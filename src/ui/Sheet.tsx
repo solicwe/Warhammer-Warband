@@ -46,7 +46,7 @@ export function DatasheetView({ sheet }: { sheet: DatasheetData }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="row" style={{ flexWrap: 'nowrap' }}>
-        <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={56} />
+        <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={64} datasheet={sheet.name} editable />
         <h2 style={{ margin: 0 }}>{sheet.name}</h2>
       </div>
       {sheet.models.map((m) => (
@@ -82,11 +82,17 @@ export function UnitView({ u }: { u: UnitState }) {
   const st = strength(u);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <h2>{u.name}</h2>
+      <div className="row">
+        {u.sources.map((src) => (
+          <Portrait key={src} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} character={u.models.some((m) => m.source === src && m.isCharacter)} size={64} datasheet={src} editable />
+        ))}
+        <h2 className="grow" style={{ margin: 0 }}>{u.name}</h2>
+      </div>
+      <div className="tiny muted">แตะรูปเพื่อใส่รูปของคุณเอง (เช่นรูปโมเดลที่ทาสีแล้ว) — เก็บไว้ในเครื่องนี้เท่านั้น</div>
       <div className="row small">
         <span className="chip">{u.models.filter((m) => !m.dead).length}/{u.startingStrength} models</span>
         {(st === 'half' || st === 'belowHalf') && <span className="chip warn">{st === 'half' ? 'Half-strength' : 'Below half'}</span>}
-        {u.battleShocked && <span className="chip warn">⚠ Battle-shocked (OC −, ห้ามใช้ stratagem)</span>}
+        {u.battleShocked && <span className="chip warn">Battle-shocked (OC −, ห้ามใช้ stratagem)</span>}
         {u.core.fnp && <span className="chip">FNP {u.core.fnp}+</span>}
         {u.core.stealth && <span className="chip">Stealth</span>}
         {u.core.deepStrike && <span className="chip">Deep Strike</span>}
@@ -100,7 +106,7 @@ export function UnitView({ u }: { u: UnitState }) {
         </div>
       ))}
       {u.enhancements.map((e) => (
-        <div key={e.name} className="sheet"><b>✦ Enhancement: {e.name}</b> <span className="tiny muted">({e.model})</span>{'\n'}{e.text}</div>
+        <div key={e.name} className="sheet"><b>Enhancement: {e.name}</b> <span className="tiny muted">({e.model})</span>{'\n'}{e.text}</div>
       ))}
       {u.abilities.map((a, i) => (
         <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({a.type}{a.model ? ` · ${a.model}` : ''})</span>{a.text ? `\n${a.text}` : ''}</div>

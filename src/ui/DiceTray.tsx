@@ -55,7 +55,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose }: Props) {
   const stageOf = (pool: Pool) => (pool !== p ? 'done' : at.stage);
   const st = stageOf(p);
   const hitShown = p.hits.length > 0 || p.autoHit && st !== 'hit';
-  const nextLabel = done ? 'ปิด' : st === 'hit' ? `🎲 ทอย Hit (${p.attacks} ลูก)` : st === 'wound' ? '🎲 ทอย Wound' : st === 'save' ? `🛡 ${s.players[T.owner].name} ทอย Save` : '💥 คิดดาเมจ';
+  const nextLabel = done ? 'ปิด' : st === 'hit' ? `ทอย Hit (${p.attacks} ลูก)` : st === 'wound' ? 'ทอย Wound' : st === 'save' ? `${s.players[T.owner].name} ทอย Save` : 'คิดดาเมจ';
 
   const hitCls = (d: Die) => d.o;
   const woundCls = (d: Die) => d.o;
@@ -66,12 +66,12 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose }: Props) {
       <div className="tray">
         <div className="row">
           <div className="grow">
-            <div className="small muted">{at.kind === 'fight' ? '⚔ Fight' : at.kind === 'overwatch' ? '🎯 Fire Overwatch' : '🎯 Shooting'}</div>
+            <div className="small muted">{at.kind === 'fight' ? 'Fight' : at.kind === 'overwatch' ? 'Fire Overwatch' : 'Shooting'}</div>
             <div style={{ fontWeight: 800 }}>
-              <span className={A.owner ? 'p1' : 'p0'}>{A.name}</span> → <span className={T.owner ? 'p1' : 'p0'}>{T.name}</span>
+              <span className={A.owner ? 'p1' : 'p0'}>{A.name}</span> <span className="muted">›</span> <span className={T.owner ? 'p1' : 'p0'}>{T.name}</span>
             </div>
           </div>
-          {!done && <button className="btn small" onClick={onSkip}>⏩ ข้าม</button>}
+          {!done && <button className="btn small" onClick={onSkip}>ข้าม</button>}
         </div>
         {at.pools.length > 1 && <div className="tiny muted">อาวุธชุดที่ {Math.min(at.idx + 1, at.pools.length)} / {at.pools.length}</div>}
 
@@ -90,7 +90,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose }: Props) {
                   </div>
                   {st === 'wound' && !p.autoHit && !p.noHitReroll && (
                     <button className={`btn small ${rr === 'hit' ? 'on' : ''}`} disabled={!!attackerCR || !p.hits.some((d) => d.o === 'miss' && !d.rerolled)} onClick={() => setRr(rr === 'hit' ? null : 'hit')}>
-                      ↻ Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'hit' ? '— แตะลูกที่พลาด' : ''}
+                      Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'hit' ? '— แตะลูกที่พลาด' : ''}
                     </button>
                   )}
                 </>
@@ -111,7 +111,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose }: Props) {
                     </div>
                     {st === 'save' && (
                       <button className={`btn small ${rr === 'wound' ? 'on' : ''}`} disabled={!!attackerCR || !p.wounds.some((d) => d.o === 'fail' && !d.rerolled)} onClick={() => setRr(rr === 'wound' ? null : 'wound')}>
-                        ↻ Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'wound' ? '— แตะลูกที่พลาด' : ''}
+                        Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'wound' ? '— แตะลูกที่พลาด' : ''}
                       </button>
                     )}
                   </>
@@ -125,7 +125,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose }: Props) {
                 <div className="tiny muted">ผลทอยจะถูกใช้กับโมเดลตามลำดับ allocation (ตัวที่บาดเจ็บก่อน · CHARACTER ทีหลัง)</div>
                 <DiceRow dice={p.saves} cls={saveCls} pick={rr === 'save' ? (d) => !d.rerolled : undefined} onPick={(i) => { onReroll('save', i); setRr(null); }} />
                 <button className={`btn small ${rr === 'save' ? 'on' : ''}`} disabled={!!defenderCR || !p.saves.length} onClick={() => setRr(rr === 'save' ? null : 'save')}>
-                  ↻ {s.players[T.owner].name}: Command Re-roll save 1CP {defenderCR ? `(${defenderCR})` : rr === 'save' ? '— แตะลูกที่จะทอยใหม่' : ''}
+                  {s.players[T.owner].name}: Command Re-roll save 1CP {defenderCR ? `(${defenderCR})` : rr === 'save' ? '— แตะลูกที่จะทอยใหม่' : ''}
                 </button>
               </div>
             )}
@@ -137,11 +137,11 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose }: Props) {
             <div className="stage-head"><span>ผลลัพธ์</span></div>
             {at.pools.filter((x) => x.done).map((x, i) => (
               <div key={i} className="small" style={{ marginBottom: 6 }}>
-                <b>{x.weapon}</b>: {x.attacks} attacks → {x.hits.filter((h) => h.o !== 'miss').length} hit → {x.wounds.filter((w) => w.o !== 'fail').length + x.autoWounds} wound
+                <b>{x.weapon}</b>: {x.attacks} attacks {x.hits.filter((h) => h.o !== 'miss').length} hit {x.wounds.filter((w) => w.o !== 'fail').length + x.autoWounds} wound
                 {x.saves.length ? <> · save <DiceRow dice={x.saves} cls={saveCls} /></> : null}
                 {x.damageLines.length > 0 && <div className="tiny muted">{x.damageLines.join(' · ')}</div>}
                 {x.mortalFromDev.some(Boolean) && <div className="tiny">Devastating Wounds: {x.mortalFromDev.join(', ')} MW</div>}
-                <div>💀 ตาย <b>{x.killed}</b></div>
+                <div>ตาย <b>{x.killed}</b></div>
               </div>
             ))}
           </div>

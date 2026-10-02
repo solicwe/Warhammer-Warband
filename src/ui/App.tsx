@@ -65,7 +65,7 @@ export default function App() {
         )}
 
         {[0, 1].map((i) => (
-          <div key={i} className="card" style={{ borderColor: i ? '#7f1d1d' : '#1e3a8a' }}>
+          <div key={i} className={`card side ${i ? 's1' : ''}`}>
             <div className="row">
               <input className="grow" value={names[i]} onChange={(e) => setNames((n) => (i === 0 ? [e.target.value, n[1]] : [n[0], e.target.value]))} />
             </div>
@@ -99,7 +99,7 @@ export default function App() {
           </div>
         </div>
 
-        <button className="btn primary" disabled={busy} onClick={start}>⚔ เริ่มเกม</button>
+        <button className="btn primary" disabled={busy} onClick={start}>เริ่มเกม</button>
         <div className="tiny muted">
           ข้อมูล datasheet: Wahapedia 11th edition export {index ? `(อัปเดต ${index.lastUpdate})` : ''} · กฎ: Core Rules มิ.ย. 2026
         </div>

@@ -1,5 +1,7 @@
 // Original token art (simple vector portraits) for models and unit cards.
+import { useRef } from 'react';
 import type { ModelState, UnitState } from '../engine/types';
+import { fileToPortrait, getPortrait, setPortrait, usePortraitsVersion } from './portraits';
 
 export type TokenKind = 'sm' | 'ork' | 'grot' | 'walker' | 'vehicle' | 'monster' | 'generic';
 
@@ -80,6 +82,7 @@ export function TokenSprites() {
           <circle cx="38" cy="48" r="8" fill="#33302a" /><circle cx="62" cy="48" r="8" fill="#33302a" />
           <path d="M50 58 L45 66 H55 Z" fill="#33302a" />
         </symbol>
+ <clipPath id="clip-round" clipPathUnits="objectBoundingBox"><circle cx="0.5" cy="0.5" r="0.5" /></clipPath>
         <symbol id="tok-crown" viewBox="0 0 100 60">
           <path d="M6 54 L14 10 L34 34 L50 4 L66 34 L86 10 L94 54 Z" fill="#f5b83d" stroke="#5a3d00" strokeWidth="5" />
         </symbol>
@@ -88,13 +91,28 @@ export function TokenSprites() {
   );
 }
 
-export function Portrait({ kind, owner, character, size = 56 }: { kind: TokenKind; owner: 0 | 1; character?: boolean; size?: number }) {
-  const rim = owner ? '#ef4444' : '#3b82f6';
+export function Portrait({ kind, owner, character, size = 56, datasheet, editable }: { kind: TokenKind; owner: 0 | 1; character?: boolean; size?: number; datasheet?: string; editable?: boolean }) {
+  usePortraitsVersion();
+  const input = useRef<HTMLInputElement>(null);
+  const rim = owner ? 'var(--p1)' : 'var(--p0)';
+  const photo = datasheet ? getPortrait(datasheet) : undefined;
+  const pick = async (f?: File) => {
+    if (!f || !datasheet) return;
+    try { setPortrait(datasheet, await fileToPortrait(f)); } catch { /* unreadable file: keep the old picture */ }
+  };
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" style={{ flex: 'none' }} aria-hidden="true">
-      <circle cx="50" cy="50" r="47" fill="#20242c" stroke={rim} strokeWidth="5" />
-      <use href={`#tok-${kind}`} x="12" y="14" width="76" height="76" />
-      {character && <use href="#tok-crown" x="30" y="0" width="40" height="24" />}
-    </svg>
+    <span className="portrait" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" onClick={() => editable && input.current?.click()} style={{ cursor: editable ? 'pointer' : undefined }}>
+        <circle cx="50" cy="50" r="48" fill="var(--surface2)" />
+        {photo
+          ? <image href={photo} x="4" y="4" width="92" height="92" clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" />
+          : <use href={`#tok-${kind}`} x="14" y="16" width="72" height="72" />}
+        <circle cx="50" cy="50" r="47" fill="none" stroke={rim} strokeWidth="4" />
+        {character && <use href="#tok-crown" x="32" y="0" width="36" height="22" />}
+        {editable && !photo && <text x="50" y="96" fontSize="13" textAnchor="middle" fill="var(--muted)">+ รูป</text>}
+      </svg>
+      {editable && <input ref={input} type="file" accept="image/*" hidden onChange={(e) => pick(e.target.files?.[0])} />}
+      {editable && photo && <button type="button" className="portrait-x" onClick={() => datasheet && setPortrait(datasheet, null)} aria-label="ลบรูป">×</button>}
+    </span>
   );
 }

@@ -5,6 +5,7 @@ import { dist } from '../engine/geometry';
 import { alive, onBoard } from '../engine/state';
 import { levelOfControl } from '../engine/game';
 import { modelToken } from './Tokens';
+import { getPortrait, usePortraitsVersion } from './portraits';
 import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export type Paths = Map<string, Pt[]>;
@@ -50,6 +51,7 @@ interface DragState {
 }
 
 function BoardImpl(props: BoardProps) {
+  usePortraitsVersion();
   const { s, draft, draftUnit, maxFor, groupDrag, onDraft } = props;
   const svgRef = useRef<SVGSVGElement>(null);
   const [vb, setVb] = useState({ x: -1, y: -1, w: W + 2, h: H + 2 });
@@ -382,7 +384,9 @@ function BoardImpl(props: BoardProps) {
                     strokeWidth={isSel || isDraft || isTarget || isPicked || bad ? 0.16 : 0.12}
                     strokeDasharray={u.battleShocked ? '0.25 0.15' : undefined}
                   />
-                  <use href={`#tok-${modelToken(m)}`} x={p.x - m.r * 0.82} y={p.y - m.r * 0.82} width={m.r * 1.64} height={m.r * 1.64} pointerEvents="none" />
+                  {getPortrait(m.source)
+                    ? <image href={getPortrait(m.source)} x={p.x - m.r * 0.9} y={p.y - m.r * 0.9} width={m.r * 1.8} height={m.r * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
+                    : <use href={`#tok-${modelToken(m)}`} x={p.x - m.r * 0.82} y={p.y - m.r * 0.82} width={m.r * 1.64} height={m.r * 1.64} pointerEvents="none" />}
                   {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
                   {m.profile.W > 1 && m.wounds < m.profile.W && (
                     <text x={p.x} y={p.y + 0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={800} pointerEvents="none">{m.wounds}</text>
@@ -390,7 +394,7 @@ function BoardImpl(props: BoardProps) {
                 </g>
               );
             })}
-            {(isSel || isTarget || vb.w < 30) && pts.length > 0 && (
+            {(isSel || isPicked || isDraft || vb.w < 24) && pts.length > 0 && (
               <text x={cx} y={minY - 0.35} fontSize={fs * 0.85} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
                 {u.name.length > 22 ? u.name.slice(0, 21) + '…' : u.name}{u.battleShocked ? ' ⚠' : ''}
               </text>
