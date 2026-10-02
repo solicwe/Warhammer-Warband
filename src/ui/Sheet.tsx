@@ -47,11 +47,13 @@ export function DatasheetView({ sheet }: { sheet: DatasheetData }) {
   usePastePortrait(sheet.name);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div className="row" style={{ flexWrap: 'nowrap' }}>
-        <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={64} datasheet={sheet.name} editable />
-        <h2 style={{ margin: 0 }}>{sheet.name}</h2>
+      <div className="ds-head">
+        <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={60} datasheet={sheet.name} editable />
+        <div className="grow">
+          <h2>{sheet.name}</h2>
+          <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''} · แตะรูปหรือวาง (Paste) เพื่อใส่รูป</div>
+        </div>
       </div>
-      <div className="tiny muted">แตะรูปเพื่อเลือกรูป หรือคัดลอกรูปแล้ววาง (Paste) ที่หน้านี้</div>
       {sheet.models.map((m) => (
         <div key={m.name}>
           {sheet.models.length > 1 && <div className="small muted">{m.name} · ฐาน {m.base.text}</div>}
@@ -86,13 +88,15 @@ export function UnitView({ u }: { u: UnitState }) {
   const st = strength(u);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div className="row">
+      <div className="ds-head">
         {u.sources.map((src) => (
-          <Portrait key={src} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} character={u.models.some((m) => m.source === src && m.isCharacter)} size={64} datasheet={src} editable />
+          <Portrait key={src} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} character={u.models.some((m) => m.source === src && m.isCharacter)} size={56} datasheet={src} editable />
         ))}
-        <h2 className="grow" style={{ margin: 0 }}>{u.name}</h2>
+        <div className="grow">
+          <h2>{u.name}</h2>
+          <div className="tiny">แตะรูปหรือวาง (Paste) เพื่อใส่รูป · เก็บในเครื่องนี้</div>
+        </div>
       </div>
-      <div className="tiny muted">แตะรูปเพื่อเลือกรูป หรือคัดลอกรูปแล้ววาง (Paste) ที่หน้านี้ — เก็บไว้ในเครื่องนี้เท่านั้น</div>
       <div className="row small">
         <span className="chip">{u.models.filter((m) => !m.dead).length}/{u.startingStrength} models</span>
         {(st === 'half' || st === 'belowHalf') && <span className="chip warn">{st === 'half' ? 'Half-strength' : 'Below half'}</span>}

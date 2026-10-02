@@ -53,6 +53,14 @@ export function botDeploy(s: GameState) {
 
 export function botCommand(s: GameState) {
   for (const t of s.shockTests) if (t.passed === null) rollBattleShock(s, t.unitId);
+  const P = s.players[s.active];
+  if (P.armyRules.some((r) => r.name === 'Oath of Moment')) {
+    const mine = boardUnits(s, s.active);
+    const enemies = boardUnits(s, other(s.active));
+    const t = enemies.sort((a, b) => Math.min(...mine.map((m) => unitDistance(m, a))) - Math.min(...mine.map((m) => unitDistance(m, b))))[0];
+    if (t) P.oathTarget = t.id;
+  }
+  if (P.armyRules.some((r) => r.name === 'Waaagh!') && !P.waaaghUsed && s.round >= 2) { P.waaaghUsed = true; P.riledUntilTurn = s.turn + 1; }
   endPhase(s);
 }
 
@@ -174,4 +182,26 @@ export function botAct(s: GameState) {
     case 'fight': if (!botFightStep(s)) endPhase(s); return;
     default: return;
   }
+}
+
+/** One bot step for a human-vs-bot game. Returns true if the bot did something. */
+export function botStep(s: GameState, bot: PlayerId): boolean {
+  if (s.window) { if (s.window.player === bot) { closeWindow(s); return true; } return false; }
+  if (s.phase === 'deploy') { if (s.deployTurn !== bot) return false; botDeploy(s); return true; }
+  if (s.phase === 'scouts') { if (s.deployTurn !== bot) return false; for (const u of scoutUnits(s, bot)) u.scoutDone = true; endScouts(s); return true; }
+  if (s.phase === 'fight') return botFightStep(s, bot);
+  if (s.phase === 'gameover' || s.active !== bot) return false;
+  botAct(s);
+  return true;
+}
+
+export function botShouldAct(s: GameState, bot: PlayerId): boolean {
+  if (s.attack || s.phase === 'gameover') return false;
+  if (s.window) return s.window.player === bot;
+  if (s.phase === 'deploy' || s.phase === 'scouts') return s.deployTurn === bot;
+  if (s.phase === 'fight' && s.fight) {
+    if (s.fight.step !== 'fight') return s.fight.stepPlayer === bot;
+    return fightCandidates(s).player === bot;
+  }
+  return s.active === bot;
 }

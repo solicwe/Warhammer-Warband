@@ -34,8 +34,8 @@ export interface BoardProps {
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
-const COLORS = ['#3b82f6', '#ef4444'];
-const SOFT = ['rgba(59,130,246,0.16)', 'rgba(239,68,68,0.16)'];
+const COLORS = ['#3a9ad9', '#e0453f'];
+const SOFT = ['rgba(58,154,217,0.16)', 'rgba(224,69,63,0.16)'];
 const TERRAIN_FILL: Record<string, string> = { dense: 'rgba(120,98,72,0.55)', light: 'rgba(150,140,80,0.45)', exposed: 'rgba(90,85,78,0.45)' };
 
 function pathLen(p: Pt[]) { let d = 0; for (let i = 1; i < p.length; i++) d += dist(p[i - 1], p[i]); return d; }

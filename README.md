@@ -9,7 +9,7 @@
 ```bash
 npm install
 npm run dev        # เปิด http://localhost:5173 (มี --host ไว้แล้ว ใช้มือถือในวง Wi-Fi เดียวกันเปิดผ่าน IP ของเครื่องได้)
-npm test           # ทดสอบ rules engine
+npm test           # ทดสอบ rules engine + จำลองเกมเต็ม 5 รอบ (บอทเล่นกันเอง) ทุก deployment × ทุก primary
 npm run build      # build เป็นไฟล์ static ใน dist/ (เอาไปวางบนเว็บโฮสต์ใดก็ได้ / ติดตั้งเป็นแอปบนมือถือ)
 npm run artifact   # รวมเป็นหน้าเดียว + ไฟล์ข้อมูลใน artifact/ (ใช้ publish เป็นลิงก์)
 ```
@@ -27,6 +27,12 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 - **Enhancements**: เลือกได้ในหน้าจัดทัพตาม detachment ที่เลือก (เช็ก CHARACTER / EPIC HERO / ซ้ำ / จำนวนตาม battle size / Upgrade ×3) และขึ้นบนการ์ดหน่วยในเกม
 - **Detachment stratagems**: ปุ่ม CP บนแถบบน — ดูกฎ detachment และใช้ stratagem ของ detachment (หัก CP, กันใช้ซ้ำใน phase เดียวกัน)
 - **สนามแบบโต๊ะแข่ง**: ruins (พื้นกระเบื้อง, กำแพง+หน้าต่าง, ชั้นบน), armoured containers, sandbag barricades, craters, objective marker 40mm พร้อมเลข OC สด, ป้าย 🛡 Cover / 👁 Hidden และเส้น line of sight ตอนเลือกเป้ายิง, token รูปตัวละคร (Space Marine / Ork / Grot / Walker / Vehicle / Monster, มงกุฎ = CHARACTER)
+- **เล่นกับบอทได้** (single-player): บอทเล่นตามกฎ — วางทัพ, เดินเข้าหาศัตรู/objective, ยิง, ชาร์จ, ตี, ทอย battle-shock, ใช้ Oath of Moment / WAAAGH!
+- **Secondary Missions** ครบ 18 ใบ (Tactical: จั่ว 2 ใบทุก Command phase, ทิ้ง +1CP, เปลี่ยนใบ 1CP ครั้งเดียว · Fixed: เลือก 2 ใบ สูงสุดใบละ 20VP) — กดยืนยันคะแนนเองเหมือนบนโต๊ะ ระบบคุม cap 15VP/รอบ, 45VP
+- **Transports**: ขึ้นรถตอนวางทัพหรือหลังเดิน, ลงรถแบบ Tactical / Rapid / Combat, Emergency Disembark อัตโนมัติเมื่อรถถูกทำลาย (อ่าน capacity / ข้อห้ามจาก datasheet)
+- **Split fire**: เลือกอาวุธทีละชุดยิงคนละเป้าได้
+- **Scouts**: ขยับก่อนเริ่มเกมตามกฎ
+- **Undo** ย้อนได้ 60 ขั้น, ข้อผิดพลาดไม่ทำให้แอปพังหรือเซฟเสีย, กองทัพที่จัดไว้ถูกจำไว้ในเครื่อง
 - **Buff chips**: ability ของ datasheet/detachment ที่ยังไม่ได้ทำให้อัตโนมัติ กดเปิดเองได้ (+1 Hit, Re-roll, Lethal, FNP …)
 - เซฟเกมอัตโนมัติใน browser (ปิดแล้วกลับมาเล่นต่อได้)
 
@@ -54,8 +60,8 @@ docs/            สรุปกฎ 11th ที่ตรวจแล้ว + gam
 ## ข้อจำกัดตอนนี้ (สิ่งที่ยังไม่ได้ทำ)
 - Detachment rules / datasheet abilities / ผลของ detachment stratagems ยังไม่ทำงานอัตโนมัติ (หัก CP ได้แล้ว) → ใช้ Buff chips ใส่ผลเอง
 - รูปตัวละครเริ่มต้นเป็นภาพวาดเวกเตอร์ของโปรเจกต์เอง (ไม่ใช้รูปโมเดลของ GW เพราะติดลิขสิทธิ์) — แตะรูปในหน้า datasheet เพื่อใส่รูปของคุณเอง รูปจะขึ้นทั้งบนการ์ดและบน token ในสนาม (เก็บในเครื่องนั้นเท่านั้น)
-- Transport (ขึ้นลงรถ), Aircraft, Scouts move, Secondary Missions, Primary Missions ที่ใช้ action/operation marker ยังไม่มี
-- ระบบแบ่งยิงหลายเป้าในหน่วยเดียว ยังไม่มี (ทั้งหน่วยยิงเป้าเดียว)
+- Aircraft, Firing Deck, Primary Missions ที่ใช้ action/operation marker (Disruption / Recon / Priority Assets) ยังไม่มี
+- Secondary ที่ต้องทำ action (Plunder, Cleanse) ให้กดยืนยันเองเมื่อทำครบเงื่อนไข
 - Terrain เป็น 2D: กำแพงของ ruins บังสายตา, พื้นที่ terrain เป็น obscuring; ยังไม่มีการปีนชั้นบน (Plunging Fire ทำได้แค่ TOWERING)
 - โมเดลไม่บังสายตากันเอง (ตามที่แอปออนไลน์ส่วนใหญ่ทำ)
 - ฐานโมเดลแบบ "Use model"/hull ใช้วงกลมขนาดประมาณ

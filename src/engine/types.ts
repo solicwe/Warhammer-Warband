@@ -328,4 +328,5 @@ export interface GameState {
   controlAtTurnStart: (PlayerId | null)[];
   log: LogEntry[];
   winner: PlayerId | null | 'draw';
+  botPlayer?: PlayerId | null;
 }

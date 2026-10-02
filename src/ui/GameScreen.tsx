@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, finishAttack, meleeWeapons, rerollOne, resolveAll, shootingModes, startAttack, stepAttack,
   type ShootMode,
@@ -11,7 +11,12 @@ import {
   formationAt, heroicCandidates, ingressUnit, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, type MoveCheck, hasArmyRule, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
+  canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts,
+  claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries,
 } from '../engine/game';
+import { botShouldAct, botStep } from '../engine/bot';
+import { endUnitShooting, rangedWeaponNames } from '../engine/attack';
+import { MISSIONS, secondaryById } from '../engine/config';
 import { polyCentroid } from '../engine/geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, onBoard, other, spendStratagem, strength, unitById, unitDistance,
@@ -27,9 +32,9 @@ import { UnitView } from './Sheet';
 import { useGame } from './store';
 
 type Mode =
-  | { k: 'place'; unitId: string; how: 'deploy' | 'infiltrate' | 'ingress' | 'deepStrike'; rapid?: boolean }
-  | { k: 'move'; unitId: string; kind: 'normal' | 'advance' | 'fallback'; fly: boolean }
-  | { k: 'shoot'; unitId: string; smode: ShootMode; target: string | null; useCQ: boolean; profile: Record<string, number>; overwatch?: boolean }
+  | { k: 'place'; unitId: string; how: 'deploy' | 'infiltrate' | 'ingress' | 'deepStrike' | 'disembark'; rapid?: boolean; transportId?: string }
+  | { k: 'move'; unitId: string; kind: 'normal' | 'advance' | 'fallback' | 'scout'; fly: boolean }
+  | { k: 'shoot'; unitId: string; smode: ShootMode; target: string | null; useCQ: boolean; profile: Record<string, number>; overwatch?: boolean; skip?: string[] }
   | { k: 'charge'; unitId: string; targets: string[]; heroic?: 'leap' | 'fray' }
   | { k: 'pile'; unitId: string; kind: 'pileIn' | 'consolidate'; overrun?: boolean }
   | { k: 'fight'; unitId: string; target: string | null; weapon?: string; epic: boolean }
@@ -54,7 +59,28 @@ const mergePaths = (base: Paths, add: Paths): Paths => { const o = new Map(base)
 const pName = (s: GameState, p: PlayerId) => s.players[p].name;
 
 export function GameScreen({ initial, onExit }: { initial: GameState; onExit: () => void }) {
-  const { state: s, act } = useGame(initial);
+  const { state: s, act, undo, canUndo } = useGame(initial);
+  const bot = s.botPlayer ?? null;
+  const [showMenu, setShowMenu] = useState(false);
+  const [showMissions, setShowMissions] = useState(false);
+
+  // engine errors become a message instead of a crash
+  useEffect(() => {
+    const onErr = (e: Event) => flash(`ทำไม่ได้: ${(e as CustomEvent).detail}`);
+    window.addEventListener('game-error', onErr);
+    return () => window.removeEventListener('game-error', onErr);
+  });
+
+  // single-player: let the bot take its steps one at a time so the board animates
+  useEffect(() => {
+    if (bot === null || !botShouldAct(s, bot)) return;
+    const t = window.setTimeout(() => {
+      const before = s.log.length;
+      act((g) => botStep(g, bot));
+      void before;
+    }, 450);
+    return () => window.clearTimeout(t);
+  }, [s, bot, act]);
   const [sel, setSel] = useState<string | null>(null);
   const [mode, setModeRaw] = useState<Mode | null>(null);
   const [draft, setDraft] = useState<Paths | null>(null);
@@ -171,7 +197,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   // ---------- generic confirm helpers ----------
 
-  const confirmMove = (kind: 'normal' | 'advance' | 'fallback' | 'charge' | 'pileIn' | 'consolidate', after?: () => void) => {
+  const confirmMove = (kind: 'normal' | 'advance' | 'fallback' | 'scout' | 'charge' | 'pileIn' | 'consolidate', after?: () => void) => {
     if (!mode || !draft) return;
     const u = U(mode.unitId);
     const opts = mode.k === 'move' ? { fly: mode.fly } : mode.k === 'charge' ? { targets: mode.targets } : {};
@@ -187,6 +213,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode?.k !== 'place' || !draft) return;
     const pos = lastPos(draft);
     const u = U(mode.unitId);
+    if (mode.how === 'disembark') {
+      const t = U(mode.transportId!);
+      const chk = validateDisembark(s, u, t, pos);
+      if (!chk.ok) { setCheck(chk); return; }
+      act((g) => disembarkUnit(g, unitById(g, u.id), unitById(g, t.id), pos));
+      setMode(null);
+      return;
+    }
     if (mode.how === 'deploy' || mode.how === 'infiltrate') {
       const chk = act((g) => deployUnit(g, u.id, pos, mode.how as 'deploy' | 'infiltrate'));
       if (!chk.ok) { setCheck(chk); return; }
@@ -201,6 +235,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const autoPlace = () => {
     if (mode?.k !== 'place') return;
+    if (mode.how === 'disembark') {
+      const u = U(mode.unitId), t = U(mode.transportId!);
+      const tm = alive(t)[0];
+      for (let ring = 0; ring < 4; ring++) for (let a = 0; a < 16; a++) {
+        const ang = (a / 16) * Math.PI * 2;
+        const pos = formationAt(u, { x: tm.x + Math.cos(ang) * (tm.r + 1 + ring * 0.6), y: tm.y + Math.sin(ang) * (tm.r + 1 + ring * 0.6) });
+        if (validateDisembark(s, u, t, pos).ok) { setDraft(placePaths(pos)); setCheck(null); return; }
+      }
+      flash('หาที่ลงรถอัตโนมัติไม่ได้ ลองแตะวางเอง');
+      return;
+    }
     const pos = findPlacement(s, U(mode.unitId), mode.how, draft ? polyCentroid([...lastPos(draft).values()]) : undefined);
     if (pos) { setDraft(placePaths(pos)); setCheck(null); } else flash('หาที่วางอัตโนมัติไม่ได้ ลองแตะวางเอง');
   };
@@ -378,7 +423,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const u = U(mode.unitId);
     return (
       <>
-        <div className="small">วาง <b>{u.name}</b>: แตะบนสนาม{mode.how === 'deploy' ? 'ในโซนของคุณ' : mode.how === 'deepStrike' ? ` (ห่างศัตรู >${RULES.reserves.enemyDistance}")` : ` (ภายใน ${RULES.reserves.edgeDistance}" จากขอบ, ห่างศัตรู >${RULES.reserves.enemyDistance}")`} แล้วลากปรับตำแหน่ง</div>
+        <div className="small">วาง <b>{u.name}</b>: แตะบนสนาม{mode.how === 'deploy' ? 'ในโซนของคุณ' : mode.how === 'disembark' ? ` ภายใน ${disembarkMode(s, U(mode.transportId!)) === 'combat' ? 6 : 3}" จากรถ (${disembarkMode(s, U(mode.transportId!))} disembark)` : mode.how === 'deepStrike' ? ` (ห่างศัตรู >${RULES.reserves.enemyDistance}")` : ` (ภายใน ${RULES.reserves.edgeDistance}" จากขอบ, ห่างศัตรู >${RULES.reserves.enemyDistance}")`} แล้วลากปรับตำแหน่ง</div>
         <div className="row">
           <button className={`btn small ${group ? 'on' : ''}`} onClick={() => setGroup(true)}>ลากทั้งหน่วย</button>
           <button className={`btn small ${!group ? 'on' : ''}`} onClick={() => setGroup(false)}>ทีละตัว</button>
@@ -407,6 +452,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'deploy' })}>วางใน deployment zone</button>
             {u.core.infiltrators && <button className="btn" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'infiltrate' })}>Infiltrate</button>}
             <button className="btn" onClick={() => { const e = act((g) => sendToReserves(g, u.id)); if (e) flash(e); else setSel(null); }}>Strategic Reserves{u.core.deepStrike ? ' / Deep Strike' : ''}</button>
+            {s.units.filter((t) => t.owner === p && t.transport && (t.status === 'board' || t.status === 'pending') && !canEmbarkIn(s, u, t)).map((t) => (
+              <button key={t.id} className="btn" onClick={() => { const e = act((g) => embarkUnit(g, unitById(g, u.id), unitById(g, t.id), true)); if (e) flash(e); else setSel(null); }}>ขึ้นรถ {t.name}</button>
+            ))}
           </div>
         ) : <div className="muted small">เลือกหน่วยที่จะวาง</div>}
         {u && unitCard(u)}
@@ -473,11 +521,24 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         </>
       );
     }
-    const mine = s.units.filter((u) => u.owner === s.active && (onBoard(u) || u.status === 'reserves'));
+    const mine = s.units.filter((u) => u.owner === s.active && (onBoard(u) || u.status === 'reserves' || u.status === 'embarked'));
     const u = selUnit && mine.includes(selUnit) && !selUnit.move ? selUnit : null;
+    const moved = selUnit && mine.includes(selUnit) && selUnit.move && ['normal', 'advance', 'fallback'].includes(selUnit.move) ? selUnit : null;
+    const rides = moved ? s.units.filter((t) => t.owner === s.active && t.transport && onBoard(t) && !canEmbarkIn(s, moved, t)) : [];
     return (
       <>
+        {!selUnit && <div className="small muted">เลือกหน่วยเพื่อเดิน · หน่วยที่ไม่ได้สั่งจะยืนนิ่งเมื่อจบ phase</div>}
         <div className="unit-strip">{mine.map((x) => unitPill(x, !!x.move))}</div>
+        {u && u.status === 'embarked' && (() => {
+          const t = U(u.embarkedIn!);
+          const dm = disembarkMode(s, t);
+          return dm
+            ? <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'disembark', transportId: t.id })}>ลงจากรถ {t.name} ({dm === 'tactical' ? 'Tactical: ลงแล้วเดินต่อได้' : dm === 'rapid' ? 'Rapid: ลงแล้วชาร์จไม่ได้' : 'Combat: hazard + battle-shocked'})</button>
+            : <div className="muted small">รถ Advance/Fall back มาแล้ว ลงไม่ได้ phase นี้</div>;
+        })()}
+        {rides.map((t) => (
+          <button key={t.id} className="btn" onClick={() => { const e = act((g) => embarkUnit(g, unitById(g, moved!.id), unitById(g, t.id))); if (e) flash(e); else setSel(null); }}>ขึ้นรถ {t.name}</button>
+        ))}
         {u && u.status === 'reserves' && (
           canIngress(s, u)
             ? <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: u.core.deepStrike ? 'deepStrike' : 'ingress' })}>ลงสนาม ({u.core.deepStrike ? 'Deep Strike' : 'Ingress'})</button>
@@ -525,13 +586,23 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       );
     }
     if (mode?.k === 'shoot' && modeUnit) {
-      const opt = { mode: mode.smode, useCloseQuarters: mode.useCQ, profile: mode.profile };
+      const opt = { mode: mode.smode, useCloseQuarters: mode.useCQ, profile: mode.profile, skipWeapons: mode.skip };
+      const remaining = rangedWeaponNames(modeUnit).filter((n) => !modeUnit.weaponsFired.includes(n));
       const res = mode.target ? buildShootPools(s, modeUnit.id, mode.target, opt) : null;
       const multi = alive(modeUnit)[0]?.weapons.filter((w) => !isMelee(w.profiles[0]) && w.profiles.length > 1) ?? [];
       const hasCQ = alive(modeUnit).some((m) => m.weapons.some((w) => hasAbility(w.profiles[0], 'close-quarters'))) && alive(modeUnit).some((m) => m.weapons.some((w) => !isMelee(w.profiles[0]) && !hasAbility(w.profiles[0], 'close-quarters')));
       return (
         <>
           <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' ? 'ยิง' : mode.smode}{mode.target ? ` › ${U(mode.target).name}` : ' · แตะเป้าบนสนาม'}</span></div>
+          {!mode.overwatch && remaining.length > 1 && (
+            <div className="row">
+              <span className="label">อาวุธที่ยิงใส่เป้านี้</span>
+              {remaining.map((n) => {
+                const off = (mode.skip ?? []).includes(n);
+                return <button key={n} className={`btn small ${off ? '' : 'on'}`} onClick={() => setModeRaw({ ...mode, skip: off ? (mode.skip ?? []).filter((x) => x !== n) : [...(mode.skip ?? []), n] })}>{off ? '○' : '●'} {n}</button>;
+              })}
+            </div>
+          )}
           <div className="row">
             {hasCQ && mode.smode !== 'closeQuarters' && <button className={`btn small ${mode.useCQ ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, useCQ: !mode.useCQ })}>ใช้ Pistol/Close-quarters</button>}
             {multi.map((w) => (
@@ -592,6 +663,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const canExplode = u && !u.selectedToShoot && !isEngaged(s, u) && u.move !== 'advance' && u.move !== 'fallback' && (hasKw(u, 'GRENADES') || hasKw(u, 'EXPLOSIVES')) && !canUseStratagem(s, u.owner, 'explosives', u);
     return (
       <>
+        {!selUnit && <div className="small muted">เลือกหน่วยที่จะยิง แล้วแตะเป้าบนสนาม · ระบบเช็กระยะ สายตา และ cover ให้</div>}
         <div className="unit-strip">{mine.map((x) => unitPill(x, x.selectedToShoot || shootingModes(s, x).length === 0))}</div>
         {u && (
           <>
@@ -600,7 +672,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               {modes.map((m) => <button key={m} className="btn" onClick={() => setMode({ k: 'shoot', unitId: u.id, smode: m, target: null, useCQ: false, profile: {} })}>{m === 'normal' ? 'ยิง' : m === 'assault' ? 'Assault (advance มา)' : m === 'closeQuarters' ? 'Close-quarters' : 'Indirect'}</button>)}
               {modes.length === 0 && <span className="muted small">{u.selectedToShoot ? 'ยิงไปแล้ว' : u.move === 'fallback' ? 'Fall back มา ยิงไม่ได้' : u.move === 'advance' ? 'Advance มา (ไม่มีอาวุธ Assault)' : 'ยิงไม่ได้'}</span>}
               {canExplode && <button className="btn small" onClick={() => setMode({ k: 'explosives', unitId: u.id, target: null })}>Explosives 1CP</button>}
+              {u.weaponsFired.length > 0 && !u.selectedToShoot && <button className="btn small ghost" onClick={() => act((g) => endUnitShooting(unitById(g, u.id)))}>จบการยิงหน่วยนี้</button>}
             </div>
+            {u.weaponsFired.length > 0 && !u.selectedToShoot && <div className="tiny muted">ยิงไปแล้ว: {u.weaponsFired.join(', ')} · อาวุธที่เหลือยิงเป้าอื่นได้</div>}
           </>
         )}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
@@ -642,6 +716,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const why = u ? chargeEligibility(s, u) : null;
     return (
       <>
+        {!selUnit && <div className="small muted">หน่วยที่ชาร์จได้ต้องอยู่ภายใน 12" ของศัตรู · ทอย 2D6 ก่อนแล้วค่อยเลือกเป้าที่อยู่ในระยะ</div>}
         <div className="unit-strip">{mine.map((x) => unitPill(x, !!chargeEligibility(s, x)))}</div>
         {u && (
           <>
@@ -755,8 +830,87 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     );
   };
 
+  const scoutsPanel = () => {
+    if (mode?.k === 'move' && modeUnit) {
+      return (
+        <>
+          <div className="small"><b>{modeUnit.name}</b> · Scout move สูงสุด {modeUnit.core.scouts}" · ต้องจบห่างศัตรูเกิน {RULES.reserves.enemyDistance}"</div>
+          {moveControls('scout', () => confirmMove('scout'))}
+        </>
+      );
+    }
+    const p = s.deployTurn;
+    const list = scoutUnits(s, p);
+    return (
+      <>
+        <div className="handoff">Pre-battle · Scouts · {pName(s, p)}</div>
+        <div className="unit-strip">{list.map((u) => unitPill(u, false, () => { setSel(u.id); setMode({ k: 'move', unitId: u.id, kind: 'scout', fly: false }, startPaths(u)); }))}</div>
+        {!list.length && <div className="muted small">ไม่มีหน่วย Scouts ที่ต้องขยับแล้ว</div>}
+        <button className="btn primary" onClick={() => { act((g) => endScouts(g)); setSel(null); }}>เสร็จ ▶</button>
+      </>
+    );
+  };
+
+  const missionsSheet = () => {
+    const prim = primaryById(s.primaryId);
+    return (
+      <div className="tray-backdrop" onClick={() => setShowMissions(false)}>
+        <div className="tray" onClick={(e) => e.stopPropagation()}>
+          <div className="sheet-title">Mission</div>
+          <div className="card">
+            <div style={{ fontWeight: 700 }}>{prim.name} <span className="muted small">· Primary (ทั้งสองฝ่าย)</span></div>
+            {prim.scoring.map((r) => <div key={r.text + r.rounds} className="small">R{r.rounds[0]}–{r.rounds[1]} · {r.text} <b>{r.vp}VP</b>{r.bonus ? ` (+${r.bonus.vp})` : ''}</div>)}
+            <div className="tiny muted">ระบบนับ Primary ให้อัตโนมัติ · สูงสุด 15VP ต่อรอบ / 45VP</div>
+          </div>
+          {s.players.map((P, i) => {
+            const p = i as PlayerId;
+            if (P.secMode === 'none') return null;
+            const fixedPicking = P.secMode === 'fixed' && P.secActive.length < 2;
+            return (
+              <div key={i} className={`card side ${i ? 's1' : ''}`}>
+                <div className="row">
+                  <b className="grow">{P.name} · Secondary ({P.secMode === 'tactical' ? 'Tactical' : 'Fixed'})</b>
+                  <span className="small">{P.secVp} VP</span>
+                </div>
+                {fixedPicking && (
+                  <>
+                    <div className="small muted">เลือก Fixed Mission 2 ใบ (ใช้ทั้งเกม)</div>
+                    {MISSIONS.secondaries.filter((x) => x.fixed).map((x) => (
+                      <button key={x.id} className="btn small" onClick={() => act((g) => chooseFixedSecondaries(g, p, [...g.players[p].secActive, x.id]))} disabled={P.secActive.includes(x.id)}>{x.name}</button>
+                    ))}
+                  </>
+                )}
+                {!fixedPicking && P.secActive.length === 0 && <div className="small muted">{P.secMode === 'tactical' ? 'จะจั่ว 2 ใบตอนต้น Command phase ของคุณ' : '—'}</div>}
+                {!fixedPicking && P.secActive.map((id) => {
+                  const d = secondaryById(id);
+                  return (
+                    <div key={id} className="sec-card">
+                      <div className="row"><b className="grow">{d.name}</b><span className="tiny muted">{d.when}</span></div>
+                      <div className="small">{d.text}</div>
+                      <div className="row" style={{ marginTop: 6 }}>
+                        <span className="tiny muted">ทำสำเร็จ:</span>
+                        {d.options.map((v) => <button key={v} className="btn small" onClick={() => { const got = act((g) => claimSecondary(g, p, id, v)); flash(`+${got} VP`); }}>+{v}</button>)}
+                        {P.secMode === 'tactical' && <button className="btn small ghost" onClick={() => act((g) => discardSecondary(g, p, id))}>ทิ้ง{s.active === p ? ' (+1CP)' : ''}</button>}
+                        {P.secMode === 'tactical' && !P.secSwapUsed && s.active === p && s.phase === 'command' && P.cp >= 1 && <button className="btn small ghost" onClick={() => act((g) => swapSecondary(g, p, id))}>เปลี่ยนใบ 1CP</button>}
+                      </div>
+                    </div>
+                  );
+                })}
+                {P.secMode === 'fixed' && !fixedPicking && <div className="tiny muted">แต่ละใบได้ไม่เกิน 20VP</div>}
+              </div>
+            );
+          })}
+          {s.players.every((P) => P.secMode === 'none') && <div className="small muted">เกมนี้ไม่ได้ใช้ Secondary Missions</div>}
+          <button className="btn" onClick={() => setShowMissions(false)}>ปิด</button>
+        </div>
+      </div>
+    );
+  };
+
   const panel = () => {
     if (s.phase === 'gameover') return null;
+    if (bot !== null && botShouldAct(s, bot)) return <div className="handoff">{pName(s, bot)} กำลังเล่น…</div>;
+    if (s.phase === 'scouts') return scoutsPanel();
     if (s.window) return windowPanel();
     if (s.phase === 'deploy') return deployPanel();
     if (s.phase === 'command') return commandPanel();
@@ -773,18 +927,24 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   return (
     <>
       <div className="topbar">
-        <button className="btn small ghost" onClick={onExit} aria-label="เมนู">☰</button>
+        <button className="btn small ghost" onClick={() => setShowMenu(true)} aria-label="เมนู">☰</button>
         <div className="grow">
-          <div className="phase">{s.phase === 'deploy' ? 'Deployment' : `R${s.round} · ${PHASE_TH[s.phase][0]}${PHASE_TH[s.phase].slice(1).toLowerCase()}`}</div>
-          <div className="tiny muted">{prim.name}</div>
+          <div className="phase">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : `Battle Round ${s.round}`}</div>
+          <div className="tiny muted">{s.phase === 'deploy' || s.phase === 'scouts' ? prim.name : `เทิร์น ${pName(s, s.active)}`}</div>
         </div>
-        <div className="score">
-          <span className="p0">{s.players[0].vp}<small> VP</small> {s.players[0].cp}<small> CP</small></span>
-          <span className="p1">{s.players[1].vp}<small> VP</small> {s.players[1].cp}<small> CP</small></span>
-        </div>
+        <button className="score" onClick={() => setShowMissions(true)}>
+          <span className="p0">{s.players[0].vp + s.players[0].secVp}<small> VP</small> {s.players[0].cp}<small> CP</small></span>
+          <span className="p1">{s.players[1].vp + s.players[1].secVp}<small> VP</small> {s.players[1].cp}<small> CP</small></span>
+        </button>
         <button className="btn small" onClick={() => setShowStrats(true)}>Strat</button>
-        <button className="btn small" onClick={() => setShowLog(true)}>Log</button>
       </div>
+      {['command', 'movement', 'shooting', 'charge', 'fight'].includes(s.phase) && (
+        <div className="phasebar">
+          {(['command', 'movement', 'shooting', 'charge', 'fight'] as const).map((ph) => (
+            <span key={ph} className={s.phase === ph ? 'on' : ['command', 'movement', 'shooting', 'charge', 'fight'].indexOf(ph) < ['command', 'movement', 'shooting', 'charge', 'fight'].indexOf(s.phase) ? 'done' : ''}>{PHASE_TH[ph][0]}{PHASE_TH[ph].slice(1).toLowerCase()}</span>
+          ))}
+        </div>
+      )}
       <div className="board-wrap">
         <Board
           s={s}
@@ -831,6 +991,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         </div>
       )}
 
+      {showMissions && missionsSheet()}
+      {showMenu && (
+        <div className="tray-backdrop" onClick={() => setShowMenu(false)}>
+          <div className="tray" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet-title">เมนู</div>
+            <button className="btn" disabled={!canUndo} onClick={() => { undo(); setMode(null); setShowMenu(false); flash('ย้อนกลับ 1 ขั้นแล้ว'); }}>ย้อนกลับ 1 ขั้น (Undo)</button>
+            <button className="btn" onClick={() => { setShowMenu(false); setShowMissions(true); }}>Mission & Secondary</button>
+            <button className="btn" onClick={() => { setShowMenu(false); setShowLog(true); }}>Battle log & กฎกองทัพ</button>
+            <button className="btn" onClick={() => { setShowMenu(false); setShowStrats(true); }}>Stratagems</button>
+            <button className="btn danger" onClick={onExit}>ออกไปหน้าแรก (เกมเซฟไว้แล้ว)</button>
+            <button className="btn ghost" onClick={() => setShowMenu(false)}>ปิด</button>
+          </div>
+        </div>
+      )}
       {showStrats && (() => {
         const p = actor;
         const P = s.players[p];
