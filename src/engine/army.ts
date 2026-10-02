@@ -1,0 +1,186 @@
+// Turns an army list (datasheet names + sizes + attachments) into UnitState objects.
+import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelState, PlayerId, UnitState, WeaponData } from './types';
+
+const MM_PER_INCH = 25.4;
+
+export function baseRadius(sheet: DatasheetData, profileIdx: number): number {
+  const b = sheet.models[profileIdx]?.base;
+  if (b && b.w > 0) return (b.w + b.h) / 4 / MM_PER_INCH;
+  if (sheet.keywords.includes('VEHICLE')) return 2.4;
+  if (sheet.keywords.includes('MONSTER')) return 1.8;
+  return 0.63;
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
+const singular = (s: string) => norm(s).replace(/(ies)$/, 'y').replace(/s$/, '');
+
+function matchProfile(sheet: DatasheetData, name?: string): number {
+  if (!name || sheet.models.length === 1) return 0;
+  const i = sheet.models.findIndex((m) => singular(m.name) === singular(name) || singular(name).includes(singular(m.name)));
+  return i >= 0 ? i : 0;
+}
+
+function findWeapon(sheet: DatasheetData, item: string): WeaponData | undefined {
+  const n = norm(item);
+  return (
+    sheet.weapons.find((w) => norm(w.name) === n) ??
+    sheet.weapons.find((w) => norm(w.name).startsWith(n) || n.startsWith(norm(w.name)))
+  );
+}
+
+function loadoutFor(sheet: DatasheetData, compName: string | undefined, profileName: string): WeaponData[] {
+  const keys = Object.keys(sheet.loadout);
+  let key: string | undefined = keys.find((k) => k === '*');
+  if (compName || profileName) {
+    const cand = [compName, profileName].filter(Boolean).map((s) => singular(s!));
+    key = keys.find((k) => cand.some((c) => singular(k) === c || singular(k).includes(c) || c.includes(singular(k)))) ?? key;
+  }
+  const items = key ? sheet.loadout[key] : [];
+  const weapons = items.map((i) => findWeapon(sheet, i)).filter((w): w is WeaponData => !!w);
+  if (weapons.length) return [...new Map(weapons.map((w) => [w.name, w])).values()];
+  // Fallback when the loadout text could not be parsed: first ranged + first melee weapon.
+  const ranged = sheet.weapons.find((w) => w.profiles[0].range !== 'Melee');
+  const melee = sheet.weapons.find((w) => w.profiles[0].range === 'Melee');
+  return [ranged, melee].filter((w): w is WeaponData => !!w);
+}
+
+/** Distribute N models over composition lines: each line gets its minimum, the remainder goes to the largest line. */
+export function distributeModels(sheet: DatasheetData, total: number): { comp?: string; profile: number; count: number }[] {
+  const lines = sheet.composition.filter((c) => c.min !== undefined);
+  if (!lines.length) return [{ profile: 0, count: total }];
+  const out = lines.map((c) => ({ comp: c.name, profile: matchProfile(sheet, c.name), count: c.min! }));
+  let left = total - out.reduce((a, b) => a + b.count, 0);
+  const order = [...lines.keys()].sort((a, b) => (lines[b].max! - lines[b].min!) - (lines[a].max! - lines[a].min!));
+  for (const i of order) {
+    if (left <= 0) break;
+    const add = Math.min(left, lines[i].max! - out[i].count);
+    out[i].count += add;
+    left -= add;
+  }
+  if (left > 0) out[out.length - 1].count += left;
+  return out.filter((o) => o.count > 0);
+}
+
+export function coreAbilities(sheets: DatasheetData[]): CoreAbilities {
+  const core: CoreAbilities = {};
+  const all = sheets.flatMap((s) => s.abilities.filter((a) => a.type === 'Core'));
+  const has = (n: string) => all.find((a) => a.name.toLowerCase() === n.toLowerCase());
+  const fnp = has('Feel No Pain');
+  if (fnp?.param) core.fnp = parseInt(fnp.param, 10);
+  if (has('Stealth') && sheets.every((s) => s.abilities.some((a) => a.name === 'Stealth'))) core.stealth = true;
+  const lo = has('Lone Operative');
+  if (lo) core.loneOperative = lo.param ? parseInt(lo.param, 10) : 12;
+  if (has('Fights First') && sheets.every((s) => s.abilities.some((a) => a.name === 'Fights First'))) core.fightsFirst = true;
+  if (has('Deep Strike') && sheets.every((s) => s.abilities.some((a) => a.name === 'Deep Strike'))) core.deepStrike = true;
+  const sc = has('Scouts');
+  if (sc?.param) core.scouts = parseInt(sc.param, 10);
+  if (has('Infiltrators')) core.infiltrators = true;
+  const dd = has('Deadly Demise');
+  if (dd) core.deadlyDemise = (dd.param || '1').trim();
+  if (has('Hover')) core.hover = true;
+  const dmg = sheets.find((s) => s.damaged)?.damaged;
+  if (dmg) core.damaged = parseInt(dmg.w.split('-').pop()!, 10);
+  return core;
+}
+
+let uidCounter = 0;
+export const newUid = (p = 'u') => `${p}${Date.now().toString(36)}${(uidCounter++).toString(36)}`;
+
+function makeModels(sheet: DatasheetData, count: number, unitId: string, bodyguard: boolean): ModelState[] {
+  const out: ModelState[] = [];
+  const isChar = sheet.keywords.includes('CHARACTER');
+  for (const part of distributeModels(sheet, count)) {
+    const profile = sheet.models[part.profile];
+    const weapons = loadoutFor(sheet, part.comp, profile.name);
+    for (let i = 0; i < part.count; i++) {
+      out.push({
+        id: `${unitId}-m${out.length}`,
+        name: part.comp && part.comp !== profile.name ? part.comp.replace(/s$/, '') : profile.name,
+        profile,
+        source: sheet.name,
+        isCharacter: isChar,
+        isBodyguard: bodyguard,
+        keywords: [...sheet.keywords, ...sheet.factionKeywords],
+        weapons,
+        x: -100, y: -100,
+        r: baseRadius(sheet, part.profile),
+        wounds: profile.W,
+        dead: false,
+      });
+    }
+  }
+  return out;
+}
+
+export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId): UnitState[] {
+  const sheetOf = (e: ArmyUnitEntry) => faction.datasheets.find((d) => d.name === e.datasheet)!;
+  const units: UnitState[] = [];
+  const attached = list.units.filter((u) => u.attachTo && list.units.some((b) => b.uid === u.attachTo));
+  for (const e of list.units) {
+    if (attached.includes(e)) continue;
+    const sheet = sheetOf(e);
+    if (!sheet) continue;
+    const id = `p${owner}-${e.uid}`;
+    const joiners = attached.filter((a) => a.attachTo === e.uid);
+    const sheets = [sheet, ...joiners.map(sheetOf)];
+    const models = [
+      ...makeModels(sheet, e.models, id, joiners.length > 0),
+      ...joiners.flatMap((j, k) => makeModels(sheetOf(j), j.models, `${id}-l${k}`, false)),
+    ];
+    const keywords = [...new Set(sheets.flatMap((s) => s.keywords))];
+    units.push({
+      id,
+      owner,
+      name: joiners.length ? `${joiners.map((j) => j.datasheet).join(' + ')} + ${sheet.name}` : sheet.name,
+      sources: sheets.map((s) => s.name),
+      keywords,
+      factionKeywords: [...new Set(sheets.flatMap((s) => s.factionKeywords))],
+      models,
+      startingStrength: models.length,
+      abilities: sheets.flatMap((s) => s.abilities.map((a) => ({ ...a, model: a.model || (sheets.length > 1 ? s.name : undefined) }))),
+      core: coreAbilities(sheets),
+      pts: e.pts + joiners.reduce((a, j) => a + j.pts, 0),
+      status: 'pending',
+      battleShocked: false,
+      isWarlordUnit: !!(e.warlord || joiners.some((j) => j.warlord)),
+      move: null, advanceRoll: null, maxMoved: 0, setUpTurn: -10, shotTurn: -10,
+      selectedToShoot: false, declaredCharge: false, chargeRoll: null, chargedTurn: -10, chargeTargets: [],
+      fought: false, foughtFirstUntilTurn: -10, stratagemPhase: null, oneShotUsed: [], buffs: [],
+    });
+  }
+  return units;
+}
+
+// ---------- army list validation (Muster Armies, 25) ----------
+
+export function pointsOptions(sheet: DatasheetData) {
+  return sheet.points[0]?.options ?? [];
+}
+
+export function listPoints(list: ArmyList): number {
+  return list.units.reduce((a, u) => a + u.pts, 0);
+}
+
+export function validateList(list: ArmyList, faction: FactionData, size: { points: number; dp: number; unitLimit: number }): string[] {
+  const errs: string[] = [];
+  const pts = listPoints(list);
+  if (pts > size.points) errs.push(`แต้มเกิน: ${pts}/${size.points}`);
+  const dp = list.detachments.reduce((a, n) => a + (faction.detachments.find((d) => d.name === n)?.dp ?? 0), 0);
+  if (dp > size.dp && !(list.detachments.length === 1 && size.dp === 2 && dp === 3)) errs.push(`Detachment Points เกิน: ${dp}/${size.dp}`);
+  const counts = new Map<string, number>();
+  for (const u of list.units) counts.set(u.datasheet, (counts.get(u.datasheet) ?? 0) + 1);
+  for (const [name, n] of counts) {
+    const sheet = faction.datasheets.find((d) => d.name === name);
+    if (!sheet) continue;
+    const limit = sheet.keywords.includes('EPIC HERO') ? 1 : sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT') ? size.unitLimit * 2 : size.unitLimit;
+    if (n > limit) errs.push(`${name}: ใส่ได้ไม่เกิน ${limit} หน่วย`);
+  }
+  if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('ต้องมี CHARACTER อย่างน้อย 1 หน่วย (Warlord)');
+  for (const u of list.units) {
+    if (!u.attachTo) continue;
+    const leader = faction.datasheets.find((d) => d.name === u.datasheet);
+    const body = list.units.find((b) => b.uid === u.attachTo);
+    if (!leader || !body || !leader.leads.includes(body.datasheet)) errs.push(`${u.datasheet} ผูกกับ ${body?.datasheet ?? '?'} ไม่ได้`);
+  }
+  return errs;
+}

@@ -1,0 +1,43 @@
+{
+  "_comment": "ตัวเลขหลักของ Core Rules 11th edition — แก้ที่นี่ที่เดียว engine อ่านจากไฟล์นี้ (อ้างอิงเลขหัวข้อใน docs/01-rules-11e-reference.md)",
+  "edition": "11th",
+  "rulesVersion": "Core Rules June 2026",
+  "battlefield": { "width": 44, "height": 60 },
+  "battleRounds": 5,
+  "startingCP": 0,
+  "cpPerCommandPhase": 1,
+  "engagementRange": 2,
+  "coherency": { "near": 2, "max": 9 },
+  "advanceDice": "D6",
+  "flyTakeToSkiesPenalty": 2,
+  "heavyMaxMove": 3,
+  "charge": { "declareRange": 12, "dice": "2D6", "mustEndWithin": 1 },
+  "pileIn": { "distance": 3, "targetRange": 5 },
+  "consolidate": { "distance": 3, "range": 3 },
+  "snapShooting": { "range": 24, "hitOn": 6 },
+  "indirectFire": { "hitOn": 6, "spottedStationaryHitOn": 4 },
+  "hidden": { "detectionRange": 15, "goneToGroundReduction": 3 },
+  "loneOperativeRange": 12,
+  "plungingFire": { "height": 3, "toweringRange": 12 },
+  "hazard": { "failOn": 2, "mortalWounds": 1, "mortalWoundsMonsterVehicle": 3 },
+  "deadlyDemiseRange": 6,
+  "objectiveMarkerRange": 3,
+  "reserves": { "maxPointsFraction": 0.5, "firstRound": 2, "noEnemyZoneBeforeRound": 3, "destroyedAfterRound": 3, "edgeDistance": 6, "enemyDistance": 8 },
+  "modifierCaps": { "hitRoll": 1, "woundRoll": 1, "bestSkill": 2, "worstSkill": 6, "bestSave": 2 },
+  "battleSizes": [
+    { "id": "incursion", "name": "Incursion", "points": 1000, "dp": 2, "enhancements": 2, "unitLimit": 2 },
+    { "id": "strike-force", "name": "Strike Force", "points": 2000, "dp": 3, "enhancements": 4, "unitLimit": 3 }
+  ],
+  "coreStratagems": [
+    { "id": "command-reroll", "name": "Command Re-roll", "cp": 1, "when": "ทันทีหลังทอย Advance / Charge / Damage / Hazard / Hit / Save / Wound", "text": "ทอยใหม่ 1 ลูก (charge ทอยใหม่ทั้ง 2D6)" },
+    { "id": "epic-challenge", "name": "Epic Challenge", "cp": 1, "when": "Fight phase เมื่อหน่วย CHARACTER ถูกเลือกให้สู้", "text": "CHARACTER 1 ตัวได้ [PRECISION] กับอาวุธ melee จนจบ phase" },
+    { "id": "insane-bravery", "name": "Insane Bravery", "cp": 1, "when": "Battle-shock step ของเรา ก่อนทอย", "text": "ผ่าน battle-shock อัตโนมัติ (1 ครั้งต่อเกม)", "oncePerBattle": true },
+    { "id": "explosives", "name": "Explosives", "cp": 1, "when": "Shooting phase ของเรา", "text": "หน่วย EXPLOSIVES/GRENADES เลือกศัตรูภายใน 8\" ที่มองเห็น ทอย 6D6 ได้ 4+ = 1 mortal wound", "range": 8, "dice": 6, "woundOn": 4 },
+    { "id": "crushing-impact", "name": "Crushing Impact", "cp": 1, "when": "Charge phase ของเรา หลัง MONSTER/VEHICLE ชาร์จเสร็จ", "text": "ทอย D6 เท่ากับ T: 5+ ศัตรูโดน 1 MW (สูงสุด 6), 1 ตัวเองโดน 1 MW", "woundOn": 5, "max": 6 },
+    { "id": "rapid-ingress", "name": "Rapid Ingress", "cp": 1, "when": "จบ Movement phase ของศัตรู", "text": "หน่วยใน reserves ทำ ingress move (ห้ามใช้ battle round 1)" },
+    { "id": "fire-overwatch", "name": "Fire Overwatch", "cp": 1, "when": "จบ Movement phase ของศัตรู", "text": "หน่วยที่ unengaged ยิงแบบ Snap Shooting (โดนเฉพาะ 6, ระยะ 24\")" },
+    { "id": "smokescreen", "name": "Smokescreen", "cp": 1, "when": "เริ่ม Shooting phase ของศัตรู", "text": "หน่วย SMOKE ได้ benefit of cover จนจบ phase" },
+    { "id": "heroic-intervention", "name": "Heroic Intervention", "cp": 1, "intoTheFrayExtraCp": 1, "when": "จบ Charge phase ของศัตรู", "text": "Leap to Defend: ชาร์จใส่หน่วยที่เพิ่งชาร์จมา / Into the Fray (+1CP): charge roll สูงสุด 6 เป้าใดก็ได้ภายใน 6\"" },
+    { "id": "counteroffensive", "name": "Counteroffensive", "cp": 2, "when": "Fight step ของศัตรู หลังหน่วยศัตรูสู้เสร็จ", "text": "หน่วยเราได้ Fights First และสู้เป็นหน่วยถัดไป" }
+  ]
+}

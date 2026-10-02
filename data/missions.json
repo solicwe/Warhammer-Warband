@@ -1,0 +1,811 @@
+{
+ "_comment": "Deployment cards / terrain / Primary Missions (Chapter Approved 2026-27). พิกัดเป็นนิ้ว: x = 0..44 จากซ้าย, y = 0..60 จากบน (แนวตั้งตามการ์ดทางการ). terrain 'mirror' = สร้างชิ้นหมุน 180° รอบจุดกลางให้อีกฝั่งเพื่อความยุติธรรม",
+ "terrainKinds": {
+  "ruin": {
+   "category": "dense",
+   "height": 5,
+   "walls": "L",
+   "label": "Ruins (Dense)"
+  },
+  "objective-ruin": {
+   "category": "dense",
+   "height": 5,
+   "walls": "L",
+   "label": "Objective Ruins (Dense)"
+  },
+  "barricade": {
+   "category": "light",
+   "height": 1.5,
+   "walls": "none",
+   "label": "Barricades (Light)"
+  },
+  "crater": {
+   "category": "exposed",
+   "height": 0,
+   "walls": "none",
+   "label": "Craters (Exposed)"
+  }
+ },
+ "objectiveTerrain": {
+  "kind": "objective-ruin",
+  "w": 6,
+  "h": 6
+ },
+ "deployments": [
+  {
+   "id": "hammer-and-anvil",
+   "name": "Hammer and Anvil",
+   "attackerEdge": "top",
+   "defenderEdge": "bottom",
+   "zones": {
+    "attacker": [
+     [
+      0,
+      0
+     ],
+     [
+      44,
+      0
+     ],
+     [
+      44,
+      18
+     ],
+     [
+      0,
+      18
+     ]
+    ],
+    "defender": [
+     [
+      0,
+      42
+     ],
+     [
+      44,
+      42
+     ],
+     [
+      44,
+      60
+     ],
+     [
+      0,
+      60
+     ]
+    ]
+   },
+   "territory": {
+    "attacker": [
+     [
+      0,
+      0
+     ],
+     [
+      44,
+      0
+     ],
+     [
+      44,
+      30
+     ],
+     [
+      0,
+      30
+     ]
+    ],
+    "defender": [
+     [
+      0,
+      30
+     ],
+     [
+      44,
+      30
+     ],
+     [
+      44,
+      60
+     ],
+     [
+      0,
+      60
+     ]
+    ]
+   },
+   "objectives": [
+    {
+     "id": "home-a",
+     "type": "home",
+     "x": 10,
+     "y": 14,
+     "owner": "attacker"
+    },
+    {
+     "id": "home-d",
+     "type": "home",
+     "x": 34,
+     "y": 46,
+     "owner": "defender"
+    },
+    {
+     "id": "exp-1",
+     "type": "expansion",
+     "x": 36,
+     "y": 24
+    },
+    {
+     "id": "exp-2",
+     "type": "expansion",
+     "x": 8,
+     "y": 36
+    },
+    {
+     "id": "central",
+     "type": "central",
+     "x": 22,
+     "y": 30
+    }
+   ],
+   "terrain": [
+    {
+     "kind": "ruin",
+     "x": 27,
+     "y": 20,
+     "w": 8,
+     "h": 5,
+     "mirror": true
+    },
+    {
+     "kind": "barricade",
+     "x": 18,
+     "y": 20,
+     "w": 6,
+     "h": 3,
+     "mirror": true
+    },
+    {
+     "kind": "barricade",
+     "x": 4,
+     "y": 30,
+     "w": 4,
+     "h": 4,
+     "mirror": true
+    },
+    {
+     "kind": "ruin",
+     "x": 36,
+     "y": 8,
+     "w": 5,
+     "h": 8,
+     "mirror": true
+    }
+   ]
+  },
+  {
+   "id": "dawn-of-war",
+   "name": "Dawn of War",
+   "attackerEdge": "left",
+   "defenderEdge": "right",
+   "zones": {
+    "attacker": [
+     [
+      0,
+      0
+     ],
+     [
+      12,
+      0
+     ],
+     [
+      12,
+      60
+     ],
+     [
+      0,
+      60
+     ]
+    ],
+    "defender": [
+     [
+      32,
+      0
+     ],
+     [
+      44,
+      0
+     ],
+     [
+      44,
+      60
+     ],
+     [
+      32,
+      60
+     ]
+    ]
+   },
+   "territory": {
+    "attacker": [
+     [
+      0,
+      0
+     ],
+     [
+      22,
+      0
+     ],
+     [
+      22,
+      60
+     ],
+     [
+      0,
+      60
+     ]
+    ],
+    "defender": [
+     [
+      22,
+      0
+     ],
+     [
+      44,
+      0
+     ],
+     [
+      44,
+      60
+     ],
+     [
+      22,
+      60
+     ]
+    ]
+   },
+   "objectives": [
+    {
+     "id": "home-a",
+     "type": "home",
+     "x": 10,
+     "y": 30,
+     "owner": "attacker"
+    },
+    {
+     "id": "home-d",
+     "type": "home",
+     "x": 34,
+     "y": 30,
+     "owner": "defender"
+    },
+    {
+     "id": "exp-1",
+     "type": "expansion",
+     "x": 25,
+     "y": 10
+    },
+    {
+     "id": "exp-2",
+     "type": "expansion",
+     "x": 19,
+     "y": 50
+    },
+    {
+     "id": "central",
+     "type": "central",
+     "x": 22,
+     "y": 30
+    }
+   ],
+   "terrain": [
+    {
+     "kind": "ruin",
+     "x": 10,
+     "y": 12,
+     "w": 6,
+     "h": 8,
+     "mirror": true
+    },
+    {
+     "kind": "barricade",
+     "x": 17,
+     "y": 22,
+     "w": 5,
+     "h": 3,
+     "mirror": true
+    },
+    {
+     "kind": "ruin",
+     "x": 34,
+     "y": 16,
+     "w": 6,
+     "h": 5,
+     "mirror": true
+    },
+    {
+     "kind": "crater",
+     "x": 22,
+     "y": 16,
+     "w": 4,
+     "h": 4,
+     "mirror": true
+    }
+   ]
+  },
+  {
+   "id": "search-and-destroy",
+   "name": "Search and Destroy",
+   "attackerEdge": "left",
+   "defenderEdge": "right",
+   "zones": {
+    "attacker": [
+     [
+      0,
+      0
+     ],
+     [
+      22,
+      0
+     ],
+     [
+      22,
+      21
+     ],
+     [
+      22.0,
+      21.0
+     ],
+     [
+      20.83,
+      21.08
+     ],
+     [
+      19.67,
+      21.31
+     ],
+     [
+      18.56,
+      21.69
+     ],
+     [
+      17.5,
+      22.21
+     ],
+     [
+      16.52,
+      22.86
+     ],
+     [
+      15.64,
+      23.64
+     ],
+     [
+      14.86,
+      24.52
+     ],
+     [
+      14.21,
+      25.5
+     ],
+     [
+      13.69,
+      26.56
+     ],
+     [
+      13.31,
+      27.67
+     ],
+     [
+      13.08,
+      28.83
+     ],
+     [
+      13.0,
+      30.0
+     ],
+     [
+      0,
+      30
+     ]
+    ],
+    "defender": [
+     [
+      44,
+      60
+     ],
+     [
+      22,
+      60
+     ],
+     [
+      22,
+      39
+     ],
+     [
+      22.0,
+      39.0
+     ],
+     [
+      23.17,
+      38.92
+     ],
+     [
+      24.33,
+      38.69
+     ],
+     [
+      25.44,
+      38.31
+     ],
+     [
+      26.5,
+      37.79
+     ],
+     [
+      27.48,
+      37.14
+     ],
+     [
+      28.36,
+      36.36
+     ],
+     [
+      29.14,
+      35.48
+     ],
+     [
+      29.79,
+      34.5
+     ],
+     [
+      30.31,
+      33.44
+     ],
+     [
+      30.69,
+      32.33
+     ],
+     [
+      30.92,
+      31.17
+     ],
+     [
+      31.0,
+      30.0
+     ],
+     [
+      44,
+      30
+     ]
+    ]
+   },
+   "territory": {
+    "attacker": [
+     [
+      0,
+      0
+     ],
+     [
+      44,
+      0
+     ],
+     [
+      0,
+      60
+     ]
+    ],
+    "defender": [
+     [
+      44,
+      0
+     ],
+     [
+      44,
+      60
+     ],
+     [
+      0,
+      60
+     ]
+    ]
+   },
+   "objectives": [
+    {
+     "id": "home-a",
+     "type": "home",
+     "x": 10,
+     "y": 14,
+     "owner": "attacker"
+    },
+    {
+     "id": "home-d",
+     "type": "home",
+     "x": 34,
+     "y": 46,
+     "owner": "defender"
+    },
+    {
+     "id": "exp-1",
+     "type": "expansion",
+     "x": 34,
+     "y": 14
+    },
+    {
+     "id": "exp-2",
+     "type": "expansion",
+     "x": 10,
+     "y": 46
+    },
+    {
+     "id": "central",
+     "type": "central",
+     "x": 22,
+     "y": 30
+    }
+   ],
+   "terrain": [
+    {
+     "kind": "ruin",
+     "x": 22,
+     "y": 10,
+     "w": 6,
+     "h": 6,
+     "mirror": true
+    },
+    {
+     "kind": "barricade",
+     "x": 6,
+     "y": 30,
+     "w": 4,
+     "h": 6,
+     "mirror": true
+    },
+    {
+     "kind": "ruin",
+     "x": 15,
+     "y": 22,
+     "w": 5,
+     "h": 5,
+     "mirror": true
+    },
+    {
+     "kind": "barricade",
+     "x": 30,
+     "y": 24,
+     "w": 4,
+     "h": 3,
+     "mirror": true
+    }
+   ]
+  }
+ ],
+ "twists": [
+  {
+   "id": "mirrored-world",
+   "name": "Mirrored World",
+   "text": "ทั้งสองฝ่ายใช้ Primary Mission ใบเดียวกัน"
+  }
+ ],
+ "primaries": [
+  {
+   "id": "battlefield-dominance",
+   "name": "Battlefield Dominance",
+   "forceDisposition": "Take and Hold",
+   "mirroredWorld": true,
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      2
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlMoreThanOpponent",
+     "vp": 2,
+     "text": "ยึด objective ได้มากกว่าศัตรู"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "round5When": "endOfYourTurn",
+     "condition": "perObjectiveControlled",
+     "vp": 3,
+     "bonus": {
+      "condition": "perNonHomeIfHomeControlled",
+      "vp": 2
+     },
+     "text": "ต่อ 1 objective ที่ยึด (+2 ต่ออันที่ไม่ใช่ home ถ้ายึด home ตัวเองไว้)"
+    }
+   ]
+  },
+  {
+   "id": "immovable-object",
+   "name": "Immovable Object",
+   "forceDisposition": "Take and Hold",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlCentral",
+     "vp": 3,
+     "text": "ยึด central objective ได้"
+    },
+    {
+     "rounds": [
+      2,
+      4
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 5,
+     "text": "ต่อ objective ที่ยึด (ไม่นับ home)"
+    },
+    {
+     "rounds": [
+      5,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 5,
+     "text": "ต่อ objective ที่ยึด (ไม่นับ home)"
+    }
+   ]
+  },
+  {
+   "id": "inescapable-dominion",
+   "name": "Inescapable Dominion",
+   "forceDisposition": "Take and Hold",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "control3Plus",
+     "vp": 4,
+     "text": "ยึดได้ 3 objective ขึ้นไป"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "round5When": "endOfYourTurn",
+     "condition": "control2Plus",
+     "vp": 5,
+     "text": "ยึดได้ 2 objective ขึ้นไป"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "round5When": "endOfYourTurn",
+     "condition": "controlMoreThanOpponent",
+     "vp": 4,
+     "text": "ยึดได้มากกว่าศัตรู"
+    },
+    {
+     "rounds": [
+      5,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "controlEnemyHome",
+     "vp": 5,
+     "text": "ยึด home ของศัตรูตอนจบเกม"
+    }
+   ]
+  },
+  {
+   "id": "unstoppable-force",
+   "name": "Unstoppable Force",
+   "forceDisposition": "Purge the Foe",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "enemyUnitDestroyedThisTurn",
+     "vp": 3,
+     "text": "ทำลายหน่วยศัตรูได้เทิร์นนี้"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "round5When": "endOfYourTurn",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 4,
+     "text": "ต่อ objective ที่ยึด (ไม่นับ home)"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "newObjectiveThisTurnExclHome",
+     "vp": 3,
+     "text": "ยึด objective ใหม่ได้เทิร์นนี้ (ไม่นับ home)"
+    },
+    {
+     "rounds": [
+      5,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "controlCentral",
+     "vp": 5,
+     "text": "ยึด central ตอนจบเกม"
+    }
+   ]
+  },
+  {
+   "id": "meatgrinder",
+   "name": "Meatgrinder",
+   "forceDisposition": "Purge the Foe",
+   "mirroredWorld": true,
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "enemyUnitDestroyedThisTurn",
+     "vp": 3,
+     "text": "ทำลายหน่วยศัตรูได้เทิร์นนี้"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "round5When": "endOfYourTurn",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home)"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "moreKillsThanLossesLastTurn",
+     "vp": 5,
+     "text": "ทำลายศัตรูได้มากกว่าที่เสียไปเทิร์นก่อน"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlEnemyHome",
+     "vp": 5,
+     "text": "ยึด home ของศัตรู"
+    }
+   ]
+  }
+ ],
+ "vpCaps": {
+  "primaryTotal": 45,
+  "primaryPerRound": 15
+ }
+}

@@ -1,0 +1,157 @@
+{
+ "source": "Wahapedia 40k 11th edition data export",
+ "sourceUrl": "https://wahapedia.ru/wh40k11ed/",
+ "lastUpdate": "2026-09-28 02:38:04",
+ "factions": [
+  {
+   "id": "AS",
+   "name": "Adepta Sororitas",
+   "datasheets": 38,
+   "detachments": 10
+  },
+  {
+   "id": "AC",
+   "name": "Adeptus Custodes",
+   "datasheets": 31,
+   "detachments": 11
+  },
+  {
+   "id": "AdM",
+   "name": "Adeptus Mechanicus",
+   "datasheets": 38,
+   "detachments": 13
+  },
+  {
+   "id": "TL",
+   "name": "Adeptus Titanicus",
+   "datasheets": 4,
+   "detachments": 0
+  },
+  {
+   "id": "AE",
+   "name": "Aeldari",
+   "datasheets": 99,
+   "detachments": 19
+  },
+  {
+   "id": "AM",
+   "name": "Astra Militarum",
+   "datasheets": 135,
+   "detachments": 13
+  },
+  {
+   "id": "CD",
+   "name": "Chaos Daemons",
+   "datasheets": 101,
+   "detachments": 14
+  },
+  {
+   "id": "QT",
+   "name": "Chaos Knights",
+   "datasheets": 37,
+   "detachments": 8
+  },
+  {
+   "id": "CSM",
+   "name": "Chaos Space Marines",
+   "datasheets": 111,
+   "detachments": 20
+  },
+  {
+   "id": "DG",
+   "name": "Death Guard",
+   "datasheets": 71,
+   "detachments": 12
+  },
+  {
+   "id": "DRU",
+   "name": "Drukhari",
+   "datasheets": 46,
+   "detachments": 13
+  },
+  {
+   "id": "EC",
+   "name": "Emperor’s Children",
+   "datasheets": 23,
+   "detachments": 11
+  },
+  {
+   "id": "GC",
+   "name": "Genestealer Cults",
+   "datasheets": 139,
+   "detachments": 12
+  },
+  {
+   "id": "GK",
+   "name": "Grey Knights",
+   "datasheets": 31,
+   "detachments": 11
+  },
+  {
+   "id": "AoI",
+   "name": "Imperial Agents",
+   "datasheets": 46,
+   "detachments": 7
+  },
+  {
+   "id": "QI",
+   "name": "Imperial Knights",
+   "datasheets": 27,
+   "detachments": 8
+  },
+  {
+   "id": "LoV",
+   "name": "Leagues of Votann",
+   "datasheets": 22,
+   "detachments": 12
+  },
+  {
+   "id": "NEC",
+   "name": "Necrons",
+   "datasheets": 64,
+   "detachments": 16
+  },
+  {
+   "id": "ORK",
+   "name": "Orks",
+   "datasheets": 67,
+   "detachments": 17
+  },
+  {
+   "id": "SM",
+   "name": "Space Marines",
+   "datasheets": 291,
+   "detachments": 57
+  },
+  {
+   "id": "TAU",
+   "name": "T’au Empire",
+   "datasheets": 62,
+   "detachments": 9
+  },
+  {
+   "id": "TS",
+   "name": "Thousand Sons",
+   "datasheets": 60,
+   "detachments": 12
+  },
+  {
+   "id": "TYR",
+   "name": "Tyranids",
+   "datasheets": 57,
+   "detachments": 14
+  },
+  {
+   "id": "UA",
+   "name": "Unbound Adversaries",
+   "datasheets": 0,
+   "detachments": 0
+  },
+  {
+   "id": "WE",
+   "name": "World Eaters",
+   "datasheets": 58,
+   "detachments": 10
+  }
+ ]
+}
