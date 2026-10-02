@@ -34,8 +34,11 @@ export const MISSIONS = missions as unknown as {
   objectiveTerrain: { kind: string; w: number; h: number };
   deployments: DeploymentDef[];
   primaries: PrimaryDef[];
-  vpCaps: { primaryTotal: number; primaryPerRound: number };
+  vpCaps: { primaryTotal: number; primaryPerRound: number; secondaryTotal: number; secondaryPerRound: number; fixedPerCard: number };
+  secondaries: SecondaryDef[];
 };
+export interface SecondaryDef { id: string; name: string; when: string; text: string; options: number[]; fixed?: boolean; round1Redraw?: boolean; redrawIf?: string }
+export const secondaryById = (id: string) => (missions as unknown as { secondaries: SecondaryDef[] }).secondaries.find((x) => x.id === id)!;
 
 export const toPoly = (arr: number[][]): Pt[] => arr.map(([x, y]) => ({ x, y }));
 export const deploymentById = (id: string) => MISSIONS.deployments.find((d) => d.id === id)!;

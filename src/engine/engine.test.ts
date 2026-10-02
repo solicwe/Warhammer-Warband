@@ -189,3 +189,66 @@ describe('army rules', () => {
     expect(effectiveInSv(s, boyz, alive(boyz)[0])).toBe(5);
   });
 });
+
+describe('transports, split fire, secondaries', () => {
+  it('parses transport capacity and embarks / disembarks', async () => {
+    const { parseTransport } = await import('./army');
+    const t = parseTransport('This model has a transport capacity of 6 Adeptus Astartes Infantry models. It cannot transport Jump Pack, Wulfen, Phobos, Gravis, Centurion, Terminator or Tacticus models.');
+    expect(t?.capacity).toBe(6);
+    expect(t?.infantryOnly).toBe(true);
+    expect(t?.forbid).toContain('TACTICUS');
+    const lr = parseTransport('This model has a transport capacity of 12 Adeptus Astartes Infantry models. Each Jump Pack, Wulfen, Gravis or Terminator model takes up the space of 2 models and each Centurion model takes up the space of 3 models.');
+    expect(lr?.double).toEqual(['JUMP PACK', 'WULFEN', 'GRAVIS', 'TERMINATOR']);
+  });
+
+  it('split fire keeps the unit eligible until every ranged weapon has fired', async () => {
+    const { finishAttack, rangedWeaponNames } = await import('./attack');
+    const s = game();
+    const a = put(s, s.units[0].id, { x: 22, y: 10 });
+    const t = put(s, s.units[2].id, { x: 22, y: 25 });
+    s.phase = 'shooting'; s.active = 0; s.turn = 0;
+    const pools = buildShootPools(s, a.id, t.id, { mode: 'normal', skipWeapons: ['Master-crafted bolter'] }).pools;
+    startAttack(s, 'shoot', a.id, t.id, pools);
+    while (s.attack!.stage !== 'done') { const { stepAttack } = await import('./attack'); stepAttack(s); }
+    finishAttack(s);
+    expect(rangedWeaponNames(a).length).toBeGreaterThan(a.weaponsFired.length);
+    expect(a.selectedToShoot).toBe(false);
+    const again = buildShootPools(s, a.id, t.id, { mode: 'normal' }).pools;
+    expect(again.every((p) => !a.weaponsFired.includes(p.weapon))).toBe(true);
+  });
+
+  it('secondary claims respect the 15VP per round cap', async () => {
+    const { claimSecondary, drawSecondaries } = await import('./game');
+    const s = createGame({
+      lists: [list('SM', [['Intercessor Squad', 10, 150], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 90], ['Warboss', 1, 100]])],
+      factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'hammer-and-anvil', primaryId: 'battlefield-dominance', seed: 3, secondaryMode: 'tactical',
+    });
+    s.round = 1;
+    drawSecondaries(s, 0, 6);
+    const ids = [...s.players[0].secActive];
+    let total = 0;
+    for (const id of ids) total += claimSecondary(s, 0, id, 5);
+    expect(total).toBe(15);
+    expect(s.players[0].secVp).toBe(15);
+  });
+});
+
+describe('emergency disembark', () => {
+  it('passengers survive (battle-shocked) when their Trukk is destroyed', async () => {
+    const { embarkUnit } = await import('./game');
+    const { applyMortalWounds } = await import('./attack');
+    const units = buildUnits(list('ORK', [['Trukk', 1, 60], ['Boyz', 10, 90]]), ORK, 1);
+    const s = game();
+    s.units.push(...units.map((u, i) => ({ ...u, id: `tr${i}` })));
+    const trukk = s.units.find((u) => u.id === 'tr0')!;
+    const boyz = s.units.find((u) => u.id === 'tr1')!;
+    put(s, trukk.id, { x: 22, y: 30 });
+    expect(trukk.transport?.capacity).toBeGreaterThanOrEqual(10);
+    expect(embarkUnit(s, boyz, trukk, true)).toBeNull();
+    expect(boyz.status).toBe('embarked');
+    applyMortalWounds(s, trukk, 50, 'test');
+    expect(trukk.status).toBe('destroyed');
+    expect(boyz.status).toBe('board');
+    expect(boyz.battleShocked).toBe(true);
+  });
+});

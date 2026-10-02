@@ -119,7 +119,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const isOwnShootingPhase = s.phase === 'shooting' && A.owner === s.active;
 
   for (const m of alive(A)) {
-    const ranged = m.weapons.filter((w) => !isMelee(w.profiles[0]) && !(opt.skipWeapons ?? []).includes(w.name));
+    const ranged = m.weapons.filter((w) => !isMelee(w.profiles[0]) && !(opt.skipWeapons ?? []).includes(w.name) && !A.weaponsFired.includes(w.name));
     const cqOnly = ranged.filter((w) => hasAbility(w.profiles[0], 'close-quarters'));
     const others = ranged.filter((w) => !hasAbility(w.profiles[0], 'close-quarters'));
     let chosen = ranged;
@@ -303,6 +303,7 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     p.attacks = total;
     if (parts.length) p.attackNote += ` · ทอยจำนวน attack: ${parts.join(', ')}`;
     if (hasAbility(p.profile, 'one-shot') && !A.oneShotUsed.includes(p.weapon)) A.oneShotUsed.push(p.weapon);
+    if (kind === 'shoot' && !A.weaponsFired.includes(p.weapon)) A.weaponsFired.push(p.weapon);
   }
   s.attack = { kind, attackerId, targetId, pools, idx: 0, stage: pools.length ? 'hit' : 'done', hazardousRolls: [], summary: [] };
 }
@@ -419,9 +420,14 @@ function pickModel(g: Group, u: UnitState): ModelState | undefined {
   return pickCasualty(u, g.models);
 }
 
+type TransportHook = (s: GameState, u: UnitState, m: ModelState) => void;
+let transportHook: TransportHook | null = null;
+export const onTransportDestroyed = (fn: TransportHook) => { transportHook = fn; };
+
 export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: string) {
   m.dead = true;
   m.wounds = 0;
+  if (u.transport && m.keywords.includes('TRANSPORT')) transportHook?.(s, u, m);
   if (!alive(u).length) {
     u.status = 'destroyed';
     s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id });
@@ -561,7 +567,7 @@ export function finishAttack(s: GameState) {
   const verb = at.kind === 'fight' ? 'ตี' : at.kind === 'overwatch' ? 'Overwatch ยิง' : 'ยิง';
   log(s, `${A.name} ${verb} ${T.name}: ตาย ${killed} โมเดล`, 'info', A.owner);
   if (at.kind !== 'fight') A.shotTurn = s.turn;
-  if (at.kind === 'shoot') A.selectedToShoot = true;
+  if (at.kind === 'shoot' && rangedWeaponNames(A).every((n) => A.weaponsFired.includes(n))) A.selectedToShoot = true;
   if (at.kind === 'fight') A.fought = true;
   s.attack = null;
 }
@@ -571,3 +577,13 @@ export function canShootTarget(s: GameState, a: UnitState, t: UnitState): boolea
 }
 
 export const opponentOf = (s: GameState, u: UnitState) => other(u.owner);
+
+/** Names of all ranged weapons still carried by living models. */
+export function rangedWeaponNames(u: UnitState): string[] {
+  return [...new Set(alive(u).flatMap((m) => m.weapons.filter((w) => !isMelee(w.profiles[0])).map((w) => w.name)))];
+}
+
+/** Split fire: the player is done with this unit even if some weapons were not used. */
+export function endUnitShooting(u: UnitState) {
+  u.selectedToShoot = true;
+}

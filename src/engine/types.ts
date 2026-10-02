@@ -107,8 +107,8 @@ export type PlayerId = 0 | 1;
 export interface Pt { x: number; y: number }
 export interface Seg { a: Pt; b: Pt }
 
-export type Phase = 'formations' | 'deploy' | 'command' | 'movement' | 'shooting' | 'charge' | 'fight' | 'gameover';
-export type MoveKind = 'stationary' | 'normal' | 'advance' | 'fallback' | 'ingress' | 'charge' | 'pileIn' | 'consolidate' | 'deploy';
+export type Phase = 'formations' | 'deploy' | 'scouts' | 'command' | 'movement' | 'shooting' | 'charge' | 'fight' | 'gameover';
+export type MoveKind = 'stationary' | 'normal' | 'advance' | 'fallback' | 'ingress' | 'charge' | 'pileIn' | 'consolidate' | 'deploy' | 'scout';
 
 export interface ModelState {
   id: string;
@@ -139,6 +139,8 @@ export interface CoreAbilities {
   damaged?: number; // Damaged X: -1 to hit while wounds <= X
 }
 
+export interface TransportInfo { capacity: number; double: string[]; forbid: string[]; only: string[]; infantryOnly: boolean; text: string }
+
 export interface UnitState {
   id: string;
   owner: PlayerId;
@@ -151,7 +153,12 @@ export interface UnitState {
   abilities: AbilityData[];
   core: CoreAbilities;
   pts: number;
-  status: 'pending' | 'reserves' | 'board' | 'destroyed';
+  status: 'pending' | 'reserves' | 'board' | 'destroyed' | 'embarked';
+  embarkedIn: string | null;
+  transport: TransportInfo | null;
+  weaponsFired: string[]; // split fire: ranged weapons already used this phase
+  cantCharge: boolean; // e.g. after a rapid / combat disembark
+  scoutDone: boolean;
   battleShocked: boolean;
   isWarlordUnit: boolean;
   enhancements: { name: string; text: string; model: string }[];
@@ -211,6 +218,13 @@ export interface PlayerState {
   oathWoundBonus: boolean;
   waaaghUsed: boolean; // Waaagh! War Cry (Orks)
   riledUntilTurn: number;
+  secMode: 'none' | 'tactical' | 'fixed';
+  secDeck: string[];
+  secActive: string[];
+  secVp: number;
+  secByRound: number[];
+  secFixedVp: Record<string, number>;
+  secSwapUsed: boolean;
   armyRules: { name: string; text: string }[];
   detachments: DetachmentData[];
 }
@@ -291,7 +305,7 @@ export interface FightState {
 export interface ShockTest { unitId: string; result: number | null; passed: boolean | null; auto?: boolean }
 
 export interface GameState {
-  version: 1;
+  version: 2;
   rng: number;
   round: number;
   turn: number; // global turn index (0-based)

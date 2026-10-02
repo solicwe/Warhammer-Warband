@@ -1,5 +1,24 @@
 // Turns an army list (datasheet names + sizes + attachments) into UnitState objects.
-import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelState, PlayerId, UnitState, WeaponData } from './types';
+import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelState, PlayerId, TransportInfo, UnitState, WeaponData } from './types';
+
+/** "This model has a transport capacity of 12 Adeptus Astartes Infantry models. Each Jump Pack ... takes up the space of 2 models ... It cannot transport ..." */
+export function parseTransport(text?: string): TransportInfo | null {
+  if (!text) return null;
+  const cap = /transport capacity of (\d+)/i.exec(text);
+  if (!cap) return null;
+  const list = (re: RegExp) => {
+    const m = re.exec(text);
+    return m ? m[1].split(/,\s*|\/|\s+or\s+|\s+and\s+/i).map((x) => x.replace(/models?$/i, '').trim().toUpperCase()).filter(Boolean) : [];
+  };
+  return {
+    capacity: +cap[1],
+    double: list(/Each ([^.]+?) model takes up the space of 2/i),
+    forbid: list(/cannot transport ([^.]+?)(?: models)?\./i),
+    only: list(/can only transport ([^.]+?)(?: models)?\./i),
+    infantryOnly: /capacity of \d+ [^.]*infantry/i.test(text),
+    text,
+  };
+}
 
 const MM_PER_INCH = 25.4;
 
@@ -141,6 +160,11 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       core: coreAbilities(sheets),
       pts: e.pts + joiners.reduce((a, j) => a + j.pts, 0),
       status: 'pending',
+      embarkedIn: null,
+      transport: parseTransport(sheet.transport),
+      weaponsFired: [],
+      cantCharge: false,
+      scoutDone: false,
       battleShocked: false,
       isWarlordUnit: !!(e.warlord || joiners.some((j) => j.warlord)),
       enhancements: [e, ...joiners].filter((x) => x.enhancement).map((x) => {

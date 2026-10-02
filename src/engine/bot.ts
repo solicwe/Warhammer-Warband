@@ -8,6 +8,7 @@ import {
   openCounteroffensive, pileInEligible, remainStationary, rollBattleShock, sendToReserves, validateMove, validatePlacement,
 } from './game';
 import { polyCentroid } from './geometry';
+import { endScouts, scoutUnits } from './game';
 import { alive, boardUnits, engagedEnemies, isEngaged, onBoard, other, unitById, unitDistance } from './state';
 import type { GameState, PlayerId, Pt, UnitState } from './types';
 
@@ -92,8 +93,10 @@ export function botShooting(s: GameState) {
       startAttack(s, 'shoot', u.id, t.id, r.pools);
       resolveAll(s);
       finishAttack(s);
+      if (!u.selectedToShoot) continue; // split fire: remaining weapons try the next target
       break;
     }
+    u.selectedToShoot = true;
   }
   endPhase(s);
 }
@@ -163,6 +166,7 @@ export function botAct(s: GameState) {
   if (s.window) { botWindow(s); return; }
   switch (s.phase) {
     case 'deploy': botDeploy(s); return;
+    case 'scouts': for (const u of scoutUnits(s, s.deployTurn)) u.scoutDone = true; endScouts(s); return;
     case 'command': botCommand(s); return;
     case 'movement': botMovement(s); return;
     case 'shooting': botShooting(s); return;

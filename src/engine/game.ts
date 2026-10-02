@@ -1,13 +1,13 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
 import { buildUnits } from './army';
-import { applyMortalWounds, killModel } from './attack';
-import { deploymentById, MISSIONS, primaryById, RULES, toPoly, type ScoringRule } from './config';
-import { d6, rollN, rollOff } from './dice';
+import { applyMortalWounds, killModel, onTransportDestroyed } from './attack';
+import { deploymentById, MISSIONS, primaryById, RULES, secondaryById, toPoly, type ScoringRule } from './config';
+import { d6, nextRandom, rollN, rollOff } from './dice';
 import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointInPoly, pointSegDist, polyCentroid, segSegDist } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from './state';
-import type { ArmyList, FactionData, GameState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, Seg, TerrainPiece, UnitState } from './types';
+import type { ArmyList, FactionData, GameState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
 
@@ -61,12 +61,13 @@ export interface NewGameOptions {
   deploymentId: string;
   primaryId: string;
   seed?: number;
+  secondaryMode?: 'none' | 'tactical' | 'fixed';
 }
 
 export function createGame(o: NewGameOptions): GameState {
   const { terrain, objectives } = buildTerrain(o.deploymentId);
   const s: GameState = {
-    version: 1,
+    version: 2,
     rng: (o.seed ?? Date.now()) >>> 0,
     round: 0,
     turn: -1,
@@ -78,6 +79,7 @@ export function createGame(o: NewGameOptions): GameState {
       name: o.names[i], factionId: o.factions[i].id, factionName: o.factions[i].name,
       cp: RULES.startingCP, vp: 0, vpByRound: [0, 0, 0, 0, 0, 0], role: 'attacker', stratagemsUsed: [], insaneBraveryUsed: false,
       oathTarget: null, oathWoundBonus: false, waaaghUsed: false, riledUntilTurn: -10,
+      secMode: o.secondaryMode ?? 'none', secDeck: [], secActive: [], secVp: 0, secByRound: [0, 0, 0, 0, 0, 0], secFixedVp: {}, secSwapUsed: false,
       armyRules: o.factions[i].armyRules,
       detachments: o.factions[i].detachments.filter((d) => o.lists[i].detachments.includes(d.name)),
     })) as unknown as GameState['players'],
@@ -103,6 +105,7 @@ export function createGame(o: NewGameOptions): GameState {
     s.players[p].oathWoundBonus = !s.units.some((u) => u.owner === p && u.factionKeywords.some((k) => CHAPTERS.includes(k)));
   }
   s.deployTurn = other(s.attackerPlayer); // Defender deploys first
+  for (const p of [0, 1] as PlayerId[]) if (s.players[p].secMode === 'tactical') s.players[p].secDeck = shuffle(s, MISSIONS.secondaries.map((x) => x.id));
   log(s, `Mission: ${primaryById(o.primaryId).name} (Mirrored World) · Deployment: ${deploymentById(o.deploymentId).name}`, 'info', null);
   return s;
 }
@@ -167,6 +170,7 @@ export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: M
   else if (kind === 'charge') max = u.chargeRoll ?? 0;
   else if (kind === 'pileIn') max = RULES.pileIn.distance;
   else if (kind === 'consolidate') max = RULES.consolidate.distance;
+  else if (kind === 'scout') max = u.core.scouts ?? 0;
   if (opt.fly && ['normal', 'advance', 'fallback', 'charge'].includes(kind) && !u.core.hover) max -= RULES.flyTakeToSkiesPenalty;
   return Math.max(0, max);
 }
@@ -199,6 +203,10 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
   }
   endChecks(s, u, pos, errors, bad);
   const eng = engagedAt(s, u, pos);
+  if (kind === 'scout') {
+    const enemiesNear = boardUnits(s, other(u.owner)).some((e) => alive(u).some((m) => { const p = pos.get(m.id) ?? m; return alive(e).some((n) => dist(p, n) - m.r - n.r <= RULES.reserves.enemyDistance); }));
+    if (enemiesNear) errors.push(`Scout move ต้องจบห่างศัตรูทุกหน่วยเกิน ${RULES.reserves.enemyDistance}"`);
+  }
   if (['normal', 'advance', 'fallback', 'ingress'].includes(kind) && eng.length) { errors.push(`จบการเดินต้องไม่อยู่ใน engagement range (${RULES.engagementRange}") ของศัตรู`); }
   if (kind === 'charge' || kind === 'heroic' as MoveKind) {
     const targets = (opt.targets ?? []).map((id) => unitById(s, id));
@@ -316,7 +324,20 @@ function finishDeployment(s: GameState) {
   log(s, `Roll-off เลือกคนเล่นก่อน: ${s.players[0].name} ${ro.a} – ${s.players[1].name} ${ro.b} → ${s.players[ro.winner].name} เล่นก่อน`, 'roll', null);
   s.round = 1;
   s.turn = -1;
+  if (s.units.some((u) => u.status === 'board' && u.core.scouts)) {
+    s.phase = 'scouts';
+    s.deployTurn = ro.winner;
+    log(s, 'Pre-battle: Scouts move (เริ่มจากคนที่ได้เล่นก่อน)', 'info', null);
+    return;
+  }
   startTurn(s, ro.winner);
+}
+
+export const scoutUnits = (s: GameState, p: PlayerId) => s.units.filter((u) => u.owner === p && u.status === 'board' && u.core.scouts && !u.scoutDone);
+
+export function endScouts(s: GameState) {
+  if (s.deployTurn === s.firstPlayer) { s.deployTurn = other(s.firstPlayer); if (scoutUnits(s, s.deployTurn).length) return; }
+  startTurn(s, s.firstPlayer);
 }
 
 // ---------- turn structure ----------
@@ -324,7 +345,7 @@ function finishDeployment(s: GameState) {
 function resetTurnFlags(s: GameState) {
   for (const u of s.units) {
     u.move = null; u.advanceRoll = null; u.maxMoved = 0; u.selectedToShoot = false; u.declaredCharge = false;
-    u.chargeRoll = null; u.chargeTargets = []; u.fought = false;
+    u.chargeRoll = null; u.chargeTargets = []; u.fought = false; u.weaponsFired = []; u.cantCharge = false;
     u.buffs = u.buffs.filter((b) => b.until === 'battle');
   }
 }
@@ -342,6 +363,7 @@ function startCommand(s: GameState) {
   s.phase = 'command';
   for (const p of [0, 1] as PlayerId[]) s.players[p].cp += RULES.cpPerCommandPhase;
   log(s, `+${RULES.cpPerCommandPhase} CP ทั้งสองฝ่าย (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
+  drawSecondaries(s, s.active, 2);
   s.shockTests = s.units
     .filter((u) => u.owner === s.active && u.status !== 'destroyed' && u.status !== 'pending' && alive(u).length)
     .filter((u) => u.battleShocked || strength(u) === 'half' || strength(u) === 'belowHalf')
@@ -389,7 +411,7 @@ export function endPhase(s: GameState) {
     s.fight = null;
     endTurn(s);
   }
-  s.units.forEach((u) => (u.buffs = u.buffs.filter((b) => b.until !== 'phase')));
+  s.units.forEach((u) => { u.buffs = u.buffs.filter((b) => b.until !== 'phase'); u.weaponsFired = []; });
 }
 
 function endTurn(s: GameState) {
@@ -428,7 +450,7 @@ function endTurn(s: GameState) {
 function endBattle(s: GameState) {
   for (const p of [s.firstPlayer, other(s.firstPlayer)] as PlayerId[]) scoreTiming(s, 'endOfBattle', p);
   s.phase = 'gameover';
-  const [a, b] = [s.players[0].vp, s.players[1].vp];
+  const [a, b] = [s.players[0].vp + s.players[0].secVp, s.players[1].vp + s.players[1].secVp];
   s.winner = a === b ? 'draw' : a > b ? 0 : 1;
   log(s, `🏁 จบเกม: ${s.players[0].name} ${a} VP – ${s.players[1].name} ${b} VP → ${s.winner === 'draw' ? 'เสมอ' : s.players[s.winner].name + ' ชนะ!'}`, 'vp', null);
 }
@@ -450,6 +472,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
     m.x = end.x; m.y = end.y;
   }
   if (['normal', 'advance', 'fallback', 'stationary', 'ingress'].includes(kind)) u.move = kind;
+  if (kind === 'scout') u.scoutDone = true;
   u.maxMoved = Math.max(u.maxMoved, maxMoved);
   if (kind === 'fallback' && u.battleShocked) {
     // Desperate Escape: hazard roll per model, made before moving (resolved here for simplicity)
@@ -458,7 +481,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
     log(s, `Desperate Escape ${u.name}: hazard [${rolls.join(' ')}]`, 'roll', u.owner);
     if (fails) applyMortalWounds(s, u, fails * (alive(u).every(isMV) ? RULES.hazard.mortalWoundsMonsterVehicle : RULES.hazard.mortalWounds), 'Desperate Escape');
   }
-  const label: Record<string, string> = { normal: 'Normal move', advance: 'Advance', fallback: 'Fall back', charge: 'Charge move', pileIn: 'Pile-in', consolidate: 'Consolidate', ingress: 'Ingress' };
+  const label: Record<string, string> = { scout: 'Scout move', normal: 'Normal move', advance: 'Advance', fallback: 'Fall back', charge: 'Charge move', pileIn: 'Pile-in', consolidate: 'Consolidate', ingress: 'Ingress' };
   if (label[kind]) log(s, `${u.name}: ${label[kind]}${maxMoved ? ` (${maxMoved.toFixed(1)}")` : ''}`, 'info', u.owner);
 }
 
@@ -504,6 +527,7 @@ export function chargeEligibility(s: GameState, u: UnitState): string | null {
   if (hasKw(u, 'AIRCRAFT')) return 'AIRCRAFT ชาร์จไม่ได้';
   if (isEngaged(s, u)) return 'engaged อยู่';
   if (u.move === 'fallback') return 'Fall back มาเทิร์นนี้';
+  if (u.cantCharge) return 'ลงจากรถแบบ Rapid/Combat มา ชาร์จไม่ได้เทิร์นนี้';
   if (u.move === 'advance' && !isRiledUp(s, u)) return 'Advance มาเทิร์นนี้';
   if (!boardUnits(s, other(u.owner)).some((e) => !hasKw(e, 'AIRCRAFT') && unitDistance(u, e) <= RULES.charge.declareRange)) return `ไม่มีศัตรูภายใน ${RULES.charge.declareRange}"`;
   return null;
@@ -869,3 +893,180 @@ export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingre
   }
   return null;
 }
+
+// ---------- secondary missions (Chapter Approved 2026-27) ----------
+
+function shuffle<T>(s: GameState, arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(nextRandom(s) * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+export function drawSecondaries(s: GameState, p: PlayerId, n: number) {
+  const P = s.players[p];
+  if (P.secMode !== 'tactical') return;
+  for (let i = 0; i < n && P.secDeck.length; i++) {
+    let id = P.secDeck.shift()!;
+    const def = secondaryById(id);
+    if ((def.round1Redraw && s.round === 1) || (def.redrawIf && P.secActive.includes(def.redrawIf))) {
+      P.secDeck.push(id);
+      if (!P.secDeck.length) break;
+      id = P.secDeck.shift()!;
+    }
+    P.secActive.push(id);
+    log(s, `${P.name} จั่ว Secondary: ${secondaryById(id).name}`, 'info', p);
+  }
+}
+
+export function chooseFixedSecondaries(s: GameState, p: PlayerId, ids: string[]) {
+  s.players[p].secActive = ids.slice(0, 2);
+  log(s, `${s.players[p].name} เลือก Fixed Secondary: ${ids.map((x) => secondaryById(x).name).join(', ')}`, 'info', p);
+}
+
+/** Claim VP from an active secondary (players confirm the condition, like on the table). */
+export function claimSecondary(s: GameState, p: PlayerId, id: string, vp: number): number {
+  const P = s.players[p];
+  const caps = MISSIONS.vpCaps;
+  let gain = Math.min(vp, caps.secondaryPerRound - P.secByRound[s.round], caps.secondaryTotal - P.secVp);
+  if (P.secMode === 'fixed') gain = Math.min(gain, caps.fixedPerCard - (P.secFixedVp[id] ?? 0));
+  gain = Math.max(0, gain);
+  P.secVp += gain;
+  P.secByRound[s.round] += gain;
+  if (P.secMode === 'fixed') P.secFixedVp[id] = (P.secFixedVp[id] ?? 0) + gain;
+  else P.secActive = P.secActive.filter((x) => x !== id);
+  log(s, `🎯 ${P.name} +${gain} VP (Secondary: ${secondaryById(id).name})`, 'vp', p);
+  return gain;
+}
+
+/** Tactical: discard an active card; at the end of your own turn this gains 1CP. */
+export function discardSecondary(s: GameState, p: PlayerId, id: string) {
+  const P = s.players[p];
+  P.secActive = P.secActive.filter((x) => x !== id);
+  if (s.active === p) { P.cp += 1; log(s, `${P.name} ทิ้ง ${secondaryById(id).name} → +1CP`, 'cp', p); }
+}
+
+/** Once per battle, end of your Command phase: pay 1CP to replace one active card. */
+export function swapSecondary(s: GameState, p: PlayerId, id: string) {
+  const P = s.players[p];
+  P.cp -= 1;
+  P.secSwapUsed = true;
+  P.secActive = P.secActive.filter((x) => x !== id);
+  drawSecondaries(s, p, 1);
+}
+
+// ---------- transports ----------
+
+const modelSpace = (t: TransportInfo, m: ModelState) => (t.double.some((k) => m.keywords.includes(k)) ? 2 : 1);
+
+export function transportSpaceUsed(s: GameState, t: UnitState) {
+  return s.units.filter((u) => u.embarkedIn === t.id && u.status === 'embarked').reduce((a, u) => a + alive(u).reduce((b, m) => b + modelSpace(t.transport!, m), 0), 0);
+}
+
+export function canEmbarkIn(s: GameState, u: UnitState, t: UnitState): string | null {
+  const T = t.transport;
+  if (!T || t.owner !== u.owner || t.id === u.id) return 'ไม่ใช่รถขนส่ง';
+  if (hasKw(u, 'TRANSPORT')) return 'รถขึ้นรถไม่ได้';
+  if (T.infantryOnly && !alive(u).every((m) => m.keywords.includes('INFANTRY'))) return 'ขนได้เฉพาะ INFANTRY';
+  if (T.forbid.some((k) => u.keywords.includes(k))) return `ขน ${T.forbid.filter((k) => u.keywords.includes(k)).join(', ')} ไม่ได้`;
+  if (T.only.length && !T.only.some((k) => u.sources.some((n) => n.toUpperCase().includes(k)) || u.keywords.includes(k))) return 'ขนได้เฉพาะหน่วยที่ระบุบนการ์ด';
+  if (u.factionKeywords.length && t.factionKeywords.length && !u.factionKeywords.some((k) => t.factionKeywords.includes(k))) return 'คนละฝ่าย';
+  const need = alive(u).reduce((a, m) => a + modelSpace(T, m), 0);
+  if (transportSpaceUsed(s, t) + need > T.capacity) return `ที่ไม่พอ (${transportSpaceUsed(s, t)}+${need}/${T.capacity})`;
+  return null;
+}
+
+/** Embark during deployment (Declare Battle Formations) or after a normal/advance/fall-back move (18.02). */
+export function embarkUnit(s: GameState, u: UnitState, t: UnitState, duringDeploy = false): string | null {
+  const why = canEmbarkIn(s, u, t);
+  if (why) return why;
+  if (!duringDeploy) {
+    if (!['normal', 'advance', 'fallback'].includes(u.move ?? '')) return 'ต้องเดิน (Normal/Advance/Fall back) ก่อนขึ้นรถ';
+    if (u.setUpTurn === s.turn) return 'หน่วยที่เพิ่งลงสนามเทิร์นนี้ขึ้นรถไม่ได้';
+    if (!alive(u).every((m) => alive(t).some((n) => baseDist(m, n) <= 3 + 1e-6))) return 'ทุกโมเดลต้องอยู่ภายใน 3" ของรถ';
+  }
+  u.status = 'embarked';
+  u.embarkedIn = t.id;
+  log(s, `${u.name} ขึ้นรถ ${t.name}`, 'info', u.owner);
+  if (duringDeploy) nextDeployer(s);
+  return null;
+}
+
+export const embarkedIn = (s: GameState, t: UnitState) => s.units.filter((u) => u.embarkedIn === t.id && u.status === 'embarked');
+
+export function disembarkMode(s: GameState, t: UnitState): 'rapid' | 'tactical' | 'combat' | null {
+  if (t.move === 'advance' || t.move === 'fallback') return null;
+  if (isEngaged(s, t)) return 'combat';
+  if (t.move === 'normal' || t.move === 'ingress') return 'rapid';
+  return 'tactical';
+}
+
+export function validateDisembark(s: GameState, u: UnitState, t: UnitState, pos: Map<string, Pt>): MoveCheck {
+  const mode = disembarkMode(s, t);
+  const errors: string[] = [];
+  const bad = new Set<string>();
+  if (!mode) return { ok: false, errors: ['รถ Advance/Fall back มาแล้ว ลงไม่ได้ phase นี้'], bad: [] };
+  const range = mode === 'combat' ? 6 : 3;
+  endChecks(s, u, pos, errors, bad);
+  for (const m of alive(u)) {
+    const p = pos.get(m.id) ?? m;
+    const tm = alive(t).reduce((a, b) => (dist(p, a) <= dist(p, b) ? a : b));
+    if (dist(p, tm) - tm.r + m.r > range + 0.02) { errors.push(`ต้องวางให้อยู่ภายใน ${range}" ของรถทั้งตัว`); bad.add(m.id); }
+  }
+  if (mode !== 'combat' && engagedAt(s, u, pos).length) errors.push('ลงจากรถต้องไม่ engaged');
+  return { ok: !errors.length, errors: [...new Set(errors)], bad: [...bad] };
+}
+
+export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map<string, Pt>): MoveCheck {
+  const chk = validateDisembark(s, u, t, pos);
+  if (!chk.ok) return chk;
+  const mode = disembarkMode(s, t)!;
+  if (mode === 'combat') {
+    const rolls = rollN(s, alive(u).length);
+    const fails = rolls.filter((r) => r <= RULES.hazard.failOn).length;
+    log(s, `Combat Disembark ${u.name}: hazard [${rolls.join(' ')}]`, 'roll', u.owner);
+    if (fails) applyMortalWounds(s, u, fails, 'Combat Disembark');
+    u.battleShocked = true;
+  }
+  for (const m of alive(u)) { const p = pos.get(m.id)!; m.x = p.x; m.y = p.y; }
+  u.status = 'board';
+  u.embarkedIn = null;
+  u.setUpTurn = s.turn;
+  if (mode === 'tactical') u.move = null; // may still make a normal or advance move
+  else { u.move = 'stationary'; u.cantCharge = true; }
+  log(s, `${u.name} ลงจากรถ (${mode === 'rapid' ? 'Rapid' : mode === 'tactical' ? 'Tactical' : 'Combat'} Disembark)`, 'info', u.owner);
+  return chk;
+}
+
+/** Emergency disembark when a transport is destroyed (18.05). */
+export function emergencyDisembark(s: GameState, t: UnitState, tm: ModelState) {
+  for (const u of embarkedIn(s, t)) {
+    const rolls = rollN(s, alive(u).length);
+    const fails = rolls.filter((r) => r <= RULES.hazard.failOn).length;
+    let placed: Map<string, Pt> | null = null;
+    for (let ring = 0; ring < 5 && !placed; ring++) {
+      for (let a = 0; a < 12 && !placed; a++) {
+        const ang = (a / 12) * Math.PI * 2;
+        const c = { x: tm.x + Math.cos(ang) * (tm.r + 1.2 + ring), y: tm.y + Math.sin(ang) * (tm.r + 1.2 + ring) };
+        const pos = formationAt(u, c);
+        const errs: string[] = [];
+        endChecks(s, u, pos, errs, new Set());
+        const within = alive(u).every((m) => { const p = pos.get(m.id)!; return dist(p, tm) - tm.r + m.r <= 6 + 0.02; });
+        if (!errs.length && within) placed = pos;
+      }
+    }
+    u.embarkedIn = null;
+    if (!placed) {
+      for (const m of alive(u)) killModel(s, u, m);
+      log(s, `${u.name} ออกจากรถที่ระเบิดไม่ได้ → ถูกทำลาย`, 'kill', u.owner);
+      continue;
+    }
+    for (const m of alive(u)) { const p = placed.get(m.id)!; m.x = p.x; m.y = p.y; }
+    u.status = 'board';
+    u.battleShocked = true;
+    u.cantCharge = true;
+    log(s, `Emergency Disembark ${u.name}: hazard [${rolls.join(' ')}] · battle-shocked`, 'roll', u.owner);
+    if (fails) applyMortalWounds(s, u, fails, 'Emergency Disembark');
+  }
+}
+
+onTransportDestroyed((s, u, m) => { if (u.transport && embarkedIn(s, u).length) emergencyDisembark(s, u, m); });
