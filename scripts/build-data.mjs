@@ -174,7 +174,13 @@ function build() {
   const abilityById = new Map(t.Abilities.map((a) => [a.id, a]));
   const sourceById = new Map(t.Source.map((s) => [s.id, s]));
   const excludeRe = (META.excludeSources?.patterns ?? []).map((p) => new RegExp(p, 'i'));
-  const excludedSource = (id) => { const s = sourceById.get(id); return !!s && excludeRe.some((r) => r.test(s.name)); };
+  const keepEd = META.excludeSources?.keepEditions;
+  const excludedSource = (id) => {
+    const s = sourceById.get(id);
+    if (!s) return !!keepEd; // no source at all: not a published 11th edition datasheet
+    if (excludeRe.some((r) => r.test(s.name))) return true;
+    return !!keepEd && !keepEd.includes(String(s.edition));
+  };
   let dropped = 0;
   const datasheetById = new Map(t.Datasheets.map((d) => [d.id, d]));
   const by = {
@@ -279,7 +285,7 @@ function build() {
   }
   index.factions.sort((a, b) => a.name.localeCompare(b.name));
   fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));
-  console.log(`built ${index.factions.length} factions (data ${lastUpdate}); left out ${dropped} Legends datasheets`);
+  console.log(`built ${index.factions.length} factions (data ${lastUpdate}); left out ${dropped} non-11th-edition (Legends / Forge World / old index) datasheets`);
 }
 
 if (process.argv.includes('--fetch')) await fetchAll();

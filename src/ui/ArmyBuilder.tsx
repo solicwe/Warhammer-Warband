@@ -322,6 +322,24 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               <div className="ab-pts">{u.pts + (u.enhancementPts ?? 0)} pts</div>
             </div>
           </div>
+          <div className="field">รูปของหน่วยนี้
+            <div className="row">
+              <label className="btn small">
+                {sheet && getPortrait(sheet.name) ? 'เปลี่ยนรูป' : 'ใส่รูป'}
+                <input type="file" accept="image/*" hidden onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (!f || !sheet) return;
+                  try {
+                    const ok = setPortrait(sheet.name, await fileToPortrait(f));
+                    setNote(ok ? `ใส่รูปให้ ${sheet.name} แล้ว` : 'เก็บรูปถาวรไม่ได้ (พื้นที่เบราว์เซอร์เต็ม/ถูกบล็อก) — รูปจะหายเมื่อปิดหน้า');
+                  } catch (err) { setNote(err instanceof Error ? err.message : 'อ่านรูปไม่ได้'); }
+                }} />
+              </label>
+              {sheet && getPortrait(sheet.name) && <button className="btn small ghost" onClick={() => { setPortrait(sheet.name, null); setNote('ลบรูปแล้ว'); }}>ลบรูป</button>}
+              <span className="tiny muted grow">ใช้กับทุกหน่วย {u.datasheet} (ทั้งการ์ดและ token บนสนาม)</span>
+            </div>
+          </div>
           {opts.length > 1 && (
             <div className="field">จำนวนโมเดล
               <div className="seg">

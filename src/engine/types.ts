@@ -199,6 +199,7 @@ export interface TerrainPiece {
   height: number;
   poly: Pt[];
   walls: Seg[];
+  obstacles?: Seg[];
   objectiveId?: string;
 }
 
@@ -235,6 +236,41 @@ export interface PlayerState {
   secSwapUsed: boolean;
   armyRules: { name: string; text: string }[];
   detachments: DetachmentData[];
+  /** Chapter Approved: chosen Force Disposition and the primary mission it gives against the opponent's */
+  disposition: string;
+  primaryId: string;
+  mission: MissionState;
+  sec: SecondaryState;
+}
+
+/** State behind secondary cards that need choices or actions. */
+export interface SecondaryState {
+  temptingTarget?: string; // objective id
+  beacon?: string; // unit id
+  guards: { objId: string; unitId: string }[];
+  cleansed: { objId: string; turn: number }[];
+  plundered: { terrainId: string; turn: number }[];
+}
+
+/** Per-player primary-mission bookkeeping (markers, trapped/decoyed objectives, completed actions …). */
+export interface MissionState {
+  trapped: { terrainId: string; turn: number }[];
+  decoyed: string[]; // objective ids
+  consecrated: string[];
+  triangulated: string[];
+  condemned: string[]; // enemy unit ids, until the start of your next turn
+  consecrationUnits: string[];
+  surveilled: { unitId: string; turn: number }[];
+  done: { action: string; unitId: string; turn: number; objId?: string; terrainId?: string }[];
+}
+
+export interface OperationMarker { id: string; owner: PlayerId; x: number; y: number; objId?: string; terrainId?: string; kind: string }
+export interface PendingAction { player: PlayerId; unitId: string; action: string; turn: number; objId?: string; terrainId?: string }
+export interface TurnSnapshot {
+  turn: number;
+  inRangeObj: string[];
+  inRangeCentral: string[];
+  inTerrain: Record<string, string[]>;
 }
 
 export interface LogEntry { turn: number; round: number; player: PlayerId | null; text: string; kind?: 'roll' | 'info' | 'vp' | 'cp' | 'kill' }
@@ -243,6 +279,7 @@ export type DieOutcome = 'miss' | 'hit' | 'crit' | 'auto' | 'wound' | 'critWound
 export interface Die { v: number; o: DieOutcome; rerolled?: boolean; orig?: number }
 
 export interface Pool {
+  snap?: boolean; // Snap Shooting: 6s hit but are not critical hits (15.09)
   defApplied?: boolean; // defensive stratagem effects of the target already folded in
   key: string;
   weapon: string;
@@ -329,7 +366,7 @@ export interface FightState {
 export interface ShockTest { unitId: string; result: number | null; passed: boolean | null; auto?: boolean }
 
 export interface GameState {
-  version: 2;
+  version: 3;
   rng: number;
   round: number;
   turn: number; // global turn index (0-based)
@@ -341,18 +378,23 @@ export interface GameState {
   units: UnitState[];
   terrain: TerrainPiece[];
   objectives: ObjectiveState[];
-  deploymentId: string;
-  primaryId: string;
+  deploymentId: string; // terrain layout id (data/layouts.json)
   attackerPlayer: PlayerId;
   window: Window | null;
   attack: AttackSession | null;
   fight: FightState | null;
   shockTests: ShockTest[];
-  destroyedByTurn: { turn: number; owner: PlayerId; unitId: string }[];
+  destroyedByTurn: { turn: number; owner: PlayerId; unitId: string; killerId?: string; killerNearObj?: boolean }[];
+  markers: OperationMarker[];
+  modelDeaths: { turn: number; owner: PlayerId; character: boolean; W: number }[];
+  pendingActions: PendingAction[];
+  turnStart: TurnSnapshot | null;
   controlAtTurnStart: (PlayerId | null)[];
   log: LogEntry[];
   winner: PlayerId | null | 'draw';
   botPlayer?: PlayerId | null;
+  /** players run by the bot (both for a bot-vs-bot game) */
+  bots?: PlayerId[];
   fx?: FxEvent[];
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

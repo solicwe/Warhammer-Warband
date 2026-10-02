@@ -5,6 +5,7 @@ import { baseDist, clamp, coherencyProblems } from './geometry';
 import { alive, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, unitById } from './state';
 import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { getAbility, hasAbility, isMelee } from './weapons';
+import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
@@ -166,7 +167,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         pool.skillNote = mods.skillNotes.join(' · ');
         pool.hitMod = fm.hit;
         pool.hitNote = mods.hitNotes.join(' · ') + (psychic ? ' (Psychic: ไม่สน modifier ลบ)' : '');
-        if (opt.mode === 'snap') { pool.hitOn6Only = true; pool.noHitReroll = true; pool.autoHit = false; pool.hitNote = 'Snap Shooting: โดนเฉพาะ 6'; }
+        if (opt.mode === 'snap') { pool.hitOn6Only = true; pool.noHitReroll = true; pool.autoHit = false; pool.snap = true; pool.hitNote = 'Snap Shooting: โดนเฉพาะ 6 (ไม่เป็น critical, re-roll ไม่ได้)'; }
         if (indirect) {
           pool.noHitReroll = true;
           const spotted = A.move === 'stationary' && s.units.some((f) => f.owner === A.owner && onBoard(f) && alive(f).some((fm2) => tModels.some((t) => modelVisible(s, fm2, T, t))));
@@ -316,7 +317,7 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
 
 function evalHit(p: Pool, v: number): Die['o'] {
   if (v === 1) return 'miss';
-  if (v === 6) return 'crit';
+  if (v === 6) return p.snap ? 'hit' : 'crit';
   if (p.hitOn6Only) return 'miss';
   if (p.minHitUnmodified && v < p.minHitUnmodified) return 'miss';
   return v + p.hitMod >= (p.skill ?? 7) ? 'hit' : 'miss';
@@ -458,10 +459,12 @@ export const onTransportDestroyed = (fn: TransportHook) => { transportHook = fn;
 export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: string) {
   m.dead = true;
   m.wounds = 0;
+  (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || m.keywords.includes('CHARACTER'), W: m.profile.W });
   if (u.transport && m.keywords.includes('TRANSPORT')) transportHook?.(s, u, m);
   if (!alive(u).length) {
     u.status = 'destroyed';
     s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id });
+    onUnitDestroyed(s, u, s.attack?.attackerId);
     log(s, `💀 ${u.name} ถูกทำลาย${killer ? ' โดย ' + killer : ''}`, 'kill');
   }
   if (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1)) {

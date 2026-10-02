@@ -42,7 +42,7 @@ function Dice({ values, color, landed, winner }: { values: number[]; color?: str
   );
 }
 
-export function RollOverlay({ s, onBusy }: { s: GameState; onBusy?: (busy: boolean) => void }) {
+export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy: boolean) => void; quick?: boolean }) {
   // a brand-new game also shows the roll-off made while creating it
   const fresh = s.phase === 'deploy' && s.units.every((u) => u.status !== 'board');
   const seen = useRef(fresh ? 0 : s.fxSeq ?? 0);
@@ -53,7 +53,9 @@ export function RollOverlay({ s, onBusy }: { s: GameState; onBusy?: (busy: boole
     if ((s.fxSeq ?? 0) < seen.current) { seen.current = s.fxSeq ?? 0; setQueue([]); return; } // undo
     const add = (s.fx ?? []).filter((e): e is RollFx => e.seq > seen.current && (e.kind === 'roll' || e.kind === 'rolloff'));
     seen.current = s.fxSeq ?? 0;
-    if (add.length) setQueue((q) => [...q, ...add].slice(-4));
+    // when only bots play, skip the minor rolls so the overlay does not hide the game
+    const shown = quick ? add.filter((e) => e.kind === 'rolloff' || e.title.startsWith('Charge')) : add;
+    if (shown.length) setQueue((q) => [...q, ...shown].slice(-4));
   }, [s.fx, s.fxSeq]);
 
   const cur = queue[0];
@@ -70,9 +72,9 @@ export function RollOverlay({ s, onBusy }: { s: GameState; onBusy?: (busy: boole
   useEffect(() => {
     if (!cur || !landed) return;
     // after the first tap the result stays up longer, so it is never missed
-    const b = window.setTimeout(() => setQueue((q) => q.slice(1)), hold ? 4000 : SHOW_MS[cur.kind] - TUMBLE_MS);
+    const b = window.setTimeout(() => setQueue((q) => q.slice(1)), hold ? 4000 : quick ? 700 : SHOW_MS[cur.kind] - TUMBLE_MS);
     return () => window.clearTimeout(b);
-  }, [cur, landed, hold]);
+  }, [cur, landed, hold, quick]);
 
   if (!cur) return null;
   // first tap: stop the tumble and show the numbers; next tap: close (ignoring an accidental double tap)

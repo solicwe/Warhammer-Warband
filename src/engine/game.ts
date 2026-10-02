@@ -1,13 +1,15 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
 import { buildUnits } from './army';
 import { applyMortalWounds, killModel, onTransportDestroyed } from './attack';
-import { deploymentById, MISSIONS, primaryById, RULES, secondaryById, toPoly, type ScoringRule } from './config';
+import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
+import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
+import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollN, rollOff } from './dice';
 import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointInPoly, pointSegDist, polyCentroid, segSegDist } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from './state';
-import type { ArmyList, FactionData, GameState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
+import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
 
@@ -16,40 +18,31 @@ const H = RULES.battlefield.height;
 
 // ---------- setup ----------
 
-function buildTerrain(depId: string): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
-  const dep = deploymentById(depId);
-  const terrain: TerrainPiece[] = [];
-  const make = (id: string, kind: string, x: number, y: number, w: number, h: number, mirror: boolean): TerrainPiece => {
-    const k = MISSIONS.terrainKinds[kind];
-    const tf = (p: Pt): Pt => (mirror ? { x: W - p.x, y: H - p.y } : p);
-    const x0 = x - w / 2, y0 = y - h / 2;
-    const poly = [{ x: x0, y: y0 }, { x: x0 + w, y: y0 }, { x: x0 + w, y: y0 + h }, { x: x0, y: y0 + h }].map(tf);
-    const corners = [{ x: x0, y: y0 }, { x: x0 + w, y: y0 }, { x: x0 + w, y: y0 + h }, { x: x0, y: y0 + h }];
-    const walls: Seg[] = k.walls === 'L'
-      ? [
-          { a: { x: x0, y: y0 }, b: { x: x0 + w * 0.7, y: y0 } },
-          { a: { x: x0, y: y0 }, b: { x: x0, y: y0 + h * 0.7 } },
-        ].map((s) => ({ a: tf(s.a), b: tf(s.b) }))
-      : k.walls === 'box' ? corners.map((c, i) => ({ a: tf(c), b: tf(corners[(i + 1) % 4]) })) : [];
-    return { id, kind, label: k.label, category: k.category, height: k.height, poly, walls };
-  };
-  const objectives: ObjectiveState[] = dep.objectives.map((o, i) => {
-    const ot = MISSIONS.objectiveTerrain;
-    // rotate home objective ruins so their walls face the owner differently on each side
-    const mirror = o.owner === 'defender' || (!o.owner && o.y > H / 2) || (!o.owner && o.y === H / 2 && o.x > W / 2);
-    const t = make(`obj-t${i}`, ot.kind, o.x, o.y, ot.w, ot.h, false);
-    if (mirror) {
-      const c = { x: o.x, y: o.y };
-      const rot = (p: Pt) => ({ x: 2 * c.x - p.x, y: 2 * c.y - p.y });
-      t.walls = t.walls.map((s) => ({ a: rot(s.a), b: rot(s.b) }));
+function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
+  const L = deploymentById(layoutId);
+  const seg = (w: number[]): Seg => ({ a: { x: w[0], y: w[1] }, b: { x: w[2], y: w[3] } });
+  const terrain: TerrainPiece[] = L.terrain.map((t, i) => ({
+    id: `t${i}`,
+    kind: 'ruin',
+    label: t.walls.length ? 'Ruins (Dense)' : 'Terrain area (Light)',
+    // a baseplate with ruin walls is dense (walls block sight); a bare baseplate with obstacles only is light
+    category: t.walls.length ? 'dense' : 'light',
+    height: t.walls.length ? 5 : 1.5,
+    poly: t.poly.map(([x, y]) => ({ x, y })),
+    walls: t.walls.map(seg),
+    obstacles: t.obstacles.map(seg),
+  }));
+  const objectives: ObjectiveState[] = L.objectives.map((o, i) => {
+    const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
+    let tp = terrain.find((t) => pointInPoly({ x: o.x, y: o.y }, t.poly));
+    if (!tp) {
+      // objective in the open: give it a 3" area so control works the same way
+      tp = { id: `obj-t${i}`, kind: 'objective-area', label: 'Objective area', category: 'exposed', height: 0, walls: [], obstacles: [],
+        poly: [{ x: o.x - 3, y: o.y - 3 }, { x: o.x + 3, y: o.y - 3 }, { x: o.x + 3, y: o.y + 3 }, { x: o.x - 3, y: o.y + 3 }] };
+      terrain.push(tp);
     }
-    t.objectiveId = o.id;
-    terrain.push(t);
-    return { id: o.id, type: o.type, owner: undefined, x: o.x, y: o.y, terrainId: t.id, controller: null, ownerRole: o.owner } as ObjectiveState & { ownerRole?: string };
-  });
-  dep.terrain.forEach((t, i) => {
-    terrain.push(make(`t${i}`, t.kind, t.x, t.y, t.w, t.h, false));
-    if (t.mirror) terrain.push(make(`t${i}m`, t.kind, t.x, t.y, t.w, t.h, true));
+    tp.objectiveId = id;
+    return { id, type: o.type, owner: undefined, x: o.x, y: o.y, terrainId: tp.id, controller: null, ownerRole: o.owner ?? undefined } as ObjectiveState & { ownerRole?: string };
   });
   return { terrain, objectives };
 }
@@ -58,16 +51,36 @@ export interface NewGameOptions {
   lists: [ArmyList, ArmyList];
   factions: [FactionData, FactionData];
   names: [string, string];
-  deploymentId: string;
-  primaryId: string;
+  /** terrain layout id; when omitted a random official layout for the two dispositions is used */
+  deploymentId?: string;
+  /** each player's Force Disposition (from one of their detachments) */
+  dispositions?: [DispositionId, DispositionId];
   seed?: number;
   secondaryMode?: 'none' | 'tactical' | 'fixed';
 }
 
+export const emptyMission = (): MissionState => ({ trapped: [], decoyed: [], consecrated: [], triangulated: [], condemned: [], consecrationUnits: [], surveilled: [], done: [] });
+
+/** Disposition a list brings: the first detachment's, else Take and Hold. */
+export function listDisposition(list: ArmyList, faction: FactionData): DispositionId {
+  for (const n of list.detachments) {
+    const d = dispositionId(faction.detachments.find((x) => x.name === n)?.forceDisposition);
+    if (d) return d;
+  }
+  return 'take-and-hold';
+}
+
 export function createGame(o: NewGameOptions): GameState {
-  const { terrain, objectives } = buildTerrain(o.deploymentId);
+  const disp: [DispositionId, DispositionId] = o.dispositions ?? [listDisposition(o.lists[0], o.factions[0]), listDisposition(o.lists[1], o.factions[1])];
+  let layoutId = o.deploymentId;
+  if (!layoutId || !LAYOUTS.some((l) => l.id === layoutId)) {
+    const opts = layoutsFor(disp[0], disp[1]);
+    const r = mulberryPick((o.seed ?? Date.now()) >>> 0, opts.length);
+    layoutId = (opts[r] ?? LAYOUTS[0]).id;
+  }
+  const { terrain, objectives } = buildTerrain(layoutId);
   const s: GameState = {
-    version: 2,
+    version: 3,
     rng: (o.seed ?? Date.now()) >>> 0,
     round: 0,
     turn: -1,
@@ -82,14 +95,15 @@ export function createGame(o: NewGameOptions): GameState {
       secMode: o.secondaryMode ?? 'none', secDeck: [], secActive: [], secVp: 0, secByRound: [0, 0, 0, 0, 0, 0], secFixedVp: {}, secSwapUsed: false,
       armyRules: o.factions[i].armyRules,
       detachments: o.factions[i].detachments.filter((d) => o.lists[i].detachments.includes(d.name)),
+      disposition: disp[i], primaryId: primaryFor(disp[i], disp[1 - i]).id, mission: emptyMission(), sec: { guards: [], cleansed: [], plundered: [] },
     })) as unknown as GameState['players'],
     units: [...buildUnits(o.lists[0], o.factions[0], 0), ...buildUnits(o.lists[1], o.factions[1], 1)],
     terrain, objectives,
-    deploymentId: o.deploymentId,
-    primaryId: o.primaryId,
+    deploymentId: layoutId,
     attackerPlayer: 0,
     window: null, attack: null, fight: null, shockTests: [],
     destroyedByTurn: [], controlAtTurnStart: [], log: [], winner: null,
+    markers: [], pendingActions: [], turnStart: null, modelDeaths: [],
   };
   const ro = rollOff(s);
   log(s, `Roll-off เลือก Attacker/Defender: ${o.names[0]} ${ro.a} – ${o.names[1]} ${ro.b} → ${o.names[ro.winner]} เป็น Attacker`, 'roll', null);
@@ -107,7 +121,11 @@ export function createGame(o: NewGameOptions): GameState {
   }
   s.deployTurn = other(s.attackerPlayer); // Defender deploys first
   for (const p of [0, 1] as PlayerId[]) if (s.players[p].secMode === 'tactical') s.players[p].secDeck = shuffle(s, MISSIONS.secondaries.map((x) => x.id));
-  log(s, `Mission: ${primaryById(o.primaryId).name} (Mirrored World) · Deployment: ${deploymentById(o.deploymentId).name}`, 'info', null);
+  const L = deploymentById(layoutId);
+  log(s, `Force Disposition: ${s.players[0].name} ${dispositionById(disp[0]).name} vs ${s.players[1].name} ${dispositionById(disp[1]).name}`, 'info', null);
+  for (const p of [0, 1] as PlayerId[]) log(s, `Primary ของ ${s.players[p].name}: ${primaryById(s.players[p].primaryId).name}`, 'info', p);
+  log(s, `Layout: ${L.name} · ${L.matchup.map((m) => dispositionById(m).name).join(' vs ')} #${L.number} (${s.objectives.length} objectives)`, 'info', null);
+  startOfBattle(s);
   return s;
 }
 
@@ -357,6 +375,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   s.active = p;
   resetTurnFlags(s);
   s.controlAtTurnStart = s.objectives.map((o) => o.controller);
+  onTurnStart(s);
   log(s, `━━ Battle Round ${s.round} · เทิร์นของ ${s.players[p].name} ━━`, 'info', p);
   startCommand(s);
 }
@@ -365,7 +384,7 @@ function startCommand(s: GameState) {
   s.phase = 'command';
   for (const p of [0, 1] as PlayerId[]) s.players[p].cp += RULES.cpPerCommandPhase;
   log(s, `+${RULES.cpPerCommandPhase} CP ทั้งสองฝ่าย (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
-  drawSecondaries(s, s.active, 2);
+  drawUpTo(s, s.active);
   s.shockTests = s.units
     .filter((u) => u.owner === s.active && u.status !== 'destroyed' && u.status !== 'pending' && alive(u).length)
     .filter((u) => u.battleShocked || strength(u) === 'half' || strength(u) === 'belowHalf')
@@ -435,7 +454,10 @@ function endTurn(s: GameState) {
   // Aircraft return to reserves at the end of the opponent's turn
   for (const u of boardUnits(s, other(s.active))) if (hasKw(u, 'AIRCRAFT')) u.status = 'reserves';
   updateControl(s);
+  onTurnEnd(s);
   scoreTiming(s, 'endOfYourTurn');
+  for (const p of [0, 1] as PlayerId[]) scorePrimary(s, 'endOfAnyTurn', p);
+  scoreSecondaries(s, s.round === 5 && s.active !== s.firstPlayer);
   const second = s.active !== s.firstPlayer;
   if (!second) { s.phase = 'command'; startTurn(s, other(s.active)); return; }
   // end of battle round
@@ -489,6 +511,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
   const moved = alive(u).filter((m) => (paths.get(m.id)?.length ?? 0) > 1 && pathLength(paths.get(m.id)!) > 0.01);
   if (moved.length) pushFx(s, { kind: 'move', unitId: u.id, owner: u.owner, moveKind: kind, paths: moved.map((m) => [m.id, paths.get(m.id)!.map((q) => ({ x: q.x, y: q.y }))]) });
   const label: Record<string, string> = { scout: 'Scout move', normal: 'Normal move', advance: 'Advance', fallback: 'Fall back', charge: 'Charge move', pileIn: 'Pile-in', consolidate: 'Consolidate', ingress: 'Ingress' };
+  onMoveEnd(s, u, kind);
   if (label[kind]) log(s, `${u.name}: ${label[kind]}${maxMoved ? ` (${maxMoved.toFixed(1)}")` : ''}`, 'info', u.owner);
 }
 
@@ -836,53 +859,8 @@ export function updateControl(s: GameState) {
   }
 }
 
-const controlled = (s: GameState, p: PlayerId) => s.objectives.filter((o) => o.controller === p);
-
-function evalCondition(s: GameState, p: PlayerId, c: string): number {
-  const mine = controlled(s, p);
-  const theirs = controlled(s, other(p));
-  const destroyedThisTurn = (owner: PlayerId, turn = s.turn) => s.destroyedByTurn.filter((d) => d.turn === turn && d.owner === owner).length;
-  switch (c) {
-    case 'controlMoreThanOpponent': return mine.length > theirs.length ? 1 : 0;
-    case 'perObjectiveControlled': return mine.length;
-    case 'perObjectiveControlledExclHome': return mine.filter((o) => o.type !== 'home').length;
-    case 'perNonHomeIfHomeControlled': return mine.some((o) => o.type === 'home' && o.owner === p) ? mine.filter((o) => !(o.type === 'home' && o.owner === p)).length : 0;
-    case 'controlCentral': return mine.some((o) => o.type === 'central') ? 1 : 0;
-    case 'control3Plus': return mine.length >= 3 ? 1 : 0;
-    case 'control2Plus': return mine.length >= 2 ? 1 : 0;
-    case 'controlAnyExclHome': return mine.some((o) => o.type !== 'home') ? 1 : 0;
-    case 'controlEnemyHome': return mine.some((o) => o.type === 'home' && o.owner === other(p)) ? 1 : 0;
-    case 'enemyUnitDestroyedThisTurn': return destroyedThisTurn(other(p)) > 0 ? 1 : 0;
-    case 'moreKillsThanLossesLastTurn': return destroyedThisTurn(other(p)) > destroyedThisTurn(p, s.turn - 1) ? 1 : 0;
-    case 'newObjectiveThisTurnExclHome':
-      return s.objectives.some((o, i) => o.type !== 'home' && o.controller === p && s.controlAtTurnStart[i] !== p) ? 1 : 0;
-    default: return 0;
-  }
-}
-
-function ruleActive(r: ScoringRule, round: number, timing: string): boolean {
-  if (round < r.rounds[0] || round > r.rounds[1]) return false;
-  if (timing === 'endOfBattle') return r.when === 'endOfBattle';
-  if (round === 5 && r.round5When) return r.round5When === timing;
-  return r.when === timing;
-}
-
 export function scoreTiming(s: GameState, timing: 'endOfYourCommandPhase' | 'endOfYourTurn' | 'endOfBattle', player: PlayerId = s.active) {
-  const prim = primaryById(s.primaryId);
-  const P = s.players[player];
-  for (const r of prim.scoring) {
-    if (!ruleActive(r, s.round, timing)) continue;
-    const n = evalCondition(s, player, r.condition);
-    let vp = n * r.vp;
-    if (r.bonus) vp += evalCondition(s, player, r.bonus.condition) * r.bonus.vp;
-    if (!vp) continue;
-    const roundCap = timing === 'endOfBattle' ? Infinity : MISSIONS.vpCaps.primaryPerRound - P.vpByRound[s.round];
-    vp = Math.max(0, Math.min(vp, roundCap, MISSIONS.vpCaps.primaryTotal - P.vp));
-    if (!vp) continue;
-    P.vp += vp;
-    if (timing !== 'endOfBattle') P.vpByRound[s.round] += vp;
-    log(s, `🏆 ${P.name} +${vp} VP (${prim.name}: ${r.text})`, 'vp', player);
-  }
+  scorePrimary(s, timing, player);
 }
 
 export const terrainOfObjective = objectiveTerrain;
@@ -914,19 +892,7 @@ function shuffle<T>(s: GameState, arr: T[]): T[] {
 }
 
 export function drawSecondaries(s: GameState, p: PlayerId, n: number) {
-  const P = s.players[p];
-  if (P.secMode !== 'tactical') return;
-  for (let i = 0; i < n && P.secDeck.length; i++) {
-    let id = P.secDeck.shift()!;
-    const def = secondaryById(id);
-    if ((def.round1Redraw && s.round === 1) || (def.redrawIf && P.secActive.includes(def.redrawIf))) {
-      P.secDeck.push(id);
-      if (!P.secDeck.length) break;
-      id = P.secDeck.shift()!;
-    }
-    P.secActive.push(id);
-    log(s, `${P.name} จั่ว Secondary: ${secondaryById(id).name}`, 'info', p);
-  }
+  drawUpTo(s, p, Math.max(n, s.players[p].secActive.length + n));
 }
 
 export function chooseFixedSecondaries(s: GameState, p: PlayerId, ids: string[]) {
@@ -934,19 +900,9 @@ export function chooseFixedSecondaries(s: GameState, p: PlayerId, ids: string[])
   log(s, `${s.players[p].name} เลือก Fixed Secondary: ${ids.map((x) => secondaryById(x).name).join(', ')}`, 'info', p);
 }
 
-/** Claim VP from an active secondary (players confirm the condition, like on the table). */
+/** Manual override: claim VP from an active secondary when the automatic check cannot see it. */
 export function claimSecondary(s: GameState, p: PlayerId, id: string, vp: number): number {
-  const P = s.players[p];
-  const caps = MISSIONS.vpCaps;
-  let gain = Math.min(vp, caps.secondaryPerRound - P.secByRound[s.round], caps.secondaryTotal - P.secVp);
-  if (P.secMode === 'fixed') gain = Math.min(gain, caps.fixedPerCard - (P.secFixedVp[id] ?? 0));
-  gain = Math.max(0, gain);
-  P.secVp += gain;
-  P.secByRound[s.round] += gain;
-  if (P.secMode === 'fixed') P.secFixedVp[id] = (P.secFixedVp[id] ?? 0) + gain;
-  else P.secActive = P.secActive.filter((x) => x !== id);
-  log(s, `🎯 ${P.name} +${gain} VP (Secondary: ${secondaryById(id).name})`, 'vp', p);
-  return gain;
+  return bankSecondary(s, p, id, vp);
 }
 
 /** Tactical: discard an active card; at the end of your own turn this gains 1CP. */

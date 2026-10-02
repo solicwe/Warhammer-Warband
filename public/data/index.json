@@ -14,7 +14,7 @@
    "id": "AC",
    "name": "Adeptus Custodes",
    "group": "Imperium",
-   "datasheets": 31,
+   "datasheets": 18,
    "detachments": 9
   },
   {
@@ -35,14 +35,14 @@
    "id": "AE",
    "name": "Aeldari",
    "group": "Xenos",
-   "datasheets": 76,
+   "datasheets": 74,
    "detachments": 15
   },
   {
    "id": "AM",
    "name": "Astra Militarum",
    "group": "Imperium",
-   "datasheets": 72,
+   "datasheets": 69,
    "detachments": 11
   },
   {
@@ -56,7 +56,7 @@
    "id": "QT",
    "name": "Chaos Knights",
    "group": "Chaos",
-   "datasheets": 27,
+   "datasheets": 18,
    "detachments": 8
   },
   {
@@ -91,14 +91,14 @@
    "id": "GC",
    "name": "Genestealer Cults",
    "group": "Xenos",
-   "datasheets": 88,
+   "datasheets": 87,
    "detachments": 9
   },
   {
    "id": "GK",
    "name": "Grey Knights",
    "group": "Imperium",
-   "datasheets": 26,
+   "datasheets": 25,
    "detachments": 9
   },
   {
@@ -112,7 +112,7 @@
    "id": "QI",
    "name": "Imperial Knights",
    "group": "Imperium",
-   "datasheets": 27,
+   "datasheets": 17,
    "detachments": 8
   },
   {
@@ -126,21 +126,21 @@
    "id": "NEC",
    "name": "Necrons",
    "group": "Xenos",
-   "datasheets": 52,
+   "datasheets": 51,
    "detachments": 12
   },
   {
    "id": "ORK",
    "name": "Orks",
    "group": "Xenos",
-   "datasheets": 55,
+   "datasheets": 54,
    "detachments": 15
   },
   {
    "id": "SM",
    "name": "Space Marines",
    "group": "Imperium",
-   "datasheets": 183,
+   "datasheets": 171,
    "detachments": 53,
    "subfactions": [
     "Ultramarines",
@@ -160,7 +160,7 @@
    "id": "TAU",
    "name": "T’au Empire",
    "group": "Xenos",
-   "datasheets": 43,
+   "datasheets": 39,
    "detachments": 7
   },
   {
@@ -174,7 +174,7 @@
    "id": "TYR",
    "name": "Tyranids",
    "group": "Xenos",
-   "datasheets": 52,
+   "datasheets": 50,
    "detachments": 10
   },
   {

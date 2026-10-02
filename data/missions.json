@@ -37,594 +37,6 @@
   "w": 6,
   "h": 6
  },
- "deployments": [
-  {
-   "id": "hammer-and-anvil",
-   "name": "Hammer and Anvil",
-   "attackerEdge": "top",
-   "defenderEdge": "bottom",
-   "zones": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      44,
-      0
-     ],
-     [
-      44,
-      18
-     ],
-     [
-      0,
-      18
-     ]
-    ],
-    "defender": [
-     [
-      0,
-      42
-     ],
-     [
-      44,
-      42
-     ],
-     [
-      44,
-      60
-     ],
-     [
-      0,
-      60
-     ]
-    ]
-   },
-   "territory": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      44,
-      0
-     ],
-     [
-      44,
-      30
-     ],
-     [
-      0,
-      30
-     ]
-    ],
-    "defender": [
-     [
-      0,
-      30
-     ],
-     [
-      44,
-      30
-     ],
-     [
-      44,
-      60
-     ],
-     [
-      0,
-      60
-     ]
-    ]
-   },
-   "objectives": [
-    {
-     "id": "home-a",
-     "type": "home",
-     "x": 10,
-     "y": 14,
-     "owner": "attacker"
-    },
-    {
-     "id": "home-d",
-     "type": "home",
-     "x": 34,
-     "y": 46,
-     "owner": "defender"
-    },
-    {
-     "id": "exp-1",
-     "type": "expansion",
-     "x": 36,
-     "y": 24
-    },
-    {
-     "id": "exp-2",
-     "type": "expansion",
-     "x": 8,
-     "y": 36
-    },
-    {
-     "id": "central",
-     "type": "central",
-     "x": 22,
-     "y": 30
-    }
-   ],
-   "terrain": [
-    {
-     "kind": "ruin",
-     "x": 26,
-     "y": 19.5,
-     "w": 9,
-     "h": 5,
-     "mirror": true
-    },
-    {
-     "kind": "container",
-     "x": 14,
-     "y": 24,
-     "w": 5,
-     "h": 2.5,
-     "mirror": true
-    },
-    {
-     "kind": "barricade",
-     "x": 31,
-     "y": 30,
-     "w": 6,
-     "h": 2,
-     "mirror": true
-    },
-    {
-     "kind": "ruin",
-     "x": 38,
-     "y": 8,
-     "w": 5,
-     "h": 8,
-     "mirror": true
-    },
-    {
-     "kind": "crater",
-     "x": 4,
-     "y": 22,
-     "w": 4,
-     "h": 4,
-     "mirror": true
-    },
-    {
-     "kind": "container",
-     "x": 22,
-     "y": 8,
-     "w": 2.5,
-     "h": 5,
-     "mirror": true
-    }
-   ]
-  },
-  {
-   "id": "dawn-of-war",
-   "name": "Dawn of War",
-   "attackerEdge": "left",
-   "defenderEdge": "right",
-   "zones": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      12,
-      0
-     ],
-     [
-      12,
-      60
-     ],
-     [
-      0,
-      60
-     ]
-    ],
-    "defender": [
-     [
-      32,
-      0
-     ],
-     [
-      44,
-      0
-     ],
-     [
-      44,
-      60
-     ],
-     [
-      32,
-      60
-     ]
-    ]
-   },
-   "territory": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      22,
-      0
-     ],
-     [
-      22,
-      60
-     ],
-     [
-      0,
-      60
-     ]
-    ],
-    "defender": [
-     [
-      22,
-      0
-     ],
-     [
-      44,
-      0
-     ],
-     [
-      44,
-      60
-     ],
-     [
-      22,
-      60
-     ]
-    ]
-   },
-   "objectives": [
-    {
-     "id": "home-a",
-     "type": "home",
-     "x": 10,
-     "y": 30,
-     "owner": "attacker"
-    },
-    {
-     "id": "home-d",
-     "type": "home",
-     "x": 34,
-     "y": 30,
-     "owner": "defender"
-    },
-    {
-     "id": "exp-1",
-     "type": "expansion",
-     "x": 25,
-     "y": 10
-    },
-    {
-     "id": "exp-2",
-     "type": "expansion",
-     "x": 19,
-     "y": 50
-    },
-    {
-     "id": "central",
-     "type": "central",
-     "x": 22,
-     "y": 30
-    }
-   ],
-   "terrain": [
-    {
-     "kind": "ruin",
-     "x": 10,
-     "y": 12,
-     "w": 6,
-     "h": 9,
-     "mirror": true
-    },
-    {
-     "kind": "container",
-     "x": 17,
-     "y": 22,
-     "w": 2.5,
-     "h": 5,
-     "mirror": true
-    },
-    {
-     "kind": "barricade",
-     "x": 28,
-     "y": 24,
-     "w": 2,
-     "h": 6,
-     "mirror": true
-    },
-    {
-     "kind": "ruin",
-     "x": 34,
-     "y": 16,
-     "w": 8,
-     "h": 5,
-     "mirror": true
-    },
-    {
-     "kind": "crater",
-     "x": 22,
-     "y": 20,
-     "w": 4,
-     "h": 4,
-     "mirror": true
-    },
-    {
-     "kind": "container",
-     "x": 6,
-     "y": 52,
-     "w": 5,
-     "h": 2.5,
-     "mirror": true
-    }
-   ]
-  },
-  {
-   "id": "search-and-destroy",
-   "name": "Search and Destroy",
-   "attackerEdge": "left",
-   "defenderEdge": "right",
-   "zones": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      22,
-      0
-     ],
-     [
-      22,
-      21
-     ],
-     [
-      22.0,
-      21.0
-     ],
-     [
-      20.83,
-      21.08
-     ],
-     [
-      19.67,
-      21.31
-     ],
-     [
-      18.56,
-      21.69
-     ],
-     [
-      17.5,
-      22.21
-     ],
-     [
-      16.52,
-      22.86
-     ],
-     [
-      15.64,
-      23.64
-     ],
-     [
-      14.86,
-      24.52
-     ],
-     [
-      14.21,
-      25.5
-     ],
-     [
-      13.69,
-      26.56
-     ],
-     [
-      13.31,
-      27.67
-     ],
-     [
-      13.08,
-      28.83
-     ],
-     [
-      13.0,
-      30.0
-     ],
-     [
-      0,
-      30
-     ]
-    ],
-    "defender": [
-     [
-      44,
-      60
-     ],
-     [
-      22,
-      60
-     ],
-     [
-      22,
-      39
-     ],
-     [
-      22.0,
-      39.0
-     ],
-     [
-      23.17,
-      38.92
-     ],
-     [
-      24.33,
-      38.69
-     ],
-     [
-      25.44,
-      38.31
-     ],
-     [
-      26.5,
-      37.79
-     ],
-     [
-      27.48,
-      37.14
-     ],
-     [
-      28.36,
-      36.36
-     ],
-     [
-      29.14,
-      35.48
-     ],
-     [
-      29.79,
-      34.5
-     ],
-     [
-      30.31,
-      33.44
-     ],
-     [
-      30.69,
-      32.33
-     ],
-     [
-      30.92,
-      31.17
-     ],
-     [
-      31.0,
-      30.0
-     ],
-     [
-      44,
-      30
-     ]
-    ]
-   },
-   "territory": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      44,
-      0
-     ],
-     [
-      0,
-      60
-     ]
-    ],
-    "defender": [
-     [
-      44,
-      0
-     ],
-     [
-      44,
-      60
-     ],
-     [
-      0,
-      60
-     ]
-    ]
-   },
-   "objectives": [
-    {
-     "id": "home-a",
-     "type": "home",
-     "x": 10,
-     "y": 14,
-     "owner": "attacker"
-    },
-    {
-     "id": "home-d",
-     "type": "home",
-     "x": 34,
-     "y": 46,
-     "owner": "defender"
-    },
-    {
-     "id": "exp-1",
-     "type": "expansion",
-     "x": 34,
-     "y": 14
-    },
-    {
-     "id": "exp-2",
-     "type": "expansion",
-     "x": 10,
-     "y": 46
-    },
-    {
-     "id": "central",
-     "type": "central",
-     "x": 22,
-     "y": 30
-    }
-   ],
-   "terrain": [
-    {
-     "kind": "ruin",
-     "x": 22,
-     "y": 8,
-     "w": 6,
-     "h": 6,
-     "mirror": true
-    },
-    {
-     "kind": "barricade",
-     "x": 5,
-     "y": 30,
-     "w": 2,
-     "h": 6,
-     "mirror": true
-    },
-    {
-     "kind": "ruin",
-     "x": 15,
-     "y": 23,
-     "w": 5,
-     "h": 7,
-     "mirror": true
-    },
-    {
-     "kind": "container",
-     "x": 30,
-     "y": 24,
-     "w": 5,
-     "h": 2.5,
-     "mirror": true
-    },
-    {
-     "kind": "crater",
-     "x": 34,
-     "y": 30,
-     "w": 3,
-     "h": 3,
-     "mirror": true
-    }
-   ]
-  }
- ],
  "twists": [
   {
    "id": "mirrored-world",
@@ -636,8 +48,8 @@
   {
    "id": "battlefield-dominance",
    "name": "Battlefield Dominance",
-   "forceDisposition": "Take and Hold",
-   "mirroredWorld": true,
+   "forceDisposition": "take-and-hold",
+   "vs": "take-and-hold",
    "scoring": [
     {
      "rounds": [
@@ -655,21 +67,23 @@
       5
      ],
      "when": "endOfYourCommandPhase",
-     "round5When": "endOfYourTurn",
      "condition": "perObjectiveControlled",
      "vp": 3,
+     "text": "3VP ต่อ objective ที่ยึด",
+     "round5When": "endOfYourTurn",
      "bonus": {
       "condition": "perNonHomeIfHomeControlled",
       "vp": 2
      },
-     "text": "ต่อ 1 objective ที่ยึด (+2 ต่ออันที่ไม่ใช่ home ถ้ายึด home ตัวเองไว้)"
+     "bonusText": "+2 ต่ออันที่ไม่ใช่ home ถ้ายึด home ตัวเองไว้"
     }
    ]
   },
   {
    "id": "immovable-object",
    "name": "Immovable Object",
-   "forceDisposition": "Take and Hold",
+   "forceDisposition": "take-and-hold",
+   "vs": "purge-the-foe",
    "scoring": [
     {
      "rounds": [
@@ -679,7 +93,7 @@
      "when": "endOfYourTurn",
      "condition": "controlCentral",
      "vp": 3,
-     "text": "ยึด central objective ได้"
+     "text": "ยึด central objective ได้อย่างน้อย 1"
     },
     {
      "rounds": [
@@ -689,7 +103,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "perObjectiveControlledExclHome",
      "vp": 5,
-     "text": "ต่อ objective ที่ยึด (ไม่นับ home)"
+     "text": "5VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)"
     },
     {
      "rounds": [
@@ -699,14 +113,88 @@
      "when": "endOfYourTurn",
      "condition": "perObjectiveControlledExclHome",
      "vp": 5,
-     "text": "ต่อ objective ที่ยึด (ไม่นับ home)"
+     "text": "รอบ 5: 5VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)"
+    }
+   ]
+  },
+  {
+   "id": "determined-acquisition",
+   "name": "Determined Acquisition",
+   "forceDisposition": "take-and-hold",
+   "vs": "disruption",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perNewObjectiveThisTurnExclHome",
+     "vp": 2,
+     "text": "2VP ต่อ objective ที่เพิ่งยึดได้เทิร์นนี้ (ไม่นับ home)"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "perObjectiveControlled",
+     "vp": 3,
+     "text": "3VP ต่อ objective ที่ยึด",
+     "round5When": "endOfYourTurn",
+     "bonus": {
+      "condition": "perControlledInEnemyTerritory",
+      "vp": 3
+     },
+     "bonusText": "+3 ต่ออันที่อยู่ในเขตศัตรู"
+    }
+   ]
+  },
+  {
+   "id": "purge-and-secure",
+   "name": "Purge and Secure",
+   "forceDisposition": "take-and-hold",
+   "vs": "reconnaissance",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killNearObjective",
+     "vp": 3,
+     "text": "ทำลายหน่วยศัตรูด้วยหน่วยที่อยู่ในระยะ objective หรือทำลายหน่วยศัตรูที่เริ่มเทิร์นในระยะ objective"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 4,
+     "text": "4VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "newObjectiveThisTurnExclHome",
+     "vp": 3,
+     "text": "ยึด objective ใหม่ได้เทิร์นนี้ (ไม่นับ home)"
     }
    ]
   },
   {
    "id": "inescapable-dominion",
    "name": "Inescapable Dominion",
-   "forceDisposition": "Take and Hold",
+   "forceDisposition": "take-and-hold",
+   "vs": "priority-assets",
    "scoring": [
     {
      "rounds": [
@@ -716,7 +204,7 @@
      "when": "endOfYourTurn",
      "condition": "control3Plus",
      "vp": 4,
-     "text": "ยึดได้ 3 objective ขึ้นไป"
+     "text": "ยึด objective ได้ 3 อันขึ้นไป"
     },
     {
      "rounds": [
@@ -724,10 +212,10 @@
       5
      ],
      "when": "endOfYourCommandPhase",
-     "round5When": "endOfYourTurn",
      "condition": "control2Plus",
      "vp": 5,
-     "text": "ยึดได้ 2 objective ขึ้นไป"
+     "text": "ยึด objective ได้ 2 อันขึ้นไป",
+     "round5When": "endOfYourTurn"
     },
     {
      "rounds": [
@@ -735,27 +223,28 @@
       5
      ],
      "when": "endOfYourCommandPhase",
-     "round5When": "endOfYourTurn",
      "condition": "controlMoreThanOpponent",
      "vp": 4,
-     "text": "ยึดได้มากกว่าศัตรู"
+     "text": "ยึด objective ได้มากกว่าศัตรู",
+     "round5When": "endOfYourTurn"
     },
     {
      "rounds": [
-      5,
+      1,
       5
      ],
      "when": "endOfBattle",
      "condition": "controlEnemyHome",
      "vp": 5,
-     "text": "ยึด home ของศัตรูตอนจบเกม"
+     "text": "จบเกม: ยึด home ของศัตรู"
     }
    ]
   },
   {
    "id": "unstoppable-force",
    "name": "Unstoppable Force",
-   "forceDisposition": "Purge the Foe",
+   "forceDisposition": "purge-the-foe",
+   "vs": "take-and-hold",
    "scoring": [
     {
      "rounds": [
@@ -773,10 +262,10 @@
       5
      ],
      "when": "endOfYourCommandPhase",
-     "round5When": "endOfYourTurn",
      "condition": "perObjectiveControlledExclHome",
      "vp": 4,
-     "text": "ต่อ objective ที่ยึด (ไม่นับ home)"
+     "text": "4VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
     },
     {
      "rounds": [
@@ -790,21 +279,21 @@
     },
     {
      "rounds": [
-      5,
+      1,
       5
      ],
      "when": "endOfBattle",
      "condition": "controlCentral",
      "vp": 5,
-     "text": "ยึด central ตอนจบเกม"
+     "text": "จบเกม: ยึด central objective"
     }
    ]
   },
   {
    "id": "meatgrinder",
    "name": "Meatgrinder",
-   "forceDisposition": "Purge the Foe",
-   "mirroredWorld": true,
+   "forceDisposition": "purge-the-foe",
+   "vs": "purge-the-foe",
    "scoring": [
     {
      "rounds": [
@@ -822,10 +311,10 @@
       5
      ],
      "when": "endOfYourCommandPhase",
-     "round5When": "endOfYourTurn",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home)"
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
     },
     {
      "rounds": [
@@ -835,7 +324,7 @@
      "when": "endOfYourTurn",
      "condition": "moreKillsThanLossesLastTurn",
      "vp": 5,
-     "text": "ทำลายศัตรูได้มากกว่าที่เสียไปเทิร์นก่อน"
+     "text": "ทำลายศัตรูเทิร์นนี้มากกว่าที่เสียไปเทิร์นก่อน"
     },
     {
      "rounds": [
@@ -848,6 +337,904 @@
      "text": "ยึด home ของศัตรู"
     }
    ]
+  },
+  {
+   "id": "punishment",
+   "name": "Punishment",
+   "forceDisposition": "purge-the-foe",
+   "vs": "disruption",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfAnyTurn",
+     "condition": "condemnedLeftThisTurn",
+     "vp": 5,
+     "text": "หน่วย condemned ออกจากสนามเทิร์นนี้ (นับทุกเทิร์น)"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlMoreThanOpponent",
+     "vp": 5,
+     "text": "ยึด objective ได้มากกว่าศัตรู",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "controlEnemyHome",
+     "vp": 8,
+     "text": "จบเกม: ยึด home ของศัตรู"
+    }
+   ],
+   "action": "condemned"
+  },
+  {
+   "id": "consecrate",
+   "name": "Consecrate",
+   "forceDisposition": "purge-the-foe",
+   "vs": "reconnaissance",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "consecratedCount",
+     "vp": 0,
+     "text": "objective ที่ consecrated: 1–2 อัน = 3VP, 3+ อัน = 6VP",
+     "tiers": [
+      [
+       1,
+       3
+      ],
+      [
+       3,
+       6
+      ]
+     ]
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlMoreThanOpponent",
+     "vp": 4,
+     "text": "ยึด objective ได้มากกว่าศัตรู",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "enemyHomeConsecrated",
+     "vp": 5,
+     "text": "จบเกม: home ของศัตรูถูก consecrate"
+    }
+   ],
+   "action": "consecrate"
+  },
+  {
+   "id": "destroyers-wrath",
+   "name": "Destroyer's Wrath",
+   "forceDisposition": "purge-the-foe",
+   "vs": "priority-assets",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "enemyUnitDestroyedThisTurn",
+     "vp": 3,
+     "text": "ทำลายหน่วยศัตรูได้เทิร์นนี้"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlMoreThanOpponent",
+     "vp": 6,
+     "text": "ยึด objective ได้มากกว่าศัตรู",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "moreKillsThanLossesLastTurn",
+     "vp": 4,
+     "text": "ทำลายศัตรูเทิร์นนี้มากกว่าที่เสียไปเทิร์นก่อน"
+    }
+   ]
+  },
+  {
+   "id": "death-trap",
+   "name": "Death Trap",
+   "forceDisposition": "disruption",
+   "vs": "take-and-hold",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perTrappedThisTurn",
+     "vp": 2,
+     "text": "2VP ต่อ terrain area ที่วางกับดักเทิร์นนี้",
+     "bonus": {
+      "condition": "perTrappedThisTurnObjective",
+      "vp": 3
+     },
+     "bonusText": "+3 ต่ออันที่เป็น objective"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInTrapped",
+     "vp": 3,
+     "text": "ทำลายหน่วยศัตรูที่เริ่มเทิร์นใน terrain area ที่มีกับดัก"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    }
+   ],
+   "action": "booby-trap"
+  },
+  {
+   "id": "delaying-action",
+   "name": "Delaying Action",
+   "forceDisposition": "disruption",
+   "vs": "purge-the-foe",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perEnemyDestroyedThisTurn",
+     "vp": 2,
+     "text": "2VP ต่อหน่วยศัตรูที่ทำลายเทิร์นนี้"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHomes",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ทั้งสองฝั่ง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlCentralAndExpansion",
+     "vp": 3,
+     "text": "ยึด central และ expansion อย่างละ 1 ขึ้นไป"
+    }
+   ]
+  },
+  {
+   "id": "outmanoeuvre",
+   "name": "Outmanoeuvre",
+   "forceDisposition": "disruption",
+   "vs": "disruption",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlEnemyHome",
+     "vp": 10,
+     "text": "ยึด home ของศัตรู"
+    },
+    {
+     "rounds": [
+      1,
+      1
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 4,
+     "text": "รอบ 1: 4VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)"
+    },
+    {
+     "rounds": [
+      2,
+      3
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 5,
+     "text": "รอบ 2–3: 5VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)"
+    },
+    {
+     "rounds": [
+      4,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 6,
+     "text": "รอบ 4+: 6VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)"
+    }
+   ]
+  },
+  {
+   "id": "smoke-and-mirrors",
+   "name": "Smoke and Mirrors",
+   "forceDisposition": "disruption",
+   "vs": "reconnaissance",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perDecoyed",
+     "vp": 2,
+     "text": "2VP ต่อ objective ที่ decoyed",
+     "bonus": {
+      "condition": "perDecoyedInEnemyTerritory",
+      "vp": 2
+     },
+     "bonusText": "+2 ต่ออันที่อยู่ในเขตศัตรู"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "decoyed4Plus",
+     "vp": 10,
+     "text": "จบเกม: decoyed 4 objective ขึ้นไป"
+    }
+   ],
+   "action": "decoy"
+  },
+  {
+   "id": "locate-and-deny",
+   "name": "Locate and Deny",
+   "forceDisposition": "disruption",
+   "vs": "priority-assets",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInRangeOfObjective",
+     "vp": 4,
+     "text": "ทำลายหน่วยศัตรูที่เริ่มเทิร์นในระยะ objective"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "onlyOneOwnMarkerHeld",
+     "vp": 4,
+     "text": "เหลือ operation marker ของเราอันเดียว มีหน่วยเราใน terrain area เดียวกันและไม่มีศัตรู"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "onlyOneOwnMarkerHeld",
+     "vp": 5,
+     "text": "จบเกม: เหลือ marker ของเราอันเดียวและเรายึด terrain area นั้น"
+    }
+   ],
+   "action": "sensor-sweep"
+  },
+  {
+   "id": "reconnaissance-sweep",
+   "name": "Reconnaissance Sweep",
+   "forceDisposition": "reconnaissance",
+   "vs": "take-and-hold",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "tableQuarters",
+     "vp": 0,
+     "text": "หน่วยเราอยู่ครบ table quarter (ห่างกลางสนาม >6\"): 3 quarter = 3VP, 4 quarter = 6VP",
+     "tiers": [
+      [
+       3,
+       3
+      ],
+      [
+       4,
+       6
+      ]
+     ]
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perEnemyDestroyedThisTurn",
+     "vp": 1,
+     "text": "1VP ต่อหน่วยศัตรูที่ทำลายเทิร์นนี้"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 3,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    }
+   ]
+  },
+  {
+   "id": "triangulation",
+   "name": "Triangulation",
+   "forceDisposition": "reconnaissance",
+   "vs": "purge-the-foe",
+   "scoring": [
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "triangulatedCount",
+     "vp": 0,
+     "text": "objective ที่ triangulated: 1 = 3VP, 2 = 6VP, 3+ = 10VP",
+     "tiers": [
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       3,
+       10
+      ]
+     ]
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "control4Plus",
+     "vp": 10,
+     "text": "จบเกม: ยึด objective 4 อันขึ้นไป"
+    }
+   ],
+   "action": "triangulate"
+  },
+  {
+   "id": "surveil-the-foe",
+   "name": "Surveil the Foe",
+   "forceDisposition": "reconnaissance",
+   "vs": "disruption",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "surveilledUnprotected",
+     "vp": 4,
+     "text": "สอดแนมหน่วยศัตรูได้เทิร์นนี้ (ยกเว้นทุกหน่วยอยู่ใกล้ objective ที่มี marker)"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlMoreThanOpponent",
+     "vp": 4,
+     "text": "ยึด objective ได้มากกว่าศัตรู",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "noOpponentMarkers",
+     "vp": 5,
+     "text": "ไม่เหลือ operation marker ของศัตรูบนสนาม"
+    }
+   ],
+   "action": "surveil"
+  },
+  {
+   "id": "gather-intel",
+   "name": "Gather Intel",
+   "forceDisposition": "reconnaissance",
+   "vs": "reconnaissance",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      1
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlCentral",
+     "vp": 6,
+     "text": "รอบ 1: ยึด central objective"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perExtractThisTurn",
+     "vp": 7,
+     "text": "7VP ต่อหน่วยที่ทำ Extract Intelligence สำเร็จเทิร์นนี้"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "ownMarkers3Plus",
+     "vp": 5,
+     "text": "จบเกม: มี operation marker ของเรา 3 อันขึ้นไป"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "ownMarkerAtEnemyHome",
+     "vp": 5,
+     "text": "จบเกม: marker ของเราอยู่ในระยะ home ศัตรู"
+    }
+   ],
+   "action": "extract-intelligence"
+  },
+  {
+   "id": "search-and-scour",
+   "name": "Search and Scour",
+   "forceDisposition": "reconnaissance",
+   "vs": "priority-assets",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlCentral",
+     "vp": 3,
+     "text": "ยึด central objective"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInTerrain",
+     "vp": 2,
+     "text": "ทำลายหน่วยศัตรูที่เริ่มเทิร์นใน terrain area"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 4,
+     "text": "4VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "noEnemyInYourTerritory",
+     "vp": 5,
+     "text": "จบเกม: ไม่มีหน่วยศัตรูอยู่ในเขตเราทั้งหน่วย"
+    }
+   ]
+  },
+  {
+   "id": "secure-asset",
+   "name": "Secure Asset",
+   "forceDisposition": "priority-assets",
+   "vs": "take-and-hold",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "securedAssetThisTurn",
+     "vp": 4,
+     "text": "หน่วยเรา Secure the Asset สำเร็จเทิร์นนี้"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInRangeOfCentral",
+     "vp": 2,
+     "text": "ทำลายหน่วยศัตรูที่เริ่มเทิร์นในระยะ central objective"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "control3Plus",
+     "vp": 4,
+     "text": "ยึด objective ได้ 3 อันขึ้นไป",
+     "round5When": "endOfYourTurn"
+    }
+   ],
+   "action": "secure-asset"
+  },
+  {
+   "id": "vital-link",
+   "name": "Vital Link",
+   "forceDisposition": "priority-assets",
+   "vs": "purge-the-foe",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlCentral",
+     "vp": 2,
+     "text": "ยึด central objective",
+     "bonus": {
+      "condition": "ownMarkersAtControlledCentral",
+      "vp": 1
+     },
+     "bonusText": "+1 ต่อ marker ของเราในระยะ central ที่ยึด"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn",
+     "bonus": {
+      "condition": "controlCentral",
+      "vp": 4
+     },
+     "bonusText": "+4 ถ้าในนั้นมี central"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "controlEnemyHome",
+     "vp": 10,
+     "text": "จบเกม: ยึด home ของศัตรู"
+    }
+   ],
+   "action": "maintain-control"
+  },
+  {
+   "id": "extract-relic",
+   "name": "Extract Relic",
+   "forceDisposition": "priority-assets",
+   "vs": "disruption",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "sensorSweepThisTurn",
+     "vp": 4,
+     "text": "หน่วยเราทำ Sensor Sweep สำเร็จเทิร์นนี้"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInRangeOfObjective",
+     "vp": 3,
+     "text": "ทำลายหน่วยศัตรูที่เริ่มเทิร์นในระยะ objective"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "onlyOneOpponentMarkerHeld",
+     "vp": 4,
+     "text": "เหลือ marker ของศัตรูอันเดียว มีหน่วยเราใน terrain area นั้นและไม่มีศัตรู"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "onlyOneOpponentMarkerHeld",
+     "vp": 5,
+     "text": "จบเกม: เหลือ marker ศัตรูอันเดียวและเรายึด terrain area นั้น"
+    }
+   ],
+   "action": "sensor-sweep"
+  },
+  {
+   "id": "vanguard-operation",
+   "name": "Vanguard Operation",
+   "forceDisposition": "priority-assets",
+   "vs": "reconnaissance",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "vanguardThisTurn",
+     "vp": 4,
+     "text": "หน่วยเราทำ Vanguard Operation สำเร็จเทิร์นนี้"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "enemyUnitDestroyedThisTurn",
+     "vp": 2,
+     "text": "ทำลายหน่วยศัตรูได้เทิร์นนี้"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "controlEnemyHome",
+     "vp": 10,
+     "text": "จบเกม: ยึด home ของศัตรู"
+    }
+   ],
+   "action": "vanguard-operation"
+  },
+  {
+   "id": "sabotage",
+   "name": "Sabotage",
+   "forceDisposition": "priority-assets",
+   "vs": "priority-assets",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perSabotageThisTurn",
+     "vp": 3,
+     "text": "3VP ต่อหน่วยที่ทำ Sabotage สำเร็จเทิร์นนี้",
+     "bonus": {
+      "condition": "perSabotageInEnemyTerritory",
+      "vp": 2
+     },
+     "bonusText": "+2 ต่อหน่วยที่อยู่ในระยะ objective ในเขตศัตรู"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "round5When": "endOfYourTurn"
+    }
+   ],
+   "action": "sabotage"
   }
  ],
  "vpCaps": {
@@ -863,105 +1250,237 @@
    "name": "No Prisoners",
    "when": "จบเทิร์นใดก็ได้",
    "text": "2VP ต่อหน่วยศัตรูที่ถูกทำลายเทิร์นนี้ (สูงสุด 5VP)",
-   "options": [
-    2,
-    4,
-    5
+   "auto": [
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "perEnemyDestroyed",
+     "vp": 2,
+     "mode": "both",
+     "fromRound": 1,
+     "cap": 5
+    }
    ]
   },
   {
    "id": "overwhelming-force",
    "name": "Overwhelming Force",
    "when": "จบเทิร์นใดก็ได้",
-   "text": "3VP ต่อหน่วยศัตรูที่เริ่มเทิร์นอยู่บน objective แล้วถูกทำลาย (สูงสุด 5VP)",
-   "options": [
-    3,
-    5
+   "text": "3VP ต่อหน่วยศัตรูที่เริ่มเทิร์นในระยะ objective แล้วถูกทำลาย (สูงสุด 5VP)",
+   "auto": [
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "perEnemyStartedOnObjDestroyed",
+     "vp": 3,
+     "mode": "both",
+     "fromRound": 1,
+     "cap": 5
+    }
    ]
   },
   {
    "id": "plunder",
    "name": "Plunder",
    "when": "จบเทิร์นของคุณ",
-   "text": "Action (Shooting phase): หน่วยใน terrain area ที่ไม่อยู่ใน territory ของคุณ → plundered = 5VP",
-   "options": [
-    5
+   "text": "Action Plunder (Shooting phase, ครั้งเดียวต่อเทิร์น, สำเร็จทันที): หน่วยใน terrain area ที่ไม่อยู่ในเขตตัวเอง → plundered = 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "plunderedThisTurn",
+     "vp": 5,
+     "mode": "both",
+     "fromRound": 1
+    }
    ],
-   "redrawIf": "cleanse"
+   "redrawIf": "cleanse",
+   "action": "plunder"
   },
   {
    "id": "display-of-might",
    "name": "Display of Might",
    "when": "จบเทิร์นของคุณ / ของศัตรู",
-   "text": "มีหน่วยเรา (ไม่นับ AIRCRAFT/battle-shocked) อยู่ใน No Man's Land มากกว่าศัตรู: 2VP ตอนจบเทิร์นเรา, 5VP ตอนจบเทิร์นศัตรู",
-   "options": [
-    2,
-    5
+   "text": "หน่วยเรา (ไม่นับ AIRCRAFT/battle-shocked) อยู่ใน No Man's Land ทั้งหน่วยมากกว่าศัตรู: 2VP ตอนจบเทิร์นเรา, 5VP ตอนจบเทิร์นศัตรู",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "moreUnitsInNML",
+     "vp": 2,
+     "mode": "both",
+     "fromRound": 1
+    },
+    {
+     "trigger": "endOfOpponentTurn",
+     "condition": "moreUnitsInNML",
+     "vp": 5,
+     "mode": "both",
+     "fromRound": 1
+    }
    ]
   },
   {
    "id": "outflank",
    "name": "Outflank",
    "when": "จบเทิร์นของคุณ",
-   "text": "หน่วยเราภายใน 6\" จากขอบสนามและไม่อยู่ใน territory ตัวเอง 3VP / อยู่ใกล้ขอบตรงข้ามกัน 2 ฝั่ง 5VP",
-   "options": [
-    3,
-    5
+   "text": "หน่วยเราภายใน 6\" จากขอบสนามและไม่อยู่ในเขตตัวเอง 3VP · มีหน่วยใกล้ขอบตรงข้ามกัน 2 ฝั่ง (อย่างน้อย 1 หน่วยนอกเขตตัวเอง) 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "outflank",
+     "vp": 0,
+     "mode": "both",
+     "fromRound": 1,
+     "tiers": [
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       5
+      ]
+     ]
+    }
    ]
   },
   {
    "id": "beacon",
    "name": "Beacon",
-   "when": "จบเทิร์นศัตรู",
-   "text": "เลือก beacon unit ตอนจั่ว: อยู่นอก deployment zone 3VP / นอก territory 5VP",
-   "options": [
-    3,
-    5
-   ]
+   "when": "จบเทิร์นศัตรู (หรือจบรอบ 5)",
+   "text": "ตอนจั่วเลือก beacon unit: อยู่บนสนามนอก deployment zone ตัวเอง 3VP / นอกเขตตัวเอง 5VP",
+   "auto": [
+    {
+     "trigger": "endOfOpponentTurn",
+     "condition": "beacon",
+     "vp": 0,
+     "mode": "both",
+     "fromRound": 1,
+     "tiers": [
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       5
+      ]
+     ],
+     "orEndOfRound5": true
+    }
+   ],
+   "whenDrawn": "beacon"
   },
   {
    "id": "cleanse",
    "name": "Cleanse",
    "when": "จบเทิร์นของคุณ",
-   "text": "Action (Shooting phase) บน objective ที่ไม่ใช่ home: cleanse 1 จุด 2VP / 2 จุดขึ้นไป 5VP",
-   "options": [
-    2,
-    5
+   "text": "Action Cleanse (Shooting phase) บน objective ที่ไม่ใช่ home ตัวเอง สำเร็จจบเทิร์นถ้ายึดไว้: cleanse 1 จุด 2VP / 2 จุดขึ้นไป 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "cleansedThisTurn",
+     "vp": 0,
+     "mode": "both",
+     "fromRound": 1,
+     "tiers": [
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       5
+      ]
+     ]
+    }
    ],
-   "redrawIf": "plunder"
+   "redrawIf": "plunder",
+   "action": "cleanse"
   },
   {
    "id": "a-grievous-blow",
    "name": "A Grievous Blow",
    "when": "จบเทิร์นใดก็ได้",
-   "text": "ต่อหน่วยศัตรู starting strength 13+ ที่ถูกทำลาย: Fixed 4VP / Tactical 5VP (สูงสุด 5VP)",
-   "options": [
-    4,
-    5
+   "text": "หน่วยศัตรู starting strength 13+ ถูกทำลาย: Fixed 4VP ต่อหน่วย · Tactical 5VP",
+   "auto": [
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "perBigUnitDestroyed",
+     "vp": 4,
+     "mode": "fixed",
+     "fromRound": 1
+    },
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "bigUnitDestroyed",
+     "vp": 5,
+     "mode": "tactical",
+     "fromRound": 1
+    }
    ],
-   "fixed": true
+   "fixed": true,
+   "redrawIfNo": "ss13"
   },
   {
    "id": "defend-stronghold",
    "name": "Defend Stronghold",
-   "when": "จบเทิร์นศัตรู (round 2+)",
-   "text": "ยึด home objective ไว้ 3VP (+2 ถ้าไม่มีศัตรูใน deployment zone ของเรา)",
-   "options": [
-    3,
-    5
+   "when": "จบเทิร์นศัตรู (รอบ 2+, หรือจบรอบ 5)",
+   "text": "ยึด home objective ตัวเอง 3VP (+2 ถ้าไม่มีศัตรูใน deployment zone เรา)",
+   "auto": [
+    {
+     "trigger": "endOfOpponentTurn",
+     "condition": "controlOwnHome",
+     "vp": 3,
+     "mode": "both",
+     "fromRound": 2,
+     "bonus": {
+      "condition": "noEnemyInOwnZone",
+      "vp": 2
+     },
+     "orEndOfRound5": true
+    }
    ],
-   "round1Redraw": true
+   "round1Redraw": true,
+   "mandatoryRedraw": true
   },
   {
    "id": "engage-on-all-fronts",
    "name": "Engage on All Fronts",
    "when": "จบเทิร์นของคุณ",
-   "text": "มีหน่วยอยู่ใน 3 table quarters (ห่างกลางสนาม >6\"): Fixed 2 / Tactical 3VP · 4 quarters: Fixed 4 / Tactical 5VP",
-   "options": [
-    2,
-    3,
-    4,
-    5
+   "text": "มีหน่วยครอง table quarter (ทั้งหน่วย ห่างกลางสนาม >6\"): 3 quarters = Fixed 2 / Tactical 3VP · 4 quarters = Fixed 4 / Tactical 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "quarters",
+     "vp": 0,
+     "mode": "fixed",
+     "fromRound": 1,
+     "tiers": [
+      [
+       3,
+       2
+      ],
+      [
+       4,
+       4
+      ]
+     ]
+    },
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "quarters",
+     "vp": 0,
+     "mode": "tactical",
+     "fromRound": 1,
+     "tiers": [
+      [
+       3,
+       3
+      ],
+      [
+       4,
+       5
+      ]
+     ]
+    }
    ],
    "fixed": true
   },
@@ -969,39 +1488,78 @@
    "id": "secure-no-mans-land",
    "name": "Secure No Man's Land",
    "when": "จบเทิร์นของคุณ",
-   "text": "ยึด objective ใน No Man's Land ได้ 2 จุดขึ้นไป (ไม่นับ home) 5VP",
-   "options": [
-    5
+   "text": "ยึด objective ใน No Man's Land ได้ 2 จุดขึ้นไป (ไม่นับ home ตัวเอง) 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "controlNML2",
+     "vp": 5,
+     "mode": "both",
+     "fromRound": 1
+    }
    ]
   },
   {
    "id": "forward-position",
    "name": "Forward Position",
    "when": "จบเทิร์นของคุณ",
-   "text": "ยึด home objective ศัตรู และ/หรือ expansion objective ทุกจุด 5VP",
-   "options": [
-    5
-   ]
+   "text": "ยึด home ของศัตรู และ/หรือ expansion objective ทุกจุด 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "forwardPosition",
+     "vp": 5,
+     "mode": "both",
+     "fromRound": 1
+    }
+   ],
+   "round1Redraw": true
   },
   {
    "id": "centre-ground",
    "name": "Centre Ground",
    "when": "จบเทิร์นของคุณ",
    "text": "มีหน่วยเราภายใน 3\" จากกลางสนาม และไม่มีศัตรูภายใน 3\" = 3VP / ไม่มีศัตรูภายใน 6\" = 5VP",
-   "options": [
-    3,
-    5
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "centreGround",
+     "vp": 0,
+     "mode": "both",
+     "fromRound": 1,
+     "tiers": [
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       5
+      ]
+     ]
+    }
    ]
   },
   {
    "id": "assassination",
    "name": "Assassination",
    "when": "จบเทิร์นใดก็ได้",
-   "text": "Fixed: 3VP ต่อ CHARACTER ศัตรูที่ตาย (+1 ถ้า W4+) · Tactical: มี CHARACTER ศัตรูตายเทิร์นนี้ หรือตายหมดแล้ว 5VP",
-   "options": [
-    3,
-    4,
-    5
+   "text": "Fixed: 3VP ต่อโมเดล CHARACTER ศัตรูที่ตาย (+1 ถ้า W4+) · Tactical: มี CHARACTER ศัตรูตายเทิร์นนี้ หรือ CHARACTER ศัตรูตายหมดแล้ว 5VP",
+   "auto": [
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "characterKillsVP",
+     "vp": 1,
+     "mode": "fixed",
+     "fromRound": 1
+    },
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "characterDiedOrAllDead",
+     "vp": 5,
+     "mode": "tactical",
+     "fromRound": 1
+    }
    ],
    "fixed": true
   },
@@ -1009,42 +1567,232 @@
    "id": "a-tempting-target",
    "name": "A Tempting Target",
    "when": "จบเทิร์นของคุณ",
-   "text": "ศัตรูเลือก objective ใน No Man's Land ให้ตอนจั่ว: ยึดได้ 5VP",
-   "options": [
-    5
-   ]
+   "text": "ตอนจั่ว ศัตรูเลือก objective ใน No Man's Land (ไม่ใช่ home) เป็นเป้าล่อ: ยึดได้ 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "controlTemptingTarget",
+     "vp": 5,
+     "mode": "both",
+     "fromRound": 1
+    }
+   ],
+   "whenDrawn": "tempting-target"
   },
   {
    "id": "behind-enemy-lines",
    "name": "Behind Enemy Lines",
    "when": "จบเทิร์นของคุณ",
-   "text": "3VP ต่อหน่วยเราที่อยู่ใน deployment zone ศัตรูทั้งหน่วย (สูงสุด 5VP)",
-   "options": [
-    3,
-    5
-   ]
+   "text": "3VP ต่อหน่วยเรา (ไม่นับ AIRCRAFT/battle-shocked) ที่อยู่ใน deployment zone ศัตรูทั้งหน่วย (สูงสุด 5VP)",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "perUnitInEnemyZone",
+     "vp": 3,
+     "mode": "both",
+     "fromRound": 1,
+     "cap": 5
+    }
+   ],
+   "round1Redraw": true
   },
   {
    "id": "bring-it-down",
-   "name": "Bring It Down",
+   "name": "Bring it Down",
    "when": "จบเทิร์นใดก็ได้",
-   "text": "ต่อโมเดลศัตรู W10+ ที่ตาย: Fixed 4VP / Tactical 5VP (สูงสุด 5VP)",
-   "options": [
-    4,
-    5
+   "text": "โมเดลศัตรู W10+ ตาย: Fixed 4VP ต่อโมเดล · Tactical 5VP",
+   "auto": [
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "perBigModelDestroyed",
+     "vp": 4,
+     "mode": "fixed",
+     "fromRound": 1
+    },
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "bigModelDestroyed",
+     "vp": 5,
+     "mode": "tactical",
+     "fromRound": 1
+    }
    ],
-   "fixed": true
+   "fixed": true,
+   "redrawIfNo": "w10"
   },
   {
    "id": "burden-of-trust",
    "name": "Burden of Trust",
-   "when": "จบเทิร์นศัตรู",
-   "text": "2VP ต่อ objective ที่ guard ไว้ (สูงสุด 5VP)",
-   "options": [
-    2,
-    4,
-    5
-   ]
+   "when": "จบเทิร์นศัตรู (หรือจบรอบ 5)",
+   "text": "ต้นเทิร์นเรา: ให้หน่วยเฝ้า objective ละ 1 หน่วย — 2VP ต่อ objective ที่ยังเฝ้าและยึดไว้ (สูงสุด 5VP)",
+   "auto": [
+    {
+     "trigger": "endOfOpponentTurn",
+     "condition": "perGuarded",
+     "vp": 2,
+     "mode": "both",
+     "fromRound": 1,
+     "cap": 5,
+     "orEndOfRound5": true
+    }
+   ],
+   "whenDrawn": "guard"
   }
- ]
+ ],
+ "forceDispositions": [
+  {
+   "id": "take-and-hold",
+   "name": "Take and Hold",
+   "color": "#2f6b4f",
+   "text": "ยึดและครอง objective ทั่วสนาม"
+  },
+  {
+   "id": "purge-the-foe",
+   "name": "Purge the Foe",
+   "color": "#8a2b2b",
+   "text": "ทำลายศัตรูและครองสนาม"
+  },
+  {
+   "id": "disruption",
+   "name": "Disruption",
+   "color": "#1f4f8a",
+   "text": "ก่อกวน วางกับดัก หลอกล่อ"
+  },
+  {
+   "id": "reconnaissance",
+   "name": "Reconnaissance",
+   "color": "#1f6f75",
+   "text": "สอดแนม กระจายกำลัง เก็บข้อมูล"
+  },
+  {
+   "id": "priority-assets",
+   "name": "Priority Assets",
+   "color": "#8a6414",
+   "text": "ยึดทรัพยากรสำคัญด้วย action"
+  }
+ ],
+ "deploymentCards": [
+  {
+   "id": "tipping-point",
+   "name": "Tipping Point"
+  },
+  {
+   "id": "sweeping-engagement",
+   "name": "Sweeping Engagement"
+  },
+  {
+   "id": "search-and-destroy",
+   "name": "Search and Destroy"
+  },
+  {
+   "id": "crucible-of-battle",
+   "name": "Crucible of Battle"
+  },
+  {
+   "id": "dawn-of-war",
+   "name": "Dawn of War"
+  },
+  {
+   "id": "hammer-and-anvil",
+   "name": "Hammer and Anvil"
+  }
+ ],
+ "actions": {
+  "booby-trap": {
+   "name": "Booby Trap",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "unlimited",
+   "completes": "immediately",
+   "text": "หน่วยในระยะ objective (ไม่นับ home ตัวเอง) หรืออยู่ใน terrain area นอก deployment zone ตัวเองที่ยังไม่ถูกวางกับดัก → terrain area นั้น trapped (วาง marker) ใช้ได้ไม่จำกัด แต่ละหน่วยต้องคนละ terrain area"
+  },
+  "decoy": {
+   "name": "Decoy",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "unlimited",
+   "completes": "endOfTurnIfControl",
+   "text": "หน่วยในระยะ objective (ไม่นับ home ตัวเอง) ที่ยังไม่ decoyed → จบเทิร์นถ้าหน่วยนั้นยึด objective ได้: objective decoyed (วาง marker)"
+  },
+  "sensor-sweep": {
+   "name": "Sensor Sweep",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "oncePerTurn",
+   "completes": "endOfTurnIfControl",
+   "text": "หน่วยในระยะ central objective → จบเทิร์นถ้ายึดได้: เอา operation marker ออก 1 อัน (เริ่มไม่ได้ถ้าเหลือ marker บนสนามอันเดียว)"
+  },
+  "triangulate": {
+   "name": "Triangulate",
+   "starts": "shooting",
+   "fromRound": 2,
+   "limit": "oncePerTurn",
+   "completes": "endOfTurnIfControl",
+   "text": "ตั้งแต่รอบ 2: หน่วยในระยะ objective (ไม่นับ home ตัวเอง) → จบเทิร์นถ้ายึดได้: objective triangulated (วาง marker)"
+  },
+  "surveil": {
+   "name": "Surveil the Foe",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "unlimited",
+   "completes": "immediately",
+   "text": "หน่วยใดก็ได้ เลือกหน่วยศัตรูภายใน 18\" ที่มองเห็นและยังไม่ถูกสอดแนมเทิร์นนี้ → surveilled จนจบเทิร์น"
+  },
+  "extract-intelligence": {
+   "name": "Extract Intelligence",
+   "starts": "shooting",
+   "fromRound": 2,
+   "limit": "unlimited",
+   "completes": "endOfTurnIfControl",
+   "text": "ตั้งแต่รอบ 2: หน่วยในระยะ objective (ไม่นับ home ตัวเอง) ที่ยังไม่มี marker ของเรา → จบเทิร์นถ้ายึดได้: วาง marker"
+  },
+  "secure-asset": {
+   "name": "Secure Asset",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "oncePerTurn",
+   "completes": "endOfTurnIfControl",
+   "text": "หน่วยในระยะ objective (ไม่นับ home ตัวเอง) → จบเทิร์นถ้ายึดได้: secure the asset"
+  },
+  "maintain-control": {
+   "name": "Maintain Control",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "oncePerTurn",
+   "completes": "endOfTurnIfControl",
+   "text": "หน่วยในระยะ central objective → จบเทิร์นถ้ายึดได้: วาง marker"
+  },
+  "vanguard-operation": {
+   "name": "Vanguard Operation",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "oncePerTurn",
+   "completes": "endOfTurnIfNoEnemyInArea",
+   "text": "หน่วยใน terrain area ที่อยู่ในเขตศัตรู → จบเทิร์นถ้าไม่มีศัตรูใน terrain area นั้น: vanguard operation สำเร็จ"
+  },
+  "sabotage": {
+   "name": "Sabotage",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "unlimited",
+   "completes": "endOfTurnIfControl",
+   "text": "หน่วยในระยะ objective (ไม่นับ home ตัวเอง) แต่ละหน่วยคนละ objective → จบเทิร์นถ้ายึดได้: commit sabotage"
+  },
+  "cleanse": {
+   "name": "Cleanse",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "unlimited",
+   "completes": "endOfTurnIfControl",
+   "text": "หน่วยในระยะ objective (ไม่นับ home ตัวเอง) แต่ละหน่วยคนละ objective → จบเทิร์นถ้ายึดไว้: objective cleansed"
+  },
+  "plunder": {
+   "name": "Plunder",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "oncePerTurn",
+   "completes": "immediately",
+   "text": "หน่วยใน terrain area ที่ไม่อยู่ในเขตตัวเอง → terrain area นั้น plundered"
+  }
+ }
 }

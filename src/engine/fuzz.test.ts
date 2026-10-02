@@ -8,7 +8,7 @@ it('auto charge never ends in walls', () => {
   const SM = load('SM'), ORK = load('ORK');
   let fails = 0;
   for (let seed = 1; seed < 60; seed++) {
-    const s = createGame({ lists: [PRESETS.SM, PRESETS.ORK], factions: [SM, ORK], names: ['a', 'b'], deploymentId: 'hammer-and-anvil', primaryId: 'battlefield-dominance', seed });
+    const s = createGame({ lists: [PRESETS.SM, PRESETS.ORK], factions: [SM, ORK], names: ['a', 'b'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed });
     const boyz = s.units.find((u) => u.owner === 1)!;
     const caps = s.units.find((u) => u.owner === 0)!;
     const p1 = findPlacement(s, caps, 'deepStrike', { x: 10 + (seed % 25), y: 22 });

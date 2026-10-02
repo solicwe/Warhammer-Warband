@@ -3,7 +3,7 @@ import type { GameState } from '../engine/types';
 
 const KEY = 'w40k11-save';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export function loadSaved(): GameState | null {
   try {

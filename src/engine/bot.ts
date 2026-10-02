@@ -8,11 +8,12 @@ import {
   autoApproach, callWaaagh, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits,
-  sendToReserves, setOathTarget, validateMove, validatePlacement,
+  sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries,
 } from './game';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
 import { isMelee } from './weapons';
 import { applyDetachmentStratagem, planStratagem, stratagemBlock } from './stratagems';
+import { actionOptions, startAction } from './missions';
 import type { GameState, ObjectiveState, PlayerId, Pt, UnitState, WeaponProfileData } from './types';
 
 const stay = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]]));
@@ -121,8 +122,22 @@ function botAttackStratagem(s: GameState, u: UnitState) {
 
 // ---------- deployment ----------
 
+/** Fixed secondaries: a bot picks two cards the matchup is likely to pay out. */
+function botPickFixed(s: GameState, p: PlayerId) {
+  const P = s.players[p];
+  if (P.secMode !== 'fixed' || P.secActive.length >= 2) return;
+  const e = other(p);
+  const enemy = s.units.filter((u) => u.owner === e);
+  const picks: string[] = [];
+  if (enemy.some((u) => u.models.some((m) => m.profile.W >= 10))) picks.push('bring-it-down');
+  if (enemy.some((u) => u.startingStrength >= 13)) picks.push('a-grievous-blow');
+  picks.push('assassination', 'engage-on-all-fronts');
+  chooseFixedSecondaries(s, p, picks.slice(0, 2));
+}
+
 export function botDeploy(s: GameState) {
   const p = s.deployTurn;
+  botPickFixed(s, p);
   const u = s.units.find((x) => x.owner === p && x.status === 'pending');
   if (!u) return;
   // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
@@ -278,6 +293,21 @@ export function botShootOne(s: GameState): boolean {
       const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, t).models, 0);
       return { t, v: shotValue(s, u, t, ev) };
     }).filter((x): x is { t: UnitState; v: number } => !!x).sort((a, b) => b.v - a.v);
+    // a mission action is worth roughly 8 points of damage per VP it brings
+    const ACTION_VP: Record<string, number> = { cleanse: 3, plunder: 5, 'booby-trap': 3, decoy: 4, 'sensor-sweep': 4, triangulate: 5, surveil: 4, 'extract-intelligence': 7, 'secure-asset': 4, 'maintain-control': 3, 'vanguard-operation': 4, sabotage: 4 };
+    const acts = actionOptions(s, u.owner).filter((o) => o.unitId === u.id);
+    if (acts.length) {
+      const P = s.players[u.owner];
+      const already = (a: string) => P.mission.done.some((d) => d.action === a && d.turn === s.turn) || s.pendingActions.some((x) => x.action === a && x.player === u.owner && x.turn === s.turn);
+      const pick = acts
+        .filter((o) => !(o.action === 'surveil' && already('surveil')))
+        .sort((a, b) => Number(b.objId?.startsWith('home') ?? 0) - Number(a.objId?.startsWith('home') ?? 0))[0];
+      const best = ranked[0]?.v ?? 0;
+      if (pick && (ACTION_VP[pick.action] ?? 3) * 8 >= best) {
+        startAction(s, pick);
+        return true;
+      }
+    }
     if (ranked.length) botAttackStratagem(s, u);
     for (const { t } of ranked) {
       if (!onBoard(t)) continue;

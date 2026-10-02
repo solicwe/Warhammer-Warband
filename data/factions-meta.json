@@ -1,7 +1,10 @@
 {
   "_comment": "Faction grouping and sub-factions for the army builder. Edit freely; run `npm run data` afterwards. Detachments are matched to a sub-faction automatically from their rules text; set `detachments` here to override.",
   "excludeSources": {
-    "_comment": "Datasheets whose source name matches one of these (case-insensitive) are left out — Warhammer Legends are not 11th edition matched play.",
+    "_comment": "Only datasheets from sources of these editions are kept (Warhammer Legends, Forge World and old 10th-edition indexes are left out). Source names matching the patterns are always left out.",
+    "keepEditions": [
+      "11"
+    ],
     "patterns": [
       "Warhammer Legends",
       "^Legends:"

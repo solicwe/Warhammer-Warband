@@ -23,7 +23,7 @@ function list(factionId: string, units: [string, number, number, string?][]): Ar
 function game(): GameState {
   const s = createGame({
     lists: [list('SM', [['Intercessor Squad', 10, 150], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 90], ['Warboss', 1, 100]])],
-    factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'hammer-and-anvil', primaryId: 'battlefield-dominance', seed: 42,
+    factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 42,
   });
   s.terrain = s.terrain.filter((t) => t.objectiveId); // rules tests run on an open board
   s.terrain.forEach((t) => (t.walls = []));
@@ -221,7 +221,7 @@ describe('transports, split fire, secondaries', () => {
     const { claimSecondary, drawSecondaries } = await import('./game');
     const s = createGame({
       lists: [list('SM', [['Intercessor Squad', 10, 150], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 90], ['Warboss', 1, 100]])],
-      factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'hammer-and-anvil', primaryId: 'battlefield-dominance', seed: 3, secondaryMode: 'tactical',
+      factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 3, secondaryMode: 'tactical',
     });
     s.round = 1;
     drawSecondaries(s, 0, 6);
@@ -329,5 +329,69 @@ describe('detachment stratagems', () => {
     expect(s.players[0].cp).toBe(3 - aoc.cp);
     rollHits(s);
     expect(s.attack!.pools[0].ap).toBe(apBefore < 0 ? apBefore + 1 : apBefore);
+  });
+});
+
+describe('Chapter Approved missions', () => {
+  it('force dispositions pick each player\'s primary and an official layout', () => {
+    const s = createGame({
+      lists: [list('SM', [['Intercessor Squad', 10, 150], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 90], ['Warboss', 1, 100]])],
+      factions: [SM, ORK], names: ['A', 'B'], dispositions: ['purge-the-foe', 'reconnaissance'], seed: 4,
+    });
+    expect(s.players[0].primaryId).toBe('consecrate');
+    expect(s.players[1].primaryId).toBe('triangulation');
+    expect(s.deploymentId).toMatch(/purge-the-foe-vs-reconnaissance-\d/);
+    expect(s.objectives.length).toBeGreaterThanOrEqual(5);
+    expect(s.objectives.filter((o) => o.type === 'home').length).toBe(2);
+  });
+  it('Sabotage: start the action on an objective, complete it at the end of the turn and score', async () => {
+    const { actionOptions, startAction, onTurnEnd, scorePrimary } = await import('./missions');
+    const s = createGame({
+      lists: [list('SM', [['Intercessor Squad', 10, 150], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 90], ['Warboss', 1, 100]])],
+      factions: [SM, ORK], names: ['A', 'B'], dispositions: ['priority-assets', 'priority-assets'], seed: 2,
+    });
+    const o = s.objectives.find((x) => x.type !== 'home')!;
+    const u = s.units.find((x) => x.owner === 0)!;
+    placeUnit(s, u, formationAt(u, { x: o.x, y: o.y }));
+    s.round = 2; s.turn = 2; s.active = 0; s.phase = 'shooting';
+    for (const x of s.units) if (x.owner === 1) x.status = 'reserves';
+    s.objectives.forEach((x) => (x.controller = null));
+    o.controller = 0;
+    const opts = actionOptions(s, 0).filter((x) => x.action === 'sabotage' && x.objId === o.id);
+    expect(opts.length).toBe(1);
+    startAction(s, opts[0]);
+    expect(u.selectedToShoot).toBe(true);
+    onTurnEnd(s);
+    expect(s.players[0].mission.done.some((d) => d.action === 'sabotage')).toBe(true);
+    const before = s.players[0].vp;
+    scorePrimary(s, 'endOfYourTurn', 0);
+    expect(s.players[0].vp).toBeGreaterThanOrEqual(before + 3);
+  });
+  it('moving cancels a pending action', async () => {
+    const { actionOptions, startAction } = await import('./missions');
+    const { commitMove } = await import('./game');
+    const s = createGame({
+      lists: [list('SM', [['Intercessor Squad', 10, 150], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 90], ['Warboss', 1, 100]])],
+      factions: [SM, ORK], names: ['A', 'B'], dispositions: ['priority-assets', 'take-and-hold'], seed: 2,
+    });
+    const o = s.objectives.find((x) => x.type !== 'home')!;
+    const u = s.units.find((x) => x.owner === 0)!;
+    placeUnit(s, u, formationAt(u, { x: o.x, y: o.y }));
+    s.round = 2; s.turn = 2; s.active = 0; s.phase = 'shooting';
+    startAction(s, actionOptions(s, 0).find((x) => x.unitId === u.id)!);
+    expect(s.pendingActions.length).toBe(1);
+    commitMove(s, u, 'normal', new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y + 0.5 }]])));
+    expect(s.pendingActions.length).toBe(0);
+  });
+  it('snap shooting 6s are hits, not critical hits', async () => {
+    const { rollHits } = await import('./attack');
+    const s = game();
+    const a = put(s, s.units[0].id, { x: 22, y: 10 });
+    const t = put(s, s.units[2].id, { x: 22, y: 25 });
+    s.phase = 'movement'; s.active = 1; s.turn = 1;
+    const r = buildShootPools(s, a.id, t.id, { mode: 'snap' });
+    startAttack(s, 'overwatch', a.id, t.id, r.pools);
+    rollHits(s);
+    expect(s.attack!.pools[0].hits.some((h) => h.o === 'crit')).toBe(false);
   });
 });

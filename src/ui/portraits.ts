@@ -7,17 +7,20 @@ try { cache = JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch { cache = {
 let version = 0;
 const listeners = new Set<() => void>();
 
+/** false when the browser refused to store the photos (storage full / blocked): they last until the page closes. */
+export let portraitsPersisted = true;
 function save() {
   version++;
-  try { localStorage.setItem(KEY, JSON.stringify(cache)); } catch { /* storage full or blocked: keep in memory */ }
+  try { localStorage.setItem(KEY, JSON.stringify(cache)); portraitsPersisted = true; } catch { portraitsPersisted = false; }
   listeners.forEach((l) => l());
 }
 
 export const getPortrait = (datasheet: string): string | undefined => cache[datasheet];
 
-export function setPortrait(datasheet: string, dataUrl: string | null) {
+export function setPortrait(datasheet: string, dataUrl: string | null): boolean {
   if (dataUrl) cache[datasheet] = dataUrl; else delete cache[datasheet];
   save();
+  return portraitsPersisted;
 }
 
 /** Re-render when portraits change; returns a version number usable as a memo key. */
@@ -39,7 +42,7 @@ export function fileToPortrait(file: File): Promise<string> {
       URL.revokeObjectURL(url);
       resolve(c.toDataURL('image/jpeg', 0.82));
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('อ่านไฟล์รูปไม่ได้')); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('อ่านไฟล์รูปไม่ได้ (ใช้ JPG / PNG / WebP — รูป HEIC จาก iPhone ให้แปลงก่อน)')); };
     img.src = url;
   });
 }

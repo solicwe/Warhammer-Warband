@@ -1,7 +1,8 @@
 import { Component, useEffect, useState, type ReactNode } from 'react';
-import { MISSIONS } from '../engine/config';
-import { createGame } from '../engine/game';
-import type { ArmyList, GameState } from '../engine/types';
+import { dispositionById, dispositionId, layoutsFor, MISSIONS, primaryFor, deploymentName, type DispositionId } from '../engine/config';
+import { createGame, listDisposition } from '../engine/game';
+import { LayoutPreview } from './LayoutPreview';
+import type { ArmyList, FactionData, GameState } from '../engine/types';
 import { ArmyBuilder } from './ArmyBuilder';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { GameScreen } from './GameScreen';
@@ -44,10 +45,12 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ kind: 'home' });
   const [lists, setLists] = useState<[ArmyList, ArmyList]>(loadLists);
   const [names, setNames] = useState<[string, string]>(['ผู้เล่น 1', 'ผู้เล่น 2']);
-  const [deployment, setDeployment] = useState('random');
-  const [primary, setPrimary] = useState('battlefield-dominance');
+  const [layoutPick, setLayoutPick] = useState<number>(0); // 0 = random, 1..3 = a specific official layout
   const [secMode, setSecMode] = useState<'none' | 'tactical' | 'fixed'>('tactical');
-  const [vsBot, setVsBot] = useState(false);
+  const [mode, setMode] = useState<'hotseat' | 'bot' | 'botbot'>('hotseat');
+  const vsBot = mode !== 'hotseat';
+  const [facs, setFacs] = useState<[FactionData | null, FactionData | null]>([null, null]);
+  const [dispPick, setDispPick] = useState<[DispositionId | null, DispositionId | null]>([null, null]);
   const [index, setIndex] = useState<FactionIndex | null>(null);
   const [saved, setSaved] = useState<GameState | null>(null);
   const [busy, setBusy] = useState(false);
@@ -55,6 +58,26 @@ export default function App() {
 
   useEffect(() => { loadIndex().then(setIndex).catch(() => setErr('โหลดรายชื่อ faction ไม่ได้ ลองรีเฟรชหน้า')); setSaved(loadSaved()); }, []);
   useEffect(() => { try { localStorage.setItem(LISTS_KEY, JSON.stringify(lists)); } catch { /* ignore */ } }, [lists]);
+  useEffect(() => {
+    let live = true;
+    Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]).then((f) => live && setFacs([f[0], f[1]])).catch(() => {});
+    return () => { live = false; };
+  }, [lists]);
+  /** Dispositions a list can choose from: one per detachment it brings. */
+  const dispOptions = (i: 0 | 1): DispositionId[] => {
+    const f = facs[i];
+    if (!f) return [];
+    const ids = lists[i].detachments.map((n) => dispositionId(f.detachments.find((d) => d.name === n)?.forceDisposition)).filter((x): x is DispositionId => !!x);
+    return ids.length ? [...new Set(ids)] : ['take-and-hold'];
+  };
+  const dispOf = (i: 0 | 1): DispositionId | null => {
+    const opts = dispOptions(i);
+    const pick = dispPick[i];
+    if (pick && opts.includes(pick)) return pick;
+    return facs[i] ? listDisposition(lists[i], facs[i]!) : null;
+  };
+  const d0 = dispOf(0), d1 = dispOf(1);
+  const layouts = d0 && d1 ? layoutsFor(d0, d1) : [];
 
   const start = async () => {
     setBusy(true);
@@ -63,13 +86,16 @@ export default function App() {
       const factions = await Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]);
       const gone = lists.flatMap((l, i) => l.units.filter((u) => !factions[i].datasheets.some((d) => d.name === u.datasheet)).map((u) => `${names[i]}: ${u.datasheet}`));
       if (gone.length) { setErr(`มีหน่วยที่ไม่อยู่ใน 11th edition แล้ว (Legends) — เข้า "จัดทัพ" แล้วลบออกก่อน: ${gone.join(', ')}`); return; }
-      const deps = MISSIONS.deployments;
-      const depId = deployment === 'random' ? deps[Math.floor(Math.random() * deps.length)].id : deployment;
+      const dz: [DispositionId, DispositionId] = [dispOf(0) ?? listDisposition(lists[0], factions[0]), dispOf(1) ?? listDisposition(lists[1], factions[1])];
+      const opts = layoutsFor(dz[0], dz[1]);
+      const layout = layoutPick ? opts[layoutPick - 1] : opts[Math.floor(Math.random() * opts.length)];
       const s = createGame({
         lists, factions: factions as [typeof factions[0], typeof factions[1]],
-        names: vsBot ? [names[0], 'บอท'] : names, deploymentId: depId, primaryId: primary, secondaryMode: secMode,
+        names: mode === 'botbot' ? ['บอท 1', 'บอท 2'] : vsBot ? [names[0], 'บอท'] : names,
+        deploymentId: layout?.id, dispositions: dz, secondaryMode: secMode,
       });
-      s.botPlayer = vsBot ? 1 : null;
+      s.botPlayer = mode === 'bot' ? 1 : null;
+      s.bots = mode === 'botbot' ? [0, 1] : mode === 'bot' ? [1] : [];
       setScreen({ kind: 'game', state: s });
     } catch (e) {
       setErr(`เริ่มเกมไม่ได้: ${e instanceof Error ? e.message : String(e)}`);
@@ -116,18 +142,33 @@ export default function App() {
         <section className="card">
           <div className="card-title">ผู้เล่น</div>
           <div className="seg">
-            <button className={!vsBot ? 'on' : ''} onClick={() => setVsBot(false)}>2 คน (ส่งเครื่องกัน)</button>
-            <button className={vsBot ? 'on' : ''} onClick={() => setVsBot(true)}>เล่นกับบอท</button>
+            <button className={mode === 'hotseat' ? 'on' : ''} onClick={() => setMode('hotseat')}>2 คน</button>
+            <button className={mode === 'bot' ? 'on' : ''} onClick={() => setMode('bot')}>เล่นกับบอท</button>
+            <button className={mode === 'botbot' ? 'on' : ''} onClick={() => setMode('botbot')}>บอท vs บอท</button>
           </div>
           {[0, 1].map((i) => (
             <div key={i} className={`army-row side ${i ? 's1' : ''}`}>
               <div className="grow">
-                {i === 1 && vsBot
-                  ? <div className="army-name">บอท</div>
+                {(i === 1 && vsBot) || mode === 'botbot'
+                  ? <div className="army-name">{mode === 'botbot' ? `บอท ${i + 1}` : 'บอท'}</div>
                   : <input aria-label={`ชื่อผู้เล่น ${i + 1}`} value={names[i]} onChange={(e) => setNames((n) => (i === 0 ? [e.target.value, n[1]] : [n[0], e.target.value]))} />}
                 <div className="small" style={{ marginTop: 4 }}>
                   <b>{factionName(lists[i].factionId)}{lists[i].subfaction ? ` · ${titleCase(lists[i].subfaction!)}` : ''}</b> <span className="muted">· {pts(lists[i])} pts · {lists[i].units.length} หน่วย · {lists[i].detachments.join(', ') || 'ยังไม่เลือก detachment'}</span>
                 </div>
+                {(() => {
+                  const ii = i as 0 | 1;
+                  const opts = dispOptions(ii);
+                  const cur = dispOf(ii);
+                  if (!cur) return null;
+                  return (
+                    <div className="row wrap" style={{ marginTop: 6, gap: 6 }}>
+                      <span className="tiny muted">Force Disposition</span>
+                      {opts.map((d) => (
+                        <button key={d} type="button" className={`disp-chip ${cur === d ? '' : 'off'}`} style={{ background: dispositionById(d).color }} onClick={() => setDispPick((x) => (ii === 0 ? [d, x[1]] : [x[0], d]))}>{dispositionById(d).name}</button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
               <button className="btn small" onClick={() => setScreen({ kind: 'build', player: i as 0 | 1 })}>จัดทัพ</button>
             </div>
@@ -136,24 +177,35 @@ export default function App() {
 
         <section className="card">
           <div className="card-title">Mission · Chapter Approved 2026-27</div>
-          <label className="field">Deployment
-            <select value={deployment} onChange={(e) => setDeployment(e.target.value)}>
-              <option value="random">สุ่ม</option>
-              {MISSIONS.deployments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
-          </label>
-          <label className="field">Primary (Mirrored World)
-            <select value={primary} onChange={(e) => setPrimary(e.target.value)}>
-              {MISSIONS.primaries.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </label>
+          {d0 && d1 ? (
+            <>
+              <div className="small">
+                <div><b>{dispositionById(d0).name}</b> vs <b>{dispositionById(d1).name}</b></div>
+                <div className="muted">Primary ของ {mode === 'botbot' ? 'บอท 1' : names[0]}: <b>{primaryFor(d0, d1).name}</b> · ของ {mode === 'botbot' ? 'บอท 2' : vsBot ? 'บอท' : names[1]}: <b>{primaryFor(d1, d0).name}</b></div>
+              </div>
+              <div className="field">Layout ทางการ (Battlemaster) สำหรับคู่นี้
+                <div className="layout-pick">
+                  <button type="button" className={`layout-opt ${layoutPick === 0 ? 'on' : ''}`} onClick={() => setLayoutPick(0)}>
+                    <div className="layout-random">?</div><span>สุ่ม</span>
+                  </button>
+                  {layouts.map((l) => (
+                    <button key={l.id} type="button" className={`layout-opt ${layoutPick === l.number ? 'on' : ''}`} onClick={() => setLayoutPick(l.number)}>
+                      <LayoutPreview layout={l} width={64} />
+                      <span>#{l.number} {deploymentName(l.deployment)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : <div className="small muted">กำลังโหลดกองทัพ…</div>}
           <label className="field">Secondary
             <select value={secMode} onChange={(e) => setSecMode(e.target.value as typeof secMode)}>
-              <option value="tactical">Tactical (จั่ว 2 ใบทุก Command phase)</option>
+              <option value="tactical">Tactical (จั่วให้ครบ 2 ใบทุก Command phase)</option>
               <option value="fixed">Fixed (เลือก 2 ใบใช้ทั้งเกม)</option>
               <option value="none">ไม่ใช้ (เหมาะกับมือใหม่)</option>
             </select>
           </label>
+          <div className="tiny muted">Force Disposition มาจาก detachment ในรายชื่อกองทัพ · คู่ disposition กำหนด Primary ของแต่ละฝ่ายและแผนที่ (3 layout ทางการต่อคู่)</div>
         </section>
 
         {err && <div className="err">{err}</div>}

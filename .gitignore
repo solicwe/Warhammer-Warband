@@ -3,3 +3,4 @@ dist
 data/raw
 *.log
 artifact
+__pycache__/

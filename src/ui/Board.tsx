@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RULES } from '../engine/config';
 import { deploymentById, toPoly } from '../engine/config';
-import { dist } from '../engine/geometry';
+import { dist, pointInPoly } from '../engine/geometry';
 import { alive, onBoard } from '../engine/state';
 import { levelOfControl } from '../engine/game';
 import { modelToken } from './Tokens';
@@ -29,6 +29,7 @@ export interface BoardProps {
   badges?: Record<string, string[]>;
   losLines?: { a: Pt; b: Pt; cover: boolean }[];
   onTapUnit?: (unitId: string, modelId: string) => void;
+  measure?: { a?: Pt; b?: Pt };
   onTapBoard?: (p: Pt) => void;
   onDraft?: (p: Paths) => void;
 }
@@ -346,7 +347,7 @@ function BoardImpl(props: BoardProps) {
           <polygon points={toPoly(dep.zones.defender).map((p) => `${p.x},${p.y}`).join(' ')} fill={SOFT[defender]} stroke={COLORS[defender]} strokeWidth={0.1} strokeDasharray="0.5 0.3" />
         </>
       )}
-      <polygon points={toPoly(dep.territory.attacker).map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth={0.06} strokeDasharray="0.15 0.35" pointerEvents="none" />
+      <polygon points={toPoly(dep.territory.attacker).map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth={0.1} strokeDasharray="0.5 0.4" pointerEvents="none" />
       {Array.from({ length: Math.floor(H / 6) + 1 }, (_, i) => (
         <text key={`ty${i}`} x={0.2} y={i * 6 + 0.5} fontSize={0.6} fill="rgba(255,255,255,0.4)">{i * 6}"</text>
       ))}
@@ -384,24 +385,36 @@ function BoardImpl(props: BoardProps) {
             </g>
           );
         }
-        // ruins (dense): tiled floor, upper floor slab, thick walls with windows, rubble
+        if (t.kind === 'objective-area') {
+          return <polygon key={t.id} points={pts} fill="rgba(245,184,61,0.05)" stroke="none" pointerEvents="none" />;
+        }
+        // terrain area: baseplate, rubble, ruin walls (block sight) and obstacles (low, cover only)
+        const cxp = t.poly.reduce((a, p) => a + p.x, 0) / t.poly.length, cyp = t.poly.reduce((a, p) => a + p.y, 0) / t.poly.length;
+        const inner = t.poly.map((p) => `${cxp + (p.x - cxp) * 0.86},${cyp + (p.y - cyp) * 0.86}`).join(' ');
         return (
           <g key={t.id} pointerEvents="none">
-            <polygon points={pts} fill="url(#tiles)" stroke={t.objectiveId ? 'none' : 'rgba(0,0,0,0.45)'} strokeWidth={0.08} />
-            <rect x={x0 + w * 0.08} y={y0 + h * 0.08} width={w * 0.45} height={h * 0.45} fill="rgba(140,130,110,0.55)" stroke="rgba(40,34,26,0.6)" strokeWidth={0.06} transform={t.walls[0] && (t.walls[0].a.x > x0 + w / 2 || t.walls[0].a.y > y0 + h / 2) ? `rotate(180 ${x0 + w / 2} ${y0 + h / 2})` : undefined} />
-            {Array.from({ length: 6 }, (_, i) => (
-              <circle key={i} cx={x0 + 0.5 + rnd(i) * (w - 1)} cy={y0 + 0.5 + rnd(i + 9) * (h - 1)} r={0.12 + rnd(i + 3) * 0.2} fill="#4b4335" />
+            <polygon points={pts} fill={t.category === 'dense' ? 'url(#tiles)' : 'rgba(170,158,128,0.55)'} stroke="#1c1712" strokeWidth={0.14} />
+            <polygon points={inner} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={0.06} />
+            {Array.from({ length: Math.min(9, Math.round(w * h / 6)) }, (_, i) => {
+              const px = x0 + 0.5 + rnd(i) * Math.max(0, w - 1), py = y0 + 0.5 + rnd(i + 9) * Math.max(0, h - 1);
+              return pointInPoly({ x: px, y: py }, t.poly) ? <circle key={i} cx={px} cy={py} r={0.12 + rnd(i + 3) * 0.22} fill="#4b4335" opacity={0.85} /> : null;
+            })}
+            {(t.obstacles ?? []).map((ob, i) => (
+              <g key={`o${i}`}>
+                <line x1={ob.a.x} y1={ob.a.y} x2={ob.b.x} y2={ob.b.y} stroke="#3a2a12" strokeWidth={0.5} strokeLinecap="round" />
+                <line x1={ob.a.x} y1={ob.a.y} x2={ob.b.x} y2={ob.b.y} stroke="#d98b1f" strokeWidth={0.3} strokeLinecap="round" strokeDasharray="0.45 0.15" />
+              </g>
             ))}
             {t.walls.map((wl, i) => {
               const len = dist(wl.a, wl.b);
               const n = Math.max(1, Math.floor(len / 2));
               return (
                 <g key={i}>
-                  <line x1={wl.a.x} y1={wl.a.y} x2={wl.b.x} y2={wl.b.y} stroke="#2a221a" strokeWidth={0.55} strokeLinecap="square" />
-                  <line x1={wl.a.x} y1={wl.a.y} x2={wl.b.x} y2={wl.b.y} stroke="#8a7e69" strokeWidth={0.22} strokeLinecap="square" />
+                  <line x1={wl.a.x} y1={wl.a.y} x2={wl.b.x} y2={wl.b.y} stroke="#14261c" strokeWidth={0.6} strokeLinecap="square" />
+                  <line x1={wl.a.x} y1={wl.a.y} x2={wl.b.x} y2={wl.b.y} stroke="#3e7a58" strokeWidth={0.32} strokeLinecap="square" />
                   {Array.from({ length: n }, (_, k) => {
                     const f = (k + 0.5) / n;
-                    return <circle key={k} cx={wl.a.x + (wl.b.x - wl.a.x) * f} cy={wl.a.y + (wl.b.y - wl.a.y) * f} r={0.16} fill="#1c1712" />;
+                    return <circle key={k} cx={wl.a.x + (wl.b.x - wl.a.x) * f} cy={wl.a.y + (wl.b.y - wl.a.y) * f} r={0.13} fill="#0d1a12" />;
                   })}
                 </g>
               );
@@ -432,6 +445,19 @@ function BoardImpl(props: BoardProps) {
             </g>
           </g>
         );
+      })}
+      {s.markers.map((m) => (
+        <g key={m.id} transform={`translate(${m.x} ${m.y})`} pointerEvents="none">
+          <rect x={-0.55} y={-0.55} width={1.1} height={1.1} rx={0.15} transform="rotate(45)" fill={COLORS[m.owner]} stroke="#fff" strokeWidth={0.12} />
+          <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>{m.kind === 'trap' ? '!' : m.kind === 'locate' ? 'L' : m.kind === 'consecrate' ? '✠' : '◆'}</text>
+        </g>
+      ))}
+      {s.pendingActions.map((a) => {
+        const u = s.units.find((x) => x.id === a.unitId);
+        const ms = u ? alive(u) : [];
+        if (!ms.length) return null;
+        const c = { x: ms.reduce((q, m) => q + m.x, 0) / ms.length, y: Math.min(...ms.map((m) => m.y - m.r)) };
+        return <text key={a.unitId + a.action} x={c.x} y={c.y - 0.6} fontSize={0.7} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.12} paintOrder="stroke" fontWeight={800} pointerEvents="none">⏳ action</text>;
       })}
       {props.rings?.map((r, i) => (
         <circle key={`r${i}`} cx={r.c.x} cy={r.c.y} r={r.r} fill="none" stroke={r.color} strokeWidth={0.08} strokeDasharray={r.dash ? '0.35 0.25' : undefined} />
@@ -521,6 +547,26 @@ function BoardImpl(props: BoardProps) {
           </g>
         );
       })}
+      {props.measure?.a && (
+        <g pointerEvents="none">
+          <circle cx={props.measure.a.x} cy={props.measure.a.y} r={0.35} fill="#fde68a" stroke="#000" strokeWidth={0.08} />
+          {props.measure.b && (() => {
+            const a = props.measure.a!, b = props.measure.b!;
+            const d = Math.hypot(a.x - b.x, a.y - b.y);
+            const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+            const n = Math.floor(d);
+            const ux = (b.x - a.x) / (d || 1), uy = (b.y - a.y) / (d || 1);
+            return (
+              <>
+                <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#fde68a" strokeWidth={0.2} />
+                {Array.from({ length: n }, (_, i) => <line key={i} x1={a.x + ux * (i + 1) - uy * 0.35} y1={a.y + uy * (i + 1) + ux * 0.35} x2={a.x + ux * (i + 1) + uy * 0.35} y2={a.y + uy * (i + 1) - ux * 0.35} stroke="#fde68a" strokeWidth={(i + 1) % 6 === 0 ? 0.14 : 0.07} />)}
+                <circle cx={b.x} cy={b.y} r={0.35} fill="#fde68a" stroke="#000" strokeWidth={0.08} />
+                <text x={mx} y={my - 0.6} fontSize={1.2} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.18} paintOrder="stroke" fontWeight={900}>{d.toFixed(1)}"</text>
+              </>
+            );
+          })()}
+        </g>
+      )}
       {fx.map((a) => <FxView key={a.e.seq} a={a} now={now} />)}
       <rect x={0} y={0} width={W} height={H} fill="none" stroke="#000" strokeWidth={0.15} pointerEvents="none" />
     </svg>
