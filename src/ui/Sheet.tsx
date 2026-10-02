@@ -2,6 +2,7 @@ import { strength } from '../engine/state';
 import type { DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
 import { Portrait, tokenKind } from './Tokens';
+import { usePastePortrait } from './portraits';
 
 function Stats({ p }: { p: ModelProfileData }) {
   return (
@@ -43,12 +44,14 @@ function Weapons({ weapons }: { weapons: WeaponData[] }) {
 }
 
 export function DatasheetView({ sheet }: { sheet: DatasheetData }) {
+  usePastePortrait(sheet.name);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="row" style={{ flexWrap: 'nowrap' }}>
         <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={64} datasheet={sheet.name} editable />
         <h2 style={{ margin: 0 }}>{sheet.name}</h2>
       </div>
+      <div className="tiny muted">แตะรูปเพื่อเลือกรูป หรือคัดลอกรูปแล้ววาง (Paste) ที่หน้านี้</div>
       {sheet.models.map((m) => (
         <div key={m.name}>
           {sheet.models.length > 1 && <div className="small muted">{m.name} · ฐาน {m.base.text}</div>}
@@ -71,6 +74,7 @@ export function DatasheetView({ sheet }: { sheet: DatasheetData }) {
 }
 
 export function UnitView({ u }: { u: UnitState }) {
+  usePastePortrait(u.models.find((m) => m.isCharacter)?.source ?? u.sources[0]);
   const groups = new Map<string, { p: ModelProfileData; n: number; weapons: WeaponData[] }>();
   for (const m of u.models) {
     if (m.dead) continue;
@@ -88,7 +92,7 @@ export function UnitView({ u }: { u: UnitState }) {
         ))}
         <h2 className="grow" style={{ margin: 0 }}>{u.name}</h2>
       </div>
-      <div className="tiny muted">แตะรูปเพื่อใส่รูปของคุณเอง (เช่นรูปโมเดลที่ทาสีแล้ว) — เก็บไว้ในเครื่องนี้เท่านั้น</div>
+      <div className="tiny muted">แตะรูปเพื่อเลือกรูป หรือคัดลอกรูปแล้ววาง (Paste) ที่หน้านี้ — เก็บไว้ในเครื่องนี้เท่านั้น</div>
       <div className="row small">
         <span className="chip">{u.models.filter((m) => !m.dead).length}/{u.startingStrength} models</span>
         {(st === 'half' || st === 'belowHalf') && <span className="chip warn">{st === 'half' ? 'Half-strength' : 'Below half'}</span>}

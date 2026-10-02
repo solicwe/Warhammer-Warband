@@ -5,6 +5,7 @@ import type { ArmyList, FactionData } from '../engine/types';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { DatasheetView } from './Sheet';
 import { Portrait, tokenKind } from './Tokens';
+import { fileToPortrait, matchDatasheet, setPortrait } from './portraits';
 
 interface Props {
   list: ArmyList;
@@ -17,6 +18,19 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [faction, setFaction] = useState<FactionData | null>(null);
   const [q, setQ] = useState('');
   const [view, setView] = useState<string | null>(null);
+  const [imported, setImported] = useState<{ ok: string[]; missed: { file: File; name: string }[] } | null>(null);
+  const importPhotos = async (files: FileList | null) => {
+    if (!files || !faction) return;
+    const names = faction.datasheets.map((d) => d.name);
+    const ok: string[] = [];
+    const missed: { file: File; name: string }[] = [];
+    for (const f of [...files]) {
+      const name = matchDatasheet(f.name, names);
+      if (!name) { missed.push({ file: f, name: f.name }); continue; }
+      try { setPortrait(name, await fileToPortrait(f)); ok.push(name); } catch { missed.push({ file: f, name: f.name }); }
+    }
+    setImported({ ok, missed });
+  };
   useEffect(() => { loadIndex().then(setIndex); }, []);
   useEffect(() => { setFaction(null); loadFaction(list.factionId).then(setFaction); }, [list.factionId]);
 
@@ -48,6 +62,33 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {!faction && <div className="muted">กำลังโหลดข้อมูล…</div>}
       {faction && (
         <>
+          <div className="card">
+            <h3>รูปตัวละคร</h3>
+            <div className="small muted">เลือกหลายรูปพร้อมกันได้ ตั้งชื่อไฟล์ตามชื่อ datasheet (เช่น <i>Intercessor Squad.jpg</i>, <i>warboss.png</i>) ระบบจะจับคู่ให้เอง</div>
+            <label className="btn small" style={{ marginTop: 8 }}>
+              นำเข้ารูป
+              <input type="file" accept="image/*" multiple hidden onChange={(e) => importPhotos(e.target.files)} />
+            </label>
+            {imported && (
+              <div className="small" style={{ marginTop: 8 }}>
+                <div>จับคู่ได้ {imported.ok.length} รูป{imported.ok.length ? `: ${imported.ok.join(', ')}` : ''}</div>
+                {imported.missed.map((m, i) => (
+                  <div key={i} className="row" style={{ marginTop: 4 }}>
+                    <span className="grow muted">{m.name}</span>
+                    <select defaultValue="" onChange={async (e) => {
+                      if (!e.target.value) return;
+                      setPortrait(e.target.value, await fileToPortrait(m.file));
+                      setImported((x) => x && { ok: [...x.ok, e.target.value], missed: x.missed.filter((y) => y !== m) });
+                    }}>
+                      <option value="">เลือก datasheet…</option>
+                      {faction.datasheets.map((d) => d.name).sort().map((n) => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="card">
             <h3>Detachments <span className="muted small">({dpUsed}/{size.dp} DP)</span></h3>
             {faction.detachments.filter((d) => d.forceDisposition).map((d) => {
