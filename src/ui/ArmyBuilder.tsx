@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { listPoints, newUid, pointsOptions, validateList } from '../engine/army';
+import { enhancementOptions, listPoints, newUid, pointsOptions, validateList } from '../engine/army';
 import { RULES } from '../engine/config';
 import type { ArmyList, FactionData } from '../engine/types';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { DatasheetView } from './Sheet';
+import { Portrait, tokenKind } from './Tokens';
 
 interface Props {
   list: ArmyList;
@@ -57,6 +58,14 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                   <div className="grow">
                     <div>{d.name}</div>
                     <div className="tiny muted">{d.dp} DP · {d.forceDisposition} · {d.stratagems.length} stratagems · {d.enhancements.length} enhancements</div>
+                    {on && (
+                      <details onClick={(e) => e.stopPropagation()}>
+                        <summary className="tiny">ดูกฎ / enhancements / stratagems</summary>
+                        {d.rules.map((r) => <div key={r.name} className="sheet tiny"><b>{r.name}</b>{'\n'}{r.text}</div>)}
+                        {d.enhancements.map((e) => <div key={e.name} className="sheet tiny"><b>✦ {e.name}</b> ({e.pts} pts{e.upgrade ? ', Upgrade' : ''}){'\n'}{e.text}</div>)}
+                        {d.stratagems.map((st) => <div key={st.name} className="sheet tiny"><b>{st.name}</b> ({st.cp}CP · {st.type}){'\n'}{st.text}</div>)}
+                      </details>
+                    )}
                   </div>
                 </label>
               );
@@ -72,7 +81,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                 <div key={u.uid} className="list-item" style={{ flexWrap: 'wrap' }}>
                   <div className="grow" style={{ minWidth: 150 }}>
                     <div style={{ fontWeight: 600 }} onClick={() => setView(u.datasheet)}>{u.datasheet} {u.warlord && '👑'}</div>
-                    <div className="tiny muted">{u.models} models · {u.pts} pts</div>
+                    <div className="tiny muted">{u.models} models · {u.pts + (u.enhancementPts ?? 0)} pts{u.enhancement ? ` · ✦ ${u.enhancement}` : ''}</div>
                   </div>
                   {sheet && pointsOptions(sheet).length > 1 && (
                     <select value={u.models} onChange={(e) => {
@@ -86,6 +95,15 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                     <select value={u.attachTo ?? ''} onChange={(e) => set({ units: list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: e.target.value || undefined } : x)) })}>
                       <option value="">ไม่ผูก</option>
                       {bodyguards.map((b) => <option key={b.uid} value={b.uid}>นำ {b.datasheet}</option>)}
+                    </select>
+                  )}
+                  {enhancementOptions(list, faction, u).length > 0 && (
+                    <select value={u.enhancement ?? ''} style={{ maxWidth: 170 }} onChange={(e) => {
+                      const enh = enhancementOptions(list, faction, u).find((x) => x.name === e.target.value);
+                      set({ units: list.units.map((x) => (x.uid === u.uid ? { ...x, enhancement: enh?.name, enhancementPts: enh?.pts } : x)) });
+                    }}>
+                      <option value="">✦ Enhancement</option>
+                      {enhancementOptions(list, faction, u).map((e) => <option key={e.detachment + e.name} value={e.name}>{e.name} (+{e.pts}){e.upgrade ? ' [Upgrade]' : ''}</option>)}
                     </select>
                   )}
                   {sheet?.keywords.includes('CHARACTER') && (
@@ -106,9 +124,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                 const opt = pointsOptions(d)[0];
                 return (
                   <div key={d.id} className="list-item">
+                    <Portrait kind={tokenKind(d.keywords, d.factionKeywords)} owner={0} character={d.keywords.includes('CHARACTER')} size={34} />
                     <div className="grow" onClick={() => setView(d.name)}>
                       <div>{d.name}</div>
-                      <div className="tiny muted">{d.role} · {pointsOptions(d).map((o) => `${o.models}: ${o.pts}`).join(' / ')}</div>
+                      <div className="tiny muted">{d.keywords.includes('EPIC HERO') ? '★ Epic Hero · ' : ''}{d.role} · {pointsOptions(d).map((o) => `${o.models}: ${o.pts}`).join(' / ')}</div>
                     </div>
                     <button className="btn small" disabled={!opt} onClick={() => set({ units: [...list.units, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts }] })}>+</button>
                   </div>

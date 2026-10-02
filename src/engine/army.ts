@@ -143,6 +143,10 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       status: 'pending',
       battleShocked: false,
       isWarlordUnit: !!(e.warlord || joiners.some((j) => j.warlord)),
+      enhancements: [e, ...joiners].filter((x) => x.enhancement).map((x) => {
+        const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
+        return { name: x.enhancement!, text: enh?.text ?? '', model: x.datasheet };
+      }),
       move: null, advanceRoll: null, maxMoved: 0, setUpTurn: -10, shotTurn: -10,
       selectedToShoot: false, declaredCharge: false, chargeRoll: null, chargedTurn: -10, chargeTargets: [],
       fought: false, foughtFirstUntilTurn: -10, stratagemPhase: null, oneShotUsed: [], buffs: [],
@@ -158,10 +162,21 @@ export function pointsOptions(sheet: DatasheetData) {
 }
 
 export function listPoints(list: ArmyList): number {
-  return list.units.reduce((a, u) => a + u.pts, 0);
+  return list.units.reduce((a, u) => a + u.pts + (u.enhancementPts ?? 0), 0);
 }
 
-export function validateList(list: ArmyList, faction: FactionData, size: { points: number; dp: number; unitLimit: number }): string[] {
+/** Enhancements a unit may take from the selected detachments (25.04). */
+export function enhancementOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry) {
+  const sheet = faction.datasheets.find((d) => d.name === entry.datasheet);
+  if (!sheet || sheet.keywords.includes('EPIC HERO')) return [];
+  const isChar = sheet.keywords.includes('CHARACTER');
+  return faction.detachments
+    .filter((d) => list.detachments.includes(d.name))
+    .flatMap((d) => d.enhancements.map((e) => ({ ...e, detachment: d.name })))
+    .filter((e) => isChar || e.upgrade);
+}
+
+export function validateList(list: ArmyList, faction: FactionData, size: { points: number; dp: number; unitLimit: number; enhancements: number }): string[] {
   const errs: string[] = [];
   const pts = listPoints(list);
   if (pts > size.points) errs.push(`แต้มเกิน: ${pts}/${size.points}`);
@@ -176,6 +191,23 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (n > limit) errs.push(`${name}: ใส่ได้ไม่เกิน ${limit} หน่วย`);
   }
   if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('ต้องมี CHARACTER อย่างน้อย 1 หน่วย (Warlord)');
+  if (!list.units.some((u) => u.warlord)) errs.push('ยังไม่ได้เลือก Warlord (กด 👑)');
+  const enh = list.units.filter((u) => u.enhancement);
+  const allEnh = faction.detachments.flatMap((d) => d.enhancements);
+  const isUpgrade = (n: string) => !!allEnh.find((e) => e.name === n)?.upgrade;
+  const counted = new Set<string>();
+  let enhCount = 0;
+  for (const u of enh) {
+    const n = u.enhancement!;
+    if (isUpgrade(n)) { if (!counted.has(n)) { enhCount++; counted.add(n); } } else enhCount++;
+    const same = enh.filter((x) => x.enhancement === n).length;
+    if (!isUpgrade(n) && same > 1) errs.push(`Enhancement "${n}" ใส่ได้หน่วยเดียว`);
+    if (isUpgrade(n) && same > 3) errs.push(`Upgrade "${n}" ใส่ได้ไม่เกิน 3`);
+    const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
+    if (sheet?.keywords.includes('EPIC HERO')) errs.push(`${u.datasheet} เป็น EPIC HERO ใส่ enhancement ไม่ได้`);
+    if (!faction.detachments.some((d) => list.detachments.includes(d.name) && d.enhancements.some((e) => e.name === n))) errs.push(`Enhancement "${n}" ไม่ได้อยู่ใน detachment ที่เลือก`);
+  }
+  if (enhCount > (size as { enhancements?: number }).enhancements!) errs.push(`Enhancement เกิน: ${enhCount}/${(size as { enhancements?: number }).enhancements}`);
   for (const u of list.units) {
     if (!u.attachTo) continue;
     const leader = faction.datasheets.find((d) => d.name === u.datasheet);

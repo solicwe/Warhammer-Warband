@@ -33,6 +33,21 @@ export function woundNeed(S: number, T: number): number {
   return 5;
 }
 
+const riled = (s: GameState, u: UnitState) => u.abilities.some((a) => a.name === 'Waaagh!') && s.players[u.owner].riledUntilTurn >= s.turn;
+export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState) => (riled(s, u) ? Math.min(m.profile.InSv ?? 7, 5) : m.profile.InSv);
+
+/** Oath of Moment: re-roll hits (+1 to wound for codex armies) against the Oath target. */
+function applyOath(s: GameState, A: UnitState, T: UnitState, pool: Pool) {
+  const P = s.players[A.owner];
+  if (P.oathTarget !== T.id || !A.abilities.some((a) => a.name === 'Oath of Moment')) return;
+  pool.rerollAllHits = true;
+  pool.hitNote = [pool.hitNote, 'Oath: re-roll hit'].filter(Boolean).join(' · ');
+  if (P.oathWoundBonus) {
+    pool.woundMod = clamp(pool.woundMod + 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
+    pool.woundNote += ' · Oath +1';
+  }
+}
+
 const isMV = (m: ModelState) => m.keywords.includes('MONSTER') || m.keywords.includes('VEHICLE');
 const buffSum = (u: UnitState, plus: string, minus: string) => u.buffs.filter((b) => b.kind === plus).length - u.buffs.filter((b) => b.kind === minus).length;
 
@@ -83,7 +98,7 @@ export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
     if (u.move !== 'advance' && (weps.some((p) => hasAbility(p, 'close-quarters')) || alive(u).some(isMV))) modes.push('closeQuarters');
     return modes;
   }
-  if (u.move === 'advance') { if (weps.some((p) => hasAbility(p, 'assault'))) modes.push('assault'); return modes; }
+  if (u.move === 'advance') { if (riled(s, u) || weps.some((p) => hasAbility(p, 'assault'))) modes.push('assault'); return modes; }
   modes.push('normal');
   if (weps.some((p) => hasAbility(p, 'indirect-fire'))) modes.push('indirect');
   return modes;
@@ -112,7 +127,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (opt.mode === 'closeQuarters') chosen = cqOnly;
       else chosen = opt.useCloseQuarters || !others.length ? cqOnly : others;
     }
-    if (opt.mode === 'assault') chosen = chosen.filter((w) => hasAbility(w.profiles[opt.profile?.[w.name] ?? 0], 'assault'));
+    if (opt.mode === 'assault' && !riled(s, A)) chosen = chosen.filter((w) => hasAbility(w.profiles[opt.profile?.[w.name] ?? 0], 'assault'));
     const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
     for (const w of chosen) {
       const pi = Math.min(opt.profile?.[w.name] ?? 0, w.profiles.length - 1);
@@ -165,6 +180,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         pool.woundMod = wm;
         pool.woundNote = `S${p.S} vs T${T_T}` + (wm ? ` · Buff ${wm > 0 ? '+' : ''}${wm}` : '');
         applyUnitBuffs(pool, A);
+        applyOath(s, A, T, pool);
         pools.set(key, pool);
       }
       pool.models += 1;
@@ -231,6 +247,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         pool.woundMod = clamp(wm, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundNote = notes.join(' · ');
         applyUnitBuffs(pool, A);
+        applyOath(s, A, T, pool);
         pools.set(key, pool);
       }
       pool.models += 1;
@@ -263,7 +280,7 @@ export function expectedDamage(s: GameState, pool: Pool, target: UnitState): { a
   const wounds = (hits - lethal) * pW + lethal;
   const m = alive(target)[0];
   const sv = m.profile.Sv - pool.ap;
-  const best = Math.min(sv, m.profile.InSv ?? 7);
+  const best = Math.min(sv, effectiveInSv(s, target, m) ?? 7);
   const pFail = Math.min(1, Math.max(1 / 6, (best - 1) / 6));
   const unsaved = wounds * pFail;
   const dmg = Math.min(exprAverage(pool.damage), m.profile.W);
@@ -313,8 +330,8 @@ export function rollHits(s: GameState) {
     p.hits = rollN(s, p.attacks).map((v) => ({ v, o: evalHit(p, v) }));
     const reroll1s = unitById(s, at.attackerId).buffs.some((b) => b.kind === 'rerollHits1');
     const rerollAll = unitById(s, at.attackerId).buffs.some((b) => b.kind === 'rerollHits');
-    if (!p.noHitReroll && (reroll1s || rerollAll)) {
-      p.hits = p.hits.map((d) => (d.o === 'miss' && (rerollAll || d.v === 1) ? reroll(s, d, (v) => evalHit(p, v)) : d));
+    if (!p.noHitReroll && (reroll1s || rerollAll || p.rerollAllHits)) {
+      p.hits = p.hits.map((d) => (d.o === 'miss' && (rerollAll || p.rerollAllHits || d.v === 1) ? reroll(s, d, (v) => evalHit(p, v)) : d));
     }
   }
   at.stage = 'wound';
@@ -484,7 +501,7 @@ export function applyDamage(s: GameState) {
     if (!g) { d.o = 'saved'; p.saveTargets[i] = '—'; continue; }
     const m = pickModel(g, T)!;
     const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0);
-    const inv = m.profile.InSv;
+    const inv = effectiveInSv(s, T, m);
     let ok = false;
     if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + p.ap >= Math.max(RULES.modifierCaps.bestSave, sv);
     p.saveTargets[i] = `${m.name} (Sv${sv}+${inv ? ` / ${inv}++` : ''}, AP${p.ap})`;

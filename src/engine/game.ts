@@ -3,7 +3,7 @@ import { buildUnits } from './army';
 import { applyMortalWounds, killModel } from './attack';
 import { deploymentById, MISSIONS, primaryById, RULES, toPoly, type ScoringRule } from './config';
 import { d6, rollN, rollOff } from './dice';
-import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointSegDist, polyCentroid, segSegDist } from './geometry';
+import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointInPoly, pointSegDist, polyCentroid, segSegDist } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from './state';
@@ -24,12 +24,13 @@ function buildTerrain(depId: string): { terrain: TerrainPiece[]; objectives: Obj
     const tf = (p: Pt): Pt => (mirror ? { x: W - p.x, y: H - p.y } : p);
     const x0 = x - w / 2, y0 = y - h / 2;
     const poly = [{ x: x0, y: y0 }, { x: x0 + w, y: y0 }, { x: x0 + w, y: y0 + h }, { x: x0, y: y0 + h }].map(tf);
+    const corners = [{ x: x0, y: y0 }, { x: x0 + w, y: y0 }, { x: x0 + w, y: y0 + h }, { x: x0, y: y0 + h }];
     const walls: Seg[] = k.walls === 'L'
       ? [
           { a: { x: x0, y: y0 }, b: { x: x0 + w * 0.7, y: y0 } },
           { a: { x: x0, y: y0 }, b: { x: x0, y: y0 + h * 0.7 } },
         ].map((s) => ({ a: tf(s.a), b: tf(s.b) }))
-      : [];
+      : k.walls === 'box' ? corners.map((c, i) => ({ a: tf(c), b: tf(corners[(i + 1) % 4]) })) : [];
     return { id, kind, label: k.label, category: k.category, height: k.height, poly, walls };
   };
   const objectives: ObjectiveState[] = dep.objectives.map((o, i) => {
@@ -76,6 +77,7 @@ export function createGame(o: NewGameOptions): GameState {
     players: [0, 1].map((i) => ({
       name: o.names[i], factionId: o.factions[i].id, factionName: o.factions[i].name,
       cp: RULES.startingCP, vp: 0, vpByRound: [0, 0, 0, 0, 0, 0], role: 'attacker', stratagemsUsed: [], insaneBraveryUsed: false,
+      oathTarget: null, oathWoundBonus: false, waaaghUsed: false, riledUntilTurn: -10,
       armyRules: o.factions[i].armyRules,
       detachments: o.factions[i].detachments.filter((d) => o.lists[i].detachments.includes(d.name)),
     })) as unknown as GameState['players'],
@@ -96,6 +98,10 @@ export function createGame(o: NewGameOptions): GameState {
     if (ob.ownerRole) ob.owner = ob.ownerRole === 'attacker' ? s.attackerPlayer : other(s.attackerPlayer);
   }
   for (const u of s.units) if (hasKw(u, 'AIRCRAFT')) { u.status = 'reserves'; }
+  const CHAPTERS = ['BLACK TEMPLARS', 'BLOOD ANGELS', 'DARK ANGELS', 'DEATHWATCH', 'SPACE WOLVES'];
+  for (const p of [0, 1] as PlayerId[]) {
+    s.players[p].oathWoundBonus = !s.units.some((u) => u.owner === p && u.factionKeywords.some((k) => CHAPTERS.includes(k)));
+  }
   s.deployTurn = other(s.attackerPlayer); // Defender deploys first
   log(s, `Mission: ${primaryById(o.primaryId).name} (Mirrored World) · Deployment: ${deploymentById(o.deploymentId).name}`, 'info', null);
   return s;
@@ -129,6 +135,11 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
       if (dist(p, op) < m.r + o.m.r - 0.02) { errors.push(`${m.name} ทับโมเดลอื่น`); bad.add(m.id); break; }
     }
     for (const t of s.terrain) for (const w of t.walls) if (pointSegDist(p, w) < m.r * 0.5) { errors.push(`${m.name} จบคาอยู่ในกำแพง`); bad.add(m.id); }
+    for (const t of s.terrain) {
+      if (t.kind === 'container' && pointInPoly(p, t.poly) && !['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k))) {
+        errors.push(`${m.name} ขึ้นไปจบบนหลังคา container ไม่ได้ (13.06)`); bad.add(m.id);
+      }
+    }
   }
   if (models.length > 1) {
     const pts = models.map((m) => pos.get(m.id) ?? m);
@@ -470,12 +481,30 @@ export const canIngress = (s: GameState, u: UnitState) => u.status === 'reserves
 
 // ---------- charge phase ----------
 
+// ---------- army rules: Oath of Moment / Waaagh! ----------
+
+export const hasArmyRule = (s: GameState, p: PlayerId, name: string) => s.players[p].armyRules.some((r) => r.name === name);
+export const unitHasAbility = (u: UnitState, name: string) => u.abilities.some((a) => a.name === name);
+export const isRiledUp = (s: GameState, u: UnitState) => unitHasAbility(u, 'Waaagh!') && s.players[u.owner].riledUntilTurn >= s.turn;
+
+export function setOathTarget(s: GameState, p: PlayerId, targetId: string) {
+  s.players[p].oathTarget = targetId;
+  log(s, `⚜ Oath of Moment: ${unitById(s, targetId).name}`, 'info', p);
+}
+
+export function callWaaagh(s: GameState, p: PlayerId) {
+  s.players[p].waaaghUsed = true;
+  s.players[p].riledUntilTurn = s.turn + 1;
+  log(s, `🟢 WAAAGH! หน่วย Ork ทุกหน่วย riled up: 5+ InSv, ยิงแบบ [ASSAULT], advance แล้วชาร์จได้ (จนจบเทิร์นถัดไป)`, 'info', p);
+}
+
 export function chargeEligibility(s: GameState, u: UnitState): string | null {
   if (!onBoard(u)) return 'ไม่อยู่บนสนาม';
   if (u.declaredCharge) return 'ประกาศชาร์จไปแล้ว';
   if (hasKw(u, 'AIRCRAFT')) return 'AIRCRAFT ชาร์จไม่ได้';
   if (isEngaged(s, u)) return 'engaged อยู่';
-  if (u.move === 'advance' || u.move === 'fallback') return 'Advance/Fall back มาเทิร์นนี้';
+  if (u.move === 'fallback') return 'Fall back มาเทิร์นนี้';
+  if (u.move === 'advance' && !isRiledUp(s, u)) return 'Advance มาเทิร์นนี้';
   if (!boardUnits(s, other(u.owner)).some((e) => !hasKw(e, 'AIRCRAFT') && unitDistance(u, e) <= RULES.charge.declareRange)) return `ไม่มีศัตรูภายใน ${RULES.charge.declareRange}"`;
   return null;
 }

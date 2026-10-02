@@ -9,7 +9,7 @@ export const PRESETS: Record<string, ArmyList> = {
     detachments: ['Anvil Siege Force'],
     units: [
       { uid: 'a1', datasheet: 'Intercessor Squad', models: 10, pts: 150 },
-      { uid: 'a2', datasheet: 'Captain', models: 1, pts: 80, attachTo: 'a1', warlord: true },
+      { uid: 'a2', datasheet: 'Captain', models: 1, pts: 80, attachTo: 'a1', warlord: true, enhancement: 'Stoic Defender', enhancementPts: 15 },
       { uid: 'a3', datasheet: 'Hellblaster Squad', models: 5, pts: 110 },
       { uid: 'a4', datasheet: 'Assault Intercessor Squad', models: 10, pts: 150 },
       { uid: 'a5', datasheet: 'Lieutenant', models: 1, pts: 45, attachTo: 'a4' },
@@ -26,7 +26,7 @@ export const PRESETS: Record<string, ArmyList> = {
     detachments: ['War Horde'],
     units: [
       { uid: 'b1', datasheet: 'Boyz', models: 20, pts: 180 },
-      { uid: 'b2', datasheet: 'Warboss', models: 1, pts: 100, attachTo: 'b1', warlord: true },
+      { uid: 'b2', datasheet: 'Warboss', models: 1, pts: 100, attachTo: 'b1', warlord: true, enhancement: "Headwoppa's Killchoppa", enhancementPts: 15 },
       { uid: 'b3', datasheet: 'Boyz', models: 10, pts: 90 },
       { uid: 'b4', datasheet: 'Big Mek', models: 1, pts: 85, attachTo: 'b3' },
       { uid: 'b5', datasheet: 'Boyz', models: 10, pts: 90 },

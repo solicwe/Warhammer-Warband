@@ -25,6 +25,8 @@ function game(): GameState {
     lists: [list('SM', [['Intercessor Squad', 10, 150], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 90], ['Warboss', 1, 100]])],
     factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'hammer-and-anvil', primaryId: 'battlefield-dominance', seed: 42,
   });
+  s.terrain = s.terrain.filter((t) => t.objectiveId); // rules tests run on an open board
+  s.terrain.forEach((t) => (t.walls = []));
   return s;
 }
 
@@ -157,5 +159,33 @@ describe('phase flow', () => {
     expect(s.phase).toBe('fight');
     expect(s.fight?.step).toBe('pileIn');
     expect(fightCandidates(s).units.length).toBe(0);
+  });
+});
+
+describe('army rules', () => {
+  it('Oath of Moment adds re-roll hits and +1 wound against the target', async () => {
+    const { setOathTarget } = await import('./game');
+    const s = game();
+    const a = put(s, s.units[0].id, { x: 22, y: 10 });
+    const t = put(s, s.units[2].id, { x: 22, y: 25 });
+    s.phase = 'shooting'; s.active = 0; s.turn = 0;
+    const before = buildShootPools(s, a.id, t.id, { mode: 'normal' }).pools[0];
+    setOathTarget(s, 0, t.id);
+    const after = buildShootPools(s, a.id, t.id, { mode: 'normal' }).pools[0];
+    expect(after.rerollAllHits).toBe(true);
+    expect(after.woundMod).toBe(before.woundMod + 1);
+  });
+  it('Waaagh! gives 5+ invulnerable and lets riled units charge after advancing', async () => {
+    const { callWaaagh, chargeEligibility } = await import('./game');
+    const { effectiveInSv } = await import('./attack');
+    const s = game();
+    const boyz = put(s, s.units[2].id, { x: 22, y: 25 });
+    put(s, s.units[0].id, { x: 22, y: 15 });
+    s.turn = 1; s.active = 1;
+    boyz.move = 'advance';
+    expect(chargeEligibility(s, boyz)).toMatch(/Advance/);
+    callWaaagh(s, 1);
+    expect(chargeEligibility(s, boyz)).toBeNull();
+    expect(effectiveInSv(s, boyz, alive(boyz)[0])).toBe(5);
   });
 });

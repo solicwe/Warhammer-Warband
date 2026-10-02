@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark;
   --bg: #121418;
   --panel: #1b1e24;
   --panel2: #232730;
@@ -28,7 +29,7 @@ html, body, #root { margin: 0; height: 100%; }
 body { background: var(--bg); overscroll-behavior: none; }
 button { font: inherit; color: inherit; }
 
-.app { height: 100dvh; display: flex; flex-direction: column; max-width: 720px; margin: 0 auto; }
+.app { height: 100%; display: flex; flex-direction: column; max-width: 720px; margin: 0 auto; }
 
 /* ---------- generic ---------- */
 .btn {
@@ -120,3 +121,8 @@ input, select { font: inherit; color: var(--text); background: var(--panel2); bo
 .wtable th, .wtable td { padding: 4px 3px; border-bottom: 1px solid var(--line); text-align: center; }
 .wtable td:first-child, .wtable th:first-child { text-align: left; }
 .kw { font-size: 11px; color: var(--muted); }
+
+/* panel children keep their natural height; the panel scrolls instead */
+.panel > * { flex-shrink: 0; }
+.score { font-size: 12px; white-space: nowrap; flex-direction: column; gap: 0; text-align: right; }
+.topbar .phase { white-space: nowrap; }

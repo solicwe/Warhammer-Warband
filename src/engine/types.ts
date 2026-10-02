@@ -89,6 +89,7 @@ export interface ArmyUnitEntry {
   pts: number;
   attachTo?: string; // uid of the bodyguard unit this leader/support joins
   enhancement?: string;
+  enhancementPts?: number;
   warlord?: boolean;
 }
 
@@ -153,6 +154,7 @@ export interface UnitState {
   status: 'pending' | 'reserves' | 'board' | 'destroyed';
   battleShocked: boolean;
   isWarlordUnit: boolean;
+  enhancements: { name: string; text: string; model: string }[];
   // per-turn flags (reset at start of each player turn)
   move: MoveKind | null;
   advanceRoll: number | null;
@@ -205,6 +207,10 @@ export interface PlayerState {
   role: 'attacker' | 'defender';
   stratagemsUsed: string[]; // `${turn}:${phase}:${id}` keys
   insaneBraveryUsed: boolean;
+  oathTarget: string | null; // Oath of Moment (Adeptus Astartes)
+  oathWoundBonus: boolean;
+  waaaghUsed: boolean; // Waaagh! War Cry (Orks)
+  riledUntilTurn: number;
   armyRules: { name: string; text: string }[];
   detachments: DetachmentData[];
 }
@@ -230,6 +236,7 @@ export interface Pool {
   minHitUnmodified?: number;
   autoHit: boolean;
   noHitReroll: boolean;
+  rerollAllHits?: boolean;
   woundNeed: number;
   woundMod: number;
   woundNote: string;

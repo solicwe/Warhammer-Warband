@@ -1,6 +1,7 @@
 import { strength } from '../engine/state';
 import type { DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
+import { Portrait, tokenKind } from './Tokens';
 
 function Stats({ p }: { p: ModelProfileData }) {
   return (
@@ -44,7 +45,10 @@ function Weapons({ weapons }: { weapons: WeaponData[] }) {
 export function DatasheetView({ sheet }: { sheet: DatasheetData }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <h2>{sheet.name}</h2>
+      <div className="row" style={{ flexWrap: 'nowrap' }}>
+        <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={56} />
+        <h2 style={{ margin: 0 }}>{sheet.name}</h2>
+      </div>
       {sheet.models.map((m) => (
         <div key={m.name}>
           {sheet.models.length > 1 && <div className="small muted">{m.name} · ฐาน {m.base.text}</div>}
@@ -94,6 +98,9 @@ export function UnitView({ u }: { u: UnitState }) {
           <Stats p={g.p} />
           <Weapons weapons={g.weapons} />
         </div>
+      ))}
+      {u.enhancements.map((e) => (
+        <div key={e.name} className="sheet"><b>✦ Enhancement: {e.name}</b> <span className="tiny muted">({e.model})</span>{'\n'}{e.text}</div>
       ))}
       {u.abilities.map((a, i) => (
         <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({a.type}{a.model ? ` · ${a.model}` : ''})</span>{a.text ? `\n${a.text}` : ''}</div>

@@ -30,7 +30,7 @@ export interface DeploymentDef {
 }
 
 export const MISSIONS = missions as unknown as {
-  terrainKinds: Record<string, { category: 'exposed' | 'light' | 'dense'; height: number; walls: 'L' | 'none'; label: string }>;
+  terrainKinds: Record<string, { category: 'exposed' | 'light' | 'dense'; height: number; walls: 'L' | 'box' | 'none'; label: string }>;
   objectiveTerrain: { kind: string; w: number; h: number };
   deployments: DeploymentDef[];
   primaries: PrimaryDef[];

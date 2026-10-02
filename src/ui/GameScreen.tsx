@@ -10,14 +10,16 @@ import {
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
   formationAt, heroicCandidates, ingressUnit, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
-  validateMove, validatePlacement, type MoveCheck,
+  validateMove, validatePlacement, type MoveCheck, hasArmyRule, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
 } from '../engine/game';
 import { polyCentroid } from '../engine/geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from '../engine/state';
 import type { BuffKind, GameState, PlayerId, Pt, UnitState } from '../engine/types';
-import { unitVisibleTo } from '../engine/visibility';
+import { hasCover, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
+import { baseDist } from '../engine/geometry';
+import { Portrait, unitToken } from './Tokens';
 import { isMelee, hasAbility } from '../engine/weapons';
 import { Board, type Paths, type Ring } from './Board';
 import { DiceTray } from './DiceTray';
@@ -63,6 +65,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [showLog, setShowLog] = useState(false);
   const [showBuffs, setShowBuffs] = useState(false);
   const [fly, setFly] = useState(false);
+  const [showStrats, setShowStrats] = useState(false);
+  const [stratUnit, setStratUnit] = useState<string>('');
+  const [freeAdvRR, setFreeAdvRR] = useState<string | null>(null);
 
   const setMode = (m: Mode | null, d: Paths | null = null) => { setModeRaw(m); setDraft(d); setCheck(null); };
   const flash = (t: string) => { setToast(t); window.setTimeout(() => setToast((x) => (x === t ? null : x)), 2600); };
@@ -137,6 +142,28 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return Infinity;
   };
 
+  // Cover / Hidden badges and line-of-sight lines while choosing a shooting target
+  const badges: Record<string, string[]> = {};
+  const losLines: { a: Pt; b: Pt; cover: boolean }[] = [];
+  if (mode?.k === 'shoot' && modeUnit) {
+    const shooters = alive(modeUnit);
+    for (const id of shootTargets) {
+      const T = U(id);
+      const b: string[] = [];
+      if (shooters.some((m) => hasCover(s, m, T))) b.push('🛡 Cover −1 BS');
+      if (alive(T).some((m) => isHidden(s, T, m))) b.push('👁 Hidden');
+      if (b.length) badges[id] = b;
+    }
+    if (mode.target) {
+      const T = U(mode.target);
+      for (const m of shooters) {
+        const vis = alive(T).filter((t) => modelVisible(s, m, T, t));
+        if (!vis.length) continue;
+        const t = vis.reduce((x, y) => (baseDist(m, x) <= baseDist(m, y) ? x : y));
+        losLines.push({ a: m, b: t, cover: hasCover(s, m, T) });
+      }
+    }
+  }
   const rings: Ring[] = [];
   if (mode?.k === 'charge' && modeUnit) {
     for (const m of alive(modeUnit)) if (alive(modeUnit).length <= 3) rings.push({ c: m, r: (modeUnit.chargeRoll ?? 0) + m.r, color: 'rgba(245,184,61,0.5)', dash: true });
@@ -217,8 +244,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const st = strength(u);
     return (
       <div className="card" style={{ padding: 8 }}>
-        <div className="row">
-          <b className={`grow ${u.owner ? 'p1' : 'p0'}`}>{u.name}</b>
+        <div className="row" style={{ flexWrap: 'nowrap' }}>
+          <Portrait kind={unitToken(u)} owner={u.owner} character={u.models.some((x) => x.isCharacter && !x.dead)} size={46} />
+          <div className="grow" style={{ minWidth: 0 }}>
+            <b className={u.owner ? 'p1' : 'p0'}>{u.name}</b>
+            <div className="tiny muted">{u.sources.length > 1 ? 'Attached unit · ' : ''}{u.keywords.filter((k) => ['CHARACTER', 'INFANTRY', 'VEHICLE', 'MONSTER', 'BATTLELINE', 'WALKER', 'FLY'].includes(k)).join(' · ')}</div>
+          </div>
           <button className="btn small" onClick={() => setSheet(u.id)}>ℹ Datasheet</button>
         </div>
         <div className="stats" style={{ marginTop: 4 }}>
@@ -232,6 +263,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           {u.battleShocked && <span className="chip warn">Battle-shocked</span>}
           {u.move && <span className="chip">{u.move}</span>}
           {u.chargedTurn === s.turn && <span className="chip">Charged · Fights First</span>}
+          {isRiledUp(s, u) && <span className="chip warn">🟢 Riled up (5++)</span>}
+          {s.players[other(u.owner)].oathTarget === u.id && <span className="chip warn">⚜ Oath target</span>}
+          {u.enhancements.map((e) => <span key={e.name} className="chip">✦ {e.name}</span>)}
           {u.buffs.map((b, i) => <span key={i} className="chip">{BUFFS.find((x) => x.kind === b.kind)?.label ?? b.kind}</span>)}
         </div>
       </div>
@@ -391,6 +425,25 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="handoff">🎖 Command phase · {pName(s, s.active)} · ทั้งสองฝ่ายได้ +1 CP</div>
+        {hasArmyRule(s, s.active, 'Oath of Moment') && (
+          <div className="card" style={{ padding: 8 }}>
+            <div className="small"><b>⚜ Oath of Moment</b> — เลือกหน่วยศัตรู 1 หน่วย: ยิง/ตีใส่ได้ re-roll hit{s.players[s.active].oathWoundBonus ? ' และ +1 wound' : ''} จนถึง Command phase หน้า</div>
+            <div className="unit-strip" style={{ marginTop: 6 }}>
+              {boardUnits(s, other(s.active)).map((e) => (
+                <button key={e.id} className={`unit-pill ${s.players[s.active].oathTarget === e.id ? 'sel' : ''}`} onClick={() => act((g) => setOathTarget(g, g.active, e.id))}>
+                  <span className={e.owner ? 'p1' : 'p0'}>●</span> {e.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {hasArmyRule(s, s.active, 'Waaagh!') && (
+          <div className="card row" style={{ padding: 8 }}>
+            <div className="grow small"><b>🟢 WAAAGH!</b> (ครั้งเดียวต่อเกม) — Ork riled up: 5+ InSv, ปืนเป็น [ASSAULT], advance แล้วชาร์จได้ จนจบเทิร์นหน้า</div>
+            {s.players[s.active].riledUntilTurn >= s.turn ? <span className="chip warn">WAAAGH! อยู่</span>
+              : <button className="btn small primary" disabled={s.players[s.active].waaaghUsed} onClick={() => act((g) => callWaaagh(g, g.active))}>{s.players[s.active].waaaghUsed ? 'ใช้ไปแล้ว' : 'WAAAGH!!!'}</button>}
+          </div>
+        )}
         {tests.length === 0 && <div className="muted small">ไม่มีหน่วยที่ต้องทอย Battle-shock</div>}
         {tests.map((t) => {
           const u = U(t.unitId);
@@ -420,7 +473,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <>
           <div className="small"><b>{modeUnit.name}</b> · {mode.kind === 'normal' ? 'Normal move' : mode.kind === 'advance' ? `Advance (M + ${modeUnit.advanceRoll})` : modeUnit.battleShocked ? 'Fall back – Desperate Escape (hazard ทุกตัว)' : 'Fall back – Ordered Retreat'} · ลากโมเดลบนสนาม ระบบจำกัดระยะให้</div>
           {moveControls(mode.kind, () => confirmMove(mode.kind),
-            mode.kind === 'advance' && !advRR ? <button className="btn small" onClick={() => { act((g) => { const gu = unitById(g, modeUnit.id); spendStratagem(g, gu.owner, 'command-reroll', gu); rollAdvance(g, gu); }); setDraft(startPaths(modeUnit)); }}>↻ Re-roll advance 1CP</button> : undefined)}
+            mode.kind === 'advance' && unitHasAbility(modeUnit, 'Waaagh!') && freeAdvRR !== modeUnit.id ? <button className="btn small" onClick={() => { act((g) => rollAdvance(g, unitById(g, modeUnit.id))); setFreeAdvRR(modeUnit.id); setDraft(startPaths(modeUnit)); }}>↻ Re-roll advance (Waaagh! ฟรี)</button>
+            : mode.kind === 'advance' && !advRR ? <button className="btn small" onClick={() => { act((g) => { const gu = unitById(g, modeUnit.id); spendStratagem(g, gu.owner, 'command-reroll', gu); rollAdvance(g, gu); }); setDraft(startPaths(modeUnit)); }}>↻ Re-roll advance 1CP</button> : undefined)}
         </>
       );
     }
@@ -717,6 +771,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <span className="p0">{s.players[0].vp}VP · {s.players[0].cp}CP</span>
           <span className="p1">{s.players[1].vp}VP · {s.players[1].cp}CP</span>
         </div>
+        <button className="btn small" onClick={() => setShowStrats(true)}>CP</button>
         <button className="btn small" onClick={() => setShowLog(true)}>📜</button>
       </div>
       <div className="board-wrap">
@@ -732,6 +787,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           targets={targets}
           picked={picked}
           rings={rings}
+          badges={badges}
+          losLines={losLines}
           onTapUnit={onTapUnit}
           onTapBoard={onTapBoard}
           onDraft={(d) => { setDraft(d); setCheck(null); }}
@@ -762,6 +819,51 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         </div>
       )}
+
+      {showStrats && (() => {
+        const p = actor;
+        const P = s.players[p];
+        const own = s.units.filter((u) => u.owner === p && onBoard(u));
+        const tgt = own.find((u) => u.id === stratUnit);
+        return (
+          <div className="tray-backdrop" onClick={() => setShowStrats(false)}>
+            <div className="tray" onClick={(e) => e.stopPropagation()}>
+              <h2 className={p ? 'p1' : 'p0'}>Stratagems · {P.name} · {P.cp} CP</h2>
+              <div className="small muted">phase ตอนนี้: {PHASE_TH[s.phase]} ({s.active === p ? 'เทิร์นของคุณ' : 'เทิร์นศัตรู'})</div>
+              <label className="small">เป้าหมาย (หน่วยของคุณ)
+                <select style={{ width: '100%' }} value={stratUnit} onChange={(e) => setStratUnit(e.target.value)}>
+                  <option value="">— ไม่ระบุ —</option>
+                  {own.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                </select>
+              </label>
+              {P.detachments.map((d) => (
+                <div key={d.id}>
+                  <h3>{d.name} <span className="tiny muted">({d.forceDisposition})</span></h3>
+                  {d.rules.map((r) => <details key={r.name}><summary className="small">📜 Detachment rule: {r.name}</summary><div className="sheet">{r.text}</div></details>)}
+                  {d.stratagems.map((st) => {
+                    const why = canUseStratagem(s, p, st.id, tgt, st.cp);
+                    return (
+                      <div key={st.id} className="card" style={{ padding: 8, marginTop: 6 }}>
+                        <div className="row">
+                          <b className="grow">{st.name}</b>
+                          <span className="chip">{st.cp}CP</span>
+                          <button className="btn small primary" disabled={!!why} title={why ?? ''} onClick={() => { act((g) => spendStratagem(g, p, st.id, tgt ? unitById(g, tgt.id) : undefined, st.cp)); flash(`ใช้ ${st.name} แล้ว — ใช้ปุ่ม Buff ให้ผลตามข้อความ`); setShowStrats(false); }}>ใช้</button>
+                        </div>
+                        <div className="tiny muted">{st.type} · {st.turn} · {st.phase}{why ? ` · ${why}` : ''}</div>
+                        <div className="sheet tiny">{st.text}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+              <h3>Core Stratagems</h3>
+              <div className="tiny muted">ระบบเด้งให้ใช้อัตโนมัติตอนที่ถึงจังหวะตามกฎ</div>
+              {RULES.coreStratagems.map((st) => <div key={st.id} className="small"><b>{st.name}</b> ({st.cp}CP) — {st.when}: {st.text}</div>)}
+              <button className="btn" onClick={() => setShowStrats(false)}>ปิด</button>
+            </div>
+          </div>
+        );
+      })()}
 
       {showLog && (
         <div className="tray-backdrop" onClick={() => setShowLog(false)}>

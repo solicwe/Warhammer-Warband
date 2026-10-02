@@ -7,6 +7,7 @@ import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { GameScreen } from './GameScreen';
 import { PRESETS } from './presets';
 import { clearSaved, loadSaved } from './store';
+import { TokenSprites } from './Tokens';
 
 type Screen = { kind: 'home' } | { kind: 'build'; player: 0 | 1 } | { kind: 'game'; state: GameState };
 
@@ -33,12 +34,13 @@ export default function App() {
   };
 
   if (screen.kind === 'game') {
-    return <div className="app"><GameScreen initial={screen.state} onExit={() => { setSaved(loadSaved()); setScreen({ kind: 'home' }); }} /></div>;
+    return <div className="app"><TokenSprites /><GameScreen initial={screen.state} onExit={() => { setSaved(loadSaved()); setScreen({ kind: 'home' }); }} /></div>;
   }
   if (screen.kind === 'build') {
     const p = screen.player;
     return (
       <div className="app">
+        <TokenSprites />
         <ArmyBuilder list={lists[p]} onChange={(l) => setLists((ls) => (p === 0 ? [l, ls[1]] : [ls[0], l]))} onDone={() => setScreen({ kind: 'home' })} />
       </div>
     );
@@ -46,6 +48,7 @@ export default function App() {
   const factionName = (id: string) => index?.factions.find((f) => f.id === id)?.name ?? id;
   return (
     <div className="app">
+      <TokenSprites />
       <div className="screen">
         <div className="title">WARHAMMER <span>40K</span> · 11th</div>
         <div className="muted small">จำลองเกมบนโต๊ะแบบ 2D · เดินเอง ระบบทอยเต๋าให้ · Hotseat 2 คน</div>
