@@ -298,7 +298,11 @@ export type FxEvent =
   | { seq: number; kind: 'move'; unitId: string; owner: PlayerId; moveKind: MoveKind; paths: [string, Pt[]][] }
   | { seq: number; kind: 'place'; unitId: string; owner: PlayerId }
   | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[] }
-  | { seq: number; kind: 'mortal'; unitId: string; n: number; at: Pt };
+  | { seq: number; kind: 'mortal'; unitId: string; n: number; at: Pt }
+  /** a roll worth showing big on screen (advance, charge, battle-shock) */
+  | { seq: number; kind: 'roll'; owner: PlayerId | null; title: string; dice: number[]; result: string; good?: boolean }
+  /** roll-off between the players */
+  | { seq: number; kind: 'rolloff'; title: string; a: number; b: number; winner: PlayerId; result: string };
 
 export type Window =
   | { kind: 'fireOverwatch'; player: PlayerId }

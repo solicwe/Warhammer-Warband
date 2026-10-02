@@ -29,7 +29,8 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 - **สนามแบบโต๊ะแข่ง**: ruins (พื้นกระเบื้อง, กำแพง+หน้าต่าง, ชั้นบน), armoured containers, sandbag barricades, craters, objective marker 40mm พร้อมเลข OC สด, ป้าย 🛡 Cover / 👁 Hidden และเส้น line of sight ตอนเลือกเป้ายิง, token รูปตัวละคร (Space Marine / Ork / Grot / Walker / Vehicle / Monster, มงกุฎ = CHARACTER)
 - **เล่นกับบอทได้** (single-player): บอทเล่นตามกฎทีละหน่วย พร้อมแอนิเมชันและคำบรรยายว่ากำลังทำอะไร — เลือกเป้ายิง/ตีจากค่าคาดหวัง (แต้มที่ฆ่าได้, เก็บหน่วย, เป้า Oath, คนยืน objective), ยืนเฝ้า objective เมื่อจำเป็น, หน่วย melee ชาร์จตามโอกาสสำเร็จ 2D6, ใช้ Command Re-roll ชาร์จ / Fire Overwatch, ใช้ Oath of Moment / WAAAGH! ตามจังหวะ
 - **เอฟเฟคบนกระดาน**: เส้นกระสุน/ฟันดาบ, ตัวเลข −W, กากบาทโมเดลที่ตาย, mortal wound; ป้าย **OATH** เหนือหน่วยที่ถูกเลือกเป็น Oath of Moment
-- **การเดิน**: ลาก = ย้ายทั้งหน่วย, แตะโมเดล = เลือกเพื่อปรับทีละตัว (เลือกหลายตัวได้)
+- **การเดิน**: ลาก = ย้ายทั้งหน่วย, แตะโมเดล 1 ตัว = เลือกตัวนั้นแล้วลากเฉพาะตัว (วัดระยะเส้นตรงจากจุดเริ่มของตัวนั้น ใช้ได้แม้ทั้งหน่วยเดินจนสุดระยะแล้ว)
+- **ทอยเต๋ากลางจอ**: roll-off ตอนเริ่มเกม (ใคร Attacker / ใครวางก่อน, ใครเล่นก่อน), Advance, Charge, Battle-shock แสดงลูกเต๋าหมุนแล้วกระแทกลงพร้อมผลลัพธ์
 - **เลือก Faction → Chapter**: แตะตรากองทัพเพื่อเลือก faction (แบ่ง Imperium / Chaos / Xenos) แล้วเลือก Chapter ของ Space Marines (Ultramarines, Blood Angels, Dark Angels, Space Wolves, Black Templars, Deathwatch ฯลฯ) — รายการหน่วยและ detachment จะแสดงเฉพาะของ Chapter นั้น + หน่วยทั่วไป และตรวจทัพให้
 - **หน้าจัดทัพ** แบบ List / Detachment: หัวกองทัพ (ตรา, ชื่อ, detachment, pts), หมวด Characters / Battleline / Others มีปุ่ม + และเมนู ⋮ ต่อหน่วย (จำนวนโมเดล, leader, enhancement, warlord, ทำซ้ำ, ลบ), ปุ่มแชร์รายชื่อกองทัพ
 - **Secondary Missions** ครบ 18 ใบ (Tactical: จั่ว 2 ใบทุก Command phase, ทิ้ง +1CP, เปลี่ยนใบ 1CP ครั้งเดียว · Fixed: เลือก 2 ใบ สูงสุดใบละ 20VP) — กดยืนยันคะแนนเองเหมือนบนโต๊ะ ระบบคุม cap 15VP/รอบ, 45VP

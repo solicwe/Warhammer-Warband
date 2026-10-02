@@ -94,6 +94,7 @@ export function createGame(o: NewGameOptions): GameState {
   const ro = rollOff(s);
   log(s, `Roll-off เลือก Attacker/Defender: ${o.names[0]} ${ro.a} – ${o.names[1]} ${ro.b} → ${o.names[ro.winner]} เป็น Attacker`, 'roll', null);
   s.attackerPlayer = ro.winner;
+  pushFx(s, { kind: 'rolloff', title: 'Roll-off: ใคร Attacker?', a: ro.a, b: ro.b, winner: ro.winner, result: `${o.names[ro.winner]} เป็น Attacker · ${o.names[other(ro.winner)]} (Defender) วางทัพก่อน` });
   s.players[ro.winner].role = 'attacker';
   s.players[other(ro.winner)].role = 'defender';
   for (const ob of s.objectives as (ObjectiveState & { ownerRole?: string })[]) {
@@ -321,6 +322,7 @@ function nextDeployer(s: GameState) {
 function finishDeployment(s: GameState) {
   const ro = rollOff(s);
   s.firstPlayer = ro.winner;
+  pushFx(s, { kind: 'rolloff', title: 'Roll-off: ใครเล่นก่อน?', a: ro.a, b: ro.b, winner: ro.winner, result: `${s.players[ro.winner].name} ได้เล่นก่อน` });
   log(s, `Roll-off เลือกคนเล่นก่อน: ${s.players[0].name} ${ro.a} – ${s.players[1].name} ${ro.b} → ${s.players[ro.winner].name} เล่นก่อน`, 'roll', null);
   s.round = 1;
   s.turn = -1;
@@ -384,6 +386,7 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
     const r = rollN(s, 2);
     t.result = r[0] + r[1];
     t.passed = t.result >= bestLd(u);
+    pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${t.result} vs Ld ${bestLd(u)}+ → ${t.passed ? 'ผ่าน' : 'ไม่ผ่าน!'}`, good: t.passed });
     log(s, `Battle-shock ${u.name}: 2D6 [${r.join('+')}] = ${t.result} vs Ld ${bestLd(u)}+ → ${t.passed ? 'ผ่าน' : 'ไม่ผ่าน ⚠'}`, 'roll', u.owner);
   }
   const was = u.battleShocked;
@@ -459,6 +462,7 @@ function endBattle(s: GameState) {
 
 export function rollAdvance(s: GameState, u: UnitState) {
   u.advanceRoll = d6(s);
+  pushFx(s, { kind: 'roll', owner: u.owner, title: `Advance · ${u.name}`, dice: [u.advanceRoll], result: `M + ${u.advanceRoll}"`, good: u.advanceRoll >= 4 });
   log(s, `${u.name} Advance: ทอยได้ ${u.advanceRoll}`, 'roll', u.owner);
 }
 
@@ -542,6 +546,8 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   let total = r[0] + r[1];
   if (cap !== undefined) total = Math.min(total, cap);
   u.chargeRoll = Math.max(0, total - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0));
+  const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
+  pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `ชาร์จได้ ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });
   log(s, `${u.name} ประกาศชาร์จ: 2D6 [${r.join('+')}] = ${r[0] + r[1]}${fly ? ' (บิน −2)' : ''}${cap !== undefined && r[0] + r[1] > cap ? ` → สูงสุด ${cap}` : ''}`, 'roll', u.owner);
   return r;
 }

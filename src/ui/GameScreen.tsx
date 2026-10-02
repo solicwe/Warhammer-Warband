@@ -15,6 +15,7 @@ import {
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries,
 } from '../engine/game';
 import { botShouldAct, botStep } from '../engine/bot';
+import { RollOverlay } from './RollOverlay';
 import { endUnitShooting, rangedWeaponNames } from '../engine/attack';
 import { MISSIONS, secondaryById } from '../engine/config';
 import { polyCentroid } from '../engine/geometry';
@@ -73,8 +74,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   // single-player: let the bot take its steps one at a time so the board animates; caption what it just did
   const [botSays, setBotSays] = useState<string | null>(null);
+  const [rolling, setRolling] = useState(false); // a big dice roll is on screen: the bot waits for it
   useEffect(() => {
-    if (bot === null) return;
+    if (bot === null || rolling) return;
     if (!botShouldAct(s, bot)) {
       if (!botSays) return;
       const t = window.setTimeout(() => setBotSays(null), 2200);
@@ -92,7 +94,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (said) setBotSays(said);
     }, quick ? 350 : 950);
     return () => window.clearTimeout(t);
-  }, [s, bot, act, botSays]);
+  }, [s, bot, act, botSays, rolling]);
   const [sel, setSel] = useState<string | null>(null);
   const [mode, setModeRaw] = useState<Mode | null>(null);
   const [draft, setDraft] = useState<Paths | null>(null);
@@ -347,7 +349,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const moveControls = (kind: string, onConfirm: () => void, extra?: React.ReactNode) => (
     <>
       <div className="row">
-        <span className="tiny muted grow">ลาก = ย้ายทั้งหน่วย · แตะโมเดล = เลือกปรับทีละตัว</span>
+        <span className="tiny muted grow">ลาก = ทั้งหน่วย · แตะ 1 ตัว = ขยับเฉพาะตัว</span>
         <button className="btn small" onClick={() => { setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); }}>Reset</button>
         {extra}
       </div>
@@ -436,7 +438,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <>
         <div className="small">วาง <b>{u.name}</b>: แตะบนสนาม{mode.how === 'deploy' ? 'ในโซนของคุณ' : mode.how === 'disembark' ? ` ภายใน ${disembarkMode(s, U(mode.transportId!)) === 'combat' ? 6 : 3}" จากรถ (${disembarkMode(s, U(mode.transportId!))} disembark)` : mode.how === 'deepStrike' ? ` (ห่างศัตรู >${RULES.reserves.enemyDistance}")` : ` (ภายใน ${RULES.reserves.edgeDistance}" จากขอบ, ห่างศัตรู >${RULES.reserves.enemyDistance}")`} แล้วลากปรับตำแหน่ง</div>
         <div className="row">
-          <span className="tiny muted grow">ลาก = ย้ายทั้งหน่วย · แตะโมเดล = เลือกปรับทีละตัว</span>
+          <span className="tiny muted grow">ลาก = ทั้งหน่วย · แตะ 1 ตัว = ขยับเฉพาะตัว</span>
           <button className="btn small" onClick={autoPlace}>หาที่วางให้</button>
         </div>
         {check && !check.ok && <div className="err">{check.errors.slice(0, 4).map((e) => <div key={e}>{e}</div>)}</div>}
@@ -984,6 +986,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         {panel()}
       </div>
 
+      <RollOverlay s={s} onBusy={setRolling} />
       {s.attack && (
         <DiceTray
           s={s}

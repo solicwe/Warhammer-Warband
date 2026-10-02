@@ -39,7 +39,7 @@ const COLORS = ['#3a9ad9', '#e0453f'];
 const SOFT = ['rgba(58,154,217,0.16)', 'rgba(224,69,63,0.16)'];
 const TERRAIN_FILL: Record<string, string> = { dense: 'rgba(120,98,72,0.55)', light: 'rgba(150,140,80,0.45)', exposed: 'rgba(90,85,78,0.45)' };
 
-const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1500, mortal: 1200 };
+const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1500, mortal: 1200, roll: 0, rolloff: 0 }; // rolls are shown by the screen, not the board
 interface ActiveFx { e: FxEvent; t0: number }
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
@@ -65,6 +65,8 @@ interface DragState {
   moved: boolean;
   unitId: string;
   modelId: string;
+  solo?: boolean; // single picked model: re-aim its move from where it started
+  grab?: Pt; // that model's position when the drag began
 }
 
 function BoardImpl(props: BoardProps) {
@@ -83,7 +85,7 @@ function BoardImpl(props: BoardProps) {
     if (!fresh.length) return;
     seen.current = Math.max(...fresh.map((e) => e.seq));
     const t0 = performance.now();
-    const keep = fresh.filter((e) => e.kind !== 'move' || props.animateMoves?.includes(e.owner));
+    const keep = fresh.filter((e) => e.kind !== 'roll' && e.kind !== 'rolloff' && (e.kind !== 'move' || props.animateMoves?.includes(e.owner)));
     // stagger events from the same step a little so they read in order
     setFx((cur) => [...cur.filter((a) => t0 - a.t0 < FX_MS[a.e.kind]), ...keep.map((e, i) => ({ e, t0: t0 + i * 180 }))]);
   }, [s.fx, s.fxSeq, props.animateMoves]);
@@ -165,7 +167,12 @@ function BoardImpl(props: BoardProps) {
       drag.current = { pointerId: e.pointerId, start: toBoard(e.clientX, e.clientY), models: [], base: new Map(), moved: false, unitId, modelId };
       return;
     }
-    const models = solo.includes(modelId) ? solo.filter((id) => draft!.has(id)) : [...draft!.keys()];
+    if (solo.includes(modelId)) {
+      const p = draft!.get(modelId)!;
+      drag.current = { pointerId: e.pointerId, start: toBoard(e.clientX, e.clientY), models: [modelId], base: new Map([[modelId, [...p]]]), moved: false, unitId, modelId, solo: true, grab: { ...p[p.length - 1] } };
+      return;
+    }
+    const models = [...draft!.keys()];
     const base: Paths = new Map();
     for (const [id, p] of draft!) {
       if (models.includes(id) && p.length > 1) {
@@ -206,6 +213,22 @@ function BoardImpl(props: BoardProps) {
       if (!dg.moved && Math.hypot(dx, dy) < 0.25) return;
       dg.moved = true;
       if (!dg.models.length || !onDraft) return;
+      if (dg.solo && dg.grab) {
+        // one model: straight line from where it started this move, clamped to its own maximum
+        const id = dg.models[0];
+        const path = dg.base.get(id)!;
+        const origin = path[0];
+        let end = { x: dg.grab.x + dx, y: dg.grab.y + dy };
+        if (path.length >= 2) {
+          const max = maxFor?.(id) ?? Infinity;
+          const d = dist(origin, end);
+          if (d > max) end = { x: origin.x + ((end.x - origin.x) * max) / d, y: origin.y + ((end.y - origin.y) * max) / d };
+        }
+        const next: Paths = new Map(draft!);
+        next.set(id, path.length < 2 ? [end] : [origin, end]);
+        onDraft(next);
+        return;
+      }
       // clamp so no model exceeds its maximum distance
       let k = 1;
       for (const id of dg.models) {
@@ -247,7 +270,7 @@ function BoardImpl(props: BoardProps) {
       drag.current = null;
       if (!dg.moved) {
         // tapping a model of the unit being moved picks it for single-model adjustment
-        if (dg.models.length && draftUnit === dg.unitId) setSolo((cur) => (cur.includes(dg.modelId) ? cur.filter((x) => x !== dg.modelId) : [...cur, dg.modelId]));
+        if (dg.models.length && draftUnit === dg.unitId) setSolo((cur) => (cur[0] === dg.modelId ? [] : [dg.modelId]));
         else props.onTapUnit?.(dg.unitId, dg.modelId);
       } else if (!solo.includes(dg.modelId)) setSolo([]);
       return;
