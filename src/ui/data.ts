@@ -4,7 +4,7 @@ export interface FactionIndex {
   source: string;
   sourceUrl: string;
   lastUpdate: string;
-  factions: { id: string; name: string; datasheets: number; detachments: number }[];
+  factions: { id: string; name: string; group?: string; datasheets: number; detachments: number; subfactions?: string[] }[];
 }
 
 const cache = new Map<string, Promise<FactionData>>();

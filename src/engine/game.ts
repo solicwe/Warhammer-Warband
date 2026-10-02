@@ -102,7 +102,7 @@ export function createGame(o: NewGameOptions): GameState {
   for (const u of s.units) if (hasKw(u, 'AIRCRAFT')) { u.status = 'reserves'; }
   const CHAPTERS = ['BLACK TEMPLARS', 'BLOOD ANGELS', 'DARK ANGELS', 'DEATHWATCH', 'SPACE WOLVES'];
   for (const p of [0, 1] as PlayerId[]) {
-    s.players[p].oathWoundBonus = !s.units.some((u) => u.owner === p && u.factionKeywords.some((k) => CHAPTERS.includes(k)));
+    s.players[p].oathWoundBonus = !CHAPTERS.includes(o.lists[p].subfaction ?? '') && !s.units.some((u) => u.owner === p && u.factionKeywords.some((k) => CHAPTERS.includes(k)));
   }
   s.deployTurn = other(s.attackerPlayer); // Defender deploys first
   for (const p of [0, 1] as PlayerId[]) if (s.players[p].secMode === 'tactical') s.players[p].secDeck = shuffle(s, MISSIONS.secondaries.map((x) => x.id));

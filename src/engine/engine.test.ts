@@ -276,3 +276,23 @@ describe('board effects', () => {
     expect(s.fxSeq).toBe(s.fx!.at(-1)!.seq);
   });
 });
+
+describe('sub-factions (Chapters)', () => {
+  it('data tags chapter datasheets and detachments', () => {
+    expect(SM.subfactions?.options.some((o) => o.keyword === 'BLOOD ANGELS')).toBe(true);
+    expect(SM.datasheets.find((d) => d.name === 'Intercessor Squad')?.subfaction).toBeUndefined();
+    expect(SM.detachments.find((d) => d.name === 'Saga of the Hunter')?.subfaction).toBe('SPACE WOLVES');
+    expect(SM.detachments.find((d) => d.name === 'Gladius Task Force')?.subfaction).toBeUndefined();
+  });
+  it('rejects units and detachments from another chapter', async () => {
+    const { validateList } = await import('./army');
+    const size = { points: 2000, dp: 3, unitLimit: 3, enhancements: 3 };
+    const wolf = SM.datasheets.find((d) => d.subfaction === 'SPACE WOLVES')!;
+    const l: ArmyList = { name: 't', factionId: 'SM', subfaction: 'BLOOD ANGELS', battleSize: 'strike', detachments: ['Saga of the Hunter'], units: [{ uid: 'a', datasheet: wolf.name, models: 1, pts: 0 }] };
+    const errs = validateList(l, SM, size);
+    expect(errs.some((e) => e.includes('Saga of the Hunter'))).toBe(true);
+    expect(errs.some((e) => e.includes(wolf.name))).toBe(true);
+    const ok = validateList({ ...l, subfaction: 'SPACE WOLVES' }, SM, size);
+    expect(ok.some((e) => e.includes('Saga of the Hunter') || e.includes(wolf.name))).toBe(false);
+  });
+});

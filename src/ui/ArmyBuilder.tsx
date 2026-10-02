@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { enhancementOptions, listPoints, newUid, pointsOptions, validateList } from '../engine/army';
 import { RULES } from '../engine/config';
-import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData } from '../engine/types';
+import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData } from '../engine/types';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { DatasheetView } from './Sheet';
 import { tokenKind } from './Tokens';
@@ -30,7 +30,9 @@ function sectionOf(d: DatasheetData | undefined): Section {
 }
 
 /** Original faction emblems (not official marks). */
-function Emblem({ factionId }: { factionId: string }) {
+export const titleCase = (k: string) => k.toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (_, a, b) => a + b.toUpperCase());
+
+export function Emblem({ factionId, color }: { factionId: string; color?: string }) {
   return (
     <svg className="ab-emblem" viewBox="0 0 64 64" aria-hidden="true">
       <circle cx="32" cy="32" r="30" fill="#1a1a1a" stroke="#7a0c0c" strokeWidth="3" />
@@ -42,7 +44,7 @@ function Emblem({ factionId }: { factionId: string }) {
         </g>
       ) : factionId === 'SM' ? (
         <g>
-          <path d="M32 12 L48 18 L46 38 Q44 48 32 54 Q20 48 18 38 L16 18 Z" fill="#1f4a8f" stroke="#d9b44a" strokeWidth="2.5" />
+          <path d="M32 12 L48 18 L46 38 Q44 48 32 54 Q20 48 18 38 L16 18 Z" fill={color ?? '#1f4a8f'} stroke="#d9b44a" strokeWidth="2.5" />
           <path d="M32 20 L40 34 L35 34 L35 46 L29 46 L29 34 L24 34 Z" fill="#d9b44a" />
         </g>
       ) : (
@@ -71,6 +73,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [adding, setAdding] = useState<Section | null>(null);
   const [q, setQ] = useState('');
   const [menu, setMenu] = useState<string | null>(null); // uid of the unit whose ⋮ menu is open
+  const [picker, setPicker] = useState<{ factionId: string | null } | null>(null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [imported, setImported] = useState<{ ok: string[]; missed: { file: File; name: string }[] } | null>(null);
@@ -85,6 +88,27 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const dpUsed = faction ? list.detachments.reduce((a, n) => a + (faction.detachments.find((d) => d.name === n)?.dp ?? 0), 0) : 0;
   const sheetOf = (name: string) => faction?.datasheets.find((d) => d.name === name);
   const factionName = index?.factions.find((f) => f.id === list.factionId)?.name ?? faction?.name ?? list.factionId;
+  const subs = faction?.subfactions;
+  const sub: SubfactionData | undefined = subs?.options.find((o) => o.keyword === list.subfaction);
+  const allowed = (x: { subfaction?: string }) => !x.subfaction || x.subfaction === list.subfaction;
+  const subTag = (k?: string) => (k ? subs?.options.find((o) => o.keyword === k)?.name ?? titleCase(k) : '');
+
+  /** Switch faction (clears the list) or only the sub-faction (keeps what is still legal). */
+  const choose = (factionId: string, subfaction?: string) => {
+    setPicker(null);
+    if (factionId !== list.factionId) {
+      onChange({ ...list, factionId, subfaction, detachments: [], units: [] });
+      return;
+    }
+    if (!faction) return;
+    const ok = (x: { subfaction?: string }) => !x.subfaction || x.subfaction === subfaction;
+    const units = list.units.filter((u) => ok(faction.datasheets.find((d) => d.name === u.datasheet) ?? {}));
+    const kept = new Set(units.map((u) => u.uid));
+    const detachments = list.detachments.filter((n) => ok(faction.detachments.find((d) => d.name === n) ?? {}));
+    const dropped = list.units.length - units.length + list.detachments.length - detachments.length;
+    onChange({ ...list, subfaction, detachments, units: units.map((u) => (u.attachTo && !kept.has(u.attachTo) ? { ...u, attachTo: undefined } : u)) });
+    if (dropped) setNote(`เอาหน่วย/detachment ของ ${subs?.label ?? 'sub-faction'} อื่นออก ${dropped} รายการ`);
+  };
 
   const set = (patch: Partial<ArmyList>) => onChange({ ...list, ...patch });
   const setUnit = (uid: string, patch: Partial<ArmyUnitEntry>) => set({ units: list.units.map((x) => (x.uid === uid ? { ...x, ...patch } : x)) });
@@ -111,7 +135,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
 
   const share = async () => {
     const lines = [
-      `${list.name || 'Army list'} — ${factionName}`,
+      `${list.name || 'Army list'} — ${factionName}${sub ? ` (${sub.name})` : ''}`,
       `${list.detachments.join(', ') || 'ไม่มี detachment'} · ${pts}/${size.points} pts`,
       '',
       ...SECTIONS.flatMap((sec) => {
@@ -132,15 +156,16 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const unitRow = (u: ArmyUnitEntry) => {
     const sheet = sheetOf(u.datasheet);
     const leads = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
-    const sub = [u.warlord && 'Warlord', u.enhancement, leads && `นำ ${leads.datasheet}`].filter(Boolean).join(' · ');
+    const line = [u.warlord && 'Warlord', u.enhancement, leads && `นำ ${leads.datasheet}`].filter(Boolean).join(' · ');
+    const wrong = sheet && !allowed(sheet);
     return (
       <div key={u.uid} className="ab-row">
         <button type="button" className="ab-row-main" onClick={() => setView(u.datasheet)}>
           <UnitArt sheet={sheet} />
           <span className="ab-row-text">
             <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
-            <span className="ab-pts">{u.pts + (u.enhancementPts ?? 0)} pts</span>
-            {sub && <span className="ab-sub">{sub}</span>}
+            <span className="ab-pts">{u.pts + (u.enhancementPts ?? 0)} pts{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}</span>
+            {line && <span className="ab-sub">{line}</span>}
           </span>
         </button>
         <button type="button" className="ab-kebab" aria-label={`ตัวเลือก ${u.datasheet}`} onClick={() => setMenu(u.uid)}>⋮</button>
@@ -171,11 +196,12 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const detachmentTab = () => faction && (
     <>
       <div className="card">
-        <label className="field">Faction
-          <select value={list.factionId} onChange={(e) => set({ factionId: e.target.value, detachments: [], units: [] })}>
-            {index?.factions.filter((f) => f.datasheets > 0).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-          </select>
-        </label>
+        <div className="field">Faction{subs ? ` / ${subs.label}` : ''}
+          <button type="button" className="ab-pick-btn" onClick={() => setPicker({ factionId: null })}>
+            <span className="grow">{factionName}{subs ? ` · ${sub?.name ?? `ไม่ระบุ ${subs.label}`}` : ''}</span>
+            <span className="muted">เปลี่ยน ›</span>
+          </button>
+        </div>
         <label className="field">Battle size
           <select value={list.battleSize} onChange={(e) => set({ battleSize: e.target.value })}>
             {RULES.battleSizes.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.points} pts · {b.dp} DP)</option>)}
@@ -184,14 +210,17 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       </div>
       <div className="card">
         <div className="card-title">Detachments <span className="muted small">{dpUsed}/{size.dp} DP</span></div>
-        {faction.detachments.filter((d) => d.forceDisposition).map((d) => {
+        {subs && !sub && <div className="small muted">ยังไม่ได้เลือก {subs.label} — แสดงเฉพาะ detachment ทั่วไป <button type="button" className="linkish" onClick={() => setPicker({ factionId: list.factionId })}>เลือก {subs.label}</button></div>}
+        {faction.detachments.filter((d) => d.forceDisposition && (allowed(d) || list.detachments.includes(d.name)))
+          .sort((a, b) => Number(!!b.subfaction) - Number(!!a.subfaction))
+          .map((d) => {
           const on = list.detachments.includes(d.name);
           return (
             <div key={d.id} className={`ab-det ${on ? 'on' : ''}`}>
               <button type="button" className="ab-det-head" onClick={() => set({ detachments: on ? list.detachments.filter((x) => x !== d.name) : [...list.detachments, d.name] })}>
                 <span className="ab-check">{on ? '✓' : ''}</span>
                 <span className="grow">
-                  <span className="ab-name">{d.name}</span>
+                  <span className="ab-name">{d.name}{d.subfaction && <span className={`ab-chip ${allowed(d) ? '' : 'bad'}`}>{subTag(d.subfaction)}</span>}</span>
                   <span className="ab-sub">{d.dp} DP · {d.forceDisposition} · {d.enhancements.length} enhancements · {d.stratagems.length} stratagems</span>
                 </span>
               </button>
@@ -241,8 +270,8 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     if (!adding || !faction) return null;
     const title = SECTIONS.find((x) => x.id === adding)!.title;
     const sheets = faction.datasheets
-      .filter((d) => !d.keywords.includes('AIRCRAFT') && sectionOf(d) === adding && d.name.toLowerCase().includes(q.toLowerCase()) && pointsOptions(d).length)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .filter((d) => !d.keywords.includes('AIRCRAFT') && allowed(d) && sectionOf(d) === adding && d.name.toLowerCase().includes(q.toLowerCase()) && pointsOptions(d).length)
+      .sort((a, b) => Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
     return (
       <div className="tray-backdrop" onClick={() => setAdding(null)}>
         <div className="tray" onClick={(e) => e.stopPropagation()}>
@@ -251,6 +280,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             <button className="btn small ghost" onClick={() => setAdding(null)}>ปิด</button>
           </div>
           <input placeholder="ค้นหา datasheet…" value={q} onChange={(e) => setQ(e.target.value)} />
+          {subs && <div className="small muted">{sub ? `แสดงหน่วยของ ${sub.name} + หน่วยทั่วไป` : `ยังไม่ได้เลือก ${subs.label}: แสดงเฉพาะหน่วยทั่วไป`} · <button type="button" className="linkish" onClick={() => setPicker({ factionId: list.factionId })}>{sub ? `เปลี่ยน ${subs.label}` : `เลือก ${subs.label}`}</button></div>}
           <div className="ab-pick">
             {sheets.map((d) => {
               const count = list.units.filter((u) => u.datasheet === d.name).length;
@@ -261,7 +291,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                     <span className="ab-row-text">
                       <span className="ab-name">{d.name}{count ? <span className="ab-count"> ×{count}</span> : null}</span>
                       <span className="ab-pts">{pointsOptions(d).map((o) => `${o.models}: ${o.pts}`).join(' / ')} pts</span>
-                      <span className="ab-sub">{d.keywords.includes('EPIC HERO') ? 'Epic Hero · ' : ''}{d.role}</span>
+                      <span className="ab-sub">{d.subfaction && <span className="ab-chip">{subTag(d.subfaction)}</span>}{d.keywords.includes('EPIC HERO') ? 'Epic Hero · ' : ''}{d.role}</span>
                     </span>
                   </button>
                   <button type="button" className="ab-add dark" aria-label={`เพิ่ม ${d.name}`} onClick={() => addUnit(d)}>+</button>
@@ -334,6 +364,67 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     );
   };
 
+  const pickerSheet = () => {
+    if (!picker || !index) return null;
+    const step = picker.factionId ? index.factions.find((f) => f.id === picker.factionId) : null;
+    const opts = step?.id === list.factionId ? subs?.options : undefined;
+    const groups = ['Imperium', 'Chaos', 'Xenos', 'Other'];
+    return (
+      <div className="tray-backdrop" onClick={() => setPicker(null)}>
+        <div className="tray" onClick={(e) => e.stopPropagation()}>
+          <div className="row">
+            {step && <button className="btn small ghost" onClick={() => setPicker({ factionId: null })}>‹ Faction</button>}
+            <div className="sheet-title grow">{step ? `${step.name}: เลือก ${subs?.label ?? 'sub-faction'}` : 'เลือก Faction'}</div>
+            <button className="btn small ghost" onClick={() => setPicker(null)}>ปิด</button>
+          </div>
+          {!step && groups.map((g) => {
+            const fs = index.factions.filter((f) => (f.group ?? 'Other') === g && f.datasheets > 0 && f.detachments > 0);
+            if (!fs.length) return null;
+            return (
+              <div key={g} className="ab-fgroup">
+                <div className="ab-fgroup-title">{g}</div>
+                <div className="ab-fgrid">
+                  {fs.map((f) => (
+                    <button key={f.id} type="button" className={`ab-fcard ${f.id === list.factionId ? 'on' : ''}`}
+                      onClick={() => (f.subfactions?.length ? (f.id === list.factionId ? setPicker({ factionId: f.id }) : (choose(f.id), setPicker({ factionId: f.id }))) : choose(f.id))}>
+                      <Emblem factionId={f.id} color={f.id === list.factionId ? sub?.color : undefined} />
+                      <span className="ab-fname">{f.name}</span>
+                      {f.subfactions?.length ? <span className="ab-sub">{f.subfactions.length} sub-factions ›</span> : null}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          {step && !opts && <div className="ab-empty">กำลังโหลด…</div>}
+          {step && opts && (
+            <>
+              {list.units.length > 0 && <div className="small muted">เปลี่ยน {subs!.label}: หน่วยและ detachment ของ {subs!.label} อื่นจะถูกเอาออก หน่วยทั่วไปอยู่ครบ</div>}
+              <div className="ab-fgrid">
+                <button type="button" className={`ab-fcard ${!list.subfaction ? 'on' : ''}`} onClick={() => choose(step.id, undefined)}>
+                  <Emblem factionId={step.id} />
+                  <span className="ab-fname">ไม่ระบุ {subs!.label}</span>
+                  <span className="ab-sub">หน่วยทั่วไปเท่านั้น</span>
+                </button>
+                {opts.map((o) => {
+                  const nU = faction!.datasheets.filter((d) => d.subfaction === o.keyword).length;
+                  const nD = faction!.detachments.filter((d) => d.subfaction === o.keyword).length;
+                  return (
+                    <button key={o.keyword} type="button" className={`ab-fcard ${list.subfaction === o.keyword ? 'on' : ''}`} onClick={() => choose(step.id, o.keyword)}>
+                      <Emblem factionId={step.id} color={o.color} />
+                      <span className="ab-fname">{o.name}</span>
+                      <span className="ab-sub">{nU} หน่วยเฉพาะ · {nD} detachment</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="ab">
       <header className="ab-top">
@@ -350,11 +441,13 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       </header>
       <div className="ab-body">
         <div className="ab-head">
-          <Emblem factionId={list.factionId} />
+          <button type="button" className="ab-emblem-btn" aria-label="เลือก faction" onClick={() => setPicker({ factionId: null })}><Emblem factionId={list.factionId} color={sub?.color} /></button>
           <div className="grow">
             <input className="ab-title" aria-label="ชื่อกองทัพ" value={list.name} placeholder="ตั้งชื่อกองทัพ" onChange={(e) => set({ name: e.target.value })} />
             <div className="ab-det-name">{list.detachments.join(' · ') || <button type="button" className="linkish" onClick={() => setTab('detachment')}>เลือก detachment</button>}</div>
-            <div className="ab-faction">{factionName}</div>
+            <button type="button" className="ab-faction" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>
+              {factionName}{subs ? ` · ${sub?.name ?? `เลือก ${subs.label}`}` : ''} ›
+            </button>
           </div>
           <div className={`ab-total ${pts > size.points ? 'over' : ''}`}>{pts}/{size.points}<small> pts</small></div>
         </div>
@@ -364,6 +457,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {note && <div className="toast ab-toast">{note}</div>}
       {addSheet()}
       {unitMenu()}
+      {pickerSheet()}
       {view && faction && sheetOf(view) && (
         <div className="tray-backdrop" onClick={() => setView(null)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>

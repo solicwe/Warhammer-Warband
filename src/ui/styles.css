@@ -243,3 +243,18 @@ details summary { cursor: pointer; }
 .ab-det.on .ab-check { background: var(--accent); border-color: var(--accent); }
 .tray .seg { flex-wrap: wrap; }
 .ab-toast { top: auto; bottom: 18px; position: absolute; }
+/* faction / sub-faction picker */
+.ab-emblem-btn { border: none; background: none; padding: 0; cursor: pointer; flex-shrink: 0; }
+button.ab-faction { border: none; background: none; padding: 0; font: inherit; font-size: 12px; color: var(--p0); cursor: pointer; text-align: left; }
+.ab-chip { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; background: var(--ink); color: #fff; font: 600 10px var(--sans); letter-spacing: 0.04em; vertical-align: 2px; text-transform: uppercase; }
+.ab-sub .ab-chip { margin: 0 6px 0 0; }
+.ab-chip.bad { background: var(--bad); }
+.ab-pick-btn { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--card3); background: #fff; color: var(--ink); font: 500 15px var(--sans); cursor: pointer; text-align: left; }
+.ab-fgroup { display: flex; flex-direction: column; gap: 8px; }
+.ab-fgroup-title { font: 600 15px var(--serif); color: var(--ink-muted); }
+.ab-fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.ab-fcard { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border-radius: 8px; border: 1px solid var(--card3); background: #fff; color: var(--ink); cursor: pointer; text-align: center; font: inherit; }
+.ab-fcard .ab-emblem { width: 44px; height: 44px; }
+.ab-fcard.on { border: 2px solid var(--accent); padding: 11px 7px; }
+.ab-fname { font: 600 14px var(--serif); line-height: 1.2; }
+.ab-fcard .ab-sub { white-space: normal; }

@@ -30,6 +30,7 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 - **เล่นกับบอทได้** (single-player): บอทเล่นตามกฎทีละหน่วย พร้อมแอนิเมชันและคำบรรยายว่ากำลังทำอะไร — เลือกเป้ายิง/ตีจากค่าคาดหวัง (แต้มที่ฆ่าได้, เก็บหน่วย, เป้า Oath, คนยืน objective), ยืนเฝ้า objective เมื่อจำเป็น, หน่วย melee ชาร์จตามโอกาสสำเร็จ 2D6, ใช้ Command Re-roll ชาร์จ / Fire Overwatch, ใช้ Oath of Moment / WAAAGH! ตามจังหวะ
 - **เอฟเฟคบนกระดาน**: เส้นกระสุน/ฟันดาบ, ตัวเลข −W, กากบาทโมเดลที่ตาย, mortal wound; ป้าย **OATH** เหนือหน่วยที่ถูกเลือกเป็น Oath of Moment
 - **การเดิน**: ลาก = ย้ายทั้งหน่วย, แตะโมเดล = เลือกเพื่อปรับทีละตัว (เลือกหลายตัวได้)
+- **เลือก Faction → Chapter**: แตะตรากองทัพเพื่อเลือก faction (แบ่ง Imperium / Chaos / Xenos) แล้วเลือก Chapter ของ Space Marines (Ultramarines, Blood Angels, Dark Angels, Space Wolves, Black Templars, Deathwatch ฯลฯ) — รายการหน่วยและ detachment จะแสดงเฉพาะของ Chapter นั้น + หน่วยทั่วไป และตรวจทัพให้
 - **หน้าจัดทัพ** แบบ List / Detachment: หัวกองทัพ (ตรา, ชื่อ, detachment, pts), หมวด Characters / Battleline / Others มีปุ่ม + และเมนู ⋮ ต่อหน่วย (จำนวนโมเดล, leader, enhancement, warlord, ทำซ้ำ, ลบ), ปุ่มแชร์รายชื่อกองทัพ
 - **Secondary Missions** ครบ 18 ใบ (Tactical: จั่ว 2 ใบทุก Command phase, ทิ้ง +1CP, เปลี่ยนใบ 1CP ครั้งเดียว · Fixed: เลือก 2 ใบ สูงสุดใบละ 20VP) — กดยืนยันคะแนนเองเหมือนบนโต๊ะ ระบบคุม cap 15VP/รอบ, 45VP
 - **Transports**: ขึ้นรถตอนวางทัพหรือหลังเดิน, ลงรถแบบ Tactical / Rapid / Combat, Emergency Disembark อัตโนมัติเมื่อรถถูกทำลาย (อ่าน capacity / ข้อห้ามจาก datasheet)
@@ -44,6 +45,7 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 |---|---|
 | ดึง datasheet / points / detachment ล่าสุดจาก Wahapedia | `npm run data -- --fetch` |
 | แก้ stat / points / อาวุธ / detachment / enhancement ด้วยมือ (เช่นตาม balance dataslate) | `data/overrides/<FACTION>.json` ([วิธีเขียน](data/overrides/README.md)) แล้ว `npm run data` |
+| กลุ่ม Faction (Imperium / Chaos / Xenos) และ sub-faction เช่น Chapter ของ Space Marines | `data/factions-meta.json` แล้ว `npm run data` (detachment จับคู่ Chapter อัตโนมัติจากเนื้อกฎ ถ้าผิดใส่ใน `detachments: { "ชื่อ": "KEYWORD" }`) |
 | ตัวเลขกฎหลัก (engagement, coherency, CP, ระยะ charge, cap ของ modifier, core stratagems) | `data/core-rules.json` |
 | Deployment map, terrain layout, Primary Mission และคะแนน | `data/missions.json` |
 | ตรรกะกฎ | `src/engine/*` (pure TypeScript ไม่ผูกกับ UI มี test ใน `src/engine/engine.test.ts`) |
@@ -52,7 +54,7 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 
 ## โครงสร้าง
 ```
-data/            core-rules.json, missions.json, overrides/   ← ไฟล์ที่ตั้งใจให้แก้
+data/            core-rules.json, missions.json, factions-meta.json, overrides/   ← ไฟล์ที่ตั้งใจให้แก้
 scripts/         build-data.mjs (Wahapedia CSV → JSON)
 public/data/     ข้อมูลที่ build แล้ว (โหลดตอนเลือก faction)
 src/engine/      rules engine: dice, geometry, visibility, army, attack, game (phases + scoring)

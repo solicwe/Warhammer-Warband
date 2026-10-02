@@ -152,6 +152,22 @@ function deepMerge(target, patch) {
   return patch;
 }
 
+const META = JSON.parse(fs.readFileSync(path.join(path.dirname(OVERRIDES), 'factions-meta.json'), 'utf8'));
+
+/** Which sub-faction (e.g. Chapter) a detachment belongs to: an explicit entry in factions-meta.json,
+ *  else the sub-faction keyword its rules / enhancements / stratagems name most often. */
+function detachmentSubfaction(sub, d) {
+  if (!sub) return undefined;
+  if (d.name in (sub.detachments ?? {})) return sub.detachments[d.name] || undefined;
+  const txt = JSON.stringify([d.rules, d.enhancements, d.stratagems]).toUpperCase();
+  let best, n = 0;
+  for (const o of sub.options) {
+    const c = txt.split(o.keyword).length - 1;
+    if (c > n) { best = o.keyword; n = c; }
+  }
+  return best;
+}
+
 function build() {
   const t = Object.fromEntries(FILES.map((f) => [f, readCsv(f)]));
   const lastUpdate = t.Last_update[0]?.last_update ?? '';
@@ -240,14 +256,21 @@ function build() {
 
     const armyRules = t.Abilities.filter((a) => a.faction_id === f.id).map((a) => ({ name: a.name, text: htmlToText(a.description) }));
 
-    let faction = { id: f.id, name: f.name, link: f.link, lastUpdate, armyRules, detachments, datasheets };
+    const sub = META.subfactions[f.id];
+    if (sub) {
+      const keys = sub.options.map((o) => o.keyword);
+      for (const d of datasheets) { const k = d.factionKeywords.find((x) => keys.includes(x)); if (k) d.subfaction = k; }
+      for (const d of detachments) { const k = detachmentSubfaction(sub, d); if (k) d.subfaction = k; }
+    }
+    let faction = { id: f.id, name: f.name, link: f.link, lastUpdate, armyRules, detachments, datasheets, ...(sub ? { subfactions: { label: sub.label, options: sub.options } } : {}) };
     const ovPath = path.join(OVERRIDES, `${f.id}.json`);
     if (fs.existsSync(ovPath)) {
       faction = deepMerge(faction, JSON.parse(fs.readFileSync(ovPath, 'utf8')));
       console.log(`applied overrides for ${f.id}`);
     }
     fs.writeFileSync(path.join(OUT, 'factions', `${f.id}.json`), JSON.stringify(faction));
-    index.factions.push({ id: f.id, name: f.name, datasheets: faction.datasheets.length, detachments: faction.detachments.length });
+    const group = Object.entries(META.groups).find(([, ids]) => ids.includes(f.id))?.[0] ?? 'Other';
+    index.factions.push({ id: f.id, name: f.name, group, datasheets: faction.datasheets.length, detachments: faction.detachments.length, ...(sub ? { subfactions: sub.options.map((o) => o.name) } : {}) });
   }
   index.factions.sort((a, b) => a.name.localeCompare(b.name));
   fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));

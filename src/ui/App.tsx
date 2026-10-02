@@ -8,6 +8,7 @@ import { GameScreen } from './GameScreen';
 import { PRESETS } from './presets';
 import { clearSaved, loadSaved } from './store';
 import { TokenSprites } from './Tokens';
+import { titleCase } from './ArmyBuilder';
 
 type Screen = { kind: 'home' } | { kind: 'build'; player: 0 | 1 } | { kind: 'game'; state: GameState };
 
@@ -123,7 +124,7 @@ export default function App() {
                   ? <div className="army-name">บอท</div>
                   : <input aria-label={`ชื่อผู้เล่น ${i + 1}`} value={names[i]} onChange={(e) => setNames((n) => (i === 0 ? [e.target.value, n[1]] : [n[0], e.target.value]))} />}
                 <div className="small" style={{ marginTop: 4 }}>
-                  <b>{factionName(lists[i].factionId)}</b> <span className="muted">· {pts(lists[i])} pts · {lists[i].units.length} หน่วย · {lists[i].detachments.join(', ') || 'ยังไม่เลือก detachment'}</span>
+                  <b>{factionName(lists[i].factionId)}{lists[i].subfaction ? ` · ${titleCase(lists[i].subfaction!)}` : ''}</b> <span className="muted">· {pts(lists[i])} pts · {lists[i].units.length} หน่วย · {lists[i].detachments.join(', ') || 'ยังไม่เลือก detachment'}</span>
                 </div>
               </div>
               <button className="btn small" onClick={() => setScreen({ kind: 'build', player: i as 0 | 1 })}>จัดทัพ</button>

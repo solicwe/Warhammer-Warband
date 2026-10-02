@@ -6,150 +6,188 @@
   {
    "id": "AS",
    "name": "Adepta Sororitas",
+   "group": "Imperium",
    "datasheets": 38,
    "detachments": 10
   },
   {
    "id": "AC",
    "name": "Adeptus Custodes",
+   "group": "Imperium",
    "datasheets": 31,
    "detachments": 11
   },
   {
    "id": "AdM",
    "name": "Adeptus Mechanicus",
+   "group": "Imperium",
    "datasheets": 38,
    "detachments": 13
   },
   {
    "id": "TL",
    "name": "Adeptus Titanicus",
+   "group": "Imperium",
    "datasheets": 4,
    "detachments": 0
   },
   {
    "id": "AE",
    "name": "Aeldari",
+   "group": "Xenos",
    "datasheets": 99,
    "detachments": 19
   },
   {
    "id": "AM",
    "name": "Astra Militarum",
+   "group": "Imperium",
    "datasheets": 135,
    "detachments": 13
   },
   {
    "id": "CD",
    "name": "Chaos Daemons",
+   "group": "Chaos",
    "datasheets": 101,
    "detachments": 14
   },
   {
    "id": "QT",
    "name": "Chaos Knights",
+   "group": "Chaos",
    "datasheets": 37,
    "detachments": 8
   },
   {
    "id": "CSM",
    "name": "Chaos Space Marines",
+   "group": "Chaos",
    "datasheets": 111,
    "detachments": 20
   },
   {
    "id": "DG",
    "name": "Death Guard",
+   "group": "Chaos",
    "datasheets": 71,
    "detachments": 12
   },
   {
    "id": "DRU",
    "name": "Drukhari",
+   "group": "Xenos",
    "datasheets": 46,
    "detachments": 13
   },
   {
    "id": "EC",
    "name": "Emperor’s Children",
+   "group": "Chaos",
    "datasheets": 23,
    "detachments": 11
   },
   {
    "id": "GC",
    "name": "Genestealer Cults",
+   "group": "Xenos",
    "datasheets": 139,
    "detachments": 12
   },
   {
    "id": "GK",
    "name": "Grey Knights",
+   "group": "Imperium",
    "datasheets": 31,
    "detachments": 11
   },
   {
    "id": "AoI",
    "name": "Imperial Agents",
+   "group": "Imperium",
    "datasheets": 46,
    "detachments": 7
   },
   {
    "id": "QI",
    "name": "Imperial Knights",
+   "group": "Imperium",
    "datasheets": 27,
    "detachments": 8
   },
   {
    "id": "LoV",
    "name": "Leagues of Votann",
+   "group": "Xenos",
    "datasheets": 22,
    "detachments": 12
   },
   {
    "id": "NEC",
    "name": "Necrons",
+   "group": "Xenos",
    "datasheets": 64,
    "detachments": 16
   },
   {
    "id": "ORK",
    "name": "Orks",
+   "group": "Xenos",
    "datasheets": 67,
    "detachments": 17
   },
   {
    "id": "SM",
    "name": "Space Marines",
+   "group": "Imperium",
    "datasheets": 291,
-   "detachments": 57
+   "detachments": 57,
+   "subfactions": [
+    "Ultramarines",
+    "Blood Angels",
+    "Dark Angels",
+    "Space Wolves",
+    "Black Templars",
+    "Deathwatch",
+    "Imperial Fists",
+    "Iron Hands",
+    "Raven Guard",
+    "Salamanders",
+    "White Scars"
+   ]
   },
   {
    "id": "TAU",
    "name": "T’au Empire",
+   "group": "Xenos",
    "datasheets": 62,
    "detachments": 9
   },
   {
    "id": "TS",
    "name": "Thousand Sons",
+   "group": "Chaos",
    "datasheets": 60,
    "detachments": 12
   },
   {
    "id": "TYR",
    "name": "Tyranids",
+   "group": "Xenos",
    "datasheets": 57,
    "detachments": 14
   },
   {
    "id": "UA",
    "name": "Unbound Adversaries",
+   "group": "Other",
    "datasheets": 0,
    "detachments": 0
   },
   {
    "id": "WE",
    "name": "World Eaters",
+   "group": "Chaos",
    "datasheets": 58,
    "detachments": 10
   }

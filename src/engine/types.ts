@@ -42,6 +42,7 @@ export interface DatasheetData {
   role: string;
   keywords: string[];
   factionKeywords: string[];
+  subfaction?: string; // e.g. the Chapter keyword ("BLOOD ANGELS"); absent = usable by any sub-faction
   models: ModelProfileData[];
   composition: CompositionData[];
   loadout: Record<string, string[]>;
@@ -65,6 +66,7 @@ export interface DetachmentData {
   name: string;
   dp: number;
   forceDisposition: string | null;
+  subfaction?: string; // Chapter-specific detachment
   rules: { name: string; text: string }[];
   enhancements: EnhancementData[];
   stratagems: StratagemData[];
@@ -78,7 +80,10 @@ export interface FactionData {
   armyRules: { name: string; text: string }[];
   detachments: DetachmentData[];
   datasheets: DatasheetData[];
+  subfactions?: { label: string; options: SubfactionData[] };
 }
+
+export interface SubfactionData { keyword: string; name: string; color?: string }
 
 // ---------- Army list ----------
 
@@ -96,6 +101,7 @@ export interface ArmyUnitEntry {
 export interface ArmyList {
   name: string;
   factionId: string;
+  subfaction?: string; // sub-faction keyword, e.g. a Chapter
   battleSize: string;
   detachments: string[];
   units: ArmyUnitEntry[];

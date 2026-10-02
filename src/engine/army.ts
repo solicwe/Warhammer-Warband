@@ -206,6 +206,16 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
   if (pts > size.points) errs.push(`แต้มเกิน: ${pts}/${size.points}`);
   const dp = list.detachments.reduce((a, n) => a + (faction.detachments.find((d) => d.name === n)?.dp ?? 0), 0);
   if (dp > size.dp && !(list.detachments.length === 1 && size.dp === 2 && dp === 3)) errs.push(`Detachment Points เกิน: ${dp}/${size.dp}`);
+  // sub-faction (Chapter): units and detachments must be generic or from the chosen one
+  const subName = (k: string) => faction.subfactions?.options.find((o) => o.keyword === k)?.name ?? k;
+  for (const n of list.detachments) {
+    const d = faction.detachments.find((x) => x.name === n);
+    if (d?.subfaction && d.subfaction !== list.subfaction) errs.push(list.subfaction ? `Detachment "${n}" เป็นของ ${subName(d.subfaction)} ใช้กับ ${subName(list.subfaction)} ไม่ได้` : `Detachment "${n}" ต้องเลือก ${faction.subfactions?.label ?? 'sub-faction'} เป็น ${subName(d.subfaction)}`);
+  }
+  for (const u of list.units) {
+    const d = faction.datasheets.find((x) => x.name === u.datasheet);
+    if (d?.subfaction && d.subfaction !== list.subfaction) errs.push(list.subfaction ? `${u.datasheet} เป็นหน่วย ${subName(d.subfaction)} ใส่ในทัพ ${subName(list.subfaction)} ไม่ได้` : `${u.datasheet} เป็นหน่วย ${subName(d.subfaction)}: ต้องเลือก ${faction.subfactions?.label ?? 'sub-faction'} ก่อน`);
+  }
   const counts = new Map<string, number>();
   for (const u of list.units) counts.set(u.datasheet, (counts.get(u.datasheet) ?? 0) + 1);
   for (const [name, n] of counts) {
