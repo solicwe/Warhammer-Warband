@@ -38,6 +38,8 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 - **Split fire**: เลือกอาวุธทีละชุดยิงคนละเป้าได้
 - **Scouts**: ขยับก่อนเริ่มเกมตามกฎ
 - **Undo** ย้อนได้ 60 ขั้น, ข้อผิดพลาดไม่ทำให้แอปพังหรือเซฟเสีย, กองทัพที่จัดไว้ถูกจำไว้ในเครื่อง
+- **Stratagems**: ปุ่ม Strat แสดงเฉพาะที่ใช้ได้ในจังหวะนั้น (เช็กเทิร์น/phase/CP/ครั้งเดียวต่อ phase) เลือกหน่วยแล้วกดใช้ ระบบหัก CP และใส่ผลให้อัตโนมัติ ฝ่ายรับกดใช้ได้จากถาดลูกเต๋าก่อนทอย (เช่น Armour of Contempt) บอทก็ใช้ stratagem ฝ่ายบุกเมื่อคุ้ม
+- **ข้อมูล 11th edition เท่านั้น**: ตัด datasheet Warhammer Legends ออกทั้งหมด (ตั้งค่าได้ใน `data/factions-meta.json`) ทัพที่บันทึกไว้ซึ่งมีหน่วยที่ถูกตัดจะขึ้นเตือนให้ลบก่อนเริ่มเกม
 - **Buff chips**: ability ของ datasheet/detachment ที่ยังไม่ได้ทำให้อัตโนมัติ กดเปิดเองได้ (+1 Hit, Re-roll, Lethal, FNP …)
 - เซฟเกมอัตโนมัติใน browser (ปิดแล้วกลับมาเล่นต่อได้)
 
@@ -64,7 +66,8 @@ docs/            สรุปกฎ 11th ที่ตรวจแล้ว + gam
 ```
 
 ## ข้อจำกัดตอนนี้ (สิ่งที่ยังไม่ได้ทำ)
-- Detachment rules / datasheet abilities / ผลของ detachment stratagems ยังไม่ทำงานอัตโนมัติ (หัก CP ได้แล้ว) → ใช้ Buff chips ใส่ผลเอง
+- Detachment stratagems: ระบบอ่านข้อความแล้วใส่ผลให้อัตโนมัติได้ประมาณ 1 ใน 3 (+1 Hit/Wound, re-roll, AP, Lethal/Sustained/Dev Wounds, Ignores Cover, −1 Hit/Wound/AP ของศัตรู, −1 Damage, FNP, Cover, Fights First, +1 Advance/Charge) ที่เหลือ (เดินพิเศษ, ยิงนอกเฟส, mortal wounds, เลือก doctrine ฯลฯ) หัก CP + บันทึกให้ แล้วทำตามข้อความเอง
+- Detachment rules / datasheet abilities ส่วนใหญ่ยังไม่ทำงานอัตโนมัติ → ใช้ Buff chips ใส่ผลเอง
 - รูปตัวละครเริ่มต้นเป็นภาพวาดเวกเตอร์ของโปรเจกต์เอง (ไม่ใช้รูปโมเดลของ GW เพราะติดลิขสิทธิ์) — แตะรูปในหน้า datasheet เพื่อใส่รูปของคุณเอง รูปจะขึ้นทั้งบนการ์ดและบน token ในสนาม (เก็บในเครื่องนั้นเท่านั้น)
 - Aircraft, Firing Deck, Primary Missions ที่ใช้ action/operation marker (Disruption / Recon / Priority Assets) ยังไม่มี
 - Secondary ที่ต้องทำ action (Plunder, Cleanse) ให้กดยืนยันเองเมื่อทำครบเงื่อนไข

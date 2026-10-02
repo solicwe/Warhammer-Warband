@@ -160,11 +160,11 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const wrong = sheet && !allowed(sheet);
     return (
       <div key={u.uid} className="ab-row">
-        <button type="button" className="ab-row-main" onClick={() => setView(u.datasheet)}>
+        <button type="button" className="ab-row-main" onClick={() => (sheet ? setView(u.datasheet) : setMenu(u.uid))}>
           <UnitArt sheet={sheet} />
           <span className="ab-row-text">
             <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
-            <span className="ab-pts">{u.pts + (u.enhancementPts ?? 0)} pts{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}</span>
+            <span className="ab-pts">{u.pts + (u.enhancementPts ?? 0)} pts{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">ไม่มีใน 11e</span>}</span>
             {line && <span className="ab-sub">{line}</span>}
           </span>
         </button>

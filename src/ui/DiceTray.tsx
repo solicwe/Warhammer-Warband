@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { canUseStratagem, unitById } from '../engine/state';
 import type { Die, GameState, Pool } from '../engine/types';
 import { abilityLabel, abilitiesOf } from '../engine/weapons';
@@ -9,6 +9,9 @@ interface Props {
   onReroll: (stage: 'hit' | 'wound' | 'save', index: number) => void;
   onSkip: () => void;
   onClose: () => void;
+  /** open the stratagem sheet for a player (e.g. the defender reacting to the attack) */
+  onStrat?: (player: 0 | 1) => void;
+  stratFor?: (0 | 1)[];
 }
 
 const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `${n}` : '');
@@ -42,9 +45,19 @@ function poolHeader(p: Pool) {
   );
 }
 
-export function DiceTray({ s, onStep, onReroll, onSkip, onClose }: Props) {
+export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1] }: Props) {
   const at = s.attack!;
   const [rr, setRr] = useState<null | 'hit' | 'wound' | 'save'>(null);
+  // a quick second tap must not roll the next stage before the player has seen these dice
+  const lastTap = useRef(0);
+  const [cool, setCool] = useState(false);
+  const guarded = (fn: () => void) => () => {
+    if (Date.now() - lastTap.current < 700) return;
+    lastTap.current = Date.now();
+    setCool(true);
+    window.setTimeout(() => setCool(false), 700);
+    fn();
+  };
   const A = unitById(s, at.attackerId);
   const T = unitById(s, at.targetId);
   const p = at.pools[Math.min(at.idx, at.pools.length - 1)];
@@ -71,8 +84,14 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose }: Props) {
               <span className={A.owner ? 'p1' : 'p0'}>{A.name}</span> <span className="muted">›</span> <span className={T.owner ? 'p1' : 'p0'}>{T.name}</span>
             </div>
           </div>
-          {!done && <button className="btn small" onClick={onSkip}>ข้าม</button>}
+          {!done && <button className="btn small" onClick={guarded(onSkip)}>ข้าม</button>}
         </div>
+        {onStrat && !done && at.idx === 0 && st === 'hit' && (
+          <div className="row">
+            {stratFor.includes(A.owner) && <button className="btn small" onClick={() => onStrat(A.owner)}>{s.players[A.owner].name}: Stratagem</button>}
+            {stratFor.includes(T.owner) && <button className="btn small" onClick={() => onStrat(T.owner)}>{s.players[T.owner].name} (ฝ่ายรับ): Stratagem</button>}
+          </div>
+        )}
         {at.pools.length > 1 && <div className="tiny muted">อาวุธชุดที่ {Math.min(at.idx + 1, at.pools.length)} / {at.pools.length}</div>}
 
         {!done && (
@@ -148,7 +167,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose }: Props) {
         )}
         {done && <div className="big-result">{T.name}: เหลือ {T.models.filter((m) => !m.dead).length}/{T.startingStrength}</div>}
 
-        <button className="btn primary" onClick={done ? onClose : onStep}>{nextLabel}</button>
+        <button className={`btn primary ${cool ? 'cooling' : ''}`} onClick={guarded(done ? onClose : onStep)}>{nextLabel}</button>
       </div>
     </div>
   );

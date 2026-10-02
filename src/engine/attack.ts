@@ -50,6 +50,7 @@ function applyOath(s: GameState, A: UnitState, T: UnitState, pool: Pool) {
 
 const isMV = (m: ModelState) => m.keywords.includes('MONSTER') || m.keywords.includes('VEHICLE');
 const buffSum = (u: UnitState, plus: string, minus: string) => u.buffs.filter((b) => b.kind === plus).length - u.buffs.filter((b) => b.kind === minus).length;
+const has = (u: UnitState, kind: string) => u.buffs.some((b) => b.kind === kind);
 
 interface Mods { skillDelta: number; skillNotes: string[]; hit: number; hitNotes: string[] }
 
@@ -309,6 +310,7 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
   s.attack = {
     kind, attackerId, targetId, pools, idx: 0, stage: pools.length ? 'hit' : 'done', hazardousRolls: [], summary: [],
     aliveBefore: alive(T).map((m) => m.id), woundsBefore: alive(T).reduce((a, m) => a + m.wounds, 0),
+    attackerBuffsAtStart: A.buffs.map((b) => b.kind),
   };
 }
 
@@ -326,9 +328,34 @@ function evalWound(p: Pool, v: number): Die['o'] {
   return v + p.woundMod >= p.woundNeed ? 'wound' : 'fail';
 }
 
+/** Defensive stratagems can be used after targets are picked, so they are folded in when the dice are rolled. */
+function applyDefense(s: GameState, p: Pool) {
+  if (p.defApplied) return;
+  p.defApplied = true;
+  const T = unitById(s, s.attack!.targetId);
+  const notes: string[] = [];
+  if (has(T, 'enemyHit-1') && !p.autoHit) { p.hitMod = clamp(p.hitMod - 1, -RULES.modifierCaps.hitRoll, RULES.modifierCaps.hitRoll); notes.push('−1 Hit'); }
+  if (has(T, 'enemyWound-1')) { p.woundMod = clamp(p.woundMod - 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll); p.woundNote += ' · Stratagem −1'; }
+  if (has(T, 'enemyAp-1') && p.ap < 0) { p.ap += 1; notes.push('AP แย่ลง 1'); }
+  if (notes.length) p.hitNote = [p.hitNote, `Stratagem ฝ่ายรับ: ${notes.join(', ')}`].filter(Boolean).join(' · ');
+  // attacker stratagems used after the attack was declared (e.g. from the dice tray)
+  const A = unitById(s, s.attack!.attackerId);
+  const before = s.attack!.attackerBuffsAtStart ?? [];
+  const late = A.buffs.map((b) => b.kind).filter((k) => !before.includes(k));
+  const lateNotes: string[] = [];
+  if (late.includes('hit+1') && !p.autoHit) { p.hitMod = clamp(p.hitMod + 1, -RULES.modifierCaps.hitRoll, RULES.modifierCaps.hitRoll); lateNotes.push('+1 Hit'); }
+  if (late.includes('wound+1')) { p.woundMod = clamp(p.woundMod + 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll); p.woundNote += ' · Stratagem +1'; }
+  if (late.includes('ap+1')) { p.ap -= 1; lateNotes.push('AP +1'); }
+  if (late.includes('lethal')) { p.lethal = true; lateNotes.push('Lethal Hits'); }
+  if (late.includes('sustained1') && !p.sustained) { p.sustained = '1'; lateNotes.push('Sustained 1'); }
+  if (late.includes('devastating')) { p.devastating = true; lateNotes.push('Dev Wounds'); }
+  if (lateNotes.length) p.hitNote = [p.hitNote, `Stratagem: ${lateNotes.join(', ')}`].filter(Boolean).join(' · ');
+}
+
 export function rollHits(s: GameState) {
   const at = s.attack!;
   const p = at.pools[at.idx];
+  applyDefense(s, p);
   if (p.autoHit) {
     p.hits = Array.from({ length: p.attacks }, () => ({ v: 0, o: 'auto' as const }));
   } else {
@@ -451,7 +478,8 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
 /** Lose wounds on one model with Feel No Pain. Returns wounds actually lost. */
 function loseWounds(s: GameState, u: UnitState, m: ModelState, n: number, lines?: string[]): number {
   let lost = 0;
-  const fnp = u.core.fnp ?? (u.buffs.some((b) => b.kind === 'fnp5') ? 5 : u.buffs.some((b) => b.kind === 'fnp6') ? 6 : undefined);
+  const buffFnp = u.buffs.some((b) => b.kind === 'fnp4') ? 4 : u.buffs.some((b) => b.kind === 'fnp5') ? 5 : u.buffs.some((b) => b.kind === 'fnp6') ? 6 : undefined;
+  const fnp = u.core.fnp !== undefined && buffFnp !== undefined ? Math.min(u.core.fnp, buffFnp) : u.core.fnp ?? buffFnp;
   const fnpRolls: number[] = [];
   for (let i = 0; i < n && !m.dead; i++) {
     if (fnp) { const r = d6(s); fnpRolls.push(r); if (r >= fnp) continue; }
@@ -575,7 +603,19 @@ export function finishAttack(s: GameState) {
     const dmg = Math.max(0, (at.woundsBefore ?? 0) - alive(T).reduce((a, m) => a + m.wounds, 0));
     const c = (ms: { x: number; y: number }[]) => ({ x: ms.reduce((a, m) => a + m.x, 0) / Math.max(1, ms.length), y: ms.reduce((a, m) => a + m.y, 0) / Math.max(1, ms.length) });
     const tm = alive(T).length ? alive(T) : dead;
-    pushFx(s, { kind: 'attack', attackKind: at.kind, attackerId: A.id, targetId: T.id, owner: A.owner, from: c(alive(A).length ? alive(A) : A.models), to: c(tm), dmg, killed: dead.length, dead: dead.map((m) => ({ x: m.x, y: m.y })) });
+    const names = at.pools.map((p) => `${p.weapon} ${p.profile.name}`).join(' ');
+    const style = at.kind === 'fight' ? 'melee'
+      : at.pools.some((p) => hasAbility(p.profile, 'torrent')) ? 'flame'
+      : /plasma|las|melta|volkite|beam|lance|tesla|gauss|lascannon|conversion|pulse|ion/i.test(names) ? 'beam'
+      : /cannon|missile|rocket|launcher|mortar|battle ?cannon|demolisher|krak|frag|artillery|bombard|kannon|zzap|shokk/i.test(names) ? 'blast'
+      : 'bullet';
+    const pt = (m: { x: number; y: number }) => ({ x: m.x, y: m.y });
+    const before = T.models.filter((m) => at.aliveBefore!.includes(m.id));
+    pushFx(s, {
+      kind: 'attack', attackKind: at.kind, attackerId: A.id, targetId: T.id, owner: A.owner, from: c(alive(A).length ? alive(A) : A.models), to: c(tm), dmg, killed: dead.length, dead: dead.map(pt),
+      style, shooters: (alive(A).length ? alive(A) : A.models).slice(0, 12).map(pt), victims: before.slice(0, 12).map(pt),
+      shots: at.pools.reduce((a, p) => a + p.attacks, 0), hits: at.pools.reduce((a, p) => a + p.hits.filter((h) => h.o !== 'miss').length, 0),
+    });
   }
   const verb = at.kind === 'fight' ? 'ตี' : at.kind === 'overwatch' ? 'Overwatch ยิง' : 'ยิง';
   log(s, `${A.name} ${verb} ${T.name}: ตาย ${killed} โมเดล`, 'info', A.owner);

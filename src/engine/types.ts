@@ -186,7 +186,9 @@ export interface UnitState {
   buffs: Buff[];
 }
 
-export type BuffKind = 'hit+1' | 'hit-1' | 'wound+1' | 'wound-1' | 'rerollHits1' | 'rerollHits' | 'rerollWounds1' | 'rerollWounds' | 'ap+1' | 'lethal' | 'sustained1' | 'devastating' | 'ignoresCover' | 'fnp5' | 'fnp6' | 'save+1' | 'damage-1' | 'smoke';
+export type BuffKind = 'hit+1' | 'hit-1' | 'wound+1' | 'wound-1' | 'rerollHits1' | 'rerollHits' | 'rerollWounds1' | 'rerollWounds' | 'ap+1' | 'lethal' | 'sustained1' | 'devastating' | 'ignoresCover' | 'fnp5' | 'fnp6' | 'save+1' | 'damage-1' | 'smoke'
+  // defensive buffs on the unit being attacked, and other stratagem effects
+  | 'enemyHit-1' | 'enemyWound-1' | 'enemyAp-1' | 'fnp4' | 'cover' | 'fightsFirst' | 'advanceCharge+1';
 export interface Buff { kind: BuffKind; until: 'phase' | 'turn' | 'battle'; label?: string }
 
 export interface TerrainPiece {
@@ -241,6 +243,7 @@ export type DieOutcome = 'miss' | 'hit' | 'crit' | 'auto' | 'wound' | 'critWound
 export interface Die { v: number; o: DieOutcome; rerolled?: boolean; orig?: number }
 
 export interface Pool {
+  defApplied?: boolean; // defensive stratagem effects of the target already folded in
   key: string;
   weapon: string;
   profile: WeaponProfileData;
@@ -290,6 +293,7 @@ export interface AttackSession {
   hazardousRolls: number[];
   summary: string[];
   aliveBefore?: string[]; // model ids alive when the attack started (for effects)
+  attackerBuffsAtStart?: string[]; // attacker buffs already counted when the pools were built
   woundsBefore?: number;
 }
 
@@ -297,7 +301,8 @@ export interface AttackSession {
 export type FxEvent =
   | { seq: number; kind: 'move'; unitId: string; owner: PlayerId; moveKind: MoveKind; paths: [string, Pt[]][] }
   | { seq: number; kind: 'place'; unitId: string; owner: PlayerId }
-  | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[] }
+  | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[];
+      style?: 'bullet' | 'beam' | 'flame' | 'blast' | 'melee'; shooters?: Pt[]; victims?: Pt[]; shots?: number; hits?: number }
   | { seq: number; kind: 'mortal'; unitId: string; n: number; at: Pt }
   /** a roll worth showing big on screen (advance, charge, battle-shock) */
   | { seq: number; kind: 'roll'; owner: PlayerId | null; title: string; dice: number[]; result: string; good?: boolean }

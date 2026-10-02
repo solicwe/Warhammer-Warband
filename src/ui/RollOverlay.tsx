@@ -57,17 +57,31 @@ export function RollOverlay({ s, onBusy }: { s: GameState; onBusy?: (busy: boole
   }, [s.fx, s.fxSeq]);
 
   const cur = queue[0];
+  const landedAt = useRef(0);
+  const [hold, setHold] = useState(0); // bumped when the player taps to see the result: restarts the close timer
   useEffect(() => { onBusy?.(!!cur); }, [cur, onBusy]);
   useEffect(() => {
     if (!cur) return;
     setLanded(false);
-    const a = window.setTimeout(() => setLanded(true), TUMBLE_MS);
-    const b = window.setTimeout(() => setQueue((q) => q.slice(1)), SHOW_MS[cur.kind]);
-    return () => { window.clearTimeout(a); window.clearTimeout(b); };
+    setHold(0);
+    const a = window.setTimeout(() => setLanded((was) => { if (!was) landedAt.current = Date.now(); return true; }), TUMBLE_MS);
+    return () => window.clearTimeout(a);
   }, [cur]);
+  useEffect(() => {
+    if (!cur || !landed) return;
+    // after the first tap the result stays up longer, so it is never missed
+    const b = window.setTimeout(() => setQueue((q) => q.slice(1)), hold ? 4000 : SHOW_MS[cur.kind] - TUMBLE_MS);
+    return () => window.clearTimeout(b);
+  }, [cur, landed, hold]);
 
   if (!cur) return null;
-  const skip = () => setQueue((q) => q.slice(1));
+  // first tap: stop the tumble and show the numbers; next tap: close (ignoring an accidental double tap)
+  const skip = () => {
+    if (!landed) { landedAt.current = Date.now(); setLanded(true); setHold((h) => h + 1); return; }
+    if (Date.now() - landedAt.current < 350) return;
+    setHold(0);
+    setQueue((q) => q.slice(1));
+  };
   if (cur.kind === 'rolloff') {
     return (
       <div className="ro-backdrop" onClick={skip} role="dialog" aria-label={cur.title}>
@@ -82,6 +96,7 @@ export function RollOverlay({ s, onBusy }: { s: GameState; onBusy?: (busy: boole
             ))}
           </div>
           <div className={`ro-result ${landed ? 'show' : ''}`}>{cur.result}</div>
+          <div className="ro-hint">{landed ? 'แตะเพื่อปิด' : 'แตะเพื่อดูผลทันที'}</div>
         </div>
       </div>
     );
@@ -95,6 +110,7 @@ export function RollOverlay({ s, onBusy }: { s: GameState; onBusy?: (busy: boole
         <div className={`ro-result ${landed ? 'show' : ''} ${cur.good === false ? 'bad' : cur.good ? 'good' : ''}`}>
           {cur.dice.length > 1 && <span className="ro-sum">{cur.dice.join(' + ')} = {cur.dice.reduce((a, b) => a + b, 0)} · </span>}{cur.result}
         </div>
+        <div className="ro-hint">{landed ? 'แตะเพื่อปิด' : 'แตะเพื่อดูผลทันที'}</div>
       </div>
     </div>
   );

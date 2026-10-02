@@ -16,6 +16,7 @@ import {
 } from '../engine/game';
 import { botShouldAct, botStep } from '../engine/bot';
 import { RollOverlay } from './RollOverlay';
+import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem } from '../engine/stratagems';
 import { endUnitShooting, rangedWeaponNames } from '../engine/attack';
 import { MISSIONS, secondaryById } from '../engine/config';
 import { polyCentroid } from '../engine/geometry';
@@ -106,6 +107,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [fly, setFly] = useState(false);
   const [showStrats, setShowStrats] = useState(false);
   const [stratUnit, setStratUnit] = useState<string>('');
+  const [stratPlayer, setStratPlayer] = useState<PlayerId | null>(null); // whose stratagems the sheet shows (null = who acts now)
+  const openStrats = (p: PlayerId | null = null) => { setStratPlayer(p); setStratUnit(sel && s.units.find((u) => u.id === sel)?.owner === (p ?? actor) ? sel : ''); setShowStrats(true); };
   const [freeAdvRR, setFreeAdvRR] = useState<string | null>(null);
 
   const setMode = (m: Mode | null, d: Paths | null = null) => { setModeRaw(m); setDraft(d); setCheck(null); };
@@ -309,7 +312,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       isRiledUp(s, u) && 'Riled up 5++',
       s.players[other(u.owner)].oathTarget === u.id && 'Oath target',
       ...u.enhancements.map((e) => e.name),
-      ...u.buffs.map((b) => BUFFS.find((x) => x.kind === b.kind)?.label ?? b.kind),
+      ...u.buffs.map((b) => (b.label && !BUFFS.some((x) => x.kind === b.kind) ? `${EFFECT_LABEL[b.kind] ?? b.kind} (${b.label})` : BUFFS.find((x) => x.kind === b.kind)?.label ?? EFFECT_LABEL[b.kind] ?? b.kind)),
     ].filter(Boolean) as string[];
     return (
       <div className="row" style={{ flexWrap: 'nowrap', gap: 10 }} onClick={() => setSheet(u.id)}>
@@ -949,7 +952,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <span className="p0">{s.players[0].vp + s.players[0].secVp}<small> VP</small> {s.players[0].cp}<small> CP</small></span>
           <span className="p1">{s.players[1].vp + s.players[1].secVp}<small> VP</small> {s.players[1].cp}<small> CP</small></span>
         </button>
-        <button className="btn small" onClick={() => setShowStrats(true)}>Strat</button>
+        <button className="btn small" onClick={() => openStrats()}>Strat</button>
       </div>
       {['command', 'movement', 'shooting', 'charge', 'fight'].includes(s.phase) && (
         <div className="phasebar">
@@ -990,6 +993,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       {s.attack && (
         <DiceTray
           s={s}
+          onStrat={(pl) => openStrats(pl)}
+          stratFor={bot === null ? [0, 1] : [(1 - bot) as PlayerId]}
           onStep={() => act((g) => stepAttack(g))}
           onReroll={onReroll}
           onSkip={() => act((g) => resolveAll(g))}
@@ -1014,50 +1019,82 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn" disabled={!canUndo} onClick={() => { undo(); setMode(null); setShowMenu(false); flash('ย้อนกลับ 1 ขั้นแล้ว'); }}>ย้อนกลับ 1 ขั้น (Undo)</button>
             <button className="btn" onClick={() => { setShowMenu(false); setShowMissions(true); }}>Mission & Secondary</button>
             <button className="btn" onClick={() => { setShowMenu(false); setShowLog(true); }}>Battle log & กฎกองทัพ</button>
-            <button className="btn" onClick={() => { setShowMenu(false); setShowStrats(true); }}>Stratagems</button>
+            <button className="btn" onClick={() => { setShowMenu(false); openStrats(); }}>Stratagems</button>
             <button className="btn danger" onClick={onExit}>ออกไปหน้าแรก (เกมเซฟไว้แล้ว)</button>
             <button className="btn ghost" onClick={() => setShowMenu(false)}>ปิด</button>
           </div>
         </div>
       )}
       {showStrats && (() => {
-        const p = actor;
+        const p = stratPlayer ?? actor;
         const P = s.players[p];
-        const own = s.units.filter((u) => u.owner === p && onBoard(u));
-        const tgt = own.find((u) => u.id === stratUnit);
+        const all = stratagemsNow(s, p);
+        const tgtUnit = stratUnit ? s.units.find((u) => u.id === stratUnit && onBoard(u)) : undefined;
+        const rows = all.map((x) => ({ ...x, why: stratagemBlock(s, p, x.st, tgtUnit) }));
+        const timingOk = (why: string | null) => !why || /เลือกหน่วย|ต้องเป็นหน่วย|ต้องเลือกหน่วยศัตรู|CP ไม่พอ/.test(why);
+        const now = rows.filter((r) => timingOk(r.why));
+        const later = rows.filter((r) => !timingOk(r.why));
+        const card = (r: typeof rows[number]) => {
+          const pickable = r.plan.target === 'enemy' ? boardUnits(s, other(p)) : r.plan.target === 'own' ? boardUnits(s, p) : [];
+          return (
+            <div key={r.st.id} className={`strat-card ${timingOk(r.why) ? '' : 'off'}`}>
+              <div className="row">
+                <b className="grow">{r.st.name}</b>
+                <span className="chip">{r.st.cp}CP</span>
+              </div>
+              <div className="tiny muted">{r.detachment} · {r.st.turn} · {r.st.phase}</div>
+              <div className="strat-fx">
+                {r.plan.effects.length
+                  ? r.plan.effects.map((k) => <span key={k} className="chip good">{EFFECT_LABEL[k] ?? k}</span>)
+                  : <span className="chip">ทำตามข้อความเอง</span>}
+                {r.plan.effects.length > 0 && !r.plan.full && <span className="chip">+ ส่วนที่เหลือทำเอง</span>}
+              </div>
+              <details><summary className="tiny">ข้อความเต็ม</summary><div className="sheet tiny">{r.st.text}</div></details>
+              {timingOk(r.why) && (
+                <>
+                  {pickable.length > 0 && (
+                    <div className="unit-strip">
+                      {pickable.map((u) => (
+                        <button key={u.id} className={`unit-pill ${stratUnit === u.id ? 'sel' : ''}`} onClick={() => setStratUnit(stratUnit === u.id ? '' : u.id)}>
+                          <span className={u.owner ? 'p1' : 'p0'}>●</span> {u.name.length > 22 ? u.name.slice(0, 21) + '…' : u.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button className="btn primary" disabled={!!r.why} onClick={() => {
+                    const eff = act((g) => applyDetachmentStratagem(g, p, r.st, tgtUnit?.id));
+                    flash(eff && eff.length ? `${r.st.name}: ${eff.map((k) => EFFECT_LABEL[k] ?? k).join(', ')} ✓` : `ใช้ ${r.st.name} แล้ว — ทำตามข้อความ`);
+                    setShowStrats(false);
+                  }}>{r.why ? r.why : `ใช้ ${r.st.name}${tgtUnit && r.plan.target !== 'none' ? ` → ${tgtUnit.name}` : ''}`}</button>
+                </>
+              )}
+              {!timingOk(r.why) && <div className="tiny muted">{r.why}</div>}
+            </div>
+          );
+        };
         return (
           <div className="tray-backdrop" onClick={() => setShowStrats(false)}>
             <div className="tray" onClick={(e) => e.stopPropagation()}>
-              <h2 className={p ? 'p1' : 'p0'}>Stratagems · {P.name} · {P.cp} CP</h2>
-              <div className="small muted">phase ตอนนี้: {PHASE_TH[s.phase]} ({s.active === p ? 'เทิร์นของคุณ' : 'เทิร์นศัตรู'})</div>
-              <label className="small">เป้าหมาย (หน่วยของคุณ)
-                <select style={{ width: '100%' }} value={stratUnit} onChange={(e) => setStratUnit(e.target.value)}>
-                  <option value="">— ไม่ระบุ —</option>
-                  {own.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-                </select>
-              </label>
-              {P.detachments.map((d) => (
-                <div key={d.id}>
-                  <h3>{d.name} <span className="tiny muted">({d.forceDisposition})</span></h3>
-                  {d.rules.map((r) => <details key={r.name}><summary className="small">Detachment rule: {r.name}</summary><div className="sheet">{r.text}</div></details>)}
-                  {d.stratagems.map((st) => {
-                    const why = canUseStratagem(s, p, st.id, tgt, st.cp);
-                    return (
-                      <div key={st.id} className="card" style={{ padding: 8, marginTop: 6 }}>
-                        <div className="row">
-                          <b className="grow">{st.name}</b>
-                          <span className="chip">{st.cp}CP</span>
-                          <button className="btn small primary" disabled={!!why} title={why ?? ''} onClick={() => { act((g) => spendStratagem(g, p, st.id, tgt ? unitById(g, tgt.id) : undefined, st.cp)); flash(`ใช้ ${st.name} แล้ว — ใช้ปุ่ม Buff ให้ผลตามข้อความ`); setShowStrats(false); }}>ใช้</button>
-                        </div>
-                        <div className="tiny muted">{st.type} · {st.turn} · {st.phase}{why ? ` · ${why}` : ''}</div>
-                        <div className="sheet tiny">{st.text}</div>
-                      </div>
-                    );
-                  })}
+              <div className="row">
+                <div className="sheet-title grow"><span className={p ? 'p1' : 'p0'}>Stratagems</span></div>
+                <span className="chip">{P.cp} CP</span>
+              </div>
+              {bot === null && (
+                <div className="seg">
+                  {[0, 1].map((i) => <button key={i} className={p === i ? 'on' : ''} onClick={() => { setStratPlayer(i as PlayerId); setStratUnit(''); }}>{s.players[i].name}</button>)}
                 </div>
-              ))}
-              <h3>Core Stratagems</h3>
-              <div className="tiny muted">ระบบเด้งให้ใช้อัตโนมัติตอนที่ถึงจังหวะตามกฎ</div>
+              )}
+              <div className="small muted">{PHASE_TH[s.phase] ?? s.phase} · {s.active === p ? 'เทิร์นของคุณ' : 'เทิร์นศัตรู'} — เลือกหน่วยแล้วกดใช้ ระบบหัก CP และใส่ผลให้อัตโนมัติ (มีผลจนจบ phase/เทิร์นตามข้อความ)</div>
+              <div className="card-title">ใช้ได้ตอนนี้ ({now.length})</div>
+              {now.length ? now.map(card) : <div className="small muted">ไม่มี stratagem ของ detachment ที่ใช้ได้ในจังหวะนี้</div>}
+              {later.length > 0 && (
+                <details>
+                  <summary className="small">ใช้ไม่ได้ตอนนี้ ({later.length})</summary>
+                  {later.map(card)}
+                </details>
+              )}
+              <div className="card-title">Core Stratagems</div>
+              <div className="tiny muted">ระบบเด้งให้ใช้เองตอนถึงจังหวะ (Command Re-roll ในถาดลูกเต๋า, Overwatch/Heroic Intervention/Smokescreen/Rapid Ingress ตอนจบ phase, Insane Bravery ตอน battle-shock ฯลฯ)</div>
               {RULES.coreStratagems.map((st) => <div key={st.id} className="small"><b>{st.name}</b> ({st.cp}CP) — {st.when}: {st.text}</div>)}
               <button className="btn" onClick={() => setShowStrats(false)}>ปิด</button>
             </div>

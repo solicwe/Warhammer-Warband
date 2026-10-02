@@ -30,7 +30,7 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'b3', datasheet: 'Boyz', models: 10, pts: 90 },
       { uid: 'b4', datasheet: 'Big Mek', models: 1, pts: 85, attachTo: 'b3' },
       { uid: 'b5', datasheet: 'Boyz', models: 10, pts: 90 },
-      { uid: 'b6', datasheet: 'Lootas', models: 5, pts: 50 },
+      { uid: 'b6', datasheet: 'Mek Gunz', models: 1, pts: 55 },
       { uid: 'b7', datasheet: 'Nobz', models: 5, pts: 125 },
       { uid: 'b8', datasheet: 'Deff Dread', models: 1, pts: 130 },
       { uid: 'b9', datasheet: 'Stormboyz', models: 5, pts: 70 },

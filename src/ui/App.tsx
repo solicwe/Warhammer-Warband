@@ -61,6 +61,8 @@ export default function App() {
     setErr(null);
     try {
       const factions = await Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]);
+      const gone = lists.flatMap((l, i) => l.units.filter((u) => !factions[i].datasheets.some((d) => d.name === u.datasheet)).map((u) => `${names[i]}: ${u.datasheet}`));
+      if (gone.length) { setErr(`มีหน่วยที่ไม่อยู่ใน 11th edition แล้ว (Legends) — เข้า "จัดทัพ" แล้วลบออกก่อน: ${gone.join(', ')}`); return; }
       const deps = MISSIONS.deployments;
       const depId = deployment === 'random' ? deps[Math.floor(Math.random() * deps.length)].id : deployment;
       const s = createGame({

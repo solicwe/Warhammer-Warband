@@ -134,7 +134,7 @@ function makeModels(sheet: DatasheetData, count: number, unitId: string, bodygua
 export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId): UnitState[] {
   const sheetOf = (e: ArmyUnitEntry) => faction.datasheets.find((d) => d.name === e.datasheet)!;
   const units: UnitState[] = [];
-  const attached = list.units.filter((u) => u.attachTo && list.units.some((b) => b.uid === u.attachTo));
+  const attached = list.units.filter((u) => u.attachTo && list.units.some((b) => b.uid === u.attachTo) && sheetOf(u));
   for (const e of list.units) {
     if (attached.includes(e)) continue;
     const sheet = sheetOf(e);
@@ -206,6 +206,8 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
   if (pts > size.points) errs.push(`แต้มเกิน: ${pts}/${size.points}`);
   const dp = list.detachments.reduce((a, n) => a + (faction.detachments.find((d) => d.name === n)?.dp ?? 0), 0);
   if (dp > size.dp && !(list.detachments.length === 1 && size.dp === 2 && dp === 3)) errs.push(`Detachment Points เกิน: ${dp}/${size.dp}`);
+  for (const u of list.units) if (!faction.datasheets.some((d) => d.name === u.datasheet)) errs.push(`${u.datasheet}: ไม่มีใน 11th edition แล้ว (Legends หรือถูกถอด) — ลบออกจากทัพ`);
+  for (const n of list.detachments) if (!faction.detachments.some((d) => d.name === n)) errs.push(`Detachment "${n}" ไม่มีใน 11th edition แล้ว — เอาออก`);
   // sub-faction (Chapter): units and detachments must be generic or from the chosen one
   const subName = (k: string) => faction.subfactions?.options.find((o) => o.keyword === k)?.name ?? k;
   for (const n of list.detachments) {

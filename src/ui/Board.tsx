@@ -39,7 +39,7 @@ const COLORS = ['#3a9ad9', '#e0453f'];
 const SOFT = ['rgba(58,154,217,0.16)', 'rgba(224,69,63,0.16)'];
 const TERRAIN_FILL: Record<string, string> = { dense: 'rgba(120,98,72,0.55)', light: 'rgba(150,140,80,0.45)', exposed: 'rgba(90,85,78,0.45)' };
 
-const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1500, mortal: 1200, roll: 0, rolloff: 0 }; // rolls are shown by the screen, not the board
+const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1900, mortal: 1200, roll: 0, rolloff: 0 }; // rolls are shown by the screen, not the board
 interface ActiveFx { e: FxEvent; t0: number }
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
@@ -334,6 +334,8 @@ function BoardImpl(props: BoardProps) {
           <rect width="0.8" height="0.8" fill="#7a4b2e" /><rect width="0.25" height="0.8" fill="#8d5a38" />
         </pattern>
         <radialGradient id="crater"><stop offset="0" stopColor="#2f2a22" /><stop offset="0.7" stopColor="#4a4336" /><stop offset="1" stopColor="#6d6452" /></radialGradient>
+        <radialGradient id="fx-boom"><stop offset="0" stopColor="#fffbe6" /><stop offset="0.35" stopColor="#fbbf24" /><stop offset="0.7" stopColor="#ea580c" stopOpacity="0.8" /><stop offset="1" stopColor="#7c2d12" stopOpacity="0" /></radialGradient>
+        <linearGradient id="fx-flame" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#fff3c4" /><stop offset="0.4" stopColor="#fb923c" /><stop offset="1" stopColor="#b91c1c" stopOpacity="0.2" /></linearGradient>
         <radialGradient id="objdisc"><stop offset="0" stopColor="#f1f2f4" /><stop offset="1" stopColor="#8d939c" /></radialGradient>
       </defs>
       <rect x={0} y={0} width={W} height={H} fill="url(#ash)" />
@@ -537,45 +539,168 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
       </g>
     );
   }
-  if (e.kind === 'attack') {
-    const col = COLORS[e.owner];
-    const melee = e.attackKind === 'fight';
-    const shot = Math.min(1, f / 0.35); // projectile travel
-    const hitF = Math.max(0, (f - 0.3) / 0.7); // impact
-    const dx = e.to.x - e.from.x, dy = e.to.y - e.from.y;
-    const head = { x: e.from.x + dx * shot, y: e.from.y + dy * shot };
-    const tail = { x: e.from.x + dx * Math.max(0, shot - 0.25), y: e.from.y + dy * Math.max(0, shot - 0.25) };
-    return (
-      <g pointerEvents="none">
-        {!melee && f < 0.5 && (
-          <>
-            <line x1={e.from.x} y1={e.from.y} x2={e.to.x} y2={e.to.y} stroke={col} strokeWidth={0.08} strokeDasharray="0.4 0.3" opacity={0.5 * (1 - f * 2)} />
-            <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#fde68a" strokeWidth={0.28} strokeLinecap="round" />
-          </>
-        )}
-        {melee && f < 0.6 && (
-          <g transform={`translate(${e.to.x} ${e.to.y}) rotate(${f * 90}) scale(${0.6 + f})`} opacity={1 - f / 0.6}>
-            <path d="M -1.2 -1.2 L 1.2 1.2 M 1.2 -1.2 L -1.2 1.2" stroke="#fca5a5" strokeWidth={0.25} strokeLinecap="round" />
-          </g>
-        )}
-        {hitF > 0 && (
-          <g opacity={1 - hitF}>
-            <circle cx={e.to.x} cy={e.to.y} r={0.6 + hitF * 2.6} fill="none" stroke={e.dmg ? '#ef4444' : '#9ca3af'} strokeWidth={0.2} />
-            {e.dead.map((d, i) => (
-              <g key={i} transform={`translate(${d.x} ${d.y})`}>
-                <circle r={0.7} fill="rgba(0,0,0,0.55)" stroke="#ef4444" strokeWidth={0.1} />
-                <path d="M -0.4 -0.4 L 0.4 0.4 M 0.4 -0.4 L -0.4 0.4" stroke="#ef4444" strokeWidth={0.16} strokeLinecap="round" />
-              </g>
-            ))}
-            <text x={e.to.x} y={e.to.y - 1.4 - hitF * 2} fontSize={1.15} textAnchor="middle" fill={e.dmg ? '#fecaca' : '#e5e7eb'} stroke="#000" strokeWidth={0.16} paintOrder="stroke" fontWeight={900}>
+  if (e.kind === 'attack') return <AttackFx e={e} f={f} />;
+  return null;
+}
+
+type AttackEvent = Extract<FxEvent, { kind: 'attack' }>;
+
+/** deterministic 0..1 noise so an effect looks the same on every frame */
+const noise = (seed: number, i: number) => { const v = Math.sin(seed * 91.17 + i * 12.9898) * 43758.5453; return v - Math.floor(v); };
+const lerp = (a: Pt, b: Pt, k: number): Pt => ({ x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k });
+const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+
+const SHOT_COLOR: Record<string, { core: string; glow: string }> = {
+  bullet: { core: '#fff7d6', glow: '#f59e0b' },
+  beam: { core: '#e0f7ff', glow: '#38bdf8' },
+  blast: { core: '#fff1c2', glow: '#f97316' },
+  flame: { core: '#fff3c4', glow: '#f97316' },
+};
+
+function Sparks({ at, seed, k, color = '#fde68a', size = 0.9 }: { at: Pt; seed: number; k: number; color?: string; size?: number }) {
+  if (k <= 0 || k >= 1) return null;
+  return (
+    <g opacity={1 - k}>
+      <circle cx={at.x} cy={at.y} r={0.25 + k * 0.5 * size} fill="#fff" opacity={0.9 * (1 - k)} />
+      {Array.from({ length: 6 }, (_, i) => {
+        const a = noise(seed, i) * Math.PI * 2;
+        const r0 = 0.2 + k * 0.4 * size, r1 = r0 + (0.35 + noise(seed, i + 7) * 0.5) * size * (1 - k * 0.5);
+        return <line key={i} x1={at.x + Math.cos(a) * r0} y1={at.y + Math.sin(a) * r0} x2={at.x + Math.cos(a) * r1} y2={at.y + Math.sin(a) * r1} stroke={color} strokeWidth={0.07} strokeLinecap="round" />;
+      })}
+    </g>
+  );
+}
+
+function Puff({ at, k, r = 1, color = 'rgba(120,115,105,0.55)' }: { at: Pt; k: number; r?: number; color?: string }) {
+  if (k <= 0 || k >= 1) return null;
+  return <circle cx={at.x} cy={at.y} r={r * (0.3 + k * 0.9)} fill={color} opacity={0.8 * (1 - k)} />;
+}
+
+/** Shooting / melee effect: muzzle flashes, tracers or beams per model, impacts, smoke, damage and casualties. */
+function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
+  const style = e.style ?? (e.attackKind === 'fight' ? 'melee' : 'bullet');
+  const shooters = e.shooters?.length ? e.shooters : [e.from];
+  const victims = e.victims?.length ? e.victims : [e.to];
+  const seed = e.seq;
+  const shots = e.shots ?? 6, hits = e.hits ?? shots;
+  const n = style === 'bullet' ? Math.min(16, Math.max(3, shots)) : style === 'beam' ? Math.min(6, Math.max(1, shooters.length)) : style === 'blast' ? Math.min(4, Math.max(1, shots)) : style === 'flame' ? Math.min(4, shooters.length) : Math.min(8, Math.max(2, shots));
+  const hitShare = shots ? hits / shots : 1;
+  const travel = style === 'bullet' ? 0.1 : style === 'blast' ? 0.2 : style === 'beam' ? 0.02 : style === 'flame' ? 0.22 : 0.08;
+  const span = 0.42; // shots are spread over the first part of the effect
+  const after = clamp01((f - 0.5) / 0.5); // damage numbers and casualties
+  const c = SHOT_COLOR[style] ?? SHOT_COLOR.bullet;
+  const items: React.ReactNode[] = [];
+  for (let i = 0; i < n; i++) {
+    const t0 = (i / n) * span + noise(seed, i + 40) * 0.04;
+    const from = shooters[Math.floor(noise(seed, i) * shooters.length) % shooters.length];
+    const tgt = victims[Math.floor(noise(seed, i + 3) * victims.length) % victims.length];
+    const hit = noise(seed, i + 5) < hitShare;
+    const miss = { x: tgt.x + (noise(seed, i + 9) - 0.5) * 4, y: tgt.y + (noise(seed, i + 11) - 0.5) * 4 };
+    const impact = hit ? { x: tgt.x + (noise(seed, i + 13) - 0.5) * 0.5, y: tgt.y + (noise(seed, i + 17) - 0.5) * 0.5 } : miss;
+    const k = (f - t0) / travel; // 0..1 while travelling
+    const ik = (f - t0 - travel) / 0.22; // 0..1 after impact
+    if (style === 'melee') {
+      const sk = (f - t0) / 0.2;
+      if (sk > 0 && sk < 1) {
+        const a = noise(seed, i + 21) * 360;
+        items.push(
+          <g key={`s${i}`} transform={`translate(${impact.x} ${impact.y}) rotate(${a})`} opacity={1 - sk}>
+            <path d={`M -1 ${-0.6 + sk * 0.3} Q 0 ${-1.4 + sk} 1 ${-0.6 + sk * 0.3}`} fill="none" stroke="#fff" strokeWidth={0.16} strokeLinecap="round" />
+            <path d={`M -1 ${-0.6 + sk * 0.3} Q 0 ${-1.4 + sk} 1 ${-0.6 + sk * 0.3}`} fill="none" stroke="#ef4444" strokeWidth={0.4} strokeLinecap="round" opacity={0.45} />
+          </g>,
+        );
+      }
+      if (hit) items.push(<Sparks key={`k${i}`} at={impact} seed={seed + i} k={(f - t0 - 0.08) / 0.25} color="#fecaca" />);
+      continue;
+    }
+    // muzzle flash
+    const mk = (f - t0) / 0.07;
+    if (mk > 0 && mk < 1) {
+      const ang = Math.atan2(impact.y - from.y, impact.x - from.x);
+      const tip = { x: from.x + Math.cos(ang) * 0.9, y: from.y + Math.sin(ang) * 0.9 };
+      items.push(
+        <g key={`m${i}`} opacity={1 - mk}>
+          <circle cx={from.x} cy={from.y} r={0.45 + mk * 0.25} fill={c.glow} opacity={0.55} />
+          <polygon points={`${tip.x},${tip.y} ${from.x + Math.cos(ang + 0.5) * 0.35},${from.y + Math.sin(ang + 0.5) * 0.35} ${from.x + Math.cos(ang - 0.5) * 0.35},${from.y + Math.sin(ang - 0.5) * 0.35}`} fill={c.core} />
+        </g>,
+      );
+    }
+    if (style === 'beam') {
+      const bk = (f - t0) / 0.16;
+      if (bk > 0 && bk < 1) {
+        const w = 0.35 * (1 - bk);
+        items.push(
+          <g key={`b${i}`}>
+            <line x1={from.x} y1={from.y} x2={impact.x} y2={impact.y} stroke={c.glow} strokeWidth={w * 2.2} strokeLinecap="round" opacity={0.45} />
+            <line x1={from.x} y1={from.y} x2={impact.x} y2={impact.y} stroke={c.core} strokeWidth={w * 0.7} strokeLinecap="round" />
+          </g>,
+        );
+      }
+    } else if (style === 'flame') {
+      const fk = (f - t0) / 0.3;
+      if (fk > 0 && fk < 1) {
+        const ang = Math.atan2(impact.y - from.y, impact.x - from.x);
+        const len = Math.min(12, Math.hypot(impact.x - from.x, impact.y - from.y)) * Math.min(1, fk * 2);
+        const spread = 0.35;
+        const pts = [from, { x: from.x + Math.cos(ang + spread) * len, y: from.y + Math.sin(ang + spread) * len }, { x: from.x + Math.cos(ang - spread) * len, y: from.y + Math.sin(ang - spread) * len }];
+        items.push(
+          <g key={`f${i}`} opacity={0.85 * (1 - fk)}>
+            <polygon points={pts.map((q) => `${q.x},${q.y}`).join(' ')} fill="url(#fx-flame)" />
+            <polygon points={pts.map((q, j) => (j ? lerp(from, q, 0.6) : q)).map((q) => `${q.x},${q.y}`).join(' ')} fill="#fff3c4" opacity={0.5} />
+          </g>,
+        );
+      }
+    } else if (k > 0 && k < 1) {
+      // bullet tracer / shell
+      if (style === 'blast') {
+        const mid = { x: (from.x + impact.x) / 2, y: (from.y + impact.y) / 2 - Math.hypot(impact.x - from.x, impact.y - from.y) * 0.18 };
+        const q = (a: Pt, b: Pt, cc: Pt, s: number) => lerp(lerp(a, cc, s), lerp(cc, b, s), s);
+        const p = q(from, impact, mid, k), tail = q(from, impact, mid, Math.max(0, k - 0.15));
+        items.push(<g key={`t${i}`}><line x1={tail.x} y1={tail.y} x2={p.x} y2={p.y} stroke="rgba(150,150,150,0.5)" strokeWidth={0.35} strokeLinecap="round" /><circle cx={p.x} cy={p.y} r={0.22} fill={c.core} /></g>);
+      } else {
+        const head = lerp(from, impact, k), tail = lerp(from, impact, Math.max(0, k - 0.22));
+        items.push(
+          <g key={`t${i}`}>
+            <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={c.glow} strokeWidth={0.3} strokeLinecap="round" opacity={0.5} />
+            <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={c.core} strokeWidth={0.1} strokeLinecap="round" />
+          </g>,
+        );
+      }
+    }
+    // impact
+    if (style === 'blast') {
+      const xk = (f - t0 - travel) / 0.35;
+      if (xk > 0 && xk < 1) {
+        items.push(
+          <g key={`x${i}`}>
+            <circle cx={impact.x} cy={impact.y} r={0.6 + xk * 2.2} fill="url(#fx-boom)" opacity={1 - xk} />
+            <Puff at={impact} k={xk} r={2.2} color="rgba(70,64,56,0.6)" />
+          </g>,
+        );
+      }
+    } else if (hit) items.push(<Sparks key={`k${i}`} at={impact} seed={seed + i} k={ik} color={style === 'beam' ? '#bae6fd' : '#fde68a'} />);
+    else items.push(<Puff key={`p${i}`} at={impact} k={ik} r={0.5} />);
+  }
+  return (
+    <g pointerEvents="none">
+      {items}
+      {after > 0 && (
+        <g>
+          {e.dead.map((d, i) => (
+            <g key={`d${i}`} transform={`translate(${d.x} ${d.y})`} opacity={after < 0.8 ? 1 : (1 - after) * 5}>
+              <ellipse rx={0.75 + after * 0.25} ry={0.6 + after * 0.2} fill="rgba(110,10,10,0.55)" transform={`rotate(${noise(seed, i + 50) * 180})`} />
+              <path d="M -0.4 -0.4 L 0.4 0.4 M 0.4 -0.4 L -0.4 0.4" stroke="#fecaca" strokeWidth={0.15} strokeLinecap="round" />
+            </g>
+          ))}
+          <g opacity={after < 0.75 ? 1 : (1 - after) * 4} transform={`translate(${e.to.x} ${e.to.y - 1.6 - after * 1.6}) scale(${after < 0.15 ? 0.6 + after * 3 : 1.05})`}>
+            <text fontSize={1.2} textAnchor="middle" fill={e.dmg ? '#fecaca' : '#e5e7eb'} stroke="#000" strokeWidth={0.18} paintOrder="stroke" fontWeight={900}>
               {e.dmg ? `-${e.dmg}W` : 'ไม่เข้า'}{e.killed ? ` · ตาย ${e.killed}` : ''}
             </text>
           </g>
-        )}
-      </g>
-    );
-  }
-  return null;
+        </g>
+      )}
+    </g>
+  );
 }
 
 export const Board = memo(BoardImpl);

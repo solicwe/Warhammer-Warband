@@ -12,6 +12,7 @@ import {
 } from './game';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
 import { isMelee } from './weapons';
+import { applyDetachmentStratagem, planStratagem, stratagemBlock } from './stratagems';
 import type { GameState, ObjectiveState, PlayerId, Pt, UnitState, WeaponProfileData } from './types';
 
 const stay = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]]));
@@ -97,6 +98,25 @@ function stepTowards(s: GameState, u: UnitState, goal: Pt, max: number, kind: 'n
     if (validateMove(s, u, kind, paths).ok) { commitMove(s, u, kind, paths); return true; }
   }
   return false;
+}
+
+// ---------- stratagems ----------
+
+const ATTACK_BUFFS = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
+
+/** Before a big attack, spend CP on a detachment stratagem whose whole effect the engine applies (keeps 1 CP for re-rolls). */
+function botAttackStratagem(s: GameState, u: UnitState) {
+  if (unitValue(u) < 110) return;
+  const p = u.owner;
+  for (const d of s.players[p].detachments) {
+    for (const st of d.stratagems) {
+      const plan = planStratagem(st);
+      if (!plan.full || plan.target !== 'own' || !plan.effects.every((k) => ATTACK_BUFFS.includes(k))) continue;
+      if (s.players[p].cp < st.cp + 1 || stratagemBlock(s, p, st, u)) continue;
+      applyDetachmentStratagem(s, p, st, u.id);
+      return;
+    }
+  }
 }
 
 // ---------- deployment ----------
@@ -258,6 +278,7 @@ export function botShootOne(s: GameState): boolean {
       const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, t).models, 0);
       return { t, v: shotValue(s, u, t, ev) };
     }).filter((x): x is { t: UnitState; v: number } => !!x).sort((a, b) => b.v - a.v);
+    if (ranked.length) botAttackStratagem(s, u);
     for (const { t } of ranked) {
       if (!onBoard(t)) continue;
       const r = buildShootPools(s, u.id, t.id, { mode });
@@ -355,7 +376,9 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
       return { e, r, v: shotValue(s, u, e, ev) };
     }).filter((x) => x.r.pools.length).sort((a, b) => b.v - a.v);
     if (scored.length) {
-      startAttack(s, 'fight', u.id, scored[0].e.id, scored[0].r.pools);
+      botAttackStratagem(s, u);
+      const r = buildFightPools(s, u.id, scored[0].e.id);
+      startAttack(s, 'fight', u.id, scored[0].e.id, r.pools.length ? r.pools : scored[0].r.pools);
       resolveAll(s);
       finishAttack(s);
     }

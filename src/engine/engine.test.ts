@@ -296,3 +296,38 @@ describe('sub-factions (Chapters)', () => {
     expect(ok.some((e) => e.includes('Saga of the Hunter') || e.includes(wolf.name))).toBe(false);
   });
 });
+
+describe('detachment stratagems', () => {
+  it('reads timing, target and effects from the text', async () => {
+    const { planStratagem } = await import('./stratagems');
+    const aoc = SM.detachments.flatMap((d) => d.stratagems).find((x) => x.name === 'ARMOUR OF CONTEMPT')!;
+    const plan = planStratagem(aoc);
+    expect(plan.turn).toBe('either');
+    expect(plan.phases).toEqual(['shooting', 'fight']);
+    expect(plan.target).toBe('own');
+    expect(plan.effects).toEqual(['enemyAp-1']);
+  });
+  it('blocks the wrong phase and applies a defensive effect when the dice are rolled', async () => {
+    const { applyDetachmentStratagem, stratagemBlock } = await import('./stratagems');
+    const { rollHits } = await import('./attack');
+    const s = game();
+    const a = put(s, s.units.find((u) => u.owner === 0 && u.name.includes('Intercessor'))!.id, { x: 22, y: 20 });
+    const b = put(s, s.units.find((u) => u.owner === 1 && u.name.includes('Boyz'))!.id, { x: 22, y: 32 });
+    const aoc = SM.detachments.flatMap((d) => d.stratagems).find((x) => x.name === 'ARMOUR OF CONTEMPT')!;
+    s.players[0].detachments = SM.detachments.filter((d) => d.stratagems.includes(aoc));
+    s.round = 1; s.active = 1; s.turn = 1; s.phase = 'movement';
+    s.players[0].cp = 3;
+    expect(stratagemBlock(s, 0, aoc, a)).toMatch(/phase/);
+    s.phase = 'shooting';
+    // the Ork unit shoots the marines; the marines react after targets are picked
+    const r = buildShootPools(s, b.id, a.id, { mode: 'normal' });
+    expect(r.pools.length).toBeGreaterThan(0);
+    startAttack(s, 'shoot', b.id, a.id, r.pools);
+    const apBefore = s.attack!.pools[0].ap;
+    expect(stratagemBlock(s, 0, aoc, a)).toBeNull();
+    applyDetachmentStratagem(s, 0, aoc, a.id);
+    expect(s.players[0].cp).toBe(3 - aoc.cp);
+    rollHits(s);
+    expect(s.attack!.pools[0].ap).toBe(apBefore < 0 ? apBefore + 1 : apBefore);
+  });
+});

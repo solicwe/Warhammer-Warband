@@ -172,6 +172,10 @@ function build() {
   const t = Object.fromEntries(FILES.map((f) => [f, readCsv(f)]));
   const lastUpdate = t.Last_update[0]?.last_update ?? '';
   const abilityById = new Map(t.Abilities.map((a) => [a.id, a]));
+  const sourceById = new Map(t.Source.map((s) => [s.id, s]));
+  const excludeRe = (META.excludeSources?.patterns ?? []).map((p) => new RegExp(p, 'i'));
+  const excludedSource = (id) => { const s = sourceById.get(id); return !!s && excludeRe.some((r) => r.test(s.name)); };
+  let dropped = 0;
   const datasheetById = new Map(t.Datasheets.map((d) => [d.id, d]));
   const by = {
     models: groupBy(t.Datasheets_models, 'datasheet_id'),
@@ -190,7 +194,7 @@ function build() {
   const index = { source: 'Wahapedia 40k 11th edition data export', sourceUrl: BASE_URL, lastUpdate, factions: [] };
 
   for (const f of t.Factions) {
-    const sheets = t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true');
+    const sheets = t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true' && !excludedSource(d.source_id));
     const datasheets = sheets.map((d) => {
       const kw = by.keywords.get(d.id) ?? [];
       const weapons = [];
@@ -240,7 +244,8 @@ function build() {
       };
     }).filter((d) => d.models.length && d.points.length);
 
-    const detachments = t.Detachments.filter((x) => x.faction_id === f.id).map((x) => ({
+    dropped += t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true' && excludedSource(d.source_id)).length;
+    const detachments = t.Detachments.filter((x) => x.faction_id === f.id && (x.force_disposition || !META.excludeDetachmentsWithoutForceDisposition)).map((x) => ({
       id: x.id,
       name: x.name,
       dp: num(x.dp) ?? 1,
@@ -274,7 +279,7 @@ function build() {
   }
   index.factions.sort((a, b) => a.name.localeCompare(b.name));
   fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));
-  console.log(`built ${index.factions.length} factions (data ${lastUpdate})`);
+  console.log(`built ${index.factions.length} factions (data ${lastUpdate}); left out ${dropped} Legends datasheets`);
 }
 
 if (process.argv.includes('--fetch')) await fetchAll();

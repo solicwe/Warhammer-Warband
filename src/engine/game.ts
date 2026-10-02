@@ -461,8 +461,9 @@ function endBattle(s: GameState) {
 // ---------- movement phase actions ----------
 
 export function rollAdvance(s: GameState, u: UnitState) {
-  u.advanceRoll = d6(s);
-  pushFx(s, { kind: 'roll', owner: u.owner, title: `Advance · ${u.name}`, dice: [u.advanceRoll], result: `M + ${u.advanceRoll}"`, good: u.advanceRoll >= 4 });
+  const raw = d6(s);
+  u.advanceRoll = raw + (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0);
+  pushFx(s, { kind: 'roll', owner: u.owner, title: `Advance · ${u.name}`, dice: [raw], result: `M + ${u.advanceRoll}"${u.advanceRoll > raw ? ' (+1)' : ''}`, good: u.advanceRoll >= 4 });
   log(s, `${u.name} Advance: ทอยได้ ${u.advanceRoll}`, 'roll', u.owner);
 }
 
@@ -545,6 +546,7 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   const r = rollN(s, 2);
   let total = r[0] + r[1];
   if (cap !== undefined) total = Math.min(total, cap);
+  if (u.buffs.some((b) => b.kind === 'advanceCharge+1')) total += 1;
   u.chargeRoll = Math.max(0, total - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0));
   const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `ชาร์จได้ ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });
@@ -684,7 +686,7 @@ export function endPileInStep(s: GameState) {
   if (!fightCandidates(s).units.length) startConsolidate(s);
 }
 
-export const isFightsFirst = (s: GameState, u: UnitState) => u.chargedTurn === s.turn || !!u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn;
+export const isFightsFirst = (s: GameState, u: UnitState) => u.chargedTurn === s.turn || !!u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn || u.buffs.some((b) => b.kind === 'fightsFirst');
 
 export function fightEligibleNow(s: GameState, u: UnitState) {
   const f = s.fight!;
