@@ -1,6 +1,6 @@
 import { RULES } from './config';
 import { baseDist, circleTouchesPoly } from './geometry';
-import type { GameState, LogEntry, ModelState, PlayerId, UnitState } from './types';
+import type { FxEvent, GameState, LogEntry, ModelState, PlayerId, UnitState } from './types';
 
 export const unitById = (s: GameState, id: string) => s.units.find((u) => u.id === id)!;
 export const alive = (u: UnitState) => u.models.filter((m) => !m.dead);
@@ -9,6 +9,13 @@ export const boardUnits = (s: GameState, owner?: PlayerId) => s.units.filter((u)
 export const other = (p: PlayerId): PlayerId => (p === 0 ? 1 : 0);
 export const hasKw = (u: UnitState, kw: string) => u.keywords.includes(kw);
 export const everyModelKw = (u: UnitState, kws: string[]) => alive(u).every((m) => kws.some((k) => m.keywords.includes(k)));
+
+type FxInput = FxEvent extends infer E ? (E extends { seq: number } ? Omit<E, 'seq'> : never) : never;
+export function pushFx(s: GameState, e: FxInput) {
+  s.fxSeq = (s.fxSeq ?? 0) + 1;
+  (s.fx ??= []).push({ ...e, seq: s.fxSeq } as FxEvent);
+  if (s.fx.length > 24) s.fx.splice(0, s.fx.length - 24);
+}
 
 export function log(s: GameState, text: string, kind?: LogEntry['kind'], player: PlayerId | null = s.active) {
   s.log.push({ turn: s.turn, round: s.round, player, text, kind });

@@ -5,7 +5,7 @@ import { deploymentById, MISSIONS, primaryById, RULES, secondaryById, toPoly, ty
 import { d6, nextRandom, rollN, rollOff } from './dice';
 import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointInPoly, pointSegDist, polyCentroid, segSegDist } from './geometry';
 import {
-  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, onBoard, other, spendStratagem, strength, unitById, unitDistance,
+  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from './state';
 import type { ArmyList, FactionData, GameState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
@@ -481,6 +481,8 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
     log(s, `Desperate Escape ${u.name}: hazard [${rolls.join(' ')}]`, 'roll', u.owner);
     if (fails) applyMortalWounds(s, u, fails * (alive(u).every(isMV) ? RULES.hazard.mortalWoundsMonsterVehicle : RULES.hazard.mortalWounds), 'Desperate Escape');
   }
+  const moved = alive(u).filter((m) => (paths.get(m.id)?.length ?? 0) > 1 && pathLength(paths.get(m.id)!) > 0.01);
+  if (moved.length) pushFx(s, { kind: 'move', unitId: u.id, owner: u.owner, moveKind: kind, paths: moved.map((m) => [m.id, paths.get(m.id)!.map((q) => ({ x: q.x, y: q.y }))]) });
   const label: Record<string, string> = { scout: 'Scout move', normal: 'Normal move', advance: 'Advance', fallback: 'Fall back', charge: 'Charge move', pileIn: 'Pile-in', consolidate: 'Consolidate', ingress: 'Ingress' };
   if (label[kind]) log(s, `${u.name}: ${label[kind]}${maxMoved ? ` (${maxMoved.toFixed(1)}")` : ''}`, 'info', u.owner);
 }
@@ -495,6 +497,7 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   const chk = validatePlacement(s, u, pos, how);
   if (!chk.ok) return chk;
   placeUnit(s, u, pos);
+  pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
   u.move = 'ingress';
   log(s, `${u.name} ลงสนาม (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})`, 'info', u.owner);
   return chk;

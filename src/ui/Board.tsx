@@ -6,7 +6,7 @@ import { alive, onBoard } from '../engine/state';
 import { levelOfControl } from '../engine/game';
 import { modelToken } from './Tokens';
 import { getPortrait, usePortraitsVersion } from './portraits';
-import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
+import type { FxEvent, GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export type Paths = Map<string, Pt[]>;
 
@@ -19,7 +19,8 @@ export interface BoardProps {
   draftUnit?: string | null;
   draft?: Paths | null;
   maxFor?: (modelId: string) => number;
-  groupDrag?: boolean;
+  /** players whose moves are replayed as an animation (the bot) */
+  animateMoves?: PlayerId[];
   bad?: string[];
   targets?: string[];
   picked?: string[];
@@ -38,6 +39,22 @@ const COLORS = ['#3a9ad9', '#e0453f'];
 const SOFT = ['rgba(58,154,217,0.16)', 'rgba(224,69,63,0.16)'];
 const TERRAIN_FILL: Record<string, string> = { dense: 'rgba(120,98,72,0.55)', light: 'rgba(150,140,80,0.45)', exposed: 'rgba(90,85,78,0.45)' };
 
+const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1500, mortal: 1200 };
+interface ActiveFx { e: FxEvent; t0: number }
+const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+
+function alongPath(p: Pt[], f: number): Pt {
+  const total = pathLen(p);
+  if (total < 1e-6) return p[p.length - 1];
+  let want = total * f;
+  for (let i = 1; i < p.length; i++) {
+    const d = dist(p[i - 1], p[i]);
+    if (want <= d) { const k = d ? want / d : 0; return { x: p[i - 1].x + (p[i].x - p[i - 1].x) * k, y: p[i - 1].y + (p[i].y - p[i - 1].y) * k }; }
+    want -= d;
+  }
+  return p[p.length - 1];
+}
+
 function pathLen(p: Pt[]) { let d = 0; for (let i = 1; i < p.length; i++) d += dist(p[i - 1], p[i]); return d; }
 
 interface DragState {
@@ -52,7 +69,55 @@ interface DragState {
 
 function BoardImpl(props: BoardProps) {
   usePortraitsVersion();
-  const { s, draft, draftUnit, maxFor, groupDrag, onDraft } = props;
+  const { s, draft, draftUnit, maxFor, onDraft } = props;
+  // models picked for single-model adjustment (tap a model of the moving unit); otherwise a drag moves the whole unit
+  const [solo, setSolo] = useState<string[]>([]);
+  useEffect(() => setSolo([]), [draftUnit]);
+  // --- effects: replay new engine events as short animations ---
+  const seen = useRef(s.fxSeq ?? 0);
+  const [fx, setFx] = useState<ActiveFx[]>([]);
+  const [now, setNow] = useState(() => performance.now());
+  useEffect(() => {
+    const fresh = (s.fx ?? []).filter((e) => e.seq > seen.current);
+    if (s.fxSeq !== undefined && s.fxSeq < seen.current) seen.current = s.fxSeq; // undo
+    if (!fresh.length) return;
+    seen.current = Math.max(...fresh.map((e) => e.seq));
+    const t0 = performance.now();
+    const keep = fresh.filter((e) => e.kind !== 'move' || props.animateMoves?.includes(e.owner));
+    // stagger events from the same step a little so they read in order
+    setFx((cur) => [...cur.filter((a) => t0 - a.t0 < FX_MS[a.e.kind]), ...keep.map((e, i) => ({ e, t0: t0 + i * 180 }))]);
+  }, [s.fx, s.fxSeq, props.animateMoves]);
+  useEffect(() => {
+    if (!fx.length) return;
+    let raf = 0;
+    const tick = () => {
+      const t = performance.now();
+      setNow(t);
+      if (fx.some((a) => t - a.t0 < FX_MS[a.e.kind])) raf = requestAnimationFrame(tick);
+      else setFx([]);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [fx]);
+  const animPos = useMemo(() => {
+    const m = new Map<string, Pt>();
+    for (const a of fx) {
+      if (a.e.kind !== 'move') continue;
+      const f = Math.min(1, Math.max(0, (now - a.t0) / FX_MS.move));
+      if (f >= 1) continue;
+      for (const [id, p] of a.e.paths) m.set(id, alongPath(p, ease(f)));
+    }
+    return m;
+  }, [fx, now]);
+  const acting = useMemo(() => {
+    const ids = new Set<string>();
+    for (const a of fx) {
+      if (now - a.t0 > FX_MS[a.e.kind] || now < a.t0) continue;
+      if (a.e.kind === 'move' || a.e.kind === 'place') ids.add(a.e.unitId);
+      if (a.e.kind === 'attack') ids.add(a.e.attackerId);
+    }
+    return ids;
+  }, [fx, now]);
   const svgRef = useRef<SVGSVGElement>(null);
   const [vb, setVb] = useState({ x: -1, y: -1, w: W + 2, h: H + 2 });
   const pointers = useRef(new Map<number, { x: number; y: number }>());
@@ -100,7 +165,7 @@ function BoardImpl(props: BoardProps) {
       drag.current = { pointerId: e.pointerId, start: toBoard(e.clientX, e.clientY), models: [], base: new Map(), moved: false, unitId, modelId };
       return;
     }
-    const models = groupDrag ? [...draft!.keys()] : [modelId];
+    const models = solo.includes(modelId) ? solo.filter((id) => draft!.has(id)) : [...draft!.keys()];
     const base: Paths = new Map();
     for (const [id, p] of draft!) {
       if (models.includes(id) && p.length > 1) {
@@ -180,7 +245,11 @@ function BoardImpl(props: BoardProps) {
     const dg = drag.current;
     if (dg && dg.pointerId === e.pointerId) {
       drag.current = null;
-      if (!dg.moved) props.onTapUnit?.(dg.unitId, dg.modelId);
+      if (!dg.moved) {
+        // tapping a model of the unit being moved picks it for single-model adjustment
+        if (dg.models.length && draftUnit === dg.unitId) setSolo((cur) => (cur.includes(dg.modelId) ? cur.filter((x) => x !== dg.modelId) : [...cur, dg.modelId]));
+        else props.onTapUnit?.(dg.unitId, dg.modelId);
+      } else if (!solo.includes(dg.modelId)) setSolo([]);
       return;
     }
     const pn = pan.current;
@@ -199,6 +268,8 @@ function BoardImpl(props: BoardProps) {
   const enemyOfDraft = draftUnit ? s.units.find((u) => u.id === draftUnit)?.owner : undefined;
 
   const posOf = (u: UnitState, id: string, m: Pt): Pt => {
+    const ap = animPos.get(id);
+    if (ap) return ap;
     if (draft && draftUnit === u.id) {
       const p = draft.get(id);
       if (p) return p[p.length - 1];
@@ -373,9 +444,12 @@ function BoardImpl(props: BoardProps) {
             {ms.map((m, i) => {
               const p = pts[i];
               const bad = props.bad?.includes(m.id);
+              const isSolo = isDraft && solo.includes(m.id);
               return (
                 <g key={m.id} onPointerDown={(e) => startModelDrag(e, u.id, m.id)} style={{ cursor: isDraft ? 'grab' : 'pointer' }}>
                   <circle cx={p.x} cy={p.y} r={Math.max(m.r, 0.35) + 0.35} fill="transparent" />
+                  {acting.has(u.id) && <circle cx={p.x} cy={p.y} r={m.r + 0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
+                  {isSolo && <circle cx={p.x} cy={p.y} r={m.r + 0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
                   <circle
                     cx={p.x} cy={p.y} r={m.r}
                     fill={bad ? '#7f1d1d' : '#1d2129'}
@@ -404,6 +478,13 @@ function BoardImpl(props: BoardProps) {
                 {props.badges[u.id].join('  ')}
               </text>
             ) : null}
+            {s.players[1 - u.owner].oathTarget === u.id && pts.length > 0 && (
+              <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 3.1 : 2.2)})`} pointerEvents="none">
+                <rect x={-2.3} y={-0.62} width={4.6} height={1.24} rx={0.25} fill="#7a0c0c" stroke="#f5d48a" strokeWidth={0.1} />
+                <path d="M -1.85 0.32 L -1.4 -0.32 L -0.95 0.32 Z" fill="#f5d48a" />
+                <text x={0.35} y={0.27} fontSize={0.75} textAnchor="middle" fill="#f5d48a" fontWeight={800} letterSpacing={0.06}>OATH</text>
+              </g>
+            )}
             {isDraft && maxFor && ms.map((m) => {
               const p = draft!.get(m.id);
               if (!p || p.length < 2) return null;
@@ -415,9 +496,63 @@ function BoardImpl(props: BoardProps) {
           </g>
         );
       })}
-      <rect x={0} y={0} width={W} height={H} fill="none" stroke="#000" strokeWidth={0.15} />
+      {fx.map((a) => <FxView key={a.e.seq} a={a} now={now} />)}
+      <rect x={0} y={0} width={W} height={H} fill="none" stroke="#000" strokeWidth={0.15} pointerEvents="none" />
     </svg>
   );
+}
+
+function FxView({ a, now }: { a: ActiveFx; now: number }) {
+  const e = a.e;
+  const f = (now - a.t0) / FX_MS[e.kind];
+  if (f < 0 || f > 1) return null;
+  if (e.kind === 'mortal') {
+    return (
+      <g pointerEvents="none" opacity={1 - f}>
+        <circle cx={e.at.x} cy={e.at.y} r={0.8 + f * 2.2} fill="none" stroke="#c084fc" strokeWidth={0.18} />
+        <text x={e.at.x} y={e.at.y - 1 - f * 1.6} fontSize={1} textAnchor="middle" fill="#e9d5ff" stroke="#000" strokeWidth={0.14} paintOrder="stroke" fontWeight={900}>-{e.n} MW</text>
+      </g>
+    );
+  }
+  if (e.kind === 'attack') {
+    const col = COLORS[e.owner];
+    const melee = e.attackKind === 'fight';
+    const shot = Math.min(1, f / 0.35); // projectile travel
+    const hitF = Math.max(0, (f - 0.3) / 0.7); // impact
+    const dx = e.to.x - e.from.x, dy = e.to.y - e.from.y;
+    const head = { x: e.from.x + dx * shot, y: e.from.y + dy * shot };
+    const tail = { x: e.from.x + dx * Math.max(0, shot - 0.25), y: e.from.y + dy * Math.max(0, shot - 0.25) };
+    return (
+      <g pointerEvents="none">
+        {!melee && f < 0.5 && (
+          <>
+            <line x1={e.from.x} y1={e.from.y} x2={e.to.x} y2={e.to.y} stroke={col} strokeWidth={0.08} strokeDasharray="0.4 0.3" opacity={0.5 * (1 - f * 2)} />
+            <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#fde68a" strokeWidth={0.28} strokeLinecap="round" />
+          </>
+        )}
+        {melee && f < 0.6 && (
+          <g transform={`translate(${e.to.x} ${e.to.y}) rotate(${f * 90}) scale(${0.6 + f})`} opacity={1 - f / 0.6}>
+            <path d="M -1.2 -1.2 L 1.2 1.2 M 1.2 -1.2 L -1.2 1.2" stroke="#fca5a5" strokeWidth={0.25} strokeLinecap="round" />
+          </g>
+        )}
+        {hitF > 0 && (
+          <g opacity={1 - hitF}>
+            <circle cx={e.to.x} cy={e.to.y} r={0.6 + hitF * 2.6} fill="none" stroke={e.dmg ? '#ef4444' : '#9ca3af'} strokeWidth={0.2} />
+            {e.dead.map((d, i) => (
+              <g key={i} transform={`translate(${d.x} ${d.y})`}>
+                <circle r={0.7} fill="rgba(0,0,0,0.55)" stroke="#ef4444" strokeWidth={0.1} />
+                <path d="M -0.4 -0.4 L 0.4 0.4 M 0.4 -0.4 L -0.4 0.4" stroke="#ef4444" strokeWidth={0.16} strokeLinecap="round" />
+              </g>
+            ))}
+            <text x={e.to.x} y={e.to.y - 1.4 - hitF * 2} fontSize={1.15} textAnchor="middle" fill={e.dmg ? '#fecaca' : '#e5e7eb'} stroke="#000" strokeWidth={0.16} paintOrder="stroke" fontWeight={900}>
+              {e.dmg ? `-${e.dmg}W` : 'ไม่เข้า'}{e.killed ? ` · ตาย ${e.killed}` : ''}
+            </text>
+          </g>
+        )}
+      </g>
+    );
+  }
+  return null;
 }
 
 export const Board = memo(BoardImpl);

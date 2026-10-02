@@ -283,7 +283,16 @@ export interface AttackSession {
   stage: 'hit' | 'wound' | 'save' | 'damage' | 'done';
   hazardousRolls: number[];
   summary: string[];
+  aliveBefore?: string[]; // model ids alive when the attack started (for effects)
+  woundsBefore?: number;
 }
+
+/** Visual events for the board (animations). Not rules state; capped to the last few. */
+export type FxEvent =
+  | { seq: number; kind: 'move'; unitId: string; owner: PlayerId; moveKind: MoveKind; paths: [string, Pt[]][] }
+  | { seq: number; kind: 'place'; unitId: string; owner: PlayerId }
+  | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[] }
+  | { seq: number; kind: 'mortal'; unitId: string; n: number; at: Pt };
 
 export type Window =
   | { kind: 'fireOverwatch'; player: PlayerId }
@@ -329,4 +338,7 @@ export interface GameState {
   log: LogEntry[];
   winner: PlayerId | null | 'draw';
   botPlayer?: PlayerId | null;
+  fx?: FxEvent[];
+  botTried?: string[]; // bot bookkeeping: units already considered this phase
+  fxSeq?: number;
 }

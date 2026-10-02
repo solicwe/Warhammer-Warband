@@ -71,20 +71,31 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return () => window.removeEventListener('game-error', onErr);
   });
 
-  // single-player: let the bot take its steps one at a time so the board animates
+  // single-player: let the bot take its steps one at a time so the board animates; caption what it just did
+  const [botSays, setBotSays] = useState<string | null>(null);
   useEffect(() => {
-    if (bot === null || !botShouldAct(s, bot)) return;
+    if (bot === null) return;
+    if (!botShouldAct(s, bot)) {
+      if (!botSays) return;
+      const t = window.setTimeout(() => setBotSays(null), 2200);
+      return () => window.clearTimeout(t);
+    }
+    const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command';
     const t = window.setTimeout(() => {
-      const before = s.log.length;
-      act((g) => botStep(g, bot));
-      void before;
-    }, 450);
+      let said: string | null = null;
+      act((g) => {
+        const last = g.log[g.log.length - 1];
+        botStep(g, bot);
+        const fresh = g.log.slice(g.log.lastIndexOf(last) + 1).filter((e) => e.kind !== 'roll' || /ชาร์จ|Advance/.test(e.text));
+        said = fresh.length ? fresh[fresh.length - 1].text : null;
+      });
+      if (said) setBotSays(said);
+    }, quick ? 350 : 950);
     return () => window.clearTimeout(t);
-  }, [s, bot, act]);
+  }, [s, bot, act, botSays]);
   const [sel, setSel] = useState<string | null>(null);
   const [mode, setModeRaw] = useState<Mode | null>(null);
   const [draft, setDraft] = useState<Paths | null>(null);
-  const [group, setGroup] = useState(true);
   const [check, setCheck] = useState<MoveCheck | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<string | null>(null);
@@ -278,6 +289,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     <button key={u.id} className={`unit-pill ${done ? 'done' : ''} ${sel === u.id ? 'sel' : ''} ${u.battleShocked ? 'shock' : ''}`} onClick={onClick ?? (() => { setSel(u.id); })}>
       <span className={u.owner ? 'p1' : 'p0'}>●</span> {u.name.length > 26 ? u.name.slice(0, 25) + '…' : u.name}
       <span className="muted"> {alive(u).length}/{u.startingStrength}</span>{u.battleShocked ? ' ' : ''}
+      {s.players[1 - u.owner].oathTarget === u.id && <span className="oath-tag">OATH</span>}
     </button>
   );
 
@@ -335,8 +347,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const moveControls = (kind: string, onConfirm: () => void, extra?: React.ReactNode) => (
     <>
       <div className="row">
-        <button className={`btn small ${group ? 'on' : ''}`} onClick={() => setGroup(true)}>ลากทั้งหน่วย</button>
-        <button className={`btn small ${!group ? 'on' : ''}`} onClick={() => setGroup(false)}>ทีละตัว</button>
+        <span className="tiny muted grow">ลาก = ย้ายทั้งหน่วย · แตะโมเดล = เลือกปรับทีละตัว</span>
         <button className="btn small" onClick={() => { setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); }}>Reset</button>
         {extra}
       </div>
@@ -425,8 +436,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <>
         <div className="small">วาง <b>{u.name}</b>: แตะบนสนาม{mode.how === 'deploy' ? 'ในโซนของคุณ' : mode.how === 'disembark' ? ` ภายใน ${disembarkMode(s, U(mode.transportId!)) === 'combat' ? 6 : 3}" จากรถ (${disembarkMode(s, U(mode.transportId!))} disembark)` : mode.how === 'deepStrike' ? ` (ห่างศัตรู >${RULES.reserves.enemyDistance}")` : ` (ภายใน ${RULES.reserves.edgeDistance}" จากขอบ, ห่างศัตรู >${RULES.reserves.enemyDistance}")`} แล้วลากปรับตำแหน่ง</div>
         <div className="row">
-          <button className={`btn small ${group ? 'on' : ''}`} onClick={() => setGroup(true)}>ลากทั้งหน่วย</button>
-          <button className={`btn small ${!group ? 'on' : ''}`} onClick={() => setGroup(false)}>ทีละตัว</button>
+          <span className="tiny muted grow">ลาก = ย้ายทั้งหน่วย · แตะโมเดล = เลือกปรับทีละตัว</span>
           <button className="btn small" onClick={autoPlace}>หาที่วางให้</button>
         </div>
         {check && !check.ok && <div className="err">{check.errors.slice(0, 4).map((e) => <div key={e}>{e}</div>)}</div>}
@@ -473,8 +483,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <div className="small"><b>Oath of Moment</b> — เลือกหน่วยศัตรู 1 หน่วย: ยิง/ตีใส่ได้ re-roll hit{s.players[s.active].oathWoundBonus ? ' และ +1 wound' : ''} จนถึง Command phase หน้า</div>
             <div className="unit-strip" style={{ marginTop: 6 }}>
               {boardUnits(s, other(s.active)).map((e) => (
-                <button key={e.id} className={`unit-pill ${s.players[s.active].oathTarget === e.id ? 'sel' : ''}`} onClick={() => act((g) => setOathTarget(g, g.active, e.id))}>
+                <button key={e.id} className={`unit-pill ${s.players[s.active].oathTarget === e.id ? 'sel' : ''}`} onClick={() => { act((g) => setOathTarget(g, g.active, e.id)); setSel(e.id); flash(`Oath of Moment → ${e.name}`); }}>
                   <span className={e.owner ? 'p1' : 'p0'}>●</span> {e.name}
+                  {s.players[s.active].oathTarget === e.id && <span className="oath-tag">OATH</span>}
                 </button>
               ))}
             </div>
@@ -953,7 +964,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           draftUnit={draftUnit}
           draft={draft}
           maxFor={mode?.k === 'place' ? undefined : maxFor}
-          groupDrag={group}
+          animateMoves={bot !== null ? [bot] : undefined}
           bad={check?.bad}
           targets={targets}
           picked={picked}
@@ -964,6 +975,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onTapBoard={onTapBoard}
           onDraft={(d) => { setDraft(d); setCheck(null); }}
         />
+        {botSays && <div className="bot-caption">{botSays.includes(pName(s, bot ?? 1)) ? botSays : <><b>{pName(s, bot ?? 1)}</b> {botSays}</>}</div>}
         {toast && <div className="toast">{toast}</div>}
         {mode?.k === 'shoot' && !mode.target && <div className="toast">แตะหน่วยศัตรูที่เรืองแสงเพื่อเลือกเป้า ({targets.length} เป้า)</div>}
       </div>

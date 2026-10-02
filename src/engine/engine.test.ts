@@ -252,3 +252,27 @@ describe('emergency disembark', () => {
     expect(boyz.battleShocked).toBe(true);
   });
 });
+
+describe('board effects', () => {
+  it('moves and attacks leave fx events for the UI', async () => {
+    const { commitMove } = await import('./game');
+    const { finishAttack, resolveAll } = await import('./attack');
+    const s = game();
+    const a = put(s, s.units.find((u) => u.owner === 0 && u.name.includes('Intercessor'))!.id, { x: 22, y: 20 });
+    const b = put(s, s.units.find((u) => u.owner === 1 && u.name.includes('Boyz'))!.id, { x: 22, y: 34 });
+    s.phase = 'movement';
+    const paths = new Map(alive(a).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y + 1 }]]));
+    commitMove(s, a, 'normal', paths);
+    expect(s.fx?.at(-1)).toMatchObject({ kind: 'move', unitId: a.id, moveKind: 'normal' });
+    s.phase = 'shooting';
+    const r = buildShootPools(s, a.id, b.id, { mode: 'normal' });
+    expect(r.pools.length).toBeGreaterThan(0);
+    startAttack(s, 'shoot', a.id, b.id, r.pools);
+    resolveAll(s);
+    const lostBefore = b.models.filter((m) => m.dead).length;
+    finishAttack(s);
+    const fx = s.fx!.filter((e) => e.kind === 'attack').at(-1)!;
+    expect(fx).toMatchObject({ kind: 'attack', attackerId: a.id, targetId: b.id, killed: lostBefore });
+    expect(s.fxSeq).toBe(s.fx!.at(-1)!.seq);
+  });
+});

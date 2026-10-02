@@ -121,7 +121,9 @@ function parsePoints(rows) {
   for (const r of rows) {
     if (!r.cost) { cur = { label: r.description, options: [] }; tiers.push(cur); continue; }
     if (!cur) { cur = { label: 'YOUR UNIT COSTS', options: [] }; tiers.push(cur); }
-    const models = num(r.description) ?? 1;
+    // "1 Sword Brother, 4 Neophytes, 5 Initiates" -> 10 models; "10 models" -> 10
+    const parts = [...String(r.description).matchAll(/(\d+)\s+[A-Za-z]/g)].map((m) => +m[1]);
+    const models = parts.length ? parts.reduce((a, b) => a + b, 0) : num(r.description) ?? 1;
     if (!cur.options.some((o) => o.models === models)) cur.options.push({ models, pts: +r.cost });
   }
   const filled = tiers.filter((t) => t.options.length);

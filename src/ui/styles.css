@@ -180,3 +180,66 @@ input, select { font: inherit; color: var(--ink); background: #fff; border: 1px 
 details summary { cursor: pointer; }
 
 .ds-head .portrait text { display: none; }
+
+/* bot action caption + board effects */
+.bot-caption { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); background: rgba(26, 26, 26, 0.94); color: #f0f0f0; padding: 7px 14px; border-radius: 8px; border-left: 4px solid var(--p1); font-size: 13px; max-width: 92%; pointer-events: none; animation: cap-in 0.25s ease-out; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
+.bot-caption b { color: #fff; margin-right: 6px; }
+@keyframes cap-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.fx-glow { animation: glow 0.7s ease-in-out infinite alternate; }
+@keyframes glow { from { opacity: 0.35; } to { opacity: 0.95; } }
+.oath-tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: #7a0c0c; color: #f5d48a; border: 1px solid #f5d48a; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; vertical-align: 1px; }
+
+/* ---------- army builder (list view) ---------- */
+.ab { flex: 1; display: flex; flex-direction: column; min-height: 0; background: var(--page); position: relative; }
+.ab-top { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bar); color: var(--on-dark); }
+.ab-icon { width: 40px; height: 40px; border: none; border-radius: 8px; background: transparent; color: var(--on-dark); font-size: 28px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.ab-icon:hover { background: rgba(255, 255, 255, 0.06); }
+.ab-tabs { flex: 1; display: flex; justify-content: center; gap: 6px; }
+.ab-tabs button { border: none; background: transparent; color: var(--on-dark-muted); font: 500 15px var(--sans); padding: 10px 14px 8px; border-bottom: 3px solid transparent; cursor: pointer; }
+.ab-tabs button.on { color: var(--on-dark); border-bottom-color: var(--accent-hi); }
+.ab-body { flex: 1; overflow-y: auto; padding: 14px 12px 28px; display: flex; flex-direction: column; gap: 16px; }
+.ab-head { display: flex; align-items: center; gap: 12px; background: var(--card); color: var(--ink); border-radius: 8px; padding: 12px; }
+.ab-emblem { width: 56px; height: 56px; flex-shrink: 0; }
+.ab-title { width: 100%; border: none; background: transparent; padding: 0; font: 600 19px var(--serif); color: var(--ink); min-height: 0; }
+.ab-title:focus { outline: none; box-shadow: 0 1px 0 var(--accent-hi); }
+.ab-det-name { font-size: 13px; color: var(--ink); margin-top: 2px; }
+.ab-faction { font-size: 12px; color: var(--ink-muted); }
+.ab-total { font: 700 15px var(--sans); color: var(--p0); white-space: nowrap; align-self: flex-start; }
+.ab-total small { font-size: 12px; font-weight: 500; }
+.ab-total.over { color: var(--bad); }
+.linkish { border: none; background: none; padding: 0; color: var(--p0); font: inherit; text-decoration: underline; cursor: pointer; }
+.ab-errors { background: #fbe9e9; color: var(--bad); border-radius: 8px; padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 3px; border-left: 4px solid var(--bad); }
+.ab-section { display: flex; flex-direction: column; gap: 8px; }
+.ab-section-head { display: flex; align-items: center; justify-content: space-between; color: var(--on-dark); font: 600 17px var(--serif); padding: 0 2px; }
+.ab-add { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--on-dark-muted); background: transparent; color: var(--on-dark); font-size: 22px; line-height: 1; cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
+.ab-add:hover { border-color: var(--on-dark); }
+.ab-add.dark { border-color: var(--card3); color: var(--ink); background: #fff; }
+.ab-row { display: flex; align-items: stretch; background: var(--card); color: var(--ink); border-radius: 8px; overflow: hidden; min-height: 72px; }
+.ab-row-main { flex: 1; min-width: 0; display: flex; align-items: stretch; gap: 12px; border: none; background: transparent; padding: 0; text-align: left; color: inherit; cursor: pointer; font: inherit; }
+.ab-art { width: 104px; flex-shrink: 0; background: linear-gradient(135deg, #2b2b2b, #474747); display: grid; place-items: center; overflow: hidden; min-height: 72px; }
+.ab-art.k-ork, .ab-art.k-grot { background: linear-gradient(135deg, #22301a, #4a5a2c); }
+.ab-art.k-sm { background: linear-gradient(135deg, #14223d, #34507e); }
+.ab-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ab-art svg { width: 64px; height: 64px; }
+.tray .ab-art { width: 84px; min-height: 60px; border-radius: 6px; }
+.ab-row-text { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 8px 0; min-width: 0; }
+.ab-name { font: 600 15px var(--serif); line-height: 1.25; }
+.ab-count { font: 400 13px var(--sans); color: var(--ink-muted); }
+.ab-pts { color: var(--p0); font-weight: 600; font-size: 14px; }
+.ab-sub { font-size: 12px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ab-kebab { width: 42px; border: none; background: transparent; color: var(--ink-muted); font-size: 22px; cursor: pointer; flex-shrink: 0; }
+.ab-kebab:hover { color: var(--ink); background: var(--card2); }
+.ab-empty { color: var(--on-dark-muted); font-size: 13px; padding: 4px 2px; }
+.tray .ab-empty { color: var(--ink-muted); }
+.ab-pick { display: flex; flex-direction: column; gap: 8px; }
+.ab-pick .ab-row { background: #fff; box-shadow: inset 0 0 0 1px var(--card3); }
+.ab-pick .ab-add { align-self: center; margin: 0 10px; }
+.ab-det { border-radius: 8px; box-shadow: inset 0 0 0 1px var(--card3); padding: 4px 8px 8px; }
+.ab-det.on { box-shadow: inset 0 0 0 2px var(--accent); background: #fff; }
+.ab-det-head { display: flex; align-items: center; gap: 10px; width: 100%; border: none; background: none; padding: 6px 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.ab-det-head .grow { display: flex; flex-direction: column; min-width: 0; }
+.ab-det-head .ab-sub { white-space: normal; }
+.ab-check { width: 22px; height: 22px; border-radius: 5px; border: 2px solid var(--card3); display: grid; place-items: center; font-size: 14px; color: #fff; flex-shrink: 0; }
+.ab-det.on .ab-check { background: var(--accent); border-color: var(--accent); }
+.tray .seg { flex-wrap: wrap; }
+.ab-toast { top: auto; bottom: 18px; position: absolute; }

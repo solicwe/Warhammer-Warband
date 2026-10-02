@@ -2,7 +2,7 @@
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems } from './geometry';
-import { alive, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, onBoard, other, unitById } from './state';
+import { alive, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, unitById } from './state';
 import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { getAbility, hasAbility, isMelee } from './weapons';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
@@ -305,7 +305,11 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     if (hasAbility(p.profile, 'one-shot') && !A.oneShotUsed.includes(p.weapon)) A.oneShotUsed.push(p.weapon);
     if (kind === 'shoot' && !A.weaponsFired.includes(p.weapon)) A.weaponsFired.push(p.weapon);
   }
-  s.attack = { kind, attackerId, targetId, pools, idx: 0, stage: pools.length ? 'hit' : 'done', hazardousRolls: [], summary: [] };
+  const T = unitById(s, targetId);
+  s.attack = {
+    kind, attackerId, targetId, pools, idx: 0, stage: pools.length ? 'hit' : 'done', hazardousRolls: [], summary: [],
+    aliveBefore: alive(T).map((m) => m.id), woundsBefore: alive(T).reduce((a, m) => a + m.wounds, 0),
+  };
 }
 
 function evalHit(p: Pool, v: number): Die['o'] {
@@ -476,6 +480,8 @@ export function applyMortalWounds(s: GameState, u: UnitState, n: number, source:
     loseWounds(s, u, current, 1);
     if (current.dead) killed += 1;
   }
+  const hitAt = alive(u)[0] ?? u.models.find((m) => m.dead);
+  if (hitAt) pushFx(s, { kind: 'mortal', unitId: u.id, n, at: { x: hitAt.x, y: hitAt.y } });
   log(s, `⚡ ${u.name} โดน ${n} mortal wound (${source})${killed ? ` → ตาย ${killed}` : ''}`, 'roll', u.owner);
   return killed;
 }
@@ -564,6 +570,13 @@ export function finishAttack(s: GameState) {
     }
   }
   const killed = at.pools.reduce((a, p) => a + p.killed, 0);
+  if (at.aliveBefore) {
+    const dead = T.models.filter((m) => m.dead && at.aliveBefore!.includes(m.id));
+    const dmg = Math.max(0, (at.woundsBefore ?? 0) - alive(T).reduce((a, m) => a + m.wounds, 0));
+    const c = (ms: { x: number; y: number }[]) => ({ x: ms.reduce((a, m) => a + m.x, 0) / Math.max(1, ms.length), y: ms.reduce((a, m) => a + m.y, 0) / Math.max(1, ms.length) });
+    const tm = alive(T).length ? alive(T) : dead;
+    pushFx(s, { kind: 'attack', attackKind: at.kind, attackerId: A.id, targetId: T.id, owner: A.owner, from: c(alive(A).length ? alive(A) : A.models), to: c(tm), dmg, killed: dead.length, dead: dead.map((m) => ({ x: m.x, y: m.y })) });
+  }
   const verb = at.kind === 'fight' ? 'ตี' : at.kind === 'overwatch' ? 'Overwatch ยิง' : 'ยิง';
   log(s, `${A.name} ${verb} ${T.name}: ตาย ${killed} โมเดล`, 'info', A.owner);
   if (at.kind !== 'fight') A.shotTurn = s.turn;
