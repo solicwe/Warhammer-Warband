@@ -539,4 +539,5 @@ Battle Round (×5)
 ## 17. ⚠️ สิ่งที่ต้องตรวจซ้ำก่อนล็อกโค้ด
 1. **Cap ของ hit/wound roll modifier** (±1?) และลำดับการรวมกับ BS modifier → ต้องดูหัวข้อ 02.02.01 ใน PDF ทางการ
 2. ข้อความเต็มของ Primary Missions กลุ่ม Disruption / Recon / Priority Assets (ใช้ operation marker และ action เฉพาะ) → ทำทีหลัง MVP
-3. Errata และ FAQ จะออกเป็นระยะ ให้ data pipeline ดึงจาก `Last_update.csv` ของ Wahapedia ทุกครั้งที่ build
+3. Primary ที่เขียนว่า "End of your Command phase (or the end of your turn in the fifth battle round)" — engine ตีความว่ารอบ 5 นับตอนจบเทิร์นแทน Command phase (แก้ได้ใน `data/missions.json` ช่อง `round5When`)
+4. Errata และ FAQ จะออกเป็นระยะ ให้ data pipeline ดึงจาก `Last_update.csv` ของ Wahapedia ทุกครั้งที่ build

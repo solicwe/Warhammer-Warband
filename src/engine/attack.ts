@@ -1,7 +1,7 @@
 // Making Attacks (04) + Attack Sequence (05), resolved stage by stage so the UI can show every roll.
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
-import { baseDist, clamp } from './geometry';
+import { baseDist, clamp, coherencyProblems } from './geometry';
 import { alive, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, onBoard, other, unitById } from './state';
 import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { getAbility, hasAbility, isMelee } from './weapons';
@@ -380,9 +380,26 @@ export function allocationGroups(T: UnitState): Group[] {
   return groups.sort((x, y) => rank(x) - rank(y) || x.models[0].profile.W - y.models[0].profile.W || y.models[0].profile.Sv - x.models[0].profile.Sv);
 }
 
-function pickModel(g: Group): ModelState | undefined {
-  const a = g.models.filter((m) => !m.dead);
-  return a.find((m) => m.wounds < m.profile.W) ?? a[0];
+/** Choose which model takes the next attack: a wounded one if any (05.04), otherwise one whose removal keeps the unit coherent. */
+export function pickCasualty(u: UnitState, candidates: ModelState[]): ModelState | undefined {
+  const a = candidates.filter((m) => !m.dead);
+  const wounded = a.find((m) => m.wounds < m.profile.W);
+  if (wounded || a.length <= 1) return wounded ?? a[0];
+  const all = alive(u);
+  const c = { x: all.reduce((x, m) => x + m.x, 0) / all.length, y: all.reduce((y, m) => y + m.y, 0) / all.length };
+  let best = a[0];
+  let bestScore = -Infinity;
+  for (const m of a) {
+    const rest = all.filter((x) => x !== m);
+    const broken = coherencyProblems(rest, RULES.coherency.near, RULES.coherency.max, rest.map((x) => x.r)).length;
+    const score = -broken * 1000 + Math.hypot(m.x - c.x, m.y - c.y);
+    if (score > bestScore) { bestScore = score; best = m; }
+  }
+  return best;
+}
+
+function pickModel(g: Group, u: UnitState): ModelState | undefined {
+  return pickCasualty(u, g.models);
 }
 
 export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: string) {
@@ -430,7 +447,7 @@ export function applyMortalWounds(s: GameState, u: UnitState, n: number, source:
       if (maxModels !== undefined && modelsHit >= maxModels) break;
       const nonChar = a.filter((m) => !m.isCharacter);
       const pool = preferChar && a.some((m) => m.isCharacter) ? a.filter((m) => m.isCharacter) : nonChar.length ? nonChar : a;
-      current = pool.find((m) => m.wounds < m.profile.W) ?? pool[0];
+      current = pickCasualty(u, pool)!;
       modelsHit += 1;
     }
     loseWounds(s, u, current, 1);
@@ -465,7 +482,7 @@ export function applyDamage(s: GameState) {
   for (const { d, i } of order) {
     const g = precisionGroup && precisionGroup.models.some((m) => !m.dead) ? precisionGroup : groups.find((x) => x.models.some((m) => !m.dead));
     if (!g) { d.o = 'saved'; p.saveTargets[i] = '—'; continue; }
-    const m = pickModel(g)!;
+    const m = pickModel(g, T)!;
     const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0);
     const inv = m.profile.InSv;
     let ok = false;

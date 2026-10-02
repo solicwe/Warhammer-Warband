@@ -195,7 +195,7 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     for (const e of eng) if (!targets.includes(e)) errors.push(`ห้าม engaged กับหน่วยที่ไม่ใช่เป้า (${e.name})`);
     for (const m of alive(u)) {
       const path = paths.get(m.id);
-      if (!path || path.length < 2) continue;
+      if (!path || path.length < 2 || pathLength(path) < 0.01) continue;
       const before = Math.min(...targets.flatMap((t) => alive(t).map((n) => baseDist(m, n))));
       const after = Math.min(...targets.flatMap((t) => alive(t).map((n) => dist(path[path.length - 1], n) - m.r - n.r)));
       if (after > before + 1e-6) { errors.push(`${m.name} ต้องจบใกล้เป้ามากขึ้น`); bad.add(m.id); }
@@ -205,7 +205,7 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     const engagedBefore = engagedEnemies(s, u);
     for (const m of alive(u)) {
       const path = paths.get(m.id);
-      if (!path || path.length < 2) continue;
+      if (!path || path.length < 2 || pathLength(path) < 0.01) continue;
       if (enemyModels.some((e) => baseDist(m, e) <= 0.05)) { errors.push(`${m.name} ติดฐานศัตรูอยู่ ขยับไม่ได้`); bad.add(m.id); }
       for (const e of engagedBefore) if (modelEngagedWith(m, e)) {
         const p = path[path.length - 1];
@@ -244,18 +244,19 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
 export function formationAt(u: UnitState, c: Pt, facingUp = true): Map<string, Pt> {
   const ms = alive(u);
   const maxR = Math.max(...ms.map((m) => m.r));
-  const step = maxR * 2 + 0.5;
-  const perRow = Math.max(1, Math.min(5, Math.ceil(Math.sqrt(ms.length * 1.6))));
+  const step = maxR * 2 + (ms.length > 12 ? 0.3 : 0.6);
+  const perRow = Math.max(1, Math.ceil(Math.sqrt(ms.length)));
   const rows = Math.ceil(ms.length / perRow);
-  const out = new Map<string, Pt>();
-  ms.forEach((m, i) => {
+  const slots: Pt[] = ms.map((_, i) => {
     const row = Math.floor(i / perRow), col = i % perRow;
     const inRow = Math.min(perRow, ms.length - row * perRow);
-    out.set(m.id, {
-      x: c.x + (col - (inRow - 1) / 2) * step,
-      y: c.y + (row - (rows - 1) / 2) * step * (facingUp ? 1 : -1),
-    });
+    return { x: c.x + (col - (inRow - 1) / 2) * step, y: c.y + (row - (rows - 1) / 2) * step * (facingUp ? 1 : -1) };
   });
+  // characters and big models take the central slots so casualties don't strand them
+  const slotOrder = slots.map((p, i) => i).sort((a, b) => dist(slots[a], c) - dist(slots[b], c));
+  const modelOrder = [...ms].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter) || b.profile.W - a.profile.W);
+  const out = new Map<string, Pt>();
+  modelOrder.forEach((m, i) => out.set(m.id, slots[slotOrder[i]]));
   return out;
 }
 
@@ -387,7 +388,8 @@ function endTurn(s: GameState) {
     let probs = coherencyProblems(models, RULES.coherency.near, RULES.coherency.max, models.map((m) => m.r));
     while (probs.length && models.length > 1) {
       const c = polyCentroid(models);
-      const worst = probs.map((i) => models[i]).sort((a, b) => dist(b, c) - dist(a, c))[0];
+      // controlling player's choice: drop ordinary, low-wound models first, furthest from the group
+      const worst = probs.map((i) => models[i]).sort((a, b) => Number(a.isCharacter) - Number(b.isCharacter) || a.profile.W - b.profile.W || dist(b, c) - dist(a, c))[0];
       killModel(s, u, worst);
       log(s, `${u.name}: ${worst.name} ถูกนำออกเพราะหลุด coherency`, 'info', u.owner);
       models = alive(u);
@@ -526,53 +528,76 @@ export function crushingImpact(s: GameState, u: UnitState, targetId: string) {
   return rolls;
 }
 
-/** Auto-place models towards target units (used for charge / pile-in / consolidation helpers). */
-export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], maxDist: number, opts: { contact?: boolean; objective?: Pt } = {}): Map<string, Pt[]> {
-  const paths = new Map<string, Pt[]>();
-  const placed: { x: number; y: number; r: number }[] = s.units
-    .filter((x) => x.id !== u.id && onBoard(x))
-    .flatMap((x) => alive(x).map((m) => ({ x: m.x, y: m.y, r: m.r })));
+/** Auto-place models towards target units (charge / pile-in / consolidation helper).
+ *  1) shift the whole unit as a block (keeps coherency), 2) pull individual models into base contact if the unit stays coherent. */
+export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], maxDist: number, opts: { objective?: Pt } = {}): Map<string, Pt[]> {
+  const ms = alive(u);
+  const others = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap((x) => alive(x).map((m) => ({ x: m.x, y: m.y, r: m.r })));
   const enemyModels = targets.flatMap(alive);
-  const order = [...alive(u)].sort((a, b) => {
-    const da = Math.min(...enemyModels.map((e) => baseDist(a, e)), opts.objective ? dist(a, opts.objective) : Infinity);
-    const db = Math.min(...enemyModels.map((e) => baseDist(b, e)), opts.objective ? dist(b, opts.objective) : Infinity);
-    return da - db;
-  });
-  const free = (p: Pt, r: number) => p.x - r >= 0 && p.y - r >= 0 && p.x + r <= W && p.y + r <= H && placed.every((o) => dist(p, o) >= o.r + r - 0.01)
-    && s.terrain.every((t) => t.walls.every((w) => pointSegDist(p, w) >= r * 0.6));
-  for (const m of order) {
-    if (enemyModels.some((e) => baseDist(m, e) <= 0.05)) { placed.push({ x: m.x, y: m.y, r: m.r }); continue; }
-    let best: Pt | null = null;
-    let bestScore = Infinity;
-    const cands: Pt[] = [];
-    if (opts.objective) {
-      const d = dist(m, opts.objective);
-      const k = Math.min(1, maxDist / Math.max(d, 1e-6));
-      cands.push({ x: m.x + (opts.objective.x - m.x) * k, y: m.y + (opts.objective.y - m.y) * k });
+  const avoid = boardUnits(s, other(u.owner)).filter((e) => !targets.includes(e) && !hasKw(e, 'AIRCRAFT')).flatMap(alive);
+  const clearOfOthers = (p: Pt, r: number) => avoid.every((e) => dist(p, e) - e.r - r > RULES.engagementRange + 0.05);
+  const pos = new Map<string, Pt>(ms.map((m) => [m.id, { x: m.x, y: m.y }]));
+  const free = (id: string, p: Pt, r: number) => p.x - r >= 0 && p.y - r >= 0 && p.x + r <= W && p.y + r <= H
+    && others.every((o) => dist(p, o) >= o.r + r - 0.01)
+    && ms.every((m) => m.id === id || dist(p, pos.get(m.id)!) >= m.r + r - 0.01)
+    && s.terrain.every((t) => t.walls.every((w) => pointSegDist(p, w) >= r * 0.6)) && clearOfOthers(p, r);
+  const coherent = () => coherencyProblems(ms.map((m) => pos.get(m.id)!), RULES.coherency.near, RULES.coherency.max, ms.map((m) => m.r)).length === 0;
+  const gapTo = (m: ModelState, p: Pt) => Math.min(...enemyModels.map((e) => dist(p, e) - e.r - m.r));
+  const inContact = (m: ModelState) => enemyModels.some((e) => baseDist(m, e) <= 0.05);
+
+  // 1) block shift
+  let dir: Pt | null = null;
+  let need = maxDist;
+  if (enemyModels.length) {
+    let best = { m: ms[0], e: enemyModels[0], d: Infinity };
+    for (const m of ms) for (const e of enemyModels) { const d = baseDist(m, e); if (d < best.d) best = { m, e, d }; }
+    const L = dist(best.m, best.e);
+    dir = { x: (best.e.x - best.m.x) / L, y: (best.e.y - best.m.y) / L };
+    need = Math.min(maxDist, Math.max(0, best.d - 0.02));
+  } else if (opts.objective) {
+    const c = polyCentroid(ms);
+    const L = dist(c, opts.objective);
+    if (L > 0.01) { dir = { x: (opts.objective.x - c.x) / L, y: (opts.objective.y - c.y) / L }; need = Math.min(maxDist, L); }
+  }
+  if (dir && !ms.some(inContact)) {
+    for (let k = need; k > 0.05; k -= 0.25) {
+      const trial = new Map(ms.map((m) => [m.id, { x: m.x + dir!.x * k, y: m.y + dir!.y * k }]));
+      const ok = ms.every((m) => {
+        const p = trial.get(m.id)!;
+        return p.x - m.r >= 0 && p.y - m.r >= 0 && p.x + m.r <= W && p.y + m.r <= H && others.every((o) => dist(p, o) >= o.r + m.r - 0.01)
+          && s.terrain.every((t) => t.walls.every((w) => pointSegDist(p, w) >= m.r * 0.6)) && clearOfOthers(p, m.r);
+      });
+      if (ok) { for (const [id, p] of trial) pos.set(id, p); break; }
     }
-    for (const e of enemyModels) {
-      for (let a = 0; a < 24; a++) {
-        const ang = Math.atan2(m.y - e.y, m.x - e.x) + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 12);
-        cands.push({ x: e.x + Math.cos(ang) * (e.r + m.r + 0.02), y: e.y + Math.sin(ang) * (e.r + m.r + 0.02) });
+  }
+  // 2) individual refinement into contact
+  if (enemyModels.length) {
+    const order = [...ms].sort((a, b) => gapTo(a, pos.get(a.id)!) - gapTo(b, pos.get(b.id)!));
+    for (const m of order) {
+      const cur = pos.get(m.id)!;
+      if (gapTo(m, cur) <= 0.05) continue;
+      const budget = maxDist - dist(m, cur);
+      if (budget <= 0.05) continue;
+      let best: Pt | null = null;
+      let bestScore = Infinity;
+      for (const e of enemyModels) {
+        for (let a = 0; a < 24; a++) {
+          const ang = Math.atan2(cur.y - e.y, cur.x - e.x) + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 12);
+          const c = { x: e.x + Math.cos(ang) * (e.r + m.r + 0.02), y: e.y + Math.sin(ang) * (e.r + m.r + 0.02) };
+          const travel = dist(m, c);
+          if (travel > maxDist + 1e-6 || !free(m.id, c, m.r)) continue;
+          if (travel < bestScore) { bestScore = travel; best = c; }
+        }
       }
-      // straight approach, stopping short
-      const d = baseDist(m, e);
-      const k = Math.min(1, maxDist / Math.max(d, 1e-6));
-      const dx = e.x - m.x, dy = e.y - m.y, L = Math.hypot(dx, dy);
-      cands.push({ x: m.x + (dx / L) * Math.min(maxDist, Math.max(0, d)), y: m.y + (dy / L) * Math.min(maxDist, Math.max(0, d)) });
-      void k;
+      if (!best) continue;
+      pos.set(m.id, best);
+      if (!coherent()) pos.set(m.id, cur);
     }
-    for (const c of cands) {
-      const travel = dist(m, c);
-      if (travel > maxDist + 1e-6 || !free(c, m.r)) continue;
-      const toEnemy = Math.min(...enemyModels.map((e) => dist(c, e) - e.r - m.r));
-      const score = (opts.objective && !enemyModels.length ? dist(c, opts.objective) : toEnemy) * 10 + travel * 0.1;
-      if (score < bestScore) { bestScore = score; best = c; }
-    }
-    if (best) {
-      paths.set(m.id, [{ x: m.x, y: m.y }, best]);
-      placed.push({ ...best, r: m.r });
-    } else placed.push({ x: m.x, y: m.y, r: m.r });
+  }
+  const paths = new Map<string, Pt[]>();
+  for (const m of ms) {
+    const p = pos.get(m.id)!;
+    if (dist(p, m) > 0.01) paths.set(m.id, [{ x: m.x, y: m.y }, p]);
   }
   return paths;
 }
@@ -797,3 +822,21 @@ export function scoreTiming(s: GameState, timing: 'endOfYourCommandPhase' | 'end
 }
 
 export const terrainOfObjective = objectiveTerrain;
+
+/** Find a legal spot for a whole unit (used by "auto place" during deployment / ingress). */
+export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate', near?: Pt): Map<string, Pt> | null {
+  const zone = how === 'deploy' ? zoneOf(s, u.owner) : null;
+  const cands: Pt[] = [];
+  for (let y = 1; y < H; y += 1.5) for (let x = 1; x < W; x += 1.5) cands.push({ x, y });
+  const enemyZone = zoneOf(s, other(u.owner));
+  const ec = polyCentroid(enemyZone);
+  const ref = near ?? (zone ? ec : polyCentroid(zoneOf(s, u.owner)));
+  cands.sort((a, b) => dist(a, ref) - dist(b, ref));
+  const up = s.players[u.owner].role === 'defender';
+  for (const c of cands) {
+    if (zone && !circleTouchesPoly(c, 0, zone)) continue;
+    const pos = formationAt(u, c, up);
+    if (validatePlacement(s, u, pos, how).ok) return pos;
+  }
+  return null;
+}

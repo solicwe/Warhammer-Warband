@@ -66,7 +66,7 @@ export function unitVisibleTo(s: GameState, observer: ModelState, u: UnitState):
 
 /** Benefit of cover (13.08) against attacks from one attacking model. */
 export function hasCover(s: GameState, attacker: ModelState, target: UnitState): boolean {
-  if (target.core.stealth) return true;
+  if (target.core.stealth || target.buffs.some((b) => b.kind === 'smoke')) return true;
   return alive(target).every((m) => {
     const inArea = ['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) && s.terrain.some((t) => circleTouchesPoly(m, m.r, t.poly));
     return inArea || !fullyVisible(s, attacker, m);
