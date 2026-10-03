@@ -1,8 +1,10 @@
 // Big centre-screen dice for rolls that matter (roll-offs, advance, charge, battle-shock).
 import { useEffect, useRef, useState } from 'react';
 import type { FxEvent, GameState } from '../engine/types';
+import { secondaryById } from '../engine/config';
+import { Icon } from './Icon';
 
-type RollFx = Extract<FxEvent, { kind: 'roll' | 'rolloff' }>;
+type RollFx = Extract<FxEvent, { kind: 'roll' | 'rolloff' | 'cards' }>;
 
 const PIPS: Record<number, [number, number][]> = {
   1: [[50, 50]],
@@ -23,7 +25,7 @@ export function Die({ v, color, size = 76 }: { v: number; color?: string; size?:
 }
 
 const TUMBLE_MS = 650;
-const SHOW_MS = { roll: 1900, rolloff: 3200 };
+const SHOW_MS = { roll: 1900, rolloff: 3200, cards: 4600 };
 const COLORS = ['var(--p0)', 'var(--p1)'];
 
 /** Tumbling dice that settle on the real values. */
@@ -51,10 +53,10 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
 
   useEffect(() => {
     if ((s.fxSeq ?? 0) < seen.current) { seen.current = s.fxSeq ?? 0; setQueue([]); return; } // undo
-    const add = (s.fx ?? []).filter((e): e is RollFx => e.seq > seen.current && (e.kind === 'roll' || e.kind === 'rolloff'));
+    const add = (s.fx ?? []).filter((e): e is RollFx => e.seq > seen.current && (e.kind === 'roll' || e.kind === 'rolloff' || e.kind === 'cards'));
     seen.current = s.fxSeq ?? 0;
     // when only bots play, skip the minor rolls so the overlay does not hide the game
-    const shown = quick ? add.filter((e) => e.kind === 'rolloff' || e.title.startsWith('Charge')) : add;
+    const shown = quick ? add.filter((e) => e.kind === 'rolloff' || e.kind === 'cards' || e.title.startsWith('Charge')) : add;
     if (shown.length) setQueue((q) => [...q, ...shown].slice(-4));
   }, [s.fx, s.fxSeq]);
 
@@ -84,6 +86,19 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
     setHold(0);
     setQueue((q) => q.slice(1));
   };
+  if (cur.kind === 'cards') {
+    return (
+      <div className="ro-backdrop" onClick={skip} role="dialog" aria-label="จั่วการ์ด Secondary">
+        <div className="ro-card sec-draw">
+          <div className="ro-title" style={{ color: COLORS[cur.owner] }}>{s.players[cur.owner].name} จั่ว Secondary</div>
+          <div className="sec-hand">
+            {cur.ids.map((id, i) => <SecondaryCard key={id} id={id} faceUp={landed} delay={i * 260} owner={cur.owner} />)}
+          </div>
+          <div className="ro-hint">{landed ? 'แตะเพื่อปิด · ดูการ์ดได้ตลอดที่ปุ่ม การ์ด ด้านบน' : 'แตะเพื่อเปิดการ์ดทันที'}</div>
+        </div>
+      </div>
+    );
+  }
   if (cur.kind === 'rolloff') {
     return (
       <div className="ro-backdrop" onClick={skip} role="dialog" aria-label={cur.title}>
@@ -113,6 +128,22 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
           {cur.dice.length > 1 && <span className="ro-sum">{cur.dice.join(' + ')} = {cur.dice.reduce((a, b) => a + b, 0)} · </span>}{cur.result}
         </div>
         <div className="ro-hint">{landed ? 'แตะเพื่อปิด' : 'แตะเพื่อดูผลทันที'}</div>
+      </div>
+    </div>
+  );
+}
+
+/** A secondary mission card: face down it shows the back, face up its name, when it scores and how. */
+export function SecondaryCard({ id, faceUp = true, delay = 0, owner, progress }: { id: string; faceUp?: boolean; delay?: number; owner?: 0 | 1; progress?: string }) {
+  const def = secondaryById(id);
+  return (
+    <div className={`sec-card ${faceUp ? 'up' : ''} ${owner === 1 ? 'p1' : 'p0'}`} style={{ transitionDelay: `${delay}ms` }}>
+      <div className="sec-face sec-back"><Icon name="objective" size={42} /><span>SECONDARY</span></div>
+      <div className="sec-face sec-front">
+        <div className="sec-name">{def.name}</div>
+        <div className="sec-when"><Icon name="wait" size={13} /> {def.when}</div>
+        <div className="sec-text">{def.text}</div>
+        {progress && <div className="sec-progress">{progress}</div>}
       </div>
     </div>
   );

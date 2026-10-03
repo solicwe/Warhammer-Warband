@@ -23,7 +23,8 @@ import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
-import { RollOverlay } from './RollOverlay';
+import { RollOverlay, SecondaryCard } from './RollOverlay';
+import { secondaryGoal, secondaryPreview } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem } from '../engine/stratagems';
 import { endUnitShooting, rangedWeaponNames, rerollAttackCount, toggleRerollPick } from '../engine/attack';
 import { polyCentroid } from '../engine/geometry';
@@ -77,6 +78,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const bot: PlayerId | null = actingBot ?? (bots.length === 1 ? bots[0] : null);
   const [speed, setSpeed] = useState<0 | 1 | 2>(1); // bot-vs-bot: pause / normal / fast
   const [showMenu, setShowMenu] = useState(false);
+  const [showCards, setShowCards] = useState(false);
+  const [showGoals, setShowGoals] = useState(true);
   const [showMissions, setShowMissions] = useState(false);
 
   // engine errors become a message instead of a crash
@@ -289,6 +292,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   // Cover / Hidden badges and line-of-sight lines while choosing a shooting target
   const badges: Record<string, string[]> = {};
+  // the cards of the player at the screen: what they want is drawn on the board, target units get a tag
+  const me: PlayerId = human ?? actor;
+  const goals = showGoals && s.phase !== 'deploy' ? s.players[me].secActive.map((id) => secondaryGoal(s, me, id)) : [];
+  for (const g of goals) for (const id of g.units) (badges[id] ??= []).push(`เป้า: ${g.name}`);
   const losLines: { a: Pt; b: Pt; cover: boolean }[] = [];
   const noLos: string[] = [];
   if (mode?.k === 'shoot' && modeUnit) {
@@ -1356,13 +1363,18 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <div className="topbar">
         <button className="btn small ghost" onClick={() => setShowMenu(true)} aria-label="เมนู"><Icon name="menu" size={24} /></button>
         <div className="grow">
-          <div className="phase">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : `Battle Round ${s.round}`}</div>
+          <div className="phase">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : `รอบ ${s.round}/5`}</div>
           <div className="tiny muted">{s.phase === 'deploy' || s.phase === 'scouts' ? layoutName : `เทิร์น ${pName(s, s.active)}`}</div>
         </div>
         <button className="score" onClick={() => setShowMissions(true)}>
           <span className="p0">{s.players[0].vp + s.players[0].secVp}<small> VP</small> {s.players[0].cp}<small> CP</small></span>
           <span className="p1">{s.players[1].vp + s.players[1].secVp}<small> VP</small> {s.players[1].cp}<small> CP</small></span>
         </button>
+        {(s.players[0].secMode !== 'none' || s.players[1].secMode !== 'none') && (
+          <button className="btn small cards-btn" onClick={() => setShowCards(true)} aria-label="การ์ด Secondary">
+            <Icon name="objective" size={18} />การ์ด<span className="cards-n">{s.players[me].secActive.length}</span>
+          </button>
+        )}
         <button className="btn small" onClick={() => openStrats()}>Strat</button>
       </div>
       {['command', 'movement', 'shooting', 'charge', 'fight'].includes(s.phase) && (
@@ -1386,6 +1398,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           picked={picked}
           rings={rings}
           badges={badges}
+          goals={goals}
           losLines={losLines}
           noLos={noLos}
           onTapUnit={onTapUnit}
@@ -1447,6 +1460,44 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       )}
 
       {showMissions && missionsSheet()}
+      {showCards && (
+        <div className="tray-backdrop" onClick={() => setShowCards(false)}>
+          <div className="tray" onClick={(e) => e.stopPropagation()}>
+            <div className="row">
+              <div className="sheet-title grow">การ์ด Secondary</div>
+              <button className={`btn small ${showGoals ? 'on' : ''}`} onClick={() => setShowGoals((x) => !x)}><Icon name="objective" size={16} /> {showGoals ? 'โชว์บนแผนที่' : 'ซ่อนบนแผนที่'}</button>
+              <button className="btn small ghost" onClick={() => setShowCards(false)}>ปิด</button>
+            </div>
+            {([me, other(me)] as PlayerId[]).map((p) => {
+              const P = s.players[p];
+              if (P.secMode === 'none') return null;
+              return (
+                <div key={p} className="field">
+                  <span><b className={p ? 'p1' : 'p0'}>{P.name}</b> · {P.secMode === 'tactical' ? `Tactical · เหลือในกอง ${P.secDeck.length} ใบ` : 'Fixed'} · ได้ {P.secVp} VP</span>
+                  {P.secActive.length === 0 && <div className="small muted">{P.secMode === 'tactical' ? 'ยังไม่มีการ์ด — จะจั่วให้ครบ 2 ใบตอนต้น Command phase ของ ' + P.name : 'ยังไม่ได้เลือก'}</div>}
+                  <div className="sec-list">
+                    {P.secActive.map((id) => {
+                      const vp = secondaryPreview(s, p, id);
+                      const goal = secondaryGoal(s, p, id);
+                      return (
+                        <div key={id} className="sec-slot">
+                          <SecondaryCard id={id} owner={p} progress={vp ? `ถ้าจบเทิร์นตอนนี้: +${vp} VP` : `ทำ: ${goal.todo}`} />
+                          {P.secMode === 'tactical' && !bots.includes(p) && (
+                            <div className="row" style={{ justifyContent: 'center' }}>
+                              <button className="btn small ghost" onClick={() => act((g) => discardSecondary(g, p, id))}>ทิ้ง{s.active === p ? ' (+1CP)' : ''}</button>
+                              {!P.secSwapUsed && s.active === p && s.phase === 'command' && P.cp >= 1 && <button className="btn small ghost" onClick={() => act((g) => swapSecondary(g, p, id))}>เปลี่ยน 1CP</button>}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {showMenu && (
         <div className="tray-backdrop" onClick={() => setShowMenu(false)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>

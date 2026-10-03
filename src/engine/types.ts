@@ -450,7 +450,9 @@ export type FxEvent =
   /** a roll worth showing big on screen (advance, charge, battle-shock) */
   | { seq: number; kind: 'roll'; owner: PlayerId | null; title: string; dice: number[]; result: string; good?: boolean }
   /** roll-off between the players */
-  | { seq: number; kind: 'rolloff'; title: string; a: number; b: number; winner: PlayerId; result: string };
+  | { seq: number; kind: 'rolloff'; title: string; a: number; b: number; winner: PlayerId; result: string }
+  /** tactical secondary cards just drawn (shown face up, one after the other) */
+  | { seq: number; kind: 'cards'; owner: PlayerId; ids: string[] };
 
 export type Window =
   | { kind: 'fireOverwatch'; player: PlayerId }

@@ -7,6 +7,7 @@ import { levelOfControl } from '../engine/game';
 import { modelToken } from './Tokens';
 import { getPortrait, usePortraitsVersion } from './portraits';
 import { SvgIcon } from './Icon';
+import type { SecondaryGoal } from '../engine/secondaries';
 import type { FxEvent, GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export type Paths = Map<string, Pt[]>;
@@ -31,6 +32,8 @@ export interface BoardProps {
   losLines?: { a: Pt; b: Pt; cover: boolean }[];
   onTapUnit?: (unitId: string, modelId: string) => void;
   measure?: { a?: Pt; b?: Pt; label?: string; los?: boolean };
+  /** what the viewer's secondary mission cards want on the table (drawn in gold) */
+  goals?: SecondaryGoal[];
   /** shooting: models of the firing unit that cannot see the chosen target (they don't shoot it) */
   noLos?: string[];
   onTapBoard?: (p: Pt) => void;
@@ -45,7 +48,7 @@ const COLORS = ['#3a9ad9', '#e0453f'];
 const SOFT = ['rgba(58,154,217,0.16)', 'rgba(224,69,63,0.16)'];
 const TERRAIN_FILL: Record<string, string> = { dense: 'rgba(120,98,72,0.55)', light: 'rgba(150,140,80,0.45)', exposed: 'rgba(90,85,78,0.45)' };
 
-const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1900, mortal: 1200, roll: 0, rolloff: 0 }; // rolls are shown by the screen, not the board
+const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1900, mortal: 1200, roll: 0, rolloff: 0, cards: 0 }; // rolls are shown by the screen, not the board
 interface ActiveFx { e: FxEvent; t0: number }
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
@@ -92,7 +95,7 @@ function BoardImpl(props: BoardProps) {
     if (!fresh.length) return;
     seen.current = Math.max(...fresh.map((e) => e.seq));
     const t0 = performance.now();
-    const keep = fresh.filter((e) => e.kind !== 'roll' && e.kind !== 'rolloff' && (e.kind !== 'move' || props.animateMoves?.includes(e.owner)));
+    const keep = fresh.filter((e) => e.kind !== 'roll' && e.kind !== 'rolloff' && e.kind !== 'cards' && (e.kind !== 'move' || props.animateMoves?.includes(e.owner)));
     // stagger events from the same step a little so they read in order
     setFx((cur) => [...cur.filter((a) => t0 - a.t0 < FX_MS[a.e.kind]), ...keep.map((e, i) => ({ e, t0: t0 + i * 180 }))]);
   }, [s.fx, s.fxSeq, props.animateMoves]);
@@ -423,6 +426,25 @@ function BoardImpl(props: BoardProps) {
           </g>
         );
       })}
+      {props.goals?.map((g) => (
+        <g key={'goal-' + g.id} pointerEvents="none" className="goal">
+          {g.areas.map((a, i) => <polygon key={i} points={a.map((p) => `${p.x},${p.y}`).join(' ')} fill="rgba(245,212,138,0.10)" stroke="#f5d48a" strokeWidth={0.18} strokeDasharray="0.9 0.5" />)}
+          {g.circles.map((c, i) => <circle key={i} cx={c.x} cy={c.y} r={c.r} fill="none" stroke="#f5d48a" strokeWidth={0.16} strokeDasharray="0.7 0.4" />)}
+          {g.objectives.map((oid) => {
+            const o = s.objectives.find((x) => x.id === oid);
+            if (!o) return null;
+            return (
+              <g key={oid}>
+                <circle cx={o.x} cy={o.y} r={3.2} fill="none" stroke="#f5d48a" strokeWidth={0.22} className="goal-ring" />
+                <g transform={`translate(${o.x} ${o.y + 4.1})`}>
+                  <rect x={-3.6} y={-0.48} width={7.2} height={0.95} rx={0.45} fill="rgba(60,40,0,0.9)" stroke="#f5d48a" strokeWidth={0.06} />
+                  <text y={0.2} fontSize={0.55} textAnchor="middle" fill="#f5d48a" fontWeight={800}>{g.name.length > 24 ? g.name.slice(0, 23) + '…' : g.name}</text>
+                </g>
+              </g>
+            );
+          })}
+        </g>
+      ))}
       {s.objectives.map((o, i) => {
         const t = s.terrain.find((x) => x.id === o.terrainId)!;
         const [a, b] = levelOfControl(s, o);

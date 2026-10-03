@@ -2,7 +2,7 @@
 import { MISSIONS, RULES, secondaryById, toPoly, deploymentById, type SecondaryRule } from './config';
 import { circleTouchesPoly, circleWhollyInPoly, dist, pointInPoly } from './geometry';
 import { territoryPoly, unitInRange, zonePoly } from './missions';
-import { alive, boardUnits, hasKw, log, onBoard, other, unitById } from './state';
+import { pushFx, alive, boardUnits, hasKw, log, onBoard, other, unitById } from './state';
 import type { GameState, PlayerId, UnitState } from './types';
 
 const W = RULES.battlefield.width;
@@ -199,6 +199,7 @@ export function drawUpTo(s: GameState, p: PlayerId, n = 2) {
   const P = s.players[p];
   if (P.secMode !== 'tactical') return;
   let guard = 0;
+  const drawn: string[] = [];
   while (P.secActive.length < n && P.secDeck.length && guard++ < 40) {
     const id = P.secDeck.shift()!;
     if (!onDrawn(s, p, id)) {
@@ -208,9 +209,63 @@ export function drawUpTo(s: GameState, p: PlayerId, n = 2) {
       continue;
     }
     P.secActive.push(id);
+    drawn.push(id);
     log(s, `${P.name} จั่ว Secondary: ${secondaryById(id).name}`, 'info', p);
   }
+  if (drawn.length) pushFx(s, { kind: 'cards', owner: p, ids: drawn });
   if (P.secActive.includes('burden-of-trust')) assignGuards(s, p);
+}
+
+/** VP the card would give if the turn ended now (its scoring checked against the board as it stands). */
+export function secondaryPreview(s: GameState, p: PlayerId, id: string): number {
+  const P = s.players[p];
+  let total = 0;
+  for (const r of secondaryById(id).auto) {
+    if (r.mode !== 'both' && r.mode !== P.secMode) continue;
+    if (s.round < r.fromRound) continue;
+    total += ruleVP(s, p, r);
+  }
+  return total;
+}
+
+/** What a card wants on the table, for the board to show: objectives, units, areas and a short "what to do". */
+export interface SecondaryGoal {
+  id: string;
+  name: string;
+  todo: string;
+  objectives: string[];
+  units: string[];
+  areas: { x: number; y: number }[][];
+  circles: { x: number; y: number; r: number }[];
+}
+
+export function secondaryGoal(s: GameState, p: PlayerId, id: string): SecondaryGoal {
+  const def = secondaryById(id);
+  const e = other(p);
+  const S = s.players[p].sec;
+  const g: SecondaryGoal = { id, name: def.name, todo: def.text, objectives: [], units: [], areas: [], circles: [] };
+  const nml = s.objectives.filter((o) => objInNML(s, o));
+  const foes = boardUnits(s, e);
+  switch (id) {
+    case 'no-prisoners': g.todo = 'ทำลายหน่วยศัตรู'; g.units = foes.map((u) => u.id); break;
+    case 'overwhelming-force': g.todo = 'ทำลายหน่วยศัตรูที่ยืนบน objective'; g.units = foes.filter((u) => s.objectives.some((o) => unitInRange(s, u, o))).map((u) => u.id); break;
+    case 'plunder': case 'cleanse': g.todo = id === 'plunder' ? 'ทำ action Plunder บน objective' : 'ทำ action Cleanse บน objective'; g.objectives = s.objectives.map((o) => o.id); break;
+    case 'display-of-might': g.todo = 'มีหน่วยใน No Man\'s Land มากกว่าศัตรู'; g.objectives = nml.map((o) => o.id); break;
+    case 'outflank': g.todo = 'หน่วยแตะขอบสนาม (6") นอกเขตตัวเอง'; g.areas = [[{ x: 0, y: 0 }, { x: 6, y: 0 }, { x: 6, y: H }, { x: 0, y: H }], [{ x: W - 6, y: 0 }, { x: W, y: 0 }, { x: W, y: H }, { x: W - 6, y: H }]]; break;
+    case 'beacon': g.todo = 'พาหน่วย Beacon ออกจากเขตตัวเอง'; if (S.beacon) g.units = [S.beacon]; g.areas = [zonePoly(s, p)]; break;
+    case 'a-grievous-blow': g.todo = 'ทำลายหน่วยศัตรูที่มี 13 ตัวขึ้นไป'; g.units = foes.filter((u) => u.startingStrength >= 13).map((u) => u.id); break;
+    case 'defend-stronghold': g.todo = 'ยึด home objective ของตัวเองไว้'; g.objectives = s.objectives.filter((o) => o.type === 'home' && o.owner === p).map((o) => o.id); break;
+    case 'engage-on-all-fronts': g.todo = 'มีหน่วยใน 3–4 มุมสนาม (ห่างกลาง 6")'; g.circles = [{ ...CENTRE, r: 6 }]; break;
+    case 'secure-no-mans-land': g.todo = 'ยึด objective ใน No Man\'s Land 2 จุด'; g.objectives = nml.filter((o) => !(o.type === 'home' && o.owner === p)).map((o) => o.id); break;
+    case 'forward-position': g.todo = 'ยึด home ศัตรู หรือ expansion ทั้งหมด'; g.objectives = s.objectives.filter((o) => (o.type === 'home' && o.owner === e) || o.type === 'expansion').map((o) => o.id); break;
+    case 'centre-ground': g.todo = 'มีหน่วยห่างกลางสนาม 3" (ศัตรูไม่อยู่ใน 6")'; g.circles = [{ ...CENTRE, r: 3 }, { ...CENTRE, r: 6 }]; break;
+    case 'assassination': g.todo = 'ฆ่า CHARACTER ศัตรู'; g.units = foes.filter((u) => alive(u).some((m) => m.isCharacter)).map((u) => u.id); break;
+    case 'a-tempting-target': g.todo = 'ยึด objective ที่ศัตรูเลือก'; if (S.temptingTarget) g.objectives = [S.temptingTarget]; break;
+    case 'behind-enemy-lines': g.todo = 'พาหน่วยเข้าไปทั้งหน่วยในเขตศัตรู'; g.areas = [zonePoly(s, e)]; break;
+    case 'bring-it-down': g.todo = 'ทำลายโมเดลศัตรูที่มี W 10 ขึ้นไป'; g.units = foes.filter((u) => alive(u).some((m) => m.profile.W >= 10)).map((u) => u.id); break;
+    case 'burden-of-trust': g.todo = 'หน่วยที่เฝ้า objective อยู่ต่อจนจบเทิร์นศัตรู'; g.objectives = S.guards.map((x) => x.objId); g.units = S.guards.map((x) => x.unitId); break;
+  }
+  return g;
 }
 
 export const unitName = (s: GameState, id?: string) => (id ? unitById(s, id).name : '—');
