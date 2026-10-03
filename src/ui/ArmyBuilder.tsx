@@ -6,7 +6,7 @@ import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { DET_RULES } from '../engine/detachments';
 import { DatasheetView } from './Sheet';
 import { tokenKind } from './Tokens';
-import { download, exportPortraitsJson, exportPortraitsZip, fileToPortrait, getPortrait, hasOwnPortrait, importPortraitsJson, matchDatasheet, ownPortraitCount, servedPortraitCount, setPortrait, usePortraitsVersion } from './portraits';
+import { cloudMode, cloudPortraitCount, download, exportablePortraitCount, exportPortraitsJson, exportPortraitsZip, fileToPortrait, getPortrait, hasOwnPortrait, importPortraitsJson, matchDatasheet, ownPortraitCount, servedPortraitCount, setPortrait, cloudErrorNow, uploadAllLocal, usePortraitsVersion } from './portraits';
 
 interface Props {
   list: ArmyList;
@@ -368,15 +368,23 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       <div className="card">
         <div className="card-title">รูปตัวละคร</div>
         <div className="small muted">เลือกหลายรูปพร้อมกันได้ ตั้งชื่อไฟล์ตามชื่อ datasheet (เช่น <i>Intercessor Squad.jpg</i>) ระบบจะจับคู่ให้เอง หรือแตะรูปในหน้า datasheet เพื่อเปลี่ยนทีละหน่วย</div>
-        <div className="small muted">รูปในเครื่องนี้ {ownPortraitCount()} รูป · รูปจากเซิร์ฟเวอร์ {servedPortraitCount()} รูป (รูปที่ใส่เองจะทับรูปเซิร์ฟเวอร์)</div>
+        {cloudMode === 'write' && <div className="hint"><span>☁ เปิดจากลิงก์เว็บ: รูปที่ใส่จะอัปขึ้นเว็บนี้เลย ทุกคนที่เปิดลิงก์เห็นรูปเดียวกัน</span></div>}
+        {cloudMode === 'read' && <div className="small muted">☁ รูปบนเว็บนี้ ({cloudPortraitCount()}) — คุณดูได้อย่างเดียว ใส่รูปเพิ่มจะเก็บไว้แค่ในเครื่องนี้</div>}
+        <div className="small muted">
+          {cloudMode !== 'off' ? `บนเว็บ ${cloudPortraitCount()} รูป · ` : ''}ในเครื่องนี้ {ownPortraitCount()} รูป · จากโฟลเดอร์เซิร์ฟเวอร์ {servedPortraitCount()} รูป
+        </div>
+        {cloudErrorNow() && <div className="err">{cloudErrorNow()}</div>}
+        {cloudMode === 'write' && ownPortraitCount() > 0 && (
+          <button className="btn primary" onClick={async () => { setNote('กำลังอัปรูปขึ้นเว็บ…'); const n = await uploadAllLocal(); setNote(`อัปขึ้นเว็บแล้ว ${n} รูป`); }}>☁ อัปรูปในเครื่อง {ownPortraitCount()} รูป ขึ้นเว็บ</button>
+        )}
         <div className="btn-row">
           <label className="btn">
             📷 นำเข้ารูป
             <input type="file" accept="image/*" multiple hidden onChange={(e) => { importPhotos(e.target.files); e.target.value = ''; }} />
           </label>
-          <button className="btn ghost" disabled={!ownPortraitCount()} onClick={() => {
+          <button className="btn ghost" disabled={!exportablePortraitCount()} onClick={async () => {
             const factionOf = (n: string) => (faction?.datasheets.some((d) => d.name === n) ? list.factionId : undefined);
-            download('unit-images.zip', exportPortraitsZip(factionOf), 'application/zip')
+            download('unit-images.zip', await exportPortraitsZip(factionOf), 'application/zip')
               .then((m) => setNote(`${m} — แตกไฟล์ลงโฟลเดอร์ public/images/ แล้วรัน npm run images`));
           }}>⬇ ส่งออก (.zip สำหรับเซิร์ฟเวอร์)</button>
           <button className="btn ghost" disabled={!ownPortraitCount()} onClick={() => download('unit-images-backup.json', exportPortraitsJson(), 'application/json').then(setNote)}>⬇ สำรอง (.json)</button>

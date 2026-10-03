@@ -48,17 +48,115 @@ export function loadImageManifest(): Promise<void> {
 }
 
 /** The picture to show: the player's own photo, else the server image. */
-export const getPortrait = (datasheet: string): string | undefined => cache[datasheet] ?? served[datasheet];
+export const getPortrait = (datasheet: string): string | undefined =>
+  cache[datasheet] ?? (cloud[datasheet] ? `/_blob/${cloud[datasheet].asset}` : undefined) ?? served[datasheet];
 /** true when the player added this photo in the app (so it can be removed); server images can't be. */
-export const hasOwnPortrait = (datasheet: string): boolean => datasheet in cache;
+export const hasOwnPortrait = (datasheet: string): boolean => datasheet in cache || (cloudMode === 'write' && datasheet in cloud);
 export const ownPortraitCount = (): number => Object.keys(cache).length;
+/** photos to export: this browser's and the web page's */
+export const exportablePortraitCount = (): number => new Set([...Object.keys(cache), ...Object.keys(cloud)]).size;
 export const servedPortraitCount = (): number => Object.keys(served).length;
 
 export function setPortrait(datasheet: string, dataUrl: string | null): boolean {
   if (dataUrl) cache[datasheet] = dataUrl; else delete cache[datasheet];
   save();
+  // on the web link: the photo goes up to the site (shown at once from here, kept locally until the upload lands)
+  if (dataUrl) void uploadToCloud(datasheet, dataUrl);
+  else if (cloud[datasheet]) void removeFromCloud(datasheet);
   return portraitsPersisted;
 }
+
+// ---- photos kept on the web page itself (claude.ai artifact: `assets` for the files, `db` for which is which) ----
+
+type CloudDoc = { name: string; asset: string };
+interface DbLike {
+  collection(path: string): { onSnapshot(next: (q: { docs: { id: string; data(): Record<string, unknown> | undefined }[] }) => void, err?: (e: unknown) => void): () => void };
+  doc(path: string): { set(d: Record<string, unknown>): Promise<void>; delete(): Promise<void> };
+}
+interface AssetsLike { upload(b: Blob, o?: { type?: string }): Promise<{ id: string; url: string }>; delete(ref: string): Promise<unknown> }
+type Host = { use?: (name: string) => Promise<unknown> };
+
+/** Datasheet name → photo on the web page (everyone who opens the link sees it). */
+let cloud: Record<string, CloudDoc> = {};
+let cloudDb: DbLike | null = null;
+let cloudAssets: AssetsLike | null = null;
+/** 'off': not on the web link · 'read': photos show, this viewer can't add · 'write': photos added here go up */
+export let cloudMode: 'off' | 'read' | 'write' = 'off';
+const COLL = 'portraits';
+const docId = (name: string) => imageSlug(name).slice(0, 180) || 'unit';
+
+let cloudInit: Promise<void> | null = null;
+/** Connect to the page's own storage when running as a claude.ai artifact; elsewhere nothing happens. */
+export function initCloudPortraits(): Promise<void> {
+  cloudInit ??= (async () => {
+    const host = (globalThis as unknown as { claude?: Host }).claude;
+    if (!host?.use) return;
+    cloudDb = (await host.use('db').catch(() => null)) as DbLike | null;
+    if (!cloudDb) return;
+    cloudAssets = (await host.use('assets').catch(() => null)) as AssetsLike | null;
+    cloudMode = cloudAssets ? 'write' : 'read';
+    cloudDb.collection(COLL).onSnapshot((q) => {
+      const next: Record<string, CloudDoc> = {};
+      for (const d of q.docs) {
+        const b = d.data() as Partial<CloudDoc> | undefined;
+        if (b && typeof b.name === 'string' && typeof b.asset === 'string' && /^[0-9a-f]{32}$/.test(b.asset)) next[b.name] = { name: b.name, asset: b.asset };
+      }
+      cloud = next;
+      version++;
+      listeners.forEach((l) => l());
+    }, () => { cloudMode = 'off'; });
+    version++;
+    listeners.forEach((l) => l());
+  })().catch(() => { cloudMode = 'off'; });
+  return cloudInit;
+}
+
+/** The last upload problem, for the screen to show (cleared when the next upload starts). */
+export let cloudError: string | null = null;
+
+async function uploadToCloud(name: string, dataUrl: string): Promise<boolean> {
+  await initCloudPortraits();
+  if (cloudMode !== 'write' || !cloudDb || !cloudAssets) return false;
+  cloudError = null;
+  try {
+    const { bytes, ext } = dataUrlBytes(dataUrl);
+    const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+    const old = cloud[name]?.asset;
+    const up = await cloudAssets.upload(new Blob([bytes as BlobPart], { type }), { type });
+    await cloudDb.doc(`${COLL}/${docId(name)}`).set({ name, asset: up.id });
+    if (old && old !== up.id) await cloudAssets.delete(old).catch(() => undefined);
+    if (cache[name] === dataUrl) { delete cache[name]; cloud[name] = { name, asset: up.id }; save(); }
+    return true;
+  } catch (e) {
+    const code = (e as { code?: string })?.code;
+    cloudError = code === 'quota_or_state' ? 'พื้นที่เก็บรูปบนเว็บเต็ม' : code === 'too_large' ? 'รูปใหญ่เกินไป' : 'อัปรูปขึ้นเว็บไม่สำเร็จ — เก็บไว้ในเครื่องนี้แทน';
+    version++;
+    listeners.forEach((l) => l());
+    return false;
+  }
+}
+
+async function removeFromCloud(name: string) {
+  const c = cloud[name];
+  if (!c || cloudMode !== 'write' || !cloudDb || !cloudAssets) return;
+  delete cloud[name];
+  version++;
+  listeners.forEach((l) => l());
+  try {
+    await cloudDb.doc(`${COLL}/${docId(name)}`).delete();
+    await cloudAssets.delete(c.asset);
+  } catch { cloudError = 'ลบรูปบนเว็บไม่สำเร็จ'; }
+}
+
+/** Send every photo kept only in this browser up to the site. Resolves to how many went up. */
+export async function uploadAllLocal(): Promise<number> {
+  let n = 0;
+  for (const [name, url] of Object.entries(cache)) if (await uploadToCloud(name, url)) n++;
+  return n;
+}
+
+export const cloudPortraitCount = (): number => Object.keys(cloud).length;
+export const cloudErrorNow = (): string | null => cloudError;
 
 /** Re-render when portraits change; returns a version number usable as a memo key. */
 export function usePortraitsVersion() {
@@ -185,14 +283,24 @@ function dataUrlBytes(url: string): { bytes: Uint8Array; ext: string } {
  * The player's photos as a zip laid out like the server folder: `units/<FACTION>/<slug>.jpg` + `manifest.json`.
  * `factionOf` tells which faction folder a datasheet goes in (unknown ones go in `units/other/`).
  */
-export function exportPortraitsZip(factionOf: (datasheet: string) => string | undefined): Uint8Array {
+export async function exportPortraitsZip(factionOf: (datasheet: string) => string | undefined): Promise<Uint8Array> {
   const files: { name: string; data: Uint8Array }[] = [];
   const units: ImageManifest['units'] = {};
-  for (const [name, url] of Object.entries(cache).sort(([a], [b]) => a.localeCompare(b))) {
-    const { bytes, ext } = dataUrlBytes(url);
+  const all = new Map<string, () => Promise<{ bytes: Uint8Array; ext: string }>>();
+  for (const [name, c] of Object.entries(cloud)) {
+    all.set(name, async () => {
+      const r = await fetch(`/_blob/${c.asset}`);
+      const type = r.headers.get('content-type') ?? '';
+      return { bytes: new Uint8Array(await r.arrayBuffer()), ext: type.includes('png') ? 'png' : type.includes('webp') ? 'webp' : 'jpg' };
+    });
+  }
+  for (const [name, url] of Object.entries(cache)) all.set(name, async () => dataUrlBytes(url));
+  for (const [name, read] of [...all].sort(([a], [b]) => a.localeCompare(b))) {
+    const got = await read().catch(() => null);
+    if (!got) continue;
     const faction = factionOf(name) ?? 'other';
-    const path = `units/${faction}/${imageSlug(name)}.${ext}`;
-    files.push({ name: path, data: bytes });
+    const path = `units/${faction}/${imageSlug(name)}.${got.ext}`;
+    files.push({ name: path, data: got.bytes });
     (units[faction] ??= {})[name] = path;
   }
   files.push({ name: 'manifest.json', data: new TextEncoder().encode(JSON.stringify({ version: 1, units }, null, 2) + '\n') });

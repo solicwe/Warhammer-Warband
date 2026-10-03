@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { applyManifest, getPortrait, imageSlug, makeZip, matchDatasheet } from './portraits';
+import { applyManifest, cloudMode, cloudPortraitCount, getPortrait, hasOwnPortrait, imageSlug, initCloudPortraits, makeZip, matchDatasheet, ownPortraitCount, setPortrait } from './portraits';
 
 const names = ['Intercessor Squad', 'Assault Intercessor Squad', 'Captain', 'Captain in Terminator Armour', 'Warboss', 'Boyz', 'Big Mek', "Headwoppa's Killchoppa"];
 
@@ -42,5 +42,47 @@ describe('server images', () => {
     const dir = v.getUint32(end + 16, true);
     expect(v.getUint32(dir, true)).toBe(0x02014b50);
     expect(v.getUint32(dir + 16, true)).toBe(0x55bc801d); // crc32 of [1,2,3]
+  });
+});
+
+describe('photos kept on the web page (claude.ai artifact)', () => {
+  it('a photo added on the web link is uploaded, indexed in the page db, and shown from there', async () => {
+    const docs = new Map<string, Record<string, unknown>>();
+    const subs: ((q: { docs: { id: string; data(): Record<string, unknown> }[] }) => void)[] = [];
+    const push = () => subs.forEach((f) => f({ docs: [...docs].filter(([k]) => k.startsWith('portraits/')).map(([k, v]) => ({ id: k.split('/')[1], data: () => v })) }));
+    const uploads: string[] = [];
+    const deleted: string[] = [];
+    const db = {
+      collection: () => ({ onSnapshot: (f: (typeof subs)[number]) => { subs.push(f); push(); return () => undefined; } }),
+      doc: (path: string) => ({ set: async (d: Record<string, unknown>) => { docs.set(path, d); push(); }, delete: async () => { docs.delete(path); push(); } }),
+    };
+    const assets = {
+      upload: async (b: Blob) => { const id = String(uploads.length + 1).padStart(32, 'a'); uploads.push(b.type); return { id, url: `/_blob/${id}` }; },
+      delete: async (ref: string) => { deleted.push(ref); return { deleted: true }; },
+    };
+    (globalThis as unknown as { claude: unknown }).claude = { use: async (n: string) => (n === 'db' ? db : n === 'assets' ? assets : null) };
+    await initCloudPortraits();
+    expect(cloudMode).toBe('write');
+
+    const jpg = 'data:image/jpeg;base64,' + btoa('fake-jpeg-bytes');
+    setPortrait('Warboss', jpg);
+    expect(getPortrait('Warboss')).toBe(jpg); // shown at once from this browser
+    await new Promise((r) => setTimeout(r, 10));
+    expect(uploads).toEqual(['image/jpeg']);
+    expect(docs.get('portraits/warboss')).toEqual({ name: 'Warboss', asset: 'a'.repeat(31) + '1' });
+    expect(getPortrait('Warboss')).toBe(`/_blob/${'a'.repeat(31)}1`);
+    expect(ownPortraitCount()).toBe(0); // the local copy is dropped once it is on the site
+    expect(cloudPortraitCount()).toBe(1);
+    expect(hasOwnPortrait('Warboss')).toBe(true);
+
+    // replacing it deletes the old file; removing it deletes the row and the file
+    setPortrait('Warboss', jpg);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(deleted).toEqual(['a'.repeat(31) + '1']);
+    setPortrait('Warboss', null);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(docs.has('portraits/warboss')).toBe(false);
+    expect(deleted).toEqual(['a'.repeat(31) + '1', 'a'.repeat(31) + '2']);
+    expect(getPortrait('Warboss')).toBeUndefined();
   });
 });
