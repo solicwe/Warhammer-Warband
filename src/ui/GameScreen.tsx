@@ -123,7 +123,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [showStrats, setShowStrats] = useState(false);
   const [stratUnit, setStratUnit] = useState<string>('');
   const [stratPlayer, setStratPlayer] = useState<PlayerId | null>(null); // whose stratagems the sheet shows (null = who acts now)
-  const openStrats = (p: PlayerId | null = null) => { setStratPlayer(p); setStratUnit(sel && s.units.find((u) => u.id === sel)?.owner === (p ?? actor) ? sel : ''); setShowStrats(true); };
+  // the bot decides its own CP: against the bot the sheet always shows the player's own stratagems
+  const human: PlayerId | null = bots.length === 1 ? (bots[0] === 0 ? 1 : 0) : null;
+  const openStrats = (p: PlayerId | null = null) => {
+    const who = p !== null && !bots.includes(p) ? p : human ?? p;
+    setStratPlayer(who); setStratUnit(sel && s.units.find((u) => u.id === sel)?.owner === (who ?? actor) ? sel : ''); setShowStrats(true);
+  };
   const [freeAdvRR, setFreeAdvRR] = useState<string | null>(null);
 
   const setMode = (m: Mode | null, d: Paths | null = null) => { setModeRaw(m); setDraft(d); setCheck(null); };
@@ -1339,6 +1344,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           s={s}
           onStrat={(pl) => openStrats(pl)}
           stratFor={([0, 1] as PlayerId[]).filter((p) => !bots.includes(p))}
+          botSides={bots}
           onStep={() => act((g) => stepAttack(g))}
           onReroll={onReroll}
           onFree={(k, i) => { const e = act((g) => useFreeDie(g, k, i)); if (e) flash(e); }}
@@ -1405,7 +1411,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 {r.plan.effects.length > 0 && !r.plan.full && <span className="chip">+ ส่วนที่เหลือทำเอง</span>}
               </div>
               <details><summary className="tiny">ข้อความเต็ม</summary><div className="sheet tiny">{r.st.text}</div></details>
-              {timingOk(r.why) && (
+              {timingOk(r.why) && bots.includes(p) && <div className="tiny muted">🤖 บอทตัดสินใจใช้ stratagem นี้เอง</div>}
+              {timingOk(r.why) && !bots.includes(p) && (
                 <>
                   {pickable.length > 0 && (
                     <div className="unit-strip">

@@ -20,6 +20,8 @@ interface Props {
   onPick?: (index: number) => void;
   /** the bot is attacking: its own dice roll by themselves, the player rolls the saves */
   auto?: boolean;
+  /** players run by the bot: their re-rolls and stratagems are the bot's own decisions, no buttons for them */
+  botSides?: (0 | 1)[];
 }
 
 const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `${n}` : '');
@@ -53,7 +55,7 @@ function poolHeader(p: Pool) {
   );
 }
 
-export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree, onPick, auto }: Props) {
+export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree, onPick, auto, botSides = [] }: Props) {
   const at = s.attack!;
   const [rr, setRr] = useState<null | 'hit' | 'wound' | 'save'>(null);
   const [fd, setFd] = useState<string | null>(null); // free die being used: tap the die
@@ -82,6 +84,8 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
   const done = at.stage === 'done';
   const attackerCR = canUseStratagem(s, A.owner, 'command-reroll', A);
   const defenderCR = canUseStratagem(s, T.owner, 'command-reroll', T);
+  const attackerBot = botSides.includes(A.owner);
+  const defenderBot = botSides.includes(T.owner);
 
   const stageOf = (pool: Pool) => (pool !== p ? 'done' : at.stage);
   const st = stageOf(p);
@@ -89,7 +93,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
   // an ability re-roll waits for the attacker to pick the dice (the failures are picked to begin with)
   const pending = !done ? p.reroll : undefined;
   const nextLabel = done ? 'ปิด' : pending ? `ทอยใหม่ ${pending.picks.length} ลูกที่เลือก` : st === 'hit' ? `ทอย Hit (${p.attacks} ลูก)` : st === 'wound' ? 'ทอย Wound' : st === 'save' ? `${s.players[T.owner].name} ทอย Save` : 'คิดดาเมจ';
-  const pickRow = (stage: 'hit' | 'wound') => (pending?.stage === stage && onPick
+  const pickRow = (stage: 'hit' | 'wound') => (pending?.stage === stage && onPick && !botSides.includes(A.owner)
     ? { pick: (d: Die) => rerollable(p, d), picked: pending.picks, onPick: (i: number) => onPick(i) }
     : null);
   // the bot's own dice (hits, wounds, its re-rolls) roll by themselves; the player rolls the saves
@@ -148,8 +152,8 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                     โดน <b>{p.hits.filter((h) => h.o !== 'miss').length}</b>
                     {p.hits.some((h) => h.o === 'crit') && <> · Critical <b>{p.hits.filter((h) => h.o === 'crit').length}</b>{p.sustained ? ` (Sustained ${p.sustained})` : ''}{p.lethal ? ' (Lethal Hits)' : ''}</>}
                   </div>
-                  {st === 'wound' && !pending && !p.autoHit && freeButtons('hit')}
-                  {st === 'wound' && !pending && !p.autoHit && !p.noHitReroll && !auto && (
+                  {st === 'wound' && !pending && !p.autoHit && !attackerBot && freeButtons('hit')}
+                  {st === 'wound' && !pending && !p.autoHit && !p.noHitReroll && !attackerBot && (
                     <button className={`btn small ${rr === 'hit' ? 'on' : ''}`} disabled={!!attackerCR || !p.hits.some((d) => d.o === 'miss' && !d.rerolled)} onClick={() => setRr(rr === 'hit' ? null : 'hit')}>
                       Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'hit' ? '— แตะลูกที่พลาด' : ''}
                     </button>
@@ -174,8 +178,8 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                       {p.autoWounds ? ` (รวม Lethal Hits ${p.autoWounds})` : ''}
                       {p.devastating && p.wounds.some((w) => w.o === 'critWound') ? ` · Devastating ${p.wounds.filter((w) => w.o === 'critWound').length} (mortal wounds)` : ''}
                     </div>
-                    {st === 'save' && !pending && freeButtons('wound')}
-                    {st === 'save' && !pending && !auto && (
+                    {st === 'save' && !pending && !attackerBot && freeButtons('wound')}
+                    {st === 'save' && !pending && !attackerBot && (
                       <button className={`btn small ${rr === 'wound' ? 'on' : ''}`} disabled={!!attackerCR || !p.wounds.some((d) => d.o === 'fail' && !d.rerolled)} onClick={() => setRr(rr === 'wound' ? null : 'wound')}>
                         Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'wound' ? '— แตะลูกที่พลาด' : ''}
                       </button>
@@ -190,9 +194,11 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                 <div className="stage-head"><span>3. Save ({s.players[T.owner].name})</span><span className="need">AP{p.ap} · ใช้ผลต่ำสุดก่อน</span></div>
                 <div className="tiny muted">ผลทอยจะถูกใช้กับโมเดลตามลำดับ allocation (ตัวที่บาดเจ็บก่อน · CHARACTER ทีหลัง)</div>
                 <DiceRow dice={p.saves} cls={saveCls} pick={rr === 'save' ? (d) => !d.rerolled : undefined} onPick={(i) => { onReroll('save', i); setRr(null); }} />
-                <button className={`btn small ${rr === 'save' ? 'on' : ''}`} disabled={!!defenderCR || !p.saves.length} onClick={() => setRr(rr === 'save' ? null : 'save')}>
-                  {s.players[T.owner].name}: Command Re-roll save 1CP {defenderCR ? `(${defenderCR})` : rr === 'save' ? '— แตะลูกที่จะทอยใหม่' : ''}
-                </button>
+                {defenderBot ? <div className="tiny muted">🤖 {s.players[T.owner].name} ตัดสินใจ re-roll save เอง</div> : (
+                  <button className={`btn small ${rr === 'save' ? 'on' : ''}`} disabled={!!defenderCR || !p.saves.length} onClick={() => setRr(rr === 'save' ? null : 'save')}>
+                    {s.players[T.owner].name}: Command Re-roll save 1CP {defenderCR ? `(${defenderCR})` : rr === 'save' ? '— แตะลูกที่จะทอยใหม่' : ''}
+                  </button>
+                )}
               </div>
             )}
           </>

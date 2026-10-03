@@ -2,6 +2,7 @@
 // to keep an objective, the reactive core stratagems (Rapid Ingress, Smokescreen, Heroic Intervention, Counteroffensive),
 // Explosives, Crushing Impact, Epic Challenge, and its detachments' defensive stratagems when one of its units is
 // attacked. It keeps a CP back for a re-roll until the last round unless the play is worth more.
+import { freeDiceNow, useFreeDie } from './activations';
 import { applyMortalWounds, expectedDamage, onAttackStart, rerollOne, setDiceHook } from './attack';
 import { chargeValue, isBrawler, maxRange, meleeKills, onObjective, oc, p2d6, perModel, rangedKills, unitValue } from './botEval';
 import { bestArrival } from './botMove';
@@ -48,9 +49,16 @@ setDiceHook((s, stage) => {
   const A = unitById(s, at.attackerId);
   const T = unitById(s, at.targetId);
   if (stage === 'hit' || stage === 'wound') {
-    if (!isBot(s, A.owner) || canUseStratagem(s, A.owner, 'command-reroll', A) || !spare(s, A.owner, 1)) return;
+    if (!isBot(s, A.owner)) return;
     const dice = stage === 'hit' ? p.hits : p.wounds;
-    const i = dice.findIndex((d) => (stage === 'hit' ? d.o === 'miss' : d.o === 'fail') && !d.rerolled);
+    const failed = (d: (typeof dice)[number]) => (stage === 'hit' ? d.o === 'miss' : d.o === 'fail');
+    // free re-rolls / "make it a 6" from abilities and detachment rules first (they cost nothing)
+    for (const f of freeDiceNow(s).filter((x) => x.stage === stage)) {
+      const k = dice.findIndex((d) => failed(d) && (f.kind === 'setSix' || !d.rerolled));
+      if (k >= 0) useFreeDie(s, f.key, k);
+    }
+    if (canUseStratagem(s, A.owner, 'command-reroll', A) || !spare(s, A.owner, 1)) return;
+    const i = dice.findIndex((d) => failed(d) && !d.rerolled);
     if (i < 0 || (stage === 'hit' && p.noHitReroll)) return;
     const need = stage === 'hit' ? (p.hitOn6Only ? 6 : Math.max(2, Math.min(6, (p.skill ?? 7) - p.hitMod))) : Math.max(2, Math.min(6, p.woundNeed - p.woundMod));
     const gain = dieWorth(s, at, stage) * ((7 - need) / 6);
