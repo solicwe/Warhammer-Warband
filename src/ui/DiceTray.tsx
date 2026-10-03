@@ -220,7 +220,9 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
         )}
         {done && <div className="big-result">{T.name}: เหลือ {T.models.filter((m) => !m.dead).length}/{T.startingStrength}</div>}
 
-        <button className={`btn primary ${cool ? 'cooling' : ''}`} onClick={guarded(done ? onClose : onStep)}>{nextLabel}</button>
+        <div className="sticky-act tray-act">
+          <button className={`btn primary big wide ${cool ? 'cooling' : ''}`} onClick={guarded(done ? onClose : onStep)}>{nextLabel}</button>
+        </div>
       </div>
     </div>
   );

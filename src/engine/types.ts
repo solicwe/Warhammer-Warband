@@ -430,6 +430,8 @@ export interface AttackSession {
   negated?: string[]; // model ids whose once-per-phase damage negation was used in this attack
   /** a bot attacks a player's unit: the player rolls the saves (and may use Command Re-roll) */
   defenderRolls?: boolean;
+  /** how many timed effects each side had when the attack was declared (later ones are applied before the rolls) */
+  timedAtStart?: { a: number; t: number };
 }
 
 /** Visual events for the board (animations). Not rules state; capped to the last few. */

@@ -499,6 +499,11 @@ function offerExtraMove(s: GameState, u: UnitState, label: string) {
 }
 
 /** Use an ability now (button, or automatically at its trigger). Returns an error message or null. */
+/** Actions of a rule that is not an ability (a stratagem's "your unit can make a Normal move of up to D6"" …). */
+export function runActions(s: GameState, name: string, holder: UnitState, acts: Action[], target: UnitState | null) {
+  doActions(s, { key: `rule:${name}`, name, holder, spec: { when: 'anyPhase' } as ActSpec, bearers: alive(holder) }, acts, target, {});
+}
+
 export function useAct(s: GameState, def: ActDef, targetId?: string, ctx: FireCtx = {}): string | null {
   if (!limitLeft(s, def)) return 'ใช้ครบแล้ว';
   if (!(def.spec.if ?? []).every((c) => cond(c, { s, A: def.holder, holder: def.holder, bearers: def.bearers }))) return 'เงื่อนไขไม่ครบ';

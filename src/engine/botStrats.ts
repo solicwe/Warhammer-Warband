@@ -3,7 +3,7 @@
 // Explosives, Crushing Impact, Epic Challenge, and its detachments' defensive stratagems when one of its units is
 // attacked. It keeps a CP back for a re-roll until the last round unless the play is worth more.
 import { freeDiceNow, useFreeDie } from './activations';
-import { applyMortalWounds, expectedDamage, onAttackStart, rerollOne, setDiceHook } from './attack';
+import { applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, onAttackStart, rerollOne, setDiceHook, shootingModes, targetToughness, woundNeed } from './attack';
 import { chargeValue, isBrawler, maxRange, meleeKills, onObjective, oc, p2d6, perModel, rangedKills, unitValue } from './botEval';
 import { bestArrival } from './botMove';
 import { RULES } from './config';
@@ -12,11 +12,11 @@ import {
   arrivalRound, autoApproach, bestLd, chargeTargetOptions, commitCharge, counteroffensiveCandidates, declareCharge, heroicCandidates, hasDeepStrike,
   ingressUnit, rapidIngressCandidates, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, crushingImpact,
 } from './game';
-import { unitFlags, withRuleCache } from './effects';
-import { alive, boardUnits, canUseStratagem, hasKw, isEngaged, log, other, spendStratagem, unitById, unitDistance } from './state';
-import { applyDetachmentStratagem, planStratagem, stratagemBlock } from './stratagems';
+import { addTimed, applyLateEffects, unitFlags, withRuleCache } from './effects';
+import { alive, boardUnits, canUseStratagem, hasKw, isEngaged, log, other, spendStratagem, stratCost, unitById, unitDistance } from './state';
+import { applyDetachmentStratagem, stratagemBlock, stratRule, type StratRule } from './stratagems';
 import { unitVisibleTo } from './visibility';
-import type { AttackSession, BuffKind, GameState, PlayerId, UnitState } from './types';
+import type { AttackSession, GameState, PlayerId, StratagemData, TimedEffect, UnitState } from './types';
 
 /** Is this player run by the bot? */
 export const isBot = (s: GameState, p: PlayerId) => (s.bots ?? (s.botPlayer != null ? [s.botPlayer] : [])).includes(p);
@@ -82,29 +82,84 @@ setDiceHook((s, stage) => {
   log(s, `↻ Command Re-roll: ทอย Save ที่ไม่ผ่านใหม่ (${T.name})`, 'roll', T.owner);
 });
 
-// ---------- defensive stratagems when a bot unit is attacked ----------
+// ---------- detachment stratagems, any of them: try the effect, measure, use the best ----------
 
-const DEFENSIVE: BuffKind[] = ['enemyHit-1', 'enemyWound-1', 'enemyAp-1', 'damage-1', 'fnp4', 'fnp5', 'fnp6', 'cover', 'save+1'];
+/** Points of damage `u` expects to do to `t` with the effects it has right now. */
+function attackValue(s: GameState, u: UnitState, t: UnitState, kind: 'shoot' | 'fight'): number {
+  const r = kind === 'shoot' ? buildShootPools(s, u.id, t.id, { mode: shootingModes(s, u)[0] ?? 'normal' }) : buildFightPools(s, u.id, t.id);
+  if (r.error || !r.pools.length) return 0;
+  const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, t).models, 0);
+  return Math.min(alive(t).length, ev) * perModel(t);
+}
 
+/** Put a stratagem's effects on a unit for a moment, measure something, and take them off again. */
+function tryRule<R>(s: GameState, u: UnitState, label: string, rule: StratRule, fn: () => R): R {
+  const nb = u.buffs.length, nt = u.timed?.length ?? 0;
+  for (const k of rule.buffs ?? []) u.buffs.push({ kind: k, until: 'phase', label });
+  for (const e of rule.effects ?? []) addTimed(s, u, { e, label, until: 'phase', by: u.owner });
+  try { return fn(); } finally { u.buffs.length = nb; if (u.timed) u.timed.length = nt; }
+}
+
+/** The bot's usable stratagems for a unit of the kind it wants ('attack' / 'defend'), with their rules. */
+function usable(s: GameState, p: PlayerId, u: UnitState, use: 'attack' | 'defend') {
+  return s.players[p].detachments.flatMap((d) => d.stratagems.map((st) => ({ st, rule: stratRule(st, s.players[p].factionId, d.name) })))
+    .filter(({ st, rule }) => rule.bot === use && !stratagemBlock(s, p, st, u) && spare(s, p, stratCost(s, st.id, u, st.cp)));
+}
+
+/** Before one of its units shoots or fights: the stratagem that adds the most expected damage, if it is worth the CP. */
+export function botOffensiveStratagem(s: GameState, u: UnitState, kind: 'shoot' | 'fight', targets: UnitState[]) {
+  const p = u.owner;
+  if (!targets.length || u.battleShocked) return;
+  const best0 = () => Math.max(0, ...targets.map((t) => attackValue(s, u, t, kind)));
+  const base = best0();
+  let best: { st: StratagemData; gain: number } | null = null;
+  for (const { st, rule } of usable(s, p, u, 'attack')) {
+    const gain = tryRule(s, u, st.name, rule, best0) - base;
+    if (gain > (best?.gain ?? 0)) best = { st, gain };
+  }
+  // a CP is worth about 12 points of damage (more when CP are scarce)
+  if (best && best.gain >= 12 * best.st.cp + (s.players[p].cp <= 2 ? 6 : 0)) applyDetachmentStratagem(s, p, best.st, u.id);
+}
+
+/** Expected points lost to this attack, with the target's current effects (and those of `rule`, when given). */
+function lossFrom(s: GameState, at: AttackSession, T: UnitState, rule?: StratRule): number {
+  const kind = at.kind === 'fight' ? 'melee' : 'ranged';
+  const A = unitById(s, at.attackerId);
+  let fnp = 7;
+  const ev = at.pools.reduce((a, p0) => {
+    const p = structuredClone(p0);
+    if (rule) {
+      const b = rule.buffs ?? [];
+      if (b.includes('enemyHit-1') && !p.autoHit) p.hitMod -= 1;
+      if (b.includes('enemyWound-1')) p.woundMod -= 1;
+      if (b.includes('enemyAp-1') && p.ap < 0) p.ap += 1;
+      if (b.includes('cover') && kind === 'ranged' && p.skill !== null) p.skill = Math.min(6, (p.skill ?? 6) + 1);
+      if (b.includes('damage-1')) p.damage = String(Math.max(1, exprAverage(p.damage) - 1));
+      for (const k of ['fnp4', 'fnp5', 'fnp6'] as const) if (b.includes(k)) fnp = Math.min(fnp, Number(k.slice(3)));
+      const late = (rule.effects ?? []).map((e) => ({ e, label: 'try', until: 'phase', by: T.owner, turn: s.turn }) as TimedEffect);
+      if (late.length) applyLateEffects(s, A, T, p, { attacker: [], target: late }, kind, targetToughness(T, s), woundNeed);
+      for (const e of rule.effects ?? []) if (e.defend?.fnp && (!e.defend.fnpVs)) fnp = Math.min(fnp, e.defend.fnp);
+      for (const e of rule.effects ?? []) if (e.defend?.damage) p.damage = String(Math.max(1, exprAverage(p.damage) + e.defend.damage));
+    }
+    return a + expectedDamage(s, p, T).models;
+  }, 0);
+  return Math.min(alive(T).length, ev * (fnp < 7 ? (fnp - 1) / 6 : 1)) * perModel(T);
+}
+
+/** When one of its units is attacked: the stratagem that saves the most, if it is worth the CP. */
 onAttackStart((s, at) => {
   if (at.free) return;
   const T = unitById(s, at.targetId);
   const p = T.owner;
   if (!isBot(s, p) || T.battleShocked) return;
-  // only when the attack is a real threat to a unit worth protecting
-  const ev = at.pools.reduce((a, pool) => a + expectedDamage(s, pool, T).models, 0);
-  const loss = Math.min(alive(T).length, ev) * perModel(T);
-  if (loss < 30 && loss < unitValue(T) * 0.4) return;
-  for (const d of s.players[p].detachments) {
-    for (const st of d.stratagems) {
-      const plan = planStratagem(st);
-      if (plan.target !== 'own' || !plan.effects.length || !plan.effects.every((k) => DEFENSIVE.includes(k))) continue;
-      if (plan.effects.includes('cover') && at.kind === 'fight') continue;
-      if (stratagemBlock(s, p, st, T) || !spare(s, p, st.cp)) continue;
-      applyDetachmentStratagem(s, p, st, T.id);
-      return;
-    }
+  const base = lossFrom(s, at, T);
+  if (base < 15) return;
+  let best: { st: StratagemData; save: number } | null = null;
+  for (const { st, rule } of usable(s, p, T, 'defend')) {
+    const save = base - tryRule(s, T, st.name, rule, () => lossFrom(s, at, T, rule));
+    if (save > (best?.save ?? 0)) best = { st, save };
   }
+  if (best && best.save >= 10 * best.st.cp + (s.players[p].cp <= 2 ? 6 : 0)) applyDetachmentStratagem(s, p, best.st, T.id);
 });
 
 // ---------- battle-shock ----------

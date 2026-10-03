@@ -7,7 +7,7 @@ import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, Weapon
 import { getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
-import { applyAttackEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate } from './effects';
+import { applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate } from './effects';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
 
@@ -345,6 +345,7 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     kind, attackerId, targetId, pools, idx: 0, stage: pools.length ? 'hit' : 'done', hazardousRolls: [], summary: [],
     aliveBefore: alive(T).map((m) => m.id), woundsBefore: alive(T).reduce((a, m) => a + m.wounds, 0),
     attackerBuffsAtStart: A.buffs.map((b) => b.kind), free: opts.free,
+    timedAtStart: { a: A.timed?.length ?? 0, t: T.timed?.length ?? 0 },
   };
   for (const h of startHooks) h(s, s.attack);
 }
@@ -377,6 +378,13 @@ function applyDefense(s: GameState, p: Pool) {
   p.defApplied = true;
   const T = unitById(s, s.attack!.targetId);
   const notes: string[] = [];
+  // stratagem effects (either side) used after the attack was declared
+  const at0 = s.attack!.timedAtStart;
+  if (at0) {
+    const A0 = unitById(s, s.attack!.attackerId);
+    const late = { attacker: (A0.timed ?? []).slice(at0.a), target: (T.timed ?? []).slice(at0.t) };
+    if (late.attacker.length || late.target.length) applyLateEffects(s, A0, T, p, late, s.attack!.kind === 'fight' ? 'melee' : 'ranged', targetToughness(T, s), woundNeed);
+  }
   if (has(T, 'enemyHit-1') && !p.autoHit && !p.ignoreHitMods) { p.hitMod = clamp(p.hitMod - 1, -RULES.modifierCaps.hitRoll, RULES.modifierCaps.hitRoll); notes.push('−1 Hit'); }
   if (has(T, 'enemyWound-1')) { p.woundMod = clamp(p.woundMod - 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll); p.woundNote += ' · Stratagem −1'; }
   if (has(T, 'enemyAp-1') && p.ap < 0) { p.ap += 1; notes.push('AP แย่ลง 1'); }

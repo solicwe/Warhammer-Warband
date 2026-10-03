@@ -37,6 +37,7 @@ export interface Defend {
   untargetableBeyond12?: boolean;
   strengthMinus?: number;
   saveBonusD1?: number;
+  minHit?: number; // attacks that target this unit fail on an unmodified hit roll below this (Speediest Freeks: 4)
   negateOncePerPhase?: boolean; // once per phase: a failed save's damage becomes 0
   // legacy names used by the first version of detachment-rules.json
   woundMinusIfStronger?: boolean;
@@ -430,6 +431,10 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('contains:')) { const n = wk(c.slice(9)); return alive(A).some((m) => wk(m.name).includes(n) || wk(m.source).includes(n)); }
   if (c.startsWith('body:')) return A.sources[0] === c.slice(5) || wk(A.sources[0]).includes(wk(c.slice(5)));
   if (c.startsWith('leader:')) { const n = wk(c.slice(7)); return hasLivingLeader(A) && A.sources.slice(1).some((src) => n.split('|').some((x2) => wk(src).includes(x2))); }
+  if (c.startsWith('within:')) return (x.d ?? Infinity) <= Number(c.slice(7)) + 1e-6;
+  // a detachment choice that is active for the army (Combat Doctrines …): "detActive:assault"
+  if (c.startsWith('detActive:')) return Object.values(s.players[A.owner].det ?? {}).some((d) => (d as { active?: string[] }).active?.includes(c.slice(10)));
+  if (c.startsWith('beyond:')) return (x.d ?? 0) > Number(c.slice(7)) + 1e-6;
   if (c.startsWith('targetKw:')) return !!T && c.slice(9).split('|').some((k) => T.keywords.includes(k));
   if (c.startsWith('targetMarked:')) return !!T && (T.timed ?? []).some((t) => t.mark === c.slice(13) && t.by === A.owner);
   if (c.startsWith('modelFrom:')) return !!x.m && wk(x.m.source).includes(wk(c.slice(10)));
@@ -452,6 +457,7 @@ export function cond(c: string, x: Ctx): boolean {
     case 'stationary': return A.move === 'stationary' || (A.lastStationaryTurn !== undefined && s.turn - A.lastStationaryTurn <= 1);
     case 'notAdvanced': return A.move !== 'advance';
     case 'within12': return (x.d ?? Infinity) <= 12 + 1e-6;
+    case 'targetBattleShocked': return !!T && T.battleShocked;
     case 'within6': return (x.d ?? Infinity) <= 6 + 1e-6;
     case 'targetMV': return !!T && isMVU(T);
     case 'targetNotMV': return !!T && !isMVU(T);
@@ -584,7 +590,48 @@ function addToExpr(expr: string, n: number): string {
 export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, pool: Pool, list: Active[], inc: Incoming[], kind: 'melee' | 'ranged', d: number, toughness: number, woundNeedFn: (S: number, T: number) => number): string[] {
   const notes: string[] = [];
   const hitCap = RULES.modifierCaps.hitRoll, woundCap = RULES.modifierCaps.woundRoll;
-  let strength = pool.profile.S ?? 1;
+  let strength = (pool.profile.S ?? 1) + offenceInto(s, A, T, pool, list, kind, notes);
+  for (const i of inc) {
+    if (i.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + i.hit, -hitCap, hitCap); notes.push(`เป้าโดนมาร์ก: +${i.hit} hit`); }
+    if (i.wound) { pool.woundMod = clamp(pool.woundMod + i.wound, -woundCap, woundCap); notes.push(`เป้าโดนมาร์ก: +${i.wound} wound`); }
+    if (i.ap) { pool.ap -= i.ap; notes.push(`เป้าโดนมาร์ก: +${i.ap} AP`); }
+    for (const r of rerolls(i)) applyReroll(pool, r, 'เป้าโดนมาร์ก', notes);
+    for (const ab of i.abilities ?? []) applyAbility(pool, ab, 'เป้าโดนมาร์ก', notes, kind, A, s, T);
+  }
+  // the target's side
+  const def = defencesFor(s, T, kind);
+  for (const { e, label } of def) {
+    const df = e.defend!;
+    const sm = df.strengthMinus ?? df.enemyStrengthMinus ?? 0;
+    if (sm) { strength -= sm; notes.push(`${label}: S −${sm}`); }
+  }
+  if (strength !== (pool.profile.S ?? 1)) pool.woundNeed = woundNeedFn(Math.max(1, strength), toughness);
+  pool.effS = strength;
+  defenceInto(pool, def, strength, toughness, notes);
+  if (notes.length) pool.woundNote = [pool.woundNote, notes.join(' · ')].filter(Boolean).join(' · ');
+  void d;
+  return notes;
+}
+
+/** Effects put on the attacker or the target after the attack was declared (a stratagem used "after targets are
+ *  selected", such as Armour of Contempt): added to the pool just before its dice are rolled. */
+export function applyLateEffects(s: GameState, A: UnitState, T: UnitState, pool: Pool, late: { attacker: TimedEffect[]; target: TimedEffect[] }, kind: 'melee' | 'ranged', toughness: number, woundNeedFn: (S: number, T: number) => number): string[] {
+  const notes: string[] = [];
+  const offence = late.attacker.filter((t) => !t.e.defend).map((t) => ({ e: t.e, label: t.label, holder: A }) as Active)
+    .filter((a) => (!a.e.attack || a.e.attack === kind) && (a.e.if ?? []).every((c) => cond(c, { s, A, T, kind, holder: A })));
+  const add = offenceInto(s, A, T, pool, offence, kind, notes);
+  const strength = (pool.effS ?? pool.profile.S ?? 1) + add;
+  if (add) { pool.effS = strength; pool.woundNeed = woundNeedFn(Math.max(1, strength), toughness); }
+  const def = late.target.filter((t) => t.e.defend && (!t.e.defend.vs || t.e.defend.vs === kind)).map((t) => ({ e: t.e, label: t.label, holder: T }) as Active);
+  defenceInto(pool, def, strength, toughness, notes);
+  if (notes.length) pool.woundNote = [pool.woundNote, notes.join(' · ')].filter(Boolean).join(' · ');
+  return notes;
+}
+
+/** The attacker's own modifiers into a pool; returns the change to Strength. */
+function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list: Active[], kind: 'melee' | 'ranged', notes: string[]): number {
+  const hitCap = RULES.modifierCaps.hitRoll, woundCap = RULES.modifierCaps.woundRoll;
+  let strength = 0;
   const bump = (label: string, txt: string) => notes.push(`${label}: ${txt}`);
   for (const a of list) {
     const e = a.e;
@@ -610,22 +657,13 @@ export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, poo
     for (const r of rerolls(e)) applyReroll(pool, r, a.label, notes);
     for (const ab of e.abilities ?? []) applyAbility(pool, ab, a.label, notes, kind, A, s, T);
   }
-  for (const i of inc) {
-    if (i.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + i.hit, -hitCap, hitCap); notes.push(`เป้าโดนมาร์ก: +${i.hit} hit`); }
-    if (i.wound) { pool.woundMod = clamp(pool.woundMod + i.wound, -woundCap, woundCap); notes.push(`เป้าโดนมาร์ก: +${i.wound} wound`); }
-    if (i.ap) { pool.ap -= i.ap; notes.push(`เป้าโดนมาร์ก: +${i.ap} AP`); }
-    for (const r of rerolls(i)) applyReroll(pool, r, 'เป้าโดนมาร์ก', notes);
-    for (const ab of i.abilities ?? []) applyAbility(pool, ab, 'เป้าโดนมาร์ก', notes, kind, A, s, T);
-  }
-  // the target's side
-  const def = defencesFor(s, T, kind);
-  for (const { e, label } of def) {
-    const df = e.defend!;
-    const sm = df.strengthMinus ?? df.enemyStrengthMinus ?? 0;
-    if (sm) { strength -= sm; notes.push(`${label}: S −${sm}`); }
-  }
-  if (strength !== (pool.profile.S ?? 1)) pool.woundNeed = woundNeedFn(Math.max(1, strength), toughness);
-  pool.effS = strength;
+  void woundCap;
+  return strength;
+}
+
+/** The target's defences (−1 to hit / wound, worse AP, hit rolls of 1-3 fail …) into a pool. */
+function defenceInto(pool: Pool, def: Active[], strength: number, toughness: number, notes: string[]) {
+  const hitCap = RULES.modifierCaps.hitRoll, woundCap = RULES.modifierCaps.woundRoll;
   for (const { e, label } of def) {
     const df = e.defend!;
     if (df.hit && !pool.autoHit && !pool.ignoreHitMods) { pool.hitMod = clamp(pool.hitMod + df.hit, -hitCap, hitCap); notes.push(`${label}: ${df.hit} hit`); }
@@ -634,10 +672,8 @@ export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, poo
     if (df.woundIfStrongerOrEqual && strength >= toughness) wm += df.woundIfStrongerOrEqual;
     if (wm) { pool.woundMod = clamp(pool.woundMod + wm, -woundCap, woundCap); notes.push(`${label}: ${wm} wound`); }
     if (df.ap && pool.ap < 0) { pool.ap = Math.min(0, pool.ap + df.ap); notes.push(`${label}: AP แย่ลง ${df.ap}`); }
+    if (df.minHit && !pool.autoHit) { pool.minHitUnmodified = Math.max(pool.minHitUnmodified ?? 0, df.minHit); notes.push(`${label}: ทอย hit ${df.minHit - 1} ลงมาพลาด`); }
   }
-  if (notes.length) pool.woundNote = [pool.woundNote, notes.join(' · ')].filter(Boolean).join(' · ');
-  void d;
-  return notes;
 }
 
 function applyReroll(pool: Pool, r: Reroll, label: string, notes: string[]) {

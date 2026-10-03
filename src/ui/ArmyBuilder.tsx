@@ -6,7 +6,7 @@ import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { DET_RULES } from '../engine/detachments';
 import { DatasheetView } from './Sheet';
 import { tokenKind } from './Tokens';
-import { fileToPortrait, getPortrait, matchDatasheet, setPortrait, usePortraitsVersion } from './portraits';
+import { download, exportPortraitsJson, exportPortraitsZip, fileToPortrait, getPortrait, hasOwnPortrait, importPortraitsJson, matchDatasheet, ownPortraitCount, servedPortraitCount, setPortrait, usePortraitsVersion } from './portraits';
 
 interface Props {
   list: ArmyList;
@@ -368,10 +368,28 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       <div className="card">
         <div className="card-title">รูปตัวละคร</div>
         <div className="small muted">เลือกหลายรูปพร้อมกันได้ ตั้งชื่อไฟล์ตามชื่อ datasheet (เช่น <i>Intercessor Squad.jpg</i>) ระบบจะจับคู่ให้เอง หรือแตะรูปในหน้า datasheet เพื่อเปลี่ยนทีละหน่วย</div>
-        <label className="btn small" style={{ alignSelf: 'flex-start' }}>
-          นำเข้ารูป
-          <input type="file" accept="image/*" multiple hidden onChange={(e) => importPhotos(e.target.files)} />
-        </label>
+        <div className="small muted">รูปในเครื่องนี้ {ownPortraitCount()} รูป · รูปจากเซิร์ฟเวอร์ {servedPortraitCount()} รูป (รูปที่ใส่เองจะทับรูปเซิร์ฟเวอร์)</div>
+        <div className="btn-row">
+          <label className="btn">
+            📷 นำเข้ารูป
+            <input type="file" accept="image/*" multiple hidden onChange={(e) => { importPhotos(e.target.files); e.target.value = ''; }} />
+          </label>
+          <button className="btn ghost" disabled={!ownPortraitCount()} onClick={() => {
+            const factionOf = (n: string) => (faction?.datasheets.some((d) => d.name === n) ? list.factionId : undefined);
+            download('unit-images.zip', exportPortraitsZip(factionOf), 'application/zip');
+            setNote('ได้ไฟล์ unit-images.zip — แตกไฟล์ลงโฟลเดอร์ public/images/ แล้วรัน npm run images');
+          }}>⬇ ส่งออก (.zip สำหรับเซิร์ฟเวอร์)</button>
+          <button className="btn ghost" disabled={!ownPortraitCount()} onClick={() => download('unit-images-backup.json', exportPortraitsJson(), 'application/json')}>⬇ สำรอง (.json)</button>
+          <label className="btn ghost">
+            ⬆ กู้คืนจาก .json
+            <input type="file" accept="application/json,.json" hidden onChange={async (e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              if (!f) return;
+              try { setNote(`กู้คืน ${importPortraitsJson(await f.text())} รูป`); } catch { setNote('ไฟล์นี้ไม่ใช่ไฟล์สำรองรูป'); }
+            }} />
+          </label>
+        </div>
         {imported && (
           <div className="small">
             <div>จับคู่ได้ {imported.ok.length} รูป{imported.ok.length ? `: ${imported.ok.join(', ')}` : ''}</div>
@@ -465,7 +483,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                   } catch (err) { setNote(err instanceof Error ? err.message : 'อ่านรูปไม่ได้'); }
                 }} />
               </label>
-              {sheet && getPortrait(sheet.name) && <button className="btn small ghost" onClick={() => { setPortrait(sheet.name, null); setNote('ลบรูปแล้ว'); }}>ลบรูป</button>}
+              {sheet && hasOwnPortrait(sheet.name) && <button className="btn small ghost" onClick={() => { setPortrait(sheet.name, null); setNote(getPortrait(sheet.name) ? 'ลบรูปของเครื่องนี้แล้ว (กลับไปใช้รูปจากเซิร์ฟเวอร์)' : 'ลบรูปแล้ว'); }}>ลบรูป</button>}
               <span className="tiny muted grow">ใช้กับทุกหน่วย {u.datasheet} (ทั้งการ์ดและ token บนสนาม)</span>
             </div>
           </div>

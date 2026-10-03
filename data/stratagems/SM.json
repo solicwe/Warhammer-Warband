@@ -1,0 +1,747 @@
+{
+ "_comment": "Space Marine stratagems in machine-readable form. Keys: stratagem NAME (as on the card) or NAME@Detachment. Anything not listed here is read from the card text (src/engine/stratagems.ts). See docs/EDITING.md.",
+ "rules": {
+  "HONOUR THE CHAPTER": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "lance"
+     ]
+    },
+    {
+     "attack": "melee",
+     "ap": 1,
+     "if": [
+      "detActive:assault"
+     ]
+    }
+   ]
+  },
+  "COURAGE AND HONOUR!": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "lance"
+     ]
+    },
+    {
+     "attack": "melee",
+     "ap": 1,
+     "if": [
+      "detActive:assault"
+     ]
+    }
+   ]
+  },
+  "ONLY IN DEATH DOES DUTY END": {
+   "effects": [
+    {
+     "fightOnDeath": 1
+    }
+   ],
+   "bot": "never"
+  },
+  "DEATHLESS DUTY": {
+   "effects": [
+    {
+     "fightOnDeath": 1
+    }
+   ],
+   "bot": "never"
+  },
+  "FIGHT TO THE END": {
+   "effects": [
+    {
+     "fightOnDeath": 4
+    }
+   ],
+   "bot": "never"
+  },
+  "OBDURATE VENGEANCE": {
+   "effects": [
+    {
+     "fightOnDeath": 3
+    }
+   ],
+   "bot": "never"
+  },
+  "DUTY UNTO DEATH": {
+   "effects": [
+    {
+     "fightOnDeath": 4
+    }
+   ],
+   "bot": "never",
+   "status": "partial",
+   "note": "+1 ต่อการทอยเมื่ออยู่บน Vowed objective: ทำเอง"
+  },
+  "FINAL RETRIBUTION": {
+   "effects": [
+    {
+     "fightOnDeath": 4
+    }
+   ],
+   "bot": "never",
+   "status": "partial",
+   "note": "+1 ต่อการทอยเมื่อมี Chaplain ภายใน 12\": ทำเอง"
+  },
+  "STAND TO THE END": {
+   "effects": [
+    {
+     "fightOnDeath": 4
+    }
+   ],
+   "bot": "never",
+   "status": "partial",
+   "note": "+1 ต่อการทอยถ้า ENTRENCHED: ทำเอง"
+  },
+  "SAVAGE ECHOES": {
+   "effects": [
+    {
+     "attack": "melee",
+     "attacks": 1
+    }
+   ],
+   "until": "turn",
+   "status": "partial",
+   "note": "ระบบเลือก +1 A ให้ (เปลี่ยนเป็น +1 S หรือ Red Thirst ทำเอง)"
+  },
+  "RED RAMPAGE": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "lethal hits"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "ระบบเลือก [LETHAL HITS] ให้ (เลือก [LANCE] หรือ Red Thirst ทำเอง)"
+  },
+  "LIMB FROM LIMB": {
+   "effects": [
+    {
+     "attack": "melee",
+     "ap": 1
+    }
+   ],
+   "status": "partial",
+   "note": "ระบบเลือก +1 AP ให้ (เลือก +1 S หรือ Red Thirst ทำเอง)"
+  },
+  "ANCIENT FURY": {
+   "effects": [
+    {
+     "move": 1,
+     "toughness": 1,
+     "oc": 1,
+     "hit": 1
+    }
+   ],
+   "until": "nextCommand",
+   "status": "partial",
+   "note": "Leadership ดีขึ้น 1: ทำเอง"
+  },
+  "ONSLAUGHT OF FIRE": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "hit": 1,
+     "if": [
+      "targetClosest",
+      "within12"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "ส่วนที่ทำลายโมเดลแล้วได้ผลเพิ่ม: ทำเอง"
+  },
+  "STRIKE FROM THE SHADOWS@Vanguard Spearhead": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "hit": 1,
+     "ap": 1,
+     "if": [
+      "beyond:12"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "BS ดีขึ้น 1 ทำเป็น +1 hit · ส่วนที่ทำลายโมเดลแล้วได้ผลเพิ่ม: ทำเอง"
+  },
+  "STUNNING FUSILLADE": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "hit": 1,
+     "ap": 1,
+     "if": [
+      "beyond:12"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "BS ดีขึ้น 1 ทำเป็น +1 hit · ส่วนที่ทำลายโมเดลแล้วได้ผลเพิ่ม: ทำเอง"
+  },
+  "KRAKEN ROUNDS": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "ap": 1
+    },
+    {
+     "rangeBonus": 6
+    }
+   ]
+  },
+  "HELLFIRE ROUNDS": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "anti-infantry 2+",
+      "anti-monster 5+"
+     ]
+    }
+   ]
+  },
+  "MARTIAL MASTERY": {
+   "effects": [
+    {
+     "reroll": "wounds1"
+    }
+   ],
+   "status": "partial",
+   "note": "re-roll wound ได้ทุกลูกเมื่ออยู่บน Vowed objective: ทำเอง"
+  },
+  "LOST TO RAGE": {
+   "effects": [
+    {
+     "attack": "melee",
+     "attacks": 1,
+     "strength": 1,
+     "ap": 1
+    }
+   ],
+   "status": "partial",
+   "note": "ผลเสียเมื่อไม่มี Chaplain ภายใน 12\": ทำเอง"
+  },
+  "KILL SHOT": {
+   "effects": [
+    {
+     "reroll": "wounds1",
+     "if": [
+      "targetMV"
+     ]
+    },
+    {
+     "reroll": "wounds",
+     "if": [
+      "targetMV",
+      "targetBelowStarting"
+     ]
+    }
+   ]
+  },
+  "FURIOUS DEDICATION": {
+   "effects": [
+    {
+     "chargeBonus": 2
+    },
+    {
+     "attack": "melee",
+     "attacks": 1
+    }
+   ],
+   "until": "turn"
+  },
+  "CRUSADING CONQUERORS": {
+   "effects": [
+    {
+     "oc": 1
+    }
+   ],
+   "until": "nextCommand"
+  },
+  "UNYIELDING MIGHT": {
+   "effects": [
+    {
+     "oc": 1
+    }
+   ],
+   "until": "nextCommand"
+  },
+  "NO SACRIFICE TOO GREAT": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "strength": 1,
+     "if": [
+      "plasmaWeapon"
+     ]
+    }
+   ]
+  },
+  "REVELATION OF GUILT": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "hit": 1,
+     "if": [
+      "plasmaWeapon"
+     ]
+    }
+   ]
+  },
+  "COGITATED FEROCITY": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "lethal hits"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "ระบบเลือก [LETHAL HITS] ให้ (เลือก [SUSTAINED HITS 1] ทำเอง)"
+  },
+  "SPEAR THRUST AND SABRE SWING": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "lance"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "ระบบเลือก [LANCE] ให้ (เลือก [LETHAL HITS] / ส่วนของ MOUNTED ทำเอง)"
+  },
+  "AUGMENTED TARGETING": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "lethal hits"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "ระบบเลือก [LETHAL HITS] ให้ (เลือก [SUSTAINED HITS 1] / ส่วน ENTRENCHED ทำเอง)"
+  },
+  "AGGRESSIVE ONSLAUGHT": {
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterAdvance",
+      "chargeAfterAdvance"
+     ]
+    }
+   ],
+   "until": "turn",
+   "status": "partial",
+   "note": "ตามกฎเลือกได้อย่างใดอย่างหนึ่ง (ยิงหรือชาร์จ) · Red Thirst ทำเอง"
+  },
+  "RED WRATH": {
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterAdvance",
+      "chargeAfterAdvance"
+     ]
+    }
+   ],
+   "until": "turn",
+   "status": "partial",
+   "note": "ตามกฎเลือกได้อย่างใดอย่างหนึ่ง (ยิงหรือชาร์จ) · Red Thirst ทำเอง"
+  },
+  "RELENTLESS ASSAULT": {
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterFallBack",
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "status": "partial",
+   "note": "ตามกฎเลือกได้อย่างใดอย่างหนึ่ง (ยิงหรือชาร์จ) · Red Thirst ทำเอง"
+  },
+  "TACTICAL MASTERY": {
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterAdvance",
+      "chargeAfterAdvance"
+     ]
+    },
+    {
+     "eligible": [
+      "shootAfterFallBack",
+      "chargeAfterFallBack"
+     ],
+     "units": [
+      "RAVENWING"
+     ]
+    }
+   ],
+   "until": "turn"
+  },
+  "FEINT AND THRUST": {
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterFallBack",
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "status": "partial",
+   "note": "Phobos / Scout Squad: Advance แล้วยิงและชาร์จได้ด้วย: ทำเอง"
+  },
+  "WRATHFUL RAMPAGE": {
+   "effects": [
+    {
+     "eligible": [
+      "chargeAfterAdvance"
+     ]
+    }
+   ],
+   "until": "turn",
+   "status": "partial",
+   "note": "ส่วนที่มี Chaplain ภายใน 12\" หรือหน่วยเสียโมเดล: ทำเอง"
+  },
+  "UNRELENTING HUNTERS": {
+   "effects": [
+    {
+     "eligible": [
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "status": "partial",
+   "note": "หน่วย Space Wolves: Advance แล้วชาร์จได้ด้วย: ทำเอง"
+  },
+  "HERESY UNDONE": {
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterAdvance",
+      "chargeAfterAdvance",
+      "shootAfterFallBack",
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "เป้าต้องเป็นหน่วยที่ถูก auspex scan: ทำเอง"
+  },
+  "KNIGHTS OF IRON": {
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never"
+  },
+  "GAUNTLET OF THE GOD-EMPEROR": {
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never"
+  },
+  "CERAMITE SLEDGEHAMMER": {
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never",
+   "status": "partial",
+   "note": "Heavy Transport เดินทะลุโมเดลศัตรู: ทำเอง"
+  },
+  "BOUNDING ADVANCE": {
+   "effects": [
+    {
+     "moveThroughModels": true
+    }
+   ],
+   "bot": "never"
+  },
+  "SHOCK CAVALRY": {
+   "effects": [
+    {
+     "moveThroughModels": true
+    }
+   ],
+   "bot": "never",
+   "status": "partial",
+   "note": "ทะลุ terrain ที่สูง ≤4\": ทำเอง"
+  },
+  "FENRISIAN FEROCITY": {
+   "effects": [
+    {
+     "moveThroughModels": true,
+     "mobile": true
+    }
+   ],
+   "bot": "never"
+  },
+  "FOCUSED HATRED": {
+   "effects": [
+    {
+     "chargeThroughModels": true
+    }
+   ],
+   "bot": "never"
+  },
+  "SQUAD TACTICS": {
+   "do": [
+    {
+     "move": "D6"
+    }
+   ],
+   "status": "partial",
+   "note": "6\" ถ้าอยู่ใต้ Tactical Doctrine: ทำเอง"
+  },
+  "CALCULATED FEINT": {
+   "do": [
+    {
+     "move": "D6"
+    }
+   ],
+   "status": "partial",
+   "note": "6\" ถ้าเป็น PHOBOS/SCOUT: ทำเอง"
+  },
+  "RAPTORIAL VIGILANCE": {
+   "do": [
+    {
+     "move": "D6"
+    }
+   ],
+   "status": "partial"
+  },
+  "PRACTICAL TACTICS": {
+   "do": [
+    {
+     "move": "D6"
+    }
+   ],
+   "status": "partial"
+  },
+  "THUNDEROUS PURSUIT": {
+   "do": [
+    {
+     "move": "D6"
+    }
+   ],
+   "status": "partial"
+  },
+  "MARCHING EVER ON": {
+   "do": [
+    {
+     "move": "D6+1"
+    }
+   ]
+  },
+  "EVASIVE REPOSITIONING": {
+   "do": [
+    {
+     "move": "D6"
+    }
+   ],
+   "status": "partial",
+   "note": "re-roll D6 ถ้า ENTRENCHED: ทำเอง"
+  },
+  "A CEASELESS CAUSE": {
+   "do": [
+    {
+     "move": "6"
+    }
+   ]
+  },
+  "RIGID DISCIPLINE": {
+   "do": [
+    {
+     "move": "6"
+    }
+   ],
+   "status": "partial",
+   "note": "เป็น Fall Back และต้องจบใน DZ หรือบน objective"
+  },
+  "GUERRILLA TACTICS": {
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "partial",
+   "note": "เลือกได้หลายหน่วย: ใช้ซ้ำทีละหน่วย"
+  },
+  "INTO DARKNESS": {
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "partial"
+  },
+  "ORBITAL TELEPORTARIUM": {
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "partial",
+   "note": "กลับลงด้วย Deep Strike เทิร์นหน้า"
+  },
+  "SITE-TO-SITE TELEPORTATION": {
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "partial"
+  },
+  "DUTY AND HONOUR": {
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  },
+  "HUNTERS’ TRAIL@Company of Hunters": {
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  },
+  "GLORIOUS SACRIFICE": {
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  },
+  "WRATHFUL CONQUERORS": {
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  },
+  "DOMINATOR BEACON": {
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  },
+  "A DEADLY PRIZE": {
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "status": "partial"
+  },
+  "RUNES OF CLAIMING": {
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  },
+  "TERRITORIAL ADVANTAGE": {
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  },
+  "ULTRAMARIAN DESTINY": {
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  },
+  "A GRIM WARNING": {
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  },
+  "UNSPARING EXECUTION": {
+   "effects": [
+    {
+     "forceDesperate": true
+    }
+   ],
+   "bot": "never",
+   "status": "partial"
+  },
+  "SOUL-DARKENED FURY": {
+   "effects": [
+    {
+     "forceDesperate": true
+    }
+   ],
+   "bot": "never",
+   "status": "partial"
+  },
+  "ICY CALM": {
+   "effects": [
+    {
+     "eligible": [
+      "actionAfterAdvance",
+      "actionAfterFallBack"
+     ]
+    }
+   ]
+  },
+  "ADAPTIVE OPERATIONS": {
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterAction"
+     ]
+    }
+   ]
+  },
+  "DEATH ON THE WIND": {
+   "effects": [
+    {
+     "eligible": [
+      "chargeAfterAdvance"
+     ]
+    }
+   ]
+  },
+  "ADVANCED DEPLOYMENT": {
+   "effects": [
+    {
+     "disembarkAfterAdvance": true
+    }
+   ],
+   "status": "partial"
+  },
+  "CLOAKED POSITION": {
+   "effects": [
+    {
+     "detection": -3
+    }
+   ],
+   "until": "turn"
+  }
+ }
+}

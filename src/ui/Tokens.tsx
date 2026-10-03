@@ -1,7 +1,7 @@
 // Original token art (simple vector portraits) for models and unit cards.
 import { useRef } from 'react';
 import type { ModelState, UnitState } from '../engine/types';
-import { fileToPortrait, getPortrait, setPortrait, usePortraitsVersion } from './portraits';
+import { fileToPortrait, getPortrait, hasOwnPortrait, setPortrait, usePortraitsVersion } from './portraits';
 
 export type TokenKind = 'sm' | 'ork' | 'grot' | 'walker' | 'vehicle' | 'monster' | 'generic';
 
@@ -112,7 +112,7 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
         {editable && !photo && <text x="50" y="96" fontSize="13" textAnchor="middle" fill="var(--muted)">+ รูป</text>}
       </svg>
       {editable && <input ref={input} type="file" accept="image/*" hidden onChange={(e) => pick(e.target.files?.[0])} />}
-      {editable && photo && <button type="button" className="portrait-x" onClick={() => datasheet && setPortrait(datasheet, null)} aria-label="ลบรูป">×</button>}
+      {editable && datasheet && hasOwnPortrait(datasheet) && <button type="button" className="portrait-x" onClick={() => datasheet && setPortrait(datasheet, null)} aria-label="ลบรูป">×</button>}
     </span>
   );
 }

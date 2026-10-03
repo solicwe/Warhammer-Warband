@@ -1,0 +1,169 @@
+{
+ "_comment": "Ork stratagems in machine-readable form. Keys: stratagem NAME (as on the card) or NAME@Detachment. Anything not listed here is read from the card text (src/engine/stratagems.ts). See docs/EDITING.md.",
+ "rules": {
+  "MOW 'EM DOWN": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "cleave 1"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "ถ้าอาวุธมี [CLEAVE] อยู่แล้ว +1: ทำเอง"
+  },
+  "CLOSE-RANGE DAKKA": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "rapid fire 1"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "ถ้าอาวุธมี [RAPID FIRE] อยู่แล้ว +1: ทำเอง"
+  },
+  "ORKS IS NEVER BEATEN": {
+   "effects": [
+    {
+     "fightOnDeath": 4,
+     "fightOnDeathRiled": 1
+    }
+   ],
+   "bot": "never"
+  },
+  "TOO ARROGANT TO DIE": {
+   "effects": [
+    {
+     "fightOnDeath": 4,
+     "fightOnDeathRiled": 1
+    }
+   ],
+   "bot": "never"
+  },
+  "CRAZED RAMPAGE": {
+   "effects": [
+    {
+     "fightOnDeath": 4
+    }
+   ],
+   "bot": "never",
+   "status": "partial",
+   "note": "+3 ต่อการทอยถ้าเป็น Deff Dread: ทำเอง"
+  },
+  "HULKING BRUTES": {
+   "effects": [
+    {
+     "defend": {
+      "woundIfStronger": -1,
+      "vs": "ranged"
+     }
+    }
+   ],
+   "status": "partial",
+   "note": "ตัวเลือก +1CP (−1 wound ทุกการยิง): ทำเอง"
+  },
+  "SPEEDIEST FREEKS": {
+   "effects": [
+    {
+     "defend": {
+      "minHit": 4,
+      "vs": "ranged"
+     }
+    }
+   ]
+  },
+  "LONG, UNCONTROLLED BURSTS": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "reroll": "hits",
+     "if": [
+      "targetFly"
+     ]
+    }
+   ]
+  },
+  "BREAKIN' HEADS": {
+   "do": [
+    {
+     "mortals": "D3"
+    },
+    {
+     "unshock": true
+    }
+   ]
+  },
+  "GOADED INTO ACTION": {
+   "do": [
+    {
+     "surge": "D6"
+    }
+   ],
+   "status": "partial",
+   "note": "re-roll D6 ถ้า riled up: ทำเอง"
+  },
+  "WHERE D'YA FINK YOU'RE GOING?": {
+   "effects": [
+    {
+     "forceDesperate": true
+    }
+   ],
+   "bot": "never",
+   "status": "partial"
+  },
+  "MIND MOSTLY ON THE MISSION": {
+   "effects": [
+    {
+     "eligible": [
+      "actionAfterAdvance",
+      "actionAfterFallBack"
+     ]
+    }
+   ]
+  },
+  "DUBIOUS RESTRAINT": {
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  },
+  "READIED BRAWLERS": {
+   "effects": [
+    {
+     "assaultDisembark": true
+    }
+   ]
+  },
+  "GRAB IT": {
+   "do": [
+    {
+     "move": "6",
+     "noCharge": true
+    }
+   ],
+   "status": "partial",
+   "note": "ต้องจบบน objective"
+  },
+  "SCARPER!": {
+   "do": [
+    {
+     "move": "D6"
+    }
+   ],
+   "status": "partial",
+   "note": "6\" ถ้าเป็นหน่วยที่มี leader"
+  },
+  "WHIRLIGIG EVASION": {
+   "do": [
+    {
+     "move": "D6",
+     "moveIfRiled": "6"
+    }
+   ]
+  }
+ }
+}

@@ -28,4 +28,11 @@ fs.mkdirSync(path.join(OUT, 'data/factions'), { recursive: true });
 fs.writeFileSync(path.join(OUT, 'index.html'), page);
 fs.copyFileSync(path.join(ROOT, 'public/data/index.json'), path.join(OUT, 'data/index.json'));
 for (const f of fs.readdirSync(path.join(ROOT, 'public/data/factions'))) fs.copyFileSync(path.join(ROOT, 'public/data/factions', f), path.join(OUT, 'data/factions', f));
-console.log(`artifact/index.html ${(page.length / 1024).toFixed(0)} KB + ${fs.readdirSync(path.join(OUT, 'data/factions')).length} faction files`);
+// unit images (public/images): publish them next to the page, same layout
+const IMG = path.join(ROOT, 'public/images');
+let images = 0;
+if (fs.existsSync(IMG)) {
+  fs.cpSync(IMG, path.join(OUT, 'images'), { recursive: true, filter: (src) => !/(\.gitkeep|README\.md)$/.test(src) });
+  images = Object.values(JSON.parse(fs.readFileSync(path.join(IMG, 'manifest.json'), 'utf8')).units ?? {}).reduce((a, f) => a + Object.keys(f).length, 0);
+}
+console.log(`artifact/index.html ${(page.length / 1024).toFixed(0)} KB + ${fs.readdirSync(path.join(OUT, 'data/factions')).length} faction files + ${images} unit images`);

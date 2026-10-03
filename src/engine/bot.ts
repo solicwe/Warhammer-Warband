@@ -14,14 +14,13 @@ import {
 import { abilityChoices, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
-import { applyDetachmentStratagem, planStratagem, stratagemBlock } from './stratagems';
 import { actionOptions, startAction } from './missions';
 import {
   centre, chargeValue, isBrawler, meleeKills, moveOf, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
 import { bestArrival, bestFallBack, bestMove, canLeave, ctxFor, movesTowards, planMove, scoreSpot } from './botMove';
 import {
-  botCounteroffensive, botCrushingImpact, botEpicChallenge, botExplosives, botHeroic, botRapidIngress, botSmokescreen, isBot, wantsBravery,
+  botCounteroffensive, botCrushingImpact, botEpicChallenge, botExplosives, botHeroic, botOffensiveStratagem, botRapidIngress, botSmokescreen, isBot, wantsBravery,
 } from './botStrats';
 import type { GameState, PlayerId, UnitState } from './types';
 
@@ -49,23 +48,6 @@ function botAttack(s: GameState, kind: 'shoot' | 'fight' | 'overwatch', attacker
 }
 
 // ---------- stratagems ----------
-
-const ATTACK_BUFFS = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
-
-/** Before a big attack, spend CP on a detachment stratagem whose whole effect the engine applies (keeps 1 CP for re-rolls). */
-function botAttackStratagem(s: GameState, u: UnitState) {
-  if (unitValue(u) < 110) return;
-  const p = u.owner;
-  for (const d of s.players[p].detachments) {
-    for (const st of d.stratagems) {
-      const plan = planStratagem(st);
-      if (!plan.full || plan.target !== 'own' || !plan.effects.every((k) => ATTACK_BUFFS.includes(k))) continue;
-      if (s.players[p].cp < st.cp + 1 || stratagemBlock(s, p, st, u)) continue;
-      applyDetachmentStratagem(s, p, st, u.id);
-      return;
-    }
-  }
-}
 
 // ---------- deployment ----------
 
@@ -309,7 +291,7 @@ export function botShootOne(s: GameState): boolean {
       botExplosives(s, u);
     }
     const ranked = rank();
-    if (!busy && ranked.length) botAttackStratagem(s, u);
+    if (!busy && ranked.length) botOffensiveStratagem(s, u, 'shoot', ranked.slice(0, 3).map((x) => x.t));
     for (const { t } of ranked) {
       if (!onBoard(t)) continue;
       const r = buildShootPools(s, u.id, t.id, { mode });
@@ -407,7 +389,7 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
       return { e, r, v: shotValue(s, u, e, ev) };
     }).filter((x) => x.r.pools.length).sort((a, b) => b.v - a.v);
     if (scored.length) {
-      botAttackStratagem(s, u);
+      botOffensiveStratagem(s, u, 'fight', [scored[0].e]);
       const epic = botEpicChallenge(s, u, scored[0].e.id);
       const r = buildFightPools(s, u.id, scored[0].e.id, { epicChallengeModel: epic });
       // the player rolls the saves: the dice tray finishes the fight (marks it fought, offers Counteroffensive)

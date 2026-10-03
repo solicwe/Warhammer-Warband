@@ -364,3 +364,37 @@ details > .strat-card { margin-top: 6px; }
 .ab-bar .btn { background: var(--accent, #2f6fd1); color: #fff; }
 .ab-bar .btn:disabled { background: var(--card2); color: var(--ink-muted); }
 .ab-bar .btn.on { box-shadow: 0 0 0 2px var(--ink) inset; }
+
+/* ---------- touch: every control is at least ~44px to press, with a visible press state ---------- */
+button, .btn, label.btn, select, .unit-pill, .seg button, .wg-chips button { touch-action: manipulation; }
+.btn { min-height: 44px; font-size: 15px; border-radius: 10px; }
+.btn.small { min-height: 40px; padding: 0 12px; font-size: 14px; }
+.btn.big { min-height: 56px; font-size: 17px; }
+.btn:not(:disabled):active, .unit-pill:active, .seg button:active, .wg-chips button:active, .ab-add:active, .die.pick:active { transform: scale(0.96); filter: brightness(0.92); }
+.btn, .unit-pill, .seg button { transition: transform 0.08s ease, filter 0.08s ease, background 0.15s ease; }
+.btn:disabled { opacity: 0.35; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn-row > .btn { flex: 1 1 140px; }
+.seg button { min-height: 42px; font-size: 14px; }
+.wg-chips button { min-height: 40px; border-radius: 20px; padding: 0 12px; font-size: 14px; }
+.wg-step button { width: 42px; height: 42px; }
+.ab-add { width: 44px; height: 44px; }
+input, select { min-height: 44px; font-size: 16px; } /* 16px stops iOS zooming into the field */
+.unit-pill { min-height: 42px; padding: 0 14px; font-size: 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; }
+.unit-pill.done { opacity: 0.5; }
+.unit-pill.done::after { content: '✓'; margin-left: 4px; font-weight: 700; }
+.die { width: 36px; height: 36px; font-size: 17px; border-radius: 8px; }
+.die.pick, .die.picked { width: 40px; height: 40px; }
+.portrait-x { width: 28px; height: 28px; line-height: 28px; font-size: 16px; top: -8px; right: -8px; }
+.topbar .btn, .topbar button { min-height: 44px; }
+.topbar .btn.ghost:first-child { min-width: 44px; font-size: 22px; }
+.score { min-height: 44px; }
+.phasebar span { font-size: 12px; padding: 6px 0; }
+.panel { gap: 12px; }
+.sticky-act { position: sticky; bottom: calc(-12px - env(safe-area-inset-bottom, 0px)); margin: 0 -12px calc(-12px - env(safe-area-inset-bottom, 0px)); padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--card); box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.08); z-index: 2; }
+.hint { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--ink); background: #fff; border-left: 4px solid var(--accent); border-radius: 8px; padding: 8px 10px; line-height: 1.4; }
+.hint::before { content: '👉'; flex: none; }
+.btn.wide { width: 100%; }
+.acts > .btn:not(.small) { flex: 1 1 0; min-width: 96px; min-height: 52px; font-size: 16px; font-weight: 600; }
+.tray .sticky-act.tray-act { margin: 0 -16px calc(-16px - env(safe-area-inset-bottom, 0px)); padding: 10px 16px calc(16px + env(safe-area-inset-bottom, 0px)); bottom: calc(-16px - env(safe-area-inset-bottom, 0px)); }
+button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-radius: 8px; }
