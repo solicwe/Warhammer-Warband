@@ -358,3 +358,6 @@ details > .strat-card { margin-top: 6px; }
 .ab-st.partial { background: #b07d12; color: #fff; }
 .ab-st.manual, .ab-st.none { background: #5a5f6b; color: #fff; }
 .fx-labels { color: var(--accent, #7fb8ff); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ab-bar .btn { background: var(--accent, #2f6fd1); color: #fff; }
+.ab-bar .btn:disabled { background: var(--card2); color: var(--ink-muted); }
+.ab-bar .btn.on { box-shadow: 0 0 0 2px var(--ink) inset; }

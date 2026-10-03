@@ -486,7 +486,7 @@ export interface GameState {
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;
   /** destroyed models that fight / shoot after the attacking unit has finished (resolved by activations.ts) */
-  deathQueue?: { unitId: string; modelIds: string[]; targetId: string; kind: 'fight' | 'shoot'; label: string; regain?: string }[];
+  deathQueue?: { unitId: string; modelIds: string[]; targetId: string; kind: 'fight' | 'shoot'; label: string; regain?: string; alive?: boolean }[];
   /** models destroyed this phase that roll to come back at the end of it (Armour of Fate) */
   revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number }[];
 }

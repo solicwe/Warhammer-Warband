@@ -30,8 +30,16 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 - **Army rules อัตโนมัติ**: Oath of Moment (Space Marines: re-roll hit, +1 wound ถ้าเป็น codex army) และ WAAAGH! (Orks: 5+ InSv, ยิงแบบ Assault, advance แล้วชาร์จได้, re-roll advance ฟรี)
 - **Enhancements**: เลือกได้ในหน้าจัดทัพตาม detachment ที่เลือก (เช็ก CHARACTER / EPIC HERO / ซ้ำ / จำนวนตาม battle size / Upgrade ×3) และขึ้นบนการ์ดหน่วยในเกม
 - **Detachment stratagems**: ปุ่ม CP บนแถบบน — ดูกฎ detachment และใช้ stratagem ของ detachment (หัก CP, กันใช้ซ้ำใน phase เดียวกัน)
-- **กฎ Detachment ทำงานจริง** (Space Marines 43 จาก 53, Orks 10 จาก 15): โบนัสตอนยิง/ตี (+Hit/Wound/S/A/AP, re-roll, Sustained/Lethal Hits), ฝ่ายรับ (cover เมื่อโดนยิงจากเกิน 12", −1 wound เมื่อ S > T, InSv), สิทธิ์ยิง/ชาร์จหลัง Advance/Fall back, re-roll Advance/Charge ฟรี, +OC และกฎแบบ "เลือก 1 อย่าง" เช่น **Combat Doctrines** (เลือกใน Command phase, แต่ละอย่างครั้งเดียวต่อเกม), Mission Tactics, Hunting Packs, Psychic Disciplines, Legacy of the Angel — การ์ดใน Command phase บอกว่าระบบทำให้ครบ / ทำส่วนหลัก / ต้องทำเอง; บอทก็เลือก doctrine เอง
-- **Wargear**: เมนู ⋮ ของหน่วยในหน้าจัดทัพ → เปลี่ยน/เพิ่มอาวุธตาม wargear options ของ datasheet (จ่าเปลี่ยนอาวุธ, ทุก 5 โมเดลได้ 1 กระบอก, "any number", เลือก 2 อย่างจากรายการตามกฎ Pistol, เพิ่มโมเดลอย่าง Invader ATV) — อาวุธที่มีราคาเพิ่ม (เช่น thunder hammer +5/ชิ้น) บวกแต้มให้อัตโนมัติ, อาวุธที่เลือกไปอยู่บนโมเดลจริงในเกม, โล่ (storm shield / relic shield) ปรับ W / InSv ให้, อาวุธหลายกระบอก (2 godhammer lascannons) ยิงครบทุกกระบอก
+- **กฎ Detachment ทำงานจริงครบทุกอัน** (Space Marines 53, Orks 15 + army rule อย่าง Templar Vows / The Ravenwing / The Deathwing): โบนัสตอนยิง/ตี, ฝ่ายรับ, สิทธิ์ยิง/ชาร์จหลัง Advance/Fall back, re-roll ฟรี, +OC, กฎแบบ "เลือก 1 อย่าง" (Combat Doctrines, Mission Tactics, Hunting Packs, Psychic Disciplines, Templar Vows), **Saga** ของ Space Wolves (นับ tally / boast ให้เอง), ปุ่ม re-roll ฟรีในถาดลูกเต๋า (Armoured Wrath, Heroes All), ability ที่ detachment แจกให้หน่วย (Try Dat Button!, Unpredictable Genius, Powers of da Waaagh!, Sower of Dread, ’Ard as Nails …), ปุ่มระดับกองทัพ (Grim Resolve +1 OC) — 69 จาก 71 ทำให้ครบ อีก 2 อันมีหมายเหตุสั้น ๆ บนการ์ด Command phase
+- **Datasheet abilities ทำงานจริง** — Space Marines ทุก ability (295) และ Orks ทุก ability (100) เขียนเป็นข้อมูลใน `data/abilities/` แล้วระบบเล่นให้เอง:
+  - ผลถาวร/ออร่า/ตอนนำหน่วย (+Hit/Wound/S/A/AP/D, re-roll, Lethal/Sustained/Dev Wounds, InSv, FNP, −Damage, Stealth, Lone Operative, OC, Ld, Move …) พร้อมเงื่อนไข (ชาร์จมา, ยืนนิ่ง, เป้าเป็นรถ/มอนสเตอร์, อยู่บน objective, ใกล้หน่วยเพื่อน ฯลฯ)
+  - **ปุ่มกดใช้** ในแต่ละ phase พร้อมลิมิต (ครั้งเดียวต่อเกม / ต่อ round / ต่อเทิร์น) เช่น Ammo Runts, Finest Hour, Bomb Squigs, Rampart, Haywire Mine — แตะการ์ดหน่วยดูปุ่มของหน่วยนั้นได้ทุกเมื่อ
+  - **ทำงานเองตามจังหวะ**: ตอนชาร์จจบ (mortal wounds), เริ่ม Fight phase (battle-shock), หลังยิงโดนเป้า (มาร์กเป้า), ต้น Command phase (+CP, ฟื้น wound), ตอนตาย (ตีโต้ก่อนตาย, กลับมาเกิด Armour of Fate), โดนยิง (surge move), Strikes of Retribution, shoot-back ของ Invictor/ATV
+  - **ตอบโต้นอกเทิร์น**: ศัตรูเดินเข้ามาใกล้ 8" → เด้งถามว่าจะเดินหนีไหม (Evade and Survive ฯลฯ), ศัตรู Fall back → ตามไปได้
+  - เลือก 2 ใน 3 ability (Author of the Codex), เป้าสำรองของ Oath (Master of Battle), แยกหน่วย Combat Squads ในหน้าจัดทัพ, ปุ่มเปลี่ยนลูกเต๋าเป็น 6 (Armorium Cherub)
+  - ฝ่ายอื่นทั้งหมด: ระบบอ่านข้อความ ability เองเฉพาะประโยคที่เข้าใจทั้งประโยค (ราว 30%) ที่เหลือทำเองด้วย Buff chips
+  - การ์ดหน่วยบอกทุก ability ว่า ✓ ระบบทำให้ / ◐ บางส่วน / ✋ ทำเอง; ✨ บนการ์ดบอกว่าตอนนี้มีอะไรมีผลกับหน่วยนั้นบ้าง; บอทก็กดใช้ ability เอง
+- **Wargear** (เลือกตอนจัดทัพเท่านั้น): เมนู ⋮ ของหน่วยในหน้าจัดทัพ → เปลี่ยน/เพิ่มอาวุธตาม wargear options ของ datasheet (จ่าเปลี่ยนอาวุธ, ทุก 5 โมเดลได้ 1 กระบอก, "any number", เลือก 2 อย่างจากรายการตามกฎ Pistol, เพิ่มโมเดลอย่าง Invader ATV) — อาวุธที่มีราคาเพิ่ม (เช่น thunder hammer +5/ชิ้น) บวกแต้มให้อัตโนมัติ, อาวุธที่เลือกไปอยู่บนโมเดลจริงในเกม, โล่ (storm shield / relic shield) ปรับ W / InSv ให้, อาวุธหลายกระบอก (2 godhammer lascannons) ยิงครบทุกกระบอก
 - **สนามแบบโต๊ะแข่ง**: ruins (พื้นกระเบื้อง, กำแพง+หน้าต่าง, ชั้นบน), armoured containers, sandbag barricades, craters, objective marker 40mm พร้อมเลข OC สด, ป้าย 🛡 Cover / 👁 Hidden และเส้น line of sight ตอนเลือกเป้ายิง, token รูปตัวละคร (Space Marine / Ork / Grot / Walker / Vehicle / Monster, มงกุฎ = CHARACTER)
 - **เล่นกับบอทได้** (single-player): บอทเล่นตามกฎทีละหน่วย พร้อมแอนิเมชันและคำบรรยายว่ากำลังทำอะไร — เลือกเป้ายิง/ตีจากค่าคาดหวัง (แต้มที่ฆ่าได้, เก็บหน่วย, เป้า Oath, คนยืน objective), ยืนเฝ้า objective เมื่อจำเป็น, หน่วย melee ชาร์จตามโอกาสสำเร็จ 2D6, ใช้ Command Re-roll ชาร์จ / Fire Overwatch, ใช้ Oath of Moment / WAAAGH! ตามจังหวะ
 - **เอฟเฟคบนกระดาน**: เส้นกระสุน/ฟันดาบ, ตัวเลข −W, กากบาทโมเดลที่ตาย, mortal wound; ป้าย **OATH** เหนือหน่วยที่ถูกเลือกเป็น Oath of Moment
@@ -60,6 +68,7 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 | แผนที่แข่ง (layout) | `data/layouts.json` สร้างด้วย `python3 scripts/extract-layouts.py <โฟลเดอร์ภาพ layout> > data/layouts.json` |
 | Primary / Secondary / action | `data/missions.json` (`primaries`, `secondaries`, `actions`) |
 | กฎ Detachment ที่ระบบทำให้อัตโนมัติ (โบนัส, เงื่อนไข, Combat Doctrines ฯลฯ) | `data/detachment-rules.json` (ใส่ชื่อ detachment แล้วเขียน effect ตามคำอธิบายบนหัวไฟล์) |
+| Datasheet abilities | `data/abilities/<FACTION>.json` — คีย์คือชื่อ ability (หรือ `ชื่อ@datasheet`), `effects` = ผลถาวร/ออร่า, `act` = ปุ่ม/ทริกเกอร์ (ดูชนิดฟิลด์ใน `src/engine/effects.ts` และ `src/engine/activations.ts`); faction ที่ไม่มีไฟล์จะใช้ตัวอ่านข้อความ `src/engine/abilityText.ts` |
 | Wargear options / ราคาอาวุธ | มาจาก Wahapedia อัตโนมัติ (`npm run data`) แก้ด้วยมือได้ใน `data/overrides/<FACTION>.json` (`wargearOptions`, `wargearCosts`) |
 | กลุ่ม Faction (Imperium / Chaos / Xenos) และ sub-faction เช่น Chapter ของ Space Marines | `data/factions-meta.json` แล้ว `npm run data` (detachment จับคู่ Chapter อัตโนมัติจากเนื้อกฎ ถ้าผิดใส่ใน `detachments: { "ชื่อ": "KEYWORD" }`) |
 | ตัวเลขกฎหลัก (engagement, coherency, CP, ระยะ charge, cap ของ modifier, core stratagems) | `data/core-rules.json` |
@@ -70,18 +79,20 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 
 ## โครงสร้าง
 ```
-data/            core-rules.json, missions.json, layouts.json, detachment-rules.json, factions-meta.json, overrides/   ← ไฟล์ที่ตั้งใจให้แก้
+data/            core-rules.json, missions.json, layouts.json, detachment-rules.json, abilities/, factions-meta.json, overrides/   ← ไฟล์ที่ตั้งใจให้แก้
 scripts/         build-data.mjs (Wahapedia CSV → JSON)
 public/data/     ข้อมูลที่ build แล้ว (โหลดตอนเลือก faction)
-src/engine/      rules engine: dice, geometry, visibility, army (+wargear), attack, game (phases + scoring), pathing (route/settle moves), detachments, missions, secondaries, stratagems, bot
+src/engine/      rules engine: dice, geometry, visibility, army (+wargear), attack, game (phases + scoring), pathing (route/settle moves), effects (abilities + detachments), activations (buttons/triggers/reactions), abilityText, detachments, missions, secondaries, stratagems, bot
 src/ui/          React: Board (SVG + pan/pinch/drag), DiceTray, GameScreen, ArmyBuilder
 docs/            สรุปกฎ 11th ที่ตรวจแล้ว + game design
 ```
 
 ## ข้อจำกัดตอนนี้ (สิ่งที่ยังไม่ได้ทำ)
 - Detachment stratagems: ระบบอ่านข้อความแล้วใส่ผลให้อัตโนมัติได้ประมาณ 1 ใน 3 (+1 Hit/Wound, re-roll, AP, Lethal/Sustained/Dev Wounds, Ignores Cover, −1 Hit/Wound/AP ของศัตรู, −1 Damage, FNP, Cover, Fights First, +1 Advance/Charge) ที่เหลือ (เดินพิเศษ, ยิงนอกเฟส, mortal wounds, เลือก doctrine ฯลฯ) หัก CP + บันทึกให้ แล้วทำตามข้อความเอง
-- กฎ Detachment ที่ยังต้องทำเอง: Space Marines 10 อัน (Inner Circle, Angelic Host, Lion's Blade, Champions of Fenris, Armoured Speartip, Living Miracle, Interrogation Conclave, Veterans of the Fang, Fulguris, Subversion Assets) + ส่วนรองของบางอัน (นับ Saga, re-roll 1 ลูกแบบ Armoured Wrath ฯลฯ) และ Orks 5 อัน (Dread Mob, Runt Swarm, Madcap Meks, Brute Bosses, Wurrband) — การ์ดใน Command phase บอกว่าส่วนไหนต้องทำเอง
-- Datasheet abilities ส่วนใหญ่ยังไม่ทำงานอัตโนมัติ → ใช้ Buff chips ใส่ผลเอง
+- Detachment: Champions of Fenris (หน้าต่าง Heroic Intervention เปิดซ้ำได้หลังใช้แต่ละครั้ง) และ Ceramite Sentinels (keyword ENTRENCHED ไม่ได้ตรวจ) มีหมายเหตุ; ส่วนที่ระบบเลือกแทนผู้เล่น: Vowed Target (Aggressive Push), หน่วยรับ Deep Strike ของ Orbital Assault Force, Slayer's Oath keyword, Ferocious Strike (Lethal/Sustained ตาม S กับ T)
+- Ability ของ Space Marines/Orks ที่ยังต้องทำเอง: Miraculous Saviour, Master of Deceit, Strategium Command, Emergency Combat Embarkation, Stabilised Disembarkation, Pilin' Out, Pulse Jet; ทำบางส่วน: Drop Pod Assault (ผู้โดยสารลงเอง), Teleport Homer (ตำแหน่ง token), Seeker of the Unfound, Cerebrex (redeploy), ป้อมปราการ (Fortification)
+- ปุ่ม re-roll damage ยังไม่มีในถาดลูกเต๋า (ability ที่ให้ re-roll hit/wound/damage 1 ลูกใช้ได้แค่ hit/wound)
+- ฝ่ายอื่นทั้งหมด: ability ส่วนใหญ่ (ราว 70%) และกฎกองทัพ (Acts of Faith, Battle Focus ฯลฯ) ยังไม่อัตโนมัติ → ใช้ Buff chips
 - Wargear: ข้อความ option ที่เขียนแปลก ๆ บางอัน (ราว 3%) แปลงไม่ได้ จะไม่ขึ้นให้เลือก; ability ของอุปกรณ์ที่ไม่ใช่อาวุธ (banner, icon, drone) ยังไม่มีผล ยกเว้นโล่ที่ปรับ W/InSv และ helix gauntlet (FNP)
 - รูปตัวละครเริ่มต้นเป็นภาพวาดเวกเตอร์ของโปรเจกต์เอง (ไม่ใช้รูปโมเดลของ GW เพราะติดลิขสิทธิ์) — แตะรูปในหน้า datasheet เพื่อใส่รูปของคุณเอง รูปจะขึ้นทั้งบนการ์ดและบน token ในสนาม (เก็บในเครื่องนั้นเท่านั้น)
 - Aircraft, Firing Deck ยังไม่มี

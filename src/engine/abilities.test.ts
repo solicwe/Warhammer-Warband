@@ -390,3 +390,29 @@ function initSagasForTest(s: GameState) {
   // the battle starts: sagas get their targets
   initSagas(s);
 }
+
+describe('reactions to being attacked', () => {
+  it('Combat Support: the Invictor shoots back when a Phobos unit nearby is shot', () => {
+    const s = game([['Infiltrator Squad', 5, 110], ['Invictor Tactical Warsuit', 1, 125]], [['Boyz', 10, 90]]);
+    s.phase = 'shooting'; s.active = 1;
+    const inf = put(s, 'p0-x0', { x: 20, y: 14 });
+    put(s, 'p0-x1', { x: 26, y: 14 });
+    const boyz = put(s, 'p1-x0', { x: 22, y: 24 });
+    const r = buildShootPools(s, boyz.id, inf.id, { mode: 'normal' });
+    startAttack(s, 'shoot', boyz.id, inf.id, r.pools);
+    resolveAll(s);
+    finishAttack(s);
+    expect(s.log.some((l) => /Combat Support/.test(l.text) && /ยิงตอบ/.test(l.text))).toBe(true);
+  });
+
+  it('Bladeguard: attacked first in the Fight phase gives the enemy −1 to hit', () => {
+    const s = game([['Bladeguard Veteran Squad', 3, 80]], [['Boyz', 10, 90]]);
+    s.phase = 'fight'; s.active = 1;
+    const bg = put(s, 'p0-x0', { x: 20, y: 20 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 23.6 });
+    const r = buildFightPools(s, boyz.id, bg.id);
+    const before = r.pools.map((p) => p.hitMod);
+    startAttack(s, 'fight', boyz.id, bg.id, r.pools);
+    expect(s.attack!.pools.map((p) => p.hitMod)).toEqual(before.map((h) => Math.max(-1, h - 1)));
+  });
+});

@@ -22,7 +22,8 @@ export type Trigger =
   | 'movement' | 'endOfNormalMove' | 'movementEnd' | 'shooting' | 'selectedToShoot' | 'afterShooting' | 'afterShootingButton'
   | 'selectedToFight' | 'fightStart' | 'fightStartButton' | 'afterFighting' | 'endOfCharge'
   | 'anyPhase' | 'opponentTurnEnd' | 'opponentFightEnd' | 'onDeath' | 'friendlyDeath' | 'shotByEnemy' | 'enemyMovedNear' | 'enemyFellBack'
-  | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks' | 'movementStart' | 'fightEnd' | 'attackStart';
+  | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks' | 'movementStart' | 'fightEnd' | 'attackStart'
+  | 'attacked' | 'friendlyTargeted';
 
 export type Until = TimedEffect['until'];
 
@@ -85,6 +86,7 @@ export interface Action {
   tryDatButton?: 1 | 2; // Dread Mob: roll 1 or 2 different D6 on the table (2 = one hazard roll)
   attackMod?: { hit?: number; toughness?: number; noCover?: boolean }; // changes the attack being made right now
   splashMortals?: { expr: string; range: number }; // another enemy unit within X" of the target suffers mortal wounds
+  shootBack?: boolean; // after the enemy unit has finished its attacks, this unit shoots it (as if it were your Shooting phase)
   log?: string;
 }
 
@@ -104,6 +106,8 @@ export interface ActSpec {
   needCharacterKill?: boolean; // … an enemy CHARACTER model was destroyed
   needModelsLost?: boolean; // shotByEnemy: models were destroyed, not just wounds lost
   needMelee?: boolean; // onDeath: destroyed by a melee attack
+  needUnitDestroyed?: boolean; // friendlyDeath: the whole unit was destroyed
+  oppShooting?: boolean; // only in the opponent's Shooting phase
   roll?: string; // e.g. "D6"
   rollAdd?: 'per5models' | 'warlordInTarget2';
   perModel?: boolean; // one die per model of this unit engaged with the target
@@ -466,6 +470,13 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       }
       log(s, `${def.name}: ${a.attackMod.hit ? '+1 hit' : a.attackMod.noCover ? 'เป้าไม่ได้ cover' : `เป้า T${a.attackMod.toughness}`} (การยิงนี้)`, 'info', u.owner);
     }
+    if (a.shootBack && ctx.killerId) {
+      const k = unitById(s, ctx.killerId);
+      if (onBoard(k)) {
+        (s.deathQueue ??= []).push({ unitId: u.id, modelIds: alive(u).map((m) => m.id), targetId: k.id, kind: 'shoot', label: def.name, alive: true });
+        log(s, `${def.name}: ${u.name} จะยิงตอบ ${k.name} หลังศัตรูยิงเสร็จ`, 'info', u.owner);
+      }
+    }
     if (a.splashMortals) {
       const others = boardUnits(s, on.owner).filter((x) => x.id !== on.id && alive(x).some((m) => alive(on).some((n) => baseDist(m, n) <= a.splashMortals!.range + 1e-6)));
       const v = others.sort((x, y) => y.pts - x.pts)[0];
@@ -577,7 +588,8 @@ export function bestTarget(s: GameState, def: ActDef, cands: UnitState[], ctx: F
 export interface ManualAct { def: ActDef; targets: UnitState[]; why: string | null; label: string }
 
 const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge', 'opponentFightEnd',
-  'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks', 'movementStart', 'fightEnd', 'attackStart'];
+  'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks', 'movementStart', 'fightEnd', 'attackStart',
+  'attacked', 'friendlyTargeted'];
 
 /** Abilities player p can use by pressing a button right now. */
 export function manualActs(s: GameState, p: PlayerId): ManualAct[] {
@@ -781,10 +793,10 @@ function runDeathQueue(s: GameState) {
     const r = q.kind === 'fight' ? buildFightPools(s, u.id, T.id, { models: q.modelIds }) : buildShootPools(s, u.id, T.id, { mode: 'normal', models: q.modelIds });
     if (r.error || !r.pools.length) { log(s, `${q.label}: ไม่มีอาวุธที่ใช้กับ ${T.name} ได้`, 'info', u.owner); continue; }
     const before = alive(T).length;
-    log(s, `⚔ ${q.label}: ${u.models.filter((m) => q.modelIds.includes(m.id)).map((m) => m.name).join(', ')} ${q.kind === 'fight' ? 'ตี' : 'ยิง'}ก่อนถูกนำออก → ${T.name}`, 'info', u.owner);
+    log(s, q.alive ? `🔫 ${q.label}: ${u.name} ยิงตอบ ${T.name}` : `⚔ ${q.label}: ${u.models.filter((m) => q.modelIds.includes(m.id)).map((m) => m.name).join(', ')} ${q.kind === 'fight' ? 'ตี' : 'ยิง'}ก่อนถูกนำออก → ${T.name}`, 'info', u.owner);
     startAttack(s, q.kind, u.id, T.id, r.pools);
     s.attack!.free = true;
-    if (q.kind === 'shoot') for (const p of s.attack!.pools) { p.hazardous = 0; p.noHazard = true; }
+    if (q.kind === 'shoot' && !q.alive) for (const p of s.attack!.pools) { p.hazardous = 0; p.noHazard = true; }
     resolveAll(s);
     finishAttack(s);
     if (q.regain && alive(T).length < before) {
@@ -887,8 +899,23 @@ let wholly: (s: GameState, u: UnitState, zoneOwner: PlayerId) => boolean = () =>
 export const setZoneCheck = (fn: typeof wholly) => { wholly = fn; };
 
 onAttackStart((s, at) => {
-  if (at.free || at.kind !== 'shoot') return;
-  fire(s, 'attackStart', [unitById(s, at.attackerId)], { targetId: at.targetId });
+  if (at.free) return;
+  const A = unitById(s, at.attackerId);
+  const T = unitById(s, at.targetId);
+  if (at.kind === 'shoot') fire(s, 'attackStart', [A], { targetId: T.id });
+  // the target reacts ("when an enemy unit targets this unit …")
+  fire(s, 'attacked', [T], { targetId: A.id, killerId: A.id, melee: at.kind === 'fight' });
+  // friendly units nearby react ("when a friendly PHOBOS unit within 6" is selected as the target of an attack")
+  if (at.kind !== 'fight' && s.phase === 'shooting' && T.owner !== s.active) {
+    for (const f of boardUnits(s, T.owner)) {
+      if (f.id === T.id) continue;
+      for (const def of actsOfUnit(s, f)) {
+        if (def.spec.when !== 'friendlyTargeted' || !def.spec.auto || !limitLeft(s, def) || !unitMatches(T, def.spec.deathUnits)) continue;
+        if (!near(def.bearers, T, def.spec.range ?? 6)) continue;
+        useAct(s, def, undefined, { killerId: A.id, targetId: A.id });
+      }
+    }
+  }
 });
 
 onModelKilled((s, u, m, killerId) => {
@@ -920,6 +947,8 @@ onModelKilled((s, u, m, killerId) => {
     if (f.id === u.id) continue;
     for (const def of actsOfUnit(s, f)) {
       if (def.spec.when !== 'friendlyDeath' || !def.spec.auto || !limitLeft(s, def) || !unitMatches(u, def.spec.deathUnits)) continue;
+      if (def.spec.needUnitDestroyed && alive(u).length) continue;
+      if (def.spec.oppShooting && !(s.phase === 'shooting' && f.owner !== s.active)) continue;
       if (!def.bearers.some((b) => baseDist(b, m) <= (def.spec.range ?? 12) + 1e-6)) continue;
       useAct(s, def, undefined, ctx);
     }

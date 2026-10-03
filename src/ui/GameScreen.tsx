@@ -232,7 +232,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
   // the last committed move can be reopened ("move further / fix it") while nothing else has happened since
   const [lastMove, setLastMove] = useState<{ mode: Mode; paths: Paths; after: GameState; label: string } | null>(null);
-  const reopenMove = lastMove && lastMove.after === s && !s.window ? lastMove : null;
+  const reopenMove = lastMove && lastMove.after === s && !s.window && U(lastMove.mode.unitId).owner === s.active ? lastMove : null;
   const redoButton = () => reopenMove && (
     <button className="btn small" onClick={() => { const lm = reopenMove; undo(); setLastMove(null); setSel(lm.mode.unitId); setMode(lm.mode, lm.paths); }}>
       ↺ แก้/ขยับต่อ: {reopenMove.label}
@@ -483,7 +483,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="small"><b>{modeUnit.name}</b> · {em?.label}: {mode.kind === 'surge' ? `Surge move ${em?.max ?? 0}" (เข้าหาศัตรูที่ใกล้สุด, ห้ามจบใน engagement range)` : `เดินได้ ${em?.max ?? 0}" (ห้ามจบใน engagement range)`}</div>
-        {moveControls(mode.kind === 'surge' ? 'surge move' : 'การเดิน', () => confirmMove(mode.kind as 'extra' | 'surge'))}
+        {moveControls(mode.kind === 'surge' ? 'surge move' : 'การเดิน', () => confirmMove(mode.kind as 'extra' | 'surge', () => setSel(null)))}
       </>
     );
   };
