@@ -83,45 +83,36 @@ export function truncatePath(path: Pt[], len: number): Pt[] {
   return out;
 }
 
-const pointAt = (path: Pt[], len: number) => { const p = truncatePath(path, len); return p[p.length - 1]; };
+export const pointAt = (path: Pt[], len: number) => { const p = truncatePath(path, len); return p[p.length - 1]; };
 
 /** Shortest legal route (A* on a 0.5" grid, then straightened) from `from` towards `to` within `maxLen` inches.
  *  If `to` cannot be reached it ends at the reachable point closest to it. Null when the model cannot move at all. */
 export function routeAround(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, from: Pt, to: Pt, maxLen: number, opt: MoveOpts = {}): Pt[] | null {
-  const c = ctxFor(s, u, kind, m, opt);
-  if (!stepBlocked(c, from, to, true) && dist(from, to) <= maxLen + 1e-6) return [from, to];
-  const step = 0.5;
-  const nx = Math.floor(W / step) + 1;
-  const ny = Math.floor(H / step) + 1;
-  const state = new Uint8Array(nx * ny); // 0 unknown, 1 free, 2 blocked
-  const cx = (i: number) => (i % nx) * step;
-  const cy = (i: number) => Math.floor(i / nx) * step;
-  // cells keep a little extra room so a diagonal step between two free cells can't cut a corner
-  const pad = (d: number) => Math.sqrt(d * d + step * step * 0.52);
-  const wallRoom = pad(c.clear);
-  const free = (i: number) => {
-    if (!state[i]) {
-      const p = { x: cx(i), y: cy(i) };
-      const bad = p.x < m.r || p.y < m.r || p.x > W - m.r || p.y > H - m.r
-        || c.enemies.some((e) => dist(p, e) < pad(e.r + m.r - 0.05))
-        || c.walls.some((w) => pointSegDist(p, w) < wallRoom);
-      state[i] = bad ? 2 : 1;
-    }
-    return state[i] === 1;
-  };
-  const idx = (p: Pt) => Math.min(ny - 1, Math.max(0, Math.round(p.y / step))) * nx + Math.min(nx - 1, Math.max(0, Math.round(p.x / step)));
+  const all = ctxFor(s, u, kind, m, opt);
+  // only what lies within reach of this move can be in the way
+  const reach = maxLen + 1.5;
+  const c: Ctx = { ...all, enemies: all.enemies.filter((e) => dist(e, from) <= reach + e.r + m.r), walls: all.walls.filter((w) => pointSegDist(from, w) <= reach + all.clear) };
+  const far = dist(from, to);
+  if (far <= maxLen + 1e-6 ? !stepBlocked(c, from, to, true) : false) return [from, to];
+  // out of reach but nothing in the way: the straight line gets as close as any route could
+  if (far > maxLen + 1e-6) {
+    const p = { x: from.x + ((to.x - from.x) * maxLen) / far, y: from.y + ((to.y - from.y) * maxLen) / far };
+    if (p.x >= m.r && p.y >= m.r && p.x <= W - m.r && p.y <= H - m.r && !stepBlocked(c, from, p, true)) return [from, p];
+  }
+  const { step, nx, ny, cx, cy, free, idx } = gridOf(c, m);
   const start = idx(from);
   const g = new Float32Array(nx * ny).fill(Infinity);
+  const fv = new Float32Array(nx * ny);
   const prev = new Int32Array(nx * ny).fill(-1);
   const closed = new Uint8Array(nx * ny);
   g[start] = dist(from, { x: cx(start), y: cy(start) });
-  // binary heap on f = g + h
-  const heap: number[] = [start];
-  const f = (i: number) => g[i] + dist({ x: cx(i), y: cy(i) }, to);
+  // binary heap on f = g + h (f stored when a cell is pushed)
+  const heap: number[] = [];
   const push = (i: number) => {
+    fv[i] = g[i] + Math.hypot(cx(i) - to.x, cy(i) - to.y);
     heap.push(i);
     let k = heap.length - 1;
-    while (k > 0) { const p = (k - 1) >> 1; if (f(heap[p]) <= f(heap[k])) break; [heap[p], heap[k]] = [heap[k], heap[p]]; k = p; }
+    while (k > 0) { const p = (k - 1) >> 1; if (fv[heap[p]] <= fv[heap[k]]) break; const t = heap[p]; heap[p] = heap[k]; heap[k] = t; k = p; }
   };
   const pop = () => {
     const top = heap[0];
@@ -132,15 +123,16 @@ export function routeAround(s: GameState, u: UnitState, kind: MoveKind, m: Model
       for (;;) {
         const l = 2 * k + 1, r = l + 1;
         let b = k;
-        if (l < heap.length && f(heap[l]) < f(heap[b])) b = l;
-        if (r < heap.length && f(heap[r]) < f(heap[b])) b = r;
+        if (l < heap.length && fv[heap[l]] < fv[heap[b]]) b = l;
+        if (r < heap.length && fv[heap[r]] < fv[heap[b]]) b = r;
         if (b === k) break;
-        [heap[b], heap[k]] = [heap[k], heap[b]];
+        const t = heap[b]; heap[b] = heap[k]; heap[k] = t;
         k = b;
       }
     }
     return top;
   };
+  push(start);
   let best = start;
   let bestD = dist({ x: cx(start), y: cy(start) }, to);
   const goal = idx(to);
@@ -184,6 +176,107 @@ export function routeAround(s: GameState, u: UnitState, kind: MoveKind, m: Model
   const route = pathLength(out) > maxLen + 0.01 ? truncatePath(out, maxLen) : out;
   for (let i = 1; i < route.length; i++) if (stepBlocked(c, route[i - 1], route[i], i === 1)) return null;
   return route;
+}
+
+/** The 0.5" grid a model moves on: which cells it can stand on (walls it can't cross, enemy models, board edges). */
+function gridOf(c: Ctx, m: ModelState) {
+  const step = 0.5;
+  const nx = Math.floor(W / step) + 1;
+  const ny = Math.floor(H / step) + 1;
+  const state = new Uint8Array(nx * ny); // 0 unknown, 1 free, 2 blocked
+  const cx = (i: number) => (i % nx) * step;
+  const cy = (i: number) => Math.floor(i / nx) * step;
+  // cells keep a little extra room so a diagonal step between two free cells can't cut a corner
+  const pad = (d: number) => Math.sqrt(d * d + step * step * 0.52);
+  const wallRoom = pad(c.clear);
+  const free = (i: number) => {
+    if (!state[i]) {
+      const p = { x: cx(i), y: cy(i) };
+      const bad = p.x < m.r || p.y < m.r || p.x > W - m.r || p.y > H - m.r
+        || c.enemies.some((e) => dist(p, e) < pad(e.r + m.r - 0.05))
+        || c.walls.some((w) => pointSegDist(p, w) < wallRoom);
+      state[i] = bad ? 2 : 1;
+    }
+    return state[i] === 1;
+  };
+  const idx = (p: Pt) => Math.min(ny - 1, Math.max(0, Math.round(p.y / step))) * nx + Math.min(nx - 1, Math.max(0, Math.round(p.x / step)));
+  return { step, nx, ny, cx, cy, free, idx };
+}
+
+/** How far (along legal routes) every spot on the board is from the nearest of `goals` for this model, e.g. a vehicle
+ *  inside a U-shaped ruin is far from the enemy behind the closed wall even though the straight line is short. */
+export function distanceField(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, goals: Pt[], opt: MoveOpts = {}): (p: Pt) => number {
+  const c = ctxFor(s, u, kind, m, opt);
+  const { step, nx, ny, cx, cy, free, idx } = gridOf(c, m);
+  const d = new Float32Array(nx * ny).fill(Infinity);
+  const heap: number[] = [];
+  const push = (i: number) => {
+    heap.push(i);
+    let k = heap.length - 1;
+    while (k > 0) { const q = (k - 1) >> 1; if (d[heap[q]] <= d[heap[k]]) break; const t = heap[q]; heap[q] = heap[k]; heap[k] = t; k = q; }
+  };
+  const pop = () => {
+    const top = heap[0];
+    const last = heap.pop()!;
+    if (heap.length) {
+      heap[0] = last;
+      let k = 0;
+      for (;;) {
+        const l = 2 * k + 1, r = l + 1;
+        let b = k;
+        if (l < heap.length && d[heap[l]] < d[heap[b]]) b = l;
+        if (r < heap.length && d[heap[r]] < d[heap[b]]) b = r;
+        if (b === k) break;
+        const t = heap[b]; heap[b] = heap[k]; heap[k] = t;
+        k = b;
+      }
+    }
+    return top;
+  };
+  // a goal inside something the model can't stand on (an enemy unit, a wall) starts from the free cells around it
+  for (const g of goals) {
+    for (let rad = 0; rad <= 4; rad += step) {
+      let found = false;
+      for (let a = 0; a < (rad ? 16 : 1); a++) {
+        const p = { x: g.x + Math.cos((a / 16) * Math.PI * 2) * rad, y: g.y + Math.sin((a / 16) * Math.PI * 2) * rad };
+        const i = idx(p);
+        if (!free(i)) continue;
+        found = true;
+        if (rad < d[i]) { d[i] = rad; push(i); }
+      }
+      if (found) break;
+    }
+  }
+  const D = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+  const closed = new Uint8Array(nx * ny);
+  while (heap.length) {
+    const i = pop();
+    if (closed[i]) continue;
+    closed[i] = 1;
+    const ix = i % nx, iy = Math.floor(i / nx);
+    for (const [dx, dy] of D) {
+      const jx = ix + dx, jy = iy + dy;
+      if (jx < 0 || jy < 0 || jx >= nx || jy >= ny) continue;
+      const j = jy * nx + jx;
+      if (closed[j] || !free(j)) continue;
+      const nd = d[i] + step * (dx && dy ? Math.SQRT2 : 1);
+      if (nd < d[j]) { d[j] = nd; push(j); }
+    }
+  }
+  return (p: Pt) => {
+    const i = idx(p);
+    if (Number.isFinite(d[i])) return d[i] + dist(p, { x: cx(i), y: cy(i) });
+    // a spot off the grid's free cells (the model's own base overlapping something): use the best neighbour
+    let best = Infinity;
+    const ix = i % nx, iy = Math.floor(i / nx);
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      const jx = ix + dx, jy = iy + dy;
+      if (jx < 0 || jy < 0 || jx >= nx || jy >= ny) continue;
+      const j = jy * nx + jx;
+      if (Number.isFinite(d[j])) best = Math.min(best, d[j] + dist(p, { x: cx(j), y: cy(j) }));
+    }
+    return best;
+  };
 }
 
 export interface SettleOpts extends MoveOpts { maxFor: (m: ModelState) => number; targets?: string[] }

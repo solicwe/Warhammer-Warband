@@ -40,6 +40,7 @@ describe('bot battles with every datasheet', () => {
       a.detachments = [SM.detachments.filter((d) => !d.subfaction || d.subfaction === sub)[k % 5]?.name].filter(Boolean) as string[];
       b.detachments = [ORK.detachments[k % ORK.detachments.length].name];
       const s = createGame({ lists: [a, b], factions: [SM, ORK], names: ['A', 'B'], seed: 11 + k });
+      s.bots = [0, 1]; // both sides play their stratagems and re-rolls
       let steps = 0;
       while (s.phase !== 'gameover' && s.round < 4 && steps < 4000) {
         botAct(s);
@@ -63,6 +64,7 @@ describe('bot battles for the other factions (abilities read from the datasheet 
       la.detachments = [a.detachments.find((d) => !d.subfaction || d.subfaction === la.subfaction)?.name].filter(Boolean) as string[];
       lb.detachments = [b.detachments.find((d) => !d.subfaction || d.subfaction === lb.subfaction)?.name].filter(Boolean) as string[];
       const s = createGame({ lists: [la, lb], factions: [a, b], names: ['A', 'B'], seed: 5 + k });
+      s.bots = [0, 1]; // both sides play their stratagems and re-rolls
       let steps = 0;
       while (s.phase !== 'gameover' && s.round < 4 && steps < 4000) {
         botAct(s);

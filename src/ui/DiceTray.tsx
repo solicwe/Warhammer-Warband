@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { freeDiceNow } from '../engine/activations';
 import { canUseStratagem, unitById } from '../engine/state';
 import type { Die, GameState, Pool } from '../engine/types';
 import { abilityLabel, abilitiesOf } from '../engine/weapons';
+import { rerollable } from '../engine/attack';
 
 interface Props {
   s: GameState;
@@ -15,18 +16,22 @@ interface Props {
   stratFor?: (0 | 1)[];
   /** free re-rolls / "change to a 6" from abilities (Armorium Cherub …) */
   onFree?: (key: string, index: number) => void;
+  /** pick / unpick a die for an ability re-roll ("you can re-roll the Hit roll") */
+  onPick?: (index: number) => void;
+  /** the bot is attacking: its own dice roll by themselves, the player rolls the saves */
+  auto?: boolean;
 }
 
 const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `${n}` : '');
 
-function DiceRow({ dice, cls, pick, onPick }: { dice: Die[]; cls: (d: Die) => string; pick?: (d: Die) => boolean; onPick?: (i: number) => void }) {
+function DiceRow({ dice, cls, pick, onPick, picked }: { dice: Die[]; cls: (d: Die) => string; pick?: (d: Die) => boolean; onPick?: (i: number) => void; picked?: number[] }) {
   if (!dice.length) return <div className="muted small">—</div>;
   return (
     <div className="dice">
       {dice.map((d, i) => {
         const can = pick?.(d);
         return (
-          <button key={i} type="button" className={`die ${cls(d)} ${d.rerolled ? 'rr' : ''} ${can ? 'pick' : ''}`} onClick={() => can && onPick?.(i)} title={d.rerolled ? `ทอยใหม่จาก ${d.orig}` : undefined}>
+          <button key={i} type="button" className={`die ${cls(d)} ${d.rerolled ? 'rr' : ''} ${can ? 'pick' : ''} ${picked?.includes(i) ? 'picked' : ''}`} onClick={() => can && onPick?.(i)} title={d.rerolled ? `ทอยใหม่จาก ${d.orig}` : undefined}>
             {d.o === 'auto' ? '✓' : d.v}
           </button>
         );
@@ -48,7 +53,7 @@ function poolHeader(p: Pool) {
   );
 }
 
-export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree }: Props) {
+export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree, onPick, auto }: Props) {
   const at = s.attack!;
   const [rr, setRr] = useState<null | 'hit' | 'wound' | 'save'>(null);
   const [fd, setFd] = useState<string | null>(null); // free die being used: tap the die
@@ -81,7 +86,22 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
   const stageOf = (pool: Pool) => (pool !== p ? 'done' : at.stage);
   const st = stageOf(p);
   const hitShown = p.hits.length > 0 || p.autoHit && st !== 'hit';
-  const nextLabel = done ? 'ปิด' : st === 'hit' ? `ทอย Hit (${p.attacks} ลูก)` : st === 'wound' ? 'ทอย Wound' : st === 'save' ? `${s.players[T.owner].name} ทอย Save` : 'คิดดาเมจ';
+  // an ability re-roll waits for the attacker to pick the dice (the failures are picked to begin with)
+  const pending = !done ? p.reroll : undefined;
+  const nextLabel = done ? 'ปิด' : pending ? `ทอยใหม่ ${pending.picks.length} ลูกที่เลือก` : st === 'hit' ? `ทอย Hit (${p.attacks} ลูก)` : st === 'wound' ? 'ทอย Wound' : st === 'save' ? `${s.players[T.owner].name} ทอย Save` : 'คิดดาเมจ';
+  const pickRow = (stage: 'hit' | 'wound') => (pending?.stage === stage && onPick
+    ? { pick: (d: Die) => rerollable(p, d), picked: pending.picks, onPick: (i: number) => onPick(i) }
+    : null);
+  // the bot's own dice (hits, wounds, its re-rolls) roll by themselves; the player rolls the saves
+  const [hold, setHold] = useState(false);
+  const stepRef = useRef(onStep);
+  stepRef.current = onStep;
+  const botDice = !!auto && !done && (st === 'hit' || st === 'wound' || !!pending);
+  useEffect(() => {
+    if (!botDice || hold) return;
+    const t = window.setTimeout(() => stepRef.current(), st === 'hit' && at.idx === 0 && !p.hits.length ? 1800 : 900);
+    return () => window.clearTimeout(t);
+  }, [botDice, hold, st, at.idx, p.hits.length, pending?.stage]);
 
   const hitCls = (d: Die) => d.o;
   const woundCls = (d: Die) => d.o;
@@ -99,11 +119,15 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
           </div>
           {!done && <button className="btn small" onClick={guarded(onSkip)}>ข้าม</button>}
         </div>
+        {auto && !done && <div className="tiny">🤖 บอทโจมตี — ลูกเต๋าของบอททอยเอง · คุณกดทอย Save เอง และใช้ Command Re-roll ได้{hold ? ' (หยุดรอ)' : ''}</div>}
         {onStrat && !done && at.idx === 0 && st === 'hit' && (
           <div className="row">
-            {stratFor.includes(A.owner) && <button className="btn small" onClick={() => onStrat(A.owner)}>{s.players[A.owner].name}: Stratagem</button>}
-            {stratFor.includes(T.owner) && <button className="btn small" onClick={() => onStrat(T.owner)}>{s.players[T.owner].name} (ฝ่ายรับ): Stratagem</button>}
+            {stratFor.includes(A.owner) && <button className="btn small" onClick={() => { setHold(true); onStrat(A.owner); }}>{s.players[A.owner].name}: Stratagem</button>}
+            {stratFor.includes(T.owner) && <button className="btn small" onClick={() => { setHold(true); onStrat(T.owner); }}>{s.players[T.owner].name} (ฝ่ายรับ): Stratagem</button>}
           </div>
+        )}
+        {pending && (
+          <div className="tiny">🎲 {pending.which === 'all' ? 'Re-roll ได้ (ability)' : 'Re-roll ลูกที่ได้ 1 ได้ (ability)'}: แตะลูกเต๋าเพื่อเลือก/เอาออก — เลือกลูกที่พลาดไว้ให้แล้ว (ทอยใหม่ได้ลูกละครั้ง)</div>
         )}
         {at.pools.length > 1 && <div className="tiny muted">อาวุธชุดที่ {Math.min(at.idx + 1, at.pools.length)} / {at.pools.length}</div>}
 
@@ -115,15 +139,17 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
               <div className="tiny muted">{p.attackNote}{p.skillNote ? ` · ${p.skillNote}` : ''}{p.hitNote ? ` · ${p.hitNote}` : ''}</div>
               {hitShown && (
                 <>
-                  <DiceRow dice={p.hits} cls={hitCls}
-                    pick={rr === 'hit' ? (d) => d.o === 'miss' && !d.rerolled : fdSpec?.stage === 'hit' && st === 'wound' ? freeCan : undefined}
-                    onPick={(i) => { if (rr === 'hit') { onReroll('hit', i); setRr(null); } else if (fd) { onFree?.(fd, i); setFd(null); } }} />
+                  {pickRow('hit') ? <DiceRow dice={p.hits} cls={hitCls} {...pickRow('hit')!} /> : (
+                    <DiceRow dice={p.hits} cls={hitCls}
+                      pick={rr === 'hit' ? (d) => d.o === 'miss' && !d.rerolled : fdSpec?.stage === 'hit' && st === 'wound' ? freeCan : undefined}
+                      onPick={(i) => { if (rr === 'hit') { onReroll('hit', i); setRr(null); } else if (fd) { onFree?.(fd, i); setFd(null); } }} />
+                  )}
                   <div className="small">
                     โดน <b>{p.hits.filter((h) => h.o !== 'miss').length}</b>
                     {p.hits.some((h) => h.o === 'crit') && <> · Critical <b>{p.hits.filter((h) => h.o === 'crit').length}</b>{p.sustained ? ` (Sustained ${p.sustained})` : ''}{p.lethal ? ' (Lethal Hits)' : ''}</>}
                   </div>
-                  {st === 'wound' && !p.autoHit && freeButtons('hit')}
-                  {st === 'wound' && !p.autoHit && !p.noHitReroll && (
+                  {st === 'wound' && !pending && !p.autoHit && freeButtons('hit')}
+                  {st === 'wound' && !pending && !p.autoHit && !p.noHitReroll && !auto && (
                     <button className={`btn small ${rr === 'hit' ? 'on' : ''}`} disabled={!!attackerCR || !p.hits.some((d) => d.o === 'miss' && !d.rerolled)} onClick={() => setRr(rr === 'hit' ? null : 'hit')}>
                       Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'hit' ? '— แตะลูกที่พลาด' : ''}
                     </button>
@@ -138,16 +164,18 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                 <div className="tiny muted">{p.woundNote}{p.twinLinked ? ' · Twin-linked: ทอยใหม่ลูกที่พลาด' : ''}</div>
                 {st !== 'wound' && (
                   <>
-                    <DiceRow dice={p.wounds} cls={woundCls}
-                      pick={rr === 'wound' ? (d) => d.o === 'fail' && !d.rerolled : fdSpec?.stage === 'wound' && st === 'save' ? freeCan : undefined}
-                      onPick={(i) => { if (rr === 'wound') { onReroll('wound', i); setRr(null); } else if (fd) { onFree?.(fd, i); setFd(null); } }} />
+                    {pickRow('wound') ? <DiceRow dice={p.wounds} cls={woundCls} {...pickRow('wound')!} /> : (
+                      <DiceRow dice={p.wounds} cls={woundCls}
+                        pick={rr === 'wound' ? (d) => d.o === 'fail' && !d.rerolled : fdSpec?.stage === 'wound' && st === 'save' ? freeCan : undefined}
+                        onPick={(i) => { if (rr === 'wound') { onReroll('wound', i); setRr(null); } else if (fd) { onFree?.(fd, i); setFd(null); } }} />
+                    )}
                     <div className="small">
                       Wound <b>{p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds}</b>
                       {p.autoWounds ? ` (รวม Lethal Hits ${p.autoWounds})` : ''}
                       {p.devastating && p.wounds.some((w) => w.o === 'critWound') ? ` · Devastating ${p.wounds.filter((w) => w.o === 'critWound').length} (mortal wounds)` : ''}
                     </div>
-                    {st === 'save' && freeButtons('wound')}
-                    {st === 'save' && (
+                    {st === 'save' && !pending && freeButtons('wound')}
+                    {st === 'save' && !pending && !auto && (
                       <button className={`btn small ${rr === 'wound' ? 'on' : ''}`} disabled={!!attackerCR || !p.wounds.some((d) => d.o === 'fail' && !d.rerolled)} onClick={() => setRr(rr === 'wound' ? null : 'wound')}>
                         Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'wound' ? '— แตะลูกที่พลาด' : ''}
                       </button>

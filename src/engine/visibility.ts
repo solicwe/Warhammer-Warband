@@ -16,9 +16,25 @@ export interface VisibilityHooks {
 let hooks: VisibilityHooks = {};
 export const setVisibilityHooks = (h: VisibilityHooks) => { hooks = h; };
 
+interface Box { x0: number; y0: number; x1: number; y1: number }
+const boxes = new WeakMap<TerrainPiece, Box>();
+function boxOf(t: TerrainPiece): Box {
+  let b = boxes.get(t);
+  if (!b) {
+    const pts = [...t.poly, ...t.walls.flatMap((w) => [w.a, w.b])];
+    b = { x0: Math.min(...pts.map((p) => p.x)), y0: Math.min(...pts.map((p) => p.y)), x1: Math.max(...pts.map((p) => p.x)), y1: Math.max(...pts.map((p) => p.y)) };
+    boxes.set(t, b);
+  }
+  return b;
+}
+
 function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false): Blockers {
-  const walls = s.terrain.filter((t) => t.category === 'dense').flatMap((t) => t.walls);
-  const areas = s.terrain.filter(
+  // only terrain overlapping the box around both models can be crossed by a line between them
+  const x0 = Math.min(a.x - a.r, b.x - b.r), x1 = Math.max(a.x + a.r, b.x + b.r);
+  const y0 = Math.min(a.y - a.r, b.y - b.r), y1 = Math.max(a.y + a.r, b.y + b.r);
+  const near = s.terrain.filter((t) => { const q = boxOf(t); return q.x1 >= x0 && q.x0 <= x1 && q.y1 >= y0 && q.y0 <= y1; });
+  const walls = near.filter((t) => t.category === 'dense').flatMap((t) => t.walls);
+  const areas = near.filter(
     (t) => (denseOnly ? t.category === 'dense' : t.category !== 'exposed') && !circleTouchesPoly(a, a.r, t.poly) && !circleTouchesPoly(b, b.r, t.poly),
   );
   return { walls, areas };

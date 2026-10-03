@@ -144,8 +144,24 @@ export interface DetRule {
 }
 export const DET_RULES = (detData as unknown as { rules: Record<string, DetRule> }).rules;
 
+/** While the bot plans a move it asks the same questions many times over: effects are worked out once per unit then. */
+let memo: { fx: Map<string, Active[]>; rules: Map<PlayerId, string[]> } | null = null;
+export function withRuleCache<T>(fn: () => T): T {
+  const prev = memo;
+  memo = { fx: new Map(), rules: new Map() };
+  try { return fn(); } finally { memo = prev; }
+}
+
 /** Names of the detachment rules and army rules (Templar Vows …) in force for a player. */
 export function activeRules(s: GameState, p: PlayerId): string[] {
+  const hit = memo?.rules.get(p);
+  if (hit) return hit;
+  const out = findActiveRules(s, p);
+  memo?.rules.set(p, out);
+  return out;
+}
+
+function findActiveRules(s: GameState, p: PlayerId): string[] {
   const P = s.players[p];
   const out = (P.detachments ?? []).map((d) => d.name).filter((n) => DET_RULES[n]);
   for (const r of P.armyRules ?? []) {
@@ -187,8 +203,18 @@ export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
 /** The datasheet an ability came from (abilities of attached units carry it). */
 export const abilitySheet = (u: UnitState, a: AbilityData) => a.sheet ?? (u.sources.length === 1 ? u.sources[0] : a.model && u.sources.includes(a.model) ? a.model : u.sources[0]);
 
+const ruleMemo = new WeakMap<AbilityData, { sheet: string; r: AbilityRule | undefined }>();
+
 export function abilityRule(u: UnitState, a: AbilityData): AbilityRule | undefined {
   const sheet = abilitySheet(u, a);
+  const hit = ruleMemo.get(a);
+  if (hit && hit.sheet === sheet) return hit.r;
+  const r = findRule(a, sheet);
+  ruleMemo.set(a, { sheet, r });
+  return r;
+}
+
+function findRule(a: AbilityData, sheet: string): AbilityRule | undefined {
   const books = a.faction ? [FACTION_RULES[a.faction]].filter(Boolean) : Object.values(FACTION_RULES);
   for (const b of books) {
     const r = b[`${a.name}@${sheet}`] ?? b[a.name];
@@ -315,6 +341,14 @@ function ruleEffects(u: UnitState, h: UnitState, effects: Effect[], label: strin
 }
 
 export function effectsFor(s: GameState, u: UnitState): Active[] {
+  const hit = memo?.fx.get(u.id);
+  if (hit) return hit;
+  const out = collectEffects(s, u);
+  memo?.fx.set(u.id, out);
+  return out;
+}
+
+function collectEffects(s: GameState, u: UnitState): Active[] {
   const out: Active[] = [];
   for (const { e, label } of playerDetEffects(s, u.owner)) if (unitMatches(u, e.units)) out.push({ e, label, holder: u });
   for (const h of s.units) {

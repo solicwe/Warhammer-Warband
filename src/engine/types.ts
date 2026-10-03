@@ -393,6 +393,8 @@ export interface Pool {
   hazardous: number;
   hits: Die[];
   wounds: Die[];
+  /** an ability lets the attacker re-roll some of these dice: they pick which (the failures by default) */
+  reroll?: { stage: 'hit' | 'wound'; which: 'all' | 'ones'; picks: number[] };
   autoWounds: number;
   saves: Die[];
   saveTargets: string[]; // per save die: model name it was checked against
@@ -417,6 +419,8 @@ export interface AttackSession {
   free?: boolean; // attacks made by a destroyed model ("fights on death"): the unit is not marked as having fought / shot
   allocated?: Record<string, number>; // melee attacks allocated per target model id (Strikes of Retribution)
   negated?: string[]; // model ids whose once-per-phase damage negation was used in this attack
+  /** a bot attacks a player's unit: the player rolls the saves (and may use Command Re-roll) */
+  defenderRolls?: boolean;
 }
 
 /** Visual events for the board (animations). Not rules state; capped to the last few. */
@@ -482,6 +486,8 @@ export interface GameState {
   botPlayer?: PlayerId | null;
   /** players run by the bot (both for a bot-vs-bot game) */
   bots?: PlayerId[];
+  /** vs bot: the player rolls their own saves when the bot attacks (and can use Command Re-roll then). Default on. */
+  defenderRolls?: boolean;
   fx?: FxEvent[];
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

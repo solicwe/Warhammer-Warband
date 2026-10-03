@@ -403,13 +403,49 @@ export function rollHits(s: GameState) {
     p.hits = Array.from({ length: p.attacks }, () => ({ v: 0, o: 'auto' as const }));
   } else {
     p.hits = rollN(s, p.attacks).map((v) => ({ v, o: evalHit(p, v) }));
-    const reroll1s = p.rerollHits1 || unitById(s, at.attackerId).buffs.some((b) => b.kind === 'rerollHits1');
-    const rerollAll = unitById(s, at.attackerId).buffs.some((b) => b.kind === 'rerollHits');
-    if (!p.noHitReroll && (reroll1s || rerollAll || p.rerollAllHits)) {
-      p.hits = p.hits.map((d) => (d.o === 'miss' && (rerollAll || p.rerollAllHits || d.v === 1) ? reroll(s, d, (v) => evalHit(p, v)) : d));
-    }
+    const A = unitById(s, at.attackerId);
+    const all = p.rerollAllHits || A.buffs.some((b) => b.kind === 'rerollHits');
+    const ones = p.rerollHits1 || A.buffs.some((b) => b.kind === 'rerollHits1');
+    if (!p.noHitReroll && (all || ones)) offerReroll(p, 'hit', all ? 'all' : 'ones');
   }
   at.stage = 'wound';
+}
+
+/** Dice an ability lets the attacker re-roll at this stage (01.05.02: a die is only ever re-rolled once). */
+export function rerollable(p: Pool, d: Die): boolean {
+  const r = p.reroll;
+  return !!r && !d.rerolled && d.o !== 'auto' && (r.which === 'all' || d.v === 1);
+}
+
+/** "You can re-roll the Hit roll": the player chooses the dice — every failure is picked to begin with. */
+function offerReroll(p: Pool, stage: 'hit' | 'wound', which: 'all' | 'ones') {
+  const dice = stage === 'hit' ? p.hits : p.wounds;
+  p.reroll = { stage, which, picks: [] };
+  const failed = (d: Die) => (stage === 'hit' ? d.o === 'miss' : d.o === 'fail');
+  p.reroll.picks = dice.map((d, i) => (rerollable(p, d) && failed(d) ? i : -1)).filter((i) => i >= 0);
+  if (!dice.some((d) => rerollable(p, d))) p.reroll = undefined;
+}
+
+/** Pick / unpick one die for the pending ability re-roll. */
+export function toggleRerollPick(s: GameState, i: number) {
+  const p = s.attack?.pools[s.attack.idx];
+  const r = p?.reroll;
+  if (!p || !r) return;
+  const d = (r.stage === 'hit' ? p.hits : p.wounds)[i];
+  if (!d || !rerollable(p, d)) return;
+  r.picks = r.picks.includes(i) ? r.picks.filter((x) => x !== i) : [...r.picks, i].sort((a, b) => a - b);
+}
+
+/** Re-roll the picked dice of the pending ability re-roll. */
+export function resolveReroll(s: GameState) {
+  const p = s.attack?.pools[s.attack.idx];
+  const r = p?.reroll;
+  if (!p || !r) return;
+  for (const i of r.picks) {
+    if (r.stage === 'hit') p.hits[i] = reroll(s, p.hits[i], (v) => evalHit(p, v));
+    else p.wounds[i] = reroll(s, p.wounds[i], (v) => evalWound(p, v));
+  }
+  p.reroll = undefined;
 }
 
 function reroll(s: GameState, d: Die, ev: (v: number) => Die['o']): Die {
@@ -437,7 +473,7 @@ export function rollWounds(s: GameState) {
   const A = unitById(s, at.attackerId);
   const rrAll = p.twinLinked || p.rerollAllWounds || A.buffs.some((b) => b.kind === 'rerollWounds');
   const rr1 = p.rerollWounds1 || A.buffs.some((b) => b.kind === 'rerollWounds1');
-  if (rrAll || rr1) p.wounds = p.wounds.map((d) => (d.o === 'fail' && (rrAll || d.v === 1) ? reroll(s, d, (v) => evalWound(p, v)) : d));
+  if (rrAll || rr1) offerReroll(p, 'wound', rrAll ? 'all' : 'ones');
   at.stage = 'save';
 }
 
@@ -648,11 +684,19 @@ export function resolveAll(s: GameState) {
   while (s.attack && s.attack.stage !== 'done') stepAttack(s);
 }
 
+/** Bots decide on Command Re-rolls right after dice are rolled (registered by botStrats.ts). */
+type DiceHook = (s: GameState, stage: 'hit' | 'wound' | 'save') => void;
+let diceHook: DiceHook | null = null;
+export const setDiceHook = (fn: DiceHook) => { diceHook = fn; };
+
 export function stepAttack(s: GameState) {
   const at = s.attack!;
-  if (at.stage === 'hit') rollHits(s);
-  else if (at.stage === 'wound') rollWounds(s);
-  else if (at.stage === 'save') rollSavesAndDamage(s);
+  const p = at.pools[at.idx];
+  // a pending ability re-roll is made first (with the dice picked so far)
+  if (p?.reroll) { const st = p.reroll.stage; resolveReroll(s); diceHook?.(s, st); return; }
+  if (at.stage === 'hit') { rollHits(s); if (!at.pools[at.idx]?.reroll) diceHook?.(s, 'hit'); }
+  else if (at.stage === 'wound') { rollWounds(s); if (!at.pools[at.idx]?.reroll) diceHook?.(s, 'wound'); }
+  else if (at.stage === 'save') { rollSavesAndDamage(s); diceHook?.(s, 'save'); }
   else if (at.stage === 'damage') applyDamage(s);
 }
 

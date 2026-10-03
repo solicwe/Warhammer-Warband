@@ -20,6 +20,7 @@ describe('every automated detachment survives two bot battle rounds', () => {
         lists: [{ ...PRESETS.SM, detachments: [a] }, { ...PRESETS.ORK, detachments: [b] }],
         factions: [SM, ORK], names: ['A', 'B'], seed: 3,
       });
+      s.bots = [0, 1]; // both sides play their stratagems and re-rolls
       let steps = 0;
       while (s.phase !== 'gameover' && s.round < 3 && steps < 3000) { botAct(s); steps++; }
       expect(s.round).toBeGreaterThanOrEqual(3);

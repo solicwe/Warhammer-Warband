@@ -993,7 +993,7 @@ export function scoreTiming(s: GameState, timing: 'endOfYourCommandPhase' | 'end
 export const terrainOfObjective = objectiveTerrain;
 
 /** Find a legal spot for a whole unit (used by "auto place" during deployment / ingress). */
-export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate', near?: Pt): Map<string, Pt> | null {
+export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate', near?: Pt, accept?: (pos: Map<string, Pt>) => boolean): Map<string, Pt> | null {
   const zone = how === 'deploy' ? zoneOf(s, u.owner) : null;
   const cands: Pt[] = [];
   for (let y = 1; y < H; y += 1.5) for (let x = 1; x < W; x += 1.5) cands.push({ x, y });
@@ -1005,7 +1005,7 @@ export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingre
   for (const c of cands) {
     if (zone && !circleTouchesPoly(c, 0, zone)) continue;
     const pos = formationAt(u, c, up);
-    if (validatePlacement(s, u, pos, how).ok) return pos;
+    if (validatePlacement(s, u, pos, how).ok && (!accept || accept(pos))) return pos;
   }
   return null;
 }
