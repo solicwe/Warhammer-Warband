@@ -1,6 +1,7 @@
 // What the bot knows about a matchup: rough damage numbers, who wants to be in melee, objectives and threats.
 // Planning estimates only — the real attacks always go through attack.ts.
 import { woundNeed } from './attack';
+import { primaryById, secondaryById } from './config';
 import { exprAverage } from './dice';
 import { isRiled } from './effects';
 import { circleTouchesPoly, polyCentroid } from './geometry';
@@ -89,6 +90,8 @@ export function shotValue(s: GameState, u: UnitState, t: UnitState, ev: number, 
   const kills = Math.min(ev, left);
   let v = kills * perModel(t);
   if (ev >= left * 0.9) v += unitValue(t) * 0.35; // finishing a unit denies its actions and scores
+  const vp = killVp(s, u.owner, t);
+  if (vp) v += vp * 8 * (ev >= left * 0.9 ? 1 : 0.5 * (ev / left) ** 2); // ~8 points of damage per VP
   if (s.players[u.owner].oathTarget === t.id) v *= 1.15;
   if (s.objectives.some((o) => onObjective(s, t, o))) v *= 1.25;
   if (isBrawler(s, t) && gap < 14) v *= 1.2; // threatens us next turn
@@ -96,3 +99,66 @@ export function shotValue(s: GameState, u: UnitState, t: UnitState, ev: number, 
 }
 
 export const riledUp = (s: GameState, u: UnitState) => isRiled(s, u);
+
+/** How much each objective is worth to `p` under its primary mission (VP a turn for holding it, mean ~1 over the board). */
+export function objectiveWorth(s: GameState, p: PlayerId): number[] {
+  const prim = primaryById(s.players[p].primaryId);
+  const raw = s.objectives.map((o) => {
+    const own = o.type === 'home' && o.owner === p, enemy = o.type === 'home' && o.owner === other(p);
+    let v = 0;
+    for (const r of prim?.scoring ?? []) {
+      const vp = r.vp || 3;
+      const late = r.when === 'endOfBattle' ? 0.5 : 1;
+      switch (r.condition) {
+        case 'perObjectiveControlled': v += vp; break;
+        case 'perObjectiveControlledExclHome': case 'perNewObjectiveThisTurnExclHome': case 'newObjectiveThisTurnExclHome':
+        case 'perNonHomeIfHomeControlled': if (!own) v += vp; break;
+        case 'controlCentral': if (o.type === 'central') v += vp * late; break;
+        case 'controlEnemyHome': if (enemy) v += vp * late; break;
+        case 'controlAnyExclHome': if (!own) v += vp * 0.4; break;
+        case 'controlAnyExclHomes': if (o.type !== 'home') v += vp * 0.4; break;
+        case 'controlCentralAndExpansion': if (o.type === 'central' || o.type === 'expansion') v += vp * 0.5; break;
+        case 'controlMoreThanOpponent': case 'control2Plus': case 'control3Plus': case 'control4Plus': v += vp * 0.4; break;
+      }
+    }
+    return v;
+  });
+  const mean = raw.reduce((a, b) => a + b, 0) / Math.max(1, raw.length);
+  return raw.map((v) => (mean > 0 ? 0.4 + 0.6 * (v / mean) : 1));
+}
+
+const KILL_CARDS = new Set(['no-prisoners', 'overwhelming-force', 'a-grievous-blow', 'assassination', 'bring-it-down']);
+
+/** VP that destroying `t` now would bring `p`: kill clauses of its primary (on its own turn) and kill secondaries in hand. */
+export function killVp(s: GameState, p: PlayerId, t: UnitState): number {
+  let vp = 0;
+  if (s.active === p) {
+    const prim = primaryById(s.players[p].primaryId);
+    const killed = s.destroyedByTurn.filter((d) => d.turn === s.turn && d.owner === other(p)).length;
+    const snap = s.turnStart && s.turnStart.turn === s.turn ? s.turnStart : null;
+    for (const r of prim?.scoring ?? []) {
+      switch (r.condition) {
+        case 'enemyUnitDestroyedThisTurn': if (!killed) vp += r.vp; break;
+        case 'perEnemyDestroyedThisTurn': vp += r.vp; break;
+        case 'moreKillsThanLossesLastTurn': vp += r.vp * 0.4; break;
+        case 'killNearObjective': case 'killStartedInRangeOfObjective': if (snap?.inRangeObj.includes(t.id)) vp += r.vp * 0.7; break;
+        case 'killStartedInRangeOfCentral': if (snap?.inRangeCentral.includes(t.id)) vp += r.vp * 0.7; break;
+        case 'killStartedInTerrain': if ((snap?.inTerrain[t.id] ?? []).length) vp += r.vp * 0.7; break;
+      }
+    }
+  }
+  const P = s.players[p];
+  if (P.secMode !== 'none') {
+    for (const id of P.secActive) {
+      if (!KILL_CARDS.has(id)) continue;
+      const def = secondaryById(id);
+      const hit = id === 'no-prisoners' ? true
+        : id === 'overwhelming-force' ? s.objectives.some((o) => onObjective(s, t, o))
+        : id === 'a-grievous-blow' ? t.startingStrength >= 13
+        : id === 'assassination' ? alive(t).some((m) => m.isCharacter)
+        : alive(t).some((m) => m.profile.W >= 10);
+      if (hit) vp += Math.max(2, ...def.auto.filter((r) => r.mode !== 'fixed').map((r) => r.vp)) * 0.8;
+    }
+  }
+  return vp;
+}

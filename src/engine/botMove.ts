@@ -12,7 +12,7 @@ import { hasLos } from './visibility';
 import { secondaryGoal } from './secondaries';
 import { hasAbility } from './weapons';
 import {
-  centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, shotValue, unitValue,
+  centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, objectiveWorth, p2d6, perModel, rangedKills, shotValue, unitValue,
 } from './botEval';
 import type { GameState, ModelState, MoveKind, Pt, UnitState } from './types';
 
@@ -103,6 +103,8 @@ interface Foe { u: UnitState; rk: number; mk: number; brawler: boolean; range: n
 /** What the enemy army can do to this unit (computed once per unit, positions vary). */
 export interface Ctx {
   foes: Foe[]; brawler: boolean; target?: UnitState; range: number; heavy: boolean; ocNeed: Pt[];
+  /** per objective: what holding it is worth (our primary) plus what taking it off the enemy denies them */
+  objW: number[];
   /** route distances for units that can't cross ruin walls (vehicles, monsters): to the melee target, to objectives */
   toTarget?: (p: Pt) => number; toObjective?: (p: Pt) => number;
 }
@@ -115,7 +117,9 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   const target = brawler ? [...foes].sort((a, b) => (chargeValue(s, u, b.u) / (1 + unitDistance(u, b.u) / 10)) - (chargeValue(s, u, a.u) / (1 + unitDistance(u, a.u) / 10)))[0]?.u : undefined;
   const heavy = alive(u).some((m) => m.weapons.some((w) => w.profiles.some((p) => hasAbility(p, 'heavy'))));
   const ocNeed = oc(u) > 0 ? objectiveNeeds(s, u.owner).filter((n) => n.need > 0).map((n) => objPoint(s, n.o)) : [];
-  const ctx: Ctx = { foes, brawler, target, range: maxRange(u), heavy, ocNeed };
+  const mine = objectiveWorth(s, u.owner), theirs = objectiveWorth(s, other(u.owner));
+  const objW = mine.map((w, i) => (w + 0.6 * theirs[i]) / 1.6);
+  const ctx: Ctx = { foes, brawler, target, range: maxRange(u), heavy, ocNeed, objW };
   const lead = leaderOf(u);
   if (lead && blockingWalls(s, lead).length) {
     if (target) ctx.toTarget = distanceField(s, u, 'normal', lead, alive(target));
@@ -124,12 +128,12 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   return ctx;
 }
 
-function objectiveScore(s: GameState, u: UnitState): number {
+function objectiveScore(s: GameState, u: UnitState, ctx: Ctx): number {
   let v = 0;
-  for (const o of s.objectives) {
+  for (const [i, o] of s.objectives.entries()) {
     const [a, b] = levelOfControl(s, o);
     const ours = u.owner === 0 ? a : b, theirs = u.owner === 0 ? b : a;
-    if (ours || theirs) v += OBJECTIVE * Math.tanh((ours - theirs) / 3);
+    if (ours || theirs) v += OBJECTIVE * (ctx.objW[i] ?? 1) * Math.tanh((ours - theirs) / 3);
   }
   return v;
 }
@@ -218,7 +222,7 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
   u.maxMoved = Math.max(u.maxMoved, moved);
   try {
     const caution = ctx.brawler ? 0.45 : 1;
-    return objectiveScore(s, u) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx);
+    return objectiveScore(s, u, ctx) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }
     u.move = was.move;
