@@ -153,13 +153,3 @@ describe('stratagem reactions', () => {
     expect(unitFlags(s, bg).forceShockAura).toBe(6);
   });
 });
-
-describe('army list Strategic Reserves', () => {
-  it('a unit marked Reserves in the army builder starts the battle in Strategic Reserves', () => {
-    const l = list('SM', [['Intercessor Squad', 10, 150], ['Hellblaster Squad', 5, 110]]);
-    l.units[1].reserves = true;
-    const s = createGame({ lists: [l, list('ORK', [['Boyz', 10, 90]])], factions: [SM, ORK], names: ['A', 'B'], seed: 3 });
-    expect(s.units.find((u) => u.id === 'p0-x1')!.status).toBe('reserves');
-    expect(s.units.find((u) => u.id === 'p0-x0')!.status).toBe('pending');
-  });
-});

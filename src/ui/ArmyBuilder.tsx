@@ -184,7 +184,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [adding, setAdding] = useState<Section | null>(null);
   const [q, setQ] = useState('');
   const [menu, setMenu] = useState<string | null>(null); // uid of the unit whose datasheet + settings panel is open
-  const [pop, setPop] = useState<{ uid: string; x: number; y: number; sizes?: boolean; join?: boolean } | null>(null); // the ⋮ quick menu
+  const [pop, setPop] = useState<{ uid: string; x: number; y: number; join?: boolean; embark?: boolean } | null>(null); // the ⋮ quick menu
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -287,11 +287,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     ].filter(Boolean).join(' · ');
     const wg = wargearSummary(sheet, u);
     const wrong = sheet && !allowed(sheet);
-    const inReserves = (leads ?? u).reserves;
     return (
       <div key={u.uid} className={`ab-row ${inGroup ? 'in-group' : ''}`}>
         <button type="button" className="ab-row-main" onClick={() => setMenu(u.uid)}>
-          <span className="ab-art-wrap"><UnitArt sheet={sheet} />{inReserves && <span className="ab-badge-r" title="Strategic Reserves">R</span>}</span>
+          <span className="ab-art-wrap"><UnitArt sheet={sheet} /></span>
           <span className="ab-row-text">
             <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
             <span className="ab-pts">{unitPoints(u)} pts{u.enhancement && <span className="ab-enh"> {u.enhancement}</span>}{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">ไม่มีใน 11e</span>}</span>
@@ -321,7 +320,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         };
         const tops = list.units.filter((u) => (!u.attachTo || !list.units.some((b) => b.uid === u.attachTo)) && homeOf(u) === sec.id);
         const us = tops;
-        if (sec.id === 'transports' && !us.length) return null;
         return (
           <section key={sec.id} className="ab-section">
             <div className="ab-section-head">
@@ -520,8 +518,15 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             {sheet?.keywords.includes('CHARACTER') && (
               <button type="button" className={u.warlord ? 'on' : ''} onClick={() => set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) })}><Icon name="leader" size={22} />{u.warlord ? 'Warlord' : 'ตั้ง Warlord'}</button>
             )}
-            <button type="button" onClick={() => { set({ units: [...list.units, { ...u, uid: newUid('e'), warlord: false, enhancement: undefined, enhancementPts: undefined, attachTo: undefined }] }); setMenu(null); setNote(`เพิ่ม ${u.datasheet} อีก 1`); }}><Icon name="duplicate" size={22} />ทำซ้ำ</button>
+            <button type="button" className="danger" onClick={() => { removeUnit(u.uid); setMenu(null); }}><Icon name="delete" size={22} />ลบหน่วย</button>
           </div>
+          {opts.length > 1 && (
+            <div className="field"><span><Icon name="size" size={15} /> จำนวนโมเดล</span>
+              <div className="seg">
+                {opts.map((o) => <button key={o.models} className={u.models === o.models ? 'on' : ''} onClick={() => setUnit(u.uid, { models: o.models, pts: o.pts })}>{o.models} · {o.pts}</button>)}
+              </div>
+            </div>
+          )}
           {(() => {
             // start the battle embarked: any transport in the list (leaders ride with the unit they lead)
             const rides = list.units.filter((t) => t.uid !== u.uid && parseTransport(sheetOf(t.datasheet)?.transport));
@@ -606,19 +611,23 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     );
   };
 
-  /** The ⋮ quick menu: Leave Squad, Reserves, Unit size, Delete (everything else is in the unit's datasheet panel). */
+  /** The ⋮ quick menu: Join / Leave Squad, Duplicate, Embark / Disembark (everything else is in the unit's datasheet panel). */
   const quickMenu = () => {
     const u = pop ? list.units.find((x) => x.uid === pop.uid) : undefined;
-    if (!pop || !u) return null;
+    if (!pop || !u || !faction) return null;
     const sheet = sheetOf(u.datasheet);
-    const opts = sheet ? pointsOptions(sheet) : [];
     const body = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
-    const holder = body ?? u; // a Leader goes into Reserves with its unit
+    const rider = body ?? u; // a Leader rides with the unit it leads
+    const rideIn = rider.embarkIn ? list.units.find((t) => t.uid === rider.embarkIn) : undefined;
+    const isTransport = !!parseTransport(sheet?.transport) || !!sheet?.keywords.includes('TRANSPORT');
+    const loads = transportLoads(list, faction);
+    const rides = isTransport ? [] : list.units.filter((t) => t.uid !== rider.uid && parseTransport(sheetOf(t.datasheet)?.transport));
+    const bodies = sheet?.leads.length ? attachOptions(list, faction, u) : [];
     const close = () => setPop(null);
-    const w = 230;
+    const w = 240;
+    const rows = pop.join ? bodies.length + 1 : pop.embark ? rides.length + 1 : 3;
     const left = Math.max(8, Math.min(window.innerWidth - w - 8, pop.x - w));
-    const bodies = faction && sheet?.leads.length ? attachOptions(list, faction, u) : [];
-    const top = Math.max(8, Math.min(pop.y + 4, window.innerHeight - (pop.sizes ? 80 + opts.length * 52 : pop.join ? 80 + bodies.length * 52 : 250)));
+    const top = Math.max(8, Math.min(pop.y + 4, window.innerHeight - 40 - rows * 56));
     return (
       <div className="ab-pop-backdrop" onClick={close}>
         <div className="ab-pop" style={{ left, top, width: w }} onClick={(e) => e.stopPropagation()}>
@@ -626,44 +635,45 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             <>
               <div className="ab-pop-head">{sheet?.isSupport ? 'เข้าหน่วยเป็น Support' : 'นำหน่วย (Leader)'}</div>
               {bodies.map((b) => (
-                <button key={b.uid} type="button" onClick={() => { setUnit(u.uid, { attachTo: b.uid, embarkIn: undefined, reserves: undefined }); setNote(`${u.datasheet} เข้า ${b.datasheet} แล้ว`); close(); }}>
+                <button key={b.uid} type="button" onClick={() => { setUnit(u.uid, { attachTo: b.uid, embarkIn: undefined }); setNote(`${u.datasheet} เข้า ${b.datasheet} แล้ว`); close(); }}>
                   <Icon name="leader" size={22} />{b.datasheet} ({b.models})
                 </button>
               ))}
               {!bodies.length && <div className="ab-pop-head">ไม่มีหน่วยที่เข้าได้ในทัพ</div>}
             </>
-          ) : pop.sizes ? (
+          ) : pop.embark ? (
             <>
-              <div className="ab-pop-head">จำนวนโมเดล</div>
-              {opts.map((o) => (
-                <button key={o.models} type="button" className={u.models === o.models ? 'on' : ''} onClick={() => { setUnit(u.uid, { models: o.models, pts: o.pts }); close(); }}>
-                  <Icon name={u.models === o.models ? 'check' : 'size'} size={22} />{o.models} โมเดล · {o.pts} pts
-                </button>
-              ))}
+              <div className="ab-pop-head">ขึ้นรถตอนเริ่มเกม{body ? ` (ทั้งหน่วย ${body.datasheet})` : ''}</div>
+              {rides.map((t) => {
+                const l = loads.find((x) => x.uid === t.uid);
+                return (
+                  <button key={t.uid} type="button" className={rider.embarkIn === t.uid ? 'on' : ''} onClick={() => { setUnit(rider.uid, { embarkIn: t.uid }); setNote(`${rider.datasheet} เริ่มเกมบน ${t.datasheet}`); close(); }}>
+                    <Icon name="embark" size={22} />{t.datasheet} <span className="ab-pop-val">{l ? `${l.used}/${l.capacity}` : ''}</span>
+                  </button>
+                );
+              })}
+              {!rides.length && <div className="ab-pop-head">ไม่มีรถในทัพ</div>}
             </>
           ) : (
             <>
               {!body && sheet && sheet.leads.length > 0 && (
-                <button type="button" onClick={() => setPop({ ...pop, join: true })}>
-                  <Icon name="leader" size={22} />Join Squad
-                </button>
+                <button type="button" onClick={() => setPop({ ...pop, join: true })}><Icon name="leader" size={22} />Join Squad</button>
               )}
               {body && (
                 <button type="button" onClick={() => { setUnit(u.uid, { attachTo: undefined }); setNote(`${u.datasheet} ออกจาก ${body.datasheet}`); close(); }}>
                   <Icon name="leave" size={22} />Leave Squad
                 </button>
               )}
-              <button type="button" className={holder.reserves ? 'on' : ''} onClick={() => { setUnit(holder.uid, { reserves: !holder.reserves, embarkIn: undefined }); close(); }}>
-                <Icon name={holder.reserves ? 'check' : 'reserves'} size={22} />Reserves{body ? ` (ทั้งหน่วย)` : ''}
+              <button type="button" onClick={() => { set({ units: [...list.units, { ...u, uid: newUid('e'), warlord: false, enhancement: undefined, enhancementPts: undefined, attachTo: undefined }] }); setNote(`เพิ่ม ${u.datasheet} อีก 1`); close(); }}>
+                <Icon name="duplicate" size={22} />ทำซ้ำ
               </button>
-              {opts.length > 1 && (
-                <button type="button" onClick={() => setPop({ ...pop, sizes: true })}>
-                  <Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span>
+              {!isTransport && (rideIn ? (
+                <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setNote(`${rider.datasheet} ลงจาก ${rideIn.datasheet}`); close(); }}>
+                  <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{rideIn.datasheet}</span>
                 </button>
-              )}
-              <button type="button" className="danger" onClick={() => { removeUnit(u.uid); close(); }}>
-                <Icon name="delete" size={22} />Delete
-              </button>
+              ) : rides.length > 0 && (
+                <button type="button" onClick={() => setPop({ ...pop, embark: true })}><Icon name="embark" size={22} />Embark</button>
+              ))}
             </>
           )}
         </div>

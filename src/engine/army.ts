@@ -666,9 +666,5 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
   }
   for (const u of list.units) if (u.embarkIn && !list.units.some((t) => t.uid === u.embarkIn)) errs.push(`${u.datasheet}: รถที่เลือกให้ขึ้นไม่อยู่ในทัพแล้ว`);
   for (const t of transportLoads(list, faction)) errs.push(...t.problems);
-  // Strategic Reserves: at most half the army's points (a reserved unit takes its leaders with it)
-  const total = listPoints(list);
-  const reserved = list.units.filter((u) => u.reserves && !u.attachTo).reduce((a, u) => a + unitPoints(u) + list.units.filter((l) => l.attachTo === u.uid).reduce((b, l) => b + unitPoints(l), 0), 0);
-  if (total && reserved > total / 2) errs.push(`Strategic Reserves ${reserved} pts เกินครึ่งของกองทัพ (${Math.floor(total / 2)} pts)`);
   return errs;
 }

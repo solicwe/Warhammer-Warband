@@ -124,7 +124,6 @@ export interface ArmyUnitEntry {
   addons?: string[]; // optional extra models bought separately, e.g. "Invader ATV"
   split?: boolean; // split into two units at Declare Battle Formations (Combat Squads …)
   embarkIn?: string; // uid of the TRANSPORT this unit starts the battle embarked within
-  reserves?: boolean; // starts the battle in Strategic Reserves (leaders follow the unit they lead)
 }
 
 export interface ArmyList {

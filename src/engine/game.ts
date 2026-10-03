@@ -155,17 +155,6 @@ export function createGame(o: NewGameOptions): GameState {
       }
     }
   }
-  // Declare Battle Formations: units set aside in Strategic Reserves in the army builder
-  for (const p of [0, 1] as PlayerId[]) {
-    for (const e of o.lists[p].units) {
-      if (!e.reserves || e.attachTo || e.embarkIn) continue;
-      for (const u of s.units.filter((x) => (x.id === `p${p}-${e.uid}` || x.id === `p${p}-${e.uid}-b`) && x.status === 'pending')) {
-        if (reservesPoints(s, p) + u.pts > armyPoints(s, p) * RULES.reserves.maxPointsFraction) { log(s, `${u.name}: Strategic Reserves เต็ม (เกิน ${RULES.reserves.maxPointsFraction * 100}%) — วางบนสนามแทน`, 'info', p); continue; }
-        u.status = 'reserves';
-        log(s, `${u.name} เริ่มเกมใน Strategic Reserves`, 'info', p);
-      }
-    }
-  }
   // Declare Battle Formations: abilities fixed for the battle, "choose two of these", Master of the Fleet …
   applyStaticEffects(s);
   initAbilityChoices(s);
