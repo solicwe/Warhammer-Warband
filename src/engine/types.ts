@@ -511,6 +511,8 @@ export interface GameState {
   pickRerolls?: boolean;
   /** the player moves their own units in pile-in / consolidate (off: the game does it, as many models into the fight as possible) */
   manualPile?: boolean;
+  /** bots that move without looking at their secondary cards (for comparing bot versions in tests) */
+  botIgnoresCards?: PlayerId[];
   fx?: FxEvent[];
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

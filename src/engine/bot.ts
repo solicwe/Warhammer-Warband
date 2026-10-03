@@ -3,10 +3,10 @@
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from './attack';
 import { RULES } from './config';
 import { smartPlacement } from './deploy';
-import { dist, polyCentroid } from './geometry';
+import { dist, pointInPoly, polyCentroid } from './geometry';
 import { detChoices, pickDetChoice } from './detachments';
 import {
-  autoApproach, autoCharge, autoPileMove, callWaaagh, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
+  autoApproach, autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
@@ -15,7 +15,8 @@ import {
 import { abilityChoices, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
-import { actionOptions, startAction } from './missions';
+import { actionOptions, startAction, zonePoly } from './missions';
+import { secondaryGoal } from './secondaries';
 import {
   centre, chargeValue, isBrawler, meleeKills, moveOf, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
@@ -92,9 +93,35 @@ export function botDeploy(s: GameState) {
 
 // ---------- command ----------
 
+/**
+ * Tactical cards that cannot score any more: nothing left to kill for them, or no unit able to get where they
+ * want this turn. Swapped for a new card (once per battle, 1CP) or discarded for +1CP.
+ */
+export function botManageCards(s: GameState, p: PlayerId) {
+  const P = s.players[p];
+  if (P.secMode !== 'tactical' || s.botIgnoresCards?.includes(p)) return;
+  const mine = boardUnits(s, p);
+  const reach = (u: UnitState) => (alive(u)[0]?.profile.M ?? 0) + 6;
+  const dead = (id: string) => {
+    const g = secondaryGoal(s, p, id);
+    if (['assassination', 'bring-it-down', 'a-grievous-blow'].includes(id)) return g.units.length === 0;
+    if (id === 'behind-enemy-lines') {
+      const z = zonePoly(s, other(p));
+      return !mine.some((u) => alive(u).some((m) => pointInPoly(m, z) || z.some((q) => dist(m, q) <= reach(u))));
+    }
+    return false;
+  };
+  for (const id of [...P.secActive]) {
+    if (!dead(id)) continue;
+    if (!P.secSwapUsed && P.cp >= 2 && s.phase === 'command' && s.active === p) swapSecondary(s, p, id);
+    else discardSecondary(s, p, id);
+  }
+}
+
 export function botCommand(s: GameState) {
   for (const t of s.shockTests) if (t.passed === null) rollBattleShock(s, t.unitId, wantsBravery(s, unitById(s, t.unitId)));
   const p = s.active;
+  botManageCards(s, p);
   const P = s.players[p];
   const mine = boardUnits(s, p);
   const enemies = boardUnits(s, other(p));

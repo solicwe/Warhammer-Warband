@@ -9,6 +9,7 @@ import { circleTouchesPoly, dist, polyCentroid } from './geometry';
 import { blockingWalls, distanceField, pathLength, pointAt, routeAround } from './pathing';
 import { alive, boardUnits, other, unitDistance } from './state';
 import { hasLos } from './visibility';
+import { secondaryGoal } from './secondaries';
 import { hasAbility } from './weapons';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, shotValue, unitValue,
@@ -240,6 +241,16 @@ function aimsFor(s: GameState, u: UnitState, max: number, ctx: Ctx): Pt[] {
   const cover = s.terrain.filter((t) => t.category !== 'exposed' && dist(polyCentroid(t.poly), c) <= max + 3)
     .sort((a, b) => dist(polyCentroid(a.poly), c) - dist(polyCentroid(b.poly), c)).slice(0, 2);
   for (const t of cover) pts.push(polyCentroid(t.poly));
+  // where the secondary cards want units: their objectives, areas and circles
+  const P = s.players[u.owner];
+  if (P.secMode !== 'none') {
+    for (const id of P.secActive) {
+      const g = secondaryGoal(s, u.owner, id);
+      for (const oid of g.objectives) { const o = s.objectives.find((x) => x.id === oid); if (o && dist(o, c) <= max + 12) pts.push({ x: o.x, y: o.y }); }
+      for (const a of g.areas) { const p = polyCentroid(a); if (dist(p, c) <= max + 14) pts.push(clampIn(p, 1)); }
+      for (const ci of g.circles.slice(0, 1)) if (dist(ci, c) <= max + 12) pts.push({ x: ci.x, y: ci.y });
+    }
+  }
   for (let k = 0; k < 4; k++) pts.push(clampIn({ x: c.x + Math.cos((k * Math.PI) / 2 + 0.4) * max, y: c.y + Math.sin((k * Math.PI) / 2 + 0.4) * max }, 1));
   const out: Pt[] = [];
   for (const p of pts) if (dist(p, c) > 0.6 && !out.some((q) => dist(p, q) < 1.5)) out.push(p);
