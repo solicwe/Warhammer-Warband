@@ -29,7 +29,9 @@ export interface BoardProps {
   badges?: Record<string, string[]>;
   losLines?: { a: Pt; b: Pt; cover: boolean }[];
   onTapUnit?: (unitId: string, modelId: string) => void;
-  measure?: { a?: Pt; b?: Pt };
+  measure?: { a?: Pt; b?: Pt; label?: string; los?: boolean };
+  /** shooting: models of the firing unit that cannot see the chosen target (they don't shoot it) */
+  noLos?: string[];
   onTapBoard?: (p: Pt) => void;
   onDraft?: (p: Paths) => void;
   /** a drag of the draft finished (the screen settles models into legal spots) */
@@ -511,8 +513,24 @@ function BoardImpl(props: BoardProps) {
                     ? <image href={getPortrait(m.source)} x={p.x - m.r * 0.9} y={p.y - m.r * 0.9} width={m.r * 1.8} height={m.r * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
                     : <use href={`#tok-${modelToken(m)}`} x={p.x - m.r * 0.82} y={p.y - m.r * 0.82} width={m.r * 1.64} height={m.r * 1.64} pointerEvents="none" />}
                   {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
-                  {m.profile.W > 1 && m.wounds < m.profile.W && (
-                    <text x={p.x} y={p.y + 0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={800} pointerEvents="none">{m.wounds}</text>
+                  {m.profile.W > 1 && m.wounds < m.profile.W && (() => {
+                    // wounds left on a dark badge with an outline, so it reads over any token art
+                    const fsz = Math.max(0.62, Math.min(1.1, m.r * 0.7));
+                    const low = m.wounds * 2 <= m.profile.W;
+                    const by = p.y + m.r * 0.55;
+                    return (
+                      <g pointerEvents="none">
+                        <rect x={p.x - fsz * 0.62} y={by - fsz * 0.72} width={fsz * 1.24} height={fsz * 0.98} rx={fsz * 0.3} fill="rgba(0,0,0,0.78)" stroke={low ? '#f87171' : '#fde68a'} strokeWidth={0.06} />
+                        <text x={p.x} y={by + fsz * 0.1} fontSize={fsz} textAnchor="middle" fill={low ? '#fca5a5' : '#fff7d6'} stroke="#000" strokeWidth={fsz * 0.22} paintOrder="stroke" fontWeight={900}>{m.wounds}</text>
+                      </g>
+                    );
+                  })()}
+                  {props.noLos?.includes(m.id) && (
+                    <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.7} ${p.y - m.r * 0.7})`}>
+                      <circle r={0.38} fill="#111" stroke="#f87171" strokeWidth={0.08} />
+                      <path d="M -0.22 0 Q 0 -0.2 0.22 0 Q 0 0.2 -0.22 0 Z" fill="none" stroke="#fff" strokeWidth={0.06} />
+                      <line x1={-0.26} y1={0.26} x2={0.26} y2={-0.26} stroke="#f87171" strokeWidth={0.09} />
+                    </g>
                   )}
                 </g>
               );
@@ -527,8 +545,14 @@ function BoardImpl(props: BoardProps) {
                 {props.badges[u.id].join('  ')}
               </text>
             ) : null}
-            {s.players[1 - u.owner].oathTarget === u.id && pts.length > 0 && (
+            {u.battleShocked && pts.length > 0 && (
               <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 3.1 : 2.2)})`} pointerEvents="none">
+                <rect x={-3.9} y={-0.55} width={7.8} height={1.1} rx={0.55} fill="#4c1d95" stroke="#e9d5ff" strokeWidth={0.09} />
+                <text x={0} y={0.25} fontSize={0.66} textAnchor="middle" fill="#f5f3ff" fontWeight={900}>⚡ BATTLE-SHOCKED</text>
+              </g>
+            )}
+            {s.players[1 - u.owner].oathTarget === u.id && pts.length > 0 && (
+              <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 3.1 : 2.2) - (u.battleShocked ? 1.35 : 0)})`} pointerEvents="none">
                 <rect x={-2.3} y={-0.62} width={4.6} height={1.24} rx={0.25} fill="#7a0c0c" stroke="#f5d48a" strokeWidth={0.1} />
                 <path d="M -1.85 0.32 L -1.4 -0.32 L -0.95 0.32 Z" fill="#f5d48a" />
                 <text x={0.35} y={0.27} fontSize={0.75} textAnchor="middle" fill="#f5d48a" fontWeight={800} letterSpacing={0.06}>OATH</text>
@@ -551,15 +575,16 @@ function BoardImpl(props: BoardProps) {
           {props.measure.b && (() => {
             const a = props.measure.a!, b = props.measure.b!;
             const d = Math.hypot(a.x - b.x, a.y - b.y);
+            const col = props.measure.los === false ? '#f87171' : '#fde68a';
             const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
             const n = Math.floor(d);
             const ux = (b.x - a.x) / (d || 1), uy = (b.y - a.y) / (d || 1);
             return (
               <>
-                <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#fde68a" strokeWidth={0.2} />
-                {Array.from({ length: n }, (_, i) => <line key={i} x1={a.x + ux * (i + 1) - uy * 0.35} y1={a.y + uy * (i + 1) + ux * 0.35} x2={a.x + ux * (i + 1) + uy * 0.35} y2={a.y + uy * (i + 1) - ux * 0.35} stroke="#fde68a" strokeWidth={(i + 1) % 6 === 0 ? 0.14 : 0.07} />)}
-                <circle cx={b.x} cy={b.y} r={0.35} fill="#fde68a" stroke="#000" strokeWidth={0.08} />
-                <text x={mx} y={my - 0.6} fontSize={1.2} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.18} paintOrder="stroke" fontWeight={900}>{d.toFixed(1)}"</text>
+                <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={col} strokeWidth={0.2} strokeDasharray={props.measure.los === false ? '0.5 0.3' : undefined} />
+                {Array.from({ length: n }, (_, i) => <line key={i} x1={a.x + ux * (i + 1) - uy * 0.35} y1={a.y + uy * (i + 1) + ux * 0.35} x2={a.x + ux * (i + 1) + uy * 0.35} y2={a.y + uy * (i + 1) - ux * 0.35} stroke={col} strokeWidth={(i + 1) % 6 === 0 ? 0.14 : 0.07} />)}
+                <circle cx={b.x} cy={b.y} r={0.35} fill={col} stroke="#000" strokeWidth={0.08} />
+                <text x={mx} y={my - 0.6} fontSize={1.2} textAnchor="middle" fill={col} stroke="#000" strokeWidth={0.18} paintOrder="stroke" fontWeight={900}>{props.measure.label ?? `${d.toFixed(1)}"`}{props.measure.los === false ? ' ✗' : ''}</text>
               </>
             );
           })()}

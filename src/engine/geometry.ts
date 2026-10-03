@@ -50,9 +50,38 @@ export function circleWhollyInPoly(c: Pt, r: number, poly: Pt[]): boolean {
   return pointInPoly(c, poly) && polyEdges(poly).every((e) => pointSegDist(c, e) >= r - EPS);
 }
 
+/** Do two segments touch or cross (an end lying on the other segment counts)? */
+export function segsTouch(p: Seg, q: Seg): boolean {
+  return segSegDist(p, q) < 1e-7;
+}
+
+/** Strictly inside the polygon (not on its boundary). */
+const strictlyInside = (p: Pt, poly: Pt[]) => pointInPoly(p, poly) && polyEdges(poly).every((e) => pointSegDist(p, e) > 1e-7);
+
+/** Does the segment pass through the inside of the polygon? Running along its boundary or touching a corner
+ *  from outside does not count; passing through two corners (a diagonal) does. */
 export function segCrossesPoly(s: Seg, poly: Pt[]): boolean {
-  if (pointInPoly(s.a, poly) || pointInPoly(s.b, poly)) return true;
-  return polyEdges(poly).some((e) => segsIntersect(s, e));
+  if (strictlyInside(s.a, poly) || strictlyInside(s.b, poly)) return true;
+  // split the segment where it meets the boundary (corners included) and test the middle of each piece
+  const rx = s.b.x - s.a.x, ry = s.b.y - s.a.y;
+  const ts = [0, 1];
+  for (const e of polyEdges(poly)) {
+    const ex = e.b.x - e.a.x, ey = e.b.y - e.a.y;
+    const den = rx * ey - ry * ex;
+    const qx = e.a.x - s.a.x, qy = e.a.y - s.a.y;
+    if (Math.abs(den) < 1e-12) continue; // parallel: at most runs along the boundary
+    const t = (qx * ey - qy * ex) / den;
+    const u = (qx * ry - qy * rx) / den;
+    if (t > -1e-9 && t < 1 + 1e-9 && u > -1e-9 && u < 1 + 1e-9) ts.push(Math.min(1, Math.max(0, t)));
+  }
+  if (ts.length === 2) return false;
+  ts.sort((a, b) => a - b);
+  for (let i = 1; i < ts.length; i++) {
+    if (ts[i] - ts[i - 1] < 1e-9) continue;
+    const m = (ts[i] + ts[i - 1]) / 2;
+    if (strictlyInside({ x: s.a.x + rx * m, y: s.a.y + ry * m }, poly)) return true;
+  }
+  return false;
 }
 
 /** Sample points on and inside a base for line-of-sight tests. */

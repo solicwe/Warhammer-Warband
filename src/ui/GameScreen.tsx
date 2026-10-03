@@ -29,8 +29,8 @@ import { polyCentroid } from '../engine/geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, onBoard, other, spendStratagem, stratCost, strength, unitById, unitDistance,
 } from '../engine/state';
-import type { BuffKind, GameState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
-import { hasCover, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
+import type { BuffKind, GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
+import { hasCover, hasLos, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
 import { baseDist } from '../engine/geometry';
 import { Portrait, unitToken } from './Tokens';
 import { isMelee, hasAbility } from '../engine/weapons';
@@ -182,8 +182,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const onTapUnit = (unitId: string, modelId?: string) => {
     if (tape.on) {
-      const m = U(unitId).models.find((x) => x.id === modelId) ?? alive(U(unitId))[0];
-      if (m) measureTap({ x: m.x, y: m.y });
+      const m = U(unitId).models.find((x) => x.id === modelId && !x.dead) ?? alive(U(unitId))[0];
+      if (m) measureTap({ x: m.x, y: m.y }, { u: unitId, m: m.id });
       return;
     }
     if (mode && targets.includes(unitId)) {
@@ -195,8 +195,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (!mode) setSel(unitId);
   };
 
-  const measureTap = (p: Pt) => {
-    setTape((tp) => (!tp.a || tp.b ? { on: true, a: p } : { ...tp, b: p }));
+  const measureTap = (p: Pt, ref?: { u: string; m: string }) => {
+    setTape((tp) => (!tp.a || tp.b ? { on: true, a: p, ma: ref } : { ...tp, b: p, mb: ref }));
   };
   const onTapBoard = (p: Pt) => {
     if (tape.on) { measureTap(p); return; }
@@ -242,6 +242,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // Cover / Hidden badges and line-of-sight lines while choosing a shooting target
   const badges: Record<string, string[]> = {};
   const losLines: { a: Pt; b: Pt; cover: boolean }[] = [];
+  const noLos: string[] = [];
   if (mode?.k === 'shoot' && modeUnit) {
     const shooters = alive(modeUnit);
     for (const id of shootTargets.filter((x) => x === mode.target)) {
@@ -257,7 +258,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const T = U(mode.target);
       for (const m of shooters) {
         const vis = alive(T).filter((t) => modelVisible(s, m, T, t));
-        if (!vis.length) continue;
+        if (!vis.length) { noLos.push(m.id); continue; }
         const t = vis.reduce((x, y) => (baseDist(m, x) <= baseDist(m, y) ? x : y));
         losLines.push({ a: m, b: t, cover: hasCover(s, m, T) });
       }
@@ -267,7 +268,23 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     for (const id of targets) badges[id] = [`${unitDistance(modeUnit, U(id)).toFixed(1)}"`, ...(badges[id] ?? [])];
   }
   // tape measure: tap two points on the board
-  const [tape, setTape] = useState<{ on: boolean; a?: Pt; b?: Pt }>({ on: false });
+  const [tape, setTape] = useState<{ on: boolean; a?: Pt; b?: Pt; ma?: { u: string; m: string }; mb?: { u: string; m: string } }>({ on: false });
+  // between two models the tape measures base to base (how ranges work) and checks line of sight through terrain
+  const tapeInfo = (() => {
+    if (!tape.a || !tape.b) return null;
+    const mOf = (r?: { u: string; m: string }) => (r ? s.units.find((u) => u.id === r.u)?.models.find((x) => x.id === r.m && !x.dead) : undefined);
+    const ma = mOf(tape.ma), mb = mOf(tape.mb);
+    const centre = Math.hypot(tape.a.x - tape.b.x, tape.a.y - tape.b.y);
+    if (!ma || !mb) {
+      const pt = (p: Pt) => ({ ...p, r: 0.01, keywords: [] } as unknown as ModelState);
+      return { text: `${centre.toFixed(1)}"`, line: `ระยะ ${centre.toFixed(1)}" (จุดถึงจุด) · ${hasLos(s, pt(tape.a), pt(tape.b)) ? 'เส้นนี้ไม่ผ่าน terrain ที่บัง' : 'เส้นนี้ผ่าน terrain ที่บังสายตา'}`, los: hasLos(s, pt(tape.a), pt(tape.b)) };
+    }
+    const tu = U(tape.mb!.u);
+    const los = hasLos(s, ma, mb);
+    const vis = tape.ma!.u !== tape.mb!.u && modelVisible(s, ma, tu, mb);
+    const why = !los ? 'มองไม่เห็น: terrain บัง (ยืนอยู่ในพื้นที่นั้นจึงจะมองผ่านได้)' : vis || tape.ma!.u === tape.mb!.u ? 'มองเห็น' : isHidden(s, tu, mb) ? 'มองเห็นแต่ Hidden: ต้องเข้าใกล้กว่า detection range' : 'มองไม่เห็น';
+    return { text: `${baseDist(ma, mb).toFixed(1)}"`, line: `ขอบฐานถึงขอบฐาน ${baseDist(ma, mb).toFixed(1)}" (กลางถึงกลาง ${centre.toFixed(1)}") · ${why}`, los: los && (vis || tape.ma!.u === tape.mb!.u) };
+  })();
   const rings: Ring[] = [];
   if (mode?.k === 'charge' && modeUnit) {
     for (const m of alive(modeUnit)) if (alive(modeUnit).length <= 3) rings.push({ c: m, r: (modeUnit.chargeRoll ?? 0) + m.r, color: 'rgba(245,184,61,0.5)', dash: true });
@@ -1294,8 +1311,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           rings={rings}
           badges={badges}
           losLines={losLines}
+          noLos={noLos}
           onTapUnit={onTapUnit}
-          measure={tape.on ? tape : undefined}
+          measure={tape.on ? { a: tape.a, b: tape.b, label: tapeInfo?.text, los: tapeInfo?.los } : undefined}
           onTapBoard={onTapBoard}
           onDraft={(d) => { setDraft(d); setCheck(null); }}
           onDragEnd={onDragEnd}
@@ -1304,7 +1322,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         {toast && <div className="toast">{toast}</div>}
         {tape.on && (
           <div className="tape-bar">
-            <span>{tape.a && tape.b ? `ระยะ ${Math.hypot(tape.a.x - tape.b.x, tape.a.y - tape.b.y).toFixed(1)}" (จุดกลางถึงจุดกลาง)` : tape.a ? 'แตะจุดที่ 2' : 'ไม้วัด: แตะจุดแรกบนสนามหรือโมเดล'}</span>
+            <span>{tapeInfo ? tapeInfo.line : tape.a ? 'แตะจุดที่ 2 (แตะโมเดล = วัดขอบฐาน + เช็ค line of sight)' : 'ไม้วัด: แตะโมเดลหรือจุดแรกบนสนาม'}</span>
             <button className="btn small" onClick={() => setTape({ on: false })}>ปิด</button>
           </div>
         )}

@@ -319,7 +319,8 @@ details > .strat-card { margin-top: 6px; }
 .action-box .btn { text-align: left; }
 .transport-box { background: var(--card2); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
 .transport-box .btn { margin: 2px 4px 0 0; }
-.tape-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; background: rgba(26, 26, 26, 0.94); color: #fde68a; padding: 6px 8px 6px 14px; border-radius: 999px; font: 600 13px var(--sans); white-space: nowrap; }
+.tape-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 20px); box-sizing: border-box; display: flex; align-items: center; gap: 10px; background: rgba(26, 26, 26, 0.94); color: #fde68a; padding: 6px 8px 6px 14px; border-radius: 16px; font: 600 13px/1.35 var(--sans); }
+.tape-bar > span { min-width: 0; }
 .btn.armed { background: #b26b00 !important; animation: armed 0.6s ease-in-out infinite alternate; }
 @keyframes armed { from { filter: brightness(1); } to { filter: brightness(1.25); } }
 

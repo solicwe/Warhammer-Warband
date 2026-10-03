@@ -1,7 +1,7 @@
 // Line of sight on a 2D board (06.01, 13.07-13.11).
 // Terrain areas with light/dense features are obscuring; dense walls are Solid at ground level.
 import { RULES } from './config';
-import { baseDist, circleTouchesPoly, samplePoints, segCrossesPoly, segsIntersect } from './geometry';
+import { baseDist, circleTouchesPoly, samplePoints, segCrossesPoly, segsTouch } from './geometry';
 import { alive, everyModelKw } from './state';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 
@@ -40,22 +40,30 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
   return { walls, areas };
 }
 
+// a wall end or the joint of two walls blocks too: a 1mm line can't slip through a corner
 const lineClear = (p: Pt, q: Pt, bl: Blockers) => {
   const seg = { a: p, b: q };
-  return !bl.walls.some((w) => segsIntersect(seg, w)) && !bl.areas.some((t) => segCrossesPoly(seg, t.poly));
+  return !bl.walls.some((w) => segsTouch(seg, w)) && !bl.areas.some((t) => segCrossesPoly(seg, t.poly));
 };
+
+/** Points of a base to look from / at. A token pressed against a ruin wall overlaps it a little (it stands for a hull),
+ *  but the part on the far side of the wall isn't really there: it can't see or be seen through the wall. */
+function lookPoints(m: ModelState, bl: Blockers): Pt[] {
+  const c = { x: m.x, y: m.y };
+  return samplePoints(m).filter((p, i) => i === 0 || !bl.walls.some((w) => segsTouch({ a: c, b: p }, w)));
+}
 
 /** True line-of-sight test ignoring Hidden / Lone Operative. */
 export function hasLos(s: GameState, a: ModelState, b: ModelState): boolean {
   const bl = blockers(s, a, b);
-  const pa = samplePoints(a), pb = samplePoints(b);
+  const pa = lookPoints(a, bl), pb = lookPoints(b, bl);
   return pa.some((p) => pb.some((q) => lineClear(p, q, bl)));
 }
 
 /** Every part of `b` facing `a` is visible (approximated by sample points). */
 export function fullyVisible(s: GameState, a: ModelState, b: ModelState, denseOnly = false): boolean {
   const bl = blockers(s, a, b, denseOnly);
-  const pa = samplePoints(a);
+  const pa = lookPoints(a, bl);
   const facing = samplePoints(b).filter((q) => Math.hypot(q.x - a.x, q.y - a.y) <= Math.hypot(b.x - a.x, b.y - a.y) + 1e-6);
   return facing.every((q) => pa.some((p) => lineClear(p, q, bl)));
 }
