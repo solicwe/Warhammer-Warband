@@ -137,6 +137,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const T_T = targetToughness(T, s);
   const isOwnShootingPhase = s.phase === 'shooting' && A.owner === s.active;
   const aFlags = unitFlags(s, A);
+  // Heresy Undone: after Advancing / Falling Back it may only shoot auspex scanned units
+  if (aFlags.onlyTargetMarked && (A.move === 'advance' || A.move === 'fallback') && !(T.timed ?? []).some((t) => t.mark === aFlags.onlyTargetMarked && t.by === A.owner)) return { pools: [], notes, error: 'Advance/Fall back มาแล้ว ยิงได้เฉพาะหน่วยที่ถูก auspex scan' };
 
   const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : alive(A);
   for (const m of shooters) {
@@ -822,7 +824,7 @@ export function finishAttack(s: GameState) {
     if (at.kind === 'fight') A.fought = true;
   }
   s.attack = null;
-  {
+  if (!at.free) {
     const L = s.lastAct?.kind === 'attack' && s.lastAct.unitId === A.id && s.lastAct.turn === s.turn && s.lastAct.phase === s.phase ? s.lastAct
       : (s.lastAct = { unitId: A.id, owner: A.owner, kind: 'attack', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] });
     if (!L.targets.includes(T.id)) L.targets.push(T.id);

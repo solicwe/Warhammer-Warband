@@ -3,10 +3,10 @@
 import orkStrats from '../../data/stratagems/ORK.json';
 import smStrats from '../../data/stratagems/SM.json';
 import { parseAbilityText } from './abilityText';
-import { runActions, type Action } from './activations';
+import { runActions, shockTest, type Action } from './activations';
 import { kwPhrase } from './army';
 import { buildShootPools, expectedDamage, finishAttack, onAttackFinished, onModelKilled, resolveAll, startAttack } from './attack';
-import { addTimed, cond, lastEnemyAct, type Effect } from './effects';
+import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
 import {
   afterReaction, autoCharge, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, formationAt, validateDisembark,
 } from './game';
@@ -55,12 +55,16 @@ export interface StratRule {
   special?: Special[];
   /** "You can only use this Stratagem once per battle round / battle" */
   limit?: 'round' | 'battle';
+  /** the TARGET keywords, when the card's wording can't be read ("INFANTRY or MOUNTED") */
+  targetKw?: string[];
+  /** reaction to a model's death: the destroyed model must have this keyword (Refusal to Yield: ANCIENT) */
+  ctxModel?: string;
   /** reactions: when the bot uses it (default never) */
   botReact?: 'always' | 'shoot' | 'charge';
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'shootAt' | 'charge' | 'embark' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective';
+export type Special = 'shootAt' | 'charge' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -357,7 +361,7 @@ export function stratagemBlock(s: GameState, p: PlayerId, st: StratagemData, uni
   if (limitUsed(s, p, st, rule)) return rule.limit === 'battle' ? 'ใช้ได้ครั้งเดียวต่อเกม' : 'ใช้ได้ครั้งเดียวต่อ battle round';
   if (plan.target === 'own' && !unit) return 'เลือกหน่วยเป้าหมายก่อน';
   if (unit && plan.target === 'own' && unit.owner !== p) return 'ต้องเป็นหน่วยของคุณ';
-  if (unit && plan.target === 'own' && !stratTargetOk(st, unit)) return 'หน่วยนี้ไม่ตรงกับ TARGET ของ stratagem';
+  if (unit && plan.target === 'own' && unit.owner === p && !(rule.targetKw ? cond(`kw:${rule.targetKw.join('|')}`, { s, A: unit }) : stratTargetOk(st, unit))) return 'หน่วยนี้ไม่ตรงกับ TARGET ของ stratagem';
   if (unit && plan.target === 'enemy' && unit.owner === p && !rule.enemy) return 'ต้องเลือกหน่วยศัตรู';
   if (unit && unit.owner === p) {
     const L = lastEnemyAct(s, p);
@@ -477,8 +481,9 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       u.chargedTurn = -1; // no Charge bonus (Fights First, Lance …) this turn
       return;
     }
-    case 'embark': case 'embarkHeavy': {
-      const ts = boardUnits(s, p).filter((t) => t.transport && !canEmbarkIn(s, u, t) && (sp === 'embark' || Math.max(...t.models.map((m) => m.profile.W)) >= 14)
+    case 'embark': case 'embarkEmpty': case 'embarkHeavy': {
+      const ts = boardUnits(s, p).filter((t) => t.transport && !canEmbarkIn(s, u, t) && (sp !== 'embarkHeavy' || Math.max(...t.models.map((m) => m.profile.W)) >= 14)
+        && (sp !== 'embarkEmpty' || !embarkedIn(s, t).length)
         && alive(u).every((m) => alive(t).some((n) => baseDist(m, n) <= 6 + 1e-6)));
       const t = ts.sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
       if (!t) { log(s, `${label}: ไม่มีรถที่ขึ้นได้ภายใน 6"`, 'info', p); return; }
@@ -552,7 +557,11 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
   for (const d of s.players[p].detachments) for (const st of d.stratagems) {
     const rule = stratRule(st, s.players[p].factionId, d.name);
     if (rule.react !== on) continue;
-    const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed'].includes(on)
+    if (rule.ctxModel && ctx.modelId) {
+      const m = ctx.unitId ? unitById(s, ctx.unitId).models.find((x) => x.id === ctx.modelId) : undefined;
+      if (!m || !(m.keywords.includes(rule.ctxModel) || new RegExp(rule.ctxModel, 'i').test(m.name))) continue;
+    }
+    const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked'].includes(on)
       ? (ctx.unitId ? [unitById(s, ctx.unitId)] : [])
       : stratCandidates(s, p, st, ctx)
     ).filter((u) => u.owner === p && !stratagemBlock(s, p, st, u, { react: true, ctx }));
@@ -581,7 +590,7 @@ function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto:
         const ev = r.pools.reduce((a, q) => a + expectedDamage(s, q, e).models, 0) * (e.pts / Math.max(1, e.startingStrength));
         if (ev > v) { v = ev; enemyId = e.id; }
       }
-      if (!auto && v < 12 * cost) continue;
+      if (!auto && v < 6 * cost) continue; // a free volley is worth a lot
     } else if (o.rule.botReact === 'charge' || o.rule.special?.includes('charge')) {
       const near = boardUnits(s, other(p)).filter((e) => unitDistance(u, e) <= 12).sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
       if (!near) continue;
@@ -621,6 +630,7 @@ function handleReact(s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx): boo
 }
 
 export const REACT_LABEL: Partial<Record<ReactOn, string>> = {
+  enemyChargeMoveEnd: 'หน่วยศัตรูเพิ่งชาร์จเข้ามา', enemyChargePhaseStart: 'เริ่ม Charge phase ของศัตรู', enemyCommandStart: 'Command phase ของศัตรู',
   enemyMoved: 'หน่วยศัตรูเพิ่งเดินจบ', enemyShot: 'หน่วยศัตรูเพิ่งยิงเสร็จ', enemyChargeDeclared: 'หน่วยศัตรูเพิ่งประกาศชาร์จ', enemyChargePhaseEnd: 'จบ Charge phase ของศัตรู',
   fightPhaseEnd: 'จบ Fight phase', chargeMoveEnd: 'หน่วยของคุณเพิ่งชาร์จเข้า', ownAttacked: 'หน่วยของคุณเพิ่งโจมตีเสร็จ', ownDestroyed: 'หน่วยของคุณถูกทำลาย',
   modelDestroyed: 'โมเดลของคุณถูกทำลาย', oathDestroyed: 'เป้า Oath of Moment ถูกทำลาย',
@@ -629,9 +639,15 @@ export const REACT_LABEL: Partial<Record<ReactOn, string>> = {
 setReactHook(handleReact);
 
 // the attack sequence: "just after an enemy unit has shot", "after your unit has shot / fought"
-onAttackFinished((s, at) => {
-  if (at.free) return;
+onAttackFinished((s, at, info) => {
   const A = unitById(s, at.attackerId);
+  // Onslaught of Fire / Strike from the Shadows: models destroyed → that unit takes a Battle-shock test
+  const T = unitById(s, at.targetId);
+  if (info.modelsKilled > 0 && onBoard(T) && unitFlags(s, A).shockOnKill && (T.used ??= {}).shockOnKill !== `${s.turn}:${s.phase}`) {
+    T.used.shockOnKill = `${s.turn}:${s.phase}`;
+    shockTest(s, T, 0, 'Stratagem');
+  }
+  if (at.free) return;
   if (at.kind === 'shoot' && s.phase === 'shooting' && A.owner === s.active) handleReact(s, other(A.owner), 'enemyShot', { unitId: A.id });
   if (at.kind === 'shoot' || at.kind === 'fight') handleReact(s, A.owner, 'ownAttacked', { unitId: A.id });
   // prompts that waited for the attack to finish (a unit destroyed during it …)

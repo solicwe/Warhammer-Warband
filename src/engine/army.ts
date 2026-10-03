@@ -45,8 +45,9 @@ export function kwPhrase(phrase: string, kws: string[]): boolean {
   const p = normKw(phrase);
   if (K.has(p)) return true;
   // "<faction or kind> INFANTRY / CHARACTER / MONSTER": the type word and the rest separately
-  const types = ['INFANTRY', 'CHARACTER', 'MONSTER'].filter((t) => new RegExp(`\\b${t}\\b`).test(p));
-  const rest = p.replace(/\b(INFANTRY|CHARACTER|MONSTER)\b/g, ' ').replace(/\s+/g, ' ').trim();
+  const TYPES = ['INFANTRY', 'CHARACTER', 'MONSTER', 'VEHICLE', 'MOUNTED', 'TRANSPORT', 'WALKER', 'BATTLELINE', 'FLY', 'BEASTS', 'SWARM'];
+  const types = TYPES.filter((t) => new RegExp(`\\b${t}\\b`).test(p));
+  const rest = p.replace(new RegExp(`\\b(${TYPES.join('|')})\\b`, 'g'), ' ').replace(/\s+/g, ' ').trim();
   if (types.length && types.every((t) => K.has(t)) && (!rest || K.has(rest))) return true;
   // every word a keyword of its own ("TACTICUS CHARACTER")
   const ws = p.split(' ');

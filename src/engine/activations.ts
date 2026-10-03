@@ -90,7 +90,7 @@ export interface Action {
   log?: string;
   // stratagem actions
   if?: string[]; // only when these conditions hold (on the unit using it; "target…" ones on the other unit)
-  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[] }; // one D6 per model engaged with the target: each X+ is a mortal wound
+  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean }; // one D6 per model engaged with the target: each X+ is a mortal wound
   ldFail?: Effect[]; // the target takes a Leadership test; failed → these effects (until `until`)
   setOath?: boolean; // the target becomes your Oath of Moment target
   pileInRoll?: string; // Pile-in moves up to this many inches (rolled now) this phase
@@ -98,6 +98,7 @@ export interface Action {
   moveReroll?: boolean; // re-roll the move distance when it is low
   characterModel?: boolean; // one non-CHARACTER model gains the CHARACTER keyword until your next Command phase
   reviveModel?: string; // a destroyed model with this keyword is set back up at the end of the phase with full wounds
+  sabotage?: boolean; // A Deadly Prize: the objective the unit holds becomes Sabotaged
 }
 
 export interface ActSpec {
@@ -378,7 +379,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.if && !a.if.every((c) => cond(c, { s, A: u, T: target ?? undefined, holder: u, bearers: def.bearers }))) continue;
     if (a.mortalRoll) {
       const q = a.mortalRoll;
-      const n = alive(u).filter((m) => alive(on).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length;
+      const n = q.all ? alive(u).length : alive(u).filter((m) => alive(on).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length;
       const plus = q.plus && (q.plusIf ?? []).every((c) => cond(c, { s, A: u, T: on, holder: u })) ? q.plus : 0;
       const dice = rollN(s, Math.max(1, n));
       const hits = Math.min(q.max ?? 99, dice.filter((v) => v + plus >= q.on).length);
@@ -486,6 +487,11 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.secure) {
       for (const o of s.objectives) {
         if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.secured = u.owner; log(s, `${def.name}: objective ${o.id} ยังเป็นของเราแม้ไม่มีใครยืน (secured)`, 'info', u.owner); }
+      }
+    }
+    if (a.sabotage) {
+      for (const o of s.objectives) {
+        if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.sabotaged = u.owner; o.secured = u.owner; log(s, `${def.name}: objective ${o.id} ถูก Sabotage (ศัตรูที่เดินมาจบบนนี้อาจโดน D3 mortal wound)`, 'info', u.owner); }
       }
     }
     if (a.vow) {
@@ -844,11 +850,13 @@ function runDeathQueue(s: GameState) {
     if (r.error || !r.pools.length) { log(s, `${q.label}: ไม่มีอาวุธที่ใช้กับ ${T.name} ได้`, 'info', u.owner); continue; }
     const before = alive(T).length;
     log(s, q.alive ? `${q.label}: ${u.name} ยิงตอบ ${T.name}` : `${q.label}: ${u.models.filter((m) => q.modelIds.includes(m.id)).map((m) => m.name).join(', ')} ${q.kind === 'fight' ? 'ตี' : 'ยิง'}ก่อนถูกนำออก → ${T.name}`, 'info', u.owner);
+    const fired = [...u.weaponsFired];
     startAttack(s, q.kind, u.id, T.id, r.pools);
     s.attack!.free = true;
     if (q.kind === 'shoot' && !q.alive) for (const p of s.attack!.pools) { p.hazardous = 0; p.noHazard = true; }
     resolveAll(s);
     finishAttack(s);
+    u.weaponsFired = fired; // shooting out of phase does not use up the unit's own shooting
     if (q.regain && alive(T).length < before) {
       for (const id of q.modelIds) {
         const m = u.models.find((x) => x.id === id);

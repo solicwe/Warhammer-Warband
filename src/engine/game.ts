@@ -484,6 +484,7 @@ function startCommand(s: GameState) {
   log(s, `+${RULES.cpPerCommandPhase} CP ทั้งสองฝ่าย (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
   fireFor(s, 'commandStart', s.active);
   drawUpTo(s, s.active);
+  emitReact(s, other(s.active), 'enemyCommandStart', {});
   // Terrifying Proficiency: enemy units near the marked unit must test too (−1 when Below Half-strength)
   const terrors = boardUnits(s, other(s.active)).filter((e) => unitFlags(s, e).forceShockAura > 0);
   const forced = (u: UnitState) => terrors.some((e) => unitDistance(u, e) <= unitFlags(s, e).forceShockAura + 1e-6);
@@ -552,6 +553,7 @@ export function endPhase(s: GameState) {
     if (!s.window) openWindow(s, 'startOfShooting');
   } else if (s.phase === 'shooting') {
     s.phase = 'charge';
+    emitReact(s, other(s.active), 'enemyChargePhaseStart', {});
   } else if (s.phase === 'charge') {
     if (phaseEndReactions(s, 'enemyChargePhaseEnd', [other(s.active)])) return;
     s.phase = 'fight';
@@ -707,14 +709,30 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
     offerReactions(s, 'enemyMovedNear', u);
     if (kind === 'fallback' && engagedBefore.length) offerReactions(s, 'enemyFellBack', u, engagedBefore.filter((e) => !isEngaged(s, e)));
   }
+  if (['normal', 'advance', 'fallback', 'charge'].includes(kind)) sabotageCheck(s, u);
   // stratagems: "just after an enemy unit ends a Normal, Advance or Fall Back move" (Squad Tactics …)
   if (reactAfterMove) emitReact(s, other(u.owner), 'enemyMoved', { unitId: u.id });
+}
+
+/** A Deadly Prize: an enemy unit ending a move on a Sabotaged objective rolls a D6, on 2+ it suffers D3 mortal wounds. */
+function sabotageCheck(s: GameState, u: UnitState) {
+  for (const o of s.objectives) {
+    if (o.sabotaged === undefined || o.sabotaged === null || o.sabotaged === u.owner || o.controller !== o.sabotaged) continue;
+    if (!alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) continue;
+    const r = d6(s);
+    const mw = r >= 2 ? rollExpr(s, 'D3').total : 0;
+    log(s, `A Deadly Prize: ${u.name} จบการเดินบน objective ที่ถูก Sabotage — ทอย ${r}${mw ? ` → ${mw} mortal wound` : ''}`, 'roll', o.sabotaged);
+    if (mw) applyMortalWounds(s, u, mw, 'A Deadly Prize');
+  }
 }
 
 /** A unit is selected to make a Normal / Advance / Fall Back move: rules that happen at that moment
  *  (Transfixing Gaze's Leadership test, Stasis Bomb's slowed roll). Returns false if it must Remain Stationary instead. */
 export function beginMove(s: GameState, u: UnitState, kind: 'normal' | 'advance' | 'fallback'): boolean {
-  if (kind === 'fallback' && u.owner === s.active) emitReact(s, other(u.owner), 'enemyFallBack', { unitId: u.id });
+  if (kind === 'fallback' && u.owner === s.active) {
+    s.lastAct = { unitId: u.id, owner: u.owner, kind: 'move', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
+    emitReact(s, other(u.owner), 'enemyFallBack', { unitId: u.id });
+  }
   const f = unitFlags(s, u);
   if (f.mustStay) { log(s, `${u.name} ต้อง Remain Stationary เทิร์นนี้`, 'info', u.owner); remainStationary(s, u); return false; }
   if (kind === 'fallback' && f.fallBackLdTest && !ldTest(s, u, 'Transfixing Gaze')) { remainStationary(s, u); return false; }
@@ -823,6 +841,8 @@ export function chargeTargetOptions(s: GameState, u: UnitState, opts: { onlyChar
     if (d > RULES.charge.declareRange || d > roll + 1e-6) return false;
     if (opts.within !== undefined && d > opts.within) return false;
     if (opts.onlyChargedThisPhase && e.chargedTurn !== s.turn) return false;
+    const only = unitFlags(s, u).onlyTargetMarked;
+    if (only && (u.move === 'advance' || u.move === 'fallback') && !(e.timed ?? []).some((t) => t.mark === only && t.by === u.owner)) return false;
     return true;
   });
 }
@@ -834,7 +854,10 @@ export function commitCharge(s: GameState, u: UnitState, paths: Map<string, Pt[]
   if (s.lastAct?.unitId === u.id && s.lastAct.kind === 'charge') s.lastAct.targets = [...targets];
   log(s, `${u.name} ชาร์จสำเร็จ → ${targets.map((t) => unitById(s, t).name).join(', ')} (ได้ Fights First)`, 'info', u.owner);
   fire(s, 'endOfCharge', [u], { targetId: targets[0] });
-  if (u.owner === s.active && s.phase === 'charge') emitReact(s, u.owner, 'chargeMoveEnd', { unitId: u.id });
+  if (u.owner === s.active && s.phase === 'charge') {
+    emitReact(s, u.owner, 'chargeMoveEnd', { unitId: u.id });
+    emitReact(s, other(u.owner), 'enemyChargeMoveEnd', { unitId: u.id });
+  }
 }
 
 export function crushingImpact(s: GameState, u: UnitState, targetId: string) {
@@ -1128,7 +1151,7 @@ export function updateControl(s: GameState) {
     // "secured" objectives (Objective Secured …) stay yours until the opponent controls them
     if (o.secured !== undefined && o.secured !== null) {
       const mine = o.secured === 0 ? a : b, theirs = o.secured === 0 ? b : a;
-      if (theirs > mine) o.secured = null; else c = o.secured;
+      if (theirs > mine) { o.secured = null; o.sabotaged = null; } else c = o.secured;
     }
     o.controller = c;
   }

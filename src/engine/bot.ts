@@ -24,6 +24,7 @@ import { bestArrival, bestFallBack, bestMove, canLeave, ctxFor, movesTowards, pl
 import {
   botCounteroffensive, botCrushingImpact, botEpicChallenge, botExplosives, botHeroic, botOffensiveStratagem, botRapidIngress, botSmokescreen, isBot, wantsBravery,
 } from './botStrats';
+import { answerReaction } from './stratagems';
 import type { GameState, PlayerId, UnitState } from './types';
 
 const stay = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]]));
@@ -430,6 +431,7 @@ export function botWindow(s: GameState) {
     closeOffers(s);
     return;
   }
+  if (w.kind === 'stratReaction') { answerReaction(s, null); return; } // bots decide their reactions as they happen
   if (w.kind === 'rapidIngress') { botRapidIngress(s, w.player); closeWindow(s); return; }
   if (w.kind === 'smokescreen') { botSmokescreen(s, w.player); closeWindow(s); return; }
   if (w.kind === 'heroicIntervention') { botHeroic(s, w.player); closeWindow(s); return; }
