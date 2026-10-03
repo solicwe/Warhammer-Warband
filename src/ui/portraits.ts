@@ -212,9 +212,22 @@ export function importPortraitsJson(text: string): number {
   return n;
 }
 
-/** Save bytes / text as a file on the player's device. */
-export function download(name: string, data: Uint8Array | string, type: string) {
+type SaveFn = (r: { filename: string; data: Blob }) => Promise<unknown>;
+type ClaudeHost = { use?: (name: string) => Promise<{ save: SaveFn } | null> };
+
+/**
+ * Save bytes / text as a file on the player's device. Inside a claude.ai artifact the page may not download by
+ * itself, so the file goes through the host's `downloads` capability (the player confirms). Resolves to a message.
+ */
+export async function download(name: string, data: Uint8Array | string, type: string): Promise<string> {
   const blob = new Blob([data as BlobPart], { type });
+  const host = (window as unknown as { claude?: ClaudeHost }).claude;
+  if (host?.use) {
+    const dl = await host.use('downloads').catch(() => null);
+    if (!dl) return 'หน้านี้บันทึกไฟล์ไม่ได้';
+    try { await dl.save({ filename: name, data: blob }); return `บันทึก ${name} แล้ว`; }
+    catch (e) { return (e as { code?: string })?.code === 'declined' ? 'ยกเลิกการบันทึก' : 'บันทึกไฟล์ไม่ได้'; }
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = name;
@@ -222,4 +235,5 @@ export function download(name: string, data: Uint8Array | string, type: string) 
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  return `บันทึก ${name} แล้ว`;
 }

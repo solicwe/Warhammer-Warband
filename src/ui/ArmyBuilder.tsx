@@ -376,10 +376,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           </label>
           <button className="btn ghost" disabled={!ownPortraitCount()} onClick={() => {
             const factionOf = (n: string) => (faction?.datasheets.some((d) => d.name === n) ? list.factionId : undefined);
-            download('unit-images.zip', exportPortraitsZip(factionOf), 'application/zip');
-            setNote('ได้ไฟล์ unit-images.zip — แตกไฟล์ลงโฟลเดอร์ public/images/ แล้วรัน npm run images');
+            download('unit-images.zip', exportPortraitsZip(factionOf), 'application/zip')
+              .then((m) => setNote(`${m} — แตกไฟล์ลงโฟลเดอร์ public/images/ แล้วรัน npm run images`));
           }}>⬇ ส่งออก (.zip สำหรับเซิร์ฟเวอร์)</button>
-          <button className="btn ghost" disabled={!ownPortraitCount()} onClick={() => download('unit-images-backup.json', exportPortraitsJson(), 'application/json')}>⬇ สำรอง (.json)</button>
+          <button className="btn ghost" disabled={!ownPortraitCount()} onClick={() => download('unit-images-backup.json', exportPortraitsJson(), 'application/json').then(setNote)}>⬇ สำรอง (.json)</button>
           <label className="btn ghost">
             ⬆ กู้คืนจาก .json
             <input type="file" accept="application/json,.json" hidden onChange={async (e) => {
