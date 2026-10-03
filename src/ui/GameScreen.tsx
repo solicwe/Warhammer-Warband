@@ -12,8 +12,9 @@ import {
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, type MoveCheck, hasArmyRule, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
-  claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove,
+  claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
 } from '../engine/game';
+import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { actionOptions, startAction } from '../engine/missions';
 import { RollOverlay } from './RollOverlay';
@@ -538,6 +539,45 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     );
   };
 
+  const [detPick, setDetPick] = useState<string[]>([]);
+  const AUTO_LABEL: Record<string, string> = { full: '✓ ระบบทำให้', partial: '◐ ระบบทำส่วนหลัก', manual: '✋ ทำเอง', none: '✋ ยังไม่รองรับ (อ่านกฎ)' };
+  /** Detachment rules of player p: what the app applies, and "pick one" choices such as Combat Doctrines. */
+  const detPanel = (p: PlayerId) => {
+    const summary = detSummary(s, p);
+    if (!summary.length) return null;
+    const choices = detChoices(s, p);
+    return (
+      <div className="card det-card">
+        {summary.map((d) => {
+          const ch = choices.find((c) => c.rule === d.name);
+          const need = ch?.choice.pick ?? 1;
+          const pick = (ids: string[]) => { const e = act((g) => pickDetChoice(g, p, d.name, ids)); if (e) flash(e); else { setDetPick([]); flash(`${ch!.choice.name}: ${ids.map((id) => ch!.choice.options.find((o) => o.id === id)?.name).join(' + ')}`); } };
+          return (
+            <div key={d.name} className="det-row">
+              <div className="small"><b>Detachment: {d.name}</b> <span className={`det-auto ${d.auto}`}>{AUTO_LABEL[d.auto]}</span></div>
+              {d.active.length > 0 && <div className="small"><span className="chip on">ใช้อยู่: {d.active.join(' + ')}</span></div>}
+              {ch && ch.open && (
+                <div className="det-choice">
+                  <div className="tiny muted">{ch.choice.name} — เลือก {need} อย่าง{ch.choice.when === 'command' ? ' (มีผลถึง Command phase หน้า)' : ch.choice.when === 'round' ? ' (มีผลทั้ง battle round)' : ' (มีผลทั้งเกม)'}{ch.choice.uses === 'eachOnce' ? ' · แต่ละอย่างใช้ได้ครั้งเดียวต่อเกม' : ch.choice.uses === 'limit' ? ` · ใช้ได้ ${ch.choice.limit} ครั้ง (เหลือ ${(ch.choice.limit ?? 1) - ch.state.count})` : ''}</div>
+                  <div className="det-opts">
+                    {ch.options.map(({ o, why }) => (
+                      <button key={o.id} className={`btn small ${detPick.includes(o.id) ? 'on' : ''}`} disabled={!!why} title={why ?? o.text}
+                        onClick={() => (need === 1 ? pick([o.id]) : setDetPick((cur) => (cur.includes(o.id) ? cur.filter((x) => x !== o.id) : [...cur, o.id].slice(-need))))}>
+                        <b>{o.name}</b><span className="tiny"> {why ?? o.text}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {need > 1 && <button className="btn small primary" disabled={detPick.length !== need} onClick={() => pick(detPick)}>ยืนยัน ({detPick.length}/{need})</button>}
+                </div>
+              )}
+              {d.manual && <div className="tiny muted">ทำเอง: {d.manual}</div>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const commandPanel = () => {
     const tests = s.shockTests;
     const pending = tests.filter((t) => t.passed === null);
@@ -564,6 +604,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               : <button className="btn small primary" disabled={s.players[s.active].waaaghUsed} onClick={() => act((g) => callWaaagh(g, g.active))}>{s.players[s.active].waaaghUsed ? 'ใช้ไปแล้ว' : 'WAAAGH!!!'}</button>}
           </div>
         )}
+        {detPanel(s.active)}
         {tests.length === 0 && <div className="muted small">ไม่มีหน่วยที่ต้องทอย Battle-shock</div>}
         {tests.map((t) => {
           const u = U(t.unitId);
@@ -594,6 +635,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <div className="small"><b>{modeUnit.name}</b> · {mode.kind === 'normal' ? 'Normal move' : mode.kind === 'advance' ? `Advance (M + ${modeUnit.advanceRoll})` : modeUnit.battleShocked ? 'Fall back – Desperate Escape (hazard ทุกตัว)' : 'Fall back – Ordered Retreat'} · ลากโมเดลบนสนาม ระบบจำกัดระยะให้</div>
           {moveControls(mode.kind, () => confirmMove(mode.kind),
             mode.kind === 'advance' && unitHasAbility(modeUnit, 'Waaagh!') && freeAdvRR !== modeUnit.id ? <button className="btn small" onClick={() => { act((g) => rollAdvance(g, unitById(g, modeUnit.id))); setFreeAdvRR(modeUnit.id); setDraft(startPaths(modeUnit)); }}>Re-roll advance (Waaagh! ฟรี)</button>
+            : mode.kind === 'advance' && canDetReroll(s, modeUnit, 'advance') ? <button className="btn small" onClick={() => { act((g) => detReroll(g, unitById(g, modeUnit.id), 'advance')); setDraft(startPaths(modeUnit)); }}>Re-roll advance ฟรี (Detachment)</button>
             : mode.kind === 'advance' && !advRR ? <button className="btn small" onClick={() => { act((g) => { const gu = unitById(g, modeUnit.id); spendStratagem(g, gu.owner, 'command-reroll', gu); rollAdvance(g, gu); }); setDraft(startPaths(modeUnit)); }}>Re-roll advance 1CP</button> : undefined)}
         </>
       );
@@ -808,6 +850,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           }), <button className="btn small" onClick={() => { const add = autoApproach(s, modeUnit, mode.targets.map(U), roll); setDraft(mergePaths(startPaths(modeUnit), add)); setCheck(null); }}>Auto</button>)}
           {check && !check.ok && <div className="tiny muted">จัดไม่ลง? กด Auto ให้ระบบวางให้ หรือ "ยกเลิกการชาร์จ" (นับเป็นชาร์จไม่สำเร็จ) แล้วกด จบ Charge → Fight</div>}
           <div className="row">
+            {canDetReroll(s, modeUnit, 'charge') && <button className="btn small" onClick={() => { act((g) => detReroll(g, unitById(g, modeUnit.id), 'charge', false, mode.heroic === 'fray' ? 6 : undefined)); setModeRaw({ ...mode, targets: [] }); setDraft(startPaths(modeUnit)); }}>Re-roll charge ฟรี (Detachment)</button>}
             {!cr && <button className="btn small" onClick={() => { act((g) => rerollCharge(g, unitById(g, modeUnit.id), false, mode.heroic === 'fray' ? 6 : undefined)); setModeRaw({ ...mode, targets: [] }); setDraft(startPaths(modeUnit)); }}>Re-roll charge 1CP</button>}
             <button className="btn grow" onClick={() => { setMode(null); finish(); flash(`${modeUnit.name} ไม่ชาร์จ (ชาร์จไม่สำเร็จ)`); }}>{mode.targets.length ? 'ยกเลิกการชาร์จ' : 'ชาร์จไม่สำเร็จ / ไปต่อ'}</button>
           </div>

@@ -7,6 +7,7 @@ import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, Weapon
 import { getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
+import { applyDetachment, detCover, detEligible, detGrants, detInv } from './detachments';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
 
@@ -35,7 +36,10 @@ export function woundNeed(S: number, T: number): number {
 }
 
 const riled = (s: GameState, u: UnitState) => u.abilities.some((a) => a.name === 'Waaagh!') && s.players[u.owner].riledUntilTurn >= s.turn;
-export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState) => (riled(s, u) ? Math.min(m.profile.InSv ?? 7, 5) : m.profile.InSv);
+export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState, ranged = true) => {
+  const best = Math.min(m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, detInv(s, u, ranged) ?? 7);
+  return best >= 7 ? null : best;
+};
 
 /** Oath of Moment: re-roll hits (+1 to wound for codex armies) against the Oath target. */
 function applyOath(s: GameState, A: UnitState, T: UnitState, pool: Pool) {
@@ -91,7 +95,7 @@ function applyUnitBuffs(pool: Pool, u: UnitState) {
 export interface BuildResult { pools: Pool[]; notes: string[]; error?: string }
 
 export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
-  if (!onBoard(u) || u.selectedToShoot || u.move === 'fallback') return [];
+  if (!onBoard(u) || u.selectedToShoot || (u.move === 'fallback' && !detEligible(s, u, 'shootAfterFallBack'))) return [];
   const weps = alive(u).flatMap((m) => m.weapons.flatMap((w) => w.profiles)).filter((p) => !isMelee(p));
   if (!weps.length) return [];
   const engaged = isEngaged(s, u);
@@ -100,7 +104,10 @@ export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
     if (u.move !== 'advance' && (weps.some((p) => hasAbility(p, 'close-quarters')) || alive(u).some(isMV))) modes.push('closeQuarters');
     return modes;
   }
-  if (u.move === 'advance') { if (riled(s, u) || weps.some((p) => hasAbility(p, 'assault'))) modes.push('assault'); return modes; }
+  if (u.move === 'advance' && !detEligible(s, u, 'shootAfterAdvance')) {
+    if (riled(s, u) || weps.some((p) => hasAbility(p, 'assault')) || detGrants(s, u, 'ranged', 'assault')) modes.push('assault');
+    return modes;
+  }
   modes.push('normal');
   if (weps.some((p) => hasAbility(p, 'indirect-fire'))) modes.push('indirect');
   return modes;
@@ -129,7 +136,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (opt.mode === 'closeQuarters') chosen = cqOnly;
       else chosen = opt.useCloseQuarters || !others.length ? cqOnly : others;
     }
-    if (opt.mode === 'assault' && !riled(s, A)) chosen = chosen.filter((w) => hasAbility(w.profiles[opt.profile?.[w.name] ?? 0], 'assault'));
+    if (opt.mode === 'assault' && !riled(s, A) && !detGrants(s, A, 'ranged', 'assault')) chosen = chosen.filter((w) => hasAbility(w.profiles[opt.profile?.[w.name] ?? 0], 'assault'));
     const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
     for (const w of chosen) {
       const pi = Math.min(opt.profile?.[w.name] ?? 0, w.profiles.length - 1);
@@ -147,10 +154,12 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
       const mods: Mods = { skillDelta: 0, skillNotes: [], hit: 0, hitNotes: [] };
-      const cover = indirect || (!hasAbility(p, 'ignores-cover', T.keywords) && !A.buffs.some((b) => b.kind === 'ignoresCover') && hasCover(s, m, T));
+      const ignoresCover = hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || detGrants(s, A, 'ranged', 'ignores cover', { T, p, d });
+      const cover = indirect || (!ignoresCover && (hasCover(s, m, T) || detCover(s, T, d)));
       if (cover) { mods.skillDelta += 1; mods.skillNotes.push('Cover −1 BS'); }
       if (m.keywords.includes('TOWERING') && d <= RULES.plungingFire.toweringRange && !T.keywords.includes('AIRCRAFT')) { mods.skillDelta -= 1; mods.skillNotes.push('Plunging Fire +1 BS'); }
-      if (hasAbility(p, 'heavy') && isOwnShootingPhase && !isEngaged(s, A) && A.setUpTurn !== s.turn && A.maxMoved <= RULES.heavyMaxMove + 1e-6) { mods.hit += 1; mods.hitNotes.push('Heavy +1'); }
+      const heavy = hasAbility(p, 'heavy') || detGrants(s, A, 'ranged', 'heavy', { T, p, d });
+      if (heavy && isOwnShootingPhase && !isEngaged(s, A) && A.setUpTurn !== s.turn && A.maxMoved <= RULES.heavyMaxMove + 1e-6) { mods.hit += 1; mods.hitNotes.push('Heavy +1'); }
       if (tIsMV && tEngaged && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('ยิงเป้า M/V ที่ engaged −1'); }
       if (opt.mode === 'closeQuarters' && isMV(m) && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('Big guns ใน combat −1'); }
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
@@ -159,7 +168,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const psychic = hasAbility(p, 'psychic');
       const fm = finishPoolMods(p, mods, psychic);
       const half = d <= range / 2 + 1e-6;
-      const key = [w.name, p.name, cover, half, fm.skill, fm.hit].join('|');
+      const key = [w.name, p.name, cover, half, d <= 12 + 1e-6, fm.skill, fm.hit].join('|');
       let pool = pools.get(key);
       if (!pool) {
         pool = newPool(key, w, p, T);
@@ -183,6 +192,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         pool.woundNote = `S${p.S} vs T${T_T}` + (wm ? ` · Buff ${wm > 0 ? '+' : ''}${wm}` : '');
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
+        applyDetachment(s, A, T, pool, 'ranged', d, T_T, woundNeed);
         pools.set(key, pool);
       }
       pool.models += 1;
@@ -250,6 +260,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         pool.woundNote = notes.join(' · ');
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
+        applyDetachment(s, A, T, pool, 'melee', 0, T_T, woundNeed);
         pools.set(key, pool);
       }
       pool.models += 1;
@@ -272,7 +283,7 @@ function attackNote(p: Pool): string {
 // ---------- expected value for previews ----------
 
 export function expectedDamage(s: GameState, pool: Pool, target: UnitState): { attacks: number; hits: number; wounds: number; unsaved: number; models: number } {
-  const attacks = pool.instances.reduce((a, i) => a + exprAverage(i.A) + i.extras.reduce((b, e) => b + exprAverage(e), 0) + i.flat, 0);
+  const attacks = pool.instances.reduce((a, i) => a + exprAverage(i.A) + i.extras.reduce((b, e) => b + exprAverage(e), 0) + i.flat + (pool.attackBonus ?? 0), 0);
   const pHit = pool.autoHit ? 1 : pool.hitOn6Only ? 1 / 6 : Math.max(1, Math.min(5, 7 - ((pool.skill ?? 7) - pool.hitMod))) / 6;
   const pCrit = pool.autoHit ? 0 : 1 / 6;
   const sus = pool.sustained ? exprAverage(pool.sustained) : 0;
@@ -299,7 +310,7 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     for (const i of p.instances) {
       const a = rollExpr(s, i.A);
       const ex = i.extras.map((e) => rollExpr(s, e).total);
-      total += a.total + ex.reduce((x, y) => x + y, 0) + i.flat;
+      total += a.total + ex.reduce((x, y) => x + y, 0) + i.flat + (p.attackBonus ?? 0);
       if (a.dice.length) parts.push(`${i.A}=${a.total}`);
     }
     p.attacks = total;
@@ -361,7 +372,7 @@ export function rollHits(s: GameState) {
     p.hits = Array.from({ length: p.attacks }, () => ({ v: 0, o: 'auto' as const }));
   } else {
     p.hits = rollN(s, p.attacks).map((v) => ({ v, o: evalHit(p, v) }));
-    const reroll1s = unitById(s, at.attackerId).buffs.some((b) => b.kind === 'rerollHits1');
+    const reroll1s = p.rerollHits1 || unitById(s, at.attackerId).buffs.some((b) => b.kind === 'rerollHits1');
     const rerollAll = unitById(s, at.attackerId).buffs.some((b) => b.kind === 'rerollHits');
     if (!p.noHitReroll && (reroll1s || rerollAll || p.rerollAllHits)) {
       p.hits = p.hits.map((d) => (d.o === 'miss' && (rerollAll || p.rerollAllHits || d.v === 1) ? reroll(s, d, (v) => evalHit(p, v)) : d));
@@ -393,8 +404,8 @@ export function rollWounds(s: GameState) {
   p.autoWounds = auto;
   p.wounds = rollN(s, rolls).map((v) => ({ v, o: evalWound(p, v) }));
   const A = unitById(s, at.attackerId);
-  const rrAll = p.twinLinked || A.buffs.some((b) => b.kind === 'rerollWounds');
-  const rr1 = A.buffs.some((b) => b.kind === 'rerollWounds1');
+  const rrAll = p.twinLinked || p.rerollAllWounds || A.buffs.some((b) => b.kind === 'rerollWounds');
+  const rr1 = p.rerollWounds1 || A.buffs.some((b) => b.kind === 'rerollWounds1');
   if (rrAll || rr1) p.wounds = p.wounds.map((d) => (d.o === 'fail' && (rrAll || d.v === 1) ? reroll(s, d, (v) => evalWound(p, v)) : d));
   at.stage = 'save';
 }
@@ -544,7 +555,7 @@ export function applyDamage(s: GameState) {
     if (!g) { d.o = 'saved'; p.saveTargets[i] = '—'; continue; }
     const m = pickModel(g, T)!;
     const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0);
-    const inv = effectiveInSv(s, T, m);
+    const inv = effectiveInSv(s, T, m, at.kind !== 'fight');
     let ok = false;
     if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + p.ap >= Math.max(RULES.modifierCaps.bestSave, sv);
     p.saveTargets[i] = `${m.name} (Sv${sv}+${inv ? ` / ${inv}++` : ''}, AP${p.ap})`;

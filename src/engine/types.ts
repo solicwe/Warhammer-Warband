@@ -101,6 +101,8 @@ export interface FactionData {
   lastUpdate: string;
   armyRules: { name: string; text: string }[];
   detachments: DetachmentData[];
+  /** choice-type detachment rules (Combat Doctrines …): what is active and what was used, by detachment name */
+  det?: Record<string, DetChoiceState>;
   datasheets: DatasheetData[];
   subfactions?: { label: string; options: SubfactionData[] };
 }
@@ -190,6 +192,9 @@ export interface UnitState {
   transport: TransportInfo | null;
   weaponsFired: string[]; // split fire: ranged weapons already used this phase
   cantCharge: boolean; // e.g. after a rapid / combat disembark
+  disembarkedTurn?: number;
+  detRerolled?: string; // `${turn}:advance|charge`: free detachment re-roll used
+  detAdvanceHurt?: string; // `${turn}:advance`: Wrath of the Doomed mortal wounds taken
   scoutDone: boolean;
   battleShocked: boolean;
   isWarlordUnit: boolean;
@@ -262,12 +267,16 @@ export interface PlayerState {
   secSwapUsed: boolean;
   armyRules: { name: string; text: string }[];
   detachments: DetachmentData[];
+  /** choice-type detachment rules (Combat Doctrines …): what is active and what was used, by detachment name */
+  det?: Record<string, DetChoiceState>;
   /** Chapter Approved: chosen Force Disposition and the primary mission it gives against the opponent's */
   disposition: string;
   primaryId: string;
   mission: MissionState;
   sec: SecondaryState;
 }
+
+export interface DetChoiceState { active: string[]; used: string[]; count: number; pickedTurn?: number; round?: number }
 
 /** State behind secondary cards that need choices or actions. */
 export interface SecondaryState {
@@ -323,6 +332,10 @@ export interface Pool {
   autoHit: boolean;
   noHitReroll: boolean;
   rerollAllHits?: boolean;
+  rerollHits1?: boolean; // from detachment rules (unit buffs are checked separately)
+  rerollWounds1?: boolean;
+  rerollAllWounds?: boolean;
+  attackBonus?: number; // +A per weapon instance (e.g. Red Thirst)
   woundNeed: number;
   woundMod: number;
   woundNote: string;

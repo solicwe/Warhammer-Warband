@@ -4,7 +4,8 @@ import { buildUnits, distributeModels, syncWargear, wargearMax, wargearPoints, w
 import { allocationGroups, applyDamage, buildFightPools, buildShootPools, rollSavesAndDamage, startAttack, targetToughness, woundNeed } from './attack';
 import { parseDice } from './dice';
 import { coherencyProblems } from './geometry';
-import { commitCharge, createGame, endPhase, fightCandidates, formationAt, maxMoveDistance, placeUnit, settleMove, validateMove } from './game';
+import { canDetReroll, chargeEligibility, commitCharge, createGame, declareCharge, detReroll, endPhase, fightCandidates, formationAt, maxMoveDistance, placeUnit, rollAdvance, settleMove, validateMove } from './game';
+import { detChoices, detOnCommandStart, pickDetChoice } from './detachments';
 import type { ArmyList, ArmyUnitEntry, FactionData, GameState, Pt, TerrainPiece } from './types';
 import { parseAbility } from './weapons';
 import { alive } from './state';
@@ -527,5 +528,83 @@ describe('moving by drag: settling, routing, vehicles and walls', () => {
     commitCharge(s, u, settled, [t.id]);
     endPhase(s);
     expect(s.phase).toBe('fight');
+  });
+});
+
+describe('detachment rules', () => {
+  function detGame(smDet: string, orkDet: string, sm: [string, number, number, string?][] = [['Intercessor Squad', 10, 160], ['Captain', 1, 80]], ork: [string, number, number, string?][] = [['Boyz', 10, 90], ['Warboss', 1, 100]]) {
+    const a = list('SM', sm), b = list('ORK', ork);
+    a.detachments = [smDet]; b.detachments = [orkDet];
+    const s = createGame({ lists: [a, b], factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 42 });
+    s.terrain = s.terrain.filter((t) => t.objectiveId);
+    s.terrain.forEach((t) => (t.walls = []));
+    return s;
+  }
+
+  it('Combat Doctrines: pick one per Command phase, each once per battle; Assault Doctrine lets advancing units charge', () => {
+    const s = detGame('Gladius Task Force', 'War Horde');
+    s.phase = 'command'; s.active = 0;
+    const u = put(s, 'p0-x0', { x: 20, y: 20 });
+    put(s, 'p1-x0', { x: 20, y: 28 });
+    u.move = 'advance';
+    expect(chargeEligibility(s, u)).toMatch(/Advance/);
+    expect(detChoices(s, 0)[0].open).toBe(true);
+    expect(pickDetChoice(s, 0, 'Gladius Task Force', ['assault'])).toBeNull();
+    expect(chargeEligibility(s, u)).toBeNull();
+    expect(pickDetChoice(s, 0, 'Gladius Task Force', ['devastator'])).toMatch(/ไม่ได้/); // already picked this Command phase
+    s.turn += 2; // our next Command phase
+    detOnCommandStart(s, 0, true);
+    expect(chargeEligibility(s, u)).toMatch(/Advance/);
+    expect(detChoices(s, 0)[0].options.find((o) => o.o.id === 'assault')!.why).toBeTruthy();
+  });
+
+  it('War Horde gives Ork melee Sustained Hits 1; Liberator Assault Group adds +1 A and +2 S after charging', () => {
+    const s = detGame('Liberator Assault Group', 'War Horde');
+    s.phase = 'fight';
+    const u = put(s, 'p0-x0', { x: 20, y: 20 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 25.2 });
+    const ork = buildFightPools(s, boyz.id, u.id).pools;
+    expect(ork.length).toBeGreaterThan(0);
+    expect(ork.every((p) => p.sustained === '1')).toBe(true);
+    s.active = 0;
+    u.chargedTurn = s.turn;
+    const sm = buildFightPools(s, u.id, boyz.id).pools;
+    expect(sm.length).toBeGreaterThan(0);
+    expect(sm.every((p) => p.attackBonus === 1)).toBe(true);
+    const ccw = sm.find((p) => p.weapon === 'Close combat weapon')!;
+    expect(ccw.woundNeed).toBe(woundNeed((ccw.profile.S ?? 4) + 2, 5));
+  });
+
+  it('Vanguard Spearhead gives cover beyond 12"; Wrath of the Rock makes strong attacks -1 to wound', () => {
+    const s = detGame('Vanguard Spearhead', 'War Horde', [['Intercessor Squad', 10, 160], ['Captain', 1, 80]], [['Boyz', 10, 90], ['Warboss', 1, 100]]);
+    s.phase = 'shooting'; s.active = 1;
+    const u = put(s, 'p0-x0', { x: 20, y: 10 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 30 });
+    const far = buildShootPools(s, boyz.id, u.id, { mode: 'normal' }).pools;
+    expect(far.length).toBeGreaterThan(0);
+    expect(far.every((p) => p.skill === 6)).toBe(true); // BS5+ shootas, cover makes it 6+
+    const s2 = detGame('Wrath of the Rock', 'War Horde');
+    s2.phase = 'fight'; s2.active = 1;
+    const v = put(s2, 'p0-x0', { x: 20, y: 20 });
+    const b2 = put(s2, 'p1-x0', { x: 20, y: 25.2 });
+    const pools = buildFightPools(s2, b2.id, v.id).pools;
+    const strong = pools.filter((p) => (p.profile.S ?? 0) > 4);
+    const weak = pools.filter((p) => (p.profile.S ?? 0) <= 4);
+    expect(strong.every((p) => p.woundMod === -1)).toBe(true);
+    expect(weak.every((p) => p.woundMod === 0)).toBe(true);
+  });
+
+  it('re-roll and fixed rolls: Companions of Vehemence, Blitz Brigade', () => {
+    const s = detGame('Companions of Vehemence', 'Blitz Brigade', [['Intercessor Squad', 10, 160], ['Captain', 1, 80]], [['Battlewagon', 1, 160], ['Warboss', 1, 100]]);
+    s.phase = 'charge'; s.active = 0;
+    const u = put(s, 'p0-x0', { x: 20, y: 20 });
+    const bw = put(s, 'p1-x0', { x: 20, y: 28 });
+    declareCharge(s, u);
+    expect(canDetReroll(s, u, 'charge')).toBe(true);
+    detReroll(s, u, 'charge');
+    expect(canDetReroll(s, u, 'charge')).toBe(false);
+    s.active = 1; s.phase = 'movement';
+    rollAdvance(s, bw);
+    expect(bw.advanceRoll).toBe(6);
   });
 });

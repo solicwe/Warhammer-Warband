@@ -4,7 +4,7 @@ import { applyMortalWounds, killModel, onTransportDestroyed } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
-import { d6, nextRandom, rollN, rollOff } from './dice';
+import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
 import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointInPoly, pointSegDist, polyCentroid, segSegDist } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
@@ -13,6 +13,7 @@ import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKi
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
 import { canCrossDense, isMV, pathBlocked, pathLength, wallClearance } from './pathing';
+import { detEligible, detMove, detOnCommandStart, detRolls, modelOc } from './detachments';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -179,7 +180,7 @@ export interface MoveOptions { fly?: boolean; targets?: string[]; maxOverride?: 
 
 export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOptions = {}): number {
   if (opt.maxOverride !== undefined) return opt.maxOverride;
-  const M = m.profile.M ?? 0;
+  const M = (m.profile.M ?? 0) + detMove(s, u);
   let max = 0;
   if (kind === 'normal' || kind === 'fallback') max = M;
   else if (kind === 'advance') max = M + (u.advanceRoll ?? 0);
@@ -365,6 +366,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   s.controlAtTurnStart = s.objectives.map((o) => o.controller);
   onTurnStart(s);
   log(s, `━━ Battle Round ${s.round} · เทิร์นของ ${s.players[p].name} ━━`, 'info', p);
+  detOnCommandStart(s, p, p === s.firstPlayer);
   startCommand(s);
 }
 
@@ -471,10 +473,29 @@ function endBattle(s: GameState) {
 // ---------- movement phase actions ----------
 
 export function rollAdvance(s: GameState, u: UnitState) {
-  const raw = d6(s);
-  u.advanceRoll = raw + (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0);
-  pushFx(s, { kind: 'roll', owner: u.owner, title: `Advance · ${u.name}`, dice: [raw], result: `M + ${u.advanceRoll}"${u.advanceRoll > raw ? ' (+1)' : ''}`, good: u.advanceRoll >= 4 });
-  log(s, `${u.name} Advance: ทอยได้ ${u.advanceRoll}`, 'roll', u.owner);
+  const det = detRolls(s, u);
+  const raw = det.advanceSix ? 6 : d6(s);
+  const bonus = (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0) + det.advanceBonus;
+  u.advanceRoll = raw + bonus;
+  pushFx(s, { kind: 'roll', owner: u.owner, title: `Advance · ${u.name}`, dice: [raw], result: `M + ${u.advanceRoll}"${bonus ? ` (+${bonus})` : ''}${det.advanceSix ? ' (Detachment: 6)' : ''}`, good: u.advanceRoll >= 4 });
+  log(s, `${u.name} Advance: ทอยได้ ${u.advanceRoll}${det.advanceSix ? ' (กฎ detachment: นับเป็น 6)' : ''}`, 'roll', u.owner);
+  if (det.advanceSelfMortals && !u.detAdvanceHurt?.startsWith(`${s.turn}:`)) {
+    u.detAdvanceHurt = `${s.turn}:advance`;
+    const mw = rollExpr(s, det.advanceSelfMortals).total;
+    applyMortalWounds(s, u, mw, 'กฎ detachment (Advance)');
+  }
+}
+
+/** Free re-roll of an Advance or Charge roll from a detachment rule (once per roll). */
+export function canDetReroll(s: GameState, u: UnitState, what: 'advance' | 'charge'): boolean {
+  const r = detRolls(s, u);
+  return (what === 'advance' ? r.rerollAdvance && !r.advanceSix : r.rerollCharge) && u.detRerolled !== `${s.turn}:${what}`;
+}
+export function detReroll(s: GameState, u: UnitState, what: 'advance' | 'charge', fly = false, cap?: number) {
+  u.detRerolled = `${s.turn}:${what}`;
+  log(s, `${u.name}: re-roll ${what === 'advance' ? 'Advance' : 'Charge'} ฟรี (กฎ detachment)`, 'info', u.owner);
+  if (what === 'advance') rollAdvance(s, u);
+  else { u.declaredCharge = false; declareCharge(s, u, fly, cap); }
 }
 
 export function commitMove(s: GameState, u: UnitState, kind: MoveKind, paths: Map<string, Pt[]>) {
@@ -545,9 +566,9 @@ export function chargeEligibility(s: GameState, u: UnitState): string | null {
   if (u.declaredCharge) return 'ประกาศชาร์จไปแล้ว';
   if (hasKw(u, 'AIRCRAFT')) return 'AIRCRAFT ชาร์จไม่ได้';
   if (isEngaged(s, u)) return 'engaged อยู่';
-  if (u.move === 'fallback') return 'Fall back มาเทิร์นนี้';
+  if (u.move === 'fallback' && !detEligible(s, u, 'chargeAfterFallBack')) return 'Fall back มาเทิร์นนี้';
   if (u.cantCharge) return 'ลงจากรถแบบ Rapid/Combat มา ชาร์จไม่ได้เทิร์นนี้';
-  if (u.move === 'advance' && !isRiledUp(s, u)) return 'Advance มาเทิร์นนี้';
+  if (u.move === 'advance' && !isRiledUp(s, u) && !detEligible(s, u, 'chargeAfterAdvance')) return 'Advance มาเทิร์นนี้';
   if (!boardUnits(s, other(u.owner)).some((e) => !hasKw(e, 'AIRCRAFT') && unitDistance(u, e) <= RULES.charge.declareRange)) return `ไม่มีศัตรูภายใน ${RULES.charge.declareRange}"`;
   return null;
 }
@@ -558,6 +579,7 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   let total = r[0] + r[1];
   if (cap !== undefined) total = Math.min(total, cap);
   if (u.buffs.some((b) => b.kind === 'advanceCharge+1')) total += 1;
+  total += detRolls(s, u).chargeBonus;
   u.chargeRoll = Math.max(0, total - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0));
   const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `ชาร์จได้ ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });
@@ -834,8 +856,7 @@ export function levelOfControl(s: GameState, o: ObjectiveState): [number, number
   const t = objectiveTerrain(s, o);
   const lv: [number, number] = [0, 0];
   for (const u of boardUnits(s)) {
-    if (u.battleShocked) continue;
-    for (const m of alive(u)) if (circleTouchesPoly(m, m.r, t.poly)) lv[u.owner] += m.profile.OC ?? 0;
+    for (const m of alive(u)) if (circleTouchesPoly(m, m.r, t.poly)) lv[u.owner] += modelOc(s, u, m);
   }
   return lv;
 }
@@ -986,6 +1007,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
   u.status = 'board';
   u.embarkedIn = null;
   u.setUpTurn = s.turn;
+  u.disembarkedTurn = s.turn;
   if (mode === 'tactical') u.move = null; // may still make a normal or advance move
   else { u.move = 'stationary'; u.cantCharge = true; }
   log(s, `${u.name} ลงจากรถ (${mode === 'rapid' ? 'Rapid' : mode === 'tactical' ? 'Tactical' : 'Combat'} Disembark)`, 'info', u.owner);

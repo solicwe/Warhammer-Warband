@@ -30,10 +30,12 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 - **Army rules อัตโนมัติ**: Oath of Moment (Space Marines: re-roll hit, +1 wound ถ้าเป็น codex army) และ WAAAGH! (Orks: 5+ InSv, ยิงแบบ Assault, advance แล้วชาร์จได้, re-roll advance ฟรี)
 - **Enhancements**: เลือกได้ในหน้าจัดทัพตาม detachment ที่เลือก (เช็ก CHARACTER / EPIC HERO / ซ้ำ / จำนวนตาม battle size / Upgrade ×3) และขึ้นบนการ์ดหน่วยในเกม
 - **Detachment stratagems**: ปุ่ม CP บนแถบบน — ดูกฎ detachment และใช้ stratagem ของ detachment (หัก CP, กันใช้ซ้ำใน phase เดียวกัน)
+- **กฎ Detachment ทำงานจริง** (Space Marines 43 จาก 53, Orks 10 จาก 15): โบนัสตอนยิง/ตี (+Hit/Wound/S/A/AP, re-roll, Sustained/Lethal Hits), ฝ่ายรับ (cover เมื่อโดนยิงจากเกิน 12", −1 wound เมื่อ S > T, InSv), สิทธิ์ยิง/ชาร์จหลัง Advance/Fall back, re-roll Advance/Charge ฟรี, +OC และกฎแบบ "เลือก 1 อย่าง" เช่น **Combat Doctrines** (เลือกใน Command phase, แต่ละอย่างครั้งเดียวต่อเกม), Mission Tactics, Hunting Packs, Psychic Disciplines, Legacy of the Angel — การ์ดใน Command phase บอกว่าระบบทำให้ครบ / ทำส่วนหลัก / ต้องทำเอง; บอทก็เลือก doctrine เอง
+- **Wargear**: เมนู ⋮ ของหน่วยในหน้าจัดทัพ → เปลี่ยน/เพิ่มอาวุธตาม wargear options ของ datasheet (จ่าเปลี่ยนอาวุธ, ทุก 5 โมเดลได้ 1 กระบอก, "any number", เลือก 2 อย่างจากรายการตามกฎ Pistol, เพิ่มโมเดลอย่าง Invader ATV) — อาวุธที่มีราคาเพิ่ม (เช่น thunder hammer +5/ชิ้น) บวกแต้มให้อัตโนมัติ, อาวุธที่เลือกไปอยู่บนโมเดลจริงในเกม, โล่ (storm shield / relic shield) ปรับ W / InSv ให้, อาวุธหลายกระบอก (2 godhammer lascannons) ยิงครบทุกกระบอก
 - **สนามแบบโต๊ะแข่ง**: ruins (พื้นกระเบื้อง, กำแพง+หน้าต่าง, ชั้นบน), armoured containers, sandbag barricades, craters, objective marker 40mm พร้อมเลข OC สด, ป้าย 🛡 Cover / 👁 Hidden และเส้น line of sight ตอนเลือกเป้ายิง, token รูปตัวละคร (Space Marine / Ork / Grot / Walker / Vehicle / Monster, มงกุฎ = CHARACTER)
 - **เล่นกับบอทได้** (single-player): บอทเล่นตามกฎทีละหน่วย พร้อมแอนิเมชันและคำบรรยายว่ากำลังทำอะไร — เลือกเป้ายิง/ตีจากค่าคาดหวัง (แต้มที่ฆ่าได้, เก็บหน่วย, เป้า Oath, คนยืน objective), ยืนเฝ้า objective เมื่อจำเป็น, หน่วย melee ชาร์จตามโอกาสสำเร็จ 2D6, ใช้ Command Re-roll ชาร์จ / Fire Overwatch, ใช้ Oath of Moment / WAAAGH! ตามจังหวะ
 - **เอฟเฟคบนกระดาน**: เส้นกระสุน/ฟันดาบ, ตัวเลข −W, กากบาทโมเดลที่ตาย, mortal wound; ป้าย **OATH** เหนือหน่วยที่ถูกเลือกเป็น Oath of Moment
-- **การเดิน**: ลาก = ย้ายทั้งหน่วย, แตะโมเดล 1 ตัว = เลือกตัวนั้นแล้วลากเฉพาะตัว (วัดระยะเส้นตรงจากจุดเริ่มของตัวนั้น ใช้ได้แม้ทั้งหน่วยเดินจนสุดระยะแล้ว)
+- **การเดิน**: ลาก = ย้ายทั้งหน่วย, แตะโมเดล 1 ตัว = เลือกตัวนั้นแล้วลากเฉพาะตัว (วัดระยะเส้นตรงจากจุดเริ่ม ลากซ้ำกี่ครั้งก็ได้ ตัวที่เดินสุดระยะจะไถลไปตามวงระยะแทนการค้าง) — ปล่อยนิ้วแล้วระบบจัดให้ถูกกฎ: โมเดลที่ทับกันจะถอยมาชิดฐาน, รถ/มอนสเตอร์ที่ลากทะลุกำแพง dense terrain จะหาทางอ้อมให้เอง (A*), ชาร์จจะไม่ไปติด engagement กับหน่วยที่ไม่ได้ประกาศ · ปุ่ม **↺ แก้/ขยับต่อ** เปิดการเดินล่าสุดกลับมาแก้ได้ถ้ายังไม่ได้ทำอย่างอื่น
 - **ทอยเต๋ากลางจอ**: roll-off ตอนเริ่มเกม (ใคร Attacker / ใครวางก่อน, ใครเล่นก่อน), Advance, Charge, Battle-shock แสดงลูกเต๋าหมุนแล้วกระแทกลงพร้อมผลลัพธ์
 - **เลือก Faction → Chapter**: แตะตรากองทัพเพื่อเลือก faction (แบ่ง Imperium / Chaos / Xenos) แล้วเลือก Chapter ของ Space Marines (Ultramarines, Blood Angels, Dark Angels, Space Wolves, Black Templars, Deathwatch ฯลฯ) — รายการหน่วยและ detachment จะแสดงเฉพาะของ Chapter นั้น + หน่วยทั่วไป และตรวจทัพให้
 - **หน้าจัดทัพ** แบบ List / Detachment: หัวกองทัพ (ตรา, ชื่อ, detachment, pts), หมวด Characters / Battleline / Others มีปุ่ม + และเมนู ⋮ ต่อหน่วย (จำนวนโมเดล, leader, enhancement, warlord, ทำซ้ำ, ลบ), ปุ่มแชร์รายชื่อกองทัพ
@@ -57,6 +59,8 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 | แก้ stat / points / อาวุธ / detachment / enhancement ด้วยมือ (เช่นตาม balance dataslate) | `data/overrides/<FACTION>.json` ([วิธีเขียน](data/overrides/README.md)) แล้ว `npm run data` |
 | แผนที่แข่ง (layout) | `data/layouts.json` สร้างด้วย `python3 scripts/extract-layouts.py <โฟลเดอร์ภาพ layout> > data/layouts.json` |
 | Primary / Secondary / action | `data/missions.json` (`primaries`, `secondaries`, `actions`) |
+| กฎ Detachment ที่ระบบทำให้อัตโนมัติ (โบนัส, เงื่อนไข, Combat Doctrines ฯลฯ) | `data/detachment-rules.json` (ใส่ชื่อ detachment แล้วเขียน effect ตามคำอธิบายบนหัวไฟล์) |
+| Wargear options / ราคาอาวุธ | มาจาก Wahapedia อัตโนมัติ (`npm run data`) แก้ด้วยมือได้ใน `data/overrides/<FACTION>.json` (`wargearOptions`, `wargearCosts`) |
 | กลุ่ม Faction (Imperium / Chaos / Xenos) และ sub-faction เช่น Chapter ของ Space Marines | `data/factions-meta.json` แล้ว `npm run data` (detachment จับคู่ Chapter อัตโนมัติจากเนื้อกฎ ถ้าผิดใส่ใน `detachments: { "ชื่อ": "KEYWORD" }`) |
 | ตัวเลขกฎหลัก (engagement, coherency, CP, ระยะ charge, cap ของ modifier, core stratagems) | `data/core-rules.json` |
 | Deployment map, terrain layout, Primary Mission และคะแนน | `data/missions.json` |
@@ -66,24 +70,26 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 
 ## โครงสร้าง
 ```
-data/            core-rules.json, missions.json, factions-meta.json, overrides/   ← ไฟล์ที่ตั้งใจให้แก้
+data/            core-rules.json, missions.json, layouts.json, detachment-rules.json, factions-meta.json, overrides/   ← ไฟล์ที่ตั้งใจให้แก้
 scripts/         build-data.mjs (Wahapedia CSV → JSON)
 public/data/     ข้อมูลที่ build แล้ว (โหลดตอนเลือก faction)
-src/engine/      rules engine: dice, geometry, visibility, army, attack, game (phases + scoring)
+src/engine/      rules engine: dice, geometry, visibility, army (+wargear), attack, game (phases + scoring), pathing (route/settle moves), detachments, missions, secondaries, stratagems, bot
 src/ui/          React: Board (SVG + pan/pinch/drag), DiceTray, GameScreen, ArmyBuilder
 docs/            สรุปกฎ 11th ที่ตรวจแล้ว + game design
 ```
 
 ## ข้อจำกัดตอนนี้ (สิ่งที่ยังไม่ได้ทำ)
 - Detachment stratagems: ระบบอ่านข้อความแล้วใส่ผลให้อัตโนมัติได้ประมาณ 1 ใน 3 (+1 Hit/Wound, re-roll, AP, Lethal/Sustained/Dev Wounds, Ignores Cover, −1 Hit/Wound/AP ของศัตรู, −1 Damage, FNP, Cover, Fights First, +1 Advance/Charge) ที่เหลือ (เดินพิเศษ, ยิงนอกเฟส, mortal wounds, เลือก doctrine ฯลฯ) หัก CP + บันทึกให้ แล้วทำตามข้อความเอง
-- Detachment rules / datasheet abilities ส่วนใหญ่ยังไม่ทำงานอัตโนมัติ → ใช้ Buff chips ใส่ผลเอง
+- กฎ Detachment ที่ยังต้องทำเอง: Space Marines 10 อัน (Inner Circle, Angelic Host, Lion's Blade, Champions of Fenris, Armoured Speartip, Living Miracle, Interrogation Conclave, Veterans of the Fang, Fulguris, Subversion Assets) + ส่วนรองของบางอัน (นับ Saga, re-roll 1 ลูกแบบ Armoured Wrath ฯลฯ) และ Orks 5 อัน (Dread Mob, Runt Swarm, Madcap Meks, Brute Bosses, Wurrband) — การ์ดใน Command phase บอกว่าส่วนไหนต้องทำเอง
+- Datasheet abilities ส่วนใหญ่ยังไม่ทำงานอัตโนมัติ → ใช้ Buff chips ใส่ผลเอง
+- Wargear: ข้อความ option ที่เขียนแปลก ๆ บางอัน (ราว 3%) แปลงไม่ได้ จะไม่ขึ้นให้เลือก; ability ของอุปกรณ์ที่ไม่ใช่อาวุธ (banner, icon, drone) ยังไม่มีผล ยกเว้นโล่ที่ปรับ W/InSv และ helix gauntlet (FNP)
 - รูปตัวละครเริ่มต้นเป็นภาพวาดเวกเตอร์ของโปรเจกต์เอง (ไม่ใช้รูปโมเดลของ GW เพราะติดลิขสิทธิ์) — แตะรูปในหน้า datasheet เพื่อใส่รูปของคุณเอง รูปจะขึ้นทั้งบนการ์ดและบน token ในสนาม (เก็บในเครื่องนั้นเท่านั้น)
 - Aircraft, Firing Deck ยังไม่มี
 - ตัวเลือกบนการ์ด mission บางอย่างระบบเลือกให้อัตโนมัติ (เป้า Punishment 3 หน่วย, ที่วาง marker ของ Locate and Deny, beacon unit, หน่วยเฝ้า Burden of Trust, marker ที่ Sensor Sweep เอาออก)
 - Twist cards ยังไม่มี
 - Terrain เป็น 2D: กำแพงของ ruins บังสายตา, พื้นที่ terrain เป็น obscuring; ยังไม่มีการปีนชั้นบน (Plunging Fire ทำได้แค่ TOWERING)
 - โมเดลไม่บังสายตากันเอง (ตามที่แอปออนไลน์ส่วนใหญ่ทำ)
-- ฐานโมเดลแบบ "Use model"/hull ใช้วงกลมขนาดประมาณ
+- ฐานโมเดลแบบ "Use model"/hull ใช้วงกลมขนาดประมาณตามชนิดรถ (Land Raider 6", Rhino 4.2", Trukk 3.8" …) และให้ทับขอบกำแพงได้นิดหน่อยเพื่อให้รถผ่านช่องได้
 
 ## เครดิต
 ข้อมูล datasheet: **Powered by [Wahapedia](https://wahapedia.ru/wh40k11ed/)** (data export) · Warhammer 40,000 เป็นเครื่องหมายการค้าของ Games Workshop — โปรเจกต์นี้เป็นเครื่องมือแฟนเมดสำหรับใช้ส่วนตัว ไม่ใช่ผลิตภัณฑ์ทางการ

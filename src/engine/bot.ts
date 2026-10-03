@@ -4,11 +4,12 @@ import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolve
 import { RULES } from './config';
 import { exprAverage } from './dice';
 import { circleTouchesPoly, dist, polyCentroid } from './geometry';
+import { detChoices, pickDetChoice } from './detachments';
 import {
   autoApproach, callWaaagh, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits,
-  sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, settleMove,
+  sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
 } from './game';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
 import { isMelee } from './weapons';
@@ -177,7 +178,29 @@ export function botCommand(s: GameState) {
     const close = brawlers.filter((u) => enemies.some((e) => unitDistance(u, e) <= 16));
     if (s.round >= 3 || close.length >= Math.max(1, brawlers.length / 2)) callWaaagh(s, p);
   }
+  botDetachmentChoices(s, p, mine, enemies);
   endPhase(s);
+}
+
+/** Combat Doctrines and other "pick one" detachment rules: shoot on the move early, charge once the armies meet. */
+function botDetachmentChoices(s: GameState, p: PlayerId, mine: UnitState[], enemies: UnitState[]) {
+  const near = mine.some((u) => enemies.some((e) => unitDistance(u, e) <= 14));
+  const engaged = mine.some((u) => isEngaged(s, u));
+  const prefer: Record<string, string[]> = {
+    command: engaged ? ['tactical', 'assault', 'devastator'] : near ? ['assault', 'devastator', 'tactical'] : ['devastator', 'assault', 'tactical'],
+  };
+  for (const c of detChoices(s, p)) {
+    if (!c.open) continue;
+    const free = c.options.filter((o) => !o.why).map((o) => o.o.id);
+    if (!free.length) continue;
+    const want = c.choice.pick ?? 1;
+    // generic order: the rule's own preference list for doctrines, else the listed order (round / battle choices)
+    const order = [...(prefer[c.choice.when] ?? []), ...c.choice.options.map((o) => o.id)];
+    const ids = [...new Set(order.filter((id) => free.includes(id)))].slice(0, want);
+    // keep limited-use rules (e.g. 3 doctrines in 5 rounds) for when the armies are close
+    if (c.choice.uses === 'limit' && !near && s.round < 3) continue;
+    if (ids.length === want) pickDetChoice(s, p, c.rule, ids);
+  }
 }
 
 // ---------- movement ----------
@@ -352,6 +375,7 @@ export function botChargeOne(s: GameState): boolean {
     if (value(best) <= 0 || p < (brawler ? 0.25 : 0.58)) continue;
     declareCharge(s, u);
     let opts = chargeTargetOptions(s, u);
+    if (!opts.length && canDetReroll(s, u, 'charge')) { detReroll(s, u, 'charge'); opts = chargeTargetOptions(s, u); }
     if (!opts.length && brawler && !canUseStratagem(s, u.owner, 'command-reroll', u) && p2d6(unitDistance(u, best)) >= 0.27) {
       log(s, `บอทใช้ Command Re-roll ทอยชาร์จใหม่ (${u.name})`, 'cp', u.owner);
       rerollCharge(s, u);

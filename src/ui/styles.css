@@ -336,3 +336,14 @@ details > .strat-card { margin-top: 6px; }
 .wg-picks select { flex: 1; min-width: 140px; }
 .wg-cost { margin-left: 6px; padding: 0 5px; border-radius: 4px; background: var(--accent); color: #fff; font: 600 11px var(--sans); }
 .ab-sub.ab-wg { white-space: normal; }
+
+/* ---------- detachment rules (command phase) ---------- */
+.det-card { padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+.det-row { display: flex; flex-direction: column; gap: 4px; }
+.det-auto { font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--card2); color: var(--ink-muted); white-space: nowrap; }
+.det-auto.full { background: #1f7a3a; color: #fff; }
+.det-auto.partial { background: #b07d12; color: #fff; }
+.det-choice { display: flex; flex-direction: column; gap: 6px; padding: 6px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--line); }
+.det-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.det-opts .btn { flex: 1 1 140px; flex-direction: column; align-items: flex-start; text-align: left; height: auto; min-height: 44px; padding: 6px 10px; white-space: normal; }
+.ab-det-head .det-auto { align-self: flex-start; margin-top: 3px; }

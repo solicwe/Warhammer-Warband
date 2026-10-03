@@ -1,0 +1,331 @@
+{
+  "_doc": [
+    "Detachment rules the engine applies by itself, keyed by detachment name (Wahapedia spelling).",
+    "auto: full = everything in the rule is automatic; partial = the main effect is automatic, the rest is in 'manual'.",
+    "units: every entry must match the unit; 'A|B' = either; 'name:X' = datasheet name X; plain words are keywords.",
+    "if: all must hold. charged, stationary, within12, targetMV, targetNotMV, targetCharMV, targetOath, belowStarting, belowHalf,",
+    "    battleShocked, notBattleShocked, inTerrain, onObjective, targetOnObjective, objectiveEitherWay, riled, setUpThisTurn,",
+    "    chargedOrArrived, disembarkedThisTurn, heavyWeapon, plasmaWeapon, outnumberOrGangUp.",
+    "offence: hit, wound, ap, strength, attacks (numbers to add), reroll: hits1 | hits | wounds1 | wounds, abilities: weapon abilities.",
+    "defend: woundMinusIfStronger, coverUnless12, inv + rangedOnly, enemyStrengthMinus (when this army's unit is attacked).",
+    "eligible: shootAfterAdvance, shootAfterFallBack, chargeAfterAdvance, chargeAfterFallBack.",
+    "rolls: rerollAdvance, rerollCharge, advanceSix, advanceBonus, chargeBonus, move (+M), oc (+OC), shockedOc (OC while battle-shocked).",
+    "choice: when = command (start of your Command phase, lasts until your next one) | round (each battle round) | battle (start of the battle, lasts all game);",
+    "        uses = eachOnce (each option once per battle) | limit (at most 'limit' activations, no repeats) | free; pick = options chosen at once."
+  ],
+  "rules": {
+    "Gladius Task Force": {
+      "auto": "full",
+      "choice": {
+        "name": "Combat Doctrines", "when": "command", "uses": "eachOnce",
+        "options": [
+          { "id": "devastator", "name": "Devastator Doctrine", "text": "ยิงได้แม้ Advance มา", "effects": [{ "units": ["ADEPTUS ASTARTES"], "eligible": ["shootAfterAdvance"] }] },
+          { "id": "tactical", "name": "Tactical Doctrine", "text": "Fall back แล้วยังยิงและชาร์จได้", "effects": [{ "units": ["ADEPTUS ASTARTES"], "eligible": ["shootAfterFallBack", "chargeAfterFallBack"] }] },
+          { "id": "assault", "name": "Assault Doctrine", "text": "Advance แล้วยังชาร์จได้", "effects": [{ "units": ["ADEPTUS ASTARTES"], "eligible": ["chargeAfterAdvance"] }] }
+        ]
+      }
+    },
+    "Blade of Ultramar": {
+      "auto": "full",
+      "choice": {
+        "name": "Mastered Doctrines", "when": "command", "uses": "limit", "limit": 3,
+        "options": [
+          { "id": "devastator", "name": "Devastator Doctrine", "text": "ยิงได้แม้ Advance มา", "effects": [{ "units": ["ADEPTUS ASTARTES"], "eligible": ["shootAfterAdvance"] }] },
+          { "id": "tactical", "name": "Tactical Doctrine", "text": "Fall back แล้วยังยิงและชาร์จได้", "effects": [{ "units": ["ADEPTUS ASTARTES"], "eligible": ["shootAfterFallBack", "chargeAfterFallBack"] }] },
+          { "id": "assault", "name": "Assault Doctrine", "text": "Advance แล้วยังชาร์จได้", "effects": [{ "units": ["ADEPTUS ASTARTES"], "eligible": ["chargeAfterAdvance"] }] }
+        ]
+      }
+    },
+    "Liberator Assault Group": {
+      "auto": "full",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "attack": "melee", "if": ["charged"], "attacks": 1, "strength": 2 }]
+    },
+    "Anvil Siege Force": {
+      "auto": "full",
+      "effects": [
+        { "units": ["ADEPTUS ASTARTES"], "attack": "ranged", "abilities": ["heavy"] },
+        { "units": ["ADEPTUS ASTARTES"], "attack": "ranged", "if": ["heavyWeapon", "stationary"], "wound": 1 }
+      ]
+    },
+    "Ironstorm Spearhead": {
+      "auto": "manual",
+      "manual": "Armoured Wrath: re-roll hit/wound/damage 1 ลูกต่อหน่วยต่อ phase — กด re-roll ลูกเต๋าในถาดเอง"
+    },
+    "Firestorm Assault Force": {
+      "auto": "full",
+      "effects": [
+        { "units": ["ADEPTUS ASTARTES"], "attack": "ranged", "abilities": ["assault"] },
+        { "units": ["ADEPTUS ASTARTES"], "attack": "ranged", "if": ["within12"], "strength": 1 }
+      ]
+    },
+    "Forgefather’s Seekers": {
+      "auto": "partial",
+      "effects": [
+        { "units": ["ADEPTUS ASTARTES"], "attack": "ranged", "abilities": ["assault"] },
+        { "units": ["ADEPTUS ASTARTES"], "attack": "ranged", "if": ["within12"], "strength": 1 }
+      ],
+      "manual": "Seeker's Companions (Vulkan He'stan + Infernus) ทำเอง"
+    },
+    "Stormlance Task Force": {
+      "auto": "full",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "eligible": ["chargeAfterAdvance", "chargeAfterFallBack"] }]
+    },
+    "Spearpoint Task Force": {
+      "auto": "partial",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "eligible": ["chargeAfterAdvance", "chargeAfterFallBack"] }],
+      "manual": "Wrath of the First Khan (Suboden Khan) ทำเอง"
+    },
+    "Vanguard Spearhead": {
+      "auto": "full",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "defend": { "coverUnless12": true } }]
+    },
+    "Shadowmark Talon": {
+      "auto": "partial",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "defend": { "coverUnless12": true } }],
+      "manual": "Unparalleled Tactician (Aethon Shaan) ทำเอง"
+    },
+    "1st Company Task Force": {
+      "auto": "full",
+      "choice": {
+        "name": "Extremis-level Threat", "when": "command", "uses": "limit", "limit": 1,
+        "options": [
+          { "id": "extremis", "name": "Extremis-level Threat", "text": "จนถึง Command phase หน้า: ตีเป้า Oath re-roll wound ได้", "effects": [{ "if": ["targetOath"], "reroll": "wounds" }] }
+        ]
+      }
+    },
+    "Black Spear Task Force": {
+      "auto": "partial",
+      "choice": {
+        "name": "Mission Tactics", "when": "command", "uses": "eachOnce",
+        "options": [
+          { "id": "furor", "name": "Furor Tactics", "text": "อาวุธมี [SUSTAINED HITS 1]", "effects": [{ "units": ["ADEPTUS ASTARTES"], "abilities": ["sustained hits 1"] }] },
+          { "id": "malleus", "name": "Malleus Tactics", "text": "อาวุธมี [LETHAL HITS]", "effects": [{ "units": ["ADEPTUS ASTARTES"], "abilities": ["lethal hits"] }] },
+          { "id": "purgatus", "name": "Purgatus Tactics", "text": "critical hit ได้ [PRECISION] (ระบบยังไม่คำนวณ precision เฉพาะลูก crit)", "effects": [] }
+        ]
+      }
+    },
+    "Unforgiven Task Force": {
+      "auto": "partial",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "shockedOc": 1 }],
+      "manual": "เลือก 1 หน่วยใน Command phase ให้ +1 OC — ใส่ buff เอง"
+    },
+    "Company of Hunters": {
+      "auto": "full",
+      "effects": [
+        { "units": ["ADEPTUS ASTARTES"], "attack": "ranged", "abilities": ["assault"] },
+        { "units": ["ADEPTUS ASTARTES"], "eligible": ["shootAfterFallBack"] },
+        { "units": ["ADEPTUS ASTARTES", "MOUNTED"], "eligible": ["chargeAfterAdvance", "chargeAfterFallBack"] }
+      ]
+    },
+    "The Lost Brethren": {
+      "auto": "full",
+      "effects": [
+        { "units": ["DEATH COMPANY"], "attack": "melee", "if": ["belowStarting"], "reroll": "wounds1" },
+        { "units": ["DEATH COMPANY"], "attack": "melee", "if": ["belowHalf"], "reroll": "wounds" }
+      ]
+    },
+    "Librarius Conclave": {
+      "auto": "partial",
+      "choice": {
+        "name": "Psychic Disciplines", "when": "round", "uses": "free",
+        "options": [
+          { "id": "biomancy", "name": "Biomancy", "text": "+2\" M", "effects": [{ "units": ["ADEPTUS ASTARTES", "PSYKER"], "move": 2 }] },
+          { "id": "divination", "name": "Divination", "text": "re-roll hit 1 และ wound 1", "effects": [{ "units": ["ADEPTUS ASTARTES", "PSYKER"], "reroll": "hits1" }, { "units": ["ADEPTUS ASTARTES", "PSYKER"], "reroll": "wounds1" }] },
+          { "id": "pyromancy", "name": "Pyromancy", "text": "ยิงเป้าภายใน 12\" ได้ +1 AP", "effects": [{ "units": ["ADEPTUS ASTARTES", "PSYKER"], "attack": "ranged", "if": ["within12"], "ap": 1 }] },
+          { "id": "telekinesis", "name": "Telekinesis", "text": "โดนยิง: S ของศัตรู −1", "effects": [{ "units": ["ADEPTUS ASTARTES", "PSYKER"], "defend": { "enemyStrengthMinus": 1, "rangedOnly": true } }] },
+          { "id": "telepathy", "name": "Telepathy", "text": "ไม่สน modifier ของ BS/WS/hit (ทำเอง)", "effects": [] }
+        ]
+      }
+    },
+    "Angelic Inheritors": {
+      "auto": "full",
+      "choice": {
+        "name": "Legacy of the Angel", "when": "battle", "uses": "free", "pick": 2,
+        "options": [
+          { "id": "grace", "name": "Sanguinary Grace", "text": "Fall back แล้วยังยิงและชาร์จได้", "effects": [{ "units": ["ADEPTUS ASTARTES", "CHARACTER"], "eligible": ["shootAfterFallBack", "chargeAfterFallBack"] }] },
+          { "id": "wrath", "name": "Carmine Wrath", "text": "re-roll hit 1 และ wound 1", "effects": [{ "units": ["ADEPTUS ASTARTES", "CHARACTER"], "reroll": "hits1" }, { "units": ["ADEPTUS ASTARTES", "CHARACTER"], "reroll": "wounds1" }] },
+          { "id": "hour", "name": "Their Appointed Hour", "text": "re-roll Advance และ Charge", "effects": [{ "units": ["ADEPTUS ASTARTES", "CHARACTER"], "rerollAdvance": true, "rerollCharge": true }] }
+        ]
+      }
+    },
+    "Wrathful Procession": {
+      "auto": "full",
+      "effects": [{ "units": ["CHAPLAIN"], "defend": { "inv": 5, "rangedOnly": true } }]
+    },
+    "Wrath of the Rock": {
+      "auto": "full",
+      "effects": [{ "units": ["ADEPTUS ASTARTES", "INFANTRY|MOUNTED"], "defend": { "woundMinusIfStronger": true } }]
+    },
+    "Saga of the Hunter": {
+      "auto": "partial",
+      "effects": [{ "units": ["SPACE WOLVES"], "attack": "melee", "if": ["outnumberOrGangUp"], "hit": 1 }],
+      "manual": "นับ Quarry tally / Saga สำเร็จ (+1 wound) ทำเอง"
+    },
+    "Saga of the Beastslayer": {
+      "auto": "partial",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "if": ["targetCharMV"], "abilities": ["lethal hits"] }],
+      "manual": "นับ Beastslayer tally: เมื่อ Saga สำเร็จ ทุกการโจมตีได้ Lethal Hits — ใส่ buff Lethal Hits เอง"
+    },
+    "Saga of the Bold": {
+      "auto": "manual",
+      "manual": "Heroes All: re-roll 1 ลูก (hit/wound/damage) — กด re-roll ในถาดเอง; นับ Boasts เอง"
+    },
+    "Companions of Vehemence": {
+      "auto": "full",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "rerollAdvance": true, "rerollCharge": true }]
+    },
+    "Vindication Task Force": {
+      "auto": "partial",
+      "effects": [{ "units": ["ANCIENT"], "if": ["onObjective"], "defend": { "woundMinusIfStronger": true } }],
+      "manual": "Crusader Squad surge move ไปที่ objective ทำเอง"
+    },
+    "Godhammer Assault Force": {
+      "auto": "partial",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "attack": "melee", "if": ["disembarkedThisTurn"], "hit": 1 }],
+      "manual": "ชาร์จหลังลงรถ: เป้า 1 หน่วยต้องทอย Battle-shock — ทอยเอง"
+    },
+    "Emperor’s Shield": {
+      "auto": "full",
+      "effects": [{ "if": ["targetOath"], "reroll": "wounds1" }]
+    },
+    "Hammer of Avernii": {
+      "auto": "partial",
+      "effects": [{ "if": ["targetOath"], "reroll": "wounds1" }],
+      "manual": "Recalculating (Caanok Var) ทำเอง"
+    },
+    "Rage-cursed Onslaught": {
+      "auto": "full",
+      "effects": [
+        { "units": ["ADEPTUS ASTARTES"], "attack": "melee", "reroll": "wounds1" },
+        { "units": ["ADEPTUS ASTARTES"], "attack": "melee", "if": ["charged", "notBattleShocked"], "attacks": 1 },
+        { "units": ["ADEPTUS ASTARTES"], "attack": "melee", "if": ["charged", "battleShocked"], "attacks": 2 }
+      ]
+    },
+    "Saga of the Great Wolf": {
+      "auto": "partial",
+      "choice": {
+        "name": "Master of Wolves", "when": "command", "uses": "eachOnce",
+        "options": [
+          { "id": "jaws", "name": "Encircling Jaws", "text": "re-roll Advance และ Charge", "effects": [{ "units": ["ADEPTUS ASTARTES"], "rerollAdvance": true, "rerollCharge": true }] },
+          { "id": "eye", "name": "Hunter’s Eye", "text": "ยิง +1 hit", "effects": [{ "units": ["ADEPTUS ASTARTES"], "attack": "ranged", "hit": 1 }] },
+          { "id": "strike", "name": "Ferocious Strike", "text": "ตีระยะประชิดได้ [LETHAL HITS]", "effects": [{ "units": ["ADEPTUS ASTARTES"], "attack": "melee", "abilities": ["lethal hits"] }] }
+        ]
+      }
+    },
+    "Bastion Task Force": {
+      "auto": "partial",
+      "effects": [{ "units": ["ADEPTUS ASTARTES", "BATTLELINE"], "eligible": ["shootAfterAdvance", "shootAfterFallBack", "chargeAfterAdvance", "chargeAfterFallBack"] }],
+      "manual": "Auspex scanned (re-roll hit 1 ใส่เป้าที่ถูกสแกน) ใส่ buff เอง"
+    },
+    "Orbital Assault Force": {
+      "auto": "partial",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "if": ["setUpThisTurn"], "reroll": "wounds1" }],
+      "manual": "เลือกหน่วยรับ Deep Strike ตอนจัดทัพ / Drop Pod re-roll hit 1 ทำเอง"
+    },
+    "Reclamation Force": {
+      "auto": "full",
+      "effects": [
+        { "units": ["ADEPTUS ASTARTES"], "attack": "melee", "if": ["targetOnObjective"], "ap": 1 },
+        { "units": ["ADEPTUS ASTARTES"], "if": ["onObjective"], "defend": { "woundMinusIfStronger": true } }
+      ]
+    },
+    "Ceramite Sentinels": {
+      "auto": "partial",
+      "effects": [
+        { "units": ["ADEPTUS ASTARTES"], "if": ["inTerrain"], "reroll": "hits1" },
+        { "units": ["ADEPTUS ASTARTES"], "if": ["inTerrain"], "reroll": "wounds1" }
+      ],
+      "manual": "ENTRENCHED keyword ทำเอง"
+    },
+    "Headhunter Task Force": {
+      "auto": "partial",
+      "effects": [{ "units": ["ADEPTUS ASTARTES", "VEHICLE"], "advanceSix": true }],
+      "manual": "Tank Ace re-roll damage ตอนยิงทำเอง"
+    },
+    "Marshal’s Household": {
+      "auto": "full",
+      "effects": [{ "units": ["SWORD BRETHREN SQUAD"], "oc": 1 }]
+    },
+    "Legacy of Grace": {
+      "auto": "full",
+      "effects": [{ "units": ["BLOOD ANGELS", "INFANTRY", "CHARACTER"], "advanceBonus": 1, "chargeBonus": 1 }]
+    },
+    "Encarmine Speartip": {
+      "auto": "full",
+      "effects": [{ "units": ["name:Sanguinary Guard"], "eligible": ["shootAfterFallBack", "chargeAfterFallBack"] }]
+    },
+    "Wrath of the Doomed": {
+      "auto": "full",
+      "effects": [{ "units": ["DEATH COMPANY"], "eligible": ["chargeAfterAdvance"], "advanceSelfMortals": "D3+1" }]
+    },
+    "Dark Age Arsenal": {
+      "auto": "full",
+      "effects": [{ "units": ["ADEPTUS ASTARTES"], "if": ["plasmaWeapon"], "strength": 1 }]
+    },
+    "Darkflight Pursuit": {
+      "auto": "full",
+      "effects": [{ "units": ["RAVENWING", "FLY"], "attack": "ranged", "abilities": ["ignores cover"] }]
+    },
+    "Legends of Saga and Song": {
+      "auto": "full",
+      "effects": [{ "units": ["ADEPTUS ASTARTES", "TERMINATOR"], "chargeBonus": 1 }]
+    },
+    "Vengeful Hosts": {
+      "auto": "full",
+      "effects": [{ "units": ["ADEPTUS ASTARTES", "FLY", "INFANTRY"], "if": ["chargedOrArrived"], "reroll": "hits1" }]
+    },
+    "War Horde": {
+      "auto": "full",
+      "effects": [{ "units": ["ORKS"], "attack": "melee", "abilities": ["sustained hits 1"] }]
+    },
+    "Da Big Hunt": {
+      "auto": "full",
+      "effects": [{ "units": ["BEAST SNAGGA"], "if": ["targetMV"], "ap": 1 }]
+    },
+    "Kult of Speed": {
+      "auto": "full",
+      "effects": [
+        { "units": ["SPEED FREEKS"], "attack": "ranged", "abilities": ["assault"] },
+        { "units": ["SPEED FREEKS"], "eligible": ["chargeAfterAdvance", "chargeAfterFallBack"] }
+      ]
+    },
+    "Green Tide": {
+      "auto": "full",
+      "effects": [
+        { "units": ["name:Boyz"], "attack": "melee", "abilities": ["sustained hits 1"] },
+        { "units": ["ORKS", "INFANTRY"], "attack": "melee", "if": ["charged", "targetNotMV"], "abilities": ["lethal hits"] }
+      ]
+    },
+    "Bully Boyz": {
+      "auto": "full",
+      "effects": [{ "units": ["name:Nobz|name:Meganobz"], "attack": "melee", "abilities": ["sustained hits 1"] }]
+    },
+    "Taktikal Brigade": {
+      "auto": "full",
+      "effects": [{ "units": ["name:Boyz|name:Kommandos|name:Stormboyz"], "eligible": ["chargeAfterFallBack"] }]
+    },
+    "Blitz Brigade": {
+      "auto": "full",
+      "effects": [{ "units": ["WAGON"], "rerollCharge": true, "advanceSix": true }]
+    },
+    "Wreckas": {
+      "auto": "full",
+      "effects": [{ "units": ["name:Breaka Boyz|name:Flash Gitz|name:Tankbustas"], "attack": "ranged", "if": ["objectiveEitherWay"], "reroll": "hits1" }]
+    },
+    "Shoota Boyz": {
+      "auto": "partial",
+      "effects": [{ "units": ["ORKS", "INFANTRY"], "attack": "ranged", "abilities": ["assault"] }],
+      "manual": "ตอน riled up ปืนระยะ +3\" ทำเอง"
+    },
+    "Flyboyz": {
+      "auto": "partial",
+      "effects": [{ "units": ["AIRCRAFT|name:Deffkoptas"], "attack": "ranged", "if": ["riled"], "hit": 1 }],
+      "manual": "AIRCRAFT ไม่นับแต้ม strategic reserves ทำเอง"
+    },
+    "Dread Mob": { "auto": "manual", "manual": "Try Dat Button!: ทอย D6 ตอนเลือกยิง/ตี แล้วใส่ buff ตามผลเอง" },
+    "Runt Swarm": { "auto": "manual", "manual": "Gretchin advance/fall back แล้วยังทำ action ได้ — ระบบยังไม่ตรวจ" },
+    "Madcap Meks": { "auto": "manual", "manual": "Unpredictable Genius: ทอย D6 ตามตารางแล้วใส่ผลเอง" },
+    "Brute Bosses": { "auto": "manual", "manual": "'Ard as Nails: Warboss ทอยรอดตอนตายเอง" },
+    "Wurrband": { "auto": "manual", "manual": "Psychic powers ของ Weirdboy ทำเอง" }
+  }
+}

@@ -3,6 +3,7 @@ import { addonLines, enhancementOptions, listPoints, newUid, pointsOptions, sync
 import { RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
+import { DET_RULES } from '../engine/detachments';
 import { DatasheetView } from './Sheet';
 import { tokenKind } from './Tokens';
 import { fileToPortrait, getPortrait, matchDatasheet, setPortrait, usePortraitsVersion } from './portraits';
@@ -342,6 +343,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                 <span className="grow">
                   <span className="ab-name">{d.name}{d.subfaction && <span className={`ab-chip ${allowed(d) ? '' : 'bad'}`}>{subTag(d.subfaction)}</span>}</span>
                   <span className="ab-sub">{d.dp} DP · {d.forceDisposition} · {d.enhancements.length} enhancements · {d.stratagems.length} stratagems</span>
+                  <span className={`det-auto ${DET_RULES[d.name]?.auto ?? 'none'}`}>{{ full: 'กฎ detachment: ระบบทำให้ครบ', partial: 'กฎ detachment: ระบบทำส่วนหลัก', manual: 'กฎ detachment: ทำเอง' }[DET_RULES[d.name]?.auto ?? 'manual'] ?? 'กฎ detachment: อ่านเอง'}{!DET_RULES[d.name] ? ' (ยังไม่รองรับ)' : ''}</span>
                 </span>
               </button>
               {on && (
