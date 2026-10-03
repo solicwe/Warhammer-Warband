@@ -183,7 +183,8 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [tab, setTab] = useState<'list' | 'detachment'>('list');
   const [adding, setAdding] = useState<Section | null>(null);
   const [q, setQ] = useState('');
-  const [menu, setMenu] = useState<string | null>(null); // uid of the unit whose ⋮ menu is open
+  const [menu, setMenu] = useState<string | null>(null); // uid of the unit whose datasheet + settings panel is open
+  const [pop, setPop] = useState<{ uid: string; x: number; y: number; sizes?: boolean; join?: boolean } | null>(null); // the ⋮ quick menu
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -273,23 +274,24 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const menuUnit = menu ? list.units.find((u) => u.uid === menu) : undefined;
   const menuSheet = menuUnit ? sheetOf(menuUnit.datasheet) : undefined;
 
-  const unitRow = (u: ArmyUnitEntry) => {
+  const unitRow = (u: ArmyUnitEntry, inGroup = false) => {
     const sheet = sheetOf(u.datasheet);
     const leads = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
     const rides = u.embarkIn ? list.units.find((t) => t.uid === u.embarkIn) : undefined;
     const load = faction ? transportLoads(list, faction).find((t) => t.uid === u.uid) : undefined;
     const carried = load?.riders.map((r) => list.units.find((x) => x.uid === r)?.datasheet).filter(Boolean) ?? [];
     const line = [
-      u.warlord && 'Warlord', leads && `${sheet?.isSupport ? 'Support ของ' : 'นำ'} ${leads.datasheet}`, u.split && 'แยก 2 หน่วย',
+      u.warlord && 'Warlord', leads && !inGroup && `${sheet?.isSupport ? 'Support ของ' : 'นำ'} ${leads.datasheet}`, leads && inGroup && (sheet?.isSupport ? 'Support' : 'Leader'), u.split && 'แยก 2 หน่วย',
       rides && `เริ่มเกมบน ${rides.datasheet}`,
       load && (carried.length ? `บรรทุก ${carried.join(', ')} (${load.used}/${load.capacity} ที่)` : `ว่าง (0/${load.capacity} ที่)`),
     ].filter(Boolean).join(' · ');
     const wg = wargearSummary(sheet, u);
     const wrong = sheet && !allowed(sheet);
+    const inReserves = (leads ?? u).reserves;
     return (
-      <div key={u.uid} className="ab-row">
-        <button type="button" className="ab-row-main" onClick={() => (sheet ? setView(u.datasheet) : setMenu(u.uid))}>
-          <UnitArt sheet={sheet} />
+      <div key={u.uid} className={`ab-row ${inGroup ? 'in-group' : ''}`}>
+        <button type="button" className="ab-row-main" onClick={() => setMenu(u.uid)}>
+          <span className="ab-art-wrap"><UnitArt sheet={sheet} />{inReserves && <span className="ab-badge-r" title="Strategic Reserves">R</span>}</span>
           <span className="ab-row-text">
             <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
             <span className="ab-pts">{unitPoints(u)} pts{u.enhancement && <span className="ab-enh"> {u.enhancement}</span>}{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">ไม่มีใน 11e</span>}</span>
@@ -297,7 +299,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             {wg && <span className="ab-sub ab-wg"><Icon name="wargear" size={13} /> {wg}</span>}
           </span>
         </button>
-        <button type="button" className="ab-kebab" aria-label={`ตัวเลือก ${u.datasheet}`} onClick={() => setMenu(u.uid)}><Icon name="more" size={22} /></button>
+        <button type="button" className="ab-kebab" aria-label={`ตัวเลือก ${u.datasheet}`} onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          setPop({ uid: u.uid, x: r.right, y: r.bottom });
+        }}><Icon name="more" size={22} /></button>
       </div>
     );
   };
@@ -306,7 +311,16 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     <>
       {errors.length > 0 && <div className="ab-errors">{errors.map((e) => <div key={e}>{e}</div>)}</div>}
       {SECTIONS.map((sec) => {
-        const us = list.units.filter((u) => sectionOf(sheetOf(u.datasheet)) === sec.id);
+        // a unit with its Leader / Support shows as one card, in the section of its (first) character
+        const joined = (b: ArmyUnitEntry) => list.units.filter((c) => c.attachTo === b.uid);
+        const homeOf = (u: ArmyUnitEntry): string => {
+          const body = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
+          if (body) return homeOf(body);
+          const first = joined(u)[0];
+          return sectionOf(sheetOf((first ?? u).datasheet));
+        };
+        const tops = list.units.filter((u) => (!u.attachTo || !list.units.some((b) => b.uid === u.attachTo)) && homeOf(u) === sec.id);
+        const us = tops;
         if (sec.id === 'transports' && !us.length) return null;
         return (
           <section key={sec.id} className="ab-section">
@@ -314,7 +328,16 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               <span>{sec.title}</span>
               <button type="button" className="ab-add" aria-label={`เพิ่ม ${sec.title}`} onClick={() => { setQ(''); setAdding(sec.id); }}>+</button>
             </div>
-            {us.map(unitRow)}
+            {us.map((u) => {
+              const chars = joined(u);
+              if (!chars.length) return unitRow(u);
+              return (
+                <div key={u.uid} className="ab-group">
+                  {chars.sort((a, b) => Number(!!sheetOf(a.datasheet)?.isSupport) - Number(!!sheetOf(b.datasheet)?.isSupport)).map((c) => unitRow(c, true))}
+                  {unitRow(u, true)}
+                </div>
+              );
+            })}
             {!us.length && <div className="ab-empty">ยังไม่มีหน่วย — กด + เพื่อเพิ่ม</div>}
           </section>
         );
@@ -490,28 +513,15 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     return (
       <div className="tray-backdrop" onClick={() => setMenu(null)}>
         <div className="tray" onClick={(e) => e.stopPropagation()}>
-          <div className="row">
-            <UnitArt sheet={sheet} />
-            <div className="grow">
-              <div className="sheet-title">{u.datasheet}</div>
-              <div className="ab-pts">{unitPoints(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</div>
-            </div>
-          </div>
+          {sheet && <DatasheetView sheet={sheet} factionId={faction.id} />}
+          {!sheet && <div className="sheet-title">{u.datasheet}</div>}
+          <div className="ab-panel-title">ตั้งค่าหน่วยนี้ · <span className="ab-pts">{unitPoints(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</span></div>
           <div className="quick-acts">
-            <button type="button" onClick={() => setView(u.datasheet)}><Icon name="hint" size={22} />Datasheet</button>
             {sheet?.keywords.includes('CHARACTER') && (
               <button type="button" className={u.warlord ? 'on' : ''} onClick={() => set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) })}><Icon name="leader" size={22} />{u.warlord ? 'Warlord' : 'ตั้ง Warlord'}</button>
             )}
             <button type="button" onClick={() => { set({ units: [...list.units, { ...u, uid: newUid('e'), warlord: false, enhancement: undefined, enhancementPts: undefined, attachTo: undefined }] }); setMenu(null); setNote(`เพิ่ม ${u.datasheet} อีก 1`); }}><Icon name="duplicate" size={22} />ทำซ้ำ</button>
-            <button type="button" className="danger" onClick={() => { removeUnit(u.uid); setMenu(null); }}><Icon name="delete" size={22} />ลบ</button>
           </div>
-          {opts.length > 1 && (
-            <div className="field"><span><Icon name="size" size={15} /> จำนวนโมเดล</span>
-              <div className="seg">
-                {opts.map((o) => <button key={o.models} className={u.models === o.models ? 'on' : ''} onClick={() => setUnit(u.uid, { models: o.models, pts: o.pts })}>{o.models} · {o.pts}</button>)}
-              </div>
-            </div>
-          )}
           {(() => {
             // start the battle embarked: any transport in the list (leaders ride with the unit they lead)
             const rides = list.units.filter((t) => t.uid !== u.uid && parseTransport(sheetOf(t.datasheet)?.transport));
@@ -590,6 +600,72 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               <span className="tiny muted grow">ใช้กับทุกหน่วย {u.datasheet} (ทั้งการ์ดและ token บนสนาม)</span>
             </div>
           </div>
+          <button className="btn" onClick={() => setMenu(null)}>ปิด</button>
+        </div>
+      </div>
+    );
+  };
+
+  /** The ⋮ quick menu: Leave Squad, Reserves, Unit size, Delete (everything else is in the unit's datasheet panel). */
+  const quickMenu = () => {
+    const u = pop ? list.units.find((x) => x.uid === pop.uid) : undefined;
+    if (!pop || !u) return null;
+    const sheet = sheetOf(u.datasheet);
+    const opts = sheet ? pointsOptions(sheet) : [];
+    const body = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
+    const holder = body ?? u; // a Leader goes into Reserves with its unit
+    const close = () => setPop(null);
+    const w = 230;
+    const left = Math.max(8, Math.min(window.innerWidth - w - 8, pop.x - w));
+    const bodies = faction && sheet?.leads.length ? attachOptions(list, faction, u) : [];
+    const top = Math.max(8, Math.min(pop.y + 4, window.innerHeight - (pop.sizes ? 80 + opts.length * 52 : pop.join ? 80 + bodies.length * 52 : 250)));
+    return (
+      <div className="ab-pop-backdrop" onClick={close}>
+        <div className="ab-pop" style={{ left, top, width: w }} onClick={(e) => e.stopPropagation()}>
+          {pop.join ? (
+            <>
+              <div className="ab-pop-head">{sheet?.isSupport ? 'เข้าหน่วยเป็น Support' : 'นำหน่วย (Leader)'}</div>
+              {bodies.map((b) => (
+                <button key={b.uid} type="button" onClick={() => { setUnit(u.uid, { attachTo: b.uid, embarkIn: undefined, reserves: undefined }); setNote(`${u.datasheet} เข้า ${b.datasheet} แล้ว`); close(); }}>
+                  <Icon name="leader" size={22} />{b.datasheet} ({b.models})
+                </button>
+              ))}
+              {!bodies.length && <div className="ab-pop-head">ไม่มีหน่วยที่เข้าได้ในทัพ</div>}
+            </>
+          ) : pop.sizes ? (
+            <>
+              <div className="ab-pop-head">จำนวนโมเดล</div>
+              {opts.map((o) => (
+                <button key={o.models} type="button" className={u.models === o.models ? 'on' : ''} onClick={() => { setUnit(u.uid, { models: o.models, pts: o.pts }); close(); }}>
+                  <Icon name={u.models === o.models ? 'check' : 'size'} size={22} />{o.models} โมเดล · {o.pts} pts
+                </button>
+              ))}
+            </>
+          ) : (
+            <>
+              {!body && sheet && sheet.leads.length > 0 && (
+                <button type="button" onClick={() => setPop({ ...pop, join: true })}>
+                  <Icon name="leader" size={22} />Join Squad
+                </button>
+              )}
+              {body && (
+                <button type="button" onClick={() => { setUnit(u.uid, { attachTo: undefined }); setNote(`${u.datasheet} ออกจาก ${body.datasheet}`); close(); }}>
+                  <Icon name="leave" size={22} />Leave Squad
+                </button>
+              )}
+              <button type="button" className={holder.reserves ? 'on' : ''} onClick={() => { setUnit(holder.uid, { reserves: !holder.reserves, embarkIn: undefined }); close(); }}>
+                <Icon name={holder.reserves ? 'check' : 'reserves'} size={22} />Reserves{body ? ` (ทั้งหน่วย)` : ''}
+              </button>
+              {opts.length > 1 && (
+                <button type="button" onClick={() => setPop({ ...pop, sizes: true })}>
+                  <Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span>
+                </button>
+              )}
+              <button type="button" className="danger" onClick={() => { removeUnit(u.uid); close(); }}>
+                <Icon name="delete" size={22} />Delete
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -688,6 +764,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {note && <div className="toast ab-toast">{note}</div>}
       {addSheet()}
       {unitMenu()}
+      {quickMenu()}
       {pickerSheet()}
       {view && faction && sheetOf(view) && (
         <div className="tray-backdrop" onClick={() => setView(null)}>

@@ -124,6 +124,7 @@ export interface ArmyUnitEntry {
   addons?: string[]; // optional extra models bought separately, e.g. "Invader ATV"
   split?: boolean; // split into two units at Declare Battle Formations (Combat Squads …)
   embarkIn?: string; // uid of the TRANSPORT this unit starts the battle embarked within
+  reserves?: boolean; // starts the battle in Strategic Reserves (leaders follow the unit they lead)
 }
 
 export interface ArmyList {
@@ -213,7 +214,7 @@ export interface UnitState {
   abilityPicks?: { pool: string[]; on: string[] }; // "select two of these abilities" (Author of the Codex …)
   used?: Record<string, string>; // ability limits: name -> last use key (battle / round / turn / phase)
   lastHits?: { key: string; ids: string[]; byWeapon?: Record<string, string[]> }; // enemy units hit this phase
-  extraMove?: { max: number; label: string; kind: 'extra' | 'surge'; phase?: string }; // a move granted by an ability, not yet made
+  extraMove?: { max: number; label: string; kind: 'extra' | 'surge'; phase?: string; endIn?: 'dzOrObjective' }; // a move granted by an ability, not yet made
   arriveEarly?: number; // battle round in which this unit may already arrive from Reserves (High King of Fenris …)
   noChargeTurn?: number; // turn in which this unit cannot declare a charge (Meteoric Descent …)
   fellBackFrom?: string[]; // enemy units engaged with this unit when it fell back this turn
@@ -290,6 +291,10 @@ export interface PlayerState {
   secByRound: number[];
   secFixedVp: Record<string, number>;
   secSwapUsed: boolean;
+  /** detachment stratagems the player lets the game use by itself when their moment comes (e.g. Vengeful Animus) */
+  autoStrats?: string[];
+  /** limited stratagems: id -> battle round it was last used ("once per battle round") or -1 (once per battle) */
+  stratLimits?: Record<string, number>;
   armyRules: { name: string; text: string }[];
   detachments: DetachmentData[];
   /** choice-type detachment rules (Combat Doctrines …): what is active and what was used, by detachment name */
@@ -389,6 +394,7 @@ export interface Pool {
   attackBonus?: number; // +A per weapon instance (e.g. Red Thirst)
   critHitOn?: number; // unmodified hit rolls of this or more are critical hits
   ignoreHitMods?: boolean; // ignore negative modifiers to hit / BS / WS
+  ignoreWoundMods?: boolean; // … and to the wound roll
   effS?: number; // Strength after rule modifiers (for "if S > T" effects)
   hazardousAll?: boolean;
   psychic?: boolean;
@@ -461,7 +467,9 @@ export type Window =
   | { kind: 'heroicIntervention'; player: PlayerId }
   | { kind: 'counteroffensive'; player: PlayerId }
   /** abilities that let units react out of turn ("if an enemy unit ends a move within 8\", this unit can make a Normal move") */
-  | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string };
+  | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
+  /** detachment stratagems the player can use right now, at a moment the engine reported ("just after an enemy unit has shot") */
+  | { kind: 'stratReaction'; player: PlayerId; on: string; ctx: { unitId?: string; modelId?: string; killerId?: string }; offers: { stratId: string; units: string[] }[]; label: string; resume?: 'endPhase' };
 
 export interface FightState {
   step: 'pileIn' | 'fight' | 'consolidate';
@@ -473,7 +481,7 @@ export interface FightState {
   movedThisStep: string[];
 }
 
-export interface ShockTest { unitId: string; result: number | null; passed: boolean | null; auto?: boolean }
+export interface ShockTest { unitId: string; result: number | null; passed: boolean | null; auto?: boolean; mod?: number }
 
 export interface GameState {
   version: 3;
@@ -494,7 +502,7 @@ export interface GameState {
   attack: AttackSession | null;
   fight: FightState | null;
   shockTests: ShockTest[];
-  destroyedByTurn: { turn: number; owner: PlayerId; unitId: string; killerId?: string; killerNearObj?: boolean }[];
+  destroyedByTurn: { turn: number; owner: PlayerId; unitId: string; killerId?: string; killerNearObj?: boolean; phase?: Phase }[];
   markers: OperationMarker[];
   modelDeaths: { turn: number; owner: PlayerId; character: boolean; W: number }[];
   pendingActions: PendingAction[];
@@ -517,7 +525,15 @@ export interface GameState {
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;
   /** destroyed models that fight / shoot after the attacking unit has finished (resolved by activations.ts) */
+  /** the last unit to move / attack / declare a charge, for reactions ("just after an enemy unit has shot") */
+  lastAct?: { unitId: string; owner: PlayerId; kind: 'move' | 'attack' | 'charge'; turn: number; phase: Phase; targets: string[]; lost: string[]; halved: string[] };
+  /** stratagem prompts waiting for the current prompt / attack to finish */
+  reactQueue?: { player: PlayerId; on: string; ctx: { unitId?: string; modelId?: string; killerId?: string }; turn: number; phase: Phase }[];
+  /** "turn:phase:moment" keys already offered (so ending a phase twice does not prompt twice) */
+  reactDone?: string[];
   deathQueue?: { unitId: string; modelIds: string[]; targetId: string; kind: 'fight' | 'shoot'; label: string; regain?: string; alive?: boolean }[];
   /** models destroyed this phase that roll to come back at the end of it (Armour of Fate) */
+  /** models made CHARACTERs for a while (Instant of Grace, Birth of a Saga): undone at their player's next Command phase */
+  tempCharacters?: { unitId: string; modelId: string; by: PlayerId }[];
   revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number }[];
 }

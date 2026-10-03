@@ -2,7 +2,7 @@
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems } from './geometry';
-import { alive, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
+import { alive, canUseStratagem, emitReact, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
 import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
@@ -92,7 +92,9 @@ function applyUnitBuffs(pool: Pool, u: UnitState) {
 }
 
 /** "Ignore any or all modifiers to BS/WS and the Hit roll": drop the bad ones once everything is folded in. */
-function finishIgnore(pool: Pool) {
+function finishIgnore(pool: Pool, all = false) {
+  // Unbowed Conviction: ignore every modifier to its rolls (saving throws excepted)
+  if (all) { pool.ignoreHitMods = true; pool.ignoreWoundMods = true; pool.woundMod = Math.max(0, pool.woundMod); }
   if (!pool.ignoreHitMods) return;
   pool.hitMod = Math.max(0, pool.hitMod);
   if (pool.skill !== null && pool.profile.skill !== null) pool.skill = Math.min(pool.skill, pool.profile.skill);
@@ -160,6 +162,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
       if (d > maxRange + 1e-6) continue;
       if (untargetableAt(s, T, d)) continue;
+      if (d > unitFlags(s, T).targetableWithin + 1e-6) continue; // In the Shadow of Great Wings
       if (opt.mode === 'closeQuarters' && !isMV(m) && !engagedWithTarget) continue;
       if (hasAbility(p, 'blast') && tEngaged) continue;
       const indirect = opt.mode === 'indirect' && hasAbility(p, 'indirect-fire');
@@ -207,7 +210,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         applyAttackEffects(s, A, T, pool, fx, inc, 'ranged', d, T_T, woundNeed);
-        finishIgnore(pool);
+        finishIgnore(pool, unitFlags(s, A).ignoreMods);
         pools.set(key, pool);
       }
       pool.models += 1;
@@ -246,8 +249,11 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
   const T_T = targetToughness(T, s);
   const pools = new Map<string, Pool>();
   const fighters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : alive(A);
+  // Angel's Sacrifice: models in Engagement Range of the taunting unit must attack it
+  const taunters = unitFlags(s, T).taunt ? [] : engagedEnemies(s, A).filter((e) => unitFlags(s, e).taunt);
   for (const m of fighters) {
     if (!modelEngagedWith(m, T)) continue;
+    if (taunters.some((e) => modelEngagedWith(m, e))) continue;
     const d = Math.min(...alive(T).map((t) => baseDist(m, t)));
     const melee = meleeWeapons(m);
     const extra = melee.filter((w) => hasAbility(w.profiles[0], 'extra-attacks'));
@@ -282,7 +288,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         applyAttackEffects(s, A, T, pool, fx, inc, 'melee', d, T_T, woundNeed);
-        finishIgnore(pool);
+        finishIgnore(pool, unitFlags(s, A).ignoreMods);
         pools.set(key, pool);
       }
       pool.models += 1;
@@ -416,7 +422,7 @@ function applyDefense(s: GameState, p: Pool) {
     if (late.attacker.length || late.target.length) applyLateEffects(s, A0, T, p, late, s.attack!.kind === 'fight' ? 'melee' : 'ranged', targetToughness(T, s), woundNeed);
   }
   if (has(T, 'enemyHit-1') && !p.autoHit && !p.ignoreHitMods) { p.hitMod = clamp(p.hitMod - 1, -RULES.modifierCaps.hitRoll, RULES.modifierCaps.hitRoll); notes.push('−1 Hit'); }
-  if (has(T, 'enemyWound-1')) { p.woundMod = clamp(p.woundMod - 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll); p.woundNote += ' · Stratagem −1'; }
+  if (has(T, 'enemyWound-1') && !p.ignoreWoundMods) { p.woundMod = clamp(p.woundMod - 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll); p.woundNote += ' · Stratagem −1'; }
   if (has(T, 'enemyAp-1') && p.ap < 0) { p.ap += 1; notes.push('AP แย่ลง 1'); }
   if (notes.length) p.hitNote = [p.hitNote, `Stratagem ฝ่ายรับ: ${notes.join(', ')}`].filter(Boolean).join(' · ');
   // attacker stratagems used after the attack was declared (e.g. from the dice tray)
@@ -598,15 +604,19 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   if (u.transport && m.keywords.includes('TRANSPORT')) transportHook?.(s, u, m);
   if (!alive(u).length) {
     u.status = 'destroyed';
-    s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id });
+    s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id, killerId: s.attack?.attackerId, phase: s.phase });
     onUnitDestroyed(s, u, s.attack?.attackerId);
     log(s, `(ตาย) ${u.name} ถูกทำลาย${killer ? ' โดย ' + killer : ''}`, 'kill');
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
   if (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1)) {
-    const r = d6(s);
+    // Vengeful Animus: no roll, it blows up anyway
+    const sure = emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id });
+    const r = sure ? 6 : d6(s);
     if (r === 6) {
-      log(s, `Deadly Demise (${u.core.deadlyDemise}) ของ ${m.name}: ทอยได้ 6!`, 'roll');
+      log(s, `Deadly Demise (${u.core.deadlyDemise}) ของ ${m.name}: ${sure ? 'ระเบิดแน่นอน' : 'ทอยได้ 6!'}`, 'roll');
+      // Machine Wrath: the wreck makes one last move before it blows
+      emitReact(s, u.owner, 'deadlyDemiseSix', { unitId: u.id, modelId: m.id, six: true });
       for (const v of s.units.filter((x) => x.id !== u.id && onBoard(x))) {
         if (alive(v).some((n) => baseDist(n, m) <= RULES.deadlyDemiseRange)) applyMortalWounds(s, v, rollExpr(s, u.core.deadlyDemise).total, 'Deadly Demise');
       }
@@ -812,6 +822,14 @@ export function finishAttack(s: GameState) {
     if (at.kind === 'fight') A.fought = true;
   }
   s.attack = null;
+  {
+    const L = s.lastAct?.kind === 'attack' && s.lastAct.unitId === A.id && s.lastAct.turn === s.turn && s.lastAct.phase === s.phase ? s.lastAct
+      : (s.lastAct = { unitId: A.id, owner: A.owner, kind: 'attack', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] });
+    if (!L.targets.includes(T.id)) L.targets.push(T.id);
+    if (killed && !L.lost.includes(T.id)) L.lost.push(T.id);
+    if (killed && alive(T).length && alive(T).length * 2 < T.startingStrength && (at.aliveBefore?.length ?? 0) * 2 >= T.startingStrength) L.halved.push(T.id);
+    if (T.models.length === 1 && alive(T).length && alive(T)[0].wounds * 2 < alive(T)[0].profile.W && (at.woundsBefore ?? 0) * 2 >= alive(T)[0].profile.W) L.halved.push(T.id);
+  }
   const info: AttackInfo = {
     hits: at.pools.reduce((a, p) => a + p.hits.filter((h) => h.o !== 'miss').length, 0),
     hitWeapons: [...new Set(at.pools.filter((p) => p.hits.some((h) => h.o !== 'miss')).map((p) => p.weapon))],

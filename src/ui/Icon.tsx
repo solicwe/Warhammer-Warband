@@ -30,6 +30,7 @@ const ICONS = {
   size: <><circle {...S} cx="8" cy="9" r="3" /><circle {...S} cx="17" cy="10" r="2.4" /><path {...S} d="M3 20c0-3 2.3-5 5-5s5 2 5 5M14 20c0-2.5 1.4-4 3.2-4S21 17.5 21 20" /></>,
   duplicate: <><rect {...S} x="8" y="8" width="12" height="12" rx="2" /><path {...S} d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></>,
   delete: <><circle {...S} cx="12" cy="12" r="9" /><path {...S} d="M9 9l6 6M15 9l-6 6" /></>,
+  leave: <><circle {...S} cx="12" cy="12" r="9" /><path {...S} d="M7.5 12h9" /></>,
   wargear: <><path {...S} d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z" /></>,
   enhancement: <path {...S} d="M12 3l2.4 5.6L20 9.3l-4.3 3.9 1.3 6-5-3-5 3 1.3-6L4 9.3l5.6-.7z" />,
   // general

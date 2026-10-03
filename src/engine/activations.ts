@@ -88,6 +88,16 @@ export interface Action {
   splashMortals?: { expr: string; range: number }; // another enemy unit within X" of the target suffers mortal wounds
   shootBack?: boolean; // after the enemy unit has finished its attacks, this unit shoots it (as if it were your Shooting phase)
   log?: string;
+  // stratagem actions
+  if?: string[]; // only when these conditions hold (on the unit using it; "target…" ones on the other unit)
+  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[] }; // one D6 per model engaged with the target: each X+ is a mortal wound
+  ldFail?: Effect[]; // the target takes a Leadership test; failed → these effects (until `until`)
+  setOath?: boolean; // the target becomes your Oath of Moment target
+  pileInRoll?: string; // Pile-in moves up to this many inches (rolled now) this phase
+  unshot?: boolean; // the unit's ranged attacks this turn do not stop it being hidden
+  moveReroll?: boolean; // re-roll the move distance when it is low
+  characterModel?: boolean; // one non-CHARACTER model gains the CHARACTER keyword until your next Command phase
+  reviveModel?: string; // a destroyed model with this keyword is set back up at the end of the phase with full wounds
 }
 
 export interface ActSpec {
@@ -365,6 +375,40 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
   for (const a of acts) {
     const on = a.on === 'self' || !target ? u : a.on === 'attacker' && ctx.killerId ? unitById(s, ctx.killerId) : target;
     if (!on) continue;
+    if (a.if && !a.if.every((c) => cond(c, { s, A: u, T: target ?? undefined, holder: u, bearers: def.bearers }))) continue;
+    if (a.mortalRoll) {
+      const q = a.mortalRoll;
+      const n = alive(u).filter((m) => alive(on).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length;
+      const plus = q.plus && (q.plusIf ?? []).every((c) => cond(c, { s, A: u, T: on, holder: u })) ? q.plus : 0;
+      const dice = rollN(s, Math.max(1, n));
+      const hits = Math.min(q.max ?? 99, dice.filter((v) => v + plus >= q.on).length);
+      log(s, `${def.name}: ทอย [${dice.join(' ')}]${plus ? ` +${plus}` : ''} → ${on.name} โดน ${hits} mortal wound`, 'roll', u.owner);
+      if (hits) applyMortalWounds(s, on, hits, def.name);
+    }
+    if (a.ldFail && !ldTest(s, on, def.name)) for (const e of a.ldFail) addTimed(s, on, { e, label: def.name, until: a.until ?? 'turn', by: u.owner });
+    if (a.setOath) { s.players[u.owner].oathTarget = on.id; log(s, `${def.name}: ${on.name} เป็นเป้า Oath of Moment`, 'info', u.owner); }
+    if (a.pileInRoll) {
+      const n = rollExpr(s, a.pileInRoll).total;
+      addTimed(s, on, { e: { pileIn: n }, label: def.name, until: 'phase', by: u.owner });
+      log(s, `${def.name}: ${on.name} pile-in ได้ ${n}"`, 'roll', u.owner);
+    }
+    if (a.unshot) { on.shotTurn = -99; log(s, `${def.name}: ${on.name} ยังซ่อนตัวได้แม้ยิงไปแล้ว`, 'info', u.owner); }
+    if (a.characterModel) {
+      const m = alive(on).find((x) => !x.isCharacter && /sergeant|leader|champion|headtaker/i.test(x.name)) ?? alive(on).find((x) => !x.isCharacter);
+      if (m) {
+        m.isCharacter = true;
+        if (!m.keywords.includes('CHARACTER')) m.keywords = [...m.keywords, 'CHARACTER'];
+        (s.tempCharacters ??= []).push({ unitId: on.id, modelId: m.id, by: u.owner });
+        log(s, `${def.name}: ${m.name} มี keyword CHARACTER จนถึง Command phase หน้า`, 'info', u.owner);
+      }
+    }
+    if (a.reviveModel) {
+      const m = on.models.find((x) => x.dead && x.keywords.includes(a.reviveModel!)) ?? on.models.find((x) => x.dead && new RegExp(a.reviveModel!, 'i').test(x.name));
+      if (m) {
+        (s.revivals ??= []).push({ unitId: on.id, modelId: m.id, label: def.name, on: 1, wounds: m.profile.W, x: m.x, y: m.y });
+        log(s, `${def.name}: ${m.name} จะกลับมาตอนจบ phase พร้อม wound เต็ม`, 'info', u.owner);
+      }
+    }
     const models = a.bearerOnly ? def.bearers.map((m) => m.id) : undefined;
     for (const e of a.buff ?? []) addTimed(s, on, { e, label: def.name, until: a.until ?? 'phase', by: u.owner, mark: a.mark, models });
     if (a.incoming) {
@@ -417,7 +461,8 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.move) {
       const heavy = a.moveIfHeavyTransport && hasKw(u, 'TRANSPORT') && Math.max(...u.models.map((m) => m.profile.W)) >= 14;
       const expr = heavy ? a.moveIfHeavyTransport! : a.moveIfRiled && isRiled(s, on) ? a.moveIfRiled : a.move;
-      const max = expr === 'M' ? Math.max(0, ...alive(on).map((m) => m.profile.M ?? 0)) + unitFlags(s, on).move : rollExpr(s, expr).total;
+      let max = expr === 'M' ? Math.max(0, ...alive(on).map((m) => m.profile.M ?? 0)) + unitFlags(s, on).move : rollExpr(s, expr).total;
+      if (a.moveReroll && expr !== 'M' && max < 4) { const again = rollExpr(s, expr).total; log(s, `${def.name}: re-roll ระยะเดิน ${max} → ${again}`, 'roll', u.owner); max = again; }
       on.extraMove = { max, label: def.name, kind: 'extra', phase: phaseKey(s) };
       if (a.noCharge) on.cantCharge = true;
       log(s, `${def.name}: ${on.name} เดินได้อีก ${max}"${a.noCharge ? ' (ชาร์จไม่ได้เทิร์นนี้)' : ''}`, 'info', u.owner);

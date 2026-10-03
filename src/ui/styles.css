@@ -490,3 +490,20 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 .map-filter .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .layout-pick.wrap { flex-wrap: wrap; overflow-x: visible; max-height: 420px; overflow-y: auto; }
 .layout-pick.wrap .layout-opt { width: 96px; }
+
+/* army builder: a unit with its Leader / Support in one card, the ⋮ quick menu */
+.ab-group { background: var(--card); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+.ab-group .ab-row.in-group { background: transparent; border-radius: 0; }
+.ab-group .ab-row.in-group + .ab-row.in-group { border-top: 1px solid var(--card3); }
+.ab-art-wrap { position: relative; display: flex; flex-shrink: 0; }
+.ab-badge-r { position: absolute; left: 4px; bottom: 4px; width: 22px; height: 22px; border-radius: 50%; background: #1f6fb2; color: #fff; font: 700 12px/22px var(--sans); text-align: center; box-shadow: 0 0 0 2px #fff; }
+.ab-pop-backdrop { position: fixed; inset: 0; z-index: 60; }
+.ab-pop { position: fixed; background: #fff; color: #111; border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.28); overflow: hidden; display: flex; flex-direction: column; }
+.ab-pop button { display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 0 18px; border: none; background: transparent; color: inherit; font: 500 16px var(--serif, var(--sans)); text-align: left; cursor: pointer; }
+.ab-pop button + button { border-top: 1px solid #eee; }
+.ab-pop button:active, .ab-pop button:hover { background: #f3f3f3; }
+.ab-pop button.on { color: #1f6fb2; }
+.ab-pop button.danger { color: #111; }
+.ab-pop .ab-pop-val { margin-left: auto; color: #777; font-size: 14px; }
+.ab-pop-head { padding: 12px 18px 6px; font: 600 13px var(--sans); color: #666; }
+.ab-panel-title { font: 700 15px var(--sans); margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--card3); }

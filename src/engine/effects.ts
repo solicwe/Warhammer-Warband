@@ -118,6 +118,18 @@ export interface Effect {
   rangeBonusIf?: { ability: string; add: number }; // aura range grows when the holder also has this ability
   embarkedOc?: boolean; // add the OC of models embarked within this model
   ldSet?: number;
+  // stratagem effects
+  ocMultiply?: number; // "double the Objective Control characteristic"
+  mustStay?: boolean; // must Remain Stationary this turn
+  advanceFixed?: number; // Advance: no roll, add this many inches instead
+  pileIn?: number; consolidate?: number; // Pile-in / Consolidation moves up to this far instead of 3"
+  freeConsolidate?: boolean; // consolidation does not need to end closer to the closest enemy model
+  taunt?: boolean; // enemy models in Engagement Range must target this unit with all their attacks
+  targetableWithin?: number; // can only be targeted by ranged attacks from models within this range
+  ignoreMods?: boolean; // ignore modifiers to its characteristics and rolls (not saving throws)
+  forceShockAura?: number; // in the opponent's next Command phase, enemy units this close must take a Battle-shock test
+  shockOnKill?: boolean; // after its attacks destroy models, that unit takes a Battle-shock test
+  onlyTargetMarked?: string; // after Advancing / Falling Back it may only shoot or charge units with this mark (Heresy Undone: "auspex")
   statM?: number; // fixed change to the bearers' Move characteristic
   rangeBonus?: number; // ranged weapons +X" Range
   strengthPer5Models?: boolean; // +1 S for every 5 models in the unit (or embarked within it)
@@ -424,6 +436,14 @@ function closestEnemy(s: GameState, A: UnitState, T: UnitState): boolean {
   return bestId === T.id;
 }
 
+/** The enemy unit (of `p`'s opponent) that last moved, attacked or declared a charge, this phase. */
+export function lastEnemyAct(s: GameState, p: PlayerId) {
+  const a = s.lastAct;
+  if (!a || a.owner === p || a.turn !== s.turn || a.phase !== s.phase) return null;
+  const u = s.units.find((x) => x.id === a.unitId);
+  return u ? { a, u } : null;
+}
+
 export function cond(c: string, x: Ctx): boolean {
   const { s, A, T } = x;
   if (c.startsWith('!')) return !cond(c.slice(1), x);
@@ -451,8 +471,28 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('armyHas:')) return s.units.some((f) => f.owner === A.owner && f.status !== 'destroyed' && f.sources.includes(c.slice(8)));
   if (c.startsWith('armyOnBoard:')) return boardUnits(s, A.owner).some((f) => f.sources.includes(c.slice(12)) && alive(f).some((m) => m.source === c.slice(12)));
   if (c.startsWith('disembarkedFrom:')) { const t = A.disembarkedFrom && A.disembarkedTurn === s.turn ? s.units.find((f) => f.id === A.disembarkedFrom) : undefined; return !!t && t.sources.some((n) => wk(n).includes(wk(c.slice(16)))); }
+  if (c.startsWith('all:')) return c.slice(4).split('&&').every((alt) => cond(alt, x));
+  if (c.startsWith('maxWBelow:')) return Math.max(...alive(A).map((m) => m.profile.W)) < Number(c.slice(10));
+  if (c.startsWith('kw:')) return c.slice(3).split('|').some((k) => A.keywords.includes(k) || A.factionKeywords.includes(k) || A.sources.some((n) => wk(n) === wk(k)) || alive(A).some((m) => m.keywords.includes(k)));
+  if (c.startsWith('nearLast:')) { const L = lastEnemyAct(s, A.owner); return !!L && onBoard(L.u) && unitDistance(A, L.u) <= Number(c.slice(9)) + 1e-6; }
+  if (c.startsWith('doctrine:')) return cond(`detActive:${c.slice(9)}`, x) || (A.timed ?? []).some((t) => t.mark === c);
   if (c.startsWith('targetKwAll:')) return !!T && c.slice(12).split('|').some((k) => alive(T).every((n) => n.keywords.includes(k)));
   switch (c) {
+    case 'advanced': return A.move === 'advance';
+    case 'fellBack': return A.move === 'fallback';
+    case 'targetOfAttack': return s.attack?.targetId === A.id;
+    case 'onControlledObjective': return s.objectives.some((o) => o.controller === A.owner && unitInRange(s, A, o));
+    case 'hasEmbarked': return s.units.some((e) => e.embarkedIn === A.id && e.status === 'embarked');
+    case 'heavyTransport': return !!A.transport && Math.max(...A.models.map((m) => m.profile.W)) >= 14;
+    case 'torrentWeapon': return alive(A).some((m) => m.weapons.some((w) => w.profiles.some((p) => p.abilities.some((ab) => ab.startsWith('torrent')))));
+    case 'engagedWithLast': { const L = lastEnemyAct(s, A.owner); return !!L && engagedEnemies(s, A).some((e) => e.id === L.u.id); }
+    case 'targetOfLast': return !!lastEnemyAct(s, A.owner)?.a.targets.includes(A.id);
+    case 'lostToLast': return !!lastEnemyAct(s, A.owner)?.a.lost.includes(A.id);
+    case 'halvedByLast': return !!lastEnemyAct(s, A.owner)?.a.halved.includes(A.id);
+    case 'engaged': return engagedEnemies(s, A).length > 0;
+    case 'onVowed': return (s.players[A.owner].vowed ?? []).some((id) => { const o = s.objectives.find((q) => q.id === id); return !!o && unitInRange(s, A, o); });
+    case 'entrenched': return alive(A).some((m) => withinTerrain(s, m).length > 0) && A.setUpTurn !== s.turn && (A.maxMoved ?? 0) <= 3 + 1e-6;
+    case 'killedThisPhase': return s.destroyedByTurn.some((d) => d.turn === s.turn && d.phase === s.phase && d.killerId === A.id);
     case 'charged': return A.chargedTurn === s.turn;
     case 'stationary': return A.move === 'stationary' || (A.lastStationaryTurn !== undefined && s.turn - A.lastStationaryTurn <= 1);
     case 'notAdvanced': return A.move !== 'advance';
@@ -670,6 +710,7 @@ function defenceInto(pool: Pool, def: Active[], strength: number, toughness: num
     let wm = df.wound ?? 0;
     if ((df.woundIfStronger || df.woundMinusIfStronger) && strength > toughness) wm += df.woundIfStronger ?? -1;
     if (df.woundIfStrongerOrEqual && strength >= toughness) wm += df.woundIfStrongerOrEqual;
+    if (pool.ignoreWoundMods && wm < 0) wm = 0;
     if (wm) { pool.woundMod = clamp(pool.woundMod + wm, -woundCap, woundCap); notes.push(`${label}: ${wm} wound`); }
     if (df.ap && pool.ap < 0) { pool.ap = Math.min(0, pool.ap + df.ap); notes.push(`${label}: AP แย่ลง ${df.ap}`); }
     if (df.minHit && !pool.autoHit) { pool.minHitUnmodified = Math.max(pool.minHitUnmodified ?? 0, df.minHit); notes.push(`${label}: ทอย hit ${df.minHit - 1} ลงมาพลาด`); }
@@ -793,7 +834,8 @@ export function rollMods(s: GameState, u: UnitState) {
     rerollCharge: es.some((e) => e.rerollCharge),
     advanceSix: es.some((e) => e.advanceSix),
     advanceBonus: es.reduce((a, e) => a + (e.advanceBonus ?? 0), 0),
-    chargeBonus: es.reduce((a, e) => a + (e.chargeBonus ?? 0), 0),
+    chargeBonus: es.reduce((a, e) => a + (es.some((x) => x.ignoreMods) ? Math.max(0, e.chargeBonus ?? 0) : e.chargeBonus ?? 0), 0),
+    advanceFixed: Math.max(0, ...es.map((e) => e.advanceFixed ?? 0)),
     rerollShock: es.some((e) => e.rerollShock),
     advanceSelfMortals: es.find((e) => e.advanceSelfMortals)?.advanceSelfMortals,
   };
@@ -808,7 +850,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     deepStrike: es.some((e) => e.deepStrike),
     fightsFirst: es.some((e) => e.fightsFirst),
     scouts: Math.max(0, ...es.map((e) => e.scouts ?? 0)),
-    move: es.reduce((a, e) => a + (e.move ?? 0), 0),
+    move: es.some((e) => e.ignoreMods) ? es.reduce((a, e) => a + Math.max(0, e.move ?? 0), 0) : es.reduce((a, e) => a + (e.move ?? 0), 0),
     ld: es.reduce((a, e) => a + (e.ld ?? 0), 0),
     toughness: es.reduce((a, e) => a + (e.toughness ?? 0), 0),
     cannotFallBack: es.some((e) => e.cannotFallBack),
@@ -837,6 +879,16 @@ export function unitFlags(s: GameState, u: UnitState) {
     grounded: es.some((e) => e.grounded),
     oppMoveIngress: es.some((e) => e.oppMoveIngress),
     oathBackup: es.some((e) => e.oathBackup),
+    mustStay: es.some((e) => e.mustStay),
+    pileIn: Math.max(0, ...es.map((e) => e.pileIn ?? 0)),
+    consolidate: Math.max(0, ...es.map((e) => e.consolidate ?? 0)),
+    freeConsolidate: es.some((e) => e.freeConsolidate),
+    taunt: es.some((e) => e.taunt),
+    targetableWithin: Math.min(99, ...es.map((e) => e.targetableWithin ?? 99)),
+    ignoreMods: es.some((e) => e.ignoreMods),
+    forceShockAura: Math.max(0, ...es.map((e) => e.forceShockAura ?? 0)),
+    shockOnKill: es.some((e) => e.shockOnKill),
+    onlyTargetMarked: es.find((e) => e.onlyTargetMarked)?.onlyTargetMarked,
   };
 }
 
@@ -895,6 +947,7 @@ export function ocOf(s: GameState, u: UnitState): (m: ModelState) => number {
     for (const x of fx) if (x.e.ocSet !== undefined) oc = Math.max(oc, x.e.ocSet);
     for (const x of fx) oc += x.e.oc ?? 0;
     if (fx.some((x) => x.e.embarkedOc)) oc += s.units.filter((p) => p.embarkedIn === u.id && p.status === 'embarked').reduce((a, p) => a + alive(p).reduce((b, n) => b + (n.profile.OC ?? 0), 0), 0);
+    oc *= Math.max(1, ...fx.map((x) => x.e.ocMultiply ?? 1));
     if (fx.some((x) => x.e.ocHalve)) oc = Math.ceil(oc / 2);
     return Math.max(0, oc);
   };

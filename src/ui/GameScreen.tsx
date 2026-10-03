@@ -14,6 +14,7 @@ import {
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
+  pileDistance,
 } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, unitSelected, useActByKey, useFreeDie, type Trigger,
@@ -25,7 +26,8 @@ import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
 import { RollOverlay, SecondaryCard } from './RollOverlay';
 import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/secondaries';
-import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem } from '../engine/stratagems';
+import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../engine/stratagems';
+import { StratUseCard } from './StratUse';
 import { endUnitShooting, rangedWeaponNames, rerollAttackCount, toggleRerollPick } from '../engine/attack';
 import { polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../engine/deploy';
@@ -265,7 +267,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const m = modeUnit.models.find((x) => x.id === id)!;
     if (mode.k === 'move') return maxMoveDistance(s, modeUnit, mode.kind, m, { fly: mode.fly });
     if (mode.k === 'charge') return modeUnit.chargeRoll ?? 0;
-    if (mode.k === 'pile') return mode.kind === 'pileIn' ? RULES.pileIn.distance : RULES.consolidate.distance;
+    if (mode.k === 'pile') return pileDistance(s, U(mode.unitId), mode.kind);
     return Infinity;
   };
   const draftKind: MoveKind | null = mode?.k === 'move' ? mode.kind : mode?.k === 'charge' ? 'charge' : mode?.k === 'pile' ? mode.kind : null;
@@ -643,6 +645,27 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             </div>
           ))}
           {skip}
+        </>
+      );
+    }
+    if (w.kind === 'stratReaction') {
+      const P = s.players[p];
+      const strats = P.detachments.flatMap((d) => d.stratagems.map((st) => ({ st, d: d.name })));
+      return (
+        <>
+          <div className="handoff">{pName(s, p)}: {w.label} — ใช้ stratagem ไหม? ({P.cp} CP)</div>
+          {w.offers.map((o) => {
+            const x = strats.find((q) => q.st.id === o.stratId);
+            if (!x) return null;
+            return (
+              <StratUseCard key={o.stratId} s={s} p={p} st={x.st} rule={stratRuleFor(s, p, x.st)} detachment={x.d} react ctx={w.ctx}
+                units={o.units.map((id) => U(id))}
+                auto={P.autoStrats?.includes(o.stratId)}
+                onAuto={() => act((g) => { const GP = g.players[p]; GP.autoStrats = GP.autoStrats?.includes(o.stratId) ? GP.autoStrats.filter((q) => q !== o.stratId) : [...(GP.autoStrats ?? []), o.stratId]; })}
+                onUse={(unitId, use) => { act((g) => answerReaction(g, o.stratId, unitId, use)); flash(`ใช้ ${x.st.name} แล้ว`); }} />
+            );
+          })}
+          <button className="btn" onClick={() => act((g) => answerReaction(g, null))}>ไม่ใช้</button>
         </>
       );
     }
@@ -1118,14 +1141,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const pileTargets = isEngaged(s, u) ? engagedEnemies(s, u) : boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.pileIn.targetRange);
     const auto = () => {
       let add: Paths;
-      if (cm?.mode === 'objective' && cm.objective) add = autoApproach(s, u, [], RULES.consolidate.distance, { objective: polyCentroid(objectiveTerrain(s, cm.objective).poly) });
-      else add = autoApproach(s, u, cm ? cm.enemies : pileTargets, mode.kind === 'pileIn' ? RULES.pileIn.distance : RULES.consolidate.distance);
+      if (cm?.mode === 'objective' && cm.objective) add = autoApproach(s, u, [], pileDistance(s, u, 'consolidate'), { objective: polyCentroid(objectiveTerrain(s, cm.objective).poly) });
+      else add = autoApproach(s, u, cm ? cm.enemies : pileTargets, pileDistance(s, u, mode.kind));
       setDraft(mergePaths(startPaths(u), add));
       setCheck(null);
     };
     return (
       <>
-        <div className="small"><b>{u.name}</b> · {mode.kind === 'pileIn' ? `Pile-in ${RULES.pileIn.distance}"${mode.overrun ? ' (Overrun)' : ''}` : `Consolidate ${RULES.consolidate.distance}" — โหมด: ${cm?.mode ?? '-'}`}</div>
+        <div className="small"><b>{u.name}</b> · {mode.kind === 'pileIn' ? `Pile-in ${pileDistance(s, u, 'pileIn')}"${mode.overrun ? ' (Overrun)' : ''}` : `Consolidate ${pileDistance(s, u, 'consolidate')}" — โหมด: ${cm?.mode ?? '-'}`}</div>
         {moveControls(mode.kind === 'pileIn' ? 'pile-in' : 'consolidate', () => confirmMove(mode.kind, () => {
           if (!mode.overrun) return;
           const eng = act((g) => {
@@ -1549,48 +1572,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         const all = stratagemsNow(s, p);
         const tgtUnit = stratUnit ? s.units.find((u) => u.id === stratUnit && onBoard(u)) : undefined;
         const rows = all.map((x) => ({ ...x, why: stratagemBlock(s, p, x.st, tgtUnit) }));
-        const timingOk = (why: string | null) => !why || /เลือกหน่วย|ต้องเป็นหน่วย|ต้องเลือกหน่วยศัตรู|CP ไม่พอ|ไม่ตรงกับ TARGET/.test(why);
+        const timingOk = (why: string | null) => !why || /เลือกหน่วย|ต้องเป็นหน่วย|ต้องเลือกหน่วยศัตรู|CP ไม่พอ|ไม่ตรงกับ TARGET|ไม่เข้าเงื่อนไข|ไม่มีหน่วยศัตรู/.test(why);
         const now = rows.filter((r) => timingOk(r.why));
         const later = rows.filter((r) => !timingOk(r.why));
-        const card = (r: typeof rows[number]) => {
-          const pickable = r.plan.target === 'enemy' ? boardUnits(s, other(p)) : r.plan.target === 'own' ? boardUnits(s, p) : [];
-          const cost = stratCost(s, r.st.id, r.plan.target === 'own' ? tgtUnit : undefined, r.st.cp);
-          return (
-            <div key={r.st.id} className={`strat-card ${timingOk(r.why) ? '' : 'off'}`}>
-              <div className="row">
-                <b className="grow">{r.st.name}</b>
-                <span className={`chip ${cost !== r.st.cp ? 'warn' : ''}`}>{cost !== r.st.cp ? <><s>{r.st.cp}</s> {cost}</> : r.st.cp}CP</span>
-              </div>
-              <div className="tiny muted">{r.detachment} · {r.st.turn} · {r.st.phase}</div>
-              <div className="strat-fx">
-                <span className={`chip ${r.rule.status === 'auto' ? 'good' : r.rule.status === 'partial' ? 'warn' : ''}`}>{r.rule.status === 'auto' ? 'ระบบทำให้' : r.rule.status === 'partial' ? '◐ ระบบทำส่วนหลัก' : 'ทำตามข้อความเอง'}</span>
-                {(r.rule.buffs ?? []).map((k) => <span key={k} className="chip good">{EFFECT_LABEL[k] ?? k}</span>)}
-                {r.rule.note && <span className="tiny muted">{r.rule.note}</span>}
-              </div>
-              <details><summary className="tiny">ข้อความเต็ม</summary><div className="sheet tiny">{r.st.text}</div></details>
-              {timingOk(r.why) && bots.includes(p) && <div className="tiny muted"><Icon name="bot" size={13} /> บอทตัดสินใจใช้ stratagem นี้เอง</div>}
-              {timingOk(r.why) && !bots.includes(p) && (
-                <>
-                  {pickable.length > 0 && (
-                    <div className="unit-strip">
-                      {pickable.map((u) => (
-                        <button key={u.id} className={`unit-pill ${stratUnit === u.id ? 'sel' : ''}`} onClick={() => setStratUnit(stratUnit === u.id ? '' : u.id)}>
-                          <span className={u.owner ? 'p1' : 'p0'}>●</span> {u.name.length > 22 ? u.name.slice(0, 21) + '…' : u.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  <button className="btn primary" disabled={!!r.why} onClick={() => {
-                    const eff = act((g) => applyDetachmentStratagem(g, p, r.st, tgtUnit?.id));
-                    flash(eff && eff.length ? `${r.st.name}: ${eff.map((k) => EFFECT_LABEL[k] ?? k).join(', ')}` : `ใช้ ${r.st.name} แล้ว — ทำตามข้อความ`);
-                    setShowStrats(false);
-                  }}>{r.why ? r.why : `ใช้ ${r.st.name}${tgtUnit && r.plan.target !== 'none' ? ` → ${tgtUnit.name}` : ''}`}</button>
-                </>
-              )}
-              {!timingOk(r.why) && <div className="tiny muted">{r.why}</div>}
-            </div>
-          );
-        };
+        const card = (r: typeof rows[number]) => (
+          <StratUseCard key={r.st.id + (stratUnit || '')} s={s} p={p} st={r.st} rule={r.rule} detachment={r.detachment} bot={bots.includes(p)}
+            units={(r.plan.target === 'own' ? stratCandidates(s, p, r.st) : r.plan.target === 'enemy' && !r.rule.enemy ? boardUnits(s, other(p)) : []).filter((u) => !tgtUnit || u.id === tgtUnit.id || u.owner !== tgtUnit.owner)}
+            auto={P.autoStrats?.includes(r.st.id)}
+            onAuto={r.rule.react ? () => act((g) => { const GP = g.players[p]; GP.autoStrats = GP.autoStrats?.includes(r.st.id) ? GP.autoStrats.filter((x) => x !== r.st.id) : [...(GP.autoStrats ?? []), r.st.id]; }) : undefined}
+            onUse={(unitId, use) => {
+              const eff = act((g) => applyDetachmentStratagem(g, p, r.st, unitId, use));
+              flash(eff && eff.length ? `${r.st.name}: ${eff.map((k) => EFFECT_LABEL[k] ?? k).join(', ')}` : `ใช้ ${r.st.name} แล้ว`);
+              setShowStrats(false);
+            }} />
+        );
         return (
           <div className="tray-backdrop" onClick={() => setShowStrats(false)}>
             <div className="tray" onClick={(e) => e.stopPropagation()}>

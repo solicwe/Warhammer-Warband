@@ -110,3 +110,14 @@ export function wantsCR(s: GameState, player: PlayerId, what: AutoReroll, unit?:
 export function withinTerrain(s: GameState, m: ModelState, categories: string[] = ['exposed', 'light', 'dense']) {
   return s.terrain.filter((t) => categories.includes(t.category) && circleTouchesPoly(m, m.r, t.poly));
 }
+
+// ---------- stratagem reactions ----------
+/** Moments a stratagem can react to (stratagems.ts registers the handler; the engine only reports the moment). */
+export type ReactOn = 'enemyMoved' | 'enemyShot' | 'enemyChargeDeclared' | 'enemyChargePhaseEnd' | 'fightPhaseEnd' | 'chargeMoveEnd' | 'ownAttacked'
+  | 'ownDestroyed' | 'modelDestroyed' | 'oathDestroyed' | 'deadlyDemise' | 'deadlyDemiseSix' | 'enemyFallBack' | 'commandStart' | 'fightStart';
+export interface ReactCtx { unitId?: string; modelId?: string; killerId?: string; six?: boolean }
+type ReactHook = (s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx) => boolean;
+let reactHook: ReactHook | null = null;
+export const setReactHook = (fn: ReactHook) => { reactHook = fn; };
+/** Tell the reaction system a moment has come for player p. True when p used a stratagem / a prompt was opened. */
+export const emitReact = (s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx = {}) => (reactHook ? reactHook(s, p, on, ctx) : false);

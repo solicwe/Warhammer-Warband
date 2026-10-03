@@ -8,6 +8,7 @@ import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
 import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointInPoly, pointSegDist, polyCentroid, segSegDist } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
+  emitReact, type ReactOn,
 } from './state';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
@@ -154,6 +155,17 @@ export function createGame(o: NewGameOptions): GameState {
       }
     }
   }
+  // Declare Battle Formations: units set aside in Strategic Reserves in the army builder
+  for (const p of [0, 1] as PlayerId[]) {
+    for (const e of o.lists[p].units) {
+      if (!e.reserves || e.attachTo || e.embarkIn) continue;
+      for (const u of s.units.filter((x) => (x.id === `p${p}-${e.uid}` || x.id === `p${p}-${e.uid}-b`) && x.status === 'pending')) {
+        if (reservesPoints(s, p) + u.pts > armyPoints(s, p) * RULES.reserves.maxPointsFraction) { log(s, `${u.name}: Strategic Reserves เต็ม (เกิน ${RULES.reserves.maxPointsFraction * 100}%) — วางบนสนามแทน`, 'info', p); continue; }
+        u.status = 'reserves';
+        log(s, `${u.name} เริ่มเกมใน Strategic Reserves`, 'info', p);
+      }
+    }
+  }
   // Declare Battle Formations: abilities fixed for the battle, "choose two of these", Master of the Fleet …
   applyStaticEffects(s);
   initAbilityChoices(s);
@@ -210,6 +222,12 @@ function engagedAt(s: GameState, u: UnitState, pos: Map<string, Pt>, enemy?: Uni
 
 export interface MoveOptions { fly?: boolean; targets?: string[]; maxOverride?: number }
 
+/** How far a Pile-in / Consolidation move may go (3", or more with stratagems such as Shock Onslaught). */
+export function pileDistance(s: GameState, u: UnitState, kind: 'pileIn' | 'consolidate'): number {
+  const f = unitFlags(s, u);
+  return kind === 'pileIn' ? Math.max(RULES.pileIn.distance, f.pileIn) : Math.max(RULES.consolidate.distance, f.consolidate);
+}
+
 export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOptions = {}): number {
   if (opt.maxOverride !== undefined) return opt.maxOverride;
   const M = (m.profile.M ?? 0) + unitFlags(s, u).move;
@@ -217,8 +235,7 @@ export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: M
   if (kind === 'normal' || kind === 'fallback') max = M;
   else if (kind === 'advance') max = M + (u.advanceRoll ?? 0);
   else if (kind === 'charge') max = u.chargeRoll ?? 0;
-  else if (kind === 'pileIn') max = RULES.pileIn.distance;
-  else if (kind === 'consolidate') max = RULES.consolidate.distance;
+  else if (kind === 'pileIn' || kind === 'consolidate') max = pileDistance(s, u, kind);
   else if (kind === 'scout') max = Math.max(u.core.scouts ?? 0, unitFlags(s, u).scouts);
   else if (kind === 'extra' || kind === 'surge') max = u.extraMove?.max ?? 0;
   if (opt.fly && ['normal', 'advance', 'fallback', 'charge'].includes(kind) && !u.core.hover) max -= RULES.flyTakeToSkiesPenalty;
@@ -249,6 +266,13 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     if (enemiesNear) errors.push(`Scout move ต้องจบห่างศัตรูทุกหน่วยเกิน ${RULES.reserves.enemyDistance}"`);
   }
   if (['normal', 'advance', 'fallback', 'ingress', 'extra', 'surge'].includes(kind) && eng.length) { errors.push(`จบการเดินต้องไม่อยู่ใน engagement range (${RULES.engagementRange}") ของศัตรู`); }
+  // Rigid Discipline: the move must end wholly in the deployment zone or within range of an objective
+  if (kind === 'extra' && u.extraMove?.endIn === 'dzOrObjective') {
+    const at = alive(u).map((m) => { const pth = paths.get(m.id); return { ...m, ...(pth ? pth[pth.length - 1] : {}) }; });
+    const inDz = at.every((m) => circleWhollyInPoly(m, m.r, zoneOf(s, u.owner)));
+    const onObj = s.objectives.some((o) => at.some((m) => dist(m, o) <= 3 + m.r + 1e-6));
+    if (!inDz && !onObj) errors.push('ต้องจบใน deployment zone ทั้งหน่วย หรือในระยะ objective');
+  }
   if (kind === 'charge' || kind === 'heroic' as MoveKind) {
     const targets = (opt.targets ?? []).map((id) => unitById(s, id));
     for (const t of targets) if (!eng.includes(t)) errors.push(`ต้องจบ engaged กับเป้า ${t.name}`);
@@ -450,14 +474,23 @@ export function startTurn(s: GameState, p: PlayerId) {
 function startCommand(s: GameState) {
   s.phase = 'command';
   expireTimed(s, 'commandStart', s.active);
+  // Instant of Grace / Birth of a Saga end
+  for (const t of (s.tempCharacters ?? []).filter((x) => x.by === s.active)) {
+    const m = s.units.find((u) => u.id === t.unitId)?.models.find((x) => x.id === t.modelId);
+    if (m) { m.isCharacter = false; m.keywords = m.keywords.filter((k) => k !== 'CHARACTER'); }
+  }
+  if (s.tempCharacters) s.tempCharacters = s.tempCharacters.filter((x) => x.by !== s.active);
   for (const p of [0, 1] as PlayerId[]) s.players[p].cp += RULES.cpPerCommandPhase;
   log(s, `+${RULES.cpPerCommandPhase} CP ทั้งสองฝ่าย (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
   fireFor(s, 'commandStart', s.active);
   drawUpTo(s, s.active);
+  // Terrifying Proficiency: enemy units near the marked unit must test too (−1 when Below Half-strength)
+  const terrors = boardUnits(s, other(s.active)).filter((e) => unitFlags(s, e).forceShockAura > 0);
+  const forced = (u: UnitState) => terrors.some((e) => unitDistance(u, e) <= unitFlags(s, e).forceShockAura + 1e-6);
   s.shockTests = s.units
     .filter((u) => u.owner === s.active && u.status !== 'destroyed' && u.status !== 'pending' && alive(u).length)
-    .filter((u) => u.battleShocked || strength(u) === 'half' || strength(u) === 'belowHalf')
-    .map((u) => ({ unitId: u.id, result: null, passed: null }));
+    .filter((u) => u.battleShocked || strength(u) === 'half' || strength(u) === 'belowHalf' || (onBoard(u) && forced(u)))
+    .map((u) => ({ unitId: u.id, result: null, passed: null, ...(forced(u) && strength(u) === 'belowHalf' ? { mod: -1 } : {}) }));
 }
 
 export function bestLd(u: UnitState, s?: GameState) {
@@ -475,13 +508,14 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
     t.result = 0; t.passed = true; t.auto = true;
   } else {
     const ld = bestLd(u, s);
+    const mod = unitFlags(s, u).ignoreMods ? 0 : t.mod ?? 0;
     let r = rollN(s, 2);
-    t.result = r[0] + r[1];
+    t.result = r[0] + r[1] + mod;
     t.passed = t.result >= ld;
     if (!t.passed && rollMods(s, u).rerollShock) {
       log(s, `${u.name}: re-roll Battle-shock (ability)`, 'info', u.owner);
       r = rollN(s, 2);
-      t.result = r[0] + r[1];
+      t.result = r[0] + r[1] + mod;
       t.passed = t.result >= ld;
     }
     pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${t.result} vs Ld ${ld}+ → ${t.passed ? 'ผ่าน' : 'ไม่ผ่าน!'}`, good: t.passed });
@@ -519,16 +553,36 @@ export function endPhase(s: GameState) {
   } else if (s.phase === 'shooting') {
     s.phase = 'charge';
   } else if (s.phase === 'charge') {
+    if (phaseEndReactions(s, 'enemyChargePhaseEnd', [other(s.active)])) return;
     s.phase = 'fight';
     startFight(s);
     openWindow(s, 'endOfCharge');
   } else if (s.phase === 'fight') {
+    if (phaseEndReactions(s, 'fightPhaseEnd', [other(s.active), s.active])) return;
     fireFor(s, 'fightEnd', 'both');
     fireFor(s, 'opponentFightEnd', other(s.active));
     s.fight = null;
     endTurn(s);
   }
   s.units.forEach((u) => { u.buffs = u.buffs.filter((b) => b.until !== 'phase'); u.weaponsFired = []; });
+}
+
+/** Stratagems used "at the end of the … phase": offered once, before the phase actually ends. True = wait for a prompt. */
+function phaseEndReactions(s: GameState, on: ReactOn, players: PlayerId[]): boolean {
+  const key = `${s.turn}:${s.phase}:${on}`;
+  const done = (s.reactDone ??= []);
+  if (done.includes(key)) return false;
+  done.push(key);
+  if (done.length > 12) done.splice(0, done.length - 12);
+  for (const [i, p] of players.entries()) {
+    emitReact(s, p, on, {});
+    if (s.window) {
+      for (const q of players.slice(i + 1)) (s.reactQueue ??= []).push({ player: q, on, ctx: {}, turn: s.turn, phase: s.phase });
+      if (s.window.kind === 'stratReaction') s.window.resume = 'endPhase';
+      return true;
+    }
+  }
+  return false;
 }
 
 function endTurn(s: GameState) {
@@ -581,6 +635,12 @@ function endBattle(s: GameState) {
 
 export function rollAdvance(s: GameState, u: UnitState) {
   const det = rollMods(s, u);
+  if (det.advanceFixed) {
+    // Full Throttle / Target Sighted: no Advance roll, a fixed bonus instead
+    u.advanceRoll = det.advanceFixed;
+    log(s, `${u.name} Advance: ไม่ต้องทอย +${det.advanceFixed}"`, 'info', u.owner);
+    return;
+  }
   const raw = det.advanceSix ? 6 : d6(s);
   const bonus = (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0) + det.advanceBonus;
   u.advanceRoll = raw + bonus;
@@ -621,6 +681,8 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
     m.x = end.x; m.y = end.y;
   }
   if (['normal', 'advance', 'fallback', 'stationary', 'ingress'].includes(kind)) u.move = kind;
+  if (['normal', 'advance', 'fallback'].includes(kind)) s.lastAct = { unitId: u.id, owner: u.owner, kind: 'move', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
+  const reactAfterMove = ['normal', 'advance', 'fallback'].includes(kind) && u.owner === s.active && s.phase === 'movement';
   if (kind === 'extra' || kind === 'surge') { u.extraMove = undefined; offerDone(s, u.id); }
   if (kind === 'scout') u.scoutDone = true;
   u.maxMoved = Math.max(u.maxMoved, maxMoved);
@@ -645,12 +707,16 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
     offerReactions(s, 'enemyMovedNear', u);
     if (kind === 'fallback' && engagedBefore.length) offerReactions(s, 'enemyFellBack', u, engagedBefore.filter((e) => !isEngaged(s, e)));
   }
+  // stratagems: "just after an enemy unit ends a Normal, Advance or Fall Back move" (Squad Tactics …)
+  if (reactAfterMove) emitReact(s, other(u.owner), 'enemyMoved', { unitId: u.id });
 }
 
 /** A unit is selected to make a Normal / Advance / Fall Back move: rules that happen at that moment
  *  (Transfixing Gaze's Leadership test, Stasis Bomb's slowed roll). Returns false if it must Remain Stationary instead. */
 export function beginMove(s: GameState, u: UnitState, kind: 'normal' | 'advance' | 'fallback'): boolean {
+  if (kind === 'fallback' && u.owner === s.active) emitReact(s, other(u.owner), 'enemyFallBack', { unitId: u.id });
   const f = unitFlags(s, u);
+  if (f.mustStay) { log(s, `${u.name} ต้อง Remain Stationary เทิร์นนี้`, 'info', u.owner); remainStationary(s, u); return false; }
   if (kind === 'fallback' && f.fallBackLdTest && !ldTest(s, u, 'Transfixing Gaze')) { remainStationary(s, u); return false; }
   if (f.slowed && (u.used ??= {}).slowed !== String(s.turn)) {
     u.used.slowed = String(s.turn);
@@ -728,6 +794,8 @@ export function chargeEligibility(s: GameState, u: UnitState): string | null {
 
 export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: number) {
   u.declaredCharge = true;
+  s.lastAct = { unitId: u.id, owner: u.owner, kind: 'charge', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
+  const declaredInOwnTurn = u.owner === s.active && s.phase === 'charge';
   const r = rollN(s, 2);
   let total = r[0] + r[1];
   if (cap !== undefined) total = Math.min(total, cap);
@@ -737,6 +805,7 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `ชาร์จได้ ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });
   log(s, `${u.name} ประกาศชาร์จ: 2D6 [${r.join('+')}] = ${r[0] + r[1]}${fly ? ' (บิน −2)' : ''}${cap !== undefined && r[0] + r[1] > cap ? ` → สูงสุด ${cap}` : ''}`, 'roll', u.owner);
+  if (declaredInOwnTurn) emitReact(s, other(u.owner), 'enemyChargeDeclared', { unitId: u.id });
   return r;
 }
 
@@ -762,8 +831,10 @@ export function commitCharge(s: GameState, u: UnitState, paths: Map<string, Pt[]
   commitMove(s, u, 'charge', paths);
   u.chargedTurn = s.turn;
   u.chargeTargets = targets;
+  if (s.lastAct?.unitId === u.id && s.lastAct.kind === 'charge') s.lastAct.targets = [...targets];
   log(s, `${u.name} ชาร์จสำเร็จ → ${targets.map((t) => unitById(s, t).name).join(', ')} (ได้ Fights First)`, 'info', u.owner);
   fire(s, 'endOfCharge', [u], { targetId: targets[0] });
+  if (u.owner === s.active && s.phase === 'charge') emitReact(s, u.owner, 'chargeMoveEnd', { unitId: u.id });
 }
 
 export function crushingImpact(s: GameState, u: UnitState, targetId: string) {
@@ -1002,11 +1073,25 @@ export function closeWindow(s: GameState) {
   const w = s.window;
   s.window = null;
   if (!w) return;
+  if (w.kind === 'stratReaction') { afterReaction(s, w.resume); return; }
   if (w.kind === 'fireOverwatch' && rapidIngressCandidates(s, w.player).length) { s.window = { kind: 'rapidIngress', player: w.player }; return; }
   if (w.kind === 'fireOverwatch' || w.kind === 'rapidIngress') openWindow(s, 'startOfShooting');
   if (w.kind === 'heroicIntervention' && s.fight && s.fight.step === 'pileIn') {
     // nothing else: fight phase continues with pile-in
   }
+}
+
+/** A stratagem prompt was answered: show the next waiting one, else carry on (end the phase that was paused). */
+export function afterReaction(s: GameState, resume?: 'endPhase') {
+  if (s.window) return;
+  while (s.reactQueue?.length) {
+    const q = s.reactQueue.shift()!;
+    if (q.turn !== s.turn || q.phase !== s.phase) continue;
+    emitReact(s, q.player, q.on as ReactOn, q.ctx);
+    const w = s.window as GameState['window'];
+    if (w) { if (resume && w.kind === 'stratReaction') w.resume = resume; return; }
+  }
+  if (resume === 'endPhase') endPhase(s);
 }
 
 export function openCounteroffensive(s: GameState, attackerOwner: PlayerId) {
@@ -1261,8 +1346,8 @@ export function autoPileMove(s: GameState, u: UnitState, kind: 'pileIn' | 'conso
   if (cm && !cm.mode) return false;
   const targets = isEngaged(s, u) ? engagedEnemies(s, u) : cm ? cm.enemies : boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.pileIn.targetRange);
   const add = cm?.mode === 'objective' && cm.objective
-    ? autoApproach(s, u, [], RULES.consolidate.distance, { objective: polyCentroid(objectiveTerrain(s, cm.objective).poly) })
-    : autoApproach(s, u, targets, kind === 'pileIn' ? RULES.pileIn.distance : RULES.consolidate.distance);
+    ? autoApproach(s, u, [], pileDistance(s, u, 'consolidate'), { objective: polyCentroid(objectiveTerrain(s, cm.objective).poly) })
+    : autoApproach(s, u, targets, pileDistance(s, u, kind));
   const paths = new Map([...stayPaths(u), ...add]);
   if (!validateMove(s, u, kind, paths).ok) return false;
   commitMove(s, u, kind, paths);
