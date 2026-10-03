@@ -113,6 +113,29 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }, delay);
     return () => window.clearTimeout(t);
   }, [s, actingBot, act, botSays, rolling, speed, spectate, bots.length]);
+  // pile-in / consolidate on the player's side: every unit moves in by itself (as many models into the fight as
+  // possible); the step ends by itself unless a fight-start ability is waiting to be used
+  const pileKey = s.fight && (s.fight.step === 'pileIn' || s.fight.step === 'consolidate') ? `${s.turn}:${s.fight.step}:${s.fight.stepPlayer}` : null;
+  useEffect(() => {
+    if (!pileKey || s.manualPile || s.attack || s.window) return;
+    const f = s.fight!;
+    if (bots.includes(f.stepPlayer)) return;
+    const kind = f.step === 'pileIn' ? 'pileIn' : 'consolidate';
+    const t = window.setTimeout(() => {
+      const res = act((g) => {
+        const gf = g.fight!;
+        const units = boardUnits(g, gf.stepPlayer).filter((u) => !gf.movedThisStep.includes(u.id)
+          && (kind === 'pileIn' ? pileInEligible(g, u) : consolidateEligible(g, u) && consolidateMode(g, u).mode));
+        const moved = units.filter((u) => autoPileMove(g, u, kind)).map((u) => u.name);
+        const waiting = kind === 'pileIn' && manualActs(g, gf.stepPlayer).some((m) => ['fightStartButton'].includes(m.def.spec.when));
+        if (!waiting) { if (kind === 'pileIn') endPileInStep(g); else endConsolidateStep(g); }
+        return { moved, waiting };
+      });
+      if (res.moved.length) flash(`${kind === 'pileIn' ? 'Pile-in' : 'Consolidate'} อัตโนมัติ: ${res.moved.join(', ')}`);
+    }, 450);
+    return () => window.clearTimeout(t);
+  }, [pileKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [sel, setSel] = useState<string | null>(null);
   const [mode, setModeRaw] = useState<Mode | null>(null);
   const [draft, setDraft] = useState<Paths | null>(null);
@@ -1438,6 +1461,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 ตอนบอทโจมตี: {s.defenderRolls !== false ? 'ฉันทอย Save เอง (ใช้ Command Re-roll ได้)' : 'ทอยให้อัตโนมัติ'}
               </button>
             )}
+            <button className={`btn ${s.manualPile ? '' : 'on'}`} onClick={() => act((g) => { g.manualPile = !g.manualPile; })}>
+              Pile-in / Consolidate: {s.manualPile ? 'ขยับเอง' : 'อัตโนมัติ (เข้าหาศัตรูให้มากที่สุด)'}
+            </button>
             <button className={`btn ${s.pickRerolls ? '' : 'on'}`} onClick={() => act((g) => { g.pickRerolls = !g.pickRerolls; })}>
               Re-roll จาก ability (Oath ฯลฯ): {s.pickRerolls ? 'เลือกลูกเอง' : 'ทอยลูกที่พลาดใหม่ให้อัตโนมัติ'}
             </button>

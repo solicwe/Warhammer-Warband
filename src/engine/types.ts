@@ -507,6 +507,8 @@ export interface GameState {
   defenderRolls?: boolean;
   /** ability re-rolls ("re-roll the Hit roll", Oath of Moment …) wait for the dice to be picked; off: every failed die is re-rolled at once */
   pickRerolls?: boolean;
+  /** the player moves their own units in pile-in / consolidate (off: the game does it, as many models into the fight as possible) */
+  manualPile?: boolean;
   fx?: FxEvent[];
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

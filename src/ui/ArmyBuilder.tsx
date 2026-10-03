@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, attachOptions, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { Icon } from './Icon';
@@ -280,7 +280,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const load = faction ? transportLoads(list, faction).find((t) => t.uid === u.uid) : undefined;
     const carried = load?.riders.map((r) => list.units.find((x) => x.uid === r)?.datasheet).filter(Boolean) ?? [];
     const line = [
-      u.warlord && 'Warlord', leads && `นำ ${leads.datasheet}`, u.split && 'แยก 2 หน่วย',
+      u.warlord && 'Warlord', leads && `${sheet?.isSupport ? 'Support ของ' : 'นำ'} ${leads.datasheet}`, u.split && 'แยก 2 หน่วย',
       rides && `เริ่มเกมบน ${rides.datasheet}`,
       load && (carried.length ? `บรรทุก ${carried.join(', ')} (${load.used}/${load.capacity} ที่)` : `ว่าง (0/${load.capacity} ที่)`),
     ].filter(Boolean).join(' · ');
@@ -484,7 +484,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const sheet = menuSheet;
     const opts = sheet ? pointsOptions(sheet) : [];
     const enh = enhancementOptions(list, faction, u);
-    const bodyguards = list.units.filter((b) => b.uid !== u.uid && !b.attachTo && sheet?.leads.includes(b.datasheet));
+    const bodyguards = attachOptions(list, faction, u);
+    // the bodyguard's other character (a support beside a leader, or the leader beside a support)
+    const partner = (b: ArmyUnitEntry) => list.units.find((o) => o.uid !== u.uid && o.attachTo === b.uid)?.datasheet;
     return (
       <div className="tray-backdrop" onClick={() => setMenu(null)}>
         <div className="tray" onClick={(e) => e.stopPropagation()}>
@@ -529,10 +531,11 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             );
           })()}
           {sheet && sheet.leads.length > 0 && (
-            <label className="field"><span><Icon name="leader" size={15} /> นำหน่วย (Leader)</span>
+            <label className="field"><span><Icon name="leader" size={15} /> {sheet.isSupport ? 'เข้าหน่วยเป็น Support (คู่กับ Leader อีกตัวได้)' : 'นำหน่วย (Leader)'}</span>
               <select value={u.attachTo ?? ''} onChange={(e) => setUnit(u.uid, { attachTo: e.target.value || undefined })}>
                 <option value="">ไม่ผูก</option>
-                {bodyguards.map((b) => <option key={b.uid} value={b.uid}>{b.datasheet} ({b.models})</option>)}
+                {u.attachTo && !bodyguards.some((b) => b.uid === u.attachTo) && (() => { const b = list.units.find((x) => x.uid === u.attachTo); return b ? <option value={b.uid}>{b.datasheet} ({b.models})</option> : null; })()}
+                {bodyguards.map((b) => <option key={b.uid} value={b.uid}>{b.datasheet} ({b.models}){partner(b) ? ` + ${partner(b)}` : ''}</option>)}
               </select>
             </label>
           )}

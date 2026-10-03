@@ -843,9 +843,24 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
           if (travel < bestScore) { bestScore = travel; best = c; }
         }
       }
-      if (!best) continue;
-      pos.set(m.id, best);
-      if (!coherent()) pos.set(m.id, cur);
+      if (best) {
+        pos.set(m.id, best);
+        if (coherent()) continue;
+        pos.set(m.id, cur);
+      }
+      // no base contact within reach: get as close as it can (inside engagement range still fights)
+      const near = enemyModels.reduce((a, e) => (dist(cur, e) - e.r < dist(cur, a) - a.r ? e : a));
+      const L = dist(cur, near);
+      if (L < 0.01) continue;
+      const step = { x: (near.x - cur.x) / L, y: (near.y - cur.y) / L };
+      const most = Math.min(maxDist - dist(m, cur), L - near.r - m.r - 0.02);
+      for (let k = most; k > 0.1; k -= 0.25) {
+        const c = { x: cur.x + step.x * k, y: cur.y + step.y * k };
+        if (dist(m, c) > maxDist + 1e-6 || !free(m.id, c, m.r) || !clearLine(m, c)) continue;
+        pos.set(m.id, c);
+        if (coherent()) break;
+        pos.set(m.id, cur);
+      }
     }
   }
   const paths = new Map<string, Pt[]>();

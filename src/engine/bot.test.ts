@@ -329,4 +329,16 @@ describe('one-tap charge and pile-in (the player taps the target, the models mov
     expect(autoPileMove(s, ints, 'pileIn')).toBe(true);
     expect(unitDistance(ints, boyz)).toBeLessThan(before);
   });
+
+  it('pile-in brings models that cannot reach base contact as close as they can (more of them end up fighting)', () => {
+    const s = game([['Intercessor Squad', 10, 160]], [['Boyz', 5, 45]]);
+    s.phase = 'fight';
+    const ints = put(s, 'p0-x0', { x: 20, y: 14 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 19.5 });
+    // the models left behind are the ones that count: each should end as near the enemy as it can get
+    const gaps = () => alive(ints).map((m) => Math.min(...alive(boyz).map((b) => Math.hypot(m.x - b.x, m.y - b.y) - m.r - b.r))).sort((a, b) => b - a);
+    expect(autoPileMove(s, ints, 'pileIn')).toBe(true);
+    const g = gaps();
+    expect(g[0]).toBeLessThan(3); // the furthest model still closes in (it stayed ~3.8" away before)
+  });
 });

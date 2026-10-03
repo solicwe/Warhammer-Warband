@@ -541,6 +541,18 @@ export function unitPoints(u: ArmyUnitEntry): number {
 }
 
 /** Enhancements a unit may take from the selected detachments (25.04). */
+/**
+ * The bodyguard units `entry` (a leader or a support character) can join: those its datasheet can lead that do
+ * not already have a character of the same kind (each bodyguard takes one leader and one support, 24.34).
+ */
+export function attachOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry): ArmyUnitEntry[] {
+  const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
+  const me = sheetOf(entry.datasheet);
+  if (!me?.leads.length) return [];
+  return list.units.filter((b) => b.uid !== entry.uid && !b.attachTo && me.leads.includes(b.datasheet)
+    && !list.units.some((o) => o.uid !== entry.uid && o.attachTo === b.uid && !!sheetOf(o.datasheet)?.isSupport === me.isSupport));
+}
+
 export function enhancementOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry) {
   const sheet = faction.datasheets.find((d) => d.name === entry.datasheet);
   if (!sheet || sheet.keywords.includes('EPIC HERO')) return [];
@@ -643,6 +655,13 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     const leader = faction.datasheets.find((d) => d.name === u.datasheet);
     const body = list.units.find((b) => b.uid === u.attachTo);
     if (!leader || !body || !leader.leads.includes(body.datasheet)) errs.push(`${u.datasheet} ผูกกับ ${body?.datasheet ?? '?'} ไม่ได้`);
+  }
+  // 24.34 Support: a bodyguard unit takes at most one leader unit and one support unit
+  for (const body of list.units) {
+    const joined = list.units.filter((u) => u.attachTo === body.uid).map((u) => faction.datasheets.find((d) => d.name === u.datasheet)).filter(Boolean) as DatasheetData[];
+    const sup = joined.filter((d) => d.isSupport), lead = joined.filter((d) => !d.isSupport);
+    if (lead.length > 1) errs.push(`${body.datasheet}: มี Leader ได้ 1 หน่วย (${lead.map((d) => d.name).join(', ')})`);
+    if (sup.length > 1) errs.push(`${body.datasheet}: มี Support ได้ 1 หน่วย (${sup.map((d) => d.name).join(', ')})`);
   }
   for (const u of list.units) if (u.embarkIn && !list.units.some((t) => t.uid === u.embarkIn)) errs.push(`${u.datasheet}: รถที่เลือกให้ขึ้นไม่อยู่ในทัพแล้ว`);
   for (const t of transportLoads(list, faction)) errs.push(...t.problems);
