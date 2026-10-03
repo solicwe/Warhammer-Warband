@@ -1,5 +1,5 @@
 import { Component, useEffect, useState, type ReactNode } from 'react';
-import { dispositionById, dispositionId, layoutsFor, MISSIONS, primaryFor, deploymentName, type DispositionId } from '../engine/config';
+import { dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryFor, deploymentName, type DispositionId } from '../engine/config';
 import { createGame, listDisposition } from '../engine/game';
 import { listPoints, syncList } from '../engine/army';
 import { LayoutPreview } from './LayoutPreview';
@@ -46,7 +46,10 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ kind: 'home' });
   const [lists, setLists] = useState<[ArmyList, ArmyList]>(loadLists);
   const [names, setNames] = useState<[string, string]>(['ผู้เล่น 1', 'ผู้เล่น 2']);
-  const [layoutPick, setLayoutPick] = useState<number>(0); // 0 = random, 1..3 = a specific official layout
+  // '' = random official layout for the matchup, 'any' = random from every layout, else a layout id
+  const [layoutPick, setLayoutPick] = useState<string>('');
+  const [allMaps, setAllMaps] = useState(false);
+  const [mapDeploy, setMapDeploy] = useState('');
   const [secMode, setSecMode] = useState<'none' | 'tactical' | 'fixed'>('tactical');
   const [mode, setMode] = useState<'hotseat' | 'bot' | 'botbot'>('hotseat');
   const vsBot = mode !== 'hotseat';
@@ -96,7 +99,8 @@ export default function App() {
       if (gone.length) { setErr(`มีหน่วยที่ไม่อยู่ใน 11th edition แล้ว (Legends) — เข้า "จัดทัพ" แล้วลบออกก่อน: ${gone.join(', ')}`); return; }
       const dz: [DispositionId, DispositionId] = [dispOf(0) ?? listDisposition(lists[0], factions[0]), dispOf(1) ?? listDisposition(lists[1], factions[1])];
       const opts = layoutsFor(dz[0], dz[1]);
-      const layout = layoutPick ? opts[layoutPick - 1] : opts[Math.floor(Math.random() * opts.length)];
+      const pool = layoutPick === 'any' ? LAYOUTS : opts;
+      const layout = LAYOUTS.find((l) => l.id === layoutPick) ?? pool[Math.floor(Math.random() * pool.length)];
       const s = createGame({
         lists: lists2, factions: factions as [typeof factions[0], typeof factions[1]],
         names: mode === 'botbot' ? ['บอท 1', 'บอท 2'] : vsBot ? [names[0], 'บอท'] : names,
@@ -191,15 +195,31 @@ export default function App() {
                 <div><b>{dispositionById(d0).name}</b> vs <b>{dispositionById(d1).name}</b></div>
                 <div className="muted">Primary ของ {mode === 'botbot' ? 'บอท 1' : names[0]}: <b>{primaryFor(d0, d1).name}</b> · ของ {mode === 'botbot' ? 'บอท 2' : vsBot ? 'บอท' : names[1]}: <b>{primaryFor(d1, d0).name}</b></div>
               </div>
-              <div className="field">Layout ทางการ (Battlemaster) สำหรับคู่นี้
-                <div className="layout-pick">
-                  <button type="button" className={`layout-opt ${layoutPick === 0 ? 'on' : ''}`} onClick={() => setLayoutPick(0)}>
-                    <div className="layout-random">?</div><span>สุ่ม</span>
+              <div className="field">
+                <div className="map-head">
+                  <span>{allMaps ? `แผนที่ทั้งหมด (${LAYOUTS.length} layout ทางการ)` : 'Layout ทางการ (Battlemaster) สำหรับคู่นี้'}</span>
+                  <button type="button" className="btn small" onClick={() => { setAllMaps((v) => !v); setMapDeploy(''); }}>{allMaps ? 'เฉพาะคู่นี้' : `ดูทุกแมพ (${LAYOUTS.length})`}</button>
+                </div>
+                {allMaps && (
+                  <div className="map-filter">
+                    {['', ...new Set(LAYOUTS.map((l) => l.deployment))].map((d) => (
+                      <button key={d || 'all'} type="button" className={`chip ${mapDeploy === d ? 'on' : ''}`} onClick={() => setMapDeploy(d)}>{d ? deploymentName(d) : 'ทั้งหมด'}</button>
+                    ))}
+                  </div>
+                )}
+                <div className={`layout-pick ${allMaps ? 'wrap' : ''}`}>
+                  <button type="button" className={`layout-opt ${layoutPick === '' ? 'on' : ''}`} onClick={() => setLayoutPick('')}>
+                    <div className="layout-random">?</div><span>สุ่ม (คู่นี้)</span>
                   </button>
-                  {layouts.map((l) => (
-                    <button key={l.id} type="button" className={`layout-opt ${layoutPick === l.number ? 'on' : ''}`} onClick={() => setLayoutPick(l.number)}>
+                  {allMaps && (
+                    <button type="button" className={`layout-opt ${layoutPick === 'any' ? 'on' : ''}`} onClick={() => setLayoutPick('any')}>
+                      <div className="layout-random">??</div><span>สุ่มจากทุกแมพ</span>
+                    </button>
+                  )}
+                  {(allMaps ? LAYOUTS.filter((l) => !mapDeploy || l.deployment === mapDeploy) : layouts).map((l) => (
+                    <button key={l.id} type="button" className={`layout-opt ${layoutPick === l.id ? 'on' : ''}`} onClick={() => setLayoutPick(l.id)}>
                       <LayoutPreview layout={l} width={64} />
-                      <span>#{l.number} {deploymentName(l.deployment)}</span>
+                      <span>{allMaps ? `${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}` : `#${l.number} ${deploymentName(l.deployment)}`}</span>
                     </button>
                   ))}
                 </div>

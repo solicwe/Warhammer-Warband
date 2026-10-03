@@ -484,3 +484,9 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 .cards-n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font: 700 11px var(--sans); display: inline-grid; place-items: center; }
 .sec-slot { display: flex; flex-direction: column; gap: 6px; align-items: center; }
 .topbar { gap: 6px; }
+.map-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.map-filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.map-filter .chip { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--card3); background: #fff; color: var(--ink); font: 500 12px var(--sans); cursor: pointer; }
+.map-filter .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.layout-pick.wrap { flex-wrap: wrap; overflow-x: visible; max-height: 420px; overflow-y: auto; }
+.layout-pick.wrap .layout-opt { width: 96px; }

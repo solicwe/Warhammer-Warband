@@ -6,6 +6,7 @@ import { describe, it } from 'vitest';
 import * as live from './bot';
 import * as base from './baseline/bot';
 import { createGame } from './game';
+import type { DispositionId } from './config';
 import type { ArmyList, FactionData, GameState, PlayerId } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -23,7 +24,10 @@ const ARMIES: Record<string, () => ArmyList> = {
 /** Play one game: `liveSide` is run by the live bot, the other side by the baseline. */
 export function playArena(armyA: string, armyB: string, seed: number, liveSide: PlayerId): { vp: [number, number]; steps: number } {
   const lists: [ArmyList, ArmyList] = [ARMIES[armyA](), ARMIES[armyB]()];
-  const s: GameState = createGame({ lists, factions: [FACTIONS[lists[0].factionId], FACTIONS[lists[1].factionId]], names: ['A', 'B'], seed, secondaryMode: 'tactical' });
+  // every pair of Force Dispositions (so every primary mission and all 45 layouts) comes up across seeds
+  const D: DispositionId[] = ['take-and-hold', 'purge-the-foe', 'disruption', 'reconnaissance', 'priority-assets'];
+  const dispositions: [DispositionId, DispositionId] = [D[seed % 5], D[Math.floor(seed / 5) % 5]];
+  const s: GameState = createGame({ lists, factions: [FACTIONS[lists[0].factionId], FACTIONS[lists[1].factionId]], names: ['A', 'B'], seed, secondaryMode: 'tactical', dispositions });
   s.bots = [0, 1];
   let steps = 0;
   while (s.phase !== 'gameover' && steps < 12000) {

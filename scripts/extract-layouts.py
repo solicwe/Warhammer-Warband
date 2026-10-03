@@ -2,6 +2,7 @@
 """Turn the measured terrain-layout images (one per force-disposition matchup) into board data.
 
 Usage: python3 scripts/extract-layouts.py <dir with no-measurements PNGs> > data/layouts.json
+       then python3 scripts/fix-layout-centres.py (drops fake centre pieces, merges split centre ruins)
 Board is 44" x 60" portrait: x 0..44 left->right, y 0..60 top->bottom, attacker (red) zone at the top.
 """
 import json, os, sys
