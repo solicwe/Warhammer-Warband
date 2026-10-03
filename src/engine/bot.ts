@@ -9,13 +9,15 @@ import {
   autoApproach, callWaaagh, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits,
-  sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
+  sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
 } from './game';
+import { abilityChoices, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
+import { abilityRule, unitFlags } from './effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
 import { isMelee } from './weapons';
 import { applyDetachmentStratagem, planStratagem, stratagemBlock } from './stratagems';
 import { actionOptions, startAction } from './missions';
-import type { GameState, ObjectiveState, PlayerId, Pt, UnitState, WeaponProfileData } from './types';
+import type { GameState, MoveKind, ObjectiveState, PlayerId, Pt, UnitState, WeaponProfileData } from './types';
 
 const stay = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]]));
 const centre = (u: UnitState) => polyCentroid(alive(u));
@@ -89,7 +91,7 @@ function markTried(s: GameState, u: UnitState) {
 }
 
 /** Move a unit straight towards a point, stopping `short` inches away; shortens the move until it is legal. */
-function stepTowards(s: GameState, u: UnitState, goal: Pt, max: number, kind: 'normal' | 'advance' | 'fallback', short = 0) {
+function stepTowards(s: GameState, u: UnitState, goal: Pt, max: number, kind: MoveKind, short = 0) {
   const c = centre(u);
   const L = dist(c, goal);
   const want = Math.min(max, L - short);
@@ -148,7 +150,7 @@ export function botDeploy(s: GameState) {
   const u = s.units.find((x) => x.owner === p && x.status === 'pending');
   if (!u) return;
   // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
-  if (u.core.deepStrike && sendToReserves(s, u.id) === null) return;
+  if (hasDeepStrike(s, u) && sendToReserves(s, u.id) === null) return;
   const pos = findPlacement(s, u, 'deploy');
   if (pos && deployUnit(s, u.id, pos).ok) return;
   if (sendToReserves(s, u.id)) {
@@ -179,6 +181,22 @@ export function botCommand(s: GameState) {
     if (s.round >= 3 || close.length >= Math.max(1, brawlers.length / 2)) callWaaagh(s, p);
   }
   botDetachmentChoices(s, p, mine, enemies);
+  // Master of Battle: a second Oath of Moment target
+  if (P.oathTarget && mine.some((u) => unitFlags(s, u).oathBackup)) {
+    const second = [...enemies].filter((e) => e.id !== P.oathTarget).sort((a, b) => unitValue(b) - unitValue(a))[0];
+    if (second) setOathBackup(s, p, second.id);
+  }
+  // "select two of these abilities": keep the ones that do something by themselves
+  for (const c of abilityChoices(s, p)) {
+    const score = (name: string) => {
+      const a = c.unit.abilities.find((x) => x.name === name);
+      const r = a ? abilityRule(c.unit, a) : undefined;
+      const act = r?.act as { botUse?: string } | undefined;
+      return (r?.effects?.length ? 2 : 0) + (act && act.botUse !== 'never' ? 1 : 0);
+    };
+    pickAbilities(s, c.unit.id, [...c.options].sort((a, b) => score(b) - score(a)).slice(0, c.pick));
+  }
+  botUseActs(s, p, ['command', 'anyCommand', 'battleStart', 'opponentTurnEnd', 'anyPhase']);
   endPhase(s);
 }
 
@@ -251,12 +269,13 @@ function movementGoal(s: GameState, u: UnitState): { goal: Pt; short: number; ad
 
 /** Move (or bring in) one unit. Returns false when there is nothing left to do this phase. */
 export function botMoveOne(s: GameState): boolean {
+  botUseActs(s, s.active, ['movement']);
   for (const u of s.units.filter((x) => x.owner === s.active)) {
     if (tried(s, u)) continue;
     if (u.status === 'reserves') {
       if (!canIngress(s, u)) continue;
       markTried(s, u);
-      const how = u.core.deepStrike ? 'deepStrike' : 'ingress';
+      const how = hasDeepStrike(s, u) ? 'deepStrike' : 'ingress';
       // deep strike near an objective that needs bodies, else the closest enemy
       const needs = objectiveNeeds(s, u.owner).filter((n) => n.need > 0);
       const near = needs.length ? objPoint(s, needs[0].o) : boardUnits(s, other(u.owner))[0] ? centre(boardUnits(s, other(u.owner))[0]) : undefined;
@@ -276,16 +295,20 @@ export function botMoveOne(s: GameState): boolean {
       const ec = polyCentroid(foes.flatMap(alive));
       const c = centre(u);
       const away = { x: c.x + (c.x - ec.x), y: c.y + (c.y - ec.y) };
-      if (!stepTowards(s, u, away, M, 'fallback')) remainStationary(s, u);
+      if (!beginMove(s, u, 'fallback')) return true;
+      if (!stepTowards(s, u, away, M + unitFlags(s, u).move, 'fallback')) remainStationary(s, u);
       return true;
     }
     const g = movementGoal(s, u);
     if (!g || g === 'hold') { remainStationary(s, u); return true; }
+    const MM = M + unitFlags(s, u).move;
     if (g.advance) {
+      if (!beginMove(s, u, 'advance')) return true;
       rollAdvance(s, u);
-      if (stepTowards(s, u, g.goal, Math.max(0, M + (u.advanceRoll ?? 0) - 0.1), 'advance', g.short)) return true;
-    }
-    if (!stepTowards(s, u, g.goal, Math.max(0, M - 0.1), 'normal', g.short)) remainStationary(s, u);
+      if (stepTowards(s, u, g.goal, Math.max(0, MM + (u.advanceRoll ?? 0) - 0.1), 'advance', g.short)) return true;
+    } else if (!beginMove(s, u, 'normal')) return true;
+    if (!stepTowards(s, u, g.goal, Math.max(0, MM - 0.1), 'normal', g.short)) remainStationary(s, u);
+    else botUseActs(s, u.owner, ['endOfNormalMove'], u.id);
     return true;
   }
   return false;
@@ -315,6 +338,8 @@ export function botShootOne(s: GameState): boolean {
     const modes = shootingModes(s, u);
     if (!modes.length) continue;
     markTried(s, u);
+    unitSelected(s, u, 'shoot');
+    botUseActs(s, u.owner, ['selectedToShoot', 'shooting'], u.id);
     const mode = modes[0];
     const ranked = boardUnits(s, other(u.owner)).map((t) => {
       const r = buildShootPools(s, u.id, t.id, { mode });
@@ -428,6 +453,8 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
   // fight with the unit that does the most damage first
   const pick = (x: UnitState) => Math.max(0, ...engagedEnemies(s, x).map((e) => meleeKills(x, e) * perModel(e)));
   const u = [...c.units].sort((a, b) => pick(b) - pick(a))[0];
+  unitSelected(s, u, 'fight');
+  botUseActs(s, u.owner, ['selectedToFight', 'fightStartButton'], u.id);
   const eng = engagedEnemies(s, u);
   if (eng.length) {
     const scored = eng.map((e) => {
@@ -455,6 +482,17 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
 export function botWindow(s: GameState) {
   const w = s.window;
   if (!w) return;
+  if (w.kind === 'abilityMove') {
+    // surge moves (towards the closest enemy) are made; optional reaction moves are declined
+    for (const o of w.offers) {
+      const u = unitById(s, o.unitId);
+      if (o.key || !u.extraMove || !onBoard(u)) continue;
+      const foes = boardUnits(s, other(u.owner)).sort((a, b) => unitDistance(u, a) - unitDistance(u, b));
+      if (u.extraMove.kind === 'surge' && foes.length) stepTowards(s, u, centre(foes[0]), u.extraMove.max - 0.1, 'surge', 1.6);
+    }
+    closeOffers(s);
+    return;
+  }
   if (w.kind === 'fireOverwatch' && s.players[w.player].cp >= 2) {
     let best: { u: UnitState; t: UnitState; v: number } | null = null;
     for (const u of overwatchCandidates(s, w.player)) {

@@ -1,3 +1,4 @@
+import type { Effect } from './effects';
 // ---------- Data (from public/data/factions/*.json, see scripts/build-data.mjs) ----------
 
 export interface WeaponProfileData {
@@ -30,7 +31,7 @@ export interface ModelProfileData {
   base: BaseData;
 }
 
-export interface AbilityData { name: string; type: string; param?: string; model?: string; text: string }
+export interface AbilityData { name: string; type: string; param?: string; model?: string; text: string; sheet?: string; faction?: string }
 
 export interface CompositionData { name?: string; min?: number; max?: number; text: string }
 
@@ -101,8 +102,6 @@ export interface FactionData {
   lastUpdate: string;
   armyRules: { name: string; text: string }[];
   detachments: DetachmentData[];
-  /** choice-type detachment rules (Combat Doctrines …): what is active and what was used, by detachment name */
-  det?: Record<string, DetChoiceState>;
   datasheets: DatasheetData[];
   subfactions?: { label: string; options: SubfactionData[] };
 }
@@ -123,6 +122,7 @@ export interface ArmyUnitEntry {
   wargear?: WargearPick[];
   wargearPts?: number; // points for costed wargear and add-on models, kept in sync by the army builder
   addons?: string[]; // optional extra models bought separately, e.g. "Invader ATV"
+  split?: boolean; // split into two units at Declare Battle Formations (Combat Squads …)
 }
 
 export interface ArmyList {
@@ -141,7 +141,7 @@ export interface Pt { x: number; y: number }
 export interface Seg { a: Pt; b: Pt }
 
 export type Phase = 'formations' | 'deploy' | 'scouts' | 'command' | 'movement' | 'shooting' | 'charge' | 'fight' | 'gameover';
-export type MoveKind = 'stationary' | 'normal' | 'advance' | 'fallback' | 'ingress' | 'charge' | 'pileIn' | 'consolidate' | 'deploy' | 'scout';
+export type MoveKind = 'stationary' | 'normal' | 'advance' | 'fallback' | 'ingress' | 'charge' | 'pileIn' | 'consolidate' | 'deploy' | 'scout' | 'extra' | 'surge';
 
 export interface ModelState {
   id: string;
@@ -193,6 +193,19 @@ export interface UnitState {
   weaponsFired: string[]; // split fire: ranged weapons already used this phase
   cantCharge: boolean; // e.g. after a rapid / combat disembark
   disembarkedTurn?: number;
+  disembarkedFrom?: string; // transport id the unit disembarked from this turn
+  lastStationaryTurn?: number; // turn the unit last Remained Stationary
+  riledUntil?: number; // Orks: riled up by an ability until this turn index (inclusive)
+  quarry?: string; // Headhunters: enemy unit id
+  timed?: TimedEffect[]; // temporary effects and marks from abilities
+  split?: string; // split off another unit at Declare Battle Formations (Combat Squads …): the other unit's id
+  abilityPicks?: { pool: string[]; on: string[] }; // "select two of these abilities" (Author of the Codex …)
+  used?: Record<string, string>; // ability limits: name -> last use key (battle / round / turn / phase)
+  lastHits?: { key: string; ids: string[]; byWeapon?: Record<string, string[]> }; // enemy units hit this phase
+  extraMove?: { max: number; label: string; kind: 'extra' | 'surge'; phase?: string }; // a move granted by an ability, not yet made
+  arriveEarly?: number; // battle round in which this unit may already arrive from Reserves (High King of Fenris …)
+  noChargeTurn?: number; // turn in which this unit cannot declare a charge (Meteoric Descent …)
+  fellBackFrom?: string[]; // enemy units engaged with this unit when it fell back this turn
   detRerolled?: string; // `${turn}:advance|charge`: free detachment re-roll used
   detAdvanceHurt?: string; // `${turn}:advance`: Wrath of the Doomed mortal wounds taken
   scoutDone: boolean;
@@ -242,6 +255,7 @@ export interface ObjectiveState {
   y: number;
   terrainId: string;
   controller: PlayerId | null;
+  secured?: PlayerId | null; // stays under this player's control until the opponent controls it (Objective Secured …)
 }
 
 export interface PlayerState {
@@ -269,6 +283,12 @@ export interface PlayerState {
   detachments: DetachmentData[];
   /** choice-type detachment rules (Combat Doctrines …): what is active and what was used, by detachment name */
   det?: Record<string, DetChoiceState>;
+  vowed?: string[]; // Inner Circle: vowed objective ids
+  priorityObjective?: string; // Priority Objective Identified
+  oathBackup?: string | null; // Master of Battle: second Oath of Moment target
+  slayer?: Record<string, string>; // Slayer's Oath: unit id -> keyword
+  subfaction?: string; // chapter / sub-faction picked in the army builder
+  abilityUsed?: Record<string, string>; // per-army ability limits: name -> last use key
   /** Chapter Approved: chosen Force Disposition and the primary mission it gives against the opponent's */
   disposition: string;
   primaryId: string;
@@ -277,6 +297,17 @@ export interface PlayerState {
 }
 
 export interface DetChoiceState { active: string[]; used: string[]; count: number; pickedTurn?: number; round?: number }
+
+/** A temporary effect on a unit: an own buff, or a mark placed on an enemy unit (by = the player who placed it). */
+export interface TimedEffect {
+  e: Effect;
+  label: string;
+  until: 'phase' | 'turn' | 'nextTurnStart' | 'nextCommand' | 'nextMovement' | 'endOfNextTurn' | 'opponentNextMovementEnd' | 'battle';
+  by: PlayerId;
+  turn: number;
+  mark?: string;
+  models?: string[]; // only these models ("this model" abilities)
+}
 
 /** State behind secondary cards that need choices or actions. */
 export interface SecondaryState {
@@ -335,7 +366,13 @@ export interface Pool {
   rerollHits1?: boolean; // from detachment rules (unit buffs are checked separately)
   rerollWounds1?: boolean;
   rerollAllWounds?: boolean;
+  rerollDamage?: boolean;
   attackBonus?: number; // +A per weapon instance (e.g. Red Thirst)
+  critHitOn?: number; // unmodified hit rolls of this or more are critical hits
+  ignoreHitMods?: boolean; // ignore negative modifiers to hit / BS / WS
+  effS?: number; // Strength after rule modifiers (for "if S > T" effects)
+  hazardousAll?: boolean;
+  psychic?: boolean;
   woundNeed: number;
   woundMod: number;
   woundNote: string;
@@ -345,6 +382,8 @@ export interface Pool {
   devastating: boolean;
   twinLinked: boolean;
   precision: boolean;
+  precisionOnCrit?: boolean; // only attacks that scored a critical hit have [PRECISION]
+  noHazard?: boolean; // hazardous tests automatically passed
   ap: number;
   damage: string;
   hazardous: number;
@@ -371,6 +410,9 @@ export interface AttackSession {
   aliveBefore?: string[]; // model ids alive when the attack started (for effects)
   attackerBuffsAtStart?: string[]; // attacker buffs already counted when the pools were built
   woundsBefore?: number;
+  free?: boolean; // attacks made by a destroyed model ("fights on death"): the unit is not marked as having fought / shot
+  allocated?: Record<string, number>; // melee attacks allocated per target model id (Strikes of Retribution)
+  negated?: string[]; // model ids whose once-per-phase damage negation was used in this attack
 }
 
 /** Visual events for the board (animations). Not rules state; capped to the last few. */
@@ -390,7 +432,9 @@ export type Window =
   | { kind: 'rapidIngress'; player: PlayerId }
   | { kind: 'smokescreen'; player: PlayerId }
   | { kind: 'heroicIntervention'; player: PlayerId }
-  | { kind: 'counteroffensive'; player: PlayerId };
+  | { kind: 'counteroffensive'; player: PlayerId }
+  /** abilities that let units react out of turn ("if an enemy unit ends a move within 8\", this unit can make a Normal move") */
+  | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string };
 
 export interface FightState {
   step: 'pileIn' | 'fight' | 'consolidate';
@@ -437,4 +481,8 @@ export interface GameState {
   fx?: FxEvent[];
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;
+  /** destroyed models that fight / shoot after the attacking unit has finished (resolved by activations.ts) */
+  deathQueue?: { unitId: string; modelIds: string[]; targetId: string; kind: 'fight' | 'shoot'; label: string; regain?: string }[];
+  /** models destroyed this phase that roll to come back at the end of it (Armour of Fate) */
+  revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number }[];
 }

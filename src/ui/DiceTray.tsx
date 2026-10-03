@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { freeDiceNow } from '../engine/activations';
 import { canUseStratagem, unitById } from '../engine/state';
 import type { Die, GameState, Pool } from '../engine/types';
 import { abilityLabel, abilitiesOf } from '../engine/weapons';
@@ -12,6 +13,8 @@ interface Props {
   /** open the stratagem sheet for a player (e.g. the defender reacting to the attack) */
   onStrat?: (player: 0 | 1) => void;
   stratFor?: (0 | 1)[];
+  /** free re-rolls / "change to a 6" from abilities (Armorium Cherub …) */
+  onFree?: (key: string, index: number) => void;
 }
 
 const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `${n}` : '');
@@ -45,9 +48,19 @@ function poolHeader(p: Pool) {
   );
 }
 
-export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1] }: Props) {
+export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree }: Props) {
   const at = s.attack!;
   const [rr, setRr] = useState<null | 'hit' | 'wound' | 'save'>(null);
+  const [fd, setFd] = useState<string | null>(null); // free die being used: tap the die
+  const free = onFree ? freeDiceNow(s) : [];
+  const freeOf = (stage: 'hit' | 'wound') => free.filter((f) => f.stage === stage);
+  const fdSpec = free.find((f) => f.key === fd);
+  const freeCan = (d: Die) => (fdSpec?.kind === 'setSix' ? d.v !== 6 && d.o !== 'auto' : fdSpec?.stage === 'hit' ? d.o === 'miss' && !d.rerolled : d.o === 'fail' && !d.rerolled);
+  const freeButtons = (stage: 'hit' | 'wound') => freeOf(stage).map((f) => (
+    <button key={f.key} className={`btn small ${fd === f.key ? 'on' : ''}`} onClick={() => { setRr(null); setFd(fd === f.key ? null : f.key); }}>
+      ✨ {f.label}{fd === f.key ? ' — แตะลูกเต๋า' : ''}
+    </button>
+  ));
   // a quick second tap must not roll the next stage before the player has seen these dice
   const lastTap = useRef(0);
   const [cool, setCool] = useState(false);
@@ -102,11 +115,14 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
               <div className="tiny muted">{p.attackNote}{p.skillNote ? ` · ${p.skillNote}` : ''}{p.hitNote ? ` · ${p.hitNote}` : ''}</div>
               {hitShown && (
                 <>
-                  <DiceRow dice={p.hits} cls={hitCls} pick={rr === 'hit' ? (d) => d.o === 'miss' && !d.rerolled : undefined} onPick={(i) => { onReroll('hit', i); setRr(null); }} />
+                  <DiceRow dice={p.hits} cls={hitCls}
+                    pick={rr === 'hit' ? (d) => d.o === 'miss' && !d.rerolled : fdSpec?.stage === 'hit' && st === 'wound' ? freeCan : undefined}
+                    onPick={(i) => { if (rr === 'hit') { onReroll('hit', i); setRr(null); } else if (fd) { onFree?.(fd, i); setFd(null); } }} />
                   <div className="small">
                     โดน <b>{p.hits.filter((h) => h.o !== 'miss').length}</b>
                     {p.hits.some((h) => h.o === 'crit') && <> · Critical <b>{p.hits.filter((h) => h.o === 'crit').length}</b>{p.sustained ? ` (Sustained ${p.sustained})` : ''}{p.lethal ? ' (Lethal Hits)' : ''}</>}
                   </div>
+                  {st === 'wound' && !p.autoHit && freeButtons('hit')}
                   {st === 'wound' && !p.autoHit && !p.noHitReroll && (
                     <button className={`btn small ${rr === 'hit' ? 'on' : ''}`} disabled={!!attackerCR || !p.hits.some((d) => d.o === 'miss' && !d.rerolled)} onClick={() => setRr(rr === 'hit' ? null : 'hit')}>
                       Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'hit' ? '— แตะลูกที่พลาด' : ''}
@@ -122,12 +138,15 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                 <div className="tiny muted">{p.woundNote}{p.twinLinked ? ' · Twin-linked: ทอยใหม่ลูกที่พลาด' : ''}</div>
                 {st !== 'wound' && (
                   <>
-                    <DiceRow dice={p.wounds} cls={woundCls} pick={rr === 'wound' ? (d) => d.o === 'fail' && !d.rerolled : undefined} onPick={(i) => { onReroll('wound', i); setRr(null); }} />
+                    <DiceRow dice={p.wounds} cls={woundCls}
+                      pick={rr === 'wound' ? (d) => d.o === 'fail' && !d.rerolled : fdSpec?.stage === 'wound' && st === 'save' ? freeCan : undefined}
+                      onPick={(i) => { if (rr === 'wound') { onReroll('wound', i); setRr(null); } else if (fd) { onFree?.(fd, i); setFd(null); } }} />
                     <div className="small">
                       Wound <b>{p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds}</b>
                       {p.autoWounds ? ` (รวม Lethal Hits ${p.autoWounds})` : ''}
                       {p.devastating && p.wounds.some((w) => w.o === 'critWound') ? ` · Devastating ${p.wounds.filter((w) => w.o === 'critWound').length} (mortal wounds)` : ''}
                     </div>
+                    {st === 'save' && freeButtons('wound')}
                     {st === 'save' && (
                       <button className={`btn small ${rr === 'wound' ? 'on' : ''}`} disabled={!!attackerCR || !p.wounds.some((d) => d.o === 'fail' && !d.rerolled)} onClick={() => setRr(rr === 'wound' ? null : 'wound')}>
                         Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'wound' ? '— แตะลูกที่พลาด' : ''}

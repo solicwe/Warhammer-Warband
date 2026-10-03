@@ -1,0 +1,826 @@
+// One effect engine for every rule that changes play without being a weapon keyword:
+// detachment rules (data/detachment-rules.json), datasheet abilities (data/abilities/<faction>.json,
+// or read from the ability text by abilityText.ts for factions without a file),
+// and temporary effects / marks put on units by abilities (e.g. "suppressed" until your next turn).
+// Rules are data: an Effect says WHO it applies to (scope), WHEN (conditions) and WHAT changes.
+import abilityData from '../../data/ability-rules.json';
+import orkAbilities from '../../data/abilities/ORK.json';
+import smAbilities from '../../data/abilities/SM.json';
+import detData from '../../data/detachment-rules.json';
+import { parseAbilityText } from './abilityText';
+import { RULES } from './config';
+import { d6 } from './dice';
+import { baseDist, circleTouchesPoly, clamp, dist } from './geometry';
+import { unitInRange } from './missions';
+import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, setStratHooks, unitDistance, withinTerrain } from './state';
+import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, UnitState, WeaponData, WeaponProfileData } from './types';
+import { isHidden, setVisibilityHooks } from './visibility';
+import { setThroughHook } from './pathing';
+
+export type Eligibility = 'shootAfterAdvance' | 'shootAfterFallBack' | 'chargeAfterAdvance' | 'chargeAfterFallBack' | 'actionWhileEngaged' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction';
+export type Reroll = 'hits1' | 'hits' | 'wounds1' | 'wounds' | 'damage';
+
+export interface Defend {
+  vs?: 'melee' | 'ranged';
+  hit?: number; // attacks that target this unit: +/- to hit
+  wound?: number;
+  woundIfStronger?: number; // when S > T
+  woundIfStrongerOrEqual?: number; // when S >= T
+  ap?: number; // worsen the attack's AP by this much
+  damage?: number; // -1 D (minimum 1)
+  halveDamage?: boolean;
+  inv?: number;
+  fnp?: number;
+  fnpVs?: 'mortal' | 'psychic' | 'mortalPsychic';
+  cover?: boolean;
+  coverUnless12?: boolean;
+  untargetableBeyond12?: boolean;
+  strengthMinus?: number;
+  saveBonusD1?: number;
+  negateOncePerPhase?: boolean; // once per phase: a failed save's damage becomes 0
+  // legacy names used by the first version of detachment-rules.json
+  woundMinusIfStronger?: boolean;
+  rangedOnly?: boolean;
+  enemyStrengthMinus?: number;
+}
+
+/** A mark on an enemy unit that makes attacks against it better for the marking player's units. */
+export interface Incoming {
+  by: PlayerId; // filled in when the mark is placed
+  units?: string[]; // only attacks by these units of the marking player
+  attack?: 'melee' | 'ranged';
+  hit?: number; wound?: number; ap?: number;
+  reroll?: Reroll | Reroll[];
+  abilities?: string[];
+  noCover?: boolean;
+  fromTransport?: string; // only models that disembarked from this transport this turn
+}
+
+export interface Effect {
+  scope?: 'unit' | 'model' | 'led' | 'bodyguardLed' | 'aura' | 'enemyAura' | 'army';
+  range?: number;
+  units?: string[];
+  notSelf?: boolean;
+  weapon?: string;
+  attack?: 'melee' | 'ranged';
+  if?: string[];
+  // offence
+  hit?: number; wound?: number; ap?: number; strength?: number; attacks?: number; damage?: number;
+  reroll?: Reroll | Reroll[];
+  abilities?: string[];
+  critHitOn?: number;
+  ignoreHitMods?: boolean;
+  givesCover?: boolean;
+  // defence
+  defend?: Defend;
+  incoming?: Incoming;
+  // the unit
+  stealth?: boolean; loneOperative?: boolean; deepStrike?: boolean; fightsFirst?: boolean; scouts?: number;
+  oc?: number; ocSet?: number; shockedOc?: number; ocHalve?: boolean; ocZero?: boolean;
+  toughness?: number; move?: number; ld?: number;
+  eligible?: Eligibility[];
+  cannotFallBack?: boolean; noOverwatch?: boolean; cannotBeHidden?: boolean; detection?: number; rangeMinus?: number;
+  rerollAdvance?: boolean; rerollCharge?: boolean; advanceSix?: boolean; advanceBonus?: number; chargeBonus?: number; rerollShock?: boolean;
+  advanceSelfMortals?: string;
+  stratDiscount?: { ids: string[]; cp: number; limit?: Limit; perArmy?: boolean };
+  stratTax?: { cp: number; limit?: Limit }; // enemy aura: your opponent's stratagems on their units near it cost more
+  stratCpChance?: number; // targeting this unit with a stratagem: on X+ gain 1CP
+  riled?: boolean;
+  forceDesperate?: boolean;
+  overwatchHitOn?: number;
+  moveThroughModels?: boolean; // any move: through all models
+  chargeThroughModels?: boolean; // charge moves: through models other than MONSTER / VEHICLE
+  advanceHazard?: boolean; // after an Advance: a hazard roll for each model
+  grounded?: boolean; // cannot take to the skies
+  oppMoveIngress?: boolean; // in Reserves: may arrive at the end of the opponent's Movement phase
+  attacksPerEmbarked?: { per: number; max: number }; // +A for each model embarked within this unit
+  oathBackup?: boolean; // Master of Battle: a second Oath of Moment target
+  fightOnDeathRegain?: string; // after fighting on death: if it destroyed a model it regains these wounds and survives
+  // transports and reserves
+  assaultDisembark?: boolean; // units disembarking after this transport moved can still charge
+  disembarkAfterAdvance?: boolean;
+  noEmbark?: boolean;
+  omniScrambler?: number; // enemy units arriving from Reserves cannot be set up within X"
+  deepStrikeRange?: number; // may Deep Strike this close to enemy units (then cannot charge that turn)
+  arriveFromRound?: number;
+  mobile?: boolean; // moves over dense terrain like INFANTRY
+  addKeywords?: string[]; removeKeywords?: string[]; // fixed at Declare Battle Formations
+  // reactions
+  fightOnDeath?: number; // destroyed by a melee attack before fighting: on X+ it fights first, then is removed
+  shootOnDeath?: number;
+  retaliate?: { on: number; max: number }; // each melee attack allocated to this model: on X+ 1 mortal wound to the attackers
+  fallBackLdTest?: boolean; // enemy aura: units selected to Fall Back must pass a Leadership test or Remain Stationary
+  followFallBack?: boolean; // when an enemy unit engaged with this unit Falls Back, this unit can make a Normal move
+  slowed?: boolean; // selected to move: roll D6, mortal wounds and less Move (Stasis Bomb)
+  noBigGunsPenalty?: boolean;
+  attacksTo?: number; // the weapon's Attacks characteristic becomes X
+  rangeBonusIf?: { ability: string; add: number }; // aura range grows when the holder also has this ability
+  embarkedOc?: boolean; // add the OC of models embarked within this model
+  ldSet?: number;
+  statM?: number; // fixed change to the bearers' Move characteristic
+}
+
+export type Limit = 'battle' | 'round' | 'turn' | 'phase';
+
+// ---------- rule tables ----------
+
+export interface DetChoiceOption { id: string; name: string; text: string; effects: Effect[] }
+export interface DetChoice { name: string; when: 'command' | 'round' | 'battle'; uses: 'eachOnce' | 'limit' | 'free'; limit?: number; pick?: number; options: DetChoiceOption[] }
+export interface DetRule { auto: 'full' | 'partial' | 'manual'; effects?: Effect[]; choice?: DetChoice; manual?: string; acts?: unknown[] }
+export const DET_RULES = (detData as unknown as { rules: Record<string, DetRule> }).rules;
+
+export interface AbilityRule {
+  status?: 'auto' | 'partial' | 'info' | 'manual';
+  note?: string;
+  gear?: boolean; // wargear ability: only models carrying the item count as bearers
+  effects?: Effect[];
+  act?: unknown; // activation spec, see activations.ts
+  choice?: { name: string; pick: number; when: 'command'; options: string[]; if?: string[] }; // "select two of these abilities"
+  split?: 'half' | 'byModel' | 'five'; // the unit may be split into two at Declare Battle Formations
+  freeDie?: { kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' | 'damage' | 'any'; limit: Limit; count?: number };
+  parsed?: boolean; // read from the ability text (abilityText.ts), not hand-written
+}
+
+/** Hand-written rules per faction (Wahapedia faction id); a few cross-faction ones live in data/ability-rules.json. */
+const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
+  SM: smAbilities as unknown as Record<string, AbilityRule>,
+  ORK: orkAbilities as unknown as Record<string, AbilityRule>,
+};
+const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
+export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
+
+/** The datasheet an ability came from (abilities of attached units carry it). */
+export const abilitySheet = (u: UnitState, a: AbilityData) => a.sheet ?? (u.sources.length === 1 ? u.sources[0] : a.model && u.sources.includes(a.model) ? a.model : u.sources[0]);
+
+export function abilityRule(u: UnitState, a: AbilityData): AbilityRule | undefined {
+  const sheet = abilitySheet(u, a);
+  const books = a.faction ? [FACTION_RULES[a.faction]].filter(Boolean) : Object.values(FACTION_RULES);
+  for (const b of books) {
+    const r = b[`${a.name}@${sheet}`] ?? b[a.name];
+    if (r) return r;
+  }
+  const c = COMMON_RULES[`${a.name}@${sheet}`] ?? COMMON_RULES[a.name];
+  if (c) return c;
+  if (a.type === 'Core' || a.type === 'Faction') return undefined;
+  // factions without a hand-written file: read the common patterns from the text
+  return a.faction && FACTION_RULES[a.faction] ? undefined : parseAbilityText(a.name, a.text);
+}
+
+// ---------- collecting effects ----------
+
+export interface Active {
+  e: Effect;
+  label: string;
+  holder: UnitState; // unit that has the ability (or the affected unit for detachment / timed effects)
+  bearers?: ModelState[]; // "this model" effects: only these models of the unit get it
+  from?: ModelState[]; // aura: the models it is measured from (the whole receiving unit gets it)
+}
+
+const wk = (s: string) => s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '');
+
+export const unitMatches = (u: UnitState, filters?: string[]) => (filters ?? []).every((req) => req.split('|').some((alt) => {
+  if (alt.startsWith('name:')) return u.sources.includes(alt.slice(5)) || u.name === alt.slice(5);
+  if (alt.startsWith('id:')) return u.id === alt.slice(3);
+  if (alt.startsWith('!')) return !(u.keywords.includes(alt.slice(1)) || u.factionKeywords.includes(alt.slice(1)));
+  return u.keywords.includes(alt) || u.factionKeywords.includes(alt);
+}));
+
+function playerDetEffects(s: GameState, p: PlayerId): { e: Effect; label: string }[] {
+  const P = s.players[p];
+  const out: { e: Effect; label: string }[] = [];
+  for (const d of P.detachments ?? []) {
+    const r = DET_RULES[d.name];
+    if (!r) continue;
+    for (const e of r.effects ?? []) out.push({ e, label: d.name });
+    if (r.choice) {
+      const st = P.det?.[d.name];
+      for (const id of st?.active ?? []) {
+        const o = r.choice.options.find((x) => x.id === id);
+        for (const e of o?.effects ?? []) out.push({ e, label: o!.name });
+      }
+    }
+  }
+  return out;
+}
+
+/** Models carrying an ability: the datasheet's models, or (wargear) the models with that item. */
+function bearersOf(u: UnitState, a: AbilityData, rule: AbilityRule): ModelState[] {
+  const sheet = abilitySheet(u, a);
+  const ms = alive(u).filter((m) => m.source === sheet);
+  if (!rule.gear) return ms;
+  const k = wk(a.name);
+  return ms.filter((m) => (m.gear ?? []).some((g) => wk(g) === k || wk(g).includes(k) || k.includes(wk(g))) || m.weapons.some((w) => wk(w.name) === k));
+}
+
+/** Abilities chosen for "select two of these abilities" rules (Author of the Codex …) that are switched off this turn. */
+export function abilityOff(u: UnitState, a: AbilityData): boolean {
+  const c = u.abilityPicks;
+  if (!c) return false;
+  return c.pool.includes(a.name) && !c.on.includes(a.name);
+}
+
+const leaderSheet = (u: UnitState, sheet: string) => u.sources.length > 1 && sheet !== u.sources[0];
+const hasLivingLeader = (u: UnitState) => u.sources.length > 1 && alive(u).some((m) => m.source !== u.sources[0]);
+
+/** Every effect that currently applies to unit u, from any source. */
+export function effectsFor(s: GameState, u: UnitState): Active[] {
+  const out: Active[] = [];
+  for (const { e, label } of playerDetEffects(s, u.owner)) if (unitMatches(u, e.units)) out.push({ e, label, holder: u });
+  for (const h of s.units) {
+    if (h.status === 'destroyed' || !h.abilities?.length) continue;
+    for (const a of h.abilities) {
+      const rule = abilityRule(h, a);
+      if (!rule?.effects?.length || abilityOff(h, a)) continue;
+      let bearers: ModelState[] | undefined;
+      const getBearers = () => (bearers ??= bearersOf(h, a, rule));
+      for (const e of rule.effects) {
+        const scope = e.scope ?? 'unit';
+        if (scope === 'army') {
+          if (h.owner !== u.owner || !unitMatches(u, e.units)) continue;
+          out.push({ e, label: a.name, holder: h });
+          continue;
+        }
+        if (scope === 'aura' || scope === 'enemyAura') {
+          if (!onBoard(h) || !onBoard(u)) continue;
+          if (scope === 'aura' && (h.owner !== u.owner || (e.notSelf && h.id === u.id))) continue;
+          if (scope === 'enemyAura' && h.owner === u.owner) continue;
+          if (!unitMatches(u, e.units)) continue;
+          const bs = getBearers();
+          if (!bs.length) continue;
+          const r = (e.range ?? 6) + (e.rangeBonusIf && h.abilities.some((x) => x.name === e.rangeBonusIf!.ability) ? e.rangeBonusIf.add : 0);
+          if (h.id !== u.id && !bs.some((b) => alive(u).some((m) => baseDist(b, m) <= r + 1e-6))) continue;
+          out.push({ e, label: a.name, holder: h, from: bs });
+          continue;
+        }
+        if (h.id !== u.id) continue;
+        const sheet = abilitySheet(h, a);
+        if (scope === 'led' && !(leaderSheet(h, sheet) && getBearers().length)) continue;
+        if (scope === 'bodyguardLed' && !(sheet === h.sources[0] && hasLivingLeader(h))) continue;
+        if (!getBearers().length) continue;
+        out.push({ e, label: a.name, holder: h, bearers: scope === 'model' ? getBearers() : undefined });
+      }
+    }
+  }
+  for (const t of u.timed ?? []) out.push({ e: t.e, label: t.label, holder: u, bearers: t.models ? u.models.filter((m) => !m.dead && t.models!.includes(m.id)) : undefined });
+  return out;
+}
+
+// ---------- conditions ----------
+
+export interface Ctx {
+  s: GameState;
+  A: UnitState; // the unit the effect applies to (attacker for offence, target for defence)
+  T?: UnitState; // the other unit of an attack
+  m?: ModelState; // the model making the attack (or the model hit)
+  w?: WeaponData;
+  p?: WeaponProfileData;
+  d?: number; // distance attacker model -> target
+  kind?: 'melee' | 'ranged';
+  holder?: UnitState;
+  bearers?: ModelState[];
+}
+
+const isMVU = (u: UnitState) => hasKw(u, 'MONSTER') || hasKw(u, 'VEHICLE');
+const onObjective = (s: GameState, u: UnitState) => s.objectives.some((o) => unitInRange(s, u, o));
+const onOwnObjective = (s: GameState, u: UnitState) => s.objectives.some((o) => o.controller === u.owner && unitInRange(s, u, o));
+
+/** "near:6:CHARACTER+SPACE WOLVES!WULFEN" — a friendly unit with those keywords within 6" of the ability's models. */
+function nearCond(x: Ctx, spec: string): boolean {
+  const [, rs, kws = ''] = spec.split(':');
+  const r = Number(rs);
+  const [need, not] = kws.split('!');
+  const req = need ? need.split('+') : [];
+  const from = x.bearers?.length ? x.bearers : alive(x.holder ?? x.A);
+  const self = x.holder ?? x.A;
+  return boardUnits(x.s, self.owner).some((f) => f.id !== self.id
+    && req.every((k) => f.keywords.includes(k) || f.factionKeywords.includes(k) || f.sources.includes(k))
+    && !(not && (f.keywords.includes(not) || f.sources.includes(not)))
+    && alive(f).some((n) => from.some((b) => baseDist(b, n) <= r + 1e-6)));
+}
+
+/** "nearModels:6:BLOOD ANGELS+CHARACTER!WULFEN" — a friendly model (this unit's own models count) with those keywords within 6". */
+function nearModelsCond(x: Ctx, spec: string): boolean {
+  const [, rs, kws = ''] = spec.split(':');
+  const r = Number(rs);
+  const [need, not] = kws.split('!');
+  const req = need ? need.split('+') : [];
+  const self = x.holder ?? x.A;
+  const from = x.bearers?.length ? x.bearers : alive(self);
+  const has = (f: UnitState, n: ModelState, k: string) => n.keywords.includes(k) || f.factionKeywords.includes(k) || (k === 'CHARACTER' && n.isCharacter) || wk(n.source) === wk(k);
+  return boardUnits(x.s, self.owner).some((f) => alive(f).some((n) => req.every((k) => has(f, n, k)) && !(not && has(f, n, not))
+    && from.some((b) => b.id !== n.id && baseDist(b, n) <= r + 1e-6)));
+}
+
+function closestEnemy(s: GameState, A: UnitState, T: UnitState): boolean {
+  let best = Infinity, bestId = '';
+  for (const e of boardUnits(s, other(A.owner))) {
+    const d = Math.min(...alive(A).flatMap((m) => alive(e).map((n) => baseDist(m, n))));
+    if (d < best - 1e-6) { best = d; bestId = e.id; }
+  }
+  return bestId === T.id;
+}
+
+export function cond(c: string, x: Ctx): boolean {
+  const { s, A, T } = x;
+  if (c.startsWith('!')) return !cond(c.slice(1), x);
+  if (c.startsWith('near:')) return nearCond(x, c);
+  if (c.startsWith('contains:')) { const n = wk(c.slice(9)); return alive(A).some((m) => wk(m.name).includes(n) || wk(m.source).includes(n)); }
+  if (c.startsWith('body:')) return A.sources[0] === c.slice(5) || wk(A.sources[0]).includes(wk(c.slice(5)));
+  if (c.startsWith('leader:')) { const n = wk(c.slice(7)); return hasLivingLeader(A) && A.sources.slice(1).some((src) => n.split('|').some((x2) => wk(src).includes(x2))); }
+  if (c.startsWith('targetKw:')) return !!T && c.slice(9).split('|').some((k) => T.keywords.includes(k));
+  if (c.startsWith('targetMarked:')) return !!T && (T.timed ?? []).some((t) => t.mark === c.slice(13) && t.by === A.owner);
+  if (c.startsWith('modelFrom:')) return !!x.m && wk(x.m.source).includes(wk(c.slice(10)));
+  if (c.startsWith('modelName:')) return !!x.m && wk(x.m.name).includes(wk(c.slice(10)));
+  if (c.startsWith('hasWeapon:')) { const n = wk(c.slice(10)); return (x.bearers?.length ? x.bearers : alive(x.holder ?? A)).some((m) => m.weapons.some((w) => wk(w.name).includes(n))); }
+  if (c.startsWith('farFromEnemies:')) { const r = Number(c.slice(15)); return onBoard(A) && !boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= r + 1e-6); }
+  if (c.startsWith('nearMarked:')) { const [, mark, rs] = c.split(':'); return boardUnits(s, other(A.owner)).some((e) => (e.timed ?? []).some((t) => t.mark === mark && t.by === A.owner) && unitDistance(A, e) <= Number(rs) + 1e-6); }
+  if (c.startsWith('nearModels:')) return nearModelsCond(x, c);
+  if (c.startsWith('bodyKw:')) return A.sources.length > 1 && alive(A).some((m) => m.source === A.sources[0] && m.keywords.includes(c.slice(7)));
+  if (c.startsWith('minModels:')) return alive(A).length >= Number(c.slice(10));
+  if (c.startsWith('minModelsNamed:')) { const [, n, k] = c.split(':'); return alive(A).filter((m) => wk(m.name).includes(wk(n))).length >= Number(k); }
+  if (c.startsWith('modelKw:')) return !!x.m && x.m.keywords.includes(c.slice(8));
+  if (c.startsWith('any:')) return c.slice(4).split('||').some((alt) => cond(alt, x));
+  if (c.startsWith('targetKwAll:')) return !!T && c.slice(12).split('|').some((k) => alive(T).every((n) => n.keywords.includes(k)));
+  switch (c) {
+    case 'charged': return A.chargedTurn === s.turn;
+    case 'stationary': return A.move === 'stationary' || (A.lastStationaryTurn !== undefined && s.turn - A.lastStationaryTurn <= 1);
+    case 'notAdvanced': return A.move !== 'advance';
+    case 'within12': return (x.d ?? Infinity) <= 12 + 1e-6;
+    case 'within6': return (x.d ?? Infinity) <= 6 + 1e-6;
+    case 'targetMV': return !!T && isMVU(T);
+    case 'targetNotMV': return !!T && !isMVU(T);
+    case 'targetMVF': return !!T && (isMVU(T) || hasKw(T, 'FORTIFICATION'));
+    case 'targetCharMV': return !!T && (isMVU(T) || hasKw(T, 'CHARACTER'));
+    case 'targetCharacter': return !!T && hasKw(T, 'CHARACTER');
+    case 'targetInfantry': return !!T && hasKw(T, 'INFANTRY');
+    case 'targetFly': return !!T && hasKw(T, 'FLY');
+    case 'targetNotFly': return !!T && !hasKw(T, 'FLY');
+    case 'targetBelowHalf': return !!T && alive(T).length * 2 < T.startingStrength;
+    case 'targetNotBelowHalf': return !!T && alive(T).length * 2 >= T.startingStrength;
+    case 'targetHidden': return !!T && alive(T).some((n) => isHidden(s, T, n));
+    case 'targetNoT7': return !!T && alive(T).every((n) => n.profile.T < 7);
+    case 'targetIsolated': return !!T && !boardUnits(s, T.owner).some((o) => o.id !== T.id && Math.min(...alive(o).flatMap((a1) => alive(T).map((b1) => baseDist(a1, b1)))) <= 6);
+    case 'targetClosest': return !!T && closestEnemy(s, A, T);
+    case 'targetOath': return !!T && s.players[A.owner].oathTarget === T.id;
+    case 'targetQuarry': return !!T && A.quarry === T.id;
+    case 'targetVowed': return !!T && (s.players[A.owner].vowed ?? []).some((id) => { const o = s.objectives.find((q) => q.id === id); return !!o && unitInRange(s, T, o); });
+    case 'targetOnPriority': return !!T && (() => { const id = s.players[A.owner].priorityObjective; const o = s.objectives.find((q) => q.id === id); return !!o && unitInRange(s, T, o); })();
+    case 'targetNearFriendlyAA12': return !!T && boardUnits(s, A.owner).some((f) => f.factionKeywords.includes('ADEPTUS ASTARTES') && Math.min(...alive(f).flatMap((a1) => alive(T).map((b1) => baseDist(a1, b1)))) <= 12);
+    case 'targetEngagedFriendlyVehicle': return !!T && boardUnits(s, A.owner).some((f) => hasKw(f, 'VEHICLE') && engagedEnemies(s, f).some((e) => e.id === T.id));
+    case 'targetOnObjective': return !!T && onObjective(s, T);
+    case 'belowStarting': return alive(A).length < A.startingStrength;
+    case 'belowHalf': return alive(A).length * 2 < A.startingStrength;
+    case 'battleShocked': return A.battleShocked;
+    case 'notBattleShocked': return !A.battleShocked;
+    case 'inTerrain': return alive(A).some((m) => withinTerrain(s, m).length > 0);
+    case 'onObjective': return onObjective(s, A);
+    case 'onOwnObjective': return onOwnObjective(s, A);
+    case 'centreOrObjective': return onObjective(s, A) || alive(A).some((m) => dist(m, { x: RULES.battlefield.width / 2, y: RULES.battlefield.height / 2 }) - m.r <= 6);
+    case 'objectiveEitherWay': return onObjective(s, A) || (!!T && onObjective(s, T));
+    case 'riled': return isRiled(s, A);
+    case 'setUpThisTurn': return A.setUpTurn === s.turn;
+    case 'chargedOrArrived': return A.chargedTurn === s.turn || A.move === 'ingress' || A.setUpTurn === s.turn;
+    case 'disembarkedThisTurn': return A.disembarkedTurn === s.turn;
+    case 'heavyWeapon': return !!x.p && x.p.abilities.some((a) => a === 'heavy' || a.startsWith('heavy'));
+    case 'plasmaWeapon': return /plasma/i.test(`${x.w?.name ?? ''} ${x.p?.name ?? ''}`);
+    case 'torrentOrMelta': return !!x.p && x.p.abilities.some((a) => a === 'torrent' || a.startsWith('melta'));
+    case 'outnumberOrGangUp': return !!T && (alive(A).length > alive(T).length
+      || boardUnits(s, A.owner).some((f) => f.id !== A.id && f.factionKeywords.includes('ADEPTUS ASTARTES') && engagedEnemies(s, f).some((e) => e.id === T.id)));
+    case 'ownShooting': return s.phase === 'shooting' && A.owner === s.active;
+    case 'ownTurn': return A.owner === s.active;
+    case 'fightPhase': return s.phase === 'fight';
+    case 'shootingPhase': return s.phase === 'shooting';
+    case 'leaderAttached': return hasLivingLeader(A);
+    case 'warlord': return !!(x.holder ?? A).isWarlordUnit;
+    case 'notCharacterModel': return !!x.m && !x.m.isCharacter && !x.m.keywords.includes('CHARACTER');
+    case 'twoMeleeWeapons': return !!x.m && x.m.weapons.filter((w) => w.profiles[0].range === 'Melee').length >= 2;
+    case 'engaged': return engagedEnemies(s, A).length > 0;
+    case 'notEngaged': return engagedEnemies(s, A).length === 0;
+    case 'onBattlefield': return onBoard(x.holder ?? A);
+    case 'holderOnBattlefield': return onBoard(x.holder ?? A);
+    case 'targetSlayer': { const kw = s.players[A.owner].slayer?.[(x.holder ?? A).id]; return !!T && !!kw && hasKw(T, kw); }
+    case 'enemyCharacterWithin12': return boardUnits(s, other(A.owner)).some((e) => hasKw(e, 'CHARACTER') && unitDistance(A, e) <= 12 + 1e-6);
+    case 'engagedWithCharacter': return engagedEnemies(s, A).some((e) => hasKw(e, 'CHARACTER'));
+    case 'ingressThisTurn': return A.setUpTurn === s.turn && A.move === 'ingress';
+    case 'hiddenUnengaged': return onBoard(A) && engagedEnemies(s, A).length === 0 && alive(A).every((m) => isHidden(s, A, m));
+    case 'onHomeObjective': return s.objectives.some((o) => o.type === 'home' && o.owner === A.owner && unitInRange(s, A, o));
+    case 'targetInRangeOfObjective': return !!T && onObjective(s, T);
+    case 'notMoved': return !A.move || A.move === 'stationary';
+    case 'notMovedYet': return !A.move;
+    case 'sameRangedWeapons': {
+      const kinds = new Set(alive(A).flatMap((m) => m.weapons.filter((w) => w.profiles[0].range !== 'Melee').map((w) => w.name)));
+      return kinds.size === 1;
+    }
+    case 'attackSLeqT': return !!x.p && !!T && (x.p.S ?? 0) <= Math.max(...alive(T).map((n) => n.profile.T));
+    case 'enemyPsykerWithin12': return boardUnits(s, other(A.owner)).some((e) => hasKw(e, 'PSYKER') && unitDistance(A, e) <= 12 + 1e-6);
+    case 'unengaged': return engagedEnemies(s, A).length === 0;
+    case 'attackerOnObjectiveOrTarget': return onObjective(s, A) || (!!T && onObjective(s, T));
+    default: return false;
+  }
+}
+
+const riledBase = (s: GameState, u: UnitState) => u.abilities.some((a) => a.name === 'Waaagh!') && s.players[u.owner].riledUntilTurn >= s.turn;
+/** Orks: riled up by WAAAGH!, by an ability or by a timed effect. */
+export function isRiled(s: GameState, u: UnitState): boolean {
+  if (riledBase(s, u) || (u.riledUntil !== undefined && u.riledUntil >= s.turn)) return true;
+  return effectsFor(s, u).some((a) => a.e.riled && (a.e.if ?? []).every((c) => c !== 'riled' && cond(c, { s, A: u, holder: a.holder, bearers: a.from ?? a.bearers })));
+}
+
+const holds = (a: Active, x: Ctx) => (a.e.if ?? []).every((c) => cond(c, { ...x, holder: a.holder, bearers: a.from ?? a.bearers }));
+const modelOk = (a: Active, m?: ModelState) => !a.bearers || !m || a.bearers.some((b) => b.id === m.id);
+const weaponOk = (a: Active, w?: WeaponData, p?: WeaponProfileData) => !a.e.weapon || (!!w && (wk(w.name).includes(wk(a.e.weapon)) || wk(p?.name ?? '').includes(wk(a.e.weapon))));
+const rerolls = (e: { reroll?: Reroll | Reroll[] }): Reroll[] => (e.reroll ? (Array.isArray(e.reroll) ? e.reroll : [e.reroll]) : []);
+
+// ---------- attacks: the attacker's side ----------
+
+/** Effects of the attacking unit that apply to one model's attack with one weapon. */
+export function offenceFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, w: WeaponData, p: WeaponProfileData, kind: 'melee' | 'ranged', d: number): Active[] {
+  const x: Ctx = { s, A, T, m, w, p, d, kind };
+  return effectsFor(s, A).filter((a) => (!a.e.attack || a.e.attack === kind) && modelOk(a, m) && weaponOk(a, w, p) && holds(a, x)
+    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.ignoreHitMods || a.e.givesCover));
+}
+
+/** Marks on the target ("hit by Multi-spectrum Array: +1 to hit for your ADEPTUS ASTARTES") that help this attacker. */
+export function incomingFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, kind: 'melee' | 'ranged'): Incoming[] {
+  return (T.timed ?? []).map((t) => t.e.incoming).filter((i): i is Incoming => !!i && i.by === A.owner && (!i.attack || i.attack === kind) && unitMatches(A, i.units)
+    && (!i.fromTransport || (A.disembarkedTurn === s.turn && A.disembarkedFrom === i.fromTransport)));
+}
+
+/** Does the unit get a weapon ability from some effect, whatever the target (e.g. [ASSAULT] for Advance + shoot)? */
+export function unitGrants(s: GameState, u: UnitState, ability: string, kind: 'melee' | 'ranged'): boolean {
+  return effectsFor(s, u).some((a) => (!a.e.attack || a.e.attack === kind) && a.e.abilities?.includes(ability)
+    && (a.e.if ?? []).every((c) => /^target|^within|Weapon$|^!target/.test(c) || cond(c, { s, A: u, holder: a.holder, bearers: a.from ?? a.bearers })));
+}
+
+export const grants = (list: Active[], inc: Incoming[], ability: string) => list.some((a) => a.e.abilities?.includes(ability)) || inc.some((i) => i.abilities?.includes(ability));
+
+/** Stable key so models with the same effects share an attack pool. */
+export const fxKey = (list: Active[], inc: Incoming[]) => [...list.map((a) => `${a.label}:${JSON.stringify(a.e)}`), ...inc.map((i) => JSON.stringify(i))].sort().join(';');
+
+function addToExpr(expr: string, n: number): string {
+  if (!n) return expr;
+  const m = /^(\d+)$/.exec(expr.trim());
+  if (m) return String(Math.max(1, +m[1] + n));
+  const mm = /^(.*?)([+-]\d+)$/.exec(expr.trim());
+  if (mm && /D/i.test(mm[1])) { const k = +mm[2] + n; return k ? `${mm[1]}${k > 0 ? '+' : ''}${k}` : mm[1]; }
+  return `${expr}${n > 0 ? '+' : ''}${n}`;
+}
+
+/** Apply attacker effects + target marks + target defences to a new pool. Returns UI notes. */
+export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, pool: Pool, list: Active[], inc: Incoming[], kind: 'melee' | 'ranged', d: number, toughness: number, woundNeedFn: (S: number, T: number) => number): string[] {
+  const notes: string[] = [];
+  const hitCap = RULES.modifierCaps.hitRoll, woundCap = RULES.modifierCaps.woundRoll;
+  let strength = pool.profile.S ?? 1;
+  const bump = (label: string, txt: string) => notes.push(`${label}: ${txt}`);
+  for (const a of list) {
+    const e = a.e;
+    if (e.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + e.hit, -hitCap, hitCap); bump(a.label, `${e.hit > 0 ? '+' : ''}${e.hit} hit`); }
+    if (e.wound) { pool.woundMod = clamp(pool.woundMod + e.wound, -woundCap, woundCap); bump(a.label, `${e.wound > 0 ? '+' : ''}${e.wound} wound`); }
+    if (e.ap) { pool.ap -= e.ap; bump(a.label, `+${e.ap} AP`); }
+    if (e.strength) { strength += e.strength; bump(a.label, `+${e.strength} S`); }
+    if (e.attacks) { pool.attackBonus = (pool.attackBonus ?? 0) + e.attacks; bump(a.label, `+${e.attacks} A`); }
+    if (e.damage) { pool.damage = addToExpr(pool.damage, e.damage); bump(a.label, `+${e.damage} D`); }
+    if (e.critHitOn) { pool.critHitOn = Math.min(pool.critHitOn ?? 6, e.critHitOn); bump(a.label, `crit hit ${e.critHitOn}+`); }
+    if (e.ignoreHitMods) { pool.ignoreHitMods = true; bump(a.label, 'ไม่สน modifier ของ hit'); }
+    if (e.attacksPerEmbarked) {
+      const n = s.units.filter((p) => p.embarkedIn === A.id && p.status === 'embarked').reduce((x, p) => x + alive(p).length, 0);
+      const add = Math.min(e.attacksPerEmbarked.max, n * e.attacksPerEmbarked.per);
+      if (add) { pool.attackBonus = (pool.attackBonus ?? 0) + add; bump(a.label, `+${add} A`); }
+    }
+    if (e.attacksTo) { pool.instances = pool.instances.map((i) => ({ ...i, A: String(e.attacksTo) })); pool.profile = { ...pool.profile, A: String(e.attacksTo) }; bump(a.label, `A${e.attacksTo}`); }
+    for (const r of rerolls(e)) applyReroll(pool, r, a.label, notes);
+    for (const ab of e.abilities ?? []) applyAbility(pool, ab, a.label, notes, kind, A, s, T);
+  }
+  for (const i of inc) {
+    if (i.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + i.hit, -hitCap, hitCap); notes.push(`เป้าโดนมาร์ก: +${i.hit} hit`); }
+    if (i.wound) { pool.woundMod = clamp(pool.woundMod + i.wound, -woundCap, woundCap); notes.push(`เป้าโดนมาร์ก: +${i.wound} wound`); }
+    if (i.ap) { pool.ap -= i.ap; notes.push(`เป้าโดนมาร์ก: +${i.ap} AP`); }
+    for (const r of rerolls(i)) applyReroll(pool, r, 'เป้าโดนมาร์ก', notes);
+    for (const ab of i.abilities ?? []) applyAbility(pool, ab, 'เป้าโดนมาร์ก', notes, kind, A, s, T);
+  }
+  // the target's side
+  const def = defencesFor(s, T, kind);
+  for (const { e, label } of def) {
+    const df = e.defend!;
+    const sm = df.strengthMinus ?? df.enemyStrengthMinus ?? 0;
+    if (sm) { strength -= sm; notes.push(`${label}: S −${sm}`); }
+  }
+  if (strength !== (pool.profile.S ?? 1)) pool.woundNeed = woundNeedFn(Math.max(1, strength), toughness);
+  pool.effS = strength;
+  for (const { e, label } of def) {
+    const df = e.defend!;
+    if (df.hit && !pool.autoHit && !pool.ignoreHitMods) { pool.hitMod = clamp(pool.hitMod + df.hit, -hitCap, hitCap); notes.push(`${label}: ${df.hit} hit`); }
+    let wm = df.wound ?? 0;
+    if ((df.woundIfStronger || df.woundMinusIfStronger) && strength > toughness) wm += df.woundIfStronger ?? -1;
+    if (df.woundIfStrongerOrEqual && strength >= toughness) wm += df.woundIfStrongerOrEqual;
+    if (wm) { pool.woundMod = clamp(pool.woundMod + wm, -woundCap, woundCap); notes.push(`${label}: ${wm} wound`); }
+    if (df.ap && pool.ap < 0) { pool.ap = Math.min(0, pool.ap + df.ap); notes.push(`${label}: AP แย่ลง ${df.ap}`); }
+  }
+  if (notes.length) pool.woundNote = [pool.woundNote, notes.join(' · ')].filter(Boolean).join(' · ');
+  void d;
+  return notes;
+}
+
+function applyReroll(pool: Pool, r: Reroll, label: string, notes: string[]) {
+  if (r === 'hits' && !pool.rerollAllHits) { pool.rerollAllHits = true; notes.push(`${label}: re-roll hit`); }
+  if (r === 'hits1' && !pool.rerollHits1) { pool.rerollHits1 = true; notes.push(`${label}: re-roll hit 1`); }
+  if (r === 'wounds' && !pool.rerollAllWounds) { pool.rerollAllWounds = true; notes.push(`${label}: re-roll wound`); }
+  if (r === 'wounds1' && !pool.rerollWounds1) { pool.rerollWounds1 = true; notes.push(`${label}: re-roll wound 1`); }
+  if (r === 'damage' && !pool.rerollDamage) { pool.rerollDamage = true; notes.push(`${label}: re-roll damage`); }
+}
+
+function applyAbility(pool: Pool, ab: string, label: string, notes: string[], kind: 'melee' | 'ranged', A: UnitState, s: GameState, T: UnitState) {
+  const a = ab.toLowerCase();
+  let m: RegExpExecArray | null;
+  if ((m = /^sustained hits (\d|d3)$/.exec(a))) { if (!pool.sustained || (/^\d$/.test(pool.sustained) && /^\d$/.test(m[1]) && +m[1] > +pool.sustained)) { pool.sustained = m[1].toUpperCase(); notes.push(`${label}: Sustained Hits ${m[1]}`); } return; }
+  if (a === 'lethal hits') { if (!pool.lethal) { pool.lethal = true; notes.push(`${label}: Lethal Hits`); } return; }
+  if (a === 'devastating wounds') { if (!pool.devastating) { pool.devastating = true; notes.push(`${label}: Devastating Wounds`); } return; }
+  if (a === 'precision') { if (!pool.precision) { pool.precision = true; notes.push(`${label}: Precision`); } return; }
+  if (a === 'precision on crit') { if (!pool.precision && !pool.precisionOnCrit) { pool.precisionOnCrit = true; notes.push(`${label}: Precision (critical hit)`); } return; }
+  if (a === 'twin-linked') { if (!pool.twinLinked) { pool.twinLinked = true; notes.push(`${label}: Twin-linked`); } return; }
+  if (a === 'hazardous') { pool.hazardousAll = true; notes.push(`${label}: Hazardous`); return; }
+  if (a === 'psychic') { pool.psychic = true; return; }
+  if (a === 'lance') { if (kind === 'melee' && A.chargedTurn === s.turn) { pool.woundMod = clamp(pool.woundMod + 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll); notes.push(`${label}: Lance +1 wound`); } return; }
+  if ((m = /^anti-([a-z ]+) (\d)\+$/.exec(a))) { if (T.keywords.includes(m[1].toUpperCase())) { pool.critWoundOn = Math.min(pool.critWoundOn, +m[2]); notes.push(`${label}: Anti-${m[1]} ${m[2]}+`); } return; }
+  // assault / heavy / ignores cover / blast / rapid fire are handled while the pool is built
+}
+
+/** Defensive effects of the target relevant to an attack of this kind. */
+export function defencesFor(s: GameState, T: UnitState, kind: 'melee' | 'ranged', m?: ModelState): Active[] {
+  return effectsFor(s, T).filter((a) => {
+    const df = a.e.defend;
+    if (!df) return false;
+    const vs = df.vs ?? (df.rangedOnly ? 'ranged' : undefined);
+    if (vs && vs !== kind) return false;
+    if (a.bearers && m && !a.bearers.some((b) => b.id === m.id)) return false;
+    if (a.bearers && !m && !alive(T).every((x) => a.bearers!.some((b) => b.id === x.id))) return false; // "this model" counts for the whole unit only if it is the whole unit
+    return holds(a, { s, A: T });
+  }).map((a) => ({ ...a }));
+}
+
+export const targetHasCover = (s: GameState, T: UnitState, d: number) => defencesFor(s, T, 'ranged').some((a) => a.e.defend!.cover || (a.e.defend!.coverUnless12 && d > 12 + 1e-6))
+  || effectsFor(s, T).some((a) => a.e.stealth && holds(a, { s, A: T }));
+
+/** "Cannot be targeted by ranged attacks unless the attacking model is within 12"". */
+export const untargetableAt = (s: GameState, T: UnitState, d: number) => d > 12 + 1e-6 && defencesFor(s, T, 'ranged').some((a) => a.e.defend!.untargetableBeyond12);
+
+/** Damage, invulnerable save and Feel No Pain for one model hit by an attack. */
+export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'melee' | 'ranged' | 'mortal', psychic = false) {
+  const list = kind === 'mortal' ? effectsFor(s, T).filter((a) => a.e.defend && modelOk(a, m) && holds(a, { s, A: T })) : defencesFor(s, T, kind, m);
+  let damage = 0, halve = false, inv: number | null = null, fnp: number | null = null, saveBonusD1 = 0, negate = false;
+  for (const a of list) {
+    const df = a.e.defend!;
+    if (a.bearers && !a.bearers.some((b) => b.id === m.id)) continue;
+    if (kind !== 'mortal') {
+      if (df.negateOncePerPhase && T.used?.[`negate:${m.id}`] !== phaseKey(s)) negate = true;
+      if (df.damage) damage += df.damage;
+      if (df.halveDamage) halve = true;
+      if (df.inv && (inv === null || df.inv < inv)) inv = df.inv;
+      if (df.saveBonusD1) saveBonusD1 = Math.max(saveBonusD1, df.saveBonusD1);
+    }
+    if (df.fnp) {
+      const vs = df.fnpVs;
+      const ok = !vs || (vs === 'mortal' && kind === 'mortal') || (vs === 'psychic' && psychic) || (vs === 'mortalPsychic' && (kind === 'mortal' || psychic));
+      if (ok && (fnp === null || df.fnp < fnp)) fnp = df.fnp;
+    }
+  }
+  return { damage, halve, inv, fnp, saveBonusD1, negate };
+}
+
+/** Abilities of one model even after it was destroyed ("If this model is destroyed by a melee attack…"). */
+function modelRules(s: GameState, u: UnitState, m: ModelState): { e: Effect; label: string }[] {
+  const out: { e: Effect; label: string }[] = [];
+  for (const a of u.abilities) {
+    const rule = abilityRule(u, a);
+    if (!rule?.effects || abilityOff(u, a) || abilitySheet(u, a) !== m.source) continue;
+    for (const e of rule.effects) if ((e.scope ?? 'unit') === 'model' || (e.scope ?? 'unit') === 'unit') out.push({ e, label: a.name });
+  }
+  return out;
+}
+
+/** "Fights on death" and "shoots on death" that apply to this destroyed model. */
+export function fightOnDeathFor(s: GameState, u: UnitState, m: ModelState): { fight?: { on: number; label: string; regain?: string }; shoot?: { on: number; label: string } } {
+  const list = [
+    ...effectsFor(s, u).filter((a) => !a.bearers && (a.e.fightOnDeath || a.e.shootOnDeath)).map((a) => ({ e: a.e, label: a.label, holder: a.holder })),
+    ...modelRules(s, u, m).filter((r) => r.e.fightOnDeath || r.e.shootOnDeath).map((r) => ({ ...r, holder: u })),
+  ].filter((a) => (a.e.if ?? []).every((c) => cond(c, { s, A: u, m, holder: a.holder })));
+  const out: ReturnType<typeof fightOnDeathFor> = {};
+  for (const a of list) {
+    if (a.e.fightOnDeath && (!out.fight || a.e.fightOnDeath < out.fight.on)) out.fight = { on: a.e.fightOnDeath, label: a.label, regain: a.e.fightOnDeathRegain };
+    if (a.e.shootOnDeath && (!out.shoot || a.e.shootOnDeath < out.shoot.on)) out.shoot = { on: a.e.shootOnDeath, label: a.label };
+  }
+  return out;
+}
+
+/** Strikes of Retribution: mortal wounds back for melee attacks allocated to this model. */
+export function retaliateFor(s: GameState, u: UnitState, m: ModelState): { on: number; max: number; label: string } | null {
+  const r = modelRules(s, u, m).find((x) => x.e.retaliate);
+  return r ? { ...r.e.retaliate!, label: r.label } : null;
+}
+
+/** Use the once-per-phase "change the Damage of that attack to 0" of a model. */
+export const useNegate = (s: GameState, T: UnitState, m: ModelState) => { (T.used ??= {})[`negate:${m.id}`] = phaseKey(s); };
+
+// ---------- eligibility, rolls, stats ----------
+
+export function canDo(s: GameState, u: UnitState, what: Eligibility): boolean {
+  return effectsFor(s, u).some((a) => a.e.eligible?.includes(what) && holds(a, { s, A: u }));
+}
+
+const unitFx = (s: GameState, u: UnitState) => effectsFor(s, u).filter((a) => holds(a, { s, A: u }));
+
+export function rollMods(s: GameState, u: UnitState) {
+  const es = unitFx(s, u).map((a) => a.e);
+  return {
+    rerollAdvance: es.some((e) => e.rerollAdvance),
+    rerollCharge: es.some((e) => e.rerollCharge),
+    advanceSix: es.some((e) => e.advanceSix),
+    advanceBonus: es.reduce((a, e) => a + (e.advanceBonus ?? 0), 0),
+    chargeBonus: es.reduce((a, e) => a + (e.chargeBonus ?? 0), 0),
+    rerollShock: es.some((e) => e.rerollShock),
+    advanceSelfMortals: es.find((e) => e.advanceSelfMortals)?.advanceSelfMortals,
+  };
+}
+
+export function unitFlags(s: GameState, u: UnitState) {
+  const list = unitFx(s, u);
+  const es = list.map((a) => a.e);
+  return {
+    stealth: es.some((e) => e.stealth),
+    loneOperative: es.some((e) => e.loneOperative),
+    deepStrike: es.some((e) => e.deepStrike),
+    fightsFirst: es.some((e) => e.fightsFirst),
+    scouts: Math.max(0, ...es.map((e) => e.scouts ?? 0)),
+    move: es.reduce((a, e) => a + (e.move ?? 0), 0),
+    ld: es.reduce((a, e) => a + (e.ld ?? 0), 0),
+    toughness: es.reduce((a, e) => a + (e.toughness ?? 0), 0),
+    cannotFallBack: es.some((e) => e.cannotFallBack),
+    noOverwatch: es.some((e) => e.noOverwatch),
+    cannotBeHidden: es.some((e) => e.cannotBeHidden),
+    detection: es.reduce((a, e) => a + (e.detection ?? 0), 0),
+    rangeMinus: es.reduce((a, e) => a + (e.rangeMinus ?? 0), 0),
+    forceDesperate: es.some((e) => e.forceDesperate),
+    overwatchHitOn: Math.min(6, ...es.map((e) => e.overwatchHitOn ?? 6)),
+    moveThroughModels: es.some((e) => e.moveThroughModels),
+    givesCover: es.some((e) => e.givesCover),
+    assaultDisembark: es.some((e) => e.assaultDisembark),
+    disembarkAfterAdvance: es.some((e) => e.disembarkAfterAdvance),
+    noEmbark: es.some((e) => e.noEmbark),
+    omniScrambler: Math.max(0, ...es.map((e) => e.omniScrambler ?? 0)),
+    deepStrikeRange: Math.min(RULES.reserves.enemyDistance, ...es.map((e) => e.deepStrikeRange ?? RULES.reserves.enemyDistance)),
+    arriveFromRound: Math.min(RULES.reserves.firstRound, ...es.map((e) => e.arriveFromRound ?? RULES.reserves.firstRound)),
+    noBigGunsPenalty: es.some((e) => e.noBigGunsPenalty),
+    followFallBack: es.some((e) => e.followFallBack),
+    fallBackLdTest: list.some((a) => a.e.fallBackLdTest && a.holder.owner !== u.owner),
+    slowed: es.some((e) => e.slowed),
+    ldSet: Math.min(99, ...es.map((e) => e.ldSet ?? 99)),
+    advanceHazard: es.some((e) => e.advanceHazard),
+    grounded: es.some((e) => e.grounded),
+    oppMoveIngress: es.some((e) => e.oppMoveIngress),
+    oathBackup: es.some((e) => e.oathBackup),
+  };
+}
+
+// ---------- stratagem cost: discounts (Rites of Battle …), taxes (Unorthodox Strategist …), CP refunds ----------
+
+const periodKey = (s: GameState, limit?: Limit) => (limit === 'battle' ? 'battle' : limit === 'round' ? `r${s.round}` : limit === 'turn' ? `t${s.turn}` : limit === 'phase' ? phaseKey(s) : '');
+const limitBag = (s: GameState, a: Active, perArmy?: boolean) => (perArmy ? (s.players[a.holder.owner].abilityUsed ??= {}) : (a.holder.used ??= {}));
+const limitFree = (s: GameState, a: Active, tag: string, limit?: Limit, perArmy?: boolean) => !limit || limitBag(s, a, perArmy)[`${tag}:${a.label}`] !== periodKey(s, limit);
+
+interface StratParts { discount?: Active; tax?: Active; cp: number }
+function stratParts(s: GameState, u: UnitState, stratId: string): StratParts {
+  let discount: Active | undefined, tax: Active | undefined;
+  for (const a of unitFx(s, u)) {
+    const d = a.e.stratDiscount;
+    if (d && a.holder.owner === u.owner && (d.ids.includes(stratId) || d.ids.includes('*')) && limitFree(s, a, 'strat', d.limit, d.perArmy)
+      && (!discount || d.cp > discount.e.stratDiscount!.cp)) discount = a;
+    const t = a.e.stratTax;
+    if (t && a.holder.owner !== u.owner && limitFree(s, a, 'tax', t.limit) && (!tax || t.cp > tax.e.stratTax!.cp)) tax = a;
+  }
+  return { discount, tax, cp: (discount?.e.stratDiscount!.cp ?? 0) - (tax?.e.stratTax!.cp ?? 0) };
+}
+
+/** CP change for a stratagem used on this unit: positive = cheaper. */
+export const stratDiscount = (s: GameState, u: UnitState, stratId: string): number => stratParts(s, u, stratId).cp;
+
+/** The stratagem was paid: use up the limited discount / tax and roll CP refunds (Infiltrator Comms Array …). */
+function stratSpent(s: GameState, u: UnitState, stratId: string) {
+  const { discount, tax } = stratParts(s, u, stratId);
+  if (discount) {
+    const d = discount.e.stratDiscount!;
+    if (d.limit) limitBag(s, discount, d.perArmy)[`strat:${discount.label}`] = periodKey(s, d.limit);
+    log(s, `${discount.label}: stratagem ถูกลง ${d.cp}CP`, 'cp', u.owner);
+  }
+  if (tax) {
+    const t = tax.e.stratTax!;
+    if (t.limit) limitBag(s, tax)[`tax:${tax.label}`] = periodKey(s, t.limit);
+    log(s, `${tax.label} (${tax.holder.name}): stratagem แพงขึ้น ${t.cp}CP`, 'cp', tax.holder.owner);
+  }
+  for (const a of unitFx(s, u)) {
+    if (!a.e.stratCpChance || a.holder.owner !== u.owner) continue;
+    const r = d6(s);
+    const ok = r >= a.e.stratCpChance;
+    if (ok) s.players[u.owner].cp += 1;
+    log(s, `${a.label}: ทอย ${r}${ok ? ' → +1CP' : ''}`, 'cp', u.owner);
+  }
+}
+
+/** Objective Control of the models of a unit (detachment and ability bonuses, auras, enemy debuffs). */
+export function ocOf(s: GameState, u: UnitState): (m: ModelState) => number {
+  const list = effectsFor(s, u);
+  return (m) => {
+    const fx = list.filter((a) => modelOk(a, m) && holds(a, { s, A: u, m }));
+    if (u.battleShocked) return fx.reduce((a, x) => Math.max(a, x.e.shockedOc ?? 0), 0);
+    if (fx.some((x) => x.e.ocZero)) return 0;
+    let oc = m.profile.OC ?? 0;
+    for (const x of fx) if (x.e.ocSet !== undefined) oc = Math.max(oc, x.e.ocSet);
+    for (const x of fx) oc += x.e.oc ?? 0;
+    if (fx.some((x) => x.e.embarkedOc)) oc += s.units.filter((p) => p.embarkedIn === u.id && p.status === 'embarked').reduce((a, p) => a + alive(p).reduce((b, n) => b + (n.profile.OC ?? 0), 0), 0);
+    if (fx.some((x) => x.e.ocHalve)) oc = Math.ceil(oc / 2);
+    return Math.max(0, oc);
+  };
+}
+export const modelOc = (s: GameState, u: UnitState, m: ModelState) => ocOf(s, u)(m);
+
+// ---------- timed effects ----------
+
+/** Put a timed effect on a unit (own buff, or a mark on an enemy unit). */
+export function addTimed(s: GameState, u: UnitState, t: Omit<TimedEffect, 'turn'>) {
+  (u.timed ??= []).push({ ...t, turn: s.turn });
+}
+
+/** Drop timed effects whose time is up. Called at phase and turn boundaries. */
+export function expireTimed(s: GameState, at: 'phaseEnd' | 'turnEnd' | 'turnStart' | 'commandStart' | 'movementStart', player: PlayerId) {
+  for (const u of s.units) {
+    if (!u.timed?.length) continue;
+    u.timed = u.timed.filter((t) => {
+      switch (t.until) {
+        case 'phase': return at !== 'phaseEnd';
+        case 'turn': return at !== 'turnEnd';
+        case 'nextTurnStart': return !(at === 'turnStart' && player === t.by);
+        case 'nextCommand': return !(at === 'commandStart' && player === t.by);
+        case 'nextMovement': return !(at === 'movementStart' && player === t.by);
+        case 'endOfNextTurn': return !(at === 'turnEnd' && s.turn > t.turn);
+        case 'opponentNextMovementEnd': return !(at === 'phaseEnd' && s.phase === 'movement' && s.active !== t.by && s.turn > t.turn);
+        default: return true;
+      }
+    });
+  }
+}
+
+/** Short labels of what currently affects a unit, for the unit card. */
+export function activeLabels(s: GameState, u: UnitState): string[] {
+  const out = new Set<string>();
+  for (const a of effectsFor(s, u)) if (holds(a, { s, A: u }) || (a.e.if ?? []).some((c) => /target|within|charged|weapon/i.test(c))) out.add(a.label);
+  return [...out];
+}
+
+export { onObjective };
+
+// ---------- fast checks used by visibility (called very often) ----------
+
+/** Lone Operative from an ability ("while within 3" of a friendly X unit, this model has Lone Operative"). */
+export function loneOperativeNow(s: GameState, u: UnitState): boolean {
+  if (u.sources.length !== 1) return false;
+  for (const a of u.abilities) {
+    const r = abilityRule(u, a);
+    for (const e of r?.effects ?? []) if (e.loneOperative && (e.if ?? []).every((c) => cond(c, { s, A: u, holder: u, bearers: alive(u) }))) return true;
+  }
+  return (u.timed ?? []).some((t) => t.e.loneOperative);
+}
+
+setVisibilityHooks({
+  loneOperative: loneOperativeNow,
+  detection: (_s, u) => (u.timed ?? []).reduce((a, t) => a + (t.e.detection ?? 0), 0),
+  cannotBeHidden: (_s, u) => (u.timed ?? []).some((t) => t.e.cannotBeHidden),
+});
+
+setStratHooks(stratDiscount, stratSpent);
+setThroughHook((s, u, kind) => {
+  const f = unitFx(s, u).map((a) => a.e);
+  if (f.some((e) => e.moveThroughModels)) return 'all';
+  if (kind === 'charge' && f.some((e) => e.chargeThroughModels)) return 'nonMV';
+  return null;
+});
+
+// ---------- fixed at Declare Battle Formations ----------
+
+/** Keyword and characteristic changes that hold for the whole battle ("while attached to a MOUNTED unit, this model has MOBILE …"). */
+export function applyStaticEffects(s: GameState) {
+  for (const u of s.units) {
+    for (const a of u.abilities) {
+      const rule = abilityRule(u, a);
+      for (const e of rule?.effects ?? []) {
+        if (!e.mobile && !e.addKeywords && !e.removeKeywords && !e.statM) continue;
+        if (!(e.if ?? []).every((c) => cond(c, { s, A: u, holder: u }))) continue;
+        const ms = (e.scope === 'model' || e.scope === undefined) && rule ? bearersOf(u, a, rule) : alive(u);
+        for (const m of ms) {
+          const add = [...(e.addKeywords ?? []), ...(e.mobile ? ['MOBILE'] : [])];
+          m.keywords = [...new Set([...m.keywords.filter((k) => !(e.removeKeywords ?? []).includes(k)), ...add])];
+          if (e.statM && m.profile.M !== undefined && m.profile.M !== null) m.profile = { ...m.profile, M: m.profile.M + e.statM };
+        }
+        u.keywords = [...new Set(alive(u).flatMap((m) => m.keywords))];
+      }
+    }
+  }
+}

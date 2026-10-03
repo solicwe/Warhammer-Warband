@@ -7,6 +7,15 @@ import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types
 
 interface Blockers { walls: { a: Pt; b: Pt }[]; areas: TerrainPiece[] }
 
+/** Rules from abilities that change visibility (registered by effects.ts so this module stays dependency-free). */
+export interface VisibilityHooks {
+  loneOperative?: (s: GameState, u: UnitState) => boolean;
+  detection?: (s: GameState, u: UnitState) => number;
+  cannotBeHidden?: (s: GameState, u: UnitState) => boolean;
+}
+let hooks: VisibilityHooks = {};
+export const setVisibilityHooks = (h: VisibilityHooks) => { hooks = h; };
+
 function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false): Blockers {
   const walls = s.terrain.filter((t) => t.category === 'dense').flatMap((t) => t.walls);
   const areas = s.terrain.filter(
@@ -42,12 +51,13 @@ function shotRecently(s: GameState, u: UnitState) {
 /** Hidden (13.09): INFANTRY/BEASTS/SWARM in a light/dense terrain area, no ranged attacks this or the previous turn. */
 export function isHidden(s: GameState, u: UnitState, m: ModelState): boolean {
   if (!['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k))) return false;
+  if (hooks.cannotBeHidden?.(s, u)) return false;
   if (shotRecently(s, u)) return false;
   return s.terrain.some((t) => t.category !== 'exposed' && circleTouchesPoly(m, m.r, t.poly));
 }
 
 export function detectionRange(s: GameState, observer: ModelState, u: UnitState, m: ModelState): number {
-  let range = RULES.hidden.detectionRange;
+  let range = RULES.hidden.detectionRange + (hooks.detection?.(s, u) ?? 0);
   if (!fullyVisible(s, observer, m, true)) range -= RULES.hidden.goneToGroundReduction; // gone to ground
   return range;
 }
@@ -55,7 +65,7 @@ export function detectionRange(s: GameState, observer: ModelState, u: UnitState,
 /** Can `observer` see model `m` of unit `u`, applying Hidden and Lone Operative. */
 export function modelVisible(s: GameState, observer: ModelState, u: UnitState, m: ModelState): boolean {
   const d = baseDist(observer, m);
-  if (u.core.loneOperative && u.sources.length === 1 && d > u.core.loneOperative) return false;
+  if (u.sources.length === 1 && (u.core.loneOperative || hooks.loneOperative?.(s, u)) && d > (u.core.loneOperative ?? 12)) return false;
   if (isHidden(s, u, m) && d > detectionRange(s, observer, u, m)) return false;
   return hasLos(s, observer, m);
 }

@@ -370,6 +370,54 @@ function makeModels(sheet: DatasheetData, e: Pick<ArmyUnitEntry, 'models' | 'war
   });
 }
 
+/** Abilities that split a unit in two at Declare Battle Formations. `drop`: abilities the first / second unit loses. */
+export const SPLITS: Record<string, { how: 'half' | 'byModel'; byName?: string; must?: boolean; drop?: [string[], string[]]; label: string }> = {
+  'Combat Squads': { how: 'half', label: 'แยกเป็น 2 หน่วย หน่วยละ 5 (Combat Squads)' },
+  'Taktikal Know-wotz': { how: 'half', drop: [['Found ’Em!'], ['Bomb Squig (Once per battle, per unit)']], label: 'แยกเป็น 2 หน่วย หน่วยละ 5 (หน่วยแรกมี Bomb Squig อีกหน่วยมี Found ’Em!)' },
+  'Let Loose the Wolves': { how: 'byModel', byName: 'Hunting Wol', must: true, label: 'Headtakers กับ Hunting Wolves แยกเป็นคนละหน่วยเสมอ' },
+};
+export const splitRuleOf = (sheet: DatasheetData | undefined) => {
+  const a = sheet?.abilities.find((x) => SPLITS[x.name]);
+  return a ? { name: a.name, ...SPLITS[a.name] } : undefined;
+};
+
+/** Split one built unit into two (the leader, Warlord and enhancement stay with the first). */
+function splitUnit(unit: UnitState, sheet: DatasheetData, rule: NonNullable<ReturnType<typeof splitRuleOf>>, bodyPts: number): UnitState | null {
+  const body = unit.models.filter((m) => m.source === sheet.name);
+  const moving = rule.how === 'half'
+    ? body.filter((m) => !m.isCharacter).slice(-Math.floor(body.length / 2))
+    : body.filter((m) => wkey(m.name).includes(wkey(rule.byName ?? '')));
+  if (!moving.length || moving.length >= body.length) return null;
+  const ids = new Set(moving.map((m) => m.id));
+  unit.models = unit.models.filter((m) => !ids.has(m.id));
+  unit.startingStrength = unit.models.length;
+  const ptsB = Math.round((bodyPts * moving.length) / body.length);
+  unit.pts -= ptsB;
+  const drop = rule.drop ?? [[], []];
+  unit.abilities = unit.abilities.filter((a) => !(a.sheet === sheet.name && drop[0].includes(a.name)));
+  if (unit.sources.length === 1) unit.name = `${sheet.name} (1)`;
+  const kws = [...new Set(moving.flatMap((m) => m.keywords))];
+  return {
+    ...unit,
+    id: `${unit.id}-b`,
+    name: `${sheet.name} (2)`,
+    sources: [sheet.name],
+    keywords: kws.length ? kws : sheet.keywords,
+    models: moving,
+    startingStrength: moving.length,
+    abilities: unit.abilities.filter((a) => a.sheet === sheet.name && !drop[1].includes(a.name)).concat(drop[0].length ? sheet.abilities.filter((a) => drop[0].includes(a.name)).map((a) => ({ ...a, sheet: sheet.name, faction: unit.abilities[0]?.faction })) : []),
+    core: coreAbilities([sheet]),
+    pts: ptsB,
+    transport: null,
+    isWarlordUnit: false,
+    enhancements: [],
+    buffs: [],
+    oneShotUsed: [],
+    weaponsFired: [],
+    chargeTargets: [],
+  };
+}
+
 export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId): UnitState[] {
   const sheetOf = (e: ArmyUnitEntry) => faction.datasheets.find((d) => d.name === e.datasheet)!;
   const units: UnitState[] = [];
@@ -398,7 +446,7 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       factionKeywords: [...new Set(sheets.flatMap((s) => s.factionKeywords))],
       models,
       startingStrength: models.length,
-      abilities: sheets.flatMap((s) => s.abilities.map((a) => ({ ...a, model: a.model || (sheets.length > 1 ? s.name : undefined) }))),
+      abilities: sheets.flatMap((s) => s.abilities.map((a) => ({ ...a, sheet: s.name, faction: faction.id, model: a.model || (sheets.length > 1 ? s.name : undefined) }))),
       core,
       pts: [e, ...joiners].reduce((a, j) => a + j.pts + (j.wargearPts ?? 0), 0),
       status: 'pending',
@@ -417,6 +465,11 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       selectedToShoot: false, declaredCharge: false, chargeRoll: null, chargedTurn: -10, chargeTargets: [],
       fought: false, foughtFirstUntilTurn: -10, stratagemPhase: null, oneShotUsed: [], buffs: [],
     });
+    const sp = splitRuleOf(sheet);
+    if (sp && (e.split || sp.must)) {
+      const second = splitUnit(units[units.length - 1], sheet, sp, e.pts + (e.wargearPts ?? 0));
+      if (second) units.push(second);
+    }
   }
   return units;
 }

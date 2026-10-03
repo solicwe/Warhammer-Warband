@@ -53,9 +53,21 @@ export function strength(u: UnitState): 'full' | 'below' | 'half' | 'belowHalf' 
 
 export const phaseKey = (s: GameState) => `${s.turn}:${s.phase}`;
 
-export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit?: UnitState, cost?: number): string | null {
+/** CP discount (+) or tax (−) for using a stratagem on a unit (Rites of Battle, Unorthodox Strategist …) and what happens
+ *  once it is paid (limited uses, CP refunds); registered by effects.ts so this module stays free of rules. */
+type DiscountHook = (s: GameState, u: UnitState, id: string) => number;
+type SpentHook = (s: GameState, u: UnitState, id: string) => void;
+let discountHook: DiscountHook | null = null;
+let spentHook: SpentHook | null = null;
+export const setStratHooks = (discount: DiscountHook, spent: SpentHook) => { discountHook = discount; spentHook = spent; };
+export const stratCost = (s: GameState, id: string, unit?: UnitState, cost?: number) => {
   const def = RULES.coreStratagems.find((x) => x.id === id);
-  const cp = cost ?? def?.cp ?? 1;
+  const base = cost ?? def?.cp ?? 1;
+  return unit && discountHook ? Math.max(0, base - discountHook(s, unit, id)) : base;
+};
+
+export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit?: UnitState, cost?: number): string | null {
+  const cp = stratCost(s, id, unit, cost);
   const p = s.players[player];
   if (p.cp < cp) return 'CP ไม่พอ';
   if (p.stratagemsUsed.includes(`${phaseKey(s)}:${id}`)) return 'ใช้ stratagem นี้ไปแล้วใน phase นี้';
@@ -69,12 +81,13 @@ export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit
 
 export function spendStratagem(s: GameState, player: PlayerId, id: string, unit?: UnitState, cost?: number) {
   const def = RULES.coreStratagems.find((x) => x.id === id);
-  const cp = cost ?? def?.cp ?? 1;
+  const cp = stratCost(s, id, unit, cost);
   s.players[player].cp -= cp;
   s.players[player].stratagemsUsed.push(`${phaseKey(s)}:${id}`);
   if (unit) unit.stratagemPhase = phaseKey(s);
   if (id === 'insane-bravery') s.players[player].insaneBraveryUsed = true;
   log(s, `ใช้ ${def?.name ?? id} (−${cp}CP)${unit ? ' กับ ' + unit.name : ''}`, 'cp', player);
+  if (unit && spentHook) spentHook(s, unit, id);
 }
 
 export function withinTerrain(s: GameState, m: ModelState, categories: string[] = ['exposed', 'light', 'dense']) {

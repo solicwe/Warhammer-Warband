@@ -1,0 +1,856 @@
+// Abilities you use (buttons) or that happen at a moment of the game (triggers):
+// "Once per battle, at the start of the Fight phase…", "In your Command phase, this unit heals 3 wounds",
+// "Each time this unit ends a Charge move, roll one D6…", "After this unit has shot, select one enemy unit hit…".
+// The specs live with the ability in data/abilities/<faction>.json ("act"), so new abilities are data, not code.
+import {
+  applyMortalWounds, buildFightPools, buildShootPools, finishAttack, forceDie, onAttackFinished, onModelKilled, onMortalWounds, rerollOne, resolveAll, startAttack,
+} from './attack';
+import { RULES } from './config';
+import { d6, rollExpr, rollN } from './dice';
+import {
+  abilityOff, abilityRule, abilitySheet, addTimed, cond, DET_RULES, fightOnDeathFor, isRiled, retaliateFor, type AbilityRule, type Effect, type Incoming, type Limit,
+  unitFlags, unitMatches,
+} from './effects';
+import { baseDist, dist } from './geometry';
+import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, pushFx, unitById, unitDistance } from './state';
+import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from './types';
+import { unitVisibleTo } from './visibility';
+
+export type Trigger =
+  | 'formation' | 'battleStart' | 'roundStart' | 'commandStart' | 'command' | 'anyCommand' | 'commandEnd'
+  | 'movement' | 'endOfNormalMove' | 'movementEnd' | 'shooting' | 'selectedToShoot' | 'afterShooting' | 'afterShootingButton'
+  | 'selectedToFight' | 'fightStart' | 'fightStartButton' | 'afterFighting' | 'endOfCharge'
+  | 'anyPhase' | 'opponentTurnEnd' | 'opponentFightEnd' | 'onDeath' | 'friendlyDeath' | 'shotByEnemy' | 'enemyMovedNear' | 'enemyFellBack'
+  | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks';
+
+export type Until = TimedEffect['until'];
+
+export interface TargetSpec {
+  side: 'self' | 'friendly' | 'enemy';
+  range?: number; // within X" of the ability's models
+  engaged?: boolean; // enemy unit engaged with the ability's unit
+  visible?: boolean;
+  units?: string[]; // keyword filters
+  notSelf?: boolean;
+  hit?: boolean; // enemy unit hit by this unit's attacks this phase
+  hitWeapon?: string; // … hit by attacks with this weapon
+  shocked?: boolean; // friendly unit that is battle-shocked
+  damaged?: boolean; // friendly unit with a wounded model
+  each?: boolean; // every unit that qualifies, not one of them
+  count?: number | 'round'; // with each: at most this many (closest to the enemy first)
+  charged?: boolean; // enemy unit that made a Charge move this phase
+  closest?: boolean; // the closest enemy unit
+  anywhere?: boolean; // units not on the battlefield count too (Declare Battle Formations, start of the battle)
+  inReserves?: boolean; // friendly unit in Reserves
+  attacker?: boolean; // the unit whose attack destroyed this model
+  notLoneOperative?: boolean;
+  ctxUnit?: boolean; // the unit the trigger is about (e.g. the unit disembarking)
+}
+
+export interface Action {
+  on?: 'self' | 'target' | 'attacker';
+  buff?: Effect[]; // timed effect on the unit
+  bearerOnly?: boolean; // … on the models that have the ability only ("this model")
+  incoming?: Omit<Incoming, 'by'>; // mark: your attacks against that unit get better
+  selfOnly?: boolean; // … for this unit's attacks only
+  fromThisTransport?: boolean; // … for units that disembarked from this transport this turn
+  until?: Until;
+  mark?: string;
+  heal?: string; // wounds regained (on the most damaged model)
+  revive?: number; // destroyed models returned
+  reviveLater?: { on: number; wounds: number }; // this model rolls at the end of the phase to come back
+  mortals?: string; // mortal wounds
+  mortalsVehicle?: string; // … instead, if the unit is a VEHICLE
+  shock?: number; // battle-shock test with this modifier (negative = harder)
+  battleShock?: boolean; // the unit becomes battle-shocked
+  unshock?: boolean;
+  riled?: boolean; // Orks: riled up until the start of your next turn
+  cp?: number;
+  reserves?: boolean; // remove the unit and place it into Strategic Reserves
+  earlyArrival?: boolean; // the unit may arrive from Reserves this battle round
+  move?: string; // an extra Normal move of up to this many inches (dice allowed, "M" = the unit's Move)
+  moveIfRiled?: string; // … this distance instead while riled up
+  surge?: string; // surge move towards the closest enemy unit
+  noCharge?: boolean; // … and the unit cannot declare a charge this turn
+  setQuarry?: boolean;
+  setPriority?: boolean; // Priority Objective Identified (target: the objective under the unit)
+  setSlayer?: boolean; // Slayer's Oath: the keyword the enemy army has most of
+  secure?: boolean; // the objective the unit is on stays yours until the opponent controls it
+  attacksPerEnemyNear?: { range: number; max: number; weapon?: string };
+  sacrifice?: { n: string; name: string }; // destroy this many of these models (That'll Learn Ya)
+  log?: string;
+}
+
+export interface ActSpec {
+  when: Trigger;
+  limit?: Limit;
+  per?: 'unit' | 'army';
+  uses?: number;
+  battleUses?: number; // "twice per battle" on top of the limit
+  auto?: boolean; // resolves by itself at the trigger (no decision needed or always worth it)
+  if?: string[];
+  target?: TargetSpec;
+  range?: number; // enemyMovedNear / friendlyDeath: how close the event has to be
+  deathUnits?: string[]; // friendlyDeath: keywords of the destroyed model's unit
+  modelDeath?: boolean; // onDeath: fires when a model with the ability dies (not only when the unit is wiped out)
+  needDestroyed?: boolean; // afterFighting/afterShooting: the target unit was destroyed
+  needCharacterKill?: boolean; // … an enemy CHARACTER model was destroyed
+  needModelsLost?: boolean; // shotByEnemy: models were destroyed, not just wounds lost
+  needMelee?: boolean; // onDeath: destroyed by a melee attack
+  roll?: string; // e.g. "D6"
+  rollAdd?: 'per5models' | 'warlordInTarget2';
+  perModel?: boolean; // one die per model of this unit engaged with the target
+  each?: { on: number; do: Action[] }; // per die: on X+
+  table?: { min: number; max?: number; do: Action[] }[]; // by result
+  ldTest?: boolean; // Leadership test: pass / fail decide what happens
+  pass?: Action[];
+  fail?: Action[];
+  do?: Action[];
+  label?: string; // short Thai summary for the button
+  botUse?: 'always' | 'damaged' | 'never' | 'valuable' | 'round2' | 'round3';
+}
+
+export interface ActDef { key: string; name: string; holder: UnitState; spec: ActSpec; bearers: ModelState[] }
+
+// ---------- collecting ----------
+
+function specsOf(rule: { act?: unknown } | undefined): ActSpec[] {
+  const a = rule?.act;
+  if (!a) return [];
+  return (Array.isArray(a) ? a : [a]) as ActSpec[];
+}
+
+const wk = (x: string) => x.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '');
+
+function gearBearers(a: AbilityData, rule: AbilityRule, ms: ModelState[]) {
+  if (!rule.gear) return ms;
+  const k = wk(a.name);
+  return ms.filter((m) => (m.gear ?? []).some((g) => wk(g) === k || wk(g).includes(k) || k.includes(wk(g))) || m.weapons.some((w) => wk(w.name) === k));
+}
+
+export function actsOfUnit(s: GameState, u: UnitState, includeDead = false): ActDef[] {
+  const out: ActDef[] = [];
+  for (const a of u.abilities ?? []) {
+    const rule = abilityRule(u, a);
+    const specs = specsOf(rule);
+    if (!specs.length || abilityOff(u, a)) continue;
+    const sheet = abilitySheet(u, a);
+    const all = gearBearers(a, rule!, u.models.filter((m) => m.source === sheet));
+    const living = all.filter((m) => !m.dead);
+    if (!living.length && !includeDead) continue;
+    specs.forEach((spec, i) => out.push({ key: `${a.name}#${i}`, name: a.name, holder: u, spec, bearers: includeDead ? all : living }));
+  }
+  // detachment rules with actions
+  for (const d of s.players[u.owner].detachments ?? []) {
+    const r = DET_RULES[d.name] as { acts?: (ActSpec & { units?: string[] })[] } | undefined;
+    (r?.acts ?? []).forEach((spec, i) => {
+      if (spec.units && !unitMatches(u, spec.units)) return;
+      out.push({ key: `${d.name}#d${i}`, name: d.name, holder: u, spec, bearers: alive(u) });
+    });
+  }
+  return out;
+}
+
+// ---------- limits ----------
+
+function period(s: GameState, limit?: Limit): string {
+  switch (limit) {
+    case 'battle': return 'battle';
+    case 'round': return `r${s.round}`;
+    case 'turn': return `t${s.turn}`;
+    case 'phase': return phaseKey(s);
+    default: return '';
+  }
+}
+
+function usedBag(s: GameState, def: ActDef) {
+  return def.spec.per === 'army' ? (s.players[def.holder.owner].abilityUsed ??= {}) : (def.holder.used ??= {});
+}
+const baseKey = (def: ActDef) => def.key.split('#')[0];
+
+export function timesUsed(s: GameState, def: ActDef): number {
+  if (!def.spec.limit) return 0;
+  const v = usedBag(s, def)[baseKey(def)];
+  if (!v) return 0;
+  const [p, n] = v.split('|');
+  return p === period(s, def.spec.limit) ? Number(n) || 1 : 0;
+}
+
+function markUsed(s: GameState, def: ActDef) {
+  const bag = usedBag(s, def);
+  if (def.spec.battleUses) bag[`${baseKey(def)}#n`] = String((Number(bag[`${baseKey(def)}#n`]) || 0) + 1);
+  if (!def.spec.limit) return;
+  bag[baseKey(def)] = `${period(s, def.spec.limit)}|${timesUsed(s, def) + 1}`;
+}
+
+export const limitLeft = (s: GameState, def: ActDef) => (!def.spec.limit || timesUsed(s, def) < (def.spec.uses ?? 1))
+  && (!def.spec.battleUses || (Number(usedBag(s, def)[`${baseKey(def)}#n`]) || 0) < def.spec.battleUses);
+
+// ---------- timing of buttons ----------
+
+function timingOk(s: GameState, def: ActDef): string | null {
+  const u = def.holder;
+  const own = s.active === u.owner;
+  switch (def.spec.when) {
+    case 'command': return s.phase === 'command' && own ? null : 'ใช้ได้ใน Command phase ของเรา';
+    case 'anyCommand': return s.phase === 'command' ? null : 'ใช้ได้ใน Command phase';
+    case 'movement': return s.phase === 'movement' && own ? null : 'ใช้ได้ใน Movement phase ของเรา';
+    case 'endOfNormalMove': return s.phase === 'movement' && own && u.move === 'normal' ? null : 'ใช้ได้หลังเดิน Normal move';
+    case 'shooting': return s.phase === 'shooting' && own ? null : 'ใช้ได้ใน Shooting phase ของเรา';
+    case 'selectedToShoot': return s.phase === 'shooting' && own && !u.selectedToShoot ? null : 'ใช้ได้ตอนเลือกหน่วยนี้ยิง';
+    case 'afterShootingButton': return s.phase === 'shooting' && own && u.shotTurn === s.turn ? null : 'ใช้ได้หลังหน่วยนี้ยิงแล้ว';
+    case 'selectedToFight': return s.phase === 'fight' && !u.fought && engagedEnemies(s, u).length > 0 ? null : 'ใช้ได้ตอนเลือกหน่วยนี้ตี';
+    case 'fightStartButton': return s.phase === 'fight' && (s.fight?.step === 'pileIn' || !s.fight?.fought.length) ? null : 'ใช้ได้ตอนเริ่ม Fight phase';
+    case 'anyPhase': return s.phase !== 'deploy' && s.phase !== 'gameover' && s.phase !== 'scouts' ? null : 'ยังใช้ไม่ได้';
+    case 'opponentTurnEnd': return s.phase === 'command' && own && s.turn > 0 ? null : 'ใช้ได้ตอนจบเทิร์นศัตรู (ต้น Command phase ของเรา)';
+    case 'battleStart': return s.round === 1 && s.phase === 'command' && own ? null : 'เลือกได้ใน Command phase แรก';
+    default: return 'ทำงานอัตโนมัติ';
+  }
+}
+
+// ---------- targets ----------
+
+const from = (def: ActDef) => (def.bearers.some((b) => !b.dead) ? def.bearers.filter((b) => !b.dead) : alive(def.holder).length ? alive(def.holder) : def.bearers);
+const near = (ms: ModelState[], u: UnitState, r: number) => ms.some((b) => alive(u).some((m) => baseDist(b, m) <= r + 1e-6));
+
+export function actTargets(s: GameState, def: ActDef, ctx: FireCtx = {}): UnitState[] {
+  const t = def.spec.target;
+  const u = def.holder;
+  if (!t || t.side === 'self') return [u];
+  if (t.attacker) { const k = ctx.killerId ? unitById(s, ctx.killerId) : undefined; return k && onBoard(k) ? [k] : []; }
+  if (t.ctxUnit) { const k = ctx.targetId ? unitById(s, ctx.targetId) : undefined; return k && unitMatches(k, t.units) ? [k] : []; }
+  const side = t.side === 'enemy' ? other(u.owner) : u.owner;
+  const pool = t.inReserves ? s.units.filter((x) => x.owner === side && x.status === 'reserves')
+    : t.anywhere ? s.units.filter((x) => x.owner === side && x.status !== 'destroyed' && alive(x).length)
+    : boardUnits(s, side);
+  const ms = from(def);
+  let out = pool.filter((x) => {
+    if (t.notSelf && x.id === u.id) return false;
+    if (!unitMatches(x, t.units)) return false;
+    if (t.range !== undefined && x.id !== u.id && !near(ms, x, t.range)) return false;
+    if (t.engaged && !engagedEnemies(s, u).some((e) => e.id === x.id)) return false;
+    if (t.visible && !ms.some((m) => unitVisibleTo(s, m, x))) return false;
+    if (t.shocked && !x.battleShocked) return false;
+    if (t.damaged && !alive(x).some((m) => m.wounds < m.profile.W) && !(x.models.some((m) => m.dead))) return false;
+    if (t.charged && x.chargedTurn !== s.turn) return false;
+    if (t.notLoneOperative && (x.core.loneOperative || unitFlags(s, x).loneOperative) && x.sources.length === 1) return false;
+    if (t.hit) {
+      const h = u.lastHits;
+      if (!h || h.key !== phaseKey(s) || !h.ids.includes(x.id)) return false;
+      if (t.hitWeapon && !(h.byWeapon?.[x.id] ?? []).some((w) => wk(w).includes(wk(t.hitWeapon!)))) return false;
+    }
+    return true;
+  });
+  if (ctx.targetId && out.some((x) => x.id === ctx.targetId)) out = [...out.filter((x) => x.id === ctx.targetId), ...out.filter((x) => x.id !== ctx.targetId)];
+  if (t.closest && out.length) {
+    const c = [...out].sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
+    out = [c];
+  }
+  if (t.each && t.count !== undefined) {
+    const n = t.count === 'round' ? s.round : t.count;
+    const foes = boardUnits(s, other(u.owner));
+    const gap = (x: UnitState) => (onBoard(x) && foes.length ? Math.min(...foes.map((e) => unitDistance(x, e))) : 99);
+    out = [...out].sort((a, b) => gap(a) - gap(b)).slice(0, n);
+  }
+  return out;
+}
+
+// ---------- doing it ----------
+
+export interface FireCtx {
+  targetId?: string; killerId?: string; destroyed?: string[];
+  killedCharacter?: boolean; modelsKilled?: number; melee?: boolean; deadModelId?: string;
+}
+
+function heal(u: UnitState, n: number) {
+  let left = n;
+  const ms = alive(u).filter((m) => m.wounds < m.profile.W).sort((a, b) => b.profile.W - a.profile.W);
+  for (const m of ms) {
+    const k = Math.min(left, m.profile.W - m.wounds);
+    m.wounds += k;
+    left -= k;
+    if (!left) break;
+  }
+  return n - left;
+}
+
+/** Put a destroyed model back next to where it should be, not within Engagement Range of enemies. */
+function setBackUp(s: GameState, u: UnitState, m: ModelState, at: { x: number; y: number }): boolean {
+  const enemies = boardUnits(s, other(u.owner)).flatMap(alive);
+  const others = s.units.filter((x) => onBoard(x) || x.id === u.id).flatMap(alive).filter((o) => o.id !== m.id);
+  const ok = (p: { x: number; y: number }) => p.x - m.r >= 0 && p.y - m.r >= 0 && p.x + m.r <= RULES.battlefield.width && p.y + m.r <= RULES.battlefield.height
+    && others.every((o) => dist(o, p) >= o.r + m.r - 0.01) && enemies.every((e) => dist(e, p) - e.r - m.r > RULES.engagementRange + 0.02);
+  if (ok(at)) { m.x = at.x; m.y = at.y; return true; }
+  for (let ring = 1; ring <= 16; ring++) {
+    for (let k = 0; k < 16; k++) {
+      const ang = (k / 16) * Math.PI * 2;
+      const p = { x: at.x + Math.cos(ang) * ring * 0.5, y: at.y + Math.sin(ang) * ring * 0.5 };
+      if (ok(p)) { m.x = p.x; m.y = p.y; return true; }
+    }
+  }
+  return false;
+}
+
+function revive(s: GameState, u: UnitState, n: number) {
+  let k = 0;
+  for (const m of u.models) {
+    if (k >= n) break;
+    if (!m.dead || m.isCharacter) continue;
+    const anchor = alive(u)[0];
+    if (!anchor) break;
+    m.dead = false;
+    m.wounds = m.profile.W;
+    if (!setBackUp(s, u, m, { x: anchor.x + anchor.r + m.r + 0.1, y: anchor.y })) { m.dead = true; m.wounds = 0; break; }
+    k += 1;
+  }
+  return k;
+}
+
+const ldOf = (s: GameState, u: UnitState) => Math.min(...alive(u).map((m) => m.profile.Ld)) - unitFlags(s, u).ld;
+
+/** Battle-shock test forced by an ability (2D6 + modifier vs the best Ld). */
+export function shockTest(s: GameState, u: UnitState, mod: number, why: string) {
+  if (!onBoard(u)) return;
+  const r = rollN(s, 2);
+  const ld = ldOf(s, u);
+  const total = r[0] + r[1] + mod;
+  const passed = total >= ld;
+  pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${total} vs Ld ${ld}+ → ${passed ? 'ผ่าน' : 'ไม่ผ่าน!'}${mod ? ` (${mod})` : ''}`, good: passed });
+  log(s, `${why}: ${u.name} ทอย Battle-shock [${r.join('+')}]${mod ? ` ${mod}` : ''} = ${total} vs Ld ${ld}+ → ${passed ? 'ผ่าน' : 'battle-shocked!'}`, 'roll', u.owner);
+  if (!passed && !u.battleShocked) { u.battleShocked = true; fire(s, 'becameShocked', [u]); }
+}
+
+/** Leadership test for an ability: 2D6 >= the best Ld of the unit. */
+export function ldTest(s: GameState, u: UnitState, why: string): boolean {
+  const r = rollN(s, 2);
+  const ld = ldOf(s, u);
+  const ok = r[0] + r[1] >= ld;
+  pushFx(s, { kind: 'roll', owner: u.owner, title: `Leadership · ${u.name}`, dice: r, result: `${r[0] + r[1]} vs ${ld}+ → ${ok ? 'ผ่าน' : 'ไม่ผ่าน'}`, good: ok });
+  log(s, `${why}: Leadership test ${u.name} [${r.join('+')}] = ${r[0] + r[1]} vs ${ld}+ → ${ok ? 'ผ่าน' : 'ไม่ผ่าน'}`, 'roll', u.owner);
+  return ok;
+}
+
+/** The keyword (CHARACTER / MONSTER / VEHICLE) the enemy army has the most points of. */
+function slayerKeyword(s: GameState, p: PlayerId): string {
+  const score = (kw: string) => s.units.filter((x) => x.owner !== p && x.status !== 'destroyed' && hasKw(x, kw)).reduce((a, x) => a + x.pts, 0);
+  return ['CHARACTER', 'MONSTER', 'VEHICLE'].sort((a, b) => score(b) - score(a))[0];
+}
+
+function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState | null, ctx: FireCtx) {
+  const u = def.holder;
+  for (const a of acts) {
+    const on = a.on === 'self' || !target ? u : a.on === 'attacker' && ctx.killerId ? unitById(s, ctx.killerId) : target;
+    if (!on) continue;
+    const models = a.bearerOnly ? def.bearers.map((m) => m.id) : undefined;
+    for (const e of a.buff ?? []) addTimed(s, on, { e, label: def.name, until: a.until ?? 'phase', by: u.owner, mark: a.mark, models });
+    if (a.incoming) {
+      const inc: Incoming = { ...a.incoming, by: u.owner };
+      if (a.selfOnly) inc.units = [...(inc.units ?? []), `id:${u.id}`];
+      if (a.fromThisTransport) inc.fromTransport = u.id;
+      addTimed(s, on, { e: { incoming: inc }, label: def.name, until: a.until ?? 'phase', by: u.owner, mark: a.mark ?? def.name });
+    }
+    if (a.attacksPerEnemyNear) {
+      const q = a.attacksPerEnemyNear;
+      const ms = def.bearers.filter((m) => !m.dead);
+      const n = Math.min(q.max, boardUnits(s, other(u.owner)).filter((e) => near(ms, e, q.range)).length);
+      if (n) addTimed(s, on, { e: { attack: 'melee', weapon: q.weapon, attacks: n }, label: def.name, until: a.until ?? 'phase', by: u.owner, models });
+      log(s, `${def.name}: +${n} A`, 'info', u.owner);
+    }
+    if (a.heal) { const n = heal(on, rollExpr(s, a.heal).total); log(s, `💚 ${def.name}: ${on.name} ฟื้น ${n} wound`, 'info', u.owner); }
+    if (a.revive) { const n = revive(s, on, a.revive); if (n) log(s, `💚 ${def.name}: ${on.name} ได้โมเดลคืน ${n} ตัว`, 'info', u.owner); }
+    if (a.reviveLater && ctx.deadModelId) {
+      const m = on.models.find((x) => x.id === ctx.deadModelId);
+      if (m) {
+        (s.revivals ??= []).push({ unitId: on.id, modelId: m.id, label: def.name, on: a.reviveLater.on, wounds: a.reviveLater.wounds, x: m.x, y: m.y });
+        log(s, `${def.name}: ${m.name} จะทอยกลับมาตอนจบ phase (${a.reviveLater.on}+)`, 'info', u.owner);
+      }
+    }
+    if (a.mortals || a.mortalsVehicle) {
+      const expr = a.mortalsVehicle && hasKw(on, 'VEHICLE') ? a.mortalsVehicle : a.mortals!;
+      const n = rollExpr(s, expr).total;
+      log(s, `💥 ${def.name}: ${on.name} โดน ${n} mortal wound`, 'roll', u.owner);
+      applyMortalWounds(s, on, n, def.name);
+    }
+    if (a.shock !== undefined) shockTest(s, on, a.shock, def.name);
+    if (a.battleShock && !on.battleShocked) { on.battleShocked = true; log(s, `${def.name}: ${on.name} battle-shocked`, 'info', u.owner); }
+    if (a.sacrifice) {
+      const n = rollExpr(s, a.sacrifice.n).total;
+      const victims = alive(on).filter((m) => wk(m.name).includes(wk(a.sacrifice!.name))).slice(0, n);
+      for (const m of victims) { m.dead = true; m.wounds = 0; }
+      log(s, `${def.name}: ${on.name} เสีย ${victims.length} ${a.sacrifice.name}`, 'info', u.owner);
+    }
+    if (a.unshock && on.battleShocked) { on.battleShocked = false; log(s, `${def.name}: ${on.name} หายจาก battle-shocked`, 'info', u.owner); }
+    if (a.riled) { on.riledUntil = s.turn + (s.active === u.owner ? 1 : 0); log(s, `🟢 ${def.name}: ${on.name} riled up`, 'info', u.owner); }
+    if (a.cp) { s.players[u.owner].cp += a.cp; log(s, `+${a.cp}CP (${def.name})`, 'cp', u.owner); }
+    if (a.reserves) {
+      on.status = 'reserves'; on.move = null;
+      if (a.earlyArrival) on.arriveEarly = s.round;
+      log(s, `${def.name}: ${on.name} ถูกนำออกไปอยู่ใน Strategic Reserves`, 'info', u.owner);
+    } else if (a.earlyArrival) {
+      on.arriveEarly = s.round;
+      log(s, `${def.name}: ${on.name} ลงสนามได้ใน battle round นี้`, 'info', u.owner);
+    }
+    if (a.move) {
+      const expr = a.moveIfRiled && isRiled(s, on) ? a.moveIfRiled : a.move;
+      const max = expr === 'M' ? Math.max(0, ...alive(on).map((m) => m.profile.M ?? 0)) + unitFlags(s, on).move : rollExpr(s, expr).total;
+      on.extraMove = { max, label: def.name, kind: 'extra', phase: phaseKey(s) };
+      if (a.noCharge) on.cantCharge = true;
+      log(s, `${def.name}: ${on.name} เดินได้อีก ${max}"${a.noCharge ? ' (ชาร์จไม่ได้เทิร์นนี้)' : ''}`, 'info', u.owner);
+      offerExtraMove(s, on, `${def.name}: เดิน ${max}"`);
+    }
+    if (a.surge) {
+      on.extraMove = { max: rollExpr(s, a.surge).total, label: def.name, kind: 'surge', phase: phaseKey(s) };
+      log(s, `${def.name}: ${on.name} surge move ได้ ${on.extraMove.max}" (เข้าหาศัตรูที่ใกล้สุด)`, 'info', u.owner);
+      offerExtraMove(s, on, `${def.name}: surge ${on.extraMove.max}"`);
+    }
+    if (a.setQuarry && target) { u.quarry = target.id; log(s, `🎯 ${def.name}: เป้า ${target.name}`, 'info', u.owner); }
+    if (a.setPriority) {
+      const o = s.objectives.find((q) => alive(on).some((m) => dist(m, q) <= 3 + m.r)) ?? s.objectives.find((q) => q.type === 'central') ?? s.objectives[0];
+      if (o) { s.players[u.owner].priorityObjective = o.id; log(s, `🎯 ${def.name}: objective ${o.id}`, 'info', u.owner); }
+    }
+    if (a.setSlayer) {
+      const kw = slayerKeyword(s, u.owner);
+      (s.players[u.owner].slayer ??= {})[u.id] = kw;
+      log(s, `🎯 ${def.name}: ${kw}`, 'info', u.owner);
+    }
+    if (a.secure) {
+      for (const o of s.objectives) {
+        if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.secured = u.owner; log(s, `🚩 ${def.name}: objective ${o.id} ยังเป็นของเราแม้ไม่มีใครยืน (secured)`, 'info', u.owner); }
+      }
+    }
+    if (a.log) log(s, `${def.name}: ${a.log}`, 'info', u.owner);
+  }
+}
+
+/** A unit got a move from an ability: its player gets a prompt to drag it (or skip). */
+function offerExtraMove(s: GameState, u: UnitState, label: string) {
+  if (!onBoard(u)) return;
+  const w = s.window;
+  if (w?.kind === 'abilityMove' && w.player === u.owner) {
+    if (!w.offers.some((o) => o.unitId === u.id)) w.offers.push({ unitId: u.id, key: '', label });
+    return;
+  }
+  if (w) return; // another prompt is open: the move can still be made from the unit's panel this phase
+  s.window = { kind: 'abilityMove', player: u.owner, offers: [{ unitId: u.id, key: '', label }], label };
+}
+
+/** Use an ability now (button, or automatically at its trigger). Returns an error message or null. */
+export function useAct(s: GameState, def: ActDef, targetId?: string, ctx: FireCtx = {}): string | null {
+  if (!limitLeft(s, def)) return 'ใช้ครบแล้ว';
+  if (!(def.spec.if ?? []).every((c) => cond(c, { s, A: def.holder, holder: def.holder, bearers: def.bearers }))) return 'เงื่อนไขไม่ครบ';
+  const cands = actTargets(s, def, { ...ctx, targetId });
+  const t = def.spec.target;
+  if (t && t.side !== 'self' && !cands.length) return 'ไม่มีเป้าที่ใช้ได้';
+  const targets = t?.each ? cands : t && t.side !== 'self' ? [cands.find((c) => c.id === targetId) ?? cands[0]] : [def.holder];
+  markUsed(s, def);
+  log(s, `✨ ${def.holder.name}: ${def.name}${targets.length && targets[0].id !== def.holder.id ? ` → ${targets.map((x) => x.name).join(', ')}` : ''}`, 'info', def.holder.owner);
+  for (const tg of targets) {
+    if (def.spec.roll || def.spec.perModel) {
+      const n = def.spec.perModel ? alive(def.holder).filter((m) => alive(tg).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length : 1;
+      const dice = rollN(s, Math.max(1, n));
+      let add = 0;
+      if (def.spec.rollAdd === 'per5models') add = Math.floor(alive(def.holder).length / 5);
+      if (def.spec.rollAdd === 'warlordInTarget2' && tg.isWarlordUnit) add = 2;
+      log(s, `${def.name}: ทอย [${dice.join(' ')}]${add ? ` +${add}` : ''}`, 'roll', def.holder.owner);
+      if (def.spec.each) {
+        const ok = dice.filter((v) => v + add >= def.spec.each!.on).length;
+        for (let k = 0; k < ok; k++) doActions(s, def, def.spec.each.do, tg, ctx);
+      }
+      if (def.spec.table) {
+        const v = dice[0] + add;
+        const row = def.spec.table.find((r) => v >= r.min && (r.max === undefined || v <= r.max));
+        if (row) doActions(s, def, row.do, tg, ctx);
+      }
+    }
+    if (def.spec.ldTest) doActions(s, def, (ldTest(s, def.holder, def.name) ? def.spec.pass : def.spec.fail) ?? [], tg, ctx);
+    if (def.spec.do) doActions(s, def, def.spec.do, tg, ctx);
+  }
+  return null;
+}
+
+// ---------- automatic triggers ----------
+
+function eventOk(def: ActDef, ctx: FireCtx): boolean {
+  const sp = def.spec;
+  if (sp.needDestroyed && !(ctx.destroyed ?? []).length) return false;
+  if (sp.needCharacterKill && !ctx.killedCharacter) return false;
+  if (sp.needModelsLost && !(ctx.modelsKilled ?? 0)) return false;
+  if (sp.needMelee && !ctx.melee) return false;
+  return true;
+}
+
+/** Run every automatic ability for this trigger. `units` limits which units' abilities are checked. */
+export function fire(s: GameState, trigger: Trigger, units: UnitState[], ctx: FireCtx = {}) {
+  for (const u of units) {
+    for (const def of actsOfUnit(s, u, trigger === 'onDeath')) {
+      if (def.spec.when !== trigger || !def.spec.auto) continue;
+      if (trigger === 'onDeath') {
+        // "when this model is destroyed": only the model that died; otherwise only when the whole unit is gone
+        if (def.spec.modelDeath ? !def.bearers.some((b) => b.id === ctx.deadModelId) : alive(u).length > 0) continue;
+      }
+      if (!limitLeft(s, def) || !eventOk(def, ctx)) continue;
+      if (!(def.spec.if ?? []).every((c) => cond(c, { s, A: u, holder: u, bearers: def.bearers }))) continue;
+      const t = def.spec.target;
+      const cands = actTargets(s, def, ctx);
+      if (t && t.side !== 'self' && !cands.length) continue;
+      const pick = !t || t.side === 'self' || t.each ? undefined : bestTarget(s, def, cands, ctx);
+      useAct(s, def, pick, ctx);
+    }
+  }
+}
+
+/** Which unit an automatic or bot-used ability should pick. */
+export function bestTarget(s: GameState, def: ActDef, cands: UnitState[], ctx: FireCtx = {}): string | undefined {
+  if (!cands.length) return undefined;
+  if (ctx.targetId && cands.some((c) => c.id === ctx.targetId)) return ctx.targetId;
+  const t = def.spec.target!;
+  if (t.side === 'friendly') {
+    const hurt = (u: UnitState) => alive(u).reduce((a, m) => a + (m.profile.W - m.wounds), 0) + u.models.filter((m) => m.dead).length * 2;
+    if (t.shocked) return cands.find((c) => c.battleShocked)?.id ?? cands[0].id;
+    if ((def.spec.do ?? []).some((a) => a.riled)) {
+      // riling up: a battle-shocked unit first, then the unit closest to the enemy
+      const foes = boardUnits(s, other(def.holder.owner));
+      const gap = (x: UnitState) => (onBoard(x) && foes.length ? Math.min(...foes.map((e) => unitDistance(x, e))) : 99);
+      return [...cands].sort((a, b) => Number(b.battleShocked) - Number(a.battleShocked) || gap(a) - gap(b))[0].id;
+    }
+    return [...cands].sort((a, b) => hurt(b) - hurt(a) || b.pts - a.pts)[0].id;
+  }
+  // enemies: the most valuable, then the weakest
+  return [...cands].sort((a, b) => b.pts / Math.max(1, alive(b).length) - a.pts / Math.max(1, alive(a).length))[0].id;
+}
+
+// ---------- buttons ----------
+
+export interface ManualAct { def: ActDef; targets: UnitState[]; why: string | null; label: string }
+
+const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge', 'opponentFightEnd',
+  'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks'];
+
+/** Abilities player p can use by pressing a button right now. */
+export function manualActs(s: GameState, p: PlayerId): ManualAct[] {
+  const out: ManualAct[] = [];
+  for (const u of s.units.filter((x) => x.owner === p && (onBoard(x) || x.status === 'reserves' || x.status === 'embarked'))) {
+    for (const def of actsOfUnit(s, u)) {
+      if (def.spec.auto || AUTO_ONLY.includes(def.spec.when)) continue;
+      if (!onBoard(u) && def.spec.when !== 'command') continue;
+      if (timingOk(s, def)) continue;
+      if (!limitLeft(s, def)) continue;
+      const condOk = (def.spec.if ?? []).every((c) => cond(c, { s, A: u, holder: u, bearers: def.bearers }));
+      const targets = actTargets(s, def);
+      const why = !condOk ? 'เงื่อนไขยังไม่ครบ' : def.spec.target && def.spec.target.side !== 'self' && !targets.length ? 'ไม่มีเป้าในระยะ' : null;
+      out.push({ def, targets, why, label: def.spec.label ?? '' });
+    }
+  }
+  return out;
+}
+
+/** Press an ability button (by its key) for a unit. */
+export function useActByKey(s: GameState, unitId: string, key: string, targetId?: string): string | null {
+  const u = unitById(s, unitId);
+  const def = actsOfUnit(s, u).find((d) => d.key === key);
+  if (!def) return 'ไม่มี ability นี้';
+  return useAct(s, def, targetId);
+}
+
+/** The bot presses the buttons that are worth it. */
+export function botUseActs(s: GameState, p: PlayerId, when?: Trigger[], unitId?: string) {
+  for (const m of manualActs(s, p)) {
+    if (m.why || (when && !when.includes(m.def.spec.when)) || (unitId && m.def.holder.id !== unitId)) continue;
+    const use = m.def.spec.botUse ?? 'always';
+    if (use === 'never') continue;
+    if (use === 'damaged' && !m.targets.some((t) => alive(t).some((x) => x.wounds < x.profile.W) || t.models.some((x) => x.dead))) continue;
+    if (use === 'valuable' && !(engagedEnemies(s, m.def.holder).some((e) => e.pts >= 100) || s.round >= 4)) continue;
+    if (use === 'round2' && s.round < 2) continue;
+    if (use === 'round3' && s.round < 3) continue;
+    if (m.def.spec.do?.some((a) => a.move || a.surge || a.reserves)) continue; // moves need a plan the bot does not make
+    const pick = m.def.spec.target && m.def.spec.target.side !== 'self' && !m.def.spec.target.each ? bestTarget(s, m.def, m.targets) : undefined;
+    useAct(s, m.def, pick);
+  }
+}
+
+/** A unit is selected to shoot / fight: abilities that happen "when this unit is selected to …". */
+export function unitSelected(s: GameState, u: UnitState, kind: 'shoot' | 'fight') {
+  const key = `sel:${kind}`;
+  if ((u.used ??= {})[key] === phaseKey(s)) return;
+  u.used[key] = phaseKey(s);
+  fire(s, kind === 'shoot' ? 'selectedToShoot' : 'selectedToFight', [u]);
+}
+
+// ---------- reactions: "if an enemy unit ends a move within 8" of this unit, this unit can make a Normal move" ----------
+
+/** After a unit of the active player moved: units of the other player with such abilities get a prompt. */
+export function offerReactions(s: GameState, trigger: 'enemyMovedNear' | 'enemyFellBack', mover: UnitState, candidates?: UnitState[]) {
+  const p = other(mover.owner);
+  const offers: { unitId: string; key: string; label: string }[] = [];
+  for (const u of candidates ?? boardUnits(s, p)) {
+    if (!onBoard(u)) continue;
+    for (const def of actsOfUnit(s, u)) {
+      if (def.spec.when !== trigger || !limitLeft(s, def)) continue;
+      if (trigger === 'enemyMovedNear' && !(alive(mover).length && near(from(def), mover, def.spec.range ?? 8))) continue;
+      if (!(def.spec.if ?? []).every((c) => cond(c, { s, A: u, holder: u, bearers: def.bearers }))) continue;
+      const mv = def.spec.do?.find((a) => a.move)?.move ?? '';
+      offers.push({ unitId: u.id, key: def.key, label: `${def.name}: เดิน ${mv === 'M' ? 'Normal move' : `${mv}"`}` });
+    }
+  }
+  if (!offers.length) return;
+  const w = s.window;
+  if (w?.kind === 'abilityMove' && w.player === p) {
+    for (const o of offers) if (!w.offers.some((x) => x.unitId === o.unitId && x.key === o.key)) w.offers.push(o);
+    return;
+  }
+  if (w) return;
+  s.window = { kind: 'abilityMove', player: p, offers, label: `${mover.name} เดินเข้ามาใกล้` };
+  log(s, `⚡ ${s.players[p].name}: มี ability ให้ตอบโต้ (${offers.map((o) => o.label).join(', ')})`, 'info', p);
+}
+
+/** Accept one offer of the reaction prompt: the ability is used and the unit gets its move (then the player drags it). */
+export function acceptOffer(s: GameState, unitId: string, key: string): string | null {
+  const u = unitById(s, unitId);
+  if (key) {
+    const def = actsOfUnit(s, u).find((d) => d.key === key);
+    if (!def) return 'ไม่มี ability นี้';
+    const err = useAct(s, def);
+    if (err) return err;
+  }
+  const w = s.window;
+  if (w?.kind === 'abilityMove') {
+    w.offers = w.offers.filter((o) => o.unitId !== unitId);
+    if (u.extraMove) w.offers.push({ unitId, key: '', label: `${u.extraMove.label}: เดิน ${u.extraMove.max}"` });
+  }
+  return u.extraMove ? null : 'ไม่ได้เดินพิเศษ';
+}
+
+/** A move from the prompt was made: drop its offer, close the prompt when nothing is left. */
+export function offerDone(s: GameState, unitId: string) {
+  const w = s.window;
+  if (w?.kind !== 'abilityMove') return;
+  w.offers = w.offers.filter((o) => o.unitId !== unitId);
+  if (!w.offers.length) s.window = null;
+}
+
+/** Close the reaction prompt; moves that were not made are lost. */
+export function closeOffers(s: GameState) {
+  const w = s.window;
+  if (w?.kind !== 'abilityMove') return;
+  for (const o of w.offers) { const u = unitById(s, o.unitId); if (!o.key) u.extraMove = undefined; }
+  s.window = null;
+}
+
+// ---------- free dice from abilities (Armorium Cherub, Aquilon Optics) ----------
+
+export interface FreeDie { key: string; label: string; kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' }
+
+type FreeSpec = NonNullable<AbilityRule['freeDie']>;
+const freeList = (f: FreeSpec | FreeSpec[]) => (Array.isArray(f) ? f : [f]);
+
+export function freeDiceNow(s: GameState): FreeDie[] {
+  const at = s.attack;
+  if (!at) return [];
+  const A = unitById(s, at.attackerId);
+  const out: FreeDie[] = [];
+  for (const a of A.abilities) {
+    const rule = abilityRule(A, a);
+    if (!rule?.freeDie || abilityOff(A, a)) continue;
+    const sheet = abilitySheet(A, a);
+    if (!gearBearers(a, rule, alive(A).filter((m) => m.source === sheet)).length) continue;
+    freeList(rule.freeDie).forEach((f, i) => {
+      const stages: ('hit' | 'wound')[] = f.stage === 'any' ? ['hit', 'wound'] : f.stage === 'hit' || f.stage === 'wound' ? [f.stage] : [];
+      if ((A.used ?? {})[`free:${a.name}#${i}`] === period(s, f.limit)) return;
+      for (const st of stages) out.push({ key: `${a.name}#${i}:${st}`, label: `${a.name}: ${f.kind === 'setSix' ? 'เปลี่ยนเป็น 6' : 're-roll'} (${st === 'hit' ? 'Hit' : 'Wound'})`, kind: f.kind, stage: st });
+    });
+  }
+  return out;
+}
+
+export function useFreeDie(s: GameState, key: string, index: number): string | null {
+  const f = freeDiceNow(s).find((x) => x.key === key);
+  if (!f) return 'ใช้ไม่ได้แล้ว';
+  const A = unitById(s, s.attack!.attackerId);
+  const name = key.split('#')[0];
+  const i = Number(key.split('#')[1].split(':')[0]);
+  const a = A.abilities.find((x) => x.name === name)!;
+  const spec = freeList(abilityRule(A, a)!.freeDie!)[i];
+  (A.used ??= {})[`free:${name}#${i}`] = period(s, spec.limit);
+  if (f.kind === 'setSix') forceDie(s, f.stage, index, 6); else rerollOne(s, f.stage, index);
+  log(s, `${name}: ${f.kind === 'setSix' ? 'เปลี่ยนลูกเต๋าเป็น 6' : 'ทอยใหม่ 1 ลูก'}`, 'info', A.owner);
+  return null;
+}
+
+// ---------- "choose N of these abilities" (Author of the Codex …) ----------
+
+export interface AbilityChoiceNow { unit: UnitState; name: string; pick: number; options: string[]; on: string[] }
+
+export function abilityChoices(s: GameState, p: PlayerId): AbilityChoiceNow[] {
+  const out: AbilityChoiceNow[] = [];
+  for (const u of s.units.filter((x) => x.owner === p && x.status !== 'destroyed' && alive(x).length)) {
+    for (const a of u.abilities) {
+      const ch = abilityRule(u, a)?.choice;
+      if (!ch) continue;
+      if (ch.if && !ch.if.every((c) => cond(c, { s, A: u, holder: u }))) continue;
+      out.push({ unit: u, name: ch.name, pick: ch.pick, options: ch.options, on: u.abilityPicks?.on ?? ch.options.slice(0, ch.pick) });
+    }
+  }
+  return out;
+}
+
+export function pickAbilities(s: GameState, unitId: string, on: string[]) {
+  const u = unitById(s, unitId);
+  const ch = abilityChoices(s, u.owner).find((c) => c.unit.id === unitId);
+  if (!ch) return;
+  u.abilityPicks = { pool: ch.options, on: on.slice(0, ch.pick) };
+  log(s, `${u.name} · ${ch.name}: ${u.abilityPicks.on.join(' + ')}`, 'info', u.owner);
+}
+
+/** Before the battle: every "choose N" ability starts with its first options so nothing counts twice. */
+export function initAbilityChoices(s: GameState) {
+  for (const p of [0, 1] as PlayerId[]) for (const c of abilityChoices(s, p)) if (!c.unit.abilityPicks) c.unit.abilityPicks = { pool: c.options, on: c.options.slice(0, c.pick) };
+}
+
+// ---------- hooks from the attack sequence ----------
+
+/** Destroyed models that fight / shoot back before they are removed ("Heroic Last Stand", "For the Chapter!"). */
+function runDeathQueue(s: GameState) {
+  const queue = s.deathQueue ?? [];
+  if (!queue.length || s.attack) return;
+  s.deathQueue = [];
+  for (const q of queue) {
+    const u = unitById(s, q.unitId);
+    let T = unitById(s, q.targetId);
+    if (!onBoard(T) && q.kind === 'shoot') {
+      const alt = boardUnits(s, other(u.owner)).sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
+      if (!alt) continue;
+      T = alt;
+    }
+    if (!onBoard(T)) continue;
+    const r = q.kind === 'fight' ? buildFightPools(s, u.id, T.id, { models: q.modelIds }) : buildShootPools(s, u.id, T.id, { mode: 'normal', models: q.modelIds });
+    if (r.error || !r.pools.length) { log(s, `${q.label}: ไม่มีอาวุธที่ใช้กับ ${T.name} ได้`, 'info', u.owner); continue; }
+    const before = alive(T).length;
+    log(s, `⚔ ${q.label}: ${u.models.filter((m) => q.modelIds.includes(m.id)).map((m) => m.name).join(', ')} ${q.kind === 'fight' ? 'ตี' : 'ยิง'}ก่อนถูกนำออก → ${T.name}`, 'info', u.owner);
+    startAttack(s, q.kind, u.id, T.id, r.pools);
+    s.attack!.free = true;
+    if (q.kind === 'shoot') for (const p of s.attack!.pools) { p.hazardous = 0; p.noHazard = true; }
+    resolveAll(s);
+    finishAttack(s);
+    if (q.regain && alive(T).length < before) {
+      for (const id of q.modelIds) {
+        const m = u.models.find((x) => x.id === id);
+        if (!m) continue;
+        m.dead = false;
+        m.wounds = Math.min(m.profile.W, rollExpr(s, q.regain).total);
+        if (u.status === 'destroyed') { u.status = 'board'; s.destroyedByTurn = s.destroyedByTurn.filter((d) => d.unitId !== u.id || d.turn !== s.turn); }
+        log(s, `💚 ${q.label}: ${m.name} ฆ่าได้ จึงไม่ตาย (เหลือ ${m.wounds} W)`, 'info', u.owner);
+      }
+    }
+  }
+}
+
+function retaliate(s: GameState, at: AttackSession, A: UnitState, T: UnitState) {
+  for (const [id, n] of Object.entries(at.allocated ?? {})) {
+    const m = T.models.find((x) => x.id === id);
+    if (!m || !n) continue;
+    const r = retaliateFor(s, T, m);
+    if (!r) continue;
+    const dice = rollN(s, Math.min(n, r.max));
+    const hits = dice.filter((v) => v >= r.on).length;
+    log(s, `${r.label}: ${m.name} ทอย [${dice.join(' ')}] → ${hits} MW ใส่ ${A.name}`, 'roll', T.owner);
+    if (hits && onBoard(A)) applyMortalWounds(s, A, hits, r.label);
+  }
+}
+
+onAttackFinished((s, at, info) => {
+  const A = unitById(s, at.attackerId);
+  const T = unitById(s, at.targetId);
+  // remember who this unit hit this phase (for "select one enemy unit hit by those attacks")
+  const key = phaseKey(s);
+  if (!A.lastHits || A.lastHits.key !== key) A.lastHits = { key, ids: [], byWeapon: {} };
+  if (info.hits > 0 && !A.lastHits.ids.includes(T.id)) A.lastHits.ids.push(T.id);
+  if (info.hits > 0) A.lastHits.byWeapon![T.id] = [...new Set([...(A.lastHits.byWeapon![T.id] ?? []), ...info.hitWeapons])];
+  const ctx: FireCtx = { targetId: T.id, destroyed: info.destroyed ? [T.id] : [], killedCharacter: info.killedCharacter, modelsKilled: info.modelsKilled };
+  // Strikes of Retribution: melee attacks allocated to this model hurt the attackers
+  if (at.kind === 'fight' && at.allocated) retaliate(s, at, A, T);
+  if (!at.free) {
+    if (at.kind === 'shoot' && s.phase === 'shooting' && A.owner === s.active) fire(s, 'afterShooting', [A], ctx);
+    if (at.kind === 'fight') fire(s, 'afterFighting', [A], ctx);
+  }
+  if (at.kind !== 'fight' && info.woundsLost > 0 && T.owner !== s.active && onBoard(T)) fire(s, 'shotByEnemy', [T], { targetId: A.id, modelsKilled: info.modelsKilled });
+  runDeathQueue(s);
+});
+
+onModelKilled((s, u, m, killerId) => {
+  const at = s.attack;
+  const melee = at?.kind === 'fight';
+  const killer = killerId ? unitById(s, killerId) : undefined;
+  // fights / shoots on death
+  if (at && !at.free && killer && killer.owner !== u.owner) {
+    const fod = fightOnDeathFor(s, u, m);
+    if (fod.fight && melee && !u.fought && !(s.fight?.fought ?? []).includes(u.id)) {
+      const r = d6(s);
+      const ok = r >= fod.fight.on;
+      log(s, `${fod.fight.label}: ${m.name} ทอย ${r} (${fod.fight.on}+) → ${ok ? 'ยังไม่ถูกนำออก ตีโต้ได้หลังศัตรูตีเสร็จ' : 'ไม่สำเร็จ'}`, 'roll', u.owner);
+      if (ok) (s.deathQueue ??= []).push({ unitId: u.id, modelIds: [m.id], targetId: killer.id, kind: 'fight', label: fod.fight.label, regain: fod.fight.regain });
+    } else if (fod.shoot) {
+      const r = d6(s);
+      const ok = r >= fod.shoot.on;
+      log(s, `${fod.shoot.label}: ${m.name} ทอย ${r} (${fod.shoot.on}+) → ${ok ? 'ยิงได้ก่อนถูกนำออก' : 'ไม่สำเร็จ'}`, 'roll', u.owner);
+      if (ok) {
+        const q = (s.deathQueue ??= []).find((x) => x.unitId === u.id && x.kind === 'shoot' && x.targetId === killer.id);
+        if (q) q.modelIds.push(m.id); else s.deathQueue.push({ unitId: u.id, modelIds: [m.id], targetId: killer.id, kind: 'shoot', label: fod.shoot.label });
+      }
+    }
+  }
+  const ctx: FireCtx = { killerId, deadModelId: m.id, melee };
+  fire(s, 'onDeath', [u], ctx);
+  // friendly models nearby react (Vengeance of the Omnissiah)
+  for (const f of boardUnits(s, u.owner)) {
+    if (f.id === u.id) continue;
+    for (const def of actsOfUnit(s, f)) {
+      if (def.spec.when !== 'friendlyDeath' || !def.spec.auto || !limitLeft(s, def) || !unitMatches(u, def.spec.deathUnits)) continue;
+      if (!def.bearers.some((b) => baseDist(b, m) <= (def.spec.range ?? 12) + 1e-6)) continue;
+      useAct(s, def, undefined, ctx);
+    }
+  }
+  // Master of Battle: the backup Oath of Moment target takes over
+  if (!alive(u).length) {
+    for (const p of [0, 1] as PlayerId[]) {
+      const P = s.players[p];
+      if (P.oathTarget === u.id && P.oathBackup && onBoard(unitById(s, P.oathBackup))) {
+        P.oathTarget = P.oathBackup;
+        P.oathBackup = null;
+        log(s, `⚜ Master of Battle: เป้า Oath of Moment ใหม่ → ${unitById(s, P.oathTarget).name}`, 'info', p);
+      }
+    }
+  }
+});
+
+onMortalWounds((s, u) => { fire(s, 'mortalTaken', [u]); });
+
+/** End of a phase: models that roll to come back (Armour of Fate). */
+export function resolveRevivals(s: GameState) {
+  const list = s.revivals ?? [];
+  if (!list.length) return;
+  s.revivals = [];
+  for (const r of list) {
+    const u = unitById(s, r.unitId);
+    const m = u.models.find((x) => x.id === r.modelId);
+    if (!m || !m.dead) continue;
+    const v = d6(s);
+    log(s, `${r.label}: ${m.name} ทอย ${v} (${r.on}+)`, 'roll', u.owner);
+    if (v < r.on) continue;
+    m.dead = false;
+    m.wounds = Math.min(m.profile.W, r.wounds);
+    if (!setBackUp(s, u, m, { x: r.x, y: r.y })) { m.dead = true; m.wounds = 0; log(s, `${r.label}: ไม่มีที่วาง`, 'info', u.owner); continue; }
+    if (u.status === 'destroyed') { u.status = 'board'; s.destroyedByTurn = s.destroyedByTurn.filter((d) => d.unitId !== u.id); }
+    pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
+    log(s, `💚 ${r.label}: ${m.name} กลับมาพร้อม ${m.wounds} wound!`, 'info', u.owner);
+  }
+}
+
+/** Start-of-phase helper: automatic abilities of these units. */
+export const fireFor = (s: GameState, trigger: Trigger, p: PlayerId | 'both', ctx: FireCtx = {}) =>
+  fire(s, trigger, s.units.filter((u) => (p === 'both' || u.owner === p) && onBoard(u)), ctx);
+
+/** Triggers that also cover units in Reserves / not yet deployed (start of the battle or battle round, Declare Battle Formations). */
+export const fireAll = (s: GameState, trigger: Trigger, p: PlayerId | 'both') =>
+  fire(s, trigger, s.units.filter((u) => (p === 'both' || u.owner === p) && u.status !== 'destroyed' && alive(u).length > 0));
+
+export const rulePresent = (u: UnitState, a: AbilityData) => !!abilityRule(u, a);

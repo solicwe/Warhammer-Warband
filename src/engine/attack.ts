@@ -7,7 +7,7 @@ import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, Weapon
 import { getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
-import { applyDetachment, detCover, detEligible, detGrants, detInv } from './detachments';
+import { applyAttackEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate } from './effects';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
 
@@ -16,15 +16,16 @@ export interface ShootOptions {
   useCloseQuarters?: boolean; // non-M/V models: fire close-quarters weapons instead of other guns
   profile?: Record<string, number>; // weapon name -> chosen profile index
   skipWeapons?: string[];
+  models?: string[]; // only these models (destroyed models that shoot before being removed)
 }
 
 // ---------- helpers ----------
 
-export function targetToughness(u: UnitState): number {
+export function targetToughness(u: UnitState, s?: GameState): number {
   const a = alive(u);
   const body = a.filter((m) => m.isBodyguard);
   const pool = body.length ? body : a;
-  return Math.max(...pool.map((m) => m.profile.T));
+  return Math.max(...pool.map((m) => m.profile.T)) + (s ? unitFlags(s, u).toughness : 0);
 }
 
 export function woundNeed(S: number, T: number): number {
@@ -35,9 +36,9 @@ export function woundNeed(S: number, T: number): number {
   return 5;
 }
 
-const riled = (s: GameState, u: UnitState) => u.abilities.some((a) => a.name === 'Waaagh!') && s.players[u.owner].riledUntilTurn >= s.turn;
+const riled = isRiled;
 export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState, ranged = true) => {
-  const best = Math.min(m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, detInv(s, u, ranged) ?? 7);
+  const best = Math.min(m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee').inv ?? 7);
   return best >= 7 ? null : best;
 };
 
@@ -90,12 +91,19 @@ function applyUnitBuffs(pool: Pool, u: UnitState) {
   if (ap) pool.ap = pool.ap - ap;
 }
 
+/** "Ignore any or all modifiers to BS/WS and the Hit roll": drop the bad ones once everything is folded in. */
+function finishIgnore(pool: Pool) {
+  if (!pool.ignoreHitMods) return;
+  pool.hitMod = Math.max(0, pool.hitMod);
+  if (pool.skill !== null && pool.profile.skill !== null) pool.skill = Math.min(pool.skill, pool.profile.skill);
+}
+
 // ---------- building pools ----------
 
 export interface BuildResult { pools: Pool[]; notes: string[]; error?: string }
 
 export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
-  if (!onBoard(u) || u.selectedToShoot || (u.move === 'fallback' && !detEligible(s, u, 'shootAfterFallBack'))) return [];
+  if (!onBoard(u) || u.selectedToShoot || (u.move === 'fallback' && !canDo(s, u, 'shootAfterFallBack'))) return [];
   const weps = alive(u).flatMap((m) => m.weapons.flatMap((w) => w.profiles)).filter((p) => !isMelee(p));
   if (!weps.length) return [];
   const engaged = isEngaged(s, u);
@@ -104,8 +112,8 @@ export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
     if (u.move !== 'advance' && (weps.some((p) => hasAbility(p, 'close-quarters')) || alive(u).some(isMV))) modes.push('closeQuarters');
     return modes;
   }
-  if (u.move === 'advance' && !detEligible(s, u, 'shootAfterAdvance')) {
-    if (riled(s, u) || weps.some((p) => hasAbility(p, 'assault')) || detGrants(s, u, 'ranged', 'assault')) modes.push('assault');
+  if (u.move === 'advance' && !canDo(s, u, 'shootAfterAdvance')) {
+    if (riled(s, u) || weps.some((p) => hasAbility(p, 'assault')) || unitGrants(s, u, 'assault', 'ranged')) modes.push('assault');
     return modes;
   }
   modes.push('normal');
@@ -124,11 +132,13 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const tIsMV = tModels.some(isMV);
   if (opt.mode !== 'closeQuarters' && tEngaged && !tIsMV) return { pools: [], notes, error: 'เป้าหมาย engaged อยู่ ยิงไม่ได้ (ยกเว้น MONSTER/VEHICLE)' };
   if (opt.mode === 'closeQuarters' && !engagedWithTarget && !alive(A).some(isMV)) return { pools: [], notes, error: 'Close-quarters ยิงได้เฉพาะหน่วยที่ engaged ด้วย' };
-  const T_T = targetToughness(T);
+  const T_T = targetToughness(T, s);
   const isOwnShootingPhase = s.phase === 'shooting' && A.owner === s.active;
+  const aFlags = unitFlags(s, A);
 
-  for (const m of alive(A)) {
-    const ranged = m.weapons.filter((w) => !isMelee(w.profiles[0]) && !(opt.skipWeapons ?? []).includes(w.name) && !A.weaponsFired.includes(w.name));
+  const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : alive(A);
+  for (const m of shooters) {
+    const ranged = m.weapons.filter((w) => !isMelee(w.profiles[0]) && !(opt.skipWeapons ?? []).includes(w.name) && (!!opt.models || !A.weaponsFired.includes(w.name)));
     const cqOnly = ranged.filter((w) => hasAbility(w.profiles[0], 'close-quarters'));
     const others = ranged.filter((w) => !hasAbility(w.profiles[0], 'close-quarters'));
     let chosen = ranged;
@@ -136,16 +146,20 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (opt.mode === 'closeQuarters') chosen = cqOnly;
       else chosen = opt.useCloseQuarters || !others.length ? cqOnly : others;
     }
-    if (opt.mode === 'assault' && !riled(s, A) && !detGrants(s, A, 'ranged', 'assault')) chosen = chosen.filter((w) => hasAbility(w.profiles[opt.profile?.[w.name] ?? 0], 'assault'));
     const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
     for (const w of chosen) {
       const pi = Math.min(opt.profile?.[w.name] ?? 0, w.profiles.length - 1);
       const p = w.profiles[pi];
       if (hasAbility(p, 'one-shot') && A.oneShotUsed.includes(w.name)) continue;
-      const range = typeof p.range === 'number' ? p.range : 0;
+      const baseRange = typeof p.range === 'number' ? p.range : 0;
+      const range = aFlags.rangeMinus ? Math.max(Math.min(baseRange, 12), baseRange - aFlags.rangeMinus) : baseRange;
       const d = Math.min(...tModels.map((t) => baseDist(m, t)));
+      const fx = offenceFor(s, A, m, T, w, p, 'ranged', d);
+      const inc = incomingFor(s, A, m, T, 'ranged');
+      if (opt.mode === 'assault' && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault')) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
       if (d > maxRange + 1e-6) continue;
+      if (untargetableAt(s, T, d)) continue;
       if (opt.mode === 'closeQuarters' && !isMV(m) && !engagedWithTarget) continue;
       if (hasAbility(p, 'blast') && tEngaged) continue;
       const indirect = opt.mode === 'indirect' && hasAbility(p, 'indirect-fire');
@@ -154,21 +168,21 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
       const mods: Mods = { skillDelta: 0, skillNotes: [], hit: 0, hitNotes: [] };
-      const ignoresCover = hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || detGrants(s, A, 'ranged', 'ignores cover', { T, p, d });
-      const cover = indirect || (!ignoresCover && (hasCover(s, m, T) || detCover(s, T, d)));
+      const ignoresCover = hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
+      const cover = indirect || aFlags.givesCover || (!ignoresCover && (hasCover(s, m, T) || targetHasCover(s, T, d)));
       if (cover) { mods.skillDelta += 1; mods.skillNotes.push('Cover −1 BS'); }
       if (m.keywords.includes('TOWERING') && d <= RULES.plungingFire.toweringRange && !T.keywords.includes('AIRCRAFT')) { mods.skillDelta -= 1; mods.skillNotes.push('Plunging Fire +1 BS'); }
-      const heavy = hasAbility(p, 'heavy') || detGrants(s, A, 'ranged', 'heavy', { T, p, d });
+      const heavy = hasAbility(p, 'heavy') || grants(fx, inc, 'heavy');
       if (heavy && isOwnShootingPhase && !isEngaged(s, A) && A.setUpTurn !== s.turn && A.maxMoved <= RULES.heavyMaxMove + 1e-6) { mods.hit += 1; mods.hitNotes.push('Heavy +1'); }
       if (tIsMV && tEngaged && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('ยิงเป้า M/V ที่ engaged −1'); }
-      if (opt.mode === 'closeQuarters' && isMV(m) && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('Big guns ใน combat −1'); }
+      if (opt.mode === 'closeQuarters' && isMV(m) && !aFlags.noBigGunsPenalty && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('Big guns ใน combat −1'); }
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
       const bh = buffSum(A, 'hit+1', 'hit-1');
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
       const psychic = hasAbility(p, 'psychic');
       const fm = finishPoolMods(p, mods, psychic);
       const half = d <= range / 2 + 1e-6;
-      const key = [w.name, p.name, cover, half, d <= 12 + 1e-6, fm.skill, fm.hit].join('|');
+      const key = [m.source, w.name, p.name, cover, half, fm.skill, fm.hit, fxKey(fx, inc)].join('|');
       let pool = pools.get(key);
       if (!pool) {
         pool = newPool(key, w, p, T);
@@ -192,7 +206,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         pool.woundNote = `S${p.S} vs T${T_T}` + (wm ? ` · Buff ${wm > 0 ? '+' : ''}${wm}` : '');
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
-        applyDetachment(s, A, T, pool, 'ranged', d, T_T, woundNeed);
+        applyAttackEffects(s, A, T, pool, fx, inc, 'ranged', d, T_T, woundNeed);
+        finishIgnore(pool);
         pools.set(key, pool);
       }
       pool.models += 1;
@@ -200,10 +215,12 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       let flat = 0;
       const rf = getAbility(p, 'rapid-fire', T.keywords);
       if (rf && half) extras.push(rf.value ?? '1');
+      else if (half && grants(fx, inc, 'rapid fire 1')) extras.push('1');
       const blast = getAbility(p, 'blast', T.keywords);
       if (blast) flat += parseInt(blast.value ?? '1', 10) * Math.floor(tModels.length / 5);
+      else if (grants(fx, inc, 'blast 1')) flat += Math.floor(tModels.length / 5);
       pool.instances.push({ A: p.A, extras, flat });
-      if (hasAbility(p, 'hazardous')) pool.hazardous += 1;
+      if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
   }
   const list = [...pools.values()];
@@ -223,13 +240,15 @@ function scoreMelee(p: WeaponProfileData, T: number) {
   return a * hit * wound * (1 + -p.AP * 0.25) * exprAverage(p.D);
 }
 
-export function buildFightPools(s: GameState, attackerId: string, targetId: string, opt: { weapon?: string; epicChallengeModel?: string } = {}): BuildResult {
+export function buildFightPools(s: GameState, attackerId: string, targetId: string, opt: { weapon?: string; epicChallengeModel?: string; models?: string[] } = {}): BuildResult {
   const A = unitById(s, attackerId);
   const T = unitById(s, targetId);
-  const T_T = targetToughness(T);
+  const T_T = targetToughness(T, s);
   const pools = new Map<string, Pool>();
-  for (const m of alive(A)) {
+  const fighters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : alive(A);
+  for (const m of fighters) {
     if (!modelEngagedWith(m, T)) continue;
+    const d = Math.min(...alive(T).map((t) => baseDist(m, t)));
     const melee = meleeWeapons(m);
     const extra = melee.filter((w) => hasAbility(w.profiles[0], 'extra-attacks'));
     const normal = melee.filter((w) => !hasAbility(w.profiles[0], 'extra-attacks'));
@@ -240,13 +259,15 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
     const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
     for (const w of use) {
       const p = w.profiles[0];
+      const fx = offenceFor(s, A, m, T, w, p, 'melee', d);
+      const inc = incomingFor(s, A, m, T, 'melee');
       const mods: Mods = { skillDelta: 0, skillNotes: [], hit: 0, hitNotes: [] };
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
       const bh = buffSum(A, 'hit+1', 'hit-1');
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
       const fm = finishPoolMods(p, mods, hasAbility(p, 'psychic'));
       const precision = opt.epicChallengeModel === m.id;
-      const key = [w.name, fm.hit, precision].join('|');
+      const key = [m.source, w.name, fm.hit, precision, fxKey(fx, inc)].join('|');
       let pool = pools.get(key);
       if (!pool) {
         pool = newPool(key, w, p, T);
@@ -260,13 +281,14 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         pool.woundNote = notes.join(' · ');
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
-        applyDetachment(s, A, T, pool, 'melee', 0, T_T, woundNeed);
+        applyAttackEffects(s, A, T, pool, fx, inc, 'melee', d, T_T, woundNeed);
+        finishIgnore(pool);
         pools.set(key, pool);
       }
       pool.models += 1;
       const cleave = getAbility(p, 'cleave', T.keywords);
       pool.instances.push({ A: p.A, extras: [], flat: cleave ? parseInt(cleave.value ?? '1', 10) * Math.floor(alive(T).length / 5) : 0 });
-      if (hasAbility(p, 'hazardous')) pool.hazardous += 1;
+      if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
   }
   const list = [...pools.values()];
@@ -302,7 +324,7 @@ export function expectedDamage(s: GameState, pool: Pool, target: UnitState): { a
 
 // ---------- running the session ----------
 
-export function startAttack(s: GameState, kind: AttackSession['kind'], attackerId: string, targetId: string, pools: Pool[]) {
+export function startAttack(s: GameState, kind: AttackSession['kind'], attackerId: string, targetId: string, pools: Pool[], opts: { free?: boolean } = {}) {
   const A = unitById(s, attackerId);
   for (const p of pools) {
     let total = 0;
@@ -316,19 +338,27 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     p.attacks = total;
     if (parts.length) p.attackNote += ` · ทอยจำนวน attack: ${parts.join(', ')}`;
     if (hasAbility(p.profile, 'one-shot') && !A.oneShotUsed.includes(p.weapon)) A.oneShotUsed.push(p.weapon);
-    if (kind === 'shoot' && !A.weaponsFired.includes(p.weapon)) A.weaponsFired.push(p.weapon);
+    if (kind === 'shoot' && !opts.free && !A.weaponsFired.includes(p.weapon)) A.weaponsFired.push(p.weapon);
   }
   const T = unitById(s, targetId);
   s.attack = {
     kind, attackerId, targetId, pools, idx: 0, stage: pools.length ? 'hit' : 'done', hazardousRolls: [], summary: [],
     aliveBefore: alive(T).map((m) => m.id), woundsBefore: alive(T).reduce((a, m) => a + m.wounds, 0),
-    attackerBuffsAtStart: A.buffs.map((b) => b.kind),
+    attackerBuffsAtStart: A.buffs.map((b) => b.kind), free: opts.free,
   };
+}
+
+/** Change one die of the current stage to a value ("change that roll to an unmodified 6"). */
+export function forceDie(s: GameState, stage: 'hit' | 'wound', index: number, v: number) {
+  const at = s.attack!;
+  const p = at.pools[at.idx];
+  if (stage === 'hit') { const d = p.hits[index]; p.hits[index] = { v, o: evalHit(p, v), rerolled: true, orig: d.v }; }
+  else { const d = p.wounds[index]; p.wounds[index] = { v, o: evalWound(p, v), rerolled: true, orig: d.v }; }
 }
 
 function evalHit(p: Pool, v: number): Die['o'] {
   if (v === 1) return 'miss';
-  if (v === 6) return p.snap ? 'hit' : 'crit';
+  if (v >= (p.snap ? 6 : p.critHitOn ?? 6)) return p.snap ? (v === 6 ? 'hit' : 'miss') : 'crit';
   if (p.hitOn6Only) return 'miss';
   if (p.minHitUnmodified && v < p.minHitUnmodified) return 'miss';
   return v + p.hitMod >= (p.skill ?? 7) ? 'hit' : 'miss';
@@ -346,7 +376,7 @@ function applyDefense(s: GameState, p: Pool) {
   p.defApplied = true;
   const T = unitById(s, s.attack!.targetId);
   const notes: string[] = [];
-  if (has(T, 'enemyHit-1') && !p.autoHit) { p.hitMod = clamp(p.hitMod - 1, -RULES.modifierCaps.hitRoll, RULES.modifierCaps.hitRoll); notes.push('−1 Hit'); }
+  if (has(T, 'enemyHit-1') && !p.autoHit && !p.ignoreHitMods) { p.hitMod = clamp(p.hitMod - 1, -RULES.modifierCaps.hitRoll, RULES.modifierCaps.hitRoll); notes.push('−1 Hit'); }
   if (has(T, 'enemyWound-1')) { p.woundMod = clamp(p.woundMod - 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll); p.woundNote += ' · Stratagem −1'; }
   if (has(T, 'enemyAp-1') && p.ap < 0) { p.ap += 1; notes.push('AP แย่ลง 1'); }
   if (notes.length) p.hitNote = [p.hitNote, `Stratagem ฝ่ายรับ: ${notes.join(', ')}`].filter(Boolean).join(' · ');
@@ -467,6 +497,18 @@ type TransportHook = (s: GameState, u: UnitState, m: ModelState) => void;
 let transportHook: TransportHook | null = null;
 export const onTransportDestroyed = (fn: TransportHook) => { transportHook = fn; };
 
+/** Abilities that react to attacks and deaths register here (activations.ts), keeping this module free of them. */
+export interface AttackInfo { hits: number; hitWeapons: string[]; destroyed: boolean; woundsLost: number; modelsKilled: number; killedCharacter: boolean }
+type AttackHook = (s: GameState, at: AttackSession, info: AttackInfo) => void;
+type KillHook = (s: GameState, u: UnitState, m: ModelState, killerId?: string) => void;
+type MortalHook = (s: GameState, u: UnitState, n: number) => void;
+const attackHooks: AttackHook[] = [];
+const killHooks: KillHook[] = [];
+const mortalHooks: MortalHook[] = [];
+export const onAttackFinished = (fn: AttackHook) => { attackHooks.push(fn); };
+export const onModelKilled = (fn: KillHook) => { killHooks.push(fn); };
+export const onMortalWounds = (fn: MortalHook) => { mortalHooks.push(fn); };
+
 export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: string) {
   m.dead = true;
   m.wounds = 0;
@@ -478,6 +520,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     onUnitDestroyed(s, u, s.attack?.attackerId);
     log(s, `💀 ${u.name} ถูกทำลาย${killer ? ' โดย ' + killer : ''}`, 'kill');
   }
+  for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
   if (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1)) {
     const r = d6(s);
     if (r === 6) {
@@ -490,10 +533,11 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
 }
 
 /** Lose wounds on one model with Feel No Pain. Returns wounds actually lost. */
-function loseWounds(s: GameState, u: UnitState, m: ModelState, n: number, lines?: string[]): number {
+function loseWounds(s: GameState, u: UnitState, m: ModelState, n: number, lines?: string[], kind: 'melee' | 'ranged' | 'mortal' = 'ranged', psychic = false): number {
   let lost = 0;
   const buffFnp = u.buffs.some((b) => b.kind === 'fnp4') ? 4 : u.buffs.some((b) => b.kind === 'fnp5') ? 5 : u.buffs.some((b) => b.kind === 'fnp6') ? 6 : undefined;
-  const fnp = u.core.fnp !== undefined && buffFnp !== undefined ? Math.min(u.core.fnp, buffFnp) : u.core.fnp ?? buffFnp;
+  const fxFnp = modelDefence(s, u, m, kind, psychic).fnp ?? undefined;
+  const fnp = [u.core.fnp, buffFnp, fxFnp].filter((x): x is number => x !== undefined).reduce<number | undefined>((a, b) => (a === undefined ? b : Math.min(a, b)), undefined);
   const fnpRolls: number[] = [];
   for (let i = 0; i < n && !m.dead; i++) {
     if (fnp) { const r = d6(s); fnpRolls.push(r); if (r >= fnp) continue; }
@@ -506,6 +550,7 @@ function loseWounds(s: GameState, u: UnitState, m: ModelState, n: number, lines?
 }
 
 export function applyMortalWounds(s: GameState, u: UnitState, n: number, source: string, maxModels?: number, preferChar?: boolean): number {
+  if (n > 0 && alive(u).length) for (const h of mortalHooks) h(s, u, n);
   let killed = 0;
   let modelsHit = 0;
   let current: ModelState | undefined;
@@ -519,7 +564,7 @@ export function applyMortalWounds(s: GameState, u: UnitState, n: number, source:
       current = pickCasualty(u, pool)!;
       modelsHit += 1;
     }
-    loseWounds(s, u, current, 1);
+    loseWounds(s, u, current, 1, undefined, 'mortal');
     if (current.dead) killed += 1;
   }
   const hitAt = alive(u)[0] ?? u.models.find((m) => m.dead);
@@ -547,24 +592,36 @@ export function applyDamage(s: GameState) {
   const before = alive(T).length;
   const groups = allocationGroups(T);
   let precisionGroup: Group | undefined;
-  if (p.precision) precisionGroup = groups.find((g) => g.char && alive(A).some((am) => modelVisible(s, am, T, g.models[0]) || at.kind === 'fight'));
+  if (p.precision || p.precisionOnCrit) precisionGroup = groups.find((g) => g.char && alive(A).some((am) => modelVisible(s, am, T, g.models[0]) || at.kind === 'fight'));
+  // [PRECISION] only on critical hits: that many of the attacks may pick a CHARACTER
+  let precise = p.precision ? Infinity : p.precisionOnCrit ? p.hits.filter((h) => h.o === 'crit').length : 0;
   const order = p.saves.map((d, i) => ({ d, i })).sort((x, y) => x.d.v - y.d.v);
   p.saveTargets = p.saves.map(() => '');
   for (const { d, i } of order) {
-    const g = precisionGroup && precisionGroup.models.some((m) => !m.dead) ? precisionGroup : groups.find((x) => x.models.some((m) => !m.dead));
+    const usePrecise = precise > 0 && !!precisionGroup && precisionGroup.models.some((m) => !m.dead);
+    if (usePrecise) precise -= 1;
+    const g = usePrecise ? precisionGroup : groups.find((x) => x.models.some((m) => !m.dead));
     if (!g) { d.o = 'saved'; p.saveTargets[i] = '—'; continue; }
     const m = pickModel(g, T)!;
-    const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0);
+    const kind = at.kind === 'fight' ? 'melee' : 'ranged';
+    const psychic = !!p.psychic || hasAbility(p.profile, 'psychic');
+    const md = modelDefence(s, T, m, kind, psychic);
+    if (kind === 'melee') (at.allocated ??= {})[m.id] = (at.allocated[m.id] ?? 0) + 1;
+    const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0) - (md.saveBonusD1 && p.damage.trim() === '1' ? md.saveBonusD1 : 0);
     const inv = effectiveInSv(s, T, m, at.kind !== 'fight');
     let ok = false;
     if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + p.ap >= Math.max(RULES.modifierCaps.bestSave, sv);
     p.saveTargets[i] = `${m.name} (Sv${sv}+${inv ? ` / ${inv}++` : ''}, AP${p.ap})`;
     d.o = ok ? 'saved' : 'fail';
     if (!ok) {
-      const dr = rollExpr(s, p.damage);
+      let dr = rollExpr(s, p.damage);
+      if (p.rerollDamage && dr.dice.length && dr.total < exprAverage(p.damage)) { const again = rollExpr(s, p.damage); p.damageLines.push(`re-roll damage ${dr.total}→${again.total}`); dr = again; }
       let dmg = dr.total;
       if (T.buffs.some((b) => b.kind === 'damage-1')) dmg = Math.max(1, dmg - 1);
-      const lost = loseWounds(s, T, m, dmg, p.damageLines);
+      if (md.damage) dmg = Math.max(1, dmg + md.damage);
+      if (md.halve) dmg = Math.ceil(dmg / 2);
+      if (md.negate) { useNegate(s, T, m); dmg = 0; p.damageLines.push(`${m.name}: ดาเมจเป็น 0 (ability ครั้งละ phase)`); }
+      const lost = dmg ? loseWounds(s, T, m, dmg, p.damageLines, kind, psychic) : 0;
       p.damageLines.push(`${m.name}: −${lost} W${dr.dice.length ? ` (D=${p.damage}→${dmg})` : ''}${m.dead ? ' 💀' : ''}`);
     }
   }
@@ -633,10 +690,21 @@ export function finishAttack(s: GameState) {
   }
   const verb = at.kind === 'fight' ? 'ตี' : at.kind === 'overwatch' ? 'Overwatch ยิง' : 'ยิง';
   log(s, `${A.name} ${verb} ${T.name}: ตาย ${killed} โมเดล`, 'info', A.owner);
-  if (at.kind !== 'fight') A.shotTurn = s.turn;
-  if (at.kind === 'shoot' && rangedWeaponNames(A).every((n) => A.weaponsFired.includes(n))) A.selectedToShoot = true;
-  if (at.kind === 'fight') A.fought = true;
+  if (!at.free) {
+    if (at.kind !== 'fight') A.shotTurn = s.turn;
+    if (at.kind === 'shoot' && rangedWeaponNames(A).every((n) => A.weaponsFired.includes(n))) A.selectedToShoot = true;
+    if (at.kind === 'fight') A.fought = true;
+  }
   s.attack = null;
+  const info: AttackInfo = {
+    hits: at.pools.reduce((a, p) => a + p.hits.filter((h) => h.o !== 'miss').length, 0),
+    hitWeapons: [...new Set(at.pools.filter((p) => p.hits.some((h) => h.o !== 'miss')).map((p) => p.weapon))],
+    destroyed: !alive(T).length,
+    woundsLost: Math.max(0, (at.woundsBefore ?? 0) - alive(T).reduce((a, m) => a + m.wounds, 0)),
+    modelsKilled: killed,
+    killedCharacter: T.models.some((m) => m.dead && (at.aliveBefore ?? []).includes(m.id) && (m.isCharacter || m.keywords.includes('CHARACTER'))),
+  };
+  for (const h of attackHooks) h(s, at, info);
 }
 
 export function canShootTarget(s: GameState, a: UnitState, t: UnitState): boolean {

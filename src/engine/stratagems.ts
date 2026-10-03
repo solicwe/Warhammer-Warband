@@ -1,6 +1,6 @@
 // Reads detachment stratagem text (WHEN / TARGET / EFFECT) so the game can offer them at the right time
 // and apply the common effects automatically. Anything it cannot read is still usable: CP is spent and logged.
-import { canUseStratagem, log, spendStratagem, unitById } from './state';
+import { canUseStratagem, log, spendStratagem, stratCost, unitById } from './state';
 import type { BuffKind, GameState, Phase, PlayerId, StratagemData, UnitState } from './types';
 
 export interface StratagemPlan {
@@ -92,10 +92,11 @@ export function stratagemBlock(s: GameState, p: PlayerId, st: StratagemData, uni
 export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: StratagemData, unitId?: string): BuffKind[] {
   const plan = planStratagem(st);
   const u = unitId ? unitById(s, unitId) : undefined;
+  const cp = stratCost(s, st.id, plan.target === 'own' ? u : undefined, st.cp);
   spendStratagem(s, p, st.id, plan.target === 'own' ? u : undefined, st.cp);
   if (u && plan.target === 'own') for (const k of plan.effects) u.buffs.push({ kind: k, until: plan.until, label: st.name });
   const what = plan.effects.map((k) => EFFECT_LABEL[k] ?? k).join(', ');
-  log(s, `${s.players[p].name} ใช้ ${st.name} (${st.cp}CP)${u ? ` → ${u.name}` : ''}${what ? `: ${what}` : ''}${plan.full ? '' : ' — ส่วนที่เหลือทำตามข้อความ'}`, 'cp', p);
+  log(s, `${s.players[p].name} ใช้ ${st.name} (${cp}CP)${u ? ` → ${u.name}` : ''}${what ? `: ${what}` : ''}${plan.full ? '' : ' — ส่วนที่เหลือทำตามข้อความ'}`, 'cp', p);
   return plan.effects;
 }
 

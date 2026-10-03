@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, enhancementOptions, listPoints, newUid, pointsOptions, syncList, syncWargear, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, enhancementOptions, listPoints, newUid, pointsOptions, splitRuleOf, syncList, syncWargear, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
@@ -275,7 +275,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const unitRow = (u: ArmyUnitEntry) => {
     const sheet = sheetOf(u.datasheet);
     const leads = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
-    const line = [u.warlord && 'Warlord', u.enhancement, leads && `นำ ${leads.datasheet}`].filter(Boolean).join(' · ');
+    const line = [u.warlord && 'Warlord', u.enhancement, leads && `นำ ${leads.datasheet}`, u.split && 'แยก 2 หน่วย'].filter(Boolean).join(' · ');
     const wg = wargearSummary(sheet, u);
     const wrong = sheet && !allowed(sheet);
     return (
@@ -470,6 +470,13 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             </div>
           )}
           {sheet && <WargearEditor sheet={sheet} u={u} onChange={(patch) => setUnit(u.uid, patch)} />}
+          {(() => {
+            const sp = splitRuleOf(sheet);
+            if (!sp) return null;
+            return sp.must
+              ? <div className="tiny muted">{sp.name}: {sp.label}</div>
+              : <button className={`btn ${u.split ? 'on' : ''}`} onClick={() => setUnit(u.uid, { split: !u.split })}>{u.split ? '✓ ' : ''}{sp.name}: {sp.label}</button>;
+          })()}
           {sheet && sheet.leads.length > 0 && (
             <label className="field">นำหน่วย (Leader)
               <select value={u.attachTo ?? ''} onChange={(e) => setUnit(u.uid, { attachTo: e.target.value || undefined })}>

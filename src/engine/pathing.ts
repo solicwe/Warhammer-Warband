@@ -9,6 +9,11 @@ const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
 
 export const canCrossDense = (m: ModelState) => ['INFANTRY', 'BEASTS', 'SWARM', 'MOBILE'].some((k) => m.keywords.includes(k));
+
+/** Abilities that let a unit move through enemy models ("Get Out da Way!", Shokk-boosta); registered by effects.ts. */
+type ThroughHook = (s: GameState, u: UnitState, kind: MoveKind) => 'all' | 'nonMV' | null;
+let throughHook: ThroughHook | null = null;
+export const setThroughHook = (fn: ThroughHook) => { throughHook = fn; };
 export const isMV = (m: ModelState) => m.keywords.includes('MONSTER') || m.keywords.includes('VEHICLE');
 
 /** Walls a model may not move through: dense terrain taller than 2" for anything but INFANTRY / BEASTS / SWARM / MOBILE. */
@@ -27,7 +32,9 @@ interface Ctx { m: ModelState; enemies: ModelState[]; walls: Seg[]; clear: numbe
 function ctxFor(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOpts): Ctx {
   const desperate = kind === 'fallback' && u.battleShocked;
   const through = opt.fly || desperate || (isMV(m) && (kind === 'normal' || kind === 'advance'));
+  const thr = throughHook?.(s, u, kind) ?? null;
   const enemies = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive)
+    .filter((e) => thr !== 'all' && !(thr === 'nonMV' && !isMV(e)))
     .filter((e) => !through || (isMV(m) && isMV(e) && !opt.fly && !desperate));
   return { m, enemies, walls: blockingWalls(s, m, opt.fly), clear: wallClearance(m, true) };
 }
@@ -199,7 +206,7 @@ export function settleMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
     if (pathLength(path) > max + 0.01) path = truncatePath(path, max);
     out.set(m.id, path);
   }
-  const keepOutOfEr = ['normal', 'advance', 'fallback', 'ingress', 'scout'].includes(kind);
+  const keepOutOfEr = ['normal', 'advance', 'fallback', 'ingress', 'scout', 'extra'].includes(kind);
   const enemies = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive);
   const statics: (Pt & { r: number; id: string })[] = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap(alive);
   const settled: (Pt & { r: number; id: string })[] = alive(u).filter((m) => !movers.includes(m)).map((m) => ({ x: m.x, y: m.y, r: m.r, id: m.id }));

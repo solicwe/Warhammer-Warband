@@ -13,7 +13,12 @@ import {
   validateMove, validatePlacement, type MoveCheck, hasArmyRule, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
+  beginMove, hasDeepStrike, setOathBackup, arrivalRound,
 } from '../engine/game';
+import {
+  abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, unitSelected, useActByKey, useFreeDie, type Trigger,
+} from '../engine/activations';
+import { activeLabels, unitFlags } from '../engine/effects';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { actionOptions, startAction } from '../engine/missions';
@@ -22,7 +27,7 @@ import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem }
 import { endUnitShooting, rangedWeaponNames } from '../engine/attack';
 import { polyCentroid } from '../engine/geometry';
 import {
-  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, onBoard, other, spendStratagem, strength, unitById, unitDistance,
+  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, onBoard, other, spendStratagem, stratCost, strength, unitById, unitDistance,
 } from '../engine/state';
 import type { BuffKind, GameState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
 import { hasCover, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
@@ -35,8 +40,8 @@ import { UnitView } from './Sheet';
 import { useGame } from './store';
 
 type Mode =
-  | { k: 'place'; unitId: string; how: 'deploy' | 'infiltrate' | 'ingress' | 'deepStrike' | 'disembark'; rapid?: boolean; transportId?: string }
-  | { k: 'move'; unitId: string; kind: 'normal' | 'advance' | 'fallback' | 'scout'; fly: boolean }
+  | { k: 'place'; unitId: string; how: 'deploy' | 'infiltrate' | 'ingress' | 'deepStrike' | 'disembark'; rapid?: boolean | 'free'; transportId?: string }
+  | { k: 'move'; unitId: string; kind: 'normal' | 'advance' | 'fallback' | 'scout' | 'extra' | 'surge'; fly: boolean }
   | { k: 'shoot'; unitId: string; smode: ShootMode; target: string | null; useCQ: boolean; profile: Record<string, number>; overwatch?: boolean; skip?: string[] }
   | { k: 'charge'; unitId: string; targets: string[]; heroic?: 'leap' | 'fray' }
   | { k: 'pile'; unitId: string; kind: 'pileIn' | 'consolidate'; overrun?: boolean }
@@ -270,7 +275,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   // ---------- generic confirm helpers ----------
 
-  const confirmMove = (kind: 'normal' | 'advance' | 'fallback' | 'scout' | 'charge' | 'pileIn' | 'consolidate', after?: () => void) => {
+  const confirmMove = (kind: 'normal' | 'advance' | 'fallback' | 'scout' | 'extra' | 'surge' | 'charge' | 'pileIn' | 'consolidate', after?: () => void) => {
     if (!mode || !draft) return;
     const u = U(mode.unitId);
     const opts = mode.k === 'move' ? { fly: mode.fly } : mode.k === 'charge' ? { targets: mode.targets } : {};
@@ -304,7 +309,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     } else {
       const chk = validatePlacement(s, u, pos, mode.how);
       if (!chk.ok) { setCheck(chk); return; }
-      act((g) => { const gu = unitById(g, u.id); if (mode.rapid) { spendStratagem(g, gu.owner, 'rapid-ingress', gu); g.window = null; } ingressUnit(g, gu, pos); });
+      act((g) => {
+        const gu = unitById(g, u.id);
+        if (mode.rapid === true) spendStratagem(g, gu.owner, 'rapid-ingress', gu);
+        if (mode.rapid) g.window = null;
+        ingressUnit(g, gu, pos);
+      });
     }
     setMode(null);
     setSel(null);
@@ -381,9 +391,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className="grow">
           <div style={{ fontWeight: 700 }} className={u.owner ? 'p1' : 'p0'}>{u.name} <span className="muted tiny">{alive(u).length}/{u.startingStrength}</span></div>
           <div className="statline">
-            M <b>{m.profile.M ?? '-'}"</b> · T <b>{m.profile.T}</b> · Sv <b>{m.profile.Sv}+</b>{m.profile.InSv ? <> · <b>{m.profile.InSv}++</b></> : null} · W <b>{m.wounds}/{m.profile.W}</b> · Ld <b>{bestLd(u)}+</b> · OC <b>{u.battleShocked ? '-' : m.profile.OC ?? '-'}</b>
+            M <b>{m.profile.M !== undefined && m.profile.M !== null ? m.profile.M + unitFlags(s, u).move : '-'}"</b> · T <b>{m.profile.T}</b> · Sv <b>{m.profile.Sv}+</b>{m.profile.InSv ? <> · <b>{m.profile.InSv}++</b></> : null} · W <b>{m.wounds}/{m.profile.W}</b> · Ld <b>{bestLd(u, s)}+</b> · OC <b>{u.battleShocked ? '-' : m.profile.OC ?? '-'}</b>
           </div>
           {flags.length > 0 && <div className="tiny" style={{ color: 'var(--warn)' }}>{flags.join(' · ')}</div>}
+          {(() => { const ls = activeLabels(s, u); return ls.length ? <div className="tiny fx-labels">✨ {ls.slice(0, 6).join(' · ')}{ls.length > 6 ? ` +${ls.length - 6}` : ''}</div> : null; })()}
         </div>
         <span className="muted">›</span>
       </div>
@@ -425,6 +436,58 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     </>
   );
 
+  // ---------- datasheet abilities you press ----------
+
+  const [actPick, setActPick] = useState<string | null>(null); // ability whose target is being picked
+  const shortName = (n: string) => n.replace(/\s*\((?:once|psychic|psyker|first)[^)]*\)\s*$/i, '').replace(/\s*\(Aura\)\s*$/i, '');
+  /** Buttons for abilities player p can use right now ("Once per battle, in your Command phase …"). */
+  const abilityBar = (p: PlayerId, only: { unitId?: string; whens?: Trigger[] } = {}) => {
+    if (bots.includes(p)) return null;
+    const list = manualActs(s, p).filter((m) => (!only.unitId || m.def.holder.id === only.unitId) && (!only.whens || only.whens.includes(m.def.spec.when)));
+    if (!list.length) return null;
+    return (
+      <div className="ab-bar">
+        <div className="tiny muted">✨ Ability ที่กดใช้ได้ตอนนี้</div>
+        {list.map((m) => {
+          const k = `${m.def.holder.id}|${m.def.key}`;
+          const t = m.def.spec.target;
+          const pickOne = !!t && t.side !== 'self' && !t.each && m.targets.length > 1;
+          const use = (targetId?: string) => {
+            const res = act((g) => {
+              const err = useActByKey(g, m.def.holder.id, m.def.key, targetId);
+              const gu = unitById(g, m.def.holder.id);
+              return { err, move: gu.extraMove && gu.extraMove.phase === `${g.turn}:${g.phase}` && !g.window ? gu.extraMove.kind : null };
+            });
+            setActPick(null);
+            if (res.err) flash(res.err);
+            else flash(`✨ ${shortName(m.def.name)}`);
+          };
+          return (
+            <div key={k} className="ab-item">
+              <button className={`btn small ${actPick === k ? 'on' : ''}`} disabled={!!m.why} title={m.why ?? m.label} onClick={() => (pickOne ? setActPick(actPick === k ? null : k) : use(m.targets[0]?.id))}>
+                <b>{shortName(m.def.name)}</b>{!only.unitId && <span className="tiny"> · {m.def.holder.name.length > 22 ? m.def.holder.name.slice(0, 21) + '…' : m.def.holder.name}</span>}
+              </button>
+              <span className="tiny muted">{m.why ?? m.label}{m.def.spec.limit === 'battle' ? ' (ครั้งเดียวต่อเกม)' : m.def.spec.limit === 'round' ? ' (ครั้งละ round)' : ''}</span>
+              {actPick === k && <div className="unit-strip">{m.targets.map((x) => unitPill(x, false, () => use(x.id)))}</div>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  /** A move granted by an ability (reaction move, surge move, move after shooting). */
+  const extraMovePanel = () => {
+    if (mode?.k !== 'move' || !modeUnit || (mode.kind !== 'extra' && mode.kind !== 'surge')) return null;
+    const em = modeUnit.extraMove;
+    return (
+      <>
+        <div className="small"><b>{modeUnit.name}</b> · {em?.label}: {mode.kind === 'surge' ? `Surge move ${em?.max ?? 0}" (เข้าหาศัตรูที่ใกล้สุด, ห้ามจบใน engagement range)` : `เดินได้ ${em?.max ?? 0}" (ห้ามจบใน engagement range)`}</div>
+        {moveControls(mode.kind === 'surge' ? 'surge move' : 'การเดิน', () => confirmMove(mode.kind as 'extra' | 'surge'))}
+      </>
+    );
+  };
+
   // ---------- windows (reactions of the non-active player) ----------
 
   const windowPanel = () => {
@@ -447,8 +510,32 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return (
         <>
           <div className="handoff">{pName(s, p)}: ใช้ Rapid Ingress (1CP) ไหม?</div>
-          <div className="unit-strip">{rapidIngressCandidates(s, p).map((u) => unitPill(u, false, () => setMode({ k: 'place', unitId: u.id, how: u.core.deepStrike ? 'deepStrike' : 'ingress', rapid: true })))}</div>
+          <div className="unit-strip">{rapidIngressCandidates(s, p).map((u) => unitPill(u, false, () => setMode({ k: 'place', unitId: u.id, how: hasDeepStrike(s, u) ? 'deepStrike' : 'ingress', rapid: unitFlags(s, u).oppMoveIngress ? 'free' : true })))}</div>
+          {rapidIngressCandidates(s, p).some((u) => unitFlags(s, u).oppMoveIngress) && <div className="tiny muted">หน่วยที่มี ability (เช่น Deff from the Shadows) ลงได้ฟรีไม่เสีย CP</div>}
           {skip}
+        </>
+      );
+    }
+    if (w.kind === 'abilityMove') {
+      if (mode?.k === 'move') return extraMovePanel();
+      return (
+        <>
+          <div className="handoff">{pName(s, p)}: ability ตอบโต้ — {w.label}</div>
+          {w.offers.map((o) => {
+            const u = U(o.unitId);
+            return (
+              <div key={o.unitId + o.key} className="row card" style={{ padding: 8 }}>
+                <div className="grow small"><b>{u.name}</b><div className="tiny muted">{o.label}</div></div>
+                <button className="btn small primary" onClick={() => {
+                  const res = act((g) => { const err = acceptOffer(g, o.unitId, o.key); return { err, kind: unitById(g, o.unitId).extraMove?.kind ?? 'extra' }; });
+                  if (res.err) { flash(res.err); return; }
+                  setSel(o.unitId);
+                  setMode({ k: 'move', unitId: o.unitId, kind: res.kind, fly: false }, startPaths(u));
+                }}>เดิน</button>
+              </div>
+            );
+          })}
+          <button className="btn" onClick={() => { act((g) => closeOffers(g)); setMode(null); }}>ไม่ใช้ / เสร็จ</button>
         </>
       );
     }
@@ -597,6 +684,32 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             </div>
           </div>
         )}
+        {hasArmyRule(s, s.active, 'Oath of Moment') && s.players[s.active].oathTarget && boardUnits(s, s.active).some((x) => unitFlags(s, x).oathBackup) && (
+          <div className="card" style={{ padding: 8 }}>
+            <div className="small"><b>Master of Battle</b> — เป้าสำรอง: ถ้าเป้า Oath ถูกทำลาย หน่วยนี้จะเป็นเป้า Oath แทน</div>
+            <div className="unit-strip" style={{ marginTop: 6 }}>
+              {boardUnits(s, other(s.active)).filter((e) => e.id !== s.players[s.active].oathTarget).map((e) => (
+                <button key={e.id} className={`unit-pill ${s.players[s.active].oathBackup === e.id ? 'sel' : ''}`} onClick={() => act((g) => setOathBackup(g, g.active, e.id))}>
+                  <span className={e.owner ? 'p1' : 'p0'}>●</span> {e.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {abilityChoices(s, s.active).map((c) => (
+          <div key={c.unit.id + c.name} className="card" style={{ padding: 8 }}>
+            <div className="small"><b>{c.name}</b> · {c.unit.name} — เลือก {c.pick} อย่าง (มีผลถึง Command phase หน้า)</div>
+            <div className="det-opts">
+              {c.options.map((o) => (
+                <button key={o} className={`btn small ${c.on.includes(o) ? 'on' : ''}`} onClick={() => {
+                  const on = c.on.includes(o) ? c.on.filter((x) => x !== o) : [...c.on, o].slice(-c.pick);
+                  act((g) => pickAbilities(g, c.unit.id, on));
+                }}>{c.on.includes(o) ? '● ' : '○ '}{o}</button>
+              ))}
+            </div>
+          </div>
+        ))}
+        {abilityBar(s.active, { whens: ['command', 'anyCommand', 'battleStart', 'opponentTurnEnd', 'anyPhase'] })}
         {hasArmyRule(s, s.active, 'Waaagh!') && (
           <div className="card row" style={{ padding: 8 }}>
             <div className="grow small"><b>WAAAGH!</b> (ครั้งเดียวต่อเกม) — Ork riled up: 5+ InSv, ปืนเป็น [ASSAULT], advance แล้วชาร์จได้ จนจบเทิร์นหน้า</div>
@@ -611,7 +724,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           const ib = canUseStratagem(s, u.owner, 'insane-bravery', u);
           return (
             <div key={t.unitId} className="row card" style={{ padding: 8 }}>
-              <div className="grow small"><b>{u.name}</b><div className="tiny muted">{u.battleShocked ? 'Battle-shocked อยู่' : 'ต่ำกว่าครึ่ง'} · ต้องได้ 2D6 ≥ {bestLd(u)}</div></div>
+              <div className="grow small"><b>{u.name}</b><div className="tiny muted">{u.battleShocked ? 'Battle-shocked อยู่' : 'ต่ำกว่าครึ่ง'} · ต้องได้ 2D6 ≥ {bestLd(u, s)}</div></div>
               {t.passed === null ? (
                 <>
                   <button className="btn small" disabled={!!ib} onClick={() => act((g) => rollBattleShock(g, u.id, true))}>Insane Bravery 1CP</button>
@@ -682,21 +795,36 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         ))}
         {u && u.status === 'reserves' && (
           canIngress(s, u)
-            ? <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: u.core.deepStrike ? 'deepStrike' : 'ingress' })}>ลงสนาม ({u.core.deepStrike ? 'Deep Strike' : 'Ingress'})</button>
-            : <div className="muted small">ลงสนามได้ตั้งแต่ Battle Round {RULES.reserves.firstRound}</div>
+            ? <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: hasDeepStrike(s, u) ? 'deepStrike' : 'ingress' })}>ลงสนาม ({hasDeepStrike(s, u) ? 'Deep Strike' : 'Ingress'})</button>
+            : <div className="muted small">ลงสนามได้ตั้งแต่ Battle Round {arrivalRound(s, u)}</div>
         )}
-        {u && onBoard(u) && (
-          <>
-            {unitCard(u)}
-            <div className="row">
-              {!isEngaged(s, u) && <button className="btn" onClick={() => setMode({ k: 'move', unitId: u.id, kind: 'normal', fly }, startPaths(u))}>Normal {alive(u)[0].profile.M}"</button>}
-              {!isEngaged(s, u) && <button className="btn" onClick={() => { act((g) => rollAdvance(g, unitById(g, u.id))); setMode({ k: 'move', unitId: u.id, kind: 'advance', fly }, startPaths(u)); }}>Advance</button>}
-              {isEngaged(s, u) && <button className="btn" onClick={() => setMode({ k: 'move', unitId: u.id, kind: 'fallback', fly }, startPaths(u))}>Fall back</button>}
-              <button className="btn" onClick={() => { act((g) => remainStationary(g, unitById(g, u.id))); setSel(null); }}>ยืนนิ่ง</button>
-              {hasKw(u, 'FLY') && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>บิน (−2")</button>}
-            </div>
-          </>
-        )}
+        {u && onBoard(u) && (() => {
+          const canFly = hasKw(u, 'FLY') && !unitFlags(s, u).grounded;
+          const flyNow = fly && canFly;
+          const start = (kind: 'normal' | 'advance' | 'fallback') => {
+            const ok = act((g) => {
+              const gu = unitById(g, u.id);
+              if (!beginMove(g, gu, kind)) return false;
+              if (kind === 'advance') rollAdvance(g, gu);
+              return true;
+            });
+            if (!ok) { flash(`${u.name} ต้องยืนนิ่ง`); setSel(null); return; }
+            setMode({ k: 'move', unitId: u.id, kind, fly: flyNow }, startPaths(u));
+          };
+          return (
+            <>
+              {unitCard(u)}
+              <div className="row">
+                {!isEngaged(s, u) && <button className="btn" onClick={() => start('normal')}>Normal {(alive(u)[0].profile.M ?? 0) + unitFlags(s, u).move}"</button>}
+                {!isEngaged(s, u) && <button className="btn" onClick={() => start('advance')}>Advance</button>}
+                {isEngaged(s, u) && <button className="btn" onClick={() => start('fallback')}>Fall back</button>}
+                <button className="btn" onClick={() => { act((g) => remainStationary(g, unitById(g, u.id))); setSel(null); }}>ยืนนิ่ง</button>
+                {canFly && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>บิน (−2")</button>}
+              </div>
+            </>
+          );
+        })()}
+        {abilityBar(s.active, { whens: ['movement', 'endOfNormalMove', 'anyPhase'] })}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
         {redoButton()}
         {endButton('movement', 'จบ Movement ▶', boardUnits(s, s.active).length > 0 && boardUnits(s, s.active).every((x) => !x.move) && !s.units.some((x) => x.owner === s.active && x.status === 'reserves' && x.move), 'ยังไม่มีหน่วยไหนเดินเลย')}
@@ -753,6 +881,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               </button>
             ))}
           </div>
+          {!mode.overwatch && abilityBar(modeUnit.owner, { unitId: modeUnit.id, whens: ['selectedToShoot', 'shooting'] })}
           {!mode.overwatch && buffPanel(modeUnit)}
           {res?.error && <div className="err">{res.error}</div>}
           {res && !res.error && (() => {
@@ -811,7 +940,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <>
             {unitCard(u)}
             <div className="row">
-              {modes.map((m) => <button key={m} className="btn" onClick={() => setMode({ k: 'shoot', unitId: u.id, smode: m, target: null, useCQ: false, profile: {} })}>{m === 'normal' ? 'ยิง' : m === 'assault' ? 'Assault (advance มา)' : m === 'closeQuarters' ? 'Close-quarters' : 'Indirect'}</button>)}
+              {modes.map((m) => <button key={m} className="btn" onClick={() => { act((g) => unitSelected(g, unitById(g, u.id), 'shoot')); setMode({ k: 'shoot', unitId: u.id, smode: m, target: null, useCQ: false, profile: {} }); }}>{m === 'normal' ? 'ยิง' : m === 'assault' ? 'Assault (advance มา)' : m === 'closeQuarters' ? 'Close-quarters' : 'Indirect'}</button>)}
               {modes.length === 0 && <span className="muted small">{u.selectedToShoot ? 'ยิงไปแล้ว' : u.move === 'fallback' ? 'Fall back มา ยิงไม่ได้' : u.move === 'advance' ? 'Advance มา (ไม่มีอาวุธ Assault)' : 'ยิงไม่ได้'}</span>}
               {canExplode && <button className="btn small" onClick={() => setMode({ k: 'explosives', unitId: u.id, target: null })}>Explosives 1CP</button>}
               {u.weaponsFired.length > 0 && !u.selectedToShoot && <button className="btn small ghost" onClick={() => act((g) => endUnitShooting(unitById(g, u.id)))}>จบการยิงหน่วยนี้</button>}
@@ -829,6 +958,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         )}
         {!u && actionOptions(s).length > 0 && <div className="tiny muted">มีหน่วยทำ mission action ได้ {new Set(actionOptions(s).map((o) => o.unitId)).size} หน่วย ({[...new Set(actionOptions(s).map((o) => o.name))].join(', ')}) — แตะหน่วยเพื่อดูปุ่ม</div>}
         {s.pendingActions.filter((a) => a.player === s.active).length > 0 && <div className="tiny">⏳ action ที่รอสำเร็จตอนจบเทิร์น: {s.pendingActions.filter((a) => a.player === s.active).map((a) => `${MISSIONS.actions[a.action].name} (${U(a.unitId).name})`).join(', ')}</div>}
+        {abilityBar(s.active, { whens: ['shooting', 'afterShootingButton', 'anyPhase'] })}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
         {endButton('shooting', 'จบ Shooting ▶', mine.some((x) => shootingModes(s, x).length > 0) && !mine.some((x) => x.shotTurn === s.turn || x.selectedToShoot), 'ยังไม่มีหน่วยไหนยิง')}
       </>
@@ -883,6 +1013,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             )}
           </>
         )}
+        {abilityBar(s.active, { whens: ['anyPhase'] })}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
         {redoButton()}
         {endButton('charge', 'จบ Charge → Fight ▶', mine.some((x) => !chargeEligibility(s, x)) && !mine.some((x) => x.declaredCharge), 'ยังมีหน่วยที่ชาร์จได้แต่ยังไม่ได้ชาร์จ')}
@@ -930,6 +1061,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <div className="handoff">{f.step === 'pileIn' ? 'Pile-in' : 'Consolidate'} · {pName(s, p)} {p === s.active ? '(ผู้เล่นเจ้าของเทิร์นก่อน)' : ''}</div>
           {list.length === 0 && <div className="muted small">ไม่มีหน่วยที่ขยับได้</div>}
           <div className="unit-strip">{list.map((u) => unitPill(u, f.movedThisStep.includes(u.id), () => { setSel(u.id); if (!f.movedThisStep.includes(u.id)) setMode({ k: 'pile', unitId: u.id, kind: f.step === 'pileIn' ? 'pileIn' : 'consolidate' }, startPaths(u)); }))}</div>
+          {f.step === 'pileIn' && abilityBar(p, { whens: ['fightStartButton', 'anyPhase'] })}
           <button className="btn primary" onClick={() => { act((g) => (f.step === 'pileIn' ? endPileInStep(g) : endConsolidateStep(g))); setMode(null); setSel(null); }}>เสร็จ ▶</button>
         </>
       );
@@ -948,6 +1080,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             {weapons.map((w) => <button key={w.name} className={`btn small ${mode.weapon === w.name ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, weapon: w.name })}>{w.name}</button>)}
             {chars.length > 0 && !ec && <button className={`btn small ${mode.epic ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, epic: !mode.epic })}>Epic Challenge 1CP</button>}
           </div>
+          {abilityBar(u.owner, { unitId: u.id, whens: ['selectedToFight', 'fightStartButton'] })}
           {buffPanel(u)}
           {res?.pools.map((p) => <div key={p.key} className="tiny">{p.weapon}: {p.attackNote} · Hit {p.skill}+ · Wound {p.woundNeed}+ ({p.woundNote}) · AP{p.ap} D{p.damage}</div>)}
           {res?.notes.map((n) => <div key={n} className="err">{n}</div>)}
@@ -965,6 +1098,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const cands = fc!;
     const pick = (u: UnitState) => {
       setSel(u.id);
+      act((g) => unitSelected(g, unitById(g, u.id), 'fight'));
       const eng = engagedEnemies(s, u);
       if (eng.length) setMode({ k: 'fight', unitId: u.id, target: eng.length === 1 ? eng[0].id : null, epic: false });
       else setMode({ k: 'pile', unitId: u.id, kind: 'pileIn', overrun: true }, startPaths(u));
@@ -1106,6 +1240,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     );
     if (actingBot !== null) return <div className="handoff">{pName(s, actingBot)} กำลังเล่น…</div>;
     if (s.phase === 'scouts') return scoutsPanel();
+    if (mode?.k === 'move' && (mode.kind === 'extra' || mode.kind === 'surge')) return extraMovePanel();
     if (s.window) return windowPanel();
     if (s.phase === 'deploy') return deployPanel();
     if (s.phase === 'command') return commandPanel();
@@ -1184,6 +1319,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           stratFor={([0, 1] as PlayerId[]).filter((p) => !bots.includes(p))}
           onStep={() => act((g) => stepAttack(g))}
           onReroll={onReroll}
+          onFree={(k, i) => { const e = act((g) => useFreeDie(g, k, i)); if (e) flash(e); }}
           onSkip={() => act((g) => resolveAll(g))}
           onClose={onTrayClose}
         />
@@ -1193,6 +1329,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className="tray-backdrop" onClick={() => setSheet(null)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
             <UnitView u={U(sheet)} />
+            {abilityBar(U(sheet).owner, { unitId: sheet })}
             <button className="btn" onClick={() => setSheet(null)}>ปิด</button>
           </div>
         </div>
@@ -1224,11 +1361,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         const later = rows.filter((r) => !timingOk(r.why));
         const card = (r: typeof rows[number]) => {
           const pickable = r.plan.target === 'enemy' ? boardUnits(s, other(p)) : r.plan.target === 'own' ? boardUnits(s, p) : [];
+          const cost = stratCost(s, r.st.id, r.plan.target === 'own' ? tgtUnit : undefined, r.st.cp);
           return (
             <div key={r.st.id} className={`strat-card ${timingOk(r.why) ? '' : 'off'}`}>
               <div className="row">
                 <b className="grow">{r.st.name}</b>
-                <span className="chip">{r.st.cp}CP</span>
+                <span className={`chip ${cost !== r.st.cp ? 'warn' : ''}`}>{cost !== r.st.cp ? <><s>{r.st.cp}</s> {cost}</> : r.st.cp}CP</span>
               </div>
               <div className="tiny muted">{r.detachment} · {r.st.turn} · {r.st.phase}</div>
               <div className="strat-fx">
