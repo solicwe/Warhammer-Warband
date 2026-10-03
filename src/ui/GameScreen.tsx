@@ -1316,7 +1316,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className="tray-backdrop">
           <div className="tray">
             <div className="big-result">{s.winner === 'draw' ? 'เสมอ!' : `${pName(s, s.winner as PlayerId)} ชนะ!`}</div>
-            <div className="big-result">{s.players[0].vp} – {s.players[1].vp}</div>
+            <div className="big-result">{s.players[0].vp + s.players[0].secVp} – {s.players[1].vp + s.players[1].secVp}</div>
+            <div className="small muted" style={{ textAlign: 'center' }}>
+              {([0, 1] as PlayerId[]).map((p) => `${pName(s, p)}: Primary ${s.players[p].vp} + Secondary ${s.players[p].secVp}`).join(' · ')}
+            </div>
             <button className="btn primary" onClick={onExit}>กลับหน้าแรก</button>
           </div>
         </div>
