@@ -380,8 +380,8 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       if (n) addTimed(s, on, { e: { attack: 'melee', weapon: q.weapon, attacks: n }, label: def.name, until: a.until ?? 'phase', by: u.owner, models });
       log(s, `${def.name}: +${n} A`, 'info', u.owner);
     }
-    if (a.heal) { const n = heal(on, rollExpr(s, a.heal).total); log(s, `💚 ${def.name}: ${on.name} ฟื้น ${n} wound`, 'info', u.owner); }
-    if (a.revive) { const n = revive(s, on, a.revive); if (n) log(s, `💚 ${def.name}: ${on.name} ได้โมเดลคืน ${n} ตัว`, 'info', u.owner); }
+    if (a.heal) { const n = heal(on, rollExpr(s, a.heal).total); log(s, `${def.name}: ${on.name} ฟื้น ${n} wound`, 'info', u.owner); }
+    if (a.revive) { const n = revive(s, on, a.revive); if (n) log(s, `${def.name}: ${on.name} ได้โมเดลคืน ${n} ตัว`, 'info', u.owner); }
     if (a.reviveLater && ctx.deadModelId) {
       const m = on.models.find((x) => x.id === ctx.deadModelId);
       if (m) {
@@ -392,7 +392,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.mortals || a.mortalsVehicle) {
       const expr = a.mortalsVehicle && hasKw(on, 'VEHICLE') ? a.mortalsVehicle : a.mortals!;
       const n = rollExpr(s, expr).total;
-      log(s, `💥 ${def.name}: ${on.name} โดน ${n} mortal wound`, 'roll', u.owner);
+      log(s, `${def.name}: ${on.name} โดน ${n} mortal wound`, 'roll', u.owner);
       applyMortalWounds(s, on, n, def.name);
     }
     if (a.shock !== undefined) shockTest(s, on, a.shock - (a.shockPerModels ? Math.floor(alive(u).length / a.shockPerModels) : 0), def.name);
@@ -404,7 +404,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       log(s, `${def.name}: ${on.name} เสีย ${victims.length} ${a.sacrifice.name}`, 'info', u.owner);
     }
     if (a.unshock && on.battleShocked) { on.battleShocked = false; log(s, `${def.name}: ${on.name} หายจาก battle-shocked`, 'info', u.owner); }
-    if (a.riled) { on.riledUntil = s.turn + (s.active === u.owner ? 1 : 0); log(s, `🟢 ${def.name}: ${on.name} riled up`, 'info', u.owner); }
+    if (a.riled) { on.riledUntil = s.turn + (s.active === u.owner ? 1 : 0); log(s, `${def.name}: ${on.name} riled up`, 'info', u.owner); }
     if (a.cp) { s.players[u.owner].cp += a.cp; log(s, `+${a.cp}CP (${def.name})`, 'cp', u.owner); }
     if (a.reserves) {
       on.status = 'reserves'; on.move = null;
@@ -428,19 +428,19 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       log(s, `${def.name}: ${on.name} surge move ได้ ${on.extraMove.max}" (เข้าหาศัตรูที่ใกล้สุด)`, 'info', u.owner);
       offerExtraMove(s, on, `${def.name}: surge ${on.extraMove.max}"`);
     }
-    if (a.setQuarry && target) { u.quarry = target.id; log(s, `🎯 ${def.name}: เป้า ${target.name}`, 'info', u.owner); }
+    if (a.setQuarry && target) { u.quarry = target.id; log(s, `${def.name}: เป้า ${target.name}`, 'info', u.owner); }
     if (a.setPriority) {
       const o = s.objectives.find((q) => alive(on).some((m) => dist(m, q) <= 3 + m.r)) ?? s.objectives.find((q) => q.type === 'central') ?? s.objectives[0];
-      if (o) { s.players[u.owner].priorityObjective = o.id; log(s, `🎯 ${def.name}: objective ${o.id}`, 'info', u.owner); }
+      if (o) { s.players[u.owner].priorityObjective = o.id; log(s, `${def.name}: objective ${o.id}`, 'info', u.owner); }
     }
     if (a.setSlayer) {
       const kw = slayerKeyword(s, u.owner);
       (s.players[u.owner].slayer ??= {})[u.id] = kw;
-      log(s, `🎯 ${def.name}: ${kw}`, 'info', u.owner);
+      log(s, `${def.name}: ${kw}`, 'info', u.owner);
     }
     if (a.secure) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.secured = u.owner; log(s, `🚩 ${def.name}: objective ${o.id} ยังเป็นของเราแม้ไม่มีใครยืน (secured)`, 'info', u.owner); }
+        if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.secured = u.owner; log(s, `${def.name}: objective ${o.id} ยังเป็นของเราแม้ไม่มีใครยืน (secured)`, 'info', u.owner); }
       }
     }
     if (a.vow) {
@@ -480,7 +480,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.splashMortals) {
       const others = boardUnits(s, on.owner).filter((x) => x.id !== on.id && alive(x).some((m) => alive(on).some((n) => baseDist(m, n) <= a.splashMortals!.range + 1e-6)));
       const v = others.sort((x, y) => y.pts - x.pts)[0];
-      if (v) { const n = rollExpr(s, a.splashMortals.expr).total; log(s, `💥 ${def.name}: ${v.name} โดน ${n} mortal wound`, 'roll', u.owner); applyMortalWounds(s, v, n, def.name); }
+      if (v) { const n = rollExpr(s, a.splashMortals.expr).total; log(s, `${def.name}: ${v.name} โดน ${n} mortal wound`, 'roll', u.owner); applyMortalWounds(s, v, n, def.name); }
     }
     if (a.log) log(s, `${def.name}: ${a.log}`, 'info', u.owner);
   }
@@ -512,7 +512,7 @@ export function useAct(s: GameState, def: ActDef, targetId?: string, ctx: FireCt
   if (t && t.side !== 'self' && !cands.length) return 'ไม่มีเป้าที่ใช้ได้';
   const targets = t?.each ? cands : t && t.side !== 'self' ? [cands.find((c) => c.id === targetId) ?? cands[0]] : [def.holder];
   markUsed(s, def);
-  log(s, `✨ ${def.holder.name}: ${def.name}${targets.length && targets[0].id !== def.holder.id ? ` → ${targets.map((x) => x.name).join(', ')}` : ''}`, 'info', def.holder.owner);
+  log(s, `${def.holder.name}: ${def.name}${targets.length && targets[0].id !== def.holder.id ? ` → ${targets.map((x) => x.name).join(', ')}` : ''}`, 'info', def.holder.owner);
   for (const tg of targets) {
     if (def.spec.roll || def.spec.perModel) {
       const n = def.spec.perModel ? alive(def.holder).filter((m) => alive(tg).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length : 1;
@@ -670,7 +670,7 @@ export function offerReactions(s: GameState, trigger: 'enemyMovedNear' | 'enemyF
   }
   if (w) return;
   s.window = { kind: 'abilityMove', player: p, offers, label: `${mover.name} เดินเข้ามาใกล้` };
-  log(s, `⚡ ${s.players[p].name}: มี ability ให้ตอบโต้ (${offers.map((o) => o.label).join(', ')})`, 'info', p);
+  log(s, `${s.players[p].name}: มี ability ให้ตอบโต้ (${offers.map((o) => o.label).join(', ')})`, 'info', p);
 }
 
 /** Accept one offer of the reaction prompt: the ability is used and the unit gets its move (then the player drags it). */
@@ -798,7 +798,7 @@ function runDeathQueue(s: GameState) {
     const r = q.kind === 'fight' ? buildFightPools(s, u.id, T.id, { models: q.modelIds }) : buildShootPools(s, u.id, T.id, { mode: 'normal', models: q.modelIds });
     if (r.error || !r.pools.length) { log(s, `${q.label}: ไม่มีอาวุธที่ใช้กับ ${T.name} ได้`, 'info', u.owner); continue; }
     const before = alive(T).length;
-    log(s, q.alive ? `🔫 ${q.label}: ${u.name} ยิงตอบ ${T.name}` : `⚔ ${q.label}: ${u.models.filter((m) => q.modelIds.includes(m.id)).map((m) => m.name).join(', ')} ${q.kind === 'fight' ? 'ตี' : 'ยิง'}ก่อนถูกนำออก → ${T.name}`, 'info', u.owner);
+    log(s, q.alive ? `${q.label}: ${u.name} ยิงตอบ ${T.name}` : `${q.label}: ${u.models.filter((m) => q.modelIds.includes(m.id)).map((m) => m.name).join(', ')} ${q.kind === 'fight' ? 'ตี' : 'ยิง'}ก่อนถูกนำออก → ${T.name}`, 'info', u.owner);
     startAttack(s, q.kind, u.id, T.id, r.pools);
     s.attack!.free = true;
     if (q.kind === 'shoot' && !q.alive) for (const p of s.attack!.pools) { p.hazardous = 0; p.noHazard = true; }
@@ -811,7 +811,7 @@ function runDeathQueue(s: GameState) {
         m.dead = false;
         m.wounds = Math.min(m.profile.W, rollExpr(s, q.regain).total);
         if (u.status === 'destroyed') { u.status = 'board'; s.destroyedByTurn = s.destroyedByTurn.filter((d) => d.unitId !== u.id || d.turn !== s.turn); }
-        log(s, `💚 ${q.label}: ${m.name} ฆ่าได้ จึงไม่ตาย (เหลือ ${m.wounds} W)`, 'info', u.owner);
+        log(s, `${q.label}: ${m.name} ฆ่าได้ จึงไม่ตาย (เหลือ ${m.wounds} W)`, 'info', u.owner);
       }
     }
   }
@@ -863,7 +863,7 @@ export function initSagas(s: GameState) {
     const enemyCMV = s.units.filter((u) => u.owner !== p && ['CHARACTER', 'MONSTER', 'VEHICLE'].some((k) => hasKw(u, k))).length;
     const target = spec.kind === 'hunter' ? SAGA_SIZE[P.battleSize ?? 'strike'] ?? 3 : spec.kind === 'beastslayer' ? Math.max(1, Math.ceil(enemyCMV / 2)) : 3;
     P.saga = { kind: spec.kind, tally: 0, target, done: false, boasts: [] };
-    log(s, `📜 Saga: เป้าหมาย ${target}`, 'info', p);
+    log(s, `Saga: เป้าหมาย ${target}`, 'info', p);
   }
 }
 
@@ -871,14 +871,14 @@ function sagaTick(s: GameState, p: PlayerId, what: string, boast?: string) {
   const g = s.players[p].saga;
   if (!g || g.done) return;
   if (boast) { if (g.boasts.includes(boast)) return; g.boasts.push(boast); g.tally = g.boasts.length; } else g.tally += 1;
-  log(s, `📜 Saga: ${what} (${g.tally}/${g.target})`, 'info', p);
-  if (g.tally >= g.target) { g.done = true; log(s, '📜 Saga สำเร็จ! ได้ผลเพิ่มของ detachment แล้ว', 'vp', p); }
+  log(s, `Saga: ${what} (${g.tally}/${g.target})`, 'info', p);
+  if (g.tally >= g.target) { g.done = true; log(s, 'Saga สำเร็จ! ได้ผลเพิ่มของ detachment แล้ว', 'vp', p); }
 }
 
 function sagaProgress(s: GameState, at: AttackSession, A: UnitState, T: UnitState) {
   const P = s.players[A.owner];
   // Slayer's Oath: the unit gets the completed-Saga benefits when it destroys a unit with its keyword
-  for (const [id, kw] of Object.entries(P.slayer ?? {})) if (id === A.id && hasKw(T, kw) && !A.sagaDone) { A.sagaDone = true; log(s, `📜 Slayer's Oath: ${A.name} ได้ผลของ Saga ที่สำเร็จแล้ว`, 'info', A.owner); }
+  for (const [id, kw] of Object.entries(P.slayer ?? {})) if (id === A.id && hasKw(T, kw) && !A.sagaDone) { A.sagaDone = true; log(s, `Slayer's Oath: ${A.name} ได้ผลของ Saga ที่สำเร็จแล้ว`, 'info', A.owner); }
   const g = P.saga;
   if (!g || g.done || !A.factionKeywords.includes('ADEPTUS ASTARTES')) return;
   if (g.kind === 'hunter' && at.kind === 'fight') sagaTick(s, A.owner, `Quarry: ${T.name}`);
@@ -966,7 +966,7 @@ onModelKilled((s, u, m, killerId) => {
       if (P.oathBackup && onBoard(unitById(s, P.oathBackup))) {
         P.oathTarget = P.oathBackup;
         P.oathBackup = null;
-        log(s, `⚜ Master of Battle: เป้า Oath of Moment ใหม่ → ${unitById(s, P.oathTarget).name}`, 'info', p);
+        log(s, `Master of Battle: เป้า Oath of Moment ใหม่ → ${unitById(s, P.oathTarget).name}`, 'info', p);
         continue;
       }
       for (const name of activeRules(s, p)) {
@@ -980,7 +980,7 @@ onModelKilled((s, u, m, killerId) => {
         if (!next) continue;
         bag[`retarget:${name}`] = period(s, rt.limit);
         P.oathTarget = next.id;
-        log(s, `⚜ ${name}: เป้า Oath of Moment ใหม่ → ${next.name}`, 'info', p);
+        log(s, `${name}: เป้า Oath of Moment ใหม่ → ${next.name}`, 'info', p);
       }
     }
   }
@@ -1005,7 +1005,7 @@ export function resolveRevivals(s: GameState) {
     if (!setBackUp(s, u, m, { x: r.x, y: r.y })) { m.dead = true; m.wounds = 0; log(s, `${r.label}: ไม่มีที่วาง`, 'info', u.owner); continue; }
     if (u.status === 'destroyed') { u.status = 'board'; s.destroyedByTurn = s.destroyedByTurn.filter((d) => d.unitId !== u.id); }
     pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
-    log(s, `💚 ${r.label}: ${m.name} กลับมาพร้อม ${m.wounds} wound!`, 'info', u.owner);
+    log(s, `${r.label}: ${m.name} กลับมาพร้อม ${m.wounds} wound!`, 'info', u.owner);
   }
 }
 

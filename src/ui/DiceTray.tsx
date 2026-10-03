@@ -4,6 +4,7 @@ import { canUseStratagem, unitById } from '../engine/state';
 import type { Die, GameState, Pool } from '../engine/types';
 import { abilityLabel, abilitiesOf } from '../engine/weapons';
 import { rerollable } from '../engine/attack';
+import { Icon } from './Icon';
 
 interface Props {
   s: GameState;
@@ -36,7 +37,7 @@ function DiceRow({ dice, cls, pick, onPick, picked }: { dice: Die[]; cls: (d: Di
         const can = pick?.(d);
         return (
           <button key={i} type="button" className={`die ${cls(d)} ${d.rerolled ? 'rr' : ''} ${can ? 'pick' : ''} ${picked?.includes(i) ? 'picked' : ''}`} onClick={() => can && onPick?.(i)} title={d.rerolled ? `ทอยใหม่จาก ${d.orig}` : undefined}>
-            {d.o === 'auto' ? '✓' : d.v}
+            {d.o === 'auto' ? <Icon name="check" size={16} /> : d.v}
           </button>
         );
       })}
@@ -67,7 +68,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
   const freeCan = (d: Die) => (fdSpec?.kind === 'setSix' ? d.v !== 6 && d.o !== 'auto' : fdSpec?.stage === 'hit' ? d.o === 'miss' && !d.rerolled : d.o === 'fail' && !d.rerolled);
   const freeButtons = (stage: 'hit' | 'wound') => freeOf(stage).map((f) => (
     <button key={f.key} className={`btn small ${fd === f.key ? 'on' : ''}`} onClick={() => { setRr(null); setFd(fd === f.key ? null : f.key); }}>
-      ✨ {f.label}{fd === f.key ? ' — แตะลูกเต๋า' : ''}
+      <Icon name="ability" size={16} /> {f.label}{fd === f.key ? ' — แตะลูกเต๋า' : ''}
     </button>
   ));
   // a quick second tap must not roll the next stage before the player has seen these dice
@@ -125,7 +126,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
           </div>
           {!done && <button className="btn small" onClick={guarded(onSkip)}>ข้าม</button>}
         </div>
-        {auto && !done && <div className="tiny">🤖 บอทโจมตี — ลูกเต๋าของบอททอยเอง · คุณกดทอย Save เอง และใช้ Command Re-roll ได้{hold ? ' (หยุดรอ)' : ''}</div>}
+        {auto && !done && <div className="tiny"><Icon name="bot" size={13} /> บอทโจมตี — ลูกเต๋าของบอททอยเอง · คุณกดทอย Save เอง และใช้ Command Re-roll ได้{hold ? ' (หยุดรอ)' : ''}</div>}
         {onStrat && !done && at.idx === 0 && st === 'hit' && (
           <div className="row">
             {stratFor.includes(A.owner) && <button className="btn small" onClick={() => { setHold(true); onStrat(A.owner); }}>{s.players[A.owner].name}: Stratagem</button>}
@@ -133,7 +134,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
           </div>
         )}
         {pending && (
-          <div className="tiny">🎲 {pending.which === 'all' ? 'Re-roll ได้ (ability)' : 'Re-roll ลูกที่ได้ 1 ได้ (ability)'}: แตะลูกเต๋าเพื่อเลือก/เอาออก — เลือกลูกที่พลาดไว้ให้แล้ว (ทอยใหม่ได้ลูกละครั้ง)</div>
+          <div className="tiny"><Icon name="dice" size={13} /> {pending.which === 'all' ? 'Re-roll ได้ (ability)' : 'Re-roll ลูกที่ได้ 1 ได้ (ability)'}: แตะลูกเต๋าเพื่อเลือก/เอาออก — เลือกลูกที่พลาดไว้ให้แล้ว (ทอยใหม่ได้ลูกละครั้ง)</div>
         )}
         {at.pools.length > 1 && <div className="tiny muted">อาวุธชุดที่ {Math.min(at.idx + 1, at.pools.length)} / {at.pools.length}</div>}
 
@@ -145,7 +146,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
               <div className="tiny muted">{p.attackNote}{p.skillNote ? ` · ${p.skillNote}` : ''}{p.hitNote ? ` · ${p.hitNote}` : ''}</div>
               {st === 'hit' && !p.hits.length && !attackerBot && onCR && p.attackRolls?.some((r) => !r.rerolled) && (
                 <button className="btn small" disabled={!!attackerCR} onClick={() => onCR('attacks')}>
-                  🎲 Command Re-roll จำนวน attack 1CP ({p.attackRolls.filter((r) => !r.rerolled).map((r) => `${r.expr}=${r.total}`).join(', ')}){attackerCR ? ` (${attackerCR})` : ''}
+                  <Icon name="dice" size={16} /> Command Re-roll จำนวน attack 1CP ({p.attackRolls.filter((r) => !r.rerolled).map((r) => `${r.expr}=${r.total}`).join(', ')}){attackerCR ? ` (${attackerCR})` : ''}
                 </button>
               )}
               {hitShown && (
@@ -198,7 +199,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
 
             {(st === 'save' || st === 'damage') && !attackerBot && onCR && /d/i.test(p.damage) && (
               <button className={`btn small ${p.crDamage ? 'on' : ''}`} disabled={!!attackerCR && !p.crDamage} onClick={() => onCR('damage')}>
-                🎲 Command Re-roll ดาเมจ 1CP: {p.crDamage ? '✓ จะทอยใหม่ลูกดาเมจแรกที่ต่ำกว่าค่าเฉลี่ย' : 'ทอยใหม่ลูกดาเมจที่ต่ำ'}{attackerCR && !p.crDamage ? ` (${attackerCR})` : ''}
+                <Icon name="dice" size={16} /> Command Re-roll ดาเมจ 1CP: {p.crDamage ? 'จะทอยใหม่ลูกดาเมจแรกที่ต่ำกว่าค่าเฉลี่ย' : 'ทอยใหม่ลูกดาเมจที่ต่ำ'}{attackerCR && !p.crDamage ? ` (${attackerCR})` : ''}
               </button>
             )}
             {st === 'damage' && (
@@ -206,7 +207,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                 <div className="stage-head"><span>3. Save ({s.players[T.owner].name})</span><span className="need">AP{p.ap} · ใช้ผลต่ำสุดก่อน</span></div>
                 <div className="tiny muted">ผลทอยจะถูกใช้กับโมเดลตามลำดับ allocation (ตัวที่บาดเจ็บก่อน · CHARACTER ทีหลัง)</div>
                 <DiceRow dice={p.saves} cls={saveCls} pick={rr === 'save' ? (d) => !d.rerolled : undefined} onPick={(i) => { onReroll('save', i); setRr(null); }} />
-                {defenderBot ? <div className="tiny muted">🤖 {s.players[T.owner].name} ตัดสินใจ re-roll save เอง</div> : (
+                {defenderBot ? <div className="tiny muted"><Icon name="bot" size={13} /> {s.players[T.owner].name} ตัดสินใจ re-roll save เอง</div> : (
                   <button className={`btn small ${rr === 'save' ? 'on' : ''}`} disabled={!!defenderCR || !p.saves.length} onClick={() => setRr(rr === 'save' ? null : 'save')}>
                     {s.players[T.owner].name}: Command Re-roll save 1CP {defenderCR ? `(${defenderCR})` : rr === 'save' ? '— แตะลูกที่จะทอยใหม่' : ''}
                   </button>

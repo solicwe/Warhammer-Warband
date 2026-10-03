@@ -444,7 +444,7 @@ export function rollHits(s: GameState) {
     const A = unitById(s, at.attackerId);
     const all = p.rerollAllHits || A.buffs.some((b) => b.kind === 'rerollHits');
     const ones = p.rerollHits1 || A.buffs.some((b) => b.kind === 'rerollHits1');
-    if (!p.noHitReroll && (all || ones)) offerReroll(p, 'hit', all ? 'all' : 'ones');
+    if (!p.noHitReroll && (all || ones)) offerReroll(s, p, 'hit', all ? 'all' : 'ones');
   }
   at.stage = 'wound';
 }
@@ -455,13 +455,17 @@ export function rerollable(p: Pool, d: Die): boolean {
   return !!r && !d.rerolled && d.o !== 'auto' && (r.which === 'all' || d.v === 1);
 }
 
-/** "You can re-roll the Hit roll": the player chooses the dice — every failure is picked to begin with. */
-function offerReroll(p: Pool, stage: 'hit' | 'wound', which: 'all' | 'ones') {
+/**
+ * "You can re-roll the Hit roll": every failure is picked to begin with and re-rolled at once — unless the game
+ * is set to let the attacker choose the dice (`pickRerolls`), e.g. to fish for a critical.
+ */
+function offerReroll(s: GameState, p: Pool, stage: 'hit' | 'wound', which: 'all' | 'ones') {
   const dice = stage === 'hit' ? p.hits : p.wounds;
   p.reroll = { stage, which, picks: [] };
   const failed = (d: Die) => (stage === 'hit' ? d.o === 'miss' : d.o === 'fail');
   p.reroll.picks = dice.map((d, i) => (rerollable(p, d) && failed(d) ? i : -1)).filter((i) => i >= 0);
   if (!dice.some((d) => rerollable(p, d))) p.reroll = undefined;
+  else if (!s.pickRerolls) resolveReroll(s);
 }
 
 /** Pick / unpick one die for the pending ability re-roll. */
@@ -511,7 +515,7 @@ export function rollWounds(s: GameState) {
   const A = unitById(s, at.attackerId);
   const rrAll = p.twinLinked || p.rerollAllWounds || A.buffs.some((b) => b.kind === 'rerollWounds');
   const rr1 = p.rerollWounds1 || A.buffs.some((b) => b.kind === 'rerollWounds1');
-  if (rrAll || rr1) offerReroll(p, 'wound', rrAll ? 'all' : 'ones');
+  if (rrAll || rr1) offerReroll(s, p, 'wound', rrAll ? 'all' : 'ones');
   at.stage = 'save';
 }
 
@@ -596,13 +600,13 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     u.status = 'destroyed';
     s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id });
     onUnitDestroyed(s, u, s.attack?.attackerId);
-    log(s, `💀 ${u.name} ถูกทำลาย${killer ? ' โดย ' + killer : ''}`, 'kill');
+    log(s, `(ตาย) ${u.name} ถูกทำลาย${killer ? ' โดย ' + killer : ''}`, 'kill');
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
   if (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1)) {
     const r = d6(s);
     if (r === 6) {
-      log(s, `💥 Deadly Demise (${u.core.deadlyDemise}) ของ ${m.name}: ทอยได้ 6!`, 'roll');
+      log(s, `Deadly Demise (${u.core.deadlyDemise}) ของ ${m.name}: ทอยได้ 6!`, 'roll');
       for (const v of s.units.filter((x) => x.id !== u.id && onBoard(x))) {
         if (alive(v).some((n) => baseDist(n, m) <= RULES.deadlyDemiseRange)) applyMortalWounds(s, v, rollExpr(s, u.core.deadlyDemise).total, 'Deadly Demise');
       }
@@ -647,7 +651,7 @@ export function applyMortalWounds(s: GameState, u: UnitState, n: number, source:
   }
   const hitAt = alive(u)[0] ?? u.models.find((m) => m.dead);
   if (hitAt) pushFx(s, { kind: 'mortal', unitId: u.id, n, at: { x: hitAt.x, y: hitAt.y } });
-  log(s, `⚡ ${u.name} โดน ${n} mortal wound (${source})${killed ? ` → ตาย ${killed}` : ''}`, 'roll', u.owner);
+  log(s, `${u.name} โดน ${n} mortal wound (${source})${killed ? ` → ตาย ${killed}` : ''}`, 'roll', u.owner);
   return killed;
 }
 
@@ -709,7 +713,7 @@ export function applyDamage(s: GameState) {
       if (md.halve) dmg = Math.ceil(dmg / 2);
       if (md.negate) { useNegate(s, T, m); dmg = 0; p.damageLines.push(`${m.name}: ดาเมจเป็น 0 (ability ครั้งละ phase)`); }
       const lost = dmg ? loseWounds(s, T, m, dmg, p.damageLines, kind, psychic) : 0;
-      p.damageLines.push(`${m.name}: −${lost} W${dr.dice.length ? ` (D=${p.damage}→${dmg})` : ''}${m.dead ? ' 💀' : ''}`);
+      p.damageLines.push(`${m.name}: −${lost} W${dr.dice.length ? ` (D=${p.damage}→${dmg})` : ''}${m.dead ? ' (ตาย)' : ''}`);
     }
   }
   // Devastating Wounds: mortal wounds after normal damage, each critical wound damages at most one model.
@@ -773,7 +777,7 @@ export function finishAttack(s: GameState) {
   const T = unitById(s, at.targetId);
   const haz = at.pools.reduce((a, p) => a + p.hazardous, 0);
   if (haz && alive(A).length) {
-    const { rolls, fails } = hazardTest(s, A, haz, '☢ Hazardous');
+    const { rolls, fails } = hazardTest(s, A, haz, 'Hazardous');
     at.hazardousRolls = rolls;
     if (fails) {
       const mv = alive(A).every(isMV);

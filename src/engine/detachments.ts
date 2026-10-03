@@ -50,7 +50,7 @@ export function pickDetChoice(s: GameState, p: PlayerId, rule: string, ids: stri
   st.pickedTurn = s.turn;
   st.round = s.round;
   const names = ids.map((id) => now.choice.options.find((o) => o.id === id)!.name).join(' + ');
-  log(s, `📜 ${now.choice.name}: ${names}`, 'info', p);
+  log(s, `${now.choice.name}: ${names}`, 'info', p);
   return null;
 }
 

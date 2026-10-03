@@ -4,36 +4,39 @@ import type { AbilityData, DatasheetData, ModelProfileData, UnitState, WeaponDat
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
 import { Portrait, tokenKind } from './Tokens';
 import { usePastePortrait } from './portraits';
+import { Icon, type IconName } from './Icon';
 
+/** The characteristics band, laid out like the printed datasheet: framed boxes, the invulnerable save as a shield. */
 function Stats({ p }: { p: ModelProfileData }) {
+  const cells: [string, string][] = [['M', p.M != null ? `${p.M}"` : '-'], ['T', String(p.T)], ['Sv', `${p.Sv}+`], ['W', String(p.W)], ['Ld', `${p.Ld}+`], ['OC', p.OC != null ? String(p.OC) : '-']];
   return (
-    <div className="stats">
-      <div>M<b>{p.M ?? '-'}"</b></div>
-      <div>T<b>{p.T}</b></div>
-      <div>Sv<b>{p.Sv}+</b></div>
-      <div>InSv<b>{p.InSv ? `${p.InSv}+` : '-'}</b></div>
-      <div>W<b>{p.W}</b></div>
-      <div>Ld<b>{p.Ld}+</b></div>
-      <div>OC<b>{p.OC ?? '-'}</b></div>
+    <div className="ds-stats">
+      <div className="ds-statrow">
+        {cells.map(([k, v]) => <div key={k} className="ds-stat"><span>{k}</span><b>{v}</b></div>)}
+      </div>
+      {p.InSv ? <div className="ds-inv"><span className="ds-shield">{p.InSv}+</span><span>INVULNERABLE SAVE</span></div> : null}
     </div>
   );
 }
 
-function Weapons({ weapons }: { weapons: WeaponData[] }) {
-  // a weapon carried twice (2 godhammer lascannons) shows once as "2×"
-  const counted = [...new Map(weapons.map((w) => [w.name, w])).values()].map((w) => ({ w, n: weapons.filter((x) => x.name === w.name).length }));
-  const rows = counted.flatMap(({ w, n }) => w.profiles.map((p) => ({ w, p, n })));
+function WeaponTable({ rows, melee }: { rows: { w: WeaponData; p: WeaponData['profiles'][number]; n: number }[]; melee: boolean }) {
+  if (!rows.length) return null;
   return (
-    <table className="wtable">
-      <thead><tr><th>อาวุธ</th><th>R</th><th>A</th><th>BS/WS</th><th>S</th><th>AP</th><th>D</th></tr></thead>
+    <table className="wtable ds-wt">
+      <thead>
+        <tr>
+          <th><Icon name={melee ? 'fight' : 'shoot'} size={15} /> {melee ? 'MELEE WEAPONS' : 'RANGED WEAPONS'}</th>
+          <th>RANGE</th><th>A</th><th>{melee ? 'WS' : 'BS'}</th><th>S</th><th>AP</th><th>D</th>
+        </tr>
+      </thead>
       <tbody>
         {rows.map(({ w, p, n }, i) => (
           <tr key={i}>
             <td>
               {n > 1 ? `${n}× ` : ''}{w.name}{p.name !== w.name ? ` – ${p.name}` : ''}
-              {p.abilities.length > 0 && <div className="kw">[{abilitiesOf(p).map(abilityLabel).join(', ')}]</div>}
+              {p.abilities.length > 0 && <div className="ds-wkw">[{abilitiesOf(p).map(abilityLabel).join(', ').toUpperCase()}]</div>}
             </td>
-            <td>{p.range === 'Melee' ? 'M' : `${p.range}"`}</td>
+            <td>{p.range === 'Melee' ? 'Melee' : `${p.range}"`}</td>
             <td>{p.A}</td>
             <td>{p.skill ? `${p.skill}+` : 'N/A'}</td>
             <td>{p.S}</td>
@@ -46,15 +49,29 @@ function Weapons({ weapons }: { weapons: WeaponData[] }) {
   );
 }
 
-const ST_LABEL: Record<AbilityStatus, string> = { auto: '✓ ระบบทำให้', partial: '◐ ระบบทำบางส่วน', manual: '✋ ทำเอง', info: 'ℹ ข้อมูล', none: '✋ ยังไม่อัตโนมัติ', core: '' };
+function Weapons({ weapons }: { weapons: WeaponData[] }) {
+  // a weapon carried twice (2 godhammer lascannons) shows once as "2×"
+  const counted = [...new Map(weapons.map((w) => [w.name, w])).values()].map((w) => ({ w, n: weapons.filter((x) => x.name === w.name).length }));
+  const rows = counted.flatMap(({ w, n }) => w.profiles.map((p) => ({ w, p, n })));
+  return (
+    <>
+      <WeaponTable rows={rows.filter((r) => r.p.range !== 'Melee')} melee={false} />
+      <WeaponTable rows={rows.filter((r) => r.p.range === 'Melee')} melee />
+    </>
+  );
+}
+
+const ST_LABEL: Record<AbilityStatus, string> = { auto: 'ระบบทำให้', partial: 'ระบบทำบางส่วน', manual: 'ทำเอง', info: 'ข้อมูล', none: 'ยังไม่อัตโนมัติ', core: '' };
+const ST_ICON: Partial<Record<AbilityStatus, IconName>> = { auto: 'check', partial: 'partial', manual: 'hand', none: 'hand' };
 
 /** Badge saying whether the app plays this ability by itself. */
 function AbilityBadge({ u, a }: { u: UnitState; a: AbilityData }) {
   const st = abilityStatus(u, a);
   if (st.status === 'core') return null;
+  const ic = ST_ICON[st.status];
   return (
     <>
-      {' '}<span className={`ab-st ${st.status}`}>{ST_LABEL[st.status]}</span>
+      {' '}<span className={`ab-st ${st.status}`}>{ic && <Icon name={ic} size={12} />} {ST_LABEL[st.status]}</span>
       {st.note && <span className="tiny muted"> {st.note}</span>}
     </>
   );
@@ -79,14 +96,28 @@ export function DatasheetView({ sheet, factionId }: { sheet: DatasheetData; fact
         </div>
       ))}
       <Weapons weapons={sheet.weapons} />
-      <div className="small"><b>Loadout:</b> {sheet.loadoutText}</div>
-      {sheet.composition.length > 0 && <div className="small"><b>Unit:</b> {sheet.composition.map((c) => c.text).join(', ')}</div>}
-      {sheet.leads.length > 0 && <div className="small"><b>Leader ของ:</b> {sheet.leads.join(', ')}</div>}
-      {sheet.abilities.map((a, i) => (
-        <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({a.type})</span>{factionId && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: factionId }} />}{a.text ? `\n${a.text}` : ''}</div>
+      <div className="ds-sec">ABILITIES</div>
+      {(['Core', 'Faction'] as const).map((t) => {
+        const xs = sheet.abilities.filter((a) => a.type === t);
+        return xs.length ? <div key={t} className="ds-line">{t.toUpperCase()}: <b>{xs.map((a) => `${a.name}${a.param ? ` ${a.param}` : ''}`).join(', ')}</b></div> : null;
+      })}
+      {sheet.abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction').map((a, i) => (
+        <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{factionId && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: factionId }} />} {a.text}</div>
       ))}
-      {sheet.damaged && <div className="sheet"><b>Damaged {sheet.damaged.w}:</b> {sheet.damaged.text}</div>}
-      <div className="kw">{[...sheet.factionKeywords, ...sheet.keywords].join(', ')}</div>
+      {sheet.damaged && <div className="ds-ab"><b>DAMAGED: 1-{sheet.damaged.w} WOUNDS REMAINING:</b> {sheet.damaged.text}</div>}
+      <div className="ds-sec">UNIT COMPOSITION</div>
+      <div className="ds-body">
+        {sheet.composition.map((c) => <div key={c.text}>• <b>{c.text}</b></div>)}
+        <div><b>This model is equipped with:</b> {sheet.loadoutText.replace(/^.*?equipped with:\s*/i, '')}</div>
+      </div>
+      {sheet.leads.length > 0 && (
+        <>
+          <div className="ds-sec">LEADER</div>
+          <div className="ds-body">ผูกเข้ากับหน่วยเหล่านี้ได้:{sheet.leads.map((l) => <div key={l} className="ds-lead">• {l}</div>)}</div>
+        </>
+      )}
+      <div className="ds-kw"><span>FACTION KEYWORDS:</span> {sheet.factionKeywords.join(', ')}</div>
+      <div className="kw ds-kw2">KEYWORDS: {sheet.keywords.join(', ')}</div>
       {sheet.options.length > 0 && <details><summary className="small">Wargear options</summary>{sheet.options.map((o, i) => <div key={i} className="small">• {o}</div>)}</details>}
       <div className="tiny muted">Data: Wahapedia (<a href={sheet.link} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>ดูต้นฉบับ</a>)</div>
     </div>

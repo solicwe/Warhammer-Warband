@@ -6,6 +6,7 @@ import { alive, onBoard } from '../engine/state';
 import { levelOfControl } from '../engine/game';
 import { modelToken } from './Tokens';
 import { getPortrait, usePortraitsVersion } from './portraits';
+import { SvgIcon } from './Icon';
 import type { FxEvent, GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export type Paths = Map<string, Pt[]>;
@@ -381,7 +382,7 @@ function BoardImpl(props: BoardProps) {
             <g key={t.id} pointerEvents="none">
               <rect x={x0} y={y0} width={w} height={h} fill="url(#ribs)" stroke="#2b1a10" strokeWidth={0.25} />
               <rect x={x0 + 0.25} y={y0 + 0.25} width={w - 0.5} height={h - 0.5} fill="none" stroke="#a36b43" strokeWidth={0.08} />
-              <text x={x0 + w / 2} y={y0 + h / 2 + 0.25} fontSize={0.7} textAnchor="middle" fill="#f3d9a4" opacity={0.8}>⚠</text>
+              <g opacity={0.8}><SvgIcon name="shock" x={x0 + w / 2} y={y0 + h / 2} size={0.8} color="#f3d9a4" /></g>
             </g>
           );
         }
@@ -449,7 +450,7 @@ function BoardImpl(props: BoardProps) {
       {s.markers.map((m) => (
         <g key={m.id} transform={`translate(${m.x} ${m.y})`} pointerEvents="none">
           <rect x={-0.55} y={-0.55} width={1.1} height={1.1} rx={0.15} transform="rotate(45)" fill={COLORS[m.owner]} stroke="#fff" strokeWidth={0.12} />
-          <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>{m.kind === 'trap' ? '!' : m.kind === 'locate' ? 'L' : m.kind === 'consecrate' ? '✠' : '◆'}</text>
+          <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>{m.kind === 'trap' ? '!' : m.kind === 'locate' ? 'L' : m.kind === 'consecrate' ? '+' : ''}</text>
         </g>
       ))}
       {s.pendingActions.map((a) => {
@@ -457,7 +458,7 @@ function BoardImpl(props: BoardProps) {
         const ms = u ? alive(u) : [];
         if (!ms.length) return null;
         const c = { x: ms.reduce((q, m) => q + m.x, 0) / ms.length, y: Math.min(...ms.map((m) => m.y - m.r)) };
-        return <text key={a.unitId + a.action} x={c.x} y={c.y - 0.6} fontSize={0.7} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.12} paintOrder="stroke" fontWeight={800} pointerEvents="none">⏳ action</text>;
+        return <text key={a.unitId + a.action} x={c.x} y={c.y - 0.6} fontSize={0.7} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.12} paintOrder="stroke" fontWeight={800} pointerEvents="none">action…</text>;
       })}
       {props.rings?.map((r, i) => (
         <circle key={`r${i}`} cx={r.c.x} cy={r.c.y} r={r.r} fill="none" stroke={r.color} strokeWidth={0.08} strokeDasharray={r.dash ? '0.35 0.25' : undefined} />
@@ -497,7 +498,7 @@ function BoardImpl(props: BoardProps) {
               const bad = props.bad?.includes(m.id);
               const isSolo = isDraft && solo.includes(m.id);
               return (
-                <g key={m.id} onPointerDown={(e) => startModelDrag(e, u.id, m.id)} style={{ cursor: isDraft ? 'grab' : 'pointer' }}>
+                <g key={m.id} data-unit={u.id} onPointerDown={(e) => startModelDrag(e, u.id, m.id)} style={{ cursor: isDraft ? 'grab' : 'pointer' }}>
                   <circle cx={p.x} cy={p.y} r={Math.max(m.r, 0.35) + 0.35} fill="transparent" />
                   {acting.has(u.id) && <circle cx={p.x} cy={p.y} r={m.r + 0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
                   {isSolo && <circle cx={p.x} cy={p.y} r={m.r + 0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
@@ -537,7 +538,7 @@ function BoardImpl(props: BoardProps) {
             })}
             {(isSel || isPicked || isDraft || vb.w < 24) && pts.length > 0 && (
               <text x={cx} y={minY - 0.35} fontSize={fs * 0.85} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
-                {u.name.length > 22 ? u.name.slice(0, 21) + '…' : u.name}{u.battleShocked ? ' ⚠' : ''}
+                {u.name.length > 22 ? u.name.slice(0, 21) + '…' : u.name}{u.battleShocked ? ' !' : ''}
               </text>
             )}
             {props.badges?.[u.id]?.length ? (
@@ -553,14 +554,16 @@ function BoardImpl(props: BoardProps) {
               return (
                 <g transform={`translate(${cx} ${maxY + 0.75})`} pointerEvents="none">
                   <rect x={-2.2} y={-0.5} width={4.4} height={1.0} rx={0.5} fill="rgba(10,12,16,0.88)" stroke={col} strokeWidth={0.08} />
-                  <text x={0} y={0.24} fontSize={0.62} textAnchor="middle" fill="#fff" fontWeight={800}>🚚 {pax.length} หน่วย · {n}</text>
+                  <SvgIcon name="transport" x={-1.55} y={0} size={0.7} color="#fff" />
+                  <text x={0.35} y={0.24} fontSize={0.62} textAnchor="middle" fill="#fff" fontWeight={800}>{pax.length} หน่วย · {n}</text>
                 </g>
               );
             })()}
             {u.battleShocked && pts.length > 0 && (
               <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 3.1 : 2.2)})`} pointerEvents="none">
                 <rect x={-3.9} y={-0.55} width={7.8} height={1.1} rx={0.55} fill="#4c1d95" stroke="#e9d5ff" strokeWidth={0.09} />
-                <text x={0} y={0.25} fontSize={0.66} textAnchor="middle" fill="#f5f3ff" fontWeight={900}>⚡ BATTLE-SHOCKED</text>
+                <SvgIcon name="charge" x={-3.2} y={0} size={0.75} color="#f5f3ff" />
+                <text x={0.35} y={0.25} fontSize={0.66} textAnchor="middle" fill="#f5f3ff" fontWeight={900}>BATTLE-SHOCKED</text>
               </g>
             )}
             {s.players[1 - u.owner].oathTarget === u.id && pts.length > 0 && (
@@ -596,7 +599,7 @@ function BoardImpl(props: BoardProps) {
                 <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={col} strokeWidth={0.2} strokeDasharray={props.measure.los === false ? '0.5 0.3' : undefined} />
                 {Array.from({ length: n }, (_, i) => <line key={i} x1={a.x + ux * (i + 1) - uy * 0.35} y1={a.y + uy * (i + 1) + ux * 0.35} x2={a.x + ux * (i + 1) + uy * 0.35} y2={a.y + uy * (i + 1) - ux * 0.35} stroke={col} strokeWidth={(i + 1) % 6 === 0 ? 0.14 : 0.07} />)}
                 <circle cx={b.x} cy={b.y} r={0.35} fill={col} stroke="#000" strokeWidth={0.08} />
-                <text x={mx} y={my - 0.6} fontSize={1.2} textAnchor="middle" fill={col} stroke="#000" strokeWidth={0.18} paintOrder="stroke" fontWeight={900}>{props.measure.label ?? `${d.toFixed(1)}"`}{props.measure.los === false ? ' ✗' : ''}</text>
+                <text x={mx} y={my - 0.6} fontSize={1.2} textAnchor="middle" fill={col} stroke="#000" strokeWidth={0.18} paintOrder="stroke" fontWeight={900}>{props.measure.label ?? `${d.toFixed(1)}"`}{props.measure.los === false ? ' (มองไม่เห็น)' : ''}</text>
               </>
             );
           })()}

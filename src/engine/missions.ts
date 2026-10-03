@@ -264,15 +264,15 @@ export function startAction(s: GameState, opt: ActionOption) {
       P.mission.trapped.push({ terrainId: opt.terrainId, turn: s.turn });
       const t = s.terrain.find((x) => x.id === opt.terrainId)!;
       addMarker(s, p, 'trap', { terrainId: t.id, at: polyCentroid(t.poly) });
-      log(s, `💣 ${u.name}: Booby Trap — terrain area ถูกวางกับดัก`, 'info', p);
+      log(s, `${u.name}: Booby Trap — terrain area ถูกวางกับดัก`, 'info', p);
     }
     if (opt.action === 'plunder' && opt.terrainId) {
       P.sec.plundered.push({ terrainId: opt.terrainId, turn: s.turn });
-      log(s, `💰 ${u.name}: Plunder — terrain area ถูกปล้น`, 'info', p);
+      log(s, `${u.name}: Plunder — terrain area ถูกปล้น`, 'info', p);
     }
     if (opt.action === 'surveil' && opt.targetId) {
       P.mission.surveilled.push({ unitId: opt.targetId, turn: s.turn });
-      log(s, `👁 ${u.name} สอดแนม ${unitById(s, opt.targetId).name}`, 'info', p);
+      log(s, `${u.name} สอดแนม ${unitById(s, opt.targetId).name}`, 'info', p);
     }
     return;
   }
@@ -312,8 +312,8 @@ export function onTurnEnd(s: GameState) {
         return t ? boardUnits(s, p).some((x) => unitInTerrain(x, t)) && !boardUnits(s, other(p)).some((x) => unitInTerrain(x, t)) : false;
       };
       const victim = [...pool].sort((a2, b2) => Number(held(a2)) - Number(held(b2)))[0];
-      if (victim) { s.markers = s.markers.filter((m) => m !== victim); log(s, `📡 ${u.name}: Sensor Sweep เอา operation marker ออก 1 อัน`, 'info', p); }
-    } else log(s, `✓ ${u.name}: ${def.name} สำเร็จ`, 'info', p);
+      if (victim) { s.markers = s.markers.filter((m) => m !== victim); log(s, `${u.name}: Sensor Sweep เอา operation marker ออก 1 อัน`, 'info', p); }
+    } else log(s, `${u.name}: ${def.name} สำเร็จ`, 'info', p);
   }
   s.pendingActions = s.pendingActions.filter((x) => x.player !== p);
   if (P.primaryId === 'consecrate') {
@@ -327,7 +327,7 @@ export function onTurnEnd(s: GameState) {
       P.mission.consecrated.push(o.id);
       P.mission.consecrationUnits = P.mission.consecrationUnits.filter((x) => x !== id);
       addMarker(s, p, 'consecrate', { objId: o.id, at: o });
-      log(s, `✠ ${u.name} consecrate objective ${objName(s, o)}`, 'info', p);
+      log(s, `${u.name} consecrate objective ${objName(s, o)}`, 'info', p);
     }
   }
 }
@@ -456,6 +456,6 @@ export function scorePrimary(s: GameState, timing: 'endOfYourCommandPhase' | 'en
     if (!vp) continue;
     P.vp += vp;
     if (timing !== 'endOfBattle') P.vpByRound[s.round] += vp;
-    log(s, `🏆 ${P.name} +${vp} VP (${prim.name}: ${r.text})`, 'vp', player);
+    log(s, `${P.name} +${vp} VP (${prim.name}: ${r.text})`, 'vp', player);
   }
 }

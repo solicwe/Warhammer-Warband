@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
+import { Icon } from './Icon';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { DET_RULES } from '../engine/detachments';
 import { DatasheetView } from './Sheet';
@@ -279,9 +280,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const load = faction ? transportLoads(list, faction).find((t) => t.uid === u.uid) : undefined;
     const carried = load?.riders.map((r) => list.units.find((x) => x.uid === r)?.datasheet).filter(Boolean) ?? [];
     const line = [
-      u.warlord && 'Warlord', u.enhancement, leads && `นำ ${leads.datasheet}`, u.split && 'แยก 2 หน่วย',
-      rides && `🚚 เริ่มเกมบน ${rides.datasheet}`,
-      load && (carried.length ? `🚚 บรรทุก ${carried.join(', ')} (${load.used}/${load.capacity} ที่)` : `🚚 ว่าง (0/${load.capacity} ที่)`),
+      u.warlord && 'Warlord', leads && `นำ ${leads.datasheet}`, u.split && 'แยก 2 หน่วย',
+      rides && `เริ่มเกมบน ${rides.datasheet}`,
+      load && (carried.length ? `บรรทุก ${carried.join(', ')} (${load.used}/${load.capacity} ที่)` : `ว่าง (0/${load.capacity} ที่)`),
     ].filter(Boolean).join(' · ');
     const wg = wargearSummary(sheet, u);
     const wrong = sheet && !allowed(sheet);
@@ -291,12 +292,12 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           <UnitArt sheet={sheet} />
           <span className="ab-row-text">
             <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
-            <span className="ab-pts">{unitPoints(u)} pts{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">ไม่มีใน 11e</span>}</span>
+            <span className="ab-pts">{unitPoints(u)} pts{u.enhancement && <span className="ab-enh"> {u.enhancement}</span>}{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">ไม่มีใน 11e</span>}</span>
             {line && <span className="ab-sub">{line}</span>}
-            {wg && <span className="ab-sub ab-wg">🔧 {wg}</span>}
+            {wg && <span className="ab-sub ab-wg"><Icon name="wargear" size={13} /> {wg}</span>}
           </span>
         </button>
-        <button type="button" className="ab-kebab" aria-label={`ตัวเลือก ${u.datasheet}`} onClick={() => setMenu(u.uid)}>⋮</button>
+        <button type="button" className="ab-kebab" aria-label={`ตัวเลือก ${u.datasheet}`} onClick={() => setMenu(u.uid)}><Icon name="more" size={22} /></button>
       </div>
     );
   };
@@ -346,7 +347,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           return (
             <div key={d.id} className={`ab-det ${on ? 'on' : ''}`}>
               <button type="button" className="ab-det-head" onClick={() => set({ detachments: on ? list.detachments.filter((x) => x !== d.name) : [...list.detachments, d.name] })}>
-                <span className="ab-check">{on ? '✓' : ''}</span>
+                <span className="ab-check">{on && <Icon name="check" size={16} />}</span>
                 <span className="grow">
                   <span className="ab-name">{d.name}{d.subfaction && <span className={`ab-chip ${allowed(d) ? '' : 'bad'}`}>{subTag(d.subfaction)}</span>}</span>
                   <span className="ab-sub">{d.dp} DP · {d.forceDisposition} · {d.enhancements.length} enhancements · {d.stratagems.length} stratagems</span>
@@ -368,16 +369,16 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       <div className="card">
         <div className="card-title">รูปตัวละคร</div>
         <div className="small muted">เลือกหลายรูปพร้อมกันได้ ตั้งชื่อไฟล์ตามชื่อ datasheet (เช่น <i>Intercessor Squad.jpg</i>) ระบบจะจับคู่ให้เอง หรือแตะรูปในหน้า datasheet เพื่อเปลี่ยนทีละหน่วย</div>
-        {cloudMode === 'write' && <div className="hint"><span>☁ เปิดจากลิงก์เว็บ: รูปที่ใส่จะอัปขึ้นเว็บนี้เลย ทุกคนที่เปิดลิงก์เห็นรูปเดียวกัน</span></div>}
-        {cloudMode === 'read' && <div className="small muted">☁ รูปบนเว็บนี้ ({cloudPortraitCount()}) — คุณดูได้อย่างเดียว ใส่รูปเพิ่มจะเก็บไว้แค่ในเครื่องนี้</div>}
+        {cloudMode === 'write' && <div className="hint"><span><Icon name="cloud" size={15} /> เปิดจากลิงก์เว็บ: รูปที่ใส่จะอัปขึ้นเว็บนี้เลย ทุกคนที่เปิดลิงก์เห็นรูปเดียวกัน</span></div>}
+        {cloudMode === 'read' && <div className="small muted"><Icon name="cloud" size={14} /> รูปบนเว็บนี้ ({cloudPortraitCount()}) — คุณดูได้อย่างเดียว ใส่รูปเพิ่มจะเก็บไว้แค่ในเครื่องนี้</div>}
         <div className="small muted">
           {cloudMode !== 'off' ? `บนเว็บ ${cloudPortraitCount()} รูป · ` : ''}ในเครื่องนี้ {ownPortraitCount()} รูป · จากโฟลเดอร์เซิร์ฟเวอร์ {servedPortraitCount()} รูป
         </div>
         {cloudErrorNow() && <div className="err">{cloudErrorNow()}</div>}
-        {uploadsPending() > 0 && <div className="small"><b>☁ กำลังอัปขึ้นเว็บ… เหลือ {uploadsPending()} รูป</b></div>}
+        {uploadsPending() > 0 && <div className="small"><b><Icon name="cloud" size={15} /> กำลังอัปขึ้นเว็บ… เหลือ {uploadsPending()} รูป</b></div>}
         {cloudMode === 'write' && ownPortraitCount() > 0 && (
           <button className="btn primary" disabled={uploadsPending() > 0} onClick={async () => { const n = await uploadAllLocal(); setNote(`อัปขึ้นเว็บแล้ว ${n} รูป`); }}>
-            {uploadsPending() > 0 ? 'กำลังอัป…' : `☁ อัปรูปในเครื่อง ${ownPortraitCount()} รูป ขึ้นเว็บ`}
+            <Icon name="cloud" /> {uploadsPending() > 0 ? 'กำลังอัป…' : `อัปรูปในเครื่อง ${ownPortraitCount()} รูป ขึ้นเว็บ`}
           </button>
         )}
         {cloudMode === 'write' && cloudPortraitCount() > 0 && (
@@ -392,21 +393,21 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               const r = await removeUnusedCloudFiles(known);
               setNote(`ลบแล้ว: ไฟล์ซ้ำ ${r.files} ไฟล์${r.photos.length ? ` · รูปหน่วย Legends ${r.photos.length} รูป (${r.photos.join(', ')})` : ''}`);
             } catch { setNote('ลบไม่สำเร็จ ลองใหม่อีกครั้ง'); }
-          }}>🧹 เก็บกวาดรูปบนเว็บ (ไฟล์ซ้ำ + หน่วย Legends)</button>
+          }}><Icon name="clean" /> เก็บกวาดรูปบนเว็บ (ไฟล์ซ้ำ + หน่วย Legends)</button>
         )}
         <div className="btn-row">
           <label className="btn">
-            📷 นำเข้ารูป
+            <Icon name="camera" /> นำเข้ารูป
             <input type="file" accept="image/*" multiple hidden onChange={(e) => { importPhotos(e.target.files); e.target.value = ''; }} />
           </label>
           <button className="btn ghost" disabled={!exportablePortraitCount()} onClick={async () => {
             const factionOf = (n: string) => (faction?.datasheets.some((d) => d.name === n) ? list.factionId : undefined);
             download('unit-images.zip', await exportPortraitsZip(factionOf), 'application/zip')
               .then((m) => setNote(`${m} — แตกไฟล์ลงโฟลเดอร์ public/images/ แล้วรัน npm run images`));
-          }}>⬇ ส่งออก (.zip สำหรับเซิร์ฟเวอร์)</button>
-          <button className="btn ghost" disabled={!ownPortraitCount()} onClick={() => download('unit-images-backup.json', exportPortraitsJson(), 'application/json').then(setNote)}>⬇ สำรอง (.json)</button>
+          }}><Icon name="download" /> ส่งออก (.zip สำหรับเซิร์ฟเวอร์)</button>
+          <button className="btn ghost" disabled={!ownPortraitCount()} onClick={() => download('unit-images-backup.json', exportPortraitsJson(), 'application/json').then(setNote)}><Icon name="download" /> สำรอง (.json)</button>
           <label className="btn ghost">
-            ⬆ กู้คืนจาก .json
+            <Icon name="upload" /> กู้คืนจาก .json
             <input type="file" accept="application/json,.json" hidden onChange={async (e) => {
               const f = e.target.files?.[0];
               e.target.value = '';
@@ -494,7 +495,81 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               <div className="ab-pts">{unitPoints(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</div>
             </div>
           </div>
-          <div className="field">รูปของหน่วยนี้
+          <div className="quick-acts">
+            <button type="button" onClick={() => setView(u.datasheet)}><Icon name="hint" size={22} />Datasheet</button>
+            {sheet?.keywords.includes('CHARACTER') && (
+              <button type="button" className={u.warlord ? 'on' : ''} onClick={() => set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) })}><Icon name="leader" size={22} />{u.warlord ? 'Warlord' : 'ตั้ง Warlord'}</button>
+            )}
+            <button type="button" onClick={() => { set({ units: [...list.units, { ...u, uid: newUid('e'), warlord: false, enhancement: undefined, enhancementPts: undefined, attachTo: undefined }] }); setMenu(null); setNote(`เพิ่ม ${u.datasheet} อีก 1`); }}><Icon name="duplicate" size={22} />ทำซ้ำ</button>
+            <button type="button" className="danger" onClick={() => { removeUnit(u.uid); setMenu(null); }}><Icon name="delete" size={22} />ลบ</button>
+          </div>
+          {opts.length > 1 && (
+            <div className="field"><span><Icon name="size" size={15} /> จำนวนโมเดล</span>
+              <div className="seg">
+                {opts.map((o) => <button key={o.models} className={u.models === o.models ? 'on' : ''} onClick={() => setUnit(u.uid, { models: o.models, pts: o.pts })}>{o.models} · {o.pts}</button>)}
+              </div>
+            </div>
+          )}
+          {(() => {
+            // start the battle embarked: any transport in the list (leaders ride with the unit they lead)
+            const rides = list.units.filter((t) => t.uid !== u.uid && parseTransport(sheetOf(t.datasheet)?.transport));
+            if (!rides.length || u.attachTo || parseTransport(sheet?.transport) || sheet?.keywords.includes('TRANSPORT')) return null;
+            const loads = faction ? transportLoads(list, faction) : [];
+            return (
+              <label className="field"><span><Icon name="embark" size={15} /> ขึ้นรถตอนเริ่มเกม</span>
+                <select value={u.embarkIn ?? ''} onChange={(e) => setUnit(u.uid, { embarkIn: e.target.value || undefined })}>
+                  <option value="">ไม่ขึ้นรถ (วางบนสนามเอง)</option>
+                  {rides.map((t) => {
+                    const l = loads.find((x) => x.uid === t.uid);
+                    return <option key={t.uid} value={t.uid}>{t.datasheet} ({l ? `${l.used}/${l.capacity}` : '?'} ที่)</option>;
+                  })}
+                </select>
+                <span className="tiny muted">ขึ้นรถตั้งแต่ Declare Battle Formations · ลงได้ใน Movement phase: Tactical (รถยังไม่เดิน ≤3" แล้วเดินต่อได้) / Rapid (รถเดินแล้ว ≤3" ชาร์จไม่ได้) / Combat (รถ engaged ≤6" hazard + battle-shock)</span>
+              </label>
+            );
+          })()}
+          {sheet && sheet.leads.length > 0 && (
+            <label className="field"><span><Icon name="leader" size={15} /> นำหน่วย (Leader)</span>
+              <select value={u.attachTo ?? ''} onChange={(e) => setUnit(u.uid, { attachTo: e.target.value || undefined })}>
+                <option value="">ไม่ผูก</option>
+                {bodyguards.map((b) => <option key={b.uid} value={b.uid}>{b.datasheet} ({b.models})</option>)}
+              </select>
+            </label>
+          )}
+          {(enh.length > 0 || u.enhancement) && (
+            <div className="field"><span><Icon name="enhancement" size={15} /> Enhancement <span className="tiny muted">แตะเพื่อใส่ / เอาออก</span></span>
+              <div className="enh-list">
+                {u.enhancement && !enh.some((o) => o.name === u.enhancement) && (
+                  <button type="button" className="enh-card on" onClick={() => setUnit(u.uid, { enhancement: undefined, enhancementPts: undefined })}>
+                    <span className="enh-head"><b>{u.enhancement}</b><span>ไม่มีใน detachment ที่เลือก · แตะเพื่อเอาออก</span></span>
+                  </button>
+                )}
+                {enh.map((o) => {
+                  const on = u.enhancement === o.name;
+                  const taken = list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
+                  const fit = sheet ? enhancementFits(o.text, [...sheet.keywords, ...sheet.factionKeywords]) : null;
+                  if (fit && !fit.ok && !on) return <div key={o.detachment + o.name} className="enh-card off"><span className="enh-head"><b>{o.name}</b><span>+{o.pts} pts</span></span><span className="enh-foot">ใช้ไม่ได้: เฉพาะ {fit.need}</span></div>;
+                  return (
+                    <button key={o.detachment + o.name} type="button" className={`enh-card ${on ? 'on' : ''} ${taken ? 'taken' : ''}`}
+                      onClick={() => setUnit(u.uid, on ? { enhancement: undefined, enhancementPts: undefined } : { enhancement: o.name, enhancementPts: o.pts })}>
+                      <span className="enh-head"><b>{o.name}</b><span>{on ? <><Icon name="check" size={15} /> ใช้อยู่</> : `+${o.pts} pts`}</span></span>
+                      {o.text && <span className="enh-text">{o.text}</span>}
+                      <span className="enh-foot">{o.detachment}{o.upgrade ? ' · Upgrade' : ''}{taken ? ` · ${taken.datasheet} ใช้อยู่ (ใช้ได้ครั้งเดียวต่อกองทัพ)` : ''}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {sheet && <WargearEditor sheet={sheet} u={u} onChange={(patch) => setUnit(u.uid, patch)} />}
+          {(() => {
+            const sp = splitRuleOf(sheet, list.detachments);
+            if (!sp) return null;
+            return sp.must
+              ? <div className="tiny muted">{sp.name}: {sp.label}</div>
+              : <button className={`btn ${u.split ? 'on' : ''}`} onClick={() => setUnit(u.uid, { split: !u.split })}>{u.split && <Icon name="check" size={16} />}{sp.name}: {sp.label}</button>;
+          })()}
+          <div className="field"><span><Icon name="camera" size={15} /> รูปของหน่วยนี้</span>
             <div className="row">
               <label className="btn small">
                 {sheet && getPortrait(sheet.name) ? 'เปลี่ยนรูป' : 'ใส่รูป'}
@@ -512,69 +587,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               <span className="tiny muted grow">ใช้กับทุกหน่วย {u.datasheet} (ทั้งการ์ดและ token บนสนาม)</span>
             </div>
           </div>
-          {opts.length > 1 && (
-            <div className="field">จำนวนโมเดล
-              <div className="seg">
-                {opts.map((o) => <button key={o.models} className={u.models === o.models ? 'on' : ''} onClick={() => setUnit(u.uid, { models: o.models, pts: o.pts })}>{o.models} · {o.pts}</button>)}
-              </div>
-            </div>
-          )}
-          {sheet && <WargearEditor sheet={sheet} u={u} onChange={(patch) => setUnit(u.uid, patch)} />}
-          {(() => {
-            const sp = splitRuleOf(sheet, list.detachments);
-            if (!sp) return null;
-            return sp.must
-              ? <div className="tiny muted">{sp.name}: {sp.label}</div>
-              : <button className={`btn ${u.split ? 'on' : ''}`} onClick={() => setUnit(u.uid, { split: !u.split })}>{u.split ? '✓ ' : ''}{sp.name}: {sp.label}</button>;
-          })()}
-          {(() => {
-            // start the battle embarked: any transport in the list (leaders ride with the unit they lead)
-            const rides = list.units.filter((t) => t.uid !== u.uid && parseTransport(sheetOf(t.datasheet)?.transport));
-            if (!rides.length || u.attachTo || parseTransport(sheet?.transport) || sheet?.keywords.includes('TRANSPORT')) return null;
-            const loads = faction ? transportLoads(list, faction) : [];
-            return (
-              <label className="field">ขึ้นรถตอนเริ่มเกม
-                <select value={u.embarkIn ?? ''} onChange={(e) => setUnit(u.uid, { embarkIn: e.target.value || undefined })}>
-                  <option value="">ไม่ขึ้นรถ (วางบนสนามเอง)</option>
-                  {rides.map((t) => {
-                    const l = loads.find((x) => x.uid === t.uid);
-                    return <option key={t.uid} value={t.uid}>{t.datasheet} ({l ? `${l.used}/${l.capacity}` : '?'} ที่)</option>;
-                  })}
-                </select>
-                <span className="tiny muted">ขึ้นรถตั้งแต่ Declare Battle Formations · ลงได้ใน Movement phase: Tactical (รถยังไม่เดิน ≤3" แล้วเดินต่อได้) / Rapid (รถเดินแล้ว ≤3" ชาร์จไม่ได้) / Combat (รถ engaged ≤6" hazard + battle-shock)</span>
-              </label>
-            );
-          })()}
-          {sheet && sheet.leads.length > 0 && (
-            <label className="field">นำหน่วย (Leader)
-              <select value={u.attachTo ?? ''} onChange={(e) => setUnit(u.uid, { attachTo: e.target.value || undefined })}>
-                <option value="">ไม่ผูก</option>
-                {bodyguards.map((b) => <option key={b.uid} value={b.uid}>{b.datasheet} ({b.models})</option>)}
-              </select>
-            </label>
-          )}
-          {(enh.length > 0 || u.enhancement) && (
-            <label className="field">Enhancement
-              <select value={u.enhancement ?? ''} onChange={(e) => {
-                const x = enh.find((o) => o.name === e.target.value);
-                setUnit(u.uid, { enhancement: x?.name, enhancementPts: x?.pts });
-              }}>
-                <option value="">ไม่มี</option>
-                {u.enhancement && !enh.some((o) => o.name === u.enhancement) && <option value={u.enhancement}>{u.enhancement}</option>}
-                {enh.map((o) => <option key={o.detachment + o.name} value={o.name}>{o.name} (+{o.pts}){o.upgrade ? ' [Upgrade]' : ''}</option>)}
-              </select>
-            </label>
-          )}
-          {sheet?.keywords.includes('CHARACTER') && (
-            <button className={`btn ${u.warlord ? 'on' : ''}`} onClick={() => set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) })}>
-              {u.warlord ? 'Warlord ✓' : 'ตั้งเป็น Warlord'}
-            </button>
-          )}
-          <div className="row">
-            <button className="btn grow" onClick={() => { setView(u.datasheet); }}>ดู datasheet</button>
-            <button className="btn grow" onClick={() => { set({ units: [...list.units, { ...u, uid: newUid('e'), warlord: false, enhancement: undefined, enhancementPts: undefined, attachTo: undefined }] }); setMenu(null); setNote(`เพิ่ม ${u.datasheet} อีก 1`); }}>ทำซ้ำ</button>
-          </div>
-          <button className="btn danger" onClick={() => { removeUnit(u.uid); setMenu(null); }}>ลบหน่วยนี้</button>
         </div>
       </div>
     );

@@ -2,10 +2,11 @@
 // It plays one unit per step so the UI can animate each action.
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from './attack';
 import { RULES } from './config';
+import { smartPlacement } from './deploy';
 import { dist, polyCentroid } from './geometry';
 import { detChoices, pickDetChoice } from './detachments';
 import {
-  autoApproach, callWaaagh, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
+  autoApproach, autoCharge, autoPileMove, callWaaagh, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
@@ -79,7 +80,7 @@ export function botDeploy(s: GameState) {
   // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
   if (hasDeepStrike(s, u) && sendToReserves(s, u.id) === null) return;
   // a vehicle must not be set up where ruin walls box it in for the whole game
-  const pos = findPlacement(s, u, 'deploy', undefined, (q) => canLeave(s, u, q)) ?? findPlacement(s, u, 'deploy');
+  const pos = smartPlacement(s, u) ?? findPlacement(s, u, 'deploy', undefined, (q) => canLeave(s, u, q)) ?? findPlacement(s, u, 'deploy');
   if (pos && deployUnit(s, u.id, pos).ok) return;
   if (sendToReserves(s, u.id)) {
     // could not place or reserve: last resort, drop the unit
@@ -334,12 +335,10 @@ export function botChargeOne(s: GameState): boolean {
     }
     if (!opts.length) return true;
     const target = [...opts].sort((a, b) => value(b) - value(a))[0];
-    const paths = new Map([...stay(u), ...autoApproach(s, u, [target], u.chargeRoll ?? 0)]);
-    if (validateMove(s, u, 'charge', paths, { targets: [target.id] }).ok) { commitCharge(s, u, paths, [target.id]); botCrushingImpact(s, u, target.id); return true; }
+    if (autoCharge(s, u, [target.id])) { botCrushingImpact(s, u, target.id); return true; }
     // fall back to the nearest legal target
     const near = [...opts].sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
-    const p2 = new Map([...stay(u), ...autoApproach(s, u, [near], u.chargeRoll ?? 0)]);
-    if (validateMove(s, u, 'charge', p2, { targets: [near.id] }).ok) { commitCharge(s, u, p2, [near.id]); botCrushingImpact(s, u, near.id); }
+    if (autoCharge(s, u, [near.id])) botCrushingImpact(s, u, near.id);
     return true;
   }
   return false;
@@ -361,14 +360,7 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
     for (const u of boardUnits(s, f.stepPlayer)) {
       if (f.step === 'pileIn' && !pileInEligible(s, u)) continue;
       if (f.step === 'consolidate' && !(consolidateEligible(s, u) && consolidateMode(s, u).mode)) continue;
-      const kind = f.step === 'pileIn' ? 'pileIn' : 'consolidate';
-      const cm = kind === 'consolidate' ? consolidateMode(s, u) : null;
-      const targets = isEngaged(s, u) ? engagedEnemies(s, u) : cm ? cm.enemies : boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.pileIn.targetRange);
-      const add = cm?.mode === 'objective' && cm.objective
-        ? autoApproach(s, u, [], RULES.consolidate.distance, { objective: polyCentroid(objectiveTerrain(s, cm.objective).poly) })
-        : autoApproach(s, u, targets, kind === 'pileIn' ? RULES.pileIn.distance : RULES.consolidate.distance);
-      const paths = new Map([...stay(u), ...add]);
-      if (validateMove(s, u, kind, paths).ok) commitMove(s, u, kind, paths);
+      autoPileMove(s, u, f.step === 'pileIn' ? 'pileIn' : 'consolidate');
     }
     if (f.step === 'pileIn') endPileInStep(s); else endConsolidateStep(s);
     return true;

@@ -505,6 +505,8 @@ export interface GameState {
   bots?: PlayerId[];
   /** vs bot: the player rolls their own saves when the bot attacks (and can use Command Re-roll then). Default on. */
   defenderRolls?: boolean;
+  /** ability re-rolls ("re-roll the Hit roll", Oath of Moment …) wait for the dice to be picked; off: every failed die is re-rolled at once */
+  pickRerolls?: boolean;
   fx?: FxEvent[];
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

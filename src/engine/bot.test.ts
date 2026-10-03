@@ -4,8 +4,8 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botAct, botMoveOne, botShootOne, botStep, botWindow } from './bot';
 import { attackRerollGap, buildShootPools, hazardTest, rerollAttackCount, resolveAll, resolveReroll, rollHits, startAttack, stepAttack, toggleRerollPick } from './attack';
-import { createGame, formationAt, placeUnit } from './game';
-import { alive, unitDistance } from './state';
+import { autoCharge, autoPileMove, createGame, declareCharge, formationAt, placeUnit } from './game';
+import { alive, engagedEnemies, unitDistance } from './state';
 import { planStratagem } from './stratagems';
 import type { ArmyList, FactionData, GameState, Pt, TerrainPiece } from './types';
 
@@ -99,6 +99,7 @@ describe('re-rolls', () => {
   it('an ability re-roll waits for the dice to be picked: the misses are picked to begin with, only picked dice are re-rolled', () => {
     const s = game([['Intercessor Squad', 10, 150]], [['Boyz', 20, 180]]);
     s.phase = 'shooting';
+    s.pickRerolls = true;
     const ints = put(s, 'p0-x0', { x: 20, y: 14 });
     const boyz = put(s, 'p1-x0', { x: 20, y: 26 });
     ints.buffs.push({ kind: 'rerollHits', until: 'phase' });
@@ -120,8 +121,23 @@ describe('re-rolls', () => {
     if (missIdx !== undefined) expect(p.hits[missIdx].v).toBe(before[missIdx]);
   });
 
+  it('by default an ability re-roll is made at once on every failed die (Oath of Moment and the like)', () => {
+    const s = game([['Intercessor Squad', 10, 150]], [['Boyz', 20, 180]]);
+    s.phase = 'shooting';
+    const ints = put(s, 'p0-x0', { x: 20, y: 14 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 26 });
+    ints.buffs.push({ kind: 'rerollHits', until: 'phase' });
+    startAttack(s, 'shoot', ints.id, boyz.id, buildShootPools(s, ints.id, boyz.id, { mode: 'normal' }).pools);
+    rollHits(s);
+    const p = s.attack!.pools[0];
+    expect(p.reroll).toBeUndefined();
+    // nothing left that failed without being re-rolled
+    expect(p.hits.some((d) => d.o === 'miss' && !d.rerolled)).toBe(false);
+  });
+
   it('re-roll 1s only offers the dice that rolled a 1, and resolveAll re-rolls the failures by itself', () => {
     const s = game([['Intercessor Squad', 10, 150]], [['Boyz', 20, 180]]);
+    s.pickRerolls = true;
     s.phase = 'shooting';
     const ints = put(s, 'p0-x0', { x: 20, y: 14 });
     const boyz = put(s, 'p1-x0', { x: 20, y: 26 });
@@ -282,5 +298,35 @@ describe('playing against the bot', () => {
     s.botTried = [];
     botShootOne(s);
     expect(s.attack).toBeFalsy();
+  });
+});
+
+describe('one-tap charge and pile-in (the player taps the target, the models move in by themselves)', () => {
+  it('a successful charge roll moves the unit into engagement with the tapped target', () => {
+    let done = 0;
+    for (let seed = 1; seed <= 12 && !done; seed++) {
+      const s = game([['Assault Intercessor Squad', 5, 75]], [['Boyz', 10, 90]]);
+      s.rng = seed * 7919;
+      s.phase = 'charge';
+      const ai = put(s, 'p0-x0', { x: 20, y: 14 });
+      const boyz = put(s, 'p1-x0', { x: 20, y: 21 });
+      declareCharge(s, ai);
+      if ((ai.chargeRoll ?? 0) < unitDistance(ai, boyz)) continue;
+      expect(autoCharge(s, ai, [boyz.id])).toBe(true);
+      expect(engagedEnemies(s, ai).map((e) => e.id)).toContain(boyz.id);
+      expect(ai.chargedTurn).toBe(s.turn);
+      done++;
+    }
+    expect(done).toBe(1);
+  });
+
+  it('pile-in moves a unit that is close but not yet in base contact towards the enemy', () => {
+    const s = game([['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]]);
+    s.phase = 'fight';
+    const ints = put(s, 'p0-x0', { x: 20, y: 14 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 18.5 });
+    const before = unitDistance(ints, boyz);
+    expect(autoPileMove(s, ints, 'pileIn')).toBe(true);
+    expect(unitDistance(ints, boyz)).toBeLessThan(before);
   });
 });

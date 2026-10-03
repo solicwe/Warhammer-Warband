@@ -132,7 +132,7 @@ export function bankSecondary(s: GameState, p: PlayerId, id: string, vp: number)
   P.secByRound[s.round] += gain;
   if (P.secMode === 'fixed') P.secFixedVp[id] = (P.secFixedVp[id] ?? 0) + gain;
   else P.secActive = P.secActive.filter((x) => x !== id);
-  log(s, `🎯 ${P.name} +${gain} VP (Secondary: ${secondaryById(id).name})`, 'vp', p);
+  log(s, `${P.name} +${gain} VP (Secondary: ${secondaryById(id).name})`, 'vp', p);
   return gain;
 }
 

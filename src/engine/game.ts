@@ -485,7 +485,7 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
       t.passed = t.result >= ld;
     }
     pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${t.result} vs Ld ${ld}+ → ${t.passed ? 'ผ่าน' : 'ไม่ผ่าน!'}`, good: t.passed });
-    log(s, `Battle-shock ${u.name}: 2D6 [${r.join('+')}] = ${t.result} vs Ld ${ld}+ → ${t.passed ? 'ผ่าน' : 'ไม่ผ่าน ⚠'}`, 'roll', u.owner);
+    log(s, `Battle-shock ${u.name}: 2D6 [${r.join('+')}] = ${t.result} vs Ld ${ld}+ → ${t.passed ? 'ผ่าน' : 'ไม่ผ่าน '}`, 'roll', u.owner);
   }
   const was = u.battleShocked;
   u.battleShocked = !t.passed;
@@ -574,7 +574,7 @@ function endBattle(s: GameState) {
   s.phase = 'gameover';
   const [a, b] = [s.players[0].vp + s.players[0].secVp, s.players[1].vp + s.players[1].secVp];
   s.winner = a === b ? 'draw' : a > b ? 0 : 1;
-  log(s, `🏁 จบเกม: ${s.players[0].name} ${a} VP – ${s.players[1].name} ${b} VP → ${s.winner === 'draw' ? 'เสมอ' : s.players[s.winner].name + ' ชนะ!'}`, 'vp', null);
+  log(s, `จบเกม: ${s.players[0].name} ${a} VP – ${s.players[1].name} ${b} VP → ${s.winner === 'draw' ? 'เสมอ' : s.players[s.winner].name + ' ชนะ!'}`, 'vp', null);
 }
 
 // ---------- movement phase actions ----------
@@ -698,19 +698,19 @@ export const isRiledUp = (s: GameState, u: UnitState) => isRiled(s, u);
 
 export function setOathTarget(s: GameState, p: PlayerId, targetId: string) {
   s.players[p].oathTarget = targetId;
-  log(s, `⚜ Oath of Moment: ${unitById(s, targetId).name}`, 'info', p);
+  log(s, `Oath of Moment: ${unitById(s, targetId).name}`, 'info', p);
 }
 
 /** Master of Battle: the second enemy unit that becomes the Oath of Moment target if the first one is destroyed. */
 export function setOathBackup(s: GameState, p: PlayerId, targetId: string) {
   s.players[p].oathBackup = targetId;
-  log(s, `⚜ Master of Battle: เป้าสำรอง ${unitById(s, targetId).name}`, 'info', p);
+  log(s, `Master of Battle: เป้าสำรอง ${unitById(s, targetId).name}`, 'info', p);
 }
 
 export function callWaaagh(s: GameState, p: PlayerId) {
   s.players[p].waaaghUsed = true;
   s.players[p].riledUntilTurn = s.turn + 1;
-  log(s, `🟢 WAAAGH! หน่วย Ork ทุกหน่วย riled up: 5+ InSv, ยิงแบบ [ASSAULT], advance แล้วชาร์จได้ (จนจบเทิร์นถัดไป)`, 'info', p);
+  log(s, `WAAAGH! หน่วย Ork ทุกหน่วย riled up: 5+ InSv, ยิงแบบ [ASSAULT], advance แล้วชาร์จได้ (จนจบเทิร์นถัดไป)`, 'info', p);
 }
 
 export function chargeEligibility(s: GameState, u: UnitState): string | null {
@@ -762,7 +762,7 @@ export function commitCharge(s: GameState, u: UnitState, paths: Map<string, Pt[]
   commitMove(s, u, 'charge', paths);
   u.chargedTurn = s.turn;
   u.chargeTargets = targets;
-  log(s, `⚔ ${u.name} ชาร์จสำเร็จ → ${targets.map((t) => unitById(s, t).name).join(', ')} (ได้ Fights First)`, 'info', u.owner);
+  log(s, `${u.name} ชาร์จสำเร็จ → ${targets.map((t) => unitById(s, t).name).join(', ')} (ได้ Fights First)`, 'info', u.owner);
   fire(s, 'endOfCharge', [u], { targetId: targets[0] });
 }
 
@@ -794,6 +794,9 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
     && s.terrain.every((t) => t.walls.every((w) => pointSegDist(p, w) >= r * 0.6)) && clearOfOthers(p, r);
   const coherent = () => coherencyProblems(ms.map((m) => pos.get(m.id)!), RULES.coherency.near, RULES.coherency.max, ms.map((m) => m.r)).length === 0;
   const gapTo = (m: ModelState, p: Pt) => Math.min(...enemyModels.map((e) => dist(p, e) - e.r - m.r));
+  // each model goes in a straight line from where it stands: that line must not pass through an enemy model
+  const foesAll = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive);
+  const clearLine = (m: ModelState, p: Pt) => foesAll.every((e) => pointSegDist(e, { a: { x: m.x, y: m.y }, b: p }) >= e.r + m.r - 0.03);
   const inContact = (m: ModelState) => enemyModels.some((e) => baseDist(m, e) <= 0.05);
 
   // 1) block shift
@@ -816,7 +819,7 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
       const ok = ms.every((m) => {
         const p = trial.get(m.id)!;
         return p.x - m.r >= 0 && p.y - m.r >= 0 && p.x + m.r <= W && p.y + m.r <= H && others.every((o) => dist(p, o) >= o.r + m.r - 0.01)
-          && s.terrain.every((t) => t.walls.every((w) => pointSegDist(p, w) >= m.r * 0.6)) && clearOfOthers(p, m.r);
+          && s.terrain.every((t) => t.walls.every((w) => pointSegDist(p, w) >= m.r * 0.6)) && clearOfOthers(p, m.r) && clearLine(m, p);
       });
       if (ok) { for (const [id, p] of trial) pos.set(id, p); break; }
     }
@@ -836,7 +839,7 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
           const ang = Math.atan2(cur.y - e.y, cur.x - e.x) + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 12);
           const c = { x: e.x + Math.cos(ang) * (e.r + m.r + 0.02), y: e.y + Math.sin(ang) * (e.r + m.r + 0.02) };
           const travel = dist(m, c);
-          if (travel > maxDist + 1e-6 || !free(m.id, c, m.r)) continue;
+          if (travel > maxDist + 1e-6 || !free(m.id, c, m.r) || !clearLine(m, c)) continue;
           if (travel < bestScore) { bestScore = travel; best = c; }
         }
       }
@@ -1223,3 +1226,31 @@ export function emergencyDisembark(s: GameState, t: UnitState, tm: ModelState) {
 }
 
 onTransportDestroyed((s, u, m) => { if (u.transport && embarkedIn(s, u).length) emergencyDisembark(s, u, m); });
+
+// ---------- one-tap moves (the player's "go in" buttons and the bot share these) ----------
+
+const stayPaths = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]]));
+
+/** Charge `targetIds` with the distance rolled: every model is moved in by itself. False when no legal move was found. */
+export function autoCharge(s: GameState, u: UnitState, targetIds: string[]): boolean {
+  const targets = targetIds.map((id) => unitById(s, id));
+  const paths = new Map([...stayPaths(u), ...autoApproach(s, u, targets, u.chargeRoll ?? 0)]);
+  if (!validateMove(s, u, 'charge', paths, { targets: targetIds }).ok) return false;
+  commitCharge(s, u, paths, targetIds);
+  return true;
+}
+
+/** Pile-in or consolidate a unit by itself (towards the enemy, or onto the objective when that is the mode). */
+export function autoPileMove(s: GameState, u: UnitState, kind: 'pileIn' | 'consolidate'): boolean {
+  const cm = kind === 'consolidate' ? consolidateMode(s, u) : null;
+  if (cm && !cm.mode) return false;
+  const targets = isEngaged(s, u) ? engagedEnemies(s, u) : cm ? cm.enemies : boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.pileIn.targetRange);
+  const add = cm?.mode === 'objective' && cm.objective
+    ? autoApproach(s, u, [], RULES.consolidate.distance, { objective: polyCentroid(objectiveTerrain(s, cm.objective).poly) })
+    : autoApproach(s, u, targets, kind === 'pileIn' ? RULES.pileIn.distance : RULES.consolidate.distance);
+  const paths = new Map([...stayPaths(u), ...add]);
+  if (!validateMove(s, u, kind, paths).ok) return false;
+  commitMove(s, u, kind, paths);
+  if (s.fight && !s.fight.movedThisStep.includes(u.id)) s.fight.movedThisStep.push(u.id);
+  return true;
+}

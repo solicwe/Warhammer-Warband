@@ -551,6 +551,19 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
     .filter((e) => isChar || e.upgrade);
 }
 
+/**
+ * Whether an enhancement's "X model only" / "X or Y model only" line lets this datasheet take it.
+ * Null when the text names no such restriction (or one this check can't read).
+ */
+export function enhancementFits(text: string, keywords: string[]): { ok: boolean; need: string } | null {
+  const m = /^([A-Z][A-Z’'\- ]+(?:(?:,| or| OR) [A-Z][A-Z’'\- ]+)*) (?:model|unit)s? only/.exec(text.trim());
+  if (!m) return null;
+  const need = m[1].split(/,| or | OR /).map((k) => k.trim()).filter(Boolean);
+  // "ADEPTUS ASTARTES INFANTRY" is two keywords together: every word has to be among the unit's keyword words
+  const words = new Set(keywords.flatMap((k) => k.toUpperCase().split(/\s+/)));
+  return { ok: need.some((n) => n.split(/\s+/).every((w) => words.has(w))), need: need.join(' / ') };
+}
+
 /** Each TRANSPORT in the list and the units chosen to start the battle inside it (attached leaders ride with their unit). */
 export function transportLoads(list: ArmyList, faction: FactionData) {
   const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
@@ -603,7 +616,7 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (n > limit) errs.push(`${name}: ใส่ได้ไม่เกิน ${limit} หน่วย`);
   }
   if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('ต้องมี CHARACTER อย่างน้อย 1 หน่วย (Warlord)');
-  if (!list.units.some((u) => u.warlord)) errs.push('ยังไม่ได้เลือก Warlord (กด 👑)');
+  if (!list.units.some((u) => u.warlord)) errs.push('ยังไม่ได้เลือก Warlord (กด )');
   const enh = list.units.filter((u) => u.enhancement);
   const allEnh = faction.detachments.flatMap((d) => d.enhancements);
   const isUpgrade = (n: string) => !!allEnh.find((e) => e.name === n)?.upgrade;
