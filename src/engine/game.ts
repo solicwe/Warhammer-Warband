@@ -12,6 +12,7 @@ import {
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
+import { canCrossDense, isMV, pathBlocked, pathLength, wallClearance } from './pathing';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -136,14 +137,7 @@ export const territoryOf = (s: GameState, p: PlayerId) => toPoly(deploymentById(
 
 export interface MoveCheck { ok: boolean; errors: string[]; bad: string[] }
 
-const canCrossDense = (m: ModelState) => ['INFANTRY', 'BEASTS', 'SWARM', 'MOBILE'].some((k) => m.keywords.includes(k));
-const isMV = (m: ModelState) => m.keywords.includes('MONSTER') || m.keywords.includes('VEHICLE');
-
-function pathLength(path: Pt[]) {
-  let d = 0;
-  for (let i = 1; i < path.length; i++) d += dist(path[i - 1], path[i]);
-  return d;
-}
+export { canCrossDense, isMV, pathLength, settleMove, routeAround } from './pathing';
 
 function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: string[], bad: Set<string>) {
   const models = alive(u);
@@ -156,7 +150,10 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
       const op = o.unit === u.id ? pos.get(o.m.id) ?? o.m : o.m;
       if (dist(p, op) < m.r + o.m.r - 0.02) { errors.push(`${m.name} ทับโมเดลอื่น`); bad.add(m.id); break; }
     }
-    for (const t of s.terrain) for (const w of t.walls) if (pointSegDist(p, w) < m.r * 0.5) { errors.push(`${m.name} จบคาอยู่ในกำแพง`); bad.add(m.id); }
+    const blockable = !canCrossDense(m);
+    for (const t of s.terrain) for (const w of t.walls) {
+      if (pointSegDist(p, w) < wallClearance(m, blockable && t.category === 'dense' && t.height > 2)) { errors.push(`${m.name} จบคาอยู่ในกำแพง`); bad.add(m.id); break; }
+    }
     for (const t of s.terrain) {
       if (t.kind === 'container' && pointInPoly(p, t.poly) && !['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k))) {
         errors.push(`${m.name} ขึ้นไปจบบนหลังคา container ไม่ได้ (13.06)`); bad.add(m.id);
@@ -200,7 +197,6 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
   const pos = new Map<string, Pt>();
   for (const [id, path] of paths) pos.set(id, path[path.length - 1]);
   const enemyModels = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive);
-  const desperate = kind === 'fallback' && u.battleShocked;
 
   for (const m of alive(u)) {
     const path = paths.get(m.id);
@@ -208,17 +204,9 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     const len = pathLength(path);
     const max = maxMoveDistance(s, u, kind, m, opt);
     if (len > max + 0.02) { errors.push(`${m.name} เดิน ${len.toFixed(1)}" เกินระยะ ${max.toFixed(1)}"`); bad.add(m.id); }
-    for (let i = 1; i < path.length; i++) {
-      const seg = { a: path[i - 1], b: path[i] };
-      const throughEnemies = opt.fly || desperate || (isMV(m) && (kind === 'normal' || kind === 'advance'));
-      for (const e of enemyModels) {
-        if (throughEnemies && !(isMV(m) && isMV(e) && !opt.fly && !desperate)) continue;
-        if (pointSegDist(e, seg) < e.r + m.r - 0.05) { errors.push(`${m.name} เดินทะลุโมเดลศัตรูไม่ได้`); bad.add(m.id); break; }
-      }
-      if (!opt.fly && !canCrossDense(m)) {
-        for (const t of s.terrain) if (t.category === 'dense' && t.height > 2) for (const w of t.walls) if (segSegDist(seg, w) < m.r * 0.6) { errors.push(`${m.name} ผ่าน dense terrain ที่สูงเกิน 2" ไม่ได้ (ต้องเดินอ้อม)`); bad.add(m.id); }
-      }
-    }
+    const why = pathBlocked(s, u, kind, m, path, opt);
+    if (why === 'enemy') { errors.push(`${m.name} เดินทะลุโมเดลศัตรูไม่ได้`); bad.add(m.id); }
+    if (why === 'wall') { errors.push(`${m.name} ผ่านกำแพง dense terrain ที่สูงเกิน 2" ไม่ได้ — ปล่อยนิ้วแล้วระบบจะหาทางอ้อมให้`); bad.add(m.id); }
   }
   endChecks(s, u, pos, errors, bad);
   const eng = engagedAt(s, u, pos);

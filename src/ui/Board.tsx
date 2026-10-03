@@ -32,6 +32,8 @@ export interface BoardProps {
   measure?: { a?: Pt; b?: Pt };
   onTapBoard?: (p: Pt) => void;
   onDraft?: (p: Paths) => void;
+  /** a drag of the draft finished (the screen settles models into legal spots) */
+  onDragEnd?: (p: Paths) => void;
 }
 
 const W = RULES.battlefield.width;
@@ -68,6 +70,7 @@ interface DragState {
   modelId: string;
   solo?: boolean; // single picked model: re-aim its move from where it started
   grab?: Pt; // that model's position when the drag began
+  last?: Paths; // the draft as last sent
 }
 
 function BoardImpl(props: BoardProps) {
@@ -173,16 +176,10 @@ function BoardImpl(props: BoardProps) {
       drag.current = { pointerId: e.pointerId, start: toBoard(e.clientX, e.clientY), models: [modelId], base: new Map([[modelId, [...p]]]), moved: false, unitId, modelId, solo: true, grab: { ...p[p.length - 1] } };
       return;
     }
+    // whole unit: every model keeps a straight line from where it started this move, so dragging again re-aims it
+    // (no hidden waypoints eating the move distance); walls and enemy models are routed around when the drag ends
     const models = [...draft!.keys()];
-    const base: Paths = new Map();
-    for (const [id, p] of draft!) {
-      if (models.includes(id) && p.length > 1) {
-        const last = p[p.length - 1];
-        const prev = p[p.length - 2];
-        // continue the last segment if it is the one we are still adjusting, else add a waypoint
-        base.set(id, dist(last, prev) < 0.01 ? [...p] : [...p, { ...last }]);
-      } else base.set(id, [...p]);
-    }
+    const base: Paths = new Map([...draft!].map(([id, p]) => [id, [...p]]));
     drag.current = { pointerId: e.pointerId, start: toBoard(e.clientX, e.clientY), models, base, moved: false, unitId, modelId };
   };
 
@@ -210,7 +207,7 @@ function BoardImpl(props: BoardProps) {
     const dg = drag.current;
     if (dg && dg.pointerId === e.pointerId) {
       const p = toBoard(e.clientX, e.clientY);
-      let dx = p.x - dg.start.x, dy = p.y - dg.start.y;
+      const dx = p.x - dg.start.x, dy = p.y - dg.start.y;
       if (!dg.moved && Math.hypot(dx, dy) < 0.25) return;
       dg.moved = true;
       if (!dg.models.length || !onDraft) return;
@@ -227,28 +224,26 @@ function BoardImpl(props: BoardProps) {
         }
         const next: Paths = new Map(draft!);
         next.set(id, path.length < 2 ? [end] : [origin, end]);
+        dg.last = next;
         onDraft(next);
         return;
       }
-      // clamp so no model exceeds its maximum distance
-      let k = 1;
-      for (const id of dg.models) {
-        const path = dg.base.get(id)!;
-        if (path.length < 2) continue; // placement: unlimited
-        const used = pathLen(path.slice(0, -1));
-        const allow = Math.max(0, (maxFor?.(id) ?? Infinity) - used);
-        const len = Math.hypot(dx, dy);
-        if (len > allow) k = Math.min(k, allow / len);
-      }
-      dx *= k; dy *= k;
+      // each model ends at most its maximum from where it started this move: one at its limit slides along that
+      // circle instead of freezing the whole unit, so the unit can always be dragged on in any direction
       const next: Paths = new Map(draft!);
       for (const id of dg.models) {
-        const path = [...dg.base.get(id)!];
-        const anchor = path.length < 2 ? path[0] : path[path.length - 2];
-        const end = { x: anchor.x + dx, y: anchor.y + dy };
-        if (path.length < 2) { path[0] = end; } else path[path.length - 1] = end;
-        next.set(id, path);
+        const path = dg.base.get(id)!;
+        const last = path[path.length - 1];
+        let end = { x: last.x + dx, y: last.y + dy };
+        if (path.length >= 2) {
+          const o = path[0];
+          const max = maxFor?.(id) ?? Infinity;
+          const d = dist(o, end);
+          if (d > max) end = { x: o.x + ((end.x - o.x) * max) / d, y: o.y + ((end.y - o.y) * max) / d };
+        }
+        next.set(id, path.length < 2 ? [end] : [path[0], end]);
       }
+      dg.last = next;
       onDraft(next);
       return;
     }
@@ -273,7 +268,10 @@ function BoardImpl(props: BoardProps) {
         // tapping a model of the unit being moved picks it for single-model adjustment
         if (dg.models.length && draftUnit === dg.unitId) setSolo((cur) => (cur[0] === dg.modelId ? [] : [dg.modelId]));
         else props.onTapUnit?.(dg.unitId, dg.modelId);
-      } else if (!solo.includes(dg.modelId)) setSolo([]);
+      } else {
+        if (!solo.includes(dg.modelId)) setSolo([]);
+        if (dg.last) props.onDragEnd?.(dg.last);
+      }
       return;
     }
     const pn = pan.current;

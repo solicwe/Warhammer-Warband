@@ -22,12 +22,22 @@ export function parseTransport(text?: string): TransportInfo | null {
 
 const MM_PER_INCH = 25.4;
 
+/** Round token sizes (inches) for hull models without a base: about half the mean of the hull's length and width. */
+const HULLS: [RegExp, number][] = [
+  [/stompa/i, 4.5], [/land raider/i, 3.0], [/hammerfall/i, 3.0], [/battlewagon|gunwagon/i, 2.8], [/bossbunka/i, 2.6],
+  [/drop pod/i, 2.5], [/predator|vindicator|whirlwind|rhino|razorback/i, 2.1], [/trukk/i, 1.9], [/invader atv/i, 1.5], [/mek gun/i, 1.2],
+];
+
 export function baseRadius(sheet: DatasheetData, profileIdx: number): number {
-  const b = sheet.models[profileIdx]?.base;
+  const prof = sheet.models[profileIdx];
+  const b = prof?.base;
   if (b && b.w > 0) return (b.w + b.h) / 4 / MM_PER_INCH;
-  if (sheet.keywords.includes('VEHICLE')) return 2.4;
+  const hull = HULLS.find(([re]) => re.test(prof?.name ?? '') || re.test(sheet.name));
+  if (hull) return hull[1];
+  const w = prof?.W ?? 0;
+  if (sheet.keywords.includes('VEHICLE')) return w >= 16 ? 2.8 : w >= 12 ? 2.4 : 2.0;
   if (sheet.keywords.includes('MONSTER')) return 1.8;
-  return 0.63;
+  return w >= 6 ? 1.2 : 0.63;
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();

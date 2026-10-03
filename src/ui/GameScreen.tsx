@@ -12,7 +12,7 @@ import {
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, type MoveCheck, hasArmyRule, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
-  claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries,
+  claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove,
 } from '../engine/game';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { actionOptions, startAction } from '../engine/missions';
@@ -23,7 +23,7 @@ import { polyCentroid } from '../engine/geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from '../engine/state';
-import type { BuffKind, GameState, PlayerId, Pt, UnitState } from '../engine/types';
+import type { BuffKind, GameState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
 import { hasCover, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
 import { baseDist } from '../engine/geometry';
 import { Portrait, unitToken } from './Tokens';
@@ -211,6 +211,27 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode.k === 'pile') return mode.kind === 'pileIn' ? RULES.pileIn.distance : RULES.consolidate.distance;
     return Infinity;
   };
+  const draftKind: MoveKind | null = mode?.k === 'move' ? mode.kind : mode?.k === 'charge' ? 'charge' : mode?.k === 'pile' ? mode.kind : null;
+  const draftOpts = mode?.k === 'move' ? { fly: mode.fly } : mode?.k === 'charge' ? { targets: mode.targets } : {};
+  /** After a drag: route around what can't be crossed and slide overlapping models back to base contact. */
+  const settleDraft = (d: Paths): Paths => (modeUnit && draftKind
+    ? settleMove(s, modeUnit, draftKind, d, { fly: mode?.k === 'move' ? mode.fly : undefined, targets: mode?.k === 'charge' ? mode.targets : undefined, maxFor: (m) => maxFor(m.id) })
+    : d);
+  const onDragEnd = (d: Paths) => {
+    if (!modeUnit || !draftKind) return;
+    const st = settleDraft(d);
+    setDraft(st);
+    const chk = validateMove(s, modeUnit, draftKind, st, draftOpts);
+    setCheck(chk.ok ? null : chk);
+  };
+  // the last committed move can be reopened ("move further / fix it") while nothing else has happened since
+  const [lastMove, setLastMove] = useState<{ mode: Mode; paths: Paths; after: GameState; label: string } | null>(null);
+  const reopenMove = lastMove && lastMove.after === s && !s.window ? lastMove : null;
+  const redoButton = () => reopenMove && (
+    <button className="btn small" onClick={() => { const lm = reopenMove; undo(); setLastMove(null); setSel(lm.mode.unitId); setMode(lm.mode, lm.paths); }}>
+      ↺ แก้/ขยับต่อ: {reopenMove.label}
+    </button>
+  );
 
   // Cover / Hidden badges and line-of-sight lines while choosing a shooting target
   const badges: Record<string, string[]> = {};
@@ -252,10 +273,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (!mode || !draft) return;
     const u = U(mode.unitId);
     const opts = mode.k === 'move' ? { fly: mode.fly } : mode.k === 'charge' ? { targets: mode.targets } : {};
-    const chk = validateMove(s, u, kind, draft, opts);
-    if (!chk.ok) { setCheck(chk); return; }
-    if (kind === 'charge') act((g) => commitCharge(g, unitById(g, u.id), draft, (mode as { targets: string[] }).targets));
-    else act((g) => { commitMove(g, unitById(g, u.id), kind, draft); if (g.fight && (kind === 'pileIn' || kind === 'consolidate')) g.fight.movedThisStep.push(u.id); });
+    const d = settleDraft(draft);
+    const chk = validateMove(s, u, kind, d, opts);
+    if (!chk.ok) { setDraft(d); setCheck(chk); return; }
+    const was = mode;
+    const next = kind === 'charge'
+      ? act((g) => { commitCharge(g, unitById(g, u.id), d, (was as { targets: string[] }).targets); return g; })
+      : act((g) => { commitMove(g, unitById(g, u.id), kind, d); if (g.fight && (kind === 'pileIn' || kind === 'consolidate')) g.fight.movedThisStep.push(u.id); return g; });
+    if (next) setLastMove({ mode: was, paths: d, after: next, label: `${u.name} (${kind})` });
     setMode(null);
     after?.();
   };
@@ -631,6 +656,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </>
         )}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
+        {redoButton()}
         {endButton('movement', 'จบ Movement ▶', boardUnits(s, s.active).length > 0 && boardUnits(s, s.active).every((x) => !x.move) && !s.units.some((x) => x.owner === s.active && x.status === 'reserves' && x.move), 'ยังไม่มีหน่วยไหนเดินเลย')}
       </>
     );
@@ -780,9 +806,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             finish();
             if (hasKw(modeUnit, 'MONSTER') || hasKw(modeUnit, 'VEHICLE')) setTimeout(() => setModeRaw({ k: 'crush', unitId: modeUnit.id }), 0);
           }), <button className="btn small" onClick={() => { const add = autoApproach(s, modeUnit, mode.targets.map(U), roll); setDraft(mergePaths(startPaths(modeUnit), add)); setCheck(null); }}>Auto</button>)}
+          {check && !check.ok && <div className="tiny muted">จัดไม่ลง? กด Auto ให้ระบบวางให้ หรือ "ยกเลิกการชาร์จ" (นับเป็นชาร์จไม่สำเร็จ) แล้วกด จบ Charge → Fight</div>}
           <div className="row">
             {!cr && <button className="btn small" onClick={() => { act((g) => rerollCharge(g, unitById(g, modeUnit.id), false, mode.heroic === 'fray' ? 6 : undefined)); setModeRaw({ ...mode, targets: [] }); setDraft(startPaths(modeUnit)); }}>Re-roll charge 1CP</button>}
-            <button className="btn" onClick={() => { setMode(null); finish(); }}>ไม่ชาร์จ / จบ</button>
+            <button className="btn grow" onClick={() => { setMode(null); finish(); flash(`${modeUnit.name} ไม่ชาร์จ (ชาร์จไม่สำเร็จ)`); }}>{mode.targets.length ? 'ยกเลิกการชาร์จ' : 'ชาร์จไม่สำเร็จ / ไปต่อ'}</button>
           </div>
         </>
       );
@@ -790,8 +817,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode?.k === 'crush' && modeUnit) {
       return (
         <>
-          <div className="small">Crushing Impact (1CP): แตะหน่วยศัตรูที่ engaged อยู่ — ทอย D6 เท่ากับ T: 5+ ศัตรูโดน MW, 1 ตัวเองโดน MW</div>
-          <button className="btn" onClick={() => setMode(null)}>ไม่ใช้</button>
+          <div className="small"><b>ชาร์จสำเร็จ!</b> ใช้ Crushing Impact (1CP) ไหม: แตะหน่วยศัตรูที่ engaged อยู่ — ทอย D6 เท่ากับ T: 5+ ศัตรูโดน MW, 1 ตัวเองโดน MW</div>
+          <button className="btn primary" onClick={() => setMode(null)}>ไม่ใช้ → ไปต่อ</button>
         </>
       );
     }
@@ -814,7 +841,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </>
         )}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
-        {endButton('charge', 'จบ Charge ▶', mine.some((x) => !chargeEligibility(s, x)) && !mine.some((x) => x.declaredCharge), 'ยังมีหน่วยที่ชาร์จได้แต่ยังไม่ได้ชาร์จ')}
+        {redoButton()}
+        {endButton('charge', 'จบ Charge → Fight ▶', mine.some((x) => !chargeEligibility(s, x)) && !mine.some((x) => x.declaredCharge), 'ยังมีหน่วยที่ชาร์จได้แต่ยังไม่ได้ชาร์จ')}
       </>
     );
   };
@@ -1088,6 +1116,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           measure={tape.on ? tape : undefined}
           onTapBoard={onTapBoard}
           onDraft={(d) => { setDraft(d); setCheck(null); }}
+          onDragEnd={onDragEnd}
         />
         {botSays && <div className="bot-caption">{botSays.includes(pName(s, bot ?? 1)) ? botSays : <><b>{pName(s, bot ?? 1)}</b> {botSays}</>}</div>}
         {toast && <div className="toast">{toast}</div>}

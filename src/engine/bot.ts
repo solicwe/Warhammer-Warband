@@ -8,7 +8,7 @@ import {
   autoApproach, callWaaagh, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits,
-  sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries,
+  sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, settleMove,
 } from './game';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
 import { isMelee } from './weapons';
@@ -98,6 +98,12 @@ function stepTowards(s: GameState, u: UnitState, goal: Pt, max: number, kind: 'n
     const paths = new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x + d.x, y: m.y + d.y }]]));
     if (validateMove(s, u, kind, paths).ok) { commitMove(s, u, kind, paths); return true; }
   }
+  // a straight line is blocked (a wall a vehicle can't cross, enemy models): route each model around it
+  const d = { x: ((goal.x - c.x) / L) * want, y: ((goal.y - c.y) / L) * want };
+  const draft = new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x + d.x, y: m.y + d.y }]]));
+  const routed = settleMove(s, u, kind, draft, { maxFor: () => max });
+  const progress = Math.max(0, ...[...routed.values()].map((p) => p.length > 1 ? dist(p[0], goal) - dist(p[p.length - 1], goal) : 0));
+  if (progress > 0.5 && validateMove(s, u, kind, routed).ok) { commitMove(s, u, kind, routed); return true; }
   return false;
 }
 

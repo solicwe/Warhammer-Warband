@@ -4,8 +4,8 @@ import { buildUnits, distributeModels, syncWargear, wargearMax, wargearPoints, w
 import { allocationGroups, applyDamage, buildFightPools, buildShootPools, rollSavesAndDamage, startAttack, targetToughness, woundNeed } from './attack';
 import { parseDice } from './dice';
 import { coherencyProblems } from './geometry';
-import { createGame, endPhase, fightCandidates, formationAt, placeUnit, validateMove } from './game';
-import type { ArmyList, ArmyUnitEntry, FactionData, GameState, Pt } from './types';
+import { commitCharge, createGame, endPhase, fightCandidates, formationAt, maxMoveDistance, placeUnit, settleMove, validateMove } from './game';
+import type { ArmyList, ArmyUnitEntry, FactionData, GameState, Pt, TerrainPiece } from './types';
 import { parseAbility } from './weapons';
 import { alive } from './state';
 
@@ -463,5 +463,69 @@ describe('wargear', () => {
     expect(wargearMax(boyz, boyz.wargearOptions![big], 20)).toBe(2);
     const e = syncWargear(boyz, { uid: 'b', datasheet: 'Boyz', models: 10, pts: 90, wargear: [{ opt: big, choice: 0, count: 2 }] });
     expect(e.wargear).toEqual([{ opt: big, choice: 0, count: 1 }]);
+  });
+});
+
+describe('moving by drag: settling, routing, vehicles and walls', () => {
+  const wall = (a: Pt, b: Pt): TerrainPiece => ({ id: `w${a.x}${a.y}`, kind: 'ruin', label: 'ruin', category: 'dense', height: 5, poly: [a, b, { x: b.x + 0.2, y: b.y }, { x: a.x + 0.2, y: a.y }], walls: [{ a, b }] });
+  function lrGame() {
+    const s = createGame({
+      lists: [list('SM', [['Land Raider', 1, 240], ['Intercessor Squad', 5, 80], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 90], ['Warboss', 1, 100]])],
+      factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 7,
+    });
+    s.terrain = [];
+    s.phase = 'movement';
+    s.active = 0;
+    return s;
+  }
+
+  it('models dragged on top of each other settle into base contact instead of failing', () => {
+    const s = game();
+    s.phase = 'movement'; s.active = 0;
+    const u = put(s, 'p0-x0', { x: 20, y: 20 });
+    put(s, 'p1-x0', { x: 45, y: 35 });
+    const target = { x: 24, y: 20 };
+    const paths = new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, target]]));
+    expect(validateMove(s, u, 'normal', paths).ok).toBe(false);
+    const settled = settleMove(s, u, 'normal', paths, { maxFor: (m) => maxMoveDistance(s, u, 'normal', m) });
+    const chk = validateMove(s, u, 'normal', settled);
+    expect(chk.errors.filter((e) => /ทับ/.test(e))).toEqual([]);
+  });
+
+  it('a Land Raider next to a wall can drive away from it, and is routed around a wall in its way', () => {
+    const s = lrGame();
+    const lr = s.units.find((x) => x.name === 'Land Raider')!;
+    expect(lr.models[0].r).toBeCloseTo(3.0);
+    s.terrain.push(wall({ x: 20, y: 10 }, { x: 20, y: 30 }));
+    placeUnit(s, lr, new Map([[lr.models[0].id, { x: 18.4, y: 20 }]])); // hull already touching the wall
+    const m = lr.models[0];
+    const away = new Map([[m.id, [{ x: m.x, y: m.y }, { x: 10, y: 20 }]]]);
+    expect(validateMove(s, lr, 'normal', away).ok).toBe(true);
+    // through the wall: blocked, but settling routes it round the end of the wall
+    placeUnit(s, lr, new Map([[m.id, { x: 14, y: 26 }]]));
+    const through = new Map([[m.id, [{ x: 14, y: 26 }, { x: 26, y: 26 }]]]);
+    expect(validateMove(s, lr, 'normal', through).errors.join()).toMatch(/กำแพง/);
+    const routed = settleMove(s, lr, 'normal', through, { maxFor: () => 30 });
+    const path = routed.get(m.id)!;
+    expect(path.length).toBeGreaterThan(2);
+    expect(path[path.length - 1].x).toBeGreaterThan(20);
+    expect(validateMove(s, lr, 'normal', routed, { maxOverride: 30 }).ok).toBe(true);
+  });
+
+  it('a charge dragged into the enemy settles at base contact, commits, and the phase moves on to Fight', () => {
+    const s = game();
+    s.phase = 'charge'; s.active = 0;
+    const u = put(s, 'p0-x0', { x: 20, y: 22 });
+    const t = put(s, 'p1-x0', { x: 30, y: 22 });
+    u.declaredCharge = true; u.chargeRoll = 9;
+    const e = alive(t)[0];
+    const paths = new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: e.x, y: e.y }]]));
+    const settled = settleMove(s, u, 'charge', paths, { maxFor: () => 9, targets: [t.id] });
+    const chk = validateMove(s, u, 'charge', settled, { targets: [t.id] });
+    expect(chk.errors.filter((x) => /ทับ|ทะลุ/.test(x))).toEqual([]);
+    expect(chk.errors).toEqual([]);
+    commitCharge(s, u, settled, [t.id]);
+    endPhase(s);
+    expect(s.phase).toBe('fight');
   });
 });
