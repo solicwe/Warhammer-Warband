@@ -11,9 +11,9 @@ const SM = load('SM');
 const ORK = load('ORK');
 
 describe('every automated detachment survives two bot battle rounds', () => {
-  const sm = SM.detachments.filter((d) => DET_RULES[d.name]?.effects || DET_RULES[d.name]?.choice).map((d) => d.name);
-  const ork = ORK.detachments.filter((d) => DET_RULES[d.name]?.effects || DET_RULES[d.name]?.choice).map((d) => d.name);
-  const pairs = sm.map((d, i) => [d, ork[i % ork.length]] as const);
+  const sm = SM.detachments.filter((d) => DET_RULES[d.name]).map((d) => d.name);
+  const ork = ORK.detachments.filter((d) => DET_RULES[d.name]).map((d) => d.name);
+  const pairs = Array.from({ length: Math.max(sm.length, ork.length) }, (_, i) => [sm[i % sm.length], ork[i % ork.length]] as const);
   for (const [a, b] of pairs) {
     it(`${a} vs ${b}`, () => {
       const s = createGame({

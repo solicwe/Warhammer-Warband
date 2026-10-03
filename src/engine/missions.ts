@@ -137,13 +137,20 @@ export function onMoveEnd(s: GameState, u: UnitState, kind: string) {
 export interface ActionOption { action: string; name: string; unitId: string; objId?: string; terrainId?: string; targetId?: string; label: string }
 
 /** Why this unit cannot start an action (core rules 16), or null. */
+/** Abilities that let units start actions while engaged / after advancing, or shoot after starting one (registered by effects.ts). */
+type EligHook = (s: GameState, u: UnitState, what: 'actionWhileEngaged' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction') => boolean;
+let eligHook: EligHook | null = null;
+export const setActionEligibilityHook = (fn: EligHook) => { eligHook = fn; };
+const may = (s: GameState, u: UnitState, what: Parameters<EligHook>[2]) => !!eligHook?.(s, u, what);
+
 export function actionBlock(s: GameState, u: UnitState): string | null {
   if (!onBoard(u)) return 'ไม่อยู่บนสนาม';
   if (hasKw(u, 'AIRCRAFT') || hasKw(u, 'FORTIFICATION')) return 'AIRCRAFT/FORTIFICATION';
   if (u.battleShocked) return 'battle-shocked';
   if (!ocOf(u)) return 'OC เป็น 0';
-  if (isEngaged(s, u) && !hasKw(u, 'TITANIC')) return 'engaged';
-  if (u.move === 'advance' || u.move === 'fallback') return 'advance/fall back มา';
+  if (isEngaged(s, u) && !hasKw(u, 'TITANIC') && !may(s, u, 'actionWhileEngaged')) return 'engaged';
+  if (u.move === 'advance' && !may(s, u, 'actionAfterAdvance')) return 'advance มา';
+  if (u.move === 'fallback' && !may(s, u, 'actionAfterFallBack')) return 'fall back มา';
   if (u.shotTurn === s.turn) return 'ยิงไปแล้ว phase นี้';
   if (s.pendingActions.some((a) => a.unitId === u.id) || s.players[u.owner].mission.done.some((d) => d.unitId === u.id && d.turn === s.turn)) return 'ทำ action ไปแล้วเทิร์นนี้';
   return null;
@@ -249,7 +256,7 @@ export function startAction(s: GameState, opt: ActionOption) {
   const p = u.owner;
   const P = s.players[p];
   const def = MISSIONS.actions[opt.action];
-  u.selectedToShoot = true; // cannot shoot (or charge) after starting an action
+  if (!may(s, u, 'shootAfterAction')) u.selectedToShoot = true; // cannot shoot (or charge) after starting an action
   u.cantCharge = true;
   if (def.completes === 'immediately') {
     P.mission.done.push({ action: opt.action, unitId: u.id, turn: s.turn, objId: opt.objId, terrainId: opt.terrainId });

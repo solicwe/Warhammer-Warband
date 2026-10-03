@@ -152,7 +152,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const p = w.profiles[pi];
       if (hasAbility(p, 'one-shot') && A.oneShotUsed.includes(w.name)) continue;
       const baseRange = typeof p.range === 'number' ? p.range : 0;
-      const range = aFlags.rangeMinus ? Math.max(Math.min(baseRange, 12), baseRange - aFlags.rangeMinus) : baseRange;
+      const range = (aFlags.rangeMinus ? Math.max(Math.min(baseRange, 12), baseRange - aFlags.rangeMinus) : baseRange) + (baseRange > 0 ? aFlags.rangeBonus : 0);
       const d = Math.min(...tModels.map((t) => baseDist(m, t)));
       const fx = offenceFor(s, A, m, T, w, p, 'ranged', d);
       const inc = incomingFor(s, A, m, T, 'ranged');
@@ -346,6 +346,7 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     aliveBefore: alive(T).map((m) => m.id), woundsBefore: alive(T).reduce((a, m) => a + m.wounds, 0),
     attackerBuffsAtStart: A.buffs.map((b) => b.kind), free: opts.free,
   };
+  for (const h of startHooks) h(s, s.attack);
 }
 
 /** Change one die of the current stage to a value ("change that roll to an unmodified 6"). */
@@ -502,12 +503,15 @@ export interface AttackInfo { hits: number; hitWeapons: string[]; destroyed: boo
 type AttackHook = (s: GameState, at: AttackSession, info: AttackInfo) => void;
 type KillHook = (s: GameState, u: UnitState, m: ModelState, killerId?: string) => void;
 type MortalHook = (s: GameState, u: UnitState, n: number) => void;
+type StartHook = (s: GameState, at: AttackSession) => void;
+const startHooks: StartHook[] = [];
 const attackHooks: AttackHook[] = [];
 const killHooks: KillHook[] = [];
 const mortalHooks: MortalHook[] = [];
 export const onAttackFinished = (fn: AttackHook) => { attackHooks.push(fn); };
 export const onModelKilled = (fn: KillHook) => { killHooks.push(fn); };
 export const onMortalWounds = (fn: MortalHook) => { mortalHooks.push(fn); };
+export const onAttackStart = (fn: StartHook) => { startHooks.push(fn); };
 
 export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: string) {
   m.dead = true;

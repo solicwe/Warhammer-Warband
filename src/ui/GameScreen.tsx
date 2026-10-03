@@ -969,7 +969,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode?.k === 'charge' && modeUnit) {
       const roll = modeUnit.chargeRoll ?? 0;
       const cr = canUseStratagem(s, modeUnit.owner, 'command-reroll', modeUnit);
-      const finish = () => { if (mode.heroic) act((g) => { g.window = null; }); };
+      const finish = () => {
+        if (!mode.heroic) return;
+        // Countercharge (Champions of Fenris) lets another CHARACTER intervene in the same phase
+        act((g) => { const p = modeUnit.owner; g.window = heroicCandidates(g, p).length ? { kind: 'heroicIntervention', player: p } : null; });
+      };
       return (
         <>
           <div className="big-result">Charge roll: {roll}"</div>

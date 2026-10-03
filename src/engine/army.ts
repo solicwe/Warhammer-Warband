@@ -1,4 +1,5 @@
 // Turns an army list (datasheet names + sizes + attachments) into UnitState objects.
+import detData from '../../data/detachment-rules.json';
 import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelProfileData, ModelState, PlayerId, TransportInfo, UnitState, WargearOption, WargearPick, WeaponData } from './types';
 
 /** "This model has a transport capacity of 12 Adeptus Astartes Infantry models. Each Jump Pack ... takes up the space of 2 models ... It cannot transport ..." */
@@ -376,9 +377,14 @@ export const SPLITS: Record<string, { how: 'half' | 'byModel'; byName?: string; 
   'Taktikal Know-wotz': { how: 'half', drop: [['Found ’Em!'], ['Bomb Squig (Once per battle, per unit)']], label: 'แยกเป็น 2 หน่วย หน่วยละ 5 (หน่วยแรกมี Bomb Squig อีกหน่วยมี Found ’Em!)' },
   'Let Loose the Wolves': { how: 'byModel', byName: 'Hunting Wol', must: true, label: 'Headtakers กับ Hunting Wolves แยกเป็นคนละหน่วยเสมอ' },
 };
-export const splitRuleOf = (sheet: DatasheetData | undefined) => {
+/** Detachments that let units split (Veterans of the Fang: Grey Hunters). */
+const DET_SPLITS = Object.entries((detData as unknown as { rules: Record<string, { splits?: { datasheets: string[]; how: 'half'; label: string } }> }).rules)
+  .filter(([, r]) => r.splits).map(([name, r]) => ({ name, ...r.splits! }));
+export const splitRuleOf = (sheet: DatasheetData | undefined, detachments: string[] = []) => {
   const a = sheet?.abilities.find((x) => SPLITS[x.name]);
-  return a ? { name: a.name, ...SPLITS[a.name] } : undefined;
+  if (a) return { name: a.name, ...SPLITS[a.name] };
+  const d = DET_SPLITS.find((x) => detachments.includes(x.name) && !!sheet && x.datasheets.includes(sheet.name));
+  return d ? { name: d.name, how: d.how, label: d.label } as { name: string; how: 'half' | 'byModel'; byName?: string; must?: boolean; drop?: [string[], string[]]; label: string } : undefined;
 };
 
 /** Split one built unit into two (the leader, Warlord and enhancement stay with the first). */
@@ -465,7 +471,7 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       selectedToShoot: false, declaredCharge: false, chargeRoll: null, chargedTurn: -10, chargeTargets: [],
       fought: false, foughtFirstUntilTurn: -10, stratagemPhase: null, oneShotUsed: [], buffs: [],
     });
-    const sp = splitRuleOf(sheet);
+    const sp = splitRuleOf(sheet, list.detachments);
     if (sp && (e.split || sp.must)) {
       const second = splitUnit(units[units.length - 1], sheet, sp, e.pts + (e.wargearPts ?? 0));
       if (second) units.push(second);

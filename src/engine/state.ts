@@ -57,9 +57,11 @@ export const phaseKey = (s: GameState) => `${s.turn}:${s.phase}`;
  *  once it is paid (limited uses, CP refunds); registered by effects.ts so this module stays free of rules. */
 type DiscountHook = (s: GameState, u: UnitState, id: string) => number;
 type SpentHook = (s: GameState, u: UnitState, id: string) => void;
+type RepeatHook = (s: GameState, u: UnitState, id: string) => boolean; // may be used again this phase (Countercharge)
 let discountHook: DiscountHook | null = null;
 let spentHook: SpentHook | null = null;
-export const setStratHooks = (discount: DiscountHook, spent: SpentHook) => { discountHook = discount; spentHook = spent; };
+let repeatHook: RepeatHook | null = null;
+export const setStratHooks = (discount: DiscountHook, spent: SpentHook, repeat?: RepeatHook) => { discountHook = discount; spentHook = spent; repeatHook = repeat ?? null; };
 export const stratCost = (s: GameState, id: string, unit?: UnitState, cost?: number) => {
   const def = RULES.coreStratagems.find((x) => x.id === id);
   const base = cost ?? def?.cp ?? 1;
@@ -70,7 +72,7 @@ export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit
   const cp = stratCost(s, id, unit, cost);
   const p = s.players[player];
   if (p.cp < cp) return 'CP ไม่พอ';
-  if (p.stratagemsUsed.includes(`${phaseKey(s)}:${id}`)) return 'ใช้ stratagem นี้ไปแล้วใน phase นี้';
+  if (p.stratagemsUsed.includes(`${phaseKey(s)}:${id}`) && !(unit && repeatHook?.(s, unit, id))) return 'ใช้ stratagem นี้ไปแล้วใน phase นี้';
   if (unit) {
     if (unit.battleShocked) return 'หน่วยที่ battle-shocked เป็นเป้า stratagem ไม่ได้';
     if (unit.stratagemPhase === phaseKey(s)) return 'หน่วยนี้โดน stratagem ไปแล้วใน phase นี้';

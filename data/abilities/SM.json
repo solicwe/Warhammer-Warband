@@ -299,5 +299,9 @@
   "Second Company Banner": { "effects": [{ "if": ["contains:Gadriel"], "oc": 1 }, { "if": ["contains:Gadriel", "contains:Titus"], "ld": 1 }] },
   "Strategium Command": { "status": "manual", "note": "redeploy หลังวางทัพ: ใช้ Undo ตอนวางทัพ หรือส่งเข้ากองหนุนเอง" },
   "Refractor Field": { "gear": true, "status": "auto", "note": "5+ InSv (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)" },
+  "Curse of the Wulfen": { "effects": [
+    { "scope": "model", "if": ["notBattleShocked", "any:nearModels:6:SPACE WOLVES+CHARACTER!WULFEN||nearModels:12:Wolf Priest", "modelKw:INFANTRY"], "oc": 1 },
+    { "scope": "model", "if": ["notBattleShocked", "any:nearModels:6:SPACE WOLVES+CHARACTER!WULFEN||nearModels:12:Wolf Priest", "modelKw:VEHICLE"], "oc": 3 }
+  ] },
   "Overlapping Detonations": { "effects": [{ "weapon": "heavy bolter", "if": ["targetNotMV"], "abilities": ["blast 1"] }] }
 }

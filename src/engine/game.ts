@@ -15,7 +15,7 @@ import { isMelee } from './weapons';
 import { canCrossDense, isMV, pathBlocked, pathLength, wallClearance } from './pathing';
 import { detOnCommandStart } from './detachments';
 import { addTimed, applyStaticEffects, canDo, effectsFor, expireTimed, isRiled, modelDefence, modelOc, rollMods, unitFlags } from './effects';
-import { fire, fireAll, fireFor, initAbilityChoices, ldTest, offerDone, offerReactions, resolveRevivals } from './activations';
+import { fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setZoneCheck } from './activations';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -101,6 +101,7 @@ export function createGame(o: NewGameOptions): GameState {
       detachments: o.factions[i].detachments.filter((d) => o.lists[i].detachments.includes(d.name)),
       disposition: disp[i], primaryId: primaryFor(disp[i], disp[1 - i]).id, mission: emptyMission(), sec: { guards: [], cleansed: [], plundered: [] },
       subfaction: o.lists[i].subfaction,
+      battleSize: o.lists[i].battleSize,
     })) as unknown as GameState['players'],
     units: [...buildUnits(o.lists[0], o.factions[0], 0), ...buildUnits(o.lists[1], o.factions[1], 1)],
     terrain, objectives,
@@ -130,6 +131,14 @@ export function createGame(o: NewGameOptions): GameState {
   log(s, `Force Disposition: ${s.players[0].name} ${dispositionById(disp[0]).name} vs ${s.players[1].name} ${dispositionById(disp[1]).name}`, 'info', null);
   for (const p of [0, 1] as PlayerId[]) log(s, `Primary ของ ${s.players[p].name}: ${primaryById(s.players[p].primaryId).name}`, 'info', p);
   log(s, `Layout: ${L.name} · ${L.matchup.map((m) => dispositionById(m).name).join(' vs ')} #${L.number} (${s.objectives.length} objectives)`, 'info', null);
+  // Heirs of Sigismund: Black Templars swap Oath of Moment for Templar Vows
+  for (const p of [0, 1] as PlayerId[]) {
+    const P = s.players[p];
+    if (P.subfaction !== 'BLACK TEMPLARS' && !s.units.some((u) => u.owner === p && u.factionKeywords.includes('BLACK TEMPLARS'))) continue;
+    if (!P.armyRules.some((r) => r.name === 'Templar Vows')) continue;
+    P.armyRules = P.armyRules.filter((r) => r.name !== 'Oath of Moment');
+    for (const u of s.units) if (u.owner === p) u.abilities = u.abilities.filter((a) => a.name !== 'Oath of Moment');
+  }
   // Declare Battle Formations: abilities fixed for the battle, "choose two of these", Master of the Fleet …
   applyStaticEffects(s);
   initAbilityChoices(s);
@@ -139,6 +148,7 @@ export function createGame(o: NewGameOptions): GameState {
 }
 
 export const zoneOf = (s: GameState, p: PlayerId) => toPoly(deploymentById(s.deploymentId).zones[s.players[p].role]);
+setZoneCheck((s, u, owner) => alive(u).length > 0 && alive(u).every((m) => circleWhollyInPoly(m, m.r, zoneOf(s, owner))));
 export const territoryOf = (s: GameState, p: PlayerId) => toPoly(deploymentById(s.deploymentId).territory[s.players[p].role]);
 
 // ---------- placement / movement validation ----------
@@ -385,7 +395,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   onTurnStart(s);
   log(s, `━━ Battle Round ${s.round} · เทิร์นของ ${s.players[p].name} ━━`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
-  if (s.turn === 0) fireAll(s, 'battleStart', 'both');
+  if (s.turn === 0) { initSagas(s); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) fireAll(s, 'roundStart', 'both');
   startCommand(s);
 }
@@ -444,9 +454,16 @@ export function endPhase(s: GameState) {
   expireTimed(s, 'phaseEnd', s.active);
   if (s.phase === 'command') {
     fireFor(s, 'commandEnd', s.active);
+    // Uphold the Honour of the Emperor (Templar Vows): objectives held now stay yours
+    for (const u of boardUnits(s, s.active)) {
+      if (!unitFlags(s, u).secureAtCommandEnd || !hasKw(u, 'INFANTRY')) continue;
+      for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) o.secured = s.active;
+    }
+    sagaBoasts(s, 'commandEnd');
     scoreTiming(s, 'endOfYourCommandPhase');
     s.phase = 'movement';
     expireTimed(s, 'movementStart', s.active);
+    fireFor(s, 'movementStart', s.active);
   } else if (s.phase === 'movement') {
     for (const u of boardUnits(s, s.active)) if (!u.move) { u.move = 'stationary'; u.lastStationaryTurn = s.turn; }
     s.phase = 'shooting';
@@ -459,6 +476,7 @@ export function endPhase(s: GameState) {
     startFight(s);
     openWindow(s, 'endOfCharge');
   } else if (s.phase === 'fight') {
+    fireFor(s, 'fightEnd', 'both');
     fireFor(s, 'opponentFightEnd', other(s.active));
     s.fight = null;
     endTurn(s);
@@ -485,6 +503,7 @@ function endTurn(s: GameState) {
   // Aircraft return to reserves at the end of the opponent's turn
   for (const u of boardUnits(s, other(s.active))) if (hasKw(u, 'AIRCRAFT')) u.status = 'reserves';
   updateControl(s);
+  sagaBoasts(s, 'turnEnd');
   onTurnEnd(s);
   scoreTiming(s, 'endOfYourTurn');
   for (const p of [0, 1] as PlayerId[]) scorePrimary(s, 'endOfAnyTurn', p);
@@ -882,8 +901,7 @@ export function overwatchCandidates(s: GameState, p: PlayerId): UnitState[] {
 }
 
 export function heroicCandidates(s: GameState, p: PlayerId): UnitState[] {
-  if (canUseStratagem(s, p, 'heroic-intervention')) return [];
-  return boardUnits(s, p).filter((u) => !u.battleShocked && !isEngaged(s, u) && (!hasKw(u, 'VEHICLE') || hasKw(u, 'CHARACTER') || hasKw(u, 'WALKER'))
+  return boardUnits(s, p).filter((u) => !canUseStratagem(s, p, 'heroic-intervention', u) && !isEngaged(s, u) && (!hasKw(u, 'VEHICLE') || hasKw(u, 'CHARACTER') || hasKw(u, 'WALKER'))
     && boardUnits(s, other(p)).some((e) => unitDistance(u, e) <= RULES.charge.declareRange));
 }
 

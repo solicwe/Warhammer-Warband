@@ -1,6 +1,6 @@
 // Detachment rules: the effects themselves live in data/detachment-rules.json and are applied by effects.ts;
 // this module handles the "pick one" rules (Combat Doctrines, Mission Tactics, Psychic Disciplines …).
-import { DET_RULES, type DetChoice, type DetChoiceOption, type DetRule } from './effects';
+import { activeRules, DET_RULES, type DetChoice, type DetChoiceOption, type DetRule } from './effects';
 import { log } from './state';
 import type { DetChoiceState, GameState, PlayerId } from './types';
 
@@ -14,7 +14,7 @@ export interface DetChoiceNow { rule: string; choice: DetChoice; state: DetChoic
 /** Choice rules of player p, whether one can be picked right now and why an option is unavailable. */
 export function detChoices(s: GameState, p: PlayerId): DetChoiceNow[] {
   const out: DetChoiceNow[] = [];
-  for (const d of s.players[p].detachments ?? []) {
+  for (const d of activeRules(s, p).map((name) => ({ name }))) {
     const ch = DET_RULES[d.name]?.choice;
     if (!ch) continue;
     const st: DetChoiceState = s.players[p].det?.[d.name] ?? { active: [], used: [], count: 0 };
@@ -58,7 +58,7 @@ export function pickDetChoice(s: GameState, p: PlayerId, rule: string, ids: stri
  *  and per-battle-round ones when a new round starts. */
 export function detOnCommandStart(s: GameState, p: PlayerId, newRound: boolean) {
   for (const pl of [0, 1] as PlayerId[]) {
-    for (const d of s.players[pl].detachments ?? []) {
+    for (const d of activeRules(s, pl).map((name) => ({ name }))) {
       const ch = DET_RULES[d.name]?.choice;
       const st = s.players[pl].det?.[d.name];
       if (!ch || !st) continue;
@@ -70,7 +70,8 @@ export function detOnCommandStart(s: GameState, p: PlayerId, newRound: boolean) 
 
 /** One-line summary of how much of each detachment rule the app applies, for the screen. */
 export function detSummary(s: GameState, p: PlayerId): { name: string; auto: DetRule['auto'] | 'none'; manual?: string; active: string[] }[] {
-  return (s.players[p].detachments ?? []).map((d) => {
+  const names = [...new Set([...(s.players[p].detachments ?? []).map((d) => d.name), ...activeRules(s, p)])];
+  return names.map((name) => ({ name })).map((d) => {
     const r = DET_RULES[d.name];
     const st = s.players[p].det?.[d.name];
     const active = r?.choice ? (st?.active ?? []).map((id) => r.choice!.options.find((o) => o.id === id)?.name ?? id) : [];

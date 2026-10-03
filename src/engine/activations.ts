@@ -3,13 +3,14 @@
 // "Each time this unit ends a Charge move, roll one D6…", "After this unit has shot, select one enemy unit hit…".
 // The specs live with the ability in data/abilities/<faction>.json ("act"), so new abilities are data, not code.
 import {
-  applyMortalWounds, buildFightPools, buildShootPools, finishAttack, forceDie, onAttackFinished, onModelKilled, onMortalWounds, rerollOne, resolveAll, startAttack,
+  applyMortalWounds, buildFightPools, buildShootPools, finishAttack, forceDie, onAttackFinished, onAttackStart, onModelKilled, onMortalWounds, rerollOne, resolveAll, startAttack,
+  targetToughness, woundNeed,
 } from './attack';
 import { RULES } from './config';
 import { d6, rollExpr, rollN } from './dice';
 import {
-  abilityOff, abilityRule, abilitySheet, addTimed, cond, DET_RULES, fightOnDeathFor, isRiled, retaliateFor, type AbilityRule, type Effect, type Incoming, type Limit,
-  unitFlags, unitMatches,
+  abilityOff, abilityRule, abilitySheet, activeRules, addTimed, cond, DET_RULES, fightOnDeathFor, grantsOf, isRiled, retaliateFor, type AbilityRule, type Effect, type FreeDieSpec,
+  type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
 import { baseDist, dist } from './geometry';
 import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, pushFx, unitById, unitDistance } from './state';
@@ -21,7 +22,7 @@ export type Trigger =
   | 'movement' | 'endOfNormalMove' | 'movementEnd' | 'shooting' | 'selectedToShoot' | 'afterShooting' | 'afterShootingButton'
   | 'selectedToFight' | 'fightStart' | 'fightStartButton' | 'afterFighting' | 'endOfCharge'
   | 'anyPhase' | 'opponentTurnEnd' | 'opponentFightEnd' | 'onDeath' | 'friendlyDeath' | 'shotByEnemy' | 'enemyMovedNear' | 'enemyFellBack'
-  | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks';
+  | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks' | 'movementStart' | 'fightEnd' | 'attackStart';
 
 export type Until = TimedEffect['until'];
 
@@ -37,7 +38,7 @@ export interface TargetSpec {
   shocked?: boolean; // friendly unit that is battle-shocked
   damaged?: boolean; // friendly unit with a wounded model
   each?: boolean; // every unit that qualifies, not one of them
-  count?: number | 'round'; // with each: at most this many (closest to the enemy first)
+  count?: number | 'round' | 'battleSize'; // with each: at most this many (closest to the enemy first; before the battle: the most expensive)
   charged?: boolean; // enemy unit that made a Charge move this phase
   closest?: boolean; // the closest enemy unit
   anywhere?: boolean; // units not on the battlefield count too (Declare Battle Formations, start of the battle)
@@ -78,6 +79,12 @@ export interface Action {
   secure?: boolean; // the objective the unit is on stays yours until the opponent controls it
   attacksPerEnemyNear?: { range: number; max: number; weapon?: string };
   sacrifice?: { n: string; name: string }; // destroy this many of these models (That'll Learn Ya)
+  shockPerModels?: number; // the battle-shock test gets −1 for every this many models in this unit (Roar of Mork)
+  moveIfHeavyTransport?: string; // move instead if the ability's unit is a transport with 14+ wounds
+  vow?: 'aggressive'; // Vowed Target: every objective you do not control becomes a Vowed objective
+  tryDatButton?: 1 | 2; // Dread Mob: roll 1 or 2 different D6 on the table (2 = one hazard roll)
+  attackMod?: { hit?: number; toughness?: number; noCover?: boolean }; // changes the attack being made right now
+  splashMortals?: { expr: string; range: number }; // another enemy unit within X" of the target suffers mortal wounds
   log?: string;
 }
 
@@ -108,6 +115,8 @@ export interface ActSpec {
   do?: Action[];
   label?: string; // short Thai summary for the button
   botUse?: 'always' | 'damaged' | 'never' | 'valuable' | 'round2' | 'round3';
+  units?: string[]; // detachment acts: which units have it
+  armyWide?: boolean; // detachment acts: one button for the army, not one per unit
 }
 
 export interface ActDef { key: string; name: string; holder: UnitState; spec: ActSpec; bearers: ModelState[] }
@@ -140,12 +149,22 @@ export function actsOfUnit(s: GameState, u: UnitState, includeDead = false): Act
     if (!living.length && !includeDead) continue;
     specs.forEach((spec, i) => out.push({ key: `${a.name}#${i}`, name: a.name, holder: u, spec, bearers: includeDead ? all : living }));
   }
+  // abilities the army's rules give this unit ("Friendly CHAPLAIN units have the following ability")
+  for (const g of grantsOf(s, u)) {
+    const ms = (includeDead ? u.models : alive(u)).filter((m) => !g.models || m.keywords.includes(g.models));
+    if (!ms.length) continue;
+    specsOf(g.rule).forEach((spec, i) => out.push({ key: `${g.name}#g${i}`, name: g.name, holder: u, spec, bearers: ms }));
+  }
   // detachment rules with actions
-  for (const d of s.players[u.owner].detachments ?? []) {
-    const r = DET_RULES[d.name] as { acts?: (ActSpec & { units?: string[] })[] } | undefined;
+  for (const name of activeRules(s, u.owner)) {
+    const r = DET_RULES[name] as { acts?: ActSpec[] } | undefined;
     (r?.acts ?? []).forEach((spec, i) => {
       if (spec.units && !unitMatches(u, spec.units)) return;
-      out.push({ key: `${d.name}#d${i}`, name: d.name, holder: u, spec, bearers: alive(u) });
+      if (spec.armyWide) {
+        const first = s.units.find((x) => x.owner === u.owner && x.status !== 'destroyed' && alive(x).length && unitMatches(x, spec.units));
+        if (first?.id !== u.id) return;
+      }
+      out.push({ key: `${name}#d${i}`, name, holder: u, spec, bearers: alive(u) });
     });
   }
   return out;
@@ -247,10 +266,11 @@ export function actTargets(s: GameState, def: ActDef, ctx: FireCtx = {}): UnitSt
     out = [c];
   }
   if (t.each && t.count !== undefined) {
-    const n = t.count === 'round' ? s.round : t.count;
+    const sizes: Record<string, number> = { incursion: 2, strike: 3, onslaught: 4 };
+    const n = t.count === 'round' ? s.round : t.count === 'battleSize' ? sizes[s.players[u.owner].battleSize ?? 'strike'] ?? 3 : t.count;
     const foes = boardUnits(s, other(u.owner));
     const gap = (x: UnitState) => (onBoard(x) && foes.length ? Math.min(...foes.map((e) => unitDistance(x, e))) : 99);
-    out = [...out].sort((a, b) => gap(a) - gap(b)).slice(0, n);
+    out = [...out].sort((a, b) => gap(a) - gap(b) || b.pts - a.pts).slice(0, n);
   }
   return out;
 }
@@ -371,7 +391,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       log(s, `💥 ${def.name}: ${on.name} โดน ${n} mortal wound`, 'roll', u.owner);
       applyMortalWounds(s, on, n, def.name);
     }
-    if (a.shock !== undefined) shockTest(s, on, a.shock, def.name);
+    if (a.shock !== undefined) shockTest(s, on, a.shock - (a.shockPerModels ? Math.floor(alive(u).length / a.shockPerModels) : 0), def.name);
     if (a.battleShock && !on.battleShocked) { on.battleShocked = true; log(s, `${def.name}: ${on.name} battle-shocked`, 'info', u.owner); }
     if (a.sacrifice) {
       const n = rollExpr(s, a.sacrifice.n).total;
@@ -391,7 +411,8 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       log(s, `${def.name}: ${on.name} ลงสนามได้ใน battle round นี้`, 'info', u.owner);
     }
     if (a.move) {
-      const expr = a.moveIfRiled && isRiled(s, on) ? a.moveIfRiled : a.move;
+      const heavy = a.moveIfHeavyTransport && hasKw(u, 'TRANSPORT') && Math.max(...u.models.map((m) => m.profile.W)) >= 14;
+      const expr = heavy ? a.moveIfHeavyTransport! : a.moveIfRiled && isRiled(s, on) ? a.moveIfRiled : a.move;
       const max = expr === 'M' ? Math.max(0, ...alive(on).map((m) => m.profile.M ?? 0)) + unitFlags(s, on).move : rollExpr(s, expr).total;
       on.extraMove = { max, label: def.name, kind: 'extra', phase: phaseKey(s) };
       if (a.noCharge) on.cantCharge = true;
@@ -417,6 +438,38 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       for (const o of s.objectives) {
         if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.secured = u.owner; log(s, `🚩 ${def.name}: objective ${o.id} ยังเป็นของเราแม้ไม่มีใครยืน (secured)`, 'info', u.owner); }
       }
+    }
+    if (a.vow) {
+      const P = s.players[u.owner];
+      P.vowed = s.objectives.filter((o) => o.controller !== u.owner).map((o) => o.id);
+      log(s, `${def.name}: Aggressive Push → Vowed objectives ${P.vowed.join(', ') || '-'}`, 'info', u.owner);
+    }
+    if (a.tryDatButton) {
+      const rows: { name: string; e: Effect }[] = [{ name: '+1 A', e: { attacks: 1 } }, { name: '+2 S', e: { strength: 2 } }, { name: '+1 AP', e: { ap: 1 } }];
+      const dice: number[] = [];
+      while (dice.length < a.tryDatButton) { const v = d6(s); if (!dice.includes(v)) dice.push(v); }
+      const got = [...new Set(dice.map((v) => (v <= 2 ? 0 : v <= 4 ? 1 : 2)))];
+      for (const i of got) addTimed(s, on, { e: rows[i].e, label: def.name, until: 'phase', by: u.owner });
+      log(s, `${def.name}: ทอย [${dice.join(' ')}] → ${got.map((i) => rows[i].name).join(', ')}`, 'roll', u.owner);
+      if (a.tryDatButton === 2) {
+        const h = d6(s);
+        log(s, `${def.name}: hazard roll ${h}${h <= RULES.hazard.failOn ? ' → โดน mortal wound' : ''}`, 'roll', u.owner);
+        if (h <= RULES.hazard.failOn) applyMortalWounds(s, on, alive(on).every((m) => m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER')) ? RULES.hazard.mortalWoundsMonsterVehicle : RULES.hazard.mortalWounds, 'Hazard');
+      }
+    }
+    if (a.attackMod && s.attack) {
+      const T = unitById(s, s.attack.targetId);
+      for (const p of s.attack.pools) {
+        if (a.attackMod.hit && !p.autoHit) { p.hitMod = Math.max(-1, Math.min(1, p.hitMod + a.attackMod.hit)); p.hitNote = [p.hitNote, `${def.name}: +${a.attackMod.hit} hit`].filter(Boolean).join(' · '); }
+        if (a.attackMod.noCover && /Cover/.test(p.skillNote) && p.skill !== null) { p.skill -= 1; p.skillNote = p.skillNote.replace(/Cover −1 BS/, `${def.name}: ไม่มี cover`); }
+        if (a.attackMod.toughness) { p.woundNeed = woundNeed(p.effS ?? p.profile.S ?? 1, Math.max(1, targetToughness(T, s) + a.attackMod.toughness)); p.woundNote = [p.woundNote, `${def.name}: T${a.attackMod.toughness}`].join(' · '); }
+      }
+      log(s, `${def.name}: ${a.attackMod.hit ? '+1 hit' : a.attackMod.noCover ? 'เป้าไม่ได้ cover' : `เป้า T${a.attackMod.toughness}`} (การยิงนี้)`, 'info', u.owner);
+    }
+    if (a.splashMortals) {
+      const others = boardUnits(s, on.owner).filter((x) => x.id !== on.id && alive(x).some((m) => alive(on).some((n) => baseDist(m, n) <= a.splashMortals!.range + 1e-6)));
+      const v = others.sort((x, y) => y.pts - x.pts)[0];
+      if (v) { const n = rollExpr(s, a.splashMortals.expr).total; log(s, `💥 ${def.name}: ${v.name} โดน ${n} mortal wound`, 'roll', u.owner); applyMortalWounds(s, v, n, def.name); }
     }
     if (a.log) log(s, `${def.name}: ${a.log}`, 'info', u.owner);
   }
@@ -524,7 +577,7 @@ export function bestTarget(s: GameState, def: ActDef, cands: UnitState[], ctx: F
 export interface ManualAct { def: ActDef; targets: UnitState[]; why: string | null; label: string }
 
 const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge', 'opponentFightEnd',
-  'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks'];
+  'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks', 'movementStart', 'fightEnd', 'attackStart'];
 
 /** Abilities player p can use by pressing a button right now. */
 export function manualActs(s: GameState, p: PlayerId): ManualAct[] {
@@ -638,27 +691,34 @@ export function closeOffers(s: GameState) {
 
 // ---------- free dice from abilities (Armorium Cherub, Aquilon Optics) ----------
 
-export interface FreeDie { key: string; label: string; kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' }
+export interface FreeDie { key: string; label: string; kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound'; bag: string; limit: Limit; name: string }
 
-type FreeSpec = NonNullable<AbilityRule['freeDie']>;
-const freeList = (f: FreeSpec | FreeSpec[]) => (Array.isArray(f) ? f : [f]);
+const freeList = (f: FreeDieSpec | FreeDieSpec[]) => (Array.isArray(f) ? f : [f]);
 
+/** Free re-rolls / "change to a 6" the attacking unit can use on the dice of the attack being made. */
 export function freeDiceNow(s: GameState): FreeDie[] {
   const at = s.attack;
   if (!at) return [];
   const A = unitById(s, at.attackerId);
+  const kind = at.kind === 'fight' ? 'melee' : 'ranged';
   const out: FreeDie[] = [];
+  const add = (name: string, tag: string, f: FreeDieSpec) => {
+    if (f.units && !unitMatches(A, f.units)) return;
+    if (f.attack && f.attack !== kind) return;
+    if (f.if && !f.if.every((c) => cond(c, { s, A, holder: A }))) return;
+    const bag = `free:${name}#${tag}`;
+    if ((A.used ?? {})[bag] === period(s, f.limit)) return;
+    const stages: ('hit' | 'wound')[] = f.stage === 'any' ? ['hit', 'wound'] : f.stage === 'hit' || f.stage === 'wound' ? [f.stage] : [];
+    for (const st of stages) out.push({ key: `${bag}:${st}`, label: `${name}: ${f.kind === 'setSix' ? 'เปลี่ยนเป็น 6' : 're-roll'} (${st === 'hit' ? 'Hit' : 'Wound'})`, kind: f.kind, stage: st, bag, limit: f.limit, name });
+  };
   for (const a of A.abilities) {
     const rule = abilityRule(A, a);
     if (!rule?.freeDie || abilityOff(A, a)) continue;
     const sheet = abilitySheet(A, a);
     if (!gearBearers(a, rule, alive(A).filter((m) => m.source === sheet)).length) continue;
-    freeList(rule.freeDie).forEach((f, i) => {
-      const stages: ('hit' | 'wound')[] = f.stage === 'any' ? ['hit', 'wound'] : f.stage === 'hit' || f.stage === 'wound' ? [f.stage] : [];
-      if ((A.used ?? {})[`free:${a.name}#${i}`] === period(s, f.limit)) return;
-      for (const st of stages) out.push({ key: `${a.name}#${i}:${st}`, label: `${a.name}: ${f.kind === 'setSix' ? 'เปลี่ยนเป็น 6' : 're-roll'} (${st === 'hit' ? 'Hit' : 'Wound'})`, kind: f.kind, stage: st });
-    });
+    freeList(rule.freeDie).forEach((f, i) => add(a.name, String(i), f));
   }
+  for (const name of activeRules(s, A.owner)) (DET_RULES[name].freeDie ?? []).forEach((f, i) => add(name, `d${i}`, f));
   return out;
 }
 
@@ -666,13 +726,9 @@ export function useFreeDie(s: GameState, key: string, index: number): string | n
   const f = freeDiceNow(s).find((x) => x.key === key);
   if (!f) return 'ใช้ไม่ได้แล้ว';
   const A = unitById(s, s.attack!.attackerId);
-  const name = key.split('#')[0];
-  const i = Number(key.split('#')[1].split(':')[0]);
-  const a = A.abilities.find((x) => x.name === name)!;
-  const spec = freeList(abilityRule(A, a)!.freeDie!)[i];
-  (A.used ??= {})[`free:${name}#${i}`] = period(s, spec.limit);
+  (A.used ??= {})[f.bag] = period(s, f.limit);
   if (f.kind === 'setSix') forceDie(s, f.stage, index, 6); else rerollOne(s, f.stage, index);
-  log(s, `${name}: ${f.kind === 'setSix' ? 'เปลี่ยนลูกเต๋าเป็น 6' : 'ทอยใหม่ 1 ลูก'}`, 'info', A.owner);
+  log(s, `${f.name}: ${f.kind === 'setSix' ? 'เปลี่ยนลูกเต๋าเป็น 6' : 'ทอยใหม่ 1 ลูก'}`, 'info', A.owner);
   return null;
 }
 
@@ -766,6 +822,7 @@ onAttackFinished((s, at, info) => {
   if (info.hits > 0 && !A.lastHits.ids.includes(T.id)) A.lastHits.ids.push(T.id);
   if (info.hits > 0) A.lastHits.byWeapon![T.id] = [...new Set([...(A.lastHits.byWeapon![T.id] ?? []), ...info.hitWeapons])];
   const ctx: FireCtx = { targetId: T.id, destroyed: info.destroyed ? [T.id] : [], killedCharacter: info.killedCharacter, modelsKilled: info.modelsKilled };
+  if (info.destroyed) { (A.used ??= {}).killedUnit = key; sagaProgress(s, at, A, T); }
   // Strikes of Retribution: melee attacks allocated to this model hurt the attackers
   if (at.kind === 'fight' && at.allocated) retaliate(s, at, A, T);
   if (!at.free) {
@@ -774,6 +831,64 @@ onAttackFinished((s, at, info) => {
   }
   if (at.kind !== 'fight' && info.woundsLost > 0 && T.owner !== s.active && onBoard(T)) fire(s, 'shotByEnemy', [T], { targetId: A.id, modelsKilled: info.modelsKilled });
   runDeathQueue(s);
+});
+
+// ---------- Space Wolves Sagas ----------
+
+const SAGA_SIZE: Record<string, number> = { incursion: 2, strike: 3, onslaught: 4 };
+
+/** Start of the battle: tallies and targets of the Saga in the player's detachment. */
+export function initSagas(s: GameState) {
+  for (const p of [0, 1] as PlayerId[]) {
+    const P = s.players[p];
+    const spec = activeRules(s, p).map((n) => DET_RULES[n].saga).find(Boolean);
+    if (!spec || P.saga) continue;
+    const enemyCMV = s.units.filter((u) => u.owner !== p && ['CHARACTER', 'MONSTER', 'VEHICLE'].some((k) => hasKw(u, k))).length;
+    const target = spec.kind === 'hunter' ? SAGA_SIZE[P.battleSize ?? 'strike'] ?? 3 : spec.kind === 'beastslayer' ? Math.max(1, Math.ceil(enemyCMV / 2)) : 3;
+    P.saga = { kind: spec.kind, tally: 0, target, done: false, boasts: [] };
+    log(s, `📜 Saga: เป้าหมาย ${target}`, 'info', p);
+  }
+}
+
+function sagaTick(s: GameState, p: PlayerId, what: string, boast?: string) {
+  const g = s.players[p].saga;
+  if (!g || g.done) return;
+  if (boast) { if (g.boasts.includes(boast)) return; g.boasts.push(boast); g.tally = g.boasts.length; } else g.tally += 1;
+  log(s, `📜 Saga: ${what} (${g.tally}/${g.target})`, 'info', p);
+  if (g.tally >= g.target) { g.done = true; log(s, '📜 Saga สำเร็จ! ได้ผลเพิ่มของ detachment แล้ว', 'vp', p); }
+}
+
+function sagaProgress(s: GameState, at: AttackSession, A: UnitState, T: UnitState) {
+  const P = s.players[A.owner];
+  // Slayer's Oath: the unit gets the completed-Saga benefits when it destroys a unit with its keyword
+  for (const [id, kw] of Object.entries(P.slayer ?? {})) if (id === A.id && hasKw(T, kw) && !A.sagaDone) { A.sagaDone = true; log(s, `📜 Slayer's Oath: ${A.name} ได้ผลของ Saga ที่สำเร็จแล้ว`, 'info', A.owner); }
+  const g = P.saga;
+  if (!g || g.done || !A.factionKeywords.includes('ADEPTUS ASTARTES')) return;
+  if (g.kind === 'hunter' && at.kind === 'fight') sagaTick(s, A.owner, `Quarry: ${T.name}`);
+  if (g.kind === 'beastslayer' && ['CHARACTER', 'MONSTER', 'VEHICLE'].some((k) => hasKw(T, k))) sagaTick(s, A.owner, `Beastslayer: ${T.name}`);
+  if (g.kind === 'bold' && hasKw(A, 'CHARACTER') && A.factionKeywords.includes('SPACE WOLVES') && P.oathTarget === T.id) {
+    A.oathKills = (A.oathKills ?? 0) + 1;
+    sagaTick(s, A.owner, `Boast: Your Hide as a Trophy (${A.name})`, 'trophy');
+    if (A.oathKills >= 2) sagaTick(s, A.owner, `Boast: Slay Them All (${A.name})`, 'slay');
+  }
+}
+
+/** Saga of the Bold boasts checked at the end of a turn / of the Command phase. */
+export function sagaBoasts(s: GameState, at: 'turnEnd' | 'commandEnd') {
+  for (const p of [0, 1] as PlayerId[]) {
+    const g = s.players[p].saga;
+    if (!g || g.kind !== 'bold' || g.done) continue;
+    const heroes = boardUnits(s, p).filter((u) => hasKw(u, 'CHARACTER') && u.factionKeywords.includes('SPACE WOLVES'));
+    if (at === 'turnEnd' && heroes.some((u) => wholly(s, u, other(p)))) sagaTick(s, p, 'Boast: Overrun Their Position', 'overrun');
+    if (at === 'commandEnd' && p === s.active && s.round >= 2 && heroes.some((u) => s.objectives.some((o) => o.controller === p && !(o.type === 'home' && o.owner === p) && alive(u).some((m) => dist(m, o) <= 3 + m.r)))) sagaTick(s, p, 'Boast: Hold the Line', 'hold');
+  }
+}
+let wholly: (s: GameState, u: UnitState, zoneOwner: PlayerId) => boolean = () => false;
+export const setZoneCheck = (fn: typeof wholly) => { wholly = fn; };
+
+onAttackStart((s, at) => {
+  if (at.free || at.kind !== 'shoot') return;
+  fire(s, 'attackStart', [unitById(s, at.attackerId)], { targetId: at.targetId });
 });
 
 onModelKilled((s, u, m, killerId) => {
@@ -809,14 +924,29 @@ onModelKilled((s, u, m, killerId) => {
       useAct(s, def, undefined, ctx);
     }
   }
-  // Master of Battle: the backup Oath of Moment target takes over
+  // Master of Battle: the backup Oath of Moment target takes over; Recalculating: pick a new one
   if (!alive(u).length) {
     for (const p of [0, 1] as PlayerId[]) {
       const P = s.players[p];
-      if (P.oathTarget === u.id && P.oathBackup && onBoard(unitById(s, P.oathBackup))) {
+      if (P.oathTarget !== u.id) continue;
+      if (P.oathBackup && onBoard(unitById(s, P.oathBackup))) {
         P.oathTarget = P.oathBackup;
         P.oathBackup = null;
         log(s, `⚜ Master of Battle: เป้า Oath of Moment ใหม่ → ${unitById(s, P.oathTarget).name}`, 'info', p);
+        continue;
+      }
+      for (const name of activeRules(s, p)) {
+        const rt = DET_RULES[name].oathRetarget;
+        if (!rt) continue;
+        const holder = boardUnits(s, p).find((x) => x.sources.includes(rt.needs) && alive(x).some((n) => n.source === rt.needs));
+        const bag = (P.abilityUsed ??= {});
+        if (!holder || bag[`retarget:${name}`] === period(s, rt.limit)) continue;
+        const eye = alive(holder).filter((n) => n.source === rt.needs);
+        const next = boardUnits(s, other(p)).filter((e) => eye.some((n) => unitVisibleTo(s, n, e))).sort((a, b) => b.pts - a.pts)[0];
+        if (!next) continue;
+        bag[`retarget:${name}`] = period(s, rt.limit);
+        P.oathTarget = next.id;
+        log(s, `⚜ ${name}: เป้า Oath of Moment ใหม่ → ${next.name}`, 'info', p);
       }
     }
   }

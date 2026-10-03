@@ -199,6 +199,8 @@ export interface UnitState {
   quarry?: string; // Headhunters: enemy unit id
   timed?: TimedEffect[]; // temporary effects and marks from abilities
   split?: string; // split off another unit at Declare Battle Formations (Combat Squads …): the other unit's id
+  sagaDone?: boolean; // Slayer's Oath: this unit has the completed-Saga benefits
+  oathKills?: number; // Saga of the Bold: Oath of Moment targets this unit destroyed
   abilityPicks?: { pool: string[]; on: string[] }; // "select two of these abilities" (Author of the Codex …)
   used?: Record<string, string>; // ability limits: name -> last use key (battle / round / turn / phase)
   lastHits?: { key: string; ids: string[]; byWeapon?: Record<string, string[]> }; // enemy units hit this phase
@@ -288,6 +290,8 @@ export interface PlayerState {
   oathBackup?: string | null; // Master of Battle: second Oath of Moment target
   slayer?: Record<string, string>; // Slayer's Oath: unit id -> keyword
   subfaction?: string; // chapter / sub-faction picked in the army builder
+  battleSize?: string; // incursion | strike | onslaught (some rules scale with it)
+  saga?: { kind: 'hunter' | 'beastslayer' | 'bold'; tally: number; target: number; done: boolean; boasts: string[] }; // Space Wolves Sagas
   abilityUsed?: Record<string, string>; // per-army ability limits: name -> last use key
   /** Chapter Approved: chosen Force Disposition and the primary mission it gives against the opponent's */
   disposition: string;

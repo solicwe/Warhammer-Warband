@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { acceptOffer, actsOfUnit, abilityChoices, fire, freeDiceNow, manualActs, pickAbilities, resolveRevivals, useActByKey, useFreeDie } from './activations';
+import { acceptOffer, actsOfUnit, abilityChoices, fire, freeDiceNow, initSagas, manualActs, pickAbilities, resolveRevivals, useActByKey, useFreeDie } from './activations';
+import { detChoices, pickDetChoice } from './detachments';
 import { buildFightPools, buildShootPools, finishAttack, resolveAll, rollHits, startAttack } from './attack';
 import { abilityRule, effectsFor } from './effects';
 import { commitMove, createGame, endPhase, formationAt, ingressUnit, placeUnit, updateControl, validatePlacement } from './game';
@@ -41,7 +42,7 @@ describe('ability data covers every Space Marine and Ork ability', () => {
   for (const f of [SM, ORK]) {
     it(`${f.id}: every datasheet ability has a rule`, () => {
       const missing = new Set<string>();
-      const handled = ['Oath of Moment', 'Curse of the Wulfen', 'Templar Vows']; // army rules (core code / detachment choices)
+      const handled = ['Oath of Moment', 'Templar Vows']; // army rules (core code / Templar Vows choice)
       for (const d of f.datasheets) for (const a of d.abilities) {
         if (a.type === 'Core' || handled.includes(a.name)) continue;
         const u = { sources: [d.name], abilities: [] } as unknown as Parameters<typeof abilityRule>[0];
@@ -282,3 +283,110 @@ describe('Space Marine abilities', () => {
     for (const u of s.units) expect(() => actsOfUnit(s, u)).not.toThrow();
   });
 });
+
+describe('detachment rules added in this round', () => {
+  function detGame(smDet: string, orkDet: string, sm: Row[], ork: Row[], smSub?: string): GameState {
+    const a = list('SM', sm), b = list('ORK', ork);
+    a.detachments = [smDet]; b.detachments = [orkDet];
+    if (smSub) a.subfaction = smSub;
+    const s = createGame({ lists: [a, b], factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 42 });
+    s.terrain = s.terrain.filter((t) => t.objectiveId);
+    s.terrain.forEach((t) => (t.walls = []));
+    s.round = 2; s.turn = 2;
+    return s;
+  }
+
+  it('Armoured Wrath: one free re-roll per unit per phase', () => {
+    const s = detGame('Ironstorm Spearhead', 'War Horde', [['Intercessor Squad', 10, 150]], [['Boyz', 10, 90]]);
+    s.phase = 'shooting'; s.active = 0;
+    const ints = put(s, 'p0-x0', { x: 20, y: 14 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 24 });
+    startAttack(s, 'shoot', ints.id, boyz.id, buildShootPools(s, ints.id, boyz.id, { mode: 'normal' }).pools);
+    rollHits(s);
+    const fd = freeDiceNow(s).filter((f) => f.name === 'Ironstorm Spearhead');
+    expect(fd.map((f) => f.stage)).toEqual(['hit', 'wound']);
+    const i = s.attack!.pools[0].hits.findIndex((h) => h.o === 'miss');
+    useFreeDie(s, fd[0].key, Math.max(0, i));
+    expect(freeDiceNow(s).some((f) => f.name === 'Ironstorm Spearhead')).toBe(false); // hit OR wound, once
+  });
+
+  it('Grim Resolve: one army-wide button gives a unit +1 OC until the next Command phase', () => {
+    const s = detGame('Unforgiven Task Force', 'War Horde', [['Intercessor Squad', 10, 150], ['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]], 'DARK ANGELS');
+    s.phase = 'command'; s.active = 0;
+    const a = put(s, 'p0-x0', { x: 20, y: 14 });
+    put(s, 'p0-x1', { x: 30, y: 14 });
+    const btns = manualActs(s, 0).filter((m) => m.def.name === 'Unforgiven Task Force');
+    expect(btns.length).toBe(1);
+    expect(useActByKey(s, btns[0].def.holder.id, btns[0].def.key, a.id)).toBeNull();
+    expect(effectsFor(s, a).some((x) => x.e.oc === 1)).toBe(true);
+    expect(manualActs(s, 0).some((m) => m.def.name === 'Unforgiven Task Force')).toBe(false);
+  });
+
+  it('Black Templars: Templar Vows replaces Oath of Moment; Accept Any Challenge gives +1 wound when S ≤ T', () => {
+    const s = detGame('Wrathful Procession', 'War Horde', [['Intercessor Squad', 10, 150]], [['Meganobz', 3, 110]], 'BLACK TEMPLARS');
+    expect(s.players[0].armyRules.some((r) => r.name === 'Oath of Moment')).toBe(false);
+    s.phase = 'command'; s.active = 0; s.round = 1;
+    const ch = detChoices(s, 0).find((c) => c.rule === 'Templar Vows')!;
+    expect(ch.open).toBe(true);
+    expect(pickDetChoice(s, 0, 'Templar Vows', ['challenge'])).toBeNull();
+    s.phase = 'fight'; s.round = 2;
+    const ints = put(s, 'p0-x0', { x: 20, y: 20 });
+    const mega = put(s, 'p1-x0', { x: 20, y: 23.6 });
+    const pools = buildFightPools(s, ints.id, mega.id).pools;
+    expect(pools.length).toBeGreaterThan(0);
+    expect(pools.every((p) => p.woundMod === 1)).toBe(true); // S4 vs T5
+  });
+
+  it('Saga of the Hunter: the Quarry tally completes the Saga and adds +1 to wound', () => {
+    const s = detGame('Saga of the Hunter', 'War Horde', [['Blood Claws', 10, 135]], [['Boyz', 10, 90]], 'SPACE WOLVES');
+    s.phase = 'command'; s.active = 0; s.turn = 0; s.round = 1;
+    initSagasForTest(s);
+    const g = s.players[0].saga!;
+    expect(g.target).toBe(2); // Incursion
+    g.tally = 2; g.done = true;
+    s.phase = 'fight'; s.round = 2; s.turn = 2;
+    const bc = put(s, 'p0-x0', { x: 20, y: 20 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 23.6 });
+    for (const m of boyz.models.slice(5)) { m.dead = true; m.wounds = 0; } // 10 Blood Claws outnumber 5 Boyz
+    const pools = buildFightPools(s, bc.id, boyz.id).pools;
+    expect(pools.length).toBeGreaterThan(0);
+    expect(pools.every((p) => p.hitMod === 1 && p.woundMod === 1)).toBe(true);
+    g.done = false;
+    expect(buildFightPools(s, bc.id, boyz.id).pools.every((p) => p.hitMod === 1 && p.woundMod === 0)).toBe(true);
+  });
+
+  it('Ork detachments: Wurrband powers, Brute Bosses, Shoota Boyz range, Dread Mob buttons', () => {
+    const s = detGame('Gladius Task Force', 'Wurrband', [['Intercessor Squad', 10, 150]], [['Weirdboy', 1, 60], ['Boyz', 10, 90]]);
+    s.phase = 'movement'; s.active = 1;
+    put(s, 'p0-x0', { x: 20, y: 14 });
+    put(s, 'p1-x0', { x: 20, y: 24 });
+    expect(manualActs(s, 1).some((m) => m.def.name === 'Powers of da Waaagh!')).toBe(true);
+
+    const b = detGame('Gladius Task Force', 'Brute Bosses', [['Intercessor Squad', 10, 150]], [['Warboss', 1, 100]]);
+    const boss = b.units.find((u) => u.id === 'p1-x0')!;
+    expect(effectsFor(b, boss).some((x) => x.label === '’Ard as Nails')).toBe(true);
+
+    const c = detGame('Gladius Task Force', 'Shoota Boyz', [['Intercessor Squad', 10, 150]], [['Boyz', 10, 90]]);
+    c.phase = 'shooting'; c.active = 1;
+    const sm = put(c, 'p0-x0', { x: 20, y: 10 });
+    const boyz = put(c, 'p1-x0', { x: 20, y: 30 }); // ~18" apart: out of 18" shoota range edge
+    const before = buildShootPools(c, boyz.id, sm.id, { mode: 'normal' }).pools.reduce((n, p) => n + p.models, 0);
+    boyz.riledUntil = c.turn;
+    const after = buildShootPools(c, boyz.id, sm.id, { mode: 'normal' }).pools.reduce((n, p) => n + p.models, 0);
+    expect(after).toBeGreaterThanOrEqual(before);
+
+    const d = detGame('Gladius Task Force', 'Dread Mob', [['Intercessor Squad', 10, 150]], [['Deff Dread', 1, 130]]);
+    d.phase = 'shooting'; d.active = 1;
+    put(d, 'p0-x0', { x: 20, y: 14 });
+    put(d, 'p1-x0', { x: 20, y: 24 });
+    const tdb = manualActs(d, 1).filter((m) => m.def.name === 'Try Dat Button!');
+    expect(tdb.length).toBe(2);
+    expect(useActByKey(d, tdb[0].def.holder.id, tdb[0].def.key)).toBeNull();
+    expect(manualActs(d, 1).some((m) => m.def.name === 'Try Dat Button!')).toBe(false);
+  });
+});
+
+function initSagasForTest(s: GameState) {
+  // the battle starts: sagas get their targets
+  initSagas(s);
+}

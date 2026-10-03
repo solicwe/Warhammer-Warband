@@ -471,7 +471,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           )}
           {sheet && <WargearEditor sheet={sheet} u={u} onChange={(patch) => setUnit(u.uid, patch)} />}
           {(() => {
-            const sp = splitRuleOf(sheet);
+            const sp = splitRuleOf(sheet, list.detachments);
             if (!sp) return null;
             return sp.must
               ? <div className="tiny muted">{sp.name}: {sp.label}</div>

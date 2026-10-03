@@ -11,7 +11,7 @@ import { parseAbilityText } from './abilityText';
 import { RULES } from './config';
 import { d6 } from './dice';
 import { baseDist, circleTouchesPoly, clamp, dist } from './geometry';
-import { unitInRange } from './missions';
+import { setActionEligibilityHook, unitInRange } from './missions';
 import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, setStratHooks, unitDistance, withinTerrain } from './state';
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, UnitState, WeaponData, WeaponProfileData } from './types';
 import { isHidden, setVisibilityHooks } from './visibility';
@@ -118,6 +118,11 @@ export interface Effect {
   embarkedOc?: boolean; // add the OC of models embarked within this model
   ldSet?: number;
   statM?: number; // fixed change to the bearers' Move characteristic
+  rangeBonus?: number; // ranged weapons +X" Range
+  strengthPer5Models?: boolean; // +1 S for every 5 models in the unit (or embarked within it)
+  fightOnDeathRiled?: number; // … +X to that roll while riled up
+  secureAtCommandEnd?: boolean; // end of your Command phase: objectives this unit holds stay yours (Uphold the Honour)
+  stratRepeat?: { ids: string[]; limit: Limit }; // this stratagem can target this unit even if it was used this phase (Countercharge)
 }
 
 export type Limit = 'battle' | 'round' | 'turn' | 'phase';
@@ -126,8 +131,38 @@ export type Limit = 'battle' | 'round' | 'turn' | 'phase';
 
 export interface DetChoiceOption { id: string; name: string; text: string; effects: Effect[] }
 export interface DetChoice { name: string; when: 'command' | 'round' | 'battle'; uses: 'eachOnce' | 'limit' | 'free'; limit?: number; pick?: number; options: DetChoiceOption[] }
-export interface DetRule { auto: 'full' | 'partial' | 'manual'; effects?: Effect[]; choice?: DetChoice; manual?: string; acts?: unknown[] }
+/** An ability a detachment / army rule gives to units ("Friendly CHAPLAIN units have the following ability: …"). */
+export interface DetGrant { units: string[]; models?: string; name: string; rule: AbilityRule }
+export interface FreeDieSpec { kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' | 'damage' | 'any'; limit: Limit; count?: number; units?: string[]; if?: string[]; attack?: 'melee' | 'ranged' }
+export interface SagaSpec { kind: 'hunter' | 'beastslayer' | 'bold'; target?: Record<string, number> }
+export interface DetRule {
+  auto: 'full' | 'partial' | 'manual'; effects?: Effect[]; choice?: DetChoice; manual?: string; acts?: unknown[];
+  grants?: DetGrant[]; freeDie?: FreeDieSpec[]; saga?: SagaSpec;
+  armyRule?: boolean; needKw?: string; // army rules: apply when the army has units with this (Chapter) keyword
+  oathRetarget?: { needs: string; limit: Limit }; // Recalculating: a new Oath target when the old one dies
+  splits?: { datasheets: string[]; how: 'half'; label: string }; // Veterans of the Fang
+}
 export const DET_RULES = (detData as unknown as { rules: Record<string, DetRule> }).rules;
+
+/** Names of the detachment rules and army rules (Templar Vows …) in force for a player. */
+export function activeRules(s: GameState, p: PlayerId): string[] {
+  const P = s.players[p];
+  const out = (P.detachments ?? []).map((d) => d.name).filter((n) => DET_RULES[n]);
+  for (const r of P.armyRules ?? []) {
+    const d = DET_RULES[r.name];
+    if (!d?.armyRule) continue;
+    if (d.needKw && P.subfaction !== d.needKw && !s.units.some((u) => u.owner === p && u.factionKeywords.includes(d.needKw!))) continue;
+    out.push(r.name);
+  }
+  return out;
+}
+
+/** Abilities that rules of the unit's army give it. */
+export function grantsOf(s: GameState, u: UnitState): DetGrant[] {
+  const out: DetGrant[] = [];
+  for (const n of activeRules(s, u.owner)) for (const g of DET_RULES[n].grants ?? []) if (unitMatches(u, g.units)) out.push(g);
+  return out;
+}
 
 export interface AbilityRule {
   status?: 'auto' | 'partial' | 'info' | 'manual';
@@ -137,7 +172,7 @@ export interface AbilityRule {
   act?: unknown; // activation spec, see activations.ts
   choice?: { name: string; pick: number; when: 'command'; options: string[]; if?: string[] }; // "select two of these abilities"
   split?: 'half' | 'byModel' | 'five'; // the unit may be split into two at Declare Battle Formations
-  freeDie?: { kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' | 'damage' | 'any'; limit: Limit; count?: number };
+  freeDie?: FreeDieSpec | FreeDieSpec[];
   parsed?: boolean; // read from the ability text (abilityText.ts), not hand-written
 }
 
@@ -188,7 +223,8 @@ export const unitMatches = (u: UnitState, filters?: string[]) => (filters ?? [])
 function playerDetEffects(s: GameState, p: PlayerId): { e: Effect; label: string }[] {
   const P = s.players[p];
   const out: { e: Effect; label: string }[] = [];
-  for (const d of P.detachments ?? []) {
+  for (const name of activeRules(s, p)) {
+    const d = { name };
     const r = DET_RULES[d.name];
     if (!r) continue;
     for (const e of r.effects ?? []) out.push({ e, label: d.name });
@@ -223,42 +259,49 @@ const leaderSheet = (u: UnitState, sheet: string) => u.sources.length > 1 && she
 const hasLivingLeader = (u: UnitState) => u.sources.length > 1 && alive(u).some((m) => m.source !== u.sources[0]);
 
 /** Every effect that currently applies to unit u, from any source. */
+/** The effects of one ability (of unit h) that reach unit u, by scope. */
+function ruleEffects(u: UnitState, h: UnitState, effects: Effect[], label: string, sheet: string, getBearers: () => ModelState[], out: Active[]) {
+  for (const e of effects) {
+    const scope = e.scope ?? 'unit';
+    if (scope === 'army') {
+      if (h.owner !== u.owner || !unitMatches(u, e.units)) continue;
+      out.push({ e, label, holder: h });
+      continue;
+    }
+    if (scope === 'aura' || scope === 'enemyAura') {
+      if (!onBoard(h) || !onBoard(u)) continue;
+      if (scope === 'aura' && (h.owner !== u.owner || (e.notSelf && h.id === u.id))) continue;
+      if (scope === 'enemyAura' && h.owner === u.owner) continue;
+      if (!unitMatches(u, e.units)) continue;
+      const bs = getBearers();
+      if (!bs.length) continue;
+      const r = (e.range ?? 6) + (e.rangeBonusIf && h.abilities.some((x) => x.name === e.rangeBonusIf!.ability) ? e.rangeBonusIf.add : 0);
+      if (h.id !== u.id && !bs.some((b) => alive(u).some((m) => baseDist(b, m) <= r + 1e-6))) continue;
+      out.push({ e, label, holder: h, from: bs });
+      continue;
+    }
+    if (h.id !== u.id) continue;
+    if (scope === 'led' && !(leaderSheet(h, sheet) && getBearers().length)) continue;
+    if (scope === 'bodyguardLed' && !(sheet === h.sources[0] && hasLivingLeader(h))) continue;
+    if (!getBearers().length) continue;
+    out.push({ e, label, holder: h, bearers: scope === 'model' ? getBearers() : undefined });
+  }
+}
+
 export function effectsFor(s: GameState, u: UnitState): Active[] {
   const out: Active[] = [];
   for (const { e, label } of playerDetEffects(s, u.owner)) if (unitMatches(u, e.units)) out.push({ e, label, holder: u });
   for (const h of s.units) {
-    if (h.status === 'destroyed' || !h.abilities?.length) continue;
-    for (const a of h.abilities) {
+    if (h.status === 'destroyed') continue;
+    for (const a of h.abilities ?? []) {
       const rule = abilityRule(h, a);
       if (!rule?.effects?.length || abilityOff(h, a)) continue;
       let bearers: ModelState[] | undefined;
-      const getBearers = () => (bearers ??= bearersOf(h, a, rule));
-      for (const e of rule.effects) {
-        const scope = e.scope ?? 'unit';
-        if (scope === 'army') {
-          if (h.owner !== u.owner || !unitMatches(u, e.units)) continue;
-          out.push({ e, label: a.name, holder: h });
-          continue;
-        }
-        if (scope === 'aura' || scope === 'enemyAura') {
-          if (!onBoard(h) || !onBoard(u)) continue;
-          if (scope === 'aura' && (h.owner !== u.owner || (e.notSelf && h.id === u.id))) continue;
-          if (scope === 'enemyAura' && h.owner === u.owner) continue;
-          if (!unitMatches(u, e.units)) continue;
-          const bs = getBearers();
-          if (!bs.length) continue;
-          const r = (e.range ?? 6) + (e.rangeBonusIf && h.abilities.some((x) => x.name === e.rangeBonusIf!.ability) ? e.rangeBonusIf.add : 0);
-          if (h.id !== u.id && !bs.some((b) => alive(u).some((m) => baseDist(b, m) <= r + 1e-6))) continue;
-          out.push({ e, label: a.name, holder: h, from: bs });
-          continue;
-        }
-        if (h.id !== u.id) continue;
-        const sheet = abilitySheet(h, a);
-        if (scope === 'led' && !(leaderSheet(h, sheet) && getBearers().length)) continue;
-        if (scope === 'bodyguardLed' && !(sheet === h.sources[0] && hasLivingLeader(h))) continue;
-        if (!getBearers().length) continue;
-        out.push({ e, label: a.name, holder: h, bearers: scope === 'model' ? getBearers() : undefined });
-      }
+      ruleEffects(u, h, rule.effects, a.name, abilitySheet(h, a), () => (bearers ??= bearersOf(h, a, rule)), out);
+    }
+    for (const g of grantsOf(s, h)) {
+      if (!g.rule.effects?.length) continue;
+      ruleEffects(u, h, g.rule.effects, g.name, h.sources[0], () => alive(h).filter((m) => !g.models || m.keywords.includes(g.models)), out);
     }
   }
   for (const t of u.timed ?? []) out.push({ e: t.e, label: t.label, holder: u, bearers: t.models ? u.models.filter((m) => !m.dead && t.models!.includes(m.id)) : undefined });
@@ -340,6 +383,9 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('minModelsNamed:')) { const [, n, k] = c.split(':'); return alive(A).filter((m) => wk(m.name).includes(wk(n))).length >= Number(k); }
   if (c.startsWith('modelKw:')) return !!x.m && x.m.keywords.includes(c.slice(8));
   if (c.startsWith('any:')) return c.slice(4).split('||').some((alt) => cond(alt, x));
+  if (c.startsWith('armyHas:')) return s.units.some((f) => f.owner === A.owner && f.status !== 'destroyed' && f.sources.includes(c.slice(8)));
+  if (c.startsWith('armyOnBoard:')) return boardUnits(s, A.owner).some((f) => f.sources.includes(c.slice(12)) && alive(f).some((m) => m.source === c.slice(12)));
+  if (c.startsWith('disembarkedFrom:')) { const t = A.disembarkedFrom && A.disembarkedTurn === s.turn ? s.units.find((f) => f.id === A.disembarkedFrom) : undefined; return !!t && t.sources.some((n) => wk(n).includes(wk(c.slice(16)))); }
   if (c.startsWith('targetKwAll:')) return !!T && c.slice(12).split('|').some((k) => alive(T).every((n) => n.keywords.includes(k)));
   switch (c) {
     case 'charged': return A.chargedTurn === s.turn;
@@ -411,6 +457,12 @@ export function cond(c: string, x: Ctx): boolean {
       const kinds = new Set(alive(A).flatMap((m) => m.weapons.filter((w) => w.profiles[0].range !== 'Melee').map((w) => w.name)));
       return kinds.size === 1;
     }
+    case 'sagaDone': return !!s.players[A.owner].saga?.done || !!(x.holder ?? A).sagaDone;
+    case 'psychicWeapon': return !!x.p && x.p.abilities.some((a) => a === 'psychic');
+    case 'attackSLessT': return !!x.p && !!T && (x.p.S ?? 0) < Math.max(...alive(T).map((n) => n.profile.T));
+    case 'transportMoved': return (A.move === 'normal' || A.move === 'advance') && A.setUpTurn !== s.turn;
+    case 'destroyedUnitThisPhase': return (A.used ?? {}).killedUnit === phaseKey(s);
+    case 'chargeTargetEngagedWith:RAVENWING': return boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= 12 + 1e-6 && boardUnits(s, A.owner).some((f) => hasKw(f, 'RAVENWING') && engagedEnemies(s, f).some((g) => g.id === e.id)));
     case 'attackSLeqT': return !!x.p && !!T && (x.p.S ?? 0) <= Math.max(...alive(T).map((n) => n.profile.T));
     case 'enemyPsykerWithin12': return boardUnits(s, other(A.owner)).some((e) => hasKw(e, 'PSYKER') && unitDistance(A, e) <= 12 + 1e-6);
     case 'unengaged': return engagedEnemies(s, A).length === 0;
@@ -482,6 +534,11 @@ export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, poo
     if (e.damage) { pool.damage = addToExpr(pool.damage, e.damage); bump(a.label, `+${e.damage} D`); }
     if (e.critHitOn) { pool.critHitOn = Math.min(pool.critHitOn ?? 6, e.critHitOn); bump(a.label, `crit hit ${e.critHitOn}+`); }
     if (e.ignoreHitMods) { pool.ignoreHitMods = true; bump(a.label, 'ไม่สน modifier ของ hit'); }
+    if (e.strengthPer5Models) {
+      const n = alive(A).length + s.units.filter((p) => p.embarkedIn === A.id && p.status === 'embarked').reduce((x, p) => x + alive(p).length, 0);
+      const add = Math.floor(n / 5);
+      if (add) { strength += add; bump(a.label, `+${add} S`); }
+    }
     if (e.attacksPerEmbarked) {
       const n = s.units.filter((p) => p.embarkedIn === A.id && p.status === 'embarked').reduce((x, p) => x + alive(p).length, 0);
       const add = Math.min(e.attacksPerEmbarked.max, n * e.attacksPerEmbarked.per);
@@ -603,10 +660,12 @@ export function fightOnDeathFor(s: GameState, u: UnitState, m: ModelState): { fi
   const list = [
     ...effectsFor(s, u).filter((a) => !a.bearers && (a.e.fightOnDeath || a.e.shootOnDeath)).map((a) => ({ e: a.e, label: a.label, holder: a.holder })),
     ...modelRules(s, u, m).filter((r) => r.e.fightOnDeath || r.e.shootOnDeath).map((r) => ({ ...r, holder: u })),
+    ...grantsOf(s, u).filter((g) => !g.models || m.keywords.includes(g.models)).flatMap((g) => (g.rule.effects ?? []).filter((e) => e.fightOnDeath || e.shootOnDeath).map((e) => ({ e, label: g.name, holder: u }))),
   ].filter((a) => (a.e.if ?? []).every((c) => cond(c, { s, A: u, m, holder: a.holder })));
   const out: ReturnType<typeof fightOnDeathFor> = {};
   for (const a of list) {
-    if (a.e.fightOnDeath && (!out.fight || a.e.fightOnDeath < out.fight.on)) out.fight = { on: a.e.fightOnDeath, label: a.label, regain: a.e.fightOnDeathRegain };
+    const on = (a.e.fightOnDeath ?? 7) - (a.e.fightOnDeathRiled && isRiled(s, u) ? a.e.fightOnDeathRiled : 0);
+    if (a.e.fightOnDeath && (!out.fight || on < out.fight.on)) out.fight = { on, label: a.label, regain: a.e.fightOnDeathRegain };
     if (a.e.shootOnDeath && (!out.shoot || a.e.shootOnDeath < out.shoot.on)) out.shoot = { on: a.e.shootOnDeath, label: a.label };
   }
   return out;
@@ -675,6 +734,8 @@ export function unitFlags(s: GameState, u: UnitState) {
     slowed: es.some((e) => e.slowed),
     ldSet: Math.min(99, ...es.map((e) => e.ldSet ?? 99)),
     advanceHazard: es.some((e) => e.advanceHazard),
+    rangeBonus: es.reduce((a, e) => a + (e.rangeBonus ?? 0), 0),
+    secureAtCommandEnd: es.some((e) => e.secureAtCommandEnd),
     grounded: es.some((e) => e.grounded),
     oppMoveIngress: es.some((e) => e.oppMoveIngress),
     oathBackup: es.some((e) => e.oathBackup),
@@ -795,7 +856,15 @@ setVisibilityHooks({
   cannotBeHidden: (_s, u) => (u.timed ?? []).some((t) => t.e.cannotBeHidden),
 });
 
-setStratHooks(stratDiscount, stratSpent);
+/** Countercharge: Heroic Intervention on this unit even though the stratagem was used this phase (once per battle round). */
+function stratRepeat(s: GameState, u: UnitState, id: string): boolean {
+  return unitFx(s, u).some((a) => a.e.stratRepeat?.ids.includes(id) && limitFree(s, a, `repeat:${u.id}`, a.e.stratRepeat.limit));
+}
+function stratRepeatUsed(s: GameState, u: UnitState, id: string) {
+  for (const a of unitFx(s, u)) if (a.e.stratRepeat?.ids.includes(id)) limitBag(s, a)[`repeat:${u.id}:${a.label}`] = periodKey(s, a.e.stratRepeat.limit);
+}
+setStratHooks(stratDiscount, (s, u, id) => { stratSpent(s, u, id); stratRepeatUsed(s, u, id); }, stratRepeat);
+setActionEligibilityHook((s, u, what) => canDo(s, u, what));
 setThroughHook((s, u, kind) => {
   const f = unitFx(s, u).map((a) => a.e);
   if (f.some((e) => e.moveThroughModels)) return 'all';
@@ -808,6 +877,13 @@ setThroughHook((s, u, kind) => {
 /** Keyword and characteristic changes that hold for the whole battle ("while attached to a MOUNTED unit, this model has MOBILE …"). */
 export function applyStaticEffects(s: GameState) {
   for (const u of s.units) {
+    // keywords given by army / detachment rules (The Ravenwing, Skystrike, Sneaky Little Gitz …)
+    const fixed = [...playerDetEffects(s, u.owner).map((x) => x.e).filter((e) => unitMatches(u, e.units)), ...grantsOf(s, u).flatMap((g) => g.rule.effects ?? [])]
+      .filter((e) => e.addKeywords && (e.if ?? []).every((c) => cond(c, { s, A: u, holder: u })));
+    for (const e of fixed) {
+      for (const m of u.models) m.keywords = [...new Set([...m.keywords, ...e.addKeywords!])];
+      u.keywords = [...new Set([...u.keywords, ...e.addKeywords!])];
+    }
     for (const a of u.abilities) {
       const rule = abilityRule(u, a);
       for (const e of rule?.effects ?? []) {
