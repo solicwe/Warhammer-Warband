@@ -24,7 +24,7 @@ import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
 import { RollOverlay, SecondaryCard } from './RollOverlay';
-import { secondaryGoal, secondaryPreview } from '../engine/secondaries';
+import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem } from '../engine/stratagems';
 import { endUnitShooting, rangedWeaponNames, rerollAttackCount, toggleRerollPick } from '../engine/attack';
 import { polyCentroid } from '../engine/geometry';
@@ -1481,12 +1481,19 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                       const goal = secondaryGoal(s, p, id);
                       return (
                         <div key={id} className="sec-slot">
-                          <SecondaryCard id={id} owner={p} progress={vp ? `ถ้าจบเทิร์นตอนนี้: +${vp} VP` : `ทำ: ${goal.todo}`} />
+                          {(() => {
+                            const dead = P.secMode === 'tactical' && secondaryDead(s, p, id);
+                            return <SecondaryCard id={id} owner={p} dead={dead} progress={dead ? 'ทำไม่ได้แล้ว — ทิ้งได้เลย' : vp ? `ถ้าจบเทิร์นตอนนี้: +${vp} VP` : `ทำ: ${goal.todo}`} />;
+                          })()}
                           {P.secMode === 'tactical' && !bots.includes(p) && (
-                            <div className="row" style={{ justifyContent: 'center' }}>
-                              <button className="btn small ghost" onClick={() => act((g) => discardSecondary(g, p, id))}>ทิ้ง{s.active === p ? ' (+1CP)' : ''}</button>
-                              {!P.secSwapUsed && s.active === p && s.phase === 'command' && P.cp >= 1 && <button className="btn small ghost" onClick={() => act((g) => swapSecondary(g, p, id))}>เปลี่ยน 1CP</button>}
-                            </div>
+                            <>
+                              <button className="btn sec-discard" onClick={() => { act((g) => discardSecondary(g, p, id)); flash(s.active === p ? 'ทิ้งการ์ดแล้ว +1 CP' : 'ทิ้งการ์ดแล้ว (ได้ CP เฉพาะตอนเทิร์นเรา)'); }}>
+                                <Icon name="delete" size={18} /> ทิ้งการ์ด{s.active === p ? ' (+1 CP)' : ''}
+                              </button>
+                              {!P.secSwapUsed && s.active === p && s.phase === 'command' && P.cp >= 1 && (
+                                <button className="btn small sec-discard" onClick={() => act((g) => swapSecondary(g, p, id))}><Icon name="reroll" size={16} /> เปลี่ยนใบใหม่ (1 CP, ครั้งเดียว)</button>
+                              )}
+                            </>
                           )}
                         </div>
                       );

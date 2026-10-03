@@ -3,7 +3,7 @@
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from './attack';
 import { RULES } from './config';
 import { smartPlacement } from './deploy';
-import { dist, pointInPoly, polyCentroid } from './geometry';
+import { dist, polyCentroid } from './geometry';
 import { detChoices, pickDetChoice } from './detachments';
 import {
   autoApproach, autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
@@ -15,8 +15,8 @@ import {
 import { abilityChoices, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
-import { actionOptions, startAction, zonePoly } from './missions';
-import { secondaryGoal } from './secondaries';
+import { actionOptions, startAction } from './missions';
+import { secondaryDead } from './secondaries';
 import {
   centre, chargeValue, isBrawler, meleeKills, moveOf, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
@@ -100,17 +100,7 @@ export function botDeploy(s: GameState) {
 export function botManageCards(s: GameState, p: PlayerId) {
   const P = s.players[p];
   if (P.secMode !== 'tactical' || s.botIgnoresCards?.includes(p)) return;
-  const mine = boardUnits(s, p);
-  const reach = (u: UnitState) => (alive(u)[0]?.profile.M ?? 0) + 6;
-  const dead = (id: string) => {
-    const g = secondaryGoal(s, p, id);
-    if (['assassination', 'bring-it-down', 'a-grievous-blow'].includes(id)) return g.units.length === 0;
-    if (id === 'behind-enemy-lines') {
-      const z = zonePoly(s, other(p));
-      return !mine.some((u) => alive(u).some((m) => pointInPoly(m, z) || z.some((q) => dist(m, q) <= reach(u))));
-    }
-    return false;
-  };
+  const dead = (id: string) => secondaryDead(s, p, id);
   for (const id of [...P.secActive]) {
     if (!dead(id)) continue;
     if (!P.secSwapUsed && P.cp >= 2 && s.phase === 'command' && s.active === p) swapSecondary(s, p, id);

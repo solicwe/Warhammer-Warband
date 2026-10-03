@@ -268,5 +268,21 @@ export function secondaryGoal(s: GameState, p: PlayerId, id: string): SecondaryG
   return g;
 }
 
+/**
+ * A tactical card that cannot score any more: nothing left to kill for it, or no unit near enough to get where it
+ * wants. Worth discarding (+1CP in your turn) or swapping.
+ */
+export function secondaryDead(s: GameState, p: PlayerId, id: string): boolean {
+  const g = secondaryGoal(s, p, id);
+  if (['assassination', 'bring-it-down', 'a-grievous-blow'].includes(id)) return g.units.length === 0;
+  if (id === 'behind-enemy-lines') {
+    const z = zonePoly(s, other(p));
+    const reach = (u: UnitState) => (alive(u)[0]?.profile.M ?? 0) + 6;
+    return !boardUnits(s, p).some((u) => alive(u).some((m) => pointInPoly(m, z) || z.some((q) => dist(m, q) <= reach(u))));
+  }
+  if (id === 'a-tempting-target' || id === 'beacon') return g.objectives.length + g.units.length === 0;
+  return false;
+}
+
 export const unitName = (s: GameState, id?: string) => (id ? unitById(s, id).name : '—');
 export { toPoly, deploymentById };

@@ -451,21 +451,32 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 
 /* ---------- secondary mission cards ---------- */
 .sec-draw { max-width: 96vw; }
-.sec-hand { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; perspective: 900px; }
-.sec-card { position: relative; width: 150px; height: 214px; transform-style: preserve-3d; transform: rotateY(180deg) translateY(-30px) rotate(-6deg); transition: transform 0.7s cubic-bezier(.2, 1.3, .4, 1); animation: sec-deal 0.45s ease-out both; }
-.sec-card.up { transform: none; }
-.sec-face { position: absolute; inset: 0; border-radius: 12px; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
-.sec-back { transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #f5d48a; font: 800 12px var(--sans); letter-spacing: 0.18em; background: repeating-linear-gradient(45deg, #3a0b0b 0 8px, #4a1010 8px 16px); border: 3px solid #c99a2e; }
+.sec-hand { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+/* a flat 2D flip (squeeze to a line, swap faces, open again): 3D flips render mirrored or upside down on some phones */
+.sec-card { position: relative; width: 150px; height: 214px; animation: sec-deal 0.45s ease-out both; }
+.sec-face { position: absolute; inset: 0; border-radius: 12px; overflow: hidden; }
+.sec-back { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #f5d48a; font: 800 12px var(--sans); letter-spacing: 0.18em; background: repeating-linear-gradient(45deg, #3a0b0b 0 8px, #4a1010 8px 16px); border: 3px solid #c99a2e; }
 .sec-card.p0 .sec-back { background: repeating-linear-gradient(45deg, #0b2a3d 0 8px, #0f3550 8px 16px); }
-.sec-front { background: #f4efe2; color: #1a1a1a; border: 3px solid #c99a2e; padding: 10px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.sec-front { background: #f4efe2; color: #1a1a1a; border: 3px solid #c99a2e; padding: 10px; display: flex; flex-direction: column; gap: 6px; text-align: left; visibility: hidden; }
+.sec-card.up { animation: sec-flip 0.5s ease-in-out both; animation-delay: inherit; }
+.sec-card.up .sec-front { animation: sec-show 0.5s step-end both; animation-delay: inherit; }
+.sec-card.up .sec-back { animation: sec-hide 0.5s step-end both; animation-delay: inherit; }
 .sec-name { font: 700 16px var(--serif); line-height: 1.15; border-bottom: 2px solid #c99a2e; padding-bottom: 5px; }
 .sec-when { font: 700 11px var(--sans); color: #7a0c0c; display: flex; align-items: center; gap: 4px; }
 .sec-text { font-size: 12.5px; line-height: 1.4; overflow-y: auto; }
 .sec-progress { margin-top: auto; font: 700 12px var(--sans); color: #2e7d4f; }
-@keyframes sec-deal { from { opacity: 0; transform: rotateY(180deg) translateY(-120px) rotate(-20deg); } }
+.sec-progress.dead { color: var(--bad); }
+@keyframes sec-deal { from { opacity: 0; transform: translateY(-80px) rotate(-12deg); } }
+@keyframes sec-flip { 0% { transform: scaleX(1); } 50% { transform: scaleX(0.02); } 100% { transform: scaleX(1); } }
+@keyframes sec-show { 0% { visibility: hidden; } 50% { visibility: visible; } 100% { visibility: visible; } }
+@keyframes sec-hide { 0% { visibility: visible; } 50% { visibility: hidden; } 100% { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .sec-card, .sec-card.up { animation: none; } .sec-card.up .sec-front { visibility: visible; animation: none; } .sec-card.up .sec-back { visibility: hidden; animation: none; } }
 /* the card viewer */
 .sec-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; justify-items: center; }
-.sec-list .sec-card { animation: none; }
+.sec-list .sec-card, .sec-list .sec-card.up { animation: none; }
+.sec-list .sec-card.up .sec-front { visibility: visible; animation: none; }
+.sec-list .sec-card.up .sec-back { visibility: hidden; animation: none; }
+.sec-discard { width: 100%; }
 .goal-ring { animation: goal-pulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes goal-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .goal-ring { animation: none; } }
