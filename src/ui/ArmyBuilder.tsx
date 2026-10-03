@@ -6,7 +6,7 @@ import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { DET_RULES } from '../engine/detachments';
 import { DatasheetView } from './Sheet';
 import { tokenKind } from './Tokens';
-import { cloudMode, cloudPortraitCount, download, exportablePortraitCount, exportPortraitsJson, exportPortraitsZip, fileToPortrait, getPortrait, hasOwnPortrait, importPortraitsJson, matchDatasheet, ownPortraitCount, servedPortraitCount, setPortrait, cloudErrorNow, uploadAllLocal, usePortraitsVersion } from './portraits';
+import { cloudMode, cloudPortraitCount, download, exportablePortraitCount, exportPortraitsJson, exportPortraitsZip, fileToPortrait, getPortrait, hasOwnPortrait, importPortraitsJson, matchDatasheet, ownPortraitCount, cloudPhotosNotIn, removeUnusedCloudFiles, servedPortraitCount, setPortrait, cloudErrorNow, uploadAllLocal, uploadsPending, usePortraitsVersion } from './portraits';
 
 interface Props {
   list: ArmyList;
@@ -374,8 +374,25 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           {cloudMode !== 'off' ? `บนเว็บ ${cloudPortraitCount()} รูป · ` : ''}ในเครื่องนี้ {ownPortraitCount()} รูป · จากโฟลเดอร์เซิร์ฟเวอร์ {servedPortraitCount()} รูป
         </div>
         {cloudErrorNow() && <div className="err">{cloudErrorNow()}</div>}
+        {uploadsPending() > 0 && <div className="small"><b>☁ กำลังอัปขึ้นเว็บ… เหลือ {uploadsPending()} รูป</b></div>}
         {cloudMode === 'write' && ownPortraitCount() > 0 && (
-          <button className="btn primary" onClick={async () => { setNote('กำลังอัปรูปขึ้นเว็บ…'); const n = await uploadAllLocal(); setNote(`อัปขึ้นเว็บแล้ว ${n} รูป`); }}>☁ อัปรูปในเครื่อง {ownPortraitCount()} รูป ขึ้นเว็บ</button>
+          <button className="btn primary" disabled={uploadsPending() > 0} onClick={async () => { const n = await uploadAllLocal(); setNote(`อัปขึ้นเว็บแล้ว ${n} รูป`); }}>
+            {uploadsPending() > 0 ? 'กำลังอัป…' : `☁ อัปรูปในเครื่อง ${ownPortraitCount()} รูป ขึ้นเว็บ`}
+          </button>
+        )}
+        {cloudMode === 'write' && cloudPortraitCount() > 0 && (
+          <button className="btn ghost" disabled={uploadsPending() > 0} onClick={async () => {
+            setNote('กำลังเช็กรูปบนเว็บ…');
+            try {
+              // every datasheet of every army: a photo whose unit is in none of them (moved to Legends …) can go
+              const idx = await loadIndex();
+              const known = new Set((await Promise.all(idx.factions.map((f) => loadFaction(f.id)))).flatMap((f) => f.datasheets.map((d) => d.name)));
+              const gone = cloudPhotosNotIn(known);
+              if (!window.confirm(`ลบออกจากเว็บ:\n• ไฟล์รูปซ้ำที่ไม่มีหน่วยไหนใช้${gone.length ? `\n• รูปของหน่วยที่ไม่มีในเกมแล้ว (Legends): ${gone.join(', ')}` : ''}\nรูปของหน่วยที่ยังใช้อยู่ไม่หาย`)) { setNote(null); return; }
+              const r = await removeUnusedCloudFiles(known);
+              setNote(`ลบแล้ว: ไฟล์ซ้ำ ${r.files} ไฟล์${r.photos.length ? ` · รูปหน่วย Legends ${r.photos.length} รูป (${r.photos.join(', ')})` : ''}`);
+            } catch { setNote('ลบไม่สำเร็จ ลองใหม่อีกครั้ง'); }
+          }}>🧹 เก็บกวาดรูปบนเว็บ (ไฟล์ซ้ำ + หน่วย Legends)</button>
         )}
         <div className="btn-row">
           <label className="btn">

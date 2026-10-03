@@ -114,24 +114,53 @@ export function initCloudPortraits(): Promise<void> {
 /** The last upload problem, for the screen to show (cleared when the next upload starts). */
 export let cloudError: string | null = null;
 
-async function uploadToCloud(name: string, dataUrl: string): Promise<boolean> {
+// Uploads go one at a time, in order. A photo already waiting or on its way is never sent twice, and a photo
+// replaced or removed before its turn is skipped: each name keeps exactly one file on the site.
+let queue: Promise<unknown> = Promise.resolve();
+const waiting = new Map<string, { url: string; done: Promise<boolean> }>();
+export const uploadsPending = (): number => waiting.size;
+
+function uploadToCloud(name: string, dataUrl: string): Promise<boolean> {
+  const w = waiting.get(name);
+  if (w?.url === dataUrl) return w.done;
+  const done = queue.then(() => uploadNow(name, dataUrl)).finally(() => {
+    if (waiting.get(name)?.done === done) waiting.delete(name);
+    version++;
+    listeners.forEach((l) => l());
+  });
+  waiting.set(name, { url: dataUrl, done });
+  queue = done.catch(() => undefined);
+  version++;
+  listeners.forEach((l) => l());
+  return done;
+}
+
+async function uploadNow(name: string, dataUrl: string): Promise<boolean> {
   await initCloudPortraits();
   if (cloudMode !== 'write' || !cloudDb || !cloudAssets) return false;
+  if (waiting.get(name)?.url !== dataUrl || cache[name] !== dataUrl) return false; // replaced or removed meanwhile
   cloudError = null;
   try {
     const { bytes, ext } = dataUrlBytes(dataUrl);
     const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
     const old = cloud[name]?.asset;
     const up = await cloudAssets.upload(new Blob([bytes as BlobPart], { type }), { type });
-    await cloudDb.doc(`${COLL}/${docId(name)}`).set({ name, asset: up.id });
+    try {
+      await cloudDb.doc(`${COLL}/${docId(name)}`).set({ name, asset: up.id });
+    } catch (e) {
+      await cloudAssets.delete(up.id).catch(() => undefined); // nothing points at it: don't leave it behind
+      throw e;
+    }
     if (old && old !== up.id) await cloudAssets.delete(old).catch(() => undefined);
-    if (cache[name] === dataUrl) { delete cache[name]; cloud[name] = { name, asset: up.id }; save(); }
+    cloud[name] = { name, asset: up.id };
+    if (cache[name] === dataUrl) delete cache[name];
+    save();
     return true;
   } catch (e) {
     const code = (e as { code?: string })?.code;
-    cloudError = code === 'quota_or_state' ? 'พื้นที่เก็บรูปบนเว็บเต็ม' : code === 'too_large' ? 'รูปใหญ่เกินไป' : 'อัปรูปขึ้นเว็บไม่สำเร็จ — เก็บไว้ในเครื่องนี้แทน';
-    version++;
-    listeners.forEach((l) => l());
+    cloudError = code === 'quota_or_state' ? 'พื้นที่เก็บรูปบนเว็บเต็ม' : code === 'too_large' ? 'รูปใหญ่เกินไป'
+      : code === 'rate_limited' || code === 'resource_exhausted' ? 'อัปถี่เกินไป — รอสักครู่แล้วกดอัปรูปในเครื่องอีกครั้ง'
+      : 'อัปรูปขึ้นเว็บไม่สำเร็จ — เก็บไว้ในเครื่องนี้แทน';
     return false;
   }
 }
@@ -150,10 +179,40 @@ async function removeFromCloud(name: string) {
 
 /** Send every photo kept only in this browser up to the site. Resolves to how many went up. */
 export async function uploadAllLocal(): Promise<number> {
-  let n = 0;
-  for (const [name, url] of Object.entries(cache)) if (await uploadToCloud(name, url)) n++;
-  return n;
+  const results = await Promise.all(Object.entries(cache).map(([name, url]) => uploadToCloud(name, url)));
+  return results.filter(Boolean).length;
 }
+
+/**
+ * Clean the site's photo store: photos of units that are in no army any more (moved to Legends …, when `known`
+ * lists every current datasheet name), and files no photo points at (left by an interrupted or doubled upload;
+ * only those older than two minutes, so an upload on its way is never touched). Deletes for good — only on the
+ * player's say-so. Resolves to what was removed.
+ */
+export async function removeUnusedCloudFiles(known?: Set<string>): Promise<{ photos: string[]; files: number }> {
+  const out = { photos: [] as string[], files: 0 };
+  if (cloudMode !== 'write' || !cloudAssets || !cloudDb || waiting.size) return out;
+  if (known?.size) {
+    for (const name of Object.keys(cloud)) {
+      if (known.has(name)) continue;
+      try { await cloudDb.doc(`${COLL}/${docId(name)}`).delete(); delete cloud[name]; out.photos.push(name); } catch { /* keep it */ }
+    }
+  }
+  const list = (cloudAssets as AssetsLike & { list(): Promise<{ assets: { id: string; createdAt: string }[] }> }).list;
+  const { assets } = await list.call(cloudAssets);
+  const used = new Set(Object.values(cloud).map((c) => c.asset));
+  const old = Date.now() - 2 * 60_000;
+  for (const a of assets) {
+    if (used.has(a.id) || Date.parse(a.createdAt) > old) continue;
+    try { await cloudAssets.delete(a.id); out.files++; } catch { /* try the rest */ }
+  }
+  version++;
+  listeners.forEach((l) => l());
+  return out;
+}
+
+/** Names of photos on the site that are not in `known` (units no longer in any army). */
+export const cloudPhotosNotIn = (known: Set<string>): string[] => Object.keys(cloud).filter((n) => !known.has(n));
 
 export const cloudPortraitCount = (): number => Object.keys(cloud).length;
 export const cloudErrorNow = (): string | null => cloudError;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { applyManifest, cloudMode, cloudPortraitCount, getPortrait, hasOwnPortrait, imageSlug, initCloudPortraits, makeZip, matchDatasheet, ownPortraitCount, setPortrait } from './portraits';
+import { applyManifest, cloudMode, cloudPortraitCount, getPortrait, hasOwnPortrait, imageSlug, initCloudPortraits, makeZip, matchDatasheet, ownPortraitCount, removeUnusedCloudFiles, setPortrait, uploadAllLocal, uploadsPending } from './portraits';
 
 const names = ['Intercessor Squad', 'Assault Intercessor Squad', 'Captain', 'Captain in Terminator Armour', 'Warboss', 'Boyz', 'Big Mek', "Headwoppa's Killchoppa"];
 
@@ -52,13 +52,15 @@ describe('photos kept on the web page (claude.ai artifact)', () => {
     const push = () => subs.forEach((f) => f({ docs: [...docs].filter(([k]) => k.startsWith('portraits/')).map(([k, v]) => ({ id: k.split('/')[1], data: () => v })) }));
     const uploads: string[] = [];
     const deleted: string[] = [];
+    const stored: { id: string; createdAt: string }[] = [];
     const db = {
       collection: () => ({ onSnapshot: (f: (typeof subs)[number]) => { subs.push(f); push(); return () => undefined; } }),
       doc: (path: string) => ({ set: async (d: Record<string, unknown>) => { docs.set(path, d); push(); }, delete: async () => { docs.delete(path); push(); } }),
     };
     const assets = {
-      upload: async (b: Blob) => { const id = String(uploads.length + 1).padStart(32, 'a'); uploads.push(b.type); return { id, url: `/_blob/${id}` }; },
-      delete: async (ref: string) => { deleted.push(ref); return { deleted: true }; },
+      upload: async (b: Blob) => { const id = String(uploads.length + 1).padStart(32, 'a'); uploads.push(b.type); stored.push({ id, createdAt: new Date(0).toISOString() }); return { id, url: `/_blob/${id}` }; },
+      delete: async (ref: string) => { deleted.push(ref); const i = stored.findIndex((a) => a.id === ref); if (i >= 0) stored.splice(i, 1); return { deleted: true }; },
+      list: async () => ({ assets: [...stored] }),
     };
     (globalThis as unknown as { claude: unknown }).claude = { use: async (n: string) => (n === 'db' ? db : n === 'assets' ? assets : null) };
     await initCloudPortraits();
@@ -84,5 +86,25 @@ describe('photos kept on the web page (claude.ai artifact)', () => {
     expect(docs.has('portraits/warboss')).toBe(false);
     expect(deleted).toEqual(['a'.repeat(31) + '1', 'a'.repeat(31) + '2']);
     expect(getPortrait('Warboss')).toBeUndefined();
+
+    // the same photos sent again and again while they are still going up: each goes up once
+    const a = 'data:image/jpeg;base64,' + btoa('boyz'), b = 'data:image/jpeg;base64,' + btoa('nobz');
+    const before = uploads.length;
+    setPortrait('Boyz', a); setPortrait('Nobz', b);
+    void uploadAllLocal(); void uploadAllLocal(); void uploadAllLocal();
+    expect(uploadsPending()).toBe(2);
+    await uploadAllLocal();
+    await new Promise((r) => setTimeout(r, 10));
+    expect(uploads.length - before).toBe(2);
+    expect(uploadsPending()).toBe(0);
+    expect(cloudPortraitCount()).toBe(2);
+
+    // a file nothing points at (an old doubled upload) is cleared; the ones in use stay
+    stored.push({ id: 'f'.repeat(32), createdAt: new Date(0).toISOString() });
+    expect(await removeUnusedCloudFiles()).toEqual({ photos: [], files: 1 });
+    // a photo of a unit that is in no army any more (moved to Legends) goes, with its file
+    expect(await removeUnusedCloudFiles(new Set(['Boyz']))).toEqual({ photos: ['Nobz'], files: 1 });
+    expect(cloudPortraitCount()).toBe(1);
+    expect(stored.map((x) => x.id).sort()).toEqual([...docs.values()].map((v) => (v as { asset: string }).asset).sort());
   });
 });
