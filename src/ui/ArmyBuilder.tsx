@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { enhancementOptions, listPoints, newUid, pointsOptions, validateList } from '../engine/army';
+import { addonLines, enhancementOptions, listPoints, newUid, pointsOptions, syncList, syncWargear, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RULES } from '../engine/config';
-import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData } from '../engine/types';
+import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { DatasheetView } from './Sheet';
 import { tokenKind } from './Tokens';
@@ -66,6 +66,115 @@ function UnitArt({ sheet }: { sheet?: DatasheetData }) {
   );
 }
 
+/** "2× Fragstorm grenade launcher + Storm shield" */
+const itemsLabel = (items: string[]) => [...new Set(items)].map((n) => { const k = items.filter((x) => x === n).length; return k > 1 ? `${k}× ${n}` : n; }).join(' + ');
+
+function scopeLabel(o: WargearOption, max: number) {
+  if (o.stack) return `สูงสุด ${max}`;
+  if (o.scope === 'all') return 'ทั้งหน่วย';
+  if (o.scope === 'perN') return `${max} ตัว (ทุก ${o.per} โมเดล)`;
+  if (o.scope === 'any') return `ได้ทุกตัว (${max})`;
+  if (o.scope === 'upTo' && max > 1) return `ไม่เกิน ${max} ตัว`;
+  return '';
+}
+
+/** Wargear choices of one list entry: swaps, extra weapons, "pick two from the list", add-on models. */
+function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUnitEntry; onChange: (patch: Partial<ArmyUnitEntry>) => void }) {
+  const opts = sheet.wargearOptions ?? [];
+  const addons = addonLines(sheet);
+  if (!opts.length && !addons.length) return null;
+  const picks = u.wargear ?? [];
+  const cost = (items: string[]) => items.reduce((a, n) => a + (sheet.wargearCosts?.find((c) => wkey(c.name) === wkey(n))?.pts ?? 0), 0);
+  const costTag = (items: string[]) => { const c = cost(items); return c ? <span className="wg-cost">+{c}</span> : null; };
+  const put = (opt: number, next: WargearPick[]) => onChange({ wargear: [...picks.filter((p) => p.opt !== opt), ...next] });
+  const single = sheet.models.length === 1 && (sheet.composition.length <= 1);
+  return (
+    <div className="field">
+      <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· บางอาวุธบวกแต้ม (แสดง +แต้ม/ชิ้น)</span> : null}</span>
+      {opts.map((o, i) => {
+        const max = wargearMax(sheet, o, u.models, u.addons);
+        const mine = picks.filter((p) => p.opt === i);
+        const used = mine.reduce((a, p) => a + p.count, 0);
+        const who = o.who !== '*' && !single ? `${o.who}: ` : '';
+        const head = `${who}${o.replace.length ? `${itemsLabel(o.replace)} →` : 'เพิ่ม'}`;
+        if (max <= 0) {
+          return (
+            <div key={i} className="wg-opt off">
+              <div className="wg-head">{head}</div>
+              <div className="tiny muted">{o.minModels ? `ต้องมี ${o.minModels} โมเดลขึ้นไป` : 'ใช้ไม่ได้กับขนาดหน่วยนี้'}</div>
+            </div>
+          );
+        }
+        const pickSel = mine.find((p) => p.choice < 0);
+        const pickDefault = (): string[] => (o.pickFrom ?? []).slice(0, o.pick ?? 2);
+        const radio = max === 1 || o.scope === 'all' || o.scope === 'one';
+        return (
+          <div key={i} className="wg-opt">
+            <div className="wg-head">{head} <span className="tiny muted">{scopeLabel(o, max)}</span></div>
+            {radio ? (
+              <div className="wg-chips">
+                <button type="button" className={!mine.length ? 'on' : ''} onClick={() => put(i, [])}>{o.replace.length ? 'ไม่เปลี่ยน' : 'ไม่ใส่'}</button>
+                {o.choices.map((c, ci) => (
+                  <button type="button" key={ci} className={mine.some((p) => p.choice === ci) ? 'on' : ''} onClick={() => put(i, [{ opt: i, choice: ci, count: o.scope === 'all' ? max : 1 }])}>
+                    {itemsLabel(c)}{costTag(c)}
+                  </button>
+                ))}
+                {o.pick && (
+                  <button type="button" className={pickSel ? 'on' : ''} onClick={() => put(i, [{ opt: i, choice: -1, count: 1, picks: pickSel?.picks ?? pickDefault() }])}>
+                    เลือก {o.pick} ชิ้นจากรายการ
+                  </button>
+                )}
+              </div>
+            ) : (
+              o.choices.map((c, ci) => {
+                const cur = mine.find((p) => p.choice === ci)?.count ?? 0;
+                const setN = (n: number) => put(i, [...mine.filter((p) => p.choice !== ci), ...(n > 0 ? [{ opt: i, choice: ci, count: n }] : [])]);
+                return (
+                  <div key={ci} className="wg-step">
+                    <span className="grow">{itemsLabel(c)}{costTag(c)}</span>
+                    <button type="button" aria-label={`ลด ${itemsLabel(c)}`} disabled={cur <= 0} onClick={() => setN(cur - 1)}>−</button>
+                    <b>{cur}</b>
+                    <button type="button" aria-label={`เพิ่ม ${itemsLabel(c)}`} disabled={used >= max} onClick={() => setN(cur + 1)}>+</button>
+                  </div>
+                );
+              })
+            )}
+            {pickSel && o.pickFrom && (
+              <div className="wg-picks">
+                {Array.from({ length: o.pick ?? 2 }, (_, k) => (
+                  <select key={k} value={pickSel.picks?.[k] ?? ''} aria-label={`อาวุธชิ้นที่ ${k + 1}`} onChange={(e) => {
+                    const next = [...(pickSel.picks ?? pickDefault())];
+                    next[k] = e.target.value;
+                    put(i, [{ ...pickSel, picks: next }]);
+                  }}>
+                    {o.pickFrom!.map((n) => <option key={n} value={n}>{n}{cost([n]) ? ` (+${cost([n])})` : ''}</option>)}
+                  </select>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {addons.map((a) => {
+        const on = (u.addons ?? []).includes(a.name);
+        return (
+          <div key={a.name} className="wg-opt">
+            <div className="wg-head">เพิ่มโมเดล</div>
+            <div className="wg-chips">
+              <button type="button" className={!on ? 'on' : ''} onClick={() => onChange({ addons: (u.addons ?? []).filter((x) => x !== a.name) })}>ไม่เพิ่ม</button>
+              <button type="button" className={on ? 'on' : ''} onClick={() => onChange({ addons: [...(u.addons ?? []).filter((x) => x !== a.name), a.name] })}>+1 {a.name}<span className="wg-cost">+{a.pts}</span></button>
+            </div>
+          </div>
+        );
+      })}
+      <details>
+        <summary className="tiny">ข้อความ wargear ต้นฉบับ</summary>
+        {sheet.options.map((t, k) => <div key={k} className="tiny">• {t}</div>)}
+      </details>
+    </div>
+  );
+}
+
 export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [index, setIndex] = useState<FactionIndex | null>(null);
   const [faction, setFaction] = useState<FactionData | null>(null);
@@ -81,6 +190,11 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   useEffect(() => { loadIndex().then(setIndex).catch(() => setNote('โหลดรายชื่อ faction ไม่ได้')); }, []);
   useEffect(() => { setFaction(null); loadFaction(list.factionId).then(setFaction).catch(() => setNote('โหลดข้อมูล faction ไม่ได้')); }, [list.factionId]);
   useEffect(() => { if (!note) return; const t = window.setTimeout(() => setNote(null), 2400); return () => window.clearTimeout(t); }, [note]);
+  useEffect(() => {
+    if (!faction || faction.id !== list.factionId) return;
+    const synced = syncList(list, faction);
+    if (synced !== list) onChange(synced);
+  }, [faction, list, onChange]);
 
   const size = RULES.battleSizes.find((b) => b.id === list.battleSize) ?? RULES.battleSizes[0];
   const errors = useMemo(() => (faction ? validateList(list, faction, size) : []), [list, faction, size]);
@@ -111,12 +225,13 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   };
 
   const set = (patch: Partial<ArmyList>) => onChange({ ...list, ...patch });
-  const setUnit = (uid: string, patch: Partial<ArmyUnitEntry>) => set({ units: list.units.map((x) => (x.uid === uid ? { ...x, ...patch } : x)) });
+  /** Update one entry; wargear choices are re-checked for the new size and their points recomputed. */
+  const setUnit = (uid: string, patch: Partial<ArmyUnitEntry>) => set({ units: list.units.map((x) => (x.uid === uid ? syncWargear(sheetOf(x.datasheet), { ...x, ...patch }) : x)) });
   const removeUnit = (uid: string) => set({ units: list.units.filter((x) => x.uid !== uid).map((x) => (x.attachTo === uid ? { ...x, attachTo: undefined } : x)) });
   const addUnit = (d: DatasheetData) => {
     const opt = pointsOptions(d)[0];
     if (!opt) return;
-    set({ units: [...list.units, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts }] });
+    set({ units: [...list.units, syncWargear(d, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts })] });
     setNote(`เพิ่ม ${d.name}`);
   };
 
@@ -141,7 +256,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       ...SECTIONS.flatMap((sec) => {
         const us = list.units.filter((u) => sectionOf(sheetOf(u.datasheet)) === sec.id);
         if (!us.length) return [];
-        return [`${sec.title.toUpperCase()}`, ...us.map((u) => `• ${u.datasheet} (${u.models}) — ${u.pts + (u.enhancementPts ?? 0)} pts${u.warlord ? ' · Warlord' : ''}${u.enhancement ? ` · ${u.enhancement}` : ''}`), ''];
+        return [`${sec.title.toUpperCase()}`, ...us.map((u) => {
+          const wg = wargearSummary(sheetOf(u.datasheet), u);
+          return `• ${u.datasheet} (${u.models}) — ${unitPoints(u)} pts${u.warlord ? ' · Warlord' : ''}${u.enhancement ? ` · ${u.enhancement}` : ''}${wg ? `\n   ${wg}` : ''}`;
+        }), ''];
       }),
     ].join('\n');
     try {
@@ -157,6 +275,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const sheet = sheetOf(u.datasheet);
     const leads = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
     const line = [u.warlord && 'Warlord', u.enhancement, leads && `นำ ${leads.datasheet}`].filter(Boolean).join(' · ');
+    const wg = wargearSummary(sheet, u);
     const wrong = sheet && !allowed(sheet);
     return (
       <div key={u.uid} className="ab-row">
@@ -164,8 +283,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           <UnitArt sheet={sheet} />
           <span className="ab-row-text">
             <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
-            <span className="ab-pts">{u.pts + (u.enhancementPts ?? 0)} pts{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">ไม่มีใน 11e</span>}</span>
+            <span className="ab-pts">{unitPoints(u)} pts{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">ไม่มีใน 11e</span>}</span>
             {line && <span className="ab-sub">{line}</span>}
+            {wg && <span className="ab-sub ab-wg">🔧 {wg}</span>}
           </span>
         </button>
         <button type="button" className="ab-kebab" aria-label={`ตัวเลือก ${u.datasheet}`} onClick={() => setMenu(u.uid)}>⋮</button>
@@ -319,7 +439,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             <UnitArt sheet={sheet} />
             <div className="grow">
               <div className="sheet-title">{u.datasheet}</div>
-              <div className="ab-pts">{u.pts + (u.enhancementPts ?? 0)} pts</div>
+              <div className="ab-pts">{unitPoints(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</div>
             </div>
           </div>
           <div className="field">รูปของหน่วยนี้
@@ -347,6 +467,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               </div>
             </div>
           )}
+          {sheet && <WargearEditor sheet={sheet} u={u} onChange={(patch) => setUnit(u.uid, patch)} />}
           {sheet && sheet.leads.length > 0 && (
             <label className="field">นำหน่วย (Leader)
               <select value={u.attachTo ?? ''} onChange={(e) => setUnit(u.uid, { attachTo: e.target.value || undefined })}>

@@ -1,6 +1,7 @@
 import { Component, useEffect, useState, type ReactNode } from 'react';
 import { dispositionById, dispositionId, layoutsFor, MISSIONS, primaryFor, deploymentName, type DispositionId } from '../engine/config';
 import { createGame, listDisposition } from '../engine/game';
+import { listPoints, syncList } from '../engine/army';
 import { LayoutPreview } from './LayoutPreview';
 import type { ArmyList, FactionData, GameState } from '../engine/types';
 import { ArmyBuilder } from './ArmyBuilder';
@@ -60,7 +61,13 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem(LISTS_KEY, JSON.stringify(lists)); } catch { /* ignore */ } }, [lists]);
   useEffect(() => {
     let live = true;
-    Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]).then((f) => live && setFacs([f[0], f[1]])).catch(() => {});
+    Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]).then((f) => {
+      if (!live) return;
+      setFacs([f[0], f[1]]);
+      // wargear points (e.g. default thunder hammers) for lists saved before wargear existed
+      const synced: [ArmyList, ArmyList] = [syncList(lists[0], f[0]), syncList(lists[1], f[1])];
+      if (synced[0] !== lists[0] || synced[1] !== lists[1]) setLists(synced);
+    }).catch(() => {});
     return () => { live = false; };
   }, [lists]);
   /** Dispositions a list can choose from: one per detachment it brings. */
@@ -84,13 +91,14 @@ export default function App() {
     setErr(null);
     try {
       const factions = await Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]);
+      const lists2: [ArmyList, ArmyList] = [syncList(lists[0], factions[0]), syncList(lists[1], factions[1])];
       const gone = lists.flatMap((l, i) => l.units.filter((u) => !factions[i].datasheets.some((d) => d.name === u.datasheet)).map((u) => `${names[i]}: ${u.datasheet}`));
       if (gone.length) { setErr(`มีหน่วยที่ไม่อยู่ใน 11th edition แล้ว (Legends) — เข้า "จัดทัพ" แล้วลบออกก่อน: ${gone.join(', ')}`); return; }
       const dz: [DispositionId, DispositionId] = [dispOf(0) ?? listDisposition(lists[0], factions[0]), dispOf(1) ?? listDisposition(lists[1], factions[1])];
       const opts = layoutsFor(dz[0], dz[1]);
       const layout = layoutPick ? opts[layoutPick - 1] : opts[Math.floor(Math.random() * opts.length)];
       const s = createGame({
-        lists, factions: factions as [typeof factions[0], typeof factions[1]],
+        lists: lists2, factions: factions as [typeof factions[0], typeof factions[1]],
         names: mode === 'botbot' ? ['บอท 1', 'บอท 2'] : vsBot ? [names[0], 'บอท'] : names,
         deploymentId: layout?.id, dispositions: dz, secondaryMode: secMode,
       });
@@ -120,7 +128,7 @@ export default function App() {
     );
   }
   const factionName = (id: string) => index?.factions.find((f) => f.id === id)?.name ?? id;
-  const pts = (l: ArmyList) => l.units.reduce((a, u) => a + u.pts + (u.enhancementPts ?? 0), 0);
+  const pts = listPoints;
   return (
     <div className="app">
       <TokenSprites />

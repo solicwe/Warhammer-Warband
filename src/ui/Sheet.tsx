@@ -19,15 +19,17 @@ function Stats({ p }: { p: ModelProfileData }) {
 }
 
 function Weapons({ weapons }: { weapons: WeaponData[] }) {
-  const rows = weapons.flatMap((w) => w.profiles.map((p) => ({ w, p })));
+  // a weapon carried twice (2 godhammer lascannons) shows once as "2×"
+  const counted = [...new Map(weapons.map((w) => [w.name, w])).values()].map((w) => ({ w, n: weapons.filter((x) => x.name === w.name).length }));
+  const rows = counted.flatMap(({ w, n }) => w.profiles.map((p) => ({ w, p, n })));
   return (
     <table className="wtable">
       <thead><tr><th>อาวุธ</th><th>R</th><th>A</th><th>BS/WS</th><th>S</th><th>AP</th><th>D</th></tr></thead>
       <tbody>
-        {rows.map(({ w, p }, i) => (
+        {rows.map(({ w, p, n }, i) => (
           <tr key={i}>
             <td>
-              {w.name}{p.name !== w.name ? ` – ${p.name}` : ''}
+              {n > 1 ? `${n}× ` : ''}{w.name}{p.name !== w.name ? ` – ${p.name}` : ''}
               {p.abilities.length > 0 && <div className="kw">[{abilitiesOf(p).map(abilityLabel).join(', ')}]</div>}
             </td>
             <td>{p.range === 'Melee' ? 'M' : `${p.range}"`}</td>
@@ -77,11 +79,12 @@ export function DatasheetView({ sheet }: { sheet: DatasheetData }) {
 
 export function UnitView({ u }: { u: UnitState }) {
   usePastePortrait(u.models.find((m) => m.isCharacter)?.source ?? u.sources[0]);
-  const groups = new Map<string, { p: ModelProfileData; n: number; weapons: WeaponData[] }>();
+  const groups = new Map<string, { p: ModelProfileData; n: number; weapons: WeaponData[]; name: string; gear: string[] }>();
   for (const m of u.models) {
     if (m.dead) continue;
-    const k = m.source + m.profile.name;
-    const g = groups.get(k) ?? { p: m.profile, n: 0, weapons: m.weapons };
+    // models with different wargear are listed separately
+    const k = [m.source, m.name, m.profile.W, m.profile.InSv, ...m.weapons.map((w) => w.name), ...(m.gear ?? [])].join('|');
+    const g = groups.get(k) ?? { p: m.profile, n: 0, weapons: m.weapons, name: m.name, gear: m.gear ?? [] };
     g.n += 1;
     groups.set(k, g);
   }
@@ -108,7 +111,7 @@ export function UnitView({ u }: { u: UnitState }) {
       </div>
       {[...groups.values()].map((g, i) => (
         <div key={i}>
-          <div className="small muted">{g.n}× {g.p.name}</div>
+          <div className="small muted">{g.n}× {g.name}{g.gear.length ? ` · ${g.gear.join(', ')}` : ''}</div>
           <Stats p={g.p} />
           <Weapons weapons={g.weapons} />
         </div>

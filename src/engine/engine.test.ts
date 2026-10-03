@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildUnits, distributeModels } from './army';
+import { buildUnits, distributeModels, syncWargear, wargearMax, wargearPoints, wargearProblems } from './army';
 import { allocationGroups, applyDamage, buildFightPools, buildShootPools, rollSavesAndDamage, startAttack, targetToughness, woundNeed } from './attack';
 import { parseDice } from './dice';
 import { coherencyProblems } from './geometry';
 import { createGame, endPhase, fightCandidates, formationAt, placeUnit, validateMove } from './game';
-import type { ArmyList, FactionData, GameState, Pt } from './types';
+import type { ArmyList, ArmyUnitEntry, FactionData, GameState, Pt } from './types';
 import { parseAbility } from './weapons';
 import { alive } from './state';
 
@@ -393,5 +393,75 @@ describe('Chapter Approved missions', () => {
     startAttack(s, 'overwatch', a.id, t.id, r.pools);
     rollHits(s);
     expect(s.attack!.pools[0].hits.some((h) => h.o === 'crit')).toBe(false);
+  });
+});
+
+describe('wargear', () => {
+  const opt = (sheetName: string, f: FactionData, re: RegExp) => f.datasheets.find((d) => d.name === sheetName)!.wargearOptions!.findIndex((o) => re.test(o.text));
+  const one = (f: FactionData, factionId: string, e: ArmyUnitEntry) => buildUnits({ name: 't', factionId, battleSize: 'incursion', detachments: [], units: [e] }, f, 0)[0];
+
+  it('parses the datasheet options into structured choices', () => {
+    const ics = SM.datasheets.find((d) => d.name === 'Intercessor Squad')!;
+    const gl = ics.wargearOptions!.find((o) => o.scope === 'perN')!;
+    expect(gl).toMatchObject({ per: 5, max: 1, replace: [], choices: [['Astartes grenade launcher']], requires: ['Bolt rifle'] });
+    const tac = SM.datasheets.find((d) => d.name === 'Tactical Squad')!;
+    const sgt = tac.wargearOptions!.find((o) => o.pick)!;
+    expect(sgt.who).toBe('Tactical Sergeant');
+    expect(sgt.pick).toBe(2);
+    expect(sgt.pickFrom).toContain('Plasma pistol');
+    expect(sgt.choices).toEqual([['Twin lightning claws']]);
+    expect(SM.datasheets.find((d) => d.name === 'Land Raider')!.loadout['*'].filter((x) => /godhammer/i.test(x))).toHaveLength(2);
+  });
+
+  it('swaps the sergeant weapon and adds grenade launchers to rank-and-file models', () => {
+    const sgtOpt = opt('Intercessor Squad', SM, /Sergeant.s bolt rifle/);
+    const pw = SM.datasheets.find((d) => d.name === 'Intercessor Squad')!.wargearOptions![sgtOpt].choices.findIndex((c) => c[0] === 'Power weapon');
+    const glOpt = opt('Intercessor Squad', SM, /grenade launcher/);
+    const u = one(SM, 'SM', { uid: 'a', datasheet: 'Intercessor Squad', models: 10, pts: 160, wargear: [{ opt: sgtOpt, choice: pw, count: 1 }, { opt: glOpt, choice: 0, count: 2 }] });
+    const sgt = u.models.find((m) => m.name === 'Intercessor Sergeant')!;
+    expect(sgt.weapons.map((w) => w.name)).toContain('Power weapon');
+    expect(sgt.weapons.map((w) => w.name)).not.toContain('Bolt rifle');
+    const gl = u.models.filter((m) => m.weapons.some((w) => w.name === 'Astartes grenade launcher'));
+    expect(gl).toHaveLength(2);
+    expect(gl.every((m) => m.name !== 'Intercessor Sergeant' && m.weapons.some((w) => w.name === 'Bolt rifle'))).toBe(true);
+    expect(wargearMax(SM.datasheets.find((d) => d.name === 'Intercessor Squad')!, SM.datasheets.find((d) => d.name === 'Intercessor Squad')!.wargearOptions![glOpt], 5)).toBe(1);
+  });
+
+  it('charges per-item wargear points, including default loadouts, and applies shields', () => {
+    const tas = SM.datasheets.find((d) => d.name === 'Terminator Assault Squad')!;
+    const claws = tas.wargearOptions!.findIndex((o) => o.choices.some((c) => c.includes('Twin lightning claws')));
+    expect(wargearPoints(tas, { models: 5 })).toBe(25); // 5 thunder hammers at +5
+    expect(wargearPoints(tas, { models: 5, wargear: [{ opt: claws, choice: 0, count: 2 }] })).toBe(15);
+    const u = one(SM, 'SM', syncWargear(tas, { uid: 'a', datasheet: tas.name, models: 5, pts: 155, wargear: [{ opt: claws, choice: 0, count: 2 }] }));
+    expect(u.pts).toBe(170);
+    expect(u.models.filter((m) => m.profile.W === 4)).toHaveLength(3); // storm shield: Wounds 4
+    expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Twin lightning claws') && m.profile.W === 3)).toHaveLength(2);
+  });
+
+  it('two different weapons from a list follow the pistol rule', () => {
+    const tac = SM.datasheets.find((d) => d.name === 'Tactical Squad')!;
+    const i = tac.wargearOptions!.findIndex((o) => o.pick);
+    const ok = { uid: 'a', datasheet: tac.name, models: 10, pts: 140, wargear: [{ opt: i, choice: -1, count: 1, picks: ['Plasma pistol', 'Power fist'] }] };
+    expect(wargearProblems(tac, ok)).toEqual([]);
+    const sgt = one(SM, 'SM', ok).models.find((m) => m.name === 'Tactical Sergeant')!;
+    expect(sgt.weapons.map((w) => w.name).sort()).toEqual(['Close combat weapon', 'Plasma pistol', 'Power fist']);
+    expect(wargearProblems(tac, { ...ok, wargear: [{ opt: i, choice: -1, count: 1, picks: ['Boltgun', 'Storm bolter'] }] }).length).toBeGreaterThan(0);
+  });
+
+  it('vehicles carry every listed weapon and add-on models cost points', () => {
+    const lr = one(SM, 'SM', { uid: 'a', datasheet: 'Land Raider', models: 1, pts: 240 });
+    expect(lr.models[0].weapons.filter((w) => w.name === 'Godhammer lascannon')).toHaveLength(2);
+    const out = SM.datasheets.find((d) => d.name === 'Outrider Squad')!;
+    const e = syncWargear(out, { uid: 'o', datasheet: out.name, models: 3, pts: 70, addons: ['Invader ATV'] });
+    expect(e.wargearPts).toBe(60);
+    expect(one(SM, 'SM', e).models).toHaveLength(4);
+  });
+
+  it('sizes clamp choices: Boyz get one special weapon per 10 models', () => {
+    const boyz = ORK.datasheets.find((d) => d.name === 'Boyz')!;
+    const big = boyz.wargearOptions!.findIndex((o) => o.choices.some((c) => c[0] === 'Big Shoota'));
+    expect(wargearMax(boyz, boyz.wargearOptions![big], 20)).toBe(2);
+    const e = syncWargear(boyz, { uid: 'b', datasheet: 'Boyz', models: 10, pts: 90, wargear: [{ opt: big, choice: 0, count: 2 }] });
+    expect(e.wargear).toEqual([{ opt: big, choice: 0, count: 1 }]);
   });
 });

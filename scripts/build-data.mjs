@@ -62,6 +62,7 @@ export function htmlToText(s = '') {
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(+d))
     .replace(/[ \t]+/g, ' ')
     .replace(/\n\s+/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
@@ -108,17 +109,114 @@ function parseLoadout(html) {
   while ((m = re.exec(text))) {
     let who = m[1].trim().replace(/^(every|each|the|all)\s+/i, '');
     if (/^(model|models|this model)$/i.test(who)) who = '*';
-    const items = m[2].replace(/\.$/, '').split(/;\s*/).map((s) => s.replace(/^\d+\s+/, '').trim()).filter(Boolean);
-    out[who] = items;
+    // "2 godhammer lascannons" -> listed twice, so the model really carries (and fires) both
+    const items = m[2].replace(/\.$/, '').split(/;\s*/).flatMap((s) => Array(Math.min(+(/^(\d+)\s/.exec(s)?.[1] ?? 1), 6)).fill(s.replace(/^\d+\s+/, '').trim())).filter(Boolean);
+    if (!out[who]) out[who] = items;
   }
   return out;
+}
+
+const WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, a: 1, an: 1 };
+const COUNT_RE = /^(\d+|one|two|three|four|five|six|a|an)\s+/i;
+const countOf = (s) => { const m = COUNT_RE.exec(s); return m ? Number(m[1]) || WORDS[m[1].toLowerCase()] || 1 : 1; };
+const stripCount = (s) => s.replace(/^up to (\d+|\w+)\s+/i, '').replace(COUNT_RE, '').replace(/^additional\s+/i, '').replace(/[.;,:]+$/, '').trim();
+const ownerless = (x) => x.replace(/\*/g, '').replace(/\([^)]*\)?|\[[^\]]*\]?/g, '').replace(/^.*?(?:'s|\btheir|\bits)\s+/i, '').trim();
+const JUNK = /following|\bor\b|^unit$|^models?$|pistol\)|one of them|^different\b|\blist\b|duplicates|cannot be|more than|\bcan be\b|[()\]]/i;
+/** "2 multi-meltas and 1 storm bolter" -> ['multi-meltas', 'multi-meltas', 'storm bolter'] (repeated for counts) */
+const items = (s) => s.split(/\s+and\s+|,\s*/).flatMap((raw) => {
+  const body = ownerless(raw);
+  const x = stripCount(body);
+  if (!x || x.length > 40 || JUNK.test(x)) return [];
+  return Array(Math.min(countOf(body), 6)).fill(x);
+});
+
+/** Loose key for matching wargear text to weapon names: "Astartes chain sword" ~ "Astartes chainsword", "neo volkite" ~ "neo-volkite". */
+const wkey = (s) => s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '');
+export function canonWeapon(name, weapons) {
+  const k = wkey(name);
+  for (const c of [k, k.replace(/es$/, ''), k.replace(/s$/, '')]) {
+    const w = weapons.find((x) => wkey(x.name) === c);
+    if (w) return w.name;
+  }
+  const w = weapons.find((x) => k.startsWith(wkey(x.name)) && k.length - wkey(x.name).length <= 2);
+  if (w) return w.name;
+  return name.charAt(0).toUpperCase() + name.slice(1); // equipment (shield, banner ...), not a weapon
+}
+
+/** "The Intercessor Sergeant’s bolt rifle can be replaced with one of the following: • 1 power fist …" -> structured option.
+ *  scope: one (this model / the named model), upTo N models, perN (for every N models, `max` of them), any number, all.
+ *  stack: "This model can be equipped with up to 4 X" (count = copies on one model). pick: "two different weapons from the following list". */
+export function parseWargearOption(text, weapons = []) {
+  let t = text.replace(/\s+/g, ' ').replace(/’/g, "'").trim();
+  if (!t || /^none$/i.test(t) || /^\*/.test(t)) return null;
+  const opt = { text: t, scope: 'one', who: '*', replace: [], choices: [] };
+  let m;
+  // conditions first: "If this unit contains 12 models, …" / "If the Reiver Sergeant is equipped with 1 bolt carbine, it can be equipped with …"
+  if ((m = t.match(/^If this unit contains (\d+) models,\s*/i))) { opt.minModels = +m[1]; t = t.slice(m[0].length); t = t.charAt(0).toUpperCase() + t.slice(1); }
+  if ((m = t.match(/^If (?:this model|the ([A-Z][\w -]+?)) is equipped with (.+?), (?:it|its|they) /i))) {
+    if (m[1]) opt.who = m[1].trim();
+    if (!/\bnot\b/i.test(t.slice(0, m.index + m[0].length))) opt.requires = items(m[2]);
+  }
+  // "(this model's X cannot be replaced)" / "This model's X cannot be replaced." are notes, not replacements
+  t = t.replace(/\([^)]*cannot be replaced[^)]*\)/gi, '').replace(/[^.•]*cannot be replaced\.?/gi, '').trim();
+  if ((m = t.match(/^For every (\d+|\w+) models? in (?:this|the) unit,? (?:up to )?(\d+|\w+)?/i))) {
+    opt.scope = 'perN'; opt.per = Number(m[1]) || WORDS[m[1].toLowerCase()] || 5; opt.max = Number(m[2]) || WORDS[(m[2] ?? '').toLowerCase()] || 1;
+  } else if (/^Any number of/i.test(t)) opt.scope = 'any';
+  else if (/^All (?:of )?(?:the )?(?:[\w-]+ ){0,3}(?:models|in this unit)/i.test(t)) opt.scope = 'all';
+  else if ((m = t.match(/^Up to (\d+|\w+)/i))) { opt.scope = 'upTo'; opt.max = Number(m[1]) || WORDS[m[1].toLowerCase()] || 1; }
+  else if (/^(One|1) /i.test(t)) { opt.scope = 'upTo'; opt.max = 1; }
+  else if ((m = t.match(/^This model can be equipped with up to (\d+|\w+)/i))) { opt.scope = 'upTo'; opt.max = Number(m[1]) || WORDS[m[1].toLowerCase()] || 1; opt.stack = true; }
+  // who: "The Intercessor Sergeant's …", "Any number of Initiates can …", "One Incursor can …", "1 Nob model can …"
+  const whoClean = (w) => (/^models?$/i.test(w) ? '*' : w.replace(/ in this unit$/i, '').replace(/ (?:equipped with|that|who) .*$/i, '').replace(/ models?$/i, '').trim());
+  if (opt.who === '*') {
+    if ((m = t.match(/^(?:The|An?|Each|Every) ([A-Z][\w -]+?)(?:'s| can)/))) opt.who = whoClean(m[1]);
+    else if ((m = t.match(/^(?:Any number of|Up to \w+|One|1|All(?: of the)?) ([A-Z][\w -]+?)(?: models?)?(?:'s| can)/))) opt.who = whoClean(m[1]);
+    else if ((m = t.match(/^For every \w+ models? in this unit,? (?:up to \w+ )?(?:1 |one )?([A-Z][\w -]+?)(?: models?)?(?:'s| equipped| can)/))) opt.who = whoClean(m[1]);
+  }
+  // what is replaced: "have their X replaced", "X's Y can be replaced", "can replace its X with …"
+  let choiceBody = null;
+  if ((m = t.match(/can replace (?:its|their) (.+?) with (.+)$/i))) { opt.replace = items(m[1]); choiceBody = m[2]; }
+  else if ((m = t.match(/have (?:their|its) (.+?) replaced/i)) || (m = t.match(/(?:'s|their|its) (.+?) (?:can )?(?:each )?(?:be )?replaced/i))) opt.replace = items(m[1]);
+  // "… replaced with 1 twin lightning claws, or two different weapons from the following list: • …"
+  if ((m = t.match(/(two|three|2|3) different (?:weapons|items) from the following list:?\*?\s*(.+)$/i))) {
+    opt.pick = Number(m[1]) || WORDS[m[1].toLowerCase()];
+    opt.pickFrom = m[2].split('•').map((x) => x.trim()).filter(Boolean).flatMap(items);
+    const before = t.slice(0, m.index).match(/replaced with (.+?),? or $/i);
+    if (before) opt.choices = [items(before[1])];
+  } else {
+    if (choiceBody === null) {
+      // the choices follow the LAST "replaced (with)" / "equipped with"
+      const low = t.toLowerCase();
+      const idx = Math.max(low.lastIndexOf('replaced'), low.lastIndexOf('equipped with'));
+      const after = idx >= 0 ? t.slice(idx).match(/(?:replaced(?: with)?|equipped with)(?: (?:one|1) of the following)?:?\s*(.+)$/i) : null;
+      choiceBody = after ? after[1] : null;
+    }
+    if (choiceBody !== null) {
+      choiceBody = choiceBody.replace(/^(?:one|1) of the following:?\s*/i, '');
+      if (choiceBody.includes('•')) opt.choices = choiceBody.split('•').map((x) => x.trim()).filter(Boolean).map(items);
+      else opt.choices = [items(choiceBody.split(/\.\s/)[0])];
+    }
+  }
+  opt.choices = opt.choices.filter((c) => c.length);
+  // "1 model equipped with a Y can be equipped with Z" mentions Y as a requirement, not a replacement
+  if (!opt.requires && (m = t.match(/equipped with (?:a |an |1 )?(.+?) can (?:be equipped with|have)/i)) && !opt.replace.length) opt.requires = items(m[1]);
+  if (!opt.choices.length && !opt.pick) return null;
+  const canon = (arr) => arr.map((x) => canonWeapon(x, weapons));
+  opt.replace = canon(opt.replace);
+  opt.choices = opt.choices.map(canon);
+  if (opt.pickFrom) opt.pickFrom = [...new Set(canon(opt.pickFrom))];
+  if (opt.requires) opt.requires = canon(opt.requires);
+  return opt;
 }
 
 function parsePoints(rows) {
   // Keep the first price tier ("YOUR UNIT COSTS" / "YOUR 1ST TO 3RD UNITS COST"), drop duplicates.
   const tiers = [];
   let cur = null;
+  const wargear = [];
   for (const r of rows) {
+    const desc = htmlToText(r.description ?? '').replace(/^\+\s*/, '+ ');
+    if (r.cost && /^(per |\+ )/i.test(desc)) { wargear.push({ name: desc.replace(/^(per |\+ )\s*(\d+\s+)?/i, '').trim(), pts: +r.cost }); continue; }
     if (!r.cost) { cur = { label: r.description, options: [] }; tiers.push(cur); continue; }
     if (!cur) { cur = { label: 'YOUR UNIT COSTS', options: [] }; tiers.push(cur); }
     // "1 Sword Brother, 4 Neophytes, 5 Initiates" -> 10 models; "10 models" -> 10
@@ -129,7 +227,9 @@ function parsePoints(rows) {
   const filled = tiers.filter((t) => t.options.length);
   const uniq = [];
   for (const t of filled) if (!uniq.some((u) => u.label === t.label && JSON.stringify(u.options) === JSON.stringify(t.options))) uniq.push(t);
-  return uniq;
+  const wg = [];
+  for (const w of wargear) if (!wg.some((x) => x.name.toLowerCase() === w.name.toLowerCase())) wg.push(w);
+  return { tiers: uniq, wargear: wg };
 }
 
 function deepMerge(target, patch) {
@@ -239,13 +339,14 @@ function build() {
         loadout: parseLoadout(d.loadout),
         loadoutText: htmlToText(d.loadout),
         options: (by.options.get(d.id) ?? []).map((o) => htmlToText(o.description)).filter(Boolean),
+        wargearOptions: (by.options.get(d.id) ?? []).map((o) => parseWargearOption(htmlToText(o.description).replace(/\n/g, ' '), weapons)).filter(Boolean),
         weapons,
         abilities,
         leads: (by.leader.get(d.id) ?? []).map((l) => datasheetById.get(l.attached_id)?.name).filter(Boolean),
         isSupport: d.is_support === 'true',
         transport: htmlToText(d.transport) || undefined,
         damaged: d.damaged_w ? { w: d.damaged_w, text: htmlToText(d.damaged_description) } : undefined,
-        points: parsePoints(by.cost.get(d.id) ?? []),
+        ...(() => { const pp = parsePoints(by.cost.get(d.id) ?? []); return { points: pp.tiers, wargearCosts: pp.wargear.map((w) => ({ ...w, name: canonWeapon(w.name, weapons) })) }; })(),
         link: d.link,
       };
     }).filter((d) => d.models.length && d.points.length);

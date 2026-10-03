@@ -55,8 +55,30 @@ export interface DatasheetData {
   transport?: string;
   damaged?: { w: string; text: string };
   points: PointsTier[];
+  wargearOptions?: WargearOption[];
+  wargearCosts?: { name: string; pts: number }[]; // "per thunder hammer +5": charged per item carried
   link: string;
 }
+
+/** One parsed line of a datasheet's wargear options (built by scripts/build-data.mjs). */
+export interface WargearOption {
+  text: string;
+  /** one: the named/only model · upTo: up to `max` models · perN: `max` per `per` models · any: any number · all: every model or none */
+  scope: 'one' | 'upTo' | 'perN' | 'any' | 'all';
+  per?: number;
+  max?: number;
+  stack?: boolean; // "This model can be equipped with up to 4 X": count = copies on the one model
+  minModels?: number; // "If this unit contains 12 models, …"
+  who: string; // model name the option applies to, '*' = any model
+  replace: string[]; // items removed (weapon names, or equipment such as "Storm shield")
+  choices: string[][]; // each choice: items gained (repeated for "2 x")
+  pick?: number; // "two different weapons from the following list"
+  pickFrom?: string[];
+  requires?: string[]; // the model must carry these
+}
+
+/** A wargear choice in an army list: `count` models take choice `choice` of option `opt` (choice -1 = the `picks` list). */
+export interface WargearPick { opt: number; choice: number; count: number; picks?: string[] }
 
 export interface EnhancementData { id: string; name: string; pts: number; upgrade: boolean; text: string }
 export interface StratagemData { id: string; name: string; cp: number; type: string; turn: string; phase: string; text: string }
@@ -96,6 +118,9 @@ export interface ArmyUnitEntry {
   enhancement?: string;
   enhancementPts?: number;
   warlord?: boolean;
+  wargear?: WargearPick[];
+  wargearPts?: number; // points for costed wargear and add-on models, kept in sync by the army builder
+  addons?: string[]; // optional extra models bought separately, e.g. "Invader ATV"
 }
 
 export interface ArmyList {
@@ -124,7 +149,8 @@ export interface ModelState {
   isCharacter: boolean;
   isBodyguard: boolean;
   keywords: string[];
-  weapons: WeaponData[];
+  weapons: WeaponData[]; // a weapon listed twice is carried twice (e.g. 2 godhammer lascannons)
+  gear?: string[]; // non-weapon wargear: shields, banners, icons …
   x: number;
   y: number;
   r: number; // base radius in inches
