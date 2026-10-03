@@ -1,5 +1,6 @@
+import { abilityStatus, type AbilityStatus } from '../engine/effects';
 import { strength } from '../engine/state';
-import type { DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
+import type { AbilityData, DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
 import { Portrait, tokenKind } from './Tokens';
 import { usePastePortrait } from './portraits';
@@ -45,7 +46,22 @@ function Weapons({ weapons }: { weapons: WeaponData[] }) {
   );
 }
 
-export function DatasheetView({ sheet }: { sheet: DatasheetData }) {
+const ST_LABEL: Record<AbilityStatus, string> = { auto: '✓ ระบบทำให้', partial: '◐ ระบบทำบางส่วน', manual: '✋ ทำเอง', info: 'ℹ ข้อมูล', none: '✋ ยังไม่อัตโนมัติ', core: '' };
+
+/** Badge saying whether the app plays this ability by itself. */
+function AbilityBadge({ u, a }: { u: UnitState; a: AbilityData }) {
+  const st = abilityStatus(u, a);
+  if (st.status === 'core') return null;
+  return (
+    <>
+      {' '}<span className={`ab-st ${st.status}`}>{ST_LABEL[st.status]}</span>
+      {st.note && <span className="tiny muted"> {st.note}</span>}
+    </>
+  );
+}
+
+export function DatasheetView({ sheet, factionId }: { sheet: DatasheetData; factionId?: string }) {
+  const probe = { sources: [sheet.name], abilities: [] } as unknown as UnitState;
   usePastePortrait(sheet.name);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -67,7 +83,7 @@ export function DatasheetView({ sheet }: { sheet: DatasheetData }) {
       {sheet.composition.length > 0 && <div className="small"><b>Unit:</b> {sheet.composition.map((c) => c.text).join(', ')}</div>}
       {sheet.leads.length > 0 && <div className="small"><b>Leader ของ:</b> {sheet.leads.join(', ')}</div>}
       {sheet.abilities.map((a, i) => (
-        <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({a.type})</span>{a.text ? `\n${a.text}` : ''}</div>
+        <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({a.type})</span>{factionId && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: factionId }} />}{a.text ? `\n${a.text}` : ''}</div>
       ))}
       {sheet.damaged && <div className="sheet"><b>Damaged {sheet.damaged.w}:</b> {sheet.damaged.text}</div>}
       <div className="kw">{[...sheet.factionKeywords, ...sheet.keywords].join(', ')}</div>
@@ -120,7 +136,7 @@ export function UnitView({ u }: { u: UnitState }) {
         <div key={e.name} className="sheet"><b>Enhancement: {e.name}</b> <span className="tiny muted">({e.model})</span>{'\n'}{e.text}</div>
       ))}
       {u.abilities.map((a, i) => (
-        <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({a.type}{a.model ? ` · ${a.model}` : ''})</span>{a.text ? `\n${a.text}` : ''}</div>
+        <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({a.type}{a.model ? ` · ${a.model}` : ''})</span><AbilityBadge u={u} a={a} />{a.text ? `\n${a.text}` : ''}</div>
       ))}
       <div className="kw">{[...u.factionKeywords, ...u.keywords].join(', ')}</div>
     </div>

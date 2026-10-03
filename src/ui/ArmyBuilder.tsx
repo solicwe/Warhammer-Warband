@@ -609,7 +609,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {view && faction && sheetOf(view) && (
         <div className="tray-backdrop" onClick={() => setView(null)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
-            <DatasheetView sheet={sheetOf(view)!} />
+            <DatasheetView sheet={sheetOf(view)!} factionId={faction?.id} />
             <button className="btn" onClick={() => setView(null)}>ปิด</button>
           </div>
         </div>

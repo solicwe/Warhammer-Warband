@@ -303,5 +303,7 @@
     { "scope": "model", "if": ["notBattleShocked", "any:nearModels:6:SPACE WOLVES+CHARACTER!WULFEN||nearModels:12:Wolf Priest", "modelKw:INFANTRY"], "oc": 1 },
     { "scope": "model", "if": ["notBattleShocked", "any:nearModels:6:SPACE WOLVES+CHARACTER!WULFEN||nearModels:12:Wolf Priest", "modelKw:VEHICLE"], "oc": 3 }
   ] },
+  "Oath of Moment": { "status": "auto", "note": "ระบบทำให้: เลือกเป้าใน Command phase (re-roll hit, +1 wound สำหรับทัพ codex)" },
+  "Templar Vows": { "status": "auto", "note": "ระบบทำให้: เลือก Vow ใน Command phase แรก (Black Templars)" },
   "Overlapping Detonations": { "effects": [{ "weapon": "heavy bolter", "if": ["targetNotMV"], "abilities": ["blast 1"] }] }
 }

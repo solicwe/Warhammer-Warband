@@ -201,6 +201,16 @@ export function abilityRule(u: UnitState, a: AbilityData): AbilityRule | undefin
   return a.faction && FACTION_RULES[a.faction] ? undefined : parseAbilityText(a.name, a.text);
 }
 
+/** How much of an ability the app plays by itself, for the unit sheet. */
+export type AbilityStatus = 'auto' | 'partial' | 'manual' | 'info' | 'none' | 'core';
+export function abilityStatus(u: UnitState, a: AbilityData): { status: AbilityStatus; note?: string } {
+  if (a.type === 'Core') return { status: 'core' };
+  const r = abilityRule(u, a);
+  if (!r) return { status: 'none' };
+  const does = !!(r.effects?.length || r.act || r.choice || r.freeDie || r.split);
+  return { status: r.status ?? (does ? 'auto' : 'info'), note: r.note };
+}
+
 // ---------- collecting effects ----------
 
 export interface Active {
@@ -213,9 +223,25 @@ export interface Active {
 
 const wk = (s: string) => s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '');
 
+/** "kw:ADEPTUS MECHANICUS VEHICLE": the words split into keywords / datasheet names the unit has (read from ability text). */
+function kwPhraseMatch(u: UnitState, phrase: string): boolean {
+  const K = new Set([...u.keywords, ...u.factionKeywords, ...u.sources.map((n) => n.toUpperCase())].map((k) => k.replace(/[’']/g, "'")));
+  const w = phrase.replace(/[’']/g, "'").split(' ').filter(Boolean);
+  const ok: boolean[] = [true, ...w.map(() => false)];
+  for (let i = 0; i < w.length; i++) {
+    if (!ok[i]) continue;
+    for (let j = i + 1; j <= w.length; j++) {
+      const k = w.slice(i, j).join(' ');
+      if (K.has(k) || K.has(k.replace(/S$/, ''))) ok[j] = true;
+    }
+  }
+  return ok[w.length];
+}
+
 export const unitMatches = (u: UnitState, filters?: string[]) => (filters ?? []).every((req) => req.split('|').some((alt) => {
   if (alt.startsWith('name:')) return u.sources.includes(alt.slice(5)) || u.name === alt.slice(5);
   if (alt.startsWith('id:')) return u.id === alt.slice(3);
+  if (alt.startsWith('kw:')) return kwPhraseMatch(u, alt.slice(3));
   if (alt.startsWith('!')) return !(u.keywords.includes(alt.slice(1)) || u.factionKeywords.includes(alt.slice(1)));
   return u.keywords.includes(alt) || u.factionKeywords.includes(alt);
 }));
@@ -401,6 +427,8 @@ export function cond(c: string, x: Ctx): boolean {
     case 'targetInfantry': return !!T && hasKw(T, 'INFANTRY');
     case 'targetFly': return !!T && hasKw(T, 'FLY');
     case 'targetNotFly': return !!T && !hasKw(T, 'FLY');
+    case 'targetFullStrength': return !!T && alive(T).length >= T.startingStrength;
+    case 'targetBelowStarting': return !!T && alive(T).length < T.startingStrength;
     case 'targetBelowHalf': return !!T && alive(T).length * 2 < T.startingStrength;
     case 'targetNotBelowHalf': return !!T && alive(T).length * 2 >= T.startingStrength;
     case 'targetHidden': return !!T && alive(T).some((n) => isHidden(s, T, n));

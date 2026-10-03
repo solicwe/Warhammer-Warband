@@ -347,3 +347,14 @@ details > .strat-card { margin-top: 6px; }
 .det-opts { display: flex; flex-wrap: wrap; gap: 6px; }
 .det-opts .btn { flex: 1 1 140px; flex-direction: column; align-items: flex-start; text-align: left; height: auto; min-height: 44px; padding: 6px 10px; white-space: normal; }
 .ab-det-head .det-auto { align-self: flex-start; margin-top: 3px; }
+
+/* datasheet abilities: buttons you press, and how much the app plays by itself */
+.ab-bar { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 10px; background: var(--card2); border: 1px solid var(--line, rgba(255,255,255,0.08)); }
+.ab-item { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ab-item > .tiny { flex: 1 1 160px; min-width: 0; }
+.ab-item .unit-strip { flex-basis: 100%; }
+.ab-st { font-size: 11px; padding: 1px 6px; border-radius: 4px; white-space: nowrap; background: var(--card2); color: var(--ink-muted); }
+.ab-st.auto { background: #1f7a3a; color: #fff; }
+.ab-st.partial { background: #b07d12; color: #fff; }
+.ab-st.manual, .ab-st.none { background: #5a5f6b; color: #fff; }
+.fx-labels { color: var(--accent, #7fb8ff); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
