@@ -5,20 +5,65 @@ import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData
 /** "This model has a transport capacity of 12 Adeptus Astartes Infantry models. Each Jump Pack ... takes up the space of 2 models ... It cannot transport ..." */
 export function parseTransport(text?: string): TransportInfo | null {
   if (!text) return null;
-  const cap = /transport capacity of (\d+)/i.exec(text);
+  const cap = /transport capacity of (\d+)\s+([^.(]*?)\s*models?\b/i.exec(text);
   if (!cap) return null;
+  const words = (x: string) => x.split(/,\s*|\/|\s+or\s+|\s+and\s+/i).map((y) => y.replace(/\bmodels?\b/gi, '').replace(/[’]/g, "'").trim().toUpperCase()).filter(Boolean);
   const list = (re: RegExp) => {
     const m = re.exec(text);
-    return m ? m[1].split(/,\s*|\/|\s+or\s+|\s+and\s+/i).map((x) => x.replace(/models?$/i, '').trim().toUpperCase()).filter(Boolean) : [];
+    return m ? words(m[1]) : [];
   };
+  // what it carries: "Tacticus or Phobos Infantry" → TACTICUS INFANTRY / PHOBOS INFANTRY; "… and 1 Necrons Infantry Character model"
+  let kinds = cap[2].split(/\s+or\s+|\s+and\s+/i).map((k) => k.replace(/[’]/g, "'").trim().toUpperCase()).filter(Boolean);
+  const plus = /^\s*models?\s+and\s+\d+\s+([^.]+?)\s+models?\b/i.exec(text.slice(cap.index + cap[0].length - (/models?$/i.exec(cap[0])?.[0].length ?? 0)));
+  const tailType = /\b(INFANTRY(?: CHARACTER)?|MONSTER|CHARACTER)$/.exec(kinds[kinds.length - 1] ?? '')?.[1];
+  if (tailType) kinds = kinds.map((k) => (/\b(INFANTRY|MONSTER|CHARACTER)\b/.test(k) ? k : `${k} ${tailType}`));
+  if (plus) kinds.push(plus[1].replace(/[’]/g, "'").trim().toUpperCase());
+  // "(excluding Obliterator and Jump Pack models)" right after the capacity: those can't ride
+  const capEx = /^\s*models?\s*\(excluding ([^)]+)\)/i.exec(text.slice(cap.index + cap[0].length - (/models?$/i.exec(cap[0])?.[0].length ?? 0)));
+  const forbidM = /cannot transport ([^.(]*?)(?:\s*\(excluding ([^)]+)\))?\s*\./i.exec(text);
+  const spaces: [string, number][] = [];
+  for (const m of text.matchAll(/Each ([^.]+?) model[s]? takes? (?:up )?the space of (\d+) models/gi)) for (const w of words(m[1])) spaces.push([w, +m[2]]);
   return {
     capacity: +cap[1],
-    double: list(/Each ([^.]+?) model takes up the space of 2/i),
-    forbid: list(/cannot transport ([^.]+?)(?: models)?\./i),
+    double: spaces.filter(([, n]) => n === 2).map(([w]) => w),
+    forbid: [...(forbidM ? words(forbidM[1]) : []), ...(capEx ? words(capEx[1]) : [])],
+    except: forbidM?.[2] ? words(forbidM[2].replace(/\s+models?\b.*$/i, '')) : [],
     only: list(/can only transport ([^.]+?)(?: models)?\./i),
-    infantryOnly: /capacity of \d+ [^.]*infantry/i.test(text),
+    infantryOnly: kinds.length > 0 && kinds.every((k) => /INFANTRY/.test(k)),
+    kinds: kinds.filter((k) => k !== 'INFANTRY'),
+    spaces,
     text,
   };
+}
+
+const normKw = (x: string) => x.toUpperCase().replace(/[’`]/g, "'").replace(/[^A-Z0-9' ]+/g, ' ').replace(/S\b/g, '').replace(/\s+/g, ' ').trim();
+
+/** Does a model with these keywords (its own, its faction's and its datasheet name) match a phrase from a transport
+ *  rule, e.g. "JUMP PACK", "TACTICUS CHARACTER", "ADEPTUS ASTARTES INFANTRY", "GHAZGHKULL THRAKA"? */
+export function kwPhrase(phrase: string, kws: string[]): boolean {
+  const K = new Set(kws.map(normKw));
+  const p = normKw(phrase);
+  if (K.has(p)) return true;
+  // "<faction or kind> INFANTRY / CHARACTER / MONSTER": the type word and the rest separately
+  const types = ['INFANTRY', 'CHARACTER', 'MONSTER'].filter((t) => new RegExp(`\\b${t}\\b`).test(p));
+  const rest = p.replace(/\b(INFANTRY|CHARACTER|MONSTER)\b/g, ' ').replace(/\s+/g, ' ').trim();
+  if (types.length && types.every((t) => K.has(t)) && (!rest || K.has(rest))) return true;
+  // every word a keyword of its own ("TACTICUS CHARACTER")
+  const ws = p.split(' ');
+  return ws.length > 1 && ws.every((w) => K.has(w));
+}
+
+/** Can this model ride in the transport, and how many places does it take? */
+export function transportFit(t: TransportInfo, kws: string[]): { why: string | null; space: number } {
+  if (kws.some((k) => normKw(k) === 'TRANSPORT')) return { why: 'รถขึ้นรถไม่ได้', space: 0 };
+  const no = t.forbid.filter((f) => kwPhrase(f, kws));
+  if (no.length && !(t.except ?? []).some((e) => kwPhrase(e, kws))) return { why: `ขน ${no.join(', ')} ไม่ได้`, space: 0 };
+  if (t.kinds?.length) {
+    if (!t.kinds.some((k) => kwPhrase(k, kws))) return { why: `ขนได้เฉพาะ ${t.kinds.join(' / ')}`, space: 0 };
+  } else if (t.infantryOnly && !kws.includes('INFANTRY')) return { why: 'ขนได้เฉพาะ INFANTRY', space: 0 };
+  if (t.only.length && !t.only.some((k) => kwPhrase(k, kws))) return { why: `ขนได้เฉพาะ ${t.only.join(', ')}`, space: 0 };
+  const extra = (t.spaces ?? []).filter(([w]) => kwPhrase(w, kws)).map(([, n]) => n);
+  return { why: null, space: extra.length ? Math.max(...extra) : t.double.some((k) => kwPhrase(k, kws)) ? 2 : 1 };
 }
 
 const MM_PER_INCH = 25.4;
@@ -506,6 +551,31 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
     .filter((e) => isChar || e.upgrade);
 }
 
+/** Each TRANSPORT in the list and the units chosen to start the battle inside it (attached leaders ride with their unit). */
+export function transportLoads(list: ArmyList, faction: FactionData) {
+  const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
+  return list.units.flatMap((t) => {
+    const ts = sheetOf(t.datasheet);
+    const info = parseTransport(ts?.transport);
+    if (!ts || !info) return [];
+    const riders = list.units.filter((u) => u.embarkIn === t.uid && !u.attachTo);
+    const problems: string[] = [];
+    let used = 0;
+    for (const r of riders) {
+      for (const g of [r, ...list.units.filter((x) => x.attachTo === r.uid)]) {
+        const sh = sheetOf(g.datasheet);
+        if (!sh) continue;
+        const fit = transportFit(info, [...sh.keywords, ...sh.factionKeywords, sh.name]);
+        if (fit.why) problems.push(`${g.datasheet} ขึ้น ${t.datasheet} ไม่ได้: ${fit.why}`);
+        else used += g.models * fit.space;
+      }
+    }
+    if (used > info.capacity) problems.push(`${t.datasheet}: ที่ไม่พอ (${used}/${info.capacity} ที่)`);
+    if (ts.keywords.includes('DEDICATED TRANSPORT') && !riders.length) problems.push(`${t.datasheet} (Dedicated Transport) ยังว่าง: ต้องมีหน่วยอยู่ข้างในตอนเริ่มเกม ไม่อย่างนั้นถูกทำลาย — เลือกหน่วยที่ขึ้นรถในเมนู ⋮ ของหน่วยนั้น`);
+    return [{ uid: t.uid, name: t.datasheet, capacity: info.capacity, used, riders: riders.map((r) => r.uid), problems }];
+  });
+}
+
 export function validateList(list: ArmyList, faction: FactionData, size: { points: number; dp: number; unitLimit: number; enhancements: number }): string[] {
   const errs: string[] = [];
   const pts = listPoints(list);
@@ -561,5 +631,7 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     const body = list.units.find((b) => b.uid === u.attachTo);
     if (!leader || !body || !leader.leads.includes(body.datasheet)) errs.push(`${u.datasheet} ผูกกับ ${body?.datasheet ?? '?'} ไม่ได้`);
   }
+  for (const u of list.units) if (u.embarkIn && !list.units.some((t) => t.uid === u.embarkIn)) errs.push(`${u.datasheet}: รถที่เลือกให้ขึ้นไม่อยู่ในทัพแล้ว`);
+  for (const t of transportLoads(list, faction)) errs.push(...t.problems);
   return errs;
 }

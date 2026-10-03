@@ -8,7 +8,8 @@ import {
   autoApproach, callWaaagh, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits,
-  sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
+  sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
+  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark,
 } from './game';
 import { abilityChoices, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
@@ -84,6 +85,13 @@ function botPickFixed(s: GameState, p: PlayerId) {
 export function botDeploy(s: GameState) {
   const p = s.deployTurn;
   botPickFixed(s, p);
+  // Declare Battle Formations: a passenger for every empty transport (an empty Dedicated Transport is lost)
+  for (const t of s.units.filter((x) => x.owner === p && x.transport && ['pending', 'board', 'reserves'].includes(x.status))) {
+    if (embarkedIn(s, t).length) continue;
+    const riders = s.units.filter((x) => x.owner === p && x.status === 'pending' && !canEmbarkIn(s, x, t))
+      .sort((a, b) => Number(isBrawler(s, b)) - Number(isBrawler(s, a)) || unitValue(b) - unitValue(a));
+    if (riders.length && !embarkUnit(s, riders[0], t, true)) return;
+  }
   const u = s.units.find((x) => x.owner === p && x.status === 'pending');
   if (!u) return;
   // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
@@ -168,9 +176,36 @@ function moveOrder(s: GameState, p: PlayerId): UnitState[] {
   return s.units.filter((x) => x.owner === p).sort((a, b) => Number(isEngaged(s, b)) - Number(isEngaged(s, a)) || gap(a) - gap(b));
 }
 
+/** Passengers get out before their transport moves (Tactical Disembark: they can still move afterwards)
+ *  once the enemy or an objective that needs bodies is close, or late in the game. */
+function botDisembark(s: GameState, p: PlayerId): boolean {
+  const key = (u: UnitState) => `${s.turn}|${s.phase}|${u.id}:out`;
+  for (const u of s.units.filter((x) => x.owner === p && x.status === 'embarked' && x.embarkedIn && !(s.botTried ?? []).includes(key(x)))) {
+    const t = unitById(s, u.embarkedIn!);
+    if (!onBoard(t) || t.move || disembarkMode(s, t) !== 'tactical') continue;
+    s.botTried = [...(s.botTried ?? []), key(u)];
+    const tm = alive(t)[0];
+    const foes = boardUnits(s, other(p));
+    const near = foes.length ? Math.min(...foes.map((e) => unitDistance(t, e))) : 99;
+    const need = objectiveNeeds(s, p).filter((n) => n.need > 0).map((n) => objPoint(s, n.o)).sort((a, b) => dist(a, tm) - dist(b, tm))[0];
+    const go = s.round >= 4 || (s.round >= 2 && (near <= 14 || (need && dist(need, tm) <= 10)));
+    if (!go) continue;
+    // set up on the side facing the objective / the closest enemy
+    const closest = foes.length ? foes.flatMap(alive).reduce((a, m) => (dist(m, tm) < dist(a, tm) ? m : a)) : undefined;
+    const goal = need && dist(need, tm) <= 12 ? need : closest ?? need ?? tm;
+    const base = Math.atan2(goal.y - tm.y, goal.x - tm.x);
+    for (const da of [0, 0.4, -0.4, 0.8, -0.8, 1.3, -1.3, 1.9, -1.9, 2.5, -2.5, Math.PI]) {
+      const pos = ringFormation(u, tm, base + da);
+      if (validateDisembark(s, u, t, pos).ok) { disembarkUnit(s, u, t, pos); return true; }
+    }
+  }
+  return false;
+}
+
 /** Move (or bring in) one unit. Returns false when there is nothing left to do this phase. */
 export function botMoveOne(s: GameState): boolean {
   botUseActs(s, s.active, ['movement']);
+  if (botDisembark(s, s.active)) return true;
   for (const u of moveOrder(s, s.active)) {
     if (tried(s, u)) continue;
     if (u.status === 'reserves') {

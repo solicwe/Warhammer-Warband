@@ -1,5 +1,5 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
-import { buildUnits } from './army';
+import { buildUnits, transportFit } from './army';
 import { applyMortalWounds, killModel, onTransportDestroyed } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
@@ -138,6 +138,21 @@ export function createGame(o: NewGameOptions): GameState {
     if (!P.armyRules.some((r) => r.name === 'Templar Vows')) continue;
     P.armyRules = P.armyRules.filter((r) => r.name !== 'Oath of Moment');
     for (const u of s.units) if (u.owner === p) u.abilities = u.abilities.filter((a) => a.name !== 'Oath of Moment');
+  }
+  // Declare Battle Formations: units that start the battle embarked (chosen in the army builder)
+  for (const p of [0, 1] as PlayerId[]) {
+    for (const e of o.lists[p].units) {
+      if (!e.embarkIn || e.attachTo) continue;
+      const t = s.units.find((x) => x.id === `p${p}-${e.embarkIn}`);
+      if (!t) continue;
+      for (const u of s.units.filter((x) => x.id === `p${p}-${e.uid}` || x.id === `p${p}-${e.uid}-b`)) {
+        const why = canEmbarkIn(s, u, t);
+        if (why) { log(s, `${u.name} ขึ้น ${t.name} ไม่ได้: ${why}`, 'info', p); continue; }
+        u.status = 'embarked';
+        u.embarkedIn = t.id;
+        log(s, `${u.name} เริ่มเกมอยู่บน ${t.name}`, 'info', p);
+      }
+    }
   }
   // Declare Battle Formations: abilities fixed for the battle, "choose two of these", Master of the Fleet …
   applyStaticEffects(s);
@@ -312,6 +327,30 @@ export function formationAt(u: UnitState, c: Pt, facingUp = true): Map<string, P
   return out;
 }
 
+/** Models hugging a transport's hull on the side facing `angle`: up to two rings, so a whole squad fits wholly within
+ *  3" (a grid of 10 would stick out too far). Characters take the middle of the arc. */
+export function ringFormation(u: UnitState, tm: ModelState, angle: number): Map<string, Pt> {
+  const ms = [...alive(u)].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter) || b.r - a.r);
+  const r = Math.max(...ms.map((m) => m.r));
+  const perRing = ms.length > 5 ? Math.ceil(ms.length / 2) : ms.length;
+  const out = new Map<string, Pt>();
+  let placed = 0;
+  for (let ring = 0; placed < ms.length && ring < 4; ring++) {
+    const R = tm.r + r + 0.12 + ring * (2 * r + 0.08);
+    const step = (2 * r + 0.12) / R;
+    const n = Math.min(ms.length - placed, perRing, Math.floor((2 * Math.PI) / step));
+    // the middle of the arc first (characters), then alternately to each side
+    const offs = Array.from({ length: n }, (_, k) => (k % 2 ? 1 : -1) * Math.ceil(k / 2) * step + (n % 2 ? 0 : step / 2));
+    offs.sort((a, b) => Math.abs(a) - Math.abs(b));
+    for (let k = 0; k < n; k++) {
+      const m = ms[placed + k];
+      out.set(m.id, { x: tm.x + Math.cos(angle + offs[k]) * R, y: tm.y + Math.sin(angle + offs[k]) * R });
+    }
+    placed += n;
+  }
+  return out;
+}
+
 export function placeUnit(s: GameState, u: UnitState, pos: Map<string, Pt>) {
   for (const m of alive(u)) { const p = pos.get(m.id)!; m.x = p.x; m.y = p.y; }
   u.status = 'board';
@@ -352,6 +391,14 @@ function nextDeployer(s: GameState) {
 }
 
 function finishDeployment(s: GameState) {
+  // a DEDICATED TRANSPORT with nobody inside at the start of the battle is not deployed: it counts as destroyed (18)
+  for (const t of s.units) {
+    if (!t.transport || !hasKw(t, 'DEDICATED TRANSPORT') || t.status === 'destroyed' || !alive(t).length) continue;
+    if (s.units.some((u) => u.embarkedIn === t.id && u.status === 'embarked')) continue;
+    t.status = 'destroyed';
+    for (const m of t.models) { m.dead = true; m.wounds = 0; }
+    log(s, `${t.name} (Dedicated Transport) ไม่มีหน่วยอยู่ข้างใน → ไม่ได้ลงสนาม นับว่าถูกทำลาย`, 'kill', t.owner);
+  }
   const ro = rollOff(s);
   s.firstPlayer = ro.winner;
   pushFx(s, { kind: 'rolloff', title: 'Roll-off: ใครเล่นก่อน?', a: ro.a, b: ro.b, winner: ro.winner, result: `${s.players[ro.winner].name} ได้เล่นก่อน` });
@@ -1050,14 +1097,15 @@ export function swapSecondary(s: GameState, p: PlayerId, id: string) {
 
 // ---------- transports ----------
 
-const modelSpace = (t: TransportInfo, m: ModelState) => (t.double.some((k) => m.keywords.includes(k)) ? 2 : 1);
+const modelKws = (u: UnitState, m: ModelState) => [...m.keywords, ...u.factionKeywords, m.source];
+const modelSpace = (t: TransportInfo, u: UnitState, m: ModelState) => transportFit(t, modelKws(u, m)).space || 1;
 
 /** Transport space a unit takes (Downtrodden: every 2 Gretchin take the space of 1 model). */
 function unitSpace(t: TransportInfo, u: UnitState) {
   const ms = alive(u);
-  if (!u.abilities.some((a) => a.name === 'Downtrodden')) return ms.reduce((b, m) => b + modelSpace(t, m), 0);
+  if (!u.abilities.some((a) => a.name === 'Downtrodden')) return ms.reduce((b, m) => b + modelSpace(t, u, m), 0);
   const grots = ms.filter((m) => /gretchin/i.test(m.name)).length;
-  return Math.ceil(grots / 2) + ms.filter((m) => !/gretchin/i.test(m.name)).reduce((b, m) => b + modelSpace(t, m), 0);
+  return Math.ceil(grots / 2) + ms.filter((m) => !/gretchin/i.test(m.name)).reduce((b, m) => b + modelSpace(t, u, m), 0);
 }
 
 export function transportSpaceUsed(s: GameState, t: UnitState) {
@@ -1068,9 +1116,11 @@ export function canEmbarkIn(s: GameState, u: UnitState, t: UnitState): string | 
   const T = t.transport;
   if (!T || t.owner !== u.owner || t.id === u.id) return 'ไม่ใช่รถขนส่ง';
   if (hasKw(u, 'TRANSPORT')) return 'รถขึ้นรถไม่ได้';
-  if (T.infantryOnly && !alive(u).every((m) => m.keywords.includes('INFANTRY'))) return 'ขนได้เฉพาะ INFANTRY';
-  if (T.forbid.some((k) => u.keywords.includes(k))) return `ขน ${T.forbid.filter((k) => u.keywords.includes(k)).join(', ')} ไม่ได้`;
-  if (T.only.length && !T.only.some((k) => u.sources.some((n) => n.toUpperCase().includes(k)) || u.keywords.includes(k))) return 'ขนได้เฉพาะหน่วยที่ระบุบนการ์ด';
+  // every model has to fit the transport's rules (what it carries, what it can't, "excluding …")
+  for (const m of alive(u)) {
+    const why = transportFit(T, modelKws(u, m)).why;
+    if (why) return `${m.name}: ${why}`;
+  }
   if (u.factionKeywords.length && t.factionKeywords.length && !u.factionKeywords.some((k) => t.factionKeywords.includes(k))) return 'คนละฝ่าย';
   const need = unitSpace(T, u);
   if (transportSpaceUsed(s, t) + need > T.capacity) return `ที่ไม่พอ (${transportSpaceUsed(s, t)}+${need}/${T.capacity})`;

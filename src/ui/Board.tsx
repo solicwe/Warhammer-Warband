@@ -545,6 +545,18 @@ function BoardImpl(props: BoardProps) {
                 {props.badges[u.id].join('  ')}
               </text>
             ) : null}
+            {u.transport && pts.length > 0 && (() => {
+              const pax = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
+              if (!pax.length) return null;
+              const n = pax.reduce((a, x) => a + alive(x).length, 0);
+              const maxY = Math.max(...pts.map((p, i) => p.y + ms[i].r));
+              return (
+                <g transform={`translate(${cx} ${maxY + 0.75})`} pointerEvents="none">
+                  <rect x={-2.2} y={-0.5} width={4.4} height={1.0} rx={0.5} fill="rgba(10,12,16,0.88)" stroke={col} strokeWidth={0.08} />
+                  <text x={0} y={0.24} fontSize={0.62} textAnchor="middle" fill="#fff" fontWeight={800}>🚚 {pax.length} หน่วย · {n}</text>
+                </g>
+              );
+            })()}
             {u.battleShocked && pts.length > 0 && (
               <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 3.1 : 2.2)})`} pointerEvents="none">
                 <rect x={-3.9} y={-0.55} width={7.8} height={1.1} rx={0.55} fill="#4c1d95" stroke="#e9d5ff" strokeWidth={0.09} />

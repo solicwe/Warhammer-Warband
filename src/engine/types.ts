@@ -123,6 +123,7 @@ export interface ArmyUnitEntry {
   wargearPts?: number; // points for costed wargear and add-on models, kept in sync by the army builder
   addons?: string[]; // optional extra models bought separately, e.g. "Invader ATV"
   split?: boolean; // split into two units at Declare Battle Formations (Combat Squads …)
+  embarkIn?: string; // uid of the TRANSPORT this unit starts the battle embarked within
 }
 
 export interface ArmyList {
@@ -173,7 +174,15 @@ export interface CoreAbilities {
   damaged?: number; // Damaged X: -1 to hit while wounds <= X
 }
 
-export interface TransportInfo { capacity: number; double: string[]; forbid: string[]; only: string[]; infantryOnly: boolean; text: string }
+export interface TransportInfo {
+  capacity: number; double: string[]; forbid: string[]; only: string[]; infantryOnly: boolean; text: string;
+  /** what it carries, e.g. ["TACTICUS INFANTRY", "PHOBOS INFANTRY"]: every model must match one */
+  kinds?: string[];
+  /** models matching these may ride even though a forbidden keyword applies ("excluding TACTICUS CHARACTER models") */
+  except?: string[];
+  /** models taking more than one space: [keyword phrase, spaces] */
+  spaces?: [string, number][];
+}
 
 export interface UnitState {
   id: string;

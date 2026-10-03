@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, enhancementOptions, listPoints, newUid, pointsOptions, splitRuleOf, syncList, syncWargear, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
@@ -228,7 +228,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const set = (patch: Partial<ArmyList>) => onChange({ ...list, ...patch });
   /** Update one entry; wargear choices are re-checked for the new size and their points recomputed. */
   const setUnit = (uid: string, patch: Partial<ArmyUnitEntry>) => set({ units: list.units.map((x) => (x.uid === uid ? syncWargear(sheetOf(x.datasheet), { ...x, ...patch }) : x)) });
-  const removeUnit = (uid: string) => set({ units: list.units.filter((x) => x.uid !== uid).map((x) => (x.attachTo === uid ? { ...x, attachTo: undefined } : x)) });
+  const removeUnit = (uid: string) => set({ units: list.units.filter((x) => x.uid !== uid).map((x) => (x.attachTo === uid ? { ...x, attachTo: undefined } : x.embarkIn === uid ? { ...x, embarkIn: undefined } : x)) });
   const addUnit = (d: DatasheetData) => {
     const opt = pointsOptions(d)[0];
     if (!opt) return;
@@ -275,7 +275,14 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const unitRow = (u: ArmyUnitEntry) => {
     const sheet = sheetOf(u.datasheet);
     const leads = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
-    const line = [u.warlord && 'Warlord', u.enhancement, leads && `นำ ${leads.datasheet}`, u.split && 'แยก 2 หน่วย'].filter(Boolean).join(' · ');
+    const rides = u.embarkIn ? list.units.find((t) => t.uid === u.embarkIn) : undefined;
+    const load = faction ? transportLoads(list, faction).find((t) => t.uid === u.uid) : undefined;
+    const carried = load?.riders.map((r) => list.units.find((x) => x.uid === r)?.datasheet).filter(Boolean) ?? [];
+    const line = [
+      u.warlord && 'Warlord', u.enhancement, leads && `นำ ${leads.datasheet}`, u.split && 'แยก 2 หน่วย',
+      rides && `🚚 เริ่มเกมบน ${rides.datasheet}`,
+      load && (carried.length ? `🚚 บรรทุก ${carried.join(', ')} (${load.used}/${load.capacity} ที่)` : `🚚 ว่าง (0/${load.capacity} ที่)`),
+    ].filter(Boolean).join(' · ');
     const wg = wargearSummary(sheet, u);
     const wrong = sheet && !allowed(sheet);
     return (
@@ -476,6 +483,24 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             return sp.must
               ? <div className="tiny muted">{sp.name}: {sp.label}</div>
               : <button className={`btn ${u.split ? 'on' : ''}`} onClick={() => setUnit(u.uid, { split: !u.split })}>{u.split ? '✓ ' : ''}{sp.name}: {sp.label}</button>;
+          })()}
+          {(() => {
+            // start the battle embarked: any transport in the list (leaders ride with the unit they lead)
+            const rides = list.units.filter((t) => t.uid !== u.uid && parseTransport(sheetOf(t.datasheet)?.transport));
+            if (!rides.length || u.attachTo || parseTransport(sheet?.transport) || sheet?.keywords.includes('TRANSPORT')) return null;
+            const loads = faction ? transportLoads(list, faction) : [];
+            return (
+              <label className="field">ขึ้นรถตอนเริ่มเกม
+                <select value={u.embarkIn ?? ''} onChange={(e) => setUnit(u.uid, { embarkIn: e.target.value || undefined })}>
+                  <option value="">ไม่ขึ้นรถ (วางบนสนามเอง)</option>
+                  {rides.map((t) => {
+                    const l = loads.find((x) => x.uid === t.uid);
+                    return <option key={t.uid} value={t.uid}>{t.datasheet} ({l ? `${l.used}/${l.capacity}` : '?'} ที่)</option>;
+                  })}
+                </select>
+                <span className="tiny muted">ขึ้นรถตั้งแต่ Declare Battle Formations · ลงได้ใน Movement phase: Tactical (รถยังไม่เดิน ≤3" แล้วเดินต่อได้) / Rapid (รถเดินแล้ว ≤3" ชาร์จไม่ได้) / Combat (รถ engaged ≤6" hazard + battle-shock)</span>
+              </label>
+            );
           })()}
           {sheet && sheet.leads.length > 0 && (
             <label className="field">นำหน่วย (Leader)

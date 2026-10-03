@@ -8,7 +8,7 @@ import { rollN } from '../engine/dice';
 import {
   autoApproach, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
-  formationAt, heroicCandidates, ingressUnit, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
+  formationAt, heroicCandidates, ingressUnit, ringFormation, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, type MoveCheck, hasArmyRule, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
@@ -347,9 +347,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode.how === 'disembark') {
       const u = U(mode.unitId), t = U(mode.transportId!);
       const tm = alive(t)[0];
-      for (let ring = 0; ring < 4; ring++) for (let a = 0; a < 16; a++) {
-        const ang = (a / 16) * Math.PI * 2;
-        const pos = formationAt(u, { x: tm.x + Math.cos(ang) * (tm.r + 1 + ring * 0.6), y: tm.y + Math.sin(ang) * (tm.r + 1 + ring * 0.6) });
+      // models hug the hull (wholly within 3"), starting on the side facing the closest enemy
+      const foes = boardUnits(s, other(u.owner)).flatMap(alive);
+      const near = foes.length ? foes.reduce((a, m) => (Math.hypot(m.x - tm.x, m.y - tm.y) < Math.hypot(a.x - tm.x, a.y - tm.y) ? m : a)) : null;
+      const base = near ? Math.atan2(near.y - tm.y, near.x - tm.x) : 0;
+      for (let a = 0; a < 16; a++) {
+        const ang = base + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 8);
+        const pos = ringFormation(u, tm, ang);
         if (validateDisembark(s, u, t, pos).ok) { setDraft(placePaths(pos)); setCheck(null); return; }
       }
       flash('หาที่ลงรถอัตโนมัติไม่ได้ ลองแตะวางเอง');
@@ -639,10 +643,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             {u.core.infiltrators && <button className="btn" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'infiltrate' })}>Infiltrate</button>}
             <button className="btn" onClick={() => { const e = act((g) => sendToReserves(g, u.id)); if (e) flash(e); else setSel(null); }}>Strategic Reserves{u.core.deepStrike ? ' / Deep Strike' : ''}</button>
             {s.units.filter((t) => t.owner === p && t.transport && (t.status === 'board' || t.status === 'pending') && !canEmbarkIn(s, u, t)).map((t) => (
-              <button key={t.id} className="btn" onClick={() => { const e = act((g) => embarkUnit(g, unitById(g, u.id), unitById(g, t.id), true)); if (e) flash(e); else setSel(null); }}>ขึ้นรถ {t.name}</button>
+              <button key={t.id} className="btn" onClick={() => { const e = act((g) => embarkUnit(g, unitById(g, u.id), unitById(g, t.id), true)); if (e) flash(e); else setSel(null); }}>ขึ้นรถ {t.name} ({transportSpaceUsed(s, t)}/{t.transport!.capacity})</button>
             ))}
           </div>
         ) : <div className="muted small">เลือกหน่วยที่จะวาง</div>}
+        {s.units.filter((t) => t.owner === p && t.transport && t.keywords.includes('DEDICATED TRANSPORT') && t.status !== 'destroyed' && !embarkedIn(s, t).length).map((t) => (
+          <div key={t.id} className="tiny err">🚚 {t.name} ยังว่าง: Dedicated Transport ต้องมีหน่วยอยู่ข้างในตอนเริ่มเกม ไม่อย่างนั้นถูกทำลาย (เลือกหน่วยแล้วกด "ขึ้นรถ")</div>
+        ))}
         {u && unitCard(u)}
       </>
     );
@@ -812,9 +819,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             ? <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'disembark', transportId: t.id })}>ลงจากรถ {t.name} ({dm === 'tactical' ? 'Tactical: ลงแล้วเดินต่อได้' : dm === 'rapid' ? 'Rapid: ลงแล้วชาร์จไม่ได้' : 'Combat: hazard + battle-shocked'})</button>
             : <div className="muted small">รถ Advance/Fall back มาแล้ว ลงไม่ได้ phase นี้</div>;
         })()}
-        {rides.map((t) => (
-          <button key={t.id} className="btn" onClick={() => { const e = act((g) => embarkUnit(g, unitById(g, moved!.id), unitById(g, t.id))); if (e) flash(e); else setSel(null); }}>ขึ้นรถ {t.name}</button>
-        ))}
+        {rides.map((t) => {
+          // embark: after a Normal / Advance / Fall Back move, every model within 3" of the transport
+          const far = alive(moved!).filter((m) => !alive(t).some((n) => baseDist(m, n) <= 3 + 1e-6)).length;
+          return (
+            <button key={t.id} className="btn" disabled={far > 0} onClick={() => { const e = act((g) => embarkUnit(g, unitById(g, moved!.id), unitById(g, t.id))); if (e) flash(e); else setSel(null); }}>
+              ขึ้นรถ {t.name} ({transportSpaceUsed(s, t)}/{t.transport!.capacity}){far ? ` — อีก ${far} ตัวยังห่างเกิน 3"` : ''}
+            </button>
+          );
+        })}
         {u && u.status === 'reserves' && (
           canIngress(s, u)
             ? <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: hasDeepStrike(s, u) ? 'deepStrike' : 'ingress' })}>ลงสนาม ({hasDeepStrike(s, u) ? 'Deep Strike' : 'Ingress'})</button>
