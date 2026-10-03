@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botAct, botMoveOne, botShootOne, botStep, botWindow } from './bot';
-import { buildShootPools, resolveAll, resolveReroll, rollHits, startAttack, stepAttack, toggleRerollPick } from './attack';
+import { attackRerollGap, buildShootPools, hazardTest, rerollAttackCount, resolveAll, resolveReroll, rollHits, startAttack, stepAttack, toggleRerollPick } from './attack';
 import { createGame, formationAt, placeUnit } from './game';
 import { alive, unitDistance } from './state';
 import { planStratagem } from './stratagems';
@@ -62,6 +62,24 @@ describe('bot movement', () => {
     expect(dread.move === 'normal' || dread.move === 'advance').toBe(true);
     // it heads for the opening (down the board), not up against the wall
     expect(m.y).toBeGreaterThan(before.y + 2);
+  });
+
+  it('a bot move is replayed on the board: the move event carries the route from where the models stood', () => {
+    const s = game([['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]]);
+    s.phase = 'movement';
+    const ints = put(s, 'p0-x0', { x: 20, y: 12 });
+    put(s, 'p1-x0', { x: 20, y: 40 });
+    const start = new Map(alive(ints).map((m) => [m.id, { x: m.x, y: m.y }]));
+    const seq = s.fxSeq ?? 0;
+    s.botTried = [];
+    botMoveOne(s);
+    const mv = (s.fx ?? []).find((e) => e.seq > seq && e.kind === 'move');
+    expect(mv).toBeTruthy();
+    if (mv?.kind !== 'move') return;
+    for (const [id, path] of mv.paths) {
+      expect(path[0]).toEqual(start.get(id));
+      expect(path.length).toBeGreaterThan(1);
+    }
   });
 
   it('every bot unit moves at some point of a whole game (none is left stuck)', () => {
@@ -169,6 +187,72 @@ describe('the bot spends Command Points', () => {
     botWindow(s);
     expect(smoke.buffs.some((b) => b.kind === 'smoke')).toBe(true);
     expect(s.window).toBeNull();
+  });
+});
+
+describe('Command Re-roll on hazard, damage and the number of attacks', () => {
+  it('hazard: a bot re-rolls one failed die; a person only when they turned it on', () => {
+    let usedBot = 0, usedOff = 0, usedOn = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const who of ['bot', 'off', 'on'] as const) {
+        const s = game([['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]]);
+        s.rng = seed * 7919;
+        s.players[0].cp = 3;
+        s.phase = 'shooting';
+        if (who === 'bot') s.bots = [0];
+        if (who === 'on') s.players[0].autoReroll = { hazard: true };
+        const u = put(s, 'p0-x0', { x: 20, y: 14 });
+        hazardTest(s, u, 5, 'test');
+        const used = s.players[0].cp < 3 ? 1 : 0;
+        if (used) expect(s.log.at(-1)!.text).toMatch(/Command Re-roll \d→\d/);
+        if (who === 'bot') usedBot += used; else if (who === 'off') usedOff += used; else usedOn += used;
+      }
+    }
+    expect(usedBot).toBeGreaterThan(0);
+    expect(usedOn).toBeGreaterThan(0);
+    expect(usedOff).toBe(0);
+  });
+
+  it('a low random number of attacks can be re-rolled once, before the hit rolls', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const s = game([['Infernus Squad', 5, 85]], [['Boyz', 20, 180]]);
+      s.rng = seed * 7919;
+      s.players[0].cp = 3;
+      s.phase = 'shooting';
+      const inf = put(s, 'p0-x0', { x: 20, y: 14 });
+      const boyz = put(s, 'p1-x0', { x: 20, y: 22 });
+      const pools = buildShootPools(s, inf.id, boyz.id, { mode: 'normal' }).pools;
+      startAttack(s, 'shoot', inf.id, boyz.id, pools);
+      const i = s.attack!.pools.findIndex((p) => p.attackRolls?.length);
+      if (i < 0 || attackRerollGap(s.attack!.pools[i]) < 1) continue;
+      const p = s.attack!.pools[i];
+      expect(rerollAttackCount(s, i)).toBeNull();
+      expect(s.players[0].cp).toBe(2);
+      expect(p.attackRolls!.some((r) => r.rerolled)).toBe(true);
+      expect(p.attackNote).toMatch(/Command Re-roll/);
+      expect(rerollAttackCount(s, i)).not.toBeNull(); // once per phase
+      return;
+    }
+    throw new Error('no low roll found');
+  });
+
+  it('damage: with the switch on, the first low damage roll is re-rolled for 1CP', () => {
+    let used = 0;
+    for (let seed = 1; seed <= 30 && !used; seed++) {
+      const s = game([['Predator Annihilator', 1, 135]], [['Battlewagon', 1, 160]]);
+      s.rng = seed * 7919;
+      s.players[0].cp = 3;
+      s.phase = 'shooting';
+      const a = put(s, 'p0-x0', { x: 20, y: 12 });
+      const t = put(s, 'p1-x0', { x: 20, y: 30 });
+      startAttack(s, 'shoot', a.id, t.id, buildShootPools(s, a.id, t.id, { mode: 'normal' }).pools);
+      for (const p of s.attack!.pools) { p.crDamage = true; p.rerollDamage = false; } // (its own re-roll ability aside)
+      resolveAll(s);
+      const lines = s.attack!.pools.flatMap((p) => p.damageLines).filter((l) => /Command Re-roll damage/.test(l));
+      expect(lines.length).toBeLessThanOrEqual(1);
+      if (lines.length) { used++; expect(s.players[0].cp).toBe(2); }
+    }
+    expect(used).toBe(1);
   });
 });
 

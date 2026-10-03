@@ -2,7 +2,7 @@
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems } from './geometry';
-import { alive, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, unitById } from './state';
+import { alive, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
 import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
@@ -329,14 +329,16 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
   for (const p of pools) {
     let total = 0;
     const parts: string[] = [];
+    p.attackRolls = [];
     for (const i of p.instances) {
       const a = rollExpr(s, i.A);
       const ex = i.extras.map((e) => rollExpr(s, e).total);
       total += a.total + ex.reduce((x, y) => x + y, 0) + i.flat + (p.attackBonus ?? 0);
-      if (a.dice.length) parts.push(`${i.A}=${a.total}`);
+      if (a.dice.length) { parts.push(`${i.A}=${a.total}`); p.attackRolls.push({ expr: i.A, total: a.total }); }
     }
     p.attacks = total;
     if (parts.length) p.attackNote += ` · ทอยจำนวน attack: ${parts.join(', ')}`;
+    if (!p.attackRolls.length) delete p.attackRolls;
     if (hasAbility(p.profile, 'one-shot') && !A.oneShotUsed.includes(p.weapon)) A.oneShotUsed.push(p.weapon);
     if (kind === 'shoot' && !opts.free && !A.weaponsFired.includes(p.weapon)) A.weaponsFired.push(p.weapon);
   }
@@ -347,7 +349,35 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     attackerBuffsAtStart: A.buffs.map((b) => b.kind), free: opts.free,
     timedAtStart: { a: A.timed?.length ?? 0, t: T.timed?.length ?? 0 },
   };
+  // a low random number of attacks: the bot (or a player who turned it on) re-rolls the worst one
+  const low = s.attack.pools.map((p, i) => ({ i, gap: attackRerollGap(p) })).filter((x) => x.gap >= 1).sort((a, b) => b.gap - a.gap)[0];
+  if (low && wantsCR(s, A.owner, 'attacks', A)) rerollAttackCount(s, low.i);
   for (const h of startHooks) h(s, s.attack);
+}
+
+/** How far below its average the worst random number of attacks of a pool is (0: nothing to re-roll). */
+export function attackRerollGap(p: Pool): number {
+  if (p.hits.length || !p.attackRolls) return 0;
+  return Math.max(0, ...p.attackRolls.filter((r) => !r.rerolled).map((r) => exprAverage(r.expr) - r.total));
+}
+
+/** Command Re-roll: roll the worst random number of attacks of pool `idx` again (before its hit rolls). */
+export function rerollAttackCount(s: GameState, idx: number): string | null {
+  const at = s.attack!;
+  const p = at.pools[idx];
+  const A = unitById(s, at.attackerId);
+  const why = canUseStratagem(s, A.owner, 'command-reroll', A);
+  if (why) return why;
+  const r = [...(p.attackRolls ?? [])].filter((x) => !x.rerolled).sort((a, b) => (a.total - exprAverage(a.expr)) - (b.total - exprAverage(b.expr)))[0];
+  if (!r || p.hits.length) return 'ไม่มีจำนวน attack ที่ทอยใหม่ได้';
+  spendStratagem(s, A.owner, 'command-reroll', A);
+  const again = rollExpr(s, r.expr).total;
+  p.attacks += again - r.total;
+  p.attackNote += ` · Command Re-roll ${r.expr}: ${r.total}→${again}`;
+  log(s, `Command Re-roll จำนวน attack ${p.weapon}: ${r.total}→${again}`, 'roll', A.owner);
+  r.total = again;
+  r.rerolled = true;
+  return null;
 }
 
 /** Change one die of the current stage to a value ("change that roll to an unmodified 6"). */
@@ -664,6 +694,15 @@ export function applyDamage(s: GameState) {
     if (!ok) {
       let dr = rollExpr(s, p.damage);
       if (p.rerollDamage && dr.dice.length && dr.total < exprAverage(p.damage)) { const again = rollExpr(s, p.damage); p.damageLines.push(`re-roll damage ${dr.total}→${again.total}`); dr = again; }
+      // Command Re-roll on a low damage roll that would not kill the model anyway
+      else if (dr.dice.length && dr.total < exprAverage(p.damage) && dr.total < m.wounds
+        && (p.crDamage ? !canUseStratagem(s, A.owner, 'command-reroll', A) : wantsCR(s, A.owner, 'damage', A))) {
+        spendStratagem(s, A.owner, 'command-reroll', A);
+        const again = rollExpr(s, p.damage);
+        p.damageLines.push(`Command Re-roll damage ${dr.total}→${again.total}`);
+        dr = again;
+        p.crDamage = false;
+      }
       let dmg = dr.total;
       if (T.buffs.some((b) => b.kind === 'damage-1')) dmg = Math.max(1, dmg - 1);
       if (md.damage) dmg = Math.max(1, dmg + md.damage);
@@ -708,6 +747,25 @@ export function stepAttack(s: GameState) {
   else if (at.stage === 'damage') applyDamage(s);
 }
 
+/**
+ * Hazard tests (11e: each roll of 1–2 fails). With the owner's say-so (a bot decides itself) one failed die is
+ * re-rolled with a Command Re-roll. Logs the dice; the caller applies the mortal wounds.
+ */
+export function hazardTest(s: GameState, u: UnitState, n: number, label: string, worse = 0): { rolls: number[]; fails: number } {
+  const rolls = rollN(s, n);
+  const failed = (r: number) => r - worse <= RULES.hazard.failOn;
+  let note = '';
+  const i = rolls.findIndex(failed);
+  if (i >= 0 && wantsCR(s, u.owner, 'hazard', u)) {
+    spendStratagem(s, u.owner, 'command-reroll', u);
+    const again = d6(s);
+    note = ` · Command Re-roll ${rolls[i]}→${again}`;
+    rolls[i] = again;
+  }
+  log(s, `${label} ${u.name}: hazard [${rolls.join(' ')}]${worse ? ` −${worse}` : ''}${note}`, 'roll', u.owner);
+  return { rolls, fails: rolls.filter(failed).length };
+}
+
 /** Close the session: hazardous rolls, flags, log. */
 export function finishAttack(s: GameState) {
   const at = s.attack!;
@@ -715,10 +773,8 @@ export function finishAttack(s: GameState) {
   const T = unitById(s, at.targetId);
   const haz = at.pools.reduce((a, p) => a + p.hazardous, 0);
   if (haz && alive(A).length) {
-    const rolls = rollN(s, haz);
+    const { rolls, fails } = hazardTest(s, A, haz, '☢ Hazardous');
     at.hazardousRolls = rolls;
-    const fails = rolls.filter((r) => r <= RULES.hazard.failOn).length;
-    log(s, `☢ Hazard roll ${A.name}: [${rolls.join(' ')}]`, 'roll', A.owner);
     if (fails) {
       const mv = alive(A).every(isMV);
       applyMortalWounds(s, A, fails * (mv ? RULES.hazard.mortalWoundsMonsterVehicle : RULES.hazard.mortalWounds), 'Hazardous');

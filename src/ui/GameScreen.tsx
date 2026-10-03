@@ -24,7 +24,7 @@ import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { actionOptions, startAction } from '../engine/missions';
 import { RollOverlay } from './RollOverlay';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem } from '../engine/stratagems';
-import { endUnitShooting, rangedWeaponNames, toggleRerollPick } from '../engine/attack';
+import { endUnitShooting, rangedWeaponNames, rerollAttackCount, toggleRerollPick } from '../engine/attack';
 import { polyCentroid } from '../engine/geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, onBoard, other, spendStratagem, stratCost, strength, unitById, unitDistance,
@@ -1366,6 +1366,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onSkip={() => act((g) => resolveAll(g))}
           onClose={onTrayClose}
           onPick={(i) => act((g) => toggleRerollPick(g, i))}
+          onCR={(what) => {
+            const e = act((g) => {
+              const at = g.attack!;
+              if (what === 'attacks') return rerollAttackCount(g, at.idx);
+              const p = at.pools[at.idx];
+              p.crDamage = !p.crDamage;
+              return null;
+            });
+            if (e) flash(e);
+          }}
           auto={!!s.attack.defenderRolls && bots.includes(U(s.attack.attackerId).owner)}
         />
       )}
@@ -1395,6 +1405,19 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 ตอนบอทโจมตี: {s.defenderRolls !== false ? 'ฉันทอย Save เอง (ใช้ Command Re-roll ได้) ✓' : 'ทอยให้อัตโนมัติ'}
               </button>
             )}
+            {([0, 1] as PlayerId[]).filter((pl) => !bots.includes(pl)).map((pl) => (
+              <div key={pl} className="field">
+                <span>{s.players[pl].name}: ใช้ Command Re-roll (1CP) ให้อัตโนมัติเมื่อ…</span>
+                <div className="wg-chips">
+                  {([['hazard', 'ทอย Hazard ตก'], ['damage', 'ดาเมจต่ำ'], ['attacks', 'จำนวน attack ต่ำ']] as const).map(([k, label]) => (
+                    <button key={k} type="button" className={s.players[pl].autoReroll?.[k] ? 'on' : ''}
+                      onClick={() => act((g) => { const P = g.players[pl]; P.autoReroll = { ...P.autoReroll, [k]: !P.autoReroll?.[k] }; })}>
+                      {s.players[pl].autoReroll?.[k] ? '✓ ' : ''}{label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
             <button className="btn danger" onClick={onExit}>ออกไปหน้าแรก (เกมเซฟไว้แล้ว)</button>
             <button className="btn ghost" onClick={() => setShowMenu(false)}>ปิด</button>
           </div>

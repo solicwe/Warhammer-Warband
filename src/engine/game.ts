@@ -1,6 +1,6 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
 import { buildUnits, transportFit } from './army';
-import { applyMortalWounds, killModel, onTransportDestroyed } from './attack';
+import { applyMortalWounds, hazardTest, killModel, onTransportDestroyed } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
@@ -605,7 +605,9 @@ export function detReroll(s: GameState, u: UnitState, what: 'advance' | 'charge'
   else { u.declaredCharge = false; declareCharge(s, u, fly, cap); }
 }
 
-export function commitMove(s: GameState, u: UnitState, kind: MoveKind, paths: Map<string, Pt[]>) {
+export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Map<string, Pt[]>) {
+  // copy the points first: a path may start at the model object itself, which is about to move
+  const paths = new Map([...given].map(([id, p]) => [id, p.map((q) => ({ x: q.x, y: q.y }))]));
   let maxMoved = 0;
   const engagedBefore = kind === 'fallback' ? engagedEnemies(s, u) : [];
   // Savage Frenzy / Judgement of the Weak / Cut Off Their Escape: falling back from these units forces Desperate Escape
@@ -625,9 +627,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
   if (kind === 'fallback' && (u.battleShocked || forced.length)) {
     // Desperate Escape: hazard roll per model, made before moving (resolved here for simplicity)
     const worse = forced.length && u.battleShocked ? 1 : 0; // forced by an ability while also battle-shocked: −1 to each test
-    const rolls = rollN(s, alive(u).length);
-    const fails = rolls.filter((r) => r - worse <= RULES.hazard.failOn).length;
-    log(s, `Desperate Escape ${u.name}${forced.length ? ` (บังคับโดย ${forced.map((f) => f.name).join(', ')})` : ''}: hazard [${rolls.join(' ')}]${worse ? ' −1' : ''}`, 'roll', u.owner);
+    const { fails } = hazardTest(s, u, alive(u).length, `Desperate Escape${forced.length ? ` (บังคับโดย ${forced.map((f) => f.name).join(', ')})` : ''}`, worse);
     if (fails) applyMortalWounds(s, u, fails * (alive(u).every(isMV) ? RULES.hazard.mortalWoundsMonsterVehicle : RULES.hazard.mortalWounds), 'Desperate Escape');
   }
   const moved = alive(u).filter((m) => (paths.get(m.id)?.length ?? 0) > 1 && pathLength(paths.get(m.id)!) > 0.01);
@@ -637,9 +637,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
   if (label[kind]) log(s, `${u.name}: ${label[kind]}${maxMoved ? ` (${maxMoved.toFixed(1)}")` : ''}`, 'info', u.owner);
   // Shokk-boosta: a hazard roll for each model after the Advance
   if (kind === 'advance' && unitFlags(s, u).advanceHazard) {
-    const rolls = rollN(s, alive(u).length);
-    const fails = rolls.filter((r) => r <= RULES.hazard.failOn).length;
-    log(s, `Hazard (หลัง Advance) ${u.name}: [${rolls.join(' ')}]`, 'roll', u.owner);
+    const { fails } = hazardTest(s, u, alive(u).length, 'หลัง Advance');
     if (fails) applyMortalWounds(s, u, fails * (alive(u).every(isMV) ? RULES.hazard.mortalWoundsMonsterVehicle : RULES.hazard.mortalWounds), 'Hazard');
   }
   // reactions of the other player: "if an enemy unit ends a move within 8" of this unit …", "… Falls Back, this unit can make a Normal move"
@@ -1175,9 +1173,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
   if (!chk.ok) return chk;
   const mode = disembarkMode(s, t)!;
   if (mode === 'combat') {
-    const rolls = rollN(s, alive(u).length);
-    const fails = rolls.filter((r) => r <= RULES.hazard.failOn).length;
-    log(s, `Combat Disembark ${u.name}: hazard [${rolls.join(' ')}]`, 'roll', u.owner);
+    const { fails } = hazardTest(s, u, alive(u).length, 'Combat Disembark');
     if (fails) applyMortalWounds(s, u, fails, 'Combat Disembark');
     u.battleShocked = true;
   }
@@ -1198,8 +1194,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
 /** Emergency disembark when a transport is destroyed (18.05). */
 export function emergencyDisembark(s: GameState, t: UnitState, tm: ModelState) {
   for (const u of embarkedIn(s, t)) {
-    const rolls = rollN(s, alive(u).length);
-    const fails = rolls.filter((r) => r <= RULES.hazard.failOn).length;
+    const { fails } = hazardTest(s, u, alive(u).length, 'Emergency Disembark');
     let placed: Map<string, Pt> | null = null;
     for (let ring = 0; ring < 5 && !placed; ring++) {
       for (let a = 0; a < 12 && !placed; a++) {
@@ -1222,7 +1217,7 @@ export function emergencyDisembark(s: GameState, t: UnitState, tm: ModelState) {
     u.status = 'board';
     u.battleShocked = true;
     u.cantCharge = true;
-    log(s, `Emergency Disembark ${u.name}: hazard [${rolls.join(' ')}] · battle-shocked`, 'roll', u.owner);
+    log(s, `Emergency Disembark ${u.name}: battle-shocked`, 'roll', u.owner);
     if (fails) applyMortalWounds(s, u, fails, 'Emergency Disembark');
   }
 }

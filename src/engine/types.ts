@@ -295,6 +295,8 @@ export interface PlayerState {
   /** choice-type detachment rules (Combat Doctrines …): what is active and what was used, by detachment name */
   det?: Record<string, DetChoiceState>;
   vowed?: string[]; // Inner Circle: vowed objective ids
+  /** Command Re-roll used by itself on these rolls (hazard tests, low damage, a low number of attacks) */
+  autoReroll?: Partial<Record<'hazard' | 'damage' | 'attacks', boolean>>;
   priorityObjective?: string; // Priority Objective Identified
   oathBackup?: string | null; // Master of Battle: second Oath of Moment target
   slayer?: Record<string, string>; // Slayer's Oath: unit id -> keyword
@@ -380,6 +382,10 @@ export interface Pool {
   rerollWounds1?: boolean;
   rerollAllWounds?: boolean;
   rerollDamage?: boolean;
+  /** variable numbers of attacks rolled for this pool (D6, 2D3+1 …), so one can be re-rolled */
+  attackRolls?: { expr: string; total: number; rerolled?: boolean }[];
+  /** Command Re-roll the first damage roll below average that would not already kill the model */
+  crDamage?: boolean;
   attackBonus?: number; // +A per weapon instance (e.g. Red Thirst)
   critHitOn?: number; // unmodified hit rolls of this or more are critical hits
   ignoreHitMods?: boolean; // ignore negative modifiers to hit / BS / WS

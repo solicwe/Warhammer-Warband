@@ -22,6 +22,8 @@ interface Props {
   auto?: boolean;
   /** players run by the bot: their re-rolls and stratagems are the bot's own decisions, no buttons for them */
   botSides?: (0 | 1)[];
+  /** Command Re-roll on the random number of attacks (now), or on the next low damage roll (a switch) */
+  onCR?: (what: 'attacks' | 'damage') => void;
 }
 
 const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `${n}` : '');
@@ -55,7 +57,7 @@ function poolHeader(p: Pool) {
   );
 }
 
-export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree, onPick, auto, botSides = [] }: Props) {
+export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree, onPick, auto, botSides = [], onCR }: Props) {
   const at = s.attack!;
   const [rr, setRr] = useState<null | 'hit' | 'wound' | 'save'>(null);
   const [fd, setFd] = useState<string | null>(null); // free die being used: tap the die
@@ -141,6 +143,11 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
             <div className={`stage ${st === 'hit' ? 'active' : ''}`}>
               <div className="stage-head"><span>1. Hit</span><span className="need">{p.autoHit ? 'Torrent: โดนอัตโนมัติ' : p.hitOn6Only ? 'ต้องได้ 6' : `ต้องได้ ${p.skill}+${p.hitMod ? ` (${sign(p.hitMod)} hit)` : ''}`}</span></div>
               <div className="tiny muted">{p.attackNote}{p.skillNote ? ` · ${p.skillNote}` : ''}{p.hitNote ? ` · ${p.hitNote}` : ''}</div>
+              {st === 'hit' && !p.hits.length && !attackerBot && onCR && p.attackRolls?.some((r) => !r.rerolled) && (
+                <button className="btn small" disabled={!!attackerCR} onClick={() => onCR('attacks')}>
+                  🎲 Command Re-roll จำนวน attack 1CP ({p.attackRolls.filter((r) => !r.rerolled).map((r) => `${r.expr}=${r.total}`).join(', ')}){attackerCR ? ` (${attackerCR})` : ''}
+                </button>
+              )}
               {hitShown && (
                 <>
                   {pickRow('hit') ? <DiceRow dice={p.hits} cls={hitCls} {...pickRow('hit')!} /> : (
@@ -189,6 +196,11 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
               </div>
             )}
 
+            {(st === 'save' || st === 'damage') && !attackerBot && onCR && /d/i.test(p.damage) && (
+              <button className={`btn small ${p.crDamage ? 'on' : ''}`} disabled={!!attackerCR && !p.crDamage} onClick={() => onCR('damage')}>
+                🎲 Command Re-roll ดาเมจ 1CP: {p.crDamage ? '✓ จะทอยใหม่ลูกดาเมจแรกที่ต่ำกว่าค่าเฉลี่ย' : 'ทอยใหม่ลูกดาเมจที่ต่ำ'}{attackerCR && !p.crDamage ? ` (${attackerCR})` : ''}
+              </button>
+            )}
             {st === 'damage' && (
               <div className="stage active">
                 <div className="stage-head"><span>3. Save ({s.players[T.owner].name})</span><span className="need">AP{p.ap} · ใช้ผลต่ำสุดก่อน</span></div>
