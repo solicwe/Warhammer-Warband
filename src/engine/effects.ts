@@ -456,6 +456,7 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('detActive:')) return Object.values(s.players[A.owner].det ?? {}).some((d) => (d as { active?: string[] }).active?.includes(c.slice(10)));
   if (c.startsWith('beyond:')) return (x.d ?? 0) > Number(c.slice(7)) + 1e-6;
   if (c.startsWith('targetKw:')) return !!T && c.slice(9).split('|').some((k) => T.keywords.includes(k));
+  if (c.startsWith('targetNotKw:')) return !!T && !c.slice(12).split('|').some((k) => T.keywords.includes(k));
   if (c.startsWith('targetMarked:')) return !!T && (T.timed ?? []).some((t) => t.mark === c.slice(13) && t.by === A.owner);
   if (c.startsWith('modelFrom:')) return !!x.m && wk(x.m.source).includes(wk(c.slice(10)));
   if (c.startsWith('modelName:')) return !!x.m && wk(x.m.name).includes(wk(c.slice(10)));

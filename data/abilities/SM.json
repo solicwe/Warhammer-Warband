@@ -305,5 +305,15 @@
   ] },
   "Oath of Moment": { "status": "auto", "note": "ระบบทำให้: เลือกเป้าใน Command phase (re-roll hit, +1 wound สำหรับทัพ codex)" },
   "Templar Vows": { "status": "auto", "note": "ระบบทำให้: เลือก Vow ใน Command phase แรก (Black Templars)" },
-  "Overlapping Detonations": { "effects": [{ "weapon": "heavy bolter", "if": ["targetNotMV"], "abilities": ["blast 1"] }] }
+  "Overlapping Detonations": { "effects": [{ "weapon": "heavy bolter", "if": ["targetNotMV"], "abilities": ["blast 1"] }] },
+  "Assigned Agents": { "status": "info", "note": "กฎจัดทัพ: หน่วย Deathwatch (Imperial Agents) ใส่ในกองทัพ Space Marines ได้" },
+  "Tactical Instinct": { "effects": [{ "scope": "led", "abilities": ["lethal hits"] }] },
+  "Unstoppable Champion": { "act": { "when": "onDeath", "auto": true, "modelDeath": true, "limit": "battle", "do": [{ "on": "self", "reviveLater": { "on": 2, "wounds": 1 } }] } },
+  "Strategic Knowledge": { "effects": [{ "scope": "led", "eligible": ["shootAfterAdvance", "shootAfterFallBack", "chargeAfterAdvance", "chargeAfterFallBack"] }] },
+  "Death to the Alien": { "effects": [{ "reroll": "hits1" }, { "if": ["targetNotKw:IMPERIUM|CHAOS"], "reroll": "hits" }] },
+  "Astartes Shield": { "gear": true, "effects": [{ "scope": "model", "defend": { "inv": 4 } }] },
+  "Blackstar Cluster Launcher": { "status": "manual", "note": "หลังเดินผ่านหน่วยศัตรู: ทอย 6D6 ทุก 5+ = 1 MW (ทอยเอง)" },
+  "Auspex Array": { "gear": true, "effects": [{ "scope": "model", "attack": "ranged", "abilities": ["ignores cover"] }] },
+  "Infernum Halo-launcher": { "gear": true, "status": "info", "note": "มี keyword SMOKE: ใช้ Smokescreen ได้" },
+  "Kill Team": { "status": "info", "note": "ใช้ Toughness ของโมเดลส่วนใหญ่ในหน่วยตอนทอย wound · Gravis กินที่ 2 ในรถ" }
 }
