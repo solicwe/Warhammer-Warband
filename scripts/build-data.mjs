@@ -270,7 +270,7 @@ function detachmentSubfaction(sub, d) {
 
 /** Units another army's book now holds, listed again for one of this army's sub-factions. */
 const BORROW = {
-  SM: [{ from: 'AoI', keyword: 'DEATHWATCH', factionKeywords: ['ADEPTUS ASTARTES'] }],
+  // (the Deathwatch keep their own faction pack in 11th edition: nothing borrowed from Imperial Agents any more)
 };
 
 function build() {
