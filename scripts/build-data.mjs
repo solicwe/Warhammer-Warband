@@ -380,6 +380,16 @@ function build() {
       faction = deepMerge(faction, JSON.parse(fs.readFileSync(ovPath, 'utf8')));
       console.log(`applied overrides for ${f.id}`);
     }
+    // Leader lists: only units that are in the game (Legends and removed datasheets drop out), and a leader on foot
+    // can't lead a unit that moves differently (JUMP PACK / MOUNTED) — Wahapedia's own lists leave those out too
+    const present = new Map(faction.datasheets.map((d) => [d.name, d]));
+    const moves = ['JUMP PACK', 'MOUNTED'];
+    for (const d of faction.datasheets) {
+      d.leads = [...new Set(d.leads ?? [])].filter((n) => {
+        const t = present.get(n);
+        return t && moves.every((k) => !t.keywords.includes(k) || d.keywords.includes(k));
+      });
+    }
     fs.writeFileSync(path.join(OUT, 'factions', `${f.id}.json`), JSON.stringify(faction));
     const group = Object.entries(META.groups).find(([, ids]) => ids.includes(f.id))?.[0] ?? 'Other';
     index.factions.push({ id: f.id, name: f.name, group, datasheets: faction.datasheets.length, detachments: faction.detachments.length, ...(sub ? { subfactions: sub.options.map((o) => o.name) } : {}) });
