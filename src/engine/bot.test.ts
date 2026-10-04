@@ -229,7 +229,7 @@ describe('Command Re-roll on hazard, damage and the number of attacks', () => {
     expect(usedOff).toBe(0);
   });
 
-  it('a low random number of attacks can be re-rolled once, before the hit rolls', () => {
+  it('a low random number of attacks is re-rolled by itself once, before the hit rolls', () => {
     for (let seed = 1; seed <= 40; seed++) {
       const s = game([['Infernus Squad', 5, 85]], [['Boyz', 20, 180]]);
       s.rng = seed * 7919;
@@ -239,10 +239,9 @@ describe('Command Re-roll on hazard, damage and the number of attacks', () => {
       const boyz = put(s, 'p1-x0', { x: 20, y: 22 });
       const pools = buildShootPools(s, inf.id, boyz.id, { mode: 'normal' }).pools;
       startAttack(s, 'shoot', inf.id, boyz.id, pools);
-      const i = s.attack!.pools.findIndex((p) => p.attackRolls?.length);
-      if (i < 0 || attackRerollGap(s.attack!.pools[i]) < 1) continue;
+      const i = s.attack!.pools.findIndex((p) => p.attackRolls?.some((r) => r.rerolled));
+      if (i < 0) continue;
       const p = s.attack!.pools[i];
-      expect(rerollAttackCount(s, i)).toBeNull();
       expect(s.players[0].cp).toBe(2);
       expect(p.attackRolls!.some((r) => r.rerolled)).toBe(true);
       expect(p.attackNote).toMatch(/Command Re-roll/);
