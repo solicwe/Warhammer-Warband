@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { chapterRules } from '../engine/army';
+import { RuleText } from './RuleText';
 import {
   applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, finishAttack, meleeWeapons, rerollOne, resolveAll, shootingModes, startAttack, stepAttack,
   type ShootMode,
@@ -1657,7 +1659,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             {s.players.map((p, i) => (
               <details key={i}>
                 <summary className={i ? 'p1' : 'p0'}>{p.name}: Army rules & Detachments</summary>
-                {p.armyRules.map((r) => <div key={r.name} className="sheet"><b>{r.name}</b>{'\n'}{r.text}</div>)}
+                {chapterRules(p.armyRules, p.subfaction).map((r) => <div key={r.name} className="sheet rt-wrap"><b>{r.name}</b><RuleText text={r.text} /></div>)}
                 {p.detachments.map((d) => (
                   <div key={d.id} className="sheet"><b>{d.name}</b> ({d.forceDisposition}){'\n'}{d.rules.map((r) => `• ${r.name}: ${r.text}`).join('\n')}{'\n'}<i>Stratagems:</i>{'\n'}{d.stratagems.map((st) => `• ${st.name} (${st.cp}CP) — ${st.text}`).join('\n')}</div>
                 ))}

@@ -16,6 +16,27 @@ export function forChapter(faction: FactionData, subfaction?: string): FactionDa
   return { ...faction, datasheets: faction.datasheets.filter((d) => keep.has(d)) };
 }
 
+// Army rules that belong to one Chapter only (the Space Marine pack carries every Chapter's); null = every army.
+const RULE_CHAPTER: Record<string, string | null> = {
+  'Kill Team': 'HIDE', 'Assigned Agents': 'HIDE',
+  'Mission Tactics': 'DEATHWATCH', 'Kill Teams': 'DEATHWATCH', Deathwatch: 'DEATHWATCH',
+  'Templar Vows': 'BLACK TEMPLARS', 'Heirs of Sigismund': 'BLACK TEMPLARS',
+  'The Unforgiven': 'DARK ANGELS', 'The Ravenwing': 'DARK ANGELS', 'The Deathwing': 'DARK ANGELS',
+  'The Sons of Sanguinius': 'BLOOD ANGELS',
+  'Curse of the Wulfen': 'SPACE WOLVES', Sagas: 'SPACE WOLVES', 'Sons of Russ': 'SPACE WOLVES',
+};
+
+/** The army rules a player of this Chapter actually has (Black Templars swap Oath of Moment for Templar Vows). */
+export function chapterRules<T extends { name: string }>(rules: T[], subfaction?: string): T[] {
+  return rules.filter((r) => {
+    const c = RULE_CHAPTER[r.name];
+    if (r.name === 'Oath of Moment' && subfaction === 'BLACK TEMPLARS') return false;
+    // the Chapters with a codex of their own restate it as The Unforgiven, Heirs of Sigismund …
+    if (r.name === 'Space Marine Chapters' && Object.values(RULE_CHAPTER).includes(subfaction ?? '-')) return false;
+    return c === undefined || c === null || c === subfaction;
+  });
+}
+
 /** "This model has a transport capacity of 12 Adeptus Astartes Infantry models. Each Jump Pack ... takes up the space of 2 models ... It cannot transport ..." */
 export function parseTransport(text?: string): TransportInfo | null {
   if (!text) return null;

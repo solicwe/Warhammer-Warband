@@ -652,3 +652,15 @@ button.ab-head { border: none; width: 100%; text-align: left; font: inherit; cur
 .ab-reset { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--on-dark-muted); background: transparent; color: var(--on-dark); border-radius: 14px; padding: 4px 10px; font: 500 12px var(--sans); cursor: pointer; }
 .ab-reset.armed { background: var(--bad); border-color: var(--bad); color: #fff; }
 .army-row .ab-emblem { width: 48px; height: 48px; flex-shrink: 0; align-self: center; }
+/* army rule text */
+.rt-wrap { white-space: normal; }
+.rt { display: flex; flex-direction: column; gap: 6px; }
+.rt-p { margin: 0; }
+.rt-flavour { font-style: italic; opacity: .7; }
+.rt-ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+.rt-ul .rt-ul { margin-top: 3px; list-style: circle; }
+.rt-note { font-size: .88em; padding: 6px 8px; border-left: 3px solid #b8932f; background: rgba(184,147,47,.12); border-radius: 3px; }
+.rt-opts { display: flex; flex-direction: column; border: 1px solid rgba(127,127,127,.45); border-radius: 4px; overflow: hidden; }
+.rt-opt + .rt-opt { border-top: 1px solid rgba(127,127,127,.45); }
+.rt-opt-head { font-weight: 700; padding: 5px 8px; background: rgba(127,127,127,.16); letter-spacing: .02em; }
+.rt-opt-body { padding: 6px 8px; display: flex; flex-direction: column; gap: 5px; }
