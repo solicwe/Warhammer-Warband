@@ -28,6 +28,13 @@ function boxOf(t: TerrainPiece): Box {
   return b;
 }
 
+/** Is the model in this terrain area, so the area doesn't hide what's beyond it (13.10)? A small base touching it is;
+ *  a big hull only grazing the edge isn't (the token stands for the hull, which would be beside the ruin). */
+function standsIn(m: ModelState, t: TerrainPiece): boolean {
+  if (m.r <= 1) return circleTouchesPoly(m, m.r, t.poly);
+  return circleTouchesPoly(m, m.r * 0.4, t.poly);
+}
+
 function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false): Blockers {
   // only terrain overlapping the box around both models can be crossed by a line between them
   const x0 = Math.min(a.x - a.r, b.x - b.r), x1 = Math.max(a.x + a.r, b.x + b.r);
@@ -35,7 +42,7 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
   const near = s.terrain.filter((t) => { const q = boxOf(t); return q.x1 >= x0 && q.x0 <= x1 && q.y1 >= y0 && q.y0 <= y1; });
   const walls = near.filter((t) => t.category === 'dense').flatMap((t) => t.walls);
   const areas = near.filter(
-    (t) => (denseOnly ? t.category === 'dense' : t.category !== 'exposed') && !circleTouchesPoly(a, a.r, t.poly) && !circleTouchesPoly(b, b.r, t.poly),
+    (t) => (denseOnly ? t.category === 'dense' : t.category !== 'exposed') && !standsIn(a, t) && !standsIn(b, t),
   );
   return { walls, areas };
 }

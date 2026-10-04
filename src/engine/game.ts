@@ -1170,10 +1170,34 @@ export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingre
   const up = s.players[u.owner].role === 'defender';
   for (const c of cands) {
     if (zone && !circleTouchesPoly(c, 0, zone)) continue;
-    const pos = formationAt(u, c, up);
-    if (validatePlacement(s, u, pos, how).ok && (!accept || accept(pos))) return pos;
+    // a big unit arriving from Strategic Reserves has to fit within 6" of an edge: try it in two long rows too
+    const tries = how === 'ingress' && alive(u).length > 5 ? [formationAt(u, c, up), wideFormation(u, c, true), wideFormation(u, c, false)] : [formationAt(u, c, up)];
+    for (const pos of tries) if (validatePlacement(s, u, pos, how).ok && (!accept || accept(pos))) return pos;
   }
   return null;
+}
+
+/** A tight block no deeper than 6" (as few rows as fit), centred on `c`, its rows along x (or along y): for setting up
+ *  a big unit within 6" of a board edge. */
+export function wideFormation(u: UnitState, c: Pt, alongX: boolean): Map<string, Pt> {
+  const ms = [...alive(u)].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter));
+  const r = Math.max(...ms.map((m) => m.r));
+  // staggered rows (each half a base along): the rows sit closer, so more of them fit in 6"
+  const step = r * 2 + 0.05, rowStep = step * 0.87;
+  const rowsMax = Math.max(1, Math.floor((6 - 2 * r - 0.1) / rowStep) + 1);
+  const perRow = Math.ceil(ms.length / rowsMax);
+  const rows = Math.ceil(ms.length / perRow);
+  // flush against the nearest edge across the rows
+  const hd = ((rows - 1) / 2) * rowStep + r + 0.05;
+  c = alongX ? { x: c.x, y: c.y < H / 2 ? hd : H - hd } : { x: c.x < W / 2 ? hd : W - hd, y: c.y };
+  const out = new Map<string, Pt>();
+  ms.forEach((m, i) => {
+    const row = Math.floor(i / perRow), col = i % perRow;
+    const inRow = Math.min(perRow, ms.length - row * perRow);
+    const a = (col - (inRow - 1) / 2 + (row % 2 ? 0.25 : -0.25)) * step, b = (row - (rows - 1) / 2) * rowStep;
+    out.set(m.id, alongX ? { x: c.x + a, y: c.y + b } : { x: c.x + b, y: c.y + a });
+  });
+  return out;
 }
 
 // ---------- secondary missions (Chapter Approved 2026-27) ----------

@@ -59,7 +59,12 @@ def merge_slivers(T):
                 continue
             j = min(near, key=lambda j: poly(T[j]).distance(a))
             u = unary_union([a.buffer(0.35, join_style=2), poly(T[j]).buffer(0.35, join_style=2)]).buffer(-0.35, join_style=2)
-            T[j] = {'poly': outline(u), 'walls': T[j]['walls'] + t['walls'], 'obstacles': T[j]['obstacles'] + t['obstacles']}
+            # only when the two make one clean rectangle (a container with its barricade strip): otherwise the merged
+            # outline gets odd notches and slants, so the sliver stays a small piece of its own
+            rect = u.minimum_rotated_rectangle
+            if u.geom_type != 'Polygon' or u.area < 0.88 * rect.area:
+                continue
+            T[j] = {'poly': [[r(x), r(y)] for x, y in list(rect.exterior.coords)[:-1]], 'walls': T[j]['walls'] + t['walls'], 'obstacles': T[j]['obstacles'] + t['obstacles']}
             del T[i]
             changed = True
             break
