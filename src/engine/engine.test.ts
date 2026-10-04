@@ -312,6 +312,8 @@ describe('detachment stratagems', () => {
     const { applyDetachmentStratagem, stratagemBlock } = await import('./stratagems');
     const { rollHits } = await import('./attack');
     const s = game();
+    s.terrain = s.terrain.filter((t) => t.objectiveId); // open ground: this is about the stratagem, not sight lines
+    s.terrain.forEach((t) => { t.walls = []; t.category = 'exposed'; });
     const a = put(s, s.units.find((u) => u.owner === 0 && u.name.includes('Intercessor'))!.id, { x: 22, y: 20 });
     const b = put(s, s.units.find((u) => u.owner === 1 && u.name.includes('Boyz'))!.id, { x: 22, y: 32 });
     const aoc = SM.detachments.flatMap((d) => d.stratagems).find((x) => x.name === 'ARMOUR OF CONTEMPT')!;
@@ -387,6 +389,8 @@ describe('Chapter Approved missions', () => {
   it('snap shooting 6s are hits, not critical hits', async () => {
     const { rollHits } = await import('./attack');
     const s = game();
+    s.terrain = s.terrain.filter((t) => t.objectiveId); // open ground: this is about the stratagem, not sight lines
+    s.terrain.forEach((t) => { t.walls = []; t.category = 'exposed'; });
     const a = put(s, s.units[0].id, { x: 22, y: 10 });
     const t = put(s, s.units[2].id, { x: 22, y: 25 });
     s.phase = 'movement'; s.active = 1; s.turn = 1;
