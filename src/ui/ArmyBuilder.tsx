@@ -407,7 +407,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         </label>
         <div className="grow dt-top-text">
           <input className="ab-title dt-name" aria-label="ชื่อกองทัพ" value={list.name} placeholder="ตั้งชื่อกองทัพ" onChange={(e) => set({ name: e.target.value })} />
-          <button type="button" className="dt-faction linkish" onClick={() => setPicker({ factionId: null })}>{factionName}{subs ? ` · ${sub?.name ?? `เลือก ${subs.label}`}` : ''} ›</button>
+          <button type="button" className="dt-faction linkish" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>{factionName}{subs ? ` · ${sub?.name ?? `เลือก ${subs.label}`}` : ''} ›</button>
           <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || 'ยังไม่ได้เลือก detachment'}</div>
           {chosenDets.length > 0 && <div className="tiny">Force Disposition: <b>{chosenDets[0].forceDisposition}</b> · {chosenDets.reduce((x, d) => x + d.dp, 0)}/{size.dp} DP</div>}
           <div className="tiny muted">{size.name} · {pts}/{size.points} pts</div>
