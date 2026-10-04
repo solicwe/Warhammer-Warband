@@ -5,6 +5,10 @@
     "keepEditions": [
       "11"
     ],
+    "keepSources": {
+      "_comment": "Older books still in use in 11th edition: the Deathwatch faction pack (Kill Teams, Deathwatch Veterans …)",
+      "ids": ["000000035"]
+    },
     "patterns": [
       "Warhammer Legends",
       "^Legends:"

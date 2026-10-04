@@ -315,5 +315,11 @@
   "Blackstar Cluster Launcher": { "status": "auto", "note": "จบ Normal move: บินผ่านหน่วยไหน ทอย 6D6 ทุก 5+ = 1 MW (อัตโนมัติ)" },
   "Auspex Array": { "gear": true, "effects": [{ "scope": "model", "attack": "ranged", "abilities": ["ignores cover"] }] },
   "Infernum Halo-launcher": { "gear": true, "status": "info", "note": "มี keyword SMOKE: ใช้ Smokescreen ได้" },
-  "Kill Team": { "status": "info", "note": "ใช้ Toughness ของโมเดลส่วนใหญ่ในหน่วยตอนทอย wound · Gravis กินที่ 2 ในรถ" }
+  "Kill Team": { "status": "info", "note": "ใช้ Toughness ของโมเดลส่วนใหญ่ในหน่วยตอนทอย wound · Gravis กินที่ 2 ในรถ" },
+  "Mission Tactics": { "status": "info", "note": "กฎกองทัพ Deathwatch: เลือก Mission Tactic ตอนต้น Command phase ที่ช่องกฎ detachment (Black Spear Task Force)" },
+  "Spectrus Doctrines": { "act": { "when": "opponentTurnEnd", "if": ["farFromEnemies:6"], "botUse": "never", "label": "ออกไปอยู่ Strategic Reserves", "do": [{ "on": "self", "reserves": true }] } },
+  "Instigator Bolt Carbine": { "gear": true, "act": { "when": "afterShootingButton", "limit": "phase", "label": "เดิน Normal move หลังยิง (ชาร์จไม่ได้)", "do": [{ "on": "self", "move": "M", "noCharge": true }] } },
+  "Fortis Doctrines": { "effects": [{ "if": ["targetBelowStarting", "targetNotBelowHalf"], "hit": 1 }, { "if": ["targetBelowHalf"], "hit": 1, "wound": 1 }] },
+  "Indomitor Doctrines": { "effects": [{ "attack": "ranged", "if": ["targetClosest"], "strength": 2 }, { "attack": "melee", "if": ["charged"], "strength": 2 }] },
+  "Talonstrike Doctrines": { "effects": [{ "if": ["setUpThisTurn"], "ap": 1 }, { "attack": "melee", "if": ["setUpThisTurn"], "abilities": ["lance"] }] }
 }

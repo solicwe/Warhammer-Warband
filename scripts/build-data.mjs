@@ -280,7 +280,9 @@ function build() {
   const sourceById = new Map(t.Source.map((s) => [s.id, s]));
   const excludeRe = (META.excludeSources?.patterns ?? []).map((p) => new RegExp(p, 'i'));
   const keepEd = META.excludeSources?.keepEditions;
+  const keepIds = META.excludeSources?.keepSources?.ids ?? [];
   const excludedSource = (id) => {
+    if (keepIds.includes(id)) return false;
     const s = sourceById.get(id);
     if (!s) return !!keepEd; // no source at all: not a published 11th edition datasheet
     if (excludeRe.some((r) => r.test(s.name))) return true;
@@ -312,6 +314,8 @@ function build() {
     for (const br of borrow) {
       for (const d of t.Datasheets) {
         if (d.faction_id !== br.from || d.virtual === 'true' || excludedSource(d.source_id)) continue;
+        // only what this army's own books don't have (its own Watch Master, Corvus Blackstar … come first)
+        if (t.Datasheets.some((x) => x.faction_id === f.id && x.name === d.name && x.virtual !== 'true' && !excludedSource(x.source_id))) continue;
         if ((by.keywords.get(d.id) ?? []).some((k) => k.keyword.toUpperCase() === br.keyword)) borrowed.set(d.id, br);
       }
     }
