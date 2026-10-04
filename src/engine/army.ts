@@ -568,6 +568,25 @@ export function attachOptions(list: ArmyList, faction: FactionData, entry: ArmyU
     && !list.units.some((o) => o.uid !== entry.uid && o.attachTo === b.uid && !!sheetOf(o.datasheet)?.isSupport === me.isSupport));
 }
 
+/**
+ * Attach every loose Leader / Support character to a bodyguard unit, the way a player does at Declare Battle
+ * Formations: leaders first, each into the most expensive squad it can join that has no leader yet (a character on
+ * its own is an easy kill and wastes its leader ability). Used for the bot's army; the player's list is left alone.
+ */
+export function autoAttach(list: ArmyList, faction: FactionData): ArmyList {
+  const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
+  let units = [...list.units];
+  const loose = units.filter((u) => !u.attachTo && sheetOf(u.datasheet)?.leads.length && !units.some((o) => o.attachTo === u.uid))
+    .sort((a, b) => Number(!!sheetOf(a.datasheet)?.isSupport) - Number(!!sheetOf(b.datasheet)?.isSupport));
+  for (const c of loose) {
+    const cur = { ...list, units };
+    const body = attachOptions(cur, faction, c).filter((b) => !sheetOf(b.datasheet)?.keywords.includes('CHARACTER'))
+      .sort((a, b) => b.pts * b.models - a.pts * a.models)[0];
+    if (body) units = units.map((u) => (u.uid === c.uid ? { ...u, attachTo: body.uid, embarkIn: undefined } : u));
+  }
+  return { ...list, units };
+}
+
 export function enhancementOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry) {
   const sheet = faction.datasheets.find((d) => d.name === entry.datasheet);
   if (!sheet || sheet.keywords.includes('EPIC HERO')) return [];

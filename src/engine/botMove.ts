@@ -208,6 +208,34 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
   return v;
 }
 
+/**
+ * The way a tournament player places a unit besides objectives, shots and danger:
+ *  - a CHARACTER on its own stays with the army (its aura and leadership work within 6", alone it's an easy kill
+ *    and does nothing hiding in a corner);
+ *  - a unit hugging a board edge away from any objective or fight is wasted;
+ *  - an expensive damage dealer doesn't sit on an objective a cheap unit could hold (a factor on objectiveScore).
+ */
+function positionScore(s: GameState, u: UnitState): number {
+  const c = centre(u);
+  let v = 0;
+  if (alive(u).every((m) => m.isCharacter)) {
+    const friends = boardUnits(s, u.owner).filter((f) => f.id !== u.id && !f.transport && !alive(f).every((m) => m.isCharacter));
+    const near = Math.min(99, ...friends.map((f) => unitDistance(u, f)));
+    if (near > 6) v -= Math.min(15, (near - 6) * 0.8);
+  }
+  const edge = Math.min(c.x, c.y, W - c.x, H - c.y);
+  const job = s.objectives.some((o) => dist(o, c) <= 6) || boardUnits(s, other(u.owner)).some((e) => unitDistance(u, e) <= 12);
+  if (edge < 3 && !job) v -= (3 - edge) * 1.5;
+  return v;
+}
+
+/** How much holding objectives matters to this unit: less for an expensive damage dealer (cheap units hold, it fights). */
+function objectiveWeight(s: GameState, u: UnitState, ctx: Ctx): number {
+  if (u.keywords?.includes?.('BATTLELINE') || alive(u).some((m) => m.keywords.includes('BATTLELINE'))) return 1;
+  const dealer = ctx.brawler || ctx.range >= 18;
+  return dealer ? Math.max(0.45, Math.min(1, 160 / Math.max(1, unitValue(u)))) : 1;
+}
+
 /** Bunched-up units block each other's moves and charges, and give the enemy blast / charge targets: spread out. */
 function crowdScore(s: GameState, u: UnitState): number {
   const ms = alive(u);
@@ -231,7 +259,7 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
   u.maxMoved = Math.max(u.maxMoved, moved);
   try {
     const caution = ctx.brawler ? 0.45 : 1;
-    return objectiveScore(s, u) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u);
+    return objectiveWeight(s, u, ctx) * objectiveScore(s, u) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }
     u.move = was.move;

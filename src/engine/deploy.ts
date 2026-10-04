@@ -112,13 +112,16 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   cands.sort((a, b) => b.score - a.score);
 
   let best: { pos: Map<string, Pt>; score: number } | null = null;
-  for (const cand of cands.slice(0, 25)) {
+  // sight checks for many spots: a hidden spot a little further back often beats the open one in front
+  const worth = Math.min(2, (u.pts * alive(u).length) / Math.max(1, u.startingStrength) / 120);
+  for (const cand of cands.slice(0, 60)) {
     if (vehicle && !canLeave(s, u, cand.pos)) continue;
     let score = cand.score;
     const eyes = probes(u, cand.pos);
     // hidden from the enemy deployment zone (they may get the first turn)
     const seen = watchers.filter((w) => eyes.some((m) => hasLos(s, w, m))).length / Math.max(1, watchers.length);
-    score -= seen * (brawler || how === 'infiltrate' ? 14 : 9);
+    // a tournament player hides what matters most from the first turn of shooting
+    score -= seen * (brawler || how === 'infiltrate' ? 14 : 9) * (0.6 + 0.4 * worth);
     // shooters: sight of the middle objectives from here (to shoot whatever goes onto them)
     if (!brawler && range >= 18 && middle.length) {
       const lanes = middle.filter(({ p }) => dist(cand.centre, p) <= range + 3 && eyes.some((m) => hasLos(s, m, lookout(p)))).length;
