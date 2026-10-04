@@ -45,6 +45,31 @@ function shiftPaths(s: GameState, u: UnitState, kind: MoveKind, max: number, d: 
   return out;
 }
 
+/** Last resort when the squad can't move as a block or re-form (a wall or a container in the way): each model takes
+ *  its own route the same way, as far as it gets within its move; coherency is checked afterwards. */
+function trailPaths(s: GameState, u: UnitState, kind: MoveKind, max: number, d: Pt, fly: boolean): Paths | null {
+  const out: Paths = new Map();
+  let moved = false;
+  for (const m of alive(u)) {
+    const to = clampIn({ x: m.x + d.x, y: m.y + d.y }, m.r);
+    const r = routeAround(s, u, kind, m, m, to, max + 6, { fly });
+    if (!r) { out.set(m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]); continue; }
+    const L = Math.min(max, pathLength(r));
+    const cut: Pt[] = [r[0]];
+    let run = 0;
+    for (let i = 1; i < r.length; i++) {
+      const seg = dist(r[i - 1], r[i]);
+      if (run + seg >= L) { cut.push(pointAt(r, L)); break; }
+      run += seg;
+      cut.push(r[i]);
+    }
+    if (cut.length < 2) cut.push(r[0]);
+    if (dist(cut[0], cut[cut.length - 1]) > 0.3) moved = true;
+    out.set(m.id, cut);
+  }
+  return moved ? out : null;
+}
+
 /** The unit re-forms around `c` (characters in the middle), each model routed to its own place. */
 function formPaths(s: GameState, u: UnitState, kind: MoveKind, max: number, c: Pt, up: boolean, fly: boolean): Paths | null {
   const slots = formationAt(u, c, up);
@@ -86,8 +111,8 @@ export function movesTowards(s: GameState, u: UnitState, kind: MoveKind, max: nu
     const p = pointAt(route, len);
     const d = { x: p.x - lead.x, y: p.y - lead.y };
     const mid = { x: c.x + d.x, y: c.y + d.y };
-    const tries = ms.length === 1 ? [() => shiftPaths(s, u, kind, max, d, fly)]
-      : [() => shiftPaths(s, u, kind, max, d, fly), () => formPaths(s, u, kind, max, mid, d.y < 0, fly), () => formPaths(s, u, kind, max, mid, d.y >= 0, fly)];
+    const tries = ms.length === 1 ? [() => shiftPaths(s, u, kind, max, d, fly), () => trailPaths(s, u, kind, max, d, fly)]
+      : [() => shiftPaths(s, u, kind, max, d, fly), () => formPaths(s, u, kind, max, mid, d.y < 0, fly), () => formPaths(s, u, kind, max, mid, d.y >= 0, fly), () => trailPaths(s, u, kind, max, d, fly)];
     for (const t of tries) {
       const paths = t();
       if (paths && validateMove(s, u, kind, paths, vopt).ok) { out.push(paths); below = len * 0.55; break; }
