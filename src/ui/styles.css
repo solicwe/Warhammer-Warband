@@ -193,11 +193,11 @@ details summary { cursor: pointer; }
 
 /* ---------- army builder (list view) ---------- */
 .ab { flex: 1; display: flex; flex-direction: column; min-height: 0; background: var(--page); position: relative; }
-.ab-top { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bar); color: var(--on-dark); }
+.ab-top { display: flex; align-items: center; gap: 4px; padding: 8px 6px; background: var(--bar); color: var(--on-dark); }
 .ab-icon { width: 40px; height: 40px; border: none; border-radius: 8px; background: transparent; color: var(--on-dark); font-size: 28px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
 .ab-icon:hover { background: rgba(255, 255, 255, 0.06); }
 .ab-tabs { flex: 1; display: flex; justify-content: center; gap: 6px; }
-.ab-tabs button { border: none; background: transparent; color: var(--on-dark-muted); font: 500 15px var(--sans); padding: 10px 14px 8px; border-bottom: 3px solid transparent; cursor: pointer; }
+.ab-tabs button { border: none; background: transparent; color: var(--on-dark-muted); font: 500 15px var(--sans); padding: 10px 8px 8px; border-bottom: 3px solid transparent; cursor: pointer; }
 .ab-tabs button.on { color: var(--on-dark); border-bottom-color: var(--accent-hi); }
 .ab-body { flex: 1; overflow-y: auto; padding: 14px 12px 28px; display: flex; flex-direction: column; gap: 16px; }
 .ab-head { display: flex; align-items: center; gap: 12px; background: var(--card); color: var(--ink); border-radius: 8px; padding: 12px; }
@@ -206,9 +206,9 @@ details summary { cursor: pointer; }
 .ab-title:focus { outline: none; box-shadow: 0 1px 0 var(--accent-hi); }
 .ab-det-name { font-size: 13px; color: var(--ink); margin-top: 2px; }
 .ab-faction { font-size: 12px; color: var(--ink-muted); }
-.ab-total { font: 700 15px var(--sans); color: var(--p0); white-space: nowrap; align-self: flex-start; }
+.ab-total { font: 700 14px var(--sans); color: var(--on-dark); white-space: nowrap; background: rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 4px 9px; flex-shrink: 0; }
 .ab-total small { font-size: 12px; font-weight: 500; }
-.ab-total.over { color: var(--bad); }
+.ab-total.over { color: #fff; background: var(--bad); }
 .linkish { border: none; background: none; padding: 0; color: var(--p0); font: inherit; text-decoration: underline; cursor: pointer; }
 .ab-errors { background: #fbe9e9; color: var(--bad); border-radius: 8px; padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 3px; border-left: 4px solid var(--bad); }
 .ab-section { display: flex; flex-direction: column; gap: 8px; }
@@ -515,7 +515,7 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 .ab-row.open { box-shadow: inset 4px 0 0 var(--accent); }
 .ab-inline { background: var(--card); color: var(--ink); border-radius: 0 0 8px 8px; margin-top: -6px; overflow: hidden; }
 .ab-group .ab-inline { margin-top: 0; border-radius: 0; border-top: 1px solid var(--card3); }
-.ab-inline-body { display: flex; flex-direction: column; gap: 10px; padding: 0 0 6px; }
+.ab-inline-body { display: flex; flex-direction: column; gap: 10px; padding: 14px 0 6px; }
 .ab-inline-body > :not(.ds) { margin: 0 12px; }
 .ab-moreinfo { align-self: flex-end; display: flex; align-items: center; gap: 6px; border: none; background: transparent; color: var(--ink); font: 600 14px var(--serif, var(--sans)); padding: 8px 14px; cursor: pointer; }
 .ab-moreinfo svg { transform: rotate(180deg); }
@@ -572,3 +572,12 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 .ab-pop .ab-pop-card.has button.in-roster:hover { background: #f3f3f3; }
 .ab-pop-card:not(.has) .ab-art { background: #e6e6e6; }
 .ab-pop-card:not(.has) .ab-art img { mix-blend-mode: multiply; }
+
+/* units that start the battle inside a transport, shown in its card */
+.ab-ride { display: flex; flex-direction: column; margin-left: 14px; border-left: 3px solid var(--accent-hi); border-top: 1px solid var(--card3); }
+.ab-ride .ab-row.in-group + .ab-row.in-group { border-top: 1px solid var(--card3); }
+.ab-pop button.full { color: var(--bad); cursor: not-allowed; }
+.ab-pop button.full:hover, .ab-pop button.full:active { background: transparent; }
+.ab-pop button .grow { display: flex; flex-direction: column; }
+.ab-pop-sub { font: 400 12px var(--sans); color: #777; }
+.ab-pop button.full .ab-pop-sub { color: var(--bad); }

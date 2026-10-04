@@ -577,6 +577,34 @@ export function enhancementFits(text: string, keywords: string[]): { ok: boolean
   return { ok: need.some((n) => n.split(/\s+/).every((w) => words.has(w))), need: need.join(' / ') };
 }
 
+/**
+ * Can this unit (with its attached Leader / Support) start the battle inside that transport?
+ * `why` is set when it can't ride it at all or the transport has no room left for it.
+ */
+export function embarkCheck(list: ArmyList, faction: FactionData, riderUid: string, transportUid: string): { why: string | null; full: boolean; need: number; used: number; capacity: number } {
+  const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
+  const t = list.units.find((x) => x.uid === transportUid);
+  const info = parseTransport(t && sheetOf(t.datasheet)?.transport);
+  if (!t || !info || t.uid === riderUid) return { why: 'ไม่ใช่รถ', full: false, need: 0, used: 0, capacity: 0 };
+  const groupOf = (uid: string) => list.units.filter((x) => x.uid === uid || x.attachTo === uid);
+  const spaceOf = (uid: string) => {
+    let n = 0;
+    for (const g of groupOf(uid)) {
+      const sh = sheetOf(g.datasheet);
+      if (!sh) continue;
+      const fit = transportFit(info, [...sh.keywords, ...sh.factionKeywords, sh.name]);
+      if (fit.why) return { why: fit.why, n: 0 };
+      n += g.models * fit.space;
+    }
+    return { why: null, n };
+  };
+  const me = spaceOf(riderUid);
+  const used = list.units.filter((u) => u.embarkIn === t.uid && !u.attachTo && u.uid !== riderUid).reduce((a, r) => a + spaceOf(r.uid).n, 0);
+  if (me.why) return { why: me.why, full: false, need: 0, used, capacity: info.capacity };
+  const full = used + me.n > info.capacity;
+  return { why: full ? `เต็ม (${used}/${info.capacity} ที่ ต้องใช้ ${me.n})` : null, full, need: me.n, used, capacity: info.capacity };
+}
+
 /** Each TRANSPORT in the list and the units chosen to start the battle inside it (attached leaders ride with their unit). */
 export function transportLoads(list: ArmyList, faction: FactionData) {
   const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
@@ -597,7 +625,7 @@ export function transportLoads(list: ArmyList, faction: FactionData) {
       }
     }
     if (used > info.capacity) problems.push(`${t.datasheet}: ที่ไม่พอ (${used}/${info.capacity} ที่)`);
-    if (ts.keywords.includes('DEDICATED TRANSPORT') && !riders.length) problems.push(`${t.datasheet} (Dedicated Transport) ยังว่าง: ต้องมีหน่วยอยู่ข้างในตอนเริ่มเกม ไม่อย่างนั้นถูกทำลาย — เลือกหน่วยที่ขึ้นรถในเมนู ⋮ ของหน่วยนั้น`);
+    if (ts.keywords.includes('DEDICATED TRANSPORT') && !riders.length) problems.push(`${t.datasheet} (Dedicated Transport) ยังว่าง: ต้องมีหน่วยอยู่ข้างในตอนเริ่มเกม ไม่อย่างนั้นถูกทำลาย — กด ⋮ ของรถ → Embark`);
     return [{ uid: t.uid, name: t.datasheet, capacity: info.capacity, used, riders: riders.map((r) => r.uid), problems }];
   });
 }

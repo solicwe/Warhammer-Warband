@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, attachOptions, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, attachOptions, embarkCheck, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { Icon } from './Icon';
@@ -7,7 +7,7 @@ import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { DET_RULES } from '../engine/detachments';
 import { DatasheetView } from './Sheet';
 import { tokenKind } from './Tokens';
-import { cloudMode, cloudPortraitCount, download, exportablePortraitCount, exportPortraitsJson, exportPortraitsZip, fileToPortrait, getPortrait, hasOwnPortrait, importPortraitsJson, matchDatasheet, ownPortraitCount, cloudPhotosNotIn, removeUnusedCloudFiles, servedPortraitCount, setPortrait, cloudErrorNow, uploadAllLocal, uploadsPending, usePortraitsVersion } from './portraits';
+import { getPortrait, usePortraitsVersion } from './portraits';
 
 interface Props {
   list: ArmyList;
@@ -194,7 +194,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
-  const [imported, setImported] = useState<{ ok: string[]; missed: { file: File; name: string }[] } | null>(null);
 
   useEffect(() => { loadIndex().then(setIndex).catch(() => setNote('โหลดรายชื่อ faction ไม่ได้')); }, []);
   useEffect(() => { setFaction(null); loadFaction(list.factionId).then(setFaction).catch(() => setNote('โหลดข้อมูล faction ไม่ได้')); }, [list.factionId]);
@@ -244,19 +243,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     setNote(`เพิ่ม ${d.name}`);
   };
 
-  const importPhotos = async (files: FileList | null) => {
-    if (!files || !faction) return;
-    const names = faction.datasheets.map((d) => d.name);
-    const ok: string[] = [];
-    const missed: { file: File; name: string }[] = [];
-    for (const f of [...files]) {
-      const name = matchDatasheet(f.name, names);
-      if (!name) { missed.push({ file: f, name: f.name }); continue; }
-      try { setPortrait(name, await fileToPortrait(f)); ok.push(name); } catch { missed.push({ file: f, name: f.name }); }
-    }
-    setImported({ ok, missed });
-  };
-
   const share = async () => {
     const lines = [
       `${list.name || 'Army list'} — ${factionName}${sub ? ` (${sub.name})` : ''}`,
@@ -286,7 +272,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const carried = load?.riders.map((r) => list.units.find((x) => x.uid === r)?.datasheet).filter(Boolean) ?? [];
     const line = [
       u.warlord && 'Warlord', leads && !inGroup && `${sheet?.isSupport ? 'Support ของ' : 'นำ'} ${leads.datasheet}`, leads && inGroup && (sheet?.isSupport ? 'Support' : 'Leader'), u.split && 'แยก 2 หน่วย',
-      rides && `เริ่มเกมบน ${rides.datasheet}`,
+      rides && (inGroup ? 'Embarked' : `เริ่มเกมบน ${rides.datasheet}`),
       load && (carried.length ? `บรรทุก ${carried.join(', ')} (${load.used}/${load.capacity} ที่)` : `ว่าง (0/${load.capacity} ที่)`),
     ].filter(Boolean).join(' · ');
     const wg = wargearSummary(sheet, u);
@@ -323,8 +309,11 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           const first = joined(u)[0];
           return sectionOf(sheetOf((first ?? u).datasheet));
         };
-        const tops = list.units.filter((u) => (!u.attachTo || !list.units.some((b) => b.uid === u.attachTo)) && homeOf(u) === sec.id);
-        const us = tops;
+        const inRide = (u: ArmyUnitEntry) => !!u.embarkIn && list.units.some((t) => t.uid === u.embarkIn);
+        const us = list.units.filter((u) => (!u.attachTo || !list.units.some((b) => b.uid === u.attachTo)) && !inRide(u) && homeOf(u) === sec.id);
+        const bySupport = (a: ArmyUnitEntry, b: ArmyUnitEntry) => Number(!!sheetOf(a.datasheet)?.isSupport) - Number(!!sheetOf(b.datasheet)?.isSupport);
+        // a squad with its characters: Leader, Support, then the squad
+        const squadRows = (u: ArmyUnitEntry, inGroup: boolean) => [...joined(u).sort(bySupport).map((c) => unitRow(c, true)), unitRow(u, inGroup || joined(u).length > 0)];
         return (
           <section key={sec.id} className="ab-section">
             <div className="ab-section-head">
@@ -332,12 +321,13 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               <button type="button" className="ab-add" aria-label={`เพิ่ม ${sec.title}`} onClick={() => { setQ(''); setAdding(sec.id); }}>+</button>
             </div>
             {us.map((u) => {
-              const chars = joined(u);
-              if (!chars.length) return unitRow(u);
+              // a transport shows the units that start the battle inside it in its own card
+              const riders = list.units.filter((r) => r.embarkIn === u.uid && !r.attachTo);
+              if (!joined(u).length && !riders.length) return unitRow(u);
               return (
                 <div key={u.uid} className="ab-group">
-                  {chars.sort((a, b) => Number(!!sheetOf(a.datasheet)?.isSupport) - Number(!!sheetOf(b.datasheet)?.isSupport)).map((c) => unitRow(c, true))}
-                  {unitRow(u, true)}
+                  {squadRows(u, true)}
+                  {riders.map((r) => <div key={`ride-${r.uid}`} className="ab-ride">{squadRows(r, true)}</div>)}
                 </div>
               );
             })}
@@ -384,76 +374,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {chosenDets.length > 0 && dSection('strat', 'Stratagems', chosenDets.flatMap((d) => d.stratagems.map((st) => ruleCard(d.name + st.name, st.name, `${st.cp}CP`, `${st.type}\n${st.text}`))), chosenDets.reduce((a, d) => a + d.stratagems.length, 0))}
       {dSection('core', 'Core Stratagems', RULES.coreStratagems.map((st) => ruleCard(st.id, st.name, `${st.cp}CP`, `${st.when}\n${st.text}`)))}
       {dSection('army', 'Army Rule', faction.armyRules.map((r) => ruleCard(r.name, r.name, '', r.text)))}
-      <div className="card">
-        <div className="card-title">รูปตัวละคร</div>
-        <div className="small muted">เลือกหลายรูปพร้อมกันได้ ตั้งชื่อไฟล์ตามชื่อ datasheet (เช่น <i>Intercessor Squad.jpg</i>) ระบบจะจับคู่ให้เอง หรือแตะรูปในหน้า datasheet เพื่อเปลี่ยนทีละหน่วย</div>
-        {cloudMode === 'write' && <div className="hint"><span><Icon name="cloud" size={15} /> เปิดจากลิงก์เว็บ: รูปที่ใส่จะอัปขึ้นเว็บนี้เลย ทุกคนที่เปิดลิงก์เห็นรูปเดียวกัน</span></div>}
-        {cloudMode === 'read' && <div className="small muted"><Icon name="cloud" size={14} /> รูปบนเว็บนี้ ({cloudPortraitCount()}) — คุณดูได้อย่างเดียว ใส่รูปเพิ่มจะเก็บไว้แค่ในเครื่องนี้</div>}
-        <div className="small muted">
-          {cloudMode !== 'off' ? `บนเว็บ ${cloudPortraitCount()} รูป · ` : ''}ในเครื่องนี้ {ownPortraitCount()} รูป · จากโฟลเดอร์เซิร์ฟเวอร์ {servedPortraitCount()} รูป
-        </div>
-        {cloudErrorNow() && <div className="err">{cloudErrorNow()}</div>}
-        {uploadsPending() > 0 && <div className="small"><b><Icon name="cloud" size={15} /> กำลังอัปขึ้นเว็บ… เหลือ {uploadsPending()} รูป</b></div>}
-        {cloudMode === 'write' && ownPortraitCount() > 0 && (
-          <button className="btn primary" disabled={uploadsPending() > 0} onClick={async () => { const n = await uploadAllLocal(); setNote(`อัปขึ้นเว็บแล้ว ${n} รูป`); }}>
-            <Icon name="cloud" /> {uploadsPending() > 0 ? 'กำลังอัป…' : `อัปรูปในเครื่อง ${ownPortraitCount()} รูป ขึ้นเว็บ`}
-          </button>
-        )}
-        {cloudMode === 'write' && cloudPortraitCount() > 0 && (
-          <button className="btn ghost" disabled={uploadsPending() > 0} onClick={async () => {
-            setNote('กำลังเช็กรูปบนเว็บ…');
-            try {
-              // every datasheet of every army: a photo whose unit is in none of them (moved to Legends …) can go
-              const idx = await loadIndex();
-              const known = new Set((await Promise.all(idx.factions.map((f) => loadFaction(f.id)))).flatMap((f) => f.datasheets.map((d) => d.name)));
-              const gone = cloudPhotosNotIn(known);
-              if (!window.confirm(`ลบออกจากเว็บ:\n• ไฟล์รูปซ้ำที่ไม่มีหน่วยไหนใช้${gone.length ? `\n• รูปของหน่วยที่ไม่มีในเกมแล้ว (Legends): ${gone.join(', ')}` : ''}\nรูปของหน่วยที่ยังใช้อยู่ไม่หาย`)) { setNote(null); return; }
-              const r = await removeUnusedCloudFiles(known);
-              setNote(`ลบแล้ว: ไฟล์ซ้ำ ${r.files} ไฟล์${r.photos.length ? ` · รูปหน่วย Legends ${r.photos.length} รูป (${r.photos.join(', ')})` : ''}`);
-            } catch { setNote('ลบไม่สำเร็จ ลองใหม่อีกครั้ง'); }
-          }}><Icon name="clean" /> เก็บกวาดรูปบนเว็บ (ไฟล์ซ้ำ + หน่วย Legends)</button>
-        )}
-        <div className="btn-row">
-          <label className="btn">
-            <Icon name="camera" /> นำเข้ารูป
-            <input type="file" accept="image/*" multiple hidden onChange={(e) => { importPhotos(e.target.files); e.target.value = ''; }} />
-          </label>
-          <button className="btn ghost" disabled={!exportablePortraitCount()} onClick={async () => {
-            const factionOf = (n: string) => (faction?.datasheets.some((d) => d.name === n) ? list.factionId : undefined);
-            download('unit-images.zip', await exportPortraitsZip(factionOf), 'application/zip')
-              .then((m) => setNote(`${m} — แตกไฟล์ลงโฟลเดอร์ public/images/ แล้วรัน npm run images`));
-          }}><Icon name="download" /> ส่งออก (.zip สำหรับเซิร์ฟเวอร์)</button>
-          <button className="btn ghost" disabled={!ownPortraitCount()} onClick={() => download('unit-images-backup.json', exportPortraitsJson(), 'application/json').then(setNote)}><Icon name="download" /> สำรอง (.json)</button>
-          <label className="btn ghost">
-            <Icon name="upload" /> กู้คืนจาก .json
-            <input type="file" accept="application/json,.json" hidden onChange={async (e) => {
-              const f = e.target.files?.[0];
-              e.target.value = '';
-              if (!f) return;
-              try { setNote(`กู้คืน ${importPortraitsJson(await f.text())} รูป`); } catch { setNote('ไฟล์นี้ไม่ใช่ไฟล์สำรองรูป'); }
-            }} />
-          </label>
-        </div>
-        {imported && (
-          <div className="small">
-            <div>จับคู่ได้ {imported.ok.length} รูป{imported.ok.length ? `: ${imported.ok.join(', ')}` : ''}</div>
-            {imported.missed.map((m, i) => (
-              <div key={i} className="row" style={{ marginTop: 4 }}>
-                <span className="grow muted">{m.name}</span>
-                <select defaultValue="" onChange={async (e) => {
-                  const name = e.target.value;
-                  if (!name) return;
-                  setPortrait(name, await fileToPortrait(m.file));
-                  setImported((x) => x && { ok: [...x.ok, name], missed: x.missed.filter((y) => y !== m) });
-                }}>
-                  <option value="">เลือก datasheet…</option>
-                  {faction.datasheets.map((d) => d.name).sort().map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </>
   );
 
@@ -594,24 +514,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               ? <div className="tiny muted">{sp.name}: {sp.label}</div>
               : <button className={`btn ${u.split ? 'on' : ''}`} onClick={() => setUnit(u.uid, { split: !u.split })}>{u.split && <Icon name="check" size={16} />}{sp.name}: {sp.label}</button>;
           })()}
-          <div className="field"><span><Icon name="camera" size={15} /> รูปของหน่วยนี้</span>
-            <div className="row">
-              <label className="btn small">
-                {sheet && getPortrait(sheet.name) ? 'เปลี่ยนรูป' : 'ใส่รูป'}
-                <input type="file" accept="image/*" hidden onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  e.target.value = '';
-                  if (!f || !sheet) return;
-                  try {
-                    const ok = setPortrait(sheet.name, await fileToPortrait(f));
-                    setNote(ok ? `ใส่รูปให้ ${sheet.name} แล้ว` : 'เก็บรูปถาวรไม่ได้ (พื้นที่เบราว์เซอร์เต็ม/ถูกบล็อก) — รูปจะหายเมื่อปิดหน้า');
-                  } catch (err) { setNote(err instanceof Error ? err.message : 'อ่านรูปไม่ได้'); }
-                }} />
-              </label>
-              {sheet && hasOwnPortrait(sheet.name) && <button className="btn small ghost" onClick={() => { setPortrait(sheet.name, null); setNote(getPortrait(sheet.name) ? 'ลบรูปของเครื่องนี้แล้ว (กลับไปใช้รูปจากเซิร์ฟเวอร์)' : 'ลบรูปแล้ว'); }}>ลบรูป</button>}
-              <span className="tiny muted grow">ใช้กับทุกหน่วย {u.datasheet} (ทั้งการ์ดและ token บนสนาม)</span>
-            </div>
-          </div>
           <button type="button" className="ab-moreinfo" onClick={() => setMenu(null)}>ปิด <Icon name="down" size={18} /></button>
         </div>
       </div>
@@ -638,8 +540,12 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const rider = body ?? u; // a Leader rides with the unit it leads
     const rideIn = rider.embarkIn ? list.units.find((t) => t.uid === rider.embarkIn) : undefined;
     const isTransport = !!parseTransport(sheet?.transport) || !!sheet?.keywords.includes('TRANSPORT');
-    const loads = transportLoads(list, faction);
-    const rides = isTransport ? [] : list.units.filter((t) => t.uid !== rider.uid && parseTransport(sheetOf(t.datasheet)?.transport));
+    // transports this unit could ride (a full one still shows, in red) / units this transport could carry
+    const rides = isTransport ? [] : list.units.filter((t) => t.uid !== rider.uid && parseTransport(sheetOf(t.datasheet)?.transport))
+      .map((t) => ({ t, c: embarkCheck(list, faction, rider.uid, t.uid) })).filter(({ c }) => !c.why || c.full);
+    const myLoad = transportLoads(list, faction).find((t) => t.uid === u.uid);
+    const cargo = !myLoad ? [] : list.units.filter((r) => r.uid !== u.uid && !r.attachTo)
+      .map((r) => ({ r, c: embarkCheck(list, faction, r.uid, u.uid) })).filter(({ c }) => !c.why || c.full);
     const opts = sheet ? pointsOptions(sheet) : [];
     const isChar = !!sheet?.keywords.includes('CHARACTER');
     // characters that could join this squad: Leader slot, then Support slot
@@ -647,7 +553,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const hasLeader = joined.some((x) => x.d && !x.d.isSupport);
     const hasSupport = joined.some((x) => x.d?.isSupport);
     const canLeader = !u.attachTo && !hasLeader && leadersFor(false).length > 0;
-    const canSupport = !u.attachTo && hasLeader && !hasSupport && leadersFor(true).length > 0;
+    const canSupport = !u.attachTo && !hasSupport && leadersFor(true).length > 0;
     const squadsFor = sheet?.leads.length && !body ? sheet.leads.map((n) => sheetOf(n)).filter((d): d is DatasheetData => !!d && allowed(d) && pointsOptions(d).length > 0) : [];
     const close = () => setPop(null);
     const w = 260;
@@ -709,18 +615,37 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             }))}
         </>
       );
+    } else if (pop.mode === 'embark' && myLoad) {
+      // the transport's own menu: tick the units that start the battle inside it
+      const names = (r: ArmyUnitEntry) => [...list.units.filter((c) => c.attachTo === r.uid).map((c) => c.datasheet), r.datasheet].join(' + ');
+      content = (
+        <>
+          <div className="ab-pop-head">Embark · {u.datasheet} <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></div>
+          {cargo.map(({ r, c }) => {
+            const on = r.embarkIn === u.uid;
+            const other = !on && r.embarkIn ? list.units.find((t) => t.uid === r.embarkIn) : undefined;
+            return (
+              <button key={r.uid} type="button" className={on ? 'on' : c.full ? 'full' : ''} disabled={!on && c.full}
+                onClick={() => { setUnit(r.uid, { embarkIn: on ? undefined : u.uid }); setNote(on ? `${r.datasheet} ลงจาก ${u.datasheet}` : `${r.datasheet} เริ่มเกมบน ${u.datasheet}`); }}>
+                <Icon name={on ? 'check' : 'embark'} size={22} />
+                <span className="grow">{names(r)}<span className="ab-pop-sub">{c.full ? `ไม่พอ: ใช้ ${c.need} ที่ เหลือ ${Math.max(0, c.capacity - c.used)}` : `${c.need} ที่${other ? ` · ตอนนี้อยู่บน ${other.datasheet}` : ''}`}</span></span>
+              </button>
+            );
+          })}
+        </>
+      );
     } else if (pop.mode === 'embark') {
       content = (
         <>
           <div className="ab-pop-head">ขึ้นรถตอนเริ่มเกม{body ? ` (ทั้งหน่วย ${body.datasheet})` : ''}</div>
-          {rides.map((t) => {
-            const l = loads.find((x) => x.uid === t.uid);
-            return (
-              <button key={t.uid} type="button" className={rider.embarkIn === t.uid ? 'on' : ''} onClick={() => { setUnit(rider.uid, { embarkIn: t.uid }); setNote(`${rider.datasheet} เริ่มเกมบน ${t.datasheet}`); close(); }}>
-                <Icon name="embark" size={22} />{t.datasheet} <span className="ab-pop-val">{l ? `${l.used}/${l.capacity}` : ''}</span>
-              </button>
-            );
-          })}
+          {rides.map(({ t, c }) => (
+            <button key={t.uid} type="button" className={rider.embarkIn === t.uid ? 'on' : c.full ? 'full' : ''} disabled={c.full}
+              onClick={() => { setUnit(rider.uid, { embarkIn: t.uid }); setNote(`${rider.datasheet} เริ่มเกมบน ${t.datasheet}`); close(); }}>
+              <Icon name="embark" size={22} />
+              <span className="grow">{t.datasheet}{c.full && <span className="ab-pop-sub">เต็ม: ต้องใช้ {c.need} ที่ เหลือ {Math.max(0, c.capacity - c.used)}</span>}</span>
+              <span className="ab-pop-val">{c.used}/{c.capacity}</span>
+            </button>
+          ))}
         </>
       );
     } else if (pop.mode === 'size') {
@@ -744,6 +669,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             <button type="button" onClick={() => { setUnit(u.uid, { attachTo: undefined }); setNote(`${u.datasheet} ออกจาก ${body.datasheet}`); close(); }}>
               <Icon name="leave" size={22} />Leave Squad
             </button>
+          )}
+          {myLoad && cargo.length > 0 && (
+            <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></button>
           )}
           {!isTransport && (rideIn ? (
             <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setNote(`${rider.datasheet} ลงจาก ${rideIn.datasheet}`); close(); }}>
@@ -843,6 +771,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => setTab('list')}>List</button>
           <button role="tab" aria-selected={tab === 'detachment'} className={tab === 'detachment' ? 'on' : ''} onClick={() => setTab('detachment')}>Detachment</button>
         </div>
+        <div className={`ab-total ${pts > size.points ? 'over' : ''}`}>{pts}/{size.points}<small> pts</small></div>
         <button type="button" className="ab-icon" aria-label="แชร์รายชื่อกองทัพ" onClick={share}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
@@ -850,7 +779,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         </button>
       </header>
       <div className="ab-body">
-        <div className="ab-head">
+        {tab === 'list' && <div className="ab-head">
           <button type="button" className="ab-emblem-btn" aria-label="เลือก faction" onClick={() => setPicker({ factionId: null })}><Emblem factionId={list.factionId} color={sub?.color} /></button>
           <div className="grow">
             <input className="ab-title" aria-label="ชื่อกองทัพ" value={list.name} placeholder="ตั้งชื่อกองทัพ" onChange={(e) => set({ name: e.target.value })} />
@@ -859,8 +788,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               {factionName}{subs ? ` · ${sub?.name ?? `เลือก ${subs.label}`}` : ''} ›
             </button>
           </div>
-          <div className={`ab-total ${pts > size.points ? 'over' : ''}`}>{pts}/{size.points}<small> pts</small></div>
-        </div>
+        </div>}
         {!faction && <div className="ab-empty">กำลังโหลดข้อมูล…</div>}
         {faction && (tab === 'list' ? listTab() : detachmentTab())}
       </div>
