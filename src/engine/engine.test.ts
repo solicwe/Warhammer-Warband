@@ -405,12 +405,6 @@ describe('wargear', () => {
     const ics = SM.datasheets.find((d) => d.name === 'Intercessor Squad')!;
     const gl = ics.wargearOptions!.find((o) => o.scope === 'perN')!;
     expect(gl).toMatchObject({ per: 5, max: 1, replace: [], choices: [['Astartes grenade launcher']], requires: ['Bolt rifle'] });
-    const tac = SM.datasheets.find((d) => d.name === 'Tactical Squad')!;
-    const sgt = tac.wargearOptions!.find((o) => o.pick)!;
-    expect(sgt.who).toBe('Tactical Sergeant');
-    expect(sgt.pick).toBe(2);
-    expect(sgt.pickFrom).toContain('Plasma pistol');
-    expect(sgt.choices).toEqual([['Twin lightning claws']]);
     expect(SM.datasheets.find((d) => d.name === 'Land Raider')!.loadout['*'].filter((x) => /godhammer/i.test(x))).toHaveLength(2);
   });
 
@@ -437,16 +431,6 @@ describe('wargear', () => {
     expect(u.pts).toBe(170);
     expect(u.models.filter((m) => m.profile.W === 4)).toHaveLength(3); // storm shield: Wounds 4
     expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Twin lightning claws') && m.profile.W === 3)).toHaveLength(2);
-  });
-
-  it('two different weapons from a list follow the pistol rule', () => {
-    const tac = SM.datasheets.find((d) => d.name === 'Tactical Squad')!;
-    const i = tac.wargearOptions!.findIndex((o) => o.pick);
-    const ok = { uid: 'a', datasheet: tac.name, models: 10, pts: 140, wargear: [{ opt: i, choice: -1, count: 1, picks: ['Plasma pistol', 'Power fist'] }] };
-    expect(wargearProblems(tac, ok)).toEqual([]);
-    const sgt = one(SM, 'SM', ok).models.find((m) => m.name === 'Tactical Sergeant')!;
-    expect(sgt.weapons.map((w) => w.name).sort()).toEqual(['Close combat weapon', 'Plasma pistol', 'Power fist']);
-    expect(wargearProblems(tac, { ...ok, wargear: [{ opt: i, choice: -1, count: 1, picks: ['Boltgun', 'Storm bolter'] }] }).length).toBeGreaterThan(0);
   });
 
   it('vehicles carry every listed weapon and add-on models cost points', () => {

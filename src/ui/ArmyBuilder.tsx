@@ -23,8 +23,11 @@ const SECTIONS: { id: Section; title: string }[] = [
   { id: 'others', title: 'Others' },
 ];
 
+/** Units listed under Others although they carry the CHARACTER keyword (bodyguard-style Epic Heroes). */
+const OTHERS = new Set(['Victrix Honour Guard']);
+
 function sectionOf(d: DatasheetData | undefined): Section {
-  if (!d) return 'others';
+  if (!d || OTHERS.has(d.name)) return 'others';
   if (d.keywords.includes('CHARACTER') || /Character|Epic Hero/.test(d.role)) return 'characters';
   if (d.keywords.includes('BATTLELINE') || d.role === 'Battleline') return 'battleline';
   if (d.role === 'Dedicated Transports' || d.keywords.includes('DEDICATED TRANSPORT')) return 'transports';

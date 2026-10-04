@@ -101,6 +101,7 @@ export function initCloudPortraits(): Promise<void> {
         const b = d.data() as Partial<CloudDoc> | undefined;
         if (b && typeof b.name === 'string' && typeof b.asset === 'string' && /^[0-9a-f]{32}$/.test(b.asset)) next[b.name] = { name: b.name, asset: b.asset };
       }
+      for (const [n, w] of waiting) if (cloud[n] && next[n]?.asset !== cloud[n].asset && w) next[n] = cloud[n];
       cloud = next;
       version++;
       listeners.forEach((l) => l());
@@ -153,7 +154,8 @@ async function uploadNow(name: string, dataUrl: string): Promise<boolean> {
     }
     if (old && old !== up.id) await cloudAssets.delete(old).catch(() => undefined);
     cloud[name] = { name, asset: up.id };
-    if (cache[name] === dataUrl) delete cache[name];
+    // keep showing the photo from this device until the web copy has really loaded (no blank or old picture meanwhile)
+    if (await imageLoads(`/_blob/${up.id}`) && cache[name] === dataUrl) delete cache[name];
     save();
     return true;
   } catch (e) {
@@ -163,6 +165,17 @@ async function uploadNow(name: string, dataUrl: string): Promise<boolean> {
       : 'อัปรูปขึ้นเว็บไม่สำเร็จ — เก็บไว้ในเครื่องนี้แทน';
     return false;
   }
+}
+
+function imageLoads(url: string): Promise<boolean> {
+  if (typeof Image === 'undefined') return Promise.resolve(true);
+  return new Promise((ok) => {
+    const img = new Image();
+    const t = setTimeout(() => ok(false), 15000);
+    img.onload = () => { clearTimeout(t); ok(true); };
+    img.onerror = () => { clearTimeout(t); ok(false); };
+    img.src = url;
+  });
 }
 
 async function removeFromCloud(name: string) {

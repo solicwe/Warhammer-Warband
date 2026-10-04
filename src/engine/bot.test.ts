@@ -159,7 +159,7 @@ describe('the bot spends Command Points', () => {
   it('Command Re-roll on a failed lascannon hit against a tank', () => {
     let used = 0;
     for (let seed = 1; seed <= 30 && !used; seed++) {
-      const s = game([['Predator Annihilator', 1, 135]], [['Battlewagon', 1, 160]]);
+      const s = game([['Land Raider', 1, 240]], [['Battlewagon', 1, 160]]);
       s.rng = seed * 7919;
       s.bots = [0, 1];
       s.players[0].cp = 3;
@@ -255,7 +255,7 @@ describe('Command Re-roll on hazard, damage and the number of attacks', () => {
   it('damage: with the switch on, the first low damage roll is re-rolled for 1CP', () => {
     let used = 0;
     for (let seed = 1; seed <= 30 && !used; seed++) {
-      const s = game([['Predator Annihilator', 1, 135]], [['Battlewagon', 1, 160]]);
+      const s = game([['Land Raider', 1, 240]], [['Battlewagon', 1, 160]]);
       s.rng = seed * 7919;
       s.players[0].cp = 3;
       s.phase = 'shooting';

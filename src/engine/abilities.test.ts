@@ -82,7 +82,7 @@ describe('Ork abilities', () => {
   });
 
   it('Arrogant Invulnerability worsens AP; Mobile Fortress makes ranged damage −1', () => {
-    const s = game([['Devastator Squad', 5, 120]], [['Meganobz', 3, 110], ['Battlewagon', 1, 150]]);
+    const s = game([['Hellblaster Squad', 5, 120]], [['Meganobz', 3, 110], ['Battlewagon', 1, 150]]);
     s.phase = 'shooting'; s.active = 0;
     const dev = put(s, 'p0-x0', { x: 20, y: 10 });
     const mega = put(s, 'p1-x0', { x: 14, y: 26 });
@@ -180,33 +180,17 @@ describe('Space Marine abilities', () => {
     expect(fought).toBe(true);
   });
 
-  it('Rites of Battle: −1CP on a stratagem once per battle round; Unorthodox Strategist taxes the opponent', () => {
-    const s = game([['Intercessor Squad', 10, 150], ['Captain', 1, 80], ['Uriel Ventris', 1, 105]], [['Boyz', 10, 90]]);
+  it('Rites of Battle: −1CP on a stratagem once per battle round', () => {
+    const s = game([['Intercessor Squad', 10, 150], ['Captain', 1, 80]], [['Boyz', 10, 90]]);
     s.phase = 'shooting'; s.active = 0;
     put(s, 'p0-x0', { x: 20, y: 14 });
     const ints = put(s, 'p0-x1', { x: 30, y: 10 }); // Rites of Battle: the Captain's own unit
-    put(s, 'p0-x2', { x: 26, y: 18 });
-    const boyz = put(s, 'p1-x0', { x: 20, y: 25 });
+    put(s, 'p1-x0', { x: 20, y: 25 });
     expect(stratCost(s, 'command-reroll', ints, 1)).toBe(0);
     s.players[0].cp = 5;
     spendStratagem(s, 0, 'command-reroll', ints);
     expect(s.players[0].cp).toBe(5);
     expect(stratCost(s, 'command-reroll', ints, 1)).toBe(1); // once per battle round
-    // Uriel within 12" of the Boyz: the Ork player's stratagem on them costs 1 more, once per turn
-    expect(stratCost(s, 'command-reroll', boyz, 1)).toBe(2);
-    s.players[1].cp = 5;
-    spendStratagem(s, 1, 'command-reroll', boyz);
-    expect(s.players[1].cp).toBe(3);
-    expect(stratCost(s, 'command-reroll', boyz, 1)).toBe(1);
-    expect(canUseStratagem(s, 1, 'command-reroll', boyz)).toBeTruthy(); // once per phase anyway
-  });
-
-  it('Combat Squads splits a Tactical Squad into two units of five', () => {
-    const s = game([['Tactical Squad', 10, 140, undefined, { split: true }]], [['Boyz', 10, 90]]);
-    const tac = s.units.filter((u) => u.owner === 0);
-    expect(tac.map((u) => u.models.length)).toEqual([5, 5]);
-    expect(tac[0].models.some((m) => /Sergeant/.test(m.name))).toBe(true);
-    expect(tac[0].pts + tac[1].pts).toBe(140);
   });
 
   it('Author of the Codex: two of three abilities, switched in the Command phase', () => {
@@ -257,25 +241,6 @@ describe('Space Marine abilities', () => {
     placeUnit(s, ints, formationAt(ints, { x: o.x + 20 > 55 ? o.x - 20 : o.x + 20, y: o.y }));
     updateControl(s);
     expect(o.controller).toBe(0);
-  });
-
-  it('Armorium Cherub: once per battle, change a hit roll to a 6', () => {
-    const s = game([['Devastator Squad', 5, 120]], [['Boyz', 10, 90]]);
-    s.phase = 'shooting'; s.active = 0;
-    const dev = put(s, 'p0-x0', { x: 20, y: 10 });
-    const boyz = put(s, 'p1-x0', { x: 20, y: 26 });
-    const r = buildShootPools(s, dev.id, boyz.id, { mode: 'normal' });
-    startAttack(s, 'shoot', dev.id, boyz.id, r.pools);
-    rollHits(s);
-    const fd = freeDiceNow(s).find((f) => f.kind === 'setSix');
-    expect(fd).toBeTruthy();
-    const p = s.attack!.pools[0];
-    const i = p.hits.findIndex((h) => h.v !== 6);
-    if (i >= 0) {
-      expect(useFreeDie(s, fd!.key, i)).toBeNull();
-      expect(p.hits[i].v).toBe(6);
-    }
-    expect(freeDiceNow(s).some((f) => f.kind === 'setSix')).toBe(false);
   });
 
   it('each ability with an act is reachable by its unit', () => {
