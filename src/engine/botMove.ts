@@ -367,6 +367,7 @@ export function bestFallBack(s: GameState, u: UnitState, max: number, ctx: Ctx, 
 export function bestArrival(s: GameState, u: UnitState, how: 'ingress' | 'deepStrike'): Spot | null {
   const ctx = ctxFor(s, u);
   const near: Pt[] = [];
+  if (u.homer) near.push(u.homer); // Teleport Homer: arriving by its token
   for (const n of objectiveNeeds(s, u.owner)) if (n.need > 0) near.push(objPoint(s, n.o));
   for (const f of [...ctx.foes].sort((a, b) => unitValue(b.u) - unitValue(a.u)).slice(0, 3)) near.push(centre(f.u));
   near.push(...s.objectives.map((o) => objPoint(s, o)));

@@ -529,6 +529,7 @@ export function cond(c: string, x: Ctx): boolean {
     case 'notBattleShocked': return !A.battleShocked;
     case 'inTerrain': return alive(A).some((m) => withinTerrain(s, m).length > 0);
     case 'onObjective': return onObjective(s, A);
+    case 'onSeekerObjective': return !!A.seekerObjective && s.objectives.some((o) => o.id === A.seekerObjective && unitInRange(s, A, o));
     case 'onOwnObjective': return onOwnObjective(s, A);
     case 'centreOrObjective': return onObjective(s, A) || alive(A).some((m) => dist(m, { x: RULES.battlefield.width / 2, y: RULES.battlefield.height / 2 }) - m.r <= 6);
     case 'objectiveEitherWay': return onObjective(s, A) || (!!T && onObjective(s, T));

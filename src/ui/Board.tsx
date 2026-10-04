@@ -427,6 +427,13 @@ function BoardImpl(props: BoardProps) {
           </g>
         );
       })}
+      {s.units.filter((u) => u.homer && u.status === 'reserves').map((u) => (
+        <g key={'homer-' + u.id} pointerEvents="none">
+          <circle cx={u.homer!.x} cy={u.homer!.y} r={3} fill="none" stroke={u.owner ? 'var(--p1)' : 'var(--p0)'} strokeWidth={0.15} strokeDasharray="0.5 0.3" />
+          <circle cx={u.homer!.x} cy={u.homer!.y} r={0.7} fill={u.owner ? 'var(--p1)' : 'var(--p0)'} stroke="#fff" strokeWidth={0.15} />
+          <text x={u.homer!.x} y={u.homer!.y - 1.2} textAnchor="middle" fontSize={0.9} fill="#fff" stroke="#000" strokeWidth={0.12} paintOrder="stroke">Homer</text>
+        </g>
+      ))}
       {props.goals?.map((g) => (
         <g key={'goal-' + g.id} pointerEvents="none" className="goal">
           {g.areas.map((a, i) => <polygon key={i} points={a.map((p) => `${p.x},${p.y}`).join(' ')} fill="rgba(245,212,138,0.10)" stroke="#f5d48a" strokeWidth={0.18} strokeDasharray="0.9 0.5" />)}

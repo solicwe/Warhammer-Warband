@@ -14,8 +14,7 @@ import {
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
-  pileDistance,
-} from '../engine/game';
+  pileDistance, endRedeploy, redeployCandidates, redeployUnit } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../engine/activations';
@@ -707,6 +706,23 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode?.k === 'place') return placePanel();
     const p = s.deployTurn;
     const pending = s.units.filter((u) => u.owner === p && u.status === 'pending');
+    const rd = s.redeploy;
+    if (rd && rd.player === p && !pending.length) {
+      return (
+        <>
+          <div className="handoff">{rd.source}: {pName(s, p)} redeploy ได้อีก {rd.left} หน่วย{rd.infantryOnly ? ' (INFANTRY)' : ''}</div>
+          <div className="small muted">ยกหน่วยขึ้นเพื่อวางใหม่ หรือย้ายเข้า Strategic Reserves (ไม่นับเพดาน) แล้วกดเสร็จ</div>
+          {rd.left > 0 && redeployCandidates(s).map((x) => (
+            <div key={x.id} className="row">
+              <span className="grow small">{x.name}{x.status === 'reserves' ? ' (กองหนุน)' : ''}</span>
+              {x.status === 'board' && <button className="btn small" onClick={() => { const e = act((g) => redeployUnit(g, x.id, false)); if (e) flash(e); }}>วางใหม่</button>}
+              {x.status === 'board' && <button className="btn small" onClick={() => { const e = act((g) => redeployUnit(g, x.id, true)); if (e) flash(e); }}>เข้ากองหนุน</button>}
+            </div>
+          ))}
+          <button className="btn primary" onClick={() => { const e = act((g) => endRedeploy(g)); if (e) flash(e); }}><Icon name="check" /> เสร็จ</button>
+        </>
+      );
+    }
     const u = selUnit && pending.includes(selUnit) ? selUnit : null;
     return (
       <>

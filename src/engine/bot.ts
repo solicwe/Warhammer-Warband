@@ -10,8 +10,7 @@ import {
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
-  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark,
-} from './game';
+  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark, endRedeploy } from './game';
 import { abilityChoices, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
@@ -69,6 +68,8 @@ function botPickFixed(s: GameState, p: PlayerId) {
 
 export function botDeploy(s: GameState) {
   const p = s.deployTurn;
+  // a redeploy ability: the bot keeps its deployment (it was placed with the whole board in mind)
+  if (s.redeploy?.player === p && !s.units.some((x) => x.owner === p && x.status === 'pending')) { endRedeploy(s); return; }
   botPickFixed(s, p);
   // Declare Battle Formations: a passenger for every empty transport (an empty Dedicated Transport is lost)
   for (const t of s.units.filter((x) => x.owner === p && x.transport && ['pending', 'board', 'reserves'].includes(x.status))) {

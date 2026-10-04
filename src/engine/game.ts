@@ -1,6 +1,6 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
 import { buildUnits, forChapter, transportFit } from './army';
-import { applyMortalWounds, hazardTest, killModel, onTransportDestroyed } from './attack';
+import { applyMortalWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
@@ -308,8 +308,11 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
   for (const m of alive(u)) {
     const p = pos.get(m.id) ?? m;
     if (how === 'deploy' && !circleWhollyInPoly(p, m.r, zoneOf(s, u.owner))) { errors.push('ต้องวางให้อยู่ใน deployment zone ทั้งตัว'); bad.add(m.id); }
+    // Teleport Homer: arriving in the opponent's turn (Rapid Ingress, 0CP) is within 3" of its token, and 8" is enough
+    const homer = u.homer && how !== 'deploy' && how !== 'infiltrate' && s.active !== u.owner ? u.homer : undefined;
+    if (homer && dist(p, homer) - m.r > 3 + EPS) { errors.push('Teleport Homer: ต้องลงภายใน 3" จาก token'); bad.add(m.id); }
     if (how !== 'deploy') {
-      const keep = how === 'deepStrike' ? unitFlags(s, u).deepStrikeRange : RULES.reserves.enemyDistance;
+      const keep = homer ? 8 : how === 'deepStrike' ? unitFlags(s, u).deepStrikeRange : RULES.reserves.enemyDistance;
       if (enemies.some((e) => alive(e).some((n) => dist(p, n) - m.r - n.r <= keep))) { errors.push(`ต้องห่างศัตรูทุกหน่วยเกิน ${keep}"`); bad.add(m.id); }
     }
     if (how === 'ingress' || how === 'deepStrike') {
@@ -377,6 +380,14 @@ export function placeUnit(s: GameState, u: UnitState, pos: Map<string, Pt>) {
   for (const m of alive(u)) { const p = pos.get(m.id)!; m.x = p.x; m.y = p.y; }
   u.status = 'board';
   u.setUpTurn = s.turn;
+  // Seeker of the Unfound: the first time it is set up, it picks an objective (the nearest one out in the field)
+  if (!u.seekerObjective && unitHasAbility(u, 'Seeker of the Unfound') && s.objectives.length) {
+    const c = polyCentroid(alive(u));
+    const field = s.objectives.filter((o) => o.type !== 'home');
+    const o = (field.length ? field : s.objectives).reduce((a, b) => (dist(b, c) < dist(a, c) ? b : a));
+    u.seekerObjective = o.id;
+    log(s, `Seeker of the Unfound: ${u.name} เลือก objective ${s.objectives.indexOf(o) + 1}`, 'info', u.owner);
+  }
 }
 
 export function reservesPoints(s: GameState, p: PlayerId) {
@@ -407,12 +418,68 @@ export function sendToReserves(s: GameState, unitId: string): string | null {
 
 function nextDeployer(s: GameState) {
   const pending = (p: PlayerId) => s.units.some((u) => u.owner === p && u.status === 'pending');
+  if (s.redeploy) return; // re-deploying: the player says when they are done
   const o = other(s.deployTurn);
   if (pending(o)) s.deployTurn = o;
   else if (!pending(s.deployTurn)) finishDeployment(s);
 }
 
+const isAstartes = (u: UnitState) => u.factionKeywords.includes('ADEPTUS ASTARTES') || hasKw(u, 'ADEPTUS ASTARTES');
+
+/** Abilities that let a player redeploy units once both armies are deployed: how many, and of which kind. */
+const REDEPLOY: { name: string; n: number; infantryOnly: boolean }[] = [
+  { name: 'Master of Deceit', n: 3, infantryOnly: true },
+  { name: 'Strategium Command', n: 3, infantryOnly: false },
+  { name: 'Cerebrex Logic Engine', n: 1, infantryOnly: false },
+];
+
+function redeployFor(s: GameState, p: PlayerId) {
+  const mine = s.units.filter((u) => u.owner === p && (u.status === 'board' || u.status === 'embarked'));
+  return REDEPLOY.filter((r) => mine.some((u) => unitHasAbility(u, r.name))).sort((a, b) => b.n - a.n)[0];
+}
+
+/** Units a player may pick up to redeploy now. */
+export function redeployCandidates(s: GameState): UnitState[] {
+  const r = s.redeploy;
+  if (!r) return [];
+  return s.units.filter((u) => u.owner === r.player && (u.status === 'board' || u.status === 'reserves') && isAstartes(u) && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && !u.transport);
+}
+
+/** Pick a unit up: it is placed again (deployment rules) or, with toReserves, goes into Strategic Reserves (no limit). */
+export function redeployUnit(s: GameState, unitId: string, toReserves: boolean): string | null {
+  const r = s.redeploy;
+  const u = unitById(s, unitId);
+  if (!r || r.left <= 0 || !redeployCandidates(s).includes(u)) return 'redeploy หน่วยนี้ไม่ได้';
+  r.left--;
+  u.status = toReserves ? 'reserves' : 'pending';
+  log(s, `${r.source}: ${u.name} ${toReserves ? 'ย้ายเข้า Strategic Reserves' : 'ยกขึ้นเพื่อวางใหม่'}`, 'info', u.owner);
+  return null;
+}
+
+/** The re-deploying player is done (every unit picked up has been placed again). */
+export function endRedeploy(s: GameState): string | null {
+  const r = s.redeploy;
+  if (!r) return null;
+  if (s.units.some((u) => u.owner === r.player && u.status === 'pending')) return 'วางหน่วยที่ยกขึ้นให้ครบก่อน';
+  s.redeploy = { ...r, left: 0, done: [...r.done, r.player] };
+  finishDeployment(s);
+  return null;
+}
+
 function finishDeployment(s: GameState) {
+  // redeploy abilities, the attacker first; each player once
+  const doneP = s.redeploy?.done ?? [];
+  const order: PlayerId[] = s.attackerPlayer != null ? [s.attackerPlayer, other(s.attackerPlayer)] : [0, 1];
+  for (const p of order) {
+    if (doneP.includes(p)) continue;
+    const r = redeployFor(s, p);
+    if (!r) continue;
+    s.redeploy = { player: p, left: r.n, infantryOnly: r.infantryOnly, source: r.name, done: doneP };
+    s.deployTurn = p;
+    log(s, `${r.name}: ${s.players[p].name} redeploy ได้ ${r.n} หน่วย${r.infantryOnly ? ' (INFANTRY)' : ''} — วางใหม่หรือเข้ากองหนุน`, 'info', p);
+    return;
+  }
+  s.redeploy = undefined;
   // a DEDICATED TRANSPORT with nobody inside at the start of the battle is not deployed: it counts as destroyed (18)
   for (const t of s.units) {
     if (!t.transport || !hasKw(t, 'DEDICATED TRANSPORT') || t.status === 'destroyed' || !alive(t).length) continue;
@@ -554,6 +621,7 @@ export function endPhase(s: GameState) {
     emitReact(s, other(s.active), 'enemyChargePhaseStart', {});
   } else if (s.phase === 'charge') {
     if (phaseEndReactions(s, 'enemyChargePhaseEnd', [other(s.active)])) return;
+    miraculousSaviour(s);
     s.phase = 'fight';
     startFight(s);
     openWindow(s, 'endOfCharge');
@@ -665,6 +733,21 @@ export function detReroll(s: GameState, u: UnitState, what: 'advance' | 'charge'
   else { u.declaredCharge = false; declareCharge(s, u, fly, cap); }
 }
 
+/** Blackstar Cluster Launcher: after a Normal move, one enemy unit it flew over takes 6D6, a mortal wound per 5+
+ *  (always worth it, so it happens by itself, on the enemy unit worth the most). */
+function blackstarLaunch(s: GameState, u: UnitState, paths: Map<string, Pt[]>) {
+  if (!u.abilities.some((a) => a.name === 'Blackstar Cluster Launcher')) return;
+  const segs = alive(u).flatMap((m) => { const p = paths.get(m.id) ?? []; return p.slice(1).map((q, i) => ({ a: p[i], b: q, r: m.r })); });
+  if (!segs.length) return;
+  const over = s.units.filter((e) => e.owner !== u.owner && onBoard(e) && alive(e).some((n) => segs.some((g) => pointSegDist(n, g) <= n.r + g.r)));
+  const t = over.sort((a, b) => b.pts * alive(b).length / Math.max(1, b.startingStrength) - a.pts * alive(a).length / Math.max(1, a.startingStrength))[0];
+  if (!t) return;
+  const r = rollN(s, 6);
+  const n = r.filter((x) => x >= 5).length;
+  log(s, `Blackstar Cluster Launcher: ${u.name} บินผ่าน ${t.name} [${r.join(' ')}] = ${n} MW`, 'roll', u.owner);
+  if (n) applyMortalWounds(s, t, n, 'Blackstar Cluster Launcher');
+}
+
 export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Map<string, Pt[]>) {
   // copy the points first: a path may start at the model object itself, which is about to move
   const paths = new Map([...given].map(([id, p]) => [id, p.map((q) => ({ x: q.x, y: q.y }))]));
@@ -695,6 +778,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
   const moved = alive(u).filter((m) => (paths.get(m.id)?.length ?? 0) > 1 && pathLength(paths.get(m.id)!) > 0.01);
   if (moved.length) pushFx(s, { kind: 'move', unitId: u.id, owner: u.owner, moveKind: kind, paths: moved.map((m) => [m.id, paths.get(m.id)!.map((q) => ({ x: q.x, y: q.y }))]) });
   const label: Record<string, string> = { scout: 'Scout move', normal: 'Normal move', advance: 'Advance', fallback: 'Fall back', charge: 'Charge move', pileIn: 'Pile-in', consolidate: 'Consolidate', ingress: 'Ingress' };
+  if (kind === 'normal') blackstarLaunch(s, u, paths);
   onMoveEnd(s, u, kind);
   if (label[kind]) log(s, `${u.name}: ${label[kind]}${maxMoved ? ` (${maxMoved.toFixed(1)}")` : ''}`, 'info', u.owner);
   // Shokk-boosta: a hazard roll for each model after the Advance
@@ -763,7 +847,29 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   if (closest <= RULES.reserves.enemyDistance) u.noChargeTurn = s.turn;
   log(s, `${u.name} ลงสนาม (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closest <= RULES.reserves.enemyDistance ? ' ใกล้ศัตรูกว่า 9" → ชาร์จไม่ได้เทิร์นนี้' : ''}`, 'info', u.owner);
   if (u.owner === s.active && s.phase === 'movement') offerReactions(s, 'enemyMovedNear', u);
+  if (unitHasAbility(u, 'Drop Pod Assault')) dropPodAssault(s, u);
+  if (u.homer && s.active !== u.owner) { log(s, `Teleport Homer: ${u.name} ลงที่ token (token ถูกเอาออก)`, 'info', u.owner); u.homer = undefined; }
   return chk;
+}
+
+/** Drop Pod Assault: the units inside get out at once, more than 8" from every enemy model (done by itself: they
+ *  must). Tried all round the pod; the side away from the enemy first. */
+function dropPodAssault(s: GameState, pod: UnitState) {
+  const hull = alive(pod)[0];
+  if (!hull) return;
+  const enemies = boardUnits(s, other(pod.owner)).flatMap(alive);
+  const ec = enemies.length ? polyCentroid(enemies) : { x: W / 2, y: H / 2 };
+  const away = Math.atan2(hull.y - ec.y, hull.x - ec.x);
+  for (const p of s.units.filter((x) => x.status === 'embarked' && x.embarkedIn === pod.id)) {
+    let done = false;
+    for (let k = 0; k < 16 && !done; k++) {
+      const angle = away + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8);
+      const pos = ringFormation(p, hull, angle);
+      const far = alive(p).every((m) => { const q = pos.get(m.id)!; return enemies.every((n) => dist(q, n) - m.r - n.r > 8); });
+      if (far && validateDisembark(s, p, pod, pos).ok) { disembarkUnit(s, p, pod, pos); done = true; }
+    }
+    log(s, done ? `Drop Pod Assault: ${p.name} ลงจาก ${pod.name} ทันที (ห่างศัตรูเกิน 8")` : `Drop Pod Assault: ${p.name} หาที่ลงห่างศัตรูเกิน 8" ไม่ได้ — ยังอยู่ในพอด`, 'info', pod.owner);
+  }
 }
 
 /** Reserves can arrive from battle round 2, earlier with abilities (Drop Pod Assault, High King of Fenris, Da Jump …). */
@@ -822,8 +928,92 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `ชาร์จได้ ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });
   log(s, `${u.name} ประกาศชาร์จ: 2D6 [${r.join('+')}] = ${r[0] + r[1]}${fly ? ' (บิน −2)' : ''}${cap !== undefined && r[0] + r[1] > cap ? ` → สูงสุด ${cap}` : ''}`, 'roll', u.owner);
   if (declaredInOwnTurn) emitReact(s, other(u.owner), 'enemyChargeDeclared', { unitId: u.id });
+  if (declaredInOwnTurn) emergencyEmbark(s, u);
   return r;
 }
+
+/**
+ * Emergency Combat Embarkation (Repulsor, once per turn): an ADEPTUS ASTARTES unit the charge can reach, not in
+ * combat, with every model within 3" of the Repulsor, gets in before the charge move. Done by itself when the charge
+ * would cost it more than a quarter of what it is worth (approximation: every unit in reach counts as a target).
+ */
+function emergencyEmbark(s: GameState, charger: UnitState) {
+  const p = other(charger.owner);
+  for (const t of boardUnits(s, p).filter((x) => unitHasAbility(x, 'Emergency Combat Embarkation') && x.transport)) {
+    const key = `${s.turn}:${t.id}`;
+    if ((t.oncePerTurnUsed ??= []).includes(key)) continue;
+    const cands = boardUnits(s, p).filter((x) => x.id !== t.id && isAstartes(x) && !isEngaged(s, x)
+      && unitDistance(charger, x) <= (charger.chargeRoll ?? 0) + 1e-6
+      && alive(x).every((m) => alive(t).some((n) => baseDist(m, n) <= 3 + 1e-6)) && !canEmbarkIn(s, x, t));
+    const worth = (x: UnitState) => (x.pts * alive(x).length) / Math.max(1, x.startingStrength);
+    const best = cands.sort((a, b) => worth(b) - worth(a))[0];
+    if (!best) continue;
+    t.oncePerTurnUsed.push(key);
+    best.status = 'embarked';
+    best.embarkedIn = t.id;
+    log(s, `Emergency Combat Embarkation: ${best.name} หนีขึ้น ${t.name} ก่อน ${charger.name} ชาร์จถึง`, 'info', p);
+  }
+}
+
+/** Miraculous Saviour (the Sanguinor, once per battle): at the end of the opponent's Charge phase it drops in, engaged
+ *  with the unit that charged and is worth the most. */
+function miraculousSaviour(s: GameState) {
+  const p = other(s.active);
+  if (s.round <= 1) return;
+  for (const u of s.units.filter((x) => x.owner === p && unitHasAbility(x, 'Miraculous Saviour') && (x.status === 'reserves' || (onBoard(x) && !isEngaged(s, x))))) {
+    if ((u.onceUsed ??= []).includes('Miraculous Saviour')) continue;
+    const chargers = boardUnits(s, s.active).filter((e) => e.chargedTurn === s.turn)
+      .sort((a, b) => b.pts * alive(b).length / Math.max(1, b.startingStrength) - a.pts * alive(a).length / Math.max(1, a.startingStrength));
+    const m = alive(u)[0];
+    if (!m || !chargers.length) continue;
+    for (const e of chargers) {
+      let pos: Map<string, Pt> | null = null;
+      for (const n of alive(e)) {
+        for (let k = 0; k < 12 && !pos; k++) {
+          const a = (k / 12) * Math.PI * 2, d = n.r + m.r + 0.4;
+          const q = new Map([[m.id, { x: n.x + Math.cos(a) * d, y: n.y + Math.sin(a) * d }]]);
+          const errors: string[] = [], bad = new Set<string>();
+          endChecks(s, u, q, errors, bad);
+          if (!errors.length) pos = q;
+        }
+        if (pos) break;
+      }
+      if (!pos) continue;
+      u.onceUsed.push('Miraculous Saviour');
+      placeUnit(s, u, pos);
+      u.move = 'ingress';
+      pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
+      log(s, `Miraculous Saviour: ${u.name} ลงมา engaged กับ ${e.name}`, 'info', p);
+      break;
+    }
+  }
+}
+
+/** Stabilised Disembarkation (Repulsor): shot in the opponent's Shooting phase and down to half its wounds or less,
+ *  it lets the units inside get out (within 6") before it is lost with them aboard. */
+onAttackFinished((s, at) => {
+  if (at.kind !== 'shoot' || s.phase !== 'shooting') return;
+  const t = unitById(s, at.targetId);
+  if (t.owner === s.active || !onBoard(t) || !unitHasAbility(t, 'Stabilised Disembarkation')) return;
+  const hull = alive(t)[0];
+  if (!hull || hull.wounds * 2 > hull.profile.W) return;
+  const enemies = boardUnits(s, s.active).flatMap(alive);
+  const ec = enemies.length ? polyCentroid(enemies) : { x: W / 2, y: H / 2 };
+  const away = Math.atan2(hull.y - ec.y, hull.x - ec.x);
+  for (const p of s.units.filter((x) => x.status === 'embarked' && x.embarkedIn === t.id)) {
+    for (let k = 0; k < 16; k++) {
+      const pos = ringFormation(p, hull, away + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8));
+      const errors: string[] = [], bad = new Set<string>();
+      endChecks(s, p, pos, errors, bad);
+      if (errors.length || engagedAt(s, p, pos).length) continue;
+      placeUnit(s, p, pos);
+      p.embarkedIn = null;
+      p.disembarkedTurn = s.turn;
+      log(s, `Stabilised Disembarkation: ${p.name} ลงจาก ${t.name} ที่โดนยิงหนัก`, 'info', t.owner);
+      break;
+    }
+  }
+});
 
 export function rerollCharge(s: GameState, u: UnitState, fly = false, cap?: number) {
   spendStratagem(s, u.owner, 'command-reroll', u);

@@ -40,6 +40,18 @@ const unitControls = (s: GameState, u: UnitState, o: ObjectiveState) => o.contro
 
 /** Start of the battle: Locate and Deny places five operation markers in terrain areas outside the player's zone. */
 export function startOfBattle(s: GameState) {
+  // Teleport Homer: a token for each unit that has one, out of the enemy deployment zone — in front of the objective
+  // nearest the enemy (where a deep-striking unit hurts most), but not on top of it
+  for (const u of s.units.filter((x) => x.abilities.some((a) => a.name === 'Teleport Homer') && x.status !== 'destroyed')) {
+    const ez = zonePoly(s, other(u.owner));
+    const ec = polyCentroid(ez);
+    const opts = s.objectives.filter((o) => !pointInPoly(o, ez)).sort((a, b) => dist(a, ec) - dist(b, ec));
+    const o = opts[0];
+    if (!o) continue;
+    const back = { x: o.x - ec.x, y: o.y - ec.y };
+    const L = Math.hypot(back.x, back.y) || 1;
+    u.homer = { x: o.x + (back.x / L) * 4, y: o.y + (back.y / L) * 4 };
+  }
   for (const p of [0, 1] as PlayerId[]) {
     if (s.players[p].primaryId !== 'locate-and-deny') continue;
     const zone = zonePoly(s, p);

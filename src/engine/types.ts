@@ -199,6 +199,13 @@ export interface UnitState {
   pts: number;
   status: 'pending' | 'reserves' | 'board' | 'destroyed' | 'embarked';
   embarkedIn: string | null;
+  /** Seeker of the Unfound: the objective picked when the unit was first set up */
+  seekerObjective?: string;
+  /** Teleport Homer: where its token was set up at the start of the battle (removed once used) */
+  homer?: Pt;
+  /** abilities used once per battle / per turn by key (Miraculous Saviour, Emergency Combat Embarkation …) */
+  onceUsed?: string[];
+  oncePerTurnUsed?: string[];
   transport: TransportInfo | null;
   weaponsFired: string[]; // split fire: ranged weapons already used this phase
   cantCharge: boolean; // e.g. after a rapid / combat disembark
@@ -529,6 +536,8 @@ export interface GameState {
   fxSeq?: number;
   /** destroyed models that fight / shoot after the attacking unit has finished (resolved by activations.ts) */
   /** the last unit to move / attack / declare a charge, for reactions ("just after an enemy unit has shot") */
+  /** after deployment: a player re-deploying units (Master of Deceit, Strategium Command, Cerebrex Logic Engine) */
+  redeploy?: { player: PlayerId; left: number; infantryOnly: boolean; source: string; done: PlayerId[] };
   lastAct?: { unitId: string; owner: PlayerId; kind: 'move' | 'attack' | 'charge'; turn: number; phase: Phase; targets: string[]; lost: string[]; halved: string[] };
   /** stratagem prompts waiting for the current prompt / attack to finish */
   reactQueue?: { player: PlayerId; on: string; ctx: { unitId?: string; modelId?: string; killerId?: string }; turn: number; phase: Phase }[];
