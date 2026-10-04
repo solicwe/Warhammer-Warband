@@ -48,23 +48,26 @@ def outline(g):
 
 def square_up(t):
     """Ruins are rectangles, but a rotated one comes out of the tracer clipped into a triangle or pentagon (its far
-    corners fade into the deployment colours). Rebuild the rectangle along the walls: the box, in the walls' own
-    direction, around the traced outline and the walls."""
+    corners fade into the deployment colours or the centre line). Rebuild the rectangle in the walls' own direction
+    around its walls (an L on one corner) and its barricades (an L on the opposite corner)."""
     import math
-    from shapely import affinity
     if not t['walls']:
         return
     P = poly(t)
+    if P.area >= 0.85 * P.minimum_rotated_rectangle.area:
+        return  # already a rectangle
     w = max(t['walls'], key=lambda w: (w[2] - w[0]) ** 2 + (w[3] - w[1]) ** 2)
-    ang = math.degrees(math.atan2(w[3] - w[1], w[2] - w[0]))
-    pts = [tuple(p) for p in t['poly']] + [(x[0], x[1]) for x in t['walls']] + [(x[2], x[3]) for x in t['walls']]
-    c = P.centroid
-    flat = affinity.rotate(MultiPoint(pts), -ang, origin=c)
-    box = affinity.rotate(flat.envelope, ang, origin=c)
-    # only when the traced outline is clearly not that rectangle already (and the box isn't much bigger than it)
-    if P.area >= 0.85 * box.area or box.area > 2.2 * P.area:
-        return
-    t['poly'] = [[r(x), r(y)] for x, y in list(box.exterior.coords)[:-1]]
+    a = math.atan2(w[3] - w[1], w[2] - w[0])
+    ca, sa = math.cos(a), math.sin(a)
+    to = lambda x, y: (x * ca + y * sa, -x * sa + y * ca)
+    back = lambda u, v: (u * ca - v * sa, u * sa + v * ca)
+    segs = t['walls'] + t['obstacles']
+    F = [to(x[0], x[1]) for x in segs] + [to(x[2], x[3]) for x in segs]
+    u0, u1 = min(p[0] for p in F) - 0.15, max(p[0] for p in F) + 0.15
+    v0, v1 = min(p[1] for p in F) - 0.15, max(p[1] for p in F) + 0.15
+    if u1 - u0 < 1.5 or v1 - v0 < 1.5:
+        return  # a single straight wall: nothing to square up against
+    t['poly'] = [[r(x), r(y)] for x, y in (back(u0, v0), back(u1, v0), back(u1, v1), back(u0, v1))]
 
 
 def merge_slivers(T):
@@ -90,6 +93,34 @@ def merge_slivers(T):
             changed = True
             break
     return T
+
+
+def merge_overlaps(T):
+    """Two pieces lying on top of each other (a container traced once on its own and once with its barricade strip):
+    one piece, its outline the rectangle around both."""
+    changed = True
+    while changed:
+        changed = False
+        for i in range(len(T)):
+            for j in range(i + 1, len(T)):
+                a, b = poly(T[i]), poly(T[j])
+                if a.intersection(b).area > 0.4 * min(a.area, b.area):
+                    rect = unary_union([a, b]).minimum_rotated_rectangle
+                    T[i] = {'poly': [[r(x), r(y)] for x, y in list(rect.exterior.coords)[:-1]], 'walls': T[i]['walls'] + T[j]['walls'], 'obstacles': T[i]['obstacles'] + T[j]['obstacles']}
+                    del T[j]
+                    changed = True
+                    break
+            if changed:
+                break
+    return T
+
+
+def drop_unpaired(T):
+    """A small strip that found no partner on the other half (its mirror spot is taken): left out, so the board stays
+    a mirror image."""
+    P = [poly(t) for t in T]
+    R = [Polygon([rot(p) for p in t['poly']]).buffer(0) for t in T]
+    return [t for i, t in enumerate(T) if P[i].area >= SLIVER or max(iou(P[j], R[i]) for j in range(len(T))) >= 0.25]
 
 
 def iou(a, b):
@@ -173,7 +204,7 @@ def main():
             l['symmetric'] = True
             for t in l['terrain']:
                 square_up(t)
-            l['terrain'] = symmetrize(merge_slivers(l['terrain']))
+            l['terrain'] = drop_unpaired(symmetrize(merge_overlaps(symmetrize(merge_slivers(l['terrain'])))))
         for t in l['terrain']:
             close_corners(t)
             box = container_box(t)
