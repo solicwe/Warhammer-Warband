@@ -601,3 +601,4 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 .dt-item.blocked { opacity: 0.55; }
 .dt-item.blocked .dt-disp { color: var(--bad); }
 .dt-item.blocked .dt-box { border-color: #999; }
+.ab-cap { color: #1f6fb2; font-weight: 600; }

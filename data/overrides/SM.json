@@ -68,6 +68,41 @@
   {
    "name": "Uriel Ventris",
    "_delete": true
+  },
+  {
+   "name": "Victrix Honour Guard",
+   "_note": "0-1 Chapter Ancient (banner of Macragge, +15) and 0-1 Chapter Champion (blades of honour, +10) are Honour Guard models with other gear",
+   "wargearOptions": [
+    {
+     "text": "1 Victrix Honour Guard model can be the Chapter Ancient: master-crafted power weapon and banner of Macragge.",
+     "scope": "one",
+     "who": "Victrix Honour Guard",
+     "replace": [
+      "master-crafted bolt carbine",
+      "master-crafted power weapon"
+     ],
+     "choices": [
+      [
+       "master-crafted power weapon",
+       "banner of Macragge"
+      ]
+     ]
+    },
+    {
+     "text": "1 Victrix Honour Guard model can be the Chapter Champion: blades of honour.",
+     "scope": "one",
+     "who": "Victrix Honour Guard",
+     "replace": [
+      "master-crafted bolt carbine",
+      "master-crafted power weapon"
+     ],
+     "choices": [
+      [
+       "blades of honour"
+      ]
+     ]
+    }
+   ]
   }
  ]
 }
