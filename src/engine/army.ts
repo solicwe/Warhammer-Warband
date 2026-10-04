@@ -2,6 +2,20 @@
 import detData from '../../data/detachment-rules.json';
 import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelProfileData, ModelState, PlayerId, TransportInfo, UnitState, WargearOption, WargearPick, WeaponData } from './types';
 
+/**
+ * The faction as one army sees it: where a Chapter has its own datasheet with the same name as a generic one
+ * (Black Templars Impulsor, Repulsor, Terminator Squad …), only the Chapter's when that Chapter is chosen, else only
+ * the generic one. Lookups by name then always find the right card.
+ */
+export function forChapter(faction: FactionData, subfaction?: string): FactionData {
+  const byName = new Map<string, DatasheetData[]>();
+  for (const d of faction.datasheets) byName.set(d.name, [...(byName.get(d.name) ?? []), d]);
+  if ([...byName.values()].every((ds) => ds.length === 1)) return faction;
+  const pick = (ds: DatasheetData[]) => (ds.length === 1 ? ds[0] : ds.find((d) => subfaction && d.subfaction === subfaction) ?? ds.find((d) => !d.subfaction) ?? ds[0]);
+  const keep = new Set([...byName.values()].map(pick));
+  return { ...faction, datasheets: faction.datasheets.filter((d) => keep.has(d)) };
+}
+
 /** "This model has a transport capacity of 12 Adeptus Astartes Infantry models. Each Jump Pack ... takes up the space of 2 models ... It cannot transport ..." */
 export function parseTransport(text?: string): TransportInfo | null {
   if (!text) return null;

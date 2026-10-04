@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, attachOptions, embarkCheck, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, attachOptions, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { Icon } from './Icon';
@@ -182,7 +182,8 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
 
 export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [index, setIndex] = useState<FactionIndex | null>(null);
-  const [faction, setFaction] = useState<FactionData | null>(null);
+  const [rawFaction, setFaction] = useState<FactionData | null>(null);
+  const faction = useMemo(() => rawFaction && forChapter(rawFaction, list.subfaction), [rawFaction, list.subfaction]);
   const [tab, setTab] = useState<'list' | 'detachment'>('list');
   const [adding, setAdding] = useState<Section | null>(null);
   const [q, setQ] = useState('');

@@ -1,7 +1,7 @@
 import { Component, useEffect, useState, type ReactNode } from 'react';
 import { dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryFor, deploymentName, type DispositionId } from '../engine/config';
 import { createGame, listDisposition } from '../engine/game';
-import { listPoints, syncList } from '../engine/army';
+import { listPoints, syncList, forChapter } from '../engine/army';
 import { LayoutPreview } from './LayoutPreview';
 import type { ArmyList, FactionData, GameState } from '../engine/types';
 import { ArmyBuilder } from './ArmyBuilder';
@@ -94,7 +94,7 @@ export default function App() {
     setErr(null);
     try {
       const factions = await Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]);
-      const lists2: [ArmyList, ArmyList] = [syncList(lists[0], factions[0]), syncList(lists[1], factions[1])];
+      const lists2: [ArmyList, ArmyList] = [syncList(lists[0], forChapter(factions[0], lists[0].subfaction)), syncList(lists[1], forChapter(factions[1], lists[1].subfaction))];
       const gone = lists.flatMap((l, i) => l.units.filter((u) => !factions[i].datasheets.some((d) => d.name === u.datasheet)).map((u) => `${names[i]}: ${u.datasheet}`));
       if (gone.length) { setErr(`มีหน่วยที่ไม่อยู่ใน 11th edition แล้ว (Legends) — เข้า "จัดทัพ" แล้วลบออกก่อน: ${gone.join(', ')}`); return; }
       const dz: [DispositionId, DispositionId] = [dispOf(0) ?? listDisposition(lists[0], factions[0]), dispOf(1) ?? listDisposition(lists[1], factions[1])];

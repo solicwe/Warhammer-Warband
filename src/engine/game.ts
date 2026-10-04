@@ -1,5 +1,5 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
-import { buildUnits, transportFit } from './army';
+import { buildUnits, forChapter, transportFit } from './army';
 import { applyMortalWounds, hazardTest, killModel, onTransportDestroyed } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
@@ -77,6 +77,8 @@ export function listDisposition(list: ArmyList, faction: FactionData): Dispositi
 }
 
 export function createGame(o: NewGameOptions): GameState {
+  // a Chapter's own version of a datasheet replaces the generic one of the same name
+  o = { ...o, factions: [forChapter(o.factions[0], o.lists[0].subfaction), forChapter(o.factions[1], o.lists[1].subfaction)] };
   const disp: [DispositionId, DispositionId] = o.dispositions ?? [listDisposition(o.lists[0], o.factions[0]), listDisposition(o.lists[1], o.factions[1])];
   let layoutId = o.deploymentId;
   if (!layoutId || !LAYOUTS.some((l) => l.id === layoutId)) {
