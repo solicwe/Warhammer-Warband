@@ -6,6 +6,7 @@ import { botAct, botMoveOne } from './bot';
 import { createGame, disembarkMode, embarkUnit, formationAt, placeUnit, ringFormation, validateDisembark } from './game';
 import { baseDist } from './geometry';
 import { alive } from './state';
+import { buildShootPools } from './attack';
 import type { ArmyList, FactionData, GameState, Pt, UnitState } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -77,6 +78,19 @@ describe('embark and disembark', () => {
     s.round = 2; s.turn = 2; s.active = 0; s.phase = 'movement';
     return { s, imp, ints };
   }
+
+  it('Firing Deck: weapons of the squad inside shoot from the transport', () => {
+    const { s, imp, ints } = rig();
+    s.terrain.forEach((t) => { t.category = 'exposed'; });
+    const boyz = put(s, 'p1-x0', { x: 22, y: 34 });
+    s.phase = 'shooting';
+    expect(imp.core.firingDeck).toBeGreaterThan(0);
+    const r = buildShootPools(s, imp.id, boyz.id, { mode: 'normal' });
+    const passengerGuns = alive(ints).flatMap((m) => m.weapons.map((w) => w.name));
+    const deck = r.pools.filter((p) => passengerGuns.includes(p.weapon));
+    expect(deck.length).toBeGreaterThan(0);
+    expect(deck.reduce((a, p) => a + p.instances.length, 0)).toBeLessThanOrEqual(imp.core.firingDeck!);
+  });
 
   it('Tactical Disembark: wholly within 3" of the transport, and the unit can still move', () => {
     const { s, imp, ints } = rig();

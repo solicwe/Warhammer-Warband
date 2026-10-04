@@ -397,6 +397,8 @@ export function coreAbilities(sheets: DatasheetData[]): CoreAbilities {
   const dd = has('Deadly Demise');
   if (dd) core.deadlyDemise = (dd.param || '1').trim();
   if (has('Hover')) core.hover = true;
+  const fd = has('Firing Deck');
+  if (fd) core.firingDeck = parseInt(fd.param ?? '', 10) || 2;
   const dmg = sheets.find((s) => s.damaged)?.damaged;
   if (dmg) core.damaged = parseInt(dmg.w.split('-').pop()!, 10);
   return core;

@@ -651,3 +651,4 @@ button.ab-head { border: none; width: 100%; text-align: left; font: inherit; cur
 .ab-tools { display: flex; justify-content: flex-end; flex-shrink: 0; margin-bottom: -8px; }
 .ab-reset { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--on-dark-muted); background: transparent; color: var(--on-dark); border-radius: 14px; padding: 4px 10px; font: 500 12px var(--sans); cursor: pointer; }
 .ab-reset.armed { background: var(--bad); border-color: var(--bad); color: #fff; }
+.army-row .ab-emblem { width: 48px; height: 48px; flex-shrink: 0; align-self: center; }

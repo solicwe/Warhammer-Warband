@@ -123,6 +123,24 @@ export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
   return modes;
 }
 
+/**
+ * Firing Deck X (24.14): when the transport shoots, up to X ranged weapons of the models embarked within it shoot
+ * too, from the transport (one weapon per model, the strongest first). They come in as extra shooters standing
+ * where the transport's hull is.
+ */
+function firingDeck(s: GameState, A: UnitState, opt: ShootOptions): ModelState[] {
+  const X = A.core.firingDeck;
+  const hull = alive(A)[0];
+  if (!X || !hull || opt.mode === 'closeQuarters') return [];
+  const strength = (w: WeaponData) => { const p = w.profiles[0]; return (exprAverage(String(p.A)) || 1) * (p.S ?? 3) * (exprAverage(String(p.D)) || 1); };
+  const picks = s.units.filter((u) => u.status === 'embarked' && u.embarkedIn === A.id).flatMap((u) => alive(u))
+    .map((m) => ({ m, w: m.weapons.filter((w) => !isMelee(w.profiles[0]) && !A.weaponsFired.includes(w.name)).sort((a, b) => strength(b) - strength(a))[0] }))
+    .filter((x): x is { m: ModelState; w: WeaponData } => !!x.w)
+    .sort((a, b) => strength(b.w) - strength(a.w))
+    .slice(0, X);
+  return picks.map(({ m, w }) => ({ ...m, x: hull.x, y: hull.y, r: hull.r, weapons: [w] }));
+}
+
 export function buildShootPools(s: GameState, attackerId: string, targetId: string, opt: ShootOptions): BuildResult {
   const A = unitById(s, attackerId);
   const T = unitById(s, targetId);
@@ -140,7 +158,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   // Heresy Undone: after Advancing / Falling Back it may only shoot auspex scanned units
   if (aFlags.onlyTargetMarked && (A.move === 'advance' || A.move === 'fallback') && !(T.timed ?? []).some((t) => t.mark === aFlags.onlyTargetMarked && t.by === A.owner)) return { pools: [], notes, error: 'Advance/Fall back มาแล้ว ยิงได้เฉพาะหน่วยที่ถูก auspex scan' };
 
-  const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : alive(A);
+  const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : [...alive(A), ...firingDeck(s, A, opt)];
   for (const m of shooters) {
     const ranged = m.weapons.filter((w) => !isMelee(w.profiles[0]) && !(opt.skipWeapons ?? []).includes(w.name) && (!!opt.models || !A.weaponsFired.includes(w.name)));
     const cqOnly = ranged.filter((w) => hasAbility(w.profiles[0], 'close-quarters'));

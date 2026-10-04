@@ -172,6 +172,7 @@ export interface CoreAbilities {
   deadlyDemise?: string;
   hover?: boolean;
   damaged?: number; // Damaged X: -1 to hit while wounds <= X
+  firingDeck?: number; // Firing Deck X: X weapons of the units embarked within shoot from this transport
 }
 
 export interface TransportInfo {

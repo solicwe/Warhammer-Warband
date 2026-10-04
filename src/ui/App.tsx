@@ -10,7 +10,7 @@ import { GameScreen } from './GameScreen';
 import { PRESETS } from './presets';
 import { clearSaved, loadSaved } from './store';
 import { TokenSprites } from './Tokens';
-import { titleCase } from './ArmyBuilder';
+import { Emblem, titleCase } from './ArmyBuilder';
 
 type Screen = { kind: 'home' } | { kind: 'build'; player: 0 | 1 } | { kind: 'game'; state: GameState };
 
@@ -161,6 +161,7 @@ export default function App() {
           </div>
           {[0, 1].map((i) => (
             <div key={i} className={`army-row side ${i ? 's1' : ''}`}>
+              <Emblem factionId={lists[i].factionId} sub={lists[i].subfaction} color={facs[i as 0 | 1]?.subfactions?.options.find((o) => o.keyword === lists[i].subfaction)?.color} />
               <div className="grow">
                 {(i === 1 && vsBot) || mode === 'botbot'
                   ? <div className="army-name">{mode === 'botbot' ? `บอท ${i + 1}` : 'บอท'}</div>
