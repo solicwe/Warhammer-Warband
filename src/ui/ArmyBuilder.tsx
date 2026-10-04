@@ -91,7 +91,8 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
   if (!opts.length && !addons.length) return null;
   const picks = u.wargear ?? [];
   const cost = (items: string[]) => items.reduce((a, n) => a + (sheet.wargearCosts?.find((c) => wkey(c.name) === wkey(n))?.pts ?? 0), 0);
-  const costTag = (items: string[]) => { const c = cost(items); return c ? <span className="wg-cost">+{c}</span> : null; };
+  // what a swap changes per model: what it gains minus what it gives up (claws for hammer + shield: −5)
+  const costTag = (items: string[], instead: string[] = []) => { const c = cost(items) - cost(instead); return c ? <span className={`wg-cost ${c < 0 ? 'less' : ''}`}>{c > 0 ? `+${c}` : `−${-c}`}/ตัว</span> : null; };
   const put = (opt: number, next: WargearPick[]) => onChange({ wargear: [...picks.filter((p) => p.opt !== opt), ...next] });
   const single = sheet.models.length === 1 && (sheet.composition.length <= 1);
   return (
@@ -122,7 +123,7 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
                 <button type="button" className={!mine.length ? 'on' : ''} onClick={() => put(i, [])}>{o.replace.length ? 'ไม่เปลี่ยน' : 'ไม่ใส่'}</button>
                 {o.choices.map((c, ci) => (
                   <button type="button" key={ci} className={mine.some((p) => p.choice === ci) ? 'on' : ''} onClick={() => put(i, [{ opt: i, choice: ci, count: o.scope === 'all' ? max : 1 }])}>
-                    {itemsLabel(c)}{costTag(c)}
+                    {itemsLabel(c)}{costTag(c, o.replace)}
                   </button>
                 ))}
                 {o.pick && (
@@ -137,7 +138,7 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
                 const setN = (n: number) => put(i, [...mine.filter((p) => p.choice !== ci), ...(n > 0 ? [{ opt: i, choice: ci, count: n }] : [])]);
                 return (
                   <div key={ci} className="wg-step">
-                    <span className="grow">{itemsLabel(c)}{costTag(c)}</span>
+                    <span className="grow">{itemsLabel(c)}{costTag(c, o.replace)}</span>
                     <button type="button" aria-label={`ลด ${itemsLabel(c)}`} disabled={cur <= 0} onClick={() => setN(cur - 1)}>−</button>
                     <b>{cur}</b>
                     <button type="button" aria-label={`เพิ่ม ${itemsLabel(c)}`} disabled={used >= max} onClick={() => setN(cur + 1)}>+</button>

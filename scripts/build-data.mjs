@@ -268,6 +268,11 @@ function detachmentSubfaction(sub, d) {
   return best;
 }
 
+/** Units another army's book now holds, listed again for one of this army's sub-factions. */
+const BORROW = {
+  SM: [{ from: 'AoI', keyword: 'DEATHWATCH', factionKeywords: ['ADEPTUS ASTARTES'] }],
+};
+
 function build() {
   const t = Object.fromEntries(FILES.map((f) => [f, readCsv(f)]));
   const lastUpdate = t.Last_update[0]?.last_update ?? '';
@@ -300,7 +305,17 @@ function build() {
   const index = { source: 'Wahapedia 40k 11th edition data export', sourceUrl: BASE_URL, lastUpdate, factions: [] };
 
   for (const f of t.Factions) {
-    const sheets = t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true' && !excludedSource(d.source_id));
+    // 11th edition moved some sub-faction units to another army's book (the Deathwatch went to Imperial Agents):
+    // they come back here, for that sub-faction
+    const borrow = BORROW[f.id] ?? [];
+    const borrowed = new Map();
+    for (const br of borrow) {
+      for (const d of t.Datasheets) {
+        if (d.faction_id !== br.from || d.virtual === 'true' || excludedSource(d.source_id)) continue;
+        if ((by.keywords.get(d.id) ?? []).some((k) => k.keyword.toUpperCase() === br.keyword)) borrowed.set(d.id, br);
+      }
+    }
+    const sheets = [...t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true' && !excludedSource(d.source_id)), ...t.Datasheets.filter((d) => borrowed.has(d.id))];
     const datasheets = sheets.map((d) => {
       const kw = by.keywords.get(d.id) ?? [];
       const weapons = [];
@@ -368,6 +383,12 @@ function build() {
 
     const armyRules = t.Abilities.filter((a) => a.faction_id === f.id).map((a) => ({ name: a.name, text: htmlToText(a.description) }));
 
+    for (const d of datasheets) {
+      const br = borrowed.get(d.id);
+      if (!br) continue;
+      d.factionKeywords = [...new Set([...br.factionKeywords, br.keyword])];
+      d.borrowedFrom = br.from;
+    }
     const sub = META.subfactions[f.id];
     if (sub) {
       const keys = sub.options.map((o) => o.keyword);
