@@ -4,7 +4,7 @@
 The official layouts are mirror images through the centre (22", 30"), but the tracer reads each half on its own:
   * one terrain piece (a container with its barricades) comes out as a box plus small slivers;
   * the two halves of the map get different wall lines.
-It also closes the cracks at wall corners and marks sealed containers (walls on all four sides of a small box) with their footprint as `box`.
+Ruins the tracer clipped into triangles are squared up again along their walls. It also closes the cracks at wall corners and marks sealed containers (walls on all four sides of a small box) with their footprint as `box`.
 This merges slivers into the piece they touch, then for each pair of mirrored pieces keeps the better-traced one
 (more wall/obstacle length) and rotates it onto the other half. A piece on the centre keeps the walls of its first half.
 
@@ -44,6 +44,27 @@ def outline(g):
         g = g.convex_hull
     g = g.simplify(0.2)
     return [[r(x), r(y)] for x, y in list(g.exterior.coords)[:-1]]
+
+
+def square_up(t):
+    """Ruins are rectangles, but a rotated one comes out of the tracer clipped into a triangle or pentagon (its far
+    corners fade into the deployment colours). Rebuild the rectangle along the walls: the box, in the walls' own
+    direction, around the traced outline and the walls."""
+    import math
+    from shapely import affinity
+    if not t['walls']:
+        return
+    P = poly(t)
+    w = max(t['walls'], key=lambda w: (w[2] - w[0]) ** 2 + (w[3] - w[1]) ** 2)
+    ang = math.degrees(math.atan2(w[3] - w[1], w[2] - w[0]))
+    pts = [tuple(p) for p in t['poly']] + [(x[0], x[1]) for x in t['walls']] + [(x[2], x[3]) for x in t['walls']]
+    c = P.centroid
+    flat = affinity.rotate(MultiPoint(pts), -ang, origin=c)
+    box = affinity.rotate(flat.envelope, ang, origin=c)
+    # only when the traced outline is clearly not that rectangle already (and the box isn't much bigger than it)
+    if P.area >= 0.85 * box.area or box.area > 2.2 * P.area:
+        return
+    t['poly'] = [[r(x), r(y)] for x, y in list(box.exterior.coords)[:-1]]
 
 
 def merge_slivers(T):
@@ -150,6 +171,8 @@ def main():
         n = len(l['terrain'])
         if not l.get('symmetric'):
             l['symmetric'] = True
+            for t in l['terrain']:
+                square_up(t)
             l['terrain'] = symmetrize(merge_slivers(l['terrain']))
         for t in l['terrain']:
             close_corners(t)
