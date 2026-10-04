@@ -511,3 +511,21 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 .portrait-img { width: 100%; height: 100%; display: block; border-radius: 50%; object-fit: cover; border: 3px solid var(--p0); box-sizing: border-box; background: var(--surface2); }
 .portrait-crown { position: absolute; left: 32%; top: -2%; width: 36%; height: auto; pointer-events: none; }
 .portrait-msg { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 4px; white-space: nowrap; background: var(--ink); color: #fff; font: 500 12px var(--sans); padding: 3px 8px; border-radius: 6px; z-index: 5; }
+/* army builder: the unit's datasheet and settings open under its row */
+.ab-row.open { box-shadow: inset 4px 0 0 var(--accent); }
+.ab-inline { background: var(--card); color: var(--ink); border-radius: 0 0 8px 8px; margin-top: -6px; overflow: hidden; }
+.ab-group .ab-inline { margin-top: 0; border-radius: 0; border-top: 1px solid var(--card3); }
+.ab-inline-body { display: flex; flex-direction: column; gap: 10px; padding: 0 0 6px; }
+.ab-inline-body > :not(.ds) { margin: 0 12px; }
+.ab-moreinfo { align-self: flex-end; display: flex; align-items: center; gap: 6px; border: none; background: transparent; color: var(--ink); font: 600 14px var(--serif, var(--sans)); padding: 8px 14px; cursor: pointer; }
+.ab-moreinfo svg { transform: rotate(180deg); }
+/* quick menu sub-lists: a datasheet with its sizes (+) and the units already in the roster */
+.ab-pop { max-height: 70vh; overflow-y: auto; }
+.ab-pop-block { border-top: 1px solid #eee; padding: 4px 0; display: flex; flex-direction: column; }
+.ab-pop-name { padding: 8px 18px 2px; font: 700 15px var(--serif, var(--sans)); color: #111; }
+.ab-pop button.ab-pop-size { min-height: 46px; }
+.ab-pop .ab-pop-pts { color: #1f6fb2; font-weight: 700; }
+.ab-pop .ab-pop-plus { margin-left: auto; font-size: 22px; color: #333; display: flex; align-items: center; }
+.ab-pop button.in-roster { background: #fff6d6; color: #6b4e00; font-size: 14px; min-height: 44px; }
+.ab-pop button.in-roster:hover { background: #ffeeb0; }
+.ab-pop-block button + button { border-top: none; }

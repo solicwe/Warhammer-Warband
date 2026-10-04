@@ -187,7 +187,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [adding, setAdding] = useState<Section | null>(null);
   const [q, setQ] = useState('');
   const [menu, setMenu] = useState<string | null>(null); // uid of the unit whose datasheet + settings panel is open
-  const [pop, setPop] = useState<{ uid: string; x: number; y: number; join?: boolean; embark?: boolean } | null>(null); // the ⋮ quick menu
+  const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null); // the ⋮ quick menu
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -274,8 +274,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     } catch { /* cancelled */ }
   };
 
-  const menuUnit = menu ? list.units.find((u) => u.uid === menu) : undefined;
-  const menuSheet = menuUnit ? sheetOf(menuUnit.datasheet) : undefined;
 
   const unitRow = (u: ArmyUnitEntry, inGroup = false) => {
     const sheet = sheetOf(u.datasheet);
@@ -290,9 +288,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     ].filter(Boolean).join(' · ');
     const wg = wargearSummary(sheet, u);
     const wrong = sheet && !allowed(sheet);
-    return (
-      <div key={u.uid} className={`ab-row ${inGroup ? 'in-group' : ''}`}>
-        <button type="button" className="ab-row-main" onClick={() => setMenu(u.uid)}>
+    const row = (
+      <div key={u.uid} className={`ab-row ${inGroup ? 'in-group' : ''} ${menu === u.uid ? 'open' : ''}`}>
+        <button type="button" className="ab-row-main" onClick={() => setMenu(menu === u.uid ? null : u.uid)}>
           <span className="ab-art-wrap"><UnitArt sheet={sheet} /></span>
           <span className="ab-row-text">
             <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
@@ -307,6 +305,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         }}><Icon name="more" size={22} /></button>
       </div>
     );
+    return menu === u.uid ? [row, unitPanel(u)] : row;
   };
 
   const listTab = () => (
@@ -502,61 +501,16 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     );
   };
 
-  const unitMenu = () => {
-    if (!menuUnit || !faction) return null;
-    const u = menuUnit;
-    const sheet = menuSheet;
-    const opts = sheet ? pointsOptions(sheet) : [];
+  const unitPanel = (u: ArmyUnitEntry) => {
+    if (!faction) return null;
+    const sheet = sheetOf(u.datasheet);
     const enh = enhancementOptions(list, faction, u);
-    const bodyguards = attachOptions(list, faction, u);
-    // the bodyguard's other character (a support beside a leader, or the leader beside a support)
-    const partner = (b: ArmyUnitEntry) => list.units.find((o) => o.uid !== u.uid && o.attachTo === b.uid)?.datasheet;
     return (
-      <div className="tray-backdrop" onClick={() => setMenu(null)}>
-        <div className="tray" onClick={(e) => e.stopPropagation()}>
+      <div className="ab-inline" key={`panel-${u.uid}`}>
+        <div className="ab-inline-body">
           {sheet && <DatasheetView sheet={sheet} factionId={faction.id} />}
           {!sheet && <div className="sheet-title">{u.datasheet}</div>}
           <div className="ab-panel-title">ตั้งค่าหน่วยนี้ · <span className="ab-pts">{unitPoints(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</span></div>
-          <div className="quick-acts">
-            {sheet?.keywords.includes('CHARACTER') && (
-              <button type="button" className={u.warlord ? 'on' : ''} onClick={() => set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) })}><Icon name="leader" size={22} />{u.warlord ? 'Warlord' : 'ตั้ง Warlord'}</button>
-            )}
-            <button type="button" className="danger" onClick={() => { removeUnit(u.uid); setMenu(null); }}><Icon name="delete" size={22} />ลบหน่วย</button>
-          </div>
-          {opts.length > 1 && (
-            <div className="field"><span><Icon name="size" size={15} /> จำนวนโมเดล</span>
-              <div className="seg">
-                {opts.map((o) => <button key={o.models} className={u.models === o.models ? 'on' : ''} onClick={() => setUnit(u.uid, { models: o.models, pts: o.pts })}>{o.models} · {o.pts}</button>)}
-              </div>
-            </div>
-          )}
-          {(() => {
-            // start the battle embarked: any transport in the list (leaders ride with the unit they lead)
-            const rides = list.units.filter((t) => t.uid !== u.uid && parseTransport(sheetOf(t.datasheet)?.transport));
-            if (!rides.length || u.attachTo || parseTransport(sheet?.transport) || sheet?.keywords.includes('TRANSPORT')) return null;
-            const loads = faction ? transportLoads(list, faction) : [];
-            return (
-              <label className="field"><span><Icon name="embark" size={15} /> ขึ้นรถตอนเริ่มเกม</span>
-                <select value={u.embarkIn ?? ''} onChange={(e) => setUnit(u.uid, { embarkIn: e.target.value || undefined })}>
-                  <option value="">ไม่ขึ้นรถ (วางบนสนามเอง)</option>
-                  {rides.map((t) => {
-                    const l = loads.find((x) => x.uid === t.uid);
-                    return <option key={t.uid} value={t.uid}>{t.datasheet} ({l ? `${l.used}/${l.capacity}` : '?'} ที่)</option>;
-                  })}
-                </select>
-                <span className="tiny muted">ขึ้นรถตั้งแต่ Declare Battle Formations · ลงได้ใน Movement phase: Tactical (รถยังไม่เดิน ≤3" แล้วเดินต่อได้) / Rapid (รถเดินแล้ว ≤3" ชาร์จไม่ได้) / Combat (รถ engaged ≤6" hazard + battle-shock)</span>
-              </label>
-            );
-          })()}
-          {sheet && sheet.leads.length > 0 && (
-            <label className="field"><span><Icon name="leader" size={15} /> {sheet.isSupport ? 'เข้าหน่วยเป็น Support (คู่กับ Leader อีกตัวได้)' : 'นำหน่วย (Leader)'}</span>
-              <select value={u.attachTo ?? ''} onChange={(e) => setUnit(u.uid, { attachTo: e.target.value || undefined })}>
-                <option value="">ไม่ผูก</option>
-                {u.attachTo && !bodyguards.some((b) => b.uid === u.attachTo) && (() => { const b = list.units.find((x) => x.uid === u.attachTo); return b ? <option value={b.uid}>{b.datasheet} ({b.models})</option> : null; })()}
-                {bodyguards.map((b) => <option key={b.uid} value={b.uid}>{b.datasheet} ({b.models}){partner(b) ? ` + ${partner(b)}` : ''}</option>)}
-              </select>
-            </label>
-          )}
           {(enh.length > 0 || u.enhancement) && (
             <div className="field"><span><Icon name="enhancement" size={15} /> Enhancement <span className="tiny muted">แตะเพื่อใส่ / เอาออก</span></span>
               <div className="enh-list">
@@ -608,78 +562,159 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               <span className="tiny muted grow">ใช้กับทุกหน่วย {u.datasheet} (ทั้งการ์ดและ token บนสนาม)</span>
             </div>
           </div>
-          <button className="btn" onClick={() => setMenu(null)}>ปิด</button>
+          <button type="button" className="ab-moreinfo" onClick={() => setMenu(null)}>ปิด <Icon name="down" size={18} /></button>
         </div>
       </div>
     );
   };
 
-  /** The ⋮ quick menu: Join / Leave Squad, Duplicate, Embark / Disembark (everything else is in the unit's datasheet panel). */
+  /** Add a new unit from a datasheet (with a chosen size) and return its uid. */
+  const newEntry = (d: DatasheetData, models?: number, patch: Partial<ArmyUnitEntry> = {}): ArmyUnitEntry | null => {
+    const opt = pointsOptions(d).find((o) => o.models === models) ?? pointsOptions(d)[0];
+    if (!opt) return null;
+    return syncWargear(d, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts, ...patch });
+  };
+
+  /**
+   * The ⋮ quick menu: Add Squad (characters) / Add Leader / Add Support (squads), Leave Squad, Embark / Disembark,
+   * Unit size, Warlord, Duplicate, Delete. The unit's other settings open under it when the row is tapped.
+   */
   const quickMenu = () => {
     const u = pop ? list.units.find((x) => x.uid === pop.uid) : undefined;
     if (!pop || !u || !faction) return null;
     const sheet = sheetOf(u.datasheet);
     const body = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
+    const joined = list.units.filter((c) => c.attachTo === u.uid).map((c) => ({ c, d: sheetOf(c.datasheet) }));
     const rider = body ?? u; // a Leader rides with the unit it leads
     const rideIn = rider.embarkIn ? list.units.find((t) => t.uid === rider.embarkIn) : undefined;
     const isTransport = !!parseTransport(sheet?.transport) || !!sheet?.keywords.includes('TRANSPORT');
     const loads = transportLoads(list, faction);
     const rides = isTransport ? [] : list.units.filter((t) => t.uid !== rider.uid && parseTransport(sheetOf(t.datasheet)?.transport));
-    const bodies = sheet?.leads.length ? attachOptions(list, faction, u) : [];
+    const opts = sheet ? pointsOptions(sheet) : [];
+    const isChar = !!sheet?.keywords.includes('CHARACTER');
+    // characters that could join this squad: Leader slot, then Support slot
+    const leadersFor = (support: boolean) => faction.datasheets.filter((d) => allowed(d) && d.leads.includes(u.datasheet) && !!d.isSupport === support && pointsOptions(d).length);
+    const hasLeader = joined.some((x) => x.d && !x.d.isSupport);
+    const hasSupport = joined.some((x) => x.d?.isSupport);
+    const canLeader = !u.attachTo && !hasLeader && leadersFor(false).length > 0;
+    const canSupport = !u.attachTo && hasLeader && !hasSupport && leadersFor(true).length > 0;
+    const squadsFor = sheet?.leads.length && !body ? sheet.leads.map((n) => sheetOf(n)).filter((d): d is DatasheetData => !!d && allowed(d) && pointsOptions(d).length > 0) : [];
     const close = () => setPop(null);
-    const w = 240;
-    const rows = pop.join ? bodies.length + 1 : pop.embark ? rides.length + 1 : 3;
+    const w = 260;
     const left = Math.max(8, Math.min(window.innerWidth - w - 8, pop.x - w));
-    const top = Math.max(8, Math.min(pop.y + 4, window.innerHeight - 40 - rows * 56));
+    const top = Math.max(8, Math.min(pop.y + 4, window.innerHeight * 0.45));
+    const attach = (charUid: string, bodyUid: string, msg: string) => { setUnit(charUid, { attachTo: bodyUid, embarkIn: undefined }); setNote(msg); close(); };
+
+    /** A datasheet the player can add new (with its sizes) or pick from the roster. */
+    const pickBlock = (d: DatasheetData, inRoster: ArmyUnitEntry[], onPick: (x: ArmyUnitEntry) => void, onNew: (models: number) => void) => (
+      <div key={d.name} className="ab-pop-block">
+        <div className="ab-pop-name">{d.name}</div>
+        {inRoster.map((x) => (
+          <button key={x.uid} type="button" className="in-roster" onClick={() => onPick(x)}>
+            <Icon name="check" size={18} />ใน roster · {x.models} โมเดล · {unitPoints(x)} pts
+          </button>
+        ))}
+        {pointsOptions(d).map((o) => (
+          <button key={o.models} type="button" className="ab-pop-size" onClick={() => onNew(o.models)}>
+            <span className="ab-pop-pts">{o.pts} pts</span> <span className="muted">({o.models})</span><span className="ab-pop-plus">+</span>
+          </button>
+        ))}
+      </div>
+    );
+
+    let content: React.ReactNode;
+    if (pop.mode === 'squad') {
+      content = (
+        <>
+          <div className="ab-pop-head">{sheet?.isSupport ? 'Add Squad (เป็น Support)' : 'Add Squad (นำหน่วย)'}</div>
+          {squadsFor.map((d) => pickBlock(d,
+            attachOptions(list, faction, u).filter((b) => b.datasheet === d.name),
+            (b) => attach(u.uid, b.uid, `${u.datasheet} เข้า ${b.datasheet} แล้ว`),
+            (models) => {
+              const b = newEntry(d, models);
+              if (!b) return;
+              set({ units: [...list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: b.uid, embarkIn: undefined } : x)), b] });
+              setNote(`เพิ่ม ${d.name} แล้วให้ ${u.datasheet} เข้าหน่วย`); close();
+            }))}
+        </>
+      );
+    } else if (pop.mode === 'leader' || pop.mode === 'support') {
+      const support = pop.mode === 'support';
+      content = (
+        <>
+          <div className="ab-pop-head">{support ? 'Add Support' : 'Add Leader'} · {u.datasheet}</div>
+          {leadersFor(support).map((d) => pickBlock(d,
+            list.units.filter((c) => c.datasheet === d.name && attachOptions(list, faction, c).some((b) => b.uid === u.uid)),
+            (c) => attach(c.uid, u.uid, `${c.datasheet} เข้า ${u.datasheet} แล้ว`),
+            (models) => {
+              const c = newEntry(d, models, { attachTo: u.uid });
+              if (!c) return;
+              set({ units: [...list.units, c] });
+              setNote(`เพิ่ม ${d.name} เข้า ${u.datasheet} แล้ว`); close();
+            }))}
+        </>
+      );
+    } else if (pop.mode === 'embark') {
+      content = (
+        <>
+          <div className="ab-pop-head">ขึ้นรถตอนเริ่มเกม{body ? ` (ทั้งหน่วย ${body.datasheet})` : ''}</div>
+          {rides.map((t) => {
+            const l = loads.find((x) => x.uid === t.uid);
+            return (
+              <button key={t.uid} type="button" className={rider.embarkIn === t.uid ? 'on' : ''} onClick={() => { setUnit(rider.uid, { embarkIn: t.uid }); setNote(`${rider.datasheet} เริ่มเกมบน ${t.datasheet}`); close(); }}>
+                <Icon name="embark" size={22} />{t.datasheet} <span className="ab-pop-val">{l ? `${l.used}/${l.capacity}` : ''}</span>
+              </button>
+            );
+          })}
+        </>
+      );
+    } else if (pop.mode === 'size') {
+      content = (
+        <>
+          <div className="ab-pop-head">Unit size · {u.datasheet}</div>
+          {opts.map((o) => (
+            <button key={o.models} type="button" className={`ab-pop-size ${u.models === o.models ? 'on' : ''}`} onClick={() => { setUnit(u.uid, { models: o.models, pts: o.pts }); close(); }}>
+              <span className="ab-pop-pts">{o.pts} pts</span> <span className="muted">({o.models})</span><span className="ab-pop-plus">{u.models === o.models ? <Icon name="check" size={18} /> : '+'}</span>
+            </button>
+          ))}
+        </>
+      );
+    } else {
+      content = (
+        <>
+          {squadsFor.length > 0 && <button type="button" onClick={() => setPop({ ...pop, mode: 'squad' })}><Icon name="plus" size={22} />Add Squad</button>}
+          {canLeader && <button type="button" onClick={() => setPop({ ...pop, mode: 'leader' })}><Icon name="plus" size={22} />Add Leader</button>}
+          {canSupport && <button type="button" onClick={() => setPop({ ...pop, mode: 'support' })}><Icon name="plus" size={22} />Add Support</button>}
+          {body && (
+            <button type="button" onClick={() => { setUnit(u.uid, { attachTo: undefined }); setNote(`${u.datasheet} ออกจาก ${body.datasheet}`); close(); }}>
+              <Icon name="leave" size={22} />Leave Squad
+            </button>
+          )}
+          {!isTransport && (rideIn ? (
+            <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setNote(`${rider.datasheet} ลงจาก ${rideIn.datasheet}`); close(); }}>
+              <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{rideIn.datasheet}</span>
+            </button>
+          ) : rides.length > 0 && (
+            <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark</button>
+          ))}
+          {opts.length > 1 && <button type="button" onClick={() => setPop({ ...pop, mode: 'size' })}><Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span></button>}
+          {isChar && (
+            <button type="button" className={u.warlord ? 'on' : ''} onClick={() => { set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) }); close(); }}>
+              <Icon name={u.warlord ? 'check' : 'leader'} size={22} />{u.warlord ? 'Warlord' : 'ตั้งเป็น Warlord'}
+            </button>
+          )}
+          <button type="button" onClick={() => { set({ units: [...list.units, { ...u, uid: newUid('e'), warlord: false, enhancement: undefined, enhancementPts: undefined, attachTo: undefined }] }); setNote(`เพิ่ม ${u.datasheet} อีก 1`); close(); }}>
+            <Icon name="duplicate" size={22} />Duplicate
+          </button>
+          <button type="button" onClick={() => { removeUnit(u.uid); close(); }}>
+            <Icon name="delete" size={22} />Delete
+          </button>
+        </>
+      );
+    }
     return (
       <div className="ab-pop-backdrop" onClick={close}>
-        <div className="ab-pop" style={{ left, top, width: w }} onClick={(e) => e.stopPropagation()}>
-          {pop.join ? (
-            <>
-              <div className="ab-pop-head">{sheet?.isSupport ? 'เข้าหน่วยเป็น Support' : 'นำหน่วย (Leader)'}</div>
-              {bodies.map((b) => (
-                <button key={b.uid} type="button" onClick={() => { setUnit(u.uid, { attachTo: b.uid, embarkIn: undefined }); setNote(`${u.datasheet} เข้า ${b.datasheet} แล้ว`); close(); }}>
-                  <Icon name="leader" size={22} />{b.datasheet} ({b.models})
-                </button>
-              ))}
-              {!bodies.length && <div className="ab-pop-head">ไม่มีหน่วยที่เข้าได้ในทัพ</div>}
-            </>
-          ) : pop.embark ? (
-            <>
-              <div className="ab-pop-head">ขึ้นรถตอนเริ่มเกม{body ? ` (ทั้งหน่วย ${body.datasheet})` : ''}</div>
-              {rides.map((t) => {
-                const l = loads.find((x) => x.uid === t.uid);
-                return (
-                  <button key={t.uid} type="button" className={rider.embarkIn === t.uid ? 'on' : ''} onClick={() => { setUnit(rider.uid, { embarkIn: t.uid }); setNote(`${rider.datasheet} เริ่มเกมบน ${t.datasheet}`); close(); }}>
-                    <Icon name="embark" size={22} />{t.datasheet} <span className="ab-pop-val">{l ? `${l.used}/${l.capacity}` : ''}</span>
-                  </button>
-                );
-              })}
-              {!rides.length && <div className="ab-pop-head">ไม่มีรถในทัพ</div>}
-            </>
-          ) : (
-            <>
-              {!body && sheet && sheet.leads.length > 0 && (
-                <button type="button" onClick={() => setPop({ ...pop, join: true })}><Icon name="leader" size={22} />Join Squad</button>
-              )}
-              {body && (
-                <button type="button" onClick={() => { setUnit(u.uid, { attachTo: undefined }); setNote(`${u.datasheet} ออกจาก ${body.datasheet}`); close(); }}>
-                  <Icon name="leave" size={22} />Leave Squad
-                </button>
-              )}
-              <button type="button" onClick={() => { set({ units: [...list.units, { ...u, uid: newUid('e'), warlord: false, enhancement: undefined, enhancementPts: undefined, attachTo: undefined }] }); setNote(`เพิ่ม ${u.datasheet} อีก 1`); close(); }}>
-                <Icon name="duplicate" size={22} />ทำซ้ำ
-              </button>
-              {!isTransport && (rideIn ? (
-                <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setNote(`${rider.datasheet} ลงจาก ${rideIn.datasheet}`); close(); }}>
-                  <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{rideIn.datasheet}</span>
-                </button>
-              ) : rides.length > 0 && (
-                <button type="button" onClick={() => setPop({ ...pop, embark: true })}><Icon name="embark" size={22} />Embark</button>
-              ))}
-            </>
-          )}
-        </div>
+        <div className="ab-pop" style={{ left, top, width: w }} onClick={(e) => e.stopPropagation()}>{content}</div>
       </div>
     );
   };
@@ -776,7 +811,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       </div>
       {note && <div className="toast ab-toast">{note}</div>}
       {addSheet()}
-      {unitMenu()}
       {quickMenu()}
       {pickerSheet()}
       {view && faction && sheetOf(view) && (
