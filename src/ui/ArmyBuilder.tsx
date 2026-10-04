@@ -657,16 +657,21 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
 
     /** A datasheet the player can add new (with its sizes) or pick from the roster. */
     const pickBlock = (d: DatasheetData, inRoster: ArmyUnitEntry[], onPick: (x: ArmyUnitEntry) => void, onNew: (models: number) => void) => (
-      <div key={d.name} className="ab-pop-block">
-        <div className="ab-pop-name">{d.name}</div>
+      <div key={d.name} className="ab-pop-card">
+        <div className="ab-pop-card-head">
+          <UnitArt sheet={d} />
+          <div className="ab-pop-card-text">
+            <div className="ab-pop-name">{d.name}</div>
+            {pointsOptions(d).map((o) => (
+              <button key={o.models} type="button" className="ab-pop-size" onClick={() => onNew(o.models)}>
+                <span className="ab-pop-pts">{o.pts} pts</span> <span className="muted">({o.models})</span><span className="ab-pop-plus">+</span>
+              </button>
+            ))}
+          </div>
+        </div>
         {inRoster.map((x) => (
           <button key={x.uid} type="button" className="in-roster" onClick={() => onPick(x)}>
-            <Icon name="check" size={18} />ใน roster · {x.models} โมเดล · {unitPoints(x)} pts
-          </button>
-        ))}
-        {pointsOptions(d).map((o) => (
-          <button key={o.models} type="button" className="ab-pop-size" onClick={() => onNew(o.models)}>
-            <span className="ab-pop-pts">{o.pts} pts</span> <span className="muted">({o.models})</span><span className="ab-pop-plus">+</span>
+            <Icon name="check" size={18} />ใน roster · {x.models} โมเดล · {unitPoints(x)} pts — แตะเพื่อใช้ตัวนี้
           </button>
         ))}
       </div>
