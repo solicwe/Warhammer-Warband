@@ -193,6 +193,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null); // the ⋮ quick menu
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
+  useEffect(() => setView(null), [adding]); // the datasheet opened under a row of the add list
   const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => { loadIndex().then(setIndex).catch(() => setNote('โหลดรายชื่อ faction ไม่ได้')); }, []);
@@ -464,9 +465,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           <div className="ab-pick">
             {sheets.map((d) => {
               const count = list.units.filter((u) => u.datasheet === d.name).length;
-              return (
-                <div key={d.id} className="ab-row">
-                  <button type="button" className="ab-row-main" onClick={() => setView(d.name)}>
+              const open = view === d.name;
+              return [
+                <div key={d.id} className={`ab-row ${open ? 'open' : ''}`}>
+                  <button type="button" className="ab-row-main" onClick={() => setView(open ? null : d.name)}>
                     <UnitArt sheet={d} />
                     <span className="ab-row-text">
                       <span className="ab-name">{d.name}{count ? <span className="ab-count"> ×{count}</span> : null}</span>
@@ -475,8 +477,17 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                     </span>
                   </button>
                   <button type="button" className="ab-add dark" aria-label={`เพิ่ม ${d.name}`} onClick={() => addUnit(d)}>+</button>
-                </div>
-              );
+                </div>,
+                // the datasheet opens under its row, like in the list
+                open && (
+                  <div className="ab-inline" key={`peek-${d.id}`}>
+                    <div className="ab-inline-body">
+                      <DatasheetView sheet={d} factionId={faction.id} />
+                      <button type="button" className="ab-moreinfo" onClick={() => setView(null)}>ปิด <Icon name="down" size={18} /></button>
+                    </div>
+                  </div>
+                ),
+              ];
             })}
             {!sheets.length && <div className="ab-empty">ไม่พบ datasheet</div>}
           </div>
@@ -820,14 +831,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {quickMenu()}
       {detPickerPage()}
       {pickerSheet()}
-      {view && faction && sheetOf(view) && (
-        <div className="tray-backdrop" onClick={() => setView(null)}>
-          <div className="tray" onClick={(e) => e.stopPropagation()}>
-            <DatasheetView sheet={sheetOf(view)!} factionId={faction?.id} />
-            <button className="btn" onClick={() => setView(null)}>ปิด</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
