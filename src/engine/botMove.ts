@@ -132,6 +132,8 @@ export interface Ctx {
   toTarget?: (p: Pt) => number; toObjective?: (p: Pt) => number;
   /** a transport with units inside: where to drop them off (the enemy for fighters, a contested objective for the rest) */
   deliver?: Pt;
+  /** a cheap objective holder (Battleline or a low-cost squad with OC): its job is standing on objectives, not hiding */
+  holder?: boolean;
 }
 
 export function ctxFor(s: GameState, u: UnitState): Ctx {
@@ -143,6 +145,8 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   const heavy = alive(u).some((m) => m.weapons.some((w) => w.profiles.some((p) => hasAbility(p, 'heavy'))));
   const ocNeed = oc(u) > 0 ? objectiveNeeds(s, u.owner).filter((n) => n.need > 0).map((n) => objPoint(s, n.o)) : [];
   const ctx: Ctx = { foes, brawler, target, range: maxRange(u), heavy, ocNeed };
+  const battleline = alive(u).some((m) => m.keywords.includes('BATTLELINE'));
+  ctx.holder = oc(u) > 0 && !u.transport && (battleline || unitValue(u) <= 130) && !(brawler && unitValue(u) > 130);
   const cargo = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
   if (cargo.length) {
     const c = centre(u);
@@ -221,7 +225,8 @@ function dangerScore(s: GameState, u: UnitState, ctx: Ctx): number {
     }
     if (f.brawler && f.mk > 0) melee = Math.max(melee, f.mk * perModel(u) * p2d6(Math.max(0, gap - f.M)));
   }
-  return shots * 0.35 + melee * 0.8;
+  // the enemy can't kill more than the whole unit, however many guns could reach it
+  return Math.min(unitValue(u), shots * 0.35 + melee * 0.8);
 }
 
 /** Long-range pull so units far from everything still make progress (along the route, for units walls can stop). */
@@ -240,7 +245,7 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
   if (ctx.deliver) v -= 0.6 * Math.max(0, dist(c, ctx.deliver) - 9);
   if (ctx.ocNeed.length && !ctx.deliver) {
     const far = ctx.toObjective?.(lead);
-    v -= 0.35 * (far !== undefined && Number.isFinite(far) ? far : Math.min(...ctx.ocNeed.map((p) => dist(c, p))));
+    v -= (ctx.holder ? 1.5 : 0.35) * (far !== undefined && Number.isFinite(far) ? far : Math.min(...ctx.ocNeed.map((p) => dist(c, p))));
   }
   return v;
 }
@@ -296,7 +301,7 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
   u.move = kind === 'stationary' ? 'stationary' : kind;
   u.maxMoved = Math.max(u.maxMoved, moved);
   try {
-    const caution = ctx.brawler ? 0.45 : 1;
+    const caution = ctx.holder ? 0.35 : ctx.brawler ? 0.45 : 1;
     return objectiveWeight(s, u, ctx) * objectiveScore(s, u) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }

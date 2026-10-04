@@ -207,9 +207,12 @@ function passengerGoal(s: GameState, p: PlayerId, t: UnitState) {
 function getOut(s: GameState, u: UnitState, t: UnitState, goal: { x: number; y: number }): boolean {
   const tm = alive(t)[0];
   const base = Math.atan2(goal.y - tm.y, goal.x - tm.x);
-  for (const da of [0, 0.4, -0.4, 0.8, -0.8, 1.3, -1.3, 1.9, -1.9, 2.5, -2.5, Math.PI]) {
-    const pos = ringFormation(u, tm, base + da);
-    if (validateDisembark(s, u, t, pos).ok) { disembarkUnit(s, u, t, pos); return true; }
+  // a compact block on the side facing the goal; wrapping round the hull only when that's the only way to fit
+  for (const arc of [Math.PI * 0.8, 2 * Math.PI]) {
+    for (const da of [0, 0.4, -0.4, 0.8, -0.8, 1.3, -1.3, 1.9, -1.9, 2.5, -2.5, Math.PI]) {
+      const pos = ringFormation(u, tm, base + da, arc);
+      if (validateDisembark(s, u, t, pos).ok) { disembarkUnit(s, u, t, pos); return true; }
+    }
   }
   return false;
 }
@@ -223,8 +226,14 @@ function botDisembark(s: GameState, p: PlayerId): boolean {
     if (!onBoard(t) || t.move || disembarkMode(s, t) !== 'tactical') continue;
     s.botTried = [...(s.botTried ?? []), key(u)];
     const { tm, near, need, goal } = passengerGoal(s, p, t);
-    const reach = moveOf(u) + (isBrawler(s, u) ? 9 : Math.min(18, maxRange(u)));
-    const go = s.round >= 3 || near <= reach + 3 || (need !== undefined && dist(need, tm) <= moveOf(u) + 6);
+    // getting out first wastes the transport's move: only when the squad reaches more on foot this turn than by riding
+    // (an Assault Ramp lets fighters charge after a Rapid Disembark anyway)
+    const M = moveOf(u);
+    const fighter = isBrawler(s, u);
+    const go = s.round >= 4
+      || (fighter && !unitFlags(s, t).assaultDisembark && near <= M + 7)
+      || (!fighter && near <= maxRange(u))
+      || (need !== undefined && dist(need, tm) <= M + 2);
     if (go && getOut(s, u, t, goal)) return true;
   }
   return false;

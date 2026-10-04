@@ -354,7 +354,8 @@ export function formationAt(u: UnitState, c: Pt, facingUp = true): Map<string, P
 
 /** Models hugging a transport's hull on the side facing `angle`: up to two rings, so a whole squad fits wholly within
  *  3" (a grid of 10 would stick out too far). Characters take the middle of the arc. */
-export function ringFormation(u: UnitState, tm: ModelState, angle: number): Map<string, Pt> {
+/** The unit set up round a hull, centred on `angle`; each ring's arc is at most `maxArc` radians wide. */
+export function ringFormation(u: UnitState, tm: ModelState, angle: number, maxArc = 2 * Math.PI): Map<string, Pt> {
   const ms = [...alive(u)].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter) || b.r - a.r);
   const rMax = Math.max(...ms.map((m) => m.r));
   const out = new Map<string, Pt>();
@@ -372,7 +373,7 @@ export function ringFormation(u: UnitState, tm: ModelState, angle: number): Map<
     let total = 0;
     for (const m of ms.slice(placed)) {
       const w = width(m);
-      if (take.length && (total + w > 2 * Math.PI - 1e-6 || total + w / 2 > spanMax + width(take[0]) / 2)) break;
+      if (take.length && (total + w > Math.min(2 * Math.PI, maxArc) + 1e-6 || total + w / 2 > spanMax + width(take[0]) / 2)) break;
       take.push(m); total += w;
     }
     // the first in the middle of the arc, then alternately to each side

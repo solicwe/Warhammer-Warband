@@ -405,10 +405,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const foes = boardUnits(s, other(u.owner)).flatMap(alive);
       const near = foes.length ? foes.reduce((a, m) => (Math.hypot(m.x - tm.x, m.y - tm.y) < Math.hypot(a.x - tm.x, a.y - tm.y) ? m : a)) : null;
       const base = near ? Math.atan2(near.y - tm.y, near.x - tm.x) : 0;
-      for (let a = 0; a < 16; a++) {
-        const ang = base + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 8);
-        const pos = ringFormation(u, tm, ang);
-        if (validateDisembark(s, u, t, pos).ok) { setDraft(placePaths(pos)); setCheck(null); return; }
+      for (const arc of [Math.PI * 0.8, 2 * Math.PI]) {
+        for (let a = 0; a < 16; a++) {
+          const ang = base + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 8);
+          const pos = ringFormation(u, tm, ang, arc);
+          if (validateDisembark(s, u, t, pos).ok) { setDraft(placePaths(pos)); setCheck(null); return; }
+        }
       }
       flash('หาที่ลงรถอัตโนมัติไม่ได้ ลองแตะวางเอง');
       return;
