@@ -364,6 +364,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         <div className="grow dt-top-text">
           <div className="dt-faction">{factionName}{sub ? ` · ${sub.name}` : ''}</div>
           <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || 'ยังไม่ได้เลือก detachment'}</div>
+          {chosenDets.length > 0 && <div className="tiny">Force Disposition: <b>{chosenDets[0].forceDisposition}</b> · {chosenDets.reduce((x, d) => x + d.dp, 0)}/{size.dp} DP</div>}
           <div className="tiny muted">{size.name} · {pts}/{size.points} pts</div>
         </div>
         <button type="button" className="dt-gear" aria-label="เปลี่ยน detachment" onClick={() => setDetPicker(true)}><Icon name="gear" size={26} /></button>
@@ -382,6 +383,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     if (!detPicker || !faction) return null;
     const dets = faction.detachments.filter((d) => d.forceDisposition && (allowed(d) || list.detachments.includes(d.name)))
       .sort((a, b) => Number(!!b.subfaction) - Number(!!a.subfaction));
+    // Detachment Points: picks add up to the battle size's DP (one detachment alone may cost more)
+    const dpOf = (n: string) => faction.detachments.find((x) => x.name === n)?.dp ?? 0;
+    const used = list.detachments.reduce((a, n) => a + dpOf(n), 0);
+    const fits = (d: { dp: number }) => !list.detachments.length || used + d.dp <= size.dp;
     return (
       <div className="tray-backdrop" onClick={() => setDetPicker(false)}>
         <div className="tray dt-picker" onClick={(e) => e.stopPropagation()}>
@@ -397,20 +402,29 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               {RULES.battleSizes.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.points} pts)</option>)}
             </select>
           </div>
+          <div className="dt-dp-bar">Detachment Points ใช้ไป <b>{used}/{size.dp} DP</b> · เลือกได้หลายอันจนครบ DP{list.detachments.length > 1 && <> · Force Disposition ของกองทัพมาจากอันที่ <Icon name="leader" size={14} /> (แตะชื่อ disposition เพื่อเปลี่ยน)</>}</div>
           {subs && !sub && <div className="small muted">ยังไม่ได้เลือก {subs.label} — แสดงเฉพาะ detachment ทั่วไป <button type="button" className="linkish" onClick={() => setPicker({ factionId: list.factionId })}>เลือก {subs.label}</button></div>}
           {dets.map((d) => {
             const on = list.detachments.includes(d.name);
+            const blocked = !on && !fits(d);
+            const primary = on && list.detachments[0] === d.name;
             const open = openDet === d.name;
             const sec = (k: string) => openSecs.includes(`${d.name}:${k}`);
             return (
-              <div key={d.id} className={`dt-item ${on ? 'on' : ''}`}>
+              <div key={d.id} className={`dt-item ${on ? 'on' : ''} ${blocked ? 'blocked' : ''}`}>
                 <div className="dt-item-head">
-                  <button type="button" className="grow dt-item-name" onClick={() => setOpenDet(open ? null : d.name)}>
-                    {d.name}{d.subfaction && <span className={`ab-chip ${allowed(d) ? '' : 'bad'}`}>{subTag(d.subfaction)}</span>}
-                  </button>
+                  <div className="grow">
+                    <button type="button" className="dt-item-name" onClick={() => setOpenDet(open ? null : d.name)}>
+                      {d.name}{d.subfaction && <span className={`ab-chip ${allowed(d) ? '' : 'bad'}`}>{subTag(d.subfaction)}</span>}
+                    </button>
+                    <button type="button" className={`dt-disp ${primary && list.detachments.length > 1 ? 'primary' : ''}`} disabled={!on || primary || list.detachments.length < 2}
+                      onClick={() => set({ detachments: [d.name, ...list.detachments.filter((n) => n !== d.name)] })}>
+                      {primary && list.detachments.length > 1 && <Icon name="leader" size={13} />}{d.forceDisposition}{blocked ? ` · เกิน DP (เหลือ ${Math.max(0, size.dp - used)}) แตะช่องเพื่อเปลี่ยนเป็นอันนี้แทน` : ''}
+                    </button>
+                  </div>
                   <span className="dt-dp">{d.dp} DP</span>
                   <button type="button" className={`dt-chev ${open ? 'up' : ''}`} aria-label="ดูรายละเอียด" onClick={() => setOpenDet(open ? null : d.name)}><Icon name="down" size={18} /></button>
-                  <button type="button" className={`dt-box ${on ? 'on' : ''}`} aria-label={on ? 'เลือกอยู่' : 'เลือก'} onClick={() => { set({ detachments: on ? [] : [d.name] }); }}>{on && <Icon name="check" size={18} />}</button>
+                  <button type="button" className={`dt-box ${on ? 'on' : ''}`} aria-label={on ? 'เลือกอยู่' : 'เลือก'} onClick={() => { set({ detachments: on ? list.detachments.filter((n) => n !== d.name) : blocked ? [d.name] : [...list.detachments, d.name] }); }}>{on && <Icon name="check" size={18} />}</button>
                 </div>
                 {open && (
                   <div className="dt-item-body">
