@@ -399,6 +399,7 @@ function BoardImpl(props: BoardProps) {
           <g key={t.id} pointerEvents="none">
             <polygon points={pts} fill={t.category === 'dense' ? 'url(#tiles)' : 'rgba(170,158,128,0.55)'} stroke="#1c1712" strokeWidth={0.14} />
             <polygon points={inner} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={0.06} />
+            {t.box && <polygon points={t.box.map((p) => `${p.x},${p.y}`).join(' ')} fill="#2b2118" opacity={0.85} />}
             {Array.from({ length: Math.min(9, Math.round(w * h / 6)) }, (_, i) => {
               const px = x0 + 0.5 + rnd(i) * Math.max(0, w - 1), py = y0 + 0.5 + rnd(i + 9) * Math.max(0, h - 1);
               return pointInPoly({ x: px, y: py }, t.poly) ? <circle key={i} cx={px} cy={py} r={0.12 + rnd(i + 3) * 0.22} fill="#4b4335" opacity={0.85} /> : null;

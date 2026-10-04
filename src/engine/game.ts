@@ -36,6 +36,7 @@ function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: 
     poly: t.poly.map(([x, y]) => ({ x, y })),
     walls: t.walls.map(seg),
     obstacles: t.obstacles.map(seg),
+    ...(t.box ? { box: t.box.map(([x, y]) => ({ x, y })) } : {}),
   }));
   const objectives: ObjectiveState[] = L.objectives.map((o, i) => {
     const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
@@ -191,6 +192,11 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
     for (const t of s.terrain) {
       if (t.kind === 'container' && pointInPoly(p, t.poly) && !['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k))) {
         errors.push(`${m.name} ขึ้นไปจบบนหลังคา container ไม่ได้ (13.06)`); bad.add(m.id);
+      }
+      // a sealed container: nothing stands inside it or half over its side; some models can end on its roof
+      if (t.box && circleTouchesPoly(p, m.r - 0.05, t.box)) {
+        const roof = circleWhollyInPoly(p, m.r, t.box) && ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
+        if (!roof) { errors.push(`${m.name} วางทับ container ไม่ได้ (ต้องอยู่นอกกล่อง หรือบนหลังคาทั้งฐาน)`); bad.add(m.id); }
       }
     }
   }

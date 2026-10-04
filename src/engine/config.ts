@@ -37,7 +37,7 @@ export interface LayoutDef {
   zones: { attacker: number[][]; defender: number[][] };
   territory: { attacker: number[][]; defender: number[][] };
   objectives: { type: 'home' | 'central' | 'expansion'; owner: 'attacker' | 'defender' | null; x: number; y: number }[];
-  terrain: { poly: number[][]; walls: number[][]; obstacles: number[][] }[];
+  terrain: { poly: number[][]; walls: number[][]; obstacles: number[][]; box?: number[][] }[];
 }
 export type DeploymentDef = LayoutDef & { name: string };
 

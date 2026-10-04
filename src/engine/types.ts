@@ -255,6 +255,8 @@ export interface TerrainPiece {
   poly: Pt[];
   walls: Seg[];
   obstacles?: Seg[];
+  /** a sealed container inside the piece: walls on all four sides (models can't stand in it, some can on its roof) */
+  box?: Pt[];
   objectiveId?: string;
 }
 

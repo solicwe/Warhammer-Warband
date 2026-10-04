@@ -98,9 +98,7 @@ export default function App() {
       const gone = lists.flatMap((l, i) => l.units.filter((u) => !factions[i].datasheets.some((d) => d.name === u.datasheet)).map((u) => `${names[i]}: ${u.datasheet}`));
       if (gone.length) { setErr(`มีหน่วยที่ไม่อยู่ใน 11th edition แล้ว (Legends) — เข้า "จัดทัพ" แล้วลบออกก่อน: ${gone.join(', ')}`); return; }
       const dz: [DispositionId, DispositionId] = [dispOf(0) ?? listDisposition(lists[0], factions[0]), dispOf(1) ?? listDisposition(lists[1], factions[1])];
-      const opts = layoutsFor(dz[0], dz[1]);
-      const pool = layoutPick === 'any' ? LAYOUTS : opts;
-      const layout = LAYOUTS.find((l) => l.id === layoutPick) ?? pool[Math.floor(Math.random() * pool.length)];
+      const layout = LAYOUTS.find((l) => l.id === layoutPick) ?? LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
       const s = createGame({
         lists: lists2, factions: factions as [typeof factions[0], typeof factions[1]],
         names: mode === 'botbot' ? ['บอท 1', 'บอท 2'] : vsBot ? [names[0], 'บอท'] : names,
@@ -209,13 +207,8 @@ export default function App() {
                 )}
                 <div className={`layout-pick ${allMaps ? 'wrap' : ''}`}>
                   <button type="button" className={`layout-opt ${layoutPick === '' ? 'on' : ''}`} onClick={() => setLayoutPick('')}>
-                    <div className="layout-random">?</div><span>สุ่ม (คู่นี้)</span>
+                    <div className="layout-random">?</div><span>สุ่มจากทุกแมพ</span>
                   </button>
-                  {allMaps && (
-                    <button type="button" className={`layout-opt ${layoutPick === 'any' ? 'on' : ''}`} onClick={() => setLayoutPick('any')}>
-                      <div className="layout-random">??</div><span>สุ่มจากทุกแมพ</span>
-                    </button>
-                  )}
                   {(allMaps ? LAYOUTS.filter((l) => !mapDeploy || l.deployment === mapDeploy) : layouts).map((l) => (
                     <button key={l.id} type="button" className={`layout-opt ${layoutPick === l.id ? 'on' : ''}`} onClick={() => setLayoutPick(l.id)}>
                       <LayoutPreview layout={l} width={64} />
