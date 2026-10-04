@@ -207,7 +207,7 @@ export async function removeUnusedCloudFiles(known?: Set<string>): Promise<{ pho
   if (cloudMode !== 'write' || !cloudAssets || !cloudDb || waiting.size) return out;
   if (known?.size) {
     for (const name of Object.keys(cloud)) {
-      if (known.has(name)) continue;
+      if (known.has(name) || name.startsWith('emblem:')) continue;
       try { await cloudDb.doc(`${COLL}/${docId(name)}`).delete(); delete cloud[name]; out.photos.push(name); } catch { /* keep it */ }
     }
   }
@@ -225,7 +225,7 @@ export async function removeUnusedCloudFiles(known?: Set<string>): Promise<{ pho
 }
 
 /** Names of photos on the site that are not in `known` (units no longer in any army). */
-export const cloudPhotosNotIn = (known: Set<string>): string[] => Object.keys(cloud).filter((n) => !known.has(n));
+export const cloudPhotosNotIn = (known: Set<string>): string[] => Object.keys(cloud).filter((n) => !known.has(n) && !n.startsWith('emblem:'));
 
 export const cloudPortraitCount = (): number => Object.keys(cloud).length;
 export const cloudErrorNow = (): string | null => cloudError;

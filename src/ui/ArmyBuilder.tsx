@@ -7,7 +7,7 @@ import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { DET_RULES } from '../engine/detachments';
 import { DatasheetView } from './Sheet';
 import { tokenKind } from './Tokens';
-import { getPortrait, usePortraitsVersion } from './portraits';
+import { getPortrait, setPortrait, usePortraitsVersion } from './portraits';
 
 interface Props {
   list: ArmyList;
@@ -37,7 +37,12 @@ function sectionOf(d: DatasheetData | undefined): Section {
 /** Original faction emblems (not official marks). */
 export const titleCase = (k: string) => k.toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (_, a, b) => a + b.toUpperCase());
 
-export function Emblem({ factionId, color, img }: { factionId: string; color?: string; img?: string }) {
+export const emblemKey = (factionId: string, sub?: string) => `emblem:${factionId}:${sub ?? ''}`;
+
+export function Emblem({ factionId, color, sub }: { factionId: string; color?: string; sub?: string }) {
+  usePortraitsVersion();
+  // a picture uploaded for this army (its chapter first, then the whole faction), kept on the site for everyone
+  const img = getPortrait(emblemKey(factionId, sub)) ?? getPortrait(emblemKey(factionId));
   if (img) return <img className="ab-emblem ab-emblem-img" src={img} alt="" />;
   return (
     <svg className="ab-emblem" viewBox="0 0 64 64" aria-hidden="true">
@@ -253,8 +258,8 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       c.width = n; c.height = n;
       const k = Math.max(n / im.width, n / im.height);
       c.getContext('2d')!.drawImage(im, (n - im.width * k) / 2, (n - im.height * k) / 2, im.width * k, im.height * k);
-      set({ emblem: c.toDataURL('image/png') });
-      setNote('เปลี่ยนรูปโลโก้แล้ว');
+      const ok = setPortrait(emblemKey(list.factionId, list.subfaction), c.toDataURL('image/png'));
+      setNote(ok ? 'เปลี่ยนรูปโลโก้แล้ว (อัปขึ้นเว็บ ทุกคนที่เปิดลิงก์เห็นด้วย)' : 'เก็บรูปถาวรไม่ได้');
     } catch { setNote('อ่านรูปไม่ได้'); } finally { URL.revokeObjectURL(url); }
   };
   /** Update one entry; wargear choices are re-checked for the new size and their points recomputed. */
@@ -396,7 +401,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     <>
       <div className="dt-top">
         <label className="dt-emblem" aria-label="เปลี่ยนรูปโลโก้">
-          <Emblem factionId={list.factionId} color={sub?.color} img={list.emblem} />
+          <Emblem factionId={list.factionId} color={sub?.color} sub={list.subfaction} />
           <span className="dt-emblem-cam"><Icon name="camera" size={14} /></span>
           <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) pickEmblem(f); }} />
         </label>
@@ -416,7 +421,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {dSection('core', 'Core Stratagems', RULES.coreStratagems.map((st) => ruleCard(st.id, st.name, `${st.cp}CP`, `${st.when}\n${st.text}`)))}
       {dSection('army', 'Army Rule', faction.armyRules.map((r) => ruleCard(r.name, r.name, '', r.text)))}
       <div className="dt-actions">
-        {list.emblem && <button className="btn ghost" onClick={() => set({ emblem: undefined })}>ใช้โลโก้เดิมของ faction</button>}
       </div>
     </>
   );
@@ -801,7 +805,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                   {fs.map((f) => (
                     <button key={f.id} type="button" className={`ab-fcard ${f.id === list.factionId ? 'on' : ''}`}
                       onClick={() => (f.subfactions?.length ? (f.id === list.factionId ? setPicker({ factionId: f.id }) : (choose(f.id), setPicker({ factionId: f.id }))) : choose(f.id))}>
-                      <Emblem factionId={f.id} color={f.id === list.factionId ? sub?.color : undefined} />
+                      <Emblem factionId={f.id} color={f.id === list.factionId ? sub?.color : undefined} sub={f.id === list.factionId ? list.subfaction : undefined} />
                       <span className="ab-fname">{f.name}</span>
                       {f.subfactions?.length ? <span className="ab-sub">{f.subfactions.length} sub-factions ›</span> : null}
                     </button>
@@ -825,7 +829,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                   const nD = faction!.detachments.filter((d) => d.subfaction === o.keyword).length;
                   return (
                     <button key={o.keyword} type="button" className={`ab-fcard ${list.subfaction === o.keyword ? 'on' : ''}`} onClick={() => choose(step.id, o.keyword)}>
-                      <Emblem factionId={step.id} color={o.color} />
+                      <Emblem factionId={step.id} color={o.color} sub={o.keyword} />
                       <span className="ab-fname">{o.name}</span>
                       <span className="ab-sub">{nU} หน่วยเฉพาะ · {nD} detachment</span>
                     </button>
@@ -857,7 +861,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       <div className="ab-body">
         {tab === 'list' && (
           <button type="button" className="ab-head" onClick={() => setTab('detachment')} aria-label="แก้ชื่อ faction และ detachment ในแท็บ Detachment">
-            <Emblem factionId={list.factionId} color={sub?.color} img={list.emblem} />
+            <Emblem factionId={list.factionId} color={sub?.color} sub={list.subfaction} />
             <span className="grow ab-head-text">
               <span className="ab-title">{list.name || 'กองทัพไม่มีชื่อ'}</span>
               <span className="ab-det-name">{list.detachments.join(' · ') || 'ยังไม่ได้เลือก detachment'}</span>
