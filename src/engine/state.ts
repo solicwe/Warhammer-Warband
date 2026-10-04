@@ -97,14 +97,12 @@ export function spendStratagem(s: GameState, player: PlayerId, id: string, unit?
 export type AutoReroll = 'hazard' | 'damage' | 'attacks';
 
 /**
- * Should `player` spend a Command Re-roll on this roll right now? Never when it can't be used. A bot decides by
- * itself (it keeps 1CP spare until the last round); a person only when they turned that kind on.
+ * Should `player` spend a Command Re-roll on this roll right now? Never when it can't be used. The game decides for
+ * everyone, people included: it keeps 1CP spare until the last round.
  */
-export function wantsCR(s: GameState, player: PlayerId, what: AutoReroll, unit?: UnitState): boolean {
+export function wantsCR(s: GameState, player: PlayerId, _what: AutoReroll, unit?: UnitState): boolean {
   if (canUseStratagem(s, player, 'command-reroll', unit)) return false;
-  const bots = s.bots ?? (s.botPlayer != null ? [s.botPlayer] : []);
-  if (bots.includes(player)) return s.players[player].cp - 1 >= (s.round >= 5 ? 0 : 1);
-  return !!s.players[player].autoReroll?.[what];
+  return s.players[player].cp - 1 >= (s.round >= 5 ? 0 : 1);
 }
 
 export function withinTerrain(s: GameState, m: ModelState, categories: string[] = ['exposed', 'light', 'dense']) {

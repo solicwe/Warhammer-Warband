@@ -1542,25 +1542,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 ตอนบอทโจมตี: {s.defenderRolls !== false ? 'ฉันทอย Save เอง (ใช้ Command Re-roll ได้)' : 'ทอยให้อัตโนมัติ'}
               </button>
             )}
-            <button className={`btn ${s.manualPile ? '' : 'on'}`} onClick={() => act((g) => { g.manualPile = !g.manualPile; })}>
-              Pile-in / Consolidate: {s.manualPile ? 'ขยับเอง' : 'อัตโนมัติ (เข้าหาศัตรูให้มากที่สุด)'}
-            </button>
-            <button className={`btn ${s.pickRerolls ? '' : 'on'}`} onClick={() => act((g) => { g.pickRerolls = !g.pickRerolls; })}>
-              Re-roll จาก ability (Oath ฯลฯ): {s.pickRerolls ? 'เลือกลูกเอง' : 'ทอยลูกที่พลาดใหม่ให้อัตโนมัติ'}
-            </button>
-            {([0, 1] as PlayerId[]).filter((pl) => !bots.includes(pl)).map((pl) => (
-              <div key={pl} className="field">
-                <span>{s.players[pl].name}: ใช้ Command Re-roll (1CP) ให้อัตโนมัติเมื่อ…</span>
-                <div className="wg-chips">
-                  {([['hazard', 'ทอย Hazard ตก'], ['damage', 'ดาเมจต่ำ'], ['attacks', 'จำนวน attack ต่ำ']] as const).map(([k, label]) => (
-                    <button key={k} type="button" className={s.players[pl].autoReroll?.[k] ? 'on' : ''}
-                      onClick={() => act((g) => { const P = g.players[pl]; P.autoReroll = { ...P.autoReroll, [k]: !P.autoReroll?.[k] }; })}>
-                      {s.players[pl].autoReroll?.[k] && <Icon name="check" size={16} />}{label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
             <button className="btn danger" onClick={onExit}>ออกไปหน้าแรก (เกมเซฟไว้แล้ว)</button>
             <button className="btn ghost" onClick={() => setShowMenu(false)}>ปิด</button>
           </div>

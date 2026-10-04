@@ -207,19 +207,19 @@ describe('the bot spends Command Points', () => {
 });
 
 describe('Command Re-roll on hazard, damage and the number of attacks', () => {
-  it('hazard: a bot re-rolls one failed die; a person only when they turned it on', () => {
+  it('hazard: the game re-rolls one failed die for bots and people alike, keeping 1CP spare', () => {
     let usedBot = 0, usedOff = 0, usedOn = 0;
     for (let seed = 1; seed <= 40; seed++) {
       for (const who of ['bot', 'off', 'on'] as const) {
         const s = game([['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]]);
         s.rng = seed * 7919;
-        s.players[0].cp = 3;
+        const cp0 = who === 'off' ? 1 : 3; // 'off': only the spare CP left
+        s.players[0].cp = cp0;
         s.phase = 'shooting';
         if (who === 'bot') s.bots = [0];
-        if (who === 'on') s.players[0].autoReroll = { hazard: true };
         const u = put(s, 'p0-x0', { x: 20, y: 14 });
         hazardTest(s, u, 5, 'test');
-        const used = s.players[0].cp < 3 ? 1 : 0;
+        const used = s.players[0].cp < cp0 ? 1 : 0;
         if (used) expect(s.log.at(-1)!.text).toMatch(/Command Re-roll \d→\d/);
         if (who === 'bot') usedBot += used; else if (who === 'off') usedOff += used; else usedOn += used;
       }

@@ -302,8 +302,6 @@ export interface PlayerState {
   /** choice-type detachment rules (Combat Doctrines …): what is active and what was used, by detachment name */
   det?: Record<string, DetChoiceState>;
   vowed?: string[]; // Inner Circle: vowed objective ids
-  /** Command Re-roll used by itself on these rolls (hazard tests, low damage, a low number of attacks) */
-  autoReroll?: Partial<Record<'hazard' | 'damage' | 'attacks', boolean>>;
   priorityObjective?: string; // Priority Objective Identified
   oathBackup?: string | null; // Master of Battle: second Oath of Moment target
   slayer?: Record<string, string>; // Slayer's Oath: unit id -> keyword

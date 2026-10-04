@@ -1,7 +1,7 @@
 // Line of sight on a 2D board (06.01, 13.07-13.11).
 // Terrain areas with light/dense features are obscuring; dense walls are Solid at ground level.
 import { RULES } from './config';
-import { baseDist, circleTouchesPoly, samplePoints, segCrossesPoly, segsTouch } from './geometry';
+import { baseDist, circleTouchesPoly, samplePoints, segCrossesPoly, segSegDist, segsTouch } from './geometry';
 import { alive, everyModelKw } from './state';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 
@@ -40,10 +40,12 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
   return { walls, areas };
 }
 
+/** Half the thickness of a ruin wall: a line of sight can't slip through the hairline where two walls meet. */
+const WALL_HALF = 0.04;
 // a wall end or the joint of two walls blocks too: a 1mm line can't slip through a corner
 const lineClear = (p: Pt, q: Pt, bl: Blockers) => {
   const seg = { a: p, b: q };
-  return !bl.walls.some((w) => segsTouch(seg, w)) && !bl.areas.some((t) => segCrossesPoly(seg, t.poly));
+  return !bl.walls.some((w) => segSegDist(seg, w) < WALL_HALF) && !bl.areas.some((t) => segCrossesPoly(seg, t.poly));
 };
 
 /** Points of a base to look from / at. A token pressed against a ruin wall overlaps it a little (it stands for a hull),

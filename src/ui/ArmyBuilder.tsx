@@ -545,7 +545,11 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       .map((t) => ({ t, c: embarkCheck(list, faction, rider.uid, t.uid) })).filter(({ c }) => !c.why || c.full);
     const myLoad = transportLoads(list, faction).find((t) => t.uid === u.uid);
     const cargo = !myLoad ? [] : list.units.filter((r) => r.uid !== u.uid && !r.attachTo)
+      .filter((r) => !r.embarkIn || r.embarkIn === u.uid || !list.units.some((t) => t.uid === r.embarkIn))
       .map((r) => ({ r, c: embarkCheck(list, faction, r.uid, u.uid) })).filter(({ c }) => !c.why || c.full);
+    // once units are aboard, only they and what still fits show; an empty transport lists everything it can carry
+    const aboard = cargo.some(({ r }) => r.embarkIn === u.uid);
+    const cargoShown = aboard ? cargo.filter(({ r, c }) => r.embarkIn === u.uid || !c.full) : cargo;
     const opts = sheet ? pointsOptions(sheet) : [];
     const isChar = !!sheet?.keywords.includes('CHARACTER');
     // characters that could join this squad: Leader slot, then Support slot
@@ -554,16 +558,29 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const hasSupport = joined.some((x) => x.d?.isSupport);
     const canLeader = !u.attachTo && !hasLeader && leadersFor(false).length > 0;
     const canSupport = !u.attachTo && !hasSupport && leadersFor(true).length > 0;
-    const squadsFor = sheet?.leads.length && !body ? sheet.leads.map((n) => sheetOf(n)).filter((d): d is DatasheetData => !!d && allowed(d) && pointsOptions(d).length > 0) : [];
+    const squadsFor = sheet?.leads.length && !body ? [...new Set(sheet.leads)].map((n) => sheetOf(n)).filter((d): d is DatasheetData => !!d && allowed(d) && pointsOptions(d).length > 0) : [];
     const close = () => setPop(null);
-    const w = 260;
+    const w = pop.mode && pop.mode !== 'size' ? Math.min(340, window.innerWidth - 16) : 260;
     const left = Math.max(8, Math.min(window.innerWidth - w - 8, pop.x - w));
-    const top = Math.max(8, Math.min(pop.y + 4, window.innerHeight * 0.45));
+    const top = pop.mode && pop.mode !== 'size' ? Math.max(8, Math.min(pop.y + 4, window.innerHeight * 0.15)) : Math.max(8, Math.min(pop.y + 4, window.innerHeight * 0.45));
+    const maxHeight = window.innerHeight - top - 8;
     const attach = (charUid: string, bodyUid: string, msg: string) => { setUnit(charUid, { attachTo: bodyUid, embarkIn: undefined }); setNote(msg); close(); };
 
-    /** A datasheet the player can add new (with its sizes) or pick from the roster. */
-    const pickBlock = (d: DatasheetData, inRoster: ArmyUnitEntry[], onPick: (x: ArmyUnitEntry) => void, onNew: (models: number) => void) => (
-      <div key={d.name} className={`ab-pop-card ${inRoster.length ? 'has' : ''}`}>
+    /** A unit already in the roster (white): tap to use it. */
+    const rosterCard = (x: ArmyUnitEntry, onPick: (x: ArmyUnitEntry) => void) => (
+      <button key={`has-${x.uid}`} type="button" className="ab-pop-card has" onClick={() => onPick(x)}>
+        <span className="ab-pop-card-head">
+          <UnitArt sheet={sheetOf(x.datasheet)} />
+          <span className="ab-pop-card-text">
+            <span className="ab-pop-name">{x.datasheet}</span>
+            <span className="ab-pop-line"><span className="ab-pop-pts">{unitPoints(x)} pts</span> <span className="muted">({x.models})</span></span>
+          </span>
+        </span>
+      </button>
+    );
+    /** A datasheet to add new (grey), one + per size. */
+    const newCard = (d: DatasheetData, onNew: (models: number) => void) => (
+      <div key={`new-${d.name}`} className="ab-pop-card">
         <div className="ab-pop-card-head">
           <UnitArt sheet={d} />
           <div className="ab-pop-card-text">
@@ -575,12 +592,16 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             ))}
           </div>
         </div>
-        {inRoster.map((x) => (
-          <button key={x.uid} type="button" className="in-roster" onClick={() => onPick(x)}>
-            <Icon name="check" size={18} />มีใน roster · {x.models} โมเดล · {unitPoints(x)} pts — แตะเพื่อใช้ตัวนี้
-          </button>
-        ))}
       </div>
+    );
+    /** A unit card for the embark lists: picture, names, a note under them. */
+    const rideCard = (key: string, sheetName: string, title: string, note: string, cls: string, disabled: boolean, onClick: () => void, val?: string) => (
+      <button key={key} type="button" className={`ab-pop-ride ${cls}`} disabled={disabled} onClick={onClick}>
+        <UnitArt sheet={sheetOf(sheetName)} />
+        <span className="grow">{title}{note && <span className="ab-pop-sub">{note}</span>}</span>
+        {val && <span className="ab-pop-val">{val}</span>}
+        {cls === 'on' && <Icon name="check" size={20} />}
+      </button>
     );
 
     let content: React.ReactNode;
@@ -588,15 +609,14 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       content = (
         <>
           <div className="ab-pop-head">{sheet?.isSupport ? 'Add Squad (เป็น Support)' : 'Add Squad (นำหน่วย)'}</div>
-          {squadsFor.map((d) => pickBlock(d,
-            attachOptions(list, faction, u).filter((b) => b.datasheet === d.name),
-            (b) => attach(u.uid, b.uid, `${u.datasheet} เข้า ${b.datasheet} แล้ว`),
-            (models) => {
-              const b = newEntry(d, models);
-              if (!b) return;
-              set({ units: [...list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: b.uid, embarkIn: undefined } : x)), b] });
-              setNote(`เพิ่ม ${d.name} แล้วให้ ${u.datasheet} เข้าหน่วย`); close();
-            }))}
+          {attachOptions(list, faction, u).filter((b) => squadsFor.some((d) => d.name === b.datasheet))
+            .map((b) => rosterCard(b, () => attach(u.uid, b.uid, `${u.datasheet} เข้า ${b.datasheet} แล้ว`)))}
+          {squadsFor.map((d) => newCard(d, (models) => {
+            const b = newEntry(d, models);
+            if (!b) return;
+            set({ units: [...list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: b.uid, embarkIn: undefined } : x)), b] });
+            setNote(`เพิ่ม ${d.name} แล้วให้ ${u.datasheet} เข้าหน่วย`); close();
+          }))}
         </>
       );
     } else if (pop.mode === 'leader' || pop.mode === 'support') {
@@ -604,15 +624,14 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       content = (
         <>
           <div className="ab-pop-head">{support ? 'Add Support' : 'Add Leader'} · {u.datasheet}</div>
-          {leadersFor(support).map((d) => pickBlock(d,
-            list.units.filter((c) => c.datasheet === d.name && attachOptions(list, faction, c).some((b) => b.uid === u.uid)),
-            (c) => attach(c.uid, u.uid, `${c.datasheet} เข้า ${u.datasheet} แล้ว`),
-            (models) => {
-              const c = newEntry(d, models, { attachTo: u.uid });
-              if (!c) return;
-              set({ units: [...list.units, c] });
-              setNote(`เพิ่ม ${d.name} เข้า ${u.datasheet} แล้ว`); close();
-            }))}
+          {list.units.filter((c) => leadersFor(support).some((d) => d.name === c.datasheet) && attachOptions(list, faction, c).some((b) => b.uid === u.uid))
+            .map((c) => rosterCard(c, () => attach(c.uid, u.uid, `${c.datasheet} เข้า ${u.datasheet} แล้ว`)))}
+          {leadersFor(support).map((d) => newCard(d, (models) => {
+            const c = newEntry(d, models, { attachTo: u.uid });
+            if (!c) return;
+            set({ units: [...list.units, c] });
+            setNote(`เพิ่ม ${d.name} เข้า ${u.datasheet} แล้ว`); close();
+          }))}
         </>
       );
     } else if (pop.mode === 'embark' && myLoad) {
@@ -621,16 +640,11 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       content = (
         <>
           <div className="ab-pop-head">Embark · {u.datasheet} <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></div>
-          {cargo.map(({ r, c }) => {
+          {cargoShown.map(({ r, c }) => {
             const on = r.embarkIn === u.uid;
-            const other = !on && r.embarkIn ? list.units.find((t) => t.uid === r.embarkIn) : undefined;
-            return (
-              <button key={r.uid} type="button" className={on ? 'on' : c.full ? 'full' : ''} disabled={!on && c.full}
-                onClick={() => { setUnit(r.uid, { embarkIn: on ? undefined : u.uid }); setNote(on ? `${r.datasheet} ลงจาก ${u.datasheet}` : `${r.datasheet} เริ่มเกมบน ${u.datasheet}`); }}>
-                <Icon name={on ? 'check' : 'embark'} size={22} />
-                <span className="grow">{names(r)}<span className="ab-pop-sub">{c.full ? `ไม่พอ: ใช้ ${c.need} ที่ เหลือ ${Math.max(0, c.capacity - c.used)}` : `${c.need} ที่${other ? ` · ตอนนี้อยู่บน ${other.datasheet}` : ''}`}</span></span>
-              </button>
-            );
+            return rideCard(r.uid, r.datasheet, names(r), on ? `${c.need} ที่ · แตะเพื่อลงจากรถ` : c.full ? `ไม่พอ: ใช้ ${c.need} ที่ เหลือ ${Math.max(0, c.capacity - c.used)}` : `${c.need} ที่`,
+              on ? 'on' : c.full ? 'full' : '', !on && c.full,
+              () => { setUnit(r.uid, { embarkIn: on ? undefined : u.uid }); setNote(on ? `${r.datasheet} ลงจาก ${u.datasheet}` : `${r.datasheet} เริ่มเกมบน ${u.datasheet}`); });
           })}
         </>
       );
@@ -638,14 +652,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       content = (
         <>
           <div className="ab-pop-head">ขึ้นรถตอนเริ่มเกม{body ? ` (ทั้งหน่วย ${body.datasheet})` : ''}</div>
-          {rides.map(({ t, c }) => (
-            <button key={t.uid} type="button" className={rider.embarkIn === t.uid ? 'on' : c.full ? 'full' : ''} disabled={c.full}
-              onClick={() => { setUnit(rider.uid, { embarkIn: t.uid }); setNote(`${rider.datasheet} เริ่มเกมบน ${t.datasheet}`); close(); }}>
-              <Icon name="embark" size={22} />
-              <span className="grow">{t.datasheet}{c.full && <span className="ab-pop-sub">เต็ม: ต้องใช้ {c.need} ที่ เหลือ {Math.max(0, c.capacity - c.used)}</span>}</span>
-              <span className="ab-pop-val">{c.used}/{c.capacity}</span>
-            </button>
-          ))}
+          {rides.map(({ t, c }) => rideCard(t.uid, t.datasheet, t.datasheet, c.full ? `เต็ม: ต้องใช้ ${c.need} ที่ เหลือ ${Math.max(0, c.capacity - c.used)}` : '',
+            rider.embarkIn === t.uid ? 'on' : c.full ? 'full' : '', c.full,
+            () => { setUnit(rider.uid, { embarkIn: t.uid }); setNote(`${rider.datasheet} เริ่มเกมบน ${t.datasheet}`); close(); }, `${c.used}/${c.capacity}`))}
         </>
       );
     } else if (pop.mode === 'size') {
@@ -697,7 +706,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     }
     return (
       <div className="ab-pop-backdrop" onClick={close}>
-        <div className="ab-pop" style={{ left, top, width: w }} onClick={(e) => e.stopPropagation()}>{content}</div>
+        <div className="ab-pop" style={{ left, top, width: w, maxHeight }} onClick={(e) => e.stopPropagation()}>{content}</div>
       </div>
     );
   };

@@ -4,7 +4,7 @@
 The official layouts are mirror images through the centre (22", 30"), but the tracer reads each half on its own:
   * one terrain piece (a container with its barricades) comes out as a box plus small slivers;
   * the two halves of the map get different wall lines.
-It also marks sealed containers (walls on all four sides of a small box) with their footprint as `box`.
+It also closes the cracks at wall corners and marks sealed containers (walls on all four sides of a small box) with their footprint as `box`.
 This merges slivers into the piece they touch, then for each pair of mirrored pieces keeps the better-traced one
 (more wall/obstacle length) and rotates it onto the other half. A piece on the centre keeps the walls of its first half.
 
@@ -101,6 +101,26 @@ def symmetrize(T):
     return out
 
 
+def close_corners(t, gap=0.6):
+    """Walls of one ruin that stop just short of each other (the tracer leaves ~0.25" at corners): move the end onto
+    the other wall, so a line of sight can't slip through a crack that isn't on the real model."""
+    from shapely.geometry import Point
+    ws = t['walls']
+    for i, w in enumerate(ws):
+        for k in (0, 2):
+            e = Point(w[k], w[k + 1])
+            best = None
+            for j, v in enumerate(ws):
+                if j == i:
+                    continue
+                line = LineString([(v[0], v[1]), (v[2], v[3])])
+                d = line.distance(e)
+                if 0.01 < d <= gap and (best is None or d < best[0]):
+                    best = (d, line.interpolate(line.project(e)))
+            if best:
+                w[k], w[k + 1] = round(best[1].x, 3), round(best[1].y, 3)
+
+
 def container_box(t):
     """The footprint of a sealed container: walls closing all four sides of a small rectangle (else None)."""
     if len(t['walls']) < 3:
@@ -127,6 +147,7 @@ def main():
             l['symmetric'] = True
             l['terrain'] = symmetrize(merge_slivers(l['terrain']))
         for t in l['terrain']:
+            close_corners(t)
             box = container_box(t)
             if box:
                 t['box'] = box
