@@ -19,8 +19,8 @@ type Section = 'characters' | 'battleline' | 'transports' | 'others';
 const SECTIONS: { id: Section; title: string }[] = [
   { id: 'characters', title: 'Characters' },
   { id: 'battleline', title: 'Battleline' },
-  { id: 'transports', title: 'Dedicated Transports' },
   { id: 'others', title: 'Others' },
+  { id: 'transports', title: 'Dedicated Transports' },
 ];
 
 /** Units listed under Others although they carry the CHARACTER keyword (bodyguard-style Epic Heroes). */
@@ -37,7 +37,8 @@ function sectionOf(d: DatasheetData | undefined): Section {
 /** Original faction emblems (not official marks). */
 export const titleCase = (k: string) => k.toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (_, a, b) => a + b.toUpperCase());
 
-export function Emblem({ factionId, color }: { factionId: string; color?: string }) {
+export function Emblem({ factionId, color, img }: { factionId: string; color?: string; img?: string }) {
+  if (img) return <img className="ab-emblem ab-emblem-img" src={img} alt="" />;
   return (
     <svg className="ab-emblem" viewBox="0 0 64 64" aria-hidden="true">
       <circle cx="32" cy="32" r="30" fill="#1a1a1a" stroke="#7a0c0c" strokeWidth="3" />
@@ -235,6 +236,25 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   };
 
   const set = (patch: Partial<ArmyList>) => onChange({ ...list, ...patch });
+  /** Change the detachments; an enhancement that none of them has any more comes off its unit. */
+  const setDets = (detachments: string[]) => {
+    const has = (n: string) => !!faction?.detachments.some((d) => detachments.includes(d.name) && d.enhancements.some((e) => e.name === n));
+    set({ detachments, units: list.units.map((u) => (u.enhancement && !has(u.enhancement) ? { ...u, enhancement: undefined, enhancementPts: undefined } : u)) });
+  };
+  /** The player's own picture for the emblem, shrunk to a small square. */
+  const pickEmblem = async (f: File) => {
+    const url = URL.createObjectURL(f);
+    try {
+      const im = new Image();
+      await new Promise((ok, bad) => { im.onload = ok; im.onerror = bad; im.src = url; });
+      const n = 160, c = document.createElement('canvas');
+      c.width = n; c.height = n;
+      const k = Math.max(n / im.width, n / im.height);
+      c.getContext('2d')!.drawImage(im, (n - im.width * k) / 2, (n - im.height * k) / 2, im.width * k, im.height * k);
+      set({ emblem: c.toDataURL('image/png') });
+      setNote('เปลี่ยนรูปโลโก้แล้ว');
+    } catch { setNote('อ่านรูปไม่ได้'); } finally { URL.revokeObjectURL(url); }
+  };
   /** Update one entry; wargear choices are re-checked for the new size and their points recomputed. */
   const setUnit = (uid: string, patch: Partial<ArmyUnitEntry>) => set({ units: list.units.map((x) => (x.uid === uid ? syncWargear(sheetOf(x.datasheet), { ...x, ...patch }) : x)) });
   const removeUnit = (uid: string) => set({ units: list.units.filter((x) => x.uid !== uid).map((x) => (x.attachTo === uid ? { ...x, attachTo: undefined } : x.embarkIn === uid ? { ...x, embarkIn: undefined } : x)) });
@@ -362,9 +382,14 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const detachmentTab = () => faction && (
     <>
       <div className="dt-top">
-        <Emblem factionId={list.factionId} color={sub?.color} />
+        <label className="dt-emblem" aria-label="เปลี่ยนรูปโลโก้">
+          <Emblem factionId={list.factionId} color={sub?.color} img={list.emblem} />
+          <span className="dt-emblem-cam"><Icon name="camera" size={14} /></span>
+          <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) pickEmblem(f); }} />
+        </label>
         <div className="grow dt-top-text">
-          <div className="dt-faction">{factionName}{sub ? ` · ${sub.name}` : ''}</div>
+          <input className="ab-title dt-name" aria-label="ชื่อกองทัพ" value={list.name} placeholder="ตั้งชื่อกองทัพ" onChange={(e) => set({ name: e.target.value })} />
+          <button type="button" className="dt-faction linkish" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>{factionName}{subs ? ` · ${sub?.name ?? `เลือก ${subs.label}`}` : ''} ›</button>
           <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || 'ยังไม่ได้เลือก detachment'}</div>
           {chosenDets.length > 0 && <div className="tiny">Force Disposition: <b>{chosenDets[0].forceDisposition}</b> · {chosenDets.reduce((x, d) => x + d.dp, 0)}/{size.dp} DP</div>}
           <div className="tiny muted">{size.name} · {pts}/{size.points} pts</div>
@@ -377,6 +402,14 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {chosenDets.length > 0 && dSection('strat', 'Stratagems', chosenDets.flatMap((d) => d.stratagems.map((st) => ruleCard(d.name + st.name, st.name, `${st.cp}CP`, `${st.type}\n${st.text}`))), chosenDets.reduce((a, d) => a + d.stratagems.length, 0))}
       {dSection('core', 'Core Stratagems', RULES.coreStratagems.map((st) => ruleCard(st.id, st.name, `${st.cp}CP`, `${st.when}\n${st.text}`)))}
       {dSection('army', 'Army Rule', faction.armyRules.map((r) => ruleCard(r.name, r.name, '', r.text)))}
+      <div className="dt-actions">
+        {list.emblem && <button className="btn ghost" onClick={() => set({ emblem: undefined })}>ใช้โลโก้เดิมของ faction</button>}
+        <button className="btn danger" disabled={!list.units.length && !list.detachments.length} onClick={() => {
+          if (!window.confirm(`รีเซ็ต roster "${list.name || 'กองทัพนี้'}"?\nหน่วยทั้งหมด (${list.units.length}) และ detachment จะถูกลบ เหลือ roster ว่าง`)) return;
+          set({ units: [], detachments: [] });
+          setNote('รีเซ็ต roster แล้ว');
+        }}><Icon name="delete" /> รีเซ็ต roster ทั้งหมด</button>
+      </div>
     </>
   );
 
@@ -420,13 +453,13 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                       {d.name}{d.subfaction && <span className={`ab-chip ${allowed(d) ? '' : 'bad'}`}>{subTag(d.subfaction)}</span>}
                     </button>
                     <button type="button" className={`dt-disp ${primary && list.detachments.length > 1 ? 'primary' : ''}`} disabled={!on || primary || list.detachments.length < 2}
-                      onClick={() => set({ detachments: [d.name, ...list.detachments.filter((n) => n !== d.name)] })}>
+                      onClick={() => setDets([d.name, ...list.detachments.filter((n) => n !== d.name)])}>
                       {primary && list.detachments.length > 1 && <Icon name="leader" size={13} />}{d.forceDisposition}{blocked ? ` · เกิน DP (เหลือ ${Math.max(0, size.dp - used)}) แตะช่องเพื่อเปลี่ยนเป็นอันนี้แทน` : ''}
                     </button>
                   </div>
                   <span className="dt-dp">{d.dp} DP</span>
                   <button type="button" className={`dt-chev ${open ? 'up' : ''}`} aria-label="ดูรายละเอียด" onClick={() => setOpenDet(open ? null : d.name)}><Icon name="down" size={18} /></button>
-                  <button type="button" className={`dt-box ${on ? 'on' : ''}`} aria-label={on ? 'เลือกอยู่' : 'เลือก'} onClick={() => { set({ detachments: on ? list.detachments.filter((n) => n !== d.name) : blocked ? [d.name] : [...list.detachments, d.name] }); }}>{on && <Icon name="check" size={18} />}</button>
+                  <button type="button" className={`dt-box ${on ? 'on' : ''}`} aria-label={on ? 'เลือกอยู่' : 'เลือก'} onClick={() => setDets(on ? list.detachments.filter((n) => n !== d.name) : blocked ? [d.name] : [...list.detachments, d.name])}>{on && <Icon name="check" size={18} />}</button>
                 </div>
                 {open && (
                   <div className="dt-item-body">
@@ -462,7 +495,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             <button className="btn small ghost" onClick={() => setAdding(null)}>ปิด</button>
           </div>
           <input placeholder="ค้นหา datasheet…" value={q} onChange={(e) => setQ(e.target.value)} />
-          {subs && <div className="small muted">{sub ? `แสดงหน่วยของ ${sub.name} + หน่วยทั่วไป` : `ยังไม่ได้เลือก ${subs.label}: แสดงเฉพาะหน่วยทั่วไป`} · <button type="button" className="linkish" onClick={() => setPicker({ factionId: list.factionId })}>{sub ? `เปลี่ยน ${subs.label}` : `เลือก ${subs.label}`}</button></div>}
           <div className="ab-pick">
             {sheets.map((d) => {
               const count = list.units.filter((u) => u.datasheet === d.name).length;
@@ -815,16 +847,16 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         </button>
       </header>
       <div className="ab-body">
-        {tab === 'list' && <div className="ab-head">
-          <button type="button" className="ab-emblem-btn" aria-label="เลือก faction" onClick={() => setPicker({ factionId: null })}><Emblem factionId={list.factionId} color={sub?.color} /></button>
-          <div className="grow">
-            <input className="ab-title" aria-label="ชื่อกองทัพ" value={list.name} placeholder="ตั้งชื่อกองทัพ" onChange={(e) => set({ name: e.target.value })} />
-            <div className="ab-det-name">{list.detachments.join(' · ') || <button type="button" className="linkish" onClick={() => setTab('detachment')}>เลือก detachment</button>}</div>
-            <button type="button" className="ab-faction" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>
-              {factionName}{subs ? ` · ${sub?.name ?? `เลือก ${subs.label}`}` : ''} ›
-            </button>
-          </div>
-        </div>}
+        {tab === 'list' && (
+          <button type="button" className="ab-head" onClick={() => setTab('detachment')} aria-label="แก้ชื่อ faction และ detachment ในแท็บ Detachment">
+            <Emblem factionId={list.factionId} color={sub?.color} img={list.emblem} />
+            <span className="grow ab-head-text">
+              <span className="ab-title">{list.name || 'กองทัพไม่มีชื่อ'}</span>
+              <span className="ab-det-name">{list.detachments.join(' · ') || 'ยังไม่ได้เลือก detachment'}</span>
+              <span className="ab-faction">{factionName}{sub ? ` · ${sub.name}` : ''}</span>
+            </span>
+          </button>
+        )}
         {!faction && <div className="ab-empty">กำลังโหลดข้อมูล…</div>}
         {faction && (tab === 'list' ? listTab() : detachmentTab())}
       </div>

@@ -671,7 +671,7 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (n > limit) errs.push(`${name}: ใส่ได้ไม่เกิน ${limit} หน่วย`);
   }
   if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('ต้องมี CHARACTER อย่างน้อย 1 หน่วย (Warlord)');
-  if (!list.units.some((u) => u.warlord)) errs.push('ยังไม่ได้เลือก Warlord (กด )');
+  if (!list.units.some((u) => u.warlord)) errs.push('ยังไม่ได้เลือก Warlord (กด ⋮ ที่ตัวละคร → ตั้งเป็น Warlord)');
   const enh = list.units.filter((u) => u.enhancement);
   const allEnh = faction.detachments.flatMap((d) => d.enhancements);
   const isUpgrade = (n: string) => !!allEnh.find((e) => e.name === n)?.upgrade;

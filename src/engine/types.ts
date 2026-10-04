@@ -133,6 +133,8 @@ export interface ArmyList {
   battleSize: string;
   detachments: string[];
   units: ArmyUnitEntry[];
+  /** the player's own picture for the army's emblem (a small data URL) */
+  emblem?: string;
 }
 
 // ---------- Game state ----------
