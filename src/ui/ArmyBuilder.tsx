@@ -442,7 +442,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             <button className="btn small ghost" onClick={() => setDetPicker(false)}>ปิด</button>
           </div>
           <div className="row" style={{ gap: 8 }}>
-            <button type="button" className="ab-pick-btn grow" onClick={() => setPicker({ factionId: null })}>
+            <button type="button" className="ab-pick-btn grow" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>
               <span className="grow">{factionName}{subs ? ` · ${sub?.name ?? `ไม่ระบุ ${subs.label}`}` : ''}</span><span className="muted">เปลี่ยน ›</span>
             </button>
             <select value={list.battleSize} onChange={(e) => set({ battleSize: e.target.value })}>
