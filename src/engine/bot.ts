@@ -8,7 +8,7 @@ import { detChoices, pickDetChoice } from './detachments';
 import {
   autoApproach, autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
-  objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits,
+  objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark, endRedeploy } from './game';
 import { abilityChoices, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
@@ -495,6 +495,16 @@ export function botWindow(s: GameState) {
   closeWindow(s);
 }
 
+/** Pre-battle Scouts moves: each unit takes the move the planner likes best (forward onto objectives, into cover), or stays. */
+function botScouts(s: GameState, p: PlayerId) {
+  for (const u of scoutUnits(s, p)) {
+    const plan = withRuleCache(() => bestMove(s, u, 'scout', scoutsOf(s, u) - 0.05, ctxFor(s, u)));
+    if (plan.paths && validateMove(s, u, 'scout', plan.paths).ok) commitMove(s, u, 'scout', plan.paths);
+    u.scoutDone = true;
+  }
+  endScouts(s);
+}
+
 // ---------- drivers ----------
 
 /** Play the active player's whole phase (or deployment step). */
@@ -502,7 +512,7 @@ export function botAct(s: GameState) {
   if (s.window) { botWindow(s); return; }
   switch (s.phase) {
     case 'deploy': botDeploy(s); return;
-    case 'scouts': for (const u of scoutUnits(s, s.deployTurn)) u.scoutDone = true; endScouts(s); return;
+    case 'scouts': botScouts(s, s.deployTurn); return;
     case 'command': botCommand(s); return;
     case 'movement': botMovement(s); return;
     case 'shooting': botShooting(s); return;
@@ -516,7 +526,7 @@ export function botAct(s: GameState) {
 export function botStep(s: GameState, bot: PlayerId): boolean {
   if (s.window) { if (s.window.player === bot) { botWindow(s); return true; } return false; }
   if (s.phase === 'deploy') { if (s.deployTurn !== bot) return false; botDeploy(s); return true; }
-  if (s.phase === 'scouts') { if (s.deployTurn !== bot) return false; for (const u of scoutUnits(s, bot)) u.scoutDone = true; endScouts(s); return true; }
+  if (s.phase === 'scouts') { if (s.deployTurn !== bot) return false; botScouts(s, bot); return true; }
   if (s.phase === 'fight') return botFightStep(s, bot);
   if (s.phase === 'gameover' || s.active !== bot) return false;
   const one = s.phase === 'movement' ? botMoveOne : s.phase === 'shooting' ? botShootOne : s.phase === 'charge' ? botChargeOne : null;

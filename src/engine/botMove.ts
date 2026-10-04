@@ -130,6 +130,8 @@ export interface Ctx {
   foes: Foe[]; brawler: boolean; target?: UnitState; range: number; heavy: boolean; ocNeed: Pt[];
   /** route distances for units that can't cross ruin walls (vehicles, monsters): to the melee target, to objectives */
   toTarget?: (p: Pt) => number; toObjective?: (p: Pt) => number;
+  /** a transport with units inside: where to drop them off (the enemy for fighters, a contested objective for the rest) */
+  deliver?: Pt;
 }
 
 export function ctxFor(s: GameState, u: UnitState): Ctx {
@@ -141,6 +143,14 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   const heavy = alive(u).some((m) => m.weapons.some((w) => w.profiles.some((p) => hasAbility(p, 'heavy'))));
   const ocNeed = oc(u) > 0 ? objectiveNeeds(s, u.owner).filter((n) => n.need > 0).map((n) => objPoint(s, n.o)) : [];
   const ctx: Ctx = { foes, brawler, target, range: maxRange(u), heavy, ocNeed };
+  const cargo = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
+  if (cargo.length) {
+    const c = centre(u);
+    const near = <T extends Pt>(ps: T[]) => ps.reduce<T | undefined>((a, p) => (!a || dist(p, c) < dist(a, c) ? p : a), undefined);
+    const enemy = near(foes.flatMap((f) => alive(f.u)));
+    const field = near(s.objectives.filter((o) => o.type !== 'home' && ocNeed.some((q) => dist(q, objPoint(s, o)) < 0.1)).map((o) => objPoint(s, o)));
+    ctx.deliver = cargo.some((x) => isBrawler(s, x)) ? enemy ?? field : field ?? enemy;
+  }
   const lead = leaderOf(u);
   if (lead && blockingWalls(s, lead).length) {
     if (target) ctx.toTarget = distanceField(s, u, 'normal', lead, alive(target));
@@ -226,7 +236,9 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
     const near = Math.min(99, ...ctx.foes.map((f) => unitDistance(u, f.u)));
     v -= 0.4 * Math.max(0, near - ctx.range);
   }
-  if (ctx.ocNeed.length) {
+  // a loaded transport drives its passengers to where they get out, rather than parking on an objective
+  if (ctx.deliver) v -= 0.6 * Math.max(0, dist(c, ctx.deliver) - 9);
+  if (ctx.ocNeed.length && !ctx.deliver) {
     const far = ctx.toObjective?.(lead);
     v -= 0.35 * (far !== undefined && Number.isFinite(far) ? far : Math.min(...ctx.ocNeed.map((p) => dist(c, p))));
   }
@@ -256,6 +268,7 @@ function positionScore(s: GameState, u: UnitState): number {
 
 /** How much holding objectives matters to this unit: less for an expensive damage dealer (cheap units hold, it fights). */
 function objectiveWeight(s: GameState, u: UnitState, ctx: Ctx): number {
+  if (ctx.deliver) return 0.3;
   if (u.keywords?.includes?.('BATTLELINE') || alive(u).some((m) => m.keywords.includes('BATTLELINE'))) return 1;
   const dealer = ctx.brawler || ctx.range >= 18;
   return dealer ? Math.max(0.45, Math.min(1, 160 / Math.max(1, unitValue(u)))) : 1;

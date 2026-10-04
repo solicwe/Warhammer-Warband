@@ -356,22 +356,34 @@ export function formationAt(u: UnitState, c: Pt, facingUp = true): Map<string, P
  *  3" (a grid of 10 would stick out too far). Characters take the middle of the arc. */
 export function ringFormation(u: UnitState, tm: ModelState, angle: number): Map<string, Pt> {
   const ms = [...alive(u)].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter) || b.r - a.r);
-  const r = Math.max(...ms.map((m) => m.r));
-  const perRing = ms.length > 5 ? Math.ceil(ms.length / 2) : ms.length;
+  const rMax = Math.max(...ms.map((m) => m.r));
   const out = new Map<string, Pt>();
   let placed = 0;
+  // each ring hugs the hull with every base at its own size (a Lieutenant's 40mm next to Intercessors' 32mm); as many as
+  // fit go on the inner ring (the one inside 3" of the hull): coherency only needs one friend within 2" and the whole
+  // unit within 9" (between bases), so one arc is fine while its ends stay that close
   for (let ring = 0; placed < ms.length && ring < 4; ring++) {
-    const R = tm.r + r + 0.12 + ring * (2 * r + 0.08);
-    const step = (2 * r + 0.12) / R;
-    const n = Math.min(ms.length - placed, perRing, Math.floor((2 * Math.PI) / step));
-    // the middle of the arc first (characters), then alternately to each side
-    const offs = Array.from({ length: n }, (_, k) => (k % 2 ? 1 : -1) * Math.ceil(k / 2) * step + (n % 2 ? 0 : step / 2));
-    offs.sort((a, b) => Math.abs(a) - Math.abs(b));
-    for (let k = 0; k < n; k++) {
-      const m = ms[placed + k];
-      out.set(m.id, { x: tm.x + Math.cos(angle + offs[k]) * R, y: tm.y + Math.sin(angle + offs[k]) * R });
+    const gap = 0.12 + ring * (2 * rMax + 0.08);
+    const rad = (m: ModelState) => tm.r + m.r + gap;
+    const width = (m: ModelState) => 2 * Math.asin(Math.min(1, (m.r + 0.06) / rad(m)));
+    const R = tm.r + rMax + gap;
+    const spanMax = (RULES.coherency.max + 2 * rMax) / (2 * R) >= 1 ? 2 * Math.PI : 2 * Math.asin((RULES.coherency.max + 2 * rMax) / (2 * R));
+    const take: ModelState[] = [];
+    let total = 0;
+    for (const m of ms.slice(placed)) {
+      const w = width(m);
+      if (take.length && (total + w > 2 * Math.PI - 1e-6 || total + w / 2 > spanMax + width(take[0]) / 2)) break;
+      take.push(m); total += w;
     }
-    placed += n;
+    // the first in the middle of the arc, then alternately to each side
+    let left = -width(take[0]) / 2, right = width(take[0]) / 2;
+    take.forEach((m, k) => {
+      const w = width(m);
+      let a = 0;
+      if (k > 0 && k % 2) { a = right + w / 2; right += w; } else if (k > 0) { a = left - w / 2; left -= w; }
+      out.set(m.id, { x: tm.x + Math.cos(angle + a) * rad(m), y: tm.y + Math.sin(angle + a) * rad(m) });
+    });
+    placed += take.length;
   }
   return out;
 }

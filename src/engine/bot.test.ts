@@ -341,3 +341,27 @@ describe('one-tap charge and pile-in (the player taps the target, the models mov
     expect(g[0]).toBeLessThan(3); // the furthest model still closes in (it stayed ~3.8" away before)
   });
 });
+
+describe('Bot Scouts moves', () => {
+  it('makes the pre-battle Scouts move with its scout units and ends more than 9" from the enemy', () => {
+    let moved = 0;
+    for (const seed of [1, 2, 3]) {
+      const s = createGame({ lists: [list('SM', [['Incursor Squad', 5, 80], ['Intercessor Squad', 5, 80]]), list('ORK', [['Boyz', 10, 90]])], factions: [SM, ORK], names: ['A', 'B'], seed });
+      s.bots = [0, 1];
+      for (let i = 0; i < 60 && s.phase === 'deploy'; i++) botAct(s);
+      expect(s.phase).toBe('scouts');
+      const inc = s.units.find((u) => u.name === 'Incursor Squad')!;
+      const before = alive(inc).map((m) => ({ x: m.x, y: m.y }));
+      for (let i = 0; i < 4 && s.phase === 'scouts'; i++) botAct(s);
+      expect(s.phase).not.toBe('scouts');
+      expect(inc.scoutDone).toBe(true);
+      const boyz = s.units.find((u) => u.owner === 1)!;
+      if (alive(inc).some((m, i) => Math.hypot(m.x - before[i].x, m.y - before[i].y) > 0.5)) {
+        moved++;
+        expect(s.log.some((l) => l.text.includes('Scout move'))).toBe(true);
+        expect(unitDistance(inc, boyz)).toBeGreaterThan(9);
+      }
+    }
+    expect(moved).toBeGreaterThan(0);
+  });
+});

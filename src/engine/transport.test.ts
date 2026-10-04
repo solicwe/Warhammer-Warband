@@ -105,6 +105,21 @@ describe('embark and disembark', () => {
     expect(validateDisembark(s, ints, imp, far).ok).toBe(false);
   });
 
+  it('a led squad of 6+ models on big bases fits round the hull when it gets out (Captain + Terminators, Lieutenant + 10 Intercessors)', () => {
+    for (const [tr, sq, n, ld] of [['Land Raider', 'Terminator Squad', 5, 'Captain In Terminator Armour'], ['Repulsor', 'Intercessor Squad', 10, 'Lieutenant']] as const) {
+      const s = createGame({
+        lists: [list('SM', [[tr, 1, 200], [sq, n, 170, { embarkIn: 'x0' }], [ld, 1, 80, { attachTo: 'x1' }]]), list('ORK', [['Boyz', 10, 90]])],
+        factions: [SM, ORK], names: ['A', 'B'], seed: 1,
+      });
+      s.terrain = [];
+      const t = put(s, 'p0-x0', { x: 22, y: 30 });
+      const pas = s.units.find((u) => u.embarkedIn === t.id)!;
+      expect(alive(pas).length).toBe(n + 1);
+      s.phase = 'movement'; s.round = 2; s.turn = 2; s.active = 0; t.move = null;
+      for (const a of [0, 1.5, 3, 4.5]) expect(validateDisembark(s, pas, t, ringFormation(pas, alive(t)[0], a)).errors).toEqual([]);
+    }
+  });
+
   it('embarking after a move needs every model within 3" of the transport', () => {
     const { s, imp, ints } = rig();
     const tm = alive(imp)[0];
