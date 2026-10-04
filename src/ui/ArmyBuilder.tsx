@@ -196,6 +196,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null); // the ⋮ quick menu
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
+  const [resetArmed, setResetArmed] = useState(false);
   useEffect(() => setView(null), [adding]); // the datasheet opened under a row of the add list
   const [note, setNote] = useState<string | null>(null);
 
@@ -322,6 +323,17 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
 
   const listTab = () => (
     <>
+      {list.units.length > 0 && (
+        <div className="ab-tools">
+          {/* the page runs where confirm() dialogs are blocked: tap once to arm, again to clear */}
+          <button type="button" className={`ab-reset ${resetArmed ? 'armed' : ''}`} onClick={() => {
+            if (!resetArmed) { setResetArmed(true); window.setTimeout(() => setResetArmed(false), 3000); return; }
+            setResetArmed(false);
+            set({ units: [], detachments: [] });
+            setNote('รีเซ็ต roster แล้ว');
+          }}><Icon name="delete" size={15} /> {resetArmed ? 'แตะอีกครั้งเพื่อลบทั้งหมด' : 'รีเซ็ต roster'}</button>
+        </div>
+      )}
       {errors.length > 0 && <div className="ab-errors">{errors.map((e) => <div key={e}>{e}</div>)}</div>}
       {SECTIONS.map((sec) => {
         // a unit with its Leader / Support shows as one card, in the section of its (first) character
@@ -405,11 +417,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {dSection('army', 'Army Rule', faction.armyRules.map((r) => ruleCard(r.name, r.name, '', r.text)))}
       <div className="dt-actions">
         {list.emblem && <button className="btn ghost" onClick={() => set({ emblem: undefined })}>ใช้โลโก้เดิมของ faction</button>}
-        <button className="btn danger" disabled={!list.units.length && !list.detachments.length} onClick={() => {
-          if (!window.confirm(`รีเซ็ต roster "${list.name || 'กองทัพนี้'}"?\nหน่วยทั้งหมด (${list.units.length}) และ detachment จะถูกลบ เหลือ roster ว่าง`)) return;
-          set({ units: [], detachments: [] });
-          setNote('รีเซ็ต roster แล้ว');
-        }}><Icon name="delete" /> รีเซ็ต roster ทั้งหมด</button>
       </div>
     </>
   );

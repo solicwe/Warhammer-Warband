@@ -648,3 +648,6 @@ button.ab-head { border: none; width: 100%; text-align: left; font: inherit; cur
 .mc-vp { flex-shrink: 0; background: #1a1a1a; color: #f5d48a; border-radius: 8px; padding: 2px 8px; font: 700 13px var(--sans); white-space: nowrap; }
 .mc-action { background: #fff8e6; border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.4; }
 .mc-deck { text-transform: none; letter-spacing: 0; font-weight: 500; } .mc-map { white-space: nowrap; flex-shrink: 0; }
+.ab-tools { display: flex; justify-content: flex-end; flex-shrink: 0; margin-bottom: -8px; }
+.ab-reset { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--on-dark-muted); background: transparent; color: var(--on-dark); border-radius: 14px; padding: 4px 10px; font: 500 12px var(--sans); cursor: pointer; }
+.ab-reset.armed { background: var(--bad); border-color: var(--bad); color: #fff; }
