@@ -38,7 +38,7 @@ function probes(u: UnitState, pos: Map<string, Pt>): ModelState[] {
   return [sorted[0], sorted[sorted.length - 1], sorted[Math.floor(sorted.length / 2)]];
 }
 
-export interface DeployOptions { near?: Pt }
+export interface DeployOptions { near?: Pt; how?: 'deploy' | 'infiltrate' }
 
 /** The best legal deployment for `u`, or null when nothing in the zone fits. */
 export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = {}): Map<string, Pt> | null {
@@ -51,6 +51,8 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   const fast = moveOf(u) >= 10;
   const vehicle = alive(u).some((m) => m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER'));
   const holdsGround = oc(u) > 0 && !brawler;
+  // Infiltrators: anywhere more than 9" from the enemy deployment zone
+  const how = opt.how ?? 'deploy';
 
   // where the enemy could stand (sight checks), and the objectives
   const watchers = samplePoly(enemyZone, 6).map(lookout);
@@ -67,9 +69,10 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   for (let y = 1; y < H; y += 2) {
     for (let x = 1; x < W; x += 2) {
       const c = { x, y };
-      if (!circleTouchesPoly(c, 0, zone)) continue;
+      if (how === 'deploy' && !circleTouchesPoly(c, 0, zone)) continue;
+      if (how === 'infiltrate' && circleTouchesPoly(c, RULES.reserves.enemyDistance, enemyZone)) continue;
       const pos = formationAt(u, c, up);
-      if (!validatePlacement(s, u, pos, 'deploy').ok) continue;
+      if (!validatePlacement(s, u, pos, how).ok) continue;
       const ms = alive(u).map((m) => ({ ...m, ...pos.get(m.id)! }) as ModelState);
       const centre = polyCentroid(ms);
       let score = 0;
@@ -80,10 +83,18 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
 
       // how far forward: melee and fast units at the front, long guns further back
       const forward = 1 - (dist(centre, ec) - frontDist) / zoneDepth; // 1 = front edge, 0 = back edge
-      if (brawler || fast) score += forward * 8;
+      if (how === 'infiltrate') { /* placed by objectives and cover, not by depth */ }
+      else if (brawler || fast) score += forward * 8;
       else if (range >= 30) score += (1 - Math.abs(forward - 0.35)) * 3;
       else score += forward * 3;
 
+      // objectives out in the middle: Infiltrators sit on one, others start where they reach one in their first move
+      if (holdsGround || how === 'infiltrate') {
+        const dMid = Math.min(99, ...middle.map(({ p }) => Math.min(...ms.map((m) => dist(m, p) - m.r))));
+        // snipers stay back in cover; others take an objective only from cover
+        if (how === 'infiltrate' && range < 30) score += (dMid <= 3 ? 5 : Math.max(0, 3 - dMid / 3)) * (covered > 0.5 ? 1 : 0.4);
+        else if (dMid <= moveOf(u) + 3) score += 3;
+      }
       // somebody with OC on the home objective
       for (const { p } of home) if (holdsGround && !homeHeld(p) && ms.some((m) => dist(m, p) <= 3 + m.r)) score += 7;
 
@@ -107,7 +118,7 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
     const eyes = probes(u, cand.pos);
     // hidden from the enemy deployment zone (they may get the first turn)
     const seen = watchers.filter((w) => eyes.some((m) => hasLos(s, w, m))).length / Math.max(1, watchers.length);
-    score -= seen * (brawler ? 14 : 9);
+    score -= seen * (brawler || how === 'infiltrate' ? 14 : 9);
     // shooters: sight of the middle objectives from here (to shoot whatever goes onto them)
     if (!brawler && range >= 18 && middle.length) {
       const lanes = middle.filter(({ p }) => dist(cand.centre, p) <= range + 3 && eyes.some((m) => hasLos(s, m, lookout(p)))).length;

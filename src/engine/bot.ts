@@ -18,7 +18,7 @@ import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onB
 import { actionOptions, startAction } from './missions';
 import { secondaryDead } from './secondaries';
 import {
-  centre, chargeValue, isBrawler, meleeKills, moveOf, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
+  centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, rangedKills, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
 import { bestArrival, bestFallBack, bestMove, canLeave, ctxFor, movesTowards, planMove, scoreSpot } from './botMove';
 import {
@@ -82,6 +82,11 @@ export function botDeploy(s: GameState) {
   // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
   if (hasDeepStrike(s, u) && sendToReserves(s, u.id) === null) return;
   // a vehicle must not be set up where ruin walls box it in for the whole game
+  // Infiltrators set up forward, on an objective or in cover near one
+  if (u.core.infiltrators) {
+    const fwd = smartPlacement(s, u, { how: 'infiltrate' });
+    if (fwd && deployUnit(s, u.id, fwd, 'infiltrate').ok) return;
+  }
   const pos = smartPlacement(s, u) ?? findPlacement(s, u, 'deploy', undefined, (q) => canLeave(s, u, q)) ?? findPlacement(s, u, 'deploy');
   if (pos && deployUnit(s, u.id, pos).ok) return;
   if (sendToReserves(s, u.id)) {
@@ -117,9 +122,20 @@ export function botCommand(s: GameState) {
   const mine = boardUnits(s, p);
   const enemies = boardUnits(s, other(p));
   if (P.armyRules.some((r) => r.name === 'Oath of Moment') && enemies.length) {
-    // the most valuable enemy our army can actually reach this turn
-    const reach = (e: UnitState) => Math.min(...mine.map((m) => unitDistance(m, e)), 99);
-    const t = [...enemies].sort((a, b) => (unitValue(b) / (1 + Math.max(0, reach(b) - 24) / 6)) - (unitValue(a) / (1 + Math.max(0, reach(a) - 24) / 6)))[0];
+    // the enemy our army can hurt most this turn: damage our units in range could do to it, worth more on objectives
+    const hurt = (e: UnitState) => {
+      let dmg = 0;
+      for (const u of mine) {
+        const gap = unitDistance(u, e);
+        const M = moveOf(u);
+        if (isBrawler(s, u)) { if (gap <= M + 9) dmg += Math.min(alive(e).length, meleeKills(u, e)) * perModel(e); }
+        else if (gap <= maxRange(u) + M) dmg += Math.min(alive(e).length, rangedKills(u, e)) * perModel(e);
+      }
+      const onObj = s.objectives.some((o) => onObjective(s, e, o)) ? 1.3 : 1;
+      // finishing it this turn is best; a unit we can barely scratch is a waste of the Oath
+      return Math.min(dmg, unitValue(e) * 1.2) * onObj + unitValue(e) * 0.05;
+    };
+    const t = [...enemies].sort((a, b) => hurt(b) - hurt(a))[0];
     setOathTarget(s, p, t.id);
   }
   if (P.armyRules.some((r) => r.name === 'Waaagh!') && !P.waaaghUsed && s.round >= 2) {
@@ -177,30 +193,51 @@ function moveOrder(s: GameState, p: PlayerId): UnitState[] {
   return s.units.filter((x) => x.owner === p).sort((a, b) => Number(isEngaged(s, b)) - Number(isEngaged(s, a)) || gap(a) - gap(b));
 }
 
-/** Passengers get out before their transport moves (Tactical Disembark: they can still move afterwards)
- *  once the enemy or an objective that needs bodies is close, or late in the game. */
+/** Where a passenger unit wants to be: the nearest objective that needs bodies, else the nearest enemy. */
+function passengerGoal(s: GameState, p: PlayerId, t: UnitState) {
+  const tm = alive(t)[0];
+  const foes = boardUnits(s, other(p));
+  const near = foes.length ? Math.min(...foes.map((e) => unitDistance(t, e))) : 99;
+  const need = objectiveNeeds(s, p).filter((n) => n.need > 0).map((n) => objPoint(s, n.o)).sort((a, b) => dist(a, tm) - dist(b, tm))[0];
+  const closest = foes.length ? foes.flatMap(alive).reduce((a, m) => (dist(m, tm) < dist(a, tm) ? m : a)) : undefined;
+  return { tm, near, need, goal: need && dist(need, tm) <= 12 ? need : closest ?? need ?? tm };
+}
+
+function getOut(s: GameState, u: UnitState, t: UnitState, goal: { x: number; y: number }): boolean {
+  const tm = alive(t)[0];
+  const base = Math.atan2(goal.y - tm.y, goal.x - tm.x);
+  for (const da of [0, 0.4, -0.4, 0.8, -0.8, 1.3, -1.3, 1.9, -1.9, 2.5, -2.5, Math.PI]) {
+    const pos = ringFormation(u, tm, base + da);
+    if (validateDisembark(s, u, t, pos).ok) { disembarkUnit(s, u, t, pos); return true; }
+  }
+  return false;
+}
+
+/** Passengers get out before their transport moves (Tactical Disembark: they can still move and charge)
+ *  once the enemy or an objective that needs bodies is within reach of their own move. */
 function botDisembark(s: GameState, p: PlayerId): boolean {
   const key = (u: UnitState) => `${s.turn}|${s.phase}|${u.id}:out`;
   for (const u of s.units.filter((x) => x.owner === p && x.status === 'embarked' && x.embarkedIn && !(s.botTried ?? []).includes(key(x)))) {
     const t = unitById(s, u.embarkedIn!);
     if (!onBoard(t) || t.move || disembarkMode(s, t) !== 'tactical') continue;
     s.botTried = [...(s.botTried ?? []), key(u)];
-    const tm = alive(t)[0];
-    const foes = boardUnits(s, other(p));
-    const near = foes.length ? Math.min(...foes.map((e) => unitDistance(t, e))) : 99;
-    const need = objectiveNeeds(s, p).filter((n) => n.need > 0).map((n) => objPoint(s, n.o)).sort((a, b) => dist(a, tm) - dist(b, tm))[0];
-    const go = s.round >= 4 || (s.round >= 2 && (near <= 14 || (need && dist(need, tm) <= 10)));
-    if (!go) continue;
-    // set up on the side facing the objective / the closest enemy
-    const closest = foes.length ? foes.flatMap(alive).reduce((a, m) => (dist(m, tm) < dist(a, tm) ? m : a)) : undefined;
-    const goal = need && dist(need, tm) <= 12 ? need : closest ?? need ?? tm;
-    const base = Math.atan2(goal.y - tm.y, goal.x - tm.x);
-    for (const da of [0, 0.4, -0.4, 0.8, -0.8, 1.3, -1.3, 1.9, -1.9, 2.5, -2.5, Math.PI]) {
-      const pos = ringFormation(u, tm, base + da);
-      if (validateDisembark(s, u, t, pos).ok) { disembarkUnit(s, u, t, pos); return true; }
-    }
+    const { tm, near, need, goal } = passengerGoal(s, p, t);
+    const reach = moveOf(u) + (isBrawler(s, u) ? 9 : Math.min(18, maxRange(u)));
+    const go = s.round >= 3 || near <= reach + 3 || (need !== undefined && dist(need, tm) <= moveOf(u) + 6);
+    if (go && getOut(s, u, t, goal)) return true;
   }
   return false;
+}
+
+/** After its transport moved: shooters get out (Rapid Disembark) when there is something to shoot or to hold. */
+function botRapidDisembark(s: GameState, t: UnitState) {
+  if (!t.transport || disembarkMode(s, t) !== 'rapid') return;
+  for (const u of s.units.filter((x) => x.embarkedIn === t.id && x.status === 'embarked')) {
+    const { tm, near, need, goal } = passengerGoal(s, t.owner, t);
+    const shooter = !isBrawler(s, u) || unitFlags(s, t).assaultDisembark;
+    const go = (shooter && near <= Math.min(24, maxRange(u) + 2)) || (need !== undefined && dist(need, tm) <= 6) || s.round >= 4;
+    if (go) getOut(s, u, t, goal);
+  }
 }
 
 /** Move (or bring in) one unit. Returns false when there is nothing left to do this phase. */
@@ -249,15 +286,16 @@ export function botMoveOne(s: GameState): boolean {
       const max = MM + (u.advanceRoll ?? 0) - 0.05;
       const aims = [adv.aim!, ...(normal.aim ? [normal.aim] : [])];
       const plan = onBoard(u) ? withRuleCache(() => bestMove(s, u, 'advance', max, ctxFor(s, u), { aims, noStay: true })) : null;
-      if (plan?.paths && validateMove(s, u, 'advance', plan.paths).ok) commitMove(s, u, 'advance', plan.paths);
+      if (plan?.paths && validateMove(s, u, 'advance', plan.paths).ok) { commitMove(s, u, 'advance', plan.paths); botRapidDisembark(s, u); }
       else remainStationary(s, u);
       return true;
     }
-    if (!normal.paths) { remainStationary(s, u); return true; }
+    if (!normal.paths) { remainStationary(s, u); botRapidDisembark(s, u); return true; }
     if (!beginMove(s, u, 'normal')) return true;
     if (onBoard(u) && validateMove(s, u, 'normal', normal.paths).ok) {
       commitMove(s, u, 'normal', normal.paths);
       botUseActs(s, u.owner, ['endOfNormalMove'], u.id);
+      botRapidDisembark(s, u);
     } else remainStationary(s, u);
     return true;
   }

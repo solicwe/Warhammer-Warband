@@ -208,6 +208,19 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
   return v;
 }
 
+/** Bunched-up units block each other's moves and charges, and give the enemy blast / charge targets: spread out. */
+function crowdScore(s: GameState, u: UnitState): number {
+  const ms = alive(u);
+  let v = 0;
+  for (const f of boardUnits(s, u.owner)) {
+    if (f.id === u.id || f.transport || u.transport) continue;
+    let gap = 99;
+    for (const a of ms) for (const b of alive(f)) gap = Math.min(gap, dist(a, b) - a.r - b.r);
+    if (gap < 1) v += 4; else if (gap < 3) v += 1.5;
+  }
+  return v;
+}
+
 /** How good it is for `u` to end its move at `spot` (null: where it stands now) after a move of this kind. */
 export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationary', spot: Spot | null, ctx: Ctx, moved = 0): number {
   const ms = alive(u);
@@ -218,7 +231,7 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
   u.maxMoved = Math.max(u.maxMoved, moved);
   try {
     const caution = ctx.brawler ? 0.45 : 1;
-    return objectiveScore(s, u) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx);
+    return objectiveScore(s, u) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }
     u.move = was.move;
