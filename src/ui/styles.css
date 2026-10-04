@@ -566,3 +566,9 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 .ab-pop .ab-pop-card button.ab-pop-size { min-height: 36px; padding: 0 10px 0 0; background: transparent; border-top: none; }
 .ab-pop .ab-pop-card button.ab-pop-size:hover { background: #dadada; }
 .ab-pop .ab-pop-card button.in-roster { width: 100%; border-top: 1px solid #d0c38f; }
+/* white = already in the roster, grey = not in it yet */
+.ab-pop-card.has { background: #fff; box-shadow: inset 0 0 0 1.5px #c9c9c9; }
+.ab-pop .ab-pop-card.has button.in-roster { background: #fff; color: #1a1a1a; border-top: 1px solid #e2e2e2; font-weight: 600; }
+.ab-pop .ab-pop-card.has button.in-roster:hover { background: #f3f3f3; }
+.ab-pop-card:not(.has) .ab-art { background: #e6e6e6; }
+.ab-pop-card:not(.has) .ab-art img { mix-blend-mode: multiply; }

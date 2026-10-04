@@ -657,7 +657,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
 
     /** A datasheet the player can add new (with its sizes) or pick from the roster. */
     const pickBlock = (d: DatasheetData, inRoster: ArmyUnitEntry[], onPick: (x: ArmyUnitEntry) => void, onNew: (models: number) => void) => (
-      <div key={d.name} className="ab-pop-card">
+      <div key={d.name} className={`ab-pop-card ${inRoster.length ? 'has' : ''}`}>
         <div className="ab-pop-card-head">
           <UnitArt sheet={d} />
           <div className="ab-pop-card-text">
@@ -671,7 +671,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         </div>
         {inRoster.map((x) => (
           <button key={x.uid} type="button" className="in-roster" onClick={() => onPick(x)}>
-            <Icon name="check" size={18} />ใน roster · {x.models} โมเดล · {unitPoints(x)} pts — แตะเพื่อใช้ตัวนี้
+            <Icon name="check" size={18} />มีใน roster · {x.models} โมเดล · {unitPoints(x)} pts — แตะเพื่อใช้ตัวนี้
           </button>
         ))}
       </div>
