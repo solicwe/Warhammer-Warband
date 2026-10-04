@@ -24,7 +24,7 @@ import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
-import { PrimaryCard, RollOverlay, SecondaryCard } from './RollOverlay';
+import { RollOverlay, SecondaryCard } from './RollOverlay';
 import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../engine/stratagems';
 import { StratUseCard } from './StratUse';
@@ -81,6 +81,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [speed, setSpeed] = useState<0 | 1 | 2>(1); // bot-vs-bot: pause / normal / fast
   const [showMenu, setShowMenu] = useState(false);
   const [showCards, setShowCards] = useState(false);
+  const [cardSide, setCardSide] = useState<PlayerId | null>(null); // whose cards the card viewer shows
   const [showGoals, setShowGoals] = useState(true);
   const [showMissions, setShowMissions] = useState(false);
 
@@ -1483,35 +1484,63 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       )}
 
       {showMissions && missionsSheet()}
-      {showCards && (
-        <div className="tray-backdrop" onClick={() => setShowCards(false)}>
-          <div className="tray" onClick={(e) => e.stopPropagation()}>
-            <div className="row">
-              <div className="sheet-title grow">การ์ดภารกิจ</div>
-              <button className={`btn small ${showGoals ? 'on' : ''}`} onClick={() => setShowGoals((x) => !x)}><Icon name="objective" size={16} /> {showGoals ? 'โชว์บนแผนที่' : 'ซ่อนบนแผนที่'}</button>
-              <button className="btn small ghost" onClick={() => setShowCards(false)}>ปิด</button>
-            </div>
-            <div className="field">
-              <span><b>Primary</b> · ภารกิจหลักของแต่ละฝ่าย</span>
-              <div className="sec-list prim-list">{([me, other(me)] as PlayerId[]).map((p) => <PrimaryCard key={p} s={s} owner={p} />)}</div>
-            </div>
-            {([me, other(me)] as PlayerId[]).map((p) => {
-              const P = s.players[p];
-              if (P.secMode === 'none') return null;
-              return (
-                <div key={p} className="field">
-                  <span><b className={p ? 'p1' : 'p0'}>{P.name}</b> · {P.secMode === 'tactical' ? `Tactical · เหลือในกอง ${P.secDeck.length} ใบ` : 'Fixed'} · ได้ {P.secVp} VP</span>
-                  {P.secActive.length === 0 && <div className="small muted">{P.secMode === 'tactical' ? 'ยังไม่มีการ์ด — จะจั่วให้ครบ 2 ใบตอนต้น Command phase ของ ' + P.name : 'ยังไม่ได้เลือก'}</div>}
+      {showCards && (() => {
+        const p = cardSide ?? me;
+        const P = s.players[p];
+        const prim = primaryById(P.primaryId);
+        const disp = dispositionById(P.disposition as DispositionId);
+        const act0 = prim.action ? MISSIONS.actions[prim.action] : undefined;
+        const whenTh: Record<string, string> = { endOfYourTurn: 'จบเทิร์นตัวเอง', endOfYourCommandPhase: 'จบ Command phase', endOfBattle: 'จบเกม', endOfAnyTurn: 'จบทุกเทิร์น' };
+        const rounds = (r: number[]) => (r[0] === r[1] ? `รอบ ${r[0]}` : r[0] === 1 && r[1] === 5 ? 'ทุกรอบ' : `รอบ ${r[0]}–${r[1]}`);
+        return (
+          <div className="tray-backdrop" onClick={() => setShowCards(false)}>
+            <div className="tray mc" onClick={(e) => e.stopPropagation()}>
+              <div className="row">
+                <div className="sheet-title grow">การ์ดภารกิจ</div>
+                <button className="btn small ghost" onClick={() => setShowCards(false)}>ปิด</button>
+              </div>
+              <div className="mc-tabs" role="tablist">
+                {([me, other(me)] as PlayerId[]).map((q) => (
+                  <button key={q} role="tab" aria-selected={q === p} className={`mc-tab ${q === p ? 'on' : ''} ${q ? 'p1' : 'p0'}`} onClick={() => setCardSide(q)}>
+                    {s.players[q].name}<span className="mc-tab-vp">{s.players[q].vp + s.players[q].secVp} VP</span>
+                  </button>
+                ))}
+              </div>
+              <div className="mc-score">
+                <div><span>Primary</span><b>{P.vp}<small>/45</small></b></div>
+                <div><span>Secondary</span><b>{P.secVp}</b></div>
+                <div><span>CP</span><b>{P.cp}</b></div>
+              </div>
+
+              <section className="mc-sec">
+                <div className="mc-head"><span className="mc-kicker">Primary Mission</span><span className="disp-chip" style={{ background: disp.color }}>{disp.name}</span></div>
+                <div className="mc-prim">
+                  <div className="mc-prim-name">{prim.name}</div>
+                  {prim.scoring.map((r) => (
+                    <div key={r.text + r.rounds} className="mc-rule">
+                      <div className="mc-rule-when"><span className="mc-round">{rounds(r.rounds)}</span> {whenTh[r.when] ?? r.when}</div>
+                      <div className="mc-rule-body"><span className="grow">{r.text}{r.bonus ? <span className="muted"> · {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</span>{!r.tiers && <span className="mc-vp">{r.vp} VP</span>}</div>
+                    </div>
+                  ))}
+                  {act0 && <div className="mc-action"><b>Action · {act0.name}</b><div>{act0.text}</div></div>}
+                </div>
+              </section>
+
+              {P.secMode !== 'none' && (
+                <section className="mc-sec">
+                  <div className="mc-head">
+                    <span className="mc-kicker">Secondary · {P.secMode === 'tactical' ? 'Tactical' : 'Fixed'}{P.secMode === 'tactical' && <span className="mc-deck"> · กองเหลือ {P.secDeck.length}</span>}</span>
+                    <button className={`btn small mc-map ${showGoals ? 'on' : ''}`} onClick={() => setShowGoals((x) => !x)}><Icon name="objective" size={15} /> {showGoals ? 'โชว์บนแผนที่' : 'ซ่อนบนแผนที่'}</button>
+                  </div>
+                  {P.secActive.length === 0 && <div className="small muted">{P.secMode === 'tactical' ? `ยังไม่มีการ์ด — จั่วให้ครบ 2 ใบตอนต้น Command phase ของ ${P.name}` : 'ยังไม่ได้เลือก'}</div>}
                   <div className="sec-list">
                     {P.secActive.map((id) => {
                       const vp = secondaryPreview(s, p, id);
                       const goal = secondaryGoal(s, p, id);
+                      const dead = P.secMode === 'tactical' && secondaryDead(s, p, id);
                       return (
                         <div key={id} className="sec-slot">
-                          {(() => {
-                            const dead = P.secMode === 'tactical' && secondaryDead(s, p, id);
-                            return <SecondaryCard id={id} owner={p} dead={dead} progress={dead ? 'ทำไม่ได้แล้ว — ทิ้งได้เลย' : vp ? `ถ้าจบเทิร์นตอนนี้: +${vp} VP` : `ทำ: ${goal.todo}`} />;
-                          })()}
+                          <SecondaryCard id={id} owner={p} dead={dead} progress={dead ? 'ทำไม่ได้แล้ว — ทิ้งได้เลย' : vp ? `ถ้าจบเทิร์นตอนนี้: +${vp} VP` : `ทำ: ${goal.todo}`} />
                           {P.secMode === 'tactical' && !bots.includes(p) && (
                             <>
                               <button className="btn sec-discard" onClick={() => { act((g) => discardSecondary(g, p, id)); flash(s.active === p ? 'ทิ้งการ์ดแล้ว +1 CP' : 'ทิ้งการ์ดแล้ว (ได้ CP เฉพาะตอนเทิร์นเรา)'); }}>
@@ -1526,12 +1555,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                       );
                     })}
                   </div>
-                </div>
-              );
-            })}
+                </section>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
       {showMenu && (
         <div className="tray-backdrop" onClick={() => setShowMenu(false)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>

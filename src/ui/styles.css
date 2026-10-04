@@ -622,3 +622,29 @@ button.ab-head { border: none; width: 100%; text-align: left; font: inherit; cur
 .dt-top-text .dt-faction.linkish { text-decoration: none; display: block; width: 100%; color: var(--ink-muted); }
 .dt-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; margin-top: 8px; }
 .wg-cost.less { color: #2e7d4f; }
+/* ---------- mission card viewer ---------- */
+.mc { gap: 12px; }
+.mc-tabs { display: flex; background: var(--card3, #ddd); border-radius: 10px; padding: 3px; gap: 3px; }
+.mc-tab { flex: 1; border: none; background: transparent; border-radius: 8px; padding: 9px 6px; font: 600 14px var(--sans); color: var(--ink-muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.mc-tab.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+.mc-tab.on.p0 { box-shadow: inset 0 -3px 0 var(--p0), 0 1px 3px rgba(0,0,0,.15); }
+.mc-tab.on.p1 { box-shadow: inset 0 -3px 0 var(--p1), 0 1px 3px rgba(0,0,0,.15); }
+.mc-tab-vp { font: 500 12px var(--sans); color: var(--ink-muted); }
+.mc-score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mc-score > div { background: #fff; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--card3, #ddd); }
+.mc-score span { font: 600 11px var(--sans); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); }
+.mc-score b { font: 700 22px var(--serif); color: var(--ink); }
+.mc-score small { font: 500 12px var(--sans); color: var(--ink-muted); }
+.mc-sec { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+.mc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mc-kicker { font: 700 12px var(--sans); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
+.mc-prim { background: #f4efe2; border: 2px solid #c99a2e; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; color: #1a1a1a; }
+.mc-prim-name { font: 700 19px var(--serif); border-bottom: 2px solid #c99a2e; padding-bottom: 6px; }
+.mc-rule { display: flex; flex-direction: column; gap: 3px; }
+.mc-rule + .mc-rule { border-top: 1px dashed #d8c99a; padding-top: 8px; }
+.mc-rule-when { font: 600 12px var(--sans); color: #7a0c0c; display: flex; align-items: center; gap: 6px; }
+.mc-round { background: #7a0c0c; color: #fff; border-radius: 6px; padding: 1px 7px; font-size: 11px; }
+.mc-rule-body { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.4; }
+.mc-vp { flex-shrink: 0; background: #1a1a1a; color: #f5d48a; border-radius: 8px; padding: 2px 8px; font: 700 13px var(--sans); white-space: nowrap; }
+.mc-action { background: #fff8e6; border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.4; }
+.mc-deck { text-transform: none; letter-spacing: 0; font-weight: 500; } .mc-map { white-space: nowrap; flex-shrink: 0; }
