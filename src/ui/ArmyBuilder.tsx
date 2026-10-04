@@ -187,6 +187,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [adding, setAdding] = useState<Section | null>(null);
   const [q, setQ] = useState('');
   const [menu, setMenu] = useState<string | null>(null); // uid of the unit whose datasheet + settings panel is open
+  const [detPicker, setDetPicker] = useState(false);
+  const [openDet, setOpenDet] = useState<string | null>(null);
+  const [openSecs, setOpenSecs] = useState<string[]>(['enh']);
   const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null); // the ⋮ quick menu
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
@@ -345,50 +348,42 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     </>
   );
 
+  const toggleSec = (k: string) => setOpenSecs((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
+  /** One collapsible block of the Detachment tab (Detachment Rule, Enhancements …). */
+  const dSection = (k: string, title: string, body: React.ReactNode, count?: number) => (
+    <div key={k} className="dt-sec">
+      <button type="button" className="dt-sec-head" onClick={() => toggleSec(k)}>
+        <span className="grow">{title}{count !== undefined && <span className="muted"> ({count})</span>}</span>
+        <span className={`dt-chev ${openSecs.includes(k) ? 'up' : ''}`}><Icon name="down" size={18} /></span>
+      </button>
+      {openSecs.includes(k) && <div className="dt-sec-body">{body}</div>}
+    </div>
+  );
+  const ruleCard = (key: string, name: string, right: string, text: string) => (
+    <div key={key} className="dt-card">
+      <div className="dt-card-head"><b>{name}</b><span>{right}</span></div>
+      <div className="dt-card-text">{text}</div>
+    </div>
+  );
+  const chosenDets = faction ? list.detachments.map((n) => faction.detachments.find((d) => d.name === n)).filter((d): d is NonNullable<typeof d> => !!d) : [];
+
   const detachmentTab = () => faction && (
     <>
-      <div className="card">
-        <div className="field">Faction{subs ? ` / ${subs.label}` : ''}
-          <button type="button" className="ab-pick-btn" onClick={() => setPicker({ factionId: null })}>
-            <span className="grow">{factionName}{subs ? ` · ${sub?.name ?? `ไม่ระบุ ${subs.label}`}` : ''}</span>
-            <span className="muted">เปลี่ยน ›</span>
-          </button>
+      <div className="dt-top">
+        <Emblem factionId={list.factionId} color={sub?.color} />
+        <div className="grow dt-top-text">
+          <div className="dt-faction">{factionName}{sub ? ` · ${sub.name}` : ''}</div>
+          <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || 'ยังไม่ได้เลือก detachment'}</div>
+          <div className="tiny muted">{size.name} · {pts}/{size.points} pts</div>
         </div>
-        <label className="field">Battle size
-          <select value={list.battleSize} onChange={(e) => set({ battleSize: e.target.value })}>
-            {RULES.battleSizes.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.points} pts · {b.dp} DP)</option>)}
-          </select>
-        </label>
+        <button type="button" className="dt-gear" aria-label="เปลี่ยน detachment" onClick={() => setDetPicker(true)}><Icon name="gear" size={26} /></button>
       </div>
-      <div className="card">
-        <div className="card-title">Detachments <span className="muted small">{dpUsed}/{size.dp} DP</span></div>
-        {subs && !sub && <div className="small muted">ยังไม่ได้เลือก {subs.label} — แสดงเฉพาะ detachment ทั่วไป <button type="button" className="linkish" onClick={() => setPicker({ factionId: list.factionId })}>เลือก {subs.label}</button></div>}
-        {faction.detachments.filter((d) => d.forceDisposition && (allowed(d) || list.detachments.includes(d.name)))
-          .sort((a, b) => Number(!!b.subfaction) - Number(!!a.subfaction))
-          .map((d) => {
-          const on = list.detachments.includes(d.name);
-          return (
-            <div key={d.id} className={`ab-det ${on ? 'on' : ''}`}>
-              <button type="button" className="ab-det-head" onClick={() => set({ detachments: on ? list.detachments.filter((x) => x !== d.name) : [...list.detachments, d.name] })}>
-                <span className="ab-check">{on && <Icon name="check" size={16} />}</span>
-                <span className="grow">
-                  <span className="ab-name">{d.name}{d.subfaction && <span className={`ab-chip ${allowed(d) ? '' : 'bad'}`}>{subTag(d.subfaction)}</span>}</span>
-                  <span className="ab-sub">{d.dp} DP · {d.forceDisposition} · {d.enhancements.length} enhancements · {d.stratagems.length} stratagems</span>
-                  <span className={`det-auto ${DET_RULES[d.name]?.auto ?? 'none'}`}>{{ full: 'กฎ detachment: ระบบทำให้ครบ', partial: 'กฎ detachment: ระบบทำส่วนหลัก', manual: 'กฎ detachment: ทำเอง' }[DET_RULES[d.name]?.auto ?? 'manual'] ?? 'กฎ detachment: อ่านเอง'}{!DET_RULES[d.name] ? ' (ยังไม่รองรับ)' : ''}</span>
-                </span>
-              </button>
-              {on && (
-                <details>
-                  <summary className="tiny">กฎ / enhancements / stratagems</summary>
-                  {d.rules.map((r) => <div key={r.name} className="sheet tiny"><b>{r.name}</b>{'\n'}{r.text}</div>)}
-                  {d.enhancements.map((e) => <div key={e.name} className="sheet tiny"><b>{e.name}</b> ({e.pts} pts{e.upgrade ? ', Upgrade' : ''}){'\n'}{e.text}</div>)}
-                  {d.stratagems.map((st) => <div key={st.name} className="sheet tiny"><b>{st.name}</b> ({st.cp}CP · {st.type}){'\n'}{st.text}</div>)}
-                </details>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {chosenDets.length === 0 && <button className="btn primary" onClick={() => setDetPicker(true)}>เลือก Detachment</button>}
+      {chosenDets.length > 0 && dSection('rule', 'Detachment Rule', chosenDets.flatMap((d) => d.rules.map((r) => ruleCard(d.name + r.name, r.name, chosenDets.length > 1 ? d.name : '', r.text))))}
+      {chosenDets.length > 0 && dSection('enh', 'Enhancements', chosenDets.flatMap((d) => d.enhancements.map((e) => ruleCard(d.name + e.name, e.name, `${e.pts}pts`, e.text))), chosenDets.reduce((a, d) => a + d.enhancements.length, 0))}
+      {chosenDets.length > 0 && dSection('strat', 'Stratagems', chosenDets.flatMap((d) => d.stratagems.map((st) => ruleCard(d.name + st.name, st.name, `${st.cp}CP`, `${st.type}\n${st.text}`))), chosenDets.reduce((a, d) => a + d.stratagems.length, 0))}
+      {dSection('core', 'Core Stratagems', RULES.coreStratagems.map((st) => ruleCard(st.id, st.name, `${st.cp}CP`, `${st.when}\n${st.text}`)))}
+      {dSection('army', 'Army Rule', faction.armyRules.map((r) => ruleCard(r.name, r.name, '', r.text)))}
       <div className="card">
         <div className="card-title">รูปตัวละคร</div>
         <div className="small muted">เลือกหลายรูปพร้อมกันได้ ตั้งชื่อไฟล์ตามชื่อ datasheet (เช่น <i>Intercessor Squad.jpg</i>) ระบบจะจับคู่ให้เอง หรือแตะรูปในหน้า datasheet เพื่อเปลี่ยนทีละหน่วย</div>
@@ -461,6 +456,61 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       </div>
     </>
   );
+
+  /** The ⚙ page: every detachment of the faction, open one to read it, tick one to use it. */
+  const detPickerPage = () => {
+    if (!detPicker || !faction) return null;
+    const dets = faction.detachments.filter((d) => d.forceDisposition && (allowed(d) || list.detachments.includes(d.name)))
+      .sort((a, b) => Number(!!b.subfaction) - Number(!!a.subfaction));
+    return (
+      <div className="tray-backdrop" onClick={() => setDetPicker(false)}>
+        <div className="tray dt-picker" onClick={(e) => e.stopPropagation()}>
+          <div className="row">
+            <div className="sheet-title grow">Army Detachment</div>
+            <button className="btn small ghost" onClick={() => setDetPicker(false)}>ปิด</button>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <button type="button" className="ab-pick-btn grow" onClick={() => setPicker({ factionId: null })}>
+              <span className="grow">{factionName}{subs ? ` · ${sub?.name ?? `ไม่ระบุ ${subs.label}`}` : ''}</span><span className="muted">เปลี่ยน ›</span>
+            </button>
+            <select value={list.battleSize} onChange={(e) => set({ battleSize: e.target.value })}>
+              {RULES.battleSizes.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.points} pts)</option>)}
+            </select>
+          </div>
+          {subs && !sub && <div className="small muted">ยังไม่ได้เลือก {subs.label} — แสดงเฉพาะ detachment ทั่วไป <button type="button" className="linkish" onClick={() => setPicker({ factionId: list.factionId })}>เลือก {subs.label}</button></div>}
+          {dets.map((d) => {
+            const on = list.detachments.includes(d.name);
+            const open = openDet === d.name;
+            const sec = (k: string) => openSecs.includes(`${d.name}:${k}`);
+            return (
+              <div key={d.id} className={`dt-item ${on ? 'on' : ''}`}>
+                <div className="dt-item-head">
+                  <button type="button" className="grow dt-item-name" onClick={() => setOpenDet(open ? null : d.name)}>
+                    {d.name}{d.subfaction && <span className={`ab-chip ${allowed(d) ? '' : 'bad'}`}>{subTag(d.subfaction)}</span>}
+                  </button>
+                  <span className="dt-dp">{d.dp} DP</span>
+                  <button type="button" className={`dt-chev ${open ? 'up' : ''}`} aria-label="ดูรายละเอียด" onClick={() => setOpenDet(open ? null : d.name)}><Icon name="down" size={18} /></button>
+                  <button type="button" className={`dt-box ${on ? 'on' : ''}`} aria-label={on ? 'เลือกอยู่' : 'เลือก'} onClick={() => { set({ detachments: on ? [] : [d.name] }); }}>{on && <Icon name="check" size={18} />}</button>
+                </div>
+                {open && (
+                  <div className="dt-item-body">
+                    {d.rules.map((r) => (
+                      <div key={r.name}><div className="dt-rule-name">{r.name.toUpperCase()}</div><div className="dt-card-text">{r.text}</div></div>
+                    ))}
+                    <div className="tiny">Force Disposition: <b>{d.forceDisposition}</b> · <span className={`det-auto ${DET_RULES[d.name]?.auto ?? 'none'}`}>{{ full: 'ระบบทำให้ครบ', partial: 'ระบบทำส่วนหลัก', manual: 'ทำเอง' }[DET_RULES[d.name]?.auto ?? 'manual'] ?? 'อ่านเอง'}</span></div>
+                    <button type="button" className="dt-sub" onClick={() => toggleSec(`${d.name}:enh`)}>Enhancements ({d.enhancements.length})<span className={`dt-chev ${sec('enh') ? 'up' : ''}`}><Icon name="down" size={16} /></span></button>
+                    {sec('enh') && d.enhancements.map((e) => ruleCard(e.name, e.name, `${e.pts}pts`, e.text))}
+                    <button type="button" className="dt-sub" onClick={() => toggleSec(`${d.name}:strat`)}>Stratagems ({d.stratagems.length})<span className={`dt-chev ${sec('strat') ? 'up' : ''}`}><Icon name="down" size={16} /></span></button>
+                    {sec('strat') && d.stratagems.map((st) => ruleCard(st.name, st.name, `${st.cp}CP`, `${st.type}\n${st.text}`))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   const addSheet = () => {
     if (!adding || !faction) return null;
@@ -812,6 +862,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {note && <div className="toast ab-toast">{note}</div>}
       {addSheet()}
       {quickMenu()}
+      {detPickerPage()}
       {pickerSheet()}
       {view && faction && sheetOf(view) && (
         <div className="tray-backdrop" onClick={() => setView(null)}>

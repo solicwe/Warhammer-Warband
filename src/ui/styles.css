@@ -529,3 +529,31 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 .ab-pop button.in-roster { background: #fff6d6; color: #6b4e00; font-size: 14px; min-height: 44px; }
 .ab-pop button.in-roster:hover { background: #ffeeb0; }
 .ab-pop-block button + button { border-top: none; }
+/* Detachment tab: the chosen detachment on top (⚙ to change), its rules in collapsible blocks */
+.dt-top { display: flex; align-items: center; gap: 14px; background: var(--card); color: var(--ink); border-radius: 10px; padding: 12px 14px; }
+.dt-top .emblem, .dt-top svg:first-child { flex-shrink: 0; }
+.dt-top-text { min-width: 0; text-align: center; }
+.dt-faction { font: italic 500 14px var(--serif, var(--sans)); color: var(--ink-muted); }
+.dt-det { font: 700 17px var(--serif, var(--sans)); }
+.dt-gear { border: none; background: transparent; color: var(--ink); padding: 6px; cursor: pointer; border-radius: 50%; }
+.dt-gear:hover { background: var(--card2); }
+.dt-sec { background: var(--card); color: var(--ink); border-radius: 10px; overflow: hidden; }
+.dt-sec-head { width: 100%; display: flex; align-items: center; gap: 8px; border: none; background: transparent; color: inherit; padding: 13px 14px; font: 600 16px var(--serif, var(--sans)); text-align: left; cursor: pointer; }
+.dt-sec-body { display: flex; flex-direction: column; gap: 8px; padding: 0 6px 8px; }
+.dt-chev { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #3b3b3b; color: #fff; border: none; flex-shrink: 0; cursor: pointer; padding: 0; }
+.dt-chev.up svg { transform: rotate(180deg); }
+.dt-card { background: #fff; border-radius: 4px; overflow: hidden; }
+.dt-card-head { display: flex; justify-content: space-between; gap: 8px; background: #4a4a4a; color: #fff; padding: 6px 10px; font: 700 14px var(--serif, var(--sans)); }
+.dt-card-text { padding: 8px 10px; font: 400 14px/1.45 var(--serif, var(--sans)); color: #111; white-space: pre-line; }
+.dt-picker { gap: 10px; }
+.dt-item { background: #efefef; color: #111; border-radius: 8px; overflow: hidden; }
+.dt-item.on .dt-item-head { background: #f0a92e; }
+.dt-item-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+.dt-item-name { border: none; background: transparent; color: inherit; text-align: left; font: 500 15px var(--serif, var(--sans)); padding: 4px 0; cursor: pointer; }
+.dt-dp { font: 600 14px var(--serif, var(--sans)); white-space: nowrap; }
+.dt-box { width: 26px; height: 26px; border: 2px solid #333; border-radius: 4px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; flex-shrink: 0; }
+.dt-box.on { background: #fff; border-color: #222; }
+.dt-item-body { background: #fff; padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 8px; }
+.dt-rule-name { background: #9a9a9a; color: #fff; font: 700 13px var(--serif, var(--sans)); padding: 3px 8px; }
+.dt-sub { display: flex; align-items: center; justify-content: space-between; border: none; border-top: 1px solid #ddd; background: #efefef; color: #111; padding: 9px 10px; font: 500 15px var(--serif, var(--sans)); cursor: pointer; margin: 0 -10px; }
+.dt-top, .dt-sec, .dt-item, .dt-card { flex-shrink: 0; }
