@@ -23,7 +23,7 @@ function game(sm: Row[], det: string[], ork: Row[]): GameState {
     deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 7,
   });
   s.terrain = s.terrain.filter((t) => t.objectiveId);
-  s.terrain.forEach((t) => (t.walls = []));
+  s.terrain.forEach((t) => { t.walls = []; t.category = 'exposed'; }); // open ground: only the objective areas stay
   s.round = 2; s.turn = 2; s.phase = 'command'; s.active = 0;
   s.players[0].cp = 10; s.players[1].cp = 10;
   return s;
