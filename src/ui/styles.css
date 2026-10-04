@@ -602,3 +602,11 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 .dt-item.blocked .dt-disp { color: var(--bad); }
 .dt-item.blocked .dt-box { border-color: #999; }
 .ab-cap { color: #1f6fb2; font-weight: 600; }
+
+/* Primary Mission cards: bigger than a secondary, the scoring rules scroll */
+.sec-card.prim-card { width: 172px; height: 340px; }
+.prim-card .sec-front { gap: 5px; }
+.prim-who { font: 700 11px var(--sans); text-transform: uppercase; letter-spacing: 0.06em; }
+.prim-card .disp-chip { align-self: flex-start; font-size: 11px; }
+.prim-rule { margin-bottom: 6px; }
+.prim-list { grid-template-columns: repeat(auto-fill, minmax(172px, 1fr)); }

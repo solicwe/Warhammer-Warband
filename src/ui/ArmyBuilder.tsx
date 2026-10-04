@@ -474,7 +474,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                       <span className="ab-name">{d.name}{count ? <span className="ab-count"> ×{count}</span> : null}</span>
                       <span className="ab-pts">{pointsOptions(d).map((o) => `${o.models}: ${o.pts}`).join(' / ')} pts</span>
                       <span className="ab-sub">{d.subfaction && <span className="ab-chip">{subTag(d.subfaction)}</span>}{d.keywords.includes('EPIC HERO') ? 'Epic Hero · ' : ''}{d.role}</span>
-                      {(() => { const t = parseTransport(d.transport); return t ? <span className="ab-sub ab-cap"><Icon name="embark" size={13} /> ขนได้ {t.capacity} ที่{t.kinds?.length ? ` · ${t.kinds.join(' / ')}` : t.infantryOnly ? ' · INFANTRY' : ''}{t.forbid.length ? ` · ห้าม ${t.forbid.join(', ')}` : ''}</span> : null; })()}
+                      {(() => { const t = parseTransport(d.transport); return t ? <span className="ab-sub ab-cap"><Icon name="embark" size={13} /> ขนได้ {t.capacity} ที่</span> : null; })()}
                     </span>
                   </button>
                   <button type="button" className="ab-add dark" aria-label={`เพิ่ม ${d.name}`} onClick={() => addUnit(d)}>+</button>

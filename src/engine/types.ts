@@ -458,7 +458,9 @@ export type FxEvent =
   /** roll-off between the players */
   | { seq: number; kind: 'rolloff'; title: string; a: number; b: number; winner: PlayerId; result: string }
   /** tactical secondary cards just drawn (shown face up, one after the other) */
-  | { seq: number; kind: 'cards'; owner: PlayerId; ids: string[] };
+  | { seq: number; kind: 'cards'; owner: PlayerId; ids: string[] }
+  /** the start of the battle: both players' Primary Mission cards */
+  | { seq: number; kind: 'primary' };
 
 export type Window =
   | { kind: 'fireOverwatch'; player: PlayerId }

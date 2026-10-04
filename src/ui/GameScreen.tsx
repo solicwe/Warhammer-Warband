@@ -24,7 +24,7 @@ import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
-import { RollOverlay, SecondaryCard } from './RollOverlay';
+import { PrimaryCard, RollOverlay, SecondaryCard } from './RollOverlay';
 import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../engine/stratagems';
 import { StratUseCard } from './StratUse';
@@ -1487,9 +1487,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className="tray-backdrop" onClick={() => setShowCards(false)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
             <div className="row">
-              <div className="sheet-title grow">การ์ด Secondary</div>
+              <div className="sheet-title grow">การ์ดภารกิจ</div>
               <button className={`btn small ${showGoals ? 'on' : ''}`} onClick={() => setShowGoals((x) => !x)}><Icon name="objective" size={16} /> {showGoals ? 'โชว์บนแผนที่' : 'ซ่อนบนแผนที่'}</button>
               <button className="btn small ghost" onClick={() => setShowCards(false)}>ปิด</button>
+            </div>
+            <div className="field">
+              <span><b>Primary</b> · ภารกิจหลักของแต่ละฝ่าย</span>
+              <div className="sec-list prim-list">{([me, other(me)] as PlayerId[]).map((p) => <PrimaryCard key={p} s={s} owner={p} />)}</div>
             </div>
             {([me, other(me)] as PlayerId[]).map((p) => {
               const P = s.players[p];

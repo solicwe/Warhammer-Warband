@@ -119,6 +119,7 @@ export function createGame(o: NewGameOptions): GameState {
   pushFx(s, { kind: 'rolloff', title: 'Roll-off: ใคร Attacker?', a: ro.a, b: ro.b, winner: ro.winner, result: `${o.names[ro.winner]} เป็น Attacker · ${o.names[other(ro.winner)]} (Defender) วางทัพก่อน` });
   s.players[ro.winner].role = 'attacker';
   s.players[other(ro.winner)].role = 'defender';
+  pushFx(s, { kind: 'primary' });
   for (const ob of s.objectives as (ObjectiveState & { ownerRole?: string })[]) {
     if (ob.ownerRole) ob.owner = ob.ownerRole === 'attacker' ? s.attackerPlayer : other(s.attackerPlayer);
   }

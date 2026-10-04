@@ -1,10 +1,10 @@
 // Big centre-screen dice for rolls that matter (roll-offs, advance, charge, battle-shock).
 import { useEffect, useRef, useState } from 'react';
 import type { FxEvent, GameState } from '../engine/types';
-import { secondaryById } from '../engine/config';
+import { dispositionById, MISSIONS, primaryById, secondaryById, type DispositionId } from '../engine/config';
 import { Icon } from './Icon';
 
-type RollFx = Extract<FxEvent, { kind: 'roll' | 'rolloff' | 'cards' }>;
+type RollFx = Extract<FxEvent, { kind: 'roll' | 'rolloff' | 'cards' | 'primary' }>;
 
 const PIPS: Record<number, [number, number][]> = {
   1: [[50, 50]],
@@ -25,7 +25,7 @@ export function Die({ v, color, size = 76 }: { v: number; color?: string; size?:
 }
 
 const TUMBLE_MS = 650;
-const SHOW_MS = { roll: 1900, rolloff: 3200, cards: 4600 };
+const SHOW_MS = { roll: 1900, rolloff: 3200, cards: 4600, primary: 15000 };
 const COLORS = ['var(--p0)', 'var(--p1)'];
 
 /** Tumbling dice that settle on the real values. */
@@ -53,10 +53,10 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
 
   useEffect(() => {
     if ((s.fxSeq ?? 0) < seen.current) { seen.current = s.fxSeq ?? 0; setQueue([]); return; } // undo
-    const add = (s.fx ?? []).filter((e): e is RollFx => e.seq > seen.current && (e.kind === 'roll' || e.kind === 'rolloff' || e.kind === 'cards'));
+    const add = (s.fx ?? []).filter((e): e is RollFx => e.seq > seen.current && (e.kind === 'roll' || e.kind === 'rolloff' || e.kind === 'cards' || e.kind === 'primary'));
     seen.current = s.fxSeq ?? 0;
     // when only bots play, skip the minor rolls so the overlay does not hide the game
-    const shown = quick ? add.filter((e) => e.kind === 'rolloff' || e.kind === 'cards' || e.title.startsWith('Charge')) : add;
+    const shown = quick ? add.filter((e) => e.kind === 'rolloff' || e.kind === 'cards' || e.kind === 'primary' || e.title.startsWith('Charge')) : add;
     if (shown.length) setQueue((q) => [...q, ...shown].slice(-4));
   }, [s.fx, s.fxSeq]);
 
@@ -95,6 +95,19 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
             {cur.ids.map((id, i) => <SecondaryCard key={id} id={id} faceUp={landed} delay={i * 260} owner={cur.owner} />)}
           </div>
           <div className="ro-hint">{landed ? 'แตะเพื่อปิด · ดูการ์ดได้ตลอดที่ปุ่ม การ์ด ด้านบน' : 'แตะเพื่อเปิดการ์ดทันที'}</div>
+        </div>
+      </div>
+    );
+  }
+  if (cur.kind === 'primary') {
+    return (
+      <div className="ro-backdrop" onClick={skip} role="dialog" aria-label="Primary Mission">
+        <div className="ro-card sec-draw">
+          <div className="ro-title">Primary Mission</div>
+          <div className="sec-hand">
+            {([0, 1] as const).map((p, i) => <PrimaryCard key={p} s={s} owner={p} faceUp={landed} delay={i * 260} />)}
+          </div>
+          <div className="ro-hint">{landed ? 'แตะเพื่อปิด · ดูได้ตลอดที่ปุ่ม การ์ด ด้านบน' : 'แตะเพื่อเปิดการ์ดทันที'}</div>
         </div>
       </div>
     );
@@ -144,6 +157,35 @@ export function SecondaryCard({ id, faceUp = true, delay = 0, owner, progress, d
         <div className="sec-when"><Icon name="wait" size={13} /> {def.when}</div>
         <div className="sec-text">{def.text}</div>
         {progress && <div className={`sec-progress ${dead ? 'dead' : ''}`}>{progress}</div>}
+      </div>
+    </div>
+  );
+}
+
+const WHEN_TH: Record<string, string> = { endOfYourTurn: 'จบเทิร์นตัวเอง', endOfYourCommandPhase: 'จบ Command phase (รอบ 5: จบเทิร์น)', endOfBattle: 'จบเกม', endOfAnyTurn: 'จบทุกเทิร์น' };
+
+/** A player's Primary Mission card: its name, their Force Disposition, how and when it scores, its action. */
+export function PrimaryCard({ s, owner, faceUp = true, delay = 0 }: { s: GameState; owner: 0 | 1; faceUp?: boolean; delay?: number }) {
+  const P = s.players[owner];
+  const prim = primaryById(P.primaryId);
+  const disp = dispositionById(P.disposition as DispositionId);
+  const act = prim.action ? MISSIONS.actions[prim.action] : undefined;
+  return (
+    <div className={`sec-card prim-card ${faceUp ? 'up' : ''} ${owner === 1 ? 'p1' : 'p0'}`} style={{ animationDelay: `${delay}ms` }}>
+      <div className="sec-face sec-back"><Icon name="objective" size={42} /><span>PRIMARY</span></div>
+      <div className="sec-face sec-front">
+        <div className="prim-who" style={{ color: owner ? 'var(--p1)' : 'var(--p0)' }}>{P.name}</div>
+        <div className="sec-name">{prim.name}</div>
+        <span className="disp-chip" style={{ background: disp.color }}>{disp.name}</span>
+        <div className="sec-text">
+          {prim.scoring.map((r) => (
+            <div key={r.text + r.rounds} className="prim-rule">
+              <div className="sec-when"><Icon name="wait" size={12} /> {r.rounds[0] === r.rounds[1] ? `รอบ ${r.rounds[0]}` : r.rounds[0] === 1 && r.rounds[1] === 5 ? 'ทุกรอบ' : `รอบ ${r.rounds[0]}–${r.rounds[1]}`} · {WHEN_TH[r.when] ?? r.when}</div>
+              <div>{r.text} {!r.tiers && <b>{r.vp} VP</b>}{r.bonus ? <span> · {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</div>
+            </div>
+          ))}
+          {act && <div className="prim-rule"><b>Action: {act.name}</b> — {act.text}</div>}
+        </div>
       </div>
     </div>
   );
