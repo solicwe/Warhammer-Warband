@@ -1494,6 +1494,740 @@
      }
     }
    ]
+  },
+  "Aegis of the Emperor": {
+   "auto": "full",
+   "armyRule": true,
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "defend": {
+      "fnp": 5,
+      "fnpVs": "mortal"
+     }
+    }
+   ]
+  },
+  "Aquila Commander": {
+   "auto": "full",
+   "armyRule": true,
+   "note": "warlord ที่มี ability นี้: ต้น battle round ได้ 1CP (ดู data/abilities/AC.json)"
+  },
+  "Special Move Types": {
+   "auto": "full",
+   "armyRule": true,
+   "note": "Shock disembark: ดู Assault Vehicle"
+  },
+  "Daughters of the Abyss": {
+   "auto": "full",
+   "armyRule": true,
+   "effects": [
+    {
+     "units": [
+      "ANATHEMA PSYKANA"
+     ],
+     "defend": {
+      "fnp": 3,
+      "fnpVs": "psychic"
+     }
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "ANATHEMA PSYKANA"
+     ],
+     "name": "Psychic Null (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+         "ADEPTUS CUSTODES"
+        ],
+        "defend": {
+         "fnp": 5,
+         "fnpVs": "psychic"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Martial Ka'tah": {
+   "auto": "full",
+   "armyRule": true,
+   "acts": [
+    {
+     "when": "commandStart",
+     "auto": true,
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "ready": true
+      }
+     ]
+    },
+    {
+     "when": "command",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied"
+     ],
+     "label": "Conservai: ทำ action ได้แม้ engaged / battle-shocked และยังยิงได้",
+     "botUse": "never",
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "eligible": [
+          "actionWhileEngaged",
+          "actionWhileShocked",
+          "shootAfterAction"
+         ]
+        }
+       ],
+       "until": "turn"
+      },
+      {
+       "on": "self",
+       "if": [
+        "detachment:Emissaries Imperatus"
+       ],
+       "buff": [
+        {
+         "eligible": [
+          "actionAfterAdvance",
+          "actionAfterFallBack"
+         ]
+        }
+       ],
+       "until": "turn"
+      }
+     ]
+    },
+    {
+     "when": "movement",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied",
+      "notMovedYet"
+     ],
+     "label": "Calistus: เดินทะลุโมเดลได้",
+     "botIf": [
+      "detachment:Solar Watch",
+      "!engaged"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "moveThroughModels": true
+        }
+       ],
+       "until": "turn"
+      },
+      {
+       "on": "self",
+       "if": [
+        "detachment:Solar Watch"
+       ],
+       "buff": [
+        {
+         "move": 2
+        }
+       ],
+       "until": "turn"
+      }
+     ]
+    },
+    {
+     "when": "selectedToShoot",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied"
+     ],
+     "label": "Salvus: ไม่สน modifier ของ BS / hit / wound",
+     "botIf": [
+      "any:detachment:Aquilan Shield||farFromEnemies:14"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "ranged",
+         "ignoreHitMods": true,
+         "ignoreWoundMods": true
+        }
+       ]
+      },
+      {
+       "on": "self",
+       "if": [
+        "detachment:Aquilan Shield"
+       ],
+       "buff": [
+        {
+         "rangeBonus": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "when": "fightStartButton",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied"
+     ],
+     "label": "Dacatarai: ตีระยะประชิดใส่หน่วยที่ไม่ใช่ MONSTER/VEHICLE re-roll hit 1",
+     "botIf": [
+      "ownTurn",
+      "engagedNotMV",
+      "!engagedMV"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "melee",
+         "if": [
+          "targetNotMV"
+         ],
+         "reroll": "hits1"
+        }
+       ]
+      },
+      {
+       "on": "self",
+       "if": [
+        "detachment:Dread Host"
+       ],
+       "buff": [
+        {
+         "enemyPileMinus": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "when": "fightStartButton",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied"
+     ],
+     "label": "Kaptaris: ศัตรูตีหน่วยนี้ระยะประชิด -1 hit",
+     "botIf": [
+      "!ownTurn",
+      "engaged"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "defend": {
+          "vs": "melee",
+          "hit": -1
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "when": "fightStartButton",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied",
+      "detachment:Shadowkeepers"
+     ],
+     "target": {
+      "side": "enemy",
+      "engaged": true
+     },
+     "label": "Kaptaris (Shadowkeepers): -1 hit + ศัตรูที่ติดพันทดสอบ battle-shock -1",
+     "botIf": [
+      "engaged"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "defend": {
+          "vs": "melee",
+          "hit": -1
+         }
+        }
+       ]
+      },
+      {
+       "shock": -1
+      }
+     ]
+    },
+    {
+     "when": "selectedToFight",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied"
+     ],
+     "label": "Rendax: อาวุธประชิด [LETHAL HITS: MONSTER/VEHICLE]",
+     "botIf": [
+      "engagedMV"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "melee",
+         "abilities": [
+          "lethal hits: monster/vehicle"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "when": "selectedToFight",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied",
+      "detachment:Emperor's Chosen",
+      "engagedMV"
+     ],
+     "target": {
+      "side": "enemy",
+      "engaged": true,
+      "units": [
+       "MONSTER|VEHICLE"
+      ]
+     },
+     "roll": "D6",
+     "label": "Rendax (Emperor's Chosen): + ทอย mortal wound ใส่ MONSTER/VEHICLE ที่ติดพัน",
+     "botIf": [
+      "engagedMV"
+     ],
+     "table": [
+      {
+       "min": 1,
+       "max": 2,
+       "do": [
+        {
+         "mortals": "1"
+        }
+       ]
+      },
+      {
+       "min": 3,
+       "max": 5,
+       "do": [
+        {
+         "mortals": "D3"
+        }
+       ]
+      },
+      {
+       "min": 6,
+       "do": [
+        {
+         "mortals": "3"
+        }
+       ]
+      }
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "melee",
+         "abilities": [
+          "lethal hits: monster/vehicle"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "Guardians of the Throne": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "name": "Martial Mastery",
+     "rule": {
+      "act": [
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "if": [
+         "!marked:martialMastery"
+        ],
+        "label": "อาวุธประชิด [SUSTAINED HITS 1]",
+        "botIf": [
+         "!lethalBetter"
+        ],
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "attack": "melee",
+            "abilities": [
+             "sustained hits 1"
+            ]
+           }
+          ],
+          "mark": "martialMastery"
+         }
+        ]
+       },
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "if": [
+         "!marked:martialMastery"
+        ],
+        "label": "อาวุธประชิด [LETHAL HITS]",
+        "botIf": [
+         "lethalBetter"
+        ],
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "attack": "melee",
+            "abilities": [
+             "lethal hits"
+            ]
+           }
+          ],
+          "mark": "martialMastery"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Aquilan Shield": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES",
+      "!MONSTER",
+      "!VEHICLE"
+     ],
+     "if": [
+      "onObjective"
+     ],
+     "defend": {
+      "vs": "ranged",
+      "woundIfStronger": -1
+     }
+    }
+   ],
+   "note": "Favoured Ka'tah: Salvus +6\" ระยะยิง"
+  },
+  "Emperor's Chosen": {
+   "auto": "full",
+   "freeDie": [
+    {
+     "kind": "reroll",
+     "stage": "hit",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "wound",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ]
+    }
+   ],
+   "note": "Favoured Ka'tah: Rendax + ทอย mortal wound"
+  },
+  "Emissaries Imperatus": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "fightsFirst": true
+    }
+   ],
+   "note": "Favoured Ka'tah: Conservai"
+  },
+  "Dread Host": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "rerollCharge": true
+    }
+   ],
+   "note": "Favoured Ka'tah: Dacatarai (ศัตรูที่ติดพัน pile-in/consolidate -2\")"
+  },
+  "Shadowkeepers": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES",
+      "!MONSTER",
+      "!VEHICLE"
+     ],
+     "if": [
+      "onObjective"
+     ],
+     "defend": {
+      "vs": "melee",
+      "woundIfStronger": -1
+     }
+    }
+   ],
+   "note": "Favoured Ka'tah: Kaptaris + battle-shock"
+  },
+  "Solar Watch": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "eligible": [
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "note": "Favoured Ka'tah: Calistus +2\" M"
+  },
+  "Auric Champions": {
+   "auto": "full",
+   "acts": [
+    {
+     "when": "command",
+     "armyWide": true,
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "target": {
+      "side": "enemy",
+      "anywhere": true
+     },
+     "limit": "turn",
+     "label": "เลือกศัตรูเป็น dreadful foe: CHARACTER ของเรา +1 wound ใส่มัน",
+     "do": [
+      {
+       "incoming": {
+        "units": [
+         "CHARACTER"
+        ],
+        "wound": 1
+       },
+       "until": "nextCommand",
+       "mark": "dreadfulFoe"
+      }
+     ]
+    }
+   ]
+  },
+  "Honoured Companions": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "TRUSTED SENTINEL"
+     ],
+     "if": [
+      "onObjective"
+     ],
+     "reroll": "wounds1"
+    }
+   ]
+  },
+  "Lions of the Emperor": {
+   "auto": "full",
+   "acts": [
+    {
+     "when": "opponentFightEnd",
+     "units": [
+      "ADEPTUS CUSTODES",
+      "TERMINATOR"
+     ],
+     "if": [
+      "notEngaged"
+     ],
+     "botUse": "never",
+     "label": "On Gilded Wings: ออกไปอยู่ Strategic Reserves",
+     "do": [
+      {
+       "on": "self",
+       "reserves": true
+      }
+     ]
+    }
+   ]
+  },
+  "Might of the Moritoi": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES",
+      "DREADNOUGHT"
+     ],
+     "if": [
+      "!belowStartingW"
+     ],
+     "oc": 2
+    },
+    {
+     "units": [
+      "ADEPTUS CUSTODES",
+      "DREADNOUGHT"
+     ],
+     "if": [
+      "belowStartingW",
+      "!belowHalfW"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "ADEPTUS CUSTODES",
+      "DREADNOUGHT"
+     ],
+     "if": [
+      "belowHalfW"
+     ],
+     "reroll": [
+      "hits1",
+      "wounds1"
+     ]
+    }
+   ]
+  },
+  "Grav-Assault Force": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "GRAV-ASSAULT"
+     ],
+     "defend": {
+      "vs": "ranged",
+      "inv": 4
+     }
+    }
+   ]
+  },
+  "Null Maiden Vigil": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "PROSECUTOR SQUAD"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "ANATHEMA PSYKANA"
+     ],
+     "name": "Creeping Dread (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "creepingDread": 12
+       }
+      ]
+     }
+    }
+   ],
+   "note": "warlord เป็น ANATHEMA PSYKANA CHARACTER ได้"
   }
  }
 }

@@ -37,4 +37,17 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'b10', datasheet: 'Gretchin', models: 10, pts: 45 },
     ],
   },
+  AC: {
+    name: 'Adeptus Custodes (Quick)',
+    factionId: 'AC',
+    battleSize: 'incursion',
+    detachments: ['Guardians of the Throne'],
+    units: [
+      { uid: 'c1', datasheet: 'Custodian Guard', models: 3, pts: 240 },
+      { uid: 'c2', datasheet: 'Shield-Captain', models: 1, pts: 180, attachTo: 'c1', warlord: true },
+      { uid: 'c3', datasheet: 'Custodian Guard', models: 3, pts: 240 },
+      { uid: 'c4', datasheet: 'Vertus Praetors', models: 2, pts: 220 },
+      { uid: 'c5', datasheet: 'Prosecutors', models: 5, pts: 50 },
+    ],
+  },
 };

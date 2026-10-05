@@ -6,7 +6,7 @@
  "author": "Roboute Guilliman",
  "gameSystemId": "wh40k-11e_main",
  "baseCatalogueName": "Imperium - Space Marines",
- "revision": 188,
+ "revision": 189,
  "origin": "local",
  "markEntryNames": false,
  "localEdits": false,
@@ -22685,9 +22685,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "baal-predator--m-baal-predator--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "baal-predator--m-baal-predator--slot-armoured-tracks",
+       "name": "Armoured Tracks",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -22699,7 +22699,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "baal-predator--m-baal-predator--slot-hunter-killer-missile",
+       "name": "Hunter-killer missile",
+       "optional": true,
+       "options": [
         {
          "weapons": [
           {
@@ -22710,7 +22717,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "baal-predator--m-baal-predator--slot-storm-bolter",
+       "name": "Storm bolter",
+       "optional": true,
+       "options": [
         {
          "weapons": [
           {
@@ -22721,7 +22735,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "baal-predator--m-baal-predator--slot-sponson-weapons",
+       "name": "Sponson Weapons",
+       "optional": true,
+       "options": [
         {
          "weapons": [
           {
@@ -22743,7 +22764,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "baal-predator--m-baal-predator--slot-turret-weapon",
+       "name": "Turret Weapon",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -22929,10 +22957,21 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "blood-angels-captain--m-blood-angels-captain--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "blood-angels-captain--m-blood-angels-captain--slot-melee",
+       "name": "Melee",
+       "optional": false,
        "options": [
+        {
+         "weapons": [
+          {
+           "weaponId": "blood-angels-captain--master-crafted-chainsword"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        },
         {
          "weapons": [
           {
@@ -22954,11 +22993,18 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "blood-angels-captain--m-blood-angels-captain--slot-pistol",
+       "name": "Pistol",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
-           "weaponId": "blood-angels-captain--master-crafted-chainsword"
+           "weaponId": "blood-angels-captain--heavy-bolt-pistol"
           }
          ],
          "upgradeName": "",
@@ -22970,17 +23016,6 @@
          "weapons": [
           {
            "weaponId": "blood-angels-captain--inferno-pistol"
-          }
-         ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        },
-        {
-         "weapons": [
-          {
-           "weaponId": "blood-angels-captain--heavy-bolt-pistol"
           }
          ],
          "upgradeName": "",
@@ -23524,9 +23559,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "death-company-captain--m-death-company-captain--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "death-company-captain--m-death-company-captain--slot-melee",
+       "name": "Melee",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -23560,7 +23595,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "death-company-captain--m-death-company-captain--slot-pistol",
+       "name": "Pistol",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -23806,12 +23848,15 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "death-company-captain-with-jump-pack--m-death-company-captain-with-jump-pack--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "death-company-captain-with-jump-pack--m-death-company-captain-with-jump-pack--slot-weapons",
+       "name": "Weapons",
+       "optional": false,
        "options": [
         {
          "weapons": [
+          {
+           "weaponId": "death-company-captain-with-jump-pack--heavy-bolt-pistol"
+          },
           {
            "weaponId": "death-company-captain-with-jump-pack--chainsword"
           }
@@ -23824,6 +23869,9 @@
         {
          "weapons": [
           {
+           "weaponId": "death-company-captain-with-jump-pack--heavy-bolt-pistol"
+          },
+          {
            "weaponId": "death-company-captain-with-jump-pack--power-fist"
           }
          ],
@@ -23834,6 +23882,9 @@
         },
         {
          "weapons": [
+          {
+           "weaponId": "death-company-captain-with-jump-pack--heavy-bolt-pistol"
+          },
           {
            "weaponId": "death-company-captain-with-jump-pack--relic-weapon"
           }
@@ -23847,6 +23898,37 @@
          "weapons": [
           {
            "weaponId": "death-company-captain-with-jump-pack--hand-flamer"
+          },
+          {
+           "weaponId": "death-company-captain-with-jump-pack--chainsword"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        },
+        {
+         "weapons": [
+          {
+           "weaponId": "death-company-captain-with-jump-pack--hand-flamer"
+          },
+          {
+           "weaponId": "death-company-captain-with-jump-pack--power-fist"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        },
+        {
+         "weapons": [
+          {
+           "weaponId": "death-company-captain-with-jump-pack--hand-flamer"
+          },
+          {
+           "weaponId": "death-company-captain-with-jump-pack--relic-weapon"
           }
          ],
          "upgradeName": "",
@@ -23858,6 +23940,9 @@
          "weapons": [
           {
            "weaponId": "death-company-captain-with-jump-pack--plasma-pistol"
+          },
+          {
+           "weaponId": "death-company-captain-with-jump-pack--chainsword"
           }
          ],
          "upgradeName": "",
@@ -23868,7 +23953,24 @@
         {
          "weapons": [
           {
-           "weaponId": "death-company-captain-with-jump-pack--heavy-bolt-pistol"
+           "weaponId": "death-company-captain-with-jump-pack--plasma-pistol"
+          },
+          {
+           "weaponId": "death-company-captain-with-jump-pack--power-fist"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        },
+        {
+         "weapons": [
+          {
+           "weaponId": "death-company-captain-with-jump-pack--plasma-pistol"
+          },
+          {
+           "weaponId": "death-company-captain-with-jump-pack--relic-weapon"
           }
          ],
          "upgradeName": "",
@@ -24099,9 +24201,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "death-company-dreadnought--m-death-company-dreadnought--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "death-company-dreadnought--m-death-company-dreadnought--slot-twin-icarus-ironhail-heavy-stubber",
+       "name": "Twin Icarus ironhail heavy stubber",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -24113,7 +24215,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "death-company-dreadnought--m-death-company-dreadnought--slot-melee-weapon-option",
+       "name": "Melee Weapon Option",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -24138,7 +24247,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "death-company-dreadnought--m-death-company-dreadnought--slot-ranged-weapon-option",
+       "name": "Ranged Weapon Option",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -25356,9 +25472,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "sanguinary-priest--m-sanguinary-priest--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "sanguinary-priest--m-sanguinary-priest--slot-absolvor-bolt-pistol",
+       "name": "Absolvor bolt pistol",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -25370,7 +25486,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "sanguinary-priest--m-sanguinary-priest--slot-astartes-chainsword",
+       "name": "Astartes Chainsword",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -27229,9 +27352,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "land-speeder-vengeance--m-land-speeder-vengeance--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "land-speeder-vengeance--m-land-speeder-vengeance--slot-close-combat-weapon",
+       "name": "Close Combat Weapon",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -27243,11 +27366,36 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "land-speeder-vengeance--m-land-speeder-vengeance--slot-plasma-storm-battery",
+       "name": "Plasma storm battery",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
            "weaponId": "land-speeder-vengeance--plasma-storm-battery"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        }
+       ]
+      },
+      {
+       "id": "land-speeder-vengeance--m-land-speeder-vengeance--slot-main-weapon",
+       "name": "Main Weapon",
+       "optional": false,
+       "options": [
+        {
+         "weapons": [
+          {
+           "weaponId": "land-speeder-vengeance--heavy-bolter"
           }
          ],
          "upgradeName": "",
@@ -27259,17 +27407,6 @@
          "weapons": [
           {
            "weaponId": "land-speeder-vengeance--assault-cannon"
-          }
-         ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        },
-        {
-         "weapons": [
-          {
-           "weaponId": "land-speeder-vengeance--heavy-bolter"
           }
          ],
          "upgradeName": "",
@@ -27772,9 +27909,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "nephilim-jetfighter--m-nephilim-jetfighter--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "nephilim-jetfighter--m-nephilim-jetfighter--slot-armoured-hull",
+       "name": "Armoured hull",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -27786,7 +27923,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "nephilim-jetfighter--m-nephilim-jetfighter--slot-blacksword-missiles",
+       "name": "Blacksword missiles",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -27797,7 +27941,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "nephilim-jetfighter--m-nephilim-jetfighter--slot-twin-heavy-bolter",
+       "name": "Twin heavy bolter",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -27808,7 +27959,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "nephilim-jetfighter--m-nephilim-jetfighter--slot-main-weapon",
+       "name": "Main Weapon",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -28570,9 +28728,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "ravenwing-command-squad--m-ravenwing-champion--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "ravenwing-command-squad--m-ravenwing-champion--slot-bolt-pistol",
+       "name": "Bolt Pistol",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -28584,7 +28742,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "ravenwing-command-squad--m-ravenwing-champion--slot-master-crafted-power-weapon",
+       "name": "Master-crafted power weapon",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -28595,7 +28760,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "ravenwing-command-squad--m-ravenwing-champion--slot-bike-weapon",
+       "name": "Bike weapon",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -28746,9 +28918,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "ravenwing-darkshroud--m-ravenwing-darkshroud--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "ravenwing-darkshroud--m-ravenwing-darkshroud--slot-close-combat-weapon",
+       "name": "Close Combat Weapon",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -28760,11 +28932,18 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "ravenwing-darkshroud--m-ravenwing-darkshroud--slot-main-weapon",
+       "name": "Main Weapon",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
-           "weaponId": "ravenwing-darkshroud--assault-cannon"
+           "weaponId": "ravenwing-darkshroud--heavy-bolter"
           }
          ],
          "upgradeName": "",
@@ -28775,7 +28954,7 @@
         {
          "weapons": [
           {
-           "weaponId": "ravenwing-darkshroud--heavy-bolter"
+           "weaponId": "ravenwing-darkshroud--assault-cannon"
           }
          ],
          "upgradeName": "",
@@ -28911,9 +29090,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "ravenwing-dark-talon--m-ravenwing-dark-talon--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "ravenwing-dark-talon--m-ravenwing-dark-talon--slot-armoured-hull",
+       "name": "Armoured Hull",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -28925,7 +29104,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "ravenwing-dark-talon--m-ravenwing-dark-talon--slot-hurricane-bolter",
+       "name": "Hurricane bolter",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -28936,7 +29122,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "ravenwing-dark-talon--m-ravenwing-dark-talon--slot-rift-cannon",
+       "name": "Rift cannon",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -30164,7 +30357,7 @@
         {
          "weapons": [
           {
-           "weaponId": "grey-hunters--plasma-pistol"
+           "weaponId": "grey-hunters--bolt-carbine"
           }
          ],
          "upgradeName": "",
@@ -30175,7 +30368,7 @@
         {
          "weapons": [
           {
-           "weaponId": "grey-hunters--bolt-carbine"
+           "weaponId": "grey-hunters--plasma-pistol"
           }
          ],
          "upgradeName": "",
@@ -30380,9 +30573,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "iron-priest--m-iron-priest--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "iron-priest--m-iron-priest--slot-helfrost-pistol",
+       "name": "Helfrost pistol",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -30394,7 +30587,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "iron-priest--m-iron-priest--slot-tempest-hammer-and-servo-arm",
+       "name": "Tempest hammer and Servo-arm",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -31960,14 +32160,14 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "venerable-dreadnought--m-venerable-dreadnought--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "venerable-dreadnought--m-venerable-dreadnought--slot-ranged",
+       "name": "Ranged weapon",
+       "optional": false,
        "options": [
         {
          "weapons": [
           {
-           "weaponId": "venerable-dreadnought--dreadnought-combat-weapon"
+           "weaponId": "venerable-dreadnought--assault-cannon"
           }
          ],
          "upgradeName": "",
@@ -31978,7 +32178,50 @@
         {
          "weapons": [
           {
-           "weaponId": "venerable-dreadnought--fenrisian-great-axe"
+           "weaponId": "venerable-dreadnought--helfrost-cannon"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        },
+        {
+         "weapons": [
+          {
+           "weaponId": "venerable-dreadnought--multi-melta"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        }
+       ]
+      },
+      {
+       "id": "venerable-dreadnought--m-venerable-dreadnought--slot-melee",
+       "name": "Melee weapon",
+       "optional": false,
+       "options": [
+        {
+         "weapons": [
+          {
+           "weaponId": "venerable-dreadnought--dreadnought-combat-weapon"
+          },
+          {
+           "weaponId": "venerable-dreadnought--storm-bolter"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        },
+        {
+         "weapons": [
+          {
+           "weaponId": "venerable-dreadnought--dreadnought-combat-weapon"
           },
           {
            "weaponId": "venerable-dreadnought--heavy-flamer"
@@ -31998,42 +32241,35 @@
            "weaponId": "venerable-dreadnought--storm-bolter"
           }
          ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
+         "upgradeName": "Blizzard Shield",
+         "upgradeText": "The bearer has a 4+ invulnerable save.",
+         "statMods": [
+          {
+           "characteristic": "InSv",
+           "type": "set",
+           "value": "4+"
+          }
+         ],
          "pts": 0
         },
         {
          "weapons": [
           {
-           "weaponId": "venerable-dreadnought--assault-cannon"
-          }
-         ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        },
-        {
-         "weapons": [
+           "weaponId": "venerable-dreadnought--fenrisian-great-axe"
+          },
           {
-           "weaponId": "venerable-dreadnought--multi-melta"
+           "weaponId": "venerable-dreadnought--heavy-flamer"
           }
          ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        },
-        {
-         "weapons": [
+         "upgradeName": "Blizzard Shield",
+         "upgradeText": "The bearer has a 4+ invulnerable save.",
+         "statMods": [
           {
-           "weaponId": "venerable-dreadnought--helfrost-cannon"
+           "characteristic": "InSv",
+           "type": "set",
+           "value": "4+"
           }
          ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
          "pts": 0
         }
        ]
@@ -32210,21 +32446,10 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "wolf-guard-battle-leader--m-wolf-guard-battle-leader--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "wolf-guard-battle-leader--m-wolf-guard-battle-leader--slot-replace-master-crafted-power-weapon",
+       "name": "Melee weapon",
+       "optional": false,
        "options": [
-        {
-         "weapons": [
-          {
-           "weaponId": "wolf-guard-battle-leader--thunder-hammer"
-          }
-         ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        },
         {
          "weapons": [
           {
@@ -32239,14 +32464,21 @@
         {
          "weapons": [
           {
-           "weaponId": "wolf-guard-battle-leader--plasma-pistol"
+           "weaponId": "wolf-guard-battle-leader--thunder-hammer"
           }
          ],
          "upgradeName": "",
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "wolf-guard-battle-leader--m-wolf-guard-battle-leader--slot-replace-storm-shield",
+       "name": "Storm Shield or ranged weapon",
+       "optional": false,
+       "options": [
         {
          "weapons": [],
          "upgradeName": "Storm Shield",
@@ -32258,6 +32490,17 @@
            "value": "1"
           }
          ],
+         "pts": 0
+        },
+        {
+         "weapons": [
+          {
+           "weaponId": "wolf-guard-battle-leader--plasma-pistol"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
          "pts": 0
         },
         {
@@ -33165,9 +33408,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "wolf-priest--m-wolf-priest--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "wolf-priest--m-wolf-priest--slot-crozius-arcanum",
+       "name": "Crozius arcanum",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -33179,7 +33422,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "wolf-priest--m-wolf-priest--slot-absolvor-bolt-pistol",
+       "name": "Absolvor bolt pistol",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -34053,6 +34303,42 @@
        "keywords": ""
       }
      ]
+    },
+    {
+     "id": "wulfen-dreadnought--storm-bolter",
+     "name": "Storm Bolter",
+     "selectOne": false,
+     "profiles": [
+      {
+       "name": "",
+       "melee": false,
+       "range": "24\"",
+       "attacks": "2",
+       "skill": "3+",
+       "strength": "5",
+       "ap": "-1",
+       "damage": "1",
+       "keywords": "Rapid Fire 2"
+      }
+     ]
+    },
+    {
+     "id": "wulfen-dreadnought--heavy-flamer",
+     "name": "Heavy Flamer",
+     "selectOne": false,
+     "profiles": [
+      {
+       "name": "",
+       "melee": false,
+       "range": "12\"",
+       "attacks": "3",
+       "skill": "N/A",
+       "strength": "5",
+       "ap": "-1",
+       "damage": "1",
+       "keywords": "Blast 2, Torrent"
+      }
+     ]
     }
    ],
    "models": [
@@ -34076,13 +34362,49 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "wulfen-dreadnought--m-wulfen-dreadnought--slot-wargear",
-       "name": "Wargear",
+       "id": "wulfen-dreadnought--m-wulfen-dreadnought--slot-axe",
+       "name": "Fenrisian Great Axe",
        "optional": false,
        "options": [
         {
-         "weapons": [],
-         "upgradeName": "Blizzard shield",
+         "weapons": [
+          {
+           "weaponId": "wulfen-dreadnought--fenrisian-great-axe"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        }
+       ]
+      },
+      {
+       "id": "wulfen-dreadnought--m-wulfen-dreadnought--slot-claw",
+       "name": "Great Wolf Claw or Blizzard Shield",
+       "optional": false,
+       "options": [
+        {
+         "weapons": [
+          {
+           "weaponId": "wulfen-dreadnought--great-wolf-claw"
+          },
+          {
+           "weaponId": "wulfen-dreadnought--storm-bolter"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        },
+        {
+         "weapons": [
+          {
+           "weaponId": "wulfen-dreadnought--heavy-flamer"
+          }
+         ],
+         "upgradeName": "Blizzard Shield",
          "upgradeText": "The bearer has a 4+ invulnerable save.",
          "statMods": [
           {
@@ -34096,23 +34418,18 @@
         {
          "weapons": [
           {
-           "weaponId": "wulfen-dreadnought--fenrisian-great-axe"
+           "weaponId": "wulfen-dreadnought--storm-bolter"
           }
          ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        },
-        {
-         "weapons": [
+         "upgradeName": "Blizzard Shield",
+         "upgradeText": "The bearer has a 4+ invulnerable save.",
+         "statMods": [
           {
-           "weaponId": "wulfen-dreadnought--great-wolf-claw"
+           "characteristic": "InSv",
+           "type": "set",
+           "value": "4+"
           }
          ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
          "pts": 0
         }
        ]
@@ -34477,21 +34794,10 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "castellan--m-castellan--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "castellan--m-castellan--slot-melee-weapon",
+       "name": "Melee Weapon",
+       "optional": false,
        "options": [
-        {
-         "weapons": [
-          {
-           "weaponId": "castellan--chainsword"
-          }
-         ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        },
         {
          "weapons": [
           {
@@ -34503,6 +34809,24 @@
          "statMods": [],
          "pts": 0
         },
+        {
+         "weapons": [
+          {
+           "weaponId": "castellan--chainsword"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        }
+       ]
+      },
+      {
+       "id": "castellan--m-castellan--slot-ranged-weapon",
+       "name": "Ranged Weapon",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -34872,9 +35196,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "crusade-ancient--m-crusade-ancient--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "crusade-ancient--m-crusade-ancient--slot-bolt-pistol",
+       "name": "Bolt pistol",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -34886,7 +35210,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "crusade-ancient--m-crusade-ancient--slot-master-crafted-power-weapon",
+       "name": "Master-crafted Power Weapon",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -35777,9 +36108,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "emperor-s-champion--m-emperor-s-champion--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "emperor-s-champion--m-emperor-s-champion--slot-bolt-pistol",
+       "name": "Bolt pistol",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -35791,7 +36122,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "emperor-s-champion--m-emperor-s-champion--slot-black-sword",
+       "name": "Black Sword",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -35953,9 +36291,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "execrator--m-execrator--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "execrator--m-execrator--slot-crozius-arcanum",
+       "name": "Crozius arcanum",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -35967,7 +36305,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "execrator--m-execrator--slot-master-crafted-power-weapon",
+       "name": "Master-crafted Power Weapon",
+       "optional": true,
+       "options": [
         {
          "weapons": [
           {
@@ -35978,7 +36323,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "execrator--m-execrator--slot-pistol",
+       "name": "Pistol",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -36324,9 +36676,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "marshal--m-marshal--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "marshal--m-marshal--slot-master-crafted-power-weapon",
+       "name": "Master-crafted Power Weapon",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -36338,11 +36690,18 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "marshal--m-marshal--slot-ranged-weapon",
+       "name": "Ranged Weapon",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
-           "weaponId": "marshal--combi-weapon"
+           "weaponId": "marshal--plasma-pistol"
           }
          ],
          "upgradeName": "",
@@ -36353,7 +36712,7 @@
         {
          "weapons": [
           {
-           "weaponId": "marshal--plasma-pistol"
+           "weaponId": "marshal--combi-weapon"
           }
          ],
          "upgradeName": "",
@@ -36950,9 +37309,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "corvus-blackstar--m-corvus-blackstar--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "corvus-blackstar--m-corvus-blackstar--slot-armoured-hull",
+       "name": "Armoured hull",
+       "optional": false,
        "options": [
         {
          "weapons": [
@@ -36964,7 +37323,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "corvus-blackstar--m-corvus-blackstar--slot-hurricane-bolter",
+       "name": "Hurricane bolter",
+       "optional": true,
+       "options": [
         {
          "weapons": [
           {
@@ -36975,7 +37341,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "corvus-blackstar--m-corvus-blackstar--slot-centreline-weapon",
+       "name": "Centreline weapon",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -36997,7 +37370,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "corvus-blackstar--m-corvus-blackstar--slot-missile-choice",
+       "name": "Missile choice",
+       "optional": false,
+       "options": [
         {
          "weapons": [
           {
@@ -37019,7 +37399,14 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
-        },
+        }
+       ]
+      },
+      {
+       "id": "corvus-blackstar--m-corvus-blackstar--slot-wargear-options",
+       "name": "Wargear Options",
+       "optional": true,
+       "options": [
         {
          "weapons": [],
          "upgradeName": "Auspex array",
@@ -39088,7 +39475,7 @@
         {
          "weapons": [
           {
-           "weaponId": "decimus-kill-team--plasma-incinerator"
+           "weaponId": "decimus-kill-team--stalker-bolt-rifle"
           }
          ],
          "upgradeName": "",
@@ -39099,7 +39486,7 @@
         {
          "weapons": [
           {
-           "weaponId": "decimus-kill-team--stalker-bolt-rifle"
+           "weaponId": "decimus-kill-team--plasma-incinerator"
           }
          ],
          "upgradeName": "",
@@ -39156,7 +39543,7 @@
         {
          "weapons": [
           {
-           "weaponId": "decimus-kill-team--power-weapon"
+           "weaponId": "decimus-kill-team--heavy-thunder-hammer"
           }
          ],
          "upgradeName": "",
@@ -39167,7 +39554,7 @@
         {
          "weapons": [
           {
-           "weaponId": "decimus-kill-team--heavy-thunder-hammer"
+           "weaponId": "decimus-kill-team--power-weapon"
           }
          ],
          "upgradeName": "",
@@ -39330,6 +39717,17 @@
         {
          "weapons": [
           {
+           "weaponId": "decimus-kill-team--infernus-heavy-bolter"
+          }
+         ],
+         "upgradeName": "",
+         "upgradeText": "",
+         "statMods": [],
+         "pts": 0
+        },
+        {
+         "weapons": [
+          {
            "weaponId": "decimus-kill-team--frag-cannon"
           }
          ],
@@ -39345,17 +39743,6 @@
           },
           {
            "weaponId": "decimus-kill-team--grenade-launcher"
-          }
-         ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        },
-        {
-         "weapons": [
-          {
-           "weaponId": "decimus-kill-team--infernus-heavy-bolter"
           }
          ],
          "upgradeName": "",
@@ -42968,9 +43355,9 @@
      "keywords": [],
      "wargear": [
       {
-       "id": "watch-master--m-watch-master--slot-wargear",
-       "name": "Wargear",
-       "optional": true,
+       "id": "watch-master--m-watch-master--slot-vigil-spear",
+       "name": "Vigil spear",
+       "optional": false,
        "options": [
         {
          "weapons": [

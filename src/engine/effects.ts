@@ -4,6 +4,7 @@
 // and temporary effects / marks put on units by abilities (e.g. "suppressed" until your next turn).
 // Rules are data: an Effect says WHO it applies to (scope), WHEN (conditions) and WHAT changes.
 import abilityData from '../../data/ability-rules.json';
+import acAbilities from '../../data/abilities/AC.json';
 import orkAbilities from '../../data/abilities/ORK.json';
 import smAbilities from '../../data/abilities/SM.json';
 import detData from '../../data/detachment-rules.json';
@@ -74,6 +75,7 @@ export interface Effect {
   abilities?: string[];
   critHitOn?: number;
   ignoreHitMods?: boolean;
+  ignoreWoundMods?: boolean; // ignore (bad) modifiers to the wound roll
   givesCover?: boolean;
   rapidFireFullRange?: boolean; // [RAPID FIRE] counts up to the weapon's full range (Codex Fire-patterns)
   // defence
@@ -127,11 +129,13 @@ export interface Effect {
   mustStay?: boolean; // must Remain Stationary this turn
   advanceFixed?: number; // Advance: no roll, add this many inches instead
   pileIn?: number; consolidate?: number; // Pile-in / Consolidation moves up to this far instead of 3"
+  enemyPileMinus?: number; // enemy units engaged with it pile in / consolidate this much less (Dacatarai in Dread Host)
   freeConsolidate?: boolean; // consolidation does not need to end closer to the closest enemy model
   taunt?: boolean; // enemy models in Engagement Range must target this unit with all their attacks
   targetableWithin?: number; // can only be targeted by ranged attacks from models within this range
   ignoreMods?: boolean; // ignore modifiers to its characteristics and rolls (not saving throws)
   forceShockAura?: number; // in the opponent's next Command phase, enemy units this close must take a Battle-shock test
+  creepingDread?: number; // Creeping Dread: in the opponent's Command phase, enemy PSYKER / below-strength units this close test at -1
   shockOnKill?: boolean; // after its attacks destroy models, that unit takes a Battle-shock test
   onlyTargetMarked?: string; // after Advancing / Falling Back it may only shoot or charge units with this mark (Heresy Undone: "auspex")
   statM?: number; // fixed change to the bearers' Move characteristic
@@ -147,6 +151,7 @@ export interface Effect {
   objConsolidate?: boolean; // its consolidation can be an objective consolidation even while engaged (Establish Supremacy)
   looseDisembark?: boolean; // disembarking models only need to be within the set-up distance, not wholly (Aggressive Disembarkation)
   stratRepeat?: { ids: string[]; limit: Limit }; // this stratagem can target this unit even if it was used this phase (Countercharge)
+  freeDie?: FreeDieSpec[]; // timed: free re-rolls of one die (Prime Target: one hit, one wound and one damage roll)
 }
 
 export type Limit = 'battle' | 'round' | 'turn' | 'phase';
@@ -224,6 +229,7 @@ export interface AbilityRule {
 /** Hand-written rules per faction (Wahapedia faction id); a few cross-faction ones live in data/ability-rules.json. */
 const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   SM: smAbilities as unknown as Record<string, AbilityRule>,
+  AC: acAbilities as unknown as Record<string, AbilityRule>,
   ORK: orkAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
@@ -545,7 +551,22 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('marked:')) return (A.timed ?? []).some((t) => t.mark === c.slice(7));
   if (c.startsWith('friendMarked:')) return s.units.some((f) => f.owner === A.owner && (f.timed ?? []).some((t) => t.mark === c.slice(13)));
   if (c.startsWith('targetKwAll:')) return !!T && c.slice(12).split('|').some((k) => alive(T).every((n) => n.keywords.includes(k)));
+  if (c.startsWith('detachment:')) return (s.players[A.owner].detachments ?? []).some((d) => d.name === c.slice(11));
   switch (c) {
+    case 'readied': return !!A.readied;
+    case 'targetTougher': return !!T && Math.max(...alive(T).map((m) => m.profile.T)) > Math.max(...alive(x.holder ?? A).map((m) => m.profile.T));
+    case 'markAlive': { const id = (x.holder ?? A).mark; return !!id && s.units.some((e) => e.id === id && e.status !== 'destroyed' && alive(e).length > 0); }
+    // below starting / half strength, a single-model unit counting its wounds
+    case 'belowStartingW': return A.startingStrength === 1 ? alive(A).some((m) => m.wounds < m.profile.W) : alive(A).length < A.startingStrength;
+    case 'belowHalfW': return A.startingStrength === 1 ? alive(A).some((m) => m.wounds * 2 < m.profile.W) : alive(A).length * 2 < A.startingStrength;
+    case 'engagedMV': return engagedEnemies(s, A).some((e) => isMVU(e));
+    case 'engagedNotMV': return engagedEnemies(s, A).some((e) => !isMVU(e));
+    // [LETHAL HITS] beats [SUSTAINED HITS 1] when the unit's melee attacks wound the engaged enemy on a 4+ or worse
+    case 'lethalBetter': {
+      const S = Math.max(0, ...alive(A).flatMap((m) => m.weapons.flatMap((w) => w.profiles.filter((p) => p.range === 'Melee').map((p) => p.S ?? 0))));
+      return engagedEnemies(s, A).some((e) => Math.max(...alive(e).map((m) => m.profile.T)) >= S);
+    }
+    case 'targetMark': return !!T && (x.holder ?? A).mark === T.id;
     case 'advanced': return A.move === 'advance';
     case 'fellBack': return A.move === 'fallback';
     case 'targetOfAttack': return s.attack?.targetId === A.id;
@@ -679,7 +700,7 @@ const rerolls = (e: { reroll?: Reroll | Reroll[] }): Reroll[] => (e.reroll ? (Ar
 export function offenceFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, w: WeaponData, p: WeaponProfileData, kind: 'melee' | 'ranged', d: number): Active[] {
   const x: Ctx = { s, A, T, m, w, p, d, kind };
   return effectsFor(s, A).filter((a) => (!a.e.attack || a.e.attack === kind) && modelOk(a, m) && weaponOk(a, w, p) && holds(a, x)
-    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.ignoreHitMods || a.e.givesCover || a.e.rapidFireFullRange));
+    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange));
 }
 
 /** Marks on the target ("hit by Multi-spectrum Array: +1 to hit for your ADEPTUS ASTARTES") that help this attacker. */
@@ -766,6 +787,7 @@ function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list:
     if (e.damage) { pool.damage = addToExpr(pool.damage, e.damage); bump(a.label, `+${e.damage} D`); }
     if (e.critHitOn) { pool.critHitOn = Math.min(pool.critHitOn ?? 6, e.critHitOn); bump(a.label, `crit hit ${e.critHitOn}+`); }
     if (e.ignoreHitMods) { pool.ignoreHitMods = true; bump(a.label, 'ไม่สน modifier ของ hit'); }
+    if (e.ignoreWoundMods) { pool.ignoreWoundMods = true; bump(a.label, 'ไม่สน modifier ของ wound'); }
     if (e.strengthPer5Models) {
       const n = alive(A).length + s.units.filter((p) => p.embarkedIn === A.id && p.status === 'embarked').reduce((x, p) => x + alive(p).length, 0);
       const add = Math.floor(n / 5);
@@ -984,12 +1006,14 @@ export function unitFlags(s: GameState, u: UnitState) {
     oathBackup: es.some((e) => e.oathBackup),
     mustStay: es.some((e) => e.mustStay),
     pileIn: Math.max(0, ...es.map((e) => e.pileIn ?? 0)),
+    enemyPileMinus: Math.max(0, ...es.map((e) => e.enemyPileMinus ?? 0)),
     consolidate: Math.max(0, ...es.map((e) => e.consolidate ?? 0)),
     freeConsolidate: es.some((e) => e.freeConsolidate),
     taunt: es.some((e) => e.taunt),
     targetableWithin: Math.min(99, ...es.map((e) => e.targetableWithin ?? 99)),
     ignoreMods: es.some((e) => e.ignoreMods),
     forceShockAura: Math.max(0, ...es.map((e) => e.forceShockAura ?? 0)),
+    creepingDread: Math.max(0, ...es.map((e) => e.creepingDread ?? 0)),
     shockOnKill: es.some((e) => e.shockOnKill),
     onlyTargetMarked: es.find((e) => e.onlyTargetMarked)?.onlyTargetMarked,
   };

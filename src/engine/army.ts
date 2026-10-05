@@ -586,8 +586,12 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       if (!enh || !m) continue;
       const w = /This model has \+(\d+) W\b/i.exec(enh.text);
       if (w) { m.profile = { ...m.profile, W: m.profile.W + +w[1] }; m.wounds = m.profile.W; }
-      const wp = /following weapon:\s*([^:]+):\s*(Melee|\d+")\s*\|\s*A\s*(\S+)\s*\|\s*(?:WS|BS)\s*(\d)\+\s*\|\s*S\s*(\d+)\s*\|\s*AP\s*(-?\d+)\s*\|\s*D\s*([^.\s|]+)/i.exec(enh.text);
-      if (wp) m.weapons = [...m.weapons, { name: wp[1].trim(), profiles: [{ name: wp[1].trim(), range: wp[2] === 'Melee' ? 'Melee' : parseInt(wp[2], 10), A: wp[3], skill: +wp[4], S: +wp[5], AP: +wp[6], D: wp[7], abilities: [] }] }];
+      // "Name [KEYWORD, KEYWORD]: Range 12" | A 3 | BS 2+ …" — the bracketed words are the weapon's abilities
+      const wp = /following weapon:\s*([^:[]+?)\s*(?:\[([^\]]+)\])?\s*:\s*(?:Range\s*)?(Melee|\d+")\s*\|\s*A\s*(\S+)\s*\|\s*(?:WS|BS)\s*(\d)\+\s*\|\s*S\s*(\d+)\s*\|\s*AP\s*(-?\d+)\s*\|\s*D\s*([^.\s|]+)/i.exec(enh.text);
+      if (wp) {
+        const abilities = (wp[2] ?? '').split(',').map((k) => k.trim().toLowerCase()).filter(Boolean);
+        m.weapons = [...m.weapons, { name: wp[1].trim(), profiles: [{ name: wp[1].trim(), range: wp[3] === 'Melee' ? 'Melee' : parseInt(wp[3], 10), A: wp[4], skill: +wp[5], S: +wp[6], AP: +wp[7], D: wp[8], abilities }] }];
+      }
     }
     const sp = splitRuleOf(sheet, list.detachments);
     if (sp && (e.split || sp.must)) {
@@ -604,8 +608,22 @@ export function pointsOptions(sheet: DatasheetData) {
   return sheet.points[0]?.options ?? [];
 }
 
-export function listPoints(list: ArmyList): number {
-  return list.units.reduce((a, u) => a + unitPoints(u), 0);
+export function listPoints(list: ArmyList, faction?: FactionData): number {
+  const tax = faction ? dupTaxes(list, faction) : null;
+  return list.units.reduce((a, u) => a + unitPoints(u) + (tax?.get(u.uid) ?? 0), 0);
+}
+
+/** 11th edition duplicate tax: the Nth and later copies of some datasheets cost more (uid → extra points). */
+export function dupTaxes(list: ArmyList, faction: FactionData): Map<string, number> {
+  const out = new Map<string, number>();
+  const seen = new Map<string, number>();
+  for (const u of list.units) {
+    const n = (seen.get(u.datasheet) ?? 0) + 1;
+    seen.set(u.datasheet, n);
+    const t = faction.datasheets.find((d) => d.name === u.datasheet)?.dupTax;
+    if (t && n >= t.from) out.set(u.uid, t.pts);
+  }
+  return out;
 }
 
 /** A list entry's total: unit + enhancement + costed wargear. */
@@ -660,12 +678,23 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
  * Null when the text names no such restriction (or one this check can't read).
  */
 export function enhancementFits(text: string, keywords: string[]): { ok: boolean; need: string } | null {
-  const m = /^([A-Z][A-Z’'\- ]+(?:(?:,| or| OR) [A-Z][A-Z’'\- ]+)*) (?:model|unit)s? only/.exec(text.trim());
+  // "(One per army) ADEPTUS CUSTODES INFANTRY/MOUNTED unit only (excluding TERMINATOR units)."
+  const t = text.trim().replace(/^\([^)]*\)\s*/, '');
+  const m = /^([A-Z][A-Z’'\- ]+(?:(?:,| or| OR|\/) ?[A-Z][A-Z’'\- ]+)*) (?:model|unit)s? only(?: \(excluding ([A-Z][A-Z’'\-/ ]+?) (?:model|unit)s?\))?/.exec(t);
   if (!m) return null;
-  const need = m[1].split(/,| or | OR /).map((k) => k.trim()).filter(Boolean);
+  // "ADEPTUS CUSTODES INFANTRY/MOUNTED": the words before the last one go with each alternative
+  const alts = m[1].split(/,| or | OR /).map((k) => k.trim()).filter(Boolean).flatMap((k) => {
+    if (!k.includes('/')) return [k];
+    const parts = k.split('/');
+    const head = parts[0].split(/\s+/);
+    const prefix = head.slice(0, -1).join(' ');
+    return [parts[0], ...parts.slice(1).map((x) => (prefix ? `${prefix} ${x.trim()}` : x.trim()))];
+  });
   // "ADEPTUS ASTARTES INFANTRY" is two keywords together: every word has to be among the unit's keyword words
   const words = new Set(keywords.flatMap((k) => k.toUpperCase().split(/\s+/)));
-  return { ok: need.some((n) => n.split(/\s+/).every((w) => words.has(w))), need: need.join(' / ') };
+  const has = (n: string) => n.trim().split(/\s+/).every((w) => words.has(w));
+  if (m[2] && m[2].split('/').some(has)) return { ok: false, need: `${alts.join(' / ')} (ไม่รวม ${m[2]})` };
+  return { ok: alts.some(has), need: alts.join(' / ') };
 }
 
 /**
@@ -723,7 +752,7 @@ export function transportLoads(list: ArmyList, faction: FactionData) {
 
 export function validateList(list: ArmyList, faction: FactionData, size: { points: number; dp: number; unitLimit: number; enhancements: number }): string[] {
   const errs: string[] = [];
-  const pts = listPoints(list);
+  const pts = listPoints(list, faction);
   if (pts > size.points) errs.push(`แต้มเกิน: ${pts}/${size.points}`);
   const dp = list.detachments.reduce((a, n) => a + (faction.detachments.find((d) => d.name === n)?.dp ?? 0), 0);
   if (dp > size.dp && !(list.detachments.length === 1 && size.dp === 2 && dp === 3)) errs.push(`Detachment Points เกิน: ${dp}/${size.dp}`);
@@ -744,11 +773,19 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
   for (const [name, n] of counts) {
     const sheet = faction.datasheets.find((d) => d.name === name);
     if (!sheet) continue;
-    const limit = sheet.keywords.includes('EPIC HERO') ? 1 : sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT') ? size.unitLimit * 2 : size.unitLimit;
+    const limit = sheet.keywords.includes('EPIC HERO') ? 1 : sheet.maxPerArmy ? sheet.maxPerArmy
+      : sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT') ? size.unitLimit * 2 : size.unitLimit;
     if (n > limit) errs.push(`${name}: ใส่ได้ไม่เกิน ${limit} หน่วย`);
   }
   if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('ต้องมี CHARACTER อย่างน้อย 1 หน่วย (Warlord)');
   if (!list.units.some((u) => u.warlord)) errs.push('ยังไม่ได้เลือก Warlord (กด ⋮ ที่ตัวละคร → ตั้งเป็น Warlord)');
+  for (const u of list.units) {
+    const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
+    // Supreme Commander (Trajann Valoris): must be the Warlord
+    if (sheet?.abilities.some((a) => a.name === 'Supreme Commander') && !u.warlord) errs.push(`${u.datasheet} ต้องเป็น Warlord (Supreme Commander)`);
+    // ANATHEMA PSYKANA characters can't be the Warlord (Null Maiden Vigil allows it)
+    if (u.warlord && sheet?.factionKeywords.includes('ANATHEMA PSYKANA') && !list.detachments.includes('Null Maiden Vigil')) errs.push(`${u.datasheet} (ANATHEMA PSYKANA) เป็น Warlord ไม่ได้`);
+  }
   const enh = list.units.filter((u) => u.enhancement);
   const allEnh = faction.detachments.flatMap((d) => d.enhancements);
   const isUpgrade = (n: string) => !!allEnh.find((e) => e.name === n)?.upgrade;

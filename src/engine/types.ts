@@ -60,6 +60,7 @@ export interface DatasheetData {
   wargearCosts?: { name: string; pts: number }[]; // "per thunder hammer +5": charged per item carried
   hiddenFor?: string[]; // not available to armies of these Chapters (Black Templars have no Librarians …)
   maxPerArmy?: number;
+  dupTax?: { pts: number; from: number }; // 11e: each copy of this datasheet from the Nth on costs this much more
   link: string;
 }
 
@@ -217,6 +218,8 @@ export interface UnitState {
   lastStationaryTurn?: number; // turn the unit last Remained Stationary
   riledUntil?: number; // Orks: riled up by an ability until this turn index (inclusive)
   quarry?: string; // Headhunters: enemy unit id
+  readied?: boolean; // Adeptus Custodes Martial Ka'tah: the unit can use one ka'tah ability
+  mark?: string; // Blade Champion's Sword of the Throne: enemy unit id
   timed?: TimedEffect[]; // temporary effects and marks from abilities
   split?: string; // split off another unit at Declare Battle Formations (Combat Squads …): the other unit's id
   sagaDone?: boolean; // Slayer's Oath: this unit has the completed-Saga benefits

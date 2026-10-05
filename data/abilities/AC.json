@@ -1,0 +1,937 @@
+{
+ "Aquila Commander": {
+  "act": {
+   "when": "roundStart",
+   "auto": true,
+   "if": [
+    "warlord"
+   ],
+   "do": [
+    {
+     "cp": 1
+    }
+   ]
+  }
+ },
+ "Captain-General (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS CUSTODES",
+     "!MONSTER",
+     "!VEHICLE"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Moment Shackle (Once per battle, per army)": {
+  "act": [
+   {
+    "when": "fightStartButton",
+    "limit": "battle",
+    "per": "army",
+    "label": "Watcher's Axe +3 A ถึงจบ phase",
+    "botIf": [
+     "engaged"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "attack": "melee",
+        "weapon": "Watcher's Axe",
+        "attacks": 3
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "when": "anyPhase",
+    "limit": "battle",
+    "per": "army",
+    "label": "InSv 3+ ถึงจบ phase",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "defend": {
+         "inv": 3
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "Supreme Commander": {
+  "status": "info",
+  "note": "อยู่ในกองทัพต้องเป็น WARLORD"
+ },
+ "Praesidium Shield": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Praesidium Shield@Sentinel Guard Sodality": {
+  "effects": [
+   {
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Master of Ka'tahs (Once per battle round, per unit)": {
+  "act": [
+   {
+    "when": "anyPhase",
+    "limit": "round",
+    "if": [
+     "!readied"
+    ],
+    "label": "หน่วยนี้ readied อีกครั้ง",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "ready": true
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "limit": "round",
+    "if": [
+     "!readied"
+    ],
+    "label": "หน่วยนี้ readied อีกครั้ง",
+    "botIf": [
+     "engagedMV"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "ready": true
+     }
+    ]
+   }
+  ]
+ },
+ "Vengeful Surge (Once per battle, per unit)": {
+  "act": {
+   "when": "shotByEnemy",
+   "auto": true,
+   "limit": "battle",
+   "if": [
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6+2"
+    }
+   ]
+  }
+ },
+ "Archeotech Teleport-shunter (Once per battle, per unit)": {
+  "act": {
+   "when": "movement",
+   "limit": "battle",
+   "if": [
+    "notEngaged",
+    "notMovedYet"
+   ],
+   "botUse": "never",
+   "label": "ไป Strategic Reserves แล้วลง ingress ใน phase นี้",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true,
+     "earlyArrival": true
+    }
+   ]
+  }
+ },
+ "Sweeping Advance (Once per battle, per unit)": {
+  "status": "partial",
+  "note": "จบ Fight phase: ถ้าไม่ติดพันเดิน Normal move (ปุ่มตอนจบ Fight phase ของศัตรู)",
+  "act": {
+   "when": "opponentFightEnd",
+   "limit": "battle",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "เดิน Normal move",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "move": "M"
+    }
+   ]
+  }
+ },
+ "Swift Onslaught": {
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Sword of the Throne": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "targetMark"
+    ],
+    "wound": 1
+   }
+  ],
+  "act": {
+   "when": "roundStart",
+   "auto": true,
+   "if": [
+    "!markAlive"
+   ],
+   "target": {
+    "side": "enemy",
+    "anywhere": true
+   },
+   "do": [
+    {
+     "setMark": true
+    }
+   ]
+  }
+ },
+ "Vexilla": {
+  "status": "auto",
+  "note": "+1 OC (ignore Ld modifiers: เกือบไม่มีผล)"
+ },
+ "Stand Vigil": {
+  "effects": [
+   {
+    "if": [
+     "objectiveEitherWay"
+    ],
+    "abilities": [
+     "lethal hits: non-monster/vehicle"
+    ]
+   }
+  ]
+ },
+ "Impenetrable Defence": {
+  "effects": [
+   {
+    "if": [
+     "objectiveEitherWay"
+    ],
+    "abilities": [
+     "sustained hits 1: non-monster/vehicle"
+    ]
+   }
+  ]
+ },
+ "Living Fortress": {
+  "effects": [
+   {
+    "defend": {
+     "ap": 1
+    }
+   }
+  ]
+ },
+ "Slayer of Tyrants": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "targetTougher"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Dread Foe": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "targetNotMV"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Reap a Terrible Tally": {
+  "effects": [
+   {
+    "if": [
+     "targetInfantry"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Take Wing": {
+  "act": {
+   "when": "opponentFightEnd",
+   "if": [
+    "notEngaged"
+   ],
+   "botUse": "never",
+   "label": "ออกไปอยู่ Strategic Reserves",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Neutronium Cascade Mine (Once per battle, per unit)": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "target": {
+    "side": "enemy",
+    "range": 3
+   },
+   "roll": "D6",
+   "label": "ศัตรูในระยะ 3\": 2+ → D3 MW (MONSTER/VEHICLE 2D3)",
+   "table": [
+    {
+     "min": 2,
+     "do": [
+      {
+       "mortals": "D3",
+       "mortalsMV": "2D3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Strike from the Skies": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "ingressThisTurn"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Swift Ruin (Once per phase, per army)": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "rapid-ingress"
+     ],
+     "cp": 1,
+     "limit": "phase",
+     "perArmy": true
+    },
+    "stratRepeat": {
+     "ids": [
+      "rapid-ingress"
+     ],
+     "limit": "phase"
+    }
+   }
+  ]
+ },
+ "Guardian Eternal": {
+  "effects": [
+   {
+    "defend": {
+     "vs": "ranged",
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Unyielding Ancient": {
+  "effects": [
+   {
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Quicksilver Execution": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Death Blow": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Destructor Optics": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetNotMV"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Advanced Firepower": {
+  "freeDie": [
+   {
+    "kind": "reroll",
+    "stage": "hit",
+    "limit": "phase",
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ]
+   },
+   {
+    "kind": "reroll",
+    "stage": "wound",
+    "limit": "phase",
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ]
+   },
+   {
+    "kind": "reroll",
+    "stage": "damage",
+    "limit": "phase",
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ]
+   }
+  ]
+ },
+ "Mobile Hunter": {
+  "act": {
+   "when": "afterShootingButton",
+   "limit": "phase",
+   "label": "เดิน Normal move D6\" (แล้วชาร์จไม่ได้)",
+   "do": [
+    {
+     "on": "self",
+     "move": "D6",
+     "noCharge": true
+    }
+   ]
+  }
+ },
+ "Repulsor Suspensor Technology (Once per phase, per unit)": {
+  "act": {
+   "when": "shotByEnemy",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "move": "D6"
+    }
+   ]
+  }
+ },
+ "Assault Vehicle": {
+  "effects": [
+   {
+    "disembarkAfterAdvance": true
+   }
+  ],
+  "status": "partial",
+  "note": "Shock disembark (ระยะ 3\"): หน่วยที่ลงชาร์จไม่ได้ในเทิร์นนั้น"
+ },
+ "Seeker's Instincts": {
+  "effects": [
+   {
+    "move": 2,
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Corner the Quarry": {
+  "effects": [
+   {
+    "forceDesperate": true
+   }
+  ],
+  "status": "partial",
+  "note": "-1 hazard ถ้าศัตรู battle-shocked: ทำเอง"
+ },
+ "Purity of Execution": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true
+   },
+   "label": "ศัตรูถูก detect: detection range +3\"",
+   "do": [
+    {
+     "buff": [
+      {
+       "detection": 3
+      }
+     ],
+     "until": "turn",
+     "mark": "detected"
+    }
+   ]
+  }
+ },
+ "Deft Parry": {
+  "effects": [
+   {
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Sanctified Flames": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "shock": -1,
+     "if": [
+      "targetKw:PSYKER"
+     ]
+    },
+    {
+     "shock": 0,
+     "if": [
+      "!targetKw:PSYKER"
+     ]
+    }
+   ]
+  }
+ },
+ "Bane of Abominations": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "targetCharMV"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Emperor's Light": {
+  "status": "auto",
+  "note": "อาวุธ Emperor's Light [EXTRA ATTACKS] ถูกเพิ่มให้โมเดลแล้ว"
+ },
+ "Castellan's Mark": {
+  "status": "manual",
+  "note": "หลังวางทัพ: redeploy ได้ 3 หน่วย (ทำเองตอน deploy)"
+ },
+ "Eagle's Eye": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "per": "army",
+   "label": "InSv 3+ ถึงจบ phase",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "defend": {
+        "inv": 3
+       }
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Pareldor's Caducatrix": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "per": "army",
+   "label": "ฟื้น D3+3 wound",
+   "botUse": "damaged",
+   "target": {
+    "side": "self"
+   },
+   "do": [
+    {
+     "on": "self",
+     "heal": "D3+3"
+    }
+   ]
+  }
+ },
+ "Not a Shell Wasted": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "attacks": 1
+   }
+  ]
+ },
+ "Radiant Mantle": {
+  "effects": [
+   {
+    "defend": {
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "From the Hall of Armouries": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
+ },
+ "Auriferous Orb": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "auriferous orb"
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "blinded"
+    }
+   ]
+  }
+ },
+ "Edge of the Blade": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "charged"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Auric Exemplar": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "abilities": [
+     "cleave 1"
+    ]
+   }
+  ]
+ },
+ "Flawless Bladework": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Genalchemic Warding": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Unstoppable Destroyer": {
+  "effects": [
+   {
+    "pileIn": 4,
+    "consolidate": 4,
+    "objConsolidate": true
+   }
+  ]
+ },
+ "Sally Forth": {
+  "status": "partial",
+  "note": "ต้น Charge phase: หน่วย CUSTODES INFANTRY ในระยะ 6\" ที่ Advance แล้วชาร์จได้",
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS CUSTODES",
+     "INFANTRY"
+    ],
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   }
+  ]
+ },
+ "Auric Eagle": {
+  "effects": [
+   {
+    "advanceBonus": 1,
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Shroud of the Hidden Blade": {
+  "effects": [
+   {
+    "stealth": true,
+    "loneOperative": true
+   }
+  ]
+ },
+ "Inspirational Exemplar": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "round",
+   "per": "army",
+   "target": {
+    "side": "friendly",
+    "range": 9,
+    "shocked": true,
+    "units": [
+     "ADEPTUS CUSTODES"
+    ]
+   },
+   "label": "หน่วยเพื่อนในระยะ 9\" หายจาก battle-shocked",
+   "do": [
+    {
+     "unshock": true
+    }
+   ]
+  }
+ },
+ "Superior Creation": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "reviveLater": {
+      "on": 2,
+      "wounds": 3
+     }
+    }
+   ]
+  }
+ },
+ "Arae-Shrike": {
+  "effects": [
+   {
+    "omniScrambler": 12
+   }
+  ]
+ },
+ "Celeritous Sentries": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1,
+     "limit": "phase"
+    },
+    "stratRepeat": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "limit": "phase"
+    }
+   }
+  ]
+ },
+ "Lightning Descent": {
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ]
+ },
+ "Leonine Ferocity": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "rapid-ingress"
+     ],
+     "cp": 1,
+     "limit": "phase",
+     "perArmy": true
+    },
+    "stratRepeat": {
+     "ids": [
+      "rapid-ingress"
+     ],
+     "limit": "phase"
+    }
+   }
+  ]
+ },
+ "Memento Moritoi": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 1,
+    "strength": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Augury Uplink": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Combat Deployment": {
+  "status": "partial",
+  "note": "หน่วยที่ลงจากรถนี้: re-roll charge และโดน snap shooting ไม่ได้ ถึงจบเทิร์น",
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 3,
+    "if": [
+     "disembarkedFrom:Coronus"
+    ],
+    "rerollCharge": true,
+    "noSnapTarget": true
+   }
+  ]
+ },
+ "Anti-Gravitic Mobility": {
+  "effects": [
+   {
+    "eligible": [
+     "shootAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Oblivion Knight": {
+  "effects": [
+   {
+    "if": [
+     "!any:targetKw:PSYKER||targetBattleShocked"
+    ],
+    "hit": 1
+   },
+   {
+    "if": [
+     "any:targetKw:PSYKER||targetBattleShocked"
+    ],
+    "hit": 1,
+    "wound": 1
+   }
+  ]
+ },
+ "Huntress' Eye": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "visible": true
+   },
+   "label": "ศัตรูในระยะ 12\" ทดสอบ battle-shock -1",
+   "do": [
+    {
+     "shock": -1
+    }
+   ]
+  }
+ }
+}

@@ -467,6 +467,7 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
     if (f.step === 'pileIn' && isBot(s, f.stepPlayer) && !(s.botTried ?? []).includes(startKey)) {
       s.botTried = [...(s.botTried ?? []), startKey];
       botFightStartStratagems(s, f.stepPlayer);
+      botUseActs(s, f.stepPlayer, ['fightStartButton']);
     }
     for (const u of boardUnits(s, f.stepPlayer)) {
       if (f.step === 'pileIn' && !pileInEligible(s, u)) continue;

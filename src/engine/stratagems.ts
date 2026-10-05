@@ -1,5 +1,6 @@
 // Reads detachment stratagem text (WHEN / TARGET / EFFECT) so the game can offer them at the right time
 // and apply the common effects automatically. Anything it cannot read is still usable: CP is spent and logged.
+import acStrats from '../../data/stratagems/AC.json';
 import orkStrats from '../../data/stratagems/ORK.json';
 import { reactWorth } from './botPlus';
 import smStrats from '../../data/stratagems/SM.json';
@@ -90,6 +91,7 @@ export interface EnemyPick {
 
 const BOOKS: Record<string, Record<string, StratRule>> = {
   SM: (smStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  AC: (acStrats as unknown as { rules: Record<string, StratRule> }).rules,
   ORK: (orkStrats as unknown as { rules: Record<string, StratRule> }).rules,
 };
 

@@ -1,15 +1,16 @@
 # แก้ / เพิ่ม / ลบ กฎ — คู่มือไฟล์ข้อมูล
 
 กฎทั้งหมดของเกมอยู่ในไฟล์ JSON ข้างล่าง แก้แล้วรัน `npm test` เพื่อเช็ก แล้ว `npm run artifact` เพื่อ build ใหม่
-ตอนนี้โฟกัส **Space Marines (SM)** และ **Orks (ORK)** — faction อื่นใช้ได้แต่ระบบอ่านจากข้อความการ์ดเท่าที่อ่านได้
+ตอนนี้โฟกัส **Space Marines (SM)**, **Orks (ORK)** และ **Adeptus Custodes (AC)** — faction อื่นใช้ได้แต่ระบบอ่านจากข้อความการ์ดเท่าที่อ่านได้
 
 | อยากแก้อะไร | ไฟล์ |
 |---|---|
 | ค่าบนการ์ด (M/T/Sv/W, อาวุธ, แต้ม, keyword) | `data/overrides/<FACTION>.json` (ดู `data/overrides/README.md`) — อย่าแก้ `public/data/factions/*.json` ตรง ๆ เพราะถูกสร้างใหม่จาก Wahapedia |
 | **Space Marines (Codex 2026)** | `data/packs/SM.listforge-pack.json` (ไฟล์ ListForge) + `data/packs/SM.cards.txt` (การ์ด stratagem) — `npm run data` สร้าง SM จาก pack นี้แทน Wahapedia (ดู `scripts/pack.mjs`) |
-| Ability ของ datasheet | `data/abilities/SM.json`, `data/abilities/ORK.json` |
+| **Adeptus Custodes (Codex 2026)** | `data/packs/AC.listforge-pack.json` — Martial Ka'tah (readied) อยู่ใน `data/detachment-rules.json` key `Martial Ka'tah` |
+| Ability ของ datasheet | `data/abilities/SM.json`, `data/abilities/ORK.json`, `data/abilities/AC.json` |
 | กฎ Detachment / Army rule | `data/detachment-rules.json` |
-| **Stratagem ของ detachment** | `data/stratagems/SM.json`, `data/stratagems/ORK.json` |
+| **Stratagem ของ detachment** | `data/stratagems/SM.json`, `data/stratagems/ORK.json`, `data/stratagems/AC.json` |
 | Core rules, core stratagems (Command Re-roll ฯลฯ) | `data/core-rules.json` |
 | Mission, secondary, terrain kind | `data/missions.json` |
 | แผนที่ (layout, objective, ruin) | `data/layouts.json` |

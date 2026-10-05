@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, attachOptions, chapterRules, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, attachOptions, chapterRules, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { Em } from './Em';
 import { RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { Icon } from './Icon';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
+import { PRESETS } from './presets';
 import { DET_RULES } from '../engine/detachments';
 import { DatasheetView } from './Sheet';
 import { tokenKind } from './Tokens';
@@ -232,7 +233,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
 
   const size = RULES.battleSizes.find((b) => b.id === list.battleSize) ?? RULES.battleSizes[0];
   const errors = useMemo(() => (faction ? validateList(list, faction, size) : []), [list, faction, size]);
-  const pts = listPoints(list);
+  const pts = listPoints(list, faction ?? undefined);
+  const taxes = useMemo(() => (faction ? dupTaxes(list, faction) : new Map<string, number>()), [list, faction]);
+  const ptsOf = (u: ArmyUnitEntry) => unitPoints(u) + (taxes.get(u.uid) ?? 0);
   const dpUsed = faction ? list.detachments.reduce((a, n) => a + (faction.detachments.find((d) => d.name === n)?.dp ?? 0), 0) : 0;
   const sheetOf = (name: string) => faction?.datasheets.find((d) => d.name === name);
   const factionName = index?.factions.find((f) => f.id === list.factionId)?.name ?? faction?.name ?? list.factionId;
@@ -245,7 +248,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const choose = (factionId: string, subfaction?: string) => {
     setPicker(null);
     if (factionId !== list.factionId) {
-      onChange({ ...list, factionId, subfaction, detachments: [], units: [] });
+      // a faction with a ready-made list starts from it (Adeptus Custodes …), others from an empty list
+      const quick = PRESETS[factionId];
+      onChange(quick && !subfaction ? { ...structuredClone(quick), battleSize: list.battleSize } : { ...list, factionId, subfaction, detachments: [], units: [] });
       return;
     }
     if (!faction) return;
@@ -298,7 +303,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         if (!us.length) return [];
         return [`${sec.title.toUpperCase()}`, ...us.map((u) => {
           const wg = wargearSummary(sheetOf(u.datasheet), u);
-          return `• ${u.datasheet} (${u.models}) — ${unitPoints(u)} pts${u.warlord ? ' · Warlord' : ''}${u.enhancement ? ` · ${u.enhancement}` : ''}${wg ? `\n   ${wg}` : ''}`;
+          return `• ${u.datasheet} (${u.models}) — ${ptsOf(u)} pts${u.warlord ? ' · Warlord' : ''}${u.enhancement ? ` · ${u.enhancement}` : ''}${wg ? `\n   ${wg}` : ''}`;
         }), ''];
       }),
     ].join('\n');
@@ -328,7 +333,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           <span className="ab-art-wrap"><UnitArt sheet={sheet} /></span>
           <span className="ab-row-text">
             <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
-            <span className="ab-pts">{unitPoints(u)} pts{u.enhancement && <span className="ab-enh"> {u.enhancement}</span>}{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">ไม่มีใน 11e</span>}</span>
+            <span className="ab-pts">{ptsOf(u)} pts{taxes.get(u.uid) ? <span className="tiny muted"> (หน่วยซ้ำ +{taxes.get(u.uid)})</span> : null}{u.enhancement && <span className="ab-enh"> {u.enhancement}</span>}{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">ไม่มีใน 11e</span>}</span>
             {line && <span className="ab-sub">{line}</span>}
             {wg && <span className="ab-sub ab-wg"><Icon name="wargear" size={13} /> {wg}</span>}
           </span>
@@ -563,7 +568,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         <div className="ab-inline-body">
           {sheet && <DatasheetView sheet={sheet} factionId={faction.id} />}
           {!sheet && <div className="sheet-title">{u.datasheet}</div>}
-          <div className="ab-panel-title">ตั้งค่าหน่วยนี้ · <span className="ab-pts">{unitPoints(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</span></div>
+          <div className="ab-panel-title">ตั้งค่าหน่วยนี้ · <span className="ab-pts">{ptsOf(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</span></div>
           {(enh.length > 0 || u.enhancement) && (
             <div className="field"><span><Icon name="enhancement" size={15} /> Enhancement <span className="tiny muted">แตะเพื่อใส่ / เอาออก</span></span>
               <div className="enh-list">

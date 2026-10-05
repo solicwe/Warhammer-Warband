@@ -64,6 +64,7 @@ export interface Action {
   reviveLater?: { on: number; wounds: number }; // this model rolls at the end of the phase to come back
   mortals?: string; // mortal wounds
   mortalsVehicle?: string; // … instead, if the unit is a VEHICLE
+  mortalsMV?: string; // … instead, if the unit is a MONSTER or VEHICLE
   shock?: number; // battle-shock test with this modifier (negative = harder)
   battleShock?: boolean; // the unit becomes battle-shocked
   unshock?: boolean;
@@ -104,6 +105,9 @@ export interface Action {
   identifyTerrain?: boolean; // Priority Target Identified: the visible terrain feature with the most enemy points in it is identified
   snare?: boolean; // Mortis Snares: the objective the unit controls becomes snared
   secureDead?: boolean; // In Sacrifice, Victory: objectives we control where the (destroyed) unit stood are secured
+  ready?: boolean; // Martial Ka'tah: the unit is readied
+  unready?: boolean; // … it used its ka'tah ability and is no longer readied
+  setMark?: boolean; // Sword of the Throne: the target becomes this model's mark
 }
 
 export interface ActSpec {
@@ -135,6 +139,7 @@ export interface ActSpec {
   do?: Action[];
   label?: string; // short Thai summary for the button
   botUse?: 'always' | 'damaged' | 'never' | 'valuable' | 'round2' | 'round3' | 'healthy';
+  botIf?: string[]; // the bot only presses it when these conditions hold too (a player may press it any time)
   units?: string[]; // detachment acts: which units have it
   armyWide?: boolean; // detachment acts: one button for the army, not one per unit
 }
@@ -404,6 +409,9 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       addTimed(s, on, { e: { consolidate: n }, label: def.name, until: 'phase', by: u.owner });
       log(s, `${def.name}: ${on.name} consolidate ได้ ${n}"`, 'roll', u.owner);
     }
+    if (a.ready && !on.readied) { on.readied = true; log(s, `${def.name}: ${on.name} พร้อมใช้ Ka'tah (readied)`, 'info', u.owner); }
+    if (a.unready) on.readied = false;
+    if (a.setMark) { u.mark = on.id; log(s, `${def.name}: ${on.name} เป็นเป้าหมาย (mark) ของ ${u.name}`, 'info', u.owner); }
     if (a.unshot) { on.shotTurn = -99; log(s, `${def.name}: ${on.name} ยังซ่อนตัวได้แม้ยิงไปแล้ว`, 'info', u.owner); }
     if (a.characterModel) {
       const m = alive(on).find((x) => !x.isCharacter && /sergeant|leader|champion|headtaker/i.test(x.name)) ?? alive(on).find((x) => !x.isCharacter);
@@ -446,8 +454,8 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
         log(s, `${def.name}: ${m.name} จะทอยกลับมาตอนจบ phase (${a.reviveLater.on}+)`, 'info', u.owner);
       }
     }
-    if (a.mortals || a.mortalsVehicle) {
-      const expr = a.mortalsVehicle && hasKw(on, 'VEHICLE') ? a.mortalsVehicle : a.mortals!;
+    if (a.mortals || a.mortalsVehicle || a.mortalsMV) {
+      const expr = a.mortalsMV && (hasKw(on, 'VEHICLE') || hasKw(on, 'MONSTER')) ? a.mortalsMV : a.mortalsVehicle && hasKw(on, 'VEHICLE') ? a.mortalsVehicle : a.mortals!;
       const n = rollExpr(s, expr).total;
       log(s, `${def.name}: ${on.name} โดน ${n} mortal wound`, 'roll', u.owner);
       applyMortalWounds(s, on, n, def.name);
@@ -717,6 +725,7 @@ export function botUseActs(s: GameState, p: PlayerId, when?: Trigger[], unitId?:
     if (use === 'round3' && s.round < 3) continue;
     if (use === 'healthy' && alive(m.def.holder).reduce((a, x) => a + x.wounds, 0) * 2 <= m.def.holder.models.reduce((a, x) => a + x.profile.W, 0)) continue;
     if (m.def.spec.do?.some((a) => a.move || a.surge || a.reserves)) continue; // moves need a plan the bot does not make
+    if (!(m.def.spec.botIf ?? []).every((c) => cond(c, { s, A: m.def.holder, holder: m.def.holder, bearers: m.def.bearers }))) continue;
     const pick = m.def.spec.target && m.def.spec.target.side !== 'self' && !m.def.spec.target.each ? bestTarget(s, m.def, m.targets) : undefined;
     useAct(s, m.def, pick);
   }
@@ -806,7 +815,7 @@ export function freeDiceNow(s: GameState): FreeDie[] {
   const add = (name: string, tag: string, f: FreeDieSpec) => {
     if (f.units && !unitMatches(A, f.units)) return;
     if (f.attack && f.attack !== kind) return;
-    if (f.if && !f.if.every((c) => cond(c, { s, A, holder: A }))) return;
+    if (f.if && !f.if.every((c) => cond(c, { s, A, T: unitById(s, at.targetId), holder: A }))) return;
     const bag = `free:${name}#${tag}`;
     if ((A.used ?? {})[bag] === period(s, f.limit)) return;
     const stages: ('hit' | 'wound')[] = f.stage === 'any' ? ['hit', 'wound'] : f.stage === 'hit' || f.stage === 'wound' ? [f.stage] : [];
@@ -820,6 +829,7 @@ export function freeDiceNow(s: GameState): FreeDie[] {
     freeList(rule.freeDie).forEach((f, i) => add(a.name, String(i), f));
   }
   for (const name of activeRules(s, A.owner)) (DET_RULES[name].freeDie ?? []).forEach((f, i) => add(name, `d${i}`, f));
+  for (const t of A.timed ?? []) freeList(t.e.freeDie ?? []).forEach((f, i) => add(t.label, `t${i}`, f));
   return out;
 }
 
@@ -836,10 +846,11 @@ function takeFreeDamage(s: GameState): boolean {
     freeList(rule.freeDie).forEach((f, i) => specs.push({ name: a.name, tag: String(i), f }));
   }
   for (const name of activeRules(s, A.owner)) (DET_RULES[name].freeDie ?? []).forEach((f, i) => specs.push({ name, tag: `d${i}`, f }));
+  for (const t of A.timed ?? []) freeList(t.e.freeDie ?? []).forEach((f, i) => specs.push({ name: t.label, tag: `t${i}`, f }));
   for (const { name, tag, f } of specs) {
     if (f.stage !== 'any' && f.stage !== 'damage') continue;
     if (f.kind !== 'reroll' || (f.units && !unitMatches(A, f.units)) || (f.attack && f.attack !== kind)) continue;
-    if (f.if && !f.if.every((c) => cond(c, { s, A, holder: A }))) continue;
+    if (f.if && !f.if.every((c) => cond(c, { s, A, T: unitById(s, at.targetId), holder: A }))) continue;
     const bag = `free:${name}#${tag}`;
     if ((A.used ?? {})[bag] === period(s, f.limit)) continue;
     (A.used ??= {})[bag] = period(s, f.limit);

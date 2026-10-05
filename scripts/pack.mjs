@@ -92,11 +92,36 @@ function readCards(file) {
   return out;
 }
 
+/** The faction keyword of a faction's units (the army's own keyword, not its name). */
+const FACTION_KW = { SM: 'ADEPTUS ASTARTES', AC: 'ADEPTUS CUSTODES' };
+/** Factions whose saved lists and rules data use Wahapedia's spelling of unit names. */
+const KEEP_SPELLING = new Set(['SM']);
+
 const PHASES = ['Command', 'Movement', 'Shooting', 'Charge', 'Fight'];
 function stratagemsOf(det, text, cards) {
   const i = text.indexOf('STRATAGEMS');
   if (i < 0) return [];
   const out = [];
+  // card layout ("Name (1CP)" then WHEN / TARGET / EFFECT / RESTRICTIONS lines)
+  for (const m of text.slice(i).matchAll(/^([^\n:]+?) \((\d+)CP\)\n(WHEN:[\s\S]*?)(?=\n\s*\n[^\n]+ \(\d+CP\)\n|(?![\s\S]))/gm)) {
+    const [, name, cp, body] = m;
+    const part = (k) => (new RegExp(`^${k}: ([\\s\\S]*?)(?=\\n(?:WHEN|TARGET|EFFECT|RESTRICTIONS):|(?![\\s\\S]))`, 'm').exec(body)?.[1] ?? '').trim();
+    const when = part('WHEN');
+    const card = cards.get(`${up(name)}@${det}`);
+    const phase = /^end of any phase|^any phase/i.test(when) ? 'Any phase' : PHASES.filter((p) => new RegExp(`${p} phase`, 'i').test(when)).map((p) => `${p} phase`).join(' or ') || 'Any phase';
+    const turn = /or the fight phase/i.test(when) ? 'Either player’s turn' : /^your opponent/i.test(when) ? 'Opponent’s turn' : /^your /i.test(when) ? 'Your turn' : 'Either player’s turn';
+    const restr = part('RESTRICTIONS');
+    out.push({
+      id: `${det}-${wkey(name)}`,
+      name: up(name.trim()),
+      cp: Number(cp),
+      type: `${det} – ${card?.category || 'Battle Tactic'} Stratagem`,
+      turn,
+      phase,
+      text: `WHEN: ${when}\nTARGET: ${part('TARGET')}\nEFFECT: ${part('EFFECT')}${restr ? `\nRESTRICTIONS: ${restr}` : ''}`,
+    });
+  }
+  if (out.length) return out;
   for (const m of text.slice(i).matchAll(/^- (.+?) \((\d+)CP\): ([\s\S]*?)(?=\n\s*\n- |\n- |$)/gm)) {
     const [, name, cp, body] = m;
     const tgt = /\s*(Target [^.]*\.)\s*/.exec(body);
@@ -179,16 +204,29 @@ function pointsOf(u) {
 
 export function factionFromPack(packFile, ref, meta) {
   const pack = JSON.parse(fs.readFileSync(packFile, 'utf8'));
+  // a model's default gear is in its points: when a pack lists a costed option first (Shield-Captain: Praesidium
+  // Shield +25), the first free option is the default
+  for (const u of pack.units) for (const m of u.models) for (const sl of m.wargear) {
+    const i = sl.options.findIndex((o) => !o.pts);
+    if (!sl.optional && i > 0 && sl.options[0].pts > 0) sl.options = [sl.options[i], ...sl.options.filter((_, k) => k !== i)];
+  }
   const cards = readCards(packFile.replace(/\.listforge-pack\.json$/, '.cards.txt'));
   const chapters = new Map((meta?.options ?? []).map((o) => [wkey(o.keyword), o.keyword]));
   const refSheets = new Map(ref.datasheets.map((d) => [wkey(d.name), d]));
-  const ruleText = new Map(pack.armyRules.map((r) => [r.name, r.description]));
+  // army rules the book changes ("modify") or adds keep their new text
+  const changed = (pack.armyRuleChanges ?? []).filter((c) => c.action !== 'remove' && c.description);
+  const ruleText = new Map([...pack.armyRules, ...changed].map((r) => [r.name, r.description]));
+  const factionKw = meta?.factionKeyword ?? FACTION_KW[ref.id] ?? up(ref.name);
 
   const datasheets = [];
+  const packNames = new Map(); // the pack's name of a unit → the name used here
   for (const u of pack.units) {
     if (/\[legends\]/i.test(u.name)) continue;
     const old = refSheets.get(wkey(u.name)) ?? refSheets.get(wkey(u.replacesName));
-    const name = old?.name ?? u.name;
+    // the Wahapedia spelling is kept (saved lists, pictures and rules data use it) — except where it only differs in
+    // capitals ("Shield-captain") in factions with no saved data yet
+    const name = old && (KEEP_SPELLING.has(ref.id) || wkey(old.name) !== wkey(u.name)) ? old.name : u.name;
+    packNames.set(wkey(u.name), name);
     const chapter = u.keywords.map((k) => chapters.get(wkey(k))).find(Boolean);
     const weaponIds = new Map(u.weapons.map((w) => [w.id, w.name]));
     const weaponName = (id) => weaponIds.get(id) ?? '';
@@ -208,13 +246,13 @@ export function factionFromPack(packFile, ref, meta) {
       composition = [...byName].map(([n, r]) => ({ name: n, min: r.min, max: r.max, text: `${r.min === r.max ? r.min : `${r.min}-${r.max}`} ${n}` }));
     }
     const damaged = u.abilities.find((a) => /^Damaged:/i.test(a.name));
-    const keywords = [...new Set([...u.categories, ...u.keywords].map(up).filter((k) => !chapters.has(wkey(k))).concat(up(name)))];
+    const keywords = [...new Set([...u.categories, ...u.keywords].map(up).filter((k) => !chapters.has(wkey(k))).concat(up(name), up(u.name)))];
     datasheets.push({
       id: old?.id ?? u.id,
       name,
       role: old?.role ?? roleOf(u.categories),
       keywords,
-      factionKeywords: ['ADEPTUS ASTARTES', ...(chapter ? [chapter] : [])],
+      factionKeywords: [...(u.keywords.some((k) => up(k) === 'ANATHEMA PSYKANA') ? ['ANATHEMA PSYKANA'] : [factionKw]), ...(chapter ? [chapter] : [])],
       ...(chapter ? { subfaction: chapter } : {}),
       models,
       composition,
@@ -237,11 +275,13 @@ export function factionFromPack(packFile, ref, meta) {
       ...(costs.length ? { wargearCosts: costs } : {}),
       ...(u.hiddenWhenKeywords?.length ? { hiddenFor: u.hiddenWhenKeywords.map(up) } : {}),
       ...(u.maxPerArmy ? { maxPerArmy: u.maxPerArmy } : {}),
+      ...(u.duplicateTaxPts ? { dupTax: { pts: u.duplicateTaxPts, from: u.duplicateTaxFromCopy || 2 } } : {}),
       link: old?.link ?? '',
     });
   }
-  // leaders name their bodyguards by the pack's spelling: map to the names actually used
+  // leaders name their bodyguards by the pack's spelling ("Custodian Guard Sodality"): map to the names actually used
   const names = new Map(datasheets.map((d) => [wkey(d.name), d.name]));
+  for (const [k, n] of packNames) if (!names.has(k)) names.set(k, n);
   for (const d of datasheets) d.leads = [...new Set(d.leads.map((n) => names.get(wkey(n))).filter(Boolean))];
 
   const detachments = pack.detachments.map((x) => {
@@ -267,7 +307,8 @@ export function factionFromPack(packFile, ref, meta) {
     ...ref,
     name: ref.name,
     lastUpdate: `${pack.name} r${pack.revision}`,
-    armyRules: pack.armyRules.filter((r) => !removed.has(r.name)).map((r) => ({ name: r.name, text: r.description })),
+    armyRules: [...pack.armyRules.filter((r) => !removed.has(r.name) && !changed.some((c) => c.name === r.name)), ...changed]
+      .map((r) => ({ name: r.name, text: r.description })),
     detachments,
     datasheets,
     source: { pack: pack.name, revision: pack.revision },

@@ -257,7 +257,10 @@ export interface MoveOptions { fly?: boolean; targets?: string[]; maxOverride?: 
 /** How far a Pile-in / Consolidation move may go (3", or more with stratagems such as Shock Onslaught). */
 export function pileDistance(s: GameState, u: UnitState, kind: 'pileIn' | 'consolidate'): number {
   const f = unitFlags(s, u);
-  return kind === 'pileIn' ? Math.max(RULES.pileIn.distance, f.pileIn) : Math.max(RULES.consolidate.distance, f.consolidate);
+  const base = kind === 'pileIn' ? Math.max(RULES.pileIn.distance, f.pileIn) : Math.max(RULES.consolidate.distance, f.consolidate);
+  // Dacatarai (Dread Host): enemy units engaged with that unit move less
+  const minus = Math.max(0, ...engagedEnemies(s, u).map((e) => unitFlags(s, e).enemyPileMinus));
+  return Math.max(0, base - minus);
 }
 
 export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOptions = {}): number {
@@ -647,10 +650,14 @@ function startCommand(s: GameState) {
   // Terrifying Proficiency: enemy units near the marked unit must test too (−1 when Below Half-strength)
   const terrors = boardUnits(s, other(s.active)).filter((e) => unitFlags(s, e).forceShockAura > 0);
   const forced = (u: UnitState) => terrors.some((e) => unitDistance(u, e) <= unitFlags(s, e).forceShockAura + 1e-6);
+  // Creeping Dread (Null Maiden Vigil): enemy PSYKER units and units below starting strength near it test at -1
+  const dreads = boardUnits(s, other(s.active)).filter((e) => unitFlags(s, e).creepingDread > 0);
+  const dreaded = (u: UnitState) => onBoard(u) && (hasKw(u, 'PSYKER') || alive(u).length < u.startingStrength)
+    && dreads.some((e) => unitDistance(u, e) <= unitFlags(s, e).creepingDread + 1e-6);
   s.shockTests = s.units
     .filter((u) => u.owner === s.active && u.status !== 'destroyed' && u.status !== 'pending' && alive(u).length)
-    .filter((u) => u.battleShocked || strength(u) === 'half' || strength(u) === 'belowHalf' || (onBoard(u) && forced(u)))
-    .map((u) => ({ unitId: u.id, result: null, passed: null, ...(forced(u) && strength(u) === 'belowHalf' ? { mod: -1 } : {}) }));
+    .filter((u) => u.battleShocked || strength(u) === 'half' || strength(u) === 'belowHalf' || (onBoard(u) && forced(u)) || dreaded(u))
+    .map((u) => ({ unitId: u.id, result: null, passed: null, ...((forced(u) && strength(u) === 'belowHalf') || dreaded(u) ? { mod: -1 } : {}) }));
 }
 
 export function bestLd(u: UnitState, s?: GameState) {

@@ -1,0 +1,593 @@
+{
+ "_comment": "Adeptus Custodes stratagems (Codex 2026) in machine-readable form. Keys: stratagem NAME (as on the card) or NAME@Detachment. See docs/EDITING.md.",
+ "rules": {
+  "SUPERHUMAN FOCUS": {
+   "unitIf": [
+    "!readied"
+   ],
+   "do": [
+    {
+     "ready": true
+    }
+   ],
+   "limit": "round",
+   "bot": "never",
+   "status": "auto",
+   "note": "ใช้ตอนจบ phase ไหนก็ได้ · หน่วยเดียวกันได้ครั้งเดียวต่อ battle round"
+  },
+  "UNLIMITED ENDURANCE": {
+   "unitIf": [
+    "advanced"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "eligible": [
+      "chargeAfterAdvance"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "SHIELD OF HONOUR": {
+   "targetKw": [
+    "INFANTRY|MOUNTED"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "vs": "melee",
+      "hit": -1,
+      "wound": -1
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "partial",
+   "note": "ใช้กับโมเดลศัตรูที่ไม่ได้ตีหน่วยนี้ทุกครั้ง: ระบบให้ -1 hit/-1 wound กับการโจมตีที่เข้าหน่วยนี้"
+  },
+  "PRIME TARGET": {
+   "effects": [
+    {
+     "freeDie": [
+      {
+       "kind": "reroll",
+       "stage": "hit",
+       "limit": "phase",
+       "attack": "ranged"
+      },
+      {
+       "kind": "reroll",
+       "stage": "wound",
+       "limit": "phase",
+       "attack": "ranged"
+      },
+      {
+       "kind": "reroll",
+       "stage": "damage",
+       "limit": "phase",
+       "attack": "ranged"
+      }
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "IN AURAMITE CLAD": {
+   "unitIf": [
+    "!kw:CUSTODIAN WARDENS"
+   ],
+   "buffs": [
+    "enemyAp-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "SWIFT AS THE EAGLE": {
+   "react": "enemyMoved",
+   "targetKw": [
+    "TRUSTED SENTINEL"
+   ],
+   "unitIf": [
+    "nearLast:8",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "D3+3"
+    }
+   ],
+   "status": "auto"
+  },
+  "MANOEUVRE AND FIRE": {
+   "unitIf": [
+    "fellBack"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterFallBack",
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "TIP OF THE TALON": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "if": [
+      "within:9"
+     ],
+     "strength": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "RAPID REACTIONS": {
+   "react": "enemyFallBack",
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "unitIf": [
+    "fellBackFromLast"
+   ],
+   "enemy": {
+    "lastActor": true
+   },
+   "special": [
+    "shootAt"
+   ],
+   "botReact": "shoot",
+   "status": "auto"
+  },
+  "IMPENETRABLE BASTION": {
+   "unitIf": [
+    "!kw:MONSTER",
+    "!kw:VEHICLE",
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "status": "auto"
+  },
+  "BEARERS OF HIS LIGHT": {
+   "effects": [
+    {
+     "attack": "melee",
+     "ignoreHitMods": true,
+     "ignoreWoundMods": true
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "SLAYERS OF NIGHTMARES": {
+   "effects": [
+    {
+     "attack": "melee",
+     "if": [
+      "targetTougher"
+     ],
+     "wound": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "SELFLESS SERVICE": {
+   "react": "enemyChargePhaseEnd",
+   "unitIf": [
+    "!engaged",
+    "any:!kw:VEHICLE||kw:CHARACTER||kw:WALKER"
+   ],
+   "enemy": {
+    "range": 6
+   },
+   "special": [
+    "charge"
+   ],
+   "botReact": "charge",
+   "status": "auto",
+   "note": "ทอยชาร์จได้สูงสุด 6"
+  },
+  "LIGHTNING WRATH": {
+   "do": [
+    {
+     "pileInRoll": "D3+3"
+    }
+   ],
+   "status": "auto"
+  },
+  "GOLDEN LIGHT OF THE MOIRAIDES": {
+   "targetFrom": "reserves",
+   "effects": [
+    {
+     "defend": {
+      "hit": -1
+     }
+    },
+    {
+     "noSnapTarget": true
+    }
+   ],
+   "until": "nextTurnStart",
+   "bot": "never",
+   "status": "auto"
+  },
+  "PRETERNATURAL RAPIDITY": {
+   "unitIf": [
+    "advanced"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "chargeAfterAdvance"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "GRIM RESPONSIBILITY": {
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "lethal hits: character/monster"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "NO ESCAPE": {
+   "react": "enemyFallBack",
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "unitIf": [
+    "!engaged",
+    "nearLast:6"
+   ],
+   "enemy": {
+    "lastActor": true
+   },
+   "special": [
+    "charge"
+   ],
+   "botReact": "charge",
+   "status": "auto"
+  },
+  "INDOMITABLE GUARDIANS": {
+   "unitIf": [
+    "onObjective",
+    "!ownTurn"
+   ],
+   "effects": [
+    {
+     "fightsFirst": true
+    }
+   ],
+   "bot": "never",
+   "status": "partial",
+   "note": "ต้องเป็นหน่วยถัดไปที่เลือกตี"
+  },
+  "INEXORABLE": {
+   "effects": [
+    {
+     "ignoreMods": true
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "AT SPEAR'S LENGTH": {
+   "unitIf": [
+    "fellBack"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "GRAVIMETRIC GRENADE": {
+   "react": "enemyChargePhaseStart",
+   "unitIf": [
+    "!engaged"
+   ],
+   "enemy": {
+    "range": 12,
+    "visible": true
+   },
+   "enemyEffects": [
+    {
+     "chargeBonus": -1
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "GILDED CHAMPION": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "limit": "battle",
+   "bot": "never",
+   "status": "manual",
+   "note": "ใช้ ability (Once per battle) ของตัวละครได้อีกครั้ง: กดปุ่ม ability เองอีกรอบ"
+  },
+  "DUTY UNTO DEATH": {
+   "effects": [
+    {
+     "fightOnDeath": 3
+    }
+   ],
+   "bot": "defend",
+   "status": "auto",
+   "note": "CHARACTER +1 ไม่ได้นับ"
+  },
+  "EMPEROR'S DOMAIN": {
+   "targetKw": [
+    "TRUSTED SENTINEL"
+   ],
+   "effects": [
+    {
+     "objConsolidate": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "AVENGE THE FALLEN": {
+   "targetKw": [
+    "TRUSTED SENTINEL"
+   ],
+   "unitIf": [
+    "belowStarting"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "if": [
+      "notCharacterModel"
+     ],
+     "attacks": 2
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "VIGIL UNENDING": {
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "buffs": [
+    "damage-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "UNLEASH THE LIONS": {
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "unitIf": [
+    "minModels:2"
+   ],
+   "bot": "never",
+   "status": "manual",
+   "note": "แยกหน่วยเป็นหน่วยละ 1 โมเดล: ยังไม่รองรับ"
+  },
+  "FURY OF THE EMPEROR": {
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "unitIf": [
+    "ingressThisTurn"
+   ],
+   "effects": [
+    {
+     "chargeBonus": 2
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "HONOURED INTERRED": {
+   "targetKw": [
+    "DREADNOUGHT"
+   ],
+   "effects": [
+    {
+     "scope": "aura",
+     "range": 6,
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "reroll": "hits1"
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "UNCEASING ONSLAUGHT": {
+   "targetKw": [
+    "DREADNOUGHT"
+   ],
+   "unitIf": [
+    "advanced"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "eligible": [
+      "chargeAfterAdvance"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "UNSTOPPABLE MOMENTUM": {
+   "targetKw": [
+    "DREADNOUGHT"
+   ],
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "VICTORY BEFORE DEATH": {
+   "react": "ownDestroyed",
+   "targetFrom": "destroyed",
+   "unitIf": [
+    "kw:GRAV-ASSAULT"
+   ],
+   "do": [
+    {
+     "secureDead": true
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "ADVANCED STABILISERS": {
+   "targetKw": [
+    "GRAV-ASSAULT"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "INEVITABLE ANNIHILATION": {
+   "targetKw": [
+    "GRAV-ASSAULT"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "ignoreHitMods": true
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "ANATHEMA BLADEMASTERY": {
+   "targetKw": [
+    "VIGILATOR SQUAD|VIGILATORS"
+   ],
+   "choice": [
+    {
+     "label": "[SUSTAINED HITS 1]",
+     "effects": [
+      {
+       "abilities": [
+        "sustained hits 1"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "[LETHAL HITS]",
+     "effects": [
+      {
+       "abilities": [
+        "lethal hits"
+       ]
+      }
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "PSY-CHAFF VOLLEY": {
+   "targetKw": [
+    "PROSECUTOR SQUAD|PROSECUTORS"
+   ],
+   "enemy": {
+    "hitBy": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "ap": 1
+     },
+     "until": "turn",
+     "mark": "prosecuted"
+    }
+   ],
+   "status": "auto"
+  },
+  "PURGATION SWEEP": {
+   "targetKw": [
+    "WITCHSEEKER SQUAD|WITCHSEEKERS"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "if": [
+      "torrentAttack",
+      "!any:targetKw:PSYKER||targetBattleShocked"
+     ],
+     "attacks": 1
+    },
+    {
+     "attack": "ranged",
+     "if": [
+      "torrentAttack",
+      "any:targetKw:PSYKER||targetBattleShocked"
+     ],
+     "attacks": 2
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  }
+ }
+}
