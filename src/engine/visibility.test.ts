@@ -36,10 +36,19 @@ describe('obscuring areas (13.10)', () => {
     expect(hasLos(board(ruin), a, b)).toBe(false);
   });
 
-  it('a model just outside an area is not "in" it: the area still blocks', () => {
+  it('a model only touching an area with its rim is not "in" it: the area still blocks', () => {
     const s = board(area(18, 10, 26, 30, 'light'));
     expect(hasLos(s, model(10, 20), model(26.7, 20))).toBe(false);
-    expect(hasLos(s, model(10, 20), model(26.6, 20))).toBe(true); // base edge over the area: it stands in it
+    expect(hasLos(s, model(10, 20), model(26.4, 20))).toBe(false); // base edge over the area, centre outside
+  });
+
+  it('a model in an area is seen into it, not across all of it (and sees out, not through)', () => {
+    const s = board(area(18, 10, 26, 30, 'light'));
+    expect(hasLos(s, model(10, 20), model(19, 20))).toBe(true); // 1" in from the near edge
+    expect(hasLos(s, model(10, 20), model(25, 20))).toBe(false); // at the far edge: the whole area is in between
+    expect(hasLos(s, model(25, 20), model(34, 20))).toBe(true); // looking out of the near side
+    expect(hasLos(s, model(19, 20), model(34, 20))).toBe(false); // looking out of the far side
+    expect(hasLos(s, model(19, 20), model(25, 20))).toBe(true); // both in it: each sees its own stretch
   });
 
   it('a big base pressed against a ruin wall does not see (or get seen) through it', () => {

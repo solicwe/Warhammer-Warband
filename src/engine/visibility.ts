@@ -1,11 +1,11 @@
 // Line of sight on a 2D board (06.01, 13.07-13.11).
 // Terrain areas with light/dense features are obscuring; dense walls are Solid at ground level.
 import { RULES } from './config';
-import { baseDist, circleTouchesPoly, samplePoints, segCrossesPoly, segSegDist, segsTouch } from './geometry';
+import { baseDist, circleTouchesPoly, pointInPoly, samplePoints, segCrossesPoly, segLengthInPoly, segSegDist, segsTouch } from './geometry';
 import { alive, everyModelKw } from './state';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 
-interface Blockers { walls: { a: Pt; b: Pt }[]; areas: TerrainPiece[] }
+interface Blockers { walls: { a: Pt; b: Pt }[]; areas: TerrainPiece[]; own: { t: TerrainPiece; reach: number }[] }
 
 /** Rules from abilities that change visibility (registered by effects.ts so this module stays dependency-free). */
 export interface VisibilityHooks {
@@ -28,11 +28,11 @@ function boxOf(t: TerrainPiece): Box {
   return b;
 }
 
-/** Is the model in this terrain area, so the area doesn't hide what's beyond it (13.10)? A small base touching it is;
- *  a big hull only grazing the edge isn't (the token stands for the hull, which would be beside the ruin). */
+/** Is the model in this terrain area, so the area doesn't hide what's beyond it (13.10)? Its base must be on the
+ *  plate, not just touching the edge: a model beside a ruin with its rim over the plate doesn't see through the whole
+ *  ruin, and isn't seen through it either. */
 function standsIn(m: ModelState, t: TerrainPiece): boolean {
-  if (m.r <= 1) return circleTouchesPoly(m, m.r, t.poly);
-  return circleTouchesPoly(m, m.r * 0.4, t.poly);
+  return pointInPoly(m, t.poly);
 }
 
 function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false): Blockers {
@@ -41,18 +41,24 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
   const y0 = Math.min(a.y - a.r, b.y - b.r), y1 = Math.max(a.y + a.r, b.y + b.r);
   const near = s.terrain.filter((t) => { const q = boxOf(t); return q.x1 >= x0 && q.x0 <= x1 && q.y1 >= y0 && q.y0 <= y1; });
   const walls = near.filter((t) => t.category === 'dense').flatMap((t) => t.walls);
-  const areas = near.filter(
-    (t) => (denseOnly ? t.category === 'dense' : t.category !== 'exposed') && !standsIn(a, t) && !standsIn(b, t),
-  );
-  return { walls, areas };
+  const obscuring = near.filter((t) => (denseOnly ? t.category === 'dense' : t.category !== 'exposed'));
+  const areas = obscuring.filter((t) => !standsIn(a, t) && !standsIn(b, t));
+  // both models in the same area: each sees its own stretch of it
+  const own = obscuring.filter((t) => !areas.includes(t)).map((t) => ({ t, reach: SEE_IN_AREA * (+standsIn(a, t) + +standsIn(b, t)) }));
+  return { walls, areas, own };
 }
+
+/** A model sees out of the area it stands in (and is seen in it), but not across all of it: a line may run this far
+ *  through that area. A model at one end of a big ruin doesn't see out of its far side. */
+export const SEE_IN_AREA = 4;
 
 /** Half the thickness of a ruin wall: a line of sight can't slip through the hairline where two walls meet. */
 const WALL_HALF = 0.04;
 // a wall end or the joint of two walls blocks too: a 1mm line can't slip through a corner
 const lineClear = (p: Pt, q: Pt, bl: Blockers) => {
   const seg = { a: p, b: q };
-  return !bl.walls.some((w) => segSegDist(seg, w) < WALL_HALF) && !bl.areas.some((t) => segCrossesPoly(seg, t.poly));
+  return !bl.walls.some((w) => segSegDist(seg, w) < WALL_HALF) && !bl.areas.some((t) => segCrossesPoly(seg, t.poly))
+    && !bl.own.some((o) => segLengthInPoly(seg, o.t.poly) > o.reach);
 };
 
 /** Points of a base to look from / at. A token pressed against a ruin wall overlaps it a little (it stands for a hull),

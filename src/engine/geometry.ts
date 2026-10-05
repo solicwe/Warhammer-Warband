@@ -84,6 +84,27 @@ export function segCrossesPoly(s: Seg, poly: Pt[]): boolean {
   return false;
 }
 
+/** How much of the segment lies inside the polygon. */
+export function segLengthInPoly(s: Seg, poly: Pt[]): number {
+  const rx = s.b.x - s.a.x, ry = s.b.y - s.a.y;
+  const ts = [0, 1];
+  for (const e of polyEdges(poly)) {
+    const ex = e.b.x - e.a.x, ey = e.b.y - e.a.y;
+    const den = rx * ey - ry * ex;
+    if (Math.abs(den) < 1e-12) continue;
+    const qx = e.a.x - s.a.x, qy = e.a.y - s.a.y;
+    const t = (qx * ey - qy * ex) / den, u = (qx * ry - qy * rx) / den;
+    if (t > 0 && t < 1 && u > -1e-9 && u < 1 + 1e-9) ts.push(t);
+  }
+  ts.sort((a, b) => a - b);
+  let inside = 0;
+  for (let i = 1; i < ts.length; i++) {
+    const m = (ts[i] + ts[i - 1]) / 2;
+    if (pointInPoly({ x: s.a.x + rx * m, y: s.a.y + ry * m }, poly)) inside += ts[i] - ts[i - 1];
+  }
+  return inside * Math.hypot(rx, ry);
+}
+
 /** Sample points on and inside a base for line-of-sight tests. */
 export function samplePoints(m: Pt & { r: number }, n = 8): Pt[] {
   const pts: Pt[] = [{ x: m.x, y: m.y }];
