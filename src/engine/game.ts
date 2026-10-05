@@ -516,7 +516,8 @@ function nextDeployer(s: GameState) {
   else if (!pending(s.deployTurn)) finishDeployment(s);
 }
 
-const isAstartes = (u: UnitState) => u.factionKeywords.includes('ADEPTUS ASTARTES') || hasKw(u, 'ADEPTUS ASTARTES');
+// the army's own units (Space Marines, Adeptus Custodes) — not allies
+const isAstartes = (u: UnitState) => ['ADEPTUS ASTARTES', 'ADEPTUS CUSTODES'].some((k) => u.factionKeywords.includes(k) || hasKw(u, k));
 
 /** Abilities that let a player redeploy units once both armies are deployed: how many, and of which kind. */
 const REDEPLOY: { name: string; n: number; infantryOnly: boolean }[] = [
@@ -528,6 +529,7 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean }[] = [
   { name: 'Hunter’s Guile', n: 3, infantryOnly: false },
   { name: "Hunter's Guile", n: 3, infantryOnly: false },
   { name: 'Chariots of the Storm', n: 3, infantryOnly: false },
+  { name: "Castellan's Mark", n: 3, infantryOnly: false }, // Adeptus Custodes
 ];
 
 function redeployFor(s: GameState, p: PlayerId) {
@@ -731,6 +733,7 @@ export function endPhase(s: GameState) {
     if (!s.window) openWindow(s, 'startOfShooting');
   } else if (s.phase === 'shooting') {
     s.phase = 'charge';
+    fireFor(s, 'chargeStart', s.active);
     emitReact(s, other(s.active), 'enemyChargePhaseStart', {});
   } else if (s.phase === 'charge') {
     if (phaseEndReactions(s, 'enemyChargePhaseEnd', [other(s.active)])) return;

@@ -66,7 +66,7 @@ export interface StratRule {
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'shootAt' | 'charge' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap';
+export type Special = 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -491,9 +491,10 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
     case 'shootAt': if (enemy) shootNow(s, u, enemy, label); return;
     // Power of the Machine Spirit: snap shooting, or normal shooting once the unit is at or below half-strength
     case 'shootAtSnap': if (enemy) shootNow(s, u, enemy, label, alive(u).length * 2 <= u.startingStrength || alive(u).reduce((a, m) => a + m.wounds, 0) * 2 <= u.models.reduce((a, m) => a + m.profile.W, 0) ? 'normal' : 'snap'); return;
-    case 'charge': {
+    case 'charge': case 'chargeCap6': {
       // a charge out of turn (Leonine Aggression …): only at the enemy units it was allowed to pick, no charge bonus
-      declareCharge(s, u);
+      // (Selfless Service: a charge roll above 6 counts as 6)
+      declareCharge(s, u, false, sp === 'chargeCap6' ? 6 : undefined);
       const opts = chargeTargetOptions(s, u).filter((e) => !enemy || e.id === enemy.id || unitDistance(u, e) <= 6);
       const t = (enemy && opts.find((e) => e.id === enemy.id)) ?? opts[0];
       if (!t || !autoCharge(s, u, [t.id])) { log(s, `${label}: ${u.name} ชาร์จไม่ถึง`, 'info', p); u.declaredCharge = false; return; }
@@ -620,7 +621,7 @@ function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto:
         if (ev > v) { v = ev; enemyId = e.id; }
       }
       if (!auto && v < 6 * cost) continue; // a free volley is worth a lot
-    } else if (o.rule.botReact === 'charge' || o.rule.special?.includes('charge')) {
+    } else if (o.rule.botReact === 'charge' || o.rule.special?.includes('charge') || o.rule.special?.includes('chargeCap6')) {
       const near = boardUnits(s, other(p)).filter((e) => unitDistance(u, e) <= 12).sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
       if (!near) continue;
       v = 12 - unitDistance(u, near);

@@ -10,7 +10,7 @@ import smAbilities from '../../data/abilities/SM.json';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { RULES } from './config';
-import { d6 } from './dice';
+import { d6, exprAverage } from './dice';
 import { baseDist, circleTouchesPoly, clamp, dist } from './geometry';
 import { setActionEligibilityHook, unitInRange } from './missions';
 import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, unitDistance, withinTerrain } from './state';
@@ -132,6 +132,8 @@ export interface Effect {
   enemyPileMinus?: number; // enemy units engaged with it pile in / consolidate this much less (Dacatarai in Dread Host)
   freeConsolidate?: boolean; // consolidation does not need to end closer to the closest enemy model
   taunt?: boolean; // enemy models in Engagement Range must target this unit with all their attacks
+  shieldOfHonour?: boolean; // enemy models engaged with it that attack another unit have -1 to hit and wound (Shield of Honour)
+  fightOnDeathCharBonus?: number; // +X to the fight-on-death roll for a CHARACTER model (Duty Unto Death)
   targetableWithin?: number; // can only be targeted by ranged attacks from models within this range
   ignoreMods?: boolean; // ignore modifiers to its characteristics and rolls (not saving throws)
   forceShockAura?: number; // in the opponent's next Command phase, enemy units this close must take a Battle-shock test
@@ -554,6 +556,7 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('detachment:')) return (s.players[A.owner].detachments ?? []).some((d) => d.name === c.slice(11));
   switch (c) {
     case 'readied': return !!A.readied;
+    case 'usedBattleAbility': return Object.values(A.used ?? {}).some((v) => v.startsWith('battle|'));
     case 'targetTougher': return !!T && Math.max(...alive(T).map((m) => m.profile.T)) > Math.max(...alive(x.holder ?? A).map((m) => m.profile.T));
     case 'markAlive': { const id = (x.holder ?? A).mark; return !!id && s.units.some((e) => e.id === id && e.status !== 'destroyed' && alive(e).length > 0); }
     // below starting / half strength, a single-model unit counting its wounds
@@ -570,6 +573,8 @@ export function cond(c: string, x: Ctx): boolean {
     case 'advanced': return A.move === 'advance';
     case 'fellBack': return A.move === 'fallback';
     case 'targetOfAttack': return s.attack?.targetId === A.id;
+    // the attack on this unit right now is a heavy one (AP -2 or better and 2+ damage a hit): worth a once-per-battle save
+    case 'dangerousAttack': return s.attack?.targetId === A.id && s.attack.pools.some((p) => (p.ap ?? 0) <= -2 && exprAverage(String(p.damage ?? p.profile.D)) >= 2);
     case 'onControlledObjective': return s.objectives.some((o) => o.controller === A.owner && unitInRange(s, A, o));
     case 'hasEmbarked': return s.units.some((e) => e.embarkedIn === A.id && e.status === 'embarked');
     case 'hasEmbarkedBattleline': return s.units.some((e) => e.embarkedIn === A.id && e.status === 'embarked' && alive(e).some((m) => m.keywords.includes('BATTLELINE')));
@@ -919,7 +924,8 @@ export function fightOnDeathFor(s: GameState, u: UnitState, m: ModelState): { fi
   ].filter((a) => (a.e.if ?? []).every((c) => cond(c, { s, A: u, m, holder: a.holder })));
   const out: ReturnType<typeof fightOnDeathFor> = {};
   for (const a of list) {
-    const on = (a.e.fightOnDeath ?? 7) - (a.e.fightOnDeathRiled && isRiled(s, u) ? a.e.fightOnDeathRiled : 0);
+    const on = (a.e.fightOnDeath ?? 7) - (a.e.fightOnDeathRiled && isRiled(s, u) ? a.e.fightOnDeathRiled : 0)
+      - (a.e.fightOnDeathCharBonus && (m.isCharacter || m.keywords.includes('CHARACTER')) ? a.e.fightOnDeathCharBonus : 0);
     if (a.e.fightOnDeath && (!out.fight || on < out.fight.on)) out.fight = { on, label: a.label, regain: a.e.fightOnDeathRegain };
     if (a.e.shootOnDeath && (!out.shoot || a.e.shootOnDeath < out.shoot.on)) out.shoot = { on: a.e.shootOnDeath, label: a.label };
   }
@@ -1010,6 +1016,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     consolidate: Math.max(0, ...es.map((e) => e.consolidate ?? 0)),
     freeConsolidate: es.some((e) => e.freeConsolidate),
     taunt: es.some((e) => e.taunt),
+    shieldOfHonour: es.some((e) => e.shieldOfHonour),
     targetableWithin: Math.min(99, ...es.map((e) => e.targetableWithin ?? 99)),
     ignoreMods: es.some((e) => e.ignoreMods),
     forceShockAura: Math.max(0, ...es.map((e) => e.forceShockAura ?? 0)),

@@ -1584,7 +1584,6 @@
       "readied"
      ],
      "label": "Conservai: ทำ action ได้แม้ engaged / battle-shocked และยังยิงได้",
-     "botUse": "never",
      "do": [
       {
        "on": "self",
@@ -1618,6 +1617,11 @@
        ],
        "until": "turn"
       }
+     ],
+     "botIf": [
+      "battleShocked",
+      "!engaged",
+      "farFromEnemies:12"
      ]
     },
     {

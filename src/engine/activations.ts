@@ -23,7 +23,7 @@ export type Trigger =
   | 'selectedToFight' | 'fightStart' | 'fightStartButton' | 'afterFighting' | 'endOfCharge'
   | 'anyPhase' | 'opponentTurnEnd' | 'opponentFightEnd' | 'onDeath' | 'friendlyDeath' | 'shotByEnemy' | 'enemyMovedNear' | 'enemyFellBack'
   | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks' | 'movementStart' | 'fightEnd' | 'attackStart'
-  | 'attacked' | 'friendlyTargeted';
+  | 'attacked' | 'friendlyTargeted' | 'fightEndButton' | 'chargeStart';
 
 export type Until = TimedEffect['until'];
 
@@ -47,6 +47,7 @@ export interface TargetSpec {
   attacker?: boolean; // the unit whose attack destroyed this model
   notLoneOperative?: boolean;
   ctxUnit?: boolean; // the unit the trigger is about (e.g. the unit disembarking)
+  advanced?: boolean; // a unit that made an Advance move this turn
 }
 
 export interface Action {
@@ -108,6 +109,9 @@ export interface Action {
   ready?: boolean; // Martial Ka'tah: the unit is readied
   unready?: boolean; // … it used its ka'tah ability and is no longer readied
   setMark?: boolean; // Sword of the Throne: the target becomes this model's mark
+  fightNext?: boolean; // the unit must be the next one its player selects to fight (Indomitable Guardians)
+  moreBattleUses?: boolean; // its (once per battle) abilities that were used can be used one more time (Gilded Champion)
+  splitSingles?: boolean; // the unit splits into units of one model each (Unleash the Lions)
 }
 
 export interface ActSpec {
@@ -140,6 +144,7 @@ export interface ActSpec {
   label?: string; // short Thai summary for the button
   botUse?: 'always' | 'damaged' | 'never' | 'valuable' | 'round2' | 'round3' | 'healthy';
   botIf?: string[]; // the bot only presses it when these conditions hold too (a player may press it any time)
+  botOnly?: boolean; // an automatic trigger only for a bot player (a person uses the button version)
   units?: string[]; // detachment acts: which units have it
   armyWide?: boolean; // detachment acts: one button for the army, not one per unit
 }
@@ -232,6 +237,32 @@ export const limitLeft = (s: GameState, def: ActDef) => (!def.spec.limit || time
 
 // ---------- timing of buttons ----------
 
+/** Unleash the Lions: every model but the first becomes a unit of its own (starting strength 1). */
+export function splitSingles(s: GameState, u: UnitState, label: string) {
+  const ms = alive(u);
+  if (ms.length < 2) return;
+  const made: string[] = [];
+  ms.slice(1).forEach((m, i) => {
+    const n: UnitState = structuredClone(u);
+    n.id = `${u.id}~${i + 1}`;
+    n.models = n.models.filter((x) => x.id === m.id);
+    n.sources = [m.source];
+    n.name = m.source;
+    n.startingStrength = 1;
+    n.isWarlordUnit = u.isWarlordUnit && m.isCharacter;
+    n.abilities = n.abilities.filter((a) => !a.sheet || a.sheet === m.source);
+    n.enhancements = n.enhancements.filter((e) => e.model === m.source);
+    s.units.push(n);
+    made.push(n.name);
+  });
+  const first = ms[0];
+  u.models = u.models.filter((x) => x.id === first.id);
+  u.sources = [first.source];
+  u.name = first.source;
+  u.startingStrength = 1;
+  log(s, `${label}: ${u.name} แยกเป็น ${made.length + 1} หน่วย หน่วยละ 1 โมเดล`, 'info', u.owner);
+}
+
 function timingOk(s: GameState, def: ActDef): string | null {
   const u = def.holder;
   const own = s.active === u.owner;
@@ -249,6 +280,7 @@ function timingOk(s: GameState, def: ActDef): string | null {
     case 'opponentTurnEnd': return s.phase === 'command' && own && s.turn > 0 ? null : 'ใช้ได้ตอนจบเทิร์นศัตรู (ต้น Command phase ของเรา)';
     case 'battleStart': return s.round === 1 && s.phase === 'command' && own ? null : 'เลือกได้ใน Command phase แรก';
     case 'opponentFightEnd': return s.phase === 'fight' && !own && s.fight?.step === 'consolidate' ? null : 'ใช้ได้ตอนจบ Fight phase ของศัตรู';
+    case 'fightEndButton': return s.phase === 'fight' && s.fight?.step === 'consolidate' ? null : 'ใช้ได้ตอนจบ Fight phase';
     default: return 'ทำงานอัตโนมัติ';
   }
 }
@@ -278,6 +310,7 @@ export function actTargets(s: GameState, def: ActDef, ctx: FireCtx = {}): UnitSt
     if (t.shocked && !x.battleShocked) return false;
     if (t.damaged && !alive(x).some((m) => m.wounds < m.profile.W) && !(x.models.some((m) => m.dead))) return false;
     if (t.charged && x.chargedTurn !== s.turn) return false;
+    if (t.advanced && x.move !== 'advance') return false;
     if (t.notLoneOperative && (x.core.loneOperative || unitFlags(s, x).loneOperative) && x.sources.length === 1) return false;
     if (t.hit) {
       const h = u.lastHits;
@@ -411,6 +444,17 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     }
     if (a.ready && !on.readied) { on.readied = true; log(s, `${def.name}: ${on.name} พร้อมใช้ Ka'tah (readied)`, 'info', u.owner); }
     if (a.unready) on.readied = false;
+    if (a.fightNext && s.fight) { s.fight.forcedNext = on.id; log(s, `${def.name}: ${on.name} ต้องเป็นหน่วยถัดไปที่ตี`, 'info', u.owner); }
+    if (a.moreBattleUses) {
+      for (const d of actsOfUnit(s, on).filter((x) => x.spec.limit === 'battle' && timesUsed(s, x) > 0)) {
+        const bag = usedBag(s, d);
+        const k = baseKey(d);
+        const n = timesUsed(s, d) - 1;
+        if (n > 0) bag[k] = `battle|${n}`; else delete bag[k];
+      }
+      log(s, `${def.name}: ${on.name} ใช้ ability (Once per battle) ได้อีกครั้ง`, 'info', u.owner);
+    }
+    if (a.splitSingles) splitSingles(s, on, def.name);
     if (a.setMark) { u.mark = on.id; log(s, `${def.name}: ${on.name} เป็นเป้าหมาย (mark) ของ ${u.name}`, 'info', u.owner); }
     if (a.unshot) { on.shotTurn = -99; log(s, `${def.name}: ${on.name} ยังซ่อนตัวได้แม้ยิงไปแล้ว`, 'info', u.owner); }
     if (a.characterModel) {
@@ -644,6 +688,7 @@ export function fire(s: GameState, trigger: Trigger, units: UnitState[], ctx: Fi
   for (const u of units) {
     for (const def of actsOfUnit(s, u, trigger === 'onDeath')) {
       if (def.spec.when !== trigger || !def.spec.auto) continue;
+      if (def.spec.botOnly && !(s.bots ?? []).includes(u.owner)) continue;
       if (trigger === 'onDeath') {
         // "when this model is destroyed": only the model that died; otherwise only when the whole unit is gone
         if (def.spec.modelDeath ? !def.bearers.some((b) => b.id === ctx.deadModelId) : alive(u).length > 0) continue;

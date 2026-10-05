@@ -4,10 +4,11 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { actsOfUnit, manualActs, useActByKey } from './activations';
 import { buildFightPools } from './attack';
+import { applyDetachmentStratagem } from './stratagems';
 import { botAct } from './bot';
 import { abilityRule, DET_RULES } from './effects';
 import { buildUnits, enhancementFits, listPoints, validateList } from './army';
-import { createGame, formationAt, placeUnit } from './game';
+import { createGame, endPhase, formationAt, placeUnit } from './game';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -131,6 +132,61 @@ describe('Martial Ka\'tah', () => {
     expect(cg.readied).toBe(true);
     cg.readied = false;
     expect(useActByKey(s, cg.id, def.key)).not.toBeNull();
+  });
+});
+
+describe('Custodes rules that needed new engine parts', () => {
+  const strat = (s: GameState, name: string) => AC.detachments.flatMap((d) => d.stratagems).find((x) => x.name === name)!;
+  it('Shield of Honour: an enemy model engaged with the shielded unit that attacks another unit gets -1 hit and -1 wound', () => {
+    const s = game([['Custodian Guard', 3, 240], ['Custodian Wardens', 3, 295]], [['Boyz', 10, 90]], 'Guardians of the Throne');
+    const cg = put(s, 'p0-x0', { x: 20, y: 30 });
+    put(s, 'p0-x1', { x: 26, y: 30 });
+    const boyz = put(s, 'p1-x0', { x: 23, y: 30 });
+    s.players[0].cp = 5; s.phase = 'fight';
+    const before = buildFightPools(s, boyz.id, 'p0-x1').pools[0];
+    applyDetachmentStratagem(s, 0, strat(s, 'SHIELD OF HONOUR'), cg.id);
+    const after = buildFightPools(s, boyz.id, 'p0-x1').pools.find((p) => /Shield of Honour/.test(p.hitNote))!;
+    expect(after.hitMod).toBe(before.hitMod - 1);
+    expect(after.woundMod).toBe(before.woundMod - 1);
+    expect(buildFightPools(s, boyz.id, cg.id).pools.some((p) => /Shield of Honour/.test(p.hitNote))).toBe(false);
+  });
+  it('Unleash the Lions splits a Terminator unit into one-model units', () => {
+    const s = game([['Allarus Custodians', 3, 270]], [['Boyz', 10, 90]], 'Lions of the Emperor');
+    const u = put(s, 'p0-x0', { x: 20, y: 30 });
+    s.players[0].cp = 5; s.phase = 'command';
+    applyDetachmentStratagem(s, 0, strat(s, 'UNLEASH THE LIONS'), u.id);
+    const mine = s.units.filter((x) => x.owner === 0 && x.status === 'board');
+    expect(mine.length).toBe(3);
+    expect(mine.every((x) => x.models.length === 1 && x.startingStrength === 1)).toBe(true);
+  });
+  it('Gilded Champion: a used once-per-battle ability can be used again', () => {
+    const s = game([['Custodian Guard', 3, 240], ['Shield-Captain', 1, 180, 'x0']], [['Boyz', 10, 90]], 'Auric Champions');
+    const u = put(s, 'p0-x0', { x: 20, y: 30 });
+    put(s, 'p1-x0', { x: 20, y: 40 });
+    s.players[0].cp = 5; s.phase = 'movement';
+    (u.used ??= {})['Vengeful Surge (Once per battle, per unit)'] = 'battle|1';
+    applyDetachmentStratagem(s, 0, strat(s, 'GILDED CHAMPION'), u.id);
+    expect(u.used['Vengeful Surge (Once per battle, per unit)']).toBeUndefined();
+  });
+  it('Sally Forth: at the start of the Charge phase an Infantry unit that advanced near the bearer may charge', () => {
+    const s = game([['Custodian Guard', 3, 240], ['Shield-Captain', 1, 180, undefined, { enhancement: 'Sally Forth' }]], [['Boyz', 10, 90]], 'Solar Watch');
+    const cg = put(s, 'p0-x0', { x: 20, y: 30 });
+    put(s, 'p0-x1', { x: 24, y: 30 });
+    put(s, 'p1-x0', { x: 20, y: 38 });
+    s.phase = 'shooting'; cg.move = 'advance';
+    endPhase(s);
+    expect(s.phase).toBe('charge');
+    expect((cg.timed ?? []).some((t) => t.e.eligible?.includes('chargeAfterAdvance'))).toBe(true);
+  });
+  it('Sweeping Advance is a button at the end of the Fight phase', () => {
+    const s = game([['Shield-Captain on Dawneagle Jetbike', 1, 205]], [['Boyz', 10, 90]]);
+    const u = put(s, 'p0-x0', { x: 20, y: 30 });
+    s.phase = 'fight';
+    s.fight = { step: 'consolidate', stepPlayer: 0, chooser: 0, eligible: [], fought: [], forcedNext: null, movedThisStep: [] };
+    const m = manualActs(s, 0).find((x) => x.def.name.startsWith('Sweeping Advance'))!;
+    expect(m.why).toBeNull();
+    expect(useActByKey(s, u.id, m.def.key)).toBeNull();
+    expect(u.extraMove?.max).toBeGreaterThan(0);
   });
 });
 

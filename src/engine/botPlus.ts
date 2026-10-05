@@ -7,9 +7,9 @@ import { cpWorth, tryRule } from './botStrats';
 import { dist } from './geometry';
 import { unitVisibleTo } from './visibility';
 import { isBrawler, maxRange, moveOf, onObjective, unitValue } from './botEval';
-import { rollMods, targetHasCover, unitDoctrines } from './effects';
-import { commitMove, consolidateMode, levelOfControl, setPhaseEndHook, validateMove } from './game';
-import { alive, boardUnits, engagedEnemies, isEngaged, other, unitDistance } from './state';
+import { rollMods, targetHasCover, unitDoctrines, unitFlags } from './effects';
+import { chargeEligibility, commitMove, consolidateMode, levelOfControl, setPhaseEndHook, validateMove } from './game';
+import { alive, boardUnits, engagedEnemies, isEngaged, onBoard as onBoardUnit, other, unitDistance } from './state';
 import { applyDetachmentStratagem, stratagemBlock, stratRule, stratChoices } from './stratagems';
 import type { GameState, PlayerId, StratagemData, UnitState } from './types';
 import { stratCost } from './state';
@@ -390,3 +390,120 @@ setPhaseEndHook((s, phase) => {
   const p = other(s.active);
   if (phase === 'fight' && (s.bots ?? []).includes(p)) botRedeployActs(s, p);
 });
+
+// ---------- Adeptus Custodes decisions (and any faction with the same kind of rule) ----------
+
+/** An Advance that stops the charge (Unlimited Endurance, Preternatural Rapidity): worth it when a melee unit can reach. */
+export function botAdvanceChargeStratagem(s: GameState, u: UnitState) {
+  if (u.move !== 'advance' || !isBrawler(s, u) || !chargeEligibility(s, u)?.startsWith('Advance')) return;
+  if (!boardUnits(s, other(u.owner)).some((e) => unitDistance(u, e) <= 9)) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || !fxOf(rule).some((e) => e.eligible?.includes('chargeAfterAdvance')) || !ready(s, u.owner, st, u)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    return;
+  }
+}
+
+/** +X to the charge roll (Fury of the Emperor) for a long charge. */
+export function botChargeBonusStratagem(s: GameState, u: UnitState, gap: number) {
+  if (gap <= 7) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || !fxOf(rule).some((e) => (e.chargeBonus ?? 0) > 0) || !ready(s, u.owner, st, u)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    return;
+  }
+}
+
+/** A unit about to fight that is not readied: ready it again (Superhuman Focus) so it gets its ka'tah. */
+export function botReadyStratagem(s: GameState, u: UnitState) {
+  if (u.readied || !engagedEnemies(s, u).length || unitValue(u) < 150) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || !dosOf(rule).some((a) => a.ready) || !ready(s, u.owner, st, u)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    return;
+  }
+}
+
+/** A valuable unit about to arrive from Reserves: -1 to be hit until our next turn (Golden Light of the Moiraides). */
+export function botArrivalDefence(s: GameState, u: UnitState) {
+  if (unitValue(u) < 150) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.targetFrom !== 'reserves' || !fxOf(rule).some((e) => e.defend?.hit) || !ready(s, u.owner, st, u)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    return;
+  }
+}
+
+/** After shooting: mark the enemy it hit so the rest of the army's attacks get +1 AP (Psy-chaff Volley). */
+export function botAfterShootStratagems(s: GameState, u: UnitState) {
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || !rule.enemy?.hitBy || !dosOf(rule).some((a) => a.incoming) || !ready(s, u.owner, st, u)) continue;
+    const hit = u.lastHits?.ids.map((id) => s.units.find((x) => x.id === id)).filter((x): x is UnitState => !!x && onBoardUnit(x)) ?? [];
+    const t = hit.sort((a, b) => unitValue(b) - unitValue(a))[0];
+    if (t && unitValue(t) >= 100) applyDetachmentStratagem(s, u.owner, st, u.id, { enemyId: t.id });
+    return;
+  }
+}
+
+/** Start of the Fight phase: an enemy unit engaged with two of ours: ours with Shield of Honour punishes it for hitting the other. */
+export function botShieldStratagem(s: GameState, p: PlayerId) {
+  for (const { st, rule } of strats(s, p)) {
+    if (rule.react || !fxOf(rule).some((e) => e.shieldOfHonour)) continue;
+    const u = boardUnits(s, p).filter((x) => ready(s, p, st, x) && engagedEnemies(s, x).some((e) => boardUnits(s, p).some((y) => y.id !== x.id && engagedEnemies(s, y).some((f) => f.id === e.id))))
+      .sort((a, b) => unitValue(a) - unitValue(b))[0];
+    if (u) applyDetachmentStratagem(s, p, st, u.id);
+  }
+}
+
+/** Command phase: a once-per-battle ability used up on a character (Gilded Champion), a Terminator squad that would hold
+ *  more ground as single models (Unleash the Lions). */
+export function botCommandExtras(s: GameState, p: PlayerId) {
+  for (const { st, rule } of strats(s, p)) {
+    if (rule.react) continue;
+    if (dosOf(rule).some((a) => a.moreBattleUses)) {
+      const u = boardUnits(s, p).filter((x) => ready(s, p, st, x, 2)).sort((a, b) => unitValue(b) - unitValue(a))[0];
+      if (u) applyDetachmentStratagem(s, p, st, u.id);
+    }
+    if (dosOf(rule).some((a) => a.splitSingles) && s.round >= 2) {
+      const open = s.objectives.filter((o) => o.controller !== p);
+      const u = boardUnits(s, p).filter((x) => ready(s, p, st, x) && !engagedEnemies(s, x).length && alive(x).length >= 2
+        && open.filter((o) => alive(x).some((m) => dist(m, o) <= 10)).length >= 2)[0];
+      if (u) applyDetachmentStratagem(s, p, st, u.id);
+    }
+  }
+}
+
+/** End of a Fight phase: a once-per-battle move (Sweeping Advance) out of a fight it is losing, or on towards the enemy. */
+export function botFightEndActs(s: GameState, p: PlayerId) {
+  for (const m of manualActs(s, p)) {
+    if (m.why || m.def.spec.when !== 'fightEndButton' || !m.def.spec.do?.some((a) => a.move)) continue;
+    const u = m.def.holder;
+    const losing = engagedEnemies(s, u).length > 0 && alive(u).reduce((a, x) => a + x.wounds, 0) * 2 < u.models.reduce((a, x) => a + x.profile.W, 0);
+    const free = !engagedEnemies(s, u).length && moveGain(s, u, moveOf(u)) > 3;
+    if (!losing && !free) continue;
+    useActByKey(s, u.id, m.def.key);
+    if (u.extraMove) botExtraMove(s, u);
+  }
+}
+
+/** Movement phase: a unit far from everything teleports (Archeotech Teleport-shunter) and arrives this phase. */
+export function botTeleportActs(s: GameState, p: PlayerId) {
+  if (s.round < 2) return;
+  for (const m of manualActs(s, p)) {
+    if (m.why || !m.def.spec.do?.some((a) => a.reserves && a.earlyArrival)) continue;
+    const u = m.def.holder;
+    if (s.objectives.some((o) => onObjective(s, u, o)) || boardUnits(s, other(p)).some((e) => unitDistance(u, e) <= 18)) continue;
+    useActByKey(s, u.id, m.def.key);
+  }
+}
+
+/** A unit slowed by the enemy (-M, -advance / charge): ignore those modifiers this turn (Inexorable). */
+export function botIgnoreModsStratagem(s: GameState, u: UnitState) {
+  const slowed = unitFlags(s, u).move < 0 || rollMods(s, u).chargeBonus < 0 || rollMods(s, u).advanceBonus < 0;
+  if (!slowed) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || rule.until !== 'turn' || !fxOf(rule).some((e) => e.ignoreMods) || !ready(s, u.owner, st, u)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    return;
+  }
+}

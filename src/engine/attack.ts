@@ -299,11 +299,14 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       const inc = incomingFor(s, A, m, T, 'melee');
       const mods: Mods = { skillDelta: 0, skillNotes: [], hit: 0, hitNotes: [] };
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
+      // Shield of Honour: this model is engaged with that unit but attacks another one
+      const shamed = engagedEnemies(s, A).some((e) => e.id !== T.id && unitFlags(s, e).shieldOfHonour && modelEngagedWith(m, e));
+      if (shamed) { mods.hit -= 1; mods.hitNotes.push('Shield of Honour −1'); }
       const bh = buffSum(A, 'hit+1', 'hit-1');
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
       const fm = finishPoolMods(p, mods, hasAbility(p, 'psychic'));
       const precision = opt.epicChallengeModel === m.id;
-      const key = [m.source, w.name, fm.hit, precision, fxKey(fx, inc)].join('|');
+      const key = [m.source, w.name, fm.hit, precision, shamed, fxKey(fx, inc)].join('|');
       let pool = pools.get(key);
       if (!pool) {
         pool = newPool(key, w, p, T);
@@ -313,6 +316,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         let wm = buffSum(A, 'wound+1', 'wound-1');
         const notes = [`S${p.S} vs T${T_T}`];
         if (hasAbility(p, 'lance', T.keywords) && A.chargedTurn === s.turn) { wm += 1; notes.push('Lance +1'); }
+        if (shamed) { wm -= 1; notes.push('Shield of Honour −1'); }
         pool.woundMod = clamp(wm, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundNote = notes.join(' · ');
         applyUnitBuffs(pool, A);

@@ -13,7 +13,7 @@
    "limit": "round",
    "bot": "never",
    "status": "auto",
-   "note": "ใช้ตอนจบ phase ไหนก็ได้ · หน่วยเดียวกันได้ครั้งเดียวต่อ battle round"
+   "note": "จบ phase ไหนก็ได้ · ระบบนับครั้งเดียวต่อ battle round"
   },
   "UNLIMITED ENDURANCE": {
    "unitIf": [
@@ -42,16 +42,12 @@
    ],
    "effects": [
     {
-     "defend": {
-      "vs": "melee",
-      "hit": -1,
-      "wound": -1
-     }
+     "shieldOfHonour": true
     }
    ],
-   "bot": "defend",
-   "status": "partial",
-   "note": "ใช้กับโมเดลศัตรูที่ไม่ได้ตีหน่วยนี้ทุกครั้ง: ระบบให้ -1 hit/-1 wound กับการโจมตีที่เข้าหน่วยนี้"
+   "bot": "never",
+   "status": "auto",
+   "note": "โมเดลศัตรูที่ติดพันหน่วยนี้แต่ไปตีหน่วยอื่น: −1 hit −1 wound"
   },
   "PRIME TARGET": {
    "effects": [
@@ -200,11 +196,10 @@
     "range": 6
    },
    "special": [
-    "charge"
+    "chargeCap6"
    ],
    "botReact": "charge",
-   "status": "auto",
-   "note": "ทอยชาร์จได้สูงสุด 6"
+   "status": "auto"
   },
   "LIGHTNING WRATH": {
    "do": [
@@ -288,9 +283,13 @@
      "fightsFirst": true
     }
    ],
+   "do": [
+    {
+     "fightNext": true
+    }
+   ],
    "bot": "never",
-   "status": "partial",
-   "note": "ต้องเป็นหน่วยถัดไปที่เลือกตี"
+   "status": "auto"
   },
   "INEXORABLE": {
    "effects": [
@@ -338,20 +337,27 @@
    "targetKw": [
     "CHARACTER"
    ],
-   "limit": "battle",
+   "unitIf": [
+    "usedBattleAbility"
+   ],
+   "do": [
+    {
+     "moreBattleUses": true
+    }
+   ],
    "bot": "never",
-   "status": "manual",
-   "note": "ใช้ ability (Once per battle) ของตัวละครได้อีกครั้ง: กดปุ่ม ability เองอีกรอบ"
+   "status": "auto",
+   "note": "ใช้กับโมเดลเดียวกันได้ครั้งเดียวต่อเกม"
   },
   "DUTY UNTO DEATH": {
    "effects": [
     {
-     "fightOnDeath": 3
+     "fightOnDeath": 3,
+     "fightOnDeathCharBonus": 1
     }
    ],
    "bot": "defend",
-   "status": "auto",
-   "note": "CHARACTER +1 ไม่ได้นับ"
+   "status": "auto"
   },
   "EMPEROR'S DOMAIN": {
    "targetKw": [
@@ -401,9 +407,13 @@
    "unitIf": [
     "minModels:2"
    ],
+   "do": [
+    {
+     "splitSingles": true
+    }
+   ],
    "bot": "never",
-   "status": "manual",
-   "note": "แยกหน่วยเป็นหน่วยละ 1 โมเดล: ยังไม่รองรับ"
+   "status": "auto"
   },
   "FURY OF THE EMPEROR": {
    "targetKw": [

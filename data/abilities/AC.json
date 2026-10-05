@@ -73,6 +73,30 @@
       ]
      }
     ]
+   },
+   {
+    "when": "attacked",
+    "auto": true,
+    "botOnly": true,
+    "limit": "battle",
+    "per": "army",
+    "if": [
+     "dangerousAttack",
+     "!fightPhase"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "defend": {
+         "inv": 3
+        }
+       }
+      ]
+     }
+    ]
    }
   ]
  },
@@ -172,15 +196,10 @@
   }
  },
  "Sweeping Advance (Once per battle, per unit)": {
-  "status": "partial",
-  "note": "จบ Fight phase: ถ้าไม่ติดพันเดิน Normal move (ปุ่มตอนจบ Fight phase ของศัตรู)",
   "act": {
-   "when": "opponentFightEnd",
+   "when": "fightEndButton",
    "limit": "battle",
-   "if": [
-    "notEngaged"
-   ],
-   "label": "เดิน Normal move",
+   "label": "จบ Fight phase: เดิน Normal move (ถ้าติดพัน = Fall back)",
    "botUse": "never",
    "do": [
     {
@@ -488,8 +507,7 @@
     "disembarkAfterAdvance": true
    }
   ],
-  "status": "partial",
-  "note": "Shock disembark (ระยะ 3\"): หน่วยที่ลงชาร์จไม่ได้ในเทิร์นนั้น"
+  "note": "Shock disembark: ลงได้หลังรถ Advance (ระยะ 3\") แล้วชาร์จไม่ได้เทิร์นนั้น"
  },
  "Seeker's Instincts": {
   "effects": [
@@ -506,8 +524,7 @@
     "forceDesperate": true
    }
   ],
-  "status": "partial",
-  "note": "-1 hazard ถ้าศัตรู battle-shocked: ทำเอง"
+  "note": "ศัตรู (ไม่ใช่ MONSTER/VEHICLE) ที่ fall back ต้องใช้ Desperate Escape · battle-shocked −1 hazard"
  },
  "Purity of Execution": {
   "act": {
@@ -582,30 +599,55 @@
   "note": "อาวุธ Emperor's Light [EXTRA ATTACKS] ถูกเพิ่มให้โมเดลแล้ว"
  },
  "Castellan's Mark": {
-  "status": "manual",
-  "note": "หลังวางทัพ: redeploy ได้ 3 หน่วย (ทำเองตอน deploy)"
+  "status": "auto",
+  "note": "หลังวางทัพทั้งสองฝ่าย: redeploy หน่วย CUSTODES ได้ 3 หน่วย (วางใหม่หรือเข้า Strategic Reserves)"
  },
  "Eagle's Eye": {
-  "act": {
-   "when": "anyPhase",
-   "limit": "battle",
-   "per": "army",
-   "label": "InSv 3+ ถึงจบ phase",
-   "botUse": "never",
-   "do": [
-    {
-     "on": "self",
-     "bearerOnly": true,
-     "buff": [
-      {
-       "defend": {
-        "inv": 3
+  "act": [
+   {
+    "when": "anyPhase",
+    "limit": "battle",
+    "per": "army",
+    "label": "InSv 3+ ถึงจบ phase",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "defend": {
+         "inv": 3
+        }
        }
-      }
-     ]
-    }
-   ]
-  }
+      ]
+     }
+    ]
+   },
+   {
+    "when": "attacked",
+    "auto": true,
+    "botOnly": true,
+    "limit": "battle",
+    "per": "army",
+    "if": [
+     "dangerousAttack"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "defend": {
+         "inv": 3
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
  },
  "Pareldor's Caducatrix": {
   "act": {
@@ -731,21 +773,32 @@
   ]
  },
  "Sally Forth": {
-  "status": "partial",
-  "note": "ต้น Charge phase: หน่วย CUSTODES INFANTRY ในระยะ 6\" ที่ Advance แล้วชาร์จได้",
-  "effects": [
-   {
-    "scope": "aura",
+  "act": {
+   "when": "chargeStart",
+   "auto": true,
+   "target": {
+    "side": "friendly",
     "range": 6,
     "units": [
      "ADEPTUS CUSTODES",
      "INFANTRY"
     ],
-    "eligible": [
-     "chargeAfterAdvance"
-    ]
-   }
-  ]
+    "advanced": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "eligible": [
+        "chargeAfterAdvance"
+       ]
+      }
+     ],
+     "until": "turn"
+    }
+   ]
+  }
  },
  "Auric Eagle": {
   "effects": [
@@ -877,19 +930,28 @@
   ]
  },
  "Combat Deployment": {
-  "status": "partial",
-  "note": "หน่วยที่ลงจากรถนี้: re-roll charge และโดน snap shooting ไม่ได้ ถึงจบเทิร์น",
-  "effects": [
-   {
-    "scope": "aura",
-    "range": 3,
-    "if": [
-     "disembarkedFrom:Coronus"
-    ],
-    "rerollCharge": true,
-    "noSnapTarget": true
-   }
-  ]
+  "act": {
+   "when": "passengerDisembarks",
+   "auto": true,
+   "target": {
+    "side": "friendly",
+    "ctxUnit": true,
+    "units": [
+     "ADEPTUS CUSTODES"
+    ]
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "rerollCharge": true,
+       "noSnapTarget": true
+      }
+     ],
+     "until": "turn"
+    }
+   ]
+  }
  },
  "Anti-Gravitic Mobility": {
   "effects": [
