@@ -6,6 +6,7 @@ import * as live from './bot';
 import * as base from './baseline/bot';
 const { botAct } = live;
 import { setBotWeights, type BotW } from './botWeights';
+import { resetLookahead, setLookahead } from './botLook';
 import type { DispositionId } from './config';
 import { createGame } from './game';
 import type { ArmyList, FactionData, GameState, PlayerId } from './types';
@@ -38,6 +39,8 @@ export function playTune(g: TuneGame, wA: Partial<BotW>, wB: Partial<BotW>, base
     secondaryMode: 'tactical', dispositions: [D[g.seed % 5], D[Math.floor(g.seed / 5) % 5]],
   });
   s.bots = [0, 1];
+  resetLookahead();
+  setLookahead(true);
   setBotWeights(g.sideA, wA);
   setBotWeights(sideB, wB);
   try {

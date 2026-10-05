@@ -13,6 +13,7 @@ import {
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark, endRedeploy } from './game';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
 import { W } from './botWeights';
+import { applyStyle, chooseTurnStyle, styleChosen } from './botLook';
 import { unitVisibleTo } from './visibility';
 import { botAdvanceActs, botArrivalStratagem, botCharacterStratagem, botFightChoice, botFightStartStratagems, botFightsFirstStratagem, botLooseDisembark, botMobileStratagem, botPileStratagem, botRedeployActs, botShootActs, botShootOnTheMove, botAdvanceStratagem, botAfterShootMove, botConsolidateStratagem, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
@@ -267,6 +268,8 @@ function botRapidDisembark(s: GameState, t: UnitState) {
 
 /** Move (or bring in) one unit. Returns false when there is nothing left to do this phase. */
 export function botMoveOne(s: GameState): boolean {
+  // once per turn, before anything moves: try the turn a few ways on copies of the game and keep the best style
+  if (s.phase === 'movement' && !styleChosen(s)) applyStyle(s, s.active, chooseTurnStyle(s, s.active));
   botUseActs(s, s.active, ['movement']);
   botDoctrineActs(s, s.active);
   if (botDisembark(s, s.active)) return true;

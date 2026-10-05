@@ -24,6 +24,8 @@ import {
 import { activeLabels, unitFlags } from '../engine/effects';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
+import { applyStyle, setLookahead, styleChosen } from '../engine/botLook';
+import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
 import { RollOverlay, SecondaryCard } from './RollOverlay';
@@ -98,9 +100,34 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [botSays, setBotSays] = useState<string | null>(null);
   const [botWho, setBotWho] = useState<PlayerId | null>(null);
   const [rolling, setRolling] = useState(false); // a big dice roll is on screen: the bot waits for it
+  // the bot looks ahead (plays its turn a few ways on copies) in a worker; the main thread never rolls out itself
+  const [thinking, setThinking] = useState(false);
+  const worker = useMemo(() => {
+    setLookahead(false);
+    try { return new LookWorker(); } catch { return null; }
+  }, []);
+  useEffect(() => () => worker?.terminate(), [worker]);
   useEffect(() => {
-    if (!bots.length || rolling || s.phase === 'gameover' || (spectate && speed === 0)) return;
+    if (!bots.length || rolling || thinking || s.phase === 'gameover' || (spectate && speed === 0)) return;
     const who = actingBot;
+    // start of a bot's Movement phase: pick how to play the turn before moving anything
+    if (who !== null && s.phase === 'movement' && s.active === who && !styleChosen(s)) {
+      const done = (name: string) => { setThinking(false); act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); }); };
+      if (!worker) { done('steady'); return; }
+      setThinking(true);
+      setBotSays(`${pName(s, who)} กำลังคิดล่วงหน้า…`); setBotWho(who);
+      const id = Math.random();
+      const fallback = window.setTimeout(() => { worker.onmessage = null; done('steady'); }, 45000);
+      worker.onmessage = (e: MessageEvent<{ id: number; name: string }>) => {
+        if (e.data.id !== id) return;
+        window.clearTimeout(fallback);
+        worker.onmessage = null;
+        done(e.data.name);
+      };
+      worker.onerror = () => { window.clearTimeout(fallback); worker.onmessage = null; done('steady'); };
+      try { worker.postMessage({ state: s, p: who, id }); } catch { window.clearTimeout(fallback); done('steady'); }
+      return;
+    }
     // bot-vs-bot: nobody "has" the step (e.g. ending the fight phase) — let the driver move the game on
     const drive = who === null && spectate && !s.attack;
     if (who === null && !drive) {
@@ -123,7 +150,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (said) { setBotSays(said); setBotWho(saidBy); }
     }, delay);
     return () => window.clearTimeout(t);
-  }, [s, actingBot, act, botSays, rolling, speed, spectate, bots.length]);
+  }, [s, actingBot, act, botSays, rolling, thinking, worker, speed, spectate, bots.length]);
   // pile-in / consolidate on the player's side: every unit moves in by itself (as many models into the fight as
   // possible); the step ends by itself unless a fight-start ability is waiting to be used
   const pileKey = s.fight && (s.fight.step === 'pileIn' || s.fight.step === 'consolidate') ? `${s.turn}:${s.fight.step}:${s.fight.stepPlayer}` : null;
