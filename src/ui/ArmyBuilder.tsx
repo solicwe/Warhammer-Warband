@@ -420,7 +420,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         </div>
         <button type="button" className="dt-gear" aria-label="เปลี่ยน detachment" onClick={() => setDetPicker(true)}><Icon name="gear" size={26} /></button>
       </div>
-      {chosenDets.length === 0 && <button className="btn primary" onClick={() => setDetPicker(true)}>เลือก Detachment</button>}
       {chosenDets.length > 0 && dSection('rule', 'Detachment Rule', chosenDets.flatMap((d) => d.rules.map((r) => ruleCard(d.name + r.name, r.name, chosenDets.length > 1 ? d.name : '', r.text))))}
       {chosenDets.length > 0 && dSection('enh', 'Enhancements', chosenDets.flatMap((d) => d.enhancements.map((e) => ruleCard(d.name + e.name, e.name, `${e.pts}pts`, e.text))), chosenDets.reduce((a, d) => a + d.enhancements.length, 0))}
       {chosenDets.length > 0 && dSection('strat', 'Stratagems', chosenDets.flatMap((d) => d.stratagems.map((st) => ruleCard(d.name + st.name, st.name, `${st.cp}CP`, `${st.type}\n${st.text}`))), chosenDets.reduce((a, d) => a + d.stratagems.length, 0))}
