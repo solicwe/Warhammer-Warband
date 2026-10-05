@@ -1,14 +1,14 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RULES } from '../engine/config';
 import { deploymentById, toPoly } from '../engine/config';
-import { dist, pointInPoly } from '../engine/geometry';
+import { dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard } from '../engine/state';
 import { levelOfControl } from '../engine/game';
 import { modelToken } from './Tokens';
 import { getPortrait, usePortraitsVersion } from './portraits';
 import { SvgIcon } from './Icon';
 import type { SecondaryGoal } from '../engine/secondaries';
-import type { FxEvent, GameState, PlayerId, Pt, UnitState } from '../engine/types';
+import type { FxEvent, GameState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
 
 export type Paths = Map<string, Pt[]>;
 
@@ -415,7 +415,30 @@ function BoardImpl(props: BoardProps) {
           <g key={t.id} pointerEvents="none">
             <polygon points={pts} fill={t.category === 'dense' ? 'url(#tiles)' : 'rgba(170,158,128,0.55)'} stroke="#1c1712" strokeWidth={0.14} />
             <polygon points={inner} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={0.06} />
-            {t.box && <polygon points={t.box.map((p) => `${p.x},${p.y}`).join(' ')} fill="#2b2118" opacity={0.85} />}
+            {t.box && (() => {
+              // a solid block (container / bunker) standing on the plate: shadow, metal top with ribs, lit rim
+              const bp = t.box.map((p) => `${p.x},${p.y}`).join(' ');
+              const sp = t.box.map((p) => `${p.x + 0.3},${p.y + 0.42}`).join(' ');
+              const bc = polyCentroid(t.box);
+              const [a, b] = [t.box[0], t.box[1]];
+              const long = dist(t.box[0], t.box[1]) >= dist(t.box[1], t.box[2]);
+              const u = long ? { x: b.x - a.x, y: b.y - a.y } : { x: t.box[2].x - b.x, y: t.box[2].y - b.y };
+              const L = Math.hypot(u.x, u.y) || 1;
+              const ribs = Math.max(2, Math.floor(L / 0.5));
+              const across = long ? { x: t.box[2].x - b.x, y: t.box[2].y - b.y } : { x: b.x - a.x, y: b.y - a.y };
+              return (
+                <g>
+                  <polygon points={sp} fill="rgba(0,0,0,0.45)" />
+                  <polygon points={bp} fill="#4a3a2a" stroke="#1a130c" strokeWidth={0.14} strokeLinejoin="round" />
+                  {Array.from({ length: ribs - 1 }, (_, k) => {
+                    const f = (k + 1) / ribs - 0.5;
+                    const c0 = { x: bc.x + (u.x * f), y: bc.y + (u.y * f) };
+                    return <line key={k} x1={c0.x - across.x * 0.45} y1={c0.y - across.y * 0.45} x2={c0.x + across.x * 0.45} y2={c0.y + across.y * 0.45} stroke="#2e2318" strokeWidth={0.07} />;
+                  })}
+                  <polygon points={t.box.map((p) => `${bc.x + (p.x - bc.x) * 0.9},${bc.y + (p.y - bc.y) * 0.9}`).join(' ')} fill="none" stroke="rgba(255,220,170,0.25)" strokeWidth={0.06} />
+                </g>
+              );
+            })()}
             {Array.from({ length: Math.min(9, Math.round(w * h / 6)) }, (_, i) => {
               const px = x0 + 0.5 + rnd(i) * Math.max(0, w - 1), py = y0 + 0.5 + rnd(i + 9) * Math.max(0, h - 1);
               return pointInPoly({ x: px, y: py }, t.poly) ? <circle key={i} cx={px} cy={py} r={0.12 + rnd(i + 3) * 0.22} fill="#4b4335" opacity={0.85} /> : null;
@@ -426,11 +449,11 @@ function BoardImpl(props: BoardProps) {
                 <line x1={ob.a.x} y1={ob.a.y} x2={ob.b.x} y2={ob.b.y} stroke="#d98b1f" strokeWidth={0.3} strokeLinecap="round" strokeDasharray="0.45 0.15" />
               </g>
             ))}
-            {t.walls.map((wl, i) => (
+            {t.walls.filter((wl) => !onBoxEdge(t, wl)).map((wl, i) => (
               // the wall's shadow: ruins stand 5" tall
               <line key={`sh${i}`} x1={wl.a.x + 0.22} y1={wl.a.y + 0.32} x2={wl.b.x + 0.22} y2={wl.b.y + 0.32} stroke="rgba(0,0,0,0.38)" strokeWidth={0.95} strokeLinecap="square" />
             ))}
-            {t.walls.map((wl, i) => {
+            {t.walls.filter((wl) => !onBoxEdge(t, wl)).map((wl, i) => {
               const len = dist(wl.a, wl.b);
               const n = Math.max(1, Math.floor(len / 2));
               return (
@@ -679,6 +702,9 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
 }
 
 type AttackEvent = Extract<FxEvent, { kind: 'attack' }>;
+
+/** Is this wall one of the edges of the piece's solid block (drawn as the block itself)? */
+const onBoxEdge = (t: TerrainPiece, w: { a: Pt; b: Pt }) => !!t.box && [w.a, w.b].every((p) => t.box!.some((q) => Math.hypot(p.x - q.x, p.y - q.y) < 0.01));
 
 /** A grainy battlefield ground (dirt, ash patches, small stones, cracks), drawn once on a canvas. */
 let groundTex: string | null | undefined;

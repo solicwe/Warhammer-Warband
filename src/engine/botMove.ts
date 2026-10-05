@@ -13,6 +13,7 @@ import { secondaryGoal } from './secondaries';
 import { hasAbility } from './weapons';
 import { actsOfUnit } from './activations';
 import { unitFlags } from './effects';
+import { W as BW } from './botWeights';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, shotValue, unitValue,
 } from './botEval';
@@ -24,7 +25,6 @@ type Spot = Map<string, Pt>;
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
 /** Holding an objective is worth about this many points of damage (a few VP each turn). */
-const OBJECTIVE = 40;
 
 const endOf = (paths: Paths): Spot => new Map([...paths].map(([id, p]) => [id, p[p.length - 1]]));
 const clampIn = (p: Pt, r: number): Pt => ({ x: Math.min(W - r, Math.max(r, p.x)), y: Math.min(H - r, Math.max(r, p.y)) });
@@ -214,6 +214,7 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
 
 function objectiveScore(s: GameState, u: UnitState, homeFactor = 1): number {
   let v = 0;
+  const OBJECTIVE = BW(u.owner).objective;
   for (const o of s.objectives) {
     const [a, b] = levelOfControl(s, o);
     const ours = u.owner === 0 ? a : b, theirs = u.owner === 0 ? b : a;
@@ -237,7 +238,7 @@ function shootScore(s: GameState, u: UnitState, kind: MoveKind | 'stationary', c
     const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, f.u).models, 0);
     best = Math.max(best, shotValue(s, u, f.u, ev, gap));
   }
-  if (ctx.heavy && (kind === 'stationary' || u.maxMoved <= RULES.heavyMaxMove)) best *= 1.1;
+  if (ctx.heavy && (kind === 'stationary' || u.maxMoved <= RULES.heavyMaxMove)) best *= BW(u.owner).heavyStill;
   return best;
 }
 
@@ -250,7 +251,7 @@ function chargeScore(s: GameState, u: UnitState, ctx: Ctx): number {
     const v = chargeValue(s, u, f.u);
     if (v > 0) best = Math.max(best, v * p2d6(gap));
   }
-  return best * (ctx.brawler ? 1 : 0.5);
+  return best * (ctx.brawler ? 1 : BW(u.owner).chargeNonBrawler);
 }
 
 /** Can any model of `e` see any model of `u` from where it stands (closest pair only, for speed)? */
@@ -272,37 +273,38 @@ function dangerScore(s: GameState, u: UnitState, ctx: Ctx): number {
   for (const f of ctx.foes) {
     const gap = unitDistance(u, f.u);
     if (f.range > 0 && f.rk > 0 && gap <= f.range + f.M) {
-      shots += f.rk * perModel(u) * (seen(s, f.u, u) ? 1 : 0.3) * (gap <= f.range ? 1 : 0.6) * (infantryInCover ? 0.8 : 1);
+      shots += f.rk * perModel(u) * (seen(s, f.u, u) ? 1 : BW(u.owner).dangerUnseen) * (gap <= f.range ? 1 : 0.6) * (infantryInCover ? 0.8 : 1);
     }
     if (f.brawler && f.mk > 0) melee = Math.max(melee, f.mk * perModel(u) * p2d6(Math.max(0, gap - f.M)));
   }
   // the enemy can't kill more than the whole unit, however many guns could reach it
-  return Math.min(unitValue(u), shots * 0.35 + melee * 0.8);
+  return Math.min(unitValue(u), shots * BW(u.owner).dangerShots + melee * BW(u.owner).dangerMelee);
 }
 
 /** Long-range pull so units far from everything still make progress (along the route, for units walls can stop). */
 function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
   const c = centre(u);
   const lead = leaderOf(u);
+  const w = BW(u.owner);
   let v = 0;
   if (ctx.brawler && ctx.target && alive(ctx.target).length) {
     const far = ctx.toTarget?.(lead);
-    v -= 0.6 * (far !== undefined && Number.isFinite(far) ? Math.max(unitDistance(u, ctx.target), far - 1.5) : unitDistance(u, ctx.target));
+    v -= w.pullBrawler * (far !== undefined && Number.isFinite(far) ? Math.max(unitDistance(u, ctx.target), far - 1.5) : unitDistance(u, ctx.target));
   } else if (ctx.range) {
     const near = Math.min(99, ...ctx.foes.map((f) => unitDistance(u, f.u)));
-    v -= 0.4 * Math.max(0, near - ctx.range);
+    v -= w.pullRange * Math.max(0, near - ctx.range);
   }
   // a loaded transport drives its passengers to where they get out, rather than parking on an objective
-  if (ctx.deliver) v -= 0.6 * Math.max(0, dist(c, ctx.deliver) - 9);
+  if (ctx.deliver) v -= w.pullDeliver * Math.max(0, dist(c, ctx.deliver) - 9);
   if (ctx.claim && !ctx.deliver) {
     // standing on it is what secures it: a clear reward for getting there, and a pull until then
     const on = alive(u).some((m) => dist(m, ctx.claim!) <= 3 + m.r);
-    v += on ? 15 : -1.5 * Math.max(0, dist(c, ctx.claim) - 2);
+    v += on ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.claim) - 2);
   }
   if (ctx.escort && alive(ctx.escort.u).length) v -= ctx.escort.weight * 2 * Math.max(0, unitDistance(u, ctx.escort.u) - (ctx.escort.range - 1));
   if (ctx.ocNeed.length && !ctx.deliver) {
     const far = ctx.toObjective?.(lead);
-    v -= (ctx.holder ? 1.5 : 0.35) * (far !== undefined && Number.isFinite(far) ? far : Math.min(...ctx.ocNeed.map((p) => dist(c, p))));
+    v -= (ctx.holder ? w.pullHolder : w.pullObjective) * (far !== undefined && Number.isFinite(far) ? far : Math.min(...ctx.ocNeed.map((p) => dist(c, p))));
   }
   return v;
 }
@@ -320,7 +322,7 @@ function positionScore(s: GameState, u: UnitState): number {
   if (alive(u).every((m) => m.isCharacter)) {
     const friends = boardUnits(s, u.owner).filter((f) => f.id !== u.id && !f.transport && !alive(f).every((m) => m.isCharacter));
     const near = Math.min(99, ...friends.map((f) => unitDistance(u, f)));
-    if (near > 6) v -= Math.min(15, (near - 6) * 0.8);
+    if (near > 6) v -= Math.min(15, (near - 6) * BW(u.owner).charLonely);
   }
   const edge = Math.min(c.x, c.y, W - c.x, H - c.y);
   const job = s.objectives.some((o) => dist(o, c) <= 6) || boardUnits(s, other(u.owner)).some((e) => unitDistance(u, e) <= 12);
@@ -334,7 +336,7 @@ function objectiveWeight(s: GameState, u: UnitState, ctx: Ctx): number {
   if (ctx.escort && ctx.escort.weight >= 3) return 0.3; // a Techmarine's job is its vehicle, not holding ground
   if (u.keywords?.includes?.('BATTLELINE') || alive(u).some((m) => m.keywords.includes('BATTLELINE'))) return 1;
   const dealer = ctx.brawler || ctx.range >= 18;
-  return dealer ? Math.max(0.45, Math.min(1, 160 / Math.max(1, unitValue(u)))) : 1;
+  return dealer ? Math.max(0.45, Math.min(1, BW(u.owner).objDealerPts / Math.max(1, unitValue(u)))) : 1;
 }
 
 /** Bunched-up units block each other's moves and charges, and give the enemy blast / charge targets: spread out. */
@@ -345,7 +347,7 @@ function crowdScore(s: GameState, u: UnitState): number {
     if (f.id === u.id || f.transport || u.transport) continue;
     let gap = 99;
     for (const a of ms) for (const b of alive(f)) gap = Math.min(gap, dist(a, b) - a.r - b.r);
-    if (gap < 1) v += 4; else if (gap < 3) v += 1.5;
+    if (gap < 1) v += BW(u.owner).crowdTouch; else if (gap < 3) v += BW(u.owner).crowdNear;
   }
   return v;
 }
@@ -359,9 +361,10 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
   u.move = kind === 'stationary' ? 'stationary' : kind;
   u.maxMoved = Math.max(u.maxMoved, moved);
   try {
-    const caution = ctx.holder ? 0.35 : ctx.brawler ? 0.45 : 1;
+    const w = BW(u.owner);
+    const caution = ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther;
     // the home objective is a job for a cheap unit: a tournament player doesn't park 400 points of Terminators on it
-    const homeFactor = ctx.holder || unitValue(u) <= 200 ? 1 : 0.25;
+    const homeFactor = ctx.holder || unitValue(u) <= 200 ? 1 : w.homeExpensive;
     return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }

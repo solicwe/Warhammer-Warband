@@ -12,6 +12,7 @@ import {
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark, endRedeploy } from './game';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
+import { W } from './botWeights';
 import { botAdvanceStratagem, botAfterShootMove, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
@@ -302,7 +303,7 @@ export function botMoveOne(s: GameState): boolean {
     }
     const { normal, advance: adv } = withRuleCache(() => planMove(s, u, MM, ctxFor(s, u)));
     // advancing: worth it when the extra distance (3.5" on average) reaches somewhere better than a Normal move does
-    if (adv && adv.score > normal.score + 3) {
+    if (adv && adv.score > normal.score + W(u.owner).advanceMargin) {
       if (!beginMove(s, u, 'advance')) return true;
       botAdvanceStratagem(s, u);
       rollAdvance(s, u);

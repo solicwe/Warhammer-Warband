@@ -26,18 +26,48 @@ const H = RULES.battlefield.height;
 function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
   const L = deploymentById(layoutId);
   const seg = (w: number[]): Seg => ({ a: { x: w[0], y: w[1] }, b: { x: w[2], y: w[3] } });
-  const terrain: TerrainPiece[] = L.terrain.map((t, i) => ({
-    id: `t${i}`,
-    kind: 'ruin',
-    label: t.walls.length ? 'Ruins (Dense)' : 'Terrain area (Light)',
-    // a baseplate with ruin walls is dense (walls block sight); a bare baseplate with obstacles only is light
-    category: t.walls.length ? 'dense' : 'light',
-    height: t.walls.length ? 5 : 1.5,
-    poly: t.poly.map(([x, y]) => ({ x, y })),
-    walls: t.walls.map(seg),
-    obstacles: t.obstacles.map(seg),
-    ...(t.box ? { box: t.box.map(([x, y]) => ({ x, y })) } : {}),
-  }));
+  // Some layouts trace a plate with a solid block in its middle as three pieces: two plates and a small piece whose
+  // rough walls outline the block. That small piece becomes the block itself (its four true edges), and the
+  // plates' walls that only mark the block's ends go.
+  const blocks: Pt[][] = [];
+  const raw = L.terrain.map((t) => {
+    if (t.box || t.obstacles.length || t.walls.length < 3 || t.poly.length !== 4) return t;
+    const P = t.poly.map(([x, y]) => ({ x, y }));
+    if (Math.max(...P.map((p, k) => dist(p, P[(k + 1) % 4]))) > 3.5) return t;
+    const ux = (P[1].x - P[0].x) / (dist(P[0], P[1]) || 1), uy = (P[1].y - P[0].y) / (dist(P[0], P[1]) || 1);
+    const ends = t.walls.flatMap(([x0, y0, x1, y1]) => [{ x: x0, y: y0 }, { x: x1, y: y1 }]);
+    const us = ends.map((p) => (p.x - P[0].x) * ux + (p.y - P[0].y) * uy), vs = ends.map((p) => -(p.x - P[0].x) * uy + (p.y - P[0].y) * ux);
+    const [u0, u1, v0, v1] = [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)];
+    const at = (u: number, v: number) => ({ x: P[0].x + ux * u - uy * v, y: P[0].y + uy * u + ux * v });
+    const box = [at(u0, v0), at(u1, v0), at(u1, v1), at(u0, v1)];
+    blocks.push(box);
+    return { ...t, poly: box.map((p) => [p.x, p.y]), walls: [], box: box.map((p) => [p.x, p.y]) };
+  });
+  const nearBlock = (w: number[]) => blocks.some((b) => [{ x: w[0], y: w[1] }, { x: w[2], y: w[3] }].every((p) => b.some((q, k) => pointSegDist(p, { a: q, b: b[(k + 1) % 4] }) < 0.7)));
+  const terrain: TerrainPiece[] = raw.map((t0, i) => {
+    const t = blocks.length && !t0.box ? { ...t0, walls: t0.walls.filter((w) => !nearBlock(w)) } : t0;
+    const box = t.box?.map(([x, y]) => ({ x, y }));
+    let walls = t.walls.map(seg);
+    if (box) {
+      // a solid block (container) on the plate: its outline was traced as several rough, overlapping segments;
+      // its four true edges replace them, and walls elsewhere on the plate stay
+      const edges = box.map((a, k) => ({ a, b: box[(k + 1) % box.length] }));
+      const onBox = (w: Seg) => [w.a, w.b].every((p) => edges.some((e) => pointSegDist(p, e) < 0.6));
+      walls = [...edges, ...walls.filter((w) => !onBox(w))];
+    }
+    return {
+      id: `t${i}`,
+      kind: 'ruin',
+      label: walls.length ? 'Ruins (Dense)' : 'Terrain area (Light)',
+      // a baseplate with ruin walls is dense (walls block sight); a bare baseplate with obstacles only is light
+      category: walls.length ? 'dense' : 'light',
+      height: walls.length ? 5 : 1.5,
+      poly: t.poly.map(([x, y]) => ({ x, y })),
+      walls,
+      obstacles: t.obstacles.map(seg),
+      ...(box ? { box } : {}),
+    };
+  });
   const objectives: ObjectiveState[] = L.objectives.map((o, i) => {
     const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
     let tp = terrain.find((t) => pointInPoly({ x: o.x, y: o.y }, t.poly));
