@@ -7,6 +7,8 @@ import { attackRerollGap, buildShootPools, hazardTest, rerollAttackCount, resolv
 import { autoCharge, autoPileMove, createGame, declareCharge, formationAt, placeUnit } from './game';
 import { alive, engagedEnemies, unitDistance } from './state';
 import { planStratagem } from './stratagems';
+import { botAfterShootMove, botDoctrineActs } from './botPlus';
+import { unitDoctrines } from './effects';
 import type { ArmyList, FactionData, GameState, Pt, TerrainPiece } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -363,5 +365,35 @@ describe('Bot Scouts moves', () => {
       }
     }
     expect(moved).toBeGreaterThan(0);
+  });
+});
+
+describe('the bot uses decision abilities', () => {
+  it('Strategic Acumen: a Captain far out of range of its guns takes Devastator Doctrine (Advance and still shoot)', () => {
+    const s = game([['Captain', 1, 80]], [['Boyz', 10, 90]]);
+    s.bots = [0, 1];
+    s.phase = 'command';
+    const cap = put(s, 'p0-x0', { x: 20, y: 6 });
+    put(s, 'p1-x0', { x: 20, y: 52 });
+    botDoctrineActs(s, 0);
+    expect([...unitDoctrines(s, cap)]).toContain('devastator');
+  });
+
+  it('Tactical Fluidity: after shooting, a Phobos Captain in the open moves on when there is a better spot', () => {
+    const s = game([['Captain In Phobos Armour', 1, 75]], [['Boyz', 10, 90]]);
+    s.bots = [0, 1];
+    s.phase = 'shooting';
+    const cap = put(s, 'p0-x0', { x: 20, y: 20 });
+    put(s, 'p1-x0', { x: 20, y: 30 });
+    cap.selectedToShoot = true;
+    cap.shotTurn = s.turn;
+    const before = { x: alive(cap)[0].x, y: alive(cap)[0].y };
+    botAfterShootMove(s, cap);
+    const after = alive(cap)[0];
+    const used = s.log.some((l) => /Tactical Fluidity/.test(l.text));
+    expect(used).toBe(true);
+    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(0);
+    expect(cap.extraMove).toBeUndefined();
+    expect(s.window).toBeNull();
   });
 });

@@ -12,7 +12,8 @@ import {
   arrivalRound, autoApproach, bestLd, chargeTargetOptions, commitCharge, counteroffensiveCandidates, declareCharge, heroicCandidates, hasDeepStrike,
   ingressUnit, rapidIngressCandidates, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, crushingImpact,
 } from './game';
-import { addTimed, applyLateEffects, unitFlags, withRuleCache } from './effects';
+import { addTimed, applyLateEffects, targetHasCover, unitFlags, withRuleCache } from './effects';
+import { botFightOnDeath } from './botPlus';
 import { alive, boardUnits, canUseStratagem, hasKw, isEngaged, log, other, spendStratagem, stratCost, unitById, unitDistance } from './state';
 import { applyDetachmentStratagem, stratagemBlock, stratChoices, stratRule, withChoice, type StratRule } from './stratagems';
 import { unitVisibleTo } from './visibility';
@@ -146,7 +147,7 @@ function lossFrom(s: GameState, at: AttackSession, T: UnitState, rule?: StratRul
       if (b.includes('enemyHit-1') && !p.autoHit) p.hitMod -= 1;
       if (b.includes('enemyWound-1')) p.woundMod -= 1;
       if (b.includes('enemyAp-1') && p.ap < 0) p.ap += 1;
-      if (b.includes('cover') && kind === 'ranged' && p.skill !== null) p.skill = Math.min(6, (p.skill ?? 6) + 1);
+      if ((b.includes('cover') || (rule.effects ?? []).some((e) => e.stealth) && !targetHasCover(s, T, unitDistance(A, T))) && kind === 'ranged' && p.skill !== null) p.skill = Math.min(6, (p.skill ?? 6) + 1);
       if (b.includes('damage-1')) p.damage = String(Math.max(1, exprAverage(p.damage) - 1));
       for (const k of ['fnp4', 'fnp5', 'fnp6'] as const) if (b.includes(k)) fnp = Math.min(fnp, Number(k.slice(3)));
       const late = (rule.effects ?? []).map((e) => ({ e, label: 'try', until: 'phase', by: T.owner, turn: s.turn }) as TimedEffect);
@@ -173,6 +174,7 @@ onAttackStart((s, at) => {
     if (save > (best?.save ?? 0)) best = { st, save, choice };
   }
   if (best && best.save >= (cpWorth(s, p) - 2) * best.st.cp) applyDetachmentStratagem(s, p, best.st, T.id, { choice: best.choice });
+  else if (at.kind === 'fight') botFightOnDeath(s, T, base / Math.max(1, alive(T).length * perModel(T)));
 });
 
 // ---------- battle-shock ----------

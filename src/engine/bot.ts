@@ -11,7 +11,8 @@ import {
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark, endRedeploy } from './game';
-import { abilityChoices, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
+import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
+import { botAdvanceStratagem, botAfterShootMove, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
 import { actionOptions, startAction } from './missions';
@@ -161,6 +162,8 @@ export function botCommand(s: GameState) {
     pickAbilities(s, c.unit.id, [...c.options].sort((a, b) => score(b) - score(a)).slice(0, c.pick));
   }
   botUseActs(s, p, ['command', 'anyCommand', 'battleStart', 'opponentTurnEnd', 'anyPhase']);
+  botDoctrineActs(s, p);
+  botCommandStratagems(s, p);
   endPhase(s);
 }
 
@@ -261,6 +264,7 @@ function botRapidDisembark(s: GameState, t: UnitState) {
 /** Move (or bring in) one unit. Returns false when there is nothing left to do this phase. */
 export function botMoveOne(s: GameState): boolean {
   botUseActs(s, s.active, ['movement']);
+  botDoctrineActs(s, s.active);
   if (botDisembark(s, s.active)) return true;
   for (const u of moveOrder(s, s.active)) {
     if (tried(s, u)) continue;
@@ -300,6 +304,7 @@ export function botMoveOne(s: GameState): boolean {
     // advancing: worth it when the extra distance (3.5" on average) reaches somewhere better than a Normal move does
     if (adv && adv.score > normal.score + 3) {
       if (!beginMove(s, u, 'advance')) return true;
+      botAdvanceStratagem(s, u);
       rollAdvance(s, u);
       const max = MM + (u.advanceRoll ?? 0) - 0.05;
       const aims = [adv.aim!, ...(normal.aim ? [normal.aim] : [])];
@@ -317,6 +322,8 @@ export function botMoveOne(s: GameState): boolean {
     } else remainStationary(s, u);
     return true;
   }
+  const endKey = `${s.turn}|${s.phase}|end`;
+  if (!(s.botTried ?? []).includes(endKey)) { s.botTried = [...(s.botTried ?? []), endKey]; botEndOfMovement(s, s.active); }
   return false;
 }
 
@@ -376,6 +383,7 @@ export function botShootOne(s: GameState): boolean {
       break;
     }
     u.selectedToShoot = true;
+    if (!s.window && !s.attack) withRuleCache(() => botAfterShootMove(s, u));
     return true;
   }
   return false;
@@ -474,10 +482,18 @@ export function botWindow(s: GameState) {
   const w = s.window;
   if (!w) return;
   if (w.kind === 'abilityMove') {
-    // surge moves (towards the closest enemy) are made; optional reaction moves are declined
-    for (const o of w.offers) {
+    // reaction moves ("an enemy ended a move near this unit") are taken when there is somewhere better to be
+    for (const o of [...w.offers]) {
+      const u = unitById(s, o.unitId);
+      if (!o.key || !onBoard(u)) continue;
+      const mv = Number(/(\d+)"/.exec(o.label)?.[1] ?? moveOf(u));
+      if (withRuleCache(() => moveGain(s, u, mv)) > unitValue(u) * 0.05) acceptOffer(s, u.id, o.key);
+    }
+    // surge moves go towards the closest enemy; other extra moves to the best spot the planner finds
+    for (const o of [...w.offers]) {
       const u = unitById(s, o.unitId);
       if (o.key || !u.extraMove || !onBoard(u)) continue;
+      if (u.extraMove.kind !== 'surge') { withRuleCache(() => botExtraMove(s, u)); continue; }
       const foes = boardUnits(s, other(u.owner)).sort((a, b) => unitDistance(u, a) - unitDistance(u, b));
       if (u.extraMove.kind !== 'surge' || !foes.length) continue;
       const near = alive(foes[0]).reduce((a, m) => (dist(m, centre(u)) < dist(a, centre(u)) ? m : a));

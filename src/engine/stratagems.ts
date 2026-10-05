@@ -1,6 +1,7 @@
 // Reads detachment stratagem text (WHEN / TARGET / EFFECT) so the game can offer them at the right time
 // and apply the common effects automatically. Anything it cannot read is still usable: CP is spent and logged.
 import orkStrats from '../../data/stratagems/ORK.json';
+import { reactWorth } from './botPlus';
 import smStrats from '../../data/stratagems/SM.json';
 import { parseAbilityText } from './abilityText';
 import { runActions, shockTest, type Action } from './activations';
@@ -585,8 +586,14 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
 /** Bot (or "use automatically"): which unit and enemy it would use the stratagem with, and whether it is worth it. */
 function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto: boolean): { u: UnitState; enemyId?: string; choice?: number } | null {
   const cost = o.st.cp;
+  if (!auto && !o.rule.botReact) {
+    // moves and redeploys: worth it when the planner finds somewhere better for the unit
+    const kind = o.rule.do?.some((a) => a.reserves) ? 'reserves' : o.rule.do?.some((a) => a.surge) ? 'surge' : o.rule.do?.some((a) => a.move) ? 'move' : null;
+    if (!kind || o.rule.enemy) return null;
+    const u = o.units.find((x) => reactWorth(s, x, o.st, kind));
+    return u ? { u, choice: stratChoices(s, o.rule, u)[0]?.i } : null;
+  }
   if (!auto) {
-    if (!o.rule.botReact) return null;
     if (s.players[p].cp < cost + (SYNC_ONLY.has(o.rule.react!) ? 0 : 1)) return null;
   }
   let best: { u: UnitState; enemyId?: string; v: number } | null = null;

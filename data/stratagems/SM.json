@@ -1179,7 +1179,8 @@
      "detection": -3
     }
    ],
-   "status": "auto"
+   "status": "auto",
+   "bot": "defend"
   },
   "INSTANT OF GRACE": {
    "targetKw": [
@@ -1255,7 +1256,8 @@
      "detection": -3
     }
    ],
-   "status": "auto"
+   "status": "auto",
+   "bot": "defend"
   },
   "INEXORABLE VALOR": {
    "react": "enemyMoved",
@@ -1575,7 +1577,8 @@
      "stealth": true
     }
    ],
-   "status": "auto"
+   "status": "auto",
+   "bot": "defend"
   },
   "BLADE OF DETESTATION": {
    "react": "chargeMoveEnd",
