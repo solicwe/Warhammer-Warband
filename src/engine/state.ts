@@ -61,6 +61,9 @@ type RepeatHook = (s: GameState, u: UnitState, id: string) => boolean; // may be
 let discountHook: DiscountHook | null = null;
 let spentHook: SpentHook | null = null;
 let repeatHook: RepeatHook | null = null;
+let blockHook: ((s: GameState, u: UnitState) => string | null) | null = null;
+/** Something on the battlefield stops this unit being the target of its player's stratagems (Coronal Susurrant). */
+export const setStratBlockHook = (h: (s: GameState, u: UnitState) => string | null) => { blockHook = h; };
 export const setStratHooks = (discount: DiscountHook, spent: SpentHook, repeat?: RepeatHook) => { discountHook = discount; spentHook = spent; repeatHook = repeat ?? null; };
 export const stratCost = (s: GameState, id: string, unit?: UnitState, cost?: number) => {
   const def = RULES.coreStratagems.find((x) => x.id === id);
@@ -75,6 +78,8 @@ export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit
   if (p.stratagemsUsed.includes(`${phaseKey(s)}:${id}`) && !(unit && repeatHook?.(s, unit, id))) return 'ใช้ stratagem นี้ไปแล้วใน phase นี้';
   if (unit) {
     if (unit.battleShocked) return 'หน่วยที่ battle-shocked เป็นเป้า stratagem ไม่ได้';
+    const blocked = blockHook?.(s, unit);
+    if (blocked) return blocked;
     if (unit.stratagemPhase === phaseKey(s)) return 'หน่วยนี้โดน stratagem ไปแล้วใน phase นี้';
   }
   if (id === 'insane-bravery' && p.insaneBraveryUsed) return 'ใช้ได้ครั้งเดียวต่อเกม';

@@ -4,7 +4,7 @@
 // The specs live with the ability in data/abilities/<faction>.json ("act"), so new abilities are data, not code.
 import {
   applyMortalWounds, buildFightPools, buildShootPools, finishAttack, forceDie, onAttackFinished, onAttackStart, onModelKilled, onMortalWounds, rerollOne, resolveAll, startAttack,
-  targetToughness, woundNeed,
+  setFreeDamageHook, targetToughness, woundNeed,
 } from './attack';
 import { RULES } from './config';
 import { d6, rollExpr, rollN } from './dice';
@@ -12,7 +12,7 @@ import {
   abilityOff, abilityRule, abilitySheet, activeRules, addTimed, cond, DET_RULES, fightOnDeathFor, grantsOf, isRiled, retaliateFor, type AbilityRule, type Effect, type FreeDieSpec,
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
-import { baseDist, dist } from './geometry';
+import { baseDist, circleTouchesPoly, dist } from './geometry';
 import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, pushFx, unitById, unitDistance } from './state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
@@ -56,6 +56,7 @@ export interface Action {
   incoming?: Omit<Incoming, 'by'>; // mark: your attacks against that unit get better
   selfOnly?: boolean; // … for this unit's attacks only
   fromThisTransport?: boolean; // … for units that disembarked from this transport this turn
+  fromDisembarked?: boolean; // … for units that disembarked from any transport this turn
   until?: Until;
   mark?: string;
   heal?: string; // wounds regained (on the most damaged model)
@@ -100,6 +101,9 @@ export interface Action {
   characterModel?: boolean; // one non-CHARACTER model gains the CHARACTER keyword until your next Command phase
   reviveModel?: string; // a destroyed model with this keyword is set back up at the end of the phase with full wounds
   sabotage?: boolean; // A Deadly Prize: the objective the unit holds becomes Sabotaged
+  identifyTerrain?: boolean; // Priority Target Identified: the visible terrain feature with the most enemy points in it is identified
+  snare?: boolean; // Mortis Snares: the objective the unit controls becomes snared
+  secureDead?: boolean; // In Sacrifice, Victory: objectives we control where the (destroyed) unit stood are secured
 }
 
 export interface ActSpec {
@@ -422,6 +426,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       const inc: Incoming = { ...a.incoming, by: u.owner };
       if (a.selfOnly) inc.units = [...(inc.units ?? []), `id:${u.id}`];
       if (a.fromThisTransport) inc.fromTransport = u.id;
+      if (a.fromDisembarked) inc.disembarked = true;
       addTimed(s, on, { e: { incoming: inc }, label: def.name, until: a.until ?? 'phase', by: u.owner, mark: a.mark ?? def.name });
     }
     if (a.attacksPerEnemyNear) {
@@ -493,6 +498,26 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.secure) {
       for (const o of s.objectives) {
         if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.secured = u.owner; log(s, `${def.name}: objective ${o.id} ยังเป็นของเราแม้ไม่มีใครยืน (secured)`, 'info', u.owner); }
+      }
+    }
+    if (a.identifyTerrain) {
+      // the terrain feature this unit can see that holds the most enemy points (hidden units first)
+      const foes = boardUnits(s, other(u.owner));
+      let best: { id: string; v: number } | null = null;
+      for (const t of s.terrain.filter((q) => q.category !== 'exposed')) {
+        const v = foes.filter((e) => alive(e).some((m) => circleTouchesPoly(m, m.r, t.poly))).reduce((a2, e) => a2 + e.pts, 0);
+        if (v > (best?.v ?? 0)) best = { id: t.id, v };
+      }
+      if (best) { (s.identified ??= []).push({ terrainId: best.id, by: u.owner, turn: s.turn }); log(s, `${def.name}: ระบุ terrain ${best.id} (ศัตรูข้างใน +3" detection)`, 'info', u.owner); }
+    }
+    if (a.snare) {
+      for (const o of s.objectives) {
+        if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.snared = u.owner; log(s, `${def.name}: วางกับดักบน objective ${o.id}`, 'info', u.owner); }
+      }
+    }
+    if (a.secureDead) {
+      for (const o of s.objectives) {
+        if (o.controller === u.owner && on.models.some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.secured = u.owner; log(s, `${def.name}: objective ${o.id} ติดเป็นของเรา (secured)`, 'info', u.owner); }
       }
     }
     if (a.sabotage) {
@@ -796,6 +821,33 @@ export function freeDiceNow(s: GameState): FreeDie[] {
   return out;
 }
 
+/** The damage side of "re-roll one hit, wound or damage roll": a free die (stage any / damage) still unused this period. */
+function takeFreeDamage(s: GameState): boolean {
+  const at = s.attack;
+  if (!at) return false;
+  const A = unitById(s, at.attackerId);
+  const kind = at.kind === 'fight' ? 'melee' : 'ranged';
+  const specs: { name: string; tag: string; f: FreeDieSpec }[] = [];
+  for (const a of A.abilities) {
+    const rule = abilityRule(A, a);
+    if (!rule?.freeDie || abilityOff(A, a)) continue;
+    freeList(rule.freeDie).forEach((f, i) => specs.push({ name: a.name, tag: String(i), f }));
+  }
+  for (const name of activeRules(s, A.owner)) (DET_RULES[name].freeDie ?? []).forEach((f, i) => specs.push({ name, tag: `d${i}`, f }));
+  for (const { name, tag, f } of specs) {
+    if (f.stage !== 'any' && f.stage !== 'damage') continue;
+    if (f.kind !== 'reroll' || (f.units && !unitMatches(A, f.units)) || (f.attack && f.attack !== kind)) continue;
+    if (f.if && !f.if.every((c) => cond(c, { s, A, holder: A }))) continue;
+    const bag = `free:${name}#${tag}`;
+    if ((A.used ?? {})[bag] === period(s, f.limit)) continue;
+    (A.used ??= {})[bag] = period(s, f.limit);
+    log(s, `${name}: re-roll damage 1 ลูก`, 'info', A.owner);
+    return true;
+  }
+  return false;
+}
+setFreeDamageHook(takeFreeDamage);
+
 export function useFreeDie(s: GameState, key: string, index: number): string | null {
   const f = freeDiceNow(s).find((x) => x.key === key);
   if (!f) return 'ใช้ไม่ได้แล้ว';
@@ -976,7 +1028,8 @@ onAttackStart((s, at) => {
       for (const def of actsOfUnit(s, f)) {
         if (def.spec.when !== 'friendlyTargeted' || !def.spec.auto || !limitLeft(s, def) || !unitMatches(T, def.spec.deathUnits)) continue;
         if (!near(def.bearers, T, def.spec.range ?? 6)) continue;
-        useAct(s, def, undefined, { killerId: A.id, targetId: A.id });
+        // "that friendly unit has …" (Adept of the Omnissiah): the act's target is the unit being shot
+        useAct(s, def, def.spec.target?.side === 'friendly' ? T.id : undefined, { killerId: A.id, targetId: A.id });
       }
     }
   }

@@ -88,9 +88,10 @@ export function botCommandStratagems(s: GameState, p: PlayerId) {
 /** End of the Movement phase: secure an objective that is ours but in reach of the enemy (Stand Unyielding …). */
 export function botEndOfMovement(s: GameState, p: PlayerId) {
   for (const { st, rule } of strats(s, p)) {
-    if (rule.react || !(rule.do ?? []).some((a) => a.secure)) continue;
+    if (rule.react || !(rule.do ?? []).some((a) => a.secure || a.snare)) continue;
     for (const u of boardUnits(s, p)) {
-      const o = s.objectives.find((x) => onObjective(s, u, x) && x.controller === p && x.secured !== p && x.type !== 'home');
+      const snare = (rule.do ?? []).some((a) => a.snare);
+      const o = s.objectives.find((x) => onObjective(s, u, x) && x.controller === p && (snare ? x.snared !== p : x.secured !== p && x.type !== 'home'));
       if (!o || stratagemBlock(s, p, st, u) || !spare(s, p, stratCost(s, st.id, u, st.cp))) continue;
       if (!boardUnits(s, other(p)).some((e) => unitDistance(u, e) <= 18)) continue;
       applyDetachmentStratagem(s, p, st, u.id);
@@ -153,6 +154,12 @@ export function botAfterShootMove(s: GameState, u: UnitState) {
     if (s.window?.kind === 'abilityMove' && !s.window.offers.length) s.window = null;
     return;
   }
+  // it stays put: "those attacks do not prevent it from being hidden" (Shadow Masters …) costs nothing
+  for (const m of manualActs(s, u.owner)) {
+    if (m.why || m.def.holder.id !== u.id || m.def.spec.when !== 'afterShootingButton' || !m.def.spec.do?.some((a) => a.unshot)) continue;
+    useActByKey(s, u.id, m.def.key);
+    return;
+  }
 }
 
 /** A unit about to Advance: "Advance 6" instead of rolling" (Sudden Onslaught …) for a unit that has to get there. */
@@ -173,6 +180,20 @@ export function botFightOnDeath(s: GameState, T: UnitState, lossShare: number) {
     if (rule.react || !(rule.effects ?? []).some((e) => e.fightOnDeath)) continue;
     if (stratagemBlock(s, T.owner, st, T) || !spare(s, T.owner, stratCost(s, st.id, T, st.cp))) continue;
     applyDetachmentStratagem(s, T.owner, st, T.id);
+    return;
+  }
+}
+
+/** Before its consolidation: an engaged unit that may still consolidate onto an objective (Establish Supremacy) does,
+ *  when that objective isn't ours yet. */
+export function botConsolidateStratagem(s: GameState, u: UnitState) {
+  if (!isEngaged(s, u)) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || !(rule.effects ?? []).some((e) => e.objConsolidate)) continue;
+    if (stratagemBlock(s, u.owner, st, u) || !spare(s, u.owner, stratCost(s, st.id, u, st.cp))) continue;
+    const o = s.objectives.find((x) => x.controller !== u.owner && alive(u).some((m) => Math.hypot(m.x - x.x, m.y - x.y) <= 3 + 3 + m.r));
+    if (!o) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
     return;
   }
 }

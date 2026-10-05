@@ -7,6 +7,10 @@ import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, Weapon
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
+
+/** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
+let freeDamageHook: ((s: GameState) => boolean) | null = null;
+export const setFreeDamageHook = (h: (s: GameState) => boolean) => { freeDamageHook = h; };
 import { applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate } from './effects';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
@@ -382,6 +386,16 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     attackerBuffsAtStart: A.buffs.map((b) => b.kind), free: opts.free,
     timedAtStart: { a: A.timed?.length ?? 0, t: T.timed?.length ?? 0 },
   };
+  // Nightforged Battery: ranged weapons re-roll a low number of attacks for free
+  if (kind === 'shoot' && unitFlags(s, A).rerollAttackRolls) {
+    for (const p of s.attack.pools) for (const r of p.attackRolls ?? []) {
+      if (r.rerolled || r.total >= exprAverage(r.expr)) continue;
+      const again = rollExpr(s, r.expr).total;
+      p.attacks += again - r.total;
+      p.attackNote += ` · re-roll ${r.expr}: ${r.total}→${again}`;
+      r.total = again; r.rerolled = true;
+    }
+  }
   // a low random number of attacks: the bot (or a player who turned it on) re-rolls the worst one
   const low = s.attack.pools.map((p, i) => ({ i, gap: attackRerollGap(p) })).filter((x) => x.gap >= 1).sort((a, b) => b.gap - a.gap)[0];
   if (low && wantsCR(s, A.owner, 'attacks', A)) rerollAttackCount(s, low.i);
@@ -734,7 +748,12 @@ export function applyDamage(s: GameState) {
     d.o = ok ? 'saved' : 'fail';
     if (!ok) {
       let dr = rollExpr(s, p.damage);
-      if (p.rerollDamage && dr.dice.length && dr.total < exprAverage(p.damage)) { const again = rollExpr(s, p.damage); p.damageLines.push(`re-roll damage ${dr.total}→${again.total}`); dr = again; }
+      if ((p.rerollDamage || (p.rerollDamageOne && dr.total < m.wounds)) && dr.dice.length && dr.total < exprAverage(p.damage)) {
+        const again = rollExpr(s, p.damage); p.damageLines.push(`re-roll damage ${dr.total}→${again.total}`); dr = again; p.rerollDamageOne = false;
+      } else if (dr.dice.length && dr.total < exprAverage(p.damage) && dr.total < m.wounds && freeDamageHook?.(s)) {
+        // a free "hit, wound or damage" re-roll not used on the hit or wound dice goes on a low damage roll
+        const again = rollExpr(s, p.damage); p.damageLines.push(`re-roll damage (ฟรี) ${dr.total}→${again.total}`); dr = again;
+      }
       // Command Re-roll on a low damage roll that would not kill the model anyway
       else if (dr.dice.length && dr.total < exprAverage(p.damage) && dr.total < m.wounds
         && (p.crDamage ? !canUseStratagem(s, A.owner, 'command-reroll', A) : wantsCR(s, A.owner, 'damage', A))) {
@@ -796,6 +815,12 @@ export function hazardTest(s: GameState, u: UnitState, n: number, label: string,
   const rolls = rollN(s, n);
   const failed = (r: number) => r - worse <= RULES.hazard.failOn;
   let note = '';
+  // an ability re-rolls the failed hazard dice for free
+  if (unitFlags(s, u).rerollHazard && rolls.some(failed)) {
+    const before = rolls.join(' ');
+    for (let k = 0; k < rolls.length; k++) if (failed(rolls[k])) rolls[k] = d6(s);
+    note = ` · re-roll [${before}]`;
+  }
   const i = rolls.findIndex(failed);
   if (i >= 0 && wantsCR(s, u.owner, 'hazard', u)) {
     spendStratagem(s, u.owner, 'command-reroll', u);

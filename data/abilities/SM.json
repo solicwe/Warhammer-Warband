@@ -2690,8 +2690,16 @@
     ]
    }
   ],
-  "status": "partial",
-  "note": "re-roll damage ยังไม่มีในถาดลูกเต๋า"
+  "status": "auto",
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ],
+    "reroll": "damageOne"
+   }
+  ]
  },
  "Tempormortis": {
   "effects": [
@@ -3818,8 +3826,7 @@
     ]
    }
   ],
-  "status": "partial",
-  "note": "ระบบเลือกให้ตามเป้า"
+  "status": "auto"
  },
  "Cerebrex Logic Engine": {
   "act": {
@@ -4486,12 +4493,12 @@
    {
     "eligible": [
      "actionWhileEngaged",
+     "actionWhileShocked",
      "shootAfterAction"
     ]
    }
   ],
-  "status": "partial",
-  "note": "battle-shocked แล้วยังเริ่ม action ได้: ทำเอง"
+  "status": "auto"
  },
  "Power of the Machine Spirit": {
   "freeDie": [
@@ -4656,31 +4663,57 @@
   }
  },
  "Righteous Fury (Once per battle, per army)": {
-  "act": {
-   "when": "fightStartButton",
-   "limit": "battle",
-   "per": "army",
-   "botUse": "valuable",
-   "label": "+1 S ทั้งหน่วย (ฟื้น D3)",
-   "do": [
-    {
-     "on": "self",
-     "buff": [
-      {
-       "attack": "melee",
-       "strength": 1
-      }
-     ],
-     "until": "phase"
-    },
-    {
-     "on": "self",
-     "heal": "D3"
-    }
-   ]
-  },
-  "status": "partial",
-  "note": "ฟื้นทันที D3 (กฎจริง: หลังตี ถ้าฆ่าได้ 2D3)"
+  "act": [
+   {
+    "when": "fightStartButton",
+    "limit": "battle",
+    "per": "army",
+    "botUse": "valuable",
+    "label": "+1 S ทั้งหน่วย แล้วฟื้นหลังตี (D3 หรือ 2D3 ถ้าฆ่าได้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "melee",
+        "strength": 1
+       }
+      ],
+      "until": "phase",
+      "mark": "righteousFury"
+     }
+    ]
+   },
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "limit": "phase",
+    "if": [
+     "marked:righteousFury"
+    ],
+    "needModelsLost": true,
+    "do": [
+     {
+      "on": "self",
+      "heal": "2D3"
+     }
+    ]
+   },
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "limit": "phase",
+    "if": [
+     "marked:righteousFury"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "heal": "D3"
+     }
+    ]
+   }
+  ]
  },
  "Raise the Banner": {
   "act": {
@@ -4707,18 +4740,19 @@
   ]
  },
  "Veteran Bodyguard": {
-  "status": "partial",
+  "status": "auto",
   "effects": [
    {
     "defend": {
      "fnp": 4
     },
     "if": [
-     "leaderAttached"
+     "leaderAttached",
+     "modelKw:CHARACTER",
+     "!modelSource:Kaius Konorius"
     ]
    }
-  ],
-  "note": "FNP 4+ ให้ทั้งหน่วย (กฎจริง: เฉพาะ CHARACTER ตัวอื่น)"
+  ]
  },
  "Calgar's Champion": {
   "effects": [
@@ -4781,10 +4815,23 @@
       "move": "D6"
      }
     ]
+   },
+   {
+    "when": "opponentFightEnd",
+    "auto": true,
+    "limit": "round",
+    "if": [
+     "engaged"
+    ],
+    "label": "fall back 6\" ตอนจบ Fight phase ของศัตรู",
+    "do": [
+     {
+      "on": "self",
+      "move": "6"
+     }
+    ]
    }
-  ],
-  "status": "partial",
-  "note": "ส่วน fall back 6\" ตอนจบ Fight phase ของศัตรู: ทำเอง"
+  ]
  },
  "Unstoppable Valour": {
   "effects": [
@@ -4859,8 +4906,17 @@
   ]
  },
  "Priority Target Identified (Once per battle, per unit)": {
-  "status": "manual",
-  "note": "เลือก terrain: ศัตรูข้างใน +3\" detection — ทำเอง"
+  "act": {
+   "when": "command",
+   "limit": "battle",
+   "label": "ระบุ terrain ที่มีศัตรูมากที่สุด (ศัตรูข้างใน +3\" detection)",
+   "do": [
+    {
+     "on": "self",
+     "identifyTerrain": true
+    }
+   ]
+  }
  },
  "Evade and Survive (Once per phase, per unit)": {
   "act": {
@@ -5341,16 +5397,50 @@
   ]
  },
  "Special-issue Optics and Ammunition": {
-  "effects": [
+  "effects": [],
+  "status": "auto",
+  "act": [
    {
-    "attack": "ranged",
-    "abilities": [
-     "ignores cover"
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "label": "[IGNORES COVER] ทั้งหน่วย",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "ranged",
+        "abilities": [
+         "ignores cover"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "botUse": "never",
+    "target": {
+     "side": "enemy",
+     "range": 24
+    },
+    "label": "ศัตรู 1 หน่วย +6\" detection",
+    "do": [
+     {
+      "on": "target",
+      "buff": [
+       {
+        "detection": 6
+       }
+      ],
+      "until": "phase"
+     }
     ]
    }
-  ],
-  "status": "partial",
-  "note": "ระบบใช้ [IGNORES COVER] เสมอ (อีกทาง: ศัตรู +6\" detection เลือกเอง)"
+  ]
  },
  "Full-throttle Assault": {
   "effects": [
@@ -5370,10 +5460,17 @@
      "charged"
     ],
     "hit": 1
+   },
+   {
+    "attack": "melee",
+    "weapon": "!Thunder Hammer",
+    "if": [
+     "charged"
+    ],
+    "damage": 1
    }
   ],
-  "status": "partial",
-  "note": "+1 D ของอาวุธอื่น: ยังไม่ได้ใส่"
+  "status": "auto"
  },
  "Overlapping Destruction": {
   "effects": [
@@ -5385,8 +5482,7 @@
     ]
    }
   ],
-  "status": "partial",
-  "note": "ใช้กับทุกเป้า (กฎจริง: เลือกเป้า 1 หน่วย)"
+  "status": "auto"
  },
  "Close-quarters Firestorm": {
   "effects": [
@@ -5460,8 +5556,7 @@
     "disembarkAfterAdvance": true
    }
   ],
-  "status": "partial",
-  "note": "ลงหลังรถ advance: ชาร์จไม่ได้เทิร์นนั้น"
+  "status": "auto"
  },
  "Sentinel Protocols (Once per phase, per unit)": {
   "effects": [
@@ -5514,7 +5609,7 @@
   ]
  },
  "Forward Assault Warsuit": {
-  "status": "partial",
+  "status": "auto",
   "effects": [
    {
     "if": [
@@ -5522,8 +5617,7 @@
     ],
     "reroll": "wounds1"
    }
-  ],
-  "note": "ระบบใช้เป้า Quarry ถ้ามี"
+  ]
  },
  "Shattered Defences": {
   "act": {
@@ -5578,11 +5672,13 @@
    {
     "scope": "enemyAura",
     "range": 6,
-    "fallBackLdTest": true
+    "fallBackLdTest": true,
+    "if": [
+     "holderNotShocked"
+    ]
    }
   ],
-  "status": "partial",
-  "note": "ระบบเปิดตลอด (กฎจริง: ใช้ตอนเริ่ม Movement phase ของศัตรู)"
+  "status": "auto"
  },
  "Miraculous Savior": {
   "status": "auto",
@@ -5707,8 +5803,17 @@
   ]
  },
  "Ancient Tactician (Once per turn)": {
-  "status": "manual",
-  "note": "ใช้ stratagem กับตัวนี้ −1CP (ครั้งเดียวต่อเทิร์น) — ลดเอง"
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "*"
+     ],
+     "cp": 1,
+     "limit": "turn"
+    }
+   }
+  ]
  },
  "Old Greymanes": {
   "split": "half",
@@ -5874,8 +5979,7 @@
     "reroll": "wounds1"
    }
   ],
-  "status": "partial",
-  "note": "เป้า hunted = Quarry ที่ระบบเลือก"
+  "status": "auto"
  },
  "Fealty to the Lion": {
   "status": "manual",
@@ -5989,8 +6093,24 @@
   ]
  },
  "Laurels of Vigilance": {
-  "status": "manual",
-  "note": "Fire Overwatch / Heroic Intervention ใส่ BATTLELINE ในระยะ 12\" −1CP (ครั้งเดียวต่อ round) — ลดเอง"
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 12,
+    "units": [
+     "BATTLELINE"
+    ],
+    "stratDiscount": {
+     "ids": [
+      "fire-overwatch",
+      "heroic-intervention"
+     ],
+     "cp": 1,
+     "limit": "round",
+     "perArmy": true
+    }
+   }
+  ]
  },
  "Tactical Insight": {
   "doctrines": [
@@ -6452,8 +6572,30 @@
   ]
  },
  "Adept of the Omnissiah": {
-  "status": "manual",
-  "note": "ศัตรูยิงรถในระยะ 6\": รถได้ FNP 5+ — ใช้เอง"
+  "act": {
+   "when": "friendlyTargeted",
+   "auto": true,
+   "range": 6,
+   "deathUnits": [
+    "VEHICLE"
+   ],
+   "target": {
+    "side": "friendly"
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "defend": {
+        "fnp": 5
+       }
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
  },
  "Master of the Machine War": {
   "act": [
@@ -6547,12 +6689,18 @@
   ]
  },
  "Blackwing Shroud": {
-  "status": "manual",
-  "note": "หน่วยนี้มี Infiltrators — วางเอง"
+  "effects": [
+   {
+    "infiltrators": true
+   }
+  ]
  },
  "Coronal Susurrant": {
-  "status": "manual",
-  "note": "ศัตรู (ไม่ใช่ MONSTER/VEHICLE) ที่ engaged กับหน่วยนี้ใช้ stratagem ไม่ได้ — เช็กเอง"
+  "effects": [
+   {
+    "noEngagedStrats": true
+   }
+  ]
  },
  "Umbral Raptor": {
   "effects": [
@@ -6579,8 +6727,7 @@
     "arriveFromRound": 1
    }
   ],
-  "status": "partial",
-  "note": "ลงสนามเร็วขึ้น 1 round"
+  "status": "auto"
  },
  "Hunter's Eye": {
   "effects": [
@@ -6674,16 +6821,47 @@
   }
  },
  "Angelic Executioner": {
-  "effects": [
+  "act": [
    {
-    "attack": "melee",
-    "abilities": [
-     "lethal hits"
+    "when": "selectedToFight",
+    "limit": "phase",
+    "label": "[LETHAL HITS] ตีระยะประชิดจน phase จบ",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "melee",
+        "abilities": [
+         "lethal hits"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "limit": "phase",
+    "label": "[SUSTAINED HITS 1] ตีระยะประชิดจน phase จบ",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "melee",
+        "abilities": [
+         "sustained hits 1"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
     ]
    }
-  ],
-  "status": "partial",
-  "note": "ระบบเลือก [LETHAL HITS] (อีกทาง: [SUSTAINED HITS 1])"
+  ]
  },
  "Shadow of Abomination": {
   "act": {
@@ -6770,8 +6948,28 @@
     "damage": 1
    }
   ],
-  "status": "partial",
-  "note": "ฆ่าได้: เพิ่มเป็น +2 — ยังไม่ทำ"
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "limit": "battle",
+   "needModelsLost": true,
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "attack": "melee",
+       "strength": 1,
+       "ap": 1,
+       "damage": 1
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  },
+  "note": "ฆ่าโมเดลศัตรูด้วยการตีครั้งแรก: เพิ่มเป็น +2 S/AP/D ถึงจบเกม"
  },
  "The Tome of Ectoclades": {
   "act": [
@@ -6822,8 +7020,17 @@
   ]
  },
  "Singular Will": {
-  "status": "manual",
-  "note": "Consolidation เดินได้ D3+3\" — เดินเอง"
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "do": [
+    {
+     "on": "self",
+     "consolidateRoll": "D3+3"
+    }
+   ]
+  }
  },
  "Ancient Weapons": {
   "effects": [
@@ -6850,8 +7057,12 @@
   ]
  },
  "Nightforged Battery": {
-  "status": "manual",
-  "note": "re-roll จำนวน attack ของอาวุธยิง และ hazard roll — ทอยเอง"
+  "effects": [
+   {
+    "rerollAttackRolls": true,
+    "rerollHazard": true
+   }
+  ]
  },
  "Thundercowl Turbines": {
   "effects": [
@@ -7040,8 +7251,7 @@
     "mobile": true
    }
   ],
-  "status": "partial",
-  "note": "เดินผ่านโมเดลทุกชนิด, ขึ้นลงตึกง่าย"
+  "status": "auto"
  },
  "Orbital Comms Array": {
   "gear": true,

@@ -263,8 +263,7 @@
     "onObjective"
    ],
    "bot": "never",
-   "status": "partial",
-   "note": "ต้องเป็นหน่วยถัดไปที่เลือกตี: เลือกเอง"
+   "status": "auto"
   },
   "TACTICAL FOCUS": {
    "targetKw": [
@@ -320,9 +319,17 @@
    "status": "auto"
   },
   "MORTIS SNARES": {
-   "status": "manual",
-   "bot": "never",
-   "note": "วาง snare บน objective ที่ยึดอยู่: ศัตรูจบการเดินในระยะ ทอย 2+ โดน D6 mortal — ทำเอง"
+   "unitIf": [
+    "!engaged",
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "snare": true
+    }
+   ],
+   "status": "auto",
+   "note": "objective ที่หน่วยนี้ยึดอยู่มีกับดัก: ศัตรูหน่วยแรกที่เดินจบในระยะ ทอย 2+ โดน D6 mortal"
   },
   "TACTICAL WITHDRAWAL": {
    "targetKw": [
@@ -388,20 +395,20 @@
   "PURGATION PUSH": {
    "react": "ownAttacked",
    "unitIf": [
-    "!engaged"
+    "!engaged",
+    "kw:GRAVIS"
    ],
    "do": [
     {
-     "move": "5"
+     "move": "5",
+     "noCharge": true
     }
    ],
-   "effects": [
-    {
-     "eligible": []
-    }
+   "special": [
+    "moveEndObjective"
    ],
-   "status": "partial",
-   "note": "ต้องจบในระยะ objective และชาร์จ / ขึ้นรถไม่ได้จนจบเทิร์น: เช็กเอง"
+   "status": "auto",
+   "note": "เดิน 5\" ต้องจบในระยะ objective ชาร์จไม่ได้จนจบเทิร์น"
   },
   "ARMOURED IMPACT": {
    "react": "chargeMoveEnd",
@@ -448,14 +455,11 @@
    ],
    "do": [
     {
-     "move": "M",
-     "if": [
-      "!engaged"
-     ]
+     "move": "M"
     }
    ],
-   "status": "partial",
-   "note": "ถ้า engaged อยู่: fall back เอง"
+   "status": "auto",
+   "note": "ถ้า engaged อยู่ การเดินนี้คือ fall back (ต้องจบนอก engagement)"
   },
   "SUDDEN ONSLAUGHT": {
    "effects": [
@@ -526,9 +530,15 @@
    "status": "auto"
   },
   "AGGRESSIVE DISEMBARKATION": {
-   "status": "manual",
+   "targetFrom": "embarked",
+   "effects": [
+    {
+     "looseDisembark": true
+    }
+   ],
    "bot": "never",
-   "note": "ลงรถ: วางแต่ละโมเดลภายในระยะ (ไม่ต้องทั้งตัว) — วางเอง"
+   "status": "auto",
+   "note": "ใช้ก่อนกดลงรถ: แต่ละโมเดลวางแค่ภายในระยะลงรถ (ไม่ต้องทั้งตัว)"
   },
   "DUTY IS NEVER DONE": {
    "react": "fightPhaseEnd",
@@ -550,10 +560,9 @@
     }
    ],
    "unitIf": [
-    "hasEmbarked"
+    "hasEmbarkedBattleline"
    ],
-   "status": "partial",
-   "note": "ต้องมี BATTLELINE อยู่ในรถ"
+   "status": "auto"
   },
   "LAYERED CERAMITE": {
    "effects": [
@@ -724,9 +733,17 @@
    "status": "auto"
   },
   "ESTABLISH SUPREMACY": {
-   "status": "manual",
-   "bot": "never",
-   "note": "objective consolidation move แม้ engaged — เดินเอง"
+   "unitIf": [
+    "entrenched",
+    "engaged"
+   ],
+   "effects": [
+    {
+     "objConsolidate": true
+    }
+   ],
+   "status": "auto",
+   "note": "Consolidate เข้าหา objective ได้แม้ยัง engaged"
   },
   "STAND TO THE END": {
    "effects": [
@@ -926,15 +943,14 @@
     "lastActor": true
    },
    "special": [
-    "shootAt"
+    "shootAtSnap"
    ],
    "botReact": "shoot",
    "unitIf": [
     "targetOfLast",
     "kw:VEHICLE"
    ],
-   "status": "partial",
-   "note": "ยิงแบบ normal เสมอ (กฎจริง: snap shooting ถ้ายังไม่ถึงครึ่ง)"
+   "status": "auto"
   },
   "VENGEFUL ANIMUS": {
    "react": "deadlyDemise",
@@ -1263,15 +1279,15 @@
    "react": "enemyMoved",
    "unitIf": [
     "!engaged",
-    "nearLast:3"
+    "fellBackFromLast",
+    "kw:SANGUINARY GUARD"
    ],
    "do": [
     {
      "move": "D3+3"
     }
    ],
-   "status": "partial",
-   "note": "กฎจริง: เฉพาะตอนศัตรูที่ engaged อยู่ fall back ออกไป"
+   "status": "auto"
   },
   "JUDGEMENT OF THE GOLDEN HOST": {
    "react": "chargeMoveEnd",
@@ -1464,9 +1480,19 @@
    "status": "auto"
   },
   "IN SACRIFICE, VICTORY": {
-   "status": "manual",
-   "bot": "never",
-   "note": "หน่วย DEATHWING/RAVENWING บน objective ถูกทำลาย: objective นั้นติดเป็นของเรา — กด secure เอง"
+   "react": "ownDestroyed",
+   "targetFrom": "destroyed",
+   "targetKw": [
+    "DEATHWING",
+    "RAVENWING"
+   ],
+   "do": [
+    {
+     "secureDead": true
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
   },
   "INESCAPABLE JUSTICE": {
    "effects": [

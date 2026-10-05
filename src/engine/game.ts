@@ -192,6 +192,8 @@ export function createGame(o: NewGameOptions): GameState {
   // Declare Battle Formations: abilities fixed for the battle, "choose two of these", Master of the Fleet …
   applyStaticEffects(s);
   initAbilityChoices(s);
+  // abilities that give a core rule at deployment (Blackwing Shroud: Infiltrators)
+  for (const u of s.units) if (!u.core.infiltrators && unitFlags(s, u).infiltrators) u.core.infiltrators = true;
   fireAll(s, 'formation', 'both');
   startOfBattle(s);
   return s;
@@ -295,11 +297,11 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
   }
   if (['normal', 'advance', 'fallback', 'ingress', 'extra', 'surge'].includes(kind) && eng.length) { errors.push(`จบการเดินต้องไม่อยู่ใน engagement range (${RULES.engagementRange}") ของศัตรู`); }
   // Rigid Discipline: the move must end wholly in the deployment zone or within range of an objective
-  if (kind === 'extra' && u.extraMove?.endIn === 'dzOrObjective') {
+  if (kind === 'extra' && u.extraMove?.endIn) {
     const at = alive(u).map((m) => { const pth = paths.get(m.id); return { ...m, ...(pth ? pth[pth.length - 1] : {}) }; });
-    const inDz = at.every((m) => circleWhollyInPoly(m, m.r, zoneOf(s, u.owner)));
+    const inDz = u.extraMove.endIn === 'dzOrObjective' && at.every((m) => circleWhollyInPoly(m, m.r, zoneOf(s, u.owner)));
     const onObj = s.objectives.some((o) => at.some((m) => dist(m, o) <= 3 + m.r + 1e-6));
-    if (!inDz && !onObj) errors.push('ต้องจบใน deployment zone ทั้งหน่วย หรือในระยะ objective');
+    if (!inDz && !onObj) errors.push(u.extraMove.endIn === 'objective' ? 'ต้องจบในระยะ objective' : 'ต้องจบใน deployment zone ทั้งหน่วย หรือในระยะ objective');
   }
   if (kind === 'charge' || kind === 'heroic' as MoveKind) {
     const targets = (opt.targets ?? []).map((id) => unitById(s, id));
@@ -889,6 +891,8 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
     offerReactions(s, 'enemyMovedNear', u);
     if (kind === 'fallback' && engagedBefore.length) offerReactions(s, 'enemyFellBack', u, engagedBefore.filter((e) => !isEngaged(s, e)));
   }
+  // remember whom it fell back from ("an enemy unit that was engaged with your unit ends a Fall Back move")
+  if (kind === 'fallback' && s.lastAct?.unitId === u.id) s.lastAct.fellBackFrom = engagedBefore.map((e) => e.id);
   if (['normal', 'advance', 'fallback', 'charge'].includes(kind)) sabotageCheck(s, u);
   // stratagems: "just after an enemy unit ends a Normal, Advance or Fall Back move" (Squad Tactics …)
   if (reactAfterMove) emitReact(s, other(u.owner), 'enemyMoved', { unitId: u.id });
@@ -897,6 +901,16 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
 /** A Deadly Prize: an enemy unit ending a move on a Sabotaged objective rolls a D6, on 2+ it suffers D3 mortal wounds. */
 function sabotageCheck(s: GameState, u: UnitState) {
   for (const o of s.objectives) {
+    // Mortis Snares: one trap, sprung by the first enemy unit that ends a move in range
+    if (o.snared !== undefined && o.snared !== null && o.snared !== u.owner && alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) {
+      const by = o.snared;
+      o.snared = null;
+      const r = d6(s);
+      const mw = r >= 2 ? rollExpr(s, 'D6').total : 0;
+      log(s, `Mortis Snares: ${u.name} เดินเข้า objective ที่วางกับดัก — ทอย ${r}${mw ? ` → ${mw} mortal wound` : ' ไม่โดน'}`, 'roll', by);
+      if (mw) applyMortalWounds(s, u, mw, 'Mortis Snares');
+      if (!onBoard(u)) return;
+    }
     if (o.sabotaged === undefined || o.sabotaged === null || o.sabotaged === u.owner || o.controller !== o.sabotaged) continue;
     if (!alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) continue;
     const r = d6(s);
@@ -1315,6 +1329,11 @@ function startConsolidate(s: GameState) {
 
 export function consolidateMode(s: GameState, u: UnitState): { mode: 'ongoing' | 'engaging' | 'objective' | null; enemies: UnitState[]; objective?: ObjectiveState } {
   const eng = engagedEnemies(s, u);
+  // Establish Supremacy: an objective consolidation even while engaged
+  if (eng.length && unitFlags(s, u).objConsolidate) {
+    const obj = s.objectives.find((o) => alive(u).some((m) => circleTouchesPoly(m, m.r + RULES.consolidate.range, objectiveTerrain(s, o).poly)));
+    if (obj) return { mode: 'objective', enemies: [], objective: obj };
+  }
   if (eng.length) return { mode: 'ongoing', enemies: eng };
   const near = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT') && unitDistance(u, e) <= RULES.consolidate.range);
   if (near.length) return { mode: 'engaging', enemies: near };
@@ -1595,10 +1614,12 @@ export function validateDisembark(s: GameState, u: UnitState, t: UnitState, pos:
   if (!mode) return { ok: false, errors: ['รถ Advance/Fall back มาแล้ว ลงไม่ได้ phase นี้'], bad: [] };
   const range = mode === 'combat' ? 6 : 3;
   endChecks(s, u, pos, errors, bad);
+  // Aggressive Disembarkation: within the set-up distance is enough, not wholly within
+  const loose = unitFlags(s, u).looseDisembark;
   for (const m of alive(u)) {
     const p = pos.get(m.id) ?? m;
     const tm = alive(t).reduce((a, b) => (dist(p, a) <= dist(p, b) ? a : b));
-    if (dist(p, tm) - tm.r + m.r > range + 0.02) { errors.push(`ต้องวางให้อยู่ภายใน ${range}" ของรถทั้งตัว`); bad.add(m.id); }
+    if (dist(p, tm) - tm.r + (loose ? -m.r : m.r) > range + 0.02) { errors.push(loose ? `ต้องวางให้อยู่ภายใน ${range}" ของรถ` : `ต้องวางให้อยู่ภายใน ${range}" ของรถทั้งตัว`); bad.add(m.id); }
   }
   if (mode !== 'combat' && engagedAt(s, u, pos).length) errors.push('ลงจากรถต้องไม่ engaged');
   return { ok: !errors.length, errors: [...new Set(errors)], bad: [...bad] };

@@ -150,7 +150,7 @@ export interface ActionOption { action: string; name: string; unitId: string; ob
 
 /** Why this unit cannot start an action (core rules 16), or null. */
 /** Abilities that let units start actions while engaged / after advancing, or shoot after starting one (registered by effects.ts). */
-type EligHook = (s: GameState, u: UnitState, what: 'actionWhileEngaged' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction') => boolean;
+type EligHook = (s: GameState, u: UnitState, what: 'actionWhileEngaged' | 'actionWhileShocked' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction') => boolean;
 let eligHook: EligHook | null = null;
 export const setActionEligibilityHook = (fn: EligHook) => { eligHook = fn; };
 const may = (s: GameState, u: UnitState, what: Parameters<EligHook>[2]) => !!eligHook?.(s, u, what);
@@ -158,7 +158,7 @@ const may = (s: GameState, u: UnitState, what: Parameters<EligHook>[2]) => !!eli
 export function actionBlock(s: GameState, u: UnitState): string | null {
   if (!onBoard(u)) return 'ไม่อยู่บนสนาม';
   if (hasKw(u, 'AIRCRAFT') || hasKw(u, 'FORTIFICATION')) return 'AIRCRAFT/FORTIFICATION';
-  if (u.battleShocked) return 'battle-shocked';
+  if (u.battleShocked && !may(s, u, 'actionWhileShocked')) return 'battle-shocked';
   if (!ocOf(u)) return 'OC เป็น 0';
   if (isEngaged(s, u) && !hasKw(u, 'TITANIC') && !may(s, u, 'actionWhileEngaged')) return 'engaged';
   if (u.move === 'advance' && !may(s, u, 'actionAfterAdvance')) return 'advance มา';

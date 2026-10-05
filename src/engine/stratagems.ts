@@ -43,7 +43,7 @@ export interface StratRule {
   /** timed effects put on the picked enemy unit(s) ("that enemy unit is pinned …") */
   enemyEffects?: Effect[];
   /** the TARGET is a unit in Reserves (arriving by Deep Strike this phase), or one destroyed this phase */
-  targetFrom?: 'reserves' | 'destroyed';
+  targetFrom?: 'reserves' | 'destroyed' | 'embarked';
   /** the target also counts for up to this many units (Guerrilla Tactics: up to two PHOBOS/SCOUT units) */
   extraTargets?: { count: number; kw?: string[] };
   /** how long `enemyEffects` last (default: as `until`) */
@@ -65,7 +65,7 @@ export interface StratRule {
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'shootAt' | 'charge' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective';
+export type Special = 'shootAt' | 'charge' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -332,6 +332,7 @@ export function stratCandidates(s: GameState, p: PlayerId, st: StratagemData, ct
   const rule = stratRuleFor(s, p, st);
   if (rule.targetFrom === 'destroyed') return ctx.unitId ? [unitById(s, ctx.unitId)].filter((u) => u.owner === p) : [];
   if (rule.targetFrom === 'reserves') return s.units.filter((u) => u.owner === p && u.status === 'reserves');
+  if (rule.targetFrom === 'embarked') return s.units.filter((u) => u.owner === p && u.status === 'embarked');
   return boardUnits(s, p);
 }
 
@@ -388,6 +389,7 @@ const COND_TH: Record<string, string> = {
   targetOfLast: 'ต้องเป็นเป้าของหน่วยศัตรูที่เพิ่งโจมตี', lostToLast: 'ต้องเสียโมเดลจากการโจมตีนั้น', halvedByLast: 'ต้องเหลือต่ำกว่าครึ่งจากการโจมตีนั้น',
   '!engaged': 'ต้องไม่ engaged', engaged: 'ต้อง engaged', belowStarting: 'ต้องเสียโมเดลไปแล้ว', onObjective: 'ต้องอยู่บน objective', charged: 'ต้องชาร์จเทิร์นนี้',
   killedThisPhase: 'ต้องทำลายหน่วยศัตรูใน phase นี้', disembarkedThisTurn: 'ต้องลงจากรถเทิร์นนี้', entrenched: 'ต้อง ENTRENCHED',
+  onControlledObjective: 'ต้องยึด objective อยู่', hasEmbarkedBattleline: 'ต้องมีหน่วย BATTLELINE อยู่ในรถ', fellBackFromLast: 'ศัตรูต้อง fall back ออกจากหน่วยนี้',
 };
 const condText = (c: string) => COND_TH[c] ?? (c.startsWith('nearLast:') ? `ต้องอยู่ภายใน ${c.slice(9)}" ของหน่วยศัตรูนั้น` : c);
 
@@ -450,9 +452,9 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
 // ---------- special actions ----------
 
 /** Shoot `target` with `u` right now, as if it were its Shooting phase (dice rolled automatically). */
-function shootNow(s: GameState, u: UnitState, target: UnitState, label: string) {
+function shootNow(s: GameState, u: UnitState, target: UnitState, label: string, mode: 'normal' | 'snap' = 'normal') {
   if (!onBoard(u) || !onBoard(target)) return;
-  const r = buildShootPools(s, u.id, target.id, { mode: 'normal' });
+  const r = buildShootPools(s, u.id, target.id, { mode });
   if (r.error || !r.pools.length) { log(s, `${label}: ${u.name} ยิง ${target.name} ไม่ได้ (${r.error ?? 'ไม่มีอาวุธที่ถึง'})`, 'info', u.owner); return; }
   const fired = [...u.weaponsFired];
   log(s, `${label}: ${u.name} ยิง ${target.name}`, 'info', u.owner);
@@ -485,6 +487,8 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
   if (!u) return;
   switch (sp) {
     case 'shootAt': if (enemy) shootNow(s, u, enemy, label); return;
+    // Power of the Machine Spirit: snap shooting, or normal shooting once the unit is at or below half-strength
+    case 'shootAtSnap': if (enemy) shootNow(s, u, enemy, label, alive(u).length * 2 <= u.startingStrength || alive(u).reduce((a, m) => a + m.wounds, 0) * 2 <= u.models.reduce((a, m) => a + m.profile.W, 0) ? 'normal' : 'snap'); return;
     case 'charge': {
       // a charge out of turn (Leonine Aggression …): only at the enemy units it was allowed to pick, no charge bonus
       declareCharge(s, u);
@@ -551,6 +555,9 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       if (best.pt.x !== m.x || best.pt.y !== m.y) { m.x = best.pt.x; m.y = best.pt.y; log(s, `${label}: ${u.name} พุ่งเข้าหาศัตรูก่อนระเบิด`, 'info', p); }
       return;
     }
+    case 'moveEndObjective':
+      if (u.extraMove) u.extraMove.endIn = 'objective';
+      return;
     case 'moveEndDzOrObjective':
       if (u.extraMove) u.extraMove.endIn = 'dzOrObjective';
       return;
@@ -602,7 +609,7 @@ function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto:
     if (o.rule.enemy && !o.rule.enemy.all && !es.length) continue;
     let v = 1;
     let enemyId = es[0]?.id;
-    if (o.rule.botReact === 'shoot' || o.rule.special?.includes('shootAt')) {
+    if (o.rule.botReact === 'shoot' || o.rule.special?.includes('shootAt') || o.rule.special?.includes('shootAtSnap')) {
       v = 0;
       for (const e of es) {
         const r = buildShootPools(s, u.id, e.id, { mode: 'normal' });

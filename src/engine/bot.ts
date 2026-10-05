@@ -13,7 +13,7 @@ import {
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark, endRedeploy } from './game';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
 import { W } from './botWeights';
-import { botAdvanceStratagem, botAfterShootMove, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
+import { botAdvanceStratagem, botAfterShootMove, botConsolidateStratagem, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
 import { actionOptions, startAction } from './missions';
@@ -26,7 +26,7 @@ import {
   botCounteroffensive, botCrushingImpact, botEpicChallenge, botExplosives, botHeroic, botOffensiveStratagem, botRapidIngress, botSmokescreen, isBot, wantsBravery,
 } from './botStrats';
 import { answerReaction } from './stratagems';
-import type { GameState, PlayerId, UnitState } from './types';
+import type { GameState, PlayerId, Pt, UnitState } from './types';
 
 const stay = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]]));
 
@@ -442,6 +442,7 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
     if (only !== undefined && f.stepPlayer !== only) return false;
     for (const u of boardUnits(s, f.stepPlayer)) {
       if (f.step === 'pileIn' && !pileInEligible(s, u)) continue;
+      if (f.step === 'consolidate' && consolidateEligible(s, u) && (s.bots ?? []).includes(u.owner)) botConsolidateStratagem(s, u);
       if (f.step === 'consolidate' && !(consolidateEligible(s, u) && consolidateMode(s, u).mode)) continue;
       autoPileMove(s, u, f.step === 'pileIn' ? 'pileIn' : 'consolidate');
     }
@@ -497,7 +498,12 @@ export function botWindow(s: GameState) {
       if (u.extraMove.kind !== 'surge') { withRuleCache(() => botExtraMove(s, u)); continue; }
       const foes = boardUnits(s, other(u.owner)).sort((a, b) => unitDistance(u, a) - unitDistance(u, b));
       if (u.extraMove.kind !== 'surge' || !foes.length) continue;
-      const near = alive(foes[0]).reduce((a, m) => (dist(m, centre(u)) < dist(a, centre(u)) ? m : a));
+      let near: Pt = alive(foes[0]).reduce((a, m) => (dist(m, centre(u)) < dist(a, centre(u)) ? m : a));
+      // Purge and Sanctify: the closest objective instead, when it isn't ours yet
+      if (unitFlags(s, u).surgeObjective) {
+        const o = [...s.objectives].sort((a, b) => dist(a, centre(u)) - dist(b, centre(u)))[0];
+        if (o && o.controller !== u.owner) near = { x: o.x, y: o.y };
+      }
       const [paths] = movesTowards(s, u, 'surge', u.extraMove.max - 0.05, near, { count: 1 });
       if (paths) commitMove(s, u, 'surge', paths);
     }

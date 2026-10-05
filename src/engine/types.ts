@@ -224,7 +224,7 @@ export interface UnitState {
   abilityPicks?: { pool: string[]; on: string[] }; // "select two of these abilities" (Author of the Codex …)
   used?: Record<string, string>; // ability limits: name -> last use key (battle / round / turn / phase)
   lastHits?: { key: string; ids: string[]; byWeapon?: Record<string, string[]> }; // enemy units hit this phase
-  extraMove?: { max: number; label: string; kind: 'extra' | 'surge'; phase?: string; endIn?: 'dzOrObjective' }; // a move granted by an ability, not yet made
+  extraMove?: { max: number; label: string; kind: 'extra' | 'surge'; phase?: string; endIn?: 'dzOrObjective' | 'objective' }; // a move granted by an ability, not yet made
   arriveEarly?: number; // battle round in which this unit may already arrive from Reserves (High King of Fenris …)
   noChargeTurn?: number; // turn in which this unit cannot declare a charge (Meteoric Descent …)
   fellBackFrom?: string[]; // enemy units engaged with this unit when it fell back this turn
@@ -281,6 +281,7 @@ export interface ObjectiveState {
   controller: PlayerId | null;
   secured?: PlayerId | null; // stays under this player's control until the opponent controls it (Objective Secured …)
   sabotaged?: PlayerId | null; // A Deadly Prize: enemy units ending a move on it may suffer mortal wounds while this player holds it
+  snared?: PlayerId | null; // Mortis Snares: the next enemy unit ending a move in range rolls a D6, 2+ = D6 mortal wounds
 }
 
 export interface PlayerState {
@@ -399,6 +400,7 @@ export interface Pool {
   rerollWounds12?: boolean; // re-roll wound rolls of 1 and 2
   rerollAllWounds?: boolean;
   rerollDamage?: boolean;
+  rerollDamageOne?: boolean; // one low damage roll of this pool may be re-rolled (Aquilon Optics)
   /** variable numbers of attacks rolled for this pool (D6, 2D3+1 …), so one can be re-rolled */
   attackRolls?: { expr: string; total: number; rerolled?: boolean }[];
   /** Command Re-roll the first damage roll below average that would not already kill the model */
@@ -542,7 +544,9 @@ export interface GameState {
   /** the last unit to move / attack / declare a charge, for reactions ("just after an enemy unit has shot") */
   /** after deployment: a player re-deploying units (Master of Deceit, Strategium Command, Cerebrex Logic Engine) */
   redeploy?: { player: PlayerId; left: number; infantryOnly: boolean; source: string; done: PlayerId[] };
-  lastAct?: { unitId: string; owner: PlayerId; kind: 'move' | 'attack' | 'charge'; turn: number; phase: Phase; targets: string[]; lost: string[]; halved: string[] };
+  /** Priority Target Identified: terrain features identified this turn (enemy units within have +3" detection range) */
+  identified?: { terrainId: string; by: PlayerId; turn: number }[];
+  lastAct?: { unitId: string; owner: PlayerId; kind: 'move' | 'attack' | 'charge'; turn: number; phase: Phase; targets: string[]; lost: string[]; halved: string[]; fellBackFrom?: string[] };
   /** stratagem prompts waiting for the current prompt / attack to finish */
   reactQueue?: { player: PlayerId; on: string; ctx: { unitId?: string; modelId?: string; killerId?: string }; turn: number; phase: Phase }[];
   /** "turn:phase:moment" keys already offered (so ending a phase twice does not prompt twice) */

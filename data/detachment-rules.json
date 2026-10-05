@@ -656,23 +656,73 @@
    ]
   },
   "Phobos Shadow Force": {
-   "auto": "manual",
-   "manual": "หลัง PHOBOS / SCOUT SQUAD ยิง: ยังนับว่า hidden ได้ หรือเดิน D6\" (แล้วชาร์จไม่ได้) — ทำเอง"
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "PHOBOS|SCOUT SQUAD|name:Scout Squad"
+     ],
+     "name": "Shadow Masters",
+     "rule": {
+      "act": [
+       {
+        "when": "afterShootingButton",
+        "limit": "phase",
+        "label": "ยิงแล้วยังซ่อน (hidden) ได้",
+        "do": [
+         {
+          "on": "self",
+          "unshot": true
+         }
+        ]
+       },
+       {
+        "when": "afterShootingButton",
+        "limit": "phase",
+        "if": [
+         "notEngaged"
+        ],
+        "label": "เดิน D6\" หลังยิง (ชาร์จไม่ได้)",
+        "do": [
+         {
+          "on": "self",
+          "move": "D6",
+          "noCharge": true
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "note": "หลังหน่วย PHOBOS / Scout Squad ยิง: กดเลือก 'ยังซ่อนได้' หรือ 'เดิน D6\"' (อย่างใดอย่างหนึ่ง)"
   },
   "Phobos Shock Force": {
-   "auto": "partial",
-   "effects": [
+   "auto": "full",
+   "acts": [
     {
+     "when": "movementEnd",
+     "auto": true,
      "units": [
       "PHOBOS"
      ],
      "if": [
       "hidden"
      ],
-     "reroll": "wounds1"
+     "do": [
+      {
+       "on": "self",
+       "buff": [
+        {
+         "reroll": "wounds1"
+        }
+       ],
+       "until": "turn"
+      }
+     ]
     }
    ],
-   "manual": "ระบบเช็ก hidden ตอนโจมตี (กฎจริงเช็กตอนจบ Movement phase)"
+   "note": "จบ Movement phase: หน่วย PHOBOS ที่ hidden อยู่ re-roll wound 1 ได้จนจบเทิร์น"
   },
   "Gravis Linebreaker Force": {
    "auto": "full",
@@ -730,8 +780,44 @@
    ]
   },
   "Gauntlet Task Force": {
-   "auto": "manual",
-   "manual": "หลัง TRANSPORT ยิง: เลือกศัตรูที่โดนยิงเป็น assailed — หน่วยที่ลงรถเทิร์นนี้ยิง/ตีมันได้ [SUSTAINED HITS 1] (ทำเอง)"
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "TRANSPORT"
+     ],
+     "name": "Combined Deployment",
+     "rule": {
+      "act": {
+       "when": "afterShooting",
+       "auto": true,
+       "limit": "phase",
+       "target": {
+        "side": "enemy",
+        "hit": true
+       },
+       "do": [
+        {
+         "on": "target",
+         "incoming": {
+          "abilities": [
+           "sustained hits 1"
+          ],
+          "units": [
+           "ADEPTUS ASTARTES"
+          ]
+         },
+         "fromDisembarked": true,
+         "until": "turn",
+         "mark": "assailed"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "note": "TRANSPORT ยิงโดนหน่วยไหน หน่วยนั้นเป็น assailed ถึงจบเทิร์น: หน่วยที่ลงรถเทิร์นนี้ยิง/ตีมันได้ [SUSTAINED HITS 1]"
   },
   "Ironstorm Spearhead": {
    "auto": "full",
@@ -807,7 +893,7 @@
    ]
   },
   "Forgefather's Seekers": {
-   "auto": "partial",
+   "auto": "full",
    "doctrineExtra": [
     {
      "ids": [
@@ -828,17 +914,49 @@
      "strength": 1
     }
    ],
-   "manual": "Infernus Squad (มี Vulkan): advance/fall back แล้วยังเริ่ม action ได้, เริ่ม action แล้วยังยิงได้ — ทำเอง"
+   "grants": [
+    {
+     "units": [
+      "name:Infernus Squad"
+     ],
+     "name": "Vulkan's Quest",
+     "rule": {
+      "effects": [
+       {
+        "if": [
+         "armyHas:Vulkan He’stan"
+        ],
+        "eligible": [
+         "actionAfterAdvance",
+         "actionAfterFallBack",
+         "shootAfterAction"
+        ]
+       }
+      ]
+     }
+    }
+   ]
   },
   "Medusa's Wrath": {
-   "auto": "partial",
+   "auto": "full",
    "freeDie": [
+    {
+     "kind": "reroll",
+     "stage": "any",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    },
     {
      "kind": "reroll",
      "stage": "hit",
      "limit": "phase",
      "units": [
       "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Caanok Var"
      ]
     },
     {
@@ -847,13 +965,60 @@
      "limit": "phase",
      "units": [
       "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Caanok Var"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "damage",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Caanok Var"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "hit",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Iron Father Feirros"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "wound",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Iron Father Feirros"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "damage",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Iron Father Feirros"
      ]
     }
    ],
-   "manual": "re-roll damage และ aura ของ Caanok Var / Iron Father Feirros ยังไม่มีในถาดลูกเต๋า (กฎจริงเลือก hit หรือ wound หรือ damage ได้ 1 ลูก)"
+   "note": "re-roll 1 ลูก (hit / wound / damage) ต่อการโจมตี · ใกล้ Caanok Var / Iron Father Feirros 6\": ได้เพิ่มอย่างละ 1 ลูก"
   },
   "Shadowmark Talon": {
-   "auto": "partial",
+   "auto": "full",
    "effects": [
     {
      "units": [
@@ -866,12 +1031,27 @@
       "PHOBOS|SCOUT SQUAD"
      ],
      "detection": -3
+    },
+    {
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "armyHas:Aethon Shaan"
+     ],
+     "stratDiscount": {
+      "ids": [
+       "Shadowmark Talon-intodarkness"
+      ],
+      "cp": 1,
+      "limit": "round",
+      "perArmy": true
+     }
     }
-   ],
-   "manual": "Aethon Shaan: Into Darkness −1CP (ครั้งเดียวต่อ battle round) — ลด CP เอง"
+   ]
   },
   "Spearpoint Task Force": {
-   "auto": "partial",
+   "auto": "full",
    "doctrineExtra": [
     {
      "ids": [
@@ -890,7 +1070,27 @@
      "advanceBonus": 1
     }
    ],
-   "manual": "Suboden Khan: จบ Fight phase เดิน normal move (ไม่ engaged) หรือ fall back (engaged) — ทำเอง"
+   "grants": [
+    {
+     "units": [
+      "name:Suboden Khan"
+     ],
+     "name": "Wrath of the First Khan",
+     "rule": {
+      "act": {
+       "when": "fightEnd",
+       "auto": true,
+       "limit": "phase",
+       "do": [
+        {
+         "on": "self",
+         "move": "M"
+        }
+       ]
+      }
+     }
+    }
+   ]
   },
   "Angelic Inheritors": {
    "auto": "full",
@@ -1138,8 +1338,16 @@
    }
   },
   "Fist of the God-Emperor": {
-   "auto": "manual",
-   "manual": "Crusader Squad: surge move เข้าหา objective ที่ใกล้สุดแทนศัตรูได้ — ทำเอง"
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "CRUSADER SQUAD|name:Crusader Squad"
+     ],
+     "surgeObjective": true
+    }
+   ],
+   "note": "Crusader Squad: surge move ไปหา objective ที่ใกล้ที่สุดแทนศัตรูได้ (บอทเลือกเอง; ผู้เล่นลากไปทาง objective ได้เลย)"
   },
   "Champions of Fenris": {
    "auto": "full",
@@ -1180,7 +1388,7 @@
    ]
   },
   "Saga of the Great Wolf": {
-   "auto": "partial",
+   "auto": "full",
    "effects": [
     {
      "units": [
@@ -1219,9 +1427,73 @@
      "abilities": [
       "sustained hits 1"
      ]
+    },
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "MONSTER|VEHICLE"
+     ],
+     "if": [
+      "friendMarked:howlingOnslaught",
+      "doctrine:assault"
+     ],
+     "advanceBonus": 1,
+     "chargeBonus": 1
+    },
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "MONSTER|VEHICLE"
+     ],
+     "attack": "ranged",
+     "if": [
+      "friendMarked:howlingOnslaught",
+      "doctrine:devastator"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "MONSTER|VEHICLE"
+     ],
+     "if": [
+      "friendMarked:howlingOnslaught",
+      "doctrine:tactical",
+      "within:9"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
     }
    ],
-   "manual": "Logan Grimnar (Howling Onslaught): MONSTER/VEHICLE ได้ Master of Wolves ด้วยจนถึง Command phase ถัดไป — ทำเอง"
+   "grants": [
+    {
+     "units": [
+      "name:Logan Grimnar"
+     ],
+     "name": "Howling Onslaught",
+     "rule": {
+      "act": {
+       "when": "command",
+       "limit": "battle",
+       "per": "army",
+       "botUse": "round2",
+       "label": "MONSTER/VEHICLE ได้ Master of Wolves ถึง Command phase หน้า",
+       "do": [
+        {
+         "on": "self",
+         "buff": [
+          {}
+         ],
+         "until": "nextCommand",
+         "mark": "howlingOnslaught"
+        }
+       ]
+      }
+     }
+    }
+   ]
   }
  }
 }
