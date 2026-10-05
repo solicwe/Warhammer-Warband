@@ -1,6 +1,7 @@
 // One detachment stratagem, ready to use: pick the unit, the option ("select either …"), the enemy unit, then use it.
 // Shared by the Stratagem tray and the prompt the game opens at a stratagem's moment ("just after an enemy unit has shot").
 import { useState } from 'react';
+import { Em } from './Em';
 import { alive, onBoard, stratCost, type ReactCtx } from '../engine/state';
 import { EFFECT_LABEL, stratagemBlock, stratChoices, stratEnemies, type StratRule, type StratUse as Use } from '../engine/stratagems';
 import type { GameState, PlayerId, StratagemData, UnitState } from '../engine/types';
@@ -45,7 +46,7 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
         {(rule.buffs ?? []).map((k) => <span key={k} className="chip good">{EFFECT_LABEL[k] ?? k}</span>)}
         {rule.note && <span className="tiny muted">{rule.note}</span>}
       </div>
-      <details><summary className="tiny">ข้อความเต็ม</summary><div className="sheet tiny">{st.text}</div></details>
+      <details><summary className="tiny">ข้อความเต็ม</summary><div className="sheet tiny"><Em text={st.text} /></div></details>
       {timingOk && bot && <div className="tiny muted"><Icon name="bot" size={13} /> บอทตัดสินใจใช้ stratagem นี้เอง</div>}
       {timingOk && !bot && (
         <>

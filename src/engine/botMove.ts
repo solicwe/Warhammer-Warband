@@ -11,6 +11,8 @@ import { alive, boardUnits, other, unitDistance } from './state';
 import { hasLos } from './visibility';
 import { secondaryGoal } from './secondaries';
 import { hasAbility } from './weapons';
+import { actsOfUnit } from './activations';
+import { unitFlags } from './effects';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, shotValue, unitValue,
 } from './botEval';
@@ -134,6 +136,44 @@ export interface Ctx {
   deliver?: Pt;
   /** a cheap objective holder (Battleline or a low-cost squad with OC): its job is standing on objectives, not hiding */
   holder?: boolean;
+  /** a unit that leaves objectives secured behind it (Objective Secured …): the next objective to claim, then it moves on */
+  claim?: Pt;
+  /** a character or model whose ability works on friendly units nearby (Techmarine and vehicles, auras): stay by them */
+  escort?: { u: UnitState; range: number; weight: number };
+}
+
+/** Can this unit make objectives stay ours after it leaves them? */
+export function securesObjectives(s: GameState, u: UnitState): boolean {
+  const f = unitFlags(s, u);
+  return f.secureAtMovementEnd || f.secureAtCommandEnd || actsOfUnit(s, u).some((d) => d.spec.do?.some((a) => a.secure));
+}
+
+/**
+ * Who the unit's abilities are for: "friendly … VEHICLE model within 3"" (Techmarine), "while a friendly … INFANTRY unit
+ * is within 6" of this model" (auras). The most valuable such unit (a hurt vehicle first) is the one to stay with.
+ */
+function escortFor(s: GameState, u: UnitState): Ctx['escort'] {
+  if (u.transport || u.sources.length > 1 || boardUnits(s, u.owner).length < 2) return undefined; // a led squad goes where its squad goes
+  let best: Ctx['escort'];
+  let bestV = 0;
+  const solo = alive(u).every((m) => m.isCharacter);
+  for (const a of u.abilities) {
+    const t = a.text ?? '';
+    const f1 = /friendly ([A-Z][A-Z' -]*?) (?:unit|model)s?\b[^.]*?within (\d+)"/.exec(t);
+    const f2 = /within (\d+)" of (?:a|one or more) friendly ([A-Z][A-Z' -]*?) (?:unit|model)/.exec(t);
+    const m = f1 ? [f1[1], f1[2]] : f2 ? [f2[2], f2[1]] : null;
+    if (!m) continue;
+    const kws = m[0].trim().split(/\s+/).filter((k) => !['ADEPTUS', 'ASTARTES', 'IMPERIUM', 'ORKS'].includes(k));
+    if (!kws.length) continue;
+    const range = Number(m[1]);
+    for (const f of boardUnits(s, u.owner)) {
+      if (f.id === u.id || !kws.every((k) => alive(f).some((x) => x.keywords.includes(k)))) continue;
+      const hurt = alive(f).some((x) => x.wounds < x.profile.W) ? 1.5 : 1;
+      const v = unitValue(f) * hurt / (1 + unitDistance(u, f) / 24);
+      if (v > bestV) { bestV = v; best = { u: f, range, weight: solo ? 3 : 0.3 }; }
+    }
+  }
+  return best;
 }
 
 export function ctxFor(s: GameState, u: UnitState): Ctx {
@@ -147,6 +187,15 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   const ctx: Ctx = { foes, brawler, target, range: maxRange(u), heavy, ocNeed };
   const battleline = alive(u).some((m) => m.keywords.includes('BATTLELINE'));
   ctx.holder = oc(u) > 0 && !u.transport && (battleline || unitValue(u) <= 130) && !(brawler && unitValue(u) > 130);
+  if (oc(u) > 0 && !u.battleShocked && securesObjectives(s, u)) {
+    // the closest objective not yet ours for good, within two moves; the home one only if nobody holds it
+    const M = moveOf(u);
+    const c = centre(u);
+    const open = s.objectives.filter((o) => o.secured !== u.owner && !(o.type === 'home' && o.controller === u.owner))
+      .map((o) => objPoint(s, o)).filter((p) => dist(p, c) <= 2 * M + 6).sort((a, b) => dist(a, c) - dist(b, c));
+    ctx.claim = open[0];
+  }
+  ctx.escort = escortFor(s, u);
   const cargo = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
   if (cargo.length) {
     const c = centre(u);
@@ -168,6 +217,8 @@ function objectiveScore(s: GameState, u: UnitState, homeFactor = 1): number {
   for (const o of s.objectives) {
     const [a, b] = levelOfControl(s, o);
     const ours = u.owner === 0 ? a : b, theirs = u.owner === 0 ? b : a;
+    // an objective we secured stays ours while the enemy doesn't take it: nothing to gain by standing on it
+    if (o.secured === u.owner && theirs === 0) { v += OBJECTIVE * Math.tanh(2 / 3); continue; }
     if (ours || theirs) v += OBJECTIVE * Math.tanh((ours - theirs) / 3) * (o.type === 'home' ? homeFactor : 1);
   }
   return v;
@@ -243,6 +294,12 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
   }
   // a loaded transport drives its passengers to where they get out, rather than parking on an objective
   if (ctx.deliver) v -= 0.6 * Math.max(0, dist(c, ctx.deliver) - 9);
+  if (ctx.claim && !ctx.deliver) {
+    // standing on it is what secures it: a clear reward for getting there, and a pull until then
+    const on = alive(u).some((m) => dist(m, ctx.claim!) <= 3 + m.r);
+    v += on ? 15 : -1.5 * Math.max(0, dist(c, ctx.claim) - 2);
+  }
+  if (ctx.escort && alive(ctx.escort.u).length) v -= ctx.escort.weight * 2 * Math.max(0, unitDistance(u, ctx.escort.u) - (ctx.escort.range - 1));
   if (ctx.ocNeed.length && !ctx.deliver) {
     const far = ctx.toObjective?.(lead);
     v -= (ctx.holder ? 1.5 : 0.35) * (far !== undefined && Number.isFinite(far) ? far : Math.min(...ctx.ocNeed.map((p) => dist(c, p))));
@@ -274,6 +331,7 @@ function positionScore(s: GameState, u: UnitState): number {
 /** How much holding objectives matters to this unit: less for an expensive damage dealer (cheap units hold, it fights). */
 function objectiveWeight(s: GameState, u: UnitState, ctx: Ctx): number {
   if (ctx.deliver) return 0.3;
+  if (ctx.escort && ctx.escort.weight >= 3) return 0.3; // a Techmarine's job is its vehicle, not holding ground
   if (u.keywords?.includes?.('BATTLELINE') || alive(u).some((m) => m.keywords.includes('BATTLELINE'))) return 1;
   const dealer = ctx.brawler || ctx.range >= 18;
   return dealer ? Math.max(0.45, Math.min(1, 160 / Math.max(1, unitValue(u)))) : 1;
@@ -320,6 +378,8 @@ function aimsFor(s: GameState, u: UnitState, max: number, ctx: Ctx): Pt[] {
   const pts: Pt[] = [];
   const objs = s.objectives.map((o) => objPoint(s, o)).sort((a, b) => dist(c, a) - dist(c, b));
   pts.push(...objs.filter((p, i) => i < 2 || dist(c, p) <= max + 10));
+  if (ctx.claim) pts.push(ctx.claim);
+  if (ctx.escort && alive(ctx.escort.u).length) pts.push(centre(ctx.escort.u));
   const nearestModel = (e: UnitState) => alive(e).reduce((a, m) => (dist(m, c) < dist(a, c) ? m : a));
   const foes = [...ctx.foes].sort((a, b) => unitDistance(u, a.u) - unitDistance(u, b.u));
   for (const f of foes.slice(0, 3)) pts.push(nearestModel(f.u));

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addonLines, attachOptions, chapterRules, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
+import { Em } from './Em';
 import { RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { Icon } from './Icon';
@@ -33,6 +34,20 @@ function sectionOf(d: DatasheetData | undefined): Section {
   if (d.keywords.includes('BATTLELINE') || d.role === 'Battleline') return 'battleline';
   if (d.role === 'Dedicated Transports' || d.keywords.includes('DEDICATED TRANSPORT')) return 'transports';
   return 'others';
+}
+
+/** Groups of the add-unit list, in the order they show. */
+const KINDS = ['Epic Hero', 'Character', 'Infantry', 'Fast Infantry', 'Heavy Infantry', 'Mounted', 'Walker', 'Vehicle', 'Aircraft', 'Other'] as const;
+export function unitKind(d: DatasheetData): (typeof KINDS)[number] {
+  const k = (w: string) => d.keywords.includes(w);
+  if (k('EPIC HERO')) return 'Epic Hero';
+  if (k('CHARACTER')) return 'Character';
+  if (k('AIRCRAFT')) return 'Aircraft';
+  if (k('WALKER')) return 'Walker';
+  if (k('VEHICLE')) return 'Vehicle';
+  if (k('MOUNTED')) return 'Mounted';
+  if (k('INFANTRY')) return k('GRAVIS') || k('TERMINATOR') ? 'Heavy Infantry' : k('JUMP PACK') || k('FLY') ? 'Fast Infantry' : 'Infantry';
+  return 'Other';
 }
 
 /** Original faction emblems (not official marks). */
@@ -329,17 +344,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
 
   const listTab = () => (
     <>
-      {list.units.length > 0 && (
-        <div className="ab-tools">
-          {/* the page runs where confirm() dialogs are blocked: tap once to arm, again to clear */}
-          <button type="button" className={`ab-reset ${resetArmed ? 'armed' : ''}`} onClick={() => {
-            if (!resetArmed) { setResetArmed(true); window.setTimeout(() => setResetArmed(false), 3000); return; }
-            setResetArmed(false);
-            set({ units: [], detachments: [] });
-            setNote('รีเซ็ต roster แล้ว');
-          }}><Icon name="delete" size={15} /> {resetArmed ? 'แตะอีกครั้งเพื่อลบทั้งหมด' : 'รีเซ็ต roster'}</button>
-        </div>
-      )}
       {errors.length > 0 && <div className="ab-errors">{errors.map((e) => <div key={e}>{e}</div>)}</div>}
       {SECTIONS.map((sec) => {
         // a unit with its Leader / Support shows as one card, in the section of its (first) character
@@ -393,9 +397,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const ruleCard = (key: string, name: string, right: string, text: string) => (
     <div key={key} className="dt-card">
       <div className="dt-card-head"><b>{name}</b><span>{right}</span></div>
-      <div className="dt-card-text">{text}</div>
+      <div className="dt-card-text"><Em text={text} names={ruleNames} /></div>
     </div>
   );
+  const ruleNames = useMemo(() => (faction ? [...faction.datasheets.map((d) => d.name), ...faction.detachments.flatMap((d) => [...d.stratagems.map((st) => st.name), ...d.enhancements.map((e) => e.name), ...d.rules.map((r) => r.name)]), ...faction.armyRules.map((r) => r.name)] : []), [faction]);
   const chosenDets = faction ? list.detachments.map((n) => faction.detachments.find((d) => d.name === n)).filter((d): d is NonNullable<typeof d> => !!d) : [];
 
   const detachmentTab = () => faction && (
@@ -423,7 +428,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       {dSection('army', 'Army Rule', chapterRules(faction.armyRules, list.subfaction).map((r) => (
         <div key={r.name} className="dt-card">
           <div className="dt-card-head"><b>{r.name}</b></div>
-          <div className="dt-card-text rt-wrap"><RuleText text={r.text} /></div>
+          <div className="dt-card-text rt-wrap"><RuleText text={r.text} names={ruleNames} /></div>
         </div>
       )))}
       <div className="dt-actions">
@@ -482,7 +487,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                 {open && (
                   <div className="dt-item-body">
                     {d.rules.map((r) => (
-                      <div key={r.name}><div className="dt-rule-name">{r.name.toUpperCase()}</div><div className="dt-card-text">{r.text}</div></div>
+                      <div key={r.name}><div className="dt-rule-name">{r.name.toUpperCase()}</div><div className="dt-card-text"><Em text={r.text} names={ruleNames} /></div></div>
                     ))}
                     <div className="tiny">Force Disposition: <b>{d.forceDisposition}</b> · <span className={`det-auto ${DET_RULES[d.name]?.auto ?? 'none'}`}>{{ full: 'ระบบทำให้ครบ', partial: 'ระบบทำส่วนหลัก', manual: 'ทำเอง' }[DET_RULES[d.name]?.auto ?? 'manual'] ?? 'อ่านเอง'}</span></div>
                     <button type="button" className="dt-sub" onClick={() => toggleSec(`${d.name}:enh`)}>Enhancements ({d.enhancements.length})<span className={`dt-chev ${sec('enh') ? 'up' : ''}`}><Icon name="down" size={16} /></span></button>
@@ -503,8 +508,8 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     if (!adding || !faction) return null;
     const title = SECTIONS.find((x) => x.id === adding)!.title;
     const sheets = faction.datasheets
-      .filter((d) => !d.keywords.includes('AIRCRAFT') && allowed(d) && sectionOf(d) === adding && d.name.toLowerCase().includes(q.toLowerCase()) && pointsOptions(d).length)
-      .sort((a, b) => Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
+      .filter((d) => allowed(d) && sectionOf(d) === adding && d.name.toLowerCase().includes(q.toLowerCase()) && pointsOptions(d).length)
+      .sort((a, b) => KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) || Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
     return (
       <div className="tray-backdrop" onClick={() => setAdding(null)}>
         <div className="tray" onClick={(e) => e.stopPropagation()}>
@@ -514,10 +519,12 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           </div>
           <input placeholder="ค้นหา datasheet…" value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="ab-pick">
-            {sheets.map((d) => {
+            {sheets.map((d, i) => {
               const count = list.units.filter((u) => u.datasheet === d.name).length;
               const open = view === d.name;
+              const kind = unitKind(d);
               return [
+                (i === 0 || unitKind(sheets[i - 1]) !== kind) && <div key={`kind-${kind}`} className="ab-kind">{kind}</div>,
                 <div key={d.id} className={`ab-row ${open ? 'open' : ''}`}>
                   <button type="button" className="ab-row-main" onClick={() => setView(open ? null : d.name)}>
                     <UnitArt sheet={d} />
@@ -575,7 +582,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                     <button key={o.detachment + o.name} type="button" className={`enh-card ${on ? 'on' : ''} ${taken ? 'taken' : ''}`}
                       onClick={() => setUnit(u.uid, on ? { enhancement: undefined, enhancementPts: undefined } : { enhancement: o.name, enhancementPts: o.pts })}>
                       <span className="enh-head"><b>{o.name}</b><span>{on ? <><Icon name="check" size={15} /> ใช้อยู่</> : `+${o.pts} pts`}</span></span>
-                      {o.text && <span className="enh-text">{o.text}</span>}
+                      {o.text && <span className="enh-text"><Em text={o.text} names={ruleNames} /></span>}
                       <span className="enh-foot">{o.detachment}{o.upgrade ? ' · Upgrade' : ''}{taken ? ` · ${taken.datasheet} ใช้อยู่ (ใช้ได้ครั้งเดียวต่อกองทัพ)` : ''}</span>
                     </button>
                   );
@@ -635,6 +642,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const hasSupport = joined.some((x) => x.d?.isSupport);
     const canLeader = !u.attachTo && !hasLeader && leadersFor(false).length > 0;
     const canSupport = !u.attachTo && !hasSupport && leadersFor(true).length > 0;
+    // a Leader in a squad: Add Support works on the squad it leads
+    const bodySupport = body && !sheet?.isSupport && !list.units.some((c) => c.attachTo === body.uid && sheetOf(c.datasheet)?.isSupport)
+      && faction.datasheets.some((d) => allowed(d) && d.isSupport && d.leads.includes(body.datasheet) && pointsOptions(d).length);
     const squadsFor = sheet?.leads.length && !body ? [...new Set(sheet.leads)].map((n) => sheetOf(n)).filter((d): d is DatasheetData => !!d && allowed(d) && pointsOptions(d).length > 0) : [];
     const close = () => setPop(null);
     const w = pop.mode && pop.mode !== 'size' ? Math.min(340, window.innerWidth - 16) : 260;
@@ -751,6 +761,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           {squadsFor.length > 0 && <button type="button" onClick={() => setPop({ ...pop, mode: 'squad' })}><Icon name="plus" size={22} />Add Squad</button>}
           {canLeader && <button type="button" onClick={() => setPop({ ...pop, mode: 'leader' })}><Icon name="plus" size={22} />Add Leader</button>}
           {canSupport && <button type="button" onClick={() => setPop({ ...pop, mode: 'support' })}><Icon name="plus" size={22} />Add Support</button>}
+          {bodySupport && <button type="button" onClick={() => setPop({ ...pop, uid: body!.uid, mode: 'support' })}><Icon name="plus" size={22} />Add Support <span className="ab-pop-val">{body!.datasheet}</span></button>}
           {body && (
             <button type="button" onClick={() => { setUnit(u.uid, { attachTo: undefined }); setNote(`${u.datasheet} ออกจาก ${body.datasheet}`); close(); }}>
               <Icon name="leave" size={22} />Leave Squad
@@ -866,14 +877,26 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       </header>
       <div className="ab-body">
         {tab === 'list' && (
-          <button type="button" className="ab-head" onClick={() => setTab('detachment')} aria-label="แก้ชื่อ faction และ detachment ในแท็บ Detachment">
-            <Emblem factionId={list.factionId} color={sub?.color} sub={list.subfaction} />
-            <span className="grow ab-head-text">
-              <span className="ab-title">{list.name || 'กองทัพไม่มีชื่อ'}</span>
-              <span className="ab-det-name">{list.detachments.join(' · ') || 'ยังไม่ได้เลือก detachment'}</span>
-              <span className="ab-faction">{factionName}{sub ? ` · ${sub.name}` : ''}</span>
-            </span>
-          </button>
+          <div className="ab-head">
+            <button type="button" className="ab-head-main" onClick={() => setTab('detachment')} aria-label="แก้ชื่อ faction และ detachment ในแท็บ Detachment">
+              <Emblem factionId={list.factionId} color={sub?.color} sub={list.subfaction} />
+              <span className="grow ab-head-text">
+                <span className="ab-title">{list.name || 'กองทัพไม่มีชื่อ'}</span>
+                <span className="ab-det-name">{list.detachments.join(' · ') || 'ยังไม่ได้เลือก detachment'}</span>
+                {chosenDets.length > 0 && <span className="ab-disp">Force Disposition: <b>{chosenDets[0].forceDisposition}</b></span>}
+                <span className="ab-faction">{factionName}{sub ? ` · ${sub.name}` : ''}</span>
+              </span>
+            </button>
+            {list.units.length > 0 && (
+              // the page runs where confirm() dialogs are blocked: tap once to arm, again to clear
+              <button type="button" className={`ab-reset ${resetArmed ? 'armed' : ''}`} onClick={() => {
+                if (!resetArmed) { setResetArmed(true); window.setTimeout(() => setResetArmed(false), 3000); return; }
+                setResetArmed(false);
+                set({ units: [], detachments: [] });
+                setNote('รีเซ็ต roster แล้ว');
+              }}><Icon name="delete" size={15} /> {resetArmed ? 'แตะอีกครั้ง' : 'รีเซ็ต'}</button>
+            )}
+          </div>
         )}
         {!faction && <div className="ab-empty">กำลังโหลดข้อมูล…</div>}
         {faction && (tab === 'list' ? listTab() : detachmentTab())}

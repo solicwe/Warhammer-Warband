@@ -5,6 +5,8 @@ import { abilitiesOf, abilityLabel } from '../engine/weapons';
 import { Portrait, tokenKind } from './Tokens';
 import { usePastePortrait } from './portraits';
 import { Icon, type IconName } from './Icon';
+import { useState } from 'react';
+import { Em } from './Em';
 
 /** The characteristics band, laid out like the printed datasheet: framed boxes, the invulnerable save as a shield. */
 function Stats({ p }: { p: ModelProfileData }) {
@@ -77,9 +79,23 @@ function AbilityBadge({ u, a }: { u: UnitState; a: AbilityData }) {
   );
 }
 
+/** Model lines with the same characteristics show once ("Intercessor Sergeant / Intercessor"). */
+function statGroups(models: ModelProfileData[]) {
+  const key = (m: ModelProfileData) => [m.M, m.T, m.Sv, m.W, m.Ld, m.OC, m.InSv ?? ''].join('|');
+  const out: { names: string[]; base: string; p: ModelProfileData }[] = [];
+  for (const m of models) {
+    const g = out.find((x) => key(x.p) === key(m) && x.base === m.base.text);
+    if (g) g.names.push(m.name); else out.push({ names: [m.name], base: m.base.text, p: m });
+  }
+  return out;
+}
+
 export function DatasheetView({ sheet, factionId }: { sheet: DatasheetData; factionId?: string }) {
   const probe = { sources: [sheet.name], abilities: [] } as unknown as UnitState;
+  const [more, setMore] = useState(false);
   usePastePortrait(sheet.name);
+  const groups = statGroups(sheet.models);
+  const names = [...sheet.abilities.map((a) => a.name), ...sheet.leads, sheet.name];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="ds-head">
@@ -89,37 +105,43 @@ export function DatasheetView({ sheet, factionId }: { sheet: DatasheetData; fact
           <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''} · แตะรูปหรือวาง (Paste) เพื่อใส่รูป</div>
         </div>
       </div>
-      {sheet.models.map((m) => (
-        <div key={m.name}>
-          {sheet.models.length > 1 && <div className="small muted">{m.name} · ฐาน {m.base.text}</div>}
-          <Stats p={m} />
+      {groups.map((g) => (
+        <div key={g.names.join('|')}>
+          {(groups.length > 1 || sheet.models.length > 1) && <div className="small muted">{groups.length > 1 ? g.names.join(' / ') : 'ทุกโมเดล'} · ฐาน {g.base}</div>}
+          <Stats p={g.p} />
         </div>
       ))}
       <Weapons weapons={sheet.weapons} />
+      {sheet.options.length > 0 && <details><summary className="small">Wargear options</summary>{sheet.options.map((o, i) => <div key={i} className="small">• <Em text={o} /></div>)}</details>}
       <div className="ds-sec">ABILITIES</div>
       {(['Core', 'Faction'] as const).map((t) => {
         const xs = sheet.abilities.filter((a) => a.type === t);
         return xs.length ? <div key={t} className="ds-line">{t.toUpperCase()}: <b>{xs.map((a) => `${a.name}${a.param ? ` ${a.param}` : ''}`).join(', ')}</b></div> : null;
       })}
       {sheet.abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction').map((a, i) => (
-        <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{factionId && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: factionId }} />} {a.text}</div>
+        <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{factionId && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: factionId }} />} <Em text={a.text} names={names} /></div>
       ))}
-      {sheet.damaged && <div className="ds-ab"><b>DAMAGED: 1-{sheet.damaged.w} WOUNDS REMAINING:</b> {sheet.damaged.text}</div>}
-      <div className="ds-sec">UNIT COMPOSITION</div>
-      <div className="ds-body">
-        {sheet.composition.map((c) => <div key={c.text}>• <b>{c.text}</b></div>)}
-        <div><b>This model is equipped with:</b> {sheet.loadoutText.replace(/^.*?equipped with:\s*/i, '')}</div>
-      </div>
-      {sheet.leads.length > 0 && (
+      {sheet.damaged && <div className="ds-ab"><b>DAMAGED: 1-{sheet.damaged.w} WOUNDS REMAINING:</b> <Em text={sheet.damaged.text} /></div>}
+      {!more && <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(true)}>MORE INFO <Icon name="down" size={18} /></button>}
+      {more && (
         <>
-          <div className="ds-sec">LEADER</div>
-          <div className="ds-body">ผูกเข้ากับหน่วยเหล่านี้ได้:{sheet.leads.map((l) => <div key={l} className="ds-lead">• {l}</div>)}</div>
+          <div className="ds-sec">UNIT COMPOSITION</div>
+          <div className="ds-body">
+            {sheet.composition.map((c) => <div key={c.text}>• <b>{c.text}</b></div>)}
+            <div><b>This model is equipped with:</b> {sheet.loadoutText.replace(/^.*?equipped with:\s*/i, '')}</div>
+          </div>
+          {sheet.leads.length > 0 && (
+            <>
+              <div className="ds-sec">LEADER</div>
+              <div className="ds-body">ผูกเข้ากับหน่วยเหล่านี้ได้:{sheet.leads.map((l) => <div key={l} className="ds-lead">• {l}</div>)}</div>
+            </>
+          )}
+          <div className="ds-kw"><span>FACTION KEYWORDS:</span> {sheet.factionKeywords.join(', ')}</div>
+          <div className="kw ds-kw2">KEYWORDS: {sheet.keywords.join(', ')}</div>
+          <div className="tiny muted">Data: Wahapedia (<a href={sheet.link} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>ดูต้นฉบับ</a>)</div>
+          <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(false)}>LESS <span className="dt-chev up"><Icon name="down" size={18} /></span></button>
         </>
       )}
-      <div className="ds-kw"><span>FACTION KEYWORDS:</span> {sheet.factionKeywords.join(', ')}</div>
-      <div className="kw ds-kw2">KEYWORDS: {sheet.keywords.join(', ')}</div>
-      {sheet.options.length > 0 && <details><summary className="small">Wargear options</summary>{sheet.options.map((o, i) => <div key={i} className="small">• {o}</div>)}</details>}
-      <div className="tiny muted">Data: Wahapedia (<a href={sheet.link} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>ดูต้นฉบับ</a>)</div>
     </div>
   );
 }
@@ -164,10 +186,10 @@ export function UnitView({ u }: { u: UnitState }) {
         </div>
       ))}
       {u.enhancements.map((e) => (
-        <div key={e.name} className="sheet"><b>Enhancement: {e.name}</b> <span className="tiny muted">({e.model})</span>{'\n'}{e.text}</div>
+        <div key={e.name} className="sheet"><b>Enhancement: {e.name}</b> <span className="tiny muted">({e.model})</span>{'\n'}<Em text={e.text} /></div>
       ))}
       {u.abilities.map((a, i) => (
-        <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({a.type}{a.model ? ` · ${a.model}` : ''})</span><AbilityBadge u={u} a={a} />{a.text ? `\n${a.text}` : ''}</div>
+        <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({a.type}{a.model ? ` · ${a.model}` : ''})</span><AbilityBadge u={u} a={a} />{a.text ? <>{'\n'}<Em text={a.text} names={u.abilities.map((x) => x.name)} /></> : ''}</div>
       ))}
       <div className="kw">{[...u.factionKeywords, ...u.keywords].join(', ')}</div>
     </div>

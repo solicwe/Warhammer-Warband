@@ -104,7 +104,7 @@ export default function App() {
       const layout = LAYOUTS.find((l) => l.id === layoutPick) ?? LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
       const s = createGame({
         lists: lists2, factions: factions as [typeof factions[0], typeof factions[1]],
-        names: mode === 'botbot' ? ['บอท 1', 'บอท 2'] : vsBot ? [names[0], 'บอท'] : names,
+        names: mode === 'botbot' ? ['บอทสีน้ำเงิน', 'บอทสีแดง'] : vsBot ? [names[0], 'บอทสีแดง'] : names,
         deploymentId: layout?.id, dispositions: dz, secondaryMode: secMode,
       });
       s.botPlayer = mode === 'bot' ? 1 : null;
@@ -164,7 +164,7 @@ export default function App() {
               <Emblem factionId={lists[i].factionId} sub={lists[i].subfaction} color={facs[i as 0 | 1]?.subfactions?.options.find((o) => o.keyword === lists[i].subfaction)?.color} />
               <div className="grow">
                 {(i === 1 && vsBot) || mode === 'botbot'
-                  ? <div className="army-name">{mode === 'botbot' ? `บอท ${i + 1}` : 'บอท'}</div>
+                  ? <div className="army-name">{mode === 'botbot' && i === 0 ? 'บอทสีน้ำเงิน' : 'บอทสีแดง'}</div>
                   : <input aria-label={`ชื่อผู้เล่น ${i + 1}`} value={names[i]} onChange={(e) => setNames((n) => (i === 0 ? [e.target.value, n[1]] : [n[0], e.target.value]))} />}
                 <div className="small" style={{ marginTop: 4 }}>
                   <b>{factionName(lists[i].factionId)}{lists[i].subfaction ? ` · ${titleCase(lists[i].subfaction!)}` : ''}</b> <span className="muted">· {pts(lists[i])} pts · {lists[i].units.length} หน่วย · {lists[i].detachments.join(', ') || 'ยังไม่เลือก detachment'}</span>
@@ -195,7 +195,7 @@ export default function App() {
             <>
               <div className="small">
                 <div><b>{dispositionById(d0).name}</b> vs <b>{dispositionById(d1).name}</b></div>
-                <div className="muted">Primary ของ {mode === 'botbot' ? 'บอท 1' : names[0]}: <b>{primaryFor(d0, d1).name}</b> · ของ {mode === 'botbot' ? 'บอท 2' : vsBot ? 'บอท' : names[1]}: <b>{primaryFor(d1, d0).name}</b></div>
+                <div className="muted">Primary ของ {mode === 'botbot' ? 'บอทสีน้ำเงิน' : names[0]}: <b>{primaryFor(d0, d1).name}</b> · ของ {mode === 'botbot' || vsBot ? 'บอทสีแดง' : names[1]}: <b>{primaryFor(d1, d0).name}</b></div>
               </div>
               <div className="field">
                 <div className="map-head">

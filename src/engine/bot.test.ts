@@ -397,3 +397,34 @@ describe('the bot uses decision abilities', () => {
     expect(s.window).toBeNull();
   });
 });
+
+describe('bot unit roles', () => {
+  it('a Techmarine leaves the infantry it stands with to stay by the army\'s vehicle', () => {
+    const s = game([['Techmarine', 1, 55], ['Redemptor Dreadnought', 1, 195], ['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]]);
+    s.bots = [0, 1];
+    s.phase = 'movement';
+    const tech = put(s, 'p0-x0', { x: 8, y: 20 });
+    const dread = put(s, 'p0-x1', { x: 38, y: 6 });
+    dread.move = 'stationary';
+    put(s, 'p0-x2', { x: 10, y: 23 }).move = 'stationary';
+    put(s, 'p1-x0', { x: 22, y: 56 });
+    const before = unitDistance(tech, dread);
+    s.botTried = [];
+    botMoveOne(s);
+    expect(unitDistance(tech, dread)).toBeLessThan(before - 9);
+  });
+
+  it('an Ancient (its banner secures objectives) steps onto an objective we hold so it stays ours', () => {
+    const s = game([['Ancient', 1, 50], ['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]]);
+    s.bots = [0, 1];
+    s.phase = 'movement';
+    const o = s.objectives.find((x) => x.type === 'expansion' && x.x > 30)!;
+    const anc = put(s, 'p0-x0', { x: o.x - 6, y: o.y - 6 });
+    put(s, 'p0-x1', { x: o.x, y: o.y }).move = 'stationary';
+    o.controller = 0;
+    put(s, 'p1-x0', { x: 22, y: 56 });
+    s.botTried = [];
+    botMoveOne(s);
+    expect(alive(anc).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= 3 + m.r)).toBe(true);
+  });
+});

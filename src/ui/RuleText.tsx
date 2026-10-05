@@ -1,6 +1,7 @@
 // Army rule text laid out: bullet lists (nested after a "…:" bullet), named options (Mission Tactics, Templar Vows …)
 // as boxed rows with their flavour text in italics, and Designer's Notes / Examples set apart.
 import type { ReactNode } from 'react';
+import { emph } from './Em';
 
 type Bullet = { text: string; sub: string[] };
 type Block = { kind: 'p'; text: string } | { kind: 'ul'; items: Bullet[] } | { kind: 'note'; label: string; text: string };
@@ -27,34 +28,35 @@ function blocks(lines: string[]): Block[] {
   return out;
 }
 
-function renderBlocks(bs: Block[], flavourFirst: boolean): ReactNode[] {
+function renderBlocks(bs: Block[], flavourFirst: boolean, names?: string[]): ReactNode[] {
+  const e = (t: string) => emph(t, names);
   return bs.map((b, i) => {
-    if (b.kind === 'note') return <div key={i} className="rt-note"><b>{b.label}</b> {b.text}</div>;
+    if (b.kind === 'note') return <div key={i} className="rt-note"><b>{b.label}</b> {e(b.text)}</div>;
     if (b.kind === 'ul') {
       return (
         <ul key={i} className="rt-ul">
           {b.items.map((it, j) => (
-            <li key={j}>{it.text}{it.sub.length > 0 && <ul className="rt-ul">{it.sub.map((x, k) => <li key={k}>{x}</li>)}</ul>}</li>
+            <li key={j}>{e(it.text)}{it.sub.length > 0 && <ul className="rt-ul">{it.sub.map((x, k) => <li key={k}>{e(x)}</li>)}</ul>}</li>
           ))}
         </ul>
       );
     }
     // "ASSAULT DOCTRINE: When this unit …": the capitalised name in bold
     const lead = /^([A-Z][A-Z' -]{3,}):\s*(.*)$/.exec(b.text);
-    if (lead) return <p key={i} className="rt-p"><b>{lead[1]}</b> {lead[2]}</p>;
-    return <p key={i} className={flavourFirst && i === 0 ? 'rt-p rt-flavour' : 'rt-p'}>{b.text}</p>;
+    if (lead) return <p key={i} className="rt-p"><b>{lead[1]}</b> {e(lead[2])}</p>;
+    return <p key={i} className={flavourFirst && i === 0 ? 'rt-p rt-flavour' : 'rt-p'}>{flavourFirst && i === 0 ? b.text : e(b.text)}</p>;
   });
 }
 
-export function RuleText({ text }: { text: string }) {
+export function RuleText({ text, names }: { text: string; names?: string[] }) {
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
   // named options: a short title line followed by its body, repeated (at least two of them)
   const heads = lines.map((l, i) => (isHeading(l, lines[i + 1]) ? i : -1)).filter((i) => i >= 0);
-  if (heads.length < 2) return <div className="rt">{renderBlocks(blocks(lines), false)}</div>;
+  if (heads.length < 2) return <div className="rt">{renderBlocks(blocks(lines), false, names)}</div>;
   const intro = lines.slice(0, heads[0]);
   return (
     <div className="rt">
-      {renderBlocks(blocks(intro), false)}
+      {renderBlocks(blocks(intro), false, names)}
       <div className="rt-opts">
         {heads.map((h, k) => {
           const body = blocks(lines.slice(h + 1, heads[k + 1] ?? lines.length));
@@ -62,7 +64,7 @@ export function RuleText({ text }: { text: string }) {
           return (
             <div key={h} className="rt-opt">
               <div className="rt-opt-head">{lines[h]}</div>
-              <div className="rt-opt-body">{renderBlocks(body, paras >= 2 && body[0].kind === 'p')}</div>
+              <div className="rt-opt-body">{renderBlocks(body, paras >= 2 && body[0].kind === 'p', names)}</div>
             </div>
           );
         })}

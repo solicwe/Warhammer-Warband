@@ -6,10 +6,10 @@ export const PRESETS: Record<string, ArmyList> = {
     name: 'Space Marines (Quick)',
     factionId: 'SM',
     battleSize: 'incursion',
-    detachments: ['Anvil Siege Force'],
+    detachments: ['Gladius Task Force'],
     units: [
       { uid: 'a1', datasheet: 'Intercessor Squad', models: 10, pts: 150 },
-      { uid: 'a2', datasheet: 'Captain', models: 1, pts: 80, attachTo: 'a1', warlord: true, enhancement: 'Stoic Defender', enhancementPts: 15 },
+      { uid: 'a2', datasheet: 'Captain', models: 1, pts: 80, attachTo: 'a1', warlord: true, enhancement: 'Adept of the Codex', enhancementPts: 20 },
       { uid: 'a3', datasheet: 'Hellblaster Squad', models: 5, pts: 110 },
       { uid: 'a4', datasheet: 'Assault Intercessor Squad', models: 10, pts: 150 },
       { uid: 'a5', datasheet: 'Lieutenant', models: 1, pts: 45, attachTo: 'a4' },

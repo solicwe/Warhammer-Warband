@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { chapterRules } from '../engine/army';
 import { RuleText } from './RuleText';
+import { Em } from './Em';
 import {
   applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, finishAttack, meleeWeapons, rerollOne, resolveAll, shootingModes, startAttack, stepAttack,
   type ShootMode,
@@ -95,6 +96,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   // single-player: let the bot take its steps one at a time so the board animates; caption what it just did
   const [botSays, setBotSays] = useState<string | null>(null);
+  const [botWho, setBotWho] = useState<PlayerId | null>(null);
   const [rolling, setRolling] = useState(false); // a big dice roll is on screen: the bot waits for it
   useEffect(() => {
     if (!bots.length || rolling || s.phase === 'gameover' || (spectate && speed === 0)) return;
@@ -110,13 +112,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const delay = (quick ? 350 : 950) / (spectate && speed === 2 ? 3 : 1);
     const t = window.setTimeout(() => {
       let said: string | null = null;
+      let saidBy: PlayerId | null = null;
       act((g) => {
         const last = g.log[g.log.length - 1];
         if (who === null) botAct(g); else botStep(g, who);
         const fresh = g.log.slice(g.log.lastIndexOf(last) + 1).filter((e) => e.kind !== 'roll' || /ชาร์จ|Advance/.test(e.text));
         said = fresh.length ? fresh[fresh.length - 1].text : null;
+        saidBy = fresh.length ? fresh[fresh.length - 1].player : null;
       });
-      if (said) setBotSays(said);
+      if (said) { setBotSays(said); setBotWho(saidBy); }
     }, delay);
     return () => window.clearTimeout(t);
   }, [s, actingBot, act, botSays, rolling, speed, spectate, bots.length]);
@@ -1345,7 +1349,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                         return (
                           <div key={id} className="sec-card">
                             <div className="row"><b className="grow">{d.name}</b><span className="tiny muted">{d.when}</span></div>
-                            <div className="small">{d.text}</div>
+                            <div className="small"><Em text={d.text} /></div>
                             {extra && <div className="tiny muted">{extra}</div>}
                             <div className="row" style={{ marginTop: 6 }}>
                               <span className="tiny muted grow">ระบบนับคะแนนให้อัตโนมัติ{P.secMode === 'fixed' ? ` · ได้แล้ว ${P.secFixedVp[id] ?? 0}/20` : ''}</span>
@@ -1451,7 +1455,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onDraft={(d) => { setDraft(d); setCheck(null); }}
           onDragEnd={onDragEnd}
         />
-        {botSays && <div className="bot-caption">{botSays.includes(pName(s, bot ?? 1)) ? botSays : <><b>{pName(s, bot ?? 1)}</b> {botSays}</>}</div>}
+        {botSays && (() => { const nm = pName(s, botWho ?? bot ?? 1); return <div className="bot-caption">{botSays.includes(nm) ? botSays : <><b>{nm}</b> {botSays}</>}</div>; })()}
         {toast && <div className="toast">{toast}</div>}
         {tape.on && (
           <div className="tape-bar">
@@ -1643,7 +1647,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               )}
               <div className="card-title">Core Stratagems</div>
               <div className="tiny muted">ระบบเด้งให้ใช้เองตอนถึงจังหวะ (Command Re-roll ในถาดลูกเต๋า, Overwatch/Heroic Intervention/Smokescreen/Rapid Ingress ตอนจบ phase, Insane Bravery ตอน battle-shock ฯลฯ)</div>
-              {RULES.coreStratagems.map((st) => <div key={st.id} className="small"><b>{st.name}</b> ({st.cp}CP) — {st.when}: {st.text}</div>)}
+              {RULES.coreStratagems.map((st) => <div key={st.id} className="small"><b>{st.name}</b> ({st.cp}CP) — {st.when}: <Em text={st.text} /></div>)}
               <button className="btn" onClick={() => setShowStrats(false)}>ปิด</button>
             </div>
           </div>
