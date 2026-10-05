@@ -9,23 +9,25 @@ import { detChoices, pickDetChoice } from '../detachments';
 import {
   autoApproach, autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
-  objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits,
+  objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
-  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark,
-} from '../game';
-import { abilityChoices, botUseActs, closeOffers, pickAbilities, unitSelected } from '../activations';
+  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark, endRedeploy } from '../game';
+import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, unitSelected } from '../activations';
+import { W } from '../botWeights';
+import { botAdvanceActs, botArrivalStratagem, botCharacterStratagem, botFightChoice, botFightStartStratagems, botFightsFirstStratagem, botLooseDisembark, botMobileStratagem, botPileStratagem, botRedeployActs, botShootActs, botShootOnTheMove, botAdvanceStratagem, botAfterShootMove, botConsolidateStratagem, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from '../botPlus';
 import { abilityRule, unitFlags, withRuleCache } from '../effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from '../state';
 import { actionOptions, startAction } from '../missions';
 import { secondaryDead } from '../secondaries';
 import {
-  centre, chargeValue, isBrawler, meleeKills, moveOf, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
+  centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, rangedKills, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
 import { bestArrival, bestFallBack, bestMove, canLeave, ctxFor, movesTowards, planMove, scoreSpot } from './botMove';
 import {
   botCounteroffensive, botCrushingImpact, botEpicChallenge, botExplosives, botHeroic, botOffensiveStratagem, botRapidIngress, botSmokescreen, isBot, wantsBravery,
 } from './botStrats';
-import type { GameState, PlayerId, UnitState } from '../types';
+import { answerReaction } from '../stratagems';
+import type { GameState, PlayerId, Pt, UnitState } from '../types';
 
 const stay = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]]));
 
@@ -69,6 +71,8 @@ function botPickFixed(s: GameState, p: PlayerId) {
 
 export function botDeploy(s: GameState) {
   const p = s.deployTurn;
+  // a redeploy ability: the bot keeps its deployment (it was placed with the whole board in mind)
+  if (s.redeploy?.player === p && !s.units.some((x) => x.owner === p && x.status === 'pending')) { endRedeploy(s); return; }
   botPickFixed(s, p);
   // Declare Battle Formations: a passenger for every empty transport (an empty Dedicated Transport is lost)
   for (const t of s.units.filter((x) => x.owner === p && x.transport && ['pending', 'board', 'reserves'].includes(x.status))) {
@@ -82,6 +86,11 @@ export function botDeploy(s: GameState) {
   // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
   if (hasDeepStrike(s, u) && sendToReserves(s, u.id) === null) return;
   // a vehicle must not be set up where ruin walls box it in for the whole game
+  // Infiltrators set up forward, on an objective or in cover near one
+  if (u.core.infiltrators) {
+    const fwd = smartPlacement(s, u, { how: 'infiltrate' });
+    if (fwd && deployUnit(s, u.id, fwd, 'infiltrate').ok) return;
+  }
   const pos = smartPlacement(s, u) ?? findPlacement(s, u, 'deploy', undefined, (q) => canLeave(s, u, q)) ?? findPlacement(s, u, 'deploy');
   if (pos && deployUnit(s, u.id, pos).ok) return;
   if (sendToReserves(s, u.id)) {
@@ -117,9 +126,20 @@ export function botCommand(s: GameState) {
   const mine = boardUnits(s, p);
   const enemies = boardUnits(s, other(p));
   if (P.armyRules.some((r) => r.name === 'Oath of Moment') && enemies.length) {
-    // the most valuable enemy our army can actually reach this turn
-    const reach = (e: UnitState) => Math.min(...mine.map((m) => unitDistance(m, e)), 99);
-    const t = [...enemies].sort((a, b) => (unitValue(b) / (1 + Math.max(0, reach(b) - 24) / 6)) - (unitValue(a) / (1 + Math.max(0, reach(a) - 24) / 6)))[0];
+    // the enemy our army can hurt most this turn: damage our units in range could do to it, worth more on objectives
+    const hurt = (e: UnitState) => {
+      let dmg = 0;
+      for (const u of mine) {
+        const gap = unitDistance(u, e);
+        const M = moveOf(u);
+        if (isBrawler(s, u)) { if (gap <= M + 9) dmg += Math.min(alive(e).length, meleeKills(u, e)) * perModel(e); }
+        else if (gap <= maxRange(u) + M) dmg += Math.min(alive(e).length, rangedKills(u, e)) * perModel(e);
+      }
+      const onObj = s.objectives.some((o) => onObjective(s, e, o)) ? 1.3 : 1;
+      // finishing it this turn is best; a unit we can barely scratch is a waste of the Oath
+      return Math.min(dmg, unitValue(e) * 1.2) * onObj + unitValue(e) * 0.05;
+    };
+    const t = [...enemies].sort((a, b) => hurt(b) - hurt(a))[0];
     setOathTarget(s, p, t.id);
   }
   if (P.armyRules.some((r) => r.name === 'Waaagh!') && !P.waaaghUsed && s.round >= 2) {
@@ -144,6 +164,10 @@ export function botCommand(s: GameState) {
     pickAbilities(s, c.unit.id, [...c.options].sort((a, b) => score(b) - score(a)).slice(0, c.pick));
   }
   botUseActs(s, p, ['command', 'anyCommand', 'battleStart', 'opponentTurnEnd', 'anyPhase']);
+  botDoctrineActs(s, p);
+  botCommandStratagems(s, p);
+  botCharacterStratagem(s, p);
+  botRedeployActs(s, p);
   endPhase(s);
 }
 
@@ -164,6 +188,14 @@ function botDetachmentChoices(s: GameState, p: PlayerId, mine: UnitState[], enem
     const ids = [...new Set(order.filter((id) => free.includes(id)))].slice(0, want);
     // keep limited-use rules (e.g. 3 doctrines in 5 rounds) for when the armies are close
     if (c.choice.uses === 'limit' && !near && s.round < 3) continue;
+    // Combat Doctrines (each once per battle): only when it does something this turn — tactical to leave a fight and
+    // still shoot / charge, assault to Advance and charge when the enemy is close, devastator to Advance and still shoot
+    if (c.rule === 'Combat Doctrines') {
+      const pick = engaged && free.includes('tactical') ? 'tactical' : near && free.includes('assault') ? 'assault'
+        : s.round >= 2 && free.includes('devastator') ? 'devastator' : s.round >= 4 ? free[0] : null;
+      if (pick) pickDetChoice(s, p, c.rule, [pick]);
+      continue;
+    }
     if (ids.length === want) pickDetChoice(s, p, c.rule, ids);
   }
 }
@@ -177,35 +209,65 @@ function moveOrder(s: GameState, p: PlayerId): UnitState[] {
   return s.units.filter((x) => x.owner === p).sort((a, b) => Number(isEngaged(s, b)) - Number(isEngaged(s, a)) || gap(a) - gap(b));
 }
 
-/** Passengers get out before their transport moves (Tactical Disembark: they can still move afterwards)
- *  once the enemy or an objective that needs bodies is close, or late in the game. */
+/** Where a passenger unit wants to be: the nearest objective that needs bodies, else the nearest enemy. */
+function passengerGoal(s: GameState, p: PlayerId, t: UnitState) {
+  const tm = alive(t)[0];
+  const foes = boardUnits(s, other(p));
+  const near = foes.length ? Math.min(...foes.map((e) => unitDistance(t, e))) : 99;
+  const need = objectiveNeeds(s, p).filter((n) => n.need > 0).map((n) => objPoint(s, n.o)).sort((a, b) => dist(a, tm) - dist(b, tm))[0];
+  const closest = foes.length ? foes.flatMap(alive).reduce((a, m) => (dist(m, tm) < dist(a, tm) ? m : a)) : undefined;
+  return { tm, near, need, goal: need && dist(need, tm) <= 12 ? need : closest ?? need ?? tm };
+}
+
+function getOut(s: GameState, u: UnitState, t: UnitState, goal: { x: number; y: number }): boolean {
+  const tm = alive(t)[0];
+  const base = Math.atan2(goal.y - tm.y, goal.x - tm.x);
+  // a compact block on the side facing the goal; wrapping round the hull only when that's the only way to fit
+  const spots = () => [Math.PI * 0.8, 2 * Math.PI].flatMap((arc) => [0, 0.4, -0.4, 0.8, -0.8, 1.3, -1.3, 1.9, -1.9, 2.5, -2.5, Math.PI].map((da) => ringFormation(u, tm, base + da, arc)));
+  const tryOut = () => { for (const pos of spots()) if (validateDisembark(s, u, t, pos).ok) { disembarkUnit(s, u, t, pos); return true; } return false; };
+  if (tryOut()) return true;
+  // no room wholly within 3": models only need to be within it (Aggressive Disembarkation)
+  if (isBot(s, u.owner) && botLooseDisembark(s, u, () => spots().some((pos) => validateDisembark(s, u, t, pos).ok))) return tryOut();
+  return false;
+}
+
+/** Passengers get out before their transport moves (Tactical Disembark: they can still move and charge)
+ *  once the enemy or an objective that needs bodies is within reach of their own move. */
 function botDisembark(s: GameState, p: PlayerId): boolean {
   const key = (u: UnitState) => `${s.turn}|${s.phase}|${u.id}:out`;
   for (const u of s.units.filter((x) => x.owner === p && x.status === 'embarked' && x.embarkedIn && !(s.botTried ?? []).includes(key(x)))) {
     const t = unitById(s, u.embarkedIn!);
     if (!onBoard(t) || t.move || disembarkMode(s, t) !== 'tactical') continue;
     s.botTried = [...(s.botTried ?? []), key(u)];
-    const tm = alive(t)[0];
-    const foes = boardUnits(s, other(p));
-    const near = foes.length ? Math.min(...foes.map((e) => unitDistance(t, e))) : 99;
-    const need = objectiveNeeds(s, p).filter((n) => n.need > 0).map((n) => objPoint(s, n.o)).sort((a, b) => dist(a, tm) - dist(b, tm))[0];
-    const go = s.round >= 4 || (s.round >= 2 && (near <= 14 || (need && dist(need, tm) <= 10)));
-    if (!go) continue;
-    // set up on the side facing the objective / the closest enemy
-    const closest = foes.length ? foes.flatMap(alive).reduce((a, m) => (dist(m, tm) < dist(a, tm) ? m : a)) : undefined;
-    const goal = need && dist(need, tm) <= 12 ? need : closest ?? need ?? tm;
-    const base = Math.atan2(goal.y - tm.y, goal.x - tm.x);
-    for (const da of [0, 0.4, -0.4, 0.8, -0.8, 1.3, -1.3, 1.9, -1.9, 2.5, -2.5, Math.PI]) {
-      const pos = ringFormation(u, tm, base + da);
-      if (validateDisembark(s, u, t, pos).ok) { disembarkUnit(s, u, t, pos); return true; }
-    }
+    const { tm, near, need, goal } = passengerGoal(s, p, t);
+    // getting out first wastes the transport's move: only when the squad reaches more on foot this turn than by riding
+    // (an Assault Ramp lets fighters charge after a Rapid Disembark anyway)
+    const M = moveOf(u);
+    const fighter = isBrawler(s, u);
+    const go = s.round >= 4
+      || (fighter && !unitFlags(s, t).assaultDisembark && near <= M + 7)
+      || (!fighter && near <= maxRange(u))
+      || (need !== undefined && dist(need, tm) <= M + 2);
+    if (go && getOut(s, u, t, goal)) return true;
   }
   return false;
+}
+
+/** After its transport moved: shooters get out (Rapid Disembark) when there is something to shoot or to hold. */
+function botRapidDisembark(s: GameState, t: UnitState) {
+  if (!t.transport || disembarkMode(s, t) !== 'rapid') return;
+  for (const u of s.units.filter((x) => x.embarkedIn === t.id && x.status === 'embarked')) {
+    const { tm, near, need, goal } = passengerGoal(s, t.owner, t);
+    const shooter = !isBrawler(s, u) || unitFlags(s, t).assaultDisembark;
+    const go = (shooter && near <= Math.min(24, maxRange(u) + 2)) || (need !== undefined && dist(need, tm) <= 6) || s.round >= 4;
+    if (go) getOut(s, u, t, goal);
+  }
 }
 
 /** Move (or bring in) one unit. Returns false when there is nothing left to do this phase. */
 export function botMoveOne(s: GameState): boolean {
   botUseActs(s, s.active, ['movement']);
+  botDoctrineActs(s, s.active);
   if (botDisembark(s, s.active)) return true;
   for (const u of moveOrder(s, s.active)) {
     if (tried(s, u)) continue;
@@ -213,6 +275,7 @@ export function botMoveOne(s: GameState): boolean {
       if (!canIngress(s, u)) continue;
       markTried(s, u);
       const how = hasDeepStrike(s, u) ? 'deepStrike' : 'ingress';
+      withRuleCache(() => botArrivalStratagem(s, u, how));
       const pos = withRuleCache(() => bestArrival(s, u, how));
       if (pos && validatePlacement(s, u, pos, how).ok) { ingressUnit(s, u, pos); return true; }
       continue;
@@ -236,31 +299,39 @@ export function botMoveOne(s: GameState): boolean {
         return plan.paths && plan.score - cost + gain > stayScore ? plan.paths : null;
       });
       if (!back) { remainStationary(s, u); return true; }
+      botShootOnTheMove(s, u);
       if (!beginMove(s, u, 'fallback')) return true;
       if (onBoard(u) && validateMove(s, u, 'fallback', back).ok) commitMove(s, u, 'fallback', back);
       else remainStationary(s, u);
       return true;
     }
+    withRuleCache(() => botMobileStratagem(s, u, MM));
     const { normal, advance: adv } = withRuleCache(() => planMove(s, u, MM, ctxFor(s, u)));
     // advancing: worth it when the extra distance (3.5" on average) reaches somewhere better than a Normal move does
-    if (adv && adv.score > normal.score + 3) {
+    if (adv && adv.score > normal.score + W(u.owner).advanceMargin) {
+      botShootOnTheMove(s, u);
       if (!beginMove(s, u, 'advance')) return true;
+      botAdvanceStratagem(s, u);
+      botAdvanceActs(s, u);
       rollAdvance(s, u);
       const max = MM + (u.advanceRoll ?? 0) - 0.05;
       const aims = [adv.aim!, ...(normal.aim ? [normal.aim] : [])];
       const plan = onBoard(u) ? withRuleCache(() => bestMove(s, u, 'advance', max, ctxFor(s, u), { aims, noStay: true })) : null;
-      if (plan?.paths && validateMove(s, u, 'advance', plan.paths).ok) commitMove(s, u, 'advance', plan.paths);
+      if (plan?.paths && validateMove(s, u, 'advance', plan.paths).ok) { commitMove(s, u, 'advance', plan.paths); botRapidDisembark(s, u); }
       else remainStationary(s, u);
       return true;
     }
-    if (!normal.paths) { remainStationary(s, u); return true; }
+    if (!normal.paths) { remainStationary(s, u); botRapidDisembark(s, u); return true; }
     if (!beginMove(s, u, 'normal')) return true;
     if (onBoard(u) && validateMove(s, u, 'normal', normal.paths).ok) {
       commitMove(s, u, 'normal', normal.paths);
       botUseActs(s, u.owner, ['endOfNormalMove'], u.id);
+      botRapidDisembark(s, u);
     } else remainStationary(s, u);
     return true;
   }
+  const endKey = `${s.turn}|${s.phase}|end`;
+  if (!(s.botTried ?? []).includes(endKey)) { s.botTried = [...(s.botTried ?? []), endKey]; botEndOfMovement(s, s.active); }
   return false;
 }
 
@@ -291,6 +362,7 @@ export function botShootOne(s: GameState): boolean {
     if (!busy) {
       markTried(s, u);
       unitSelected(s, u, 'shoot');
+      botShootActs(s, u);
       botUseActs(s, u.owner, ['selectedToShoot', 'shooting'], u.id);
       // a mission action is worth roughly 8 points of damage per VP it brings
       const ACTION_VP: Record<string, number> = { cleanse: 3, plunder: 5, 'booby-trap': 3, decoy: 4, 'sensor-sweep': 4, triangulate: 5, surveil: 4, 'extract-intelligence': 7, 'secure-asset': 4, 'maintain-control': 3, 'vanguard-operation': 4, sabotage: 4 };
@@ -320,6 +392,7 @@ export function botShootOne(s: GameState): boolean {
       break;
     }
     u.selectedToShoot = true;
+    if (!s.window && !s.attack) withRuleCache(() => botAfterShootMove(s, u));
     return true;
   }
   return false;
@@ -375,8 +448,15 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
   if (!f) return false;
   if (f.step === 'pileIn' || f.step === 'consolidate') {
     if (only !== undefined && f.stepPlayer !== only) return false;
+    const startKey = `${s.turn}|fightStart|${f.stepPlayer}`;
+    if (f.step === 'pileIn' && isBot(s, f.stepPlayer) && !(s.botTried ?? []).includes(startKey)) {
+      s.botTried = [...(s.botTried ?? []), startKey];
+      botFightStartStratagems(s, f.stepPlayer);
+    }
     for (const u of boardUnits(s, f.stepPlayer)) {
       if (f.step === 'pileIn' && !pileInEligible(s, u)) continue;
+      if (isBot(s, u.owner) && (f.step === 'pileIn' || consolidateEligible(s, u))) botPileStratagem(s, u, f.step === 'pileIn' ? 'pileIn' : 'consolidate');
+      if (f.step === 'consolidate' && consolidateEligible(s, u) && (s.bots ?? []).includes(u.owner)) botConsolidateStratagem(s, u);
       if (f.step === 'consolidate' && !(consolidateEligible(s, u) && consolidateMode(s, u).mode)) continue;
       autoPileMove(s, u, f.step === 'pileIn' ? 'pileIn' : 'consolidate');
     }
@@ -388,8 +468,9 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
   if (only !== undefined && c.player !== only) return false;
   // fight with the unit that does the most damage first
   const pick = (x: UnitState) => Math.max(0, ...engagedEnemies(s, x).map((e) => meleeKills(x, e) * perModel(e)));
-  const u = [...c.units].sort((a, b) => pick(b) - pick(a))[0];
+  const u = (isBot(s, c.player) ? botFightsFirstStratagem(s, c.player, c.units) : null) ?? [...c.units].sort((a, b) => pick(b) - pick(a))[0];
   unitSelected(s, u, 'fight');
+  if (isBot(s, u.owner)) botFightChoice(s, u);
   botUseActs(s, u.owner, ['selectedToFight', 'fightStartButton'], u.id);
   const eng = engagedEnemies(s, u);
   if (eng.length) {
@@ -418,19 +499,33 @@ export function botWindow(s: GameState) {
   const w = s.window;
   if (!w) return;
   if (w.kind === 'abilityMove') {
-    // surge moves (towards the closest enemy) are made; optional reaction moves are declined
-    for (const o of w.offers) {
+    // reaction moves ("an enemy ended a move near this unit") are taken when there is somewhere better to be
+    for (const o of [...w.offers]) {
+      const u = unitById(s, o.unitId);
+      if (!o.key || !onBoard(u)) continue;
+      const mv = Number(/(\d+)"/.exec(o.label)?.[1] ?? moveOf(u));
+      if (withRuleCache(() => moveGain(s, u, mv)) > unitValue(u) * 0.05) acceptOffer(s, u.id, o.key);
+    }
+    // surge moves go towards the closest enemy; other extra moves to the best spot the planner finds
+    for (const o of [...w.offers]) {
       const u = unitById(s, o.unitId);
       if (o.key || !u.extraMove || !onBoard(u)) continue;
+      if (u.extraMove.kind !== 'surge') { withRuleCache(() => botExtraMove(s, u)); continue; }
       const foes = boardUnits(s, other(u.owner)).sort((a, b) => unitDistance(u, a) - unitDistance(u, b));
       if (u.extraMove.kind !== 'surge' || !foes.length) continue;
-      const near = alive(foes[0]).reduce((a, m) => (dist(m, centre(u)) < dist(a, centre(u)) ? m : a));
+      let near: Pt = alive(foes[0]).reduce((a, m) => (dist(m, centre(u)) < dist(a, centre(u)) ? m : a));
+      // Purge and Sanctify: the closest objective instead, when it isn't ours yet
+      if (unitFlags(s, u).surgeObjective) {
+        const o = [...s.objectives].sort((a, b) => dist(a, centre(u)) - dist(b, centre(u)))[0];
+        if (o && o.controller !== u.owner) near = { x: o.x, y: o.y };
+      }
       const [paths] = movesTowards(s, u, 'surge', u.extraMove.max - 0.05, near, { count: 1 });
       if (paths) commitMove(s, u, 'surge', paths);
     }
     closeOffers(s);
     return;
   }
+  if (w.kind === 'stratReaction') { answerReaction(s, null); return; } // bots decide their reactions as they happen
   if (w.kind === 'rapidIngress') { botRapidIngress(s, w.player); closeWindow(s); return; }
   if (w.kind === 'smokescreen') { botSmokescreen(s, w.player); closeWindow(s); return; }
   if (w.kind === 'heroicIntervention') { botHeroic(s, w.player); closeWindow(s); return; }
@@ -455,6 +550,16 @@ export function botWindow(s: GameState) {
   closeWindow(s);
 }
 
+/** Pre-battle Scouts moves: each unit takes the move the planner likes best (forward onto objectives, into cover), or stays. */
+function botScouts(s: GameState, p: PlayerId) {
+  for (const u of scoutUnits(s, p)) {
+    const plan = withRuleCache(() => bestMove(s, u, 'scout', scoutsOf(s, u) - 0.05, ctxFor(s, u)));
+    if (plan.paths && validateMove(s, u, 'scout', plan.paths).ok) commitMove(s, u, 'scout', plan.paths);
+    u.scoutDone = true;
+  }
+  endScouts(s);
+}
+
 // ---------- drivers ----------
 
 /** Play the active player's whole phase (or deployment step). */
@@ -462,7 +567,7 @@ export function botAct(s: GameState) {
   if (s.window) { botWindow(s); return; }
   switch (s.phase) {
     case 'deploy': botDeploy(s); return;
-    case 'scouts': for (const u of scoutUnits(s, s.deployTurn)) u.scoutDone = true; endScouts(s); return;
+    case 'scouts': botScouts(s, s.deployTurn); return;
     case 'command': botCommand(s); return;
     case 'movement': botMovement(s); return;
     case 'shooting': botShooting(s); return;
@@ -476,7 +581,7 @@ export function botAct(s: GameState) {
 export function botStep(s: GameState, bot: PlayerId): boolean {
   if (s.window) { if (s.window.player === bot) { botWindow(s); return true; } return false; }
   if (s.phase === 'deploy') { if (s.deployTurn !== bot) return false; botDeploy(s); return true; }
-  if (s.phase === 'scouts') { if (s.deployTurn !== bot) return false; for (const u of scoutUnits(s, bot)) u.scoutDone = true; endScouts(s); return true; }
+  if (s.phase === 'scouts') { if (s.deployTurn !== bot) return false; botScouts(s, bot); return true; }
   if (s.phase === 'fight') return botFightStep(s, bot);
   if (s.phase === 'gameover' || s.active !== bot) return false;
   const one = s.phase === 'movement' ? botMoveOne : s.phase === 'shooting' ? botShootOne : s.phase === 'charge' ? botChargeOne : null;

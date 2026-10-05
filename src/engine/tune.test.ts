@@ -2,7 +2,9 @@
 // and writes each game's VP margin (A minus B). Run by scripts/tune.mjs; only runs with TUNE_JOB set.
 import fs from 'node:fs';
 import { describe, it } from 'vitest';
-import { botAct } from './bot';
+import * as live from './bot';
+import * as base from './baseline/bot';
+const { botAct } = live;
 import { setBotWeights, type BotW } from './botWeights';
 import type { DispositionId } from './config';
 import { createGame } from './game';
@@ -20,13 +22,13 @@ export const TUNE_ARMIES: Record<string, () => ArmyList> = {
 };
 
 export interface TuneGame { a: string; b: string; seed: number; sideA: PlayerId }
-export interface TuneJob { games: TuneGame[]; wA: Partial<BotW>; wB: Partial<BotW>; out: string }
+export interface TuneJob { games: TuneGame[]; wA: Partial<BotW>; wB: Partial<BotW>; out: string; baselineB?: boolean }
 
 const FACTIONS: Record<string, FactionData> = {};
 const fac = (id: string) => (FACTIONS[id] ??= load(id));
 
 /** One game: the weights wA play `a` on side sideA, wB play `b` on the other side. Returns A's VP minus B's. */
-export function playTune(g: TuneGame, wA: Partial<BotW>, wB: Partial<BotW>): number {
+export function playTune(g: TuneGame, wA: Partial<BotW>, wB: Partial<BotW>, baselineB = false): number {
   const sideB = (1 - g.sideA) as PlayerId;
   const lists = [] as ArmyList[];
   lists[g.sideA] = TUNE_ARMIES[g.a](); lists[sideB] = TUNE_ARMIES[g.b]();
@@ -40,7 +42,15 @@ export function playTune(g: TuneGame, wA: Partial<BotW>, wB: Partial<BotW>): num
   setBotWeights(sideB, wB);
   try {
     let steps = 0;
-    while (s.phase !== 'gameover' && steps < 12000) { botAct(s); steps++; }
+    if (!baselineB) while (s.phase !== 'gameover' && steps < 12000) { botAct(s); steps++; }
+    // A/B against the frozen baseline bot (src/engine/baseline): side B's decisions come from the old code
+    else while (s.phase !== 'gameover' && steps < 12000) {
+      steps++;
+      const who = ([0, 1] as PlayerId[]).find((p) => live.botShouldAct(s, p));
+      if (who === undefined) { botAct(s); continue; }
+      const mod = who === g.sideA ? live : base;
+      if (!mod.botStep(s, who)) botAct(s);
+    }
   } finally { setBotWeights(0); setBotWeights(1); }
   const vp = (p: PlayerId) => s.players[p].vp + s.players[p].secVp;
   return vp(g.sideA) - vp(sideB);
@@ -49,7 +59,7 @@ export function playTune(g: TuneGame, wA: Partial<BotW>, wB: Partial<BotW>): num
 describe.skipIf(!process.env.TUNE_JOB)('tune worker', () => {
   it('plays the job', () => {
     const job = JSON.parse(fs.readFileSync(process.env.TUNE_JOB!, 'utf8')) as TuneJob;
-    const margins = job.games.map((g) => { try { return playTune(g, job.wA, job.wB); } catch (e) { return { error: String(e) }; } });
+    const margins = job.games.map((g) => { try { return playTune(g, job.wA, job.wB, job.baselineB); } catch (e) { return { error: String(e) }; } });
     fs.writeFileSync(job.out, JSON.stringify(margins));
   }, 7_200_000);
 });

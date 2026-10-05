@@ -69,10 +69,10 @@ function runWorker(job) {
 }
 
 /** Mean VP margin of `wA` over `wB`, with wins / draws / losses. */
-async function evaluate(wA, wB, iter) {
+async function evaluate(wA, wB, iter, baselineB = false) {
   const games = schedule(iter);
   const shards = Array.from({ length: WORKERS }, (_, k) => games.filter((_, i) => i % WORKERS === k)).filter((g) => g.length);
-  const res = (await Promise.all(shards.map((g) => runWorker({ games: g, wA, wB })))).flat();
+  const res = (await Promise.all(shards.map((g) => runWorker({ games: g, wA, wB, baselineB })))).flat();
   const ms = res.filter((x) => typeof x === 'number');
   const errors = res.length - ms.length;
   const mean = ms.reduce((a, b) => a + b, 0) / Math.max(1, ms.length);
@@ -80,6 +80,13 @@ async function evaluate(wA, wB, iter) {
   return { mean, se: sd / Math.sqrt(Math.max(1, ms.length)), win: ms.filter((x) => x > 0).length, draw: ms.filter((x) => x === 0).length, loss: ms.filter((x) => x < 0).length, errors };
 }
 
+// --ab: the live bot code against the frozen baseline (scripts/bot-baseline/snapshot.mjs), same weights, then stop
+if (process.argv.includes('--ab')) {
+  const t0 = Date.now();
+  const r = await evaluate(best, best, Number(arg('round', 0)), true);
+  log(`AB live vs baseline: margin ${r.mean.toFixed(1)}±${r.se.toFixed(1)} W${r.win} D${r.draw} L${r.loss}${r.errors ? ` E${r.errors}` : ''} · ${GAMES} games · ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+  process.exit(0);
+}
 log(`# tune ${new Date().toISOString()} iters ${ITERS} games ${GAMES} workers ${WORKERS}`);
 for (let it = 0; it < ITERS; it++) {
   const t0 = Date.now();

@@ -4,7 +4,7 @@
 // Explosives, Crushing Impact, Epic Challenge, and its detachments' defensive stratagems when one of its units is
 // attacked. It keeps a CP back for a re-roll until the last round unless the play is worth more.
 import { freeDiceNow, useFreeDie } from '../activations';
-import { applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, onAttackStart, rerollOne, setDiceHook, shootingModes, targetToughness, woundNeed } from '../attack';
+import { applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, onAttackStart, onMortalWounds, rerollOne, setDiceHook, shootingModes, targetToughness, woundNeed } from '../attack';
 import { chargeValue, isBrawler, maxRange, meleeKills, onObjective, oc, p2d6, perModel, rangedKills, unitValue } from './botEval';
 import { bestArrival } from './botMove';
 import { RULES } from '../config';
@@ -13,9 +13,10 @@ import {
   arrivalRound, autoApproach, bestLd, chargeTargetOptions, commitCharge, counteroffensiveCandidates, declareCharge, heroicCandidates, hasDeepStrike,
   ingressUnit, rapidIngressCandidates, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, crushingImpact,
 } from '../game';
-import { addTimed, applyLateEffects, unitFlags, withRuleCache } from '../effects';
+import { addTimed, applyLateEffects, targetHasCover, unitFlags, withRuleCache } from '../effects';
+import { botFightOnDeath } from '../botPlus';
 import { alive, boardUnits, canUseStratagem, hasKw, isEngaged, log, other, spendStratagem, stratCost, unitById, unitDistance } from '../state';
-import { applyDetachmentStratagem, stratagemBlock, stratRule, type StratRule } from '../stratagems';
+import { applyDetachmentStratagem, stratagemBlock, stratChoices, stratRule, withChoice, type StratRule } from '../stratagems';
 import { unitVisibleTo } from '../visibility';
 import type { AttackSession, GameState, PlayerId, StratagemData, TimedEffect, UnitState } from '../types';
 
@@ -24,6 +25,18 @@ export const isBot = (s: GameState, p: PlayerId) => (s.bots ?? (s.botPlayer != n
 
 /** Can the bot afford this now and still keep a CP for a re-roll (until the last round)? */
 const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= 5 ? 0 : 1) => s.players[p].cp - cost >= keep;
+
+/**
+ * What one CP is worth right now, in points of damage done or saved. A good player spends CP every turn: points left
+ * over at the end are wasted, so the more CP there are for the rounds left, the cheaper each one is (and the last
+ * round spends what's left).
+ */
+export function cpWorth(s: GameState, p: PlayerId): number {
+  const left = Math.max(1, 6 - s.round); // rounds still to play, this one included
+  const perRound = s.players[p].cp / left;
+  const w = perRound < 1 ? 14 : perRound < 2 ? 10 : 7;
+  return s.round >= 5 ? w * 0.6 : w;
+}
 
 // ---------- Command Re-roll on attack dice ----------
 
@@ -63,7 +76,7 @@ export const baselineDiceHook = ((s, stage) => {
     if (i < 0 || (stage === 'hit' && p.noHitReroll)) return;
     const need = stage === 'hit' ? (p.hitOn6Only ? 6 : Math.max(2, Math.min(6, (p.skill ?? 7) - p.hitMod))) : Math.max(2, Math.min(6, p.woundNeed - p.woundMod));
     const gain = dieWorth(s, at, stage) * ((7 - need) / 6);
-    if (gain < 10) return;
+    if (gain < cpWorth(s, A.owner) - 2) return;
     spendStratagem(s, A.owner, 'command-reroll', A);
     rerollOne(s, stage, i);
     log(s, `↻ Command Re-roll: ทอยลูก ${stage === 'hit' ? 'Hit' : 'Wound'} ที่พลาดใหม่ (${p.weapon})`, 'roll', A.owner);
@@ -77,7 +90,13 @@ export const baselineDiceHook = ((s, stage) => {
   const i = p.saves.map((d, k) => ({ d, k })).filter(({ d }) => !d.rerolled && (d.v === 1 || d.v < sv)).sort((a, b) => a.d.v - b.d.v)[0]?.k;
   if (i === undefined || sv > 6) return;
   const gain = dieWorth(s, at, 'save') * ((7 - Math.max(2, sv)) / 6);
-  if (gain < 10) return;
+  if (gain < cpWorth(s, T.owner) - 2) return;
+  // a unit about to answer with a reaction (Hail of Vengeance, Power of the Machine Spirit …) keeps its one stratagem
+  // of the phase for that
+  if (at.kind === 'shoot' && s.players[T.owner].detachments.some((d) => d.stratagems.some((st) => {
+    const r = stratRule(st, s.players[T.owner].factionId, d.name);
+    return r.react === 'enemyShot' && !!r.botReact && s.players[T.owner].cp >= st.cp + 1;
+  }))) return;
   spendStratagem(s, T.owner, 'command-reroll', T);
   rerollOne(s, 'save', i);
   log(s, `↻ Command Re-roll: ทอย Save ที่ไม่ผ่านใหม่ (${T.name})`, 'roll', T.owner);
@@ -94,7 +113,7 @@ function attackValue(s: GameState, u: UnitState, t: UnitState, kind: 'shoot' | '
 }
 
 /** Put a stratagem's effects on a unit for a moment, measure something, and take them off again. */
-function tryRule<R>(s: GameState, u: UnitState, label: string, rule: StratRule, fn: () => R): R {
+export function tryRule<R>(s: GameState, u: UnitState, label: string, rule: StratRule, fn: () => R): R {
   const nb = u.buffs.length, nt = u.timed?.length ?? 0;
   for (const k of rule.buffs ?? []) u.buffs.push({ kind: k, until: 'phase', label });
   for (const e of rule.effects ?? []) addTimed(s, u, { e, label, until: 'phase', by: u.owner });
@@ -104,7 +123,9 @@ function tryRule<R>(s: GameState, u: UnitState, label: string, rule: StratRule, 
 /** The bot's usable stratagems for a unit of the kind it wants ('attack' / 'defend'), with their rules. */
 function usable(s: GameState, p: PlayerId, u: UnitState, use: 'attack' | 'defend') {
   return s.players[p].detachments.flatMap((d) => d.stratagems.map((st) => ({ st, rule: stratRule(st, s.players[p].factionId, d.name) })))
-    .filter(({ st, rule }) => rule.bot === use && !stratagemBlock(s, p, st, u) && spare(s, p, stratCost(s, st.id, u, st.cp)));
+    .filter(({ st, rule }) => rule.bot === use && !rule.react && !rule.enemy && !stratagemBlock(s, p, st, u) && spare(s, p, stratCost(s, st.id, u, st.cp)))
+    // "select either …": each option is a separate candidate (Red Thirst ones too: the bot only takes them when they pay)
+    .flatMap(({ st, rule }) => (rule.choice?.length ? stratChoices(s, rule, u).filter(({ o }) => !o.shock).map(({ i }) => ({ st, rule: withChoice(rule, i) as StratRule, choice: i as number | undefined })) : [{ st, rule, choice: undefined as number | undefined }]));
 }
 
 /** Before one of its units shoots or fights: the stratagem that adds the most expected damage, if it is worth the CP. */
@@ -113,13 +134,12 @@ export function botOffensiveStratagem(s: GameState, u: UnitState, kind: 'shoot' 
   if (!targets.length || u.battleShocked) return;
   const best0 = () => Math.max(0, ...targets.map((t) => attackValue(s, u, t, kind)));
   const base = best0();
-  let best: { st: StratagemData; gain: number } | null = null;
-  for (const { st, rule } of usable(s, p, u, 'attack')) {
+  let best: { st: StratagemData; gain: number; choice?: number } | null = null;
+  for (const { st, rule, choice } of usable(s, p, u, 'attack')) {
     const gain = tryRule(s, u, st.name, rule, best0) - base;
-    if (gain > (best?.gain ?? 0)) best = { st, gain };
+    if (gain > (best?.gain ?? 0)) best = { st, gain, choice };
   }
-  // a CP is worth about 12 points of damage (more when CP are scarce)
-  if (best && best.gain >= 12 * best.st.cp + (s.players[p].cp <= 2 ? 6 : 0)) applyDetachmentStratagem(s, p, best.st, u.id);
+  if (best && best.gain >= cpWorth(s, p) * best.st.cp) applyDetachmentStratagem(s, p, best.st, u.id, { choice: best.choice });
 }
 
 /** Expected points lost to this attack, with the target's current effects (and those of `rule`, when given). */
@@ -134,7 +154,7 @@ function lossFrom(s: GameState, at: AttackSession, T: UnitState, rule?: StratRul
       if (b.includes('enemyHit-1') && !p.autoHit) p.hitMod -= 1;
       if (b.includes('enemyWound-1')) p.woundMod -= 1;
       if (b.includes('enemyAp-1') && p.ap < 0) p.ap += 1;
-      if (b.includes('cover') && kind === 'ranged' && p.skill !== null) p.skill = Math.min(6, (p.skill ?? 6) + 1);
+      if ((b.includes('cover') || (rule.effects ?? []).some((e) => e.stealth) && !targetHasCover(s, T, unitDistance(A, T))) && kind === 'ranged' && p.skill !== null) p.skill = Math.min(6, (p.skill ?? 6) + 1);
       if (b.includes('damage-1')) p.damage = String(Math.max(1, exprAverage(p.damage) - 1));
       for (const k of ['fnp4', 'fnp5', 'fnp6'] as const) if (b.includes(k)) fnp = Math.min(fnp, Number(k.slice(3)));
       const late = (rule.effects ?? []).map((e) => ({ e, label: 'try', until: 'phase', by: T.owner, turn: s.turn }) as TimedEffect);
@@ -155,12 +175,27 @@ export const baselineStartHook = ((s, at) => {
   if (!isBot(s, p) || T.battleShocked) return;
   const base = lossFrom(s, at, T);
   if (base < 15) return;
-  let best: { st: StratagemData; save: number } | null = null;
-  for (const { st, rule } of usable(s, p, T, 'defend')) {
+  let best: { st: StratagemData; save: number; choice?: number } | null = null;
+  for (const { st, rule, choice } of usable(s, p, T, 'defend')) {
     const save = base - tryRule(s, T, st.name, rule, () => lossFrom(s, at, T, rule));
-    if (save > (best?.save ?? 0)) best = { st, save };
+    if (save > (best?.save ?? 0)) best = { st, save, choice };
   }
-  if (best && best.save >= 10 * best.st.cp + (s.players[p].cp <= 2 ? 6 : 0)) applyDetachmentStratagem(s, p, best.st, T.id);
+  if (best && best.save >= (cpWorth(s, p) - 2) * best.st.cp) applyDetachmentStratagem(s, p, best.st, T.id, { choice: best.choice });
+  else if (at.kind === 'fight') botFightOnDeath(s, T, base / Math.max(1, alive(T).length * perModel(T)));
+});
+
+/** Mortal wounds coming in: "Feel No Pain 5+ against mortal wounds" (Layered Ceramite …) when they would hurt. */
+onMortalWounds((s, u, n) => {
+  const p = u.owner;
+  if (!isBot(s, p) || u.battleShocked) return;
+  const loss = Math.min(alive(u).length, n / Math.max(1, alive(u)[0]?.profile.W ?? 1)) * perModel(u);
+  if (loss < 8 && n < 3) return;
+  for (const d of s.players[p].detachments) for (const st of d.stratagems) {
+    const rule = stratRule(st, s.players[p].factionId, d.name);
+    if (!(rule.effects ?? []).some((e) => e.defend?.fnpVs === 'mortal') || stratagemBlock(s, p, st, u) || !spare(s, p, stratCost(s, st.id, u, st.cp))) continue;
+    applyDetachmentStratagem(s, p, st, u.id);
+    return;
+  }
 });
 
 // ---------- battle-shock ----------
@@ -181,16 +216,42 @@ export function botRapidIngress(s: GameState, p: PlayerId): boolean {
   const cands = [...rapidIngressCandidates(s, p)].sort((a, b) => unitValue(b) - unitValue(a));
   for (const u of cands) {
     const free = unitFlags(s, u).oppMoveIngress && s.round >= arrivalRound(s, u);
-    // paid: melee units (they can then move and charge in our turn), or anything late in the game
-    if (!free && (canUseStratagem(s, p, 'rapid-ingress', u) || !spare(s, p, 1) || !(isBrawler(s, u) || s.round >= 4))) continue;
+    if (!free && (canUseStratagem(s, p, 'rapid-ingress', u) || !spare(s, p, 1))) continue;
     const how = hasDeepStrike(s, u) ? 'deepStrike' : 'ingress';
     const pos = withRuleCache(() => bestArrival(s, u, how));
     if (!pos || !validatePlacement(s, u, pos, how).ok) continue;
+    if (!free && ingressWorth(s, u, pos) < cpWorth(s, p)) continue;
     if (!free) spendStratagem(s, p, 'rapid-ingress', u);
     ingressUnit(s, u, pos);
     return true;
   }
   return false;
+}
+
+/**
+ * What arriving now (at the end of the opponent's move) rather than in our own Movement phase is worth, the way a
+ * tournament player sees Rapid Ingress: the unit is on the table before our turn starts, so it can move again and
+ * charge, it can reach an objective to take or contest in our turn, it gets a full move towards targets, and the
+ * opponent has already moved so can't react to where it lands (a little risk: their shooting is still to come next
+ * turn, not this one). Late in the game a unit still in reserves is points doing nothing.
+ */
+function ingressWorth(s: GameState, u: UnitState, pos: Map<string, { x: number; y: number }>): number {
+  const at = [...pos.values()];
+  const c = { x: at.reduce((a, q) => a + q.x, 0) / at.length, y: at.reduce((a, q) => a + q.y, 0) / at.length };
+  const near = (o: { x: number; y: number }, r: number) => Math.hypot(o.x - c.x, o.y - c.y) <= r;
+  let v = 0;
+  // melee: a charge in our turn from where it lands (move + 2D6)
+  if (isBrawler(s, u)) v += 0.5 * unitValue(u);
+  // objectives it can stand on in our turn (a normal move away) that we don't hold yet
+  const reach = (alive(u)[0]?.profile.M ?? 6) + 3;
+  const objs = s.objectives.filter((o) => near(o, reach) && o.controller !== u.owner);
+  v += objs.length * 15 * Math.min(2, oc(u) / 4);
+  // shooting: targets within its best range after a move
+  const foes = boardUnits(s, other(u.owner)).filter((e) => alive(e).some((m) => near(m, maxRange(u) + reach)));
+  if (foes.length) v += 0.25 * Math.max(...foes.map((e) => Math.min(alive(e).length, rangedKills(u, e)) * perModel(e)));
+  // from round 3 on a unit in reserves is wasted points
+  if (s.round >= 3) v += 0.3 * unitValue(u);
+  return v;
 }
 
 /** Shots the enemy can put into this unit this phase (points), from units that are in range and can see it. */
@@ -205,7 +266,7 @@ function incoming(s: GameState, u: UnitState): number {
 export function botSmokescreen(s: GameState, p: PlayerId): boolean {
   if (!spare(s, p, 1)) return false;
   const best = smokescreenCandidates(s, p).map((u) => ({ u, v: incoming(s, u) })).sort((a, b) => b.v - a.v)[0];
-  if (!best || best.v < 25) return false;
+  if (!best || best.v < 2 * cpWorth(s, p)) return false;
   spendStratagem(s, p, 'smokescreen', best.u);
   best.u.buffs.push({ kind: 'smoke', until: 'phase', label: 'Smokescreen' });
   return true;
@@ -223,7 +284,7 @@ export function botHeroic(s: GameState, p: PlayerId): boolean {
       if (!best || v > best.v) best = { u, v };
     }
   }
-  if (!best || best.v < 20) return false;
+  if (!best || best.v < 1.6 * cpWorth(s, p)) return false;
   const u = best.u;
   spendStratagem(s, p, 'heroic-intervention', u);
   declareCharge(s, u);
@@ -241,7 +302,7 @@ export function botCounteroffensive(s: GameState, p: PlayerId): boolean {
   if (!spare(s, p, 2)) return false;
   const score = (u: UnitState) => Math.max(0, ...boardUnits(s, other(p)).filter((e) => unitDistance(u, e) <= RULES.engagementRange).map((e) => Math.min(alive(e).length, meleeKills(u, e)) * perModel(e)));
   const best = counteroffensiveCandidates(s, p).map((u) => ({ u, v: score(u) })).sort((a, b) => b.v - a.v)[0];
-  if (!best || best.v < 35) return false;
+  if (!best || best.v < 2.8 * cpWorth(s, p)) return false;
   useCounteroffensive(s, best.u);
   return true;
 }
@@ -260,7 +321,7 @@ export function botExplosives(s: GameState, u: UnitState): boolean {
   };
   const t = boardUnits(s, other(p)).filter((e) => !isEngaged(s, e) && unitDistance(u, e) <= 8 && alive(u).some((m) => unitVisibleTo(s, m, e)))
     .sort((a, b) => worth(b) - worth(a))[0];
-  if (!t || worth(t) < 20) return false;
+  if (!t || worth(t) < 1.6 * cpWorth(s, p)) return false;
   spendStratagem(s, p, 'explosives', u);
   const r = rollN(s, 6);
   const n = r.filter((x) => x >= 4).length;
@@ -275,7 +336,7 @@ export function botCrushingImpact(s: GameState, u: UnitState, targetId: string) 
   const t = unitById(s, targetId);
   const T = alive(u)[0]?.profile.T ?? 0;
   const worth = Math.min(6, T / 3) * (perModel(t) / Math.max(1, alive(t)[0]?.profile.W ?? 1)) - (T / 6) * (perModel(u) / Math.max(1, alive(u)[0]?.profile.W ?? 1));
-  if (worth < 12) return;
+  if (worth < cpWorth(s, u.owner)) return;
   crushingImpact(s, u, targetId);
 }
 

@@ -186,7 +186,8 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   const ocNeed = oc(u) > 0 ? objectiveNeeds(s, u.owner).filter((n) => n.need > 0).map((n) => objPoint(s, n.o)) : [];
   const ctx: Ctx = { foes, brawler, target, range: maxRange(u), heavy, ocNeed };
   const battleline = alive(u).some((m) => m.keywords.includes('BATTLELINE'));
-  ctx.holder = oc(u) > 0 && !u.transport && (battleline || unitValue(u) <= 130) && !(brawler && unitValue(u) > 130);
+  // melee units go and fight; holding is a job for BATTLELINE and cheap shooting squads
+  ctx.holder = oc(u) > 0 && !u.transport && (battleline || unitValue(u) <= 130) && !(brawler && (unitValue(u) > 130 || !battleline));
   if (oc(u) > 0 && !u.battleShocked && securesObjectives(s, u)) {
     // the closest objective not yet ours for good, within two moves; the home one only if nobody holds it
     const M = moveOf(u);

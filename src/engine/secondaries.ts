@@ -286,3 +286,38 @@ export function secondaryDead(s: GameState, p: PlayerId, id: string): boolean {
 
 export const unitName = (s: GameState, id?: string) => (id ? unitById(s, id).name : '—');
 export { toPoly, deploymentById };
+
+/**
+ * A rough chance (0..1) that a tactical card scores at the end of this turn, from where the armies stand: units able
+ * to reach the place the card wants, enemy units of the kind it wants destroyed within reach. The bot discards the
+ * cards it won't score this turn (+1CP) so a fresh card is drawn instead of holding a dead one.
+ */
+export function secondaryChance(s: GameState, p: PlayerId, id: string): number {
+  if (secondaryDead(s, p, id)) return 0;
+  const e = other(p);
+  const mine = boardUnits(s, p).filter(counts);
+  const foes = boardUnits(s, e);
+  const M = (u: UnitState) => Math.max(0, ...alive(u).map((m) => m.profile.M ?? 0));
+  const gap = (a: UnitState, b: UnitState) => Math.min(...alive(a).flatMap((m) => alive(b).map((n) => dist(m, n) - m.r - n.r)));
+  // within a move plus the unit's longest gun (or a charge for units without guns)
+  const range = (u: UnitState) => Math.max(8, ...alive(u).flatMap((m) => m.weapons.flatMap((w) => w.profiles.map((pr) => (typeof pr.range === 'number' ? pr.range : Number(pr.range) || 0)))));
+  const reachUnit = (t: UnitState) => mine.some((u) => gap(u, t) <= M(u) + range(u));
+  const reachPt = (pt: { x: number; y: number }, extra = 3) => mine.some((u) => alive(u).some((m) => dist(m, pt) <= M(u) + extra));
+  const g = secondaryGoal(s, p, id);
+  switch (id) {
+    case 'no-prisoners': return foes.length ? 0.8 : 0;
+    case 'overwhelming-force': return g.units.some((x) => reachUnit(unitById(s, x))) ? 0.6 : 0.15;
+    case 'assassination': case 'bring-it-down': case 'a-grievous-blow':
+      return g.units.some((x) => reachUnit(unitById(s, x))) ? 0.45 : 0.05;
+    case 'behind-enemy-lines': { const z = zonePoly(s, e); return mine.some((u) => alive(u).some((m) => pointInPoly(m, z) || z.some((q) => dist(m, q) <= M(u) + 2))) ? 0.45 : 0.1; }
+    case 'outflank': { const terr = territoryPoly(s, p); return mine.some((u) => alive(u).some((m) => !pointInPoly(m, terr) && Math.min(m.x, m.y, W - m.x, H - m.y) <= 6 + M(u))) ? 0.6 : 0.15; }
+    case 'display-of-might': { const n = (q: PlayerId) => boardUnits(s, q).filter((u) => counts(u) && inNML(s, u)).length; return n(p) + 1 >= n(e) ? 0.6 : 0.2; }
+    case 'engage-on-all-fronts': return presenceQuarters(s, p) >= 2 ? 0.6 : 0.25;
+    case 'centre-ground': return reachPt(CENTRE) && !foes.some((u) => alive(u).some((m) => dist(m, CENTRE) <= 6)) ? 0.5 : 0.15;
+    case 'secure-no-mans-land': return g.objectives.filter((oid) => { const o = s.objectives.find((x) => x.id === oid)!; return o.controller === p || reachPt(o); }).length >= 2 ? 0.6 : 0.15;
+    case 'forward-position': return g.objectives.some((oid) => { const o = s.objectives.find((x) => x.id === oid)!; return o.type === 'home' && (o.controller === p || reachPt(o)); }) ? 0.4 : 0.1;
+    case 'plunder': case 'cleanse': return s.objectives.some((o) => reachPt(o, 1)) ? 0.7 : 0.2;
+    case 'defend-stronghold': return s.objectives.some((o) => o.type === 'home' && o.owner === p && o.controller === p) ? 0.85 : 0.3;
+    default: return 0.5;
+  }
+}

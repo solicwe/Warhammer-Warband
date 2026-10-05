@@ -13,11 +13,12 @@ import {
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark, endRedeploy } from './game';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
 import { W } from './botWeights';
+import { unitVisibleTo } from './visibility';
 import { botAdvanceActs, botArrivalStratagem, botCharacterStratagem, botFightChoice, botFightStartStratagems, botFightsFirstStratagem, botLooseDisembark, botMobileStratagem, botPileStratagem, botRedeployActs, botShootActs, botShootOnTheMove, botAdvanceStratagem, botAfterShootMove, botConsolidateStratagem, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
 import { actionOptions, startAction } from './missions';
-import { secondaryDead } from './secondaries';
+import { secondaryChance, secondaryDead } from './secondaries';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, rangedKills, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
@@ -109,7 +110,8 @@ export function botDeploy(s: GameState) {
 export function botManageCards(s: GameState, p: PlayerId) {
   const P = s.players[p];
   if (P.secMode !== 'tactical' || s.botIgnoresCards?.includes(p)) return;
-  const dead = (id: string) => secondaryDead(s, p, id);
+  // dead, or very unlikely to score this turn: the slot is better used by a fresh card next turn (and +1CP now)
+  const dead = (id: string) => secondaryDead(s, p, id) || (s.round < 5 && secondaryChance(s, p, id) < 0.2);
   for (const id of [...P.secActive]) {
     if (!dead(id)) continue;
     if (!P.secSwapUsed && P.cp >= 2 && s.phase === 'command' && s.active === p) swapSecondary(s, p, id);
@@ -347,7 +349,11 @@ export function botShootOne(s: GameState): boolean {
   const mine = boardUnits(s, s.active);
   // a unit that fired some of its weapons carries on with the rest (split fire), e.g. after the player rolled saves
   const busy = mine.find((u) => tried(s, u) && !u.selectedToShoot && u.weaponsFired.length > 0 && shootingModes(s, u).length > 0);
-  for (const u of busy ? [busy] : mine) {
+  // units with the fewest targets shoot first; the flexible ones go last and finish off what is left
+  const foes = boardUnits(s, other(s.active));
+  const options = (u: UnitState) => foes.filter((e) => unitDistance(u, e) <= maxRange(u) + 0.5 && alive(u).some((m) => unitVisibleTo(s, m, e))).length;
+  const order = busy ? [busy] : mine.filter((u) => !tried(s, u)).map((u) => ({ u, n: options(u) })).sort((a, b) => (a.n || 99) - (b.n || 99)).map((x) => x.u);
+  for (const u of order) {
     if (!busy && tried(s, u)) continue;
     const modes = shootingModes(s, u);
     if (!modes.length) continue;
@@ -363,7 +369,7 @@ export function botShootOne(s: GameState): boolean {
       unitSelected(s, u, 'shoot');
       botShootActs(s, u);
       botUseActs(s, u.owner, ['selectedToShoot', 'shooting'], u.id);
-      // a mission action is worth roughly 8 points of damage per VP it brings
+      // a mission action is worth roughly 16 points of damage per VP it brings (a 1000-point game is decided by ~30 VP)
       const ACTION_VP: Record<string, number> = { cleanse: 3, plunder: 5, 'booby-trap': 3, decoy: 4, 'sensor-sweep': 4, triangulate: 5, surveil: 4, 'extract-intelligence': 7, 'secure-asset': 4, 'maintain-control': 3, 'vanguard-operation': 4, sabotage: 4 };
       const acts = actionOptions(s, u.owner).filter((o) => o.unitId === u.id);
       if (acts.length) {
@@ -373,7 +379,7 @@ export function botShootOne(s: GameState): boolean {
           .filter((o) => !(o.action === 'surveil' && already('surveil')))
           .sort((a, b) => Number(b.objId?.startsWith('home') ?? 0) - Number(a.objId?.startsWith('home') ?? 0))[0];
         const best = rank()[0]?.v ?? 0;
-        if (pick && (ACTION_VP[pick.action] ?? 3) * 8 >= best) {
+        if (pick && (ACTION_VP[pick.action] ?? 3) * 16 >= best) {
           startAction(s, pick);
           return true;
         }
@@ -411,7 +417,14 @@ export function botChargeOne(s: GameState): boolean {
     const enemies = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.charge.declareRange);
     if (!enemies.length) continue;
     const brawler = isBrawler(s, u);
-    const value = (e: UnitState) => meleeKills(u, e) * perModel(e) - meleeKills(e, u) * perModel(u) * 0.5 + (s.players[u.owner].oathTarget === e.id ? 8 : 0);
+    const value = (e: UnitState) => {
+      let v = meleeKills(u, e) * perModel(e) - meleeKills(e, u) * perModel(u) * 0.5 + (s.players[u.owner].oathTarget === e.id ? 8 : 0);
+      // a melee unit that would charge us next turn anyway: going in first means we strike first
+      if (isBrawler(s, e) && unitDistance(u, e) <= moveOf(e) + 12) v += meleeKills(e, u) * perModel(u) * 0.4;
+      // an objective they hold: our models on it contest it
+      if (s.objectives.some((o) => onObjective(s, e, o))) v += 10;
+      return v;
+    };
     const best = [...enemies].sort((a, b) => value(b) * p2d6(unitDistance(u, b)) - value(a) * p2d6(unitDistance(u, a)))[0];
     const p = p2d6(unitDistance(u, best));
     // shooters only charge weak, close targets; brawlers accept long shots
