@@ -203,29 +203,30 @@
        {
         "when": "selectedToShoot",
         "limit": "phase",
-        "label": "ทอย 1 ลูก: 1-2 +1A · 3-4 +2S · 5-6 +1AP",
+        "label": "ทอย 2 ลูก (ไม่ซ้ำ) + hazard 1 ครั้ง",
+        "botUse": "healthy",
         "do": [
          {
           "on": "self",
-          "tryDatButton": 1
+          "tryDatButton": 2
+         }
+        ]
+       },
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "label": "ทอย 2 ลูก (ไม่ซ้ำ) + hazard 1 ครั้ง",
+        "botUse": "healthy",
+        "do": [
+         {
+          "on": "self",
+          "tryDatButton": 2
          }
         ]
        },
        {
         "when": "selectedToShoot",
         "limit": "phase",
-        "label": "ทอย 2 ลูก (ไม่ซ้ำ) + hazard 1 ครั้ง",
-        "botUse": "never",
-        "do": [
-         {
-          "on": "self",
-          "tryDatButton": 2
-         }
-        ]
-       },
-       {
-        "when": "selectedToFight",
-        "limit": "phase",
         "label": "ทอย 1 ลูก: 1-2 +1A · 3-4 +2S · 5-6 +1AP",
         "do": [
          {
@@ -237,12 +238,11 @@
        {
         "when": "selectedToFight",
         "limit": "phase",
-        "label": "ทอย 2 ลูก (ไม่ซ้ำ) + hazard 1 ครั้ง",
-        "botUse": "never",
+        "label": "ทอย 1 ลูก: 1-2 +1A · 3-4 +2S · 5-6 +1AP",
         "do": [
          {
           "on": "self",
-          "tryDatButton": 2
+          "tryDatButton": 1
          }
         ]
        }

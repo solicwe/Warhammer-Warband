@@ -1735,7 +1735,8 @@
      "ignoreHitMods": true
     }
    ],
-   "status": "auto"
+   "status": "auto",
+   "bot": "attack"
   },
   "ANGELS DEFIANT": {
    "effects": [

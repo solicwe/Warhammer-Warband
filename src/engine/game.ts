@@ -10,7 +10,7 @@ import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
 } from './state';
-import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
+import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
 import { canCrossDense, isMV, pathBlocked, pathLength, wallClearance } from './pathing';
@@ -685,6 +685,10 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
   if (!was && !t.passed) fire(s, 'becameShocked', [u]);
 }
 
+/** The bot's decisions at the end of a phase of the other player (Echo of the Ravenspire …), set by botPlus.ts. */
+let phaseEndHook: ((s: GameState, phase: Phase) => void) | null = null;
+export const setPhaseEndHook = (h: (s: GameState, phase: Phase) => void) => { phaseEndHook = h; };
+
 export function endPhase(s: GameState) {
   updateControl(s);
   if (s.phase === 'movement') {
@@ -728,6 +732,7 @@ export function endPhase(s: GameState) {
   } else if (s.phase === 'fight') {
     if (phaseEndReactions(s, 'fightPhaseEnd', [other(s.active), s.active])) return;
     fireFor(s, 'fightEnd', 'both');
+    phaseEndHook?.(s, 'fight');
     fireFor(s, 'opponentFightEnd', other(s.active));
     s.fight = null;
     endTurn(s);

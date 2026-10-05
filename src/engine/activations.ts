@@ -134,7 +134,7 @@ export interface ActSpec {
   fail?: Action[];
   do?: Action[];
   label?: string; // short Thai summary for the button
-  botUse?: 'always' | 'damaged' | 'never' | 'valuable' | 'round2' | 'round3';
+  botUse?: 'always' | 'damaged' | 'never' | 'valuable' | 'round2' | 'round3' | 'healthy';
   units?: string[]; // detachment acts: which units have it
   armyWide?: boolean; // detachment acts: one button for the army, not one per unit
 }
@@ -243,6 +243,7 @@ function timingOk(s: GameState, def: ActDef): string | null {
     case 'anyPhase': return s.phase !== 'deploy' && s.phase !== 'gameover' && s.phase !== 'scouts' ? null : 'ยังใช้ไม่ได้';
     case 'opponentTurnEnd': return s.phase === 'command' && own && s.turn > 0 ? null : 'ใช้ได้ตอนจบเทิร์นศัตรู (ต้น Command phase ของเรา)';
     case 'battleStart': return s.round === 1 && s.phase === 'command' && own ? null : 'เลือกได้ใน Command phase แรก';
+    case 'opponentFightEnd': return s.phase === 'fight' && !own && s.fight?.step === 'consolidate' ? null : 'ใช้ได้ตอนจบ Fight phase ของศัตรู';
     default: return 'ทำงานอัตโนมัติ';
   }
 }
@@ -674,7 +675,7 @@ export function bestTarget(s: GameState, def: ActDef, cands: UnitState[], ctx: F
 
 export interface ManualAct { def: ActDef; targets: UnitState[]; why: string | null; label: string }
 
-const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge', 'opponentFightEnd',
+const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge',
   'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks', 'movementStart', 'fightEnd', 'attackStart',
   'attacked', 'friendlyTargeted'];
 
@@ -714,6 +715,7 @@ export function botUseActs(s: GameState, p: PlayerId, when?: Trigger[], unitId?:
     if (use === 'valuable' && !(engagedEnemies(s, m.def.holder).some((e) => e.pts >= 100) || s.round >= 4)) continue;
     if (use === 'round2' && s.round < 2) continue;
     if (use === 'round3' && s.round < 3) continue;
+    if (use === 'healthy' && alive(m.def.holder).reduce((a, x) => a + x.wounds, 0) * 2 <= m.def.holder.models.reduce((a, x) => a + x.profile.W, 0)) continue;
     if (m.def.spec.do?.some((a) => a.move || a.surge || a.reserves)) continue; // moves need a plan the bot does not make
     const pick = m.def.spec.target && m.def.spec.target.side !== 'self' && !m.def.spec.target.each ? bestTarget(s, m.def, m.targets) : undefined;
     useAct(s, m.def, pick);

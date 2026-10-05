@@ -595,7 +595,8 @@ function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto:
   const cost = o.st.cp;
   if (!auto && !o.rule.botReact) {
     // moves and redeploys: worth it when the planner finds somewhere better for the unit
-    const kind = o.rule.do?.some((a) => a.reserves) ? 'reserves' : o.rule.do?.some((a) => a.surge) ? 'surge' : o.rule.do?.some((a) => a.move) ? 'move' : null;
+    const kind = o.rule.do?.some((a) => a.reserves) ? 'reserves' : o.rule.do?.some((a) => a.surge) ? 'surge' : o.rule.do?.some((a) => a.move) ? 'move'
+      : o.rule.special?.some((x) => x.startsWith('embark')) ? 'embark' : null;
     if (!kind || o.rule.enemy) return null;
     const u = o.units.find((x) => reactWorth(s, x, o.st, kind));
     return u ? { u, choice: stratChoices(s, o.rule, u)[0]?.i } : null;

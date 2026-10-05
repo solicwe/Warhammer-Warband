@@ -2,11 +2,14 @@
 // command-phase stratagems (+OC, securing objectives, buffs that last the turn), moves offered by reactions and after
 // shooting, and pulling a threatened unit back into Strategic Reserves.
 import { manualActs, useActByKey } from './activations';
-import { ctxFor, bestMove, scoreSpot } from './botMove';
+import { bestArrival, ctxFor, bestMove, planMove, scoreSpot } from './botMove';
+import { cpWorth, tryRule } from './botStrats';
+import { dist } from './geometry';
+import { unitVisibleTo } from './visibility';
 import { isBrawler, maxRange, moveOf, onObjective, unitValue } from './botEval';
-import { unitDoctrines } from './effects';
-import { commitMove, levelOfControl, validateMove } from './game';
-import { alive, boardUnits, isEngaged, other, unitDistance } from './state';
+import { rollMods, targetHasCover, unitDoctrines } from './effects';
+import { commitMove, consolidateMode, levelOfControl, setPhaseEndHook, validateMove } from './game';
+import { alive, boardUnits, engagedEnemies, isEngaged, other, unitDistance } from './state';
 import { applyDetachmentStratagem, stratagemBlock, stratRule, stratChoices } from './stratagems';
 import type { GameState, PlayerId, StratagemData, UnitState } from './types';
 import { stratCost } from './state';
@@ -123,8 +126,9 @@ export function botExtraMove(s: GameState, u: UnitState): boolean {
 }
 
 /** Is a reaction that moves the unit (or takes it off the board) worth its CP? */
-export function reactWorth(s: GameState, u: UnitState, st: StratagemData, kind: 'move' | 'surge' | 'reserves'): boolean {
+export function reactWorth(s: GameState, u: UnitState, st: StratagemData, kind: 'move' | 'surge' | 'reserves' | 'embark'): boolean {
   if (!spare(s, u.owner, st.cp)) return false;
+  if (kind === 'embark') return redeployWorth(s, u);
   if (kind === 'surge') return isBrawler(s, u) && !isEngaged(s, u);
   if (kind === 'reserves') {
     // a unit about to be swarmed, not holding anything, can come back where it's needed
@@ -197,3 +201,192 @@ export function botConsolidateStratagem(s: GameState, u: UnitState) {
     return;
   }
 }
+
+// ---------- the rest of the rules the bot plays by itself ----------
+
+const ready = (s: GameState, p: PlayerId, st: StratagemData, u: UnitState, keep = 1) => !stratagemBlock(s, p, st, u) && s.players[p].cp >= stratCost(s, st.id, u, st.cp) + keep;
+const fxOf = (r: ReturnType<typeof stratRule>) => r.effects ?? [];
+const dosOf = (r: ReturnType<typeof stratRule>) => r.do ?? [];
+
+/** Command phase: "your unit has CHARACTER until your next Command phase" (Instant of Grace, Birth of a Saga) on the
+ *  most valuable unit about to fight, while CP is plentiful. */
+export function botCharacterStratagem(s: GameState, p: PlayerId) {
+  for (const { st, rule } of strats(s, p)) {
+    if (rule.react || !dosOf(rule).some((a) => a.characterModel)) continue;
+    const foes = boardUnits(s, other(p));
+    const u = boardUnits(s, p).filter((x) => !alive(x).every((m) => m.isCharacter) && ready(s, p, st, x, 2) && foes.some((e) => unitDistance(x, e) <= 18))
+      .sort((a, b) => unitValue(b) - unitValue(a))[0];
+    if (u && unitValue(u) >= 120) applyDetachmentStratagem(s, p, st, u.id);
+  }
+}
+
+/** Start of the Fight phase: battle-shock rolls for every enemy unit engaged with ours (Adamantine Terror). */
+export function botFightStartStratagems(s: GameState, p: PlayerId) {
+  for (const { st, rule } of strats(s, p)) {
+    if (rule.react || !rule.enemy?.all || !dosOf(rule).some((a) => a.shock !== undefined)) continue;
+    const u = boardUnits(s, p).filter((x) => ready(s, p, st, x)).map((x) => ({ x, v: engagedEnemies(s, x).reduce((a, e) => a + unitValue(e), 0) }))
+      .sort((a, b) => b.v - a.v)[0];
+    if (u && u.v >= 100) applyDetachmentStratagem(s, p, st, u.x.id);
+  }
+}
+
+/** Our pick in the Fight phase: a unit holding an objective that the enemy is about to hit fights first instead
+ *  (Transhuman Swiftness). Returns the unit that must fight next, if the stratagem was used. */
+export function botFightsFirstStratagem(s: GameState, p: PlayerId, cands: UnitState[]): UnitState | null {
+  for (const { st, rule } of strats(s, p)) {
+    if (rule.react || !fxOf(rule).some((e) => e.fightsFirst)) continue;
+    const u = cands.filter((x) => ready(s, p, st, x) && engagedEnemies(s, x).some((e) => !e.fought))
+      .sort((a, b) => unitValue(b) - unitValue(a))[0];
+    if (!u) continue;
+    applyDetachmentStratagem(s, p, st, u.id);
+    return u;
+  }
+  return null;
+}
+
+/** A pile-in or consolidation that needs more than 3" (Tactical Focus, Devout Push: D3+3"). */
+export function botPileStratagem(s: GameState, u: UnitState, step: 'pileIn' | 'consolidate') {
+  const key = step === 'pileIn' ? 'pileInRoll' : 'consolidateRoll';
+  const foes = boardUnits(s, other(u.owner));
+  let need = 0;
+  if (step === 'pileIn') need = Math.min(99, ...foes.map((e) => unitDistance(u, e)));
+  else {
+    const cm = consolidateMode(s, u);
+    if (cm.mode === 'engaging') need = Math.min(99, ...cm.enemies.map((e) => unitDistance(u, e)));
+    else if (cm.mode === 'objective' && cm.objective) need = Math.min(...alive(u).map((m) => dist(m, cm.objective!) - 3 - m.r));
+  }
+  if (need <= 2.9 || need > 6) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || !dosOf(rule).some((a) => a[key])) continue;
+    if (!ready(s, u.owner, st, u)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    return;
+  }
+}
+
+/** A vehicle or monster boxed in by ruin walls: MOBILE for the move when it reaches somewhere clearly better. */
+export function botMobileStratagem(s: GameState, u: UnitState, M: number) {
+  if (alive(u).every((m) => m.keywords.includes('INFANTRY'))) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || !fxOf(rule).some((e) => e.mobile)) continue;
+    if (!ready(s, u.owner, st, u)) continue;
+    const base = planMove(s, u, M, ctxFor(s, u));
+    const withIt = tryRule(s, u, st.name, rule, () => planMove(s, u, M, ctxFor(s, u)));
+    const best = (x: typeof base) => Math.max(x.normal.score, x.advance?.score ?? -Infinity);
+    if (best(withIt) - best(base) >= cpWorth(s, u.owner) * st.cp) applyDetachmentStratagem(s, u.owner, st, u.id);
+    return;
+  }
+}
+
+/** Advancing or falling back with guns that still want to shoot this turn (Mobile Lethality). */
+export function botShootOnTheMove(s: GameState, u: UnitState) {
+  if (!maxRange(u) || isBrawler(s, u)) return;
+  if (!boardUnits(s, other(u.owner)).some((e) => unitDistance(u, e) <= maxRange(u) + moveOf(u))) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || !fxOf(rule).some((e) => e.eligible?.includes('shootAfterFallBack') || e.abilities?.includes('assault'))) continue;
+    if (!ready(s, u.owner, st, u)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    return;
+  }
+}
+
+/** "Advance 6" instead of rolling" from a psychic power (Veil of Time): when nothing else gave the unit a fixed Advance. */
+export function botAdvanceActs(s: GameState, u: UnitState) {
+  if (rollMods(s, u).advanceFixed) return;
+  for (const m of manualActs(s, u.owner)) {
+    if (m.why || m.def.holder.id !== u.id || !m.def.spec.do?.some((a) => a.buff?.some((e) => e.advanceFixed))) continue;
+    useActByKey(s, u.id, m.def.key);
+    return;
+  }
+}
+
+/** Deep Strike that may land closer to the enemy (Relic Teleportarium): where it lands with it, if that is worth it. */
+export function botArrivalStratagem(s: GameState, u: UnitState, how: 'ingress' | 'deepStrike'): boolean {
+  if (how !== 'deepStrike') return false;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (!fxOf(rule).some((e) => e.deepStrikeRange) || stratagemBlock(s, u.owner, st, u) || s.players[u.owner].cp < st.cp + 1) continue;
+    const pos = tryRule(s, u, st.name, rule, () => bestArrival(s, u, how));
+    if (!pos) continue;
+    const foes = boardUnits(s, other(u.owner)).flatMap(alive);
+    const gap = Math.min(99, ...[...pos.values()].flatMap((p) => foes.map((e) => dist(p, e))));
+    // only when it lands nearer than the usual 9" (a short-ranged or melee unit gets its shots / its fight)
+    if (gap < 8.5 && (isBrawler(s, u) || maxRange(u) <= 18)) { applyDetachmentStratagem(s, u.owner, st, u.id); return true; }
+  }
+  return false;
+}
+
+/** Getting out where only "wholly within" fails (Aggressive Disembarkation): returns true if the stratagem was used. */
+export function botLooseDisembark(s: GameState, u: UnitState, fits: () => boolean): boolean {
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (!fxOf(rule).some((e) => e.looseDisembark) || stratagemBlock(s, u.owner, st, u) || s.players[u.owner].cp < st.cp + 1) continue;
+    if (!tryRule(s, u, st.name, rule, fits)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    return true;
+  }
+  return false;
+}
+
+/** Psychic and wargear choices when a unit is selected to shoot: more range when the enemy is just out of reach
+ *  (Thunderous Force), [IGNORES COVER] on a target in cover (Soul Sight), a hidden target found (Special-issue Optics). */
+export function botShootActs(s: GameState, u: UnitState) {
+  const foes = boardUnits(s, other(u.owner));
+  const R = maxRange(u);
+  const inRange = foes.filter((e) => unitDistance(u, e) <= R);
+  const seen = (e: UnitState) => alive(u).some((m) => unitVisibleTo(s, m, e));
+  for (const m of manualActs(s, u.owner)) {
+    if (m.why || m.def.spec.botUse !== 'never') continue;
+    const dos = m.def.spec.do ?? [];
+    if (m.def.holder.id === u.id && dos.some((a) => a.buff?.some((e) => e.rangeBonus))) {
+      const bonus = Math.max(...dos.flatMap((a) => a.buff ?? []).map((e) => e.rangeBonus ?? 0));
+      if (!inRange.length && foes.some((e) => unitDistance(u, e) <= R + bonus)) useActByKey(s, u.id, m.def.key);
+      continue;
+    }
+    if (dos.some((a) => a.incoming?.noCover)) {
+      const t = inRange.filter((e) => seen(e) && alive(u).some((mm) => targetHasCover(s, e, unitDistance(u, e)))).sort((a, b) => unitValue(b) - unitValue(a))[0];
+      if (t && m.targets.some((x) => x.id === t.id)) useActByKey(s, m.def.holder.id, m.def.key, t.id);
+      continue;
+    }
+    if (m.def.holder.id === u.id && dos.some((a) => a.buff?.some((e) => e.detection))) {
+      // nothing visible to shoot, but a hidden unit in reach: find it instead of the other option
+      const t = m.targets.find((e) => unitDistance(u, e) <= R && !seen(e));
+      if (!inRange.some(seen) && t) useActByKey(s, u.id, m.def.key, t.id);
+    }
+  }
+}
+
+/** "Select one of the following" when selected to fight (Angelic Executioner): [LETHAL HITS] against tough targets,
+ *  [SUSTAINED HITS 1] against ones it wounds easily. */
+export function botFightChoice(s: GameState, u: UnitState) {
+  const opts = manualActs(s, u.owner).filter((m) => !m.why && m.def.holder.id === u.id && m.def.spec.when === 'selectedToFight'
+    && m.def.spec.do?.some((a) => a.buff?.some((e) => e.abilities?.some((x) => /lethal hits|sustained hits/.test(x)))));
+  if (opts.length < 2) return;
+  const e = engagedEnemies(s, u)[0];
+  if (!e) return;
+  const T = Math.max(...alive(e).map((m) => m.profile.T));
+  const S = Math.max(...alive(u).flatMap((m) => m.weapons.flatMap((w) => w.profiles.filter((p) => p.range === 'Melee').map((p) => Number(p.S) || 0))));
+  const want = S >= 2 * T ? /sustained/ : S > T ? /sustained/ : /lethal/;
+  const pick = opts.find((m) => m.def.spec.do!.some((a) => a.buff?.some((x) => x.abilities?.some((y) => want.test(y))))) ?? opts[0];
+  useActByKey(s, u.id, pick.def.key);
+}
+
+/** Is it worth pulling this unit back into Strategic Reserves (or into a transport) right now? */
+export function redeployWorth(s: GameState, u: UnitState): boolean {
+  if (s.objectives.some((o) => onObjective(s, u, o)) || s.round >= 4) return false;
+  const threats = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= 9).length;
+  return threats >= 2 || alive(u).length * 2 <= u.startingStrength;
+}
+
+/** Abilities that take a unit off the board to come back elsewhere (Echo of the Ravenspire, Parabolic Jetleap,
+ *  Spectrus Doctrines), at their moment. */
+export function botRedeployActs(s: GameState, p: PlayerId) {
+  for (const m of manualActs(s, p)) {
+    if (m.why || !m.def.spec.do?.some((a) => a.reserves)) continue;
+    if (redeployWorth(s, m.def.holder)) useActByKey(s, m.def.holder.id, m.def.key);
+  }
+}
+
+// the end of the enemy's Fight phase: units that may now leave for Strategic Reserves
+setPhaseEndHook((s, phase) => {
+  const p = other(s.active);
+  if (phase === 'fight' && (s.bots ?? []).includes(p)) botRedeployActs(s, p);
+});

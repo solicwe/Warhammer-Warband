@@ -3,7 +3,7 @@
 // Explosives, Crushing Impact, Epic Challenge, and its detachments' defensive stratagems when one of its units is
 // attacked. It keeps a CP back for a re-roll until the last round unless the play is worth more.
 import { freeDiceNow, useFreeDie } from './activations';
-import { applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, onAttackStart, rerollOne, setDiceHook, shootingModes, targetToughness, woundNeed } from './attack';
+import { applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, onAttackStart, onMortalWounds, rerollOne, setDiceHook, shootingModes, targetToughness, woundNeed } from './attack';
 import { chargeValue, isBrawler, maxRange, meleeKills, onObjective, oc, p2d6, perModel, rangedKills, unitValue } from './botEval';
 import { bestArrival } from './botMove';
 import { RULES } from './config';
@@ -90,6 +90,12 @@ setDiceHook((s, stage) => {
   if (i === undefined || sv > 6) return;
   const gain = dieWorth(s, at, 'save') * ((7 - Math.max(2, sv)) / 6);
   if (gain < cpWorth(s, T.owner) - 2) return;
+  // a unit about to answer with a reaction (Hail of Vengeance, Power of the Machine Spirit …) keeps its one stratagem
+  // of the phase for that
+  if (at.kind === 'shoot' && s.players[T.owner].detachments.some((d) => d.stratagems.some((st) => {
+    const r = stratRule(st, s.players[T.owner].factionId, d.name);
+    return r.react === 'enemyShot' && !!r.botReact && s.players[T.owner].cp >= st.cp + 1;
+  }))) return;
   spendStratagem(s, T.owner, 'command-reroll', T);
   rerollOne(s, 'save', i);
   log(s, `↻ Command Re-roll: ทอย Save ที่ไม่ผ่านใหม่ (${T.name})`, 'roll', T.owner);
@@ -106,7 +112,7 @@ function attackValue(s: GameState, u: UnitState, t: UnitState, kind: 'shoot' | '
 }
 
 /** Put a stratagem's effects on a unit for a moment, measure something, and take them off again. */
-function tryRule<R>(s: GameState, u: UnitState, label: string, rule: StratRule, fn: () => R): R {
+export function tryRule<R>(s: GameState, u: UnitState, label: string, rule: StratRule, fn: () => R): R {
   const nb = u.buffs.length, nt = u.timed?.length ?? 0;
   for (const k of rule.buffs ?? []) u.buffs.push({ kind: k, until: 'phase', label });
   for (const e of rule.effects ?? []) addTimed(s, u, { e, label, until: 'phase', by: u.owner });
@@ -175,6 +181,20 @@ onAttackStart((s, at) => {
   }
   if (best && best.save >= (cpWorth(s, p) - 2) * best.st.cp) applyDetachmentStratagem(s, p, best.st, T.id, { choice: best.choice });
   else if (at.kind === 'fight') botFightOnDeath(s, T, base / Math.max(1, alive(T).length * perModel(T)));
+});
+
+/** Mortal wounds coming in: "Feel No Pain 5+ against mortal wounds" (Layered Ceramite …) when they would hurt. */
+onMortalWounds((s, u, n) => {
+  const p = u.owner;
+  if (!isBot(s, p) || u.battleShocked) return;
+  const loss = Math.min(alive(u).length, n / Math.max(1, alive(u)[0]?.profile.W ?? 1)) * perModel(u);
+  if (loss < 8 && n < 3) return;
+  for (const d of s.players[p].detachments) for (const st of d.stratagems) {
+    const rule = stratRule(st, s.players[p].factionId, d.name);
+    if (!(rule.effects ?? []).some((e) => e.defend?.fnpVs === 'mortal') || stratagemBlock(s, p, st, u) || !spare(s, p, stratCost(s, st.id, u, st.cp))) continue;
+    applyDetachmentStratagem(s, p, st, u.id);
+    return;
+  }
 });
 
 // ---------- battle-shock ----------
