@@ -72,9 +72,11 @@ function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: 
     const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
     let tp = terrain.find((t) => pointInPoly({ x: o.x, y: o.y }, t.poly));
     if (!tp) {
-      // objective in the open: give it a 3" area so control works the same way
-      tp = { id: `obj-t${i}`, kind: 'objective-area', label: 'Objective area', category: 'exposed', height: 0, walls: [], obstacles: [],
-        poly: [{ x: o.x - 3, y: o.y - 3 }, { x: o.x + 3, y: o.y - 3 }, { x: o.x + 3, y: o.y + 3 }, { x: o.x - 3, y: o.y + 3 }] };
+      // objective in the open (no terrain on it): a 40mm marker, in range within 3" of it (14) — a circle of
+      // 3" + the marker's radius around its centre, so control works the same way as for terrain objectives
+      const R = 3 + 20 / 25.4;
+      tp = { id: `obj-t${i}`, kind: 'objective-area', label: 'Objective (marker 40mm, ระยะ 3")', category: 'exposed', height: 0, walls: [], obstacles: [],
+        poly: Array.from({ length: 32 }, (_, k) => ({ x: o.x + R * Math.cos((k / 32) * Math.PI * 2), y: o.y + R * Math.sin((k / 32) * Math.PI * 2) })) };
       terrain.push(tp);
     }
     tp.objectiveId = id;
