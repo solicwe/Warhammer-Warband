@@ -61,6 +61,13 @@ describe('2026 Codex: every Space Marine enhancement and stratagem has a rule', 
     }).map((e) => e.name);
     expect(missing).toEqual([]);
   });
+  it('enhancements that change the model: Imperium\'s Sword (a weapon), A Giant Amongst Giants (+2 W)', async () => {
+    const { buildUnits } = await import('./army');
+    const mk = (enhancement: string) => buildUnits({ name: 't', factionId: 'SM', battleSize: 'strike', detachments: [], units: [{ uid: 'a', datasheet: 'Captain', models: 1, pts: 80, enhancement }] }, SM, 0)[0].models[0];
+    const plain = mk('');
+    expect(mk('Imperium\'s Sword').weapons.some((w) => w.name === 'Imperium\'s Sword' && w.profiles[0].S === 7 && w.profiles[0].AP === -3)).toBe(true);
+    expect(mk('A Giant Amongst Giants').profile.W).toBe(plain.profile.W + 2);
+  });
   it('stratagems', () => {
     const rules = (JSON.parse(fs.readFileSync('data/stratagems/SM.json', 'utf8')) as { rules: Record<string, unknown> }).rules;
     const missing = SM.detachments.flatMap((d) => d.stratagems.filter((st) => !rules[st.name] && !rules[`${st.name}@${d.name}`]).map((st) => `${st.name}@${d.name}`));

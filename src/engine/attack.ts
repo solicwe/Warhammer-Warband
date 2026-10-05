@@ -158,6 +158,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   // Heresy Undone: after Advancing / Falling Back it may only shoot auspex scanned units
   if (aFlags.onlyTargetMarked && (A.move === 'advance' || A.move === 'fallback') && !(T.timed ?? []).some((t) => t.mark === aFlags.onlyTargetMarked && t.by === A.owner)) return { pools: [], notes, error: 'Advance/Fall back มาแล้ว ยิงได้เฉพาะหน่วยที่ถูก auspex scan' };
 
+  // Seal of Shrouding / Blazing Icon / Linebreaker Onslaught: enemy units cannot snap-shoot this unit
+  if (opt.mode === 'snap' && unitFlags(s, T).noSnapTarget) return { pools: [], notes, error: 'ยิง snap shooting ใส่หน่วยนี้ไม่ได้' };
   const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : [...alive(A), ...firingDeck(s, A, opt)];
   for (const m of shooters) {
     const ranged = m.weapons.filter((w) => !isMelee(w.profiles[0]) && !(opt.skipWeapons ?? []).includes(w.name) && (!!opt.models || !A.weaponsFired.includes(w.name)));
@@ -483,14 +485,14 @@ export function rollHits(s: GameState) {
 /** Dice an ability lets the attacker re-roll at this stage (01.05.02: a die is only ever re-rolled once). */
 export function rerollable(p: Pool, d: Die): boolean {
   const r = p.reroll;
-  return !!r && !d.rerolled && d.o !== 'auto' && (r.which === 'all' || d.v === 1);
+  return !!r && !d.rerolled && d.o !== 'auto' && (r.which === 'all' || d.v === 1 || (r.which === 'onesTwos' && d.v === 2));
 }
 
 /**
  * "You can re-roll the Hit roll": every failure is picked to begin with and re-rolled at once — unless the game
  * is set to let the attacker choose the dice (`pickRerolls`), e.g. to fish for a critical.
  */
-function offerReroll(s: GameState, p: Pool, stage: 'hit' | 'wound', which: 'all' | 'ones') {
+function offerReroll(s: GameState, p: Pool, stage: 'hit' | 'wound', which: 'all' | 'ones' | 'onesTwos') {
   const dice = stage === 'hit' ? p.hits : p.wounds;
   p.reroll = { stage, which, picks: [] };
   const failed = (d: Die) => (stage === 'hit' ? d.o === 'miss' : d.o === 'fail');
@@ -546,7 +548,7 @@ export function rollWounds(s: GameState) {
   const A = unitById(s, at.attackerId);
   const rrAll = p.twinLinked || p.rerollAllWounds || A.buffs.some((b) => b.kind === 'rerollWounds');
   const rr1 = p.rerollWounds1 || A.buffs.some((b) => b.kind === 'rerollWounds1');
-  if (rrAll || rr1) offerReroll(s, p, 'wound', rrAll ? 'all' : 'ones');
+  if (rrAll || rr1 || p.rerollWounds12) offerReroll(s, p, 'wound', rrAll ? 'all' : p.rerollWounds12 ? 'onesTwos' : 'ones');
   at.stage = 'save';
 }
 

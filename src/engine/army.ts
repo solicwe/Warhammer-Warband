@@ -579,6 +579,16 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       selectedToShoot: false, declaredCharge: false, chargeRoll: null, chargedTurn: -10, chargeTargets: [],
       fought: false, foughtFirstUntilTurn: -10, stratagemPhase: null, oneShotUsed: [], buffs: [],
     });
+    // Enhancements that change the model itself: "+2 W", "the following weapon: Name: Melee | A 6 | WS 2+ | S 7 | AP -3 | D 3"
+    for (const x of [e, ...joiners].filter((j) => j.enhancement)) {
+      const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
+      const m = units[units.length - 1].models.find((md) => md.source === x.datasheet && md.isCharacter) ?? units[units.length - 1].models.find((md) => md.source === x.datasheet);
+      if (!enh || !m) continue;
+      const w = /This model has \+(\d+) W\b/i.exec(enh.text);
+      if (w) { m.profile = { ...m.profile, W: m.profile.W + +w[1] }; m.wounds = m.profile.W; }
+      const wp = /following weapon:\s*([^:]+):\s*(Melee|\d+")\s*\|\s*A\s*(\S+)\s*\|\s*(?:WS|BS)\s*(\d)\+\s*\|\s*S\s*(\d+)\s*\|\s*AP\s*(-?\d+)\s*\|\s*D\s*([^.\s|]+)/i.exec(enh.text);
+      if (wp) m.weapons = [...m.weapons, { name: wp[1].trim(), profiles: [{ name: wp[1].trim(), range: wp[2] === 'Melee' ? 'Melee' : parseInt(wp[2], 10), A: wp[3], skill: +wp[4], S: +wp[5], AP: +wp[6], D: wp[7], abilities: [] }] }];
+    }
     const sp = splitRuleOf(sheet, list.detachments);
     if (sp && (e.split || sp.must)) {
       const second = splitUnit(units[units.length - 1], sheet, sp, e.pts + (e.wargearPts ?? 0));

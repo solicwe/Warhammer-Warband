@@ -203,6 +203,8 @@ export function factionFromPack(packFile, ref, meta) {
     if (u.sizeOptions?.length) {
       const byName = new Map();
       for (const so of u.sizeOptions) for (const c of so.counts) { const e = byName.get(c.modelName) ?? { min: Infinity, max: 0 }; byName.set(c.modelName, { min: Math.min(e.min, c.min), max: Math.max(e.max, c.max) }); }
+      // a model missing from a size option has none in that size
+      for (const [n, r] of byName) if (u.sizeOptions.some((so) => !so.counts.some((c) => c.modelName === n))) r.min = 0;
       composition = [...byName].map(([n, r]) => ({ name: n, min: r.min, max: r.max, text: `${r.min === r.max ? r.min : `${r.min}-${r.max}`} ${n}` }));
     }
     const damaged = u.abilities.find((a) => /^Damaged:/i.test(a.name));

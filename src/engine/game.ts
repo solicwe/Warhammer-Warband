@@ -354,8 +354,50 @@ export function formationAt(u: UnitState, c: Pt, facingUp = true): Map<string, P
 
 /** Models hugging a transport's hull on the side facing `angle`: up to two rings, so a whole squad fits wholly within
  *  3" (a grid of 10 would stick out too far). Characters take the middle of the arc. */
-/** The unit set up round a hull, centred on `angle`; each ring's arc is at most `maxArc` radians wide. */
-export function ringFormation(u: UnitState, tm: ModelState, angle: number, maxArc = 2 * Math.PI): Map<string, Pt> {
+/**
+ * The unit set up next to a hull (getting out of a transport), on the side `angle` points to, every model wholly
+ * within `within`" of the hull: a compact block, two rows deep where the bases fit inside the distance, filled from
+ * the middle of that side outwards — not a ring round the whole vehicle. Falls back to arcs when the block can't fit.
+ */
+export function ringFormation(u: UnitState, tm: ModelState, angle: number, maxArc = 2 * Math.PI, within = 3): Map<string, Pt> {
+  return packFormation(u, tm, angle, within) ?? arcFormation(u, tm, angle, maxArc);
+}
+
+function packFormation(u: UnitState, tm: ModelState, angle: number, within: number): Map<string, Pt> | null {
+  const ms = [...alive(u)].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter) || b.r - a.r);
+  const placed: { x: number; y: number; r: number }[] = [];
+  const out = new Map<string, Pt>();
+  const ax = { x: Math.cos(angle), y: Math.sin(angle) };
+  for (const m of ms) {
+    const rIn = tm.r + m.r + 0.08, rOut = tm.r + within - m.r - 0.03;
+    if (rOut < rIn) return null;
+    let best: { p: Pt; score: number } | null = null;
+    for (let R = rIn; R <= rOut + 1e-9; R += 0.12) {
+      const step = 0.05 / Math.max(1, R / 3);
+      for (let k = 0; k * step <= Math.PI; k++) {
+        for (const sgn of k ? [1, -1] : [1]) {
+          const a = angle + sgn * k * step;
+          const p = { x: tm.x + Math.cos(a) * R, y: tm.y + Math.sin(a) * R };
+          if (placed.some((q) => Math.hypot(q.x - p.x, q.y - p.y) < q.r + m.r + 0.06)) continue;
+          // stay in coherency with the models already out (within 2" of one of them)
+          if (placed.length && !placed.some((q) => Math.hypot(q.x - p.x, q.y - p.y) - q.r - m.r <= 1.9)) continue;
+          // the middle of the chosen side first, then outwards; a model further from the hull only when it packs tighter
+          const side = Math.abs(((a - angle + 3 * Math.PI) % (2 * Math.PI)) - Math.PI) * R;
+          const toward = (p.x - tm.x) * ax.x + (p.y - tm.y) * ax.y;
+          const score = side * 1.0 - toward * 0.15 + (placed.length ? Math.min(...placed.map((q) => Math.hypot(q.x - p.x, q.y - p.y))) * 0.3 : 0);
+          if (!best || score < best.score) best = { p, score };
+        }
+      }
+    }
+    if (!best) return null;
+    placed.push({ ...best.p, r: m.r });
+    out.set(m.id, best.p);
+  }
+  return out;
+}
+
+/** Fallback: rings round the hull, each ring's arc at most `maxArc` radians wide. */
+function arcFormation(u: UnitState, tm: ModelState, angle: number, maxArc: number): Map<string, Pt> {
   const ms = [...alive(u)].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter) || b.r - a.r);
   const rMax = Math.max(...ms.map((m) => m.r));
   const out = new Map<string, Pt>();

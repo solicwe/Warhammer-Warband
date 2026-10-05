@@ -5975,8 +5975,8 @@
   ]
  },
  "Imperium's Sword": {
-  "status": "manual",
-  "note": "ได้อาวุธ Imperium's Sword (A6 WS2+ S7 AP-3 D3) — ยังไม่เพิ่มในการ์ด"
+  "status": "auto",
+  "note": "ได้อาวุธ Imperium's Sword (ใส่ให้อัตโนมัติ)"
  },
  "Furious Assault": {
   "effects": [
@@ -6083,13 +6083,19 @@
   "effects": [
    {
     "if": [
-     "targetHidden"
+     "targetHidden",
+     "!doctrine:assault"
     ],
     "reroll": "wounds1"
+   },
+   {
+    "if": [
+     "targetHidden",
+     "doctrine:assault"
+    ],
+    "reroll": "wounds12"
    }
-  ],
-  "status": "partial",
-  "note": "assault doctrine: re-roll 1 และ 2 (ระบบ re-roll แค่ 1)"
+  ]
  },
  "Execute and Redeploy": {
   "act": {
@@ -6109,8 +6115,11 @@
   }
  },
  "Seal of Shrouding": {
-  "status": "manual",
-  "note": "ศัตรูยิง snap shooting ใส่หน่วยนี้ไม่ได้ — เช็กเอง"
+  "effects": [
+   {
+    "noSnapTarget": true
+   }
+  ]
  },
  "Indefatigable Fortitude": {
   "effects": [
@@ -6207,10 +6216,14 @@
      "disembarkedThisTurn"
     ],
     "rerollCharge": true
+   },
+   {
+    "if": [
+     "disembarkedThisTurn"
+    ],
+    "noSnapTarget": true
    }
-  ],
-  "status": "partial",
-  "note": "ห้ามศัตรู snap shooting ใส่: เช็กเอง"
+  ]
  },
  "Damocles-class Uplink": {
   "act": [
@@ -6610,8 +6623,11 @@
   ]
  },
  "Blazing Icon": {
-  "status": "manual",
-  "note": "ศัตรูยิง snap shooting ใส่หน่วยนี้ไม่ได้ — เช็กเอง"
+  "effects": [
+   {
+    "noSnapTarget": true
+   }
+  ]
  },
  "Ordained Sacrifice": {
   "act": {
@@ -6927,8 +6943,8 @@
     "strength": 1
    }
   ],
-  "status": "partial",
-  "note": "+2 W ยังไม่ได้ใส่"
+  "status": "auto",
+  "note": "+2 W ใส่ให้อัตโนมัติ"
  },
  "Preyslayer": {
   "effects": [

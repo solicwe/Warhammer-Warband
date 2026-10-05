@@ -19,7 +19,7 @@ import { isHidden, setVisibilityHooks } from './visibility';
 import { setThroughHook } from './pathing';
 
 export type Eligibility = 'shootAfterAdvance' | 'shootAfterFallBack' | 'chargeAfterAdvance' | 'chargeAfterFallBack' | 'actionWhileEngaged' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction';
-export type Reroll = 'hits1' | 'hits' | 'wounds1' | 'wounds' | 'damage';
+export type Reroll = 'hits1' | 'hits' | 'wounds1' | 'wounds12' | 'wounds' | 'damage';
 
 export interface Defend {
   vs?: 'melee' | 'ranged';
@@ -83,7 +83,7 @@ export interface Effect {
   oc?: number; ocSet?: number; shockedOc?: number; ocHalve?: boolean; ocZero?: boolean;
   toughness?: number; move?: number; ld?: number;
   eligible?: Eligibility[];
-  cannotFallBack?: boolean; noOverwatch?: boolean; cannotBeHidden?: boolean; detection?: number; rangeMinus?: number;
+  cannotFallBack?: boolean; noOverwatch?: boolean; noSnapTarget?: boolean; cannotBeHidden?: boolean; detection?: number; rangeMinus?: number;
   rerollAdvance?: boolean; rerollCharge?: boolean; advanceSix?: boolean; advanceBonus?: number; chargeBonus?: number; rerollShock?: boolean;
   advanceSelfMortals?: string;
   stratDiscount?: { ids: string[]; cp: number; limit?: Limit; perArmy?: boolean };
@@ -785,6 +785,7 @@ function applyReroll(pool: Pool, r: Reroll, label: string, notes: string[]) {
   if (r === 'hits1' && !pool.rerollHits1) { pool.rerollHits1 = true; notes.push(`${label}: re-roll hit 1`); }
   if (r === 'wounds' && !pool.rerollAllWounds) { pool.rerollAllWounds = true; notes.push(`${label}: re-roll wound`); }
   if (r === 'wounds1' && !pool.rerollWounds1) { pool.rerollWounds1 = true; notes.push(`${label}: re-roll wound 1`); }
+  if (r === 'wounds12' && !pool.rerollWounds12) { pool.rerollWounds12 = true; notes.push(`${label}: re-roll wound 1-2`); }
   if (r === 'damage' && !pool.rerollDamage) { pool.rerollDamage = true; notes.push(`${label}: re-roll damage`); }
 }
 
@@ -927,6 +928,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     toughness: es.reduce((a, e) => a + (e.toughness ?? 0), 0),
     cannotFallBack: es.some((e) => e.cannotFallBack),
     noOverwatch: es.some((e) => e.noOverwatch),
+    noSnapTarget: es.some((e) => e.noSnapTarget),
     cannotBeHidden: es.some((e) => e.cannotBeHidden),
     detection: es.reduce((a, e) => a + (e.detection ?? 0), 0),
     rangeMinus: es.reduce((a, e) => a + (e.rangeMinus ?? 0), 0),

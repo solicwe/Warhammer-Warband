@@ -1870,11 +1870,10 @@
   "EYE OF THE PACK": {
    "effects": [
     {
-     "reroll": "wounds1"
+     "reroll": "wounds12"
     }
    ],
-   "status": "partial",
-   "note": "re-roll ได้ทั้ง 1 และ 2 (ระบบ re-roll แค่ 1)"
+   "status": "auto"
   },
   "GRIMNAR'S COMMAND": {
    "until": "nextCommand",

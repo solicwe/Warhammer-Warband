@@ -396,6 +396,7 @@ export interface Pool {
   rerollAllHits?: boolean;
   rerollHits1?: boolean; // from detachment rules (unit buffs are checked separately)
   rerollWounds1?: boolean;
+  rerollWounds12?: boolean; // re-roll wound rolls of 1 and 2
   rerollAllWounds?: boolean;
   rerollDamage?: boolean;
   /** variable numbers of attacks rolled for this pool (D6, 2D3+1 …), so one can be re-rolled */
@@ -426,7 +427,7 @@ export interface Pool {
   hits: Die[];
   wounds: Die[];
   /** an ability lets the attacker re-roll some of these dice: they pick which (the failures by default) */
-  reroll?: { stage: 'hit' | 'wound'; which: 'all' | 'ones'; picks: number[] };
+  reroll?: { stage: 'hit' | 'wound'; which: 'all' | 'ones' | 'onesTwos'; picks: number[] };
   autoWounds: number;
   saves: Die[];
   saveTargets: string[]; // per save die: model name it was checked against
