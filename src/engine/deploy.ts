@@ -8,7 +8,7 @@ import { RULES } from './config';
 import { formationAt, objectiveTerrain, validatePlacement, zoneOf } from './game';
 import { circleTouchesPoly, dist, pointInPoly, polyCentroid } from './geometry';
 import { canLeave } from './botMove';
-import { isBrawler, maxRange, moveOf, oc } from './botEval';
+import { isBrawler, maxRange, moveOf, oc, unitValue } from './botEval';
 import { alive, onBoard, other, withinTerrain } from './state';
 import type { GameState, ModelState, Pt, UnitState } from './types';
 import { hasLos } from './visibility';
@@ -51,6 +51,8 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   const fast = moveOf(u) >= 10;
   const vehicle = alive(u).some((m) => m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER'));
   const holdsGround = oc(u) > 0 && !brawler;
+  // the home objective is for a cheap or Battleline unit, not the army's hammer
+  const cheap = alive(u).some((m) => m.keywords.includes('BATTLELINE')) || unitValue(u) <= 200;
   // Infiltrators: anywhere more than 9" from the enemy deployment zone
   const how = opt.how ?? 'deploy';
 
@@ -96,7 +98,7 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
         else if (dMid <= moveOf(u) + 3) score += 3;
       }
       // somebody with OC on the home objective
-      for (const { p } of home) if (holdsGround && !homeHeld(p) && ms.some((m) => dist(m, p) <= 3 + m.r)) score += 7;
+      for (const { p } of home) if (holdsGround && cheap && !homeHeld(p) && ms.some((m) => dist(m, p) <= 3 + m.r)) score += 7;
 
       // spread out: no packing next to other units
       for (const f of friends) {

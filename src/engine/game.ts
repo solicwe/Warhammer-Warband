@@ -443,7 +443,12 @@ const isAstartes = (u: UnitState) => u.factionKeywords.includes('ADEPTUS ASTARTE
 const REDEPLOY: { name: string; n: number; infantryOnly: boolean }[] = [
   { name: 'Master of Deceit', n: 3, infantryOnly: true },
   { name: 'Strategium Command', n: 3, infantryOnly: false },
-  { name: 'Cerebrex Logic Engine', n: 1, infantryOnly: false },
+  // Enhancements that redeploy (2026 Codex)
+  { name: 'Cyber-familiar', n: 3, infantryOnly: true },
+  { name: 'Defensive Mastery', n: 3, infantryOnly: true },
+  { name: 'Hunter’s Guile', n: 3, infantryOnly: false },
+  { name: "Hunter's Guile", n: 3, infantryOnly: false },
+  { name: 'Chariots of the Storm', n: 3, infantryOnly: false },
 ];
 
 function redeployFor(s: GameState, p: PlayerId) {
@@ -608,7 +613,15 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
 
 export function endPhase(s: GameState) {
   updateControl(s);
-  if (s.phase === 'movement') { fireFor(s, 'movementEnd', s.active); updateControl(s); }
+  if (s.phase === 'movement') {
+    fireFor(s, 'movementEnd', s.active);
+    updateControl(s);
+    // Uphold the Honour of the Emperor (Vow-sworn Crusaders): objectives INFANTRY control now are secured
+    for (const u of boardUnits(s, s.active)) {
+      if (!unitFlags(s, u).secureAtMovementEnd || !hasKw(u, 'INFANTRY')) continue;
+      for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) o.secured = s.active;
+    }
+  }
   resolveRevivals(s);
   if (s.window?.kind === 'abilityMove') s.window = null;
   expireTimed(s, 'phaseEnd', s.active);
@@ -952,7 +965,7 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
  */
 function emergencyEmbark(s: GameState, charger: UnitState) {
   const p = other(charger.owner);
-  for (const t of boardUnits(s, p).filter((x) => unitHasAbility(x, 'Emergency Combat Embarkation') && x.transport)) {
+  for (const t of boardUnits(s, p).filter((x) => (unitHasAbility(x, 'Combat Embarkation') || unitHasAbility(x, 'Emergency Combat Embarkation')) && x.transport)) {
     const key = `${s.turn}:${t.id}`;
     if ((t.oncePerTurnUsed ??= []).includes(key)) continue;
     const cands = boardUnits(s, p).filter((x) => x.id !== t.id && isAstartes(x) && !isEngaged(s, x)
@@ -973,7 +986,7 @@ function emergencyEmbark(s: GameState, charger: UnitState) {
 function miraculousSaviour(s: GameState) {
   const p = other(s.active);
   if (s.round <= 1) return;
-  for (const u of s.units.filter((x) => x.owner === p && unitHasAbility(x, 'Miraculous Saviour') && (x.status === 'reserves' || (onBoard(x) && !isEngaged(s, x))))) {
+  for (const u of s.units.filter((x) => x.owner === p && (unitHasAbility(x, 'Miraculous Savior') || unitHasAbility(x, 'Miraculous Saviour')) && (x.status === 'reserves' || (onBoard(x) && !isEngaged(s, x))))) {
     if ((u.onceUsed ??= []).includes('Miraculous Saviour')) continue;
     const chargers = boardUnits(s, s.active).filter((e) => e.chargedTurn === s.turn)
       .sort((a, b) => b.pts * alive(b).length / Math.max(1, b.startingStrength) - a.pts * alive(a).length / Math.max(1, a.startingStrength));

@@ -6,6 +6,7 @@
 | อยากแก้อะไร | ไฟล์ |
 |---|---|
 | ค่าบนการ์ด (M/T/Sv/W, อาวุธ, แต้ม, keyword) | `data/overrides/<FACTION>.json` (ดู `data/overrides/README.md`) — อย่าแก้ `public/data/factions/*.json` ตรง ๆ เพราะถูกสร้างใหม่จาก Wahapedia |
+| **Space Marines (Codex 2026)** | `data/packs/SM.listforge-pack.json` (ไฟล์ ListForge) + `data/packs/SM.cards.txt` (การ์ด stratagem) — `npm run data` สร้าง SM จาก pack นี้แทน Wahapedia (ดู `scripts/pack.mjs`) |
 | Ability ของ datasheet | `data/abilities/SM.json`, `data/abilities/ORK.json` |
 | กฎ Detachment / Army rule | `data/detachment-rules.json` |
 | **Stratagem ของ detachment** | `data/stratagems/SM.json`, `data/stratagems/ORK.json` |
@@ -46,6 +47,10 @@ key = ชื่อ ability (หรือ `ชื่อ@Datasheet`) ค่า: `e
 
 ## Detachment (`data/detachment-rules.json`)
 key = ชื่อ detachment: `effects`, `choice` (เลือก doctrine ฯลฯ), `grants` (ให้ ability กับหน่วย), `freeDie`, `auto`
+
+Combat Doctrines (army rule ของ SM) อยู่ใน key `Combat Doctrines` — detachment เพิ่มจำนวนครั้งที่เลือกได้ด้วย `doctrineExtra` และบังคับ doctrine ให้หน่วยด้วย `doctrines` (เช่น Wrath of the Doomed)
+
+Enhancement: เขียนกฎใน `data/abilities/<FACTION>.json` ด้วยชื่อ enhancement (ทำงานเหมือน ability ของตัวที่ถือ)
 
 ## Faction / datasheet ใหม่
 1. `npm run data -- --fetch` ดึงข้อมูลล่าสุดจาก Wahapedia (หรือวาง CSV ใน `data/raw`)

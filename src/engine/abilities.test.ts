@@ -53,6 +53,21 @@ describe('ability data covers every Space Marine and Ork ability', () => {
   }
 });
 
+describe('2026 Codex: every Space Marine enhancement and stratagem has a rule', () => {
+  it('enhancements', () => {
+    const missing = SM.detachments.flatMap((d) => d.enhancements).filter((e) => {
+      const u = { sources: [e.name], abilities: [] } as unknown as Parameters<typeof abilityRule>[0];
+      return !abilityRule(u, { name: e.name, type: 'Enhancement', text: e.text, sheet: e.name, faction: 'SM' });
+    }).map((e) => e.name);
+    expect(missing).toEqual([]);
+  });
+  it('stratagems', () => {
+    const rules = (JSON.parse(fs.readFileSync('data/stratagems/SM.json', 'utf8')) as { rules: Record<string, unknown> }).rules;
+    const missing = SM.detachments.flatMap((d) => d.stratagems.filter((st) => !rules[st.name] && !rules[`${st.name}@${d.name}`]).map((st) => `${st.name}@${d.name}`));
+    expect(missing).toEqual([]);
+  });
+});
+
 describe('Ork abilities', () => {
   it('Might Is Right: the Warboss gets +3 A and +2 S after charging, the Boyz do not', () => {
     const s = game([['Intercessor Squad', 10, 150]], [['Boyz', 10, 90], ['Warboss', 1, 100, 'x0']]);
@@ -141,7 +156,7 @@ describe('Ork abilities', () => {
 });
 
 describe('Space Marine abilities', () => {
-  it('Evade and Survive: an enemy ending a move within 8" offers a 6" move to the Lieutenant', () => {
+  it('Evade and Survive: an enemy ending a move within 8" offers a D3+3" move to the Lieutenant', () => {
     const s = game([['Lieutenant with Combi-weapon', 1, 95]], [['Boyz', 10, 90]]);
     s.phase = 'movement'; s.active = 1;
     const lt = put(s, 'p0-x0', { x: 20, y: 14 });
@@ -152,13 +167,13 @@ describe('Space Marine abilities', () => {
     const w = s.window as { offers: { unitId: string; key: string }[] };
     expect(w.offers[0].unitId).toBe(lt.id);
     expect(acceptOffer(s, lt.id, w.offers[0].key)).toBeNull();
-    expect(lt.extraMove?.max).toBe(6);
-    const away = new Map(alive(lt).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y - 5 }]]));
+    expect(lt.extraMove?.max).toBeGreaterThanOrEqual(4);
+    expect(lt.extraMove?.max).toBeLessThanOrEqual(6);
+    const away = new Map(alive(lt).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y - 3.5 }]]));
     commitMove(s, lt, 'extra', away);
     expect(lt.extraMove).toBeUndefined();
     expect(s.window).toBeNull();
   });
-
   it('Heroic Last Stand: a Battle Leader killed in melee fights back before being removed', () => {
     const s = game([['Wolf Guard Battle Leader', 1, 65]], [['Boyz', 20, 180]]);
     s.phase = 'fight'; s.active = 1;
@@ -180,31 +195,27 @@ describe('Space Marine abilities', () => {
     expect(fought).toBe(true);
   });
 
-  it('Rites of Battle: −1CP on a stratagem once per battle round', () => {
-    const s = game([['Intercessor Squad', 10, 150], ['Captain', 1, 80]], [['Boyz', 10, 90]]);
-    s.phase = 'shooting'; s.active = 0;
-    put(s, 'p0-x0', { x: 20, y: 14 });
-    const ints = put(s, 'p0-x1', { x: 30, y: 10 }); // Rites of Battle: the Captain's own unit
-    put(s, 'p1-x0', { x: 20, y: 25 });
-    expect(stratCost(s, 'command-reroll', ints, 1)).toBe(0);
-    s.players[0].cp = 5;
-    spendStratagem(s, 0, 'command-reroll', ints);
-    expect(s.players[0].cp).toBe(5);
-    expect(stratCost(s, 'command-reroll', ints, 1)).toBe(1); // once per battle round
+  it('Strategic Acumen: the Captain makes a combat doctrine active for his own unit (once per phase)', () => {
+    const s = game([['Intercessor Squad', 10, 170], ['Captain', 1, 80, 'x0']], [['Boyz', 10, 90]]);
+    s.phase = 'command'; s.active = 0;
+    const u = put(s, 'p0-x0', { x: 20, y: 14 });
+    const btns = manualActs(s, 0).filter((m) => m.def.name === 'Strategic Acumen');
+    expect(btns.length).toBe(3);
+    const assault = btns.find((b) => b.def.spec.label?.startsWith('Assault'))!;
+    expect(useActByKey(s, u.id, assault.def.key)).toBeNull();
+    expect(effectsFor(s, u).some((a) => a.label === 'Assault Doctrine')).toBe(true);
+    expect(manualActs(s, 0).some((m) => m.def.name === 'Strategic Acumen')).toBe(false); // one doctrine per phase
   });
-
-  it('Author of the Codex: two of three abilities, switched in the Command phase', () => {
-    const s = game([['Intercessor Squad', 10, 150], ['Roboute Guilliman', 1, 355]], [['Boyz', 10, 90]]);
+  it('Author of the Codex: in the Movement phase Guilliman gives a friendly unit within 12" a doctrine on top of its own', () => {
+    const s = game([['Intercessor Squad', 10, 170], ['Roboute Guilliman', 1, 415]], [['Boyz', 10, 90]]);
     const rg = put(s, 'p0-x1', { x: 30, y: 12 });
     const ints = put(s, 'p0-x0', { x: 30, y: 18 });
-    const c = abilityChoices(s, 0)[0];
-    expect(c.on).toEqual(['Primarch of the XIII (Aura)', 'Master of Battle']);
-    const oc = () => effectsFor(s, ints).some((a) => a.label === 'Primarch of the XIII (Aura)');
-    expect(oc()).toBe(true);
-    pickAbilities(s, rg.id, ['Master of Battle', 'Supreme Strategist']);
-    expect(oc()).toBe(false);
+    expect(effectsFor(s, rg).filter((a) => /Doctrine$/.test(a.label)).map((a) => a.label).sort()).toEqual(['Assault Doctrine', 'Devastator Doctrine', 'Tactical Doctrine']); // Codex Adept
+    s.phase = 'movement'; s.active = 0;
+    const tac = manualActs(s, 0).find((m) => m.def.name === 'Author of the Codex' && m.def.spec.label?.startsWith('Tactical'))!;
+    expect(useActByKey(s, rg.id, tac.def.key, ints.id)).toBeNull();
+    expect(effectsFor(s, ints).some((a) => a.label === 'Tactical Doctrine')).toBe(true);
   });
-
   it('Armour of Fate: Guilliman can come back at the end of the phase', () => {
     const s = game([['Roboute Guilliman', 1, 355]], [['Boyz', 10, 90]]);
     s.phase = 'shooting'; s.active = 1;
@@ -218,31 +229,28 @@ describe('Space Marine abilities', () => {
     expect(rg.status).toBe('board');
   });
 
-  it('Omni-scramblers: enemy units from Reserves cannot arrive within 12"', () => {
+  it('Omni-scramblers: a visible enemy unit within 18" is detected (+3" detection range)', () => {
     const s = game([['Infiltrator Squad', 5, 110]], [['Boyz', 10, 90]]);
-    s.phase = 'movement'; s.active = 1;
-    put(s, 'p0-x0', { x: 30, y: 30 });
-    const boyz = s.units.find((u) => u.id === 'p1-x0')!;
-    boyz.status = 'reserves';
-    const near = formationAt(boyz, { x: 30, y: 41 });
-    expect(validatePlacement(s, boyz, near, 'ingress').errors.join()).toMatch(/Omni-scramblers/);
-    expect(ingressUnit(s, boyz, near).ok).toBe(false);
+    s.phase = 'shooting'; s.active = 0;
+    const inf = put(s, 'p0-x0', { x: 30, y: 20 });
+    const boyz = put(s, 'p1-x0', { x: 30, y: 34 });
+    const b = manualActs(s, 0).find((m) => m.def.name === 'Omni-scramblers')!;
+    expect(useActByKey(s, inf.id, b.def.key, boyz.id)).toBeNull();
+    expect((boyz.timed ?? []).some((t) => t.mark === 'detected' && t.e.detection === 3)).toBe(true);
   });
-
-  it('Objective Secured keeps an objective after the Intercessors walk off', () => {
-    const s = game([['Intercessor Squad', 10, 150]], [['Boyz', 10, 90]]);
+  it('Raise the Banner: the Ancient secures the objective it controls at the end of the Movement phase', () => {
+    const s = game([['Ancient', 1, 50]], [['Boyz', 10, 90]]);
     const o = s.objectives[0];
-    const ints = put(s, 'p0-x0', { x: o.x, y: o.y });
-    s.active = 0; s.phase = 'command';
+    const anc = put(s, 'p0-x0', { x: o.x, y: o.y });
+    s.active = 0; s.phase = 'movement';
     updateControl(s);
     expect(o.controller).toBe(0);
-    endPhase(s); // end of Command phase: Objective Secured
+    endPhase(s);
     expect(o.secured).toBe(0);
-    placeUnit(s, ints, formationAt(ints, { x: o.x + 20 > 55 ? o.x - 20 : o.x + 20, y: o.y }));
+    placeUnit(s, anc, formationAt(anc, { x: o.x + 20 > 55 ? o.x - 20 : o.x + 20, y: o.y }));
     updateControl(s);
     expect(o.controller).toBe(0);
   });
-
   it('each ability with an act is reachable by its unit', () => {
     const s = game([['Captain', 1, 80], ['Techmarine', 1, 55]], [['Painboy', 1, 45]]);
     for (const u of s.units) expect(() => actsOfUnit(s, u)).not.toThrow();
@@ -261,65 +269,56 @@ describe('detachment rules added in this round', () => {
     return s;
   }
 
-  it('Armoured Wrath: one free re-roll per unit per phase', () => {
-    const s = detGame('Ironstorm Spearhead', 'War Horde', [['Intercessor Squad', 10, 150]], [['Boyz', 10, 90]]);
+  it('Ironstorm Auto-targeters: a vehicle re-rolls one hit and one wound when it shoots (walkers and infantry do not)', () => {
+    const s = detGame('Ironstorm Spearhead', 'War Horde', [['Gladiator Lancer', 1, 160], ['Intercessor Squad', 10, 170]], [['Boyz', 10, 90]]);
     s.phase = 'shooting'; s.active = 0;
-    const ints = put(s, 'p0-x0', { x: 20, y: 14 });
-    const boyz = put(s, 'p1-x0', { x: 20, y: 24 });
-    startAttack(s, 'shoot', ints.id, boyz.id, buildShootPools(s, ints.id, boyz.id, { mode: 'normal' }).pools);
+    const tank = put(s, 'p0-x0', { x: 20, y: 10 });
+    put(s, 'p0-x1', { x: 34, y: 14 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 28 });
+    startAttack(s, 'shoot', tank.id, boyz.id, buildShootPools(s, tank.id, boyz.id, { mode: 'normal' }).pools);
     rollHits(s);
     const fd = freeDiceNow(s).filter((f) => f.name === 'Ironstorm Spearhead');
-    expect(fd.map((f) => f.stage)).toEqual(['hit', 'wound']);
-    const i = s.attack!.pools[0].hits.findIndex((h) => h.o === 'miss');
-    useFreeDie(s, fd[0].key, Math.max(0, i));
-    expect(freeDiceNow(s).some((f) => f.name === 'Ironstorm Spearhead')).toBe(false); // hit OR wound, once
+    expect(fd.map((f) => f.stage).sort()).toEqual(['hit', 'wound']);
+    useFreeDie(s, fd.find((f) => f.stage === 'hit')!.key, 0);
+    expect(freeDiceNow(s).filter((f) => f.name === 'Ironstorm Spearhead').map((f) => f.stage)).toEqual(['wound']);
   });
-
-  it('Grim Resolve: one army-wide button gives a unit +1 OC until the next Command phase', () => {
-    const s = detGame('Unforgiven Task Force', 'War Horde', [['Intercessor Squad', 10, 150], ['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]], 'DARK ANGELS');
+  it('Combat Doctrines: each once per battle, and the Gladius Task Force lets one be picked a second time', () => {
+    const s = detGame('Gladius Task Force', 'War Horde', [['Intercessor Squad', 10, 170]], [['Boyz', 10, 90]]);
     s.phase = 'command'; s.active = 0;
-    const a = put(s, 'p0-x0', { x: 20, y: 14 });
-    put(s, 'p0-x1', { x: 30, y: 14 });
-    const btns = manualActs(s, 0).filter((m) => m.def.name === 'Unforgiven Task Force');
-    expect(btns.length).toBe(1);
-    expect(useActByKey(s, btns[0].def.holder.id, btns[0].def.key, a.id)).toBeNull();
-    expect(effectsFor(s, a).some((x) => x.e.oc === 1)).toBe(true);
-    expect(manualActs(s, 0).some((m) => m.def.name === 'Unforgiven Task Force')).toBe(false);
+    expect(pickDetChoice(s, 0, 'Combat Doctrines', ['assault'])).toBeNull();
+    s.turn += 2;
+    expect(pickDetChoice(s, 0, 'Combat Doctrines', ['assault'])).toBeNull(); // the Gladius extra use
+    s.turn += 2;
+    expect(pickDetChoice(s, 0, 'Combat Doctrines', ['assault'])).not.toBeNull();
+    expect(pickDetChoice(s, 0, 'Combat Doctrines', ['tactical'])).toBeNull();
   });
-
-  it('Black Templars: Templar Vows replaces Oath of Moment; Accept Any Challenge gives +1 wound when S ≤ T', () => {
-    const s = detGame('Wrathful Procession', 'War Horde', [['Intercessor Squad', 10, 150]], [['Meganobz', 3, 110]], 'BLACK TEMPLARS');
+  it('Vow-sworn Crusaders: no Oath of Moment; Accept Any Challenge gives +1 wound when the target T is greater than S', () => {
+    const s = detGame('Vow-sworn Crusaders', 'War Horde', [['Intercessor Squad', 10, 170]], [['Meganobz', 3, 110]], 'BLACK TEMPLARS');
     expect(s.players[0].armyRules.some((r) => r.name === 'Oath of Moment')).toBe(false);
     s.phase = 'command'; s.active = 0; s.round = 1;
-    const ch = detChoices(s, 0).find((c) => c.rule === 'Templar Vows')!;
+    const ch = detChoices(s, 0).find((c) => c.rule === 'Vow-sworn Crusaders')!;
     expect(ch.open).toBe(true);
-    expect(pickDetChoice(s, 0, 'Templar Vows', ['challenge'])).toBeNull();
+    expect(pickDetChoice(s, 0, 'Vow-sworn Crusaders', ['challenge'])).toBeNull();
     s.phase = 'fight'; s.round = 2;
     const ints = put(s, 'p0-x0', { x: 20, y: 20 });
     const mega = put(s, 'p1-x0', { x: 20, y: 23.6 });
     const pools = buildFightPools(s, ints.id, mega.id).pools;
     expect(pools.length).toBeGreaterThan(0);
-    expect(pools.every((p) => p.woundMod === 1)).toBe(true); // S4 vs T5
+    for (const p of pools) expect(p.woundMod).toBe((p.profile.S ?? 0) < 6 ? 1 : 0); // Meganobz T6
   });
-
-  it('Saga of the Hunter: the Quarry tally completes the Saga and adds +1 to wound', () => {
-    const s = detGame('Saga of the Hunter', 'War Horde', [['Blood Claws', 10, 135]], [['Boyz', 10, 90]], 'SPACE WOLVES');
-    s.phase = 'command'; s.active = 0; s.turn = 0; s.round = 1;
-    initSagasForTest(s);
-    const g = s.players[0].saga!;
-    expect(g.target).toBe(2); // Incursion
-    g.tally = 2; g.done = true;
-    s.phase = 'fight'; s.round = 2; s.turn = 2;
+  it('Saga of the Beastslayer: Blood Claws attacks have [LETHAL HITS] against MONSTER / VEHICLE / CHARACTER units', () => {
+    const s = detGame('Saga of the Beastslayer', 'War Horde', [['Blood Claws', 10, 135]], [['Deff Dread', 1, 130], ['Boyz', 10, 90]], 'SPACE WOLVES');
+    s.phase = 'fight'; s.active = 0;
     const bc = put(s, 'p0-x0', { x: 20, y: 20 });
-    const boyz = put(s, 'p1-x0', { x: 20, y: 23.6 });
-    for (const m of boyz.models.slice(5)) { m.dead = true; m.wounds = 0; } // 10 Blood Claws outnumber 5 Boyz
-    const pools = buildFightPools(s, bc.id, boyz.id).pools;
+    const dread = put(s, 'p1-x0', { x: 20, y: 24 });
+    const pools = buildFightPools(s, bc.id, dread.id).pools;
     expect(pools.length).toBeGreaterThan(0);
-    expect(pools.every((p) => p.hitMod === 1 && p.woundMod === 1)).toBe(true);
-    g.done = false;
-    expect(buildFightPools(s, bc.id, boyz.id).pools.every((p) => p.hitMod === 1 && p.woundMod === 0)).toBe(true);
+    expect(pools.every((p) => p.lethal)).toBe(true);
+    const boyz = put(s, 'p1-x1', { x: 34, y: 20 });
+    placeUnit(s, dread, formationAt(dread, { x: 6, y: 50 }));
+    placeUnit(s, bc, formationAt(bc, { x: 34, y: 16.4 }));
+    expect(buildFightPools(s, bc.id, boyz.id).pools.some((p) => p.lethal)).toBe(false);
   });
-
   it('Ork detachments: Wurrband powers, Brute Bosses, Shoota Boyz range, Dread Mob buttons', () => {
     const s = detGame('Gladius Task Force', 'Wurrband', [['Intercessor Squad', 10, 150]], [['Weirdboy', 1, 60], ['Boyz', 10, 90]]);
     s.phase = 'movement'; s.active = 1;
@@ -357,19 +356,16 @@ function initSagasForTest(s: GameState) {
 }
 
 describe('reactions to being attacked', () => {
-  it('Combat Support: the Invictor shoots back when a Phobos unit nearby is shot', () => {
-    const s = game([['Infiltrator Squad', 5, 110], ['Invictor Tactical Warsuit', 1, 125]], [['Boyz', 10, 90]]);
-    s.phase = 'shooting'; s.active = 1;
-    const inf = put(s, 'p0-x0', { x: 20, y: 14 });
-    put(s, 'p0-x1', { x: 26, y: 14 });
-    const boyz = put(s, 'p1-x0', { x: 22, y: 24 });
-    const r = buildShootPools(s, boyz.id, inf.id, { mode: 'normal' });
-    startAttack(s, 'shoot', boyz.id, inf.id, r.pools);
-    resolveAll(s);
-    finishAttack(s);
-    expect(s.log.some((l) => /Combat Support/.test(l.text) && /ยิงตอบ/.test(l.text))).toBe(true);
+  it('Bolter Discipline: Intercessors on an objective (or shooting at a unit on one) get +1 to hit', () => {
+    const s = game([['Intercessor Squad', 5, 85]], [['Boyz', 10, 90]]);
+    s.phase = 'shooting'; s.active = 0;
+    const o = s.objectives[0];
+    const ints = put(s, 'p0-x0', { x: o.x, y: o.y });
+    const boyz = put(s, 'p1-x0', { x: o.x, y: o.y + 14 > 58 ? o.y - 14 : o.y + 14 });
+    const on = buildShootPools(s, ints.id, boyz.id, { mode: 'normal' }).pools;
+    expect(on.length).toBeGreaterThan(0);
+    expect(on.every((p) => p.hitMod >= 1)).toBe(true);
   });
-
   it('Bladeguard: attacked first in the Fight phase gives the enemy −1 to hit', () => {
     const s = game([['Bladeguard Veteran Squad', 3, 80]], [['Boyz', 10, 90]]);
     s.phase = 'fight'; s.active = 1;

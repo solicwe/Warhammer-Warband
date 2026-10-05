@@ -4,8 +4,8 @@
 // weighs it: objectives held, the shots and the charge it sets up this turn, and what the enemy can do back.
 import { buildShootPools, expectedDamage, shootingModes } from './attack';
 import { RULES } from './config';
-import { chargeEligibility, findPlacement, formationAt, levelOfControl, validateMove, validatePlacement } from './game';
-import { circleTouchesPoly, dist, polyCentroid } from './geometry';
+import { chargeEligibility, findPlacement, formationAt, levelOfControl, validateMove, validatePlacement, zoneOf } from './game';
+import { circleTouchesPoly, dist, pointInPoly, polyCentroid } from './geometry';
 import { blockingWalls, distanceField, pathLength, pointAt, routeAround } from './pathing';
 import { alive, boardUnits, other, unitDistance } from './state';
 import { hasLos } from './visibility';
@@ -163,12 +163,12 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   return ctx;
 }
 
-function objectiveScore(s: GameState, u: UnitState): number {
+function objectiveScore(s: GameState, u: UnitState, homeFactor = 1): number {
   let v = 0;
   for (const o of s.objectives) {
     const [a, b] = levelOfControl(s, o);
     const ours = u.owner === 0 ? a : b, theirs = u.owner === 0 ? b : a;
-    if (ours || theirs) v += OBJECTIVE * Math.tanh((ours - theirs) / 3);
+    if (ours || theirs) v += OBJECTIVE * Math.tanh((ours - theirs) / 3) * (o.type === 'home' ? homeFactor : 1);
   }
   return v;
 }
@@ -302,7 +302,9 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
   u.maxMoved = Math.max(u.maxMoved, moved);
   try {
     const caution = ctx.holder ? 0.35 : ctx.brawler ? 0.45 : 1;
-    return objectiveWeight(s, u, ctx) * objectiveScore(s, u) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u);
+    // the home objective is a job for a cheap unit: a tournament player doesn't park 400 points of Terminators on it
+    const homeFactor = ctx.holder || unitValue(u) <= 200 ? 1 : 0.25;
+    return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }
     u.move = was.move;
@@ -397,8 +399,18 @@ export function bestArrival(s: GameState, u: UnitState, how: 'ingress' | 'deepSt
     const key = [...pos.values()].map((q) => `${q.x.toFixed(1)},${q.y.toFixed(1)}`).join(';');
     if (seen.has(key)) continue;
     seen.add(key);
-    // arriving counts as a Normal move: shots and (long) charges this turn
-    const v = scoreSpot(s, u, 'ingress', pos, ctx, 0);
+    // arriving counts as a Normal move: shots and (long) charges this turn. A unit held back to drop in is meant for
+    // the fight: landing in its own deployment zone (where it's safe because it's useless) is what a walk does anyway
+    const atHome = [...pos.values()].filter((q) => pointInPoly(q, zoneOf(s, u.owner))).length / Math.max(1, pos.size);
+    let v = scoreSpot(s, u, 'ingress', pos, { ...ctx, holder: true }, 0) - atHome * 25;
+    // dropping in from the sky is for hitting the enemy: within 12" (rapid fire, a charge next turn), not a safe corner
+    if (how === 'deepStrike' && ctx.foes.length) {
+      const ms = alive(u), saved = ms.map((m) => [m, m.x, m.y] as const);
+      for (const m of ms) { const q = pos.get(m.id); if (q) { m.x = q.x; m.y = q.y; } }
+      const gap = Math.min(...ctx.foes.map((f) => unitDistance(u, f.u)));
+      for (const [m, x, y] of saved) { m.x = x; m.y = y; }
+      v -= 1.2 * Math.max(0, gap - 12);
+    }
     if (!best || v > best.v) best = { pos, v };
   }
   return best?.pos ?? null;

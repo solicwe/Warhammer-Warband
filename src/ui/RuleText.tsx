@@ -39,6 +39,9 @@ function renderBlocks(bs: Block[], flavourFirst: boolean): ReactNode[] {
         </ul>
       );
     }
+    // "ASSAULT DOCTRINE: When this unit …": the capitalised name in bold
+    const lead = /^([A-Z][A-Z' -]{3,}):\s*(.*)$/.exec(b.text);
+    if (lead) return <p key={i} className="rt-p"><b>{lead[1]}</b> {lead[2]}</p>;
     return <p key={i} className={flavourFirst && i === 0 ? 'rt-p rt-flavour' : 'rt-p'}>{b.text}</p>;
   });
 }

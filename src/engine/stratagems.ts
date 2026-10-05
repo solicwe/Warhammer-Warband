@@ -256,6 +256,14 @@ const OFFENSE: [RegExp, BuffKind][] = [
   [/\[sustained hits 1\]/, 'sustained1'],
   [/\[devastating wounds\]/, 'devastating'],
   [/\[ignores cover\]/, 'ignoresCover'],
+  // 2026 Codex wording ("Your unit's attacks have +1 to hit rolls", "can re-roll wound rolls of 1")
+  [/attacks (?:have|get) \+1 to hit rolls/, 'hit+1'],
+  [/attacks (?:have|get) \+1 to wound rolls/, 'wound+1'],
+  [/re-roll hit rolls of 1/, 'rerollHits1'],
+  [/re-roll hit rolls(?! of)/, 'rerollHits'],
+  [/re-roll wound rolls of 1/, 'rerollWounds1'],
+  [/re-roll wound rolls(?! of)/, 'rerollWounds'],
+  [/attacks have \+1 ap/, 'ap+1'],
 ];
 const DEFENSE: [RegExp, BuffKind][] = [
   [/subtract 1 from the hit roll/, 'enemyHit-1'],
@@ -267,6 +275,10 @@ const DEFENSE: [RegExp, BuffKind][] = [
   [/feel no pain 6\+/, 'fnp6'],
   [/benefit of cover/, 'cover'],
   [/add 1 to the armour saving throw|improve the save characteristic .* by 1/, 'save+1'],
+  [/target your unit have -1 ap/, 'enemyAp-1'],
+  [/target your unit have -1 d\b/, 'damage-1'],
+  [/target your unit have -1 to hit rolls/, 'enemyHit-1'],
+  [/target your unit have -1 to wound rolls/, 'enemyWound-1'],
 ];
 const OTHER: [RegExp, BuffKind][] = [
   [/fights first/, 'fightsFirst'],

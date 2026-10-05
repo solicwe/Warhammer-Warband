@@ -1,6 +1,6 @@
 // Detachment rules: the effects themselves live in data/detachment-rules.json and are applied by effects.ts;
 // this module handles the "pick one" rules (Combat Doctrines, Mission Tactics, Psychic Disciplines …).
-import { activeRules, DET_RULES, type DetChoice, type DetChoiceOption, type DetRule } from './effects';
+import { activeRules, DET_RULES, DOCTRINES, doctrineUsesLeft, type DetChoice, type DetChoiceOption, type DetRule } from './effects';
 import { log } from './state';
 import type { DetChoiceState, GameState, PlayerId } from './types';
 
@@ -23,9 +23,11 @@ export function detChoices(s: GameState, p: PlayerId): DetChoiceNow[] {
     if (ch.when === 'command') open = inCommand && st.pickedTurn !== s.turn && (ch.uses !== 'limit' || st.count < (ch.limit ?? 1));
     if (ch.when === 'round') open = inCommand && st.round !== s.round;
     if (ch.when === 'battle') open = inCommand && st.active.length < (ch.pick ?? 1) && st.count === 0;
+    const left = d.name === DOCTRINES ? doctrineUsesLeft(s, p, ch.options.map((o) => o.id), st.used) : null;
     const options = ch.options.map((o) => ({
       o,
-      why: (ch.uses === 'eachOnce' || ch.uses === 'limit') && st.used.includes(o.id) ? 'ใช้ไปแล้วในเกมนี้' : null,
+      why: left ? (left[o.id] ? null : 'ใช้ครบแล้วในเกมนี้')
+        : (ch.uses === 'eachOnce' || ch.uses === 'limit') && st.used.includes(o.id) ? 'ใช้ไปแล้วในเกมนี้' : null,
     }));
     out.push({ rule: d.name, choice: ch, state: st, open, options });
   }
@@ -45,7 +47,7 @@ export function pickDetChoice(s: GameState, p: PlayerId, rule: string, ids: stri
   }
   const st = (detState(s, p)[rule] ??= { active: [], used: [], count: 0 });
   st.active = [...ids];
-  st.used = [...new Set([...st.used, ...ids])];
+  st.used = rule === DOCTRINES ? [...st.used, ...ids] : [...new Set([...st.used, ...ids])];
   st.count += 1;
   st.pickedTurn = s.turn;
   st.round = s.round;

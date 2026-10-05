@@ -94,6 +94,7 @@ export interface Action {
   ldFail?: Effect[]; // the target takes a Leadership test; failed → these effects (until `until`)
   setOath?: boolean; // the target becomes your Oath of Moment target
   pileInRoll?: string; // Pile-in moves up to this many inches (rolled now) this phase
+  consolidateRoll?: string; // Consolidation moves up to this many inches (rolled now) this phase
   unshot?: boolean; // the unit's ranged attacks this turn do not stop it being hidden
   moveReroll?: boolean; // re-roll the move distance when it is low
   characterModel?: boolean; // one non-CHARACTER model gains the CHARACTER keyword until your next Command phase
@@ -392,6 +393,11 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       const n = rollExpr(s, a.pileInRoll).total;
       addTimed(s, on, { e: { pileIn: n }, label: def.name, until: 'phase', by: u.owner });
       log(s, `${def.name}: ${on.name} pile-in ได้ ${n}"`, 'roll', u.owner);
+    }
+    if (a.consolidateRoll) {
+      const n = rollExpr(s, a.consolidateRoll).total;
+      addTimed(s, on, { e: { consolidate: n }, label: def.name, until: 'phase', by: u.owner });
+      log(s, `${def.name}: ${on.name} consolidate ได้ ${n}"`, 'roll', u.owner);
     }
     if (a.unshot) { on.shotTurn = -99; log(s, `${def.name}: ${on.name} ยังซ่อนตัวได้แม้ยิงไปแล้ว`, 'info', u.owner); }
     if (a.characterModel) {

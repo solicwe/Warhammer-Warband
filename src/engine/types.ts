@@ -31,7 +31,7 @@ export interface ModelProfileData {
   base: BaseData;
 }
 
-export interface AbilityData { name: string; type: string; param?: string; model?: string; text: string; sheet?: string; faction?: string }
+export interface AbilityData { name: string; type: string; param?: string; model?: string; text: string; sheet?: string; faction?: string; mods?: { stat: string; type: 'increment' | 'set'; value: string }[] }
 
 export interface CompositionData { name?: string; min?: number; max?: number; text: string }
 
@@ -58,6 +58,8 @@ export interface DatasheetData {
   points: PointsTier[];
   wargearOptions?: WargearOption[];
   wargearCosts?: { name: string; pts: number }[]; // "per thunder hammer +5": charged per item carried
+  hiddenFor?: string[]; // not available to armies of these Chapters (Black Templars have no Librarians …)
+  maxPerArmy?: number;
   link: string;
 }
 
@@ -90,6 +92,7 @@ export interface DetachmentData {
   dp: number;
   forceDisposition: string | null;
   subfaction?: string; // Chapter-specific detachment
+  forceDispositions?: string[]; // detachments that count as more than one Force Disposition
   rules: { name: string; text: string }[];
   enhancements: EnhancementData[];
   stratagems: StratagemData[];

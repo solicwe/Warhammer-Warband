@@ -95,7 +95,7 @@ describe('shooting', () => {
     const t = put(s, s.units[2].id, { x: 22, y: 25 }); // ~13" away: bolt rifle in range, not half range
     s.phase = 'shooting'; s.active = 0; s.turn = 0;
     const r = buildShootPools(s, a.id, t.id, { mode: 'normal' });
-    const rifle = r.pools.filter((p) => p.weapon === 'Bolt rifle');
+    const rifle = r.pools.filter((p) => p.weapon === 'Bolt Rifle');
     expect(rifle.reduce((x, p) => x + p.models, 0)).toBe(10);
   });
 
@@ -164,17 +164,17 @@ describe('phase flow', () => {
 });
 
 describe('army rules', () => {
-  it('Oath of Moment adds re-roll hits and +1 wound against the target', async () => {
-    const { setOathTarget } = await import('./game');
+  it('Combat Doctrines: the devastator doctrine gives ranged attacks [ASSAULT] (shoot after advancing)', async () => {
+    const { pickDetChoice } = await import('./detachments');
     const s = game();
     const a = put(s, s.units[0].id, { x: 22, y: 10 });
     const t = put(s, s.units[2].id, { x: 22, y: 25 });
-    s.phase = 'shooting'; s.active = 0; s.turn = 0;
-    const before = buildShootPools(s, a.id, t.id, { mode: 'normal' }).pools[0];
-    setOathTarget(s, 0, t.id);
-    const after = buildShootPools(s, a.id, t.id, { mode: 'normal' }).pools[0];
-    expect(after.rerollAllHits).toBe(true);
-    expect(after.woundMod).toBe(before.woundMod + 1);
+    s.phase = 'command'; s.active = 0; s.turn = 0;
+    expect(pickDetChoice(s, 0, 'Combat Doctrines', ['devastator'])).toBeNull();
+    s.phase = 'shooting';
+    a.move = 'advance';
+    const r = buildShootPools(s, a.id, t.id, { mode: 'assault' });
+    expect(r.pools.length).toBeGreaterThan(0);
   });
   it('Waaagh! gives 5+ invulnerable and lets riled units charge after advancing', async () => {
     const { callWaaagh, chargeEligibility } = await import('./game');
@@ -282,19 +282,19 @@ describe('sub-factions (Chapters)', () => {
   it('data tags chapter datasheets and detachments', () => {
     expect(SM.subfactions?.options.some((o) => o.keyword === 'BLOOD ANGELS')).toBe(true);
     expect(SM.datasheets.find((d) => d.name === 'Intercessor Squad')?.subfaction).toBeUndefined();
-    expect(SM.detachments.find((d) => d.name === 'Saga of the Hunter')?.subfaction).toBe('SPACE WOLVES');
+    expect(SM.detachments.find((d) => d.name === 'Saga of the Great Wolf')?.subfaction).toBe('SPACE WOLVES');
     expect(SM.detachments.find((d) => d.name === 'Gladius Task Force')?.subfaction).toBeUndefined();
   });
   it('rejects units and detachments from another chapter', async () => {
     const { validateList } = await import('./army');
     const size = { points: 2000, dp: 3, unitLimit: 3, enhancements: 3 };
     const wolf = SM.datasheets.find((d) => d.subfaction === 'SPACE WOLVES')!;
-    const l: ArmyList = { name: 't', factionId: 'SM', subfaction: 'BLOOD ANGELS', battleSize: 'strike', detachments: ['Saga of the Hunter'], units: [{ uid: 'a', datasheet: wolf.name, models: 1, pts: 0 }] };
+    const l: ArmyList = { name: 't', factionId: 'SM', subfaction: 'BLOOD ANGELS', battleSize: 'strike', detachments: ['Saga of the Great Wolf'], units: [{ uid: 'a', datasheet: wolf.name, models: 1, pts: 0 }] };
     const errs = validateList(l, SM, size);
-    expect(errs.some((e) => e.includes('Saga of the Hunter'))).toBe(true);
+    expect(errs.some((e) => e.includes('Saga of the Great Wolf'))).toBe(true);
     expect(errs.some((e) => e.includes(wolf.name))).toBe(true);
     const ok = validateList({ ...l, subfaction: 'SPACE WOLVES' }, SM, size);
-    expect(ok.some((e) => e.includes('Saga of the Hunter') || e.includes(wolf.name))).toBe(false);
+    expect(ok.some((e) => e.includes('Saga of the Great Wolf') || e.includes(wolf.name))).toBe(false);
   });
 });
 
@@ -350,7 +350,7 @@ describe('Chapter Approved missions', () => {
   it('Sabotage: start the action on an objective, complete it at the end of the turn and score', async () => {
     const { actionOptions, startAction, onTurnEnd, scorePrimary } = await import('./missions');
     const s = createGame({
-      lists: [list('SM', [['Intercessor Squad', 10, 150], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 90], ['Warboss', 1, 100]])],
+      lists: [list('SM', [['Assault Intercessor Squad', 10, 150], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 90], ['Warboss', 1, 100]])],
       factions: [SM, ORK], names: ['A', 'B'], dispositions: ['priority-assets', 'priority-assets'], seed: 2,
     });
     const o = s.objectives.find((x) => x.type !== 'home')!;
@@ -408,44 +408,37 @@ describe('wargear', () => {
   it('parses the datasheet options into structured choices', () => {
     const ics = SM.datasheets.find((d) => d.name === 'Intercessor Squad')!;
     const gl = ics.wargearOptions!.find((o) => o.scope === 'perN')!;
-    expect(gl).toMatchObject({ per: 5, max: 1, replace: [], choices: [['Astartes grenade launcher']], requires: ['Bolt rifle'] });
-    expect(SM.datasheets.find((d) => d.name === 'Land Raider')!.loadout['*'].filter((x) => /godhammer/i.test(x))).toHaveLength(2);
+    expect(gl).toMatchObject({ per: 5, max: 1, replace: [], choices: [['Grenade Launcher']] });
+    expect(Object.values(SM.datasheets.find((d) => d.name === 'Land Raider')!.loadout).flat().filter((x) => /godhammer/i.test(x))).toHaveLength(2);
   });
-
   it('swaps the sergeant weapon and adds grenade launchers to rank-and-file models', () => {
-    const sgtOpt = opt('Intercessor Squad', SM, /Sergeant.s bolt rifle/);
-    const pw = SM.datasheets.find((d) => d.name === 'Intercessor Squad')!.wargearOptions![sgtOpt].choices.findIndex((c) => c[0] === 'Power weapon');
-    const glOpt = opt('Intercessor Squad', SM, /grenade launcher/);
-    const u = one(SM, 'SM', { uid: 'a', datasheet: 'Intercessor Squad', models: 10, pts: 160, wargear: [{ opt: sgtOpt, choice: pw, count: 1 }, { opt: glOpt, choice: 0, count: 2 }] });
+    const sgtOpt = opt('Intercessor Squad', SM, /Sergeant: Bolt Rifle/);
+    const pw = SM.datasheets.find((d) => d.name === 'Intercessor Squad')!.wargearOptions![sgtOpt].choices.findIndex((c) => c[0] === 'Power Weapon');
+    const glOpt = opt('Intercessor Squad', SM, /Grenade Launcher/);
+    const u = one(SM, 'SM', { uid: 'a', datasheet: 'Intercessor Squad', models: 10, pts: 170, wargear: [{ opt: sgtOpt, choice: pw, count: 1 }, { opt: glOpt, choice: 0, count: 2 }] });
     const sgt = u.models.find((m) => m.name === 'Intercessor Sergeant')!;
-    expect(sgt.weapons.map((w) => w.name)).toContain('Power weapon');
-    expect(sgt.weapons.map((w) => w.name)).not.toContain('Bolt rifle');
-    const gl = u.models.filter((m) => m.weapons.some((w) => w.name === 'Astartes grenade launcher'));
+    expect(sgt.weapons.map((w) => w.name)).toContain('Power Weapon');
+    expect(sgt.weapons.map((w) => w.name)).not.toContain('Bolt Rifle');
+    const gl = u.models.filter((m) => m.weapons.some((w) => w.name === 'Grenade Launcher'));
     expect(gl).toHaveLength(2);
-    expect(gl.every((m) => m.name !== 'Intercessor Sergeant' && m.weapons.some((w) => w.name === 'Bolt rifle'))).toBe(true);
+    expect(gl.every((m) => m.name !== 'Intercessor Sergeant' && m.weapons.some((w) => w.name === 'Bolt Rifle'))).toBe(true);
     expect(wargearMax(SM.datasheets.find((d) => d.name === 'Intercessor Squad')!, SM.datasheets.find((d) => d.name === 'Intercessor Squad')!.wargearOptions![glOpt], 5)).toBe(1);
   });
-
-  it('charges per-item wargear points, including default loadouts, and applies shields', () => {
+  it('charges per-item wargear points and applies storm shields (+1 W)', () => {
     const tas = SM.datasheets.find((d) => d.name === 'Terminator Assault Squad')!;
-    const claws = tas.wargearOptions!.findIndex((o) => o.choices.some((c) => c.includes('Twin lightning claws')));
-    expect(wargearPoints(tas, { models: 5 })).toBe(25); // 5 thunder hammers at +5
-    expect(wargearPoints(tas, { models: 5, wargear: [{ opt: claws, choice: 0, count: 2 }] })).toBe(15);
-    const u = one(SM, 'SM', syncWargear(tas, { uid: 'a', datasheet: tas.name, models: 5, pts: 155, wargear: [{ opt: claws, choice: 0, count: 2 }] }));
-    expect(u.pts).toBe(170);
-    expect(u.models.filter((m) => m.profile.W === 4)).toHaveLength(3); // storm shield: Wounds 4
-    expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Twin lightning claws') && m.profile.W === 3)).toHaveLength(2);
+    const hammers = tas.wargearOptions!.findIndex((o) => o.who === 'Terminator' && o.choices.some((c) => c.includes('Thunder Hammer')));
+    expect(wargearPoints(tas, { models: 5 })).toBe(0); // lightning claws by default
+    expect(wargearPoints(tas, { models: 5, wargear: [{ opt: hammers, choice: 0, count: 2 }] })).toBe(10);
+    const u = one(SM, 'SM', syncWargear(tas, { uid: 'a', datasheet: tas.name, models: 5, pts: 170, wargear: [{ opt: hammers, choice: 0, count: 2 }] }));
+    expect(u.pts).toBe(180);
+    expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Thunder Hammer') && m.profile.W === 4)).toHaveLength(2);
+    expect(u.models.filter((m) => m.profile.W === 3)).toHaveLength(3);
   });
-
-  it('vehicles carry every listed weapon and add-on models cost points', () => {
-    const lr = one(SM, 'SM', { uid: 'a', datasheet: 'Land Raider', models: 1, pts: 240 });
-    expect(lr.models[0].weapons.filter((w) => w.name === 'Godhammer lascannon')).toHaveLength(2);
-    const out = SM.datasheets.find((d) => d.name === 'Outrider Squad')!;
-    const e = syncWargear(out, { uid: 'o', datasheet: out.name, models: 3, pts: 70, addons: ['Invader ATV'] });
-    expect(e.wargearPts).toBe(60);
-    expect(one(SM, 'SM', e).models).toHaveLength(4);
+  it('vehicles carry every listed weapon', () => {
+    const lr = one(SM, 'SM', { uid: 'a', datasheet: 'Land Raider', models: 1, pts: 245 });
+    expect(lr.models[0].weapons.filter((w) => w.name === 'Godhammer Lascannon')).toHaveLength(2);
+    expect(lr.models[0].weapons.some((w) => w.name === 'Twin Heavy Bolter')).toBe(true);
   });
-
   it('sizes clamp choices: Boyz get one special weapon per 10 models', () => {
     const boyz = ORK.datasheets.find((d) => d.name === 'Boyz')!;
     const big = boyz.wargearOptions!.findIndex((o) => o.choices.some((c) => c[0] === 'Big Shoota'));
@@ -530,68 +523,50 @@ describe('detachment rules', () => {
   }
 
   it('Combat Doctrines: pick one per Command phase, each once per battle; Assault Doctrine lets advancing units charge', () => {
-    const s = detGame('Gladius Task Force', 'War Horde');
+    const s = detGame('Terminator Storm Force', 'War Horde');
     s.phase = 'command'; s.active = 0;
     const u = put(s, 'p0-x0', { x: 20, y: 20 });
     put(s, 'p1-x0', { x: 20, y: 28 });
     u.move = 'advance';
     expect(chargeEligibility(s, u)).toMatch(/Advance/);
     expect(detChoices(s, 0)[0].open).toBe(true);
-    expect(pickDetChoice(s, 0, 'Gladius Task Force', ['assault'])).toBeNull();
+    expect(pickDetChoice(s, 0, 'Combat Doctrines', ['assault'])).toBeNull();
     expect(chargeEligibility(s, u)).toBeNull();
-    expect(pickDetChoice(s, 0, 'Gladius Task Force', ['devastator'])).toMatch(/ไม่ได้/); // already picked this Command phase
+    expect(pickDetChoice(s, 0, 'Combat Doctrines', ['devastator'])).toMatch(/ไม่ได้/); // already picked this Command phase
     s.turn += 2; // our next Command phase
     detOnCommandStart(s, 0, true);
     expect(chargeEligibility(s, u)).toMatch(/Advance/);
     expect(detChoices(s, 0)[0].options.find((o) => o.o.id === 'assault')!.why).toBeTruthy();
   });
 
-  it('War Horde gives Ork melee Sustained Hits 1; Liberator Assault Group adds +1 A and +2 S after charging', () => {
-    const s = detGame('Liberator Assault Group', 'War Horde');
+  it('War Horde gives Ork melee Sustained Hits 1', () => {
+    const s = detGame('Gladius Task Force', 'War Horde');
     s.phase = 'fight';
     const u = put(s, 'p0-x0', { x: 20, y: 20 });
     const boyz = put(s, 'p1-x0', { x: 20, y: 25.2 });
     const ork = buildFightPools(s, boyz.id, u.id).pools;
     expect(ork.length).toBeGreaterThan(0);
     expect(ork.every((p) => p.sustained === '1')).toBe(true);
-    s.active = 0;
-    u.chargedTurn = s.turn;
-    const sm = buildFightPools(s, u.id, boyz.id).pools;
-    expect(sm.length).toBeGreaterThan(0);
-    expect(sm.every((p) => p.attackBonus === 1)).toBe(true);
-    const ccw = sm.find((p) => p.weapon === 'Close combat weapon')!;
-    expect(ccw.woundNeed).toBe(woundNeed((ccw.profile.S ?? 4) + 2, 5));
   });
-
-  it('Vanguard Spearhead gives cover beyond 12"; Wrath of the Rock makes strong attacks -1 to wound', () => {
-    const s = detGame('Vanguard Spearhead', 'War Horde', [['Intercessor Squad', 10, 160], ['Captain', 1, 80]], [['Boyz', 10, 90], ['Warboss', 1, 100]]);
-    s.phase = 'shooting'; s.active = 1;
-    const u = put(s, 'p0-x0', { x: 20, y: 10 });
-    const boyz = put(s, 'p1-x0', { x: 20, y: 30 });
-    const far = buildShootPools(s, boyz.id, u.id, { mode: 'normal' }).pools;
-    expect(far.length).toBeGreaterThan(0);
-    expect(far.every((p) => p.skill === 6)).toBe(true); // BS5+ shootas, cover makes it 6+
+  it('Wrath of the Rock makes attacks with S greater than T -1 to wound', () => {
     const s2 = detGame('Wrath of the Rock', 'War Horde');
     s2.phase = 'fight'; s2.active = 1;
     const v = put(s2, 'p0-x0', { x: 20, y: 20 });
     const b2 = put(s2, 'p1-x0', { x: 20, y: 25.2 });
     const pools = buildFightPools(s2, b2.id, v.id).pools;
-    const strong = pools.filter((p) => (p.profile.S ?? 0) > 4);
-    const weak = pools.filter((p) => (p.profile.S ?? 0) <= 4);
+    const strong = pools.filter((p) => (p.profile.S ?? 0) > 5); // Intercessors are T5
+    const weak = pools.filter((p) => (p.profile.S ?? 0) <= 5);
     expect(strong.every((p) => p.woundMod === -1)).toBe(true);
     expect(weak.every((p) => p.woundMod === 0)).toBe(true);
   });
-
-  it('re-roll and fixed rolls: Companions of Vehemence, Blitz Brigade', () => {
-    const s = detGame('Companions of Vehemence', 'Blitz Brigade', [['Intercessor Squad', 10, 160], ['Captain', 1, 80]], [['Battlewagon', 1, 160], ['Warboss', 1, 100]]);
-    s.phase = 'charge'; s.active = 0;
+  it('re-roll and fixed rolls: Tacticus Attack Force, Blitz Brigade', () => {
+    const s = detGame('Tacticus Attack Force', 'Blitz Brigade', [['Intercessor Squad', 10, 170], ['Captain', 1, 80]], [['Battlewagon', 1, 160], ['Warboss', 1, 100]]);
+    s.phase = 'movement'; s.active = 0;
     const u = put(s, 'p0-x0', { x: 20, y: 20 });
-    const bw = put(s, 'p1-x0', { x: 20, y: 28 });
-    declareCharge(s, u);
-    expect(canDetReroll(s, u, 'charge')).toBe(true);
-    detReroll(s, u, 'charge');
-    expect(canDetReroll(s, u, 'charge')).toBe(false);
-    s.active = 1; s.phase = 'movement';
+    const bw = put(s, 'p1-x0', { x: 20, y: 40 });
+    rollAdvance(s, u);
+    expect(canDetReroll(s, u, 'advance')).toBe(true);
+    s.active = 1;
     rollAdvance(s, bw);
     expect(bw.advanceRoll).toBe(6);
   });

@@ -1,325 +1,7073 @@
 {
-  "Surgical Precision": { "effects": [{ "scope": "led", "abilities": ["lethal hits"] }] },
-  "Vivispectrum": { "act": { "when": "afterFighting", "auto": true, "needDestroyed": true, "limit": "battle", "do": [{ "on": "self", "bearerOnly": true, "buff": [{ "ocSet": 9 }], "until": "battle" }] } },
-  "Assault Ramp": { "effects": [{ "assaultDisembark": true }] },
-  "One Shot": { "status": "info", "note": "keyword ของอาวุธ ระบบนับให้แล้ว" },
-  "Suppression Fire": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true, "hitWeapon": "accelerator autocannon" }, "do": [{ "buff": [{ "hit": -1 }], "until": "nextTurnStart", "mark": "suppressed" }] } },
-  "Combat Squads": { "split": "half", "note": "เลือกแยกหน่วยได้ตอนจัดทัพ (เมนู ⋮)" },
-  "Bladeguard": { "act": [{ "when": "selectedToFight", "auto": true, "limit": "turn", "do": [{ "on": "self", "buff": [{ "attack": "melee", "hit": 1 }], "until": "phase" }] }, { "when": "attacked", "auto": true, "limit": "turn", "needMelee": true, "if": ["fightPhase"], "do": [{ "attackMod": { "hit": -1 } }] }], "note": "ระบบใช้ให้อัตโนมัติ: ถ้าโดนตีก่อน = ศัตรู −1 hit, ถ้าได้ตีก่อน = +1 hit" },
-  "Relic Shield": { "gear": true, "status": "auto", "note": "W6 (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)" },
-  "Rites of Battle": { "effects": [{ "stratDiscount": { "ids": ["*"], "cp": 1, "limit": "round", "perArmy": true } }] },
-  "Finest Hour": { "act": { "when": "fightStartButton", "limit": "battle", "botUse": "valuable", "label": "+3 A, Devastating Wounds (ตัวนี้)", "do": [{ "on": "self", "bearerOnly": true, "buff": [{ "attack": "melee", "attacks": 3, "abilities": ["devastating wounds"] }], "until": "phase" }] } },
-  "Priority Objective Identified": {
-    "effects": [{ "scope": "army", "units": ["ADEPTUS ASTARTES"], "if": ["holderOnBattlefield", "targetOnPriority"], "reroll": "wounds1" }],
-    "act": { "when": "battleStart", "auto": true, "limit": "battle", "per": "army", "do": [{ "on": "self", "setPriority": true }] }
+ "Surgical Precision": {
+  "effects": [
+   {
+    "scope": "led",
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Vivispectrum": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "needDestroyed": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "ocSet": 9
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  }
+ },
+ "Assault Ramp": {
+  "effects": [
+   {
+    "assaultDisembark": true
+   }
+  ]
+ },
+ "One Shot": {
+  "status": "info",
+  "note": "keyword ของอาวุธ ระบบนับให้แล้ว"
+ },
+ "Suppression Fire": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "accelerator autocannon"
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "suppressed"
+    }
+   ]
+  }
+ },
+ "Combat Squads": {
+  "split": "half",
+  "note": "เลือกแยกหน่วยได้ตอนจัดทัพ (เมนู ⋮)"
+ },
+ "Bladeguard": {
+  "act": [
+   {
+    "when": "selectedToFight",
+    "auto": true,
+    "limit": "turn",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "melee",
+        "hit": 1
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "attacked",
+    "auto": true,
+    "limit": "turn",
+    "needMelee": true,
+    "if": [
+     "fightPhase"
+    ],
+    "do": [
+     {
+      "attackMod": {
+       "hit": -1
+      }
+     }
+    ]
+   }
+  ],
+  "note": "ระบบใช้ให้อัตโนมัติ: ถ้าโดนตีก่อน = ศัตรู −1 hit, ถ้าได้ตีก่อน = +1 hit"
+ },
+ "Relic Shield": {
+  "gear": true,
+  "status": "auto",
+  "note": "W6 (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)"
+ },
+ "Rites of Battle": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "*"
+     ],
+     "cp": 1,
+     "limit": "round",
+     "perArmy": true
+    }
+   }
+  ]
+ },
+ "Finest Hour": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "botUse": "valuable",
+   "label": "+3 A, Devastating Wounds (ตัวนี้)",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "attack": "melee",
+       "attacks": 3,
+       "abilities": [
+        "devastating wounds"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Priority Objective Identified": {
+  "effects": [
+   {
+    "scope": "army",
+    "units": [
+     "ADEPTUS ASTARTES"
+    ],
+    "if": [
+     "holderOnBattlefield",
+     "targetOnPriority"
+    ],
+    "reroll": "wounds1"
+   }
+  ],
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "limit": "battle",
+   "per": "army",
+   "do": [
+    {
+     "on": "self",
+     "setPriority": true
+    }
+   ]
+  }
+ },
+ "Evade and Survive": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "limit": "phase",
+   "do": [
+    {
+     "on": "self",
+     "move": "6"
+    }
+   ]
+  }
+ },
+ "LAST SURVIVOR": {
+  "status": "info",
+  "note": "ห้ามเป็น Warlord"
+ },
+ "Psychic Hood": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "fnp": 4,
+     "fnpVs": "psychic"
+    }
+   }
+  ]
+ },
+ "Veil of Time (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Angel’s Wrath": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "strength": 1
+   }
+  ]
+ },
+ "Interceptor": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetFly"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Sentinel Protocols": {
+  "effects": [
+   {
+    "overwatchHitOn": 4
+   }
+  ]
+ },
+ "Drop Pod Assault": {
+  "status": "auto",
+  "note": "ลงสนามได้ตั้งแต่ round 1; ผู้โดยสารลงทันทีห่างศัตรูเกิน 8\" (อัตโนมัติ)",
+  "effects": [
+   {
+    "deepStrike": true,
+    "arriveFromRound": 1
+   }
+  ]
+ },
+ "Combat Disembarkation": {
+  "effects": [
+   {
+    "assaultDisembark": true
+   }
+  ]
+ },
+ "Deployment Complete": {
+  "effects": [
+   {
+    "noEmbark": true
+   }
+  ]
+ },
+ "Designer’s Note": {
+  "status": "info"
+ },
+ "Ballistus Strike": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "within:24"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Litany of Hate": {
+  "effects": [
+   {
+    "attack": "melee",
+    "abilities": [
+     "lance"
+    ]
+   }
+  ]
+ },
+ "Catechism of Fire": {
+  "act": {
+   "when": "selectedToShoot",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "visible": true
+   },
+   "label": "เลือกเป้า: ยิงได้ Devastating Wounds",
+   "do": [
+    {
+     "incoming": {
+      "attack": "ranged",
+      "abilities": [
+       "devastating wounds"
+      ]
+     },
+     "selfOnly": true,
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Fortification": {
+  "status": "partial",
+  "note": "ระบบยังไม่มีกฎ FORTIFICATION แบบเต็ม (ยิงเข้าหน่วยที่ติดป้อมได้ด้วย −1 hit ให้ใส่ buff เอง)"
+ },
+ "Ceramite Cover": {
+  "status": "partial",
+  "note": "cover จากป้อมคิดแบบเดียวกับ terrain ที่บังไม่หมด"
+ },
+ "Defensive Array": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "fire-overwatch"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "Total Obliteration": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "reroll": "damage"
+   }
+  ]
+ },
+ "Exhortation of Rage": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "belowHalf"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Hammerstrike": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetInTerrain"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Recitation of Faith": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "fnp": 4,
+     "fnpVs": "mortal"
+    }
+   }
+  ]
+ },
+ "Wisdom of the Ancients (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS ASTARTES",
+     "INFANTRY"
+    ],
+    "reroll": "hits1"
+   }
+  ]
+ },
+ "Teleport Homer": {
+  "status": "auto",
+  "note": "token วางเองตอนเริ่มเกม; Rapid Ingress 0CP ลงภายใน 3\" ของ token ห่างศัตรูเกิน 8\"",
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "rapid-ingress"
+     ],
+     "cp": 1,
+     "limit": "battle"
+    }
+   }
+  ]
+ },
+ "Terminatus Assault": {
+  "effects": [
+   {
+    "attack": "melee",
+    "weapon": "Lightning Claws",
+    "if": [
+     "charged"
+    ],
+    "abilities": [
+     "sustained hits 1: non-monster/vehicle"
+    ]
+   },
+   {
+    "attack": "melee",
+    "weapon": "Thunder Hammer",
+    "if": [
+     "charged"
+    ],
+    "abilities": [
+     "sustained hits 1: monster/vehicle"
+    ]
+   }
+  ]
+ },
+ "Storm Shield": {
+  "gear": true,
+  "status": "auto",
+  "note": "W/InSv ตามอุปกรณ์ที่เลือกตอนจัดทัพ"
+ },
+ "Shrouding (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "stealth": true,
+    "defend": {
+     "untargetableBeyond12": true
+    }
+   }
+  ]
+ },
+ "Unorthodox Strategist (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 12,
+    "stratTax": {
+     "cp": 1,
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Master of the Fleet": {
+  "act": {
+   "when": "formation",
+   "auto": true,
+   "limit": "battle",
+   "per": "army",
+   "target": {
+    "side": "friendly",
+    "units": [
+     "ADEPTUS ASTARTES",
+     "INFANTRY",
+     "PHOBOS|GRAVIS|TACTICUS"
+    ],
+    "anywhere": true
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "deepStrike": true
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  }
+ },
+ "Hailstrike": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "attack": "ranged",
+      "units": [
+       "ADEPTUS ASTARTES"
+      ],
+      "noCover": true
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Meteoric Descent": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "ingressThisTurn"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Incendiary Terror": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "pyreblaster",
+    "units": [
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "shock": -1
+    }
+   ]
+  }
+ },
+ "Rites of Tempering": {
+  "effects": [
+   {
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Iron Father": {
+  "effects": [
+   {
+    "loneOperative": true,
+    "if": [
+     "near:3:ADEPTUS ASTARTES+VEHICLE"
+    ]
+   }
+  ]
+ },
+ "Master of the Forge": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 3,
+    "units": [
+     "ADEPTUS ASTARTES",
+     "VEHICLE"
+    ]
+   },
+   "label": "รถในระยะ 3\": ฟื้น 3 W, ไม่สนตัวปรับ hit/wound",
+   "do": [
+    {
+     "heal": "3"
+    },
+    {
+     "buff": [
+      {
+       "ignoreMods": true
+      }
+     ],
+     "until": "nextTurnStart"
+    }
+   ]
+  }
+ },
+ "INSPIRING COMMANDER@Iron Father Feirros": {
+  "effects": [
+   {
+    "scope": "army",
+    "units": [
+     "name:Heavy Intercessor Squad"
+    ],
+    "if": [
+     "notCharacterModel"
+    ],
+    "ocSet": 3
+   }
+  ]
+ },
+ "Omni-scramblers": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true
+   },
+   "label": "ศัตรู detected: +3\" detection",
+   "do": [
+    {
+     "buff": [
+      {
+       "detection": 3
+      }
+     ],
+     "until": "turn",
+     "mark": "detected"
+    }
+   ]
+  }
+ },
+ "Helix Gauntlet": {
+  "gear": true,
+  "effects": [
+   {
+    "defend": {
+     "fnp": 6
+    }
+   }
+  ]
+ },
+ "Infiltrator Comms Array": {
+  "gear": true,
+  "effects": [
+   {
+    "stratCpChance": 5
+   }
+  ]
+ },
+ "Fire Support": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "reroll": "wounds"
+     },
+     "fromThisTransport": true,
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "The Imperium’s Sword": {
+  "effects": [
+   {
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Brutalis Charge": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "max": 3,
+     "do": [
+      {
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "do": [
+      {
+       "mortals": "3"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "mortals": "D3+3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Author of the Codex": {
+  "act": [
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Assault Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:assault"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 12,
+     "visible": true,
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    }
+   },
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Devastator Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:devastator"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 12,
+     "visible": true,
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    }
+   },
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Tactical Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:tactical"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 12,
+     "visible": true,
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    }
+   }
+  ]
+ },
+ "Ultramarines Bodyguard": {
+  "effects": [
+   {
+    "loneOperative": true,
+    "if": [
+     "near:3:ADEPTUS ASTARTES+INFANTRY"
+    ]
+   }
+  ]
+ },
+ "Armour of Fate": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "reviveLater": {
+      "on": 3,
+      "wounds": 6
+     }
+    }
+   ]
+  }
+ },
+ "SUPREME COMMANDER": {
+  "status": "info",
+  "note": "ต้องเป็น Warlord"
+ },
+ "Primarch of the XIII (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS ASTARTES"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Master of Battle": {
+  "status": "auto",
+  "note": "เลือกเป้าสำรองของ Oath of Moment ใน Command phase",
+  "effects": [
+   {
+    "oathBackup": true
+   }
+  ]
+ },
+ "Supreme Strategist": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 12,
+    "units": [
+     "ADEPTUS ASTARTES"
+    ],
+    "stratDiscount": {
+     "ids": [
+      "*"
+     ],
+     "cp": 1,
+     "limit": "round",
+     "perArmy": true
+    }
+   }
+  ]
+ },
+ "Techmarine": {
+  "effects": [
+   {
+    "loneOperative": true,
+    "if": [
+     "near:3:ADEPTUS ASTARTES+VEHICLE"
+    ]
+   }
+  ]
+ },
+ "Blessing of the Omnissiah": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 3,
+    "units": [
+     "ADEPTUS ASTARTES",
+     "VEHICLE"
+    ]
+   },
+   "label": "รถในระยะ 3\": ฟื้น D3 W, +1 hit",
+   "do": [
+    {
+     "heal": "D3"
+    },
+    {
+     "buff": [
+      {
+       "hit": 1
+      }
+     ],
+     "until": "nextCommand"
+    }
+   ]
+  }
+ },
+ "Vengeance of the Omnissiah": {
+  "act": {
+   "when": "friendlyDeath",
+   "auto": true,
+   "range": 12,
+   "deathUnits": [
+    "ADEPTUS ASTARTES",
+    "VEHICLE"
+   ],
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "weapon": "Omnissian power axe",
+       "attacksTo": 7
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  }
+ },
+ "Vanguard Assault": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "attacks": 1
+   }
+  ]
+ },
+ "Warden of the Imperium Nihilus": {
+  "doctrines": [
+   "assault",
+   "tactical"
+  ]
+ },
+ "Death Mask of Sanguinius": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 6,
+    "each": true
+   },
+   "do": [
+    {
+     "shock": -1
+    }
+   ]
+  }
+ },
+ "The Quickening (Psychic)": {
+  "effects": [
+   {
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   }
+  ]
+ },
+ "Transfixing Gaze (Aura, Psychic)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "fallBackLdTest": true
+   }
+  ]
+ },
+ "Aura of Fervour (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS ASTARTES"
+    ],
+    "rerollShock": true
+   }
+  ]
+ },
+ "Miraculous Saviour": {
+  "status": "auto",
+  "note": "จบ Charge phase ศัตรู: ลงมา engaged กับหน่วยที่ชาร์จ (ครั้งเดียว)"
+ },
+ "Redeemer of the Lost": {
+  "effects": [
+   {
+    "scope": "led",
+    "fightOnDeath": 4
+   }
+  ]
+ },
+ "Mass of Doom": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "abilities": [
+     "devastating wounds: non-monster/vehicle"
+    ]
+   }
+  ]
+ },
+ "Sanguinary Priest": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Blood Chalice": {
+  "effects": [
+   {
+    "scope": "led",
+    "toughness": 1
+   }
+  ]
+ },
+ "Guardian of the Lost": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Fury Unbound": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Angelic Visage": {
+  "effects": [
+   {
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Heirs of Azkaellon": {
+  "effects": [
+   {
+    "defend": {
+     "vs": "melee",
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Sanguinary Banner": {
+  "gear": true,
+  "effects": [
+   {
+    "oc": 1
+   }
+  ]
+ },
+ "ATTACHED UNIT": {
+  "status": "info",
+  "note": "สิทธิ์ผูก leader (ใช้ตอนจัดทัพ)"
+ },
+ "Attached Unit": {
+  "status": "info",
+  "note": "สิทธิ์ผูก leader (ใช้ตอนจัดทัพ)"
+ },
+ "Black Rage": {
+  "effects": [
+   {
+    "attack": "melee",
+    "reroll": "hits1"
+   }
+  ]
+ },
+ "Driven by Fury": {
+  "act": {
+   "when": "shotByEnemy",
+   "auto": true,
+   "limit": "phase",
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6+1"
+    }
+   ]
+  }
+ },
+ "Overcharged Engines": {
+  "effects": [
+   {
+    "rerollAdvance": true
+   }
+  ]
+ },
+ "The Lion Helm": {
+  "gear": true,
+  "effects": [
+   {
+    "defend": {
+     "inv": 4
+    }
+   }
+  ],
+  "act": {
+   "when": "mortalTaken",
+   "auto": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "defend": {
+        "fnp": 4,
+        "fnpVs": "mortal"
+       }
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Supreme Grand Master": {
+  "effects": [
+   {
+    "scope": "led",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Masterful Tactician": {
+  "act": [
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Assault Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:assault"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 9,
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    }
+   },
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Devastator Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:devastator"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 9,
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    }
+   },
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Tactical Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:tactical"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 9,
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    }
+   }
+  ]
+ },
+ "Grand Master of the Deathwing": {
+  "effects": [
+   {
+    "if": [
+     "targetCharacter"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Strikes of Retribution": {
+  "effects": [
+   {
+    "scope": "model",
+    "fightOnDeath": 2
+   }
+  ]
+ },
+ "Exemplar of Hate": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Feared Interrogator": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 6,
+    "units": [
+     "CHARACTER"
+    ],
+    "each": true
+   },
+   "do": [
+    {
+     "shock": -1
+    }
+   ]
+  }
+ },
+ "Engulfing Fear (Psychic)": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 18
+   },
+   "label": "ศัตรูในระยะ 18\" ทอย Battle-shock",
+   "do": [
+    {
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Book of Salvation": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "attacks": 1
+   }
+  ]
+ },
+ "Deathwing": {
+  "effects": [
+   {
+    "ignoreHitMods": true
+   }
+  ]
+ },
+ "Watcher in the Dark": {
+  "gear": true,
+  "act": {
+   "when": "mortalTaken",
+   "auto": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "defend": {
+        "fnp": 4,
+        "fnpVs": "mortal"
+       }
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Inner Circle": {
+  "effects": [
+   {
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Icon of Old Caliban (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "DARK ANGELS"
+    ],
+    "stealth": true
+   }
+  ]
+ },
+ "Lightning-fast Manoeuvres": {
+  "effects": [
+   {
+    "defend": {
+     "vs": "ranged",
+     "wound": -1
+    }
+   }
+  ]
+ },
+ "Stasis Bomb": {
+  "act": {
+   "when": "opponentFightEnd",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 24,
+    "visible": true,
+    "units": [
+     "!AIRCRAFT"
+    ],
+    "notLoneOperative": true
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "slowed": true
+      }
+     ],
+     "until": "opponentNextMovementEnd",
+     "mark": "slowed"
+    }
+   ]
+  }
+ },
+ "Knights of Caliban": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "abilities": [
+     "anti-monster 4+",
+     "anti-vehicle 4+"
+    ]
+   }
+  ]
+ },
+ "Storm of Vengeance": {
+  "act": {
+   "when": "friendlyDeath",
+   "auto": true,
+   "limit": "turn",
+   "range": 6,
+   "needUnitDestroyed": true,
+   "oppShooting": true,
+   "deathUnits": [
+    "ADEPTUS ASTARTES"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "shootBack": true
+    }
+   ]
+  }
+ },
+ "High King of Fenris": {
+  "act": {
+   "when": "movement",
+   "limit": "round",
+   "per": "army",
+   "target": {
+    "side": "friendly",
+    "units": [
+     "SPACE WOLVES"
+    ],
+    "inReserves": true
+   },
+   "label": "หน่วยในกองหนุนลงสนามเร็วขึ้น 1 round",
+   "do": [
+    {
+     "earlyArrival": true
+    }
+   ]
+  }
+ },
+ "Guile of the Wolf (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 12,
+    "stratTax": {
+     "cp": 1,
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "EMBARKING WITHIN TRANSPORTS": {
+  "status": "info",
+  "note": "กฎการขึ้นรถ (นับที่นั่งตามข้อมูลรถ)"
+ },
+ "War Howl": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "body:Blood Claws"
+    ],
+    "attack": "melee",
+    "strength": 1,
+    "abilities": [
+     "sustained hits 1"
+    ]
+   },
+   {
+    "scope": "led",
+    "if": [
+     "body:Wolf Guard Headtakers"
+    ],
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   }
+  ]
+ },
+ "Battle-lust": {
+  "effects": [
+   {
+    "scope": "model",
+    "weapon": "Frostfang",
+    "if": [
+     "charged"
+    ],
+    "attacks": 2
+   }
+  ]
+ },
+ "Wind Walker (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   },
+   {
+    "scope": "led",
+    "advanceSix": true
+   }
+  ]
+ },
+ "Tempest’s Wrath (Psychic)": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Living Lightning",
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "rangeMinus": 6
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "stormwracked"
+    }
+   ]
+  }
+ },
+ "Slayer’s Oath": {
+  "note": "ระบบเลือก keyword ให้ (ที่ศัตรูมีแต้มรวมมากสุด) · ทำลายหน่วยที่มี keyword นั้นได้ = หน่วยนี้ได้ผลของ Saga ที่สำเร็จ",
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "setSlayer": true
+    }
+   ]
+  }
+ },
+ "Oathbound": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "hit": 1
+   },
+   {
+    "scope": "led",
+    "attack": "melee",
+    "if": [
+     "targetSlayer"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Legendary Tenacity": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Ancient Tactician": {
+  "act": {
+   "when": "commandStart",
+   "auto": true,
+   "if": [
+    "holderOnBattlefield"
+   ],
+   "do": [
+    {
+     "cp": 1
+    }
+   ]
+  }
+ },
+ "Berserk Charge": {
+  "effects": [
+   {
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   }
+  ]
+ },
+ "Cunning Hunters": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "onObjective"
+    ],
+    "strength": 1,
+    "ap": 1
+   }
+  ]
+ },
+ "Iron Priest": {
+  "effects": [
+   {
+    "loneOperative": true,
+    "if": [
+     "near:3:ADEPTUS ASTARTES+VEHICLE"
+    ]
+   }
+  ]
+ },
+ "Gift of the Iron Wolf": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 3,
+    "units": [
+     "ADEPTUS ASTARTES",
+     "VEHICLE"
+    ]
+   },
+   "label": "รถในระยะ 3\": ฟื้น D3 W, ไม่สนตัวปรับ hit/wound",
+   "do": [
+    {
+     "heal": "D3"
+    },
+    {
+     "buff": [
+      {
+       "ignoreMods": true
+      }
+     ],
+     "until": "nextTurnStart"
+    }
+   ]
+  }
+ },
+ "Judgement of the Omnissiah": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "targetEngagedFriendlyVehicle"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Savage Frenzy": {
+  "effects": [
+   {
+    "forceDesperate": true
+   }
+  ]
+ },
+ "Death Totem": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "reroll": "hits1"
+   }
+  ]
+ },
+ "Murder-maker (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "name:Wulfen|name:Wulfen with Storm Shields"
+    ],
+    "if": [
+     "fightPhase"
+    ],
+    "fightOnDeath": 4
+   }
+  ]
+ },
+ "Bestial Fury": {
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "FORCE OF UNTAMED DESTRUCTION": {
+  "status": "info",
+  "note": "ห้ามเป็น Warlord"
+ },
+ "Anvil of Endurance": {
+  "effects": [
+   {
+    "scope": "led",
+    "fightOnDeath": 4
+   }
+  ]
+ },
+ "Champion of the Kingsguard": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "targetCharacter"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Rugged Resilience": {
+  "effects": [
+   {
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Thunderous Charge": {
+  "effects": [
+   {
+    "weapon": "Wolf Guard weapon",
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "strength": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Predatory Instinct": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 9,
+   "limit": "turn",
+   "do": [
+    {
+     "on": "self",
+     "move": "D6"
+    }
+   ]
+  }
+ },
+ "Hunting Hounds@Fenrisian Wolves": {
+  "effects": [
+   {
+    "if": [
+     "nearModels:6:SPACE WOLVES+CHARACTER!WULFEN",
+     "notBattleShocked"
+    ],
+    "ocSet": 1
+   }
+  ]
+ },
+ "Hunting Hounds@Wolf Guard Headtakers": {
+  "effects": [
+   {
+    "if": [
+     "nearModels:6:SPACE WOLVES+CHARACTER!WULFEN",
+     "notBattleShocked",
+     "modelName:Hunting Wol"
+    ],
+    "ocSet": 1
+   }
+  ]
+ },
+ "Hunting Hounds@Wolf Scouts": {
+  "effects": [
+   {
+    "if": [
+     "nearModels:6:SPACE WOLVES+CHARACTER!WULFEN",
+     "notBattleShocked",
+     "modelName:Hunting Wol"
+    ],
+    "ocSet": 1
+   }
+  ]
+ },
+ "Combat Support": {
+  "act": {
+   "when": "friendlyTargeted",
+   "auto": true,
+   "limit": "turn",
+   "per": "army",
+   "range": 6,
+   "deathUnits": [
+    "ADEPTUS ASTARTES",
+    "PHOBOS",
+    "INFANTRY"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "shootBack": true
+    }
+   ]
+  }
+ },
+ "Objective Secured": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "onOwnObjective"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "secure": true
+    }
+   ]
+  }
+ },
+ "Hail of Bolts": {
+  "effects": [
+   {
+    "weapon": "Bolt rifle",
+    "attack": "ranged",
+    "if": [
+     "ownShooting"
+    ],
+    "attacks": 2
+   }
+  ]
+ },
+ "Outrider Escort": {
+  "act": {
+   "when": "friendlyTargeted",
+   "auto": true,
+   "limit": "turn",
+   "per": "army",
+   "range": 6,
+   "deathUnits": [
+    "ADEPTUS ASTARTES",
+    "MOUNTED"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "shootBack": true
+    }
+   ]
+  }
+ },
+ "Multi-spectrum Array": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "units": [
+       "ADEPTUS ASTARTES"
+      ],
+      "hit": 1
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Haywire Mine": {
+  "gear": true,
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "target": {
+    "side": "enemy",
+    "range": 3
+   },
+   "roll": "D6",
+   "label": "ศัตรูในระยะ 3\": 2+ → D3 MW (รถ 2D3)",
+   "table": [
+    {
+     "min": 2,
+     "do": [
+      {
+       "mortals": "D3",
+       "mortalsVehicle": "2D3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Guerrilla Tactics": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "if": [
+    "farFromEnemies:6"
+   ],
+   "botUse": "never",
+   "label": "ออกไปอยู่ Strategic Reserves",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Astartes Banner": {
+  "effects": [
+   {
+    "if": [
+     "contains:Ravenwing Ancient"
+    ],
+    "oc": 1
+   }
+  ]
+ },
+ "Astartes Banner@Ravenwing Command Squad": {
+  "effects": [
+   {
+    "if": [
+     "contains:Ancient"
+    ],
+    "oc": 1
+   }
+  ]
+ },
+ "Astartes Banner@Company Heroes": {
+  "effects": [
+   {
+    "if": [
+     "contains:Ancient"
+    ],
+    "oc": 1
+   }
+  ]
+ },
+ "Deeds of Heroism": {
+  "act": {
+   "when": "selectedToFight",
+   "limit": "battle",
+   "botUse": "valuable",
+   "label": "+1 A ทั้งหน่วย",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "attack": "melee",
+       "attacks": 1
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Refuse to Yield": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Spiritual Leader": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "shocked": true,
+    "units": [
+     "ADEPTUS ASTARTES"
+    ]
+   },
+   "label": "หน่วยเพื่อนในระยะ 12\" หายจาก battle-shocked",
+   "do": [
+    {
+     "unshock": true
+    }
+   ]
+  }
+ },
+ "Unyielding in the Face of the Foe": {
+  "effects": [
+   {
+    "if": [
+     "onControlledObjective"
+    ],
+    "defend": {
+     "save": 1
+    }
+   }
+  ]
+ },
+ "Fury of the First": {
+  "effects": [
+   {
+    "if": [
+     "within:9"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Siege Shield": {
+  "effects": [
+   {
+    "noBigGunsPenalty": true
+   }
+  ]
+ },
+ "Strafing Run": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetNotFly"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Armoured Resilience": {
+  "effects": [
+   {
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Decimator Protocols": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "reroll": "hits1"
+   },
+   {
+    "attack": "ranged",
+    "if": [
+     "targetOnObjective"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Tactical Precision": {
+  "effects": [
+   {
+    "abilities": [
+     "lethal hits: non-monster/vehicle"
+    ]
+   }
+  ]
+ },
+ "Deadly Terror": {
+  "status": "auto",
+  "note": "เพิ่มระยะ Terror Troops เป็น 6\" (คิดใน Terror Troops)"
+ },
+ "Target Priority": {
+  "effects": [
+   {
+    "eligible": [
+     "shootAfterFallBack",
+     "chargeAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Shock Assault": {
+  "effects": [
+   {
+    "attack": "melee",
+    "reroll": "wounds1"
+   },
+   {
+    "attack": "melee",
+    "if": [
+     "targetOnObjective"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Thunderstrike": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Hood of Hellfire": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "fnp": 4,
+     "fnpVs": "mortalPsychic"
+    }
+   }
+  ]
+ },
+ "Master of Prescience (Psychic)": {
+  "effects": [
+   {
+    "stealth": true,
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   },
+   {
+    "stratDiscount": {
+     "ids": [
+      "counteroffensive",
+      "fire-overwatch",
+      "heroic-intervention"
+     ],
+     "cp": 1,
+     "limit": "round",
+     "perArmy": true
+    }
+   }
+  ]
+ },
+ "Rotating Death": {
+  "effects": [
+   {
+    "weapon": "onslaught gatling cannon",
+    "if": [
+     "targetInfantry"
+    ],
+    "abilities": [
+     "sustained hits 2"
+    ]
+   }
+  ]
+ },
+ "Reaping Tally": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetNotMV"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Reposition Under Covering Fire": {
+  "act": {
+   "when": "afterShootingButton",
+   "limit": "phase",
+   "if": [
+    "hasWeapon:Instigator bolt carbine"
+   ],
+   "label": "เดิน Normal move หลังยิง (ชาร์จไม่ได้)",
+   "do": [
+    {
+     "on": "self",
+     "move": "M",
+     "noCharge": true
+    }
+   ]
+  }
+ },
+ "Mark the Target": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "stationary"
+    ],
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
+ },
+ "Ferocious Assault": {
+  "effects": [
+   {
+    "weapon": "las-talon",
+    "if": [
+     "targetMV",
+     "targetClosest"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Priority Target Acquisition": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "within12"
+    ],
+    "strength": 1
+   }
+  ]
+ },
+ "An Honourable Death in Combat": {
+  "effects": [
+   {
+    "if": [
+     "belowStarting",
+     "!belowHalf"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   },
+   {
+    "if": [
+     "belowHalf"
+    ],
+    "abilities": [
+     "sustained hits 2"
+    ]
+   }
+  ]
+ },
+ "For the Chapter!": {
+  "effects": [
+   {
+    "shootOnDeath": 3
+   }
+  ]
+ },
+ "Close-quarters Firepower": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetClosest"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Unto the Anvil": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "!doctrine:assault"
+    ],
+    "reroll": "wounds1"
+   },
+   {
+    "attack": "melee",
+    "if": [
+     "doctrine:assault"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Lord of the Pyroclasts": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 2,
+    "oc": -1
+   }
+  ]
+ },
+ "Icon of Obstinacy": {
+  "effects": [
+   {
+    "defend": {
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Rampart": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "botUse": "valuable",
+   "label": "2+ InSv จนจบ phase",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "defend": {
+        "inv": 2
+       }
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "INSPIRING COMMANDER@Darnath Lysander": {
+  "effects": [
+   {
+    "scope": "army",
+    "units": [
+     "name:Terminator Assault Squad|name:Terminator Squad"
+    ],
+    "if": [
+     "notCharacterModel"
+    ],
+    "ocSet": 2
+   }
+  ]
+ },
+ "Signum": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "stationary"
+    ],
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Armorium Cherub": {
+  "freeDie": {
+   "kind": "setSix",
+   "stage": "hit",
+   "limit": "battle"
+  }
+ },
+ "Sternguard Focus": {
+  "effects": [
+   {
+    "if": [
+     "targetOath"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Mental Fortress (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "inv": 4
+    }
+   }
+  ]
+ },
+ "Targeter Optics": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Visions of Heresy": {
+  "effects": [
+   {
+    "rerollCharge": true,
+    "stratDiscount": {
+     "ids": [
+      "fire-overwatch",
+      "heroic-intervention"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "Grand Master of the Ravenwing": {
+  "effects": [
+   {
+    "mobile": true
+   }
+  ],
+  "act": [
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Assault Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:assault"
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Devastator Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:devastator"
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Tactical Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:tactical"
+     }
+    ]
+   }
+  ]
+ },
+ "Cut Off Their Escape": {
+  "effects": [
+   {
+    "forceDesperate": true
+   }
+  ]
+ },
+ "Intractable Will": {
+  "effects": [
+   {
+    "scope": "led",
+    "fightOnDeath": 4
+   }
+  ]
+ },
+ "The Spiritshield Helm": {
+  "effects": [
+   {
+    "defend": {
+     "fnp": 3,
+     "fnpVs": "mortalPsychic"
+    }
+   }
+  ]
+ },
+ "Signum Array": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true
+   },
+   "label": "ศัตรู: ไม่ได้ cover",
+   "do": [
+    {
+     "incoming": {
+      "noCover": true
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Siege Captain": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "targetMVF"
+    ],
+    "strength": 2,
+    "ap": 2,
+    "damage": 2
+   }
+  ]
+ },
+ "Strategic Dispersal": {
+  "act": {
+   "when": "afterShootingButton",
+   "limit": "phase",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "เดิน 6\" หลังยิง (ชาร์จไม่ได้)",
+   "do": [
+    {
+     "on": "self",
+     "move": "6",
+     "noCharge": true
+    }
+   ]
+  }
+ },
+ "Assault Vehicle": {
+  "effects": [
+   {
+    "disembarkAfterAdvance": true
+   }
+  ]
+ },
+ "Orbital Comms Array (Aura)": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS ASTARTES"
+    ],
+    "stratCpChance": 5
+   }
+  ]
+ },
+ "Shield Dome": {
+  "gear": true,
+  "status": "auto",
+  "note": "5+ InSv (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)"
+ },
+ "Keep the Banner High": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "belowStarting"
+    ],
+    "hit": 1
+   },
+   {
+    "scope": "led",
+    "if": [
+     "belowHalf"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Terminator Storm Shield": {
+  "gear": true,
+  "status": "auto",
+  "note": "W6 (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)"
+ },
+ "Primarch of the First Legion": {
+  "choice": {
+   "name": "Primarch of the First Legion",
+   "pick": 2,
+   "when": "command",
+   "options": [
+    "Martial Exemplar (Aura)",
+    "No Hiding From the Watchers (Aura)",
+    "Fealty to the Lion"
+   ]
+  }
+ },
+ "The Emperor’s Shield": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Dark Angels Bodyguard": {
+  "effects": [
+   {
+    "loneOperative": true,
+    "if": [
+     "near:3:ADEPTUS ASTARTES+INFANTRY"
+    ]
+   }
+  ]
+ },
+ "Mist-wreathed Shadow Realms": {
+  "act": {
+   "when": "command",
+   "if": [
+    "notEngaged"
+   ],
+   "botUse": "never",
+   "label": "ออกไป Strategic Reserves แล้วลงสนามได้เทิร์นหน้า",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true,
+     "earlyArrival": true
+    }
+   ]
+  }
+ },
+ "Martial Exemplar (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "DARK ANGELS"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "No Hiding From the Watchers (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "DARK ANGELS"
+    ],
+    "defend": {
+     "fnp": 5,
+     "fnpVs": "mortalPsychic"
+    }
+   }
+  ]
+ },
+ "Master of Deceit": {
+  "status": "auto",
+  "note": "หลังวางทัพ: redeploy INFANTRY ได้ 3 หน่วย (วางใหม่หรือเข้ากองหนุน)"
+ },
+ "Annihilator Protocols": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "targetMVF"
+    ],
+    "abilities": [
+     "sustained hits 2"
+    ]
+   }
+  ]
+ },
+ "Centurion Assault Launcher": {
+  "gear": true,
+  "status": "info",
+  "note": "ได้ keyword GRENADES"
+ },
+ "Aquilon Optics": {
+  "freeDie": [
+   {
+    "kind": "reroll",
+    "stage": "hit",
+    "limit": "phase",
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ]
+   },
+   {
+    "kind": "reroll",
+    "stage": "wound",
+    "limit": "phase",
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ]
+   }
+  ],
+  "status": "partial",
+  "note": "re-roll damage ยังไม่มีในถาดลูกเต๋า"
+ },
+ "Tempormortis": {
+  "effects": [
+   {
+    "fightsFirst": true
+   }
+  ]
+ },
+ "Silent Fury": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "needCharacterKill": true,
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "weapon": "executioner relic blade",
+       "attacks": 1
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  }
+ },
+ "Shadowmaster": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "untargetableBeyond12": true
+    }
+   }
+  ]
+ },
+ "Echo of the Ravenspire": {
+  "act": {
+   "when": "opponentFightEnd",
+   "if": [
+    "notEngaged"
+   ],
+   "botUse": "never",
+   "label": "ออกไปอยู่ Strategic Reserves",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "INSPIRING COMMANDER@Kayvaan Shrike": {
+  "effects": [
+   {
+    "scope": "army",
+    "units": [
+     "name:Assault Intercessors With Jump Packs"
+    ],
+    "if": [
+     "notCharacterModel"
+    ],
+    "ocSet": 2
+   }
+  ]
+ },
+ "For the Khan!": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   },
+   {
+    "attack": "melee",
+    "abilities": [
+     "lance"
+    ]
+   }
+  ]
+ },
+ "Trophy Taker": {
+  "effects": [
+   {
+    "if": [
+     "targetCharacter"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "INSPIRING COMMANDER@Kor’sarro Khan": {
+  "effects": [
+   {
+    "scope": "army",
+    "units": [
+     "name:Outrider Squad"
+    ],
+    "if": [
+     "notCharacterModel"
+    ],
+    "ocSet": 3
+   }
+  ]
+ },
+ "Purgation Run": {
+  "act": {
+   "when": "afterShootingButton",
+   "limit": "phase",
+   "label": "เดิน D6\" หลังยิง (ชาร์จไม่ได้)",
+   "do": [
+    {
+     "on": "self",
+     "move": "D6",
+     "noCharge": true
+    }
+   ]
+  }
+ },
+ "Thunderous Impact": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "strength": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Oath of Rynn": {
+  "act": {
+   "when": "anyCommand",
+   "limit": "battle",
+   "botUse": "valuable",
+   "label": "+1 A อาวุธทั้งหน่วยจนจบเทิร์น",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "attacks": 1
+      }
+     ],
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ "To the Last": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "belowStarting"
+    ],
+    "hit": 1
+   },
+   {
+    "scope": "led",
+    "if": [
+     "belowHalf"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "CRIMSON FISTS": {
+  "status": "info",
+  "note": "นับเป็น Imperial Fists"
+ },
+ "INSPIRING COMMANDER@Pedro Kantor": {
+  "effects": [
+   {
+    "scope": "army",
+    "units": [
+     "name:Sternguard Veteran Squad"
+    ],
+    "if": [
+     "notCharacterModel"
+    ],
+    "ocSet": 2
+   }
+  ]
+ },
+ "Annihilator": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ],
+    "reroll": "damage"
+   }
+  ]
+ },
+ "Destructor": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetInfantry"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Duty Eternal": {
+  "effects": [
+   {
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Fearsome Assault": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "shock": -1
+    }
+   ]
+  }
+ },
+ "Terror Troops (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 3,
+    "oc": -1
+   }
+  ]
+ },
+ "Grapnel Launcher": {
+  "gear": true,
+  "status": "info",
+  "note": "สนาม 2D ไม่มีระยะแนวตั้งอยู่แล้ว"
+ },
+ "Reiver Grav-chute": {
+  "gear": true,
+  "effects": [
+   {
+    "deepStrike": true
+   }
+  ]
+ },
+ "Emergency Combat Embarkation": {
+  "status": "auto",
+  "note": "ศัตรูประกาศชาร์จ: หน่วยที่อยู่ภายใน 3\" ขึ้นรถหนีเอง (เทิร์นละครั้ง)"
+ },
+ "Executioner": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetNotBelowHalf"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Self Repair": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "do": [
+    {
+     "on": "self",
+     "heal": "1"
+    }
+   ]
+  }
+ },
+ "Forgefather": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 24,
+    "visible": true
+   },
+   "label": "เลือกเป้า: อาวุธ Torrent/Melta +2 S",
+   "do": [
+    {
+     "incoming": {
+      "attack": "ranged",
+      "units": [
+       "ADEPTUS ASTARTES"
+      ],
+      "strength": 2,
+      "weaponCond": "torrentOrMelta"
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Seeker of the Unfound": {
+  "status": "auto",
+  "note": "เลือก objective กลางสนามที่ใกล้สุดตอนลงสนามครั้งแรก",
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "onSeekerObjective"
+    ],
+    "ocSet": 10,
+    "defend": {
+     "fnp": 4
+    }
+   }
+  ]
+ },
+ "INSPIRING COMMANDER@Vulkan He’stan": {
+  "effects": [
+   {
+    "scope": "army",
+    "units": [
+     "name:Infernus Squad"
+    ],
+    "if": [
+     "notCharacterModel"
+    ],
+    "ocSet": 2
+   }
+  ]
+ },
+ "Pinning Bombardment": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "vengeance launcher",
+    "units": [
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Savage Fury": {
+  "effects": [
+   {
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Narthecium": {
+  "act": {
+   "when": "command",
+   "auto": true,
+   "botUse": "damaged",
+   "do": [
+    {
+     "on": "self",
+     "heal": "D3+1"
+    }
+   ]
+  }
+ },
+ "Narthecium@Ravenwing Command Squad": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "if": [
+    "contains:Apothecary"
+   ],
+   "botUse": "damaged",
+   "label": "คืนชีพ 1 โมเดล",
+   "do": [
+    {
+     "on": "self",
+     "revive": 1
+    }
+   ]
+  }
+ },
+ "Honour or Death@Ravenwing Command Squad": {
+  "effects": [
+   {
+    "if": [
+     "contains:Champion"
+    ],
+    "advanceBonus": 1,
+    "chargeBonus": 1,
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "Honour or Death": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "Command Squad": {
+  "effects": [
+   {
+    "defend": {
+     "wound": -1
+    }
+   }
+  ]
+ },
+ "Gene-seed Recovery": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "do": [
+      {
+       "cp": 1
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Unbreakable Duty": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "centreOrObjective"
+    ],
+    "defend": {
+     "fnp": 4
+    }
+   }
+  ]
+ },
+ "Hammer of Wrath": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "perModel": true,
+   "each": {
+    "on": 4,
+    "do": [
+     {
+      "mortals": "1"
+     }
+    ]
+   }
+  }
+ },
+ "Interception Strike": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetNearFriendlyAA12"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Stabilised Disembarkation": {
+  "status": "auto",
+  "note": "รถโดนยิงจนเหลือครึ่งเลือด: หน่วยข้างในลงเอง"
+ },
+ "Litanies of the Devout": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "contains:Grimaldus"
+    ],
+    "attack": "melee",
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Temple Relics": {
+  "choice": {
+   "name": "Temple Relics",
+   "pick": 1,
+   "when": "command",
+   "if": [
+    "contains:Servitor"
+   ],
+   "options": [
+    "Banner of the Emperor Victorious",
+    "Column from the Major Altar",
+    "Water from the Stoup of Elucidation"
+   ]
+  }
+ },
+ "Banner of the Emperor Victorious": {
+  "effects": [
+   {
+    "advanceBonus": 1,
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Column from the Major Altar": {
+  "effects": [
+   {
+    "toughness": 1
+   }
+  ]
+ },
+ "Water from the Stoup of Elucidation": {
+  "effects": [
+   {
+    "attack": "melee",
+    "ap": 1
+   }
+  ]
+ },
+ "Vehement Aggression": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "reroll": "hits1"
+   }
+  ],
+  "act": {
+   "when": "selectedToFight",
+   "auto": true,
+   "if": [
+    "leaderAttached"
+   ],
+   "ldTest": true,
+   "pass": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "attack": "melee",
+       "reroll": "wounds1"
+      }
+     ],
+     "until": "phase"
+    }
+   ],
+   "fail": []
+  }
+ },
+ "Prioritised Eradication": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "needDestroyed": true,
+   "roll": "D6",
+   "table": [
+    {
+     "min": 4,
+     "do": [
+      {
+       "cp": 1
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Crusade of Wrath": {
+  "effects": [
+   {
+    "attack": "melee",
+    "attacks": 1,
+    "strength": 1
+   }
+  ]
+ },
+ "High Marshal": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "roll": "D6",
+   "rollAdd": "per5models",
+   "table": [
+    {
+     "min": 2,
+     "max": 3,
+     "do": [
+      {
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "do": [
+      {
+       "mortals": "3"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "mortals": "D3+3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Armour of Faith": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Sigismund’s Heir": {
+  "effects": [
+   {
+    "if": [
+     "enemyCharacterWithin12"
+    ],
+    "rerollCharge": true
+   }
+  ],
+  "act": {
+   "when": "selectedToFight",
+   "limit": "battle",
+   "per": "army",
+   "if": [
+    "engagedWithCharacter"
+   ],
+   "label": "Devastating Wounds (ตีใส่ CHARACTER)",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "attack": "melee",
+       "abilities": [
+        "devastating wounds"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "CHOSEN OF THE EMPEROR": {
+  "status": "info",
+  "note": "มี Emperor's Champion ได้ตัวเดียว"
+ },
+ "Inspirational Exemplar": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "hit": 1
+   }
+  ]
+ },
+ "Pious Fervour": {
+  "act": {
+   "when": "selectedToFight",
+   "auto": true,
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "attacksPerEnemyNear": {
+      "range": 6,
+      "max": 3,
+      "weapon": "master-crafted power weapon"
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Exploit Their Cowardice": {
+  "act": {
+   "when": "enemyFellBack",
+   "limit": "phase",
+   "if": [
+    "unengaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "move": "M"
+    }
+   ]
+  }
+ },
+ "Righteous Zeal": {
+  "act": {
+   "when": "shotByEnemy",
+   "auto": true,
+   "limit": "phase",
+   "needModelsLost": true,
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6+1"
+    }
+   ]
+  }
+ },
+ "Fervour of the Ancients (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "SPACE WOLVES"
+    ],
+    "advanceBonus": 1,
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Blizzard Shield": {
+  "gear": true,
+  "status": "auto",
+  "note": "4+ InSv (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)"
+ },
+ "Braziers of Judgement": {
+  "effects": [
+   {
+    "stealth": true,
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Enmity for the Unworthy": {
+  "effects": [
+   {
+    "if": [
+     "targetCharacter"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Forlorn Hero": {
+  "effects": [
+   {
+    "scouts": 6
+   }
+  ]
+ },
+ "Death Vision of Sanguinius": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "needMelee": true,
+   "target": {
+    "side": "enemy",
+    "attacker": true
+   },
+   "roll": "D6",
+   "rollAdd": "warlordInTarget2",
+   "table": [
+    {
+     "min": 2,
+     "max": 3,
+     "do": [
+      {
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "do": [
+      {
+       "mortals": "3"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "mortals": "D3+3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Lost to Fury": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Healing Balms": {
+  "act": {
+   "when": "command",
+   "auto": true,
+   "botUse": "damaged",
+   "do": [
+    {
+     "on": "self",
+     "heal": "D3+1"
+    }
+   ]
+  }
+ },
+ "Tempered Ferocity": {
+  "effects": [
+   {
+    "scope": "led",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   },
+   {
+    "scope": "led",
+    "if": [
+     "within6"
+    ],
+    "reroll": "hits1"
+   }
+  ]
+ },
+ "Heroic Last Stand": {
+  "effects": [
+   {
+    "scope": "model",
+    "fightOnDeath": 2
+   }
+  ]
+ },
+ "Let Loose the Wolves": {
+  "split": "byModel",
+  "note": "แยก Headtakers กับ Hunting Wolves ตอนจัดทัพ (เมนู ⋮)"
+ },
+ "Headhunters": {
+  "effects": [
+   {
+    "if": [
+     "targetQuarry"
+    ],
+    "abilities": [
+     "devastating wounds",
+     "precision"
+    ]
+   }
+  ],
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "limit": "battle",
+   "target": {
+    "side": "enemy",
+    "anywhere": true
+   },
+   "do": [
+    {
+     "setQuarry": true
+    }
+   ]
+  }
+ },
+ "Hammer Blow": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "MONSTER|VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "endOfNextTurn",
+     "mark": "suppressed"
+    }
+   ]
+  }
+ },
+ "Bestial Rage": {
+  "act": {
+   "when": "shotByEnemy",
+   "auto": true,
+   "limit": "phase",
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6+1"
+    }
+   ]
+  }
+ },
+ "Violent Fury": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "twoMeleeWeapons"
+    ],
+    "abilities": [
+     "twin-linked"
+    ]
+   }
+  ]
+ },
+ "Remorseless Persecution": {
+  "effects": [
+   {
+    "scope": "led",
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   }
+  ]
+ },
+ "Condemnatory Annihilation": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "needDestroyed": true,
+   "target": {
+    "side": "enemy",
+    "range": 6,
+    "each": true
+   },
+   "do": [
+    {
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Vengeful Exhortation": {
+  "effects": [
+   {
+    "scope": "led",
+    "fightOnDeath": 4
+   }
+  ]
+ },
+ "Martial Honour": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "needDestroyed": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "oc": 5,
+       "if": [
+        "notBattleShocked"
+       ]
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  }
+ },
+ "Virtuous Onslaught": {
+  "effects": [
+   {
+    "if": [
+     "targetClosest"
+    ],
+    "reroll": "wounds1"
+   }
+  ]
+ },
+ "Judgement of the Weak": {
+  "effects": [
+   {
+    "forceDesperate": true
+   }
+  ]
+ },
+ "Legacy of Jerulas": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "reroll": [
+       "hits1",
+       "wounds1"
+      ]
+     },
+     "fromThisTransport": true,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ "Master of Shadows": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "units": [
+     "ADEPTUS ASTARTES",
+     "INFANTRY"
+    ]
+   },
+   "label": "หน่วยเพื่อน: re-roll ชาร์จได้",
+   "do": [
+    {
+     "buff": [
+      {
+       "rerollCharge": true
+      }
+     ],
+     "until": "nextCommand"
+    }
+   ]
+  }
+ },
+ "Blackwing Mantle": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "rapid-ingress",
+      "heroic-intervention"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "CHAPTER MASTER OF THE RAVEN GUARD": {
+  "status": "info",
+  "note": "ปรับ keyword ของ Shrike เมื่อมี Aethon Shaan"
+ },
+ "Cold and Calculating": {
+  "effects": [
+   {
+    "if": [
+     "targetMV"
+    ],
+    "abilities": [
+     "lethal hits"
+    ]
+   },
+   {
+    "if": [
+     "targetNotMV"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ],
+  "status": "partial",
+  "note": "ระบบเลือกให้ตามเป้า"
+ },
+ "Cerebrex Logic Engine": {
+  "act": {
+   "when": "formation",
+   "auto": true,
+   "limit": "battle",
+   "per": "army",
+   "target": {
+    "side": "friendly",
+    "units": [
+     "ADEPTUS ASTARTES",
+     "INFANTRY"
+    ],
+    "anywhere": true
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "scouts": 6
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  }
+ },
+ "Spear of Chogoris": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   },
+   {
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   },
+   {
+    "if": [
+     "doctrine:assault"
+    ],
+    "advanceBonus": 1,
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Skilled Riders": {
+  "effects": [
+   {
+    "mobile": true
+   }
+  ]
+ },
+ "Deadly Stalkers": {
+  "effects": [
+   {
+    "if": [
+     "targetIsolated"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Inspiring Leader": {
+  "effects": [
+   {
+    "eligible": [
+     "shootAfterAdvance",
+     "shootAfterFallBack",
+     "chargeAfterAdvance",
+     "chargeAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Master Tactician": {
+  "act": [
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Assault Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:assault"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 9,
+     "visible": true,
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    }
+   },
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Devastator Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:devastator"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 9,
+     "visible": true,
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    }
+   },
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Tactical Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:tactical"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 9,
+     "visible": true,
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    }
+   }
+  ]
+ },
+ "Knight Champion of Macragge": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "limit": "phase",
+   "do": [
+    {
+     "on": "self",
+     "move": "6"
+    }
+   ]
+  }
+ },
+ "Ultramarines Honour Guard": {
+  "effects": [
+   {
+    "scope": "bodyguardLed",
+    "if": [
+     "leader:Captain|Chapter Master|Calgar|Titus|Sicarius|Guilliman"
+    ],
+    "defend": {
+     "wound": -1
+    }
+   }
+  ]
+ },
+ "Glory of Ultramar": {
+  "act": {
+   "when": "shotByEnemy",
+   "auto": true,
+   "limit": "phase",
+   "needModelsLost": true,
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6"
+    }
+   ]
+  }
+ },
+ "Banner of Macragge": {
+  "gear": true,
+  "act": [
+   {
+    "when": "movementEnd",
+    "auto": true,
+    "if": [
+     "onControlledObjective"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "secure": true
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "limit": "battle",
+    "per": "army",
+    "botUse": "valuable",
+    "label": "+1 S และ +1 A ทั้งหน่วย",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "melee",
+        "strength": 1,
+        "attacks": 1
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   }
+  ]
+ },
+ "Press the Attack": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "!doctrine:assault"
+    ],
+    "abilities": [
+     "sustained hits 1: non-monster/vehicle"
+    ]
+   },
+   {
+    "attack": "melee",
+    "if": [
+     "doctrine:assault"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Honour of Ultramar": {
+  "effects": [
+   {
+    "scope": "model",
+    "fightOnDeath": 2
+   }
+  ]
+ },
+ "DEMETRIAN TITUS": {
+  "status": "info",
+  "note": "มี Titus ได้หน่วยเดียว"
+ },
+ "Second Company Banner": {
+  "effects": [
+   {
+    "if": [
+     "contains:Gadriel"
+    ],
+    "oc": 1
+   },
+   {
+    "if": [
+     "contains:Gadriel",
+     "contains:Titus"
+    ],
+    "ld": 1
+   }
+  ]
+ },
+ "Strategium Command": {
+  "status": "auto",
+  "note": "หลังวางทัพ: redeploy ได้ 3 หน่วย (วางใหม่หรือเข้ากองหนุน)"
+ },
+ "Refractor Field": {
+  "gear": true,
+  "status": "auto",
+  "note": "5+ InSv (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)"
+ },
+ "Curse of the Wulfen": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "notBattleShocked",
+     "any:nearModels:6:SPACE WOLVES+CHARACTER!WULFEN||nearModels:12:Wolf Priest",
+     "modelKw:INFANTRY"
+    ],
+    "oc": 1
+   },
+   {
+    "scope": "model",
+    "if": [
+     "notBattleShocked",
+     "any:nearModels:6:SPACE WOLVES+CHARACTER!WULFEN||nearModels:12:Wolf Priest",
+     "modelKw:VEHICLE"
+    ],
+    "oc": 3
+   }
+  ]
+ },
+ "Oath of Moment": {
+  "status": "auto",
+  "note": "ระบบทำให้: เลือกเป้าใน Command phase (re-roll hit, +1 wound สำหรับทัพ codex)"
+ },
+ "Templar Vows": {
+  "status": "auto",
+  "note": "ระบบทำให้: เลือก Vow ใน Command phase แรก (Black Templars)"
+ },
+ "Overlapping Detonations": {
+  "effects": [
+   {
+    "weapon": "heavy bolter",
+    "if": [
+     "targetNotMV"
+    ],
+    "abilities": [
+     "blast 1"
+    ]
+   }
+  ]
+ },
+ "Assigned Agents": {
+  "status": "info",
+  "note": "กฎจัดทัพ: หน่วย Deathwatch (Imperial Agents) ใส่ในกองทัพ Space Marines ได้"
+ },
+ "Tactical Instinct": {
+  "effects": [
+   {
+    "scope": "led",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Unstoppable Champion": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "reviveLater": {
+      "on": 2,
+      "wounds": 3
+     }
+    }
+   ]
+  }
+ },
+ "Strategic Knowledge": {
+  "effects": [
+   {
+    "scope": "led",
+    "eligible": [
+     "shootAfterAdvance",
+     "shootAfterFallBack",
+     "chargeAfterAdvance",
+     "chargeAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Death to the Alien": {
+  "effects": [
+   {
+    "reroll": "hits1"
+   },
+   {
+    "if": [
+     "targetNotKw:IMPERIUM|CHAOS"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Astartes Shield": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "inv": 4
+    }
+   }
+  ]
+ },
+ "Blackstar Cluster Launcher": {
+  "status": "auto",
+  "note": "จบ Normal move: บินผ่านหน่วยไหน ทอย 6D6 ทุก 5+ = 1 MW (อัตโนมัติ)"
+ },
+ "Auspex Array": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Infernum Halo-launcher": {
+  "gear": true,
+  "status": "info",
+  "note": "มี keyword SMOKE: ใช้ Smokescreen ได้"
+ },
+ "Kill Team": {
+  "status": "info",
+  "note": "ใช้ Toughness ของโมเดลส่วนใหญ่ในหน่วยตอนทอย wound · Gravis กินที่ 2 ในรถ"
+ },
+ "Mission Tactics": {
+  "status": "info",
+  "note": "กฎกองทัพ Deathwatch: เลือก Mission Tactic ตอนต้น Command phase ที่ช่องกฎ detachment (Black Spear Task Force)"
+ },
+ "Spectrus Doctrines": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "if": [
+    "farFromEnemies:6"
+   ],
+   "botUse": "never",
+   "label": "ออกไปอยู่ Strategic Reserves",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Instigator Bolt Carbine": {
+  "gear": true,
+  "act": {
+   "when": "afterShootingButton",
+   "limit": "phase",
+   "label": "เดิน Normal move หลังยิง (ชาร์จไม่ได้)",
+   "do": [
+    {
+     "on": "self",
+     "move": "M",
+     "noCharge": true
+    }
+   ]
+  }
+ },
+ "Fortis Doctrines": {
+  "effects": [
+   {
+    "if": [
+     "targetBelowStarting",
+     "targetNotBelowHalf"
+    ],
+    "hit": 1
+   },
+   {
+    "if": [
+     "targetBelowHalf"
+    ],
+    "hit": 1,
+    "wound": 1
+   }
+  ]
+ },
+ "Indomitor Doctrines": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetClosest"
+    ],
+    "strength": 1
+   },
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "strength": 1
+   }
+  ]
+ },
+ "Talonstrike Doctrines": {
+  "effects": [
+   {
+    "if": [
+     "setUpThisTurn"
+    ],
+    "ap": 1
+   },
+   {
+    "attack": "melee",
+    "if": [
+     "setUpThisTurn"
+    ],
+    "abilities": [
+     "lance"
+    ]
+   }
+  ]
+ },
+ "Combat Doctrines": {
+  "status": "auto",
+  "note": "เลือก doctrine ตอนต้น Command phase (แผง Detachment)"
+ },
+ "Transhuman Strategist": {
+  "act": {
+   "when": "roundStart",
+   "auto": true,
+   "if": [
+    "warlord"
+   ],
+   "do": [
+    {
+     "cp": 1
+    }
+   ]
+  }
+ },
+ "Librarius": {
+  "status": "info",
+  "note": "ระบบไม่นับ psyker level (แต่ละ psychic ability มีลิมิตของมันเอง)"
+ },
+ "Special Move Types": {
+  "status": "info",
+  "note": "Shock / Assault disembark: ใช้ตอนลงรถ (ระบบรู้จักผ่าน ability ของรถ)"
+ },
+ "Hunter": {
+  "status": "auto",
+  "note": "โปรไฟล์ Hunter ยิงได้เฉพาะเป้าที่ตรง keyword"
+ },
+ "Codex Adept": {
+  "doctrines": [
+   "assault",
+   "devastator",
+   "tactical"
+  ]
+ },
+ "Guile of the Wolf": {
+  "doctrines": [
+   "assault",
+   "devastator",
+   "tactical"
+  ]
+ },
+ "Leader of Astartes": {
+  "effects": [
+   {
+    "loneOperative": true,
+    "if": [
+     "near:3:ADEPTUS ASTARTES+INFANTRY"
+    ]
+   }
+  ]
+ },
+ "Supreme Commander": {
+  "status": "info",
+  "note": "ต้องเป็น Warlord (เลือกในหน้าจัดทัพ)"
+ },
+ "Strategic Acumen": {
+  "act": [
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Assault Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:assault"
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Devastator Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:devastator"
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Tactical Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:tactical"
+     }
+    ]
+   }
+  ]
+ },
+ "Finest Hour (Once per battle, per unit)": {
+  "act": {
+   "when": "selectedToFight",
+   "limit": "battle",
+   "botUse": "valuable",
+   "label": "+3 A, Devastating Wounds (ตัวนี้)",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "attack": "melee",
+       "attacks": 3,
+       "abilities": [
+        "devastating wounds"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Bolter Discipline": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "shootingPhase",
+     "objectiveEitherWay"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Tactical Mainstay": {
+  "effects": [
+   {
+    "eligible": [
+     "actionWhileEngaged",
+     "shootAfterAction"
+    ]
+   }
+  ],
+  "status": "partial",
+  "note": "battle-shocked แล้วยังเริ่ม action ได้: ทำเอง"
+ },
+ "Power of the Machine Spirit": {
+  "freeDie": [
+   {
+    "kind": "reroll",
+    "stage": "hit",
+    "limit": "phase",
+    "attack": "ranged"
+   },
+   {
+    "kind": "reroll",
+    "stage": "wound",
+    "limit": "phase",
+    "attack": "ranged"
+   }
+  ]
+ },
+ "Thunderhawk Insertion": {
+  "act": {
+   "when": "formation",
+   "auto": true,
+   "limit": "battle",
+   "per": "army",
+   "target": {
+    "side": "friendly",
+    "units": [
+     "GRAVIS|PHOBOS|TACTICUS"
+    ],
+    "anywhere": true
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "deepStrike": true
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  }
+ },
+ "Chief Librarian (psyker level 3)": {
+  "status": "info",
+  "note": "psyker level (ระบบไม่นับ)"
+ },
+ "Librarian (psyker level 1)": {
+  "status": "info",
+  "note": "psyker level (ระบบไม่นับ)"
+ },
+ "Rune Priest (psyker level 3)": {
+  "status": "info",
+  "note": "psyker level (ระบบไม่นับ)"
+ },
+ "Hood of Hellfire (Psychic)": {
+  "effects": [
+   {
+    "defend": {
+     "fnp": 4,
+     "fnpVs": "mortalPsychic"
+    }
+   }
+  ]
+ },
+ "Psychic Hood (Psychic)": {
+  "effects": [
+   {
+    "defend": {
+     "fnp": 4,
+     "fnpVs": "psychic"
+    }
+   }
+  ]
+ },
+ "Prescience (psychic level 2)": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "label": "Psychic: +1 Sv จนถึงเทิร์นหน้า (ทอย 1 = battle-shocked)",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "battleShock": true
+      }
+     ]
+    }
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "defend": {
+        "save": 1
+       }
+      }
+     ],
+     "until": "nextTurnStart"
+    }
+   ],
+   "botUse": "always"
+  }
+ },
+ "Telepathic Assault (psychic level 1)": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "label": "Psychic: ศัตรูในระยะ 24\" โดน 2D3 mortal (ทอย 1 = battle-shocked)",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "battleShock": true
+      }
+     ]
+    }
+   ],
+   "do": [
+    {
+     "mortals": "2D3"
+    }
+   ],
+   "target": {
+    "side": "enemy",
+    "range": 24,
+    "visible": true
+   },
+   "botUse": "always"
+  }
+ },
+ "Captain of the Honour Guard": {
+  "status": "info",
+  "note": "ถ้ามี Marneus Calgar: Leader เปลี่ยนเป็น Support (ติดหน่วยเดิมได้)"
+ },
+ "Knight Champion of Macragge (Once per phase, per army)": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "limit": "phase",
+   "per": "army",
+   "do": [
+    {
+     "on": "self",
+     "move": "6"
+    }
+   ]
+  }
+ },
+ "Righteous Fury (Once per battle, per army)": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "per": "army",
+   "botUse": "valuable",
+   "label": "+1 S ทั้งหน่วย (ฟื้น D3)",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "attack": "melee",
+       "strength": 1
+      }
+     ],
+     "until": "phase"
+    },
+    {
+     "on": "self",
+     "heal": "D3"
+    }
+   ]
   },
-  "Evade and Survive": { "act": { "when": "enemyMovedNear", "range": 8, "limit": "phase", "do": [{ "on": "self", "move": "6" }] } },
-  "LAST SURVIVOR": { "status": "info", "note": "ห้ามเป็น Warlord" },
-  "Psychic Hood": { "effects": [{ "scope": "led", "defend": { "fnp": 4, "fnpVs": "psychic" } }] },
-  "Veil of Time (Psychic)": { "effects": [{ "scope": "led", "abilities": ["sustained hits 1"] }] },
-  "Angel’s Wrath": { "effects": [{ "scope": "led", "attack": "melee", "if": ["charged"], "strength": 1 }] },
-  "Interceptor": { "effects": [{ "attack": "ranged", "if": ["targetFly"], "hit": 1 }] },
-  "Sentinel Protocols": { "effects": [{ "overwatchHitOn": 4 }] },
-  "Drop Pod Assault": { "status": "auto", "note": "ลงสนามได้ตั้งแต่ round 1; ผู้โดยสารลงทันทีห่างศัตรูเกิน 8\" (อัตโนมัติ)", "effects": [{ "deepStrike": true, "arriveFromRound": 1 }] },
-  "Combat Disembarkation": { "effects": [{ "assaultDisembark": true }] },
-  "Deployment Complete": { "effects": [{ "noEmbark": true }] },
-  "Designer’s Note": { "status": "info" },
-  "Ballistus Strike": { "effects": [{ "attack": "ranged", "if": ["targetNotBelowHalf"], "reroll": "hits" }] },
-  "Litany of Hate": { "effects": [{ "scope": "led", "attack": "melee", "wound": 1 }] },
-  "Catechism of Fire": { "act": { "when": "selectedToShoot", "limit": "phase", "target": { "side": "enemy", "range": 12, "visible": true }, "label": "เลือกเป้า: ยิงได้ Devastating Wounds", "do": [{ "incoming": { "attack": "ranged", "abilities": ["devastating wounds"] }, "selfOnly": true, "until": "phase" }] } },
-  "Fortification": { "status": "partial", "note": "ระบบยังไม่มีกฎ FORTIFICATION แบบเต็ม (ยิงเข้าหน่วยที่ติดป้อมได้ด้วย −1 hit ให้ใส่ buff เอง)" },
-  "Ceramite Cover": { "status": "partial", "note": "cover จากป้อมคิดแบบเดียวกับ terrain ที่บังไม่หมด" },
-  "Defensive Array": { "effects": [{ "stratDiscount": { "ids": ["fire-overwatch"], "cp": 1 } }] },
-  "Total Obliteration": { "effects": [{ "attack": "ranged", "if": ["targetMV"], "reroll": ["hits", "wounds", "damage"] }] },
-  "Exhortation of Rage": { "act": { "when": "selectedToFight", "auto": true, "target": { "side": "enemy", "engaged": true }, "roll": "D6", "table": [{ "min": 4, "max": 5, "do": [{ "mortals": "D3" }] }, { "min": 6, "do": [{ "mortals": "3" }] }] } },
-  "Hammerstrike": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true }, "do": [{ "incoming": { "noCover": true }, "until": "phase" }] } },
-  "Recitation of Faith": { "effects": [{ "scope": "led", "defend": { "fnp": 4, "fnpVs": "mortal" } }] },
-  "Wisdom of the Ancients (Aura)": { "effects": [{ "scope": "aura", "range": 6, "units": ["ADEPTUS ASTARTES", "INFANTRY"], "reroll": "hits1" }] },
-  "Teleport Homer": { "status": "auto", "note": "token วางเองตอนเริ่มเกม; Rapid Ingress 0CP ลงภายใน 3\" ของ token ห่างศัตรูเกิน 8\"", "effects": [{ "stratDiscount": { "ids": ["rapid-ingress"], "cp": 1, "limit": "battle" } }] },
-  "Terminatus Assault": { "act": { "when": "fightStart", "auto": true, "target": { "side": "enemy", "engaged": true, "each": true }, "do": [{ "shock": 0 }] } },
-  "Storm Shield": { "gear": true, "status": "auto", "note": "W/InSv ตามอุปกรณ์ที่เลือกตอนจัดทัพ" },
-  "Shrouding (Psychic)": { "effects": [{ "scope": "led", "stealth": true, "defend": { "untargetableBeyond12": true } }] },
-  "Unorthodox Strategist (Aura)": { "effects": [{ "scope": "enemyAura", "range": 12, "stratTax": { "cp": 1, "limit": "turn" } }] },
-  "Master of the Fleet": { "act": { "when": "formation", "auto": true, "limit": "battle", "per": "army", "target": { "side": "friendly", "units": ["ADEPTUS ASTARTES", "INFANTRY", "PHOBOS|GRAVIS|TACTICUS"], "anywhere": true }, "do": [{ "buff": [{ "deepStrike": true }], "until": "battle" }] } },
-  "Hailstrike": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true, "units": ["!MONSTER", "!VEHICLE"] }, "do": [{ "incoming": { "attack": "ranged", "units": ["ADEPTUS ASTARTES"], "ap": 1 }, "until": "phase" }] } },
-  "Meteoric Descent": { "effects": [{ "deepStrikeRange": 6 }] },
-  "Incendiary Terror": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true, "hitWeapon": "pyreblaster", "units": ["INFANTRY"] }, "do": [{ "shock": -1 }] } },
-  "Rites of Tempering": { "effects": [{ "scope": "led", "defend": { "fnp": 5 } }] },
-  "Iron Father": { "effects": [{ "loneOperative": true, "if": ["near:3:ADEPTUS ASTARTES+VEHICLE"] }] },
-  "Master of the Forge": { "act": { "when": "command", "limit": "phase", "target": { "side": "friendly", "range": 3, "units": ["ADEPTUS ASTARTES", "VEHICLE"] }, "label": "รถในระยะ 3\": ฟื้น 3 W, +1 hit", "do": [{ "heal": "3" }, { "buff": [{ "hit": 1 }], "until": "nextCommand" }] } },
-  "INSPIRING COMMANDER@Iron Father Feirros": { "effects": [{ "scope": "army", "units": ["name:Heavy Intercessor Squad"], "if": ["notCharacterModel"], "ocSet": 3 }] },
-  "Omni-scramblers": { "effects": [{ "omniScrambler": 12 }] },
-  "Helix Gauntlet": { "gear": true, "effects": [{ "defend": { "fnp": 6 } }] },
-  "Infiltrator Comms Array": { "gear": true, "effects": [{ "stratCpChance": 5 }] },
-  "Fire Support": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true }, "do": [{ "incoming": { "reroll": "wounds" }, "fromThisTransport": true, "until": "phase" }] } },
-  "The Imperium’s Sword": { "effects": [{ "rerollCharge": true }] },
-  "Brutalis Charge": { "act": { "when": "endOfCharge", "auto": true, "target": { "side": "enemy", "engaged": true }, "roll": "D6", "table": [{ "min": 2, "max": 3, "do": [{ "mortals": "D3" }] }, { "min": 4, "max": 5, "do": [{ "mortals": "3" }] }, { "min": 6, "do": [{ "mortals": "D3+3" }] }] } },
-  "Author of the Codex": { "choice": { "name": "Author of the Codex", "pick": 2, "when": "command", "options": ["Primarch of the XIII (Aura)", "Master of Battle", "Supreme Strategist"] } },
-  "Ultramarines Bodyguard": { "effects": [{ "loneOperative": true, "if": ["near:3:ADEPTUS ASTARTES+INFANTRY"] }] },
-  "Armour of Fate": { "act": { "when": "onDeath", "auto": true, "modelDeath": true, "limit": "battle", "do": [{ "on": "self", "reviveLater": { "on": 3, "wounds": 6 } }] } },
-  "SUPREME COMMANDER": { "status": "info", "note": "ต้องเป็น Warlord" },
-  "Primarch of the XIII (Aura)": { "effects": [{ "scope": "aura", "range": 6, "units": ["ADEPTUS ASTARTES"], "oc": 1, "rerollShock": true }] },
-  "Master of Battle": { "status": "auto", "note": "เลือกเป้าสำรองของ Oath of Moment ใน Command phase", "effects": [{ "oathBackup": true }] },
-  "Supreme Strategist": { "effects": [{ "scope": "aura", "range": 12, "units": ["ADEPTUS ASTARTES"], "stratDiscount": { "ids": ["*"], "cp": 1, "limit": "round", "perArmy": true } }] },
-  "Techmarine": { "effects": [{ "loneOperative": true, "if": ["near:3:ADEPTUS ASTARTES+VEHICLE"] }] },
-  "Blessing of the Omnissiah": { "act": { "when": "command", "limit": "phase", "target": { "side": "friendly", "range": 3, "units": ["ADEPTUS ASTARTES", "VEHICLE"] }, "label": "รถในระยะ 3\": ฟื้น D3 W, +1 hit", "do": [{ "heal": "D3" }, { "buff": [{ "hit": 1 }], "until": "nextCommand" }] } },
-  "Vengeance of the Omnissiah": { "act": { "when": "friendlyDeath", "auto": true, "range": 12, "deathUnits": ["ADEPTUS ASTARTES", "VEHICLE"], "limit": "battle", "do": [{ "on": "self", "bearerOnly": true, "buff": [{ "weapon": "Omnissian power axe", "attacksTo": 7 }], "until": "battle" }] } },
-  "Vanguard Assault": { "effects": [{ "attack": "melee", "if": ["charged"], "abilities": ["lethal hits"] }] },
-  "Warden of the Imperium Nihilus": { "effects": [{ "scope": "led", "advanceBonus": 1, "chargeBonus": 1, "hit": 1 }] },
-  "Death Mask of Sanguinius": { "act": { "when": "fightStart", "auto": true, "target": { "side": "enemy", "range": 6, "each": true }, "do": [{ "shock": -1 }] } },
-  "The Quickening (Psychic)": { "effects": [{ "eligible": ["chargeAfterAdvance"] }] },
-  "Transfixing Gaze (Aura, Psychic)": { "effects": [{ "scope": "enemyAura", "range": 6, "fallBackLdTest": true }] },
-  "Aura of Fervour (Aura)": { "effects": [{ "scope": "aura", "range": 6, "units": ["ADEPTUS ASTARTES"], "rerollShock": true }] },
-  "Miraculous Saviour": { "status": "auto", "note": "จบ Charge phase ศัตรู: ลงมา engaged กับหน่วยที่ชาร์จ (ครั้งเดียว)" },
-  "Redeemer of the Lost": { "effects": [{ "scope": "led", "fightOnDeath": 4 }] },
-  "Mass of Doom": { "effects": [{ "attack": "melee", "if": ["charged"], "abilities": ["devastating wounds"] }] },
-  "Sanguinary Priest": { "effects": [{ "scope": "led", "defend": { "fnp": 5 } }] },
-  "Blood Chalice": { "effects": [{ "scope": "led", "attack": "melee", "ap": 1 }] },
-  "Guardian of the Lost": { "effects": [{ "scope": "led", "defend": { "damage": -1 } }] },
-  "Fury Unbound": { "effects": [{ "scope": "led", "attack": "melee", "abilities": ["lethal hits"] }] },
-  "Angelic Visage": { "effects": [{ "defend": { "vs": "melee", "hit": -1 } }] },
-  "Heirs of Azkaellon": { "effects": [{ "scope": "bodyguardLed", "defend": { "vs": "melee", "wound": -1 } }] },
-  "Sanguinary Banner": { "gear": true, "effects": [{ "oc": 1 }] },
-  "ATTACHED UNIT": { "status": "info", "note": "สิทธิ์ผูก leader (ใช้ตอนจัดทัพ)" },
-  "Attached Unit": { "status": "info", "note": "สิทธิ์ผูก leader (ใช้ตอนจัดทัพ)" },
-  "Black Rage": { "effects": [{ "attack": "melee", "reroll": "hits" }, { "if": ["!nearModels:6:BLOOD ANGELS+CHARACTER", "!nearModels:12:CHAPLAIN"], "cannotFallBack": true, "ocZero": true }] },
-  "Driven by Fury": { "act": { "when": "shotByEnemy", "auto": true, "limit": "phase", "do": [{ "on": "self", "surge": "D6+2" }] } },
-  "Overcharged Engines": { "effects": [{ "rerollAdvance": true }] },
-  "The Lion Helm": { "gear": true, "effects": [{ "defend": { "inv": 4 } }], "act": { "when": "mortalTaken", "auto": true, "limit": "battle", "do": [{ "on": "self", "buff": [{ "defend": { "fnp": 4, "fnpVs": "mortal" } }], "until": "phase" }] } },
-  "Supreme Grand Master": { "effects": [{ "scope": "led", "abilities": ["sustained hits 1"] }] },
-  "Masterful Tactician": { "act": { "when": "commandStart", "auto": true, "if": ["holderOnBattlefield"], "do": [{ "cp": 1 }] } },
-  "Grand Master of the Deathwing": { "effects": [{ "scope": "led", "abilities": ["precision on crit"] }] },
-  "Strikes of Retribution": { "effects": [{ "scope": "model", "retaliate": { "on": 4, "max": 6 } }] },
-  "Exemplar of Hate": { "effects": [{ "scope": "led", "attack": "melee", "reroll": "hits" }] },
-  "Feared Interrogator": { "act": [
-    { "when": "fightStart", "auto": true, "target": { "side": "enemy", "range": 6, "units": ["CHARACTER"], "each": true }, "do": [{ "shock": -1 }] },
-    { "when": "afterFighting", "auto": true, "needCharacterKill": true, "do": [{ "cp": 1 }] }
-  ] },
-  "Engulfing Fear (Psychic)": { "act": { "when": "shooting", "limit": "phase", "target": { "side": "enemy", "range": 18 }, "label": "ศัตรูในระยะ 18\" ทอย Battle-shock", "do": [{ "shock": 0 }] } },
-  "Book of Salvation": { "gear": true, "effects": [{ "scope": "led", "attack": "melee", "attacks": 1 }], "act": { "when": "onDeath", "auto": true, "modelDeath": true, "target": { "side": "friendly", "range": 6, "units": ["ADEPTUS ASTARTES"], "each": true }, "do": [{ "shock": 0 }] } },
-  "Deathwing": { "effects": [{ "ignoreHitMods": true }, { "if": ["targetOath"], "hit": 1 }] },
-  "Watcher in the Dark": { "gear": true, "act": { "when": "mortalTaken", "auto": true, "limit": "battle", "do": [{ "on": "self", "buff": [{ "defend": { "fnp": 4, "fnpVs": "mortal" } }], "until": "phase" }] } },
-  "Inner Circle": { "effects": [{ "defend": { "damage": -1 } }] },
-  "Icon of Old Caliban (Aura)": { "effects": [{ "scope": "aura", "range": 6, "units": ["ADEPTUS ASTARTES"], "stealth": true }] },
-  "Lightning-fast Manoeuvres": { "effects": [{ "defend": { "vs": "ranged", "wound": -1 } }] },
-  "Stasis Bomb": { "act": { "when": "opponentFightEnd", "auto": true, "target": { "side": "enemy", "range": 24, "visible": true, "units": ["!AIRCRAFT"], "notLoneOperative": true }, "do": [{ "buff": [{ "slowed": true }], "until": "opponentNextMovementEnd", "mark": "slowed" }] } },
-  "Knights of Caliban": { "effects": [{ "attack": "melee", "if": ["charged"], "abilities": ["anti-monster 4+", "anti-vehicle 4+"] }] },
-  "Storm of Vengeance": { "act": { "when": "friendlyDeath", "auto": true, "limit": "turn", "range": 6, "needUnitDestroyed": true, "oppShooting": true, "deathUnits": ["ADEPTUS ASTARTES"], "do": [{ "on": "self", "shootBack": true }] } },
-  "High King of Fenris": { "act": { "when": "movement", "limit": "round", "per": "army", "target": { "side": "friendly", "units": ["SPACE WOLVES"], "inReserves": true }, "label": "หน่วยในกองหนุนลงสนามเร็วขึ้น 1 round", "do": [{ "earlyArrival": true }] } },
-  "Guile of the Wolf (Aura)": { "effects": [{ "scope": "enemyAura", "range": 12, "stratTax": { "cp": 1, "limit": "turn" } }] },
-  "EMBARKING WITHIN TRANSPORTS": { "status": "info", "note": "กฎการขึ้นรถ (นับที่นั่งตามข้อมูลรถ)" },
-  "War Howl": { "effects": [{ "scope": "led", "if": ["body:Blood Claws"], "attack": "melee", "reroll": "wounds" }, { "scope": "led", "if": ["body:Wolf Guard Headtakers"], "eligible": ["chargeAfterAdvance"] }] },
-  "Battle-lust": { "effects": [{ "scope": "model", "weapon": "Frostfang", "if": ["charged"], "attacks": 2 }] },
-  "Wind Walker (Psychic)": { "effects": [{ "scope": "led", "attack": "ranged", "abilities": ["assault"] }, { "scope": "led", "advanceSix": true }] },
-  "Tempest’s Wrath (Psychic)": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true, "hitWeapon": "Living Lightning", "units": ["!MONSTER", "!VEHICLE"] }, "do": [{ "buff": [{ "rangeMinus": 6 }], "until": "nextTurnStart", "mark": "stormwracked" }] } },
-  "Slayer’s Oath": { "note": "ระบบเลือก keyword ให้ (ที่ศัตรูมีแต้มรวมมากสุด) · ทำลายหน่วยที่มี keyword นั้นได้ = หน่วยนี้ได้ผลของ Saga ที่สำเร็จ", "act": { "when": "battleStart", "auto": true, "limit": "battle", "do": [{ "on": "self", "setSlayer": true }] } },
-  "Oathbound": { "effects": [{ "scope": "led", "attack": "melee", "hit": 1 }, { "scope": "led", "attack": "melee", "if": ["targetSlayer"], "wound": 1 }] },
-  "Legendary Tenacity": { "effects": [{ "scope": "model", "defend": { "woundIfStronger": -1 } }] },
-  "Ancient Tactician": { "act": { "when": "commandStart", "auto": true, "if": ["holderOnBattlefield"], "do": [{ "cp": 1 }] } },
-  "Berserk Charge": { "effects": [{ "eligible": ["chargeAfterAdvance"] }] },
-  "Cunning Hunters": { "effects": [{ "reroll": "wounds1" }, { "if": ["targetOnObjective"], "reroll": "wounds" }] },
-  "Iron Priest": { "effects": [{ "loneOperative": true, "if": ["near:3:ADEPTUS ASTARTES+VEHICLE"] }] },
-  "Gift of the Iron Wolf": { "act": { "when": "command", "limit": "phase", "target": { "side": "friendly", "range": 3, "units": ["ADEPTUS ASTARTES", "VEHICLE"] }, "label": "รถในระยะ 3\": ฟื้น D3 W, อาวุธยิงได้ Rapid Fire 1", "do": [{ "heal": "D3" }, { "buff": [{ "attack": "ranged", "abilities": ["rapid fire 1"] }], "until": "nextCommand" }] } },
-  "Judgement of the Omnissiah": { "effects": [{ "scope": "model", "if": ["targetEngagedFriendlyVehicle"], "reroll": "wounds" }] },
-  "Savage Frenzy": { "effects": [{ "forceDesperate": true }] },
-  "Death Totem": { "gear": true, "effects": [{ "scope": "model", "attack": "melee", "reroll": "hits1" }] },
-  "Murder-maker (Aura)": { "effects": [{ "scope": "aura", "range": 6, "units": ["name:Wulfen|name:Wulfen with Storm Shields"], "if": ["fightPhase"], "fightOnDeath": 4 }] },
-  "Bestial Fury": { "effects": [{ "rerollAdvance": true, "rerollCharge": true }] },
-  "FORCE OF UNTAMED DESTRUCTION": { "status": "info", "note": "ห้ามเป็น Warlord" },
-  "Anvil of Endurance": { "effects": [{ "scope": "led", "fightOnDeath": 4 }] },
-  "Champion of the Kingsguard": { "effects": [{ "scope": "model", "attack": "melee", "if": ["targetCharacter"], "reroll": ["hits", "wounds"] }] },
-  "Rugged Resilience": { "effects": [{ "defend": { "woundIfStronger": -1 } }] },
-  "Thunderous Charge": { "effects": [{ "weapon": "Wolf Guard weapon", "attack": "melee", "if": ["charged"], "damage": 1 }] },
-  "Predatory Instinct": { "act": { "when": "enemyMovedNear", "range": 8, "limit": "phase", "do": [{ "on": "self", "move": "D6" }] } },
-  "Hunting Hounds@Fenrisian Wolves": { "effects": [{ "if": ["nearModels:6:SPACE WOLVES+CHARACTER!WULFEN", "notBattleShocked"], "ocSet": 1 }] },
-  "Hunting Hounds@Wolf Guard Headtakers": { "effects": [{ "if": ["nearModels:6:SPACE WOLVES+CHARACTER!WULFEN", "notBattleShocked", "modelName:Hunting Wol"], "ocSet": 1 }] },
-  "Hunting Hounds@Wolf Scouts": { "effects": [{ "if": ["nearModels:6:SPACE WOLVES+CHARACTER!WULFEN", "notBattleShocked", "modelName:Hunting Wol"], "ocSet": 1 }] },
-  "Combat Support": { "act": { "when": "friendlyTargeted", "auto": true, "limit": "turn", "per": "army", "range": 6, "deathUnits": ["ADEPTUS ASTARTES", "PHOBOS", "INFANTRY"], "do": [{ "on": "self", "shootBack": true }] } },
-  "Objective Secured": { "act": { "when": "commandEnd", "auto": true, "if": ["onOwnObjective"], "do": [{ "on": "self", "secure": true }] } },
-  "Hail of Bolts": { "effects": [{ "weapon": "Bolt rifle", "attack": "ranged", "if": ["ownShooting"], "attacks": 2 }] },
-  "Outrider Escort": { "act": { "when": "friendlyTargeted", "auto": true, "limit": "turn", "per": "army", "range": 6, "deathUnits": ["ADEPTUS ASTARTES", "MOUNTED"], "do": [{ "on": "self", "shootBack": true }] } },
-  "Multi-spectrum Array": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true }, "do": [{ "incoming": { "units": ["ADEPTUS ASTARTES"], "hit": 1 }, "until": "phase" }] } },
-  "Haywire Mine": { "gear": true, "act": { "when": "anyPhase", "limit": "battle", "target": { "side": "enemy", "range": 3 }, "roll": "D6", "label": "ศัตรูในระยะ 3\": 2+ → D3 MW (รถ 2D3)", "table": [{ "min": 2, "do": [{ "mortals": "D3", "mortalsVehicle": "2D3" }] }] } },
-  "Guerrilla Tactics": { "act": { "when": "opponentTurnEnd", "if": ["farFromEnemies:6"], "botUse": "never", "label": "ออกไปอยู่ Strategic Reserves", "do": [{ "on": "self", "reserves": true }] } },
-  "Astartes Banner": { "effects": [{ "scope": "led", "oc": 1 }] },
-  "Astartes Banner@Ravenwing Command Squad": { "effects": [{ "if": ["contains:Ancient"], "oc": 1 }] },
-  "Astartes Banner@Company Heroes": { "effects": [{ "if": ["contains:Ancient"], "oc": 1 }] },
-  "Deeds of Heroism": { "act": { "when": "selectedToFight", "limit": "battle", "botUse": "valuable", "label": "+1 A ทั้งหน่วย", "do": [{ "on": "self", "buff": [{ "attack": "melee", "attacks": 1 }], "until": "phase" }] } },
-  "Refuse to Yield": { "effects": [{ "scope": "model", "defend": { "halveDamage": true } }] },
-  "Spiritual Leader": { "act": { "when": "anyPhase", "limit": "battle", "target": { "side": "friendly", "range": 12, "shocked": true, "units": ["ADEPTUS ASTARTES"] }, "label": "หน่วยเพื่อนในระยะ 12\" หายจาก battle-shocked", "do": [{ "unshock": true }] } },
-  "Unyielding in the Face of the Foe": { "effects": [{ "if": ["onOwnObjective"], "defend": { "saveBonusD1": 1 } }] },
-  "Fury of the First": { "effects": [{ "if": ["targetOath"], "hit": 1 }] },
-  "Siege Shield": { "effects": [{ "noBigGunsPenalty": true }] },
-  "Strafing Run": { "effects": [{ "attack": "ranged", "if": ["targetNotFly"], "hit": 1 }] },
-  "Armoured Resilience": { "effects": [{ "defend": { "damage": -1 } }] },
-  "Decimator Protocols": { "effects": [{ "attack": "ranged", "reroll": "hits1" }, { "attack": "ranged", "if": ["targetOnObjective"], "reroll": "hits" }] },
-  "Tactical Precision": { "effects": [{ "scope": "led", "abilities": ["lethal hits"] }] },
-  "Deadly Terror": { "status": "auto", "note": "เพิ่มระยะ Terror Troops เป็น 6\" (คิดใน Terror Troops)" },
-  "Target Priority": { "effects": [{ "eligible": ["shootAfterFallBack", "chargeAfterFallBack"] }] },
-  "Shock Assault": { "effects": [{ "attack": "melee", "reroll": "wounds1" }, { "attack": "melee", "if": ["targetOnObjective"], "reroll": "wounds" }] },
-  "Thunderstrike": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true, "units": ["MONSTER|VEHICLE"] }, "do": [{ "incoming": { "attack": "ranged", "units": ["ADEPTUS ASTARTES"], "wound": 1 }, "until": "phase" }] } },
-  "Hood of Hellfire": { "effects": [{ "scope": "led", "defend": { "fnp": 4, "fnpVs": "mortalPsychic" } }] },
-  "Master of Prescience (Psychic)": { "effects": [{ "stealth": true, "defend": { "vs": "melee", "hit": -1 } }, { "stratDiscount": { "ids": ["counteroffensive", "fire-overwatch", "heroic-intervention"], "cp": 1, "limit": "round", "perArmy": true } }] },
-  "Rotating Death": { "effects": [{ "weapon": "onslaught gatling cannon", "if": ["targetInfantry"], "abilities": ["sustained hits 2"] }] },
-  "Reaping Tally": { "effects": [{ "weapon": "onslaught gatling cannon", "if": ["targetInfantry"], "abilities": ["sustained hits 2"] }] },
-  "Reposition Under Covering Fire": { "act": { "when": "afterShootingButton", "limit": "phase", "if": ["hasWeapon:Instigator bolt carbine"], "label": "เดิน Normal move หลังยิง (ชาร์จไม่ได้)", "do": [{ "on": "self", "move": "M", "noCharge": true }] } },
-  "Mark the Target": { "effects": [{ "attack": "ranged", "if": ["stationary"], "abilities": ["devastating wounds"] }] },
-  "Ferocious Assault": { "effects": [{ "weapon": "las-talon", "if": ["targetMV", "targetClosest"], "hit": 1 }] },
-  "Priority Target Acquisition": { "effects": [{ "weapon": "las-talon", "if": ["targetMV", "targetClosest"], "hit": 1 }] },
-  "An Honourable Death in Combat": { "effects": [{ "if": ["belowStarting", "!belowHalf"], "abilities": ["sustained hits 1"] }, { "if": ["belowHalf"], "abilities": ["sustained hits 2"] }] },
-  "For the Chapter!": { "effects": [{ "shootOnDeath": 3 }] },
-  "Close-quarters Firepower": { "effects": [{ "attack": "ranged", "if": ["targetClosest"], "ap": 1 }] },
-  "Unto the Anvil": { "effects": [{ "scope": "led", "attack": "melee", "reroll": "wounds" }] },
-  "Lord of the Pyroclasts": { "effects": [{ "scope": "enemyAura", "range": 2, "ocHalve": true }] },
-  "Icon of Obstinacy": { "effects": [{ "defend": { "woundIfStrongerOrEqual": -1 } }] },
-  "Rampart": { "act": { "when": "anyPhase", "limit": "battle", "botUse": "valuable", "label": "2+ InSv จนจบ phase", "do": [{ "on": "self", "bearerOnly": true, "buff": [{ "defend": { "inv": 2 } }], "until": "phase" }] } },
-  "INSPIRING COMMANDER@Darnath Lysander": { "effects": [{ "scope": "army", "units": ["name:Terminator Assault Squad|name:Terminator Squad"], "if": ["notCharacterModel"], "ocSet": 2 }] },
-  "Signum": { "effects": [{ "attack": "ranged", "if": ["stationary"], "abilities": ["ignores cover"] }] },
-  "Armorium Cherub": { "freeDie": { "kind": "setSix", "stage": "hit", "limit": "battle" } },
-  "Sternguard Focus": { "effects": [{ "if": ["targetOath"], "reroll": "wounds" }] },
-  "Mental Fortress (Psychic)": { "effects": [{ "scope": "led", "defend": { "inv": 4 } }] },
-  "Targeter Optics": { "effects": [{ "attack": "ranged", "if": ["stationary"], "abilities": ["ignores cover"] }] },
-  "Visions of Heresy": { "effects": [{ "rerollCharge": true, "stratDiscount": { "ids": ["fire-overwatch", "heroic-intervention"], "cp": 1 } }] },
-  "Grand Master of the Ravenwing": { "effects": [{ "attack": "ranged", "abilities": ["assault"] }, { "eligible": ["chargeAfterAdvance"], "mobile": true }] },
-  "Cut Off Their Escape": { "effects": [{ "forceDesperate": true }] },
-  "Intractable Will": { "effects": [{ "scope": "led", "fightOnDeath": 4 }] },
-  "The Spiritshield Helm": { "effects": [{ "scope": "model", "defend": { "fnp": 3, "fnpVs": "mortalPsychic" } }] },
-  "Signum Array": { "effects": [{ "scope": "led", "attack": "ranged", "abilities": ["ignores cover"] }] },
-  "Siege Captain": { "effects": [{ "scope": "model", "if": ["targetMVF"], "strength": 2, "ap": 2, "damage": 2 }] },
-  "Strategic Dispersal": { "act": { "when": "afterShootingButton", "limit": "phase", "if": ["notEngaged"], "label": "เดิน 6\" หลังยิง (ชาร์จไม่ได้)", "do": [{ "on": "self", "move": "6", "noCharge": true }] } },
-  "Assault Vehicle": { "effects": [{ "disembarkAfterAdvance": true }] },
-  "Orbital Comms Array (Aura)": { "gear": true, "effects": [{ "scope": "aura", "range": 6, "units": ["ADEPTUS ASTARTES"], "stratCpChance": 5 }] },
-  "Shield Dome": { "gear": true, "status": "auto", "note": "5+ InSv (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)" },
-  "Keep the Banner High": { "effects": [{ "scope": "led", "if": ["belowStarting"], "hit": 1 }, { "scope": "led", "if": ["belowHalf"], "wound": 1 }] },
-  "Terminator Storm Shield": { "gear": true, "status": "auto", "note": "W6 (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)" },
-  "Primarch of the First Legion": { "choice": { "name": "Primarch of the First Legion", "pick": 2, "when": "command", "options": ["Mist-wreathed Shadow Realms", "Martial Exemplar (Aura)", "No Hiding From the Watchers (Aura)"] } },
-  "The Emperor’s Shield": { "effects": [{ "scope": "model", "defend": { "woundIfStronger": -1 } }] },
-  "Dark Angels Bodyguard": { "effects": [{ "loneOperative": true, "if": ["near:3:ADEPTUS ASTARTES+INFANTRY"] }] },
-  "Mist-wreathed Shadow Realms": { "act": { "when": "command", "if": ["notEngaged"], "botUse": "never", "label": "ออกไป Strategic Reserves แล้วลงสนามได้เทิร์นหน้า", "do": [{ "on": "self", "reserves": true, "earlyArrival": true }] } },
-  "Martial Exemplar (Aura)": { "effects": [{ "scope": "aura", "range": 6, "units": ["ADEPTUS ASTARTES"], "attack": "melee", "reroll": ["hits1", "wounds1"] }] },
-  "No Hiding From the Watchers (Aura)": { "effects": [{ "scope": "aura", "range": 6, "units": ["ADEPTUS ASTARTES"], "defend": { "fnp": 4, "fnpVs": "mortal" } }] },
-  "Master of Deceit": { "status": "auto", "note": "หลังวางทัพ: redeploy INFANTRY ได้ 3 หน่วย (วางใหม่หรือเข้ากองหนุน)" },
-  "Annihilator Protocols": { "effects": [{ "attack": "melee", "if": ["targetMVF"], "abilities": ["sustained hits 2"] }] },
-  "Centurion Assault Launcher": { "gear": true, "status": "info", "note": "ได้ keyword GRENADES" },
-  "Aquilon Optics": { "freeDie": [{ "kind": "reroll", "stage": "hit", "limit": "phase" }, { "kind": "reroll", "stage": "wound", "limit": "phase" }] },
-  "Tempormortis": { "effects": [{ "scope": "led", "fightsFirst": true }] },
-  "Silent Fury": { "act": { "when": "afterFighting", "auto": true, "needCharacterKill": true, "do": [{ "on": "self", "bearerOnly": true, "buff": [{ "weapon": "executioner relic blade", "attacks": 1 }], "until": "battle" }] } },
-  "Shadowmaster": { "effects": [{ "scope": "led", "defend": { "untargetableBeyond12": true } }] },
-  "Echo of the Ravenspire": { "act": { "when": "opponentTurnEnd", "if": ["notEngaged"], "botUse": "never", "label": "ออกไปอยู่ Strategic Reserves", "do": [{ "on": "self", "reserves": true }] } },
-  "INSPIRING COMMANDER@Kayvaan Shrike": { "effects": [{ "scope": "army", "units": ["name:Assault Intercessors With Jump Packs"], "if": ["notCharacterModel"], "ocSet": 2 }] },
-  "For the Khan!": { "effects": [{ "scope": "led", "attack": "ranged", "abilities": ["assault"] }, { "scope": "led", "attack": "melee", "abilities": ["lance"] }] },
-  "Trophy Taker": { "act": { "when": "afterFighting", "auto": true, "needCharacterKill": true, "do": [{ "cp": 1 }] } },
-  "INSPIRING COMMANDER@Kor’sarro Khan": { "effects": [{ "scope": "army", "units": ["name:Outrider Squad"], "if": ["notCharacterModel"], "ocSet": 3 }] },
-  "Purgation Run": { "act": { "when": "afterShootingButton", "limit": "phase", "label": "เดิน D6\" หลังยิง (ชาร์จไม่ได้)", "do": [{ "on": "self", "move": "D6", "noCharge": true }] } },
-  "Thunderous Impact": { "effects": [{ "attack": "melee", "if": ["charged"], "strength": 1, "damage": 1 }] },
-  "Oath of Rynn": { "act": { "when": "anyCommand", "limit": "battle", "botUse": "valuable", "label": "+1 A อาวุธทั้งหน่วยจนจบเทิร์น", "do": [{ "on": "self", "buff": [{ "attacks": 1 }], "until": "turn" }] } },
-  "To the Last": { "effects": [{ "scope": "led", "if": ["belowStarting"], "hit": 1 }, { "scope": "led", "if": ["belowHalf"], "wound": 1 }] },
-  "CRIMSON FISTS": { "status": "info", "note": "นับเป็น Imperial Fists" },
-  "INSPIRING COMMANDER@Pedro Kantor": { "effects": [{ "scope": "army", "units": ["name:Sternguard Veteran Squad"], "if": ["notCharacterModel"], "ocSet": 2 }] },
-  "Annihilator": { "effects": [{ "attack": "ranged", "if": ["targetMV"], "reroll": "damage" }] },
-  "Destructor": { "effects": [{ "attack": "ranged", "if": ["targetInfantry"], "ap": 1 }] },
-  "Duty Eternal": { "effects": [{ "defend": { "damage": -1 } }] },
-  "Fearsome Assault": { "act": { "when": "fightStart", "auto": true, "target": { "side": "enemy", "engaged": true, "each": true }, "do": [{ "shock": -1 }] } },
-  "Terror Troops (Aura)": { "effects": [{ "scope": "enemyAura", "range": 3, "units": ["!MONSTER", "!VEHICLE"], "oc": -1, "rangeBonusIf": { "ability": "Deadly Terror", "add": 3 } }] },
-  "Grapnel Launcher": { "gear": true, "status": "info", "note": "สนาม 2D ไม่มีระยะแนวตั้งอยู่แล้ว" },
-  "Reiver Grav-chute": { "gear": true, "effects": [{ "deepStrike": true }] },
-  "Emergency Combat Embarkation": { "status": "auto", "note": "ศัตรูประกาศชาร์จ: หน่วยที่อยู่ภายใน 3\" ขึ้นรถหนีเอง (เทิร์นละครั้ง)" },
-  "Executioner": { "effects": [{ "if": ["targetBelowHalf"], "hit": 1 }] },
-  "Self Repair": { "act": { "when": "commandEnd", "auto": true, "do": [{ "on": "self", "heal": "1" }] } },
-  "Forgefather": { "act": { "when": "shooting", "limit": "phase", "target": { "side": "enemy", "range": 24, "visible": true }, "label": "เลือกเป้า: อาวุธ Torrent/Melta re-roll wound", "do": [{ "incoming": { "attack": "ranged", "units": ["ADEPTUS ASTARTES"], "reroll": "wounds", "weaponCond": "torrentOrMelta" }, "until": "phase" }] } },
-  "Seeker of the Unfound": { "status": "auto", "note": "เลือก objective กลางสนามที่ใกล้สุดตอนลงสนามครั้งแรก", "effects": [{ "scope": "model", "if": ["onSeekerObjective"], "ocSet": 10, "defend": { "fnp": 4 } }] },
-  "INSPIRING COMMANDER@Vulkan He’stan": { "effects": [{ "scope": "army", "units": ["name:Infernus Squad"], "if": ["notCharacterModel"], "ocSet": 2 }] },
-  "Pinning Bombardment": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true, "hitWeapon": "vengeance launcher", "units": ["INFANTRY"] }, "do": [{ "shock": 0 }] } },
-  "Savage Fury": { "effects": [{ "rerollCharge": true }] },
-  "Narthecium": { "act": { "when": "command", "limit": "phase", "if": ["leaderAttached"], "botUse": "damaged", "label": "คืนชีพ 1 โมเดล", "do": [{ "on": "self", "revive": 1 }] } },
-  "Narthecium@Ravenwing Command Squad": { "act": { "when": "command", "limit": "phase", "if": ["contains:Apothecary"], "botUse": "damaged", "label": "คืนชีพ 1 โมเดล", "do": [{ "on": "self", "revive": 1 }] } },
-  "Honour or Death@Ravenwing Command Squad": { "effects": [{ "if": ["contains:Champion"], "advanceBonus": 1, "chargeBonus": 1, "stratDiscount": { "ids": ["heroic-intervention"], "cp": 1 } }] },
-  "Honour or Death": { "effects": [{ "stratDiscount": { "ids": ["heroic-intervention"], "cp": 1 } }] },
-  "Command Squad": { "effects": [{ "scope": "bodyguardLed", "defend": { "wound": -1 } }] },
-  "Gene-seed Recovery": { "act": { "when": "onDeath", "auto": true, "roll": "D6", "table": [{ "min": 2, "do": [{ "cp": 1 }] }] } },
-  "Unbreakable Duty": { "effects": [{ "scope": "model", "if": ["centreOrObjective"], "defend": { "fnp": 4 } }] },
-  "Hammer of Wrath": { "act": { "when": "endOfCharge", "auto": true, "target": { "side": "enemy", "engaged": true }, "perModel": true, "each": { "on": 4, "do": [{ "mortals": "1" }] } } },
-  "Interception Strike": { "effects": [{ "attack": "ranged", "if": ["targetNearFriendlyAA12"], "reroll": "hits" }] },
-  "Stabilised Disembarkation": { "status": "auto", "note": "รถโดนยิงจนเหลือครึ่งเลือด: หน่วยข้างในลงเอง" },
-  "Litanies of the Devout": { "effects": [{ "scope": "led", "if": ["contains:Grimaldus"], "attack": "melee", "reroll": "hits" }] },
-  "Temple Relics": { "choice": { "name": "Temple Relics", "pick": 1, "when": "command", "if": ["contains:Servitor"], "options": ["Banner of the Emperor Victorious", "Column from the Major Altar", "Water from the Stoup of Elucidation"] } },
-  "Banner of the Emperor Victorious": { "effects": [{ "advanceBonus": 1, "chargeBonus": 1 }] },
-  "Column from the Major Altar": { "effects": [{ "toughness": 1 }] },
-  "Water from the Stoup of Elucidation": { "effects": [{ "attack": "melee", "ap": 1 }] },
-  "Vehement Aggression": { "act": { "when": "selectedToFight", "auto": true, "if": ["leaderAttached"], "ldTest": true, "pass": [{ "on": "self", "buff": [{ "reroll": "hits" }], "until": "phase" }], "fail": [{ "on": "self", "buff": [{ "reroll": "hits1" }], "until": "phase" }] } },
-  "Prioritised Eradication": { "act": { "when": "afterFighting", "auto": true, "needDestroyed": true, "roll": "D6", "table": [{ "min": 4, "do": [{ "cp": 1 }] }] } },
-  "Crusade of Wrath": { "effects": [{ "scope": "led", "attack": "melee", "attacks": 1, "strength": 1 }] },
-  "High Marshal": { "act": { "when": "fightStart", "auto": true, "target": { "side": "enemy", "engaged": true }, "roll": "D6", "rollAdd": "per5models", "table": [{ "min": 2, "max": 3, "do": [{ "mortals": "D3" }] }, { "min": 4, "max": 5, "do": [{ "mortals": "3" }] }, { "min": 6, "do": [{ "mortals": "D3+3" }] }] } },
-  "Armour of Faith": { "effects": [{ "scope": "model", "defend": { "negateOncePerPhase": true } }] },
-  "Sigismund’s Heir": { "effects": [{ "if": ["enemyCharacterWithin12"], "rerollCharge": true }], "act": { "when": "selectedToFight", "limit": "battle", "per": "army", "if": ["engagedWithCharacter"], "label": "Devastating Wounds (ตีใส่ CHARACTER)", "do": [{ "on": "self", "buff": [{ "attack": "melee", "abilities": ["devastating wounds"] }], "until": "phase" }] } },
-  "CHOSEN OF THE EMPEROR": { "status": "info", "note": "มี Emperor's Champion ได้ตัวเดียว" },
-  "Inspirational Exemplar": { "effects": [{ "scope": "led", "attack": "melee", "critHitOn": 5 }] },
-  "Pious Fervour": { "act": { "when": "selectedToFight", "auto": true, "do": [{ "on": "self", "bearerOnly": true, "attacksPerEnemyNear": { "range": 6, "max": 3, "weapon": "master-crafted power weapon" }, "until": "phase" }] } },
-  "Exploit Their Cowardice": { "act": { "when": "enemyFellBack", "limit": "phase", "if": ["unengaged"], "do": [{ "on": "self", "move": "M" }] } },
-  "Righteous Zeal": { "act": { "when": "shotByEnemy", "auto": true, "limit": "phase", "needModelsLost": true, "do": [{ "on": "self", "surge": "D6+2" }] } },
-  "Fervour of the Ancients (Aura)": { "effects": [{ "scope": "aura", "range": 6, "units": ["SPACE WOLVES"], "advanceBonus": 1, "chargeBonus": 1 }] },
-  "Blizzard Shield": { "gear": true, "status": "auto", "note": "4+ InSv (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)" },
-  "Braziers of Judgement": { "effects": [{ "stealth": true, "defend": { "vs": "melee", "hit": -1 } }] },
-  "Enmity for the Unworthy": { "effects": [{ "if": ["targetCharacter"], "hit": 1 }] },
-  "Forlorn Hero": { "effects": [{ "scope": "led", "scouts": 6 }] },
-  "Death Vision of Sanguinius": { "act": { "when": "onDeath", "auto": true, "modelDeath": true, "needMelee": true, "target": { "side": "enemy", "attacker": true }, "roll": "D6", "rollAdd": "warlordInTarget2", "table": [{ "min": 2, "max": 3, "do": [{ "mortals": "D3" }] }, { "min": 4, "max": 5, "do": [{ "mortals": "3" }] }, { "min": 6, "do": [{ "mortals": "D3+3" }] }] } },
-  "Lost to Fury": { "effects": [{ "scope": "led", "attack": "melee", "abilities": ["sustained hits 1"] }] },
-  "Healing Balms": { "act": { "when": "command", "limit": "phase", "if": ["leaderAttached"], "botUse": "damaged", "label": "คืนชีพ 1 โมเดล", "do": [{ "on": "self", "revive": 1 }] } },
-  "Tempered Ferocity": { "effects": [{ "scope": "led", "abilities": ["sustained hits 1"] }, { "scope": "led", "if": ["within6"], "reroll": "hits1" }] },
-  "Heroic Last Stand": { "effects": [{ "scope": "model", "fightOnDeath": 2 }] },
-  "Let Loose the Wolves": { "split": "byModel", "note": "แยก Headtakers กับ Hunting Wolves ตอนจัดทัพ (เมนู ⋮)" },
-  "Headhunters": { "effects": [{ "if": ["targetQuarry"], "abilities": ["devastating wounds", "precision"] }], "act": { "when": "battleStart", "auto": true, "limit": "battle", "target": { "side": "enemy", "anywhere": true }, "do": [{ "setQuarry": true }] } },
-  "Hammer Blow": { "act": { "when": "afterFighting", "auto": true, "target": { "side": "enemy", "hit": true, "units": ["MONSTER|VEHICLE"] }, "do": [{ "buff": [{ "hit": -1 }], "until": "endOfNextTurn", "mark": "suppressed" }] } },
-  "Bestial Rage": { "act": { "when": "shotByEnemy", "auto": true, "limit": "phase", "do": [{ "on": "self", "surge": "D6+2" }] } },
-  "Violent Fury": { "effects": [{ "attack": "melee", "if": ["twoMeleeWeapons"], "abilities": ["twin-linked"] }] },
-  "Remorseless Persecution": { "effects": [{ "scope": "led", "eligible": ["chargeAfterAdvance"] }] },
-  "Condemnatory Annihilation": { "act": { "when": "afterFighting", "auto": true, "needDestroyed": true, "target": { "side": "enemy", "range": 6, "each": true }, "do": [{ "shock": 0 }] } },
-  "Vengeful Exhortation": { "effects": [{ "scope": "led", "fightOnDeath": 4 }] },
-  "Martial Honour": { "act": { "when": "afterFighting", "auto": true, "needDestroyed": true, "limit": "battle", "do": [{ "on": "self", "bearerOnly": true, "buff": [{ "oc": 5, "if": ["notBattleShocked"] }], "until": "battle" }] } },
-  "Virtuous Onslaught": { "effects": [{ "if": ["targetClosest"], "reroll": "wounds1" }] },
-  "Judgement of the Weak": { "effects": [{ "forceDesperate": true }] },
-  "Legacy of Jerulas": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true }, "do": [{ "incoming": { "reroll": ["hits1", "wounds1"] }, "fromThisTransport": true, "until": "turn" }] } },
-  "Master of Shadows": { "effects": [{ "scope": "army", "units": ["ADEPTUS ASTARTES"], "if": ["nearMarked:shadows:12"], "rerollCharge": true }], "act": { "when": "command", "limit": "phase", "target": { "side": "enemy", "anywhere": true }, "label": "เลือกศัตรู: หน่วยเราในระยะ 12\" re-roll ชาร์จได้", "do": [{ "buff": [{}], "until": "nextCommand", "mark": "shadows" }] } },
-  "Blackwing Mantle": { "effects": [{ "stratDiscount": { "ids": ["rapid-ingress", "heroic-intervention"], "cp": 1 } }] },
-  "CHAPTER MASTER OF THE RAVEN GUARD": { "status": "info", "note": "ปรับ keyword ของ Shrike เมื่อมี Aethon Shaan" },
-  "Cold and Calculating": { "effects": [{ "if": ["targetMV"], "abilities": ["lethal hits"] }, { "if": ["targetNotMV"], "abilities": ["sustained hits 1"] }] },
-  "Cerebrex Logic Engine": { "status": "auto", "note": "Scouts 6\" ให้หน่วย Infantry ที่แพงสุด; หลังวางทัพ redeploy ได้ 1 หน่วย", "act": { "when": "formation", "auto": true, "limit": "battle", "per": "army", "target": { "side": "friendly", "units": ["ADEPTUS ASTARTES", "INFANTRY"], "anywhere": true }, "do": [{ "buff": [{ "scouts": 6 }], "until": "battle" }] } },
-  "Spear of Chogoris": { "effects": [{ "eligible": ["shootAfterAdvance", "shootAfterFallBack", "chargeAfterAdvance", "chargeAfterFallBack"] }] },
-  "Skilled Riders": { "effects": [{ "mobile": true }] },
-  "Deadly Stalkers": { "effects": [{ "if": ["targetIsolated"], "wound": 1 }] },
-  "Inspiring Leader": { "effects": [{ "eligible": ["shootAfterAdvance", "shootAfterFallBack", "chargeAfterAdvance", "chargeAfterFallBack"] }] },
-  "Master Tactician": { "act": { "when": "commandStart", "auto": true, "if": ["holderOnBattlefield", "warlord"], "do": [{ "cp": 1 }] } },
-  "Knight Champion of Macragge": { "act": { "when": "enemyMovedNear", "range": 8, "limit": "phase", "do": [{ "on": "self", "move": "6" }] } },
-  "Ultramarines Honour Guard": { "effects": [{ "scope": "bodyguardLed", "if": ["leader:Captain|Chapter Master|Calgar|Titus|Sicarius|Guilliman"], "defend": { "wound": -1 } }] },
-  "Glory of Ultramar": { "act": { "when": "shotByEnemy", "auto": true, "limit": "phase", "needModelsLost": true, "do": [{ "on": "self", "surge": "D6" }] } },
-  "Banner of Macragge": { "gear": true, "act": { "when": "fightStartButton", "limit": "battle", "botUse": "valuable", "label": "+1 S และ +1 A ทั้งหน่วย", "do": [{ "on": "self", "buff": [{ "attack": "melee", "strength": 1, "attacks": 1 }], "until": "phase" }] } },
-  "Press the Attack": { "effects": [{ "abilities": ["sustained hits 1"] }] },
-  "Honour of Ultramar": { "effects": [{ "scope": "model", "fightOnDeath": 2, "fightOnDeathRegain": "D3" }] },
-  "DEMETRIAN TITUS": { "status": "info", "note": "มี Titus ได้หน่วยเดียว" },
-  "Second Company Banner": { "effects": [{ "if": ["contains:Gadriel"], "oc": 1 }, { "if": ["contains:Gadriel", "contains:Titus"], "ld": 1 }] },
-  "Strategium Command": { "status": "auto", "note": "หลังวางทัพ: redeploy ได้ 3 หน่วย (วางใหม่หรือเข้ากองหนุน)" },
-  "Refractor Field": { "gear": true, "status": "auto", "note": "5+ InSv (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)" },
-  "Curse of the Wulfen": { "effects": [
-    { "scope": "model", "if": ["notBattleShocked", "any:nearModels:6:SPACE WOLVES+CHARACTER!WULFEN||nearModels:12:Wolf Priest", "modelKw:INFANTRY"], "oc": 1 },
-    { "scope": "model", "if": ["notBattleShocked", "any:nearModels:6:SPACE WOLVES+CHARACTER!WULFEN||nearModels:12:Wolf Priest", "modelKw:VEHICLE"], "oc": 3 }
-  ] },
-  "Oath of Moment": { "status": "auto", "note": "ระบบทำให้: เลือกเป้าใน Command phase (re-roll hit, +1 wound สำหรับทัพ codex)" },
-  "Templar Vows": { "status": "auto", "note": "ระบบทำให้: เลือก Vow ใน Command phase แรก (Black Templars)" },
-  "Overlapping Detonations": { "effects": [{ "weapon": "heavy bolter", "if": ["targetNotMV"], "abilities": ["blast 1"] }] },
-  "Assigned Agents": { "status": "info", "note": "กฎจัดทัพ: หน่วย Deathwatch (Imperial Agents) ใส่ในกองทัพ Space Marines ได้" },
-  "Tactical Instinct": { "effects": [{ "scope": "led", "abilities": ["lethal hits"] }] },
-  "Unstoppable Champion": { "act": { "when": "onDeath", "auto": true, "modelDeath": true, "limit": "battle", "do": [{ "on": "self", "reviveLater": { "on": 2, "wounds": 1 } }] } },
-  "Strategic Knowledge": { "effects": [{ "scope": "led", "eligible": ["shootAfterAdvance", "shootAfterFallBack", "chargeAfterAdvance", "chargeAfterFallBack"] }] },
-  "Death to the Alien": { "effects": [{ "reroll": "hits1" }, { "if": ["targetNotKw:IMPERIUM|CHAOS"], "reroll": "hits" }] },
-  "Astartes Shield": { "gear": true, "effects": [{ "scope": "model", "defend": { "inv": 4 } }] },
-  "Blackstar Cluster Launcher": { "status": "auto", "note": "จบ Normal move: บินผ่านหน่วยไหน ทอย 6D6 ทุก 5+ = 1 MW (อัตโนมัติ)" },
-  "Auspex Array": { "gear": true, "effects": [{ "scope": "model", "attack": "ranged", "abilities": ["ignores cover"] }] },
-  "Infernum Halo-launcher": { "gear": true, "status": "info", "note": "มี keyword SMOKE: ใช้ Smokescreen ได้" },
-  "Kill Team": { "status": "info", "note": "ใช้ Toughness ของโมเดลส่วนใหญ่ในหน่วยตอนทอย wound · Gravis กินที่ 2 ในรถ" },
-  "Mission Tactics": { "status": "info", "note": "กฎกองทัพ Deathwatch: เลือก Mission Tactic ตอนต้น Command phase ที่ช่องกฎ detachment (Black Spear Task Force)" },
-  "Spectrus Doctrines": { "act": { "when": "opponentTurnEnd", "if": ["farFromEnemies:6"], "botUse": "never", "label": "ออกไปอยู่ Strategic Reserves", "do": [{ "on": "self", "reserves": true }] } },
-  "Instigator Bolt Carbine": { "gear": true, "act": { "when": "afterShootingButton", "limit": "phase", "label": "เดิน Normal move หลังยิง (ชาร์จไม่ได้)", "do": [{ "on": "self", "move": "M", "noCharge": true }] } },
-  "Fortis Doctrines": { "effects": [{ "if": ["targetBelowStarting", "targetNotBelowHalf"], "hit": 1 }, { "if": ["targetBelowHalf"], "hit": 1, "wound": 1 }] },
-  "Indomitor Doctrines": { "effects": [{ "attack": "ranged", "if": ["targetClosest"], "strength": 2 }, { "attack": "melee", "if": ["charged"], "strength": 2 }] },
-  "Talonstrike Doctrines": { "effects": [{ "if": ["setUpThisTurn"], "ap": 1 }, { "attack": "melee", "if": ["setUpThisTurn"], "abilities": ["lance"] }] }
+  "status": "partial",
+  "note": "ฟื้นทันที D3 (กฎจริง: หลังตี ถ้าฆ่าได้ 2D3)"
+ },
+ "Raise the Banner": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "if": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "secure": true
+    }
+   ]
+  }
+ },
+ "Honour Guard of Macragge": {
+  "effects": [
+   {
+    "defend": {
+     "wound": -1
+    }
+   }
+  ]
+ },
+ "Veteran Bodyguard": {
+  "status": "partial",
+  "effects": [
+   {
+    "defend": {
+     "fnp": 4
+    },
+    "if": [
+     "leaderAttached"
+    ]
+   }
+  ],
+  "note": "FNP 4+ ให้ทั้งหน่วย (กฎจริง: เฉพาะ CHARACTER ตัวอื่น)"
+ },
+ "Calgar's Champion": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "targetCharacter"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Blackwing Mantle (Once per phase, per army)": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1,
+     "limit": "phase",
+     "perArmy": true
+    }
+   }
+  ]
+ },
+ "Trifold Path of Shadow": {
+  "effects": [
+   {
+    "stealth": true
+   },
+   {
+    "detection": -3
+   }
+  ]
+ },
+ "Angel's Wrath": {
+  "effects": [
+   {
+    "advanceBonus": 1,
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Tactical Fluidity (Once per battle round, per unit)": {
+  "act": [
+   {
+    "when": "afterShootingButton",
+    "limit": "round",
+    "if": [
+     "notEngaged"
+    ],
+    "label": "เดิน D6\" หลังยิง",
+    "do": [
+     {
+      "on": "self",
+      "move": "D6"
+     }
+    ]
+   }
+  ],
+  "status": "partial",
+  "note": "ส่วน fall back 6\" ตอนจบ Fight phase ของศัตรู: ทำเอง"
+ },
+ "Unstoppable Valour": {
+  "effects": [
+   {
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Into the Fray": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "abilities": [
+     "cleave 1"
+    ]
+   }
+  ]
+ },
+ "Demi-company Commander (Once per turn, per unit)": {
+  "act": [
+   {
+    "when": "command",
+    "limit": "turn",
+    "botUse": "never",
+    "label": "Assault Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:assault"
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "turn",
+    "botUse": "never",
+    "label": "Devastator Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:devastator"
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "turn",
+    "botUse": "never",
+    "label": "Tactical Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:tactical"
+     }
+    ]
+   }
+  ]
+ },
+ "Priority Target Identified (Once per battle, per unit)": {
+  "status": "manual",
+  "note": "เลือก terrain: ศัตรูข้างใน +3\" detection — ทำเอง"
+ },
+ "Evade and Survive (Once per phase, per unit)": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "limit": "phase",
+   "do": [
+    {
+     "on": "self",
+     "move": "D3+3"
+    }
+   ]
+  }
+ },
+ "Spiritual Leader (Once per battle round, per unit)": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "round",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "shocked": true,
+    "units": [
+     "ADEPTUS ASTARTES"
+    ]
+   },
+   "label": "หน่วยเพื่อนในระยะ 6\" หายจาก battle-shocked",
+   "do": [
+    {
+     "unshock": true
+    }
+   ]
+  }
+ },
+ "Zealous Fortitude": {
+  "effects": [
+   {
+    "defend": {
+     "fnp": 4,
+     "fnpVs": "mortal"
+    }
+   }
+  ]
+ },
+ "*Invulnerable Save": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "vs": "melee",
+     "inv": 4
+    }
+   }
+  ]
+ },
+ "Veil of Time (psychic level 1)": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "label": "Psychic: Advance ได้ 6 เสมอ (ทอย 1 = battle-shocked)",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "battleShock": true
+      }
+     ]
+    }
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "advanceFixed": 6
+      }
+     ],
+     "until": "phase"
+    }
+   ],
+   "botUse": "never"
+  }
+ },
+ "Force Dome (psychic level 1)": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "label": "Psychic: 4+ InSv จนถึงเทิร์นหน้า (ทอย 1 = battle-shocked)",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "battleShock": true
+      }
+     ]
+    }
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "defend": {
+        "inv": 4
+       }
+      }
+     ],
+     "until": "nextTurnStart"
+    }
+   ],
+   "botUse": "always"
+  }
+ },
+ "Shrouding (psychic level 1)": {
+  "act": {
+   "when": "attacked",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "label": "Psychic: ศัตรูยิง/ตีโดน −1 hit (ทอย 1 = battle-shocked)",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "battleShock": true
+      }
+     ]
+    }
+   ],
+   "do": [
+    {
+     "attackMod": {
+      "hit": -1
+     }
+    }
+   ],
+   "auto": true
+  }
+ },
+ "Soul Sight (psychic level 1)": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "label": "Psychic: ศัตรู 1 หน่วย: ยิงใส่ได้ [IGNORES COVER] (ทอย 1 = battle-shocked)",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "battleShock": true
+      }
+     ]
+    }
+   ],
+   "do": [
+    {
+     "incoming": {
+      "attack": "ranged",
+      "noCover": true
+     },
+     "until": "phase"
+    }
+   ],
+   "target": {
+    "side": "enemy",
+    "visible": true
+   },
+   "botUse": "never"
+  }
+ },
+ "Might of Heroes (psychic level 1)": {
+  "act": {
+   "when": "selectedToFight",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "label": "Psychic: +2 S (ทอย 1 = battle-shocked)",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "battleShock": true
+      }
+     ]
+    }
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "attack": "melee",
+       "strength": 2
+      }
+     ],
+     "until": "phase"
+    }
+   ],
+   "botUse": "always"
+  }
+ },
+ "Thunderous Force (psychic level 1)": {
+  "act": {
+   "when": "selectedToShoot",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "label": "Psychic: +6\" ระยะยิง (ทอย 1 = battle-shocked)",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "battleShock": true
+      }
+     ]
+    }
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "rangeBonus": 6
+      }
+     ],
+     "until": "phase"
+    }
+   ],
+   "botUse": "never"
+  }
+ },
+ "Honour of the Company": {
+  "effects": [
+   {
+    "oc": 1
+   }
+  ]
+ },
+ "Deeds of Legend": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "onObjective"
+    ],
+    "attacks": 1
+   }
+  ]
+ },
+ "Never Shall the Standard Fall": {
+  "effects": [
+   {
+    "if": [
+     "onObjective"
+    ],
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Blessings of the Omnissiah": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 3,
+    "units": [
+     "ADEPTUS ASTARTES",
+     "VEHICLE"
+    ]
+   },
+   "label": "รถในระยะ 3\": ฟื้น D3 W, ไม่สนตัวปรับ hit/wound",
+   "do": [
+    {
+     "heal": "D3"
+    },
+    {
+     "buff": [
+      {
+       "ignoreMods": true
+      }
+     ],
+     "until": "nextTurnStart"
+    }
+   ]
+  }
+ },
+ "Vivispectral Analysis Targeting": {
+  "effects": [
+   {
+    "abilities": [
+     "lethal hits: non-vehicle"
+    ]
+   }
+  ]
+ },
+ "Targeted Intercession": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "strength": 1,
+    "ap": 1
+   }
+  ]
+ },
+ "Rites of Thermal Appeasement": {
+  "status": "info",
+  "note": "+1 hazard roll ของอาวุธ plasma (ระบบยังไม่ปรับ hazard roll)"
+ },
+ "Driven from Cover": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "attack": "ranged",
+      "units": [
+       "ADEPTUS ASTARTES"
+      ],
+      "noCover": true
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Bladeguard (Once per turn, per unit)": {
+  "act": [
+   {
+    "when": "selectedToFight",
+    "auto": true,
+    "limit": "turn",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "melee",
+        "hit": 1
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "attacked",
+    "auto": true,
+    "limit": "turn",
+    "needMelee": true,
+    "if": [
+     "fightPhase"
+    ],
+    "do": [
+     {
+      "attackMod": {
+       "hit": -1
+      }
+     }
+    ]
+   }
+  ],
+  "note": "ระบบใช้ตอนโดนตีก่อน ถ้ายังไม่ได้ใช้ (ไม่งั้นใช้ +1 hit ตอนตี)"
+ },
+ "Veteran Marksmen": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "reroll": "hits1"
+   }
+  ]
+ },
+ "Divinator-class Auspexes (Once per phase, per unit)": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true
+   },
+   "label": "scan ศัตรู: ยิงใส่ re-roll hit 1",
+   "do": [
+    {
+     "incoming": {
+      "attack": "ranged",
+      "reroll": "hits1"
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Haywire Mine (Once per battle, per unit)": {
+  "act": {
+   "when": "shooting",
+   "limit": "battle",
+   "target": {
+    "side": "enemy",
+    "range": 6,
+    "visible": true
+   },
+   "roll": "D6",
+   "label": "ศัตรูในระยะ 6\": 2+ → D3 MW (รถ 2D3)",
+   "table": [
+    {
+     "min": 2,
+     "do": [
+      {
+       "mortals": "D3",
+       "mortalsVehicle": "2D3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Flexible Asset": {
+  "effects": [
+   {
+    "eligible": [
+     "actionAfterAdvance",
+     "actionAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Chameleoline Cloaks": {
+  "effects": [
+   {
+    "detection": -3
+   }
+  ]
+ },
+ "Special-issue Optics and Ammunition": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ],
+  "status": "partial",
+  "note": "ระบบใช้ [IGNORES COVER] เสมอ (อีกทาง: ศัตรู +6\" detection เลือกเอง)"
+ },
+ "Full-throttle Assault": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   },
+   {
+    "attack": "melee",
+    "weapon": "Thunder Hammer",
+    "if": [
+     "charged"
+    ],
+    "hit": 1
+   }
+  ],
+  "status": "partial",
+  "note": "+1 D ของอาวุธอื่น: ยังไม่ได้ใส่"
+ },
+ "Overlapping Destruction": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "weapon": "Heavy Bolter",
+    "abilities": [
+     "blast 1"
+    ]
+   }
+  ],
+  "status": "partial",
+  "note": "ใช้กับทุกเป้า (กฎจริง: เลือกเป้า 1 หน่วย)"
+ },
+ "Close-quarters Firestorm": {
+  "effects": [
+   {
+    "if": [
+     "within:9"
+    ],
+    "strength": 1
+   }
+  ]
+ },
+ "Parabolic Jetleap": {
+  "act": {
+   "when": "opponentFightEnd",
+   "if": [
+    "notEngaged"
+   ],
+   "botUse": "never",
+   "label": "ออกไปอยู่ Strategic Reserves",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Teleport Homer (Once per battle, per unit)": {
+  "status": "auto",
+  "note": "token วางอัตโนมัติตอนเริ่มเกม; Rapid Ingress −1CP ลงภายใน 3\" ของ token ห่างศัตรูเกิน 8\"",
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "rapid-ingress"
+     ],
+     "cp": 1,
+     "limit": "battle"
+    }
+   }
+  ]
+ },
+ "Aggressive Reconnaissance": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "shootingPhase",
+     "targetIsolated"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Veiling Smoke (Once per phase, per unit)": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "smokescreen"
+     ],
+     "cp": 1,
+     "limit": "phase"
+    }
+   }
+  ]
+ },
+ "Rapid Disembarkation": {
+  "effects": [
+   {
+    "disembarkAfterAdvance": true
+   }
+  ],
+  "status": "partial",
+  "note": "ลงหลังรถ advance: ชาร์จไม่ได้เทิร์นนั้น"
+ },
+ "Sentinel Protocols (Once per phase, per unit)": {
+  "effects": [
+   {
+    "overwatchHitOn": 4
+   }
+  ]
+ },
+ "Combat Embarkation": {
+  "status": "auto",
+  "note": "ศัตรูประกาศชาร์จหน่วยที่อยู่ภายใน 3\" ของรถ: ขึ้นรถได้ (ระบบทำให้)"
+ },
+ "Fury of the Machine Spirit": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "within12"
+    ],
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Wrath of the Machine Spirit": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "within12"
+    ],
+    "abilities": [
+     "devastating wounds: non-monster/vehicle"
+    ]
+   }
+  ]
+ },
+ "Brutalis Charge (Once per phase, per unit)": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "crushing-impact"
+     ],
+     "cp": 1,
+     "limit": "phase"
+    }
+   }
+  ]
+ },
+ "Forward Assault Warsuit": {
+  "status": "partial",
+  "effects": [
+   {
+    "if": [
+     "targetQuarry"
+    ],
+    "reroll": "wounds1"
+   }
+  ],
+  "note": "ระบบใช้เป้า Quarry ถ้ามี"
+ },
+ "Shattered Defences": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "MONSTER|VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "incoming": {
+      "attack": "ranged",
+      "units": [
+       "ADEPTUS ASTARTES"
+      ],
+      "ap": 1
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "The Quickening (psychic level 1)": {
+  "act": [
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Assault Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:assault"
+     }
+    ],
+    "if": [
+     "notBattleShocked"
+    ]
+   }
+  ]
+ },
+ "Transfixing Gaze (psychic level 2)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "fallBackLdTest": true
+   }
+  ],
+  "status": "partial",
+  "note": "ระบบเปิดตลอด (กฎจริง: ใช้ตอนเริ่ม Movement phase ของศัตรู)"
+ },
+ "Miraculous Savior": {
+  "status": "auto",
+  "note": "(ครั้งเดียวต่อเกม) จบ Charge phase ของศัตรู: ลงจากกองหนุนติดหน่วยที่เพิ่งชาร์จ (อัตโนมัติ)"
+ },
+ "Engulfing Fear (psychic level 1)": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "target": {
+    "side": "enemy",
+    "range": 12
+   },
+   "label": "ศัตรูในระยะ 12\" ทอย Battle-shock −1",
+   "do": [
+    {
+     "shock": -1
+    }
+   ]
+  }
+ },
+ "Whispers of the Shadow Forest (psychic level 1)": {
+  "act": {
+   "when": "attacked",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "do": [
+    {
+     "attackMod": {
+      "hit": -1
+     }
+    }
+   ]
+  }
+ },
+ "Emnity for the Unworthy": {
+  "effects": [
+   {
+    "if": [
+     "targetCharacter"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "The Emperor's Shield": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Master Strategist": {
+  "act": [
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Assault Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:assault"
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Devastator Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:devastator"
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Tactical Doctrine (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:tactical"
+     }
+    ]
+   }
+  ]
+ },
+ "The Watchers": {
+  "effects": [
+   {
+    "defend": {
+     "fnp": 4,
+     "fnpVs": "mortalPsychic"
+    }
+   }
+  ]
+ },
+ "Ancient Tactician (Once per turn)": {
+  "status": "manual",
+  "note": "ใช้ stratagem กับตัวนี้ −1CP (ครั้งเดียวต่อเทิร์น) — ลดเอง"
+ },
+ "Old Greymanes": {
+  "split": "half",
+  "note": "แยกเป็น 2 หน่วย หน่วยละ 5 ตอนจัดทัพ (เมนู ⋮)"
+ },
+ "Embarking within Transports": {
+  "status": "info",
+  "note": "ขึ้นรถที่ขน TERMINATOR ได้ กินที่ 4"
+ },
+ "Murder-maker [Aura]": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WULFEN"
+    ],
+    "fightOnDeath": 4
+   }
+  ]
+ },
+ "Force of Untamed Destruction": {
+  "status": "info",
+  "note": "เป็น Warlord ไม่ได้"
+ },
+ "Beastial Fury": {
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Wind Walker": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   },
+   {
+    "scope": "led",
+    "advanceFixed": 6
+   }
+  ]
+ },
+ "Tempest's Wrath (psychic level 1)": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true
+   },
+   "label": "ศัตรู: −1 hit จนจบเทิร์นหน้า",
+   "do": [
+    {
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart"
+    }
+   ]
+  }
+ },
+ "Murderous Hurricane (psychic level 1)": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "target": {
+    "side": "enemy",
+    "range": 12
+   },
+   "label": "ศัตรู: ยิง snap shooting ไม่ได้",
+   "do": [
+    {
+     "buff": [
+      {
+       "noOverwatch": true
+      }
+     ],
+     "until": "nextTurnStart"
+    }
+   ]
+  }
+ },
+ "Storm Caller (psychic level 1)": {
+  "act": {
+   "when": "attacked",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "notBattleShocked"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "detection": -3
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Slayer's Oath": {
+  "note": "ระบบเลือก keyword ให้ (ที่ศัตรูมีแต้มรวมมากสุด) · ทำลายหน่วยที่มี keyword นั้นได้ = หน่วยนี้ได้ผลของ Saga ที่สำเร็จ",
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "setSlayer": true
+    }
+   ]
+  }
+ },
+ "Servitors": {
+  "status": "info",
+  "note": "Grimaldus ตาย: Servitor ตายหมด (ทำเอง)"
+ },
+ "Sigismund's Heir": {
+  "effects": [
+   {
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Watch Master": {
+  "effects": [
+   {
+    "if": [
+     "targetCharacter"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Purgatus Quarry": {
+  "effects": [
+   {
+    "if": [
+     "targetQuarry"
+    ],
+    "reroll": "wounds1"
+   }
+  ],
+  "status": "partial",
+  "note": "เป้า hunted = Quarry ที่ระบบเลือก"
+ },
+ "Fealty to the Lion": {
+  "status": "manual",
+  "note": "Movement phase: ยกขึ้นวางใหม่ห่างศัตรูเกิน 9\" — วางเอง"
+ },
+ "Rampart (Once per battle, per army)": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "botUse": "valuable",
+   "label": "2+ InSv จนจบ phase",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "defend": {
+        "inv": 2
+       }
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Standard of the Emperor Ascendant": {
+  "effects": [
+   {
+    "scope": "model",
+    "oc": 1
+   },
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ],
+  "act": {
+   "when": "selectedToFight",
+   "limit": "battle",
+   "per": "army",
+   "botUse": "valuable",
+   "label": "Ancient Exhortation: +1 A ทั้งหน่วย",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "attack": "melee",
+       "attacks": 1
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Laurels of Triumph": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 1,
+    "ap": 1,
+    "if": [
+     "!doctrine:assault"
+    ]
+   },
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 2,
+    "ap": 2,
+    "if": [
+     "doctrine:assault"
+    ]
+   }
+  ]
+ },
+ "Adept of the Codex": {
+  "doctrines": [
+   "tactical"
+  ]
+ },
+ "Artificer Armour": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "save": 1,
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Imperium's Sword": {
+  "status": "manual",
+  "note": "ได้อาวุธ Imperium's Sword (A6 WS2+ S7 AP-3 D3) — ยังไม่เพิ่มในการ์ด"
+ },
+ "Furious Assault": {
+  "effects": [
+   {
+    "attack": "melee",
+    "abilities": [
+     "sustained hits 1: non-monster/vehicle"
+    ]
+   }
+  ]
+ },
+ "Laurels of Vigilance": {
+  "status": "manual",
+  "note": "Fire Overwatch / Heroic Intervention ใส่ BATTLELINE ในระยะ 12\" −1CP (ครั้งเดียวต่อ round) — ลดเอง"
+ },
+ "Tactical Insight": {
+  "doctrines": [
+   "tactical"
+  ]
+ },
+ "Master-forged Firearms": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "attacks": 1,
+    "strength": 1,
+    "ap": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Honour of Vigilance": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "lethal hits"
+    ]
+   },
+   {
+    "if": [
+     "doctrine:devastator"
+    ],
+    "rerollAdvance": true
+   }
+  ]
+ },
+ "Champion of the First Company": {
+  "effects": [
+   {
+    "attack": "melee",
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Corporeum Reliquary": {
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ]
+ },
+ "Martial Paragon": {
+  "freeDie": [
+   {
+    "kind": "reroll",
+    "stage": "hit",
+    "limit": "phase"
+   },
+   {
+    "kind": "reroll",
+    "stage": "wound",
+    "limit": "phase"
+   }
+  ]
+ },
+ "Spearpoint War Leader": {
+  "effects": [
+   {
+    "scouts": 6
+   }
+  ]
+ },
+ "Cyber-familiar": {
+  "status": "auto",
+  "note": "หลังวางทัพ: redeploy INFANTRY ได้ 3 หน่วย"
+ },
+ "Tempered in Battle (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS ASTARTES"
+    ],
+    "rerollShock": true
+   }
+  ]
+ },
+ "Venator Omni-auspex": {
+  "effects": [
+   {
+    "if": [
+     "targetHidden"
+    ],
+    "reroll": "wounds1"
+   }
+  ],
+  "status": "partial",
+  "note": "assault doctrine: re-roll 1 และ 2 (ระบบ re-roll แค่ 1)"
+ },
+ "Execute and Redeploy": {
+  "act": {
+   "when": "afterShootingButton",
+   "limit": "phase",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "เดิน 6\" หลังยิง (ชาร์จไม่ได้)",
+   "do": [
+    {
+     "on": "self",
+     "move": "6",
+     "noCharge": true
+    }
+   ]
+  }
+ },
+ "Seal of Shrouding": {
+  "status": "manual",
+  "note": "ศัตรูยิง snap shooting ใส่หน่วยนี้ไม่ได้ — เช็กเอง"
+ },
+ "Indefatigable Fortitude": {
+  "effects": [
+   {
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Relentless Advance": {
+  "effects": [
+   {
+    "scouts": 5
+   }
+  ]
+ },
+ "Immovable Conquerors": {
+  "effects": [
+   {
+    "oc": 1
+   }
+  ]
+ },
+ "Narthecis Gauntlet": {
+  "act": {
+   "when": "command",
+   "auto": true,
+   "botUse": "damaged",
+   "do": [
+    {
+     "on": "self",
+     "heal": "D3+1"
+    }
+   ]
+  }
+ },
+ "Supercharged Engines": {
+  "effects": [
+   {
+    "rerollAdvance": true
+   }
+  ]
+ },
+ "Auspex Triangulation Shrines": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "visible": true
+   },
+   "label": "ศัตรู spotted: +3\" detection",
+   "do": [
+    {
+     "buff": [
+      {
+       "detection": 3
+      }
+     ],
+     "until": "turn",
+     "mark": "spotted"
+    }
+   ]
+  }
+ },
+ "Artificer Sarcophagus": {
+  "effects": [
+   {
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Venerable Champion (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS ASTARTES",
+     "INFANTRY|MOUNTED"
+    ],
+    "reroll": "hits1"
+   }
+  ]
+ },
+ "Linebreaker Onslaught": {
+  "effects": [
+   {
+    "if": [
+     "disembarkedThisTurn"
+    ],
+    "rerollCharge": true
+   }
+  ],
+  "status": "partial",
+  "note": "ห้ามศัตรู snap shooting ใส่: เช็กเอง"
+ },
+ "Damocles-class Uplink": {
+  "act": [
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Assault Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:assault"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "units": [
+      "ADEPTUS ASTARTES",
+      "INFANTRY"
+     ]
+    }
+   },
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Devastator Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:devastator"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "units": [
+      "ADEPTUS ASTARTES",
+      "INFANTRY"
+     ]
+    }
+   },
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Tactical Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:tactical"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "units": [
+      "ADEPTUS ASTARTES",
+      "INFANTRY"
+     ]
+    }
+   }
+  ]
+ },
+ "Redoubtable Machine Spirit": {
+  "effects": [
+   {
+    "defend": {
+     "inv": 5
+    }
+   }
+  ],
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "do": [
+    {
+     "on": "self",
+     "heal": "1"
+    }
+   ]
+  }
+ },
+ "Gunnery Honours": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "heavy"
+    ]
+   }
+  ]
+ },
+ "Armour of Antoninus": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "save": 1,
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Oath of Macragge": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 1,
+    "strength": 1,
+    "if": [
+     "!doctrine:assault"
+    ]
+   },
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 2,
+    "strength": 2,
+    "if": [
+     "doctrine:assault"
+    ]
+   }
+  ]
+ },
+ "Student of the Codex": {
+  "doctrines": [
+   "tactical"
+  ]
+ },
+ "Veteran of Behemoth": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Castellum Omnivox": {
+  "effects": [
+   {
+    "eligible": [
+     "actionAfterAdvance",
+     "actionAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Defensive Mastery": {
+  "status": "auto",
+  "note": "หลังวางทัพ: redeploy INFANTRY ได้ 3 หน่วย"
+ },
+ "Honour Indefatigable": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "reviveLater": {
+      "on": 2,
+      "wounds": 3
+     }
+    }
+   ]
+  }
+ },
+ "Spy-skull Data Link": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Adamantine Mantle": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Forged in Battle": {
+  "effects": [
+   {
+    "ignoreHitMods": true
+   }
+  ]
+ },
+ "Immolator": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "torrentAttack"
+    ],
+    "attacks": 1
+   }
+  ]
+ },
+ "War-tempered Artifice": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Adept of the Omnissiah": {
+  "status": "manual",
+  "note": "ศัตรูยิงรถในระยะ 6\": รถได้ FNP 5+ — ใช้เอง"
+ },
+ "Master of the Machine War": {
+  "act": [
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Devastator Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:devastator"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 6,
+     "units": [
+      "ADEPTUS ASTARTES",
+      "VEHICLE"
+     ]
+    }
+   },
+   {
+    "when": "movement",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Tactical Doctrine ให้หน่วยเพื่อน",
+    "do": [
+     {
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:tactical"
+     }
+    ],
+    "target": {
+     "side": "friendly",
+     "range": 6,
+     "units": [
+      "ADEPTUS ASTARTES",
+      "VEHICLE"
+     ]
+    }
+   }
+  ]
+ },
+ "Target Augury Web": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 3,
+    "units": [
+     "ADEPTUS ASTARTES",
+     "VEHICLE"
+    ]
+   },
+   "label": "รถในระยะ 3\": [LETHAL HITS]",
+   "do": [
+    {
+     "buff": [
+      {
+       "abilities": [
+        "lethal hits"
+       ]
+      }
+     ],
+     "until": "nextCommand"
+    }
+   ]
+  }
+ },
+ "The Flesh Is Weak": {
+  "effects": [
+   {
+    "scope": "model",
+    "toughness": 1
+   },
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Blackwing Shroud": {
+  "status": "manual",
+  "note": "หน่วยนี้มี Infiltrators — วางเอง"
+ },
+ "Coronal Susurrant": {
+  "status": "manual",
+  "note": "ศัตรู (ไม่ใช่ MONSTER/VEHICLE) ที่ engaged กับหน่วยนี้ใช้ stratagem ไม่ได้ — เช็กเอง"
+ },
+ "Umbral Raptor": {
+  "effects": [
+   {
+    "scope": "model",
+    "fightsFirst": true
+   },
+   {
+    "scope": "model",
+    "loneOperative": true
+   }
+  ]
+ },
+ "Hunter's Instincts": {
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ]
+ },
+ "Chogorian Huntmaster": {
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ],
+  "status": "partial",
+  "note": "ลงสนามเร็วขึ้น 1 round"
+ },
+ "Hunter's Eye": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover",
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Spearpoint Paragon": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 1,
+    "ap": 1,
+    "if": [
+     "!charged"
+    ]
+   },
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 2,
+    "ap": 2,
+    "if": [
+     "charged"
+    ]
+   }
+  ]
+ },
+ "Stormseer's Wisdom": {
+  "effects": [
+   {
+    "rerollAdvance": true
+   }
+  ]
+ },
+ "Blazing Icon": {
+  "status": "manual",
+  "note": "ศัตรูยิง snap shooting ใส่หน่วยนี้ไม่ได้ — เช็กเอง"
+ },
+ "Ordained Sacrifice": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "reviveLater": {
+      "on": 2,
+      "wounds": 3
+     }
+    }
+   ]
+  }
+ },
+ "Prescient Flash": {
+  "effects": [
+   {
+    "scouts": 6
+   }
+  ]
+ },
+ "Unto Death": {
+  "act": {
+   "when": "command",
+   "limit": "battle",
+   "botUse": "round2",
+   "label": "re-roll Advance และ Charge จนจบเทิร์น",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "rerollAdvance": true,
+       "rerollCharge": true
+      }
+     ],
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ "Angelic Executioner": {
+  "effects": [
+   {
+    "attack": "melee",
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ],
+  "status": "partial",
+  "note": "ระบบเลือก [LETHAL HITS] (อีกทาง: [SUSTAINED HITS 1])"
+ },
+ "Shadow of Abomination": {
+  "act": {
+   "when": "selectedToFight",
+   "limit": "battle",
+   "botUse": "valuable",
+   "label": "+1 D (ตัวนี้)",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "attack": "melee",
+       "damage": 1
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Instinctive Interception": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "On the Archtraitor's Bridge": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 2
+   }
+  ]
+ },
+ "Beacon Angelis": {
+  "effects": [
+   {
+    "if": [
+     "kw:KILL TEAM"
+    ],
+    "deepStrike": true
+   },
+   {
+    "if": [
+     "kw:KILL TEAM"
+    ],
+    "stratDiscount": {
+     "ids": [
+      "rapid-ingress"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "Osseus Key": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "units": [
+     "VEHICLE"
+    ],
+    "attacks": -1
+   }
+  ]
+ },
+ "The Thief of Secrets": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 1,
+    "ap": 1,
+    "damage": 1
+   }
+  ],
+  "status": "partial",
+  "note": "ฆ่าได้: เพิ่มเป็น +2 — ยังไม่ทำ"
+ },
+ "The Tome of Ectoclades": {
+  "act": [
+   {
+    "when": "command",
+    "limit": "battle",
+    "botUse": "round2",
+    "label": "3 doctrine พร้อมกัน (หน่วยนี้)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:assault"
+     },
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:devastator"
+     },
+     {
+      "on": "self",
+      "buff": [
+       {}
+      ],
+      "until": "nextCommand",
+      "mark": "doctrine:tactical"
+     }
+    ]
+   }
+  ]
+ },
+ "Champion of the Deathwing": {
+  "effects": [
+   {
+    "if": [
+     "targetVowed"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Singular Will": {
+  "status": "manual",
+  "note": "Consolidation เดินได้ D3+3\" — เดินเอง"
+ },
+ "Ancient Weapons": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 2,
+    "ap": 1
+   }
+  ]
+ },
+ "Deathwing Assault": {
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ]
+ },
+ "Lord of the Ravenwing": {
+  "effects": [
+   {
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Nightforged Battery": {
+  "status": "manual",
+  "note": "re-roll จำนวน attack ของอาวุธยิง และ hazard roll — ทอยเอง"
+ },
+ "Thundercowl Turbines": {
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ]
+ },
+ "Fervent Exemplars": {
+  "effects": [
+   {
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Inheritors of Sigismund": {
+  "effects": [
+   {
+    "fightsFirst": true
+   }
+  ]
+ },
+ "Augury Servo-host": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true
+   },
+   "label": "ศัตรู: ไม่ได้ cover",
+   "do": [
+    {
+     "incoming": {
+      "noCover": true
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Consecrating Aura": {
+  "effects": [
+   {
+    "defend": {
+     "inv": 5
+    }
+   }
+  ]
+ },
+ "Incendiary Animus": {
+  "effects": [
+   {
+    "attack": "melee",
+    "strength": 1
+   }
+  ]
+ },
+ "Zealous Vanguard": {
+  "effects": [
+   {
+    "scouts": 6
+   }
+  ]
+ },
+ "Oathbound Exemplar": {
+  "effects": [
+   {
+    "eligible": [
+     "actionAfterAdvance",
+     "actionAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Righteous Fervour": {
+  "effects": [
+   {
+    "rerollAdvance": true
+   }
+  ]
+ },
+ "A Giant Amongst Giants": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 1
+   }
+  ],
+  "status": "partial",
+  "note": "+2 W ยังไม่ได้ใส่"
+ },
+ "Preyslayer": {
+  "effects": [
+   {
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Hunter's Guile": {
+  "status": "auto",
+  "note": "หลังวางทัพ: redeploy ได้ 3 หน่วย"
+ },
+ "Wolf-Touched": {
+  "effects": [
+   {
+    "move": 2
+   },
+   {
+    "addKeywords": [
+     "WULFEN"
+    ]
+   }
+  ]
+ },
+ "Chariots of the Storm": {
+  "status": "auto",
+  "note": "หลังวางทัพ: redeploy ได้ 3 หน่วย"
+ },
+ "Grimnar's Mark": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "rapid-ingress",
+      "heroic-intervention"
+     ],
+     "cp": 1,
+     "limit": "round",
+     "perArmy": true
+    }
+   }
+  ]
+ },
+ "Howlmaw": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "turn",
+   "target": {
+    "side": "enemy",
+    "range": 6
+   },
+   "do": [
+    {
+     "shock": -1
+    }
+   ]
+  }
+ },
+ "Skjald's Foretelling": {
+  "effects": [
+   {
+    "attack": "melee",
+    "abilities": [
+     "lance"
+    ]
+   }
+  ]
+ },
+ "Combat Shield": {
+  "gear": true,
+  "status": "auto",
+  "note": "ค่า W / InSv ปรับตามอุปกรณ์ที่เลือกตอนจัดทัพ"
+ },
+ "Blizzard shield": {
+  "gear": true,
+  "status": "auto",
+  "note": "ค่า W / InSv ปรับตามอุปกรณ์ที่เลือกตอนจัดทัพ"
+ },
+ "Grav-chutes": {
+  "gear": true,
+  "effects": [
+   {
+    "deepStrike": true
+   }
+  ]
+ },
+ "Grapnel Launchers": {
+  "gear": true,
+  "effects": [
+   {
+    "moveThroughModels": true,
+    "mobile": true
+   }
+  ],
+  "status": "partial",
+  "note": "เดินผ่านโมเดลทุกชนิด, ขึ้นลงตึกง่าย"
+ },
+ "Orbital Comms Array": {
+  "gear": true,
+  "effects": [
+   {
+    "scouts": 6
+   }
+  ]
+ },
+ "Auspex array": {
+  "gear": true,
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Infernum halo-launcher": {
+  "gear": true,
+  "effects": [
+   {
+    "addKeywords": [
+     "SMOKE"
+    ]
+   }
+  ]
+ },
+ "Helix Gauntlet@Infiltrator Squad": {
+  "gear": true,
+  "act": {
+   "when": "command",
+   "auto": true,
+   "botUse": "damaged",
+   "do": [
+    {
+     "on": "self",
+     "heal": "D3"
+    }
+   ]
+  }
+ }
 }

@@ -4,7 +4,7 @@ import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems } from './geometry';
 import { alive, canUseStratagem, emitReact, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
 import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
-import { getAbility, hasAbility, isMelee } from './weapons';
+import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 import { applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate } from './effects';
@@ -170,7 +170,11 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
     }
     const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
     for (const w of chosen) {
-      const pi = Math.min(opt.profile?.[w.name] ?? 0, w.profiles.length - 1);
+      // Hunter (army rule): a profile marked "Hunter: MONSTER/VEHICLE" only shoots at those; the weapon's other profile then
+      const hunts = (q: WeaponProfileData) => { const h = getAbility(q, 'hunter'); return !h || condApplies(h.cond, T.keywords); };
+      let pi = Math.min(opt.profile?.[w.name] ?? 0, w.profiles.length - 1);
+      if (!hunts(w.profiles[pi])) pi = w.profiles.findIndex(hunts);
+      if (pi < 0) continue;
       const p = w.profiles[pi];
       if (hasAbility(p, 'one-shot') && A.oneShotUsed.includes(w.name)) continue;
       const baseRange = typeof p.range === 'number' ? p.range : 0;
@@ -237,7 +241,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const extras: string[] = [];
       let flat = 0;
       const rf = getAbility(p, 'rapid-fire', T.keywords);
-      if (rf && half) extras.push(rf.value ?? '1');
+      if (rf && (half || fx.some((a) => a.e.rapidFireFullRange))) extras.push(rf.value ?? '1');
       else if (half && grants(fx, inc, 'rapid fire 1')) extras.push('1');
       const blast = getAbility(p, 'blast', T.keywords);
       if (blast) flat += parseInt(blast.value ?? '1', 10) * Math.floor(tModels.length / 5);
@@ -313,7 +317,8 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       }
       pool.models += 1;
       const cleave = getAbility(p, 'cleave', T.keywords);
-      pool.instances.push({ A: p.A, extras: [], flat: cleave ? parseInt(cleave.value ?? '1', 10) * Math.floor(alive(T).length / 5) : 0 });
+      const cleaveN = cleave ? parseInt(cleave.value ?? '1', 10) : grants(fx, inc, 'cleave 1') ? 1 : 0; // Into the Fray
+      pool.instances.push({ A: p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
   }
@@ -719,7 +724,7 @@ export function applyDamage(s: GameState) {
     const psychic = !!p.psychic || hasAbility(p.profile, 'psychic');
     const md = modelDefence(s, T, m, kind, psychic);
     if (kind === 'melee') (at.allocated ??= {})[m.id] = (at.allocated[m.id] ?? 0) + 1;
-    const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0) - (md.saveBonusD1 && p.damage.trim() === '1' ? md.saveBonusD1 : 0);
+    const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0) - (md.saveBonusD1 && p.damage.trim() === '1' ? md.saveBonusD1 : 0) - (md.save ?? 0);
     const inv = effectiveInSv(s, T, m, at.kind !== 'fight');
     let ok = false;
     if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + p.ap >= Math.max(RULES.modifierCaps.bestSave, sv);

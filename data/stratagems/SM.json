@@ -1,7 +1,91 @@
 {
  "_comment": "Space Marine stratagems in machine-readable form. Keys: stratagem NAME (as on the card) or NAME@Detachment. Anything not listed here is read from the card text (src/engine/stratagems.ts). See docs/EDITING.md.",
  "rules": {
-  "HONOUR THE CHAPTER": {
+  "ARMOUR OF CONTEMPT": {
+   "buffs": [
+    "enemyAp-1"
+   ],
+   "status": "auto"
+  },
+  "A WORTHY DEATH": {
+   "effects": [
+    {
+     "fightOnDeath": 4
+    }
+   ],
+   "unitIf": [
+    "any:targetOfAttack||targetOfLast"
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "MIGHT OF ANGELS": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "lance"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "ADAPTIVE STRATEGY": {
+   "until": "nextCommand",
+   "choice": [
+    {
+     "label": "Assault Doctrine",
+     "mark": "doctrine:assault",
+     "effects": [
+      {}
+     ]
+    },
+    {
+     "label": "Devastator Doctrine",
+     "mark": "doctrine:devastator",
+     "effects": [
+      {}
+     ]
+    },
+    {
+     "label": "Tactical Doctrine",
+     "mark": "doctrine:tactical",
+     "effects": [
+      {}
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "STORM OF DEVASTATION": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "ignores cover"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "RESPONSIVE TACTICS": {
+   "targetKw": [
+    "INFANTRY|MOUNTED"
+   ],
+   "react": "enemyMoved",
+   "unitIf": [
+    "nearLast:8",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "D6"
+    }
+   ],
+   "status": "auto"
+  },
+  "GENE-WROUGHT MIGHT": {
    "effects": [
     {
      "attack": "melee",
@@ -13,10 +97,512 @@
      "attack": "melee",
      "ap": 1,
      "if": [
-      "detActive:assault"
+      "doctrine:assault"
      ]
     }
-   ]
+   ],
+   "status": "auto"
+  },
+  "DUTY IN DEATH": {
+   "effects": [
+    {
+     "fightOnDeath": 4,
+     "if": [
+      "!doctrine:assault"
+     ]
+    },
+    {
+     "fightOnDeath": 3,
+     "if": [
+      "doctrine:assault"
+     ]
+    }
+   ],
+   "unitIf": [
+    "any:targetOfAttack||targetOfLast"
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "DOMINATION FIRE": {
+   "react": "ownAttacked",
+   "enemy": {
+    "hitBy": true
+   },
+   "enemyEffects": [
+    {
+     "hit": -1
+    }
+   ],
+   "enemyUntil": "nextTurnStart",
+   "botReact": "always",
+   "status": "auto"
+  },
+  "MASTERFUL TACTICS": {
+   "targetKw": [
+    "INFANTRY|MOUNTED"
+   ],
+   "react": "enemyMoved",
+   "unitIf": [
+    "nearLast:8",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "6",
+     "if": [
+      "doctrine:tactical"
+     ]
+    },
+    {
+     "move": "D6",
+     "if": [
+      "!doctrine:tactical"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "STORM OF FIRE": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "ignores cover"
+     ]
+    },
+    {
+     "attack": "ranged",
+     "ap": 1,
+     "if": [
+      "doctrine:devastator"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "HAIL OF VENGEANCE": {
+   "react": "enemyShot",
+   "enemy": {
+    "lastActor": true
+   },
+   "special": [
+    "shootAt"
+   ],
+   "botReact": "shoot",
+   "unitIf": [
+    "lostToLast"
+   ],
+   "status": "auto"
+  },
+  "TACTICAL DREADNOUGHT FORTITUDE": {
+   "buffs": [
+    "damage-1"
+   ],
+   "status": "auto"
+  },
+  "MERCILESS VETERANS": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "lethal hits",
+      "sustained hits 1"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "GUNSHIP EXTRACTION": {
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "react": "fightPhaseEnd",
+   "unitIf": [
+    "!engaged"
+   ],
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "auto"
+  },
+  "RELENTLESS ASSAULT": {
+   "choice": [
+    {
+     "label": "[SUSTAINED HITS 1] (ไม่ใช่ MONSTER/VEHICLE)",
+     "effects": [
+      {
+       "abilities": [
+        "sustained hits 1: non-monster/vehicle"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "[LETHAL HITS] (MONSTER/VEHICLE)",
+     "effects": [
+      {
+       "abilities": [
+        "lethal hits: monster/vehicle"
+       ]
+      }
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "TRANSHUMAN SWIFTNESS": {
+   "effects": [
+    {
+     "fightsFirst": true
+    }
+   ],
+   "unitIf": [
+    "onObjective"
+   ],
+   "bot": "never",
+   "status": "partial",
+   "note": "ต้องเป็นหน่วยถัดไปที่เลือกตี: เลือกเอง"
+  },
+  "TACTICAL FOCUS": {
+   "targetKw": [
+    "TACTICUS"
+   ],
+   "do": [
+    {
+     "consolidateRoll": "D3+3"
+    }
+   ],
+   "status": "auto"
+  },
+  "FOR THE EMPEROR!": {
+   "effects": [
+    {
+     "oc": 1
+    }
+   ],
+   "unitIf": [
+    "onObjective"
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "POINT-BLANK BRUTALITY": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "close-quarters",
+      "ignores cover"
+     ]
+    }
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "status": "auto"
+  },
+  "STRIKE FROM THE SHADOWS": {
+   "effects": [
+    {
+     "strength": 1,
+     "abilities": [
+      "lethal hits"
+     ]
+    }
+   ],
+   "unitIf": [
+    "hidden"
+   ],
+   "status": "auto"
+  },
+  "MORTIS SNARES": {
+   "status": "manual",
+   "bot": "never",
+   "note": "วาง snare บน objective ที่ยึดอยู่: ศัตรูจบการเดินในระยะ ทอย 2+ โดน D6 mortal — ทำเอง"
+  },
+  "TACTICAL WITHDRAWAL": {
+   "targetKw": [
+    "PHOBOS|SCOUT SQUAD"
+   ],
+   "react": "fightPhaseEnd",
+   "unitIf": [
+    "!engaged"
+   ],
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "auto"
+  },
+  "TRANSHUMAN REACTIONS": {
+   "targetKw": [
+    "PHOBOS"
+   ],
+   "react": "enemyMoved",
+   "unitIf": [
+    "nearLast:8",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "6",
+     "if": [
+      "doctrine:tactical"
+     ]
+    },
+    {
+     "move": "D6",
+     "if": [
+      "!doctrine:tactical"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "UMBRAL EVASION": {
+   "effects": [
+    {
+     "defend": {
+      "vs": "ranged",
+      "hit": -1
+     }
+    }
+   ],
+   "status": "auto"
+  },
+  "ANNIHILATING FORCE": {
+   "effects": [
+    {
+     "abilities": [
+      "lethal hits"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "PURGATION PUSH": {
+   "react": "ownAttacked",
+   "unitIf": [
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "5"
+    }
+   ],
+   "effects": [
+    {
+     "eligible": []
+    }
+   ],
+   "status": "partial",
+   "note": "ต้องจบในระยะ objective และชาร์จ / ขึ้นรถไม่ได้จนจบเทิร์น: เช็กเอง"
+  },
+  "ARMOURED IMPACT": {
+   "react": "chargeMoveEnd",
+   "enemy": {
+    "engaged": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 3
+     }
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "STAND UNYIELDING": {
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "status": "auto"
+  },
+  "SUPPRESSION VOLLEYS": {
+   "react": "ownAttacked",
+   "enemy": {
+    "hitBy": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "WIND-SWIFT EVASION": {
+   "react": "fightPhaseEnd",
+   "targetKw": [
+    "MOUNTED"
+   ],
+   "do": [
+    {
+     "move": "M",
+     "if": [
+      "!engaged"
+     ]
+    }
+   ],
+   "status": "partial",
+   "note": "ถ้า engaged อยู่: fall back เอง"
+  },
+  "SUDDEN ONSLAUGHT": {
+   "effects": [
+    {
+     "advanceFixed": 6
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "HURTLING TARGETS": {
+   "effects": [
+    {
+     "defend": {
+      "vs": "ranged",
+      "hit": -1
+     }
+    }
+   ],
+   "status": "auto"
+  },
+  "ADAMANTINE TERROR": {
+   "enemy": {
+    "engaged": true,
+    "all": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "MERCY IS WEAKNESS": {
+   "choice": [
+    {
+     "label": "[LETHAL HITS]",
+     "effects": [
+      {
+       "abilities": [
+        "lethal hits"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "[SUSTAINED HITS 1]",
+     "effects": [
+      {
+       "abilities": [
+        "sustained hits 1"
+       ]
+      }
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "UNSTOPPABLE ADVANCE": {
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "AGGRESSIVE DISEMBARKATION": {
+   "status": "manual",
+   "bot": "never",
+   "note": "ลงรถ: วางแต่ละโมเดลภายในระยะ (ไม่ต้องทั้งตัว) — วางเอง"
+  },
+  "DUTY IS NEVER DONE": {
+   "react": "fightPhaseEnd",
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "unitIf": [
+    "!engaged"
+   ],
+   "special": [
+    "embark"
+   ],
+   "status": "auto"
+  },
+  "STORM AND SECURE": {
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "unitIf": [
+    "hasEmbarked"
+   ],
+   "status": "partial",
+   "note": "ต้องมี BATTLELINE อยู่ในรถ"
+  },
+  "LAYERED CERAMITE": {
+   "effects": [
+    {
+     "defend": {
+      "fnp": 5,
+      "fnpVs": "mortal"
+     }
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "MIGHT OF THE MACHINE SPIRIT": {
+   "effects": [
+    {
+     "ignoreMods": true
+    }
+   ],
+   "until": "nextCommand",
+   "bot": "never",
+   "status": "auto"
+  },
+  "HEADHUNTER DOCTRINE": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "lethal hits: monster/vehicle"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "PRACTICAL TACTICS": {
+   "targetKw": [
+    "INFANTRY|MOUNTED"
+   ],
+   "react": "enemyMoved",
+   "unitIf": [
+    "nearLast:8",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "D3+3"
+    }
+   ],
+   "status": "auto"
   },
   "COURAGE AND HONOUR!": {
    "effects": [
@@ -25,504 +611,57 @@
      "abilities": [
       "lance"
      ]
-    },
-    {
-     "attack": "melee",
-     "ap": 1,
-     "if": [
-      "detActive:assault"
-     ]
-    }
-   ]
-  },
-  "ONLY IN DEATH DOES DUTY END": {
-   "effects": [
-    {
-     "fightOnDeath": 1
     }
    ],
-   "bot": "never"
-  },
-  "DEATHLESS DUTY": {
-   "effects": [
-    {
-     "fightOnDeath": 1
-    }
-   ],
-   "bot": "never"
-  },
-  "FIGHT TO THE END": {
-   "effects": [
-    {
-     "fightOnDeath": 4
-    }
-   ],
-   "bot": "never"
-  },
-  "OBDURATE VENGEANCE": {
-   "effects": [
-    {
-     "fightOnDeath": 3
-    }
-   ],
-   "bot": "never"
-  },
-  "DUTY UNTO DEATH": {
-   "targetKw": [
-    "DEATHWING"
-   ],
-   "unitIf": [
-    "any:targetOfAttack||targetOfLast"
-   ],
-   "effects": [
-    {
-     "fightOnDeath": 4,
-     "if": [
-      "!onVowed"
-     ]
-    },
-    {
-     "fightOnDeath": 3,
-     "if": [
-      "onVowed"
-     ]
-    }
-   ],
-   "bot": "never",
    "status": "auto"
   },
-  "FINAL RETRIBUTION": {
-   "unitIf": [
-    "any:targetOfAttack||targetOfLast"
-   ],
+  "TACTICAL FORESIGHT": {
    "effects": [
     {
-     "fightOnDeath": 4,
-     "if": [
-      "!nearModels:12:CHAPLAIN"
-     ]
-    },
-    {
-     "fightOnDeath": 3,
-     "if": [
-      "nearModels:12:CHAPLAIN"
-     ]
+     "defend": {
+      "woundIfStronger": -1
+     }
     }
    ],
-   "bot": "never",
    "status": "auto"
   },
-  "STAND TO THE END": {
-   "unitIf": [
-    "any:targetOfAttack||targetOfLast"
-   ],
+  "EXEMPLARY VIGILANCE": {
    "effects": [
     {
-     "fightOnDeath": 4,
-     "if": [
-      "!entrenched"
-     ]
-    },
-    {
-     "fightOnDeath": 3,
-     "if": [
-      "entrenched"
-     ]
-    }
-   ],
-   "bot": "never",
-   "status": "auto"
-  },
-  "SAVAGE ECHOES": {
-   "react": "enemyChargeMoveEnd",
-   "unitIf": [
-    "targetOfLast"
-   ],
-   "until": "turn",
-   "botReact": "always",
-   "choice": [
-    {
-     "label": "+1 Attacks",
-     "effects": [
-      {
-       "attack": "melee",
-       "attacks": 1
-      }
-     ]
-    },
-    {
-     "label": "+1 Strength",
-     "effects": [
-      {
-       "attack": "melee",
-       "strength": 1
-      }
-     ]
-    },
-    {
-     "label": "Red Thirst: +1 S และ +1 A (battle-shocked)",
-     "shock": true,
-     "effects": [
-      {
-       "attack": "melee",
-       "attacks": 1
-      },
-      {
-       "attack": "melee",
-       "strength": 1
-      }
+     "attack": "ranged",
+     "abilities": [
+      "ignores cover"
      ]
     }
    ],
    "status": "auto"
   },
-  "RED RAMPAGE": {
-   "choice": [
-    {
-     "label": "[LETHAL HITS]",
-     "effects": [
-      {
-       "attack": "melee",
-       "abilities": [
-        "lethal hits"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "[LANCE]",
-     "effects": [
-      {
-       "attack": "melee",
-       "abilities": [
-        "lance"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "Red Thirst: ทั้งสองอย่าง (battle-shocked)",
-     "shock": true,
-     "effects": [
-      {
-       "attack": "melee",
-       "abilities": [
-        "lance",
-        "lethal hits"
-       ]
-      }
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "LIMB FROM LIMB": {
-   "unitIf": [
-    "charged"
-   ],
-   "choice": [
-    {
-     "label": "+1 Strength",
-     "effects": [
-      {
-       "attack": "melee",
-       "strength": 1
-      }
-     ]
-    },
-    {
-     "label": "+1 AP",
-     "effects": [
-      {
-       "attack": "melee",
-       "ap": 1
-      }
-     ]
-    },
-    {
-     "label": "Red Thirst: +1 S และ +1 AP (battle-shocked)",
-     "shock": true,
-     "effects": [
-      {
-       "attack": "melee",
-       "strength": 1
-      },
-      {
-       "attack": "melee",
-       "ap": 1
-      }
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "ANCIENT FURY": {
-   "effects": [
-    {
-     "move": 1,
-     "toughness": 1,
-     "ld": 1,
-     "oc": 1,
-     "hit": 1
-    }
-   ],
+  "ULTRAMARIAN ADAPTIVITY": {
    "until": "nextCommand",
+   "choice": [
+    {
+     "label": "Assault Doctrine",
+     "mark": "doctrine:assault",
+     "effects": [
+      {}
+     ]
+    },
+    {
+     "label": "Devastator Doctrine",
+     "mark": "doctrine:devastator",
+     "effects": [
+      {}
+     ]
+    },
+    {
+     "label": "Tactical Doctrine",
+     "mark": "doctrine:tactical",
+     "effects": [
+      {}
+     ]
+    }
+   ],
    "bot": "never",
-   "status": "auto"
-  },
-  "ONSLAUGHT OF FIRE": {
-   "unitIf": [
-    "disembarkedThisTurn"
-   ],
-   "effects": [
-    {
-     "attack": "ranged",
-     "hit": 1,
-     "if": [
-      "targetClosest",
-      "within12"
-     ]
-    },
-    {
-     "shockOnKill": true
-    }
-   ],
-   "status": "auto"
-  },
-  "STRIKE FROM THE SHADOWS@Vanguard Spearhead": {
-   "effects": [
-    {
-     "attack": "ranged",
-     "hit": 1,
-     "ap": 1,
-     "if": [
-      "beyond:12"
-     ]
-    },
-    {
-     "shockOnKill": true
-    }
-   ],
-   "status": "auto"
-  },
-  "STUNNING FUSILLADE": {
-   "effects": [
-    {
-     "attack": "ranged",
-     "hit": 1,
-     "ap": 1,
-     "if": [
-      "beyond:12"
-     ]
-    },
-    {
-     "shockOnKill": true
-    }
-   ],
-   "status": "auto"
-  },
-  "KRAKEN ROUNDS": {
-   "effects": [
-    {
-     "attack": "ranged",
-     "ap": 1
-    },
-    {
-     "rangeBonus": 6
-    }
-   ]
-  },
-  "HELLFIRE ROUNDS": {
-   "effects": [
-    {
-     "attack": "ranged",
-     "abilities": [
-      "anti-infantry 2+",
-      "anti-monster 5+"
-     ]
-    }
-   ]
-  },
-  "MARTIAL MASTERY": {
-   "effects": [
-    {
-     "reroll": "wounds1",
-     "if": [
-      "!onVowed"
-     ]
-    },
-    {
-     "reroll": "wounds",
-     "if": [
-      "onVowed"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "LOST TO RAGE": {
-   "unitIf": [
-    "belowStarting"
-   ],
-   "effects": [
-    {
-     "attack": "melee",
-     "attacks": 1,
-     "strength": 1,
-     "ap": 1
-    },
-    {
-     "attack": "melee",
-     "abilities": [
-      "hazardous"
-     ],
-     "if": [
-      "!nearModels:12:CHAPLAIN"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "KILL SHOT": {
-   "effects": [
-    {
-     "reroll": "wounds1",
-     "if": [
-      "targetMV"
-     ]
-    },
-    {
-     "reroll": "wounds",
-     "if": [
-      "targetMV",
-      "targetBelowStarting"
-     ]
-    }
-   ]
-  },
-  "FURIOUS DEDICATION": {
-   "effects": [
-    {
-     "chargeBonus": 2
-    },
-    {
-     "attack": "melee",
-     "attacks": 1
-    }
-   ],
-   "until": "turn"
-  },
-  "CRUSADING CONQUERORS": {
-   "effects": [
-    {
-     "oc": 1
-    }
-   ],
-   "until": "nextCommand"
-  },
-  "UNYIELDING MIGHT": {
-   "effects": [
-    {
-     "oc": 1
-    }
-   ],
-   "until": "nextCommand"
-  },
-  "NO SACRIFICE TOO GREAT": {
-   "effects": [
-    {
-     "attack": "ranged",
-     "strength": 1,
-     "if": [
-      "plasmaWeapon"
-     ]
-    }
-   ]
-  },
-  "REVELATION OF GUILT": {
-   "effects": [
-    {
-     "attack": "ranged",
-     "hit": 1,
-     "if": [
-      "plasmaWeapon"
-     ]
-    }
-   ]
-  },
-  "COGITATED FEROCITY": {
-   "choice": [
-    {
-     "label": "[SUSTAINED HITS 1]",
-     "effects": [
-      {
-       "abilities": [
-        "sustained hits 1"
-       ],
-       "attack": "melee"
-      }
-     ]
-    },
-    {
-     "label": "[LETHAL HITS]",
-     "effects": [
-      {
-       "abilities": [
-        "lethal hits"
-       ],
-       "attack": "melee"
-      }
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "SPEAR THRUST AND SABRE SWING": {
-   "choice": [
-    {
-     "label": "[LANCE]",
-     "if": [
-      "!kw:MOUNTED"
-     ],
-     "effects": [
-      {
-       "attack": "melee",
-       "abilities": [
-        "lance"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "[LETHAL HITS]",
-     "if": [
-      "!kw:MOUNTED"
-     ],
-     "effects": [
-      {
-       "attack": "melee",
-       "abilities": [
-        "lethal hits"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "MOUNTED: ทั้งสองอย่าง",
-     "if": [
-      "kw:MOUNTED"
-     ],
-     "effects": [
-      {
-       "attack": "melee",
-       "abilities": [
-        "lance",
-        "lethal hits"
-       ]
-      }
-     ]
-    }
-   ],
    "status": "auto"
   },
   "AUGMENTED TARGETING": {
@@ -573,440 +712,51 @@
    ],
    "status": "auto"
   },
-  "AGGRESSIVE ONSLAUGHT": {
-   "unitIf": [
-    "advanced"
-   ],
-   "until": "turn",
-   "choice": [
-    {
-     "label": "ยิงได้",
-     "effects": [
-      {
-       "eligible": [
-        "shootAfterAdvance"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "ชาร์จได้",
-     "effects": [
-      {
-       "eligible": [
-        "chargeAfterAdvance"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "Red Thirst: ยิงและชาร์จได้ (battle-shocked)",
-     "shock": true,
-     "effects": [
-      {
-       "eligible": [
-        "shootAfterAdvance",
-        "chargeAfterAdvance"
-       ]
-      }
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "RED WRATH": {
-   "unitIf": [
-    "advanced"
-   ],
-   "until": "turn",
-   "choice": [
-    {
-     "label": "ยิงได้",
-     "effects": [
-      {
-       "eligible": [
-        "shootAfterAdvance"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "ชาร์จได้",
-     "effects": [
-      {
-       "eligible": [
-        "chargeAfterAdvance"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "Red Thirst: ยิงและชาร์จได้ (battle-shocked)",
-     "shock": true,
-     "effects": [
-      {
-       "eligible": [
-        "shootAfterAdvance",
-        "chargeAfterAdvance"
-       ]
-      }
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "RELENTLESS ASSAULT": {
-   "unitIf": [
-    "fellBack"
-   ],
-   "until": "turn",
-   "choice": [
-    {
-     "label": "ยิงได้",
-     "effects": [
-      {
-       "eligible": [
-        "shootAfterFallBack"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "ชาร์จได้",
-     "effects": [
-      {
-       "eligible": [
-        "chargeAfterFallBack"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "Red Thirst: ยิงและชาร์จได้ (battle-shocked)",
-     "shock": true,
-     "effects": [
-      {
-       "eligible": [
-        "shootAfterFallBack",
-        "chargeAfterFallBack"
-       ]
-      }
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "TACTICAL MASTERY": {
+  "PRIORITY STRIKE": {
    "effects": [
     {
-     "eligible": [
-      "shootAfterAdvance",
-      "chargeAfterAdvance"
-     ]
-    },
-    {
-     "eligible": [
-      "shootAfterFallBack",
-      "chargeAfterFallBack"
-     ],
-     "units": [
-      "RAVENWING"
-     ]
-    }
-   ],
-   "until": "turn"
-  },
-  "FEINT AND THRUST": {
-   "until": "turn",
-   "effects": [
-    {
-     "eligible": [
-      "shootAfterFallBack",
-      "chargeAfterFallBack"
-     ]
-    },
-    {
-     "eligible": [
-      "shootAfterAdvance",
-      "chargeAfterAdvance"
-     ],
+     "wound": 1,
      "if": [
-      "kw:PHOBOS|SCOUT SQUAD"
+      "targetMV"
      ]
     }
    ],
    "status": "auto"
   },
-  "WRATHFUL RAMPAGE": {
-   "unitIf": [
-    "advanced"
-   ],
-   "until": "turn",
-   "effects": [
-    {
-     "eligible": [
-      "chargeAfterAdvance"
-     ]
-    },
-    {
-     "eligible": [
-      "shootAfterAdvance"
-     ],
-     "if": [
-      "any:nearModels:12:CHAPLAIN||belowStarting"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "UNRELENTING HUNTERS": {
-   "until": "turn",
-   "effects": [
-    {
-     "eligible": [
-      "chargeAfterFallBack"
-     ]
-    },
-    {
-     "eligible": [
-      "chargeAfterAdvance"
-     ],
-     "if": [
-      "kw:SPACE WOLVES"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "HERESY UNDONE": {
-   "unitIf": [
-    "!kw:BATTLELINE"
-   ],
-   "effects": [
-    {
-     "eligible": [
-      "shootAfterAdvance",
-      "chargeAfterAdvance",
-      "shootAfterFallBack",
-      "chargeAfterFallBack"
-     ]
-    },
-    {
-     "onlyTargetMarked": "auspex"
-    }
-   ],
+  "ESTABLISH SUPREMACY": {
+   "status": "manual",
    "bot": "never",
-   "status": "auto"
+   "note": "objective consolidation move แม้ engaged — เดินเอง"
   },
-  "KNIGHTS OF IRON": {
+  "STAND TO THE END": {
    "effects": [
     {
-     "mobile": true
-    }
-   ],
-   "bot": "never"
-  },
-  "GAUNTLET OF THE GOD-EMPEROR": {
-   "effects": [
-    {
-     "mobile": true
-    }
-   ],
-   "bot": "never"
-  },
-  "CERAMITE SLEDGEHAMMER": {
-   "effects": [
-    {
-     "mobile": true
+     "defend": {
+      "woundIfStronger": -1
+     },
+     "if": [
+      "!entrenched"
+     ]
     },
     {
-     "moveThroughModels": true,
+     "defend": {
+      "wound": -1
+     },
      "if": [
-      "heavyTransport"
+      "entrenched"
      ]
     }
    ],
    "status": "auto"
-  },
-  "BOUNDING ADVANCE": {
-   "effects": [
-    {
-     "moveThroughModels": true
-    }
-   ],
-   "bot": "never"
-  },
-  "SHOCK CAVALRY": {
-   "effects": [
-    {
-     "moveThroughModels": true
-    },
-    {
-     "chargeThroughModels": true
-    },
-    {
-     "mobile": true
-    }
-   ],
-   "status": "auto"
-  },
-  "FENRISIAN FEROCITY": {
-   "effects": [
-    {
-     "moveThroughModels": true,
-     "mobile": true
-    }
-   ],
-   "bot": "never"
-  },
-  "FOCUSED HATRED": {
-   "effects": [
-    {
-     "chargeThroughModels": true
-    }
-   ],
-   "bot": "never"
-  },
-  "SQUAD TACTICS": {
-   "react": "enemyMoved",
-   "unitIf": [
-    "nearLast:8",
-    "!engaged"
-   ],
-   "targetKw": [
-    "INFANTRY",
-    "MOUNTED"
-   ],
-   "do": [
-    {
-     "move": "6",
-     "if": [
-      "doctrine:tactical"
-     ]
-    },
-    {
-     "move": "D6",
-     "if": [
-      "!doctrine:tactical"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "CALCULATED FEINT": {
-   "react": "enemyChargeDeclared",
-   "targetKw": [
-    "INFANTRY"
-   ],
-   "unitIf": [
-    "nearLast:12",
-    "!engaged"
-   ],
-   "do": [
-    {
-     "move": "6",
-     "if": [
-      "kw:PHOBOS|SCOUT SQUAD"
-     ]
-    },
-    {
-     "move": "D6",
-     "if": [
-      "!kw:PHOBOS|SCOUT SQUAD"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "RAPTORIAL VIGILANCE": {
-   "react": "enemyMoved",
-   "targetKw": [
-    "INFANTRY",
-    "MOUNTED"
-   ],
-   "unitIf": [
-    "nearLast:8",
-    "!engaged"
-   ],
-   "do": [
-    {
-     "move": "6",
-     "if": [
-      "kw:PHOBOS|SCOUT SQUAD"
-     ]
-    },
-    {
-     "move": "D6",
-     "if": [
-      "!kw:PHOBOS|SCOUT SQUAD"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "PRACTICAL TACTICS": {
-   "react": "enemyMoved",
-   "unitIf": [
-    "nearLast:8",
-    "!engaged"
-   ],
-   "targetKw": [
-    "INFANTRY",
-    "MOUNTED"
-   ],
-   "do": [
-    {
-     "move": "6",
-     "if": [
-      "doctrine:tactical"
-     ]
-    },
-    {
-     "move": "D6",
-     "if": [
-      "!doctrine:tactical"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "THUNDEROUS PURSUIT": {
-   "react": "enemyMoved",
-   "unitIf": [
-    "nearLast:8",
-    "!engaged"
-   ],
-   "do": [
-    {
-     "move": "6",
-     "if": [
-      "any:all:kw:SPACE WOLVES&&kw:INFANTRY||kw:THUNDERWOLF CAVALRY"
-     ]
-    },
-    {
-     "move": "D6",
-     "if": [
-      "!any:all:kw:SPACE WOLVES&&kw:INFANTRY||kw:THUNDERWOLF CAVALRY"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "MARCHING EVER ON": {
-   "do": [
-    {
-     "move": "D6+1"
-    }
-   ]
   },
   "EVASIVE REPOSITIONING": {
    "react": "enemyShot",
    "targetKw": [
-    "INFANTRY",
-    "MOUNTED"
+    "INFANTRY|MOUNTED"
    ],
    "unitIf": [
-    "targetOfLast"
+    "targetOfLast",
+    "!engaged"
    ],
    "do": [
     {
@@ -1016,8 +766,7 @@
      ]
     },
     {
-     "move": "D6",
-     "moveReroll": true,
+     "move": "D3+3",
      "if": [
       "entrenched"
      ]
@@ -1025,416 +774,48 @@
    ],
    "status": "auto"
   },
-  "A CEASELESS CAUSE": {
-   "do": [
-    {
-     "move": "6"
-    }
-   ]
-  },
-  "RIGID DISCIPLINE": {
-   "react": "fightPhaseEnd",
-   "unitIf": [
-    "engaged"
-   ],
-   "do": [
-    {
-     "move": "6"
-    }
-   ],
-   "special": [
-    "moveEndDzOrObjective"
-   ],
-   "status": "auto"
-  },
-  "GUERRILLA TACTICS": {
-   "react": "fightPhaseEnd",
-   "do": [
-    {
-     "reserves": true
-    }
-   ],
-   "unitIf": [
-    "farFromEnemies:3"
-   ],
-   "targetKw": [
-    "INFANTRY"
-   ],
-   "extraTargets": {
-    "count": 2,
-    "kw": [
-     "PHOBOS",
-     "SCOUT SQUAD"
-    ]
-   },
-   "status": "auto"
-  },
-  "INTO DARKNESS": {
-   "react": "fightPhaseEnd",
-   "do": [
-    {
-     "reserves": true
-    }
-   ],
-   "unitIf": [
-    "!engaged"
-   ],
-   "targetKw": [
-    "INFANTRY"
-   ],
-   "extraTargets": {
-    "count": 2,
-    "kw": [
-     "PHOBOS",
-     "SCOUT SQUAD"
-    ]
-   },
-   "status": "auto"
-  },
-  "ORBITAL TELEPORTARIUM": {
-   "react": "fightPhaseEnd",
-   "do": [
-    {
-     "reserves": true,
-     "earlyArrival": true
-    }
-   ],
-   "unitIf": [
-    "!engaged"
-   ],
+  "UNYIELDING MIGHT": {
    "effects": [
     {
-     "deepStrike": true
+     "oc": 1
     }
    ],
-   "until": "battle",
-   "status": "auto"
-  },
-  "SITE-TO-SITE TELEPORTATION": {
-   "react": "fightPhaseEnd",
-   "do": [
-    {
-     "reserves": true
-    }
-   ],
-   "unitIf": [
-    "!engaged"
-   ],
-   "targetKw": [
-    "INFANTRY"
-   ],
-   "extraTargets": {
-    "count": 2,
-    "kw": [
-     "KILL TEAM"
-    ]
-   },
-   "effects": [
-    {
-     "deepStrike": true
-    }
-   ],
-   "until": "battle",
-   "status": "auto"
-  },
-  "DUTY AND HONOUR": {
-   "do": [
-    {
-     "secure": true
-    }
-   ]
-  },
-  "HUNTERS’ TRAIL@Company of Hunters": {
-   "do": [
-    {
-     "secure": true
-    }
-   ]
-  },
-  "GLORIOUS SACRIFICE": {
-   "do": [
-    {
-     "secure": true
-    }
-   ]
-  },
-  "WRATHFUL CONQUERORS": {
-   "do": [
-    {
-     "secure": true
-    }
-   ]
-  },
-  "DOMINATOR BEACON": {
-   "do": [
-    {
-     "secure": true
-    }
-   ]
-  },
-  "A DEADLY PRIZE": {
-   "unitIf": [
-    "onControlledObjective"
-   ],
-   "targetKw": [
-    "INFANTRY",
-    "MOUNTED"
-   ],
-   "do": [
-    {
-     "secure": true,
-     "sabotage": true
-    }
-   ],
-   "status": "auto"
-  },
-  "RUNES OF CLAIMING": {
-   "do": [
-    {
-     "secure": true
-    }
-   ]
-  },
-  "TERRITORIAL ADVANTAGE": {
-   "do": [
-    {
-     "secure": true
-    }
-   ]
-  },
-  "ULTRAMARIAN DESTINY": {
-   "do": [
-    {
-     "secure": true
-    }
-   ]
-  },
-  "A GRIM WARNING": {
-   "do": [
-    {
-     "secure": true
-    }
-   ]
-  },
-  "UNSPARING EXECUTION": {
-   "react": "enemyFallBack",
-   "unitIf": [
-    "kw:SWORD BRETHREN SQUAD",
-    "engagedWithLast"
-   ],
-   "effects": [
-    {
-     "forceDesperate": true
-    }
-   ],
-   "botReact": "always",
-   "status": "auto"
-  },
-  "SOUL-DARKENED FURY": {
-   "react": "enemyFallBack",
-   "targetKw": [
-    "CHARACTER"
-   ],
-   "unitIf": [
-    "engagedWithLast"
-   ],
-   "effects": [
-    {
-     "forceDesperate": true
-    }
-   ],
-   "botReact": "always",
-   "status": "auto"
-  },
-  "ICY CALM": {
-   "effects": [
-    {
-     "eligible": [
-      "actionAfterAdvance",
-      "actionAfterFallBack"
-     ]
-    }
-   ]
-  },
-  "ADAPTIVE OPERATIONS": {
-   "effects": [
-    {
-     "eligible": [
-      "shootAfterAction"
-     ]
-    }
-   ]
-  },
-  "DEATH ON THE WIND": {
-   "effects": [
-    {
-     "eligible": [
-      "chargeAfterAdvance"
-     ]
-    }
-   ]
-  },
-  "ADVANCED DEPLOYMENT": {
-   "effects": [
-    {
-     "disembarkAfterAdvance": true
-    }
-   ],
-   "status": "auto"
-  },
-  "CLOAKED POSITION": {
-   "effects": [
-    {
-     "detection": -3
-    }
-   ],
-   "until": "turn"
-  },
-  "ADAPTIVE STRATEGY": {
-   "choice": [
-    {
-     "label": "Devastator Doctrine",
-     "mark": "doctrine:devastator",
-     "effects": [
-      {
-       "eligible": [
-        "shootAfterAdvance"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "Tactical Doctrine",
-     "mark": "doctrine:tactical",
-     "effects": [
-      {
-       "eligible": [
-        "shootAfterFallBack",
-        "chargeAfterFallBack"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "Assault Doctrine",
-     "mark": "doctrine:assault",
-     "effects": [
-      {
-       "eligible": [
-        "chargeAfterAdvance"
-       ]
-      }
-     ]
-    }
-   ],
-   "until": "nextCommand",
-   "status": "auto"
-  },
-  "ULTRAMARIAN ADAPTIVITY": {
-   "choice": [
-    {
-     "label": "Devastator Doctrine",
-     "mark": "doctrine:devastator",
-     "effects": [
-      {
-       "eligible": [
-        "shootAfterAdvance"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "Tactical Doctrine",
-     "mark": "doctrine:tactical",
-     "effects": [
-      {
-       "eligible": [
-        "shootAfterFallBack",
-        "chargeAfterFallBack"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "Assault Doctrine",
-     "mark": "doctrine:assault",
-     "effects": [
-      {
-       "eligible": [
-        "chargeAfterAdvance"
-       ]
-      }
-     ]
-    }
-   ],
-   "until": "nextCommand",
-   "status": "auto"
-  },
-  "HAIL OF VENGEANCE": {
-   "react": "enemyShot",
-   "enemy": {
-    "lastActor": true
-   },
-   "special": [
-    "shootAt"
-   ],
-   "botReact": "shoot",
-   "unitIf": [
-    "lostToLast"
-   ],
-   "status": "auto"
-  },
-  "NOT ONE BACKWARDS STEP": {
    "unitIf": [
     "onObjective"
    ],
-   "effects": [
-    {
-     "ocMultiply": 2
-    },
-    {
-     "mustStay": true
-    }
-   ],
    "until": "turn",
    "bot": "never",
    "status": "auto"
   },
-  "UNBOWED CONVICTION": {
+  "BLAZING EARTH": {
+   "react": "enemyChargePhaseStart",
    "unitIf": [
-    "belowStarting"
+    "torrentWeapon"
    ],
-   "effects": [
-    {
-     "ignoreMods": true
-    }
-   ],
-   "until": "turn",
-   "bot": "never",
-   "status": "auto"
-  },
-  "POWER OF THE MACHINE SPIRIT": {
-   "react": "enemyShot",
    "enemy": {
-    "lastActor": true
+    "range": 12
    },
-   "special": [
-    "shootAt"
-   ],
-   "botReact": "shoot",
-   "unitIf": [
-    "halvedByLast",
-    "kw:VEHICLE"
-   ],
-   "status": "auto"
-  },
-  "VENGEFUL ANIMUS": {
-   "react": "deadlyDemise",
-   "targetFrom": "destroyed",
-   "unitIf": [
-    "kw:VEHICLE"
+   "enemyEffects": [
+    {
+     "chargeBonus": -1
+    }
    ],
    "botReact": "always",
+   "status": "auto"
+  },
+  "FORGED IN FIRE": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "close-quarters"
+     ],
+     "attacks": 1
+    }
+   ],
+   "unitIf": [
+    "engaged"
+   ],
    "status": "auto"
   },
   "BURNING VENGEANCE": {
@@ -1453,123 +834,93 @@
    "botReact": "always",
    "status": "auto"
   },
-  "RAPID EMBARKATION@Firestorm Assault Force": {
-   "react": "fightPhaseEnd",
-   "targetKw": [
-    "INFANTRY"
-   ],
-   "unitIf": [
-    "!engaged",
-    "!disembarkedThisTurn"
-   ],
-   "special": [
-    "embarkEmpty"
-   ],
-   "status": "auto"
-  },
-  "BLAZING EARTH": {
-   "react": "enemyChargePhaseStart",
-   "unitIf": [
-    "torrentWeapon"
-   ],
-   "enemy": {
-    "range": 12,
-    "visible": true,
-    "notKw": [
-     "MONSTER",
-     "VEHICLE",
-     "FLY"
-    ]
-   },
-   "enemyEffects": [
-    {
-     "chargeBonus": -2
-    }
-   ],
-   "botReact": "always",
-   "status": "auto"
-  },
-  "FULL THROTTLE": {
-   "targetKw": [
-    "MOUNTED",
-    "VEHICLE"
-   ],
-   "unitIf": [
-    "!kw:WALKER"
-   ],
+  "IMMOLATION PROTOCOLS": {
    "effects": [
     {
-     "advanceFixed": 9,
+     "attack": "ranged",
+     "ap": 1,
      "if": [
-      "kw:MOUNTED"
+      "torrentAttack"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "CRUCIBLE OF BATTLE": {
+   "effects": [
+    {
+     "reroll": [
+      "hits1",
+      "wounds1"
+     ],
+     "if": [
+      "within:6"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "WRATH AND RUIN": {
+   "until": "turn",
+   "choice": [
+    {
+     "label": "Assault Doctrine",
+     "mark": "doctrine:assault",
+     "effects": [
+      {}
      ]
     },
     {
-     "advanceFixed": 6,
-     "if": [
-      "!kw:MOUNTED"
+     "label": "Tactical Doctrine",
+     "mark": "doctrine:tactical",
+     "effects": [
+      {}
      ]
     }
    ],
    "bot": "never",
    "status": "auto"
   },
-  "TERRIFYING PROFICIENCY": {
-   "unitIf": [
-    "charged",
-    "killedThisPhase"
-   ],
+  "ANCIENT FURY": {
    "effects": [
     {
-     "forceShockAura": 6
+     "move": 1,
+     "toughness": 1,
+     "ld": 1,
+     "oc": 1,
+     "hit": 1
     }
    ],
    "until": "nextCommand",
+   "bot": "never",
    "status": "auto"
   },
-  "ADAPTIVE TACTICS": {
-   "until": "nextCommand",
-   "extraTargets": {
-    "count": 2,
-    "kw": [
-     "KILL TEAM"
-    ]
-   },
-   "choice": [
+  "SPIRITS OF IRON": {
+   "effects": [
     {
-     "label": "Furor Tactics: [SUSTAINED HITS 1]",
-     "effects": [
-      {
-       "abilities": [
-        "sustained hits 1"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "Malleus Tactics: [LETHAL HITS]",
-     "effects": [
-      {
-       "abilities": [
-        "lethal hits"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "Purgatus Tactics: crit = [PRECISION]",
-     "effects": [
-      {
-       "abilities": [
-        "precision on crit"
-       ]
-      }
-     ]
+     "defend": {
+      "fnp": 5,
+      "fnpVs": "mortal"
+     }
     }
    ],
+   "bot": "never",
    "status": "auto"
   },
-  "GRIM RETRIBUTION": {
+  "UNBOWED CONVICTION": {
+   "effects": [
+    {
+     "ignoreMods": true
+    }
+   ],
+   "unitIf": [
+    "belowStarting"
+   ],
+   "until": "nextCommand",
+   "bot": "never",
+   "status": "auto"
+  },
+  "POWER OF THE MACHINE SPIRIT": {
    "react": "enemyShot",
    "enemy": {
     "lastActor": true
@@ -1579,122 +930,253 @@
    ],
    "botReact": "shoot",
    "unitIf": [
-    "lostToLast"
+    "targetOfLast",
+    "kw:VEHICLE"
    ],
-   "status": "auto"
+   "status": "partial",
+   "note": "ยิงแบบ normal เสมอ (กฎจริง: snap shooting ถ้ายังไม่ถึงครึ่ง)"
   },
-  "WRATH OF THE LION": {
-   "react": "chargeMoveEnd",
-   "targetKw": [
-    "DEATHWING"
-   ],
+  "VENGEFUL ANIMUS": {
+   "react": "deadlyDemise",
+   "targetFrom": "destroyed",
    "unitIf": [
-    "kw:INFANTRY"
-   ],
-   "enemy": {
-    "engaged": true
-   },
-   "do": [
-    {
-     "on": "target",
-     "mortalRoll": {
-      "on": 4,
-      "max": 3,
-      "plus": 1,
-      "plusIf": [
-       "targetVowed"
-      ],
-      "all": true
-     }
-    }
+    "kw:VEHICLE"
    ],
    "botReact": "always",
    "status": "auto"
   },
-  "RELIC TELEPORTARIUM": {
-   "targetFrom": "reserves",
-   "targetKw": [
-    "DEATHWING"
-   ],
-   "effects": [
+  "FEINT AND THRUST": {
+   "until": "nextCommand",
+   "choice": [
     {
-     "deepStrikeRange": 6
-    }
-   ],
-   "until": "turn",
-   "status": "auto"
-  },
-  "ILLUMINATING FIRE": {
-   "targetKw": [
-    "RAVENWING"
-   ],
-   "enemy": {
-    "range": 12
-   },
-   "do": [
-    {
-     "on": "target",
-     "incoming": {
-      "units": [
-       "DEATHWING"
-      ],
-      "wound": 1
-     },
-     "until": "phase"
+     "label": "Tactical Doctrine",
+     "mark": "doctrine:tactical",
+     "effects": [
+      {}
+     ]
     }
    ],
    "bot": "never",
    "status": "auto"
   },
-  "INESCAPABLE WRATH": {
-   "react": "enemyChargePhaseEnd",
-   "special": [
-    "charge"
-   ],
-   "botReact": "charge",
-   "targetKw": [
-    "DEATHWING"
+  "MURDEROUS FUSILLADE": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "hit": 1,
+     "ap": 1
+    }
    ],
    "unitIf": [
-    "kw:INFANTRY|WALKER",
-    "!engaged",
-    "!farFromEnemies:6"
+    "ingressThisTurn"
    ],
    "status": "auto"
   },
-  "OVERPOWERING EXACTION": {
-   "limit": "round",
-   "enemy": {
-    "engaged": true
-   },
+  "INTO DARKNESS": {
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "react": "fightPhaseEnd",
+   "unitIf": [
+    "!engaged"
+   ],
    "do": [
     {
-     "on": "target",
-     "shock": 0,
+     "reserves": true
+    }
+   ],
+   "status": "auto"
+  },
+  "LAY LOW THE TYRANTS": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "precision"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "SUPPRESSED WEAPONS": {
+   "react": "ownAttacked",
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "do": [
+    {
+     "unshot": true
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "RAPTORIAL VIGILIANCE": {
+   "react": "enemyMoved",
+   "unitIf": [
+    "nearLast:8",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "6",
      "if": [
-      "!kw:DEATHWING|RAVENWING"
+      "kw:PHOBOS|SCOUT SQUAD"
      ]
     },
     {
-     "on": "target",
-     "shock": -1,
+     "move": "D6",
      "if": [
-      "kw:DEATHWING|RAVENWING"
+      "!kw:PHOBOS|SCOUT SQUAD"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "EVASIVE MANOEUVRES": {
+   "effects": [
+    {
+     "defend": {
+      "vs": "ranged",
+      "wound": -1
+     }
+    }
+   ],
+   "status": "auto"
+  },
+  "FLAWLESS RIDERS": {
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "HUNTER'S INSTINCTS": {
+   "targetKw": [
+    "INFANTRY|MOUNTED|SPEEDER"
+   ],
+   "react": "enemyMoved",
+   "unitIf": [
+    "nearLast:8",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "D3+3"
+    }
+   ],
+   "status": "auto"
+  },
+  "MOBILE LETHALITY": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "eligible": [
+      "shootAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "SPEAR THRUST AND SABRE SWING": {
+   "choice": [
+    {
+     "label": "[LANCE]",
+     "if": [
+      "!kw:MOUNTED"
+     ],
+     "effects": [
+      {
+       "attack": "melee",
+       "abilities": [
+        "lance"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "[LETHAL HITS]",
+     "if": [
+      "!kw:MOUNTED"
+     ],
+     "effects": [
+      {
+       "attack": "melee",
+       "abilities": [
+        "lethal hits"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "MOUNTED: ทั้งสองอย่าง",
+     "if": [
+      "kw:MOUNTED"
+     ],
+     "effects": [
+      {
+       "attack": "melee",
+       "abilities": [
+        "lance",
+        "lethal hits"
+       ]
+      }
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "WITHDRAW AND REGROUP": {
+   "targetKw": [
+    "MOUNTED|SPEEDER"
+   ],
+   "react": "fightPhaseEnd",
+   "unitIf": [
+    "!engaged"
+   ],
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "auto"
+  },
+  "FOCUSED FURY": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "lethal hits"
+     ]
+    },
+    {
+     "attack": "melee",
+     "abilities": [
+      "lance"
+     ],
+     "if": [
+      "kw:CHARACTER"
      ]
     }
    ],
    "status": "auto"
   },
   "IN THE SHADOW OF GREAT WINGS": {
-   "targetKw": [
-    "CHARACTER"
-   ],
-   "unitIf": [
-    "any:targetOfAttack||targetOfLast"
-   ],
    "effects": [
     {
-     "targetableWithin": 18
+     "stealth": true
+    },
+    {
+     "detection": -3
     }
    ],
    "status": "auto"
@@ -1710,560 +1192,84 @@
    ],
    "status": "auto"
   },
-  "INESCAPABLE JUSTICE": {
-   "react": "oathDestroyed",
-   "targetKw": [
-    "CHARACTER"
-   ],
-   "enemy": {
-    "range": 12,
-    "visible": true
-   },
-   "do": [
-    {
-     "on": "target",
-     "setOath": true
-    }
-   ],
-   "botReact": "always",
-   "status": "auto"
-  },
-  "LEONINE AGGRESSION": {
-   "react": "enemyChargePhaseEnd",
-   "special": [
-    "charge"
-   ],
-   "botReact": "charge",
-   "unitIf": [
-    "!engaged",
-    "any:!farFromEnemies:3||all:kw:DEATHWING&&!farFromEnemies:6"
-   ],
-   "status": "auto"
-  },
-  "FURIOUS ONSLAUGHT": {
-   "targetKw": [
-    "DEATH COMPANY"
-   ],
-   "do": [
-    {
-     "pileInRoll": "D3+3",
-     "if": [
-      "!any:nearModels:12:CHAPLAIN||belowStarting"
-     ]
-    },
-    {
-     "buff": [
-      {
-       "pileIn": 6
-      }
-     ],
-     "if": [
-      "any:nearModels:12:CHAPLAIN||belowStarting"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "ANGEL’S SACRIFICE": {
-   "targetKw": [
-    "JUMP PACK"
-   ],
-   "effects": [
-    {
-     "taunt": true
-    }
-   ],
-   "bot": "never",
-   "status": "auto"
-  },
-  "DESCENT OF ANGELS": {
-   "targetFrom": "reserves",
-   "targetKw": [
-    "JUMP PACK"
-   ],
-   "effects": [
-    {
-     "deepStrikeRange": 6
-    }
-   ],
-   "until": "turn",
-   "status": "auto"
-  },
-  "MARKED FOR DESTRUCTION": {
-   "extraTargets": {
-    "count": 2
-   },
-   "unitIf": [
-    "!kw:BEASTS"
-   ],
-   "enemy": {
-    "visible": true
-   },
-   "do": [
-    {
-     "on": "target",
-     "incoming": {
-      "reroll": "wounds1"
-     },
-     "selfOnly": true,
-     "until": "phase"
-    }
-   ],
-   "bot": "never",
-   "status": "auto"
-  },
-  "HUNTERS’ TRAIL@Saga of the Hunter": {
-   "targetKw": [
-    "SPACE WOLVES"
-   ],
-   "unitIf": [
-    "!kw:MONSTER",
-    "!kw:VEHICLE"
-   ],
-   "effects": [
-    {
-     "pileIn": 6
-    },
-    {
-     "consolidate": 6
-    },
-    {
-     "freeConsolidate": true
-    }
-   ],
-   "status": "auto"
-  },
-  "COUNTERCHARGE": {
-   "react": "enemyChargePhaseEnd",
-   "special": [
-    "charge"
-   ],
-   "botReact": "charge",
-   "targetKw": [
-    "CHARACTER"
-   ],
-   "unitIf": [
-    "!engaged",
-    "!farFromEnemies:6"
-   ],
-   "status": "auto"
-  },
-  "BIRTH OF A SAGA": {
-   "unitIf": [
-    "any:contains:Headtaker||contains:Pack Leader"
-   ],
-   "do": [
-    {
-     "characterModel": true
-    }
-   ],
-   "status": "auto"
-  },
-  "PINNING FIRE": {
-   "react": "ownAttacked",
-   "enemy": {
-    "hitBy": true,
-    "kw": [
-     "CHARACTER",
-     "MONSTER",
-     "VEHICLE"
-    ]
-   },
-   "enemyEffects": [
-    {
-     "move": -2,
-     "chargeBonus": -2
-    }
-   ],
-   "enemyUntil": "nextTurnStart",
-   "status": "auto"
-  },
-  "GRIMNAR’S COMMAND": {
+  "MEASURED STRATEGIST": {
    "until": "nextCommand",
    "choice": [
     {
-     "label": "Encircling Jaws: re-roll Advance/Charge",
+     "label": "Assault Doctrine",
+     "mark": "doctrine:assault",
      "effects": [
-      {
-       "rerollAdvance": true,
-       "rerollCharge": true
-      }
+      {}
      ]
     },
     {
-     "label": "Hunter’s Eye: ยิง +1 hit",
+     "label": "Devastator Doctrine",
+     "mark": "doctrine:devastator",
      "effects": [
-      {
-       "attack": "ranged",
-       "hit": 1
-      }
+      {}
      ]
     },
     {
-     "label": "Ferocious Strike: ตี Lethal/Sustained",
+     "label": "Tactical Doctrine",
+     "mark": "doctrine:tactical",
      "effects": [
-      {
-       "attack": "melee",
-       "if": [
-        "attackSLessT"
-       ],
-       "abilities": [
-        "lethal hits"
-       ]
-      },
-      {
-       "attack": "melee",
-       "if": [
-        "!attackSLessT"
-       ],
-       "abilities": [
-        "sustained hits 1"
-       ]
-      }
+      {}
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "STRIKE NOW FOR GLORY": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "sustained hits 1"
      ]
     }
    ],
    "status": "auto"
   },
-  "CHILLING HOWL": {
-   "react": "enemyCommandStart",
-   "unitIf": [
-    "kw:WOLF GUARD TERMINATORS"
+  "UNTO THE BURNING SKIES": {
+   "targetKw": [
+    "THE SANGUINOR|JUMP PACK"
    ],
-   "enemy": {
-    "range": 6
-   },
-   "do": [
-    {
-     "on": "target",
-     "shock": 0,
-     "if": [
-      "!targetBelowHalf"
-     ]
-    },
-    {
-     "on": "target",
-     "shock": -1,
-     "if": [
-      "targetBelowHalf"
-     ]
-    }
-   ],
-   "botReact": "always",
-   "status": "auto"
-  },
-  "BLADE-KEEN SENSES": {
+   "react": "fightPhaseEnd",
    "unitIf": [
-    "kw:GREY HUNTERS",
     "!engaged"
    ],
-   "enemy": {
-    "range": 24,
-    "visible": true
-   },
-   "enemyEffects": [
+   "do": [
     {
-     "detection": 6
+     "reserves": true
     }
    ],
    "status": "auto"
   },
-  "DEVOUT PUSH": {
-   "targetKw": [
-    "INFANTRY"
-   ],
+  "BINDING BLURS OF VENGEANCE": {
    "effects": [
     {
-     "pileIn": 6
+     "stealth": true
     },
     {
-     "consolidate": 6
+     "detection": -3
     }
    ],
    "status": "auto"
   },
-  "HEARTS HARDENED TO DUTY": {
-   "targetKw": [
-    "INFANTRY"
-   ],
-   "effects": [
-    {
-     "freeConsolidate": true
-    }
-   ],
-   "status": "auto"
-  },
-  "DREAD CRUSADERS": {
-   "react": "enemyChargeDeclared",
-   "targetKw": [
-    "INFANTRY"
-   ],
-   "unitIf": [
-    "nearLast:12"
-   ],
-   "enemy": {
-    "lastActor": true
-   },
-   "do": [
-    {
-     "on": "target",
-     "shock": -1
-    }
-   ],
-   "botReact": "always",
-   "status": "auto"
-  },
-  "REFUSAL TO YIELD": {
-   "react": "modelDestroyed",
-   "targetFrom": "destroyed",
-   "ctxModel": "ANCIENT",
-   "do": [
-    {
-     "reviveModel": "ANCIENT"
-    }
-   ],
-   "botReact": "always",
-   "status": "auto"
-  },
-  "PERFERVID INTERVENTION": {
-   "react": "enemyChargePhaseEnd",
-   "special": [
-    "charge"
-   ],
-   "botReact": "charge",
+  "INEXORABLE VALOR": {
+   "react": "enemyMoved",
    "unitIf": [
     "!engaged",
-    "!farFromEnemies:6"
+    "nearLast:3"
    ],
-   "status": "auto"
-  },
-  "CONDEMNATORY INFO-SCREED": {
-   "effects": [
-    {
-     "reroll": "wounds1",
-     "if": [
-      "disembarkedThisTurn",
-      "!disembarkedFrom:Land Raider"
-     ]
-    },
-    {
-     "reroll": "wounds",
-     "if": [
-      "disembarkedFrom:Land Raider"
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "UNCOMPROMISING EGRESS": {
-   "unitIf": [
-    "contains:Land Raider",
-    "hasEmbarked"
-   ],
-   "special": [
-    "disembarkNear6"
-   ],
-   "status": "auto"
-  },
-  "LIGHT OF VENGEANCE": {
-   "choice": [
-    {
-     "label": "[LETHAL HITS]",
-     "effects": [
-      {
-       "abilities": [
-        "lethal hits"
-       ],
-       "if": [
-        "any:targetMarked:auspex||kw:BATTLELINE"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "[SUSTAINED HITS 1]",
-     "effects": [
-      {
-       "abilities": [
-        "sustained hits 1"
-       ],
-       "if": [
-        "any:targetMarked:auspex||kw:BATTLELINE"
-       ]
-      }
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "GUIDED DISRUPTION": {
-   "react": "ownAttacked",
-   "targetKw": [
-    "BATTLELINE"
-   ],
-   "enemy": {
-    "hitBy": true,
-    "notKw": [
-     "MONSTER",
-     "VEHICLE"
-    ],
-    "all": true
-   },
-   "enemyEffects": [
-    {
-     "move": -2,
-     "chargeBonus": -2
-    }
-   ],
-   "enemyUntil": "nextTurnStart",
-   "botReact": "always",
-   "status": "auto"
-  },
-  "AUTO‑SENSE COORDINATION": {
-   "choice": [
-    {
-     "label": "[LETHAL HITS]",
-     "effects": [
-      {
-       "abilities": [
-        "lethal hits"
-       ],
-       "if": [
-        "any:disembarkedFrom:Drop Pod||within:12"
-       ]
-      }
-     ]
-    },
-    {
-     "label": "[SUSTAINED HITS 1]",
-     "effects": [
-      {
-       "abilities": [
-        "sustained hits 1"
-       ],
-       "if": [
-        "any:disembarkedFrom:Drop Pod||within:12"
-       ]
-      }
-     ]
-    }
-   ],
-   "status": "auto"
-  },
-  "SHOCK ONSLAUGHT": {
-   "effects": [
-    {
-     "pileIn": 6
-    },
-    {
-     "consolidate": 6
-    }
-   ],
-   "status": "auto"
-  },
-  "SUPPRESSION STRAFING": {
-   "limit": "round",
-   "enemy": {
-    "range": 18,
-    "visible": true
-   },
    "do": [
     {
-     "on": "target",
-     "shock": -1
-    },
-    {
-     "on": "target",
-     "if": [
-      "targetBattleShocked"
-     ],
-     "buff": [
-      {
-       "hit": -1
-      }
-     ],
-     "until": "nextTurnStart"
+     "move": "D3+3"
     }
    ],
-   "botReact": "always",
-   "status": "auto"
-  },
-  "ONWARD FOR THE EMPEROR": {
-   "react": "fightPhaseEnd",
-   "targetKw": [
-    "INFANTRY"
-   ],
-   "unitIf": [
-    "!setUpThisTurn",
-    "!engaged"
-   ],
-   "special": [
-    "embark"
-   ],
-   "status": "auto"
-  },
-  "MACHINE WRATH": {
-   "react": "deadlyDemiseSix",
-   "targetFrom": "destroyed",
-   "unitIf": [
-    "heavyTransport"
-   ],
-   "special": [
-    "wreckMove"
-   ],
-   "botReact": "always",
-   "status": "auto"
-  },
-  "RAPID EMBARKATION@Armoured Speartip": {
-   "react": "fightPhaseEnd",
-   "targetKw": [
-    "INFANTRY"
-   ],
-   "unitIf": [
-    "!engaged"
-   ],
-   "special": [
-    "embarkHeavy"
-   ],
-   "status": "auto"
-  },
-  "MACHINE VENGEANCE": {
-   "react": "enemyShot",
-   "enemy": {
-    "lastActor": true
-   },
-   "special": [
-    "shootAt"
-   ],
-   "botReact": "shoot",
-   "unitIf": [
-    "targetOfLast",
-    "kw:VEHICLE",
-    "!kw:WALKER",
-    "!kw:FLY",
-    "maxWBelow:16"
-   ],
-   "status": "auto"
-  },
-  "BLADE OF DETESTATION": {
-   "react": "chargeMoveEnd",
-   "unitIf": [
-    "kw:SWORD BRETHREN SQUAD"
-   ],
-   "enemy": {
-    "engaged": true
-   },
-   "do": [
-    {
-     "on": "target",
-     "mortalRoll": {
-      "on": 4,
-      "max": 6
-     }
-    }
-   ],
-   "botReact": "always",
-   "status": "auto"
+   "status": "partial",
+   "note": "กฎจริง: เฉพาะตอนศัตรูที่ engaged อยู่ fall back ออกไป"
   },
   "JUDGEMENT OF THE GOLDEN HOST": {
    "react": "chargeMoveEnd",
@@ -2308,21 +1314,226 @@
    "botReact": "always",
    "status": "auto"
   },
-  "SEARING BURSTS": {
-   "react": "ownAttacked",
-   "unitIf": [
-    "kw:HELLBLASTER SQUAD"
-   ],
-   "enemy": {
-    "hitBy": "plasma"
-   },
-   "enemyEffects": [
+  "NO BARRIER TO RETRIBUTION": {
+   "effects": [
     {
-     "move": -2
+     "mobile": true
     }
    ],
-   "enemyUntil": "nextTurnStart",
+   "bot": "never",
+   "status": "auto"
+  },
+  "RAGE-FUELLED RESPONSE": {
+   "react": "enemyShot",
+   "unitIf": [
+    "targetOfLast",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "surge": "D6"
+    }
+   ],
+   "status": "auto"
+  },
+  "DRAGONFIRE ROUNDS": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "reroll": "wounds1",
+     "abilities": [
+      "ignores cover"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "HELLFIRE ROUNDS": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "anti-non-vehicle 4+"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "KRAKEN ROUNDS": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "strength": 1
+    },
+    {
+     "rangeBonus": 6
+    }
+   ],
+   "status": "auto"
+  },
+  "SITE-TO-SITE TELEPORTATION": {
+   "react": "fightPhaseEnd",
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "unitIf": [
+    "!engaged"
+   ],
+   "effects": [
+    {
+     "deepStrike": true
+    }
+   ],
+   "until": "battle",
+   "status": "auto"
+  },
+  "BLACKSTAR EXTRACTION": {
+   "targetKw": [
+    "KILL TEAM"
+   ],
+   "react": "fightPhaseEnd",
+   "unitIf": [
+    "!engaged"
+   ],
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "auto"
+  },
+  "DUTY UNTO DEATH": {
+   "targetKw": [
+    "DEATHWING"
+   ],
+   "unitIf": [
+    "any:targetOfAttack||targetOfLast"
+   ],
+   "effects": [
+    {
+     "fightOnDeath": 4,
+     "if": [
+      "!onVowed"
+     ]
+    },
+    {
+     "fightOnDeath": 3,
+     "if": [
+      "onVowed"
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "RELIC TELEPORTARIUM": {
+   "targetFrom": "reserves",
+   "targetKw": [
+    "DEATHWING"
+   ],
+   "effects": [
+    {
+     "deepStrikeRange": 6
+    }
+   ],
+   "until": "turn",
+   "status": "auto"
+  },
+  "WRATH OF THE LION": {
+   "react": "chargeMoveEnd",
+   "targetKw": [
+    "DEATHWING"
+   ],
+   "enemy": {
+    "engaged": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 3,
+      "max": 6
+     }
+    }
+   ],
    "botReact": "always",
+   "status": "auto"
+  },
+  "IN SACRIFICE, VICTORY": {
+   "status": "manual",
+   "bot": "never",
+   "note": "หน่วย DEATHWING/RAVENWING บน objective ถูกทำลาย: objective นั้นติดเป็นของเรา — กด secure เอง"
+  },
+  "INESCAPABLE JUSTICE": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "precision"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "KNIGHTS OF IRON": {
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "LION'S WILL": {
+   "effects": [
+    {
+     "oc": 1
+    }
+   ],
+   "unitIf": [
+    "onObjective"
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "RELICS OF THE DARK AGE": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "strength": 2
+    }
+   ],
+   "status": "auto"
+  },
+  "TACTICAL MASTERY": {
+   "until": "nextCommand",
+   "choice": [
+    {
+     "label": "Assault Doctrine",
+     "mark": "doctrine:assault",
+     "effects": [
+      {}
+     ]
+    },
+    {
+     "label": "Devastator Doctrine",
+     "mark": "doctrine:devastator",
+     "effects": [
+      {}
+     ]
+    },
+    {
+     "label": "Tactical Doctrine",
+     "mark": "doctrine:tactical",
+     "effects": [
+      {}
+     ]
+    }
+   ],
+   "bot": "never",
    "status": "auto"
   },
   "SKYBORNE SURVEILLANCE": {
@@ -2345,57 +1556,375 @@
    "botReact": "always",
    "status": "auto"
   },
-  "TERRIFYING ZEAL": {
+  "WE ARE VENGEANCE": {
+   "react": "enemyShot",
+   "unitIf": [
+    "targetOfLast",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "D3+3"
+    }
+   ],
+   "status": "auto"
+  },
+  "WINGS OF SHADOW": {
+   "effects": [
+    {
+     "stealth": true
+    }
+   ],
+   "status": "auto"
+  },
+  "BLADE OF DETESTATION": {
    "react": "chargeMoveEnd",
    "unitIf": [
-    "kw:CHAPLAIN"
+    "kw:SWORD BRETHREN SQUAD"
    ],
    "enemy": {
-    "engaged": true,
-    "notKw": [
-     "MONSTER",
-     "VEHICLE"
-    ]
+    "engaged": true
    },
    "do": [
     {
      "on": "target",
-     "ldFail": [
-      {
-       "hit": -1
-      }
-     ],
-     "until": "turn"
+     "mortalRoll": {
+      "on": 4,
+      "max": 6
+     }
     }
    ],
    "botReact": "always",
    "status": "auto"
   },
-  "DATA-LINK AUGURY": {
-   "unitIf": [
-    "kw:SPEEDER|LAND SPEEDER|STORM SPEEDER"
-   ],
-   "enemy": {
-    "range": 24
-   },
-   "enemyEffects": [
+  "SLAYERS OF ABOMINATIONS": {
+   "effects": [
     {
-     "detection": 6
+     "attack": "melee",
+     "strength": 2,
+     "if": [
+      "targetMV"
+     ]
     }
    ],
    "status": "auto"
   },
-  "STRIKE FROM THE SHADOWS@Subversion Assets": {
-   "react": "ownAttacked",
+  "UNSPARING EXECUTION": {
+   "react": "enemyFallBack",
    "unitIf": [
-    "kw:PHOBOS|SCOUT SQUAD"
+    "kw:SWORD BRETHREN SQUAD",
+    "engagedWithLast"
+   ],
+   "effects": [
+    {
+     "forceDesperate": true
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "DEVOUT PUSH": {
+   "targetKw": [
+    "INFANTRY"
    ],
    "do": [
     {
-     "unshot": true
+     "pileInRoll": "D3+3"
+    },
+    {
+     "consolidateRoll": "D3+3"
+    }
+   ],
+   "status": "auto"
+  },
+  "DREAD CRUSADERS": {
+   "react": "enemyChargeDeclared",
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "unitIf": [
+    "nearLast:12"
+   ],
+   "enemy": {
+    "lastActor": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
     }
    ],
    "botReact": "always",
+   "status": "auto"
+  },
+  "FOR THE EMPEROR'S HONOUR": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "precision"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "HERESY BEGETS RETRIBUTION": {
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "react": "enemyMoved",
+   "unitIf": [
+    "nearLast:8",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "surge": "D6"
+    }
+   ],
+   "status": "auto"
+  },
+  "PIOUS ENMITY": {
+   "effects": [
+    {
+     "attack": "melee",
+     "reroll": "hits1"
+    },
+    {
+     "attack": "melee",
+     "reroll": "wounds1",
+     "if": [
+      "targetMV"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "SPOOR OF THE UNHOLY": {
+   "effects": [
+    {
+     "ignoreHitMods": true
+    }
+   ],
+   "status": "auto"
+  },
+  "ANGELS DEFIANT": {
+   "effects": [
+    {
+     "defend": {
+      "woundIfStronger": -1
+     }
+    }
+   ],
+   "status": "auto"
+  },
+  "AVOWED DESTRUCTION": {
+   "choice": [
+    {
+     "label": "[LETHAL HITS]",
+     "effects": [
+      {
+       "attack": "melee",
+       "abilities": [
+        "lethal hits"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "[SUSTAINED HITS 1]",
+     "effects": [
+      {
+       "attack": "melee",
+       "abilities": [
+        "sustained hits 1"
+       ]
+      }
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "DOCTRINAL FLEXIBILITY": {
+   "until": "nextCommand",
+   "choice": [
+    {
+     "label": "Assault Doctrine",
+     "mark": "doctrine:assault",
+     "effects": [
+      {}
+     ]
+    },
+    {
+     "label": "Devastator Doctrine",
+     "mark": "doctrine:devastator",
+     "effects": [
+      {}
+     ]
+    },
+    {
+     "label": "Tactical Doctrine",
+     "mark": "doctrine:tactical",
+     "effects": [
+      {}
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "BIRTH OF A SAGA": {
+   "unitIf": [
+    "!kw:MONSTER",
+    "!kw:VEHICLE"
+   ],
+   "do": [
+    {
+     "characterModel": true
+    }
+   ],
+   "status": "auto"
+  },
+  "CHAMPION'S GUIDANCE": {
+   "effects": [
+    {
+     "attack": "melee",
+     "reroll": [
+      "hits1",
+      "wounds1"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "HEROIC RESOLVE": {
+   "buffs": [
+    "damage-1"
+   ],
+   "status": "auto"
+  },
+  "CO-ORDINATED STRIKE": {
+   "targetKw": [
+    "BLOOD CLAWS|THUNDERWOLF CAVALRY|WULFEN"
+   ],
+   "react": "fightPhaseEnd",
+   "unitIf": [
+    "!engaged"
+   ],
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "auto"
+  },
+  "IMPETUOSITY": {
+   "react": "enemyShot",
+   "unitIf": [
+    "targetOfLast",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "surge": "D6"
+    }
+   ],
+   "status": "auto"
+  },
+  "UNBRIDLED FEROCITY": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "lance"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "BATTLE INSTINCTS": {
+   "react": "enemyShot",
+   "unitIf": [
+    "targetOfLast",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "D3+3"
+    }
+   ],
+   "status": "auto",
+   "targetKw": [
+    "INFANTRY|MOUNTED"
+   ]
+  },
+  "FENRISIAN FEROCITY": {
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "EYE OF THE PACK": {
+   "effects": [
+    {
+     "reroll": "wounds1"
+    }
+   ],
+   "status": "partial",
+   "note": "re-roll ได้ทั้ง 1 และ 2 (ระบบ re-roll แค่ 1)"
+  },
+  "GRIMNAR'S COMMAND": {
+   "until": "nextCommand",
+   "choice": [
+    {
+     "label": "Assault Doctrine",
+     "mark": "doctrine:assault",
+     "effects": [
+      {}
+     ]
+    },
+    {
+     "label": "Devastator Doctrine",
+     "mark": "doctrine:devastator",
+     "effects": [
+      {}
+     ]
+    },
+    {
+     "label": "Tactical Doctrine",
+     "mark": "doctrine:tactical",
+     "effects": [
+      {}
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "FANGS OF THE PACK": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "precision"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "WOLF TOTEMS": {
+   "effects": [
+    {
+     "defend": {
+      "fnp": 5,
+      "fnpVs": "mortal"
+     }
+    }
+   ],
+   "bot": "never",
    "status": "auto"
   }
  }

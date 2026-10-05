@@ -8,6 +8,7 @@
 // (see data/overrides/README.md), so they survive every re-import.
 import fs from 'node:fs';
 import path from 'node:path';
+import { factionFromPack, packFile } from './pack.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const RAW = path.join(ROOT, 'data/raw');
@@ -404,6 +405,12 @@ function build() {
     if (fs.existsSync(ovPath)) {
       faction = deepMerge(faction, JSON.parse(fs.readFileSync(ovPath, 'utf8')));
       console.log(`applied overrides for ${f.id}`);
+    }
+    // a newer book as a ListForge pack replaces the Wahapedia datasheets / rules / detachments (data/packs)
+    const pf = packFile(path.join(ROOT, 'data/packs'), f.id);
+    if (fs.existsSync(pf)) {
+      faction = factionFromPack(pf, faction, sub);
+      console.log(`built ${f.id} from ${faction.source.pack} (revision ${faction.source.revision})`);
     }
     // Leader lists: only units that are in the game (Legends and removed datasheets drop out), and a leader on foot
     // can't lead a unit that moves differently (JUMP PACK / MOUNTED) — Wahapedia's own lists leave those out too

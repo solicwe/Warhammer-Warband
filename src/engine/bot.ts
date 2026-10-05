@@ -181,6 +181,14 @@ function botDetachmentChoices(s: GameState, p: PlayerId, mine: UnitState[], enem
     const ids = [...new Set(order.filter((id) => free.includes(id)))].slice(0, want);
     // keep limited-use rules (e.g. 3 doctrines in 5 rounds) for when the armies are close
     if (c.choice.uses === 'limit' && !near && s.round < 3) continue;
+    // Combat Doctrines (each once per battle): only when it does something this turn — tactical to leave a fight and
+    // still shoot / charge, assault to Advance and charge when the enemy is close, devastator to Advance and still shoot
+    if (c.rule === 'Combat Doctrines') {
+      const pick = engaged && free.includes('tactical') ? 'tactical' : near && free.includes('assault') ? 'assault'
+        : s.round >= 2 && free.includes('devastator') ? 'devastator' : s.round >= 4 ? free[0] : null;
+      if (pick) pickDetChoice(s, p, c.rule, [pick]);
+      continue;
+    }
     if (ids.length === want) pickDetChoice(s, p, c.rule, ids);
   }
 }

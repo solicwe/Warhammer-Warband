@@ -231,7 +231,7 @@ describe('Command Re-roll on hazard, damage and the number of attacks', () => {
 
   it('a low random number of attacks is re-rolled by itself once, before the hit rolls', () => {
     for (let seed = 1; seed <= 40; seed++) {
-      const s = game([['Infernus Squad', 5, 85]], [['Boyz', 20, 180]]);
+      const s = game([['Ballistus Dreadnought', 1, 150]], [['Boyz', 20, 180]]); // Ballistus missile launcher: D6+6 attacks
       s.rng = seed * 7919;
       s.players[0].cp = 3;
       s.phase = 'shooting';
@@ -346,11 +346,11 @@ describe('Bot Scouts moves', () => {
   it('makes the pre-battle Scouts move with its scout units and ends more than 9" from the enemy', () => {
     let moved = 0;
     for (const seed of [1, 2, 3]) {
-      const s = createGame({ lists: [list('SM', [['Incursor Squad', 5, 80], ['Intercessor Squad', 5, 80]]), list('ORK', [['Boyz', 10, 90]])], factions: [SM, ORK], names: ['A', 'B'], seed });
+      const s = createGame({ lists: [list('SM', [['Scout Squad', 5, 70], ['Intercessor Squad', 5, 85]]), list('ORK', [['Boyz', 10, 90]])], factions: [SM, ORK], names: ['A', 'B'], seed });
       s.bots = [0, 1];
       for (let i = 0; i < 60 && s.phase === 'deploy'; i++) botAct(s);
       expect(s.phase).toBe('scouts');
-      const inc = s.units.find((u) => u.name === 'Incursor Squad')!;
+      const inc = s.units.find((u) => u.name === 'Scout Squad')!;
       const before = alive(inc).map((m) => ({ x: m.x, y: m.y }));
       for (let i = 0; i < 4 && s.phase === 'scouts'; i++) botAct(s);
       expect(s.phase).not.toBe('scouts');

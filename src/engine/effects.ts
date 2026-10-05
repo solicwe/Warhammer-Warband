@@ -14,6 +14,7 @@ import { baseDist, circleTouchesPoly, clamp, dist } from './geometry';
 import { setActionEligibilityHook, unitInRange } from './missions';
 import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, setStratHooks, unitDistance, withinTerrain } from './state';
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, UnitState, WeaponData, WeaponProfileData } from './types';
+import { abilityLabel, condApplies, parseAbility } from './weapons';
 import { isHidden, setVisibilityHooks } from './visibility';
 import { setThroughHook } from './pathing';
 
@@ -37,6 +38,7 @@ export interface Defend {
   untargetableBeyond12?: boolean;
   strengthMinus?: number;
   saveBonusD1?: number;
+  save?: number; // +X to save rolls (better armour save)
   minHit?: number; // attacks that target this unit fail on an unmodified hit roll below this (Speediest Freeks: 4)
   negateOncePerPhase?: boolean; // once per phase: a failed save's damage becomes 0
   // legacy names used by the first version of detachment-rules.json
@@ -72,6 +74,7 @@ export interface Effect {
   critHitOn?: number;
   ignoreHitMods?: boolean;
   givesCover?: boolean;
+  rapidFireFullRange?: boolean; // [RAPID FIRE] counts up to the weapon's full range (Codex Fire-patterns)
   // defence
   defend?: Defend;
   incoming?: Incoming;
@@ -135,6 +138,7 @@ export interface Effect {
   strengthPer5Models?: boolean; // +1 S for every 5 models in the unit (or embarked within it)
   fightOnDeathRiled?: number; // … +X to that roll while riled up
   secureAtCommandEnd?: boolean; // end of your Command phase: objectives this unit holds stay yours (Uphold the Honour)
+  secureAtMovementEnd?: boolean; // end of your Movement phase: the same (Vow-sworn Crusaders' Uphold the Honour)
   stratRepeat?: { ids: string[]; limit: Limit }; // this stratagem can target this unit even if it was used this phase (Countercharge)
 }
 
@@ -154,6 +158,10 @@ export interface DetRule {
   armyRule?: boolean; needKw?: string; // army rules: apply when the army has units with this (Chapter) keyword
   oathRetarget?: { needs: string; limit: Limit }; // Recalculating: a new Oath target when the old one dies
   splits?: { datasheets: string[]; how: 'half'; label: string }; // Veterans of the Fang
+  /** Combat Doctrines: this rule lets a doctrine be selected again (ids: any of these, n times; if: only when …) */
+  doctrineExtra?: { ids: string[]; n: number; if?: string[] }[];
+  /** Combat Doctrines always active for these units (only: no other doctrine can be active for them) */
+  doctrines?: { units: string[]; ids: string[]; only?: boolean }[];
 }
 export const DET_RULES = (detData as unknown as { rules: Record<string, DetRule> }).rules;
 
@@ -203,6 +211,7 @@ export interface AbilityRule {
   split?: 'half' | 'byModel' | 'five'; // the unit may be split into two at Declare Battle Formations
   freeDie?: FreeDieSpec | FreeDieSpec[];
   parsed?: boolean; // read from the ability text (abilityText.ts), not hand-written
+  doctrines?: string[]; // Combat Doctrines always active for the unit with this ability (Codex Adept …)
 }
 
 /** Hand-written rules per faction (Wahapedia faction id); a few cross-faction ones live in data/ability-rules.json. */
@@ -293,7 +302,7 @@ function playerDetEffects(s: GameState, p: PlayerId): { e: Effect; label: string
     const r = DET_RULES[d.name];
     if (!r) continue;
     for (const e of r.effects ?? []) out.push({ e, label: d.name });
-    if (r.choice) {
+    if (r.choice && d.name !== DOCTRINES) {
       const st = P.det?.[d.name];
       for (const id of st?.active ?? []) {
         const o = r.choice.options.find((x) => x.id === id);
@@ -364,6 +373,11 @@ export function effectsFor(s: GameState, u: UnitState): Active[] {
 function collectEffects(s: GameState, u: UnitState): Active[] {
   const out: Active[] = [];
   for (const { e, label } of playerDetEffects(s, u.owner)) if (unitMatches(u, e.units)) out.push({ e, label, holder: u });
+  const doc = DET_RULES[DOCTRINES]?.choice;
+  for (const id of unitDoctrines(s, u)) {
+    const o = doc?.options.find((x) => x.id === id);
+    for (const e of o?.effects ?? []) if (unitMatches(u, e.units)) out.push({ e, label: o!.name, holder: u });
+  }
   for (const h of s.units) {
     if (h.status === 'destroyed') continue;
     for (const a of h.abilities ?? []) {
@@ -379,6 +393,45 @@ function collectEffects(s: GameState, u: UnitState): Active[] {
   }
   for (const t of u.timed ?? []) out.push({ e: t.e, label: t.label, holder: u, bearers: t.models ? u.models.filter((m) => !m.dead && t.models!.includes(m.id)) : undefined });
   return out;
+}
+
+// ---------- Combat Doctrines ----------
+
+export const DOCTRINES = 'Combat Doctrines';
+
+/** The combat doctrines active for a unit: the army's pick (units with the Combat Doctrines ability), one a rule or
+ *  stratagem made active for this unit (a timed "doctrine:x" mark), and the ones always active for it (Codex Adept,
+ *  Adept of the Codex, Wrath of Angels …). A rule that says only one doctrine can be active for a unit wins. */
+export function unitDoctrines(s: GameState, u: UnitState): Set<string> {
+  const out = new Set<string>();
+  const P = s.players[u.owner];
+  const rules = activeRules(s, u.owner);
+  if (rules.includes(DOCTRINES) && u.abilities.some((a) => a.name === DOCTRINES)) for (const id of P.det?.[DOCTRINES]?.active ?? []) out.add(id);
+  for (const t of u.timed ?? []) if (t.mark?.startsWith('doctrine:')) out.add(t.mark.slice(9));
+  for (const a of u.abilities) { const r = abilityRule(u, a); for (const id of r?.doctrines ?? []) out.add(id); }
+  for (const name of rules) {
+    for (const g of DET_RULES[name]?.doctrines ?? []) {
+      if (!unitMatches(u, g.units)) continue;
+      if (g.only) for (const id of [...out]) if (!g.ids.includes(id)) out.delete(id);
+      for (const id of g.ids) out.add(id);
+    }
+  }
+  return out;
+}
+
+/** How many more times each combat doctrine can be selected this battle (once each, plus the detachment's extra uses). */
+export function doctrineUsesLeft(s: GameState, p: PlayerId, ids: string[], used: string[]): Record<string, boolean> {
+  const any = s.units.find((x) => x.owner === p);
+  const grants = activeRules(s, p).flatMap((n) => DET_RULES[n]?.doctrineExtra ?? [])
+    .filter((g) => !g.if || (any && g.if.every((c) => cond(c, { s, A: any, holder: any }))))
+    .map((g) => ({ ...g, left: g.n }))
+    .sort((a, b) => a.ids.length - b.ids.length);
+  const count = (id: string) => used.filter((x) => x === id).length;
+  for (const id of ids) {
+    let over = count(id) - 1;
+    for (const g of grants) while (over > 0 && g.left > 0 && g.ids.includes(id)) { g.left -= 1; over -= 1; }
+  }
+  return Object.fromEntries(ids.map((id) => [id, count(id) < 1 || grants.some((g) => g.left > 0 && g.ids.includes(id))]));
 }
 
 // ---------- conditions ----------
@@ -453,7 +506,11 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('leader:')) { const n = wk(c.slice(7)); return hasLivingLeader(A) && A.sources.slice(1).some((src) => n.split('|').some((x2) => wk(src).includes(x2))); }
   if (c.startsWith('within:')) return (x.d ?? Infinity) <= Number(c.slice(7)) + 1e-6;
   // a detachment choice that is active for the army (Combat Doctrines …): "detActive:assault"
-  if (c.startsWith('detActive:')) return Object.values(s.players[A.owner].det ?? {}).some((d) => (d as { active?: string[] }).active?.includes(c.slice(10)));
+  if (c.startsWith('detActive:')) {
+    const id = c.slice(10);
+    if (unitDoctrines(s, A).has(id)) return true;
+    return Object.entries(s.players[A.owner].det ?? {}).some(([n, d]) => n !== DOCTRINES && (d as { active?: string[] }).active?.includes(id));
+  }
   if (c.startsWith('beyond:')) return (x.d ?? 0) > Number(c.slice(7)) + 1e-6;
   if (c.startsWith('targetKw:')) return !!T && c.slice(9).split('|').some((k) => T.keywords.includes(k));
   if (c.startsWith('targetNotKw:')) return !!T && !c.slice(12).split('|').some((k) => T.keywords.includes(k));
@@ -476,7 +533,7 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('maxWBelow:')) return Math.max(...alive(A).map((m) => m.profile.W)) < Number(c.slice(10));
   if (c.startsWith('kw:')) return c.slice(3).split('|').some((k) => A.keywords.includes(k) || A.factionKeywords.includes(k) || A.sources.some((n) => wk(n) === wk(k)) || alive(A).some((m) => m.keywords.includes(k)));
   if (c.startsWith('nearLast:')) { const L = lastEnemyAct(s, A.owner); return !!L && onBoard(L.u) && unitDistance(A, L.u) <= Number(c.slice(9)) + 1e-6; }
-  if (c.startsWith('doctrine:')) return cond(`detActive:${c.slice(9)}`, x) || (A.timed ?? []).some((t) => t.mark === c);
+  if (c.startsWith('doctrine:')) return unitDoctrines(s, A).has(c.slice(9));
   if (c.startsWith('targetKwAll:')) return !!T && c.slice(12).split('|').some((k) => alive(T).every((n) => n.keywords.includes(k)));
   switch (c) {
     case 'advanced': return A.move === 'advance';
@@ -495,6 +552,8 @@ export function cond(c: string, x: Ctx): boolean {
     case 'entrenched': return alive(A).some((m) => withinTerrain(s, m).length > 0) && A.setUpTurn !== s.turn && (A.maxMoved ?? 0) <= 3 + 1e-6;
     case 'killedThisPhase': return s.destroyedByTurn.some((d) => d.turn === s.turn && d.phase === s.phase && d.killerId === A.id);
     case 'charged': return A.chargedTurn === s.turn;
+    case 'normalMoved': return A.move === 'normal';
+    case 'hidden': return alive(A).length > 0 && alive(A).every((n) => isHidden(s, A, n));
     case 'stationary': return A.move === 'stationary' || (A.lastStationaryTurn !== undefined && s.turn - A.lastStationaryTurn <= 1);
     case 'notAdvanced': return A.move !== 'advance';
     case 'within12': return (x.d ?? Infinity) <= 12 + 1e-6;
@@ -528,6 +587,7 @@ export function cond(c: string, x: Ctx): boolean {
     case 'battleShocked': return A.battleShocked;
     case 'notBattleShocked': return !A.battleShocked;
     case 'inTerrain': return alive(A).some((m) => withinTerrain(s, m).length > 0);
+    case 'targetInTerrain': return !!T && alive(T).some((m) => withinTerrain(s, m).length > 0);
     case 'onObjective': return onObjective(s, A);
     case 'onSeekerObjective': return !!A.seekerObjective && s.objectives.some((o) => o.id === A.seekerObjective && unitInRange(s, A, o));
     case 'onOwnObjective': return onOwnObjective(s, A);
@@ -539,6 +599,7 @@ export function cond(c: string, x: Ctx): boolean {
     case 'disembarkedThisTurn': return A.disembarkedTurn === s.turn;
     case 'heavyWeapon': return !!x.p && x.p.abilities.some((a) => a === 'heavy' || a.startsWith('heavy'));
     case 'plasmaWeapon': return /plasma/i.test(`${x.w?.name ?? ''} ${x.p?.name ?? ''}`);
+    case 'torrentAttack': return !!x.p && x.p.abilities.includes('torrent');
     case 'torrentOrMelta': return !!x.p && x.p.abilities.some((a) => a === 'torrent' || a.startsWith('melta'));
     case 'outnumberOrGangUp': return !!T && (alive(A).length > alive(T).length
       || boardUnits(s, A.owner).some((f) => f.id !== A.id && f.factionKeywords.includes('ADEPTUS ASTARTES') && engagedEnemies(s, f).some((e) => e.id === T.id)));
@@ -599,7 +660,7 @@ const rerolls = (e: { reroll?: Reroll | Reroll[] }): Reroll[] => (e.reroll ? (Ar
 export function offenceFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, w: WeaponData, p: WeaponProfileData, kind: 'melee' | 'ranged', d: number): Active[] {
   const x: Ctx = { s, A, T, m, w, p, d, kind };
   return effectsFor(s, A).filter((a) => (!a.e.attack || a.e.attack === kind) && modelOk(a, m) && weaponOk(a, w, p) && holds(a, x)
-    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.ignoreHitMods || a.e.givesCover));
+    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.ignoreHitMods || a.e.givesCover || a.e.rapidFireFullRange));
 }
 
 /** Marks on the target ("hit by Multi-spectrum Array: +1 to hit for your ADEPTUS ASTARTES") that help this attacker. */
@@ -728,19 +789,27 @@ function applyReroll(pool: Pool, r: Reroll, label: string, notes: string[]) {
 }
 
 function applyAbility(pool: Pool, ab: string, label: string, notes: string[], kind: 'melee' | 'ranged', A: UnitState, s: GameState, T: UnitState) {
-  const a = ab.toLowerCase();
-  let m: RegExpExecArray | null;
-  if ((m = /^sustained hits (\d|d3)$/.exec(a))) { if (!pool.sustained || (/^\d$/.test(pool.sustained) && /^\d$/.test(m[1]) && +m[1] > +pool.sustained)) { pool.sustained = m[1].toUpperCase(); notes.push(`${label}: Sustained Hits ${m[1]}`); } return; }
-  if (a === 'lethal hits') { if (!pool.lethal) { pool.lethal = true; notes.push(`${label}: Lethal Hits`); } return; }
-  if (a === 'devastating wounds') { if (!pool.devastating) { pool.devastating = true; notes.push(`${label}: Devastating Wounds`); } return; }
-  if (a === 'precision') { if (!pool.precision) { pool.precision = true; notes.push(`${label}: Precision`); } return; }
-  if (a === 'precision on crit') { if (!pool.precision && !pool.precisionOnCrit) { pool.precisionOnCrit = true; notes.push(`${label}: Precision (critical hit)`); } return; }
-  if (a === 'twin-linked') { if (!pool.twinLinked) { pool.twinLinked = true; notes.push(`${label}: Twin-linked`); } return; }
-  if (a === 'hazardous') { pool.hazardousAll = true; notes.push(`${label}: Hazardous`); return; }
-  if (a === 'psychic') { pool.psychic = true; return; }
-  if (a === 'lance') { if (kind === 'melee' && A.chargedTurn === s.turn) { pool.woundMod = clamp(pool.woundMod + 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll); notes.push(`${label}: Lance +1 wound`); } return; }
-  if ((m = /^anti-([a-z ]+) (\d)\+$/.exec(a))) { if (T.keywords.includes(m[1].toUpperCase())) { pool.critWoundOn = Math.min(pool.critWoundOn, +m[2]); notes.push(`${label}: Anti-${m[1]} ${m[2]}+`); } return; }
-  // assault / heavy / ignores cover / blast / rapid fire are handled while the pool is built
+  // the same words as on a weapon profile, keyword conditions included ("lethal hits: monster/vehicle", "anti-non-vehicle 4+")
+  const pa = parseAbility(ab);
+  if (pa.key !== 'anti' && pa.cond && !condApplies(pa.cond, T.keywords)) return;
+  const tag = abilityLabel(pa);
+  switch (pa.key) {
+    case 'sustained-hits': {
+      const v = (pa.value ?? '1').toUpperCase();
+      if (!pool.sustained || (/^\d$/.test(pool.sustained) && /^\d$/.test(v) && +v > +pool.sustained)) { pool.sustained = v; notes.push(`${label}: ${tag}`); }
+      return;
+    }
+    case 'lethal-hits': if (!pool.lethal) { pool.lethal = true; notes.push(`${label}: ${tag}`); } return;
+    case 'devastating-wounds': if (!pool.devastating) { pool.devastating = true; notes.push(`${label}: ${tag}`); } return;
+    case 'precision': if (!pool.precision) { pool.precision = true; notes.push(`${label}: Precision`); } return;
+    case 'precision-on-crit': if (!pool.precision && !pool.precisionOnCrit) { pool.precisionOnCrit = true; notes.push(`${label}: Precision (critical hit)`); } return;
+    case 'twin-linked': if (!pool.twinLinked) { pool.twinLinked = true; notes.push(`${label}: Twin-linked`); } return;
+    case 'hazardous': pool.hazardousAll = true; notes.push(`${label}: Hazardous`); return;
+    case 'psychic': pool.psychic = true; return;
+    case 'lance': if (kind === 'melee' && A.chargedTurn === s.turn) { pool.woundMod = clamp(pool.woundMod + 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll); notes.push(`${label}: Lance +1 wound`); } return;
+    case 'anti': if (condApplies(pa.cond, T.keywords) && pa.on) { pool.critWoundOn = Math.min(pool.critWoundOn, pa.on); notes.push(`${label}: ${tag}`); } return;
+    default: // assault / heavy / ignores cover / blast / cleave / rapid fire / close-quarters are handled while the pool is built
+  }
 }
 
 /** Defensive effects of the target relevant to an attack of this kind. */
@@ -765,7 +834,7 @@ export const untargetableAt = (s: GameState, T: UnitState, d: number) => d > 12 
 /** Damage, invulnerable save and Feel No Pain for one model hit by an attack. */
 export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'melee' | 'ranged' | 'mortal', psychic = false) {
   const list = kind === 'mortal' ? effectsFor(s, T).filter((a) => a.e.defend && modelOk(a, m) && holds(a, { s, A: T })) : defencesFor(s, T, kind, m);
-  let damage = 0, halve = false, inv: number | null = null, fnp: number | null = null, saveBonusD1 = 0, negate = false;
+  let damage = 0, halve = false, inv: number | null = null, fnp: number | null = null, saveBonusD1 = 0, save = 0, negate = false;
   for (const a of list) {
     const df = a.e.defend!;
     if (a.bearers && !a.bearers.some((b) => b.id === m.id)) continue;
@@ -775,6 +844,7 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
       if (df.halveDamage) halve = true;
       if (df.inv && (inv === null || df.inv < inv)) inv = df.inv;
       if (df.saveBonusD1) saveBonusD1 = Math.max(saveBonusD1, df.saveBonusD1);
+      if (df.save) save = Math.max(save, df.save);
     }
     if (df.fnp) {
       const vs = df.fnpVs;
@@ -782,7 +852,7 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
       if (ok && (fnp === null || df.fnp < fnp)) fnp = df.fnp;
     }
   }
-  return { damage, halve, inv, fnp, saveBonusD1, negate };
+  return { damage, halve, inv, fnp, saveBonusD1, save, negate };
 }
 
 /** Abilities of one model even after it was destroyed ("If this model is destroyed by a melee attack…"). */
@@ -878,6 +948,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     advanceHazard: es.some((e) => e.advanceHazard),
     rangeBonus: es.reduce((a, e) => a + (e.rangeBonus ?? 0), 0),
     secureAtCommandEnd: es.some((e) => e.secureAtCommandEnd),
+    secureAtMovementEnd: es.some((e) => e.secureAtMovementEnd),
     grounded: es.some((e) => e.grounded),
     oppMoveIngress: es.some((e) => e.oppMoveIngress),
     oathBackup: es.some((e) => e.oathBackup),

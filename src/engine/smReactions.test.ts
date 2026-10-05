@@ -1,6 +1,5 @@
 // Space Marine abilities that act at a moment of the game: Blackstar Cluster Launcher, Drop Pod Assault, Seeker of the
-// Unfound, Teleport Homer, redeploys (Master of Deceit …), Emergency Combat Embarkation, Miraculous Saviour and
-// Stabilised Disembarkation.
+// Unfound, Teleport Homer, redeploys (Strategium Command …), Combat Embarkation and Miraculous Savior.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildShootPools, finishAttack, resolveAll, startAttack } from './attack';
@@ -76,9 +75,9 @@ describe('Space Marine abilities with their own moment', () => {
     expect(near && validatePlacement(s, t, near, 'deepStrike').ok).toBe(true);
   });
 
-  it('Master of Deceit: after deployment the player redeploys a unit into Strategic Reserves', () => {
+  it('Strategium Command: after deployment the player redeploys a unit into Strategic Reserves', () => {
     const s = createGame({
-      lists: [list('SM', [['Captain In Phobos Armour', 1, 70], ['Intercessor Squad', 5, 80]]), list('ORK', [['Boyz', 10, 90]])],
+      lists: [list('SM', [['Wardens of Ultramar', 6, 115], ['Intercessor Squad', 5, 80]], 'ULTRAMARINES'), list('ORK', [['Boyz', 10, 90]])],
       factions: [SM, ORK], names: ['A', 'B'], seed: 3,
     });
     s.bots = [1];
@@ -123,19 +122,4 @@ describe('Space Marine abilities with their own moment', () => {
     expect(isEngaged(s, sang)).toBe(true);
   });
 
-  it('Stabilised Disembarkation: a Repulsor shot down to half its wounds lets the squad inside out', () => {
-    const s = game([['Repulsor', 1, 180], ['Intercessor Squad', 5, 80]], [['Flash Gitz', 5, 80]], 'BLACK TEMPLARS'); // the Black Templars Repulsor
-    const rep = put(s, 'p0-x0', { x: 22, y: 20 });
-    const ints = s.units.find((u) => u.id === 'p0-x1')!;
-    ints.status = 'embarked'; ints.embarkedIn = rep.id;
-    const lootas = put(s, 'p1-x0', { x: 22, y: 32 });
-    alive(rep)[0].wounds = Math.floor(alive(rep)[0].profile.W / 2);
-    s.active = 1; s.phase = 'shooting';
-    const r = buildShootPools(s, lootas.id, rep.id, { mode: 'normal' });
-    expect(r.pools.length).toBeGreaterThan(0);
-    startAttack(s, 'shoot', lootas.id, rep.id, r.pools);
-    resolveAll(s);
-    finishAttack(s);
-    expect(ints.status).toBe('board');
-  });
 });

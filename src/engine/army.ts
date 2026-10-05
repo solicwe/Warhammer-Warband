@@ -8,6 +8,14 @@ import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData
  * the generic one. Lookups by name then always find the right card.
  */
 export function forChapter(faction: FactionData, subfaction?: string): FactionData {
+  // datasheets a Chapter can't take (Black Templars: no Librarians; Space Wolves: their own Apothecaries …)
+  if (subfaction && faction.datasheets.some((d) => d.hiddenFor?.includes(subfaction))) faction = { ...faction, datasheets: faction.datasheets.filter((d) => !d.hiddenFor?.includes(subfaction)) };
+  // a Chapter's own version of a datasheet ("Black Templars Repulsor") replaces the generic one for that Chapter
+  const chapterName = faction.subfactions?.options.find((o) => o.keyword === subfaction)?.name;
+  if (chapterName) {
+    const own = new Set(faction.datasheets.filter((d) => d.subfaction === subfaction && d.name.startsWith(`${chapterName} `)).map((d) => d.name.slice(chapterName.length + 1)));
+    if (own.size) faction = { ...faction, datasheets: faction.datasheets.filter((d) => !(own.has(d.name) && d.subfaction !== subfaction)) };
+  }
   const byName = new Map<string, DatasheetData[]>();
   for (const d of faction.datasheets) byName.set(d.name, [...(byName.get(d.name) ?? []), d]);
   if ([...byName.values()].every((ds) => ds.length === 1)) return faction;
@@ -365,6 +373,16 @@ function gearProfile(sheet: DatasheetData, gear: string[], base: ModelProfileDat
   for (const g of gear) {
     const ab = sheet.abilities.find((a) => /wargear/i.test(a.type) && wkey(a.name) === wkey(g));
     if (!ab) continue;
+    // stat changes listed with the item (2026 Codex data): +1 W, 4+ InSv …
+    for (const md of ab.mods ?? []) {
+      const n = parseInt(md.value, 10);
+      if (Number.isNaN(n)) continue;
+      if (md.stat === 'W') p = { ...p, W: md.type === 'set' ? n : p.W + n };
+      if (md.stat === 'T') p = { ...p, T: md.type === 'set' ? n : p.T + n };
+      if (md.stat === 'InSv' && (p.InSv === null || n < p.InSv)) p = { ...p, InSv: n };
+      if (md.stat === 'Sv') p = { ...p, Sv: md.type === 'set' ? n : p.Sv - n };
+    }
+    if (ab.mods?.length) continue;
     const w = /bearer has a Wounds characteristic of (\d+)/i.exec(ab.text);
     if (w) p = { ...p, W: +w[1] };
     const inv = /bearer has an? (\d)\+ invulnerable save/i.exec(ab.text);
@@ -535,7 +553,14 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       factionKeywords: [...new Set(sheets.flatMap((s) => s.factionKeywords))],
       models,
       startingStrength: models.length,
-      abilities: sheets.flatMap((s) => s.abilities.map((a) => ({ ...a, sheet: s.name, faction: faction.id, model: a.model || (sheets.length > 1 ? s.name : undefined) }))),
+      abilities: [
+        ...sheets.flatMap((s) => s.abilities.map((a) => ({ ...a, sheet: s.name, faction: faction.id, model: a.model || (sheets.length > 1 ? s.name : undefined) }))),
+        // an Enhancement works like an ability of the character carrying it (rules in data/abilities)
+        ...[e, ...joiners].filter((x) => x.enhancement).map((x) => {
+          const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
+          return { name: x.enhancement!, type: 'Enhancement', text: enh?.text ?? '', sheet: x.datasheet, faction: faction.id, model: sheets.length > 1 ? x.datasheet : undefined };
+        }),
+      ],
       core,
       pts: [e, ...joiners].reduce((a, j) => a + j.pts + (j.wargearPts ?? 0), 0),
       status: 'pending',

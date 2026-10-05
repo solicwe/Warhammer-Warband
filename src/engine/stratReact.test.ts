@@ -50,43 +50,35 @@ function orksShoot(s: GameState, shooter: string, target: string) {
 }
 
 describe('stratagem options ("select either …")', () => {
-  it('Red Rampage: [LANCE] or [LETHAL HITS]; Red Thirst gives both and battle-shocks the unit', () => {
-    const s = game([['Assault Intercessor Squad', 10, 150]], ['Liberator Assault Group'], [['Boyz', 10, 90]]);
+  it('Gene-wrought Might: [LANCE], and +1 AP as well while the assault doctrine is active for the unit', () => {
+    const s = game([['Assault Intercessor Squad', 10, 150]], ['Assault Brethren'], [['Boyz', 10, 90]]);
     const u = put(s, 'p0-x0', { x: 20, y: 30 });
     s.phase = 'fight';
-    const st = strat(s, 0, 'RED RAMPAGE');
-    const rule = stratRuleFor(s, 0, st);
-    expect(rule.choice?.map((o) => o.label)).toHaveLength(3);
-    applyDetachmentStratagem(s, 0, st, u.id, { choice: 1 });
-    const abil = () => effectsFor(s, u).flatMap((a) => a.e.abilities ?? []);
-    expect(abil()).toContain('lance');
-    expect(abil()).not.toContain('lethal hits');
-    expect(u.battleShocked).toBe(false);
-    s.turn += 2; // next fight phase
-    u.timed = []; u.stratagemPhase = null;
-    applyDetachmentStratagem(s, 0, st, u.id, { choice: 2 });
-    expect(abil()).toEqual(expect.arrayContaining(['lance', 'lethal hits']));
-    expect(u.battleShocked).toBe(true);
+    const st = strat(s, 0, 'GENE-WROUGHT MIGHT');
+    applyDetachmentStratagem(s, 0, st, u.id);
+    const fx = () => effectsFor(s, u).filter((a) => a.label === 'GENE-WROUGHT MIGHT');
+    expect(fx().some((a) => a.e.abilities?.includes('lance'))).toBe(true);
+    const ap = () => effectsFor(s, u).some((a) => a.label === 'GENE-WROUGHT MIGHT' && a.e.ap === 1);
+    expect(ap()).toBe(true); // the timed effect carries the +1 AP; it only counts while the doctrine is active:
+    s.players[0].det = { 'Combat Doctrines': { active: ['assault'], used: ['assault'], count: 1 } };
+    expect(effectsFor(s, u).some((a) => a.label === 'Assault Doctrine')).toBe(true);
   });
-
-  it('Not One Backwards Step: double OC, and the unit must Remain Stationary', () => {
-    const s = game([['Intercessor Squad', 10, 150]], ['Anvil Siege Force'], [['Boyz', 10, 90]]);
+  it('For the Emperor!: a Tacticus unit on an objective has +1 OC until the end of the turn', () => {
+    const s = game([['Intercessor Squad', 10, 170]], ['Tacticus Firestorm Force'], [['Boyz', 10, 90]]);
     const o = s.objectives[0];
     const u = put(s, 'p0-x0', { x: o.x, y: o.y });
-    const st = strat(s, 0, 'NOT ONE BACKWARDS STEP');
+    s.phase = 'command'; s.active = 0;
+    const st = strat(s, 0, 'FOR THE EMPEROR!');
     expect(stratagemBlock(s, 0, st, u)).toBeNull();
     const before = ocOf(s, u)(alive(u)[0]);
     applyDetachmentStratagem(s, 0, st, u.id);
-    expect(ocOf(s, u)(alive(u)[0])).toBe(before * 2);
-    s.phase = 'movement';
-    expect(beginMove(s, u, 'normal')).toBe(false);
-    expect(u.move).toBe('stationary');
+    expect(ocOf(s, u)(alive(u)[0])).toBe(before + 1);
   });
 });
 
 describe('stratagem reactions', () => {
   it('Hail of Vengeance (bot): after the Orks kill some of its models, the unit shoots back', () => {
-    const s = game([['Hellblaster Squad', 10, 230]], ['Anvil Siege Force'], [['Boyz', 20, 180]]);
+    const s = game([['Hellblaster Squad', 10, 230]], ['Devastator Brethren'], [['Boyz', 20, 180]]);
     s.bots = [0];
     put(s, 'p0-x0', { x: 22, y: 30 });
     const boyz = put(s, 'p1-x0', { x: 22, y: 38 });
@@ -99,7 +91,7 @@ describe('stratagem reactions', () => {
   });
 
   it('Hail of Vengeance (player): a prompt opens; using it shoots back, passing closes it', () => {
-    const s = game([['Intercessor Squad', 10, 150]], ['Anvil Siege Force'], [['Flash Gitz', 5, 80]]);
+    const s = game([['Intercessor Squad', 10, 150]], ['Devastator Brethren'], [['Flash Gitz', 5, 80]]);
     s.bots = [1];
     put(s, 'p0-x0', { x: 22, y: 30 });
     put(s, 'p1-x0', { x: 22, y: 40 });
@@ -133,7 +125,7 @@ describe('stratagem reactions', () => {
   });
 
   it('Vengeful Animus (bot): a Redemptor that dies always blows up', () => {
-    const s = game([['Redemptor Dreadnought', 1, 195]], ['Ironstorm Spearhead'], [['Boyz', 10, 90]]);
+    const s = game([['Redemptor Dreadnought', 1, 195]], ['Medusa\'s Wrath'], [['Boyz', 10, 90]]);
     s.bots = [0];
     const r = put(s, 'p0-x0', { x: 22, y: 30 });
     put(s, 'p1-x0', { x: 22, y: 36 });
@@ -142,14 +134,12 @@ describe('stratagem reactions', () => {
     expect(s.log.some((l) => l.text.includes('ระเบิดแน่นอน'))).toBe(true);
   });
 
-  it('Terrifying Proficiency: enemy units within 6" test in their next Command phase', () => {
-    const s = game([['Bladeguard Veteran Squad', 3, 80]], ['1st Company Task Force'], [['Boyz', 10, 90]]);
-    const bg = put(s, 'p0-x0', { x: 22, y: 30 });
-    put(s, 'p1-x0', { x: 22, y: 34 });
-    bg.chargedTurn = s.turn;
-    s.phase = 'fight';
-    s.destroyedByTurn.push({ turn: s.turn, owner: 1, unitId: 'gone', killerId: bg.id, phase: 'fight' });
-    applyDetachmentStratagem(s, 0, strat(s, 0, 'TERRIFYING PROFICIENCY'), bg.id);
-    expect(unitFlags(s, bg).forceShockAura).toBe(6);
+  it('Tactical Dreadnought Fortitude: attacks that target the Terminators have -1 D', () => {
+    const s = game([['Terminator Squad', 5, 190]], ['Terminator Storm Force'], [['Boyz', 10, 90]]);
+    const t = put(s, 'p0-x0', { x: 22, y: 30 });
+    put(s, 'p1-x0', { x: 22, y: 40 });
+    s.phase = 'shooting'; s.active = 1;
+    applyDetachmentStratagem(s, 0, strat(s, 0, 'TACTICAL DREADNOUGHT FORTITUDE'), t.id);
+    expect(t.buffs.some((b) => b.kind === 'damage-1')).toBe(true);
   });
 });
