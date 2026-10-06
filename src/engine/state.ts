@@ -1,6 +1,6 @@
 import { RULES } from './config';
 import { baseDist, circleTouchesPoly } from './geometry';
-import type { FxEvent, GameState, LogEntry, ModelState, PlayerId, UnitState } from './types';
+import type { FxEvent, GameState, LogEntry, ModelState, PlayerId, SkillStyle, UnitState } from './types';
 
 export const unitById = (s: GameState, id: string) => s.units.find((u) => u.id === id)!;
 export const alive = (u: UnitState) => u.models.filter((m) => !m.dead);
@@ -15,6 +15,25 @@ export function pushFx(s: GameState, e: FxInput) {
   s.fxSeq = (s.fxSeq ?? 0) + 1;
   (s.fx ??= []).push({ ...e, seq: s.fxSeq } as FxEvent);
   if (s.fx.length > 24) s.fx.splice(0, s.fx.length - 24);
+}
+
+/** The look of a hero's ability effect: from what it does and who uses it. */
+export function skillStyle(u: UnitState, name: string, defensive = false): SkillStyle {
+  const kw = (k: string) => hasKw(u, k);
+  if (defensive) return 'shield';
+  if (kw('PSYKER') || /psych|warp|smite|witch|null|soul/i.test(name)) return 'psychic';
+  if (u.factionKeywords.includes('ORKS') || kw('ORKS')) return /waaagh/i.test(name) ? 'waaagh' : 'fury';
+  if (kw('TECHMARINE') || kw('VEHICLE') || /servo|machine|forge|tech/i.test(name)) return 'tech';
+  return 'holy';
+}
+
+/** A hero (CHARACTER) used a big ability: show it on the board. EPIC HERO models get the bigger version. */
+export function heroFx(s: GameState, u: UnitState, name: string, defensive = false, ms?: ModelState[]) {
+  const who = (ms?.length ? ms : alive(u)).filter((m) => !m.dead);
+  if (!who.length || !onBoard(u)) return;
+  const hero = who.find((m) => m.keywords.includes('EPIC HERO')) ?? who.find((m) => m.isCharacter) ?? who[0];
+  pushFx(s, { kind: 'skill', unitId: u.id, owner: u.owner, at: { x: hero.x, y: hero.y }, name: name.replace(/\s*\((?:Once|Aura)[^)]*\)/gi, ''), who: hero.name,
+    style: skillStyle(u, name, defensive), epic: who.some((m) => m.keywords.includes('EPIC HERO')) });
 }
 
 export function log(s: GameState, text: string, kind?: LogEntry['kind'], player: PlayerId | null = s.active) {

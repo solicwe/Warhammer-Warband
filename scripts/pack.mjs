@@ -246,7 +246,8 @@ export function factionFromPack(packFile, ref, meta) {
       composition = [...byName].map(([n, r]) => ({ name: n, min: r.min, max: r.max, text: `${r.min === r.max ? r.min : `${r.min}-${r.max}`} ${n}` }));
     }
     const damaged = u.abilities.find((a) => /^Damaged:/i.test(a.name));
-    const keywords = [...new Set([...u.categories, ...u.keywords].map(up).filter((k) => !chapters.has(wkey(k))).concat(up(name), up(u.name)))];
+    // named characters: some packs only flag them (epicHero) without the Epic Hero category
+    const keywords = [...new Set([...u.categories, ...u.keywords, ...(u.epicHero ? ['Epic Hero'] : [])].map(up).filter((k) => !chapters.has(wkey(k))).concat(up(name), up(u.name)))];
     datasheets.push({
       id: old?.id ?? u.id,
       name,

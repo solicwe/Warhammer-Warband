@@ -48,7 +48,7 @@ const COLORS = ['#3a9ad9', '#e0453f'];
 const SOFT = ['rgba(58,154,217,0.16)', 'rgba(224,69,63,0.16)'];
 const TERRAIN_FILL: Record<string, string> = { dense: 'rgba(120,98,72,0.55)', light: 'rgba(150,140,80,0.45)', exposed: 'rgba(90,85,78,0.45)' };
 
-const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1900, mortal: 1200, roll: 0, rolloff: 0, cards: 0, primary: 0 }; // rolls are shown by the screen, not the board
+const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1900, mortal: 1200, skill: 2800, roll: 0, rolloff: 0, cards: 0, primary: 0 }; // rolls are shown by the screen, not the board
 interface ActiveFx { e: FxEvent; t0: number }
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
@@ -127,6 +127,7 @@ function BoardImpl(props: BoardProps) {
       if (now - a.t0 > FX_MS[a.e.kind] || now < a.t0) continue;
       if (a.e.kind === 'move' || a.e.kind === 'place') ids.add(a.e.unitId);
       if (a.e.kind === 'attack') ids.add(a.e.attackerId);
+      if (a.e.kind === 'skill') ids.add(a.e.unitId);
     }
     return ids;
   }, [fx, now]);
@@ -698,6 +699,7 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
     );
   }
   if (e.kind === 'attack') return <AttackFx e={e} f={f} />;
+  if (e.kind === 'skill') return <SkillFx e={e} f={f} />;
   return null;
 }
 
@@ -967,3 +969,97 @@ function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
 }
 
 export const Board = memo(BoardImpl);
+
+// ---------- a hero's ability: charge-up, flash, shockwave, a turning rune circle, rays, embers and the name ----------
+
+type SkillEvent = Extract<FxEvent, { kind: 'skill' }>;
+const SKILL_COLORS: Record<SkillEvent['style'], { core: string; glow: string; deep: string; text: string }> = {
+  holy: { core: '#fffbeb', glow: '#fcd34d', deep: '#b45309', text: '#fde68a' },
+  psychic: { core: '#faf5ff', glow: '#c084fc', deep: '#6d28d9', text: '#e9d5ff' },
+  fury: { core: '#fff1f2', glow: '#f87171', deep: '#991b1b', text: '#fecaca' },
+  waaagh: { core: '#f7fee7', glow: '#a3e635', deep: '#3f6212', text: '#d9f99d' },
+  tech: { core: '#ecfeff', glow: '#67e8f9', deep: '#0e7490', text: '#a5f3fc' },
+  shield: { core: '#eff6ff', glow: '#93c5fd', deep: '#1d4ed8', text: '#bfdbfe' },
+};
+
+function SkillFx({ e, f }: { e: SkillEvent; f: number }) {
+  const c = SKILL_COLORS[e.style];
+  const { x, y } = e.at;
+  const big = e.epic ? 1.45 : 1;
+  const seed = e.seq;
+  const R = 2.3 * big; // rune circle
+  const charge = Math.min(1, f / 0.16); // energy pulled in
+  const burst = Math.max(0, (f - 0.14) / 0.86); // after the flash
+  const fadeOut = f > 0.82 ? 1 - (f - 0.82) / 0.18 : 1;
+  const circleIn = Math.min(1, Math.max(0, (f - 0.08) / 0.15));
+  const spin = f * 140;
+  const shake = e.style === 'waaagh' && f > 0.14 && f < 0.5 ? (noise(seed, Math.floor(f * 60)) - 0.5) * 0.35 : 0;
+  const rays = e.epic ? 12 : 8;
+  return (
+    <g pointerEvents="none" transform={`translate(${shake} 0)`}>
+      {/* the battlefield darkens a little and takes the colour of the power */}
+      {e.epic && <rect x={x - 40} y={y - 40} width={80} height={80} fill={c.deep} opacity={0.16 * Math.sin(Math.min(1, f * 1.3) * Math.PI)} />}
+      {/* charge-up: sparks spiral in */}
+      {charge < 1 && Array.from({ length: 14 }, (_, i) => {
+        const a = (i / 14) * Math.PI * 2 + charge * 2.5;
+        const d = (1 - charge) * R * 2.2 + 0.3;
+        return <circle key={`c${i}`} cx={x + Math.cos(a) * d} cy={y + Math.sin(a) * d} r={0.12 * big} fill={c.glow} opacity={0.4 + charge * 0.6} />;
+      })}
+      <g filter="url(#fx-bloom)">
+        {/* flash */}
+        {f > 0.12 && f < 0.4 && <circle cx={x} cy={y} r={(0.6 + (f - 0.12) * 9) * big} fill={c.core} opacity={Math.max(0, 1 - (f - 0.12) / 0.28)} />}
+        {/* shockwaves */}
+        {[0, 0.12].map((d, i) => {
+          const k = Math.max(0, burst - d);
+          if (k <= 0 || k >= 0.7) return null;
+          return <circle key={`w${i}`} cx={x} cy={y} r={(0.8 + k * 9) * big} fill="none" stroke={c.glow} strokeWidth={(0.45 - k * 0.5) * big} opacity={1 - k / 0.7} />;
+        })}
+        {/* rays */}
+        <g transform={`translate(${x} ${y}) rotate(${spin * 0.3})`} opacity={Math.sin(Math.min(1, burst * 1.6) * Math.PI) * 0.75 * fadeOut}>
+          {Array.from({ length: rays }, (_, i) => {
+            const a = (i / rays) * 360;
+            const L = (R * 1.9 + noise(seed, i) * R) * (0.6 + burst * 0.6);
+            return <polygon key={`r${i}`} transform={`rotate(${a})`} points={`0,-0.18 ${L},0 0,0.18`} fill={c.glow} opacity={0.55} />;
+          })}
+        </g>
+        {/* core glow */}
+        <circle cx={x} cy={y} r={0.9 * big} fill={c.glow} opacity={0.5 * fadeOut * circleIn} />
+      </g>
+      {/* rune circle: two rings turning against each other, with marks */}
+      <g transform={`translate(${x} ${y})`} opacity={circleIn * fadeOut}>
+        <circle r={R} fill="none" stroke={c.glow} strokeWidth={0.12} opacity={0.9} />
+        <circle r={R * 0.78} fill="none" stroke={c.glow} strokeWidth={0.07} strokeDasharray="0.5 0.25" transform={`rotate(${-spin})`} />
+        <g transform={`rotate(${spin})`}>
+          {Array.from({ length: 12 }, (_, i) => (
+            <rect key={`t${i}`} transform={`rotate(${i * 30}) translate(${R - 0.05} -0.09)`} width={0.36 * big} height={0.18} fill={c.glow} />
+          ))}
+          {e.epic && Array.from({ length: 6 }, (_, i) => (
+            <polygon key={`s${i}`} transform={`rotate(${i * 60})`} points={`${R + 0.3},-0.3 ${R + 1.1},0 ${R + 0.3},0.3`} fill={c.glow} opacity={0.85} />
+          ))}
+        </g>
+        <circle r={R * 1.04} fill="none" stroke={c.deep} strokeWidth={0.05} opacity={0.8} />
+      </g>
+      {/* embers drifting up and out */}
+      {burst > 0 && Array.from({ length: e.epic ? 26 : 16 }, (_, i) => {
+        const a = noise(seed, i + 7) * Math.PI * 2;
+        const sp = 0.5 + noise(seed, i + 30) * 0.8;
+        const d = burst * R * 2.2 * sp;
+        return <circle key={`e${i}`} cx={x + Math.cos(a) * d} cy={y + Math.sin(a) * d - burst * 2.2 * sp} r={(0.07 + noise(seed, i + 50) * 0.12) * big}
+          fill={i % 3 ? c.glow : c.core} opacity={(1 - burst) * 0.95} />;
+      })}
+      {/* the name */}
+      {f > 0.1 && (() => {
+        const pop = Math.min(1, (f - 0.1) / 0.12);
+        const scale = 0.6 + 0.4 * (1 - Math.pow(1 - pop, 3)) + (pop < 1 ? 0 : 0.03 * Math.sin(f * 20));
+        const ty = y - R - 1.4 * big - f * 0.6;
+        const size = (e.name.length > 22 ? 1.0 : 1.25) * big;
+        return (
+          <g transform={`translate(${x} ${ty}) scale(${scale})`} opacity={fadeOut}>
+            <text y={0} fontSize={size} textAnchor="middle" fontWeight={900} fill={c.text} stroke={c.deep} strokeWidth={0.32} paintOrder="stroke" letterSpacing={0.05}>{e.name}</text>
+            <text y={size * 0.85} fontSize={size * 0.55} textAnchor="middle" fontWeight={700} fill="#fff" stroke="#000" strokeWidth={0.16} paintOrder="stroke" opacity={0.9}>{e.who}</text>
+          </g>
+        );
+      })()}
+    </g>
+  );
+}

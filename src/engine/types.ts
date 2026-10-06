@@ -477,7 +477,11 @@ export type FxEvent =
   /** tactical secondary cards just drawn (shown face up, one after the other) */
   | { seq: number; kind: 'cards'; owner: PlayerId; ids: string[] }
   /** the start of the battle: both players' Primary Mission cards */
-  | { seq: number; kind: 'primary' };
+  | { seq: number; kind: 'primary' }
+  /** a hero uses a big ability or a stratagem: a burst of light around it and the ability's name */
+  | { seq: number; kind: 'skill'; unitId: string; owner: PlayerId; at: Pt; name: string; who: string; style: SkillStyle; epic: boolean };
+
+export type SkillStyle = 'holy' | 'psychic' | 'fury' | 'waaagh' | 'tech' | 'shield';
 
 export type Window =
   | { kind: 'fireOverwatch'; player: PlayerId }

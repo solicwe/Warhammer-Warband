@@ -16,6 +16,7 @@ import { baseDist, dist } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, log, onBoard, other, setReactHook, spendStratagem, stratCost, unitById, unitDistance,
   type ReactCtx, type ReactOn,
+  heroFx,
 } from './state';
 import type { BuffKind, GameState, Phase, PlayerId, Pt, StratagemData, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
@@ -446,6 +447,9 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
     }
   }
   for (const sp of rule.special ?? []) runSpecial(s, p, sp, st.name, own[0] ?? holder, enemies[0], use.ctx ?? {});
+  // a stratagem on an EPIC HERO (or a 2CP one on a character): the hero's moment on the board
+  const hero = own.find((x) => alive(x).some((m) => m.keywords.includes('EPIC HERO') || (st.cp >= 2 && m.isCharacter)));
+  if (hero) heroFx(s, hero, st.name, buffs.some((k) => /^enemy|fnp|damage-|save|cover/.test(k)) || (rule.effects ?? []).some((e) => !!e.defend));
   const what = [...buffs.map((k) => EFFECT_LABEL[k] ?? k), ...(base.choice?.length && use.choice !== undefined ? [base.choice[use.choice].label] : []), ...(rule.effects?.length && !base.choice ? ['ระบบทำให้'] : [])].join(', ');
   log(s, `${s.players[p].name} ใช้ ${st.name} (${cp}CP)${u ? ` → ${u.name}` : ''}${enemies.length ? ` · ศัตรู: ${enemies.map((e) => e.name).join(', ')}` : ''}${what ? `: ${what}` : ''}${rule.status === 'auto' || !rule.status ? '' : ' — ส่วนที่เหลือทำตามข้อความ'}`, 'cp', p);
   return buffs;

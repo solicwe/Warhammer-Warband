@@ -9,6 +9,7 @@ import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dis
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
+  heroFx,
 } from './state';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
@@ -1028,6 +1029,8 @@ export function callWaaagh(s: GameState, p: PlayerId) {
   s.players[p].waaaghUsed = true;
   s.players[p].riledUntilTurn = s.turn + 1;
   log(s, `WAAAGH! หน่วย Ork ทุกหน่วย riled up: 5+ InSv, ยิงแบบ [ASSAULT], advance แล้วชาร์จได้ (จนจบเทิร์นถัดไป)`, 'info', p);
+  const boss = boardUnits(s, p).find((u) => u.isWarlordUnit) ?? boardUnits(s, p).find((u) => alive(u).some((m) => m.isCharacter));
+  if (boss) heroFx(s, boss, 'WAAAGH!');
 }
 
 export function chargeEligibility(s: GameState, u: UnitState): string | null {

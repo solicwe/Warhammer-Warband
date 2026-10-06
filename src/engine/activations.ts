@@ -13,7 +13,7 @@ import {
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
 import { baseDist, circleTouchesPoly, dist } from './geometry';
-import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, pushFx, unitById, unitDistance } from './state';
+import { alive, boardUnits, engagedEnemies, hasKw, heroFx, log, onBoard, other, phaseKey, pushFx, unitById, unitDistance } from './state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
@@ -236,6 +236,22 @@ export const limitLeft = (s: GameState, def: ActDef) => (!def.spec.limit || time
   && (!def.spec.battleUses || (Number(usedBag(s, def)[`${baseKey(def)}#n`]) || 0) < def.spec.battleUses);
 
 // ---------- timing of buttons ----------
+
+const QUIET: Trigger[] = ['roundStart', 'commandStart', 'formation', 'battleStart', 'commandEnd', 'movementEnd', 'opponentTurnEnd'];
+
+/** A hero's big ability (once per battle / round, dice, mortal wounds) or anything an EPIC HERO does: an effect on the board. */
+function showHeroSkill(s: GameState, def: ActDef) {
+  if (QUIET.includes(def.spec.when) || def.spec.armyWide) return;
+  const chars = def.bearers.filter((m) => !m.dead && (m.isCharacter || m.keywords.includes('CHARACTER')));
+  if (!chars.length) return;
+  const epic = chars.some((m) => m.keywords.includes('EPIC HERO'));
+  const dos = def.spec.do ?? [];
+  const big = def.spec.limit === 'battle' || def.spec.limit === 'round' || !!def.spec.roll || !!def.spec.table
+    || dos.some((a) => a.mortals || a.mortalsVehicle || a.mortalsMV || a.mortalRoll || a.surge || a.heal || a.revive);
+  if (!epic && !big) return;
+  const defensive = dos.some((a) => (a.buff ?? []).some((e) => e.defend?.inv || e.defend?.fnp || e.defend?.hit));
+  heroFx(s, def.holder, def.name, defensive, chars);
+}
 
 /** Unleash the Lions: every model but the first becomes a unit of its own (starting strength 1). */
 export function splitSingles(s: GameState, u: UnitState, label: string) {
@@ -648,6 +664,7 @@ export function useAct(s: GameState, def: ActDef, targetId?: string, ctx: FireCt
   const targets = t?.each ? cands : t && t.side !== 'self' ? [cands.find((c) => c.id === targetId) ?? cands[0]] : [def.holder];
   markUsed(s, def);
   log(s, `${def.holder.name}: ${def.name}${targets.length && targets[0].id !== def.holder.id ? ` → ${targets.map((x) => x.name).join(', ')}` : ''}`, 'info', def.holder.owner);
+  showHeroSkill(s, def);
   for (const tg of targets) {
     if (def.spec.roll || def.spec.perModel) {
       const n = def.spec.perModel ? alive(def.holder).filter((m) => alive(tg).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length : 1;
