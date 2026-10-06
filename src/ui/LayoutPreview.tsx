@@ -1,5 +1,6 @@
 // Small SVG preview of an official terrain layout (zones, territory line, terrain, objectives).
 import type { LayoutDef } from '../engine/config';
+import { stripBarricade } from '../engine/game';
 
 const ZONE = ['rgba(178,34,34,0.55)', 'rgba(14,111,164,0.55)'];
 
@@ -17,6 +18,7 @@ export function LayoutPreview({ layout, width = 120 }: { layout: LayoutDef; widt
           <polygon points={pts(t.poly)} fill="#d8d2c4" stroke="#222" strokeWidth={0.3} />
           {t.walls.map((w, k) => <line key={k} x1={w[0]} y1={w[1]} x2={w[2]} y2={w[3]} stroke="#2f6b4f" strokeWidth={0.7} />)}
           {t.obstacles.map((w, k) => <line key={`o${k}`} x1={w[0]} y1={w[1]} x2={w[2]} y2={w[3]} stroke="#d98b1f" strokeWidth={0.6} />)}
+          {!t.walls.length && !t.obstacles.length && !t.box && stripBarricade(t.poly).map((w, k) => <line key={`b${k}`} x1={w.a.x} y1={w.a.y} x2={w.b.x} y2={w.b.y} stroke="#d98b1f" strokeWidth={0.6} />)}
         </g>
       ))}
       {layout.objectives.map((o, i) => (

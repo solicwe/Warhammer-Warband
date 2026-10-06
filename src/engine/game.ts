@@ -24,6 +24,22 @@ const H = RULES.battlefield.height;
 
 // ---------- setup ----------
 
+/** A light terrain strip traced with nothing on it (the layouts' ~1" x 3.5" barricade sections): give it its
+ *  barricade, a low obstacle along its length, so it doesn't show as an empty plate. */
+export function stripBarricade(poly: number[][]): Seg[] {
+  if (poly.length !== 4) return [];
+  const P = poly.map(([x, y]) => ({ x, y }));
+  const e = [0, 1, 2, 3].map((k) => dist(P[k], P[(k + 1) % 4]));
+  const k = e[0] + e[2] >= e[1] + e[3] ? 0 : 1; // the long sides are k and k+2
+  const mid = (a: Pt, b: Pt) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  // the centre line runs between the middles of the two short sides
+  const a = mid(P[(k + 1) % 4], P[(k + 2) % 4]), b = mid(P[(k + 3) % 4], P[k]);
+  const L = dist(a, b);
+  if (L < 1.5) return [];
+  const ux = (b.x - a.x) / L, uy = (b.y - a.y) / L, inset = 0.35;
+  return [{ a: { x: a.x + ux * inset, y: a.y + uy * inset }, b: { x: b.x - ux * inset, y: b.y - uy * inset } }];
+}
+
 function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
   const L = deploymentById(layoutId);
   const seg = (w: number[]): Seg => ({ a: { x: w[0], y: w[1] }, b: { x: w[2], y: w[3] } });
@@ -65,7 +81,7 @@ function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: 
       height: walls.length ? 5 : 1.5,
       poly: t.poly.map(([x, y]) => ({ x, y })),
       walls,
-      obstacles: t.obstacles.map(seg),
+      obstacles: t.obstacles.length || walls.length ? t.obstacles.map(seg) : stripBarricade(t.poly),
       ...(box ? { box } : {}),
     };
   });
