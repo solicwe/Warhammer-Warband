@@ -1,11 +1,11 @@
 // Line of sight on a 2D board (06.01, 13.07-13.11).
 // Terrain areas with light/dense features are obscuring; dense walls are Solid at ground level.
 import { RULES } from './config';
-import { baseDist, circleTouchesPoly, pointInPoly, samplePoints, segCrossesPoly, segLengthInPoly, segSegDist, segsTouch } from './geometry';
+import { baseDist, circleTouchesPoly, pointInPoly, pointSegDist, samplePoints, segCrossesPoly, segLengthInPoly, segSegDist, segsTouch } from './geometry';
 import { alive, everyModelKw } from './state';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 
-interface Blockers { walls: { a: Pt; b: Pt }[]; areas: TerrainPiece[]; own: { t: TerrainPiece; reach: number }[] }
+interface Blockers { walls: { a: Pt; b: Pt }[]; areas: { poly: Pt[] }[]; own: { t: TerrainPiece; reach: number }[] }
 
 /** Rules from abilities that change visibility (registered by effects.ts so this module stays dependency-free). */
 export interface VisibilityHooks {
@@ -35,6 +35,57 @@ function standsIn(m: ModelState, t: TerrainPiece): boolean {
   return pointInPoly(m, t.poly);
 }
 
+/** Two terrain areas whose footprints all but touch (a hairline left between them where the layout was traced):
+ *  the crack between them is closed, so no line of sight slips through a corner the two pieces share. */
+interface Bridge { poly: Pt[]; box: Box; of: [TerrainPiece, TerrainPiece]; dense: boolean }
+const BRIDGE_GAP = 0.6;
+const bridgeCache = new Map<string, Bridge[]>();
+function polyDist(p: Pt, poly: Pt[]): number {
+  if (pointInPoly(p, poly)) return 0;
+  return Math.min(...poly.map((q, i) => pointSegDist(p, { a: q, b: poly[(i + 1) % poly.length] })));
+}
+function edgePoints(poly: Pt[], step = 0.25): Pt[] {
+  const out: Pt[] = [];
+  poly.forEach((a, i) => {
+    const b = poly[(i + 1) % poly.length], n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / step));
+    for (let k = 0; k < n; k++) out.push({ x: a.x + ((b.x - a.x) * k) / n, y: a.y + ((b.y - a.y) * k) / n });
+  });
+  return out;
+}
+function hull(pts: Pt[]): Pt[] {
+  const p = [...pts].sort((a, b) => a.x - b.x || a.y - b.y);
+  if (p.length < 3) return p;
+  const cross = (o: Pt, a: Pt, b: Pt) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const lo: Pt[] = [], up: Pt[] = [];
+  for (const q of p) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+  for (const q of [...p].reverse()) { while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+  return [...lo.slice(0, -1), ...up.slice(0, -1)];
+}
+const bridgeByList = new WeakMap<TerrainPiece[], Bridge[]>();
+function bridgesOf(s: GameState): Bridge[] {
+  const hit = bridgeByList.get(s.terrain);
+  if (hit) return hit;
+  const key = s.terrain.map((t) => `${t.id}:${t.category}:${t.poly[0]?.x},${t.poly[0]?.y}`).join('|');
+  let out = bridgeCache.get(key);
+  if (out) { bridgeByList.set(s.terrain, out); return out; }
+  out = [];
+  const obs = s.terrain.filter((t) => t.category !== 'exposed');
+  for (let i = 0; i < obs.length; i++) for (let j = i + 1; j < obs.length; j++) {
+    const A = obs[i], B = obs[j], qa = boxOf(A), qb = boxOf(B);
+    if (qa.x0 > qb.x1 + BRIDGE_GAP || qb.x0 > qa.x1 + BRIDGE_GAP || qa.y0 > qb.y1 + BRIDGE_GAP || qb.y0 > qa.y1 + BRIDGE_GAP) continue;
+    const near = [...edgePoints(A.poly).filter((p) => polyDist(p, B.poly) <= BRIDGE_GAP), ...edgePoints(B.poly).filter((p) => polyDist(p, A.poly) <= BRIDGE_GAP)];
+    // pieces that overlap need no bridge; a real gap (one sees between them) is wider than BRIDGE_GAP
+    if (near.length < 3 || near.some((p) => pointInPoly(p, A.poly) && pointInPoly(p, B.poly))) continue;
+    const poly = hull(near);
+    if (poly.length >= 3) out.push({ poly, of: [A, B], dense: A.category === 'dense' && B.category === 'dense',
+      box: { x0: Math.min(...poly.map((p) => p.x)), y0: Math.min(...poly.map((p) => p.y)), x1: Math.max(...poly.map((p) => p.x)), y1: Math.max(...poly.map((p) => p.y)) } });
+  }
+  if (bridgeCache.size > 50) bridgeCache.clear();
+  bridgeCache.set(key, out);
+  bridgeByList.set(s.terrain, out);
+  return out;
+}
+
 function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false): Blockers {
   // only terrain overlapping the box around both models can be crossed by a line between them
   const x0 = Math.min(a.x - a.r, b.x - b.r), x1 = Math.max(a.x + a.r, b.x + b.r);
@@ -42,7 +93,14 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
   const near = s.terrain.filter((t) => { const q = boxOf(t); return q.x1 >= x0 && q.x0 <= x1 && q.y1 >= y0 && q.y0 <= y1; });
   const walls = near.filter((t) => t.category === 'dense').flatMap((t) => t.walls);
   const obscuring = near.filter((t) => (denseOnly ? t.category === 'dense' : t.category !== 'exposed'));
-  const areas = obscuring.filter((t) => !standsIn(a, t) && !standsIn(b, t));
+  const areas: { poly: Pt[] }[] = obscuring.filter((t) => !standsIn(a, t) && !standsIn(b, t));
+  for (const br of bridgesOf(s)) {
+    if (denseOnly && !br.dense) continue;
+    const q = br.box;
+    if (q.x1 < x0 || q.x0 > x1 || q.y1 < y0 || q.y0 > y1) continue;
+    if ([a, b].some((m) => br.of.some((t) => standsIn(m, t)) || pointInPoly(m, br.poly))) continue;
+    areas.push(br);
+  }
   // both models in the same area: each sees its own stretch of it
   const own = obscuring.filter((t) => !areas.includes(t)).map((t) => ({ t, reach: SEE_IN_AREA * (+standsIn(a, t) + +standsIn(b, t)) }));
   return { walls, areas, own };

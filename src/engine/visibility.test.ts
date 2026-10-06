@@ -59,3 +59,17 @@ describe('obscuring areas (13.10)', () => {
     expect(hasLos(board(ruin), tank, model(20, 26))).toBe(true);
   });
 });
+
+describe('a hairline between two terrain areas (layout tracing)', () => {
+  it('no line of sight slips through the corner where two footprints almost touch', () => {
+    // a light area above, a dense ruin to the right, 0.25" apart at the shared corner; the tank tucked in the angle
+    const s = board(area(5.25, 38.75, 9, 44.5, 'light'), area(9, 44.75, 15.75, 56, 'dense'));
+    const tank = model(5.6, 47.2, 2.4);
+    for (const [x, y] of [[20, 30], [28, 17], [16, 34], [24, 28]]) expect(hasLos(s, model(x, y), tank)).toBe(false);
+  });
+
+  it('a real gap between two areas still gives line of sight', () => {
+    const s = board(area(10, 10, 18, 18, 'light'), area(20, 10, 28, 18, 'light'));
+    expect(hasLos(s, model(19, 4), model(19, 24))).toBe(true);
+  });
+});
