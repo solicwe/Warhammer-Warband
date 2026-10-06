@@ -108,6 +108,8 @@ input, select { font: inherit; color: var(--ink); background: #fff; border: 1px 
 .phasebar span.on { background: var(--accent); color: #fff; font-weight: 600; }
 .board-wrap { flex: 1; min-height: 0; position: relative; background: var(--board); touch-action: none; }
 .board-wrap svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; }
+/* effects are drawn on their own layer above the board, so animating them does not repaint the battlefield */
+.board-wrap svg.fx-overlay { position: absolute; inset: 0; pointer-events: none; will-change: transform; }
 .toast { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); background: rgba(26, 26, 26, 0.92); color: #fff; padding: 6px 14px; border-radius: 999px; font-size: 13px; max-width: 90%; text-align: center; pointer-events: none; }
 
 .panel { background: var(--card); color: var(--ink); border-top: 4px solid var(--p0); padding: 12px; max-height: 44%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
@@ -187,7 +189,7 @@ details summary { cursor: pointer; }
 .bot-caption { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); background: rgba(26, 26, 26, 0.9); color: #f0f0f0; padding: 5px 12px; border-radius: 8px; border-left: 4px solid var(--p1); font-size: 12px; line-height: 1.35; max-width: 86%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; pointer-events: none; animation: cap-in 0.25s ease-out; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
 .bot-caption b { color: #fff; margin-right: 6px; }
 @keyframes cap-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
-.fx-glow { animation: glow 0.7s ease-in-out infinite alternate; }
+.fx-glow { opacity: 0.85; } /* static: an animated shape inside the board SVG repaints the whole battlefield every frame */
 @keyframes glow { from { opacity: 0.35; } to { opacity: 0.95; } }
 .oath-tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: #7a0c0c; color: #f5d48a; border: 1px solid #f5d48a; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; vertical-align: 1px; }
 
@@ -477,7 +479,7 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 .sec-list .sec-card.up .sec-front { visibility: visible; animation: none; }
 .sec-list .sec-card.up .sec-back { visibility: hidden; animation: none; }
 .sec-discard { width: 100%; }
-.goal-ring { animation: goal-pulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.goal-ring { opacity: 0.9; }
 @keyframes goal-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .goal-ring { animation: none; } }
 .cards-btn { gap: 4px; padding: 0 10px; }
@@ -681,4 +683,22 @@ b.em { font-weight: 700; color: #000; font-family: var(--sans); font-size: 0.97e
 .ab-name-input:focus { outline: none; border-bottom-color: var(--ink-muted, #888); }
 .ab-disp-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .ab-disp-pick .disp-chip { font-size: 12px; padding: 3px 9px; }
-.ab-add-size { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 12px; background: var(--card-2, rgba(0,0,0,0.04)); border-radius: 8px; margin: -2px 0 6px; }
+.ab-add-size { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #f4f4f2; color: #111; border: 2px solid #1f6fb2; border-radius: 10px; margin: -2px 0 8px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.ab-add-size .ab-pop-head { padding: 0 2px 2px; font: 700 14px var(--sans); color: #333; }
+.ab-add-size button.ab-pop-size { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 0 14px; background: #fff; color: #111; border: 1px solid #d4d4d4; border-radius: 8px; font: 500 16px var(--sans); text-align: left; cursor: pointer; }
+.ab-add-size button.ab-pop-size:active { background: #e8f1fa; border-color: #1f6fb2; }
+.ab-add-size .ab-pop-models { font-weight: 800; color: #111; }
+.ab-add-size .ab-pop-pts { color: #1f6fb2; font-weight: 800; }
+.ab-add-size .ab-pop-plus { margin-left: auto; display: flex; align-items: center; justify-content: center; min-width: 64px; height: 34px; border-radius: 17px; background: #1f6fb2; color: #fff; font: 700 14px var(--sans); }
+
+/* start of battle: both Primary Mission cards side by side, readable on a phone */
+.prim-draw { padding: 14px 10px 14px; width: 94vw; max-width: 560px; box-sizing: border-box; }
+.prim-hand { flex-wrap: nowrap; gap: 8px; width: 100%; }
+.prim-hand .sec-card.prim-card { flex: 1 1 0; min-width: 0; width: auto; height: min(64vh, 470px); }
+.prim-hand .sec-front { padding: 8px 8px 6px; gap: 4px; }
+.prim-hand .sec-name { font-size: 15px; }
+.prim-hand .disp-chip { font-size: 9.5px; padding: 2px 6px; }
+.prim-hand .sec-text { font-size: 11.5px; line-height: 1.35; -webkit-overflow-scrolling: touch; }
+.prim-hand .sec-when { font-size: 10px; }
+.prim-hand .prim-rule { padding-bottom: 5px; border-bottom: 1px dashed rgba(201,154,46,0.6); }
+.prim-hand .prim-rule:last-child { border-bottom: none; }

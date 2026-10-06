@@ -28,12 +28,13 @@ export function skillStyle(u: UnitState, name: string, defensive = false): Skill
 }
 
 /** A hero (CHARACTER) used a big ability: show it on the board. EPIC HERO models get the bigger version. */
-export function heroFx(s: GameState, u: UnitState, name: string, defensive = false, ms?: ModelState[]) {
+/** grand = a once-per-battle moment (the big show); everything else gets a light touch */
+export function heroFx(s: GameState, u: UnitState, name: string, defensive = false, ms?: ModelState[], grand = false) {
   const who = (ms?.length ? ms : alive(u)).filter((m) => !m.dead);
   if (!who.length || !onBoard(u)) return;
   const hero = who.find((m) => m.keywords.includes('EPIC HERO')) ?? who.find((m) => m.isCharacter) ?? who[0];
   pushFx(s, { kind: 'skill', unitId: u.id, owner: u.owner, at: { x: hero.x, y: hero.y }, name: name.replace(/\s*\((?:Once|Aura)[^)]*\)/gi, ''), who: hero.name,
-    style: skillStyle(u, name, defensive), epic: who.some((m) => m.keywords.includes('EPIC HERO')) });
+    style: skillStyle(u, name, defensive), epic: who.some((m) => m.keywords.includes('EPIC HERO')), grand });
 }
 
 export function log(s: GameState, text: string, kind?: LogEntry['kind'], player: PlayerId | null = s.active) {

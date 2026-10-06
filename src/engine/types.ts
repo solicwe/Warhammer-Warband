@@ -470,7 +470,9 @@ export type FxEvent =
   | { seq: number; kind: 'move'; unitId: string; owner: PlayerId; moveKind: MoveKind; paths: [string, Pt[]][] }
   | { seq: number; kind: 'place'; unitId: string; owner: PlayerId }
   | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[];
-      style?: 'bullet' | 'beam' | 'flame' | 'blast' | 'melee'; shooters?: Pt[]; victims?: Pt[]; shots?: number; hits?: number }
+      style?: 'bullet' | 'beam' | 'flame' | 'blast' | 'melee'; shooters?: Pt[]; victims?: Pt[]; shots?: number; hits?: number;
+      /** one entry per weapon fired, so each weapon gets its own look (plasma balls, assault cannon streams …) */
+      volleys?: { fx: WeaponFx; shots: number; hits: number; models: number }[] }
   | { seq: number; kind: 'mortal'; unitId: string; n: number; at: Pt }
   /** a roll worth showing big on screen (advance, charge, battle-shock) */
   | { seq: number; kind: 'roll'; owner: PlayerId | null; title: string; dice: number[]; result: string; good?: boolean }
@@ -481,8 +483,9 @@ export type FxEvent =
   /** the start of the battle: both players' Primary Mission cards */
   | { seq: number; kind: 'primary' }
   /** a hero uses a big ability or a stratagem: a burst of light around it and the ability's name */
-  | { seq: number; kind: 'skill'; unitId: string; owner: PlayerId; at: Pt; name: string; who: string; style: SkillStyle; epic: boolean };
+  | { seq: number; kind: 'skill'; unitId: string; owner: PlayerId; at: Pt; name: string; who: string; style: SkillStyle; epic: boolean; grand?: boolean };
 
+import type { WeaponFx } from './weaponFx';
 export type SkillStyle = 'holy' | 'psychic' | 'fury' | 'waaagh' | 'tech' | 'shield';
 
 export type Window =

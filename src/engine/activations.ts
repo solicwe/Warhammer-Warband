@@ -250,7 +250,7 @@ function showHeroSkill(s: GameState, def: ActDef) {
     || dos.some((a) => a.mortals || a.mortalsVehicle || a.mortalsMV || a.mortalRoll || a.surge || a.heal || a.revive);
   if (!epic && !big) return;
   const defensive = dos.some((a) => (a.buff ?? []).some((e) => e.defend?.inv || e.defend?.fnp || e.defend?.hit));
-  heroFx(s, def.holder, def.name, defensive, chars);
+  heroFx(s, def.holder, def.name, defensive, chars, def.spec.limit === 'battle');
 }
 
 /** Unleash the Lions: every model but the first becomes a unit of its own (starting strength 1). */

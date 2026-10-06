@@ -1045,7 +1045,7 @@ export function callWaaagh(s: GameState, p: PlayerId) {
   s.players[p].riledUntilTurn = s.turn + 1;
   log(s, `WAAAGH! Every Ork unit is riled up: 5+ invulnerable save, ranged weapons have [ASSAULT], can charge after advancing (until the end of the next turn)`, 'info', p);
   const boss = boardUnits(s, p).find((u) => u.isWarlordUnit) ?? boardUnits(s, p).find((u) => alive(u).some((m) => m.isCharacter));
-  if (boss) heroFx(s, boss, 'WAAAGH!');
+  if (boss) heroFx(s, boss, 'WAAAGH!', false, undefined, true); // once per battle
 }
 
 export function chargeEligibility(s: GameState, u: UnitState): string | null {

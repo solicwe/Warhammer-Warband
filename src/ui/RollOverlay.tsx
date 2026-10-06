@@ -102,9 +102,9 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
   if (cur.kind === 'primary') {
     return (
       <div className="ro-backdrop" onClick={skip} role="dialog" aria-label="Primary Mission">
-        <div className="ro-card sec-draw">
+        <div className="ro-card sec-draw prim-draw">
           <div className="ro-title">Primary Mission</div>
-          <div className="sec-hand">
+          <div className="sec-hand prim-hand">
             {([0, 1] as const).map((p, i) => <PrimaryCard key={p} s={s} owner={p} faceUp={landed} delay={i * 260} />)}
           </div>
           <div className="ro-hint">{landed ? 'Tap to close · the Cards button at the top shows them any time' : 'Tap to reveal now'}</div>

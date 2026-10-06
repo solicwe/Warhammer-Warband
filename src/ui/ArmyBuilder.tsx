@@ -564,7 +564,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                     <div className="ab-pop-head">Unit size · {d.name}</div>
                     {pointsOptions(d).map((o) => (
                       <button key={o.models} type="button" className="ab-pop-size" onClick={() => { addUnit(d, o); setAddSize(null); }}>
-                        <span className="ab-pop-pts">{o.pts} pts</span> <span className="muted">({o.models} models)</span><span className="ab-pop-plus">+</span>
+                        <span className="ab-pop-models">{o.models} {o.models === 1 ? 'model' : 'models'}</span><span className="ab-pop-pts">{o.pts} pts</span><span className="ab-pop-plus">+ Add</span>
                       </button>
                     ))}
                   </div>
