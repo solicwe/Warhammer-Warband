@@ -113,10 +113,30 @@ export const SEE_IN_AREA = 4;
 /** Half the thickness of a ruin wall: a line of sight can't slip through the hairline where two walls meet. */
 const WALL_HALF = 0.04;
 // a wall end or the joint of two walls blocks too: a 1mm line can't slip through a corner
+// bounding boxes of walls and footprints, so a line only does the exact test against what it can reach
+const segBoxes = new WeakMap<object, Box>();
+const segBox = (w: { a: Pt; b: Pt }) => {
+  let b = segBoxes.get(w);
+  if (!b) { b = { x0: Math.min(w.a.x, w.b.x), y0: Math.min(w.a.y, w.b.y), x1: Math.max(w.a.x, w.b.x), y1: Math.max(w.a.y, w.b.y) }; segBoxes.set(w, b); }
+  return b;
+};
+const polyBox = (poly: Pt[]) => {
+  let b = segBoxes.get(poly);
+  if (!b) {
+    b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+    for (const p of poly) { b.x0 = Math.min(b.x0, p.x); b.y0 = Math.min(b.y0, p.y); b.x1 = Math.max(b.x1, p.x); b.y1 = Math.max(b.y1, p.y); }
+    segBoxes.set(poly, b);
+  }
+  return b;
+};
 const lineClear = (p: Pt, q: Pt, bl: Blockers) => {
   const seg = { a: p, b: q };
-  return !bl.walls.some((w) => segSegDist(seg, w) < WALL_HALF) && !bl.areas.some((t) => segCrossesPoly(seg, t.poly))
-    && !bl.own.some((o) => segLengthInPoly(seg, o.t.poly) > o.reach);
+  const x0 = Math.min(p.x, q.x) - WALL_HALF, x1 = Math.max(p.x, q.x) + WALL_HALF, y0 = Math.min(p.y, q.y) - WALL_HALF, y1 = Math.max(p.y, q.y) + WALL_HALF;
+  const near = (b: Box) => b.x1 >= x0 && b.x0 <= x1 && b.y1 >= y0 && b.y0 <= y1;
+  for (const w of bl.walls) if (near(segBox(w)) && segSegDist(seg, w) < WALL_HALF) return false;
+  for (const t of bl.areas) if (near(polyBox(t.poly)) && segCrossesPoly(seg, t.poly)) return false;
+  for (const o of bl.own) if (near(polyBox(o.t.poly)) && segLengthInPoly(seg, o.t.poly) > o.reach) return false;
+  return true;
 };
 
 /** Points of a base to look from / at. A token pressed against a ruin wall overlaps it a little (it stands for a hull),

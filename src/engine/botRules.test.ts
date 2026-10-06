@@ -69,9 +69,10 @@ describe('the bot uses the rest of the decision rules', () => {
 
   it('Echo of the Ravenspire: Shrike swarmed at the end of the enemy Fight phase goes back into reserves', () => {
     const s = game([['Kayvaan Shrike', 1, 100]], [['Boyz', 10, 90], ['Boyz', 10, 90]], 'ADAMANTINE TERROR');
-    const shrike = put(s, 'p0-x0', { x: 20, y: 30 });
-    put(s, 'p1-x0', { x: 13, y: 30 });
-    put(s, 'p1-x1', { x: 27, y: 30 });
+    // clear of every objective (the centre ruins count as part of their objective)
+    const shrike = put(s, 'p0-x0', { x: 20, y: 44 });
+    put(s, 'p1-x0', { x: 13, y: 44 });
+    put(s, 'p1-x1', { x: 27, y: 44 });
     s.active = 1; s.phase = 'fight';
     s.fight = { step: 'consolidate', stepPlayer: 1, fought: [], eligible: [], movedThisStep: [] } as unknown as GameState['fight'];
     botRedeployActs(s, 0);
