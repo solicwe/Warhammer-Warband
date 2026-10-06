@@ -13,7 +13,7 @@
    "limit": "round",
    "bot": "never",
    "status": "auto",
-   "note": "จบ phase ไหนก็ได้ · ระบบนับครั้งเดียวต่อ battle round"
+   "note": "End of any phase · counted once per battle round"
   },
   "UNLIMITED ENDURANCE": {
    "unitIf": [
@@ -47,7 +47,7 @@
    ],
    "bot": "never",
    "status": "auto",
-   "note": "โมเดลศัตรูที่ติดพันหน่วยนี้แต่ไปตีหน่วยอื่น: −1 hit −1 wound"
+   "note": "Enemy models engaged with this unit that attack another unit: −1 to Hit, −1 to Wound"
   },
   "PRIME TARGET": {
    "effects": [
@@ -347,7 +347,7 @@
    ],
    "bot": "never",
    "status": "auto",
-   "note": "ใช้กับโมเดลเดียวกันได้ครั้งเดียวต่อเกม"
+   "note": "Once per battle per model"
   },
   "DUTY UNTO DEATH": {
    "effects": [

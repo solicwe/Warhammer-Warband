@@ -208,7 +208,7 @@ function afterShot(t: string): AbilityRule | null {
     return { parsed: true, act: { when: 'afterShooting', auto: true, target: { side: 'enemy', hit: true, ...(units ? { units } : {}), ...(m[2] ? { hitWeapon: m[2] } : {}) }, do: fx } };
   }
   if ((m = /^in your shooting phase, after this (?:unit|model) has shot, (?:if it is not within engagement range of (?:one or more|any) enemy units, )?it can make a normal move(?: of up to (d6|d3|\d+)")?(?: as if it were your movement phase)?\. if it does, until the end of the turn, this (?:unit|model) is not eligible to declare a charge\.?$/.exec(t))) {
-    return { parsed: true, act: { when: 'afterShootingButton', limit: 'phase', if: ['notEngaged'], label: `เดิน ${m[1] ? `${m[1].toUpperCase()}"` : 'Normal move'} หลังยิง (ชาร์จไม่ได้)`, do: [{ on: 'self', move: m[1] ? m[1].toUpperCase() : 'M', noCharge: true }] } };
+    return { parsed: true, act: { when: 'afterShootingButton', limit: 'phase', if: ['notEngaged'], label: `Move ${m[1] ? `${m[1].toUpperCase()}"` : 'Normal move'} after shooting (no charge)`, do: [{ on: 'self', move: m[1] ? m[1].toUpperCase() : 'M', noCharge: true }] } };
   }
   return null;
 }
@@ -247,10 +247,10 @@ function wholeText(t: string): AbilityRule | null {
     return { parsed: true, act: { when: 'commandStart', auto: true, if: ['holderOnBattlefield', ...(/warlord/.test(t) ? ['warlord'] : [])], do: [{ cp: Number(m[1]) }] } };
   }
   if ((m = /^once per battle, at the start of any phase, (?:this model|the bearer) can use this ability\. if it does, until the end of the phase, (?:this model|the bearer) has a (\d)\+ invulnerable save\.?$/.exec(t))) {
-    return { parsed: true, act: { when: 'anyPhase', limit: 'battle', botUse: 'valuable', label: `${m[1]}+ InSv จนจบ phase`, do: [{ on: 'self', bearerOnly: true, buff: [{ defend: { inv: Number(m[1]) } }], until: 'phase' }] } };
+    return { parsed: true, act: { when: 'anyPhase', limit: 'battle', botUse: 'valuable', label: `${m[1]}+ invulnerable save until the end of the phase`, do: [{ on: 'self', bearerOnly: true, buff: [{ defend: { inv: Number(m[1]) } }], until: 'phase' }] } };
   }
   if ((m = /^in your shooting phase, after this unit has shot, if it is not within engagement range of (?:one or more|any) enemy units, it can make a normal move of up to (\d+)"\. if it does, until the end of the turn, this unit is not eligible to declare a charge\.?$/.exec(t))) {
-    return { parsed: true, act: { when: 'afterShootingButton', limit: 'phase', if: ['notEngaged'], label: `เดิน ${m[1]}" หลังยิง (ชาร์จไม่ได้)`, do: [{ on: 'self', move: m[1], noCharge: true }] } };
+    return { parsed: true, act: { when: 'afterShootingButton', limit: 'phase', if: ['notEngaged'], label: `Move ${m[1]}" after shooting (no charge)`, do: [{ on: 'self', move: m[1], noCharge: true }] } };
   }
   const shot = afterShot(t);
   if (shot) return shot;
@@ -274,10 +274,10 @@ function wholeText(t: string): AbilityRule | null {
   if ((m = /^at the start of your shooting phase, select one (visible )?enemy (?:([a-z]+) )?unit within (\d+)"(?: of (?:and visible to )?this (?:unit|model))?(?: and visible to this (?:unit|model))?\. (.+)$/.exec(t))) {
     const target = { side: 'enemy', range: Number(m[3]), visible: true, ...(m[2] && m[2] !== 'visible' ? { units: [m[2].toUpperCase()] } : {}) };
     const fx = markEffects(m[4]);
-    if (fx) return { parsed: true, act: { when: 'shooting', limit: 'phase', target, label: 'เริ่ม Shooting phase: เลือกเป้า', do: fx } };
+    if (fx) return { parsed: true, act: { when: 'shooting', limit: 'phase', target, label: 'Start of the Shooting phase: select a target', do: fx } };
   }
   if ((m = /^at the start of your shooting phase, select one visible enemy (?:([a-z]+) )?unit within (\d+)" of this model and roll one d6: (.+)$/.exec(t)) && rows.length) {
-    return { parsed: true, act: { when: 'shooting', limit: 'phase', target: { side: 'enemy', range: Number(m[2]), visible: true, ...(m[1] ? { units: [m[1].toUpperCase()] } : {}) }, label: 'ทอย D6: mortal wounds', roll: 'D6', table: rows } };
+    return { parsed: true, act: { when: 'shooting', limit: 'phase', target: { side: 'enemy', range: Number(m[2]), visible: true, ...(m[1] ? { units: [m[1].toUpperCase()] } : {}) }, label: 'Roll a D6: mortal wounds', roll: 'D6', table: rows } };
   }
   if (/^at the end of your command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control/.test(t)) {
     return { parsed: true, act: { when: 'commandEnd', auto: true, if: ['onOwnObjective'], do: [{ on: 'self', secure: true }] } };
@@ -298,22 +298,22 @@ function wholeText(t: string): AbilityRule | null {
     return { parsed: true, act: { when: 'movementEnd', auto: true, target: { side: 'enemy', range: Number(m[1]), each: true }, roll: 'D6', table: rows } };
   }
   if ((m = /^once per battle, at the start of any phase, you can select one friendly ([a-z' ]+?) unit that is battle-shocked and within (\d+)" of this model\. that unit is no longer battle-shocked\.?$/.exec(t))) {
-    return { parsed: true, act: { when: 'anyPhase', limit: 'battle', target: { side: 'friendly', range: Number(m[2]), shocked: true, units: kwPhrase(m[1]) }, label: 'หน่วยเพื่อนหายจาก battle-shocked', do: [{ unshock: true }] } };
+    return { parsed: true, act: { when: 'anyPhase', limit: 'battle', target: { side: 'friendly', range: Number(m[2]), shocked: true, units: kwPhrase(m[1]) }, label: 'A friendly unit is no longer Battle-shocked', do: [{ unshock: true }] } };
   }
   if ((m = /^once per battle, at the start of any phase, this (?:unit|model) can use this ability\.? if it does, until the end of the phase, models in this unit have the feel no pain (\d)\+ ability\.?$/.exec(t))) {
-    return { parsed: true, act: { when: 'anyPhase', limit: 'battle', botUse: 'valuable', label: `FNP ${m[1]}+ จนจบ phase`, do: [{ on: 'self', buff: [{ defend: { fnp: Number(m[1]) } }], until: 'phase' }] } };
+    return { parsed: true, act: { when: 'anyPhase', limit: 'battle', botUse: 'valuable', label: `Feel No Pain ${m[1]}+ until the end of the phase`, do: [{ on: 'self', buff: [{ defend: { fnp: Number(m[1]) } }], until: 'phase' }] } };
   }
   if ((m = /^once per battle, at the start of the fight phase, this model can use this ability\. if it does, until the end of the phase, add (\d) to the attacks characteristic of melee weapons equipped by this model(?: and those weapons have the \[([a-z ]+)\] ability)?\.?$/.exec(t))) {
-    return { parsed: true, act: { when: 'fightStartButton', limit: 'battle', botUse: 'valuable', label: `+${m[1]} A${m[2] ? `, ${m[2]}` : ''} (ตัวนี้)`, do: [{ on: 'self', bearerOnly: true, buff: [{ attack: 'melee', attacks: Number(m[1]), ...(m[2] ? { abilities: [m[2]] } : {}) }], until: 'phase' }] } };
+    return { parsed: true, act: { when: 'fightStartButton', limit: 'battle', botUse: 'valuable', label: `+${m[1]} A${m[2] ? `, ${m[2]}` : ''} (this model)`, do: [{ on: 'self', bearerOnly: true, buff: [{ attack: 'melee', attacks: Number(m[1]), ...(m[2] ? { abilities: [m[2]] } : {}) }], until: 'phase' }] } };
   }
   if (/^each time this model has shot, select one enemy unit hit by one or more of those attacks\. until the end of the phase, that enemy unit cannot have the benefit of cover\.?$/.test(t)) {
     return { parsed: true, act: { when: 'afterShooting', auto: true, target: { side: 'enemy', hit: true }, do: [{ incoming: { attack: 'ranged', noCover: true }, until: 'phase' }] } };
   }
   if (/^each time this model is selected to shoot, you can re-roll one hit roll, you can re-roll one wound roll and you can re-roll one damage roll when resolving its attacks\.?$/.test(t)) {
-    return { parsed: true, freeDie: [{ kind: 'reroll', stage: 'hit', limit: 'phase', attack: 'ranged' }, { kind: 'reroll', stage: 'wound', limit: 'phase', attack: 'ranged' }], status: 'partial', note: 're-roll damage ยังไม่มีในถาดลูกเต๋า' };
+    return { parsed: true, freeDie: [{ kind: 'reroll', stage: 'hit', limit: 'phase', attack: 'ranged' }, { kind: 'reroll', stage: 'wound', limit: 'phase', attack: 'ranged' }], status: 'partial', note: 'Damage re-roll: not in the dice tray yet' };
   }
   if (/^once per battle round, after a hit roll, a wound roll,? or a saving throw is made for this model, you can change the result of that roll to a 6\.?$/.test(t)) {
-    return { parsed: true, freeDie: { kind: 'setSix', stage: 'any', limit: 'round' }, status: 'partial', note: 'เปลี่ยน save เป็น 6 ยังไม่มีในถาดลูกเต๋า' };
+    return { parsed: true, freeDie: { kind: 'setSix', stage: 'any', limit: 'round' }, status: 'partial', note: 'Changing a save to a 6: not in the dice tray yet' };
   }
   if ((m = /^once per turn, you can target this unit with the ([a-z' ]+?) stratagem for 0cp\.?$/.exec(t))) {
     return { parsed: true, effects: [{ stratDiscount: { ids: [m[1].replace(/\s+/g, '-')], cp: 9, limit: 'turn' } }] };
@@ -457,6 +457,6 @@ function parse(text: string): AbilityRule | undefined {
   if (!effects.length) return undefined;
   const rule: AbilityRule = { parsed: true, effects };
   if (gear) rule.gear = true;
-  if (missed) { rule.status = 'partial'; rule.note = 'ระบบอ่านได้บางส่วน: ส่วนที่เหลือทำเอง'; }
+  if (missed) { rule.status = 'partial'; rule.note = 'Partly read by the app: resolve the rest yourself'; }
   return rule;
 }

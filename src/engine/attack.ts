@@ -154,16 +154,16 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const tEngaged = isEngaged(s, T);
   const engagedWithTarget = engagedEnemies(s, A).some((e) => e.id === T.id);
   const tIsMV = tModels.some(isMV);
-  if (opt.mode !== 'closeQuarters' && tEngaged && !tIsMV) return { pools: [], notes, error: 'เป้าหมาย engaged อยู่ ยิงไม่ได้ (ยกเว้น MONSTER/VEHICLE)' };
-  if (opt.mode === 'closeQuarters' && !engagedWithTarget && !alive(A).some(isMV)) return { pools: [], notes, error: 'Close-quarters ยิงได้เฉพาะหน่วยที่ engaged ด้วย' };
+  if (opt.mode !== 'closeQuarters' && tEngaged && !tIsMV) return { pools: [], notes, error: 'The target is engaged and cannot be shot (unless MONSTER / VEHICLE)' };
+  if (opt.mode === 'closeQuarters' && !engagedWithTarget && !alive(A).some(isMV)) return { pools: [], notes, error: 'Close-quarters can only target a unit it is engaged with' };
   const T_T = targetToughness(T, s);
   const isOwnShootingPhase = s.phase === 'shooting' && A.owner === s.active;
   const aFlags = unitFlags(s, A);
   // Heresy Undone: after Advancing / Falling Back it may only shoot auspex scanned units
-  if (aFlags.onlyTargetMarked && (A.move === 'advance' || A.move === 'fallback') && !(T.timed ?? []).some((t) => t.mark === aFlags.onlyTargetMarked && t.by === A.owner)) return { pools: [], notes, error: 'Advance/Fall back มาแล้ว ยิงได้เฉพาะหน่วยที่ถูก auspex scan' };
+  if (aFlags.onlyTargetMarked && (A.move === 'advance' || A.move === 'fallback') && !(T.timed ?? []).some((t) => t.mark === aFlags.onlyTargetMarked && t.by === A.owner)) return { pools: [], notes, error: 'After Advancing / Falling Back it can only shoot a unit marked by the auspex scan' };
 
   // Seal of Shrouding / Blazing Icon / Linebreaker Onslaught: enemy units cannot snap-shoot this unit
-  if (opt.mode === 'snap' && unitFlags(s, T).noSnapTarget) return { pools: [], notes, error: 'ยิง snap shooting ใส่หน่วยนี้ไม่ได้' };
+  if (opt.mode === 'snap' && unitFlags(s, T).noSnapTarget) return { pools: [], notes, error: 'This unit cannot be targeted by snap shooting' };
   const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : [...alive(A), ...firingDeck(s, A, opt)];
   for (const m of shooters) {
     const ranged = m.weapons.filter((w) => !isMelee(w.profiles[0]) && !(opt.skipWeapons ?? []).includes(w.name) && (!!opt.models || !A.weaponsFired.includes(w.name)));
@@ -207,8 +207,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (m.keywords.includes('TOWERING') && d <= RULES.plungingFire.toweringRange && !T.keywords.includes('AIRCRAFT')) { mods.skillDelta -= 1; mods.skillNotes.push('Plunging Fire +1 BS'); }
       const heavy = hasAbility(p, 'heavy') || grants(fx, inc, 'heavy');
       if (heavy && isOwnShootingPhase && !isEngaged(s, A) && A.setUpTurn !== s.turn && A.maxMoved <= RULES.heavyMaxMove + 1e-6) { mods.hit += 1; mods.hitNotes.push('Heavy +1'); }
-      if (tIsMV && tEngaged && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('ยิงเป้า M/V ที่ engaged −1'); }
-      if (opt.mode === 'closeQuarters' && isMV(m) && !aFlags.noBigGunsPenalty && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('Big guns ใน combat −1'); }
+      if (tIsMV && tEngaged && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('Engaged MONSTER/VEHICLE target −1'); }
+      if (opt.mode === 'closeQuarters' && isMV(m) && !aFlags.noBigGunsPenalty && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('Big guns in combat −1'); }
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
       const bh = buffSum(A, 'hit+1', 'hit-1');
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
@@ -222,14 +222,14 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         pool.skill = fm.skill;
         pool.skillNote = mods.skillNotes.join(' · ');
         pool.hitMod = fm.hit;
-        pool.hitNote = mods.hitNotes.join(' · ') + (psychic ? ' (Psychic: ไม่สน modifier ลบ)' : '');
-        if (opt.mode === 'snap') { pool.hitOn6Only = true; pool.noHitReroll = true; pool.autoHit = false; pool.snap = true; pool.hitNote = 'Snap Shooting: โดนเฉพาะ 6 (ไม่เป็น critical, re-roll ไม่ได้)'; }
+        pool.hitNote = mods.hitNotes.join(' · ') + (psychic ? ' (Psychic: ignores negative modifiers)' : '');
+        if (opt.mode === 'snap') { pool.hitOn6Only = true; pool.noHitReroll = true; pool.autoHit = false; pool.snap = true; pool.hitNote = 'Snap Shooting: hits only on a 6 (not Critical, no re-rolls)'; }
         if (indirect) {
           pool.noHitReroll = true;
           const spotted = A.move === 'stationary' && s.units.some((f) => f.owner === A.owner && onBoard(f) && alive(f).some((fm2) => tModels.some((t) => modelVisible(s, fm2, T, t))));
           pool.hitOn6Only = !spotted;
           if (spotted) pool.minHitUnmodified = RULES.indirectFire.spottedStationaryHitOn;
-          pool.hitNote += spotted ? ' · Indirect (ยืนนิ่ง+มีคนเห็น): 1-3 พลาด' : ' · Indirect: โดนเฉพาะ 6';
+          pool.hitNote += spotted ? ' · Indirect (stationary and spotted): 1-3 fail' : ' · Indirect: hits only on a 6';
         }
         const melta = getAbility(p, 'melta', T.keywords);
         if (melta && half) pool.damage = `${p.D}+${melta.value ?? 0}`.replace(/^(\d+)\+(\d+)$/, (_, a, b) => String(+a + +b));
@@ -258,7 +258,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   }
   const list = [...pools.values()];
   for (const pl of list) pl.attackNote = attackNote(pl);
-  if (!list.length) notes.push('ไม่มีอาวุธที่อยู่ในระยะและมองเห็นเป้า');
+  if (!list.length) notes.push('No weapon in range with the target visible');
   return { pools: list, notes };
 }
 
@@ -334,13 +334,13 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
   }
   const list = [...pools.values()];
   for (const pl of list) pl.attackNote = attackNote(pl);
-  return { pools: list, notes: list.length ? [] : ['ไม่มีโมเดลที่ engaged กับเป้า'] };
+  return { pools: list, notes: list.length ? [] : ['No model is engaged with the target'] };
 }
 
 function attackNote(p: Pool): string {
   const extra = p.instances.reduce((a, i) => a + i.flat, 0);
   const rf = p.instances.filter((i) => i.extras.length).length;
-  return `${p.models} โมเดล × A${p.profile.A}${rf ? ` · Rapid Fire ×${rf}` : ''}${extra ? ` · +${extra} (Blast/Cleave)` : ''}`;
+  return `${p.models} models × A${p.profile.A}${rf ? ` · Rapid Fire ×${rf}` : ''}${extra ? ` · +${extra} (Blast/Cleave)` : ''}`;
 }
 
 // ---------- expected value for previews ----------
@@ -378,7 +378,7 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
       if (a.dice.length) { parts.push(`${i.A}=${a.total}`); p.attackRolls.push({ expr: i.A, total: a.total }); }
     }
     p.attacks = total;
-    if (parts.length) p.attackNote += ` · ทอยจำนวน attack: ${parts.join(', ')}`;
+    if (parts.length) p.attackNote += ` · Attacks rolled: ${parts.join(', ')}`;
     if (!p.attackRolls.length) delete p.attackRolls;
     if (hasAbility(p.profile, 'one-shot') && !A.oneShotUsed.includes(p.weapon)) A.oneShotUsed.push(p.weapon);
     if (kind === 'shoot' && !opts.free && !A.weaponsFired.includes(p.weapon)) A.weaponsFired.push(p.weapon);
@@ -420,12 +420,12 @@ export function rerollAttackCount(s: GameState, idx: number): string | null {
   const why = canUseStratagem(s, A.owner, 'command-reroll', A);
   if (why) return why;
   const r = [...(p.attackRolls ?? [])].filter((x) => !x.rerolled).sort((a, b) => (a.total - exprAverage(a.expr)) - (b.total - exprAverage(b.expr)))[0];
-  if (!r || p.hits.length) return 'ไม่มีจำนวน attack ที่ทอยใหม่ได้';
+  if (!r || p.hits.length) return 'No Attacks roll to re-roll';
   spendStratagem(s, A.owner, 'command-reroll', A);
   const again = rollExpr(s, r.expr).total;
   p.attacks += again - r.total;
   p.attackNote += ` · Command Re-roll ${r.expr}: ${r.total}→${again}`;
-  log(s, `Command Re-roll จำนวน attack ${p.weapon}: ${r.total}→${again}`, 'roll', A.owner);
+  log(s, `Command Re-roll Attacks ${p.weapon}: ${r.total}→${again}`, 'roll', A.owner);
   r.total = again;
   r.rerolled = true;
   return null;
@@ -468,8 +468,8 @@ function applyDefense(s: GameState, p: Pool) {
   }
   if (has(T, 'enemyHit-1') && !p.autoHit && !p.ignoreHitMods) { p.hitMod = clamp(p.hitMod - 1, -RULES.modifierCaps.hitRoll, RULES.modifierCaps.hitRoll); notes.push('−1 Hit'); }
   if (has(T, 'enemyWound-1') && !p.ignoreWoundMods) { p.woundMod = clamp(p.woundMod - 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll); p.woundNote += ' · Stratagem −1'; }
-  if (has(T, 'enemyAp-1') && p.ap < 0) { p.ap += 1; notes.push('AP แย่ลง 1'); }
-  if (notes.length) p.hitNote = [p.hitNote, `Stratagem ฝ่ายรับ: ${notes.join(', ')}`].filter(Boolean).join(' · ');
+  if (has(T, 'enemyAp-1') && p.ap < 0) { p.ap += 1; notes.push('AP worsened by 1'); }
+  if (notes.length) p.hitNote = [p.hitNote, `Defender's Stratagem: ${notes.join(', ')}`].filter(Boolean).join(' · ');
   // attacker stratagems used after the attack was declared (e.g. from the dice tray)
   const A = unitById(s, s.attack!.attackerId);
   const before = s.attack!.attackerBuffsAtStart ?? [];
@@ -651,7 +651,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     u.status = 'destroyed';
     s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id, killerId: s.attack?.attackerId, phase: s.phase });
     onUnitDestroyed(s, u, s.attack?.attackerId);
-    log(s, `(ตาย) ${u.name} ถูกทำลาย${killer ? ' โดย ' + killer : ''}`, 'kill');
+    log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
   if (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1)) {
@@ -659,13 +659,13 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     const sure = emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id });
     const r = sure ? 6 : d6(s);
     if (r === 6) {
-      log(s, `Deadly Demise (${u.core.deadlyDemise}) ของ ${m.name}: ${sure ? 'ระเบิดแน่นอน' : 'ทอยได้ 6!'}`, 'roll');
+      log(s, `Deadly Demise (${u.core.deadlyDemise}) from ${m.name}: ${sure ? 'it explodes' : 'rolled a 6!'}`, 'roll');
       // Machine Wrath: the wreck makes one last move before it blows
       emitReact(s, u.owner, 'deadlyDemiseSix', { unitId: u.id, modelId: m.id, six: true });
       for (const v of s.units.filter((x) => x.id !== u.id && onBoard(x))) {
         if (alive(v).some((n) => baseDist(n, m) <= RULES.deadlyDemiseRange)) applyMortalWounds(s, v, rollExpr(s, u.core.deadlyDemise).total, 'Deadly Demise');
       }
-    } else log(s, `Deadly Demise ของ ${m.name}: ทอยได้ ${r} (ไม่ระเบิด)`, 'roll');
+    } else log(s, `Deadly Demise from ${m.name}: rolled ${r} (no explosion)`, 'roll');
   }
 }
 
@@ -706,7 +706,7 @@ export function applyMortalWounds(s: GameState, u: UnitState, n: number, source:
   }
   const hitAt = alive(u)[0] ?? u.models.find((m) => m.dead);
   if (hitAt) pushFx(s, { kind: 'mortal', unitId: u.id, n, at: { x: hitAt.x, y: hitAt.y } });
-  log(s, `${u.name} โดน ${n} mortal wound (${source})${killed ? ` → ตาย ${killed}` : ''}`, 'roll', u.owner);
+  log(s, `${u.name} suffers ${n} mortal wounds (${source})${killed ? ` → ${killed} slain` : ''}`, 'roll', u.owner);
   return killed;
 }
 
@@ -756,7 +756,7 @@ export function applyDamage(s: GameState) {
         const again = rollExpr(s, p.damage); p.damageLines.push(`re-roll damage ${dr.total}→${again.total}`); dr = again; p.rerollDamageOne = false;
       } else if (dr.dice.length && dr.total < exprAverage(p.damage) && dr.total < m.wounds && freeDamageHook?.(s)) {
         // a free "hit, wound or damage" re-roll not used on the hit or wound dice goes on a low damage roll
-        const again = rollExpr(s, p.damage); p.damageLines.push(`re-roll damage (ฟรี) ${dr.total}→${again.total}`); dr = again;
+        const again = rollExpr(s, p.damage); p.damageLines.push(`free Damage re-roll ${dr.total}→${again.total}`); dr = again;
       }
       // Command Re-roll on a low damage roll that would not kill the model anyway
       else if (dr.dice.length && dr.total < exprAverage(p.damage) && dr.total < m.wounds
@@ -771,9 +771,9 @@ export function applyDamage(s: GameState) {
       if (T.buffs.some((b) => b.kind === 'damage-1')) dmg = Math.max(1, dmg - 1);
       if (md.damage) dmg = Math.max(1, dmg + md.damage);
       if (md.halve) dmg = Math.ceil(dmg / 2);
-      if (md.negate) { useNegate(s, T, m); dmg = 0; p.damageLines.push(`${m.name}: ดาเมจเป็น 0 (ability ครั้งละ phase)`); }
+      if (md.negate) { useNegate(s, T, m); dmg = 0; p.damageLines.push(`${m.name}: damage reduced to 0 (once per phase)`); }
       const lost = dmg ? loseWounds(s, T, m, dmg, p.damageLines, kind, psychic) : 0;
-      p.damageLines.push(`${m.name}: −${lost} W${dr.dice.length ? ` (D=${p.damage}→${dmg})` : ''}${m.dead ? ' (ตาย)' : ''}`);
+      p.damageLines.push(`${m.name}: −${lost} W${dr.dice.length ? ` (D=${p.damage}→${dmg})` : ''}${m.dead ? ' (slain)' : ''}`);
     }
   }
   // Devastating Wounds: mortal wounds after normal damage, each critical wound damages at most one model.
@@ -785,7 +785,7 @@ export function applyDamage(s: GameState) {
   }
   p.killed = before - alive(T).length;
   p.done = true;
-  at.summary.push(`${p.weapon}: ${p.attacks} attacks → ${p.hits.filter((h) => h.o !== 'miss').length} hit → ${p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds} wound → ตาย ${p.killed}`);
+  at.summary.push(`${p.weapon}: ${p.attacks} attacks → ${p.hits.filter((h) => h.o !== 'miss').length} hit → ${p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds} wound → ${p.killed} slain`);
   if (!alive(T).length) { at.stage = 'done'; return; }
   if (at.idx < at.pools.length - 1) { at.idx += 1; at.stage = 'hit'; } else at.stage = 'done';
 }
@@ -870,8 +870,8 @@ export function finishAttack(s: GameState) {
       shots: at.pools.reduce((a, p) => a + p.attacks, 0), hits: at.pools.reduce((a, p) => a + p.hits.filter((h) => h.o !== 'miss').length, 0),
     });
   }
-  const verb = at.kind === 'fight' ? 'ตี' : at.kind === 'overwatch' ? 'Overwatch ยิง' : 'ยิง';
-  log(s, `${A.name} ${verb} ${T.name}: ตาย ${killed} โมเดล`, 'info', A.owner);
+  const verb = at.kind === 'fight' ? 'fights' : at.kind === 'overwatch' ? 'fires Overwatch at' : 'shoots';
+  log(s, `${A.name} ${verb} ${T.name}: ${killed} models destroyed`, 'info', A.owner);
   if (!at.free) {
     if (at.kind !== 'fight') A.shotTurn = s.turn;
     if (at.kind === 'shoot' && rangedWeaponNames(A).every((n) => A.weaponsFired.includes(n))) A.selectedToShoot = true;

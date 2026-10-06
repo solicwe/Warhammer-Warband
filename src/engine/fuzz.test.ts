@@ -20,7 +20,7 @@ it('auto charge never ends in walls', () => {
     const paths = autoApproach(s, boyz, [caps], 12);
     for (const m of alive(boyz)) if (!paths.has(m.id)) paths.set(m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]);
     const chk = validateMove(s, boyz, 'charge', paths, { targets: [caps.id] });
-    const wall = chk.errors.find((e) => e.includes('กำแพง'));
+    const wall = chk.errors.find((e) => e.includes('wall'));
     if (wall) fails++;
   }
   expect(fails).toBe(0);

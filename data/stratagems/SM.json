@@ -231,7 +231,7 @@
   "RELENTLESS ASSAULT": {
    "choice": [
     {
-     "label": "[SUSTAINED HITS 1] (ไม่ใช่ MONSTER/VEHICLE)",
+     "label": "[SUSTAINED HITS 1] (not MONSTER/VEHICLE)",
      "effects": [
       {
        "abilities": [
@@ -329,7 +329,7 @@
     }
    ],
    "status": "auto",
-   "note": "objective ที่หน่วยนี้ยึดอยู่มีกับดัก: ศัตรูหน่วยแรกที่เดินจบในระยะ ทอย 2+ โดน D6 mortal"
+   "note": "The objective this unit controls is trapped: the first enemy unit that ends a move within range rolls 2+ → D6 mortal wounds"
   },
   "TACTICAL WITHDRAWAL": {
    "targetKw": [
@@ -408,7 +408,7 @@
     "moveEndObjective"
    ],
    "status": "auto",
-   "note": "เดิน 5\" ต้องจบในระยะ objective ชาร์จไม่ได้จนจบเทิร์น"
+   "note": "Move 5\", must end within range of an objective; cannot charge until end of turn"
   },
   "ARMOURED IMPACT": {
    "react": "chargeMoveEnd",
@@ -459,7 +459,7 @@
     }
    ],
    "status": "auto",
-   "note": "ถ้า engaged อยู่ การเดินนี้คือ fall back (ต้องจบนอก engagement)"
+   "note": "If engaged, this move is a Fall Back (must end outside Engagement Range)"
   },
   "SUDDEN ONSLAUGHT": {
    "effects": [
@@ -538,7 +538,7 @@
    ],
    "bot": "never",
    "status": "auto",
-   "note": "ใช้ก่อนกดลงรถ: แต่ละโมเดลวางแค่ภายในระยะลงรถ (ไม่ต้องทั้งตัว)"
+   "note": "Use before disembarking: each model only needs to be set up within disembark range (not wholly)"
   },
   "DUTY IS NEVER DONE": {
    "react": "fightPhaseEnd",
@@ -704,7 +704,7 @@
      ]
     },
     {
-     "label": "ENTRENCHED: ทั้งสองอย่าง",
+     "label": "ENTRENCHED: both",
      "if": [
       "entrenched"
      ],
@@ -743,7 +743,7 @@
     }
    ],
    "status": "auto",
-   "note": "Consolidate เข้าหา objective ได้แม้ยัง engaged"
+   "note": "Can Consolidate towards an objective even while engaged"
   },
   "STAND TO THE END": {
    "effects": [
@@ -1134,7 +1134,7 @@
      ]
     },
     {
-     "label": "MOUNTED: ทั้งสองอย่าง",
+     "label": "MOUNTED: both",
      "if": [
       "kw:MOUNTED"
      ],

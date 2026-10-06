@@ -741,11 +741,11 @@ export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, poo
   const hitCap = RULES.modifierCaps.hitRoll, woundCap = RULES.modifierCaps.woundRoll;
   let strength = (pool.profile.S ?? 1) + offenceInto(s, A, T, pool, list, kind, notes);
   for (const i of inc) {
-    if (i.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + i.hit, -hitCap, hitCap); notes.push(`เป้าโดนมาร์ก: +${i.hit} hit`); }
-    if (i.wound) { pool.woundMod = clamp(pool.woundMod + i.wound, -woundCap, woundCap); notes.push(`เป้าโดนมาร์ก: +${i.wound} wound`); }
-    if (i.ap) { pool.ap -= i.ap; notes.push(`เป้าโดนมาร์ก: +${i.ap} AP`); }
-    for (const r of rerolls(i)) applyReroll(pool, r, 'เป้าโดนมาร์ก', notes);
-    for (const ab of i.abilities ?? []) applyAbility(pool, ab, 'เป้าโดนมาร์ก', notes, kind, A, s, T);
+    if (i.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + i.hit, -hitCap, hitCap); notes.push(`marked target: +${i.hit} to hit`); }
+    if (i.wound) { pool.woundMod = clamp(pool.woundMod + i.wound, -woundCap, woundCap); notes.push(`marked target: +${i.wound} to wound`); }
+    if (i.ap) { pool.ap -= i.ap; notes.push(`marked target: +${i.ap} AP`); }
+    for (const r of rerolls(i)) applyReroll(pool, r, 'marked target', notes);
+    for (const ab of i.abilities ?? []) applyAbility(pool, ab, 'marked target', notes, kind, A, s, T);
   }
   // the target's side
   const def = defencesFor(s, T, kind);
@@ -791,8 +791,8 @@ function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list:
     if (e.attacks) { pool.attackBonus = (pool.attackBonus ?? 0) + e.attacks; bump(a.label, `+${e.attacks} A`); }
     if (e.damage) { pool.damage = addToExpr(pool.damage, e.damage); bump(a.label, `+${e.damage} D`); }
     if (e.critHitOn) { pool.critHitOn = Math.min(pool.critHitOn ?? 6, e.critHitOn); bump(a.label, `crit hit ${e.critHitOn}+`); }
-    if (e.ignoreHitMods) { pool.ignoreHitMods = true; bump(a.label, 'ไม่สน modifier ของ hit'); }
-    if (e.ignoreWoundMods) { pool.ignoreWoundMods = true; bump(a.label, 'ไม่สน modifier ของ wound'); }
+    if (e.ignoreHitMods) { pool.ignoreHitMods = true; bump(a.label, 'ignores Hit roll modifiers'); }
+    if (e.ignoreWoundMods) { pool.ignoreWoundMods = true; bump(a.label, 'ignores Wound roll modifiers'); }
     if (e.strengthPer5Models) {
       const n = alive(A).length + s.units.filter((p) => p.embarkedIn === A.id && p.status === 'embarked').reduce((x, p) => x + alive(p).length, 0);
       const add = Math.floor(n / 5);
@@ -822,8 +822,8 @@ function defenceInto(pool: Pool, def: Active[], strength: number, toughness: num
     if (df.woundIfStrongerOrEqual && strength >= toughness) wm += df.woundIfStrongerOrEqual;
     if (pool.ignoreWoundMods && wm < 0) wm = 0;
     if (wm) { pool.woundMod = clamp(pool.woundMod + wm, -woundCap, woundCap); notes.push(`${label}: ${wm} wound`); }
-    if (df.ap && pool.ap < 0) { pool.ap = Math.min(0, pool.ap + df.ap); notes.push(`${label}: AP แย่ลง ${df.ap}`); }
-    if (df.minHit && !pool.autoHit) { pool.minHitUnmodified = Math.max(pool.minHitUnmodified ?? 0, df.minHit); notes.push(`${label}: ทอย hit ${df.minHit - 1} ลงมาพลาด`); }
+    if (df.ap && pool.ap < 0) { pool.ap = Math.min(0, pool.ap + df.ap); notes.push(`${label}: AP worsened by ${df.ap}`); }
+    if (df.minHit && !pool.autoHit) { pool.minHitUnmodified = Math.max(pool.minHitUnmodified ?? 0, df.minHit); notes.push(`${label}: unmodified Hit rolls of ${df.minHit - 1} or less fail`); }
   }
 }
 
@@ -834,7 +834,7 @@ function applyReroll(pool: Pool, r: Reroll, label: string, notes: string[]) {
   if (r === 'wounds1' && !pool.rerollWounds1) { pool.rerollWounds1 = true; notes.push(`${label}: re-roll wound 1`); }
   if (r === 'wounds12' && !pool.rerollWounds12) { pool.rerollWounds12 = true; notes.push(`${label}: re-roll wound 1-2`); }
   if (r === 'damage' && !pool.rerollDamage) { pool.rerollDamage = true; notes.push(`${label}: re-roll damage`); }
-  if (r === 'damageOne' && !pool.rerollDamage && !pool.rerollDamageOne) { pool.rerollDamageOne = true; notes.push(`${label}: re-roll damage 1 ลูก`); }
+  if (r === 'damageOne' && !pool.rerollDamage && !pool.rerollDamageOne) { pool.rerollDamageOne = true; notes.push(`${label}: re-roll one Damage roll`); }
 }
 
 function applyAbility(pool: Pool, ab: string, label: string, notes: string[], kind: 'melee' | 'ranged', A: UnitState, s: GameState, T: UnitState) {
@@ -1054,19 +1054,19 @@ function stratSpent(s: GameState, u: UnitState, stratId: string) {
   if (discount) {
     const d = discount.e.stratDiscount!;
     if (d.limit) limitBag(s, discount, d.perArmy)[`strat:${discount.label}`] = periodKey(s, d.limit);
-    log(s, `${discount.label}: stratagem ถูกลง ${d.cp}CP`, 'cp', u.owner);
+    log(s, `${discount.label}: Stratagem costs ${d.cp}CP less`, 'cp', u.owner);
   }
   if (tax) {
     const t = tax.e.stratTax!;
     if (t.limit) limitBag(s, tax)[`tax:${tax.label}`] = periodKey(s, t.limit);
-    log(s, `${tax.label} (${tax.holder.name}): stratagem แพงขึ้น ${t.cp}CP`, 'cp', tax.holder.owner);
+    log(s, `${tax.label} (${tax.holder.name}): Stratagem costs ${t.cp}CP more`, 'cp', tax.holder.owner);
   }
   for (const a of unitFx(s, u)) {
     if (!a.e.stratCpChance || a.holder.owner !== u.owner) continue;
     const r = d6(s);
     const ok = r >= a.e.stratCpChance;
     if (ok) s.players[u.owner].cp += 1;
-    log(s, `${a.label}: ทอย ${r}${ok ? ' → +1CP' : ''}`, 'cp', u.owner);
+    log(s, `${a.label}: rolled ${r}${ok ? ' → +1CP' : ''}`, 'cp', u.owner);
   }
 }
 
@@ -1154,7 +1154,7 @@ setStratHooks(stratDiscount, (s, u, id) => { stratSpent(s, u, id); stratRepeatUs
 setStratBlockHook((s, u) => {
   if (!onBoard(u) || u.keywords.includes('MONSTER') || u.keywords.includes('VEHICLE')) return null;
   const e = engagedEnemies(s, u).find((x) => unitFlags(s, x).noEngagedStrats);
-  return e ? `engaged กับ ${e.name} (Coronal Susurrant): เป็นเป้า stratagem ไม่ได้` : null;
+  return e ? `engaged with ${e.name} (Coronal Susurrant): cannot be targeted by Stratagems` : null;
 });
 setActionEligibilityHook((s, u, what) => canDo(s, u, what));
 setThroughHook((s, u, kind) => {

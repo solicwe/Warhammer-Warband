@@ -26,8 +26,8 @@ export function detChoices(s: GameState, p: PlayerId): DetChoiceNow[] {
     const left = d.name === DOCTRINES ? doctrineUsesLeft(s, p, ch.options.map((o) => o.id), st.used) : null;
     const options = ch.options.map((o) => ({
       o,
-      why: left ? (left[o.id] ? null : 'ใช้ครบแล้วในเกมนี้')
-        : (ch.uses === 'eachOnce' || ch.uses === 'limit') && st.used.includes(o.id) ? 'ใช้ไปแล้วในเกมนี้' : null,
+      why: left ? (left[o.id] ? null : 'All uses spent this battle')
+        : (ch.uses === 'eachOnce' || ch.uses === 'limit') && st.used.includes(o.id) ? 'Already used this battle' : null,
     }));
     out.push({ rule: d.name, choice: ch, state: st, open, options });
   }
@@ -36,13 +36,13 @@ export function detChoices(s: GameState, p: PlayerId): DetChoiceNow[] {
 
 export function pickDetChoice(s: GameState, p: PlayerId, rule: string, ids: string[]): string | null {
   const now = detChoices(s, p).find((c) => c.rule === rule);
-  if (!now) return 'ไม่มีกฎนี้';
-  if (!now.open) return 'เลือกตอนนี้ไม่ได้';
+  if (!now) return 'No such rule';
+  if (!now.open) return 'Cannot be selected now';
   const need = now.choice.pick ?? 1;
-  if (ids.length !== need) return `ต้องเลือก ${need} อย่าง`;
+  if (ids.length !== need) return `Select ${need}`;
   for (const id of ids) {
     const o = now.options.find((x) => x.o.id === id);
-    if (!o) return 'ไม่มีตัวเลือกนี้';
+    if (!o) return 'No such option';
     if (o.why) return o.why;
   }
   const st = (detState(s, p)[rule] ??= { active: [], used: [], count: 0 });

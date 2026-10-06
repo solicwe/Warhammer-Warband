@@ -40,7 +40,7 @@ describe('Space Marine abilities with their own moment', () => {
     put(s, 'p1-x0', { x: 22, y: 30 });
     const m = alive(c)[0];
     commitMove(s, c, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: 36, y: 30 }]]]));
-    expect(s.log.some((l) => l.text.startsWith('Blackstar Cluster Launcher: Corvus Blackstar บินผ่าน Boyz'))).toBe(true);
+    expect(s.log.some((l) => l.text.startsWith('Blackstar Cluster Launcher: Corvus Blackstar flies over Boyz'))).toBe(true);
   });
 
   it('Drop Pod Assault: the squad inside gets out at once, more than 8" from the enemy', () => {

@@ -34,7 +34,7 @@ describe('tactical secondaries', () => {
       let steps = 0;
       while (s.phase !== 'gameover' && steps < 6000) { botAct(s); steps++; }
       scored += s.players[0].secVp + s.players[1].secVp;
-      drawn += s.log.filter((l) => /จั่ว Secondary/.test(l.text)).length;
+      drawn += s.log.filter((l) => /draws Secondary Mission/.test(l.text)).length;
     }
     expect(drawn).toBeGreaterThan(12);
     expect(scored).toBeGreaterThan(0);

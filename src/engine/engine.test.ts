@@ -147,7 +147,7 @@ describe('movement validation', () => {
     const paths = new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y + 7 }]]));
     const chk = validateMove(s, u, 'normal', paths);
     expect(chk.ok).toBe(false);
-    expect(chk.errors.join()).toMatch(/เกินระยะ/);
+    expect(chk.errors.join()).toMatch(/more than/);
   });
 });
 
@@ -471,7 +471,7 @@ describe('moving by drag: settling, routing, vehicles and walls', () => {
     expect(validateMove(s, u, 'normal', paths).ok).toBe(false);
     const settled = settleMove(s, u, 'normal', paths, { maxFor: (m) => maxMoveDistance(s, u, 'normal', m) });
     const chk = validateMove(s, u, 'normal', settled);
-    expect(chk.errors.filter((e) => /ทับ/.test(e))).toEqual([]);
+    expect(chk.errors.filter((e) => /overlaps/.test(e))).toEqual([]);
   });
 
   it('a Land Raider next to a wall can drive away from it, and is routed around a wall in its way', () => {
@@ -486,7 +486,7 @@ describe('moving by drag: settling, routing, vehicles and walls', () => {
     // through the wall: blocked, but settling routes it round the end of the wall
     placeUnit(s, lr, new Map([[m.id, { x: 14, y: 26 }]]));
     const through = new Map([[m.id, [{ x: 14, y: 26 }, { x: 26, y: 26 }]]]);
-    expect(validateMove(s, lr, 'normal', through).errors.join()).toMatch(/กำแพง/);
+    expect(validateMove(s, lr, 'normal', through).errors.join()).toMatch(/wall/);
     const routed = settleMove(s, lr, 'normal', through, { maxFor: () => 30 });
     const path = routed.get(m.id)!;
     expect(path.length).toBeGreaterThan(2);
@@ -504,7 +504,7 @@ describe('moving by drag: settling, routing, vehicles and walls', () => {
     const paths = new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: e.x, y: e.y }]]));
     const settled = settleMove(s, u, 'charge', paths, { maxFor: () => 9, targets: [t.id] });
     const chk = validateMove(s, u, 'charge', settled, { targets: [t.id] });
-    expect(chk.errors.filter((x) => /ทับ|ทะลุ/.test(x))).toEqual([]);
+    expect(chk.errors.filter((x) => /overlaps|through/.test(x))).toEqual([]);
     expect(chk.errors).toEqual([]);
     commitCharge(s, u, settled, [t.id]);
     endPhase(s);
@@ -532,7 +532,7 @@ describe('detachment rules', () => {
     expect(detChoices(s, 0)[0].open).toBe(true);
     expect(pickDetChoice(s, 0, 'Combat Doctrines', ['assault'])).toBeNull();
     expect(chargeEligibility(s, u)).toBeNull();
-    expect(pickDetChoice(s, 0, 'Combat Doctrines', ['devastator'])).toMatch(/ไม่ได้/); // already picked this Command phase
+    expect(pickDetChoice(s, 0, 'Combat Doctrines', ['devastator'])).toMatch(/Cannot|Already|All uses/); // already picked this Command phase
     s.turn += 2; // our next Command phase
     detOnCommandStart(s, 0, true);
     expect(chargeEligibility(s, u)).toMatch(/Advance/);

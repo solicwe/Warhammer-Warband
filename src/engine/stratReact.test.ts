@@ -104,7 +104,7 @@ describe('stratagem reactions', () => {
     expect(offer?.units).toEqual(['p0-x0']);
     answerReaction(s, offer!.stratId, 'p0-x0');
     expect(s.window).toBeNull();
-    expect(s.log.some((l) => /HAIL OF VENGEANCE: Intercessor Squad ยิง Flash Gitz/.test(l.text))).toBe(true);
+    expect(s.log.some((l) => /HAIL OF VENGEANCE: Intercessor Squad shoots Flash Gitz/.test(l.text))).toBe(true);
   });
 
   it('Squad Tactics: an enemy unit ends a move within 8" → the player is offered a D6" move', () => {
@@ -131,7 +131,7 @@ describe('stratagem reactions', () => {
     put(s, 'p1-x0', { x: 22, y: 36 });
     applyMortalWounds(s, r, 99, 'test');
     expect(s.log.some((l) => l.text.includes('VENGEFUL ANIMUS'))).toBe(true);
-    expect(s.log.some((l) => l.text.includes('ระเบิดแน่นอน'))).toBe(true);
+    expect(s.log.some((l) => l.text.includes('it explodes'))).toBe(true);
   });
 
   it('Tactical Dreadnought Fortitude: attacks that target the Terminators have -1 D', () => {

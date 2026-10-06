@@ -39,11 +39,11 @@ describe('army builder: who starts in which transport', () => {
     // GRAVIS models can't ride a Rhino; an empty Dedicated Transport is flagged
     const bad = list('SM', [['Rhino', 1, 70], ['Heavy Intercessor Squad', 5, 100, { embarkIn: 'x0' }], ['Rhino', 1, 70], ['Captain', 1, 80, { warlord: true }]]);
     const errs = validateList(bad, SM, SIZE);
-    expect(errs.some((e) => /Heavy Intercessor Squad ขึ้น Rhino ไม่ได้/.test(e))).toBe(true);
-    expect(errs.some((e) => /Dedicated Transport\) ยังว่าง/.test(e))).toBe(true);
+    expect(errs.some((e) => /Heavy Intercessor Squad cannot embark in Rhino/.test(e))).toBe(true);
+    expect(errs.some((e) => /Dedicated Transport\) is empty/.test(e))).toBe(true);
     // too many models
     const full = list('ORK', [['Trukk', 1, 60], ['Boyz', 20, 180, { embarkIn: 'x0' }], ['Warboss', 1, 100, { warlord: true }]]);
-    expect(transportLoads(full, ORK)[0].problems.some((p) => /ที่ไม่พอ/.test(p))).toBe(true);
+    expect(transportLoads(full, ORK)[0].problems.some((p) => /not enough room/.test(p))).toBe(true);
   });
 
   it('the units start the battle embarked; a Dedicated Transport left empty is lost when deployment ends', () => {

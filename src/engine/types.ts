@@ -136,6 +136,8 @@ export interface ArmyList {
   subfaction?: string; // sub-faction keyword, e.g. a Chapter
   battleSize: string;
   detachments: string[];
+  /** the Force Disposition picked when the detachments offer more than one */
+  disposition?: string;
   units: ArmyUnitEntry[];
 }
 

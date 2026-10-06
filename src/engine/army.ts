@@ -99,13 +99,13 @@ export function kwPhrase(phrase: string, kws: string[]): boolean {
 
 /** Can this model ride in the transport, and how many places does it take? */
 export function transportFit(t: TransportInfo, kws: string[]): { why: string | null; space: number } {
-  if (kws.some((k) => normKw(k) === 'TRANSPORT')) return { why: 'รถขึ้นรถไม่ได้', space: 0 };
+  if (kws.some((k) => normKw(k) === 'TRANSPORT')) return { why: 'A TRANSPORT cannot embark', space: 0 };
   const no = t.forbid.filter((f) => kwPhrase(f, kws));
-  if (no.length && !(t.except ?? []).some((e) => kwPhrase(e, kws))) return { why: `ขน ${no.join(', ')} ไม่ได้`, space: 0 };
+  if (no.length && !(t.except ?? []).some((e) => kwPhrase(e, kws))) return { why: `Cannot carry ${no.join(', ')}`, space: 0 };
   if (t.kinds?.length) {
-    if (!t.kinds.some((k) => kwPhrase(k, kws))) return { why: `ขนได้เฉพาะ ${t.kinds.join(' / ')}`, space: 0 };
-  } else if (t.infantryOnly && !kws.includes('INFANTRY')) return { why: 'ขนได้เฉพาะ INFANTRY', space: 0 };
-  if (t.only.length && !t.only.some((k) => kwPhrase(k, kws))) return { why: `ขนได้เฉพาะ ${t.only.join(', ')}`, space: 0 };
+    if (!t.kinds.some((k) => kwPhrase(k, kws))) return { why: `Can only carry ${t.kinds.join(' / ')}`, space: 0 };
+  } else if (t.infantryOnly && !kws.includes('INFANTRY')) return { why: 'Can only carry INFANTRY', space: 0 };
+  if (t.only.length && !t.only.some((k) => kwPhrase(k, kws))) return { why: `Can only carry ${t.only.join(', ')}`, space: 0 };
   const extra = (t.spaces ?? []).filter(([w]) => kwPhrase(w, kws)).map(([, n]) => n);
   return { why: null, space: extra.length ? Math.max(...extra) : t.double.some((k) => kwPhrase(k, kws)) ? 2 : 1 };
 }
@@ -278,7 +278,7 @@ function applyWargear(sheet: DatasheetData, plans: ModelPlan[], picks: WargearPi
       p.used.push(pk.opt);
       left--;
     }
-    if (left > 0) problems.push(`${gain.join(' + ')}: ไม่มีโมเดลที่ถือ ${[...need, ...(o.requires ?? [])].join(' + ') || 'อาวุธเดิม'} เหลือให้เปลี่ยนอีก ${left} ตัว`);
+    if (left > 0) problems.push(`${gain.join(' + ')}: ${left} more model(s) needed carrying ${[...need, ...(o.requires ?? [])].join(' + ') || 'the original weapon'}`);
   }
   return problems;
 }
@@ -338,16 +338,16 @@ export function wargearProblems(sheet: DatasheetData, e: ArmyUnitEntry): string[
     const o = opts[i];
     if (!o) continue;
     const max = wargearMax(sheet, o, e.models, e.addons);
-    if (n > max) out.push(`${e.datasheet}: "${o.text.slice(0, 60)}…" เลือกได้ไม่เกิน ${max}`);
+    if (n > max) out.push(`${e.datasheet}: "${o.text.slice(0, 60)}…" allows at most ${max}`);
   }
   for (const pk of e.wargear ?? []) {
     const o = opts[pk.opt];
     if (!o || pk.choice >= 0) continue;
     const picks = pk.picks ?? [];
-    if (picks.length !== (o.pick ?? 2) || new Set(picks).size !== picks.length) out.push(`${e.datasheet}: ต้องเลือกอาวุธ ${o.pick ?? 2} ชิ้นที่ไม่ซ้ำกัน`);
+    if (picks.length !== (o.pick ?? 2) || new Set(picks).size !== picks.length) out.push(`${e.datasheet}: select ${o.pick ?? 2} different weapons`);
     const ranged = picks.map((n) => weaponNamed(sheet, n)).filter((w): w is WeaponData => !!w && w.profiles[0].range !== 'Melee');
     const pistols = ranged.filter((w) => w.profiles.some((p) => p.abilities.includes('pistol')));
-    if (ranged.length >= 2 && pistols.length !== 1) out.push(`${e.datasheet}: ถืออาวุธยิง 2 ชิ้นได้ถ้ามี Pistol 1 ชิ้นพอดี`);
+    if (ranged.length >= 2 && pistols.length !== 1) out.push(`${e.datasheet}: two ranged weapons only if exactly one is a Pistol`);
   }
   const plans = planModels(sheet, e.models, e.addons);
   out.push(...applyWargear(sheet, plans, e.wargear ?? []).map((p) => `${e.datasheet}: ${p}`));
@@ -474,9 +474,9 @@ function makeModels(sheet: DatasheetData, e: Pick<ArmyUnitEntry, 'models' | 'war
 
 /** Abilities that split a unit in two at Declare Battle Formations. `drop`: abilities the first / second unit loses. */
 export const SPLITS: Record<string, { how: 'half' | 'byModel'; byName?: string; must?: boolean; drop?: [string[], string[]]; label: string }> = {
-  'Combat Squads': { how: 'half', label: 'แยกเป็น 2 หน่วย หน่วยละ 5 (Combat Squads)' },
-  'Taktikal Know-wotz': { how: 'half', drop: [['Found ’Em!'], ['Bomb Squig (Once per battle, per unit)']], label: 'แยกเป็น 2 หน่วย หน่วยละ 5 (หน่วยแรกมี Bomb Squig อีกหน่วยมี Found ’Em!)' },
-  'Let Loose the Wolves': { how: 'byModel', byName: 'Hunting Wol', must: true, label: 'Headtakers กับ Hunting Wolves แยกเป็นคนละหน่วยเสมอ' },
+  'Combat Squads': { how: 'half', label: 'Split into two units of 5 (Combat Squads)' },
+  'Taktikal Know-wotz': { how: 'half', drop: [['Found ’Em!'], ['Bomb Squig (Once per battle, per unit)']], label: 'Split into two units of 5 (one keeps Bomb Squig, the other Found ’Em!)' },
+  'Let Loose the Wolves': { how: 'byModel', byName: 'Hunting Wol', must: true, label: 'Headtakers and Hunting Wolves always become separate units' },
 };
 /** Detachments that let units split (Veterans of the Fang: Grey Hunters). */
 const DET_SPLITS = Object.entries((detData as unknown as { rules: Record<string, { splits?: { datasheets: string[]; how: 'half'; label: string } }> }).rules)
@@ -693,7 +693,7 @@ export function enhancementFits(text: string, keywords: string[]): { ok: boolean
   // "ADEPTUS ASTARTES INFANTRY" is two keywords together: every word has to be among the unit's keyword words
   const words = new Set(keywords.flatMap((k) => k.toUpperCase().split(/\s+/)));
   const has = (n: string) => n.trim().split(/\s+/).every((w) => words.has(w));
-  if (m[2] && m[2].split('/').some(has)) return { ok: false, need: `${alts.join(' / ')} (ไม่รวม ${m[2]})` };
+  if (m[2] && m[2].split('/').some(has)) return { ok: false, need: `${alts.join(' / ')} (excluding ${m[2]})` };
   return { ok: alts.some(has), need: alts.join(' / ') };
 }
 
@@ -705,7 +705,7 @@ export function embarkCheck(list: ArmyList, faction: FactionData, riderUid: stri
   const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
   const t = list.units.find((x) => x.uid === transportUid);
   const info = parseTransport(t && sheetOf(t.datasheet)?.transport);
-  if (!t || !info || t.uid === riderUid) return { why: 'ไม่ใช่รถ', full: false, need: 0, used: 0, capacity: 0 };
+  if (!t || !info || t.uid === riderUid) return { why: 'Not a transport', full: false, need: 0, used: 0, capacity: 0 };
   const groupOf = (uid: string) => list.units.filter((x) => x.uid === uid || x.attachTo === uid);
   const spaceOf = (uid: string) => {
     let n = 0;
@@ -722,7 +722,7 @@ export function embarkCheck(list: ArmyList, faction: FactionData, riderUid: stri
   const used = list.units.filter((u) => u.embarkIn === t.uid && !u.attachTo && u.uid !== riderUid).reduce((a, r) => a + spaceOf(r.uid).n, 0);
   if (me.why) return { why: me.why, full: false, need: 0, used, capacity: info.capacity };
   const full = used + me.n > info.capacity;
-  return { why: full ? `เต็ม (${used}/${info.capacity} ที่ ต้องใช้ ${me.n})` : null, full, need: me.n, used, capacity: info.capacity };
+  return { why: full ? `Full (${used}/${info.capacity}, needs ${me.n})` : null, full, need: me.n, used, capacity: info.capacity };
 }
 
 /** Each TRANSPORT in the list and the units chosen to start the battle inside it (attached leaders ride with their unit). */
@@ -740,12 +740,12 @@ export function transportLoads(list: ArmyList, faction: FactionData) {
         const sh = sheetOf(g.datasheet);
         if (!sh) continue;
         const fit = transportFit(info, [...sh.keywords, ...sh.factionKeywords, sh.name]);
-        if (fit.why) problems.push(`${g.datasheet} ขึ้น ${t.datasheet} ไม่ได้: ${fit.why}`);
+        if (fit.why) problems.push(`${g.datasheet} cannot embark in ${t.datasheet}: ${fit.why}`);
         else used += g.models * fit.space;
       }
     }
-    if (used > info.capacity) problems.push(`${t.datasheet}: ที่ไม่พอ (${used}/${info.capacity} ที่)`);
-    if (ts.keywords.includes('DEDICATED TRANSPORT') && !riders.length) problems.push(`${t.datasheet} (Dedicated Transport) ยังว่าง: ต้องมีหน่วยอยู่ข้างในตอนเริ่มเกม ไม่อย่างนั้นถูกทำลาย — กด ⋮ ของรถ → Embark`);
+    if (used > info.capacity) problems.push(`${t.datasheet}: not enough room (${used}/${info.capacity})`);
+    if (ts.keywords.includes('DEDICATED TRANSPORT') && !riders.length) problems.push(`${t.datasheet} (Dedicated Transport) is empty: it must start the battle with a unit embarked or it is destroyed — tap the transport's ⋮ → Embark`);
     return [{ uid: t.uid, name: t.datasheet, capacity: info.capacity, used, riders: riders.map((r) => r.uid), problems }];
   });
 }
@@ -753,20 +753,20 @@ export function transportLoads(list: ArmyList, faction: FactionData) {
 export function validateList(list: ArmyList, faction: FactionData, size: { points: number; dp: number; unitLimit: number; enhancements: number }): string[] {
   const errs: string[] = [];
   const pts = listPoints(list, faction);
-  if (pts > size.points) errs.push(`แต้มเกิน: ${pts}/${size.points}`);
+  if (pts > size.points) errs.push(`Over the points limit: ${pts}/${size.points}`);
   const dp = list.detachments.reduce((a, n) => a + (faction.detachments.find((d) => d.name === n)?.dp ?? 0), 0);
-  if (dp > size.dp && !(list.detachments.length === 1 && size.dp === 2 && dp === 3)) errs.push(`Detachment Points เกิน: ${dp}/${size.dp}`);
-  for (const u of list.units) if (!faction.datasheets.some((d) => d.name === u.datasheet)) errs.push(`${u.datasheet}: ไม่มีใน 11th edition แล้ว (Legends หรือถูกถอด) — ลบออกจากทัพ`);
-  for (const n of list.detachments) if (!faction.detachments.some((d) => d.name === n)) errs.push(`Detachment "${n}" ไม่มีใน 11th edition แล้ว — เอาออก`);
+  if (dp > size.dp && !(list.detachments.length === 1 && size.dp === 2 && dp === 3)) errs.push(`Too many Detachment Points: ${dp}/${size.dp}`);
+  for (const u of list.units) if (!faction.datasheets.some((d) => d.name === u.datasheet)) errs.push(`${u.datasheet}: not in 11th edition (Legends or removed) — remove it from the army`);
+  for (const n of list.detachments) if (!faction.detachments.some((d) => d.name === n)) errs.push(`Detachment "${n}" is not in 11th edition — remove it`);
   // sub-faction (Chapter): units and detachments must be generic or from the chosen one
   const subName = (k: string) => faction.subfactions?.options.find((o) => o.keyword === k)?.name ?? k;
   for (const n of list.detachments) {
     const d = faction.detachments.find((x) => x.name === n);
-    if (d?.subfaction && d.subfaction !== list.subfaction) errs.push(list.subfaction ? `Detachment "${n}" เป็นของ ${subName(d.subfaction)} ใช้กับ ${subName(list.subfaction)} ไม่ได้` : `Detachment "${n}" ต้องเลือก ${faction.subfactions?.label ?? 'sub-faction'} เป็น ${subName(d.subfaction)}`);
+    if (d?.subfaction && d.subfaction !== list.subfaction) errs.push(list.subfaction ? `Detachment "${n}" belongs to ${subName(d.subfaction)} and cannot be used by ${subName(list.subfaction)}` : `Detachment "${n}" requires ${faction.subfactions?.label ?? 'sub-faction'}: ${subName(d.subfaction)}`);
   }
   for (const u of list.units) {
     const d = faction.datasheets.find((x) => x.name === u.datasheet);
-    if (d?.subfaction && d.subfaction !== list.subfaction) errs.push(list.subfaction ? `${u.datasheet} เป็นหน่วย ${subName(d.subfaction)} ใส่ในทัพ ${subName(list.subfaction)} ไม่ได้` : `${u.datasheet} เป็นหน่วย ${subName(d.subfaction)}: ต้องเลือก ${faction.subfactions?.label ?? 'sub-faction'} ก่อน`);
+    if (d?.subfaction && d.subfaction !== list.subfaction) errs.push(list.subfaction ? `${u.datasheet} is a ${subName(d.subfaction)} unit and cannot join a ${subName(list.subfaction)} army` : `${u.datasheet} is a ${subName(d.subfaction)} unit: select that ${faction.subfactions?.label ?? 'sub-faction'} first`);
   }
   const counts = new Map<string, number>();
   for (const u of list.units) counts.set(u.datasheet, (counts.get(u.datasheet) ?? 0) + 1);
@@ -775,16 +775,16 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (!sheet) continue;
     const limit = sheet.keywords.includes('EPIC HERO') ? 1 : sheet.maxPerArmy ? sheet.maxPerArmy
       : sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT') ? size.unitLimit * 2 : size.unitLimit;
-    if (n > limit) errs.push(`${name}: ใส่ได้ไม่เกิน ${limit} หน่วย`);
+    if (n > limit) errs.push(`${name}: maximum ${limit} per army`);
   }
-  if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('ต้องมี CHARACTER อย่างน้อย 1 หน่วย (Warlord)');
-  if (!list.units.some((u) => u.warlord)) errs.push('ยังไม่ได้เลือก Warlord (กด ⋮ ที่ตัวละคร → ตั้งเป็น Warlord)');
+  if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('The army needs at least one CHARACTER (Warlord)');
+  if (!list.units.some((u) => u.warlord)) errs.push('No Warlord selected (tap a character\'s ⋮ → Make Warlord)');
   for (const u of list.units) {
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
     // Supreme Commander (Trajann Valoris): must be the Warlord
-    if (sheet?.abilities.some((a) => a.name === 'Supreme Commander') && !u.warlord) errs.push(`${u.datasheet} ต้องเป็น Warlord (Supreme Commander)`);
+    if (sheet?.abilities.some((a) => a.name === 'Supreme Commander') && !u.warlord) errs.push(`${u.datasheet} must be your Warlord (Supreme Commander)`);
     // ANATHEMA PSYKANA characters can't be the Warlord (Null Maiden Vigil allows it)
-    if (u.warlord && sheet?.factionKeywords.includes('ANATHEMA PSYKANA') && !list.detachments.includes('Null Maiden Vigil')) errs.push(`${u.datasheet} (ANATHEMA PSYKANA) เป็น Warlord ไม่ได้`);
+    if (u.warlord && sheet?.factionKeywords.includes('ANATHEMA PSYKANA') && !list.detachments.includes('Null Maiden Vigil')) errs.push(`${u.datasheet} (ANATHEMA PSYKANA) cannot be your Warlord`);
   }
   const enh = list.units.filter((u) => u.enhancement);
   const allEnh = faction.detachments.flatMap((d) => d.enhancements);
@@ -795,32 +795,32 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     const n = u.enhancement!;
     if (isUpgrade(n)) { if (!counted.has(n)) { enhCount++; counted.add(n); } } else enhCount++;
     const same = enh.filter((x) => x.enhancement === n).length;
-    if (!isUpgrade(n) && same > 1) errs.push(`Enhancement "${n}" ใส่ได้หน่วยเดียว`);
-    if (isUpgrade(n) && same > 3) errs.push(`Upgrade "${n}" ใส่ได้ไม่เกิน 3`);
+    if (!isUpgrade(n) && same > 1) errs.push(`Enhancement "${n}" can only be taken once`);
+    if (isUpgrade(n) && same > 3) errs.push(`Upgrade "${n}" can be taken at most 3 times`);
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
-    if (sheet?.keywords.includes('EPIC HERO')) errs.push(`${u.datasheet} เป็น EPIC HERO ใส่ enhancement ไม่ได้`);
-    if (!faction.detachments.some((d) => list.detachments.includes(d.name) && d.enhancements.some((e) => e.name === n))) errs.push(`Enhancement "${n}" ไม่ได้อยู่ใน detachment ที่เลือก`);
+    if (sheet?.keywords.includes('EPIC HERO')) errs.push(`${u.datasheet} is an EPIC HERO and cannot take Enhancements`);
+    if (!faction.detachments.some((d) => list.detachments.includes(d.name) && d.enhancements.some((e) => e.name === n))) errs.push(`Enhancement "${n}" is not in the selected Detachments`);
   }
-  if (enhCount > (size as { enhancements?: number }).enhancements!) errs.push(`Enhancement เกิน: ${enhCount}/${(size as { enhancements?: number }).enhancements}`);
+  if (enhCount > (size as { enhancements?: number }).enhancements!) errs.push(`Too many Enhancements: ${enhCount}/${(size as { enhancements?: number }).enhancements}`);
   for (const u of list.units) {
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
     if (sheet && (u.wargear?.length || u.addons?.length)) errs.push(...wargearProblems(sheet, u));
-    if (sheet && (u.wargearPts ?? 0) !== wargearPoints(sheet, u)) errs.push(`${u.datasheet}: แต้ม wargear ไม่ตรง (${u.wargearPts ?? 0} ≠ ${wargearPoints(sheet, u)}) — เปิดเมนู ⋮ ของหน่วยเพื่ออัปเดต`);
+    if (sheet && (u.wargearPts ?? 0) !== wargearPoints(sheet, u)) errs.push(`${u.datasheet}: wargear points out of date (${u.wargearPts ?? 0} ≠ ${wargearPoints(sheet, u)}) — open the unit's ⋮ menu to update`);
   }
   for (const u of list.units) {
     if (!u.attachTo) continue;
     const leader = faction.datasheets.find((d) => d.name === u.datasheet);
     const body = list.units.find((b) => b.uid === u.attachTo);
-    if (!leader || !body || !leader.leads.includes(body.datasheet)) errs.push(`${u.datasheet} ผูกกับ ${body?.datasheet ?? '?'} ไม่ได้`);
+    if (!leader || !body || !leader.leads.includes(body.datasheet)) errs.push(`${u.datasheet} cannot be attached to ${body?.datasheet ?? '?'}`);
   }
   // 24.34 Support: a bodyguard unit takes at most one leader unit and one support unit
   for (const body of list.units) {
     const joined = list.units.filter((u) => u.attachTo === body.uid).map((u) => faction.datasheets.find((d) => d.name === u.datasheet)).filter(Boolean) as DatasheetData[];
     const sup = joined.filter((d) => d.isSupport), lead = joined.filter((d) => !d.isSupport);
-    if (lead.length > 1) errs.push(`${body.datasheet}: มี Leader ได้ 1 หน่วย (${lead.map((d) => d.name).join(', ')})`);
-    if (sup.length > 1) errs.push(`${body.datasheet}: มี Support ได้ 1 หน่วย (${sup.map((d) => d.name).join(', ')})`);
+    if (lead.length > 1) errs.push(`${body.datasheet}: only one Leader (${lead.map((d) => d.name).join(', ')})`);
+    if (sup.length > 1) errs.push(`${body.datasheet}: only one Support (${sup.map((d) => d.name).join(', ')})`);
   }
-  for (const u of list.units) if (u.embarkIn && !list.units.some((t) => t.uid === u.embarkIn)) errs.push(`${u.datasheet}: รถที่เลือกให้ขึ้นไม่อยู่ในทัพแล้ว`);
+  for (const u of list.units) if (u.embarkIn && !list.units.some((t) => t.uid === u.embarkIn)) errs.push(`${u.datasheet}: the chosen transport is no longer in the army`);
   for (const t of transportLoads(list, faction)) errs.push(...t.problems);
   return errs;
 }

@@ -177,7 +177,7 @@ function onDrawn(s: GameState, p: PlayerId, id: string): boolean {
     const cands = s.objectives.filter((o) => o.type !== 'home' && objInNML(s, o));
     const far = (o: { x: number; y: number }) => myC.length ? Math.min(...myC.map((m) => dist(m, o))) : 0;
     const pick = cands.sort((a, b) => far(b) - far(a))[0];
-    if (pick) { P.sec.temptingTarget = pick.id; log(s, `A Tempting Target: ${s.players[e].name} เลือก objective ${s.objectives.indexOf(pick) + 1}`, 'info', p); }
+    if (pick) { P.sec.temptingTarget = pick.id; log(s, `A Tempting Target: ${s.players[e].name} selects objective ${s.objectives.indexOf(pick) + 1}`, 'info', p); }
   }
   if (def.whenDrawn === 'guard') assignGuards(s, p);
   return true;
@@ -205,12 +205,12 @@ export function drawUpTo(s: GameState, p: PlayerId, n = 2) {
     if (!onDrawn(s, p, id)) {
       // shuffle back in (bottom of the deck) and draw again
       P.secDeck.push(id);
-      log(s, `${P.name} จั่ว ${secondaryById(id).name} แล้วใส่คืน (เงื่อนไขตอนจั่ว)`, 'info', p);
+      log(s, `${P.name} drew ${secondaryById(id).name} and shuffled it back (When Drawn)`, 'info', p);
       continue;
     }
     P.secActive.push(id);
     drawn.push(id);
-    log(s, `${P.name} จั่ว Secondary: ${secondaryById(id).name}`, 'info', p);
+    log(s, `${P.name} draws Secondary Mission: ${secondaryById(id).name}`, 'info', p);
   }
   if (drawn.length) pushFx(s, { kind: 'cards', owner: p, ids: drawn });
   if (P.secActive.includes('burden-of-trust')) assignGuards(s, p);
@@ -247,23 +247,23 @@ export function secondaryGoal(s: GameState, p: PlayerId, id: string): SecondaryG
   const nml = s.objectives.filter((o) => objInNML(s, o));
   const foes = boardUnits(s, e);
   switch (id) {
-    case 'no-prisoners': g.todo = 'ทำลายหน่วยศัตรู'; g.units = foes.map((u) => u.id); break;
-    case 'overwhelming-force': g.todo = 'ทำลายหน่วยศัตรูที่ยืนบน objective'; g.units = foes.filter((u) => s.objectives.some((o) => unitInRange(s, u, o))).map((u) => u.id); break;
-    case 'plunder': case 'cleanse': g.todo = id === 'plunder' ? 'ทำ action Plunder บน objective' : 'ทำ action Cleanse บน objective'; g.objectives = s.objectives.map((o) => o.id); break;
-    case 'display-of-might': g.todo = 'มีหน่วยใน No Man\'s Land มากกว่าศัตรู'; g.objectives = nml.map((o) => o.id); break;
-    case 'outflank': g.todo = 'หน่วยแตะขอบสนาม (6") นอกเขตตัวเอง'; g.areas = [[{ x: 0, y: 0 }, { x: 6, y: 0 }, { x: 6, y: H }, { x: 0, y: H }], [{ x: W - 6, y: 0 }, { x: W, y: 0 }, { x: W, y: H }, { x: W - 6, y: H }]]; break;
-    case 'beacon': g.todo = 'พาหน่วย Beacon ออกจากเขตตัวเอง'; if (S.beacon) g.units = [S.beacon]; g.areas = [zonePoly(s, p)]; break;
-    case 'a-grievous-blow': g.todo = 'ทำลายหน่วยศัตรูที่มี 13 ตัวขึ้นไป'; g.units = foes.filter((u) => u.startingStrength >= 13).map((u) => u.id); break;
-    case 'defend-stronghold': g.todo = 'ยึด home objective ของตัวเองไว้'; g.objectives = s.objectives.filter((o) => o.type === 'home' && o.owner === p).map((o) => o.id); break;
-    case 'engage-on-all-fronts': g.todo = 'มีหน่วยใน 3–4 มุมสนาม (ห่างกลาง 6")'; g.circles = [{ ...CENTRE, r: 6 }]; break;
-    case 'secure-no-mans-land': g.todo = 'ยึด objective ใน No Man\'s Land 2 จุด'; g.objectives = nml.filter((o) => !(o.type === 'home' && o.owner === p)).map((o) => o.id); break;
-    case 'forward-position': g.todo = 'ยึด home ศัตรู หรือ expansion ทั้งหมด'; g.objectives = s.objectives.filter((o) => (o.type === 'home' && o.owner === e) || o.type === 'expansion').map((o) => o.id); break;
-    case 'centre-ground': g.todo = 'มีหน่วยห่างกลางสนาม 3" (ศัตรูไม่อยู่ใน 6")'; g.circles = [{ ...CENTRE, r: 3 }, { ...CENTRE, r: 6 }]; break;
-    case 'assassination': g.todo = 'ฆ่า CHARACTER ศัตรู'; g.units = foes.filter((u) => alive(u).some((m) => m.isCharacter)).map((u) => u.id); break;
-    case 'a-tempting-target': g.todo = 'ยึด objective ที่ศัตรูเลือก'; if (S.temptingTarget) g.objectives = [S.temptingTarget]; break;
-    case 'behind-enemy-lines': g.todo = 'พาหน่วยเข้าไปทั้งหน่วยในเขตศัตรู'; g.areas = [zonePoly(s, e)]; break;
-    case 'bring-it-down': g.todo = 'ทำลายโมเดลศัตรูที่มี W 10 ขึ้นไป'; g.units = foes.filter((u) => alive(u).some((m) => m.profile.W >= 10)).map((u) => u.id); break;
-    case 'burden-of-trust': g.todo = 'หน่วยที่เฝ้า objective อยู่ต่อจนจบเทิร์นศัตรู'; g.objectives = S.guards.map((x) => x.objId); g.units = S.guards.map((x) => x.unitId); break;
+    case 'no-prisoners': g.todo = 'Destroy enemy units'; g.units = foes.map((u) => u.id); break;
+    case 'overwhelming-force': g.todo = 'Destroy enemy units within range of objectives'; g.units = foes.filter((u) => s.objectives.some((o) => unitInRange(s, u, o))).map((u) => u.id); break;
+    case 'plunder': case 'cleanse': g.todo = id === 'plunder' ? 'Perform the Plunder action on objectives' : 'Perform the Cleanse action on objectives'; g.objectives = s.objectives.map((o) => o.id); break;
+    case 'display-of-might': g.todo = 'Have more units than your opponent in No Man\'s Land'; g.objectives = nml.map((o) => o.id); break;
+    case 'outflank': g.todo = 'Have units within 6" of a battlefield edge outside your deployment zone'; g.areas = [[{ x: 0, y: 0 }, { x: 6, y: 0 }, { x: 6, y: H }, { x: 0, y: H }], [{ x: W - 6, y: 0 }, { x: W, y: 0 }, { x: W, y: H }, { x: W - 6, y: H }]]; break;
+    case 'beacon': g.todo = 'Get the Beacon unit out of your deployment zone'; if (S.beacon) g.units = [S.beacon]; g.areas = [zonePoly(s, p)]; break;
+    case 'a-grievous-blow': g.todo = 'Destroy an enemy unit with a Starting Strength of 13+'; g.units = foes.filter((u) => u.startingStrength >= 13).map((u) => u.id); break;
+    case 'defend-stronghold': g.todo = 'Control your home objective'; g.objectives = s.objectives.filter((o) => o.type === 'home' && o.owner === p).map((o) => o.id); break;
+    case 'engage-on-all-fronts': g.todo = 'Have units in 3–4 table quarters (more than 6" from the centre)'; g.circles = [{ ...CENTRE, r: 6 }]; break;
+    case 'secure-no-mans-land': g.todo = 'Control 2 objectives in No Man\'s Land'; g.objectives = nml.filter((o) => !(o.type === 'home' && o.owner === p)).map((o) => o.id); break;
+    case 'forward-position': g.todo = 'Control the enemy home objective or all expansion objectives'; g.objectives = s.objectives.filter((o) => (o.type === 'home' && o.owner === e) || o.type === 'expansion').map((o) => o.id); break;
+    case 'centre-ground': g.todo = 'Have a unit within 3" of the centre (no enemy within 6")'; g.circles = [{ ...CENTRE, r: 3 }, { ...CENTRE, r: 6 }]; break;
+    case 'assassination': g.todo = 'Destroy enemy CHARACTER models'; g.units = foes.filter((u) => alive(u).some((m) => m.isCharacter)).map((u) => u.id); break;
+    case 'a-tempting-target': g.todo = 'Control the objective your opponent selected'; if (S.temptingTarget) g.objectives = [S.temptingTarget]; break;
+    case 'behind-enemy-lines': g.todo = 'Get units wholly within the enemy deployment zone'; g.areas = [zonePoly(s, e)]; break;
+    case 'bring-it-down': g.todo = 'Destroy enemy models with 10+ Wounds'; g.units = foes.filter((u) => alive(u).some((m) => m.profile.W >= 10)).map((u) => u.id); break;
+    case 'burden-of-trust': g.todo = "Guarding units stay on their objectives until the end of your opponent's turn"; g.objectives = S.guards.map((x) => x.objId); g.units = S.guards.map((x) => x.unitId); break;
   }
   return g;
 }

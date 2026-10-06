@@ -17,7 +17,7 @@ const PIPS: Record<number, [number, number][]> = {
 
 export function Die({ v, color, size = 76 }: { v: number; color?: string; size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" aria-label={`ลูกเต๋า ${v}`}>
+    <svg width={size} height={size} viewBox="0 0 100 100" aria-label={`Die ${v}`}>
       <rect x="5" y="5" width="90" height="90" rx="18" fill="#f7f4ee" stroke={color ?? '#1a1a1a'} strokeWidth="6" />
       {(PIPS[v] ?? []).map(([x, y], i) => <circle key={i} cx={x} cy={y} r={v === 1 ? 11 : 8.5} fill={v === 1 ? '#b22222' : '#1a1a1a'} />)}
     </svg>
@@ -88,13 +88,13 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
   };
   if (cur.kind === 'cards') {
     return (
-      <div className="ro-backdrop" onClick={skip} role="dialog" aria-label="จั่วการ์ด Secondary">
+      <div className="ro-backdrop" onClick={skip} role="dialog" aria-label="Secondary Mission draw">
         <div className="ro-card sec-draw">
-          <div className="ro-title" style={{ color: COLORS[cur.owner] }}>{s.players[cur.owner].name} จั่ว Secondary</div>
+          <div className="ro-title" style={{ color: COLORS[cur.owner] }}>{s.players[cur.owner].name} draws a Secondary Mission</div>
           <div className="sec-hand">
             {cur.ids.map((id, i) => <SecondaryCard key={id} id={id} faceUp={landed} delay={i * 260} owner={cur.owner} />)}
           </div>
-          <div className="ro-hint">{landed ? 'แตะเพื่อปิด · ดูการ์ดได้ตลอดที่ปุ่ม การ์ด ด้านบน' : 'แตะเพื่อเปิดการ์ดทันที'}</div>
+          <div className="ro-hint">{landed ? 'Tap to close · the Cards button at the top shows them any time' : 'Tap to reveal now'}</div>
         </div>
       </div>
     );
@@ -107,7 +107,7 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
           <div className="sec-hand">
             {([0, 1] as const).map((p, i) => <PrimaryCard key={p} s={s} owner={p} faceUp={landed} delay={i * 260} />)}
           </div>
-          <div className="ro-hint">{landed ? 'แตะเพื่อปิด · ดูได้ตลอดที่ปุ่ม การ์ด ด้านบน' : 'แตะเพื่อเปิดการ์ดทันที'}</div>
+          <div className="ro-hint">{landed ? 'Tap to close · the Cards button at the top shows them any time' : 'Tap to reveal now'}</div>
         </div>
       </div>
     );
@@ -126,7 +126,7 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
             ))}
           </div>
           <div className={`ro-result ${landed ? 'show' : ''}`}>{cur.result}</div>
-          <div className="ro-hint">{landed ? 'แตะเพื่อปิด' : 'แตะเพื่อดูผลทันที'}</div>
+          <div className="ro-hint">{landed ? 'Tap to close' : 'Tap to see the result now'}</div>
         </div>
       </div>
     );
@@ -140,7 +140,7 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
         <div className={`ro-result ${landed ? 'show' : ''} ${cur.good === false ? 'bad' : cur.good ? 'good' : ''}`}>
           {cur.dice.length > 1 && <span className="ro-sum">{cur.dice.join(' + ')} = {cur.dice.reduce((a, b) => a + b, 0)} · </span>}{cur.result}
         </div>
-        <div className="ro-hint">{landed ? 'แตะเพื่อปิด' : 'แตะเพื่อดูผลทันที'}</div>
+        <div className="ro-hint">{landed ? 'Tap to close' : 'Tap to see the result now'}</div>
       </div>
     </div>
   );
@@ -162,7 +162,7 @@ export function SecondaryCard({ id, faceUp = true, delay = 0, owner, progress, d
   );
 }
 
-const WHEN_TH: Record<string, string> = { endOfYourTurn: 'จบเทิร์นตัวเอง', endOfYourCommandPhase: 'จบ Command phase (รอบ 5: จบเทิร์น)', endOfBattle: 'จบเกม', endOfAnyTurn: 'จบทุกเทิร์น' };
+const WHEN_TH: Record<string, string> = { endOfYourTurn: 'End of your turn', endOfYourCommandPhase: 'End of your Command phase (round 5: end of turn)', endOfBattle: 'End of the battle', endOfAnyTurn: 'End of every turn' };
 
 /** A player's Primary Mission card: its name, their Force Disposition, how and when it scores, its action. */
 export function PrimaryCard({ s, owner, faceUp = true, delay = 0 }: { s: GameState; owner: 0 | 1; faceUp?: boolean; delay?: number }) {
@@ -180,7 +180,7 @@ export function PrimaryCard({ s, owner, faceUp = true, delay = 0 }: { s: GameSta
         <div className="sec-text">
           {prim.scoring.map((r) => (
             <div key={r.text + r.rounds} className="prim-rule">
-              <div className="sec-when"><Icon name="wait" size={12} /> {r.rounds[0] === r.rounds[1] ? `รอบ ${r.rounds[0]}` : r.rounds[0] === 1 && r.rounds[1] === 5 ? 'ทุกรอบ' : `รอบ ${r.rounds[0]}–${r.rounds[1]}`} · {WHEN_TH[r.when] ?? r.when}</div>
+              <div className="sec-when"><Icon name="wait" size={12} /> {r.rounds[0] === r.rounds[1] ? `Round ${r.rounds[0]}` : r.rounds[0] === 1 && r.rounds[1] === 5 ? 'Every round' : `Rounds ${r.rounds[0]}–${r.rounds[1]}`} · {WHEN_TH[r.when] ?? r.when}</div>
               <div>{r.text} {!r.tiers && <b>{r.vp} VP</b>}{r.bonus ? <span> · {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</div>
             </div>
           ))}

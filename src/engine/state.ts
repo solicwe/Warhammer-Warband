@@ -93,15 +93,15 @@ export const stratCost = (s: GameState, id: string, unit?: UnitState, cost?: num
 export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit?: UnitState, cost?: number): string | null {
   const cp = stratCost(s, id, unit, cost);
   const p = s.players[player];
-  if (p.cp < cp) return 'CP ไม่พอ';
-  if (p.stratagemsUsed.includes(`${phaseKey(s)}:${id}`) && !(unit && repeatHook?.(s, unit, id))) return 'ใช้ stratagem นี้ไปแล้วใน phase นี้';
+  if (p.cp < cp) return 'Not enough CP';
+  if (p.stratagemsUsed.includes(`${phaseKey(s)}:${id}`) && !(unit && repeatHook?.(s, unit, id))) return 'This Stratagem was already used this phase';
   if (unit) {
-    if (unit.battleShocked) return 'หน่วยที่ battle-shocked เป็นเป้า stratagem ไม่ได้';
+    if (unit.battleShocked) return 'A Battle-shocked unit cannot be targeted by Stratagems';
     const blocked = blockHook?.(s, unit);
     if (blocked) return blocked;
-    if (unit.stratagemPhase === phaseKey(s)) return 'หน่วยนี้โดน stratagem ไปแล้วใน phase นี้';
+    if (unit.stratagemPhase === phaseKey(s)) return 'This unit was already targeted by a Stratagem this phase';
   }
-  if (id === 'insane-bravery' && p.insaneBraveryUsed) return 'ใช้ได้ครั้งเดียวต่อเกม';
+  if (id === 'insane-bravery' && p.insaneBraveryUsed) return 'Once per battle';
   return null;
 }
 
@@ -113,7 +113,7 @@ export function spendStratagem(s: GameState, player: PlayerId, id: string, unit?
   if (unit) unit.stratagemPhase = phaseKey(s);
   if (id === 'insane-bravery') s.players[player].insaneBraveryUsed = true;
   // detachment stratagems are logged by name (with their effect) by the caller
-  if (def) log(s, `ใช้ ${def.name} (−${cp}CP)${unit ? ' กับ ' + unit.name : ''}`, 'cp', player);
+  if (def) log(s, `${def.name} (−${cp}CP)${unit ? ' on ' + unit.name : ''}`, 'cp', player);
   if (unit && spentHook) spentHook(s, unit, id);
 }
 

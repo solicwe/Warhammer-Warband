@@ -76,7 +76,7 @@ function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: 
       // objective in the open (no terrain on it): a 40mm marker, in range within 3" of it (14) — a circle of
       // 3" + the marker's radius around its centre, so control works the same way as for terrain objectives
       const R = 3 + 20 / 25.4;
-      tp = { id: `obj-t${i}`, kind: 'objective-area', label: 'Objective (marker 40mm, ระยะ 3")', category: 'exposed', height: 0, walls: [], obstacles: [],
+      tp = { id: `obj-t${i}`, kind: 'objective-area', label: 'Objective (40mm marker, range 3")', category: 'exposed', height: 0, walls: [], obstacles: [],
         poly: Array.from({ length: 32 }, (_, k) => ({ x: o.x + R * Math.cos((k / 32) * Math.PI * 2), y: o.y + R * Math.sin((k / 32) * Math.PI * 2) })) };
       terrain.push(tp);
     }
@@ -101,7 +101,22 @@ export interface NewGameOptions {
 export const emptyMission = (): MissionState => ({ trapped: [], decoyed: [], consecrated: [], triangulated: [], condemned: [], consecrationUnits: [], surveilled: [], done: [] });
 
 /** Disposition a list brings: the first detachment's, else Take and Hold. */
+/** Every Force Disposition the list's detachments give it (a detachment can count as more than one). */
+export function listDispositionOptions(list: ArmyList, faction: FactionData): DispositionId[] {
+  const out: DispositionId[] = [];
+  for (const n of list.detachments) {
+    const d = faction.detachments.find((x) => x.name === n);
+    for (const name of d?.forceDispositions ?? (d?.forceDisposition ? [d.forceDisposition] : [])) {
+      const id = dispositionId(name);
+      if (id && !out.includes(id)) out.push(id);
+    }
+  }
+  return out;
+}
+
 export function listDisposition(list: ArmyList, faction: FactionData): DispositionId {
+  const picked = dispositionId(list.disposition);
+  if (picked && listDispositionOptions(list, faction).includes(picked)) return picked;
   for (const n of list.detachments) {
     const d = dispositionId(faction.detachments.find((x) => x.name === n)?.forceDisposition);
     if (d) return d;
@@ -149,9 +164,9 @@ export function createGame(o: NewGameOptions): GameState {
     markers: [], pendingActions: [], turnStart: null, modelDeaths: [],
   };
   const ro = rollOff(s);
-  log(s, `Roll-off เลือก Attacker/Defender: ${o.names[0]} ${ro.a} – ${o.names[1]} ${ro.b} → ${o.names[ro.winner]} เป็น Attacker`, 'roll', null);
+  log(s, `Roll-off for Attacker / Defender: ${o.names[0]} ${ro.a} – ${o.names[1]} ${ro.b} → ${o.names[ro.winner]} is the Attacker`, 'roll', null);
   s.attackerPlayer = ro.winner;
-  pushFx(s, { kind: 'rolloff', title: 'Roll-off: ใคร Attacker?', a: ro.a, b: ro.b, winner: ro.winner, result: `${o.names[ro.winner]} เป็น Attacker · ${o.names[other(ro.winner)]} (Defender) วางทัพก่อน` });
+  pushFx(s, { kind: 'rolloff', title: 'Roll-off: who is the Attacker?', a: ro.a, b: ro.b, winner: ro.winner, result: `${o.names[ro.winner]} is the Attacker · ${o.names[other(ro.winner)]} (Defender) deploys first` });
   s.players[ro.winner].role = 'attacker';
   s.players[other(ro.winner)].role = 'defender';
   pushFx(s, { kind: 'primary' });
@@ -167,7 +182,7 @@ export function createGame(o: NewGameOptions): GameState {
   for (const p of [0, 1] as PlayerId[]) if (s.players[p].secMode === 'tactical') s.players[p].secDeck = shuffle(s, MISSIONS.secondaries.map((x) => x.id));
   const L = deploymentById(layoutId);
   log(s, `Force Disposition: ${s.players[0].name} ${dispositionById(disp[0]).name} vs ${s.players[1].name} ${dispositionById(disp[1]).name}`, 'info', null);
-  for (const p of [0, 1] as PlayerId[]) log(s, `Primary ของ ${s.players[p].name}: ${primaryById(s.players[p].primaryId).name}`, 'info', p);
+  for (const p of [0, 1] as PlayerId[]) log(s, `${s.players[p].name}'s Primary Mission: ${primaryById(s.players[p].primaryId).name}`, 'info', p);
   log(s, `Layout: ${L.name} · ${L.matchup.map((m) => dispositionById(m).name).join(' vs ')} #${L.number} (${s.objectives.length} objectives)`, 'info', null);
   // Heirs of Sigismund: Black Templars swap Oath of Moment for Templar Vows
   for (const p of [0, 1] as PlayerId[]) {
@@ -185,10 +200,10 @@ export function createGame(o: NewGameOptions): GameState {
       if (!t) continue;
       for (const u of s.units.filter((x) => x.id === `p${p}-${e.uid}` || x.id === `p${p}-${e.uid}-b`)) {
         const why = canEmbarkIn(s, u, t);
-        if (why) { log(s, `${u.name} ขึ้น ${t.name} ไม่ได้: ${why}`, 'info', p); continue; }
+        if (why) { log(s, `${u.name} cannot embark in ${t.name}: ${why}`, 'info', p); continue; }
         u.status = 'embarked';
         u.embarkedIn = t.id;
-        log(s, `${u.name} เริ่มเกมอยู่บน ${t.name}`, 'info', p);
+        log(s, `${u.name} starts the battle embarked in ${t.name}`, 'info', p);
       }
     }
   }
@@ -217,31 +232,31 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
   const all = s.units.filter((x) => onBoard(x) || x.id === u.id).flatMap((x) => alive(x).map((m) => ({ m, owner: x.owner, unit: x.id })));
   for (const m of models) {
     const p = pos.get(m.id) ?? m;
-    if (p.x - m.r < -EPS || p.y - m.r < -EPS || p.x + m.r > W + EPS || p.y + m.r > H + EPS) { errors.push(`${m.name} อยู่นอกขอบสนาม`); bad.add(m.id); }
+    if (p.x - m.r < -EPS || p.y - m.r < -EPS || p.x + m.r > W + EPS || p.y + m.r > H + EPS) { errors.push(`${m.name} is off the battlefield`); bad.add(m.id); }
     for (const o of all) {
       if (o.m.id === m.id) continue;
       const op = o.unit === u.id ? pos.get(o.m.id) ?? o.m : o.m;
-      if (dist(p, op) < m.r + o.m.r - 0.02) { errors.push(`${m.name} ทับโมเดลอื่น`); bad.add(m.id); break; }
+      if (dist(p, op) < m.r + o.m.r - 0.02) { errors.push(`${m.name} overlaps another model`); bad.add(m.id); break; }
     }
     const blockable = !canCrossDense(m);
     for (const t of s.terrain) for (const w of t.walls) {
-      if (pointSegDist(p, w) < wallClearance(m, blockable && t.category === 'dense' && t.height > 2)) { errors.push(`${m.name} จบคาอยู่ในกำแพง`); bad.add(m.id); break; }
+      if (pointSegDist(p, w) < wallClearance(m, blockable && t.category === 'dense' && t.height > 2)) { errors.push(`${m.name} ends inside a wall`); bad.add(m.id); break; }
     }
     for (const t of s.terrain) {
       if (t.kind === 'container' && pointInPoly(p, t.poly) && !['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k))) {
-        errors.push(`${m.name} ขึ้นไปจบบนหลังคา container ไม่ได้ (13.06)`); bad.add(m.id);
+        errors.push(`${m.name} cannot end on top of a container (13.06)`); bad.add(m.id);
       }
       // a sealed container: nothing stands inside it or half over its side; some models can end on its roof
       if (t.box && circleTouchesPoly(p, m.r - 0.05, t.box)) {
         const roof = circleWhollyInPoly(p, m.r, t.box) && ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
-        if (!roof) { errors.push(`${m.name} วางทับ container ไม่ได้ (ต้องอยู่นอกกล่อง หรือบนหลังคาทั้งฐาน)`); bad.add(m.id); }
+        if (!roof) { errors.push(`${m.name} cannot overlap a container (place it beside the container or wholly on its roof)`); bad.add(m.id); }
       }
     }
   }
   if (models.length > 1) {
     const pts = models.map((m) => pos.get(m.id) ?? m);
     const probs = coherencyProblems(pts, RULES.coherency.near, RULES.coherency.max, models.map((m) => m.r));
-    if (probs.length) { errors.push(`หลุด coherency (ต้องห่างเพื่อน ≤${RULES.coherency.near}" และทุกตัวอยู่ภายใน ${RULES.coherency.max}")`); probs.forEach((i) => bad.add(models[i].id)); }
+    if (probs.length) { errors.push(`Out of Unit Coherency (each model within ${RULES.coherency.near}" of another, all within ${RULES.coherency.max}")`); probs.forEach((i) => bad.add(models[i].id)); }
   }
 }
 
@@ -290,35 +305,35 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     if (!path || path.length < 2) continue;
     const len = pathLength(path);
     const max = maxMoveDistance(s, u, kind, m, opt);
-    if (len > max + 0.02) { errors.push(`${m.name} เดิน ${len.toFixed(1)}" เกินระยะ ${max.toFixed(1)}"`); bad.add(m.id); }
+    if (len > max + 0.02) { errors.push(`${m.name} moved ${len.toFixed(1)}", more than ${max.toFixed(1)}"`); bad.add(m.id); }
     const why = pathBlocked(s, u, kind, m, path, opt);
-    if (why === 'enemy') { errors.push(`${m.name} เดินทะลุโมเดลศัตรูไม่ได้`); bad.add(m.id); }
-    if (why === 'wall') { errors.push(`${m.name} ผ่านกำแพง dense terrain ที่สูงเกิน 2" ไม่ได้ — ปล่อยนิ้วแล้วระบบจะหาทางอ้อมให้`); bad.add(m.id); }
+    if (why === 'enemy') { errors.push(`${m.name} cannot move through enemy models`); bad.add(m.id); }
+    if (why === 'wall') { errors.push(`${m.name} cannot move through a dense terrain wall taller than 2" — release and a way around will be found`); bad.add(m.id); }
   }
   endChecks(s, u, pos, errors, bad);
   const eng = engagedAt(s, u, pos);
   if (kind === 'scout') {
     const enemiesNear = boardUnits(s, other(u.owner)).some((e) => alive(u).some((m) => { const p = pos.get(m.id) ?? m; return alive(e).some((n) => dist(p, n) - m.r - n.r <= RULES.reserves.enemyDistance); }));
-    if (enemiesNear) errors.push(`Scout move ต้องจบห่างศัตรูทุกหน่วยเกิน ${RULES.reserves.enemyDistance}"`);
+    if (enemiesNear) errors.push(`A Scout move must end more than ${RULES.reserves.enemyDistance}" from all enemy units`);
   }
-  if (['normal', 'advance', 'fallback', 'ingress', 'extra', 'surge'].includes(kind) && eng.length) { errors.push(`จบการเดินต้องไม่อยู่ใน engagement range (${RULES.engagementRange}") ของศัตรู`); }
+  if (['normal', 'advance', 'fallback', 'ingress', 'extra', 'surge'].includes(kind) && eng.length) { errors.push(`Cannot end within Engagement Range (${RULES.engagementRange}") of an enemy`); }
   // Rigid Discipline: the move must end wholly in the deployment zone or within range of an objective
   if (kind === 'extra' && u.extraMove?.endIn) {
     const at = alive(u).map((m) => { const pth = paths.get(m.id); return { ...m, ...(pth ? pth[pth.length - 1] : {}) }; });
     const inDz = u.extraMove.endIn === 'dzOrObjective' && at.every((m) => circleWhollyInPoly(m, m.r, zoneOf(s, u.owner)));
     const onObj = s.objectives.some((o) => at.some((m) => dist(m, o) <= 3 + m.r + 1e-6));
-    if (!inDz && !onObj) errors.push(u.extraMove.endIn === 'objective' ? 'ต้องจบในระยะ objective' : 'ต้องจบใน deployment zone ทั้งหน่วย หรือในระยะ objective');
+    if (!inDz && !onObj) errors.push(u.extraMove.endIn === 'objective' ? 'Must end within range of an objective' : 'Must end wholly within your deployment zone or within range of an objective');
   }
   if (kind === 'charge' || kind === 'heroic' as MoveKind) {
     const targets = (opt.targets ?? []).map((id) => unitById(s, id));
-    for (const t of targets) if (!eng.includes(t)) errors.push(`ต้องจบ engaged กับเป้า ${t.name}`);
-    for (const e of eng) if (!targets.includes(e)) errors.push(`ห้าม engaged กับหน่วยที่ไม่ใช่เป้า (${e.name})`);
+    for (const t of targets) if (!eng.includes(t)) errors.push(`Must end engaged with the target ${t.name}`);
+    for (const e of eng) if (!targets.includes(e)) errors.push(`Cannot end engaged with a unit that was not a target (${e.name})`);
     for (const m of alive(u)) {
       const path = paths.get(m.id);
       if (!path || path.length < 2 || pathLength(path) < 0.01) continue;
       const before = Math.min(...targets.flatMap((t) => alive(t).map((n) => baseDist(m, n))));
       const after = Math.min(...targets.flatMap((t) => alive(t).map((n) => dist(path[path.length - 1], n) - m.r - n.r)));
-      if (after > before + 1e-6) { errors.push(`${m.name} ต้องจบใกล้เป้ามากขึ้น`); bad.add(m.id); }
+      if (after > before + 1e-6) { errors.push(`${m.name} must end closer to the target`); bad.add(m.id); }
     }
   }
   if (kind === 'pileIn' || kind === 'consolidate') {
@@ -326,13 +341,13 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     for (const m of alive(u)) {
       const path = paths.get(m.id);
       if (!path || path.length < 2 || pathLength(path) < 0.01) continue;
-      if (enemyModels.some((e) => baseDist(m, e) <= 0.05)) { errors.push(`${m.name} ติดฐานศัตรูอยู่ ขยับไม่ได้`); bad.add(m.id); }
+      if (enemyModels.some((e) => baseDist(m, e) <= 0.05)) { errors.push(`${m.name} is in base contact with an enemy and cannot move`); bad.add(m.id); }
       for (const e of engagedBefore) if (modelEngagedWith(m, e)) {
         const p = path[path.length - 1];
-        if (!alive(e).some((n) => dist(p, n) - m.r - n.r <= RULES.engagementRange + 1e-6)) { errors.push(`${m.name} ต้องยัง engaged กับ ${e.name}`); bad.add(m.id); }
+        if (!alive(e).some((n) => dist(p, n) - m.r - n.r <= RULES.engagementRange + 1e-6)) { errors.push(`${m.name} must stay engaged with ${e.name}`); bad.add(m.id); }
       }
     }
-    if (kind === 'pileIn' && !eng.length) errors.push('หลัง pile-in หน่วยต้อง engaged');
+    if (kind === 'pileIn' && !eng.length) errors.push('After a pile-in move the unit must be engaged');
   }
   return { ok: errors.length === 0, errors: [...new Set(errors)], bad: [...bad] };
 }
@@ -345,28 +360,28 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
   const enemyZone = zoneOf(s, other(u.owner));
   for (const m of alive(u)) {
     const p = pos.get(m.id) ?? m;
-    if (how === 'deploy' && !circleWhollyInPoly(p, m.r, zoneOf(s, u.owner))) { errors.push('ต้องวางให้อยู่ใน deployment zone ทั้งตัว'); bad.add(m.id); }
+    if (how === 'deploy' && !circleWhollyInPoly(p, m.r, zoneOf(s, u.owner))) { errors.push('Must be set up wholly within your deployment zone'); bad.add(m.id); }
     // Teleport Homer: arriving in the opponent's turn (Rapid Ingress, 0CP) is within 3" of its token, and 8" is enough
     const homer = u.homer && how !== 'deploy' && how !== 'infiltrate' && s.active !== u.owner ? u.homer : undefined;
-    if (homer && dist(p, homer) - m.r > 3 + EPS) { errors.push('Teleport Homer: ต้องลงภายใน 3" จาก token'); bad.add(m.id); }
+    if (homer && dist(p, homer) - m.r > 3 + EPS) { errors.push('Teleport Homer: must be set up within 3" of the token'); bad.add(m.id); }
     if (how !== 'deploy') {
       const keep = homer ? 8 : how === 'deepStrike' ? unitFlags(s, u).deepStrikeRange : RULES.reserves.enemyDistance;
-      if (enemies.some((e) => alive(e).some((n) => dist(p, n) - m.r - n.r <= keep))) { errors.push(`ต้องห่างศัตรูทุกหน่วยเกิน ${keep}"`); bad.add(m.id); }
+      if (enemies.some((e) => alive(e).some((n) => dist(p, n) - m.r - n.r <= keep))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
     }
     if (how === 'ingress' || how === 'deepStrike') {
       for (const e of enemies) {
         const omni = unitFlags(s, e).omniScrambler;
-        if (omni && alive(e).some((n) => dist(p, n) - m.r - n.r <= omni)) { errors.push(`ห้ามลงภายใน ${omni}" ของ ${e.name} (Omni-scramblers)`); bad.add(m.id); }
+        if (omni && alive(e).some((n) => dist(p, n) - m.r - n.r <= omni)) { errors.push(`Cannot be set up within ${omni}" of ${e.name} (Omni-scramblers)`); bad.add(m.id); }
       }
     }
-    if (how === 'infiltrate' && circleTouchesPoly(p, m.r + RULES.reserves.enemyDistance, enemyZone)) { errors.push(`Infiltrators ต้องห่าง deployment zone ศัตรูเกิน ${RULES.reserves.enemyDistance}"`); bad.add(m.id); }
+    if (how === 'infiltrate' && circleTouchesPoly(p, m.r + RULES.reserves.enemyDistance, enemyZone)) { errors.push(`Infiltrators must be more than ${RULES.reserves.enemyDistance}" from the enemy deployment zone`); bad.add(m.id); }
     if (how === 'ingress') {
       const edge = Math.min(p.x + m.r, p.y + m.r, W - p.x + m.r, H - p.y + m.r);
-      if (Math.min(p.x, p.y, W - p.x, H - p.y) + m.r > RULES.reserves.edgeDistance + EPS || edge < 0) { errors.push(`Ingress ต้องวางภายใน ${RULES.reserves.edgeDistance}" จากขอบสนาม`); bad.add(m.id); }
-      if (s.round < RULES.reserves.noEnemyZoneBeforeRound && circleTouchesPoly(p, m.r, enemyZone)) { errors.push('ก่อน battle round 3 ห้ามวางใน deployment zone ศัตรู'); bad.add(m.id); }
+      if (Math.min(p.x, p.y, W - p.x, H - p.y) + m.r > RULES.reserves.edgeDistance + EPS || edge < 0) { errors.push(`An ingress move must end within ${RULES.reserves.edgeDistance}" of a battlefield edge`); bad.add(m.id); }
+      if (s.round < RULES.reserves.noEnemyZoneBeforeRound && circleTouchesPoly(p, m.r, enemyZone)) { errors.push('Cannot be set up in the enemy deployment zone before battle round 3'); bad.add(m.id); }
     }
   }
-  if (engagedAt(s, u, pos).length) errors.push('ต้องวางแบบไม่ engaged');
+  if (engagedAt(s, u, pos).length) errors.push('Must be set up unengaged');
   return { ok: !errors.length, errors: [...new Set(errors)], bad: [...bad] };
 }
 
@@ -479,7 +494,7 @@ export function placeUnit(s: GameState, u: UnitState, pos: Map<string, Pt>) {
     const field = s.objectives.filter((o) => o.type !== 'home');
     const o = (field.length ? field : s.objectives).reduce((a, b) => (dist(b, c) < dist(a, c) ? b : a));
     u.seekerObjective = o.id;
-    log(s, `Seeker of the Unfound: ${u.name} เลือก objective ${s.objectives.indexOf(o) + 1}`, 'info', u.owner);
+    log(s, `Seeker of the Unfound: ${u.name} picks objective ${s.objectives.indexOf(o) + 1}`, 'info', u.owner);
   }
 }
 
@@ -495,16 +510,16 @@ export function deployUnit(s: GameState, unitId: string, pos: Map<string, Pt>, h
   const chk = validatePlacement(s, u, pos, how);
   if (!chk.ok) return chk;
   placeUnit(s, u, pos);
-  log(s, `วาง ${u.name}`, 'info', u.owner);
+  log(s, `Deployed ${u.name}`, 'info', u.owner);
   nextDeployer(s);
   return chk;
 }
 
 export function sendToReserves(s: GameState, unitId: string): string | null {
   const u = unitById(s, unitId);
-  if (reservesPoints(s, u.owner) + u.pts > armyPoints(s, u.owner) * RULES.reserves.maxPointsFraction) return `Strategic reserves รวมได้ไม่เกิน ${RULES.reserves.maxPointsFraction * 100}% ของแต้ม`;
+  if (reservesPoints(s, u.owner) + u.pts > armyPoints(s, u.owner) * RULES.reserves.maxPointsFraction) return `Strategic Reserves cannot exceed ${RULES.reserves.maxPointsFraction * 100}% of the army's points`;
   u.status = 'reserves';
-  log(s, `${u.name} อยู่ใน Strategic Reserves${hasDeepStrike(s, u) ? ' (Deep Strike)' : ''}`, 'info', u.owner);
+  log(s, `${u.name} is in Strategic Reserves${hasDeepStrike(s, u) ? ' (Deep Strike)' : ''}`, 'info', u.owner);
   nextDeployer(s);
   return null;
 }
@@ -549,10 +564,10 @@ export function redeployCandidates(s: GameState): UnitState[] {
 export function redeployUnit(s: GameState, unitId: string, toReserves: boolean): string | null {
   const r = s.redeploy;
   const u = unitById(s, unitId);
-  if (!r || r.left <= 0 || !redeployCandidates(s).includes(u)) return 'redeploy หน่วยนี้ไม่ได้';
+  if (!r || r.left <= 0 || !redeployCandidates(s).includes(u)) return 'This unit cannot be redeployed';
   r.left--;
   u.status = toReserves ? 'reserves' : 'pending';
-  log(s, `${r.source}: ${u.name} ${toReserves ? 'ย้ายเข้า Strategic Reserves' : 'ยกขึ้นเพื่อวางใหม่'}`, 'info', u.owner);
+  log(s, `${r.source}: ${u.name} ${toReserves ? 'moved into Strategic Reserves' : 'picked up to be set up again'}`, 'info', u.owner);
   return null;
 }
 
@@ -560,7 +575,7 @@ export function redeployUnit(s: GameState, unitId: string, toReserves: boolean):
 export function endRedeploy(s: GameState): string | null {
   const r = s.redeploy;
   if (!r) return null;
-  if (s.units.some((u) => u.owner === r.player && u.status === 'pending')) return 'วางหน่วยที่ยกขึ้นให้ครบก่อน';
+  if (s.units.some((u) => u.owner === r.player && u.status === 'pending')) return 'Set up the units you picked up first';
   s.redeploy = { ...r, left: 0, done: [...r.done, r.player] };
   finishDeployment(s);
   return null;
@@ -576,7 +591,7 @@ function finishDeployment(s: GameState) {
     if (!r) continue;
     s.redeploy = { player: p, left: r.n, infantryOnly: r.infantryOnly, source: r.name, done: doneP };
     s.deployTurn = p;
-    log(s, `${r.name}: ${s.players[p].name} redeploy ได้ ${r.n} หน่วย${r.infantryOnly ? ' (INFANTRY)' : ''} — วางใหม่หรือเข้ากองหนุน`, 'info', p);
+    log(s, `${r.name}: ${s.players[p].name} can redeploy ${r.n} unit(s)${r.infantryOnly ? ' (INFANTRY)' : ''}: set up again or move into Strategic Reserves`, 'info', p);
     return;
   }
   s.redeploy = undefined;
@@ -586,18 +601,18 @@ function finishDeployment(s: GameState) {
     if (s.units.some((u) => u.embarkedIn === t.id && u.status === 'embarked')) continue;
     t.status = 'destroyed';
     for (const m of t.models) { m.dead = true; m.wounds = 0; }
-    log(s, `${t.name} (Dedicated Transport) ไม่มีหน่วยอยู่ข้างใน → ไม่ได้ลงสนาม นับว่าถูกทำลาย`, 'kill', t.owner);
+    log(s, `${t.name} (Dedicated Transport) has no unit embarked → not set up, counts as destroyed`, 'kill', t.owner);
   }
   const ro = rollOff(s);
   s.firstPlayer = ro.winner;
-  pushFx(s, { kind: 'rolloff', title: 'Roll-off: ใครเล่นก่อน?', a: ro.a, b: ro.b, winner: ro.winner, result: `${s.players[ro.winner].name} ได้เล่นก่อน` });
-  log(s, `Roll-off เลือกคนเล่นก่อน: ${s.players[0].name} ${ro.a} – ${s.players[1].name} ${ro.b} → ${s.players[ro.winner].name} เล่นก่อน`, 'roll', null);
+  pushFx(s, { kind: 'rolloff', title: 'Roll-off: who goes first?', a: ro.a, b: ro.b, winner: ro.winner, result: `${s.players[ro.winner].name} goes first` });
+  log(s, `Roll-off for first turn: ${s.players[0].name} ${ro.a} – ${s.players[1].name} ${ro.b} → ${s.players[ro.winner].name} goes first`, 'roll', null);
   s.round = 1;
   s.turn = -1;
   if (s.units.some((u) => u.status === 'board' && scoutsOf(s, u))) {
     s.phase = 'scouts';
     s.deployTurn = ro.winner;
-    log(s, 'Pre-battle: Scouts move (เริ่มจากคนที่ได้เล่นก่อน)', 'info', null);
+    log(s, 'Pre-battle: Scout moves (first player first)', 'info', null);
     return;
   }
   startTurn(s, ro.winner);
@@ -629,7 +644,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   resetTurnFlags(s);
   s.controlAtTurnStart = s.objectives.map((o) => o.controller);
   onTurnStart(s);
-  log(s, `━━ Battle Round ${s.round} · เทิร์นของ ${s.players[p].name} ━━`, 'info', p);
+  log(s, `━━ Battle Round ${s.round} · ${s.players[p].name}'s turn ━━`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
   if (s.turn === 0) { initSagas(s); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) fireAll(s, 'roundStart', 'both');
@@ -646,7 +661,7 @@ function startCommand(s: GameState) {
   }
   if (s.tempCharacters) s.tempCharacters = s.tempCharacters.filter((x) => x.by !== s.active);
   for (const p of [0, 1] as PlayerId[]) s.players[p].cp += RULES.cpPerCommandPhase;
-  log(s, `+${RULES.cpPerCommandPhase} CP ทั้งสองฝ่าย (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
+  log(s, `+${RULES.cpPerCommandPhase}CP to both players (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
   fireFor(s, 'commandStart', s.active);
   drawUpTo(s, s.active);
   emitReact(s, other(s.active), 'enemyCommandStart', {});
@@ -688,12 +703,12 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
       t.result = r[0] + r[1] + mod;
       t.passed = t.result >= ld;
     }
-    pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${t.result} vs Ld ${ld}+ → ${t.passed ? 'ผ่าน' : 'ไม่ผ่าน!'}`, good: t.passed });
-    log(s, `Battle-shock ${u.name}: 2D6 [${r.join('+')}] = ${t.result} vs Ld ${ld}+ → ${t.passed ? 'ผ่าน' : 'ไม่ผ่าน '}`, 'roll', u.owner);
+    pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${t.result} vs Ld ${ld}+ → ${t.passed ? 'passed' : 'failed!'}`, good: t.passed });
+    log(s, `Battle-shock ${u.name}: 2D6 [${r.join('+')}] = ${t.result} vs Ld ${ld}+ → ${t.passed ? 'passed' : 'failed'}`, 'roll', u.owner);
   }
   const was = u.battleShocked;
   u.battleShocked = !t.passed;
-  if (was && t.passed) log(s, `${u.name} หายจาก battle-shocked`, 'info', u.owner);
+  if (was && t.passed) log(s, `${u.name} is no longer Battle-shocked`, 'info', u.owner);
   if (!was && !t.passed) fire(s, 'becameShocked', [u]);
 }
 
@@ -782,7 +797,7 @@ function endTurn(s: GameState) {
       // controlling player's choice: drop ordinary, low-wound models first, furthest from the group
       const worst = probs.map((i) => models[i]).sort((a, b) => Number(a.isCharacter) - Number(b.isCharacter) || a.profile.W - b.profile.W || dist(b, c) - dist(a, c))[0];
       killModel(s, u, worst);
-      log(s, `${u.name}: ${worst.name} ถูกนำออกเพราะหลุด coherency`, 'info', u.owner);
+      log(s, `${u.name}: ${worst.name} removed (out of Unit Coherency)`, 'info', u.owner);
       models = alive(u);
       probs = coherencyProblems(models, RULES.coherency.near, RULES.coherency.max, models.map((m) => m.r));
     }
@@ -801,7 +816,7 @@ function endTurn(s: GameState) {
   if (s.round === RULES.reserves.destroyedAfterRound) {
     for (const u of s.units) if (u.status === 'reserves' && !hasKw(u, 'AIRCRAFT')) {
       u.status = 'destroyed';
-      log(s, `${u.name} ไม่ได้ลงสนามจากกองหนุนภายใน round ${s.round} → ถูกทำลาย`, 'kill', u.owner);
+      log(s, `${u.name} did not arrive from Reserves by battle round ${s.round} → destroyed`, 'kill', u.owner);
     }
   }
   if (s.round >= RULES.battleRounds) { endBattle(s); return; }
@@ -814,7 +829,7 @@ function endBattle(s: GameState) {
   s.phase = 'gameover';
   const [a, b] = [s.players[0].vp + s.players[0].secVp, s.players[1].vp + s.players[1].secVp];
   s.winner = a === b ? 'draw' : a > b ? 0 : 1;
-  log(s, `จบเกม: ${s.players[0].name} ${a} VP – ${s.players[1].name} ${b} VP → ${s.winner === 'draw' ? 'เสมอ' : s.players[s.winner].name + ' ชนะ!'}`, 'vp', null);
+  log(s, `Battle over: ${s.players[0].name} ${a} VP – ${s.players[1].name} ${b} VP → ${s.winner === 'draw' ? 'draw' : s.players[s.winner].name + ' wins!'}`, 'vp', null);
 }
 
 // ---------- movement phase actions ----------
@@ -824,18 +839,18 @@ export function rollAdvance(s: GameState, u: UnitState) {
   if (det.advanceFixed) {
     // Full Throttle / Target Sighted: no Advance roll, a fixed bonus instead
     u.advanceRoll = det.advanceFixed;
-    log(s, `${u.name} Advance: ไม่ต้องทอย +${det.advanceFixed}"`, 'info', u.owner);
+    log(s, `${u.name} Advance: no roll, +${det.advanceFixed}"`, 'info', u.owner);
     return;
   }
   const raw = det.advanceSix ? 6 : d6(s);
   const bonus = (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0) + det.advanceBonus;
   u.advanceRoll = raw + bonus;
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Advance · ${u.name}`, dice: [raw], result: `M + ${u.advanceRoll}"${bonus ? ` (+${bonus})` : ''}${det.advanceSix ? ' (Detachment: 6)' : ''}`, good: u.advanceRoll >= 4 });
-  log(s, `${u.name} Advance: ทอยได้ ${u.advanceRoll}${det.advanceSix ? ' (กฎ detachment: นับเป็น 6)' : ''}`, 'roll', u.owner);
+  log(s, `${u.name} Advance: rolled ${u.advanceRoll}${det.advanceSix ? ' (Detachment rule: counts as 6)' : ''}`, 'roll', u.owner);
   if (det.advanceSelfMortals && !u.detAdvanceHurt?.startsWith(`${s.turn}:`)) {
     u.detAdvanceHurt = `${s.turn}:advance`;
     const mw = rollExpr(s, det.advanceSelfMortals).total;
-    applyMortalWounds(s, u, mw, 'กฎ detachment (Advance)');
+    applyMortalWounds(s, u, mw, 'Detachment rule (Advance)');
   }
 }
 
@@ -846,7 +861,7 @@ export function canDetReroll(s: GameState, u: UnitState, what: 'advance' | 'char
 }
 export function detReroll(s: GameState, u: UnitState, what: 'advance' | 'charge', fly = false, cap?: number) {
   u.detRerolled = `${s.turn}:${what}`;
-  log(s, `${u.name}: re-roll ${what === 'advance' ? 'Advance' : 'Charge'} ฟรี (กฎ detachment)`, 'info', u.owner);
+  log(s, `${u.name}: re-roll ${what === 'advance' ? 'Advance' : 'Charge'} for free (Detachment rule)`, 'info', u.owner);
   if (what === 'advance') rollAdvance(s, u);
   else { u.declaredCharge = false; declareCharge(s, u, fly, cap); }
 }
@@ -862,7 +877,7 @@ function blackstarLaunch(s: GameState, u: UnitState, paths: Map<string, Pt[]>) {
   if (!t) return;
   const r = rollN(s, 6);
   const n = r.filter((x) => x >= 5).length;
-  log(s, `Blackstar Cluster Launcher: ${u.name} บินผ่าน ${t.name} [${r.join(' ')}] = ${n} MW`, 'roll', u.owner);
+  log(s, `Blackstar Cluster Launcher: ${u.name} flies over ${t.name} [${r.join(' ')}] = ${n} MW`, 'roll', u.owner);
   if (n) applyMortalWounds(s, t, n, 'Blackstar Cluster Launcher');
 }
 
@@ -890,7 +905,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
   if (kind === 'fallback' && (u.battleShocked || forced.length)) {
     // Desperate Escape: hazard roll per model, made before moving (resolved here for simplicity)
     const worse = forced.length && u.battleShocked ? 1 : 0; // forced by an ability while also battle-shocked: −1 to each test
-    const { fails } = hazardTest(s, u, alive(u).length, `Desperate Escape${forced.length ? ` (บังคับโดย ${forced.map((f) => f.name).join(', ')})` : ''}`, worse);
+    const { fails } = hazardTest(s, u, alive(u).length, `Desperate Escape${forced.length ? ` (forced by ${forced.map((f) => f.name).join(', ')})` : ''}`, worse);
     if (fails) applyMortalWounds(s, u, fails * (alive(u).every(isMV) ? RULES.hazard.mortalWoundsMonsterVehicle : RULES.hazard.mortalWounds), 'Desperate Escape');
   }
   const moved = alive(u).filter((m) => (paths.get(m.id)?.length ?? 0) > 1 && pathLength(paths.get(m.id)!) > 0.01);
@@ -901,7 +916,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
   if (label[kind]) log(s, `${u.name}: ${label[kind]}${maxMoved ? ` (${maxMoved.toFixed(1)}")` : ''}`, 'info', u.owner);
   // Shokk-boosta: a hazard roll for each model after the Advance
   if (kind === 'advance' && unitFlags(s, u).advanceHazard) {
-    const { fails } = hazardTest(s, u, alive(u).length, 'หลัง Advance');
+    const { fails } = hazardTest(s, u, alive(u).length, 'After Advancing');
     if (fails) applyMortalWounds(s, u, fails * (alive(u).every(isMV) ? RULES.hazard.mortalWoundsMonsterVehicle : RULES.hazard.mortalWounds), 'Hazard');
   }
   // reactions of the other player: "if an enemy unit ends a move within 8" of this unit …", "… Falls Back, this unit can make a Normal move"
@@ -925,7 +940,7 @@ function sabotageCheck(s: GameState, u: UnitState) {
       o.snared = null;
       const r = d6(s);
       const mw = r >= 2 ? rollExpr(s, 'D6').total : 0;
-      log(s, `Mortis Snares: ${u.name} เดินเข้า objective ที่วางกับดัก — ทอย ${r}${mw ? ` → ${mw} mortal wound` : ' ไม่โดน'}`, 'roll', by);
+      log(s, `Mortis Snares: ${u.name} moved onto the snared objective — rolled ${r}${mw ? ` → ${mw} mortal wounds` : ', no effect'}`, 'roll', by);
       if (mw) applyMortalWounds(s, u, mw, 'Mortis Snares');
       if (!onBoard(u)) return;
     }
@@ -933,7 +948,7 @@ function sabotageCheck(s: GameState, u: UnitState) {
     if (!alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) continue;
     const r = d6(s);
     const mw = r >= 2 ? rollExpr(s, 'D3').total : 0;
-    log(s, `A Deadly Prize: ${u.name} จบการเดินบน objective ที่ถูก Sabotage — ทอย ${r}${mw ? ` → ${mw} mortal wound` : ''}`, 'roll', o.sabotaged);
+    log(s, `A Deadly Prize: ${u.name} ended a move on the sabotaged objective — rolled ${r}${mw ? ` → ${mw} mortal wounds` : ''}`, 'roll', o.sabotaged);
     if (mw) applyMortalWounds(s, u, mw, 'A Deadly Prize');
   }
 }
@@ -946,14 +961,14 @@ export function beginMove(s: GameState, u: UnitState, kind: 'normal' | 'advance'
     emitReact(s, other(u.owner), 'enemyFallBack', { unitId: u.id });
   }
   const f = unitFlags(s, u);
-  if (f.mustStay) { log(s, `${u.name} ต้อง Remain Stationary เทิร์นนี้`, 'info', u.owner); remainStationary(s, u); return false; }
+  if (f.mustStay) { log(s, `${u.name} must Remain Stationary this turn`, 'info', u.owner); remainStationary(s, u); return false; }
   if (kind === 'fallback' && f.fallBackLdTest && !ldTest(s, u, 'Transfixing Gaze')) { remainStationary(s, u); return false; }
   if (f.slowed && (u.used ??= {}).slowed !== String(s.turn)) {
     u.used.slowed = String(s.turn);
     const r = d6(s);
     const mw = rollExpr(s, r <= 4 ? 'D3' : '2D3').total;
     addTimed(s, u, { e: { move: r <= 4 ? -2 : -3 }, label: 'Slowed', until: 'turn', by: other(u.owner) });
-    log(s, `Slowed: ${u.name} ทอย ${r} → M −${r <= 4 ? 2 : 3}"`, 'roll', u.owner);
+    log(s, `Slowed: ${u.name} rolled ${r} → −${r <= 4 ? 2 : 3}"`, 'roll', u.owner);
     applyMortalWounds(s, u, mw, 'Slowed (Stasis Bomb)');
   }
   return onBoard(u);
@@ -975,10 +990,10 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
   u.move = 'ingress';
   if (closest <= RULES.reserves.enemyDistance) u.noChargeTurn = s.turn;
-  log(s, `${u.name} ลงสนาม (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closest <= RULES.reserves.enemyDistance ? ' ใกล้ศัตรูกว่า 9" → ชาร์จไม่ได้เทิร์นนี้' : ''}`, 'info', u.owner);
+  log(s, `${u.name} arrives (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closest <= RULES.reserves.enemyDistance ? ' within 9" of the enemy → cannot charge this turn' : ''}`, 'info', u.owner);
   if (u.owner === s.active && s.phase === 'movement') offerReactions(s, 'enemyMovedNear', u);
   if (unitHasAbility(u, 'Drop Pod Assault')) dropPodAssault(s, u);
-  if (u.homer && s.active !== u.owner) { log(s, `Teleport Homer: ${u.name} ลงที่ token (token ถูกเอาออก)`, 'info', u.owner); u.homer = undefined; }
+  if (u.homer && s.active !== u.owner) { log(s, `Teleport Homer: ${u.name} arrives at the token (token removed)`, 'info', u.owner); u.homer = undefined; }
   return chk;
 }
 
@@ -998,7 +1013,7 @@ function dropPodAssault(s: GameState, pod: UnitState) {
       const far = alive(p).every((m) => { const q = pos.get(m.id)!; return enemies.every((n) => dist(q, n) - m.r - n.r > 8); });
       if (far && validateDisembark(s, p, pod, pos).ok) { disembarkUnit(s, p, pod, pos); done = true; }
     }
-    log(s, done ? `Drop Pod Assault: ${p.name} ลงจาก ${pod.name} ทันที (ห่างศัตรูเกิน 8")` : `Drop Pod Assault: ${p.name} หาที่ลงห่างศัตรูเกิน 8" ไม่ได้ — ยังอยู่ในพอด`, 'info', pod.owner);
+    log(s, done ? `Drop Pod Assault: ${p.name} disembarks from ${pod.name} (more than 8" from enemies)` : `Drop Pod Assault: no room for ${p.name} more than 8" from enemies — it stays in the pod`, 'info', pod.owner);
   }
 }
 
@@ -1022,27 +1037,27 @@ export function setOathTarget(s: GameState, p: PlayerId, targetId: string) {
 /** Master of Battle: the second enemy unit that becomes the Oath of Moment target if the first one is destroyed. */
 export function setOathBackup(s: GameState, p: PlayerId, targetId: string) {
   s.players[p].oathBackup = targetId;
-  log(s, `Master of Battle: เป้าสำรอง ${unitById(s, targetId).name}`, 'info', p);
+  log(s, `Master of Battle: backup target ${unitById(s, targetId).name}`, 'info', p);
 }
 
 export function callWaaagh(s: GameState, p: PlayerId) {
   s.players[p].waaaghUsed = true;
   s.players[p].riledUntilTurn = s.turn + 1;
-  log(s, `WAAAGH! หน่วย Ork ทุกหน่วย riled up: 5+ InSv, ยิงแบบ [ASSAULT], advance แล้วชาร์จได้ (จนจบเทิร์นถัดไป)`, 'info', p);
+  log(s, `WAAAGH! Every Ork unit is riled up: 5+ invulnerable save, ranged weapons have [ASSAULT], can charge after advancing (until the end of the next turn)`, 'info', p);
   const boss = boardUnits(s, p).find((u) => u.isWarlordUnit) ?? boardUnits(s, p).find((u) => alive(u).some((m) => m.isCharacter));
   if (boss) heroFx(s, boss, 'WAAAGH!');
 }
 
 export function chargeEligibility(s: GameState, u: UnitState): string | null {
-  if (!onBoard(u)) return 'ไม่อยู่บนสนาม';
-  if (u.declaredCharge) return 'ประกาศชาร์จไปแล้ว';
-  if (hasKw(u, 'AIRCRAFT')) return 'AIRCRAFT ชาร์จไม่ได้';
-  if (isEngaged(s, u)) return 'engaged อยู่';
-  if (u.move === 'fallback' && !canDo(s, u, 'chargeAfterFallBack')) return 'Fall back มาเทิร์นนี้';
-  if (u.cantCharge) return 'ลงจากรถแบบ Rapid/Combat มา หรือใช้ ability ที่ห้ามชาร์จ — ชาร์จไม่ได้เทิร์นนี้';
-  if (u.noChargeTurn === s.turn) return 'ลงสนามใกล้ศัตรูกว่าปกติ (Meteoric Descent) ชาร์จไม่ได้เทิร์นนี้';
-  if (u.move === 'advance' && !isRiledUp(s, u) && !canDo(s, u, 'chargeAfterAdvance')) return 'Advance มาเทิร์นนี้';
-  if (!boardUnits(s, other(u.owner)).some((e) => !hasKw(e, 'AIRCRAFT') && unitDistance(u, e) <= RULES.charge.declareRange)) return `ไม่มีศัตรูภายใน ${RULES.charge.declareRange}"`;
+  if (!onBoard(u)) return 'Not on the battlefield';
+  if (u.declaredCharge) return 'Already declared a charge';
+  if (hasKw(u, 'AIRCRAFT')) return 'AIRCRAFT cannot charge';
+  if (isEngaged(s, u)) return 'Engaged';
+  if (u.move === 'fallback' && !canDo(s, u, 'chargeAfterFallBack')) return 'Fell Back this turn';
+  if (u.cantCharge) return 'Disembarked (Rapid / Combat) or used an ability that prevents charging this turn';
+  if (u.noChargeTurn === s.turn) return 'Arrived closer to the enemy than normal (Meteoric Descent): cannot charge this turn';
+  if (u.move === 'advance' && !isRiledUp(s, u) && !canDo(s, u, 'chargeAfterAdvance')) return 'Advanced this turn';
+  if (!boardUnits(s, other(u.owner)).some((e) => !hasKw(e, 'AIRCRAFT') && unitDistance(u, e) <= RULES.charge.declareRange)) return `No enemy within ${RULES.charge.declareRange}"`;
   return null;
 }
 
@@ -1057,8 +1072,8 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   total += rollMods(s, u).chargeBonus;
   u.chargeRoll = Math.max(0, total - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0));
   const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
-  pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `ชาร์จได้ ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });
-  log(s, `${u.name} ประกาศชาร์จ: 2D6 [${r.join('+')}] = ${r[0] + r[1]}${fly ? ' (บิน −2)' : ''}${cap !== undefined && r[0] + r[1] > cap ? ` → สูงสุด ${cap}` : ''}`, 'roll', u.owner);
+  pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `Charge ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });
+  log(s, `${u.name} declares a charge: 2D6 [${r.join('+')}] = ${r[0] + r[1]}${fly ? ' (Fly −2)' : ''}${cap !== undefined && r[0] + r[1] > cap ? ` → capped at ${cap}` : ''}`, 'roll', u.owner);
   if (declaredInOwnTurn) emitReact(s, other(u.owner), 'enemyChargeDeclared', { unitId: u.id });
   if (declaredInOwnTurn) emergencyEmbark(s, u);
   return r;
@@ -1083,7 +1098,7 @@ function emergencyEmbark(s: GameState, charger: UnitState) {
     t.oncePerTurnUsed.push(key);
     best.status = 'embarked';
     best.embarkedIn = t.id;
-    log(s, `Emergency Combat Embarkation: ${best.name} หนีขึ้น ${t.name} ก่อน ${charger.name} ชาร์จถึง`, 'info', p);
+    log(s, `Emergency Combat Embarkation: ${best.name} embarks in ${t.name} before ${charger.name}'s charge`, 'info', p);
   }
 }
 
@@ -1115,7 +1130,7 @@ function miraculousSaviour(s: GameState) {
       placeUnit(s, u, pos);
       u.move = 'ingress';
       pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
-      log(s, `Miraculous Saviour: ${u.name} ลงมา engaged กับ ${e.name}`, 'info', p);
+      log(s, `Miraculous Saviour: ${u.name} is set up engaged with ${e.name}`, 'info', p);
       break;
     }
   }
@@ -1141,7 +1156,7 @@ onAttackFinished((s, at) => {
       placeUnit(s, p, pos);
       p.embarkedIn = null;
       p.disembarkedTurn = s.turn;
-      log(s, `Stabilised Disembarkation: ${p.name} ลงจาก ${t.name} ที่โดนยิงหนัก`, 'info', t.owner);
+      log(s, `Stabilised Disembarkation: ${p.name} disembarks from the damaged ${t.name}`, 'info', t.owner);
       break;
     }
   }
@@ -1172,7 +1187,7 @@ export function commitCharge(s: GameState, u: UnitState, paths: Map<string, Pt[]
   u.chargedTurn = s.turn;
   u.chargeTargets = targets;
   if (s.lastAct?.unitId === u.id && s.lastAct.kind === 'charge') s.lastAct.targets = [...targets];
-  log(s, `${u.name} ชาร์จสำเร็จ → ${targets.map((t) => unitById(s, t).name).join(', ')} (ได้ Fights First)`, 'info', u.owner);
+  log(s, `${u.name} charges successfully → ${targets.map((t) => unitById(s, t).name).join(', ')} (Fights First)`, 'info', u.owner);
   fire(s, 'endOfCharge', [u], { targetId: targets[0] });
   if (u.owner === s.active && s.phase === 'charge') {
     emitReact(s, u.owner, 'chargeMoveEnd', { unitId: u.id });
@@ -1187,7 +1202,7 @@ export function crushingImpact(s: GameState, u: UnitState, targetId: string) {
   const rolls = rollN(s, m.profile.T);
   const hits = Math.min(6, rolls.filter((r) => r >= 5).length);
   const self = rolls.filter((r) => r === 1).length;
-  log(s, `Crushing Impact: ${m.profile.T}D6 [${rolls.join(' ')}] → ศัตรู ${hits} MW, ตัวเอง ${self} MW`, 'roll', u.owner);
+  log(s, `Crushing Impact: ${m.profile.T}D6 [${rolls.join(' ')}] → enemy ${hits} MW, own unit ${self} MW`, 'roll', u.owner);
   if (hits) applyMortalWounds(s, t, hits, 'Crushing Impact');
   if (self) applyMortalWounds(s, u, self, 'Crushing Impact');
   return rolls;
@@ -1544,7 +1559,7 @@ export function drawSecondaries(s: GameState, p: PlayerId, n: number) {
 
 export function chooseFixedSecondaries(s: GameState, p: PlayerId, ids: string[]) {
   s.players[p].secActive = ids.slice(0, 2);
-  log(s, `${s.players[p].name} เลือก Fixed Secondary: ${ids.map((x) => secondaryById(x).name).join(', ')}`, 'info', p);
+  log(s, `${s.players[p].name} selects Fixed Missions: ${ids.map((x) => secondaryById(x).name).join(', ')}`, 'info', p);
 }
 
 /** Manual override: claim VP from an active secondary when the automatic check cannot see it. */
@@ -1556,7 +1571,7 @@ export function claimSecondary(s: GameState, p: PlayerId, id: string, vp: number
 export function discardSecondary(s: GameState, p: PlayerId, id: string) {
   const P = s.players[p];
   P.secActive = P.secActive.filter((x) => x !== id);
-  if (s.active === p) { P.cp += 1; log(s, `${P.name} ทิ้ง ${secondaryById(id).name} → +1CP`, 'cp', p); }
+  if (s.active === p) { P.cp += 1; log(s, `${P.name} discards ${secondaryById(id).name} → +1CP`, 'cp', p); }
 }
 
 /** Once per battle, end of your Command phase: pay 1CP to replace one active card. */
@@ -1587,16 +1602,16 @@ export function transportSpaceUsed(s: GameState, t: UnitState) {
 
 export function canEmbarkIn(s: GameState, u: UnitState, t: UnitState): string | null {
   const T = t.transport;
-  if (!T || t.owner !== u.owner || t.id === u.id) return 'ไม่ใช่รถขนส่ง';
-  if (hasKw(u, 'TRANSPORT')) return 'รถขึ้นรถไม่ได้';
+  if (!T || t.owner !== u.owner || t.id === u.id) return 'Not a transport';
+  if (hasKw(u, 'TRANSPORT')) return 'A TRANSPORT cannot embark';
   // every model has to fit the transport's rules (what it carries, what it can't, "excluding …")
   for (const m of alive(u)) {
     const why = transportFit(T, modelKws(u, m)).why;
     if (why) return `${m.name}: ${why}`;
   }
-  if (u.factionKeywords.length && t.factionKeywords.length && !u.factionKeywords.some((k) => t.factionKeywords.includes(k))) return 'คนละฝ่าย';
+  if (u.factionKeywords.length && t.factionKeywords.length && !u.factionKeywords.some((k) => t.factionKeywords.includes(k))) return 'Different faction';
   const need = unitSpace(T, u);
-  if (transportSpaceUsed(s, t) + need > T.capacity) return `ที่ไม่พอ (${transportSpaceUsed(s, t)}+${need}/${T.capacity})`;
+  if (transportSpaceUsed(s, t) + need > T.capacity) return `Not enough room (${transportSpaceUsed(s, t)}+${need}/${T.capacity})`;
   return null;
 }
 
@@ -1605,14 +1620,14 @@ export function embarkUnit(s: GameState, u: UnitState, t: UnitState, duringDeplo
   const why = canEmbarkIn(s, u, t);
   if (why) return why;
   if (!duringDeploy) {
-    if (unitFlags(s, t).noEmbark) return 'ขึ้นรถคันนี้ไม่ได้หลังลงสนามแล้ว';
-    if (!['normal', 'advance', 'fallback'].includes(u.move ?? '')) return 'ต้องเดิน (Normal/Advance/Fall back) ก่อนขึ้นรถ';
-    if (u.setUpTurn === s.turn) return 'หน่วยที่เพิ่งลงสนามเทิร์นนี้ขึ้นรถไม่ได้';
-    if (!alive(u).every((m) => alive(t).some((n) => baseDist(m, n) <= 3 + 1e-6))) return 'ทุกโมเดลต้องอยู่ภายใน 3" ของรถ';
+    if (unitFlags(s, t).noEmbark) return 'Cannot embark in this transport once the battle has begun';
+    if (!['normal', 'advance', 'fallback'].includes(u.move ?? '')) return 'Must make a Normal / Advance / Fall Back move to embark';
+    if (u.setUpTurn === s.turn) return 'A unit set up this turn cannot embark';
+    if (!alive(u).every((m) => alive(t).some((n) => baseDist(m, n) <= 3 + 1e-6))) return 'Every model must be within 3" of the transport';
   }
   u.status = 'embarked';
   u.embarkedIn = t.id;
-  log(s, `${u.name} ขึ้นรถ ${t.name}`, 'info', u.owner);
+  log(s, `${u.name} embarks in ${t.name}`, 'info', u.owner);
   if (duringDeploy) nextDeployer(s);
   return null;
 }
@@ -1631,7 +1646,7 @@ export function validateDisembark(s: GameState, u: UnitState, t: UnitState, pos:
   const mode = disembarkMode(s, t);
   const errors: string[] = [];
   const bad = new Set<string>();
-  if (!mode) return { ok: false, errors: ['รถ Advance/Fall back มาแล้ว ลงไม่ได้ phase นี้'], bad: [] };
+  if (!mode) return { ok: false, errors: ['The transport Advanced / Fell Back: no disembarking this phase'], bad: [] };
   const range = mode === 'combat' ? 6 : 3;
   endChecks(s, u, pos, errors, bad);
   // Aggressive Disembarkation: within the set-up distance is enough, not wholly within
@@ -1639,9 +1654,9 @@ export function validateDisembark(s: GameState, u: UnitState, t: UnitState, pos:
   for (const m of alive(u)) {
     const p = pos.get(m.id) ?? m;
     const tm = alive(t).reduce((a, b) => (dist(p, a) <= dist(p, b) ? a : b));
-    if (dist(p, tm) - tm.r + (loose ? -m.r : m.r) > range + 0.02) { errors.push(loose ? `ต้องวางให้อยู่ภายใน ${range}" ของรถ` : `ต้องวางให้อยู่ภายใน ${range}" ของรถทั้งตัว`); bad.add(m.id); }
+    if (dist(p, tm) - tm.r + (loose ? -m.r : m.r) > range + 0.02) { errors.push(loose ? `Must be set up within ${range}" of the transport` : `Must be set up wholly within ${range}" of the transport`); bad.add(m.id); }
   }
-  if (mode !== 'combat' && engagedAt(s, u, pos).length) errors.push('ลงจากรถต้องไม่ engaged');
+  if (mode !== 'combat' && engagedAt(s, u, pos).length) errors.push('Disembarking units must be set up unengaged');
   return { ok: !errors.length, errors: [...new Set(errors)], bad: [...bad] };
 }
 
@@ -1663,7 +1678,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
   if (mode === 'tactical') u.move = null; // may still make a normal or advance move
   else { u.move = 'stationary'; u.cantCharge = !assault; }
   u.disembarkedFrom = t.id;
-  log(s, `${u.name} ลงจากรถ (${assault ? 'Assault: ยังชาร์จได้' : mode === 'rapid' ? 'Rapid' : mode === 'tactical' ? 'Tactical' : 'Combat'} Disembark)`, 'info', u.owner);
+  log(s, `${u.name} disembarks (${assault ? 'Assault: can still charge' : mode === 'rapid' ? 'Rapid' : mode === 'tactical' ? 'Tactical' : 'Combat'} Disembark)`, 'info', u.owner);
   fire(s, 'passengerDisembarks', [t], { targetId: u.id });
   return chk;
 }
@@ -1687,7 +1702,7 @@ export function emergencyDisembark(s: GameState, t: UnitState, tm: ModelState) {
     u.embarkedIn = null;
     if (!placed) {
       for (const m of alive(u)) killModel(s, u, m);
-      log(s, `${u.name} ออกจากรถที่ระเบิดไม่ได้ → ถูกทำลาย`, 'kill', u.owner);
+      log(s, `${u.name} could not escape the destroyed transport → destroyed`, 'kill', u.owner);
       continue;
     }
     for (const m of alive(u)) { const p = placed.get(m.id)!; m.x = p.x; m.y = p.y; }

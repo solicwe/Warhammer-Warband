@@ -92,17 +92,17 @@ describe('mustering (11th edition)', () => {
     const l = list('AC', [['Shield-Captain', 1, 180, undefined, { warlord: true }], ['Shield-Captain', 1, 180], ['Shield-Captain', 1, 180]]);
     expect(listPoints(l)).toBe(540);
     expect(listPoints(l, AC)).toBe(580);
-    expect(validateList(l, AC, size).some((e) => /ใส่ได้ไม่เกิน/.test(e))).toBe(false);
+    expect(validateList(l, AC, size).some((e) => /maximum/.test(e))).toBe(false);
     l.units.push({ uid: 'x9', datasheet: 'Shield-Captain', models: 1, pts: 180 });
-    expect(validateList(l, AC, size).some((e) => /Shield-Captain: ใส่ได้ไม่เกิน 3/.test(e))).toBe(true);
+    expect(validateList(l, AC, size).some((e) => /Shield-Captain: maximum 3/.test(e))).toBe(true);
   });
   it('Trajann must be the Warlord; an ANATHEMA PSYKANA character can\'t be (unless Null Maiden Vigil)', () => {
     const l = list('AC', [['Trajann Valoris', 1, 265], ['Knight-Centura', 1, 55, undefined, { warlord: true }]]);
     const errs = validateList(l, AC, size);
-    expect(errs.some((e) => /Trajann Valoris ต้องเป็น Warlord/.test(e))).toBe(true);
-    expect(errs.some((e) => /ANATHEMA PSYKANA\) เป็น Warlord ไม่ได้/.test(e))).toBe(true);
+    expect(errs.some((e) => /Trajann Valoris must be your Warlord/.test(e))).toBe(true);
+    expect(errs.some((e) => /ANATHEMA PSYKANA\) cannot be your Warlord/.test(e))).toBe(true);
     l.detachments = ['Null Maiden Vigil'];
-    expect(validateList(l, AC, size).some((e) => /ANATHEMA PSYKANA\) เป็น Warlord ไม่ได้/.test(e))).toBe(false);
+    expect(validateList(l, AC, size).some((e) => /ANATHEMA PSYKANA\) cannot be your Warlord/.test(e))).toBe(false);
   });
 });
 

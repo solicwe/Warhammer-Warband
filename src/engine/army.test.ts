@@ -35,7 +35,7 @@ describe('leader + support (24.34)', () => {
 
   it('a Captain (leader) and an Apothecary Biologis (support) join the same Heavy Intercessor Squad', () => {
     const list = mk([['Heavy Intercessor Squad', 5, 100], ['Captain In Gravis Armour', 1, 80, 'x0'], ['Apothecary Biologis', 1, 75, 'x0']]);
-    expect(validateList(list, SM, SIZE).filter((e) => /Leader|Support|ผูก/.test(e))).toEqual([]);
+    expect(validateList(list, SM, SIZE).filter((e) => /Leader|Support|attached/.test(e))).toEqual([]);
     const units = buildUnits(list, SM, 0);
     expect(units).toHaveLength(1);
     expect(units[0].sources.sort()).toEqual(['Apothecary Biologis', 'Captain In Gravis Armour', 'Heavy Intercessor Squad']);
@@ -45,7 +45,7 @@ describe('leader + support (24.34)', () => {
 
   it('two leaders (or two supports) in one bodyguard unit are flagged', () => {
     const list = mk([['Heavy Intercessor Squad', 5, 100], ['Captain In Gravis Armour', 1, 80, 'x0'], ['Captain In Gravis Armour', 1, 80, 'x0']]);
-    expect(validateList(list, SM, SIZE).some((e) => /มี Leader ได้ 1/.test(e))).toBe(true);
+    expect(validateList(list, SM, SIZE).some((e) => /only one Leader/.test(e))).toBe(true);
     expect(attachOptions(mk([['Heavy Intercessor Squad', 5, 100], ['Captain In Gravis Armour', 1, 80, 'x0'], ['Captain In Gravis Armour', 1, 80]]), SM, { uid: 'x2', datasheet: 'Captain In Gravis Armour', models: 1, pts: 80 })).toEqual([]);
   });
 });

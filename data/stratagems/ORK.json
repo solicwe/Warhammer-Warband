@@ -11,7 +11,7 @@
     }
    ],
    "status": "partial",
-   "note": "ถ้าอาวุธมี [CLEAVE] อยู่แล้ว +1: ทำเอง"
+   "note": "If the weapon already has [CLEAVE], +1: apply manually"
   },
   "CLOSE-RANGE DAKKA": {
    "effects": [
@@ -23,7 +23,7 @@
     }
    ],
    "status": "partial",
-   "note": "ถ้าอาวุธมี [RAPID FIRE] อยู่แล้ว +1: ทำเอง"
+   "note": "If the weapon already has [RAPID FIRE], +1: apply manually"
   },
   "ORKS IS NEVER BEATEN": {
    "effects": [
@@ -51,7 +51,7 @@
    ],
    "bot": "never",
    "status": "partial",
-   "note": "+3 ต่อการทอยถ้าเป็น Deff Dread: ทำเอง"
+   "note": "+3 per roll if Deff Dread: apply manually"
   },
   "HULKING BRUTES": {
    "effects": [
@@ -63,7 +63,7 @@
     }
    ],
    "status": "partial",
-   "note": "ตัวเลือก +1CP (−1 wound ทุกการยิง): ทำเอง"
+   "note": "+1CP option (−1 to Wound for every attack): apply manually"
   },
   "SPEEDIEST FREEKS": {
    "effects": [
@@ -103,7 +103,7 @@
     }
    ],
    "status": "partial",
-   "note": "re-roll D6 ถ้า riled up: ทำเอง"
+   "note": "Re-roll D6 if riled up: apply manually"
   },
   "WHERE D'YA FINK YOU'RE GOING?": {
    "effects": [
@@ -146,7 +146,7 @@
     }
    ],
    "status": "partial",
-   "note": "ต้องจบบน objective"
+   "note": "Must end on an objective"
   },
   "SCARPER!": {
    "do": [
@@ -155,7 +155,7 @@
     }
    ],
    "status": "partial",
-   "note": "6\" ถ้าเป็นหน่วยที่มี leader"
+   "note": "6\" if the unit has a Leader"
   },
   "WHIRLIGIG EVASION": {
    "do": [

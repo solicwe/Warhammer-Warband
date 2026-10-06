@@ -197,7 +197,7 @@ describe('Space Marine abilities', () => {
       startAttack(t, 'fight', boyz.id, bl.id, structuredClone(r.pools));
       resolveAll(t);
       finishAttack(t);
-      fought = t.log.some((l) => /ตีก่อนถูกนำออก/.test(l.text));
+      fought = t.log.some((l) => /fights before being removed/.test(l.text));
     }
     expect(fought).toBe(true);
   });

@@ -186,7 +186,7 @@
      "hit": 1
     }
    ],
-   "note": "AIRCRAFT ไม่นับแต้ม Strategic Reserves (ระบบไม่นับอยู่แล้ว)"
+   "note": "AIRCRAFT do not count toward Strategic Reserves points (already excluded)"
   },
   "Dread Mob": {
    "auto": "full",
@@ -203,7 +203,7 @@
        {
         "when": "selectedToShoot",
         "limit": "phase",
-        "label": "ทอย 2 ลูก (ไม่ซ้ำ) + hazard 1 ครั้ง",
+        "label": "Roll 2 dice (no duplicates) + 1 Hazardous roll",
         "botUse": "healthy",
         "do": [
          {
@@ -215,7 +215,7 @@
        {
         "when": "selectedToFight",
         "limit": "phase",
-        "label": "ทอย 2 ลูก (ไม่ซ้ำ) + hazard 1 ครั้ง",
+        "label": "Roll 2 dice (no duplicates) + 1 Hazardous roll",
         "botUse": "healthy",
         "do": [
          {
@@ -227,7 +227,7 @@
        {
         "when": "selectedToShoot",
         "limit": "phase",
-        "label": "ทอย 1 ลูก: 1-2 +1A · 3-4 +2S · 5-6 +1AP",
+        "label": "Roll 1 die: 1-2 +1 A · 3-4 +2 S · 5-6 +1 AP",
         "do": [
          {
           "on": "self",
@@ -238,7 +238,7 @@
        {
         "when": "selectedToFight",
         "limit": "phase",
-        "label": "ทอย 1 ลูก: 1-2 +1A · 3-4 +2S · 5-6 +1AP",
+        "label": "Roll 1 die: 1-2 +1 A · 3-4 +2 S · 5-6 +1 AP",
         "do": [
          {
           "on": "self",
@@ -363,7 +363,7 @@
      }
     }
    ],
-   "note": "ทอยตอนเริ่มยิงครั้งแรกของหน่วยใน phase (ผล FLY ของข้อ 5 ไม่ได้ใส่)"
+   "note": "Rolled when the unit first shoots in the phase (the FLY result of option 5 is not applied)"
   },
   "Brute Bosses": {
    "auto": "full",
@@ -420,7 +420,7 @@
           "!VEHICLE"
          ]
         },
-        "label": "Roar of Mork: ศัตรูในระยะ 12\" ทอย battle-shock (−1 ต่อทุก 10 โมเดล) · ทอย psychic 1 = battle-shocked",
+        "label": "Roar of Mork: enemies within 12\" take a Battle-shock test (−1 per 10 models) · psychic roll of 1 = Battle-shocked",
         "roll": "D6",
         "table": [
          {
@@ -447,7 +447,7 @@
         "if": [
          "notBattleShocked"
         ],
-        "label": "Visions of Violence: Fights First · ทอย psychic 1 = battle-shocked",
+        "label": "Visions of Violence: Fights First · psychic roll of 1 = Battle-shocked",
         "botUse": "valuable",
         "roll": "D6",
         "table": [
@@ -509,7 +509,7 @@
      ]
     }
    ],
-   "note": "ระบบเลือก Aggressive Push ให้ (objective ที่ยังไม่ได้ครองทั้งหมดเป็น Vowed)"
+   "note": "The engine selects Aggressive Push (all objectives not yet controlled are Vowed)"
   },
   "Combat Doctrines": {
    "auto": "full",
@@ -522,7 +522,7 @@
      {
       "id": "assault",
       "name": "Assault Doctrine",
-      "text": "Advance แล้วยังชาร์จได้",
+      "text": "Can charge after Advancing",
       "effects": [
        {
         "units": [
@@ -537,7 +537,7 @@
      {
       "id": "devastator",
       "name": "Devastator Doctrine",
-      "text": "อาวุธยิงมี [ASSAULT]",
+      "text": "Ranged weapons have [ASSAULT]",
       "effects": [
        {
         "units": [
@@ -553,7 +553,7 @@
      {
       "id": "tactical",
       "name": "Tactical Doctrine",
-      "text": "Fall back แล้วยังยิงและชาร์จได้",
+      "text": "Can shoot and charge after Falling Back",
       "effects": [
        {
         "units": [
@@ -572,7 +572,7 @@
   "Transhuman Strategist": {
    "auto": "full",
    "armyRule": true,
-   "note": "warlord ที่มี ability นี้: ต้น battle round ได้ 1CP (ดู data/abilities)"
+   "note": "Warlord with this ability: gain 1CP at the start of the battle round (see data/abilities)"
   },
   "Gladius Task Force": {
    "auto": "full",
@@ -668,7 +668,7 @@
        {
         "when": "afterShootingButton",
         "limit": "phase",
-        "label": "ยิงแล้วยังซ่อน (hidden) ได้",
+        "label": "Can remain hidden after shooting",
         "do": [
          {
           "on": "self",
@@ -682,7 +682,7 @@
         "if": [
          "notEngaged"
         ],
-        "label": "เดิน D6\" หลังยิง (ชาร์จไม่ได้)",
+        "label": "Move D6\" after shooting (cannot charge)",
         "do": [
          {
           "on": "self",
@@ -695,7 +695,7 @@
      }
     }
    ],
-   "note": "หลังหน่วย PHOBOS / Scout Squad ยิง: กดเลือก 'ยังซ่อนได้' หรือ 'เดิน D6\"' (อย่างใดอย่างหนึ่ง)"
+   "note": "After a PHOBOS / Scout Squad unit shoots: choose 'Stay hidden' or 'Move D6\"' (one or the other)"
   },
   "Phobos Shock Force": {
    "auto": "full",
@@ -722,7 +722,7 @@
      ]
     }
    ],
-   "note": "จบ Movement phase: หน่วย PHOBOS ที่ hidden อยู่ re-roll wound 1 ได้จนจบเทิร์น"
+   "note": "End of Movement phase: hidden PHOBOS units re-roll Wound rolls of 1 until end of turn"
   },
   "Gravis Linebreaker Force": {
    "auto": "full",
@@ -817,7 +817,7 @@
      }
     }
    ],
-   "note": "TRANSPORT ยิงโดนหน่วยไหน หน่วยนั้นเป็น assailed ถึงจบเทิร์น: หน่วยที่ลงรถเทิร์นนี้ยิง/ตีมันได้ [SUSTAINED HITS 1]"
+   "note": "Units hit by the TRANSPORT's shooting are assailed until end of turn: units that disembarked this turn gain [SUSTAINED HITS 1] against them"
   },
   "Ironstorm Spearhead": {
    "auto": "full",
@@ -1015,7 +1015,7 @@
      ]
     }
    ],
-   "note": "re-roll 1 ลูก (hit / wound / damage) ต่อการโจมตี · ใกล้ Caanok Var / Iron Father Feirros 6\": ได้เพิ่มอย่างละ 1 ลูก"
+   "note": "Re-roll 1 die (Hit / Wound / Damage) per attack · within 6\" of Caanok Var / Iron Father Feirros: 1 extra of each"
   },
   "Shadowmark Talon": {
    "auto": "full",
@@ -1211,7 +1211,7 @@
      ]
     }
    ],
-   "note": "Deathwatch Allies (500 แต้ม, ห้ามเป็น warlord) ยังไม่ได้ตรวจในหน้าจัดทัพ"
+   "note": "Deathwatch Allies (500 points, cannot be Warlord) not yet validated in the army builder"
   },
   "Wrath of the Rock": {
    "auto": "full",
@@ -1277,7 +1277,7 @@
      {
       "id": "witch",
       "name": "Abhor the Witch, Destroy the Witch",
-      "text": "ตี PSYKER: [PRECISION] และ [LANCE]",
+      "text": "Attacks against PSYKER: [PRECISION] and [LANCE]",
       "effects": [
        {
         "units": [
@@ -1297,7 +1297,7 @@
      {
       "id": "challenge",
       "name": "Accept Any Challenge, No Matter the Odds",
-      "text": "ตี: T เป้า > S +1 wound",
+      "text": "Attacks: if target T > S, +1 to Wound",
       "effects": [
        {
         "units": [
@@ -1314,7 +1314,7 @@
      {
       "id": "uphold",
       "name": "Uphold the Honour of the Emperor",
-      "text": "จบ Movement: objective ที่ INFANTRY ยึดอยู่ติดเป็นของเรา; Advance แล้วยังเริ่ม action ได้",
+      "text": "End of Movement: objectives controlled by INFANTRY become sticky; can start actions after Advancing",
       "effects": [
        {
         "units": [
@@ -1347,7 +1347,7 @@
      "surgeObjective": true
     }
    ],
-   "note": "Crusader Squad: surge move ไปหา objective ที่ใกล้ที่สุดแทนศัตรูได้ (บอทเลือกเอง; ผู้เล่นลากไปทาง objective ได้เลย)"
+   "note": "Crusader Squad: may surge move towards the closest objective instead of the enemy (bot chooses; players can drag towards an objective)"
   },
   "Champions of Fenris": {
    "auto": "full",
@@ -1479,7 +1479,7 @@
        "limit": "battle",
        "per": "army",
        "botUse": "round2",
-       "label": "MONSTER/VEHICLE ได้ Master of Wolves ถึง Command phase หน้า",
+       "label": "MONSTER/VEHICLE gain Master of Wolves until your next Command phase",
        "do": [
         {
          "on": "self",
@@ -1513,12 +1513,12 @@
   "Aquila Commander": {
    "auto": "full",
    "armyRule": true,
-   "note": "warlord ที่มี ability นี้: ต้น battle round ได้ 1CP (ดู data/abilities/AC.json)"
+   "note": "Warlord with this ability: gain 1CP at the start of the battle round (see data/abilities/AC.json)"
   },
   "Special Move Types": {
    "auto": "full",
    "armyRule": true,
-   "note": "Shock disembark: ดู Assault Vehicle"
+   "note": "Shock disembark: see Assault Vehicle"
   },
   "Daughters of the Abyss": {
    "auto": "full",
@@ -1583,7 +1583,7 @@
      "if": [
       "readied"
      ],
-     "label": "Conservai: ทำ action ได้แม้ engaged / battle-shocked และยังยิงได้",
+     "label": "Conservai: can perform actions while engaged / Battle-shocked and can still shoot",
      "do": [
       {
        "on": "self",
@@ -1633,7 +1633,7 @@
       "readied",
       "notMovedYet"
      ],
-     "label": "Calistus: เดินทะลุโมเดลได้",
+     "label": "Calistus: can move through models",
      "botIf": [
       "detachment:Solar Watch",
       "!engaged"
@@ -1674,7 +1674,7 @@
      "if": [
       "readied"
      ],
-     "label": "Salvus: ไม่สน modifier ของ BS / hit / wound",
+     "label": "Salvus: ignore modifiers to BS / Hit / Wound",
      "botIf": [
       "any:detachment:Aquilan Shield||farFromEnemies:14"
      ],
@@ -1714,7 +1714,7 @@
      "if": [
       "readied"
      ],
-     "label": "Dacatarai: ตีระยะประชิดใส่หน่วยที่ไม่ใช่ MONSTER/VEHICLE re-roll hit 1",
+     "label": "Dacatarai: melee attacks against non-MONSTER/VEHICLE units re-roll Hit rolls of 1",
      "botIf": [
       "ownTurn",
       "engagedNotMV",
@@ -1758,7 +1758,7 @@
      "if": [
       "readied"
      ],
-     "label": "Kaptaris: ศัตรูตีหน่วยนี้ระยะประชิด -1 hit",
+     "label": "Kaptaris: enemy melee attacks against this unit -1 to Hit",
      "botIf": [
       "!ownTurn",
       "engaged"
@@ -1794,7 +1794,7 @@
       "side": "enemy",
       "engaged": true
      },
-     "label": "Kaptaris (Shadowkeepers): -1 hit + ศัตรูที่ติดพันทดสอบ battle-shock -1",
+     "label": "Kaptaris (Shadowkeepers): -1 to Hit + engaged enemies -1 to Battle-shock tests",
      "botIf": [
       "engaged"
      ],
@@ -1827,7 +1827,7 @@
      "if": [
       "readied"
      ],
-     "label": "Rendax: อาวุธประชิด [LETHAL HITS: MONSTER/VEHICLE]",
+     "label": "Rendax: melee weapons gain [LETHAL HITS: MONSTER/VEHICLE]",
      "botIf": [
       "engagedMV"
      ],
@@ -1867,7 +1867,7 @@
       ]
      },
      "roll": "D6",
-     "label": "Rendax (Emperor's Chosen): + ทอย mortal wound ใส่ MONSTER/VEHICLE ที่ติดพัน",
+     "label": "Rendax (Emperor's Chosen): + mortal wound roll against engaged MONSTER/VEHICLE",
      "botIf": [
       "engagedMV"
      ],
@@ -1935,7 +1935,7 @@
         "if": [
          "!marked:martialMastery"
         ],
-        "label": "อาวุธประชิด [SUSTAINED HITS 1]",
+        "label": "Melee weapons [SUSTAINED HITS 1]",
         "botIf": [
          "!lethalBetter"
         ],
@@ -1960,7 +1960,7 @@
         "if": [
          "!marked:martialMastery"
         ],
-        "label": "อาวุธประชิด [LETHAL HITS]",
+        "label": "Melee weapons [LETHAL HITS]",
         "botIf": [
          "lethalBetter"
         ],
@@ -2002,7 +2002,7 @@
      }
     }
    ],
-   "note": "Favoured Ka'tah: Salvus +6\" ระยะยิง"
+   "note": "Favoured Ka'tah: Salvus +6\" range"
   },
   "Emperor's Chosen": {
    "auto": "full",
@@ -2024,7 +2024,7 @@
      ]
     }
    ],
-   "note": "Favoured Ka'tah: Rendax + ทอย mortal wound"
+   "note": "Favoured Ka'tah: Rendax + mortal wound roll"
   },
   "Emissaries Imperatus": {
    "auto": "full",
@@ -2048,7 +2048,7 @@
      "rerollCharge": true
     }
    ],
-   "note": "Favoured Ka'tah: Dacatarai (ศัตรูที่ติดพัน pile-in/consolidate -2\")"
+   "note": "Favoured Ka'tah: Dacatarai (engaged enemies -2\" pile-in/consolidate)"
   },
   "Shadowkeepers": {
    "auto": "full",
@@ -2098,7 +2098,7 @@
       "anywhere": true
      },
      "limit": "turn",
-     "label": "เลือกศัตรูเป็น dreadful foe: CHARACTER ของเรา +1 wound ใส่มัน",
+     "label": "Select an enemy as dreadful foe: our CHARACTERS +1 to Wound against it",
      "do": [
       {
        "incoming": {
@@ -2141,7 +2141,7 @@
       "notEngaged"
      ],
      "botUse": "never",
-     "label": "On Gilded Wings: ออกไปอยู่ Strategic Reserves",
+     "label": "On Gilded Wings: go into Strategic Reserves",
      "do": [
       {
        "on": "self",
@@ -2231,7 +2231,7 @@
      }
     }
    ],
-   "note": "warlord เป็น ANATHEMA PSYKANA CHARACTER ได้"
+   "note": "Warlord can be an ANATHEMA PSYKANA CHARACTER"
   }
  }
 }

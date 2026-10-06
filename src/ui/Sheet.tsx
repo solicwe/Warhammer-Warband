@@ -63,7 +63,7 @@ function Weapons({ weapons }: { weapons: WeaponData[] }) {
   );
 }
 
-const ST_LABEL: Record<AbilityStatus, string> = { auto: 'ระบบทำให้', partial: 'ระบบทำบางส่วน', manual: 'ทำเอง', info: 'ข้อมูล', none: 'ยังไม่อัตโนมัติ', core: '' };
+const ST_LABEL: Record<AbilityStatus, string> = { auto: 'Automated', partial: 'Partly automated', manual: 'Manual', info: 'Info', none: 'Not automated', core: '' };
 const ST_ICON: Partial<Record<AbilityStatus, IconName>> = { auto: 'check', partial: 'partial', manual: 'hand', none: 'hand' };
 
 /** Badge saying whether the app plays this ability by itself. */
@@ -102,12 +102,12 @@ export function DatasheetView({ sheet, factionId }: { sheet: DatasheetData; fact
         <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={60} datasheet={sheet.name} editable />
         <div className="grow">
           <h2>{sheet.name}</h2>
-          <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''} · แตะรูปหรือวาง (Paste) เพื่อใส่รูป</div>
+          <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''} · tap the picture or paste to set one</div>
         </div>
       </div>
       {groups.map((g) => (
         <div key={g.names.join('|')}>
-          {(groups.length > 1 || sheet.models.length > 1) && <div className="small muted">{groups.length > 1 ? g.names.join(' / ') : 'ทุกโมเดล'} · ฐาน {g.base}</div>}
+          {(groups.length > 1 || sheet.models.length > 1) && <div className="small muted">{groups.length > 1 ? g.names.join(' / ') : 'All models'} · base {g.base}</div>}
           <Stats p={g.p} />
         </div>
       ))}
@@ -133,12 +133,12 @@ export function DatasheetView({ sheet, factionId }: { sheet: DatasheetData; fact
           {sheet.leads.length > 0 && (
             <>
               <div className="ds-sec">LEADER</div>
-              <div className="ds-body">ผูกเข้ากับหน่วยเหล่านี้ได้:{sheet.leads.map((l) => <div key={l} className="ds-lead">• {l}</div>)}</div>
+              <div className="ds-body">Can be attached to:{sheet.leads.map((l) => <div key={l} className="ds-lead">• {l}</div>)}</div>
             </>
           )}
           <div className="ds-kw"><span>FACTION KEYWORDS:</span> {sheet.factionKeywords.join(', ')}</div>
           <div className="kw ds-kw2">KEYWORDS: {sheet.keywords.join(', ')}</div>
-          <div className="tiny muted">Data: Wahapedia (<a href={sheet.link} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>ดูต้นฉบับ</a>)</div>
+          <div className="tiny muted">Data: Wahapedia (<a href={sheet.link} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>source</a>)</div>
           <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(false)}>LESS <span className="dt-chev up"><Icon name="down" size={18} /></span></button>
         </>
       )}
@@ -166,13 +166,13 @@ export function UnitView({ u }: { u: UnitState }) {
         ))}
         <div className="grow">
           <h2>{u.name}</h2>
-          <div className="tiny">แตะรูปหรือวาง (Paste) เพื่อใส่รูป · เก็บในเครื่องนี้</div>
+          <div className="tiny">Tap the picture or paste to set one · saved on this device</div>
         </div>
       </div>
       <div className="row small">
         <span className="chip">{u.models.filter((m) => !m.dead).length}/{u.startingStrength} models</span>
         {(st === 'half' || st === 'belowHalf') && <span className="chip warn">{st === 'half' ? 'Half-strength' : 'Below half'}</span>}
-        {u.battleShocked && <span className="chip warn">Battle-shocked (OC −, ห้ามใช้ stratagem)</span>}
+        {u.battleShocked && <span className="chip warn">Battle-shocked (OC 0, no Stratagems)</span>}
         {u.core.fnp && <span className="chip">FNP {u.core.fnp}+</span>}
         {u.core.stealth && <span className="chip">Stealth</span>}
         {u.core.deepStrike && <span className="chip">Deep Strike</span>}

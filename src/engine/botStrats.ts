@@ -78,7 +78,7 @@ setDiceHook((s, stage) => {
     if (gain < cpWorth(s, A.owner) - 2) return;
     spendStratagem(s, A.owner, 'command-reroll', A);
     rerollOne(s, stage, i);
-    log(s, `↻ Command Re-roll: ทอยลูก ${stage === 'hit' ? 'Hit' : 'Wound'} ที่พลาดใหม่ (${p.weapon})`, 'roll', A.owner);
+    log(s, `↻ Command Re-roll: a failed ${stage === 'hit' ? 'Hit' : 'Wound'} roll re-rolled (${p.weapon})`, 'roll', A.owner);
     return;
   }
   // saves: the defender re-rolls its lowest failed save when the damage it stops is worth the CP
@@ -98,7 +98,7 @@ setDiceHook((s, stage) => {
   }))) return;
   spendStratagem(s, T.owner, 'command-reroll', T);
   rerollOne(s, 'save', i);
-  log(s, `↻ Command Re-roll: ทอย Save ที่ไม่ผ่านใหม่ (${T.name})`, 'roll', T.owner);
+  log(s, `↻ Command Re-roll: a failed saving throw re-rolled (${T.name})`, 'roll', T.owner);
 });
 
 // ---------- detachment stratagems, any of them: try the effect, measure, use the best ----------
@@ -324,7 +324,7 @@ export function botExplosives(s: GameState, u: UnitState): boolean {
   spendStratagem(s, p, 'explosives', u);
   const r = rollN(s, 6);
   const n = r.filter((x) => x >= 4).length;
-  log(s, `บอทใช้ Explosives: ${u.name} → ${t.name} [${r.join(' ')}] = ${n} MW`, 'roll', p);
+  log(s, `Bot uses Explosives: ${u.name} → ${t.name} [${r.join(' ')}] = ${n} MW`, 'roll', p);
   if (n) applyMortalWounds(s, t, n, 'Explosives');
   return true;
 }

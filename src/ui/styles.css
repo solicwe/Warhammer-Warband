@@ -674,3 +674,11 @@ button.disp-chip { min-height: 36px; padding: 0 12px; font-size: 12px; border-ra
 /* key terms in rule text: clearly heavier than the words around them */
 b.em { font-weight: 700; color: #000; font-family: var(--sans); font-size: 0.97em; letter-spacing: 0.005em; }
 .dt-card-text b.em, .enh-text b.em, .ds-ab b.em, .rt b.em, .sheet b.em { font-weight: 800; }
+
+/* list header: a plain card, only the name is editable */
+.ab-head-main { cursor: default; }
+.ab-name-input { border: none; background: transparent; padding: 0; margin: 0; width: 100%; color: inherit; font: 600 19px var(--serif); border-bottom: 1px dashed transparent; }
+.ab-name-input:focus { outline: none; border-bottom-color: var(--ink-muted, #888); }
+.ab-disp-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ab-disp-pick .disp-chip { font-size: 12px; padding: 3px 9px; }
+.ab-add-size { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 12px; background: var(--card-2, rgba(0,0,0,0.04)); border-radius: 8px; margin: -2px 0 6px; }

@@ -171,7 +171,7 @@ describe('the bot spends Command Points', () => {
       const r = buildShootPools(s, dev.id, bw.id, { mode: 'normal' });
       startAttack(s, 'shoot', dev.id, bw.id, r.pools);
       resolveAll(s);
-      used += s.log.filter((e) => /Command Re-roll: ทอยลูก (Hit|Wound)/.test(e.text)).length;
+      used += s.log.filter((e) => /Command Re-roll: a failed (Hit|Wound) roll/.test(e.text)).length;
     }
     expect(used).toBeGreaterThan(0);
   });

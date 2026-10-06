@@ -66,7 +66,7 @@ export function startOfBattle(s: GameState) {
       picked.push(rest.shift()!);
     }
     for (const t of picked) addMarker(s, p, 'locate', { terrainId: t.id, at: polyCentroid(t.poly) });
-    log(s, `Locate and Deny: ${s.players[p].name} วาง operation marker ${picked.length} อันใน terrain area นอก deployment zone`, 'info', p);
+    log(s, `Locate and Deny: ${s.players[p].name} places ${picked.length} operation markers in terrain areas outside the deployment zones`, 'info', p);
   }
 }
 
@@ -96,7 +96,7 @@ export function onTurnStart(s: GameState) {
       const any = boardUnits(s, other(p))[0];
       if (any) P.mission.condemned = [any.id];
     }
-    if (P.mission.condemned.length) log(s, `Punishment: ${P.mission.condemned.map((id) => unitById(s, id).name).join(', ')} ถูก condemned จนถึงต้นเทิร์นหน้า`, 'info', p);
+    if (P.mission.condemned.length) log(s, `Punishment: ${P.mission.condemned.map((id) => unitById(s, id).name).join(', ')} condemned until the start of the next turn`, 'info', p);
   }
 }
 
@@ -129,7 +129,7 @@ export function onMoveEnd(s: GameState, u: UnitState, kind: string) {
   if (kind !== 'pileIn' && kind !== 'consolidate') {
     const before = s.pendingActions.length;
     s.pendingActions = s.pendingActions.filter((a) => a.unitId !== u.id);
-    if (s.pendingActions.length < before) log(s, `${u.name} เคลื่อนที่: action ไม่สำเร็จ`, 'info', u.owner);
+    if (s.pendingActions.length < before) log(s, `${u.name} moved: action failed`, 'info', u.owner);
   }
   if (s.players[u.owner].primaryId === 'surveil-the-foe') {
     for (const o of s.objectives) {
@@ -138,7 +138,7 @@ export function onMoveEnd(s: GameState, u: UnitState, kind: string) {
       const gone = s.markers.filter((m) => m.owner !== u.owner && circleTouchesPoly({ x: m.x, y: m.y }, 0.5, t.poly));
       if (gone.length) {
         s.markers = s.markers.filter((m) => !gone.includes(m));
-        log(s, `Surveil the Foe: ${u.name} เก็บ operation marker ศัตรู ${gone.length} อัน`, 'info', u.owner);
+        log(s, `Surveil the Foe: ${u.name} removes ${gone.length} enemy operation markers`, 'info', u.owner);
       }
     }
   }
@@ -156,15 +156,15 @@ export const setActionEligibilityHook = (fn: EligHook) => { eligHook = fn; };
 const may = (s: GameState, u: UnitState, what: Parameters<EligHook>[2]) => !!eligHook?.(s, u, what);
 
 export function actionBlock(s: GameState, u: UnitState): string | null {
-  if (!onBoard(u)) return 'ไม่อยู่บนสนาม';
+  if (!onBoard(u)) return 'Not on the battlefield';
   if (hasKw(u, 'AIRCRAFT') || hasKw(u, 'FORTIFICATION')) return 'AIRCRAFT/FORTIFICATION';
   if (u.battleShocked && !may(s, u, 'actionWhileShocked')) return 'battle-shocked';
-  if (!ocOf(u)) return 'OC เป็น 0';
+  if (!ocOf(u)) return 'OC is 0';
   if (isEngaged(s, u) && !hasKw(u, 'TITANIC') && !may(s, u, 'actionWhileEngaged')) return 'engaged';
-  if (u.move === 'advance' && !may(s, u, 'actionAfterAdvance')) return 'advance มา';
-  if (u.move === 'fallback' && !may(s, u, 'actionAfterFallBack')) return 'fall back มา';
-  if (u.shotTurn === s.turn) return 'ยิงไปแล้ว phase นี้';
-  if (s.pendingActions.some((a) => a.unitId === u.id) || s.players[u.owner].mission.done.some((d) => d.unitId === u.id && d.turn === s.turn)) return 'ทำ action ไปแล้วเทิร์นนี้';
+  if (u.move === 'advance' && !may(s, u, 'actionAfterAdvance')) return 'Advanced';
+  if (u.move === 'fallback' && !may(s, u, 'actionAfterFallBack')) return 'Fell Back';
+  if (u.shotTurn === s.turn) return 'Already shot this phase';
+  if (s.pendingActions.some((a) => a.unitId === u.id) || s.players[u.owner].mission.done.some((d) => d.unitId === u.id && d.turn === s.turn)) return 'Already performed an action this turn';
   return null;
 }
 
@@ -201,7 +201,7 @@ function actionOptionsFor(s: GameState, p: PlayerId, id: string): ActionOption[]
         for (const t of s.terrain) {
           if (t.kind === 'objective-area' || t.objectiveId || trapped.has(t.id) || usedAreas.has(t.id)) continue;
           if (pointInPoly(polyCentroid(t.poly), zone) || !unitInTerrain(u, t)) continue;
-          out.push({ action: id, name: def.name, unitId: u.id, terrainId: t.id, label: nm('terrain area นี้') });
+          out.push({ action: id, name: def.name, unitId: u.id, terrainId: t.id, label: nm('this terrain area') });
         }
         break;
       }
@@ -209,7 +209,7 @@ function actionOptionsFor(s: GameState, p: PlayerId, id: string): ActionOption[]
         const mine = territoryPoly(s, p);
         for (const t of s.terrain) {
           if (t.kind === 'objective-area' || pointInPoly(polyCentroid(t.poly), mine) || !alive(u).some((m) => pointInPoly(m, t.poly))) continue;
-          out.push({ action: id, name: def.name, unitId: u.id, terrainId: t.id, label: nm('terrain area นี้') });
+          out.push({ action: id, name: def.name, unitId: u.id, terrainId: t.id, label: nm('this terrain area') });
         }
         break;
       }
@@ -251,7 +251,7 @@ function actionOptionsFor(s: GameState, p: PlayerId, id: string): ActionOption[]
         const terr = territoryPoly(s, other(p));
         for (const t of s.terrain) {
           if (t.kind === 'objective-area' || !pointInPoly(polyCentroid(t.poly), terr) || !alive(u).some((m) => pointInPoly(m, t.poly))) continue;
-          out.push({ action: id, name: def.name, unitId: u.id, terrainId: t.id, label: nm('terrain area ในเขตศัตรู') });
+          out.push({ action: id, name: def.name, unitId: u.id, terrainId: t.id, label: nm('terrain area in the enemy deployment zone') });
         }
         break;
       }
@@ -276,20 +276,20 @@ export function startAction(s: GameState, opt: ActionOption) {
       P.mission.trapped.push({ terrainId: opt.terrainId, turn: s.turn });
       const t = s.terrain.find((x) => x.id === opt.terrainId)!;
       addMarker(s, p, 'trap', { terrainId: t.id, at: polyCentroid(t.poly) });
-      log(s, `${u.name}: Booby Trap — terrain area ถูกวางกับดัก`, 'info', p);
+      log(s, `${u.name}: Booby Trap — the terrain area is trapped`, 'info', p);
     }
     if (opt.action === 'plunder' && opt.terrainId) {
       P.sec.plundered.push({ terrainId: opt.terrainId, turn: s.turn });
-      log(s, `${u.name}: Plunder — terrain area ถูกปล้น`, 'info', p);
+      log(s, `${u.name}: Plunder — the terrain area is plundered`, 'info', p);
     }
     if (opt.action === 'surveil' && opt.targetId) {
       P.mission.surveilled.push({ unitId: opt.targetId, turn: s.turn });
-      log(s, `${u.name} สอดแนม ${unitById(s, opt.targetId).name}`, 'info', p);
+      log(s, `${u.name} surveils ${unitById(s, opt.targetId).name}`, 'info', p);
     }
     return;
   }
   s.pendingActions.push({ player: p, unitId: u.id, action: opt.action, turn: s.turn, objId: opt.objId, terrainId: opt.terrainId });
-  log(s, `${u.name} เริ่ม action ${def.name} (สำเร็จตอนจบเทิร์นถ้าเงื่อนไขครบ)`, 'info', p);
+  log(s, `${u.name} starts the ${def.name} action (completes at the end of the turn if the conditions are met)`, 'info', p);
 }
 
 /** End of the active player's turn: complete actions, consecrate objectives. Called before scoring. */
@@ -299,7 +299,7 @@ export function onTurnEnd(s: GameState) {
   for (const a of s.pendingActions.filter((x) => x.player === p)) {
     const u = s.units.find((x) => x.id === a.unitId);
     const def = MISSIONS.actions[a.action];
-    if (!u || !onBoard(u) || u.battleShocked) { log(s, `${def.name}: ไม่สำเร็จ`, 'info', p); continue; }
+    if (!u || !onBoard(u) || u.battleShocked) { log(s, `${def.name}: failed`, 'info', p); continue; }
     const o = a.objId ? s.objectives.find((x) => x.id === a.objId) : undefined;
     let ok = false;
     if (def.completes === 'endOfTurnIfControl') ok = !!o && unitControls(s, u, o);
@@ -307,7 +307,7 @@ export function onTurnEnd(s: GameState) {
       const t = s.terrain.find((x) => x.id === a.terrainId);
       ok = !!t && !boardUnits(s, other(p)).some((e) => unitInTerrain(e, t));
     }
-    if (!ok) { log(s, `${def.name} ของ ${u.name}: ไม่สำเร็จ (ไม่ได้ยึด objective / มีศัตรูในพื้นที่)`, 'info', p); continue; }
+    if (!ok) { log(s, `${u.name}'s ${def.name}: failed (objective not controlled / enemies within range)`, 'info', p); continue; }
     P.mission.done.push({ action: a.action, unitId: u.id, turn: s.turn, objId: a.objId, terrainId: a.terrainId });
     if (o && a.action === 'cleanse') P.sec.cleansed.push({ objId: o.id, turn: s.turn });
     if (o && (a.action === 'decoy' || a.action === 'triangulate' || a.action === 'extract-intelligence' || a.action === 'maintain-control')) {
@@ -324,8 +324,8 @@ export function onTurnEnd(s: GameState) {
         return t ? boardUnits(s, p).some((x) => unitInTerrain(x, t)) && !boardUnits(s, other(p)).some((x) => unitInTerrain(x, t)) : false;
       };
       const victim = [...pool].sort((a2, b2) => Number(held(a2)) - Number(held(b2)))[0];
-      if (victim) { s.markers = s.markers.filter((m) => m !== victim); log(s, `${u.name}: Sensor Sweep เอา operation marker ออก 1 อัน`, 'info', p); }
-    } else log(s, `${u.name}: ${def.name} สำเร็จ`, 'info', p);
+      if (victim) { s.markers = s.markers.filter((m) => m !== victim); log(s, `${u.name}: Sensor Sweep removes an operation marker`, 'info', p); }
+    } else log(s, `${u.name}: ${def.name} completed`, 'info', p);
   }
   s.pendingActions = s.pendingActions.filter((x) => x.player !== p);
   if (P.primaryId === 'consecrate') {

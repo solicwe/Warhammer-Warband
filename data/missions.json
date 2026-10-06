@@ -1,5 +1,5 @@
 {
- "_comment": "Deployment cards / terrain / Primary Missions (Chapter Approved 2026-27). พิกัดเป็นนิ้ว: x = 0..44 จากซ้าย, y = 0..60 จากบน (แนวตั้งตามการ์ดทางการ). terrain 'mirror' = สร้างชิ้นหมุน 180° รอบจุดกลางให้อีกฝั่งเพื่อความยุติธรรม",
+ "_comment": "Deployment cards / terrain / Primary Missions (Chapter Approved 2026-27). Coordinates in inches: x = 0..44 from left, y = 0..60 from top (portrait, as on the official cards). terrain 'mirror' = create a copy rotated 180° around the centre for the other side, for fairness",
  "terrainKinds": {
   "ruin": {
    "category": "dense",
@@ -41,7 +41,7 @@
   {
    "id": "mirrored-world",
    "name": "Mirrored World",
-   "text": "ทั้งสองฝ่ายใช้ Primary Mission ใบเดียวกัน"
+   "text": "Both players use the same Primary Mission"
   }
  ],
  "primaries": [
@@ -59,7 +59,7 @@
      "when": "endOfYourTurn",
      "condition": "controlMoreThanOpponent",
      "vp": 2,
-     "text": "ยึด objective ได้มากกว่าศัตรู"
+     "text": "Control more objectives than your opponent"
     },
     {
      "rounds": [
@@ -69,13 +69,13 @@
      "when": "endOfYourCommandPhase",
      "condition": "perObjectiveControlled",
      "vp": 3,
-     "text": "3VP ต่อ objective ที่ยึด",
+     "text": "3VP per objective controlled",
      "round5When": "endOfYourTurn",
      "bonus": {
       "condition": "perNonHomeIfHomeControlled",
       "vp": 2
      },
-     "bonusText": "+2 ต่ออันที่ไม่ใช่ home ถ้ายึด home ตัวเองไว้"
+     "bonusText": "+2 per non-home one if you control your own home"
     }
    ]
   },
@@ -93,7 +93,7 @@
      "when": "endOfYourTurn",
      "condition": "controlCentral",
      "vp": 3,
-     "text": "ยึด central objective ได้อย่างน้อย 1"
+     "text": "Control at least 1 central objective"
     },
     {
      "rounds": [
@@ -103,7 +103,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "perObjectiveControlledExclHome",
      "vp": 5,
-     "text": "5VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)"
+     "text": "5VP per objective controlled (excluding your home)"
     },
     {
      "rounds": [
@@ -113,7 +113,7 @@
      "when": "endOfYourTurn",
      "condition": "perObjectiveControlledExclHome",
      "vp": 5,
-     "text": "รอบ 5: 5VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)"
+     "text": "Round 5: 5VP per objective controlled (excluding your home)"
     }
    ]
   },
@@ -131,7 +131,7 @@
      "when": "endOfYourTurn",
      "condition": "perNewObjectiveThisTurnExclHome",
      "vp": 2,
-     "text": "2VP ต่อ objective ที่เพิ่งยึดได้เทิร์นนี้ (ไม่นับ home)"
+     "text": "2VP per objective newly controlled this turn (excluding home)"
     },
     {
      "rounds": [
@@ -141,13 +141,13 @@
      "when": "endOfYourCommandPhase",
      "condition": "perObjectiveControlled",
      "vp": 3,
-     "text": "3VP ต่อ objective ที่ยึด",
+     "text": "3VP per objective controlled",
      "round5When": "endOfYourTurn",
      "bonus": {
       "condition": "perControlledInEnemyTerritory",
       "vp": 3
      },
-     "bonusText": "+3 ต่ออันที่อยู่ในเขตศัตรู"
+     "bonusText": "+3 per one in the enemy's territory"
     }
    ]
   },
@@ -165,7 +165,7 @@
      "when": "endOfYourTurn",
      "condition": "killNearObjective",
      "vp": 3,
-     "text": "ทำลายหน่วยศัตรูด้วยหน่วยที่อยู่ในระยะ objective หรือทำลายหน่วยศัตรูที่เริ่มเทิร์นในระยะ objective"
+     "text": "Destroy an enemy unit with a unit within range of an objective, or destroy an enemy unit that started the turn within range of an objective"
     },
     {
      "rounds": [
@@ -175,7 +175,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "perObjectiveControlledExclHome",
      "vp": 4,
-     "text": "4VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)",
+     "text": "4VP per objective controlled (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -186,7 +186,7 @@
      "when": "endOfYourTurn",
      "condition": "newObjectiveThisTurnExclHome",
      "vp": 3,
-     "text": "ยึด objective ใหม่ได้เทิร์นนี้ (ไม่นับ home)"
+     "text": "Control a new objective this turn (excluding home)"
     }
    ]
   },
@@ -204,7 +204,7 @@
      "when": "endOfYourTurn",
      "condition": "control3Plus",
      "vp": 4,
-     "text": "ยึด objective ได้ 3 อันขึ้นไป"
+     "text": "Control 3+ objectives"
     },
     {
      "rounds": [
@@ -214,7 +214,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "control2Plus",
      "vp": 5,
-     "text": "ยึด objective ได้ 2 อันขึ้นไป",
+     "text": "Control 2+ objectives",
      "round5When": "endOfYourTurn"
     },
     {
@@ -225,7 +225,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlMoreThanOpponent",
      "vp": 4,
-     "text": "ยึด objective ได้มากกว่าศัตรู",
+     "text": "Control more objectives than your opponent",
      "round5When": "endOfYourTurn"
     },
     {
@@ -236,7 +236,7 @@
      "when": "endOfBattle",
      "condition": "controlEnemyHome",
      "vp": 5,
-     "text": "จบเกม: ยึด home ของศัตรู"
+     "text": "End of battle: control the enemy home"
     }
    ]
   },
@@ -254,7 +254,7 @@
      "when": "endOfYourTurn",
      "condition": "enemyUnitDestroyedThisTurn",
      "vp": 3,
-     "text": "ทำลายหน่วยศัตรูได้เทิร์นนี้"
+     "text": "Destroy an enemy unit this turn"
     },
     {
      "rounds": [
@@ -264,7 +264,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "perObjectiveControlledExclHome",
      "vp": 4,
-     "text": "4VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)",
+     "text": "4VP per objective controlled (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -275,7 +275,7 @@
      "when": "endOfYourTurn",
      "condition": "newObjectiveThisTurnExclHome",
      "vp": 3,
-     "text": "ยึด objective ใหม่ได้เทิร์นนี้ (ไม่นับ home)"
+     "text": "Control a new objective this turn (excluding home)"
     },
     {
      "rounds": [
@@ -285,7 +285,7 @@
      "when": "endOfBattle",
      "condition": "controlCentral",
      "vp": 5,
-     "text": "จบเกม: ยึด central objective"
+     "text": "End of battle: control the central objective"
     }
    ]
   },
@@ -303,7 +303,7 @@
      "when": "endOfYourTurn",
      "condition": "enemyUnitDestroyedThisTurn",
      "vp": 3,
-     "text": "ทำลายหน่วยศัตรูได้เทิร์นนี้"
+     "text": "Destroy an enemy unit this turn"
     },
     {
      "rounds": [
@@ -313,7 +313,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -324,7 +324,7 @@
      "when": "endOfYourTurn",
      "condition": "moreKillsThanLossesLastTurn",
      "vp": 5,
-     "text": "ทำลายศัตรูเทิร์นนี้มากกว่าที่เสียไปเทิร์นก่อน"
+     "text": "Destroy more enemy units this turn than you lost last turn"
     },
     {
      "rounds": [
@@ -334,7 +334,7 @@
      "when": "endOfYourTurn",
      "condition": "controlEnemyHome",
      "vp": 5,
-     "text": "ยึด home ของศัตรู"
+     "text": "Control the enemy home"
     }
    ]
   },
@@ -352,7 +352,7 @@
      "when": "endOfAnyTurn",
      "condition": "condemnedLeftThisTurn",
      "vp": 5,
-     "text": "หน่วย condemned ออกจากสนามเทิร์นนี้ (นับทุกเทิร์น)"
+     "text": "A condemned unit left the battlefield this turn (scored every turn)"
     },
     {
      "rounds": [
@@ -362,7 +362,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -373,7 +373,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlMoreThanOpponent",
      "vp": 5,
-     "text": "ยึด objective ได้มากกว่าศัตรู",
+     "text": "Control more objectives than your opponent",
      "round5When": "endOfYourTurn"
     },
     {
@@ -384,7 +384,7 @@
      "when": "endOfBattle",
      "condition": "controlEnemyHome",
      "vp": 8,
-     "text": "จบเกม: ยึด home ของศัตรู"
+     "text": "End of battle: control the enemy home"
     }
    ],
    "action": "condemned"
@@ -403,7 +403,7 @@
      "when": "endOfYourTurn",
      "condition": "consecratedCount",
      "vp": 0,
-     "text": "objective ที่ consecrated: 1–2 อัน = 3VP, 3+ อัน = 6VP",
+     "text": "Consecrated objectives: 1–2 = 3VP, 3+ = 6VP",
      "tiers": [
       [
        1,
@@ -423,7 +423,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -434,7 +434,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlMoreThanOpponent",
      "vp": 4,
-     "text": "ยึด objective ได้มากกว่าศัตรู",
+     "text": "Control more objectives than your opponent",
      "round5When": "endOfYourTurn"
     },
     {
@@ -445,7 +445,7 @@
      "when": "endOfBattle",
      "condition": "enemyHomeConsecrated",
      "vp": 5,
-     "text": "จบเกม: home ของศัตรูถูก consecrate"
+     "text": "End of battle: enemy home consecrated"
     }
    ],
    "action": "consecrate"
@@ -464,7 +464,7 @@
      "when": "endOfYourTurn",
      "condition": "enemyUnitDestroyedThisTurn",
      "vp": 3,
-     "text": "ทำลายหน่วยศัตรูได้เทิร์นนี้"
+     "text": "Destroy an enemy unit this turn"
     },
     {
      "rounds": [
@@ -474,7 +474,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -485,7 +485,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlMoreThanOpponent",
      "vp": 6,
-     "text": "ยึด objective ได้มากกว่าศัตรู",
+     "text": "Control more objectives than your opponent",
      "round5When": "endOfYourTurn"
     },
     {
@@ -496,7 +496,7 @@
      "when": "endOfYourTurn",
      "condition": "moreKillsThanLossesLastTurn",
      "vp": 4,
-     "text": "ทำลายศัตรูเทิร์นนี้มากกว่าที่เสียไปเทิร์นก่อน"
+     "text": "Destroy more enemy units this turn than you lost last turn"
     }
    ]
   },
@@ -514,12 +514,12 @@
      "when": "endOfYourTurn",
      "condition": "perTrappedThisTurn",
      "vp": 2,
-     "text": "2VP ต่อ terrain area ที่วางกับดักเทิร์นนี้",
+     "text": "2VP per terrain area trapped this turn",
      "bonus": {
       "condition": "perTrappedThisTurnObjective",
       "vp": 3
      },
-     "bonusText": "+3 ต่ออันที่เป็น objective"
+     "bonusText": "+3 per one that is an objective"
     },
     {
      "rounds": [
@@ -529,7 +529,7 @@
      "when": "endOfYourTurn",
      "condition": "killStartedInTrapped",
      "vp": 3,
-     "text": "ทำลายหน่วยศัตรูที่เริ่มเทิร์นใน terrain area ที่มีกับดัก"
+     "text": "Destroy an enemy unit that started the turn in a trapped terrain area"
     },
     {
      "rounds": [
@@ -539,7 +539,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     }
    ],
@@ -559,7 +559,7 @@
      "when": "endOfYourTurn",
      "condition": "perEnemyDestroyedThisTurn",
      "vp": 2,
-     "text": "2VP ต่อหน่วยศัตรูที่ทำลายเทิร์นนี้"
+     "text": "2VP per enemy unit destroyed this turn"
     },
     {
      "rounds": [
@@ -569,7 +569,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHomes",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ทั้งสองฝั่ง)",
+     "text": "Control at least 1 objective (excluding both homes)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -580,7 +580,7 @@
      "when": "endOfYourTurn",
      "condition": "controlCentralAndExpansion",
      "vp": 3,
-     "text": "ยึด central และ expansion อย่างละ 1 ขึ้นไป"
+     "text": "Control at least 1 central and 1 expansion objective"
     }
    ]
   },
@@ -598,7 +598,7 @@
      "when": "endOfYourTurn",
      "condition": "controlEnemyHome",
      "vp": 10,
-     "text": "ยึด home ของศัตรู"
+     "text": "Control the enemy home"
     },
     {
      "rounds": [
@@ -608,7 +608,7 @@
      "when": "endOfYourTurn",
      "condition": "perObjectiveControlledExclHome",
      "vp": 4,
-     "text": "รอบ 1: 4VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)"
+     "text": "Round 1: 4VP per objective controlled (excluding your home)"
     },
     {
      "rounds": [
@@ -618,7 +618,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "perObjectiveControlledExclHome",
      "vp": 5,
-     "text": "รอบ 2–3: 5VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)"
+     "text": "Rounds 2–3: 5VP per objective controlled (excluding your home)"
     },
     {
      "rounds": [
@@ -628,7 +628,7 @@
      "when": "endOfYourTurn",
      "condition": "perObjectiveControlledExclHome",
      "vp": 6,
-     "text": "รอบ 4+: 6VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)"
+     "text": "Round 4+: 6VP per objective controlled (excluding your home)"
     }
    ]
   },
@@ -646,12 +646,12 @@
      "when": "endOfYourTurn",
      "condition": "perDecoyed",
      "vp": 2,
-     "text": "2VP ต่อ objective ที่ decoyed",
+     "text": "2VP per decoyed objective",
      "bonus": {
       "condition": "perDecoyedInEnemyTerritory",
       "vp": 2
      },
-     "bonusText": "+2 ต่ออันที่อยู่ในเขตศัตรู"
+     "bonusText": "+2 per one in the enemy's territory"
     },
     {
      "rounds": [
@@ -661,7 +661,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -672,7 +672,7 @@
      "when": "endOfBattle",
      "condition": "decoyed4Plus",
      "vp": 10,
-     "text": "จบเกม: decoyed 4 objective ขึ้นไป"
+     "text": "End of battle: 4+ objectives decoyed"
     }
    ],
    "action": "decoy"
@@ -691,7 +691,7 @@
      "when": "endOfYourTurn",
      "condition": "killStartedInRangeOfObjective",
      "vp": 4,
-     "text": "ทำลายหน่วยศัตรูที่เริ่มเทิร์นในระยะ objective"
+     "text": "Destroy an enemy unit that started the turn within range of an objective"
     },
     {
      "rounds": [
@@ -701,7 +701,7 @@
      "when": "endOfYourTurn",
      "condition": "onlyOneOwnMarkerHeld",
      "vp": 4,
-     "text": "เหลือ operation marker ของเราอันเดียว มีหน่วยเราใน terrain area เดียวกันและไม่มีศัตรู"
+     "text": "Only one of our operation markers left, with a unit of ours in the same terrain area and no enemies"
     },
     {
      "rounds": [
@@ -711,7 +711,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -722,7 +722,7 @@
      "when": "endOfBattle",
      "condition": "onlyOneOwnMarkerHeld",
      "vp": 5,
-     "text": "จบเกม: เหลือ marker ของเราอันเดียวและเรายึด terrain area นั้น"
+     "text": "End of battle: only one of our markers left and we control that terrain area"
     }
    ],
    "action": "sensor-sweep"
@@ -741,7 +741,7 @@
      "when": "endOfYourTurn",
      "condition": "tableQuarters",
      "vp": 0,
-     "text": "หน่วยเราอยู่ครบ table quarter (ห่างกลางสนาม >6\"): 3 quarter = 3VP, 4 quarter = 6VP",
+     "text": "Our units in table quarters (more than 6\" from the centre): 3 quarters = 3VP, 4 quarters = 6VP",
      "tiers": [
       [
        3,
@@ -761,7 +761,7 @@
      "when": "endOfYourTurn",
      "condition": "perEnemyDestroyedThisTurn",
      "vp": 1,
-     "text": "1VP ต่อหน่วยศัตรูที่ทำลายเทิร์นนี้"
+     "text": "1VP per enemy unit destroyed this turn"
     },
     {
      "rounds": [
@@ -771,7 +771,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 3,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     }
    ]
@@ -790,7 +790,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -801,7 +801,7 @@
      "when": "endOfYourTurn",
      "condition": "triangulatedCount",
      "vp": 0,
-     "text": "objective ที่ triangulated: 1 = 3VP, 2 = 6VP, 3+ = 10VP",
+     "text": "Triangulated objectives: 1 = 3VP, 2 = 6VP, 3+ = 10VP",
      "tiers": [
       [
        1,
@@ -825,7 +825,7 @@
      "when": "endOfBattle",
      "condition": "control4Plus",
      "vp": 10,
-     "text": "จบเกม: ยึด objective 4 อันขึ้นไป"
+     "text": "End of battle: control 4+ objectives"
     }
    ],
    "action": "triangulate"
@@ -844,7 +844,7 @@
      "when": "endOfYourTurn",
      "condition": "surveilledUnprotected",
      "vp": 4,
-     "text": "สอดแนมหน่วยศัตรูได้เทิร์นนี้ (ยกเว้นทุกหน่วยอยู่ใกล้ objective ที่มี marker)"
+     "text": "Surveil an enemy unit this turn (unless every unit is near an objective with a marker)"
     },
     {
      "rounds": [
@@ -854,7 +854,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -865,7 +865,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlMoreThanOpponent",
      "vp": 4,
-     "text": "ยึด objective ได้มากกว่าศัตรู",
+     "text": "Control more objectives than your opponent",
      "round5When": "endOfYourTurn"
     },
     {
@@ -876,7 +876,7 @@
      "when": "endOfYourTurn",
      "condition": "noOpponentMarkers",
      "vp": 5,
-     "text": "ไม่เหลือ operation marker ของศัตรูบนสนาม"
+     "text": "No enemy operation markers left on the battlefield"
     }
    ],
    "action": "surveil"
@@ -895,7 +895,7 @@
      "when": "endOfYourTurn",
      "condition": "controlCentral",
      "vp": 6,
-     "text": "รอบ 1: ยึด central objective"
+     "text": "Round 1: control the central objective"
     },
     {
      "rounds": [
@@ -905,7 +905,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -916,7 +916,7 @@
      "when": "endOfYourTurn",
      "condition": "perExtractThisTurn",
      "vp": 7,
-     "text": "7VP ต่อหน่วยที่ทำ Extract Intelligence สำเร็จเทิร์นนี้"
+     "text": "7VP per unit that completed Extract Intelligence this turn"
     },
     {
      "rounds": [
@@ -926,7 +926,7 @@
      "when": "endOfBattle",
      "condition": "ownMarkers3Plus",
      "vp": 5,
-     "text": "จบเกม: มี operation marker ของเรา 3 อันขึ้นไป"
+     "text": "End of battle: 3+ of our operation markers"
     },
     {
      "rounds": [
@@ -936,7 +936,7 @@
      "when": "endOfBattle",
      "condition": "ownMarkerAtEnemyHome",
      "vp": 5,
-     "text": "จบเกม: marker ของเราอยู่ในระยะ home ศัตรู"
+     "text": "End of battle: a marker of ours within range of the enemy home"
     }
    ],
    "action": "extract-intelligence"
@@ -955,7 +955,7 @@
      "when": "endOfYourTurn",
      "condition": "controlCentral",
      "vp": 3,
-     "text": "ยึด central objective"
+     "text": "Control the central objective"
     },
     {
      "rounds": [
@@ -965,7 +965,7 @@
      "when": "endOfYourTurn",
      "condition": "killStartedInTerrain",
      "vp": 2,
-     "text": "ทำลายหน่วยศัตรูที่เริ่มเทิร์นใน terrain area"
+     "text": "Destroy an enemy unit that started the turn in a terrain area"
     },
     {
      "rounds": [
@@ -975,7 +975,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "perObjectiveControlledExclHome",
      "vp": 4,
-     "text": "4VP ต่อ objective ที่ยึด (ไม่นับ home ตัวเอง)",
+     "text": "4VP per objective controlled (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -986,7 +986,7 @@
      "when": "endOfBattle",
      "condition": "noEnemyInYourTerritory",
      "vp": 5,
-     "text": "จบเกม: ไม่มีหน่วยศัตรูอยู่ในเขตเราทั้งหน่วย"
+     "text": "End of battle: no enemy units wholly within our territory"
     }
    ]
   },
@@ -1004,7 +1004,7 @@
      "when": "endOfYourTurn",
      "condition": "securedAssetThisTurn",
      "vp": 4,
-     "text": "หน่วยเรา Secure the Asset สำเร็จเทิร์นนี้"
+     "text": "A unit of ours completed Secure the Asset this turn"
     },
     {
      "rounds": [
@@ -1014,7 +1014,7 @@
      "when": "endOfYourTurn",
      "condition": "killStartedInRangeOfCentral",
      "vp": 2,
-     "text": "ทำลายหน่วยศัตรูที่เริ่มเทิร์นในระยะ central objective"
+     "text": "Destroy an enemy unit that started the turn within range of the central objective"
     },
     {
      "rounds": [
@@ -1024,7 +1024,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -1035,7 +1035,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "control3Plus",
      "vp": 4,
-     "text": "ยึด objective ได้ 3 อันขึ้นไป",
+     "text": "Control 3+ objectives",
      "round5When": "endOfYourTurn"
     }
    ],
@@ -1055,12 +1055,12 @@
      "when": "endOfYourTurn",
      "condition": "controlCentral",
      "vp": 2,
-     "text": "ยึด central objective",
+     "text": "Control the central objective",
      "bonus": {
       "condition": "ownMarkersAtControlledCentral",
       "vp": 1
      },
-     "bonusText": "+1 ต่อ marker ของเราในระยะ central ที่ยึด"
+     "bonusText": "+1 per marker of ours within range of a controlled central objective"
     },
     {
      "rounds": [
@@ -1070,13 +1070,13 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn",
      "bonus": {
       "condition": "controlCentral",
       "vp": 4
      },
-     "bonusText": "+4 ถ้าในนั้นมี central"
+     "bonusText": "+4 if it includes the central objective"
     },
     {
      "rounds": [
@@ -1086,7 +1086,7 @@
      "when": "endOfBattle",
      "condition": "controlEnemyHome",
      "vp": 10,
-     "text": "จบเกม: ยึด home ของศัตรู"
+     "text": "End of battle: control the enemy home"
     }
    ],
    "action": "maintain-control"
@@ -1105,7 +1105,7 @@
      "when": "endOfYourTurn",
      "condition": "sensorSweepThisTurn",
      "vp": 4,
-     "text": "หน่วยเราทำ Sensor Sweep สำเร็จเทิร์นนี้"
+     "text": "A unit of ours completed Sensor Sweep this turn"
     },
     {
      "rounds": [
@@ -1115,7 +1115,7 @@
      "when": "endOfYourTurn",
      "condition": "killStartedInRangeOfObjective",
      "vp": 3,
-     "text": "ทำลายหน่วยศัตรูที่เริ่มเทิร์นในระยะ objective"
+     "text": "Destroy an enemy unit that started the turn within range of an objective"
     },
     {
      "rounds": [
@@ -1125,7 +1125,7 @@
      "when": "endOfYourTurn",
      "condition": "onlyOneOpponentMarkerHeld",
      "vp": 4,
-     "text": "เหลือ marker ของศัตรูอันเดียว มีหน่วยเราใน terrain area นั้นและไม่มีศัตรู"
+     "text": "Only one enemy marker left, with a unit of ours in that terrain area and no enemies"
     },
     {
      "rounds": [
@@ -1135,7 +1135,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -1146,7 +1146,7 @@
      "when": "endOfBattle",
      "condition": "onlyOneOpponentMarkerHeld",
      "vp": 5,
-     "text": "จบเกม: เหลือ marker ศัตรูอันเดียวและเรายึด terrain area นั้น"
+     "text": "End of battle: only one enemy marker left and we control that terrain area"
     }
    ],
    "action": "sensor-sweep"
@@ -1165,7 +1165,7 @@
      "when": "endOfYourTurn",
      "condition": "vanguardThisTurn",
      "vp": 4,
-     "text": "หน่วยเราทำ Vanguard Operation สำเร็จเทิร์นนี้"
+     "text": "A unit of ours completed Vanguard Operation this turn"
     },
     {
      "rounds": [
@@ -1175,7 +1175,7 @@
      "when": "endOfYourTurn",
      "condition": "enemyUnitDestroyedThisTurn",
      "vp": 2,
-     "text": "ทำลายหน่วยศัตรูได้เทิร์นนี้"
+     "text": "Destroy an enemy unit this turn"
     },
     {
      "rounds": [
@@ -1185,7 +1185,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     },
     {
@@ -1196,7 +1196,7 @@
      "when": "endOfBattle",
      "condition": "controlEnemyHome",
      "vp": 10,
-     "text": "จบเกม: ยึด home ของศัตรู"
+     "text": "End of battle: control the enemy home"
     }
    ],
    "action": "vanguard-operation"
@@ -1215,12 +1215,12 @@
      "when": "endOfYourTurn",
      "condition": "perSabotageThisTurn",
      "vp": 3,
-     "text": "3VP ต่อหน่วยที่ทำ Sabotage สำเร็จเทิร์นนี้",
+     "text": "3VP per unit that completed Sabotage this turn",
      "bonus": {
       "condition": "perSabotageInEnemyTerritory",
       "vp": 2
      },
-     "bonusText": "+2 ต่อหน่วยที่อยู่ในระยะ objective ในเขตศัตรู"
+     "bonusText": "+2 per unit within range of an objective in the enemy's territory"
     },
     {
      "rounds": [
@@ -1230,7 +1230,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home ตัวเอง)",
+     "text": "Control at least 1 objective (excluding your home)",
      "round5When": "endOfYourTurn"
     }
    ],
@@ -1248,8 +1248,8 @@
   {
    "id": "no-prisoners",
    "name": "No Prisoners",
-   "when": "จบเทิร์นใดก็ได้",
-   "text": "2VP ต่อหน่วยศัตรูที่ถูกทำลายเทิร์นนี้ (สูงสุด 5VP)",
+   "when": "End of any turn",
+   "text": "2VP per enemy unit destroyed this turn (max 5VP)",
    "auto": [
     {
      "trigger": "endOfAnyTurn",
@@ -1264,8 +1264,8 @@
   {
    "id": "overwhelming-force",
    "name": "Overwhelming Force",
-   "when": "จบเทิร์นใดก็ได้",
-   "text": "3VP ต่อหน่วยศัตรูที่เริ่มเทิร์นในระยะ objective แล้วถูกทำลาย (สูงสุด 5VP)",
+   "when": "End of any turn",
+   "text": "3VP per enemy unit that started the turn within range of an objective and was destroyed (max 5VP)",
    "auto": [
     {
      "trigger": "endOfAnyTurn",
@@ -1280,8 +1280,8 @@
   {
    "id": "plunder",
    "name": "Plunder",
-   "when": "จบเทิร์นของคุณ",
-   "text": "Action Plunder (Shooting phase, ครั้งเดียวต่อเทิร์น, สำเร็จทันที): หน่วยใน terrain area ที่ไม่อยู่ในเขตตัวเอง → plundered = 5VP",
+   "when": "End of your turn",
+   "text": "Plunder action (Shooting phase, once per turn, completes immediately): a unit in a terrain area outside your territory → plundered = 5VP",
    "auto": [
     {
      "trigger": "endOfYourTurn",
@@ -1297,8 +1297,8 @@
   {
    "id": "display-of-might",
    "name": "Display of Might",
-   "when": "จบเทิร์นของคุณ / ของศัตรู",
-   "text": "หน่วยเรา (ไม่นับ AIRCRAFT/battle-shocked) อยู่ใน No Man's Land ทั้งหน่วยมากกว่าศัตรู: 2VP ตอนจบเทิร์นเรา, 5VP ตอนจบเทิร์นศัตรู",
+   "when": "End of your turn / your opponent's turn",
+   "text": "More of our units (excluding AIRCRAFT/Battle-shocked) wholly in No Man's Land than the enemy's: 2VP at end of your turn, 5VP at end of the opponent's turn",
    "auto": [
     {
      "trigger": "endOfYourTurn",
@@ -1319,8 +1319,8 @@
   {
    "id": "outflank",
    "name": "Outflank",
-   "when": "จบเทิร์นของคุณ",
-   "text": "หน่วยเราภายใน 6\" จากขอบสนามและไม่อยู่ในเขตตัวเอง 3VP · มีหน่วยใกล้ขอบตรงข้ามกัน 2 ฝั่ง (อย่างน้อย 1 หน่วยนอกเขตตัวเอง) 5VP",
+   "when": "End of your turn",
+   "text": "A unit of ours within 6\" of a battlefield edge and outside your territory 3VP · units near 2 opposite edges (at least 1 outside your territory) 5VP",
    "auto": [
     {
      "trigger": "endOfYourTurn",
@@ -1344,8 +1344,8 @@
   {
    "id": "beacon",
    "name": "Beacon",
-   "when": "จบเทิร์นศัตรู (หรือจบรอบ 5)",
-   "text": "ตอนจั่วเลือก beacon unit: อยู่บนสนามนอก deployment zone ตัวเอง 3VP / นอกเขตตัวเอง 5VP",
+   "when": "End of opponent's turn (or end of round 5)",
+   "text": "When drawn, select a beacon unit: on the battlefield outside your deployment zone 3VP / outside your territory 5VP",
    "auto": [
     {
      "trigger": "endOfOpponentTurn",
@@ -1371,8 +1371,8 @@
   {
    "id": "cleanse",
    "name": "Cleanse",
-   "when": "จบเทิร์นของคุณ",
-   "text": "Action Cleanse (Shooting phase) บน objective ที่ไม่ใช่ home ตัวเอง สำเร็จจบเทิร์นถ้ายึดไว้: cleanse 1 จุด 2VP / 2 จุดขึ้นไป 5VP",
+   "when": "End of your turn",
+   "text": "Cleanse action (Shooting phase) on an objective other than your home, completed at end of turn if you control it: 1 cleansed = 2VP / 2+ = 5VP",
    "auto": [
     {
      "trigger": "endOfYourTurn",
@@ -1398,8 +1398,8 @@
   {
    "id": "a-grievous-blow",
    "name": "A Grievous Blow",
-   "when": "จบเทิร์นใดก็ได้",
-   "text": "หน่วยศัตรู starting strength 13+ ถูกทำลาย: Fixed 4VP ต่อหน่วย · Tactical 5VP",
+   "when": "End of any turn",
+   "text": "Enemy unit with Starting Strength 13+ destroyed: Fixed 4VP per unit · Tactical 5VP",
    "auto": [
     {
      "trigger": "endOfAnyTurn",
@@ -1422,8 +1422,8 @@
   {
    "id": "defend-stronghold",
    "name": "Defend Stronghold",
-   "when": "จบเทิร์นศัตรู (รอบ 2+, หรือจบรอบ 5)",
-   "text": "ยึด home objective ตัวเอง 3VP (+2 ถ้าไม่มีศัตรูใน deployment zone เรา)",
+   "when": "End of opponent's turn (round 2+, or end of round 5)",
+   "text": "Control your home objective 3VP (+2 if no enemies in your deployment zone)",
    "auto": [
     {
      "trigger": "endOfOpponentTurn",
@@ -1444,8 +1444,8 @@
   {
    "id": "engage-on-all-fronts",
    "name": "Engage on All Fronts",
-   "when": "จบเทิร์นของคุณ",
-   "text": "มีหน่วยครอง table quarter (ทั้งหน่วย ห่างกลางสนาม >6\"): 3 quarters = Fixed 2 / Tactical 3VP · 4 quarters = Fixed 4 / Tactical 5VP",
+   "when": "End of your turn",
+   "text": "Units holding table quarters (wholly, more than 6\" from the centre): 3 quarters = Fixed 2 / Tactical 3VP · 4 quarters = Fixed 4 / Tactical 5VP",
    "auto": [
     {
      "trigger": "endOfYourTurn",
@@ -1487,8 +1487,8 @@
   {
    "id": "secure-no-mans-land",
    "name": "Secure No Man's Land",
-   "when": "จบเทิร์นของคุณ",
-   "text": "ยึด objective ใน No Man's Land ได้ 2 จุดขึ้นไป (ไม่นับ home ตัวเอง) 5VP",
+   "when": "End of your turn",
+   "text": "Control 2+ objectives in No Man's Land (excluding your home) 5VP",
    "auto": [
     {
      "trigger": "endOfYourTurn",
@@ -1502,8 +1502,8 @@
   {
    "id": "forward-position",
    "name": "Forward Position",
-   "when": "จบเทิร์นของคุณ",
-   "text": "ยึด home ของศัตรู และ/หรือ expansion objective ทุกจุด 5VP",
+   "when": "End of your turn",
+   "text": "Control the enemy home and/or every expansion objective 5VP",
    "auto": [
     {
      "trigger": "endOfYourTurn",
@@ -1518,8 +1518,8 @@
   {
    "id": "centre-ground",
    "name": "Centre Ground",
-   "when": "จบเทิร์นของคุณ",
-   "text": "มีหน่วยเราภายใน 3\" จากกลางสนาม และไม่มีศัตรูภายใน 3\" = 3VP / ไม่มีศัตรูภายใน 6\" = 5VP",
+   "when": "End of your turn",
+   "text": "A unit of ours within 3\" of the centre and no enemies within 3\" = 3VP / no enemies within 6\" = 5VP",
    "auto": [
     {
      "trigger": "endOfYourTurn",
@@ -1543,8 +1543,8 @@
   {
    "id": "assassination",
    "name": "Assassination",
-   "when": "จบเทิร์นใดก็ได้",
-   "text": "Fixed: 3VP ต่อโมเดล CHARACTER ศัตรูที่ตาย (+1 ถ้า W4+) · Tactical: มี CHARACTER ศัตรูตายเทิร์นนี้ หรือ CHARACTER ศัตรูตายหมดแล้ว 5VP",
+   "when": "End of any turn",
+   "text": "Fixed: 3VP per enemy CHARACTER model destroyed (+1 if W4+) · Tactical: an enemy CHARACTER destroyed this turn, or all enemy CHARACTERS destroyed, 5VP",
    "auto": [
     {
      "trigger": "endOfAnyTurn",
@@ -1566,8 +1566,8 @@
   {
    "id": "a-tempting-target",
    "name": "A Tempting Target",
-   "when": "จบเทิร์นของคุณ",
-   "text": "ตอนจั่ว ศัตรูเลือก objective ใน No Man's Land (ไม่ใช่ home) เป็นเป้าล่อ: ยึดได้ 5VP",
+   "when": "End of your turn",
+   "text": "When drawn, the opponent selects an objective in No Man's Land (not home) as the decoy: control it for 5VP",
    "auto": [
     {
      "trigger": "endOfYourTurn",
@@ -1582,8 +1582,8 @@
   {
    "id": "behind-enemy-lines",
    "name": "Behind Enemy Lines",
-   "when": "จบเทิร์นของคุณ",
-   "text": "3VP ต่อหน่วยเรา (ไม่นับ AIRCRAFT/battle-shocked) ที่อยู่ใน deployment zone ศัตรูทั้งหน่วย (สูงสุด 5VP)",
+   "when": "End of your turn",
+   "text": "3VP per unit of ours (excluding AIRCRAFT/Battle-shocked) wholly within the enemy's deployment zone (max 5VP)",
    "auto": [
     {
      "trigger": "endOfYourTurn",
@@ -1599,8 +1599,8 @@
   {
    "id": "bring-it-down",
    "name": "Bring it Down",
-   "when": "จบเทิร์นใดก็ได้",
-   "text": "โมเดลศัตรู W10+ ตาย: Fixed 4VP ต่อโมเดล · Tactical 5VP",
+   "when": "End of any turn",
+   "text": "Enemy W10+ model destroyed: Fixed 4VP per model · Tactical 5VP",
    "auto": [
     {
      "trigger": "endOfAnyTurn",
@@ -1623,8 +1623,8 @@
   {
    "id": "burden-of-trust",
    "name": "Burden of Trust",
-   "when": "จบเทิร์นศัตรู (หรือจบรอบ 5)",
-   "text": "ต้นเทิร์นเรา: ให้หน่วยเฝ้า objective ละ 1 หน่วย — 2VP ต่อ objective ที่ยังเฝ้าและยึดไว้ (สูงสุด 5VP)",
+   "when": "End of opponent's turn (or end of round 5)",
+   "text": "Start of your turn: assign 1 guarding unit per objective — 2VP per objective still guarded and controlled (max 5VP)",
    "auto": [
     {
      "trigger": "endOfOpponentTurn",
@@ -1644,31 +1644,31 @@
    "id": "take-and-hold",
    "name": "Take and Hold",
    "color": "#2f6b4f",
-   "text": "ยึดและครอง objective ทั่วสนาม"
+   "text": "Take and hold objectives across the battlefield"
   },
   {
    "id": "purge-the-foe",
    "name": "Purge the Foe",
    "color": "#8a2b2b",
-   "text": "ทำลายศัตรูและครองสนาม"
+   "text": "Destroy the enemy and hold the field"
   },
   {
    "id": "disruption",
    "name": "Disruption",
    "color": "#1f4f8a",
-   "text": "ก่อกวน วางกับดัก หลอกล่อ"
+   "text": "Disrupt, ambush, decoy"
   },
   {
    "id": "reconnaissance",
    "name": "Reconnaissance",
    "color": "#1f6f75",
-   "text": "สอดแนม กระจายกำลัง เก็บข้อมูล"
+   "text": "Scout, spread out, gather intel"
   },
   {
    "id": "priority-assets",
    "name": "Priority Assets",
    "color": "#8a6414",
-   "text": "ยึดทรัพยากรสำคัญด้วย action"
+   "text": "Seize key assets with actions"
   }
  ],
  "deploymentCards": [
@@ -1704,7 +1704,7 @@
    "fromRound": 1,
    "limit": "unlimited",
    "completes": "immediately",
-   "text": "หน่วยในระยะ objective (ไม่นับ home ตัวเอง) หรืออยู่ใน terrain area นอก deployment zone ตัวเองที่ยังไม่ถูกวางกับดัก → terrain area นั้น trapped (วาง marker) ใช้ได้ไม่จำกัด แต่ละหน่วยต้องคนละ terrain area"
+   "text": "A unit within range of an objective (excluding your home) or in a terrain area outside your deployment zone not yet trapped → that terrain area is trapped (place a marker); unlimited, but each unit must use a different terrain area"
   },
   "decoy": {
    "name": "Decoy",
@@ -1712,7 +1712,7 @@
    "fromRound": 1,
    "limit": "unlimited",
    "completes": "endOfTurnIfControl",
-   "text": "หน่วยในระยะ objective (ไม่นับ home ตัวเอง) ที่ยังไม่ decoyed → จบเทิร์นถ้าหน่วยนั้นยึด objective ได้: objective decoyed (วาง marker)"
+   "text": "A unit within range of an objective (excluding your home) not yet decoyed → at end of turn, if that unit controls the objective: objective decoyed (place a marker)"
   },
   "sensor-sweep": {
    "name": "Sensor Sweep",
@@ -1720,7 +1720,7 @@
    "fromRound": 1,
    "limit": "oncePerTurn",
    "completes": "endOfTurnIfControl",
-   "text": "หน่วยในระยะ central objective → จบเทิร์นถ้ายึดได้: เอา operation marker ออก 1 อัน (เริ่มไม่ได้ถ้าเหลือ marker บนสนามอันเดียว)"
+   "text": "A unit within range of the central objective → at end of turn, if controlled: remove 1 operation marker (cannot start if only one marker is left on the battlefield)"
   },
   "triangulate": {
    "name": "Triangulate",
@@ -1728,7 +1728,7 @@
    "fromRound": 2,
    "limit": "oncePerTurn",
    "completes": "endOfTurnIfControl",
-   "text": "ตั้งแต่รอบ 2: หน่วยในระยะ objective (ไม่นับ home ตัวเอง) → จบเทิร์นถ้ายึดได้: objective triangulated (วาง marker)"
+   "text": "From round 2: a unit within range of an objective (excluding your home) → at end of turn, if controlled: objective triangulated (place a marker)"
   },
   "surveil": {
    "name": "Surveil the Foe",
@@ -1736,7 +1736,7 @@
    "fromRound": 1,
    "limit": "unlimited",
    "completes": "immediately",
-   "text": "หน่วยใดก็ได้ เลือกหน่วยศัตรูภายใน 18\" ที่มองเห็นและยังไม่ถูกสอดแนมเทิร์นนี้ → surveilled จนจบเทิร์น"
+   "text": "Any unit selects a visible enemy unit within 18\" not yet surveilled this turn → surveilled until end of turn"
   },
   "extract-intelligence": {
    "name": "Extract Intelligence",
@@ -1744,7 +1744,7 @@
    "fromRound": 2,
    "limit": "unlimited",
    "completes": "endOfTurnIfControl",
-   "text": "ตั้งแต่รอบ 2: หน่วยในระยะ objective (ไม่นับ home ตัวเอง) ที่ยังไม่มี marker ของเรา → จบเทิร์นถ้ายึดได้: วาง marker"
+   "text": "From round 2: a unit within range of an objective (excluding your home) without our marker → at end of turn, if controlled: place a marker"
   },
   "secure-asset": {
    "name": "Secure Asset",
@@ -1752,7 +1752,7 @@
    "fromRound": 1,
    "limit": "oncePerTurn",
    "completes": "endOfTurnIfControl",
-   "text": "หน่วยในระยะ objective (ไม่นับ home ตัวเอง) → จบเทิร์นถ้ายึดได้: secure the asset"
+   "text": "A unit within range of an objective (excluding your home) → at end of turn, if controlled: secure the asset"
   },
   "maintain-control": {
    "name": "Maintain Control",
@@ -1760,7 +1760,7 @@
    "fromRound": 1,
    "limit": "oncePerTurn",
    "completes": "endOfTurnIfControl",
-   "text": "หน่วยในระยะ central objective → จบเทิร์นถ้ายึดได้: วาง marker"
+   "text": "A unit within range of the central objective → at end of turn, if controlled: place a marker"
   },
   "vanguard-operation": {
    "name": "Vanguard Operation",
@@ -1768,7 +1768,7 @@
    "fromRound": 1,
    "limit": "oncePerTurn",
    "completes": "endOfTurnIfNoEnemyInArea",
-   "text": "หน่วยใน terrain area ที่อยู่ในเขตศัตรู → จบเทิร์นถ้าไม่มีศัตรูใน terrain area นั้น: vanguard operation สำเร็จ"
+   "text": "A unit in a terrain area in the enemy's territory → at end of turn, if no enemies in that terrain area: vanguard operation completed"
   },
   "sabotage": {
    "name": "Sabotage",
@@ -1776,7 +1776,7 @@
    "fromRound": 1,
    "limit": "unlimited",
    "completes": "endOfTurnIfControl",
-   "text": "หน่วยในระยะ objective (ไม่นับ home ตัวเอง) แต่ละหน่วยคนละ objective → จบเทิร์นถ้ายึดได้: commit sabotage"
+   "text": "Units within range of objectives (excluding your home), each on a different objective → at end of turn, if controlled: commit sabotage"
   },
   "cleanse": {
    "name": "Cleanse",
@@ -1784,7 +1784,7 @@
    "fromRound": 1,
    "limit": "unlimited",
    "completes": "endOfTurnIfControl",
-   "text": "หน่วยในระยะ objective (ไม่นับ home ตัวเอง) แต่ละหน่วยคนละ objective → จบเทิร์นถ้ายึดไว้: objective cleansed"
+   "text": "Units within range of objectives (excluding your home), each on a different objective → at end of turn, if still controlled: objective cleansed"
   },
   "plunder": {
    "name": "Plunder",
@@ -1792,7 +1792,7 @@
    "fromRound": 1,
    "limit": "oncePerTurn",
    "completes": "immediately",
-   "text": "หน่วยใน terrain area ที่ไม่อยู่ในเขตตัวเอง → terrain area นั้น plundered"
+   "text": "A unit in a terrain area outside your territory → that terrain area is plundered"
   }
  }
 }

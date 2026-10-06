@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { addonLines, attachOptions, chapterRules, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { Em } from './Em';
-import { RULES } from '../engine/config';
+import { dispositionById, RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { Icon } from './Icon';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
+import { listDisposition, listDispositionOptions } from '../engine/game';
 import { PRESETS } from './presets';
 import { DET_RULES } from '../engine/detachments';
 import { DatasheetView } from './Sheet';
@@ -98,11 +99,11 @@ function UnitArt({ sheet }: { sheet?: DatasheetData }) {
 const itemsLabel = (items: string[]) => [...new Set(items)].map((n) => { const k = items.filter((x) => x === n).length; return k > 1 ? `${k}× ${n}` : n; }).join(' + ');
 
 function scopeLabel(o: WargearOption, max: number) {
-  if (o.stack) return `สูงสุด ${max}`;
-  if (o.scope === 'all') return 'ทั้งหน่วย';
-  if (o.scope === 'perN') return `${max} ตัว (ทุก ${o.per} โมเดล)`;
-  if (o.scope === 'any') return `ได้ทุกตัว (${max})`;
-  if (o.scope === 'upTo' && max > 1) return `ไม่เกิน ${max} ตัว`;
+  if (o.stack) return `up to ${max}`;
+  if (o.scope === 'all') return 'whole unit';
+  if (o.scope === 'perN') return `${max} per ${o.per} models`;
+  if (o.scope === 'any') return `any number (${max})`;
+  if (o.scope === 'upTo' && max > 1) return `up to ${max} models`;
   return '';
 }
 
@@ -114,23 +115,23 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
   const picks = u.wargear ?? [];
   const cost = (items: string[]) => items.reduce((a, n) => a + (sheet.wargearCosts?.find((c) => wkey(c.name) === wkey(n))?.pts ?? 0), 0);
   // what a swap changes per model: what it gains minus what it gives up (claws for hammer + shield: −5)
-  const costTag = (items: string[], instead: string[] = []) => { const c = cost(items) - cost(instead); return c ? <span className={`wg-cost ${c < 0 ? 'less' : ''}`}>{c > 0 ? `+${c}` : `−${-c}`}/ตัว</span> : null; };
+  const costTag = (items: string[], instead: string[] = []) => { const c = cost(items) - cost(instead); return c ? <span className={`wg-cost ${c < 0 ? 'less' : ''}`}>{c > 0 ? `+${c}` : `−${-c}`}/model</span> : null; };
   const put = (opt: number, next: WargearPick[]) => onChange({ wargear: [...picks.filter((p) => p.opt !== opt), ...next] });
   const single = sheet.models.length === 1 && (sheet.composition.length <= 1);
   return (
     <div className="field">
-      <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· บางอาวุธบวกแต้ม (แสดง +แต้ม/ชิ้น)</span> : null}</span>
+      <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· some weapons cost points (shown as +pts each)</span> : null}</span>
       {opts.map((o, i) => {
         const max = wargearMax(sheet, o, u.models, u.addons);
         const mine = picks.filter((p) => p.opt === i);
         const used = mine.reduce((a, p) => a + p.count, 0);
         const who = o.who !== '*' && !single ? `${o.who}: ` : '';
-        const head = `${who}${o.replace.length ? `${itemsLabel(o.replace)} →` : 'เพิ่ม'}`;
+        const head = `${who}${o.replace.length ? `${itemsLabel(o.replace)} →` : 'Add'}`;
         if (max <= 0) {
           return (
             <div key={i} className="wg-opt off">
               <div className="wg-head">{head}</div>
-              <div className="tiny muted">{o.minModels ? `ต้องมี ${o.minModels} โมเดลขึ้นไป` : 'ใช้ไม่ได้กับขนาดหน่วยนี้'}</div>
+              <div className="tiny muted">{o.minModels ? `needs ${o.minModels}+ models` : 'not available at this unit size'}</div>
             </div>
           );
         }
@@ -142,7 +143,7 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
             <div className="wg-head">{head} <span className="tiny muted">{scopeLabel(o, max)}</span></div>
             {radio ? (
               <div className="wg-chips">
-                <button type="button" className={!mine.length ? 'on' : ''} onClick={() => put(i, [])}>{o.replace.length ? 'ไม่เปลี่ยน' : 'ไม่ใส่'}</button>
+                <button type="button" className={!mine.length ? 'on' : ''} onClick={() => put(i, [])}>{o.replace.length ? 'Keep' : 'None'}</button>
                 {o.choices.map((c, ci) => (
                   <button type="button" key={ci} className={mine.some((p) => p.choice === ci) ? 'on' : ''} onClick={() => put(i, [{ opt: i, choice: ci, count: o.scope === 'all' ? max : 1 }])}>
                     {itemsLabel(c)}{costTag(c, o.replace)}
@@ -150,7 +151,7 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
                 ))}
                 {o.pick && (
                   <button type="button" className={pickSel ? 'on' : ''} onClick={() => put(i, [{ opt: i, choice: -1, count: 1, picks: pickSel?.picks ?? pickDefault() }])}>
-                    เลือก {o.pick} ชิ้นจากรายการ
+                    Select {o.pick} from the list
                   </button>
                 )}
               </div>
@@ -161,9 +162,9 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
                 return (
                   <div key={ci} className="wg-step">
                     <span className="grow">{itemsLabel(c)}{costTag(c, o.replace)}</span>
-                    <button type="button" aria-label={`ลด ${itemsLabel(c)}`} disabled={cur <= 0} onClick={() => setN(cur - 1)}>−</button>
+                    <button type="button" aria-label={`Remove ${itemsLabel(c)}`} disabled={cur <= 0} onClick={() => setN(cur - 1)}>−</button>
                     <b>{cur}</b>
-                    <button type="button" aria-label={`เพิ่ม ${itemsLabel(c)}`} disabled={used >= max} onClick={() => setN(cur + 1)}>+</button>
+                    <button type="button" aria-label={`Add ${itemsLabel(c)}`} disabled={used >= max} onClick={() => setN(cur + 1)}>+</button>
                   </div>
                 );
               })
@@ -171,7 +172,7 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
             {pickSel && o.pickFrom && (
               <div className="wg-picks">
                 {Array.from({ length: o.pick ?? 2 }, (_, k) => (
-                  <select key={k} value={pickSel.picks?.[k] ?? ''} aria-label={`อาวุธชิ้นที่ ${k + 1}`} onChange={(e) => {
+                  <select key={k} value={pickSel.picks?.[k] ?? ''} aria-label={`Weapon ${k + 1}`} onChange={(e) => {
                     const next = [...(pickSel.picks ?? pickDefault())];
                     next[k] = e.target.value;
                     put(i, [{ ...pickSel, picks: next }]);
@@ -188,16 +189,16 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
         const on = (u.addons ?? []).includes(a.name);
         return (
           <div key={a.name} className="wg-opt">
-            <div className="wg-head">เพิ่มโมเดล</div>
+            <div className="wg-head">Additional models</div>
             <div className="wg-chips">
-              <button type="button" className={!on ? 'on' : ''} onClick={() => onChange({ addons: (u.addons ?? []).filter((x) => x !== a.name) })}>ไม่เพิ่ม</button>
+              <button type="button" className={!on ? 'on' : ''} onClick={() => onChange({ addons: (u.addons ?? []).filter((x) => x !== a.name) })}>None</button>
               <button type="button" className={on ? 'on' : ''} onClick={() => onChange({ addons: [...(u.addons ?? []).filter((x) => x !== a.name), a.name] })}>+1 {a.name}<span className="wg-cost">+{a.pts}</span></button>
             </div>
           </div>
         );
       })}
       <details>
-        <summary className="tiny">ข้อความ wargear ต้นฉบับ</summary>
+        <summary className="tiny">Wargear options (datasheet text)</summary>
         {sheet.options.map((t, k) => <div key={k} className="tiny">• {t}</div>)}
       </details>
     </div>
@@ -215,6 +216,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [detPicker, setDetPicker] = useState(false);
   const [openDet, setOpenDet] = useState<string | null>(null);
   const [openSecs, setOpenSecs] = useState<string[]>(['enh']);
+  const [addSize, setAddSize] = useState<string | null>(null); // the datasheet whose unit size is being picked to add it
   const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null); // the ⋮ quick menu
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
@@ -222,8 +224,8 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   useEffect(() => setView(null), [adding]); // the datasheet opened under a row of the add list
   const [note, setNote] = useState<string | null>(null);
 
-  useEffect(() => { loadIndex().then(setIndex).catch(() => setNote('โหลดรายชื่อ faction ไม่ได้')); }, []);
-  useEffect(() => { setFaction(null); loadFaction(list.factionId).then(setFaction).catch(() => setNote('โหลดข้อมูล faction ไม่ได้')); }, [list.factionId]);
+  useEffect(() => { loadIndex().then(setIndex).catch(() => setNote('Could not load the faction list')); }, []);
+  useEffect(() => { setFaction(null); loadFaction(list.factionId).then(setFaction).catch(() => setNote('Could not load the faction data')); }, [list.factionId]);
   useEffect(() => { if (!note) return; const t = window.setTimeout(() => setNote(null), 2400); return () => window.clearTimeout(t); }, [note]);
   useEffect(() => {
     if (!faction || faction.id !== list.factionId) return;
@@ -260,7 +262,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const detachments = list.detachments.filter((n) => ok(faction.detachments.find((d) => d.name === n) ?? {}));
     const dropped = list.units.length - units.length + list.detachments.length - detachments.length;
     onChange({ ...list, subfaction, detachments, units: units.map((u) => (u.attachTo && !kept.has(u.attachTo) ? { ...u, attachTo: undefined } : u)) });
-    if (dropped) setNote(`เอาหน่วย/detachment ของ ${subs?.label ?? 'sub-faction'} อื่นออก ${dropped} รายการ`);
+    if (dropped) setNote(`Removed ${dropped} unit(s)/detachment(s) of another ${subs?.label ?? 'sub-faction'}`);
   };
 
   const set = (patch: Partial<ArmyList>) => onChange({ ...list, ...patch });
@@ -280,23 +282,23 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       const k = Math.max(n / im.width, n / im.height);
       c.getContext('2d')!.drawImage(im, (n - im.width * k) / 2, (n - im.height * k) / 2, im.width * k, im.height * k);
       const ok = setPortrait(emblemKey(list.factionId, list.subfaction), c.toDataURL('image/png'));
-      setNote(ok ? 'เปลี่ยนรูปโลโก้แล้ว (อัปขึ้นเว็บ ทุกคนที่เปิดลิงก์เห็นด้วย)' : 'เก็บรูปถาวรไม่ได้');
-    } catch { setNote('อ่านรูปไม่ได้'); } finally { URL.revokeObjectURL(url); }
+      setNote(ok ? 'Emblem changed (uploaded: everyone with the link sees it)' : 'Could not save the image');
+    } catch { setNote('Could not read the image'); } finally { URL.revokeObjectURL(url); }
   };
   /** Update one entry; wargear choices are re-checked for the new size and their points recomputed. */
   const setUnit = (uid: string, patch: Partial<ArmyUnitEntry>) => set({ units: list.units.map((x) => (x.uid === uid ? syncWargear(sheetOf(x.datasheet), { ...x, ...patch }) : x)) });
   const removeUnit = (uid: string) => set({ units: list.units.filter((x) => x.uid !== uid).map((x) => (x.attachTo === uid ? { ...x, attachTo: undefined } : x.embarkIn === uid ? { ...x, embarkIn: undefined } : x)) });
-  const addUnit = (d: DatasheetData) => {
-    const opt = pointsOptions(d)[0];
+  const addUnit = (d: DatasheetData, chosen?: { models: number; pts: number }) => {
+    const opt = chosen ?? pointsOptions(d)[0];
     if (!opt) return;
     set({ units: [...list.units, syncWargear(d, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts })] });
-    setNote(`เพิ่ม ${d.name}`);
+    setNote(`Added ${d.name}`);
   };
 
   const share = async () => {
     const lines = [
       `${list.name || 'Army list'} — ${factionName}${sub ? ` (${sub.name})` : ''}`,
-      `${list.detachments.join(', ') || 'ไม่มี detachment'} · ${pts}/${size.points} pts`,
+      `${list.detachments.join(', ') || 'No Detachment'} · ${pts}/${size.points} pts`,
       '',
       ...SECTIONS.flatMap((sec) => {
         const us = list.units.filter((u) => sectionOf(sheetOf(u.datasheet)) === sec.id);
@@ -309,7 +311,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     ].join('\n');
     try {
       if (navigator.share) await navigator.share({ title: list.name || 'Army list', text: lines });
-      else { await navigator.clipboard.writeText(lines); setNote('คัดลอกรายชื่อกองทัพแล้ว'); }
+      else { await navigator.clipboard.writeText(lines); setNote('Army list copied'); }
     } catch { /* cancelled */ }
   };
 
@@ -321,9 +323,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const load = faction ? transportLoads(list, faction).find((t) => t.uid === u.uid) : undefined;
     const carried = load?.riders.map((r) => list.units.find((x) => x.uid === r)?.datasheet).filter(Boolean) ?? [];
     const line = [
-      u.warlord && 'Warlord', leads && !inGroup && `${sheet?.isSupport ? 'Support ของ' : 'นำ'} ${leads.datasheet}`, leads && inGroup && (sheet?.isSupport ? 'Support' : 'Leader'), u.split && 'แยก 2 หน่วย',
-      rides && (inGroup ? 'Embarked' : `เริ่มเกมบน ${rides.datasheet}`),
-      load && (carried.length ? `บรรทุก ${carried.join(', ')} (${load.used}/${load.capacity} ที่)` : `ว่าง (0/${load.capacity} ที่)`),
+      u.warlord && 'Warlord', leads && !inGroup && `${sheet?.isSupport ? 'Support for' : 'Leading'} ${leads.datasheet}`, leads && inGroup && (sheet?.isSupport ? 'Support' : 'Leader'), u.split && 'Split in two',
+      rides && (inGroup ? 'Embarked' : `Starts embarked in ${rides.datasheet}`),
+      load && (carried.length ? `Carrying ${carried.join(', ')} (${load.used}/${load.capacity})` : `Empty (0/${load.capacity})`),
     ].filter(Boolean).join(' · ');
     const wg = wargearSummary(sheet, u);
     const wrong = sheet && !allowed(sheet);
@@ -333,12 +335,12 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           <span className="ab-art-wrap"><UnitArt sheet={sheet} /></span>
           <span className="ab-row-text">
             <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
-            <span className="ab-pts">{ptsOf(u)} pts{taxes.get(u.uid) ? <span className="tiny muted"> (หน่วยซ้ำ +{taxes.get(u.uid)})</span> : null}{u.enhancement && <span className="ab-enh"> {u.enhancement}</span>}{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">ไม่มีใน 11e</span>}</span>
+            <span className="ab-pts">{ptsOf(u)} pts{taxes.get(u.uid) ? <span className="tiny muted"> (duplicate +{taxes.get(u.uid)})</span> : null}{u.enhancement && <span className="ab-enh"> {u.enhancement}</span>}{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">Not in 11th edition</span>}</span>
             {line && <span className="ab-sub">{line}</span>}
             {wg && <span className="ab-sub ab-wg"><Icon name="wargear" size={13} /> {wg}</span>}
           </span>
         </button>
-        <button type="button" className="ab-kebab" aria-label={`ตัวเลือก ${u.datasheet}`} onClick={(e) => {
+        <button type="button" className="ab-kebab" aria-label={`Options for ${u.datasheet}`} onClick={(e) => {
           const r = e.currentTarget.getBoundingClientRect();
           setPop({ uid: u.uid, x: r.right, y: r.bottom });
         }}><Icon name="more" size={22} /></button>
@@ -368,7 +370,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           <section key={sec.id} className="ab-section">
             <div className="ab-section-head">
               <span>{sec.title}</span>
-              <button type="button" className="ab-add" aria-label={`เพิ่ม ${sec.title}`} onClick={() => { setQ(''); setAdding(sec.id); }}>+</button>
+              <button type="button" className="ab-add" aria-label={`Add ${sec.title}`} onClick={() => { setQ(''); setAdding(sec.id); }}>+</button>
             </div>
             {us.map((u) => {
               // a transport shows the units that start the battle inside it in its own card
@@ -381,7 +383,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                 </div>
               );
             })}
-            {!us.length && <div className="ab-empty">ยังไม่มีหน่วย — กด + เพื่อเพิ่ม</div>}
           </section>
         );
       })}
@@ -407,23 +408,38 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   );
   const ruleNames = useMemo(() => (faction ? [...faction.datasheets.map((d) => d.name), ...faction.detachments.flatMap((d) => [...d.stratagems.map((st) => st.name), ...d.enhancements.map((e) => e.name), ...d.rules.map((r) => r.name)]), ...faction.armyRules.map((r) => r.name)] : []), [faction]);
   const chosenDets = faction ? list.detachments.map((n) => faction.detachments.find((d) => d.name === n)).filter((d): d is NonNullable<typeof d> => !!d) : [];
+  /** Force Disposition: the detachments may offer more than one — tap one to play it (the mission and map follow it). */
+  const dispositionChips = () => {
+    if (!faction || !chosenDets.length) return null;
+    const opts = listDispositionOptions(list, faction);
+    const cur = listDisposition(list, faction);
+    if (opts.length < 2) return <span className="ab-disp">Force Disposition: <b>{dispositionById(cur).name}</b></span>;
+    return (
+      <span className="ab-disp ab-disp-pick">Force Disposition:{' '}
+        {opts.map((d) => (
+          <button key={d} type="button" className={`disp-chip ${cur === d ? '' : 'off'}`} style={{ background: dispositionById(d).color }}
+            onClick={() => set({ disposition: dispositionById(d).name })}>{dispositionById(d).name}</button>
+        ))}
+      </span>
+    );
+  };
 
   const detachmentTab = () => faction && (
     <>
       <div className="dt-top">
-        <label className="dt-emblem" aria-label="เปลี่ยนรูปโลโก้">
+        <label className="dt-emblem" aria-label="Change emblem">
           <Emblem factionId={list.factionId} color={sub?.color} sub={list.subfaction} />
           <span className="dt-emblem-cam"><Icon name="camera" size={14} /></span>
           <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) pickEmblem(f); }} />
         </label>
         <div className="grow dt-top-text">
-          <input className="ab-title dt-name" aria-label="ชื่อกองทัพ" value={list.name} placeholder="ตั้งชื่อกองทัพ" onChange={(e) => set({ name: e.target.value })} />
-          <button type="button" className="dt-faction linkish" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>{factionName}{subs ? ` · ${sub?.name ?? `เลือก ${subs.label}`}` : ''} ›</button>
-          <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || 'ยังไม่ได้เลือก detachment'}</div>
-          {chosenDets.length > 0 && <div className="tiny">Force Disposition: <b>{chosenDets[0].forceDisposition}</b> · {chosenDets.reduce((x, d) => x + d.dp, 0)}/{size.dp} DP</div>}
+          <input className="ab-title dt-name" aria-label="Army name" value={list.name} placeholder="Army name" onChange={(e) => set({ name: e.target.value })} />
+          <button type="button" className="dt-faction linkish" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>{factionName}{subs ? ` · ${sub?.name ?? `Select ${subs.label}`}` : ''} ›</button>
+          <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || 'No Detachment selected'}</div>
+          {chosenDets.length > 0 && <div className="tiny">{dispositionChips()} {chosenDets.reduce((x, d) => x + d.dp, 0)}/{size.dp} DP</div>}
           <div className="tiny muted">{size.name} · {pts}/{size.points} pts</div>
         </div>
-        <button type="button" className="dt-gear" aria-label="เปลี่ยน detachment" onClick={() => setDetPicker(true)}><Icon name="gear" size={26} /></button>
+        <button type="button" className="dt-gear" aria-label="Change Detachment" onClick={() => setDetPicker(true)}><Icon name="gear" size={26} /></button>
       </div>
       {chosenDets.length > 0 && dSection('rule', 'Detachment Rule', chosenDets.flatMap((d) => d.rules.map((r) => ruleCard(d.name + r.name, r.name, chosenDets.length > 1 ? d.name : '', r.text))))}
       {chosenDets.length > 0 && dSection('enh', 'Enhancements', chosenDets.flatMap((d) => d.enhancements.map((e) => ruleCard(d.name + e.name, e.name, `${e.pts}pts`, e.text))), chosenDets.reduce((a, d) => a + d.enhancements.length, 0))}
@@ -454,18 +470,18 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         <div className="tray dt-picker" onClick={(e) => e.stopPropagation()}>
           <div className="row">
             <div className="sheet-title grow">Army Detachment</div>
-            <button className="btn small ghost" onClick={() => setDetPicker(false)}>ปิด</button>
+            <button className="btn small ghost" onClick={() => setDetPicker(false)}>Close</button>
           </div>
           <div className="row" style={{ gap: 8 }}>
             <button type="button" className="ab-pick-btn grow" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>
-              <span className="grow">{factionName}{subs ? ` · ${sub?.name ?? `ไม่ระบุ ${subs.label}`}` : ''}</span><span className="muted">เปลี่ยน ›</span>
+              <span className="grow">{factionName}{subs ? ` · ${sub?.name ?? `No ${subs.label}`}` : ''}</span><span className="muted">Change ›</span>
             </button>
             <select value={list.battleSize} onChange={(e) => set({ battleSize: e.target.value })}>
               {RULES.battleSizes.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.points} pts)</option>)}
             </select>
           </div>
-          <div className="dt-dp-bar">Detachment Points ใช้ไป <b>{used}/{size.dp} DP</b> · เลือกได้หลายอันจนครบ DP{list.detachments.length > 1 && <> · Force Disposition ของกองทัพมาจากอันที่ <Icon name="leader" size={14} /> (แตะชื่อ disposition เพื่อเปลี่ยน)</>}</div>
-          {subs && !sub && <div className="small muted">ยังไม่ได้เลือก {subs.label} — แสดงเฉพาะ detachment ทั่วไป <button type="button" className="linkish" onClick={() => setPicker({ factionId: list.factionId })}>เลือก {subs.label}</button></div>}
+          <div className="dt-dp-bar">Detachment Points: <b>{used}/{size.dp} DP</b> · pick as many as fit the DP{list.detachments.length > 1 && <> · the army's Force Disposition is the one marked <Icon name="leader" size={14} /> (tap a disposition to change it)</>}</div>
+          {subs && !sub && <div className="small muted">No {subs.label} selected: only generic Detachments are shown <button type="button" className="linkish" onClick={() => setPicker({ factionId: list.factionId })}>Select {subs.label}</button></div>}
           {dets.map((d) => {
             const on = list.detachments.includes(d.name);
             const blocked = !on && !fits(d);
@@ -481,19 +497,19 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                     </button>
                     <button type="button" className={`dt-disp ${primary && list.detachments.length > 1 ? 'primary' : ''}`} disabled={!on || primary || list.detachments.length < 2}
                       onClick={() => setDets([d.name, ...list.detachments.filter((n) => n !== d.name)])}>
-                      {primary && list.detachments.length > 1 && <Icon name="leader" size={13} />}{d.forceDisposition}{blocked ? ` · เกิน DP (เหลือ ${Math.max(0, size.dp - used)}) แตะช่องเพื่อเปลี่ยนเป็นอันนี้แทน` : ''}
+                      {primary && list.detachments.length > 1 && <Icon name="leader" size={13} />}{d.forceDisposition}{blocked ? ` · over the DP (${Math.max(0, size.dp - used)} left): tick to switch to this one instead` : ''}
                     </button>
                   </div>
                   <span className="dt-dp">{d.dp} DP</span>
-                  <button type="button" className={`dt-chev ${open ? 'up' : ''}`} aria-label="ดูรายละเอียด" onClick={() => setOpenDet(open ? null : d.name)}><Icon name="down" size={18} /></button>
-                  <button type="button" className={`dt-box ${on ? 'on' : ''}`} aria-label={on ? 'เลือกอยู่' : 'เลือก'} onClick={() => setDets(on ? list.detachments.filter((n) => n !== d.name) : blocked ? [d.name] : [...list.detachments, d.name])}>{on && <Icon name="check" size={18} />}</button>
+                  <button type="button" className={`dt-chev ${open ? 'up' : ''}`} aria-label="Details" onClick={() => setOpenDet(open ? null : d.name)}><Icon name="down" size={18} /></button>
+                  <button type="button" className={`dt-box ${on ? 'on' : ''}`} aria-label={on ? 'Selected' : 'Select'} onClick={() => setDets(on ? list.detachments.filter((n) => n !== d.name) : blocked ? [d.name] : [...list.detachments, d.name])}>{on && <Icon name="check" size={18} />}</button>
                 </div>
                 {open && (
                   <div className="dt-item-body">
                     {d.rules.map((r) => (
                       <div key={r.name}><div className="dt-rule-name">{r.name.toUpperCase()}</div><div className="dt-card-text"><Em text={r.text} names={ruleNames} /></div></div>
                     ))}
-                    <div className="tiny">Force Disposition: <b>{d.forceDisposition}</b> · <span className={`det-auto ${DET_RULES[d.name]?.auto ?? 'none'}`}>{{ full: 'ระบบทำให้ครบ', partial: 'ระบบทำส่วนหลัก', manual: 'ทำเอง' }[DET_RULES[d.name]?.auto ?? 'manual'] ?? 'อ่านเอง'}</span></div>
+                    <div className="tiny">Force Disposition: <b>{d.forceDisposition}</b> · <span className={`det-auto ${DET_RULES[d.name]?.auto ?? 'none'}`}>{{ full: 'Fully automated', partial: 'Mostly automated', manual: 'Manual' }[DET_RULES[d.name]?.auto ?? 'manual'] ?? 'Read only'}</span></div>
                     <button type="button" className="dt-sub" onClick={() => toggleSec(`${d.name}:enh`)}>Enhancements ({d.enhancements.length})<span className={`dt-chev ${sec('enh') ? 'up' : ''}`}><Icon name="down" size={16} /></span></button>
                     {sec('enh') && d.enhancements.map((e) => ruleCard(e.name, e.name, `${e.pts}pts`, e.text))}
                     <button type="button" className="dt-sub" onClick={() => toggleSec(`${d.name}:strat`)}>Stratagems ({d.stratagems.length})<span className={`dt-chev ${sec('strat') ? 'up' : ''}`}><Icon name="down" size={16} /></span></button>
@@ -518,10 +534,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       <div className="tray-backdrop" onClick={() => setAdding(null)}>
         <div className="tray" onClick={(e) => e.stopPropagation()}>
           <div className="row">
-            <div className="sheet-title grow">เพิ่ม {title}</div>
-            <button className="btn small ghost" onClick={() => setAdding(null)}>ปิด</button>
+            <div className="sheet-title grow">Add {title}</div>
+            <button className="btn small ghost" onClick={() => setAdding(null)}>Close</button>
           </div>
-          <input placeholder="ค้นหา datasheet…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input placeholder="Search datasheets…" value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="ab-pick">
             {sheets.map((d, i) => {
               const count = list.units.filter((u) => u.datasheet === d.name).length;
@@ -536,23 +552,35 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                       <span className="ab-name">{d.name}{count ? <span className="ab-count"> ×{count}</span> : null}</span>
                       <span className="ab-pts">{pointsOptions(d).map((o) => `${o.models}: ${o.pts}`).join(' / ')} pts</span>
                       <span className="ab-sub">{d.subfaction && <span className="ab-chip">{subTag(d.subfaction)}</span>}{d.keywords.includes('EPIC HERO') ? 'Epic Hero · ' : ''}{d.role}</span>
-                      {(() => { const t = parseTransport(d.transport); return t ? <span className="ab-sub ab-cap"><Icon name="embark" size={13} /> ขนได้ {t.capacity} ที่</span> : null; })()}
+                      {(() => { const t = parseTransport(d.transport); return t ? <span className="ab-sub ab-cap"><Icon name="embark" size={13} /> Transport capacity {t.capacity}</span> : null; })()}
                     </span>
                   </button>
-                  <button type="button" className="ab-add dark" aria-label={`เพิ่ม ${d.name}`} onClick={() => addUnit(d)}>+</button>
+                  <button type="button" className="ab-add dark" aria-label={`Add ${d.name}`}
+                    onClick={() => (pointsOptions(d).length > 1 ? setAddSize(addSize === d.name ? null : d.name) : addUnit(d))}>+</button>
                 </div>,
+                // more than one unit size: pick it now
+                addSize === d.name && (
+                  <div key={`size-${d.id}`} className="ab-add-size">
+                    <div className="ab-pop-head">Unit size · {d.name}</div>
+                    {pointsOptions(d).map((o) => (
+                      <button key={o.models} type="button" className="ab-pop-size" onClick={() => { addUnit(d, o); setAddSize(null); }}>
+                        <span className="ab-pop-pts">{o.pts} pts</span> <span className="muted">({o.models} models)</span><span className="ab-pop-plus">+</span>
+                      </button>
+                    ))}
+                  </div>
+                ),
                 // the datasheet opens under its row, like in the list
                 open && (
                   <div className="ab-inline" key={`peek-${d.id}`}>
                     <div className="ab-inline-body">
                       <DatasheetView sheet={d} factionId={faction.id} />
-                      <button type="button" className="ab-moreinfo" onClick={() => setView(null)}>ปิด <Icon name="down" size={18} /></button>
+                      <button type="button" className="ab-moreinfo" onClick={() => setView(null)}>Close <Icon name="down" size={18} /></button>
                     </div>
                   </div>
                 ),
               ];
             })}
-            {!sheets.length && <div className="ab-empty">ไม่พบ datasheet</div>}
+            {!sheets.length && <div className="ab-empty">No datasheets found</div>}
           </div>
         </div>
       </div>
@@ -568,26 +596,26 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         <div className="ab-inline-body">
           {sheet && <DatasheetView sheet={sheet} factionId={faction.id} />}
           {!sheet && <div className="sheet-title">{u.datasheet}</div>}
-          <div className="ab-panel-title">ตั้งค่าหน่วยนี้ · <span className="ab-pts">{ptsOf(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</span></div>
+          <div className="ab-panel-title">Unit settings · <span className="ab-pts">{ptsOf(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</span></div>
           {(enh.length > 0 || u.enhancement) && (
-            <div className="field"><span><Icon name="enhancement" size={15} /> Enhancement <span className="tiny muted">แตะเพื่อใส่ / เอาออก</span></span>
+            <div className="field"><span><Icon name="enhancement" size={15} /> Enhancement <span className="tiny muted">tap to add / remove</span></span>
               <div className="enh-list">
                 {u.enhancement && !enh.some((o) => o.name === u.enhancement) && (
                   <button type="button" className="enh-card on" onClick={() => setUnit(u.uid, { enhancement: undefined, enhancementPts: undefined })}>
-                    <span className="enh-head"><b>{u.enhancement}</b><span>ไม่มีใน detachment ที่เลือก · แตะเพื่อเอาออก</span></span>
+                    <span className="enh-head"><b>{u.enhancement}</b><span>not in the selected Detachments · tap to remove</span></span>
                   </button>
                 )}
                 {enh.map((o) => {
                   const on = u.enhancement === o.name;
                   const taken = list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
                   const fit = sheet ? enhancementFits(o.text, [...sheet.keywords, ...sheet.factionKeywords]) : null;
-                  if (fit && !fit.ok && !on) return <div key={o.detachment + o.name} className="enh-card off"><span className="enh-head"><b>{o.name}</b><span>+{o.pts} pts</span></span><span className="enh-foot">ใช้ไม่ได้: เฉพาะ {fit.need}</span></div>;
+                  if (fit && !fit.ok && !on) return <div key={o.detachment + o.name} className="enh-card off"><span className="enh-head"><b>{o.name}</b><span>+{o.pts} pts</span></span><span className="enh-foot">Not allowed: {fit.need} only</span></div>;
                   return (
                     <button key={o.detachment + o.name} type="button" className={`enh-card ${on ? 'on' : ''} ${taken ? 'taken' : ''}`}
                       onClick={() => setUnit(u.uid, on ? { enhancement: undefined, enhancementPts: undefined } : { enhancement: o.name, enhancementPts: o.pts })}>
-                      <span className="enh-head"><b>{o.name}</b><span>{on ? <><Icon name="check" size={15} /> ใช้อยู่</> : `+${o.pts} pts`}</span></span>
+                      <span className="enh-head"><b>{o.name}</b><span>{on ? <><Icon name="check" size={15} /> Selected</> : `+${o.pts} pts`}</span></span>
                       {o.text && <span className="enh-text"><Em text={o.text} names={ruleNames} /></span>}
-                      <span className="enh-foot">{o.detachment}{o.upgrade ? ' · Upgrade' : ''}{taken ? ` · ${taken.datasheet} ใช้อยู่ (ใช้ได้ครั้งเดียวต่อกองทัพ)` : ''}</span>
+                      <span className="enh-foot">{o.detachment}{o.upgrade ? ' · Upgrade' : ''}{taken ? ` · taken by ${taken.datasheet} (one per army)` : ''}</span>
                     </button>
                   );
                 })}
@@ -602,7 +630,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               ? <div className="tiny muted">{sp.name}: {sp.label}</div>
               : <button className={`btn ${u.split ? 'on' : ''}`} onClick={() => setUnit(u.uid, { split: !u.split })}>{u.split && <Icon name="check" size={16} />}{sp.name}: {sp.label}</button>;
           })()}
-          <button type="button" className="ab-moreinfo" onClick={() => setMenu(null)}>ปิด <Icon name="down" size={18} /></button>
+          <button type="button" className="ab-moreinfo" onClick={() => setMenu(null)}>Close <Icon name="down" size={18} /></button>
         </div>
       </div>
     );
@@ -699,14 +727,14 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     if (pop.mode === 'squad') {
       content = (
         <>
-          <div className="ab-pop-head">{sheet?.isSupport ? 'Add Squad (เป็น Support)' : 'Add Squad (นำหน่วย)'}</div>
+          <div className="ab-pop-head">{sheet?.isSupport ? 'Add Squad (as Support)' : 'Add Squad (as Leader)'}</div>
           {attachOptions(list, faction, u).filter((b) => squadsFor.some((d) => d.name === b.datasheet))
-            .map((b) => rosterCard(b, () => attach(u.uid, b.uid, `${u.datasheet} เข้า ${b.datasheet} แล้ว`)))}
+            .map((b) => rosterCard(b, () => attach(u.uid, b.uid, `${u.datasheet} joined ${b.datasheet}`)))}
           {squadsFor.map((d) => newCard(d, (models) => {
             const b = newEntry(d, models);
             if (!b) return;
             set({ units: [...list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: b.uid, embarkIn: undefined } : x)), b] });
-            setNote(`เพิ่ม ${d.name} แล้วให้ ${u.datasheet} เข้าหน่วย`); close();
+            setNote(`Added ${d.name}; ${u.datasheet} joined it`); close();
           }))}
         </>
       );
@@ -716,12 +744,12 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         <>
           <div className="ab-pop-head">{support ? 'Add Support' : 'Add Leader'} · {u.datasheet}</div>
           {list.units.filter((c) => leadersFor(support).some((d) => d.name === c.datasheet) && attachOptions(list, faction, c).some((b) => b.uid === u.uid))
-            .map((c) => rosterCard(c, () => attach(c.uid, u.uid, `${c.datasheet} เข้า ${u.datasheet} แล้ว`)))}
+            .map((c) => rosterCard(c, () => attach(c.uid, u.uid, `${c.datasheet} joined ${u.datasheet}`)))}
           {leadersFor(support).map((d) => newCard(d, (models) => {
             const c = newEntry(d, models, { attachTo: u.uid });
             if (!c) return;
             set({ units: [...list.units, c] });
-            setNote(`เพิ่ม ${d.name} เข้า ${u.datasheet} แล้ว`); close();
+            setNote(`Added ${d.name} to ${u.datasheet}`); close();
           }))}
         </>
       );
@@ -733,19 +761,19 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           <div className="ab-pop-head">Embark · {u.datasheet} <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></div>
           {cargoShown.map(({ r, c }) => {
             const on = r.embarkIn === u.uid;
-            return rideCard(r.uid, r.datasheet, names(r), on ? `${c.need} ที่ · แตะเพื่อลงจากรถ` : c.full ? `ไม่พอ: ใช้ ${c.need} ที่ เหลือ ${Math.max(0, c.capacity - c.used)}` : `${c.need} ที่`,
+            return rideCard(r.uid, r.datasheet, names(r), on ? `${c.need} slots · tap to disembark` : c.full ? `No room: needs ${c.need}, ${Math.max(0, c.capacity - c.used)} left` : `${c.need} slots`,
               on ? 'on' : c.full ? 'full' : '', !on && c.full,
-              () => { setUnit(r.uid, { embarkIn: on ? undefined : u.uid }); setNote(on ? `${r.datasheet} ลงจาก ${u.datasheet}` : `${r.datasheet} เริ่มเกมบน ${u.datasheet}`); });
+              () => { setUnit(r.uid, { embarkIn: on ? undefined : u.uid }); setNote(on ? `${r.datasheet} left ${u.datasheet}` : `${r.datasheet} starts embarked in ${u.datasheet}`); });
           })}
         </>
       );
     } else if (pop.mode === 'embark') {
       content = (
         <>
-          <div className="ab-pop-head">ขึ้นรถตอนเริ่มเกม{body ? ` (ทั้งหน่วย ${body.datasheet})` : ''}</div>
-          {rides.map(({ t, c }) => rideCard(t.uid, t.datasheet, t.datasheet, c.full ? `เต็ม: ต้องใช้ ${c.need} ที่ เหลือ ${Math.max(0, c.capacity - c.used)}` : '',
+          <div className="ab-pop-head">Start embarked{body ? ` (whole unit with ${body.datasheet})` : ''}</div>
+          {rides.map(({ t, c }) => rideCard(t.uid, t.datasheet, t.datasheet, c.full ? `Full: needs ${c.need}, ${Math.max(0, c.capacity - c.used)} left` : '',
             rider.embarkIn === t.uid ? 'on' : c.full ? 'full' : '', c.full,
-            () => { setUnit(rider.uid, { embarkIn: t.uid }); setNote(`${rider.datasheet} เริ่มเกมบน ${t.datasheet}`); close(); }, `${c.used}/${c.capacity}`))}
+            () => { setUnit(rider.uid, { embarkIn: t.uid }); setNote(`${rider.datasheet} starts embarked in ${t.datasheet}`); close(); }, `${c.used}/${c.capacity}`))}
         </>
       );
     } else if (pop.mode === 'size') {
@@ -767,7 +795,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           {canSupport && <button type="button" onClick={() => setPop({ ...pop, mode: 'support' })}><Icon name="plus" size={22} />Add Support</button>}
           {bodySupport && <button type="button" onClick={() => setPop({ ...pop, uid: body!.uid, mode: 'support' })}><Icon name="plus" size={22} />Add Support <span className="ab-pop-val">{body!.datasheet}</span></button>}
           {body && (
-            <button type="button" onClick={() => { setUnit(u.uid, { attachTo: undefined }); setNote(`${u.datasheet} ออกจาก ${body.datasheet}`); close(); }}>
+            <button type="button" onClick={() => { setUnit(u.uid, { attachTo: undefined }); setNote(`${u.datasheet} left ${body.datasheet}`); close(); }}>
               <Icon name="leave" size={22} />Leave Squad
             </button>
           )}
@@ -775,7 +803,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></button>
           )}
           {!isTransport && (rideIn ? (
-            <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setNote(`${rider.datasheet} ลงจาก ${rideIn.datasheet}`); close(); }}>
+            <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setNote(`${rider.datasheet} left ${rideIn.datasheet}`); close(); }}>
               <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{rideIn.datasheet}</span>
             </button>
           ) : rides.length > 0 && (
@@ -784,10 +812,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
           {opts.length > 1 && <button type="button" onClick={() => setPop({ ...pop, mode: 'size' })}><Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span></button>}
           {isChar && (
             <button type="button" className={u.warlord ? 'on' : ''} onClick={() => { set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) }); close(); }}>
-              <Icon name={u.warlord ? 'check' : 'leader'} size={22} />{u.warlord ? 'Warlord' : 'ตั้งเป็น Warlord'}
+              <Icon name={u.warlord ? 'check' : 'leader'} size={22} />{u.warlord ? 'Warlord' : 'Make Warlord'}
             </button>
           )}
-          <button type="button" onClick={() => { set({ units: [...list.units, { ...u, uid: newUid('e'), warlord: false, enhancement: undefined, enhancementPts: undefined, attachTo: undefined }] }); setNote(`เพิ่ม ${u.datasheet} อีก 1`); close(); }}>
+          <button type="button" onClick={() => { set({ units: [...list.units, { ...u, uid: newUid('e'), warlord: false, enhancement: undefined, enhancementPts: undefined, attachTo: undefined }] }); setNote(`Added another ${u.datasheet}`); close(); }}>
             <Icon name="duplicate" size={22} />Duplicate
           </button>
           <button type="button" onClick={() => { removeUnit(u.uid); close(); }}>
@@ -813,8 +841,8 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         <div className="tray" onClick={(e) => e.stopPropagation()}>
           <div className="row">
             {step && <button className="btn small ghost" onClick={() => setPicker({ factionId: null })}>‹ Faction</button>}
-            <div className="sheet-title grow">{step ? `${step.name}: เลือก ${subs?.label ?? 'sub-faction'}` : 'เลือก Faction'}</div>
-            <button className="btn small ghost" onClick={() => setPicker(null)}>ปิด</button>
+            <div className="sheet-title grow">{step ? `${step.name}: select ${subs?.label ?? 'sub-faction'}` : 'Select Faction'}</div>
+            <button className="btn small ghost" onClick={() => setPicker(null)}>Close</button>
           </div>
           {!step && groups.map((g) => {
             const fs = index.factions.filter((f) => (f.group ?? 'Other') === g && f.datasheets > 0 && f.detachments > 0);
@@ -835,15 +863,15 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               </div>
             );
           })}
-          {step && !opts && <div className="ab-empty">กำลังโหลด…</div>}
+          {step && !opts && <div className="ab-empty">Loading…</div>}
           {step && opts && (
             <>
-              {list.units.length > 0 && <div className="small muted">เปลี่ยน {subs!.label}: หน่วยและ detachment ของ {subs!.label} อื่นจะถูกเอาออก หน่วยทั่วไปอยู่ครบ</div>}
+              {list.units.length > 0 && <div className="small muted">Changing {subs!.label} removes units and Detachments of other {subs!.label}s; generic units stay</div>}
               <div className="ab-fgrid">
                 <button type="button" className={`ab-fcard ${!list.subfaction ? 'on' : ''}`} onClick={() => choose(step.id, undefined)}>
                   <Emblem factionId={step.id} />
-                  <span className="ab-fname">ไม่ระบุ {subs!.label}</span>
-                  <span className="ab-sub">หน่วยทั่วไปเท่านั้น</span>
+                  <span className="ab-fname">No {subs!.label}</span>
+                  <span className="ab-sub">Generic units only</span>
                 </button>
                 {opts.map((o) => {
                   const nU = faction!.datasheets.filter((d) => d.subfaction === o.keyword).length;
@@ -852,7 +880,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
                     <button key={o.keyword} type="button" className={`ab-fcard ${list.subfaction === o.keyword ? 'on' : ''}`} onClick={() => choose(step.id, o.keyword)}>
                       <Emblem factionId={step.id} color={o.color} sub={o.keyword} />
                       <span className="ab-fname">{o.name}</span>
-                      <span className="ab-sub">{nU} หน่วยเฉพาะ · {nD} detachment</span>
+                      <span className="ab-sub">{nU} specific units · {nD} Detachments</span>
                     </button>
                   );
                 })}
@@ -867,13 +895,13 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   return (
     <div className="ab">
       <header className="ab-top">
-        <button type="button" className="ab-icon" aria-label="กลับ" onClick={onDone}>‹</button>
+        <button type="button" className="ab-icon" aria-label="Back" onClick={onDone}>‹</button>
         <div className="ab-tabs" role="tablist">
           <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => setTab('list')}>List</button>
           <button role="tab" aria-selected={tab === 'detachment'} className={tab === 'detachment' ? 'on' : ''} onClick={() => setTab('detachment')}>Detachment</button>
         </div>
         <div className={`ab-total ${pts > size.points ? 'over' : ''}`}>{pts}/{size.points}<small> pts</small></div>
-        <button type="button" className="ab-icon" aria-label="แชร์รายชื่อกองทัพ" onClick={share}>
+        <button type="button" className="ab-icon" aria-label="Share army list" onClick={share}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
           </svg>
@@ -882,27 +910,27 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
       <div className="ab-body">
         {tab === 'list' && (
           <div className="ab-head">
-            <button type="button" className="ab-head-main" onClick={() => setTab('detachment')} aria-label="แก้ชื่อ faction และ detachment ในแท็บ Detachment">
+            <div className="ab-head-main">
               <Emblem factionId={list.factionId} color={sub?.color} sub={list.subfaction} />
               <span className="grow ab-head-text">
-                <span className="ab-title">{list.name || 'กองทัพไม่มีชื่อ'}</span>
-                <span className="ab-det-name">{list.detachments.join(' · ') || 'ยังไม่ได้เลือก detachment'}</span>
-                {chosenDets.length > 0 && <span className="ab-disp">Force Disposition: <b>{chosenDets[0].forceDisposition}</b></span>}
+                <input className="ab-title ab-name-input" aria-label="Army name" value={list.name} placeholder="Army name" onChange={(e) => set({ name: e.target.value })} />
+                <span className="ab-det-name">{list.detachments.join(' · ') || 'No Detachment selected'}</span>
+                {dispositionChips()}
                 <span className="ab-faction">{factionName}{sub ? ` · ${sub.name}` : ''}</span>
               </span>
-            </button>
+            </div>
             {list.units.length > 0 && (
               // the page runs where confirm() dialogs are blocked: tap once to arm, again to clear
               <button type="button" className={`ab-reset ${resetArmed ? 'armed' : ''}`} onClick={() => {
                 if (!resetArmed) { setResetArmed(true); window.setTimeout(() => setResetArmed(false), 3000); return; }
                 setResetArmed(false);
                 set({ units: [], detachments: [] });
-                setNote('รีเซ็ต roster แล้ว');
-              }}><Icon name="delete" size={15} /> {resetArmed ? 'แตะอีกครั้ง' : 'รีเซ็ต'}</button>
+                setNote('Roster reset');
+              }}><Icon name="delete" size={15} /> {resetArmed ? 'Tap again' : 'Reset'}</button>
             )}
           </div>
         )}
-        {!faction && <div className="ab-empty">กำลังโหลดข้อมูล…</div>}
+        {!faction && <div className="ab-empty">Loading…</div>}
         {faction && (tab === 'list' ? listTab() : detachmentTab())}
       </div>
       {note && <div className="toast ab-toast">{note}</div>}

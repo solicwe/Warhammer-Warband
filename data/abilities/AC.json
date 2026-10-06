@@ -36,7 +36,7 @@
     "when": "fightStartButton",
     "limit": "battle",
     "per": "army",
-    "label": "Watcher's Axe +3 A ถึงจบ phase",
+    "label": "Watcher's Axe +3 A until end of phase",
     "botIf": [
      "engaged"
     ],
@@ -58,7 +58,7 @@
     "when": "anyPhase",
     "limit": "battle",
     "per": "army",
-    "label": "InSv 3+ ถึงจบ phase",
+    "label": "3+ invulnerable save until end of phase",
     "botUse": "never",
     "do": [
      {
@@ -102,7 +102,7 @@
  },
  "Supreme Commander": {
   "status": "info",
-  "note": "อยู่ในกองทัพต้องเป็น WARLORD"
+  "note": "If included, must be the WARLORD"
  },
  "Praesidium Shield": {
   "gear": true,
@@ -132,7 +132,7 @@
     "if": [
      "!readied"
     ],
-    "label": "หน่วยนี้ readied อีกครั้ง",
+    "label": "This unit is readied again",
     "botUse": "never",
     "do": [
      {
@@ -147,7 +147,7 @@
     "if": [
      "!readied"
     ],
-    "label": "หน่วยนี้ readied อีกครั้ง",
+    "label": "This unit is readied again",
     "botIf": [
      "engagedMV"
     ],
@@ -185,7 +185,7 @@
     "notMovedYet"
    ],
    "botUse": "never",
-   "label": "ไป Strategic Reserves แล้วลง ingress ใน phase นี้",
+   "label": "Go into Strategic Reserves, then arrive via Ingress this phase",
    "do": [
     {
      "on": "self",
@@ -199,7 +199,7 @@
   "act": {
    "when": "fightEndButton",
    "limit": "battle",
-   "label": "จบ Fight phase: เดิน Normal move (ถ้าติดพัน = Fall back)",
+   "label": "End of Fight phase: make a Normal move (if engaged = Fall Back)",
    "botUse": "never",
    "do": [
     {
@@ -246,7 +246,7 @@
  },
  "Vexilla": {
   "status": "auto",
-  "note": "+1 OC (ignore Ld modifiers: เกือบไม่มีผล)"
+  "note": "+1 OC (ignore Ld modifiers: almost no effect)"
  },
  "Stand Vigil": {
   "effects": [
@@ -323,7 +323,7 @@
     "notEngaged"
    ],
    "botUse": "never",
-   "label": "ออกไปอยู่ Strategic Reserves",
+   "label": "Go into Strategic Reserves",
    "do": [
     {
      "on": "self",
@@ -341,7 +341,7 @@
     "range": 3
    },
    "roll": "D6",
-   "label": "ศัตรูในระยะ 3\": 2+ → D3 MW (MONSTER/VEHICLE 2D3)",
+   "label": "Enemies within 3\": 2+ → D3 mortal wounds (MONSTER/VEHICLE 2D3)",
    "table": [
     {
      "min": 2,
@@ -475,7 +475,7 @@
   "act": {
    "when": "afterShootingButton",
    "limit": "phase",
-   "label": "เดิน Normal move D6\" (แล้วชาร์จไม่ได้)",
+   "label": "Make a Normal move of D6\" (cannot charge afterwards)",
    "do": [
     {
      "on": "self",
@@ -507,7 +507,7 @@
     "disembarkAfterAdvance": true
    }
   ],
-  "note": "Shock disembark: ลงได้หลังรถ Advance (ระยะ 3\") แล้วชาร์จไม่ได้เทิร์นนั้น"
+  "note": "Shock disembark: can disembark after the transport Advanced (within 3\"), but cannot charge that turn"
  },
  "Seeker's Instincts": {
   "effects": [
@@ -524,7 +524,7 @@
     "forceDesperate": true
    }
   ],
-  "note": "ศัตรู (ไม่ใช่ MONSTER/VEHICLE) ที่ fall back ต้องใช้ Desperate Escape · battle-shocked −1 hazard"
+  "note": "Enemies (not MONSTER/VEHICLE) that Fall Back must take Desperate Escape · Battle-shocked −1 to Hazardous"
  },
  "Purity of Execution": {
   "act": {
@@ -535,7 +535,7 @@
     "range": 18,
     "visible": true
    },
-   "label": "ศัตรูถูก detect: detection range +3\"",
+   "label": "Detected enemy: detection range +3\"",
    "do": [
     {
      "buff": [
@@ -596,11 +596,11 @@
  },
  "Emperor's Light": {
   "status": "auto",
-  "note": "อาวุธ Emperor's Light [EXTRA ATTACKS] ถูกเพิ่มให้โมเดลแล้ว"
+  "note": "Emperor's Light weapon [EXTRA ATTACKS] already added to the model"
  },
  "Castellan's Mark": {
   "status": "auto",
-  "note": "หลังวางทัพทั้งสองฝ่าย: redeploy หน่วย CUSTODES ได้ 3 หน่วย (วางใหม่หรือเข้า Strategic Reserves)"
+  "note": "After both players deploy: redeploy up to 3 CUSTODES units (set up again or place into Strategic Reserves)"
  },
  "Eagle's Eye": {
   "act": [
@@ -608,7 +608,7 @@
     "when": "anyPhase",
     "limit": "battle",
     "per": "army",
-    "label": "InSv 3+ ถึงจบ phase",
+    "label": "3+ invulnerable save until end of phase",
     "botUse": "never",
     "do": [
      {
@@ -654,7 +654,7 @@
    "when": "anyPhase",
    "limit": "battle",
    "per": "army",
-   "label": "ฟื้น D3+3 wound",
+   "label": "Regain D3+3 wounds",
    "botUse": "damaged",
    "target": {
     "side": "self"
@@ -829,7 +829,7 @@
      "ADEPTUS CUSTODES"
     ]
    },
-   "label": "หน่วยเพื่อนในระยะ 9\" หายจาก battle-shocked",
+   "label": "Friendly units within 9\" are no longer Battle-shocked",
    "do": [
     {
      "unshock": true
@@ -988,7 +988,7 @@
     "range": 12,
     "visible": true
    },
-   "label": "ศัตรูในระยะ 12\" ทดสอบ battle-shock -1",
+   "label": "Enemies within 12\" -1 to Battle-shock tests",
    "do": [
     {
      "shock": -1

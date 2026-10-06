@@ -38,7 +38,7 @@
  },
  "One Shot": {
   "status": "info",
-  "note": "keyword ของอาวุธ ระบบนับให้แล้ว"
+  "note": "Weapon keyword, already handled by the engine"
  },
  "Suppression Fire": {
   "act": {
@@ -64,7 +64,7 @@
  },
  "Combat Squads": {
   "split": "half",
-  "note": "เลือกแยกหน่วยได้ตอนจัดทัพ (เมนู ⋮)"
+  "note": "Can be split in the army builder (⋮ menu)"
  },
  "Bladeguard": {
   "act": [
@@ -102,12 +102,12 @@
     ]
    }
   ],
-  "note": "ระบบใช้ให้อัตโนมัติ: ถ้าโดนตีก่อน = ศัตรู −1 hit, ถ้าได้ตีก่อน = +1 hit"
+  "note": "Used automatically: if attacked first = enemy −1 to Hit, if attacking first = +1 to Hit"
  },
  "Relic Shield": {
   "gear": true,
   "status": "auto",
-  "note": "W6 (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)"
+  "note": "W6 (per wargear chosen in the list)"
  },
  "Rites of Battle": {
   "effects": [
@@ -128,7 +128,7 @@
    "when": "fightStartButton",
    "limit": "battle",
    "botUse": "valuable",
-   "label": "+3 A, Devastating Wounds (ตัวนี้)",
+   "label": "+3 A, [DEVASTATING WOUNDS] (this model)",
    "do": [
     {
      "on": "self",
@@ -189,7 +189,7 @@
  },
  "LAST SURVIVOR": {
   "status": "info",
-  "note": "ห้ามเป็น Warlord"
+  "note": "Cannot be the Warlord"
  },
  "Psychic Hood": {
   "effects": [
@@ -244,7 +244,7 @@
  },
  "Drop Pod Assault": {
   "status": "auto",
-  "note": "ลงสนามได้ตั้งแต่ round 1; ผู้โดยสารลงทันทีห่างศัตรูเกิน 8\" (อัตโนมัติ)",
+  "note": "Can arrive from battle round 1; passengers disembark immediately more than 8\" from enemies (automatic)",
   "effects": [
    {
     "deepStrike": true,
@@ -301,7 +301,7 @@
     "range": 12,
     "visible": true
    },
-   "label": "เลือกเป้า: ยิงได้ Devastating Wounds",
+   "label": "Select a target: attacks gain [DEVASTATING WOUNDS]",
    "do": [
     {
      "incoming": {
@@ -318,11 +318,11 @@
  },
  "Fortification": {
   "status": "partial",
-  "note": "ระบบยังไม่มีกฎ FORTIFICATION แบบเต็ม (ยิงเข้าหน่วยที่ติดป้อมได้ด้วย −1 hit ให้ใส่ buff เอง)"
+  "note": "The engine does not yet have full FORTIFICATION rules (shooting a unit engaged with a fortification at −1 to Hit: add the buff manually)"
  },
  "Ceramite Cover": {
   "status": "partial",
-  "note": "cover จากป้อมคิดแบบเดียวกับ terrain ที่บังไม่หมด"
+  "note": "Cover from fortifications works like terrain that does not fully block"
  },
  "Defensive Array": {
   "effects": [
@@ -394,7 +394,7 @@
  },
  "Teleport Homer": {
   "status": "auto",
-  "note": "token วางเองตอนเริ่มเกม; Rapid Ingress 0CP ลงภายใน 3\" ของ token ห่างศัตรูเกิน 8\"",
+  "note": "Token placed manually at the start of the game; Rapid Ingress 0CP, arrive within 3\" of the token and more than 8\" from enemies",
   "effects": [
    {
     "stratDiscount": {
@@ -434,7 +434,7 @@
  "Storm Shield": {
   "gear": true,
   "status": "auto",
-  "note": "W/InSv ตามอุปกรณ์ที่เลือกตอนจัดทัพ"
+  "note": "W / invulnerable save per wargear chosen in the list"
  },
  "Shrouding (Psychic)": {
   "effects": [
@@ -569,7 +569,7 @@
      "VEHICLE"
     ]
    },
-   "label": "รถในระยะ 3\": ฟื้น 3 W, ไม่สนตัวปรับ hit/wound",
+   "label": "Vehicle within 3\": regain 3 W, ignore Hit/Wound modifiers",
    "do": [
     {
      "heal": "3"
@@ -608,7 +608,7 @@
     "range": 18,
     "visible": true
    },
-   "label": "ศัตรู detected: +3\" detection",
+   "label": "Detected enemy: +3\" detection",
    "do": [
     {
      "buff": [
@@ -711,7 +711,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Assault Doctrine ให้หน่วยเพื่อน",
+    "label": "Assault Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -734,7 +734,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Devastator Doctrine ให้หน่วยเพื่อน",
+    "label": "Devastator Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -757,7 +757,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Tactical Doctrine ให้หน่วยเพื่อน",
+    "label": "Tactical Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -807,7 +807,7 @@
  },
  "SUPREME COMMANDER": {
   "status": "info",
-  "note": "ต้องเป็น Warlord"
+  "note": "Must be the Warlord"
  },
  "Primarch of the XIII (Aura)": {
   "effects": [
@@ -826,7 +826,7 @@
  },
  "Master of Battle": {
   "status": "auto",
-  "note": "เลือกเป้าสำรองของ Oath of Moment ใน Command phase",
+  "note": "Select a secondary Oath of Moment target in the Command phase",
   "effects": [
    {
     "oathBackup": true
@@ -874,7 +874,7 @@
      "VEHICLE"
     ]
    },
-   "label": "รถในระยะ 3\": ฟื้น D3 W, +1 hit",
+   "label": "Vehicle within 3\": regain D3 W, +1 to Hit",
    "do": [
     {
      "heal": "D3"
@@ -980,7 +980,7 @@
  },
  "Miraculous Saviour": {
   "status": "auto",
-  "note": "จบ Charge phase ศัตรู: ลงมา engaged กับหน่วยที่ชาร์จ (ครั้งเดียว)"
+  "note": "End of opponent's Charge phase: arrive engaged with the charging unit (once)"
  },
  "Redeemer of the Lost": {
   "effects": [
@@ -1072,11 +1072,11 @@
  },
  "ATTACHED UNIT": {
   "status": "info",
-  "note": "สิทธิ์ผูก leader (ใช้ตอนจัดทัพ)"
+  "note": "Leader attachment permission (used in the army builder)"
  },
  "Attached Unit": {
   "status": "info",
-  "note": "สิทธิ์ผูก leader (ใช้ตอนจัดทัพ)"
+  "note": "Leader attachment permission (used in the army builder)"
  },
  "Black Rage": {
   "effects": [
@@ -1151,7 +1151,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Assault Doctrine ให้หน่วยเพื่อน",
+    "label": "Assault Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -1173,7 +1173,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Devastator Doctrine ให้หน่วยเพื่อน",
+    "label": "Devastator Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -1195,7 +1195,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Tactical Doctrine ให้หน่วยเพื่อน",
+    "label": "Tactical Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -1269,7 +1269,7 @@
     "side": "enemy",
     "range": 18
    },
-   "label": "ศัตรูในระยะ 18\" ทอย Battle-shock",
+   "label": "Enemies within 18\" take a Battle-shock test",
    "do": [
     {
      "shock": 0
@@ -1418,7 +1418,7 @@
     ],
     "inReserves": true
    },
-   "label": "หน่วยในกองหนุนลงสนามเร็วขึ้น 1 round",
+   "label": "Reserves units arrive 1 round earlier",
    "do": [
     {
      "earlyArrival": true
@@ -1440,7 +1440,7 @@
  },
  "EMBARKING WITHIN TRANSPORTS": {
   "status": "info",
-  "note": "กฎการขึ้นรถ (นับที่นั่งตามข้อมูลรถ)"
+  "note": "Embark rules (capacity per transport data)"
  },
  "War Howl": {
   "effects": [
@@ -1520,7 +1520,7 @@
   }
  },
  "Slayer’s Oath": {
-  "note": "ระบบเลือก keyword ให้ (ที่ศัตรูมีแต้มรวมมากสุด) · ทำลายหน่วยที่มี keyword นั้นได้ = หน่วยนี้ได้ผลของ Saga ที่สำเร็จ",
+  "note": "The engine selects the keyword (the one with the most enemy points) · destroying a unit with that keyword = this unit gains the completed Saga's effect",
   "act": {
    "when": "battleStart",
    "auto": true,
@@ -1617,7 +1617,7 @@
      "VEHICLE"
     ]
    },
-   "label": "รถในระยะ 3\": ฟื้น D3 W, ไม่สนตัวปรับ hit/wound",
+   "label": "Vehicle within 3\": regain D3 W, ignore Hit/Wound modifiers",
    "do": [
     {
      "heal": "D3"
@@ -1687,7 +1687,7 @@
  },
  "FORCE OF UNTAMED DESTRUCTION": {
   "status": "info",
-  "note": "ห้ามเป็น Warlord"
+  "note": "Cannot be the Warlord"
  },
  "Anvil of Endurance": {
   "effects": [
@@ -1879,7 +1879,7 @@
     "range": 3
    },
    "roll": "D6",
-   "label": "ศัตรูในระยะ 3\": 2+ → D3 MW (รถ 2D3)",
+   "label": "Enemies within 3\": 2+ → D3 mortal wounds (vehicles 2D3)",
    "table": [
     {
      "min": 2,
@@ -1900,7 +1900,7 @@
     "farFromEnemies:6"
    ],
    "botUse": "never",
-   "label": "ออกไปอยู่ Strategic Reserves",
+   "label": "Go into Strategic Reserves",
    "do": [
     {
      "on": "self",
@@ -1944,7 +1944,7 @@
    "when": "selectedToFight",
    "limit": "battle",
    "botUse": "valuable",
-   "label": "+1 A ทั้งหน่วย",
+   "label": "+1 A for the whole unit",
    "do": [
     {
      "on": "self",
@@ -1981,7 +1981,7 @@
      "ADEPTUS ASTARTES"
     ]
    },
-   "label": "หน่วยเพื่อนในระยะ 12\" หายจาก battle-shocked",
+   "label": "Friendly units within 12\" are no longer Battle-shocked",
    "do": [
     {
      "unshock": true
@@ -2064,7 +2064,7 @@
  },
  "Deadly Terror": {
   "status": "auto",
-  "note": "เพิ่มระยะ Terror Troops เป็น 6\" (คิดใน Terror Troops)"
+  "note": "Increase Terror Troops range to 6\" (handled in Terror Troops)"
  },
  "Target Priority": {
   "effects": [
@@ -2167,7 +2167,7 @@
    "if": [
     "hasWeapon:Instigator bolt carbine"
    ],
-   "label": "เดิน Normal move หลังยิง (ชาร์จไม่ได้)",
+   "label": "Make a Normal move after shooting (cannot charge)",
    "do": [
     {
      "on": "self",
@@ -2293,7 +2293,7 @@
    "when": "anyPhase",
    "limit": "battle",
    "botUse": "valuable",
-   "label": "2+ InSv จนจบ phase",
+   "label": "2+ invulnerable save until end of phase",
    "do": [
     {
      "on": "self",
@@ -2399,7 +2399,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Assault Doctrine (หน่วยนี้)",
+    "label": "Assault Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -2415,7 +2415,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Devastator Doctrine (หน่วยนี้)",
+    "label": "Devastator Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -2431,7 +2431,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Tactical Doctrine (หน่วยนี้)",
+    "label": "Tactical Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -2479,7 +2479,7 @@
     "range": 18,
     "visible": true
    },
-   "label": "ศัตรู: ไม่ได้ cover",
+   "label": "Enemy: does not gain cover",
    "do": [
     {
      "incoming": {
@@ -2510,7 +2510,7 @@
    "if": [
     "notEngaged"
    ],
-   "label": "เดิน 6\" หลังยิง (ชาร์จไม่ได้)",
+   "label": "Move 6\" after shooting (cannot charge)",
    "do": [
     {
      "on": "self",
@@ -2543,7 +2543,7 @@
  "Shield Dome": {
   "gear": true,
   "status": "auto",
-  "note": "5+ InSv (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)"
+  "note": "5+ invulnerable save (per wargear chosen in the list)"
  },
  "Keep the Banner High": {
   "effects": [
@@ -2566,7 +2566,7 @@
  "Terminator Storm Shield": {
   "gear": true,
   "status": "auto",
-  "note": "W6 (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)"
+  "note": "W6 (per wargear chosen in the list)"
  },
  "Primarch of the First Legion": {
   "choice": {
@@ -2607,7 +2607,7 @@
     "notEngaged"
    ],
    "botUse": "never",
-   "label": "ออกไป Strategic Reserves แล้วลงสนามได้เทิร์นหน้า",
+   "label": "Go into Strategic Reserves, then arrive next turn",
    "do": [
     {
      "on": "self",
@@ -2649,7 +2649,7 @@
  },
  "Master of Deceit": {
   "status": "auto",
-  "note": "หลังวางทัพ: redeploy INFANTRY ได้ 3 หน่วย (วางใหม่หรือเข้ากองหนุน)"
+  "note": "After deployment: redeploy up to 3 INFANTRY units (set up again or place into Reserves)"
  },
  "Annihilator Protocols": {
   "effects": [
@@ -2667,7 +2667,7 @@
  "Centurion Assault Launcher": {
   "gear": true,
   "status": "info",
-  "note": "ได้ keyword GRENADES"
+  "note": "Gains the GRENADES keyword"
  },
  "Aquilon Optics": {
   "freeDie": [
@@ -2745,7 +2745,7 @@
     "notEngaged"
    ],
    "botUse": "never",
-   "label": "ออกไปอยู่ Strategic Reserves",
+   "label": "Go into Strategic Reserves",
    "do": [
     {
      "on": "self",
@@ -2815,7 +2815,7 @@
   "act": {
    "when": "afterShootingButton",
    "limit": "phase",
-   "label": "เดิน D6\" หลังยิง (ชาร์จไม่ได้)",
+   "label": "Move D6\" after shooting (cannot charge)",
    "do": [
     {
      "on": "self",
@@ -2842,7 +2842,7 @@
    "when": "anyCommand",
    "limit": "battle",
    "botUse": "valuable",
-   "label": "+1 A อาวุธทั้งหน่วยจนจบเทิร์น",
+   "label": "+1 A to the unit's weapons until end of turn",
    "do": [
     {
      "on": "self",
@@ -2876,7 +2876,7 @@
  },
  "CRIMSON FISTS": {
   "status": "info",
-  "note": "นับเป็น Imperial Fists"
+  "note": "Counts as Imperial Fists"
  },
  "INSPIRING COMMANDER@Pedro Kantor": {
   "effects": [
@@ -2951,7 +2951,7 @@
  "Grapnel Launcher": {
   "gear": true,
   "status": "info",
-  "note": "สนาม 2D ไม่มีระยะแนวตั้งอยู่แล้ว"
+  "note": "The 2D board has no vertical distance anyway"
  },
  "Reiver Grav-chute": {
   "gear": true,
@@ -2963,7 +2963,7 @@
  },
  "Emergency Combat Embarkation": {
   "status": "auto",
-  "note": "ศัตรูประกาศชาร์จ: หน่วยที่อยู่ภายใน 3\" ขึ้นรถหนีเอง (เทิร์นละครั้ง)"
+  "note": "Enemy declares a charge: a unit within 3\" embarks to escape (once per turn)"
  },
  "Executioner": {
   "effects": [
@@ -2997,7 +2997,7 @@
     "range": 24,
     "visible": true
    },
-   "label": "เลือกเป้า: อาวุธ Torrent/Melta +2 S",
+   "label": "Select a target: Torrent/Melta weapons +2 S",
    "do": [
     {
      "incoming": {
@@ -3015,7 +3015,7 @@
  },
  "Seeker of the Unfound": {
   "status": "auto",
-  "note": "เลือก objective กลางสนามที่ใกล้สุดตอนลงสนามครั้งแรก",
+  "note": "Select the closest central objective when first arriving on the battlefield",
   "effects": [
    {
     "scope": "model",
@@ -3090,7 +3090,7 @@
     "contains:Apothecary"
    ],
    "botUse": "damaged",
-   "label": "คืนชีพ 1 โมเดล",
+   "label": "Return 1 destroyed model",
    "do": [
     {
      "on": "self",
@@ -3199,7 +3199,7 @@
  },
  "Stabilised Disembarkation": {
   "status": "auto",
-  "note": "รถโดนยิงจนเหลือครึ่งเลือด: หน่วยข้างในลงเอง"
+  "note": "Transport reduced to half wounds: units inside disembark automatically"
  },
  "Litanies of the Devout": {
   "effects": [
@@ -3374,7 +3374,7 @@
    "if": [
     "engagedWithCharacter"
    ],
-   "label": "Devastating Wounds (ตีใส่ CHARACTER)",
+   "label": "[DEVASTATING WOUNDS] (attacks against CHARACTER)",
    "do": [
     {
      "on": "self",
@@ -3393,7 +3393,7 @@
  },
  "CHOSEN OF THE EMPEROR": {
   "status": "info",
-  "note": "มี Emperor's Champion ได้ตัวเดียว"
+  "note": "Only one Emperor's Champion"
  },
  "Inspirational Exemplar": {
   "effects": [
@@ -3467,7 +3467,7 @@
  "Blizzard Shield": {
   "gear": true,
   "status": "auto",
-  "note": "4+ InSv (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)"
+  "note": "4+ invulnerable save (per wargear chosen in the list)"
  },
  "Braziers of Judgement": {
   "effects": [
@@ -3590,7 +3590,7 @@
  },
  "Let Loose the Wolves": {
   "split": "byModel",
-  "note": "แยก Headtakers กับ Hunting Wolves ตอนจัดทัพ (เมนู ⋮)"
+  "note": "Split Headtakers and Hunting Wolves in the army builder (⋮ menu)"
  },
  "Headhunters": {
   "effects": [
@@ -3777,7 +3777,7 @@
      "INFANTRY"
     ]
    },
-   "label": "หน่วยเพื่อน: re-roll ชาร์จได้",
+   "label": "Friendly unit: can re-roll Charge",
    "do": [
     {
      "buff": [
@@ -3805,7 +3805,7 @@
  },
  "CHAPTER MASTER OF THE RAVEN GUARD": {
   "status": "info",
-  "note": "ปรับ keyword ของ Shrike เมื่อมี Aethon Shaan"
+  "note": "Adjust Shrike's keywords when Aethon Shaan is included"
  },
  "Cold and Calculating": {
   "effects": [
@@ -3911,7 +3911,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Assault Doctrine ให้หน่วยเพื่อน",
+    "label": "Assault Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -3934,7 +3934,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Devastator Doctrine ให้หน่วยเพื่อน",
+    "label": "Devastator Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -3957,7 +3957,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Tactical Doctrine ให้หน่วยเพื่อน",
+    "label": "Tactical Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -4039,7 +4039,7 @@
     "limit": "battle",
     "per": "army",
     "botUse": "valuable",
-    "label": "+1 S และ +1 A ทั้งหน่วย",
+    "label": "+1 S and +1 A for the whole unit",
     "do": [
      {
       "on": "self",
@@ -4088,7 +4088,7 @@
  },
  "DEMETRIAN TITUS": {
   "status": "info",
-  "note": "มี Titus ได้หน่วยเดียว"
+  "note": "Only one Titus unit"
  },
  "Second Company Banner": {
   "effects": [
@@ -4109,12 +4109,12 @@
  },
  "Strategium Command": {
   "status": "auto",
-  "note": "หลังวางทัพ: redeploy ได้ 3 หน่วย (วางใหม่หรือเข้ากองหนุน)"
+  "note": "After deployment: redeploy up to 3 units (set up again or place into Reserves)"
  },
  "Refractor Field": {
   "gear": true,
   "status": "auto",
-  "note": "5+ InSv (ตามอุปกรณ์ที่เลือกตอนจัดทัพ)"
+  "note": "5+ invulnerable save (per wargear chosen in the list)"
  },
  "Curse of the Wulfen": {
   "effects": [
@@ -4140,11 +4140,11 @@
  },
  "Oath of Moment": {
   "status": "auto",
-  "note": "ระบบทำให้: เลือกเป้าใน Command phase (re-roll hit, +1 wound สำหรับทัพ codex)"
+  "note": "Automated: select a target in the Command phase (re-roll Hit, +1 to Wound for codex armies)"
  },
  "Templar Vows": {
   "status": "auto",
-  "note": "ระบบทำให้: เลือก Vow ใน Command phase แรก (Black Templars)"
+  "note": "Automated: select a Vow in the first Command phase (Black Templars)"
  },
  "Overlapping Detonations": {
   "effects": [
@@ -4161,7 +4161,7 @@
  },
  "Assigned Agents": {
   "status": "info",
-  "note": "กฎจัดทัพ: หน่วย Deathwatch (Imperial Agents) ใส่ในกองทัพ Space Marines ได้"
+  "note": "Muster rule: Deathwatch (Imperial Agents) units can be included in a Space Marines army"
  },
  "Tactical Instinct": {
   "effects": [
@@ -4229,7 +4229,7 @@
  },
  "Blackstar Cluster Launcher": {
   "status": "auto",
-  "note": "จบ Normal move: บินผ่านหน่วยไหน ทอย 6D6 ทุก 5+ = 1 MW (อัตโนมัติ)"
+  "note": "End of Normal move: for each unit flown over, roll 6D6, each 5+ = 1 mortal wound (automatic)"
  },
  "Auspex Array": {
   "gear": true,
@@ -4246,15 +4246,15 @@
  "Infernum Halo-launcher": {
   "gear": true,
   "status": "info",
-  "note": "มี keyword SMOKE: ใช้ Smokescreen ได้"
+  "note": "Has the SMOKE keyword: can use Smokescreen"
  },
  "Kill Team": {
   "status": "info",
-  "note": "ใช้ Toughness ของโมเดลส่วนใหญ่ในหน่วยตอนทอย wound · Gravis กินที่ 2 ในรถ"
+  "note": "Use the Toughness of the majority of the unit when rolling to wound · Gravis take 2 transport slots"
  },
  "Mission Tactics": {
   "status": "info",
-  "note": "กฎกองทัพ Deathwatch: เลือก Mission Tactic ตอนต้น Command phase ที่ช่องกฎ detachment (Black Spear Task Force)"
+  "note": "Deathwatch Army Rule: select a Mission Tactic at the start of the Command phase in the detachment rule panel (Black Spear Task Force)"
  },
  "Spectrus Doctrines": {
   "act": {
@@ -4263,7 +4263,7 @@
     "farFromEnemies:6"
    ],
    "botUse": "never",
-   "label": "ออกไปอยู่ Strategic Reserves",
+   "label": "Go into Strategic Reserves",
    "do": [
     {
      "on": "self",
@@ -4277,7 +4277,7 @@
   "act": {
    "when": "afterShootingButton",
    "limit": "phase",
-   "label": "เดิน Normal move หลังยิง (ชาร์จไม่ได้)",
+   "label": "Make a Normal move after shooting (cannot charge)",
    "do": [
     {
      "on": "self",
@@ -4344,7 +4344,7 @@
  },
  "Combat Doctrines": {
   "status": "auto",
-  "note": "เลือก doctrine ตอนต้น Command phase (แผง Detachment)"
+  "note": "Select a Doctrine at the start of the Command phase (Detachment panel)"
  },
  "Transhuman Strategist": {
   "act": {
@@ -4362,15 +4362,15 @@
  },
  "Librarius": {
   "status": "info",
-  "note": "ระบบไม่นับ psyker level (แต่ละ psychic ability มีลิมิตของมันเอง)"
+  "note": "Psyker level not tracked (each psychic ability has its own limit)"
  },
  "Special Move Types": {
   "status": "info",
-  "note": "Shock / Assault disembark: ใช้ตอนลงรถ (ระบบรู้จักผ่าน ability ของรถ)"
+  "note": "Shock / Assault disembark: used when disembarking (handled via the transport's ability)"
  },
  "Hunter": {
   "status": "auto",
-  "note": "โปรไฟล์ Hunter ยิงได้เฉพาะเป้าที่ตรง keyword"
+  "note": "Hunter profile can only target units with the matching keyword"
  },
  "Codex Adept": {
   "doctrines": [
@@ -4398,7 +4398,7 @@
  },
  "Supreme Commander": {
   "status": "info",
-  "note": "ต้องเป็น Warlord (เลือกในหน้าจัดทัพ)"
+  "note": "Must be the Warlord (select in the army builder)"
  },
  "Strategic Acumen": {
   "act": [
@@ -4406,7 +4406,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Assault Doctrine (หน่วยนี้)",
+    "label": "Assault Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -4422,7 +4422,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Devastator Doctrine (หน่วยนี้)",
+    "label": "Devastator Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -4438,7 +4438,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Tactical Doctrine (หน่วยนี้)",
+    "label": "Tactical Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -4457,7 +4457,7 @@
    "when": "selectedToFight",
    "limit": "battle",
    "botUse": "valuable",
-   "label": "+3 A, Devastating Wounds (ตัวนี้)",
+   "label": "+3 A, [DEVASTATING WOUNDS] (this model)",
    "do": [
     {
      "on": "self",
@@ -4543,15 +4543,15 @@
  },
  "Chief Librarian (psyker level 3)": {
   "status": "info",
-  "note": "psyker level (ระบบไม่นับ)"
+  "note": "Psyker level (not tracked)"
  },
  "Librarian (psyker level 1)": {
   "status": "info",
-  "note": "psyker level (ระบบไม่นับ)"
+  "note": "Psyker level (not tracked)"
  },
  "Rune Priest (psyker level 3)": {
   "status": "info",
-  "note": "psyker level (ระบบไม่นับ)"
+  "note": "Psyker level (not tracked)"
  },
  "Hood of Hellfire (Psychic)": {
   "effects": [
@@ -4580,7 +4580,7 @@
    "if": [
     "notBattleShocked"
    ],
-   "label": "Psychic: +1 Sv จนถึงเทิร์นหน้า (ทอย 1 = battle-shocked)",
+   "label": "Psychic: +1 Sv until your next turn (roll of 1 = Battle-shocked)",
    "roll": "D6",
    "table": [
     {
@@ -4617,7 +4617,7 @@
    "if": [
     "notBattleShocked"
    ],
-   "label": "Psychic: ศัตรูในระยะ 24\" โดน 2D3 mortal (ทอย 1 = battle-shocked)",
+   "label": "Psychic: an enemy within 24\" suffers 2D3 mortal wounds (roll of 1 = Battle-shocked)",
    "roll": "D6",
    "table": [
     {
@@ -4646,7 +4646,7 @@
  },
  "Captain of the Honour Guard": {
   "status": "info",
-  "note": "ถ้ามี Marneus Calgar: Leader เปลี่ยนเป็น Support (ติดหน่วยเดิมได้)"
+  "note": "If Marneus Calgar is included: Leader becomes Support (can attach to the same unit)"
  },
  "Knight Champion of Macragge (Once per phase, per army)": {
   "act": {
@@ -4669,7 +4669,7 @@
     "limit": "battle",
     "per": "army",
     "botUse": "valuable",
-    "label": "+1 S ทั้งหน่วย แล้วฟื้นหลังตี (D3 หรือ 2D3 ถ้าฆ่าได้)",
+    "label": "+1 S for the whole unit, then heal after fighting (D3, or 2D3 if it destroyed a unit)",
     "do": [
      {
       "on": "self",
@@ -4808,7 +4808,7 @@
     "if": [
      "notEngaged"
     ],
-    "label": "เดิน D6\" หลังยิง",
+    "label": "Move D6\" after shooting",
     "do": [
      {
       "on": "self",
@@ -4823,7 +4823,7 @@
     "if": [
      "engaged"
     ],
-    "label": "fall back 6\" ตอนจบ Fight phase ของศัตรู",
+    "label": "Fall back 6\" at the end of the opponent's Fight phase",
     "do": [
      {
       "on": "self",
@@ -4859,7 +4859,7 @@
     "when": "command",
     "limit": "turn",
     "botUse": "never",
-    "label": "Assault Doctrine (หน่วยนี้)",
+    "label": "Assault Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -4875,7 +4875,7 @@
     "when": "command",
     "limit": "turn",
     "botUse": "never",
-    "label": "Devastator Doctrine (หน่วยนี้)",
+    "label": "Devastator Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -4891,7 +4891,7 @@
     "when": "command",
     "limit": "turn",
     "botUse": "never",
-    "label": "Tactical Doctrine (หน่วยนี้)",
+    "label": "Tactical Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -4909,7 +4909,7 @@
   "act": {
    "when": "command",
    "limit": "battle",
-   "label": "ระบุ terrain ที่มีศัตรูมากที่สุด (ศัตรูข้างใน +3\" detection)",
+   "label": "Mark the terrain area with the most enemies (enemies inside +3\" detection)",
    "do": [
     {
      "on": "self",
@@ -4943,7 +4943,7 @@
      "ADEPTUS ASTARTES"
     ]
    },
-   "label": "หน่วยเพื่อนในระยะ 6\" หายจาก battle-shocked",
+   "label": "Friendly units within 6\" are no longer Battle-shocked",
    "do": [
     {
      "unshock": true
@@ -4979,7 +4979,7 @@
    "if": [
     "notBattleShocked"
    ],
-   "label": "Psychic: Advance ได้ 6 เสมอ (ทอย 1 = battle-shocked)",
+   "label": "Psychic: Advance is always 6 (roll of 1 = Battle-shocked)",
    "roll": "D6",
    "table": [
     {
@@ -5014,7 +5014,7 @@
    "if": [
     "notBattleShocked"
    ],
-   "label": "Psychic: 4+ InSv จนถึงเทิร์นหน้า (ทอย 1 = battle-shocked)",
+   "label": "Psychic: 4+ invulnerable save until your next turn (roll of 1 = Battle-shocked)",
    "roll": "D6",
    "table": [
     {
@@ -5051,7 +5051,7 @@
    "if": [
     "notBattleShocked"
    ],
-   "label": "Psychic: ศัตรูยิง/ตีโดน −1 hit (ทอย 1 = battle-shocked)",
+   "label": "Psychic: enemy attacks against it −1 to Hit (roll of 1 = Battle-shocked)",
    "roll": "D6",
    "table": [
     {
@@ -5082,7 +5082,7 @@
    "if": [
     "notBattleShocked"
    ],
-   "label": "Psychic: ศัตรู 1 หน่วย: ยิงใส่ได้ [IGNORES COVER] (ทอย 1 = battle-shocked)",
+   "label": "Psychic: 1 enemy unit: attacks against it gain [IGNORES COVER] (roll of 1 = Battle-shocked)",
    "roll": "D6",
    "table": [
     {
@@ -5119,7 +5119,7 @@
    "if": [
     "notBattleShocked"
    ],
-   "label": "Psychic: +2 S (ทอย 1 = battle-shocked)",
+   "label": "Psychic: +2 S (roll of 1 = Battle-shocked)",
    "roll": "D6",
    "table": [
     {
@@ -5155,7 +5155,7 @@
    "if": [
     "notBattleShocked"
    ],
-   "label": "Psychic: +6\" ระยะยิง (ทอย 1 = battle-shocked)",
+   "label": "Psychic: +6\" range (roll of 1 = Battle-shocked)",
    "roll": "D6",
    "table": [
     {
@@ -5225,7 +5225,7 @@
      "VEHICLE"
     ]
    },
-   "label": "รถในระยะ 3\": ฟื้น D3 W, ไม่สนตัวปรับ hit/wound",
+   "label": "Vehicle within 3\": regain D3 W, ignore Hit/Wound modifiers",
    "do": [
     {
      "heal": "D3"
@@ -5264,7 +5264,7 @@
  },
  "Rites of Thermal Appeasement": {
   "status": "info",
-  "note": "+1 hazard roll ของอาวุธ plasma (ระบบยังไม่ปรับ hazard roll)"
+  "note": "+1 to Hazardous rolls for plasma weapons (Hazardous rolls not yet adjusted)"
  },
  "Driven from Cover": {
   "act": {
@@ -5324,7 +5324,7 @@
     ]
    }
   ],
-  "note": "ระบบใช้ตอนโดนตีก่อน ถ้ายังไม่ได้ใช้ (ไม่งั้นใช้ +1 hit ตอนตี)"
+  "note": "The engine uses it when attacked first, if not used yet (otherwise +1 to Hit when attacking)"
  },
  "Veteran Marksmen": {
   "effects": [
@@ -5343,7 +5343,7 @@
     "range": 18,
     "visible": true
    },
-   "label": "scan ศัตรู: ยิงใส่ re-roll hit 1",
+   "label": "Scan an enemy: attacks against it re-roll Hit rolls of 1",
    "do": [
     {
      "incoming": {
@@ -5365,7 +5365,7 @@
     "visible": true
    },
    "roll": "D6",
-   "label": "ศัตรูในระยะ 6\": 2+ → D3 MW (รถ 2D3)",
+   "label": "Enemies within 6\": 2+ → D3 mortal wounds (vehicles 2D3)",
    "table": [
     {
      "min": 2,
@@ -5403,7 +5403,7 @@
    {
     "when": "selectedToShoot",
     "limit": "phase",
-    "label": "[IGNORES COVER] ทั้งหน่วย",
+    "label": "[IGNORES COVER] for the whole unit",
     "do": [
      {
       "on": "self",
@@ -5427,7 +5427,7 @@
      "side": "enemy",
      "range": 24
     },
-    "label": "ศัตรู 1 หน่วย +6\" detection",
+    "label": "1 enemy unit +6\" detection",
     "do": [
      {
       "on": "target",
@@ -5501,7 +5501,7 @@
     "notEngaged"
    ],
    "botUse": "never",
-   "label": "ออกไปอยู่ Strategic Reserves",
+   "label": "Go into Strategic Reserves",
    "do": [
     {
      "on": "self",
@@ -5512,7 +5512,7 @@
  },
  "Teleport Homer (Once per battle, per unit)": {
   "status": "auto",
-  "note": "token วางอัตโนมัติตอนเริ่มเกม; Rapid Ingress −1CP ลงภายใน 3\" ของ token ห่างศัตรูเกิน 8\"",
+  "note": "Token placed automatically at the start of the game; Rapid Ingress −1CP, arrive within 3\" of the token and more than 8\" from enemies",
   "effects": [
    {
     "stratDiscount": {
@@ -5567,7 +5567,7 @@
  },
  "Combat Embarkation": {
   "status": "auto",
-  "note": "ศัตรูประกาศชาร์จหน่วยที่อยู่ภายใน 3\" ของรถ: ขึ้นรถได้ (ระบบทำให้)"
+  "note": "Enemy declares a charge against a unit within 3\" of the transport: it can embark (automated)"
  },
  "Fury of the Machine Spirit": {
   "effects": [
@@ -5650,7 +5650,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Assault Doctrine (หน่วยนี้)",
+    "label": "Assault Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -5682,7 +5682,7 @@
  },
  "Miraculous Savior": {
   "status": "auto",
-  "note": "(ครั้งเดียวต่อเกม) จบ Charge phase ของศัตรู: ลงจากกองหนุนติดหน่วยที่เพิ่งชาร์จ (อัตโนมัติ)"
+  "note": "(Once per battle) End of opponent's Charge phase: arrive from Reserves engaged with a unit that just charged (automatic)"
  },
  "Engulfing Fear (psychic level 1)": {
   "act": {
@@ -5695,7 +5695,7 @@
     "side": "enemy",
     "range": 12
    },
-   "label": "ศัตรูในระยะ 12\" ทอย Battle-shock −1",
+   "label": "Enemies within 12\" −1 to Battle-shock tests",
    "do": [
     {
      "shock": -1
@@ -5746,7 +5746,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Assault Doctrine (หน่วยนี้)",
+    "label": "Assault Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -5762,7 +5762,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Devastator Doctrine (หน่วยนี้)",
+    "label": "Devastator Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -5778,7 +5778,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Tactical Doctrine (หน่วยนี้)",
+    "label": "Tactical Doctrine (this unit)",
     "do": [
      {
       "on": "self",
@@ -5817,11 +5817,11 @@
  },
  "Old Greymanes": {
   "split": "half",
-  "note": "แยกเป็น 2 หน่วย หน่วยละ 5 ตอนจัดทัพ (เมนู ⋮)"
+  "note": "Split into 2 units of 5 in the army builder (⋮ menu)"
  },
  "Embarking within Transports": {
   "status": "info",
-  "note": "ขึ้นรถที่ขน TERMINATOR ได้ กินที่ 4"
+  "note": "Can embark in transports that carry TERMINATOR, takes 4 slots"
  },
  "Murder-maker [Aura]": {
   "effects": [
@@ -5837,7 +5837,7 @@
  },
  "Force of Untamed Destruction": {
   "status": "info",
-  "note": "เป็น Warlord ไม่ได้"
+  "note": "Cannot be the Warlord"
  },
  "Beastial Fury": {
   "effects": [
@@ -5874,7 +5874,7 @@
     "range": 18,
     "visible": true
    },
-   "label": "ศัตรู: −1 hit จนจบเทิร์นหน้า",
+   "label": "Enemy: −1 to Hit until end of next turn",
    "do": [
     {
      "buff": [
@@ -5898,7 +5898,7 @@
     "side": "enemy",
     "range": 12
    },
-   "label": "ศัตรู: ยิง snap shooting ไม่ได้",
+   "label": "Enemy: cannot Snap Shoot",
    "do": [
     {
      "buff": [
@@ -5933,7 +5933,7 @@
   }
  },
  "Slayer's Oath": {
-  "note": "ระบบเลือก keyword ให้ (ที่ศัตรูมีแต้มรวมมากสุด) · ทำลายหน่วยที่มี keyword นั้นได้ = หน่วยนี้ได้ผลของ Saga ที่สำเร็จ",
+  "note": "The engine selects the keyword (the one with the most enemy points) · destroying a unit with that keyword = this unit gains the completed Saga's effect",
   "act": {
    "when": "battleStart",
    "auto": true,
@@ -5948,7 +5948,7 @@
  },
  "Servitors": {
   "status": "info",
-  "note": "Grimaldus ตาย: Servitor ตายหมด (ทำเอง)"
+  "note": "Grimaldus destroyed: all Servitors destroyed (apply manually)"
  },
  "Sigismund's Heir": {
   "effects": [
@@ -5983,14 +5983,14 @@
  },
  "Fealty to the Lion": {
   "status": "manual",
-  "note": "Movement phase: ยกขึ้นวางใหม่ห่างศัตรูเกิน 9\" — วางเอง"
+  "note": "Movement phase: remove and set up again more than 9\" from enemies — place manually"
  },
  "Rampart (Once per battle, per army)": {
   "act": {
    "when": "anyPhase",
    "limit": "battle",
    "botUse": "valuable",
-   "label": "2+ InSv จนจบ phase",
+   "label": "2+ invulnerable save until end of phase",
    "do": [
     {
      "on": "self",
@@ -6025,7 +6025,7 @@
    "limit": "battle",
    "per": "army",
    "botUse": "valuable",
-   "label": "Ancient Exhortation: +1 A ทั้งหน่วย",
+   "label": "Ancient Exhortation: +1 A for the whole unit",
    "do": [
     {
      "on": "self",
@@ -6080,7 +6080,7 @@
  },
  "Imperium's Sword": {
   "status": "auto",
-  "note": "ได้อาวุธ Imperium's Sword (ใส่ให้อัตโนมัติ)"
+  "note": "Gains the Imperium's Sword weapon (added automatically)"
  },
  "Furious Assault": {
   "effects": [
@@ -6185,7 +6185,7 @@
  },
  "Cyber-familiar": {
   "status": "auto",
-  "note": "หลังวางทัพ: redeploy INFANTRY ได้ 3 หน่วย"
+  "note": "After deployment: redeploy up to 3 INFANTRY units"
  },
  "Tempered in Battle (Aura)": {
   "effects": [
@@ -6224,7 +6224,7 @@
    "if": [
     "notEngaged"
    ],
-   "label": "เดิน 6\" หลังยิง (ชาร์จไม่ได้)",
+   "label": "Move 6\" after shooting (cannot charge)",
    "do": [
     {
      "on": "self",
@@ -6293,7 +6293,7 @@
     "range": 12,
     "visible": true
    },
-   "label": "ศัตรู spotted: +3\" detection",
+   "label": "Spotted enemy: +3\" detection",
    "do": [
     {
      "buff": [
@@ -6351,7 +6351,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Assault Doctrine ให้หน่วยเพื่อน",
+    "label": "Assault Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -6373,7 +6373,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Devastator Doctrine ให้หน่วยเพื่อน",
+    "label": "Devastator Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -6395,7 +6395,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Tactical Doctrine ให้หน่วยเพื่อน",
+    "label": "Tactical Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -6504,7 +6504,7 @@
  },
  "Defensive Mastery": {
   "status": "auto",
-  "note": "หลังวางทัพ: redeploy INFANTRY ได้ 3 หน่วย"
+  "note": "After deployment: redeploy up to 3 INFANTRY units"
  },
  "Honour Indefatigable": {
   "act": {
@@ -6603,7 +6603,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Devastator Doctrine ให้หน่วยเพื่อน",
+    "label": "Devastator Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -6626,7 +6626,7 @@
     "when": "movement",
     "limit": "phase",
     "botUse": "never",
-    "label": "Tactical Doctrine ให้หน่วยเพื่อน",
+    "label": "Tactical Doctrine for a friendly unit",
     "do": [
      {
       "buff": [
@@ -6659,7 +6659,7 @@
      "VEHICLE"
     ]
    },
-   "label": "รถในระยะ 3\": [LETHAL HITS]",
+   "label": "Vehicle within 3\": [LETHAL HITS]",
    "do": [
     {
      "buff": [
@@ -6805,7 +6805,7 @@
    "when": "command",
    "limit": "battle",
    "botUse": "round2",
-   "label": "re-roll Advance และ Charge จนจบเทิร์น",
+   "label": "Re-roll Advance and Charge rolls until end of turn",
    "do": [
     {
      "on": "self",
@@ -6825,7 +6825,7 @@
    {
     "when": "selectedToFight",
     "limit": "phase",
-    "label": "[LETHAL HITS] ตีระยะประชิดจน phase จบ",
+    "label": "[LETHAL HITS] on melee attacks until end of phase",
     "do": [
      {
       "on": "self",
@@ -6844,7 +6844,7 @@
    {
     "when": "selectedToFight",
     "limit": "phase",
-    "label": "[SUSTAINED HITS 1] ตีระยะประชิดจน phase จบ",
+    "label": "[SUSTAINED HITS 1] on melee attacks until end of phase",
     "botUse": "never",
     "do": [
      {
@@ -6868,7 +6868,7 @@
    "when": "selectedToFight",
    "limit": "battle",
    "botUse": "valuable",
-   "label": "+1 D (ตัวนี้)",
+   "label": "+1 D (this model)",
    "do": [
     {
      "on": "self",
@@ -6969,7 +6969,7 @@
     }
    ]
   },
-  "note": "ฆ่าโมเดลศัตรูด้วยการตีครั้งแรก: เพิ่มเป็น +2 S/AP/D ถึงจบเกม"
+  "note": "Destroy an enemy model with the first attack: increase to +2 S/AP/D until end of battle"
  },
  "The Tome of Ectoclades": {
   "act": [
@@ -6977,7 +6977,7 @@
     "when": "command",
     "limit": "battle",
     "botUse": "round2",
-    "label": "3 doctrine พร้อมกัน (หน่วยนี้)",
+    "label": "3 Doctrines at once (this unit)",
     "do": [
      {
       "on": "self",
@@ -7094,7 +7094,7 @@
     "range": 18,
     "visible": true
    },
-   "label": "ศัตรู: ไม่ได้ cover",
+   "label": "Enemy: does not gain cover",
    "do": [
     {
      "incoming": {
@@ -7155,7 +7155,7 @@
    }
   ],
   "status": "auto",
-  "note": "+2 W ใส่ให้อัตโนมัติ"
+  "note": "+2 W applied automatically"
  },
  "Preyslayer": {
   "effects": [
@@ -7166,7 +7166,7 @@
  },
  "Hunter's Guile": {
   "status": "auto",
-  "note": "หลังวางทัพ: redeploy ได้ 3 หน่วย"
+  "note": "After deployment: redeploy up to 3 units"
  },
  "Wolf-Touched": {
   "effects": [
@@ -7182,7 +7182,7 @@
  },
  "Chariots of the Storm": {
   "status": "auto",
-  "note": "หลังวางทัพ: redeploy ได้ 3 หน่วย"
+  "note": "After deployment: redeploy up to 3 units"
  },
  "Grimnar's Mark": {
   "effects": [
@@ -7228,12 +7228,12 @@
  "Combat Shield": {
   "gear": true,
   "status": "auto",
-  "note": "ค่า W / InSv ปรับตามอุปกรณ์ที่เลือกตอนจัดทัพ"
+  "note": "W / invulnerable save adjusted per wargear chosen in the list"
  },
  "Blizzard shield": {
   "gear": true,
   "status": "auto",
-  "note": "ค่า W / InSv ปรับตามอุปกรณ์ที่เลือกตอนจัดทัพ"
+  "note": "W / invulnerable save adjusted per wargear chosen in the list"
  },
  "Grav-chutes": {
   "gear": true,

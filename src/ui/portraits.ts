@@ -160,9 +160,9 @@ async function uploadNow(name: string, dataUrl: string): Promise<boolean> {
     return true;
   } catch (e) {
     const code = (e as { code?: string })?.code;
-    cloudError = code === 'quota_or_state' ? 'พื้นที่เก็บรูปบนเว็บเต็ม' : code === 'too_large' ? 'รูปใหญ่เกินไป'
-      : code === 'rate_limited' || code === 'resource_exhausted' ? 'อัปถี่เกินไป — รอสักครู่แล้วกดอัปรูปในเครื่องอีกครั้ง'
-      : 'อัปรูปขึ้นเว็บไม่สำเร็จ — เก็บไว้ในเครื่องนี้แทน';
+    cloudError = code === 'quota_or_state' ? 'Online image storage is full' : code === 'too_large' ? 'The image is too large'
+      : code === 'rate_limited' || code === 'resource_exhausted' ? 'Too many uploads: wait a moment and upload again'
+      : 'Upload failed: saved on this device instead';
     return false;
   }
 }
@@ -187,7 +187,7 @@ async function removeFromCloud(name: string) {
   try {
     await cloudDb.doc(`${COLL}/${docId(name)}`).delete();
     await cloudAssets.delete(c.asset);
-  } catch { cloudError = 'ลบรูปบนเว็บไม่สำเร็จ'; }
+  } catch { cloudError = 'Could not delete the online image'; }
 }
 
 /** Send every photo kept only in this browser up to the site. Resolves to how many went up. */
@@ -249,7 +249,7 @@ export function fileToPortrait(file: File): Promise<string> {
       URL.revokeObjectURL(url);
       resolve(c.toDataURL('image/jpeg', 0.82));
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('อ่านไฟล์รูปไม่ได้ (ใช้ JPG / PNG / WebP — รูป HEIC จาก iPhone ให้แปลงก่อน)')); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read the image (use JPG / PNG / WebP; convert iPhone HEIC first)')); };
     img.src = url;
   });
 }
@@ -404,9 +404,9 @@ export async function download(name: string, data: Uint8Array | string, type: st
   const host = (window as unknown as { claude?: ClaudeHost }).claude;
   if (host?.use) {
     const dl = await host.use('downloads').catch(() => null);
-    if (!dl) return 'หน้านี้บันทึกไฟล์ไม่ได้';
-    try { await dl.save({ filename: name, data: blob }); return `บันทึก ${name} แล้ว`; }
-    catch (e) { return (e as { code?: string })?.code === 'declined' ? 'ยกเลิกการบันทึก' : 'บันทึกไฟล์ไม่ได้'; }
+    if (!dl) return 'This page cannot save files';
+    try { await dl.save({ filename: name, data: blob }); return `Saved ${name}`; }
+    catch (e) { return (e as { code?: string })?.code === 'declined' ? 'Save cancelled' : 'Could not save the file'; }
   }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -415,5 +415,5 @@ export async function download(name: string, data: Uint8Array | string, type: st
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  return `บันทึก ${name} แล้ว`;
+  return `Saved ${name}`;
 }

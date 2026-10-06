@@ -102,8 +102,8 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
     if (!f || !datasheet) return;
     try {
       const ok = setPortrait(datasheet, await fileToPortrait(f));
-      setMsg(ok ? 'ใส่รูปแล้ว' : 'ใส่รูปแล้ว (เก็บถาวรในเครื่องไม่ได้)');
-    } catch (e) { setMsg(e instanceof Error ? e.message : 'อ่านรูปไม่ได้'); }
+      setMsg(ok ? 'Picture set' : 'Picture set (could not be stored on this device)');
+    } catch (e) { setMsg(e instanceof Error ? e.message : 'Could not read the image'); }
   };
   return (
     <span className="portrait" style={{ width: size, height: size }} onClick={() => editable && input.current?.click()}>
@@ -114,13 +114,13 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
             <circle cx="50" cy="50" r="48" fill="var(--surface2)" />
             <use href={`#tok-${kind}`} x="14" y="16" width="72" height="72" />
             <circle cx="50" cy="50" r="47" fill="none" stroke={rim} strokeWidth="4" />
-            {editable && <text x="50" y="96" fontSize="13" textAnchor="middle" fill="var(--muted)">+ รูป</text>}
+            {editable && <text x="50" y="96" fontSize="13" textAnchor="middle" fill="var(--muted)">+ Image</text>}
           </svg>
         )}
       {character && <svg className="portrait-crown" viewBox="0 0 100 60" aria-hidden="true"><use href="#tok-crown" /></svg>}
       {msg && <span className="portrait-msg">{msg}</span>}
       {editable && <input ref={input} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; void pick(f); }} />}
-      {editable && datasheet && hasOwnPortrait(datasheet) && <button type="button" className="portrait-x" onClick={(e) => { e.stopPropagation(); if (datasheet) setPortrait(datasheet, null); }} aria-label="ลบรูป">×</button>}
+      {editable && datasheet && hasOwnPortrait(datasheet) && <button type="button" className="portrait-x" onClick={(e) => { e.stopPropagation(); if (datasheet) setPortrait(datasheet, null); }} aria-label="Remove image">×</button>}
     </span>
   );
 }

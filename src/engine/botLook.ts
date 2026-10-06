@@ -75,7 +75,7 @@ export function applyStyle(s: GameState, p: PlayerId, name: string) {
   own[p] ??= W(p);
   s.botTried = [...(s.botTried ?? []), styleKey(s)];
   setBotWeights(p, { ...own[p]!, ...(STYLES[name] ?? {}) });
-  if (name !== 'steady') s.log.push({ turn: s.turn, round: s.round, player: p, kind: 'info', text: `${s.players[p].name}: เทิร์นนี้เล่นแบบ${name === 'aggressive' ? 'บุก' : 'ระวัง'} (ลองคิดล่วงหน้าแล้วดีกว่า)` });
+  if (name !== 'steady') s.log.push({ turn: s.turn, round: s.round, player: p, kind: 'info', text: `${s.players[p].name}: plays this turn ${name === 'aggressive' ? 'aggressively' : 'carefully'} (looked ahead: it plays out better)` });
 }
 
 /** Forget the per-side weights captured for styles (a new game, or the tuner changed them). */

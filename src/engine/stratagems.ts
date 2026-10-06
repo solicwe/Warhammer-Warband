@@ -215,9 +215,9 @@ function readStratagem(st: StratagemData): StratRule {
   if (compact) r = { ...(compact.effects.length ? { effects: compact.effects } : {}), ...(compact.acts.length ? { do: compact.acts } : {}), until, status: 'auto' };
   else if (plan.full) r = { buffs: plan.effects, until, status: 'auto' };
   else if (effects && parsed!.status !== 'partial') r = { effects, until, status: 'auto' };
-  else if (plan.effects.length) r = { buffs: plan.effects, until, status: 'partial', note: 'ระบบทำส่วนที่อ่านได้ ส่วนที่เหลือทำตามข้อความ' };
-  else if (effects) r = { effects, until, status: 'partial', note: 'ระบบทำส่วนที่อ่านได้ ส่วนที่เหลือทำตามข้อความ' };
-  else r = { status: 'manual', note: 'ทำตามข้อความเอง' };
+  else if (plan.effects.length) r = { buffs: plan.effects, until, status: 'partial', note: 'The app applies what it can read; do the rest as written' };
+  else if (effects) r = { effects, until, status: 'partial', note: 'The app applies what it can read; do the rest as written' };
+  else r = { status: 'manual', note: 'Resolve it as written' };
   r.bot = botUseOf(r);
   readMemo.set(key, r);
   return r;
@@ -292,7 +292,7 @@ const OTHER: [RegExp, BuffKind][] = [
 export const EFFECT_LABEL: Partial<Record<BuffKind, string>> = {
   'hit+1': '+1 Hit', 'wound+1': '+1 Wound', rerollHits1: 'Re-roll Hit 1', rerollHits: 'Re-roll Hits', rerollWounds1: 'Re-roll Wound 1', rerollWounds: 'Re-roll Wounds',
   'ap+1': 'AP +1', lethal: 'Lethal Hits', sustained1: 'Sustained Hits 1', devastating: 'Devastating Wounds', ignoresCover: 'Ignores Cover',
-  'enemyHit-1': 'ศัตรู −1 Hit', 'enemyWound-1': 'ศัตรู −1 Wound', 'enemyAp-1': 'ศัตรู AP −1', 'damage-1': '−1 Damage', fnp4: 'FNP 4+', fnp5: 'FNP 5+', fnp6: 'FNP 6+',
+  'enemyHit-1': 'enemy −1 to Hit', 'enemyWound-1': 'enemy −1 to Wound', 'enemyAp-1': 'enemy −1 AP', 'damage-1': '−1 Damage', fnp4: 'FNP 4+', fnp5: 'FNP 5+', fnp6: 'FNP 6+',
   cover: 'Benefit of Cover', 'save+1': '+1 Save', fightsFirst: 'Fights First', 'advanceCharge+1': '+1 Advance/Charge',
 };
 
@@ -369,32 +369,32 @@ const limitUsed = (s: GameState, p: PlayerId, st: StratagemData, rule: StratRule
 export function stratagemBlock(s: GameState, p: PlayerId, st: StratagemData, unit?: UnitState, opt: { react?: boolean; ctx?: ReactCtx } = {}): string | null {
   const plan = planStratagem(st);
   const rule = stratRuleFor(s, p, st);
-  if (s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'gameover') return 'ยังไม่เริ่ม battle round';
+  if (s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'gameover') return 'The battle has not started';
   if (!opt.react) {
-    if (plan.turn === 'your' && s.active !== p) return 'ใช้ได้เฉพาะเทิร์นของคุณ';
-    if (plan.turn === 'opponent' && s.active === p) return 'ใช้ได้เฉพาะเทิร์นศัตรู';
-    if (plan.phases !== 'any' && plan.phases.length && !plan.phases.includes(s.phase)) return `ใช้ได้ใน ${plan.phases.join(' / ')} phase`;
+    if (plan.turn === 'your' && s.active !== p) return 'Your turn only';
+    if (plan.turn === 'opponent' && s.active === p) return "Opponent's turn only";
+    if (plan.phases !== 'any' && plan.phases.length && !plan.phases.includes(s.phase)) return `${plan.phases.join(' / ')} phase only`;
   }
-  if (limitUsed(s, p, st, rule)) return rule.limit === 'battle' ? 'ใช้ได้ครั้งเดียวต่อเกม' : 'ใช้ได้ครั้งเดียวต่อ battle round';
-  if (plan.target === 'own' && !unit) return 'เลือกหน่วยเป้าหมายก่อน';
-  if (unit && plan.target === 'own' && unit.owner !== p) return 'ต้องเป็นหน่วยของคุณ';
-  if (unit && plan.target === 'own' && unit.owner === p && !(rule.targetKw ? cond(`kw:${rule.targetKw.join('|')}`, { s, A: unit }) : stratTargetOk(st, unit))) return 'หน่วยนี้ไม่ตรงกับ TARGET ของ stratagem';
-  if (unit && plan.target === 'enemy' && unit.owner === p && !rule.enemy) return 'ต้องเลือกหน่วยศัตรู';
+  if (limitUsed(s, p, st, rule)) return rule.limit === 'battle' ? 'Once per battle' : 'Once per battle round';
+  if (plan.target === 'own' && !unit) return 'Select a target unit first';
+  if (unit && plan.target === 'own' && unit.owner !== p) return 'Must be one of your units';
+  if (unit && plan.target === 'own' && unit.owner === p && !(rule.targetKw ? cond(`kw:${rule.targetKw.join('|')}`, { s, A: unit }) : stratTargetOk(st, unit))) return "This unit does not match the Stratagem's TARGET";
+  if (unit && plan.target === 'enemy' && unit.owner === p && !rule.enemy) return 'Select an enemy unit';
   if (unit && unit.owner === p) {
     const L = lastEnemyAct(s, p);
-    for (const c of rule.unitIf ?? []) if (!cond(c, { s, A: unit, T: L?.u, holder: unit })) return `หน่วยนี้ไม่เข้าเงื่อนไข (${condText(c)})`;
-    if (rule.enemy && !rule.enemy.all && !stratEnemies(s, p, rule, unit, opt.ctx).length) return 'ไม่มีหน่วยศัตรูที่เลือกได้';
+    for (const c of rule.unitIf ?? []) if (!cond(c, { s, A: unit, T: L?.u, holder: unit })) return `This unit does not qualify (${condText(c)})`;
+    if (rule.enemy && !rule.enemy.all && !stratEnemies(s, p, rule, unit, opt.ctx).length) return 'No enemy unit can be selected';
   }
   return canUseStratagem(s, p, st.id, plan.target === 'own' && unit?.owner === p && rule.targetFrom !== 'destroyed' ? unit : undefined, st.cp);
 }
 
 const COND_TH: Record<string, string> = {
-  targetOfLast: 'ต้องเป็นเป้าของหน่วยศัตรูที่เพิ่งโจมตี', lostToLast: 'ต้องเสียโมเดลจากการโจมตีนั้น', halvedByLast: 'ต้องเหลือต่ำกว่าครึ่งจากการโจมตีนั้น',
-  '!engaged': 'ต้องไม่ engaged', engaged: 'ต้อง engaged', belowStarting: 'ต้องเสียโมเดลไปแล้ว', onObjective: 'ต้องอยู่บน objective', charged: 'ต้องชาร์จเทิร์นนี้',
-  killedThisPhase: 'ต้องทำลายหน่วยศัตรูใน phase นี้', disembarkedThisTurn: 'ต้องลงจากรถเทิร์นนี้', entrenched: 'ต้อง ENTRENCHED',
-  onControlledObjective: 'ต้องยึด objective อยู่', hasEmbarkedBattleline: 'ต้องมีหน่วย BATTLELINE อยู่ในรถ', fellBackFromLast: 'ศัตรูต้อง fall back ออกจากหน่วยนี้',
+  targetOfLast: 'must be the target of the enemy unit that just attacked', lostToLast: 'must have lost models to that attack', halvedByLast: 'must be Below Half-strength after that attack',
+  '!engaged': 'must be unengaged', engaged: 'must be engaged', belowStarting: 'must be below Starting Strength', onObjective: 'must be within range of an objective', charged: 'must have charged this turn',
+  killedThisPhase: 'must have destroyed an enemy unit this phase', disembarkedThisTurn: 'must have disembarked this turn', entrenched: 'must be ENTRENCHED',
+  onControlledObjective: 'must control an objective', hasEmbarkedBattleline: 'must have a BATTLELINE unit embarked', fellBackFromLast: 'the enemy unit must have Fallen Back from this unit',
 };
-const condText = (c: string) => COND_TH[c] ?? (c.startsWith('nearLast:') ? `ต้องอยู่ภายใน ${c.slice(9)}" ของหน่วยศัตรูนั้น` : c);
+const condText = (c: string) => COND_TH[c] ?? (c.startsWith('nearLast:') ? `must be within ${c.slice(9)}" of that enemy unit` : c);
 
 export interface StratUse { choice?: number; enemyId?: string; extraIds?: string[]; ctx?: ReactCtx }
 
@@ -432,7 +432,7 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
   for (const x of own) {
     for (const k of buffs) x.buffs.push({ kind: k, until, label: st.name });
     for (const e of rule.effects ?? []) addTimed(s, x, { e, label: st.name, until: rule.until ?? 'phase', by: p, mark: rule.mark });
-    if (rule.shock && !x.battleShocked) { x.battleShocked = true; log(s, `${st.name}: ${x.name} ยอมให้ Red Thirst ครอบงำ → battle-shocked`, 'info', p); }
+    if (rule.shock && !x.battleShocked) { x.battleShocked = true; log(s, `${st.name}: ${x.name} gives in to the Red Thirst → Battle-shocked`, 'info', p); }
   }
   const enemies = rule.enemy
     ? (rule.enemy.all ? stratEnemies(s, p, rule, u, use.ctx) : [stratEnemies(s, p, rule, u, use.ctx).find((e) => e.id === use.enemyId) ?? stratEnemies(s, p, rule, u, use.ctx)[0]].filter((e): e is UnitState => !!e))
@@ -450,8 +450,8 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
   // a stratagem on an EPIC HERO (or a 2CP one on a character): the hero's moment on the board
   const hero = own.find((x) => alive(x).some((m) => m.keywords.includes('EPIC HERO') || (st.cp >= 2 && m.isCharacter)));
   if (hero) heroFx(s, hero, st.name, buffs.some((k) => /^enemy|fnp|damage-|save|cover/.test(k)) || (rule.effects ?? []).some((e) => !!e.defend));
-  const what = [...buffs.map((k) => EFFECT_LABEL[k] ?? k), ...(base.choice?.length && use.choice !== undefined ? [base.choice[use.choice].label] : []), ...(rule.effects?.length && !base.choice ? ['ระบบทำให้'] : [])].join(', ');
-  log(s, `${s.players[p].name} ใช้ ${st.name} (${cp}CP)${u ? ` → ${u.name}` : ''}${enemies.length ? ` · ศัตรู: ${enemies.map((e) => e.name).join(', ')}` : ''}${what ? `: ${what}` : ''}${rule.status === 'auto' || !rule.status ? '' : ' — ส่วนที่เหลือทำตามข้อความ'}`, 'cp', p);
+  const what = [...buffs.map((k) => EFFECT_LABEL[k] ?? k), ...(base.choice?.length && use.choice !== undefined ? [base.choice[use.choice].label] : []), ...(rule.effects?.length && !base.choice ? ['applied'] : [])].join(', ');
+  log(s, `${s.players[p].name} uses ${st.name} (${cp}CP)${u ? ` → ${u.name}` : ''}${enemies.length ? ` · enemy: ${enemies.map((e) => e.name).join(', ')}` : ''}${what ? `: ${what}` : ''}${rule.status === 'auto' || !rule.status ? '' : ' — resolve the rest as written'}`, 'cp', p);
   return buffs;
 }
 
@@ -461,9 +461,9 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
 function shootNow(s: GameState, u: UnitState, target: UnitState, label: string, mode: 'normal' | 'snap' = 'normal') {
   if (!onBoard(u) || !onBoard(target)) return;
   const r = buildShootPools(s, u.id, target.id, { mode });
-  if (r.error || !r.pools.length) { log(s, `${label}: ${u.name} ยิง ${target.name} ไม่ได้ (${r.error ?? 'ไม่มีอาวุธที่ถึง'})`, 'info', u.owner); return; }
+  if (r.error || !r.pools.length) { log(s, `${label}: ${u.name} cannot shoot ${target.name} (${r.error ?? 'no weapon in range'})`, 'info', u.owner); return; }
   const fired = [...u.weaponsFired];
-  log(s, `${label}: ${u.name} ยิง ${target.name}`, 'info', u.owner);
+  log(s, `${label}: ${u.name} shoots ${target.name}`, 'info', u.owner);
   startAttack(s, 'shoot', u.id, target.id, r.pools, { free: true });
   resolveAll(s);
   finishAttack(s);
@@ -501,7 +501,7 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       declareCharge(s, u, false, sp === 'chargeCap6' ? 6 : undefined);
       const opts = chargeTargetOptions(s, u).filter((e) => !enemy || e.id === enemy.id || unitDistance(u, e) <= 6);
       const t = (enemy && opts.find((e) => e.id === enemy.id)) ?? opts[0];
-      if (!t || !autoCharge(s, u, [t.id])) { log(s, `${label}: ${u.name} ชาร์จไม่ถึง`, 'info', p); u.declaredCharge = false; return; }
+      if (!t || !autoCharge(s, u, [t.id])) { log(s, `${label}: ${u.name}'s charge fails`, 'info', p); u.declaredCharge = false; return; }
       u.chargedTurn = -1; // no Charge bonus (Fights First, Lance …) this turn
       return;
     }
@@ -510,22 +510,22 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
         && (sp !== 'embarkEmpty' || !embarkedIn(s, t).length)
         && alive(u).every((m) => alive(t).some((n) => baseDist(m, n) <= 6 + 1e-6)));
       const t = ts.sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
-      if (!t) { log(s, `${label}: ไม่มีรถที่ขึ้นได้ภายใน 6"`, 'info', p); return; }
+      if (!t) { log(s, `${label}: no transport to embark within 6"`, 'info', p); return; }
       u.status = 'embarked'; u.embarkedIn = t.id;
-      log(s, `${label}: ${u.name} ขึ้นรถ ${t.name}`, 'info', p);
+      log(s, `${label}: ${u.name} embarks in ${t.name}`, 'info', p);
       return;
     }
     case 'disembarkShoot': {
       // Burning Vengeance: one unit gets out of the transport (best shooter) and shoots the attacker
       const inside = embarkedIn(s, u);
-      if (!inside.length || !enemy) { log(s, `${label}: ไม่มีหน่วยในรถ`, 'info', p); return; }
+      if (!inside.length || !enemy) { log(s, `${label}: no unit embarked`, 'info', p); return; }
       const score = (x: UnitState) => {
         const r = buildShootPools(s, x.id, enemy.id, { mode: 'normal' });
         return r.pools.reduce((a, q) => a + expectedDamage(s, q, enemy).models, 0);
       };
       const x = [...inside].sort((a, b) => score(b) - score(a))[0];
       const pos = placeNear(s, x, u, 3, alive(enemy)[0] ?? null, (q) => validateDisembark(s, x, u, q).ok);
-      if (!pos) { log(s, `${label}: ไม่มีที่ให้ ${x.name} ลง`, 'info', p); return; }
+      if (!pos) { log(s, `${label}: no room for ${x.name} to disembark`, 'info', p); return; }
       disembarkUnit(s, x, u, pos);
       shootNow(s, x, enemy, label);
       return;
@@ -534,17 +534,17 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       // Uncompromising Egress: set up wholly within 6" of the Land Raider, even in Engagement Range
       const inside = embarkedIn(s, u);
       const x = inside[0];
-      if (!x) { log(s, `${label}: ไม่มีหน่วยในรถ`, 'info', p); return; }
+      if (!x) { log(s, `${label}: no unit embarked`, 'info', p); return; }
       const foe = boardUnits(s, other(p)).sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
       const pos = placeNear(s, x, u, 6, foe ? alive(foe)[0] : null, (q) => [...q.entries()].every(([id, pt]) => {
         const m = x.models.find((mm) => mm.id === id)!;
         return pt.x >= m.r && pt.y >= m.r && alive(u).some((n) => dist(pt, n) - n.r + m.r <= 6 + 1e-6)
           && !s.units.some((o) => o.id !== x.id && onBoard(o) && alive(o).some((n) => dist(pt, n) < n.r + m.r - 0.01));
       }));
-      if (!pos) { log(s, `${label}: ไม่มีที่ให้ลง`, 'info', p); return; }
+      if (!pos) { log(s, `${label}: no room to disembark`, 'info', p); return; }
       for (const m of alive(x)) { const q = pos.get(m.id)!; m.x = q.x; m.y = q.y; }
       x.status = 'board'; x.embarkedIn = null; x.setUpTurn = s.turn; x.disembarkedTurn = s.turn; x.disembarkedFrom = u.id;
-      log(s, `${label}: ${x.name} ลงจาก ${u.name} ภายใน 6"`, 'info', p);
+      log(s, `${label}: ${x.name} disembarks from ${u.name} within 6"`, 'info', p);
       return;
     }
     case 'wreckMove': {
@@ -559,7 +559,7 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
         const v = val(pt);
         if (v > best.v) best = { pt, v };
       }
-      if (best.pt.x !== m.x || best.pt.y !== m.y) { m.x = best.pt.x; m.y = best.pt.y; log(s, `${label}: ${u.name} พุ่งเข้าหาศัตรูก่อนระเบิด`, 'info', p); }
+      if (best.pt.x !== m.x || best.pt.y !== m.y) { m.x = best.pt.x; m.y = best.pt.y; log(s, `${label}: ${u.name} lurches towards the enemy before exploding`, 'info', p); }
       return;
     }
     case 'moveEndObjective':
@@ -664,10 +664,10 @@ function handleReact(s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx): boo
 }
 
 export const REACT_LABEL: Partial<Record<ReactOn, string>> = {
-  enemyChargeMoveEnd: 'หน่วยศัตรูเพิ่งชาร์จเข้ามา', enemyChargePhaseStart: 'เริ่ม Charge phase ของศัตรู', enemyCommandStart: 'Command phase ของศัตรู',
-  enemyMoved: 'หน่วยศัตรูเพิ่งเดินจบ', enemyShot: 'หน่วยศัตรูเพิ่งยิงเสร็จ', enemyChargeDeclared: 'หน่วยศัตรูเพิ่งประกาศชาร์จ', enemyChargePhaseEnd: 'จบ Charge phase ของศัตรู',
-  fightPhaseEnd: 'จบ Fight phase', chargeMoveEnd: 'หน่วยของคุณเพิ่งชาร์จเข้า', ownAttacked: 'หน่วยของคุณเพิ่งโจมตีเสร็จ', ownDestroyed: 'หน่วยของคุณถูกทำลาย',
-  modelDestroyed: 'โมเดลของคุณถูกทำลาย', oathDestroyed: 'เป้า Oath of Moment ถูกทำลาย',
+  enemyChargeMoveEnd: 'an enemy unit just made a Charge move', enemyChargePhaseStart: "start of your opponent's Charge phase", enemyCommandStart: "your opponent's Command phase",
+  enemyMoved: 'an enemy unit just ended a move', enemyShot: 'an enemy unit has just shot', enemyChargeDeclared: 'an enemy unit just declared a charge', enemyChargePhaseEnd: "end of your opponent's Charge phase",
+  fightPhaseEnd: 'end of the Fight phase', chargeMoveEnd: 'your unit just made a Charge move', ownAttacked: 'your unit has just attacked', ownDestroyed: 'your unit was destroyed',
+  modelDestroyed: 'your model was destroyed', oathDestroyed: 'the Oath of Moment target was destroyed',
 };
 
 setReactHook(handleReact);

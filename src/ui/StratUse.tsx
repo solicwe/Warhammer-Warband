@@ -23,7 +23,7 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
   const [extra, setExtra] = useState<string[]>([]);
   const unit = units.find((u) => u.id === unitId);
   const why = stratagemBlock(s, p, st, unit, { react, ctx });
-  const timingOk = !why || /เลือกหน่วย|ต้องเป็นหน่วย|ต้องเลือกหน่วยศัตรู|CP ไม่พอ|ไม่ตรงกับ TARGET|ไม่เข้าเงื่อนไข|ไม่มีหน่วยศัตรู/.test(why);
+  const timingOk = !why || /Select a target|Must be one of your units|Select an enemy unit|Not enough CP|TARGET|does not qualify|No enemy unit/.test(why);
   const cost = stratCost(s, st.id, unit?.owner === p && onBoard(unit) ? unit : undefined, st.cp);
   const choices = stratChoices(s, rule, unit);
   const enemies = rule.enemy && !rule.enemy.all ? stratEnemies(s, p, rule, unit, ctx) : [];
@@ -42,12 +42,12 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
       </div>
       <div className="tiny muted">{detachment} · {st.turn} · {st.phase}</div>
       <div className="strat-fx">
-        <span className={`chip ${rule.status === 'auto' || !rule.status ? 'good' : rule.status === 'partial' ? 'warn' : ''}`}>{rule.status === 'auto' || !rule.status ? 'ระบบทำให้' : rule.status === 'partial' ? '◐ ระบบทำส่วนหลัก' : 'ทำตามข้อความเอง'}</span>
+        <span className={`chip ${rule.status === 'auto' || !rule.status ? 'good' : rule.status === 'partial' ? 'warn' : ''}`}>{rule.status === 'auto' || !rule.status ? 'Automated' : rule.status === 'partial' ? '◐ Mostly automated' : 'Resolve as written'}</span>
         {(rule.buffs ?? []).map((k) => <span key={k} className="chip good">{EFFECT_LABEL[k] ?? k}</span>)}
         {rule.note && <span className="tiny muted">{rule.note}</span>}
       </div>
-      <details><summary className="tiny">ข้อความเต็ม</summary><div className="sheet tiny"><Em text={st.text} /></div></details>
-      {timingOk && bot && <div className="tiny muted"><Icon name="bot" size={13} /> บอทตัดสินใจใช้ stratagem นี้เอง</div>}
+      <details><summary className="tiny">Full text</summary><div className="sheet tiny"><Em text={st.text} /></div></details>
+      {timingOk && bot && <div className="tiny muted"><Icon name="bot" size={13} /> The bot decides when to use this Stratagem</div>}
       {timingOk && !bot && (
         <>
           {units.length > 1 && (
@@ -57,12 +57,12 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
                   if (unitId && unitId !== u.id && extraOk(u) && extra.length < (rule.extraTargets?.count ?? 1) - 1) { setExtra(extra.includes(u.id) ? extra.filter((x) => x !== u.id) : [...extra, u.id]); return; }
                   setUnitId(unitId === u.id ? '' : u.id); setExtra([]); setChoice(undefined); setEnemyId('');
                 }}>
-                  <span className={u.owner ? 'p1' : 'p0'}>●</span> {short(u.name)}{u.status === 'reserves' ? ' (กองหนุน)' : !alive(u).length ? ' (ถูกทำลาย)' : ''}
+                  <span className={u.owner ? 'p1' : 'p0'}>●</span> {short(u.name)}{u.status === 'reserves' ? ' (Reserves)' : !alive(u).length ? ' (destroyed)' : ''}
                 </button>
               ))}
             </div>
           )}
-          {rule.extraTargets && unit && <div className="tiny muted">เลือกเพิ่มได้อีก {rule.extraTargets.count - 1 - extra.length} หน่วย (แตะหน่วยอื่น)</div>}
+          {rule.extraTargets && unit && <div className="tiny muted">You can select {rule.extraTargets.count - 1 - extra.length} more unit(s) (tap another unit)</div>}
           {choices.length > 1 && (
             <div className="wg-chips">
               {choices.map(({ o, i }) => (
@@ -74,7 +74,7 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
           )}
           {enemies.length > 1 && (
             <>
-              <div className="tiny muted">เลือกหน่วยศัตรู</div>
+              <div className="tiny muted">Select an enemy unit</div>
               <div className="unit-strip">
                 {enemies.map((e) => (
                   <button key={e.id} className={`unit-pill ${pickedEnemy?.id === e.id ? 'sel' : ''}`} onClick={() => setEnemyId(e.id)}>
@@ -84,13 +84,13 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
               </div>
             </>
           )}
-          {enemies.length === 1 && <div className="tiny muted">ศัตรู: <b>{enemies[0].name}</b></div>}
+          {enemies.length === 1 && <div className="tiny muted">Enemy: <b>{enemies[0].name}</b></div>}
           <button className="btn primary" disabled={!!why || needChoice || needEnemy} onClick={() => onUse(unit?.id, { choice: pickedChoice, enemyId: pickedEnemy?.id, extraIds: extra })}>
-            {why ? why : needChoice ? 'เลือกตัวเลือกก่อน' : needEnemy ? 'เลือกหน่วยศัตรูก่อน' : `ใช้ ${st.name}${unit ? ` → ${short(unit.name)}` : ''}`}
+            {why ? why : needChoice ? 'Select an option first' : needEnemy ? 'Select an enemy unit first' : `Use ${st.name}${unit ? ` → ${short(unit.name)}` : ''}`}
           </button>
           {onAuto && (
             <label className="tiny row" style={{ gap: 6 }}>
-              <input type="checkbox" checked={!!auto} onChange={onAuto} /> ใช้อัตโนมัติเมื่อถึงจังหวะ (ไม่ต้องถาม)
+              <input type="checkbox" checked={!!auto} onChange={onAuto} /> Use automatically when it comes up (don't ask)
             </label>
           )}
         </>
