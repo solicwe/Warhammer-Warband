@@ -5,7 +5,7 @@ import { dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard } from '../engine/state';
 import { levelOfControl } from '../engine/game';
 import { modelToken } from './Tokens';
-import { getPortrait, usePortraitsVersion } from './portraits';
+import { getPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import type { SecondaryGoal } from '../engine/secondaries';
@@ -312,6 +312,9 @@ function BoardImpl(props: BoardProps) {
   // terrain never changes during a battle: build it once, so redrawing moving units does not rebuild every wall
   const terrainKey = s.terrain.map((t) => t.id).join('|');
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // ground + footprint art painted once into one picture (dozens of clipped images would be redrawn on every frame)
+  const backdrop = useBackdrop(s.terrain, terrainKey, ground);
+  const backdropReady = !!backdrop;
   const terrainEls = useMemo(() => s.terrain.map((t) => {
         const pts = t.poly.map((p) => `${p.x},${p.y}`).join(' ');
         const xs = t.poly.map((p) => p.x), ys = t.poly.map((p) => p.y);
@@ -349,9 +352,11 @@ function BoardImpl(props: BoardProps) {
         // terrain area: baseplate, rubble, ruin walls (block sight) and obstacles (low, cover only)
         const cxp = t.poly.reduce((a, p) => a + p.x, 0) / t.poly.length, cyp = t.poly.reduce((a, p) => a + p.y, 0) / t.poly.length;
         const inner = t.poly.map((p) => `${cxp + (p.x - cxp) * 0.86},${cyp + (p.y - cyp) * 0.86}`).join(' ');
+        const plate = plateFor(t);
         return (
           <g key={t.id} pointerEvents="none">
-            <polygon points={pts} fill={t.category === 'dense' ? 'url(#tiles)' : 'rgba(170,158,128,0.55)'} stroke="#1c1712" strokeWidth={0.14} />
+            {/* with footprint art the plate itself is drawn on the still layer underneath (see plateEls) */}
+            <polygon points={pts} fill={plate && backdropReady ? 'none' : t.category === 'dense' ? 'url(#tiles)' : 'rgba(170,158,128,0.55)'} stroke="#1c1712" strokeWidth={0.14} />
             <polygon points={inner} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={0.06} />
             {t.box && (() => {
               // a solid block (container / bunker) standing on the plate: shadow, metal top with ribs, lit rim
@@ -377,7 +382,7 @@ function BoardImpl(props: BoardProps) {
                 </g>
               );
             })()}
-            {Array.from({ length: Math.min(9, Math.round(w * h / 6)) }, (_, i) => {
+            {!(plate && backdropReady) && Array.from({ length: Math.min(9, Math.round(w * h / 6)) }, (_, i) => {
               const px = x0 + 0.5 + rnd(i) * Math.max(0, w - 1), py = y0 + 0.5 + rnd(i + 9) * Math.max(0, h - 1);
               return pointInPoly({ x: px, y: py }, t.poly) ? <circle key={i} cx={px} cy={py} r={0.12 + rnd(i + 3) * 0.22} fill="#4b4335" opacity={0.85} /> : null;
             })}
@@ -407,7 +412,7 @@ function BoardImpl(props: BoardProps) {
             })}
           </g>
         );
-      }), [terrainKey]);
+      }), [terrainKey, backdropReady]);
   return (
     <>
     <svg
@@ -447,7 +452,9 @@ function BoardImpl(props: BoardProps) {
         <linearGradient id="fx-flame" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#fff3c4" /><stop offset="0.4" stopColor="#fb923c" /><stop offset="1" stopColor="#b91c1c" stopOpacity="0.2" /></linearGradient>
         <radialGradient id="objdisc"><stop offset="0" stopColor="#f1f2f4" /><stop offset="1" stopColor="#8d939c" /></radialGradient>
       </defs>
-      <rect x={0} y={0} width={W} height={H} fill={ground ? 'url(#ground)' : 'url(#ash)'} />
+      {backdrop
+        ? <image href={backdrop} x={0} y={0} width={W} height={H} preserveAspectRatio="none" />
+        : <rect x={0} y={0} width={W} height={H} fill={ground ? 'url(#ground)' : 'url(#ash)'} />}
       <rect x={0} y={0} width={W} height={H} fill="url(#grid)" />
       {props.zones !== false && (
         <>
@@ -683,6 +690,89 @@ function BoardImpl(props: BoardProps) {
 
 /** Is this wall one of the edges of the piece's solid block (drawn as the block itself)? */
 const onBoxEdge = (t: TerrainPiece, w: { a: Pt; b: Pt }) => !!t.box && [w.a, w.b].every((p) => t.box!.some((q) => Math.hypot(p.x - q.x, p.y - q.y) < 0.01));
+
+/** The official footprint art (11e Battlezone punchboard) laid on a terrain piece: which plate, and the piece's
+ *  oriented frame (along its longest edge) so the art lines up with the piece and is cropped, never stretched. */
+const PLATES = { large: [682, 408], medium: [358, 235], stripShort: [355, 115], stripLong: [595, 143] } as const;
+const PLATE_FILE: Record<keyof typeof PLATES, string> = { large: 'plate-large', medium: 'plate-medium', stripShort: 'strip-short', stripLong: 'strip-long' };
+function plateFor(t: TerrainPiece): { href: string; ax: number; ay: number; ang: number; x: number; y: number; w: number; h: number } | null {
+  const P = t.poly;
+  if (P.length < 3) return null;
+  let k = 0, best = 0;
+  P.forEach((p, i) => { const d = dist(p, P[(i + 1) % P.length]); if (d > best) { best = d; k = i; } });
+  const a = P[k], b = P[(k + 1) % P.length];
+  const ang = Math.atan2(b.y - a.y, b.x - a.x);
+  const ux = Math.cos(ang), uy = Math.sin(ang);
+  const us = P.map((p) => (p.x - a.x) * ux + (p.y - a.y) * uy), vs = P.map((p) => -(p.x - a.x) * uy + (p.y - a.y) * ux);
+  const u0 = Math.min(...us), v0 = Math.min(...vs), L = Math.max(...us) - u0, Wd = Math.max(...vs) - v0;
+  if (L < 0.5 || Wd < 0.3) return null;
+  const strip = Wd < 1.8 && L / Wd > 2.2;
+  const kind: keyof typeof PLATES = strip ? (P.length > 4 || L > 5 ? 'stripLong' : 'stripShort') : t.category === 'dense' ? 'large' : 'medium';
+  return { href: `${IMAGE_BASE}terrain/${PLATE_FILE[kind]}.webp`, ax: a.x, ay: a.y, ang, x: u0, y: v0, w: L, h: Wd };
+}
+
+const PPI = 40; // backdrop pixels per inch (sharp enough when zoomed in on a phone)
+const plateImgs = new Map<string, Promise<HTMLImageElement>>();
+const loadImg = (href: string) => {
+  let p = plateImgs.get(href);
+  if (!p) {
+    p = new Promise((ok, bad) => { const im = new Image(); im.onload = () => ok(im); im.onerror = bad; im.src = href; });
+    plateImgs.set(href, p);
+  }
+  return p;
+};
+/** The battlefield's ground and every terrain plate's footprint art, drawn once on a canvas: one picture under the
+ *  board instead of dozens of clipped images that would be redrawn whenever a unit moves. Null until it is ready (or
+ *  if the art can't be loaded — the plain plates are drawn then). */
+function useBackdrop(terrain: TerrainPiece[], key: string, ground: string | null): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let dead = false, made: string | null = null;
+    setUrl(null);
+    (async () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = Math.round(W * PPI); c.height = Math.round(H * PPI);
+        const g = c.getContext('2d');
+        if (!g) return;
+        g.scale(PPI, PPI);
+        g.fillStyle = '#5d5648'; g.fillRect(0, 0, W, H);
+        if (ground) {
+          const tile = await loadImg(ground);
+          const pat = g.createPattern(tile, 'repeat');
+          if (pat) { pat.setTransform(new DOMMatrix().scale(11 / tile.width, 11 / tile.height)); g.fillStyle = pat; g.fillRect(0, 0, W, H); }
+        }
+        for (const t of terrain) {
+          if (t.kind === 'crater' || t.kind === 'barricade' || t.kind === 'container' || t.kind === 'objective-area') continue;
+          const plate = plateFor(t);
+          if (!plate) continue;
+          const im = await loadImg(plate.href);
+          g.save();
+          g.beginPath(); t.poly.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath();
+          g.fillStyle = t.category === 'dense' ? '#5a4a3a' : '#8a7d62'; g.fill();
+          g.clip();
+          g.translate(plate.ax, plate.ay); g.rotate(plate.ang);
+          // cover the piece's frame, keeping the art's proportions (cropped, never stretched)
+          const k = Math.max(plate.w / im.width, plate.h / im.height), dw = im.width * k, dh = im.height * k;
+          g.drawImage(im, plate.x + (plate.w - dw) / 2, plate.y + (plate.h - dh) / 2, dw, dh);
+          g.restore();
+          if (t.category !== 'dense') {
+            // light terrain reads a little paler than ruins
+            g.save(); g.beginPath(); t.poly.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath();
+            g.fillStyle = 'rgba(235,225,200,0.12)'; g.fill(); g.restore();
+          }
+        }
+        const blob = await new Promise<Blob | null>((ok) => c.toBlob(ok, 'image/jpeg', 0.86));
+        if (!blob || dead) return;
+        made = URL.createObjectURL(blob);
+        setUrl(made);
+      } catch { /* keep the plain plates */ }
+    })();
+    return () => { dead = true; if (made) URL.revokeObjectURL(made); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, ground]);
+  return url;
+}
 
 /** A grainy battlefield ground (dirt, ash patches, small stones, cracks), drawn once on a canvas. */
 let groundTex: string | null | undefined;
