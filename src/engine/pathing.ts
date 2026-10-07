@@ -1,7 +1,7 @@
 // Movement helpers: what a model may pass through, routing around walls / enemy models (A*),
 // and settling a dragged draft into legal end positions (models stop at base contact instead of overlapping).
 import { RULES } from './config';
-import { dist, pointSegDist, segSegDist } from './geometry';
+import { dist, pointInPoly, pointSegDist, segSegDist } from './geometry';
 import { alive, boardUnits, hasKw, onBoard, other } from './state';
 import type { GameState, ModelState, MoveKind, Pt, Seg, UnitState } from './types';
 
@@ -16,26 +16,31 @@ let throughHook: ThroughHook | null = null;
 export const setThroughHook = (fn: ThroughHook) => { throughHook = fn; };
 export const isMV = (m: ModelState) => m.keywords.includes('MONSTER') || m.keywords.includes('VEHICLE');
 
-/** House rule "no vehicles in ruins": this model may not enter a terrain footprint at all. */
-export const keptOutOfRuins = (s: GameState, m: ModelState) => !!s.house?.vehiclesOutOfRuins && isMV(m) && !canCrossDense(m);
-/** The footprints a model kept out of ruins must stay off (objective markers are not terrain). */
+/** Vehicles and monsters in ruins: they may drive into a terrain footprint (or just onto its edge) and out of the one
+ *  they stand in, but never across one — a footprint their move neither starts nor ends on is a wall to them. */
+export const noCrossingFootprints = (m: ModelState) => isMV(m) && !canCrossDense(m);
+/** Terrain footprints (objective markers are not terrain). */
 export const ruinFootprints = (s: GameState) => s.terrain.filter((t) => t.kind !== 'objective-area' && t.poly.length >= 3);
 
-const footprintEdges = new WeakMap<GameState['terrain'], Seg[]>();
-function edgesOfFootprints(s: GameState): Seg[] {
-  const hit = footprintEdges.get(s.terrain);
+const footprintCache = new WeakMap<GameState['terrain'], { poly: Pt[]; edges: Seg[] }[]>();
+function footprints(s: GameState) {
+  const hit = footprintCache.get(s.terrain);
   if (hit) return hit;
-  const out = ruinFootprints(s).flatMap((t) => t.poly.map((a, i) => ({ a, b: t.poly[(i + 1) % t.poly.length] })));
-  footprintEdges.set(s.terrain, out);
+  const out = ruinFootprints(s).map((t) => ({ poly: t.poly, edges: t.poly.map((a, i) => ({ a, b: t.poly[(i + 1) % t.poly.length] })) }));
+  footprintCache.set(s.terrain, out);
   return out;
 }
 
-/** Walls a model may not move through: dense terrain taller than 2" for anything but INFANTRY / BEASTS / SWARM / MOBILE
- *  (with the house rule, VEHICLE / MONSTER models also may not cross into any terrain footprint). */
-export function blockingWalls(s: GameState, m: ModelState, fly = false): Seg[] {
+/** Walls a model may not move through: dense terrain taller than 2" for anything but INFANTRY / BEASTS / SWARM / MOBILE,
+ *  and for VEHICLE / MONSTER models the outline of every footprint the move does not start or end on (`ends`). */
+export function blockingWalls(s: GameState, m: ModelState, fly = false, ends: Pt[] = [m]): Seg[] {
   if (fly || canCrossDense(m)) return [];
   const walls = s.terrain.filter((t) => t.category === 'dense' && t.height > 2).flatMap((t) => t.walls);
-  return keptOutOfRuins(s, m) ? [...walls, ...edgesOfFootprints(s)] : walls;
+  if (!noCrossingFootprints(m)) return walls;
+  // the footprint the model stands in (centre inside) can be left, the one it ends in can be entered; any other one is
+  // a wall: the hull may overlap its edge a little (the wall clearance), never cross it
+  const touches = (poly: Pt[]) => ends.some((p) => pointInPoly(p, poly));
+  return [...walls, ...footprints(s).filter((f) => !touches(f.poly)).flatMap((f) => f.edges)];
 }
 
 /** How close a model's centre may come to a wall: a round token stands in for a hull, so allow a little overlap. */
@@ -45,14 +50,14 @@ export interface MoveOpts { fly?: boolean }
 
 interface Ctx { m: ModelState; enemies: ModelState[]; walls: Seg[]; clear: number }
 
-function ctxFor(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOpts): Ctx {
+function ctxFor(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOpts, ends: Pt[] = [m]): Ctx {
   const desperate = kind === 'fallback' && u.battleShocked;
   const through = opt.fly || desperate || (isMV(m) && (kind === 'normal' || kind === 'advance'));
   const thr = throughHook?.(s, u, kind) ?? null;
   const enemies = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive)
     .filter((e) => thr !== 'all' && !(thr === 'nonMV' && !isMV(e)))
     .filter((e) => !through || (isMV(m) && isMV(e) && !opt.fly && !desperate));
-  return { m, enemies, walls: blockingWalls(s, m, opt.fly), clear: wallClearance(m, true) };
+  return { m, enemies, walls: blockingWalls(s, m, opt.fly, ends), clear: wallClearance(m, true) };
 }
 
 /** Why a straight step a→b is illegal for this model ("enemy" / "wall"), or null. `first`: the model may leave a spot it already overlaps. */
@@ -71,7 +76,7 @@ function stepBlocked(c: Ctx, a: Pt, b: Pt, first: boolean): 'enemy' | 'wall' | n
 }
 
 export function pathBlocked(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, path: Pt[], opt: MoveOpts = {}): 'enemy' | 'wall' | null {
-  const c = ctxFor(s, u, kind, m, opt);
+  const c = ctxFor(s, u, kind, m, opt, [path[0], path[path.length - 1]]);
   for (let i = 1; i < path.length; i++) {
     const why = stepBlocked(c, path[i - 1], path[i], i === 1);
     if (why) return why;
@@ -104,7 +109,7 @@ export const pointAt = (path: Pt[], len: number) => { const p = truncatePath(pat
 /** Shortest legal route (A* on a 0.5" grid, then straightened) from `from` towards `to` within `maxLen` inches.
  *  If `to` cannot be reached it ends at the reachable point closest to it. Null when the model cannot move at all. */
 export function routeAround(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, from: Pt, to: Pt, maxLen: number, opt: MoveOpts = {}): Pt[] | null {
-  const all = ctxFor(s, u, kind, m, opt);
+  const all = ctxFor(s, u, kind, m, opt, [from, to]);
   // only what lies within reach of this move can be in the way
   const reach = maxLen + 1.5;
   const c: Ctx = { ...all, enemies: all.enemies.filter((e) => dist(e, from) <= reach + e.r + m.r), walls: all.walls.filter((w) => pointSegDist(from, w) <= reach + all.clear) };
@@ -222,7 +227,7 @@ function gridOf(c: Ctx, m: ModelState) {
 /** How far (along legal routes) every spot on the board is from the nearest of `goals` for this model, e.g. a vehicle
  *  inside a U-shaped ruin is far from the enemy behind the closed wall even though the straight line is short. */
 export function distanceField(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, goals: Pt[], opt: MoveOpts = {}): (p: Pt) => number {
-  const c = ctxFor(s, u, kind, m, opt);
+  const c = ctxFor(s, u, kind, m, opt, [m, ...goals]);
   const { step, nx, ny, cx, cy, free, idx } = gridOf(c, m);
   const d = new Float32Array(nx * ny).fill(Infinity);
   const heap: number[] = [];
@@ -339,7 +344,7 @@ export function settleMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
     if (bystanders.some((e) => dist(p, e) - e.r - m.r <= RULES.engagementRange + 1e-6)) return false;
     return true;
   };
-  const c = (m: ModelState) => ctxFor(s, u, kind, m, opt);
+  const c = (m: ModelState, to: Pt) => ctxFor(s, u, kind, m, opt, [m, to]);
   // front first: along the average direction of travel
   const dir = movers.reduce((a, m) => { const p = out.get(m.id)!; const e = p[p.length - 1]; return { x: a.x + e.x - p[0].x, y: a.y + e.y - p[0].y }; }, { x: 0, y: 0 });
   const ahead = (m: ModelState) => { const p = out.get(m.id)!; const e = p[p.length - 1]; return e.x * dir.x + e.y * dir.y + (p[0].x * dir.x + p[0].y * dir.y) * 1e-3; };
@@ -354,7 +359,7 @@ export function settleMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
     // pushed far back (or all the way home)? look for a free spot right around where it was dragged instead,
     // the way a player shuffles a model into the gap next to its squad mates
     if (dist(pointAt(path, len), want) > 0.6) {
-      const cm = c(m);
+      const cm = c(m, want);
       const max = opt.maxFor(m);
       search: for (let rad = 0.2; rad <= 3.01; rad += 0.2) {
         for (let k = 0; k < 24; k++) {

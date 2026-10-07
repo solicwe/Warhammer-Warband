@@ -52,9 +52,9 @@ export default function App() {
   const [mapDeploy, setMapDeploy] = useState('');
   const [secMode, setSecMode] = useState<'none' | 'tactical' | 'fixed'>('tactical');
   const [mode, setMode] = useState<'hotseat' | 'bot' | 'botbot'>('hotseat');
-  // play options remembered on this device: auto rules (only move and shoot) and the vehicle house rule
-  const [opts, setOpts] = useState<{ autoRules: boolean; vehiclesOutOfRuins: boolean }>(() => {
-    try { return { autoRules: true, vehiclesOutOfRuins: false, ...JSON.parse(localStorage.getItem('w40k-play-opts') ?? '{}') }; } catch { return { autoRules: true, vehiclesOutOfRuins: false }; }
+  // play options remembered on this device: auto rules (only move and shoot)
+  const [opts, setOpts] = useState<{ autoRules: boolean }>(() => {
+    try { return { autoRules: true, ...JSON.parse(localStorage.getItem('w40k-play-opts') ?? '{}') }; } catch { return { autoRules: true }; }
   });
   useEffect(() => { try { localStorage.setItem('w40k-play-opts', JSON.stringify(opts)); } catch { /* ignore */ } }, [opts]);
   const vsBot = mode !== 'hotseat';
@@ -115,7 +115,6 @@ export default function App() {
       s.botPlayer = mode === 'bot' ? 1 : null;
       s.bots = mode === 'botbot' ? [0, 1] : mode === 'bot' ? [1] : [];
       s.autoRules = opts.autoRules ? ([0, 1] as const).filter((p) => !s.bots!.includes(p)) : [];
-      s.house = { vehiclesOutOfRuins: opts.vehiclesOutOfRuins };
       setScreen({ kind: 'game', state: s });
     } catch (e) {
       setErr(`Could not start the game: ${e instanceof Error ? e.message : String(e)}`);
@@ -243,10 +242,6 @@ export default function App() {
               <span><b>Auto rules</b> — you only move units and pick what to shoot; stratagems, abilities, re-rolls, saves, battle-shock, fights and reactions are done for you</span>
             </label>
           )}
-          <label className="check-row">
-            <input type="checkbox" checked={opts.vehiclesOutOfRuins} onChange={(e) => setOpts((o) => ({ ...o, vehiclesOutOfRuins: e.target.checked }))} />
-            <span><b>House rule: no vehicles in ruins</b> — VEHICLE and MONSTER models cannot enter a terrain footprint (only Infantry, Beasts, Swarms and units that move through walls can)</span>
-          </label>
           <div className="tiny muted">Force Disposition comes from the army's Detachments · the pairing sets each side's Primary Mission and the map (3 official layouts per pairing)</div>
         </section>
 

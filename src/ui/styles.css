@@ -360,6 +360,10 @@ details > .strat-card { margin-top: 6px; }
 .ab-item { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .ab-item > .tiny { flex: 1 1 160px; min-width: 0; }
 .ab-item .unit-strip { flex-basis: 100%; }
+.ab-info { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid var(--ink-muted); background: #fff; color: var(--ink); font-weight: 800; font-size: 15px; line-height: 1; cursor: pointer; padding: 0; touch-action: manipulation; }
+.ab-info.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.ab-explain { flex-basis: 100%; display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 8px; background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); font-size: 13px; line-height: 1.4; }
+.ab-explain-title { font-weight: 700; }
 .ab-st { font-size: 11px; padding: 1px 6px; border-radius: 4px; white-space: nowrap; background: var(--card2); color: var(--ink-muted); }
 .ab-st.auto { background: #1f7a3a; color: #fff; }
 .ab-st.partial { background: #b07d12; color: #fff; }

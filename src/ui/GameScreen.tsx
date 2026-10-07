@@ -104,6 +104,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [rolling, setRolling] = useState(false); // a big dice roll is on screen: the bot waits for it
   // the bot looks ahead (plays its turn a few ways on copies) in a worker; the main thread never rolls out itself
   const [thinking, setThinking] = useState(false);
+  const [explain, setExplain] = useState<string | null>(null); // the ability whose rule text is open
   const [stepping, setStepping] = useState(false); // the worker is working out the bot's next step
   const stepOnMain = useRef(false); // the worker failed once: the bot thinks on the main thread from then on
   const styleRef = useRef<{ p: PlayerId; name: string } | null>(null); // the style the bot picked for this turn
@@ -610,6 +611,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [actPick, setActPick] = useState<string | null>(null); // ability whose target is being picked
   const shortName = (n: string) => n.replace(/\s*\((?:once|psychic|psyker|first)[^)]*\)\s*$/i, '').replace(/\s*\(Aura\)\s*$/i, '');
   /** Buttons for abilities player p can use right now ("Once per battle, in your Command phase …"). */
+  /** The full rule text behind an ability button: the datasheet / enhancement ability, else the army or detachment rule. */
+  const actRuleText = (u: UnitState, name: string): string => {
+    const a = u.abilities.find((x) => x.name === name);
+    if (a?.text) return a.text;
+    const P = s.players[u.owner];
+    const det = P.detachments.flatMap((d) => d.rules ?? []).find((r) => r.name === name);
+    if (det?.text) return det.text;
+    const army = P.armyRules.find((r) => r.name === name);
+    if (army?.text) return army.text;
+    // a granted ability ("friendly CHAPLAIN units have the following ability: Name: …"): the paragraph that names it
+    const src = [...P.detachments.flatMap((d) => d.rules ?? []), ...P.armyRules].map((r) => r.text ?? '').find((t) => t.includes(name));
+    if (src) { const i = src.indexOf(name); return src.slice(i, src.indexOf('\n\n', i) > 0 ? src.indexOf('\n\n', i) : undefined); }
+    return '';
+  };
   const abilityBar = (p: PlayerId, only: { unitId?: string; whens?: Trigger[] } = {}) => {
     if (bots.includes(p)) return null;
     const list = manualActs(s, p).filter((m) => (!only.unitId || m.def.holder.id === only.unitId) && (!only.whens || only.whens.includes(m.def.spec.when)));
@@ -631,12 +646,21 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             if (res.err) flash(res.err);
             else flash(`Used ${shortName(m.def.name)}`);
           };
+          const text = actRuleText(m.def.holder, m.def.name);
           return (
             <div key={k} className="ab-item">
               <button className={`btn small ${actPick === k ? 'on' : ''}`} disabled={!!m.why} title={m.why ?? m.label} onClick={() => (pickOne ? setActPick(actPick === k ? null : k) : use(m.targets[0]?.id))}>
                 <b>{shortName(m.def.name)}</b>{!only.unitId && <span className="tiny"> · {m.def.holder.name.length > 22 ? m.def.holder.name.slice(0, 21) + '…' : m.def.holder.name}</span>}
               </button>
+              <button className={`ab-info ${explain === k ? 'on' : ''}`} aria-label={`What is ${shortName(m.def.name)}?`} onClick={() => setExplain(explain === k ? null : k)}>?</button>
               <span className="tiny muted">{m.why ?? m.label}{m.def.spec.limit === 'battle' ? ' (once per battle)' : m.def.spec.limit === 'round' ? ' (once per battle round)' : ''}</span>
+              {explain === k && (
+                <div className="ab-explain">
+                  <div className="ab-explain-title">{m.def.name} <span className="tiny muted">· {m.def.holder.name}</span></div>
+                  {text ? <RuleText text={text} /> : <div className="small">{m.label}</div>}
+                  <div className="tiny muted"><b>What it does here:</b> {m.label || 'see the rule above'}{m.def.spec.limit === 'battle' ? ' · once per battle' : m.def.spec.limit === 'round' ? ' · once per battle round' : m.def.spec.limit === 'turn' ? ' · once per turn' : m.def.spec.limit === 'phase' ? ' · once per phase' : ''}{m.why ? ` · now: ${m.why}` : ''}</div>
+                </div>
+              )}
               {actPick === k && <div className="unit-strip">{m.targets.map((x) => unitPill(x, false, () => use(x.id)))}</div>}
             </div>
           );

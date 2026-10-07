@@ -151,27 +151,28 @@ describe('movement validation', () => {
   });
 });
 
-describe('house rule: no vehicles in ruins', () => {
-  const vehicleGame = (on: boolean) => {
+describe('vehicles in ruins: drive in or onto the edge, never across', () => {
+  const vehicleGame = () => {
     const s = createGame({
       lists: [list('SM', [['Repulsor', 1, 180]]), list('ORK', [['Boyz', 10, 90]])],
       factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 42,
     });
     s.terrain = [{ id: 'r', kind: 'ruin', label: 'Ruin', category: 'light', height: 0, walls: [], poly: [{ x: 15, y: 20 }, { x: 29, y: 20 }, { x: 29, y: 26 }, { x: 15, y: 26 }] } as TerrainPiece];
-    s.house = { vehiclesOutOfRuins: on };
     return s;
   };
-  it('a tank cannot drive into or across a footprint, infantry still can', () => {
-    for (const on of [false, true]) {
-      const s = vehicleGame(on);
-      const tank = put(s, s.units[0].id, { x: 22, y: 12 });
-      const m = alive(tank)[0];
-      const across = validateMove(s, tank, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y + 10 }]]]));
-      const into = validateMove(s, tank, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y + 8 }]]]));
-      expect(across.ok).toBe(!on);
-      expect(into.ok).toBe(!on);
-    }
-    const s = vehicleGame(true);
+  const go = (s: GameState, dy: number, from: Pt) => {
+    const tank = put(s, s.units[0].id, from);
+    const m = alive(tank)[0];
+    return validateMove(s, tank, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y + dy }]]]));
+  };
+  it('a tank can drive into a footprint or onto its edge, and out of the one it is in, but not across one', () => {
+    expect(go(vehicleGame(), 9, { x: 22, y: 12 }).ok).toBe(true); // into the ruin
+    expect(go(vehicleGame(), 5, { x: 22, y: 12 }).ok).toBe(true); // onto its edge
+    expect(go(vehicleGame(), 9, { x: 22, y: 23 }).ok).toBe(true); // out of the one it stands in
+    expect(go(vehicleGame(), 10, { x: 22, y: 17 }).ok).toBe(false); // across it
+  });
+  it('infantry still walks straight across', () => {
+    const s = vehicleGame();
     put(s, s.units[0].id, { x: 6, y: 50 });
     const boyz = put(s, s.units[1].id, { x: 22, y: 30 });
     const paths = new Map(alive(boyz).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y - 6 }]]));

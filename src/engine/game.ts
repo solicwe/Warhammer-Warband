@@ -14,7 +14,7 @@ import {
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
-import { canCrossDense, isMV, keptOutOfRuins, pathBlocked, pathLength, ruinFootprints, wallClearance } from './pathing';
+import { canCrossDense, isMV, pathBlocked, pathLength, wallClearance } from './pathing';
 import { detOnCommandStart } from './detachments';
 import { addTimed, applyStaticEffects, canDo, effectsFor, expireTimed, isRiled, modelDefence, modelOc, rollMods, unitFlags } from './effects';
 import { fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setZoneCheck } from './activations';
@@ -279,10 +279,6 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
     for (const t of s.terrain) for (const w of t.walls) {
       if (pointSegDist(p, w) < wallClearance(m, blockable && t.category === 'dense' && t.height > 2)) { errors.push(`${m.name} ends inside a wall`); bad.add(m.id); break; }
     }
-    // house rule: a vehicle or monster never stands in a terrain footprint
-    if (keptOutOfRuins(s, m) && ruinFootprints(s).some((t) => circleTouchesPoly(p, m.r * 0.6, t.poly))) {
-      errors.push(`${m.name} cannot end inside a terrain footprint (house rule: no vehicles in ruins)`); bad.add(m.id);
-    }
     for (const t of s.terrain) {
       if (t.kind === 'container' && pointInPoly(p, t.poly) && !['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k))) {
         errors.push(`${m.name} cannot end on top of a container (13.06)`); bad.add(m.id);
@@ -349,7 +345,7 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     if (len > max + 0.02) { errors.push(`${m.name} moved ${len.toFixed(1)}", more than ${max.toFixed(1)}"`); bad.add(m.id); }
     const why = pathBlocked(s, u, kind, m, path, opt);
     if (why === 'enemy') { errors.push(`${m.name} cannot move through enemy models`); bad.add(m.id); }
-    if (why === 'wall') { errors.push(`${m.name} cannot move through a dense terrain wall taller than 2" — release and a way around will be found`); bad.add(m.id); }
+    if (why === 'wall') { errors.push(isMV(m) && !canCrossDense(m) ? `${m.name} cannot go through a wall or drive across a terrain footprint (it may drive into one or onto its edge) — release and a way around will be found` : `${m.name} cannot move through a dense terrain wall taller than 2" — release and a way around will be found`); bad.add(m.id); }
   }
   endChecks(s, u, pos, errors, bad);
   const eng = engagedAt(s, u, pos);
