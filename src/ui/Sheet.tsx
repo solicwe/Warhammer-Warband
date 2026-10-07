@@ -4,7 +4,7 @@ import type { AbilityData, DatasheetData, ModelProfileData, UnitState, WeaponDat
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
 import { Portrait, tokenKind, type TokenKind } from './Tokens';
 import { modelPortraitKey, usePastePortrait } from './portraits';
-import { pictureVariants, type PictureVariant } from './loadout';
+import { datasheetVariants, pictureVariants, type PictureVariant } from './loadout';
 import { Icon, type IconName } from './Icon';
 import { useState } from 'react';
 import { Em } from './Em';
@@ -112,7 +112,8 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
         // every model name counts, the one named like the unit too (Chaplain Grimaldus + Cenobyte Servitors): that one
         // uses the unit's own picture, as on the board
         const names = [...new Set(sheet.models.map((m) => m.name))].filter(Boolean);
-        const v = variants ?? (names.length > 1 ? names.map((n) => ({ key: n === sheet.name ? sheet.name : modelPortraitKey(sheet.name, n), fallback: [sheet.name], label: n })) : []);
+        const all = variants ?? datasheetVariants(sheet);
+        const v = all.length ? all : names.length > 1 ? names.map((n) => ({ key: n === sheet.name ? sheet.name : modelPortraitKey(sheet.name, n), fallback: [sheet.name], label: n })) : [];
         return <ModelPictures variants={v} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} />;
       })()}
       {groups.map((g) => (

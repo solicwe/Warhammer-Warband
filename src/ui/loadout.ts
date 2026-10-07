@@ -1,6 +1,7 @@
 // Which model is which in a squad with mixed wargear: a short label (the weapon that sets it apart) for every model
 // whose kit differs from what the whole squad carries.
-import type { ModelState, UnitState } from '../engine/types';
+import type { ArmyList, DatasheetData, FactionData, ModelState, UnitState, WargearPick } from '../engine/types';
+import { buildUnits } from '../engine/army';
 import { kitOf, modelPortraitKey, modelVariantKey } from './portraits';
 
 const FILLER = /^(astartes|master-crafted|archeotech|relic|artificer)\s+/i;
@@ -95,4 +96,20 @@ export function pictureVariants(source: string, models: ModelState[]): PictureVa
     const tag = own.length ? own.slice(0, 2).map(itemTag).join(' + ') : 'standard kit';
     return { key: modelVariantKey(source, g.name, g.kit), fallback: [nameKey, source], label: `${names.length > 1 ? g.name : g.name || source} · ${tag}` };
   }).sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/** Every picture slot a datasheet can need: its default kit plus each wargear choice, tried one at a time, so a
+ *  loadout can get its picture before it is picked in the list (Terminator · Claws / · Hammer + Shield). */
+export function datasheetVariants(sheet: DatasheetData, extra: ModelState[] = []): PictureVariant[] {
+  const faction = { id: 'x', name: 'x', datasheets: [sheet], detachments: [], armyRules: [] } as unknown as FactionData;
+  const size = Math.max(sheet.models.length, (sheet.composition ?? []).reduce((a, c) => a + (c.max ?? c.min ?? 1), 0));
+  const build = (wargear: WargearPick[]): ModelState[] => {
+    try {
+      return buildUnits({ name: 'x', factionId: 'x', battleSize: 'incursion', detachments: [], units: [{ uid: 'x', datasheet: sheet.name, models: size, pts: 0, wargear }] } as ArmyList, faction, 0)
+        .flatMap((u) => u.models).filter((m) => m.source === sheet.name);
+    } catch { return []; }
+  };
+  const models = [...build([]), ...extra.filter((m) => m.source === sheet.name)];
+  (sheet.wargearOptions ?? []).forEach((o, opt) => o.choices.forEach((_, choice) => models.push(...build([{ opt, choice, count: 1 }]))));
+  return pictureVariants(sheet.name, models);
 }

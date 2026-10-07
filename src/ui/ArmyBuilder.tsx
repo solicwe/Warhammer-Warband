@@ -10,7 +10,7 @@ import { listDisposition, listDispositionOptions } from '../engine/game';
 import { PRESETS } from './presets';
 import { DET_RULES } from '../engine/detachments';
 import { DatasheetView, ModelPictures } from './Sheet';
-import { pictureVariants } from './loadout';
+import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';
 import { getPortrait, setPortrait, usePortraitsVersion } from './portraits';
 
@@ -597,7 +597,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
         <div className="ab-inline-body">
           {sheet && <DatasheetView sheet={sheet} factionId={faction.id} variants={(() => {
             // the picture slots this entry's models use on the board (one per loadout once the wargear differs)
-            try { return pictureVariants(sheet.name, buildUnits({ ...list, units: [{ ...u, attachTo: undefined }] }, faction, 0).flatMap((x) => x.models)); } catch { return undefined; }
+            try { return datasheetVariants(sheet, buildUnits({ ...list, units: [{ ...u, attachTo: undefined }] }, faction, 0).flatMap((x) => x.models)); } catch { return undefined; }
           })()} />}
           {!sheet && <div className="sheet-title">{u.datasheet}</div>}
           <div className="ab-panel-title">Unit settings · <span className="ab-pts">{ptsOf(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</span></div>
