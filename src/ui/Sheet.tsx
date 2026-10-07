@@ -91,7 +91,8 @@ function statGroups(models: ModelProfileData[]) {
   return out;
 }
 
-export function DatasheetView({ sheet, factionId }: { sheet: DatasheetData; factionId?: string }) {
+/** `variants`: the picture slots of a list entry (one per loadout once its wargear differs); else one per model name. */
+export function DatasheetView({ sheet, factionId, variants }: { sheet: DatasheetData; factionId?: string; variants?: PictureVariant[] }) {
   const probe = { sources: [sheet.name], abilities: [] } as unknown as UnitState;
   const [more, setMore] = useState(false);
   usePastePortrait(sheet.name);
@@ -106,6 +107,12 @@ export function DatasheetView({ sheet, factionId }: { sheet: DatasheetData; fact
           <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''} · tap the picture or paste to set one</div>
         </div>
       </div>
+      {(() => {
+        // pictures per model (Wardens of Ultramar, a sergeant) and per loadout (Terminator with claws / with a hammer)
+        const names = [...new Set(sheet.models.map((m) => m.name))].filter((n) => n && n !== sheet.name);
+        const v = variants ?? (names.length > 1 ? names.map((n) => ({ key: modelPortraitKey(sheet.name, n), fallback: [sheet.name], label: n })) : []);
+        return <ModelPictures variants={v} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} />;
+      })()}
       {groups.map((g) => (
         <div key={g.names.join('|')}>
           {(groups.length > 1 || sheet.models.length > 1) && <div className="small muted">{groups.length > 1 ? g.names.join(' / ') : 'All models'} · base {g.base}</div>}

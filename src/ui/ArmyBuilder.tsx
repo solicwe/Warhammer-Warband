@@ -595,7 +595,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     return (
       <div className="ab-inline" key={`panel-${u.uid}`}>
         <div className="ab-inline-body">
-          {sheet && <DatasheetView sheet={sheet} factionId={faction.id} />}
+          {sheet && <DatasheetView sheet={sheet} factionId={faction.id} variants={(() => {
+            // the picture slots this entry's models use on the board (one per loadout once the wargear differs)
+            try { return pictureVariants(sheet.name, buildUnits({ ...list, units: [{ ...u, attachTo: undefined }] }, faction, 0).flatMap((x) => x.models)); } catch { return undefined; }
+          })()} />}
           {!sheet && <div className="sheet-title">{u.datasheet}</div>}
           <div className="ab-panel-title">Unit settings · <span className="ab-pts">{ptsOf(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</span></div>
           {(enh.length > 0 || u.enhancement) && (
@@ -624,12 +627,6 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             </div>
           )}
           {sheet && <WargearEditor sheet={sheet} u={u} onChange={(patch) => setUnit(u.uid, patch)} />}
-          {sheet && faction && (() => {
-            // the pictures this entry's models will use on the board (one per loadout once the wargear differs)
-            let models: ReturnType<typeof buildUnits>[number]['models'] = [];
-            try { models = buildUnits({ ...list, units: [{ ...u, attachTo: undefined }] }, faction, 0).flatMap((x) => x.models); } catch { /* not buildable yet */ }
-            return <ModelPictures variants={pictureVariants(sheet.name, models)} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} />;
-          })()}
           {(() => {
             const sp = splitRuleOf(sheet, list.detachments);
             if (!sp) return null;
