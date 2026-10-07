@@ -109,8 +109,10 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
       </div>
       {(() => {
         // pictures per model (Wardens of Ultramar, a sergeant) and per loadout (Terminator with claws / with a hammer)
-        const names = [...new Set(sheet.models.map((m) => m.name))].filter((n) => n && n !== sheet.name);
-        const v = variants ?? (names.length > 1 ? names.map((n) => ({ key: modelPortraitKey(sheet.name, n), fallback: [sheet.name], label: n })) : []);
+        // every model name counts, the one named like the unit too (Chaplain Grimaldus + Cenobyte Servitors): that one
+        // uses the unit's own picture, as on the board
+        const names = [...new Set(sheet.models.map((m) => m.name))].filter(Boolean);
+        const v = variants ?? (names.length > 1 ? names.map((n) => ({ key: n === sheet.name ? sheet.name : modelPortraitKey(sheet.name, n), fallback: [sheet.name], label: n })) : []);
         return <ModelPictures variants={v} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} />;
       })()}
       {groups.map((g) => (
