@@ -125,11 +125,19 @@ describe('mixed squads', () => {
     const w = (name: string, range: number | 'Melee') => ({ name, profiles: [{ name, range, A: '1', skill: 3, S: 4, AP: 0, D: '1', abilities: [] }] });
     const m = (id: string, ws: ReturnType<typeof w>[]) => ({ id, name: 'Devastator Marine', source: 'Devastator Squad', weapons: ws, dead: false });
     const base = [w('Bolt Pistol', 12), w('Close Combat Weapon', 'Melee')];
-    const u = { models: [m('a', [...base, w('Bolter', 24)]), m('b', [...base, w('Heavy Bolter', 36)]), m('c', [...base, w('Lascannon', 48)]), m('d', [...base, w('Bolter', 24)])] };
+    const u = { models: [m('a', [...base, w('Bolter', 24)]), m('b', [...base, w('Heavy Bolter', 36)]), m('c', [...base, w('Lascannon', 48)]),
+      ...['d', 'e', 'f', 'g', 'h'].map((id) => m(id, [...base, w('Bolter', 24)]))] };
     const labels = loadoutLabels(u as never);
     expect(labels.get('b')).toBe('Heavy Bolter');
     expect(labels.get('c')).toBe('Lascannon');
-    expect(labels.has('a')).toBe(false); // the usual kit of the squad needs no label
+    expect(labels.has('a')).toBe(false); // the usual kit of most of the squad needs no label
+    // a real split: every model says what it carries
+    const t = (id: string, ws: ReturnType<typeof w>[]) => ({ id, name: 'Terminator', source: 'Terminator Assault Squad', weapons: ws, gear: [] as string[], dead: false });
+    const claws = [w('Twin Lightning Claws', 'Melee')], hammer = [w('Thunder Hammer', 'Melee')];
+    const tu = { models: [t('t1', claws), t('t2', claws), { ...t('t3', hammer), gear: ['Storm Shield'] }, { ...t('t4', hammer), gear: ['Storm Shield'] }, { ...t('t5', hammer), gear: ['Storm Shield'] }] };
+    const tl = loadoutLabels(tu as never);
+    expect(tl.get('t1')).toBe('Claws');
+    expect(tl.get('t3')).toBe('Hammer+Shield');
     const same = { models: [m('x', base), m('y', base)] };
     expect(loadoutLabels(same as never).size).toBe(0);
   });

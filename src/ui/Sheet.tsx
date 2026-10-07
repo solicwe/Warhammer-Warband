@@ -132,7 +132,24 @@ export function DatasheetView({ sheet, factionId }: { sheet: DatasheetData; fact
           <div className="ds-sec">UNIT COMPOSITION</div>
           <div className="ds-body">
             {sheet.composition.map((c) => <div key={c.text}>• <b>{c.text}</b></div>)}
-            <div><b>This model is equipped with:</b> {sheet.loadoutText.replace(/^.*?equipped with:\s*/i, '')}</div>
+            {(() => {
+              // "Ancient: combat knife, …. Company Champion: …" → one row per model, its kit as a list
+              const text = sheet.loadoutText.replace(/^.*?equipped with:\s*/i, '').trim();
+              const rows = text.split(/\.\s+(?=[A-Z][^:.]{1,60}:)/).map((r) => r.replace(/\.$/, '').trim()).filter(Boolean)
+                .map((r) => { const i = r.indexOf(':'); return i > 0 && i < 60 ? { who: r.slice(0, i), kit: r.slice(i + 1).split(/,\s*/).map((x) => x.trim()).filter(Boolean) } : { who: '', kit: [r] }; });
+              if (rows.length < 2 && !rows[0]?.who) return <div><b>This model is equipped with:</b> {text}</div>;
+              return (
+                <div className="ds-kit">
+                  <b>{rows.length > 1 ? 'Each model is equipped with:' : 'This model is equipped with:'}</b>
+                  {rows.map((r, k) => (
+                    <div key={k} className="ds-kit-row">
+                      {r.who && <div className="ds-kit-who">{r.who}</div>}
+                      <div className="ds-kit-items">{r.kit.map((x) => <span key={x} className="ds-kit-item">{x}</span>)}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
           {sheet.leads.length > 0 && (
             <>

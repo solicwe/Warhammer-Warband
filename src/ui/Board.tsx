@@ -605,10 +605,18 @@ function BoardImpl(props: BoardProps) {
                     );
                   })()}
                   {labels.has(m.id) && vb.w < 30 && (() => {
-                    // shown once zoomed in, sized to the zoom so they read on a phone
-                    const fsz = Math.max(0.36, Math.min(0.6, vb.w * 0.022));
-                    const txt = shortItem(labels.get(m.id)!.replace(/ \+$/, ''), 13) + (labels.get(m.id)!.endsWith(' +') ? '+' : '');
-                    return <text x={p.x} y={p.y + m.r + fsz * 1.05} fontSize={fsz} textAnchor="middle" fill="#fff7d6" stroke="#000" strokeWidth={fsz * 0.26} paintOrder="stroke" fontWeight={800} pointerEvents="none">{txt}</text>;
+                    // shown once zoomed in; one item per line ("Hammer" / "Shield"), shrunk to the base's width so
+                    // neighbours' labels don't run into each other
+                    const raw = labels.get(m.id)!;
+                    const lines = raw.replace(/ \+$/, '').split('+').map((x) => shortItem(x, 10));
+                    if (raw.endsWith(' +')) lines[lines.length - 1] += '+';
+                    const longest = Math.max(...lines.map((x) => x.length));
+                    const fsz = Math.min(Math.max(0.36, Math.min(0.6, vb.w * 0.022)), (m.r * 2 + 0.25) / (0.6 * longest));
+                    return (
+                      <text x={p.x} y={p.y + m.r + fsz * 1.0} fontSize={fsz} textAnchor="middle" fill="#fff7d6" stroke="#000" strokeWidth={fsz * 0.26} paintOrder="stroke" fontWeight={800} pointerEvents="none">
+                        {lines.map((x, k) => <tspan key={k} x={p.x} dy={k ? fsz * 1.05 : 0}>{x}</tspan>)}
+                      </text>
+                    );
                   })()}
                   {props.noLos?.includes(m.id) && (
                     <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.7} ${p.y - m.r * 0.7})`}>
