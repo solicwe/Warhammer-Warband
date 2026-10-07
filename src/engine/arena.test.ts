@@ -52,7 +52,7 @@ describe.skipIf(!process.env.ARENA)('bot arena', () => {
       for (const a of names) for (const b of names) {
         if (names.indexOf(b) < names.indexOf(a)) continue;
         for (const liveSide of [0, 1] as PlayerId[]) {
-          const seed = 1000 + g * 37 + names.indexOf(a) * 7 + names.indexOf(b);
+          const seed = Number(process.env.ARENA_SEED ?? 1000) + g * 37 + names.indexOf(a) * 7 + names.indexOf(b);
           const { vp } = playArena(a, b, seed, liveSide);
           const m = vp[liveSide] - vp[1 - liveSide];
           margins.push(m);
@@ -64,5 +64,6 @@ describe.skipIf(!process.env.ARENA)('bot arena', () => {
     const sd = Math.sqrt(margins.reduce((x, y) => x + (y - mean) ** 2, 0) / Math.max(1, margins.length - 1));
     const out = `games ${margins.length} · live W${win} D${draw} L${loss} · win rate ${((win + draw / 2) / margins.length * 100).toFixed(1)}% · VP margin ${mean.toFixed(1)} ± ${(1.96 * sd / Math.sqrt(margins.length)).toFixed(1)} (95%) · ${((Date.now() - t0) / 1000).toFixed(0)}s`;
     fs.writeFileSync(process.env.ARENA_OUT ?? 'arena-result.txt', out + '\n');
+    if (process.env.ARENA_OUT) fs.writeFileSync(`${process.env.ARENA_OUT}.json`, JSON.stringify(margins));
   }, 3_600_000);
 });

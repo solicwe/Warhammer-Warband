@@ -541,6 +541,14 @@ export interface GameState {
   botPlayer?: PlayerId | null;
   /** players run by the bot (both for a bot-vs-bot game) */
   bots?: PlayerId[];
+  /** players who only move and pick shooting targets: every other decision (stratagems, abilities, re-rolls, saves,
+   *  battle-shock, fights, reactions) is taken for them by the bot's logic */
+  autoRules?: PlayerId[];
+  /** players who asked the app to deploy (and make Scouts moves for) the rest of their army */
+  autoDeploy?: PlayerId[];
+  /** house rules: VEHICLE / MONSTER models cannot end a move or be set up inside a terrain footprint (only
+   *  INFANTRY, BEASTS, SWARM and units that can move through walls can) */
+  house?: { vehiclesOutOfRuins?: boolean };
   /** vs bot: the player rolls their own saves when the bot attacks (and can use Command Re-roll then). Default on. */
   defenderRolls?: boolean;
   /** ability re-rolls ("re-roll the Hit roll", Oath of Moment …) wait for the dice to be picked; off: every failed die is re-rolled at once */

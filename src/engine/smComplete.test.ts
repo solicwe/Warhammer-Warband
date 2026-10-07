@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { applyMortalWounds, buildShootPools, finishAttack, resolveAll, startAttack } from './attack';
 import { createGame, formationAt, placeUnit } from './game';
 import { applyDetachmentStratagem } from './stratagems';
+import { manualActs, useAct } from './activations';
 import { canUseStratagem, stratCost } from './state';
 import { commitMove } from './game';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
@@ -120,3 +121,17 @@ describe('Space Marines: the last manual rules now run by themselves', () => {
 });
 
 const alive2 = (u: { models: { dead?: boolean }[] }) => u.models.some((m) => !m.dead);
+
+describe('Librarius: psyker level', () => {
+  it('a psyker level 1 Librarian uses one level-1 psychic ability per battle round', () => {
+    const s = game([['Librarian', 1, 65]], [['Boyz', 10, 90]]);
+    put(s, 'p0-x0', { x: 22, y: 20 });
+    s.phase = 'movement';
+    const acts = () => manualActs(s, 0).filter((m) => /psychic level/i.test(m.def.name));
+    expect(acts().map((m) => m.def.name).sort()).toEqual(['Force Dome (psychic level 1)', 'Veil of Time (psychic level 1)']);
+    useAct(s, acts().find((m) => m.def.name.startsWith('Force Dome'))!.def);
+    expect(acts()).toEqual([]);
+    s.round++; s.turn += 2;
+    expect(acts().length).toBe(2);
+  });
+});

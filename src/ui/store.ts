@@ -6,6 +6,7 @@ const KEY = 'w40k11-save';
 export const SAVE_VERSION = 3;
 
 export function loadSaved(): GameState | null {
+  flushSave(); // a save still waiting goes in first
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
@@ -17,7 +18,27 @@ export function loadSaved(): GameState | null {
 }
 
 export function clearSaved() {
+  pending = null;
   try { localStorage.removeItem(KEY); } catch { /* ignore */ }
+}
+
+/** Write the save now (a long game is a big string: done when the app is idle, or when the page is hidden). */
+let pending: GameState | null = null;
+let timer: number | null = null;
+function flushSave() {
+  if (timer !== null) { window.clearTimeout(timer); timer = null; }
+  if (!pending) return;
+  const s = pending;
+  pending = null;
+  try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* storage full or blocked */ }
+}
+function queueSave(s: GameState) {
+  pending = s;
+  if (timer === null) timer = window.setTimeout(flushSave, 700);
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', flushSave);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
 }
 
 /** Game state holder: every action runs synchronously on a clone of the latest state, then autosaves. */
@@ -29,7 +50,7 @@ export function useGame(initial: GameState) {
   const commit = (next: GameState) => {
     ref.current = next;
     setState(next);
-    try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* storage full or blocked */ }
+    queueSave(next);
   };
   const act = useCallback(<T,>(fn: (s: GameState) => T): T => {
     const prev = ref.current;

@@ -16,10 +16,26 @@ let throughHook: ThroughHook | null = null;
 export const setThroughHook = (fn: ThroughHook) => { throughHook = fn; };
 export const isMV = (m: ModelState) => m.keywords.includes('MONSTER') || m.keywords.includes('VEHICLE');
 
-/** Walls a model may not move through: dense terrain taller than 2" for anything but INFANTRY / BEASTS / SWARM / MOBILE. */
+/** House rule "no vehicles in ruins": this model may not enter a terrain footprint at all. */
+export const keptOutOfRuins = (s: GameState, m: ModelState) => !!s.house?.vehiclesOutOfRuins && isMV(m) && !canCrossDense(m);
+/** The footprints a model kept out of ruins must stay off (objective markers are not terrain). */
+export const ruinFootprints = (s: GameState) => s.terrain.filter((t) => t.kind !== 'objective-area' && t.poly.length >= 3);
+
+const footprintEdges = new WeakMap<GameState['terrain'], Seg[]>();
+function edgesOfFootprints(s: GameState): Seg[] {
+  const hit = footprintEdges.get(s.terrain);
+  if (hit) return hit;
+  const out = ruinFootprints(s).flatMap((t) => t.poly.map((a, i) => ({ a, b: t.poly[(i + 1) % t.poly.length] })));
+  footprintEdges.set(s.terrain, out);
+  return out;
+}
+
+/** Walls a model may not move through: dense terrain taller than 2" for anything but INFANTRY / BEASTS / SWARM / MOBILE
+ *  (with the house rule, VEHICLE / MONSTER models also may not cross into any terrain footprint). */
 export function blockingWalls(s: GameState, m: ModelState, fly = false): Seg[] {
   if (fly || canCrossDense(m)) return [];
-  return s.terrain.filter((t) => t.category === 'dense' && t.height > 2).flatMap((t) => t.walls);
+  const walls = s.terrain.filter((t) => t.category === 'dense' && t.height > 2).flatMap((t) => t.walls);
+  return keptOutOfRuins(s, m) ? [...walls, ...edgesOfFootprints(s)] : walls;
 }
 
 /** How close a model's centre may come to a wall: a round token stands in for a hull, so allow a little overlap. */

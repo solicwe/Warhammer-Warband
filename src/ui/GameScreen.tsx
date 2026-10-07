@@ -1,5 +1,6 @@
+import { autoCharges, autoDeclareCharge, autoDue, autoEndMovement, autoSelectToShoot, autoShoot, autoStep, onAuto } from '../engine/autoPlay';
 import { pathBlocked, routeAround } from '../engine/pathing';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { chapterRules } from '../engine/army';
 import { RuleText } from './RuleText';
 import { Em } from './Em';
@@ -103,22 +104,27 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [rolling, setRolling] = useState(false); // a big dice roll is on screen: the bot waits for it
   // the bot looks ahead (plays its turn a few ways on copies) in a worker; the main thread never rolls out itself
   const [thinking, setThinking] = useState(false);
+  const [stepping, setStepping] = useState(false); // the worker is working out the bot's next step
+  const stepOnMain = useRef(false); // the worker failed once: the bot thinks on the main thread from then on
+  const styleRef = useRef<{ p: PlayerId; name: string } | null>(null); // the style the bot picked for this turn
+  const sRef = useRef(s);
+  sRef.current = s;
   const worker = useMemo(() => {
     setLookahead(false);
     try { return new LookWorker(); } catch { return null; }
   }, []);
   useEffect(() => () => worker?.terminate(), [worker]);
   useEffect(() => {
-    if (!bots.length || rolling || thinking || s.phase === 'gameover' || (spectate && speed === 0)) return;
+    if (!bots.length || rolling || thinking || stepping || s.phase === 'gameover' || (spectate && speed === 0)) return;
     const who = actingBot;
     // start of a bot's Movement phase: pick how to play the turn before moving anything
     if (who !== null && s.phase === 'movement' && s.active === who && !styleChosen(s)) {
-      const done = (name: string) => { setThinking(false); act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); }); };
+      const done = (name: string) => { setThinking(false); styleRef.current = { p: who, name }; act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); }); };
       if (!worker) { done('steady'); return; }
       setThinking(true);
       setBotSays(`${pName(s, who)} is thinking ahead…`); setBotWho(who);
       const id = Math.random();
-      const fallback = window.setTimeout(() => { worker.onmessage = null; done('steady'); }, 45000);
+      const fallback = window.setTimeout(() => { worker.onmessage = null; done('steady'); }, 9000);
       worker.onmessage = (e: MessageEvent<{ id: number; name: string }>) => {
         if (e.data.id !== id) return;
         window.clearTimeout(fallback);
@@ -138,27 +144,65 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }
     const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command';
     const delay = (quick ? 350 : 950) / (spectate && speed === 2 ? 3 : 1);
+    const caption = (before: GameState, after: GameState) => {
+      const fresh = after.log.slice(before.log.length).filter((e) => e.kind !== 'roll' || /charge|Advance/i.test(e.text));
+      if (fresh.length) { setBotSays(fresh[fresh.length - 1].text); setBotWho(fresh[fresh.length - 1].player); }
+    };
+    const onMain = () => {
+      const before = sRef.current;
+      const after = act((g) => { if (who === null) botAct(g); else botStep(g, who); return g; });
+      if (after) caption(before, after);
+    };
     const t = window.setTimeout(() => {
-      let said: string | null = null;
-      let saidBy: PlayerId | null = null;
-      act((g) => {
-        const last = g.log[g.log.length - 1];
-        if (who === null) botAct(g); else botStep(g, who);
-        const fresh = g.log.slice(g.log.lastIndexOf(last) + 1).filter((e) => e.kind !== 'roll' || /charge|Advance/i.test(e.text));
-        said = fresh.length ? fresh[fresh.length - 1].text : null;
-        saidBy = fresh.length ? fresh[fresh.length - 1].player : null;
-      });
-      if (said) { setBotSays(said); setBotWho(saidBy); }
+      // the bot's thinking (a unit's move can take a second or more on a phone) runs in the worker: the screen stays live
+      if (!worker || stepOnMain.current) { onMain(); return; }
+      const sent = s;
+      const id = Math.random();
+      setStepping(true);
+      const giveUp = window.setTimeout(() => { worker.onmessage = null; setStepping(false); stepOnMain.current = true; if (sRef.current === sent) onMain(); }, 20000);
+      worker.onmessage = (e: MessageEvent<{ id: number; state: GameState | null; error?: string | null }>) => {
+        if (e.data.id !== id) return;
+        window.clearTimeout(giveUp);
+        worker.onmessage = null;
+        setStepping(false);
+        if (sRef.current !== sent) return; // the game changed meanwhile (undo …): the next round of this effect asks again
+        const next = e.data.state;
+        if (!next) { stepOnMain.current = true; onMain(); return; }
+        act((g) => { Object.assign(g, next); });
+        caption(sent, next);
+      };
+      try { worker.postMessage({ kind: 'step', state: s, who, id, style: styleRef.current ?? undefined }); }
+      catch { window.clearTimeout(giveUp); worker.onmessage = null; setStepping(false); stepOnMain.current = true; onMain(); }
     }, delay);
     return () => window.clearTimeout(t);
-  }, [s, actingBot, act, botSays, rolling, thinking, worker, speed, spectate, bots.length]);
+  }, [s, actingBot, act, botSays, rolling, thinking, stepping, worker, speed, spectate, bots.length]);
+  // auto rules: the player only moves and shoots; the app takes every other decision of theirs as it comes up
+  const autoWho = ([0, 1] as PlayerId[]).find((p) => autoDue(s, p)) ?? null;
+  useEffect(() => {
+    if (autoWho === null || rolling || thinking) return;
+    const t = window.setTimeout(() => {
+      let said: string | null = null;
+      act((g) => {
+        const last = g.log[g.log.length - 1];
+        autoStep(g, autoWho);
+        const fresh = g.log.slice(g.log.lastIndexOf(last) + 1).filter((e) => e.kind !== 'roll' && e.player === autoWho);
+        said = fresh.length ? fresh[fresh.length - 1].text : null;
+      });
+      if (said) {
+        const msg = `Auto: ${said}`;
+        setBotSays(msg); setBotWho(autoWho);
+        window.setTimeout(() => setBotSays((x) => (x === msg ? null : x)), 2600);
+      }
+    }, s.phase === 'fight' ? 700 : 300);
+    return () => window.clearTimeout(t);
+  }, [s, autoWho, rolling, thinking]); // eslint-disable-line react-hooks/exhaustive-deps
   // pile-in / consolidate on the player's side: every unit moves in by itself (as many models into the fight as
   // possible); the step ends by itself unless a fight-start ability is waiting to be used
   const pileKey = s.fight && (s.fight.step === 'pileIn' || s.fight.step === 'consolidate') ? `${s.turn}:${s.fight.step}:${s.fight.stepPlayer}` : null;
   useEffect(() => {
     if (!pileKey || s.manualPile || s.attack || s.window) return;
     const f = s.fight!;
-    if (bots.includes(f.stepPlayer)) return;
+    if (bots.includes(f.stepPlayer) || onAuto(s, f.stepPlayer)) return;
     const kind = f.step === 'pileIn' ? 'pileIn' : 'consolidate';
     const t = window.setTimeout(() => {
       const res = act((g) => {
@@ -204,7 +248,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <button className={`btn primary big wide ${armed === key ? 'armed' : ''}`} onClick={() => {
         if (idle && armed !== key) { setArmed(key); flash(`${why} — tap again to confirm`); return; }
         setArmed(null);
-        act((g) => endPhase(g)); setSel(null); setMode(null);
+        act((g) => { if (g.phase === 'movement') autoEndMovement(g, g.active); endPhase(g); }); setSel(null); setMode(null);
       }}>{armed === key ? `Confirm ${label}?` : label} <Icon name="next" /></button>
     </div>
   );
@@ -774,6 +818,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <>
         <div className="handoff">{pName(s, p)} ({s.players[p].role === 'attacker' ? 'Attacker' : 'Defender'}) deploys: players alternate one unit at a time</div>
         <div className="unit-strip">{pending.map((x) => unitPill(x, false))}</div>
+        {!bots.includes(p) && pending.length > 0 && !(s.autoDeploy ?? []).includes(p) && (
+          <button className="btn" onClick={() => { act((g) => { g.autoDeploy = [...(g.autoDeploy ?? []), p]; }); setSel(null); }}>Deploy the rest for me</button>
+        )}
         {u ? (
           <div className="row">
             <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'deploy' })}>Set up in deployment zone</button>
@@ -1089,12 +1136,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <div className="row">
             <button className="btn" onClick={() => setMode(null)}>Cancel</button>
             <button className="btn primary grow" disabled={!res || !!res.error || !res.pools.length} onClick={() => {
+              const auto = onAuto(s, modeUnit.owner);
               act((g) => {
                 const gu = unitById(g, modeUnit.id);
                 if (mode.overwatch) spendStratagem(g, gu.owner, 'fire-overwatch', gu);
+                if (auto) { autoShoot(g, gu.id, mode.target!, opt, !!mode.overwatch); return; }
                 const r = buildShootPools(g, gu.id, mode.target!, opt);
                 startAttack(g, mode.overwatch ? 'overwatch' : 'shoot', gu.id, mode.target!, r.pools);
               });
+              if (auto) setMode(null);
             }}>Shoot!{mode.overwatch ? ' (1CP)' : ''}</button>
           </div>
         </>
@@ -1112,7 +1162,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <>
             {unitCard(u)}
             <div className="row acts">
-              {modes.map((m) => <button key={m} className="btn primary" onClick={() => { act((g) => unitSelected(g, unitById(g, u.id), 'shoot')); setMode({ k: 'shoot', unitId: u.id, smode: m, target: null, useCQ: false, profile: {} }); }}><Icon name="shoot" /> {m === 'normal' ? 'Shoot' : m === 'assault' ? 'Assault (after Advancing)' : m === 'closeQuarters' ? 'Close-quarters' : 'Indirect'}</button>)}
+              {modes.map((m) => <button key={m} className="btn primary" onClick={() => { act((g) => autoSelectToShoot(g, unitById(g, u.id))); setMode({ k: 'shoot', unitId: u.id, smode: m, target: null, useCQ: false, profile: {} }); }}><Icon name="shoot" /> {m === 'normal' ? 'Shoot' : m === 'assault' ? 'Assault (after Advancing)' : m === 'closeQuarters' ? 'Close-quarters' : 'Indirect'}</button>)}
               {modes.length === 0 && <span className="muted small">{u.selectedToShoot ? 'Already shot' : u.move === 'fallback' ? 'Fell Back: cannot shoot' : u.move === 'advance' ? 'Advanced (no Assault weapons)' : 'Cannot shoot'}</span>}
               {canExplode && <button className="btn small" onClick={() => setMode({ k: 'explosives', unitId: u.id, target: null })}>Explosives 1CP</button>}
               {u.weaponsFired.length > 0 && !u.selectedToShoot && <button className="btn small ghost" onClick={() => act((g) => endUnitShooting(unitById(g, u.id)))}>Done shooting with this unit</button>}
@@ -1183,11 +1233,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             {unitCard(u)}
             {why ? <div className="muted small">Cannot charge: {why}</div> : (
               <div className="row">
-                <button className="btn primary" onClick={() => { act((g) => declareCharge(g, unitById(g, u.id), fly)); setMode({ k: 'charge', unitId: u.id, targets: [] }, startPaths(u)); }}>Declare charge (2D6)</button>
+                <button className="btn primary" onClick={() => { act((g) => autoDeclareCharge(g, unitById(g, u.id), fly)); setMode({ k: 'charge', unitId: u.id, targets: [] }, startPaths(u)); }}>Declare charge (2D6)</button>
                 {hasKw(u, 'FLY') && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
               </div>
             )}
           </>
+        )}
+        {onAuto(s, s.active) && mine.some((x) => !chargeEligibility(s, x) && !x.declaredCharge) && (
+          <button className="btn" onClick={() => { const n = act((g) => autoCharges(g)); flash(n ? 'Charges made for you' : 'No charge worth making'); setSel(null); }}>Charge for me</button>
         )}
         {abilityBar(s.active, { whens: ['anyPhase'] })}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
@@ -1633,7 +1686,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn" onClick={() => { setShowMenu(false); setTape({ on: true }); }}>Tape measure</button>
             <button className="btn" onClick={() => { setShowMenu(false); setShowLog(true); }}>Battle log & army rules</button>
             <button className="btn" onClick={() => { setShowMenu(false); openStrats(); }}>Stratagems</button>
-            {bots.length === 1 && (
+            {([0, 1] as PlayerId[]).filter((p) => !bots.includes(p)).map((p) => (
+              <button key={p} className={`btn ${(s.autoRules ?? []).includes(p) ? 'on' : ''}`} onClick={() => act((g) => { const a = g.autoRules ?? []; g.autoRules = a.includes(p) ? a.filter((x) => x !== p) : [...a, p]; })}>
+                {bots.length ? 'Auto rules' : `${pName(s, p)}: auto rules`}: {(s.autoRules ?? []).includes(p) ? 'on (you only move and shoot)' : 'off (you take every decision)'}
+              </button>
+            ))}
+            {bots.length === 1 && !(s.autoRules ?? []).includes(human ?? 0) && (
               <button className={`btn ${s.defenderRolls !== false ? 'on' : ''}`} onClick={() => act((g) => { g.defenderRolls = g.defenderRolls === false; })}>
                 When the bot attacks: {s.defenderRolls !== false ? 'I roll my saves (Command Re-roll available)' : 'roll automatically'}
               </button>

@@ -36,7 +36,7 @@ const standing = (s: GameState, p: PlayerId) => {
 };
 
 /** Play a copy through the rest of this turn and the opponent's next one with `style` for p; how p stands then. */
-function rollout(s: GameState, p: PlayerId, style: Partial<BotW>): number {
+function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Infinity): number {
   const c = structuredClone(s);
   c.bots = [0, 1];
   const before = { 0: W(0), 1: W(1) };
@@ -45,7 +45,10 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>): number {
   inRollout = true;
   try {
     let steps = 0;
-    while (c.phase !== 'gameover' && c.turn < end && steps < 4000) { botAct(c); steps++; }
+    while (c.phase !== 'gameover' && c.turn < end && steps < 4000) {
+      botAct(c); steps++;
+      if (Date.now() > deadline) return -Infinity; // out of time: this style is not compared
+    }
   } finally {
     inRollout = false;
     setBotWeights(0, before[0]);
@@ -55,13 +58,16 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>): number {
 }
 
 /** The style that leaves p best off after playing this turn and the opponent's next one on copies of the game. */
-export function chooseTurnStyle(s: GameState, p: PlayerId): string {
+export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs = Infinity): string {
   if (!enabled || inRollout || s.phase === 'gameover') return 'steady';
   own[p] ??= W(p);
+  // a slow device: whatever could not be tried in time is skipped (steady, the first, is the fallback)
+  const deadline = Date.now() + budgetMs;
   let best = { name: 'steady', v: -Infinity };
   for (const [name, style] of Object.entries(STYLES)) {
-    const v = rollout(s, p, style);
+    const v = rollout(s, p, style, deadline);
     if (v > best.v + 1e-6) best = { name, v };
+    if (Date.now() > deadline) break;
   }
   return best.name;
 }

@@ -833,7 +833,7 @@ export function hazardTest(s: GameState, u: UnitState, n: number, label: string,
     note = ` · Command Re-roll ${rolls[i]}→${again}`;
     rolls[i] = again;
   }
-  log(s, `${label} ${u.name}: hazard [${rolls.join(' ')}]${worse ? ` −${worse}` : ''}${note}`, 'roll', u.owner);
+  log(s, `${label} ${u.name}: hazard [${rolls.join(' ')}]${worse > 0 ? ` −${worse}` : worse < 0 ? ` +${-worse}` : ''}${note}`, 'roll', u.owner);
   return { rolls, fails: rolls.filter(failed).length };
 }
 
@@ -844,7 +844,9 @@ export function finishAttack(s: GameState) {
   const T = unitById(s, at.targetId);
   const haz = at.pools.reduce((a, p) => a + p.hazardous, 0);
   if (haz && alive(A).length) {
-    const { rolls, fails } = hazardTest(s, A, haz, 'Hazardous');
+    // Rites of Thermal Appeasement: +1 to hazard rolls for its plasma weapons
+    const plasma = A.abilities.some((a) => a.name === 'Rites of Thermal Appeasement') && at.pools.every((p) => !p.hazardous || /plasma/i.test(p.weapon));
+    const { rolls, fails } = hazardTest(s, A, haz, 'Hazardous', plasma ? -1 : 0);
     at.hazardousRolls = rolls;
     if (fails) {
       const mv = alive(A).every(isMV);

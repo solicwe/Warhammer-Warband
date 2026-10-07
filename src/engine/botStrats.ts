@@ -19,8 +19,8 @@ import { applyDetachmentStratagem, stratagemBlock, stratChoices, stratRule, with
 import { unitVisibleTo } from './visibility';
 import type { AttackSession, GameState, PlayerId, StratagemData, TimedEffect, UnitState } from './types';
 
-/** Is this player run by the bot? */
-export const isBot = (s: GameState, p: PlayerId) => (s.bots ?? (s.botPlayer != null ? [s.botPlayer] : [])).includes(p);
+/** Does the bot's logic take this player's decisions (a bot, or a player on auto rules)? */
+export const isBot = (s: GameState, p: PlayerId) => (s.bots ?? (s.botPlayer != null ? [s.botPlayer] : [])).includes(p) || (s.autoRules ?? []).includes(p);
 
 /** Can the bot afford this now and still keep a CP for a re-roll (until the last round)? */
 const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= 5 ? 0 : 1) => s.players[p].cp - cost >= keep;
@@ -31,6 +31,8 @@ const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= 5 ? 0 
  * round spends what's left).
  */
 export function cpWorth(s: GameState, p: PlayerId): number {
+  // the battle's last turn: a CP not spent now is never spent
+  if (s.round >= 5 && s.active !== s.firstPlayer) return 1;
   const left = Math.max(1, 6 - s.round); // rounds still to play, this one included
   const perRound = s.players[p].cp / left;
   const w = perRound < 1 ? 14 : perRound < 2 ? 10 : 7;

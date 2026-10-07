@@ -388,7 +388,7 @@ export function botRedeployActs(s: GameState, p: PlayerId) {
 // the end of the enemy's Fight phase: units that may now leave for Strategic Reserves
 setPhaseEndHook((s, phase) => {
   const p = other(s.active);
-  if (phase === 'fight' && (s.bots ?? []).includes(p)) botRedeployActs(s, p);
+  if (phase === 'fight' && ((s.bots ?? []).includes(p) || (s.autoRules ?? []).includes(p))) botRedeployActs(s, p);
 });
 
 // ---------- Adeptus Custodes decisions (and any faction with the same kind of rule) ----------

@@ -2232,6 +2232,16 @@
     }
    ],
    "note": "Warlord can be an ANATHEMA PSYKANA CHARACTER"
+  },
+  "Librarius": {
+   "auto": "full",
+   "armyRule": true,
+   "note": "Psyker level budget per battle round (activations.ts psykerBudgetOk)"
+  },
+  "Hunter": {
+   "auto": "full",
+   "armyRule": true,
+   "note": "Hunter profiles only target matching units (attack.ts)"
   }
  }
 }

@@ -151,6 +151,34 @@ describe('movement validation', () => {
   });
 });
 
+describe('house rule: no vehicles in ruins', () => {
+  const vehicleGame = (on: boolean) => {
+    const s = createGame({
+      lists: [list('SM', [['Repulsor', 1, 180]]), list('ORK', [['Boyz', 10, 90]])],
+      factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 42,
+    });
+    s.terrain = [{ id: 'r', kind: 'ruin', label: 'Ruin', category: 'light', height: 0, walls: [], poly: [{ x: 15, y: 20 }, { x: 29, y: 20 }, { x: 29, y: 26 }, { x: 15, y: 26 }] } as TerrainPiece];
+    s.house = { vehiclesOutOfRuins: on };
+    return s;
+  };
+  it('a tank cannot drive into or across a footprint, infantry still can', () => {
+    for (const on of [false, true]) {
+      const s = vehicleGame(on);
+      const tank = put(s, s.units[0].id, { x: 22, y: 12 });
+      const m = alive(tank)[0];
+      const across = validateMove(s, tank, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y + 10 }]]]));
+      const into = validateMove(s, tank, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y + 8 }]]]));
+      expect(across.ok).toBe(!on);
+      expect(into.ok).toBe(!on);
+    }
+    const s = vehicleGame(true);
+    put(s, s.units[0].id, { x: 6, y: 50 });
+    const boyz = put(s, s.units[1].id, { x: 22, y: 30 });
+    const paths = new Map(alive(boyz).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y - 6 }]]));
+    expect(validateMove(s, boyz, 'normal', paths).ok).toBe(true);
+  });
+});
+
 describe('phase flow', () => {
   it('command phase gives both players 1 CP and fight order starts with active player', () => {
     const s = game();

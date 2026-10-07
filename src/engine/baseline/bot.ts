@@ -3,7 +3,7 @@
 // It plays one unit per step so the UI can animate each action.
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from '../attack';
 import { RULES } from '../config';
-import { smartPlacement } from '../deploy';
+import { baitUnit, deployPosture, smartPlacement } from '../deploy';
 import { dist, polyCentroid } from '../geometry';
 import { detChoices, pickDetChoice } from '../detachments';
 import {
@@ -14,11 +14,14 @@ import {
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark, endRedeploy } from '../game';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, unitSelected } from '../activations';
 import { W } from '../botWeights';
+import { applyStyle, chooseTurnStyle, styleChosen } from '../botLook';
+import { unitVisibleTo } from '../visibility';
+import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, botChargeBonusStratagem, botCommandExtras, botFightEndActs, botIgnoreModsStratagem, botReadyStratagem, botShieldStratagem, botTeleportActs } from '../botPlus';
 import { botAdvanceActs, botArrivalStratagem, botCharacterStratagem, botFightChoice, botFightStartStratagems, botFightsFirstStratagem, botLooseDisembark, botMobileStratagem, botPileStratagem, botRedeployActs, botShootActs, botShootOnTheMove, botAdvanceStratagem, botAfterShootMove, botConsolidateStratagem, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from '../botPlus';
 import { abilityRule, unitFlags, withRuleCache } from '../effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from '../state';
 import { actionOptions, startAction } from '../missions';
-import { secondaryDead } from '../secondaries';
+import { secondaryChance, secondaryDead } from '../secondaries';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, rangedKills, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
@@ -57,7 +60,7 @@ function botAttack(s: GameState, kind: 'shoot' | 'fight' | 'overwatch', attacker
 // ---------- deployment ----------
 
 /** Fixed secondaries: a bot picks two cards the matchup is likely to pay out. */
-function botPickFixed(s: GameState, p: PlayerId) {
+export function botPickFixed(s: GameState, p: PlayerId) {
   const P = s.players[p];
   if (P.secMode !== 'fixed' || P.secActive.length >= 2) return;
   const e = other(p);
@@ -83,6 +86,11 @@ export function botDeploy(s: GameState) {
   }
   const u = s.units.find((x) => x.owner === p && x.status === 'pending');
   if (!u) return;
+  // the plan for the whole army, said once
+  if (!s.log.some((l) => l.player === p && /deploys (open|closed)/.test(l.text))) {
+    const posture = deployPosture(s, p), bait = baitUnit(s, p);
+    log(s, `${s.players[p].name} deploys ${posture === 'open' ? 'open: the enemy is built for melee, so it takes ground forward' : 'closed: out of sight of the enemy guns'}${bait ? `, with ${bait.name} out in the open as bait` : ''}`, 'info', p);
+  }
   // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
   if (hasDeepStrike(s, u) && sendToReserves(s, u.id) === null) return;
   // a vehicle must not be set up where ruin walls box it in for the whole game
@@ -110,7 +118,8 @@ export function botDeploy(s: GameState) {
 export function botManageCards(s: GameState, p: PlayerId) {
   const P = s.players[p];
   if (P.secMode !== 'tactical' || s.botIgnoresCards?.includes(p)) return;
-  const dead = (id: string) => secondaryDead(s, p, id);
+  // dead, or very unlikely to score this turn: the slot is better used by a fresh card next turn (and +1CP now)
+  const dead = (id: string) => secondaryDead(s, p, id) || (s.round < 5 && secondaryChance(s, p, id) < 0.2);
   for (const id of [...P.secActive]) {
     if (!dead(id)) continue;
     if (!P.secSwapUsed && P.cp >= 2 && s.phase === 'command' && s.active === p) swapSecondary(s, p, id);
@@ -166,6 +175,7 @@ export function botCommand(s: GameState) {
   botUseActs(s, p, ['command', 'anyCommand', 'battleStart', 'opponentTurnEnd', 'anyPhase']);
   botDoctrineActs(s, p);
   botCommandStratagems(s, p);
+  botCommandExtras(s, p);
   botCharacterStratagem(s, p);
   botRedeployActs(s, p);
   endPhase(s);
@@ -266,7 +276,10 @@ function botRapidDisembark(s: GameState, t: UnitState) {
 
 /** Move (or bring in) one unit. Returns false when there is nothing left to do this phase. */
 export function botMoveOne(s: GameState): boolean {
+  // once per turn, before anything moves: try the turn a few ways on copies of the game and keep the best style
+  if (s.phase === 'movement' && !styleChosen(s)) applyStyle(s, s.active, chooseTurnStyle(s, s.active));
   botUseActs(s, s.active, ['movement']);
+  botTeleportActs(s, s.active);
   botDoctrineActs(s, s.active);
   if (botDisembark(s, s.active)) return true;
   for (const u of moveOrder(s, s.active)) {
@@ -275,6 +288,7 @@ export function botMoveOne(s: GameState): boolean {
       if (!canIngress(s, u)) continue;
       markTried(s, u);
       const how = hasDeepStrike(s, u) ? 'deepStrike' : 'ingress';
+      botArrivalDefence(s, u);
       withRuleCache(() => botArrivalStratagem(s, u, how));
       const pos = withRuleCache(() => bestArrival(s, u, how));
       if (pos && validatePlacement(s, u, pos, how).ok) { ingressUnit(s, u, pos); return true; }
@@ -305,6 +319,7 @@ export function botMoveOne(s: GameState): boolean {
       else remainStationary(s, u);
       return true;
     }
+    botIgnoreModsStratagem(s, u);
     withRuleCache(() => botMobileStratagem(s, u, MM));
     const { normal, advance: adv } = withRuleCache(() => planMove(s, u, MM, ctxFor(s, u)));
     // advancing: worth it when the extra distance (3.5" on average) reaches somewhere better than a Normal move does
@@ -348,7 +363,11 @@ export function botShootOne(s: GameState): boolean {
   const mine = boardUnits(s, s.active);
   // a unit that fired some of its weapons carries on with the rest (split fire), e.g. after the player rolled saves
   const busy = mine.find((u) => tried(s, u) && !u.selectedToShoot && u.weaponsFired.length > 0 && shootingModes(s, u).length > 0);
-  for (const u of busy ? [busy] : mine) {
+  // units with the fewest targets shoot first; the flexible ones go last and finish off what is left
+  const foes = boardUnits(s, other(s.active));
+  const options = (u: UnitState) => foes.filter((e) => unitDistance(u, e) <= maxRange(u) + 0.5 && alive(u).some((m) => unitVisibleTo(s, m, e))).length;
+  const order = busy ? [busy] : mine.filter((u) => !tried(s, u)).map((u) => ({ u, n: options(u) })).sort((a, b) => (a.n || 99) - (b.n || 99)).map((x) => x.u);
+  for (const u of order) {
     if (!busy && tried(s, u)) continue;
     const modes = shootingModes(s, u);
     if (!modes.length) continue;
@@ -364,7 +383,7 @@ export function botShootOne(s: GameState): boolean {
       unitSelected(s, u, 'shoot');
       botShootActs(s, u);
       botUseActs(s, u.owner, ['selectedToShoot', 'shooting'], u.id);
-      // a mission action is worth roughly 8 points of damage per VP it brings
+      // a mission action is worth roughly 16 points of damage per VP it brings (a 1000-point game is decided by ~30 VP)
       const ACTION_VP: Record<string, number> = { cleanse: 3, plunder: 5, 'booby-trap': 3, decoy: 4, 'sensor-sweep': 4, triangulate: 5, surveil: 4, 'extract-intelligence': 7, 'secure-asset': 4, 'maintain-control': 3, 'vanguard-operation': 4, sabotage: 4 };
       const acts = actionOptions(s, u.owner).filter((o) => o.unitId === u.id);
       if (acts.length) {
@@ -374,7 +393,7 @@ export function botShootOne(s: GameState): boolean {
           .filter((o) => !(o.action === 'surveil' && already('surveil')))
           .sort((a, b) => Number(b.objId?.startsWith('home') ?? 0) - Number(a.objId?.startsWith('home') ?? 0))[0];
         const best = rank()[0]?.v ?? 0;
-        if (pick && (ACTION_VP[pick.action] ?? 3) * 8 >= best) {
+        if (pick && (ACTION_VP[pick.action] ?? 3) * 16 >= best) {
           startAction(s, pick);
           return true;
         }
@@ -393,6 +412,7 @@ export function botShootOne(s: GameState): boolean {
     }
     u.selectedToShoot = true;
     if (!s.window && !s.attack) withRuleCache(() => botAfterShootMove(s, u));
+    if (!s.window && !s.attack) botAfterShootStratagems(s, u);
     return true;
   }
   return false;
@@ -407,16 +427,25 @@ export function botShooting(s: GameState) {
 
 export function botChargeOne(s: GameState): boolean {
   for (const u of boardUnits(s, s.active)) {
+    if (!tried(s, u)) botAdvanceChargeStratagem(s, u);
     if (tried(s, u) || chargeEligibility(s, u)) continue;
     markTried(s, u);
     const enemies = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.charge.declareRange);
     if (!enemies.length) continue;
     const brawler = isBrawler(s, u);
-    const value = (e: UnitState) => meleeKills(u, e) * perModel(e) - meleeKills(e, u) * perModel(u) * 0.5 + (s.players[u.owner].oathTarget === e.id ? 8 : 0);
+    const value = (e: UnitState) => {
+      let v = meleeKills(u, e) * perModel(e) - meleeKills(e, u) * perModel(u) * 0.5 + (s.players[u.owner].oathTarget === e.id ? 8 : 0);
+      // a melee unit that would charge us next turn anyway: going in first means we strike first
+      if (isBrawler(s, e) && unitDistance(u, e) <= moveOf(e) + 12) v += meleeKills(e, u) * perModel(u) * 0.4;
+      // an objective they hold: our models on it contest it
+      if (s.objectives.some((o) => onObjective(s, e, o))) v += 10;
+      return v;
+    };
     const best = [...enemies].sort((a, b) => value(b) * p2d6(unitDistance(u, b)) - value(a) * p2d6(unitDistance(u, a)))[0];
     const p = p2d6(unitDistance(u, best));
     // shooters only charge weak, close targets; brawlers accept long shots
     if (value(best) <= 0 || p < (brawler ? 0.25 : 0.58)) continue;
+    botChargeBonusStratagem(s, u, unitDistance(u, best));
     declareCharge(s, u);
     let opts = chargeTargetOptions(s, u);
     if (!opts.length && canDetReroll(s, u, 'charge')) { detReroll(s, u, 'charge'); opts = chargeTargetOptions(s, u); }
@@ -452,14 +481,17 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
     if (f.step === 'pileIn' && isBot(s, f.stepPlayer) && !(s.botTried ?? []).includes(startKey)) {
       s.botTried = [...(s.botTried ?? []), startKey];
       botFightStartStratagems(s, f.stepPlayer);
+      botShieldStratagem(s, f.stepPlayer);
+      botUseActs(s, f.stepPlayer, ['fightStartButton']);
     }
     for (const u of boardUnits(s, f.stepPlayer)) {
       if (f.step === 'pileIn' && !pileInEligible(s, u)) continue;
       if (isBot(s, u.owner) && (f.step === 'pileIn' || consolidateEligible(s, u))) botPileStratagem(s, u, f.step === 'pileIn' ? 'pileIn' : 'consolidate');
-      if (f.step === 'consolidate' && consolidateEligible(s, u) && (s.bots ?? []).includes(u.owner)) botConsolidateStratagem(s, u);
+      if (f.step === 'consolidate' && consolidateEligible(s, u) && isBot(s, u.owner)) botConsolidateStratagem(s, u);
       if (f.step === 'consolidate' && !(consolidateEligible(s, u) && consolidateMode(s, u).mode)) continue;
       autoPileMove(s, u, f.step === 'pileIn' ? 'pileIn' : 'consolidate');
     }
+    if (f.step === 'consolidate' && isBot(s, f.stepPlayer)) botFightEndActs(s, f.stepPlayer);
     if (f.step === 'pileIn') endPileInStep(s); else endConsolidateStep(s);
     return true;
   }
@@ -470,6 +502,7 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
   const pick = (x: UnitState) => Math.max(0, ...engagedEnemies(s, x).map((e) => meleeKills(x, e) * perModel(e)));
   const u = (isBot(s, c.player) ? botFightsFirstStratagem(s, c.player, c.units) : null) ?? [...c.units].sort((a, b) => pick(b) - pick(a))[0];
   unitSelected(s, u, 'fight');
+  if (isBot(s, u.owner)) botReadyStratagem(s, u);
   if (isBot(s, u.owner)) botFightChoice(s, u);
   botUseActs(s, u.owner, ['selectedToFight', 'fightStartButton'], u.id);
   const eng = engagedEnemies(s, u);

@@ -59,7 +59,7 @@ function botAttack(s: GameState, kind: 'shoot' | 'fight' | 'overwatch', attacker
 // ---------- deployment ----------
 
 /** Fixed secondaries: a bot picks two cards the matchup is likely to pay out. */
-function botPickFixed(s: GameState, p: PlayerId) {
+export function botPickFixed(s: GameState, p: PlayerId) {
   const P = s.players[p];
   if (P.secMode !== 'fixed' || P.secActive.length >= 2) return;
   const e = other(p);
@@ -432,8 +432,11 @@ export function botChargeOne(s: GameState): boolean {
     const enemies = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.charge.declareRange);
     if (!enemies.length) continue;
     const brawler = isBrawler(s, u);
+    // a shooting unit stuck in a fight next turn loses its guns (vehicles and monsters keep shooting): that is a cost
+    const bigGuns = alive(u).some((m) => m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER'));
+    const gunsLost = brawler || bigGuns || s.round >= 5 ? 0 : Math.max(0, ...boardUnits(s, other(u.owner)).map((e) => Math.min(alive(e).length, rangedKills(u, e)) * perModel(e))) * 0.6;
     const value = (e: UnitState) => {
-      let v = meleeKills(u, e) * perModel(e) - meleeKills(e, u) * perModel(u) * 0.5 + (s.players[u.owner].oathTarget === e.id ? 8 : 0);
+      let v = meleeKills(u, e) * perModel(e) - meleeKills(e, u) * perModel(u) * 0.5 + (s.players[u.owner].oathTarget === e.id ? 8 : 0) - gunsLost;
       // a melee unit that would charge us next turn anyway: going in first means we strike first
       if (isBrawler(s, e) && unitDistance(u, e) <= moveOf(e) + 12) v += meleeKills(e, u) * perModel(u) * 0.4;
       // an objective they hold: our models on it contest it
@@ -486,7 +489,7 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
     for (const u of boardUnits(s, f.stepPlayer)) {
       if (f.step === 'pileIn' && !pileInEligible(s, u)) continue;
       if (isBot(s, u.owner) && (f.step === 'pileIn' || consolidateEligible(s, u))) botPileStratagem(s, u, f.step === 'pileIn' ? 'pileIn' : 'consolidate');
-      if (f.step === 'consolidate' && consolidateEligible(s, u) && (s.bots ?? []).includes(u.owner)) botConsolidateStratagem(s, u);
+      if (f.step === 'consolidate' && consolidateEligible(s, u) && isBot(s, u.owner)) botConsolidateStratagem(s, u);
       if (f.step === 'consolidate' && !(consolidateEligible(s, u) && consolidateMode(s, u).mode)) continue;
       autoPileMove(s, u, f.step === 'pileIn' ? 'pileIn' : 'consolidate');
     }
@@ -583,7 +586,7 @@ export function botWindow(s: GameState) {
 }
 
 /** Pre-battle Scouts moves: each unit takes the move the planner likes best (forward onto objectives, into cover), or stays. */
-function botScouts(s: GameState, p: PlayerId) {
+export function botScouts(s: GameState, p: PlayerId) {
   for (const u of scoutUnits(s, p)) {
     const plan = withRuleCache(() => bestMove(s, u, 'scout', scoutsOf(s, u) - 0.05, ctxFor(s, u)));
     if (plan.paths && validateMove(s, u, 'scout', plan.paths).ok) commitMove(s, u, 'scout', plan.paths);

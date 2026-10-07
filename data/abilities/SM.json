@@ -4361,8 +4361,8 @@
   }
  },
  "Librarius": {
-  "status": "info",
-  "note": "Psyker level not tracked (each psychic ability has its own limit)"
+  "status": "auto",
+  "note": "Psyker level: psychic abilities used in a battle round add up to at most the unit's psyker level"
  },
  "Special Move Types": {
   "status": "info",
@@ -4543,15 +4543,15 @@
  },
  "Chief Librarian (psyker level 3)": {
   "status": "info",
-  "note": "Psyker level (not tracked)"
+  "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
  },
  "Librarian (psyker level 1)": {
   "status": "info",
-  "note": "Psyker level (not tracked)"
+  "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
  },
  "Rune Priest (psyker level 3)": {
   "status": "info",
-  "note": "Psyker level (not tracked)"
+  "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
  },
  "Hood of Hellfire (Psychic)": {
   "effects": [
@@ -5263,8 +5263,8 @@
   ]
  },
  "Rites of Thermal Appeasement": {
-  "status": "info",
-  "note": "+1 to Hazardous rolls for plasma weapons (Hazardous rolls not yet adjusted)"
+  "status": "auto",
+  "note": "+1 to hazard rolls for its plasma weapons (attack.ts finishAttack)"
  },
  "Driven from Cover": {
   "act": {

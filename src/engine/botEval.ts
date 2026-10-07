@@ -90,9 +90,30 @@ export function shotValue(s: GameState, u: UnitState, t: UnitState, ev: number, 
   let v = kills * perModel(t);
   if (ev >= left * 0.9) v += unitValue(t) * 0.35; // finishing a unit denies its actions and scores
   if (s.players[u.owner].oathTarget === t.id) v *= 1.15;
-  if (s.objectives.some((o) => onObjective(s, t, o))) v *= 1.25;
+  const onObj = s.objectives.some((o) => onObjective(s, t, o));
+  if (onObj) v *= 1.25;
   if (isBrawler(s, t) && gap < 14) v *= 1.2; // threatens us next turn
+  // secondary cards that pay for destroying this unit: their VP (about 16 points of damage each) times the chance
+  const pKill = Math.min(1, ev / Math.max(1, left)) ** 1.5;
+  if (pKill > 0.05) {
+    for (const id of s.players[u.owner].secActive ?? []) {
+      const vp = killCardVp(id, t, onObj);
+      if (vp) v += vp * 16 * pKill;
+    }
+  }
   return v;
+}
+
+/** VP a secondary card gives for destroying this unit (0: the card does not care about it). */
+function killCardVp(id: string, t: UnitState, onObj: boolean): number {
+  switch (id) {
+    case 'no-prisoners': return 2;
+    case 'overwhelming-force': return onObj ? 3 : 0;
+    case 'a-grievous-blow': return t.startingStrength >= 13 ? 5 : 0;
+    case 'assassination': return alive(t).some((m) => m.isCharacter) ? 5 : 0;
+    case 'bring-it-down': return alive(t).some((m) => m.profile.W >= 10) ? 5 : 0;
+    default: return 0;
+  }
 }
 
 export const riledUp = (s: GameState, u: UnitState) => isRiled(s, u);

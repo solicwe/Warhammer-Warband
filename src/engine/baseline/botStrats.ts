@@ -20,8 +20,8 @@ import { applyDetachmentStratagem, stratagemBlock, stratChoices, stratRule, with
 import { unitVisibleTo } from '../visibility';
 import type { AttackSession, GameState, PlayerId, StratagemData, TimedEffect, UnitState } from '../types';
 
-/** Is this player run by the bot? */
-export const isBot = (s: GameState, p: PlayerId) => (s.bots ?? (s.botPlayer != null ? [s.botPlayer] : [])).includes(p);
+/** Does the bot's logic take this player's decisions (a bot, or a player on auto rules)? */
+export const isBot = (s: GameState, p: PlayerId) => (s.bots ?? (s.botPlayer != null ? [s.botPlayer] : [])).includes(p) || (s.autoRules ?? []).includes(p);
 
 /** Can the bot afford this now and still keep a CP for a re-roll (until the last round)? */
 const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= 5 ? 0 : 1) => s.players[p].cp - cost >= keep;
@@ -79,7 +79,7 @@ export const baselineDiceHook = ((s, stage) => {
     if (gain < cpWorth(s, A.owner) - 2) return;
     spendStratagem(s, A.owner, 'command-reroll', A);
     rerollOne(s, stage, i);
-    log(s, `↻ Command Re-roll: ทอยลูก ${stage === 'hit' ? 'Hit' : 'Wound'} ที่พลาดใหม่ (${p.weapon})`, 'roll', A.owner);
+    log(s, `↻ Command Re-roll: a failed ${stage === 'hit' ? 'Hit' : 'Wound'} roll re-rolled (${p.weapon})`, 'roll', A.owner);
     return;
   }
   // saves: the defender re-rolls its lowest failed save when the damage it stops is worth the CP
@@ -99,7 +99,7 @@ export const baselineDiceHook = ((s, stage) => {
   }))) return;
   spendStratagem(s, T.owner, 'command-reroll', T);
   rerollOne(s, 'save', i);
-  log(s, `↻ Command Re-roll: ทอย Save ที่ไม่ผ่านใหม่ (${T.name})`, 'roll', T.owner);
+  log(s, `↻ Command Re-roll: a failed saving throw re-rolled (${T.name})`, 'roll', T.owner);
 });
 
 // ---------- detachment stratagems, any of them: try the effect, measure, use the best ----------
@@ -325,7 +325,7 @@ export function botExplosives(s: GameState, u: UnitState): boolean {
   spendStratagem(s, p, 'explosives', u);
   const r = rollN(s, 6);
   const n = r.filter((x) => x >= 4).length;
-  log(s, `บอทใช้ Explosives: ${u.name} → ${t.name} [${r.join(' ')}] = ${n} MW`, 'roll', p);
+  log(s, `Bot uses Explosives: ${u.name} → ${t.name} [${r.join(' ')}] = ${n} MW`, 'roll', p);
   if (n) applyMortalWounds(s, t, n, 'Explosives');
   return true;
 }

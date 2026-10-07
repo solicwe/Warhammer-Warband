@@ -642,7 +642,7 @@ function handleReact(s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx): boo
   if (s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'gameover') return false;
   const offers = reactionOffers(s, p, on, ctx);
   if (!offers.length) return false;
-  const bot = (s.bots ?? []).includes(p);
+  const bot = (s.bots ?? []).includes(p) || (s.autoRules ?? []).includes(p);
   const autos = s.players[p].autoStrats ?? [];
   for (const o of offers) {
     const isAuto = !bot && autos.includes(o.st.id);

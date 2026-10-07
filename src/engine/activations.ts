@@ -225,14 +225,31 @@ export function timesUsed(s: GameState, def: ActDef): number {
   return p === period(s, def.spec.limit) ? Number(n) || 1 : 0;
 }
 
+/** Librarius: in a battle round a PSYKER unit uses psychic abilities whose levels add up to at most its psyker level. */
+const psyLevel = (def: ActDef) => Number(/\(psychic level (\d)\)/i.exec(def.name)?.[1] ?? 0);
+function psykerLevel(u: UnitState): number {
+  if (!u.abilities.some((a) => a.name === 'Librarius')) return 99;
+  return Math.max(0, ...u.abilities.map((a) => Number(/\(psyker level (\d)\)/i.exec(a.name)?.[1] ?? 0)));
+}
+const psyUsed = (s: GameState, u: UnitState) => {
+  const [r, n] = (u.used?.psy ?? '').split('|');
+  return Number(r) === s.round ? Number(n) || 0 : 0;
+};
+export function psykerBudgetOk(s: GameState, def: ActDef): boolean {
+  const lv = psyLevel(def);
+  return !lv || psyUsed(s, def.holder) + lv <= psykerLevel(def.holder);
+}
+
 function markUsed(s: GameState, def: ActDef) {
+  const lv = psyLevel(def);
+  if (lv) (def.holder.used ??= {}).psy = `${s.round}|${psyUsed(s, def.holder) + lv}`;
   const bag = usedBag(s, def);
   if (def.spec.battleUses) bag[`${baseKey(def)}#n`] = String((Number(bag[`${baseKey(def)}#n`]) || 0) + 1);
   if (!def.spec.limit) return;
   bag[baseKey(def)] = `${period(s, def.spec.limit)}|${timesUsed(s, def) + 1}`;
 }
 
-export const limitLeft = (s: GameState, def: ActDef) => (!def.spec.limit || timesUsed(s, def) < (def.spec.uses ?? 1))
+export const limitLeft = (s: GameState, def: ActDef) => psykerBudgetOk(s, def) && (!def.spec.limit || timesUsed(s, def) < (def.spec.uses ?? 1))
   && (!def.spec.battleUses || (Number(usedBag(s, def)[`${baseKey(def)}#n`]) || 0) < def.spec.battleUses);
 
 // ---------- timing of buttons ----------
@@ -705,7 +722,7 @@ export function fire(s: GameState, trigger: Trigger, units: UnitState[], ctx: Fi
   for (const u of units) {
     for (const def of actsOfUnit(s, u, trigger === 'onDeath')) {
       if (def.spec.when !== trigger || !def.spec.auto) continue;
-      if (def.spec.botOnly && !(s.bots ?? []).includes(u.owner)) continue;
+      if (def.spec.botOnly && !(s.bots ?? []).includes(u.owner) && !(s.autoRules ?? []).includes(u.owner)) continue;
       if (trigger === 'onDeath') {
         // "when this model is destroyed": only the model that died; otherwise only when the whole unit is gone
         if (def.spec.modelDeath ? !def.bearers.some((b) => b.id === ctx.deadModelId) : alive(u).length > 0) continue;
@@ -785,6 +802,9 @@ export function botUseActs(s: GameState, p: PlayerId, when?: Trigger[], unitId?:
     if (use === 'valuable' && !(engagedEnemies(s, m.def.holder).some((e) => e.pts >= 100) || s.round >= 4)) continue;
     if (use === 'round2' && s.round < 2) continue;
     if (use === 'round3' && s.round < 3) continue;
+    // a once-per-battle shooting boost is kept for a turn when the enemy is close, not spent on long-range potshots
+    if (use === 'always' && (m.def.spec.limit === 'battle' || m.def.spec.battleUses) && ['selectedToShoot', 'shooting'].includes(m.def.spec.when)
+      && s.round < 4 && !boardUnits(s, other(p)).some((e) => unitDistance(m.def.holder, e) <= 12)) continue;
     if (use === 'healthy' && alive(m.def.holder).reduce((a, x) => a + x.wounds, 0) * 2 <= m.def.holder.models.reduce((a, x) => a + x.profile.W, 0)) continue;
     if (m.def.spec.do?.some((a) => a.move || a.surge || a.reserves)) continue; // moves need a plan the bot does not make
     if (!(m.def.spec.botIf ?? []).every((c) => cond(c, { s, A: m.def.holder, holder: m.def.holder, bearers: m.def.bearers }))) continue;
