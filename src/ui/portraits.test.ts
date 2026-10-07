@@ -141,4 +141,17 @@ describe('mixed squads', () => {
     const same = { models: [m('x', base), m('y', base)] };
     expect(loadoutLabels(same as never).size).toBe(0);
   });
+  it('the same model with different kits gets a picture per kit', async () => {
+    const { pictureVariants } = await import('./loadout');
+    const { getModelPortrait, modelVariantKey } = await import('./portraits');
+    const w = (name: string) => ({ name, profiles: [{ name, range: 'Melee', A: '1', skill: 3, S: 4, AP: 0, D: '1', abilities: [] }] });
+    const t = (id: string, name: string, ws: string[], gear: string[] = []) => ({ id, name, source: 'Terminator Assault Squad', weapons: ws.map(w), gear, dead: false });
+    const ms = [t('s', 'Terminator Sergeant', ['Twin Lightning Claws']), t('a', 'Terminator', ['Twin Lightning Claws']), t('b', 'Terminator', ['Thunder Hammer'], ['Storm Shield'])];
+    const v = pictureVariants('Terminator Assault Squad', ms as never);
+    expect(v.map((x) => x.label)).toEqual(['Terminator · Claws', 'Terminator · Hammer + Shield', 'Terminator Sergeant']);
+    setPortrait(modelVariantKey('Terminator Assault Squad', 'Terminator', ['Storm Shield', 'Thunder Hammer']), 'data:image/png;base64,HHHH');
+    expect(getModelPortrait(ms[2] as never)).toBe('data:image/png;base64,HHHH');
+    expect(getModelPortrait(ms[1] as never)).toBeUndefined();
+    setPortrait(modelVariantKey('Terminator Assault Squad', 'Terminator', ['Storm Shield', 'Thunder Hammer']), null);
+  });
 });

@@ -604,6 +604,13 @@ function BoardImpl(props: BoardProps) {
                       </g>
                     );
                   })()}
+                  {labels.has(m.id) && vb.w >= 30 && (
+                    // zoomed out: words don't fit, a letter badge tells the kits apart (C = Claws, H = Hammer…)
+                    <g pointerEvents="none">
+                      <circle cx={p.x + m.r * 0.72} cy={p.y + m.r * 0.72} r={Math.max(0.32, m.r * 0.42)} fill="#fff7d6" stroke="#000" strokeWidth={0.07} />
+                      <text x={p.x + m.r * 0.72} y={p.y + m.r * 0.72 + Math.max(0.32, m.r * 0.42) * 0.42} fontSize={Math.max(0.32, m.r * 0.42) * 1.25} textAnchor="middle" fill="#111" fontWeight={900}>{labels.get(m.id)!.charAt(0).toUpperCase()}</text>
+                    </g>
+                  )}
                   {labels.has(m.id) && vb.w < 30 && (() => {
                     // shown once zoomed in; one item per line ("Hammer" / "Shield"), shrunk to the base's width so
                     // neighbours' labels don't run into each other

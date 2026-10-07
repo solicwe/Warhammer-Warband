@@ -53,8 +53,13 @@ export const getPortrait = (datasheet: string): string | undefined =>
 /** A unit whose models have different names (Wardens of Ultramar, a squad's sergeant): each model name can have its
  *  own picture, stored under "Datasheet::Model name"; a model without one shows the unit's picture. */
 export const modelPortraitKey = (datasheet: string, model: string) => `${datasheet}::${model}`;
-export const getModelPortrait = (m: { source: string; name: string }): string | undefined =>
-  (m.name && m.name !== m.source ? getPortrait(modelPortraitKey(m.source, m.name)) : undefined) ?? getPortrait(m.source);
+/** A model's kit as a key part: one picture per loadout (a Terminator with claws, one with hammer and shield). */
+export const kitOf = (m: { weapons?: { name: string }[]; gear?: string[] }) => [...new Set([...(m.weapons ?? []).map((w) => w.name), ...(m.gear ?? [])])].sort();
+export const modelVariantKey = (datasheet: string, model: string, kit: string[]) => `${datasheet}::${model}::${kit.join('+')}`;
+/** The picture for one model: its loadout's, else its name's, else the unit's. */
+export const getModelPortrait = (m: { source: string; name: string; weapons?: { name: string }[]; gear?: string[] }): string | undefined =>
+  getPortrait(modelVariantKey(m.source, m.name, kitOf(m)))
+  ?? (m.name && m.name !== m.source ? getPortrait(modelPortraitKey(m.source, m.name)) : undefined) ?? getPortrait(m.source);
 /** true when the player added this photo in the app (so it can be removed); server images can't be. */
 export const hasOwnPortrait = (datasheet: string): boolean => datasheet in cache || (cloudMode === 'write' && datasheet in cloud);
 export const ownPortraitCount = (): number => Object.keys(cache).length;

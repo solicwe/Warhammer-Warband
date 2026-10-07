@@ -4,6 +4,7 @@ import type { AbilityData, DatasheetData, ModelProfileData, UnitState, WeaponDat
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
 import { Portrait, tokenKind, type TokenKind } from './Tokens';
 import { modelPortraitKey, usePastePortrait } from './portraits';
+import { pictureVariants, type PictureVariant } from './loadout';
 import { Icon, type IconName } from './Icon';
 import { useState } from 'react';
 import { Em } from './Em';
@@ -105,10 +106,6 @@ export function DatasheetView({ sheet, factionId }: { sheet: DatasheetData; fact
           <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''} · tap the picture or paste to set one</div>
         </div>
       </div>
-      {(() => {
-        const models = [...new Set(sheet.models.map((m) => m.name))].filter((n) => n && n !== sheet.name);
-        return models.length > 1 ? <ModelPictures datasheet={sheet.name} names={models} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} /> : null;
-      })()}
       {groups.map((g) => (
         <div key={g.names.join('|')}>
           {(groups.length > 1 || sheet.models.length > 1) && <div className="small muted">{groups.length > 1 ? g.names.join(' / ') : 'All models'} · base {g.base}</div>}
@@ -191,8 +188,7 @@ export function UnitView({ u }: { u: UnitState }) {
         </div>
       </div>
       {u.sources.map((src) => {
-        const models = [...new Set(u.models.filter((m) => m.source === src).map((m) => m.name))].filter((n) => n && n !== src);
-        return models.length > 1 ? <ModelPictures key={src} datasheet={src} names={models} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} /> : null;
+        return <ModelPictures key={src} variants={pictureVariants(src, u.models)} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} />;
       })}
       <div className="row small">
         <span className="chip">{u.models.filter((m) => !m.dead).length}/{u.startingStrength} models</span>
@@ -221,16 +217,17 @@ export function UnitView({ u }: { u: UnitState }) {
   );
 }
 
-/** One picture per model name of a unit (Wardens of Ultramar, a squad's sergeant): tap one to set it. */
-function ModelPictures({ datasheet, names, kind, owner }: { datasheet: string; names: string[]; kind: TokenKind; owner: 0 | 1 }) {
+/** One picture per model (by name, and by loadout when the same model comes with different kits): tap to set one. */
+export function ModelPictures({ variants, kind, owner }: { variants: PictureVariant[]; kind: TokenKind; owner: 0 | 1 }) {
+  if (!variants.length) return null;
   return (
     <div>
-      <div className="small muted">Model pictures · tap to set one for each model</div>
+      <div className="small muted">Model pictures · tap to set one for each model / loadout</div>
       <div className="model-pics">
-        {names.map((n) => (
-          <div key={n} className="model-pic">
-            <Portrait kind={kind} owner={owner} size={48} datasheet={modelPortraitKey(datasheet, n)} fallback={datasheet} editable />
-            <span>{n}</span>
+        {variants.map((v) => (
+          <div key={v.key} className="model-pic">
+            <Portrait kind={kind} owner={owner} size={48} datasheet={v.key} fallback={v.fallback} editable />
+            <span>{v.label}</span>
           </div>
         ))}
       </div>

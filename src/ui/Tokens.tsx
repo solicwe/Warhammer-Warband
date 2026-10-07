@@ -91,7 +91,7 @@ export function TokenSprites() {
   );
 }
 
-export function Portrait({ kind, owner, character, size = 56, datasheet, editable, fallback }: { kind: TokenKind; owner: 0 | 1; character?: boolean; size?: number; datasheet?: string; editable?: boolean; fallback?: string }) {
+export function Portrait({ kind, owner, character, size = 56, datasheet, editable, fallback }: { kind: TokenKind; owner: 0 | 1; character?: boolean; size?: number; datasheet?: string; editable?: boolean; fallback?: string | string[] }) {
   usePortraitsVersion();
   const input = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -99,7 +99,7 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
   const rim = owner ? 'var(--p1)' : 'var(--p0)';
   const own = datasheet ? getPortrait(datasheet) : undefined;
   // a model without its own picture shows the unit's, faded, until one is added
-  const borrowed = !own && fallback ? getPortrait(fallback) : undefined;
+  const borrowed = !own && fallback ? (Array.isArray(fallback) ? fallback : [fallback]).map((k) => getPortrait(k)).find(Boolean) : undefined;
   const photo = own ?? borrowed;
   const pick = async (f?: File) => {
     if (!f || !datasheet) return;

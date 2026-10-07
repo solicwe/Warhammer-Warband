@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, attachOptions, chapterRules, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, attachOptions, buildUnits, chapterRules, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { Em } from './Em';
 import { dispositionById, RULES } from '../engine/config';
@@ -9,7 +9,8 @@ import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { listDisposition, listDispositionOptions } from '../engine/game';
 import { PRESETS } from './presets';
 import { DET_RULES } from '../engine/detachments';
-import { DatasheetView } from './Sheet';
+import { DatasheetView, ModelPictures } from './Sheet';
+import { pictureVariants } from './loadout';
 import { tokenKind } from './Tokens';
 import { getPortrait, setPortrait, usePortraitsVersion } from './portraits';
 
@@ -623,6 +624,12 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
             </div>
           )}
           {sheet && <WargearEditor sheet={sheet} u={u} onChange={(patch) => setUnit(u.uid, patch)} />}
+          {sheet && faction && (() => {
+            // the pictures this entry's models will use on the board (one per loadout once the wargear differs)
+            let models: ReturnType<typeof buildUnits>[number]['models'] = [];
+            try { models = buildUnits({ ...list, units: [{ ...u, attachTo: undefined }] }, faction, 0).flatMap((x) => x.models); } catch { /* not buildable yet */ }
+            return <ModelPictures variants={pictureVariants(sheet.name, models)} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} />;
+          })()}
           {(() => {
             const sp = splitRuleOf(sheet, list.detachments);
             if (!sp) return null;

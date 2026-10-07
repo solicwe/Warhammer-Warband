@@ -1,6 +1,7 @@
 // Which model is which in a squad with mixed wargear: a short label (the weapon that sets it apart) for every model
 // whose kit differs from what the whole squad carries.
 import type { ModelState, UnitState } from '../engine/types';
+import { kitOf, modelPortraitKey, modelVariantKey } from './portraits';
 
 const FILLER = /^(astartes|master-crafted|archeotech|relic|artificer)\s+/i;
 
@@ -71,4 +72,27 @@ export function loadoutSummary(u: UnitState): string[] {
   const out = new Map<string, number>();
   for (const [, l] of loadouts(u)) out.set(l.full, (out.get(l.full) ?? 0) + 1);
   return [...out].map(([k, n]) => (k.includes(':') ? k : `${n}× ${k}`));
+}
+
+export interface PictureVariant { key: string; fallback: string[]; label: string }
+
+/** The pictures a squad can have: one per model name, split further by loadout when the same model comes with
+ *  different kits (Terminator with claws / with hammer and shield). Empty when one picture covers the squad. */
+export function pictureVariants(source: string, models: ModelState[]): PictureVariant[] {
+  const ms = models.filter((m) => m.source === source);
+  const groups = new Map<string, { name: string; kit: string[]; m: ModelState }>();
+  for (const m of ms) { const kit = kitOf(m); groups.set(`${m.name}|${kit.join('+')}`, { name: m.name, kit, m }); }
+  const all = [...groups.values()];
+  const names = [...new Set(all.map((g) => g.name))];
+  if (all.length < 2) return [];
+  const common = all[0].kit.filter((x) => all.every((g) => g.kit.includes(x)));
+  return all.map((g) => {
+    const split = all.filter((x) => x.name === g.name).length > 1;
+    const nameKey = g.name && g.name !== source ? modelPortraitKey(source, g.name) : source;
+    if (!split) return { key: nameKey, fallback: [source], label: g.name || source };
+    // weapons before wargear: "Hammer + Shield"
+    const own = g.kit.filter((x) => !common.includes(x)).sort((a, b) => Number((g.m.gear ?? []).includes(a)) - Number((g.m.gear ?? []).includes(b)));
+    const tag = own.length ? own.slice(0, 2).map(itemTag).join(' + ') : 'standard kit';
+    return { key: modelVariantKey(source, g.name, g.kit), fallback: [nameKey, source], label: `${names.length > 1 ? g.name : g.name || source} · ${tag}` };
+  }).sort((a, b) => a.label.localeCompare(b.label));
 }
