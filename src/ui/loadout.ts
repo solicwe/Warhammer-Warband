@@ -56,8 +56,11 @@ function loadouts(u: UnitState): Map<string, { tag: string; full: string }> {
       // guns first (not pistols), then melee weapons, then wargear
       const rank = (x: string) => (isGun(m, x) && !isPistol(x) ? 0 : m.weapons.some((w) => w.name === x) ? 1 : 2);
       const sorted = [...own].sort((p, q) => rank(p) - rank(q));
-      const tag = sorted.slice(0, 2).map(itemTag).join('+') + (sorted.length > 2 ? ' +' : '');
-      out.set(m.id, { tag, full: sorted.join(' + ') });
+      // the odd one out of a squad with its own name (a Nob among Boyz, a Sergeant) is best told by that name
+      const usualName = ms[sig.indexOf(usualSig)].name;
+      const tag = !labelUsual && m.name !== usualName && m.name !== m.source ? m.name.split(' ').pop()!
+        : sorted.slice(0, 2).map(itemTag).join('+') + (sorted.length > 2 ? ' +' : '');
+      out.set(m.id, { tag, full: tag === m.name.split(' ').pop() ? `${m.name}: ${sorted.join(' + ')}` : sorted.join(' + ') });
     });
   }
   return out;

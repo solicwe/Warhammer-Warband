@@ -615,10 +615,15 @@ function BoardImpl(props: BoardProps) {
                     // shown once zoomed in; one item per line ("Hammer" / "Shield"), shrunk to the base's width so
                     // neighbours' labels don't run into each other
                     const raw = labels.get(m.id)!;
-                    const lines = raw.replace(/ \+$/, '').split('+').map((x) => shortItem(x, 10));
+                    // whole words, never cut: a long name breaks at its space / hyphen ("Kombi-" / "skorcha")
+                    const lines = raw.replace(/ \+$/, '').split('+').flatMap((x) => {
+                      const w = shortItem(x, 24);
+                      const cut = w.length > 8 ? Math.max(w.lastIndexOf(' ', Math.ceil(w.length / 2) + 2), w.indexOf('-') + 1) : 0;
+                      return cut > 1 && cut < w.length - 1 ? [w.slice(0, cut).trim(), w.slice(cut).trim()] : [w];
+                    });
                     if (raw.endsWith(' +')) lines[lines.length - 1] += '+';
                     const longest = Math.max(...lines.map((x) => x.length));
-                    const fsz = Math.min(Math.max(0.36, Math.min(0.6, vb.w * 0.022)), (m.r * 2 + 0.25) / (0.6 * longest));
+                    const fsz = Math.max(0.2, Math.min(Math.max(0.36, Math.min(0.6, vb.w * 0.022)), (m.r * 2 + 0.35) / (0.58 * longest)));
                     return (
                       <text x={p.x} y={p.y + m.r + fsz * 1.0} fontSize={fsz} textAnchor="middle" fill="#fff7d6" stroke="#000" strokeWidth={fsz * 0.26} paintOrder="stroke" fontWeight={800} pointerEvents="none">
                         {lines.map((x, k) => <tspan key={k} x={p.x} dy={k ? fsz * 1.05 : 0}>{x}</tspan>)}
