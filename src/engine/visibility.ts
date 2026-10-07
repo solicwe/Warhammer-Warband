@@ -11,6 +11,8 @@ interface Blockers { grid: WallGrid; areas: { poly: Pt[] }[]; own: { t: TerrainP
 export interface VisibilityHooks {
   loneOperative?: (s: GameState, u: UnitState) => boolean;
   detection?: (s: GameState, u: UnitState) => number;
+  /** extra detection range the observing model brings (Servants of Change: MUTANT units shooting) */
+  spotting?: (s: GameState, observer: ModelState, u: UnitState) => number;
   cannotBeHidden?: (s: GameState, u: UnitState) => boolean;
 }
 let hooks: VisibilityHooks = {};
@@ -243,7 +245,7 @@ export function isHidden(s: GameState, u: UnitState, m: ModelState): boolean {
 }
 
 export function detectionRange(s: GameState, observer: ModelState, u: UnitState, m: ModelState): number {
-  let range = RULES.hidden.detectionRange + (hooks.detection?.(s, u) ?? 0);
+  let range = RULES.hidden.detectionRange + (hooks.detection?.(s, u) ?? 0) + (hooks.spotting?.(s, observer, u) ?? 0);
   if (!fullyVisible(s, observer, m, true)) range -= RULES.hidden.goneToGroundReduction; // gone to ground
   return range;
 }

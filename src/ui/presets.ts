@@ -50,4 +50,20 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'c5', datasheet: 'Prosecutors', models: 5, pts: 50 },
     ],
   },
+  TS: {
+    name: 'Thousand Sons (Quick)',
+    factionId: 'TS',
+    battleSize: 'incursion',
+    detachments: ['Hexwarp Thrallband'],
+    units: [
+      { uid: 'd1', datasheet: 'Rubric Marines', models: 10, pts: 190 },
+      { uid: 'd2', datasheet: 'Exalted Sorcerer', models: 1, pts: 95, attachTo: 'd1', warlord: true, enhancement: 'Arcane Might', enhancementPts: 20 },
+      { uid: 'd3', datasheet: 'Rubric Marines', models: 5, pts: 100 },
+      { uid: 'd4', datasheet: 'Sorcerer', models: 1, pts: 95, attachTo: 'd3' },
+      { uid: 'd5', datasheet: 'Scarab Occult Terminators', models: 5, pts: 180 },
+      { uid: 'd6', datasheet: 'Tzaangors', models: 10, pts: 75 },
+      { uid: 'd7', datasheet: 'Tzaangor Enlightened', models: 3, pts: 50 },
+      { uid: 'd8', datasheet: 'Daemon Prince of Tzeentch', models: 1, pts: 170 },
+    ],
+  },
 };

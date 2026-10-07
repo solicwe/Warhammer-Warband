@@ -159,6 +159,7 @@ export interface ModelState {
   profile: ModelProfileData;
   source: string; // datasheet name the model comes from
   isCharacter: boolean;
+  ritualBonus?: number; // Spirit Snare: + to its Psychic test results (max 2)
   isBodyguard: boolean;
   keywords: string[];
   weapons: WeaponData[]; // a weapon listed twice is carried twice (e.g. 2 godhammer lascannons)
@@ -205,6 +206,12 @@ export interface UnitState {
   startingStrength: number;
   abilities: AbilityData[];
   core: CoreAbilities;
+  /** model profiles the unit can gain during the battle (Split: Blue / Brimstone Horrors) */
+  templates?: ModelState[];
+  /** enemy units this unit moved over in its last Normal move (Flame-wreathed, Slashing Dive) */
+  movedOver?: { key: string; ids: string[] };
+  /** hit by a Psychic Attack of a THOUSAND SONS PSYKER this phase (Ensorcelled Destruction / Annihilation) */
+  psyHit?: { key: string; by: PlayerId };
   pts: number;
   status: 'pending' | 'reserves' | 'board' | 'destroyed' | 'embarked';
   embarkedIn: string | null;
@@ -289,6 +296,7 @@ export interface ObjectiveState {
   controller: PlayerId | null;
   secured?: PlayerId | null; // stays under this player's control until the opponent controls it (Objective Secured …)
   sabotaged?: PlayerId | null; // A Deadly Prize: enemy units ending a move on it may suffer mortal wounds while this player holds it
+  mutated?: PlayerId | null; // Mutate Landscape: enemy units ending a move on it roll a D6, 4+ = D3 mortal wounds
   snared?: PlayerId | null; // Mortis Snares: the next enemy unit ending a move in range rolls a D6, 2+ = D6 mortal wounds
 }
 
@@ -329,6 +337,10 @@ export interface PlayerState {
   battleSize?: string; // incursion | strike | onslaught (some rules scale with it)
   saga?: { kind: 'hunter' | 'beastslayer' | 'bold'; tally: number; target: number; done: boolean; boasts: string[] }; // Space Wolves Sagas
   abilityUsed?: Record<string, string>; // per-army ability limits: name -> last use key
+  /** Thousand Sons Cabal of Sorcerers: Rituals attempted this turn (ritual ids) and by which models (model id -> count) */
+  rituals?: { turn: number; tried: string[]; by: Record<string, number>; done?: boolean };
+  /** Hexwarp Thrallband: the areas in the Flow of Magic this phase */
+  flow?: { key: string; nml: boolean; opp: boolean };
   /** Chapter Approved: chosen Force Disposition and the primary mission it gives against the opponent's */
   disposition: string;
   primaryId: string;
@@ -576,4 +588,8 @@ export interface GameState {
   /** models made CHARACTERs for a while (Instant of Grace, Birth of a Saga): undone at their player's next Command phase */
   tempCharacters?: { unitId: string; modelId: string; by: PlayerId }[];
   revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number }[];
+  /** mortal wounds a unit suffers at the end of the current phase (Warpmeld Sacrifice) */
+  phaseMortals?: { unitId: string; expr: string; label: string }[];
+  /** Split (Horrors): destroyed Horrors that roll to split once the attacking unit has finished its attacks */
+  splits?: { unitId: string; from: 'pink' | 'blue'; x: number; y: number }[];
 }

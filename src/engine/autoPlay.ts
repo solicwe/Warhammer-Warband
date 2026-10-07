@@ -7,6 +7,7 @@ import { botAdvanceChargeStratagem, botAfterShootStratagems, botChargeBonusStrat
 import { botOffensiveStratagem } from './botStrats';
 import { isBrawler, p2d6 } from './botEval';
 import { botUseActs, unitSelected } from './activations';
+import { botRituals, ritualsPending } from './botRituals';
 import { canDetReroll, chargeTargetOptions, closeWindow, declareCharge, detReroll, fightCandidates, rerollCharge } from './game';
 import { boardUnits, canUseStratagem, other, unitById, unitDistance } from './state';
 import type { GameState, PlayerId, UnitState } from './types';
@@ -30,6 +31,7 @@ export function autoDue(s: GameState, p: PlayerId): boolean {
   if (s.phase === 'deploy') return P.secMode === 'fixed' && P.secActive.length < 2 && !(s.botTried ?? []).includes(`fixed|${p}`);
   if (s.phase === 'command') return s.active === p;
   if (s.phase === 'movement') return s.active === p && !(s.botTried ?? []).includes(`${s.turn}|auto-move|${p}`);
+  if (s.phase === 'shooting') return ritualsPending(s, p);
   if (s.phase === 'fight' && s.fight) {
     if (s.fight.step !== 'fight') return s.fight.stepPlayer === p;
     return fightCandidates(s).player === p;
@@ -52,6 +54,7 @@ export function autoStep(s: GameState, p: PlayerId): boolean {
     botDoctrineActs(s, p);
     return true;
   }
+  if (s.phase === 'shooting') { botRituals(s, p); return true; }
   if (s.phase === 'fight') return botFightStep(s, p);
   return false;
 }

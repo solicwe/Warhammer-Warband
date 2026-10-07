@@ -586,12 +586,21 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       if (!enh || !m) continue;
       const w = /This model has \+(\d+) W\b/i.exec(enh.text);
       if (w) { m.profile = { ...m.profile, W: m.profile.W + +w[1] }; m.wounds = m.profile.W; }
+      // "… and a Wounds characteristic of 5" (Flowing Flesh)
+      const wSet = /a Wounds characteristic of (\d+)/i.exec(enh.text);
+      if (wSet) { m.profile = { ...m.profile, W: +wSet[1] }; m.wounds = m.profile.W; }
       // "Name [KEYWORD, KEYWORD]: Range 12" | A 3 | BS 2+ …" — the bracketed words are the weapon's abilities
       const wp = /following weapon:\s*([^:[]+?)\s*(?:\[([^\]]+)\])?\s*:\s*(?:Range\s*)?(Melee|\d+")\s*\|\s*A\s*(\S+)\s*\|\s*(?:WS|BS)\s*(\d)\+\s*\|\s*S\s*(\d+)\s*\|\s*AP\s*(-?\d+)\s*\|\s*D\s*([^.\s|]+)/i.exec(enh.text);
       if (wp) {
         const abilities = (wp[2] ?? '').split(',').map((k) => k.trim().toLowerCase()).filter(Boolean);
         m.weapons = [...m.weapons, { name: wp[1].trim(), profiles: [{ name: wp[1].trim(), range: wp[3] === 'Melee' ? 'Melee' : parseInt(wp[3], 10), A: wp[4], skill: +wp[5], S: +wp[6], AP: +wp[7], D: wp[8], abilities }] }];
       }
+    }
+    // Split (Horrors): the models a destroyed Horror can turn into
+    if (sheet.abilities.some((a) => a.name === 'Split')) {
+      const u0 = units[units.length - 1];
+      const base = u0.models[0];
+      u0.templates = sheet.models.map((pr, i) => ({ ...structuredClone(base), id: `${id}-t${i}`, name: pr.name, profile: pr, wounds: pr.W, dead: true }));
     }
     const sp = splitRuleOf(sheet, list.detachments);
     if (sp && (e.split || sp.must)) {
@@ -782,10 +791,27 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
   for (const u of list.units) {
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
     // Supreme Commander (Trajann Valoris): must be the Warlord
-    if (sheet?.abilities.some((a) => a.name === 'Supreme Commander') && !u.warlord) errs.push(`${u.datasheet} must be your Warlord (Supreme Commander)`);
+    if (sheet?.abilities.some((a) => a.name.toUpperCase() === 'SUPREME COMMANDER') && !u.warlord) errs.push(`${u.datasheet} must be your Warlord (Supreme Commander)`);
     // ANATHEMA PSYKANA characters can't be the Warlord (Null Maiden Vigil allows it)
     if (u.warlord && sheet?.factionKeywords.includes('ANATHEMA PSYKANA') && !list.detachments.includes('Null Maiden Vigil')) errs.push(`${u.datasheet} (ANATHEMA PSYKANA) cannot be your Warlord`);
   }
+  // allied units (Scintillating Legions in a Thousand Sons army): only with a detachment that allows them, up to a points cap, never the Warlord
+  const allyRule = faction.detachments.filter((d) => list.detachments.includes(d.name)).flatMap((d) => d.rules).find((r) => /You can include (.+?) units in your army, even though/.test(r.text));
+  const allyKws = [...new Set(faction.detachments.flatMap((d) => d.rules).map((r) => /You can include (.+?) units in your army, even though/.exec(r.text)?.[1]?.toUpperCase()).filter((k): k is string => !!k))];
+  for (const k of allyKws) {
+    const allies = list.units.filter((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.factionKeywords.includes(k));
+    if (!allies.length) continue;
+    const allowed = !!allyRule && allyRule.text.toUpperCase().includes(k);
+    if (!allowed) { errs.push(`${k} units need a Detachment that allows them (${faction.detachments.filter((d) => d.rules.some((r) => r.text.toUpperCase().includes(k) && /even though/.test(r.text))).map((d) => d.name).join(', ') || '—'})`); continue; }
+    const caps = [...allyRule!.text.matchAll(/(Incursion|Strike Force|Onslaught): Up to (\d+) pts/g)].map((m) => ({ size: m[1], pts: +m[2] }));
+    const cap = caps.length ? caps[size.points <= 1000 ? 0 : size.points <= 2000 ? Math.min(1, caps.length - 1) : caps.length - 1].pts : Infinity;
+    const allyPts = allies.reduce((a, u) => a + unitPoints(u), 0);
+    if (allyPts > cap) errs.push(`${k} units: ${allyPts} pts — at most ${cap} pts at this battle size`);
+    if (allies.some((u) => u.warlord) && new RegExp(`No ${k} models from your army can be your WARLORD`, 'i').test(allyRule!.text)) errs.push(`${k} models cannot be your Warlord`);
+  }
+  // "This detachment has the MUTANT tag and cannot be taken with another MUTANT detachment"
+  const tags = faction.detachments.filter((d) => list.detachments.includes(d.name)).flatMap((d) => d.rules.map((r) => /has the (\w+) tag/.exec(r.text)?.[1]).filter(Boolean).map((tag) => ({ tag: tag!, d: d.name })));
+  for (const tg of new Set(tags.map((x) => x.tag))) if (tags.filter((x) => x.tag === tg).length > 1) errs.push(`Only one ${tg} Detachment: ${tags.filter((x) => x.tag === tg).map((x) => x.d).join(', ')}`);
   const enh = list.units.filter((u) => u.enhancement);
   const allEnh = faction.detachments.flatMap((d) => d.enhancements);
   const isUpgrade = (n: string) => !!allEnh.find((e) => e.name === n)?.upgrade;

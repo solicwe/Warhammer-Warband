@@ -9,7 +9,7 @@ import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dis
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
-  heroFx,
+  heroFx, phaseKey,
 } from './state';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
@@ -17,6 +17,7 @@ import { isMelee } from './weapons';
 import { canCrossDense, isMV, pathBlocked, pathLength, wallClearance } from './pathing';
 import { detOnCommandStart } from './detachments';
 import { addTimed, applyStaticEffects, canDo, effectsFor, expireTimed, isRiled, modelDefence, modelOc, rollMods, unitFlags } from './effects';
+import './rituals';
 import { fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setZoneCheck } from './activations';
 
 const W = RULES.battlefield.width;
@@ -570,7 +571,7 @@ function nextDeployer(s: GameState) {
 }
 
 // the army's own units (Space Marines, Adeptus Custodes) — not allies
-const isAstartes = (u: UnitState) => ['ADEPTUS ASTARTES', 'ADEPTUS CUSTODES'].some((k) => u.factionKeywords.includes(k) || hasKw(u, k));
+const isAstartes = (u: UnitState) => ['ADEPTUS ASTARTES', 'ADEPTUS CUSTODES', 'THOUSAND SONS'].some((k) => u.factionKeywords.includes(k) || hasKw(u, k));
 
 /** Abilities that let a player redeploy units once both armies are deployed: how many, and of which kind. */
 const REDEPLOY: { name: string; n: number; infantryOnly: boolean }[] = [
@@ -583,6 +584,8 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean }[] = [
   { name: "Hunter's Guile", n: 3, infantryOnly: false },
   { name: 'Chariots of the Storm', n: 3, infantryOnly: false },
   { name: "Castellan's Mark", n: 3, infantryOnly: false }, // Adeptus Custodes
+  { name: 'Scryer of Fates (Psychic)', n: 3, infantryOnly: false }, // Thousand Sons: Ahriman
+  { name: 'Duplicitous Malediction', n: 3, infantryOnly: false },
 ];
 
 function redeployFor(s: GameState, p: PlayerId) {
@@ -700,6 +703,7 @@ function startCommand(s: GameState) {
   for (const p of [0, 1] as PlayerId[]) s.players[p].cp += RULES.cpPerCommandPhase;
   log(s, `+${RULES.cpPerCommandPhase}CP to both players (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
   fireFor(s, 'commandStart', s.active);
+  fireFor(s, 'eachCommandStart', 'both');
   drawUpTo(s, s.active);
   emitReact(s, other(s.active), 'enemyCommandStart', {});
   // Terrifying Proficiency: enemy units near the marked unit must test too (−1 when Below Half-strength)
@@ -782,6 +786,9 @@ export function endPhase(s: GameState) {
   } else if (s.phase === 'movement') {
     for (const u of boardUnits(s, s.active)) if (!u.move) { u.move = 'stationary'; u.lastStationaryTurn = s.turn; }
     s.phase = 'shooting';
+    // "at the start of your (opponent's) Shooting phase" (Marked by Fate, Treason of Tzeentch …)
+    fireFor(s, 'shootingStart', s.active);
+    fireFor(s, 'oppShootingStart', other(s.active));
     openWindow(s, 'endOfMovement');
     if (!s.window) openWindow(s, 'startOfShooting');
   } else if (s.phase === 'shooting') {
@@ -905,11 +912,16 @@ export function detReroll(s: GameState, u: UnitState, what: 'advance' | 'charge'
 
 /** Blackstar Cluster Launcher: after a Normal move, one enemy unit it flew over takes 6D6, a mortal wound per 5+
  *  (always worth it, so it happens by itself, on the enemy unit worth the most). */
+/** Enemy units the unit's models passed over during this move. */
+function movedOverUnits(s: GameState, u: UnitState, paths: Map<string, Pt[]>): UnitState[] {
+  const segs = alive(u).flatMap((m) => { const p = paths.get(m.id) ?? []; return p.slice(1).map((q, i) => ({ a: p[i], b: q, r: m.r })); });
+  if (!segs.length) return [];
+  return s.units.filter((e) => e.owner !== u.owner && onBoard(e) && alive(e).some((n) => segs.some((g) => pointSegDist(n, g) <= n.r + g.r)));
+}
+
 function blackstarLaunch(s: GameState, u: UnitState, paths: Map<string, Pt[]>) {
   if (!u.abilities.some((a) => a.name === 'Blackstar Cluster Launcher')) return;
-  const segs = alive(u).flatMap((m) => { const p = paths.get(m.id) ?? []; return p.slice(1).map((q, i) => ({ a: p[i], b: q, r: m.r })); });
-  if (!segs.length) return;
-  const over = s.units.filter((e) => e.owner !== u.owner && onBoard(e) && alive(e).some((n) => segs.some((g) => pointSegDist(n, g) <= n.r + g.r)));
+  const over = movedOverUnits(s, u, paths);
   const t = over.sort((a, b) => b.pts * alive(b).length / Math.max(1, b.startingStrength) - a.pts * alive(a).length / Math.max(1, a.startingStrength))[0];
   if (!t) return;
   const r = rollN(s, 6);
@@ -948,7 +960,12 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
   const moved = alive(u).filter((m) => (paths.get(m.id)?.length ?? 0) > 1 && pathLength(paths.get(m.id)!) > 0.01);
   if (moved.length) pushFx(s, { kind: 'move', unitId: u.id, owner: u.owner, moveKind: kind, paths: moved.map((m) => [m.id, paths.get(m.id)!.map((q) => ({ x: q.x, y: q.y }))]) });
   const label: Record<string, string> = { scout: 'Scout move', normal: 'Normal move', advance: 'Advance', fallback: 'Fall back', charge: 'Charge move', pileIn: 'Pile-in', consolidate: 'Consolidate', ingress: 'Ingress' };
-  if (kind === 'normal') blackstarLaunch(s, u, paths);
+  if (kind === 'normal') {
+    blackstarLaunch(s, u, paths);
+    // "each time this model ends a Normal move, select one enemy unit it moved over" (Flame-wreathed, Slashing Dive)
+    u.movedOver = { key: phaseKey(s), ids: movedOverUnits(s, u, paths).map((e) => e.id) };
+    if (u.movedOver.ids.length) fire(s, 'endOfNormalMove', [u]);
+  }
   onMoveEnd(s, u, kind);
   if (label[kind]) log(s, `${u.name}: ${label[kind]}${maxMoved ? ` (${maxMoved.toFixed(1)}")` : ''}`, 'info', u.owner);
   // Shokk-boosta: a hazard roll for each model after the Advance
@@ -979,6 +996,13 @@ function sabotageCheck(s: GameState, u: UnitState) {
       const mw = r >= 2 ? rollExpr(s, 'D6').total : 0;
       log(s, `Mortis Snares: ${u.name} moved onto the snared objective — rolled ${r}${mw ? ` → ${mw} mortal wounds` : ', no effect'}`, 'roll', by);
       if (mw) applyMortalWounds(s, u, mw, 'Mortis Snares');
+      if (!onBoard(u)) return;
+    }
+    if (o.mutated !== undefined && o.mutated !== null && o.mutated !== u.owner && o.controller === o.mutated && alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) {
+      const r = d6(s);
+      const mw = r >= 4 ? rollExpr(s, 'D3').total : 0;
+      log(s, `Mutate Landscape: ${u.name} ended a move on the mutated objective — rolled ${r}${mw ? ` → ${mw} mortal wounds` : ''}`, 'roll', o.mutated);
+      if (mw) applyMortalWounds(s, u, mw, 'Mutate Landscape');
       if (!onBoard(u)) return;
     }
     if (o.sabotaged === undefined || o.sabotaged === null || o.sabotaged === u.owner || o.controller !== o.sabotaged) continue;

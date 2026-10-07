@@ -79,6 +79,13 @@ export function Emblem({ factionId, color, sub }: { factionId: string; color?: s
           <path d="M32 12 L48 18 L46 38 Q44 48 32 54 Q20 48 18 38 L16 18 Z" fill={color ?? '#1f4a8f'} stroke="#d9b44a" strokeWidth="2.5" />
           <path d="M32 20 L40 34 L35 34 L35 46 L29 46 L29 34 L24 34 Z" fill="#d9b44a" />
         </g>
+      ) : factionId === 'TS' ? (
+        <g>
+          <circle cx="32" cy="32" r="20" fill="#1d6f86" stroke="#d9b44a" strokeWidth="2.5" />
+          <path d="M14 34 Q32 18 50 34 Q32 46 14 34 Z" fill="#0e3b48" stroke="#d9b44a" strokeWidth="2" />
+          <circle cx="32" cy="33" r="6" fill="#d9b44a" /><circle cx="32" cy="33" r="2.5" fill="#0e3b48" />
+          <path d="M32 12 V18 M22 15 L25 20 M42 15 L39 20" stroke="#d9b44a" strokeWidth="2.5" strokeLinecap="round" />
+        </g>
       ) : (
         <g fill="none" stroke="#b0b0b0" strokeWidth="3"><circle cx="32" cy="32" r="12" /><path d="M32 12 V20 M32 44 V52 M12 32 H20 M44 32 H52" /></g>
       )}

@@ -2242,6 +2242,361 @@
    "auto": "full",
    "armyRule": true,
    "note": "Hunter profiles only target matching units (attack.ts)"
+  },
+  "Hexwarp Thrallband": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "THOUSAND SONS"
+     ],
+     "if": [
+      "psychicWeapon",
+      "!inFlow"
+     ],
+     "reroll": "wounds1"
+    },
+    {
+     "units": [
+      "THOUSAND SONS"
+     ],
+     "if": [
+      "psychicWeapon",
+      "inFlow"
+     ],
+     "wound": 1
+    }
+   ],
+   "note": "Flow of Magic: your deployment zone; No Man's Land / the enemy deployment zone while you control half of the objectives there (flow.ts)"
+  },
+  "Grand Coven": {
+   "auto": "full",
+   "choice": {
+    "name": "Kindred Sorcery",
+    "when": "command",
+    "uses": "eachOnce",
+    "options": [
+     {
+      "id": "imbued",
+      "name": "Imbued Manifestation",
+      "text": "Psychic ranged weapons +6\" Range",
+      "effects": [
+       {
+        "units": [
+         "THOUSAND SONS"
+        ],
+        "attack": "ranged",
+        "if": [
+         "psychicWeapon"
+        ],
+        "weaponRange": 6
+       }
+      ]
+     },
+     {
+      "id": "maelstrom",
+      "name": "Psychic Maelstrom",
+      "text": "Psychic weapons +1 to Wound",
+      "effects": [
+       {
+        "units": [
+         "THOUSAND SONS"
+        ],
+        "if": [
+         "psychicWeapon"
+        ],
+        "wound": 1
+       }
+      ]
+     },
+     {
+      "id": "wrath",
+      "name": "Wrath of the Immaterium",
+      "text": "Psychic weapons have [DEVASTATING WOUNDS]",
+      "effects": [
+       {
+        "units": [
+         "THOUSAND SONS"
+        ],
+        "if": [
+         "psychicWeapon"
+        ],
+        "abilities": [
+         "devastating wounds"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "Changehost of Deceit": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "SCINTILLATING LEGIONS"
+     ],
+     "name": "Daemonic Illusions (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+         "THOUSAND SONS",
+         "PSYKER"
+        ],
+        "defend": {
+         "inv": 4,
+         "vs": "ranged"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "units": [
+      "THOUSAND SONS"
+     ],
+     "name": "Mortal Sorcery (Aura)",
+     "rule": {
+      "status": "auto",
+      "note": "Scintillating Legions PSYKER units within 6\" can attempt Rituals (rituals.ts)"
+     }
+    }
+   ],
+   "note": "Scintillating Legions points limit and no Scintillating Legions Warlord: checked in the army builder"
+  },
+  "Warpmeld Pact": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "TZAANGORS"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    },
+    {
+     "units": [
+      "TZAANGORS"
+     ],
+     "if": [
+      "notBattleShocked"
+     ],
+     "oc": 1
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "MUTANT",
+      "INFANTRY|MOUNTED"
+     ],
+     "name": "Warpmeld Sacrifice",
+     "rule": {
+      "act": [
+       {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Warpmeld Sacrifice: +1 to Wound this phase, D3 mortal wounds at the end of the phase",
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "wound": 1
+           }
+          ],
+          "phaseEndMortals": "D3"
+         }
+        ]
+       },
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "botIf": [
+         "engaged",
+         "minModels:8"
+        ],
+        "label": "Warpmeld Sacrifice: +1 to Wound this phase, D3 mortal wounds at the end of the phase",
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "wound": 1
+           }
+          ],
+          "phaseEndMortals": "D3"
+         }
+        ]
+       },
+       {
+        "when": "attacked",
+        "auto": true,
+        "botOnly": true,
+        "limit": "phase",
+        "if": [
+         "dangerousAttack"
+        ],
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "defend": {
+             "wound": -1
+            }
+           }
+          ],
+          "phaseEndMortals": "D3"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Rubricae Phalanx": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "RUBRICAE"
+     ],
+     "defend": {
+      "saveBonusD1": 1
+     }
+    }
+   ]
+  },
+  "Warpforged Cabal": {
+   "auto": "full",
+   "freeDie": [
+    {
+     "kind": "reroll",
+     "stage": "hit",
+     "limit": "phase",
+     "units": [
+      "THOUSAND SONS",
+      "VEHICLE"
+     ],
+     "if": [
+      "near:6:THOUSAND SONS+PSYKER"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "wound",
+     "limit": "phase",
+     "units": [
+      "THOUSAND SONS",
+      "VEHICLE"
+     ],
+     "if": [
+      "near:6:THOUSAND SONS+PSYKER"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "damage",
+     "limit": "phase",
+     "units": [
+      "THOUSAND SONS",
+      "VEHICLE"
+     ],
+     "if": [
+      "near:6:THOUSAND SONS+PSYKER"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "any",
+     "limit": "phase",
+     "units": [
+      "THOUSAND SONS",
+      "VEHICLE"
+     ],
+     "if": [
+      "!near:6:THOUSAND SONS+PSYKER"
+     ]
+    }
+   ],
+   "effects": [
+    {
+     "units": [
+      "THOUSAND SONS",
+      "VEHICLE"
+     ],
+     "if": [
+      "near:6:THOUSAND SONS+PSYKER"
+     ],
+     "deadlyDemiseOn": 5
+    }
+   ]
+  },
+  "Ritual of Regeneration": {
+   "auto": "full",
+   "note": "Sorcerous Invigoration: a unit that manifests a Ritual heals D3 (rituals.ts)"
+  },
+  "Sekhetar Cohort": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "SEKHETAR ROBOTS"
+     ],
+     "abilities": [
+      "psychic"
+     ]
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "THOUSAND SONS",
+      "PSYKER"
+     ],
+     "name": "Infusion (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "scope": "aura",
+        "range": 12,
+        "units": [
+         "SEKHETAR ROBOTS"
+        ],
+        "attack": "melee",
+        "hit": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Servants of Change": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "TZAANGORS"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    },
+    {
+     "units": [
+      "MUTANT"
+     ],
+     "spotting": 6
+    }
+   ]
   }
  }
 }

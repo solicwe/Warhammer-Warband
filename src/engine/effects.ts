@@ -7,6 +7,7 @@ import abilityData from '../../data/ability-rules.json';
 import acAbilities from '../../data/abilities/AC.json';
 import orkAbilities from '../../data/abilities/ORK.json';
 import smAbilities from '../../data/abilities/SM.json';
+import tsAbilities from '../../data/abilities/TS.json';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { RULES } from './config';
@@ -18,6 +19,7 @@ import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, U
 import { abilityLabel, condApplies, parseAbility } from './weapons';
 import { isHidden, setVisibilityHooks } from './visibility';
 import { setThroughHook } from './pathing';
+import { inFlow } from './flow';
 
 export type Eligibility = 'shootAfterAdvance' | 'shootAfterFallBack' | 'chargeAfterAdvance' | 'chargeAfterFallBack' | 'actionWhileEngaged' | 'actionWhileShocked' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction';
 export type Reroll = 'hits1' | 'hits' | 'wounds1' | 'wounds12' | 'wounds' | 'damage' | 'damageOne';
@@ -42,6 +44,7 @@ export interface Defend {
   save?: number; // +X to save rolls (better armour save)
   minHit?: number; // attacks that target this unit fail on an unmodified hit roll below this (Speediest Freeks: 4)
   negateOncePerPhase?: boolean; // once per phase: a failed save's damage becomes 0
+  notPsychic?: boolean; // the Damage change does not apply to Psychic Attacks (Impossible Form)
   // legacy names used by the first version of detachment-rules.json
   woundMinusIfStronger?: boolean;
   rangedOnly?: boolean;
@@ -59,6 +62,7 @@ export interface Incoming {
   noCover?: boolean;
   fromTransport?: string; // only models that disembarked from this transport this turn
   disembarked?: boolean; // only units that disembarked (from any transport) this turn
+  psychic?: boolean; // only Psychic Attacks
 }
 
 export interface Effect {
@@ -154,6 +158,10 @@ export interface Effect {
   looseDisembark?: boolean; // disembarking models only need to be within the set-up distance, not wholly (Aggressive Disembarkation)
   stratRepeat?: { ids: string[]; limit: Limit }; // this stratagem can target this unit even if it was used this phase (Countercharge)
   freeDie?: FreeDieSpec[]; // timed: free re-rolls of one die (Prime Target: one hit, one wound and one damage roll)
+  weaponRange?: number; // +X" Range for the weapons this effect covers (its weapon / if filters: e.g. Psychic weapons only)
+  deadlyDemiseOn?: number; // its Deadly Demise inflicts mortal wounds on X+ instead of only a 6 (Warpfire Infusion)
+  spotting?: number; // in your Shooting phase enemy units have +X" detection range against this unit (All-Seeing Mutant Hordes)
+  rerollRitual?: boolean; // reserved
 }
 
 export type Limit = 'battle' | 'round' | 'turn' | 'phase';
@@ -233,6 +241,7 @@ const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   SM: smAbilities as unknown as Record<string, AbilityRule>,
   AC: acAbilities as unknown as Record<string, AbilityRule>,
   ORK: orkAbilities as unknown as Record<string, AbilityRule>,
+  TS: tsAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
 export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
@@ -554,7 +563,17 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('friendMarked:')) return s.units.some((f) => f.owner === A.owner && (f.timed ?? []).some((t) => t.mark === c.slice(13)));
   if (c.startsWith('targetKwAll:')) return !!T && c.slice(12).split('|').some((k) => alive(T).every((n) => n.keywords.includes(k)));
   if (c.startsWith('detachment:')) return (s.players[A.owner].detachments ?? []).some((d) => d.name === c.slice(11));
+  if (c.startsWith('targetNearFriendly:')) {
+    // "targetNearFriendly:9:THOUSAND SONS+PSYKER": the target is within X" of a unit of A's army with all those keywords
+    const [, rs, kws = ''] = c.split(':');
+    const req = kws ? kws.split('+') : [];
+    return !!T && boardUnits(s, A.owner).some((f) => req.every((k) => f.keywords.includes(k) || f.factionKeywords.includes(k)) && unitDistance(f, T) <= Number(rs) + 1e-6);
+  }
+  if (c.startsWith('meleeWeapons:')) return !!x.m && x.m.weapons.filter((w) => w.profiles[0].range === 'Melee').length >= Number(c.slice(13));
   switch (c) {
+    case 'inFlow': return inFlow(s, x.holder ?? A);
+    case 'targetPsyHit': return !!T && T.psyHit?.key === `${s.turn}|${s.phase}` && T.psyHit.by === A.owner;
+    case 'targetOnUncontrolledObjective': return !!T && s.objectives.some((o) => o.controller !== A.owner && unitInRange(s, T, o));
     case 'readied': return !!A.readied;
     case 'usedBattleAbility': return Object.values(A.used ?? {}).some((v) => v.startsWith('battle|'));
     case 'targetTougher': return !!T && Math.max(...alive(T).map((m) => m.profile.T)) > Math.max(...alive(x.holder ?? A).map((m) => m.profile.T));
@@ -713,6 +732,13 @@ export function incomingFor(s: GameState, A: UnitState, m: ModelState, T: UnitSt
   return (T.timed ?? []).map((t) => t.e.incoming).filter((i): i is Incoming => !!i && i.by === A.owner && (!i.attack || i.attack === kind) && unitMatches(A, i.units)
     && (!i.fromTransport || (A.disembarkedTurn === s.turn && A.disembarkedFrom === i.fromTransport))
     && (!i.disembarked || A.disembarkedTurn === s.turn));
+}
+
+/** Extra Range for one weapon from effects that cover only some weapons (Imbued Manifestation: Psychic weapons +6"). */
+export function weaponRangeFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, w: WeaponData, p: WeaponProfileData): number {
+  const x: Ctx = { s, A, T, m, w, p, kind: 'ranged' };
+  return effectsFor(s, A).filter((a) => a.e.weaponRange && (!a.e.attack || a.e.attack === 'ranged') && modelOk(a, m) && weaponOk(a, w, p) && holds(a, x))
+    .reduce((n, a) => n + (a.e.weaponRange ?? 0), 0);
 }
 
 /** Does the unit get a weapon ability from some effect, whatever the target (e.g. [ASSAULT] for Advance + shoot)? */
@@ -889,7 +915,7 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
     if (a.bearers && !a.bearers.some((b) => b.id === m.id)) continue;
     if (kind !== 'mortal') {
       if (df.negateOncePerPhase && T.used?.[`negate:${m.id}`] !== phaseKey(s)) negate = true;
-      if (df.damage) damage += df.damage;
+      if (df.damage && !(df.notPsychic && psychic)) damage += df.damage;
       if (df.halveDamage) halve = true;
       if (df.inv && (inv === null || df.inv < inv)) inv = df.inv;
       if (df.saveBonusD1) saveBonusD1 = Math.max(saveBonusD1, df.saveBonusD1);
@@ -1023,6 +1049,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     creepingDread: Math.max(0, ...es.map((e) => e.creepingDread ?? 0)),
     shockOnKill: es.some((e) => e.shockOnKill),
     onlyTargetMarked: es.find((e) => e.onlyTargetMarked)?.onlyTargetMarked,
+    deadlyDemiseOn: Math.min(6, ...es.map((e) => e.deadlyDemiseOn ?? 6)),
   };
 }
 
@@ -1141,6 +1168,11 @@ setVisibilityHooks({
     // an identified terrain feature: enemy units within it are seen from 3" further
     + ((s.identified ?? []).some((x) => x.turn === s.turn && x.by !== u.owner && alive(u).some((m) => { const t = s.terrain.find((q) => q.id === x.terrainId); return !!t && circleTouchesPoly(m, m.r, t.poly); })) ? 3 : 0),
   cannotBeHidden: (_s, u) => (u.timed ?? []).some((t) => t.e.cannotBeHidden),
+  spotting: (s, obs, u) => {
+    if (s.phase !== 'shooting' || s.active === u.owner) return 0;
+    const A = s.units.find((x) => x.owner !== u.owner && x.models.some((n) => n.id === obs.id));
+    return A ? Math.max(0, ...unitFx(s, A).map((a) => a.e.spotting ?? 0)) : 0;
+  },
 });
 
 /** Countercharge: Heroic Intervention on this unit even though the stratagem was used this phase (once per battle round). */

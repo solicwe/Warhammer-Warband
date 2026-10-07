@@ -1,5 +1,6 @@
 // Rules-legal bot. Used for full-game simulation tests and as the single-player opponent.
 // It plays one unit per step so the UI can animate each action.
+import { botRituals, ritualsPending } from './botRituals';
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from './attack';
 import { RULES } from './config';
 import { baitUnit, deployPosture, smartPlacement } from './deploy';
@@ -359,6 +360,8 @@ export function botMovement(s: GameState) {
 const shotValue = (s: GameState, u: UnitState, t: UnitState, ev: number) => shotWorth(s, u, t, ev, unitDistance(u, t));
 
 export function botShootOne(s: GameState): boolean {
+  // Thousand Sons: Rituals come first, at the start of the phase
+  if (ritualsPending(s, s.active)) { botRituals(s, s.active); return true; }
   const mine = boardUnits(s, s.active);
   // a unit that fired some of its weapons carries on with the rest (split fire), e.g. after the player rolled saves
   const busy = mine.find((u) => tried(s, u) && !u.selectedToShoot && u.weaponsFired.length > 0 && shootingModes(s, u).length > 0);

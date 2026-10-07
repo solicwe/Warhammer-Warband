@@ -12,7 +12,7 @@ import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
 export const setFreeDamageHook = (h: (s: GameState) => boolean) => { freeDamageHook = h; };
-import { applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate } from './effects';
+import { applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from './effects';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
 
@@ -185,10 +185,11 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const p = w.profiles[pi];
       if (hasAbility(p, 'one-shot') && A.oneShotUsed.includes(w.name)) continue;
       const baseRange = typeof p.range === 'number' ? p.range : 0;
-      const range = (aFlags.rangeMinus ? Math.max(Math.min(baseRange, 12), baseRange - aFlags.rangeMinus) : baseRange) + (baseRange > 0 ? aFlags.rangeBonus : 0);
+      const range = (aFlags.rangeMinus ? Math.max(Math.min(baseRange, 12), baseRange - aFlags.rangeMinus) : baseRange) + (baseRange > 0 ? aFlags.rangeBonus + weaponRangeFor(s, A, m, T, w, p) : 0);
       const d = Math.min(...tModels.map((t) => baseDist(m, t)));
       const fx = offenceFor(s, A, m, T, w, p, 'ranged', d);
-      const inc = incomingFor(s, A, m, T, 'ranged');
+      const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
+      const inc = incomingFor(s, A, m, T, 'ranged').filter((i) => !i.psychic || psy);
       if (opt.mode === 'assault' && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault')) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
       if (d > maxRange + 1e-6) continue;
@@ -297,7 +298,8 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
     for (const w of use) {
       const p = w.profiles[0];
       const fx = offenceFor(s, A, m, T, w, p, 'melee', d);
-      const inc = incomingFor(s, A, m, T, 'melee');
+      const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
+      const inc = incomingFor(s, A, m, T, 'melee').filter((i) => !i.psychic || psy);
       const mods: Mods = { skillDelta: 0, skillNotes: [], hit: 0, hitNotes: [] };
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
       // Shield of Honour: this model is engaged with that unit but attacks another one
@@ -644,6 +646,7 @@ export const onMortalWounds = (fn: MortalHook) => { mortalHooks.push(fn); };
 export const onAttackStart = (fn: StartHook) => { startHooks.push(fn); };
 
 export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: string) {
+  const ddOn = u.core.deadlyDemise ? unitFlags(s, u).deadlyDemiseOn : 6; // worked out while the model still stands
   m.dead = true;
   m.wounds = 0;
   (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || m.keywords.includes('CHARACTER'), W: m.profile.W });
@@ -659,7 +662,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     // Vengeful Animus: no roll, it blows up anyway
     const sure = emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id });
     const r = sure ? 6 : d6(s);
-    if (r === 6) {
+    if (r >= ddOn) { // Warpfire Infusion: 5+ near a sorcerer
       log(s, `Deadly Demise (${u.core.deadlyDemise}) from ${m.name}: ${sure ? 'it explodes' : 'rolled a 6!'}`, 'roll');
       // Machine Wrath: the wreck makes one last move before it blows
       emitReact(s, u.owner, 'deadlyDemiseSix', { unitId: u.id, modelId: m.id, six: true });

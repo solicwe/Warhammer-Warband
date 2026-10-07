@@ -4,6 +4,7 @@ import acStrats from '../../data/stratagems/AC.json';
 import orkStrats from '../../data/stratagems/ORK.json';
 import { reactWorth } from './botPlus';
 import smStrats from '../../data/stratagems/SM.json';
+import tsStrats from '../../data/stratagems/TS.json';
 import { parseAbilityText } from './abilityText';
 import { runActions, shockTest, type Action } from './activations';
 import { kwPhrase } from './army';
@@ -94,6 +95,7 @@ const BOOKS: Record<string, Record<string, StratRule>> = {
   SM: (smStrats as unknown as { rules: Record<string, StratRule> }).rules,
   AC: (acStrats as unknown as { rules: Record<string, StratRule> }).rules,
   ORK: (orkStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  TS: (tsStrats as unknown as { rules: Record<string, StratRule> }).rules,
 };
 
 const OFFENCE_BUFFS: BuffKind[] = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
