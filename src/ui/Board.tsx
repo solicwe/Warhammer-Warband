@@ -5,7 +5,8 @@ import { dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard } from '../engine/state';
 import { levelOfControl } from '../engine/game';
 import { modelToken } from './Tokens';
-import { getPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
+import { getModelPortrait, getPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
+import { loadoutLabels, shortItem } from './loadout';
 import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import type { SecondaryGoal } from '../engine/secondaries';
@@ -553,6 +554,7 @@ function BoardImpl(props: BoardProps) {
         const isPicked = props.picked?.includes(u.id);
         const col = COLORS[u.owner];
         const ms = alive(u);
+        const labels = loadoutLabels(u); // which model carries what, in a squad with mixed wargear
         const pts = ms.map((m) => posOf(u, m.id, m));
         const cx = pts.reduce((a, p) => a + p.x, 0) / Math.max(1, pts.length);
         const minY = Math.min(...pts.map((p, i) => p.y - ms[i].r));
@@ -586,8 +588,8 @@ function BoardImpl(props: BoardProps) {
                     strokeWidth={isSel || isDraft || isTarget || isPicked || bad ? 0.16 : 0.12}
                     strokeDasharray={u.battleShocked ? '0.25 0.15' : undefined}
                   />
-                  {getPortrait(m.source)
-                    ? <image href={getPortrait(m.source)} x={p.x - m.r * 0.9} y={p.y - m.r * 0.9} width={m.r * 1.8} height={m.r * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
+                  {getModelPortrait(m)
+                    ? <image href={getModelPortrait(m)} x={p.x - m.r * 0.9} y={p.y - m.r * 0.9} width={m.r * 1.8} height={m.r * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
                     : <use href={`#tok-${modelToken(m)}`} x={p.x - m.r * 0.82} y={p.y - m.r * 0.82} width={m.r * 1.64} height={m.r * 1.64} pointerEvents="none" />}
                   {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
                   {m.profile.W > 1 && m.wounds < m.profile.W && (() => {
@@ -601,6 +603,12 @@ function BoardImpl(props: BoardProps) {
                         <text x={p.x} y={by + fsz * 0.1} fontSize={fsz} textAnchor="middle" fill={low ? '#fca5a5' : '#fff7d6'} stroke="#000" strokeWidth={fsz * 0.22} paintOrder="stroke" fontWeight={900}>{m.wounds}</text>
                       </g>
                     );
+                  })()}
+                  {labels.has(m.id) && vb.w < 30 && (() => {
+                    // shown once zoomed in, sized to the zoom so they read on a phone
+                    const fsz = Math.max(0.36, Math.min(0.6, vb.w * 0.022));
+                    const txt = shortItem(labels.get(m.id)!.replace(/ \+$/, ''), 13) + (labels.get(m.id)!.endsWith(' +') ? '+' : '');
+                    return <text x={p.x} y={p.y + m.r + fsz * 1.05} fontSize={fsz} textAnchor="middle" fill="#fff7d6" stroke="#000" strokeWidth={fsz * 0.26} paintOrder="stroke" fontWeight={800} pointerEvents="none">{txt}</text>;
                   })()}
                   {props.noLos?.includes(m.id) && (
                     <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.7} ${p.y - m.r * 0.7})`}>

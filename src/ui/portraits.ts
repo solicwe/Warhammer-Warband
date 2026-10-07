@@ -50,6 +50,11 @@ export function loadImageManifest(): Promise<void> {
 /** The picture to show: the player's own photo, else the server image. */
 export const getPortrait = (datasheet: string): string | undefined =>
   cache[datasheet] ?? (cloud[datasheet] ? `/_blob/${cloud[datasheet].asset}` : undefined) ?? served[datasheet];
+/** A unit whose models have different names (Wardens of Ultramar, a squad's sergeant): each model name can have its
+ *  own picture, stored under "Datasheet::Model name"; a model without one shows the unit's picture. */
+export const modelPortraitKey = (datasheet: string, model: string) => `${datasheet}::${model}`;
+export const getModelPortrait = (m: { source: string; name: string }): string | undefined =>
+  (m.name && m.name !== m.source ? getPortrait(modelPortraitKey(m.source, m.name)) : undefined) ?? getPortrait(m.source);
 /** true when the player added this photo in the app (so it can be removed); server images can't be. */
 export const hasOwnPortrait = (datasheet: string): boolean => datasheet in cache || (cloudMode === 'write' && datasheet in cloud);
 export const ownPortraitCount = (): number => Object.keys(cache).length;
@@ -207,7 +212,7 @@ export async function removeUnusedCloudFiles(known?: Set<string>): Promise<{ pho
   if (cloudMode !== 'write' || !cloudAssets || !cloudDb || waiting.size) return out;
   if (known?.size) {
     for (const name of Object.keys(cloud)) {
-      if (known.has(name) || name.startsWith('emblem:')) continue;
+      if (known.has(name) || known.has(name.split('::')[0]) || name.startsWith('emblem:')) continue;
       try { await cloudDb.doc(`${COLL}/${docId(name)}`).delete(); delete cloud[name]; out.photos.push(name); } catch { /* keep it */ }
     }
   }
@@ -370,7 +375,7 @@ export async function exportPortraitsZip(factionOf: (datasheet: string) => strin
   for (const [name, read] of [...all].sort(([a], [b]) => a.localeCompare(b))) {
     const got = await read().catch(() => null);
     if (!got) continue;
-    const faction = factionOf(name) ?? 'other';
+    const faction = factionOf(name.split('::')[0]) ?? 'other';
     const path = `units/${faction}/${imageSlug(name)}.${got.ext}`;
     files.push({ name: path, data: got.bytes });
     (units[faction] ??= {})[name] = path;

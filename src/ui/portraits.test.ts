@@ -108,3 +108,29 @@ describe('photos kept on the web page (claude.ai artifact)', () => {
     expect(stored.map((x) => x.id).sort()).toEqual([...docs.values()].map((v) => (v as { asset: string }).asset).sort());
   });
 });
+
+describe('mixed squads', () => {
+  it('a model name can have its own picture; without one the unit picture shows', async () => {
+    const { getModelPortrait, modelPortraitKey } = await import('./portraits');
+    setPortrait('Wardens of Ultramar', 'data:image/png;base64,AAAA');
+    expect(getModelPortrait({ source: 'Wardens of Ultramar', name: 'Lucia Vestha' })).toBe('data:image/png;base64,AAAA');
+    setPortrait(modelPortraitKey('Wardens of Ultramar', 'Lucia Vestha'), 'data:image/png;base64,BBBB');
+    expect(getModelPortrait({ source: 'Wardens of Ultramar', name: 'Lucia Vestha' })).toBe('data:image/png;base64,BBBB');
+    expect(getModelPortrait({ source: 'Wardens of Ultramar', name: 'Gaius Silva' })).toBe('data:image/png;base64,AAAA');
+    setPortrait(modelPortraitKey('Wardens of Ultramar', 'Lucia Vestha'), null);
+    setPortrait('Wardens of Ultramar', null);
+  });
+  it('models whose wargear differs from the squad get a weapon label', async () => {
+    const { loadoutLabels } = await import('./loadout');
+    const w = (name: string, range: number | 'Melee') => ({ name, profiles: [{ name, range, A: '1', skill: 3, S: 4, AP: 0, D: '1', abilities: [] }] });
+    const m = (id: string, ws: ReturnType<typeof w>[]) => ({ id, name: 'Devastator Marine', source: 'Devastator Squad', weapons: ws, dead: false });
+    const base = [w('Bolt Pistol', 12), w('Close Combat Weapon', 'Melee')];
+    const u = { models: [m('a', [...base, w('Bolter', 24)]), m('b', [...base, w('Heavy Bolter', 36)]), m('c', [...base, w('Lascannon', 48)]), m('d', [...base, w('Bolter', 24)])] };
+    const labels = loadoutLabels(u as never);
+    expect(labels.get('b')).toBe('Heavy Bolter');
+    expect(labels.get('c')).toBe('Lascannon');
+    expect(labels.has('a')).toBe(false); // the usual kit of the squad needs no label
+    const same = { models: [m('x', base), m('y', base)] };
+    expect(loadoutLabels(same as never).size).toBe(0);
+  });
+});

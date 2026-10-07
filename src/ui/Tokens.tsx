@@ -91,13 +91,16 @@ export function TokenSprites() {
   );
 }
 
-export function Portrait({ kind, owner, character, size = 56, datasheet, editable }: { kind: TokenKind; owner: 0 | 1; character?: boolean; size?: number; datasheet?: string; editable?: boolean }) {
+export function Portrait({ kind, owner, character, size = 56, datasheet, editable, fallback }: { kind: TokenKind; owner: 0 | 1; character?: boolean; size?: number; datasheet?: string; editable?: boolean; fallback?: string }) {
   usePortraitsVersion();
   const input = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState<string | null>(null);
   useEffect(() => { if (!msg) return; const t = window.setTimeout(() => setMsg(null), 2600); return () => window.clearTimeout(t); }, [msg]);
   const rim = owner ? 'var(--p1)' : 'var(--p0)';
-  const photo = datasheet ? getPortrait(datasheet) : undefined;
+  const own = datasheet ? getPortrait(datasheet) : undefined;
+  // a model without its own picture shows the unit's, faded, until one is added
+  const borrowed = !own && fallback ? getPortrait(fallback) : undefined;
+  const photo = own ?? borrowed;
   const pick = async (f?: File) => {
     if (!f || !datasheet) return;
     try {
@@ -108,7 +111,7 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
   return (
     <span className="portrait" style={{ width: size, height: size }} onClick={() => editable && input.current?.click()}>
       {photo
-        ? <img className="portrait-img" src={photo} alt="" style={{ borderColor: rim }} />
+        ? <img className={`portrait-img ${borrowed && editable ? 'borrowed' : ''}`} src={photo} alt="" style={{ borderColor: rim }} />
         : (
           <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" style={{ cursor: editable ? 'pointer' : undefined }}>
             <circle cx="50" cy="50" r="48" fill="var(--surface2)" />
@@ -117,6 +120,7 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
             {editable && <text x="50" y="96" fontSize="13" textAnchor="middle" fill="var(--muted)">+ Image</text>}
           </svg>
         )}
+      {borrowed && editable && <span className="portrait-add">+</span>}
       {character && <svg className="portrait-crown" viewBox="0 0 100 60" aria-hidden="true"><use href="#tok-crown" /></svg>}
       {msg && <span className="portrait-msg">{msg}</span>}
       {editable && <input ref={input} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; void pick(f); }} />}
