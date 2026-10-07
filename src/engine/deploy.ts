@@ -11,7 +11,7 @@ import { canLeave } from './botMove';
 import { isBrawler, maxRange, moveOf, oc, unitValue } from './botEval';
 import { alive, onBoard, other, withinTerrain } from './state';
 import type { GameState, ModelState, Pt, UnitState } from './types';
-import { hasLos } from './visibility';
+import { roughLos } from './visibility';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -38,6 +38,30 @@ function probes(u: UnitState, pos: Map<string, Pt>): ModelState[] {
   return [sorted[0], sorted[sorted.length - 1], sorted[Math.floor(sorted.length / 2)]];
 }
 
+/** How a bot sets up its whole army, decided once from both armies:
+ *  - closed: the enemy has the guns — hide what matters from their first turn of shooting;
+ *  - open: the enemy is built to fight in melee — nothing to hide from at range, so take ground forward;
+ *  - bait (with closed): one cheap, sturdy unit stands in plain view to draw the enemy into the hidden guns. */
+export type Posture = 'open' | 'closed';
+export function deployPosture(s: GameState, p: 0 | 1): Posture {
+  const foes = s.units.filter((e) => e.owner !== p && e.status !== 'destroyed');
+  let guns = 0, fists = 0;
+  for (const e of foes) {
+    const v = unitValue(e);
+    if (isBrawler(s, e)) fists += v; else if (maxRange(e) >= 18) guns += v; else { guns += v / 2; fists += v / 2; }
+  }
+  return fists > guns * 1.5 ? 'open' : 'closed';
+}
+
+/** The unit sent out as bait: cheap, not a character or vehicle, with some staying power; only for a big enough army. */
+export function baitUnit(s: GameState, p: 0 | 1): UnitState | undefined {
+  const mine = s.units.filter((u) => u.owner === p && u.status !== 'destroyed');
+  if (mine.length < 5 || deployPosture(s, p) !== 'closed') return undefined;
+  return mine
+    .filter((u) => !u.models.some((m) => m.isCharacter || m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER')) && unitValue(u) <= 150 && alive(u).length >= 5)
+    .sort((a, b) => unitValue(a) - unitValue(b))[0];
+}
+
 export interface DeployOptions { near?: Pt; how?: 'deploy' | 'infiltrate' }
 
 /** The best legal deployment for `u`, or null when nothing in the zone fits. */
@@ -55,6 +79,10 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   const cheap = alive(u).some((m) => m.keywords.includes('BATTLELINE')) || unitValue(u) <= 200;
   // Infiltrators: anywhere more than 9" from the enemy deployment zone
   const how = opt.how ?? 'deploy';
+  // the bot's plan for the whole army (the player's "place it for me" always plays it safe)
+  const isBot = (s.bots ?? []).includes(u.owner);
+  const posture: Posture = isBot ? deployPosture(s, u.owner) : 'closed';
+  const bait = isBot && baitUnit(s, u.owner)?.id === u.id;
 
   // where the enemy could stand (sight checks), and the objectives
   const watchers = samplePoly(enemyZone, 6).map(lookout);
@@ -86,9 +114,11 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
       // how far forward: melee and fast units at the front, long guns further back
       const forward = 1 - (dist(centre, ec) - frontDist) / zoneDepth; // 1 = front edge, 0 = back edge
       if (how === 'infiltrate') { /* placed by objectives and cover, not by depth */ }
+      else if (bait) score += forward * 6;
       else if (brawler || fast) score += forward * 8;
       else if (range >= 30) score += (1 - Math.abs(forward - 0.35)) * 3;
       else score += forward * 3;
+      if (posture === 'open' && how === 'deploy') score += forward * 4;
 
       // objectives out in the middle: Infiltrators sit on one, others start where they reach one in their first move
       if (holdsGround || how === 'infiltrate') {
@@ -121,12 +151,14 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
     let score = cand.score;
     const eyes = probes(u, cand.pos);
     // hidden from the enemy deployment zone (they may get the first turn)
-    const seen = watchers.filter((w) => eyes.some((m) => hasLos(s, w, m))).length / Math.max(1, watchers.length);
+    const seen = watchers.filter((w) => eyes.some((m) => roughLos(s, w, m))).length / Math.max(1, watchers.length);
     // a tournament player hides what matters most from the first turn of shooting
-    score -= seen * (brawler || how === 'infiltrate' ? 14 : 9) * (0.6 + 0.4 * worth);
+    // closed: hide; open: being seen matters much less; the bait wants to be seen
+    if (bait) score += seen * 8;
+    else score -= seen * (brawler || how === 'infiltrate' ? 14 : 9) * (0.6 + 0.4 * worth) * (posture === 'open' ? 0.35 : 1);
     // shooters: sight of the middle objectives from here (to shoot whatever goes onto them)
     if (!brawler && range >= 18 && middle.length) {
-      const lanes = middle.filter(({ p }) => dist(cand.centre, p) <= range + 3 && eyes.some((m) => hasLos(s, m, lookout(p)))).length;
+      const lanes = middle.filter(({ p }) => dist(cand.centre, p) <= range + 3 && eyes.some((m) => roughLos(s, m, lookout(p)))).length;
       score += (lanes / middle.length) * 6;
     }
     if (!best || score > best.score) best = { pos: cand.pos, score };

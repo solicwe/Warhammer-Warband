@@ -2,7 +2,7 @@
 // It plays one unit per step so the UI can animate each action.
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from './attack';
 import { RULES } from './config';
-import { smartPlacement } from './deploy';
+import { baitUnit, deployPosture, smartPlacement } from './deploy';
 import { dist, polyCentroid } from './geometry';
 import { detChoices, pickDetChoice } from './detachments';
 import {
@@ -85,6 +85,11 @@ export function botDeploy(s: GameState) {
   }
   const u = s.units.find((x) => x.owner === p && x.status === 'pending');
   if (!u) return;
+  // the plan for the whole army, said once
+  if (!s.log.some((l) => l.player === p && /deploys (open|closed)/.test(l.text))) {
+    const posture = deployPosture(s, p), bait = baitUnit(s, p);
+    log(s, `${s.players[p].name} deploys ${posture === 'open' ? 'open: the enemy is built for melee, so it takes ground forward' : 'closed: out of sight of the enemy guns'}${bait ? `, with ${bait.name} out in the open as bait` : ''}`, 'info', p);
+  }
   // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
   if (hasDeepStrike(s, u) && sendToReserves(s, u.id) === null) return;
   // a vehicle must not be set up where ruin walls box it in for the whole game

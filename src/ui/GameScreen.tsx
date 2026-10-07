@@ -1,3 +1,4 @@
+import { pathBlocked, routeAround } from '../engine/pathing';
 import { useEffect, useMemo, useState } from 'react';
 import { chapterRules } from '../engine/army';
 import { RuleText } from './RuleText';
@@ -305,6 +306,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
   const draftKind: MoveKind | null = mode?.k === 'move' ? mode.kind : mode?.k === 'charge' ? 'charge' : mode?.k === 'pile' ? mode.kind : null;
   const draftOpts = mode?.k === 'move' ? { fly: mode.fly } : mode?.k === 'charge' ? { targets: mode.targets } : {};
+  /** While dragging: a model walks its route — a wall it can't cross is gone around (the detour counts against its
+   *  move) or it stops where it can't go on; it never jumps through. */
+  const walkDraft = (id: string, path: Pt[]): Pt[] => {
+    if (!modeUnit || !draftKind || path.length < 2) return path;
+    const m = modeUnit.models.find((x) => x.id === id);
+    if (!m) return path;
+    const opt = { fly: mode?.k === 'move' ? mode.fly : undefined };
+    if (!pathBlocked(s, modeUnit, draftKind, m, path, opt)) return path;
+    return routeAround(s, modeUnit, draftKind, m, path[0], path[path.length - 1], maxFor(id), opt) ?? [path[0], path[0]];
+  };
   /** After a drag: route around what can't be crossed and slide overlapping models back to base contact. */
   const settleDraft = (d: Paths): Paths => (modeUnit && draftKind
     ? settleMove(s, modeUnit, draftKind, d, { fly: mode?.k === 'move' ? mode.fly : undefined, targets: mode?.k === 'charge' ? mode.targets : undefined, maxFor: (m) => maxFor(m.id) })
@@ -1467,6 +1478,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           draftUnit={draftUnit}
           draft={draft}
           maxFor={mode?.k === 'place' ? undefined : maxFor}
+          walk={mode?.k === 'place' ? undefined : walkDraft}
           animateMoves={bots.length ? bots : undefined}
           bad={check?.bad}
           targets={targets}

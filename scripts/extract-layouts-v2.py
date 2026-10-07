@@ -129,6 +129,80 @@ def segments(mask, sx, sy, min_len, angles):
     return res
 
 
+def thin(mask):
+    """Zhang-Suen thinning: a stroke becomes its one-pixel centre line."""
+    img = np.pad(mask.astype(np.uint8), 1)
+    while True:
+        changed = False
+        for step in (0, 1):
+            P = img
+            n = [np.roll(np.roll(P, dy, 0), dx, 1) for dy, dx in ((1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1))]
+            # neighbours p2..p9 clockwise from north
+            p2, p3, p4, p5, p6, p7, p8, p9 = n
+            B = sum(n)
+            seq = [p2, p3, p4, p5, p6, p7, p8, p9, p2]
+            A = sum(((seq[k] == 0) & (seq[k + 1] == 1)).astype(np.uint8) for k in range(8))
+            if step == 0:
+                c = (p2 * p4 * p6 == 0) & (p4 * p6 * p8 == 0)
+            else:
+                c = (p2 * p4 * p8 == 0) & (p2 * p6 * p8 == 0)
+            rm = (P == 1) & (B >= 2) & (B <= 6) & (A == 1) & c
+            if rm.any():
+                img = img.copy(); img[rm] = 0; changed = True
+        if not changed:
+            return img[1:-1, 1:-1].astype(bool)
+
+
+def skeleton_lines(mask, sx, sy, min_len, eps):
+    """Centre lines of the strokes in a mask, as straight segments [x0, y0, x1, y1] in inches: the stroke is thinned to
+    its centre line, then straight lines are fitted one after another (most pixels first) and cut where they break."""
+    res = []
+    rng = np.random.default_rng(3)
+    lab, n = ndimage.label(ndimage.binary_closing(mask, iterations=1))
+    objs = ndimage.find_objects(lab)
+    tol = max(1.5, 0.06 * sx)
+    for i in range(1, n + 1):
+        sl = objs[i - 1]
+        y0, x0 = sl[0].start, sl[1].start
+        m = lab[sl] == i
+        if m.sum() < 25:
+            continue
+        ys, xs = np.where(thin(m))
+        P = np.c_[xs + x0, ys + y0].astype(float)
+        for _ in range(40):
+            if len(P) < max(6, min_len * sx * 0.6):
+                break
+            best = None
+            for _t in range(min(400, len(P) * 4)):
+                a, b = P[rng.integers(len(P))], P[rng.integers(len(P))]
+                d = b - a
+                L = np.hypot(*d)
+                if L < 4:
+                    continue
+                nrm = np.array([-d[1], d[0]]) / L
+                inl = np.abs((P - a) @ nrm) < tol
+                c = inl.sum()
+                if best is None or c > best[0]:
+                    best = (c, a, d / L, inl)
+            if best is None or best[0] < max(6, min_len * sx * 0.6):
+                break
+            _, a, u, inl = best
+            Q = P[inl]
+            # refine the direction on the inliers
+            ctr = Q.mean(0)
+            w, v = np.linalg.eigh(np.cov((Q - ctr).T))
+            u = v[:, 1]
+            t = np.sort((Q - ctr) @ u)
+            br = np.where(np.diff(t) > max(3.0, 0.15 * sx))[0]
+            starts, ends = np.r_[t[0], t[br + 1]], np.r_[t[br], t[-1]]
+            for t0, t1 in zip(starts, ends):
+                if (t1 - t0) / sx >= min_len:
+                    pa, pb = ctr + u * t0, ctr + u * t1
+                    res.append([round(pa[0] / sx * 4) / 4, round(pa[1] / sy * 4) / 4, round(pb[0] / sx * 4) / 4, round(pb[1] / sy * 4) / 4])
+            P = P[~inl]
+    return res
+
+
 def edge_angles(poly):
     """The plate's straight directions: its longest edge and the perpendicular, plus any other long edge (a triangle's
     sides). Short rubble edges don't count."""
@@ -326,8 +400,8 @@ def extract(path):
         ImageDraw.Draw(img).polygon([(x * sx, y * sy) for x, y in p['poly']], fill=1)
         on = ndimage.binary_dilation(np.asarray(img).astype(bool), iterations=int(0.3 * sx))
         ang = edge_angles(p['poly'])
-        p['walls'] = dedupe(segments(green & on, sx, sy, 0.9, ang))
-        p['obstacles'] = dedupe(segments(orange & on, sx, sy, 0.7, ang))
+        p['walls'] = dedupe(skeleton_lines(green & on, sx, sy, 0.4, 0.15))
+        p['obstacles'] = dedupe(skeleton_lines(orange & on, sx, sy, 0.4, 0.15))
     for p in kept:
         del p['n']
     return kept

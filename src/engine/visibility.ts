@@ -5,7 +5,7 @@ import { baseDist, circleTouchesPoly, pointInPoly, pointSegDist, samplePoints, s
 import { alive, everyModelKw } from './state';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 
-interface Blockers { walls: { a: Pt; b: Pt }[]; areas: { poly: Pt[] }[]; own: { t: TerrainPiece; reach: number }[] }
+interface Blockers { grid: WallGrid; areas: { poly: Pt[] }[]; own: { t: TerrainPiece; reach: number }[] }
 
 /** Rules from abilities that change visibility (registered by effects.ts so this module stays dependency-free). */
 export interface VisibilityHooks {
@@ -86,12 +86,72 @@ function bridgesOf(s: GameState): Bridge[] {
   return out;
 }
 
+/** Dense-terrain walls bucketed on a 2" grid: a line of sight is only tested against the walls in the cells it crosses. */
+type Wall = { a: Pt; b: Pt };
+interface WallGrid { cells: Map<number, Wall[]> }
+const CELL = 2;
+const gridByList = new WeakMap<TerrainPiece[], WallGrid>();
+const cellKey = (cx: number, cy: number) => cy * 1000 + cx;
+function wallGridOf(s: GameState): WallGrid {
+  let g = gridByList.get(s.terrain);
+  if (g) return g;
+  g = { cells: new Map() };
+  for (const t of s.terrain) {
+    if (t.category !== 'dense') continue;
+    for (const w of t.walls) {
+      const cx0 = Math.floor((Math.min(w.a.x, w.b.x) - 0.05) / CELL), cx1 = Math.floor((Math.max(w.a.x, w.b.x) + 0.05) / CELL);
+      const cy0 = Math.floor((Math.min(w.a.y, w.b.y) - 0.05) / CELL), cy1 = Math.floor((Math.max(w.a.y, w.b.y) + 0.05) / CELL);
+      for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) {
+        const k = cellKey(cx, cy);
+        let list = g.cells.get(k);
+        if (!list) g.cells.set(k, (list = []));
+        list.push(w);
+      }
+    }
+  }
+  gridByList.set(s.terrain, g);
+  return g;
+}
+/** The walls in the cells a segment passes through (grid traversal), each once. */
+function wallsAlong(g: WallGrid, p: Pt, q: Pt): Wall[] {
+  const out: Wall[] = [];
+  const seen = new Set<Wall>();
+  const add = (cx: number, cy: number) => {
+    const list = g.cells.get(cellKey(cx, cy));
+    if (list) for (const w of list) if (!seen.has(w)) { seen.add(w); out.push(w); }
+  };
+  let cx = Math.floor(p.x / CELL), cy = Math.floor(p.y / CELL);
+  const ex = Math.floor(q.x / CELL), ey = Math.floor(q.y / CELL);
+  const dx = q.x - p.x, dy = q.y - p.y;
+  const sx = dx > 0 ? 1 : -1, sy = dy > 0 ? 1 : -1;
+  const tdx = dx ? Math.abs(CELL / dx) : Infinity, tdy = dy ? Math.abs(CELL / dy) : Infinity;
+  let tx = dx ? ((sx > 0 ? (cx + 1) * CELL - p.x : p.x - cx * CELL) / Math.abs(dx)) : Infinity;
+  let ty = dy ? ((sy > 0 ? (cy + 1) * CELL - p.y : p.y - cy * CELL) / Math.abs(dy)) : Infinity;
+  add(cx, cy);
+  for (let n = 0; n < 200 && (cx !== ex || cy !== ey); n++) {
+    if (tx < ty) { cx += sx; tx += tdx; } else { cy += sy; ty += tdy; }
+    add(cx, cy);
+  }
+  return out;
+}
+/** The walls near a point (its cell and the ones around it). */
+function wallsNear(g: WallGrid, p: Pt, r: number): Wall[] {
+  const out: Wall[] = [];
+  const seen = new Set<Wall>();
+  for (let cy = Math.floor((p.y - r) / CELL); cy <= Math.floor((p.y + r) / CELL); cy++) {
+    for (let cx = Math.floor((p.x - r) / CELL); cx <= Math.floor((p.x + r) / CELL); cx++) {
+      const list = g.cells.get(cellKey(cx, cy));
+      if (list) for (const w of list) if (!seen.has(w)) { seen.add(w); out.push(w); }
+    }
+  }
+  return out;
+}
+
 function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false): Blockers {
   // only terrain overlapping the box around both models can be crossed by a line between them
   const x0 = Math.min(a.x - a.r, b.x - b.r), x1 = Math.max(a.x + a.r, b.x + b.r);
   const y0 = Math.min(a.y - a.r, b.y - b.r), y1 = Math.max(a.y + a.r, b.y + b.r);
   const near = s.terrain.filter((t) => { const q = boxOf(t); return q.x1 >= x0 && q.x0 <= x1 && q.y1 >= y0 && q.y0 <= y1; });
-  const walls = near.filter((t) => t.category === 'dense').flatMap((t) => t.walls);
   const obscuring = near.filter((t) => (denseOnly ? t.category === 'dense' : t.category !== 'exposed'));
   const areas: { poly: Pt[] }[] = obscuring.filter((t) => !standsIn(a, t) && !standsIn(b, t));
   for (const br of bridgesOf(s)) {
@@ -103,7 +163,7 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
   }
   // both models in the same area: each sees its own stretch of it
   const own = obscuring.filter((t) => !areas.includes(t)).map((t) => ({ t, reach: SEE_IN_AREA * (+standsIn(a, t) + +standsIn(b, t)) }));
-  return { walls, areas, own };
+  return { grid: wallGridOf(s), areas, own };
 }
 
 /** A model sees out of the area it stands in (and is seen in it), but not across all of it: a line may run this far
@@ -133,7 +193,7 @@ const lineClear = (p: Pt, q: Pt, bl: Blockers) => {
   const seg = { a: p, b: q };
   const x0 = Math.min(p.x, q.x) - WALL_HALF, x1 = Math.max(p.x, q.x) + WALL_HALF, y0 = Math.min(p.y, q.y) - WALL_HALF, y1 = Math.max(p.y, q.y) + WALL_HALF;
   const near = (b: Box) => b.x1 >= x0 && b.x0 <= x1 && b.y1 >= y0 && b.y0 <= y1;
-  for (const w of bl.walls) if (near(segBox(w)) && segSegDist(seg, w) < WALL_HALF) return false;
+  for (const w of wallsAlong(bl.grid, p, q)) if (near(segBox(w)) && segSegDist(seg, w) < WALL_HALF) return false;
   for (const t of bl.areas) if (near(polyBox(t.poly)) && segCrossesPoly(seg, t.poly)) return false;
   for (const o of bl.own) if (near(polyBox(o.t.poly)) && segLengthInPoly(seg, o.t.poly) > o.reach) return false;
   return true;
@@ -143,7 +203,8 @@ const lineClear = (p: Pt, q: Pt, bl: Blockers) => {
  *  but the part on the far side of the wall isn't really there: it can't see or be seen through the wall. */
 function lookPoints(m: ModelState, bl: Blockers): Pt[] {
   const c = { x: m.x, y: m.y };
-  return samplePoints(m).filter((p, i) => i === 0 || !bl.walls.some((w) => segsTouch({ a: c, b: p }, w)));
+  const walls = wallsNear(bl.grid, c, m.r + 0.1);
+  return samplePoints(m).filter((p, i) => i === 0 || !walls.some((w) => segsTouch({ a: c, b: p }, w)));
 }
 
 /** True line-of-sight test ignoring Hidden / Lone Operative. */
@@ -151,6 +212,14 @@ export function hasLos(s: GameState, a: ModelState, b: ModelState): boolean {
   const bl = blockers(s, a, b);
   const pa = lookPoints(a, bl), pb = lookPoints(b, bl);
   return pa.some((p) => pb.some((q) => lineClear(p, q, bl)));
+}
+
+/** A quick sight check for planning (deployment): from `a`'s centre to `b`'s centre and four points of its rim. */
+export function roughLos(s: GameState, a: ModelState, b: ModelState): boolean {
+  const bl = blockers(s, a, b);
+  const c = { x: a.x, y: a.y };
+  const pts = [{ x: b.x, y: b.y }, { x: b.x + b.r * 0.8, y: b.y }, { x: b.x - b.r * 0.8, y: b.y }, { x: b.x, y: b.y + b.r * 0.8 }, { x: b.x, y: b.y - b.r * 0.8 }];
+  return pts.some((q) => lineClear(c, q, bl));
 }
 
 /** Every part of `b` facing `a` is visible (approximated by sample points). */

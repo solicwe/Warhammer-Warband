@@ -22,6 +22,8 @@ export interface BoardProps {
   draftUnit?: string | null;
   draft?: Paths | null;
   maxFor?: (modelId: string) => number;
+  /** the legal route for a model dragged along [start, wanted end]: around walls it can't cross, stopping where it can't go on */
+  walk?: (modelId: string, path: Pt[]) => Pt[];
   /** players whose moves are replayed as an animation (the bot) */
   animateMoves?: PlayerId[];
   bad?: string[];
@@ -80,7 +82,7 @@ interface DragState {
 
 function BoardImpl(props: BoardProps) {
   usePortraitsVersion();
-  const { s, draft, draftUnit, maxFor, onDraft } = props;
+  const { s, draft, draftUnit, maxFor, onDraft, walk } = props;
   // models picked for single-model adjustment (tap a model of the moving unit); otherwise a drag moves the whole unit
   const [solo, setSolo] = useState<string[]>([]);
   useEffect(() => setSolo([]), [draftUnit]);
@@ -232,7 +234,7 @@ function BoardImpl(props: BoardProps) {
           if (d > max) end = { x: origin.x + ((end.x - origin.x) * max) / d, y: origin.y + ((end.y - origin.y) * max) / d };
         }
         const next: Paths = new Map(draft!);
-        next.set(id, path.length < 2 ? [end] : [origin, end]);
+        next.set(id, path.length < 2 ? [end] : walk ? walk(id, [origin, end]) : [origin, end]);
         dg.last = next;
         onDraft(next);
         return;
@@ -250,7 +252,7 @@ function BoardImpl(props: BoardProps) {
           const d = dist(o, end);
           if (d > max) end = { x: o.x + ((end.x - o.x) * max) / d, y: o.y + ((end.y - o.y) * max) / d };
         }
-        next.set(id, path.length < 2 ? [end] : [path[0], end]);
+        next.set(id, path.length < 2 ? [end] : walk ? walk(id, [path[0], end]) : [path[0], end]);
       }
       dg.last = next;
       onDraft(next);
