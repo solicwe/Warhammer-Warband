@@ -67,6 +67,22 @@ export function botCommandStratagems(s: GameState, p: PlayerId) {
       if (best) applyDetachmentStratagem(s, p, st, best.u.id, { choice: docOpts.find((o) => o.d === best.d)!.i });
       continue;
     }
+    // "that objective marker remains under your control" in the Command phase (Warding Hex, Desecration of Worlds …)
+    if ((rule.do ?? []).some((a) => a.secure || a.mutate)) {
+      for (const u of mine) {
+        const o = s.objectives.find((x) => onObjective(s, u, x) && x.controller === p && x.secured !== p && x.type !== 'home');
+        if (!o || !ok(u) || !foes.some((e) => unitDistance(u, e) <= 18)) continue;
+        applyDetachmentStratagem(s, p, st, u.id);
+        break;
+      }
+      continue;
+    }
+    // "return destroyed models" (Blessed Transmutations): the unit that lost the most
+    if ((rule.do ?? []).some((a) => a.reviveRoll || a.revive)) {
+      const u = mine.filter((x) => ok(x) && x.startingStrength - alive(x).length >= 2).sort((a, b) => (b.startingStrength - alive(b).length) - (a.startingStrength - alive(a).length))[0];
+      if (u) applyDetachmentStratagem(s, p, st, u.id);
+      continue;
+    }
     const fx = rule.effects ?? [];
     // +1 OC: on an objective the enemy holds by that much or less
     const oc = fx.reduce((a, e) => a + (e.oc ?? 0), 0);
