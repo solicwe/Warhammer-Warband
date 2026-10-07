@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GameState } from '../engine/types';
 
 const KEY = 'w40k11-save';
@@ -47,6 +47,8 @@ export function useGame(initial: GameState) {
   const history = useRef<GameState[]>([]);
   const [state, setState] = useState<GameState>(initial);
   const [undoCount, setUndoCount] = useState(0);
+  // a battle left before its first action is still there to continue from the home screen
+  useEffect(() => { queueSave(ref.current); }, []);
   const commit = (next: GameState) => {
     ref.current = next;
     setState(next);

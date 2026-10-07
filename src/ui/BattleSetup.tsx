@@ -1,0 +1,244 @@
+// A new battle: who plays (you against the bot, two players on one phone, or two bots), each side's army, the
+// mission and the map. The last choices are remembered.
+import { useEffect, useMemo, useState } from 'react';
+import { deploymentName, dispositionById, LAYOUTS, layoutsFor, primaryFor, RULES, type DispositionId } from '../engine/config';
+import { autoAttach, forChapter, listPoints, syncList } from '../engine/army';
+import { createGame, listDisposition, listDispositionOptions } from '../engine/game';
+import type { ArmyList, FactionData, GameState } from '../engine/types';
+import { Emblem, titleCase } from './ArmyBuilder';
+import { loadFaction, type FactionIndex } from './data';
+import { Icon } from './Icon';
+import { LayoutPreview } from './LayoutPreview';
+import { loadBattlePrefs, saveBattlePrefs, withAutoRules, type Army, type ArmyRef, type BattleMode, type BattlePrefs } from './library';
+import { PRESETS } from './presets';
+
+interface Props {
+  armies: Army[];
+  index: FactionIndex | null;
+  onBack: () => void;
+  onStart: (s: GameState) => void;
+  onUpdateArmy: (a: Army) => void;
+}
+
+const SEC_MODES: { id: BattlePrefs['secMode']; label: string; note: string }[] = [
+  { id: 'tactical', label: 'Tactical', note: 'Draw up to 2 cards each Command phase' },
+  { id: 'fixed', label: 'Fixed', note: 'Pick 2 cards that last the whole battle' },
+  { id: 'none', label: 'None', note: 'Primary Mission only: good for a first game' },
+];
+
+const MODES: { id: BattleMode; label: string }[] = [
+  { id: 'bot', label: 'vs Bot' },
+  { id: 'hotseat', label: '2 Players' },
+  { id: 'botbot', label: 'Bot vs Bot' },
+];
+
+export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Props) {
+  const [prefs, setPrefs] = useState<BattlePrefs>(() => loadBattlePrefs(armies));
+  useEffect(() => saveBattlePrefs(prefs), [prefs]);
+  const set = (patch: Partial<BattlePrefs>) => setPrefs((p) => ({ ...p, ...patch }));
+  const [choosing, setChoosing] = useState<0 | 1 | null>(null); // the side whose army is being picked
+  const [allMaps, setAllMaps] = useState(false);
+  const [mapDeploy, setMapDeploy] = useState('');
+  const [presetDisp, setPresetDisp] = useState<[string | undefined, string | undefined]>([undefined, undefined]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const listOf = (i: 0 | 1): ArmyList => {
+    const r = prefs.sides[i];
+    if (r.kind === 'list') return armies.find((a) => a.id === r.id) ?? PRESETS.SM;
+    return { ...PRESETS[r.factionId], disposition: presetDisp[i] ?? PRESETS[r.factionId].disposition };
+  };
+  const lists: [ArmyList, ArmyList] = [listOf(0), listOf(1)];
+  const [facs, setFacs] = useState<[FactionData | null, FactionData | null]>([null, null]);
+  useEffect(() => {
+    let live = true;
+    Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]).then((f) => { if (live) setFacs([f[0], f[1]]); }).catch(() => {});
+    return () => { live = false; };
+  }, [lists[0].factionId, lists[1].factionId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const dispOptions = (i: 0 | 1): DispositionId[] => {
+    const f = facs[i];
+    if (!f || f.id !== lists[i].factionId) return [];
+    const ids = listDispositionOptions(lists[i], f);
+    return ids.length ? ids : ['take-and-hold'];
+  };
+  const dispOf = (i: 0 | 1): DispositionId | null => (facs[i] && facs[i]!.id === lists[i].factionId ? listDisposition(lists[i], facs[i]!) : null);
+  const pickDisp = (i: 0 | 1, d: DispositionId) => {
+    const r = prefs.sides[i];
+    const name = dispositionById(d).name;
+    if (r.kind === 'list') { const a = armies.find((x) => x.id === r.id); if (a) onUpdateArmy({ ...a, disposition: name }); }
+    else setPresetDisp((x) => (i === 0 ? [name, x[1]] : [x[0], name]));
+  };
+  const d0 = dispOf(0), d1 = dispOf(1);
+  const layouts = d0 && d1 ? layoutsFor(d0, d1) : [];
+
+  const bot = (i: 0 | 1) => prefs.mode === 'botbot' || (prefs.mode === 'bot' && i === 1);
+  const role = (i: 0 | 1) => (prefs.mode === 'botbot' ? (i ? 'Red Bot' : 'Blue Bot') : prefs.mode === 'bot' ? (i ? 'Bot' : 'You') : `Player ${i + 1}`);
+  const factionName = (id: string) => index?.factions.find((f) => f.id === id)?.name ?? id;
+  const playerName = (i: 0 | 1) => (bot(i) ? (i ? 'Red Bot' : 'Blue Bot') : prefs.names[i] || `Player ${i + 1}`);
+
+  const start = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      const factions = await Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]);
+      // the bot attaches its loose characters to squads, as a player would at Declare Battle Formations
+      const ready = (i: 0 | 1) => { const f = forChapter(factions[i], lists[i].subfaction); const l = syncList(lists[i], f); return bot(i) ? autoAttach(l, f) : l; };
+      const gone = lists.flatMap((l, i) => l.units.filter((u) => !factions[i].datasheets.some((d) => d.name === u.datasheet)).map((u) => `${l.name || role(i as 0 | 1)}: ${u.datasheet}`));
+      if (gone.length) { setErr(`Some units are not in 11th edition any more (Legends). Remove them from the army first: ${gone.join(', ')}`); return; }
+      if (lists.some((l) => !l.units.length)) { setErr('An army has no units yet. Open it from the home screen and add some, or pick another army.'); return; }
+      const dz: [DispositionId, DispositionId] = [dispOf(0) ?? listDisposition(lists[0], factions[0]), dispOf(1) ?? listDisposition(lists[1], factions[1])];
+      const layout = LAYOUTS.find((l) => l.id === prefs.layoutPick) ?? LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
+      const s = createGame({
+        lists: [ready(0), ready(1)], factions: [factions[0], factions[1]],
+        names: [playerName(0), playerName(1)], deploymentId: layout?.id, dispositions: dz, secondaryMode: prefs.secMode,
+      });
+      s.botPlayer = prefs.mode === 'bot' ? 1 : null;
+      s.bots = prefs.mode === 'botbot' ? [0, 1] : prefs.mode === 'bot' ? [1] : [];
+      onStart(withAutoRules(s));
+    } catch (e) {
+      setErr(`Could not start the battle: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const choices = useMemo(() => [
+    ...armies.map((a) => ({ ref: { kind: 'list', id: a.id } as ArmyRef, list: a as ArmyList })),
+    ...Object.entries(PRESETS).map(([fid, l]) => ({ ref: { kind: 'preset', factionId: fid } as ArmyRef, list: l })),
+  ], [armies]);
+  const same = (a: ArmyRef, b: ArmyRef) => (a.kind === 'list' ? b.kind === 'list' && a.id === b.id : b.kind === 'preset' && a.factionId === b.factionId);
+
+  const side = (i: 0 | 1) => {
+    const l = lists[i];
+    const size = RULES.battleSizes.find((b) => b.id === l.battleSize) ?? RULES.battleSizes[0];
+    const opts = dispOptions(i);
+    const cur = dispOf(i);
+    return (
+      <div className={`side-slot s${i}`}>
+        <div className="side-head">
+          <span className="side-mark" aria-hidden="true" />
+          <span className="label">{role(i)}</span>
+          {bot(i) && <span className="side-bot"><Icon name="bot" size={14} /> plays itself</span>}
+        </div>
+        {!bot(i) && prefs.mode === 'hotseat' && (
+          <input id={`player-name-${i}`} aria-label={`${role(i)} name`} value={prefs.names[i]} onChange={(e) => set({ names: (i ? [prefs.names[0], e.target.value] : [e.target.value, prefs.names[1]]) as [string, string] })} />
+        )}
+        <button className="pick-army" onClick={() => setChoosing(i)}>
+          <Emblem factionId={l.factionId} sub={l.subfaction} />
+          <span className="pick-army-text">
+            <span className="pick-army-name">{l.name || 'Untitled army'}{prefs.sides[i].kind === 'preset' && <span className="tag">Ready-made</span>}</span>
+            <span className="pick-army-meta">{factionName(l.factionId)}{l.subfaction ? ` · ${titleCase(l.subfaction)}` : ''} · <span className="num">{listPoints(l)}/{size.points}</span></span>
+          </span>
+          <span className="pick-army-change">Change</span>
+        </button>
+        {cur && (
+          <div className="disp-row">
+            <span className="tiny muted">Force Disposition</span>
+            {(opts.length > 1 ? opts : [cur]).map((d) => (
+              <button key={d} type="button" disabled={opts.length < 2} className={`disp-chip ${cur === d ? '' : 'off'}`} style={{ background: dispositionById(d).color }} aria-pressed={cur === d} onClick={() => pickDisp(i, d)}>{dispositionById(d).name}</button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="app setup">
+      <header className="appbar">
+        <button className="icon-btn" aria-label="Back" onClick={onBack}><span className="chev-left" aria-hidden="true" /></button>
+        <span className="appbar-title">New battle</span>
+      </header>
+      <main className="screen">
+        <div className="seg" role="radiogroup" aria-label="Who plays">
+          {MODES.map((m) => <button key={m.id} role="radio" aria-checked={prefs.mode === m.id} className={prefs.mode === m.id ? 'on' : ''} onClick={() => set({ mode: m.id })}>{m.label}</button>)}
+        </div>
+
+        <section className="sides" aria-label="Armies">
+          {side(0)}
+          <div className="vs" aria-hidden="true"><span>vs</span></div>
+          {side(1)}
+        </section>
+
+        <section className="group pad" aria-label="Mission">
+          <div className="group-head"><h3>Mission</h3><span className="group-note">Chapter Approved 2026–27</span></div>
+          {d0 && d1 ? (
+            <div className="prim-pair">
+              <div><span className="tiny muted">{playerName(0)}</span><b>{primaryFor(d0, d1).name}</b></div>
+              <div><span className="tiny muted">{playerName(1)}</span><b>{primaryFor(d1, d0).name}</b></div>
+            </div>
+          ) : <div className="small muted">Loading armies…</div>}
+          <div className="map-head">
+            <span className="small">{allMaps ? `All ${LAYOUTS.length} official layouts` : 'Official layouts for this pairing'}</span>
+            <button type="button" className="btn small ghost" onClick={() => { setAllMaps((v) => !v); setMapDeploy(''); }}>{allMaps ? 'This pairing only' : `All maps`}</button>
+          </div>
+          {allMaps && (
+            <div className="map-filter">
+              {['', ...new Set(LAYOUTS.map((l) => l.deployment))].map((d) => (
+                <button key={d || 'all'} type="button" className={`chip ${mapDeploy === d ? 'on' : ''}`} onClick={() => setMapDeploy(d)}>{d ? deploymentName(d) : 'All'}</button>
+              ))}
+            </div>
+          )}
+          <div className={`layout-pick ${allMaps ? 'wrap' : ''}`}>
+            <button type="button" className={`layout-opt ${prefs.layoutPick === '' ? 'on' : ''}`} onClick={() => set({ layoutPick: '' })}>
+              <div className="layout-random">?</div><span>Random</span>
+            </button>
+            {(allMaps ? LAYOUTS.filter((l) => !mapDeploy || l.deployment === mapDeploy) : layouts).map((l) => (
+              <button key={l.id} type="button" className={`layout-opt ${prefs.layoutPick === l.id ? 'on' : ''}`} onClick={() => set({ layoutPick: l.id })}>
+                <LayoutPreview layout={l} width={64} />
+                <span>{allMaps ? `${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}` : `#${l.number} ${deploymentName(l.deployment)}`}</span>
+              </button>
+            ))}
+          </div>
+          <div className="field">
+            <span id="sec-mode">Secondary Missions</span>
+            <div className="seg" role="radiogroup" aria-labelledby="sec-mode">
+              {SEC_MODES.map((m) => <button key={m.id} type="button" role="radio" aria-checked={prefs.secMode === m.id} className={prefs.secMode === m.id ? 'on' : ''} onClick={() => set({ secMode: m.id })}>{m.label}</button>)}
+            </div>
+            <span className="field-note">{SEC_MODES.find((m) => m.id === prefs.secMode)?.note}</span>
+          </div>
+        </section>
+
+        {err && <div className="err" role="alert">{err}</div>}
+        <div className="cta-bar">
+          <button className="btn primary big wide" disabled={busy || !index} onClick={start}>{busy ? 'Setting up…' : 'Start battle'}</button>
+        </div>
+      </main>
+
+      {choosing !== null && (
+        <div className="tray-backdrop" onClick={() => setChoosing(null)}>
+          <div className="tray" role="dialog" aria-label={`Army for ${role(choosing)}`} onClick={(e) => e.stopPropagation()}>
+            <div className="tray-head">
+              <span className="sheet-title grow">Army for {role(choosing)}</span>
+              <button className="btn small ghost" onClick={() => setChoosing(null)}>Close</button>
+            </div>
+            {(['list', 'preset'] as const).map((kind) => (
+              <div key={kind} className="group">
+                <div className="group-head"><h3>{kind === 'list' ? 'Your armies' : 'Ready-made'}</h3></div>
+                {!choices.some((c) => c.ref.kind === kind) && <div className="empty">No armies yet: build one from the home screen.</div>}
+                {choices.filter((c) => c.ref.kind === kind).map((c) => {
+                  const size = RULES.battleSizes.find((b) => b.id === c.list.battleSize) ?? RULES.battleSizes[0];
+                  const on = same(c.ref, prefs.sides[choosing]);
+                  return (
+                    <button key={kind === 'list' ? (c.ref as { id: string }).id : c.list.factionId} className={`pick-row ${on ? 'on' : ''}`} onClick={() => {
+                      set({ sides: (choosing ? [prefs.sides[0], c.ref] : [c.ref, prefs.sides[1]]) as [ArmyRef, ArmyRef] });
+                      setChoosing(null);
+                    }}>
+                      <Emblem factionId={c.list.factionId} sub={c.list.subfaction} />
+                      <span className="pick-army-text">
+                        <span className="pick-army-name">{c.list.name || 'Untitled army'}</span>
+                        <span className="pick-army-meta">{factionName(c.list.factionId)} · {c.list.detachments.join(' + ') || 'No Detachment'} · <span className="num">{listPoints(c.list)}/{size.points}</span></span>
+                      </span>
+                      {on && <Icon name="check" size={20} />}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

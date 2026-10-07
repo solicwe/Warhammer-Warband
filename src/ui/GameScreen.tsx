@@ -1115,7 +1115,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               <span className="label">Weapons shooting this target</span>
               {remaining.map((n) => {
                 const off = (mode.skip ?? []).includes(n);
-                return <button key={n} className={`btn small ${off ? '' : 'on'}`} onClick={() => setModeRaw({ ...mode, skip: off ? (mode.skip ?? []).filter((x) => x !== n) : [...(mode.skip ?? []), n] })}>{off ? '○' : '●'} {n}</button>;
+                return <button key={n} className={`btn small ${off ? '' : 'on'}`} aria-pressed={!off} onClick={() => setModeRaw({ ...mode, skip: off ? (mode.skip ?? []).filter((x) => x !== n) : [...(mode.skip ?? []), n] })}>{!off && <Icon name="check" size={16} />}{n}</button>;
               })}
             </div>
           )}
@@ -1537,11 +1537,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <span className="p1">{s.players[1].vp + s.players[1].secVp}<small> VP</small> {s.players[1].cp}<small> CP</small></span>
         </button>
         {(s.players[0].secMode !== 'none' || s.players[1].secMode !== 'none') && (
-          <button className="btn small cards-btn" onClick={() => setShowCards(true)} aria-label="Secondary Mission cards">
-            <Icon name="objective" size={18} />Cards<span className="cards-n">{s.players[me].secActive.length}</span>
+          <button className="tb-tool" onClick={() => setShowCards(true)} aria-label="Secondary Mission cards">
+            <span className="tb-ico"><Icon name="cards" size={22} />{s.players[me].secActive.length > 0 && <i className="tb-badge">{s.players[me].secActive.length}</i>}</span>
+            <span className="tb-lbl">Cards</span>
           </button>
         )}
-        <button className="btn small" onClick={() => openStrats()}>Strat</button>
+        <button className="tb-tool" onClick={() => openStrats()} aria-label="Stratagems">
+          <span className="tb-ico"><Icon name="strat" size={22} /></span>
+          <span className="tb-lbl">Strat</span>
+        </button>
       </div>
       {['command', 'movement', 'shooting', 'charge', 'fight'].includes(s.phase) && (
         <div className="phasebar">
@@ -1713,16 +1717,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn" onClick={() => { setShowMenu(false); setTape({ on: true }); }}>Tape measure</button>
             <button className="btn" onClick={() => { setShowMenu(false); setShowLog(true); }}>Battle log & army rules</button>
             <button className="btn" onClick={() => { setShowMenu(false); openStrats(); }}>Stratagems</button>
-            {([0, 1] as PlayerId[]).filter((p) => !bots.includes(p)).map((p) => (
-              <button key={p} className={`btn ${(s.autoRules ?? []).includes(p) ? 'on' : ''}`} onClick={() => act((g) => { const a = g.autoRules ?? []; g.autoRules = a.includes(p) ? a.filter((x) => x !== p) : [...a, p]; })}>
-                {bots.length ? 'Auto rules' : `${pName(s, p)}: auto rules`}: {(s.autoRules ?? []).includes(p) ? 'on (you only move and shoot)' : 'off (you take every decision)'}
-              </button>
-            ))}
-            {bots.length === 1 && !(s.autoRules ?? []).includes(human ?? 0) && (
-              <button className={`btn ${s.defenderRolls !== false ? 'on' : ''}`} onClick={() => act((g) => { g.defenderRolls = g.defenderRolls === false; })}>
-                When the bot attacks: {s.defenderRolls !== false ? 'I roll my saves (Command Re-roll available)' : 'roll automatically'}
-              </button>
-            )}
             <button className="btn danger" onClick={onExit}>Exit to home (game saved)</button>
             <button className="btn ghost" onClick={() => setShowMenu(false)}>Close</button>
           </div>
@@ -1781,7 +1775,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       {showLog && (
         <div className="tray-backdrop" onClick={() => setShowLog(false)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
-            <h2>Battle Log</h2>
+            <div className="sheet-title">Battle log</div>
             <div className="log">
               {[...s.log].reverse().map((l, i) => <div key={i} className={l.kind}>{l.round ? `R${l.round} ` : ''}{l.text}</div>)}
             </div>

@@ -54,6 +54,9 @@ const ICONS = {
   undo: <><path {...S} d="M9 14L4 9l5-5" /><path {...S} d="M4 9h10a6 6 0 0 1 0 12h-3" /></>,
   wait: <><circle {...S} cx="12" cy="12" r="9" /><path {...S} d="M12 7v5l3 2" /></>,
   trophy: <><path {...S} d="M8 4h8v5a4 4 0 0 1-8 0z" /><path {...S} d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8" /></>,
+  // the hand of Secondary Mission cards, and Stratagems (spent from Command points)
+  cards: <><rect {...S} x="8" y="3" width="12" height="16" rx="2" /><path {...S} d="M5 6.5V19a2 2 0 0 0 2 2h9" /></>,
+  strat: <><path {...S} d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" /><path {...S} d="M13 7.5l-3.5 5h3l-1 4 3.5-5h-3z" /></>,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof ICONS;

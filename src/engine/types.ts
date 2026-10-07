@@ -131,6 +131,9 @@ export interface ArmyUnitEntry {
 }
 
 export interface ArmyList {
+  /** the player's saved lists (home screen) */
+  id?: string;
+  updatedAt?: number;
   name: string;
   factionId: string;
   subfaction?: string; // sub-faction keyword, e.g. a Chapter

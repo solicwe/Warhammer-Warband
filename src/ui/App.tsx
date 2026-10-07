@@ -1,27 +1,16 @@
 import { Component, useEffect, useState, type ReactNode } from 'react';
-import { dispositionById, LAYOUTS, layoutsFor, MISSIONS, primaryFor, deploymentName, type DispositionId } from '../engine/config';
-import { createGame, listDisposition, listDispositionOptions } from '../engine/game';
-import { autoAttach, listPoints, syncList, forChapter } from '../engine/army';
-import { LayoutPreview } from './LayoutPreview';
-import type { ArmyList, FactionData, GameState } from '../engine/types';
+import { newUid } from '../engine/army';
+import type { GameState } from '../engine/types';
 import { ArmyBuilder } from './ArmyBuilder';
-import { loadFaction, loadIndex, type FactionIndex } from './data';
+import { BattleSetup } from './BattleSetup';
+import { loadIndex, type FactionIndex } from './data';
 import { GameScreen } from './GameScreen';
-import { PRESETS } from './presets';
+import { Home } from './Home';
+import { loadArmies, saveArmies, withAutoRules, type Army } from './library';
 import { clearSaved, loadSaved } from './store';
 import { TokenSprites } from './Tokens';
-import { Emblem, titleCase } from './ArmyBuilder';
 
-type Screen = { kind: 'home' } | { kind: 'build'; player: 0 | 1 } | { kind: 'game'; state: GameState };
-
-const LISTS_KEY = 'w40k11-lists';
-function loadLists(): [ArmyList, ArmyList] {
-  try {
-    const v = JSON.parse(localStorage.getItem(LISTS_KEY) ?? 'null');
-    if (Array.isArray(v) && v.length === 2 && v.every((l) => l && Array.isArray(l.units))) return v as [ArmyList, ArmyList];
-  } catch { /* ignore */ }
-  return [PRESETS.SM, PRESETS.ORK];
-}
+type Screen = { kind: 'home' } | { kind: 'build'; id: string; fresh?: boolean } | { kind: 'battle' } | { kind: 'game'; state: GameState };
 
 /** Keeps a rendering bug from taking the whole app down; the game itself is already saved. */
 class Guard extends Component<{ children: ReactNode; onReset: () => void }, { error: string | null }> {
@@ -31,11 +20,9 @@ class Guard extends Component<{ children: ReactNode; onReset: () => void }, { er
     if (!this.state.error) return this.props.children;
     return (
       <div className="screen">
-        <div className="sheet-title">Something went wrong</div>
-        <div className="card">
-          <div className="small">This screen could not be shown, but the game is saved. Go back home and tap "Continue".</div>
-          <div className="tiny muted" style={{ marginTop: 6 }}>{this.state.error}</div>
-        </div>
+        <div className="sheet-title">This screen could not be shown</div>
+        <div className="small">Your battle and armies are saved. Go back home and tap Continue.</div>
+        <div className="tiny muted">{this.state.error}</div>
         <button className="btn primary" onClick={() => { this.setState({ error: null }); this.props.onReset(); }}>Back to home</button>
       </div>
     );
@@ -44,211 +31,55 @@ class Guard extends Component<{ children: ReactNode; onReset: () => void }, { er
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ kind: 'home' });
-  const [lists, setLists] = useState<[ArmyList, ArmyList]>(loadLists);
-  const [names, setNames] = useState<[string, string]>(['Player 1', 'Player 2']);
-  // '' = random official layout for the matchup, 'any' = random from every layout, else a layout id
-  const [layoutPick, setLayoutPick] = useState<string>('');
-  const [allMaps, setAllMaps] = useState(false);
-  const [mapDeploy, setMapDeploy] = useState('');
-  const [secMode, setSecMode] = useState<'none' | 'tactical' | 'fixed'>('tactical');
-  const [mode, setMode] = useState<'hotseat' | 'bot' | 'botbot'>('hotseat');
-  // play options remembered on this device: auto rules (only move and shoot)
-  const [opts, setOpts] = useState<{ autoRules: boolean }>(() => {
-    try { return { autoRules: true, ...JSON.parse(localStorage.getItem('w40k-play-opts') ?? '{}') }; } catch { return { autoRules: true }; }
-  });
-  useEffect(() => { try { localStorage.setItem('w40k-play-opts', JSON.stringify(opts)); } catch { /* ignore */ } }, [opts]);
-  const vsBot = mode !== 'hotseat';
-  const [facs, setFacs] = useState<[FactionData | null, FactionData | null]>([null, null]);
-  const [dispPick, setDispPick] = useState<[DispositionId | null, DispositionId | null]>([null, null]);
+  const [armies, setArmies] = useState<Army[]>(loadArmies);
   const [index, setIndex] = useState<FactionIndex | null>(null);
   const [saved, setSaved] = useState<GameState | null>(null);
-  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => { loadIndex().then(setIndex).catch(() => setErr('Could not load the faction list. Try reloading the page.')); setSaved(loadSaved()); }, []);
-  useEffect(() => { try { localStorage.setItem(LISTS_KEY, JSON.stringify(lists)); } catch { /* ignore */ } }, [lists]);
-  useEffect(() => {
-    let live = true;
-    Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]).then((f) => {
-      if (!live) return;
-      setFacs([f[0], f[1]]);
-      // wargear points (e.g. default thunder hammers) for lists saved before wargear existed
-      const synced: [ArmyList, ArmyList] = [syncList(lists[0], f[0]), syncList(lists[1], f[1])];
-      if (synced[0] !== lists[0] || synced[1] !== lists[1]) setLists(synced);
-    }).catch(() => {});
-    return () => { live = false; };
-  }, [lists]);
-  /** Dispositions a list can choose from: one per detachment it brings. */
-  const dispOptions = (i: 0 | 1): DispositionId[] => {
-    const f = facs[i];
-    if (!f) return [];
-    const ids = listDispositionOptions(lists[i], f);
-    return ids.length ? ids : ['take-and-hold'];
-  };
-  const dispOf = (i: 0 | 1): DispositionId | null => {
-    const opts = dispOptions(i);
-    const pick = dispPick[i];
-    if (pick && opts.includes(pick)) return pick;
-    return facs[i] ? listDisposition(lists[i], facs[i]!) : null;
-  };
-  const d0 = dispOf(0), d1 = dispOf(1);
-  const layouts = d0 && d1 ? layoutsFor(d0, d1) : [];
+  useEffect(() => { loadIndex().then(setIndex).catch(() => setErr('Could not load the faction list. Reload the page to try again.')); setSaved(loadSaved()); }, []);
+  useEffect(() => saveArmies(armies), [armies]);
 
-  const start = async () => {
-    setBusy(true);
-    setErr(null);
-    try {
-      const factions = await Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]);
-      const botSide = (i: number) => mode === 'botbot' || (mode === 'bot' && i === 1);
-      // the bot attaches its loose characters to squads, as a player would at Declare Battle Formations
-      const ready = (i: 0 | 1) => { const f = forChapter(factions[i], lists[i].subfaction); const l = syncList(lists[i], f); return botSide(i) ? autoAttach(l, f) : l; };
-      const lists2: [ArmyList, ArmyList] = [ready(0), ready(1)];
-      const gone = lists.flatMap((l, i) => l.units.filter((u) => !factions[i].datasheets.some((d) => d.name === u.datasheet)).map((u) => `${names[i]}: ${u.datasheet}`));
-      if (gone.length) { setErr(`Some units are not in 11th edition any more (Legends). Open "Army" and remove them first: ${gone.join(', ')}`); return; }
-      const dz: [DispositionId, DispositionId] = [dispOf(0) ?? listDisposition(lists[0], factions[0]), dispOf(1) ?? listDisposition(lists[1], factions[1])];
-      const layout = LAYOUTS.find((l) => l.id === layoutPick) ?? LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
-      const s = createGame({
-        lists: lists2, factions: factions as [typeof factions[0], typeof factions[1]],
-        names: mode === 'botbot' ? ['Blue Bot', 'Red Bot'] : vsBot ? [names[0], 'Red Bot'] : names,
-        deploymentId: layout?.id, dispositions: dz, secondaryMode: secMode,
-      });
-      s.botPlayer = mode === 'bot' ? 1 : null;
-      s.bots = mode === 'botbot' ? [0, 1] : mode === 'bot' ? [1] : [];
-      s.autoRules = opts.autoRules ? ([0, 1] as const).filter((p) => !s.bots!.includes(p)) : [];
-      setScreen({ kind: 'game', state: s });
-    } catch (e) {
-      setErr(`Could not start the game: ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setBusy(false);
-    }
-  };
+  const update = (a: Army) => setArmies((xs) => xs.map((x) => (x.id === a.id ? { ...a, updatedAt: Date.now() } : x)));
   const goHome = () => { setSaved(loadSaved()); setScreen({ kind: 'home' }); };
+  const wrap = (node: ReactNode) => <div className="app-frame"><TokenSprites /><Guard onReset={goHome}>{node}</Guard></div>;
 
-  if (screen.kind === 'game') {
-    return <div className="app"><TokenSprites /><Guard onReset={goHome}><GameScreen initial={screen.state} onExit={goHome} /></Guard></div>;
-  }
+  if (screen.kind === 'game') return wrap(<div className="app"><GameScreen initial={screen.state} onExit={goHome} /></div>);
   if (screen.kind === 'build') {
-    const p = screen.player;
-    return (
+    const a = armies.find((x) => x.id === screen.id);
+    if (!a) return wrap(<div className="screen"><button className="btn" onClick={goHome}>Back to home</button></div>);
+    return wrap(
       <div className="app">
-        <TokenSprites />
-        <Guard onReset={goHome}>
-          <ArmyBuilder list={lists[p]} onChange={(l) => setLists((ls) => (p === 0 ? [l, ls[1]] : [ls[0], l]))} onDone={() => setScreen({ kind: 'home' })} />
-        </Guard>
-      </div>
+        {/* the list keeps its id whatever the builder does to it (a faction change starts it from a ready-made list) */}
+        <ArmyBuilder list={a} startPicker={screen.fresh} onChange={(l) => update({ ...l, id: a.id })} onDone={() => {
+          // backing out of "New army" before picking anything leaves no empty army behind
+          if (screen.fresh && a.name === 'New army' && !a.units.length && !a.detachments.length) setArmies((xs) => xs.filter((x) => x.id !== a.id));
+          goHome();
+        }} />
+      </div>,
     );
   }
-  const factionName = (id: string) => index?.factions.find((f) => f.id === id)?.name ?? id;
-  const pts = listPoints;
-  return (
-    <div className="app">
-      <TokenSprites />
-      <header className="appbar"><span className="brand">40K Tabletop</span><span className="muted small">11th edition</span></header>
-      <div className="screen">
-        {saved && saved.phase !== 'gameover' && (
-          <section className="card">
-            <div className="row">
-              <div className="grow">
-                <div className="card-title">Game in progress</div>
-                <div className="small muted">Battle Round {saved.round || '–'} · {saved.players[0].name} {saved.players[0].vp + saved.players[0].secVp} : {saved.players[1].vp + saved.players[1].secVp} {saved.players[1].name}</div>
-              </div>
-              <button className="btn primary" onClick={() => setScreen({ kind: 'game', state: saved })}>Continue</button>
-            </div>
-            <button className="btn small ghost" onClick={() => { clearSaved(); setSaved(null); }}>Delete this game</button>
-          </section>
-        )}
-
-        <section className="card">
-          <div className="card-title">Players</div>
-          <div className="seg">
-            <button className={mode === 'hotseat' ? 'on' : ''} onClick={() => setMode('hotseat')}>2 Players</button>
-            <button className={mode === 'bot' ? 'on' : ''} onClick={() => setMode('bot')}>vs Bot</button>
-            <button className={mode === 'botbot' ? 'on' : ''} onClick={() => setMode('botbot')}>Bot vs Bot</button>
-          </div>
-          {[0, 1].map((i) => (
-            <div key={i} className={`army-row side ${i ? 's1' : ''}`}>
-              <Emblem factionId={lists[i].factionId} sub={lists[i].subfaction} color={facs[i as 0 | 1]?.subfactions?.options.find((o) => o.keyword === lists[i].subfaction)?.color} />
-              <div className="grow">
-                {(i === 1 && vsBot) || mode === 'botbot'
-                  ? <div className="army-name">{mode === 'botbot' && i === 0 ? 'Blue Bot' : 'Red Bot'}</div>
-                  : <input aria-label={`Player ${i + 1} name`} value={names[i]} onChange={(e) => setNames((n) => (i === 0 ? [e.target.value, n[1]] : [n[0], e.target.value]))} />}
-                <div className="small" style={{ marginTop: 4 }}>
-                  <b>{factionName(lists[i].factionId)}{lists[i].subfaction ? ` · ${titleCase(lists[i].subfaction!)}` : ''}</b> <span className="muted">· {pts(lists[i])} pts · {lists[i].units.length} units · {lists[i].detachments.join(', ') || 'No Detachment selected'}</span>
-                </div>
-                {(() => {
-                  const ii = i as 0 | 1;
-                  const opts = dispOptions(ii);
-                  const cur = dispOf(ii);
-                  if (!cur) return null;
-                  return (
-                    <div className="row wrap" style={{ marginTop: 6, gap: 6 }}>
-                      <span className="tiny muted">Force Disposition</span>
-                      {opts.map((d) => (
-                        <button key={d} type="button" className={`disp-chip ${cur === d ? '' : 'off'}`} style={{ background: dispositionById(d).color }} onClick={() => { setDispPick((x) => (ii === 0 ? [d, x[1]] : [x[0], d])); setLists((ls) => (ii === 0 ? [{ ...ls[0], disposition: dispositionById(d).name }, ls[1]] : [ls[0], { ...ls[1], disposition: dispositionById(d).name }])); }}>{dispositionById(d).name}</button>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
-              <button className="btn small" onClick={() => setScreen({ kind: 'build', player: i as 0 | 1 })}>Army</button>
-            </div>
-          ))}
-        </section>
-
-        <section className="card">
-          <div className="card-title">Mission · Chapter Approved 2026-27</div>
-          {d0 && d1 ? (
-            <>
-              <div className="small">
-                <div><b>{dispositionById(d0).name}</b> vs <b>{dispositionById(d1).name}</b></div>
-                <div className="muted">{mode === 'botbot' ? 'Blue Bot' : names[0]}'s Primary: <b>{primaryFor(d0, d1).name}</b> · {mode === 'botbot' || vsBot ? 'Red Bot' : names[1]}'s: <b>{primaryFor(d1, d0).name}</b></div>
-              </div>
-              <div className="field">
-                <div className="map-head">
-                  <span>{allMaps ? `All maps (${LAYOUTS.length} official layouts)` : 'Official layouts (Battlemaster) for this pairing'}</span>
-                  <button type="button" className="btn small" onClick={() => { setAllMaps((v) => !v); setMapDeploy(''); }}>{allMaps ? 'This pairing only' : `All maps (${LAYOUTS.length})`}</button>
-                </div>
-                {allMaps && (
-                  <div className="map-filter">
-                    {['', ...new Set(LAYOUTS.map((l) => l.deployment))].map((d) => (
-                      <button key={d || 'all'} type="button" className={`chip ${mapDeploy === d ? 'on' : ''}`} onClick={() => setMapDeploy(d)}>{d ? deploymentName(d) : 'All'}</button>
-                    ))}
-                  </div>
-                )}
-                <div className={`layout-pick ${allMaps ? 'wrap' : ''}`}>
-                  <button type="button" className={`layout-opt ${layoutPick === '' ? 'on' : ''}`} onClick={() => setLayoutPick('')}>
-                    <div className="layout-random">?</div><span>Random (all maps)</span>
-                  </button>
-                  {(allMaps ? LAYOUTS.filter((l) => !mapDeploy || l.deployment === mapDeploy) : layouts).map((l) => (
-                    <button key={l.id} type="button" className={`layout-opt ${layoutPick === l.id ? 'on' : ''}`} onClick={() => setLayoutPick(l.id)}>
-                      <LayoutPreview layout={l} width={64} />
-                      <span>{allMaps ? `${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}` : `#${l.number} ${deploymentName(l.deployment)}`}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : <div className="small muted">Loading armies…</div>}
-          <label className="field">Secondary
-            <select value={secMode} onChange={(e) => setSecMode(e.target.value as typeof secMode)}>
-              <option value="tactical">Tactical (draw up to 2 cards each Command phase)</option>
-              <option value="fixed">Fixed (pick 2 cards for the whole battle)</option>
-              <option value="none">None (good for a first game)</option>
-            </select>
-          </label>
-          {mode !== 'botbot' && (
-            <label className="check-row">
-              <input type="checkbox" checked={opts.autoRules} onChange={(e) => setOpts((o) => ({ ...o, autoRules: e.target.checked }))} />
-              <span><b>Auto rules</b> — you only move units and pick what to shoot; stratagems, abilities, re-rolls, saves, battle-shock, fights and reactions are done for you</span>
-            </label>
-          )}
-          <div className="tiny muted">Force Disposition comes from the army's Detachments · the pairing sets each side's Primary Mission and the map (3 official layouts per pairing)</div>
-        </section>
-
-        {err && <div className="err">{err}</div>}
-        <button className="btn primary big" disabled={busy || !index} onClick={start}>{busy ? 'Loading…' : 'Start Battle'}</button>
-        <div className="tiny muted">Datasheets: Wahapedia 11th edition export{index ? ` · updated ${index.lastUpdate.slice(0, 10)}` : ''} · Core Rules June 2026 · Warhammer 40,000 is a trademark of Games Workshop</div>
-      </div>
-    </div>
+  if (screen.kind === 'battle') {
+    return wrap(<BattleSetup armies={armies} index={index} onBack={goHome} onUpdateArmy={update} onStart={(s) => setScreen({ kind: 'game', state: s })} />);
+  }
+  return wrap(
+    <>
+      <Home
+        armies={[...armies].sort((x, y) => (y.updatedAt ?? 0) - (x.updatedAt ?? 0))}
+        index={index}
+        saved={saved}
+        onOpen={(id) => setScreen({ kind: 'build', id })}
+        onNew={() => {
+          const id = newUid('a');
+          setArmies((xs) => [...xs, { id, name: 'New army', factionId: 'SM', battleSize: 'strike-force', detachments: [], units: [], updatedAt: Date.now() }]);
+          setScreen({ kind: 'build', id, fresh: true });
+        }}
+        onDuplicate={(id) => setArmies((xs) => { const a = xs.find((x) => x.id === id); return a ? [...xs, { ...structuredClone(a), id: newUid('a'), name: `${a.name || 'Army'} (copy)`, updatedAt: Date.now() }] : xs; })}
+        onDelete={(id) => setArmies((xs) => xs.filter((x) => x.id !== id))}
+        onBattle={() => setScreen({ kind: 'battle' })}
+        onContinue={() => { if (saved) setScreen({ kind: 'game', state: withAutoRules(saved) }); }}
+        onAbandon={() => { clearSaved(); setSaved(null); }}
+      />
+      {err && <div className="toast" role="alert">{err}</div>}
+    </>,
   );
 }

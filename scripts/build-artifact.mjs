@@ -15,7 +15,7 @@ const page = `<title>40K 11th Tabletop</title>
 ${icon}
 ${fonts}
 <style>
-html, body { height: 100%; background: #3f3f3f; color-scheme: dark; }
+html, body { height: 100%; }
 ${css}
 </style>
 <div id="root"></div>

@@ -1,7 +1,7 @@
 # Warhammer 40,000 11th Edition — Mobile Tabletop Simulator
 
-เว็บแอปจำลองการเล่น Warhammer 40K **11th edition** แบบ 2D บนมือถือ (เล่นแบบ hotseat ส่งเครื่องให้กัน 2 คน)
-**ผู้เล่นเดินและวางโมเดลเอง ส่วนระบบทอยเต๋าและคิดตามกฎให้ทั้งหมด** โดยโชว์ทุกลูก (Hit → Wound → Save → Damage) พร้อมบอกว่าต้องได้เท่าไหร่และทำไม คล้าย Baldur's Gate 3
+เว็บแอปจำลองการเล่น Warhammer 40K **11th edition** แบบ 2D บนมือถือ (เล่นกับบอท, 2 คนส่งเครื่องให้กัน หรือดูบอทเล่นกันเอง)
+**ผู้เล่นแค่เดินและเลือกเป้า ส่วนระบบทอยเต๋าและตัดสินใจตามกฎที่ไม่ต้องถามผู้เล่นให้ทั้งหมด** โดยโชว์ทุกลูก (Hit → Wound → Save → Damage) พร้อมบอกว่าต้องได้เท่าไหร่และทำไม
 
 **เล่นบนมือถือ:** https://claude.ai/artifact/XpGarv72aawR35ZDDgUBGW (ลิงก์ส่วนตัว — แชร์ให้คนอื่นผ่านเมนู Share ของหน้า)
 
@@ -15,6 +15,8 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 ```
 
 ## มีอะไรบ้าง
+- **หน้าแรก = คลังทัพ**: ทัพทั้งหมดของเรา (ตรา, ชื่อ, faction, detachment, แต้ม/ขนาดเกม, จำนวนหน่วย) แตะเพื่อแก้, **+ New army** (เลือก faction ก่อน), ⋮ ทำซ้ำ / ลบ, การ์ด **Battle in progress** เล่นต่อ / ทิ้ง → **New battle**: เลือกโหมด (vs Bot / 2 Players / Bot vs Bot), ทัพของแต่ละฝ่าย (จากคลังหรือทัพสำเร็จรูป), Force Disposition, แผนที่ และ Secondary
+- **ระบบเล่นให้เองเสมอ**: ไม่มีสวิตช์ — ทุกอย่างที่ไม่ต้องให้ผู้เล่นตัดสินใจ (ทอย save, re-roll, doctrine, ability ตามจังหวะ, pile-in ฯลฯ) ระบบทำให้ ผู้เล่นแค่เดินและเลือกเป้า
 - **กฎ 11th edition** (Core Rules มิ.ย. 2026) — ดูสรุปที่ตรวจแล้วใน [docs/01-rules-11e-reference.md](docs/01-rules-11e-reference.md)
   - ครบ 5 phase: Command (CP, Battle-shock แบบติดค้าง), Movement (Normal/Advance/Fall back + Desperate Escape, Reserves/Deep Strike), Shooting (Normal/Assault/Close-quarters/Indirect), Charge (ทอย 2D6 ก่อนแล้วค่อยเลือกเป้า), Fight (Pile-in ทั้งหมดก่อน → สลับกันตี Fights First ก่อน → Consolidate)
   - Engagement 2", Coherency 2"/9", Cover = −1 BS, Hidden 15", Plunging Fire (Towering), Hazard roll 1–2

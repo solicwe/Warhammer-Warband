@@ -18,6 +18,8 @@ interface Props {
   list: ArmyList;
   onChange: (l: ArmyList) => void;
   onDone: () => void;
+  /** a brand-new army: open on the faction chooser */
+  startPicker?: boolean;
 }
 
 type Section = 'characters' | 'battleline' | 'transports' | 'others';
@@ -65,7 +67,7 @@ export function Emblem({ factionId, color, sub }: { factionId: string; color?: s
   if (img) return <img className="ab-emblem ab-emblem-img" src={img} alt="" />;
   return (
     <svg className="ab-emblem" viewBox="0 0 64 64" aria-hidden="true">
-      <circle cx="32" cy="32" r="30" fill="#1a1a1a" stroke="#7a0c0c" strokeWidth="3" />
+      <circle className="emb-ring" cx="32" cy="32" r="30" strokeWidth="3" />
       {factionId === 'ORK' ? (
         <g fill="#8fc04a" stroke="#0d1a05" strokeWidth="2" strokeLinejoin="round">
           <path d="M14 26 L22 18 L28 24 L32 14 L36 24 L42 18 L50 26 L46 44 L32 52 L18 44 Z" />
@@ -206,7 +208,7 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
   );
 }
 
-export function ArmyBuilder({ list, onChange, onDone }: Props) {
+export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const [index, setIndex] = useState<FactionIndex | null>(null);
   const [rawFaction, setFaction] = useState<FactionData | null>(null);
   const faction = useMemo(() => rawFaction && forChapter(rawFaction, list.subfaction), [rawFaction, list.subfaction]);
@@ -219,7 +221,7 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
   const [openSecs, setOpenSecs] = useState<string[]>(['enh']);
   const [addSize, setAddSize] = useState<string | null>(null); // the datasheet whose unit size is being picked to add it
   const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null); // the ⋮ quick menu
-  const [picker, setPicker] = useState<{ factionId: string | null } | null>(null); // faction → sub-faction chooser
+  const [picker, setPicker] = useState<{ factionId: string | null } | null>(startPicker ? { factionId: null } : null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
   const [resetArmed, setResetArmed] = useState(false);
   useEffect(() => setView(null), [adding]); // the datasheet opened under a row of the add list
@@ -252,8 +254,10 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     setPicker(null);
     if (factionId !== list.factionId) {
       // a faction with a ready-made list starts from it (Adeptus Custodes …), others from an empty list
-      const quick = PRESETS[factionId];
-      onChange(quick && !subfaction ? { ...structuredClone(quick), battleSize: list.battleSize } : { ...list, factionId, subfaction, detachments: [], units: [] });
+      // a brand-new army starts empty, named after its faction
+      const quick = startPicker ? undefined : PRESETS[factionId];
+      const named = startPicker && (!list.name || list.name === 'New army') ? index?.factions.find((f) => f.id === factionId)?.name ?? list.name : list.name;
+      onChange(quick && !subfaction ? { ...structuredClone(quick), battleSize: list.battleSize } : { ...list, name: named, factionId, subfaction, detachments: [], units: [] });
       return;
     }
     if (!faction) return;
@@ -416,9 +420,9 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
     const cur = listDisposition(list, faction);
     if (opts.length < 2) return <span className="ab-disp">Force Disposition: <b>{dispositionById(cur).name}</b></span>;
     return (
-      <span className="ab-disp ab-disp-pick">Force Disposition:{' '}
+      <span className="ab-disp ab-disp-pick"><span className="ab-disp-label">Force Disposition</span>
         {opts.map((d) => (
-          <button key={d} type="button" className={`disp-chip ${cur === d ? '' : 'off'}`} style={{ background: dispositionById(d).color }}
+          <button key={d} type="button" className={`disp-chip ${cur === d ? '' : 'off'}`} style={{ background: dispositionById(d).color }} aria-pressed={cur === d}
             onClick={() => set({ disposition: dispositionById(d).name })}>{dispositionById(d).name}</button>
         ))}
       </span>
@@ -918,20 +922,20 @@ export function ArmyBuilder({ list, onChange, onDone }: Props) {
               <Emblem factionId={list.factionId} color={sub?.color} sub={list.subfaction} />
               <span className="grow ab-head-text">
                 <input className="ab-title ab-name-input" aria-label="Army name" value={list.name} placeholder="Army name" onChange={(e) => set({ name: e.target.value })} />
-                <span className="ab-det-name">{list.detachments.join(' · ') || 'No Detachment selected'}</span>
-                {dispositionChips()}
                 <span className="ab-faction">{factionName}{sub ? ` · ${sub.name}` : ''}</span>
+                <span className="ab-det-name">{list.detachments.join(' · ') || 'No Detachment selected'}</span>
               </span>
+              {list.units.length > 0 && (
+                // the page runs where confirm() dialogs are blocked: tap once to arm, again to clear
+                <button type="button" className={`ab-reset ${resetArmed ? 'armed' : ''}`} onClick={() => {
+                  if (!resetArmed) { setResetArmed(true); window.setTimeout(() => setResetArmed(false), 3000); return; }
+                  setResetArmed(false);
+                  set({ units: [], detachments: [] });
+                  setNote('Roster reset');
+                }}><Icon name="delete" size={15} /> {resetArmed ? 'Tap again' : 'Reset'}</button>
+              )}
             </div>
-            {list.units.length > 0 && (
-              // the page runs where confirm() dialogs are blocked: tap once to arm, again to clear
-              <button type="button" className={`ab-reset ${resetArmed ? 'armed' : ''}`} onClick={() => {
-                if (!resetArmed) { setResetArmed(true); window.setTimeout(() => setResetArmed(false), 3000); return; }
-                setResetArmed(false);
-                set({ units: [], detachments: [] });
-                setNote('Roster reset');
-              }}><Icon name="delete" size={15} /> {resetArmed ? 'Tap again' : 'Reset'}</button>
-            )}
+            {dispositionChips()}
           </div>
         )}
         {!faction && <div className="ab-empty">Loading…</div>}

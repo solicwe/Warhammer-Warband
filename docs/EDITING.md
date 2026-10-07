@@ -57,6 +57,10 @@ Enhancement: เขียนกฎใน `data/abilities/<FACTION>.json` ด้�
 1. `npm run data -- --fetch` ดึงข้อมูลล่าสุดจาก Wahapedia (หรือวาง CSV ใน `data/raw`)
 2. แก้ค่าที่ผิดด้วย `data/overrides/<FACTION>.json`
 3. เพิ่ม `data/abilities/<FACTION>.json` และ `data/stratagems/<FACTION>.json` แล้ว import ใน `src/engine/effects.ts` (`FACTION_RULES`) และ `src/engine/stratagems.ts` (`BOOKS`)
+4. กฎ detachment ใส่ใน `data/detachment-rules.json` (key = ชื่อ detachment, `auto` = `full` / `partial` / `manual`)
+5. (ไม่บังคับ) ทัพสำเร็จรูปให้เลือกตอน New battle: เพิ่มใน `PRESETS` ของ `src/ui/presets.ts` (key = faction id)
+
+หน้าแรก (รายการทัพ), หน้า New battle, ตัวจัดทัพ และเกม ใช้ได้กับทุก faction อยู่แล้ว: เพิ่มข้อมูลตามข้างบนแล้ว `npm test` + `npm run artifact` จบ ไม่ต้องแก้ UI
 
 ## รูปภาพหน่วย
 ดู `public/images/README.md`
