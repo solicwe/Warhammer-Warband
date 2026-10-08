@@ -528,7 +528,9 @@ b.em { font-weight: 700; color: var(--text); }
 .portrait-add { position: absolute; right: -3px; bottom: -3px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #8f5f12; color: #fff; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35); pointer-events: none; }
 .portrait-x { position: absolute; top: -8px; right: -8px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; background: #3a3f45; color: #fff; font-size: 16px; line-height: 28px; padding: 0; cursor: pointer; }
 .portrait-crown { position: absolute; left: 32%; top: -2%; width: 36%; height: auto; pointer-events: none; }
-.portrait-msg { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 4px; white-space: nowrap; background: var(--text); color: var(--bg); font: 500 12px var(--font-ui); padding: 3px 8px; border-radius: 4px; z-index: 5; }
+/* a fixed dark chip with white text: the theme's own text / background colours swap inside the white datasheet card,
+   which left dark text on a dark chip there */
+.portrait-msg { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 4px; white-space: nowrap; background: rgba(21, 25, 29, 0.92); color: #ffffff; font: 500 12px var(--font-ui); padding: 3px 8px; border-radius: 4px; z-index: 5; pointer-events: none; }
 
 /* ---------- battle ---------- */
 .topbar { display: flex; align-items: center; gap: 6px; min-height: 54px; padding: 4px 8px 4px 4px; background: var(--surface); border-bottom: 1px solid var(--line); color: var(--text); flex: none; }
@@ -789,7 +791,7 @@ details > .strat-card { margin-top: 6px; }
    headings, whatever the app theme */
 .ds-sheet {
   --ds-band: #2c4440;
-  --surface: #ffffff; --surface-2: #f2f2f2; --line: #d6d6d6; --line-2: #9a9a9a; --text: #111; --text-2: #4a4a4a; --text-3: #87909a; --accent: var(--ds-band);
+  --bg: #ffffff; --surface: #ffffff; --surface-2: #f2f2f2; --line: #d6d6d6; --line-2: #9a9a9a; --text: #111; --text-2: #4a4a4a; --text-3: #87909a; --accent: var(--ds-band); --thumb: #e9ebec;
   --sunk: #e9ebec; --good: #2c7a4b; --good-soft: #e2f1e8; --warn: #9a6400; --warn-soft: #f6ecd9; --bad: #b3261e; --bad-soft: #f8e3e1;
   --accent-soft: #eef2f4; --on-fill: #fff; --ink: #111; --ink-muted: #4a4a4a; --muted: #5a5a5a; --surface2: #f2f2f2; --card: #fff; --card2: #f2f2f2; --card3: #d6d6d6;
   color-scheme: light; background: #fff; color: #111; border: 1px solid #bdbdbd; border-radius: 6px; padding-bottom: 10px; overflow: hidden; gap: 0 !important;
@@ -824,10 +826,13 @@ details > .strat-card { margin-top: 6px; }
 .ds-sheet details, .ds-sheet > .small, .ds-sheet .ds-body { padding: 4px 12px; margin: 0; }
 .ds-sheet .ds-pics { padding: 8px 12px 0; }
 
-/* ---------- move slider: tap where to go, slide how far ---------- */
-.move-slider { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--accent); }
-.move-slider input[type="range"] { flex: 1; min-width: 0; height: 32px; accent-color: var(--accent); touch-action: pan-x; }
-.move-slider input[type="range"]::-webkit-slider-thumb { width: 26px; height: 26px; }
-.move-slider input[type="range"]::-moz-range-thumb { width: 26px; height: 26px; }
-.move-slider input[type="range"]:disabled { opacity: 0.45; }
-.move-slider-d { min-width: 44px; text-align: right; font: 700 15px/1 var(--font-ui); font-variant-numeric: tabular-nums; color: var(--text); }
+/* ---------- move joystick: hold the knob and push the way the unit should go ---------- */
+.move-joy { display: flex; align-items: center; gap: 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.move-joy-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.move-joy-d { font: 700 20px/1 var(--font-ui); font-variant-numeric: tabular-nums; color: var(--text); }
+.joystick { position: relative; flex: none; border-radius: 50%; background: radial-gradient(circle, var(--surface) 0%, var(--sunk) 100%); border: 2px solid var(--line-2); touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+.joystick.held { border-color: var(--accent); cursor: grabbing; }
+.joystick.off { opacity: 0.45; }
+.joystick-ring { position: absolute; inset: 18px; border-radius: 50%; border: 1px dashed var(--line-2); pointer-events: none; }
+.joystick-knob { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: var(--accent); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); pointer-events: none; transition: transform 0.08s ease-out; }
+.joystick.held .joystick-knob { transition: none; }

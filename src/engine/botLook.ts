@@ -3,7 +3,8 @@
 // next turn, and keeps the style that leaves it best off (VP and army left). The real turn is then played that way.
 import { botAct } from './bot';
 import { unitValue } from './botEval';
-import { setBotWeights, W, type BotW } from './botWeights';
+import { botOff, setBotWeights, W, type BotW } from './botWeights';
+import { withFastPlanning } from './botMove';
 import { alive, other } from './state';
 import type { BotLevel, GameState, PlayerId } from './types';
 
@@ -20,13 +21,13 @@ const STYLES: Record<string, Partial<BotW>> = {
  *  different on each copy, so one lucky roll doesn't decide it), and how long it may think on a phone. */
 const LEVELS: Record<BotLevel, { styles: string[]; samples: number; budget: number }> = {
   easy: { styles: [], samples: 0, budget: 0 },
-  normal: { styles: ['steady', 'aggressive', 'careful'], samples: 1, budget: 6000 },
-  hard: { styles: ['steady', 'aggressive', 'careful'], samples: 2, budget: 10000 },
-  expert: { styles: ['steady', 'aggressive', 'careful', 'objectives', 'hunt'], samples: 3, budget: 16000 },
+  normal: { styles: ['steady', 'aggressive', 'careful'], samples: 1, budget: 9000 },
+  hard: { styles: ['steady', 'aggressive', 'careful'], samples: 2, budget: 20000 },
+  expert: { styles: ['steady', 'aggressive', 'careful', 'objectives', 'hunt'], samples: 3, budget: 40000 },
 };
-export const levelOf = (s: GameState): BotLevel => s.botLevel ?? 'normal';
+export const levelOf = (s: GameState, p?: PlayerId): BotLevel => (p !== undefined ? s.botLevels?.[p] : undefined) ?? s.botLevel ?? 'normal';
 /** How long the app lets the bot think about its turn at this level (a Web Worker, so the screen never freezes). */
-export const lookBudget = (s: GameState) => LEVELS[levelOf(s)].budget;
+export const lookBudget = (s: GameState, p?: PlayerId) => LEVELS[levelOf(s, p)].budget;
 
 /** Points of army a VP is worth when comparing outcomes (a 1000-point game is decided by a few dozen VP). */
 const VP_POINTS = 15;
@@ -55,6 +56,9 @@ const standing = (s: GameState, p: PlayerId) => {
 function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Infinity, sample = 0): number {
   const c = structuredClone(s);
   if (sample) c.rng = (c.rng ^ Math.imul(sample, 2654435761)) >>> 0;
+  // the copy's turn already has its style: without this mark the copy's own movement would pick (and set) the plain
+  // weights again, and every style would play the same way
+  c.botTried = [...(c.botTried ?? []), styleKey(c)];
   c.bots = [0, 1];
   const before = { 0: W(0), 1: W(1) };
   setBotWeights(p, { ...own[p]!, ...style });
@@ -63,7 +67,8 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Inf
   try {
     let steps = 0;
     while (c.phase !== 'gameover' && c.turn < end && steps < 4000) {
-      botAct(c); steps++;
+      if (botOff('fastLook')) botAct(c); else withFastPlanning(() => botAct(c));
+      steps++;
       if (Date.now() > deadline) return -Infinity; // out of time: this style is not compared
     }
   } finally {
@@ -77,24 +82,34 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Inf
 /** The style that leaves p best off after playing this turn and the opponent's next one on copies of the game. */
 export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs?: number): string {
   if (!enabled || inRollout || s.phase === 'gameover') return 'steady';
-  const L = LEVELS[levelOf(s)];
-  if (!L.styles.length) return 'steady';
-  own[p] ??= W(p);
-  // a slow device: whatever could not be tried in time is skipped (steady, the first, is the fallback)
-  const deadline = Date.now() + (budgetMs ?? Infinity);
   let best = { name: 'steady', v: -Infinity };
-  for (const name of L.styles) {
-    let sum = 0, n = 0;
-    for (let k = 0; k < L.samples; k++) {
-      const v = rollout(s, p, STYLES[name], deadline, k);
-      if (!Number.isFinite(v)) break;
-      sum += v; n++;
-      if (Date.now() > deadline) break;
-    }
-    if (n && sum / n > best.v + 1e-6) best = { name, v: sum / n };
-    if (Date.now() > deadline) break;
-  }
+  for (const [name, v] of Object.entries(styleValues(s, p, budgetMs))) if (v > best.v + 1e-6) best = { name, v };
   return best.name;
+}
+
+/**
+ * How p stands after this turn and the opponent's next, for each way of playing the turn its level tries (the mean
+ * over the rolls of the dice played). Every way gets one roll first, then the extra rolls go round, so a phone that
+ * runs out of time has still compared them all once.
+ */
+export function styleValues(s: GameState, p: PlayerId, budgetMs?: number): Record<string, number> {
+  const L = LEVELS[levelOf(s, p)];
+  const out: Record<string, number> = {};
+  if (!L.styles.length) return out;
+  own[p] ??= W(p);
+  const deadline = Date.now() + (budgetMs ?? Infinity);
+  const sum: Record<string, number> = {}, n: Record<string, number> = {};
+  for (let k = 0; k < L.samples; k++) {
+    for (const name of L.styles) {
+      // a slow device: whatever could not be tried in time is skipped (steady, the first, is the fallback)
+      if (Date.now() > deadline && n.steady) break;
+      const v = rollout(s, p, STYLES[name], deadline, k);
+      if (!Number.isFinite(v)) continue;
+      sum[name] = (sum[name] ?? 0) + v; n[name] = (n[name] ?? 0) + 1;
+    }
+  }
+  for (const name of Object.keys(n)) out[name] = sum[name] / n[name];
+  return out;
 }
 
 /** The key that says this turn's style is chosen (so the Movement phase doesn't look ahead twice). */

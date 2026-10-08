@@ -53,12 +53,24 @@ export function deployPosture(s: GameState, p: 0 | 1): Posture {
   return fists > guns * 1.5 ? 'open' : 'closed';
 }
 
-/** The unit sent out as bait: cheap, not a character or vehicle, with some staying power; only for a big enough army. */
+/** Roughly how many ordinary shots (S4, AP0, 1 damage) the unit takes to wipe out: wounds, saves and toughness. */
+function sturdiness(u: UnitState): number {
+  return alive(u).reduce((a, m) => {
+    const sv = Math.min(m.profile.Sv || 7, m.profile.InSv ?? 7);
+    return a + m.wounds / Math.min(1, Math.max(1 / 6, (sv - 1) / 6)) * Math.min(2, (m.profile.T || 4) / 4);
+  }, 0);
+}
+
+/**
+ * The unit sent out as bait: cheap, not a character or vehicle, and able to soak a turn of shooting; only for a big
+ * enough army. Ten Gretchin in the open are not bait, just free points for the enemy (they hold home instead).
+ */
 export function baitUnit(s: GameState, p: 0 | 1): UnitState | undefined {
   const mine = s.units.filter((u) => u.owner === p && u.status !== 'destroyed');
   if (mine.length < 5 || deployPosture(s, p) !== 'closed') return undefined;
   return mine
-    .filter((u) => !u.models.some((m) => m.isCharacter || m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER')) && unitValue(u) <= 150 && alive(u).length >= 5)
+    .filter((u) => !u.models.some((m) => m.isCharacter || m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER')) && unitValue(u) <= 150 && alive(u).length >= 5
+      && sturdiness(u) >= 10)
     .sort((a, b) => unitValue(a) - unitValue(b))[0];
 }
 
@@ -90,7 +102,8 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   const home = objs.filter(({ p }) => pointInPoly(p, zone));
   const middle = objs.filter(({ p }) => !pointInPoly(p, zone) && !pointInPoly(p, enemyZone));
   const friends = s.units.filter((f) => f.owner === u.owner && f.id !== u.id && onBoard(f));
-  const homeHeld = (p: Pt) => friends.some((f) => alive(f).some((m) => dist(m, p) <= 3 + m.r));
+  // held by a unit that stays there: a mob of Boyz standing on it now charges off in the first turn
+  const homeHeld = (p: Pt) => friends.some((f) => oc(f) > 0 && !isBrawler(s, f) && alive(f).some((m) => dist(m, p) <= 3 + m.r));
   const zoneDepth = Math.max(1, ...samplePoly(zone, 3).map((p) => dist(p, ec))) - Math.min(...samplePoly(zone, 3).map((p) => dist(p, ec)));
   const frontDist = Math.min(...samplePoly(zone, 3).map((p) => dist(p, ec)));
 

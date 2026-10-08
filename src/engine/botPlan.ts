@@ -22,7 +22,11 @@ import type { GameState, PlayerId, Pt, UnitState } from './types';
  */
 export type Role = 'home' | 'anchor' | 'hammer' | 'screen' | 'firebase' | 'support' | 'taxi';
 
-export interface Job { role: Role; post?: Pt; why: string }
+export interface Job {
+  role: Role; post?: Pt; why: string;
+  /** a cheap squad kept on the home objective all game (Gretchin, Cultists): movement follows it */
+  keep?: boolean;
+}
 
 /** open: first round · push: we are stronger or behind · hold: we lead or are weaker · all-in: the last turn */
 export type Stance = 'open' | 'push' | 'hold' | 'all-in';
@@ -56,13 +60,14 @@ export function stanceFor(s: GameState, p: PlayerId): { stance: Stance; risk: nu
 /**
  * The job a unit's movement follows. Measured on the Elo ladder (scripts/elo.mjs, 96 games each against the last
  * bot): fixed posts for the whole army played clearly worse than each unit weighing its own spot (-62 Elo against
- * +42), so movement follows only the jobs that hold up — cheap fighters screening, and the last turn's rush onto the
- * objectives. The rest of the plan is the bot's reading of the battle (who would hold home, who hunts).
+ * +42), so movement follows only the jobs that hold up — cheap fighters screening, a cheap squad kept on the home
+ * objective, and the last turn's rush onto the objectives. The rest of the plan is the bot's reading of the battle
+ * (who would hold home, who hunts).
  */
 export function followedJob(plan: ArmyPlan, unitId: string): Job | undefined {
   const j = plan.jobs.get(unitId);
   if (!j || botOff('jobs')) return undefined;
-  if (botOff('lean') || plan.stance === 'all-in' || j.role === 'screen') return j;
+  if (botOff('lean') || plan.stance === 'all-in' || j.role === 'screen' || (j.keep && !botOff('keep'))) return j;
   return undefined;
 }
 
@@ -133,7 +138,11 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
       }).sort((a, b) => a.cost - b.cost);
     // never the army's hammer: 200 points of Dreadnought guarding home is a wasted unit (better nobody, until a cheap one comes)
     const c0 = cands[0] && info.get(cands[0].u.id)!;
-    if (c0 && (jobs.get(c0.u.id)?.role === 'firebase' || (c0.value <= 160 && !(c0.brawler && c0.value > 120)))) jobs.set(c0.u.id, { role: 'home', post: hp, why: 'holds home' });
+    if (c0 && (jobs.get(c0.u.id)?.role === 'firebase' || (c0.value <= 160 && !(c0.brawler && c0.value > 120)))) {
+      // a squad this cheap loses nothing by sitting at home all game (the way a player parks Gretchin there)
+      const keep = !c0.brawler && c0.value <= 80;
+      jobs.set(c0.u.id, { role: 'home', post: hp, why: keep ? 'kept on home all game' : 'holds home', keep });
+    }
   }
 
   // hammers: the units that do the most damage, and every expensive one

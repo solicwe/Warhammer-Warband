@@ -22,6 +22,15 @@ import {
 import type { GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from './types';
 
 export type Paths = Map<string, Pt[]>;
+
+/** The lookahead plays whole turns on copies of the game: there each unit weighs fewer spots (the closest aims, one
+ *  way of getting to each), so more ways of playing the turn fit in the time a phone has. */
+let fastPlanning = false;
+export function withFastPlanning<T>(fn: () => T): T {
+  const was = fastPlanning;
+  fastPlanning = true;
+  try { return fn(); } finally { fastPlanning = was; }
+}
 type Spot = Map<string, Pt>;
 
 const W = RULES.battlefield.width;
@@ -107,7 +116,7 @@ export function movesTowards(s: GameState, u: UnitState, kind: MoveKind, max: nu
   if (L < 0.5) return [];
   const vopt = { fly, maxOverride: opt.ignoreMax ? max : undefined };
   const out: Paths[] = [];
-  const want = opt.count ?? 2;
+  const want = opt.count ?? (fastPlanning ? 1 : 2);
   let below = Infinity;
   const step = Math.max(0.35, L / 8);
   for (let len = L; len >= 0.45 && out.length < want; len -= step) {
@@ -178,7 +187,7 @@ function escortFor(s: GameState, u: UnitState): Ctx['escort'] {
   if (u.transport || u.sources.length > 1 || boardUnits(s, u.owner).length < 2) return undefined; // a led squad goes where its squad goes
   let best: Ctx['escort'];
   let bestV = 0;
-  const solo = alive(u).every((m) => m.isCharacter);
+  const solo = alive(u).every((m) => m.isCharacter) && unitValue(u) < 150 && !hasKw(u, 'MONSTER') && !hasKw(u, 'VEHICLE');
   for (const a of u.abilities) {
     const t = a.text ?? '';
     const f1 = /friendly ([A-Z][A-Z' -]*?) (?:unit|model)s?\b[^.]*?within (\d+)"/.exec(t);
@@ -270,7 +279,10 @@ function quarterJobs(s: GameState, p: PlayerId): Map<string, { q: number; aim: P
   if (hit && hit.key === key) return hit.jobs;
   const jobs = new Map<string, { q: number; aim: Pt }>();
   if (wantsQuarters(s, p)) {
-    const free = boardUnits(s, p).filter((u) => !u.transport && !isEngaged(s, u) && !hasKw(u, 'AIRCRAFT'));
+    // sitting in a corner is a job for cheap units: never the army's fighters, monsters or anything expensive
+    // (Magnus or a Deff Dread parked in a table quarter is a unit out of the battle)
+    const free = boardUnits(s, p).filter((u) => !u.transport && !isEngaged(s, u) && !hasKw(u, 'AIRCRAFT') && !hasKw(u, 'MONSTER')
+      && unitValue(u) <= 150 && !(isBrawler(s, u) && unitValue(u) > 60));
     const taken = new Set<number>();
     for (const u of free) {
       const q = unitQuarter(u);
@@ -282,7 +294,7 @@ function quarterJobs(s: GameState, p: PlayerId): Map<string, { q: number; aim: P
     }
     for (const q of [0, 1, 2, 3]) {
       if (taken.has(q)) continue;
-      const cands = free.filter((u) => !jobs.has(u.id) && !(isBrawler(s, u) && unitValue(u) > 150))
+      const cands = free.filter((u) => !jobs.has(u.id))
         .map((u) => ({ u, cost: unitValue(u) + 8 * dist(centre(u), quarterAim(u, q)) / Math.max(4, moveOf(u)) * 10 }))
         .sort((a, b) => a.cost - b.cost);
       if (!cands.length) continue;
@@ -309,7 +321,10 @@ function cardJobs(s: GameState, p: PlayerId): Map<string, { aim: Pt; card: strin
   const jobs = new Map<string, { aim: Pt; card: string; done: (u: UnitState) => boolean }>();
   if (P.secMode !== 'none' && s.round >= 1 && !botOff('cards')) {
     const quarters = quarterJobs(s, p);
-    const free = boardUnits(s, p).filter((u) => !u.transport && !isEngaged(s, u) && !hasKw(u, 'AIRCRAFT') && !quarters.has(u.id) && unitValue(u) <= 220);
+    // the squad kept on the home objective stays there (a card is no reason to give up home)
+    const plan = armyPlan(s, p);
+    const free = boardUnits(s, p).filter((u) => !u.transport && !isEngaged(s, u) && !hasKw(u, 'AIRCRAFT') && !hasKw(u, 'MONSTER') && !quarters.has(u.id)
+      && unitValue(u) <= 150 && !(isBrawler(s, u) && unitValue(u) > 90) && !followedJob(plan, u.id)?.keep);
     const mine = zonePoly(s, p), theirs = zonePoly(s, other(p));
     const centreB = { x: BOARD_W / 2, y: BOARD_H / 2 };
     const wholly = (u: UnitState, poly: Pt[]) => alive(u).every((m) => pointInPoly(m, poly));
@@ -378,7 +393,7 @@ function denialFor(s: GameState, u: UnitState, ctx: Ctx): Ctx['denial'] {
 
 /** The easy bot misjudges spots now and then: a fixed jitter per spot and turn (the same game replays the same way). */
 function slip(s: GameState, u: UnitState): number {
-  if (s.botLevel !== 'easy') return 0;
+  if ((s.botLevels?.[u.owner] ?? s.botLevel) !== 'easy') return 0;
   const c = centre(u);
   let h = Math.imul(Math.round(c.x * 4) + 7919 * Math.round(c.y * 4), 2654435761) ^ Math.imul(s.turn + 31 * u.id.length, 40503);
   h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0;
@@ -548,7 +563,7 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
     const far = ctx.toTarget?.(lead);
     const gap = routeGap(far, unitDistance(u, ctx.target), 1.5);
     // a screen doesn't walk out into the open towards a far-off target: it closes to a charge's reach and waits there
-    v -= w.pullBrawler * (ctx.perInch ?? 1) * (ctx.role === 'screen' ? Math.max(0, gap - (moveOf(u) + 8)) : gap);
+    v -= w.pullBrawler * (ctx.perInch ?? 1) * gap;
   } else if (ctx.range) {
     const near = Math.min(99, ...ctx.foes.map((f) => unitDistance(u, f.u)));
     v -= w.pullRange * Math.max(0, near - ctx.range);
@@ -599,7 +614,8 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
 function positionScore(s: GameState, u: UnitState): number {
   const c = centre(u);
   let v = 0;
-  if (alive(u).every((m) => m.isCharacter)) {
+  // a small character on its own stays with the army; a big one (Magnus, a Daemon Prince, a tank) fights on its own
+  if (alive(u).every((m) => m.isCharacter) && unitValue(u) < 150 && !hasKw(u, 'MONSTER') && !hasKw(u, 'VEHICLE')) {
     const friends = boardUnits(s, u.owner).filter((f) => f.id !== u.id && !f.transport && !alive(f).every((m) => m.isCharacter));
     const near = Math.min(99, ...friends.map((f) => unitDistance(u, f)));
     if (near > 6) v -= Math.min(15, (near - 6) * BW(u.owner).charLonely);
@@ -641,7 +657,7 @@ export function scoreParts(s: GameState, u: UnitState, kind: MoveKind | 'station
   u.move = kind === 'stationary' ? 'stationary' : kind;
   try {
     const w = BW(u.owner);
-    const caution = (ctx.role === 'screen' ? w.cautionOther : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
+    const caution = (ctx.role === 'screen' ? w.cautionBrawler * 1.4 : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
     const homeFactor = ctx.role ? (ctx.role === 'home' ? 1 : w.homeExpensive) : ctx.holder || unitValue(u) <= 200 ? 1 : w.homeExpensive;
     return { obj: objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor), shoot: shootScore(s, u, kind, ctx), charge: chargeScore(s, u, ctx), danger: -caution * dangerScore(s, u, ctx), pull: pullScore(s, u, ctx), crowd: -crowdScore(s, u), pos: positionScore(s, u) };
   } finally {
@@ -662,7 +678,7 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
   try {
     const w = BW(u.owner);
     // a screen keeps out of sight like a shooting unit (it's there to be in the way later, not shot now)
-    const caution = (ctx.role === 'screen' ? w.cautionOther : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
+    const caution = (ctx.role === 'screen' ? w.cautionBrawler * 1.4 : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
     // the home objective is a job for a cheap unit: a tournament player doesn't park 400 points of Terminators on it
     const homeFactor = ctx.role && !botOff('homeF') ? (ctx.role === 'home' ? 1 : w.homeExpensive) : ctx.holder || unitValue(u) <= 200 ? 1 : w.homeExpensive;
     return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u) + denialScore(u, ctx) + slip(s, u);
@@ -716,7 +732,7 @@ export interface Plan { kind: MoveKind | 'stationary'; paths?: Paths; score: num
 export function bestMove(s: GameState, u: UnitState, kind: MoveKind, max: number, ctx: Ctx, opt: MoveOpts & { aims?: Pt[]; noStay?: boolean } = {}): Plan {
   let best: Plan = opt.noStay ? { kind: 'stationary', score: -Infinity } : { kind: 'stationary', score: scoreSpot(s, u, 'stationary', null, ctx) };
   const byAim: { aim: Pt; score: number }[] = [];
-  for (const aim of opt.aims ?? aimsFor(s, u, max, ctx)) {
+  for (const aim of opt.aims ?? (fastPlanning ? aimsFor(s, u, max, ctx).slice(0, 7) : aimsFor(s, u, max, ctx))) {
     let top = -Infinity;
     for (const paths of movesTowards(s, u, kind, max, aim, opt)) {
       const moved = Math.max(0, ...[...paths.values()].map(pathLength));

@@ -534,3 +534,21 @@ describe('reading the enemy (trading, reactions, cards, screens)', () => {
     setLookahead(false);
   });
 });
+
+describe('looking ahead', () => {
+  it('each way of playing the turn is really played out (the copies keep their style)', async () => {
+    const { styleValues, setLookahead, resetLookahead } = await import('./botLook');
+    const s = game([['Intercessor Squad', 10, 160], ['Assault Intercessor Squad', 10, 150], ['Redemptor Dreadnought', 1, 195]], [['Boyz', 20, 170], ['Deff Dread', 1, 130], ['Flash Gitz', 5, 80]]);
+    s.phase = 'movement';
+    s.units.filter((x) => x.owner === 0).forEach((u, i) => put(s, u.id, { x: 10 + i * 10, y: 14 }));
+    s.units.filter((x) => x.owner === 1).forEach((u, i) => put(s, u.id, { x: 10 + i * 10, y: 34 }));
+    s.bots = [0, 1];
+    setLookahead(true); resetLookahead();
+    try {
+      const v = styleValues(s, 0);
+      expect(Object.keys(v).sort()).toEqual(['aggressive', 'careful', 'steady']);
+      // the three ways end up in different places (before the fix every copy played the plain weights)
+      expect(new Set(Object.values(v).map((x) => Math.round(x))).size).toBeGreaterThan(1);
+    } finally { setLookahead(false); }
+  });
+});

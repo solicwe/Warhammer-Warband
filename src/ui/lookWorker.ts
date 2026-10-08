@@ -27,7 +27,7 @@ self.onmessage = (e: MessageEvent<Msg>) => {
   }
   let name = 'steady';
   setLookahead(true);
-  try { name = chooseTurnStyle(m.state, m.p, lookBudget(m.state)); } catch { /* a failed look plays the turn as it is */ }
+  try { name = chooseTurnStyle(m.state, m.p, lookBudget(m.state, m.p)); } catch { /* a failed look plays the turn as it is */ }
   setLookahead(false);
   self.postMessage({ id: m.id, name });
 };

@@ -2940,6 +2940,116 @@
    },
    "seconds": 1280,
    "kind": "experiment"
+  },
+  {
+   "date": "2026-10-08",
+   "label": "normal vs easy (lookahead fixed)",
+   "commit": "5507b67",
+   "lookahead": true,
+   "games": 24,
+   "errors": 0,
+   "win": 16,
+   "draw": 1,
+   "loss": 7,
+   "score": 0.688,
+   "elo": 137,
+   "ci": [
+    1,
+    335
+   ],
+   "margin": 19.1,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 1,
+     "score": 1,
+     "margin": 34
+    },
+    "AdM": {
+     "games": 1,
+     "score": 0,
+     "margin": -7
+    },
+    "AM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 14.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 35
+    },
+    "DG": {
+     "games": 2,
+     "score": 1,
+     "margin": 21.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 31.5
+    },
+    "AE": {
+     "games": 2,
+     "score": 1,
+     "margin": 41.5
+    },
+    "ORK": {
+     "games": 1,
+     "score": 1,
+     "margin": 56
+    },
+    "WE": {
+     "games": 1,
+     "score": 0,
+     "margin": -8
+    },
+    "AoI": {
+     "games": 1,
+     "score": 1,
+     "margin": 25
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 1
+    },
+    "CD": {
+     "games": 1,
+     "score": 0.5,
+     "margin": 0
+    },
+    "CSM": {
+     "games": 1,
+     "score": 1,
+     "margin": 54
+    },
+    "DRU": {
+     "games": 1,
+     "score": 0,
+     "margin": -11
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 6
+    },
+    "LoV": {
+     "games": 1,
+     "score": 0,
+     "margin": -1
+    },
+    "TS": {
+     "games": 1,
+     "score": 1,
+     "margin": 15
+    }
+   },
+   "seconds": 1550,
+   "kind": "levels",
+   "level": "normal",
+   "vsLevel": "easy"
   }
  ]
 }

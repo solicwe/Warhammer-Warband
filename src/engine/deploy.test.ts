@@ -2,6 +2,8 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botAct } from './bot';
+import { armyPlan } from './botPlan';
+import { baitUnit } from './deploy';
 import { createGame } from './game';
 import { baseDist } from './geometry';
 import { alive, onBoard } from './state';
@@ -37,5 +39,23 @@ describe('smart deployment', () => {
       expect(touching).toBeLessThanOrEqual(1);
     }
     expect(took).toBeLessThan(45000); // ~30s on a slow shared runner (the same before and after the army plan)
+  });
+
+  it('Gretchin are never sent out as bait: a sturdier squad is, and the Gretchin are kept on the home objective', () => {
+    const s = createGame({
+      lists: [
+        list('SM', [['Intercessor Squad', 10, 150], ['Hellblaster Squad', 5, 110], ['Eliminator Squad', 3, 85], ['Captain', 1, 80]]),
+        list('ORK', [['Gretchin', 10, 45], ['Boyz', 10, 85], ['Deff Dread', 1, 130], ['Nobz', 5, 105], ['Warboss', 1, 100]]),
+      ],
+      factions: [load('SM'), load('ORK')], names: ['A', 'B'], seed: 5,
+    });
+    s.bots = [0, 1];
+    expect(baitUnit(s, 1)?.name).toBe('Boyz');
+    let steps = 0;
+    while (s.phase === 'deploy' && steps < 200) { botAct(s); steps++; }
+    const grots = s.units.find((u) => u.owner === 1 && u.name === 'Gretchin')!;
+    const job = armyPlan(s, 1).jobs.get(grots.id);
+    expect(job?.role).toBe('home');
+    expect(job?.keep).toBe(true);
   });
 });

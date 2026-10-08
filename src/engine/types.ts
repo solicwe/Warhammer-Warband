@@ -562,6 +562,8 @@ export interface GameState {
   /** how hard the bot plays: easy (no looking ahead, some slips), normal, hard (each way of playing the turn tried on
    *  two rolls of the dice), expert (more ways, three rolls each) */
   botLevel?: BotLevel;
+  /** a level for one side only (measuring one level against another) */
+  botLevels?: Partial<Record<PlayerId, BotLevel>>;
   /** players run by the bot (both for a bot-vs-bot game) */
   bots?: PlayerId[];
   /** players who only move and pick shooting targets: every other decision (stratagems, abilities, re-rolls, saves,

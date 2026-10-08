@@ -32,6 +32,7 @@ import { applyStyle, setLookahead, styleChosen } from '../engine/botLook';
 import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
+import { Joystick } from './Joystick';
 import { RollOverlay, SecondaryCard } from './RollOverlay';
 import { RITUALS } from '../engine/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
@@ -230,6 +231,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [sel, setSel] = useState<string | null>(null);
   const [mode, setModeRaw] = useState<Mode | null>(null);
   const [draft, setDraft] = useState<Paths | null>(null);
+  // the joystick's loop outlives a render: it settles the latest draft when let go
+  const draftRef = useRef<Paths | null>(null);
+  draftRef.current = draft;
   const [check, setCheck] = useState<MoveCheck | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<string | null>(null);
@@ -246,9 +250,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
   const [freeAdvRR, setFreeAdvRR] = useState<string | null>(null);
 
-  const setMode = (m: Mode | null, d: Paths | null = null) => { setModeRaw(m); setDraft(d); setCheck(null); setSlide(null); };
-  // the move slider: tap where the unit should go, then slide how far towards it (no finger over the models)
-  const [slide, setSlide] = useState<{ aim: Pt; d: number } | null>(null);
+  const setMode = (m: Mode | null, d: Paths | null = null) => { setModeRaw(m); setDraft(d); setCheck(null); joyOff.current = { x: 0, y: 0 }; };
+  // moving without a finger over the models: the joystick walks the unit (how far it has gone from where it stood)
+  const joyOff = useRef<Pt>({ x: 0, y: 0 });
   // ending a phase where nothing was done needs a second tap (protects against mis-taps)
   const [armed, setArmed] = useState<string | null>(null);
   useEffect(() => { if (!armed) return; const tm = window.setTimeout(() => setArmed(null), 3500); return () => window.clearTimeout(tm); }, [armed]);
@@ -340,12 +344,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
   const onTapBoard = (p: Pt) => {
     if (tape.on) { measureTap(p); return; }
-    if (mode?.k === 'move' && modeUnit) {
-      // the unit heads for the tapped point: as far as it may go, or right up to the point if that is closer
-      const c = polyCentroid(alive(modeUnit));
-      applySlide(p, Math.min(slideMax(), Math.hypot(p.x - c.x, p.y - c.y)), true);
-      return;
-    }
     if (mode?.k === 'place') {
       const u = U(mode.unitId);
       setDraft(placePaths(formationAt(u, p, s.players[u.owner].role === 'defender')));
@@ -388,15 +386,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
   /** The furthest every model of the moving unit may go. */
   const slideMax = () => (modeUnit ? Math.min(...alive(modeUnit).map((m) => maxFor(m.id))) : 0);
-  /** Slide the whole unit `d` inches towards `aim` (each model routed round walls); `done`: settle and check it. */
-  const applySlide = (aim: Pt, d: number, done = false) => {
+  /** Joystick: the unit walks the way the knob is pushed, up to 5" a second, never further than it may move. */
+  const joyMove = (x: number, y: number, dt: number) => {
     if (!modeUnit || !draftKind) return;
-    const c = polyCentroid(alive(modeUnit));
-    const L = Math.max(0.01, Math.hypot(aim.x - c.x, aim.y - c.y));
-    const v = { x: ((aim.x - c.x) / L) * d, y: ((aim.y - c.y) / L) * d };
-    const paths: Paths = new Map(alive(modeUnit).map((m) => [m.id, walkDraft(m.id, [{ x: m.x, y: m.y }, { x: m.x + v.x, y: m.y + v.y }])]));
-    setSlide({ aim, d });
-    if (done) onDragEnd(paths); else { setDraft(paths); setCheck(null); }
+    const max = slideMax();
+    let o = { x: joyOff.current.x + x * 5 * dt, y: joyOff.current.y + y * 5 * dt };
+    const L = Math.hypot(o.x, o.y);
+    if (L > max) o = { x: (o.x / L) * max, y: (o.y / L) * max };
+    joyOff.current = o;
+    const paths: Paths = new Map(alive(modeUnit).map((m) => [m.id, walkDraft(m.id, [{ x: m.x, y: m.y }, { x: m.x + o.x, y: m.y + o.y }])]));
+    setDraft(paths);
+    setCheck(null);
   };
   // the last committed move can be reopened ("move further / fix it") while nothing else has happened since
   const [lastMove, setLastMove] = useState<{ mode: Mode; paths: Paths; after: GameState; label: string } | null>(null);
@@ -460,7 +460,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return { text: `${baseDist(ma, mb).toFixed(1)}"`, line: `Base to base ${baseDist(ma, mb).toFixed(1)}" (centre to centre ${centre.toFixed(1)}") · ${why}`, los: los && (vis || tape.ma!.u === tape.mb!.u) };
   })();
   const rings: Ring[] = [];
-  if (mode?.k === 'move' && slide) rings.push({ c: slide.aim, r: 0.5, color: 'rgba(120,200,255,0.9)', dash: true });
   if (mode?.k === 'charge' && modeUnit) {
     for (const m of alive(modeUnit)) if (alive(modeUnit).length <= 3) rings.push({ c: m, r: (modeUnit.chargeRoll ?? 0) + m.r, color: 'rgba(245,184,61,0.5)', dash: true });
   }
@@ -617,29 +616,28 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     </div>
   );
 
-  const slider = () => {
+  const joystick = () => {
     if (mode?.k !== 'move' || !modeUnit) return null;
     const max = slideMax();
     if (!Number.isFinite(max) || max <= 0) return null;
-    const settle = () => { if (draft) onDragEnd(draft); };
+    const moved = draft ? Math.max(0, ...[...draft.values()].map((p) => (p.length > 1 ? Math.hypot(p[p.length - 1].x - p[0].x, p[p.length - 1].y - p[0].y) : 0))) : 0;
     return (
-      <div className="move-slider">
-        <Icon name="move" size={16} />
-        <input type="range" min={0} max={+max.toFixed(1)} step={0.1} value={slide?.d ?? 0} disabled={!slide}
-          aria-label="How far to move"
-          onChange={(e) => slide && applySlide(slide.aim, Number(e.target.value))}
-          onPointerUp={settle} onKeyUp={settle} onTouchEnd={settle} />
-        <span className="move-slider-d">{slide ? `${slide.d.toFixed(1)}"` : `${max.toFixed(1)}"`}</span>
+      <div className="move-joy">
+        <Joystick onMove={joyMove} onEnd={() => { if (draftRef.current) onDragEnd(draftRef.current); }} />
+        <div className="move-joy-info">
+          <span className="move-joy-d">{moved.toFixed(1)}" <span className="tiny muted">/ {max.toFixed(1)}"</span></span>
+          <span className="tiny muted">Hold the stick and push the way to go · or drag the models</span>
+        </div>
       </div>
     );
   };
 
   const moveControls = (kind: string, onConfirm: () => void, extra?: React.ReactNode) => (
     <>
-      {slider()}
+      {joystick()}
       <div className="row">
-        <span className="tiny muted grow">{mode?.k === 'move' ? (slide ? 'Slide to set how far · tap the board to aim elsewhere · or drag the models' : 'Tap the board where to go, then slide · or drag the models') : 'Drag = whole unit · tap a model = move that model'}</span>
-        <button className="btn small" onClick={() => { setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); setSlide(null); }}>Reset</button>
+        <span className="tiny muted grow">{mode?.k === 'move' ? '' : 'Drag = whole unit · tap a model = move that model'}</span>
+        <button className="btn small" onClick={() => { setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); joyOff.current = { x: 0, y: 0 }; }}>Reset</button>
         {extra}
       </div>
       {check && !check.ok && <div className="err">{check.errors.slice(0, 4).map((e) => <div key={e}>{e}</div>)}</div>}

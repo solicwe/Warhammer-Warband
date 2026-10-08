@@ -5,6 +5,7 @@
 //   node scripts/elo.mjs --games 48 --workers 4 --label "army plan"
 //   node scripts/elo.mjs ... --promote      (then freeze the live bot as the new baseline, carrying its rating)
 //   node scripts/elo.mjs ... --look         (with the turn lookahead on: closer to the app, several times slower)
+//   node scripts/elo.mjs --look --level hard --vs-level normal   (one bot level against another, live code on both sides)
 import { execSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -54,7 +55,8 @@ const elo = (p) => 400 * Math.log10(Math.min(0.99, Math.max(0.01, p)) / (1 - Mat
 const t0 = Date.now();
 const games = schedule();
 const shards = Array.from({ length: WORKERS }, (_, k) => games.filter((_, i) => i % WORKERS === k)).filter((g) => g.length);
-const jobs = await Promise.all(shards.map((g) => runWorker({ games: g, wA: {}, wB: {}, baselineB: true, look: flag('look') })));
+const LEVEL = arg('level'), VS = arg('vs-level');
+const jobs = await Promise.all(shards.map((g) => runWorker({ games: g, wA: {}, wB: {}, baselineB: !VS, look: flag('look'), levelA: LEVEL, levelB: VS })));
 const res = shards.flatMap((g, k) => g.map((game, i) => ({ game, m: jobs[k][i] })));
 const ok = res.filter((r) => typeof r.m === 'number');
 const n = ok.length;
@@ -83,8 +85,9 @@ const run = {
   factions: Object.fromEntries(Object.entries(per).map(([f, x]) => [f, { games: x.n, score: +(x.s / x.n).toFixed(2), margin: +(x.m / x.n).toFixed(1) }])),
   seconds: Math.round((Date.now() - t0) / 1000),
 };
+if (VS) { run.kind = 'levels'; run.level = LEVEL; run.vsLevel = VS; run.rating = undefined; }
 book.runs.push(run);
-if (flag('promote')) {
+if (flag('promote') && !VS) {
   execSync('node scripts/bot-baseline/snapshot.mjs');
   book.baselineRating = rating;
 }

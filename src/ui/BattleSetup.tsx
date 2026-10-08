@@ -28,9 +28,9 @@ const SEC_MODES: { id: BattlePrefs['secMode']; label: string; note: string }[] =
 
 const LEVELS: { id: BattlePrefs['level']; label: string; note: string }[] = [
   { id: 'easy', label: 'Easy', note: 'Plays each unit on its own and misjudges now and then' },
-  { id: 'normal', label: 'Normal', note: 'Tries its turn three ways before playing it' },
-  { id: 'hard', label: 'Hard', note: 'Tries each way on two rolls of the dice' },
-  { id: 'expert', label: 'Expert', note: 'Five ways, three rolls each: thinks longest' },
+  { id: 'normal', label: 'Normal', note: 'Plays its turn out three ways before playing it (up to ~9 s)' },
+  { id: 'hard', label: 'Hard', note: 'Each way on two rolls of the dice (up to ~20 s a turn)' },
+  { id: 'expert', label: 'Expert', note: 'Five ways, three rolls each (up to ~40 s a turn)' },
 ];
 
 const MODES: { id: BattleMode; label: string }[] = [
