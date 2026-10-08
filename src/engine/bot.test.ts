@@ -8,6 +8,7 @@ import { autoCharge, autoPileMove, createGame, declareCharge, formationAt, place
 import { alive, engagedEnemies, unitDistance } from './state';
 import { planStratagem } from './stratagems';
 import { botAfterShootMove, botDoctrineActs } from './botPlus';
+import { armyPlan } from './botPlan';
 import { unitDoctrines } from './effects';
 import type { ArmyList, FactionData, GameState, Pt, TerrainPiece } from './types';
 
@@ -93,7 +94,9 @@ describe('bot movement', () => {
       botAct(s); steps++;
       for (const u of s.units) if (u.move && u.move !== 'stationary') moved.add(u.id);
     }
-    const stuck = s.units.filter((u) => u.status === 'board' && alive(u).length && !moved.has(u.id) && (alive(u)[0].profile.M ?? 0) > 0);
+    // a cheap squad kept on its home objective stays there by choice (Mek Gunz here)
+    const kept = (u: (typeof s.units)[number]) => !!armyPlan(s, u.owner).jobs.get(u.id)?.keep;
+    const stuck = s.units.filter((u) => u.status === 'board' && alive(u).length && !moved.has(u.id) && (alive(u)[0].profile.M ?? 0) > 0 && !kept(u));
     expect(stuck.map((u) => u.name)).toEqual([]);
   });
 });

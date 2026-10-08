@@ -139,8 +139,9 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
     // never the army's hammer: 200 points of Dreadnought guarding home is a wasted unit (better nobody, until a cheap one comes)
     const c0 = cands[0] && info.get(cands[0].u.id)!;
     if (c0 && (jobs.get(c0.u.id)?.role === 'firebase' || (c0.value <= 160 && !(c0.brawler && c0.value > 120)))) {
-      // a squad this cheap loses nothing by sitting at home all game (the way a player parks Gretchin there)
-      const keep = !c0.brawler && c0.value <= 80;
+      // a squad this cheap loses nothing by sitting at home all game (the way a player parks Gretchin there); one
+      // already out in the field is doing a job there, so it is not called back
+      const keep = !c0.brawler && c0.value <= 80 && dist(centre(c0.u), hp) <= c0.M + 3;
       jobs.set(c0.u.id, { role: 'home', post: hp, why: keep ? 'kept on home all game' : 'holds home', keep });
     }
   }
