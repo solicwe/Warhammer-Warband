@@ -263,6 +263,54 @@ function deepMerge(target, patch) {
   return patch;
 }
 
+// ---------- points updates (Munitorum Field Manual), data/points/*.txt ----------
+// "FACTION | Datasheet | 5=115/125,10=210/220" — models=cost on the first price tier / the later tier ("YOUR 3RD + UNIT
+// COSTS"); "t2:" only the later tier; "=95" or "=95/105" for a unit with one size; "enh:Name" for an enhancement.
+const normName = (s) => s.toLowerCase().replace(/[’'`]/g, '').replace(/[^a-z0-9]+/g, '');
+const POINTS_DIR = path.join(path.dirname(OVERRIDES), 'points');
+const pointsLines = fs.existsSync(POINTS_DIR)
+  ? fs.readdirSync(POINTS_DIR).filter((f) => f.endsWith('.txt')).sort().flatMap((f) => fs.readFileSync(path.join(POINTS_DIR, f), 'utf8').split('\n'))
+    .map((l) => l.trim()).filter((l) => l && !l.startsWith('#')).map((l) => l.split('|').map((x) => x.trim()))
+  : [];
+const pointsMisses = [];
+function applyPointsUpdates(faction, fid) {
+  for (const [fac, name, spec0] of pointsLines) {
+    if (fac !== fid) continue;
+    let spec = spec0, only = null;
+    const m0 = /^t([12]):/.exec(spec);
+    if (m0) { only = Number(m0[1]); spec = spec.slice(m0[0].length); }
+    const vals = (v) => v.split('/').map(Number);
+    if (name.startsWith('enh:')) {
+      const e = faction.detachments.flatMap((d) => d.enhancements).filter((x) => normName(x.name) === normName(name.slice(4)));
+      if (!e.length) pointsMisses.push(`${fid} ${name}`);
+      for (const x of e) x.pts = vals(spec.replace(/^=/, ''))[0];
+      continue;
+    }
+    const d = faction.datasheets.find((x) => normName(x.name) === normName(name));
+    if (!d || !d.points?.length) { pointsMisses.push(`${fid} ${name}: no such datasheet`); continue; }
+    const pairs = spec.startsWith('=') ? [[null, vals(spec.slice(1))]] : spec.split(',').map((x) => { const [m, v] = x.split('='); return [Number(m), vals(v)]; });
+    const setTier = (ti, models, pts) => {
+      const tier = d.points[ti];
+      if (!tier) return false;
+      const opts = models === null ? tier.options : tier.options.filter((o) => o.models === models);
+      if (!opts.length || (models === null && new Set(tier.options.map((o) => o.models)).size > 1)) return false;
+      for (const o of opts) o.pts = pts;
+      return true;
+    };
+    for (const [models, v] of pairs) {
+      const t1 = only === 2 ? undefined : v[0], t2 = only === 2 ? v[0] : v[1];
+      if (t1 !== undefined && !setTier(0, models, t1)) pointsMisses.push(`${fid} ${name}: no ${models ?? 'single'}-model option`);
+      if (t2 === undefined) continue;
+      if (d.points.length > 1) { if (!setTier(1, models, t2)) pointsMisses.push(`${fid} ${name}: no later-tier ${models ?? 'single'}-model option`); }
+      else if (d.dupTax) {
+        // a pack's unit: one price list plus a flat extra for later copies
+        const base = (models === null ? d.points[0].options[0] : d.points[0].options.find((o) => o.models === models))?.pts;
+        if (base !== undefined) d.dupTax = { ...d.dupTax, pts: t2 - base };
+      } else pointsMisses.push(`${fid} ${name}: no later price tier`);
+    }
+  }
+}
+
 const META = JSON.parse(fs.readFileSync(path.join(path.dirname(OVERRIDES), 'factions-meta.json'), 'utf8'));
 
 /** Which sub-faction (e.g. Chapter) a detachment belongs to: an explicit entry in factions-meta.json,
@@ -422,6 +470,7 @@ function build() {
       faction = factionFromPack(pf, faction, sub);
       console.log(`built ${f.id} from ${faction.source.pack} (revision ${faction.source.revision})`);
     }
+    applyPointsUpdates(faction, f.id);
     // Leader lists: only units that are in the game (Legends and removed datasheets drop out), and a leader on foot
     // can't lead a unit that moves differently (JUMP PACK / MOUNTED) — Wahapedia's own lists leave those out too
     const present = new Map(faction.datasheets.map((d) => [d.name, d]));
@@ -438,6 +487,7 @@ function build() {
   }
   index.factions.sort((a, b) => a.name.localeCompare(b.name));
   fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));
+  if (pointsMisses.length) console.log(`points updates not applied (${pointsMisses.length}):\n  ${pointsMisses.join('\n  ')}`);
   console.log(`built ${index.factions.length} factions (data ${lastUpdate}); left out ${dropped} non-11th-edition (Legends / Forge World / old index) datasheets`);
 }
 

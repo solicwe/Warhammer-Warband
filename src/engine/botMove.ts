@@ -138,6 +138,8 @@ export interface Ctx {
   holder?: boolean;
   /** a unit that leaves objectives secured behind it (Objective Secured …): the next objective to claim, then it moves on */
   claim?: Pt;
+  /** an expensive fighting unit (Terminators, big squads, tanks): where the fight is — the centre, then the enemy */
+  front?: Pt;
   /** a table quarter to hold for the mission (Reconnaissance Sweep, Engage on All Fronts): where to stand in it */
   quarter?: { q: number; aim: Pt };
   /** a character or model whose ability works on friendly units nearby (Techmarine and vehicles, auras): stay by them */
@@ -176,6 +178,27 @@ function escortFor(s: GameState, u: UnitState): Ctx['escort'] {
     }
   }
   return best;
+}
+
+// ---------- the army's hammer ----------
+
+/**
+ * Where an expensive unit that is not a cheap holder should be heading: the central / middle objectives the army
+ * doesn't hold yet in the first rounds (Terminators take the middle of the board), then the enemy unit worth the
+ * most that is within a couple of moves. Cheap units hold home and do missions; this is the one that wins the fight.
+ */
+function frontFor(s: GameState, u: UnitState, ctx: Ctx): Pt | undefined {
+  if (ctx.holder || ctx.quarter || ctx.deliver || u.transport || (ctx.escort && ctx.escort.weight >= 3)) return undefined;
+  if (unitValue(u) < 150 || alive(u).every((m) => m.isCharacter)) return undefined;
+  const c = centre(u);
+  const mine = (o: { controller: PlayerId | null }) => o.controller === u.owner;
+  const mid = s.objectives.filter((o) => o.type !== 'home' && !mine(o)).map((o) => objPoint(s, o)).sort((a, b) => dist(a, c) - dist(b, c));
+  const foes = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT'));
+  const reach = 2 * moveOf(u) + Math.max(ctx.range, 1);
+  const prey = foes.map((e) => ({ e, v: unitValue(e) / (1 + Math.max(0, unitDistance(u, e) - reach) / 6) })).sort((a, b) => b.v - a.v)[0]?.e;
+  if (s.round <= 2 && mid.length) return mid[0];
+  if (prey) return centre(prey);
+  return mid[0];
 }
 
 // ---------- table quarters ----------
@@ -273,6 +296,7 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   }
   ctx.escort = escortFor(s, u);
   ctx.quarter = quarterJobs(s, u.owner).get(u.id);
+  ctx.front = frontFor(s, u, ctx);
   const cargo = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
   if (cargo.length) {
     const c = centre(u);
@@ -378,6 +402,10 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
     const on = alive(u).some((m) => dist(m, ctx.claim!) <= 3 + m.r);
     v += on ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.claim) - 2);
   }
+  if (ctx.front && !ctx.brawler) {
+    // a shooter worth its points goes where the fight is, and stops at a good firing distance
+    v -= w.pullHammer * Math.max(0, dist(c, ctx.front) - Math.min(ctx.range * 0.6, 12));
+  }
   if (ctx.quarter && !ctx.deliver) {
     // its job this turn: be wholly in that quarter, more than 6" from the centre, at the end of the turn
     v += unitQuarter(u) === ctx.quarter.q ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.quarter.aim) - 2);
@@ -464,6 +492,7 @@ function aimsFor(s: GameState, u: UnitState, max: number, ctx: Ctx): Pt[] {
   pts.push(...objs.filter((p, i) => i < 2 || dist(c, p) <= max + 10));
   if (ctx.claim) pts.push(ctx.claim);
   if (ctx.quarter) pts.push(ctx.quarter.aim);
+  if (ctx.front) pts.push(ctx.front);
   if (ctx.escort && alive(ctx.escort.u).length) pts.push(centre(ctx.escort.u));
   const nearestModel = (e: UnitState) => alive(e).reduce((a, m) => (dist(m, c) < dist(a, c) ? m : a));
   const foes = [...ctx.foes].sort((a, b) => unitDistance(u, a.u) - unitDistance(u, b.u));
@@ -555,10 +584,36 @@ export function bestArrival(s: GameState, u: UnitState, how: 'ingress' | 'deepSt
       const gap = Math.min(...ctx.foes.map((f) => unitDistance(u, f.u)));
       for (const [m, x, y] of saved) { m.x = x; m.y = y; }
       v -= 1.2 * Math.max(0, gap - 12);
+      v += 0.8 * arrivalStrike(s, u, pos);
     }
     if (!best || v > best.v) best = { pos, v };
   }
   return best?.pos ?? null;
+}
+
+/**
+ * What a unit set up at `pos` can take off the board this turn: its guns at the best target in range, or (a melee
+ * unit) its charge at the best target times the chance of making that charge. Points of enemy models.
+ */
+export function arrivalStrike(s: GameState, u: UnitState, pos: Spot): number {
+  const ms = alive(u), saved = ms.map((m) => [m, m.x, m.y] as const);
+  for (const m of ms) { const q = pos.get(m.id); if (q) { m.x = q.x; m.y = q.y; } }
+  try {
+    const range = maxRange(u), brawler = isBrawler(s, u);
+    let best = 0;
+    for (const e of boardUnits(s, other(u.owner))) {
+      const gap = unitDistance(u, e);
+      const left = alive(e).length;
+      const shot = gap <= range + 0.5 ? Math.min(left, rangedKills(u, e)) * perModel(e) : 0;
+      const charge = brawler ? Math.min(left, meleeKills(u, e)) * perModel(e) * p2d6(gap) : 0;
+      // finishing a valuable unit off counts for more than scratching it
+      const v = Math.max(shot, charge) * (Math.max(shot, charge) >= unitValue(e) * 0.8 ? 1.3 : 1);
+      best = Math.max(best, v);
+    }
+    return best;
+  } finally {
+    for (const [m, x, y] of saved) { m.x = x; m.y = y; }
+  }
 }
 
 /** Can a unit set up at `pos` drive out again? (A vehicle boxed in by ruin walls would sit there all game.) */

@@ -6,7 +6,7 @@ import { bestArrival, ctxFor, bestMove, planMove, scoreSpot } from './botMove';
 import { cpWorth, tryRule } from './botStrats';
 import { dist } from './geometry';
 import { unitVisibleTo } from './visibility';
-import { isBrawler, maxRange, moveOf, onObjective, unitValue } from './botEval';
+import { centre, isBrawler, maxRange, moveOf, objPoint, onObjective, unitValue } from './botEval';
 import { rollMods, targetHasCover, unitDoctrines, unitFlags } from './effects';
 import { chargeEligibility, commitMove, consolidateMode, levelOfControl, setPhaseEndHook, validateMove } from './game';
 import { alive, boardUnits, engagedEnemies, isEngaged, onBoard as onBoardUnit, other, unitDistance } from './state';
@@ -389,7 +389,12 @@ export function botFightChoice(s: GameState, u: UnitState) {
 export function redeployWorth(s: GameState, u: UnitState): boolean {
   if (s.objectives.some((o) => onObjective(s, u, o)) || s.round >= 4) return false;
   const threats = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= 9).length;
-  return threats >= 2 || alive(u).length * 2 <= u.startingStrength;
+  if (threats >= 2 || alive(u).length * 2 <= u.startingStrength) return true;
+  // a cheap raider (Tzaangors' Ambushing Hunters): out of the board now, back next turn by an objective it could not
+  // walk to — the enemy's home, an empty flank — instead of wandering in the middle
+  if (unitValue(u) > 160 || isEngaged(s, u)) return false;
+  const reach = 2 * moveOf(u) + 3;
+  return s.objectives.some((o) => o.controller !== u.owner && !(o.type === 'home' && o.owner === u.owner) && dist(centre(u), objPoint(s, o)) > reach);
 }
 
 /** Abilities that take a unit off the board to come back elsewhere (Echo of the Ravenspire, Parabolic Jetleap,

@@ -460,7 +460,7 @@ describe('wargear', () => {
     expect(wargearPoints(tas, { models: 5 })).toBe(0); // lightning claws by default
     expect(wargearPoints(tas, { models: 5, wargear: [{ opt: hammers, choice: 0, count: 2 }] })).toBe(10);
     const u = one(SM, 'SM', syncWargear(tas, { uid: 'a', datasheet: tas.name, models: 5, pts: 170, wargear: [{ opt: hammers, choice: 0, count: 2 }] }));
-    expect(u.pts).toBe(180);
+    expect(u.pts).toBe((tas.points[0].options.find((o) => o.models === 5)?.pts ?? 0) + 10); // the unit's current price + 2 hammers
     expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Thunder Hammer') && m.profile.W === 4)).toHaveLength(2);
     expect(u.models.filter((m) => m.profile.W === 3)).toHaveLength(3);
   });

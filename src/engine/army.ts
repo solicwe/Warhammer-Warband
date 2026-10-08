@@ -312,7 +312,9 @@ export function syncWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntry):
     const count = o.scope === 'all' ? (pk.count > 0 ? max : 0) : Math.min(pk.count, max - used);
     if (count > 0) wargear.push({ ...pk, count });
   }
-  const next: ArmyUnitEntry = { ...e, wargear: wargear.length ? wargear : undefined };
+  // the unit's own price follows the current points (a Munitorum Field Manual update changes lists already made)
+  const base = pointsOptions(sheet).find((o) => o.models === e.models)?.pts ?? e.pts;
+  const next: ArmyUnitEntry = { ...e, pts: base, wargear: wargear.length ? wargear : undefined };
   const wp = wargearPoints(sheet, next);
   return { ...next, wargearPts: wp || undefined };
 }
@@ -321,8 +323,11 @@ export function syncWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntry):
 export function syncList(list: ArmyList, faction: FactionData): ArmyList {
   let changed = false;
   const units = list.units.map((u) => {
-    const next = syncWargear(faction.datasheets.find((d) => d.name === u.datasheet), u);
-    if ((next.wargearPts ?? 0) !== (u.wargearPts ?? 0) || JSON.stringify(next.wargear ?? []) !== JSON.stringify(u.wargear ?? [])) { changed = true; return next; }
+    let next = syncWargear(faction.datasheets.find((d) => d.name === u.datasheet), u);
+    // the enhancement's price follows the current points too
+    const enh = u.enhancement ? faction.detachments.filter((d) => list.detachments.includes(d.name)).flatMap((d) => d.enhancements).find((e) => e.name === u.enhancement) : undefined;
+    if (enh && enh.pts !== u.enhancementPts) next = { ...next, enhancementPts: enh.pts };
+    if (next.pts !== u.pts || next.enhancementPts !== u.enhancementPts || (next.wargearPts ?? 0) !== (u.wargearPts ?? 0) || JSON.stringify(next.wargear ?? []) !== JSON.stringify(u.wargear ?? [])) { changed = true; return next; }
     return u;
   });
   return changed ? { ...list, units } : list;
@@ -633,8 +638,15 @@ export function dupTaxes(list: ArmyList, faction: FactionData): Map<string, numb
   for (const u of list.units) {
     const n = (seen.get(u.datasheet) ?? 0) + 1;
     seen.set(u.datasheet, n);
-    const t = faction.datasheets.find((d) => d.name === u.datasheet)?.dupTax;
-    if (t && n >= t.from) out.set(u.uid, t.pts);
+    const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
+    const t = sheet?.dupTax;
+    if (t) { if (n >= t.from) out.set(u.uid, t.pts); continue; }
+    // a price list with a later tier ("YOUR 3RD + UNIT COSTS"): that copy pays the later price for its size
+    const later = sheet?.points[1];
+    const from = Number(/(\d+)(?:ST|ND|RD|TH)\s*\+/i.exec(later?.label ?? '')?.[1] ?? 0);
+    if (!later || !from || n < from) continue;
+    const a = sheet!.points[0].options.find((o) => o.models === u.models), b = later.options.find((o) => o.models === u.models);
+    if (a && b && b.pts !== a.pts) out.set(u.uid, b.pts - a.pts);
   }
   return out;
 }

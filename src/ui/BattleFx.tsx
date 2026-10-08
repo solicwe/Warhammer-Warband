@@ -3,7 +3,7 @@ import type { FxEvent, Pt } from '../engine/types';
 import type { WeaponFx } from '../engine/weaponFx';
 
 /** How long each kind of effect plays (ms). Rolls are shown by the screen, not the board. */
-export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1900, mortal: 1200, skill: 2800, roll: 0, rolloff: 0, cards: 0, primary: 0 };
+export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 900, attack: 1900, mortal: 1200, skill: 2800, ritual: 2600, roll: 0, rolloff: 0, cards: 0, primary: 0 };
 export interface ActiveFx { e: FxEvent; t0: number }
 
 /**
@@ -12,7 +12,7 @@ export interface ActiveFx { e: FxEvent; t0: number }
  * No SVG filters: blur / turbulence filters are what made phones stutter; glows are radial gradients instead.
  */
 export const FxLayer = memo(function FxLayer({ fx }: { fx: ActiveFx[] }) {
-  const live = fx.filter((a) => a.e.kind === 'attack' || a.e.kind === 'mortal' || a.e.kind === 'skill');
+  const live = fx.filter((a) => a.e.kind === 'attack' || a.e.kind === 'mortal' || a.e.kind === 'skill' || a.e.kind === 'ritual');
   const [now, setNow] = useState(() => performance.now());
   useEffect(() => {
     if (!live.length) return;
@@ -76,8 +76,93 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
     );
   }
   if (e.kind === 'attack') return <AttackFx e={e} f={f} />;
+  if (e.kind === 'ritual') return <RitualFx e={e} f={f} />;
   if (e.kind === 'skill') return e.grand ? <SkillFx e={e} f={f} /> : <SkillLite e={e} f={(now - a.t0) / SKILL_LITE_MS} />;
   return null;
+}
+
+type RitualEvent = Extract<FxEvent, { kind: 'ritual' }>;
+
+/** A sigil of eight points, turning: the mark of a Ritual. */
+function Sigil({ at, r, rot, color, op }: { at: Pt; r: number; rot: number; color: string; op: number }) {
+  const pts = Array.from({ length: 8 }, (_, i) => { const a = rot + (i * Math.PI) / 4; return `${at.x + Math.cos(a) * r},${at.y + Math.sin(a) * r}`; });
+  const star = [0, 3, 6, 1, 4, 7, 2, 5].map((i) => pts[i]).join(' ');
+  return (
+    <g opacity={op}>
+      <circle cx={at.x} cy={at.y} r={r} fill="none" stroke={color} strokeWidth={0.1} />
+      <circle cx={at.x} cy={at.y} r={r * 0.78} fill="none" stroke={color} strokeWidth={0.05} strokeDasharray="0.25 0.18" />
+      <polygon points={star} fill="none" stroke={color} strokeWidth={0.07} strokeLinejoin="round" />
+    </g>
+  );
+}
+
+/**
+ * A Ritual: a turning sigil under the sorcerer, then the spell reaches its target —
+ * Doombolt a crackling warp bolt and a burst, Destiny's Ruin an eye of fate, Twist of Fate a spiral, Temporal Surge an
+ * hourglass of blue light on the friendly unit. A failed test just fizzles at the caster.
+ */
+function RitualFx({ e, f }: { e: RitualEvent; f: number }) {
+  const col = e.ritual === 'temporal-surge' ? '#67e8f9' : e.ritual === 'destinys-ruin' ? '#a3e635' : e.ritual === 'twist-of-fate' ? '#f0abfc' : '#c084fc';
+  const glow: GlowColor = e.ritual === 'temporal-surge' ? 'cyan' : e.ritual === 'destinys-ruin' ? 'green' : 'purple';
+  const cast = clamp01(f / 0.3), travel = clamp01((f - 0.25) / 0.25), land = clamp01((f - 0.45) / 0.55);
+  const fade = f > 0.8 ? (1 - f) / 0.2 : 1;
+  const seed = e.from.x * 7 + e.to.y * 13;
+  if (!e.ok) {
+    return (
+      <g opacity={1 - f}>
+        <Sigil at={e.from} r={1.4} rot={f * 3} color={col} op={0.8} />
+        <Sparks at={e.from} seed={seed} k={clamp01(f * 1.4)} color={col} size={1.3} />
+        <text x={e.from.x} y={e.from.y - 1.9} fontSize={0.8} textAnchor="middle" fill="#fff" stroke="#000" strokeWidth={0.12} paintOrder="stroke" fontWeight={800}>{e.name} — failed</text>
+      </g>
+    );
+  }
+  // a jagged bolt from caster to target, redrawn each frame from deterministic noise
+  const bolt = () => {
+    const n = 9, head = travel;
+    const pts: string[] = [];
+    for (let i = 0; i <= n; i++) {
+      const k = (i / n) * head;
+      const p = lerp(e.from, e.to, k);
+      const dx = e.to.y - e.from.y, dy = e.from.x - e.to.x, L = Math.hypot(dx, dy) || 1;
+      const j = i === 0 || i === n ? 0 : (noise(seed + Math.floor(f * 30), i) - 0.5) * 0.9;
+      pts.push(`${p.x + (dx / L) * j},${p.y + (dy / L) * j}`);
+    }
+    return pts.join(' ');
+  };
+  return (
+    <g opacity={fade}>
+      <Glow at={e.from} r={1.2 + cast} color={glow} op={0.6 * (1 - travel * 0.5)} />
+      <Sigil at={e.from} r={1.1 + cast * 0.4} rot={f * 4} color={col} op={0.9 * (1 - land)} />
+      {travel > 0 && land < 0.6 && (e.ritual === 'doombolt' || e.ritual === 'twist-of-fate' || e.ritual === 'destinys-ruin') && (
+        <g>
+          <polyline points={bolt()} fill="none" stroke={col} strokeWidth={0.32} strokeLinejoin="round" opacity={0.45} />
+          <polyline points={bolt()} fill="none" stroke="#fff" strokeWidth={0.1} strokeLinejoin="round" />
+        </g>
+      )}
+      {land > 0 && (
+        <g>
+          <Glow at={e.to} r={1.5 + land * (e.ritual === 'doombolt' ? 2.6 : 1.4)} color={glow} op={0.8 * (1 - land)} />
+          {e.ritual === 'doombolt' && <><Sparks at={e.to} seed={seed + 3} k={land} color={col} size={2.2} /><circle cx={e.to.x} cy={e.to.y} r={0.6 + land * 3} fill="none" stroke={col} strokeWidth={0.2 * (1 - land)} /></>}
+          {e.ritual === 'destinys-ruin' && (
+            <g opacity={1 - land * 0.6}>
+              <ellipse cx={e.to.x} cy={e.to.y} rx={1.6} ry={0.75 * Math.min(1, land * 3)} fill="none" stroke={col} strokeWidth={0.14} />
+              <circle cx={e.to.x} cy={e.to.y} r={0.45} fill={col} />
+            </g>
+          )}
+          {e.ritual === 'twist-of-fate' && (
+            <path d={Array.from({ length: 28 }, (_, i) => { const a = i * 0.5 + land * 6, r = 0.2 + i * 0.07; return `${i ? 'L' : 'M'}${e.to.x + Math.cos(a) * r},${e.to.y + Math.sin(a) * r}`; }).join(' ')} fill="none" stroke={col} strokeWidth={0.1} opacity={1 - land * 0.5} />
+          )}
+          {e.ritual === 'temporal-surge' && (
+            <g opacity={1 - land * 0.5}>
+              <Sigil at={e.to} r={1.6} rot={-land * 5} color={col} op={0.9} />
+              <path d={`M${e.to.x - 0.6},${e.to.y - 0.9} L${e.to.x + 0.6},${e.to.y - 0.9} L${e.to.x - 0.6},${e.to.y + 0.9} L${e.to.x + 0.6},${e.to.y + 0.9} Z`} fill="none" stroke="#fff" strokeWidth={0.1} />
+            </g>
+          )}
+          <text x={e.to.x} y={e.to.y - 2.2 - land * 0.6} fontSize={0.85} textAnchor="middle" fill="#fff" stroke="#000" strokeWidth={0.13} paintOrder="stroke" fontWeight={900}>{e.name}{e.text ? ` · ${e.text}` : ''}</text>
+        </g>
+      )}
+    </g>
+  );
 }
 
 type AttackEvent = Extract<FxEvent, { kind: 'attack' }>;

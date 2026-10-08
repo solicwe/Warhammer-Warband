@@ -10,14 +10,14 @@ import { useState } from 'react';
 import { Em } from './Em';
 
 /** The characteristics band, laid out like the printed datasheet: framed boxes, the invulnerable save as a shield. */
-function Stats({ p }: { p: ModelProfileData }) {
+function Stats({ p, noInv }: { p: ModelProfileData; noInv?: boolean }) {
   const cells: [string, string][] = [['M', p.M != null ? `${p.M}"` : '-'], ['T', String(p.T)], ['Sv', `${p.Sv}+`], ['W', String(p.W)], ['Ld', `${p.Ld}+`], ['OC', p.OC != null ? String(p.OC) : '-']];
   return (
     <div className="ds-stats">
       <div className="ds-statrow">
         {cells.map(([k, v]) => <div key={k} className="ds-stat"><span>{k}</span><b>{v}</b></div>)}
       </div>
-      {p.InSv ? <div className="ds-inv"><span className="ds-shield">{p.InSv}+</span><span>INVULNERABLE SAVE</span></div> : null}
+      {p.InSv && !noInv ? <div className="ds-inv"><span className="ds-shield">{p.InSv}+</span><span>INVULNERABLE SAVE</span></div> : null}
     </div>
   );
 }
@@ -37,7 +37,7 @@ function WeaponTable({ rows, melee }: { rows: { w: WeaponData; p: WeaponData['pr
           <tr key={i}>
             <td>
               {n > 1 ? `${n}× ` : ''}{w.name}{p.name !== w.name ? ` – ${p.name}` : ''}
-              {p.abilities.length > 0 && <div className="ds-wkw">[{abilitiesOf(p).map(abilityLabel).join(', ').toUpperCase()}]</div>}
+              {p.abilities.length > 0 && <span className="ds-wkw"> {abilitiesOf(p).map((a) => `[${abilityLabel(a).toUpperCase()}]`).join(', ')}</span>}
             </td>
             <td>{p.range === 'Melee' ? 'Melee' : `${p.range}"`}</td>
             <td>{p.A}</td>
@@ -92,6 +92,14 @@ function statGroups(models: ModelProfileData[]) {
 }
 
 /** `variants`: the picture slots of a list entry (one per loadout once its wargear differs); else one per model name. */
+/** Each army's datasheet colour (the band behind the characteristics and the table headings). */
+const DS_COLOR: Record<string, string> = {
+  TS: '#0f3f5e', SM: '#1b3768', AC: '#6e5112', ORK: '#2f5a1d', CSM: '#5e1717', DG: '#4b5a22', WE: '#6b1111', EC: '#5b1f55',
+  CD: '#4e1a3d', AE: '#20545a', DRU: '#2d2240', NEC: '#1f4a2c', TYR: '#4a2348', GC: '#3c2f52', TAU: '#2e5a6b', LoV: '#5a3c1c',
+  AM: '#3d4a2a', AS: '#6a1a1f', AdM: '#6b1d16', GK: '#3d4d5c', AoI: '#3a3f47', QI: '#1d3a5f', QT: '#3b2a2a', TL: '#3a3a3a', UA: '#3a3f47',
+};
+export const dsColor = (factionId?: string) => DS_COLOR[factionId ?? ''] ?? '#2c4440';
+
 export function DatasheetView({ sheet, factionId, variants }: { sheet: DatasheetData; factionId?: string; variants?: PictureVariant[] }) {
   const probe = { sources: [sheet.name], abilities: [] } as unknown as UnitState;
   const [more, setMore] = useState(false);
@@ -99,7 +107,7 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
   const groups = statGroups(sheet.models);
   const names = [...sheet.abilities.map((a) => a.name), ...sheet.leads, sheet.name];
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="ds-sheet" style={{ display: 'flex', flexDirection: 'column', gap: 8, ['--ds-band' as string]: dsColor(factionId) }}>
       <div className="ds-head">
         <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={60} datasheet={sheet.name} editable />
         <div className="grow">
@@ -116,18 +124,20 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
         const v = all.length ? all : names.length > 1 ? names.map((n) => ({ key: n === sheet.name ? sheet.name : modelPortraitKey(sheet.name, n), fallback: [sheet.name], label: n })) : [];
         return <ModelPictures variants={v} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} />;
       })()}
-      {groups.map((g) => (
-        <div key={g.names.join('|')}>
-          {(groups.length > 1 || sheet.models.length > 1) && <div className="small muted">{groups.length > 1 ? g.names.join(' / ') : 'All models'} · base {g.base}</div>}
-          <Stats p={g.p} />
-        </div>
-      ))}
+      <div className="ds-statband">
+        {groups.map((g, gi) => (
+          <div key={g.names.join('|')} className="ds-statline">
+            <Stats p={g.p} noInv={gi < groups.length - 1 && groups.every((x) => x.p.InSv === g.p.InSv)} />
+            <div className="ds-mname">{(groups.length > 1 ? g.names.join(' / ') : sheet.models.length > 1 ? 'All models' : sheet.name).toUpperCase()}<small>base {g.base}</small></div>
+          </div>
+        ))}
+      </div>
       <Weapons weapons={sheet.weapons} />
       {sheet.options.length > 0 && <details><summary className="small">Wargear options</summary>{sheet.options.map((o, i) => <div key={i} className="small">• <Em text={o} /></div>)}</details>}
       <div className="ds-sec">ABILITIES</div>
       {(['Core', 'Faction'] as const).map((t) => {
         const xs = sheet.abilities.filter((a) => a.type === t);
-        return xs.length ? <div key={t} className="ds-line">{t.toUpperCase()}: <b>{xs.map((a) => `${a.name}${a.param ? ` ${a.param}` : ''}`).join(', ')}</b></div> : null;
+        return xs.length ? <div key={t} className="ds-line ds-rule">{t.toUpperCase()}: <b>{xs.map((a) => `${a.name}${a.param ? ` ${a.param}` : ''}`).join(', ')}</b></div> : null;
       })}
       {sheet.abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction').map((a, i) => (
         <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{factionId && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: factionId }} />} <Em text={a.text} names={names} /></div>

@@ -518,6 +518,20 @@ function offerReroll(s: GameState, p: Pool, stage: 'hit' | 'wound', which: 'all'
   p.reroll = { stage, which, picks: [] };
   const failed = (d: Die) => (stage === 'hit' ? d.o === 'miss' : d.o === 'fail');
   p.reroll.picks = dice.map((d, i) => (rerollable(p, d) && failed(d) ? i : -1)).filter((i) => i >= 0);
+  // [LETHAL HITS] / [SUSTAINED HITS]: a plain hit is re-rolled too when fishing for a critical is worth more — a small
+  // gun against a tank wounds on 6s, so a Lethal Hit (an automatic wound) beats keeping the hit
+  if (stage === 'hit' && which === 'all') {
+    const pw = Math.max(1, Math.min(5, 7 - (p.woundNeed - p.woundMod))) / 6;
+    const sus = p.sustained ? (Number(/\d+/.exec(String(p.sustained))?.[0]) || 1.5) : 0;
+    const critV = (p.lethal ? 1 : pw) + sus * pw;
+    const critP = (7 - Math.min(6, p.critHitOn ?? 6)) / 6;
+    const hitP = Math.max(0, Math.min(5, 7 - ((p.skill ?? 7) - p.hitMod))) / 6;
+    const normP = Math.max(0, hitP - critP);
+    if ((p.lethal || sus) && critP * critV + normP * pw > pw + 1e-9) {
+      dice.forEach((d, i) => { if (d.o === 'hit' && rerollable(p, d) && !p.reroll!.picks.includes(i)) p.reroll!.picks.push(i); });
+      p.reroll.picks.sort((a, b) => a - b);
+    }
+  }
   if (!dice.some((d) => rerollable(p, d))) p.reroll = undefined;
   else if (!s.pickRerolls) resolveReroll(s);
 }

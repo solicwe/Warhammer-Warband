@@ -188,6 +188,13 @@ export function attemptRitual(s: GameState, p: PlayerId, modelId: string, ritual
   const bonusTxt = [mods ? `+${mods}` : '', chan ? `+${chan} (channel)` : ''].filter(Boolean).join(' ');
   pushFx(s, { kind: 'roll', owner: p, title: `${r.name} · ${c.model.name}`, dice: values, result: `${casterDead ? 'the sorcerer fell' : `${result}${bonusTxt ? ` (${bonusTxt})` : ''} vs ${r.wc}+`} → ${manifested ? 'manifested' : 'failed'}${doubles ? ` · perils ${perils} MW` : ''}`, good: manifested });
   log(s, `${c.model.name}: ${r.name} — Psychic test [${values.join(' ')}]${how.channel ? ' (Channelled the Warp)' : ''}${bonusTxt ? ` ${bonusTxt}` : ''}${notes.length ? ` · ${notes.join(' · ')}` : ''} = ${result} vs ${r.wc} → ${manifested ? `manifested on ${t.name}` : 'failed'}`, 'roll', p);
+  // the Ritual on the board: from the sorcerer to its target
+  const mid = (u: UnitState) => { const ms = alive(u).length ? alive(u) : u.models; return { x: ms.reduce((a, m) => a + m.x, 0) / ms.length, y: ms.reduce((a, m) => a + m.y, 0) / ms.length }; };
+  const what: Record<string, string> = {
+    'destinys-ruin': result >= 10 ? 're-roll hits' : 're-roll hits of 1', 'twist-of-fate': result >= 12 ? 'AP +2 against it' : 'AP +1 against it',
+    doombolt: result >= 11 ? 'D3+3 mortal wounds' : 'D3 mortal wounds', 'temporal-surge': result >= 10 ? 'moves 6"' : 'moves D6"',
+  };
+  pushFx(s, { kind: 'ritual', owner: p, ritual: r.id, name: r.name, from: { x: c.model.x, y: c.model.y }, to: mid(t), ok: manifested, text: manifested ? what[r.id] : undefined });
   if (manifested) resolveRitual(s, c, r, unitById(s, t.id), result);
   return { error: null, out: { manifested, result, dice: values, perils, casterDead } };
 }

@@ -498,6 +498,8 @@ export type FxEvent =
   | { seq: number; kind: 'cards'; owner: PlayerId; ids: string[] }
   /** the start of the battle: both players' Primary Mission cards */
   | { seq: number; kind: 'primary' }
+  /** a Psychic Ritual (Thousand Sons): from the sorcerer to its target, with the Ritual's own look */
+  | { seq: number; kind: 'ritual'; owner: PlayerId; ritual: string; name: string; from: Pt; to: Pt; ok: boolean; text?: string }
   /** a hero uses a big ability or a stratagem: a burst of light around it and the ability's name */
   | { seq: number; kind: 'skill'; unitId: string; owner: PlayerId; at: Pt; name: string; who: string; style: SkillStyle; epic: boolean; grand?: boolean };
 

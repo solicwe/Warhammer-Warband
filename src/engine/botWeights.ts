@@ -11,6 +11,7 @@ export const DEFAULT_W = {
   dangerShots: 0.35, dangerMelee: 0.8, dangerUnseen: 0.3,
   pullBrawler: 0.6, pullRange: 0.4, pullHolder: 1.5, pullObjective: 0.35, pullDeliver: 0.6,
   claimBonus: 15, claimPull: 1.5,
+  pullHammer: 0.55, // an expensive non-holder unit: towards the centre objectives early, the enemy's best units later
   crowdTouch: 4, crowdNear: 1.5,
   charLonely: 0.8,
   chargeNonBrawler: 0.5,

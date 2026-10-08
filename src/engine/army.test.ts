@@ -49,3 +49,15 @@ describe('leader + support (24.34)', () => {
     expect(attachOptions(mk([['Heavy Intercessor Squad', 5, 100], ['Captain In Gravis Armour', 1, 80, 'x0'], ['Captain In Gravis Armour', 1, 80]]), SM, { uid: 'x2', datasheet: 'Captain In Gravis Armour', models: 1, pts: 80 })).toEqual([]);
   });
 });
+
+describe('Munitorum Field Manual pricing', () => {
+  it('the 4th and later copies of a unit pay the later price tier; a saved list follows a points update', async () => {
+    const { listPoints, syncList } = await import('./army');
+    const TS = JSON.parse(fs.readFileSync('public/data/factions/TS.json', 'utf8')) as FactionData;
+    const rubric = (uid: string) => ({ uid, datasheet: 'Rubric Marines', models: 5, pts: 115 });
+    const l: ArmyList = { name: 't', factionId: 'TS', battleSize: 'strike', detachments: [], units: [rubric('a'), rubric('b'), rubric('c'), rubric('d')] };
+    expect(listPoints(l, TS)).toBe(115 * 3 + 125);
+    const old: ArmyList = { ...l, units: [{ ...rubric('a'), pts: 100 }] };
+    expect(syncList(old, TS).units[0].pts).toBe(115);
+  });
+});

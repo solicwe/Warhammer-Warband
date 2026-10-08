@@ -25,7 +25,7 @@ import { secondaryChance, secondaryDead } from './secondaries';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, rangedKills, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
-import { bestArrival, bestFallBack, bestMove, canLeave, ctxFor, movesTowards, planMove, scoreSpot } from './botMove';
+import { arrivalStrike, bestArrival, bestFallBack, bestMove, canLeave, ctxFor, movesTowards, planMove, scoreSpot } from './botMove';
 import {
   botCounteroffensive, botCrushingImpact, botEpicChallenge, botExplosives, botHeroic, botOffensiveStratagem, botRapidIngress, botSmokescreen, isBot, wantsBravery,
 } from './botStrats';
@@ -291,6 +291,12 @@ export function botMoveOne(s: GameState): boolean {
       botArrivalDefence(s, u);
       withRuleCache(() => botArrivalStratagem(s, u, how));
       const pos = withRuleCache(() => bestArrival(s, u, how));
+      // a deep striker waits in reserve until it can hurt something worth it (or the last round it may arrive)
+      if (pos && how === 'deepStrike' && s.round < 3 && !u.homer) {
+        const strike = withRuleCache(() => arrivalStrike(s, u, pos));
+        const valuable = boardUnits(s, other(s.active)).some((e) => unitValue(e) >= 150);
+        if (strike < unitValue(u) * (valuable ? 0.3 : 0.2)) { log(s, `${u.name} waits in reserve for a better target`, 'info', s.active); continue; }
+      }
       if (pos && validatePlacement(s, u, pos, how).ok) { ingressUnit(s, u, pos); return true; }
       continue;
     }

@@ -33,6 +33,8 @@ import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
 import { RollOverlay, SecondaryCard } from './RollOverlay';
+import { RITUALS } from '../engine/rituals';
+const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../engine/stratagems';
 import { StratUseCard } from './StratUse';
@@ -391,6 +393,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const me: PlayerId = human ?? actor;
   const goals = showGoals && s.phase !== 'deploy' ? s.players[me].secActive.map((id) => secondaryGoal(s, me, id)) : [];
   for (const g of goals) for (const id of g.units) (badges[id] ??= []).push(`Target: ${g.name}`);
+  // Rituals on a unit this phase (Destiny's Ruin, Twist of Fate): a tag so the player sees who is marked
+  for (const u of s.units) for (const t of u.timed ?? []) if (t.mark && RITUAL_NAMES.has(t.mark) && onBoard(u)) (badges[u.id] ??= []).push(`✦ ${t.mark}`);
   const losLines: { a: Pt; b: Pt; cover: boolean }[] = [];
   const noLos: string[] = [];
   if (mode?.k === 'shoot' && modeUnit) {
