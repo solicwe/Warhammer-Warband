@@ -1,9 +1,9 @@
 import { Component, useEffect, useState, type ReactNode } from 'react';
-import { newUid } from '../engine/army';
+import { newUid, syncList } from '../engine/army';
 import type { GameState } from '../engine/types';
 import { ArmyBuilder } from './ArmyBuilder';
 import { BattleSetup } from './BattleSetup';
-import { loadIndex, type FactionIndex } from './data';
+import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { GameScreen } from './GameScreen';
 import { Home } from './Home';
 import { loadArmies, saveArmies, withAutoRules, type Army } from './library';
@@ -38,6 +38,22 @@ export default function App() {
 
   useEffect(() => { loadIndex().then(setIndex).catch(() => setErr('Could not load the faction list. Reload the page to try again.')); setSaved(loadSaved()); }, []);
   useEffect(() => saveArmies(armies), [armies]);
+  // a points update (Munitorum Field Manual) reaches the saved armies too: each one is repriced from its faction's data
+  useEffect(() => {
+    let live = true;
+    const ids = [...new Set(armies.map((a) => a.factionId))];
+    Promise.all(ids.map((id) => loadFaction(id).then((f) => [id, f] as const).catch(() => null))).then((rows) => {
+      if (!live) return;
+      const byId = new Map(rows.filter((r): r is NonNullable<typeof r> => !!r));
+      setArmies((xs) => {
+        let changed = false;
+        const next = xs.map((a) => { const f = byId.get(a.factionId); if (!f) return a; const s = syncList(a, f); if (s !== a) changed = true; return s === a ? a : { ...a, ...s }; });
+        return changed ? next : xs;
+      });
+    });
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const update = (a: Army) => setArmies((xs) => xs.map((x) => (x.id === a.id ? { ...a, updatedAt: Date.now() } : x)));
   const goHome = () => { setSaved(loadSaved()); setScreen({ kind: 'home' }); };
