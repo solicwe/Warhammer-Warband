@@ -46,6 +46,15 @@ export function blockingWalls(s: GameState, m: ModelState, fly = false, ends: Pt
 /** How close a model's centre may come to a wall: a round token stands in for a hull, so allow a little overlap. */
 export const wallClearance = (m: ModelState, blocking: boolean) => (blocking ? m.r * 0.6 : m.r * 0.5);
 
+/** Objective markers are 40mm discs: models move over them but cannot end a move (or be set up) on top of one. */
+export const OBJECTIVE_MARKER_R = 0.79;
+/** Where a model may END a move or be set up: not on a wall (its base can lean over a little) nor on an objective marker. */
+export function endSpotBlocked(s: GameState, m: { r: number }, p: Pt): 'wall' | 'objective' | null {
+  for (const t of s.terrain) for (const w of t.walls) if (pointSegDist(p, w) < m.r * 0.85) return 'wall';
+  for (const o of s.objectives) if (dist(p, o) < m.r + OBJECTIVE_MARKER_R - 0.05) return 'objective';
+  return null;
+}
+
 export interface MoveOpts { fly?: boolean }
 
 interface Ctx { m: ModelState; enemies: ModelState[]; walls: Seg[]; clear: number }
@@ -337,8 +346,7 @@ export function settleMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
     if (statics.some((o) => dist(p, o) < o.r + m.r - 0.02)) return false;
     if (settled.some((o) => dist(p, o) < o.r + m.r - 0.02)) return false;
     for (const [id, o] of pending) if (id !== m.id && dist(p, o) < o.r + m.r - 0.02) return false;
-    const blockable = !canCrossDense(m);
-    if (walls.some((t) => t.walls.some((w) => pointSegDist(p, w) < wallClearance(m, blockable && t.blocks)))) return false;
+    if (endSpotBlocked(s, m, p)) return false;
     if (keepOutOfEr && enemies.some((e) => dist(p, e) - e.r - m.r <= RULES.engagementRange + 1e-6)) return false;
     if (targetModels.length && gap(p, m) > gap(m, m) - 1e-6) return false;
     if (bystanders.some((e) => dist(p, e) - e.r - m.r <= RULES.engagementRange + 1e-6)) return false;

@@ -153,12 +153,16 @@ function wargearOf(u, weaponName) {
   const options = [];
   const costs = [];
   for (const o of u.models.flatMap((m) => m.wargear.flatMap((s) => s.options))) if (o.pts > 0) { const n = items(o)[0]; if (n && !costs.some((c) => c.name === n)) costs.push({ name: n, pts: o.pts }); }
+  // optional extra models with their own price (Victrix Honour Guard: +1 Chapter Champion 10 pts, +1 Chapter Ancient 15 pts)
+  for (const m of u.models) if (m.min === 0 && m.max === 1 && !(m.perModels > 0) && m.pts > 0 && !m.isDefault && u.models.some((x) => x.isDefault && x.min >= 1) && !costs.some((c) => c.name === m.name)) costs.push({ name: m.name, pts: m.pts });
   for (const m of u.models) {
     if (m.perModels > 0 && m !== defModel) {
-      const shared = new Set(defModel.wargear.map((s) => s.name));
-      const own = m.wargear.filter((s) => !shared.has(s.name));
-      const replace = defModel.wargear.filter((s) => !s.optional && !m.wargear.some((x) => x.name === s.name)).flatMap((s) => items(s.options[0]));
-      const choices = own.flatMap((s) => s.options.map(items)).filter((c) => c.length);
+      // the variant's own slots: ones the default model lacks, or with other weapons (Sword Brother w/ Thunder Hammer: "Melee weapon")
+      const sameSlot = (a, b) => JSON.stringify(a.options.map(items)) === JSON.stringify(b.options.map(items));
+      const own = m.wargear.filter((s) => { const d = defModel.wargear.find((x) => x.name === s.name); return !d || !sameSlot(s, d); });
+      const replace = defModel.wargear.filter((s) => !s.optional && (!m.wargear.some((x) => x.name === s.name) || own.some((x) => x.name === s.name))).flatMap((s) => items(s.options[0]));
+      // one weapon from each of its own slots (heavy weapon × melee weapon)
+      const choices = own.filter((s) => !s.optional).reduce((acc, s) => acc.flatMap((c) => s.options.map((o) => [...c, ...items(o)])), [[]]).filter((c) => c.length);
       if (choices.length) options.push({ text: `For every ${m.perModels} models, ${m.max} ${defModel.name} can be equipped as a ${m.name}: ${choices.map((c) => c.join(' + ')).join(' / ')}`, scope: 'perN', per: m.perModels, max: m.max || 1, who: defModel.name, replace, choices });
       continue;
     }

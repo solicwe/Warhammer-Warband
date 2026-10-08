@@ -146,7 +146,10 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   let best: { pos: Map<string, Pt>; score: number } | null = null;
   // sight checks for many spots: a hidden spot a little further back often beats the open one in front
   const worth = Math.min(2, (u.pts * alive(u).length) / Math.max(1, u.startingStrength) / 120);
-  for (const cand of cands.slice(0, 60)) {
+  // the best by position, plus the best spots in cover (often a little further back, and out of sight)
+  const pool = [...cands.slice(0, 70)];
+  for (const c of cands.slice(70).filter((c) => c.ms.some((m) => withinTerrain(s, m, ['light', 'dense']))).slice(0, 50)) pool.push(c);
+  for (const cand of pool) {
     if (vehicle && !canLeave(s, u, cand.pos)) continue;
     let score = cand.score;
     const eyes = probes(u, cand.pos);
@@ -155,7 +158,7 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
     // a tournament player hides what matters most from the first turn of shooting
     // closed: hide; open: being seen matters much less; the bait wants to be seen
     if (bait) score += seen * 8;
-    else score -= seen * (brawler || how === 'infiltrate' ? 14 : 9) * (0.6 + 0.4 * worth) * (posture === 'open' ? 0.35 : 1);
+    else score -= seen * (brawler || how === 'infiltrate' ? 14 : 11) * (0.6 + 0.4 * worth) * (posture === 'open' ? (brawler ? 0.35 : 0.7) : 1);
     // shooters: sight of the middle objectives from here (to shoot whatever goes onto them)
     if (!brawler && range >= 18 && middle.length) {
       const lanes = middle.filter(({ p }) => dist(cand.centre, p) <= range + 3 && eyes.some((m) => roughLos(s, m, lookout(p)))).length;

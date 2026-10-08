@@ -158,6 +158,7 @@ describe('vehicles in ruins: drive in or onto the edge, never across', () => {
       factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 42,
     });
     s.terrain = [{ id: 'r', kind: 'ruin', label: 'Ruin', category: 'light', height: 0, walls: [], poly: [{ x: 15, y: 20 }, { x: 29, y: 20 }, { x: 29, y: 26 }, { x: 15, y: 26 }] } as TerrainPiece];
+    s.objectives = []; // no markers in the way of the test moves
     return s;
   };
   const go = (s: GameState, dy: number, from: Pt) => {
@@ -598,5 +599,22 @@ describe('detachment rules', () => {
     s.active = 1;
     rollAdvance(s, bw);
     expect(bw.advanceRoll).toBe(6);
+  });
+});
+
+describe('end positions', () => {
+  it('a model cannot end a move on top of an objective marker', () => {
+    const s = createGame({
+      lists: [list('SM', [['Intercessor Squad', 5, 80]]), list('ORK', [['Boyz', 10, 90]])],
+      factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 42,
+    });
+    s.terrain = [];
+    const o = s.objectives[2];
+    const u = put(s, s.units[0].id, { x: o.x, y: o.y - 6 });
+    const m = alive(u)[0];
+    const onIt = validateMove(s, u, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: o.x, y: o.y }]]]));
+    expect(onIt.errors.some((e) => /objective marker/.test(e))).toBe(true);
+    const beside = validateMove(s, u, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: o.x, y: o.y - 1.6 }]]]));
+    expect(beside.errors.some((e) => /objective marker/.test(e))).toBe(false);
   });
 });

@@ -14,7 +14,7 @@ import {
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
-import { canCrossDense, isMV, pathBlocked, pathLength, wallClearance } from './pathing';
+import { canCrossDense, endSpotBlocked, isMV, pathBlocked, pathLength } from './pathing';
 import { detOnCommandStart } from './detachments';
 import { addTimed, applyStaticEffects, canDo, effectsFor, expireTimed, isRiled, modelDefence, modelOc, rollMods, unitFlags } from './effects';
 import './rituals';
@@ -276,10 +276,9 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
       const op = o.unit === u.id ? pos.get(o.m.id) ?? o.m : o.m;
       if (dist(p, op) < m.r + o.m.r - 0.02) { errors.push(`${m.name} overlaps another model`); bad.add(m.id); break; }
     }
-    const blockable = !canCrossDense(m);
-    for (const t of s.terrain) for (const w of t.walls) {
-      if (pointSegDist(p, w) < wallClearance(m, blockable && t.category === 'dense' && t.height > 2)) { errors.push(`${m.name} ends inside a wall`); bad.add(m.id); break; }
-    }
+    const spot = endSpotBlocked(s, m, p);
+    if (spot === 'wall') { errors.push(`${m.name} ends on a wall`); bad.add(m.id); }
+    if (spot === 'objective') { errors.push(`${m.name} cannot end on top of an objective marker`); bad.add(m.id); }
     for (const t of s.terrain) {
       if (t.kind === 'container' && pointInPoly(p, t.poly) && !['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k))) {
         errors.push(`${m.name} cannot end on top of a container (13.06)`); bad.add(m.id);
@@ -1281,7 +1280,7 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
   const free = (id: string, p: Pt, r: number) => p.x - r >= 0 && p.y - r >= 0 && p.x + r <= W && p.y + r <= H
     && others.every((o) => dist(p, o) >= o.r + r - 0.01)
     && ms.every((m) => m.id === id || dist(p, pos.get(m.id)!) >= m.r + r - 0.01)
-    && s.terrain.every((t) => t.walls.every((w) => pointSegDist(p, w) >= r * 0.6)) && clearOfOthers(p, r);
+    && !endSpotBlocked(s, { r }, p) && clearOfOthers(p, r);
   const coherent = () => coherencyProblems(ms.map((m) => pos.get(m.id)!), RULES.coherency.near, RULES.coherency.max, ms.map((m) => m.r)).length === 0;
   const gapTo = (m: ModelState, p: Pt) => Math.min(...enemyModels.map((e) => dist(p, e) - e.r - m.r));
   // each model goes in a straight line from where it stands: that line must not pass through an enemy model
@@ -1309,7 +1308,7 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
       const ok = ms.every((m) => {
         const p = trial.get(m.id)!;
         return p.x - m.r >= 0 && p.y - m.r >= 0 && p.x + m.r <= W && p.y + m.r <= H && others.every((o) => dist(p, o) >= o.r + m.r - 0.01)
-          && s.terrain.every((t) => t.walls.every((w) => pointSegDist(p, w) >= m.r * 0.6)) && clearOfOthers(p, m.r) && clearLine(m, p);
+          && !endSpotBlocked(s, m, p) && clearOfOthers(p, m.r) && clearLine(m, p);
       });
       if (ok) { for (const [id, p] of trial) pos.set(id, p); break; }
     }

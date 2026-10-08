@@ -160,6 +160,12 @@ export function parseWargearOption(text, weapons = []) {
   }
   // "(this model's X cannot be replaced)" / "This model's X cannot be replaced." are notes, not replacements
   t = t.replace(/\([^)]*cannot be replaced[^)]*\)/gi, '').replace(/[^.•]*cannot be replaced\.?/gi, '').trim();
+  // "(a model cannot be equipped with more than one electroscourge)": a note, not a choice
+  const uniq = t.match(/cannot be equipped with more than one ([\w -]+?)\)/i);
+  if (uniq) opt.unique = [uniq[1].trim()];
+  t = t.replace(/\s*\([^)]*cannot be equipped with[^)]*\)/gi, '').trim();
+  // "This model can be equipped with 1 havoc launcher or can replace 1 combi-bolter with 1 havoc launcher": the gain is what counts
+  t = t.replace(/^(This model can be equipped with [^.]+?) or can replace .*$/i, '$1.');
   if ((m = t.match(/^For every (\d+|\w+) models? in (?:this|the) unit,? (?:up to )?(\d+|\w+)?/i))) {
     opt.scope = 'perN'; opt.per = Number(m[1]) || WORDS[m[1].toLowerCase()] || 5; opt.max = Number(m[2]) || WORDS[(m[2] ?? '').toLowerCase()] || 1;
   } else if (/^Any number of/i.test(t)) opt.scope = 'any';
@@ -176,7 +182,7 @@ export function parseWargearOption(text, weapons = []) {
   }
   // what is replaced: "have their X replaced", "X's Y can be replaced", "can replace its X with …"
   let choiceBody = null;
-  if ((m = t.match(/can replace (?:its|their) (.+?) with (.+)$/i))) { opt.replace = items(m[1]); choiceBody = m[2]; }
+  if ((m = t.match(/can (?:each )?replace (?:its|their) (.+?) with (.+)$/i))) { opt.replace = items(m[1]); choiceBody = m[2]; }
   else if ((m = t.match(/have (?:their|its) (.+?) replaced/i)) || (m = t.match(/(?:'s|their|its) (.+?) (?:can )?(?:each )?(?:be )?replaced/i))) opt.replace = items(m[1]);
   // "… replaced with 1 twin lightning claws, or two different weapons from the following list: • …"
   if ((m = t.match(/(two|three|2|3) different (?:weapons|items) from the following list:?\*?\s*(.+)$/i))) {
@@ -203,7 +209,11 @@ export function parseWargearOption(text, weapons = []) {
   if (!opt.requires && (m = t.match(/equipped with (?:a |an |1 )?(.+?) can (?:be equipped with|have)/i)) && !opt.replace.length) opt.requires = items(m[1]);
   if (!opt.choices.length && !opt.pick) return null;
   const canon = (arr) => arr.map((x) => canonWeapon(x, weapons));
+  // "its excruciator cannons can be replaced with 2 …": a plural carried twice goes as a pair
+  const rawReplace = opt.replace;
   opt.replace = canon(opt.replace);
+  if (opt.replace.length === 1 && /s$/i.test(rawReplace[0]) && !/s$/i.test(opt.replace[0]) && opt.choices.length && opt.choices.every((c) => c.length === 2 && c[0] === c[1])) opt.replace = [opt.replace[0], opt.replace[0]];
+  if (opt.unique) opt.unique = canon(opt.unique);
   opt.choices = opt.choices.map(canon);
   if (opt.pickFrom) opt.pickFrom = [...new Set(canon(opt.pickFrom))];
   if (opt.requires) opt.requires = canon(opt.requires);

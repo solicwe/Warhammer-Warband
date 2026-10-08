@@ -3,11 +3,11 @@
 // its shape where it can and otherwise re-forms around the new spot. Every end position is scored the way a player
 // weighs it: objectives held, the shots and the charge it sets up this turn, and what the enemy can do back.
 import { buildShootPools, expectedDamage, shootingModes } from './attack';
-import { RULES } from './config';
+import { primaryById, RULES } from './config';
 import { chargeEligibility, findPlacement, formationAt, levelOfControl, validateMove, validatePlacement, zoneOf } from './game';
 import { circleTouchesPoly, dist, pointInPoly, polyCentroid } from './geometry';
 import { blockingWalls, distanceField, pathLength, pointAt, routeAround } from './pathing';
-import { alive, boardUnits, other, unitDistance } from './state';
+import { alive, boardUnits, hasKw, isEngaged, other, unitDistance } from './state';
 import { hasLos } from './visibility';
 import { secondaryGoal } from './secondaries';
 import { hasAbility } from './weapons';
@@ -17,7 +17,7 @@ import { W as BW } from './botWeights';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, shotValue, unitValue,
 } from './botEval';
-import type { GameState, ModelState, MoveKind, Pt, UnitState } from './types';
+import type { GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from './types';
 
 export type Paths = Map<string, Pt[]>;
 type Spot = Map<string, Pt>;
@@ -138,6 +138,8 @@ export interface Ctx {
   holder?: boolean;
   /** a unit that leaves objectives secured behind it (Objective Secured …): the next objective to claim, then it moves on */
   claim?: Pt;
+  /** a table quarter to hold for the mission (Reconnaissance Sweep, Engage on All Fronts): where to stand in it */
+  quarter?: { q: number; aim: Pt };
   /** a character or model whose ability works on friendly units nearby (Techmarine and vehicles, auras): stay by them */
   escort?: { u: UnitState; range: number; weight: number };
 }
@@ -176,6 +178,79 @@ function escortFor(s: GameState, u: UnitState): Ctx['escort'] {
   return best;
 }
 
+// ---------- table quarters ----------
+
+const BOARD_W = RULES.battlefield.width, BOARD_H = RULES.battlefield.height;
+
+const quarterOf = (m: Pt) => (m.x < BOARD_W / 2 ? 0 : 1) + (m.y < BOARD_H / 2 ? 0 : 2);
+/** Is the unit wholly in one table quarter and more than 6" from the centre (what quarter missions count)? */
+export function unitQuarter(u: UnitState): number | null {
+  const ms = alive(u);
+  if (!ms.length) return null;
+  const c = { x: BOARD_W / 2, y: BOARD_H / 2 };
+  const q0 = quarterOf(ms[0]);
+  const ok = ms.every((m) => quarterOf(m) === q0 && dist(m, c) - m.r > 6 && Math.abs(m.x - c.x) >= m.r && Math.abs(m.y - c.y) >= m.r);
+  return ok ? q0 : null;
+}
+
+/** Does player p score for units in table quarters this turn (the primary or an active secondary card)? */
+export function wantsQuarters(s: GameState, p: PlayerId): boolean {
+  const P = s.players[p];
+  if (P.secMode !== 'none' && P.secActive.includes('engage-on-all-fronts')) return true;
+  const prim = P.primaryId ? primaryById(P.primaryId) : undefined;
+  return !!prim?.scoring.some((r) => r.condition === 'tableQuarters' && s.round >= r.rounds[0] && s.round <= r.rounds[1]);
+}
+
+/** A spot in quarter q for the unit: its centre pulled into the quarter, at least 9" from the board centre. */
+function quarterAim(u: UnitState, q: number): Pt {
+  const c = centre(u);
+  const x0 = q % 2 === 0 ? 2 : BOARD_W / 2 + 2, x1 = q % 2 === 0 ? BOARD_W / 2 - 2 : BOARD_W - 2;
+  const y0 = q < 2 ? 2 : BOARD_H / 2 + 2, y1 = q < 2 ? BOARD_H / 2 - 2 : BOARD_H - 2;
+  let p = { x: Math.min(x1, Math.max(x0, c.x)), y: Math.min(y1, Math.max(y0, c.y)) };
+  const mid = { x: BOARD_W / 2, y: BOARD_H / 2 };
+  const d = dist(p, mid);
+  if (d < 9) {
+    const dx = (q % 2 === 0 ? -1 : 1) * 0.7, dy = (q < 2 ? -1 : 1) * 0.7;
+    p = { x: mid.x + dx * 9 / 0.99, y: mid.y + dy * 9 / 0.99 };
+  }
+  return p;
+}
+
+const quarterCache = new WeakMap<GameState, { key: string; jobs: Map<string, { q: number; aim: Pt }> }>();
+/**
+ * Who holds which table quarter: a unit already standing in a quarter keeps it; each empty quarter goes to the
+ * cheapest unit that can get there soonest (cheap squads and scouts, not the army's hammer).
+ */
+function quarterJobs(s: GameState, p: PlayerId): Map<string, { q: number; aim: Pt }> {
+  const key = `${s.turn}|${s.phase}|${p}|${boardUnits(s, p).map((u) => u.id + ':' + alive(u).length).join(',')}`;
+  const hit = quarterCache.get(s);
+  if (hit && hit.key === key) return hit.jobs;
+  const jobs = new Map<string, { q: number; aim: Pt }>();
+  if (wantsQuarters(s, p)) {
+    const free = boardUnits(s, p).filter((u) => !u.transport && !isEngaged(s, u) && !hasKw(u, 'AIRCRAFT'));
+    const taken = new Set<number>();
+    for (const u of free) {
+      const q = unitQuarter(u);
+      if (q === null || taken.has(q)) continue;
+      // the cheapest unit already in the quarter keeps it
+      const holders = free.filter((x) => unitQuarter(x) === q).sort((a, b) => unitValue(a) - unitValue(b));
+      jobs.set(holders[0].id, { q, aim: centre(holders[0]) });
+      taken.add(q);
+    }
+    for (const q of [0, 1, 2, 3]) {
+      if (taken.has(q)) continue;
+      const cands = free.filter((u) => !jobs.has(u.id) && !(isBrawler(s, u) && unitValue(u) > 150))
+        .map((u) => ({ u, cost: unitValue(u) + 8 * dist(centre(u), quarterAim(u, q)) / Math.max(4, moveOf(u)) * 10 }))
+        .sort((a, b) => a.cost - b.cost);
+      if (!cands.length) continue;
+      jobs.set(cands[0].u.id, { q, aim: quarterAim(cands[0].u, q) });
+      taken.add(q);
+    }
+  }
+  quarterCache.set(s, { key, jobs });
+  return jobs;
+}
+
 export function ctxFor(s: GameState, u: UnitState): Ctx {
   const foes = boardUnits(s, other(u.owner)).map((e) => ({
     u: e, rk: Math.min(alive(u).length, rangedKills(e, u)), mk: Math.min(alive(u).length, meleeKills(e, u)), brawler: isBrawler(s, e), range: maxRange(e), M: moveOf(e),
@@ -197,6 +272,7 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
     ctx.claim = open[0];
   }
   ctx.escort = escortFor(s, u);
+  ctx.quarter = quarterJobs(s, u.owner).get(u.id);
   const cargo = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
   if (cargo.length) {
     const c = centre(u);
@@ -302,6 +378,10 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
     const on = alive(u).some((m) => dist(m, ctx.claim!) <= 3 + m.r);
     v += on ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.claim) - 2);
   }
+  if (ctx.quarter && !ctx.deliver) {
+    // its job this turn: be wholly in that quarter, more than 6" from the centre, at the end of the turn
+    v += unitQuarter(u) === ctx.quarter.q ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.quarter.aim) - 2);
+  }
   if (ctx.escort && alive(ctx.escort.u).length) v -= ctx.escort.weight * 2 * Math.max(0, unitDistance(u, ctx.escort.u) - (ctx.escort.range - 1));
   if (ctx.ocNeed.length && !ctx.deliver) {
     const far = ctx.toObjective?.(lead);
@@ -383,6 +463,7 @@ function aimsFor(s: GameState, u: UnitState, max: number, ctx: Ctx): Pt[] {
   const objs = s.objectives.map((o) => objPoint(s, o)).sort((a, b) => dist(c, a) - dist(c, b));
   pts.push(...objs.filter((p, i) => i < 2 || dist(c, p) <= max + 10));
   if (ctx.claim) pts.push(ctx.claim);
+  if (ctx.quarter) pts.push(ctx.quarter.aim);
   if (ctx.escort && alive(ctx.escort.u).length) pts.push(centre(ctx.escort.u));
   const nearestModel = (e: UnitState) => alive(e).reduce((a, m) => (dist(m, c) < dist(a, c) ? m : a));
   const foes = [...ctx.foes].sort((a, b) => unitDistance(u, a.u) - unitDistance(u, b.u));

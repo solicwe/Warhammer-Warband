@@ -79,6 +79,7 @@ export interface WargearOption {
   pick?: number; // "two different weapons from the following list"
   pickFrom?: string[];
   requires?: string[]; // the model must carry these
+  unique?: string[]; // "a model cannot be equipped with more than one X"
 }
 
 /** A wargear choice in an army list: `count` models take choice `choice` of option `opt` (choice -1 = the `picks` list). */

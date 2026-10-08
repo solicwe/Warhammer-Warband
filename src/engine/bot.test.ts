@@ -428,3 +428,21 @@ describe('bot unit roles', () => {
     expect(alive(anc).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= 3 + m.r)).toBe(true);
   });
 });
+
+describe('table quarters', () => {
+  it('Reconnaissance Sweep: the cheap units are sent to the empty quarters and walk there', async () => {
+    const { ctxFor, unitQuarter } = await import('./botMove');
+    const s = game([['Intercessor Squad', 5, 80], ['Scout Squad', 5, 70], ['Infiltrator Squad', 5, 100], ['Eliminator Squad', 3, 75]], [['Boyz', 10, 90]]);
+    s.players[0].primaryId = 'reconnaissance-sweep';
+    s.players[0].secMode = 'none';
+    s.phase = 'movement';
+    for (const [i, u] of s.units.filter((x) => x.owner === 0).entries()) put(s, u.id, { x: 6 + i * 3, y: 8 });
+    put(s, s.units.find((x) => x.owner === 1)!.id, { x: 38, y: 55 });
+    const jobs = s.units.filter((x) => x.owner === 0).map((u) => ctxFor(s, u).quarter?.q).filter((q) => q !== undefined);
+    expect(new Set(jobs).size).toBe(4);
+    for (const u of s.units.filter((x) => x.owner === 0)) { u.move = null; u.maxMoved = 0; }
+    for (let i = 0; i < 12 && botMoveOne(s); i++) { /* move every unit */ }
+    const held = new Set(s.units.filter((x) => x.owner === 0).map(unitQuarter).filter((q) => q !== null));
+    expect(held.size).toBeGreaterThanOrEqual(2);
+  });
+});

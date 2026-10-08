@@ -11,11 +11,11 @@ const cache = new Map<string, Promise<FactionData>>();
 let indexPromise: Promise<FactionIndex> | null = null;
 
 export function loadIndex(): Promise<FactionIndex> {
-  indexPromise ??= fetch('./data/index.json').then((r) => r.json());
+  indexPromise ??= fetch(`./data/index.json?v=${__DATA_VERSION__}`).then((r) => r.json());
   return indexPromise;
 }
 
 export function loadFaction(id: string): Promise<FactionData> {
-  if (!cache.has(id)) cache.set(id, fetch(`./data/factions/${id}.json`).then((r) => r.json()));
+  if (!cache.has(id)) cache.set(id, fetch(`./data/factions/${id}.json?v=${__DATA_VERSION__}`).then((r) => r.json()));
   return cache.get(id)!;
 }

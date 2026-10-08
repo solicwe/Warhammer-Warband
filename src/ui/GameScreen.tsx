@@ -92,6 +92,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [cardSide, setCardSide] = useState<PlayerId | null>(null); // whose cards the card viewer shows
   const [showGoals, setShowGoals] = useState(true);
   const [showMissions, setShowMissions] = useState(false);
+  const [showLog, setShowLog] = useState(false);
 
   // engine errors become a message instead of a crash
   useEffect(() => {
@@ -117,8 +118,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     try { return new LookWorker(); } catch { return null; }
   }, []);
   useEffect(() => () => worker?.terminate(), [worker]);
+  // the player is reading (mission cards, the log, the menu, a rule): the game waits instead of moving under them
+  const viewing = showCards || showMissions || showLog || showMenu || !!explain;
   useEffect(() => {
-    if (!bots.length || rolling || thinking || stepping || s.phase === 'gameover' || (spectate && speed === 0)) return;
+    if (!bots.length || rolling || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0)) return;
     const who = actingBot;
     // start of a bot's Movement phase: pick how to play the turn before moving anything
     if (who !== null && s.phase === 'movement' && s.active === who && !styleChosen(s)) {
@@ -178,11 +181,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       catch { window.clearTimeout(giveUp); worker.onmessage = null; setStepping(false); stepOnMain.current = true; onMain(); }
     }, delay);
     return () => window.clearTimeout(t);
-  }, [s, actingBot, act, botSays, rolling, thinking, stepping, worker, speed, spectate, bots.length]);
+  }, [s, actingBot, act, botSays, rolling, thinking, stepping, viewing, worker, speed, spectate, bots.length]);
   // auto rules: the player only moves and shoots; the app takes every other decision of theirs as it comes up
   const autoWho = ([0, 1] as PlayerId[]).find((p) => autoDue(s, p)) ?? null;
   useEffect(() => {
-    if (autoWho === null || rolling || thinking) return;
+    if (autoWho === null || rolling || thinking || viewing) return;
     const t = window.setTimeout(() => {
       let said: string | null = null;
       act((g) => {
@@ -198,7 +201,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       }
     }, s.phase === 'fight' ? 700 : 300);
     return () => window.clearTimeout(t);
-  }, [s, autoWho, rolling, thinking]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s, autoWho, rolling, thinking, viewing]); // eslint-disable-line react-hooks/exhaustive-deps
   // pile-in / consolidate on the player's side: every unit moves in by itself (as many models into the fight as
   // possible); the step ends by itself unless a fight-start ability is waiting to be used
   const pileKey = s.fight && (s.fight.step === 'pileIn' || s.fight.step === 'consolidate') ? `${s.turn}:${s.fight.step}:${s.fight.stepPlayer}` : null;
@@ -228,7 +231,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [check, setCheck] = useState<MoveCheck | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<string | null>(null);
-  const [showLog, setShowLog] = useState(false);
   const [showBuffs, setShowBuffs] = useState(false);
   const [fly, setFly] = useState(false);
   const [showStrats, setShowStrats] = useState(false);

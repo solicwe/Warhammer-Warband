@@ -351,6 +351,10 @@ export function wargearProblems(sheet: DatasheetData, e: ArmyUnitEntry): string[
   }
   const plans = planModels(sheet, e.models, e.addons);
   out.push(...applyWargear(sheet, plans, e.wargear ?? []).map((p) => `${e.datasheet}: ${p}`));
+  // "a model cannot be equipped with more than one electroscourge"
+  for (const u of new Set(opts.flatMap((o) => o.unique ?? []))) {
+    if (plans.some((p) => p.items.filter((i) => wkey(i) === wkey(u)).length > 1)) out.push(`${e.datasheet}: a model cannot be equipped with more than one ${u}`);
+  }
   return out;
 }
 

@@ -108,9 +108,10 @@ export function segLengthInPoly(s: Seg, poly: Pt[]): number {
 /** Sample points on and inside a base for line-of-sight tests. */
 export function samplePoints(m: Pt & { r: number }, n = 8): Pt[] {
   const pts: Pt[] = [{ x: m.x, y: m.y }];
+  // the model itself stands inside its base: a sliver of base rim past a wall end is not a model to see or shoot from
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2;
-    pts.push({ x: m.x + Math.cos(a) * m.r * 0.92, y: m.y + Math.sin(a) * m.r * 0.92 });
+    pts.push({ x: m.x + Math.cos(a) * m.r * 0.75, y: m.y + Math.sin(a) * m.r * 0.75 });
   }
   return pts;
 }
