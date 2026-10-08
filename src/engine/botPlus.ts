@@ -402,8 +402,23 @@ export function redeployWorth(s: GameState, u: UnitState): boolean {
 export function botRedeployActs(s: GameState, p: PlayerId) {
   for (const m of manualActs(s, p)) {
     if (m.why || !m.def.spec.do?.some((a) => a.reserves)) continue;
-    if (redeployWorth(s, m.def.holder)) useActByKey(s, m.def.holder.id, m.def.key);
+    const jump = m.def.spec.do.some((a) => a.earlyArrival || a.buff?.some((b) => b.deepStrike));
+    if (jump ? jumpWorth(s, m.def.holder) : redeployWorth(s, m.def.holder)) useActByKey(s, m.def.holder.id, m.def.key);
   }
+}
+
+/**
+ * "Go into Reserves and Deep Strike" (Da Jump, Umbralefic Crystal, Mist-wreathed Shadow Realms): for a fighting unit
+ * worth the trouble that can't reach the enemy this turn on foot, and isn't holding an objective or in a fight.
+ */
+export function jumpWorth(s: GameState, u: UnitState): boolean {
+  if (s.round >= 4 || isEngaged(s, u) || u.battleShocked || s.objectives.some((o) => onObjective(s, u, o))) return false;
+  if (unitValue(u) < 120) return false;
+  const foes = boardUnits(s, other(u.owner));
+  if (!foes.length) return false;
+  const gap = Math.min(...foes.map((e) => unitDistance(u, e)));
+  const reach = isBrawler(s, u) ? moveOf(u) + 7 : moveOf(u) + maxRange(u);
+  return gap > reach;
 }
 
 // the end of the enemy's Fight phase: units that may now leave for Strategic Reserves

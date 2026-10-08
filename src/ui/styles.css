@@ -175,8 +175,11 @@ details summary { cursor: pointer; }
 .resume-score b { font: 700 36px/1 var(--font-cond); color: var(--text); }
 .resume-score b i { font-style: normal; color: var(--text-3); margin: 0 6px; }
 .resume-acts { display: flex; gap: 8px; }
-.list-new { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 16px; border: none; border-bottom: 1px solid var(--line); background: transparent; color: var(--accent); font: 600 15px var(--font-ui); cursor: pointer; text-align: left; }
-.list-new:hover { background: var(--surface-2); }
+.list-new { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; margin: 10px 12px; padding: 0 16px; border: 2px dashed var(--accent); border-radius: 10px; background: var(--accent-soft, var(--surface-2)); color: var(--accent); font: 700 16px var(--font-cond); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background 0.15s, color 0.15s, transform 0.1s; }
+.list-new svg { padding: 3px; border-radius: 50%; background: var(--accent); color: var(--on-fill); }
+.list-new:hover { background: var(--accent); color: var(--on-fill); border-style: solid; }
+.list-new:hover svg { background: var(--on-fill); color: var(--accent); }
+.list-new:active { transform: scale(0.98); }
 .army { display: flex; flex-wrap: wrap; align-items: stretch; border-bottom: 1px solid var(--line); }
 .army:last-of-type { border-bottom: none; }
 .army-main { flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 14px; padding: 14px 4px 14px 16px; border: none; background: transparent; color: inherit; text-align: left; cursor: pointer; }
@@ -522,8 +525,8 @@ b.em { font-weight: 700; color: var(--text); }
 .portrait svg { display: block; }
 .portrait-img { width: 100%; height: 100%; display: block; border-radius: 50%; object-fit: cover; border: 2px solid var(--p0); background: var(--thumb); }
 .portrait-img.borrowed { opacity: 0.45; filter: grayscale(0.6); }
-.portrait-add { position: absolute; right: -2px; bottom: -2px; width: 20px; height: 20px; border-radius: 50%; background: var(--text); color: var(--bg); font: 700 15px/20px var(--font-ui); text-align: center; pointer-events: none; }
-.portrait-x { position: absolute; top: -8px; right: -8px; width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--text); color: var(--bg); font-size: 16px; line-height: 28px; padding: 0; cursor: pointer; }
+.portrait-add { position: absolute; right: -3px; bottom: -3px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #8f5f12; color: #fff; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35); pointer-events: none; }
+.portrait-x { position: absolute; top: -8px; right: -8px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; background: #3a3f45; color: #fff; font-size: 16px; line-height: 28px; padding: 0; cursor: pointer; }
 .portrait-crown { position: absolute; left: 32%; top: -2%; width: 36%; height: auto; pointer-events: none; }
 .portrait-msg { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 4px; white-space: nowrap; background: var(--text); color: var(--bg); font: 500 12px var(--font-ui); padding: 3px 8px; border-radius: 4px; z-index: 5; }
 
@@ -786,20 +789,22 @@ details > .strat-card { margin-top: 6px; }
    headings, whatever the app theme */
 .ds-sheet {
   --ds-band: #2c4440;
-  --surface: #ffffff; --surface-2: #f2f2f2; --line: #d6d6d6; --line-2: #9a9a9a; --text: #111; --text-2: #4a4a4a; --accent: var(--ds-band);
+  --surface: #ffffff; --surface-2: #f2f2f2; --line: #d6d6d6; --line-2: #9a9a9a; --text: #111; --text-2: #4a4a4a; --text-3: #87909a; --accent: var(--ds-band);
+  --sunk: #e9ebec; --good: #2c7a4b; --good-soft: #e2f1e8; --warn: #9a6400; --warn-soft: #f6ecd9; --bad: #b3261e; --bad-soft: #f8e3e1;
+  --accent-soft: #eef2f4; --on-fill: #fff; --ink: #111; --ink-muted: #4a4a4a; --muted: #5a5a5a; --surface2: #f2f2f2; --card: #fff; --card2: #f2f2f2; --card3: #d6d6d6;
   color-scheme: light; background: #fff; color: #111; border: 1px solid #bdbdbd; border-radius: 6px; padding-bottom: 10px; overflow: hidden; gap: 0 !important;
 }
 .ds-sheet .ds-head { margin: 0; padding: 8px 12px; background: #fff; border-bottom: 0; }
 .ds-sheet .ds-head h2 { color: #111; font-family: var(--font-cond); font-size: 22px; }
 .ds-sheet .ds-head .tiny { color: #666; }
 .ds-statband { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px 10px; background: linear-gradient(180deg, var(--ds-band), color-mix(in srgb, var(--ds-band) 55%, #000)); }
-.ds-statline { display: flex; align-items: center; gap: 10px; }
-.ds-statline .ds-stats { padding: 0; flex: 0 1 auto; min-width: 0; }
-.ds-statline .ds-statrow { gap: 5px; max-width: 300px; }
+.ds-statline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.ds-statline .ds-stats { padding: 0; flex: 0 0 auto; }
+.ds-statline .ds-statrow { grid-template-columns: repeat(6, 42px); gap: 5px; max-width: none; }
 .ds-sheet .ds-stat { padding: 2px 0 4px; border: 0; border-radius: 4px; background: #fff; color: #fff; font-size: 11px; position: relative; padding-top: 16px; background: transparent; }
 .ds-sheet .ds-stat span { position: absolute; top: 0; left: 0; right: 0; text-align: center; color: #fff; font: 700 12px var(--font-cond); letter-spacing: 0.06em; }
 .ds-sheet .ds-stat b { display: grid; place-items: center; width: 100%; min-height: 34px; border-radius: 5px; background: #fff; color: #111; font-size: 20px; box-shadow: inset 0 0 0 2px var(--ds-band); }
-.ds-mname { flex: 1; min-width: 0; padding-top: 14px; color: #fff; font: 800 14px var(--font-cond); letter-spacing: 0.04em; }
+.ds-mname { flex: 1 1 90px; min-width: 90px; padding-top: 14px; color: #fff; font: 800 14px var(--font-cond); letter-spacing: 0.04em; }
 .ds-mname small { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0; color: #d0d6da; }
 .ds-sheet .ds-inv { margin: 4px 0 0 60px; gap: 0; color: #fff; }
 .ds-sheet .ds-inv > span:last-child { padding: 3px 10px; background: var(--ds-band); font-size: 12px; }
@@ -817,3 +822,4 @@ details > .strat-card { margin-top: 6px; }
 .ds-sheet .ds-kw2 { padding: 6px 12px 0; margin: 0; }
 .ds-sheet .ds-more { color: #111; align-self: flex-end; margin-right: 8px; }
 .ds-sheet details, .ds-sheet > .small, .ds-sheet .ds-body { padding: 4px 12px; margin: 0; }
+.ds-sheet .ds-pics { padding: 8px 12px 0; }

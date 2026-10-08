@@ -274,12 +274,14 @@ const pointsLines = fs.existsSync(POINTS_DIR)
   : [];
 const pointsMisses = [];
 function applyPointsUpdates(faction, fid) {
-  for (const [fac, name, spec0] of pointsLines) {
+  for (const [fac, name, spec0, extra] of pointsLines) {
     if (fac !== fid) continue;
     let spec = spec0, only = null;
+    const replaceSizes = spec.startsWith('!');
+    if (replaceSizes) spec = spec.slice(1);
     const m0 = /^t([12]):/.exec(spec);
     if (m0) { only = Number(m0[1]); spec = spec.slice(m0[0].length); }
-    const vals = (v) => v.split('/').map(Number);
+    const vals = (v) => v.split('/').map((x) => (x.trim() === '' ? undefined : Number(x)));
     if (name.startsWith('enh:')) {
       const e = faction.detachments.flatMap((d) => d.enhancements).filter((x) => normName(x.name) === normName(name.slice(4)));
       if (!e.length) pointsMisses.push(`${fid} ${name}`);
@@ -289,6 +291,20 @@ function applyPointsUpdates(faction, fid) {
     const d = faction.datasheets.find((x) => normName(x.name) === normName(name));
     if (!d || !d.points?.length) { pointsMisses.push(`${fid} ${name}: no such datasheet`); continue; }
     const pairs = spec.startsWith('=') ? [[null, vals(spec.slice(1))]] : spec.split(',').map((x) => { const [m, v] = x.split('='); return [Number(m), vals(v)]; });
+    // "!4=180/190,5=225/235": the unit now comes in these sizes (the later tier stays a flat extra on a pack's unit)
+    if (replaceSizes) {
+      d.points = d.points.slice(0, 1);
+      d.points[0].options = pairs.filter(([m, v]) => m !== null && v[0] !== undefined).map(([m, v]) => ({ models: m, pts: v[0] }));
+      if (d.dupTax && pairs[0]?.[1][1] !== undefined) d.dupTax = { ...d.dupTax, pts: pairs[0][1][1] - pairs[0][1][0] };
+      if (!d.dupTax && pairs.some(([, v]) => v[1] !== undefined)) d.points.push({ label: 'YOUR 3RD + UNIT COSTS', options: pairs.filter(([m, v]) => m !== null && v[1] !== undefined).map(([m, v]) => ({ models: m, pts: v[1] })) });
+    }
+    // "comp:Custodian Guard=4-5": how many of that model the unit has
+    const cm = /^comp:(.+)=(\d+)-(\d+)$/.exec(extra ?? '');
+    if (cm) {
+      const c = d.composition.find((x) => normName(x.name ?? '') === normName(cm[1]));
+      if (c) { c.min = +cm[2]; c.max = +cm[3]; c.text = `${c.min}-${c.max} ${c.name}`; } else pointsMisses.push(`${fid} ${name}: no model ${cm[1]}`);
+    }
+    if (replaceSizes) continue;
     const setTier = (ti, models, pts) => {
       const tier = d.points[ti];
       if (!tier) return false;
@@ -378,7 +394,10 @@ function build() {
         if ((by.keywords.get(d.id) ?? []).some((k) => k.keyword.toUpperCase() === br.keyword)) borrowed.set(d.id, br);
       }
     }
-    const sheets = [...t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true' && !excludedSource(d.source_id)), ...t.Datasheets.filter((d) => borrowed.has(d.id))];
+    // a unit the Munitorum Field Manual prices is in the game, whichever page its datasheet is on (Forge World …)
+    const priced = new Set(pointsLines.filter(([fac]) => fac === f.id).map(([, n]) => normName(n)));
+    const inGame = (d) => !excludedSource(d.source_id) || priced.has(normName(d.name));
+    const sheets = [...t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true' && inGame(d)), ...t.Datasheets.filter((d) => borrowed.has(d.id))];
     const datasheets = sheets.map((d) => {
       const kw = by.keywords.get(d.id) ?? [];
       const weapons = [];
@@ -429,7 +448,7 @@ function build() {
       };
     }).filter((d) => d.models.length && d.points.length);
 
-    dropped += t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true' && excludedSource(d.source_id)).length;
+    dropped += t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true' && !inGame(d)).length;
     const detachments = t.Detachments.filter((x) => x.faction_id === f.id && (x.force_disposition || !META.excludeDetachmentsWithoutForceDisposition)).map((x) => ({
       id: x.id,
       name: x.name,
@@ -467,7 +486,18 @@ function build() {
     // a newer book as a ListForge pack replaces the Wahapedia datasheets / rules / detachments (data/packs)
     const pf = packFile(path.join(ROOT, 'data/packs'), f.id);
     if (fs.existsSync(pf)) {
+      const waha = faction;
       faction = factionFromPack(pf, faction, sub);
+      // units the book leaves out but the points list prices (Valerian): kept from the Wahapedia data
+      for (const d of waha.datasheets) {
+        if (!pointsLines.some(([fac, n]) => fac === f.id && normName(n) === normName(d.name)) || faction.datasheets.some((x) => normName(x.name) === normName(d.name))) continue;
+        // its army rule is the book's (Combat Doctrines, not the old Oath of Moment), spelled as the book spells it
+        const rules = new Set(faction.datasheets.flatMap((x) => x.abilities.filter((a) => a.type === 'Faction').map((a) => a.name)));
+        const own = d.abilities.map((a) => ({ ...a, name: a.name.replace(/’/g, "'") })).filter((a) => a.type !== 'Faction' || rules.has(a.name));
+        const common = [...rules].find((r) => faction.datasheets.filter((x) => x.abilities.some((a) => a.name === r)).length > faction.datasheets.length / 2);
+        if (common && !own.some((a) => a.name === common)) own.push(faction.datasheets.flatMap((x) => x.abilities).find((a) => a.name === common));
+        faction.datasheets.push({ ...d, abilities: own });
+      }
       console.log(`built ${f.id} from ${faction.source.pack} (revision ${faction.source.revision})`);
     }
     applyPointsUpdates(faction, f.id);

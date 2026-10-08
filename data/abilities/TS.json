@@ -185,7 +185,6 @@
     "if": [
      "leaderAttached"
     ],
-    "botUse": "never",
     "label": "Sacrifice a Bodyguard model: +D3 A and S to Psychic weapons",
     "do": [
      {
@@ -209,6 +208,9 @@
        ]
       }
      }
+    ],
+    "botIf": [
+     "minModels:6"
     ]
    },
    {

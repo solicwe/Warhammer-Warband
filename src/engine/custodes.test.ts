@@ -108,7 +108,7 @@ describe('mustering (11th edition)', () => {
 
 describe('Martial Ka\'tah', () => {
   it('units are readied at the start of the Command phase; a ka\'tah ability uses it up', () => {
-    const s = game([['Custodian Guard', 3, 240]], [['Boyz', 10, 90]]);
+    const s = game([['Custodian Guard', 4, 180]], [['Boyz', 10, 90]]);
     const cg = put(s, 'p0-x0', { x: 20, y: 30 });
     put(s, 'p1-x0', { x: 20, y: 31.9 });
     s.phase = 'fight';
@@ -123,7 +123,7 @@ describe('Martial Ka\'tah', () => {
     expect(buildFightPools(s, cg.id, 'p1-x0').pools.every((p) => p.rerollHits1)).toBe(true);
   });
   it('Master of Ka\'tahs readies the unit again once per battle round', () => {
-    const s = game([['Custodian Guard', 3, 240], ['Shield-Captain', 1, 180, 'x0']], [['Boyz', 10, 90]]);
+    const s = game([['Custodian Guard', 4, 180], ['Shield-Captain', 1, 180, 'x0']], [['Boyz', 10, 90]]);
     const cg = put(s, 'p0-x0', { x: 20, y: 30 });
     cg.readied = false;
     s.phase = 'movement';
@@ -138,7 +138,7 @@ describe('Martial Ka\'tah', () => {
 describe('Custodes rules that needed new engine parts', () => {
   const strat = (s: GameState, name: string) => AC.detachments.flatMap((d) => d.stratagems).find((x) => x.name === name)!;
   it('Shield of Honour: an enemy model engaged with the shielded unit that attacks another unit gets -1 hit and -1 wound', () => {
-    const s = game([['Custodian Guard', 3, 240], ['Custodian Wardens', 3, 295]], [['Boyz', 10, 90]], 'Guardians of the Throne');
+    const s = game([['Custodian Guard', 4, 180], ['Custodian Wardens', 4, 210]], [['Boyz', 10, 90]], 'Guardians of the Throne');
     const cg = put(s, 'p0-x0', { x: 20, y: 30 });
     put(s, 'p0-x1', { x: 26, y: 30 });
     const boyz = put(s, 'p1-x0', { x: 23, y: 30 });
@@ -160,7 +160,7 @@ describe('Custodes rules that needed new engine parts', () => {
     expect(mine.every((x) => x.models.length === 1 && x.startingStrength === 1)).toBe(true);
   });
   it('Gilded Champion: a used once-per-battle ability can be used again', () => {
-    const s = game([['Custodian Guard', 3, 240], ['Shield-Captain', 1, 180, 'x0']], [['Boyz', 10, 90]], 'Auric Champions');
+    const s = game([['Custodian Guard', 4, 180], ['Shield-Captain', 1, 180, 'x0']], [['Boyz', 10, 90]], 'Auric Champions');
     const u = put(s, 'p0-x0', { x: 20, y: 30 });
     put(s, 'p1-x0', { x: 20, y: 40 });
     s.players[0].cp = 5; s.phase = 'movement';
@@ -169,7 +169,7 @@ describe('Custodes rules that needed new engine parts', () => {
     expect(u.used['Vengeful Surge (Once per battle, per unit)']).toBeUndefined();
   });
   it('Sally Forth: at the start of the Charge phase an Infantry unit that advanced near the bearer may charge', () => {
-    const s = game([['Custodian Guard', 3, 240], ['Shield-Captain', 1, 180, undefined, { enhancement: 'Sally Forth' }]], [['Boyz', 10, 90]], 'Solar Watch');
+    const s = game([['Custodian Guard', 4, 180], ['Shield-Captain', 1, 180, undefined, { enhancement: 'Sally Forth' }]], [['Boyz', 10, 90]], 'Solar Watch');
     const cg = put(s, 'p0-x0', { x: 20, y: 30 });
     put(s, 'p0-x1', { x: 24, y: 30 });
     put(s, 'p1-x0', { x: 20, y: 38 });
@@ -193,7 +193,7 @@ describe('Custodes rules that needed new engine parts', () => {
 describe('Adeptus Custodes in a game', () => {
   it('Custodes vs Space Marines plays to the end with the bot (readied units, ka\'tah abilities)', () => {
     const SM = load('SM');
-    const ac = list('AC', [['Custodian Guard', 3, 240], ['Shield-Captain', 1, 180, 'x0', { warlord: true }], ['Allarus Custodians', 2, 180], ['Vertus Praetors', 2, 220], ['Prosecutors', 5, 50]]);
+    const ac = list('AC', [['Custodian Guard', 4, 180], ['Shield-Captain', 1, 180, 'x0', { warlord: true }], ['Allarus Custodians', 2, 180], ['Vertus Praetors', 2, 220], ['Prosecutors', 5, 50]]);
     const sm: ArmyList = { name: 'sm', factionId: 'SM', battleSize: 'incursion', detachments: ['Gladius Task Force'], units: [
       { uid: 'a1', datasheet: 'Intercessor Squad', models: 10, pts: 150 }, { uid: 'a2', datasheet: 'Captain', models: 1, pts: 80, attachTo: 'a1', warlord: true },
       { uid: 'a3', datasheet: 'Hellblaster Squad', models: 5, pts: 110 }, { uid: 'a4', datasheet: 'Assault Intercessor Squad', models: 10, pts: 150 },

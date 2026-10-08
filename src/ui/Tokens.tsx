@@ -1,4 +1,5 @@
 // Original token art (simple vector portraits) for models and unit cards.
+import { Icon } from './Icon';
 import { useEffect, useRef, useState } from 'react';
 import type { ModelState, UnitState } from '../engine/types';
 import { fileToPortrait, getPortrait, hasOwnPortrait, setPortrait, usePortraitsVersion } from './portraits';
@@ -120,7 +121,7 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
             {editable && <text x="50" y="96" fontSize="13" textAnchor="middle" fill="var(--muted)">+ Image</text>}
           </svg>
         )}
-      {borrowed && editable && <span className="portrait-add">+</span>}
+      {borrowed && editable && <span className="portrait-add" aria-hidden="true"><Icon name="camera" size={12} /></span>}
       {character && <svg className="portrait-crown" viewBox="0 0 100 60" aria-hidden="true"><use href="#tok-crown" /></svg>}
       {msg && <span className="portrait-msg">{msg}</span>}
       {editable && <input ref={input} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; void pick(f); }} />}

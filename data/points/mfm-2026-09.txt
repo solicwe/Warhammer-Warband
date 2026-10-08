@@ -1,14 +1,17 @@
 # Munitorum Field Manual, September 2026 (11th edition) — new costs from the points update.
-# Not in this app's data: Astraeus, Thunderhawk Gunship, Gargantuan Squiggoth, Cerastus Knight Atrapos, Valerian (Forge World / Legends);
-# Custodian Guard / Wardens and Allarus at 4-6 models (the Custodes book here has 2-3 model units).
+# A unit priced here is in the game even if its datasheet comes from a Forge World page (Astraeus, Thunderhawk …).
+# "!sizes" replaces the unit's size list; a 4th column "comp:Model=min-max" changes how many of a model the unit has.
 # FACTION | Datasheet | sizes: "models=pts" (tier 1), "models=t1/t2" (both tiers), "t2:" only the later tier, "=pts" every size of a one-option unit
 AS | Paragon Warsuits | 3=165/175
 AS | Saint Celestine | =135
 AS | Celestian Insidiants | =115
 AS | Morvenn Vahl | =215
 AS | Castigator | t2:1=185
-AC | Allarus Custodians | 2=120/160,3=180/220
+AC | Allarus Custodians | !2=120/160,3=180/220,5=300/340,6=360/400 | comp:Allarus Custodian=2-6
 AC | Vertus Praetors | 2=155/180,3=230/255
+AC | Custodian Guard | !4=180/190,5=225/235 | comp:Custodian Guard=4-5
+AC | Custodian Wardens | !4=210/230,5=260/280 | comp:Custodian Warden=4-5
+AC | Valerian | =120
 AC | Shield-Captain on Dawneagle Jetbike | =150
 AC | Prosecutors | 4=50,5=55,9=80,10=90
 AdM | Kataphron Breachers | 3=140,6=290
@@ -92,6 +95,10 @@ SM | Indomitor Kill Team | =280/300
 SM | Watch Captain Artemis | =75
 SM | Watch Master | =105
 SM | Desolation Squad | t1:=135
+SM | Astraeus | =550/650
+SM | Thunderhawk Gunship | t1:=850
+SM | Eradicator Squad with Heavy Bolters | 3=95
+SM | Invader ATV | 1=65
 SM | Infiltrator Squad | 5=80,10=150
 SM | Land Raider Redeemer | =245/265
 SM | Lieutenant with Combi-Weapon | =80
@@ -122,7 +129,7 @@ SM | Storm Speeder Thunderstrike | =155/165
 SM | Victrix Honour Guard | 3=120,6=250
 SM | Aggressor Squad | 3=90,6=180
 SM | Captain in Terminator Armour | =100
-SM | Eradicator Squad | 6=190
+SM | Eradicator Squad | 6=190,3=/105,6=/205
 SM | Gladiator Valiant | =165/175
 SM | Invictor Tactical Warsuit | =140
 SM | Reiver Squad | 5=85,10=165
@@ -275,6 +282,7 @@ AoI | Watch Master | =105
 QI | Knight Defender | =385/405
 QI | Knight Valiant | =390/405
 QI | Knight Warden | =365/380
+QI | Cerastus Knight Atrapos | =420/440
 LoV | Cthonian Beserks | 5=90,10=180
 LoV | Kapricus Defenders | 1=75/95,2=150/170
 LoV | Hernkyn Pioneers | 3=85/95,6=170/180
@@ -309,6 +317,7 @@ ORK | Big Mek with Shokk Attack Gun | =110/125
 ORK | Flash Gitz | 5=110/150,10=220/260
 ORK | Tankbustas | =160/170
 ORK | Deffkoptas | 3=85/95,6=170/180
+ORK | Gargantuan Squiggoth | t2:=600
 ORK | Hunta Rig | t2:=185
 ORK | Kill Rig | t2:=195
 ORK | Mek | =55

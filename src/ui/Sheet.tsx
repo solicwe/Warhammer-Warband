@@ -115,15 +115,6 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
           <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''} · tap the picture or paste to set one</div>
         </div>
       </div>
-      {(() => {
-        // pictures per model (Wardens of Ultramar, a sergeant) and per loadout (Terminator with claws / with a hammer)
-        // every model name counts, the one named like the unit too (Chaplain Grimaldus + Cenobyte Servitors): that one
-        // uses the unit's own picture, as on the board
-        const names = [...new Set(sheet.models.map((m) => m.name))].filter(Boolean);
-        const all = variants ?? datasheetVariants(sheet);
-        const v = all.length ? all : names.length > 1 ? names.map((n) => ({ key: n === sheet.name ? sheet.name : modelPortraitKey(sheet.name, n), fallback: [sheet.name], label: n })) : [];
-        return <ModelPictures variants={v} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} />;
-      })()}
       <div className="ds-statband">
         {groups.map((g, gi) => (
           <div key={g.names.join('|')} className="ds-statline">
@@ -176,6 +167,15 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
           )}
           <div className="ds-kw"><span>FACTION KEYWORDS:</span> {sheet.factionKeywords.join(', ')}</div>
           <div className="kw ds-kw2">KEYWORDS: {sheet.keywords.join(', ')}</div>
+          {(() => {
+            // pictures per model (Wardens of Ultramar, a sergeant) and per loadout (Terminator with claws / with a hammer)
+            // every model name counts, the one named like the unit too (Chaplain Grimaldus + Cenobyte Servitors): that one
+            // uses the unit's own picture, as on the board
+            const names = [...new Set(sheet.models.map((m) => m.name))].filter(Boolean);
+            const all = variants ?? datasheetVariants(sheet);
+            const v = all.length ? all : names.length > 1 ? names.map((n) => ({ key: n === sheet.name ? sheet.name : modelPortraitKey(sheet.name, n), fallback: [sheet.name], label: n })) : [];
+            return <div className="ds-pics"><ModelPictures variants={v} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} /></div>;
+          })()}
           <div className="tiny muted">Data: Wahapedia (<a href={sheet.link} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>source</a>)</div>
           <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(false)}>LESS <span className="dt-chev up"><Icon name="down" size={18} /></span></button>
         </>

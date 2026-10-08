@@ -995,5 +995,23 @@
     }
    ]
   }
+ },
+ "Golden Laurels": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "vs": "melee",
+     "ap": 1
+    }
+   }
+  ]
+ },
+ "Hero of Lion's Gate": {
+  "freeDie": {
+   "kind": "setSix",
+   "stage": "any",
+   "limit": "battle"
+  }
  }
 }

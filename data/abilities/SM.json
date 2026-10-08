@@ -7295,5 +7295,55 @@
     }
    ]
   }
+ },
+ "Suppression Fire@Astraeus": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "macro-accelerator"
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "suppressed"
+    }
+   ]
+  }
+ },
+ "Thunderhawk Cluster Bombs": {
+  "gear": true,
+  "act": {
+   "when": "endOfNormalMove",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "movedOver": true
+   },
+   "do": [
+    {
+     "mortalRoll": {
+      "on": 3,
+      "n": 6
+     }
+    }
+   ]
+  }
+ },
+ "Aerial Assault": {
+  "effects": [
+   {
+    "assaultDisembark": true
+   }
+  ],
+  "status": "partial",
+  "note": "Units disembarking after it moved can still charge (assault disembark move by hand)"
  }
 }

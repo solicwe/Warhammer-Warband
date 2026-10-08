@@ -14,7 +14,7 @@
    "id": "AC",
    "name": "Adeptus Custodes",
    "group": "Imperium",
-   "datasheets": 27,
+   "datasheets": 28,
    "detachments": 13
   },
   {
@@ -112,7 +112,7 @@
    "id": "QI",
    "name": "Imperial Knights",
    "group": "Imperium",
-   "datasheets": 17,
+   "datasheets": 18,
    "detachments": 8
   },
   {
@@ -133,14 +133,14 @@
    "id": "ORK",
    "name": "Orks",
    "group": "Xenos",
-   "datasheets": 54,
+   "datasheets": 55,
    "detachments": 15
   },
   {
    "id": "SM",
    "name": "Space Marines",
    "group": "Imperium",
-   "datasheets": 161,
+   "datasheets": 163,
    "detachments": 35,
    "subfactions": [
     "Ultramarines",

@@ -280,6 +280,7 @@ export function botMoveOne(s: GameState): boolean {
   if (s.phase === 'movement' && !styleChosen(s)) applyStyle(s, s.active, chooseTurnStyle(s, s.active));
   botUseActs(s, s.active, ['movement']);
   botTeleportActs(s, s.active);
+  if (!s.botTried?.includes(`${s.turn}|jump|${s.active}`)) { (s.botTried ??= []).push(`${s.turn}|jump|${s.active}`); botRedeployActs(s, s.active); }
   botDoctrineActs(s, s.active);
   if (botDisembark(s, s.active)) return true;
   for (const u of moveOrder(s, s.active)) {

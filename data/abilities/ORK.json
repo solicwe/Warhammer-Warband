@@ -106,5 +106,7 @@
   "Mobile Arsenal": { "effects": [{ "attack": "ranged", "if": ["ownShooting"], "reroll": "hits1" }] },
   "Nazdreg’s Know-wotz": { "effects": [{ "deepStrike": true }, { "attack": "ranged", "abilities": ["ignores cover"] }] },
   "Supreme Kunnin’ (Once per phase, per army)": { "act": { "when": "enemyMovedNear", "range": 8, "limit": "phase", "per": "army", "if": ["unengaged"], "do": [{ "on": "self", "move": "D6", "moveIfRiled": "5" }] } },
-  "Squig Barrage": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true, "hitWeapon": "Squig Launchas", "units": ["!MONSTER", "!VEHICLE"] }, "do": [{ "buff": [{ "hit": -1 }], "until": "nextTurnStart", "mark": "squigs" }] } }
+  "Squig Barrage": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true, "hitWeapon": "Squig Launchas", "units": ["!MONSTER", "!VEHICLE"] }, "do": [{ "buff": [{ "hit": -1 }], "until": "nextTurnStart", "mark": "squigs" }] } },
+  "Walking Bastion": { "effects": [{ "noBigGunsPenalty": true }] },
+  "Gargantuan": { "effects": [{ "moveThroughModels": true }], "status": "partial", "note": "Moving over terrain 4\" or less in height: by hand" }
 }
