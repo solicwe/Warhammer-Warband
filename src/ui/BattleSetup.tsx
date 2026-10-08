@@ -26,6 +26,13 @@ const SEC_MODES: { id: BattlePrefs['secMode']; label: string; note: string }[] =
   { id: 'none', label: 'None', note: 'Primary Mission only: good for a first game' },
 ];
 
+const LEVELS: { id: BattlePrefs['level']; label: string; note: string }[] = [
+  { id: 'easy', label: 'Easy', note: 'Plays each unit on its own and misjudges now and then' },
+  { id: 'normal', label: 'Normal', note: 'Tries its turn three ways before playing it' },
+  { id: 'hard', label: 'Hard', note: 'Tries each way on two rolls of the dice' },
+  { id: 'expert', label: 'Expert', note: 'Five ways, three rolls each: thinks longest' },
+];
+
 const MODES: { id: BattleMode; label: string }[] = [
   { id: 'bot', label: 'vs Bot' },
   { id: 'hotseat', label: '2 Players' },
@@ -95,6 +102,7 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
       });
       s.botPlayer = prefs.mode === 'bot' ? 1 : null;
       s.bots = prefs.mode === 'botbot' ? [0, 1] : prefs.mode === 'bot' ? [1] : [];
+      s.botLevel = prefs.level;
       onStart(withAutoRules(s));
     } catch (e) {
       setErr(`Could not start the battle: ${e instanceof Error ? e.message : String(e)}`);
@@ -154,6 +162,16 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
         <div className="seg" role="radiogroup" aria-label="Who plays">
           {MODES.map((m) => <button key={m.id} role="radio" aria-checked={prefs.mode === m.id} className={prefs.mode === m.id ? 'on' : ''} onClick={() => set({ mode: m.id })}>{m.label}</button>)}
         </div>
+
+        {prefs.mode !== 'hotseat' && (
+          <div className="field">
+            <span id="bot-level">Bot level</span>
+            <div className="seg" role="radiogroup" aria-labelledby="bot-level">
+              {LEVELS.map((l) => <button key={l.id} type="button" role="radio" aria-checked={prefs.level === l.id} className={prefs.level === l.id ? 'on' : ''} onClick={() => set({ level: l.id })}>{l.label}</button>)}
+            </div>
+            <span className="field-note">{LEVELS.find((l) => l.id === prefs.level)?.note}</span>
+          </div>
+        )}
 
         <section className="sides" aria-label="Armies">
           {side(0)}

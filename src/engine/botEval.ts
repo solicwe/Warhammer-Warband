@@ -79,9 +79,9 @@ export function objectiveNeeds(s: GameState, p: PlayerId) {
   });
 }
 
-/** How much a successful charge into `e` is worth to `u` (its damage minus what it takes back). */
+/** How much a successful charge into `e` is worth to `u` (its damage minus what it takes back, plus tying up its guns). */
 export function chargeValue(s: GameState, u: UnitState, e: UnitState): number {
-  return meleeKills(u, e) * perModel(e) - meleeKills(e, u) * perModel(u) * 0.5 + (s.players[u.owner].oathTarget === e.id ? 8 : 0);
+  return meleeKills(u, e) * perModel(e) - meleeKills(e, u) * perModel(u) * 0.5 + (s.players[u.owner].oathTarget === e.id ? 8 : 0) + lockValue(s, e);
 }
 
 const punchCache = new WeakMap<GameState, Map<string, number>>();
@@ -101,6 +101,30 @@ export function unitPunch(s: GameState, u: UnitState): number {
   }
   c.set(key, v);
   return v;
+}
+
+const shotCache = new WeakMap<GameState, Map<string, number>>();
+/** Points of damage a unit's guns do in a turn to the enemy's best units (no fists). */
+export function gunPunch(s: GameState, u: UnitState): number {
+  const key = `${s.turn}|${s.phase}|${u.id}|${alive(u).length}`;
+  let c = shotCache.get(s);
+  if (!c) { c = new Map(); shotCache.set(s, c); }
+  const hit = c.get(key);
+  if (hit !== undefined) return hit;
+  const foes = [...boardUnits(s, other(u.owner))].sort((a, b) => unitValue(b) - unitValue(a)).slice(0, 4);
+  const v = foes.length ? foes.reduce((a, t) => a + Math.min(alive(t).length, rangedKills(u, t)) * perModel(t), 0) / foes.length : 0;
+  c.set(key, v);
+  return v;
+}
+
+/**
+ * Tying an enemy gun line up in melee (trading): engaged, it can't shoot next turn unless it falls back, and then it
+ * can't shoot either. Worth part of its guns' damage — a cheap unit thrown in front of them buys that much.
+ * Monsters and vehicles still shoot in melee, and fighters want the fight anyway.
+ */
+export function lockValue(s: GameState, e: UnitState): number {
+  if (botOff('lock') || isBrawler(s, e) || alive(e).some((m) => m.keywords.includes('MONSTER') || m.keywords.includes('VEHICLE'))) return 0;
+  return gunPunch(s, e) * 0.4;
 }
 
 /** Taking models off an objective they hold: worth a lot when it flips to us (or to nobody). */

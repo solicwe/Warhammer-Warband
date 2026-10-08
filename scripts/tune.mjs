@@ -1,7 +1,7 @@
 // Bot self-play tuning: hill-climbs the bot's weights (src/engine/botWeights.ts) by playing a changed set against the
 // current best on several CPU cores, keeping the change when it wins clearly. The best set is written to
 // data/bot-weights.json, which the bot loads by default.
-//   node scripts/tune.mjs --iters 30 --games 24 --workers 4 --log tune-log.txt
+//   node scripts/tune.mjs --iters 30 --games 24 --workers 4 --log tune-log.txt [--auto: lists for every faction]
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -22,7 +22,11 @@ const block = /DEFAULT_W = \{([\s\S]*?)\n\};/.exec(src)[1];
 const DEFAULT = Object.fromEntries([...block.matchAll(/(\w+): ([\d.]+)/g)].map((m) => [m[1], Number(m[2])]));
 let best = { ...DEFAULT, ...JSON.parse(fs.readFileSync(WEIGHTS, 'utf8')) };
 
-const ARMIES = ['SM gunline', 'SM assault', 'ORK horde', 'ORK mixed'];
+// --auto: every faction with a list made from its data (src/engine/autoList.ts), so the weights suit all armies
+const index = JSON.parse(fs.readFileSync('public/data/index.json', 'utf8'));
+const ARMIES = process.argv.includes('--auto')
+  ? (index.factions ?? index).map((f) => f.id).filter((id) => !['TL', 'UA'].includes(id)).map((id) => `auto:${id}`)
+  : ['SM gunline', 'SM assault', 'ORK horde', 'ORK mixed'];
 const log = (line) => { console.log(line); fs.appendFileSync(LOG, `${line}\n`); };
 
 let rng = SEED0 * 7 + 1;
@@ -48,7 +52,8 @@ function schedule(iter) {
   const games = [];
   let i = 0;
   while (games.length < GAMES) {
-    const a = ARMIES[i % ARMIES.length], b = ARMIES[Math.floor(i / ARMIES.length) % ARMIES.length];
+    // every army in turn, against a rotating opponent (all pairs for the four hand-made lists)
+    const a = ARMIES[(i + iter * 5) % ARMIES.length], b = ARMIES[(Math.floor(i / ARMIES.length) + i * 7 + 3 + iter) % ARMIES.length];
     const seed = SEED0 + iter * 1000 + i;
     games.push({ a, b, seed, sideA: 0 }, { a: b, b: a, seed, sideA: 1 }); // same map, armies and sides swapped
     i++;
@@ -72,7 +77,7 @@ function runWorker(job) {
 async function evaluate(wA, wB, iter, baselineB = false) {
   const games = schedule(iter);
   const shards = Array.from({ length: WORKERS }, (_, k) => games.filter((_, i) => i % WORKERS === k)).filter((g) => g.length);
-  const res = (await Promise.all(shards.map((g) => runWorker({ games: g, wA, wB, baselineB })))).flat();
+  const res = (await Promise.all(shards.map((g) => runWorker({ games: g, wA, wB, baselineB, look: process.argv.includes('--look') })))).flat();
   const ms = res.filter((x) => typeof x === 'number');
   const errors = res.length - ms.length;
   const mean = ms.reduce((a, b) => a + b, 0) / Math.max(1, ms.length);

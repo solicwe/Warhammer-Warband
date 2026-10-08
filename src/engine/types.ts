@@ -529,6 +529,8 @@ export interface FightState {
 
 export interface ShockTest { unitId: string; result: number | null; passed: boolean | null; auto?: boolean; mod?: number }
 
+export type BotLevel = 'easy' | 'normal' | 'hard' | 'expert';
+
 export interface GameState {
   version: 3;
   rng: number;
@@ -557,6 +559,9 @@ export interface GameState {
   log: LogEntry[];
   winner: PlayerId | null | 'draw';
   botPlayer?: PlayerId | null;
+  /** how hard the bot plays: easy (no looking ahead, some slips), normal, hard (each way of playing the turn tried on
+   *  two rolls of the dice), expert (more ways, three rolls each) */
+  botLevel?: BotLevel;
   /** players run by the bot (both for a bot-vs-bot game) */
   bots?: PlayerId[];
   /** players who only move and pick shooting targets: every other decision (stratagems, abilities, re-rolls, saves,

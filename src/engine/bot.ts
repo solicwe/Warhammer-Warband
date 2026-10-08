@@ -23,7 +23,7 @@ import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onB
 import { actionOptions, startAction } from './missions';
 import { secondaryChance, secondaryDead } from './secondaries';
 import {
-  centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, rangedKills, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
+  centre, chargeValue, isBrawler, lockValue, maxRange, meleeKills, moveOf, oc, rangedKills, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
 import { arrivalStrike, bestArrival, bestFallBack, bestMove, canLeave, ctxFor, movesTowards, planMove, scoreSpot } from './botMove';
 import {
@@ -323,11 +323,14 @@ export function botMoveOne(s: GameState): boolean {
       botArrivalDefence(s, u);
       withRuleCache(() => botArrivalStratagem(s, u, how));
       const pos = withRuleCache(() => bestArrival(s, u, how));
-      // a deep striker waits in reserve until it can hurt something worth it (or the last round it may arrive)
+      // a deep striker waits in reserve until it can hurt something worth it (or the last round it may arrive) — but a
+      // unit that lands on an objective we don't hold scores right away, and a turn in reserve is a turn doing nothing
       if (pos && how === 'deepStrike' && s.round < 3 && !u.homer) {
         const strike = withRuleCache(() => arrivalStrike(s, u, pos));
         const valuable = boardUnits(s, other(s.active)).some((e) => unitValue(e) >= 150);
-        if (strike < unitValue(u) * (valuable ? 0.3 : 0.2)) { log(s, `${u.name} waits in reserve for a better target`, 'info', s.active); continue; }
+        const grabs = oc(u) > 0 && s.objectives.some((o) => o.controller !== s.active && [...pos.values()].some((q) => Math.hypot(q.x - o.x, q.y - o.y) <= 3.5));
+        const wait = botOff('dswait') ? (valuable ? 0.3 : 0.2) : (valuable ? 0.18 : 0.1);
+        if (!grabs && strike < unitValue(u) * wait) { log(s, `${u.name} waits in reserve for a better target`, 'info', s.active); continue; }
       }
       if (pos && validatePlacement(s, u, pos, how).ok) { ingressUnit(s, u, pos); return true; }
       continue;
@@ -485,8 +488,12 @@ export function botChargeOne(s: GameState): boolean {
     // a shooting unit stuck in a fight next turn loses its guns (vehicles and monsters keep shooting): that is a cost
     const bigGuns = alive(u).some((m) => m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER'));
     const gunsLost = brawler || bigGuns || s.round >= 5 ? 0 : Math.max(0, ...boardUnits(s, other(u.owner)).map((e) => Math.min(alive(e).length, rangedKills(u, e)) * perModel(e))) * 0.6;
+    // what the enemy answers with: Fire Overwatch from its best gun in range, a Heroic Intervention from a fighter nearby
+    const threat = chargeAnswer(s, u);
     const value = (e: UnitState) => {
       let v = meleeKills(u, e) * perModel(e) - meleeKills(e, u) * perModel(u) * 0.5 + (s.players[u.owner].oathTarget === e.id ? 8 : 0) - gunsLost;
+      // a gun line we tie up can't shoot next turn (a cheap unit traded for its shooting)
+      v += lockValue(s, e) - threat.overwatch - threat.heroic(e);
       // a melee unit that would charge us next turn anyway: going in first means we strike first
       if (isBrawler(s, e) && unitDistance(u, e) <= moveOf(e) + 12) v += meleeKills(e, u) * perModel(u) * 0.4;
       // an objective they hold: our models on it contest it
@@ -514,6 +521,32 @@ export function botChargeOne(s: GameState): boolean {
     return true;
   }
   return false;
+}
+
+/**
+ * Expected points a charging unit loses to the enemy's reactions: Fire Overwatch (the best enemy gun unit that could
+ * use it, hitting on 6s) and a Heroic Intervention by an enemy fighter near the target. Each needs the enemy's CP.
+ */
+function chargeAnswer(s: GameState, u: UnitState): { overwatch: number; heroic: (e: UnitState) => number } {
+  const p = other(u.owner);
+  if (botOff('answer') || s.players[p].cp < 1) return { overwatch: 0, heroic: () => 0 };
+  let ow = 0;
+  if (!canUseStratagem(s, p, 'fire-overwatch')) {
+    for (const e of boardUnits(s, p)) {
+      if (e.battleShocked || isEngaged(s, e) || unitDistance(u, e) > RULES.snapShooting.range) continue;
+      // hits on unmodified 6s: about a third of what its guns usually do
+      ow = Math.max(ow, Math.min(alive(u).length, rangedKills(e, u) * 0.3) * perModel(u));
+    }
+  }
+  const fighters = boardUnits(s, p).filter((e) => !isEngaged(s, e) && isBrawler(s, e) && !canUseStratagem(s, p, 'heroic-intervention', e));
+  return {
+    overwatch: ow * 0.7, // it may keep the CP for something else
+    heroic: (t) => {
+      let worst = 0;
+      for (const e of fighters) if (e.id !== t.id && unitDistance(e, t) <= 6) worst = Math.max(worst, Math.min(alive(u).length, meleeKills(e, u)) * perModel(u));
+      return worst * 0.4 * 0.6; // it may keep the CP, and it has to make its own charge roll
+    },
+  };
 }
 
 export function botCharge(s: GameState) {
@@ -638,7 +671,11 @@ export function botWindow(s: GameState) {
 /** Pre-battle Scouts moves: each unit takes the move the planner likes best (forward onto objectives, into cover), or stays. */
 export function botScouts(s: GameState, p: PlayerId) {
   for (const u of scoutUnits(s, p)) {
-    const plan = withRuleCache(() => bestMove(s, u, 'scout', scoutsOf(s, u) - 0.05, ctxFor(s, u)));
+    // a Scout move comes before the first turn: if the enemy shoots first, running out in front of its guns gets the
+    // unit killed before it does anything — then only cover and safe spots are worth the move
+    const ctx = ctxFor(s, u);
+    if (s.firstPlayer !== p && !botOff('scoutSafe')) ctx.risk = (ctx.risk ?? 1) * 1.8;
+    const plan = withRuleCache(() => bestMove(s, u, 'scout', scoutsOf(s, u) - 0.05, ctx));
     if (plan.paths && validateMove(s, u, 'scout', plan.paths).ok) commitMove(s, u, 'scout', plan.paths);
     u.scoutDone = true;
   }

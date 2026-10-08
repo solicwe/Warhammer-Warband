@@ -5,13 +5,28 @@ import { botAct } from './bot';
 import { unitValue } from './botEval';
 import { setBotWeights, W, type BotW } from './botWeights';
 import { alive, other } from './state';
-import type { GameState, PlayerId } from './types';
+import type { BotLevel, GameState, PlayerId } from './types';
 
 const STYLES: Record<string, Partial<BotW>> = {
   steady: {},
   aggressive: { cautionOther: 0.55, cautionBrawler: 0.25, cautionHolder: 0.2, pullBrawler: 0.9, pullRange: 0.65, chargeNonBrawler: 0.8, advanceMargin: 1 },
   careful: { cautionOther: 1.6, cautionBrawler: 0.8, cautionHolder: 0.6, pullBrawler: 0.4, pullRange: 0.25, advanceMargin: 5 },
+  // the expert also tries playing the turn for the objectives, and for the kill
+  objectives: { objective: 34, pullHolder: 2.4, pullObjective: 0.7, claimPull: 3.2, homeExpensive: 0.5 },
+  hunt: { pullHammer: 0.9, pullBrawler: 0.85, chargeNonBrawler: 0.75, cautionOther: 0.8 },
 };
+
+/** What each level tries: the ways of playing the turn, how many rolls of the dice each is played on (the dice are
+ *  different on each copy, so one lucky roll doesn't decide it), and how long it may think on a phone. */
+const LEVELS: Record<BotLevel, { styles: string[]; samples: number; budget: number }> = {
+  easy: { styles: [], samples: 0, budget: 0 },
+  normal: { styles: ['steady', 'aggressive', 'careful'], samples: 1, budget: 6000 },
+  hard: { styles: ['steady', 'aggressive', 'careful'], samples: 2, budget: 10000 },
+  expert: { styles: ['steady', 'aggressive', 'careful', 'objectives', 'hunt'], samples: 3, budget: 16000 },
+};
+export const levelOf = (s: GameState): BotLevel => s.botLevel ?? 'normal';
+/** How long the app lets the bot think about its turn at this level (a Web Worker, so the screen never freezes). */
+export const lookBudget = (s: GameState) => LEVELS[levelOf(s)].budget;
 
 /** Points of army a VP is worth when comparing outcomes (a 1000-point game is decided by a few dozen VP). */
 const VP_POINTS = 15;
@@ -35,9 +50,11 @@ const standing = (s: GameState, p: PlayerId) => {
   return (vp(p) - vp(other(p))) * VP_POINTS + armyLeft(s, p) - armyLeft(s, other(p));
 };
 
-/** Play a copy through the rest of this turn and the opponent's next one with `style` for p; how p stands then. */
-function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Infinity): number {
+/** Play a copy through the rest of this turn and the opponent's next one with `style` for p; how p stands then.
+ *  `sample` > 0 rolls different dice on the copy (another throw of the same turn). */
+function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Infinity, sample = 0): number {
   const c = structuredClone(s);
+  if (sample) c.rng = (c.rng ^ Math.imul(sample, 2654435761)) >>> 0;
   c.bots = [0, 1];
   const before = { 0: W(0), 1: W(1) };
   setBotWeights(p, { ...own[p]!, ...style });
@@ -58,15 +75,23 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Inf
 }
 
 /** The style that leaves p best off after playing this turn and the opponent's next one on copies of the game. */
-export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs = Infinity): string {
+export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs?: number): string {
   if (!enabled || inRollout || s.phase === 'gameover') return 'steady';
+  const L = LEVELS[levelOf(s)];
+  if (!L.styles.length) return 'steady';
   own[p] ??= W(p);
   // a slow device: whatever could not be tried in time is skipped (steady, the first, is the fallback)
-  const deadline = Date.now() + budgetMs;
+  const deadline = Date.now() + (budgetMs ?? Infinity);
   let best = { name: 'steady', v: -Infinity };
-  for (const [name, style] of Object.entries(STYLES)) {
-    const v = rollout(s, p, style, deadline);
-    if (v > best.v + 1e-6) best = { name, v };
+  for (const name of L.styles) {
+    let sum = 0, n = 0;
+    for (let k = 0; k < L.samples; k++) {
+      const v = rollout(s, p, STYLES[name], deadline, k);
+      if (!Number.isFinite(v)) break;
+      sum += v; n++;
+      if (Date.now() > deadline) break;
+    }
+    if (n && sum / n > best.v + 1e-6) best = { name, v: sum / n };
     if (Date.now() > deadline) break;
   }
   return best.name;
@@ -81,7 +106,8 @@ export function applyStyle(s: GameState, p: PlayerId, name: string) {
   own[p] ??= W(p);
   s.botTried = [...(s.botTried ?? []), styleKey(s)];
   setBotWeights(p, { ...own[p]!, ...(STYLES[name] ?? {}) });
-  if (name !== 'steady') s.log.push({ turn: s.turn, round: s.round, player: p, kind: 'info', text: `${s.players[p].name}: plays this turn ${name === 'aggressive' ? 'aggressively' : 'carefully'} (looked ahead: it plays out better)` });
+  const how: Record<string, string> = { aggressive: 'aggressively', careful: 'carefully', objectives: 'for the objectives', hunt: 'for the kill' };
+  if (name !== 'steady') s.log.push({ turn: s.turn, round: s.round, player: p, kind: 'info', text: `${s.players[p].name}: plays this turn ${how[name] ?? name} (looked ahead: it plays out better)` });
 }
 
 /** Forget the per-side weights captured for styles (a new game, or the tuner changed them). */

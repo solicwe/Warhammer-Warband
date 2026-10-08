@@ -1,7 +1,7 @@
 // The player's army lists, kept in this browser: any number of them, each with its own id. The home screen lists
 // them; a battle picks one for each side.
 import { newUid } from '../engine/army';
-import type { ArmyList, GameState, PlayerId } from '../engine/types';
+import type { ArmyList, BotLevel, GameState, PlayerId } from '../engine/types';
 import { PRESETS } from './presets';
 
 const ARMIES_KEY = 'w40k11-armies';
@@ -40,11 +40,13 @@ export interface BattlePrefs {
   names: [string, string];
   secMode: 'none' | 'tactical' | 'fixed';
   layoutPick: string;
+  /** how hard the bot plays */
+  level: BotLevel;
 }
 
 export function loadBattlePrefs(armies: Army[]): BattlePrefs {
   const fallback = (i: number): ArmyRef => (armies[i] ? { kind: 'list', id: armies[i].id } : { kind: 'preset', factionId: i ? 'ORK' : 'SM' });
-  const base: BattlePrefs = { mode: 'bot', sides: [fallback(0), fallback(1)], names: ['Player 1', 'Player 2'], secMode: 'tactical', layoutPick: '' };
+  const base: BattlePrefs = { mode: 'bot', sides: [fallback(0), fallback(1)], names: ['Player 1', 'Player 2'], secMode: 'tactical', layoutPick: '', level: 'hard' };
   try {
     const v = JSON.parse(localStorage.getItem(BATTLE_KEY) ?? 'null') as Partial<BattlePrefs> | null;
     if (!v) return base;
@@ -53,6 +55,7 @@ export function loadBattlePrefs(armies: Army[]): BattlePrefs {
       ...base, ...v,
       sides: [ok(v.sides?.[0]) ? v.sides![0] : base.sides[0], ok(v.sides?.[1]) ? v.sides![1] : base.sides[1]],
       names: Array.isArray(v.names) && v.names.length === 2 ? v.names as [string, string] : base.names,
+      level: ['easy', 'normal', 'hard', 'expert'].includes(v.level as string) ? v.level as BotLevel : base.level,
     };
   } catch { return base; }
 }

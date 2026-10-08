@@ -87,6 +87,7 @@ function attackMods(x: string): Partial<Effect> | null {
     else if ((m = /^that attack has the (.+)$/.exec(c))) { const l = abilityList(m[1]); if (!l) return null; e.abilities = [...(e.abilities ?? []), ...l]; }
     else if (/^\[/.test(c)) { const l = abilityList(c); if (!l) return null; e.abilities = [...(e.abilities ?? []), ...l]; }
     else if (/^if a critical hit is scored, that attack has the \[precision\] ability$/.test(c)) e.abilities = [...(e.abilities ?? []), 'precision on crit'];
+    else if ((m = /^(?:a successful |an )?unmodified hit roll of (\d)\+ scores a critical hit$/.exec(c))) e.critHitOn = Number(m[1]);
     else if (/^(?:you can )?ignore any or all modifiers to (?:the hit roll|that attack's ballistic skill or weapon skill characteristics?|the ballistic skill characteristic of that weapon)(?: and(?:\/or)? (?:any or )?all modifiers to (?:the hit roll|the ballistic skill characteristic of that weapon))?$/.test(c)) e.ignoreHitMods = true;
     else return null;
   }
@@ -134,6 +135,11 @@ function unitClause(c: string): Partial<Effect> | null {
   if (/^(?:you can )?ignore any or all modifiers to (?:that attack's|the) ballistic skill or weapon skill characteristics?(?: and\/or all modifiers to the hit roll)?$/.test(c)) return { ignoreHitMods: true };
   if ((m = new RegExp(`^${who} ha(?:s|ve) \\+(\\d) oc$`).exec(c))) return { oc: Number(m[1]) };
   if (new RegExp(`^${who} ha(?:s|ve) the (?:stealth) ability$`).test(c)) return { stealth: true };
+  if ((m = /^add (\d) to the toughness characteristic of (?:models in (?:this|that|the bearer's) unit|this model|the bearer)$/.exec(c))) return { toughness: Number(m[1]) };
+  if ((m = /^(?:this|that) unit can only be selected as the target of a ranged attack if the attacking model is within (\d+)"$/.exec(c))) return { targetableWithin: Number(m[1]) };
+  if ((m = /^each time a model in (?:this|that) unit makes a pile-in or consolidation move, it can move up to (\d)" instead of up to 3"$/.exec(c))) return { pileIn: Number(m[1]), consolidate: Number(m[1]) };
+  if ((m = /^each time a model in (?:this|that) unit makes a consolidation move, it can move up to (\d)" instead of up to 3"$/.exec(c))) return { consolidate: Number(m[1]) };
+  if (/^each time (?:this|that) unit makes a normal(?:, advance or charge| or advance) move, it can move horizontally through terrain features(?: as if they were not there)?$|^each time a model in (?:this|that) unit makes a move, it can move (?:horizontally )?through terrain features$/.test(c)) return { mobile: true };
   if (new RegExp(`^${who} ha(?:s|ve) the fights first ability$`).test(c)) return { fightsFirst: true };
   if (new RegExp(`^${who} ha(?:s|ve) the deep strike ability$`).test(c)) return { deepStrike: true };
   if ((m = new RegExp(`^${who} ha(?:s|ve) the scouts (\\d+)" ability$`).exec(c))) return { scouts: Number(m[1]) };
@@ -287,6 +293,15 @@ function wholeText(t: string): AbilityRule | null {
   }
   if ((m = /^in your opponent's movement phase, (?:each time|if) an enemy unit ends a (?:normal, advance or fall back )?move within (\d+)" of this unit, if this unit is not within engagement range of (?:one or more|any) enemy units, (?:this unit|it) can make a normal move of up to (d6|d3|\d+)"?\.?$/.exec(t))) {
     return { parsed: true, act: { when: 'enemyMovedNear', range: Number(m[1]), limit: 'phase', if: ['unengaged'], do: [{ on: 'self', move: m[2].toUpperCase() }] } };
+  }
+  if (/^each time a model in this unit is destroyed, if that model has not fought this phase, do not remove it from play\. the destroyed model can fight after the attacking (?:model's )?unit has finished making its attacks, and is then removed from play\.?$/.test(t)) {
+    return { parsed: true, effects: [{ fightOnDeath: 1 }] };
+  }
+  if ((m = /^each time a model in this unit is destroyed, if that model has not fought this phase, roll one d6\. on a (\d)\+, do not remove (?:it|the destroyed model) from play;? (?:it|the destroyed model) can fight after the attacking (?:model's )?unit has finished making its attacks, and is then removed from play\.?$/.exec(t))) {
+    return { parsed: true, effects: [{ fightOnDeath: Number(m[1]) }] };
+  }
+  if ((m = /^(?:if|each time) this unit advances, do not make an advance roll(?: for it)?\. instead, until the end of the phase, add (\d)" to the move characteristic of models in this unit\.?$/.exec(t))) {
+    return { parsed: true, effects: [{ advanceFixed: Number(m[1]) }] };
   }
   if ((m = /^each time a model in this unit is destroyed by a melee attack, if that model has not fought this phase, roll one d6\. on a (\d)\+, do not remove it from play;? (?:that|the) destroyed model can fight after the attacking (?:model's )?unit has finished making its attacks, and is then removed from play\.?$/.exec(t))) {
     return { parsed: true, effects: [{ fightOnDeath: Number(m[1]) }] };

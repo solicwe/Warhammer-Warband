@@ -2,6 +2,7 @@
 // to keep an objective, the reactive core stratagems (Rapid Ingress, Smokescreen, Heroic Intervention, Counteroffensive),
 // Explosives, Crushing Impact, Epic Challenge, and its detachments' defensive stratagems when one of its units is
 // attacked. It keeps a CP back for a re-roll until the last round unless the play is worth more.
+import { botOff } from './botWeights';
 import { freeDiceNow, useFreeDie } from './activations';
 import { applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, onAttackStart, onMortalWounds, rerollOne, setDiceHook, shootingModes, targetToughness, woundNeed } from './attack';
 import { chargeValue, isBrawler, maxRange, meleeKills, onObjective, oc, p2d6, perModel, rangedKills, unitValue } from './botEval';
@@ -35,7 +36,9 @@ export function cpWorth(s: GameState, p: PlayerId): number {
   if (s.round >= 5 && s.active !== s.firstPlayer) return 1;
   const left = Math.max(1, 6 - s.round); // rounds still to play, this one included
   const perRound = s.players[p].cp / left;
-  const w = perRound < 1 ? 14 : perRound < 2 ? 10 : 7;
+  // a bank of CP that can't all be spent in the rounds left is cheap: use it (a player ending on 7 CP wasted 7 stratagems)
+  const w = botOff('cpBank') ? (perRound < 1 ? 14 : perRound < 2 ? 10 : 7)
+    : perRound < 1 ? 14 : perRound < 1.5 ? 10 : perRound < 2.5 ? 6 : 3;
   return s.round >= 5 ? w * 0.6 : w;
 }
 

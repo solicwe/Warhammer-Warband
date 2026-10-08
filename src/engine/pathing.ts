@@ -117,7 +117,25 @@ export const pointAt = (path: Pt[], len: number) => { const p = truncatePath(pat
 
 /** Shortest legal route (A* on a 0.5" grid, then straightened) from `from` towards `to` within `maxLen` inches.
  *  If `to` cannot be reached it ends at the reachable point closest to it. Null when the model cannot move at all. */
+/** Routes already found this phase: the bot asks for the same route many times while it weighs a unit's moves (normal,
+ *  advance, each aim), and nothing that blocks a route (enemy models, walls) moves while one side moves its units. */
+const routeMemo = new Map<string, Pt[] | null>();
+let routeMemoKey = '';
+
 export function routeAround(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, from: Pt, to: Pt, maxLen: number, opt: MoveOpts = {}): Pt[] | null {
+  let foes = 0;
+  for (const e of s.units) if (e.owner !== u.owner && onBoard(e)) for (const x of e.models) if (!x.dead) foes += x.x * 1.31 + x.y * 0.77;
+  const phaseKey = `${s.turn}|${s.phase}|${foes.toFixed(3)}|${s.terrain.length}`;
+  if (phaseKey !== routeMemoKey || routeMemo.size > 4000) { routeMemo.clear(); routeMemoKey = phaseKey; }
+  const r3 = (v: number) => v.toFixed(3);
+  const key = `${u.id}|${u.battleShocked ? 1 : 0}|${kind}|${m.id}|${r3(m.r)}|${r3(from.x)},${r3(from.y)}|${r3(to.x)},${r3(to.y)}|${r3(maxLen)}|${opt.fly ? 1 : 0}`;
+  if (routeMemo.has(key)) { const hit = routeMemo.get(key); return hit ? hit.map((p) => ({ ...p })) : null; }
+  const out = routeSearch(s, u, kind, m, from, to, maxLen, opt);
+  routeMemo.set(key, out ? out.map((p) => ({ ...p })) : null);
+  return out;
+}
+
+function routeSearch(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, from: Pt, to: Pt, maxLen: number, opt: MoveOpts = {}): Pt[] | null {
   const all = ctxFor(s, u, kind, m, opt, [from, to]);
   // only what lies within reach of this move can be in the way
   const reach = maxLen + 1.5;
@@ -219,12 +237,30 @@ function gridOf(c: Ctx, m: ModelState) {
   // cells keep a little extra room so a diagonal step between two free cells can't cut a corner
   const pad = (d: number) => Math.sqrt(d * d + step * step * 0.52);
   const wallRoom = pad(c.clear);
+  // walls and enemy models sorted into 4" buckets, so a cell only checks what is near it (a vehicle's route has every
+  // ruin footprint as walls, and a long route looks at most of the board)
+  const B = 4;
+  const bw = Math.ceil(W / B) + 1;
+  const wallBucket = new Map<number, Seg[]>();
+  for (const w of c.walls) {
+    const x0 = Math.floor((Math.min(w.a.x, w.b.x) - wallRoom) / B), x1 = Math.floor((Math.max(w.a.x, w.b.x) + wallRoom) / B);
+    const y0 = Math.floor((Math.min(w.a.y, w.b.y) - wallRoom) / B), y1 = Math.floor((Math.max(w.a.y, w.b.y) + wallRoom) / B);
+    for (let by = y0; by <= y1; by++) for (let bx = x0; bx <= x1; bx++) { const k = by * bw + bx; (wallBucket.get(k) ?? wallBucket.set(k, []).get(k)!).push(w); }
+  }
+  const foeBucket = new Map<number, ModelState[]>();
+  for (const e of c.enemies) {
+    const room = pad(e.r + m.r - 0.05);
+    for (let by = Math.floor((e.y - room) / B); by <= Math.floor((e.y + room) / B); by++) for (let bx = Math.floor((e.x - room) / B); bx <= Math.floor((e.x + room) / B); bx++) {
+      const k = by * bw + bx; (foeBucket.get(k) ?? foeBucket.set(k, []).get(k)!).push(e);
+    }
+  }
   const free = (i: number) => {
     if (!state[i]) {
       const p = { x: cx(i), y: cy(i) };
+      const k = Math.floor(p.y / B) * bw + Math.floor(p.x / B);
       const bad = p.x < m.r || p.y < m.r || p.x > W - m.r || p.y > H - m.r
-        || c.enemies.some((e) => dist(p, e) < pad(e.r + m.r - 0.05))
-        || c.walls.some((w) => pointSegDist(p, w) < wallRoom);
+        || (foeBucket.get(k) ?? []).some((e) => dist(p, e) < pad(e.r + m.r - 0.05))
+        || (wallBucket.get(k) ?? []).some((w) => pointSegDist(p, w) < wallRoom);
       state[i] = bad ? 2 : 1;
     }
     return state[i] === 1;

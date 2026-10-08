@@ -166,6 +166,11 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   // Seal of Shrouding / Blazing Icon / Linebreaker Onslaught: enemy units cannot snap-shoot this unit
   if (opt.mode === 'snap' && unitFlags(s, T).noSnapTarget) return { pools: [], notes, error: 'This unit cannot be targeted by snap shooting' };
   const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : [...alive(A), ...firingDeck(s, A, opt)];
+  // sight and cover depend on the model, not the weapon: worked out once per model
+  const sees = new Map<ModelState, boolean>();
+  const seesT = (m: ModelState) => { let v = sees.get(m); if (v === undefined) { v = tModels.some((t) => modelVisible(s, m, T, t)); sees.set(m, v); } return v; };
+  const covered = new Map<ModelState, boolean>();
+  const coverOf = (m: ModelState) => { let v = covered.get(m); if (v === undefined) { v = hasCover(s, m, T); covered.set(m, v); } return v; };
   for (const m of shooters) {
     const ranged = m.weapons.filter((w) => !isMelee(w.profiles[0]) && !(opt.skipWeapons ?? []).includes(w.name) && (!!opt.models || !A.weaponsFired.includes(w.name)));
     const cqOnly = ranged.filter((w) => hasAbility(w.profiles[0], 'close-quarters'));
@@ -198,13 +203,12 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (opt.mode === 'closeQuarters' && !isMV(m) && !engagedWithTarget) continue;
       if (hasAbility(p, 'blast') && tEngaged) continue;
       const indirect = opt.mode === 'indirect' && hasAbility(p, 'indirect-fire');
-      if (opt.mode === 'indirect' && !indirect && !tModels.some((t) => modelVisible(s, m, T, t))) continue;
-      if (!indirect && !tModels.some((t) => modelVisible(s, m, T, t))) continue;
+      if (!indirect && !seesT(m)) continue;
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
       const mods: Mods = { skillDelta: 0, skillNotes: [], hit: 0, hitNotes: [] };
       const ignoresCover = hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
-      const cover = indirect || aFlags.givesCover || (!ignoresCover && (hasCover(s, m, T) || targetHasCover(s, T, d)));
+      const cover = indirect || aFlags.givesCover || (!ignoresCover && (coverOf(m) || targetHasCover(s, T, d)));
       if (cover) { mods.skillDelta += 1; mods.skillNotes.push('Cover −1 BS'); }
       if (m.keywords.includes('TOWERING') && d <= RULES.plungingFire.toweringRange && !T.keywords.includes('AIRCRAFT')) { mods.skillDelta -= 1; mods.skillNotes.push('Plunging Fire +1 BS'); }
       const heavy = hasAbility(p, 'heavy') || grants(fx, inc, 'heavy');

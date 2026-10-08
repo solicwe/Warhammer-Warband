@@ -2244,6 +2244,702 @@
    "rating": 1558,
    "baseline": 1500,
    "note": "the two stance+screen runs (seeds 7000 and 9000) together"
+  },
+  {
+   "date": "2026-10-08",
+   "label": "speed (planning LOS, route memo) s7000",
+   "commit": "8287558",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 17,
+   "draw": 0,
+   "loss": 31,
+   "score": 0.354,
+   "elo": -104,
+   "ci": [
+    -221,
+    -7
+   ],
+   "margin": -5.1,
+   "rating": 1454,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0,
+     "margin": -45.3
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0,
+     "margin": -32
+    },
+    "AM": {
+     "games": 3,
+     "score": 0.33,
+     "margin": 4.7
+    },
+    "QT": {
+     "games": 2,
+     "score": 0,
+     "margin": -17
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -23.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 4
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -46
+    },
+    "QI": {
+     "games": 2,
+     "score": 1,
+     "margin": 32
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 25
+    },
+    "SM": {
+     "games": 2,
+     "score": 1,
+     "margin": 18.5
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 34.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0,
+     "margin": -12.5
+    },
+    "AE": {
+     "games": 2,
+     "score": 0,
+     "margin": -20.5
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 48.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -2
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -35
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -8.5
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -21
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -25
+    },
+    "GC": {
+     "games": 2,
+     "score": 1,
+     "margin": 12.5
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 18
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -6
+    }
+   },
+   "seconds": 557,
+   "kind": "experiment",
+   "note": "rough sight checks while planning: much weaker, reverted"
+  },
+  {
+   "date": "2026-10-08",
+   "label": "lock+answer+cards+screen+parser s7000",
+   "commit": "8287558",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 24,
+   "draw": 0,
+   "loss": 24,
+   "score": 0.5,
+   "elo": 0,
+   "ci": [
+    -101,
+    101
+   ],
+   "margin": 1.9,
+   "rating": 1558,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0,
+     "margin": -28.7
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -3
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "AE": {
+     "games": 2,
+     "score": 0,
+     "margin": -16.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0.67,
+     "margin": 3
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -14.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 14.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -23.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -24.5
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -43.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "GC": {
+     "games": 2,
+     "score": 0,
+     "margin": -19.5
+    },
+    "GK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -6
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 5.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 1,
+     "margin": 22
+    },
+    "LoV": {
+     "games": 2,
+     "score": 1,
+     "margin": 19.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 20
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 56
+    },
+    "SM": {
+     "games": 2,
+     "score": 1,
+     "margin": 36.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 9.5
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 51.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -2.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 1,
+     "margin": 5
+    }
+   },
+   "seconds": 1080,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-10-08",
+   "label": "lock+answer+cards+screen+parser s9000",
+   "commit": "8287558",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 24,
+   "draw": 1,
+   "loss": 23,
+   "score": 0.51,
+   "elo": 7,
+   "ci": [
+    -93,
+    109
+   ],
+   "margin": -0.5,
+   "rating": 1565,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.33,
+     "margin": 0
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.75,
+     "margin": 11
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0,
+     "margin": -7
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 3.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0.67,
+     "margin": -0.7
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -19
+    },
+    "QT": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -12.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -8.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -17
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -16.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 19
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 1
+    },
+    "GK": {
+     "games": 2,
+     "score": 1,
+     "margin": 19
+    },
+    "AoI": {
+     "games": 2,
+     "score": 1,
+     "margin": 11.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5
+    },
+    "LoV": {
+     "games": 2,
+     "score": 1,
+     "margin": 26.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 6
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 13
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -6.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -24.5
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 5.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0,
+     "margin": -9.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -2
+    }
+   },
+   "seconds": 1197,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-10-08",
+   "label": "wave2 + deep strike waits less + careful scouts s7000",
+   "commit": "8287558",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 23,
+   "draw": 0,
+   "loss": 25,
+   "score": 0.479,
+   "elo": -14,
+   "ci": [
+    -117,
+    85
+   ],
+   "margin": 0.9,
+   "rating": 1544,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -5
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -3
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "AE": {
+     "games": 2,
+     "score": 0,
+     "margin": -27.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0.67,
+     "margin": 3
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -19
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 14.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -22.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -29.5
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -43.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "GC": {
+     "games": 2,
+     "score": 0,
+     "margin": -19.5
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -49
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 5.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 1,
+     "margin": 22
+    },
+    "LoV": {
+     "games": 2,
+     "score": 1,
+     "margin": 19.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 20
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 56
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 16.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 9.5
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 51.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -2.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 1,
+     "margin": 27
+    }
+   },
+   "seconds": 1175,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-10-08",
+   "label": "wave2 + deep strike waits less + careful scouts s9000",
+   "commit": "8287558",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 24,
+   "draw": 1,
+   "loss": 23,
+   "score": 0.51,
+   "elo": 7,
+   "ci": [
+    -93,
+    109
+   ],
+   "margin": 0.5,
+   "rating": 1565,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.33,
+     "margin": 0
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.75,
+     "margin": 14
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0,
+     "margin": -7
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 3.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -5.7
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -25
+    },
+    "QT": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -12.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -17
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -31
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 2
+    },
+    "EC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 15
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 1
+    },
+    "GK": {
+     "games": 2,
+     "score": 1,
+     "margin": 23
+    },
+    "AoI": {
+     "games": 2,
+     "score": 1,
+     "margin": 11.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5
+    },
+    "LoV": {
+     "games": 2,
+     "score": 1,
+     "margin": 26.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 6
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 16.5
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 11
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -6.5
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 5.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0,
+     "margin": -9.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -2
+    }
+   },
+   "seconds": 1280,
+   "kind": "experiment"
   }
  ]
 }

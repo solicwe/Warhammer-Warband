@@ -4,12 +4,13 @@
 // weighs it: objectives held, the shots and the charge it sets up this turn, and what the enemy can do back.
 import { buildShootPools, expectedDamage, shootingModes } from './attack';
 import { primaryById, RULES } from './config';
-import { chargeEligibility, findPlacement, formationAt, levelOfControl, validateMove, validatePlacement, zoneOf } from './game';
+import { chargeEligibility, findPlacement, formationAt, hasDeepStrike, levelOfControl, validateMove, validatePlacement, zoneOf } from './game';
 import { circleTouchesPoly, dist, pointInPoly, polyCentroid } from './geometry';
 import { blockingWalls, distanceField, pathLength, pointAt, routeAround } from './pathing';
 import { alive, boardUnits, hasKw, isEngaged, other, unitDistance } from './state';
 import { hasLos } from './visibility';
 import { secondaryGoal } from './secondaries';
+import { zonePoly } from './missions';
 import { hasAbility } from './weapons';
 import { actsOfUnit } from './activations';
 import { unitFlags } from './effects';
@@ -146,6 +147,11 @@ export interface Ctx {
   frontObj?: boolean;
   /** a table quarter to hold for the mission (Reconnaissance Sweep, Engage on All Fronts): where to stand in it */
   quarter?: { q: number; aim: Pt };
+  /** deep strike denial: spots near our valuable units an enemy unit in Reserves could land on (more than 9" from all
+   *  our models), the ones another of our units already covers, and what covering one is worth */
+  denial?: { pts: Pt[]; covered: boolean[]; per: number };
+  /** a secondary card this unit is sent to score: where to go, and when it counts as there */
+  card?: { aim: Pt; card: string; done: (u: UnitState) => boolean };
   /** a character or model whose ability works on friendly units nearby (Techmarine and vehicles, auras): stay by them */
   escort?: { u: UnitState; range: number; weight: number };
   /** its job in the army's plan (botPlan.ts), and where that job wants it (an objective to hold, a spot to screen) */
@@ -200,7 +206,7 @@ function escortFor(s: GameState, u: UnitState): Ctx['escort'] {
  * most that is within a couple of moves. Cheap units hold home and do missions; this is the one that wins the fight.
  */
 function frontFor(s: GameState, u: UnitState, ctx: Ctx): Pt | undefined {
-  if (ctx.holder || ctx.quarter || ctx.deliver || u.transport || (ctx.escort && ctx.escort.weight >= 3)) return undefined;
+  if (ctx.holder || ctx.quarter || ctx.card || ctx.deliver || u.transport || (ctx.escort && ctx.escort.weight >= 3)) return undefined;
   const role = botOff('hammer') ? undefined : ctx.role;
   if (role && role !== 'hammer') return undefined;
   if (role !== 'hammer' && (unitValue(u) < 150 || alive(u).every((m) => m.isCharacter))) return undefined;
@@ -288,6 +294,107 @@ function quarterJobs(s: GameState, p: PlayerId): Map<string, { q: number; aim: P
   return jobs;
 }
 
+const cardCache = new WeakMap<GameState, { key: string; jobs: Map<string, { aim: Pt; card: string; done: (u: UnitState) => boolean }> }>();
+/**
+ * Where the active secondary cards want a unit by the end of this turn (a battlefield edge for Outflank, the enemy
+ * deployment zone, the centre, an objective to do an action on, the objective the opponent picked …): the cheapest
+ * unit that gets there soonest takes each card, the way a player sends a cheap squad to score a card while the army
+ * fights. Cards about killing are left to the target choice.
+ */
+function cardJobs(s: GameState, p: PlayerId): Map<string, { aim: Pt; card: string; done: (u: UnitState) => boolean }> {
+  const P = s.players[p];
+  const key = `${s.turn}|${s.phase}|${p}|${P.secActive.join(',')}|${boardUnits(s, p).map((u) => u.id + ':' + alive(u).length).join(',')}`;
+  const hit = cardCache.get(s);
+  if (hit && hit.key === key) return hit.jobs;
+  const jobs = new Map<string, { aim: Pt; card: string; done: (u: UnitState) => boolean }>();
+  if (P.secMode !== 'none' && s.round >= 1 && !botOff('cards')) {
+    const quarters = quarterJobs(s, p);
+    const free = boardUnits(s, p).filter((u) => !u.transport && !isEngaged(s, u) && !hasKw(u, 'AIRCRAFT') && !quarters.has(u.id) && unitValue(u) <= 220);
+    const mine = zonePoly(s, p), theirs = zonePoly(s, other(p));
+    const centreB = { x: BOARD_W / 2, y: BOARD_H / 2 };
+    const wholly = (u: UnitState, poly: Pt[]) => alive(u).every((m) => pointInPoly(m, poly));
+    for (const id of P.secActive) {
+      const g = secondaryGoal(s, p, id);
+      // each card: candidate spots and when a unit counts as there
+      let spots: Pt[] = [];
+      let done: (u: UnitState) => boolean = () => false;
+      let pool = free;
+      if (id === 'behind-enemy-lines') { spots = [polyCentroid(theirs)]; done = (u) => wholly(u, theirs); }
+      else if (id === 'outflank') {
+        spots = [3, BOARD_W - 3].flatMap((x) => [BOARD_H * 0.3, BOARD_H * 0.5, BOARD_H * 0.7].map((y) => ({ x, y }))).filter((q) => !pointInPoly(q, mine));
+        done = (u) => alive(u).every((m) => (m.x <= 6 || m.x >= BOARD_W - 6) && !pointInPoly(m, mine));
+      } else if (id === 'centre-ground') { spots = [centreB]; done = (u) => alive(u).some((m) => dist(m, centreB) <= 3); }
+      else if (id === 'beacon' && g.units.length) { pool = free.filter((u) => g.units.includes(u.id)); spots = [polyCentroid(theirs), centreB]; done = (u) => !alive(u).some((m) => pointInPoly(m, mine)); }
+      else if (id === 'plunder' || id === 'cleanse' || id === 'a-tempting-target') {
+        spots = g.objectives.map((oid) => s.objectives.find((o) => o.id === oid)).filter((o): o is NonNullable<typeof o> => !!o)
+          .filter((o) => id === 'a-tempting-target' || !(o.type === 'home' && o.owner === p) || s.round >= 4).map((o) => objPoint(s, o));
+        done = (u) => spots.some((q) => alive(u).some((m) => dist(m, q) <= 3 + m.r));
+      }
+      if (!spots.length) continue;
+      // the unit that is cheapest to send: points, plus how many moves it needs (a unit two moves away is no use this turn)
+      let best: { u: UnitState; aim: Pt; cost: number } | null = null;
+      for (const u of pool) {
+        if (jobs.has(u.id)) continue;
+        const c = centre(u);
+        const aim = spots.reduce((a, q) => (dist(q, c) < dist(a, c) ? q : a));
+        const moves = dist(aim, c) / Math.max(4, moveOf(u) + 3);
+        if (moves > 2) continue;
+        const cost = unitValue(u) + moves * 60;
+        if (!best || cost < best.cost) best = { u, aim, cost };
+      }
+      if (best) jobs.set(best.u.id, { aim: best.aim, card: id, done });
+    }
+  }
+  cardCache.set(s, { key, jobs });
+  return jobs;
+}
+
+/**
+ * Screening against Deep Strike: while the enemy has units waiting to land, a cheap unit standing in the open ground
+ * round our valuable units keeps them out (they must arrive more than 9" from every model of ours). The spots that
+ * matter are rings 6-12" round those units; each one a cheap unit covers that nobody else does is worth a share of
+ * what is waiting in Reserves.
+ */
+function denialFor(s: GameState, u: UnitState, ctx: Ctx): Ctx['denial'] {
+  if (botOff('screenDS') || s.round > 3 || unitValue(u) > 150 || ctx.role === 'hammer' || u.transport || isEngaged(s, u)) return undefined;
+  const waiting = s.units.filter((e) => e.owner !== u.owner && e.status === 'reserves' && hasDeepStrike(s, e)).reduce((a, e) => a + unitValue(e), 0);
+  if (waiting < 100) return undefined;
+  const guarded = boardUnits(s, u.owner).filter((f) => f.id !== u.id && unitValue(f) >= 150 && !f.transport);
+  if (!guarded.length) return undefined;
+  const pts: Pt[] = [];
+  for (const f of guarded) {
+    const c = centre(f);
+    for (const R of [7, 11]) for (let k = 0; k < 10; k++) {
+      const p = { x: c.x + Math.cos((k / 10) * Math.PI * 2) * R, y: c.y + Math.sin((k / 10) * Math.PI * 2) * R };
+      if (p.x > 1 && p.y > 1 && p.x < W - 1 && p.y < H - 1 && !pts.some((q) => dist(q, p) < 2.5)) pts.push(p);
+    }
+  }
+  const others = boardUnits(s, u.owner).filter((f) => f.id !== u.id).flatMap(alive);
+  const covered = pts.map((p) => others.some((m) => dist(m, p) - m.r < 9));
+  const open = covered.filter((x) => !x).length;
+  if (!open) return undefined;
+  return { pts, covered, per: (waiting * 0.15) / pts.length };
+}
+
+/** The easy bot misjudges spots now and then: a fixed jitter per spot and turn (the same game replays the same way). */
+function slip(s: GameState, u: UnitState): number {
+  if (s.botLevel !== 'easy') return 0;
+  const c = centre(u);
+  let h = Math.imul(Math.round(c.x * 4) + 7919 * Math.round(c.y * 4), 2654435761) ^ Math.imul(s.turn + 31 * u.id.length, 40503);
+  h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0;
+  return ((h % 1000) / 1000 - 0.5) * 40;
+}
+
+/** What a spot is worth for screening: the landing spots this unit's models keep the enemy out of. */
+function denialScore(u: UnitState, ctx: Ctx): number {
+  const d = ctx.denial;
+  if (!d) return 0;
+  let n = 0;
+  const ms = alive(u);
+  d.pts.forEach((p, i) => { if (!d.covered[i] && ms.some((m) => dist(m, p) - m.r < 9)) n++; });
+  return n * d.per;
+}
+
 export function ctxFor(s: GameState, u: UnitState): Ctx {
   const friends = boardUnits(s, u.owner).filter((f) => !hasKw(f, 'AIRCRAFT'));
   const foes = boardUnits(s, other(u.owner)).map((e) => {
@@ -329,7 +436,9 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   }
   ctx.escort = escortFor(s, u);
   ctx.quarter = quarterJobs(s, u.owner).get(u.id);
+  ctx.card = cardJobs(s, u.owner).get(u.id);
   if (ctx.quarter) ctx.post = undefined;
+  ctx.denial = denialFor(s, u, ctx);
   ctx.front = frontFor(s, u, ctx);
   ctx.frontObj = !!ctx.front && s.objectives.some((o) => dist(objPoint(s, o), ctx.front!) < 0.5);
   const cargo = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
@@ -457,6 +566,10 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
     const gap = routeGap(far, dist(c, ctx.front));
     v -= w.pullHammer * (ctx.perInch ?? 1) * Math.max(0, gap - (ctx.frontObj ? 2 : Math.min(ctx.range * 0.6, 12)));
   }
+  if (ctx.card && !ctx.deliver && !ctx.quarter) {
+    // its card: be where the card wants it at the end of the turn
+    v += ctx.card.done(u) ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.card.aim) - 2);
+  }
   if (ctx.quarter && !ctx.deliver) {
     // its job this turn: be wholly in that quarter, more than 6" from the centre, at the end of the turn
     v += unitQuarter(u) === ctx.quarter.q ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.quarter.aim) - 2);
@@ -552,7 +665,7 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
     const caution = (ctx.role === 'screen' ? w.cautionOther : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
     // the home objective is a job for a cheap unit: a tournament player doesn't park 400 points of Terminators on it
     const homeFactor = ctx.role && !botOff('homeF') ? (ctx.role === 'home' ? 1 : w.homeExpensive) : ctx.holder || unitValue(u) <= 200 ? 1 : w.homeExpensive;
-    return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u);
+    return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u) + denialScore(u, ctx) + slip(s, u);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }
     u.move = was.move;
@@ -570,6 +683,7 @@ function aimsFor(s: GameState, u: UnitState, max: number, ctx: Ctx): Pt[] {
   pts.push(...objs.filter((p, i) => i < 2 || dist(c, p) <= max + 10));
   if (ctx.claim) pts.push(ctx.claim);
   if (ctx.quarter) pts.push(ctx.quarter.aim);
+  if (ctx.card) pts.push(ctx.card.aim);
   if (ctx.front) pts.push(ctx.front);
   if (ctx.post) pts.push(ctx.post);
   if (ctx.escort && alive(ctx.escort.u).length) pts.push(centre(ctx.escort.u));

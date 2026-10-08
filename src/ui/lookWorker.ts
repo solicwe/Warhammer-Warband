@@ -1,7 +1,7 @@
 // The bot thinks off the main thread, so the board keeps animating and the screen never freezes:
 //  - look: plays the bot's turn a few ways on copies of the game (src/engine/botLook.ts) and answers with the style;
 //  - step: plays the bot's next step (one unit moves / shoots / charges …) and answers with the new game state.
-import { applyStyle, chooseTurnStyle, setLookahead } from '../engine/botLook';
+import { applyStyle, chooseTurnStyle, lookBudget, setLookahead } from '../engine/botLook';
 import { botAct, botStep } from '../engine/bot';
 import type { GameState, PlayerId } from '../engine/types';
 
@@ -27,7 +27,7 @@ self.onmessage = (e: MessageEvent<Msg>) => {
   }
   let name = 'steady';
   setLookahead(true);
-  try { name = chooseTurnStyle(m.state, m.p, 6000); } catch { /* a failed look plays the turn as it is */ }
+  try { name = chooseTurnStyle(m.state, m.p, lookBudget(m.state)); } catch { /* a failed look plays the turn as it is */ }
   setLookahead(false);
   self.postMessage({ id: m.id, name });
 };

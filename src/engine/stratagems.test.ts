@@ -29,3 +29,18 @@ describe('stratagem rules data', () => {
     expect(stratTargetOk(st, u('Boyz', ['INFANTRY', 'BOYZ']))).toBe(false);
   });
 });
+
+describe('stratagems of any faction read from the card (no hand-written file needed)', () => {
+  const card = (name: string, effect: string) => ({ id: name, name, cp: 1, type: 'Battle Tactic', turn: 'Your turn', phase: 'Fight phase', text: `WHEN: Fight phase.\nTARGET: One unit from your army.\nEFFECT: ${effect}` });
+  it('fight on death, only targetable up close, Advance without a roll, critical hits on 5+, pile-in 6"', () => {
+    const fx = (effect: string) => stratRule(card('X', effect)).effects ?? [];
+    expect(fx('Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, do not remove it from play. The destroyed model can fight after the attacking unit has finished making its attacks, and is then removed from play.')).toEqual([{ fightOnDeath: 1 }]);
+    expect(fx('Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, roll one D6. On a 4+, do not remove the destroyed model from play; it can fight after the attacking unit has finished making its attacks, and is then removed from play.')).toEqual([{ fightOnDeath: 4 }]);
+    expect(fx('Until the end of the phase, your unit can only be selected as the target of a ranged attack if the attacking model is within 18".')).toEqual([{ targetableWithin: 18 }]);
+    expect(fx('Until the end of the phase, if your unit Advances, do not make an Advance roll for it. Instead, until the end of the phase, add 6" to the Move characteristic of models in your unit.')).toEqual([{ advanceFixed: 6 }]);
+    expect(fx('Until the end of the phase, each time a model in your unit makes an attack, an unmodified Hit roll of 5+ scores a Critical Hit.')[0]).toMatchObject({ critHitOn: 5 });
+    expect(fx('Until the end of the phase, each time a model in your unit makes a Pile-in or Consolidation move, it can move up to 6" instead of up to 3".')).toEqual([{ pileIn: 6, consolidate: 6 }]);
+    // the bot uses a +crit stratagem before attacking
+    expect(stratRule(card('X', 'Until the end of the phase, each time a model in your unit makes an attack, an unmodified Hit roll of 5+ scores a Critical Hit.')).bot).toBe('attack');
+  });
+});

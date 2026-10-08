@@ -495,3 +495,42 @@ describe('the army plan (botPlan.ts)', () => {
     expect(s.units.some((u) => u.owner === 0 && u.selectedToShoot) || !!s.attack || s.log.some((l) => /shoots/.test(l.text))).toBe(true);
   });
 });
+
+describe('reading the enemy (trading, reactions, cards, screens)', () => {
+  it('tying up a gun line is worth something; tying up a melee unit is not', async () => {
+    const { lockValue } = await import('./botEval');
+    const s = game([['Assault Intercessor Squad', 5, 75]], [['Flash Gitz', 5, 80], ['Boyz', 10, 90]]);
+    s.phase = 'charge';
+    put(s, 'p0-x0', { x: 20, y: 20 });
+    const gitz = put(s, 'p1-x0', { x: 20, y: 30 });
+    const boyz = put(s, 'p1-x1', { x: 30, y: 30 });
+    expect(lockValue(s, gitz)).toBeGreaterThan(0);
+    expect(lockValue(s, boyz)).toBe(0);
+  });
+
+  it('a secondary card that wants a unit somewhere gets the cheapest unit that can make it', async () => {
+    const { ctxFor } = await import('./botMove');
+    const s = game([['Intercessor Squad', 10, 160], ['Scout Squad', 5, 70], ['Redemptor Dreadnought', 1, 195]], [['Boyz', 10, 90]]);
+    s.phase = 'movement';
+    s.players[0].secMode = 'tactical';
+    s.players[0].secActive = ['centre-ground'];
+    const [ints, scouts, dread] = s.units.filter((x) => x.owner === 0);
+    put(s, ints.id, { x: 14, y: 22 }); put(s, scouts.id, { x: 30, y: 22 }); put(s, dread.id, { x: 22, y: 20 });
+    put(s, 'p1-x0', { x: 22, y: 56 });
+    expect(ctxFor(s, scouts).card?.card).toBe('centre-ground');
+    expect(ctxFor(s, ints).card).toBeUndefined();
+    expect(ctxFor(s, dread).card).toBeUndefined();
+  });
+
+  it('difficulty: the easy bot does not look ahead, the expert tries more ways', async () => {
+    const { chooseTurnStyle, lookBudget, setLookahead, resetLookahead } = await import('./botLook');
+    const s = game([['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]]);
+    s.botLevel = 'easy';
+    setLookahead(true); resetLookahead();
+    expect(chooseTurnStyle(s, 0)).toBe('steady');
+    expect(lookBudget(s)).toBe(0);
+    s.botLevel = 'expert';
+    expect(lookBudget(s)).toBeGreaterThan(10000);
+    setLookahead(false);
+  });
+});
