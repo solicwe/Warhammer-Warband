@@ -12,6 +12,7 @@ export const DEFAULT_W = {
   pullBrawler: 0.6, pullRange: 0.4, pullHolder: 1.5, pullObjective: 0.35, pullDeliver: 0.6,
   claimBonus: 15, claimPull: 1.5,
   pullHammer: 0.55, // an expensive non-holder unit: towards the centre objectives early, the enemy's best units later
+  pullPost: 3, // towards its post in the army plan (an objective to hold, a spot to screen)
   crowdTouch: 4, crowdNear: 1.5,
   charLonely: 0.8,
   chargeNonBrawler: 0.5,
@@ -29,4 +30,8 @@ export function setBotWeights(p: PlayerId, w?: Partial<BotW>) {
 }
 
 export const W = (p: PlayerId): BotW => per[p] ?? BASE;
+
+/** Parts of the bot switched off by name (BOT_OFF=plan,share in the environment), to measure what each is worth. */
+const OFF = new Set(((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.BOT_OFF ?? '').split(',').filter(Boolean));
+export const botOff = (name: string) => OFF.has(name);
 export const baseWeights = (): BotW => ({ ...BASE });

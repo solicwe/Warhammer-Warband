@@ -32,6 +32,8 @@ const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= 5 ? 0 
  * round spends what's left).
  */
 export function cpWorth(s: GameState, p: PlayerId): number {
+  // the battle's last turn: a CP not spent now is never spent
+  if (s.round >= 5 && s.active !== s.firstPlayer) return 1;
   const left = Math.max(1, 6 - s.round); // rounds still to play, this one included
   const perRound = s.players[p].cp / left;
   const w = perRound < 1 ? 14 : perRound < 2 ? 10 : 7;

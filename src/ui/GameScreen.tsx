@@ -15,7 +15,7 @@ import { rollN } from '../engine/dice';
 import {
   autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
-  formationAt, heroicCandidates, ingressUnit, ringFormation, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
+  formationAt, heroicCandidates, hullSpots, ingressUnit, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, type MoveCheck, hasArmyRule, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
@@ -246,7 +246,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
   const [freeAdvRR, setFreeAdvRR] = useState<string | null>(null);
 
-  const setMode = (m: Mode | null, d: Paths | null = null) => { setModeRaw(m); setDraft(d); setCheck(null); };
+  const setMode = (m: Mode | null, d: Paths | null = null) => { setModeRaw(m); setDraft(d); setCheck(null); setSlide(null); };
+  // the move slider: tap where the unit should go, then slide how far towards it (no finger over the models)
+  const [slide, setSlide] = useState<{ aim: Pt; d: number } | null>(null);
   // ending a phase where nothing was done needs a second tap (protects against mis-taps)
   const [armed, setArmed] = useState<string | null>(null);
   useEffect(() => { if (!armed) return; const tm = window.setTimeout(() => setArmed(null), 3500); return () => window.clearTimeout(tm); }, [armed]);
@@ -338,6 +340,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
   const onTapBoard = (p: Pt) => {
     if (tape.on) { measureTap(p); return; }
+    if (mode?.k === 'move' && modeUnit) {
+      // the unit heads for the tapped point: as far as it may go, or right up to the point if that is closer
+      const c = polyCentroid(alive(modeUnit));
+      applySlide(p, Math.min(slideMax(), Math.hypot(p.x - c.x, p.y - c.y)), true);
+      return;
+    }
     if (mode?.k === 'place') {
       const u = U(mode.unitId);
       setDraft(placePaths(formationAt(u, p, s.players[u.owner].role === 'defender')));
@@ -377,6 +385,18 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     setDraft(st);
     const chk = validateMove(s, modeUnit, draftKind, st, draftOpts);
     setCheck(chk.ok ? null : chk);
+  };
+  /** The furthest every model of the moving unit may go. */
+  const slideMax = () => (modeUnit ? Math.min(...alive(modeUnit).map((m) => maxFor(m.id))) : 0);
+  /** Slide the whole unit `d` inches towards `aim` (each model routed round walls); `done`: settle and check it. */
+  const applySlide = (aim: Pt, d: number, done = false) => {
+    if (!modeUnit || !draftKind) return;
+    const c = polyCentroid(alive(modeUnit));
+    const L = Math.max(0.01, Math.hypot(aim.x - c.x, aim.y - c.y));
+    const v = { x: ((aim.x - c.x) / L) * d, y: ((aim.y - c.y) / L) * d };
+    const paths: Paths = new Map(alive(modeUnit).map((m) => [m.id, walkDraft(m.id, [{ x: m.x, y: m.y }, { x: m.x + v.x, y: m.y + v.y }])]));
+    setSlide({ aim, d });
+    if (done) onDragEnd(paths); else { setDraft(paths); setCheck(null); }
   };
   // the last committed move can be reopened ("move further / fix it") while nothing else has happened since
   const [lastMove, setLastMove] = useState<{ mode: Mode; paths: Paths; after: GameState; label: string } | null>(null);
@@ -440,6 +460,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return { text: `${baseDist(ma, mb).toFixed(1)}"`, line: `Base to base ${baseDist(ma, mb).toFixed(1)}" (centre to centre ${centre.toFixed(1)}") · ${why}`, los: los && (vis || tape.ma!.u === tape.mb!.u) };
   })();
   const rings: Ring[] = [];
+  if (mode?.k === 'move' && slide) rings.push({ c: slide.aim, r: 0.5, color: 'rgba(120,200,255,0.9)', dash: true });
   if (mode?.k === 'charge' && modeUnit) {
     for (const m of alive(modeUnit)) if (alive(modeUnit).length <= 3) rings.push({ c: m, r: (modeUnit.chargeRoll ?? 0) + m.r, color: 'rgba(245,184,61,0.5)', dash: true });
   }
@@ -500,12 +521,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const foes = boardUnits(s, other(u.owner)).flatMap(alive);
       const near = foes.length ? foes.reduce((a, m) => (Math.hypot(m.x - tm.x, m.y - tm.y) < Math.hypot(a.x - tm.x, a.y - tm.y) ? m : a)) : null;
       const base = near ? Math.atan2(near.y - tm.y, near.x - tm.x) : 0;
-      for (const arc of [Math.PI * 0.8, 2 * Math.PI]) {
-        for (let a = 0; a < 16; a++) {
-          const ang = base + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 8);
-          const pos = ringFormation(u, tm, ang, arc);
-          if (validateDisembark(s, u, t, pos).ok) { setDraft(placePaths(pos)); setCheck(null); return; }
-        }
+      for (const pos of hullSpots(s, u, tm, base, disembarkMode(s, t) === 'combat' ? 6 : 3, disembarkMode(s, t) === 'combat')) {
+        if (validateDisembark(s, u, t, pos).ok) { setDraft(placePaths(pos)); setCheck(null); return; }
       }
       flash('No automatic disembark spot found: tap to place');
       return;
@@ -600,11 +617,29 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     </div>
   );
 
+  const slider = () => {
+    if (mode?.k !== 'move' || !modeUnit) return null;
+    const max = slideMax();
+    if (!Number.isFinite(max) || max <= 0) return null;
+    const settle = () => { if (draft) onDragEnd(draft); };
+    return (
+      <div className="move-slider">
+        <Icon name="move" size={16} />
+        <input type="range" min={0} max={+max.toFixed(1)} step={0.1} value={slide?.d ?? 0} disabled={!slide}
+          aria-label="How far to move"
+          onChange={(e) => slide && applySlide(slide.aim, Number(e.target.value))}
+          onPointerUp={settle} onKeyUp={settle} onTouchEnd={settle} />
+        <span className="move-slider-d">{slide ? `${slide.d.toFixed(1)}"` : `${max.toFixed(1)}"`}</span>
+      </div>
+    );
+  };
+
   const moveControls = (kind: string, onConfirm: () => void, extra?: React.ReactNode) => (
     <>
+      {slider()}
       <div className="row">
-        <span className="tiny muted grow">Drag = whole unit · tap a model = move that model</span>
-        <button className="btn small" onClick={() => { setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); }}>Reset</button>
+        <span className="tiny muted grow">{mode?.k === 'move' ? (slide ? 'Slide to set how far · tap the board to aim elsewhere · or drag the models' : 'Tap the board where to go, then slide · or drag the models') : 'Drag = whole unit · tap a model = move that model'}</span>
+        <button className="btn small" onClick={() => { setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); setSlide(null); }}>Reset</button>
         {extra}
       </div>
       {check && !check.ok && <div className="err">{check.errors.slice(0, 4).map((e) => <div key={e}>{e}</div>)}</div>}

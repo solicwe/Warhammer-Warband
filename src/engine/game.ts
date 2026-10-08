@@ -14,7 +14,7 @@ import {
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
-import { canCrossDense, endSpotBlocked, isMV, pathBlocked, pathLength } from './pathing';
+import { canCrossDense, endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathLength } from './pathing';
 import { detOnCommandStart } from './detachments';
 import { addTimed, applyStaticEffects, canDo, effectsFor, expireTimed, isRiled, modelDefence, modelOc, rollMods, unitFlags } from './effects';
 import './rituals';
@@ -453,7 +453,44 @@ export function ringFormation(u: UnitState, tm: ModelState, angle: number, maxAr
   return packFormation(u, tm, angle, within) ?? arcFormation(u, tm, angle, maxArc);
 }
 
-function packFormation(u: UnitState, tm: ModelState, angle: number, within: number): Map<string, Pt> | null {
+/**
+ * Getting out next to a hull with something in the way (walls, objective markers, other units, the enemy): the same
+ * packing as ringFormation, but each model only takes a spot it may end on. Null when the unit doesn't fit that side.
+ */
+export function fitFormation(s: GameState, u: UnitState, tm: ModelState, angle: number, within = 3, engage = false): Map<string, Pt> | null {
+  const reach = tm.r + within + 2;
+  const others = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap((x) => alive(x).map((m) => ({ m, foe: x.owner !== u.owner && !hasKw(x, 'AIRCRAFT') })))
+    .filter(({ m }) => dist(m, tm) - m.r <= reach + 1);
+  const walls = s.terrain.flatMap((t) => t.walls).filter((w) => pointSegDist(tm, w) <= reach + 1);
+  const objectives = s.objectives.filter((o) => dist(o, tm) <= reach + 3);
+  const boxes = s.terrain.filter((t) => (t.box || t.kind === 'container') && t.poly.some((q) => dist(q, tm) <= reach + 12));
+  const free = (m: ModelState, p: Pt) => {
+    if (p.x - m.r < 0 || p.y - m.r < 0 || p.x + m.r > W || p.y + m.r > H) return false;
+    for (const o of others) {
+      const gap = dist(p, o.m) - m.r - o.m.r;
+      if (gap < 0.02 || (o.foe && !engage && gap <= RULES.engagementRange + 0.02)) return false;
+    }
+    if (walls.some((w) => pointSegDist(p, w) < m.r * 0.85 + 0.02)) return false;
+    if (objectives.some((o) => dist(p, o) < m.r + OBJECTIVE_MARKER_R)) return false;
+    const walker = ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
+    for (const t of boxes) {
+      if (t.kind === 'container' && pointInPoly(p, t.poly) && !walker) return false;
+      if (t.box && circleTouchesPoly(p, m.r - 0.05, t.box) && !(walker && circleWhollyInPoly(p, m.r, t.box))) return false;
+    }
+    return true;
+  };
+  return packFormation(u, tm, angle, within, free);
+}
+
+/** Ways to set a unit up round a hull, the side facing `angle` first: the plain packings, then packings round
+ *  whatever is in the way (each tried only when the earlier ones were turned down). */
+export function* hullSpots(s: GameState, u: UnitState, tm: ModelState, angle: number, within = 3, engage = false): Generator<Map<string, Pt>> {
+  const turns = Array.from({ length: 16 }, (_, k) => angle + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8));
+  for (const arc of [Math.PI * 0.8, 2 * Math.PI]) for (const a of turns) yield ringFormation(u, tm, a, arc, within);
+  for (const a of turns) { const pos = fitFormation(s, u, tm, a, within, engage); if (pos) yield pos; }
+}
+
+function packFormation(u: UnitState, tm: ModelState, angle: number, within: number, free?: (m: ModelState, p: Pt) => boolean): Map<string, Pt> | null {
   const ms = [...alive(u)].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter) || b.r - a.r);
   const placed: { x: number; y: number; r: number }[] = [];
   const out = new Map<string, Pt>();
@@ -469,6 +506,7 @@ function packFormation(u: UnitState, tm: ModelState, angle: number, within: numb
           const a = angle + sgn * k * step;
           const p = { x: tm.x + Math.cos(a) * R, y: tm.y + Math.sin(a) * R };
           if (placed.some((q) => Math.hypot(q.x - p.x, q.y - p.y) < q.r + m.r + 0.06)) continue;
+          if (free && !free(m, p)) continue;
           // stay in coherency with the models already out (within 2" of one of them)
           if (placed.length && !placed.some((q) => Math.hypot(q.x - p.x, q.y - p.y) - q.r - m.r <= 1.9)) continue;
           // the middle of the chosen side first, then outwards; a model further from the hull only when it packs tighter
@@ -1067,11 +1105,9 @@ function dropPodAssault(s: GameState, pod: UnitState) {
   const away = Math.atan2(hull.y - ec.y, hull.x - ec.x);
   for (const p of s.units.filter((x) => x.status === 'embarked' && x.embarkedIn === pod.id)) {
     let done = false;
-    for (let k = 0; k < 16 && !done; k++) {
-      const angle = away + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8);
-      const pos = ringFormation(p, hull, angle);
+    for (const pos of hullSpots(s, p, hull, away)) {
       const far = alive(p).every((m) => { const q = pos.get(m.id)!; return enemies.every((n) => dist(q, n) - m.r - n.r > 8); });
-      if (far && validateDisembark(s, p, pod, pos).ok) { disembarkUnit(s, p, pod, pos); done = true; }
+      if (far && validateDisembark(s, p, pod, pos).ok) { disembarkUnit(s, p, pod, pos); done = true; break; }
     }
     log(s, done ? `Drop Pod Assault: ${p.name} disembarks from ${pod.name} (more than 8" from enemies)` : `Drop Pod Assault: no room for ${p.name} more than 8" from enemies — it stays in the pod`, 'info', pod.owner);
   }
@@ -1208,8 +1244,7 @@ onAttackFinished((s, at) => {
   const ec = enemies.length ? polyCentroid(enemies) : { x: W / 2, y: H / 2 };
   const away = Math.atan2(hull.y - ec.y, hull.x - ec.x);
   for (const p of s.units.filter((x) => x.status === 'embarked' && x.embarkedIn === t.id)) {
-    for (let k = 0; k < 16; k++) {
-      const pos = ringFormation(p, hull, away + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8));
+    for (const pos of hullSpots(s, p, hull, away, 6)) {
       const errors: string[] = [], bad = new Set<string>();
       endChecks(s, p, pos, errors, bad);
       if (errors.length || engagedAt(s, p, pos).length) continue;

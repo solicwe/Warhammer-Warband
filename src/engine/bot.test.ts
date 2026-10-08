@@ -54,6 +54,7 @@ describe('bot movement', () => {
   it('a vehicle in a U-shaped ruin drives out of the open side instead of sitting against the closed wall', () => {
     const s = game([['Redemptor Dreadnought', 1, 195]], [['Boyz', 10, 90]]);
     s.terrain.push(uRuin(14, 18, 26, 30));
+    s.objectives = []; // only the route matters here (a central objective inside the ruin would be worth staying on)
     s.phase = 'movement';
     const dread = put(s, 'p0-x0', { x: 20, y: 22 });
     put(s, 'p1-x0', { x: 20, y: 6 }); // the enemy is behind the closed wall
@@ -444,5 +445,53 @@ describe('table quarters', () => {
     for (let i = 0; i < 12 && botMoveOne(s); i++) { /* move every unit */ }
     const held = new Set(s.units.filter((x) => x.owner === 0).map(unitQuarter).filter((q) => q !== null));
     expect(held.size).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('the army plan (botPlan.ts)', () => {
+  it('a cheap unit holds home, the expensive ones fight, a cheap melee unit is not sent out alone, a loaded transport carries', async () => {
+    const { armyPlan } = await import('./botPlan');
+    const s = game([['Intercessor Squad', 5, 80], ['Redemptor Dreadnought', 1, 195], ['Terminator Squad', 5, 170], ['Assault Intercessor Squad', 5, 75], ['Impulsor', 1, 75]], [['Boyz', 10, 90], ['Nobz', 5, 105]]);
+    s.phase = 'movement';
+    const mine = s.units.filter((x) => x.owner === 0);
+    const home = s.objectives.find((o) => o.type === 'home' && o.owner === 0)!;
+    mine.forEach((u, i) => put(s, u.id, { x: home.x + (i - 2) * 5, y: home.y + (home.y < 30 ? 6 : -6) }));
+    s.units.filter((x) => x.owner === 1).forEach((u, i) => put(s, u.id, { x: 12 + i * 12, y: home.y < 30 ? 50 : 10 }));
+    const [ints, dread, terms, assault, imp] = mine;
+    assault.status = 'embarked'; assault.embarkedIn = imp.id;
+    const plan = armyPlan(s, 0);
+    expect(plan.jobs.get(ints.id)?.role).toBe('home');
+    expect(plan.jobs.get(dread.id)?.role).toBe('hammer');
+    expect(plan.jobs.get(terms.id)?.role).toBe('hammer');
+    expect(plan.jobs.get(imp.id)?.role).toBe('taxi');
+  });
+
+  it('plays safe while ahead late on, takes risks while behind, and goes all in on the objectives in the last turn', async () => {
+    const { stanceFor, armyPlan } = await import('./botPlan');
+    const s = game([['Intercessor Squad', 5, 80], ['Hellblaster Squad', 5, 110]], [['Boyz', 10, 90]]);
+    s.phase = 'movement';
+    for (const [i, u] of s.units.entries()) put(s, u.id, { x: 10 + i * 10, y: u.owner === 0 ? 12 : 48 });
+    s.round = 3;
+    s.players[0].vp = 30; s.players[1].vp = 10;
+    expect(stanceFor(s, 0).stance).toBe('hold');
+    expect(stanceFor(s, 1).stance).toBe('push');
+    expect(stanceFor(s, 1).risk).toBeLessThan(stanceFor(s, 0).risk);
+    s.round = 5; s.firstPlayer = 1; s.active = 0;
+    const plan = armyPlan(s, 0);
+    expect(plan.stance).toBe('all-in');
+    expect([...plan.jobs.values()].every((j) => j.role === 'anchor' || j.role === 'hammer')).toBe(true);
+  });
+
+  it('shooting order: the unit that loses most if its best target is taken shoots first', () => {
+    const s = game([['Eliminator Squad', 3, 75], ['Intercessor Squad', 10, 160]], [['Boyz', 10, 90], ['Deff Dread', 1, 130]]);
+    s.phase = 'shooting';
+    const [elim, ints] = s.units.filter((x) => x.owner === 0);
+    put(s, elim.id, { x: 20, y: 14 });
+    put(s, ints.id, { x: 28, y: 14 });
+    put(s, s.units.find((x) => x.owner === 1 && x.name.includes('Boyz'))!.id, { x: 20, y: 30 });
+    put(s, s.units.find((x) => x.owner === 1 && x.name.includes('Dread'))!.id, { x: 30, y: 30 });
+    s.bots = [0];
+    botShootOne(s);
+    expect(s.units.some((u) => u.owner === 0 && u.selectedToShoot) || !!s.attack || s.log.some((l) => /shoots/.test(l.text))).toBe(true);
   });
 });

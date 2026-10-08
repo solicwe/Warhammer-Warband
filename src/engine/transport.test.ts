@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { transportLoads, validateList } from './army';
 import { botAct, botMoveOne } from './bot';
-import { createGame, disembarkMode, embarkUnit, formationAt, placeUnit, ringFormation, validateDisembark } from './game';
+import { createGame, disembarkMode, embarkUnit, formationAt, hullSpots, placeUnit, ringFormation, validateDisembark } from './game';
 import { baseDist } from './geometry';
 import { alive } from './state';
 import { buildShootPools } from './attack';
@@ -143,6 +143,37 @@ describe('embark and disembark', () => {
     expect(baseDistOf(ints, imp)).toBeLessThanOrEqual(3.05);
     // the next steps move the squad and the transport
     for (let i = 0; i < 4; i++) botMoveOne(s);
+    expect(ints.move).not.toBeNull();
+  });
+
+  it('a squad still gets out when walls, an objective marker and friends crowd the hull', () => {
+    const { s, imp, ints } = rig();
+    const tm = alive(imp)[0];
+    // walls hard against two sides, an objective marker on a third, a friendly squad on the fourth
+    s.terrain = [{ ...s.terrain[0], objectiveId: undefined, walls: [
+      { a: { x: tm.x - 6, y: tm.y - tm.r - 0.3 }, b: { x: tm.x + 6, y: tm.y - tm.r - 0.3 } },
+      { a: { x: tm.x + tm.r + 0.4, y: tm.y - 6 }, b: { x: tm.x + tm.r + 0.4, y: tm.y + 6 } },
+    ] } as any];
+    s.objectives = [{ ...s.objectives[0], x: tm.x, y: tm.y + tm.r + 1.4 }];
+    put(s, 'p0-x2', { x: tm.x - tm.r - 1.2, y: tm.y + 2 });
+    const plain = [0, 1, 2, 3, 4, 5].map((k) => ringFormation(ints, tm, (k * Math.PI) / 3));
+    expect(plain.every((pos) => !validateDisembark(s, ints, imp, pos).ok)).toBe(true);
+    const fit = [...hullSpots(s, ints, tm, Math.PI / 2)].find((pos) => validateDisembark(s, ints, imp, pos).ok);
+    expect(fit).toBeTruthy();
+  });
+
+  it('passengers of a transport that stays where it is get out and walk', () => {
+    const { s, imp, ints } = rig();
+    put(s, 'p1-x0', { x: 22, y: 58 });
+    s.objectives = [];
+    s.botTried = [];
+    // a transport that can't go anywhere this turn (nothing to hold, the enemy far off)
+    alive(imp).forEach((m) => { m.profile = { ...m.profile, M: 0 }; });
+    for (let i = 0; i < 3 && ints.status !== 'board'; i++) botMoveOne(s);
+    expect(imp.move).toBe('stationary');
+    expect(ints.status).toBe('board');
+    expect(ints.move).toBeNull(); // Tactical Disembark: the squad still moves on foot
+    for (let i = 0; i < 4 && !ints.move; i++) botMoveOne(s);
     expect(ints.move).not.toBeNull();
   });
 });

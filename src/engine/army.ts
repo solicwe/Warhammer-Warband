@@ -1,5 +1,6 @@
 // Turns an army list (datasheet names + sizes + attachments) into UnitState objects.
 import detData from '../../data/detachment-rules.json';
+import { exprAverage } from './dice';
 import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelProfileData, ModelState, PlayerId, TransportInfo, UnitState, WargearOption, WargearPick, WeaponData } from './types';
 
 /**
@@ -331,6 +332,87 @@ export function syncList(list: ArmyList, faction: FactionData): ArmyList {
     return u;
   });
   return changed ? { ...list, units } : list;
+}
+
+/** Points of damage one weapon does in a round to a typical mix of targets (Guardsmen, Marines, Terminators, a tank). */
+function weaponPower(w: WeaponData): number {
+  const targets = [
+    { T: 3, Sv: 5, inv: 7, W: 1, pts: 6, share: 0.2 }, { T: 4, Sv: 3, inv: 7, W: 2, pts: 18, share: 0.35 },
+    { T: 5, Sv: 2, inv: 4, W: 3, pts: 40, share: 0.2 }, { T: 10, Sv: 3, inv: 7, W: 12, pts: 160, share: 0.25 },
+  ];
+  // a weapon with several profiles (frag / krak) uses the best one for each target
+  return targets.reduce((sum, t) => sum + t.share * Math.max(0, ...w.profiles.map((p) => {
+    const blast = p.abilities.some((a) => a === 'blast') ? (t.W === 1 ? 1.5 : 1.1) : 1;
+    const a = exprAverage(p.A) * blast;
+    const hit = p.skill === null ? 1 : Math.max(1, 7 - p.skill) / 6;
+    const S = p.S ?? 3;
+    const need = S >= 2 * t.T ? 2 : S > t.T ? 3 : S === t.T ? 4 : S * 2 <= t.T ? 6 : 5;
+    const save = Math.min(t.Sv - p.AP, t.inv);
+    const fail = Math.min(1, Math.max(0, (save - 1) / 6));
+    const dmg = Math.min(exprAverage(p.D), t.W);
+    // a gun works every turn from afar; a melee weapon only once the unit is in a fight
+    const reach = typeof p.range === 'number' ? 0.6 + 0.4 * Math.min(p.range, 36) / 36 : 0.55;
+    return a * hit * ((7 - need) / 6) * fail * (dmg / t.W) * t.pts * reach;
+  })), 0);
+}
+
+/**
+ * The best free loadout for a new unit: every free option that adds a weapon (a hunter-killer missile, a rocket pod)
+ * is taken, and a swap is made where the unit hits harder with it (a model shoots all its guns but fights with one
+ * melee weapon, so a second melee weapon adds little). The best change is taken first, then the next, while one
+ * helps. Options that cost points, gear that isn't a weapon, and "pick two" lists are left for the player.
+ */
+export function defaultWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntry): ArmyUnitEntry {
+  if (!sheet?.wargearOptions?.length) return e;
+  const opts = sheet.wargearOptions;
+  const costOf = (items: string[]) => items.reduce((a, n) => a + (sheet.wargearCosts?.find((c) => wkey(c.name) === wkey(n))?.pts ?? 0), 0);
+  const isGear = (items: string[]) => items.some((n) => !weaponNamed(sheet, n));
+  const powerCache = new Map<string, number>();
+  const powerOf = (n: string) => {
+    if (!powerCache.has(n)) { const w = weaponNamed(sheet, n); powerCache.set(n, w ? weaponPower(w) : 0); }
+    return powerCache.get(n)!;
+  };
+  /** The whole unit: every gun each model carries, and its best melee weapon. */
+  const unitPower = (picks: WargearPick[]) => {
+    const plans = planModels(sheet, e.models, e.addons);
+    applyWargear(sheet, plans, picks);
+    return plans.reduce((sum, p) => {
+      let guns = 0, fist = 0;
+      for (const it of p.items) {
+        const w = weaponNamed(sheet, it);
+        if (!w) continue;
+        if (w.profiles[0].range === 'Melee') fist = Math.max(fist, powerOf(it)); else guns += powerOf(it);
+      }
+      return sum + guns + fist;
+    }, 0);
+  };
+  const legal = (picks: WargearPick[]) => !wargearProblems(sheet, { ...e, wargear: picks }).length;
+  let picks: WargearPick[] = [];
+  let now = unitPower(picks);
+  for (let round = 0; round < opts.length; round++) {
+    let best: { picks: WargearPick[]; v: number } | null = null;
+    opts.forEach((o, i) => {
+      if (picks.some((p) => p.opt === i) || (o.minModels && e.models < o.minModels) || isGear(o.replace)) return;
+      const max = wargearMax(sheet, o, e.models, e.addons);
+      if (max <= 0) return;
+      o.choices.forEach((items, choice) => {
+        if (!items.length || costOf(items) || isGear(items)) return;
+        for (let n = max; n > 0; n--) {
+          const next = [...picks, { opt: i, choice, count: n }];
+          if (!legal(next)) continue;
+          const v = unitPower(next);
+          if (!best || v > best.v) best = { picks: next, v };
+          break;
+        }
+      });
+    });
+    const b = best as { picks: WargearPick[]; v: number } | null;
+    // a swap has to be clearly better; a free extra weapon is always taken
+    if (!b || b.v <= now * 1.02 + 0.05) break;
+    picks = b.picks;
+    now = b.v;
+  }
+  return picks.length ? { ...e, wargear: picks } : e;
 }
 
 /** Rule problems with a unit's wargear choices (army validation). */

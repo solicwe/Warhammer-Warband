@@ -13,7 +13,8 @@ import { secondaryGoal } from './secondaries';
 import { hasAbility } from './weapons';
 import { actsOfUnit } from './activations';
 import { unitFlags } from './effects';
-import { W as BW } from './botWeights';
+import { botOff, W as BW } from './botWeights';
+import { armyPlan, followedJob, unitPunch, type Role } from './botPlan';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, shotValue, unitValue,
 } from './botEval';
@@ -125,13 +126,14 @@ export function movesTowards(s: GameState, u: UnitState, kind: MoveKind, max: nu
 
 // ---------- scoring ----------
 
-interface Foe { u: UnitState; rk: number; mk: number; brawler: boolean; range: number; M: number }
+/** share: the part of its firepower likely to come our way (it splits its fire among the units it can reach) */
+interface Foe { u: UnitState; rk: number; mk: number; brawler: boolean; range: number; M: number; share: number }
 
 /** What the enemy army can do to this unit (computed once per unit, positions vary). */
 export interface Ctx {
   foes: Foe[]; brawler: boolean; target?: UnitState; range: number; heavy: boolean; ocNeed: Pt[];
   /** route distances for units that can't cross ruin walls (vehicles, monsters): to the melee target, to objectives */
-  toTarget?: (p: Pt) => number; toObjective?: (p: Pt) => number;
+  toTarget?: (p: Pt) => number; toObjective?: (p: Pt) => number; toFront?: (p: Pt) => number; toPost?: (p: Pt) => number;
   /** a transport with units inside: where to drop them off (the enemy for fighters, a contested objective for the rest) */
   deliver?: Pt;
   /** a cheap objective holder (Battleline or a low-cost squad with OC): its job is standing on objectives, not hiding */
@@ -140,10 +142,20 @@ export interface Ctx {
   claim?: Pt;
   /** an expensive fighting unit (Terminators, big squads, tanks): where the fight is — the centre, then the enemy */
   front?: Pt;
+  /** the front is an objective to stand on (early rounds), not an enemy unit to shoot from a distance */
+  frontObj?: boolean;
   /** a table quarter to hold for the mission (Reconnaissance Sweep, Engage on All Fronts): where to stand in it */
   quarter?: { q: number; aim: Pt };
   /** a character or model whose ability works on friendly units nearby (Techmarine and vehicles, auras): stay by them */
   escort?: { u: UnitState; range: number; weight: number };
+  /** its job in the army's plan (botPlan.ts), and where that job wants it (an objective to hold, a spot to screen) */
+  role?: Role;
+  post?: Pt;
+  /** how much losses count this round (the plan: careful while ahead, risky while behind, little in the last turn) */
+  risk?: number;
+  /** what an inch closer to its fight is worth: the damage it does in a turn over the distance it moves in one
+   *  (a turn sooner into the fight is a turn more of its damage), for hammers and fighters */
+  perInch?: number;
 }
 
 /** Can this unit make objectives stay ours after it leaves them? */
@@ -189,7 +201,9 @@ function escortFor(s: GameState, u: UnitState): Ctx['escort'] {
  */
 function frontFor(s: GameState, u: UnitState, ctx: Ctx): Pt | undefined {
   if (ctx.holder || ctx.quarter || ctx.deliver || u.transport || (ctx.escort && ctx.escort.weight >= 3)) return undefined;
-  if (unitValue(u) < 150 || alive(u).every((m) => m.isCharacter)) return undefined;
+  const role = botOff('hammer') ? undefined : ctx.role;
+  if (role && role !== 'hammer') return undefined;
+  if (role !== 'hammer' && (unitValue(u) < 150 || alive(u).every((m) => m.isCharacter))) return undefined;
   const c = centre(u);
   const mine = (o: { controller: PlayerId | null }) => o.controller === u.owner;
   const mid = s.objectives.filter((o) => o.type !== 'home' && !mine(o)).map((o) => objPoint(s, o)).sort((a, b) => dist(a, c) - dist(b, c));
@@ -275,9 +289,13 @@ function quarterJobs(s: GameState, p: PlayerId): Map<string, { q: number; aim: P
 }
 
 export function ctxFor(s: GameState, u: UnitState): Ctx {
-  const foes = boardUnits(s, other(u.owner)).map((e) => ({
-    u: e, rk: Math.min(alive(u).length, rangedKills(e, u)), mk: Math.min(alive(u).length, meleeKills(e, u)), brawler: isBrawler(s, e), range: maxRange(e), M: moveOf(e),
-  }));
+  const friends = boardUnits(s, u.owner).filter((f) => !hasKw(f, 'AIRCRAFT'));
+  const foes = boardUnits(s, other(u.owner)).map((e) => {
+    const range = maxRange(e), M = moveOf(e);
+    // a gun that can reach several of our units splits its fire: each gets part of it (focus fire is common: 1/√n)
+    const reach = friends.filter((f) => unitDistance(e, f) <= range + M).length;
+    return { u: e, rk: Math.min(alive(u).length, rangedKills(e, u)), mk: Math.min(alive(u).length, meleeKills(e, u)), brawler: isBrawler(s, e), range, M, share: botOff('share') ? 1 : 1 / Math.sqrt(Math.max(1, reach)) };
+  });
   const brawler = isBrawler(s, u);
   const target = brawler ? [...foes].sort((a, b) => (chargeValue(s, u, b.u) / (1 + unitDistance(u, b.u) / 10)) - (chargeValue(s, u, a.u) / (1 + unitDistance(u, a.u) / 10)))[0]?.u : undefined;
   const heavy = alive(u).some((m) => m.weapons.some((w) => w.profiles.some((p) => hasAbility(p, 'heavy'))));
@@ -286,6 +304,21 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   const battleline = alive(u).some((m) => m.keywords.includes('BATTLELINE'));
   // melee units go and fight; holding is a job for BATTLELINE and cheap shooting squads
   ctx.holder = oc(u) > 0 && !u.transport && (battleline || unitValue(u) <= 130) && !(brawler && (unitValue(u) > 130 || !battleline));
+  const plan = armyPlan(s, u.owner);
+  const job = followedJob(plan, u.id);
+  ctx.risk = plan.risk;
+  ctx.perInch = botOff('perInch') ? 1 : Math.min(12, Math.max(1, unitPunch(s, u) / Math.max(4, moveOf(u))));
+  if (job) {
+    ctx.role = job.role === 'screen' && botOff('screen') ? undefined : job.role;
+    ctx.post = botOff('posts') ? undefined : job.post;
+    if (!botOff('posts')) {
+      if (job.role === 'home' || job.role === 'anchor') ctx.holder = oc(u) > 0;
+      else if (job.role !== 'firebase') ctx.holder = false;
+      // a unit sent to hold one objective doesn't wander to the others that need bodies
+      if (job.post && (job.role === 'home' || job.role === 'anchor')) ctx.ocNeed = ctx.ocNeed.filter((q) => dist(q, job.post!) < 0.5);
+      else if (job.role === 'screen' || job.role === 'hammer') ctx.ocNeed = s.round >= 2 ? ctx.ocNeed.filter((q) => dist(q, centre(u)) <= moveOf(u) + 3) : [];
+    }
+  }
   if (oc(u) > 0 && !u.battleShocked && securesObjectives(s, u)) {
     // the closest objective not yet ours for good, within two moves; the home one only if nobody holds it
     const M = moveOf(u);
@@ -296,7 +329,9 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   }
   ctx.escort = escortFor(s, u);
   ctx.quarter = quarterJobs(s, u.owner).get(u.id);
+  if (ctx.quarter) ctx.post = undefined;
   ctx.front = frontFor(s, u, ctx);
+  ctx.frontObj = !!ctx.front && s.objectives.some((o) => dist(objPoint(s, o), ctx.front!) < 0.5);
   const cargo = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
   if (cargo.length) {
     const c = centre(u);
@@ -308,7 +343,9 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   const lead = leaderOf(u);
   if (lead && blockingWalls(s, lead).length) {
     if (target) ctx.toTarget = distanceField(s, u, 'normal', lead, alive(target));
-    if (ocNeed.length) ctx.toObjective = distanceField(s, u, 'normal', lead, ocNeed);
+    if (ctx.ocNeed.length) ctx.toObjective = distanceField(s, u, 'normal', lead, ctx.ocNeed);
+    if (ctx.front) ctx.toFront = distanceField(s, u, 'normal', lead, [ctx.front]);
+    if (ctx.post) ctx.toPost = distanceField(s, u, 'normal', lead, [ctx.post]);
   }
   return ctx;
 }
@@ -374,12 +411,22 @@ function dangerScore(s: GameState, u: UnitState, ctx: Ctx): number {
   for (const f of ctx.foes) {
     const gap = unitDistance(u, f.u);
     if (f.range > 0 && f.rk > 0 && gap <= f.range + f.M) {
-      shots += f.rk * perModel(u) * (seen(s, f.u, u) ? 1 : BW(u.owner).dangerUnseen) * (gap <= f.range ? 1 : 0.6) * (infantryInCover ? 0.8 : 1);
+      shots += f.rk * perModel(u) * f.share * (seen(s, f.u, u) ? 1 : BW(u.owner).dangerUnseen) * (gap <= f.range ? 1 : 0.6) * (infantryInCover ? 0.8 : 1);
     }
     if (f.brawler && f.mk > 0) melee = Math.max(melee, f.mk * perModel(u) * p2d6(Math.max(0, gap - f.M)));
   }
   // the enemy can't kill more than the whole unit, however many guns could reach it
   return Math.min(unitValue(u), shots * BW(u.owner).dangerShots + melee * BW(u.owner).dangerMelee);
+}
+
+/**
+ * How far a goal is for a pull: along the route for a unit walls can stop (`far`, from its distance field), else in a
+ * straight line. With no route from here at all, every spot is equally far (no pull into a wall it can't get past).
+ */
+function routeGap(far: number | undefined, straight: number, slack = 0, routeOnly = false): number {
+  if (far === undefined) return straight;
+  if (!Number.isFinite(far)) return botOff('route') ? straight : 99;
+  return routeOnly ? far : Math.max(straight, far - slack);
 }
 
 /** Long-range pull so units far from everything still make progress (along the route, for units walls can stop). */
@@ -390,7 +437,9 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
   let v = 0;
   if (ctx.brawler && ctx.target && alive(ctx.target).length) {
     const far = ctx.toTarget?.(lead);
-    v -= w.pullBrawler * (far !== undefined && Number.isFinite(far) ? Math.max(unitDistance(u, ctx.target), far - 1.5) : unitDistance(u, ctx.target));
+    const gap = routeGap(far, unitDistance(u, ctx.target), 1.5);
+    // a screen doesn't walk out into the open towards a far-off target: it closes to a charge's reach and waits there
+    v -= w.pullBrawler * (ctx.perInch ?? 1) * (ctx.role === 'screen' ? Math.max(0, gap - (moveOf(u) + 8)) : gap);
   } else if (ctx.range) {
     const near = Math.min(99, ...ctx.foes.map((f) => unitDistance(u, f.u)));
     v -= w.pullRange * Math.max(0, near - ctx.range);
@@ -404,16 +453,25 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
   }
   if (ctx.front && !ctx.brawler) {
     // a shooter worth its points goes where the fight is, and stops at a good firing distance
-    v -= w.pullHammer * Math.max(0, dist(c, ctx.front) - Math.min(ctx.range * 0.6, 12));
+    const far = ctx.toFront?.(lead);
+    const gap = routeGap(far, dist(c, ctx.front));
+    v -= w.pullHammer * (ctx.perInch ?? 1) * Math.max(0, gap - (ctx.frontObj ? 2 : Math.min(ctx.range * 0.6, 12)));
   }
   if (ctx.quarter && !ctx.deliver) {
     // its job this turn: be wholly in that quarter, more than 6" from the centre, at the end of the turn
     v += unitQuarter(u) === ctx.quarter.q ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.quarter.aim) - 2);
   }
   if (ctx.escort && alive(ctx.escort.u).length) v -= ctx.escort.weight * 2 * Math.max(0, unitDistance(u, ctx.escort.u) - (ctx.escort.range - 1));
+  if (ctx.post && !ctx.deliver && !ctx.quarter) {
+    // its post in the plan: standing on an objective it holds, or the screening spot (anywhere close will do)
+    const on = (ctx.role === 'home' || ctx.role === 'anchor') && alive(u).some((m) => dist(m, ctx.post!) <= 3 + m.r);
+    const far = ctx.toPost?.(lead);
+    const gap = routeGap(far, dist(c, ctx.post));
+    v += on ? w.claimBonus * 0.6 : -w.pullPost * Math.max(0, gap - 2);
+  }
   if (ctx.ocNeed.length && !ctx.deliver) {
     const far = ctx.toObjective?.(lead);
-    v -= (ctx.holder ? w.pullHolder : w.pullObjective) * (far !== undefined && Number.isFinite(far) ? far : Math.min(...ctx.ocNeed.map((p) => dist(c, p))));
+    v -= (ctx.holder ? w.pullHolder : w.pullObjective) * routeGap(far, Math.min(...ctx.ocNeed.map((p) => dist(c, p))), 0, true);
   }
   return v;
 }
@@ -461,6 +519,25 @@ function crowdScore(s: GameState, u: UnitState): number {
   return v;
 }
 
+/** The parts of scoreSpot, for tests and tuning: objectives, shooting, charging, danger (already × caution), pulls, crowding, position. */
+export function scoreParts(s: GameState, u: UnitState, kind: MoveKind | 'stationary', spot: Spot | null, ctx: Ctx): Record<string, number> {
+  const ms = alive(u);
+  const saved = ms.map((m) => [m, m.x, m.y] as const);
+  const was = { move: u.move, maxMoved: u.maxMoved };
+  if (spot) for (const m of ms) { const p = spot.get(m.id); if (p) { m.x = p.x; m.y = p.y; } }
+  u.move = kind === 'stationary' ? 'stationary' : kind;
+  try {
+    const w = BW(u.owner);
+    const caution = (ctx.role === 'screen' ? w.cautionOther : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
+    const homeFactor = ctx.role ? (ctx.role === 'home' ? 1 : w.homeExpensive) : ctx.holder || unitValue(u) <= 200 ? 1 : w.homeExpensive;
+    return { obj: objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor), shoot: shootScore(s, u, kind, ctx), charge: chargeScore(s, u, ctx), danger: -caution * dangerScore(s, u, ctx), pull: pullScore(s, u, ctx), crowd: -crowdScore(s, u), pos: positionScore(s, u) };
+  } finally {
+    for (const [m, x, y] of saved) { m.x = x; m.y = y; }
+    u.move = was.move;
+    u.maxMoved = was.maxMoved;
+  }
+}
+
 /** How good it is for `u` to end its move at `spot` (null: where it stands now) after a move of this kind. */
 export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationary', spot: Spot | null, ctx: Ctx, moved = 0): number {
   const ms = alive(u);
@@ -471,9 +548,10 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
   u.maxMoved = Math.max(u.maxMoved, moved);
   try {
     const w = BW(u.owner);
-    const caution = ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther;
+    // a screen keeps out of sight like a shooting unit (it's there to be in the way later, not shot now)
+    const caution = (ctx.role === 'screen' ? w.cautionOther : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
     // the home objective is a job for a cheap unit: a tournament player doesn't park 400 points of Terminators on it
-    const homeFactor = ctx.holder || unitValue(u) <= 200 ? 1 : w.homeExpensive;
+    const homeFactor = ctx.role && !botOff('homeF') ? (ctx.role === 'home' ? 1 : w.homeExpensive) : ctx.holder || unitValue(u) <= 200 ? 1 : w.homeExpensive;
     return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }
@@ -493,6 +571,7 @@ function aimsFor(s: GameState, u: UnitState, max: number, ctx: Ctx): Pt[] {
   if (ctx.claim) pts.push(ctx.claim);
   if (ctx.quarter) pts.push(ctx.quarter.aim);
   if (ctx.front) pts.push(ctx.front);
+  if (ctx.post) pts.push(ctx.post);
   if (ctx.escort && alive(ctx.escort.u).length) pts.push(centre(ctx.escort.u));
   const nearestModel = (e: UnitState) => alive(e).reduce((a, m) => (dist(m, c) < dist(a, c) ? m : a));
   const foes = [...ctx.foes].sort((a, b) => unitDistance(u, a.u) - unitDistance(u, b.u));

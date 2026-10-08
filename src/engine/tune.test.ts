@@ -9,6 +9,8 @@ import { setBotWeights, type BotW } from './botWeights';
 import { resetLookahead, setLookahead } from './botLook';
 import type { DispositionId } from './config';
 import { createGame } from './game';
+import { autoList } from './autoList';
+import { PRESETS } from '../ui/presets';
 import type { ArmyList, FactionData, GameState, PlayerId } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -23,16 +25,23 @@ export const TUNE_ARMIES: Record<string, () => ArmyList> = {
 };
 
 export interface TuneGame { a: string; b: string; seed: number; sideA: PlayerId }
-export interface TuneJob { games: TuneGame[]; wA: Partial<BotW>; wB: Partial<BotW>; out: string; baselineB?: boolean }
+export interface TuneJob { games: TuneGame[]; wA: Partial<BotW>; wB: Partial<BotW>; out: string; baselineB?: boolean; look?: boolean }
 
 const FACTIONS: Record<string, FactionData> = {};
 const fac = (id: string) => (FACTIONS[id] ??= load(id));
 
+/** An army by name: a hand-made tuning list, "auto:NEC" (a list made from the faction's data) or "preset:TS". */
+function armyFor(key: string, seed: number): ArmyList {
+  if (key.startsWith('auto:')) return autoList(fac(key.slice(5)), 1000, seed);
+  if (key.startsWith('preset:')) return PRESETS[key.slice(7)];
+  return TUNE_ARMIES[key]();
+}
+
 /** One game: the weights wA play `a` on side sideA, wB play `b` on the other side. Returns A's VP minus B's. */
-export function playTune(g: TuneGame, wA: Partial<BotW>, wB: Partial<BotW>, baselineB = false): number {
+export function playTune(g: TuneGame, wA: Partial<BotW>, wB: Partial<BotW>, baselineB = false, look = true): number {
   const sideB = (1 - g.sideA) as PlayerId;
   const lists = [] as ArmyList[];
-  lists[g.sideA] = TUNE_ARMIES[g.a](); lists[sideB] = TUNE_ARMIES[g.b]();
+  lists[g.sideA] = armyFor(g.a, g.seed); lists[sideB] = armyFor(g.b, g.seed);
   const D: DispositionId[] = ['take-and-hold', 'purge-the-foe', 'disruption', 'reconnaissance', 'priority-assets'];
   const s: GameState = createGame({
     lists: lists as [ArmyList, ArmyList], factions: [fac(lists[0].factionId), fac(lists[1].factionId)], names: ['A', 'B'], seed: g.seed,
@@ -40,7 +49,7 @@ export function playTune(g: TuneGame, wA: Partial<BotW>, wB: Partial<BotW>, base
   });
   s.bots = [0, 1];
   resetLookahead();
-  setLookahead(true);
+  setLookahead(look);
   setBotWeights(g.sideA, wA);
   setBotWeights(sideB, wB);
   try {
@@ -62,7 +71,11 @@ export function playTune(g: TuneGame, wA: Partial<BotW>, wB: Partial<BotW>, base
 describe.skipIf(!process.env.TUNE_JOB)('tune worker', () => {
   it('plays the job', () => {
     const job = JSON.parse(fs.readFileSync(process.env.TUNE_JOB!, 'utf8')) as TuneJob;
-    const margins = job.games.map((g) => { try { return playTune(g, job.wA, job.wB, job.baselineB); } catch (e) { return { error: String(e) }; } });
+    const margins: (number | { error: string })[] = [];
+    for (const g of job.games) {
+      try { margins.push(playTune(g, job.wA, job.wB, job.baselineB, job.look ?? true)); } catch (e) { margins.push({ error: String(e) }); }
+      fs.writeFileSync(`${job.out}.part`, JSON.stringify(margins)); // progress, for a long run
+    }
     fs.writeFileSync(job.out, JSON.stringify(margins));
   }, 7_200_000);
 });

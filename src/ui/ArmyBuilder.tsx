@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, attachOptions, buildUnits, chapterRules, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, attachOptions, buildUnits, chapterRules, defaultWargear, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { Em } from './Em';
 import { dispositionById, RULES } from '../engine/config';
@@ -298,12 +298,20 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     } catch { setNote('Could not read the image'); } finally { URL.revokeObjectURL(url); }
   };
   /** Update one entry; wargear choices are re-checked for the new size and their points recomputed. */
-  const setUnit = (uid: string, patch: Partial<ArmyUnitEntry>) => set({ units: list.units.map((x) => (x.uid === uid ? syncWargear(sheetOf(x.datasheet), { ...x, ...patch }) : x)) });
+  const setUnit = (uid: string, patch: Partial<ArmyUnitEntry>) => set({ units: list.units.map((x) => {
+    if (x.uid !== uid) return x;
+    const d = sheetOf(x.datasheet);
+    // a new size keeps the best free loadout when the player hadn't changed it (more models, more special weapons)
+    const untouched = patch.models !== undefined && patch.models !== x.models
+      && JSON.stringify(x.wargear ?? []) === JSON.stringify(defaultWargear(d, { ...x, wargear: undefined }).wargear ?? []);
+    const next = { ...x, ...patch };
+    return syncWargear(d, untouched ? defaultWargear(d, { ...next, wargear: undefined }) : next);
+  }) });
   const removeUnit = (uid: string) => set({ units: list.units.filter((x) => x.uid !== uid).map((x) => (x.attachTo === uid ? { ...x, attachTo: undefined } : x.embarkIn === uid ? { ...x, embarkIn: undefined } : x)) });
   const addUnit = (d: DatasheetData, chosen?: { models: number; pts: number }) => {
     const opt = chosen ?? pointsOptions(d)[0];
     if (!opt) return;
-    set({ units: [...list.units, syncWargear(d, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts })] });
+    set({ units: [...list.units, syncWargear(d, defaultWargear(d, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts }))] });
     setNote(`Added ${d.name}`);
   };
 
@@ -655,7 +663,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const newEntry = (d: DatasheetData, models?: number, patch: Partial<ArmyUnitEntry> = {}): ArmyUnitEntry | null => {
     const opt = pointsOptions(d).find((o) => o.models === models) ?? pointsOptions(d)[0];
     if (!opt) return null;
-    return syncWargear(d, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts, ...patch });
+    return syncWargear(d, defaultWargear(d, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts, ...patch }));
   };
 
   /**

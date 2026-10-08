@@ -1,7 +1,7 @@
 // Army builder rules: which enhancements a datasheet can take.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import { attachOptions, buildUnits, enhancementFits, validateList } from './army';
+import { attachOptions, buildUnits, defaultWargear, enhancementFits, syncWargear, validateList, wargearProblems, wargearSummary } from './army';
 import type { ArmyList, FactionData } from './types';
 
 describe('enhancement restrictions ("X model only")', () => {
@@ -59,5 +59,25 @@ describe('Munitorum Field Manual pricing', () => {
     expect(listPoints(l, TS)).toBe(115 * 3 + 125);
     const old: ArmyList = { ...l, units: [{ ...rubric('a'), pts: 100 }] };
     expect(syncList(old, TS).units[0].pts).toBe(115);
+  });
+});
+
+describe('default wargear: the best free loadout', () => {
+  it('free add-ons are taken, costed options and gear are left for the player, and the result is legal', () => {
+    const fac = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
+    const sheet = (f: string, n: string) => fac(f).datasheets.find((d) => d.name === n)!;
+    const pick = (f: string, n: string, models?: number) => {
+      const d = sheet(f, n);
+      const o = d.points[0].options.find((x) => x.models === (models ?? x.models))!;
+      const e = syncWargear(d, defaultWargear(d, { uid: 'x', datasheet: n, models: o.models, pts: o.pts }));
+      expect(wargearProblems(d, e)).toEqual([]);
+      return { e, text: wargearSummary(d, e) };
+    };
+    expect(pick('SM', 'Rhino').text).toMatch(/Hunter-killer/i);
+    expect(pick('SM', 'Redemptor Dreadnought').text).toMatch(/Icarus Rocket Pod/i);
+    const wagon = pick('ORK', 'Battlewagon');
+    expect(wagon.e.wargearPts ?? 0).toBe(0);
+    // the sergeant keeps the bolt rifle (a melee weapon is no better than a gun that shoots every turn)
+    expect(pick('SM', 'Intercessor Squad', 10).text).not.toMatch(/Chainsword|Power Weapon/);
   });
 });

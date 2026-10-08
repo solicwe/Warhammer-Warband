@@ -38,5 +38,5 @@ describe('tactical secondaries', () => {
     }
     expect(drawn).toBeGreaterThan(12);
     expect(scored).toBeGreaterThan(0);
-  });
+  }, 360_000); // three whole games with lookahead
 });

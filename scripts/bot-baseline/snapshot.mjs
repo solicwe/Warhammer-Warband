@@ -6,7 +6,7 @@ import path from 'node:path';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const SRC = path.join(ROOT, 'src/engine');
 const OUT = path.join(SRC, 'baseline');
-const MODS = ['bot', 'botEval', 'botMove', 'botStrats'];
+const MODS = ['bot', 'botEval', 'botMove', 'botPlan', 'botStrats'];
 fs.mkdirSync(OUT, { recursive: true });
 for (const m of MODS) {
   let t = fs.readFileSync(path.join(SRC, `${m}.ts`), 'utf8');

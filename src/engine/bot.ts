@@ -11,9 +11,9 @@ import {
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
-  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, ringFormation, validateDisembark, endRedeploy } from './game';
+  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy } from './game';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
-import { W } from './botWeights';
+import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, styleChosen } from './botLook';
 import { unitVisibleTo } from './visibility';
 import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, botChargeBonusStratagem, botCommandExtras, botFightEndActs, botIgnoreModsStratagem, botReadyStratagem, botShieldStratagem, botTeleportActs } from './botPlus';
@@ -232,12 +232,13 @@ function passengerGoal(s: GameState, p: PlayerId, t: UnitState) {
 function getOut(s: GameState, u: UnitState, t: UnitState, goal: { x: number; y: number }): boolean {
   const tm = alive(t)[0];
   const base = Math.atan2(goal.y - tm.y, goal.x - tm.x);
-  // a compact block on the side facing the goal; wrapping round the hull only when that's the only way to fit
-  const spots = () => [Math.PI * 0.8, 2 * Math.PI].flatMap((arc) => [0, 0.4, -0.4, 0.8, -0.8, 1.3, -1.3, 1.9, -1.9, 2.5, -2.5, Math.PI].map((da) => ringFormation(u, tm, base + da, arc)));
-  const tryOut = () => { for (const pos of spots()) if (validateDisembark(s, u, t, pos).ok) { disembarkUnit(s, u, t, pos); return true; } return false; };
+  // a compact block on the side facing the goal; wrapping round the hull, or round walls / objective markers / other
+  // units in the way, only when that's the only way to fit
+  const fits = () => { for (const pos of hullSpots(s, u, tm, base)) if (validateDisembark(s, u, t, pos).ok) return pos; return null; };
+  const tryOut = () => { const pos = fits(); if (pos) disembarkUnit(s, u, t, pos); return !!pos; };
   if (tryOut()) return true;
   // no room wholly within 3": models only need to be within it (Aggressive Disembarkation)
-  if (isBot(s, u.owner) && botLooseDisembark(s, u, () => spots().some((pos) => validateDisembark(s, u, t, pos).ok))) return tryOut();
+  if (isBot(s, u.owner) && botLooseDisembark(s, u, () => !!fits())) return tryOut();
   return false;
 }
 
@@ -252,26 +253,56 @@ function botDisembark(s: GameState, p: PlayerId): boolean {
     const { tm, near, need, goal } = passengerGoal(s, p, t);
     // getting out first wastes the transport's move: only when the squad reaches more on foot this turn than by riding
     // (an Assault Ramp lets fighters charge after a Rapid Disembark anyway)
-    const M = moveOf(u);
-    const fighter = isBrawler(s, u);
-    const go = s.round >= 4
-      || (fighter && !unitFlags(s, t).assaultDisembark && near <= M + 7)
-      || (!fighter && near <= maxRange(u))
-      || (need !== undefined && dist(need, tm) <= M + 2);
-    if (go && getOut(s, u, t, goal)) return true;
+    if (wantsOut(s, u, t, near, need ? dist(need, tm) : undefined) && getOut(s, u, t, goal)) return true;
   }
   return false;
 }
 
-/** After its transport moved: shooters get out (Rapid Disembark) when there is something to shoot or to hold. */
+/** Getting out before the transport moves (they still move and charge): once the enemy is within a disembark (3"),
+ *  a move and a charge, shooters' targets are in range, an objective that needs bodies is a move away, or the battle is
+ *  half over (a full transport in round 3 is a wasted squad). */
+function wantsOut(s: GameState, u: UnitState, t: UnitState, near: number, need: number | undefined): boolean {
+  const M = moveOf(u);
+  const fighter = isBrawler(s, u);
+  return s.round >= 3
+    || (fighter && !unitFlags(s, t).assaultDisembark && near <= M + 10)
+    || (!fighter && near <= maxRange(u) + 3)
+    || (need !== undefined && need <= M + 5);
+}
+
+/** After its transport moved: shooters get out (Rapid Disembark) when there is something to shoot or to hold. A
+ *  transport that stayed where it was takes nobody anywhere: its passengers get out and go on foot. */
 function botRapidDisembark(s: GameState, t: UnitState) {
-  if (!t.transport || disembarkMode(s, t) !== 'rapid') return;
+  if (!t.transport) return;
+  const mode = disembarkMode(s, t);
   for (const u of s.units.filter((x) => x.embarkedIn === t.id && x.status === 'embarked')) {
     const { tm, near, need, goal } = passengerGoal(s, t.owner, t);
+    if (mode === 'tactical') {
+      if (t.move === 'stationary' && (s.round >= 2 || wantsOut(s, u, t, near, need ? dist(need, tm) : undefined))) getOut(s, u, t, goal);
+      continue;
+    }
+    if (mode !== 'rapid') continue;
     const shooter = !isBrawler(s, u) || unitFlags(s, t).assaultDisembark;
-    const go = (shooter && near <= Math.min(24, maxRange(u) + 2)) || (need !== undefined && dist(need, tm) <= 6) || s.round >= 4;
+    const go = (shooter && near <= Math.min(24, maxRange(u) + 2)) || (need !== undefined && dist(need, tm) <= 6) || s.round >= 3;
     if (go) getOut(s, u, t, goal);
   }
+}
+
+/** A transport whose best move hardly takes its passengers towards where they want to be (holding back, hiding,
+ *  going sideways): they get out first and walk. Returns true if anyone got out (the transport plans again). */
+function cargoOffFirst(s: GameState, t: UnitState, plans: { paths?: Map<string, Pt[]> | null }[]): boolean {
+  if (s.round < 2 || disembarkMode(s, t) !== 'tactical') return false;
+  const cargo = s.units.filter((x) => x.embarkedIn === t.id && x.status === 'embarked');
+  if (!cargo.length) return false;
+  const { tm, goal } = passengerGoal(s, t.owner, t);
+  const progress = Math.max(0, ...plans.map((pl) => {
+    const path = pl.paths?.get(tm.id);
+    return path?.length ? dist(tm, goal) - dist(path[path.length - 1], goal) : 0;
+  }));
+  if (progress >= Math.min(...cargo.map(moveOf)) + 1) return false;
+  let out = false;
+  for (const u of cargo) out = getOut(s, u, t, goal) || out;
+  return out;
 }
 
 /** Move (or bring in) one unit. Returns false when there is nothing left to do this phase. */
@@ -304,7 +335,7 @@ export function botMoveOne(s: GameState): boolean {
     if (!onBoard(u) || u.move) continue;
     markTried(s, u);
     const M = moveOf(u);
-    if (!M || !Number.isFinite(M)) { remainStationary(s, u); return true; }
+    if (!M || !Number.isFinite(M)) { remainStationary(s, u); botRapidDisembark(s, u); return true; }
     const MM = M + unitFlags(s, u).move;
     if (isEngaged(s, u)) {
       const foes = engagedEnemies(s, u);
@@ -328,7 +359,8 @@ export function botMoveOne(s: GameState): boolean {
     }
     botIgnoreModsStratagem(s, u);
     withRuleCache(() => botMobileStratagem(s, u, MM));
-    const { normal, advance: adv } = withRuleCache(() => planMove(s, u, MM, ctxFor(s, u)));
+    let { normal, advance: adv } = withRuleCache(() => planMove(s, u, MM, ctxFor(s, u)));
+    if (u.transport && cargoOffFirst(s, u, [normal, adv ?? {}])) ({ normal, advance: adv } = withRuleCache(() => planMove(s, u, MM, ctxFor(s, u))));
     // advancing: worth it when the extra distance (3.5" on average) reaches somewhere better than a Normal move does
     if (adv && adv.score > normal.score + W(u.owner).advanceMargin) {
       botShootOnTheMove(s, u);
@@ -372,10 +404,18 @@ export function botShootOne(s: GameState): boolean {
   const mine = boardUnits(s, s.active);
   // a unit that fired some of its weapons carries on with the rest (split fire), e.g. after the player rolled saves
   const busy = mine.find((u) => tried(s, u) && !u.selectedToShoot && u.weaponsFired.length > 0 && shootingModes(s, u).length > 0);
-  // units with the fewest targets shoot first; the flexible ones go last and finish off what is left
+  // the unit that loses the most if its best target is gone shoots first (a lascannon on the tank, the bolters on what
+  // is left): what its best target is worth over its second best. Flexible units go last and finish things off.
   const foes = boardUnits(s, other(s.active));
+  const regret = (u: UnitState) => {
+    const vals = foes.filter((e) => unitDistance(u, e) <= maxRange(u) + 0.5 && alive(u).some((m) => unitVisibleTo(s, m, e)))
+      .map((e) => shotValue(s, u, e, Math.min(alive(e).length, rangedKills(u, e)))).sort((a, b) => b - a);
+    return vals.length ? vals[0] - (vals[1] ?? 0) : -1;
+  };
   const options = (u: UnitState) => foes.filter((e) => unitDistance(u, e) <= maxRange(u) + 0.5 && alive(u).some((m) => unitVisibleTo(s, m, e))).length;
-  const order = busy ? [busy] : mine.filter((u) => !tried(s, u)).map((u) => ({ u, n: options(u) })).sort((a, b) => (a.n || 99) - (b.n || 99)).map((x) => x.u);
+  const order = busy ? [busy] : botOff('order')
+    ? mine.filter((u) => !tried(s, u)).map((u) => ({ u, n: options(u) })).sort((a, b) => (a.n || 99) - (b.n || 99)).map((x) => x.u)
+    : mine.filter((u) => !tried(s, u)).map((u) => ({ u, r: regret(u) })).sort((a, b) => b.r - a.r).map((x) => x.u);
   for (const u of order) {
     if (!busy && tried(s, u)) continue;
     const modes = shootingModes(s, u);

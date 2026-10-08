@@ -823,3 +823,11 @@ details > .strat-card { margin-top: 6px; }
 .ds-sheet .ds-more { color: #111; align-self: flex-end; margin-right: 8px; }
 .ds-sheet details, .ds-sheet > .small, .ds-sheet .ds-body { padding: 4px 12px; margin: 0; }
 .ds-sheet .ds-pics { padding: 8px 12px 0; }
+
+/* ---------- move slider: tap where to go, slide how far ---------- */
+.move-slider { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--accent); }
+.move-slider input[type="range"] { flex: 1; min-width: 0; height: 32px; accent-color: var(--accent); touch-action: pan-x; }
+.move-slider input[type="range"]::-webkit-slider-thumb { width: 26px; height: 26px; }
+.move-slider input[type="range"]::-moz-range-thumb { width: 26px; height: 26px; }
+.move-slider input[type="range"]:disabled { opacity: 0.45; }
+.move-slider-d { min-width: 44px; text-align: right; font: 700 15px/1 var(--font-ui); font-variant-numeric: tabular-nums; color: var(--text); }
