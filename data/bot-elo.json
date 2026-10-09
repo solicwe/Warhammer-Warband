@@ -3326,6 +3326,282 @@
     }
    },
    "seconds": 1176
+  },
+  {
+   "date": "2026-10-09",
+   "label": "big units leave home to cheap ones s7000",
+   "commit": "a2905a3",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 26,
+   "draw": 1,
+   "loss": 21,
+   "score": 0.552,
+   "elo": 36,
+   "ci": [
+    -62,
+    141
+   ],
+   "margin": -0.1,
+   "rating": 1594,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -31
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 15
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -14.5
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -23.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 1,
+     "margin": 16.3
+    },
+    "CD": {
+     "games": 2,
+     "score": 0.25,
+     "margin": -21
+    },
+    "QT": {
+     "games": 2,
+     "score": 0,
+     "margin": -17.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -31.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -5.5
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -33.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 10
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -13.5
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -14
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 13
+    },
+    "LoV": {
+     "games": 2,
+     "score": 1,
+     "margin": 27
+    },
+    "NEC": {
+     "games": 2,
+     "score": 1,
+     "margin": 33.5
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 45
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -0.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 1,
+     "margin": 33
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 23
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -13
+    },
+    "WE": {
+     "games": 2,
+     "score": 1,
+     "margin": 14
+    }
+   },
+   "seconds": 719
+  },
+  {
+   "date": "2026-10-09",
+   "label": "big units leave home to cheap ones s9000",
+   "commit": "a2905a3",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 29,
+   "draw": 0,
+   "loss": 19,
+   "score": 0.604,
+   "elo": 73,
+   "ci": [
+    -24,
+    184
+   ],
+   "margin": 2,
+   "rating": 1631,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -18.3
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0,
+     "margin": -8.5
+    },
+    "AE": {
+     "games": 2,
+     "score": 1,
+     "margin": 22.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0.67,
+     "margin": 1.3
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -45.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -25
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -19
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -15
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -0.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 21.5
+    },
+    "GC": {
+     "games": 2,
+     "score": 1,
+     "margin": 6.5
+    },
+    "GK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 4.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 1,
+     "margin": 8
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -12
+    },
+    "LoV": {
+     "games": 2,
+     "score": 1,
+     "margin": 22
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -4
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 16
+    },
+    "SM": {
+     "games": 2,
+     "score": 1,
+     "margin": 46.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 7
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 13
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 24.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 13
+    }
+   },
+   "seconds": 826
   }
  ]
 }
