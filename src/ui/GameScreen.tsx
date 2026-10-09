@@ -28,7 +28,7 @@ import {
 import { activeLabels, unitFlags } from '../engine/effects';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
-import { applyStyle, lookBudget, setLookahead, styleChosen } from '../engine/botLook';
+import { applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen } from '../engine/botLook';
 import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
@@ -121,6 +121,36 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     try { return new LookWorker(); } catch { return null; }
   }, []);
   useEffect(() => () => worker?.terminate(), [worker]);
+  // thinking during the player's turn: a second worker plays the board on to where the bot's next turn starts and looks
+  // ahead from there; when the real board gets there the same, the bot's turn starts at once instead of thinking again
+  const ponder = useRef<{ w: Worker | null; id: number; p: PlayerId; turn: number; board: string; sig?: string | null; name?: string; wait?: (name: string) => void } | null>(null);
+  const stopPonder = () => { ponder.current?.w?.terminate(); ponder.current = null; };
+  useEffect(() => stopPonder, []);
+  const ponderFor = bots.length === 1 && s.active !== bots[0] && (s.phase === 'shooting' || s.phase === 'charge' || s.phase === 'fight') ? bots[0] : null;
+  useEffect(() => {
+    if (ponderFor === null || lookBudget(s, ponderFor) <= 0) return;
+    // the same board as the thinking started from (the player only ended a phase): it stands
+    const board = boardSig(s);
+    if (ponder.current && ponder.current.turn === s.turn && ponder.current.board === board) return;
+    // the board settled for a moment: start again from it (a busy worker can't be told to stop, so it is replaced)
+    const t = window.setTimeout(() => {
+      stopPonder();
+      let w: Worker;
+      try { w = new LookWorker(); } catch { return; }
+      const id = Math.random();
+      const job: NonNullable<typeof ponder.current> = { w, id, p: ponderFor, turn: s.turn, board };
+      ponder.current = job;
+      w.onmessage = (e: MessageEvent<{ id: number; sig?: string | null; name?: string }>) => {
+        if (e.data.id !== id || ponder.current !== job) return;
+        if (e.data.sig !== undefined) job.sig = e.data.sig;
+        if (e.data.sig === null || e.data.name) { w.terminate(); job.w = null; }
+        if (e.data.name) { job.name = e.data.name; job.wait?.(e.data.name); }
+      };
+      w.onerror = () => { w.terminate(); job.w = null; job.wait?.('steady'); };
+      try { w.postMessage({ kind: 'ponder', state: s, p: ponderFor, id }); } catch { stopPonder(); }
+    }, 800);
+    return () => window.clearTimeout(t);
+  }, [s, ponderFor]); // eslint-disable-line react-hooks/exhaustive-deps
   // the player is reading (mission cards, the log, the menu, a rule): the game waits instead of moving under them
   const viewing = showCards || showMissions || showLog || showMenu || !!explain;
   useEffect(() => {
@@ -129,6 +159,19 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     // start of a bot's Movement phase: pick how to play the turn before moving anything
     if (who !== null && s.phase === 'movement' && s.active === who && !styleChosen(s)) {
       const done = (name: string) => { setThinking(false); styleRef.current = { p: who, name }; act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); }); };
+      // it thought this turn out during the player's: the same board, so the same answer (or wait for it to finish)
+      const pre = ponder.current;
+      if (pre && pre.p === who && pre.sig && pre.sig === lookSig(s)) {
+        if (pre.name) { stopPonder(); done(pre.name); return; }
+        if (pre.w) {
+          setThinking(true);
+          setBotSays(`${pName(s, who)} is thinking ahead…`); setBotWho(who);
+          const fallback = window.setTimeout(() => { stopPonder(); done('steady'); }, lookBudget(s, who) + 10000);
+          pre.wait = (name) => { window.clearTimeout(fallback); stopPonder(); done(name); };
+          return;
+        }
+      }
+      stopPonder();
       if (!worker) { done('steady'); return; }
       setThinking(true);
       setBotSays(`${pName(s, who)} is thinking ahead…`); setBotWho(who);

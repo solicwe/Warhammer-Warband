@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botAct, botMoveOne, botShootOne, botStep, botWindow } from './bot';
 import { attackRerollGap, buildShootPools, hazardTest, rerollAttackCount, resolveAll, resolveReroll, rollHits, startAttack, stepAttack, toggleRerollPick } from './attack';
-import { autoCharge, autoPileMove, createGame, declareCharge, formationAt, placeUnit } from './game';
+import { autoCharge, autoPileMove, createGame, declareCharge, endPhase, formationAt, placeUnit } from './game';
 import { alive, engagedEnemies, unitDistance } from './state';
 import { planStratagem } from './stratagems';
 import { botAfterShootMove, botDoctrineActs } from './botPlus';
@@ -553,5 +553,24 @@ describe('looking ahead', () => {
       // the three ways end up in different places (before the fix every copy played the plain weights)
       expect(new Set(Object.values(v).map((x) => Math.round(x))).size).toBeGreaterThan(1);
     } finally { setLookahead(false); }
+  });
+
+  it('thinking during the opponent\'s turn: the copy reaches the same board the real game does', async () => {
+    const { lookSig, playToMovement } = await import('./botLook');
+    const s = createGame({ lists: [list('SM', [['Intercessor Squad', 10, 150], ['Hellblaster Squad', 5, 110]]), list('ORK', [['Boyz', 20, 180], ['Deff Dread', 1, 130]])], factions: [SM, ORK], names: ['A', 'B'], seed: 4 });
+    s.bots = [0, 1];
+    let steps = 0;
+    // into the first player's Shooting phase: the other side (the bot) thinks about its coming turn from here
+    while (!(s.phase === 'shooting' && s.round === 1) && steps++ < 3000) botAct(s);
+    const me = s.active, bot = (1 - me) as 0 | 1;
+    const ahead = playToMovement(s, bot)!;
+    expect(ahead.phase).toBe('movement');
+    expect(ahead.active).toBe(bot);
+    // the player ends their phases without doing more; the real game gets to the same board (the same dice), so the
+    // style thought out meanwhile is used at once
+    while (!(s.phase === 'movement' && s.active === bot) && steps++ < 6000) {
+      if (s.active === me && !s.window && !s.attack && (s.phase === 'shooting' || s.phase === 'charge')) endPhase(s); else botAct(s);
+    }
+    expect(lookSig(s)).toBe(lookSig(ahead));
   });
 });

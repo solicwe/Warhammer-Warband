@@ -5,6 +5,7 @@ import { botAct } from './bot';
 import { unitValue } from './botEval';
 import { botOff, setBotWeights, W, type BotW } from './botWeights';
 import { withFastPlanning } from './botMove';
+import { endPhase } from './game';
 import { alive, other } from './state';
 import type { BotLevel, GameState, PlayerId } from './types';
 
@@ -131,6 +132,49 @@ export function applyStyle(s: GameState, p: PlayerId, name: string) {
   setBotWeights(p, { ...own[p]!, ...(STYLES[name] ?? {}) });
   const how: Record<string, string> = { aggressive: 'aggressively', careful: 'carefully', objectives: 'for the objectives', hunt: 'for the kill' };
   if (name !== 'steady') s.log.push({ turn: s.turn, round: s.round, player: p, kind: 'info', text: `${s.players[p].name}: plays this turn ${how[name] ?? name} (looked ahead: it plays out better)` });
+}
+
+/**
+ * The board as the look sees it, coarsely: whose turn and phase, each unit's models left and where it stands (to the
+ * inch), command points and VP. The look thought out during the opponent's turn is used when the real board matches.
+ */
+export function lookSig(s: GameState): string {
+  return `${s.round}|${s.turn}|${s.active}|${s.phase}|${boardSig(s)}`;
+}
+
+/** The board alone (units, command points, VP), whatever the phase: ending a phase without doing anything keeps it. */
+export function boardSig(s: GameState): string {
+  const units = s.units.map((u) => {
+    const ms = alive(u);
+    if (!ms.length || u.status !== 'board') return `${u.id}:${u.status}:${ms.length}`;
+    const x = ms.reduce((a, m) => a + m.x, 0) / ms.length, y = ms.reduce((a, m) => a + m.y, 0) / ms.length;
+    return `${u.id}:${ms.length}:${ms.reduce((a, m) => a + m.wounds, 0)}:${Math.round(x)},${Math.round(y)}${u.battleShocked ? '!' : ''}`;
+  });
+  const P = s.players;
+  return `${P[0].cp},${P[1].cp}|${P[0].vp + P[0].secVp},${P[1].vp + P[1].secVp}|${units.join(';')}`;
+}
+
+/**
+ * Thinking during the opponent's turn: a copy of the game played on to p's next Movement phase, where the look starts.
+ * The opponent is taken to do nothing more of their own accord (they end their Movement, Shooting and Charge phases as
+ * they stand); what the rules make happen still does (fights, reactions, p's Command phase with the same dice). When
+ * they do act after all, the board changes and the app thinks again from there; their last action is usually the
+ * last change, so the copy then gets to the very board the real game does. Null when the game ends first.
+ */
+export function playToMovement(s: GameState, p: PlayerId): GameState | null {
+  const c = structuredClone(s);
+  c.bots = [0, 1];
+  const was = enabled;
+  enabled = false; // the copy plays plainly: no look inside it
+  try {
+    let steps = 0;
+    while (!(c.phase === 'movement' && c.active === p) && c.phase !== 'gameover' && steps < 3000) {
+      const passes = c.active !== p && !c.window && !c.attack && (c.phase === 'movement' || c.phase === 'shooting' || c.phase === 'charge');
+      if (passes) endPhase(c); else botAct(c);
+      steps++;
+    }
+  } finally { enabled = was; }
+  return c.phase === 'movement' && c.active === p ? c : null;
 }
 
 /** Forget the per-side weights captured for styles (a new game, or the tuner changed them). */
