@@ -14,7 +14,7 @@ import { zonePoly } from './missions';
 import { hasAbility } from './weapons';
 import { actsOfUnit } from './activations';
 import { unitFlags } from './effects';
-import { botOff, W as BW } from './botWeights';
+import { botOff, W as BW, type BotW } from './botWeights';
 import { armyPlan, followedJob, unitPunch, type Role } from './botPlan';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, shotValue, unitValue,
@@ -421,7 +421,9 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   const brawler = isBrawler(s, u);
   const target = brawler ? [...foes].sort((a, b) => (chargeValue(s, u, b.u) / (1 + unitDistance(u, b.u) / 10)) - (chargeValue(s, u, a.u) / (1 + unitDistance(u, a.u) / 10)))[0]?.u : undefined;
   const heavy = alive(u).some((m) => m.weapons.some((w) => w.profiles.some((p) => hasAbility(p, 'heavy'))));
-  const ocNeed = oc(u) > 0 ? objectiveNeeds(s, u.owner).filter((n) => n.need > 0).map((n) => objPoint(s, n.o)) : [];
+  // an expensive unit is not pulled back to the home objective (it goes for the ones out on the field)
+  const big = unitValue(u) > 200;
+  const ocNeed = oc(u) > 0 ? objectiveNeeds(s, u.owner).filter((n) => n.need > 0 && !(big && n.o.type === 'home' && n.o.owner === u.owner)).map((n) => objPoint(s, n.o)) : [];
   const ctx: Ctx = { foes, brawler, target, range: maxRange(u), heavy, ocNeed };
   const battleline = alive(u).some((m) => m.keywords.includes('BATTLELINE'));
   // melee units go and fight; holding is a job for BATTLELINE and cheap shooting squads
@@ -472,6 +474,15 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
     if (ctx.post) ctx.toPost = distanceField(s, u, 'normal', lead, [ctx.post]);
   }
   return ctx;
+}
+
+/**
+ * How much the home objective counts for this unit. It is a job for a cheap unit: a tournament player doesn't park 400
+ * points of Terminators on it, nor a full squad of Battleline with its Sorcerer (they go and take the middle).
+ */
+function homeFactorOf(u: UnitState, ctx: Ctx, w: BotW): number {
+  if (ctx.role && !botOff('homeF')) return ctx.role === 'home' ? 1 : w.homeExpensive;
+  return unitValue(u) <= 200 ? 1 : w.homeExpensive;
 }
 
 function objectiveScore(s: GameState, u: UnitState, homeFactor = 1): number {
@@ -658,7 +669,7 @@ export function scoreParts(s: GameState, u: UnitState, kind: MoveKind | 'station
   try {
     const w = BW(u.owner);
     const caution = (ctx.role === 'screen' ? w.cautionBrawler * 1.4 : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
-    const homeFactor = ctx.role ? (ctx.role === 'home' ? 1 : w.homeExpensive) : ctx.holder || unitValue(u) <= 200 ? 1 : w.homeExpensive;
+    const homeFactor = homeFactorOf(u, ctx, w);
     return { obj: objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor), shoot: shootScore(s, u, kind, ctx), charge: chargeScore(s, u, ctx), danger: -caution * dangerScore(s, u, ctx), pull: pullScore(s, u, ctx), crowd: -crowdScore(s, u), pos: positionScore(s, u) };
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }
@@ -679,8 +690,7 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
     const w = BW(u.owner);
     // a screen keeps out of sight like a shooting unit (it's there to be in the way later, not shot now)
     const caution = (ctx.role === 'screen' ? w.cautionBrawler * 1.4 : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
-    // the home objective is a job for a cheap unit: a tournament player doesn't park 400 points of Terminators on it
-    const homeFactor = ctx.role && !botOff('homeF') ? (ctx.role === 'home' ? 1 : w.homeExpensive) : ctx.holder || unitValue(u) <= 200 ? 1 : w.homeExpensive;
+    const homeFactor = homeFactorOf(u, ctx, w);
     return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u) + denialScore(u, ctx) + slip(s, u);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }

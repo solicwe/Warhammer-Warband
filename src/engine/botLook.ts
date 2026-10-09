@@ -10,11 +10,12 @@ import type { BotLevel, GameState, PlayerId } from './types';
 
 const STYLES: Record<string, Partial<BotW>> = {
   steady: {},
-  aggressive: { cautionOther: 0.55, cautionBrawler: 0.25, cautionHolder: 0.2, pullBrawler: 0.9, pullRange: 0.65, chargeNonBrawler: 0.8, advanceMargin: 1 },
-  careful: { cautionOther: 1.6, cautionBrawler: 0.8, cautionHolder: 0.6, pullBrawler: 0.4, pullRange: 0.25, advanceMargin: 5 },
+  // the styles differ enough to move units differently (milder ones played the same moves, so the look compared nothing)
+  aggressive: { cautionOther: 0.4, cautionBrawler: 0.15, cautionHolder: 0.15, pullBrawler: 1.2, pullRange: 0.9, pullHammer: 1, pullHolder: 2.2, chargeNonBrawler: 0.9, advanceMargin: 0.5 },
+  careful: { cautionOther: 2, cautionBrawler: 1, cautionHolder: 0.8, pullBrawler: 0.4, pullRange: 0.25, advanceMargin: 5 },
   // the expert also tries playing the turn for the objectives, and for the kill
-  objectives: { objective: 34, pullHolder: 2.4, pullObjective: 0.7, claimPull: 3.2, homeExpensive: 0.5 },
-  hunt: { pullHammer: 0.9, pullBrawler: 0.85, chargeNonBrawler: 0.75, cautionOther: 0.8 },
+  objectives: { objective: 55, pullHolder: 2.6, pullObjective: 0.9, claimPull: 3.2, homeExpensive: 0.1 },
+  hunt: { pullHammer: 1.2, pullBrawler: 1.2, chargeNonBrawler: 0.9, cautionOther: 0.6, cautionBrawler: 0.25 },
 };
 
 /** What each level tries: the ways of playing the turn, how many rolls of the dice each is played on (the dice are
@@ -31,6 +32,11 @@ export const lookBudget = (s: GameState, p?: PlayerId) => LEVELS[levelOf(s, p)].
 
 /** Points of army a VP is worth when comparing outcomes (a 1000-point game is decided by a few dozen VP). */
 const VP_POINTS = 15;
+/**
+ * An objective held when the look ends: the VP it scores next turn (worth a few). Without it the look only sees the
+ * enemy's next turn of shooting, and hanging back always looks safest: the bot would sit in its own zone.
+ */
+const HOLD_POINTS = 3 * VP_POINTS;
 
 let inRollout = false;
 let enabled = true;
@@ -48,7 +54,9 @@ function armyLeft(s: GameState, p: PlayerId): number {
 
 const standing = (s: GameState, p: PlayerId) => {
   const vp = (q: PlayerId) => s.players[q].vp + s.players[q].secVp;
-  return (vp(p) - vp(other(p))) * VP_POINTS + armyLeft(s, p) - armyLeft(s, other(p));
+  const held = (q: PlayerId) => s.objectives.filter((o) => o.controller === q).length;
+  const hold = botOff('lookHold') ? 0 : (held(p) - held(other(p))) * HOLD_POINTS;
+  return (vp(p) - vp(other(p))) * VP_POINTS + hold + armyLeft(s, p) - armyLeft(s, other(p));
 };
 
 /** Play a copy through the rest of this turn and the opponent's next one with `style` for p; how p stands then.

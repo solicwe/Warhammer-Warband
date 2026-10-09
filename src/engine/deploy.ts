@@ -87,8 +87,8 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   const fast = moveOf(u) >= 10;
   const vehicle = alive(u).some((m) => m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER'));
   const holdsGround = oc(u) > 0 && !brawler;
-  // the home objective is for a cheap or Battleline unit, not the army's hammer
-  const cheap = alive(u).some((m) => m.keywords.includes('BATTLELINE')) || unitValue(u) <= 200;
+  // the home objective is for a cheap unit, not the army's hammer nor a full Battleline squad with its leader
+  const cheap = unitValue(u) <= 200;
   // Infiltrators: anywhere more than 9" from the enemy deployment zone
   const how = opt.how ?? 'deploy';
   // the bot's plan for the whole army (the player's "place it for me" always plays it safe)
