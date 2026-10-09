@@ -28,7 +28,7 @@ import {
 import { activeLabels, unitFlags } from '../engine/effects';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
-import { applyStyle, setLookahead, styleChosen } from '../engine/botLook';
+import { applyStyle, lookBudget, setLookahead, styleChosen } from '../engine/botLook';
 import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
@@ -133,7 +133,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       setThinking(true);
       setBotSays(`${pName(s, who)} is thinking ahead…`); setBotWho(who);
       const id = Math.random();
-      const fallback = window.setTimeout(() => { worker.onmessage = null; done('steady'); }, 9000);
+      // the worker stops looking by itself when the level's thinking time is up; this only catches a worker that hangs
+      // (a shorter wait would give up while it is still thinking, and leave it busy for the bot's next steps)
+      const fallback = window.setTimeout(() => { worker.onmessage = null; done('steady'); }, lookBudget(s, who) + 10000);
       worker.onmessage = (e: MessageEvent<{ id: number; name: string }>) => {
         if (e.data.id !== id) return;
         window.clearTimeout(fallback);
