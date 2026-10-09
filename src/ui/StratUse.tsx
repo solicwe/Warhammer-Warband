@@ -42,7 +42,7 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
       </div>
       <div className="tiny muted">{detachment} · {st.turn} · {st.phase}</div>
       <div className="strat-fx">
-        <span className={`chip ${rule.status === 'auto' || !rule.status ? 'good' : rule.status === 'partial' ? 'warn' : ''}`}>{rule.status === 'auto' || !rule.status ? 'Automated' : rule.status === 'partial' ? '◐ Mostly automated' : 'Resolve as written'}</span>
+        <span className={`chip ${rule.status === 'auto' || !rule.status ? 'good' : rule.status === 'partial' ? 'warn' : ''}`}>{rule.status === 'auto' || !rule.status ? 'Automated' : rule.status === 'partial' ? <><Icon name="partial" size={13} /> Mostly automated</> : 'Resolve as written'}</span>
         {(rule.buffs ?? []).map((k) => <span key={k} className="chip good">{EFFECT_LABEL[k] ?? k}</span>)}
         {rule.note && <span className="tiny muted">{rule.note}</span>}
       </div>
@@ -57,7 +57,7 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
                   if (unitId && unitId !== u.id && extraOk(u) && extra.length < (rule.extraTargets?.count ?? 1) - 1) { setExtra(extra.includes(u.id) ? extra.filter((x) => x !== u.id) : [...extra, u.id]); return; }
                   setUnitId(unitId === u.id ? '' : u.id); setExtra([]); setChoice(undefined); setEnemyId('');
                 }}>
-                  <span className={u.owner ? 'p1' : 'p0'}>●</span> {short(u.name)}{u.status === 'reserves' ? ' (Reserves)' : !alive(u).length ? ' (destroyed)' : ''}
+                  <span className={`side-dot s${u.owner}`} aria-hidden="true" /> {short(u.name)}{u.status === 'reserves' ? ' (Reserves)' : !alive(u).length ? ' (destroyed)' : ''}
                 </button>
               ))}
             </div>
@@ -78,7 +78,7 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
               <div className="unit-strip">
                 {enemies.map((e) => (
                   <button key={e.id} className={`unit-pill ${pickedEnemy?.id === e.id ? 'sel' : ''}`} onClick={() => setEnemyId(e.id)}>
-                    <span className={e.owner ? 'p1' : 'p0'}>●</span> {short(e.name)}
+                    <span className={`side-dot s${e.owner}`} aria-hidden="true" /> {short(e.name)}
                   </button>
                 ))}
               </div>

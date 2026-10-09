@@ -549,6 +549,8 @@ export interface AttackReport {
   unsaved: number;
   mortals: number;
   dmg: number;
+  /** models in the target unit when the attack began */
+  before: number;
   killed: number;
   destroyed: boolean;
   /** points of the target's unit destroyed by this attack */

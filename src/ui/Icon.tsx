@@ -46,6 +46,14 @@ const ICONS = {
   partial: <><circle {...S} cx="12" cy="12" r="8" /><path {...F} d="M12 4a8 8 0 0 1 0 16z" /></>,
   hand: <><path {...S} d="M8 12V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4a1.5 1.5 0 0 1 3 0v7M14 10V5.5a1.5 1.5 0 0 1 3 0V13" /><path {...S} d="M17 10a1.5 1.5 0 0 1 3 0v4a7 7 0 0 1-7 7h-1a7 7 0 0 1-5.5-2.7L4 15a1.6 1.6 0 0 1 2.5-2L8 14.5" /></>,
   next: <path {...S} d="M9 5l7 7-7 7" />,
+  back: <path {...S} d="M15 5l-7 7 7 7" />,
+  close: <path {...S} d="M6 6l12 12M18 6L6 18" />,
+  // an attack: from the shooter to its target
+  target: <><path {...S} d="M3 12h12" /><path {...S} d="M11 7l5 5-5 5" /><circle {...S} cx="19.5" cy="12" r="2" /></>,
+  // a ritual or psychic mark on a unit
+  mark: <><path {...S} d="M12 3c1.5 4 3 5.5 7 7-4 1.5-5.5 3-7 7-1.5-4-3-5.5-7-7 4-1.5 5.5-3 7-7z" /></>,
+  sound: <><path {...S} d="M4 9h4l5-4v14l-5-4H4z" /><path {...S} d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></>,
+  mute: <><path {...S} d="M4 9h4l5-4v14l-5-4H4z" /><path {...S} d="M17 9l5 6M22 9l-5 6" /></>,
   down: <path {...S} d="M6 9l6 6 6-6" />,
   plus: <path {...S} d="M12 5v14M5 12h14" />,
   more: <><circle {...F} cx="12" cy="5" r="2" /><circle {...F} cx="12" cy="12" r="2" /><circle {...F} cx="12" cy="19" r="2" /></>,

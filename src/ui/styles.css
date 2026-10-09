@@ -651,7 +651,7 @@ b.em { font-weight: 700; color: var(--text); }
 .die.pick, .die.picked { width: 40px; height: 40px; }
 .die.pick { outline: 2px dashed var(--accent); cursor: pointer; }
 .die.picked { outline: 3px solid var(--accent); outline-offset: 1px; }
-.die.picked::after { content: '↻'; position: absolute; top: -9px; right: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); color: var(--on-fill); font-size: 11px; line-height: 14px; text-align: center; }
+.die.picked::after { content: ''; position: absolute; top: -8px; right: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent) var(--reroll-icon) center / 10px no-repeat; }
 @keyframes roll { 0% { transform: rotate(-160deg) scale(0.5); opacity: 0; } 100% { transform: rotate(0) scale(1); opacity: 1; } }
 .tray .dice .die { animation: die-in 0.32s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
 .tray .dice .die:nth-child(2n) { animation-delay: 30ms; }
@@ -1023,3 +1023,90 @@ details > .strat-card { margin-top: 6px; }
   .setup .sides { gap: 0; }
   .setup .sides .vs { width: 1px; height: auto; margin: 16px 0; align-self: stretch; }
 }
+
+:root { --reroll-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 12a8 8 0 1 1-2.3-5.6'/%3E%3Cpath d='M20 4v5h-5'/%3E%3C/svg%3E"); }
+/* side markers and pick marks drawn by CSS (no text glyphs) */
+.side-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--p0); flex: none; vertical-align: 1px; }
+.side-dot.s1 { background: var(--p1); }
+.radio-mark { display: inline-block; width: 12px; height: 12px; margin-right: 6px; border: 2px solid currentColor; border-radius: 50%; vertical-align: -1px; flex: none; }
+.radio-mark.on { background: currentColor; box-shadow: inset 0 0 0 2px var(--surface); }
+
+/* ---------- dataslates: the pop-ups of the battle (attack reports, round summaries) ----------
+   A dark plate with cut corners and a brass hairline, like a Munitorum slate — not a rounded white card. */
+.slate { --cut: 12px; --brass: #a88443; position: relative; padding: 1px; background: linear-gradient(160deg, #d7b06a, var(--brass) 35%, #4a3a1e 70%, var(--brass)); clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut)); filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.45)); color: #e8ebee; }
+.slate-in { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #1f2328 0%, #15181c 60%, #111316 100%);
+  clip-path: polygon(calc(var(--cut) - 0.5px) 0, 100% 0, 100% calc(100% - var(--cut) + 0.5px), calc(100% - var(--cut) + 0.5px) 100%, 0 100%, 0 calc(var(--cut) - 0.5px)); }
+/* brass corner brackets on the two square corners */
+.slate-in::before, .slate-in::after { content: ''; position: absolute; width: 10px; height: 10px; border: 0 solid #c9a35c; pointer-events: none; }
+.slate-in::before { top: 4px; right: 4px; border-top-width: 2px; border-right-width: 2px; }
+.slate-in::after { bottom: 4px; left: 4px; border-bottom-width: 2px; border-left-width: 2px; }
+
+/* the attack report on a slate */
+.atk-report { padding: 1px; background-color: transparent; border-top: none; border-radius: 0; box-shadow: none; gap: 0; }
+.atk-report.o0 .slate-in { box-shadow: inset 0 3px 0 #4f8fd6; }
+.atk-report.o1 .slate-in { box-shadow: inset 0 3px 0 #d2564b; }
+.atk-vs { display: grid; grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.atk-who { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.atk-who.right { align-items: flex-end; text-align: right; }
+.atk-who b { font: 700 14px/1.15 var(--font-cond); letter-spacing: 0.03em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.atk-who b.p0 { color: #8dbcf0; } .atk-who b.p1 { color: #f08c84; }
+.atk-who small { font: 500 11.5px var(--font-ui); color: #98a1aa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.atk-arrow { color: #c9a35c; }
+.atk-face { position: relative; flex: none; width: 46px; height: 46px; display: grid; place-items: center; }
+.atk-face .portrait, .atk-face > * { max-width: 46px; max-height: 46px; }
+.atk-face.dead > :first-child { filter: grayscale(1) brightness(0.55); transition: filter 0.3s; }
+.atk-x { position: absolute; inset: -2px; pointer-events: none; animation: x-stamp 0.35s cubic-bezier(.2, 1.8, .4, 1); }
+.atk-x::before, .atk-x::after { content: ''; position: absolute; left: 50%; top: 50%; width: 120%; height: 6px; margin: -3px 0 0 -60%; border-radius: 2px; background: #e5372b; box-shadow: 0 0 0 1.5px #2a0605, 0 0 12px rgba(229, 55, 43, 0.7); }
+.atk-x::before { transform: rotate(45deg); }
+.atk-x::after { transform: rotate(-45deg); }
+@keyframes x-stamp { 0% { transform: scale(2.2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.atk-stages { margin-top: 2px; }
+.atk-stage { border-radius: 0; background: rgba(255, 255, 255, 0.04); border-bottom: 2px solid rgba(255, 255, 255, 0.08); }
+.atk-stage.on { background: rgba(201, 163, 92, 0.1); border-bottom-color: #c9a35c; }
+.atk-chip { border-radius: 2px; clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%); padding: 2px 10px; border: none; background: rgba(255, 255, 255, 0.06); }
+.atk-chip.lit { background: #c9a35c; color: #17110a; }
+.atk-foot { display: flex; align-items: center; gap: 10px; min-height: 30px; }
+.atk-pips { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
+.atk-pips i { position: relative; width: 9px; height: 9px; border-radius: 50%; background: #6f7a85; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5); }
+.atk-pips i.slain { background: #3a1513; animation: pip-x 0.3s ease-out both; }
+.atk-pips i.slain::before, .atk-pips i.slain::after { content: ''; position: absolute; left: -1px; top: 3.5px; width: 11px; height: 2px; background: #ef4444; }
+.atk-pips i.slain::before { transform: rotate(45deg); }
+.atk-pips i.slain::after { transform: rotate(-45deg); }
+@keyframes pip-x { from { transform: scale(1.8); } to { transform: scale(1); } }
+.atk-pips b { font: 600 11px var(--font-ui); color: #98a1aa; margin-left: 2px; }
+.atk-result { flex: none; justify-content: flex-end; min-height: 0; font-size: 21px; }
+.atk-result small { margin-left: 6px; }
+.atk-result.dead { padding: 0 8px; background: repeating-linear-gradient(-45deg, rgba(229, 55, 43, 0.22) 0 6px, transparent 6px 12px); }
+.atk-luck { align-self: flex-end; border-radius: 2px; }
+
+/* round summary and the end of the battle on a slate */
+.round-card.slate { width: min(100%, 440px); padding: 1px; border-radius: 0; background-color: transparent; color: #e8ebee; box-shadow: none; }
+.round-card .slate-in { gap: 12px; padding: 18px 18px 14px; }
+.round-card .rc-kicker { color: #c9a35c; }
+.round-card .rc-l { color: #98a1aa; }
+.round-card .rc-grid > b.p0 { color: #8dbcf0; } .round-card .rc-grid > b.p1 { color: #f08c84; }
+.round-card .rc-title.p0 { color: #8dbcf0; } .round-card .rc-title.p1 { color: #f08c84; }
+.round-card .rc-luck { color: #98a1aa; }
+.round-card .rc-luck.up { color: #7fd69e; } .round-card .rc-luck.down { color: #f08c84; }
+.round-card .rc-mvp { border-radius: 0; background: rgba(201, 163, 92, 0.12); border-left: 3px solid #c9a35c; }
+.round-card .rc-mvp .muted { color: #98a1aa; }
+.round-card .rc-mvp b.p0 { color: #8dbcf0; } .round-card .rc-mvp b.p1 { color: #f08c84; }
+.round-card .rc-tap { color: #7a838c; }
+.round-card .rc-grid { border-top: 1px solid rgba(201, 163, 92, 0.3); padding-top: 10px; }
+
+/* the menu as a list of rows, not a stack of cards */
+.menu-grid { gap: 0; border-top: 1px solid var(--line); }
+.menu-item { min-height: 60px; padding: 8px 4px; border: none; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
+.menu-item:hover:not(:disabled) { background: var(--surface-2); border-color: var(--line); }
+.menu-item .icon { width: 36px; height: 36px; padding: 7px; background: var(--accent-soft); clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+@media (min-width: 600px) { .menu-grid { grid-template-columns: 1fr 1fr; column-gap: 16px; } }
+
+/* the commander: a vox strip, emblem in a cut frame, the line set off like a transmission */
+.commander { gap: 12px; padding: 8px 12px 8px 10px; background: var(--surface-2); }
+.cmd-emblem { width: 44px; height: 44px; padding: 2px; background: linear-gradient(160deg, #d7b06a, #a88443 40%, #4a3a1e); clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.cmd-emblem .ab-emblem { width: 40px; height: 40px; border-radius: 0; background: #15181c; clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); }
+.cmd-says { padding-left: 10px; border-left: 2px solid var(--accent); font-style: normal; }
+.cmd-thinking { border-radius: 2px; }
+.atk-report.slate { position: absolute; }

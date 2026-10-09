@@ -5,6 +5,7 @@ import type { Die, GameState, Pool } from '../engine/types';
 import { abilityLabel, abilitiesOf } from '../engine/weapons';
 import { rerollable } from '../engine/attack';
 import { Icon } from './Icon';
+import { play } from './sfx';
 
 interface Props {
   s: GameState;
@@ -110,6 +111,14 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
     return () => window.clearTimeout(t);
   }, [botDice, hold, st, at.idx, p.hits.length, pending?.stage]);
 
+  // every new handful of dice rattles (hits, wounds, saves, re-rolls)
+  const rolled = at.pools.reduce((a, q) => a + q.hits.length + q.wounds.length + q.saves.length + q.hits.filter((d) => d.rerolled).length + q.wounds.filter((d) => d.rerolled).length + q.saves.filter((d) => d.rerolled).length, 0);
+  const lastRolled = useRef(rolled);
+  useEffect(() => {
+    if (rolled > lastRolled.current) { play('dice', Math.min(8, rolled - lastRolled.current)); window.setTimeout(() => play('land'), 420); }
+    lastRolled.current = rolled;
+  }, [rolled]);
+
   const hitCls = (d: Die) => d.o;
   const woundCls = (d: Die) => d.o;
   const saveCls = (d: Die) => (d.o === 'saved' ? 'saved' : d.o === 'fail' ? 'dmg' : '');
@@ -121,7 +130,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
           <div className="grow">
             <div className="small muted">{at.kind === 'fight' ? 'Fight' : at.kind === 'overwatch' ? 'Fire Overwatch' : 'Shooting'}</div>
             <div style={{ fontWeight: 800 }}>
-              <span className={A.owner ? 'p1' : 'p0'}>{A.name}</span> <span className="muted">›</span> <span className={T.owner ? 'p1' : 'p0'}>{T.name}</span>
+              <span className={A.owner ? 'p1' : 'p0'}>{A.name}</span> <Icon name="target" size={15} className="muted" /> <span className={T.owner ? 'p1' : 'p0'}>{T.name}</span>
             </div>
           </div>
           {!done && <button className="btn small" onClick={guarded(onSkip)}>Skip</button>}

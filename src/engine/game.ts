@@ -721,7 +721,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   resetTurnFlags(s);
   s.controlAtTurnStart = s.objectives.map((o) => o.controller);
   onTurnStart(s);
-  log(s, `━━ Battle Round ${s.round} · ${s.players[p].name}'s turn ━━`, 'info', p);
+  log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
   if (s.turn === 0) { initSagas(s); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) fireAll(s, 'roundStart', 'both');

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { FxEvent, GameState } from '../engine/types';
 import { dispositionById, MISSIONS, primaryById, secondaryById, type DispositionId } from '../engine/config';
 import { Icon } from './Icon';
+import { play } from './sfx';
 
 type RollFx = Extract<FxEvent, { kind: 'roll' | 'rolloff' | 'cards' | 'primary' }>;
 
@@ -64,6 +65,17 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
   const landedAt = useRef(0);
   const [hold, setHold] = useState(0); // bumped when the player taps to see the result: restarts the close timer
   useEffect(() => { onBusy?.(!!cur); }, [cur, onBusy]);
+  // the sound of it: dice rattle while they tumble and knock when they land (good or bad news after), cards flick
+  useEffect(() => {
+    if (!cur) return;
+    if (cur.kind === 'roll' || cur.kind === 'rolloff') play('dice', cur.kind === 'roll' ? cur.dice.length : 2);
+    else play('card');
+  }, [cur]);
+  useEffect(() => {
+    if (!cur || !landed || (cur.kind !== 'roll' && cur.kind !== 'rolloff')) return;
+    play('land');
+    if (cur.kind === 'roll' && cur.good !== undefined) { const t = window.setTimeout(() => play(cur.good ? 'good' : 'bad'), 160); return () => window.clearTimeout(t); }
+  }, [cur, landed]);
   useEffect(() => {
     if (!cur) return;
     setLanded(false);

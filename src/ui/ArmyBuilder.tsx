@@ -454,7 +454,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
         </label>
         <div className="grow dt-top-text">
           <input className="ab-title dt-name" aria-label="Army name" value={list.name} placeholder="Army name" onChange={(e) => set({ name: e.target.value })} />
-          <button type="button" className="dt-faction linkish" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>{factionName}{subs ? ` · ${sub?.name ?? `Select ${subs.label}`}` : ''} ›</button>
+          <button type="button" className="dt-faction linkish" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>{factionName}{subs ? ` · ${sub?.name ?? `Select ${subs.label}`}` : ''} <Icon name="next" size={14} /></button>
           <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || 'No Detachment selected'}</div>
           {chosenDets.length > 0 && <div className="tiny">{dispositionChips()} {chosenDets.reduce((x, d) => x + d.dp, 0)}/{size.dp} DP</div>}
           <div className="tiny muted">{size.name} · {pts}/{size.points} pts</div>
@@ -494,7 +494,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           </div>
           <div className="row" style={{ gap: 8 }}>
             <button type="button" className="ab-pick-btn grow" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>
-              <span className="grow">{factionName}{subs ? ` · ${sub?.name ?? `No ${subs.label}`}` : ''}</span><span className="muted">Change ›</span>
+              <span className="grow">{factionName}{subs ? ` · ${sub?.name ?? `No ${subs.label}`}` : ''}</span><span className="muted">Change <Icon name="next" size={14} /></span>
             </button>
             <select value={list.battleSize} onChange={(e) => set({ battleSize: e.target.value })}>
               {RULES.battleSizes.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.points} pts)</option>)}
@@ -863,7 +863,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       <div className="tray-backdrop" onClick={() => setPicker(null)}>
         <div className="tray" onClick={(e) => e.stopPropagation()}>
           <div className="row">
-            {step && <button className="btn small ghost" onClick={() => setPicker({ factionId: null })}>‹ Faction</button>}
+            {step && <button className="btn small ghost" onClick={() => setPicker({ factionId: null })}><Icon name="back" size={16} /> Faction</button>}
             <div className="sheet-title grow">{step ? `${step.name}: select ${subs?.label ?? 'sub-faction'}` : 'Select Faction'}</div>
             <button className="btn small ghost" onClick={() => setPicker(null)}>Close</button>
           </div>
@@ -879,7 +879,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                       onClick={() => (f.subfactions?.length ? (f.id === list.factionId ? setPicker({ factionId: f.id }) : (choose(f.id), setPicker({ factionId: f.id }))) : choose(f.id))}>
                       <Emblem factionId={f.id} color={f.id === list.factionId ? sub?.color : undefined} sub={f.id === list.factionId ? list.subfaction : undefined} />
                       <span className="ab-fname">{f.name}</span>
-                      {f.subfactions?.length ? <span className="ab-sub">{f.subfactions.length} sub-factions ›</span> : null}
+                      {f.subfactions?.length ? <span className="ab-sub">{f.subfactions.length} sub-factions <Icon name="next" size={13} /></span> : null}
                     </button>
                   ))}
                 </div>
@@ -918,7 +918,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   return (
     <div className="ab">
       <header className="ab-top">
-        <button type="button" className="ab-icon" aria-label="Back" onClick={onDone}>‹</button>
+        <button type="button" className="ab-icon" aria-label="Back" onClick={onDone}><Icon name="back" size={22} /></button>
         <div className="ab-tabs" role="tablist">
           <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => setTab('list')}>List</button>
           <button role="tab" aria-selected={tab === 'detachment'} className={tab === 'detachment' ? 'on' : ''} onClick={() => setTab('detachment')}>Detachment</button>

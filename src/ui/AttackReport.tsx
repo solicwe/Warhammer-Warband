@@ -2,8 +2,24 @@
 // the saves), every rule that changed the odds lights up at the stage where it acts, then the result lands with a
 // thump that grows with what was destroyed — and how lucky the dice were against the average.
 import { useEffect, useRef, useState } from 'react';
-import type { AttackReport as Report, FxEvent, GameState, PlayerId } from '../engine/types';
+import type { AttackReport as Report, FxEvent, GameState, PlayerId, UnitState } from '../engine/types';
+import { Icon } from './Icon';
+import { modelPortraitKey } from './portraits';
 import { play } from './sfx';
+import { Portrait, unitToken } from './Tokens';
+
+/** A unit's face: its leader's picture (the unit's own when the leader has none); a red cross when it is wiped out. */
+function UnitFace({ u, dead }: { u: UnitState | undefined; dead?: boolean }) {
+  if (!u) return <span className="atk-face" />;
+  const lead = u.models.find((m) => m.isCharacter) ?? u.models[0];
+  return (
+    <span className={`atk-face s${u.owner} ${dead ? 'dead' : ''}`}>
+      <Portrait kind={unitToken(u)} owner={u.owner} character={u.models.some((m) => m.isCharacter)} size={44}
+        datasheet={lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source} fallback={lead.source} />
+      {dead && <span className="atk-x" aria-label="destroyed" />}
+    </span>
+  );
+}
 
 type AttackFx = Extract<FxEvent, { kind: 'attack' }> & { report: Report };
 
@@ -66,7 +82,7 @@ export function AttackReport({ s, quick, onShake, onBusy, level }: Props) {
       while (fired.current < reached) {
         fired.current++;
         const r = cur.e.report;
-        if (fired.current < stages) play(fired.current === 0 ? 'dice' : 'tick', fired.current + 1);
+        if (fired.current < stages) play(fired.current === 0 ? 'dice' : 'tick', fired.current === 0 ? Math.min(8, Math.ceil(cur.e.report.shots / 4)) : fired.current + 1);
         else {
           if (r.destroyed) play('destroy');
           else if (r.killed) play('kill', 0, Math.min(1, r.pts / 200));
@@ -83,6 +99,8 @@ export function AttackReport({ s, quick, onShake, onBusy, level }: Props) {
 
   if (!cur) return null;
   const r = cur.e.report;
+  const A = s.units.find((u) => u.id === cur.e.attackerId);
+  const T = s.units.find((u) => u.id === cur.e.targetId);
   const fight = cur.e.attackKind === 'fight';
   const t = now;
   const at = (i: number) => t >= i * step;
@@ -93,33 +111,55 @@ export function AttackReport({ s, quick, onShake, onBusy, level }: Props) {
   const luck = r.expected >= 0.3 ? (r.killed - r.expected) / r.expected : null;
   const luckTag = luck === null ? null : luck >= 0.25 ? { cls: 'up', text: `Lucky +${Math.round(luck * 100)}%` } : luck <= -0.25 ? { cls: 'down', text: `Unlucky ${Math.round(luck * 100)}%` } : { cls: 'even', text: 'As expected' };
   const out = t > total - 220;
+  // one mark per model the target had: the slain ones are crossed out when the result lands
+  const pips = Math.min(r.before, 20);
+  const slainPips = Math.min(r.killed, pips);
   return (
-    <div className={`atk-report o${cur.e.owner} ${out ? 'out' : ''} ${fast ? 'fast' : ''}`} role="status" aria-live="polite" onClick={() => setCur(null)}>
-      <div className="atk-head">
-        <b className={cur.e.owner ? 'p1' : 'p0'}>{r.attacker}</b>
-        <span className="atk-arrow" aria-hidden="true">{fight ? '⚔' : '➜'}</span>
-        <b className={cur.e.owner ? 'p0' : 'p1'}>{r.target}</b>
-      </div>
-      {stages > 0 && (
-        <div className="atk-stages">
-          {vals.map((v, i) => (
-            <div key={labels[i]} className={`atk-stage ${at(i) ? 'on' : ''}`}>
-              <span className="atk-n num">{at(i) ? Math.round(v * shown(i)) : '–'}</span>
-              <span className="atk-l">{labels[i]}</span>
-            </div>
-          ))}
+    <div className={`atk-report slate o${cur.e.owner} ${out ? 'out' : ''} ${fast ? 'fast' : ''}`} role="status" aria-live="polite" onClick={() => setCur(null)}>
+      <div className="slate-in">
+        <div className="atk-vs">
+          <UnitFace u={A} />
+          <span className="atk-who">
+            <b className={cur.e.owner ? 'p1' : 'p0'}>{r.attacker}</b>
+            <small>{r.weapons.slice(0, 2).join(' · ')}{r.weapons.length > 2 ? ` +${r.weapons.length - 2}` : ''}</small>
+          </span>
+          <Icon name={fight ? 'fight' : 'target'} size={18} className="atk-arrow" />
+          <span className="atk-who right">
+            <b className={cur.e.owner ? 'p0' : 'p1'}>{r.target}</b>
+            <small>{r.before} {r.before === 1 ? 'model' : 'models'}</small>
+          </span>
+          <UnitFace u={T} dead={landed && r.destroyed} />
         </div>
-      )}
-      {stages > 0 && r.chips.length > 0 && (
-        <div className="atk-chips">
-          {r.chips.map((c) => {
-            const i = STAGES.indexOf(c.stage);
-            return <span key={c.label} className={`atk-chip ${at(i) ? 'lit' : ''} ${at(i) && !at(i + 1) ? 'pop' : ''}`}>{c.label}</span>;
-          })}
+        {stages > 0 && (
+          <div className="atk-stages">
+            {vals.map((v, i) => (
+              <div key={labels[i]} className={`atk-stage ${at(i) ? 'on' : ''}`}>
+                <span className="atk-n num">{at(i) ? Math.round(v * shown(i)) : '–'}</span>
+                <span className="atk-l">{labels[i]}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {stages > 0 && r.chips.length > 0 && (
+          <div className="atk-chips">
+            {r.chips.map((c) => {
+              const i = STAGES.indexOf(c.stage);
+              return <span key={c.label} className={`atk-chip ${at(i) ? 'lit' : ''} ${at(i) && !at(i + 1) ? 'pop' : ''}`}>{c.label}</span>;
+            })}
+          </div>
+        )}
+        <div className="atk-foot">
+          <div className="atk-pips" aria-hidden="true">
+            {Array.from({ length: pips }, (_, i) => {
+              const slain = landed && i >= pips - slainPips;
+              return <i key={i} className={slain ? 'slain' : ''} style={slain ? { animationDelay: `${(i - (pips - slainPips)) * 45}ms` } : undefined} />;
+            })}
+            {r.before > 20 && <b>+{r.before - 20}</b>}
+          </div>
+          <div className={`atk-result ${landed ? 'land' : ''} ${r.destroyed ? 'dead' : r.killed ? 'kill' : 'none'}`}>
+            {landed && (r.destroyed ? <>Destroyed<small>{r.pts} pts</small></> : r.killed ? <><span className="num">{r.killed}</span> slain<small>{r.pts ? `${r.pts} pts` : `${r.dmg} damage`}</small></> : r.dmg ? <><span className="num">{r.dmg}</span> damage<small>none slain</small></> : <>No damage</>)}
+          </div>
         </div>
-      )}
-      <div className={`atk-result ${landed ? 'land' : ''} ${r.destroyed ? 'dead' : r.killed ? 'kill' : 'none'}`}>
-        {landed && (r.destroyed ? <>Unit destroyed<small>{r.pts} pts</small></> : r.killed ? <><span className="num">{r.killed}</span> slain<small>{r.pts ? `${r.pts} pts` : `${r.dmg} damage`}</small></> : r.dmg ? <><span className="num">{r.dmg}</span> damage<small>no model slain</small></> : <>No damage</>)}
         {landed && luckTag && <span className={`atk-luck ${luckTag.cls}`}>{luckTag.text}</span>}
       </div>
     </div>

@@ -598,7 +598,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const goals = showGoals && s.phase !== 'deploy' ? s.players[me].secActive.map((id) => secondaryGoal(s, me, id)) : [];
   for (const g of goals) for (const id of g.units) (badges[id] ??= []).push(`Target: ${g.name}`);
   // Rituals on a unit this phase (Destiny's Ruin, Twist of Fate): a tag so the player sees who is marked
-  for (const u of s.units) for (const t of u.timed ?? []) if (t.mark && RITUAL_NAMES.has(t.mark) && onBoard(u)) (badges[u.id] ??= []).push(`✦ ${t.mark}`);
+  for (const u of s.units) for (const t of u.timed ?? []) if (t.mark && RITUAL_NAMES.has(t.mark) && onBoard(u)) (badges[u.id] ??= []).push(t.mark);
   const losLines: { a: Pt; b: Pt; cover: boolean }[] = [];
   const noLos: string[] = [];
   if (mode?.k === 'shoot' && modeUnit) {
@@ -741,7 +741,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const unitPill = (u: UnitState, done: boolean, onClick?: () => void) => (
     <button key={u.id} className={`unit-pill ${done ? 'done' : ''} ${sel === u.id ? 'sel' : ''} ${u.battleShocked ? 'shock' : ''}`} onClick={onClick ?? (() => { setSel(u.id); })}>
-      <span className={u.owner ? 'p1' : 'p0'}>●</span> {u.name.length > 26 ? u.name.slice(0, 25) + '…' : u.name}
+      <span className={`side-dot s${u.owner}`} aria-hidden="true" /> {u.name.length > 26 ? u.name.slice(0, 25) + '…' : u.name}
       <span className="muted"> {alive(u).length}/{u.startingStrength}</span>{u.battleShocked ? ' ' : ''}
       {s.players[1 - u.owner].oathTarget === u.id && <span className="oath-tag">OATH</span>}
     </button>
@@ -775,7 +775,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           {(() => { const kit = loadoutSummary(u); return kit.length ? <div className="tiny loadout-line"><Icon name="shoot" size={13} /> {kit.join(' · ')}</div> : null; })()}
           {(() => { const ls = activeLabels(s, u); return ls.length ? <div className="tiny fx-labels"><Icon name="ability" size={13} /> {ls.slice(0, 6).join(' · ')}{ls.length > 6 ? ` +${ls.length - 6}` : ''}</div> : null; })()}
         </div>
-        <span className="muted">›</span>
+        <Icon name="next" size={18} className="muted" />
       </div>
     );
   };
@@ -1140,7 +1140,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <div className="unit-strip" style={{ marginTop: 6 }}>
               {boardUnits(s, other(s.active)).map((e) => (
                 <button key={e.id} className={`unit-pill ${s.players[s.active].oathTarget === e.id ? 'sel' : ''}`} onClick={() => { act((g) => setOathTarget(g, g.active, e.id)); setSel(e.id); flash(`Oath of Moment → ${e.name}`); }}>
-                  <span className={e.owner ? 'p1' : 'p0'}>●</span> {e.name}
+                  <span className={`side-dot s${e.owner}`} aria-hidden="true" /> {e.name}
                   {s.players[s.active].oathTarget === e.id && <span className="oath-tag">OATH</span>}
                 </button>
               ))}
@@ -1153,7 +1153,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <div className="unit-strip" style={{ marginTop: 6 }}>
               {boardUnits(s, other(s.active)).filter((e) => e.id !== s.players[s.active].oathTarget).map((e) => (
                 <button key={e.id} className={`unit-pill ${s.players[s.active].oathBackup === e.id ? 'sel' : ''}`} onClick={() => act((g) => setOathBackup(g, g.active, e.id))}>
-                  <span className={e.owner ? 'p1' : 'p0'}>●</span> {e.name}
+                  <span className={`side-dot s${e.owner}`} aria-hidden="true" /> {e.name}
                 </button>
               ))}
             </div>
@@ -1167,7 +1167,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 <button key={o} className={`btn small ${c.on.includes(o) ? 'on' : ''}`} onClick={() => {
                   const on = c.on.includes(o) ? c.on.filter((x) => x !== o) : [...c.on, o].slice(-c.pick);
                   act((g) => pickAbilities(g, c.unit.id, on));
-                }}>{c.on.includes(o) ? '● ' : '○ '}{o}</button>
+                }}><span className={`radio-mark ${c.on.includes(o) ? 'on' : ''}`} aria-hidden="true" />{o}</button>
               ))}
             </div>
           </div>
@@ -1338,7 +1338,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const hasCQ = alive(modeUnit).some((m) => m.weapons.some((w) => hasAbility(w.profiles[0], 'close-quarters'))) && alive(modeUnit).some((m) => m.weapons.some((w) => !isMelee(w.profiles[0]) && !hasAbility(w.profiles[0], 'close-quarters')));
       return (
         <>
-          <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' ? 'Shoot' : mode.smode}{mode.target ? ` › ${U(mode.target).name}` : ' · tap a target'}</span></div>
+          <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' ? 'Shoot' : mode.smode}{mode.target ? <> <Icon name="target" size={14} /> {U(mode.target).name}</> : ' · tap a target'}</span></div>
           {!mode.overwatch && remaining.length > 1 && (
             <div className="row">
               <span className="label">Weapons shooting this target</span>
@@ -1873,7 +1873,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             planning={!actingBot && ponderProg ? ponderProg : null} />
         )}
         <div className={`panel ${actor ? 's1' : ''}`}>
-          {bots.length === 0 && s.phase !== 'deploy' && s.phase !== 'gameover' && !s.window && <div className="label"><span className={actor ? 'p1' : 'p0'}>●</span> {pName(s, actor)} to act</div>}
+          {bots.length === 0 && s.phase !== 'deploy' && s.phase !== 'gameover' && !s.window && <div className="label"><span className={`side-dot s${actor}`} aria-hidden="true" /> {pName(s, actor)} to act</div>}
           {panel()}
         </div>
         {/* on a computer there is room for the latest events (on a phone they are in the Battle log) */}
@@ -1915,7 +1915,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       {sheet && (
         <div className="tray-backdrop" onClick={() => setSheet(null)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
-            <div className="tray-head"><span className="grow" /><button className="icon-btn" aria-label="Close" onClick={() => setSheet(null)}>✕</button></div>
+            <div className="tray-head"><span className="grow" /><button className="icon-btn" aria-label="Close" onClick={() => setSheet(null)}><Icon name="close" /></button></div>
             <UnitView u={U(sheet)} />
             {abilityBar(U(sheet).owner, { unitId: sheet })}
             {/* for rules the app does not apply by itself: switch an effect on for this phase */}
@@ -2005,7 +2005,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       {showMenu && (
         <div className="tray-backdrop" onClick={() => setShowMenu(false)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
-            <div className="tray-head"><span className="sheet-title grow">Menu</span><button className="icon-btn" aria-label="Close menu" onClick={() => setShowMenu(false)}>✕</button></div>
+            <div className="tray-head"><span className="sheet-title grow">Menu</span><button className="icon-btn" aria-label="Close menu" onClick={() => setShowMenu(false)}><Icon name="close" /></button></div>
             <div className="menu-grid">
               <button className="menu-item" disabled={!canUndo} onClick={() => { undo(); setMode(null); setShowMenu(false); flash('Undone one step'); }}>
                 <Icon name="undo" size={22} /><span><b>Undo</b><small>Take back the last step{typeof window !== 'undefined' && window.matchMedia?.('(pointer: fine)').matches ? ' · Ctrl+Z' : ''}</small></span>

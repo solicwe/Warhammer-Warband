@@ -153,7 +153,8 @@ export function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; 
   const win = s.winner;
   return (
     <div className="tray-backdrop center" onClick={final ? undefined : onClose}>
-      <div className={`round-card ${final ? 'final' : ''}`} role="dialog" aria-label={final ? 'Battle result' : `Round ${t.round} summary`} onClick={final ? undefined : onClose}>
+      <div className={`round-card slate ${final ? 'final' : ''}`} role="dialog" aria-label={final ? 'Battle result' : `Round ${t.round} summary`} onClick={final ? undefined : onClose}>
+       <div className="slate-in">
         <div className="rc-kicker">{final ? 'Battle over' : `Round ${t.round} of 5 complete`}</div>
         {final && <div className={`rc-title ${win === 0 ? 'p0' : win === 1 ? 'p1' : ''}`}><Icon name="trophy" size={26} /> {win === 'draw' ? 'Draw' : `${names[win as number]} wins`}</div>}
         <div className="rc-grid">
@@ -166,12 +167,13 @@ export function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; 
           <span className="rc-l">Destroyed</span>
           <span className="num">{t.pts[0]} pts{t.units[0] ? ` · ${t.units[0]} unit${t.units[0] > 1 ? 's' : ''}` : ''}</span>
           <span className="num">{t.pts[1]} pts{t.units[1] ? ` · ${t.units[1]} unit${t.units[1] > 1 ? 's' : ''}` : ''}</span>
-          <span className="rc-l">Dice so far</span>
+          <span className="rc-l">{final ? 'Dice luck' : 'Dice so far'}</span>
           <span className={`rc-luck ${(t.luck[0] ?? 0) >= 0.1 ? 'up' : (t.luck[0] ?? 0) <= -0.1 ? 'down' : ''}`}>{luckText(t.luck[0])}</span>
           <span className={`rc-luck ${(t.luck[1] ?? 0) >= 0.1 ? 'up' : (t.luck[1] ?? 0) <= -0.1 ? 'down' : ''}`}>{luckText(t.luck[1])}</span>
         </div>
         {t.mvp && <div className="rc-mvp"><Icon name="trophy" size={16} /> {final ? 'Unit of the battle' : 'Unit of the round'}: <b className={t.mvp.owner ? 'p1' : 'p0'}>{t.mvp.name}</b> <span className="muted">· {t.mvp.pts} pts destroyed</span></div>}
         {actions ? <div className="rc-acts">{actions}</div> : <div className="rc-tap">Tap to continue</div>}
+       </div>
       </div>
     </div>
   );

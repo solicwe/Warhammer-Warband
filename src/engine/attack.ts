@@ -934,7 +934,7 @@ export function finishAttack(s: GameState) {
       wounds: at.pools.reduce((a, p) => a + p.wounds.filter((w) => w.o === 'wound' || w.o === 'critWound').length + p.autoWounds, 0),
       unsaved: at.pools.reduce((a, p) => a + p.saves.filter((d) => d.o === 'fail').length + p.mortalFromDev.length, 0),
       mortals: at.pools.reduce((a, p) => a + p.mortalFromDev.reduce((x, y) => x + y, 0), 0),
-      dmg, killed: dead.length, destroyed: !alive(T).length, pts, expected: at.expected ?? 0, chips: attackChips(at.pools),
+      dmg, before: at.aliveBefore.length, killed: dead.length, destroyed: !alive(T).length, pts, expected: at.expected ?? 0, chips: attackChips(at.pools),
     };
     const st = (s.stats ??= { kills: [], luck: [[0, 0], [0, 0]] });
     st.luck[A.owner][0] += dead.length;
