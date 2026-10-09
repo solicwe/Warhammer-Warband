@@ -4,7 +4,7 @@ import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems } from './geometry';
 import { alive, canUseStratagem, emitReact, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
-import type { AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
+import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
@@ -344,6 +344,41 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
   return { pools: list, notes: list.length ? [] : ['No model is engaged with the target'] };
 }
 
+/** The notes of an attack that changed its odds, by the stage they act at (the base numbers are left out). */
+function attackChips(pools: Pool[]): AttackReport['chips'] {
+  const out: AttackReport['chips'] = [];
+  const plain = /^(\d+ models × A|S\d+ vs T|Attacks rolled|re-roll .*→|Command Re-roll .*→)/;
+  let rapid = 0;
+  const add = (stage: AttackReport['chips'][number]['stage'], text: string) => {
+    const label = text.trim();
+    if (!label || plain.test(label)) return;
+    const rf = /^Rapid Fire ×(\d+)$/.exec(label);
+    if (rf) { rapid += +rf[1]; return; } // one chip for the whole attack, however many weapon groups fired
+    const short = label.length > 26 ? label.slice(0, 25) + '…' : label;
+    if (!out.some((c) => c.label === short)) out.push({ stage, label: short });
+  };
+  for (const p of pools) {
+    for (const part of p.attackNote.split(' · ')) add('attacks', part);
+    for (const part of `${p.skillNote} · ${p.hitNote}`.split(' · ')) add('hit', part);
+    if (p.rerollAllHits && !/re-roll hit/i.test(p.hitNote)) add('hit', 'Re-roll hits');
+    else if (p.rerollHits1) add('hit', 'Re-roll hit 1s');
+    if (p.sustained) add('hit', `Sustained Hits ${p.sustained}`);
+    if (p.lethal) add('hit', 'Lethal Hits');
+    if (p.critHitOn && p.critHitOn < 6) add('hit', `Critical hits on ${p.critHitOn}+`);
+    if (p.autoHit && !p.hitOn6Only) add('hit', 'Torrent: hits automatically');
+    for (const part of p.woundNote.split(' · ')) add('wound', part);
+    if (p.twinLinked) add('wound', 'Twin-linked');
+    if (p.rerollAllWounds) add('wound', 'Re-roll wounds');
+    else if (p.rerollWounds12) add('wound', 'Re-roll wound 1s and 2s');
+    else if (p.rerollWounds1) add('wound', 'Re-roll wound 1s');
+    if (p.critWoundOn < 6) add('wound', `Critical wounds on ${p.critWoundOn}+`);
+    if (p.devastating) add('save', 'Devastating Wounds');
+    if (p.precision) add('save', 'Precision');
+  }
+  if (rapid) out.unshift({ stage: 'attacks', label: `Rapid Fire ×${rapid}` });
+  return out.slice(0, 8);
+}
+
 function attackNote(p: Pool): string {
   const extra = p.instances.reduce((a, i) => a + i.flat, 0);
   const rf = p.instances.filter((i) => i.extras.length).length;
@@ -397,6 +432,8 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     attackerBuffsAtStart: A.buffs.map((b) => b.kind), free: opts.free,
     timedAtStart: { a: A.timed?.length ?? 0, t: T.timed?.length ?? 0 },
   };
+  // what the attack should do on average dice: the screen sets the real result against it (the player's luck)
+  try { if (alive(T).length) s.attack.expected = pools.reduce((a, p) => a + expectedDamage(s, p, T).models, 0); } catch { /* no estimate */ }
   // Nightforged Battery: ranged weapons re-roll a low number of attacks for free
   if (kind === 'shoot' && unitFlags(s, A).rerollAttackRolls) {
     for (const p of s.attack.pools) for (const r of p.attackRolls ?? []) {
@@ -888,11 +925,27 @@ export function finishAttack(s: GameState) {
       : 'bullet';
     const pt = (m: { x: number; y: number }) => ({ x: m.x, y: m.y });
     const before = T.models.filter((m) => at.aliveBefore!.includes(m.id));
+    const pts = Math.round((T.pts * dead.length) / Math.max(1, T.startingStrength));
+    const report: AttackReport = {
+      attacker: A.name, target: T.name, weapons: [...new Set(at.pools.map((p) => p.weapon))],
+      shots: at.pools.reduce((a, p) => a + p.attacks, 0),
+      hits: at.pools.reduce((a, p) => a + p.hits.filter((h) => h.o !== 'miss').length, 0),
+      crits: at.pools.reduce((a, p) => a + p.hits.filter((h) => h.o === 'crit').length, 0),
+      wounds: at.pools.reduce((a, p) => a + p.wounds.filter((w) => w.o === 'wound' || w.o === 'critWound').length + p.autoWounds, 0),
+      unsaved: at.pools.reduce((a, p) => a + p.saves.filter((d) => d.o === 'fail').length + p.mortalFromDev.length, 0),
+      mortals: at.pools.reduce((a, p) => a + p.mortalFromDev.reduce((x, y) => x + y, 0), 0),
+      dmg, killed: dead.length, destroyed: !alive(T).length, pts, expected: at.expected ?? 0, chips: attackChips(at.pools),
+    };
+    const st = (s.stats ??= { kills: [], luck: [[0, 0], [0, 0]] });
+    st.luck[A.owner][0] += dead.length;
+    st.luck[A.owner][1] += at.expected ?? 0;
+    if (dead.length) st.kills.push({ round: s.round, turn: s.turn, by: A.owner, attackerId: A.id, targetId: T.id, models: dead.length, pts, destroyed: !alive(T).length });
     pushFx(s, {
       kind: 'attack', attackKind: at.kind, attackerId: A.id, targetId: T.id, owner: A.owner, from: c(alive(A).length ? alive(A) : A.models), to: c(tm), dmg, killed: dead.length, dead: dead.map(pt),
       style, shooters: (alive(A).length ? alive(A) : A.models).slice(0, 12).map(pt), victims: before.slice(0, 12).map(pt),
       shots: at.pools.reduce((a, p) => a + p.attacks, 0), hits: at.pools.reduce((a, p) => a + p.hits.filter((h) => h.o !== 'miss').length, 0),
       volleys: at.pools.filter((p) => p.attacks > 0).slice(0, 6).map((p) => ({ fx: weaponFx(p.weapon, p.profile, at.kind === 'fight'), shots: p.attacks, hits: p.hits.filter((h) => h.o !== 'miss').length, models: p.models })),
+      report,
     });
   }
   const verb = at.kind === 'fight' ? 'fights' : at.kind === 'overwatch' ? 'fires Overwatch at' : 'shoots';

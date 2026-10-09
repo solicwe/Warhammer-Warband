@@ -59,7 +59,7 @@ export default function App() {
   const goHome = () => { setSaved(loadSaved()); setScreen({ kind: 'home' }); };
   const wrap = (node: ReactNode) => <div className="app-frame"><TokenSprites /><Guard onReset={goHome}>{node}</Guard></div>;
 
-  if (screen.kind === 'game') return wrap(<div className="app"><GameScreen initial={screen.state} onExit={goHome} /></div>);
+  if (screen.kind === 'game') return wrap(<div className="app game-app"><GameScreen initial={screen.state} onExit={goHome} /></div>);
   if (screen.kind === 'build') {
     const a = armies.find((x) => x.id === screen.id);
     if (!a) return wrap(<div className="screen"><button className="btn" onClick={goHome}>Back to home</button></div>);

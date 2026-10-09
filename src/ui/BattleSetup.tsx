@@ -27,10 +27,10 @@ const SEC_MODES: { id: BattlePrefs['secMode']; label: string; note: string }[] =
 ];
 
 const LEVELS: { id: BattlePrefs['level']; label: string; note: string }[] = [
-  { id: 'easy', label: 'Easy', note: 'Plays each unit on its own and misjudges now and then' },
-  { id: 'normal', label: 'Normal', note: 'Plays its turn out three ways before playing it (up to ~9 s)' },
-  { id: 'hard', label: 'Hard', note: 'Each way on two rolls of the dice (up to ~20 s a turn)' },
-  { id: 'expert', label: 'Expert', note: 'Five ways, three rolls each (up to ~40 s a turn)' },
+  { id: 'easy', label: 'Easy', note: 'Plays each unit on its own and slips now and then. Good for learning the rules.' },
+  { id: 'normal', label: 'Normal', note: 'Tries its turn three ways before playing it, and plans while you play yours.' },
+  { id: 'hard', label: 'Hard', note: 'Tries each way on two rolls of the dice. Thinks up to ~20 s, mostly during your turn.' },
+  { id: 'expert', label: 'Expert', note: 'Five ways, three rolls each. The strongest, and the longest thinking (up to ~40 s).' },
 ];
 
 const MODES: { id: BattleMode; label: string }[] = [

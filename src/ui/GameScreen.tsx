@@ -28,7 +28,7 @@ import {
 import { activeLabels, unitFlags } from '../engine/effects';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
-import { applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen } from '../engine/botLook';
+import { advantage, applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen, type Intent } from '../engine/botLook';
 import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
@@ -54,6 +54,14 @@ import { Board, type Paths, type Ring } from './Board';
 import { DiceTray } from './DiceTray';
 import { UnitView } from './Sheet';
 import { useGame } from './store';
+import { AttackReport } from './AttackReport';
+import { AdvantageBar, Commander, RoundSummary, SideScore, tally, type RoundTally, type ThinkView } from './Hud';
+import { play, setSoundOn, soundOn } from './sfx';
+import { line, type VoiceEvent } from './voice';
+
+type FxLevel = 'full' | 'short' | 'off';
+const FX_PREF = 'fx-level';
+const loadFxLevel = (): FxLevel => { try { const v = localStorage.getItem(FX_PREF); return v === 'short' || v === 'off' ? v : 'full'; } catch { return 'full'; } };
 
 type Mode =
   | { k: 'place'; unitId: string; how: 'deploy' | 'infiltrate' | 'ingress' | 'deepStrike' | 'disembark'; rapid?: boolean | 'free'; transportId?: string }
@@ -81,6 +89,8 @@ const placePaths = (pos: Map<string, Pt>): Paths => new Map([...pos].map(([id, p
 const lastPos = (d: Paths): Map<string, Pt> => new Map([...d].map(([id, p]) => [id, p[p.length - 1]]));
 const mergePaths = (base: Paths, add: Paths): Paths => { const o = new Map(base); for (const [k, v] of add) o.set(k, v); return o; };
 const pName = (s: GameState, p: PlayerId) => s.players[p].name;
+/** What the look worker answers: progress while it plays the ways out, then the style (and, pondering, the board it starts from). */
+type LookMsg = { id: number; sig?: string | null; name?: string; values?: Record<string, number>; intents?: Intent[]; progress?: { name: string; value: number; done: number; total: number } };
 
 export function GameScreen({ initial, onExit }: { initial: GameState; onExit: () => void }) {
   const { state: s, act, undo, canUndo } = useGame(initial);
@@ -96,6 +106,24 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [showGoals, setShowGoals] = useState(true);
   const [showMissions, setShowMissions] = useState(false);
   const [showLog, setShowLog] = useState(false);
+  // how much the screen tells about each attack (the player's choice, kept on this device), and sound on/off
+  const [fxLevel, setFxLevelRaw] = useState<FxLevel>(loadFxLevel);
+  const setFxLevel = (v: FxLevel) => { setFxLevelRaw(v); try { localStorage.setItem(FX_PREF, v); } catch { /* this session only */ } };
+  const [sound, setSound] = useState(soundOn());
+  const [shake, setShake] = useState(0);
+  const [reporting, setReporting] = useState(false); // an attack is being told on screen: the bot waits for it
+  const [summary, setSummary] = useState<RoundTally | null>(null); // the round just played, in numbers
+  const [think, setThink] = useState<ThinkView | null>(null); // the bot weighing its ways of playing the turn
+  const [ponderProg, setPonderProg] = useState<{ done: number; total: number } | null>(null); // … during the player's turn
+  // what the bot means to attack in its coming turn (from thinking during the player's turn), shown on request
+  const [plan, setPlan] = useState<{ turn: number; p: PlayerId; intents: Intent[] } | null>(null);
+  const [showPlan, setShowPlan] = useState(false);
+  // the bot's commander: what it last said
+  const [says, setSays] = useState<{ p: PlayerId; text: string; k: number } | null>(null);
+  const speak = (p: PlayerId, ev: VoiceEvent, names: { u?: string; t?: string } = {}) => {
+    if (!bots.includes(p)) return;
+    setSays({ p, text: line(s.players[p].factionId, ev, names), k: Date.now() });
+  };
 
   // engine errors become a message instead of a crash
   useEffect(() => {
@@ -123,8 +151,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   useEffect(() => () => worker?.terminate(), [worker]);
   // thinking during the player's turn: a second worker plays the board on to where the bot's next turn starts and looks
   // ahead from there; when the real board gets there the same, the bot's turn starts at once instead of thinking again
-  const ponder = useRef<{ w: Worker | null; id: number; p: PlayerId; turn: number; board: string; sig?: string | null; name?: string; wait?: (name: string) => void } | null>(null);
-  const stopPonder = () => { ponder.current?.w?.terminate(); ponder.current = null; };
+  const ponder = useRef<{ w: Worker | null; id: number; p: PlayerId; turn: number; board: string; sig?: string | null; name?: string; intents?: Intent[]; view?: ThinkView; wait?: (name: string) => void } | null>(null);
+  const stopPonder = () => { ponder.current?.w?.terminate(); ponder.current = null; setPonderProg(null); };
   useEffect(() => stopPonder, []);
   const ponderFor = bots.length === 1 && s.active !== bots[0] && (s.phase === 'shooting' || s.phase === 'charge' || s.phase === 'fight') ? bots[0] : null;
   useEffect(() => {
@@ -140,11 +168,21 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const id = Math.random();
       const job: NonNullable<typeof ponder.current> = { w, id, p: ponderFor, turn: s.turn, board };
       ponder.current = job;
-      w.onmessage = (e: MessageEvent<{ id: number; sig?: string | null; name?: string }>) => {
+      w.onmessage = (e: MessageEvent<LookMsg>) => {
         if (e.data.id !== id || ponder.current !== job) return;
         if (e.data.sig !== undefined) job.sig = e.data.sig;
-        if (e.data.sig === null || e.data.name) { w.terminate(); job.w = null; }
-        if (e.data.name) { job.name = e.data.name; job.wait?.(e.data.name); }
+        if (e.data.progress) {
+          const pr = e.data.progress;
+          job.view = { values: { ...job.view?.values, [pr.name]: pr.value }, done: pr.done, total: pr.total };
+          if (job.wait) setThink(job.view); else setPonderProg({ done: pr.done, total: pr.total });
+        }
+        if (e.data.sig === null || e.data.name) { w.terminate(); job.w = null; setPonderProg(null); }
+        if (e.data.name) {
+          job.name = e.data.name;
+          job.intents = e.data.intents ?? [];
+          setPlan({ turn: job.turn, p: job.p, intents: job.intents });
+          job.wait?.(e.data.name);
+        }
       };
       w.onerror = () => { w.terminate(); job.w = null; job.wait?.('steady'); };
       try { w.postMessage({ kind: 'ponder', state: s, p: ponderFor, id }); } catch { stopPonder(); }
@@ -152,38 +190,54 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return () => window.clearTimeout(t);
   }, [s, ponderFor]); // eslint-disable-line react-hooks/exhaustive-deps
   // the player is reading (mission cards, the log, the menu, a rule): the game waits instead of moving under them
-  const viewing = showCards || showMissions || showLog || showMenu || !!explain;
+  const viewing = showCards || showMissions || showLog || showMenu || !!explain || !!summary;
   useEffect(() => {
-    if (!bots.length || rolling || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0)) return;
+    if (!bots.length || rolling || reporting || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0)) return;
     const who = actingBot;
     // start of a bot's Movement phase: pick how to play the turn before moving anything
     if (who !== null && s.phase === 'movement' && s.active === who && !styleChosen(s)) {
-      const done = (name: string) => { setThinking(false); styleRef.current = { p: who, name }; act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); }); };
+      const done = (name: string, intents: Intent[] = []) => {
+        setThinking(false); setThink(null);
+        styleRef.current = { p: who, name };
+        act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); });
+        // the commander says how it plays the turn, then what it goes for first
+        speak(who, name as VoiceEvent);
+        const first = intents.find((x) => s.units.some((u) => u.id === x.targetId && onBoard(u)));
+        if (first) window.setTimeout(() => speak(who, 'target', { t: unitById(sRef.current, first.targetId).name }), 2400);
+      };
       // it thought this turn out during the player's: the same board, so the same answer (or wait for it to finish)
       const pre = ponder.current;
       if (pre && pre.p === who && pre.sig && pre.sig === lookSig(s)) {
-        if (pre.name) { stopPonder(); done(pre.name); return; }
+        if (pre.name) { const it = pre.intents; stopPonder(); done(pre.name, it); return; }
         if (pre.w) {
           setThinking(true);
-          setBotSays(`${pName(s, who)} is thinking ahead…`); setBotWho(who);
+          speak(who, 'think');
+          if (pre.view) setThink(pre.view);
           const fallback = window.setTimeout(() => { stopPonder(); done('steady'); }, lookBudget(s, who) + 10000);
-          pre.wait = (name) => { window.clearTimeout(fallback); stopPonder(); done(name); };
+          pre.wait = (name) => { window.clearTimeout(fallback); const it = pre.intents; stopPonder(); done(name, it); };
           return;
         }
       }
       stopPonder();
       if (!worker) { done('steady'); return; }
       setThinking(true);
-      setBotSays(`${pName(s, who)} is thinking ahead…`); setBotWho(who);
+      speak(who, 'think');
+      setBotSays(null);
       const id = Math.random();
       // the worker stops looking by itself when the level's thinking time is up; this only catches a worker that hangs
       // (a shorter wait would give up while it is still thinking, and leave it busy for the bot's next steps)
       const fallback = window.setTimeout(() => { worker.onmessage = null; done('steady'); }, lookBudget(s, who) + 10000);
-      worker.onmessage = (e: MessageEvent<{ id: number; name: string }>) => {
+      worker.onmessage = (e: MessageEvent<LookMsg>) => {
         if (e.data.id !== id) return;
+        if (e.data.progress) {
+          const pr = e.data.progress;
+          setThink((v) => ({ values: { ...v?.values, [pr.name]: pr.value }, done: pr.done, total: pr.total }));
+          play('think', pr.done % 6);
+          return;
+        }
         window.clearTimeout(fallback);
         worker.onmessage = null;
-        done(e.data.name);
+        done(e.data.name ?? 'steady', e.data.intents);
       };
       worker.onerror = () => { window.clearTimeout(fallback); worker.onmessage = null; done('steady'); };
       try { worker.postMessage({ state: s, p: who, id }); } catch { window.clearTimeout(fallback); done('steady'); }
@@ -191,11 +245,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }
     // bot-vs-bot: nobody "has" the step (e.g. ending the fight phase) — let the driver move the game on
     const drive = who === null && spectate && !s.attack;
-    if (who === null && !drive) {
-      if (!botSays) return;
-      const t = window.setTimeout(() => setBotSays(null), 2200);
-      return () => window.clearTimeout(t);
-    }
+    if (who === null && !drive) return;
     const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command';
     const delay = (quick ? 350 : 950) / (spectate && speed === 2 ? 3 : 1);
     const caption = (before: GameState, after: GameState) => {
@@ -229,7 +279,62 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       catch { window.clearTimeout(giveUp); worker.onmessage = null; setStepping(false); stepOnMain.current = true; onMain(); }
     }, delay);
     return () => window.clearTimeout(t);
-  }, [s, actingBot, act, botSays, rolling, thinking, stepping, viewing, worker, speed, spectate, bots.length]);
+  }, [s, actingBot, act, botSays, rolling, reporting, thinking, stepping, viewing, worker, speed, spectate, bots.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  // what happens on the table, in the bot commander's words: kills and losses, objectives changing hands, charges
+  const heard = useRef({ fx: s.fxSeq ?? 0, log: s.log.length, ctrl: s.objectives.map((o) => o.controller) });
+  useEffect(() => {
+    const h = heard.current;
+    if (!bots.length) return;
+    if ((s.fxSeq ?? 0) < h.fx) h.fx = s.fxSeq ?? 0;
+    if (s.log.length < h.log) h.log = s.log.length;
+    for (const e of s.fx ?? []) {
+      if (e.seq <= h.fx || e.kind !== 'attack' || !e.report?.destroyed) continue;
+      const victim = (1 - e.owner) as PlayerId;
+      if (bots.includes(e.owner)) speak(e.owner, 'kill', { t: e.report.target });
+      else if (bots.includes(victim)) speak(victim, 'loss', { u: e.report.target });
+    }
+    h.fx = Math.max(h.fx, s.fxSeq ?? 0);
+    s.objectives.forEach((o, i) => {
+      const was = h.ctrl[i];
+      if (o.controller === was || o.type === 'home' || s.round < 1 || s.phase === 'deploy' || s.phase === 'scouts') return;
+      if (o.controller !== null && bots.includes(o.controller)) speak(o.controller, 'objective');
+      else if (was !== null && was !== undefined && bots.includes(was)) speak(was, 'objectiveLost');
+    });
+    h.ctrl = s.objectives.map((o) => o.controller);
+    for (const l of s.log.slice(h.log)) {
+      const m = /^(.+?) charges successfully/.exec(l.text);
+      if (m && l.player !== null && bots.includes(l.player)) speak(l.player, 'charge', { u: m[1] });
+    }
+    h.log = s.log.length;
+  }, [s]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // between battle rounds: the round just played, in numbers (and the commander sizes up the battle)
+  const vpNow = (): [number, number] => [s.players[0].vp + s.players[0].secVp, s.players[1].vp + s.players[1].secVp];
+  const roundStart = useRef<{ round: number; vp: [number, number] }>({ round: s.round, vp: vpNow() });
+  useEffect(() => {
+    const r = roundStart.current;
+    if (s.round < r.round) { roundStart.current = { round: s.round, vp: vpNow() }; return; }
+    if (s.phase === 'gameover' || s.round <= r.round || (s.phase !== 'command' && s.phase !== 'movement')) return;
+    if (r.round >= 1 && fxLevel !== 'off') setSummary(tally(s, r.round, r.vp));
+    roundStart.current = { round: s.round, vp: vpNow() };
+    for (const b of bots) speak(b, (advantage(s) >= 0.5) === (b === 0) ? 'ahead' : 'behind');
+  }, [s.round, s.phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  // bot against bot: the summary goes away by itself
+  useEffect(() => { if (!summary || !spectate) return; const tm = window.setTimeout(() => setSummary(null), 4000); return () => window.clearTimeout(tm); }, [summary, spectate]);
+  const [finalSeen, setFinalSeen] = useState(false);
+  useEffect(() => {
+    if (s.phase !== 'gameover') return;
+    for (const b of bots) speak(b, s.winner === b ? 'win' : 'lose');
+    play(s.winner !== null && s.winner !== 'draw' && !bots.includes(s.winner) ? 'vp' : 'turn');
+  }, [s.phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // a caption of what the bot did goes away once the player has the turn (it is in the log)
+  useEffect(() => {
+    if (!botSays || actingBot !== null || spectate) return;
+    const tm = window.setTimeout(() => setBotSays(null), 2600);
+    return () => window.clearTimeout(tm);
+  }, [botSays, actingBot, spectate]);
+
   // auto rules: the player only moves and shoots; the app takes every other decision of theirs as it comes up
   const autoWho = ([0, 1] as PlayerId[]).find((p) => autoDue(s, p)) ?? null;
   useEffect(() => {
@@ -301,16 +406,44 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // ending a phase where nothing was done needs a second tap (protects against mis-taps)
   const [armed, setArmed] = useState<string | null>(null);
   useEffect(() => { if (!armed) return; const tm = window.setTimeout(() => setArmed(null), 3500); return () => window.clearTimeout(tm); }, [armed]);
-  const endButton = (key: string, label: string, idle: boolean, why: string) => (
+  /** The phase's way out: what is left undone shows under it, and ending with nothing done asks once more. */
+  const endButton = (key: string, label: string, idle: boolean, why: string, note?: string) => (
     <div className="sticky-act">
-      <button className={`btn primary big wide ${armed === key ? 'armed' : ''}`} onClick={() => {
+      <button className={`btn primary big wide end-btn ${armed === key ? 'armed' : ''}`} onClick={() => {
         if (idle && armed !== key) { setArmed(key); flash(`${why} — tap again to confirm`); return; }
         setArmed(null);
+        play('turn');
         act((g) => { if (g.phase === 'movement') autoEndMovement(g, g.active); endPhase(g); }); setSel(null); setMode(null);
-      }}>{armed === key ? `Confirm ${label}?` : label} <Icon name="next" /></button>
+      }}>
+        <span className="end-l">{armed === key ? `Confirm ${label}?` : label} <Icon name="next" /></span>
+        {note && armed !== key && <span className="end-note">{note}</span>}
+      </button>
     </div>
   );
   const flash = (t: string) => { setToast(t); window.setTimeout(() => setToast((x) => (x === t ? null : x)), 2600); };
+  // on a computer: Escape closes the sheet on top (or cancels what is being done), Ctrl+Z undoes
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement | null)?.tagName === 'INPUT') return;
+      if (e.key === 'Escape') {
+        if (summary) setSummary(null);
+        else if (showMenu) setShowMenu(false);
+        else if (showStrats) setShowStrats(false);
+        else if (showCards) setShowCards(false);
+        else if (showMissions) setShowMissions(false);
+        else if (showLog) setShowLog(false);
+        else if (sheet) setSheet(null);
+        else if (tape.on) setTape({ on: false });
+        else if (mode) setMode(null);
+        else if (sel) setSel(null);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && canUndo) {
+        e.preventDefault();
+        undo(); setMode(null); flash('Undone one step');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
   const U = (id: string) => unitById(s, id);
 
   // Who has to act right now (hotseat hand-off).
@@ -1083,7 +1216,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const rides = moved ? s.units.filter((t) => t.owner === s.active && t.transport && onBoard(t) && !canEmbarkIn(s, moved, t)) : [];
     return (
       <>
-        {!selUnit && <div className="hint"><span>Tap a unit below (or on the battlefield) to move it · units not moved Remain Stationary at the end of the phase</span></div>}
+        {!selUnit && <div className="hint"><span>Pick a unit to move — below or on the battlefield</span></div>}
         <div className="unit-strip">{mine.map((x) => unitPill(x, !!x.move))}</div>
         {(() => {
           const rigs = s.units.filter((t) => t.owner === s.active && t.transport && onBoard(t));
@@ -1157,7 +1290,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         {abilityBar(s.active, { whens: ['movement', 'endOfNormalMove', 'anyPhase'] })}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
         {redoButton()}
-        {endButton('movement', 'End Movement', boardUnits(s, s.active).length > 0 && boardUnits(s, s.active).every((x) => !x.move) && !s.units.some((x) => x.owner === s.active && x.status === 'reserves' && x.move), 'No unit has moved yet')}
+        {(() => {
+          const board = boardUnits(s, s.active);
+          const moved = board.filter((x) => x.move).length;
+          const left = board.length - moved;
+          return endButton('movement', 'End Movement', board.length > 0 && board.every((x) => !x.move) && !s.units.some((x) => x.owner === s.active && x.status === 'reserves' && x.move), 'No unit has moved yet',
+            left ? `${moved} of ${board.length} moved · the rest stay where they are` : 'Every unit has moved');
+        })()}
       </>
     );
   };
@@ -1212,17 +1351,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             ))}
           </div>
           {!mode.overwatch && abilityBar(modeUnit.owner, { unitId: modeUnit.id, whens: ['selectedToShoot', 'shooting'] })}
-          {!mode.overwatch && buffPanel(modeUnit)}
           {res?.error && <div className="err">{res.error}</div>}
           {res && !res.error && (() => {
             // one row per weapon profile; cover can differ per shooter, so pools are merged for display
             const T = U(mode.target!);
             const groups = new Map<string, typeof res.pools>();
             for (const p of res.pools) { const k = p.weapon + '|' + p.profile.name; groups.set(k, [...(groups.get(k) ?? []), p]); }
-            let total = 0;
+            let total = 0, slain = 0;
             const rows = [...groups.values()].map((ps) => {
               const p = ps[0];
               const ev = ps.reduce((a, x) => a + expectedDamage(s, x, T).unsaved, 0);
+              slain += ps.reduce((a, x) => a + expectedDamage(s, x, T).models, 0);
               total += ev;
               const models = ps.reduce((a, x) => a + x.models, 0);
               const covered = ps.filter((x) => x.skillNote.includes('Cover')).reduce((a, x) => a + x.models, 0);
@@ -1239,7 +1378,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             return (
               <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {rows}
-                <div className="tiny muted">Expected unsaved wounds: about {total.toFixed(1)}</div>
+                <div className="expect"><b className="num">≈ {slain < 0.95 ? slain.toFixed(1) : Math.round(slain)}</b> of {alive(T).length} {alive(T).length === 1 ? 'model' : 'models'} slain on average <span className="muted">({total.toFixed(1)} wounds through the saves)</span></div>
               </div>
             );
           })()}
@@ -1267,7 +1406,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const canExplode = u && !u.selectedToShoot && !isEngaged(s, u) && u.move !== 'advance' && u.move !== 'fallback' && (hasKw(u, 'GRENADES') || hasKw(u, 'EXPLOSIVES')) && !canUseStratagem(s, u.owner, 'explosives', u);
     return (
       <>
-        {!selUnit && <div className="hint"><span>1. Tap a unit to shoot with 2. Tap a target — range, line of sight and cover are checked for you</span></div>}
+        {!selUnit && <div className="hint"><span>Pick a unit to shoot with, then its target (range, sight and cover are checked for you)</span></div>}
         <div className="unit-strip">{mine.map((x) => unitPill(x, x.selectedToShoot || shootingModes(s, x).length === 0))}</div>
         {u && (
           <>
@@ -1293,7 +1432,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         {s.pendingActions.filter((a) => a.player === s.active).length > 0 && <div className="tiny"><Icon name="wait" size={13} /> Actions completing at the end of the turn: {s.pendingActions.filter((a) => a.player === s.active).map((a) => `${MISSIONS.actions[a.action].name} (${U(a.unitId).name})`).join(', ')}</div>}
         {abilityBar(s.active, { whens: ['shooting', 'afterShootingButton', 'anyPhase'] })}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
-        {endButton('shooting', 'End Shooting', mine.some((x) => shootingModes(s, x).length > 0) && !mine.some((x) => x.shotTurn === s.turn || x.selectedToShoot), 'No unit has shot yet')}
+        {(() => {
+          const can = mine.filter((x) => shootingModes(s, x).length > 0).length;
+          return endButton('shooting', 'End Shooting', can > 0 && !mine.some((x) => x.shotTurn === s.turn || x.selectedToShoot), 'No unit has shot yet',
+            can ? `${can} unit${can > 1 ? 's' : ''} can still shoot` : 'No unit left to shoot');
+        })()}
       </>
     );
   };
@@ -1337,7 +1480,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const why = u ? chargeEligibility(s, u) : null;
     return (
       <>
-        {!selUnit && <div className="hint"><span>Units within 12" of the enemy can charge · roll 2D6 first, then pick targets within range</span></div>}
+        {!selUnit && <div className="hint"><span>Pick a unit within 12" of the enemy: roll 2D6, then tap a target in reach</span></div>}
         <div className="unit-strip">{mine.map((x) => unitPill(x, !!chargeEligibility(s, x)))}</div>
         {u && (
           <>
@@ -1356,7 +1499,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         {abilityBar(s.active, { whens: ['anyPhase'] })}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
         {redoButton()}
-        {endButton('charge', 'End Charge → Fight', mine.some((x) => !chargeEligibility(s, x)) && !mine.some((x) => x.declaredCharge), 'Some units can still charge')}
+        {(() => {
+          const can = mine.filter((x) => !chargeEligibility(s, x)).length;
+          return endButton('charge', 'End Charge → Fight', can > 0 && !mine.some((x) => x.declaredCharge), 'Some units can still charge',
+            can ? `${can} unit${can > 1 ? 's' : ''} can still charge` : 'No unit in charge range');
+        })()}
       </>
     );
   };
@@ -1435,7 +1582,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             {chars.length > 0 && !ec && <button className={`btn small ${mode.epic ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, epic: !mode.epic })}>Epic Challenge 1CP</button>}
           </div>
           {abilityBar(u.owner, { unitId: u.id, whens: ['selectedToFight', 'fightStartButton'] })}
-          {buffPanel(u)}
           {res?.pools.map((p) => <div key={p.key} className="tiny">{p.weapon}: {p.attackNote} · Hit {p.skill}+ · Wound {p.woundNeed}+ ({p.woundNote}) · AP{p.ap} D{p.damage}</div>)}
           {res?.notes.map((n) => <div key={n} className="err">{n}</div>)}
           <div className="row">
@@ -1581,18 +1727,25 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
 
   const panel = () => {
-    if (s.phase === 'gameover') return null;
+    if (s.phase === 'gameover') return (
+      <div className="row">
+        <div className="handoff grow">{s.winner === 'draw' ? 'The battle ends in a draw' : `${pName(s, s.winner as PlayerId)} wins`}</div>
+        <button className="btn" onClick={() => setFinalSeen(false)}>Result</button>
+        <button className="btn primary" onClick={onExit}>Home</button>
+      </div>
+    );
     if (spectate) return (
       <div className="row">
-        <div className="handoff grow">Bot vs Bot · {actingBot !== null ? `${pName(s, actingBot)} is playing` : 'in progress'}</div>
-        <div className="seg" style={{ minWidth: 170 }}>
-          <button className={speed === 0 ? 'on' : ''} onClick={() => setSpeed(0)}>Pause</button>
-          <button className={speed === 1 ? 'on' : ''} onClick={() => setSpeed(1)}>Normal</button>
-          <button className={speed === 2 ? 'on' : ''} onClick={() => setSpeed(2)}>Fast</button>
+        <div className="bot-act grow"><span className={`bot-dot s${actingBot ?? 0}`} />{botSays ?? (actingBot !== null ? `${pName(s, actingBot)} is playing` : 'Between turns')}</div>
+        <div className="seg" role="radiogroup" aria-label="Speed" style={{ minWidth: 170 }}>
+          <button role="radio" aria-checked={speed === 0} className={speed === 0 ? 'on' : ''} onClick={() => setSpeed(0)}>Pause</button>
+          <button role="radio" aria-checked={speed === 1} className={speed === 1 ? 'on' : ''} onClick={() => setSpeed(1)}>Normal</button>
+          <button role="radio" aria-checked={speed === 2} className={speed === 2 ? 'on' : ''} onClick={() => setSpeed(2)}>Fast</button>
         </div>
       </div>
     );
-    if (actingBot !== null) return <div className="handoff">{pName(s, actingBot)} is playing…</div>;
+    // the bot's turn: what it just did, in a line (the commander above says why)
+    if (actingBot !== null) return <div className="bot-act"><span className={`bot-dot s${actingBot}`} />{thinking ? `${pName(s, actingBot)} is weighing its turn…` : botSays ?? `${pName(s, actingBot)} is playing…`}</div>;
     if (s.phase === 'scouts') return scoutsPanel();
     if (mode?.k === 'move' && (mode.kind === 'extra' || mode.kind === 'surge')) return extraMovePanel();
     if (s.window) return windowPanel();
@@ -1607,38 +1760,65 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const layoutName = deploymentById(s.deploymentId).name;
   const draftUnit = mode && (mode.k === 'move' || mode.k === 'place' || mode.k === 'charge' || mode.k === 'pile') ? mode.unitId : null;
+  // the sides as the player thinks of them: "You" and "Bot" against the bot, else the players' names
+  const sideLabel = (p: PlayerId) => (bots.length === 1 ? (bots.includes(p) ? 'Bot' : 'You') : s.players[p].name.replace(/ Bot$/, ''));
+  const turnText = s.phase === 'deploy' ? `${layoutName} · ${pName(s, s.deployTurn)} sets up`
+    : s.phase === 'scouts' ? 'Scouts moves'
+    : s.phase === 'gameover' ? 'Battle over'
+    : bots.length === 1 ? (bots.includes(s.active) ? `${pName(s, s.active)}'s turn` : 'Your turn') : `${pName(s, s.active)}'s turn`;
+  // the commander on screen: whoever spoke last, else the bot whose turn it is
+  const commanderP: PlayerId | null = bots.length ? (actingBot ?? (says && bots.includes(says.p) ? says.p : bots[0])) : null;
+  // the enemy's likely attacks next turn, drawn on request while it is the player's turn
+  const planArrows = useMemo(() => {
+    if (!showPlan || !plan || plan.turn !== s.turn || s.active === plan.p) return [];
+    const done = new Set<string>();
+    const out: { from: Pt; to: Pt; melee: boolean; label: string }[] = [];
+    for (const x of plan.intents) {
+      const key = `${x.attackerId}>${x.targetId}`;
+      if (done.has(key)) continue;
+      done.add(key);
+      const a = s.units.find((u) => u.id === x.attackerId), tg = s.units.find((u) => u.id === x.targetId);
+      if (!a || !tg || !onBoard(tg) || !alive(a).length) continue;
+      out.push({ from: onBoard(a) ? polyCentroid(alive(a)) : x.from, to: polyCentroid(alive(tg)), melee: x.kind === 'fight', label: x.kind === 'fight' ? 'charge' : 'shoot' });
+    }
+    return out.slice(0, 10);
+  }, [showPlan, plan, s]);
+  const planReady = !!plan && plan.turn === s.turn && s.active !== plan.p && plan.intents.length > 0;
+  if (showPlan && planReady) for (const a of plan!.intents) if (onBoard(U(a.targetId)) && U(a.targetId).owner !== plan!.p) (badges[a.targetId] ??= []).includes('Threatened') || (badges[a.targetId] ??= []).push('Threatened');
+  const final = s.phase === 'gameover' && !finalSeen;
 
   return (
-    <>
-      <div className="topbar">
-        <button className="btn small ghost" onClick={() => setShowMenu(true)} aria-label="Menu"><Icon name="menu" size={24} /></button>
-        <div className="grow">
-          <div className="phase">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : `Round ${s.round}/5`}</div>
-          <div className="tiny muted">{s.phase === 'deploy' || s.phase === 'scouts' ? layoutName : `${pName(s, s.active)}'s turn`}</div>
-        </div>
-        <button className="score" onClick={() => setShowMissions(true)}>
-          <span className="p0">{s.players[0].vp + s.players[0].secVp}<small> VP</small> {s.players[0].cp}<small> CP</small></span>
-          <span className="p1">{s.players[1].vp + s.players[1].secVp}<small> VP</small> {s.players[1].cp}<small> CP</small></span>
-        </button>
-        {(s.players[0].secMode !== 'none' || s.players[1].secMode !== 'none') && (
-          <button className="tb-tool" onClick={() => setShowCards(true)} aria-label="Secondary Mission cards">
-            <span className="tb-ico"><Icon name="cards" size={22} />{s.players[me].secActive.length > 0 && <i className="tb-badge">{s.players[me].secActive.length}</i>}</span>
-            <span className="tb-lbl">Cards</span>
+    <div className="game">
+      <header className="game-top">
+        <div className="topbar">
+          <button className="icon-btn" onClick={() => setShowMenu(true)} aria-label="Menu"><Icon name="menu" size={24} /></button>
+          <SideScore s={s} p={0} label={sideLabel(0)} onOpen={() => { setCardSide(0); setShowCards(true); }} />
+          <button className="round-box" onClick={() => setShowLog(true)} aria-label="Battle log">
+            <span className="rb-round">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : `Round ${s.round}/5`}</span>
+            <span className={`rb-turn ${s.active ? 'p1' : 'p0'}`}>{turnText}</span>
           </button>
-        )}
-        <button className="tb-tool" onClick={() => openStrats()} aria-label="Stratagems">
-          <span className="tb-ico"><Icon name="strat" size={22} /></span>
-          <span className="tb-lbl">Strat</span>
-        </button>
-      </div>
-      {['command', 'movement', 'shooting', 'charge', 'fight'].includes(s.phase) && (
-        <div className="phasebar">
-          {(['command', 'movement', 'shooting', 'charge', 'fight'] as const).map((ph) => (
-            <span key={ph} className={s.phase === ph ? 'on' : ['command', 'movement', 'shooting', 'charge', 'fight'].indexOf(ph) < ['command', 'movement', 'shooting', 'charge', 'fight'].indexOf(s.phase) ? 'done' : ''}>{PHASE_TH[ph][0]}{PHASE_TH[ph].slice(1).toLowerCase()}</span>
-          ))}
+          <SideScore s={s} p={1} label={sideLabel(1)} onOpen={() => { setCardSide(1); setShowCards(true); }} />
+          {(s.players[0].secMode !== 'none' || s.players[1].secMode !== 'none') && (
+            <button className="tb-tool" onClick={() => { setCardSide(null); setShowCards(true); }} aria-label="Mission cards">
+              <span className="tb-ico"><Icon name="cards" size={22} />{s.players[me].secActive.length > 0 && <i className="tb-badge">{s.players[me].secActive.length}</i>}</span>
+              <span className="tb-lbl">Cards</span>
+            </button>
+          )}
+          <button className="tb-tool" onClick={() => openStrats()} aria-label="Stratagems">
+            <span className="tb-ico"><Icon name="strat" size={22} /></span>
+            <span className="tb-lbl">Strat</span>
+          </button>
         </div>
-      )}
-      <div className="board-wrap">
+        {s.phase !== 'deploy' && <AdvantageBar share={advantage(s)} names={[s.players[0].name, s.players[1].name]} />}
+        {['command', 'movement', 'shooting', 'charge', 'fight'].includes(s.phase) && (
+          <div className={`phasebar a${s.active}`}>
+            {(['command', 'movement', 'shooting', 'charge', 'fight'] as const).map((ph) => (
+              <span key={ph} className={s.phase === ph ? 'on' : ['command', 'movement', 'shooting', 'charge', 'fight'].indexOf(ph) < ['command', 'movement', 'shooting', 'charge', 'fight'].indexOf(s.phase) ? 'done' : ''}>{PHASE_TH[ph][0]}{PHASE_TH[ph].slice(1).toLowerCase()}</span>
+            ))}
+          </div>
+        )}
+      </header>
+      <div className={`board-wrap shake-${shake}`}>
         <Board
           s={s}
           viewer={actor}
@@ -1661,8 +1841,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onTapBoard={onTapBoard}
           onDraft={(d) => { setDraft(d); setCheck(null); }}
           onDragEnd={onDragEnd}
+          plan={planArrows}
         />
-        {botSays && (() => { const nm = pName(s, botWho ?? bot ?? 1); return <div className="bot-caption">{botSays.includes(nm) ? botSays : <><b>{nm}</b> {botSays}</>}</div>; })()}
+        <AttackReport s={s} level={spectate && speed === 2 && fxLevel === 'full' ? 'short' : fxLevel} quick={(o) => spectate || bots.includes(o)} onBusy={setReporting}
+          onShake={(lv) => { if (!lv) return; setShake(lv); window.setTimeout(() => setShake(0), 420 + lv * 80); }} />
+        {botSays && actingBot === null && !spectate && <div className="bot-caption">{botSays}</div>}
         {toast && <div className="toast">{toast}</div>}
         {tape.on && (
           <div className="tape-bar">
@@ -1670,12 +1853,31 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn small" onClick={() => setTape({ on: false })}>Close</button>
           </div>
         )}
-        {mode?.k === 'shoot' && !mode.target && <div className="toast">Tap a highlighted enemy unit to target it ({targets.length} targets)</div>}
+        {mode?.k === 'shoot' && !mode.target && <div className="toast">{targets.length ? `Tap a highlighted enemy unit (${targets.length} in reach)` : 'No enemy in range and in sight of this unit'}</div>}
+        {planReady && !mode && (
+          <button className={`plan-toggle ${showPlan ? 'on' : ''}`} aria-pressed={showPlan} onClick={() => setShowPlan((v) => !v)}>
+            <Icon name="bot" size={16} /> {showPlan ? 'Hide enemy plan' : 'Enemy plan'}
+          </button>
+        )}
       </div>
-      <div className={`panel ${actor ? 's1' : ''}`}>
-        {s.phase !== 'deploy' && s.phase !== 'gameover' && !s.window && <div className="label"><span className={actor ? 'p1' : 'p0'}>●</span> {pName(s, actor)} to act</div>}
-        {panel()}
-      </div>
+      <aside className="game-side">
+        {commanderP !== null && (
+          <Commander s={s} p={commanderP} says={says && says.p === commanderP ? says.text : null}
+            think={thinking && actingBot === commanderP ? think ?? { values: {}, done: 0, total: 0 } : null}
+            planning={!actingBot && ponderProg ? ponderProg : null} />
+        )}
+        <div className={`panel ${actor ? 's1' : ''}`}>
+          {bots.length === 0 && s.phase !== 'deploy' && s.phase !== 'gameover' && !s.window && <div className="label"><span className={actor ? 'p1' : 'p0'}>●</span> {pName(s, actor)} to act</div>}
+          {panel()}
+        </div>
+        {/* on a computer there is room for the latest events (on a phone they are in the Battle log) */}
+        <div className="feed" aria-label="Latest events">
+          <div className="feed-head"><span>Latest</span><button className="linkish" onClick={() => setShowLog(true)}>Full log</button></div>
+          {s.log.filter((l) => l.kind !== 'roll').slice(-8).reverse().map((l, i) => (
+            <div key={s.log.length - i} className={`feed-row ${l.kind ?? ''} ${l.player === 1 ? 's1' : l.player === 0 ? 's0' : ''}`}>{l.text}</div>
+          ))}
+        </div>
+      </aside>
 
       <RollOverlay s={s} onBusy={setRolling} quick={spectate} />
       {s.attack && (
@@ -1707,9 +1909,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       {sheet && (
         <div className="tray-backdrop" onClick={() => setSheet(null)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
+            <div className="tray-head"><span className="grow" /><button className="icon-btn" aria-label="Close" onClick={() => setSheet(null)}>✕</button></div>
             <UnitView u={U(sheet)} />
             {abilityBar(U(sheet).owner, { unitId: sheet })}
-            <button className="btn" onClick={() => setSheet(null)}>Close</button>
+            {/* for rules the app does not apply by itself: switch an effect on for this phase */}
+            {!bots.includes(U(sheet).owner) && onBoard(U(sheet)) && buffPanel(U(sheet))}
           </div>
         </div>
       )}
@@ -1795,14 +1999,38 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       {showMenu && (
         <div className="tray-backdrop" onClick={() => setShowMenu(false)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
-            <div className="sheet-title">Menu</div>
-            <button className="btn" disabled={!canUndo} onClick={() => { undo(); setMode(null); setShowMenu(false); flash('Undone one step'); }}>Undo</button>
-            <button className="btn" onClick={() => { setShowMenu(false); setShowMissions(true); }}>Mission & Secondary</button>
-            <button className="btn" onClick={() => { setShowMenu(false); setTape({ on: true }); }}>Tape measure</button>
-            <button className="btn" onClick={() => { setShowMenu(false); setShowLog(true); }}>Battle log & army rules</button>
-            <button className="btn" onClick={() => { setShowMenu(false); openStrats(); }}>Stratagems</button>
-            <button className="btn danger" onClick={onExit}>Exit to home (game saved)</button>
-            <button className="btn ghost" onClick={() => setShowMenu(false)}>Close</button>
+            <div className="tray-head"><span className="sheet-title grow">Menu</span><button className="icon-btn" aria-label="Close menu" onClick={() => setShowMenu(false)}>✕</button></div>
+            <div className="menu-grid">
+              <button className="menu-item" disabled={!canUndo} onClick={() => { undo(); setMode(null); setShowMenu(false); flash('Undone one step'); }}>
+                <Icon name="undo" size={22} /><span><b>Undo</b><small>Take back the last step{typeof window !== 'undefined' && window.matchMedia?.('(pointer: fine)').matches ? ' · Ctrl+Z' : ''}</small></span>
+              </button>
+              <button className="menu-item" onClick={() => { setShowMenu(false); setTape({ on: true }); }}>
+                <Icon name="ruler" size={22} /><span><b>Tape measure</b><small>Distance and line of sight</small></span>
+              </button>
+              <button className="menu-item" onClick={() => { setShowMenu(false); setShowLog(true); }}>
+                <Icon name="hint" size={22} /><span><b>Battle log</b><small>Everything so far, and both armies' rules</small></span>
+              </button>
+              <button className="menu-item" onClick={() => { setShowMenu(false); setShowMissions(true); }}>
+                <Icon name="objective" size={22} /><span><b>Mission rules</b><small>Scoring for both sides, manual scoring</small></span>
+              </button>
+            </div>
+            <div className="field">
+              <span id="fx-level">Attack reports</span>
+              <div className="seg" role="radiogroup" aria-labelledby="fx-level">
+                {([['full', 'Full'], ['short', 'Result only'], ['off', 'Off']] as const).map(([k, l]) => (
+                  <button key={k} role="radio" aria-checked={fxLevel === k} className={fxLevel === k ? 'on' : ''} onClick={() => setFxLevel(k)}>{l}</button>
+                ))}
+              </div>
+              <span className="field-note">{fxLevel === 'full' ? 'Each attack counts up: shots, hits, wounds, through the saves — and what changed the odds' : fxLevel === 'short' ? 'Only what each attack destroyed' : 'No reports (the board still shows the shots)'}</span>
+            </div>
+            <div className="field">
+              <span id="snd">Sound</span>
+              <div className="seg" role="radiogroup" aria-labelledby="snd">
+                <button role="radio" aria-checked={sound} className={sound ? 'on' : ''} onClick={() => { setSoundOn(true); setSound(true); play('gem'); }}>On</button>
+                <button role="radio" aria-checked={!sound} className={!sound ? 'on' : ''} onClick={() => { setSoundOn(false); setSound(false); }}>Off</button>
+              </div>
+            </div>
+            <button className="btn danger" onClick={onExit}>Exit to home <span className="muted small">· the battle is saved</span></button>
           </div>
         </div>
       )}
@@ -1878,18 +2106,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         </div>
       )}
 
-      {s.phase === 'gameover' && (
-        <div className="tray-backdrop">
-          <div className="tray">
-            <div className="big-result">{s.winner === 'draw' ? 'Draw!' : `${pName(s, s.winner as PlayerId)} wins!`}</div>
-            <div className="big-result">{s.players[0].vp + s.players[0].secVp} – {s.players[1].vp + s.players[1].secVp}</div>
-            <div className="small muted" style={{ textAlign: 'center' }}>
-              {([0, 1] as PlayerId[]).map((p) => `${pName(s, p)}: Primary ${s.players[p].vp} + Secondary ${s.players[p].secVp}`).join(' · ')}
-            </div>
-            <button className="btn primary" onClick={onExit}>Back to home</button>
-          </div>
-        </div>
+      {summary && !final && <RoundSummary s={s} t={summary} onClose={() => setSummary(null)} />}
+      {final && (
+        <RoundSummary s={s} t={tally(s, null)} final onClose={() => setFinalSeen(true)}
+          actions={<>
+            <button className="btn" onClick={(e) => { e.stopPropagation(); setFinalSeen(true); }}>See the board</button>
+            <button className="btn primary" onClick={(e) => { e.stopPropagation(); onExit(); }}>Back to home</button>
+          </>} />
       )}
-    </>
+    </div>
   );
 }

@@ -44,6 +44,8 @@ export interface BoardProps {
   onDraft?: (p: Paths) => void;
   /** a drag of the draft finished (the screen settles models into legal spots) */
   onDragEnd?: (p: Paths) => void;
+  /** the enemy's likely attacks next turn (its look ahead): an arrow from each attacker to its target */
+  plan?: { from: Pt; to: Pt; melee: boolean; label: string }[];
 }
 
 const W = RULES.battlefield.width;
@@ -136,6 +138,18 @@ function BoardImpl(props: BoardProps) {
     }
     return ids;
   }, [fx]);
+  // an objective changing hands: a ring in the new controller's colour sweeps out from it
+  const ctrlPrev = useRef(s.objectives.map((o) => o.controller));
+  const [caps, setCaps] = useState<{ id: string; x: number; y: number; p: PlayerId; k: number }[]>([]);
+  useEffect(() => {
+    const prev = ctrlPrev.current;
+    ctrlPrev.current = s.objectives.map((o) => o.controller);
+    const fresh = s.objectives.flatMap((o, i) => (o.controller !== null && prev[i] !== undefined && o.controller !== prev[i] ? [{ id: o.id, x: o.x, y: o.y, p: o.controller, k: Date.now() + i }] : []));
+    if (!fresh.length) return;
+    setCaps((c) => [...c, ...fresh]);
+    const tm = setTimeout(() => setCaps((c) => c.filter((x) => !fresh.includes(x))), 1400);
+    return () => clearTimeout(tm);
+  }, [s.objectives]);
   const svgRef = useRef<SVGSVGElement>(null);
   const [vb, setVb] = useState({ x: -1, y: -1, w: W + 2, h: H + 2 });
   const pointers = useRef(new Map<number, { x: number; y: number }>());
@@ -429,6 +443,7 @@ function BoardImpl(props: BoardProps) {
       onWheel={onWheel}
     >
       <defs>
+        <marker id="plan-head" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f87171" /></marker>
         {ground && <pattern id="ground" width="11" height="11" patternUnits="userSpaceOnUse"><image href={ground} width="11" height="11" preserveAspectRatio="none" /></pattern>}
         <pattern id="grid" width="6" height="6" patternUnits="userSpaceOnUse">
           <path d="M 6 0 L 0 0 0 6" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.04" />
@@ -685,6 +700,29 @@ function BoardImpl(props: BoardProps) {
               const e = p[p.length - 1];
               return <text key={`d${m.id}`} x={e.x} y={e.y - m.r - 0.2} fontSize={0.55} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.08} paintOrder="stroke" pointerEvents="none">{used.toFixed(1)}/{maxFor(m.id).toFixed(0)}"</text>;
             })}
+          </g>
+        );
+      })}
+      {caps.map((c) => (
+        <g key={c.k} pointerEvents="none">
+          <circle cx={c.x} cy={c.y} r={0.8} fill="none" stroke={COLORS[c.p]} strokeWidth={0.35}>
+            <animate attributeName="r" from="0.8" to="5.5" dur="1.2s" fill="freeze" />
+            <animate attributeName="opacity" from="1" to="0" dur="1.2s" fill="freeze" />
+          </circle>
+          <circle cx={c.x} cy={c.y} r={1.2} fill={COLORS[c.p]} opacity={0.5}>
+            <animate attributeName="opacity" from="0.6" to="0" dur="0.9s" fill="freeze" />
+          </circle>
+        </g>
+      ))}
+      {props.plan?.map((a, i) => {
+        // stop the arrow short of the target's centre, and bend it a little so two arrows at one target stay apart
+        const dx = a.to.x - a.from.x, dy = a.to.y - a.from.y, L = Math.hypot(dx, dy) || 1;
+        const end = { x: a.to.x - (dx / L) * 1.4, y: a.to.y - (dy / L) * 1.4 };
+        const mid = { x: (a.from.x + end.x) / 2 - (dy / L) * (1 + (i % 3)), y: (a.from.y + end.y) / 2 + (dx / L) * (1 + (i % 3)) };
+        return (
+          <g key={`plan${i}`} className="plan-arrow" pointerEvents="none">
+            <path d={`M${a.from.x},${a.from.y} Q${mid.x},${mid.y} ${end.x},${end.y}`} fill="none" stroke="#f87171" strokeWidth={a.melee ? 0.32 : 0.22} strokeDasharray={a.melee ? undefined : '0.7 0.4'} markerEnd="url(#plan-head)" opacity={0.9} />
+            <text x={mid.x} y={mid.y} fontSize={0.75} textAnchor="middle" fill="#fecaca" stroke="#000" strokeWidth={0.14} paintOrder="stroke" fontWeight={800}>{a.label}</text>
           </g>
         );
       })}

@@ -7,7 +7,7 @@ import { botOff, setBotWeights, W, type BotW } from './botWeights';
 import { withFastPlanning } from './botMove';
 import { endPhase } from './game';
 import { alive, other } from './state';
-import type { BotLevel, GameState, PlayerId } from './types';
+import type { BotLevel, GameState, PlayerId, Pt } from './types';
 
 const STYLES: Record<string, Partial<BotW>> = {
   steady: {},
@@ -60,9 +60,22 @@ const standing = (s: GameState, p: PlayerId) => {
   return (vp(p) - vp(other(p))) * VP_POINTS + hold + armyLeft(s, p) - armyLeft(s, other(p));
 };
 
+/** An attack p made in a look's copy of its turn: what the bot means to do (shown to the player as the enemy plan). */
+export interface Intent { attackerId: string; targetId: string; kind: 'shoot' | 'fight' | 'overwatch'; killed: number; from: Pt; to: Pt }
+
+/**
+ * Who is ahead, as the bot weighs it (VP, objectives held, army left): player 0's share, 0..1. An estimate for the
+ * screen's advantage bar; at the end of the battle only the VP count.
+ */
+export function advantage(s: GameState): number {
+  if (s.phase === 'gameover') return s.winner === 0 ? 1 : s.winner === 1 ? 0 : 0.5;
+  return 1 / (1 + Math.exp(-standing(s, 0) / 220));
+}
+
 /** Play a copy through the rest of this turn and the opponent's next one with `style` for p; how p stands then.
- *  `sample` > 0 rolls different dice on the copy (another throw of the same turn). */
-function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Infinity, sample = 0): number {
+ *  `sample` > 0 rolls different dice on the copy (another throw of the same turn). The attacks p makes this turn go
+ *  into `intents` when given. */
+function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Infinity, sample = 0, intents?: Intent[]): number {
   const c = structuredClone(s);
   if (sample) c.rng = (c.rng ^ Math.imul(sample, 2654435761)) >>> 0;
   // the copy's turn already has its style: without this mark the copy's own movement would pick (and set) the plain
@@ -75,9 +88,17 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Inf
   inRollout = true;
   try {
     let steps = 0;
+    let seen = c.fxSeq ?? 0;
     while (c.phase !== 'gameover' && c.turn < end && steps < 4000) {
       if (botOff('fastLook')) botAct(c); else withFastPlanning(() => botAct(c));
       steps++;
+      if (intents && c.turn === s.turn) {
+        for (const e of c.fx ?? []) {
+          if (e.seq <= seen || e.kind !== 'attack' || e.owner !== p) continue;
+          intents.push({ attackerId: e.attackerId, targetId: e.targetId, kind: e.attackKind, killed: e.killed, from: e.from, to: e.to });
+        }
+      }
+      seen = c.fxSeq ?? seen;
       if (Date.now() > deadline) return -Infinity; // out of time: this style is not compared
     }
   } finally {
@@ -101,24 +122,43 @@ export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs?: number): s
  * over the rolls of the dice played). Every way gets one roll first, then the extra rolls go round, so a phone that
  * runs out of time has still compared them all once.
  */
-export function styleValues(s: GameState, p: PlayerId, budgetMs?: number): Record<string, number> {
+export function styleValues(s: GameState, p: PlayerId, budgetMs?: number, watch?: LookWatch): Record<string, number> {
   const L = LEVELS[levelOf(s, p)];
   const out: Record<string, number> = {};
   if (!L.styles.length) return out;
   own[p] ??= W(p);
   const deadline = Date.now() + (budgetMs ?? Infinity);
   const sum: Record<string, number> = {}, n: Record<string, number> = {};
+  const total = L.samples * L.styles.length;
+  let done = 0;
   for (let k = 0; k < L.samples; k++) {
     for (const name of L.styles) {
       // a slow device: whatever could not be tried in time is skipped (steady, the first, is the fallback)
       if (Date.now() > deadline && n.steady) break;
-      const v = rollout(s, p, STYLES[name], deadline, k);
+      const plan: Intent[] | undefined = watch && k === 0 ? [] : undefined;
+      const v = rollout(s, p, STYLES[name], deadline, k, plan);
+      done++;
       if (!Number.isFinite(v)) continue;
       sum[name] = (sum[name] ?? 0) + v; n[name] = (n[name] ?? 0) + 1;
+      if (plan && watch) watch.plans[name] = plan;
+      watch?.progress?.(name, sum[name] / n[name], done, total);
     }
   }
   for (const name of Object.keys(n)) out[name] = sum[name] / n[name];
   return out;
+}
+
+/** Watching a look as it goes: each way's value after every roll, and the attacks each way makes in its first roll. */
+export interface LookWatch { progress?: (name: string, value: number, done: number, total: number) => void; plans: Record<string, Intent[]> }
+
+/** A whole look: the style chosen, every style's value, and what the chosen style means to attack this turn. */
+export function lookAhead(s: GameState, p: PlayerId, budgetMs?: number, progress?: LookWatch['progress']): { name: string; values: Record<string, number>; intents: Intent[] } {
+  if (!enabled || inRollout || s.phase === 'gameover') return { name: 'steady', values: {}, intents: [] };
+  const watch: LookWatch = { progress, plans: {} };
+  const values = styleValues(s, p, budgetMs, watch);
+  let best = { name: 'steady', v: -Infinity };
+  for (const [name, v] of Object.entries(values)) if (v > best.v + 1e-6) best = { name, v };
+  return { name: best.name, values, intents: watch.plans[best.name] ?? [] };
 }
 
 /** The key that says this turn's style is chosen (so the Movement phase doesn't look ahead twice). */

@@ -2,7 +2,7 @@
 //  - look: plays the bot's turn a few ways on copies of the game (src/engine/botLook.ts) and answers with the style;
 //  - ponder: the same during the player's turn, from where the bot's next turn would start (a worker of its own);
 //  - step: plays the bot's next step (one unit moves / shoots / charges …) and answers with the new game state.
-import { applyStyle, chooseTurnStyle, lookBudget, lookSig, playToMovement, setLookahead } from '../engine/botLook';
+import { applyStyle, lookAhead, lookBudget, lookSig, playToMovement, setLookahead, type Intent } from '../engine/botLook';
 import { botAct, botStep } from '../engine/bot';
 import type { GameState, PlayerId } from '../engine/types';
 
@@ -33,9 +33,11 @@ self.onmessage = (e: MessageEvent<Msg>) => {
     self.postMessage({ id: m.id, sig: g ? lookSig(g) : null });
     if (!g) return;
   }
-  let name = 'steady';
+  let res: { name: string; values: Record<string, number>; intents: Intent[] } = { name: 'steady', values: {}, intents: [] };
   setLookahead(true);
-  try { name = chooseTurnStyle(g, m.p, lookBudget(g, m.p)); } catch { /* a failed look plays the turn as it is */ }
+  // each way of playing the turn is reported as soon as it has been played out, so the screen can show the thinking
+  const progress = (name: string, value: number, done: number, total: number) => self.postMessage({ id: m.id, progress: { name, value, done, total } });
+  try { res = lookAhead(g, m.p, lookBudget(g, m.p), progress); } catch { /* a failed look plays the turn as it is */ }
   setLookahead(false);
-  self.postMessage({ id: m.id, name });
+  self.postMessage({ id: m.id, name: res.name, values: res.values, intents: res.intents });
 };

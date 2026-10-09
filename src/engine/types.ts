@@ -479,6 +479,8 @@ export interface AttackSession {
   defenderRolls?: boolean;
   /** how many timed effects each side had when the attack was declared (later ones are applied before the rolls) */
   timedAtStart?: { a: number; t: number };
+  /** models the attack was expected to destroy, on average dice (for the luck shown to the player) */
+  expected?: number;
 }
 
 /** Visual events for the board (animations). Not rules state; capped to the last few. */
@@ -488,7 +490,9 @@ export type FxEvent =
   | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[];
       style?: 'bullet' | 'beam' | 'flame' | 'blast' | 'melee'; shooters?: Pt[]; victims?: Pt[]; shots?: number; hits?: number;
       /** one entry per weapon fired, so each weapon gets its own look (plasma balls, assault cannon streams …) */
-      volleys?: { fx: WeaponFx; shots: number; hits: number; models: number }[] }
+      volleys?: { fx: WeaponFx; shots: number; hits: number; models: number }[];
+      /** the attack told step by step (the screen counts it up stage by stage) */
+      report?: AttackReport }
   | { seq: number; kind: 'mortal'; unitId: string; n: number; at: Pt }
   /** a roll worth showing big on screen (advance, charge, battle-shock) */
   | { seq: number; kind: 'roll'; owner: PlayerId | null; title: string; dice: number[]; result: string; good?: boolean }
@@ -530,6 +534,36 @@ export interface FightState {
 export interface ShockTest { unitId: string; result: number | null; passed: boolean | null; auto?: boolean; mod?: number }
 
 export type BotLevel = 'easy' | 'normal' | 'hard' | 'expert';
+
+/** One attack as the screen tells it: each stage's count, what changed the odds at that stage, and how it compares
+ *  with what was to be expected. */
+export interface AttackReport {
+  attacker: string;
+  target: string;
+  weapons: string[];
+  shots: number;
+  hits: number;
+  crits: number;
+  wounds: number;
+  /** wounds that got through the saves (failed saves, Devastating Wounds and wounds with no save) */
+  unsaved: number;
+  mortals: number;
+  dmg: number;
+  killed: number;
+  destroyed: boolean;
+  /** points of the target's unit destroyed by this attack */
+  pts: number;
+  /** models it was expected to destroy (average dice) */
+  expected: number;
+  chips: { stage: 'attacks' | 'hit' | 'wound' | 'save'; label: string }[];
+}
+
+/** The battle so far, for the round and end-of-battle summaries. */
+export interface BattleStats {
+  kills: { round: number; turn: number; by: PlayerId; attackerId: string; targetId: string; models: number; pts: number; destroyed: boolean }[];
+  /** per player: models destroyed by its attacks, and models it was expected to destroy (its luck) */
+  luck: [[number, number], [number, number]];
+}
 
 export interface GameState {
   version: 3;
@@ -580,6 +614,7 @@ export interface GameState {
   /** bots that move without looking at their secondary cards (for comparing bot versions in tests) */
   botIgnoresCards?: PlayerId[];
   fx?: FxEvent[];
+  stats?: BattleStats;
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;
   /** destroyed models that fight / shoot after the attacking unit has finished (resolved by activations.ts) */
