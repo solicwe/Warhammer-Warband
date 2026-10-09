@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botAct, botMoveOne, botShootOne, botStep, botWindow } from './bot';
-import { attackRerollGap, buildShootPools, hazardTest, rerollAttackCount, resolveAll, resolveReroll, rollHits, startAttack, stepAttack, toggleRerollPick } from './attack';
+import { attackRerollGap, buildShootPools, finishAttack, hazardTest, rerollAttackCount, resolveAll, resolveReroll, rollHits, startAttack, stepAttack, toggleRerollPick } from './attack';
 import { autoCharge, autoPileMove, createGame, declareCharge, endPhase, formationAt, placeUnit } from './game';
 import { alive, engagedEnemies, unitDistance } from './state';
 import { planStratagem } from './stratagems';
@@ -572,5 +572,49 @@ describe('looking ahead', () => {
       if (s.active === me && !s.window && !s.attack && (s.phase === 'shooting' || s.phase === 'charge')) endPhase(s); else botAct(s);
     }
     expect(lookSig(s)).toBe(lookSig(ahead));
+  });
+
+  it('a look reports its progress and the attacks the chosen way of playing makes (the enemy plan)', async () => {
+    const { lookAhead, setLookahead, resetLookahead } = await import('./botLook');
+    const s = game([['Intercessor Squad', 10, 160], ['Hellblaster Squad', 5, 110]], [['Boyz', 20, 170], ['Flash Gitz', 5, 80]]);
+    s.phase = 'movement';
+    s.units.filter((x) => x.owner === 0).forEach((u, i) => put(s, u.id, { x: 14 + i * 12, y: 16 }));
+    s.units.filter((x) => x.owner === 1).forEach((u, i) => put(s, u.id, { x: 14 + i * 12, y: 34 }));
+    s.bots = [0, 1];
+    s.botLevel = 'normal';
+    setLookahead(true); resetLookahead();
+    try {
+      const seen: string[] = [];
+      const r = lookAhead(s, 0, undefined, (name, _v, done, total) => { seen.push(name); expect(done).toBeLessThanOrEqual(total); });
+      expect(seen.sort()).toEqual(['aggressive', 'careful', 'steady']);
+      expect(Object.keys(r.values)).toContain(r.name);
+      expect(r.intents.length).toBeGreaterThan(0);
+      for (const x of r.intents) expect(s.units.find((u) => u.id === x.attackerId)?.owner).toBe(0);
+    } finally { setLookahead(false); }
+  });
+});
+
+describe('telling an attack', () => {
+  it('the attack report counts each stage down, and the battle keeps each side\'s kills and luck', () => {
+    const s = game([['Intercessor Squad', 10, 160]], [['Boyz', 20, 170]]);
+    s.phase = 'shooting';
+    const a = put(s, 'p0-x0', { x: 20, y: 20 });
+    const b = put(s, 'p1-x0', { x: 20, y: 32 });
+    const r = buildShootPools(s, a.id, b.id, { mode: 'normal' });
+    startAttack(s, 'shoot', a.id, b.id, r.pools);
+    expect(s.attack!.expected).toBeGreaterThan(0);
+    resolveAll(s);
+    finishAttack(s);
+    const fx = (s.fx ?? []).filter((e) => e.kind === 'attack').pop();
+    if (fx?.kind !== 'attack') throw new Error('no attack event');
+    const rep = fx.report!;
+    expect(rep.shots).toBeGreaterThanOrEqual(rep.hits);
+    expect(rep.hits).toBeGreaterThanOrEqual(rep.wounds - 0);
+    expect(rep.wounds).toBeGreaterThanOrEqual(rep.unsaved);
+    expect(rep.killed).toBe(fx.killed);
+    expect(rep.chips.some((c) => /Rapid Fire/.test(c.label))).toBe(true); // 12" away: half range for bolt rifles
+    expect(s.stats!.luck[0][1]).toBeCloseTo(s.attack ? 0 : rep.expected, 5);
+    expect(s.stats!.luck[0][0]).toBe(rep.killed);
+    if (rep.killed) expect(s.stats!.kills[0]).toMatchObject({ by: 0, attackerId: a.id, targetId: b.id, models: rep.killed });
   });
 });
