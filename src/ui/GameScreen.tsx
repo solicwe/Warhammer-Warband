@@ -564,11 +564,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
   /** The furthest every model of the moving unit may go. */
   const slideMax = () => (modeUnit ? Math.min(...alive(modeUnit).map((m) => maxFor(m.id))) : 0);
-  /** Joystick: the unit walks the way the knob is pushed, up to 5" a second, never further than it may move. */
+  /**
+   * Joystick: the unit walks the way the knob is pushed, never further than it may move. Pushed all the way it crosses
+   * its whole move in about half a second (at least 14" a second); a light push creeps, for fine placing.
+   */
   const joyMove = (x: number, y: number, dt: number) => {
     if (!modeUnit || !draftKind) return;
     const max = slideMax();
-    let o = { x: joyOff.current.x + x * 5 * dt, y: joyOff.current.y + y * 5 * dt };
+    const push = Math.min(1, Math.hypot(x, y));
+    if (push <= 0) return;
+    const speed = Math.max(14, max / 0.5) * Math.pow(push, 1.6);
+    let o = { x: joyOff.current.x + (x / push) * speed * dt, y: joyOff.current.y + (y / push) * speed * dt };
     const L = Math.hypot(o.x, o.y);
     if (L > max) o = { x: (o.x / L) * max, y: (o.y / L) * max };
     joyOff.current = o;
