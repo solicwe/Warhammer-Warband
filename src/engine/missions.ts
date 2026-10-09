@@ -2,7 +2,7 @@
 // operation markers and the scoring conditions of all 25 primary cards.
 import { deploymentById, MISSIONS, primaryById, RULES, toPoly, type ScoringRule } from './config';
 import { circleTouchesPoly, circleWhollyInPoly, dist, pointInPoly, polyCentroid } from './geometry';
-import { alive, boardUnits, hasKw, isEngaged, log, onBoard, other, unitById } from './state';
+import { alive, boardUnits, hasKw, isEngaged, lastRound, log, onBoard, other, unitById } from './state';
 import type { GameState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
@@ -437,11 +437,11 @@ export function evalCondition(s: GameState, p: PlayerId, c: string): number {
   }
 }
 
-export function ruleActive(r: ScoringRule, round: number, timing: string): boolean {
+export function ruleActive(r: ScoringRule, round: number, timing: string, last = 5): boolean {
   if (round < r.rounds[0] || round > r.rounds[1]) return false;
   if (timing === 'endOfBattle') return r.when === 'endOfBattle';
   if (r.when === 'endOfAnyTurn') return timing === 'endOfAnyTurn';
-  if (round === 5 && r.round5When) return r.round5When === timing;
+  if (round === last && r.round5When) return r.round5When === timing;
   return r.when === timing;
 }
 
@@ -460,7 +460,7 @@ export function scorePrimary(s: GameState, timing: 'endOfYourCommandPhase' | 'en
   const P = s.players[player];
   const prim = primaryById(P.primaryId);
   for (const r of prim.scoring) {
-    if (!ruleActive(r, s.round, timing)) continue;
+    if (!ruleActive(r, s.round, timing, lastRound(s))) continue;
     let vp = ruleValue(s, player, r);
     if (!vp) continue;
     const roundCap = timing === 'endOfBattle' ? Infinity : MISSIONS.vpCaps.primaryPerRound - P.vpByRound[s.round];

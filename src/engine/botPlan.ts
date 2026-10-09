@@ -5,7 +5,7 @@
 // the rest.
 import { RULES } from './config';
 import { dist } from './geometry';
-import { alive, boardUnits, hasKw, isEngaged, other } from './state';
+import { alive, boardUnits, hasKw, isEngaged, lastRound, other, pace } from './state';
 import { centre, isBrawler, maxRange, moveOf, objPoint, oc, unitPunch, unitValue } from './botEval';
 import { hasAbility } from './weapons';
 import { botOff } from './botWeights';
@@ -36,7 +36,7 @@ export interface ArmyPlan { stance: Stance; risk: number; jobs: Map<string, Job>
 export { unitPunch };
 
 /** Is this the last turn of the battle for p (round 5, and p is the second player or the first player's turn)? */
-export const lastTurn = (s: GameState, p: PlayerId) => s.round >= RULES.battleRounds && (p !== s.firstPlayer || s.active === p);
+export const lastTurn = (s: GameState, p: PlayerId) => s.round >= lastRound(s) && (p !== s.firstPlayer || s.active === p);
 
 const vpOf = (s: GameState, p: PlayerId) => s.players[p].vp + s.players[p].secVp;
 const armyValue = (s: GameState, p: PlayerId) => boardUnits(s, p).reduce((a, u) => a + unitValue(u), 0)
@@ -49,7 +49,7 @@ export function stanceFor(s: GameState, p: PlayerId): { stance: Stance; risk: nu
   const lead = vpOf(s, p) - vpOf(s, other(p));
   const strength = armyValue(s, p) / Math.max(1, armyValue(s, other(p)));
   // late in the battle the score matters more than the armies left
-  const late = s.round >= 3;
+  const late = pace(s) >= 3;
   if (late && lead >= 12) return { stance: 'hold', risk: 1.3 };
   if (late && lead <= -12) return { stance: 'push', risk: 0.65 };
   if (strength >= 1.35) return { stance: 'push', risk: 0.8 };

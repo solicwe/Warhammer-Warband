@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FxEvent, GameState } from '../engine/types';
 import { dispositionById, MISSIONS, primaryById, secondaryById, type DispositionId } from '../engine/config';
+import { lastRound } from '../engine/state';
 import { Icon } from './Icon';
 import { play } from './sfx';
 
@@ -174,7 +175,13 @@ export function SecondaryCard({ id, faceUp = true, delay = 0, owner, progress, d
   );
 }
 
-const WHEN_TH: Record<string, string> = { endOfYourTurn: 'End of your turn', endOfYourCommandPhase: 'End of your Command phase (round 5: end of turn)', endOfBattle: 'End of the battle', endOfAnyTurn: 'End of every turn' };
+/** When a scoring rule applies, in the rounds this battle has (a short game ends at round 3). */
+export function roundsText(r: readonly number[], last: number): string {
+  const b = Math.min(r[1], last);
+  return r[0] === b ? `Round ${r[0]}` : r[0] === 1 && b === last ? 'Every round' : `Rounds ${r[0]}–${b}`;
+}
+
+const WHEN_TH: Record<string, string> = { endOfYourTurn: 'End of your turn', endOfYourCommandPhase: 'End of your Command phase (last round: end of turn)', endOfBattle: 'End of the battle', endOfAnyTurn: 'End of every turn' };
 
 /** A player's Primary Mission card: its name, their Force Disposition, how and when it scores, its action. */
 export function PrimaryCard({ s, owner, faceUp = true, delay = 0 }: { s: GameState; owner: 0 | 1; faceUp?: boolean; delay?: number }) {
@@ -192,7 +199,7 @@ export function PrimaryCard({ s, owner, faceUp = true, delay = 0 }: { s: GameSta
         <div className="sec-text">
           {prim.scoring.map((r) => (
             <div key={r.text + r.rounds} className="prim-rule">
-              <div className="sec-when"><Icon name="wait" size={12} /> {r.rounds[0] === r.rounds[1] ? `Round ${r.rounds[0]}` : r.rounds[0] === 1 && r.rounds[1] === 5 ? 'Every round' : `Rounds ${r.rounds[0]}–${r.rounds[1]}`} · {WHEN_TH[r.when] ?? r.when}</div>
+              <div className="sec-when"><Icon name="wait" size={12} /> {roundsText(r.rounds, lastRound(s))} · {WHEN_TH[r.when] ?? r.when}</div>
               <div>{r.text} {!r.tiers && <b>{r.vp} VP</b>}{r.bonus ? <span> · {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</div>
             </div>
           ))}

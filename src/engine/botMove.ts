@@ -7,7 +7,7 @@ import { primaryById, RULES } from './config';
 import { chargeEligibility, findPlacement, formationAt, hasDeepStrike, levelOfControl, validateMove, validatePlacement, zoneOf } from './game';
 import { circleTouchesPoly, dist, pointInPoly, polyCentroid } from './geometry';
 import { blockingWalls, distanceField, pathLength, pointAt, routeAround } from './pathing';
-import { alive, boardUnits, hasKw, isEngaged, other, unitDistance } from './state';
+import { alive, boardUnits, hasKw, isEngaged, other, pace, unitDistance } from './state';
 import { hasLos } from './visibility';
 import { secondaryGoal } from './secondaries';
 import { zonePoly } from './missions';
@@ -342,7 +342,7 @@ function cardJobs(s: GameState, p: PlayerId): Map<string, { aim: Pt; card: strin
       else if (id === 'beacon' && g.units.length) { pool = free.filter((u) => g.units.includes(u.id)); spots = [polyCentroid(theirs), centreB]; done = (u) => !alive(u).some((m) => pointInPoly(m, mine)); }
       else if (id === 'plunder' || id === 'cleanse' || id === 'a-tempting-target') {
         spots = g.objectives.map((oid) => s.objectives.find((o) => o.id === oid)).filter((o): o is NonNullable<typeof o> => !!o)
-          .filter((o) => id === 'a-tempting-target' || !(o.type === 'home' && o.owner === p) || s.round >= 4).map((o) => objPoint(s, o));
+          .filter((o) => id === 'a-tempting-target' || !(o.type === 'home' && o.owner === p) || pace(s) >= 4).map((o) => objPoint(s, o));
         done = (u) => spots.some((q) => alive(u).some((m) => dist(m, q) <= 3 + m.r));
       }
       if (!spots.length) continue;
@@ -371,7 +371,7 @@ function cardJobs(s: GameState, p: PlayerId): Map<string, { aim: Pt; card: strin
  * what is waiting in Reserves.
  */
 function denialFor(s: GameState, u: UnitState, ctx: Ctx): Ctx['denial'] {
-  if (botOff('screenDS') || s.round > 3 || unitValue(u) > 150 || ctx.role === 'hammer' || u.transport || isEngaged(s, u)) return undefined;
+  if (botOff('screenDS') || pace(s) > 3 || unitValue(u) > 150 || ctx.role === 'hammer' || u.transport || isEngaged(s, u)) return undefined;
   const waiting = s.units.filter((e) => e.owner !== u.owner && e.status === 'reserves' && hasDeepStrike(s, e)).reduce((a, e) => a + unitValue(e), 0);
   if (waiting < 100) return undefined;
   const guarded = boardUnits(s, u.owner).filter((f) => f.id !== u.id && unitValue(f) >= 150 && !f.transport);

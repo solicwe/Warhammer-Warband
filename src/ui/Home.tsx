@@ -1,7 +1,10 @@
-// Home: the player's armies (open one to edit it, start a new one), a battle to continue, and the way into a new battle.
+// Home: a battle to continue, the three ways to play (a battle, the campaign, a first battle with tips), and the
+// player's armies (open one to edit it, start a new one).
 import { useEffect, useState } from 'react';
 import { RULES } from '../engine/config';
 import { listPoints } from '../engine/army';
+import { loadRun } from '../engine/campaign';
+import { lastRound } from '../engine/state';
 import type { GameState } from '../engine/types';
 import { Emblem, titleCase } from './ArmyBuilder';
 import type { FactionIndex } from './data';
@@ -17,11 +20,16 @@ interface Props {
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
   onBattle: () => void;
+  onCampaign: () => void;
+  onTutorial: () => void;
   onContinue: () => void;
   onAbandon: () => void;
 }
 
-export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelete, onBattle, onContinue, onAbandon }: Props) {
+export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelete, onBattle, onCampaign, onTutorial, onContinue, onAbandon }: Props) {
+  const run = loadRun();
+  const runLayer = run ? Math.max(0, ...run.path.map((id) => (run.map.find((n) => n.id === id)?.layer ?? -1) + 1)) : 0;
+  const runLayers = run ? Math.max(...run.map.map((n) => n.layer)) + 1 : 0;
   const [menu, setMenu] = useState<string | null>(null);
   const [armed, setArmed] = useState<string | null>(null); // a delete that needs a second tap (dialogs are blocked here)
   useEffect(() => { if (!armed) return; const t = window.setTimeout(() => setArmed(null), 3000); return () => window.clearTimeout(t); }, [armed]);
@@ -37,10 +45,11 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
       </header>
       <main className="screen">
         {live && (
-          <section className="resume" aria-label="Battle in progress">
+          <section className="resume slate" aria-label="Battle in progress">
+           <div className="slate-in">
             <div className="resume-head">
-              <span className="label">Battle in progress</span>
-              <span className="resume-round">{live.phase === 'deploy' || live.phase === 'scouts' ? 'Deployment' : `Round ${live.round} of 5`}</span>
+              <span className="label">{live.campaign ? 'Campaign battle' : 'Battle in progress'}</span>
+              <span className="resume-round">{live.phase === 'deploy' || live.phase === 'scouts' ? 'Deployment' : `Round ${live.round} of ${lastRound(live)}`}</span>
             </div>
             <div className="resume-score">
               <span className="p0">{live.players[0].name}</span>
@@ -53,10 +62,31 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
                 {armed === 'game' ? 'Tap again to abandon' : 'Abandon'}
               </button>
             </div>
+           </div>
           </section>
         )}
 
-        <button className="btn primary big wide" onClick={onBattle}><Icon name="fight" size={20} />New battle</button>
+        <nav className="modes" aria-label="Play">
+          <button className="mode slate main" onClick={onBattle}>
+            <span className="slate-in">
+              <span className="mode-icon"><Icon name="fight" size={26} /></span>
+              <span className="mode-text"><b>New battle</b><small>Against the bot, two players on one device, or bot against bot</small></span>
+              <Icon name="next" size={20} className="mode-go" />
+            </span>
+          </button>
+          <button className="mode slate" onClick={onCampaign}>
+            <span className="slate-in">
+              <span className="mode-icon"><Icon name="trophy" size={22} /></span>
+              <span className="mode-text"><b>Campaign</b><small>{run && !run.over ? `Stage ${Math.min(runLayer + 1, runLayers)} of ${runLayers} · ${run.fate} Fate` : 'Short battles, relics and a Warlord at the end'}</small></span>
+            </span>
+          </button>
+          <button className="mode slate" onClick={onTutorial}>
+            <span className="slate-in">
+              <span className="mode-icon"><Icon name="hint" size={22} /></span>
+              <span className="mode-text"><b>How to play</b><small>A first battle with tips at every step</small></span>
+            </span>
+          </button>
+        </nav>
 
         <section className="group" aria-label="Your armies">
           <div className="group-head">

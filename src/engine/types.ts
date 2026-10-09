@@ -571,6 +571,8 @@ export interface GameState {
   version: 3;
   rng: number;
   round: number;
+  /** battle rounds this game lasts (a short game: 3); the full 5 when unset */
+  maxRounds?: number;
   turn: number; // global turn index (0-based)
   firstPlayer: PlayerId;
   active: PlayerId;
@@ -617,6 +619,8 @@ export interface GameState {
   botIgnoresCards?: PlayerId[];
   fx?: FxEvent[];
   stats?: BattleStats;
+  /** a campaign battle: the map node, the player's relics and the enemy's special rules (ids, see campaign.ts) */
+  campaign?: { node: string; relics: string[]; rules: string[] };
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;
   /** destroyed models that fight / shoot after the attacking unit has finished (resolved by activations.ts) */

@@ -12,7 +12,7 @@ import { chargeEligibility, commitMove, consolidateMode, levelOfControl, setPhas
 import { alive, boardUnits, engagedEnemies, isEngaged, onBoard as onBoardUnit, other, unitDistance } from './state';
 import { applyDetachmentStratagem, stratagemBlock, stratRule, stratChoices } from './stratagems';
 import type { GameState, PlayerId, StratagemData, UnitState } from './types';
-import { stratCost } from './state';
+import { pace, stratCost } from './state';
 
 type Doctrine = 'assault' | 'devastator' | 'tactical';
 
@@ -148,7 +148,7 @@ export function reactWorth(s: GameState, u: UnitState, st: StratagemData, kind: 
   if (kind === 'surge') return isBrawler(s, u) && !isEngaged(s, u);
   if (kind === 'reserves') {
     // a unit about to be swarmed, not holding anything, can come back where it's needed
-    if (s.objectives.some((o) => onObjective(s, u, o)) || s.round >= 4) return false;
+    if (s.objectives.some((o) => onObjective(s, u, o)) || pace(s) >= 4) return false;
     const threats = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= 9).length;
     return threats >= 2 || alive(u).length * 2 <= u.startingStrength;
   }
@@ -387,7 +387,7 @@ export function botFightChoice(s: GameState, u: UnitState) {
 
 /** Is it worth pulling this unit back into Strategic Reserves (or into a transport) right now? */
 export function redeployWorth(s: GameState, u: UnitState): boolean {
-  if (s.objectives.some((o) => onObjective(s, u, o)) || s.round >= 4) return false;
+  if (s.objectives.some((o) => onObjective(s, u, o)) || pace(s) >= 4) return false;
   const threats = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= 9).length;
   if (threats >= 2 || alive(u).length * 2 <= u.startingStrength) return true;
   // a cheap raider (Tzaangors' Ambushing Hunters): out of the board now, back next turn by an objective it could not
@@ -412,7 +412,7 @@ export function botRedeployActs(s: GameState, p: PlayerId) {
  * worth the trouble that can't reach the enemy this turn on foot, and isn't holding an objective or in a fight.
  */
 export function jumpWorth(s: GameState, u: UnitState): boolean {
-  if (s.round >= 4 || isEngaged(s, u) || u.battleShocked || s.objectives.some((o) => onObjective(s, u, o))) return false;
+  if (pace(s) >= 4 || isEngaged(s, u) || u.battleShocked || s.objectives.some((o) => onObjective(s, u, o))) return false;
   if (unitValue(u) < 120) return false;
   const foes = boardUnits(s, other(u.owner));
   if (!foes.length) return false;

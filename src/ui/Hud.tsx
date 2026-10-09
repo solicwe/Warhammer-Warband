@@ -3,6 +3,7 @@
 // who has the upper hand (the advantage bar), the bot's commander speaking, and the summaries between rounds.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { GameState, PlayerId } from '../engine/types';
+import { lastRound } from '../engine/state';
 import { Emblem } from './ArmyBuilder';
 import { Icon } from './Icon';
 import { play } from './sfx';
@@ -155,7 +156,7 @@ export function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; 
     <div className="tray-backdrop center" onClick={final ? undefined : onClose}>
       <div className={`round-card slate ${final ? 'final' : ''}`} role="dialog" aria-label={final ? 'Battle result' : `Round ${t.round} summary`} onClick={final ? undefined : onClose}>
        <div className="slate-in">
-        <div className="rc-kicker">{final ? 'Battle over' : `Round ${t.round} of 5 complete`}</div>
+        <div className="rc-kicker">{final ? 'Battle over' : `Round ${t.round} of ${lastRound(s)} complete`}</div>
         {final && <div className={`rc-title ${win === 0 ? 'p0' : win === 1 ? 'p1' : ''}`}><Icon name="trophy" size={26} /> {win === 'draw' ? 'Draw' : `${names[win as number]} wins`}</div>}
         <div className="rc-grid">
           <span />

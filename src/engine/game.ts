@@ -7,7 +7,7 @@ import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
 import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointInPoly, pointSegDist, polyCentroid, segSegDist } from './geometry';
 import {
-  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
+  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
   heroFx, phaseKey,
 } from './state';
@@ -134,6 +134,8 @@ export interface NewGameOptions {
   dispositions?: [DispositionId, DispositionId];
   seed?: number;
   secondaryMode?: 'none' | 'tactical' | 'fixed';
+  /** a short game: battle rounds before it ends (default 5) */
+  maxRounds?: number;
 }
 
 export const emptyMission = (): MissionState => ({ trapped: [], decoyed: [], consecrated: [], triangulated: [], condemned: [], consecrationUnits: [], surveilled: [], done: [] });
@@ -177,6 +179,7 @@ export function createGame(o: NewGameOptions): GameState {
     version: 3,
     rng: (o.seed ?? Date.now()) >>> 0,
     round: 0,
+    ...(o.maxRounds && o.maxRounds < RULES.battleRounds ? { maxRounds: o.maxRounds } : {}),
     turn: -1,
     firstPlayer: 0,
     active: 0,
@@ -890,7 +893,7 @@ function endTurn(s: GameState) {
   onTurnEnd(s);
   scoreTiming(s, 'endOfYourTurn');
   for (const p of [0, 1] as PlayerId[]) scorePrimary(s, 'endOfAnyTurn', p);
-  scoreSecondaries(s, s.round === 5 && s.active !== s.firstPlayer);
+  scoreSecondaries(s, s.round === lastRound(s) && s.active !== s.firstPlayer);
   const second = s.active !== s.firstPlayer;
   if (!second) { s.phase = 'command'; startTurn(s, other(s.active)); return; }
   // end of battle round
@@ -900,7 +903,7 @@ function endTurn(s: GameState) {
       log(s, `${u.name} did not arrive from Reserves by battle round ${s.round} → destroyed`, 'kill', u.owner);
     }
   }
-  if (s.round >= RULES.battleRounds) { endBattle(s); return; }
+  if (s.round >= lastRound(s)) { endBattle(s); return; }
   s.round += 1;
   startTurn(s, s.firstPlayer);
 }

@@ -33,7 +33,7 @@ import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
 import { Joystick } from './Joystick';
-import { RollOverlay, SecondaryCard } from './RollOverlay';
+import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { RITUALS } from '../engine/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/secondaries';
@@ -43,7 +43,7 @@ import { endUnitShooting, rangedWeaponNames, rerollAttackCount, toggleRerollPick
 import { polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../engine/deploy';
 import {
-  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, onBoard, other, spendStratagem, stratCost, strength, unitById, unitDistance,
+  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, stratCost, strength, unitById, unitDistance,
 } from '../engine/state';
 import type { BuffKind, GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
 import { hasCover, hasLos, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
@@ -52,6 +52,8 @@ import { Portrait, unitToken } from './Tokens';
 import { isMelee, hasAbility } from '../engine/weapons';
 import { Board, type Paths, type Ring } from './Board';
 import { DiceTray } from './DiceTray';
+import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
+import { RelicStrip } from './Relics';
 import { UnitView } from './Sheet';
 import { useGame } from './store';
 import { AttackReport } from './AttackReport';
@@ -100,6 +102,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // the bot that matters for labels: the one acting now, else the single bot
   const bot: PlayerId | null = actingBot ?? (bots.length === 1 ? bots[0] : null);
   const [speed, setSpeed] = useState<0 | 1 | 2>(1); // bot-vs-bot: pause / normal / fast
+  // the player hurries the bot's turn along: shorter pauses between its steps, results-only reports
+  const [rush, setRush] = useState(false);
+  const [coach, setCoachRaw] = useState(loadCoach);
+  const setCoach = (c: ReturnType<typeof loadCoach>) => { setCoachRaw(c); saveCoach(c); };
   const [showMenu, setShowMenu] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [cardSide, setCardSide] = useState<PlayerId | null>(null); // whose cards the card viewer shows
@@ -247,7 +253,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const drive = who === null && spectate && !s.attack;
     if (who === null && !drive) return;
     const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command';
-    const delay = (quick ? 350 : 950) / (spectate && speed === 2 ? 3 : 1);
+    const delay = (quick ? 350 : 950) / (spectate && speed === 2 ? 3 : 1) / (rush ? 5 : 1);
     const caption = (before: GameState, after: GameState) => {
       const fresh = after.log.slice(before.log.length).filter((e) => e.kind !== 'roll' || /charge|Advance/i.test(e.text));
       if (fresh.length) { setBotSays(fresh[fresh.length - 1].text); setBotWho(fresh[fresh.length - 1].player); }
@@ -279,7 +285,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       catch { window.clearTimeout(giveUp); worker.onmessage = null; setStepping(false); stepOnMain.current = true; onMain(); }
     }, delay);
     return () => window.clearTimeout(t);
-  }, [s, actingBot, act, botSays, rolling, reporting, thinking, stepping, viewing, worker, speed, spectate, bots.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s, actingBot, act, botSays, rolling, reporting, thinking, stepping, viewing, worker, speed, spectate, bots.length, rush]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the hurry lasts for the bot's turn only
+  useEffect(() => { if (actingBot === null && !spectate) setRush(false); }, [actingBot, spectate]);
   // what happens on the table, in the bot commander's words: kills and losses, objectives changing hands, charges
   const heard = useRef({ fx: s.fxSeq ?? 0, log: s.log.length, ctrl: s.objectives.map((o) => o.controller) });
   useEffect(() => {
@@ -806,7 +814,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (!Number.isFinite(max) || max <= 0) return null;
     const moved = draft ? Math.max(0, ...[...draft.values()].map((p) => (p.length > 1 ? Math.hypot(p[p.length - 1].x - p[0].x, p[p.length - 1].y - p[0].y) : 0))) : 0;
     return (
-      <div className="move-joy">
+      <div className="move-joy" data-coach="joy">
         <Joystick onMove={joyMove} onEnd={() => { if (draftRef.current) onDragEnd(draftRef.current); }} />
         <div className="move-joy-info">
           <span className="move-joy-d">{moved.toFixed(1)}" <span className="tiny muted">/ {max.toFixed(1)}"</span></span>
@@ -1069,7 +1077,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className="handoff">{pName(s, p)} ({s.players[p].role === 'attacker' ? 'Attacker' : 'Defender'}) deploys: players alternate one unit at a time</div>
         <div className="unit-strip">{pending.map((x) => unitPill(x, false))}</div>
         {!bots.includes(p) && pending.length > 0 && !(s.autoDeploy ?? []).includes(p) && (
-          <button className="btn" onClick={() => { act((g) => { g.autoDeploy = [...(g.autoDeploy ?? []), p]; }); setSel(null); }}>Deploy the rest for me</button>
+          <button className="btn" data-coach="deploy-auto" onClick={() => { act((g) => { g.autoDeploy = [...(g.autoDeploy ?? []), p]; }); setSel(null); }}>Deploy the rest for me</button>
         )}
         {u ? (
           <div className="row">
@@ -1284,7 +1292,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <>
               {unitCard(u)}
               <div className="row acts">
-                {!isEngaged(s, u) && <button className="btn" onClick={() => start('normal')}><Icon name="move" /> Normal {(alive(u)[0].profile.M ?? 0) + unitFlags(s, u).move}"</button>}
+                {!isEngaged(s, u) && <button className="btn" data-coach="normal" onClick={() => start('normal')}><Icon name="move" /> Normal {(alive(u)[0].profile.M ?? 0) + unitFlags(s, u).move}"</button>}
                 {!isEngaged(s, u) && <button className="btn" onClick={() => start('advance')}><Icon name="advance" /> Advance</button>}
                 {isEngaged(s, u) && <button className="btn" onClick={() => start('fallback')}><Icon name="fallback" /> Fall back</button>}
                 <button className="btn" onClick={() => { act((g) => remainStationary(g, unitById(g, u.id))); setSel(null); }}><Icon name="hold" /> Remain Stationary</button>
@@ -1391,7 +1399,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           {res && !res.error && res.notes.map((n) => <div key={n} className="err">{n}</div>)}
           <div className="row">
             <button className="btn" onClick={() => setMode(null)}>Cancel</button>
-            <button className="btn primary grow" disabled={!res || !!res.error || !res.pools.length} onClick={() => {
+            <button className="btn primary grow" data-coach="fire" disabled={!res || !!res.error || !res.pools.length} onClick={() => {
               const auto = onAuto(s, modeUnit.owner);
               act((g) => {
                 const gu = unitById(g, modeUnit.id);
@@ -1418,7 +1426,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <>
             {unitCard(u)}
             <div className="row acts">
-              {modes.map((m) => <button key={m} className="btn primary" onClick={() => { act((g) => autoSelectToShoot(g, unitById(g, u.id))); setMode({ k: 'shoot', unitId: u.id, smode: m, target: null, useCQ: false, profile: {} }); }}><Icon name="shoot" /> {m === 'normal' ? 'Shoot' : m === 'assault' ? 'Assault (after Advancing)' : m === 'closeQuarters' ? 'Close-quarters' : 'Indirect'}</button>)}
+              {modes.map((m, i) => <button key={m} className="btn primary" data-coach={i === 0 ? 'shoot' : undefined} onClick={() => { act((g) => autoSelectToShoot(g, unitById(g, u.id))); setMode({ k: 'shoot', unitId: u.id, smode: m, target: null, useCQ: false, profile: {} }); }}><Icon name="shoot" /> {m === 'normal' ? 'Shoot' : m === 'assault' ? 'Assault (after Advancing)' : m === 'closeQuarters' ? 'Close-quarters' : 'Indirect'}</button>)}
               {modes.length === 0 && <span className="muted small">{u.selectedToShoot ? 'Already shot' : u.move === 'fallback' ? 'Fell Back: cannot shoot' : u.move === 'advance' ? 'Advanced (no Assault weapons)' : 'Cannot shoot'}</span>}
               {canExplode && <button className="btn small" onClick={() => setMode({ k: 'explosives', unitId: u.id, target: null })}>Explosives 1CP</button>}
               {u.weaponsFired.length > 0 && !u.selectedToShoot && <button className="btn small ghost" onClick={() => act((g) => endUnitShooting(unitById(g, u.id)))}>Done shooting with this unit</button>}
@@ -1493,7 +1501,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             {unitCard(u)}
             {why ? <div className="muted small">Cannot charge: {why}</div> : (
               <div className="row">
-                <button className="btn primary" onClick={() => { act((g) => autoDeclareCharge(g, unitById(g, u.id), fly)); setMode({ k: 'charge', unitId: u.id, targets: [] }, startPaths(u)); }}>Declare charge (2D6)</button>
+                <button className="btn primary" data-coach="charge" onClick={() => { act((g) => autoDeclareCharge(g, unitById(g, u.id), fly)); setMode({ k: 'charge', unitId: u.id, targets: [] }, startPaths(u)); }}>Declare charge (2D6)</button>
                 {hasKw(u, 'FLY') && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
               </div>
             )}
@@ -1648,7 +1656,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const missionsSheet = () => {
     const L = deploymentById(s.deploymentId);
-    const whenTh: Record<string, string> = { endOfYourTurn: 'end of your turn', endOfYourCommandPhase: 'end of your Command phase (round 5: end of turn)', endOfBattle: 'end of the battle', endOfAnyTurn: 'end of every turn' };
+    const whenTh: Record<string, string> = { endOfYourTurn: 'end of your turn', endOfYourCommandPhase: 'end of your Command phase (last round: end of turn)', endOfBattle: 'end of the battle', endOfAnyTurn: 'end of every turn' };
     return (
       <div className="tray-backdrop" onClick={() => setShowMissions(false)}>
         <div className="tray" onClick={(e) => e.stopPropagation()}>
@@ -1675,7 +1683,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 <div style={{ fontWeight: 700 }}>Primary: {prim.name}</div>
                 {prim.scoring.map((r) => (
                   <div key={r.text + r.rounds} className="small prim-row">
-                    <span className="tiny muted">{r.rounds[0] === r.rounds[1] ? `R${r.rounds[0]}` : r.rounds[0] === 1 && r.rounds[1] === 5 ? 'every round' : `R${r.rounds[0]}–${r.rounds[1]}`} · {whenTh[r.when]}</span>
+                    <span className="tiny muted">{roundsText(r.rounds, lastRound(s))} · {whenTh[r.when]}</span>
                     <div>{r.text} <b>{r.tiers ? '' : `${r.vp}VP`}</b>{r.bonus ? <span className="muted"> {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</div>
                   </div>
                 ))}
@@ -1737,7 +1745,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <div className="row">
         <div className="handoff grow">{s.winner === 'draw' ? 'The battle ends in a draw' : `${pName(s, s.winner as PlayerId)} wins`}</div>
         <button className="btn" onClick={() => setFinalSeen(false)}>Result</button>
-        <button className="btn primary" onClick={onExit}>Home</button>
+        <button className="btn primary" onClick={onExit}>{s.campaign ? 'Campaign' : 'Home'}</button>
       </div>
     );
     if (spectate) return (
@@ -1751,7 +1759,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       </div>
     );
     // the bot's turn: what it just did, in a line (the commander above says why)
-    if (actingBot !== null) return <div className="bot-act"><span className={`bot-dot s${actingBot}`} />{thinking ? `${pName(s, actingBot)} is weighing its turn…` : botSays ?? `${pName(s, actingBot)} is playing…`}</div>;
+    if (actingBot !== null) return (
+      <div className="bot-act">
+        <span className={`bot-dot s${actingBot}`} />
+        <span className="grow">{thinking ? `${pName(s, actingBot)} is weighing its turn…` : botSays ?? `${pName(s, actingBot)} is playing…`}</span>
+        <button className={`btn small ff ${rush ? 'on' : ''}`} aria-pressed={rush} onClick={() => setRush((v) => !v)} title="Speed up the bot's turn: shorter pauses, results only">
+          <Icon name="advance" size={16} /> {rush ? 'Fast' : 'Faster'}
+        </button>
+      </div>
+    );
     if (s.phase === 'scouts') return scoutsPanel();
     if (mode?.k === 'move' && (mode.kind === 'extra' || mode.kind === 'surge')) return extraMovePanel();
     if (s.window) return windowPanel();
@@ -1792,6 +1808,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const planReady = !!plan && plan.turn === s.turn && s.active !== plan.p && plan.intents.length > 0;
   if (showPlan && planReady) for (const a of plan!.intents) if (onBoard(U(a.targetId)) && U(a.targetId).owner !== plan!.p) (badges[a.targetId] ??= []).includes('Threatened') || (badges[a.targetId] ??= []).push('Threatened');
   const final = s.phase === 'gameover' && !finalSeen;
+  // first battles against the bot: a tip at each new thing to do, with the control to use ringed
+  const ownSel = !!selUnit && selUnit.owner === human && onBoard(selUnit);
+  const tip = human !== null && !coach.off && !viewing && !sheet && !showStrats && !reporting && !rolling && !final && !tape.on
+    ? tipsNow({
+      s, me: human, botActing: actingBot !== null, planReady,
+      mode: mode ? { k: mode.k, kind: 'kind' in mode ? String(mode.kind) : undefined, target: 'target' in mode ? (mode.target as string | null) : undefined } : null,
+      selFresh: ownSel && (s.phase !== 'movement' || !selUnit!.move) && (s.phase !== 'shooting' || !selUnit!.selectedToShoot),
+      selCanShoot: ownSel && s.phase === 'shooting' && shootingModes(s, selUnit!).length > 0,
+      selCanCharge: ownSel && s.phase === 'charge' && !chargeEligibility(s, selUnit!),
+    }).find((t) => !coach.seen.includes(t.id)) ?? null
+    : null;
 
   return (
     <div className="game">
@@ -1800,7 +1827,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <button className="icon-btn" onClick={() => setShowMenu(true)} aria-label="Menu"><Icon name="menu" size={24} /></button>
           <SideScore s={s} p={0} label={sideLabel(0)} onOpen={() => { setCardSide(0); setShowCards(true); }} />
           <button className="round-box" onClick={() => setShowLog(true)} aria-label="Battle log">
-            <span className="rb-round">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : `Round ${s.round}/5`}</span>
+            <span className="rb-round">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : `Round ${s.round}/${lastRound(s)}`}</span>
             <span className={`rb-turn ${s.active ? 'p1' : 'p0'}`}>{turnText}</span>
           </button>
           <SideScore s={s} p={1} label={sideLabel(1)} onOpen={() => { setCardSide(1); setShowCards(true); }} />
@@ -1849,10 +1876,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onDragEnd={onDragEnd}
           plan={planArrows}
         />
-        <AttackReport s={s} level={spectate && speed === 2 && fxLevel === 'full' ? 'short' : fxLevel} quick={(o) => spectate || bots.includes(o)} onBusy={setReporting}
+        <AttackReport s={s} level={((spectate && speed === 2) || (rush && actingBot !== null)) && fxLevel === 'full' ? 'short' : fxLevel} quick={(o) => spectate || rush || bots.includes(o)} onBusy={setReporting}
           onShake={(lv) => { if (!lv) return; setShake(lv); window.setTimeout(() => setShake(0), 420 + lv * 80); }} />
         {botSays && actingBot === null && !spectate && <div className="bot-caption">{botSays}</div>}
         {toast && <div className="toast">{toast}</div>}
+        {s.campaign && <RelicStrip relics={s.campaign.relics} rules={s.campaign.rules} onInfo={flash} />}
         {tape.on && (
           <div className="tape-bar">
             <span>{tapeInfo ? tapeInfo.line : tape.a ? 'Tap the second point (tap a model = base to base + line of sight)' : 'Tape measure: tap a model or a first point'}</span>
@@ -1885,7 +1913,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         </div>
       </aside>
 
-      <RollOverlay s={s} onBusy={setRolling} quick={spectate} />
+      <Coach tip={tip} onSeen={(id) => setCoachRaw((c) => { if (c.seen.includes(id)) return c; const n = { ...c, seen: [...c.seen, id] }; saveCoach(n); return n; })} onOff={() => setCoach({ ...coach, off: true })} />
+      <RollOverlay s={s} onBusy={setRolling} quick={spectate || (rush && actingBot !== null)} />
       {s.attack && (
         <DiceTray
           s={s}
@@ -1932,7 +1961,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         const disp = dispositionById(P.disposition as DispositionId);
         const act0 = prim.action ? MISSIONS.actions[prim.action] : undefined;
         const whenTh: Record<string, string> = { endOfYourTurn: 'end of your turn', endOfYourCommandPhase: 'end of your Command phase', endOfBattle: 'end of the battle', endOfAnyTurn: 'end of every turn' };
-        const rounds = (r: number[]) => (r[0] === r[1] ? `Round ${r[0]}` : r[0] === 1 && r[1] === 5 ? 'Every round' : `Rounds ${r[0]}–${r[1]}`);
+        const rounds = (r: number[]) => roundsText(r, lastRound(s));
         return (
           <div className="tray-backdrop" onClick={() => setShowCards(false)}>
             <div className="tray mc" onClick={(e) => e.stopPropagation()}>
@@ -2029,6 +2058,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               </div>
               <span className="field-note">{fxLevel === 'full' ? 'Each attack counts up: shots, hits, wounds, through the saves — and what changed the odds' : fxLevel === 'short' ? 'Only what each attack destroyed' : 'No reports (the board still shows the shots)'}</span>
             </div>
+            {bots.length === 1 && (
+              <div className="field">
+                <span id="tips">Tips for a first battle</span>
+                <div className="seg" role="radiogroup" aria-labelledby="tips">
+                  <button role="radio" aria-checked={!coach.off} className={!coach.off ? 'on' : ''} onClick={() => setCoach({ ...coach, off: false })}>On</button>
+                  <button role="radio" aria-checked={coach.off} className={coach.off ? 'on' : ''} onClick={() => setCoach({ ...coach, off: true })}>Off</button>
+                </div>
+                {coach.seen.length > 0 && <button className="linkish small" onClick={() => { setCoach({ off: false, seen: [] }); setShowMenu(false); }}>Show every tip again</button>}
+              </div>
+            )}
             <div className="field">
               <span id="snd">Sound</span>
               <div className="seg" role="radiogroup" aria-labelledby="snd">
@@ -2117,7 +2156,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <RoundSummary s={s} t={tally(s, null)} final onClose={() => setFinalSeen(true)}
           actions={<>
             <button className="btn" onClick={(e) => { e.stopPropagation(); setFinalSeen(true); }}>See the board</button>
-            <button className="btn primary" onClick={(e) => { e.stopPropagation(); onExit(); }}>Back to home</button>
+            <button className="btn primary" onClick={(e) => { e.stopPropagation(); onExit(); }}>{s.campaign ? 'Back to the campaign' : 'Back to home'}</button>
           </>} />
       )}
     </div>

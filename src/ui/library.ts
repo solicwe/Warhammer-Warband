@@ -42,11 +42,13 @@ export interface BattlePrefs {
   layoutPick: string;
   /** how hard the bot plays */
   level: BotLevel;
+  /** battle rounds: the full 5, or a short game of 3 */
+  rounds: 3 | 5;
 }
 
 export function loadBattlePrefs(armies: Army[]): BattlePrefs {
   const fallback = (i: number): ArmyRef => (armies[i] ? { kind: 'list', id: armies[i].id } : { kind: 'preset', factionId: i ? 'ORK' : 'SM' });
-  const base: BattlePrefs = { mode: 'bot', sides: [fallback(0), fallback(1)], names: ['Player 1', 'Player 2'], secMode: 'tactical', layoutPick: '', level: 'hard' };
+  const base: BattlePrefs = { mode: 'bot', sides: [fallback(0), fallback(1)], names: ['Player 1', 'Player 2'], secMode: 'tactical', layoutPick: '', level: 'hard', rounds: 5 };
   try {
     const v = JSON.parse(localStorage.getItem(BATTLE_KEY) ?? 'null') as Partial<BattlePrefs> | null;
     if (!v) return base;
@@ -56,6 +58,7 @@ export function loadBattlePrefs(armies: Army[]): BattlePrefs {
       sides: [ok(v.sides?.[0]) ? v.sides![0] : base.sides[0], ok(v.sides?.[1]) ? v.sides![1] : base.sides[1]],
       names: Array.isArray(v.names) && v.names.length === 2 ? v.names as [string, string] : base.names,
       level: ['easy', 'normal', 'hard', 'expert'].includes(v.level as string) ? v.level as BotLevel : base.level,
+      rounds: v.rounds === 3 ? 3 : 5,
     };
   } catch { return base; }
 }

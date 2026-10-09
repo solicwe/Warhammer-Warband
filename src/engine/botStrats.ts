@@ -15,7 +15,7 @@ import {
 } from './game';
 import { addTimed, applyLateEffects, targetHasCover, unitFlags, withRuleCache } from './effects';
 import { botFightOnDeath } from './botPlus';
-import { alive, boardUnits, canUseStratagem, hasKw, isEngaged, log, other, spendStratagem, stratCost, unitById, unitDistance } from './state';
+import { alive, boardUnits, canUseStratagem, hasKw, isEngaged, lastRound, log, other, pace, spendStratagem, stratCost, unitById, unitDistance } from './state';
 import { applyDetachmentStratagem, stratagemBlock, stratChoices, stratRule, withChoice, type StratRule } from './stratagems';
 import { unitVisibleTo } from './visibility';
 import type { AttackSession, GameState, PlayerId, StratagemData, TimedEffect, UnitState } from './types';
@@ -24,7 +24,7 @@ import type { AttackSession, GameState, PlayerId, StratagemData, TimedEffect, Un
 export const isBot = (s: GameState, p: PlayerId) => (s.bots ?? (s.botPlayer != null ? [s.botPlayer] : [])).includes(p) || (s.autoRules ?? []).includes(p);
 
 /** Can the bot afford this now and still keep a CP for a re-roll (until the last round)? */
-const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= 5 ? 0 : 1) => s.players[p].cp - cost >= keep;
+const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= lastRound(s) ? 0 : 1) => s.players[p].cp - cost >= keep;
 
 /**
  * What one CP is worth right now, in points of damage done or saved. A good player spends CP every turn: points left
@@ -33,13 +33,13 @@ const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= 5 ? 0 
  */
 export function cpWorth(s: GameState, p: PlayerId): number {
   // the battle's last turn: a CP not spent now is never spent
-  if (s.round >= 5 && s.active !== s.firstPlayer) return 1;
-  const left = Math.max(1, 6 - s.round); // rounds still to play, this one included
+  if (s.round >= lastRound(s) && s.active !== s.firstPlayer) return 1;
+  const left = Math.max(1, lastRound(s) + 1 - s.round); // rounds still to play, this one included
   const perRound = s.players[p].cp / left;
   // a bank of CP that can't all be spent in the rounds left is cheap: use it (a player ending on 7 CP wasted 7 stratagems)
   const w = botOff('cpBank') ? (perRound < 1 ? 14 : perRound < 2 ? 10 : 7)
     : perRound < 1 ? 14 : perRound < 1.5 ? 10 : perRound < 2.5 ? 6 : 3;
-  return s.round >= 5 ? w * 0.6 : w;
+  return s.round >= lastRound(s) ? w * 0.6 : w;
 }
 
 // ---------- Command Re-roll on attack dice ----------
@@ -254,7 +254,7 @@ function ingressWorth(s: GameState, u: UnitState, pos: Map<string, { x: number; 
   const foes = boardUnits(s, other(u.owner)).filter((e) => alive(e).some((m) => near(m, maxRange(u) + reach)));
   if (foes.length) v += 0.25 * Math.max(...foes.map((e) => Math.min(alive(e).length, rangedKills(u, e)) * perModel(e)));
   // from round 3 on a unit in reserves is wasted points
-  if (s.round >= 3) v += 0.3 * unitValue(u);
+  if (pace(s) >= 3) v += 0.3 * unitValue(u);
   return v;
 }
 

@@ -13,7 +13,7 @@ import {
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
 import { baseDist, circleTouchesPoly, dist } from './geometry';
-import { alive, boardUnits, engagedEnemies, hasKw, heroFx, log, onBoard, other, phaseKey, pushFx, unitById, unitDistance } from './state';
+import { alive, boardUnits, engagedEnemies, hasKw, heroFx, log, onBoard, other, pace, phaseKey, pushFx, unitById, unitDistance } from './state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
@@ -846,12 +846,12 @@ export function botUseActs(s: GameState, p: PlayerId, when?: Trigger[], unitId?:
     const use = m.def.spec.botUse ?? 'always';
     if (use === 'never') continue;
     if (use === 'damaged' && !m.targets.some((t) => alive(t).some((x) => x.wounds < x.profile.W) || t.models.some((x) => x.dead))) continue;
-    if (use === 'valuable' && !(engagedEnemies(s, m.def.holder).some((e) => e.pts >= 100) || s.round >= 4)) continue;
+    if (use === 'valuable' && !(engagedEnemies(s, m.def.holder).some((e) => e.pts >= 100) || pace(s) >= 4)) continue;
     if (use === 'round2' && s.round < 2) continue;
-    if (use === 'round3' && s.round < 3) continue;
+    if (use === 'round3' && pace(s) < 3) continue;
     // a once-per-battle shooting boost is kept for a turn when the enemy is close, not spent on long-range potshots
     if (use === 'always' && (m.def.spec.limit === 'battle' || m.def.spec.battleUses) && ['selectedToShoot', 'shooting'].includes(m.def.spec.when)
-      && s.round < 4 && !boardUnits(s, other(p)).some((e) => unitDistance(m.def.holder, e) <= 12)) continue;
+      && pace(s) < 4 && !boardUnits(s, other(p)).some((e) => unitDistance(m.def.holder, e) <= 12)) continue;
     if (use === 'healthy' && alive(m.def.holder).reduce((a, x) => a + x.wounds, 0) * 2 <= m.def.holder.models.reduce((a, x) => a + x.profile.W, 0)) continue;
     if (m.def.spec.do?.some((a) => a.move || a.surge || a.reserves)) continue; // moves need a plan the bot does not make
     if (!(m.def.spec.botIf ?? []).every((c) => cond(c, { s, A: m.def.holder, holder: m.def.holder, bearers: m.def.bearers }))) continue;

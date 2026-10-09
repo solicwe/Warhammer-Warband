@@ -48,6 +48,11 @@ export function unitDistance(a: UnitState, b: UnitState): number {
   return best;
 }
 
+/** The battle round the game ends after (5, or fewer in a short game). */
+export const lastRound = (s: GameState) => s.maxRounds ?? RULES.battleRounds;
+/** How far into the battle this is, as the round of a full 5-round game (a short game's rounds count for more). */
+export const pace = (s: GameState) => (s.maxRounds ? (s.round * RULES.battleRounds) / s.maxRounds : s.round);
+
 export const modelEngagedWith = (m: ModelState, u: UnitState) => alive(u).some((n) => baseDist(m, n) <= RULES.engagementRange + 1e-6);
 
 export function engagedEnemies(s: GameState, u: UnitState): UnitState[] {
@@ -127,7 +132,7 @@ export type AutoReroll = 'hazard' | 'damage' | 'attacks';
  */
 export function wantsCR(s: GameState, player: PlayerId, _what: AutoReroll, unit?: UnitState): boolean {
   if (canUseStratagem(s, player, 'command-reroll', unit)) return false;
-  return s.players[player].cp - 1 >= (s.round >= 5 ? 0 : 1);
+  return s.players[player].cp - 1 >= (s.round >= lastRound(s) ? 0 : 1);
 }
 
 export function withinTerrain(s: GameState, m: ModelState, categories: string[] = ['exposed', 'light', 'dense']) {

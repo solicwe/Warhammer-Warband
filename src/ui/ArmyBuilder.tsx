@@ -932,7 +932,8 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       </header>
       <div className="ab-body">
         {tab === 'list' && (
-          <div className="ab-head">
+          <div className="ab-head slate">
+           <div className="slate-in">
             <div className="ab-head-main">
               <Emblem factionId={list.factionId} color={sub?.color} sub={list.subfaction} />
               <span className="grow ab-head-text">
@@ -951,6 +952,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               )}
             </div>
             {dispositionChips()}
+           </div>
           </div>
         )}
         {!faction && <div className="ab-empty">Loading…</div>}

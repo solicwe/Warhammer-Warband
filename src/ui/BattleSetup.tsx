@@ -33,6 +33,11 @@ const LEVELS: { id: BattlePrefs['level']; label: string; note: string }[] = [
   { id: 'expert', label: 'Expert', note: 'Five ways, three rolls each. The strongest, and the longest thinking (up to ~40 s).' },
 ];
 
+const LENGTHS: { id: BattlePrefs['rounds']; label: string; note: string }[] = [
+  { id: 5, label: 'Full · 5 rounds', note: 'The whole battle, as at a tournament.' },
+  { id: 3, label: 'Short · 3 rounds', note: 'A quicker battle: three rounds, then the score is final. Good with a small army (Incursion).' },
+];
+
 const MODES: { id: BattleMode; label: string }[] = [
   { id: 'bot', label: 'vs Bot' },
   { id: 'hotseat', label: '2 Players' },
@@ -98,7 +103,7 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
       const layout = LAYOUTS.find((l) => l.id === prefs.layoutPick) ?? LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
       const s = createGame({
         lists: [ready(0), ready(1)], factions: [factions[0], factions[1]],
-        names: [playerName(0), playerName(1)], deploymentId: layout?.id, dispositions: dz, secondaryMode: prefs.secMode,
+        names: [playerName(0), playerName(1)], deploymentId: layout?.id, dispositions: dz, secondaryMode: prefs.secMode, maxRounds: prefs.rounds,
       });
       s.botPlayer = prefs.mode === 'bot' ? 1 : null;
       s.bots = prefs.mode === 'botbot' ? [0, 1] : prefs.mode === 'bot' ? [1] : [];
@@ -208,6 +213,13 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
                 <span>{allMaps ? `${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}` : `#${l.number} ${deploymentName(l.deployment)}`}</span>
               </button>
             ))}
+          </div>
+          <div className="field">
+            <span id="length">Battle length</span>
+            <div className="seg" role="radiogroup" aria-labelledby="length">
+              {LENGTHS.map((m) => <button key={m.id} type="button" role="radio" aria-checked={prefs.rounds === m.id} className={prefs.rounds === m.id ? 'on' : ''} onClick={() => set({ rounds: m.id })}>{m.label}</button>)}
+            </div>
+            <span className="field-note">{LENGTHS.find((m) => m.id === prefs.rounds)?.note}</span>
           </div>
           <div className="field">
             <span id="sec-mode">Secondary Missions</span>

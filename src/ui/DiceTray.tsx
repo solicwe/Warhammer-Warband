@@ -125,7 +125,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
 
   return (
     <div className="tray-backdrop">
-      <div className="tray">
+      <div className="tray dice-tray">
         <div className="row">
           <div className="grow">
             <div className="small muted">{at.kind === 'fight' ? 'Fight' : at.kind === 'overwatch' ? 'Fire Overwatch' : 'Shooting'}</div>

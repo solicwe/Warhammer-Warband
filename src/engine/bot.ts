@@ -19,7 +19,7 @@ import { unitVisibleTo } from './visibility';
 import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, botChargeBonusStratagem, botCommandExtras, botFightEndActs, botIgnoreModsStratagem, botReadyStratagem, botShieldStratagem, botTeleportActs } from './botPlus';
 import { botAdvanceActs, botArrivalStratagem, botCharacterStratagem, botFightChoice, botFightStartStratagems, botFightsFirstStratagem, botLooseDisembark, botMobileStratagem, botPileStratagem, botRedeployActs, botShootActs, botShootOnTheMove, botAdvanceStratagem, botAfterShootMove, botConsolidateStratagem, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
-import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, log, onBoard, other, spendStratagem, unitById, unitDistance } from './state';
+import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, lastRound, log, onBoard, other, pace, spendStratagem, unitById, unitDistance } from './state';
 import { actionOptions, startAction } from './missions';
 import { secondaryChance, secondaryDead } from './secondaries';
 import {
@@ -119,7 +119,7 @@ export function botManageCards(s: GameState, p: PlayerId) {
   const P = s.players[p];
   if (P.secMode !== 'tactical' || s.botIgnoresCards?.includes(p)) return;
   // dead, or very unlikely to score this turn: the slot is better used by a fresh card next turn (and +1CP now)
-  const dead = (id: string) => secondaryDead(s, p, id) || (s.round < 5 && secondaryChance(s, p, id) < 0.2);
+  const dead = (id: string) => secondaryDead(s, p, id) || (s.round < lastRound(s) && secondaryChance(s, p, id) < 0.2);
   for (const id of [...P.secActive]) {
     if (!dead(id)) continue;
     if (!P.secSwapUsed && P.cp >= 2 && s.phase === 'command' && s.active === p) swapSecondary(s, p, id);
@@ -154,7 +154,7 @@ export function botCommand(s: GameState) {
   if (P.armyRules.some((r) => r.name === 'Waaagh!') && !P.waaaghUsed && s.round >= 2) {
     const brawlers = mine.filter((u) => isBrawler(s, u));
     const close = brawlers.filter((u) => enemies.some((e) => unitDistance(u, e) <= 16));
-    if (s.round >= 3 || close.length >= Math.max(1, brawlers.length / 2)) callWaaagh(s, p);
+    if (pace(s) >= 3 || close.length >= Math.max(1, brawlers.length / 2)) callWaaagh(s, p);
   }
   botDetachmentChoices(s, p, mine, enemies);
   // Master of Battle: a second Oath of Moment target
@@ -197,12 +197,12 @@ function botDetachmentChoices(s: GameState, p: PlayerId, mine: UnitState[], enem
     const order = [...(prefer[c.choice.when] ?? []), ...c.choice.options.map((o) => o.id)];
     const ids = [...new Set(order.filter((id) => free.includes(id)))].slice(0, want);
     // keep limited-use rules (e.g. 3 doctrines in 5 rounds) for when the armies are close
-    if (c.choice.uses === 'limit' && !near && s.round < 3) continue;
+    if (c.choice.uses === 'limit' && !near && pace(s) < 3) continue;
     // Combat Doctrines (each once per battle): only when it does something this turn — tactical to leave a fight and
     // still shoot / charge, assault to Advance and charge when the enemy is close, devastator to Advance and still shoot
     if (c.rule === 'Combat Doctrines') {
       const pick = engaged && free.includes('tactical') ? 'tactical' : near && free.includes('assault') ? 'assault'
-        : s.round >= 2 && free.includes('devastator') ? 'devastator' : s.round >= 4 ? free[0] : null;
+        : s.round >= 2 && free.includes('devastator') ? 'devastator' : pace(s) >= 4 ? free[0] : null;
       if (pick) pickDetChoice(s, p, c.rule, [pick]);
       continue;
     }
@@ -264,7 +264,7 @@ function botDisembark(s: GameState, p: PlayerId): boolean {
 function wantsOut(s: GameState, u: UnitState, t: UnitState, near: number, need: number | undefined): boolean {
   const M = moveOf(u);
   const fighter = isBrawler(s, u);
-  return s.round >= 3
+  return pace(s) >= 3
     || (fighter && !unitFlags(s, t).assaultDisembark && near <= M + 10)
     || (!fighter && near <= maxRange(u) + 3)
     || (need !== undefined && need <= M + 5);
@@ -283,7 +283,7 @@ function botRapidDisembark(s: GameState, t: UnitState) {
     }
     if (mode !== 'rapid') continue;
     const shooter = !isBrawler(s, u) || unitFlags(s, t).assaultDisembark;
-    const go = (shooter && near <= Math.min(24, maxRange(u) + 2)) || (need !== undefined && dist(need, tm) <= 6) || s.round >= 3;
+    const go = (shooter && near <= Math.min(24, maxRange(u) + 2)) || (need !== undefined && dist(need, tm) <= 6) || pace(s) >= 3;
     if (go) getOut(s, u, t, goal);
   }
 }
@@ -325,7 +325,7 @@ export function botMoveOne(s: GameState): boolean {
       const pos = withRuleCache(() => bestArrival(s, u, how));
       // a deep striker waits in reserve until it can hurt something worth it (or the last round it may arrive) — but a
       // unit that lands on an objective we don't hold scores right away, and a turn in reserve is a turn doing nothing
-      if (pos && how === 'deepStrike' && s.round < 3 && !u.homer) {
+      if (pos && how === 'deepStrike' && pace(s) < 3 && !u.homer) {
         const strike = withRuleCache(() => arrivalStrike(s, u, pos));
         const valuable = boardUnits(s, other(s.active)).some((e) => unitValue(e) >= 150);
         const grabs = oc(u) > 0 && s.objectives.some((o) => o.controller !== s.active && [...pos.values()].some((q) => Math.hypot(q.x - o.x, q.y - o.y) <= 3.5));
@@ -487,7 +487,7 @@ export function botChargeOne(s: GameState): boolean {
     const brawler = isBrawler(s, u);
     // a shooting unit stuck in a fight next turn loses its guns (vehicles and monsters keep shooting): that is a cost
     const bigGuns = alive(u).some((m) => m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER'));
-    const gunsLost = brawler || bigGuns || s.round >= 5 ? 0 : Math.max(0, ...boardUnits(s, other(u.owner)).map((e) => Math.min(alive(e).length, rangedKills(u, e)) * perModel(e))) * 0.6;
+    const gunsLost = brawler || bigGuns || s.round >= lastRound(s) ? 0 : Math.max(0, ...boardUnits(s, other(u.owner)).map((e) => Math.min(alive(e).length, rangedKills(u, e)) * perModel(e))) * 0.6;
     // what the enemy answers with: Fire Overwatch from its best gun in range, a Heroic Intervention from a fighter nearby
     const threat = chargeAnswer(s, u);
     const value = (e: UnitState) => {
