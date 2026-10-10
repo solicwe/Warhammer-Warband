@@ -1,7 +1,7 @@
 # แก้ / เพิ่ม / ลบ กฎ — คู่มือไฟล์ข้อมูล
 
 กฎทั้งหมดของเกมอยู่ในไฟล์ JSON ข้างล่าง แก้แล้วรัน `npm test` เพื่อเช็ก แล้ว `npm run artifact` เพื่อ build ใหม่
-ตอนนี้โฟกัส **Space Marines (SM)**, **Orks (ORK)**, **Adeptus Custodes (AC)** และ **Thousand Sons (TS)** — faction อื่นใช้ได้แต่ระบบอ่านจากข้อความการ์ดเท่าที่อ่านได้
+ตอนนี้โฟกัส **Space Marines (SM)**, **Orks (ORK)**, **Adeptus Custodes (AC)**, **Thousand Sons (TS)** และ **Chaos Space Marines (CSM)** — faction อื่นใช้ได้แต่ระบบอ่านจากข้อความการ์ดเท่าที่อ่านได้
 
 | อยากแก้อะไร | ไฟล์ |
 |---|---|
@@ -9,9 +9,10 @@
 | **Space Marines (Codex 2026)** | `data/packs/SM.listforge-pack.json` (ไฟล์ ListForge) + `data/packs/SM.cards.txt` (การ์ด stratagem) — `npm run data` สร้าง SM จาก pack นี้แทน Wahapedia (ดู `scripts/pack.mjs`) |
 | **Adeptus Custodes (Codex 2026)** | `data/packs/AC.listforge-pack.json` — Martial Ka'tah (readied) อยู่ใน `data/detachment-rules.json` key `Martial Ka'tah` |
 | **Thousand Sons (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T, inferno S/AP, stratagem) อยู่ใน `data/overrides/TS.json`; Rituals (Cabal of Sorcerers) อยู่ใน `src/engine/rituals.ts` + bot ใน `src/engine/botRituals.ts`; Flow of Magic ใน `src/engine/flow.ts` |
-| Ability ของ datasheet | `data/abilities/SM.json`, `data/abilities/ORK.json`, `data/abilities/AC.json`, `data/abilities/TS.json` |
+| **Chaos Space Marines (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T5/T6, boltgun S5 AP-1 …) อยู่ใน `data/overrides/CSM.json`; Dark Pacts อยู่ใน `src/engine/darkPacts.ts` (mark `darkPact`, ผ่านเทสต์ได้ mark `pactOk:lethal` / `pactOk:sustained`); focus of hatred / Vendetta ใช้ช่องเดียวกับ Oath of Moment (`markRuleName` ใน `src/engine/game.ts`) |
+| Ability ของ datasheet | `data/abilities/SM.json`, `data/abilities/ORK.json`, `data/abilities/AC.json`, `data/abilities/TS.json`, `data/abilities/CSM.json` (รวม enhancement) |
 | กฎ Detachment / Army rule | `data/detachment-rules.json` |
-| **Stratagem ของ detachment** | `data/stratagems/SM.json`, `data/stratagems/ORK.json`, `data/stratagems/AC.json`, `data/stratagems/TS.json` |
+| **Stratagem ของ detachment** | `data/stratagems/SM.json`, `data/stratagems/ORK.json`, `data/stratagems/AC.json`, `data/stratagems/TS.json`, `data/stratagems/CSM.json` |
 | Core rules, core stratagems (Command Re-roll ฯลฯ) | `data/core-rules.json` |
 | Mission, secondary, terrain kind | `data/missions.json` |
 | แผนที่ (layout, objective, ruin) | `data/layouts.json` |

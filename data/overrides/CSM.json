@@ -1,0 +1,841 @@
+{
+ "_comment": "Chaos Space Marines Faction Pack v1.3 (legal from 30 Sep 2026): the datasheet characteristic changes Wahapedia does not have yet (T5/T6, Havocs W3, S5/AP-1 bolt weapons), and army rules of other factions that the export lists for CSM (a Chaos Space Marines army has Dark Pacts and Cult of the Dark Gods only).",
+ "datasheets": [
+  {
+   "name": "Abaddon The Despoiler",
+   "models": [
+    {
+     "name": "Abaddon The Despoiler",
+     "T": 6
+    }
+   ]
+  },
+  {
+   "name": "Chaos Bikers",
+   "models": [
+    {
+     "name": "Chaos Bikers",
+     "T": 6
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Astartes chainsword",
+     "profiles": [
+      {
+       "name": "Astartes chainsword",
+       "S": 5
+      }
+     ]
+    },
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Lord In Terminator Armour",
+   "models": [
+    {
+     "name": "Chaos Lord In Terminator Armour",
+     "T": 6
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Terminator Squad",
+   "models": [
+    {
+     "name": "Chaos Terminator Squad",
+     "T": 6
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Huron Blackheart",
+   "models": [
+    {
+     "name": "Huron Blackheart",
+     "T": 6
+    }
+   ]
+  },
+  {
+   "name": "Kravek Morne",
+   "models": [
+    {
+     "name": "",
+     "T": 6
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Sorcerer In Terminator Armour",
+   "models": [
+    {
+     "name": "Sorcerer In Terminator Armour",
+     "T": 6
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Lord",
+   "models": [
+    {
+     "name": "Chaos Lord",
+     "T": 5
+    }
+   ]
+  },
+  {
+   "name": "Chaos Lord with Jump Pack",
+   "models": [
+    {
+     "name": "Chaos Lord",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chosen",
+   "models": [
+    {
+     "name": "Chosen",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Boltgun",
+     "profiles": [
+      {
+       "name": "Boltgun",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Cypher",
+   "models": [
+    {
+     "name": "Cypher",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Cypher’s bolt pistol",
+     "profiles": [
+      {
+       "name": "Cypher’s bolt pistol",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Dark Apostle",
+   "models": [
+    {
+     "name": "DARK APOSTLE",
+     "T": 5
+    },
+    {
+     "name": "DARK DISCIPLE",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Haarken Worldclaimer",
+   "models": [
+    {
+     "name": "Haarken Worldclaimer",
+     "T": 5
+    }
+   ]
+  },
+  {
+   "name": "Legionaries",
+   "models": [
+    {
+     "name": "Legionaries",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Astartes chainsword",
+     "profiles": [
+      {
+       "name": "Astartes chainsword",
+       "S": 5
+      }
+     ]
+    },
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Boltgun",
+     "profiles": [
+      {
+       "name": "Boltgun",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Master Of Executions",
+   "models": [
+    {
+     "name": "Master Of Executions",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Master Of Possession",
+   "models": [
+    {
+     "name": "Master Of Possession",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Nemesis Claw",
+   "models": [
+    {
+     "name": "Legionaries",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Astartes chainsword",
+     "profiles": [
+      {
+       "name": "Astartes chainsword",
+       "S": 5
+      }
+     ]
+    },
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Boltgun",
+     "profiles": [
+      {
+       "name": "Boltgun",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Nostraman chainblade",
+     "profiles": [
+      {
+       "name": "Nostraman chainblade",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Raptors",
+   "models": [
+    {
+     "name": "Raptors",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Astartes chainsword",
+     "profiles": [
+      {
+       "name": "Astartes chainsword",
+       "S": 5
+      }
+     ]
+    },
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Red Corsairs Raiders",
+   "models": [
+    {
+     "name": "",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Boltgun",
+     "profiles": [
+      {
+       "name": "Boltgun",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Red Corsairs Reave-Captain",
+   "models": [
+    {
+     "name": "",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Sorcerer",
+   "models": [
+    {
+     "name": "Sorcerer",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Warpsmith",
+   "models": [
+    {
+     "name": "Warpsmith",
+     "T": 5
+    }
+   ]
+  },
+  {
+   "name": "Warp Talons",
+   "models": [
+    {
+     "name": "Warp Talons",
+     "T": 5
+    }
+   ]
+  },
+  {
+   "name": "Fabius Bile",
+   "models": [
+    {
+     "name": "FABIUS BILE",
+     "T": 5
+    }
+   ]
+  },
+  {
+   "name": "Masters of the Maelstrom",
+   "models": [
+    {
+     "name": "GARLON SOULEATER, GARREON THE CORPSEMASTER, KATAR GARRIX",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Havocs",
+   "models": [
+    {
+     "name": "Havocs",
+     "W": 3
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Astartes chainsword",
+     "profiles": [
+      {
+       "name": "Astartes chainsword",
+       "S": 5
+      }
+     ]
+    },
+    {
+     "name": "Boltgun",
+     "profiles": [
+      {
+       "name": "Boltgun",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Lord Discordant On Helstalker",
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Land Raider",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Predator Annihilator",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Predator Destructor",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Rhino",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Vindicator",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Helbrute",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Possessed",
+   "weapons": [
+    {
+     "name": "Hideous mutations",
+     "profiles": [
+      {
+       "name": "Hideous mutations",
+       "S": 6
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "armyRules": [
+  {
+   "name": "Oath of Moment",
+   "_delete": true
+  },
+  {
+   "name": "Nurgle’s Gift (Aura)",
+   "_delete": true
+  },
+  {
+   "name": "Cabal of Sorcerers",
+   "_delete": true
+  },
+  {
+   "name": "Blessings of Khorne",
+   "_delete": true
+  },
+  {
+   "name": "Thrill Seekers",
+   "_delete": true
+  }
+ ]
+}

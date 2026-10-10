@@ -5,6 +5,7 @@ import orkStrats from '../../data/stratagems/ORK.json';
 import { reactWorth } from './botPlus';
 import smStrats from '../../data/stratagems/SM.json';
 import tsStrats from '../../data/stratagems/TS.json';
+import csmStrats from '../../data/stratagems/CSM.json';
 import { parseAbilityText } from './abilityText';
 import { runActions, shockTest, type Action } from './activations';
 import { kwPhrase } from './army';
@@ -96,6 +97,7 @@ const BOOKS: Record<string, Record<string, StratRule>> = {
   AC: (acStrats as unknown as { rules: Record<string, StratRule> }).rules,
   ORK: (orkStrats as unknown as { rules: Record<string, StratRule> }).rules,
   TS: (tsStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  CSM: (csmStrats as unknown as { rules: Record<string, StratRule> }).rules,
 };
 
 const OFFENCE_BUFFS: BuffKind[] = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
@@ -576,7 +578,7 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
 // ---------- reactions: the game offers a stratagem at its moment ----------
 
 /** Moments that cannot wait for a prompt (the dice are being rolled right now): only the bot or "use automatically" act. */
-const SYNC_ONLY = new Set<ReactOn>(['deadlyDemise', 'deadlyDemiseSix', 'enemyFallBack']);
+const SYNC_ONLY = new Set<ReactOn>(['deadlyDemise', 'deadlyDemiseSix', 'enemyFallBack', 'enemyDeadlyDemise']);
 
 export interface ReactOffer { st: StratagemData; rule: StratRule; units: UnitState[] }
 
@@ -593,7 +595,9 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
     const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked'].includes(on)
       ? (ctx.unitId ? [unitById(s, ctx.unitId)] : [])
       : stratCandidates(s, p, st, ctx)
-    ).filter((u) => u.owner === p && !stratagemBlock(s, p, st, u, { react: true, ctx }));
+    ).filter((u) => u.owner === p && !stratagemBlock(s, p, st, u, { react: true, ctx }))
+      // Detonator: a unit within 18" of the exploding model
+      .filter((u) => on !== 'enemyDeadlyDemise' || alive(u).some((n) => { const m = ctx.unitId && unitById(s, ctx.unitId).models.find((x) => x.id === ctx.modelId); return !!m && baseDist(n, m) <= 18; }));
     if (units.length) out.push({ st, rule, units });
   }
   return out;

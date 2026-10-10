@@ -16,7 +16,7 @@ import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
 import { canCrossDense, endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathLength } from './pathing';
 import { detOnCommandStart } from './detachments';
-import { addTimed, applyStaticEffects, canDo, effectsFor, expireTimed, isRiled, modelDefence, modelOc, rollMods, unitFlags } from './effects';
+import { activeRules, addTimed, applyStaticEffects, canDo, effectsFor, expireTimed, isRiled, modelDefence, modelOc, rollMods, unitFlags } from './effects';
 import './rituals';
 import { fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setZoneCheck } from './activations';
 
@@ -626,6 +626,7 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean }[] = [
   { name: "Castellan's Mark", n: 3, infantryOnly: false }, // Adeptus Custodes
   { name: 'Scryer of Fates (Psychic)', n: 3, infantryOnly: false }, // Thousand Sons: Ahriman
   { name: 'Duplicitous Malediction', n: 3, infantryOnly: false },
+  { name: 'Fleet Command', n: 3, infantryOnly: false }, // Chaos Space Marines: Masters of the Maelstrom
 ];
 
 function redeployFor(s: GameState, p: PlayerId) {
@@ -753,10 +754,14 @@ function startCommand(s: GameState) {
   const dreads = boardUnits(s, other(s.active)).filter((e) => unitFlags(s, e).creepingDread > 0);
   const dreaded = (u: UnitState) => onBoard(u) && (hasKw(u, 'PSYKER') || alive(u).length < u.startingStrength)
     && dreads.some((e) => unitDistance(u, e) <= unitFlags(s, e).creepingDread + 1e-6);
+  // Terror Descends / Terror Made Manifest: enemy units below Starting Strength near them must test
+  const terrorSrc = boardUnits(s, other(s.active)).filter((e) => unitFlags(s, e).terrorBelow > 0);
+  const terror = (u: UnitState) => onBoard(u) && alive(u).length < u.startingStrength ? terrorSrc.filter((e) => unitDistance(u, e) <= unitFlags(s, e).terrorBelow + 1e-6) : [];
+  const terrorMod = (u: UnitState) => Math.min(0, ...terror(u).map((e) => unitFlags(s, e).terrorBelowMod));
   s.shockTests = s.units
     .filter((u) => u.owner === s.active && u.status !== 'destroyed' && u.status !== 'pending' && alive(u).length)
-    .filter((u) => u.battleShocked || strength(u) === 'half' || strength(u) === 'belowHalf' || (onBoard(u) && forced(u)) || dreaded(u))
-    .map((u) => ({ unitId: u.id, result: null, passed: null, ...((forced(u) && strength(u) === 'belowHalf') || dreaded(u) ? { mod: -1 } : {}) }));
+    .filter((u) => u.battleShocked || strength(u) === 'half' || strength(u) === 'belowHalf' || (onBoard(u) && forced(u)) || dreaded(u) || terror(u).length > 0)
+    .map((u) => ({ unitId: u.id, result: null, passed: null, ...((forced(u) && strength(u) === 'belowHalf') || dreaded(u) ? { mod: -1 } : terrorMod(u) ? { mod: terrorMod(u) } : {}) }));
 }
 
 export function bestLd(u: UnitState, s?: GameState) {
@@ -1125,12 +1130,19 @@ export const canIngress = (s: GameState, u: UnitState) => u.status === 'reserves
 // ---------- army rules: Oath of Moment / Waaagh! ----------
 
 export const hasArmyRule = (s: GameState, p: PlayerId, name: string) => s.players[p].armyRules.some((r) => r.name === name);
+/** The rule that has the player pick one enemy unit in their Command phase (kept in `oathTarget`): Oath of Moment, or the
+ *  Chaos Space Marines' focus of hatred (Veterans of the Long War) / Vendetta target (Renegade Warband). */
+export function markRuleName(s: GameState, p: PlayerId): string | null {
+  if (hasArmyRule(s, p, 'Oath of Moment')) return 'Oath of Moment';
+  const r = activeRules(s, p);
+  return r.includes('Veterans of the Long War') ? 'Focus of Hatred' : r.includes('Renegade Warband') ? 'Vendetta' : null;
+}
 export const unitHasAbility = (u: UnitState, name: string) => u.abilities.some((a) => a.name === name);
 export const isRiledUp = (s: GameState, u: UnitState) => isRiled(s, u);
 
 export function setOathTarget(s: GameState, p: PlayerId, targetId: string) {
   s.players[p].oathTarget = targetId;
-  log(s, `Oath of Moment: ${unitById(s, targetId).name}`, 'info', p);
+  log(s, `${markRuleName(s, p) ?? 'Oath of Moment'}: ${unitById(s, targetId).name}`, 'info', p);
 }
 
 /** Master of Battle: the second enemy unit that becomes the Oath of Moment target if the first one is destroyed. */
@@ -1169,6 +1181,9 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   if (cap !== undefined) total = Math.min(total, cap);
   if (u.buffs.some((b) => b.kind === 'advanceCharge+1')) total += 1;
   total += rollMods(s, u).chargeBonus;
+  // Siegecraft: an enemy unit that makes charges near it harder (shortcut: any charge declared within 12" of it, not only at it)
+  const siege = Math.max(0, ...boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.charge.declareRange).map((e) => unitFlags(s, e).chargedMinus));
+  if (siege) total -= siege;
   u.chargeRoll = Math.max(0, total - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0));
   const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `Charge ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });

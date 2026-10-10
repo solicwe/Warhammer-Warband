@@ -11,7 +11,7 @@ import {
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
-  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy } from './game';
+  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName } from './game';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, styleChosen } from './botLook';
@@ -134,7 +134,7 @@ export function botCommand(s: GameState) {
   const P = s.players[p];
   const mine = boardUnits(s, p);
   const enemies = boardUnits(s, other(p));
-  if (P.armyRules.some((r) => r.name === 'Oath of Moment') && enemies.length) {
+  if (markRuleName(s, p) && enemies.length) {
     // the enemy our army can hurt most this turn: damage our units in range could do to it, worth more on objectives
     const hurt = (e: UnitState) => {
       let dmg = 0;

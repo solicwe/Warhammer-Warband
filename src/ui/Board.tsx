@@ -594,6 +594,8 @@ function BoardImpl(props: BoardProps) {
                 <g key={m.id} data-unit={u.id} onPointerDown={(e) => startModelDrag(e, u.id, m.id)} style={{ cursor: isDraft ? 'grab' : 'pointer' }}>
                   <circle cx={p.x} cy={p.y} r={Math.max(m.r, 0.35) + 0.35} fill="transparent" />
                   {acting.has(u.id) && <circle cx={p.x} cy={p.y} r={m.r + 0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
+                  {(isSel || isPicked) && !isDraft && <circle cx={p.x} cy={p.y} r={m.r + 0.3} fill="none" stroke={isSel ? '#f5b83d' : '#ffffff'} strokeWidth={0.18} className="sel-ring" pointerEvents="none" />}
+                  {isTarget && !isPicked && !isSel && <circle cx={p.x} cy={p.y} r={m.r + 0.28} fill="none" stroke="#fde68a" strokeWidth={0.1} strokeDasharray="0.3 0.2" pointerEvents="none" />}
                   {isSolo && <circle cx={p.x} cy={p.y} r={m.r + 0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
                   <circle
                     cx={p.x} cy={p.y} r={m.r}

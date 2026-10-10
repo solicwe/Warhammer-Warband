@@ -727,7 +727,8 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
   if (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1)) {
     // Vengeful Animus: no roll, it blows up anyway
-    const sure = emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id });
+    // Detonator (Deceptors): the opponent makes it explode without a roll
+    const sure = emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id }) || (!m.keywords.includes('TITANIC') && emitReact(s, other(u.owner), 'enemyDeadlyDemise', { unitId: u.id, modelId: m.id }));
     const r = sure ? 6 : d6(s);
     if (r >= ddOn) { // Warpfire Infusion: 5+ near a sorcerer
       log(s, `Deadly Demise (${u.core.deadlyDemise}) from ${m.name}: ${sure ? 'it explodes' : 'rolled a 6!'}`, 'roll');

@@ -1,0 +1,806 @@
+{
+ "_comment": "Chaos Space Marines stratagems (Faction Pack v1.3, 30 Sep 2026) in machine-readable form. Keys: stratagem NAME (as on the card) or NAME@Detachment. See docs/EDITING.md.",
+ "rules": {
+  "EYE OF THE GODS": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "until": "battle",
+   "effects": [
+    {
+     "move": 1,
+     "toughness": 1
+    },
+    {
+     "attack": "melee",
+     "attacks": 1,
+     "strength": 1,
+     "damage": 1
+    }
+   ],
+   "bot": "never",
+   "status": "partial",
+   "note": "Use it after the character's unit destroys an enemy unit. +1 Wounds is not tracked, and the whole unit gets the bonus, not only the character."
+  },
+  "SKINSHIFT": {
+   "do": [
+    {
+     "on": "self",
+     "heal": "3"
+    },
+    {
+     "on": "self",
+     "if": [
+      "kw:TZEENTCH",
+      "belowStarting"
+     ],
+     "revive": 1
+    }
+   ],
+   "status": "auto"
+  },
+  "TORPEFYING REFRAIN": {
+   "until": "turn",
+   "effects": [
+    {
+     "eligible": [
+      "chargeAfterFallBack"
+     ]
+    },
+    {
+     "if": [
+      "kw:SLAANESH"
+     ],
+     "eligible": [
+      "shootAfterAdvance",
+      "shootAfterFallBack",
+      "chargeAfterAdvance",
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "FESTERING MIASMA": {
+   "effects": [
+    {
+     "stealth": true
+    },
+    {
+     "if": [
+      "kw:NURGLE"
+     ],
+     "targetableWithin": 18
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "ETERNAL HATE": {
+   "effects": [
+    {
+     "fightOnDeath": 4
+    },
+    {
+     "if": [
+      "kw:KHORNE"
+     ],
+     "fightOnDeath": 3
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "ENDLESS IRE": {
+   "react": "oathDestroyed",
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "enemy": {
+    "range": 12,
+    "visible": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "setOath": true
+    }
+   ],
+   "until": "nextCommand",
+   "botReact": "always",
+   "status": "auto"
+  },
+  "FROM ALL SIDES": {
+   "choice": [
+    {
+     "label": "1 other unit charged: +1",
+     "effects": [
+      {
+       "chargeBonus": 1
+      }
+     ]
+    },
+    {
+     "label": "2 other units charged: +2",
+     "effects": [
+      {
+       "chargeBonus": 2
+      }
+     ]
+    },
+    {
+     "label": "3+ other units charged: +3",
+     "effects": [
+      {
+       "chargeBonus": 3
+      }
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto",
+   "note": "Pick how many other HERETIC ASTARTES units have made a Charge move this phase"
+  },
+  "SCRAMBLED COORDINATES": {
+   "effects": [
+    {
+     "omniScrambler": 12
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "DETONATOR": {
+   "react": "enemyDeadlyDemise",
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "status": "auto",
+   "note": "Tick 'Use automatically': the game offers it the moment the model dies (within 18\" of one of your CHARACTER units)"
+  },
+  "REAVERS’ HASTE": {
+   "targetKw": [
+    "INFANTRY|MOUNTED"
+   ],
+   "choice": [
+    {
+     "label": "Charging a unit on an objective (+1)",
+     "effects": [
+      {
+       "eligible": [
+        "chargeAfterAdvance"
+       ]
+      },
+      {
+       "chargeBonus": 1
+      }
+     ]
+    },
+    {
+     "label": "Other target",
+     "effects": [
+      {
+       "eligible": [
+        "chargeAfterAdvance"
+       ]
+      }
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "OPPORTUNISTIC RAIDERS": {
+   "react": "fightPhaseEnd",
+   "do": [
+    {
+     "on": "self",
+     "if": [
+      "!kw:MOUNTED"
+     ],
+     "move": "6"
+    },
+    {
+     "on": "self",
+     "if": [
+      "kw:MOUNTED"
+     ],
+     "move": "12"
+    }
+   ],
+   "status": "auto",
+   "note": "If your unit is engaged, this is a Fall Back move"
+  },
+  "BLOODY EXAMPLE": {
+   "enemy": {
+    "range": 12,
+    "visible": true,
+    "all": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ],
+   "status": "auto",
+   "note": "Use it just after the unit destroys an enemy CHARACTER unit"
+  },
+  "MERCILESS PURSUIT": {
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "unitIf": [
+    "notEngaged"
+   ],
+   "enemy": {
+    "range": 6
+   },
+   "special": [
+    "charge"
+   ],
+   "status": "partial",
+   "note": "Only an enemy unit that Fell Back this turn; no Charge bonus"
+  },
+  "SCREAMING DESCENT": {
+   "targetFrom": "reserves",
+   "targetKw": [
+    "JUMP PACKS"
+   ],
+   "effects": [
+    {
+     "deepStrike": true
+    },
+    {
+     "deepStrikeRange": 6
+    }
+   ],
+   "until": "turn",
+   "status": "partial",
+   "note": "After it is set up: one enemy INFANTRY or MOUNTED unit within 9\" and visible takes a Battle-shock test (by hand)"
+  },
+  "POINT-BLANK DESTRUCTION": {
+   "unitIf": [
+    "engaged"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "if": [
+      "!blastWeapon"
+     ],
+     "abilities": [
+      "pistol"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "BRUTAL ATTRITION": {
+   "targetKw": [
+    "INFANTRY",
+    "!DAMNED"
+   ],
+   "effects": [
+    {
+     "retaliate": {
+      "on": 4,
+      "max": 6
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "SIEGECRAFT": {
+   "effects": [
+    {
+     "chargedMinus": 2
+    }
+   ],
+   "bot": "defend",
+   "status": "auto",
+   "note": "Every enemy charge declared within 12\" of your unit gets -2"
+  },
+  "INFERNAL SACRIFICE": {
+   "targetKw": [
+    "DAMNED"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "mortals": "D3"
+    }
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "attacks": 1
+    }
+   ],
+   "status": "partial",
+   "note": "Desperate Pact: also take a Leadership test (failed: D3 more mortal wounds); passed: +1 S on melee weapons this phase (by hand)"
+  },
+  "SELFLESS DEMISE": {
+   "targetKw": [
+    "DAMNED"
+   ],
+   "effects": [
+    {
+     "retaliate": {
+      "on": 6,
+      "max": 20
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "partial",
+   "note": "Rolled per attack allocated here (the card: per model destroyed)"
+  },
+  "MORTAL THRALLS": {
+   "bot": "never",
+   "status": "manual",
+   "note": "Wound rolls against your unit become mortal wounds on the DAMNED unit within 3\": resolve by hand"
+  },
+  "DAEMONIC POSSESSION": {
+   "targetKw": [
+    "VEHICLE",
+    "!DAEMON"
+   ],
+   "until": "battle",
+   "effects": [
+    {
+     "addKeywords": [
+      "DAEMON"
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "partial",
+   "note": "Keyword rules that read DAEMON at the start of the battle may not see it"
+  },
+  "UNSTOPPABLE RAMPAGE": {
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "status": "auto"
+  },
+  "PREDATORY PURSUIT": {
+   "react": "enemyMoved",
+   "unitIf": [
+    "notEngaged",
+    "nearLast:8"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "surge": "6"
+    }
+   ],
+   "status": "auto"
+  },
+  "FEEDING FRENZY": {
+   "react": "enemyFallBack",
+   "status": "manual",
+   "note": "Every model of the enemy unit takes a Desperate Escape test (-1 if Battle-shocked): resolve by hand"
+  },
+  "GLUT OF SOULS": {
+   "effects": [
+    {
+     "fightOnDeathRegain": "1"
+    }
+   ],
+   "status": "partial",
+   "note": "Each kill: on 5+ regain 1 wound (max 6) — roll by hand"
+  },
+  "DELAYED MUTATIONS": {
+   "targetKw": [
+    "INFANTRY",
+    "!DAMNED"
+   ],
+   "until": "nextCommand",
+   "do": [
+    {
+     "on": "self",
+     "mortals": "D3"
+    }
+   ],
+   "choice": [
+    {
+     "label": "Cholinergic Accelerants: +1 A (melee)",
+     "effects": [
+      {
+       "attack": "melee",
+       "attacks": 1
+      }
+     ]
+    },
+    {
+     "label": "Hyperadrenal Infusion: +2\" Move",
+     "effects": [
+      {
+       "move": 2
+      }
+     ]
+    },
+    {
+     "label": "Paraneural Reactions: +1 WS",
+     "effects": [
+      {
+       "attack": "melee",
+       "hit": 1
+      }
+     ]
+    },
+    {
+     "label": "Supracutaneous Chitination: +1 T",
+     "effects": [
+      {
+       "toughness": 1
+      }
+     ]
+    },
+    {
+     "label": "Macrotensile Sinews: +1 S (melee)",
+     "effects": [
+      {
+       "attack": "melee",
+       "strength": 1
+      }
+     ]
+    },
+    {
+     "label": "Ophthalmic Enhancement: +1 BS",
+     "effects": [
+      {
+       "attack": "ranged",
+       "hit": 1
+      }
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "DIABOLIC REGENERATION": {
+   "targetKw": [
+    "INFANTRY",
+    "!DAMNED"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "if": [
+      "!kw:BATTLELINE"
+     ],
+     "revive": 1
+    },
+    {
+     "on": "self",
+     "if": [
+      "kw:BATTLELINE"
+     ],
+     "revive": 2
+    }
+   ],
+   "status": "partial",
+   "note": "Battleline: D3 models (2 here)"
+  },
+  "SPECIMENS FOR THE SPIDER": {
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "if": [
+      "targetCharacter"
+     ],
+     "reroll": "wounds"
+    }
+   ],
+   "status": "partial",
+   "note": "If enemy CHARACTER models died: one enemy unit within 6\" tests Battle-shock (the WARLORD: every enemy unit within 6\") — by hand"
+  },
+  "MASTERS ARE WATCHING": {
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "effects": [
+    {
+     "if": [
+      "!kw:DAMNED"
+     ],
+     "fightOnDeath": 4
+    },
+    {
+     "if": [
+      "kw:DAMNED"
+     ],
+     "fightOnDeath": 5
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "FLESHY CURSE": {
+   "targetKw": [
+    "PSYKER"
+   ],
+   "enemy": {
+    "range": 12,
+    "visible": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortals": "D3"
+    }
+   ],
+   "status": "partial",
+   "note": "Card: 1 → 1 MW, 2-4 → D3, 5-6 → 2D3 (here: D3)"
+  },
+  "HORRIFIC INCURSION": {
+   "unitIf": [
+    "setUpThisTurn"
+   ],
+   "enemy": {
+    "range": 12,
+    "visible": true,
+    "notKw": [
+     "MONSTER",
+     "VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ],
+   "status": "auto"
+  },
+  "SADISTIC DISPLAY": {
+   "enemy": {
+    "range": 6,
+    "visible": true,
+    "all": true,
+    "notKw": [
+     "MONSTER",
+     "VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ],
+   "status": "auto",
+   "note": "Use it just after the unit destroys an enemy unit"
+  },
+  "HARDENED KILLERS": {
+   "targetKw": [
+    "DAMNED"
+   ],
+   "until": "nextCommand",
+   "choice": [
+    {
+     "label": "+1 BS",
+     "effects": [
+      {
+       "attack": "ranged",
+       "hit": 1
+      }
+     ]
+    },
+    {
+     "label": "+1 A for Rapid Fire weapons",
+     "effects": [
+      {
+       "attack": "ranged",
+       "weapon": "rapid fire",
+       "attacks": 1
+      }
+     ]
+    },
+    {
+     "label": "+1 Save",
+     "effects": [
+      {
+       "defend": {
+        "save": 1
+       }
+      }
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "REAVERS’ FLURRY": {
+   "unitIf": [
+    "charged"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "attacks": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "SEIZE THE PRIZE": {
+   "targetKw": [
+    "!MONSTER",
+    "!VEHICLE"
+   ],
+   "effects": [
+    {
+     "advanceFixed": 6
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "CORRUPTED MUNITIONS": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "ap": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "NEVER OUTGUNNED": {
+   "choice": [
+    {
+     "label": "[LETHAL HITS]",
+     "effects": [
+      {
+       "abilities": [
+        "lethal hits"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "[SUSTAINED HITS 1]",
+     "effects": [
+      {
+       "abilities": [
+        "sustained hits 1"
+       ]
+      }
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "RENEGADE CLAIM": {
+   "unitIf": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "status": "auto"
+  },
+  "UNDYING HATRED": {
+   "effects": [
+    {
+     "fightOnDeath": 4
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "WARP-TAINTED": {
+   "targetKw": [
+    "TERMINATOR|OBLITERATORS|MUTILATORS"
+   ],
+   "unitIf": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "status": "auto"
+  },
+  "TOUCH OF THE ARKIFANE": {
+   "targetKw": [
+    "!DAMNED"
+   ],
+   "effects": [
+    {
+     "pactBoth": true
+    }
+   ],
+   "status": "auto"
+  },
+  "BIOMECHANOID REGENERATION": {
+   "targetKw": [
+    "!DAMNED"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "if": [
+      "!kw:SOUL FORGE"
+     ],
+     "heal": "D3"
+    },
+    {
+     "on": "self",
+     "if": [
+      "kw:SOUL FORGE"
+     ],
+     "heal": "3"
+    }
+   ],
+   "status": "auto"
+  },
+  "FORGE-FIRE SURGE": {
+   "until": "turn",
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterAdvance"
+     ]
+    },
+    {
+     "if": [
+      "kw:SOUL FORGE"
+     ],
+     "eligible": [
+      "chargeAfterAdvance"
+     ]
+    }
+   ],
+   "status": "auto"
+  },
+  "WARP-TWISTED TERRORS": {
+   "targetKw": [
+    "WARP TALONS"
+   ],
+   "enemy": {
+    "range": 9,
+    "visible": true,
+    "notKw": [
+     "MONSTER",
+     "VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ],
+   "status": "auto"
+  },
+  "RAKING PASS": {
+   "targetKw": [
+    "INFANTRY",
+    "FLY"
+   ],
+   "until": "turn",
+   "effects": [
+    {
+     "eligible": [
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "status": "auto"
+  }
+ }
+}

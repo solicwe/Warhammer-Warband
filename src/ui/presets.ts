@@ -65,4 +65,20 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'd8', datasheet: 'Daemon Prince of Tzeentch', models: 1, pts: 170 },
     ],
   },
+  CSM: {
+    name: 'Chaos Space Marines (Quick)',
+    factionId: 'CSM',
+    battleSize: 'incursion',
+    detachments: ['Veterans of the Long War'],
+    units: [
+      { uid: 'e1', datasheet: 'Legionaries', models: 10, pts: 180 },
+      { uid: 'e2', datasheet: 'Chaos Lord', models: 1, pts: 95, attachTo: 'e1', warlord: true, enhancement: 'Warmaster’s Gift', enhancementPts: 15 },
+      { uid: 'e3', datasheet: 'Legionaries', models: 5, pts: 95 },
+      { uid: 'e4', datasheet: 'Sorcerer', models: 1, pts: 65, attachTo: 'e3' },
+      { uid: 'e5', datasheet: 'Chaos Terminator Squad', models: 5, pts: 185 },
+      { uid: 'e6', datasheet: 'Havocs', models: 5, pts: 135 },
+      { uid: 'e7', datasheet: 'Cultist Mob', models: 10, pts: 50 },
+      { uid: 'e8', datasheet: 'Helbrute', models: 1, pts: 125 },
+    ],
+  },
 };

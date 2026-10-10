@@ -8,6 +8,7 @@ import acAbilities from '../../data/abilities/AC.json';
 import orkAbilities from '../../data/abilities/ORK.json';
 import smAbilities from '../../data/abilities/SM.json';
 import tsAbilities from '../../data/abilities/TS.json';
+import csmAbilities from '../../data/abilities/CSM.json';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { RULES } from './config';
@@ -162,6 +163,11 @@ export interface Effect {
   deadlyDemiseOn?: number; // its Deadly Demise inflicts mortal wounds on X+ instead of only a 6 (Warpfire Infusion)
   spotting?: number; // in your Shooting phase enemy units have +X" detection range against this unit (All-Seeing Mutant Hordes)
   rerollRitual?: boolean; // reserved
+  rerollPactLd?: boolean; // re-roll the Leadership test of a Dark Pact (Chaos Icon, Pact of Destruction)
+  pactBoth?: boolean; // a Dark Pact gives both [LETHAL HITS] and [SUSTAINED HITS 1] (Ruination's Bounty)
+  terrorBelow?: number; // enemy units below Starting Strength this close take a Battle-shock test in their Command phase (Terror Descends)
+  terrorBelowMod?: number; // … with this modifier (Terror Made Manifest: -1)
+  chargedMinus?: number; // enemy charges declared within 12" of this unit: subtract this from the Charge roll (Siegecraft)
 }
 
 export type Limit = 'battle' | 'round' | 'turn' | 'phase';
@@ -242,6 +248,7 @@ const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   AC: acAbilities as unknown as Record<string, AbilityRule>,
   ORK: orkAbilities as unknown as Record<string, AbilityRule>,
   TS: tsAbilities as unknown as Record<string, AbilityRule>,
+  CSM: csmAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
 export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
@@ -655,6 +662,7 @@ export function cond(c: string, x: Ctx): boolean {
     case 'chargedOrArrived': return A.chargedTurn === s.turn || A.move === 'ingress' || A.setUpTurn === s.turn;
     case 'disembarkedThisTurn': return A.disembarkedTurn === s.turn;
     case 'heavyWeapon': return !!x.p && x.p.abilities.some((a) => a === 'heavy' || a.startsWith('heavy'));
+    case 'blastWeapon': return !!x.p && x.p.abilities.includes('blast');
     case 'plasmaWeapon': return /plasma/i.test(`${x.w?.name ?? ''} ${x.p?.name ?? ''}`);
     case 'torrentAttack': return !!x.p && x.p.abilities.includes('torrent');
     case 'torrentOrMelta': return !!x.p && x.p.abilities.some((a) => a === 'torrent' || a.startsWith('melta'));
@@ -985,6 +993,8 @@ export function rollMods(s: GameState, u: UnitState) {
     chargeBonus: es.reduce((a, e) => a + (es.some((x) => x.ignoreMods) ? Math.max(0, e.chargeBonus ?? 0) : e.chargeBonus ?? 0), 0),
     advanceFixed: Math.max(0, ...es.map((e) => e.advanceFixed ?? 0)),
     rerollShock: es.some((e) => e.rerollShock),
+    rerollPactLd: es.some((e) => e.rerollPactLd || e.rerollShock),
+    pactBoth: es.some((e) => e.pactBoth),
     advanceSelfMortals: es.find((e) => e.advanceSelfMortals)?.advanceSelfMortals,
   };
 }
@@ -1047,6 +1057,9 @@ export function unitFlags(s: GameState, u: UnitState) {
     ignoreMods: es.some((e) => e.ignoreMods),
     forceShockAura: Math.max(0, ...es.map((e) => e.forceShockAura ?? 0)),
     creepingDread: Math.max(0, ...es.map((e) => e.creepingDread ?? 0)),
+    terrorBelow: Math.max(0, ...es.map((e) => e.terrorBelow ?? 0)),
+    terrorBelowMod: Math.min(0, ...es.map((e) => e.terrorBelowMod ?? 0)),
+    chargedMinus: Math.max(0, ...es.map((e) => e.chargedMinus ?? 0)),
     shockOnKill: es.some((e) => e.shockOnKill),
     onlyTargetMarked: es.find((e) => e.onlyTargetMarked)?.onlyTargetMarked,
     deadlyDemiseOn: Math.min(6, ...es.map((e) => e.deadlyDemiseOn ?? 6)),

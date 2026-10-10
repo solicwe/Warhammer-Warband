@@ -7,6 +7,7 @@ import {
   setFreeDamageHook, targetToughness, woundNeed,
 } from './attack';
 import { RULES } from './config';
+import { autoPact } from './darkPacts';
 import { d6, rollExpr, rollN } from './dice';
 import {
   abilityOff, abilityRule, abilitySheet, activeRules, addTimed, cond, DET_RULES, fightOnDeathFor, grantsOf, isRiled, retaliateFor, type AbilityRule, type Effect, type FreeDieSpec,
@@ -865,6 +866,8 @@ export function unitSelected(s: GameState, u: UnitState, kind: 'shoot' | 'fight'
   const key = `sel:${kind}`;
   if ((u.used ??= {})[key] === phaseKey(s)) return;
   u.used[key] = phaseKey(s);
+  // Dark Pacts: made here for bots and players who leave their rules to the app; a player who decides picks it on screen
+  autoPact(s, u, kind, (p) => (s.decides ?? []).includes(p) && !(s.bots ?? []).includes(p));
   fire(s, kind === 'shoot' ? 'selectedToShoot' : 'selectedToFight', [u]);
 }
 

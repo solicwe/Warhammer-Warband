@@ -2597,6 +2597,671 @@
      "spotting": 6
     }
    ]
+  },
+  "Pactbound Zealots": {
+   "auto": "partial",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "KHORNE"
+     ],
+     "attack": "melee",
+     "if": [
+      "marked:pactOk:lethal"
+     ],
+     "critHitOn": 5
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "TZEENTCH"
+     ],
+     "attack": "ranged",
+     "if": [
+      "marked:pactOk:lethal"
+     ],
+     "critHitOn": 5
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "NURGLE"
+     ],
+     "attack": "ranged",
+     "if": [
+      "marked:pactOk:sustained"
+     ],
+     "critHitOn": 5
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "SLAANESH"
+     ],
+     "attack": "melee",
+     "if": [
+      "marked:pactOk:sustained"
+     ],
+     "critHitOn": 5
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "!KHORNE",
+      "!TZEENTCH",
+      "!NURGLE",
+      "!SLAANESH"
+     ],
+     "if": [
+      "marked:pactOk:lethal"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "!KHORNE",
+      "!TZEENTCH",
+      "!NURGLE",
+      "!SLAANESH"
+     ],
+     "if": [
+      "marked:pactOk:sustained",
+      "!marked:pactOk:lethal"
+     ],
+     "reroll": "hits1"
+    }
+   ],
+   "manual": "The Mark is read from the unit's keywords (KHORNE, TZEENTCH, NURGLE, SLAANESH); a unit with none counts as CHAOS UNDIVIDED (re-roll hit rolls of 1 after a passed Dark Pact). Attach and embark restrictions are not checked."
+  },
+  "Veterans of the Long War": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "!DAMNED"
+     ],
+     "if": [
+      "targetOath"
+     ],
+     "reroll": "hits"
+    }
+   ]
+  },
+  "Deceptors": {
+   "auto": "partial",
+   "effects": [
+    {
+     "units": [
+      "LEGIONARIES|CULTIST MOB"
+     ],
+     "infiltrators": true
+    }
+   ],
+   "manual": "Every LEGIONARIES and CULTIST MOB unit gets Infiltrators (the card limits it to 2/3/4 of each by battle size, plus attached CHARACTER units)"
+  },
+  "Renegade Raiders": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "if": [
+      "targetInRangeOfObjective"
+     ],
+     "ap": 1
+    }
+   ]
+  },
+  "Dread Talons": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "scope": "enemyAura",
+     "range": 12,
+     "ld": -1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "terrorBelow": 12
+    }
+   ]
+  },
+  "Fellhammer Siege-host": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "!DAMNED"
+     ],
+     "defend": {
+      "vs": "ranged",
+      "woundIfStronger": -1
+     }
+    }
+   ]
+  },
+  "Chaos Cult": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "DAMNED"
+     ],
+     "name": "Desperate Pact",
+     "rule": {
+      "act": [
+       {
+        "when": "movement",
+        "limit": "phase",
+        "label": "Desperate Pact: Leadership test (failed: D3 mortal wounds), +2\" Move this phase",
+        "botUse": "healthy",
+        "ldTest": true,
+        "pass": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "move": 2
+           }
+          ],
+          "until": "phase"
+         }
+        ],
+        "fail": [
+         {
+          "on": "self",
+          "mortals": "D3"
+         },
+         {
+          "on": "self",
+          "buff": [
+           {
+            "move": 2
+           }
+          ],
+          "until": "phase"
+         }
+        ]
+       },
+       {
+        "when": "chargeStart",
+        "limit": "phase",
+        "label": "Desperate Pact: Leadership test (failed: D3 mortal wounds), +2 to Charge rolls this phase",
+        "botUse": "healthy",
+        "ldTest": true,
+        "pass": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "chargeBonus": 2
+           }
+          ],
+          "until": "phase"
+         }
+        ],
+        "fail": [
+         {
+          "on": "self",
+          "mortals": "D3"
+         },
+         {
+          "on": "self",
+          "buff": [
+           {
+            "chargeBonus": 2
+           }
+          ],
+          "until": "phase"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "effects": [
+    {
+     "units": [
+      "TRAITOR GUARDSMEN SQUAD"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    }
+   ]
+  },
+  "Soulforged Warpack": {
+   "auto": "full"
+  },
+  "Creations of Bile": {
+   "auto": "partial",
+   "choice": {
+    "name": "Experimental Augmentations",
+    "when": "battle",
+    "uses": "free",
+    "pick": 1,
+    "options": [
+     {
+      "id": "cholinergic",
+      "name": "Cholinergic Accelerants",
+      "text": "+1 A (melee)",
+      "effects": [
+       {
+        "attack": "melee",
+        "attacks": 1,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "hyperadrenal",
+      "name": "Hyperadrenal Infusion",
+      "text": "+2\" Move",
+      "effects": [
+       {
+        "move": 2,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "paraneural",
+      "name": "Paraneural Reactions",
+      "text": "+1 WS",
+      "effects": [
+       {
+        "attack": "melee",
+        "hit": 1,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "chitination",
+      "name": "Supracutaneous Chitination",
+      "text": "+1 T",
+      "effects": [
+       {
+        "toughness": 1,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "sinews",
+      "name": "Macrotensile Sinews",
+      "text": "+1 S (melee)",
+      "effects": [
+       {
+        "attack": "melee",
+        "strength": 1,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "ophthalmic",
+      "name": "Ophthalmic Enhancement",
+      "text": "+1 BS",
+      "effects": [
+       {
+        "attack": "ranged",
+        "hit": 1,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "manual": "Pick one augmentation (the card's alternative, two random ones, is not offered)"
+  },
+  "Cabal of Chaos": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "PSYKER",
+      "!DAEMON"
+     ],
+     "attack": "ranged",
+     "if": [
+      "marked:darkPact",
+      "ownShooting"
+     ],
+     "strength": 1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "DAEMON PRINCE|DAEMON PRINCE WITH WINGS",
+      "!KHORNE"
+     ],
+     "attack": "melee",
+     "if": [
+      "marked:darkPact",
+      "fightPhase"
+     ],
+     "strength": 2,
+     "ap": 1
+    }
+   ]
+  },
+  "Nightmare Hunt": {
+   "auto": "partial",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "terrorBelow": 12,
+     "terrorBelowMod": -1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "if": [
+      "targetBelowHalf"
+     ],
+     "hit": 1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "if": [
+      "targetBattleShocked"
+     ],
+     "wound": 1
+    }
+   ],
+   "manual": "-1 to hit for Battle-shocked attackers targeting your units: by hand"
+  },
+  "Huron’s Marauders": {
+   "auto": "partial",
+   "choice": {
+    "name": "Tyrannical Motivation",
+    "when": "command",
+    "uses": "free",
+    "pick": 1,
+    "options": [
+     {
+      "id": "elite",
+      "name": "Huron's Elite",
+      "text": "+1 to Hit",
+      "effects": [
+       {
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY"
+        ],
+        "hit": 1
+       }
+      ]
+     },
+     {
+      "id": "mobile",
+      "name": "Mobile Marauders",
+      "text": "Shoot and charge after Falling Back",
+      "effects": [
+       {
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY"
+        ],
+        "eligible": [
+         "shootAfterFallBack",
+         "chargeAfterFallBack"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "manual": "Units visible to Huron Blackheart at the start of a phase have both abilities: by hand"
+  },
+  "Renegade Warband": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "!DAMNED"
+     ],
+     "if": [
+      "targetOath"
+     ],
+     "reroll": "hits"
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "name": "Default to Doctrine",
+     "rule": {
+      "act": [
+       {
+        "when": "movement",
+        "limit": "turn",
+        "if": [
+         "notBattleShocked",
+         "notMovedYet"
+        ],
+        "label": "Default to Doctrine: Battle-shock test, then shoot and charge after Falling Back this turn",
+        "botUse": "never",
+        "do": [
+         {
+          "on": "self",
+          "shock": 0
+         },
+         {
+          "on": "self",
+          "buff": [
+           {
+            "eligible": [
+             "shootAfterFallBack",
+             "chargeAfterFallBack"
+            ]
+           }
+          ],
+          "until": "turn",
+          "mark": "doctrine"
+         }
+        ]
+       },
+       {
+        "when": "movement",
+        "limit": "turn",
+        "if": [
+         "notBattleShocked",
+         "notMovedYet"
+        ],
+        "label": "Default to Doctrine: Battle-shock test, then charge after Advancing this turn",
+        "botUse": "never",
+        "do": [
+         {
+          "on": "self",
+          "shock": 0
+         },
+         {
+          "on": "self",
+          "buff": [
+           {
+            "eligible": [
+             "chargeAfterAdvance"
+            ]
+           }
+          ],
+          "until": "turn",
+          "mark": "doctrine"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Warpstrike Champions": {
+   "auto": "partial",
+   "grants": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "TERMINATOR|OBLITERATORS|MUTILATORS"
+     ],
+     "name": "Warp Portals",
+     "rule": {
+      "act": {
+       "when": "opponentTurnEnd",
+       "limit": "turn",
+       "if": [
+        "notEngaged"
+       ],
+       "label": "Warp Portals: into Strategic Reserves",
+       "botUse": "never",
+       "do": [
+        {
+         "on": "self",
+         "reserves": true
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "manual": "Up to 1/2/3 units by battle size"
+  },
+  "Cult of the Arkifane": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "VEHICLE"
+     ],
+     "addKeywords": [
+      "DAEMON",
+      "SOUL FORGE"
+     ]
+    },
+    {
+     "units": [
+      "LORD DISCORDANT|VASHTORR THE ARKIFANE"
+     ],
+     "addKeywords": [
+      "SOUL FORGE"
+     ]
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "VEHICLE|LORD DISCORDANT|VASHTORR THE ARKIFANE|SOUL FORGE"
+     ],
+     "defend": {
+      "inv": 5
+     }
+    }
+   ]
+  },
+  "Devotees of Destruction": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HAVOCS|OBLITERATORS"
+     ],
+     "attack": "ranged",
+     "abilities": [
+      "heavy"
+     ]
+    }
+   ]
+  },
+  "Murdertalon Raiders": {
+   "auto": "partial",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY",
+      "FLY"
+     ],
+     "if": [
+      "targetBattleShocked"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY",
+      "FLY"
+     ],
+     "if": [
+      "targetBelowHalf",
+      "!targetBattleShocked"
+     ],
+     "reroll": "hits1"
+    }
+   ],
+   "manual": "-1 to hit for Battle-shocked / half-strength attackers: by hand"
   }
  }
 }

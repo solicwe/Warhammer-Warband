@@ -17,7 +17,7 @@ import {
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
   formationAt, heroicCandidates, hullSpots, ingressUnit, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
-  validateMove, validatePlacement, type MoveCheck, hasArmyRule, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
+  validateMove, validatePlacement, type MoveCheck, hasArmyRule, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
@@ -53,6 +53,7 @@ import { isMelee, hasAbility } from '../engine/weapons';
 import { Board, type Paths, type Ring } from './Board';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
+import { canMakePact, madePact, makeDarkPact, type PactPick } from '../engine/darkPacts';
 import { RelicStrip } from './Relics';
 import { UnitView } from './Sheet';
 import { useGame } from './store';
@@ -404,6 +405,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [fly, setFly] = useState(false);
   const [showStrats, setShowStrats] = useState(false);
   const [stratUnit, setStratUnit] = useState<string>('');
+  const [stratPick, setStratPick] = useState<{ p: PlayerId; ids: string[] } | null>(null); // choosing a stratagem's unit on the map
   const [stratPlayer, setStratPlayer] = useState<PlayerId | null>(null); // whose stratagems the sheet shows (null = who acts now)
   // the bot decides its own CP: against the bot the sheet always shows the player's own stratagems
   const human: PlayerId | null = bots.length === 1 ? (bots[0] === 0 ? 1 : 0) : null;
@@ -496,14 +498,42 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     : [];
   const crushTargets = mode?.k === 'crush' ? engagedEnemies(s, U(mode.unitId)).map((t) => t.id) : [];
 
-  const targets = mode?.k === 'shoot' ? shootTargets : mode?.k === 'charge' ? chargeOpts : mode?.k === 'fight' ? fightTargets : mode?.k === 'explosives' ? explosiveTargets : mode?.k === 'crush' ? crushTargets : [];
-  const picked = mode?.k === 'shoot' || mode?.k === 'fight' || mode?.k === 'explosives' ? (mode.target ? [mode.target] : []) : mode?.k === 'charge' ? mode.targets : [];
+  // Thousand Sons: the player picks their Rituals at the start of the Shooting phase (sorcerer, Ritual, target, Channel)
+  const [rit, setRit] = useState<{ model?: string; ritual?: string; target?: string; channel: boolean }>({ channel: false });
+  const ritualOn = !mode && s.phase === 'shooting' && decides(s, s.active) && !bots.includes(s.active) && ritualsPending(s, s.active);
+  // on the map: the sorcerers glow until one is picked, then the units its Ritual can target
+  const ritMap = (() => {
+    if (!ritualOn) return null;
+    const cs = casters(s, s.active);
+    const c = cs.find((x) => x.model.id === rit.model);
+    const r = c ? ritualsLeft(s, s.active, c).find((x) => x.id === rit.ritual) : undefined;
+    const tg = c && r ? ritualTargets(s, c, r).map((t) => t.id) : [];
+    return { cs, c, tg, targets: c && r ? tg : [...new Set(cs.map((x) => x.unit.id))], picked: c && r ? (rit.target ? [rit.target] : []) : c ? [c.unit.id] : [] };
+  })();
+  const targets = stratPick ? stratPick.ids : ritMap ? ritMap.targets : mode?.k === 'shoot' ? shootTargets : mode?.k === 'charge' ? chargeOpts : mode?.k === 'fight' ? fightTargets : mode?.k === 'explosives' ? explosiveTargets : mode?.k === 'crush' ? crushTargets : [];
+  const picked = ritMap ? ritMap.picked : mode?.k === 'shoot' || mode?.k === 'fight' || mode?.k === 'explosives' ? (mode.target ? [mode.target] : []) : mode?.k === 'charge' ? mode.targets : [];
 
   const onTapUnit = (unitId: string, modelId?: string) => {
     if (tape.on) {
       const m = U(unitId).models.find((x) => x.id === modelId && !x.dead) ?? alive(U(unitId))[0];
       if (m) measureTap({ x: m.x, y: m.y }, { u: unitId, m: m.id });
       return;
+    }
+    if (stratPick) {
+      if (stratPick.ids.includes(unitId)) { setSel(unitId); setStratPlayer(stratPick.p); setStratUnit(unitId); setShowStrats(true); setStratPick(null); }
+      else flash('Tap a highlighted unit (or Cancel)');
+      return;
+    }
+    if (ritMap) {
+      // a Ritual target, or a sorcerer (tapping its unit again cycles through the sorcerers in it)
+      if (ritMap.tg.includes(unitId)) { setRit({ ...rit, target: unitId }); setSel(unitId); return; }
+      const inUnit = ritMap.cs.filter((x) => x.unit.id === unitId);
+      if (inUnit.length) {
+        const c = inUnit.find((x) => x.model.id === modelId) ?? inUnit[(inUnit.findIndex((x) => x.model.id === rit.model) + 1) % inUnit.length];
+        setRit({ model: c.model.id, channel: rit.channel });
+        setSel(unitId);
+        return;
+      }
     }
     if (mode && targets.includes(unitId)) {
       if (mode.k === 'charge') {
@@ -612,6 +642,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   for (const g of goals) for (const id of g.units) (badges[id] ??= []).push(`Target: ${g.name}`);
   // Rituals on a unit this phase (Destiny's Ruin, Twist of Fate): a tag so the player sees who is marked
   for (const u of s.units) for (const t of u.timed ?? []) if (t.mark && RITUAL_NAMES.has(t.mark) && onBoard(u)) (badges[u.id] ??= []).push(t.mark);
+  // Stratagems in effect: a tag on the unit that got it, so it is clear the CP went to that unit only
+  const stratNames = new Set(s.players.flatMap((P) => P.detachments.flatMap((d) => d.stratagems.map((st) => st.name))));
+  for (const u of s.units) {
+    if (!onBoard(u)) continue;
+    const ls = new Set([...u.buffs.map((b) => b.label), ...(u.timed ?? []).map((x) => x.label)].filter((l): l is string => !!l && stratNames.has(l)));
+    for (const l of ls) (badges[u.id] ??= []).push(l);
+  }
   const losLines: { a: Pt; b: Pt; cover: boolean }[] = [];
   const noLos: string[] = [];
   if (mode?.k === 'shoot' && modeUnit) {
@@ -1153,12 +1190,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="handoff">Command phase · {pName(s, s.active)} · both players gain 1CP</div>
-        {hasArmyRule(s, s.active, 'Oath of Moment') && (
+        {markRuleName(s, s.active) && (
           <div className="card" style={{ padding: 8 }}>
-            <div className="small"><b>Oath of Moment</b> — select one enemy unit: attacks against it re-roll the Hit roll{s.players[s.active].oathWoundBonus ? ' and get +1 to wound' : ''} until your next Command phase</div>
+            <div className="small"><b>{markRuleName(s, s.active)}</b> — select one enemy unit: attacks against it re-roll the Hit roll{s.players[s.active].oathWoundBonus ? ' and get +1 to wound' : ''}{markRuleName(s, s.active) !== 'Oath of Moment' ? ' (HERETIC ASTARTES, not DAMNED)' : ''} until your next Command phase</div>
             <div className="unit-strip" style={{ marginTop: 6 }}>
               {boardUnits(s, other(s.active)).map((e) => (
-                <button key={e.id} className={`unit-pill ${s.players[s.active].oathTarget === e.id ? 'sel' : ''}`} onClick={() => { act((g) => setOathTarget(g, g.active, e.id)); setSel(e.id); flash(`Oath of Moment → ${e.name}`); }}>
+                <button key={e.id} className={`unit-pill ${s.players[s.active].oathTarget === e.id ? 'sel' : ''}`} onClick={() => { act((g) => setOathTarget(g, g.active, e.id)); setSel(e.id); flash(`${markRuleName(s, s.active)} → ${e.name}`); }}>
                   <span className={`side-dot s${e.owner}`} aria-hidden="true" /> {e.name}
                   {s.players[s.active].oathTarget === e.id && <span className="oath-tag">OATH</span>}
                 </button>
@@ -1326,8 +1363,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     );
   };
 
-  // Thousand Sons: the player picks their Rituals at the start of the Shooting phase (sorcerer, Ritual, target, Channel)
-  const [rit, setRit] = useState<{ model?: string; ritual?: string; target?: string; channel: boolean }>({ channel: false });
+  // Dark Pacts for a player who decides: before the attacks, Lethal Hits or Sustained Hits 1 (a Leadership test first)
+  const pactRow = (u: UnitState) => {
+    if (madePact(s, u)) return <div className="tiny pact-made"><Icon name="check" size={13} /> Dark Pact made this phase</div>;
+    if (!decides(s, u.owner) || bots.includes(u.owner) || !canMakePact(s, u)) return null;
+    const pact = (pick: PactPick) => act((g) => makeDarkPact(g, unitById(g, u.id), pick));
+    return (
+      <div className="row pact-row">
+        <span className="tiny grow"><b>Dark Pact</b> · Leadership test (failed: D3 mortal wounds)</span>
+        <button className="btn small" onClick={() => pact('lethal hits')}>Lethal Hits</button>
+        <button className="btn small" onClick={() => pact('sustained hits 1')}>Sustained Hits 1</button>
+      </div>
+    );
+  };
+
   const ritualPanel = () => {
     const p = s.active;
     const cs = casters(s, p);
@@ -1339,7 +1388,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="handoff">Rituals · start of the Shooting phase</div>
-        <div className="small muted">Each sorcerer attempts one Ritual (the army each Ritual once). Psychic test: 2D6 (3D6 if you Channel the Warp) — any double costs D3 mortal wounds.</div>
+        <div className="small muted">Tap a glowing sorcerer on the map (or below), pick a Ritual, then tap its target. Each sorcerer attempts one Ritual (the army each Ritual once). Psychic test: 2D6 (3D6 if you Channel the Warp) — any double costs D3 mortal wounds.</div>
         <div className="unit-strip">
           {cs.map((x) => (
             <button key={x.model.id} className={`unit-pill ${rit.model === x.model.id ? 'sel' : ''}`} onClick={() => { setRit({ model: x.model.id, channel: rit.channel }); setSel(x.unit.id); }}>
@@ -1361,7 +1410,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <div className="label">{r.side === 'enemy' ? 'Enemy target' : 'Friendly unit'} within {c!.range}"</div>
             {targets.length ? (
               <div className="unit-strip">{targets.map((t) => <button key={t.id} className={`unit-pill ${rit.target === t.id ? 'sel' : ''}`} onClick={() => setRit({ ...rit, target: t.id })}>{t.name}</button>)}</div>
-            ) : <div className="small muted">No unit in range and in sight</div>}
+            ) : <div className="small muted">No unit in range and in sight (a ruin in between blocks sight: from inside one a model sees only about 4in through it)</div>}
             <div className="row">
               <button className={`btn small ${rit.channel ? 'on' : ''}`} aria-pressed={rit.channel} onClick={() => setRit({ ...rit, channel: !rit.channel })}>Channel the Warp (3D6)</button>
               {odds && <span className="tiny muted grow">{Math.round(odds.pass * 100)}% to manifest · {Math.round(odds.perils * 100)}% perils</span>}
@@ -1381,7 +1430,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
 
   const shootPanel = () => {
-    if (!mode && decides(s, s.active) && !bots.includes(s.active) && ritualsPending(s, s.active)) return ritualPanel();
+    if (ritualOn) return ritualPanel();
     if (mode?.k === 'explosives' && modeUnit) {
       return (
         <>
@@ -1413,6 +1462,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const hasCQ = alive(modeUnit).some((m) => m.weapons.some((w) => hasAbility(w.profiles[0], 'close-quarters'))) && alive(modeUnit).some((m) => m.weapons.some((w) => !isMelee(w.profiles[0]) && !hasAbility(w.profiles[0], 'close-quarters')));
       return (
         <>
+          {pactRow(modeUnit)}
           <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' ? 'Shoot' : mode.smode}{mode.target ? <> <Icon name="target" size={14} /> {U(mode.target).name}</> : ' · tap a target'}</span></div>
           {!mode.overwatch && remaining.length > 1 && (
             <div className="row">
@@ -1431,11 +1481,21 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 <button type="button" role="radio" aria-checked={!!mode.useCQ} className={mode.useCQ ? 'on' : ''} onClick={() => setModeRaw({ ...mode, useCQ: true })}>Pistols</button>
               </div>
             )}
-            {multi.map((w) => (
-              <button key={w.name} className="btn small" onClick={() => setModeRaw({ ...mode, profile: { ...mode.profile, [w.name]: ((mode.profile[w.name] ?? 0) + 1) % w.profiles.length } })}>
-                {w.name}: {w.profiles[mode.profile[w.name] ?? 0].name}
-              </button>
-            ))}
+            {multi.map((w) => {
+              // the profile in use and what it shoots with, so a tap shows what changed
+              const stats = (q: (typeof w.profiles)[number]) => `${q.range ?? '-'}${typeof q.range === 'number' ? '"' : ''} A${q.A} ${q.skill ? `${q.skill}+` : 'N/A'} S${q.S ?? '-'} AP${q.AP} D${q.D}${q.abilities.length ? ` [${q.abilities.join(', ')}]` : ''}`;
+              const cur = w.profiles[mode.profile[w.name] ?? 0];
+              return (
+                <button key={w.name} className="btn small prof-btn" onClick={() => {
+                  const i = ((mode.profile[w.name] ?? 0) + 1) % w.profiles.length;
+                  setModeRaw({ ...mode, profile: { ...mode.profile, [w.name]: i } });
+                  flash(`${w.name} → ${w.profiles[i].name}: ${stats(w.profiles[i])}`);
+                }}>
+                  <span>{w.name}: <b>{cur.name}</b> <Icon name="reroll" size={13} /></span>
+                  <small className="muted">{stats(cur)}</small>
+                </button>
+              );
+            })}
           </div>
           {!mode.overwatch && abilityBar(modeUnit.owner, { unitId: modeUnit.id, whens: ['selectedToShoot', 'shooting'] })}
           {res?.error && <div className="err">{res.error}</div>}
@@ -1675,6 +1735,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return (
         <>
           <div className="small"><b>{u.name}</b> · {fightTargets.length > 1 ? 'tap a target' : ''} Weapons (one per model):</div>
+          {pactRow(u)}
           <div className="row">
             {weapons.map((w) => <button key={w.name} className={`btn small ${mode.weapon === w.name ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, weapon: w.name })}>{w.name}</button>)}
             {chars.length > 0 && !ec && <button className={`btn small ${mode.epic ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, epic: !mode.epic })}>Epic Challenge 1CP</button>}
@@ -1915,12 +1976,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <span className={`rb-turn ${s.active ? 'p1' : 'p0'}`}>{turnText}</span>
           </button>
           <SideScore s={s} p={1} label={sideLabel(1)} onOpen={() => { setCardSide(1); setShowCards(true); }} />
-          {(s.players[0].secMode !== 'none' || s.players[1].secMode !== 'none') && (
-            <button className="tb-tool" onClick={() => { setCardSide(null); setShowCards(true); }} aria-label="Mission cards">
-              <span className="tb-ico"><Icon name="cards" size={22} />{s.players[me].secActive.length > 0 && <i className="tb-badge">{s.players[me].secActive.length}</i>}</span>
-              <span className="tb-lbl">Cards</span>
-            </button>
-          )}
+          <button className="tb-tool" onClick={() => { setCardSide(null); setShowCards(true); }} aria-label="Mission cards">
+            <span className="tb-ico"><Icon name="cards" size={22} />{s.players[me].secActive.length > 0 && <i className="tb-badge">{s.players[me].secActive.length}</i>}</span>
+            <span className="tb-lbl">Mission</span>
+          </button>
           <button className="tb-tool" onClick={() => openStrats()} aria-label="Stratagems">
             <span className="tb-ico"><Icon name="strat" size={22} /></span>
             <span className="tb-lbl">Strat</span>
@@ -1971,7 +2030,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn small" onClick={() => setTape({ on: false })}>Close</button>
           </div>
         )}
-        {mode?.k === 'shoot' && !mode.target && <div className="toast">{targets.length ? `Tap a highlighted enemy unit (${targets.length} in reach)` : 'No enemy in range and in sight of this unit'}</div>}
+        {stratPick && (
+          <div className="tape-bar">
+            <span>Stratagem: tap the unit that uses it</span>
+            <button className="btn small" onClick={() => setStratPick(null)}>Cancel</button>
+          </div>
+        )}
+        {mode?.k === 'shoot' && !mode.target && <div className="toast">{targets.length ? `Tap a highlighted enemy unit (${targets.length} in reach)` : 'No enemy in range and in sight of this unit (a ruin in between blocks sight: from inside one a model sees only about 4in through it)'}</div>}
         {planReady && !mode && (
           <button className={`plan-toggle ${showPlan ? 'on' : ''}`} aria-pressed={showPlan} onClick={() => setShowPlan((v) => !v)}>
             <Icon name="bot" size={16} /> {showPlan ? 'Hide enemy plan' : 'Enemy plan'}
@@ -2189,7 +2254,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             onAuto={r.rule.react ? () => act((g) => { const GP = g.players[p]; GP.autoStrats = GP.autoStrats?.includes(r.st.id) ? GP.autoStrats.filter((x) => x !== r.st.id) : [...(GP.autoStrats ?? []), r.st.id]; }) : undefined}
             onUse={(unitId, use) => {
               const eff = act((g) => applyDetachmentStratagem(g, p, r.st, unitId, use));
-              flash(eff && eff.length ? `${r.st.name}: ${eff.map((k) => EFFECT_LABEL[k] ?? k).join(', ')}` : `Used ${r.st.name}`);
+              const on = unitId ? s.units.find((u) => u.id === unitId)?.name : undefined;
+              flash(`${r.st.name}${on ? ` → ${on}` : ''}${eff && eff.length ? `: ${eff.map((k) => EFFECT_LABEL[k] ?? k).join(', ')}` : ''}`);
+              if (unitId) setSel(unitId);
               setShowStrats(false);
             }} />
         );
@@ -2203,6 +2270,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               {bots.length === 0 && (
                 <div className="seg">
                   {[0, 1].map((i) => <button key={i} className={p === i ? 'on' : ''} onClick={() => { setStratPlayer(i as PlayerId); setStratUnit(''); }}>{s.players[i].name}</button>)}
+                </div>
+              )}
+              {!bots.includes(p) && (
+                <div className="row">
+                  <span className="small grow">{tgtUnit ? <>For <b>{tgtUnit.name}</b> (only this unit gets it)</> : 'Any unit'}</span>
+                  <button className="btn small" onClick={() => { setShowStrats(false); setStratPick({ p, ids: boardUnits(s, p).map((u) => u.id) }); }}>Pick a unit on the map</button>
+                  {tgtUnit && <button className="btn small" onClick={() => setStratUnit('')}>All units</button>}
                 </div>
               )}
               <div className="small muted">{PHASE_TH[s.phase] ?? s.phase} · {s.active === p ? 'your turn' : "opponent's turn"} — pick a unit and tap Use: the CP is spent and the effect applied for you (until the end of the phase / turn as written)</div>
