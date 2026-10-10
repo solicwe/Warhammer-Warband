@@ -2,7 +2,7 @@
 // operation markers and the scoring conditions of all 25 primary cards.
 import { deploymentById, MISSIONS, primaryById, RULES, toPoly, type ScoringRule } from './config';
 import { circleTouchesPoly, circleWhollyInPoly, dist, pointInPoly, polyCentroid } from './geometry';
-import { alive, boardUnits, hasKw, isEngaged, lastRound, log, onBoard, other, unitById } from './state';
+import { alive, boardUnits, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, unitById } from './state';
 import type { GameState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
@@ -270,6 +270,8 @@ export function startAction(s: GameState, opt: ActionOption) {
   const def = MISSIONS.actions[opt.action];
   if (!may(s, u, 'shootAfterAction')) u.selectedToShoot = true; // cannot shoot (or charge) after starting an action
   u.cantCharge = true;
+  // on screen as a card, like a roll: the player sees the action happen
+  pushFx(s, { kind: 'roll', owner: p, title: `${def.name} · ${u.name}`, dice: [], result: def.completes === 'immediately' ? 'Action done' : 'Action started · completes at the end of the turn', good: true });
   if (def.completes === 'immediately') {
     P.mission.done.push({ action: opt.action, unitId: u.id, turn: s.turn, objId: opt.objId, terrainId: opt.terrainId });
     if (opt.action === 'booby-trap' && opt.terrainId) {

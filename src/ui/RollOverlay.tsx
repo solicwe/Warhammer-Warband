@@ -69,7 +69,7 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
   // the sound of it: dice rattle while they tumble and knock when they land (good or bad news after), cards flick
   useEffect(() => {
     if (!cur) return;
-    if (cur.kind === 'roll' || cur.kind === 'rolloff') play('dice', cur.kind === 'roll' ? cur.dice.length : 2);
+    if (cur.kind === 'roll' || cur.kind === 'rolloff') play(cur.kind === 'roll' && !cur.dice.length ? 'card' : 'dice', cur.kind === 'roll' ? cur.dice.length : 2);
     else play('card');
   }, [cur]);
   useEffect(() => {

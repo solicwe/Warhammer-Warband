@@ -1307,4 +1307,4 @@ details > .strat-card { margin-top: 6px; }
 /* army builder: each unit (a squad with its leader / support) is its own card, with a gap between cards */
 .ab-section > .ab-group, .ab-section > .ab-group + .ab-row, .ab-section > .ab-row + .ab-group { margin-top: 8px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .ab-section > .ab-section-head + .ab-group { margin-top: 0; }
-.ab-section > .ab-group { box-shadow: inset 3px 0 0 var(--accent); }
+.ab-section > .ab-group { border-left: 3px solid var(--accent); }
