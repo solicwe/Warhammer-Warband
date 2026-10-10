@@ -244,6 +244,9 @@ describe('transports, split fire, secondaries', () => {
     const pools = buildShootPools(s, a.id, t.id, { mode: 'normal' }).pools;
     expect(pools.some((p) => p.weapon === 'Bolt Rifle')).toBe(true);
     expect(pools.some((p) => p.weapon === 'Bolt Pistol')).toBe(false);
+    // unticking the guns doesn't fire the pistols instead; choosing pistols does
+    expect(buildShootPools(s, a.id, t.id, { mode: 'normal', skipWeapons: ['Bolt Rifle'] }).pools.some((p) => p.weapon === 'Bolt Pistol')).toBe(false);
+    expect(buildShootPools(s, a.id, t.id, { mode: 'normal', useCloseQuarters: true }).pools.some((p) => p.weapon === 'Bolt Pistol')).toBe(true);
     startAttack(s, 'shoot', a.id, t.id, pools);
     while (s.attack!.stage !== 'done') stepAttack(s);
     finishAttack(s);

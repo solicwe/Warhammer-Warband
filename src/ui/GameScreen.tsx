@@ -126,6 +126,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [showPlan, setShowPlan] = useState(false);
   // the bot's commander: what it last said
   const [says, setSays] = useState<{ p: PlayerId; text: string; k: number } | null>(null);
+  // on a phone the commander steps aside 6 s after speaking (during the player's turn): redraw at that moment
+  const [, setSaysTick] = useState(0);
+  useEffect(() => { if (!says) return; const t = window.setTimeout(() => setSaysTick((x) => x + 1), 6100); return () => window.clearTimeout(t); }, [says]);
   const speak = (p: PlayerId, ev: VoiceEvent, names: { u?: string; t?: string } = {}) => {
     if (!bots.includes(p)) return;
     setSays({ p, text: line(s.players[p].factionId, ev, names), k: Date.now() });
@@ -134,8 +137,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // engine errors become a message instead of a crash
   useEffect(() => {
     const onErr = (e: Event) => flash(`Not allowed: ${(e as CustomEvent).detail}`);
+    const onSave = () => flash('This battle could not be saved on this device (storage full or blocked): finish it before closing');
     window.addEventListener('game-error', onErr);
-    return () => window.removeEventListener('game-error', onErr);
+    window.addEventListener('save-error', onSave);
+    return () => { window.removeEventListener('game-error', onErr); window.removeEventListener('save-error', onSave); };
   });
 
   // single-player: let the bot take its steps one at a time so the board animates; caption what it just did

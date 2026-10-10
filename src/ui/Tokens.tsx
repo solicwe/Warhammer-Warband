@@ -101,7 +101,9 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
   const own = datasheet ? getPortrait(datasheet) : undefined;
   // a model without its own picture shows the unit's, faded, until one is added
   const borrowed = !own && fallback ? (Array.isArray(fallback) ? fallback : [fallback]).map((k) => getPortrait(k)).find(Boolean) : undefined;
-  const photo = own ?? borrowed;
+  // a picture that fails to load (removed from the site, offline) shows the drawn token instead of a broken image
+  const [broken, setBroken] = useState<string | null>(null);
+  const photo = (own ?? borrowed) === broken ? undefined : own ?? borrowed;
   const pick = async (f?: File) => {
     if (!f || !datasheet) return;
     try {
@@ -112,7 +114,7 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
   return (
     <span className="portrait" style={{ width: size, height: size }} onClick={() => editable && input.current?.click()}>
       {photo
-        ? <img className={`portrait-img ${borrowed && editable ? 'borrowed' : ''}`} src={photo} alt="" style={{ borderColor: rim }} />
+        ? <img className={`portrait-img ${borrowed && editable ? 'borrowed' : ''}`} src={photo} alt="" style={{ borderColor: rim }} onError={() => setBroken(photo)} />
         : (
           <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" style={{ cursor: editable ? 'pointer' : undefined }}>
             <circle cx="50" cy="50" r="48" fill="var(--surface2)" />

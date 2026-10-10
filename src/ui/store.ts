@@ -30,7 +30,10 @@ function flushSave() {
   if (!pending) return;
   const s = pending;
   pending = null;
-  try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* storage full or blocked */ }
+  try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {
+    // storage full or blocked: say so (the game screen shows it), or the battle is silently lost on close
+    window.dispatchEvent(new CustomEvent('save-error'));
+  }
 }
 function queueSave(s: GameState) {
   pending = s;

@@ -189,7 +189,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (opt.mode === 'closeQuarters') chosen = firedOther ? [] : cqOnly;
       else if (firedOther) chosen = others;
       else if (firedCq) chosen = cqOnly;
-      else chosen = opt.useCloseQuarters || !others.length ? cqOnly : others;
+      // pistols only when chosen, or when the model carries no other gun (skipping its guns never fires its pistols instead)
+      else chosen = opt.useCloseQuarters || !all.some((w) => !hasAbility(w.profiles[0], 'close-quarters')) ? cqOnly : others;
     }
     const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
     for (const w of chosen) {

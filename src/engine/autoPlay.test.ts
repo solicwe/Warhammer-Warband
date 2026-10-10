@@ -54,3 +54,18 @@ describe('auto rules', () => {
     });
   }
 });
+
+describe('the player decides', () => {
+  it('prompts, the Command phase and the fights wait for a player who decides; the app still pilots the rest', async () => {
+    const { decides } = await import('./autoPlay');
+    const s = createGame({ lists: [PRESETS.SM, PRESETS.ORK], factions: [load('SM'), load('ORK')], names: ['A', 'B'], seed: 3 });
+    s.bots = [1]; s.autoRules = [0]; s.decides = [0];
+    expect(decides(s, 0)).toBe(true);
+    s.phase = 'command'; s.active = 0;
+    expect(autoDue(s, 0)).toBe(false);
+    s.window = { kind: 'fireOverwatch', player: 0 };
+    expect(autoDue(s, 0)).toBe(false);
+    s.decides = [];
+    expect(autoDue(s, 0)).toBe(true); // "Automatic": the app answers for them again
+  });
+});

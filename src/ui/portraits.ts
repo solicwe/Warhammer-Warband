@@ -96,6 +96,8 @@ let cloud: Record<string, CloudDoc> = {};
 let cloudLoaded = false;
 /** on the published page (not a local copy, where there is no file store to serve the photos) */
 const seedOn = typeof location !== 'undefined' && location.protocol === 'https:' && !/^(localhost|127\.|\[::1\])/.test(location.hostname);
+// shortcut: the list is copied from the page's store at build time (cloudSeed.json); photos added later show only once
+// the store answers. Refresh the file before each publish.
 const SEED: Record<string, string> = cloudSeed as Record<string, string>;
 let cloudDb: DbLike | null = null;
 let cloudAssets: AssetsLike | null = null;
