@@ -18,7 +18,7 @@ import { canCrossDense, endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, p
 import { detOnCommandStart } from './detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, effectsFor, expireTimed, isRiled, modelDefence, modelOc, rollMods, unitFlags } from './effects';
 import './rituals';
-import { fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setZoneCheck } from './activations';
+import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setZoneCheck } from './activations';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -310,6 +310,14 @@ function engagedAt(s: GameState, u: UnitState, pos: Map<string, Pt>, enemy?: Uni
 
 export interface MoveOptions { fly?: boolean; targets?: string[]; maxOverride?: number }
 
+/** The charge distance against these targets: Siegecraft takes 2 off when one of them has it (not on top of other
+ *  negative modifiers to the roll). */
+export function chargeReach(s: GameState, u: UnitState, targets: (string | UnitState)[] = []): number {
+  const roll = u.chargeRoll ?? 0;
+  const pen = Math.max(0, ...targets.map((t) => unitFlags(s, typeof t === 'string' ? unitById(s, t) : t).chargedMinus));
+  return pen && rollMods(s, u).chargeBonus >= 0 ? Math.max(0, roll - pen) : roll;
+}
+
 /** How far a Pile-in / Consolidation move may go (3", or more with stratagems such as Shock Onslaught). */
 export function pileDistance(s: GameState, u: UnitState, kind: 'pileIn' | 'consolidate'): number {
   const f = unitFlags(s, u);
@@ -325,7 +333,7 @@ export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: M
   let max = 0;
   if (kind === 'normal' || kind === 'fallback') max = M;
   else if (kind === 'advance') max = M + (u.advanceRoll ?? 0);
-  else if (kind === 'charge') max = u.chargeRoll ?? 0;
+  else if (kind === 'charge') max = chargeReach(s, u, opt.targets);
   else if (kind === 'pileIn' || kind === 'consolidate') max = pileDistance(s, u, kind);
   else if (kind === 'scout') max = Math.max(u.core.scouts ?? 0, unitFlags(s, u).scouts);
   else if (kind === 'extra' || kind === 'surge') max = u.extraMove?.max ?? 0;
@@ -566,6 +574,7 @@ export function placeUnit(s: GameState, u: UnitState, pos: Map<string, Pt>) {
   for (const m of alive(u)) { const p = pos.get(m.id)!; m.x = p.x; m.y = p.y; }
   u.status = 'board';
   u.setUpTurn = s.turn;
+  if (s.phase !== 'deploy' && s.phase !== 'scouts') arrivalShock(s, u);
   // Seeker of the Unfound: the first time it is set up, it picks an objective (the nearest one out in the field)
   if (!u.seekerObjective && unitHasAbility(u, 'Seeker of the Unfound') && s.objectives.length) {
     const c = polyCentroid(alive(u));
@@ -1092,9 +1101,9 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   if (!chk.ok) return chk;
   // Meteoric Descent: set up closer than usual, then no charge this turn
   const closest = Math.min(99, ...boardUnits(s, other(u.owner)).flatMap((e) => alive(e).flatMap((n) => alive(u).map((m) => { const p = pos.get(m.id) ?? m; return dist(p, n) - m.r - n.r; }))));
+  u.move = 'ingress'; // before placing: rules on arrival (Dread Reputation) read it
   placeUnit(s, u, pos);
   pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
-  u.move = 'ingress';
   if (closest <= RULES.reserves.enemyDistance) u.noChargeTurn = s.turn;
   log(s, `${u.name} arrives (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closest <= RULES.reserves.enemyDistance ? ' within 9" of the enemy → cannot charge this turn' : ''}`, 'info', u.owner);
   if (u.owner === s.active && s.phase === 'movement') offerReactions(s, 'enemyMovedNear', u);
@@ -1181,9 +1190,6 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   if (cap !== undefined) total = Math.min(total, cap);
   if (u.buffs.some((b) => b.kind === 'advanceCharge+1')) total += 1;
   total += rollMods(s, u).chargeBonus;
-  // Siegecraft: an enemy unit that makes charges near it harder (shortcut: any charge declared within 12" of it, not only at it)
-  const siege = Math.max(0, ...boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.charge.declareRange).map((e) => unitFlags(s, e).chargedMinus));
-  if (siege) total -= siege;
   u.chargeRoll = Math.max(0, total - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0));
   const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `Charge ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });
@@ -1282,11 +1288,10 @@ export function rerollCharge(s: GameState, u: UnitState, fly = false, cap?: numb
 }
 
 export function chargeTargetOptions(s: GameState, u: UnitState, opts: { onlyChargedThisPhase?: boolean; within?: number } = {}): UnitState[] {
-  const roll = u.chargeRoll ?? 0;
   return boardUnits(s, other(u.owner)).filter((e) => {
     if (hasKw(e, 'AIRCRAFT') && !hasKw(u, 'FLY')) return false;
     const d = unitDistance(u, e);
-    if (d > RULES.charge.declareRange || d > roll + 1e-6) return false;
+    if (d > RULES.charge.declareRange || d > chargeReach(s, u, [e]) + 1e-6) return false;
     if (opts.within !== undefined && d > opts.within) return false;
     if (opts.onlyChargedThisPhase && e.chargedTurn !== s.turn) return false;
     const only = unitFlags(s, u).onlyTargetMarked;
@@ -1792,6 +1797,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
   else { u.move = 'stationary'; u.cantCharge = !assault; }
   u.disembarkedFrom = t.id;
   log(s, `${u.name} disembarks (${assault ? 'Assault: can still charge' : mode === 'rapid' ? 'Rapid' : mode === 'tactical' ? 'Tactical' : 'Combat'} Disembark)`, 'info', u.owner);
+  arrivalShock(s, u);
   fire(s, 'passengerDisembarks', [t], { targetId: u.id });
   return chk;
 }
@@ -1836,7 +1842,7 @@ const stayPaths = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x
 /** Charge `targetIds` with the distance rolled: every model is moved in by itself. False when no legal move was found. */
 export function autoCharge(s: GameState, u: UnitState, targetIds: string[]): boolean {
   const targets = targetIds.map((id) => unitById(s, id));
-  const paths = new Map([...stayPaths(u), ...autoApproach(s, u, targets, u.chargeRoll ?? 0)]);
+  const paths = new Map([...stayPaths(u), ...autoApproach(s, u, targets, chargeReach(s, u, targets))]);
   if (!validateMove(s, u, 'charge', paths, { targets: targetIds }).ok) return false;
   commitCharge(s, u, paths, targetIds);
   return true;

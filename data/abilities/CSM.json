@@ -1682,52 +1682,97 @@
     }
    }
   ],
-  "act": {
-   "when": "afterShootingButton",
-   "limit": "phase",
-   "if": [
-    "marked:darkPact"
-   ],
-   "target": {
-    "side": "enemy",
-    "hit": true
+  "act": [
+   {
+    "when": "afterShootingButton",
+    "limit": "phase",
+    "if": [
+     "marked:pactOk"
+    ],
+    "target": {
+     "side": "enemy",
+     "hit": true
+    },
+    "label": "Intoxicating Elixir: Battle-shock test for a unit it hit",
+    "do": [
+     {
+      "on": "target",
+      "shock": 0
+     }
+    ]
    },
-   "label": "Battle-shock test for a unit it hit",
-   "do": [
-    {
-     "on": "target",
-     "shock": 0
-    }
-   ]
-  },
-  "status": "partial",
-  "note": "After fighting: Battle-shock by hand"
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "if": [
+     "marked:pactOk"
+    ],
+    "target": {
+     "side": "enemy",
+     "hit": true
+    },
+    "do": [
+     {
+      "on": "target",
+      "shock": 0
+     }
+    ]
+   }
+  ]
  },
  "Orbs of Unlife": {
-  "act": {
-   "when": "fightEnd",
-   "auto": true,
-   "target": {
-    "side": "enemy",
-    "range": 3,
-    "each": true
+  "act": [
+   {
+    "when": "fightEnd",
+    "auto": true,
+    "if": [
+     "!marked:pactOk"
+    ],
+    "target": {
+     "side": "enemy",
+     "range": 3,
+     "each": true
+    },
+    "roll": "D6",
+    "label": "Orbs of Unlife",
+    "table": [
+     {
+      "min": 4,
+      "do": [
+       {
+        "on": "target",
+        "mortals": "D3"
+       }
+      ]
+     }
+    ]
    },
-   "roll": "D6",
-   "label": "Orbs of Unlife",
-   "table": [
-    {
-     "min": 4,
-     "do": [
-      {
-       "on": "target",
-       "mortals": "D3"
-      }
-     ]
-    }
-   ]
-  },
-  "status": "partial",
-  "note": "+1 to the roll after a passed Dark Pact: by hand"
+   {
+    "when": "fightEnd",
+    "auto": true,
+    "if": [
+     "marked:pactOk"
+    ],
+    "target": {
+     "side": "enemy",
+     "range": 3,
+     "each": true
+    },
+    "roll": "D6",
+    "label": "Orbs of Unlife (+1 after a passed Dark Pact)",
+    "table": [
+     {
+      "min": 3,
+      "do": [
+       {
+        "on": "target",
+        "mortals": "D3"
+       }
+      ]
+     }
+    ]
+   }
+  ]
  },
  "Talisman of Burning Blood": {
   "effects": [
@@ -1842,7 +1887,8 @@
    "when": "commandStart",
    "auto": true,
    "roll": "D6",
-   "label": "Despot's Claim: 5+ → 1CP",
+   "rollAdd": "nearEnemyDz12",
+   "label": "Despot's Claim: 5+ (+1 wholly within 12\" of the enemy deployment zone) → 1CP",
    "table": [
     {
      "min": 5,
@@ -1854,23 +1900,22 @@
      ]
     }
    ]
-  },
-  "status": "partial",
-  "note": "+1 when wholly within 12\" of the enemy deployment zone: by hand"
+  }
  },
  "Dread Reaver": {
   "effects": [
    {
     "scope": "model",
     "attack": "melee",
+    "if": [
+     "nearEnemyDz:12"
+    ],
     "reroll": [
      "hits",
      "wounds"
     ]
    }
-  ],
-  "status": "partial",
-  "note": "Only while wholly within 12\" of the enemy deployment zone (not checked)"
+  ]
  },
  "Mark of the Hound": {
   "effects": [
@@ -1896,6 +1941,7 @@
    "when": "commandStart",
    "auto": true,
    "roll": "D6",
+   "rollAdd": "shockedEnemies",
    "label": "Eater of Dread: 5+ (+1 per Battle-shocked enemy unit) → 1CP",
    "table": [
     {
@@ -1908,9 +1954,7 @@
      ]
     }
    ]
-  },
-  "status": "partial",
-  "note": "+1 per Battle-shocked enemy unit: by hand"
+  }
  },
  "Night’s Shroud": {
   "effects": [
@@ -2012,13 +2056,11 @@
    "do": [
     {
      "on": "self",
-     "revive": 2
+     "reviveRoll": "D3"
     }
    ],
    "botUse": "damaged"
-  },
-  "status": "partial",
-  "note": "D3 models (2 here)"
+  }
  },
  "Cultist’s Brand": {
   "effects": [
@@ -2227,27 +2269,17 @@
   "status": "partial"
  },
  "Dread Reputation": {
-  "act": {
-   "when": "anyPhase",
-   "limit": "phase",
-   "if": [
-    "setUpThisTurn"
-   ],
-   "target": {
-    "side": "enemy",
-    "range": 12,
-    "each": true
+  "effects": [
+   {
+    "arriveShockAll": 6
    },
-   "label": "Dread Reputation: Battle-shock tests",
-   "do": [
-    {
-     "on": "target",
-     "shock": 0
-    }
-   ]
-  },
-  "status": "partial",
-  "note": "6\" normally, 12\" after Deep Strike — the game uses 12\""
+   {
+    "if": [
+     "ingressThisTurn"
+    ],
+    "arriveShockAll": 12
+   }
+  ]
  },
  "Eager for Bloodshed": {
   "effects": [
@@ -2356,7 +2388,8 @@
    "when": "commandStart",
    "auto": true,
    "roll": "D6",
-   "label": "Wyredjinn: 4+ (+1 on a controlled objective) → 1CP",
+   "rollAdd": "onControlledObjective",
+   "label": "Wyredjinn: 4+ (+1 on an objective you control) → 1CP",
    "table": [
     {
      "min": 4,
@@ -2368,9 +2401,7 @@
      ]
     }
    ]
-  },
-  "status": "partial",
-  "note": "+1 on an objective you control: by hand"
+  }
  },
  "Cybinfernal Font": {
   "effects": [

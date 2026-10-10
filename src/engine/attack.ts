@@ -3,7 +3,7 @@ import { weaponFx } from './weaponFx';
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems } from './geometry';
-import { alive, canUseStratagem, emitReact, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
+import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
@@ -630,7 +630,20 @@ export function hitsForWounding(p: Pool, s: GameState) {
 export function rollWounds(s: GameState) {
   const at = s.attack!;
   const p = at.pools[at.idx];
-  const { auto, rolls } = hitsForWounding(p, s);
+  const hw = hitsForWounding(p, s);
+  const { auto } = hw;
+  let { rolls } = hw;
+  // Mortal Thralls: no Wound roll; the DAMNED unit within 3" (visible to the attackers) takes the Damage as mortal wounds
+  const T0 = unitById(s, at.targetId), A0 = unitById(s, at.attackerId);
+  const thrall = rolls && unitFlags(s, T0).thralls
+    ? boardUnits(s, T0.owner).find((d) => d.id !== T0.id && hasKw(d, 'DAMNED') && unitDistance(d, T0) <= 3 + 1e-6 && alive(A0).some((m) => unitVisibleTo(s, m, d))) : undefined;
+  if (thrall) {
+    let mw = 0;
+    for (let i = 0; i < rolls; i++) mw += rollExpr(s, p.profile.D).total;
+    log(s, `Mortal Thralls: ${rolls} attack(s) on ${T0.name} hit ${thrall.name} instead → ${mw} mortal wounds`, 'info', T0.owner);
+    applyMortalWounds(s, thrall, mw, 'Mortal Thralls');
+    rolls = 0;
+  }
   p.autoWounds = auto;
   p.wounds = rollN(s, rolls).map((v) => ({ v, o: evalWound(p, v) }));
   const A = unitById(s, at.attackerId);

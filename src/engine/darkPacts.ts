@@ -43,6 +43,7 @@ export function makeDarkPact(s: GameState, u: UnitState, pick: PactPick): { pass
   if (!alive(u).length) return { passed, total };
   addTimed(s, u, { e: { abilities: both ? ['lethal hits', 'sustained hits 1'] : [pick] }, label: 'Dark Pact', until: 'phase', by: u.owner, mark: 'darkPact' });
   // "made a Dark Pact and did not fail the test": Marks of Chaos and the Pactbound Zealots enhancements read these marks
+  if (passed) addTimed(s, u, { e: {}, label: 'Dark Pact', until: 'phase', by: u.owner, mark: 'pactOk' });
   if (passed) for (const k of both ? ['lethal hits', 'sustained hits 1'] : [pick]) addTimed(s, u, { e: {}, label: 'Dark Pact', until: 'phase', by: u.owner, mark: k === 'lethal hits' ? 'pactOk:lethal' : 'pactOk:sustained' });
   if (contract) {
     for (const e of [{ attack: 'ranged' as const, wound: 1 }, { attack: 'melee' as const, attacks: 2 }, ...(addendum ? [{ reroll: 'hits' as const }] : [])]) addTimed(s, u, { e, label: 'Debt to the Soul Forge', until: 'phase', by: u.owner, mark: 'contract' });

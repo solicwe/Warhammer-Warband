@@ -58,10 +58,15 @@ export interface StratRule {
   unitIf?: string[];
   /** things only the stratagem engine can do: shoot back, charge now, embark, disembark, move the wreck */
   special?: Special[];
+  /** the effects go to the CHARACTER models of the unit only; `addWounds`: +X to their Wounds for the rest of the battle (Eye of the Gods) */
+  characterOnly?: boolean;
+  addWounds?: number;
   /** "You can only use this Stratagem once per battle round / battle" */
   limit?: 'round' | 'battle';
   /** the TARGET keywords, when the card's wording can't be read ("INFANTRY or MOUNTED") */
   targetKw?: string[];
+  /** ownKilled: the enemy unit it destroyed must have this keyword (Bloody Example: CHARACTER) */
+  killedKw?: string;
   /** reaction to a model's death: the destroyed model must have this keyword (Refusal to Yield: ANCIENT) */
   ctxModel?: string;
   /** reactions: when the bot uses it (default never) */
@@ -90,6 +95,8 @@ export interface EnemyPick {
   killer?: boolean;
   /** only units this unit hit this phase (optionally: with a weapon whose name matches) */
   hitBy?: boolean | string;
+  /** only an enemy unit that Fell Back this turn */
+  fellBack?: boolean;
 }
 
 const BOOKS: Record<string, Record<string, StratRule>> = {
@@ -352,6 +359,7 @@ export function stratEnemies(s: GameState, p: PlayerId, rule: StratRule, u: Unit
   return boardUnits(s, other(p)).filter((e) => {
     if (q.kw && !q.kw.some((k) => e.keywords.includes(k) || e.factionKeywords.includes(k))) return false;
     if (q.notKw && q.notKw.some((k) => e.keywords.includes(k))) return false;
+    if (q.fellBack && e.move !== 'fallback') return false;
     if (!u || !onBoard(u)) return !(q.range || q.engaged || q.visible || q.hitBy);
     if (q.engaged && !engagedEnemies(s, u).some((x) => x.id === e.id)) return false;
     if (q.range !== undefined && unitDistance(u, e) > q.range + 1e-6) return false;
@@ -435,7 +443,9 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
   const own = [u, ...(use.extraIds ?? []).map((id) => unitById(s, id))].filter((x): x is UnitState => !!x && x.owner === p);
   for (const x of own) {
     for (const k of buffs) x.buffs.push({ kind: k, until, label: st.name });
-    for (const e of rule.effects ?? []) addTimed(s, x, { e, label: st.name, until: rule.until ?? 'phase', by: p, mark: rule.mark });
+    const chars = rule.characterOnly ? alive(x).filter((m) => m.isCharacter || m.keywords.includes('CHARACTER')).map((m) => m.id) : undefined;
+    for (const e of rule.effects ?? []) addTimed(s, x, { e, label: st.name, until: rule.until ?? 'phase', by: p, mark: rule.mark, models: chars });
+    if (rule.addWounds) for (const m of alive(x).filter((m) => chars?.includes(m.id) ?? true)) { m.profile = { ...m.profile, W: m.profile.W + rule.addWounds }; m.wounds += rule.addWounds; }
     if (rule.shock && !x.battleShocked) { x.battleShocked = true; log(s, `${st.name}: ${x.name} gives in to the Red Thirst → Battle-shocked`, 'info', p); }
   }
   const enemies = rule.enemy
@@ -588,11 +598,12 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
   for (const d of s.players[p].detachments) for (const st of d.stratagems) {
     const rule = stratRule(st, s.players[p].factionId, d.name);
     if (rule.react !== on) continue;
+    if (rule.killedKw && !(ctx.victimId && unitById(s, ctx.victimId).models.some((m) => m.keywords.includes(rule.killedKw!)))) continue;
     if (rule.ctxModel && ctx.modelId) {
       const m = ctx.unitId ? unitById(s, ctx.unitId).models.find((x) => x.id === ctx.modelId) : undefined;
       if (!m || !(m.keywords.includes(rule.ctxModel) || new RegExp(rule.ctxModel, 'i').test(m.name))) continue;
     }
-    const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked'].includes(on)
+    const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked', 'ownKilled'].includes(on)
       ? (ctx.unitId ? [unitById(s, ctx.unitId)] : [])
       : stratCandidates(s, p, st, ctx)
     ).filter((u) => u.owner === p && !stratagemBlock(s, p, st, u, { react: true, ctx }))
@@ -673,7 +684,7 @@ export const REACT_LABEL: Partial<Record<ReactOn, string>> = {
   enemyChargeMoveEnd: 'an enemy unit just made a Charge move', enemyChargePhaseStart: "start of your opponent's Charge phase", enemyCommandStart: "your opponent's Command phase",
   enemyMoved: 'an enemy unit just ended a move', enemyShot: 'an enemy unit has just shot', enemyChargeDeclared: 'an enemy unit just declared a charge', enemyChargePhaseEnd: "end of your opponent's Charge phase",
   fightPhaseEnd: 'end of the Fight phase', chargeMoveEnd: 'your unit just made a Charge move', ownAttacked: 'your unit has just attacked', ownDestroyed: 'your unit was destroyed',
-  modelDestroyed: 'your model was destroyed', oathDestroyed: 'the Oath of Moment target was destroyed',
+  modelDestroyed: 'your model was destroyed', oathDestroyed: 'the Oath of Moment target was destroyed', ownKilled: 'your unit just destroyed an enemy unit',
 };
 
 setReactHook(handleReact);
@@ -690,6 +701,8 @@ onAttackFinished((s, at, info) => {
   if (at.free) return;
   if (at.kind === 'shoot' && s.phase === 'shooting' && A.owner === s.active) handleReact(s, other(A.owner), 'enemyShot', { unitId: A.id });
   if (at.kind === 'shoot' || at.kind === 'fight') handleReact(s, A.owner, 'ownAttacked', { unitId: A.id });
+  // "just after a unit from your army destroys an enemy unit" (Bloody Example, Sadistic Display, Eye of the Gods)
+  if (info.destroyed) handleReact(s, A.owner, 'ownKilled', { unitId: A.id, victimId: T.id });
   // prompts that waited for the attack to finish (a unit destroyed during it …)
   if (!s.window && s.reactQueue?.length) {
     const q = s.reactQueue.shift()!;

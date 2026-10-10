@@ -6,7 +6,7 @@ import { autoAttach, forChapter, listPoints, syncList } from '../engine/army';
 import { createGame, listDisposition, listDispositionOptions } from '../engine/game';
 import type { ArmyList, FactionData, GameState } from '../engine/types';
 import { Emblem, titleCase } from './ArmyBuilder';
-import { loadFaction, type FactionIndex } from './data';
+import { loadFaction, useFactions, type FactionIndex } from './data';
 import { Icon } from './Icon';
 import { LayoutPreview } from './LayoutPreview';
 import { loadBattlePrefs, saveBattlePrefs, withAutoRules, type Army, type ArmyRef, type BattleMode, type BattlePrefs } from './library';
@@ -61,6 +61,8 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
     return { ...PRESETS[r.factionId], disposition: presetDisp[i] ?? PRESETS[r.factionId].disposition };
   };
   const lists: [ArmyList, ArmyList] = [listOf(0), listOf(1)];
+  const ptsFacs = useFactions(armies.map((x) => x.factionId));
+  const ptsOf = (l: ArmyList) => listPoints(l, ptsFacs[l.factionId]);
   const [facs, setFacs] = useState<[FactionData | null, FactionData | null]>([null, null]);
   useEffect(() => {
     let live = true;
@@ -141,7 +143,7 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
           <Emblem factionId={l.factionId} sub={l.subfaction} />
           <span className="pick-army-text">
             <span className="pick-army-name">{l.name || 'Untitled army'}{prefs.sides[i].kind === 'preset' && <span className="tag">Ready-made</span>}</span>
-            <span className="pick-army-meta">{factionName(l.factionId)}{l.subfaction ? ` · ${titleCase(l.subfaction)}` : ''} · <span className="num">{listPoints(l)}/{size.points}</span></span>
+            <span className="pick-army-meta">{factionName(l.factionId)}{l.subfaction ? ` · ${titleCase(l.subfaction)}` : ''} · <span className="num">{ptsOf(l)}/{size.points}</span></span>
           </span>
           <span className="pick-army-change">Change</span>
         </button>
@@ -258,7 +260,7 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
                       <Emblem factionId={c.list.factionId} sub={c.list.subfaction} />
                       <span className="pick-army-text">
                         <span className="pick-army-name">{c.list.name || 'Untitled army'}</span>
-                        <span className="pick-army-meta">{factionName(c.list.factionId)} · {c.list.detachments.join(' + ') || 'No Detachment'} · <span className="num">{listPoints(c.list)}/{size.points}</span></span>
+                        <span className="pick-army-meta">{factionName(c.list.factionId)} · {c.list.detachments.join(' + ') || 'No Detachment'} · <span className="num">{ptsOf(c.list)}/{size.points}</span></span>
                       </span>
                       {on && <Icon name="check" size={20} />}
                     </button>

@@ -2599,7 +2599,7 @@
    ]
   },
   "Pactbound Zealots": {
-   "auto": "partial",
+   "auto": "full",
    "effects": [
     {
      "units": [
@@ -2672,8 +2672,7 @@
      ],
      "reroll": "hits1"
     }
-   ],
-   "manual": "The Mark is read from the unit's keywords (KHORNE, TZEENTCH, NURGLE, SLAANESH); a unit with none counts as CHAOS UNDIVIDED (re-roll hit rolls of 1 after a passed Dark Pact). Attach and embark restrictions are not checked."
+   ]
   },
   "Veterans of the Long War": {
    "auto": "full",
@@ -2691,16 +2690,69 @@
    ]
   },
   "Deceptors": {
-   "auto": "partial",
-   "effects": [
+   "auto": "full",
+   "grants": [
     {
      "units": [
       "LEGIONARIES|CULTIST MOB"
      ],
-     "infiltrators": true
+     "name": "Masters of Misdirection",
+     "rule": {
+      "act": [
+       {
+        "when": "formation",
+        "auto": true,
+        "limit": "battle",
+        "per": "army",
+        "target": {
+         "side": "friendly",
+         "units": [
+          "LEGIONARIES"
+         ],
+         "anywhere": true,
+         "each": true,
+         "count": "battleSize"
+        },
+        "do": [
+         {
+          "buff": [
+           {
+            "infiltrators": true
+           }
+          ],
+          "until": "battle"
+         }
+        ]
+       },
+       {
+        "when": "formation",
+        "auto": true,
+        "limit": "battle",
+        "per": "army",
+        "target": {
+         "side": "friendly",
+         "units": [
+          "CULTIST MOB"
+         ],
+         "anywhere": true,
+         "each": true,
+         "count": "battleSize"
+        },
+        "do": [
+         {
+          "buff": [
+           {
+            "infiltrators": true
+           }
+          ],
+          "until": "battle"
+         }
+        ]
+       }
+      ]
+     }
     }
-   ],
-   "manual": "Every LEGIONARIES and CULTIST MOB unit gets Infiltrators (the card limits it to 2/3/4 of each by battle size, plus attached CHARACTER units)"
+   ]
   },
   "Renegade Raiders": {
    "auto": "full",
@@ -2854,7 +2906,7 @@
    "auto": "full"
   },
   "Creations of Bile": {
-   "auto": "partial",
+   "auto": "full",
    "choice": {
     "name": "Experimental Augmentations",
     "when": "battle",
@@ -2954,10 +3006,16 @@
         ]
        }
       ]
+     },
+     {
+      "id": "random",
+      "name": "Roll two at random",
+      "text": "Roll two D6: 1 Cholinergic, 2 Hyperadrenal, 3 Paraneural, 4 Chitination, 5 Sinews, 6 Ophthalmic (a double gives one)",
+      "effects": [],
+      "random": 2
      }
     ]
-   },
-   "manual": "Pick one augmentation (the card's alternative, two random ones, is not offered)"
+   }
   },
   "Cabal of Chaos": {
    "auto": "full",
@@ -2992,7 +3050,7 @@
    ]
   },
   "Nightmare Hunt": {
-   "auto": "partial",
+   "auto": "full",
    "effects": [
     {
      "units": [
@@ -3018,12 +3076,22 @@
       "targetBattleShocked"
      ],
      "wound": 1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "if": [
+      "targetBattleShocked"
+     ],
+     "defend": {
+      "hit": -1
+     }
     }
-   ],
-   "manual": "-1 to hit for Battle-shocked attackers targeting your units: by hand"
+   ]
   },
   "Huron’s Marauders": {
-   "auto": "partial",
+   "auto": "full",
    "choice": {
     "name": "Tyrannical Motivation",
     "when": "command",
@@ -3063,7 +3131,31 @@
      }
     ]
    },
-   "manual": "Units visible to Huron Blackheart at the start of a phase have both abilities: by hand"
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY"
+     ],
+     "if": [
+      "seenBy:Huron Blackheart"
+     ],
+     "hit": 1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY"
+     ],
+     "if": [
+      "seenBy:Huron Blackheart"
+     ],
+     "eligible": [
+      "shootAfterFallBack",
+      "chargeAfterFallBack"
+     ]
+    }
+   ]
   },
   "Renegade Warband": {
    "auto": "full",
@@ -3159,7 +3251,7 @@
    ]
   },
   "Warpstrike Champions": {
-   "auto": "partial",
+   "auto": "full",
    "grants": [
     {
      "units": [
@@ -3181,12 +3273,13 @@
          "on": "self",
          "reserves": true
         }
-       ]
+       ],
+       "per": "army",
+       "uses": "battleSize"
       }
      }
     }
-   ],
-   "manual": "Up to 1/2/3 units by battle size"
+   ]
   },
   "Cult of the Arkifane": {
    "auto": "full",
@@ -3235,7 +3328,7 @@
    ]
   },
   "Murdertalon Raiders": {
-   "auto": "partial",
+   "auto": "full",
    "effects": [
     {
      "units": [
@@ -3259,9 +3352,35 @@
       "!targetBattleShocked"
      ],
      "reroll": "hits1"
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY",
+      "FLY"
+     ],
+     "if": [
+      "targetBattleShocked"
+     ],
+     "defend": {
+      "hit": -1
+     }
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY",
+      "FLY"
+     ],
+     "if": [
+      "targetBelowHalf",
+      "!targetBattleShocked"
+     ],
+     "defend": {
+      "hit": -1
+     }
     }
-   ],
-   "manual": "-1 to hit for Battle-shocked / half-strength attackers: by hand"
+   ]
   }
  }
 }

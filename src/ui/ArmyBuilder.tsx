@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, attachOptions, buildUnits, chapterRules, defaultWargear, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { Em } from './Em';
 import { dispositionById, RULES } from '../engine/config';
@@ -631,7 +631,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                 {enh.map((o) => {
                   const on = u.enhancement === o.name;
                   const taken = list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
-                  const fit = sheet ? enhancementFits(o.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name]) : null;
+                  const fit = sheet ? enhancementFits(o.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]) : null;
                   if (fit && !fit.ok && !on) return <div key={o.detachment + o.name} className="enh-card off"><span className="enh-head"><b>{o.name}</b><span>+{o.pts} pts</span></span><span className="enh-foot">Not allowed: {fit.need} only</span></div>;
                   return (
                     <button key={o.detachment + o.name} type="button" className={`enh-card ${on ? 'on' : ''} ${taken ? 'taken' : ''}`}
@@ -641,6 +641,16 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                       <span className="enh-foot">{o.detachment}{o.upgrade ? ' · Upgrade' : ''}{taken ? ` · taken by ${taken.datasheet} (one per army)` : ''}</span>
                     </button>
                   );
+                })}
+              </div>
+            </div>
+          )}
+          {sheet && list.detachments.includes('Pactbound Zealots') && markable(sheet) && (
+            <div className="field"><span>Mark of Chaos <span className="tiny muted">Pactbound Zealots · after a passed Dark Pact</span></span>
+              <div className="wg-chips">
+                {CHAOS_MARKS.filter((k) => !(k === 'KHORNE' && sheet.keywords.includes('PSYKER'))).map((k) => {
+                  const on = (u.mark ?? 'CHAOS UNDIVIDED') === k;
+                  return <button key={k} type="button" className={on ? 'on' : ''} aria-pressed={on} onClick={() => setUnit(u.uid, { mark: k === 'CHAOS UNDIVIDED' ? undefined : k })}>{on && <Icon name="check" size={16} />}{k.charAt(0) + k.slice(1).toLowerCase()}</button>;
                 })}
               </div>
             </div>

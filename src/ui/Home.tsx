@@ -7,7 +7,7 @@ import { loadRun } from '../engine/campaign';
 import { lastRound } from '../engine/state';
 import type { GameState } from '../engine/types';
 import { Emblem, titleCase } from './ArmyBuilder';
-import type { FactionIndex } from './data';
+import { useFactions, type FactionIndex } from './data';
 import { Icon } from './Icon';
 import type { Army } from './library';
 
@@ -31,6 +31,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
   const runLayer = run ? Math.max(0, ...run.path.map((id) => (run.map.find((n) => n.id === id)?.layer ?? -1) + 1)) : 0;
   const runLayers = run ? Math.max(...run.map.map((n) => n.layer)) + 1 : 0;
   const [menu, setMenu] = useState<string | null>(null);
+  const facs = useFactions(armies.map((a) => a.factionId)); // points with the duplicate tax, as in the army builder
   const [armed, setArmed] = useState<string | null>(null); // a delete that needs a second tap (dialogs are blocked here)
   useEffect(() => { if (!armed) return; const t = window.setTimeout(() => setArmed(null), 3000); return () => window.clearTimeout(t); }, [armed]);
   const factionName = (id: string) => index?.factions.find((f) => f.id === id)?.name ?? id;
@@ -96,7 +97,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
           <button className="list-new" onClick={onNew}><Icon name="plus" size={20} />New army</button>
           {armies.map((a) => {
             const size = RULES.battleSizes.find((b) => b.id === a.battleSize) ?? RULES.battleSizes[0];
-            const pts = listPoints(a);
+            const pts = listPoints(a, facs[a.factionId]);
             const over = pts > size.points;
             return (
               <div key={a.id} className={`army ${menu === a.id ? 'open' : ''}`}>

@@ -121,6 +121,7 @@ export interface ArmyUnitEntry {
   models: number;
   pts: number;
   attachTo?: string; // uid of the bodyguard unit this leader/support joins
+  mark?: string; // Pactbound Zealots: the Mark of Chaos picked for it (KHORNE, TZEENTCH, NURGLE, SLAANESH, CHAOS UNDIVIDED)
   enhancement?: string;
   enhancementPts?: number;
   warlord?: boolean;

@@ -2,10 +2,16 @@
  "_comment": "Chaos Space Marines stratagems (Faction Pack v1.3, 30 Sep 2026) in machine-readable form. Keys: stratagem NAME (as on the card) or NAME@Detachment. See docs/EDITING.md.",
  "rules": {
   "EYE OF THE GODS": {
+   "react": "ownKilled",
    "targetKw": [
-    "CHARACTER"
+    "CHARACTER",
+    "!DAMNED",
+    "!DAEMON",
+    "!EPIC HERO"
    ],
    "until": "battle",
+   "characterOnly": true,
+   "addWounds": 1,
    "effects": [
     {
      "move": 1,
@@ -18,9 +24,8 @@
      "damage": 1
     }
    ],
-   "bot": "never",
-   "status": "partial",
-   "note": "Use it after the character's unit destroys an enemy unit. +1 Wounds is not tracked, and the whole unit gets the bonus, not only the character."
+   "botReact": "always",
+   "status": "auto"
   },
   "SKINSHIFT": {
    "do": [
@@ -212,6 +217,9 @@
    "note": "If your unit is engaged, this is a Fall Back move"
   },
   "BLOODY EXAMPLE": {
+   "react": "ownKilled",
+   "killedKw": "CHARACTER",
+   "botReact": "always",
    "enemy": {
     "range": 12,
     "visible": true,
@@ -234,13 +242,13 @@
     "notEngaged"
    ],
    "enemy": {
-    "range": 6
+    "range": 6,
+    "fellBack": true
    },
    "special": [
     "charge"
    ],
-   "status": "partial",
-   "note": "Only an enemy unit that Fell Back this turn; no Charge bonus"
+   "status": "auto"
   },
   "SCREAMING DESCENT": {
    "targetFrom": "reserves",
@@ -253,11 +261,13 @@
     },
     {
      "deepStrikeRange": 6
+    },
+    {
+     "arriveShock": 9
     }
    ],
    "until": "turn",
-   "status": "partial",
-   "note": "After it is set up: one enemy INFANTRY or MOUNTED unit within 9\" and visible takes a Battle-shock test (by hand)"
+   "status": "auto"
   },
   "POINT-BLANK DESTRUCTION": {
    "unitIf": [
@@ -310,6 +320,17 @@
     {
      "on": "self",
      "mortals": "D3"
+    },
+    {
+     "on": "self",
+     "pactTest": {
+      "pass": [
+       {
+        "attack": "melee",
+        "strength": 1
+       }
+      ]
+     }
     }
    ],
    "effects": [
@@ -318,8 +339,7 @@
      "attacks": 1
     }
    ],
-   "status": "partial",
-   "note": "Desperate Pact: also take a Leadership test (failed: D3 more mortal wounds); passed: +1 S on melee weapons this phase (by hand)"
+   "status": "auto"
   },
   "SELFLESS DEMISE": {
    "targetKw": [
@@ -327,37 +347,35 @@
    ],
    "effects": [
     {
-     "retaliate": {
-      "on": 6,
-      "max": 20
-     }
+     "deathRetaliate": 6
     }
    ],
    "bot": "defend",
-   "status": "partial",
-   "note": "Rolled per attack allocated here (the card: per model destroyed)"
+   "status": "auto"
   },
   "MORTAL THRALLS": {
-   "bot": "never",
-   "status": "manual",
-   "note": "Wound rolls against your unit become mortal wounds on the DAMNED unit within 3\": resolve by hand"
+   "effects": [
+    {
+     "thralls": true
+    }
+   ],
+   "bot": "defend",
+   "status": "auto",
+   "note": "Uses the friendly DAMNED unit within 3\" of your unit that the attackers can see"
   },
   "DAEMONIC POSSESSION": {
    "targetKw": [
     "VEHICLE",
     "!DAEMON"
    ],
-   "until": "battle",
-   "effects": [
+   "do": [
     {
-     "addKeywords": [
-      "DAEMON"
-     ]
+     "on": "self",
+     "addKeyword": "DAEMON"
     }
    ],
    "bot": "never",
-   "status": "partial",
-   "note": "Keyword rules that read DAEMON at the start of the battle may not see it"
+   "status": "auto"
   },
   "UNSTOPPABLE RAMPAGE": {
    "effects": [
@@ -382,18 +400,32 @@
    "status": "auto"
   },
   "FEEDING FRENZY": {
-   "react": "enemyFallBack",
-   "status": "manual",
-   "note": "Every model of the enemy unit takes a Desperate Escape test (-1 if Battle-shocked): resolve by hand"
+   "targetKw": [
+    "DAEMON",
+    "VEHICLE"
+   ],
+   "effects": [
+    {
+     "forceDesperate": true
+    }
+   ],
+   "status": "auto"
   },
   "GLUT OF SOULS": {
    "effects": [
     {
-     "fightOnDeathRegain": "1"
+     "if": [
+      "marked:contract"
+     ],
+     "healOnKill": {
+      "on": 5,
+      "max": 6
+     }
     }
    ],
-   "status": "partial",
-   "note": "Each kill: on 5+ regain 1 wound (max 6) — roll by hand"
+   "bot": "attack",
+   "status": "auto",
+   "note": "Only after the unit invoked its contract (made a Dark Pact) this phase"
   },
   "DELAYED MUTATIONS": {
    "targetKw": [
@@ -482,11 +514,10 @@
      "if": [
       "kw:BATTLELINE"
      ],
-     "revive": 2
+     "reviveRoll": "D3"
     }
    ],
-   "status": "partial",
-   "note": "Battleline: D3 models (2 here)"
+   "status": "auto"
   },
   "SPECIMENS FOR THE SPIDER": {
    "targetKw": [
@@ -499,10 +530,13 @@
       "targetCharacter"
      ],
      "reroll": "wounds"
+    },
+    {
+     "charKillShock": 6
     }
    ],
-   "status": "partial",
-   "note": "If enemy CHARACTER models died: one enemy unit within 6\" tests Battle-shock (the WARLORD: every enemy unit within 6\") — by hand"
+   "bot": "attack",
+   "status": "auto"
   },
   "MASTERS ARE WATCHING": {
    "targetKw": [
@@ -536,11 +570,23 @@
    "do": [
     {
      "on": "target",
-     "mortals": "D3"
+     "mortalsTable": [
+      {
+       "min": 1,
+       "expr": "1"
+      },
+      {
+       "min": 2,
+       "expr": "D3"
+      },
+      {
+       "min": 5,
+       "expr": "2D3"
+      }
+     ]
     }
    ],
-   "status": "partial",
-   "note": "Card: 1 → 1 MW, 2-4 → D3, 5-6 → 2D3 (here: D3)"
+   "status": "auto"
   },
   "HORRIFIC INCURSION": {
    "unitIf": [
@@ -563,6 +609,8 @@
    "status": "auto"
   },
   "SADISTIC DISPLAY": {
+   "react": "ownKilled",
+   "botReact": "always",
    "enemy": {
     "range": 6,
     "visible": true,

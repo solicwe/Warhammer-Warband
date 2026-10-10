@@ -17,7 +17,7 @@ import {
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
   formationAt, heroicCandidates, hullSpots, ingressUnit, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
-  validateMove, validatePlacement, type MoveCheck, hasArmyRule, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
+  validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
@@ -549,7 +549,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         } else {
           const targetsNow = ch.targets.includes(unitId) ? ch.targets : [...ch.targets, unitId];
           setModeRaw({ ...ch, targets: targetsNow });
-          setDraft(mergePaths(startPaths(U(ch.unitId)), autoApproach(s, U(ch.unitId), targetsNow.map(U), U(ch.unitId).chargeRoll ?? 0)));
+          setDraft(mergePaths(startPaths(U(ch.unitId)), autoApproach(s, U(ch.unitId), targetsNow.map(U), chargeReach(s, U(ch.unitId), targetsNow))));
           flash('Could not move in automatically (blocked / not enough distance): drag the models');
         }
       }
@@ -578,7 +578,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (!mode || !modeUnit) return Infinity;
     const m = modeUnit.models.find((x) => x.id === id)!;
     if (mode.k === 'move') return maxMoveDistance(s, modeUnit, mode.kind, m, { fly: mode.fly });
-    if (mode.k === 'charge') return modeUnit.chargeRoll ?? 0;
+    if (mode.k === 'charge') return chargeReach(s, modeUnit, mode.targets);
     if (mode.k === 'pile') return pileDistance(s, U(mode.unitId), mode.kind);
     return Infinity;
   };

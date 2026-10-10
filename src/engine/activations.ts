@@ -121,13 +121,16 @@ export interface Action {
   phaseEndMortals?: string; // at the end of the phase the unit suffers these mortal wounds (Warpmeld Sacrifice)
   reviveRoll?: string; // return this many (rolled) destroyed models (Blessed Transmutations: D3+1)
   mutate?: boolean; // Mutate Landscape: the objective the unit controls is mutated (enemy units ending a move on it: 4+ D3 mortal wounds)
+  pactTest?: { pass?: Effect[] }; // Desperate Pact: Leadership test; failed → D3 mortal wounds, passed → these effects (until `until`)
+  mortalsTable?: { min: number; expr: string }[]; // roll one D6: the highest row it reaches is the mortal wounds the target suffers
+  addKeyword?: string; // the unit gains this keyword for the rest of the battle (Daemonic Possession)
 }
 
 export interface ActSpec {
   when: Trigger;
   limit?: Limit;
   per?: 'unit' | 'army';
-  uses?: number;
+  uses?: number | 'battleSize'; // battleSize: 1 / 2 / 3 at Incursion / Strike Force / Onslaught (Warp Portals)
   battleUses?: number; // "twice per battle" on top of the limit
   auto?: boolean; // resolves by itself at the trigger (no decision needed or always worth it)
   if?: string[];
@@ -142,7 +145,7 @@ export interface ActSpec {
   needUnitDestroyed?: boolean; // friendlyDeath: the whole unit was destroyed
   oppShooting?: boolean; // only in the opponent's Shooting phase
   roll?: string; // e.g. "D6"
-  rollAdd?: 'per5models' | 'warlordInTarget2';
+  rollAdd?: 'per5models' | 'warlordInTarget2' | 'shockedEnemies' | 'onControlledObjective' | 'nearEnemyDz12';
   perModel?: boolean; // one die per model of this unit engaged with the target
   each?: { on: number; do: Action[] }; // per die: on X+
   table?: { min: number; max?: number; do: Action[] }[]; // by result
@@ -258,7 +261,9 @@ function markUsed(s: GameState, def: ActDef) {
   bag[baseKey(def)] = `${period(s, def.spec.limit)}|${timesUsed(s, def) + 1}`;
 }
 
-export const limitLeft = (s: GameState, def: ActDef) => psykerBudgetOk(s, def) && (!def.spec.limit || timesUsed(s, def) < (def.spec.uses ?? 1))
+const BATTLE_SIZE_N: Record<string, number> = { incursion: 1, 'strike-force': 2, strike: 2, onslaught: 3 };
+const usesOf = (s: GameState, def: ActDef) => (def.spec.uses === 'battleSize' ? BATTLE_SIZE_N[s.players[def.holder.owner].battleSize ?? ''] ?? 2 : def.spec.uses ?? 1);
+export const limitLeft = (s: GameState, def: ActDef) => psykerBudgetOk(s, def) && (!def.spec.limit || timesUsed(s, def) < usesOf(s, def))
   && (!def.spec.battleUses || (Number(usedBag(s, def)[`${baseKey(def)}#n`]) || 0) < def.spec.battleUses);
 
 // ---------- timing of buttons ----------
@@ -475,6 +480,22 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       if (hits) applyMortalWounds(s, on, hits, def.name);
     }
     if (a.ldFail && !ldTest(s, on, def.name)) for (const e of a.ldFail) addTimed(s, on, { e, label: def.name, until: a.until ?? 'turn', by: u.owner });
+    if (a.pactTest) {
+      if (!ldTest(s, on, `${def.name} (Desperate Pact)`)) applyMortalWounds(s, on, rollExpr(s, 'D3').total, 'Desperate Pact');
+      else for (const e of a.pactTest.pass ?? []) addTimed(s, on, { e, label: def.name, until: a.until ?? 'phase', by: u.owner });
+    }
+    if (a.mortalsTable) {
+      const r = d6(s);
+      const row = [...a.mortalsTable].sort((x, y) => y.min - x.min).find((x) => r >= x.min);
+      const n = row ? rollExpr(s, row.expr).total : 0;
+      log(s, `${def.name}: rolled ${r} → ${on.name} suffers ${n} mortal wound(s)`, 'roll', u.owner);
+      if (n) applyMortalWounds(s, on, n, def.name);
+    }
+    if (a.addKeyword && !on.keywords.includes(a.addKeyword)) {
+      on.keywords.push(a.addKeyword);
+      for (const m of on.models) if (!m.keywords.includes(a.addKeyword)) m.keywords = [...m.keywords, a.addKeyword];
+      log(s, `${def.name}: ${on.name} gains ${a.addKeyword}`, 'info', u.owner);
+    }
     if (a.setOath) { s.players[u.owner].oathTarget = on.id; log(s, `${def.name}: ${on.name} is the Oath of Moment target`, 'info', u.owner); }
     if (a.pileInRoll) {
       const n = rollExpr(s, a.pileInRoll).total;
@@ -727,6 +748,8 @@ export function useAct(s: GameState, def: ActDef, targetId?: string, ctx: FireCt
       let add = 0;
       if (def.spec.rollAdd === 'per5models') add = Math.floor(alive(def.holder).length / 5);
       if (def.spec.rollAdd === 'warlordInTarget2' && tg.isWarlordUnit) add = 2;
+      if (def.spec.rollAdd === 'shockedEnemies') add = boardUnits(s, other(def.holder.owner)).filter((e) => e.battleShocked).length;
+      if (def.spec.rollAdd === 'onControlledObjective' || def.spec.rollAdd === 'nearEnemyDz12') add = cond(def.spec.rollAdd === 'nearEnemyDz12' ? 'nearEnemyDz:12' : 'onControlledObjective', { s, A: def.holder, holder: def.holder }) ? 1 : 0;
       log(s, `${def.name}: rolled [${dice.join(' ')}]${add ? ` +${add}` : ''}`, 'roll', def.holder.owner);
       if (def.spec.each) {
         const ok = dice.filter((v) => v + add >= def.spec.each!.on).length;
@@ -1098,6 +1121,15 @@ onAttackFinished((s, at, info) => {
   if (info.destroyed) { (A.used ??= {}).killedUnit = key; sagaProgress(s, at, A, T); }
   // Strikes of Retribution: melee attacks allocated to this model hurt the attackers
   if (at.kind === 'fight' && at.allocated) retaliate(s, at, A, T);
+  const dm = deathMW.get(A.id);
+  if (dm) { deathMW.delete(A.id); log(s, `${T.name}: ${dm} of its dying models curse ${A.name} → ${dm} mortal wound(s)`, 'roll', T.owner); if (onBoard(A)) applyMortalWounds(s, A, dm, 'Selfless Demise'); }
+  // Specimens for the Spider: enemy CHARACTER models died → Battle-shock nearby (the WARLORD: every enemy unit within range)
+  const cks = unitFlags(s, A).charKillShock;
+  if (cks && info.killedCharacter && at.kind === 'fight') {
+    const near = boardUnits(s, T.owner).filter((e) => unitDistance(A, e) <= cks + 1e-6);
+    const all = T.isWarlordUnit && T.models.some((x) => x.dead && x.isCharacter);
+    for (const e of all ? near : near.slice().sort((a, b) => unitDistance(A, a) - unitDistance(A, b)).slice(0, 1)) shockTest(s, e, 0, 'Specimens for the Spider');
+  }
   if (!at.free) {
     if (at.kind === 'shoot' && s.phase === 'shooting' && A.owner === s.active) fire(s, 'afterShooting', [A], ctx);
     if (at.kind === 'fight') fire(s, 'afterFighting', [A], ctx);
@@ -1176,6 +1208,36 @@ onAttackStart((s, at) => {
         // "that friendly unit has …" (Adept of the Omnissiah): the act's target is the unit being shot
         useAct(s, def, def.spec.target?.side === 'friendly' ? T.id : undefined, { killerId: A.id, targetId: A.id });
       }
+    }
+  }
+});
+
+/** Set up on the battlefield during the battle: Screaming Descent / Dread Reputation make enemy units nearby test. */
+export function arrivalShock(s: GameState, u: UnitState) {
+  if (s.round < 1 || !onBoard(u)) return;
+  const f = unitFlags(s, u);
+  const seen = (e: UnitState) => alive(u).some((m) => unitVisibleTo(s, m, e));
+  if (f.arriveShockAll) for (const e of boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= f.arriveShockAll + 1e-6)) shockTest(s, e, 0, `${u.name} arrives`);
+  else if (f.arriveShock) {
+    const e = boardUnits(s, other(u.owner)).filter((e) => (hasKw(e, 'INFANTRY') || hasKw(e, 'MOUNTED')) && unitDistance(u, e) <= f.arriveShock + 1e-6 && seen(e))
+      .sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
+    if (e) shockTest(s, e, 0, `${u.name} arrives`);
+  }
+}
+
+// Selfless Demise / Glut of Souls: counted while the attack runs, resolved when it is over
+const deathMW = new Map<string, number>();
+onModelKilled((s, u, m, killerId) => {
+  const killer0 = killerId ? unitById(s, killerId) : undefined;
+  if (s.attack && killer0 && killer0.owner !== u.owner) {
+    const on = unitFlags(s, u).deathRetaliate;
+    if (on <= 6 && d6(s) >= on) deathMW.set(killer0.id, (deathMW.get(killer0.id) ?? 0) + 1);
+    const h = unitFlags(s, killer0).healOnKill;
+    const key = `glut:${phaseKey(s)}`;
+    const used = Number((killer0.used ??= {})[key] ?? 0);
+    if (h && used < h.max && d6(s) >= h.on) {
+      const w = alive(killer0).filter((x) => x.wounds < x.profile.W).sort((a, b) => a.wounds - b.wounds)[0];
+      if (w) { w.wounds += 1; killer0.used[key] = String(used + 1); log(s, `${killer0.name} regains 1 wound (a soul devoured)`, 'info', killer0.owner); }
     }
   }
 });

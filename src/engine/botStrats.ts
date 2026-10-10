@@ -10,7 +10,7 @@ import { bestArrival } from './botMove';
 import { RULES } from './config';
 import { rollN, exprAverage } from './dice';
 import {
-  arrivalRound, autoApproach, bestLd, chargeTargetOptions, commitCharge, counteroffensiveCandidates, declareCharge, heroicCandidates, hasDeepStrike,
+  arrivalRound, autoApproach, chargeReach, bestLd, chargeTargetOptions, commitCharge, counteroffensiveCandidates, declareCharge, heroicCandidates, hasDeepStrike,
   ingressUnit, rapidIngressCandidates, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, crushingImpact,
 } from './game';
 import { addTimed, applyLateEffects, targetHasCover, unitFlags, withRuleCache } from './effects';
@@ -296,7 +296,7 @@ export function botHeroic(s: GameState, p: PlayerId): boolean {
   if (!opts.length) return true;
   const t = [...opts].sort((a, b) => chargeValue(s, u, b) - chargeValue(s, u, a))[0];
   const stay = new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]]));
-  const paths = new Map([...stay, ...autoApproach(s, u, [t], u.chargeRoll ?? 0)]);
+  const paths = new Map([...stay, ...autoApproach(s, u, [t], chargeReach(s, u, [t]))]);
   if (validateMove(s, u, 'charge', paths, { targets: [t.id] }).ok) commitCharge(s, u, paths, [t.id]);
   return true;
 }

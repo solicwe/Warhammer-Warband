@@ -11,14 +11,14 @@ import tsAbilities from '../../data/abilities/TS.json';
 import csmAbilities from '../../data/abilities/CSM.json';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
-import { RULES } from './config';
+import { deploymentById, RULES, toPoly } from './config';
 import { d6, exprAverage } from './dice';
-import { baseDist, circleTouchesPoly, clamp, dist } from './geometry';
+import { baseDist, circleTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from './geometry';
 import { setActionEligibilityHook, unitInRange } from './missions';
 import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, unitDistance, withinTerrain } from './state';
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, UnitState, WeaponData, WeaponProfileData } from './types';
 import { abilityLabel, condApplies, parseAbility } from './weapons';
-import { isHidden, setVisibilityHooks } from './visibility';
+import { hasLos, isHidden, setVisibilityHooks } from './visibility';
 import { setThroughHook } from './pathing';
 import { inFlow } from './flow';
 
@@ -167,14 +167,21 @@ export interface Effect {
   pactBoth?: boolean; // a Dark Pact gives both [LETHAL HITS] and [SUSTAINED HITS 1] (Ruination's Bounty)
   terrorBelow?: number; // enemy units below Starting Strength this close take a Battle-shock test in their Command phase (Terror Descends)
   terrorBelowMod?: number; // … with this modifier (Terror Made Manifest: -1)
-  chargedMinus?: number; // enemy charges declared within 12" of this unit: subtract this from the Charge roll (Siegecraft)
+  thralls?: boolean; // Mortal Thralls: wound rolls against this unit hit a DAMNED unit within 3" instead (mortal wounds = Damage)
+  arriveShock?: number; // set up on the battlefield: one enemy INFANTRY / MOUNTED unit this close and visible takes a Battle-shock test
+  arriveShockAll?: number; // … every enemy unit this close takes one (Dread Reputation)
+  deathRetaliate?: number; // each model of this unit destroyed by an attack: on X+ the attacking unit suffers 1 mortal wound
+  healOnKill?: { on: number; max: number }; // each enemy model it destroys: on X+ it regains 1 wound (at most `max` per phase)
+  charKillShock?: number; // after it fought: enemy CHARACTER models died → one enemy unit this close tests (the WARLORD: all of them)
+  chargedMinus?: number; // a charge that targets this unit: subtract this from the Charge roll (Siegecraft)
 }
 
 export type Limit = 'battle' | 'round' | 'turn' | 'phase';
 
 // ---------- rule tables ----------
 
-export interface DetChoiceOption { id: string; name: string; text: string; effects: Effect[] }
+/** `random`: picking it rolls this many D6 instead; each result N makes the Nth option (of those without `random`) active */
+export interface DetChoiceOption { id: string; name: string; text: string; effects: Effect[]; random?: number }
 export interface DetChoice { name: string; when: 'command' | 'round' | 'battle'; uses: 'eachOnce' | 'limit' | 'free'; limit?: number; pick?: number; options: DetChoiceOption[] }
 /** An ability a detachment / army rule gives to units ("Friendly CHAPLAIN units have the following ability: …"). */
 export interface DetGrant { units: string[]; models?: string; name: string; rule: AbilityRule }
@@ -532,6 +539,14 @@ export function cond(c: string, x: Ctx): boolean {
   const { s, A, T } = x;
   if (c.startsWith('!')) return !cond(c.slice(1), x);
   if (c.startsWith('near:')) return nearCond(x, c);
+  // "wholly within 12\" of your opponent's deployment zone"
+  if (c.startsWith('nearEnemyDz:')) {
+    const z = toPoly(deploymentById(s.deploymentId).zones[s.players[other(A.owner)].role]);
+    const d = Number(c.slice(12));
+    return alive(A).length > 0 && alive(A).every((m) => pointInPoly(m, z) || Math.min(...polyEdges(z).map((e) => pointSegDist(m, e))) + m.r <= d + 1e-6);
+  }
+  // "visible to a friendly HURON BLACKHEART model": a friendly model with this name can see the unit
+  if (c.startsWith('seenBy:')) { const n = wk(c.slice(7)); return boardUnits(s, A.owner).some((f) => alive(f).some((m) => (wk(m.name).includes(n) || wk(m.source).includes(n)) && (f.id === A.id || alive(A).some((o) => hasLos(s, m, o))))); }
   if (c.startsWith('contains:')) { const n = wk(c.slice(9)); return alive(A).some((m) => wk(m.name).includes(n) || wk(m.source).includes(n)); }
   if (c.startsWith('body:')) return A.sources[0] === c.slice(5) || wk(A.sources[0]).includes(wk(c.slice(5)));
   if (c.startsWith('leader:')) { const n = wk(c.slice(7)); return hasLivingLeader(A) && A.sources.slice(1).some((src) => n.split('|').some((x2) => wk(src).includes(x2))); }
@@ -782,7 +797,7 @@ export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, poo
     for (const ab of i.abilities ?? []) applyAbility(pool, ab, 'marked target', notes, kind, A, s, T);
   }
   // the target's side
-  const def = defencesFor(s, T, kind);
+  const def = defencesFor(s, T, kind, undefined, A);
   for (const { e, label } of def) {
     const df = e.defend!;
     const sm = df.strengthMinus ?? df.enemyStrengthMinus ?? 0;
@@ -896,7 +911,8 @@ function applyAbility(pool: Pool, ab: string, label: string, notes: string[], ki
 }
 
 /** Defensive effects of the target relevant to an attack of this kind. */
-export function defencesFor(s: GameState, T: UnitState, kind: 'melee' | 'ranged', m?: ModelState): Active[] {
+/** `attacker`: in a defence's conditions the "target…" ones look at the attacking unit (Terror Made Manifest). */
+export function defencesFor(s: GameState, T: UnitState, kind: 'melee' | 'ranged', m?: ModelState, attacker?: UnitState): Active[] {
   return effectsFor(s, T).filter((a) => {
     const df = a.e.defend;
     if (!df) return false;
@@ -904,7 +920,7 @@ export function defencesFor(s: GameState, T: UnitState, kind: 'melee' | 'ranged'
     if (vs && vs !== kind) return false;
     if (a.bearers && m && !a.bearers.some((b) => b.id === m.id)) return false;
     if (a.bearers && !m && !alive(T).every((x) => a.bearers!.some((b) => b.id === x.id))) return false; // "this model" counts for the whole unit only if it is the whole unit
-    return holds(a, { s, A: T, m });
+    return holds(a, { s, A: T, T: attacker, m });
   }).map((a) => ({ ...a }));
 }
 
@@ -1060,6 +1076,12 @@ export function unitFlags(s: GameState, u: UnitState) {
     terrorBelow: Math.max(0, ...es.map((e) => e.terrorBelow ?? 0)),
     terrorBelowMod: Math.min(0, ...es.map((e) => e.terrorBelowMod ?? 0)),
     chargedMinus: Math.max(0, ...es.map((e) => e.chargedMinus ?? 0)),
+    thralls: es.some((e) => e.thralls),
+    arriveShock: Math.max(0, ...es.map((e) => e.arriveShock ?? 0)),
+    arriveShockAll: Math.max(0, ...es.map((e) => e.arriveShockAll ?? 0)),
+    deathRetaliate: Math.min(7, ...es.map((e) => e.deathRetaliate ?? 7)),
+    healOnKill: es.find((e) => e.healOnKill)?.healOnKill,
+    charKillShock: Math.max(0, ...es.map((e) => e.charKillShock ?? 0)),
     shockOnKill: es.some((e) => e.shockOnKill),
     onlyTargetMarked: es.find((e) => e.onlyTargetMarked)?.onlyTargetMarked,
     deadlyDemiseOn: Math.min(6, ...es.map((e) => e.deadlyDemiseOn ?? 6)),

@@ -635,7 +635,10 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
     const core = coreAbilities(sheets);
     const fnp = sheets.map((sh) => gearFnp(sh, models.filter((m) => m.source === sh.name).flatMap((m) => m.gear ?? []))).filter((x): x is number => x !== undefined);
     if (fnp.length) core.fnp = Math.min(core.fnp ?? 7, ...fnp);
-    const keywords = [...new Set(sheets.flatMap((s) => s.keywords))];
+    // Marks of Chaos: the keyword picked in the army builder
+    const marks = [...new Set([e, ...joiners].map((x) => x.mark).filter((k): k is string => !!k))];
+    if (marks.length) for (const m of models) m.keywords = [...new Set([...m.keywords, ...marks])];
+    const keywords = [...new Set([...sheets.flatMap((s) => s.keywords), ...marks])];
     units.push({
       id,
       owner,
@@ -863,6 +866,21 @@ export function transportLoads(list: ArmyList, faction: FactionData) {
   });
 }
 
+export const CHAOS_MARKS = ['KHORNE', 'TZEENTCH', 'NURGLE', 'SLAANESH', 'CHAOS UNDIVIDED'];
+const titleMark = (k: string) => k.charAt(0) + k.slice(1).toLowerCase();
+/** The Mark of Chaos a unit counts as having: from its datasheet keywords, picked in the builder (none picked: Chaos
+ *  Undivided), or null when it takes no mark (an EPIC HERO, or not HERETIC ASTARTES). */
+export function effectiveMark(u: ArmyUnitEntry, sheet?: DatasheetData): string | null {
+  if (!sheet) return null;
+  const own = CHAOS_MARKS.find((k) => sheet.keywords.includes(k));
+  if (own) return own;
+  if (!markable(sheet)) return null;
+  return u.mark ?? 'CHAOS UNDIVIDED';
+}
+/** The unit picks a Mark of Chaos in Pactbound Zealots: HERETIC ASTARTES, not an EPIC HERO, no god keyword yet. */
+export const markable = (sheet: DatasheetData) => sheet.factionKeywords.includes('HERETIC ASTARTES') && !sheet.keywords.includes('EPIC HERO')
+  && !CHAOS_MARKS.some((k) => sheet.keywords.includes(k));
+
 export function validateList(list: ArmyList, faction: FactionData, size: { points: number; dp: number; unitLimit: number; enhancements: number }): string[] {
   const errs: string[] = [];
   const pts = listPoints(list, faction);
@@ -880,6 +898,17 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
   for (const u of list.units) {
     const d = faction.datasheets.find((x) => x.name === u.datasheet);
     if (d?.subfaction && d.subfaction !== list.subfaction) errs.push(list.subfaction ? `${u.datasheet} is a ${subName(d.subfaction)} unit and cannot join a ${subName(list.subfaction)} army` : `${u.datasheet} is a ${subName(d.subfaction)} unit: select that ${faction.subfactions?.label ?? 'sub-faction'} first`);
+  }
+  // Pactbound Zealots: Marks of Chaos (KHORNE not on a PSYKER; a leader and its bodyguard, a transport and its passengers share it)
+  if (list.detachments.includes('Pactbound Zealots')) {
+    const markOf = (u: ArmyUnitEntry) => effectiveMark(u, faction.datasheets.find((d) => d.name === u.datasheet));
+    for (const u of list.units) {
+      const d = faction.datasheets.find((x) => x.name === u.datasheet);
+      if (u.mark === 'KHORNE' && d?.keywords.includes('PSYKER')) errs.push(`${u.datasheet}: a PSYKER cannot take the Mark of Khorne`);
+      const host = list.units.find((b) => b.uid === u.attachTo) ?? list.units.find((b) => b.uid === u.embarkIn);
+      const hm = host && markOf(host), um = markOf(u);
+      if (host && hm && um && hm !== um) errs.push(`${u.datasheet} (${titleMark(um)}) and ${host.datasheet} (${titleMark(hm)}) must share the same Mark of Chaos`);
+    }
   }
   const counts = new Map<string, number>();
   for (const u of list.units) counts.set(u.datasheet, (counts.get(u.datasheet) ?? 0) + 1);

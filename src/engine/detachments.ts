@@ -1,6 +1,7 @@
 // Detachment rules: the effects themselves live in data/detachment-rules.json and are applied by effects.ts;
 // this module handles the "pick one" rules (Combat Doctrines, Mission Tactics, Psychic Disciplines …).
 import { activeRules, DET_RULES, DOCTRINES, doctrineUsesLeft, type DetChoice, type DetChoiceOption, type DetRule } from './effects';
+import { rollN } from './dice';
 import { log } from './state';
 import type { DetChoiceState, GameState, PlayerId } from './types';
 
@@ -44,6 +45,14 @@ export function pickDetChoice(s: GameState, p: PlayerId, rule: string, ids: stri
     const o = now.options.find((x) => x.o.id === id);
     if (!o) return 'No such option';
     if (o.why) return o.why;
+  }
+  // "or randomly determine two by rolling two D6" (Experimental Augmentations): duplicates count once
+  const rnd = now.choice.options.find((o) => o.id === ids[0] && o.random);
+  if (rnd) {
+    const pool = now.choice.options.filter((o) => !o.random);
+    const dice = rollN(s, rnd.random!);
+    log(s, `${now.choice.name}: rolled [${dice.join(' ')}]`, 'roll', p);
+    ids = [...new Set(dice.map((v) => pool[Math.min(v, pool.length) - 1].id))];
   }
   const st = (detState(s, p)[rule] ??= { active: [], used: [], count: 0 });
   st.active = [...ids];
