@@ -626,7 +626,8 @@ function BoardImpl(props: BoardProps) {
                       <text x={p.x + m.r * 0.72} y={p.y + m.r * 0.72 + Math.max(0.32, m.r * 0.42) * 0.42} fontSize={Math.max(0.32, m.r * 0.42) * 1.25} textAnchor="middle" fill="#111" fontWeight={900}>{labels.get(m.id)!.charAt(0).toUpperCase()}</text>
                     </g>
                   )}
-                  {labels.has(m.id) && vb.w < 30 && (() => {
+                  {labels.has(m.id) && vb.w < 30 && (isSel || isDraft) && (() => {
+                    // only the unit in hand: everyone's kit at once buries the board in words
                     // shown once zoomed in; one item per line ("Hammer" / "Shield"), shrunk to the base's width so
                     // neighbours' labels don't run into each other
                     const raw = labels.get(m.id)!;
@@ -655,7 +656,7 @@ function BoardImpl(props: BoardProps) {
                 </g>
               );
             })}
-            {(isSel || isPicked || isDraft || vb.w < 24) && pts.length > 0 && (
+            {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (
               <text x={cx} y={minY - 0.35} fontSize={fs * 0.85} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
                 {u.name.length > 22 ? u.name.slice(0, 21) + '…' : u.name}{u.battleShocked ? ' !' : ''}
               </text>

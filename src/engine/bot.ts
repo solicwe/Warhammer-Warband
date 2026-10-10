@@ -477,7 +477,8 @@ export function botShooting(s: GameState) {
 
 // ---------- charge ----------
 
-export function botChargeOne(s: GameState): boolean {
+/** One charge for the active player. `eager` (the player tapped "Charge for me"): any unit with a fair chance goes in. */
+export function botChargeOne(s: GameState, eager = false): boolean {
   for (const u of boardUnits(s, s.active)) {
     if (!tried(s, u)) botAdvanceChargeStratagem(s, u);
     if (tried(s, u) || chargeEligibility(s, u)) continue;
@@ -503,7 +504,7 @@ export function botChargeOne(s: GameState): boolean {
     const best = [...enemies].sort((a, b) => value(b) * p2d6(unitDistance(u, b)) - value(a) * p2d6(unitDistance(u, a)))[0];
     const p = p2d6(unitDistance(u, best));
     // shooters only charge weak, close targets; brawlers accept long shots
-    if (value(best) <= 0 || p < (brawler ? 0.25 : 0.58)) continue;
+    if (value(best) <= (eager ? -4 : 0) || p < (eager ? 0.2 : brawler ? 0.25 : 0.58)) continue;
     botChargeBonusStratagem(s, u, unitDistance(u, best));
     declareCharge(s, u);
     let opts = chargeTargetOptions(s, u);

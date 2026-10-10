@@ -99,7 +99,8 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   // where the enemy could stand (sight checks), and the objectives
   const watchers = samplePoly(enemyZone, 6).map(lookout);
   const objs = s.objectives.map((o) => ({ o, p: polyCentroid(objectiveTerrain(s, o).poly) }));
-  const home = objs.filter(({ p }) => pointInPoly(p, zone));
+  // its own home objective (some layouts put it on the zone's edge, outside the zone itself) and any inside the zone
+  const home = objs.filter(({ o, p }) => (o.type === 'home' && o.owner === u.owner) || pointInPoly(p, zone));
   const middle = objs.filter(({ p }) => !pointInPoly(p, zone) && !pointInPoly(p, enemyZone));
   const friends = s.units.filter((f) => f.owner === u.owner && f.id !== u.id && onBoard(f));
   // held by a unit that stays there: a mob of Boyz standing on it now charges off in the first turn
@@ -141,7 +142,8 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
         else if (dMid <= moveOf(u) + 3) score += 3;
       }
       // somebody with OC on the home objective
-      for (const { p } of home) if (holdsGround && cheap && !homeHeld(p) && ms.some((m) => dist(m, p) <= 3 + m.r)) score += 7;
+      // (worth more than being forward or in cover: a unit placed wrong at the start plays the whole battle wrong)
+      for (const { p } of home) if (holdsGround && cheap && !homeHeld(p) && ms.some((m) => dist(m, p) <= 3 + m.r)) score += 14;
 
       // spread out: no packing next to other units
       for (const f of friends) {

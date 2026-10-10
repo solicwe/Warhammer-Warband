@@ -607,6 +607,9 @@ export interface GameState {
   /** players who only move and pick shooting targets: every other decision (stratagems, abilities, re-rolls, saves,
    *  battle-shock, fights, reactions) is taken for them by the bot's logic */
   autoRules?: PlayerId[];
+  /** players on auto rules who still answer stratagem prompts, reactions (Overwatch, Heroic Intervention …) and pick
+   *  their own Rituals themselves */
+  decides?: PlayerId[];
   /** players who asked the app to deploy (and make Scouts moves for) the rest of their army */
   autoDeploy?: PlayerId[];
   /** vs bot: the player rolls their own saves when the bot attacks (and can use Command Re-roll then). Default on. */

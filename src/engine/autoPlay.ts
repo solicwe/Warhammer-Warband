@@ -13,6 +13,8 @@ import { boardUnits, canUseStratagem, other, unitById, unitDistance } from './st
 import type { GameState, PlayerId, UnitState } from './types';
 
 export const onAuto = (s: GameState, p: PlayerId) => (s.autoRules ?? []).includes(p) && !(s.bots ?? []).includes(p);
+/** The player answers stratagem prompts and reactions, and picks Rituals, themselves. */
+export const decides = (s: GameState, p: PlayerId) => (s.decides ?? []).includes(p) && !(s.bots ?? []).includes(p);
 
 const once = (s: GameState, key: string) => {
   if ((s.botTried ?? []).includes(key)) return false;
@@ -26,15 +28,16 @@ export function autoDue(s: GameState, p: PlayerId): boolean {
   // "deploy for me": the rest of the army is set up (and Scouts moves made) by the bot's placement
   if ((s.autoDeploy ?? []).includes(p) && !(s.bots ?? []).includes(p) && (s.phase === 'deploy' || s.phase === 'scouts') && !s.window) return s.deployTurn === p;
   if (!onAuto(s, p)) return false;
-  if (s.window) return s.window.player === p;
+  if (s.window) return s.window.player === p && !decides(s, p);
   const P = s.players[p];
   if (s.phase === 'deploy') return P.secMode === 'fixed' && P.secActive.length < 2 && !(s.botTried ?? []).includes(`fixed|${p}`);
-  if (s.phase === 'command') return s.active === p;
-  if (s.phase === 'movement') return s.active === p && !(s.botTried ?? []).includes(`${s.turn}|auto-move|${p}`);
-  if (s.phase === 'shooting') return ritualsPending(s, p);
+  // a player who decides plays their Command phase (detachment choices, Oath, battle-shock) and abilities themselves
+  if (s.phase === 'command') return s.active === p && !decides(s, p);
+  if (s.phase === 'movement') return s.active === p && !decides(s, p) && !(s.botTried ?? []).includes(`${s.turn}|auto-move|${p}`);
+  if (s.phase === 'shooting') return ritualsPending(s, p) && !decides(s, p);
   if (s.phase === 'fight' && s.fight) {
     if (s.fight.step !== 'fight') return s.fight.stepPlayer === p;
-    return fightCandidates(s).player === p;
+    return fightCandidates(s).player === p && !decides(s, p); // they pick who fights and use their stratagems
   }
   return false;
 }
@@ -70,7 +73,8 @@ export function autoSelectToShoot(s: GameState, u: UnitState) {
 /** The player picked the target: the best attack stratagem goes on, the dice are rolled and the saves taken at once. */
 export function autoShoot(s: GameState, attackerId: string, targetId: string, opt: ShootOptions, overwatch = false): boolean {
   const u = unitById(s, attackerId);
-  if (!overwatch) botOffensiveStratagem(s, u, 'shoot', [unitById(s, targetId)]);
+  // a player who decides their own stratagems uses them from the Stratagems sheet before shooting
+  if (!overwatch && !decides(s, u.owner)) botOffensiveStratagem(s, u, 'shoot', [unitById(s, targetId)]);
   const r = buildShootPools(s, attackerId, targetId, opt);
   if (r.error || !r.pools.length) return false;
   startAttack(s, overwatch ? 'overwatch' : 'shoot', attackerId, targetId, r.pools);
@@ -78,7 +82,7 @@ export function autoShoot(s: GameState, attackerId: string, targetId: string, op
   resolveAll(s);
   finishAttack(s);
   if (overwatch && s.window?.kind === 'fireOverwatch') closeWindow(s);
-  if (!overwatch && !s.window && !s.attack) botAfterShootStratagems(s, unitById(s, attackerId));
+  if (!overwatch && !s.window && !s.attack && !decides(s, u.owner)) botAfterShootStratagems(s, unitById(s, attackerId));
   return true;
 }
 
@@ -89,7 +93,7 @@ export function autoEndMovement(s: GameState, p: PlayerId) {
 
 /** Declare a charge for the player: a bonus stratagem for a long charge first, then a re-roll when it fails and is worth it. */
 export function autoDeclareCharge(s: GameState, u: UnitState, fly = false) {
-  if (onAuto(s, u.owner)) {
+  if (onAuto(s, u.owner) && !decides(s, u.owner)) {
     botAdvanceChargeStratagem(s, u);
     const foes = boardUnits(s, other(u.owner));
     const gap = foes.length ? Math.min(...foes.map((e) => unitDistance(u, e))) : 0;
@@ -100,12 +104,13 @@ export function autoDeclareCharge(s: GameState, u: UnitState, fly = false) {
   if (canDetReroll(s, u, 'charge')) { detReroll(s, u, 'charge'); if (chargeTargetOptions(s, u).length) return; }
   const foes = boardUnits(s, other(u.owner));
   const gap = foes.length ? Math.min(...foes.map((e) => unitDistance(u, e))) : 99;
+  if (decides(s, u.owner)) return; // the player re-rolls with Command Re-roll themselves
   if (!canUseStratagem(s, u.owner, 'command-reroll', u) && s.players[u.owner].cp >= 1 && p2d6(gap) >= (isBrawler(s, u) ? 0.27 : 0.5)) rerollCharge(s, u);
 }
 
 /** "Charge for me": the bot's charge phase for the player's units that have not charged yet. */
 export function autoCharges(s: GameState): number {
   let n = 0;
-  while (!s.window && !s.attack && n < 40 && botChargeOne(s)) n++;
+  while (!s.window && !s.attack && n < 40 && botChargeOne(s, true)) n++;
   return n;
 }

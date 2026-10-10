@@ -166,11 +166,14 @@ describe('vehicles in ruins: drive in or onto the edge, never across', () => {
     const m = alive(tank)[0];
     return validateMove(s, tank, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y + dy }]]]));
   };
-  it('a tank can drive into a footprint or onto its edge, and out of the one it is in, but not across one', () => {
+  it('a tank drives into, out of and across a ruin footprint: only walls stop it', () => {
     expect(go(vehicleGame(), 9, { x: 22, y: 12 }).ok).toBe(true); // into the ruin
     expect(go(vehicleGame(), 5, { x: 22, y: 12 }).ok).toBe(true); // onto its edge
     expect(go(vehicleGame(), 9, { x: 22, y: 23 }).ok).toBe(true); // out of the one it stands in
-    expect(go(vehicleGame(), 10, { x: 22, y: 17 }).ok).toBe(false); // across it
+    expect(go(vehicleGame(), 10, { x: 22, y: 17 }).ok).toBe(true); // across it
+    const walled = vehicleGame();
+    walled.terrain = [{ ...walled.terrain[0], category: 'dense', height: 5, walls: [{ a: { x: 15, y: 23 }, b: { x: 29, y: 23 } }] } as TerrainPiece];
+    expect(go(walled, 10, { x: 22, y: 17 }).ok).toBe(false); // not through its wall
   });
   it('infantry still walks straight across', () => {
     const s = vehicleGame();
@@ -232,20 +235,22 @@ describe('transports, split fire, secondaries', () => {
     expect(lr?.double).toEqual(['JUMP PACK', 'WULFEN', 'GRAVIS', 'TERMINATOR']);
   });
 
-  it('split fire keeps the unit eligible until every ranged weapon has fired', async () => {
-    const { finishAttack, rangedWeaponNames } = await import('./attack');
+  it('a model that fired its guns cannot fire its pistols afterwards: the unit is then done', async () => {
+    const { finishAttack, stepAttack, unfiredWeaponNames } = await import('./attack');
     const s = game();
     const a = put(s, s.units[0].id, { x: 22, y: 10 });
     const t = put(s, s.units[2].id, { x: 22, y: 25 });
     s.phase = 'shooting'; s.active = 0; s.turn = 0;
-    const pools = buildShootPools(s, a.id, t.id, { mode: 'normal', skipWeapons: ['Master-crafted bolter'] }).pools;
+    const pools = buildShootPools(s, a.id, t.id, { mode: 'normal' }).pools;
+    expect(pools.some((p) => p.weapon === 'Bolt Rifle')).toBe(true);
+    expect(pools.some((p) => p.weapon === 'Bolt Pistol')).toBe(false);
     startAttack(s, 'shoot', a.id, t.id, pools);
-    while (s.attack!.stage !== 'done') { const { stepAttack } = await import('./attack'); stepAttack(s); }
+    while (s.attack!.stage !== 'done') stepAttack(s);
     finishAttack(s);
-    expect(rangedWeaponNames(a).length).toBeGreaterThan(a.weaponsFired.length);
-    expect(a.selectedToShoot).toBe(false);
-    const again = buildShootPools(s, a.id, t.id, { mode: 'normal' }).pools;
-    expect(again.every((p) => !a.weaponsFired.includes(p.weapon))).toBe(true);
+    expect(unfiredWeaponNames(a)).not.toContain('Bolt Pistol');
+    expect(a.selectedToShoot).toBe(true);
+    const pistols = buildShootPools(s, a.id, t.id, { mode: 'normal', useCloseQuarters: true }).pools;
+    expect(pistols.some((p) => p.weapon === 'Bolt Pistol')).toBe(false);
   });
 
   it('secondary claims respect the 15VP per round cap', async () => {

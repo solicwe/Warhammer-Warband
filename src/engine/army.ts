@@ -620,6 +620,7 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
   const sheetOf = (e: ArmyUnitEntry) => faction.datasheets.find((d) => d.name === e.datasheet)!;
   const units: UnitState[] = [];
   const attached = list.units.filter((u) => u.attachTo && list.units.some((b) => b.uid === u.attachTo) && sheetOf(u));
+  const tax = dupTaxes(list, faction);
   for (const e of list.units) {
     if (attached.includes(e)) continue;
     const sheet = sheetOf(e);
@@ -653,7 +654,8 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
         }),
       ],
       core,
-      pts: [e, ...joiners].reduce((a, j) => a + j.pts + (j.wargearPts ?? 0), 0),
+      // what the list says it costs: unit, enhancement, costed wargear and any duplicate tax
+      pts: [e, ...joiners].reduce((a, j) => a + unitPoints(j) + (tax.get(j.uid) ?? 0), 0),
       status: 'pending',
       embarkedIn: null,
       transport: parseTransport(sheet.transport),
@@ -787,15 +789,19 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
 export function enhancementFits(text: string, keywords: string[]): { ok: boolean; need: string } | null {
   // "(One per army) ADEPTUS CUSTODES INFANTRY/MOUNTED unit only (excluding TERMINATOR units)."
   const t = text.trim().replace(/^\([^)]*\)\s*/, '');
-  const m = /^([A-Z][A-Z’'\- ]+(?:(?:,| or| OR|\/) ?[A-Z][A-Z’'\- ]+)*) (?:model|unit)s? only(?: \(excluding ([A-Z][A-Z’'\-/ ]+?) (?:model|unit)s?\))?/.exec(t);
+  // keywords in capitals, or a datasheet's name ("Big Mek with Shokk Attack Gun model only")
+  const m = /^([A-Za-z][A-Za-z’'\- ]+(?:(?:,| or| OR|\/) ?[A-Za-z][A-Za-z’'\- ]+)*) (?:model|unit)s? only(?: \(excluding ([A-Za-z][A-Za-z’'\-/ ]+?) (?:model|unit)s?\))?/.exec(t);
   if (!m) return null;
+  m[1] = m[1].toUpperCase();
+  if (m[2]) m[2] = m[2].toUpperCase();
   // "ADEPTUS CUSTODES INFANTRY/MOUNTED": the words before the last one go with each alternative
-  const alts = m[1].split(/,| or | OR /).map((k) => k.trim()).filter(Boolean).flatMap((k) => {
+  const alts = m[1].split(/,| OR /).map((k) => k.trim()).filter(Boolean).flatMap((k) => {
     if (!k.includes('/')) return [k];
     const parts = k.split('/');
     const head = parts[0].split(/\s+/);
     const prefix = head.slice(0, -1).join(' ');
-    return [parts[0], ...parts.slice(1).map((x) => (prefix ? `${prefix} ${x.trim()}` : x.trim()))];
+    // "INFANTRY/MOUNTED" after a faction name takes it as a prefix; "Big Mek/Mek" is two names: either reading counts
+    return [parts[0], ...parts.slice(1).flatMap((x) => (prefix ? [`${prefix} ${x.trim()}`, x.trim()] : [x.trim()]))];
   });
   // "ADEPTUS ASTARTES INFANTRY" is two keywords together: every word has to be among the unit's keyword words
   const words = new Set(keywords.flatMap((k) => k.toUpperCase().split(/\s+/)));

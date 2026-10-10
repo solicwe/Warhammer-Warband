@@ -16,31 +16,11 @@ let throughHook: ThroughHook | null = null;
 export const setThroughHook = (fn: ThroughHook) => { throughHook = fn; };
 export const isMV = (m: ModelState) => m.keywords.includes('MONSTER') || m.keywords.includes('VEHICLE');
 
-/** Vehicles and monsters in ruins: they may drive into a terrain footprint (or just onto its edge) and out of the one
- *  they stand in, but never across one — a footprint their move neither starts nor ends on is a wall to them. */
-export const noCrossingFootprints = (m: ModelState) => isMV(m) && !canCrossDense(m);
-/** Terrain footprints (objective markers are not terrain). */
-export const ruinFootprints = (s: GameState) => s.terrain.filter((t) => t.kind !== 'objective-area' && t.poly.length >= 3);
-
-const footprintCache = new WeakMap<GameState['terrain'], { poly: Pt[]; edges: Seg[] }[]>();
-function footprints(s: GameState) {
-  const hit = footprintCache.get(s.terrain);
-  if (hit) return hit;
-  const out = ruinFootprints(s).map((t) => ({ poly: t.poly, edges: t.poly.map((a, i) => ({ a, b: t.poly[(i + 1) % t.poly.length] })) }));
-  footprintCache.set(s.terrain, out);
-  return out;
-}
-
-/** Walls a model may not move through: dense terrain taller than 2" for anything but INFANTRY / BEASTS / SWARM / MOBILE,
- *  and for VEHICLE / MONSTER models the outline of every footprint the move does not start or end on (`ends`). */
-export function blockingWalls(s: GameState, m: ModelState, fly = false, ends: Pt[] = [m]): Seg[] {
+/** Walls a model may not move through: dense terrain taller than 2" for anything but INFANTRY / BEASTS / SWARM / MOBILE.
+ *  A vehicle or monster drives into, through and out of a ruin's footprint freely; only its walls stop it. */
+export function blockingWalls(s: GameState, m: ModelState, fly = false, _ends: Pt[] = [m]): Seg[] {
   if (fly || canCrossDense(m)) return [];
-  const walls = s.terrain.filter((t) => t.category === 'dense' && t.height > 2).flatMap((t) => t.walls);
-  if (!noCrossingFootprints(m)) return walls;
-  // the footprint the model stands in (centre inside) can be left, the one it ends in can be entered; any other one is
-  // a wall: the hull may overlap its edge a little (the wall clearance), never cross it
-  const touches = (poly: Pt[]) => ends.some((p) => pointInPoly(p, poly));
-  return [...walls, ...footprints(s).filter((f) => !touches(f.poly)).flatMap((f) => f.edges)];
+  return s.terrain.filter((t) => t.category === 'dense' && t.height > 2).flatMap((t) => t.walls);
 }
 
 /** How close a model's centre may come to a wall: a round token stands in for a hull, so allow a little overlap. */

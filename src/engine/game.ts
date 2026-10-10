@@ -348,7 +348,7 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     if (len > max + 0.02) { errors.push(`${m.name} moved ${len.toFixed(1)}", more than ${max.toFixed(1)}"`); bad.add(m.id); }
     const why = pathBlocked(s, u, kind, m, path, opt);
     if (why === 'enemy') { errors.push(`${m.name} cannot move through enemy models`); bad.add(m.id); }
-    if (why === 'wall') { errors.push(isMV(m) && !canCrossDense(m) ? `${m.name} cannot go through a wall or drive across a terrain footprint (it may drive into one or onto its edge) — release and a way around will be found` : `${m.name} cannot move through a dense terrain wall taller than 2" — release and a way around will be found`); bad.add(m.id); }
+    if (why === 'wall') { errors.push(`${m.name} cannot move through a terrain wall — release and a way around will be found`); bad.add(m.id); }
   }
   endChecks(s, u, pos, errors, bad);
   const eng = engagedAt(s, u, pos);

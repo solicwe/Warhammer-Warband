@@ -96,14 +96,14 @@ const STYLE_NAME: Record<string, string> = { steady: 'As planned', aggressive: '
  * The bot's commander: its army's emblem, a title, and what it says. While it thinks, the ways of playing the turn it
  * is weighing fill in as each is played out on copies of the game (the best one leads).
  */
-export function Commander({ s, p, says, think, planning }: { s: GameState; p: PlayerId; says: string | null; think: ThinkView | null; planning?: { done: number; total: number } | null }) {
+export function Commander({ s, p, says, think, planning, quiet }: { s: GameState; p: PlayerId; says: string | null; think: ThinkView | null; planning?: { done: number; total: number } | null; quiet?: boolean }) {
   const P = s.players[p];
   const v = voiceOf(P.factionId);
   const entries = think ? Object.entries(think.values) : [];
   const lo = Math.min(...entries.map(([, x]) => x), 0), hi = Math.max(...entries.map(([, x]) => x), 1);
   const best = entries.length ? entries.reduce((a, b) => (b[1] > a[1] ? b : a))[0] : null;
   return (
-    <div className={`commander s${p}`} aria-live="polite">
+    <div className={`commander s${p} ${quiet ? 'quiet' : ''}`} aria-live="polite">
       <span className="cmd-emblem"><Emblem factionId={P.factionId} sub={P.subfaction} /></span>
       <div className="cmd-body">
         <div className="cmd-name">

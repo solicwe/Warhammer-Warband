@@ -4,6 +4,7 @@
 //  2. photos the player adds in the app, stored only in this browser. These win over the server images, and can be
 //     exported as a zip in the same folder layout, ready to drop into `public/images/units/` and upload.
 import { useEffect, useSyncExternalStore } from 'react';
+import cloudSeed from './cloudSeed.json';
 
 const KEY = 'w40k11-portraits';
 let cache: Record<string, string> = {};
@@ -47,9 +48,12 @@ export function loadImageManifest(): Promise<void> {
   return manifestLoad;
 }
 
-/** The picture to show: the player's own photo, else the server image. */
+/** The picture to show: the player's own photo, else the web page's, else the server image. Until the page's photo
+ *  list has loaded (or when this view can't read it), the list as it was at the last build stands in for it: the
+ *  files themselves are served to every view of the page. */
 export const getPortrait = (datasheet: string): string | undefined =>
-  cache[datasheet] ?? (cloud[datasheet] ? `/_blob/${cloud[datasheet].asset}` : undefined) ?? served[datasheet];
+  cache[datasheet] ?? (cloud[datasheet] ? `/_blob/${cloud[datasheet].asset}` : undefined)
+  ?? (!cloudLoaded && seedOn && SEED[datasheet] ? `/_blob/${SEED[datasheet]}` : undefined) ?? served[datasheet];
 /** A unit whose models have different names (Wardens of Ultramar, a squad's sergeant): each model name can have its
  *  own picture, stored under "Datasheet::Model name"; a model without one shows the unit's picture. */
 export const modelPortraitKey = (datasheet: string, model: string) => `${datasheet}::${model}`;
@@ -80,7 +84,7 @@ export function setPortrait(datasheet: string, dataUrl: string | null): boolean 
 
 type CloudDoc = { name: string; asset: string };
 interface DbLike {
-  collection(path: string): { onSnapshot(next: (q: { docs: { id: string; data(): Record<string, unknown> | undefined }[] }) => void, err?: (e: unknown) => void): () => void };
+  collection(path: string): { onSnapshot(next: (q: { docs: { id: string; data(): Record<string, unknown> | undefined }[]; metadata?: { fromCache?: boolean } }) => void, err?: (e: unknown) => void): () => void };
   doc(path: string): { set(d: Record<string, unknown>): Promise<void>; delete(): Promise<void> };
 }
 interface AssetsLike { upload(b: Blob, o?: { type?: string }): Promise<{ id: string; url: string }>; delete(ref: string): Promise<unknown> }
@@ -88,6 +92,11 @@ type Host = { use?: (name: string) => Promise<unknown> };
 
 /** Datasheet name → photo on the web page (everyone who opens the link sees it). */
 let cloud: Record<string, CloudDoc> = {};
+/** the page's photo list has arrived from its storage (then it alone counts: a removed photo stays removed) */
+let cloudLoaded = false;
+/** on the published page (not a local copy, where there is no file store to serve the photos) */
+const seedOn = typeof location !== 'undefined' && location.protocol === 'https:' && !/^(localhost|127\.|\[::1\])/.test(location.hostname);
+const SEED: Record<string, string> = cloudSeed as Record<string, string>;
 let cloudDb: DbLike | null = null;
 let cloudAssets: AssetsLike | null = null;
 /** 'off': not on the web link · 'read': photos show, this viewer can't add · 'write': photos added here go up */
@@ -113,6 +122,8 @@ export function initCloudPortraits(): Promise<void> {
       }
       for (const [n, w] of waiting) if (cloud[n] && next[n]?.asset !== cloud[n].asset && w) next[n] = cloud[n];
       cloud = next;
+      // a first delivery from the browser's cache can be empty or partial: wait for the server's before it alone counts
+      if (!q.metadata?.fromCache) cloudLoaded = true;
       version++;
       listeners.forEach((l) => l());
     }, () => { cloudMode = 'off'; });

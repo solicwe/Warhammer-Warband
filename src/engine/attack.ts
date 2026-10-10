@@ -169,6 +169,10 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   // sight and cover depend on the model, not the weapon: worked out once per model
   const sees = new Map<ModelState, boolean>();
   const seesT = (m: ModelState) => { let v = sees.get(m); if (v === undefined) { v = tModels.some((t) => modelVisible(s, m, T, t)); sees.set(m, v); } return v; };
+  // a weapon's target must be visible to its unit and in range of the weapon: the model that sees it and the model in
+  // range can be different ones (04.02 FAQ), so a squad half inside a ruin shoots with every model in range
+  let unitSeen: boolean | undefined;
+  const unitSees = () => (unitSeen ??= shooters.some(seesT));
   const covered = new Map<ModelState, boolean>();
   const coverOf = (m: ModelState) => { let v = covered.get(m); if (v === undefined) { v = hasCover(s, m, T); covered.set(m, v); } return v; };
   for (const m of shooters) {
@@ -177,7 +181,14 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
     const others = ranged.filter((w) => !hasAbility(w.profiles[0], 'close-quarters'));
     let chosen = ranged;
     if (!isMV(m)) {
-      if (opt.mode === 'closeQuarters') chosen = cqOnly;
+      // a model shoots either its [CLOSE-QUARTERS] (pistol) weapons or its others, never both (24.07): once one kind
+      // has fired at a target, only that kind can fire at another
+      const all = m.weapons.filter((w) => !isMelee(w.profiles[0]));
+      const firedCq = !opt.models && all.some((w) => hasAbility(w.profiles[0], 'close-quarters') && A.weaponsFired.includes(w.name));
+      const firedOther = !opt.models && all.some((w) => !hasAbility(w.profiles[0], 'close-quarters') && A.weaponsFired.includes(w.name));
+      if (opt.mode === 'closeQuarters') chosen = firedOther ? [] : cqOnly;
+      else if (firedOther) chosen = others;
+      else if (firedCq) chosen = cqOnly;
       else chosen = opt.useCloseQuarters || !others.length ? cqOnly : others;
     }
     const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
@@ -203,7 +214,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (opt.mode === 'closeQuarters' && !isMV(m) && !engagedWithTarget) continue;
       if (hasAbility(p, 'blast') && tEngaged) continue;
       const indirect = opt.mode === 'indirect' && hasAbility(p, 'indirect-fire');
-      if (!indirect && !seesT(m)) continue;
+      if (!indirect && !unitSees()) continue;
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
       const mods: Mods = { skillDelta: 0, skillNotes: [], hit: 0, hitNotes: [] };
@@ -952,7 +963,7 @@ export function finishAttack(s: GameState) {
   log(s, `${A.name} ${verb} ${T.name}: ${killed} models destroyed`, 'info', A.owner);
   if (!at.free) {
     if (at.kind !== 'fight') A.shotTurn = s.turn;
-    if (at.kind === 'shoot' && rangedWeaponNames(A).every((n) => A.weaponsFired.includes(n))) A.selectedToShoot = true;
+    if (at.kind === 'shoot' && !unfiredWeaponNames(A).length) A.selectedToShoot = true;
     if (at.kind === 'fight') A.fought = true;
   }
   s.attack = null;
@@ -984,6 +995,24 @@ export const opponentOf = (s: GameState, u: UnitState) => other(u.owner);
 /** Names of all ranged weapons still carried by living models. */
 export function rangedWeaponNames(u: UnitState): string[] {
   return [...new Set(alive(u).flatMap((m) => m.weapons.filter((w) => !isMelee(w.profiles[0])).map((w) => w.name)))];
+}
+
+/** Ranged weapons the unit can still fire this phase: not fired yet, and of the kind its models chose (a model that
+ *  fired its pistols can't fire its other guns, and the other way round; MONSTER / VEHICLE models fire both). */
+export function unfiredWeaponNames(u: UnitState): string[] {
+  const out = new Set<string>();
+  for (const m of alive(u)) {
+    const all = m.weapons.filter((w) => !isMelee(w.profiles[0]));
+    const cq = (w: WeaponData) => hasAbility(w.profiles[0], 'close-quarters');
+    const firedCq = all.some((w) => cq(w) && u.weaponsFired.includes(w.name));
+    const firedOther = all.some((w) => !cq(w) && u.weaponsFired.includes(w.name));
+    for (const w of all) {
+      if (u.weaponsFired.includes(w.name)) continue;
+      if (!isMV(m) && ((firedOther && cq(w)) || (firedCq && !cq(w)))) continue;
+      out.add(w.name);
+    }
+  }
+  return [...out];
 }
 
 /** Split fire: the player is done with this unit even if some weapons were not used. */
