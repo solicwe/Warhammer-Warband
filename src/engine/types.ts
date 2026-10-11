@@ -532,7 +532,7 @@ export type Window =
   /** abilities that let units react out of turn ("if an enemy unit ends a move within 8\", this unit can make a Normal move") */
   | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
   /** Blessings of Khorne: the dice rolled and the ways to use them; the player picks one (or none) */
-  | { kind: 'blessings'; player: PlayerId; dice: number[]; picks: import('./blessings').BlessingPick[]; extra?: { label: string; kw?: string; until: 'phase' | 'round' } }
+  | { kind: 'blessings'; player: PlayerId; dice: number[]; picks: import('./blessings').BlessingPick[]; extra?: { label: string; kw?: string; until: 'phase' | 'round' }; rerolls?: number; rerollFrom?: string }
   /** a rule asks the player to pick one unit ("select one enemy unit hit by those attacks"); `acts` go to it */
   | { kind: 'pickUnit'; player: PlayerId; label: string; units: string[]; holderId: string; acts: import('./activations').Action[] }
   /** detachment stratagems the player can use right now, at a moment the engine reported ("just after an enemy unit has shot") */

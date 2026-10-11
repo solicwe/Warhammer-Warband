@@ -51,7 +51,9 @@ function renderBlocks(bs: Block[], flavourFirst: boolean, names?: string[]): Rea
 export function RuleText({ text, names }: { text: string; names?: string[] }) {
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
   // named options: a short title line followed by its body, repeated (at least two of them)
-  const heads = lines.map((l, i) => (isHeading(l, lines[i + 1]) ? i : -1)).filter((i) => i >= 0);
+  // a title's body is never itself a title ("This unit has +1 to charge rolls" with its full stop missing)
+  const heads: number[] = [];
+  lines.forEach((l, i) => { if (isHeading(l, lines[i + 1]) && heads[heads.length - 1] !== i - 1) heads.push(i); });
   if (heads.length < 2) return <div className="rt">{renderBlocks(blocks(lines), false, names)}</div>;
   const intro = lines.slice(0, heads[0]);
   return (

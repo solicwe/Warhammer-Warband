@@ -1344,3 +1344,20 @@ details > .strat-card { margin-top: 6px; }
 .ab-tick { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; vertical-align: -2px; }
 .ab-tick.ok { background: var(--good-soft); color: var(--good); }
 .ab-tick.todo { background: var(--bad-soft, rgba(220, 60, 60, 0.15)); color: var(--bad); }
+/* Blessings of Khorne roll */
+.bk { display: grid; gap: 8px; }
+.bk-head { font: 700 18px var(--font-cond); letter-spacing: 0.04em; text-transform: uppercase; }
+.bk-dice { display: flex; flex-wrap: wrap; gap: 6px; }
+.bk-die { padding: 0; border: 2px solid transparent; border-radius: 10px; background: none; line-height: 0; cursor: pointer; }
+.bk-die:disabled { cursor: default; }
+.bk-die.sel { border-color: var(--bad); transform: translateY(-3px); }
+.bk-rr { display: flex; align-items: center; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
+.bk-sub { font: 600 12px var(--font-cond); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); margin-top: 4px; }
+.bk-pick { text-align: left; }
+.bk-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text-2); cursor: pointer; }
+.bk-row.ok { border-color: var(--good); color: var(--text); }
+.bk-name { font-weight: 700; }
+.bk-need { font: 600 12px var(--font-cond); letter-spacing: 0.05em; color: var(--text-2); }
+.bk-row.ok .bk-need { color: var(--good); }
+.bk-short { grid-column: 1 / -1; font-size: 13px; }
+.bk-text { grid-column: 1 / -1; font-size: 13px; color: var(--text); padding-top: 4px; border-top: 1px dashed var(--line-2); }

@@ -26,7 +26,8 @@ import {
   abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../engine/activations';
 import { activeLabels, effectsFor, isRiled, unitFlags, type Effect } from '../engine/effects';
-import { applyPick, blessingById, type Blessing } from '../engine/blessings';
+import { applyPick, BLESSINGS, rerollBlessings } from '../engine/blessings';
+import { BlessingsPanel } from './Blessings';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { advantage, applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen, type Intent } from '../engine/botLook';
@@ -97,8 +98,6 @@ const pName = (s: GameState, p: PlayerId) => s.players[p].name;
 type LookMsg = { id: number; sig?: string | null; name?: string; values?: Record<string, number>; intents?: Intent[]; progress?: { name: string; value: number; done: number; total: number } };
 
 
-/** One line of what a Blessing of Khorne does. */
-const blessingText = (b: Blessing) => ({ bloodlust: '+1 to charge', invigoration: 'pile in / consolidate 6"', carnage: 'fight on death 4+', martial: '[SUSTAINED HITS 1] melee', warp: '[LETHAL HITS] melee', decap: '[DEVASTATING WOUNDS] vs INFANTRY' } as Record<string, string>)[b.id] ?? '';
 
 const sg = (n: number) => (n > 0 ? `+${n}` : `−${-n}`);
 /** Short "+1 Hit" tags for an effect on a unit, and whether it helps that unit. */
@@ -127,8 +126,18 @@ function fxTags(e: Effect): [string, boolean][] {
   if (e.cannotFallBack) o.push(['No Fall Back', false]);
   if (e.noOverwatch) o.push(['No Overwatch', false]);
   if (e.grounded) o.push(['Grounded', false]);
+  if (e.fightOnDeath) o.push([`Fight on death ${e.fightOnDeath}+`, true]);
+  if (e.pileIn) o.push([`Pile in ${e.pileIn}"`, true]);
+  if (e.critHitOn) o.push([`Crit hit ${e.critHitOn}+`, true]);
   return o;
 }
+/** Active Blessings of Khorne on a unit, as their short text. */
+const unitBlessingTags = (s: GameState, u: UnitState): [string, boolean][] => {
+  const P = s.players[u.owner];
+  if (!P.blessings && !P.blessingExtras?.length && !u.timed?.some((t) => t.mark === 'allBlessings')) return [];
+  const ids = new Set(effectsFor(s, u).map((a) => BLESSINGS.find((b) => b.name === a.label)?.id).filter(Boolean));
+  return BLESSINGS.filter((b) => ids.has(b.id)).map((b) => [b.short, true]);
+};
 const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
   'hit+1': ['+1 Hit', true], 'hit-1': ['−1 Hit', false], 'wound+1': ['+1 Wound', true], 'wound-1': ['−1 Wound', false],
   rerollHits1: ['Re-roll Hit 1s', true], rerollHits: ['Re-roll Hits', true], rerollWounds1: ['Re-roll Wound 1s', true], rerollWounds: ['Re-roll Wounds', true],
@@ -699,7 +708,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (!onBoard(u)) continue;
     // plus auras of other units that always apply (a conditional one only matters at the moment it holds)
     const auras = effectsFor(s, u).filter((a) => a.from && a.holder.id !== u.id && !a.e.if?.length).flatMap((a) => fxTags(a.e));
-    const tags = [...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...auras];
+    // army-wide buffs on this unit: detachment rules and choices, doctrines, Blessings of Khorne (always-on parts)
+    const own = new Set(u.abilities.map((a) => a.name));
+    const army = effectsFor(s, u).filter((a) => !a.from && a.holder.id === u.id && !own.has(a.label) && !BLESSINGS.some((b) => b.name === a.label) && !u.timed?.some((t) => t.label === a.label) && !a.e.if?.length).flatMap((a) => fxTags(a.e));
+    const bless = unitBlessingTags(s, u);
+    const riledTags: [string, boolean][] = isRiled(s, u) ? [['5+ inv', true], ['Assault', true], ['Adv & Charge', true]] : [];
+    const tags = [...riledTags, ...bless, ...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...army, ...auras];
     const seen = new Set<string>();
     const uniq = tags.filter(([t]) => !seen.has(t) && !!seen.add(t));
     if (uniq.length) buffTags[u.id] = uniq;
@@ -1054,15 +1068,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }
     if (w.kind === 'blessings') {
       return (
-        <>
-          <div className="handoff">{pName(s, p)}: {w.extra?.label ?? 'Blessings of Khorne'} — rolled {w.dice.join(' · ')}</div>
-          {w.picks.map((pk, i) => (
-            <button key={i} className="btn" onClick={() => act((g) => { if (g.window?.kind === 'blessings') applyPick(g, g.window.player, pk, g.window.extra); })}>
-              {pk.reborn ? 'Reborn in Blood (triple 6): Angron returns' : pk.ids.map((id) => { const b = blessingById(id)!; return `${b.name} — ${blessingText(b)}`; }).join(' + ')}
-            </button>
-          ))}
-          <button className="btn ghost" onClick={() => act((g) => { if (g.window?.kind === 'blessings') applyPick(g, g.window.player, null); })}>None</button>
-        </>
+        <BlessingsPanel title={`${pName(s, p)}: ${w.extra?.label ?? 'Blessings of Khorne'}`} dice={w.dice} picks={w.picks} rerolls={w.rerolls ?? 0} rerollFrom={w.rerollFrom}
+          onReroll={(idx) => { const e = act((g) => rerollBlessings(g, idx)); if (e) flash(e); }}
+          onPick={(pk) => act((g) => { if (g.window?.kind === 'blessings') applyPick(g, g.window.player, pk, g.window.extra); })} />
       );
     }
     if (w.kind === 'pickUnit') {

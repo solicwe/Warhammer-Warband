@@ -1,7 +1,7 @@
 // World Eaters (Faction Pack v1.3): Blessings of Khorne, Blood Tithe, Idols of Khorne, and whole bot games in every detachment.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { blessingPicks, blessingsRoll } from './blessings';
+import { blessingPicks, blessingsRoll, rerollBlessings } from './blessings';
 import { botAct } from './bot';
 import { pickDetChoice } from './detachments';
 import { cond, effectsFor } from './effects';
@@ -38,6 +38,19 @@ describe('Blessings of Khorne', () => {
     const s2 = game(weList('Berzerker Warband'));
     blessingsRoll(s2, 0);
     expect(['blessings', undefined]).toContain(s2.window?.kind);
+  });
+});
+
+describe('Blessings re-rolls (player)', () => {
+  it('the player picks the dice to re-roll, at most the budget, once', () => {
+    const s = game(weList('Berzerker Warband'));
+    s.window = { kind: 'blessings', player: 0, dice: [1, 1, 2, 3, 4, 5, 6, 6], picks: [], rerolls: 2 };
+    expect(rerollBlessings(s, [0, 1, 2])).toMatch(/at most 2/);
+    expect(rerollBlessings(s, [2, 3])).toBeNull();
+    const w = s.window as { dice: number[]; rerolls: number };
+    expect(w.dice).toHaveLength(8);
+    expect(w.rerolls).toBe(0);
+    expect(rerollBlessings(s, [0])).toMatch(/at most 0/);
   });
 });
 

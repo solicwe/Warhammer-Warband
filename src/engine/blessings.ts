@@ -8,15 +8,17 @@ import { alive, log, onBoard, phaseKey, pushFx } from './state';
 import type { Effect } from './effects';
 import type { GameState, PlayerId, UnitState } from './types';
 
-export interface Blessing { id: string; name: string; double: number; triple?: number; value: number; effects: Effect[] }
+export interface Blessing { id: string; name: string; double: number; triple?: number; value: number; short: string; text: string; effects: Effect[] }
 export const BLESSINGS: Blessing[] = [
-  { id: 'bloodlust', name: 'Unbridled Bloodlust', double: 1, value: 2.5, effects: [{ chargeBonus: 1 }] },
-  { id: 'invigoration', name: 'Rage-fuelled Invigoration', double: 2, value: 2, effects: [{ pileIn: 6, consolidate: 6 }] },
-  { id: 'carnage', name: 'Total Carnage', double: 3, value: 3, effects: [{ fightOnDeath: 4 }] },
-  { id: 'martial', name: 'Martial Excellence', double: 4, triple: 1, value: 4, effects: [{ attack: 'melee', abilities: ['sustained hits 1'] }] },
-  { id: 'warp', name: 'Warp Blades', double: 5, triple: 2, value: 5, effects: [{ attack: 'melee', abilities: ['lethal hits'] }] },
-  { id: 'decap', name: 'Decapitating Strikes', double: 6, triple: 3, value: 6, effects: [{ attack: 'melee', if: ['targetInfantry'], abilities: ['devastating wounds'] }] },
+  { id: 'bloodlust', name: 'Unbridled Bloodlust', double: 1, value: 2.5, short: '+1 to charge', text: 'This unit has +1 to charge rolls.', effects: [{ chargeBonus: 1 }] },
+  { id: 'invigoration', name: 'Rage-fuelled Invigoration', double: 2, value: 2, short: 'Pile in / consolidate 6"', text: 'Each time a model in this unit makes a Pile-in or Consolidation move, it can move up to 6" instead of up to 3".', effects: [{ pileIn: 6, consolidate: 6 }] },
+  { id: 'carnage', name: 'Total Carnage', double: 3, value: 3, short: 'Fight on death 4+', text: 'Each time a model in this unit is destroyed by a melee attack, if it has not fought this phase, roll one D6: on a 4+, do not remove it from play. It can fight after the attacking unit has finished making its attacks, and is then removed from play.', effects: [{ fightOnDeath: 4 }] },
+  { id: 'martial', name: 'Martial Excellence', double: 4, triple: 1, value: 4, short: '[SUSTAINED HITS 1] in melee', text: 'Melee weapons equipped by models in this unit have the [SUSTAINED HITS 1] ability.', effects: [{ attack: 'melee', abilities: ['sustained hits 1'] }] },
+  { id: 'warp', name: 'Warp Blades', double: 5, triple: 2, value: 5, short: '[LETHAL HITS] in melee', text: 'Melee weapons equipped by models in this unit have the [LETHAL HITS] ability.', effects: [{ attack: 'melee', abilities: ['lethal hits'] }] },
+  { id: 'decap', name: 'Decapitating Strikes', double: 6, triple: 3, value: 6, short: '[DEVASTATING WOUNDS] vs INFANTRY', text: 'Each time a model in this unit makes a melee attack that targets an INFANTRY unit, that attack has the [DEVASTATING WOUNDS] ability.', effects: [{ attack: 'melee', if: ['targetInfantry'], abilities: ['devastating wounds'] }] },
 ];
+/** "Double 5+ or Triple 2+" */
+export const blessingNeed = (b: Blessing) => `${b.double === 1 ? 'Any double' : `Double ${b.double}+`}${b.triple ? ` or ${b.triple === 1 ? 'any triple' : `Triple ${b.triple}+`}` : ''}`;
 export const blessingById = (id: string) => BLESSINGS.find((b) => b.id === id);
 
 /** What one roll can pay for: each pick is one or two Blessings (or Reborn in Blood) with the dice it spends. */
@@ -53,10 +55,16 @@ export function blessingPicks(dice: number[], n: 1 | 2, skip: string[] = []): Bl
 const hasAb = (u: UnitState, name: string) => u.abilities.some((a) => a.name === name) && !(u.abilityPicks?.pool.includes(name) && !u.abilityPicks.on.includes(name));
 const mine = (s: GameState, p: PlayerId) => s.units.filter((u) => u.owner === p && onBoard(u));
 
-/** Re-rolls a roll is allowed (The Blood God's Favour 6, Favoured of Khorne 2), applied to the dice that pay for nothing. */
+/** How many dice of the roll may be re-rolled, and why (The Blood God's Favour 6, Favoured of Khorne 2). */
+export function rerollBudget(s: GameState, p: PlayerId): { n: number; from: string } {
+  const angron = mine(s, p).some((u) => hasAb(u, 'The Blood God’s Favour'));
+  const fav = mine(s, p).some((u) => u.enhancements.some((e) => e.name === 'Favoured of Khorne'));
+  return { n: (angron ? 6 : 0) + (fav ? 2 : 0), from: [angron && 'The Blood God’s Favour (6)', fav && 'Favoured of Khorne (2)'].filter(Boolean).join(' + ') };
+}
+
+/** The bot's re-roll: the dice that pay for nothing, lowest first. */
 function rerollUseless(s: GameState, p: PlayerId, dice: number[]): number[] {
-  const n = (mine(s, p).some((u) => hasAb(u, 'The Blood God’s Favour')) ? 6 : 0)
-    + (mine(s, p).some((u) => u.enhancements.some((e) => e.name === 'Favoured of Khorne')) ? 2 : 0);
+  const n = rerollBudget(s, p).n;
   if (!n) return dice;
   const count = [0, 0, 0, 0, 0, 0, 0];
   for (const d of dice) count[d]++;
@@ -76,18 +84,41 @@ const auto = (s: GameState, p: PlayerId) => (s.bots ?? []).includes(p) || (s.aut
 /** Roll for the army (or one more Blessing, `extra`), then take the best pick or let the player choose. */
 export function blessingsRoll(s: GameState, p: PlayerId, extra?: { label: string; kw?: string; until: 'phase' | 'round' }) {
   const P = s.players[p];
-  const angron = s.units.find((u) => u.owner === p && hasAb(u, 'Reborn in Blood'));
   const n = 8 + (P.bloodshed ?? 0) + (mine(s, p).some((u) => hasAb(u, 'Idol of Blessed Blood')) ? 1 : 0);
   P.bloodshed = 0;
-  const dice = rerollUseless(s, p, rollN(s, n)).sort((a, b) => a - b);
-  const picks = blessingPicks(dice, extra ? 1 : 2, extra ? activeIds(s, p) : []);
-  const reborn = !extra && !!angron && !alive(angron).length && dice.filter((d) => d === 6).length >= 3;
-  pushFx(s, { kind: 'roll', owner: p, title: extra ? extra.label : 'Blessings of Khorne', dice, result: picks.length ? picks[0].ids.map((id) => blessingById(id)!.name).join(' + ') : 'no Blessing', good: picks.length > 0 });
+  const bot = auto(s, p) || !!s.window; // another prompt is open: the game takes the best for the player too
+  const raw = rollN(s, n);
+  const dice = (bot ? rerollUseless(s, p, raw) : raw).sort((a, b) => a - b);
+  const options = picksFor(s, p, dice, extra);
+  pushFx(s, { kind: 'roll', owner: p, title: extra ? extra.label : 'Blessings of Khorne', dice, result: options.length ? options[0].reborn ? 'Reborn in Blood' : options[0].ids.map((id) => blessingById(id)!.name).join(' + ') : 'no Blessing', good: options.length > 0 });
   log(s, `${extra ? extra.label : 'Blessings of Khorne'}: rolled [${dice.join(' ')}]`, 'roll', p);
-  const options: BlessingPick[] = [...(reborn ? [{ ids: [], reborn: true, score: 99 }] : []), ...picks];
-  if (!options.length) return;
-  if (auto(s, p) || s.window) { applyPick(s, p, options[0], extra); return; } // another prompt is open: take the best
-  s.window = { kind: 'blessings', player: p, dice, picks: options, extra };
+  if (bot) { if (options.length) applyPick(s, p, options[0], extra); return; }
+  const rr = rerollBudget(s, p);
+  if (!options.length && !rr.n) return;
+  s.window = { kind: 'blessings', player: p, dice, picks: options, extra, rerolls: rr.n, rerollFrom: rr.from };
+}
+
+/** What this roll can pay for (Reborn in Blood first when Angron is down and three 6s came up). */
+function picksFor(s: GameState, p: PlayerId, dice: number[], extra?: { label: string }): BlessingPick[] {
+  const angron = s.units.find((u) => u.owner === p && hasAb(u, 'Reborn in Blood'));
+  const reborn = !extra && !!angron && !alive(angron).length && dice.filter((d) => d === 6).length >= 3;
+  return [...(reborn ? [{ ids: [], reborn: true, score: 99 }] : []), ...blessingPicks(dice, extra ? 1 : 2, extra ? activeIds(s, p) : [])];
+}
+
+/** The player re-rolls the dice they picked (at most the roll's re-roll budget, once). */
+export function rerollBlessings(s: GameState, idx: number[]): string | null {
+  const w = s.window;
+  if (w?.kind !== 'blessings') return 'No Blessings roll';
+  const pick = [...new Set(idx)].filter((i) => i >= 0 && i < w.dice.length);
+  if (!pick.length) return 'Tap the dice to re-roll';
+  if (pick.length > (w.rerolls ?? 0)) return `You can re-roll at most ${w.rerolls ?? 0} dice`;
+  const fresh = rollN(s, pick.length);
+  const dice = [...w.dice];
+  pick.forEach((i, k) => { dice[i] = fresh[k]; });
+  dice.sort((a, b) => a - b);
+  log(s, `${w.extra?.label ?? 'Blessings of Khorne'}: re-rolled ${pick.length} dice → [${dice.join(' ')}]`, 'roll', w.player);
+  s.window = { ...w, dice, picks: picksFor(s, w.player, dice, w.extra), rerolls: 0 };
+  return null;
 }
 
 /** The Blessings active for the army this round (not counting extras). */
