@@ -1158,8 +1158,6 @@ details > .strat-card { margin-top: 6px; }
 .setup .sides { background: var(--surface); border: none; border-radius: 0; padding: 1px; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
   background-image: linear-gradient(160deg, #d7b06a, #a88443 35%, #4a3a1e 70%, #a88443); }
 .setup .side-slot { background: var(--surface); }
-.setup .side-slot.s0 { box-shadow: inset 3px 0 0 var(--p0); }
-.setup .side-slot.s1 { box-shadow: inset 3px 0 0 var(--p1); }
 .setup .vs { height: 2px; margin: 0; background: linear-gradient(90deg, var(--p0), #c9a35c 45%, #c9a35c 55%, var(--p1)); }
 .setup .vs span { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border-radius: 50%; color: #1a140a; font: 700 15px var(--font-cond); background: radial-gradient(circle at 35% 30%, #f0cf8e, #c9a35c 55%, #8a6a2f); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
 .setup .seg button.on, .campaign .seg button.on { box-shadow: 0 0 0 1px var(--accent), inset 0 -2px 0 var(--accent); }

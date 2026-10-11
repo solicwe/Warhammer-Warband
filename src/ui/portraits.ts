@@ -82,7 +82,7 @@ export function setPortrait(datasheet: string, dataUrl: string | null): boolean 
 
 // ---- photos kept on the web page itself (claude.ai artifact: `assets` for the files, `db` for which is which) ----
 
-type CloudDoc = { name: string; asset: string };
+type CloudDoc = { name: string; asset: string; id?: string }; // id: the store document it lives in
 interface DbLike {
   collection(path: string): { onSnapshot(next: (q: { docs: { id: string; data(): Record<string, unknown> | undefined }[]; metadata?: { fromCache?: boolean } }) => void, err?: (e: unknown) => void): () => void };
   doc(path: string): { set(d: Record<string, unknown>): Promise<void>; delete(): Promise<void> };
@@ -104,7 +104,11 @@ let cloudAssets: AssetsLike | null = null;
 /** 'off': not on the web link · 'read': photos show, this viewer can't add · 'write': photos added here go up */
 export let cloudMode: 'off' | 'read' | 'write' = 'off';
 const COLL = 'portraits';
-const docId = (name: string) => imageSlug(name).slice(0, 180) || 'unit';
+// the exact name's hash keeps names that differ only in case apart ("Master Of Executions" (CSM) / "Master of Executions" (WE))
+const fnv = (t: string) => { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 0x01000193); return (h >>> 0).toString(16).padStart(8, '0'); };
+const docId = (name: string) => `${imageSlug(name).slice(0, 170) || 'unit'}-${fnv(name)}`;
+/** the document a photo lives in now: older ones sit under the bare slug */
+const docOf = (name: string) => cloud[name]?.id ?? docId(name);
 
 let cloudInit: Promise<void> | null = null;
 /** Connect to the page's own storage when running as a claude.ai artifact; elsewhere nothing happens. */
@@ -120,7 +124,7 @@ export function initCloudPortraits(): Promise<void> {
       const next: Record<string, CloudDoc> = {};
       for (const d of q.docs) {
         const b = d.data() as Partial<CloudDoc> | undefined;
-        if (b && typeof b.name === 'string' && typeof b.asset === 'string' && /^[0-9a-f]{32}$/.test(b.asset)) next[b.name] = { name: b.name, asset: b.asset };
+        if (b && typeof b.name === 'string' && typeof b.asset === 'string' && /^[0-9a-f]{32}$/.test(b.asset) && (!next[b.name] || d.id === docId(b.name))) next[b.name] = { name: b.name, asset: b.asset, id: d.id };
       }
       for (const [n, w] of waiting) if (cloud[n] && next[n]?.asset !== cloud[n].asset && w) next[n] = cloud[n];
       cloud = next;
@@ -168,6 +172,7 @@ async function uploadNow(name: string, dataUrl: string): Promise<boolean> {
     const { bytes, ext } = dataUrlBytes(dataUrl);
     const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
     const old = cloud[name]?.asset;
+    const oldDoc = cloud[name]?.id;
     const up = await cloudAssets.upload(new Blob([bytes as BlobPart], { type }), { type });
     try {
       await cloudDb.doc(`${COLL}/${docId(name)}`).set({ name, asset: up.id });
@@ -176,7 +181,8 @@ async function uploadNow(name: string, dataUrl: string): Promise<boolean> {
       throw e;
     }
     if (old && old !== up.id) await cloudAssets.delete(old).catch(() => undefined);
-    cloud[name] = { name, asset: up.id };
+    if (oldDoc && oldDoc !== docId(name)) await cloudDb.doc(`${COLL}/${oldDoc}`).delete().catch(() => undefined);
+    cloud[name] = { name, asset: up.id, id: docId(name) };
     // keep showing the photo from this device until the web copy has really loaded (no blank or old picture meanwhile)
     if (await imageLoads(`/_blob/${up.id}`) && cache[name] === dataUrl) delete cache[name];
     save();
@@ -204,11 +210,12 @@ function imageLoads(url: string): Promise<boolean> {
 async function removeFromCloud(name: string) {
   const c = cloud[name];
   if (!c || cloudMode !== 'write' || !cloudDb || !cloudAssets) return;
+  const id = docOf(name);
   delete cloud[name];
   version++;
   listeners.forEach((l) => l());
   try {
-    await cloudDb.doc(`${COLL}/${docId(name)}`).delete();
+    await cloudDb.doc(`${COLL}/${id}`).delete();
     await cloudAssets.delete(c.asset);
   } catch { cloudError = 'Could not delete the online image'; }
 }
@@ -231,7 +238,7 @@ export async function removeUnusedCloudFiles(known?: Set<string>): Promise<{ pho
   if (known?.size) {
     for (const name of Object.keys(cloud)) {
       if (known.has(name) || known.has(name.split('::')[0]) || name.startsWith('emblem:')) continue;
-      try { await cloudDb.doc(`${COLL}/${docId(name)}`).delete(); delete cloud[name]; out.photos.push(name); } catch { /* keep it */ }
+      try { await cloudDb.doc(`${COLL}/${docOf(name)}`).delete(); delete cloud[name]; out.photos.push(name); } catch { /* keep it */ }
     }
   }
   const list = (cloudAssets as AssetsLike & { list(): Promise<{ assets: { id: string; createdAt: string }[] }> }).list;

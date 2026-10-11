@@ -130,7 +130,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
               </div>
             );
           })}
-          {!armies.length && <div className="empty">No armies yet. Tap “New army” to build one, or start a battle with a ready-made army.</div>}
+          {!armies.length && <div className="empty">No armies yet. Tap “New army” to build one.</div>}
         </section>
 
         <footer className="foot">Datasheets: Wahapedia 11th edition export{index ? ` · updated ${index.lastUpdate.slice(0, 10)}` : ''} · Core Rules June 2026 · Warhammer 40,000 is a trademark of Games Workshop</footer>

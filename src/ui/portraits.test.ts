@@ -71,7 +71,8 @@ describe('photos kept on the web page (claude.ai artifact)', () => {
     expect(getPortrait('Warboss')).toBe(jpg); // shown at once from this browser
     await new Promise((r) => setTimeout(r, 10));
     expect(uploads).toEqual(['image/jpeg']);
-    expect(docs.get('portraits/warboss')).toEqual({ name: 'Warboss', asset: 'a'.repeat(31) + '1' });
+    const wb = [...docs.keys()].find((k) => k.startsWith('portraits/warboss-'))!;
+    expect(docs.get(wb)).toEqual({ name: 'Warboss', asset: 'a'.repeat(31) + '1' });
     expect(getPortrait('Warboss')).toBe(`/_blob/${'a'.repeat(31)}1`);
     expect(ownPortraitCount()).toBe(0); // the local copy is dropped once it is on the site
     expect(cloudPortraitCount()).toBe(1);
@@ -83,9 +84,18 @@ describe('photos kept on the web page (claude.ai artifact)', () => {
     expect(deleted).toEqual(['a'.repeat(31) + '1']);
     setPortrait('Warboss', null);
     await new Promise((r) => setTimeout(r, 10));
-    expect(docs.has('portraits/warboss')).toBe(false);
+    expect(docs.has(wb)).toBe(false);
     expect(deleted).toEqual(['a'.repeat(31) + '1', 'a'.repeat(31) + '2']);
     expect(getPortrait('Warboss')).toBeUndefined();
+
+    // names that differ only in case (CSM "Master Of Executions", WE "Master of Executions") keep their own photos
+    const csm = 'data:image/jpeg;base64,' + btoa('csm'), we = 'data:image/jpeg;base64,' + btoa('we');
+    setPortrait('Master Of Executions', csm); setPortrait('Master of Executions', we);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(getPortrait('Master Of Executions')).not.toBe(getPortrait('Master of Executions'));
+    expect([...docs.keys()].filter((k) => k.startsWith('portraits/master-of-executions'))).toHaveLength(2);
+    setPortrait('Master Of Executions', null); setPortrait('Master of Executions', null);
+    await new Promise((r) => setTimeout(r, 20));
 
     // the same photos sent again and again while they are still going up: each goes up once
     const a = 'data:image/jpeg;base64,' + btoa('boyz'), b = 'data:image/jpeg;base64,' + btoa('nobz');

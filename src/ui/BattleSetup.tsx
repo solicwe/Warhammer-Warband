@@ -10,7 +10,6 @@ import { loadFaction, useFactions, type FactionIndex } from './data';
 import { Icon } from './Icon';
 import { LayoutPreview } from './LayoutPreview';
 import { loadBattlePrefs, saveBattlePrefs, withAutoRules, type Army, type ArmyRef, type BattleMode, type BattlePrefs } from './library';
-import { PRESETS } from './presets';
 
 interface Props {
   armies: Army[];
@@ -51,15 +50,12 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
   const [choosing, setChoosing] = useState<0 | 1 | null>(null); // the side whose army is being picked
   const [allMaps, setAllMaps] = useState(false);
   const [mapDeploy, setMapDeploy] = useState('');
-  const [presetDisp, setPresetDisp] = useState<[string | undefined, string | undefined]>([undefined, undefined]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const listOf = (i: 0 | 1): ArmyList => {
-    const r = prefs.sides[i];
-    if (r.kind === 'list') return armies.find((a) => a.id === r.id) ?? PRESETS.SM;
-    return { ...PRESETS[r.factionId], disposition: presetDisp[i] ?? PRESETS[r.factionId].disposition };
-  };
+  // no army picked yet (none built): an empty stand-in, shown as "Choose an army"
+  const missing = (i: 0 | 1) => !armies.some((a) => a.id === prefs.sides[i].id);
+  const listOf = (i: 0 | 1): ArmyList => armies.find((a) => a.id === prefs.sides[i].id) ?? { name: '', factionId: 'SM', battleSize: RULES.battleSizes[0].id, detachments: [], units: [] };
   const lists: [ArmyList, ArmyList] = [listOf(0), listOf(1)];
   const ptsFacs = useFactions(armies.map((x) => x.factionId));
   const ptsOf = (l: ArmyList) => listPoints(l, ptsFacs[l.factionId]);
@@ -78,10 +74,8 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
   };
   const dispOf = (i: 0 | 1): DispositionId | null => (facs[i] && facs[i]!.id === lists[i].factionId ? listDisposition(lists[i], facs[i]!) : null);
   const pickDisp = (i: 0 | 1, d: DispositionId) => {
-    const r = prefs.sides[i];
-    const name = dispositionById(d).name;
-    if (r.kind === 'list') { const a = armies.find((x) => x.id === r.id); if (a) onUpdateArmy({ ...a, disposition: name }); }
-    else setPresetDisp((x) => (i === 0 ? [name, x[1]] : [x[0], name]));
+    const a = armies.find((x) => x.id === prefs.sides[i].id);
+    if (a) onUpdateArmy({ ...a, disposition: dispositionById(d).name });
   };
   const d0 = dispOf(0), d1 = dispOf(1);
   const layouts = d0 && d1 ? layoutsFor(d0, d1) : [];
@@ -121,7 +115,6 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
   const choices = useMemo(() => [
     ...armies.map((a) => ({ ref: { kind: 'list', id: a.id } as ArmyRef, list: a as ArmyList })),
   ], [armies]);
-  const same = (a: ArmyRef, b: ArmyRef) => (a.kind === 'list' ? b.kind === 'list' && a.id === b.id : b.kind === 'preset' && a.factionId === b.factionId);
 
   const side = (i: 0 | 1) => {
     const l = lists[i];
@@ -138,15 +131,22 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
         {!bot(i) && prefs.mode === 'hotseat' && (
           <input id={`player-name-${i}`} aria-label={`${role(i)} name`} value={prefs.names[i]} onChange={(e) => set({ names: (i ? [prefs.names[0], e.target.value] : [e.target.value, prefs.names[1]]) as [string, string] })} />
         )}
+        {missing(i) ? (
+          <button className="pick-army" onClick={() => setChoosing(i)}>
+            <span className="pick-army-text"><span className="pick-army-name">Choose an army</span><span className="pick-army-meta">Build one from the home screen first</span></span>
+            <span className="pick-army-change">Pick</span>
+          </button>
+        ) : (
         <button className="pick-army" onClick={() => setChoosing(i)}>
           <Emblem factionId={l.factionId} sub={l.subfaction} />
           <span className="pick-army-text">
-            <span className="pick-army-name">{l.name || 'Untitled army'}{prefs.sides[i].kind === 'preset' && <span className="tag">Ready-made</span>}</span>
+            <span className="pick-army-name">{l.name || 'Untitled army'}</span>
             <span className="pick-army-meta">{factionName(l.factionId)}{l.subfaction ? ` · ${titleCase(l.subfaction)}` : ''} · <span className="num">{ptsOf(l)}/{size.points}</span></span>
           </span>
           <span className="pick-army-change">Change</span>
         </button>
-        {cur && (
+        )}
+        {cur && !missing(i) && (
           <div className="disp-row">
             <span className="tiny muted">Force Disposition</span>
             {(opts.length > 1 ? opts : [cur]).map((d) => (
@@ -233,7 +233,7 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
 
         {err && <div className="err" role="alert">{err}</div>}
         <div className="cta-bar">
-          <button className="btn primary big wide" disabled={busy || !index} onClick={start}>{busy ? 'Setting up…' : 'Start battle'}</button>
+          <button className="btn primary big wide" disabled={busy || !index || missing(0) || missing(1)} onClick={start}>{busy ? 'Setting up…' : 'Start battle'}</button>
         </div>
       </main>
 
@@ -244,29 +244,26 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
               <span className="sheet-title grow">Army for {role(choosing)}</span>
               <button className="btn small ghost" onClick={() => setChoosing(null)}>Close</button>
             </div>
-            {(['list', 'preset'] as const).map((kind) => (
-              <div key={kind} className="group">
-                <div className="group-head"><h3>{kind === 'list' ? 'Your armies' : 'Ready-made'}</h3></div>
-                {!choices.some((c) => c.ref.kind === kind) && <div className="empty">No armies yet: build one from the home screen.</div>}
-                {choices.filter((c) => c.ref.kind === kind).map((c) => {
-                  const size = RULES.battleSizes.find((b) => b.id === c.list.battleSize) ?? RULES.battleSizes[0];
-                  const on = same(c.ref, prefs.sides[choosing]);
-                  return (
-                    <button key={kind === 'list' ? (c.ref as { id: string }).id : c.list.factionId} className={`pick-row ${on ? 'on' : ''}`} onClick={() => {
-                      set({ sides: (choosing ? [prefs.sides[0], c.ref] : [c.ref, prefs.sides[1]]) as [ArmyRef, ArmyRef] });
-                      setChoosing(null);
-                    }}>
-                      <Emblem factionId={c.list.factionId} sub={c.list.subfaction} />
-                      <span className="pick-army-text">
-                        <span className="pick-army-name">{c.list.name || 'Untitled army'}</span>
-                        <span className="pick-army-meta">{factionName(c.list.factionId)} · {c.list.detachments.join(' + ') || 'No Detachment'} · <span className="num">{ptsOf(c.list)}/{size.points}</span></span>
-                      </span>
-                      {on && <Icon name="check" size={20} />}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
+            <div className="group">
+              {!choices.length && <div className="empty">No armies yet: build one from the home screen.</div>}
+              {choices.map((c) => {
+                const size = RULES.battleSizes.find((b) => b.id === c.list.battleSize) ?? RULES.battleSizes[0];
+                const on = c.ref.id === prefs.sides[choosing].id;
+                return (
+                  <button key={c.ref.id} className={`pick-row ${on ? 'on' : ''}`} onClick={() => {
+                    set({ sides: (choosing ? [prefs.sides[0], c.ref] : [c.ref, prefs.sides[1]]) as [ArmyRef, ArmyRef] });
+                    setChoosing(null);
+                  }}>
+                    <Emblem factionId={c.list.factionId} sub={c.list.subfaction} />
+                    <span className="pick-army-text">
+                      <span className="pick-army-name">{c.list.name || 'Untitled army'}</span>
+                      <span className="pick-army-meta">{factionName(c.list.factionId)} · {c.list.detachments.join(' + ') || 'No Detachment'} · <span className="num">{ptsOf(c.list)}/{size.points}</span></span>
+                    </span>
+                    {on && <Icon name="check" size={20} />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
