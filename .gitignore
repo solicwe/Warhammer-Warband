@@ -5,3 +5,4 @@ data/raw
 artifact
 __pycache__/
 tsconfig.tsbuildinfo
+.claude/settings.local.json
