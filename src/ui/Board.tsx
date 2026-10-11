@@ -10,7 +10,8 @@ import { loadoutLabels, shortItem } from './loadout';
 import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import type { SecondaryGoal } from '../engine/secondaries';
-import type { GameState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
+import type { FxEvent, GameState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
+import { play, type Sfx } from './sfx';
 
 export type Paths = Map<string, Pt[]>;
 
@@ -103,6 +104,9 @@ function BoardImpl(props: BoardProps) {
     seen.current = Math.max(...fresh.map((e) => e.seq));
     const t0 = performance.now();
     const keep = fresh.filter((e) => e.kind !== 'roll' && e.kind !== 'rolloff' && e.kind !== 'cards' && (e.kind !== 'move' || props.animateMoves?.includes(e.owner)));
+    // the new kinds of moment get their sound here (attacks are voiced by the attack report)
+    const voice: Partial<Record<FxEvent['kind'], Sfx>> = { shock: 'shock', heal: 'heal', place: 'arrive' };
+    for (const k of new Set(keep.map((e) => (e.kind === 'move' && e.moveKind === 'charge' ? 'charge' : voice[e.kind])).filter((x): x is Sfx => !!x))) play(k);
     // stagger events from the same step a little so they read in order
     setFx((cur) => [...cur.filter((a) => t0 - a.t0 < FX_MS[a.e.kind]), ...keep.map((e, i) => ({ e, t0: t0 + i * 180 }))]);
   }, [s.fx, s.fxSeq, props.animateMoves]);

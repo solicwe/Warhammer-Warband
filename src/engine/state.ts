@@ -8,11 +8,16 @@ export const onBoard = (u: UnitState) => u.status === 'board' && alive(u).length
 export const boardUnits = (s: GameState, owner?: PlayerId) => s.units.filter((u) => onBoard(u) && (owner === undefined || u.owner === owner));
 export const other = (p: PlayerId): PlayerId => (p === 0 ? 1 : 0);
 export const hasKw = (u: UnitState, kw: string) => u.keywords.includes(kw);
+/** Where a unit stands: the middle of its models still alive. */
+export const centreOf = (u: UnitState) => { const ms = alive(u).length ? alive(u) : u.models; return { x: ms.reduce((a, m) => a + m.x, 0) / ms.length, y: ms.reduce((a, m) => a + m.y, 0) / ms.length }; };
 export const everyModelKw = (u: UnitState, kws: string[]) => alive(u).every((m) => kws.some((k) => m.keywords.includes(k)));
 
 type FxInput = FxEvent extends infer E ? (E extends { seq: number } ? Omit<E, 'seq'> : never) : never;
 export function pushFx(s: GameState, e: FxInput) {
   s.fxSeq = (s.fxSeq ?? 0) + 1;
+  // a unit's arrival is drawn where its models now stand
+  const pl = e as { kind: string; unitId?: string; at?: unknown };
+  if (pl.kind === 'place' && !pl.at) { const u = s.units.find((x) => x.id === pl.unitId); if (u) e = { ...e, at: centreOf(u) } as FxInput; }
   (s.fx ??= []).push({ ...e, seq: s.fxSeq } as FxEvent);
   if (s.fx.length > 24) s.fx.splice(0, s.fx.length - 24);
 }
