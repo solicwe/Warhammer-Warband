@@ -7,6 +7,8 @@ import { Icon, type IconName } from './Icon';
 const RELIC_ICON: Record<string, IconName> = {
   litany: 'reroll', stimms: 'plus', plating: 'hold', smoke: 'cloud', blade: 'fight', overdrive: 'shoot', sandals: 'move', banner: 'objective',
   ledger: 'reroll', barrels: 'ruler', zeal: 'charge', relentless: 'advance', lethal: 'target', fury: 'fight', iron: 'hold', cache: 'strat',
+  auspex: 'shoot', chains: 'fight', hymn: 'shock', servo: 'wargear', jump: 'advance', bulwark: 'hold', veterans: 'target', brutes: 'skull',
+  mantle: 'leader', rounds: 'shoot', firstblow: 'charge', reaper: 'fight', shield: 'hold', devastate: 'target', grip: 'objective',
 };
 const RULE_ICON: Record<string, IconName> = { 'iron-will': 'hold', deadeye: 'target', warlord: 'leader', numbers: 'objective', armour: 'hold', savage: 'charge' };
 

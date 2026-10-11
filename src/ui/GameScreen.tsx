@@ -43,7 +43,7 @@ import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/second
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../engine/stratagems';
 import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
-import { polyCentroid } from '../engine/geometry';
+import { dist, polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../engine/deploy';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
@@ -798,8 +798,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const confirmPlace = () => {
     if (mode?.k !== 'place' || !draft) return;
-    const pos = lastPos(draft);
+    let pos = lastPos(draft);
     const u = U(mode.unitId);
+    // a spot that breaks a rule (against a board edge, on a wall, too close to an enemy): slide to the nearest legal one
+    if (mode.how !== 'disembark' && !validatePlacement(s, u, pos, mode.how).ok) {
+      const mid = (m: Map<string, Pt>) => { const q = [...m.values()]; return { x: q.reduce((a, p) => a + p.x, 0) / q.length, y: q.reduce((a, p) => a + p.y, 0) / q.length }; };
+      const near = mid(pos);
+      const fit = findPlacement(s, u, mode.how, near);
+      // only a small slide: a spot far away is not what the player chose
+      if (fit && dist(mid(fit), near) <= 6) {
+        pos = fit;
+        setDraft(placePaths(fit));
+        flash('Moved to the nearest legal spot');
+      }
+    }
     if (mode.how === 'disembark') {
       const t = U(mode.transportId!);
       const chk = validateDisembark(s, u, t, pos);
@@ -1140,6 +1152,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return (
         <>
           <div className="handoff">{pName(s, p)}: use Heroic Intervention?</div>
+          <div className="tiny muted">Two ways to counter-charge (core stratagem): <b>Leap to Defend</b> (1CP) charges a unit that just charged; <b>Into the Fray</b> (2CP) charges any enemy unit within 6", but the charge roll counts as at most 6.</div>
           {heroicCandidates(s, p).map((u) => (
             <div key={u.id} className="row">
               <span className="grow small">{u.name}</span>

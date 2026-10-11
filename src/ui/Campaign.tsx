@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { autoAttach, listPoints, syncList } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import { afterBattle, applyCampaign, bossRuleById, enter, loadRun, newRun, reachable, relicById, saveRun, START_POINTS, takeReward, type MapNode, type Reward, type Run } from '../engine/campaign';
+import { hasFactionRules } from '../engine/effects';
 import { createGame } from '../engine/game';
 import type { FactionData, GameState } from '../engine/types';
 import { Emblem } from './ArmyBuilder';
@@ -70,7 +71,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       if (!playable(f)) { setErr(`${f.name} has too few units in the data for a campaign yet. Pick another army.`); return; }
       const seed = Date.now() >>> 0;
       const list = { ...autoList(f, START_POINTS, seed % 997), name: `${f.name} strike force` };
-      const enemies = (index?.factions ?? []).map((x) => x.id).filter((id) => id !== f.id);
+      // only armies whose rules are all written up: theirs play as they should
+      const enemies = (index?.factions ?? []).map((x) => x.id).filter((id) => id !== f.id && hasFactionRules(id));
       setFac(f);
       setRun(newRun(f, list, enemies.length ? enemies : ['ORK'], seed));
       play('turn');
@@ -110,7 +112,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
   if (!run) {
     const groups = new Map<string, { id: string; name: string }[]>();
-    for (const f of index?.factions ?? []) { const g = f.group ?? 'Armies'; groups.set(g, [...(groups.get(g) ?? []), f]); }
+    for (const f of (index?.factions ?? []).filter((x) => hasFactionRules(x.id))) { const g = f.group ?? 'Armies'; groups.set(g, [...(groups.get(g) ?? []), f]); }
     return (
       <div className="app campaign">
         <header className="appbar">
@@ -122,10 +124,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <div className="cmp-kicker">A run of short battles</div>
             <div className="cmp-title">Fight your way to the Warlord</div>
             <ul className="cmp-points">
-              <li><Icon name="fight" size={16} /> Start with a {START_POINTS}-point army. Every battle lasts 3 rounds.</li>
-              <li><Icon name="enhancement" size={16} /> Win to pick a reward: a new unit, a relic for your whole army, or more CP.</li>
-              <li><Icon name="skull" size={16} /> Choose your road: elite enemies carry special rules, the Warlord two.</li>
-              <li><Icon name="hold" size={16} /> Three Fate: each defeat costs one.</li>
+              <li><Icon name="fight" size={16} /> {START_POINTS}-point army, 3-round battles</li>
+              <li><Icon name="cards" size={16} /> Win: pick 1 of 3 reward cards</li>
+              <li><Icon name="hold" size={16} /> 3 Fate: each defeat costs one</li>
             </ul>
           </div></section>
           <section className="group pad" aria-label="Your army">
