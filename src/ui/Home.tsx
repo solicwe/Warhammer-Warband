@@ -42,7 +42,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
   return (
     <div className="app home">
       <header className="appbar">
-        <span className="brand">Miniature<span className="brand-sub">Simulator</span></span>
+        <span className="brand">Pocket Warband</span>
         <span className="appbar-note">11th edition</span>
       </header>
       <main className="screen">
