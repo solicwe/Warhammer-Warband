@@ -1,11 +1,11 @@
-// Emperor's Children: Thrill Seekers (army rule) and Sensational Performance (Court of the Phoenician) let a unit shoot /
-// charge / fight with restrictions on whom it targets: not a unit it was engaged with at the start of the turn, and not
-// a unit another unit already charged or attacked this phase. This keeps the record those checks read.
+// Emperor's Children rules that keep state of their own: the targeting restrictions of Thrill Seekers (army rule) and
+// Sensational Performance (Court of the Phoenician): not a unit it was engaged with at the start of the turn, and not a
+// unit another unit already charged or attacked this phase; Daemonic Poisons; the Pledges to the Dark Prince (Coterie
+// of the Conceited) and the Favoured Champions (Slaanesh's Chosen).
 import { activeRules, unitFlags } from './effects';
 import { applyMortalWounds } from './attack';
 import { d6, rollExpr } from './dice';
-import { alive, engagedEnemies, log, onBoard, other, unitDistance } from './state';
-import { phaseKey } from './state';
+import { alive, engagedEnemies, log, onBoard, other, phaseKey, playsItself, unitDistance } from './state';
 import type { GameState, PlayerId, UnitState } from './types';
 
 /** Start of each turn: who every unit is engaged with. */
@@ -42,7 +42,6 @@ export function poisonTick(s: GameState) {
   }
 }
 
-const decidesFor = (s: GameState, p: PlayerId) => !(s.bots ?? []).includes(p) && (s.decides ?? []).includes(p);
 const warlordOnBoard = (s: GameState, p: PlayerId) => s.units.find((u) => u.owner === p && u.isWarlordUnit && onBoard(u) && alive(u).some((m) => (u.warlordSource ? m.source === u.warlordSource : m.isCharacter)));
 
 // ---------- Coterie of the Conceited: Pledges to the Dark Prince ----------
@@ -62,15 +61,16 @@ export function botPledge(s: GameState, p: PlayerId): number {
 export function pledgeRoundStart(s: GameState) {
   for (const p of [0, 1] as PlayerId[]) {
     if (!activeRules(s, p).includes('Coterie of the Conceited') || !warlordOnBoard(s, p)) continue;
-    if (decidesFor(s, p) && !s.window) { s.window = { kind: 'pledge', player: p, max: 6 }; continue; }
+    if (!playsItself(s, p) && !s.window) { s.window = { kind: 'pledge', player: p, max: 6 }; continue; }
     setPledge(s, p, botPledge(s, p));
   }
 }
 
 export function setPledge(s: GameState, p: PlayerId, n: number) {
   if (s.window?.kind === 'pledge' && s.window.player === p) s.window = null;
-  s.players[p].pledge = { round: s.round, n: Math.max(0, Math.min(6, Math.round(n))) };
-  log(s, `Pledges to the Dark Prince: ${s.players[p].name} pledges ${n} enemy unit(s) destroyed this battle round`, 'info', p);
+  const k = Math.max(0, Math.min(6, Math.round(n)));
+  s.players[p].pledge = { round: s.round, n: k };
+  log(s, `Pledges to the Dark Prince: ${s.players[p].name} pledges ${k} enemy unit(s) destroyed this battle round`, 'info', p);
 }
 
 /** Unbound Arrogance: the pledge goes up by 1. */

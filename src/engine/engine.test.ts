@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildUnits, distributeModels, syncWargear, wargearMax, wargearPoints, wargearProblems } from './army';
+import { buildUnits, distributeModels, syncWargear, wargearMax, wargearPoints } from './army';
 import { allocationGroups, applyDamage, buildFightPools, buildShootPools, rollSavesAndDamage, startAttack, targetToughness, woundNeed } from './attack';
 import { parseDice } from './dice';
 import { coherencyProblems } from './geometry';
-import { canDetReroll, chargeEligibility, commitCharge, createGame, declareCharge, detReroll, endPhase, fightCandidates, formationAt, maxMoveDistance, placeUnit, rollAdvance, settleMove, validateMove } from './game';
+import { canDetReroll, chargeEligibility, commitCharge, createGame, endPhase, fightCandidates, formationAt, maxMoveDistance, placeUnit, rollAdvance, settleMove, validateMove } from './game';
 import { detChoices, detOnCommandStart, pickDetChoice } from './detachments';
 import type { ArmyList, ArmyUnitEntry, FactionData, GameState, Pt, TerrainPiece } from './types';
 import { parseAbility } from './weapons';

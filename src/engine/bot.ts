@@ -4,12 +4,12 @@ import { botRituals, ritualsPending } from './botRituals';
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from './attack';
 import { RULES } from './config';
 import { smartPlacement } from './deploy';
-import { dist, polyCentroid } from './geometry';
+import { dist } from './geometry';
 import { detChoices, pickDetChoice } from './detachments';
 import {
-  autoApproach, autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
-  declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
-  objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
+  autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitMove, consolidateEligible, consolidateMode,
+  declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, markFought,
+  openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName } from './game';
 import { applyPick } from './blessings';
@@ -26,7 +26,7 @@ import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, lastRoun
 import { actionOptions, startAction } from './missions';
 import { secondaryChance, secondaryDead } from './secondaries';
 import {
-  centre, chargeValue, isBrawler, lockValue, maxRange, meleeKills, moveOf, oc, rangedKills, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
+  centre, isBrawler, lockValue, maxRange, meleeKills, moveOf, oc, rangedKills, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
 import { arrivalStrike, bestArrival, bestFallBack, bestMove, canLeave, ctxFor, movesTowards, planMove, scoreSpot } from './botMove';
 import {
@@ -35,7 +35,6 @@ import {
 import { answerReaction } from './stratagems';
 import type { GameState, PlayerId, Pt, UnitState } from './types';
 
-const stay = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]]));
 
 /** Has the bot already handled this unit in the current phase? */
 function tried(s: GameState, u: UnitState): boolean {

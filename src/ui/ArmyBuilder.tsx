@@ -10,7 +10,7 @@ import { Icon } from './Icon';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { listDisposition, listDispositionOptions } from '../engine/game';
 import { DET_RULES } from '../engine/detachments';
-import { armyColor, DatasheetView, ModelPictures } from './Sheet';
+import { armyColor, DatasheetView } from './Sheet';
 import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';
 import { getPortrait, setPortrait, usePortraitsVersion } from './portraits';
@@ -252,7 +252,6 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const pts = listPoints(list, faction ?? undefined);
   const taxes = useMemo(() => (faction ? dupTaxes(list, faction) : new Map<string, number>()), [list, faction]);
   const ptsOf = (u: ArmyUnitEntry) => unitPoints(u) + (taxes.get(u.uid) ?? 0);
-  const dpUsed = faction ? list.detachments.reduce((a, n) => a + (faction.detachments.find((d) => d.name === n)?.dp ?? 0), 0) : 0;
   const sheetOf = (name: string) => faction?.datasheets.find((d) => d.name === name);
   const factionName = index?.factions.find((f) => f.id === list.factionId)?.name ?? faction?.name ?? list.factionId;
   const subs = faction?.subfactions;
@@ -737,7 +736,6 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const maxHeight = window.innerHeight - top - 8;
     const attach = (charUid: string, bodyUid: string, msg: string) => { setUnit(charUid, { attachTo: bodyUid, embarkIn: undefined }); setNote(msg); close(); };
 
-    /** A unit already in the roster (white): tap to use it. */
     /** The unit picture: tap it to read the datasheet (abilities) before adding. */
     const peekArt = (name: string) => (
       <span className="ab-pop-art" role="button" tabIndex={0} aria-label={`${name} datasheet`} onClick={(e) => { e.stopPropagation(); setPeek(name); }}>
@@ -750,6 +748,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       const led = list.units.filter((c) => c.attachTo === x.uid).map((c) => c.datasheet);
       return host ? `Joined with ${host.datasheet}` : led.length ? `Led by ${led.join(' + ')}` : 'Not joined yet';
     };
+    /** A unit already in the roster (white): tap to use it. */
     const rosterCard = (x: ArmyUnitEntry, onPick: (x: ArmyUnitEntry) => void) => (
       <button key={`has-${x.uid}`} type="button" className="ab-pop-card has" onClick={() => onPick(x)}>
         <span className="ab-pop-card-head">

@@ -164,7 +164,7 @@ export interface Effect {
   chargeNeedEngagedBy?: string; // after Advancing / Falling Back it may only charge units engaged with a unit with this keyword (Sycophantic Surge)
   consolidateEngage?: boolean; // a Consolidation of more than 3" must end engaged (Incessant Violence)
   deepStrikeNear?: { range: number; kw: string }; // Deep Strike: set up wholly within X" of a friendly unit with this keyword (Dark Apparitions)
-  thrill?: boolean; // Thrill Seekers: shoot / charge after Advancing or Falling Back, with its targeting restrictions (thrill.ts)
+  thrill?: boolean; // Thrill Seekers: shoot / charge after Advancing or Falling Back, with its targeting restrictions (emperorsChildren.ts)
   onlyTargetMarked?: string; // after Advancing / Falling Back it may only shoot or charge units with this mark (Heresy Undone: "auspex")
   svSet?: number; // the bearers' Save characteristic is this (Blood-forged Armour: 2+), fixed at Declare Battle Formations
   statM?: number; // fixed change to the bearers' Move characteristic
@@ -798,9 +798,10 @@ export function cond(c: string, x: Ctx): boolean {
     case 'sensationalOk': return sensationalOk(s, A);
     case 'extraAttacksWeapon': return !!x.p && (x.p.abilities ?? []).includes('extra attacks');
     case 'vehicleNotWalker': return hasKw(A, 'VEHICLE') && !hasKw(A, 'WALKER');
-    // a friendly LEGIONS OF EXCESS unit within 6" destroyed an enemy unit this phase (Ecstatic Slaughter)
+    // a friendly LEGIONS OF EXCESS unit within 6" has lost models or wounds (Sustained by Agony has something to bring back)
     case 'loeHurtNear6': return boardUnits(s, A.owner).some((f) => f.factionKeywords.includes('LEGIONS OF EXCESS') && onBoard(f) && unitDistance(A, f) <= 6 + 1e-6 && (f.models.some((m) => m.dead) || alive(f).some((m) => m.wounds < m.profile.W)));
     case 'pledgeBeaten': { const pl = s.players[A.owner].pledge; return !!pl && pl.round === s.round && destroyedThisRound(s, A.owner) > pl.n; }
+    // a friendly LEGIONS OF EXCESS unit within 6" destroyed an enemy unit this phase (Ecstatic Slaughter)
     case 'loeKillNear6': return boardUnits(s, A.owner).some((f) => f.factionKeywords.includes('LEGIONS OF EXCESS') && (f.used ?? {}).killedUnit === phaseKey(s) && unitDistance(A, f) <= 6 + 1e-6);
     case 'sustainedWeapon': return !!x.p && (x.p.abilities ?? []).some((k) => /^sustained hits/.test(k));
     case 'killedModelThisPhase': return (A.used ?? {}).killedModel === phaseKey(s);

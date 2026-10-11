@@ -1,7 +1,7 @@
 // Movement helpers: what a model may pass through, routing around walls / enemy models (A*),
 // and settling a dragged draft into legal end positions (models stop at base contact instead of overlapping).
 import { RULES } from './config';
-import { dist, pointInPoly, pointSegDist, segSegDist } from './geometry';
+import { dist, pointSegDist, segSegDist } from './geometry';
 import { alive, boardUnits, hasKw, onBoard, other } from './state';
 import type { GameState, ModelState, MoveKind, Pt, Seg, UnitState } from './types';
 
@@ -349,7 +349,6 @@ export function settleMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
   const enemies = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive);
   const statics: (Pt & { r: number; id: string })[] = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap(alive);
   const settled: (Pt & { r: number; id: string })[] = alive(u).filter((m) => !movers.includes(m)).map((m) => ({ x: m.x, y: m.y, r: m.r, id: m.id }));
-  const walls = s.terrain.filter((t) => t.walls.length).map((t) => ({ walls: t.walls, blocks: t.category === 'dense' && t.height > 2 }));
   // a charging model that moves at all has to end closer to the charge targets than it started
   const targetModels = kind === 'charge' && opt.targets?.length ? s.units.filter((x) => opt.targets!.includes(x.id)).flatMap(alive) : [];
   // …and may not end engaged with an enemy unit it did not declare

@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { acceptOffer, actsOfUnit, abilityChoices, fire, freeDiceNow, initSagas, manualActs, pickAbilities, resolveRevivals, useActByKey, useFreeDie } from './activations';
+import { acceptOffer, actsOfUnit, fire, freeDiceNow, manualActs, resolveRevivals, useActByKey, useFreeDie } from './activations';
 import { detChoices, pickDetChoice } from './detachments';
 import { buildFightPools, buildShootPools, finishAttack, resolveAll, rollHits, startAttack } from './attack';
 import { abilityRule, effectsFor } from './effects';
-import { commitMove, createGame, endPhase, formationAt, ingressUnit, placeUnit, updateControl, validatePlacement } from './game';
-import { alive, canUseStratagem, spendStratagem, stratCost } from './state';
+import { commitMove, createGame, endPhase, formationAt, placeUnit, updateControl } from './game';
+import { alive } from './state';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -356,11 +356,6 @@ describe('detachment rules added in this round', () => {
     expect(manualActs(d, 1).some((m) => m.def.name === 'Try Dat Button!')).toBe(false);
   });
 });
-
-function initSagasForTest(s: GameState) {
-  // the battle starts: sagas get their targets
-  initSagas(s);
-}
 
 describe('reactions to being attacked', () => {
   it('Bolter Discipline: Intercessors on an objective (or shooting at a unit on one) get +1 to hit', () => {

@@ -921,10 +921,6 @@ details > .strat-card { margin-top: 6px; }
 .atk-result.kill { color: #fbbf24; }
 .atk-result.dead { color: #f87171; text-shadow: 0 0 16px rgba(248, 113, 113, 0.5); }
 .atk-result.none { color: #a5adb5; }
-.atk-luck { padding: 1px 8px; border-radius: 10px; font: 700 11.5px var(--font-ui); text-transform: none; letter-spacing: 0; }
-.atk-luck.up { background: #1f5133; color: #9be3b4; }
-.atk-luck.down { background: #5a1f1c; color: #f7b0a9; }
-.atk-luck.even { background: rgba(255, 255, 255, 0.08); color: #a5adb5; }
 .atk-report.fast .atk-n { font-size: 20px; }
 
 /* the bot's commander: emblem, title, what it says, and the ways of playing the turn it is weighing */
@@ -988,9 +984,6 @@ details > .strat-card { margin-top: 6px; }
 .rc-grid > b { font: 600 13px var(--font-cond); letter-spacing: 0.06em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rc-l { font: 600 11px var(--font-cond); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); }
 .rc-v { font: 700 24px/1 var(--font-cond); }
-.rc-luck { font-size: 13px; color: var(--text-2); }
-.rc-luck.up { color: var(--good); font-weight: 600; }
-.rc-luck.down { color: var(--bad); font-weight: 600; }
 .rc-mvp { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); font-size: 14px; }
 .rc-mvp .icon { color: var(--accent); }
 .rc-tap { font: 500 12px var(--font-ui); color: var(--text-3); text-align: center; }
@@ -1079,7 +1072,6 @@ details > .strat-card { margin-top: 6px; }
 .atk-result { flex: none; justify-content: flex-end; min-height: 0; font-size: 21px; }
 .atk-result small { margin-left: 6px; }
 .atk-result.dead { padding: 0 8px; background: repeating-linear-gradient(-45deg, rgba(229, 55, 43, 0.22) 0 6px, transparent 6px 12px); }
-.atk-luck { align-self: flex-end; border-radius: 2px; }
 
 /* round summary and the end of the battle on a slate */
 .round-card.slate { width: min(100%, 440px); padding: 1px; border-radius: 0; background-color: transparent; color: #e8ebee; box-shadow: none; }
@@ -1088,8 +1080,6 @@ details > .strat-card { margin-top: 6px; }
 .round-card .rc-l { color: #98a1aa; }
 .round-card .rc-grid > b.p0 { color: #8dbcf0; } .round-card .rc-grid > b.p1 { color: #f08c84; }
 .round-card .rc-title.p0 { color: #8dbcf0; } .round-card .rc-title.p1 { color: #f08c84; }
-.round-card .rc-luck { color: #98a1aa; }
-.round-card .rc-luck.up { color: #7fd69e; } .round-card .rc-luck.down { color: #f08c84; }
 .round-card .rc-mvp { border-radius: 0; background: rgba(201, 163, 92, 0.12); border-left: 3px solid #c9a35c; }
 .round-card .rc-mvp .muted { color: #98a1aa; }
 .round-card .rc-mvp b.p0 { color: #8dbcf0; } .round-card .rc-mvp b.p1 { color: #f08c84; }
@@ -1297,7 +1287,6 @@ details > .strat-card { margin-top: 6px; }
   .atk-l { font-size: 10px; }
   .atk-chips { display: none; }
   .atk-result { font-size: 18px; }
-  .atk-luck { font-size: 10.5px; }
 }
 .pill-face { display: inline-grid; place-items: center; width: 26px; height: 26px; flex: none; vertical-align: middle; margin: -4px 2px -4px -6px; }
 .pill-face > * { max-width: 26px; max-height: 26px; }

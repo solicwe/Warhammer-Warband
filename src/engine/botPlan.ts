@@ -3,7 +3,6 @@
 // stays back and shoots) and picks how to play the battle round by round: careful while it leads, risky while it
 // trails, everything onto the objectives in the last turn. botMove.ctxFor reads the job; the movement scoring does
 // the rest.
-import { RULES } from './config';
 import { dist } from './geometry';
 import { alive, boardUnits, hasKw, isEngaged, lastRound, other, pace } from './state';
 import { centre, isBrawler, maxRange, moveOf, objPoint, oc, unitPunch, unitValue } from './botEval';

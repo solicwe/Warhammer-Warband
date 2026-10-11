@@ -803,7 +803,6 @@ onAttackFinished((s, at, info) => {
   }
 });
 
-// deaths: "when a friendly DEATH COMPANY unit is destroyed", "just after an ANCIENT model is destroyed", "your Oath target is destroyed"
 // Emperor's Children: stratagems the bot plays when one of its units wipes out an enemy unit
 onModelKilled((s, u, _m, killerId) => {
   if (alive(u).length || !killerId) return;
@@ -832,6 +831,7 @@ onModelKilled((s, u, _m, killerId) => {
   }
 });
 
+// deaths: "when a friendly DEATH COMPANY unit is destroyed", "just after an ANCIENT model is destroyed", "your Oath target is destroyed"
 onModelKilled((s, u, m, killerId) => {
   const queue = (p: PlayerId, on: ReactOn, ctx: ReactCtx) => {
     if (!reactionOffers(s, p, on, ctx).length) return;

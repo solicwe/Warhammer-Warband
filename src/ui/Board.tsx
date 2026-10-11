@@ -5,12 +5,12 @@ import { dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard } from '../engine/state';
 import { levelOfControl } from '../engine/game';
 import { modelToken } from './Tokens';
-import { getModelPortrait, getPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
+import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { loadoutLabels, shortItem } from './loadout';
 import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import type { SecondaryGoal } from '../engine/secondaries';
-import type { FxEvent, GameState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
+import type { GameState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
 
 export type Paths = Map<string, Pt[]>;
 
@@ -56,7 +56,6 @@ const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
 const COLORS = ['#3a9ad9', '#e0453f'];
 const SOFT = ['rgba(58,154,217,0.16)', 'rgba(224,69,63,0.16)'];
-const TERRAIN_FILL: Record<string, string> = { dense: 'rgba(120,98,72,0.55)', light: 'rgba(150,140,80,0.45)', exposed: 'rgba(90,85,78,0.45)' };
 
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 

@@ -99,7 +99,7 @@ export interface Action {
   log?: string;
   // stratagem actions
   if?: string[]; // only when these conditions hold (on the unit using it; "target…" ones on the other unit)
-  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; n?: number; nWounds?: boolean; dmg?: string; shockIfAny?: number }; // dmg: each success inflicts this many (D3); shockIfAny: a Battle-shock test (this modifier) if any got through // one D6 per model engaged with the target (or n dice): each X+ is a mortal wound
+  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; n?: number; nWounds?: boolean; dmg?: string; shockIfAny?: number }; // one D6 per model engaged with the target (or n dice): each X+ is a mortal wound (dmg: that many each; shockIfAny: then a Battle-shock test with this modifier)
   ldFail?: Effect[]; // the target takes a Leadership test; failed → these effects (until `until`)
   setOath?: boolean; // the target becomes your Oath of Moment target
   pileInRoll?: string; // Pile-in moves up to this many inches (rolled now) this phase
@@ -863,7 +863,7 @@ function unleashHellDue(s: GameState, A: UnitState, force: boolean) {
 
 /** A rule asks for one unit: the bot (or a player on auto rules) takes the most valuable one, a player gets a prompt. */
 function offerPickUnit(s: GameState, holder: UnitState, label: string, units: UnitState[], acts: Action[]) {
-  const auto = (s.bots ?? []).includes(holder.owner) || ((s.autoRules ?? []).includes(holder.owner) && !(s.decides ?? []).includes(holder.owner));
+  const auto = playsItself(s, holder.owner);
   if (auto || units.length === 1 || s.window) { runActions(s, label.split(':')[0], holder, acts, [...units].sort((a, b) => b.pts - a.pts)[0]); return; }
   s.window = { kind: 'pickUnit', player: holder.owner, label, units: units.map((u) => u.id), holderId: holder.id, acts };
 }
@@ -1403,7 +1403,7 @@ onAttackFinished((s, at, info) => {
   if (!holder) return;
   const t = boardUnits(s, T.owner).find((x) => x.transport && alive(T).every((m) => alive(x).some((n) => baseDist(m, n) <= 6 + 1e-6)));
   if (!t) return;
-  const person = !(s.bots ?? []).includes(T.owner) && (s.decides ?? []).includes(T.owner);
+  const person = !playsItself(s, T.owner);
   if (person && s.window) return;
   if (!person && !info.woundsLost) return;
   (holder.used ??= {}).tactician = String(s.turn);

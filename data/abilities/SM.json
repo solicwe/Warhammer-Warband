@@ -9,26 +9,6 @@
    }
   ]
  },
- "Vivispectrum": {
-  "act": {
-   "when": "afterFighting",
-   "auto": true,
-   "needDestroyed": true,
-   "limit": "battle",
-   "do": [
-    {
-     "on": "self",
-     "bearerOnly": true,
-     "buff": [
-      {
-       "ocSet": 9
-      }
-     ],
-     "until": "battle"
-    }
-   ]
-  }
- },
  "Assault Ramp": {
   "effects": [
    {
@@ -187,10 +167,6 @@
    ]
   }
  },
- "LAST SURVIVOR": {
-  "status": "info",
-  "note": "Cannot be the Warlord"
- },
  "Psychic Hood": {
   "effects": [
    {
@@ -199,28 +175,6 @@
      "fnp": 4,
      "fnpVs": "psychic"
     }
-   }
-  ]
- },
- "Veil of Time (Psychic)": {
-  "effects": [
-   {
-    "scope": "led",
-    "abilities": [
-     "sustained hits 1"
-    ]
-   }
-  ]
- },
- "Angel’s Wrath": {
-  "effects": [
-   {
-    "scope": "led",
-    "attack": "melee",
-    "if": [
-     "charged"
-    ],
-    "strength": 1
    }
   ]
  },
@@ -252,22 +206,12 @@
    }
   ]
  },
- "Combat Disembarkation": {
-  "effects": [
-   {
-    "assaultDisembark": true
-   }
-  ]
- },
  "Deployment Complete": {
   "effects": [
    {
     "noEmbark": true
    }
   ]
- },
- "Designer’s Note": {
-  "status": "info"
  },
  "Ballistus Strike": {
   "effects": [
@@ -320,10 +264,6 @@
   "status": "partial",
   "note": "The engine does not yet have full FORTIFICATION rules (shooting a unit engaged with a fortification at −1 to Hit: add the buff manually)"
  },
- "Ceramite Cover": {
-  "status": "partial",
-  "note": "Cover from fortifications works like terrain that does not fully block"
- },
  "Defensive Array": {
   "effects": [
    {
@@ -365,30 +305,6 @@
     "abilities": [
      "sustained hits 1"
     ]
-   }
-  ]
- },
- "Recitation of Faith": {
-  "effects": [
-   {
-    "scope": "led",
-    "defend": {
-     "fnp": 4,
-     "fnpVs": "mortal"
-    }
-   }
-  ]
- },
- "Wisdom of the Ancients (Aura)": {
-  "effects": [
-   {
-    "scope": "aura",
-    "range": 6,
-    "units": [
-     "ADEPTUS ASTARTES",
-     "INFANTRY"
-    ],
-    "reroll": "hits1"
    }
   ]
  },
@@ -435,29 +351,6 @@
   "gear": true,
   "status": "auto",
   "note": "W / invulnerable save per wargear chosen in the list"
- },
- "Shrouding (Psychic)": {
-  "effects": [
-   {
-    "scope": "led",
-    "stealth": true,
-    "defend": {
-     "untargetableBeyond12": true
-    }
-   }
-  ]
- },
- "Unorthodox Strategist (Aura)": {
-  "effects": [
-   {
-    "scope": "enemyAura",
-    "range": 12,
-    "stratTax": {
-     "cp": 1,
-     "limit": "turn"
-    }
-   }
-  ]
  },
  "Master of the Fleet": {
   "act": {
@@ -519,25 +412,6 @@
    }
   ]
  },
- "Incendiary Terror": {
-  "act": {
-   "when": "afterShooting",
-   "auto": true,
-   "target": {
-    "side": "enemy",
-    "hit": true,
-    "hitWeapon": "pyreblaster",
-    "units": [
-     "INFANTRY"
-    ]
-   },
-   "do": [
-    {
-     "shock": -1
-    }
-   ]
-  }
- },
  "Rites of Tempering": {
   "effects": [
    {
@@ -584,20 +458,6 @@
     }
    ]
   }
- },
- "INSPIRING COMMANDER@Iron Father Feirros": {
-  "effects": [
-   {
-    "scope": "army",
-    "units": [
-     "name:Heavy Intercessor Squad"
-    ],
-    "if": [
-     "notCharacterModel"
-    ],
-    "ocSet": 3
-   }
-  ]
  },
  "Omni-scramblers": {
   "act": {
@@ -658,13 +518,6 @@
     }
    ]
   }
- },
- "The Imperium’s Sword": {
-  "effects": [
-   {
-    "rerollCharge": true
-   }
-  ]
  },
  "Brutalis Charge": {
   "act": {
@@ -778,16 +631,6 @@
    }
   ]
  },
- "Ultramarines Bodyguard": {
-  "effects": [
-   {
-    "loneOperative": true,
-    "if": [
-     "near:3:ADEPTUS ASTARTES+INFANTRY"
-    ]
-   }
-  ]
- },
  "Armour of Fate": {
   "act": {
    "when": "onDeath",
@@ -830,25 +673,6 @@
   "effects": [
    {
     "oathBackup": true
-   }
-  ]
- },
- "Supreme Strategist": {
-  "effects": [
-   {
-    "scope": "aura",
-    "range": 12,
-    "units": [
-     "ADEPTUS ASTARTES"
-    ],
-    "stratDiscount": {
-     "ids": [
-      "*"
-     ],
-     "cp": 1,
-     "limit": "round",
-     "perArmy": true
-    }
    }
   ]
  },
@@ -948,24 +772,6 @@
    ]
   }
  },
- "The Quickening (Psychic)": {
-  "effects": [
-   {
-    "eligible": [
-     "chargeAfterAdvance"
-    ]
-   }
-  ]
- },
- "Transfixing Gaze (Aura, Psychic)": {
-  "effects": [
-   {
-    "scope": "enemyAura",
-    "range": 6,
-    "fallBackLdTest": true
-   }
-  ]
- },
  "Aura of Fervour (Aura)": {
   "effects": [
    {
@@ -1059,14 +865,6 @@
      "vs": "melee",
      "woundIfStronger": -1
     }
-   }
-  ]
- },
- "Sanguinary Banner": {
-  "gear": true,
-  "effects": [
-   {
-    "oc": 1
    }
   ]
  },
@@ -1261,22 +1059,6 @@
    ]
   }
  },
- "Engulfing Fear (Psychic)": {
-  "act": {
-   "when": "shooting",
-   "limit": "phase",
-   "target": {
-    "side": "enemy",
-    "range": 18
-   },
-   "label": "Enemies within 18\" take a Battle-shock test",
-   "do": [
-    {
-     "shock": 0
-    }
-   ]
-  }
- },
  "Book of Salvation": {
   "gear": true,
   "effects": [
@@ -1426,18 +1208,6 @@
    ]
   }
  },
- "Guile of the Wolf (Aura)": {
-  "effects": [
-   {
-    "scope": "enemyAura",
-    "range": 12,
-    "stratTax": {
-     "cp": 1,
-     "limit": "turn"
-    }
-   }
-  ]
- },
  "EMBARKING WITHIN TRANSPORTS": {
   "status": "info",
   "note": "Embark rules (capacity per transport data)"
@@ -1477,61 +1247,6 @@
     "attacks": 2
    }
   ]
- },
- "Wind Walker (Psychic)": {
-  "effects": [
-   {
-    "scope": "led",
-    "attack": "ranged",
-    "abilities": [
-     "assault"
-    ]
-   },
-   {
-    "scope": "led",
-    "advanceSix": true
-   }
-  ]
- },
- "Tempest’s Wrath (Psychic)": {
-  "act": {
-   "when": "afterShooting",
-   "auto": true,
-   "target": {
-    "side": "enemy",
-    "hit": true,
-    "hitWeapon": "Living Lightning",
-    "units": [
-     "!MONSTER",
-     "!VEHICLE"
-    ]
-   },
-   "do": [
-    {
-     "buff": [
-      {
-       "rangeMinus": 6
-      }
-     ],
-     "until": "nextTurnStart",
-     "mark": "stormwracked"
-    }
-   ]
-  }
- },
- "Slayer’s Oath": {
-  "note": "The engine selects the keyword (the one with the most enemy points) · destroying a unit with that keyword = this unit gains the completed Saga's effect",
-  "act": {
-   "when": "battleStart",
-   "auto": true,
-   "limit": "battle",
-   "do": [
-    {
-     "on": "self",
-     "setSlayer": true
-    }
-   ]
-  }
  },
  "Oathbound": {
   "effects": [
@@ -1662,29 +1377,6 @@
    }
   ]
  },
- "Murder-maker (Aura)": {
-  "effects": [
-   {
-    "scope": "aura",
-    "range": 6,
-    "units": [
-     "name:Wulfen|name:Wulfen with Storm Shields"
-    ],
-    "if": [
-     "fightPhase"
-    ],
-    "fightOnDeath": 4
-   }
-  ]
- },
- "Bestial Fury": {
-  "effects": [
-   {
-    "rerollAdvance": true,
-    "rerollCharge": true
-   }
-  ]
- },
  "FORCE OF UNTAMED DESTRUCTION": {
   "status": "info",
   "note": "Cannot be the Warlord"
@@ -1782,26 +1474,6 @@
    }
   ]
  },
- "Combat Support": {
-  "act": {
-   "when": "friendlyTargeted",
-   "auto": true,
-   "limit": "turn",
-   "per": "army",
-   "range": 6,
-   "deathUnits": [
-    "ADEPTUS ASTARTES",
-    "PHOBOS",
-    "INFANTRY"
-   ],
-   "do": [
-    {
-     "on": "self",
-     "shootBack": true
-    }
-   ]
-  }
- },
  "Objective Secured": {
   "act": {
    "when": "commandEnd",
@@ -1813,37 +1485,6 @@
     {
      "on": "self",
      "secure": true
-    }
-   ]
-  }
- },
- "Hail of Bolts": {
-  "effects": [
-   {
-    "weapon": "Bolt rifle",
-    "attack": "ranged",
-    "if": [
-     "ownShooting"
-    ],
-    "attacks": 2
-   }
-  ]
- },
- "Outrider Escort": {
-  "act": {
-   "when": "friendlyTargeted",
-   "auto": true,
-   "limit": "turn",
-   "per": "army",
-   "range": 6,
-   "deathUnits": [
-    "ADEPTUS ASTARTES",
-    "MOUNTED"
-   ],
-   "do": [
-    {
-     "on": "self",
-     "shootBack": true
     }
    ]
   }
@@ -1939,26 +1580,6 @@
    }
   ]
  },
- "Deeds of Heroism": {
-  "act": {
-   "when": "selectedToFight",
-   "limit": "battle",
-   "botUse": "valuable",
-   "label": "+1 A for the whole unit",
-   "do": [
-    {
-     "on": "self",
-     "buff": [
-      {
-       "attack": "melee",
-       "attacks": 1
-      }
-     ],
-     "until": "phase"
-    }
-   ]
-  }
- },
  "Refuse to Yield": {
   "effects": [
    {
@@ -2038,21 +1659,6 @@
    }
   ]
  },
- "Decimator Protocols": {
-  "effects": [
-   {
-    "attack": "ranged",
-    "reroll": "hits1"
-   },
-   {
-    "attack": "ranged",
-    "if": [
-     "targetOnObjective"
-    ],
-    "reroll": "hits"
-   }
-  ]
- },
  "Tactical Precision": {
   "effects": [
    {
@@ -2062,10 +1668,6 @@
    }
   ]
  },
- "Deadly Terror": {
-  "status": "auto",
-  "note": "Increase Terror Troops range to 6\" (handled in Terror Troops)"
- },
  "Target Priority": {
   "effects": [
    {
@@ -2073,21 +1675,6 @@
      "shootAfterFallBack",
      "chargeAfterFallBack"
     ]
-   }
-  ]
- },
- "Shock Assault": {
-  "effects": [
-   {
-    "attack": "melee",
-    "reroll": "wounds1"
-   },
-   {
-    "attack": "melee",
-    "if": [
-     "targetOnObjective"
-    ],
-    "reroll": "wounds"
    }
   ]
  },
@@ -2113,42 +1700,6 @@
    }
   ]
  },
- "Master of Prescience (Psychic)": {
-  "effects": [
-   {
-    "stealth": true,
-    "defend": {
-     "vs": "melee",
-     "hit": -1
-    }
-   },
-   {
-    "stratDiscount": {
-     "ids": [
-      "counteroffensive",
-      "fire-overwatch",
-      "heroic-intervention"
-     ],
-     "cp": 1,
-     "limit": "round",
-     "perArmy": true
-    }
-   }
-  ]
- },
- "Rotating Death": {
-  "effects": [
-   {
-    "weapon": "onslaught gatling cannon",
-    "if": [
-     "targetInfantry"
-    ],
-    "abilities": [
-     "sustained hits 2"
-    ]
-   }
-  ]
- },
  "Reaping Tally": {
   "effects": [
    {
@@ -2157,48 +1708,6 @@
      "targetNotMV"
     ],
     "ap": 1
-   }
-  ]
- },
- "Reposition Under Covering Fire": {
-  "act": {
-   "when": "afterShootingButton",
-   "limit": "phase",
-   "if": [
-    "hasWeapon:Instigator bolt carbine"
-   ],
-   "label": "Make a Normal move after shooting (cannot charge)",
-   "do": [
-    {
-     "on": "self",
-     "move": "M",
-     "noCharge": true
-    }
-   ]
-  }
- },
- "Mark the Target": {
-  "effects": [
-   {
-    "attack": "ranged",
-    "if": [
-     "stationary"
-    ],
-    "abilities": [
-     "devastating wounds"
-    ]
-   }
-  ]
- },
- "Ferocious Assault": {
-  "effects": [
-   {
-    "weapon": "las-talon",
-    "if": [
-     "targetMV",
-     "targetClosest"
-    ],
-    "hit": 1
    }
   ]
  },
@@ -2238,17 +1747,6 @@
   "effects": [
    {
     "shootOnDeath": 3
-   }
-  ]
- },
- "Close-quarters Firepower": {
-  "effects": [
-   {
-    "attack": "ranged",
-    "if": [
-     "targetClosest"
-    ],
-    "ap": 1
    }
   ]
  },
@@ -2310,20 +1808,6 @@
    ]
   }
  },
- "INSPIRING COMMANDER@Darnath Lysander": {
-  "effects": [
-   {
-    "scope": "army",
-    "units": [
-     "name:Terminator Assault Squad|name:Terminator Squad"
-    ],
-    "if": [
-     "notCharacterModel"
-    ],
-    "ocSet": 2
-   }
-  ]
- },
  "Signum": {
   "effects": [
    {
@@ -2344,26 +1828,6 @@
    "limit": "battle"
   }
  },
- "Sternguard Focus": {
-  "effects": [
-   {
-    "if": [
-     "targetOath"
-    ],
-    "reroll": "wounds"
-   }
-  ]
- },
- "Mental Fortress (Psychic)": {
-  "effects": [
-   {
-    "scope": "led",
-    "defend": {
-     "inv": 4
-    }
-   }
-  ]
- },
  "Targeter Optics": {
   "effects": [
    {
@@ -2371,20 +1835,6 @@
     "abilities": [
      "ignores cover"
     ]
-   }
-  ]
- },
- "Visions of Heresy": {
-  "effects": [
-   {
-    "rerollCharge": true,
-    "stratDiscount": {
-     "ids": [
-      "fire-overwatch",
-      "heroic-intervention"
-     ],
-     "cp": 1
-    }
    }
   ]
  },
@@ -2503,23 +1953,6 @@
    }
   ]
  },
- "Strategic Dispersal": {
-  "act": {
-   "when": "afterShootingButton",
-   "limit": "phase",
-   "if": [
-    "notEngaged"
-   ],
-   "label": "Move 6\" after shooting (cannot charge)",
-   "do": [
-    {
-     "on": "self",
-     "move": "6",
-     "noCharge": true
-    }
-   ]
-  }
- },
  "Assault Vehicle": {
   "effects": [
    {
@@ -2527,46 +1960,10 @@
    }
   ]
  },
- "Orbital Comms Array (Aura)": {
-  "gear": true,
-  "effects": [
-   {
-    "scope": "aura",
-    "range": 6,
-    "units": [
-     "ADEPTUS ASTARTES"
-    ],
-    "stratCpChance": 5
-   }
-  ]
- },
  "Shield Dome": {
   "gear": true,
   "status": "auto",
   "note": "5+ invulnerable save (per wargear chosen in the list)"
- },
- "Keep the Banner High": {
-  "effects": [
-   {
-    "scope": "led",
-    "if": [
-     "belowStarting"
-    ],
-    "hit": 1
-   },
-   {
-    "scope": "led",
-    "if": [
-     "belowHalf"
-    ],
-    "wound": 1
-   }
-  ]
- },
- "Terminator Storm Shield": {
-  "gear": true,
-  "status": "auto",
-  "note": "W6 (per wargear chosen in the list)"
  },
  "Primarch of the First Legion": {
   "choice": {
@@ -2579,16 +1976,6 @@
     "Fealty to the Lion"
    ]
   }
- },
- "The Emperor’s Shield": {
-  "effects": [
-   {
-    "scope": "model",
-    "defend": {
-     "woundIfStronger": -1
-    }
-   }
-  ]
  },
  "Dark Angels Bodyguard": {
   "effects": [
@@ -2651,24 +2038,6 @@
   "status": "auto",
   "note": "After deployment: redeploy up to 3 INFANTRY units (set up again or place into Reserves)"
  },
- "Annihilator Protocols": {
-  "effects": [
-   {
-    "attack": "melee",
-    "if": [
-     "targetMVF"
-    ],
-    "abilities": [
-     "sustained hits 2"
-    ]
-   }
-  ]
- },
- "Centurion Assault Launcher": {
-  "gear": true,
-  "status": "info",
-  "note": "Gains the GRENADES keyword"
- },
  "Aquilon Optics": {
   "freeDie": [
    {
@@ -2708,36 +2077,6 @@
    }
   ]
  },
- "Silent Fury": {
-  "act": {
-   "when": "afterFighting",
-   "auto": true,
-   "needCharacterKill": true,
-   "do": [
-    {
-     "on": "self",
-     "bearerOnly": true,
-     "buff": [
-      {
-       "weapon": "executioner relic blade",
-       "attacks": 1
-      }
-     ],
-     "until": "battle"
-    }
-   ]
-  }
- },
- "Shadowmaster": {
-  "effects": [
-   {
-    "scope": "led",
-    "defend": {
-     "untargetableBeyond12": true
-    }
-   }
-  ]
- },
  "Echo of the Ravenspire": {
   "act": {
    "when": "opponentFightEnd",
@@ -2753,20 +2092,6 @@
     }
    ]
   }
- },
- "INSPIRING COMMANDER@Kayvaan Shrike": {
-  "effects": [
-   {
-    "scope": "army",
-    "units": [
-     "name:Assault Intercessors With Jump Packs"
-    ],
-    "if": [
-     "notCharacterModel"
-    ],
-    "ocSet": 2
-   }
-  ]
  },
  "For the Khan!": {
   "effects": [
@@ -2797,20 +2122,6 @@
    }
   ]
  },
- "INSPIRING COMMANDER@Kor’sarro Khan": {
-  "effects": [
-   {
-    "scope": "army",
-    "units": [
-     "name:Outrider Squad"
-    ],
-    "if": [
-     "notCharacterModel"
-    ],
-    "ocSet": 3
-   }
-  ]
- },
  "Purgation Run": {
   "act": {
    "when": "afterShootingButton",
@@ -2821,37 +2132,6 @@
      "on": "self",
      "move": "D6",
      "noCharge": true
-    }
-   ]
-  }
- },
- "Thunderous Impact": {
-  "effects": [
-   {
-    "attack": "melee",
-    "if": [
-     "charged"
-    ],
-    "strength": 1,
-    "damage": 1
-   }
-  ]
- },
- "Oath of Rynn": {
-  "act": {
-   "when": "anyCommand",
-   "limit": "battle",
-   "botUse": "valuable",
-   "label": "+1 A to the unit's weapons until end of turn",
-   "do": [
-    {
-     "on": "self",
-     "buff": [
-      {
-       "attacks": 1
-      }
-     ],
-     "until": "turn"
     }
    ]
   }
@@ -2871,24 +2151,6 @@
      "belowHalf"
     ],
     "wound": 1
-   }
-  ]
- },
- "CRIMSON FISTS": {
-  "status": "info",
-  "note": "Counts as Imperial Fists"
- },
- "INSPIRING COMMANDER@Pedro Kantor": {
-  "effects": [
-   {
-    "scope": "army",
-    "units": [
-     "name:Sternguard Veteran Squad"
-    ],
-    "if": [
-     "notCharacterModel"
-    ],
-    "ocSet": 2
    }
   ]
  },
@@ -2952,14 +2214,6 @@
   "gear": true,
   "status": "info",
   "note": "The 2D board has no vertical distance anyway"
- },
- "Reiver Grav-chute": {
-  "gear": true,
-  "effects": [
-   {
-    "deepStrike": true
-   }
-  ]
  },
  "Emergency Combat Embarkation": {
   "status": "auto",
@@ -3028,39 +2282,6 @@
     }
    }
   ]
- },
- "INSPIRING COMMANDER@Vulkan He’stan": {
-  "effects": [
-   {
-    "scope": "army",
-    "units": [
-     "name:Infernus Squad"
-    ],
-    "if": [
-     "notCharacterModel"
-    ],
-    "ocSet": 2
-   }
-  ]
- },
- "Pinning Bombardment": {
-  "act": {
-   "when": "afterShooting",
-   "auto": true,
-   "target": {
-    "side": "enemy",
-    "hit": true,
-    "hitWeapon": "vengeance launcher",
-    "units": [
-     "INFANTRY"
-    ]
-   },
-   "do": [
-    {
-     "shock": 0
-    }
-   ]
-  }
  },
  "Savage Fury": {
   "effects": [
@@ -3137,36 +2358,6 @@
    }
   ]
  },
- "Gene-seed Recovery": {
-  "act": {
-   "when": "onDeath",
-   "auto": true,
-   "roll": "D6",
-   "table": [
-    {
-     "min": 2,
-     "do": [
-      {
-       "cp": 1
-      }
-     ]
-    }
-   ]
-  }
- },
- "Unbreakable Duty": {
-  "effects": [
-   {
-    "scope": "model",
-    "if": [
-     "centreOrObjective"
-    ],
-    "defend": {
-     "fnp": 4
-    }
-   }
-  ]
- },
  "Hammer of Wrath": {
   "act": {
    "when": "endOfCharge",
@@ -3185,17 +2376,6 @@
     ]
    }
   }
- },
- "Interception Strike": {
-  "effects": [
-   {
-    "attack": "ranged",
-    "if": [
-     "targetNearFriendlyAA12"
-    ],
-    "reroll": "hits"
-   }
-  ]
  },
  "Stabilised Disembarkation": {
   "status": "auto",
@@ -3233,13 +2413,6 @@
    {
     "advanceBonus": 1,
     "chargeBonus": 1
-   }
-  ]
- },
- "Column from the Major Altar": {
-  "effects": [
-   {
-    "toughness": 1
    }
   ]
  },
@@ -3358,43 +2531,6 @@
    }
   ]
  },
- "Sigismund’s Heir": {
-  "effects": [
-   {
-    "if": [
-     "enemyCharacterWithin12"
-    ],
-    "rerollCharge": true
-   }
-  ],
-  "act": {
-   "when": "selectedToFight",
-   "limit": "battle",
-   "per": "army",
-   "if": [
-    "engagedWithCharacter"
-   ],
-   "label": "[DEVASTATING WOUNDS] (attacks against CHARACTER)",
-   "do": [
-    {
-     "on": "self",
-     "buff": [
-      {
-       "attack": "melee",
-       "abilities": [
-        "devastating wounds"
-       ]
-      }
-     ],
-     "until": "phase"
-    }
-   ]
-  }
- },
- "CHOSEN OF THE EMPEROR": {
-  "status": "info",
-  "note": "Only one Emperor's Champion"
- },
  "Inspirational Exemplar": {
   "effects": [
    {
@@ -3477,16 +2613,6 @@
      "vs": "melee",
      "hit": -1
     }
-   }
-  ]
- },
- "Enmity for the Unworthy": {
-  "effects": [
-   {
-    "if": [
-     "targetCharacter"
-    ],
-    "hit": 1
    }
   ]
  },
@@ -3727,44 +2853,12 @@
    ]
   }
  },
- "Virtuous Onslaught": {
-  "effects": [
-   {
-    "if": [
-     "targetClosest"
-    ],
-    "reroll": "wounds1"
-   }
-  ]
- },
  "Judgement of the Weak": {
   "effects": [
    {
     "forceDesperate": true
    }
   ]
- },
- "Legacy of Jerulas": {
-  "act": {
-   "when": "afterShooting",
-   "auto": true,
-   "target": {
-    "side": "enemy",
-    "hit": true
-   },
-   "do": [
-    {
-     "incoming": {
-      "reroll": [
-       "hits1",
-       "wounds1"
-      ]
-     },
-     "fromThisTransport": true,
-     "until": "turn"
-    }
-   ]
-  }
  },
  "Master of Shadows": {
   "act": {
@@ -3802,10 +2896,6 @@
     }
    }
   ]
- },
- "CHAPTER MASTER OF THE RAVEN GUARD": {
-  "status": "info",
-  "note": "Adjust Shrike's keywords when Aethon Shaan is included"
  },
  "Cold and Calculating": {
   "effects": [
@@ -3890,18 +2980,6 @@
      "targetIsolated"
     ],
     "wound": 1
-   }
-  ]
- },
- "Inspiring Leader": {
-  "effects": [
-   {
-    "eligible": [
-     "shootAfterAdvance",
-     "shootAfterFallBack",
-     "chargeAfterAdvance",
-     "chargeAfterFallBack"
-    ]
    }
   ]
  },
@@ -3991,19 +3069,6 @@
    ]
   }
  },
- "Ultramarines Honour Guard": {
-  "effects": [
-   {
-    "scope": "bodyguardLed",
-    "if": [
-     "leader:Captain|Chapter Master|Calgar|Titus|Sicarius|Guilliman"
-    ],
-    "defend": {
-     "wound": -1
-    }
-   }
-  ]
- },
  "Glory of Ultramar": {
   "act": {
    "when": "shotByEnemy",
@@ -4086,35 +3151,9 @@
    }
   ]
  },
- "DEMETRIAN TITUS": {
-  "status": "info",
-  "note": "Only one Titus unit"
- },
- "Second Company Banner": {
-  "effects": [
-   {
-    "if": [
-     "contains:Gadriel"
-    ],
-    "oc": 1
-   },
-   {
-    "if": [
-     "contains:Gadriel",
-     "contains:Titus"
-    ],
-    "ld": 1
-   }
-  ]
- },
  "Strategium Command": {
   "status": "auto",
   "note": "After deployment: redeploy up to 3 units (set up again or place into Reserves)"
- },
- "Refractor Field": {
-  "gear": true,
-  "status": "auto",
-  "note": "5+ invulnerable save (per wargear chosen in the list)"
  },
  "Curse of the Wulfen": {
   "effects": [
@@ -4145,19 +3184,6 @@
  "Templar Vows": {
   "status": "auto",
   "note": "Automated: select a Vow in the first Command phase (Black Templars)"
- },
- "Overlapping Detonations": {
-  "effects": [
-   {
-    "weapon": "heavy bolter",
-    "if": [
-     "targetNotMV"
-    ],
-    "abilities": [
-     "blast 1"
-    ]
-   }
-  ]
  },
  "Assigned Agents": {
   "status": "info",

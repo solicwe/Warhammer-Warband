@@ -461,8 +461,6 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     attackerBuffsAtStart: A.buffs.map((b) => b.kind), free: opts.free,
     timedAtStart: { a: A.timed?.length ?? 0, t: T.timed?.length ?? 0 },
   };
-  // what the attack should do on average dice: the screen sets the real result against it (the player's luck)
-  try { if (alive(T).length) s.attack.expected = pools.reduce((a, p) => a + expectedDamage(s, p, T).models, 0); } catch { /* no estimate */ }
   // Nightforged Battery: ranged weapons re-roll a low number of attacks for free
   if (kind === 'shoot' && unitFlags(s, A).rerollAttackRolls) {
     for (const p of s.attack.pools) for (const r of p.attackRolls ?? []) {
@@ -828,7 +826,6 @@ export function applyMortalWounds(s: GameState, u: UnitState, n: number, source:
 export function rollSavesAndDamage(s: GameState) {
   const at = s.attack!;
   const p = at.pools[at.idx];
-  const T = unitById(s, at.targetId);
   const devCrits = p.devastating ? p.wounds.filter((d) => d.o === 'critWound').length : 0;
   const normal = p.wounds.filter((d) => d.o === 'wound' || (d.o === 'critWound' && !p.devastating)).length + p.autoWounds;
   p.saves = rollN(s, normal).map((v) => ({ v, o: 'pass' }));
@@ -990,11 +987,9 @@ export function finishAttack(s: GameState) {
       wounds: at.pools.reduce((a, p) => a + p.wounds.filter((w) => w.o === 'wound' || w.o === 'critWound').length + p.autoWounds, 0),
       unsaved: at.pools.reduce((a, p) => a + p.saves.filter((d) => d.o === 'fail').length + p.mortalFromDev.length, 0),
       mortals: at.pools.reduce((a, p) => a + p.mortalFromDev.reduce((x, y) => x + y, 0), 0),
-      dmg, before: at.aliveBefore.length, killed: dead.length, destroyed: !alive(T).length, pts, expected: at.expected ?? 0, chips: attackChips(at.pools),
+      dmg, before: at.aliveBefore.length, killed: dead.length, destroyed: !alive(T).length, pts, chips: attackChips(at.pools),
     };
-    const st = (s.stats ??= { kills: [], luck: [[0, 0], [0, 0]] });
-    st.luck[A.owner][0] += dead.length;
-    st.luck[A.owner][1] += at.expected ?? 0;
+    const st = (s.stats ??= { kills: [] });
     if (dead.length) st.kills.push({ round: s.round, turn: s.turn, by: A.owner, attackerId: A.id, targetId: T.id, models: dead.length, pts, destroyed: !alive(T).length });
     pushFx(s, {
       kind: 'attack', attackKind: at.kind, attackerId: A.id, targetId: T.id, owner: A.owner, from: c(alive(A).length ? alive(A) : A.models), to: c(tm), dmg, killed: dead.length, dead: dead.map(pt),

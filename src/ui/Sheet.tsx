@@ -5,7 +5,7 @@ import { abilitiesOf, abilityLabel } from '../engine/weapons';
 import { Portrait, tokenKind, type TokenKind } from './Tokens';
 import { modelPortraitKey, usePastePortrait } from './portraits';
 import { datasheetVariants, pictureVariants, type PictureVariant } from './loadout';
-import { Icon, type IconName } from './Icon';
+import { Icon } from './Icon';
 import { useState, type ReactNode } from 'react';
 import { Em } from './Em';
 
@@ -65,7 +65,6 @@ function Weapons({ weapons }: { weapons: WeaponData[] }) {
 }
 
 const ST_LABEL: Record<AbilityStatus, string> = { auto: 'Automated', partial: 'Partly automated', manual: 'Manual', info: 'Info', none: 'Not automated', core: '' };
-const ST_ICON: Partial<Record<AbilityStatus, IconName>> = { auto: 'check', partial: 'partial', manual: 'hand', none: 'hand' };
 
 /** Badge saying whether the app plays this ability by itself. */
 function AbilityBadge({ u, a }: { u: UnitState; a: AbilityData }) {

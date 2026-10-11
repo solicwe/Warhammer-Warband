@@ -829,22 +829,8 @@
   ]
  },
  "Accomplished Tactician": {
-  "act": {
-   "when": "shotByEnemy",
-   "limit": "turn",
-   "target": {
-    "side": "friendly",
-    "range": 9,
-    "ctxUnit": true
-   },
-   "botUse": "damaged",
-   "label": "Embark a unit that was hit into a Transport within 6\"",
-   "do": [
-    {
-     "embarkNear": 6
-    }
-   ]
-  }
+  "status": "auto",
+  "note": "activations.ts: a unit near the bearer that was hit embarks within a transport it is wholly within 6\" of"
  },
  "Heretek Adept": {
   "effects": [

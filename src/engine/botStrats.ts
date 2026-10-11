@@ -15,13 +15,13 @@ import {
 } from './game';
 import { addTimed, applyLateEffects, targetHasCover, unitFlags, withRuleCache } from './effects';
 import { botFightOnDeath } from './botPlus';
-import { alive, boardUnits, canUseStratagem, hasKw, isEngaged, lastRound, log, other, pace, spendStratagem, stratCost, unitById, unitDistance } from './state';
+import { alive, boardUnits, canUseStratagem, hasKw, isEngaged, lastRound, log, other, pace, playsItself, spendStratagem, stratCost, unitById, unitDistance } from './state';
 import { applyDetachmentStratagem, stratagemBlock, stratChoices, stratRule, withChoice, type StratRule } from './stratagems';
 import { unitVisibleTo } from './visibility';
 import type { AttackSession, GameState, PlayerId, StratagemData, TimedEffect, UnitState } from './types';
 
 /** Does the bot's logic take this player's decisions (a bot, or a player on auto rules)? */
-export const isBot = (s: GameState, p: PlayerId) => (s.bots ?? (s.botPlayer != null ? [s.botPlayer] : [])).includes(p) || ((s.autoRules ?? []).includes(p) && !(s.decides ?? []).includes(p));
+export const isBot = (s: GameState, p: PlayerId) => (s.botPlayer != null && !s.bots && s.botPlayer === p) || playsItself(s, p);
 
 /** Can the bot afford this now and still keep a CP for a re-roll (until the last round)? */
 const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= lastRound(s) ? 0 : 1) => s.players[p].cp - cost >= keep;

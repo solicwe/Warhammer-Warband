@@ -23,7 +23,7 @@ import {
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
   pileDistance, endRedeploy, redeployCandidates, redeployUnit } from '../engine/game';
 import {
-  abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
+  abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../engine/activations';
 import { activeLabels, effectsFor, isRiled, unitFlags, withRuleCache, type Effect } from '../engine/effects';
 import { activeIds, applyPick, BLESSINGS, blessingById, rerollBlessings } from '../engine/blessings';
@@ -46,7 +46,7 @@ import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponName
 import { polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../engine/deploy';
 import {
-  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, stratCost, strength, unitById, unitDistance,
+  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from '../engine/state';
 import type { BuffKind, GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
 import { hasCover, hasLos, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
@@ -132,6 +132,7 @@ function fxTags(e: Effect): [string, boolean][] {
   if (e.critHitOn) o.push([`Crit hit ${e.critHitOn}+`, true]);
   return o;
 }
+const PACT_BONUSES = 'Pact bonuses: 1+ re-roll Hit 1s · 3+ re-roll Wound 1s · 5+ [LETHAL HITS] + [SUSTAINED HITS 1] in melee · 7+ Critical Hits on 5+';
 const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
   'hit+1': ['+1 Hit', true], 'hit-1': ['−1 Hit', false], 'wound+1': ['+1 Wound', true], 'wound-1': ['−1 Wound', false],
   rerollHits1: ['Re-roll Hit 1s', true], rerollHits: ['Re-roll Hits', true], rerollWounds1: ['Re-roll Wound 1s', true], rerollWounds: ['Re-roll Wounds', true],
@@ -146,8 +147,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const bots: PlayerId[] = s.bots ?? (s.botPlayer != null ? [s.botPlayer] : []);
   const spectate = bots.length === 2;
   const actingBot = bots.find((b) => botShouldAct(s, b)) ?? null;
-  // the bot that matters for labels: the one acting now, else the single bot
-  const bot: PlayerId | null = actingBot ?? (bots.length === 1 ? bots[0] : null);
   const [speed, setSpeed] = useState<0 | 1 | 2>(1); // bot-vs-bot: pause / normal / fast
   // the player hurries the bot's turn along: shorter pauses between its steps, results-only reports
   const [rush, setRush] = useState(false);
@@ -192,7 +191,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   // single-player: let the bot take its steps one at a time so the board animates; caption what it just did
   const [botSays, setBotSays] = useState<string | null>(null);
-  const [botWho, setBotWho] = useState<PlayerId | null>(null);
   const [rolling, setRolling] = useState(false); // a big dice roll is on screen: the bot waits for it
   // the bot looks ahead (plays its turn a few ways on copies) in a worker; the main thread never rolls out itself
   const [thinking, setThinking] = useState(false);
@@ -308,7 +306,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const delay = (quick ? 350 : 950) / (spectate && speed === 2 ? 3 : 1) / (rush ? 5 : 1);
     const caption = (before: GameState, after: GameState) => {
       const fresh = after.log.slice(before.log.length).filter((e) => e.kind !== 'roll' || /charge|Advance/i.test(e.text));
-      if (fresh.length) { setBotSays(fresh[fresh.length - 1].text); setBotWho(fresh[fresh.length - 1].player); }
+      if (fresh.length) { setBotSays(fresh[fresh.length - 1].text); }
     };
     const onMain = () => {
       const before = sRef.current;
@@ -409,7 +407,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       });
       if (said) {
         const msg = `Auto: ${said}`;
-        setBotSays(msg); setBotWho(autoWho);
+        setBotSays(msg);
         window.setTimeout(() => setBotSays((x) => (x === msg ? null : x)), 2600);
       }
     }, s.phase === 'fight' ? 700 : 300);
@@ -1086,7 +1084,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <>
           <div className="handoff">{pName(s, p)}: Pledges to the Dark Prince</div>
           <div className="tiny muted">How many enemy units will be destroyed this battle round? Kept: that many Pact points (now {pp}). Broken: your Warlord suffers D3 mortal wounds.</div>
-          <div className="tiny muted">Pact bonuses: 1+ re-roll Hit 1s · 3+ re-roll Wound 1s · 5+ [LETHAL HITS] + [SUSTAINED HITS 1] in melee · 7+ Critical Hits on 5+</div>
+          <div className="tiny muted">{PACT_BONUSES}</div>
           <div className="row wrap">{Array.from({ length: w.max + 1 }, (_, n) => <button key={n} type="button" className={`btn ${n === botPledge(s, p) ? 'primary' : ''}`} onClick={() => act((g) => setPledge(g, p, n))}>{n}</button>)}</div>
         </>
       );
@@ -2112,7 +2110,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               return <button key={`${p}${id}`} type="button" className={`p${p}`} onClick={() => flash(`${b.name}: ${b.text}`)}>{b.name} <span className="muted">{b.short}</span></button>;
             }))}
             {([0, 1] as PlayerId[]).filter((p) => s.players[p].pledge?.round === s.round || s.players[p].pactPoints).map((p) => (
-              <button key={`pact${p}`} type="button" className={`p${p}`} onClick={() => flash('Pact bonuses: 1+ re-roll Hit 1s · 3+ re-roll Wound 1s · 5+ [LETHAL HITS] + [SUSTAINED HITS 1] in melee · 7+ Critical Hits on 5+')}>
+              <button key={`pact${p}`} type="button" className={`p${p}`} onClick={() => flash(PACT_BONUSES)}>
                 {s.players[p].pledge?.round === s.round ? `Pledge ${s.players[p].pledge!.n} · ` : ''}Pact {s.players[p].pactPoints ?? 0}
               </button>
             ))}

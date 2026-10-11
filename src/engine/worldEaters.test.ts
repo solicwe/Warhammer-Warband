@@ -33,7 +33,7 @@ describe('Blessings of Khorne', () => {
     const ids = s.players[0].blessings?.ids ?? [];
     const zerk = s.units.find((u) => u.owner === 0 && u.sources[0] === 'Khorne Berzerkers')!;
     const labels = effectsFor(s, zerk).map((a) => a.label);
-    for (const id of ids) expect(labels.some((l) => /Bloodlust|Invigoration|Carnage|Excellence|Warp|Decapitating/.test(l))).toBe(true);
+    if (ids.length) expect(labels.some((l) => /Bloodlust|Invigoration|Carnage|Excellence|Warp|Decapitating/.test(l))).toBe(true);
     // a player who decides gets the choice
     const s2 = game(weList('Berzerker Warband'));
     blessingsRoll(s2, 0);

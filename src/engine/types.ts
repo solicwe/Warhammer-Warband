@@ -501,8 +501,6 @@ export interface AttackSession {
   defenderRolls?: boolean;
   /** how many timed effects each side had when the attack was declared (later ones are applied before the rolls) */
   timedAtStart?: { a: number; t: number };
-  /** models the attack was expected to destroy, on average dice (for the luck shown to the player) */
-  expected?: number;
 }
 
 /** Visual events for the board (animations). Not rules state; capped to the last few. */
@@ -540,8 +538,9 @@ export type Window =
   | { kind: 'counteroffensive'; player: PlayerId }
   /** abilities that let units react out of turn ("if an enemy unit ends a move within 8\", this unit can make a Normal move") */
   | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
-  /** Blessings of Khorne: the dice rolled and the ways to use them; the player picks one (or none) */
+  /** Coterie of the Conceited: the player pledges how many enemy units the army will destroy this battle round */
   | { kind: 'pledge'; player: PlayerId; max: number }
+  /** Blessings of Khorne: the dice rolled and the ways to use them; the player picks one (or none) */
   | { kind: 'blessings'; player: PlayerId; dice: number[]; picks: import('./blessings').BlessingPick[]; extra?: { label: string; kw?: string; until: 'phase' | 'round' }; rerolls?: number; rerollFrom?: string }
   /** a rule asks the player to pick one unit ("select one enemy unit hit by those attacks"); `acts` go to it */
   | { kind: 'pickUnit'; player: PlayerId; label: string; units: string[]; holderId: string; acts: import('./activations').Action[] }
@@ -582,16 +581,12 @@ export interface AttackReport {
   destroyed: boolean;
   /** points of the target's unit destroyed by this attack */
   pts: number;
-  /** models it was expected to destroy (average dice) */
-  expected: number;
   chips: { stage: 'attacks' | 'hit' | 'wound' | 'save'; label: string }[];
 }
 
 /** The battle so far, for the round and end-of-battle summaries. */
 export interface BattleStats {
   kills: { round: number; turn: number; by: PlayerId; attackerId: string; targetId: string; models: number; pts: number; destroyed: boolean }[];
-  /** per player: models destroyed by its attacks, and models it was expected to destroy (its luck) */
-  luck: [[number, number], [number, number]];
 }
 
 export interface GameState {

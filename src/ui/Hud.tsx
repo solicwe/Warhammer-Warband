@@ -127,7 +127,7 @@ export function Commander({ s, p, says, think, planning, quiet }: { s: GameState
   );
 }
 
-export interface RoundTally { round: number; vp: [number, number]; pts: [number, number]; units: [number, number]; mvp: { name: string; owner: PlayerId; pts: number } | null; luck: [number | null, number | null] }
+export interface RoundTally { round: number; vp: [number, number]; pts: [number, number]; units: [number, number]; mvp: { name: string; owner: PlayerId; pts: number } | null }
 
 /** The battle round just finished (or the whole battle): VP scored, what each side destroyed, the best unit, the dice. */
 export function tally(s: GameState, round: number | null, vpAtStart: [number, number] = [0, 0]): RoundTally {
@@ -142,10 +142,8 @@ export function tally(s: GameState, round: number | null, vpAtStart: [number, nu
     const u = s.units.find((x) => x.id === id);
     if (u && n > (mvp?.pts ?? 0)) mvp = { name: u.name, owner: u.owner, pts: n };
   }
-  const luck = ([0, 1] as PlayerId[]).map((p) => { const [a, e] = s.stats?.luck[p] ?? [0, 0]; return e >= 1 ? (a - e) / e : null; }) as [number | null, number | null];
-  return { round: round ?? s.round, vp, pts, units, mvp, luck };
+  return { round: round ?? s.round, vp, pts, units, mvp };
 }
-
 
 /** Between battle rounds (and at the end): the round in numbers. Tap anywhere to go on. */
 export function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; t: RoundTally; final?: boolean; onClose: () => void; actions?: ReactNode }) {
