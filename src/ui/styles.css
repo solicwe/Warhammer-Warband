@@ -1343,15 +1343,21 @@ details > .strat-card { margin-top: 6px; }
 .ab-tick.ok { background: var(--good-soft); color: var(--good); }
 .ab-tick.todo { background: var(--bad-soft, rgba(220, 60, 60, 0.15)); color: var(--bad); }
 /* Blessings of Khorne roll */
-.bk { display: grid; gap: 8px; }
-.bk-head { font: 700 18px var(--font-cond); letter-spacing: 0.04em; text-transform: uppercase; }
-.bk-dice { display: flex; flex-wrap: wrap; gap: 6px; }
+.bk { display: grid; gap: 6px; }
+.bk-head { font: 700 15px var(--font-cond); letter-spacing: 0.04em; text-transform: uppercase; }
+.bk-dice { display: flex; flex-wrap: wrap; gap: 4px; }
 .bk-die { padding: 0; border: 2px solid transparent; border-radius: 10px; background: none; line-height: 0; cursor: pointer; }
 .bk-die:disabled { cursor: default; }
 .bk-die.sel { border-color: var(--bad); transform: translateY(-3px); }
 .bk-rr { display: flex; align-items: center; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
 .bk-sub { font: 600 12px var(--font-cond); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); margin-top: 4px; }
-.bk-pick { text-align: left; }
+.bk-pick { text-align: left; display: grid; gap: 1px; padding-block: 6px; min-height: 0; }
+.bk-pick-name { font-weight: 700; font-size: 14px; }
+.bk-pick-fx { font-size: 12px; opacity: 0.85; }
+.bk-more { justify-self: start; padding: 2px 0; border: none; background: none; color: var(--accent); font-size: 13px; cursor: pointer; text-decoration: underline; }
+.blessbar { display: flex; gap: 6px; padding: 2px 8px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+.blessbar button { flex: none; padding: 0 8px; line-height: 18px; min-height: 0; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text); font-size: 11px; cursor: pointer; }
+.blessbar .p0 { border-color: var(--p0); } .blessbar .p1 { border-color: var(--p1); }
 .bk-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text-2); cursor: pointer; }
 .bk-row.ok { border-color: var(--good); color: var(--text); }
 .bk-name { font-weight: 700; }

@@ -26,7 +26,7 @@ import {
   abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../engine/activations';
 import { activeLabels, effectsFor, isRiled, unitFlags, type Effect } from '../engine/effects';
-import { applyPick, BLESSINGS, rerollBlessings } from '../engine/blessings';
+import { activeIds, applyPick, BLESSINGS, blessingById, rerollBlessings } from '../engine/blessings';
 import { BlessingsPanel } from './Blessings';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
@@ -2084,6 +2084,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             ))}
           </div>
         )}
+        {s.phase !== 'deploy' && ([0, 1] as PlayerId[]).some((p) => activeIds(s, p).length) && (
+          <div className="blessbar" aria-label="Blessings of Khorne this round">
+            {([0, 1] as PlayerId[]).flatMap((p) => activeIds(s, p).map((id) => {
+              const b = blessingById(id)!;
+              return <button key={`${p}${id}`} type="button" className={`p${p}`} onClick={() => flash(`${b.name}: ${b.text}`)}>{b.name} <span className="muted">{b.short}</span></button>;
+            }))}
+          </div>
+        )}
       </header>
       <div className={`board-wrap shake-${shake}`}>
         <Board
@@ -2300,16 +2308,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               </div>
               <span className="field-note">{fxLevel === 'full' ? 'Each attack counts up: shots, hits, wounds, through the saves — and what changed the odds' : fxLevel === 'short' ? 'Only what each attack destroyed' : 'No reports (the board still shows the shots)'}</span>
             </div>
-            {human !== null && (
-              <div className="field">
-                <span id="decide">Stratagems, reactions, Rituals</span>
-                <div className="seg" role="radiogroup" aria-labelledby="decide">
-                  <button role="radio" aria-checked={decides(s, human)} className={decides(s, human) ? 'on' : ''} onClick={() => act((g) => { g.decides = [...new Set([...(g.decides ?? []), human])]; })}>I decide</button>
-                  <button role="radio" aria-checked={!decides(s, human)} className={!decides(s, human) ? 'on' : ''} onClick={() => act((g) => { g.decides = (g.decides ?? []).filter((x) => x !== human); })}>Automatic</button>
-                </div>
-                <span className="field-note">{decides(s, human) ? 'You play your Command phase (detachment choices), pick who fights, answer every prompt (Overwatch, Heroic Intervention …) and pick your Rituals; the Strat button has the rest' : 'The app plays them for you, the way the bot would'}</span>
-              </div>
-            )}
             {bots.length === 1 && (
               <div className="field">
                 <span id="tips">Tips for a first battle</span>

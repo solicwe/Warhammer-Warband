@@ -70,9 +70,8 @@ export function saveBattlePrefs(p: BattlePrefs) {
 /** Every player who is not a bot plays with automatic rules: they only move and pick shooting targets. */
 export function withAutoRules(s: GameState): GameState {
   if (!s.autoRules) s.autoRules = ([0, 1] as PlayerId[]).filter((p) => !(s.bots ?? []).includes(p));
-  // a new battle: people answer their own stratagem prompts and reactions and pick their own Rituals (the menu can
-  // hand them back); a battle saved before this keeps playing the way it started
-  if (!s.decides && s.turn < 0) s.decides = ([0, 1] as PlayerId[]).filter((p) => !(s.bots ?? []).includes(p));
+  // people make every choice themselves (stratagem prompts, reactions, Rituals, Blessings); bots make their own
+  s.decides = ([0, 1] as PlayerId[]).filter((p) => !(s.bots ?? []).includes(p));
   // battles saved before the Thousand Sons fix still carry army rules that are not theirs
   for (const P of s.players) if (P.factionId === 'TS') P.armyRules = P.armyRules.filter((r) => r.name !== 'Oath of Moment' && r.name !== 'Dark Pacts');
   return s;

@@ -79,7 +79,8 @@ function rerollUseless(s: GameState, p: PlayerId, dice: number[]): number[] {
   return out;
 }
 
-const auto = (s: GameState, p: PlayerId) => (s.bots ?? []).includes(p) || (s.autoRules ?? []).includes(p);
+// a person who makes their own choices picks; bots (and the app for a player who left it the rules) take the best
+const auto = (s: GameState, p: PlayerId) => (s.bots ?? []).includes(p) || ((s.autoRules ?? []).includes(p) && !(s.decides ?? []).includes(p));
 
 /** Roll for the army (or one more Blessing, `extra`), then take the best pick or let the player choose. */
 export function blessingsRoll(s: GameState, p: PlayerId, extra?: { label: string; kw?: string; until: 'phase' | 'round' }) {
