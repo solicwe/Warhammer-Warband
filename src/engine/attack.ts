@@ -953,7 +953,8 @@ export function finishAttack(s: GameState) {
   const at = s.attack!;
   const A = unitById(s, at.attackerId);
   const T = unitById(s, at.targetId);
-  const haz = at.pools.reduce((a, p) => a + p.hazardous, 0);
+  // one hazard roll per Hazardous weapon used in the attack, however many models fired it
+  const haz = at.pools.filter((p) => p.hazardous > 0).length;
   if (haz && alive(A).length) {
     // Rites of Thermal Appeasement: +1 to hazard rolls for its plasma weapons
     const plasma = A.abilities.some((a) => a.name === 'Rites of Thermal Appeasement') && at.pools.every((p) => !p.hazardous || /plasma/i.test(p.weapon));

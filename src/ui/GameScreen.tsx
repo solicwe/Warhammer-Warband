@@ -1558,7 +1558,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <div className="label">{r.side === 'enemy' ? 'Enemy target' : 'Friendly unit'} within {c!.range}"</div>
             {targets.length ? (
               <div className="unit-strip">{targets.map((t) => <button key={t.id} className={`unit-pill ${rit.target === t.id ? 'sel' : ''}`} onClick={() => setRit({ ...rit, target: t.id })}>{t.name}</button>)}</div>
-            ) : <div className="small muted">No unit in range and in sight (a ruin in between blocks sight: from inside one a model sees only about 4in through it)</div>}
+            ) : <div className="small muted">No unit in range and in sight (a ruin or wall in between blocks sight; a ruin your unit stands in does not)</div>}
             <div className="row">
               <button className={`btn small ${rit.channel ? 'on' : ''}`} aria-pressed={rit.channel} onClick={() => setRit({ ...rit, channel: !rit.channel })}>Channel the Warp (3D6)</button>
               {odds && <span className="tiny muted grow">{Math.round(odds.pass * 100)}% to manifest · {Math.round(odds.perils * 100)}% perils</span>}
@@ -1876,16 +1876,18 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     // fight step
     if (mode?.k === 'fight' && modeUnit) {
       const u = modeUnit;
-      const weapons = [...new Map(alive(u).flatMap(meleeWeapons).filter((w) => !hasAbility(w.profiles[0], 'extra-attacks')).map((w) => [w.name, w])).values()];
+      // a choice only for models that carry more than one melee weapon; every other model just fights with its own
+      const own = (m: ModelState) => meleeWeapons(m).filter((w) => !hasAbility(w.profiles[0], 'extra-attacks'));
+      const weapons = [...new Map(alive(u).filter((m) => own(m).length > 1).flatMap(own).map((w) => [w.name, w])).values()];
       const chars = alive(u).filter((m) => m.isCharacter);
       const ec = canUseStratagem(s, u.owner, 'epic-challenge', u);
       const res = mode.target ? buildFightPools(s, u.id, mode.target, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined }) : null;
       return (
         <>
-          <div className="small"><b>{u.name}</b> · {fightTargets.length > 1 ? 'tap a target' : ''} Weapons (one per model):</div>
+          <div className="small"><b>{u.name}</b>{fightTargets.length > 1 ? ' · tap a target' : ''}{weapons.length > 1 ? ' · pick the weapon for models that carry several' : ''}</div>
           {pactRow(u)}
           <div className="row">
-            {weapons.map((w) => <button key={w.name} className={`btn small ${mode.weapon === w.name ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, weapon: w.name })}>{w.name}</button>)}
+            {weapons.length > 1 && weapons.map((w) => <button key={w.name} className={`btn small ${mode.weapon === w.name ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, weapon: w.name })}>{w.name}</button>)}
             {chars.length > 0 && !ec && <button className={`btn small ${mode.epic ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, epic: !mode.epic })}>Epic Challenge 1CP</button>}
           </div>
           {abilityBar(u.owner, { unitId: u.id, whens: ['selectedToFight', 'fightStartButton'] })}
@@ -2202,7 +2204,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn small" onClick={() => setStratPick(null)}>Cancel</button>
           </div>
         )}
-        {mode?.k === 'shoot' && !mode.target && <div className="toast">{targets.length ? `Tap a highlighted enemy unit (${targets.length} in reach)` : 'No enemy in range and in sight of this unit (a ruin in between blocks sight: from inside one a model sees only about 4in through it)'}</div>}
+        {mode?.k === 'shoot' && !mode.target && <div className="toast">{targets.length ? `Tap a highlighted enemy unit (${targets.length} in reach)` : 'No enemy in range and in sight of this unit (a ruin or wall in between blocks sight; a ruin your unit stands in does not)'}</div>}
         {planReady && !mode && (
           <button className={`plan-toggle ${showPlan ? 'on' : ''}`} aria-pressed={showPlan} onClick={() => setShowPlan((v) => !v)}>
             <Icon name="bot" size={16} /> {showPlan ? 'Hide enemy plan' : 'Enemy plan'}

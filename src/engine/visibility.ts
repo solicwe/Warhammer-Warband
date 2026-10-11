@@ -5,7 +5,7 @@ import { baseDist, circleTouchesPoly, pointInPoly, pointSegDist, samplePoints, s
 import { alive, everyModelKw } from './state';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 
-interface Blockers { grid: WallGrid; areas: { poly: Pt[] }[]; own: { t: TerrainPiece; reach: number }[] }
+interface Blockers { grid: WallGrid; areas: { poly: Pt[] }[] }
 
 /** Rules from abilities that change visibility (registered by effects.ts so this module stays dependency-free). */
 export interface VisibilityHooks {
@@ -178,14 +178,9 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
     if ([a, b].some((m) => br.of.some((t) => standsIn(m, t)) || pointInPoly(m, br.poly))) continue;
     areas.push(br);
   }
-  // both models in the same area: each sees its own stretch of it
-  const own = obscuring.filter((t) => !areas.includes(t)).map((t) => ({ t, reach: SEE_IN_AREA * (+unitStandsIn(s, a, t) + +unitStandsIn(s, b, t)) }));
-  return { grid: wallGridOf(s), areas, own };
+  // an area either unit stands in does not block (13.10): its models see out of it and are seen in it; walls still block
+  return { grid: wallGridOf(s), areas };
 }
-
-/** A model sees out of the area it stands in (and is seen in it), but not across all of it: a line may run this far
- *  through that area. A model at one end of a big ruin doesn't see out of its far side. */
-export const SEE_IN_AREA = 4;
 
 /** Half the thickness of a ruin wall: a line of sight can't slip through the hairline where two walls meet. */
 const WALL_HALF = 0.04;
@@ -212,7 +207,6 @@ const lineClear = (p: Pt, q: Pt, bl: Blockers) => {
   const near = (b: Box) => b.x1 >= x0 && b.x0 <= x1 && b.y1 >= y0 && b.y0 <= y1;
   for (const w of wallsAlong(bl.grid, p, q)) if (near(segBox(w)) && segSegDist(seg, w) < WALL_HALF) return false;
   for (const t of bl.areas) if (near(polyBox(t.poly)) && segCrossesPoly(seg, t.poly)) return false;
-  for (const o of bl.own) if (near(polyBox(o.t.poly)) && segLengthInPoly(seg, o.t.poly) > o.reach) return false;
   return true;
 };
 
