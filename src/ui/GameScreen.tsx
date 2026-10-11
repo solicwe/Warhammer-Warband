@@ -23,9 +23,9 @@ import {
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
   pileDistance, endRedeploy, redeployCandidates, redeployUnit } from '../engine/game';
 import {
-  abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, unitSelected, useActByKey, useFreeDie, type Trigger,
+  abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../engine/activations';
-import { activeLabels, isRiled, unitFlags, type Effect } from '../engine/effects';
+import { activeLabels, effectsFor, isRiled, unitFlags, type Effect } from '../engine/effects';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { advantage, applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen, type Intent } from '../engine/botLook';
@@ -549,7 +549,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const tg = c && r ? ritualTargets(s, c, r).map((t) => t.id) : [];
     return { cs, c, tg, targets: c && r ? tg : [...new Set(cs.map((x) => x.unit.id))], picked: c && r ? (rit.target ? [rit.target] : []) : c ? [c.unit.id] : [] };
   })();
-  const targets = stratPick ? stratPick.ids : ritMap ? ritMap.targets : mode?.k === 'shoot' ? shootTargets : mode?.k === 'charge' ? chargeOpts : mode?.k === 'fight' ? fightTargets : mode?.k === 'explosives' ? explosiveTargets : mode?.k === 'crush' ? crushTargets : [];
+  const targets = s.window?.kind === 'pickUnit' ? s.window.units : stratPick ? stratPick.ids : ritMap ? ritMap.targets : mode?.k === 'shoot' ? shootTargets : mode?.k === 'charge' ? chargeOpts : mode?.k === 'fight' ? fightTargets : mode?.k === 'explosives' ? explosiveTargets : mode?.k === 'crush' ? crushTargets : [];
   const picked = ritMap ? ritMap.picked : mode?.k === 'shoot' || mode?.k === 'fight' || mode?.k === 'explosives' ? (mode.target ? [mode.target] : []) : mode?.k === 'charge' ? mode.targets : [];
 
   const onTapUnit = (unitId: string, modelId?: string) => {
@@ -693,7 +693,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const riled: string[] = [];
   for (const u of s.units) {
     if (!onBoard(u)) continue;
-    const tags = [...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e))];
+    // plus auras of other units that always apply (a conditional one only matters at the moment it holds)
+    const auras = effectsFor(s, u).filter((a) => a.from && a.holder.id !== u.id && !a.e.if?.length).flatMap((a) => fxTags(a.e));
+    const tags = [...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...auras];
     const seen = new Set<string>();
     const uniq = tags.filter(([t]) => !seen.has(t) && !!seen.add(t));
     if (uniq.length) buffTags[u.id] = uniq;
@@ -1043,6 +1045,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <div className="unit-strip">{rapidIngressCandidates(s, p).map((u) => unitPill(u, false, () => setMode({ k: 'place', unitId: u.id, how: hasDeepStrike(s, u) ? 'deepStrike' : 'ingress', rapid: unitFlags(s, u).oppMoveIngress ? 'free' : true })))}</div>
           {rapidIngressCandidates(s, p).some((u) => unitFlags(s, u).oppMoveIngress) && <div className="tiny muted">Units with an ability (e.g. Deff from the Shadows) arrive free, no CP</div>}
           {skip}
+        </>
+      );
+    }
+    if (w.kind === 'pickUnit') {
+      return (
+        <>
+          <div className="handoff">{pName(s, p)}: {w.label}</div>
+          <div className="unit-strip">{w.units.map((id) => unitPill(U(id), false, () => act((g) => resolvePickUnit(g, id))))}</div>
+          <button className="btn" onClick={() => act((g) => resolvePickUnit(g, null))}>Skip</button>
         </>
       );
     }

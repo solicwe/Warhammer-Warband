@@ -618,6 +618,9 @@ function splitUnit(unit: UnitState, sheet: DatasheetData, rule: NonNullable<Retu
   };
 }
 
+/** Blue Horrors abilities a Pink Horrors unit gets once its last Pink Horror is gone. */
+export const BLUE_ONLY = ['Sullen Malevolence (Aura)', 'Exploding Horrors'];
+
 export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId): UnitState[] {
   const sheetOf = (e: ArmyUnitEntry) => faction.datasheets.find((d) => d.name === e.datasheet)!;
   const units: UnitState[] = [];
@@ -653,6 +656,9 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       startingStrength: models.length,
       abilities: [
         ...sheets.flatMap((s) => s.abilities.map((a) => ({ ...a, sheet: s.name, faction: faction.id, model: a.model || (sheets.length > 1 ? s.name : undefined) }))),
+        // Horrors are Pink, Horrors are Blue: once no Pink Horror is left, the unit uses the Blue Horrors abilities (switched in abilityOff)
+        ...(sheet.abilities.some((a) => a.name.startsWith('HORRORS ARE PINK')) ? (faction.datasheets.find((d) => d.name === 'Blue Horrors')?.abilities ?? [])
+          .filter((a) => BLUE_ONLY.includes(a.name)).map((a) => ({ ...a, sheet: sheet.name, faction: faction.id })) : []),
         // an Enhancement works like an ability of the character carrying it (rules in data/abilities)
         ...[e, ...joiners].filter((x) => x.enhancement).map((x) => {
           const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
@@ -686,6 +692,9 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       const w = /This model has \+(\d+) W\b/i.exec(enh.text);
       if (w) { m.profile = { ...m.profile, W: m.profile.W + +w[1] }; m.wounds = m.profile.W; }
       // "… and a Wounds characteristic of 5" (Flowing Flesh)
+      // shortcut: Deadly Demise from an enhancement (Warphead) only blows up when the bearer is on its own, not inside a mob
+      const dd = /Has Deadly Demise (D?\d+)/i.exec(enh.text);
+      if (dd) units[units.length - 1].core.deadlyDemise = dd[1];
       const wSet = /a Wounds characteristic of (\d+)/i.exec(enh.text);
       if (wSet) { m.profile = { ...m.profile, W: +wSet[1] }; m.wounds = m.profile.W; }
       // "Name [KEYWORD, KEYWORD]: Range 12" | A 3 | BS 2+ …" — the bracketed words are the weapon's abilities
@@ -747,7 +756,7 @@ export function unitPoints(u: ArmyUnitEntry): number {
 }
 
 /** Support character in this list (Captain of the Honour Guard: Cato Sicarius is Support while Marneus Calgar is in the army). */
-const supportIn = (list: ArmyList, d?: DatasheetData) => !!d && (d.isSupport || (d.name === 'Cato Sicarius' && list.units.some((u) => u.datasheet === 'Marneus Calgar')));
+export const supportIn = (list: ArmyList, d?: DatasheetData) => !!d && (d.isSupport || (d.name === 'Cato Sicarius' && list.units.some((u) => u.datasheet === 'Marneus Calgar')));
 
 /** Enhancements a unit may take from the selected detachments (25.04). */
 /**

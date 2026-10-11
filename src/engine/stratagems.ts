@@ -49,7 +49,7 @@ export interface StratRule {
   /** the TARGET is a unit in Reserves (arriving by Deep Strike this phase), or one destroyed this phase */
   targetFrom?: 'reserves' | 'destroyed' | 'embarked';
   /** the target also counts for up to this many units (Guerrilla Tactics: up to two PHOBOS/SCOUT units) */
-  extraTargets?: { count: number; kw?: string[] };
+  extraTargets?: { count: number; kw?: string[]; notKw?: string[] };
   /** how long `enemyEffects` last (default: as `until`) */
   enemyUntil?: TimedUntil;
   /** the moment the game offers it by itself ("just after an enemy unit has shot" …) */
@@ -69,12 +69,14 @@ export interface StratRule {
   killedKw?: string;
   /** reaction to a model's death: the destroyed model must have this keyword (Refusal to Yield: ANCIENT) */
   ctxModel?: string;
+  /** … and must not have this keyword (Gift of Change: excluding MONSTER) */
+  ctxModelNot?: string;
   /** reactions: when the bot uses it (default never) */
   botReact?: 'always' | 'shoot' | 'charge';
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'reserveAgain' | 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap';
+export type Special = 'reserveAgain' | 'spawnAtDeath' | 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -522,6 +524,12 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       u.chargedTurn = -1; // no Charge bonus (Fights First, Lance …) this turn
       return;
     }
+    // Gift of Change: a Chaos Spawn appears where the character died, at the end of the phase
+    case 'spawnAtDeath': {
+      const m = ctx.unitId && ctx.modelId ? unitById(s, ctx.unitId).models.find((x) => x.id === ctx.modelId) : undefined;
+      if (m && s.players[p].spawnTemplate) { (s.spawns ??= []).push({ owner: p, x: m.x, y: m.y, label }); log(s, `${label}: a Chaos Spawn will appear at the end of the phase`, 'info', p); }
+      return;
+    }
     // Infested War Zone: the destroyed unit comes back, whole, in Strategic Reserves
     case 'reserveAgain': {
       for (const m of u.models) { m.dead = false; m.wounds = m.profile.W; }
@@ -612,6 +620,7 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
     if (rule.ctxModel && ctx.modelId) {
       const m = ctx.unitId ? unitById(s, ctx.unitId).models.find((x) => x.id === ctx.modelId) : undefined;
       if (!m || !(m.keywords.includes(rule.ctxModel) || new RegExp(rule.ctxModel, 'i').test(m.name))) continue;
+      if (rule.ctxModelNot && m.keywords.includes(rule.ctxModelNot)) continue;
     }
     const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked', 'ownKilled'].includes(on)
       ? (ctx.unitId ? [unitById(s, ctx.unitId)] : [])

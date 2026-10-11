@@ -5,6 +5,7 @@ import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MI
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
+import { circleInFlow } from './flow';
 import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointInPoly, pointSegDist, polyCentroid, segSegDist } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
@@ -204,6 +205,10 @@ export function createGame(o: NewGameOptions): GameState {
     destroyedByTurn: [], controlAtTurnStart: [], log: [], winner: null,
     markers: [], pendingActions: [], turnStart: null, modelDeaths: [],
   };
+  for (const i of [0, 1] as const) {
+    if (!s.players[i].detachments.some((d) => d.stratagems.some((st) => /Tzeentch Chaos Spawn/i.test(st.text)))) continue;
+    s.players[i].spawnTemplate = buildUnits({ ...o.lists[i], units: [{ uid: 'gift-spawn', datasheet: 'Chaos Spawn', models: 1, pts: 0 }] }, o.factions[i], i)[0];
+  }
   const ro = rollOff(s);
   log(s, `Roll-off for Attacker / Defender: ${o.names[0]} ${ro.a} – ${o.names[1]} ${ro.b} → ${o.names[ro.winner]} is the Attacker`, 'roll', null);
   s.attackerPlayer = ro.winner;
@@ -419,6 +424,7 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
       const keep = homer ? 8 : how === 'deepStrike' ? unitFlags(s, u).deepStrikeRange : RULES.reserves.enemyDistance;
       if (enemies.some((e) => alive(e).some((n) => dist(p, n) - m.r - n.r <= keep))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
     }
+    if (how === 'deepStrike' && unitFlags(s, u).deepStrikeInFlow && !circleInFlow(s, u.owner, p, m.r)) { errors.push('Through the Veil: must be set up wholly within your Flow of Magic'); bad.add(m.id); }
     if (how === 'ingress' || how === 'deepStrike') {
       for (const e of enemies) {
         const omni = unitFlags(s, e).omniScrambler;
@@ -1009,6 +1015,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
   if (['normal', 'advance', 'fallback', 'stationary', 'ingress'].includes(kind)) u.move = kind;
   if (['normal', 'advance', 'fallback'].includes(kind)) s.lastAct = { unitId: u.id, owner: u.owner, kind: 'move', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
   const reactAfterMove = ['normal', 'advance', 'fallback'].includes(kind) && u.owner === s.active && s.phase === 'movement';
+  if (kind === 'extra' && u.extraMove?.asMove) u.move = 'normal';
   if (kind === 'extra' || kind === 'surge') { u.extraMove = undefined; offerDone(s, u.id); }
   if (kind === 'scout') u.scoutDone = true;
   u.maxMoved = Math.max(u.maxMoved, maxMoved);
@@ -1111,7 +1118,7 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   u.move = 'ingress'; // before placing: rules on arrival (Dread Reputation) read it
   placeUnit(s, u, pos);
   pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
-  if (closest <= RULES.reserves.enemyDistance) u.noChargeTurn = s.turn;
+  if (closest <= RULES.reserves.enemyDistance || (how === 'deepStrike' && unitFlags(s, u).deepStrikeInFlow)) u.noChargeTurn = s.turn;
   log(s, `${u.name} arrives (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closest <= RULES.reserves.enemyDistance ? ' within 9" of the enemy → cannot charge this turn' : ''}`, 'info', u.owner);
   if (u.owner === s.active && s.phase === 'movement') offerReactions(s, 'enemyMovedNear', u);
   if (unitHasAbility(u, 'Drop Pod Assault')) dropPodAssault(s, u);

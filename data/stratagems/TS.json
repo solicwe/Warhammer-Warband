@@ -44,11 +44,12 @@
      "if": [
       "kw:SCARAB OCCULT TERMINATORS"
      ],
-     "deepStrikeRange": 6
+     "deepStrikeRange": 6,
+     "deepStrikeInFlow": true
     }
    ],
-   "status": "partial",
-   "note": "Scarab Occult: set up wholly within your Flow of Magic, more than 6\" from enemies \u2014 place inside the Flow by hand; it cannot charge this turn"
+   "status": "auto",
+   "note": "Scarab Occult: wholly within your Flow of Magic, more than 6\" away; no charge this turn"
   },
   "WRATH OF THE DOOMED": {
    "effects": [
@@ -72,9 +73,14 @@
    "buffs": [
     "ignoresCover"
    ],
+   "effects": [
+    {
+     "afterShootNoCover": true
+    }
+   ],
    "bot": "attack",
-   "status": "partial",
-   "note": "The enemy unit hit also loses the Benefit of Cover for the rest of the phase \u2014 apply by hand against other shooters"
+   "status": "auto",
+   "note": "After shooting you pick one enemy unit hit: it loses the Benefit of Cover this phase"
   },
   "STRANDS OF TIME": {
    "unitIf": [
@@ -259,8 +265,14 @@
      "reserves": true
     }
    ],
-   "status": "partial",
-   "note": "Up to two non-MONSTER units: use it again for the second"
+   "status": "auto",
+   "note": "Up to two non-MONSTER units (tap a second unit), or one MONSTER",
+   "extraTargets": {
+    "count": 2,
+    "notKw": [
+     "MONSTER"
+    ]
+   }
   },
   "CHRONOSORCEROUS BLEED": {
    "react": "enemyChargePhaseStart",
@@ -314,14 +326,30 @@
    "status": "auto"
   },
   "DECEPTIVE GLAMOUR": {
-   "bot": "never",
-   "status": "manual",
-   "note": "Enemy models engaged with this unit can only target it when no SCINTILLATING LEGIONS unit is an eligible target"
+   "targetKw": [
+    "THOUSAND SONS"
+   ],
+   "effects": [
+    {
+     "glamour": true
+    }
+   ],
+   "bot": "defend",
+   "status": "auto",
+   "note": "Enemy models engaged with a Scintillating Legions unit must attack it instead"
   },
   "GIFT OF CHANGE": {
-   "bot": "never",
-   "status": "manual",
-   "note": "Add a one-model Tzeentch Chaos Spawn where the CHARACTER died, at the end of the phase"
+   "react": "modelDestroyed",
+   "ctxModel": "CHARACTER",
+   "special": [
+    "spawnAtDeath"
+   ],
+   "limit": "round",
+   "botReact": "always",
+   "status": "auto",
+   "note": "A one-model Tzeentch Chaos Spawn is set up where the character died, at the end of the phase",
+   "ctxModelNot": "MONSTER",
+   "targetFrom": "destroyed"
   },
   "TOUCHED BY TZEENTCH": {
    "targetKw": [
@@ -401,12 +429,12 @@
    "effects": [
     {
      "pileIn": 6,
-     "consolidate": 6
+     "consolidate": 6,
+     "fightReach3": true
     }
    ],
    "bot": "attack",
-   "status": "partial",
-   "note": "Models within 3\" of an enemy also fight"
+   "status": "auto"
   },
   "UNWAVERING PHALANX": {
    "react": "enemyChargeMoveEnd",

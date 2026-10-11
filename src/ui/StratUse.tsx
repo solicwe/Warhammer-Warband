@@ -33,7 +33,8 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
   const needEnemy = enemies.length > 1 && !pickedEnemy;
   // Guerrilla Tactics: "up to two PHOBOS and/or SCOUT SQUAD units" — extra picks only while every pick has one of the keywords
   const extraOk = (u: UnitState) => !!rule.extraTargets && u.id !== unitId
-    && (!rule.extraTargets.kw || [unit, u].every((x) => x && rule.extraTargets!.kw!.some((k) => x.keywords.includes(k) || x.sources.some((n) => n.toUpperCase() === k))));
+    && (!rule.extraTargets.kw || [unit, u].every((x) => x && rule.extraTargets!.kw!.some((k) => x.keywords.includes(k) || x.sources.some((n) => n.toUpperCase() === k))))
+    && [unit, u].every((x) => x && !rule.extraTargets!.notKw?.some((k) => x.keywords.includes(k)));
   return (
     <div className={`strat-card ${timingOk ? '' : 'off'}`}>
       <div className="row">

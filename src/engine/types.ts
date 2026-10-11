@@ -242,7 +242,7 @@ export interface UnitState {
   abilityPicks?: { pool: string[]; on: string[] }; // "select two of these abilities" (Author of the Codex …)
   used?: Record<string, string>; // ability limits: name -> last use key (battle / round / turn / phase)
   lastHits?: { key: string; ids: string[]; byWeapon?: Record<string, string[]> }; // enemy units hit this phase
-  extraMove?: { max: number; label: string; kind: 'extra' | 'surge'; phase?: string; endIn?: 'dzOrObjective' | 'objective' }; // a move granted by an ability, not yet made
+  extraMove?: { max: number; label: string; kind: 'extra' | 'surge'; phase?: string; endIn?: 'dzOrObjective' | 'objective'; asMove?: boolean }; // a move granted by an ability, not yet made
   arriveEarly?: number; // battle round in which this unit may already arrive from Reserves (High King of Fenris …)
   noChargeTurn?: number; // turn in which this unit cannot declare a charge (Meteoric Descent …)
   fellBackFrom?: string[]; // enemy units engaged with this unit when it fell back this turn
@@ -304,6 +304,8 @@ export interface ObjectiveState {
 }
 
 export interface PlayerState {
+  /** a unit the army can add mid-battle (Gift of Change: a one-model Tzeentch Chaos Spawn), cloned when it arrives */
+  spawnTemplate?: UnitState;
   name: string;
   factionId: string;
   factionName: string;
@@ -520,6 +522,8 @@ export type Window =
   | { kind: 'counteroffensive'; player: PlayerId }
   /** abilities that let units react out of turn ("if an enemy unit ends a move within 8\", this unit can make a Normal move") */
   | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
+  /** a rule asks the player to pick one unit ("select one enemy unit hit by those attacks"); `acts` go to it */
+  | { kind: 'pickUnit'; player: PlayerId; label: string; units: string[]; holderId: string; acts: import('./activations').Action[] }
   /** detachment stratagems the player can use right now, at a moment the engine reported ("just after an enemy unit has shot") */
   | { kind: 'stratReaction'; player: PlayerId; on: string; ctx: { unitId?: string; modelId?: string; killerId?: string }; offers: { stratId: string; units: string[] }[]; label: string; resume?: 'endPhase' };
 
@@ -643,6 +647,8 @@ export interface GameState {
   /** models destroyed this phase that roll to come back at the end of it (Armour of Fate) */
   /** models made CHARACTERs for a while (Instant of Grace, Birth of a Saga): undone at their player's next Command phase */
   tempCharacters?: { unitId: string; modelId: string; by: PlayerId }[];
+  /** Gift of Change: Chaos Spawn to set up at the end of the phase where a character died */
+  spawns?: { owner: PlayerId; x: number; y: number; label: string }[];
   revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number }[];
   /** mortal wounds a unit suffers at the end of the current phase (Warpmeld Sacrifice) */
   phaseMortals?: { unitId: string; expr: string; label: string }[];

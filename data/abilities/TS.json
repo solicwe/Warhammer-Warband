@@ -687,11 +687,14 @@
     }
    },
    {
-    "rerollCharge": true
+    "rerollCharge": true,
+    "if": [
+     "nearEngaged:12:PSYKER"
+    ]
    }
   ],
-  "status": "partial",
-  "note": "Heroic Intervention −1CP and usable again; the charge re-roll is always offered"
+  "status": "auto",
+  "note": "Heroic Intervention −1CP and usable again; charge re-roll while a friendly engaged PSYKER is within 12\""
  },
  "Scuttling Walker": {
   "effects": [
@@ -1029,7 +1032,8 @@
   ]
  },
  "HORRORS ARE PINK. HORRORS ARE BLUE. WHEREONCE THERE WAS ONE, NOW THERE ARE TWO.": {
-  "status": "info"
+  "status": "auto",
+  "note": "Once no Pink Horror is left, the unit has Sullen Malevolence and Exploding Horrors"
  },
  "Sullen Malevolence (Aura)": {
   "effects": [

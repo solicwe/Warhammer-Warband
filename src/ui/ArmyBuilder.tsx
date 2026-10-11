@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addonLines, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, supportIn, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { Em } from './Em';
 import { dispositionById, RULES } from '../engine/config';
@@ -340,7 +340,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const load = faction ? transportLoads(list, faction).find((t) => t.uid === u.uid) : undefined;
     const carried = load?.riders.map((r) => list.units.find((x) => x.uid === r)?.datasheet).filter(Boolean) ?? [];
     const line = [
-      u.warlord && 'Warlord', leads && !inGroup && `${sheet?.isSupport ? 'Support for' : 'Leading'} ${leads.datasheet}`, leads && inGroup && (sheet?.isSupport ? 'Support' : 'Leader'), u.split && 'Split in two',
+      u.warlord && 'Warlord', leads && !inGroup && `${supportIn(list, sheet) ? 'Support for' : 'Leading'} ${leads.datasheet}`, leads && inGroup && (supportIn(list, sheet) ? 'Support' : 'Leader'), u.split && 'Split in two',
       rides && (inGroup ? 'Embarked' : `Starts embarked in ${rides.datasheet}`),
       load && (carried.length ? `Carrying ${carried.join(', ')} (${load.used}/${load.capacity})` : `Empty (0/${load.capacity})`),
     ].filter(Boolean).join(' · ');
@@ -380,7 +380,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
         };
         const inRide = (u: ArmyUnitEntry) => !!u.embarkIn && list.units.some((t) => t.uid === u.embarkIn);
         const us = list.units.filter((u) => (!u.attachTo || !list.units.some((b) => b.uid === u.attachTo)) && !inRide(u) && homeOf(u) === sec.id);
-        const bySupport = (a: ArmyUnitEntry, b: ArmyUnitEntry) => Number(!!sheetOf(a.datasheet)?.isSupport) - Number(!!sheetOf(b.datasheet)?.isSupport);
+        const bySupport = (a: ArmyUnitEntry, b: ArmyUnitEntry) => Number(!!supportIn(list, sheetOf(a.datasheet))) - Number(!!supportIn(list, sheetOf(b.datasheet)));
         // a squad with its characters: Leader, Support, then the squad
         const squadRows = (u: ArmyUnitEntry, inGroup: boolean) => [...joined(u).sort(bySupport).map((c) => unitRow(c, true)), unitRow(u, inGroup || joined(u).length > 0)];
         return (
@@ -709,14 +709,14 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const opts = sheet ? pointsOptions(sheet) : [];
     const isChar = !!sheet?.keywords.includes('CHARACTER');
     // characters that could join this squad: Leader slot, then Support slot
-    const leadersFor = (support: boolean) => faction.datasheets.filter((d) => allowed(d) && d.leads.includes(u.datasheet) && !!d.isSupport === support && pointsOptions(d).length);
-    const hasLeader = joined.some((x) => x.d && !x.d.isSupport);
-    const hasSupport = joined.some((x) => x.d?.isSupport);
+    const leadersFor = (support: boolean) => faction.datasheets.filter((d) => allowed(d) && d.leads.includes(u.datasheet) && supportIn(list, d) === support && pointsOptions(d).length);
+    const hasLeader = joined.some((x) => x.d && !supportIn(list, x.d));
+    const hasSupport = joined.some((x) => supportIn(list, x.d));
     const canLeader = !u.attachTo && !hasLeader && leadersFor(false).length > 0;
     const canSupport = !u.attachTo && !hasSupport && leadersFor(true).length > 0;
     // a Leader in a squad: Add Support works on the squad it leads
-    const bodySupport = body && !sheet?.isSupport && !list.units.some((c) => c.attachTo === body.uid && sheetOf(c.datasheet)?.isSupport)
-      && faction.datasheets.some((d) => allowed(d) && d.isSupport && d.leads.includes(body.datasheet) && pointsOptions(d).length);
+    const bodySupport = body && !supportIn(list, sheet) && !list.units.some((c) => c.attachTo === body.uid && supportIn(list, sheetOf(c.datasheet)))
+      && faction.datasheets.some((d) => allowed(d) && supportIn(list, d) && d.leads.includes(body.datasheet) && pointsOptions(d).length);
     const squadsFor = sheet?.leads.length && !body ? [...new Set(sheet.leads)].map((n) => sheetOf(n)).filter((d): d is DatasheetData => !!d && allowed(d) && pointsOptions(d).length > 0) : [];
     const close = () => setPop(null);
     const w = pop.mode && pop.mode !== 'size' ? Math.min(340, window.innerWidth - 16) : 260;
@@ -767,7 +767,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     if (pop.mode === 'squad') {
       content = (
         <>
-          <div className="ab-pop-head">{sheet?.isSupport ? 'Add Squad (as Support)' : 'Add Squad (as Leader)'}</div>
+          <div className="ab-pop-head">{supportIn(list, sheet) ? 'Add Squad (as Support)' : 'Add Squad (as Leader)'}</div>
           {attachOptions(list, faction, u).filter((b) => squadsFor.some((d) => d.name === b.datasheet))
             .map((b) => rosterCard(b, () => attach(u.uid, b.uid, `${u.datasheet} joined ${b.datasheet}`)))}
           {squadsFor.map((d) => newCard(d, (models) => {

@@ -301,9 +301,12 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
   const fighters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : alive(A);
   // Angel's Sacrifice: models in Engagement Range of the taunting unit must attack it
   const taunters = unitFlags(s, T).taunt ? [] : engagedEnemies(s, A).filter((e) => unitFlags(s, e).taunt);
+  const glamour = unitFlags(s, T).glamour;
+  const reach3 = unitFlags(s, A).fightReach3 && engagedEnemies(s, A).some((e) => e.id === T.id);
   for (const m of fighters) {
-    if (!modelEngagedWith(m, T)) continue;
+    if (!modelEngagedWith(m, T) && !(reach3 && alive(T).some((t) => baseDist(m, t) <= 3 + 1e-6))) continue;
     if (taunters.some((e) => modelEngagedWith(m, e))) continue;
+    if (glamour && engagedEnemies(s, A).some((e) => e.id !== T.id && e.factionKeywords.includes('SCINTILLATING LEGIONS') && modelEngagedWith(m, e))) continue;
     const d = Math.min(...alive(T).map((t) => baseDist(m, t)));
     const melee = meleeWeapons(m);
     const extra = melee.filter((w) => hasAbility(w.profiles[0], 'extra-attacks'));

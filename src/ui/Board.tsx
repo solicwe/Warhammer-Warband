@@ -697,9 +697,10 @@ function BoardImpl(props: BoardProps) {
               // under the unit (below the transport chip): what is boosting or hampering it right now
               const maxY = Math.max(...pts.map((p, i) => p.y + ms[i].r)) + (u.transport && s.units.some((x) => x.embarkedIn === u.id && x.status === 'embarked') ? 1.9 : 0.75);
               return (
-                <text x={cx} y={maxY} fontSize={0.8} textAnchor="middle" stroke="#000" strokeWidth={0.14} paintOrder="stroke" pointerEvents="none" fontWeight={800}>
-                  {tags.slice(0, 4).map(([t, good], k) => <tspan key={k} fill={good ? '#86efac' : '#fca5a5'}>{k ? '  ' : ''}{t}</tspan>)}
-                  {tags.length > 4 && <tspan fill="#fff">  +{tags.length - 4}</tspan>}
+                <text x={cx} y={maxY} fontSize={Math.max(0.8, fs * 0.75)} textAnchor="middle" stroke="#000" strokeWidth={0.14} paintOrder="stroke" pointerEvents="none" fontWeight={800}>
+                  {/* the selected unit lists every tag; the others the first four */}
+                  {(isSel ? tags : tags.slice(0, 4)).map(([t, good], k) => <tspan key={k} fill={good ? '#86efac' : '#fca5a5'}>{k ? '  ' : ''}{t}</tspan>)}
+                  {!isSel && tags.length > 4 && <tspan fill="#fff">  +{tags.length - 4}</tspan>}
                 </text>
               );
             })() : null}

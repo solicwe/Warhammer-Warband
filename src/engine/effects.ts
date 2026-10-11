@@ -68,7 +68,7 @@ export interface Incoming {
 }
 
 export interface Effect {
-  scope?: 'unit' | 'model' | 'led' | 'bodyguardLed' | 'aura' | 'enemyAura' | 'army';
+  scope?: 'unit' | 'model' | 'led' | 'bodyguardLed' | 'aura' | 'enemyAura' | 'army' | 'transport';
   range?: number;
   units?: string[];
   notSelf?: boolean;
@@ -114,6 +114,7 @@ export interface Effect {
   disembarkAfterAdvance?: boolean;
   noEmbark?: boolean;
   omniScrambler?: number; // enemy units arriving from Reserves cannot be set up within X"
+  deepStrikeInFlow?: boolean; // Deep Strike: must be set up wholly within the army's Flow of Magic (and cannot charge that turn)
   deepStrikeRange?: number; // may Deep Strike this close to enemy units (then cannot charge that turn)
   arriveFromRound?: number;
   mobile?: boolean; // moves over dense terrain like INFANTRY
@@ -137,6 +138,9 @@ export interface Effect {
   pileIn?: number; consolidate?: number; // Pile-in / Consolidation moves up to this far instead of 3"
   enemyPileMinus?: number; // enemy units engaged with it pile in / consolidate this much less (Dacatarai in Dread Host)
   freeConsolidate?: boolean; // consolidation does not need to end closer to the closest enemy model
+  afterShootNoCover?: boolean; // Scouring Warpflame: after shooting, one enemy unit it hit cannot have the Benefit of Cover this phase
+  fightReach3?: boolean; // Deranged Ferocity: models within 3" of an enemy unit engaged with this unit also fight it
+  glamour?: boolean; // Deceptive Glamour: enemy models only attack this unit when no Scintillating Legions unit is in reach
   taunt?: boolean; // enemy models in Engagement Range must target this unit with all their attacks
   shieldOfHonour?: boolean; // enemy models engaged with it that attack another unit have -1 to hit and wound (Shield of Honour)
   fightOnDeathCharBonus?: number; // +X to the fight-on-death roll for a CHARACTER model (Duty Unto Death)
@@ -373,6 +377,7 @@ function bearersOf(u: UnitState, a: AbilityData, rule: AbilityRule): ModelState[
 
 /** Abilities chosen for "select two of these abilities" rules (Author of the Codex …) that are switched off this turn. */
 export function abilityOff(u: UnitState, a: AbilityData): boolean {
+  if (u.sources[0] === 'Pink Horrors' && (a.name === 'Sullen Malevolence (Aura)' || a.name === 'Exploding Horrors') && alive(u).some((m) => /pink/i.test(m.name))) return true;
   const c = u.abilityPicks;
   if (!c) return false;
   return c.pool.includes(a.name) && !c.on.includes(a.name);
@@ -389,6 +394,11 @@ function ruleEffects(u: UnitState, h: UnitState, effects: Effect[], label: strin
     if (scope === 'army') {
       if (h.owner !== u.owner || !unitMatches(u, e.units)) continue;
       out.push({ e, label, holder: h });
+      continue;
+    }
+    // "a transport this unit is embarked within has …" (Blitzboss)
+    if (scope === 'transport') {
+      if (h.status === 'embarked' && h.embarkedIn === u.id && unitMatches(u, e.units)) out.push({ e, label, holder: u });
       continue;
     }
     if (scope === 'aura' || scope === 'enemyAura') {
@@ -550,6 +560,8 @@ export function cond(c: string, x: Ctx): boolean {
   const { s, A, T } = x;
   if (c.startsWith('!')) return !cond(c.slice(1), x);
   if (c.startsWith('near:')) return nearCond(x, c);
+  // Snarling Protector: a friendly engaged PSYKER unit is within 12"
+  if (c.startsWith('nearEngaged:')) { const [, d, k] = c.split(':'); return boardUnits(s, A.owner).some((f) => f.id !== A.id && hasKw(f, k) && engagedEnemies(s, f).length > 0 && unitDistance(A, f) <= Number(d) + 1e-6); }
   // "wholly within 12\" of your opponent's deployment zone"
   if (c.startsWith('nearEnemyDz:')) {
     const z = toPoly(deploymentById(s.deploymentId).zones[s.players[other(A.owner)].role]);
@@ -1071,6 +1083,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     disembarkAfterAdvance: es.some((e) => e.disembarkAfterAdvance),
     noEmbark: es.some((e) => e.noEmbark),
     omniScrambler: Math.max(0, ...es.map((e) => e.omniScrambler ?? 0)),
+    deepStrikeInFlow: es.some((e) => e.deepStrikeInFlow),
     deepStrikeRange: Math.min(RULES.reserves.enemyDistance, ...es.map((e) => e.deepStrikeRange ?? RULES.reserves.enemyDistance)),
     arriveFromRound: Math.min(RULES.reserves.firstRound, ...es.map((e) => e.arriveFromRound ?? RULES.reserves.firstRound)),
     noBigGunsPenalty: es.some((e) => e.noBigGunsPenalty),
@@ -1097,6 +1110,9 @@ export function unitFlags(s: GameState, u: UnitState) {
     consolidate: Math.max(0, ...es.map((e) => e.consolidate ?? 0)),
     freeConsolidate: es.some((e) => e.freeConsolidate),
     taunt: es.some((e) => e.taunt),
+    glamour: es.some((e) => e.glamour),
+    fightReach3: es.some((e) => e.fightReach3),
+    afterShootNoCover: es.some((e) => e.afterShootNoCover),
     shieldOfHonour: es.some((e) => e.shieldOfHonour),
     targetableWithin: Math.min(99, ...es.map((e) => e.targetableWithin ?? 99)),
     ignoreMods: es.some((e) => e.ignoreMods),

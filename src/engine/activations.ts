@@ -81,6 +81,7 @@ export interface Action {
   moveIfRiled?: string; // … this distance instead while riled up
   surge?: string; // surge move towards the closest enemy unit
   noCharge?: boolean; // … and the unit cannot declare a charge this turn
+  asMove?: boolean; // … and that move is the unit's move this phase (Pulse Jet)
   setQuarry?: boolean;
   setPriority?: boolean; // Priority Objective Identified (target: the objective under the unit)
   setSlayer?: boolean; // Slayer's Oath: the keyword the enemy army has most of
@@ -197,6 +198,14 @@ export function actsOfUnit(s: GameState, u: UnitState, includeDead = false): Act
     const living = all.filter((m) => !m.dead);
     if (!living.length && !includeDead) continue;
     specs.forEach((spec, i) => out.push({ key: `${a.name}#${i}`, name: a.name, holder: u, spec, bearers: includeDead ? all : living }));
+  }
+  // Boss Boomer: the Wagon has the Intimidating Motivation / Keep Huntin' of a Warboss riding inside it
+  if (u.abilities.some((a) => a.name === 'Boss Boomer')) {
+    for (const p of s.units.filter((x) => x.status === 'embarked' && x.embarkedIn === u.id && alive(x).some((m) => m.keywords.includes('WARBOSS')))) {
+      for (const a of p.abilities.filter((x) => /^(Intimidating Motivation|Keep Huntin)/.test(x.name))) {
+        specsOf(abilityRule(p, a)).forEach((spec, i) => out.push({ key: `${a.name}#${i}`, name: a.name, holder: u, spec, bearers: alive(u) }));
+      }
+    }
   }
   // abilities the army's rules give this unit ("Friendly CHAPLAIN units have the following ability")
   for (const g of grantsOf(s, u)) {
@@ -666,7 +675,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       const expr = heavy ? a.moveIfHeavyTransport! : a.moveIfRiled && isRiled(s, on) ? a.moveIfRiled : a.move;
       let max = expr === 'M' ? Math.max(0, ...alive(on).map((m) => m.profile.M ?? 0)) + unitFlags(s, on).move : rollExpr(s, expr).total;
       if (a.moveReroll && expr !== 'M' && max < 4) { const again = rollExpr(s, expr).total; log(s, `${def.name}: move distance re-rolled ${max} → ${again}`, 'roll', u.owner); max = again; }
-      on.extraMove = { max, label: def.name, kind: 'extra', phase: phaseKey(s) };
+      on.extraMove = { max, label: def.name, kind: 'extra', phase: phaseKey(s), ...(a.asMove ? { asMove: true } : {}) };
       if (a.noCharge) on.cantCharge = true;
       log(s, `${def.name}: ${on.name} can move ${max}"${a.noCharge ? ' (cannot charge this turn)' : ''}`, 'info', u.owner);
       offerExtraMove(s, on, `${def.name}: move ${max}"`);
@@ -771,6 +780,21 @@ function offerExtraMove(s: GameState, u: UnitState, label: string) {
   s.window = { kind: 'abilityMove', player: u.owner, offers: [{ unitId: u.id, key: '', label }], label };
 }
 
+/** A rule asks for one unit: the bot (or a player on auto rules) takes the most valuable one, a player gets a prompt. */
+function offerPickUnit(s: GameState, holder: UnitState, label: string, units: UnitState[], acts: Action[]) {
+  const auto = (s.bots ?? []).includes(holder.owner) || (s.autoRules ?? []).includes(holder.owner);
+  if (auto || units.length === 1 || s.window) { runActions(s, label.split(':')[0], holder, acts, [...units].sort((a, b) => b.pts - a.pts)[0]); return; }
+  s.window = { kind: 'pickUnit', player: holder.owner, label, units: units.map((u) => u.id), holderId: holder.id, acts };
+}
+
+/** The player picked (or skipped, `unitId` null) the unit a pickUnit prompt asked for. */
+export function resolvePickUnit(s: GameState, unitId: string | null) {
+  const w = s.window;
+  if (w?.kind !== 'pickUnit') return;
+  s.window = null;
+  if (unitId && w.units.includes(unitId)) runActions(s, w.label.split(':')[0], unitById(s, w.holderId), w.acts, unitById(s, unitId));
+}
+
 /** Use an ability now (button, or automatically at its trigger). Returns an error message or null. */
 /** Actions of a rule that is not an ability (a stratagem's "your unit can make a Normal move of up to D6"" …). */
 export function runActions(s: GameState, name: string, holder: UnitState, acts: Action[], target: UnitState | null) {
@@ -791,6 +815,8 @@ export function useAct(s: GameState, def: ActDef, targetId?: string, ctx: FireCt
     if (def.spec.roll || def.spec.perModel) {
       const n = def.spec.perModel ? alive(def.holder).filter((m) => alive(tg).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length : 1;
       const dice = rollN(s, Math.max(1, n));
+      // Warphead: the Weirdboy re-rolls a psychic roll of 1 (the Perils result)
+      if (/psychic/i.test(def.name) && dice[0] === 1 && def.holder.enhancements?.some((e) => e.name === 'Warphead')) { dice[0] = rollN(s, 1)[0]; log(s, `Warphead: psychic roll of 1 re-rolled → ${dice[0]}`, 'roll', def.holder.owner); }
       let add = 0;
       if (def.spec.rollAdd === 'per5models') add = Math.floor(alive(def.holder).length / 5);
       if (def.spec.rollAdd === 'warlordInTarget2' && tg.isWarlordUnit) add = 2;
@@ -1181,6 +1207,14 @@ onAttackFinished((s, at, info) => {
   }
   if (!at.free) {
     if (at.kind === 'shoot' && s.phase === 'shooting' && A.owner === s.active) fire(s, 'afterShooting', [A], ctx);
+    // Scouring Warpflame: one enemy unit it hit loses the Benefit of Cover for the rest of the phase
+    if (at.kind === 'shoot' && unitFlags(s, A).afterShootNoCover && (A.used ??= {}).scouring !== phaseKey(s)) {
+      const hit = (A.lastHits?.ids ?? []).map((id) => unitById(s, id)).filter(onBoard);
+      if (hit.length) {
+        A.used.scouring = phaseKey(s);
+        offerPickUnit(s, A, 'Scouring Warpflame: pick an enemy unit hit — it cannot have the Benefit of Cover this phase', hit, [{ on: 'target', incoming: { attack: 'ranged', noCover: true }, until: 'phase' }]);
+      }
+    }
     if (at.kind === 'fight') fire(s, 'afterFighting', [A], ctx);
   }
   if (at.kind !== 'fight' && info.woundsLost > 0 && T.owner !== s.active && onBoard(T)) fire(s, 'shotByEnemy', [T], { targetId: A.id, modelsKilled: info.modelsKilled });
@@ -1397,6 +1431,19 @@ function resolvePhaseMortals(s: GameState) {
 /** End of a phase: models that roll to come back (Armour of Fate). */
 export function resolveRevivals(s: GameState) {
   resolvePhaseMortals(s);
+  for (const sp of s.spawns ?? []) {
+    const tpl = s.players[sp.owner].spawnTemplate;
+    if (!tpl) continue;
+    const u: UnitState = structuredClone(tpl);
+    u.id = `spawn${s.units.length}`;
+    u.models.forEach((m, i) => { m.id = `${u.id}-m${i}`; });
+    s.units.push(u);
+    if (!setBackUp(s, u, u.models[0], sp)) { s.units.pop(); log(s, `${sp.label}: no room for the Chaos Spawn`, 'info', sp.owner); continue; }
+    u.status = 'board'; u.setUpTurn = s.turn;
+    pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
+    log(s, `${sp.label}: a Tzeentch Chaos Spawn is set up`, 'info', sp.owner);
+  }
+  s.spawns = [];
   const list = s.revivals ?? [];
   if (!list.length) return;
   s.revivals = [];

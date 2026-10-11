@@ -12,7 +12,7 @@ import {
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName } from './game';
-import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, unitSelected } from './activations';
+import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, resolvePickUnit, unitSelected } from './activations';
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, styleChosen } from './botLook';
 import { unitVisibleTo } from './visibility';
@@ -618,6 +618,7 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
 export function botWindow(s: GameState) {
   const w = s.window;
   if (!w) return;
+  if (w.kind === 'pickUnit') { resolvePickUnit(s, [...w.units].sort((a, b) => unitById(s, b).pts - unitById(s, a).pts)[0]); return; }
   if (w.kind === 'abilityMove') {
     // reaction moves ("an enemy ended a move near this unit") are taken when there is somewhere better to be
     for (const o of [...w.offers]) {
