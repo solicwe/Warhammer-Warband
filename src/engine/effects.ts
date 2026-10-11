@@ -722,7 +722,11 @@ export function cond(c: string, x: Ctx): boolean {
     case 'fightPhase': return s.phase === 'fight';
     case 'shootingPhase': return s.phase === 'shooting';
     case 'leaderAttached': return hasLivingLeader(A);
-    case 'warlord': return !!(x.holder ?? A).isWarlordUnit;
+    case 'warlord': {
+      // "if a model with this ability is your WARLORD": the bearer itself, not a Warboss leading the Warlord's unit
+      const H = x.holder ?? A;
+      return !!H.isWarlordUnit && (!H.warlordSource || !x.bearers?.length || x.bearers.some((m) => m.source === H.warlordSource));
+    }
     case 'notCharacterModel': return !!x.m && !x.m.isCharacter && !x.m.keywords.includes('CHARACTER');
     case 'twoMeleeWeapons': return !!x.m && x.m.weapons.filter((w) => w.profiles[0].range === 'Melee').length >= 2;
     case 'engaged': return engagedEnemies(s, A).length > 0;

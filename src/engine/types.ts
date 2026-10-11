@@ -253,6 +253,7 @@ export interface UnitState {
   scoutDone: boolean;
   battleShocked: boolean;
   isWarlordUnit: boolean;
+  warlordSource?: string; // datasheet of the Warlord model in this unit
   enhancements: { name: string; text: string; model: string }[];
   // per-turn flags (reset at start of each player turn)
   move: MoveKind | null;

@@ -676,6 +676,7 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       scoutDone: false,
       battleShocked: false,
       isWarlordUnit: !!(e.warlord || joiners.some((j) => j.warlord)),
+      warlordSource: [e, ...joiners].find((j) => j.warlord)?.datasheet,
       enhancements: [e, ...joiners].filter((x) => x.enhancement).map((x) => {
         const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
         return { name: x.enhancement!, text: enh?.text ?? '', model: x.datasheet };
