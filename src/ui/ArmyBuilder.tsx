@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { addonLines, supportIn, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { Em } from './Em';
-import { dispositionById, RULES } from '../engine/config';
+import { dispositionById, dispositionId, RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
 import { Icon } from './Icon';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
@@ -224,7 +224,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const [menu, setMenu] = useState<string | null>(null); // uid of the unit whose datasheet + settings panel is open
   const [detPicker, setDetPicker] = useState(false);
   const [openDet, setOpenDet] = useState<string | null>(null);
-  const [openSecs, setOpenSecs] = useState<string[]>(['enh']);
+  const [openSecs, setOpenSecs] = useState<string[]>([]);
   const [addSize, setAddSize] = useState<string | null>(null); // the datasheet whose unit size is being picked to add it
   const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null); // the ⋮ quick menu
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(startPicker ? { factionId: null } : null); // faction → sub-faction chooser
@@ -512,7 +512,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                     <button type="button" className="dt-item-name" onClick={() => setOpenDet(open ? null : d.name)}>
                       {d.name}{d.subfaction && <span className={`ab-chip ${allowed(d) ? '' : 'bad'}`}>{subTag(d.subfaction)}</span>}
                     </button>
-                    <button type="button" className={`dt-disp ${primary && list.detachments.length > 1 ? 'primary' : ''}`} disabled={!on || primary || list.detachments.length < 2}
+                    <button type="button" className={`dt-disp ${primary && list.detachments.length > 1 ? 'primary' : ''}`} style={{ background: dispositionById(dispositionId(d.forceDisposition) ?? 'take-and-hold').color, color: '#fff' }} disabled={!on || primary || list.detachments.length < 2}
                       onClick={() => setDets([d.name, ...list.detachments.filter((n) => n !== d.name)])}>
                       {primary && list.detachments.length > 1 && <Icon name="leader" size={13} />}{d.forceDisposition}{blocked ? ` · over the DP (${Math.max(0, size.dp - used)} left): tick to switch to this one instead` : ''}
                     </button>

@@ -1328,7 +1328,6 @@ details > .strat-card { margin-top: 6px; }
 .ab .ab-head.slate .emb-ring { stroke: var(--accent); }
 .ab .ab-head.slate .ab-name-input:focus, .ab .ab-head.slate .ab-reset:hover { border-color: var(--accent); }
 .ab .ab-section-head::before { background: var(--accent); }
-.ab .disp-chip.on, .ab .ab-head.slate .disp-chip:not(.off) { background: var(--accent) !important; color: #fff; }
 .army .emb-ring { stroke: var(--accent); }
 .army .meter i { background: var(--accent); }
 .army { box-shadow: inset 3px 0 0 var(--accent); }
