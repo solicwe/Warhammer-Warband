@@ -11,7 +11,7 @@ const css = [...html.matchAll(/<link rel="stylesheet"[^>]*href="(?!https?:)([^"]
 const js = [...html.matchAll(/<script type="module"[^>]*src="([^"]+)"[^>]*><\/script>/g)].map((m) => read(m[1])).join('\n');
 const icon = /<link rel="icon"[^>]*>/.exec(html)?.[0] ?? '';
 const fonts = [...html.matchAll(/<link rel="(?:stylesheet|preconnect)" href="https:\/\/fonts\.[^>]*>/g)].map((m) => m[0]).join('\n');
-const page = `<title>40K 11th Tabletop</title>
+const page = `<title>Miniature Simulator</title>
 ${icon}
 ${fonts}
 <style>
