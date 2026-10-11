@@ -1,0 +1,4024 @@
+{
+ "_doc": [
+  "Detachment rules the engine applies by itself, keyed by detachment name (Wahapedia spelling).",
+  "auto: full = everything in the rule is automatic; partial = the main effect is automatic, the rest is in 'manual'.",
+  "units: every entry must match the unit; 'A|B' = either; 'name:X' = datasheet name X; plain words are keywords.",
+  "if: all must hold. charged, stationary, within12, targetMV, targetNotMV, targetCharMV, targetOath, belowStarting, belowHalf,",
+  "    battleShocked, notBattleShocked, inTerrain, onObjective, targetOnObjective, objectiveEitherWay, riled, setUpThisTurn,",
+  "    chargedOrArrived, disembarkedThisTurn, heavyWeapon, plasmaWeapon, outnumberOrGangUp.",
+  "offence: hit, wound, ap, strength, attacks (numbers to add), reroll: hits1 | hits | wounds1 | wounds, abilities: weapon abilities.",
+  "defend: woundMinusIfStronger, coverUnless12, inv + rangedOnly, enemyStrengthMinus (when this army's unit is attacked).",
+  "eligible: shootAfterAdvance, shootAfterFallBack, chargeAfterAdvance, chargeAfterFallBack.",
+  "rolls: rerollAdvance, rerollCharge, advanceSix, advanceBonus, chargeBonus, move (+M), oc (+OC), shockedOc (OC while battle-shocked).",
+  "choice: when = command (start of your Command phase, lasts until your next one) | round (each battle round) | battle (start of the battle, lasts all game);",
+  "        uses = eachOnce (each option once per battle) | limit (at most 'limit' activations, no repeats) | free; pick = options chosen at once."
+ ],
+ "rules": {
+  "War Horde": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ORKS"
+     ],
+     "attack": "melee",
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ]
+  },
+  "Da Big Hunt": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "BEAST SNAGGA"
+     ],
+     "if": [
+      "targetMV"
+     ],
+     "ap": 1
+    }
+   ]
+  },
+  "Kult of Speed": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "SPEED FREEKS"
+     ],
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "units": [
+      "SPEED FREEKS"
+     ],
+     "eligible": [
+      "chargeAfterAdvance",
+      "chargeAfterFallBack"
+     ]
+    }
+   ]
+  },
+  "Green Tide": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "name:Boyz"
+     ],
+     "attack": "melee",
+     "abilities": [
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "ORKS",
+      "INFANTRY"
+     ],
+     "attack": "melee",
+     "if": [
+      "charged",
+      "targetNotMV"
+     ],
+     "abilities": [
+      "lethal hits"
+     ]
+    }
+   ]
+  },
+  "Bully Boyz": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "name:Nobz|name:Meganobz"
+     ],
+     "attack": "melee",
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ]
+  },
+  "Taktikal Brigade": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "name:Boyz|name:Kommandos|name:Stormboyz"
+     ],
+     "eligible": [
+      "chargeAfterFallBack"
+     ]
+    }
+   ]
+  },
+  "Blitz Brigade": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "WAGON"
+     ],
+     "rerollCharge": true,
+     "advanceSix": true
+    }
+   ]
+  },
+  "Wreckas": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "name:Breaka Boyz|name:Flash Gitz|name:Tankbustas"
+     ],
+     "attack": "ranged",
+     "if": [
+      "objectiveEitherWay"
+     ],
+     "reroll": "hits1"
+    }
+   ]
+  },
+  "Shoota Boyz": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ORKS",
+      "INFANTRY"
+     ],
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "units": [
+      "ORKS",
+      "INFANTRY"
+     ],
+     "if": [
+      "riled"
+     ],
+     "rangeBonus": 3
+    }
+   ]
+  },
+  "Flyboyz": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "AIRCRAFT|name:Deffkoptas"
+     ],
+     "attack": "ranged",
+     "if": [
+      "riled"
+     ],
+     "hit": 1
+    }
+   ],
+   "note": "AIRCRAFT do not count toward Strategic Reserves points (already excluded)"
+  },
+  "Dread Mob": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "ORKS",
+      "WALKER",
+      "!TITANIC"
+     ],
+     "name": "Try Dat Button!",
+     "rule": {
+      "act": [
+       {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "label": "Roll 2 dice (no duplicates) + 1 Hazardous roll",
+        "botUse": "healthy",
+        "do": [
+         {
+          "on": "self",
+          "tryDatButton": 2
+         }
+        ]
+       },
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "label": "Roll 2 dice (no duplicates) + 1 Hazardous roll",
+        "botUse": "healthy",
+        "do": [
+         {
+          "on": "self",
+          "tryDatButton": 2
+         }
+        ]
+       },
+       {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "label": "Roll 1 die: 1-2 +1 A · 3-4 +2 S · 5-6 +1 AP",
+        "do": [
+         {
+          "on": "self",
+          "tryDatButton": 1
+         }
+        ]
+       },
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "label": "Roll 1 die: 1-2 +1 A · 3-4 +2 S · 5-6 +1 AP",
+        "do": [
+         {
+          "on": "self",
+          "tryDatButton": 1
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Runt Swarm": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "name:Gretchin"
+     ],
+     "name": "Sneaky Little Gitz",
+     "rule": {
+      "effects": [
+       {
+        "addKeywords": [
+         "BATTLELINE"
+        ]
+       },
+       {
+        "eligible": [
+         "actionAfterAdvance",
+         "actionAfterFallBack"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Madcap Meks": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "BIG MEK|name:Mek Gunz|name:Morkanaut|name:Wazbom Blastajet"
+     ],
+     "name": "Unpredictable Genius",
+     "rule": {
+      "act": {
+       "when": "attackStart",
+       "auto": true,
+       "limit": "phase",
+       "target": {
+        "side": "enemy",
+        "ctxUnit": true
+       },
+       "roll": "D6",
+       "table": [
+        {
+         "min": 1,
+         "max": 1,
+         "do": [
+          {
+           "buff": [
+            {
+             "defend": {
+              "inv": 4
+             }
+            }
+           ],
+           "until": "phase",
+           "mark": "weird"
+          }
+         ]
+        },
+        {
+         "min": 2,
+         "max": 3,
+         "do": [
+          {
+           "splashMortals": {
+            "expr": "D3",
+            "range": 3
+           }
+          }
+         ]
+        },
+        {
+         "min": 4,
+         "max": 4,
+         "do": [
+          {
+           "attackMod": {
+            "hit": 1
+           }
+          }
+         ]
+        },
+        {
+         "min": 5,
+         "max": 5,
+         "do": [
+          {
+           "attackMod": {
+            "noCover": true
+           }
+          }
+         ]
+        },
+        {
+         "min": 6,
+         "max": 6,
+         "do": [
+          {
+           "attackMod": {
+            "toughness": -1
+           }
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "note": "Rolled when the unit first shoots in the phase (the FLY result of option 5 is not applied)"
+  },
+  "Brute Bosses": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "WARBOSS"
+     ],
+     "models": "WARBOSS",
+     "name": "’Ard as Nails",
+     "rule": {
+      "effects": [
+       {
+        "scope": "model",
+        "fightOnDeath": 3,
+        "fightOnDeathRiled": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Wurrband": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "ORKS",
+      "PSYKER"
+     ],
+     "name": "Powers of da Waaagh!",
+     "rule": {
+      "effects": [
+       {
+        "if": [
+         "psychicWeapon"
+        ],
+        "strength": 1,
+        "strengthPer5Models": true
+       }
+      ],
+      "act": [
+       {
+        "when": "movement",
+        "limit": "phase",
+        "if": [
+         "notBattleShocked"
+        ],
+        "target": {
+         "side": "enemy",
+         "range": 12,
+         "units": [
+          "!MONSTER",
+          "!VEHICLE"
+         ]
+        },
+        "label": "Roar of Mork: enemies within 12\" take a Battle-shock test (−1 per 10 models) · psychic roll of 1 = Battle-shocked",
+        "roll": "D6",
+        "table": [
+         {
+          "min": 1,
+          "max": 1,
+          "do": [
+           {
+            "on": "self",
+            "battleShock": true
+           }
+          ]
+         }
+        ],
+        "do": [
+         {
+          "shock": 0,
+          "shockPerModels": 10
+         }
+        ]
+       },
+       {
+        "when": "fightStartButton",
+        "limit": "phase",
+        "if": [
+         "notBattleShocked"
+        ],
+        "label": "Visions of Violence: Fights First · psychic roll of 1 = Battle-shocked",
+        "botUse": "valuable",
+        "roll": "D6",
+        "table": [
+         {
+          "min": 1,
+          "max": 1,
+          "do": [
+           {
+            "on": "self",
+            "battleShock": true
+           }
+          ]
+         }
+        ],
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "fightsFirst": true
+           }
+          ],
+          "until": "phase"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Inner Circle Task Force": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "DEATHWING",
+      "INFANTRY"
+     ],
+     "if": [
+      "targetVowed"
+     ],
+     "wound": 1
+    }
+   ],
+   "acts": [
+    {
+     "when": "movementStart",
+     "auto": true,
+     "armyWide": true,
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "vow": "aggressive"
+      }
+     ]
+    }
+   ],
+   "note": "The engine selects Aggressive Push (all objectives not yet controlled are Vowed)"
+  },
+  "Combat Doctrines": {
+   "auto": "full",
+   "armyRule": true,
+   "choice": {
+    "name": "Combat Doctrines",
+    "when": "command",
+    "uses": "eachOnce",
+    "options": [
+     {
+      "id": "assault",
+      "name": "Assault Doctrine",
+      "text": "Can charge after Advancing",
+      "effects": [
+       {
+        "units": [
+         "ADEPTUS ASTARTES"
+        ],
+        "eligible": [
+         "chargeAfterAdvance"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "devastator",
+      "name": "Devastator Doctrine",
+      "text": "Ranged weapons have [ASSAULT]",
+      "effects": [
+       {
+        "units": [
+         "ADEPTUS ASTARTES"
+        ],
+        "attack": "ranged",
+        "abilities": [
+         "assault"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "tactical",
+      "name": "Tactical Doctrine",
+      "text": "Can shoot and charge after Falling Back",
+      "effects": [
+       {
+        "units": [
+         "ADEPTUS ASTARTES"
+        ],
+        "eligible": [
+         "shootAfterFallBack",
+         "chargeAfterFallBack"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "Transhuman Strategist": {
+   "auto": "full",
+   "armyRule": true,
+   "note": "Warlord with this ability: gain 1CP at the start of the battle round (see data/abilities)"
+  },
+  "Gladius Task Force": {
+   "auto": "full",
+   "doctrineExtra": [
+    {
+     "ids": [
+      "assault",
+      "devastator",
+      "tactical"
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "Assault Brethren": {
+   "auto": "full",
+   "doctrineExtra": [
+    {
+     "ids": [
+      "assault"
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "Tactical Brethren": {
+   "auto": "full",
+   "doctrineExtra": [
+    {
+     "ids": [
+      "tactical"
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "Devastator Brethren": {
+   "auto": "full",
+   "doctrineExtra": [
+    {
+     "ids": [
+      "devastator"
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "Terminator Storm Force": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "TERMINATOR"
+     ],
+     "chargeBonus": 1
+    }
+   ]
+  },
+  "Tacticus Attack Force": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "TACTICUS"
+     ],
+     "rerollAdvance": true
+    }
+   ]
+  },
+  "Tacticus Firestorm Force": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "TACTICUS"
+     ],
+     "attack": "ranged",
+     "rapidFireFullRange": true
+    }
+   ]
+  },
+  "Phobos Shadow Force": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "PHOBOS|SCOUT SQUAD|name:Scout Squad"
+     ],
+     "name": "Shadow Masters",
+     "rule": {
+      "act": [
+       {
+        "when": "afterShootingButton",
+        "limit": "phase",
+        "label": "Can remain hidden after shooting",
+        "do": [
+         {
+          "on": "self",
+          "unshot": true
+         }
+        ]
+       },
+       {
+        "when": "afterShootingButton",
+        "limit": "phase",
+        "if": [
+         "notEngaged"
+        ],
+        "label": "Move D6\" after shooting (cannot charge)",
+        "do": [
+         {
+          "on": "self",
+          "move": "D6",
+          "noCharge": true
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "note": "After a PHOBOS / Scout Squad unit shoots: choose 'Stay hidden' or 'Move D6\"' (one or the other)"
+  },
+  "Phobos Shock Force": {
+   "auto": "full",
+   "acts": [
+    {
+     "when": "movementEnd",
+     "auto": true,
+     "units": [
+      "PHOBOS"
+     ],
+     "if": [
+      "hidden"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "buff": [
+        {
+         "reroll": "wounds1"
+        }
+       ],
+       "until": "turn"
+      }
+     ]
+    }
+   ],
+   "note": "End of Movement phase: hidden PHOBOS units re-roll Wound rolls of 1 until end of turn"
+  },
+  "Gravis Linebreaker Force": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "GRAVIS"
+     ],
+     "attack": "ranged",
+     "if": [
+      "normalMoved"
+     ],
+     "hit": 1
+    }
+   ]
+  },
+  "Gravis Siege Force": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "GRAVIS"
+     ],
+     "if": [
+      "onObjective"
+     ],
+     "defend": {
+      "woundIfStronger": -1
+     }
+    }
+   ]
+  },
+  "Stormlance Task Force": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "MOUNTED|SPEEDER"
+     ],
+     "move": 2
+    }
+   ]
+  },
+  "Ironclad Champions": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "DREADNOUGHT"
+     ],
+     "reroll": "hits1"
+    }
+   ]
+  },
+  "Gauntlet Task Force": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "TRANSPORT"
+     ],
+     "name": "Combined Deployment",
+     "rule": {
+      "act": {
+       "when": "afterShooting",
+       "auto": true,
+       "limit": "phase",
+       "target": {
+        "side": "enemy",
+        "hit": true
+       },
+       "do": [
+        {
+         "on": "target",
+         "incoming": {
+          "abilities": [
+           "sustained hits 1"
+          ],
+          "units": [
+           "ADEPTUS ASTARTES"
+          ]
+         },
+         "fromDisembarked": true,
+         "until": "turn",
+         "mark": "assailed"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "note": "Units hit by the TRANSPORT's shooting are assailed until end of turn: units that disembarked this turn gain [SUSTAINED HITS 1] against them"
+  },
+  "Ironstorm Spearhead": {
+   "auto": "full",
+   "freeDie": [
+    {
+     "kind": "reroll",
+     "stage": "hit",
+     "limit": "phase",
+     "attack": "ranged",
+     "units": [
+      "ADEPTUS ASTARTES",
+      "VEHICLE",
+      "!WALKER"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "wound",
+     "limit": "phase",
+     "attack": "ranged",
+     "units": [
+      "ADEPTUS ASTARTES",
+      "VEHICLE",
+      "!WALKER"
+     ]
+    }
+   ]
+  },
+  "Blade of Ultramar": {
+   "auto": "full",
+   "doctrineExtra": [
+    {
+     "ids": [
+      "assault"
+     ],
+     "n": 1,
+     "if": [
+      "armyHas:Marneus Calgar"
+     ]
+    },
+    {
+     "ids": [
+      "devastator"
+     ],
+     "n": 1,
+     "if": [
+      "armyHas:Marneus Calgar"
+     ]
+    },
+    {
+     "ids": [
+      "tactical"
+     ],
+     "n": 1,
+     "if": [
+      "armyHas:Marneus Calgar"
+     ]
+    }
+   ]
+  },
+  "Ceramite Sentinels": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "inTerrain"
+     ],
+     "reroll": "wounds1"
+    }
+   ]
+  },
+  "Forgefather's Seekers": {
+   "auto": "full",
+   "doctrineExtra": [
+    {
+     "ids": [
+      "devastator"
+     ],
+     "n": 1
+    }
+   ],
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "attack": "ranged",
+     "if": [
+      "within12"
+     ],
+     "strength": 1
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "name:Infernus Squad"
+     ],
+     "name": "Vulkan's Quest",
+     "rule": {
+      "effects": [
+       {
+        "if": [
+         "armyHas:Vulkan He’stan"
+        ],
+        "eligible": [
+         "actionAfterAdvance",
+         "actionAfterFallBack",
+         "shootAfterAction"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Medusa's Wrath": {
+   "auto": "full",
+   "freeDie": [
+    {
+     "kind": "reroll",
+     "stage": "any",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "hit",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Caanok Var"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "wound",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Caanok Var"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "damage",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Caanok Var"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "hit",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Iron Father Feirros"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "wound",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Iron Father Feirros"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "damage",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "near:6:Iron Father Feirros"
+     ]
+    }
+   ],
+   "note": "Re-roll 1 die (Hit / Wound / Damage) per attack · within 6\" of Caanok Var / Iron Father Feirros: 1 extra of each"
+  },
+  "Shadowmark Talon": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "stealth": true
+    },
+    {
+     "units": [
+      "PHOBOS|SCOUT SQUAD"
+     ],
+     "detection": -3
+    },
+    {
+     "units": [
+      "ADEPTUS ASTARTES"
+     ],
+     "if": [
+      "armyHas:Aethon Shaan"
+     ],
+     "stratDiscount": {
+      "ids": [
+       "Shadowmark Talon-intodarkness"
+      ],
+      "cp": 1,
+      "limit": "round",
+      "perArmy": true
+     }
+    }
+   ]
+  },
+  "Spearpoint Task Force": {
+   "auto": "full",
+   "doctrineExtra": [
+    {
+     "ids": [
+      "assault",
+      "tactical"
+     ],
+     "n": 1
+    }
+   ],
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "MOUNTED|SPEEDER"
+     ],
+     "advanceBonus": 1
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "name:Suboden Khan"
+     ],
+     "name": "Wrath of the First Khan",
+     "rule": {
+      "act": {
+       "when": "fightEnd",
+       "auto": true,
+       "limit": "phase",
+       "do": [
+        {
+         "on": "self",
+         "move": "M"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  "Angelic Inheritors": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "BLOOD ANGELS",
+      "CHARACTER"
+     ],
+     "reroll": [
+      "hits1",
+      "wounds1"
+     ]
+    }
+   ]
+  },
+  "Encarmine Speartip": {
+   "auto": "full",
+   "doctrines": [
+    {
+     "units": [
+      "SANGUINARY GUARD"
+     ],
+     "ids": [
+      "tactical"
+     ]
+    }
+   ]
+  },
+  "Wrath of the Doomed": {
+   "auto": "full",
+   "doctrines": [
+    {
+     "units": [
+      "DEATH COMPANY"
+     ],
+     "ids": [
+      "assault"
+     ],
+     "only": true
+    }
+   ]
+  },
+  "Black Spear Task Force": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "KILL TEAM"
+     ],
+     "if": [
+      "doctrine:devastator"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "KILL TEAM"
+     ],
+     "if": [
+      "doctrine:tactical"
+     ],
+     "abilities": [
+      "lethal hits"
+     ]
+    },
+    {
+     "units": [
+      "KILL TEAM"
+     ],
+     "if": [
+      "doctrine:assault",
+      "within:9"
+     ],
+     "abilities": [
+      "precision"
+     ]
+    }
+   ]
+  },
+  "Deathwatch Support": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "KILL TEAM"
+     ],
+     "if": [
+      "doctrine:devastator"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "KILL TEAM"
+     ],
+     "if": [
+      "doctrine:tactical"
+     ],
+     "abilities": [
+      "lethal hits"
+     ]
+    },
+    {
+     "units": [
+      "KILL TEAM"
+     ],
+     "if": [
+      "doctrine:assault",
+      "within:9"
+     ],
+     "abilities": [
+      "precision"
+     ]
+    }
+   ],
+   "note": "Deathwatch Allies (500 points, cannot be Warlord) not yet validated in the army builder"
+  },
+  "Wrath of the Rock": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "INFANTRY|MOUNTED"
+     ],
+     "defend": {
+      "woundIfStronger": -1
+     }
+    }
+   ]
+  },
+  "Darkflight Pursuit": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "RAVENWING",
+      "FLY"
+     ],
+     "attack": "ranged",
+     "abilities": [
+      "ignores cover"
+     ]
+    },
+    {
+     "units": [
+      "name:Outrider Squad"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    }
+   ]
+  },
+  "Marshal's Household": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "SWORD BRETHREN SQUAD"
+     ],
+     "attack": "melee",
+     "if": [
+      "fightPhase",
+      "onObjective"
+     ],
+     "attacks": 1
+    }
+   ]
+  },
+  "Vow-sworn Crusaders": {
+   "auto": "full",
+   "choice": {
+    "name": "Templar Vows",
+    "when": "battle",
+    "uses": "free",
+    "pick": 1,
+    "options": [
+     {
+      "id": "witch",
+      "name": "Abhor the Witch, Destroy the Witch",
+      "text": "Attacks against PSYKER: [PRECISION] and [LANCE]",
+      "effects": [
+       {
+        "units": [
+         "ADEPTUS ASTARTES"
+        ],
+        "attack": "melee",
+        "if": [
+         "targetKw:PSYKER"
+        ],
+        "abilities": [
+         "precision",
+         "lance"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "challenge",
+      "name": "Accept Any Challenge, No Matter the Odds",
+      "text": "Attacks: if target T > S, +1 to Wound",
+      "effects": [
+       {
+        "units": [
+         "ADEPTUS ASTARTES"
+        ],
+        "attack": "melee",
+        "if": [
+         "attackSLessT"
+        ],
+        "wound": 1
+       }
+      ]
+     },
+     {
+      "id": "uphold",
+      "name": "Uphold the Honour of the Emperor",
+      "text": "End of Movement: objectives controlled by INFANTRY become sticky; can start actions after Advancing",
+      "effects": [
+       {
+        "units": [
+         "ADEPTUS ASTARTES",
+         "INFANTRY"
+        ],
+        "secureAtMovementEnd": true
+       },
+       {
+        "units": [
+         "ADEPTUS ASTARTES",
+         "INFANTRY"
+        ],
+        "eligible": [
+         "actionAfterAdvance"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "Fist of the God-Emperor": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "CRUSADER SQUAD|name:Crusader Squad"
+     ],
+     "surgeObjective": true
+    }
+   ],
+   "note": "Crusader Squad: may surge move towards the closest objective instead of the enemy (bot chooses; players can drag towards an objective)"
+  },
+  "Champions of Fenris": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "CHARACTER"
+     ],
+     "name": "Countercharge",
+     "rule": {
+      "effects": [
+       {
+        "stratDiscount": {
+         "ids": [
+          "heroic-intervention"
+         ],
+         "cp": 1,
+         "limit": "round"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Saga of the Beastslayer": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "BLOOD CLAWS|THUNDERWOLF CAVALRY|WULFEN"
+     ],
+     "abilities": [
+      "lethal hits: character/monster/vehicle"
+     ]
+    }
+   ]
+  },
+  "Saga of the Great Wolf": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "!MONSTER",
+      "!VEHICLE"
+     ],
+     "if": [
+      "doctrine:assault"
+     ],
+     "advanceBonus": 1,
+     "chargeBonus": 1
+    },
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "!MONSTER",
+      "!VEHICLE"
+     ],
+     "attack": "ranged",
+     "if": [
+      "doctrine:devastator"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "!MONSTER",
+      "!VEHICLE"
+     ],
+     "if": [
+      "doctrine:tactical",
+      "within:9"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "MONSTER|VEHICLE"
+     ],
+     "if": [
+      "friendMarked:howlingOnslaught",
+      "doctrine:assault"
+     ],
+     "advanceBonus": 1,
+     "chargeBonus": 1
+    },
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "MONSTER|VEHICLE"
+     ],
+     "attack": "ranged",
+     "if": [
+      "friendMarked:howlingOnslaught",
+      "doctrine:devastator"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "ADEPTUS ASTARTES",
+      "MONSTER|VEHICLE"
+     ],
+     "if": [
+      "friendMarked:howlingOnslaught",
+      "doctrine:tactical",
+      "within:9"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "name:Logan Grimnar"
+     ],
+     "name": "Howling Onslaught",
+     "rule": {
+      "act": {
+       "when": "command",
+       "limit": "battle",
+       "per": "army",
+       "botUse": "round2",
+       "label": "MONSTER/VEHICLE gain Master of Wolves until your next Command phase",
+       "do": [
+        {
+         "on": "self",
+         "buff": [
+          {}
+         ],
+         "until": "nextCommand",
+         "mark": "howlingOnslaught"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  "Aegis of the Emperor": {
+   "auto": "full",
+   "armyRule": true,
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "defend": {
+      "fnp": 5,
+      "fnpVs": "mortal"
+     }
+    }
+   ]
+  },
+  "Aquila Commander": {
+   "auto": "full",
+   "armyRule": true,
+   "note": "Warlord with this ability: gain 1CP at the start of the battle round (see data/abilities/AC.json)"
+  },
+  "Special Move Types": {
+   "auto": "full",
+   "armyRule": true,
+   "note": "Shock disembark: see Assault Vehicle"
+  },
+  "Daughters of the Abyss": {
+   "auto": "full",
+   "armyRule": true,
+   "effects": [
+    {
+     "units": [
+      "ANATHEMA PSYKANA"
+     ],
+     "defend": {
+      "fnp": 3,
+      "fnpVs": "psychic"
+     }
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "ANATHEMA PSYKANA"
+     ],
+     "name": "Psychic Null (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+         "ADEPTUS CUSTODES"
+        ],
+        "defend": {
+         "fnp": 5,
+         "fnpVs": "psychic"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Martial Ka'tah": {
+   "auto": "full",
+   "armyRule": true,
+   "acts": [
+    {
+     "when": "commandStart",
+     "auto": true,
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "ready": true
+      }
+     ]
+    },
+    {
+     "when": "command",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied"
+     ],
+     "label": "Conservai: can perform actions while engaged / Battle-shocked and can still shoot",
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "eligible": [
+          "actionWhileEngaged",
+          "actionWhileShocked",
+          "shootAfterAction"
+         ]
+        }
+       ],
+       "until": "turn"
+      },
+      {
+       "on": "self",
+       "if": [
+        "detachment:Emissaries Imperatus"
+       ],
+       "buff": [
+        {
+         "eligible": [
+          "actionAfterAdvance",
+          "actionAfterFallBack"
+         ]
+        }
+       ],
+       "until": "turn"
+      }
+     ],
+     "botIf": [
+      "battleShocked",
+      "!engaged",
+      "farFromEnemies:12"
+     ]
+    },
+    {
+     "when": "movement",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied",
+      "notMovedYet"
+     ],
+     "label": "Calistus: can move through models",
+     "botIf": [
+      "detachment:Solar Watch",
+      "!engaged"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "moveThroughModels": true
+        }
+       ],
+       "until": "turn"
+      },
+      {
+       "on": "self",
+       "if": [
+        "detachment:Solar Watch"
+       ],
+       "buff": [
+        {
+         "move": 2
+        }
+       ],
+       "until": "turn"
+      }
+     ]
+    },
+    {
+     "when": "selectedToShoot",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied"
+     ],
+     "label": "Salvus: ignore modifiers to BS / Hit / Wound",
+     "botIf": [
+      "any:detachment:Aquilan Shield||farFromEnemies:14"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "ranged",
+         "ignoreHitMods": true,
+         "ignoreWoundMods": true
+        }
+       ]
+      },
+      {
+       "on": "self",
+       "if": [
+        "detachment:Aquilan Shield"
+       ],
+       "buff": [
+        {
+         "rangeBonus": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "when": "fightStartButton",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied"
+     ],
+     "label": "Dacatarai: melee attacks against non-MONSTER/VEHICLE units re-roll Hit rolls of 1",
+     "botIf": [
+      "ownTurn",
+      "engagedNotMV",
+      "!engagedMV"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "melee",
+         "if": [
+          "targetNotMV"
+         ],
+         "reroll": "hits1"
+        }
+       ]
+      },
+      {
+       "on": "self",
+       "if": [
+        "detachment:Dread Host"
+       ],
+       "buff": [
+        {
+         "enemyPileMinus": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "when": "fightStartButton",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied"
+     ],
+     "label": "Kaptaris: enemy melee attacks against this unit -1 to Hit",
+     "botIf": [
+      "!ownTurn",
+      "engaged"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "defend": {
+          "vs": "melee",
+          "hit": -1
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "when": "fightStartButton",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied",
+      "detachment:Shadowkeepers"
+     ],
+     "target": {
+      "side": "enemy",
+      "engaged": true
+     },
+     "label": "Kaptaris (Shadowkeepers): -1 to Hit + engaged enemies -1 to Battle-shock tests",
+     "botIf": [
+      "engaged"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "defend": {
+          "vs": "melee",
+          "hit": -1
+         }
+        }
+       ]
+      },
+      {
+       "shock": -1
+      }
+     ]
+    },
+    {
+     "when": "selectedToFight",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied"
+     ],
+     "label": "Rendax: melee weapons gain [LETHAL HITS: MONSTER/VEHICLE]",
+     "botIf": [
+      "engagedMV"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "melee",
+         "abilities": [
+          "lethal hits: monster/vehicle"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "when": "selectedToFight",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "if": [
+      "readied",
+      "detachment:Emperor's Chosen",
+      "engagedMV"
+     ],
+     "target": {
+      "side": "enemy",
+      "engaged": true,
+      "units": [
+       "MONSTER|VEHICLE"
+      ]
+     },
+     "roll": "D6",
+     "label": "Rendax (Emperor's Chosen): + mortal wound roll against engaged MONSTER/VEHICLE",
+     "botIf": [
+      "engagedMV"
+     ],
+     "table": [
+      {
+       "min": 1,
+       "max": 2,
+       "do": [
+        {
+         "mortals": "1"
+        }
+       ]
+      },
+      {
+       "min": 3,
+       "max": 5,
+       "do": [
+        {
+         "mortals": "D3"
+        }
+       ]
+      },
+      {
+       "min": 6,
+       "do": [
+        {
+         "mortals": "3"
+        }
+       ]
+      }
+     ],
+     "do": [
+      {
+       "on": "self",
+       "unready": true
+      },
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "melee",
+         "abilities": [
+          "lethal hits: monster/vehicle"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "Guardians of the Throne": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "name": "Martial Mastery",
+     "rule": {
+      "act": [
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "if": [
+         "!marked:martialMastery"
+        ],
+        "label": "Melee weapons [SUSTAINED HITS 1]",
+        "botIf": [
+         "!lethalBetter"
+        ],
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "attack": "melee",
+            "abilities": [
+             "sustained hits 1"
+            ]
+           }
+          ],
+          "mark": "martialMastery"
+         }
+        ]
+       },
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "if": [
+         "!marked:martialMastery"
+        ],
+        "label": "Melee weapons [LETHAL HITS]",
+        "botIf": [
+         "lethalBetter"
+        ],
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "attack": "melee",
+            "abilities": [
+             "lethal hits"
+            ]
+           }
+          ],
+          "mark": "martialMastery"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Aquilan Shield": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES",
+      "!MONSTER",
+      "!VEHICLE"
+     ],
+     "if": [
+      "onObjective"
+     ],
+     "defend": {
+      "vs": "ranged",
+      "woundIfStronger": -1
+     }
+    }
+   ],
+   "note": "Favoured Ka'tah: Salvus +6\" range"
+  },
+  "Emperor's Chosen": {
+   "auto": "full",
+   "freeDie": [
+    {
+     "kind": "reroll",
+     "stage": "hit",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "wound",
+     "limit": "phase",
+     "units": [
+      "ADEPTUS CUSTODES"
+     ]
+    }
+   ],
+   "note": "Favoured Ka'tah: Rendax + mortal wound roll"
+  },
+  "Emissaries Imperatus": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "fightsFirst": true
+    }
+   ],
+   "note": "Favoured Ka'tah: Conservai"
+  },
+  "Dread Host": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "rerollCharge": true
+    }
+   ],
+   "note": "Favoured Ka'tah: Dacatarai (engaged enemies -2\" pile-in/consolidate)"
+  },
+  "Shadowkeepers": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES",
+      "!MONSTER",
+      "!VEHICLE"
+     ],
+     "if": [
+      "onObjective"
+     ],
+     "defend": {
+      "vs": "melee",
+      "woundIfStronger": -1
+     }
+    }
+   ],
+   "note": "Favoured Ka'tah: Kaptaris + battle-shock"
+  },
+  "Solar Watch": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "eligible": [
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "note": "Favoured Ka'tah: Calistus +2\" M"
+  },
+  "Auric Champions": {
+   "auto": "full",
+   "acts": [
+    {
+     "when": "command",
+     "armyWide": true,
+     "units": [
+      "ADEPTUS CUSTODES"
+     ],
+     "target": {
+      "side": "enemy",
+      "anywhere": true
+     },
+     "limit": "turn",
+     "label": "Select an enemy as dreadful foe: our CHARACTERS +1 to Wound against it",
+     "do": [
+      {
+       "incoming": {
+        "units": [
+         "CHARACTER"
+        ],
+        "wound": 1
+       },
+       "until": "nextCommand",
+       "mark": "dreadfulFoe"
+      }
+     ]
+    }
+   ]
+  },
+  "Honoured Companions": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "TRUSTED SENTINEL"
+     ],
+     "if": [
+      "onObjective"
+     ],
+     "reroll": "wounds1"
+    }
+   ]
+  },
+  "Lions of the Emperor": {
+   "auto": "full",
+   "acts": [
+    {
+     "when": "opponentFightEnd",
+     "units": [
+      "ADEPTUS CUSTODES",
+      "TERMINATOR"
+     ],
+     "if": [
+      "notEngaged"
+     ],
+     "botUse": "never",
+     "label": "On Gilded Wings: go into Strategic Reserves",
+     "do": [
+      {
+       "on": "self",
+       "reserves": true
+      }
+     ]
+    }
+   ]
+  },
+  "Might of the Moritoi": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ADEPTUS CUSTODES",
+      "DREADNOUGHT"
+     ],
+     "if": [
+      "!belowStartingW"
+     ],
+     "oc": 2
+    },
+    {
+     "units": [
+      "ADEPTUS CUSTODES",
+      "DREADNOUGHT"
+     ],
+     "if": [
+      "belowStartingW",
+      "!belowHalfW"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "ADEPTUS CUSTODES",
+      "DREADNOUGHT"
+     ],
+     "if": [
+      "belowHalfW"
+     ],
+     "reroll": [
+      "hits1",
+      "wounds1"
+     ]
+    }
+   ]
+  },
+  "Grav-Assault Force": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "GRAV-ASSAULT"
+     ],
+     "defend": {
+      "vs": "ranged",
+      "inv": 4
+     }
+    }
+   ]
+  },
+  "Null Maiden Vigil": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "PROSECUTOR SQUAD"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "ANATHEMA PSYKANA"
+     ],
+     "name": "Creeping Dread (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "creepingDread": 12
+       }
+      ]
+     }
+    }
+   ],
+   "note": "Warlord can be an ANATHEMA PSYKANA CHARACTER"
+  },
+  "Librarius": {
+   "auto": "full",
+   "armyRule": true,
+   "note": "Psyker level budget per battle round (activations.ts psykerBudgetOk)"
+  },
+  "Hunter": {
+   "auto": "full",
+   "armyRule": true,
+   "note": "Hunter profiles only target matching units (attack.ts)"
+  },
+  "Hexwarp Thrallband": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "THOUSAND SONS"
+     ],
+     "if": [
+      "psychicWeapon",
+      "!inFlow"
+     ],
+     "reroll": "wounds1"
+    },
+    {
+     "units": [
+      "THOUSAND SONS"
+     ],
+     "if": [
+      "psychicWeapon",
+      "inFlow"
+     ],
+     "wound": 1
+    }
+   ],
+   "note": "Flow of Magic: your deployment zone; No Man's Land / the enemy deployment zone while you control half of the objectives there (flow.ts)"
+  },
+  "Grand Coven": {
+   "auto": "full",
+   "choice": {
+    "name": "Kindred Sorcery",
+    "when": "command",
+    "uses": "eachOnce",
+    "options": [
+     {
+      "id": "imbued",
+      "name": "Imbued Manifestation",
+      "text": "Psychic ranged weapons +6\" Range",
+      "effects": [
+       {
+        "units": [
+         "THOUSAND SONS"
+        ],
+        "attack": "ranged",
+        "if": [
+         "psychicWeapon"
+        ],
+        "weaponRange": 6
+       }
+      ]
+     },
+     {
+      "id": "maelstrom",
+      "name": "Psychic Maelstrom",
+      "text": "Psychic weapons +1 to Wound",
+      "effects": [
+       {
+        "units": [
+         "THOUSAND SONS"
+        ],
+        "if": [
+         "psychicWeapon"
+        ],
+        "wound": 1
+       }
+      ]
+     },
+     {
+      "id": "wrath",
+      "name": "Wrath of the Immaterium",
+      "text": "Psychic weapons have [DEVASTATING WOUNDS]",
+      "effects": [
+       {
+        "units": [
+         "THOUSAND SONS"
+        ],
+        "if": [
+         "psychicWeapon"
+        ],
+        "abilities": [
+         "devastating wounds"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "Changehost of Deceit": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "SCINTILLATING LEGIONS"
+     ],
+     "name": "Daemonic Illusions (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+         "THOUSAND SONS",
+         "PSYKER"
+        ],
+        "defend": {
+         "inv": 4,
+         "vs": "ranged"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "units": [
+      "THOUSAND SONS"
+     ],
+     "name": "Mortal Sorcery (Aura)",
+     "rule": {
+      "status": "auto",
+      "note": "Scintillating Legions PSYKER units within 6\" can attempt Rituals (rituals.ts)"
+     }
+    }
+   ],
+   "note": "Scintillating Legions points limit and no Scintillating Legions Warlord: checked in the army builder"
+  },
+  "Warpmeld Pact": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "TZAANGORS"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    },
+    {
+     "units": [
+      "TZAANGORS"
+     ],
+     "if": [
+      "notBattleShocked"
+     ],
+     "oc": 1
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "MUTANT",
+      "INFANTRY|MOUNTED"
+     ],
+     "name": "Warpmeld Sacrifice",
+     "rule": {
+      "act": [
+       {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Warpmeld Sacrifice: +1 to Wound this phase, D3 mortal wounds at the end of the phase",
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "wound": 1
+           }
+          ],
+          "phaseEndMortals": "D3"
+         }
+        ]
+       },
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "botIf": [
+         "engaged",
+         "minModels:8"
+        ],
+        "label": "Warpmeld Sacrifice: +1 to Wound this phase, D3 mortal wounds at the end of the phase",
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "wound": 1
+           }
+          ],
+          "phaseEndMortals": "D3"
+         }
+        ]
+       },
+       {
+        "when": "attacked",
+        "auto": true,
+        "botOnly": true,
+        "limit": "phase",
+        "if": [
+         "dangerousAttack"
+        ],
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "defend": {
+             "wound": -1
+            }
+           }
+          ],
+          "phaseEndMortals": "D3"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Rubricae Phalanx": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "RUBRICAE"
+     ],
+     "defend": {
+      "saveBonusD1": 1
+     }
+    }
+   ]
+  },
+  "Warpforged Cabal": {
+   "auto": "full",
+   "freeDie": [
+    {
+     "kind": "reroll",
+     "stage": "hit",
+     "limit": "phase",
+     "units": [
+      "THOUSAND SONS",
+      "VEHICLE"
+     ],
+     "if": [
+      "near:6:THOUSAND SONS+PSYKER"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "wound",
+     "limit": "phase",
+     "units": [
+      "THOUSAND SONS",
+      "VEHICLE"
+     ],
+     "if": [
+      "near:6:THOUSAND SONS+PSYKER"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "damage",
+     "limit": "phase",
+     "units": [
+      "THOUSAND SONS",
+      "VEHICLE"
+     ],
+     "if": [
+      "near:6:THOUSAND SONS+PSYKER"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "any",
+     "limit": "phase",
+     "units": [
+      "THOUSAND SONS",
+      "VEHICLE"
+     ],
+     "if": [
+      "!near:6:THOUSAND SONS+PSYKER"
+     ]
+    }
+   ],
+   "effects": [
+    {
+     "units": [
+      "THOUSAND SONS",
+      "VEHICLE"
+     ],
+     "if": [
+      "near:6:THOUSAND SONS+PSYKER"
+     ],
+     "deadlyDemiseOn": 5
+    }
+   ]
+  },
+  "Ritual of Regeneration": {
+   "auto": "full",
+   "note": "Sorcerous Invigoration: a unit that manifests a Ritual heals D3 (rituals.ts)"
+  },
+  "Sekhetar Cohort": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "SEKHETAR ROBOTS"
+     ],
+     "abilities": [
+      "psychic"
+     ]
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "THOUSAND SONS",
+      "PSYKER"
+     ],
+     "name": "Infusion (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "scope": "aura",
+        "range": 12,
+        "units": [
+         "SEKHETAR ROBOTS"
+        ],
+        "attack": "melee",
+        "hit": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Servants of Change": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "TZAANGORS"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    },
+    {
+     "units": [
+      "MUTANT"
+     ],
+     "spotting": 6
+    }
+   ]
+  },
+  "Pactbound Zealots": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "KHORNE"
+     ],
+     "attack": "melee",
+     "if": [
+      "marked:pactOk:lethal"
+     ],
+     "critHitOn": 5
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "TZEENTCH"
+     ],
+     "attack": "ranged",
+     "if": [
+      "marked:pactOk:lethal"
+     ],
+     "critHitOn": 5
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "NURGLE"
+     ],
+     "attack": "ranged",
+     "if": [
+      "marked:pactOk:sustained"
+     ],
+     "critHitOn": 5
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "SLAANESH"
+     ],
+     "attack": "melee",
+     "if": [
+      "marked:pactOk:sustained"
+     ],
+     "critHitOn": 5
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "!KHORNE",
+      "!TZEENTCH",
+      "!NURGLE",
+      "!SLAANESH"
+     ],
+     "if": [
+      "marked:pactOk:lethal"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "!KHORNE",
+      "!TZEENTCH",
+      "!NURGLE",
+      "!SLAANESH"
+     ],
+     "if": [
+      "marked:pactOk:sustained",
+      "!marked:pactOk:lethal"
+     ],
+     "reroll": "hits1"
+    }
+   ]
+  },
+  "Veterans of the Long War": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "!DAMNED"
+     ],
+     "if": [
+      "targetOath"
+     ],
+     "reroll": "hits"
+    }
+   ]
+  },
+  "Deceptors": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "LEGIONARIES"
+     ],
+     "name": "Masters of Misdirection",
+     "rule": {
+      "act": [
+       {
+        "when": "formation",
+        "auto": true,
+        "limit": "battle",
+        "target": {
+         "side": "friendly",
+         "units": [
+          "LEGIONARIES"
+         ],
+         "anywhere": true,
+         "each": true,
+         "count": "battleSize"
+        },
+        "do": [
+         {
+          "buff": [
+           {
+            "infiltrators": true
+           }
+          ],
+          "until": "battle"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "units": [
+      "CULTIST MOB"
+     ],
+     "name": "Masters of Misdirection (Cultist Mobs)",
+     "rule": {
+      "act": [
+       {
+        "when": "formation",
+        "auto": true,
+        "limit": "battle",
+        "target": {
+         "side": "friendly",
+         "units": [
+          "CULTIST MOB"
+         ],
+         "anywhere": true,
+         "each": true,
+         "count": "battleSize"
+        },
+        "do": [
+         {
+          "buff": [
+           {
+            "infiltrators": true
+           }
+          ],
+          "until": "battle"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Renegade Raiders": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "if": [
+      "targetInRangeOfObjective"
+     ],
+     "ap": 1
+    }
+   ]
+  },
+  "Dread Talons": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "scope": "enemyAura",
+     "range": 12,
+     "ld": -1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "terrorBelow": 12
+    }
+   ]
+  },
+  "Fellhammer Siege-host": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "!DAMNED"
+     ],
+     "defend": {
+      "vs": "ranged",
+      "woundIfStronger": -1
+     }
+    }
+   ]
+  },
+  "Chaos Cult": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "DAMNED"
+     ],
+     "name": "Desperate Pact",
+     "rule": {
+      "act": [
+       {
+        "when": "movement",
+        "limit": "phase",
+        "label": "Desperate Pact: Leadership test (failed: D3 mortal wounds), +2\" Move this phase",
+        "botUse": "healthy",
+        "ldTest": true,
+        "pass": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "move": 2
+           }
+          ],
+          "until": "phase"
+         }
+        ],
+        "fail": [
+         {
+          "on": "self",
+          "mortals": "D3"
+         },
+         {
+          "on": "self",
+          "buff": [
+           {
+            "move": 2
+           }
+          ],
+          "until": "phase"
+         }
+        ]
+       },
+       {
+        "when": "chargeStart",
+        "limit": "phase",
+        "label": "Desperate Pact: Leadership test (failed: D3 mortal wounds), +2 to Charge rolls this phase",
+        "botUse": "healthy",
+        "ldTest": true,
+        "pass": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "chargeBonus": 2
+           }
+          ],
+          "until": "phase"
+         }
+        ],
+        "fail": [
+         {
+          "on": "self",
+          "mortals": "D3"
+         },
+         {
+          "on": "self",
+          "buff": [
+           {
+            "chargeBonus": 2
+           }
+          ],
+          "until": "phase"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "effects": [
+    {
+     "units": [
+      "TRAITOR GUARDSMEN SQUAD"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    }
+   ]
+  },
+  "Soulforged Warpack": {
+   "auto": "full"
+  },
+  "Creations of Bile": {
+   "auto": "full",
+   "choice": {
+    "name": "Experimental Augmentations",
+    "when": "battle",
+    "uses": "free",
+    "pick": 1,
+    "options": [
+     {
+      "id": "cholinergic",
+      "name": "Cholinergic Accelerants",
+      "text": "+1 A (melee)",
+      "effects": [
+       {
+        "attack": "melee",
+        "attacks": 1,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "hyperadrenal",
+      "name": "Hyperadrenal Infusion",
+      "text": "+2\" Move",
+      "effects": [
+       {
+        "move": 2,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "paraneural",
+      "name": "Paraneural Reactions",
+      "text": "+1 WS",
+      "effects": [
+       {
+        "attack": "melee",
+        "hit": 1,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "chitination",
+      "name": "Supracutaneous Chitination",
+      "text": "+1 T",
+      "effects": [
+       {
+        "toughness": 1,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "sinews",
+      "name": "Macrotensile Sinews",
+      "text": "+1 S (melee)",
+      "effects": [
+       {
+        "attack": "melee",
+        "strength": 1,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "ophthalmic",
+      "name": "Ophthalmic Enhancement",
+      "text": "+1 BS",
+      "effects": [
+       {
+        "attack": "ranged",
+        "hit": 1,
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY",
+         "!DAMNED"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "random",
+      "name": "Roll two at random",
+      "text": "Roll two D6: 1 Cholinergic, 2 Hyperadrenal, 3 Paraneural, 4 Chitination, 5 Sinews, 6 Ophthalmic (a double gives one)",
+      "effects": [],
+      "random": 2
+     }
+    ]
+   }
+  },
+  "Cabal of Chaos": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "PSYKER",
+      "!DAEMON"
+     ],
+     "attack": "ranged",
+     "if": [
+      "marked:darkPact",
+      "ownShooting"
+     ],
+     "strength": 1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "DAEMON PRINCE|DAEMON PRINCE WITH WINGS",
+      "!KHORNE"
+     ],
+     "attack": "melee",
+     "if": [
+      "marked:darkPact",
+      "fightPhase"
+     ],
+     "strength": 2,
+     "ap": 1
+    }
+   ]
+  },
+  "Nightmare Hunt": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "terrorBelow": 12,
+     "terrorBelowMod": -1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "if": [
+      "targetBelowHalf"
+     ],
+     "hit": 1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "if": [
+      "targetBattleShocked"
+     ],
+     "wound": 1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "if": [
+      "targetBattleShocked"
+     ],
+     "defend": {
+      "hit": -1
+     }
+    }
+   ]
+  },
+  "Huron’s Marauders": {
+   "auto": "full",
+   "choice": {
+    "name": "Tyrannical Motivation",
+    "when": "command",
+    "uses": "free",
+    "pick": 1,
+    "options": [
+     {
+      "id": "elite",
+      "name": "Huron's Elite",
+      "text": "+1 to Hit",
+      "effects": [
+       {
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY"
+        ],
+        "hit": 1
+       }
+      ]
+     },
+     {
+      "id": "mobile",
+      "name": "Mobile Marauders",
+      "text": "Shoot and charge after Falling Back",
+      "effects": [
+       {
+        "units": [
+         "HERETIC ASTARTES",
+         "INFANTRY"
+        ],
+        "eligible": [
+         "shootAfterFallBack",
+         "chargeAfterFallBack"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY"
+     ],
+     "if": [
+      "seenBy:Huron Blackheart"
+     ],
+     "hit": 1
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY"
+     ],
+     "if": [
+      "seenBy:Huron Blackheart"
+     ],
+     "eligible": [
+      "shootAfterFallBack",
+      "chargeAfterFallBack"
+     ]
+    }
+   ]
+  },
+  "Renegade Warband": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "!DAMNED"
+     ],
+     "if": [
+      "targetOath"
+     ],
+     "reroll": "hits"
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "HERETIC ASTARTES"
+     ],
+     "name": "Default to Doctrine",
+     "rule": {
+      "act": [
+       {
+        "when": "movement",
+        "limit": "turn",
+        "if": [
+         "notBattleShocked",
+         "notMovedYet"
+        ],
+        "label": "Default to Doctrine: Battle-shock test, then shoot and charge after Falling Back this turn",
+        "botUse": "never",
+        "do": [
+         {
+          "on": "self",
+          "shock": 0
+         },
+         {
+          "on": "self",
+          "buff": [
+           {
+            "eligible": [
+             "shootAfterFallBack",
+             "chargeAfterFallBack"
+            ]
+           }
+          ],
+          "until": "turn",
+          "mark": "doctrine"
+         }
+        ]
+       },
+       {
+        "when": "movement",
+        "limit": "turn",
+        "if": [
+         "notBattleShocked",
+         "notMovedYet"
+        ],
+        "label": "Default to Doctrine: Battle-shock test, then charge after Advancing this turn",
+        "botUse": "never",
+        "do": [
+         {
+          "on": "self",
+          "shock": 0
+         },
+         {
+          "on": "self",
+          "buff": [
+           {
+            "eligible": [
+             "chargeAfterAdvance"
+            ]
+           }
+          ],
+          "until": "turn",
+          "mark": "doctrine"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Warpstrike Champions": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "TERMINATOR|OBLITERATORS|MUTILATORS"
+     ],
+     "name": "Warp Portals",
+     "rule": {
+      "act": {
+       "when": "opponentTurnEnd",
+       "limit": "turn",
+       "if": [
+        "notEngaged"
+       ],
+       "label": "Warp Portals: into Strategic Reserves",
+       "botUse": "never",
+       "do": [
+        {
+         "on": "self",
+         "reserves": true
+        }
+       ],
+       "per": "army",
+       "uses": "battleSize"
+      }
+     }
+    }
+   ]
+  },
+  "Cult of the Arkifane": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "VEHICLE"
+     ],
+     "addKeywords": [
+      "DAEMON",
+      "SOUL FORGE"
+     ]
+    },
+    {
+     "units": [
+      "LORD DISCORDANT|VASHTORR THE ARKIFANE"
+     ],
+     "addKeywords": [
+      "SOUL FORGE"
+     ]
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "VEHICLE|LORD DISCORDANT|VASHTORR THE ARKIFANE|SOUL FORGE"
+     ],
+     "defend": {
+      "inv": 5
+     }
+    }
+   ]
+  },
+  "Devotees of Destruction": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HAVOCS|OBLITERATORS"
+     ],
+     "attack": "ranged",
+     "abilities": [
+      "heavy"
+     ]
+    }
+   ]
+  },
+  "Murdertalon Raiders": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY",
+      "FLY"
+     ],
+     "if": [
+      "targetBattleShocked"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY",
+      "FLY"
+     ],
+     "if": [
+      "targetBelowHalf",
+      "!targetBattleShocked"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY",
+      "FLY"
+     ],
+     "if": [
+      "targetBattleShocked"
+     ],
+     "defend": {
+      "hit": -1
+     }
+    },
+    {
+     "units": [
+      "HERETIC ASTARTES",
+      "INFANTRY",
+      "FLY"
+     ],
+     "if": [
+      "targetBelowHalf",
+      "!targetBattleShocked"
+     ],
+     "defend": {
+      "hit": -1
+     }
+    }
+   ]
+  },
+  "Blessings of Khorne": {
+   "auto": "full",
+   "armyRule": true,
+   "manual": "Rolled at the start of each battle round (blessings.ts): the bot and Automatic pick the best pair, otherwise you pick"
+  },
+  "Pact of Blood": {
+   "auto": "full",
+   "armyRule": true,
+   "manual": "Blood Legions units only with Khorne Daemonkin (checked in the army builder)"
+  },
+  "Berzerker Warband": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "WORLD EATERS"
+     ],
+     "attack": "melee",
+     "attacks": 1
+    }
+   ]
+  },
+  "Vessels of Wrath": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "WORLD EATERS",
+      "CHARACTER",
+      "!EPIC HERO"
+     ],
+     "attack": "melee",
+     "if": [
+      "!notCharacterModel"
+     ],
+     "ap": 1
+    }
+   ],
+   "manual": "Wrath of Khorne: the game takes +1 AP (not [CLEAVE 1])"
+  },
+  "Cult of Blood": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "JAKHALS|GOREMONGERS"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    }
+   ],
+   "choice": {
+    "name": "Idols of Khorne",
+    "when": "command",
+    "uses": "eachOnce",
+    "pick": 1,
+    "options": [
+     {
+      "id": "rage",
+      "name": "Idol of Infinite Rage",
+      "text": "Jakhals / Goremongers near a World Eaters MONSTER (6\") or TITANIC (9\") unit: +1 to Hit and Wound",
+      "effects": [
+       {
+        "units": [
+         "JAKHALS|GOREMONGERS"
+        ],
+        "if": [
+         "nearIdol"
+        ],
+        "hit": 1,
+        "wound": 1
+       }
+      ]
+     },
+     {
+      "id": "wrath",
+      "name": "Idol of Burning Wrath",
+      "text": "Jakhals / Goremongers near the idol: +1\" Move, +1 to Advance and Charge rolls",
+      "effects": [
+       {
+        "units": [
+         "JAKHALS|GOREMONGERS"
+        ],
+        "if": [
+         "nearIdol"
+        ],
+        "move": 1,
+        "advanceBonus": 1,
+        "chargeBonus": 1
+       }
+      ]
+     },
+     {
+      "id": "blood",
+      "name": "Idol of Blessed Blood",
+      "text": "Jakhals / Goremongers near the idol: 4+ invulnerable save",
+      "effects": [
+       {
+        "units": [
+         "JAKHALS|GOREMONGERS"
+        ],
+        "if": [
+         "nearIdol"
+        ],
+        "defend": {
+         "inv": 4
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "Khorne Daemonkin": {
+   "auto": "full",
+   "choice": {
+    "name": "Blood Tithe",
+    "when": "tithe",
+    "uses": "eachOnce",
+    "pick": 1,
+    "options": [
+     {
+      "id": "might",
+      "name": "Might of Khorne",
+      "cost": 5,
+      "text": "Blood Legions units gain the Blessings of Khorne ability",
+      "effects": []
+     },
+     {
+      "id": "boon",
+      "name": "Boon of Blood",
+      "cost": 4,
+      "text": "Blood Legions units have a 4+ invulnerable save",
+      "effects": [
+       {
+        "units": [
+         "BLOOD LEGIONS"
+        ],
+        "defend": {
+         "inv": 4
+        }
+       }
+      ]
+     },
+     {
+      "id": "rage",
+      "name": "Daemonic Rage",
+      "cost": 3,
+      "text": "Blood Legions melee weapons have [LANCE]",
+      "effects": [
+       {
+        "units": [
+         "BLOOD LEGIONS"
+        ],
+        "attack": "melee",
+        "abilities": [
+         "lance"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "abjuration",
+      "name": "Enraged Abjuration",
+      "cost": 2,
+      "text": "Blood Legions and World Eaters models: Feel No Pain 5+ against psychic attacks and mortal wounds",
+      "effects": [
+       {
+        "units": [
+         "BLOOD LEGIONS|WORLD EATERS"
+        ],
+        "defend": {
+         "fnp": 5,
+         "fnpVs": "mortalPsychic"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "manual": "Blood Tithe points: +1 on a 3+ each time a World Eaters / Blood Legions unit destroys an enemy unit; spend them in your Command phase"
+  },
+  "Possessed Slaughterband": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "WORLD EATERS",
+      "POSSESSED"
+     ],
+     "name": "Brazen Fury",
+     "rule": {
+      "act": [
+       {
+        "when": "shotByEnemy",
+        "auto": true,
+        "limit": "phase",
+        "needModelsLost": true,
+        "if": [
+         "!hasAbility:Malicious Vigour"
+        ],
+        "do": [
+         {
+          "on": "self",
+          "surge": "D6"
+         }
+        ]
+       },
+       {
+        "when": "shotByEnemy",
+        "auto": true,
+        "limit": "phase",
+        "needModelsLost": true,
+        "if": [
+         "hasAbility:Malicious Vigour"
+        ],
+        "do": [
+         {
+          "on": "self",
+          "surge": "6"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Goretrack Onslaught": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "WORLD EATERS"
+     ],
+     "if": [
+      "disembarkedThisTurn"
+     ],
+     "chargeBonus": 1
+    },
+    {
+     "units": [
+      "WORLD EATERS"
+     ],
+     "if": [
+      "disembarkedThisTurn"
+     ],
+     "attack": "melee",
+     "abilities": [
+      "lance"
+     ]
+    }
+   ]
+  },
+  "Brazen Engines": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "DAEMON",
+      "VEHICLE"
+     ],
+     "name": "Terror of Khorne",
+     "rule": {
+      "act": {
+       "when": "fightStart",
+       "auto": true,
+       "target": {
+        "side": "enemy",
+        "engaged": true
+       },
+       "do": [
+        {
+         "shock": -1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  "Butchers of Khorne": {
+   "auto": "full",
+   "manual": "Adamantine Avalanche: at the start of each Fight phase with an engaged Terminator Squad, one more Blessing for Terminator Squads (blessings.ts)"
+  },
+  "Thrill Seekers": {
+   "auto": "full",
+   "armyRule": true,
+   "manual": "Emperor’s Children units shoot and charge after Advancing or Falling Back; the targeting restrictions are checked by the game"
+  },
+  "Pact of Excess": {
+   "auto": "full",
+   "armyRule": true,
+   "manual": "Legions of Excess units only with the Carnival of Excess detachment (checked in the army builder)"
+  },
+  "Mercurial Host": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "rerollAdvance": true
+    }
+   ]
+  },
+  "Peerless Bladesmen": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "name": "Exquisite Swordsmanship",
+     "rule": {
+      "act": [
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "if": [
+         "charged",
+         "!marked:Exquisite Swordsmanship"
+        ],
+        "botIf": [
+         "lethalBetter"
+        ],
+        "label": "Exquisite Swordsmanship: [LETHAL HITS] for its melee weapons",
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "attack": "melee",
+            "abilities": [
+             "lethal hits"
+            ]
+           }
+          ],
+          "until": "phase",
+          "mark": "Exquisite Swordsmanship"
+         }
+        ]
+       },
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "if": [
+         "charged",
+         "!marked:Exquisite Swordsmanship"
+        ],
+        "botIf": [
+         "!lethalBetter"
+        ],
+        "label": "Exquisite Swordsmanship: [SUSTAINED HITS 1] for its melee weapons",
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "attack": "melee",
+            "abilities": [
+             "sustained hits 1"
+            ]
+           }
+          ],
+          "until": "phase",
+          "mark": "Exquisite Swordsmanship"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "manual": "After a Charge move, pick [LETHAL HITS] or [SUSTAINED HITS 1] when the unit is selected to fight (the bot takes Lethal Hits against tougher targets)"
+  },
+  "Rapid Evisceration": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN",
+      "TRANSPORT"
+     ],
+     "reroll": [
+      "hits1",
+      "wounds1"
+     ]
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN",
+      "!TRANSPORT"
+     ],
+     "if": [
+      "disembarkedThisTurn"
+     ],
+     "reroll": [
+      "hits1",
+      "wounds1"
+     ]
+    }
+   ]
+  },
+  "Carnival of Excess": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "near:6:LEGIONS OF EXCESS"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "near:6:LEGIONS OF EXCESS",
+      "sustainedWeapon"
+     ],
+     "critHitOn": 5
+    },
+    {
+     "units": [
+      "LEGIONS OF EXCESS"
+     ],
+     "if": [
+      "near:6:EMPEROR’S CHILDREN"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "LEGIONS OF EXCESS"
+     ],
+     "if": [
+      "near:6:EMPEROR’S CHILDREN",
+      "sustainedWeapon"
+     ],
+     "critHitOn": 5
+    }
+   ],
+   "manual": "Empowered units (within 6\" of the other kind): [SUSTAINED HITS 1], or Critical Hits on 5+ for weapons that already have it. Legions of Excess points caps checked in the army builder"
+  },
+  "Coterie of the Conceited": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "pact:1"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "pact:3"
+     ],
+     "reroll": "wounds1"
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "pact:5"
+     ],
+     "attack": "melee",
+     "abilities": [
+      "lethal hits",
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "pact:7"
+     ],
+     "critHitOn": 5
+    }
+   ],
+   "manual": "Start of each battle round: pledge a number of enemy units to destroy (you pick; the bot estimates). Kept: + that many Pact points; broken: the Warlord suffers D3 mortal wounds"
+  },
+  "Slaanesh’s Chosen": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN",
+      "CHARACTER"
+     ],
+     "ignoreMoveMods": true
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "favoured"
+     ],
+     "reroll": "wounds"
+    }
+   ],
+   "manual": "Favoured Champions: the Warlord’s unit at the start; then the first EC CHARACTER unit in each turn to destroy an enemy unit"
+  },
+  "Court of the Phoenician": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "name": "Sensational Performance",
+     "rule": {
+      "act": {
+       "when": "selectedToFight",
+       "limit": "phase",
+       "if": [
+        "charged"
+       ],
+       "botIf": [
+        "sensationalOk"
+       ],
+       "label": "Sensational Performance: +1 S and AP (not against a unit it was engaged with at the start of the turn or one already attacked this phase)",
+       "do": [
+        {
+         "on": "self",
+         "buff": [
+          {
+           "attack": "melee",
+           "strength": 1,
+           "ap": 1,
+           "sensational": true
+          }
+         ],
+         "until": "phase"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "effects": [
+    {
+     "units": [
+      "FULGRIM"
+     ],
+     "stratDiscount": {
+      "ids": [
+       "000010655004",
+       "000010655003"
+      ],
+      "cp": 1,
+      "limit": "round",
+      "perArmy": true
+     }
+    }
+   ]
+  },
+  "Elegant Brutes": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN",
+      "TERMINATOR"
+     ],
+     "if": [
+      "setUpThisTurn"
+     ],
+     "chargeBonus": 1
+    }
+   ]
+  },
+  "Frenzied Host": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "advanced",
+      "modelKw:BATTLELINE"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "fellBack",
+      "modelKw:BATTLELINE"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ]
+  },
+  "Spectacle of Slaughter": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "FLAWLESS BLADES"
+     ],
+     "fightsFirst": true
+    }
+   ]
+  }
+ }
+}

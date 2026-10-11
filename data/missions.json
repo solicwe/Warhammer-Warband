@@ -1,5 +1,5 @@
 {
- "_comment": "Deployment cards / terrain / Primary Missions (Chapter Approved 2026-27). พิกัดเป็นนิ้ว: x = 0..44 จากซ้าย, y = 0..60 จากบน (แนวตั้งตามการ์ดทางการ). terrain 'mirror' = สร้างชิ้นหมุน 180° รอบจุดกลางให้อีกฝั่งเพื่อความยุติธรรม",
+ "_comment": "Deployment cards / terrain / Primary Missions (Chapter Approved 2026-27). Coordinates in inches: x = 0..44 from left, y = 0..60 from top (portrait, as on the official cards). terrain 'mirror' = create a copy rotated 180° around the centre for the other side, for fairness",
  "terrainKinds": {
   "ruin": {
    "category": "dense",
@@ -24,6 +24,12 @@
    "height": 0,
    "walls": "none",
    "label": "Craters (Exposed)"
+  },
+  "container": {
+   "category": "dense",
+   "height": 4,
+   "walls": "box",
+   "label": "Armoured Container (Dense)"
   }
  },
  "objectiveTerrain": {
@@ -31,567 +37,19 @@
   "w": 6,
   "h": 6
  },
- "deployments": [
-  {
-   "id": "hammer-and-anvil",
-   "name": "Hammer and Anvil",
-   "attackerEdge": "top",
-   "defenderEdge": "bottom",
-   "zones": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      44,
-      0
-     ],
-     [
-      44,
-      18
-     ],
-     [
-      0,
-      18
-     ]
-    ],
-    "defender": [
-     [
-      0,
-      42
-     ],
-     [
-      44,
-      42
-     ],
-     [
-      44,
-      60
-     ],
-     [
-      0,
-      60
-     ]
-    ]
-   },
-   "territory": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      44,
-      0
-     ],
-     [
-      44,
-      30
-     ],
-     [
-      0,
-      30
-     ]
-    ],
-    "defender": [
-     [
-      0,
-      30
-     ],
-     [
-      44,
-      30
-     ],
-     [
-      44,
-      60
-     ],
-     [
-      0,
-      60
-     ]
-    ]
-   },
-   "objectives": [
-    {
-     "id": "home-a",
-     "type": "home",
-     "x": 10,
-     "y": 14,
-     "owner": "attacker"
-    },
-    {
-     "id": "home-d",
-     "type": "home",
-     "x": 34,
-     "y": 46,
-     "owner": "defender"
-    },
-    {
-     "id": "exp-1",
-     "type": "expansion",
-     "x": 36,
-     "y": 24
-    },
-    {
-     "id": "exp-2",
-     "type": "expansion",
-     "x": 8,
-     "y": 36
-    },
-    {
-     "id": "central",
-     "type": "central",
-     "x": 22,
-     "y": 30
-    }
-   ],
-   "terrain": [
-    {
-     "kind": "ruin",
-     "x": 27,
-     "y": 20,
-     "w": 8,
-     "h": 5,
-     "mirror": true
-    },
-    {
-     "kind": "barricade",
-     "x": 18,
-     "y": 20,
-     "w": 6,
-     "h": 3,
-     "mirror": true
-    },
-    {
-     "kind": "barricade",
-     "x": 4,
-     "y": 30,
-     "w": 4,
-     "h": 4,
-     "mirror": true
-    },
-    {
-     "kind": "ruin",
-     "x": 36,
-     "y": 8,
-     "w": 5,
-     "h": 8,
-     "mirror": true
-    }
-   ]
-  },
-  {
-   "id": "dawn-of-war",
-   "name": "Dawn of War",
-   "attackerEdge": "left",
-   "defenderEdge": "right",
-   "zones": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      12,
-      0
-     ],
-     [
-      12,
-      60
-     ],
-     [
-      0,
-      60
-     ]
-    ],
-    "defender": [
-     [
-      32,
-      0
-     ],
-     [
-      44,
-      0
-     ],
-     [
-      44,
-      60
-     ],
-     [
-      32,
-      60
-     ]
-    ]
-   },
-   "territory": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      22,
-      0
-     ],
-     [
-      22,
-      60
-     ],
-     [
-      0,
-      60
-     ]
-    ],
-    "defender": [
-     [
-      22,
-      0
-     ],
-     [
-      44,
-      0
-     ],
-     [
-      44,
-      60
-     ],
-     [
-      22,
-      60
-     ]
-    ]
-   },
-   "objectives": [
-    {
-     "id": "home-a",
-     "type": "home",
-     "x": 10,
-     "y": 30,
-     "owner": "attacker"
-    },
-    {
-     "id": "home-d",
-     "type": "home",
-     "x": 34,
-     "y": 30,
-     "owner": "defender"
-    },
-    {
-     "id": "exp-1",
-     "type": "expansion",
-     "x": 25,
-     "y": 10
-    },
-    {
-     "id": "exp-2",
-     "type": "expansion",
-     "x": 19,
-     "y": 50
-    },
-    {
-     "id": "central",
-     "type": "central",
-     "x": 22,
-     "y": 30
-    }
-   ],
-   "terrain": [
-    {
-     "kind": "ruin",
-     "x": 10,
-     "y": 12,
-     "w": 6,
-     "h": 8,
-     "mirror": true
-    },
-    {
-     "kind": "barricade",
-     "x": 17,
-     "y": 22,
-     "w": 5,
-     "h": 3,
-     "mirror": true
-    },
-    {
-     "kind": "ruin",
-     "x": 34,
-     "y": 16,
-     "w": 6,
-     "h": 5,
-     "mirror": true
-    },
-    {
-     "kind": "crater",
-     "x": 22,
-     "y": 16,
-     "w": 4,
-     "h": 4,
-     "mirror": true
-    }
-   ]
-  },
-  {
-   "id": "search-and-destroy",
-   "name": "Search and Destroy",
-   "attackerEdge": "left",
-   "defenderEdge": "right",
-   "zones": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      22,
-      0
-     ],
-     [
-      22,
-      21
-     ],
-     [
-      22.0,
-      21.0
-     ],
-     [
-      20.83,
-      21.08
-     ],
-     [
-      19.67,
-      21.31
-     ],
-     [
-      18.56,
-      21.69
-     ],
-     [
-      17.5,
-      22.21
-     ],
-     [
-      16.52,
-      22.86
-     ],
-     [
-      15.64,
-      23.64
-     ],
-     [
-      14.86,
-      24.52
-     ],
-     [
-      14.21,
-      25.5
-     ],
-     [
-      13.69,
-      26.56
-     ],
-     [
-      13.31,
-      27.67
-     ],
-     [
-      13.08,
-      28.83
-     ],
-     [
-      13.0,
-      30.0
-     ],
-     [
-      0,
-      30
-     ]
-    ],
-    "defender": [
-     [
-      44,
-      60
-     ],
-     [
-      22,
-      60
-     ],
-     [
-      22,
-      39
-     ],
-     [
-      22.0,
-      39.0
-     ],
-     [
-      23.17,
-      38.92
-     ],
-     [
-      24.33,
-      38.69
-     ],
-     [
-      25.44,
-      38.31
-     ],
-     [
-      26.5,
-      37.79
-     ],
-     [
-      27.48,
-      37.14
-     ],
-     [
-      28.36,
-      36.36
-     ],
-     [
-      29.14,
-      35.48
-     ],
-     [
-      29.79,
-      34.5
-     ],
-     [
-      30.31,
-      33.44
-     ],
-     [
-      30.69,
-      32.33
-     ],
-     [
-      30.92,
-      31.17
-     ],
-     [
-      31.0,
-      30.0
-     ],
-     [
-      44,
-      30
-     ]
-    ]
-   },
-   "territory": {
-    "attacker": [
-     [
-      0,
-      0
-     ],
-     [
-      44,
-      0
-     ],
-     [
-      0,
-      60
-     ]
-    ],
-    "defender": [
-     [
-      44,
-      0
-     ],
-     [
-      44,
-      60
-     ],
-     [
-      0,
-      60
-     ]
-    ]
-   },
-   "objectives": [
-    {
-     "id": "home-a",
-     "type": "home",
-     "x": 10,
-     "y": 14,
-     "owner": "attacker"
-    },
-    {
-     "id": "home-d",
-     "type": "home",
-     "x": 34,
-     "y": 46,
-     "owner": "defender"
-    },
-    {
-     "id": "exp-1",
-     "type": "expansion",
-     "x": 34,
-     "y": 14
-    },
-    {
-     "id": "exp-2",
-     "type": "expansion",
-     "x": 10,
-     "y": 46
-    },
-    {
-     "id": "central",
-     "type": "central",
-     "x": 22,
-     "y": 30
-    }
-   ],
-   "terrain": [
-    {
-     "kind": "ruin",
-     "x": 22,
-     "y": 10,
-     "w": 6,
-     "h": 6,
-     "mirror": true
-    },
-    {
-     "kind": "barricade",
-     "x": 6,
-     "y": 30,
-     "w": 4,
-     "h": 6,
-     "mirror": true
-    },
-    {
-     "kind": "ruin",
-     "x": 15,
-     "y": 22,
-     "w": 5,
-     "h": 5,
-     "mirror": true
-    },
-    {
-     "kind": "barricade",
-     "x": 30,
-     "y": 24,
-     "w": 4,
-     "h": 3,
-     "mirror": true
-    }
-   ]
-  }
- ],
  "twists": [
   {
    "id": "mirrored-world",
    "name": "Mirrored World",
-   "text": "ทั้งสองฝ่ายใช้ Primary Mission ใบเดียวกัน"
+   "text": "Both players use the same Primary Mission"
   }
  ],
  "primaries": [
   {
    "id": "battlefield-dominance",
    "name": "Battlefield Dominance",
-   "forceDisposition": "Take and Hold",
-   "mirroredWorld": true,
+   "forceDisposition": "take-and-hold",
+   "vs": "take-and-hold",
    "scoring": [
     {
      "rounds": [
@@ -601,7 +59,7 @@
      "when": "endOfYourTurn",
      "condition": "controlMoreThanOpponent",
      "vp": 2,
-     "text": "ยึด objective ได้มากกว่าศัตรู"
+     "text": "Control more objectives than your opponent"
     },
     {
      "rounds": [
@@ -609,21 +67,23 @@
       5
      ],
      "when": "endOfYourCommandPhase",
-     "round5When": "endOfYourTurn",
      "condition": "perObjectiveControlled",
      "vp": 3,
+     "text": "3VP per objective controlled",
+     "round5When": "endOfYourTurn",
      "bonus": {
       "condition": "perNonHomeIfHomeControlled",
       "vp": 2
      },
-     "text": "ต่อ 1 objective ที่ยึด (+2 ต่ออันที่ไม่ใช่ home ถ้ายึด home ตัวเองไว้)"
+     "bonusText": "+2 per non-home one if you control your own home"
     }
    ]
   },
   {
    "id": "immovable-object",
    "name": "Immovable Object",
-   "forceDisposition": "Take and Hold",
+   "forceDisposition": "take-and-hold",
+   "vs": "purge-the-foe",
    "scoring": [
     {
      "rounds": [
@@ -633,7 +93,7 @@
      "when": "endOfYourTurn",
      "condition": "controlCentral",
      "vp": 3,
-     "text": "ยึด central objective ได้"
+     "text": "Control at least 1 central objective"
     },
     {
      "rounds": [
@@ -643,7 +103,7 @@
      "when": "endOfYourCommandPhase",
      "condition": "perObjectiveControlledExclHome",
      "vp": 5,
-     "text": "ต่อ objective ที่ยึด (ไม่นับ home)"
+     "text": "5VP per objective controlled (excluding your home)"
     },
     {
      "rounds": [
@@ -653,14 +113,15 @@
      "when": "endOfYourTurn",
      "condition": "perObjectiveControlledExclHome",
      "vp": 5,
-     "text": "ต่อ objective ที่ยึด (ไม่นับ home)"
+     "text": "Round 5: 5VP per objective controlled (excluding your home)"
     }
    ]
   },
   {
-   "id": "inescapable-dominion",
-   "name": "Inescapable Dominion",
-   "forceDisposition": "Take and Hold",
+   "id": "determined-acquisition",
+   "name": "Determined Acquisition",
+   "forceDisposition": "take-and-hold",
+   "vs": "disruption",
    "scoring": [
     {
      "rounds": [
@@ -668,9 +129,9 @@
       5
      ],
      "when": "endOfYourTurn",
-     "condition": "control3Plus",
-     "vp": 4,
-     "text": "ยึดได้ 3 objective ขึ้นไป"
+     "condition": "perNewObjectiveThisTurnExclHome",
+     "vp": 2,
+     "text": "2VP per objective newly controlled this turn (excluding home)"
     },
     {
      "rounds": [
@@ -678,48 +139,33 @@
       5
      ],
      "when": "endOfYourCommandPhase",
-     "round5When": "endOfYourTurn",
-     "condition": "control2Plus",
-     "vp": 5,
-     "text": "ยึดได้ 2 objective ขึ้นไป"
-    },
-    {
-     "rounds": [
-      2,
-      5
-     ],
-     "when": "endOfYourCommandPhase",
-     "round5When": "endOfYourTurn",
-     "condition": "controlMoreThanOpponent",
-     "vp": 4,
-     "text": "ยึดได้มากกว่าศัตรู"
-    },
-    {
-     "rounds": [
-      5,
-      5
-     ],
-     "when": "endOfBattle",
-     "condition": "controlEnemyHome",
-     "vp": 5,
-     "text": "ยึด home ของศัตรูตอนจบเกม"
-    }
-   ]
-  },
-  {
-   "id": "unstoppable-force",
-   "name": "Unstoppable Force",
-   "forceDisposition": "Purge the Foe",
-   "scoring": [
-    {
-     "rounds": [
-      1,
-      5
-     ],
-     "when": "endOfYourTurn",
-     "condition": "enemyUnitDestroyedThisTurn",
+     "condition": "perObjectiveControlled",
      "vp": 3,
-     "text": "ทำลายหน่วยศัตรูได้เทิร์นนี้"
+     "text": "3VP per objective controlled",
+     "round5When": "endOfYourTurn",
+     "bonus": {
+      "condition": "perControlledInEnemyTerritory",
+      "vp": 3
+     },
+     "bonusText": "+3 per one in the enemy's territory"
+    }
+   ]
+  },
+  {
+   "id": "purge-and-secure",
+   "name": "Purge and Secure",
+   "forceDisposition": "take-and-hold",
+   "vs": "reconnaissance",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killNearObjective",
+     "vp": 3,
+     "text": "Destroy an enemy unit with a unit within range of an objective, or destroy an enemy unit that started the turn within range of an objective"
     },
     {
      "rounds": [
@@ -727,10 +173,10 @@
       5
      ],
      "when": "endOfYourCommandPhase",
-     "round5When": "endOfYourTurn",
      "condition": "perObjectiveControlledExclHome",
      "vp": 4,
-     "text": "ต่อ objective ที่ยึด (ไม่นับ home)"
+     "text": "4VP per objective controlled (excluding your home)",
+     "round5When": "endOfYourTurn"
     },
     {
      "rounds": [
@@ -740,25 +186,65 @@
      "when": "endOfYourTurn",
      "condition": "newObjectiveThisTurnExclHome",
      "vp": 3,
-     "text": "ยึด objective ใหม่ได้เทิร์นนี้ (ไม่นับ home)"
-    },
-    {
-     "rounds": [
-      5,
-      5
-     ],
-     "when": "endOfBattle",
-     "condition": "controlCentral",
-     "vp": 5,
-     "text": "ยึด central ตอนจบเกม"
+     "text": "Control a new objective this turn (excluding home)"
     }
    ]
   },
   {
-   "id": "meatgrinder",
-   "name": "Meatgrinder",
-   "forceDisposition": "Purge the Foe",
-   "mirroredWorld": true,
+   "id": "inescapable-dominion",
+   "name": "Inescapable Dominion",
+   "forceDisposition": "take-and-hold",
+   "vs": "priority-assets",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "control3Plus",
+     "vp": 4,
+     "text": "Control 3+ objectives"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "control2Plus",
+     "vp": 5,
+     "text": "Control 2+ objectives",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlMoreThanOpponent",
+     "vp": 4,
+     "text": "Control more objectives than your opponent",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "controlEnemyHome",
+     "vp": 5,
+     "text": "End of battle: control the enemy home"
+    }
+   ]
+  },
+  {
+   "id": "unstoppable-force",
+   "name": "Unstoppable Force",
+   "forceDisposition": "purge-the-foe",
+   "vs": "take-and-hold",
    "scoring": [
     {
      "rounds": [
@@ -768,7 +254,7 @@
      "when": "endOfYourTurn",
      "condition": "enemyUnitDestroyedThisTurn",
      "vp": 3,
-     "text": "ทำลายหน่วยศัตรูได้เทิร์นนี้"
+     "text": "Destroy an enemy unit this turn"
     },
     {
      "rounds": [
@@ -776,10 +262,59 @@
       5
      ],
      "when": "endOfYourCommandPhase",
-     "round5When": "endOfYourTurn",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 4,
+     "text": "4VP per objective controlled (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "newObjectiveThisTurnExclHome",
+     "vp": 3,
+     "text": "Control a new objective this turn (excluding home)"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "controlCentral",
+     "vp": 5,
+     "text": "End of battle: control the central objective"
+    }
+   ]
+  },
+  {
+   "id": "meatgrinder",
+   "name": "Meatgrinder",
+   "forceDisposition": "purge-the-foe",
+   "vs": "purge-the-foe",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "enemyUnitDestroyedThisTurn",
+     "vp": 3,
+     "text": "Destroy an enemy unit this turn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
      "condition": "controlAnyExclHome",
      "vp": 4,
-     "text": "ยึด objective ได้อย่างน้อย 1 (ไม่นับ home)"
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
     },
     {
      "rounds": [
@@ -789,7 +324,7 @@
      "when": "endOfYourTurn",
      "condition": "moreKillsThanLossesLastTurn",
      "vp": 5,
-     "text": "ทำลายศัตรูได้มากกว่าที่เสียไปเทิร์นก่อน"
+     "text": "Destroy more enemy units this turn than you lost last turn"
     },
     {
      "rounds": [
@@ -799,13 +334,1465 @@
      "when": "endOfYourTurn",
      "condition": "controlEnemyHome",
      "vp": 5,
-     "text": "ยึด home ของศัตรู"
+     "text": "Control the enemy home"
     }
    ]
+  },
+  {
+   "id": "punishment",
+   "name": "Punishment",
+   "forceDisposition": "purge-the-foe",
+   "vs": "disruption",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfAnyTurn",
+     "condition": "condemnedLeftThisTurn",
+     "vp": 5,
+     "text": "A condemned unit left the battlefield this turn (scored every turn)"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlMoreThanOpponent",
+     "vp": 5,
+     "text": "Control more objectives than your opponent",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "controlEnemyHome",
+     "vp": 8,
+     "text": "End of battle: control the enemy home"
+    }
+   ],
+   "action": "condemned"
+  },
+  {
+   "id": "consecrate",
+   "name": "Consecrate",
+   "forceDisposition": "purge-the-foe",
+   "vs": "reconnaissance",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "consecratedCount",
+     "vp": 0,
+     "text": "Consecrated objectives: 1–2 = 3VP, 3+ = 6VP",
+     "tiers": [
+      [
+       1,
+       3
+      ],
+      [
+       3,
+       6
+      ]
+     ]
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlMoreThanOpponent",
+     "vp": 4,
+     "text": "Control more objectives than your opponent",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "enemyHomeConsecrated",
+     "vp": 5,
+     "text": "End of battle: enemy home consecrated"
+    }
+   ],
+   "action": "consecrate"
+  },
+  {
+   "id": "destroyers-wrath",
+   "name": "Destroyer's Wrath",
+   "forceDisposition": "purge-the-foe",
+   "vs": "priority-assets",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "enemyUnitDestroyedThisTurn",
+     "vp": 3,
+     "text": "Destroy an enemy unit this turn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlMoreThanOpponent",
+     "vp": 6,
+     "text": "Control more objectives than your opponent",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "moreKillsThanLossesLastTurn",
+     "vp": 4,
+     "text": "Destroy more enemy units this turn than you lost last turn"
+    }
+   ]
+  },
+  {
+   "id": "death-trap",
+   "name": "Death Trap",
+   "forceDisposition": "disruption",
+   "vs": "take-and-hold",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perTrappedThisTurn",
+     "vp": 2,
+     "text": "2VP per terrain area trapped this turn",
+     "bonus": {
+      "condition": "perTrappedThisTurnObjective",
+      "vp": 3
+     },
+     "bonusText": "+3 per one that is an objective"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInTrapped",
+     "vp": 3,
+     "text": "Destroy an enemy unit that started the turn in a trapped terrain area"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    }
+   ],
+   "action": "booby-trap"
+  },
+  {
+   "id": "delaying-action",
+   "name": "Delaying Action",
+   "forceDisposition": "disruption",
+   "vs": "purge-the-foe",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perEnemyDestroyedThisTurn",
+     "vp": 2,
+     "text": "2VP per enemy unit destroyed this turn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHomes",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding both homes)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlCentralAndExpansion",
+     "vp": 3,
+     "text": "Control at least 1 central and 1 expansion objective"
+    }
+   ]
+  },
+  {
+   "id": "outmanoeuvre",
+   "name": "Outmanoeuvre",
+   "forceDisposition": "disruption",
+   "vs": "disruption",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlEnemyHome",
+     "vp": 10,
+     "text": "Control the enemy home"
+    },
+    {
+     "rounds": [
+      1,
+      1
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 4,
+     "text": "Round 1: 4VP per objective controlled (excluding your home)"
+    },
+    {
+     "rounds": [
+      2,
+      3
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 5,
+     "text": "Rounds 2–3: 5VP per objective controlled (excluding your home)"
+    },
+    {
+     "rounds": [
+      4,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 6,
+     "text": "Round 4+: 6VP per objective controlled (excluding your home)"
+    }
+   ]
+  },
+  {
+   "id": "smoke-and-mirrors",
+   "name": "Smoke and Mirrors",
+   "forceDisposition": "disruption",
+   "vs": "reconnaissance",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perDecoyed",
+     "vp": 2,
+     "text": "2VP per decoyed objective",
+     "bonus": {
+      "condition": "perDecoyedInEnemyTerritory",
+      "vp": 2
+     },
+     "bonusText": "+2 per one in the enemy's territory"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "decoyed4Plus",
+     "vp": 10,
+     "text": "End of battle: 4+ objectives decoyed"
+    }
+   ],
+   "action": "decoy"
+  },
+  {
+   "id": "locate-and-deny",
+   "name": "Locate and Deny",
+   "forceDisposition": "disruption",
+   "vs": "priority-assets",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInRangeOfObjective",
+     "vp": 4,
+     "text": "Destroy an enemy unit that started the turn within range of an objective"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "onlyOneOwnMarkerHeld",
+     "vp": 4,
+     "text": "Only one of our operation markers left, with a unit of ours in the same terrain area and no enemies"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "onlyOneOwnMarkerHeld",
+     "vp": 5,
+     "text": "End of battle: only one of our markers left and we control that terrain area"
+    }
+   ],
+   "action": "sensor-sweep"
+  },
+  {
+   "id": "reconnaissance-sweep",
+   "name": "Reconnaissance Sweep",
+   "forceDisposition": "reconnaissance",
+   "vs": "take-and-hold",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "tableQuarters",
+     "vp": 0,
+     "text": "Our units in table quarters (more than 6\" from the centre): 3 quarters = 3VP, 4 quarters = 6VP",
+     "tiers": [
+      [
+       3,
+       3
+      ],
+      [
+       4,
+       6
+      ]
+     ]
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perEnemyDestroyedThisTurn",
+     "vp": 1,
+     "text": "1VP per enemy unit destroyed this turn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 3,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    }
+   ]
+  },
+  {
+   "id": "triangulation",
+   "name": "Triangulation",
+   "forceDisposition": "reconnaissance",
+   "vs": "purge-the-foe",
+   "scoring": [
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "triangulatedCount",
+     "vp": 0,
+     "text": "Triangulated objectives: 1 = 3VP, 2 = 6VP, 3+ = 10VP",
+     "tiers": [
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       3,
+       10
+      ]
+     ]
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "control4Plus",
+     "vp": 10,
+     "text": "End of battle: control 4+ objectives"
+    }
+   ],
+   "action": "triangulate"
+  },
+  {
+   "id": "surveil-the-foe",
+   "name": "Surveil the Foe",
+   "forceDisposition": "reconnaissance",
+   "vs": "disruption",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "surveilledUnprotected",
+     "vp": 4,
+     "text": "Surveil an enemy unit this turn (unless every unit is near an objective with a marker)"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlMoreThanOpponent",
+     "vp": 4,
+     "text": "Control more objectives than your opponent",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "noOpponentMarkers",
+     "vp": 5,
+     "text": "No enemy operation markers left on the battlefield"
+    }
+   ],
+   "action": "surveil"
+  },
+  {
+   "id": "gather-intel",
+   "name": "Gather Intel",
+   "forceDisposition": "reconnaissance",
+   "vs": "reconnaissance",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      1
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlCentral",
+     "vp": 6,
+     "text": "Round 1: control the central objective"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perExtractThisTurn",
+     "vp": 7,
+     "text": "7VP per unit that completed Extract Intelligence this turn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "ownMarkers3Plus",
+     "vp": 5,
+     "text": "End of battle: 3+ of our operation markers"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "ownMarkerAtEnemyHome",
+     "vp": 5,
+     "text": "End of battle: a marker of ours within range of the enemy home"
+    }
+   ],
+   "action": "extract-intelligence"
+  },
+  {
+   "id": "search-and-scour",
+   "name": "Search and Scour",
+   "forceDisposition": "reconnaissance",
+   "vs": "priority-assets",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlCentral",
+     "vp": 3,
+     "text": "Control the central objective"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInTerrain",
+     "vp": 2,
+     "text": "Destroy an enemy unit that started the turn in a terrain area"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "perObjectiveControlledExclHome",
+     "vp": 4,
+     "text": "4VP per objective controlled (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "noEnemyInYourTerritory",
+     "vp": 5,
+     "text": "End of battle: no enemy units wholly within our territory"
+    }
+   ]
+  },
+  {
+   "id": "secure-asset",
+   "name": "Secure Asset",
+   "forceDisposition": "priority-assets",
+   "vs": "take-and-hold",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "securedAssetThisTurn",
+     "vp": 4,
+     "text": "A unit of ours completed Secure the Asset this turn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInRangeOfCentral",
+     "vp": 2,
+     "text": "Destroy an enemy unit that started the turn within range of the central objective"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "control3Plus",
+     "vp": 4,
+     "text": "Control 3+ objectives",
+     "round5When": "endOfYourTurn"
+    }
+   ],
+   "action": "secure-asset"
+  },
+  {
+   "id": "vital-link",
+   "name": "Vital Link",
+   "forceDisposition": "priority-assets",
+   "vs": "purge-the-foe",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "controlCentral",
+     "vp": 2,
+     "text": "Control the central objective",
+     "bonus": {
+      "condition": "ownMarkersAtControlledCentral",
+      "vp": 1
+     },
+     "bonusText": "+1 per marker of ours within range of a controlled central objective"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn",
+     "bonus": {
+      "condition": "controlCentral",
+      "vp": 4
+     },
+     "bonusText": "+4 if it includes the central objective"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "controlEnemyHome",
+     "vp": 10,
+     "text": "End of battle: control the enemy home"
+    }
+   ],
+   "action": "maintain-control"
+  },
+  {
+   "id": "extract-relic",
+   "name": "Extract Relic",
+   "forceDisposition": "priority-assets",
+   "vs": "disruption",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "sensorSweepThisTurn",
+     "vp": 4,
+     "text": "A unit of ours completed Sensor Sweep this turn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInRangeOfObjective",
+     "vp": 3,
+     "text": "Destroy an enemy unit that started the turn within range of an objective"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "onlyOneOpponentMarkerHeld",
+     "vp": 4,
+     "text": "Only one enemy marker left, with a unit of ours in that terrain area and no enemies"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "onlyOneOpponentMarkerHeld",
+     "vp": 5,
+     "text": "End of battle: only one enemy marker left and we control that terrain area"
+    }
+   ],
+   "action": "sensor-sweep"
+  },
+  {
+   "id": "vanguard-operation",
+   "name": "Vanguard Operation",
+   "forceDisposition": "priority-assets",
+   "vs": "reconnaissance",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "vanguardThisTurn",
+     "vp": 4,
+     "text": "A unit of ours completed Vanguard Operation this turn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "enemyUnitDestroyedThisTurn",
+     "vp": 2,
+     "text": "Destroy an enemy unit this turn"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfBattle",
+     "condition": "controlEnemyHome",
+     "vp": 10,
+     "text": "End of battle: control the enemy home"
+    }
+   ],
+   "action": "vanguard-operation"
+  },
+  {
+   "id": "sabotage",
+   "name": "Sabotage",
+   "forceDisposition": "priority-assets",
+   "vs": "priority-assets",
+   "scoring": [
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "perSabotageThisTurn",
+     "vp": 3,
+     "text": "3VP per unit that completed Sabotage this turn",
+     "bonus": {
+      "condition": "perSabotageInEnemyTerritory",
+      "vp": 2
+     },
+     "bonusText": "+2 per unit within range of an objective in the enemy's territory"
+    },
+    {
+     "rounds": [
+      2,
+      5
+     ],
+     "when": "endOfYourCommandPhase",
+     "condition": "controlAnyExclHome",
+     "vp": 4,
+     "text": "Control at least 1 objective (excluding your home)",
+     "round5When": "endOfYourTurn"
+    }
+   ],
+   "action": "sabotage"
   }
  ],
  "vpCaps": {
   "primaryTotal": 45,
-  "primaryPerRound": 15
+  "primaryPerRound": 15,
+  "secondaryTotal": 45,
+  "secondaryPerRound": 15,
+  "fixedPerCard": 20
+ },
+ "secondaries": [
+  {
+   "id": "no-prisoners",
+   "name": "No Prisoners",
+   "when": "End of any turn",
+   "text": "2VP per enemy unit destroyed this turn (max 5VP)",
+   "auto": [
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "perEnemyDestroyed",
+     "vp": 2,
+     "mode": "both",
+     "fromRound": 1,
+     "cap": 5
+    }
+   ]
+  },
+  {
+   "id": "overwhelming-force",
+   "name": "Overwhelming Force",
+   "when": "End of any turn",
+   "text": "3VP per enemy unit that started the turn within range of an objective and was destroyed (max 5VP)",
+   "auto": [
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "perEnemyStartedOnObjDestroyed",
+     "vp": 3,
+     "mode": "both",
+     "fromRound": 1,
+     "cap": 5
+    }
+   ]
+  },
+  {
+   "id": "plunder",
+   "name": "Plunder",
+   "when": "End of your turn",
+   "text": "Plunder action (Shooting phase, once per turn, completes immediately): a unit in a terrain area outside your territory → plundered = 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "plunderedThisTurn",
+     "vp": 5,
+     "mode": "both",
+     "fromRound": 1
+    }
+   ],
+   "redrawIf": "cleanse",
+   "action": "plunder"
+  },
+  {
+   "id": "display-of-might",
+   "name": "Display of Might",
+   "when": "End of your turn / your opponent's turn",
+   "text": "More of our units (excluding AIRCRAFT/Battle-shocked) wholly in No Man's Land than the enemy's: 2VP at end of your turn, 5VP at end of the opponent's turn",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "moreUnitsInNML",
+     "vp": 2,
+     "mode": "both",
+     "fromRound": 1
+    },
+    {
+     "trigger": "endOfOpponentTurn",
+     "condition": "moreUnitsInNML",
+     "vp": 5,
+     "mode": "both",
+     "fromRound": 1
+    }
+   ]
+  },
+  {
+   "id": "outflank",
+   "name": "Outflank",
+   "when": "End of your turn",
+   "text": "A unit of ours within 6\" of a battlefield edge and outside your territory 3VP · units near 2 opposite edges (at least 1 outside your territory) 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "outflank",
+     "vp": 0,
+     "mode": "both",
+     "fromRound": 1,
+     "tiers": [
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       5
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "beacon",
+   "name": "Beacon",
+   "when": "End of opponent's turn (or end of round 5)",
+   "text": "When drawn, select a beacon unit: on the battlefield outside your deployment zone 3VP / outside your territory 5VP",
+   "auto": [
+    {
+     "trigger": "endOfOpponentTurn",
+     "condition": "beacon",
+     "vp": 0,
+     "mode": "both",
+     "fromRound": 1,
+     "tiers": [
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       5
+      ]
+     ],
+     "orEndOfRound5": true
+    }
+   ],
+   "whenDrawn": "beacon"
+  },
+  {
+   "id": "cleanse",
+   "name": "Cleanse",
+   "when": "End of your turn",
+   "text": "Cleanse action (Shooting phase) on an objective other than your home, completed at end of turn if you control it: 1 cleansed = 2VP / 2+ = 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "cleansedThisTurn",
+     "vp": 0,
+     "mode": "both",
+     "fromRound": 1,
+     "tiers": [
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       5
+      ]
+     ]
+    }
+   ],
+   "redrawIf": "plunder",
+   "action": "cleanse"
+  },
+  {
+   "id": "a-grievous-blow",
+   "name": "A Grievous Blow",
+   "when": "End of any turn",
+   "text": "Enemy unit with Starting Strength 13+ destroyed: Fixed 4VP per unit · Tactical 5VP",
+   "auto": [
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "perBigUnitDestroyed",
+     "vp": 4,
+     "mode": "fixed",
+     "fromRound": 1
+    },
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "bigUnitDestroyed",
+     "vp": 5,
+     "mode": "tactical",
+     "fromRound": 1
+    }
+   ],
+   "fixed": true,
+   "redrawIfNo": "ss13"
+  },
+  {
+   "id": "defend-stronghold",
+   "name": "Defend Stronghold",
+   "when": "End of opponent's turn (round 2+, or end of round 5)",
+   "text": "Control your home objective 3VP (+2 if no enemies in your deployment zone)",
+   "auto": [
+    {
+     "trigger": "endOfOpponentTurn",
+     "condition": "controlOwnHome",
+     "vp": 3,
+     "mode": "both",
+     "fromRound": 2,
+     "bonus": {
+      "condition": "noEnemyInOwnZone",
+      "vp": 2
+     },
+     "orEndOfRound5": true
+    }
+   ],
+   "round1Redraw": true,
+   "mandatoryRedraw": true
+  },
+  {
+   "id": "engage-on-all-fronts",
+   "name": "Engage on All Fronts",
+   "when": "End of your turn",
+   "text": "Units holding table quarters (wholly, more than 6\" from the centre): 3 quarters = Fixed 2 / Tactical 3VP · 4 quarters = Fixed 4 / Tactical 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "quarters",
+     "vp": 0,
+     "mode": "fixed",
+     "fromRound": 1,
+     "tiers": [
+      [
+       3,
+       2
+      ],
+      [
+       4,
+       4
+      ]
+     ]
+    },
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "quarters",
+     "vp": 0,
+     "mode": "tactical",
+     "fromRound": 1,
+     "tiers": [
+      [
+       3,
+       3
+      ],
+      [
+       4,
+       5
+      ]
+     ]
+    }
+   ],
+   "fixed": true
+  },
+  {
+   "id": "secure-no-mans-land",
+   "name": "Secure No Man's Land",
+   "when": "End of your turn",
+   "text": "Control 2+ objectives in No Man's Land (excluding your home) 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "controlNML2",
+     "vp": 5,
+     "mode": "both",
+     "fromRound": 1
+    }
+   ]
+  },
+  {
+   "id": "forward-position",
+   "name": "Forward Position",
+   "when": "End of your turn",
+   "text": "Control the enemy home and/or every expansion objective 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "forwardPosition",
+     "vp": 5,
+     "mode": "both",
+     "fromRound": 1
+    }
+   ],
+   "round1Redraw": true
+  },
+  {
+   "id": "centre-ground",
+   "name": "Centre Ground",
+   "when": "End of your turn",
+   "text": "A unit of ours within 3\" of the centre and no enemies within 3\" = 3VP / no enemies within 6\" = 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "centreGround",
+     "vp": 0,
+     "mode": "both",
+     "fromRound": 1,
+     "tiers": [
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       5
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "assassination",
+   "name": "Assassination",
+   "when": "End of any turn",
+   "text": "Fixed: 3VP per enemy CHARACTER model destroyed (+1 if W4+) · Tactical: an enemy CHARACTER destroyed this turn, or all enemy CHARACTERS destroyed, 5VP",
+   "auto": [
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "characterKillsVP",
+     "vp": 1,
+     "mode": "fixed",
+     "fromRound": 1
+    },
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "characterDiedOrAllDead",
+     "vp": 5,
+     "mode": "tactical",
+     "fromRound": 1
+    }
+   ],
+   "fixed": true
+  },
+  {
+   "id": "a-tempting-target",
+   "name": "A Tempting Target",
+   "when": "End of your turn",
+   "text": "When drawn, the opponent selects an objective in No Man's Land (not home) as the decoy: control it for 5VP",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "controlTemptingTarget",
+     "vp": 5,
+     "mode": "both",
+     "fromRound": 1
+    }
+   ],
+   "whenDrawn": "tempting-target"
+  },
+  {
+   "id": "behind-enemy-lines",
+   "name": "Behind Enemy Lines",
+   "when": "End of your turn",
+   "text": "3VP per unit of ours (excluding AIRCRAFT/Battle-shocked) wholly within the enemy's deployment zone (max 5VP)",
+   "auto": [
+    {
+     "trigger": "endOfYourTurn",
+     "condition": "perUnitInEnemyZone",
+     "vp": 3,
+     "mode": "both",
+     "fromRound": 1,
+     "cap": 5
+    }
+   ],
+   "round1Redraw": true
+  },
+  {
+   "id": "bring-it-down",
+   "name": "Bring it Down",
+   "when": "End of any turn",
+   "text": "Enemy W10+ model destroyed: Fixed 4VP per model · Tactical 5VP",
+   "auto": [
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "perBigModelDestroyed",
+     "vp": 4,
+     "mode": "fixed",
+     "fromRound": 1
+    },
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "bigModelDestroyed",
+     "vp": 5,
+     "mode": "tactical",
+     "fromRound": 1
+    }
+   ],
+   "fixed": true,
+   "redrawIfNo": "w10"
+  },
+  {
+   "id": "burden-of-trust",
+   "name": "Burden of Trust",
+   "when": "End of opponent's turn (or end of round 5)",
+   "text": "Start of your turn: assign 1 guarding unit per objective — 2VP per objective still guarded and controlled (max 5VP)",
+   "auto": [
+    {
+     "trigger": "endOfOpponentTurn",
+     "condition": "perGuarded",
+     "vp": 2,
+     "mode": "both",
+     "fromRound": 1,
+     "cap": 5,
+     "orEndOfRound5": true
+    }
+   ],
+   "whenDrawn": "guard"
+  }
+ ],
+ "forceDispositions": [
+  {
+   "id": "take-and-hold",
+   "name": "Take and Hold",
+   "color": "#2f6b4f",
+   "text": "Take and hold objectives across the battlefield"
+  },
+  {
+   "id": "purge-the-foe",
+   "name": "Purge the Foe",
+   "color": "#8a2b2b",
+   "text": "Destroy the enemy and hold the field"
+  },
+  {
+   "id": "disruption",
+   "name": "Disruption",
+   "color": "#1f4f8a",
+   "text": "Disrupt, ambush, decoy"
+  },
+  {
+   "id": "reconnaissance",
+   "name": "Reconnaissance",
+   "color": "#1f6f75",
+   "text": "Scout, spread out, gather intel"
+  },
+  {
+   "id": "priority-assets",
+   "name": "Priority Assets",
+   "color": "#8a6414",
+   "text": "Seize key assets with actions"
+  }
+ ],
+ "deploymentCards": [
+  {
+   "id": "tipping-point",
+   "name": "Tipping Point"
+  },
+  {
+   "id": "sweeping-engagement",
+   "name": "Sweeping Engagement"
+  },
+  {
+   "id": "search-and-destroy",
+   "name": "Search and Destroy"
+  },
+  {
+   "id": "crucible-of-battle",
+   "name": "Crucible of Battle"
+  },
+  {
+   "id": "dawn-of-war",
+   "name": "Dawn of War"
+  },
+  {
+   "id": "hammer-and-anvil",
+   "name": "Hammer and Anvil"
+  }
+ ],
+ "actions": {
+  "booby-trap": {
+   "name": "Booby Trap",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "unlimited",
+   "completes": "immediately",
+   "text": "A unit within range of an objective (excluding your home) or in a terrain area outside your deployment zone not yet trapped → that terrain area is trapped (place a marker); unlimited, but each unit must use a different terrain area"
+  },
+  "decoy": {
+   "name": "Decoy",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "unlimited",
+   "completes": "endOfTurnIfControl",
+   "text": "A unit within range of an objective (excluding your home) not yet decoyed → at end of turn, if that unit controls the objective: objective decoyed (place a marker)"
+  },
+  "sensor-sweep": {
+   "name": "Sensor Sweep",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "oncePerTurn",
+   "completes": "endOfTurnIfControl",
+   "text": "A unit within range of the central objective → at end of turn, if controlled: remove 1 operation marker (cannot start if only one marker is left on the battlefield)"
+  },
+  "triangulate": {
+   "name": "Triangulate",
+   "starts": "shooting",
+   "fromRound": 2,
+   "limit": "oncePerTurn",
+   "completes": "endOfTurnIfControl",
+   "text": "From round 2: a unit within range of an objective (excluding your home) → at end of turn, if controlled: objective triangulated (place a marker)"
+  },
+  "surveil": {
+   "name": "Surveil the Foe",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "unlimited",
+   "completes": "immediately",
+   "text": "Any unit selects a visible enemy unit within 18\" not yet surveilled this turn → surveilled until end of turn"
+  },
+  "extract-intelligence": {
+   "name": "Extract Intelligence",
+   "starts": "shooting",
+   "fromRound": 2,
+   "limit": "unlimited",
+   "completes": "endOfTurnIfControl",
+   "text": "From round 2: a unit within range of an objective (excluding your home) without our marker → at end of turn, if controlled: place a marker"
+  },
+  "secure-asset": {
+   "name": "Secure Asset",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "oncePerTurn",
+   "completes": "endOfTurnIfControl",
+   "text": "A unit within range of an objective (excluding your home) → at end of turn, if controlled: secure the asset"
+  },
+  "maintain-control": {
+   "name": "Maintain Control",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "oncePerTurn",
+   "completes": "endOfTurnIfControl",
+   "text": "A unit within range of the central objective → at end of turn, if controlled: place a marker"
+  },
+  "vanguard-operation": {
+   "name": "Vanguard Operation",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "oncePerTurn",
+   "completes": "endOfTurnIfNoEnemyInArea",
+   "text": "A unit in a terrain area in the enemy's territory → at end of turn, if no enemies in that terrain area: vanguard operation completed"
+  },
+  "sabotage": {
+   "name": "Sabotage",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "unlimited",
+   "completes": "endOfTurnIfControl",
+   "text": "Units within range of objectives (excluding your home), each on a different objective → at end of turn, if controlled: commit sabotage"
+  },
+  "cleanse": {
+   "name": "Cleanse",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "unlimited",
+   "completes": "endOfTurnIfControl",
+   "text": "Units within range of objectives (excluding your home), each on a different objective → at end of turn, if still controlled: objective cleansed"
+  },
+  "plunder": {
+   "name": "Plunder",
+   "starts": "shooting",
+   "fromRound": 1,
+   "limit": "oncePerTurn",
+   "completes": "immediately",
+   "text": "A unit in a terrain area outside your territory → that terrain area is plundered"
+  }
  }
 }

@@ -6,152 +6,190 @@
   {
    "id": "AS",
    "name": "Adepta Sororitas",
-   "datasheets": 38,
-   "detachments": 10
+   "group": "Imperium",
+   "datasheets": 33,
+   "detachments": 8
   },
   {
    "id": "AC",
    "name": "Adeptus Custodes",
-   "datasheets": 31,
-   "detachments": 11
+   "group": "Imperium",
+   "datasheets": 28,
+   "detachments": 13
   },
   {
    "id": "AdM",
    "name": "Adeptus Mechanicus",
-   "datasheets": 38,
-   "detachments": 13
+   "group": "Imperium",
+   "datasheets": 34,
+   "detachments": 10
   },
   {
    "id": "TL",
    "name": "Adeptus Titanicus",
+   "group": "Imperium",
    "datasheets": 4,
    "detachments": 0
   },
   {
    "id": "AE",
    "name": "Aeldari",
-   "datasheets": 99,
-   "detachments": 19
+   "group": "Xenos",
+   "datasheets": 74,
+   "detachments": 15
   },
   {
    "id": "AM",
    "name": "Astra Militarum",
-   "datasheets": 135,
-   "detachments": 13
+   "group": "Imperium",
+   "datasheets": 69,
+   "detachments": 11
   },
   {
    "id": "CD",
    "name": "Chaos Daemons",
-   "datasheets": 101,
-   "detachments": 14
+   "group": "Chaos",
+   "datasheets": 74,
+   "detachments": 9
   },
   {
    "id": "QT",
    "name": "Chaos Knights",
-   "datasheets": 37,
+   "group": "Chaos",
+   "datasheets": 18,
    "detachments": 8
   },
   {
    "id": "CSM",
    "name": "Chaos Space Marines",
-   "datasheets": 111,
-   "detachments": 20
+   "group": "Chaos",
+   "datasheets": 58,
+   "detachments": 17
   },
   {
    "id": "DG",
    "name": "Death Guard",
-   "datasheets": 71,
-   "detachments": 12
+   "group": "Chaos",
+   "datasheets": 36,
+   "detachments": 9
   },
   {
    "id": "DRU",
    "name": "Drukhari",
-   "datasheets": 46,
-   "detachments": 13
+   "group": "Xenos",
+   "datasheets": 37,
+   "detachments": 9
   },
   {
    "id": "EC",
    "name": "Emperor’s Children",
+   "group": "Chaos",
    "datasheets": 23,
-   "detachments": 11
+   "detachments": 10
   },
   {
    "id": "GC",
    "name": "Genestealer Cults",
-   "datasheets": 139,
-   "detachments": 12
+   "group": "Xenos",
+   "datasheets": 87,
+   "detachments": 9
   },
   {
    "id": "GK",
    "name": "Grey Knights",
-   "datasheets": 31,
-   "detachments": 11
+   "group": "Imperium",
+   "datasheets": 25,
+   "detachments": 9
   },
   {
    "id": "AoI",
    "name": "Imperial Agents",
-   "datasheets": 46,
-   "detachments": 7
+   "group": "Imperium",
+   "datasheets": 29,
+   "detachments": 5
   },
   {
    "id": "QI",
    "name": "Imperial Knights",
-   "datasheets": 27,
+   "group": "Imperium",
+   "datasheets": 18,
    "detachments": 8
   },
   {
    "id": "LoV",
    "name": "Leagues of Votann",
+   "group": "Xenos",
    "datasheets": 22,
-   "detachments": 12
+   "detachments": 10
   },
   {
    "id": "NEC",
    "name": "Necrons",
-   "datasheets": 64,
-   "detachments": 16
+   "group": "Xenos",
+   "datasheets": 51,
+   "detachments": 12
   },
   {
    "id": "ORK",
    "name": "Orks",
-   "datasheets": 67,
-   "detachments": 17
+   "group": "Xenos",
+   "datasheets": 55,
+   "detachments": 15
   },
   {
    "id": "SM",
    "name": "Space Marines",
-   "datasheets": 291,
-   "detachments": 57
+   "group": "Imperium",
+   "datasheets": 163,
+   "detachments": 35,
+   "subfactions": [
+    "Ultramarines",
+    "Blood Angels",
+    "Dark Angels",
+    "Space Wolves",
+    "Black Templars",
+    "Deathwatch",
+    "Imperial Fists",
+    "Iron Hands",
+    "Raven Guard",
+    "Salamanders",
+    "White Scars"
+   ]
   },
   {
    "id": "TAU",
    "name": "T’au Empire",
-   "datasheets": 62,
-   "detachments": 9
+   "group": "Xenos",
+   "datasheets": 39,
+   "detachments": 7
   },
   {
    "id": "TS",
    "name": "Thousand Sons",
-   "datasheets": 60,
-   "detachments": 12
+   "group": "Chaos",
+   "datasheets": 34,
+   "detachments": 9
   },
   {
    "id": "TYR",
    "name": "Tyranids",
-   "datasheets": 57,
-   "detachments": 14
+   "group": "Xenos",
+   "datasheets": 50,
+   "detachments": 10
   },
   {
    "id": "UA",
    "name": "Unbound Adversaries",
+   "group": "Other",
    "datasheets": 0,
    "detachments": 0
   },
   {
    "id": "WE",
    "name": "World Eaters",
-   "datasheets": 58,
-   "detachments": 10
+   "group": "Chaos",
+   "datasheets": 30,
+   "detachments": 8
   }
  ]
 }

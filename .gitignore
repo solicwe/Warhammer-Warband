@@ -2,3 +2,7 @@ node_modules
 dist
 data/raw
 *.log
+artifact
+__pycache__/
+tsconfig.tsbuildinfo
+.claude/settings.local.json

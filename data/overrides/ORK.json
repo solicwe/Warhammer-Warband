@@ -1,0 +1,11 @@
+{
+  "detachments": [
+    { "name": "Brute Bosses", "enhancements": [
+      { "name": "Da Gobshot Thunderbuss", "text": "Warboss model only. This model has the following weapon: Da Gobshot Thunderbuss [LETHAL HITS: NON-MONSTER/VEHICLE, RAPID FIRE 6]: Range 24\" | A 6 | BS 4+ | S 7 | AP -2 | D 2" }
+    ] },
+    { "name": "Wurrband", "enhancements": [
+      { "name": "Da Krunch", "text": "Orks Psyker model only. This model has the following weapon: Da Krunch [BLAST 3, HAZARDOUS, LETHAL HITS, PSYCHIC]: Range 24\" | A 3 | BS 4+ | S 5 | AP -1 | D 1" },
+      { "name": "'Eadbanger", "text": "Orks Psyker model only. This model has the following weapon: 'Eadbanger [HAZARDOUS, PRECISION, PSYCHIC]: Range 24\" | A 2 | BS 4+ | S 6 | AP -3 | D 3" }
+    ] }
+  ]
+}

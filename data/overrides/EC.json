@@ -1,0 +1,318 @@
+{
+ "_comment": "Emperor’s Children Faction Pack v1.3 (legal from 30 Sep 2026) rules updates Wahapedia does not have yet.",
+ "datasheets": [
+  {
+   "name": "Chaos Terminators",
+   "models": [
+    {
+     "name": "Terminator Squad",
+     "T": 6
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Lord Kakophonist",
+   "models": [
+    {
+     "name": "Lord Kakophonist",
+     "T": 6
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Lucius the Eternal",
+   "models": [
+    {
+     "name": "Lucius the Eternal",
+     "T": 6
+    }
+   ]
+  },
+  {
+   "name": "Infractors",
+   "models": [
+    {
+     "name": "Infractors",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Duelling sabre",
+     "profiles": [
+      {
+       "name": "Duelling sabre",
+       "S": 5
+      }
+     ]
+    },
+    {
+     "name": "Power sword",
+     "profiles": [
+      {
+       "name": "Power sword",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Lord Exultant",
+   "models": [
+    {
+     "name": "Lord Exultant",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Sorcerer",
+   "models": [
+    {
+     "name": "Sorcerer",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Tormentors",
+   "models": [
+    {
+     "name": "Tormentors",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Boltgun",
+     "profiles": [
+      {
+       "name": "Boltgun",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    },
+    {
+     "name": "Power sword",
+     "profiles": [
+      {
+       "name": "Power sword",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Noise Marines",
+   "models": [
+    {
+     "name": "Noise Marines",
+     "W": 3
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Flawless Blades",
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Blissblade",
+     "profiles": [
+      {
+       "name": "Blissblade",
+       "A": "4"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Land Raider",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Rhino",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "detachments": [
+  {
+   "name": "Frenzied Host",
+   "rules": [
+    {
+     "name": "Frantic Focus",
+     "text": "When a friendly EMPEROR’S CHILDREN BATTLELINE unit is selected to make an advance/fall-back move, that unit’s BATTLELINE models’ attacks have [SUSTAINED HITS 1] until the end of the turn.\nThis detachment has the HOST tag and cannot be taken with another HOST detachment."
+    }
+   ]
+  },
+  {
+   "name": "Slaanesh’s Chosen",
+   "stratagems": [
+    {
+     "name": "VENGEFUL SURGE",
+     "text": "WHEN: Your opponent’s Shooting phase, when an enemy unit that targeted a friendly unengaged EMPEROR’S CHILDREN CHARACTER unit this phase has shot.\nTARGET: That EMPEROR’S CHILDREN CHARACTER unit.\nEFFECT: Your unit can make a surge move of up to D6\". If your unit is not your army’s Favoured Champions, you can re-roll the dice to determine the distance of that surge move."
+    }
+   ]
+  }
+ ]
+}

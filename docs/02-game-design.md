@@ -3,6 +3,9 @@
 > เป้าหมาย: ให้ความรู้สึกเหมือนเล่นบนโต๊ะจริง (เหมือน Tabletop Simulator) แต่ **ระบบทอยและคิดเลขให้ทั้งหมด** แบบ Baldur's Gate 3
 > ผู้เล่นทำแค่ **วางโมเดล ลากเดินตามระยะ M แล้วเลือกเป้า** ส่วน engine จัดการทอย modifier CP และสถานะทั้งหมดตามกฎ 11th ([01-rules-11e-reference.md](./01-rules-11e-reference.md))
 
+> **สถานะ (2026-10-02)**: ทำ M0–M5 แล้ว (data pipeline, engine, board, turn loop, mission, dice tray) — ดู README สำหรับสิ่งที่ยังไม่ได้ทำ
+> เปลี่ยนจากแผนเดิม: ใช้ SVG แทน PixiJS (ลื่นพอสำหรับ ~80 โมเดล และ hit-test ง่าย), ใช้ state hook เองแทน Zustand, ข้อมูลทุกฝ่าย 25 factions ใช้ได้ทันทีผ่าน Buff chips
+
 ---
 
 ## 1. หลักการออกแบบ

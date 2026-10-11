@@ -1,0 +1,108 @@
+{
+ "_comment": "Space Marines 11th edition codex: units moved to Warhammer Legends (Classic Dreadnought, Centurions, Razorback, Predators, Vindicator, Whirlwind, Stormhawk/Stormtalon/Stormraven, Hammerfall Bunker) and units that became Legendary Proxies only (Tactical Squad, Devastator Squad, Suppressor Squad, Pedro Kantor, Uriel Ventris).",
+ "datasheets": [
+  {
+   "name": "Dreadnought",
+   "_delete": true
+  },
+  {
+   "name": "Centurion Assault Squad",
+   "_delete": true
+  },
+  {
+   "name": "Centurion Devastator Squad",
+   "_delete": true
+  },
+  {
+   "name": "Razorback",
+   "_delete": true
+  },
+  {
+   "name": "Predator Annihilator",
+   "_delete": true
+  },
+  {
+   "name": "Predator Destructor",
+   "_delete": true
+  },
+  {
+   "name": "Vindicator",
+   "_delete": true
+  },
+  {
+   "name": "Whirlwind",
+   "_delete": true
+  },
+  {
+   "name": "Stormhawk Interceptor",
+   "_delete": true
+  },
+  {
+   "name": "Stormtalon Gunship",
+   "_delete": true
+  },
+  {
+   "name": "Stormraven Gunship",
+   "_delete": true
+  },
+  {
+   "name": "Hammerfall Bunker",
+   "_delete": true
+  },
+  {
+   "name": "Tactical Squad",
+   "_delete": true
+  },
+  {
+   "name": "Devastator Squad",
+   "_delete": true
+  },
+  {
+   "name": "Suppressor Squad",
+   "_delete": true
+  },
+  {
+   "name": "Pedro Kantor",
+   "_delete": true
+  },
+  {
+   "name": "Uriel Ventris",
+   "_delete": true
+  },
+  {
+   "name": "Victrix Honour Guard",
+   "_note": "0-1 Chapter Ancient (banner of Macragge, +15) and 0-1 Chapter Champion (blades of honour, +10) are Honour Guard models with other gear",
+   "wargearOptions": [
+    {
+     "text": "1 Victrix Honour Guard model can be the Chapter Ancient: master-crafted power weapon and banner of Macragge.",
+     "scope": "one",
+     "who": "Victrix Honour Guard",
+     "replace": [
+      "master-crafted bolt carbine",
+      "master-crafted power weapon"
+     ],
+     "choices": [
+      [
+       "master-crafted power weapon",
+       "banner of Macragge"
+      ]
+     ]
+    },
+    {
+     "text": "1 Victrix Honour Guard model can be the Chapter Champion: blades of honour.",
+     "scope": "one",
+     "who": "Victrix Honour Guard",
+     "replace": [
+      "master-crafted bolt carbine",
+      "master-crafted power weapon"
+     ],
+     "choices": [
+      [
+       "blades of honour"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

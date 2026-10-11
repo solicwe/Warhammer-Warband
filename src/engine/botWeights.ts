@@ -1,0 +1,37 @@
+// The numbers the bot weighs a position with. Each side can play with its own set (the tuner plays one set against
+// another); without one it uses the tuned set from botWeights.json, else these defaults.
+import tuned from '../../data/bot-weights.json';
+import type { PlayerId } from './types';
+
+export const DEFAULT_W = {
+  objective: 40, // value of holding an objective by a clear margin
+  homeExpensive: 0.25, // how much an expensive unit cares for the home objective
+  objDealerPts: 160, // damage dealers costing more than this care less for objectives
+  cautionHolder: 0.35, cautionBrawler: 0.35, cautionOther: 0.85, // how much expected losses count (the self-play tuner finds strength flat round here, so the bot leans aggressive)
+  dangerShots: 0.35, dangerMelee: 0.8, dangerUnseen: 0.3,
+  pullBrawler: 0.7, pullRange: 0.4, pullHolder: 1.5, pullObjective: 0.35, pullDeliver: 0.6,
+  claimBonus: 15, claimPull: 1.5,
+  pullHammer: 0.55, // an expensive non-holder unit: towards the centre objectives early, the enemy's best units later
+  pullPost: 3, // towards its post in the army plan (an objective to hold, a spot to screen)
+  crowdTouch: 5, crowdNear: 2.3, // spread out: a bunched army blocks itself and gives the enemy easy targets
+  charLonely: 0.8,
+  chargeNonBrawler: 0.5,
+  heavyStill: 1.1,
+  advanceMargin: 3, // an Advance must beat a Normal move by this much
+};
+export type BotW = typeof DEFAULT_W;
+
+const BASE: BotW = { ...DEFAULT_W, ...(tuned as Partial<BotW>) };
+const per: Partial<Record<PlayerId, BotW>> = {};
+
+/** Give one side its own weights (the tuner); undefined goes back to the tuned set. */
+export function setBotWeights(p: PlayerId, w?: Partial<BotW>) {
+  if (w) per[p] = { ...BASE, ...w }; else delete per[p];
+}
+
+export const W = (p: PlayerId): BotW => per[p] ?? BASE;
+
+/** Parts of the bot switched off by name (BOT_OFF=plan,share in the environment), to measure what each is worth. */
+const OFF = new Set(((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.BOT_OFF ?? '').split(',').filter(Boolean));
+export const botOff = (name: string) => OFF.has(name);
+export const baseWeights = (): BotW => ({ ...BASE });

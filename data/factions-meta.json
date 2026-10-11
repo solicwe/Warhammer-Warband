@@ -1,0 +1,113 @@
+{
+  "_comment": "Faction grouping and sub-factions for the army builder. Edit freely; run `npm run data` afterwards. Detachments are matched to a sub-faction automatically from their rules text; set `detachments` here to override.",
+  "excludeSources": {
+    "_comment": "Only datasheets from sources of these editions are kept (Warhammer Legends, Forge World and old 10th-edition indexes are left out). Source names matching the patterns are always left out.",
+    "keepEditions": [
+      "11"
+    ],
+    "keepSources": {
+      "_comment": "Older books still in use in 11th edition: the Deathwatch faction pack (Kill Teams, Deathwatch Veterans …)",
+      "ids": ["000000035"]
+    },
+    "patterns": [
+      "Warhammer Legends",
+      "^Legends:"
+    ]
+  },
+  "excludeDetachmentsWithoutForceDisposition": true,
+  "groups": {
+    "Imperium": [
+      "SM",
+      "AS",
+      "AC",
+      "AdM",
+      "AM",
+      "GK",
+      "AoI",
+      "QI",
+      "TL"
+    ],
+    "Chaos": [
+      "CSM",
+      "DG",
+      "TS",
+      "WE",
+      "EC",
+      "CD",
+      "QT"
+    ],
+    "Xenos": [
+      "AE",
+      "DRU",
+      "GC",
+      "LoV",
+      "NEC",
+      "ORK",
+      "TAU",
+      "TYR"
+    ]
+  },
+  "subfactions": {
+    "SM": {
+      "label": "Chapter",
+      "options": [
+        {
+          "keyword": "ULTRAMARINES",
+          "name": "Ultramarines",
+          "color": "#1f4a8f"
+        },
+        {
+          "keyword": "BLOOD ANGELS",
+          "name": "Blood Angels",
+          "color": "#9b1c1c"
+        },
+        {
+          "keyword": "DARK ANGELS",
+          "name": "Dark Angels",
+          "color": "#1d4a2a"
+        },
+        {
+          "keyword": "SPACE WOLVES",
+          "name": "Space Wolves",
+          "color": "#5b6b7a"
+        },
+        {
+          "keyword": "BLACK TEMPLARS",
+          "name": "Black Templars",
+          "color": "#1a1a1a"
+        },
+        {
+          "keyword": "DEATHWATCH",
+          "name": "Deathwatch",
+          "color": "#2a2a2a"
+        },
+        {
+          "keyword": "IMPERIAL FISTS",
+          "name": "Imperial Fists",
+          "color": "#c9a227"
+        },
+        {
+          "keyword": "IRON HANDS",
+          "name": "Iron Hands",
+          "color": "#3a3a3a"
+        },
+        {
+          "keyword": "RAVEN GUARD",
+          "name": "Raven Guard",
+          "color": "#202020"
+        },
+        {
+          "keyword": "SALAMANDERS",
+          "name": "Salamanders",
+          "color": "#2e6b2e"
+        },
+        {
+          "keyword": "WHITE SCARS",
+          "name": "White Scars",
+          "color": "#d9d9d9"
+        }
+      ],
+      "detachments": {}
+    }
+  }
+}

@@ -1,0 +1,336 @@
+# Munitorum Field Manual, September 2026 (11th edition) — new costs from the points update.
+# A unit priced here is in the game even if its datasheet comes from a Forge World page (Astraeus, Thunderhawk …).
+# "!sizes" replaces the unit's size list; a 4th column "comp:Model=min-max" changes how many of a model the unit has.
+# FACTION | Datasheet | sizes: "models=pts" (tier 1), "models=t1/t2" (both tiers), "t2:" only the later tier, "=pts" every size of a one-option unit
+AS | Paragon Warsuits | 3=165/175
+AS | Saint Celestine | =135
+AS | Celestian Insidiants | =115
+AS | Morvenn Vahl | =215
+AS | Castigator | t2:1=185
+AC | Allarus Custodians | !2=120/160,3=180/220,5=300/340,6=360/400 | comp:Allarus Custodian=2-6
+AC | Vertus Praetors | 2=155/180,3=230/255
+AC | Custodian Guard | !4=180/190,5=225/235 | comp:Custodian Guard=4-5
+AC | Custodian Wardens | !4=210/230,5=260/280 | comp:Custodian Warden=4-5
+AC | Valerian | =120
+AC | Shield-Captain on Dawneagle Jetbike | =150
+AC | Prosecutors | 4=50,5=55,9=80,10=90
+AdM | Kataphron Breachers | 3=140,6=290
+AdM | Corpuscarii Electro-Priests | 5=60,10=120
+AdM | Fulgurite Electro-Priests | 5=65,10=130
+AdM | Hastarii Fusiliers | =105/120
+AdM | Sydonian Dragoons with Radium Jezzails | 2=95,3=140
+AdM | Cybernetica Datasmith | =20
+AdM | Hastarii Exterminators | =100/115
+AdM | Onager Dunecrawler | =150
+AdM | Serberys Raiders | 6=105
+AdM | Serberys Sulphurhounds | 6=95
+AdM | Sydonian Skatros | =45
+AdM | Servitor Battleclade | =75/85
+AE | The Yncarne | =230
+AE | Fire Dragons | 5=110/120
+AE | Shroud Runners | 6=165
+AE | Warlock Conclave | 4=110
+AE | Skyweavers | 2=90,4=180
+AE | Solitaire | =105
+AE | Yvraine | =90
+AE | Autarch | =70
+AE | Dragon Knights | 3=85
+AE | Farseer | =60
+AE | Kharseth | =80
+AE | Leystalker | =75
+AE | Night Spinner | t1:=165
+AE | Stonesinger | =55
+AE | Death Jester | =65
+AM | Commissar Yarrick | =110
+AM | Hellhound | =115/125
+AM | Lord Solar Leontus | =120
+AM | Lord Marshal Dreir | =70
+SM | Sword Brethren Squad | 4=115/135,5=140/160,9=250/270,10=275/295
+SM | Chaplain Grimaldus | =120
+SM | Execrator | =65
+SM | High Marshal Helbrecht | =125
+SM | Emperor's Champion | =100
+SM | Castellan | =75
+SM | Crusade Ancient | =45
+SM | Sanguinary Priest | =60
+SM | Chief Librarian Mephiston | =175
+SM | Death Company Marines with Jump Packs | 5=130/160,10=260/290
+SM | Death Company Dreadnought | =165/185
+SM | Vanguard Veteran Squad with Jump Packs | 5=120/130,10=240/250
+SM | Baal Predator | =135/150
+SM | Commander Dante | =140
+SM | Death Company Marines | 5=90/105,10=170/185
+SM | Sanguinary Guard | 3=135/150,6=275/290
+SM | Blood Angels Captain | =90
+SM | Death Company Captain | =80
+SM | Death Company Captain with Jump Pack | =85
+SM | Lemartes | =110
+SM | Assault Intercessors with Jump Packs | 5=100/110,10=190/200
+SM | Captain with Jump Pack | =90
+SM | Astorath | =90
+SM | Ravenwing Dark Talon | =190
+SM | Lion El'Jonson | =415
+SM | Deathwing Terminator Squad | 5=190,10=380
+SM | Repulsor Executioner | =275/295
+SM | Ezekiel | =110
+SM | Belial | =100
+SM | Inner Circle Companions | 3=90/105,6=180/195
+SM | Land Speeder Vengeance | =150/160
+SM | Nephilim Jetfighter | =200
+SM | Ravenwing Black Knights | 3=85/95,6=170/180
+SM | Ravenwing Command Squad | =115/135
+SM | Deathwing Knights | =255/275
+SM | Sammael | =120
+SM | Asmodai | =80
+SM | Azrael | =150
+SM | Lazarus | =80
+SM | Ravenwing Darkshroud | =80
+SM | Deathwatch Terminator Squad | 5=190,10=380
+SM | Deathwatch Veterans | 5=115,10=220
+SM | Decimus Kill Team | 5=110,10=210
+SM | Talonstrike Kill Team | =280/300
+SM | Fortis Kill Team | =210/225
+SM | Spectrus Kill Team | =185/195
+SM | Indomitor Kill Team | =280/300
+SM | Watch Captain Artemis | =75
+SM | Watch Master | =105
+SM | Desolation Squad | t1:=135
+SM | Astraeus | =550/650
+SM | Thunderhawk Gunship | t1:=850
+SM | Eradicator Squad with Heavy Bolters | 3=95
+SM | Invader ATV | 1=65
+SM | Infiltrator Squad | 5=80,10=150
+SM | Land Raider Redeemer | =245/265
+SM | Lieutenant with Combi-Weapon | =80
+SM | Redemptor Dreadnought | =180/195
+SM | Apothecary Biologis | =60
+SM | Judiciar | =50
+SM | Lieutenant in Phobos Armour | =40
+SM | Kayvaan Shrike | =95
+SM | Wardens of Ultramar | =115
+SM | Terminator Squad | 5=195,10=390
+SM | Darnath Lysander | =160
+SM | Roboute Guilliman | =415
+SM | Terminator Assault Squad | 5=175,10=350
+SM | Company Heroes | t1:=135
+SM | Chief Librarian Tigurius | =115
+SM | Assault Intercessor Squad | 5=90,10=175
+SM | Intercessor Squad | 5=95,10=175
+SM | Land Raider | =245/265
+SM | Land Raider Crusader | =245/265
+SM | Marneus Calgar | =180
+SM | Kor'sarro Khan | =80
+SM | Bladeguard Ancient | =60
+SM | Heavy Intercessor Squad | 5=110,10=220
+SM | Infernus Squad | 5=100,10=200
+SM | Outrider Squad | 3=85,6=160
+SM | Repulsor | =190/210
+SM | Storm Speeder Thunderstrike | =155/165
+SM | Victrix Honour Guard | 3=120,6=250
+SM | Aggressor Squad | 3=90,6=180
+SM | Captain in Terminator Armour | =100
+SM | Eradicator Squad | 6=190,3=/105,6=/205
+SM | Gladiator Valiant | =165/175
+SM | Invictor Tactical Warsuit | =140
+SM | Reiver Squad | 5=85,10=165
+SM | Captain Titus | =115
+SM | Suboden Khan | =105
+SM | Ancient in Terminator Armour | =75
+SM | Bladeguard Veteran Squad | 3=85/95,6=170/180
+SM | Brutalis Dreadnought | =160/170
+SM | Captain | =90
+SM | Captain in Gravis Armour | =90
+SM | Chaplain | =70
+SM | Chaplain in Terminator Armour | =85
+SM | Chaplain on Bike | =80
+SM | Eliminator Squad | =85
+SM | Firestrike Servo-Turrets | 1=80,2=160
+SM | Incursor Squad | 5=95/105,10=160/170
+SM | Sternguard Veteran Squad | 5=105,10=210
+SM | Techmarine | =65
+SM | Tor Garadon | =90
+SM | Caanok Var | =100
+SM | Adrax Agatone | =90
+SM | Vulkan He'Stan | =105
+SM | Cato Sicarius | =115
+SM | Ancient | =45
+SM | Apothecary | =45
+SM | Captain in Phobos Armour | =75
+SM | Chaplain with Jump Pack | =80
+SM | Gladiator Lancer | =165/175
+SM | Gladiator Reaper | =165/175
+SM | Land Speeder | =110
+SM | Librarian | =75
+SM | Librarian in Phobos Armour | =75
+SM | Lieutenant | =50
+SM | Rhino | =70/80
+SM | Storm Speeder Hailstrike | =110/120
+SM | Aethon Shaan | =105
+SM | Wulfen with Storm Shields | 5=125/155,10=250/280
+SM | Wolf Guard Headtakers | t2:3=125,6=180
+SM | Wolf Guard Terminators | 5=180/220,10=365/405
+SM | Logan Grimnar | =150
+SM | Thunderwolf Cavalry | 3=115/145,6=230/260
+SM | Njal Stormcaller | =100
+SM | Blood Claws | 10=150,20=290
+SM | Ulrik the Slayer | =90
+SM | Grey Hunters | =180
+SM | Wolf Guard Battle Leader | =80
+SM | Wulfen | 5=90/105,10=180/195
+SM | Arjac Rockfist | =105
+SM | Iron Priest | =60
+SM | Ragnar Blackmane | =100
+SM | Wolf Scouts | 6=95,12=190
+SM | Wolf Priest | =75
+SM | Wulfen Dreadnought | =140/150
+CD | Skarbrand | =330
+CD | Bloodcrushers | 6=210/250
+CD | Fiends | t2:3=115,6=215
+CD | Flesh Hounds | 5=80
+QT | Knight Ruinator | =325/345
+QT | Knight Tyrant | =390/410
+QT | Knight Abominant | t1:=350
+QT | Knight Desecrator | t1:=350
+QT | Knight Rampager | t1:=350
+CSM | Accursed Cultists | 16=185/205
+CSM | Heretic Astartes Daemon Prince | =155
+CSM | Heretic Astartes Daemon Prince with Wings | =170
+CSM | Chaos Predator Annihilator | =140/150
+CSM | Chaos Predator Destructor | =145/155
+CSM | Chaos Vindicator | =180/190
+CSM | Forgefiend | =155/165
+CSM | Helbrute | =125
+CSM | Lord Discordant on Helstalker | =155
+CSM | Maulerfiend | =125
+CSM | Traitor Guardsmen Squad | =65
+CSM | Chaos Bikers | 3=80,6=150
+CSM | Chaos Terminator Squad | 5=185,10=370
+CSM | Possessed | 5=130/150,10=260/280
+CSM | Raptors | 5=115/125,10=225/235
+CSM | Chosen | 5=140/150,10=280/290
+CSM | Fabius Bile | =110
+CSM | Havocs | =135/145
+CSM | Kravek Morne | =130
+CSM | Legionaries | 5=95,10=180
+CSM | Mutilators | t2:=185
+CSM | Nemesis Claw | 5=105,10=190
+CSM | Red Corsairs Raiders | 5=120/130,10=220/230
+CSM | Warp Talons | 5=130/140,10=290/300
+CSM | Abaddon the Despoiler | =300
+CSM | Chaos Lord | =95
+CSM | Chaos Lord in Terminator Armour | =90
+CSM | Chaos Lord with Jump Pack | =85
+CSM | Cypher | =95
+CSM | Dark Apostle | =70
+CSM | Haarken Worldclaimer | =95
+CSM | Huron Blackheart | =135
+CSM | Master of Executions | =75
+CSM | Master of Possession | =65
+CSM | Masters of the Maelstrom | =150
+CSM | Red Corsairs Reave-Captain | =65
+CSM | Sorcerer | =65
+CSM | Sorcerer in Terminator Armour | =85
+CSM | Warpsmith | =65
+DG | Daemon Prince of Nurgle | =185
+DG | Daemon Prince of Nurgle with Wings | =160
+DG | Deathshroud Terminators | 3=150/160
+DG | Lord of Contagion | =110
+DG | Lord of Virulence | =90
+DG | Typhus | =90
+DG | Chaos Predator Annihilator | =130/140
+DG | Chaos Predator Destructor | =140/150
+DG | Helbrute | =105
+DG | Plague Marines | 10=175
+DG | Blightlord Terminators | 5=185,10=370
+DRU | Talos | 1=70/80,2=140/150
+DRU | Wracks | 5=55,8=90,10=110
+EC | Chaos Land Raider | =210/230
+EC | Daemon Prince of Slaanesh with Wings | t2:=225
+EC | Daemon Prince of Slaanesh | =165/180
+EC | Infractors | 5=95,10=175
+EC | Noise Marines | =160/175
+EC | Chaos Terminators | =155
+EC | Lucius the Eternal | =130
+EC | Tormentors | 5=85,10=170
+EC | Lord Exultant | =95/105
+GC | Acolyte Hybrids with Autopistols | 5=65,10=120
+GC | Goliath Rockgrinder | =110/120
+GC | Nexos | =50
+GC | Primus | =60
+GC | Sanctus | =60
+GK | Paladin Squad | 4=185/225,5=230/270,8=385/425,10=490/530
+GK | Purifier Squad | 5=145/155,10=290/300
+GK | Brotherhood Terminator Squad | 4=150,5=185,8=315,10=380
+GK | Interceptor Squad | 5=135/145,10=270/280
+GK | Purgation Squad | 5=115/125,10=230/240
+GK | Strike Squad | 5=125,10=250
+GK | Grand Master in Nemesis Dreadknight | =210/225
+GK | Nemesis Dreadknight | =205/220
+GK | Brother-Captain | =100
+GK | Brotherhood Champion | =75
+GK | Brotherhood Chaplain | =70
+GK | Brotherhood Librarian | =95/105
+GK | Brotherhood Techmarine | =75
+GK | Castellan Crowe | =105
+GK | Grand Master | =100
+GK | Grand Master Voldus | =130
+AoI | Deathwatch Kill Team | 5=115,10=220
+AoI | Sisters of Battle Immolator | t2:=115
+AoI | Aquila Kill Team | 5=110,10=210
+AoI | Watch Captain Artemis | =75
+AoI | Watch Master | =105
+QI | Knight Defender | =385/405
+QI | Knight Valiant | =390/405
+QI | Knight Warden | =365/380
+QI | Cerastus Knight Atrapos | =420/440
+LoV | Cthonian Beserks | 5=90,10=180
+LoV | Kapricus Defenders | 1=75/95,2=150/170
+LoV | Hernkyn Pioneers | 3=85/95,6=170/180
+LoV | Ûthar the Destined | =100
+LoV | Hekaton Land Fortress | t2:=270
+NEC | Canoptek Doomstalker | =130
+NEC | Doomsday Ark | t1:=200
+NEC | Immortals | 5=65,10=130
+NEC | Trazyn the Infinite | =60
+NEC | Tesseract Vault | t2:=505
+NEC | Lokhust Destroyers | 6=190/220
+NEC | Canoptek Tomb Crawlers | =60
+NEC | Nekrosor Ammentar | =195
+NEC | Psychomancer | =65
+NEC | Annihilation Barge | =100
+ORK | Nobz | 5=115/145,10=230/260
+ORK | Squighog Boyz | t1:4=130,8=260
+ORK | Breaka Boyz | =120/130
+ORK | Meganobz | 2=70/110,3=105/145,5=175/215,6=210/250
+ORK | Beast Snagga Boyz | 10=80/90,20=160/170
+ORK | Boyz | 10=85/95,20=170/180
+ORK | Ghazghkull Thraka | =290
+ORK | Nazdreg | =165
+ORK | Warboss in Mega Armour | =115/130
+ORK | Bannernob | =30
+ORK | Weirdboy | =60
+ORK | Big Mek Dakkarig | =160/180
+ORK | Killa Kans | t2:3=170,6=315
+ORK | Battlewagon | =160/180
+ORK | Big Mek | =100/115
+ORK | Big Mek with Shokk Attack Gun | =110/125
+ORK | Flash Gitz | 5=110/150,10=220/260
+ORK | Tankbustas | =160/170
+ORK | Deffkoptas | 3=85/95,6=170/180
+ORK | Gargantuan Squiggoth | t2:=600
+ORK | Hunta Rig | t2:=185
+ORK | Kill Rig | t2:=195
+ORK | Mek | =55
+TAU | Breacher Team | =80
+TAU | The Twin Lance | =240
+TS | Scarab Occult Terminators | 5=200/240,10=425/465
+TS | Rubric Marines | 5=115/125,10=210/220
+TS | Sorcerer In Terminator Armour | =110/120
+TS | Ahriman | =105
+TS | Exalted Sorcerer | =100
+TS | Exalted Sorcerer on Disc of Tzeentch | =95
+TS | Infernal Master | =105
+TS | Sorcerer | =100/110
+ORK | enh:Targetin' Gizmos | =25
+ORK | enh:Dreadherder | =30
+ORK | enh:Supa-snazz Dakka | =25

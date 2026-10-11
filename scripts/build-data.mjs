@@ -8,6 +8,7 @@
 // (see data/overrides/README.md), so they survive every re-import.
 import fs from 'node:fs';
 import path from 'node:path';
+import { factionFromPack, packFile } from './pack.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const RAW = path.join(ROOT, 'data/raw');
@@ -57,13 +58,16 @@ function groupBy(rows, key) {
 export function htmlToText(s = '') {
   return s
     .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/t[dh]>/gi, ' ¦ ') // table cells stay apart: the app draws "a ¦ b ¦ c" lines as a table
     .replace(/<\/(p|li|div|tr)>/gi, '\n')
     .replace(/<li>/gi, '• ')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(+d))
     .replace(/[ \t]+/g, ' ')
     .replace(/\n\s+/g, '\n')
+    .split('\n').filter((l) => !/^[\s¦]+$/.test(l)).map((l) => (l.includes('¦') ? l.replace(/(\s*¦\s*)+$/, '').replace(/^(\s*¦\s*)+/, '') : l)).join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
@@ -108,26 +112,137 @@ function parseLoadout(html) {
   while ((m = re.exec(text))) {
     let who = m[1].trim().replace(/^(every|each|the|all)\s+/i, '');
     if (/^(model|models|this model)$/i.test(who)) who = '*';
-    const items = m[2].replace(/\.$/, '').split(/;\s*/).map((s) => s.replace(/^\d+\s+/, '').trim()).filter(Boolean);
-    out[who] = items;
+    // "2 godhammer lascannons" -> listed twice, so the model really carries (and fires) both
+    const items = m[2].replace(/\.$/, '').split(/;\s*/).flatMap((s) => Array(Math.min(+(/^(\d+)\s/.exec(s)?.[1] ?? 1), 6)).fill(s.replace(/^\d+\s+/, '').trim())).filter(Boolean);
+    if (!out[who]) out[who] = items;
   }
   return out;
+}
+
+const WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, a: 1, an: 1 };
+const COUNT_RE = /^(\d+|one|two|three|four|five|six|a|an)\s+/i;
+const countOf = (s) => { const m = COUNT_RE.exec(s); return m ? Number(m[1]) || WORDS[m[1].toLowerCase()] || 1 : 1; };
+const stripCount = (s) => s.replace(/^up to (\d+|\w+)\s+/i, '').replace(COUNT_RE, '').replace(/^additional\s+/i, '').replace(/[.;,:]+$/, '').trim();
+const ownerless = (x) => x.replace(/\*/g, '').replace(/\([^)]*\)?|\[[^\]]*\]?/g, '').replace(/^.*?(?:'s|\btheir|\bits)\s+/i, '').trim();
+const JUNK = /following|\bor\b|^unit$|^models?$|pistol\)|one of them|^different\b|\blist\b|duplicates|cannot be|more than|\bcan be\b|[()\]]/i;
+/** "2 multi-meltas and 1 storm bolter" -> ['multi-meltas', 'multi-meltas', 'storm bolter'] (repeated for counts) */
+const items = (s) => s.split(/\s+and\s+|,\s*/).flatMap((raw) => {
+  const body = ownerless(raw);
+  const x = stripCount(body);
+  if (!x || x.length > 40 || JUNK.test(x)) return [];
+  return Array(Math.min(countOf(body), 6)).fill(x);
+});
+
+/** Loose key for matching wargear text to weapon names: "Astartes chain sword" ~ "Astartes chainsword", "neo volkite" ~ "neo-volkite". */
+const wkey = (s) => s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '');
+export function canonWeapon(name, weapons) {
+  const k = wkey(name);
+  for (const c of [k, k.replace(/es$/, ''), k.replace(/s$/, '')]) {
+    const w = weapons.find((x) => wkey(x.name) === c);
+    if (w) return w.name;
+  }
+  const w = weapons.find((x) => k.startsWith(wkey(x.name)) && k.length - wkey(x.name).length <= 2);
+  if (w) return w.name;
+  return name.charAt(0).toUpperCase() + name.slice(1); // equipment (shield, banner ...), not a weapon
+}
+
+/** "The Intercessor Sergeant’s bolt rifle can be replaced with one of the following: • 1 power fist …" -> structured option.
+ *  scope: one (this model / the named model), upTo N models, perN (for every N models, `max` of them), any number, all.
+ *  stack: "This model can be equipped with up to 4 X" (count = copies on one model). pick: "two different weapons from the following list". */
+export function parseWargearOption(text, weapons = []) {
+  let t = text.replace(/\s+/g, ' ').replace(/’/g, "'").trim();
+  if (!t || /^none$/i.test(t) || /^\*/.test(t)) return null;
+  const opt = { text: t, scope: 'one', who: '*', replace: [], choices: [] };
+  let m;
+  // conditions first: "If this unit contains 12 models, …" / "If the Reiver Sergeant is equipped with 1 bolt carbine, it can be equipped with …"
+  if ((m = t.match(/^If this unit contains (\d+) models,\s*/i))) { opt.minModels = +m[1]; t = t.slice(m[0].length); t = t.charAt(0).toUpperCase() + t.slice(1); }
+  if ((m = t.match(/^If (?:this model|the ([A-Z][\w -]+?)) is equipped with (.+?), (?:it|its|they) /i))) {
+    if (m[1]) opt.who = m[1].trim();
+    if (!/\bnot\b/i.test(t.slice(0, m.index + m[0].length))) opt.requires = items(m[2]);
+  }
+  // "(this model's X cannot be replaced)" / "This model's X cannot be replaced." are notes, not replacements
+  t = t.replace(/\([^)]*cannot be replaced[^)]*\)/gi, '').replace(/[^.•]*cannot be replaced\.?/gi, '').trim();
+  // "(a model cannot be equipped with more than one electroscourge)": a note, not a choice
+  const uniq = t.match(/cannot be equipped with more than one ([\w -]+?)\)/i);
+  if (uniq) opt.unique = [uniq[1].trim()];
+  t = t.replace(/\s*\([^)]*cannot be equipped with[^)]*\)/gi, '').trim();
+  // "This model can be equipped with 1 havoc launcher or can replace 1 combi-bolter with 1 havoc launcher": the gain is what counts
+  t = t.replace(/^(This model can be equipped with [^.]+?) or can replace .*$/i, '$1.');
+  if ((m = t.match(/^For every (\d+|\w+) models? in (?:this|the) unit,? (?:up to )?(\d+|\w+)?/i))) {
+    opt.scope = 'perN'; opt.per = Number(m[1]) || WORDS[m[1].toLowerCase()] || 5; opt.max = Number(m[2]) || WORDS[(m[2] ?? '').toLowerCase()] || 1;
+  } else if (/^Any number of/i.test(t)) opt.scope = 'any';
+  else if (/^All (?:of )?(?:the )?(?:[\w-]+ ){0,3}(?:models|in this unit)/i.test(t)) opt.scope = 'all';
+  else if ((m = t.match(/^Up to (\d+|\w+)/i))) { opt.scope = 'upTo'; opt.max = Number(m[1]) || WORDS[m[1].toLowerCase()] || 1; }
+  else if (/^(One|1) /i.test(t)) { opt.scope = 'upTo'; opt.max = 1; }
+  else if ((m = t.match(/^This model can be equipped with up to (\d+|\w+)/i))) { opt.scope = 'upTo'; opt.max = Number(m[1]) || WORDS[m[1].toLowerCase()] || 1; opt.stack = true; }
+  // who: "The Intercessor Sergeant's …", "Any number of Initiates can …", "One Incursor can …", "1 Nob model can …"
+  const whoClean = (w) => (/^models?$/i.test(w) ? '*' : w.replace(/ in this unit$/i, '').replace(/ (?:equipped with|that|who) .*$/i, '').replace(/ models?$/i, '').trim());
+  if (opt.who === '*') {
+    if ((m = t.match(/^(?:The|An?|Each|Every) ([A-Z][\w -]+?)(?:'s| can)/))) opt.who = whoClean(m[1]);
+    else if ((m = t.match(/^(?:Any number of|Up to \w+|One|1|All(?: of the)?) ([A-Z][\w -]+?)(?: models?)?(?:'s| can)/))) opt.who = whoClean(m[1]);
+    else if ((m = t.match(/^For every \w+ models? in this unit,? (?:up to \w+ )?(?:1 |one )?([A-Z][\w -]+?)(?: models?)?(?:'s| equipped| can)/))) opt.who = whoClean(m[1]);
+  }
+  // what is replaced: "have their X replaced", "X's Y can be replaced", "can replace its X with …"
+  let choiceBody = null;
+  if ((m = t.match(/can (?:each )?replace (?:its|their) (.+?) with (.+)$/i))) { opt.replace = items(m[1]); choiceBody = m[2]; }
+  else if ((m = t.match(/have (?:their|its) (.+?) replaced/i)) || (m = t.match(/(?:'s|their|its) (.+?) (?:can )?(?:each )?(?:be )?replaced/i))) opt.replace = items(m[1]);
+  // "… replaced with 1 twin lightning claws, or two different weapons from the following list: • …"
+  if ((m = t.match(/(two|three|2|3) different (?:weapons|items) from the following list:?\*?\s*(.+)$/i))) {
+    opt.pick = Number(m[1]) || WORDS[m[1].toLowerCase()];
+    opt.pickFrom = m[2].split('•').map((x) => x.trim()).filter(Boolean).flatMap(items);
+    const before = t.slice(0, m.index).match(/replaced with (.+?),? or $/i);
+    if (before) opt.choices = [items(before[1])];
+  } else {
+    if (choiceBody === null) {
+      // the choices follow the LAST "replaced (with)" / "equipped with"
+      const low = t.toLowerCase();
+      const idx = Math.max(low.lastIndexOf('replaced'), low.lastIndexOf('equipped with'));
+      const after = idx >= 0 ? t.slice(idx).match(/(?:replaced(?: with)?|equipped with)(?: (?:one|1) of the following)?:?\s*(.+)$/i) : null;
+      choiceBody = after ? after[1] : null;
+    }
+    if (choiceBody !== null) {
+      choiceBody = choiceBody.replace(/^(?:one|1) of the following:?\s*/i, '');
+      if (choiceBody.includes('•')) opt.choices = choiceBody.split('•').map((x) => x.trim()).filter(Boolean).map(items);
+      else opt.choices = [items(choiceBody.split(/\.\s/)[0])];
+    }
+  }
+  opt.choices = opt.choices.filter((c) => c.length);
+  // "1 model equipped with a Y can be equipped with Z" mentions Y as a requirement, not a replacement
+  if (!opt.requires && (m = t.match(/equipped with (?:a |an |1 )?(.+?) can (?:be equipped with|have)/i)) && !opt.replace.length) opt.requires = items(m[1]);
+  if (!opt.choices.length && !opt.pick) return null;
+  const canon = (arr) => arr.map((x) => canonWeapon(x, weapons));
+  // "its excruciator cannons can be replaced with 2 …": a plural carried twice goes as a pair
+  const rawReplace = opt.replace;
+  opt.replace = canon(opt.replace);
+  if (opt.replace.length === 1 && /s$/i.test(rawReplace[0]) && !/s$/i.test(opt.replace[0]) && opt.choices.length && opt.choices.every((c) => c.length === 2 && c[0] === c[1])) opt.replace = [opt.replace[0], opt.replace[0]];
+  if (opt.unique) opt.unique = canon(opt.unique);
+  opt.choices = opt.choices.map(canon);
+  if (opt.pickFrom) opt.pickFrom = [...new Set(canon(opt.pickFrom))];
+  if (opt.requires) opt.requires = canon(opt.requires);
+  return opt;
 }
 
 function parsePoints(rows) {
   // Keep the first price tier ("YOUR UNIT COSTS" / "YOUR 1ST TO 3RD UNITS COST"), drop duplicates.
   const tiers = [];
   let cur = null;
+  const wargear = [];
   for (const r of rows) {
+    const desc = htmlToText(r.description ?? '').replace(/^\+\s*/, '+ ');
+    if (r.cost && /^(per |\+ )/i.test(desc)) { wargear.push({ name: desc.replace(/^(per |\+ )\s*(\d+\s+)?/i, '').trim(), pts: +r.cost }); continue; }
     if (!r.cost) { cur = { label: r.description, options: [] }; tiers.push(cur); continue; }
     if (!cur) { cur = { label: 'YOUR UNIT COSTS', options: [] }; tiers.push(cur); }
-    const models = num(r.description) ?? 1;
+    // "1 Sword Brother, 4 Neophytes, 5 Initiates" -> 10 models; "10 models" -> 10
+    const parts = [...String(r.description).matchAll(/(\d+)\s+[A-Za-z]/g)].map((m) => +m[1]);
+    const models = parts.length ? parts.reduce((a, b) => a + b, 0) : num(r.description) ?? 1;
     if (!cur.options.some((o) => o.models === models)) cur.options.push({ models, pts: +r.cost });
   }
   const filled = tiers.filter((t) => t.options.length);
   const uniq = [];
   for (const t of filled) if (!uniq.some((u) => u.label === t.label && JSON.stringify(u.options) === JSON.stringify(t.options))) uniq.push(t);
-  return uniq;
+  const wg = [];
+  for (const w of wargear) if (!wg.some((x) => x.name.toLowerCase() === w.name.toLowerCase())) wg.push(w);
+  return { tiers: uniq, wargear: wg };
 }
 
 function deepMerge(target, patch) {
@@ -150,10 +265,107 @@ function deepMerge(target, patch) {
   return patch;
 }
 
+// ---------- points updates (Munitorum Field Manual), data/points/*.txt ----------
+// "FACTION | Datasheet | 5=115/125,10=210/220" — models=cost on the first price tier / the later tier ("YOUR 3RD + UNIT
+// COSTS"); "t2:" only the later tier; "=95" or "=95/105" for a unit with one size; "enh:Name" for an enhancement.
+const normName = (s) => s.toLowerCase().replace(/[’'`]/g, '').replace(/[^a-z0-9]+/g, '');
+const POINTS_DIR = path.join(path.dirname(OVERRIDES), 'points');
+const pointsLines = fs.existsSync(POINTS_DIR)
+  ? fs.readdirSync(POINTS_DIR).filter((f) => f.endsWith('.txt')).sort().flatMap((f) => fs.readFileSync(path.join(POINTS_DIR, f), 'utf8').split('\n'))
+    .map((l) => l.trim()).filter((l) => l && !l.startsWith('#')).map((l) => l.split('|').map((x) => x.trim()))
+  : [];
+const pointsMisses = [];
+function applyPointsUpdates(faction, fid) {
+  for (const [fac, name, spec0, extra] of pointsLines) {
+    if (fac !== fid) continue;
+    let spec = spec0, only = null;
+    const replaceSizes = spec.startsWith('!');
+    if (replaceSizes) spec = spec.slice(1);
+    const m0 = /^t([12]):/.exec(spec);
+    if (m0) { only = Number(m0[1]); spec = spec.slice(m0[0].length); }
+    const vals = (v) => v.split('/').map((x) => (x.trim() === '' ? undefined : Number(x)));
+    if (name.startsWith('enh:')) {
+      const e = faction.detachments.flatMap((d) => d.enhancements).filter((x) => normName(x.name) === normName(name.slice(4)));
+      if (!e.length) pointsMisses.push(`${fid} ${name}`);
+      for (const x of e) x.pts = vals(spec.replace(/^=/, ''))[0];
+      continue;
+    }
+    const d = faction.datasheets.find((x) => normName(x.name) === normName(name));
+    if (!d || !d.points?.length) { pointsMisses.push(`${fid} ${name}: no such datasheet`); continue; }
+    const pairs = spec.startsWith('=') ? [[null, vals(spec.slice(1))]] : spec.split(',').map((x) => { const [m, v] = x.split('='); return [Number(m), vals(v)]; });
+    // "!4=180/190,5=225/235": the unit now comes in these sizes (the later tier stays a flat extra on a pack's unit)
+    if (replaceSizes) {
+      d.points = d.points.slice(0, 1);
+      d.points[0].options = pairs.filter(([m, v]) => m !== null && v[0] !== undefined).map(([m, v]) => ({ models: m, pts: v[0] }));
+      if (d.dupTax && pairs[0]?.[1][1] !== undefined) d.dupTax = { ...d.dupTax, pts: pairs[0][1][1] - pairs[0][1][0] };
+      if (!d.dupTax && pairs.some(([, v]) => v[1] !== undefined)) d.points.push({ label: 'YOUR 3RD + UNIT COSTS', options: pairs.filter(([m, v]) => m !== null && v[1] !== undefined).map(([m, v]) => ({ models: m, pts: v[1] })) });
+    }
+    // "comp:Custodian Guard=4-5": how many of that model the unit has
+    const cm = /^comp:(.+)=(\d+)-(\d+)$/.exec(extra ?? '');
+    if (cm) {
+      const c = d.composition.find((x) => normName(x.name ?? '') === normName(cm[1]));
+      if (c) { c.min = +cm[2]; c.max = +cm[3]; c.text = `${c.min}-${c.max} ${c.name}`; } else pointsMisses.push(`${fid} ${name}: no model ${cm[1]}`);
+    }
+    if (replaceSizes) continue;
+    const setTier = (ti, models, pts) => {
+      const tier = d.points[ti];
+      if (!tier) return false;
+      const opts = models === null ? tier.options : tier.options.filter((o) => o.models === models);
+      if (!opts.length || (models === null && new Set(tier.options.map((o) => o.models)).size > 1)) return false;
+      for (const o of opts) o.pts = pts;
+      return true;
+    };
+    for (const [models, v] of pairs) {
+      const t1 = only === 2 ? undefined : v[0], t2 = only === 2 ? v[0] : v[1];
+      if (t1 !== undefined && !setTier(0, models, t1)) pointsMisses.push(`${fid} ${name}: no ${models ?? 'single'}-model option`);
+      if (t2 === undefined) continue;
+      if (d.points.length > 1) { if (!setTier(1, models, t2)) pointsMisses.push(`${fid} ${name}: no later-tier ${models ?? 'single'}-model option`); }
+      else if (d.dupTax) {
+        // a pack's unit: one price list plus a flat extra for later copies
+        const base = (models === null ? d.points[0].options[0] : d.points[0].options.find((o) => o.models === models))?.pts;
+        if (base !== undefined) d.dupTax = { ...d.dupTax, pts: t2 - base };
+      } else pointsMisses.push(`${fid} ${name}: no later price tier`);
+    }
+  }
+}
+
+const META = JSON.parse(fs.readFileSync(path.join(path.dirname(OVERRIDES), 'factions-meta.json'), 'utf8'));
+
+/** Which sub-faction (e.g. Chapter) a detachment belongs to: an explicit entry in factions-meta.json,
+ *  else the sub-faction keyword its rules / enhancements / stratagems name most often. */
+function detachmentSubfaction(sub, d) {
+  if (!sub) return undefined;
+  if (d.name in (sub.detachments ?? {})) return sub.detachments[d.name] || undefined;
+  const txt = JSON.stringify([d.rules, d.enhancements, d.stratagems]).toUpperCase();
+  let best, n = 0;
+  for (const o of sub.options) {
+    const c = txt.split(o.keyword).length - 1;
+    if (c > n) { best = o.keyword; n = c; }
+  }
+  return best;
+}
+
+/** Units another army's book now holds, listed again for one of this army's sub-factions. */
+const BORROW = {
+  // (the Deathwatch keep their own faction pack in 11th edition: nothing borrowed from Imperial Agents any more)
+};
+
 function build() {
   const t = Object.fromEntries(FILES.map((f) => [f, readCsv(f)]));
   const lastUpdate = t.Last_update[0]?.last_update ?? '';
   const abilityById = new Map(t.Abilities.map((a) => [a.id, a]));
+  const sourceById = new Map(t.Source.map((s) => [s.id, s]));
+  const excludeRe = (META.excludeSources?.patterns ?? []).map((p) => new RegExp(p, 'i'));
+  const keepEd = META.excludeSources?.keepEditions;
+  const keepIds = META.excludeSources?.keepSources?.ids ?? [];
+  const excludedSource = (id) => {
+    if (keepIds.includes(id)) return false;
+    const s = sourceById.get(id);
+    if (!s) return !!keepEd; // no source at all: not a published 11th edition datasheet
+    if (excludeRe.some((r) => r.test(s.name))) return true;
+    return !!keepEd && !keepEd.includes(String(s.edition));
+  };
+  let dropped = 0;
   const datasheetById = new Map(t.Datasheets.map((d) => [d.id, d]));
   const by = {
     models: groupBy(t.Datasheets_models, 'datasheet_id'),
@@ -172,7 +384,22 @@ function build() {
   const index = { source: 'Wahapedia 40k 11th edition data export', sourceUrl: BASE_URL, lastUpdate, factions: [] };
 
   for (const f of t.Factions) {
-    const sheets = t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true');
+    // 11th edition moved some sub-faction units to another army's book (the Deathwatch went to Imperial Agents):
+    // they come back here, for that sub-faction
+    const borrow = BORROW[f.id] ?? [];
+    const borrowed = new Map();
+    for (const br of borrow) {
+      for (const d of t.Datasheets) {
+        if (d.faction_id !== br.from || d.virtual === 'true' || excludedSource(d.source_id)) continue;
+        // only what this army's own books don't have (its own Watch Master, Corvus Blackstar … come first)
+        if (t.Datasheets.some((x) => x.faction_id === f.id && x.name === d.name && x.virtual !== 'true' && !excludedSource(x.source_id))) continue;
+        if ((by.keywords.get(d.id) ?? []).some((k) => k.keyword.toUpperCase() === br.keyword)) borrowed.set(d.id, br);
+      }
+    }
+    // a unit the Munitorum Field Manual prices is in the game, whichever page its datasheet is on (Forge World …)
+    const priced = new Set(pointsLines.filter(([fac]) => fac === f.id).map(([, n]) => normName(n)));
+    const inGame = (d) => !excludedSource(d.source_id) || priced.has(normName(d.name));
+    const sheets = [...t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true' && inGame(d)), ...t.Datasheets.filter((d) => borrowed.has(d.id))];
     const datasheets = sheets.map((d) => {
       const kw = by.keywords.get(d.id) ?? [];
       const weapons = [];
@@ -211,18 +438,20 @@ function build() {
         loadout: parseLoadout(d.loadout),
         loadoutText: htmlToText(d.loadout),
         options: (by.options.get(d.id) ?? []).map((o) => htmlToText(o.description)).filter(Boolean),
+        wargearOptions: (by.options.get(d.id) ?? []).map((o) => parseWargearOption(htmlToText(o.description).replace(/\n/g, ' '), weapons)).filter(Boolean),
         weapons,
         abilities,
         leads: (by.leader.get(d.id) ?? []).map((l) => datasheetById.get(l.attached_id)?.name).filter(Boolean),
         isSupport: d.is_support === 'true',
         transport: htmlToText(d.transport) || undefined,
         damaged: d.damaged_w ? { w: d.damaged_w, text: htmlToText(d.damaged_description) } : undefined,
-        points: parsePoints(by.cost.get(d.id) ?? []),
+        ...(() => { const pp = parsePoints(by.cost.get(d.id) ?? []); return { points: pp.tiers, wargearCosts: pp.wargear.map((w) => ({ ...w, name: canonWeapon(w.name, weapons) })) }; })(),
         link: d.link,
       };
     }).filter((d) => d.models.length && d.points.length);
 
-    const detachments = t.Detachments.filter((x) => x.faction_id === f.id).map((x) => ({
+    dropped += t.Datasheets.filter((d) => d.faction_id === f.id && d.virtual !== 'true' && !inGame(d)).length;
+    const detachments = t.Detachments.filter((x) => x.faction_id === f.id && (x.force_disposition || !META.excludeDetachmentsWithoutForceDisposition)).map((x) => ({
       id: x.id,
       name: x.name,
       dp: num(x.dp) ?? 1,
@@ -238,18 +467,60 @@ function build() {
 
     const armyRules = t.Abilities.filter((a) => a.faction_id === f.id).map((a) => ({ name: a.name, text: htmlToText(a.description) }));
 
-    let faction = { id: f.id, name: f.name, link: f.link, lastUpdate, armyRules, detachments, datasheets };
+    for (const d of datasheets) {
+      const br = borrowed.get(d.id);
+      if (!br) continue;
+      d.factionKeywords = [...new Set([...br.factionKeywords, br.keyword])];
+      d.borrowedFrom = br.from;
+    }
+    const sub = META.subfactions[f.id];
+    if (sub) {
+      const keys = sub.options.map((o) => o.keyword);
+      for (const d of datasheets) { const k = d.factionKeywords.find((x) => keys.includes(x)); if (k) d.subfaction = k; }
+      for (const d of detachments) { const k = detachmentSubfaction(sub, d); if (k) d.subfaction = k; }
+    }
+    let faction = { id: f.id, name: f.name, link: f.link, lastUpdate, armyRules, detachments, datasheets, ...(sub ? { subfactions: { label: sub.label, options: sub.options } } : {}) };
     const ovPath = path.join(OVERRIDES, `${f.id}.json`);
     if (fs.existsSync(ovPath)) {
       faction = deepMerge(faction, JSON.parse(fs.readFileSync(ovPath, 'utf8')));
       console.log(`applied overrides for ${f.id}`);
     }
+    // a newer book as a ListForge pack replaces the Wahapedia datasheets / rules / detachments (data/packs)
+    const pf = packFile(path.join(ROOT, 'data/packs'), f.id);
+    if (fs.existsSync(pf)) {
+      const waha = faction;
+      faction = factionFromPack(pf, faction, sub);
+      // units the book leaves out but the points list prices (Valerian): kept from the Wahapedia data
+      for (const d of waha.datasheets) {
+        if (!pointsLines.some(([fac, n]) => fac === f.id && normName(n) === normName(d.name)) || faction.datasheets.some((x) => normName(x.name) === normName(d.name))) continue;
+        // its army rule is the book's (Combat Doctrines, not the old Oath of Moment), spelled as the book spells it
+        const rules = new Set(faction.datasheets.flatMap((x) => x.abilities.filter((a) => a.type === 'Faction').map((a) => a.name)));
+        const own = d.abilities.map((a) => ({ ...a, name: a.name.replace(/’/g, "'") })).filter((a) => a.type !== 'Faction' || rules.has(a.name));
+        const common = [...rules].find((r) => faction.datasheets.filter((x) => x.abilities.some((a) => a.name === r)).length > faction.datasheets.length / 2);
+        if (common && !own.some((a) => a.name === common)) own.push(faction.datasheets.flatMap((x) => x.abilities).find((a) => a.name === common));
+        faction.datasheets.push({ ...d, abilities: own });
+      }
+      console.log(`built ${f.id} from ${faction.source.pack} (revision ${faction.source.revision})`);
+    }
+    applyPointsUpdates(faction, f.id);
+    // Leader lists: only units that are in the game (Legends and removed datasheets drop out), and a leader on foot
+    // can't lead a unit that moves differently (JUMP PACK / MOUNTED) — Wahapedia's own lists leave those out too
+    const present = new Map(faction.datasheets.map((d) => [d.name, d]));
+    const moves = ['JUMP PACK', 'MOUNTED'];
+    for (const d of faction.datasheets) {
+      d.leads = [...new Set(d.leads ?? [])].filter((n) => {
+        const t = present.get(n);
+        return t && moves.every((k) => !t.keywords.includes(k) || d.keywords.includes(k));
+      });
+    }
     fs.writeFileSync(path.join(OUT, 'factions', `${f.id}.json`), JSON.stringify(faction));
-    index.factions.push({ id: f.id, name: f.name, datasheets: faction.datasheets.length, detachments: faction.detachments.length });
+    const group = Object.entries(META.groups).find(([, ids]) => ids.includes(f.id))?.[0] ?? 'Other';
+    index.factions.push({ id: f.id, name: f.name, group, datasheets: faction.datasheets.length, detachments: faction.detachments.length, ...(sub ? { subfactions: sub.options.map((o) => o.name) } : {}) });
   }
   index.factions.sort((a, b) => a.name.localeCompare(b.name));
   fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));
-  console.log(`built ${index.factions.length} factions (data ${lastUpdate})`);
+  if (pointsMisses.length) console.log(`points updates not applied (${pointsMisses.length}):\n  ${pointsMisses.join('\n  ')}`);
+  console.log(`built ${index.factions.length} factions (data ${lastUpdate}); left out ${dropped} non-11th-edition (Legends / Forge World / old index) datasheets`);
 }
 
 if (process.argv.includes('--fetch')) await fetchAll();

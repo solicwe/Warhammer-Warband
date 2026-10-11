@@ -1,0 +1,644 @@
+{
+ "_comment": "World Eaters stratagems (Faction Pack v1.3, 30 Sep 2026) in machine-readable form. Keys: stratagem NAME (as on the card).",
+ "rules": {
+  "HACK AND SLASH": {
+   "unitIf": [
+    "charged"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "ap": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "FRENZIED RESILIENCE": {
+   "buffs": [
+    "damage-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "BLOOD OFFERING": {
+   "react": "ownDestroyed",
+   "targetFrom": "destroyed",
+   "do": [
+    {
+     "secureDead": true
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "BERZERKER’S WRATH": {
+   "react": "enemyShot",
+   "targetKw": [
+    "KHORNE BERZERKERS"
+   ],
+   "unitIf": [
+    "lostToLast"
+   ],
+   "effects": [
+    {
+     "surgeFixed": 8
+    }
+   ],
+   "botReact": "always",
+   "note": "Its Blood Surge move is up to 8\" instead of rolled",
+   "status": "auto"
+  },
+  "APOPLECTIC FRENZY": {
+   "targetKw": [
+    "KHORNE BERZERKERS"
+   ],
+   "until": "turn",
+   "effects": [
+    {
+     "eligible": [
+      "chargeAfterAdvance"
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "SKULLS FOR THE SKULL THRONE!": {
+   "react": "ownKilled",
+   "killedKw": "CHARACTER|MONSTER",
+   "special": [
+    "blessingOne"
+   ],
+   "botReact": "always",
+   "note": "One more Blessing of Khorne until the end of the battle round",
+   "status": "auto"
+  },
+  "PUNISH THE CRAVEN": {
+   "react": "enemyFallBack",
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "effects": [
+    {
+     "forceDesperate": true
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "SCORN THE WITCH": {
+   "targetKw": [
+    "CHARACTER",
+    "!EPIC HERO"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "fnp": 4,
+      "fnpVs": "mortal"
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "ASPIRE TO INFAMY": {
+   "targetKw": [
+    "CHARACTER",
+    "!EPIC HERO"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "if": [
+      "!notCharacterModel"
+     ],
+     "attacks": 1,
+     "strength": 2
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "BLOODTHIRSTY HORDE": {
+   "targetKw": [
+    "JAKHALS|GOREMONGERS"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "effects": [
+    {
+     "fightReach3": true
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "BRAZEN IDOL": {
+   "targetKw": [
+    "MONSTER|TITANIC"
+   ],
+   "until": "nextCommand",
+   "choice": [
+    {
+     "label": "Idol of Infinite Rage",
+     "do": [
+      {
+       "on": "self",
+       "idol": "rage"
+      }
+     ]
+    },
+    {
+     "label": "Idol of Burning Wrath",
+     "do": [
+      {
+       "on": "self",
+       "idol": "wrath"
+      }
+     ]
+    },
+    {
+     "label": "Idol of Blessed Blood",
+     "do": [
+      {
+       "on": "self",
+       "idol": "blood"
+      }
+     ]
+    }
+   ],
+   "limit": "battle",
+   "bot": "never",
+   "status": "auto"
+  },
+  "BLOODY VENGEANCE": {
+   "react": "ownDestroyed",
+   "targetFrom": "destroyed",
+   "targetKw": [
+    "MONSTER|TITANIC"
+   ],
+   "enemy": {
+    "killer": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "units": [
+       "JAKHALS|GOREMONGERS"
+      ],
+      "reroll": "hits"
+     },
+     "until": "battle",
+     "mark": "Bloody Vengeance"
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "IN THE SHADOW OF BRASS IDOLS": {
+   "targetKw": [
+    "JAKHALS|GOREMONGERS"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "fnp": 6
+     }
+    },
+    {
+     "if": [
+      "nearIdol"
+     ],
+     "defend": {
+      "fnp": 5
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "DRAWN TO THE SLAUGHTER": {
+   "react": "ownDestroyed",
+   "targetFrom": "destroyed",
+   "targetKw": [
+    "JAKHALS"
+   ],
+   "special": [
+    "reserveAgain"
+   ],
+   "limit": "battle",
+   "botReact": "always",
+   "status": "auto"
+  },
+  "FAIL NOT THE BLOOD GOD": {
+   "targetKw": [
+    "JAKHALS|GOREMONGERS"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "if": [
+      "!nearIdol"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "attack": "melee",
+     "if": [
+      "nearIdol"
+     ],
+     "reroll": "hits"
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "DAEMONIC FURY": {
+   "targetKw": [
+    "BLOOD LEGIONS"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buffNear": {
+      "range": 6,
+      "units": [
+       "WORLD EATERS"
+      ],
+      "one": true,
+      "effects": [
+       {
+        "attack": "melee",
+        "abilities": [
+         "lance"
+        ]
+       },
+       {
+        "attack": "melee",
+        "if": [
+         "detActive:rage"
+        ],
+        "abilities": [
+         "twin-linked"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "until": "turn",
+   "bot": "attack",
+   "status": "auto"
+  },
+  "BLESSING OF BURNING BLOOD": {
+   "targetKw": [
+    "WORLD EATERS"
+   ],
+   "unitIf": [
+    "near:6:BLOOD LEGIONS"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "inv": 5
+     }
+    },
+    {
+     "if": [
+      "detActive:boon"
+     ],
+     "defend": {
+      "inv": 4
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto",
+   "note": "Played on the World Eaters unit being attacked (a Blood Legions unit within 6\")"
+  },
+  "A WORTHY SKULL": {
+   "react": "ownKilled",
+   "killedKw": "CHARACTER|MONSTER",
+   "do": [
+    {
+     "on": "self",
+     "tithe": "D3"
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "DAEMONTIDE": {
+   "targetKw": [
+    "WORLD EATERS"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "reviveNear": {
+      "range": 6,
+      "units": [
+       "BLOOD LEGIONS"
+      ]
+     }
+    }
+   ],
+   "bot": "never",
+   "note": "Mounted: 1 model, Beast: D3, Infantry: D6 back in the closest Blood Legions unit within 6\"",
+   "status": "auto"
+  },
+  "MURDER-CALL": {
+   "react": "fightPhaseEnd",
+   "targetKw": [
+    "BLOOD LEGIONS"
+   ],
+   "unitIf": [
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ],
+   "botReact": "never",
+   "status": "auto"
+  },
+  "SUMMONED BY SLAUGHTER": {
+   "react": "ownKilled",
+   "special": [
+    "summonNear"
+   ],
+   "limit": "round",
+   "botReact": "always",
+   "note": "A Bloodletters unit in Reserves is set up within 9\" of the destroyed unit",
+   "status": "auto"
+  },
+  "IMMORTAL FURY": {
+   "targetKw": [
+    "POSSESSED"
+   ],
+   "effects": [
+    {
+     "fightOnDeath": 1
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "DAEMONIC RESISTANCE": {
+   "targetKw": [
+    "POSSESSED"
+   ],
+   "buffs": [
+    "enemyWound-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "DAEMONIC STRENGTH": {
+   "targetKw": [
+    "POSSESSED"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "if": [
+      "kw:EIGHTBOUND",
+      "!kw:EXALTED EIGHTBOUND",
+      "targetNotMV"
+     ],
+     "damage": 1
+    },
+    {
+     "attack": "melee",
+     "if": [
+      "kw:EXALTED EIGHTBOUND",
+      "targetMV"
+     ],
+     "damage": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "WARP STALKERS": {
+   "targetKw": [
+    "POSSESSED"
+   ],
+   "effects": [
+    {
+     "chargeThroughModels": true,
+     "moveThroughModels": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "HORRIFYING VIOLENCE": {
+   "react": "enemyCommandStart",
+   "targetKw": [
+    "POSSESSED"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "enemy": {
+    "engaged": true,
+    "all": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "RAPID MANIFESTATION": {
+   "targetFrom": "reserves",
+   "targetKw": [
+    "EXALTED EIGHTBOUND"
+   ],
+   "effects": [
+    {
+     "deepStrikeRange": 6
+    }
+   ],
+   "until": "turn",
+   "status": "auto"
+  },
+  "UNRELENTING ADVANCE": {
+   "react": "enemyShot",
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "unitIf": [
+    "targetOfLast",
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "move": "6"
+    }
+   ],
+   "botReact": "never",
+   "status": "auto"
+  },
+  "FULL-THROTTLE ASSAULT": {
+   "targetKw": [
+    "RHINO"
+   ],
+   "effects": [
+    {
+     "assaultDisembark": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "AGGRESSIVE DISEMBARKATION": {
+   "targetKw": [
+    "RHINO"
+   ],
+   "special": [
+    "disembarkNear6"
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "SMASH THROUGH": {
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "FURY UNLEASHED": {
+   "react": "enemyShot",
+   "targetKw": [
+    "RHINO"
+   ],
+   "unitIf": [
+    "targetOfLast"
+   ],
+   "special": [
+    "disembarkSurge"
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "ENDLESS PURSUIT OF VIOLENCE": {
+   "react": "fightPhaseEnd",
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "special": [
+    "embark"
+   ],
+   "botReact": "never",
+   "status": "auto"
+  },
+  "GOADED TO FURY": {
+   "react": "enemyShot",
+   "targetKw": [
+    "DAEMON",
+    "VEHICLE",
+    "!TITANIC"
+   ],
+   "unitIf": [
+    "targetOfLast",
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6"
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "TRAIL OF DESTRUCTION": {
+   "targetKw": [
+    "DAEMON",
+    "VEHICLE"
+   ],
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "APOPLECTIC CLARITY": {
+   "targetKw": [
+    "DAEMON",
+    "VEHICLE"
+   ],
+   "effects": [
+    {
+     "ignoreHitMods": true,
+     "ignoreWoundMods": true
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "WRATH BEYOND REASON": {
+   "targetKw": [
+    "TERMINATOR SQUAD"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "vs": "ranged",
+      "damage": 1
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "A TROPHY FOR THE THRONE": {
+   "targetKw": [
+    "TERMINATOR SQUAD"
+   ],
+   "effects": [
+    {
+     "if": [
+      "targetMV"
+     ],
+     "wound": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "FOCUSED FEROCITY": {
+   "targetKw": [
+    "TERMINATOR SQUAD"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "attacks": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  }
+ }
+}

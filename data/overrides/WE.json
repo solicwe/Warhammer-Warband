@@ -1,0 +1,267 @@
+{
+ "datasheets": [
+  {
+   "name": "Chaos Terminators",
+   "models": [
+    {
+     "name": "Chaos Terminators",
+     "T": 6
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Khorne Berzerkers",
+   "models": [
+    {
+     "name": "Khorne Berzerkers",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Chainblade",
+     "profiles": [
+      {
+       "name": "Chainblade",
+       "S": 5
+      }
+     ]
+    }
+   ],
+   "abilities": [
+    {
+     "name": "Murderous Charge",
+     "type": "Datasheet",
+     "text": "If this unit made a charge move this turn, this unit’s melee attacks have +1 S."
+    }
+   ]
+  },
+  {
+   "name": "Khârn The Betrayer",
+   "models": [
+    {
+     "name": "Khârn The Betrayer",
+     "T": 5
+    }
+   ]
+  },
+  {
+   "name": "Master of Executions",
+   "models": [
+    {
+     "name": "Master of Executions",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Lord Invocatus",
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Land Raider",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Predator Annihilator",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Predator Destructor",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Rhino",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Helbrute",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Angron",
+   "abilities": [
+    {
+     "name": "Driven by Ultimate Rage (Aura)",
+     "type": "Primarch",
+     "text": "While a friendly WORLD EATERS unit is within 6\" of this unit, that unit’s melee attacks can:\n• Re-roll hit rolls of 1.\n• Re-roll wound rolls of 1."
+    }
+   ]
+  }
+ ],
+ "detachments": [
+  {
+   "name": "Berzerker Warband",
+   "rules": [
+    {
+     "name": "Relentless Rage",
+     "text": "Friendly WORLD EATERS units’ melee attacks have +1 A."
+    }
+   ]
+  }
+ ],
+ "armyRules": [
+  {
+   "name": "Oath of Moment",
+   "_delete": true
+  },
+  {
+   "name": "Dark Pacts",
+   "_delete": true
+  },
+  {
+   "name": "Blessings of Khorne",
+   "text": "If your Army Faction is WORLD EATERS, at the start of the battle round, you can make a Blessings of Khorne roll. To do so, roll eight D6. You can then use those dice to activate up to two Blessings of Khorne (see below). Each Blessing of Khorne specifies the dice results it requires (where a number is specified, a double or triple of that value or higher is required). You can only activate each Blessing of Khorne once per battle round. Any unused dice from the Blessings of Khorne roll are then discarded. Once activated, each Blessing of Khorne applies to all units from your army with this ability until the end of the battle round.\nExample: Ash makes a Blessings of Khorne roll, getting the following: 1, 2, 2, 2, 3, 4, 6, 6. First they use the two 6s to activate Warp Blades (which requires a double 5+), leaving the following dice: 1,2, 2, 2, 3, 4. They then use the two 2s to activate Unbridled Bloodlust. Now that two Blessings of Khorne have been activated, no more can be activated and the remaining dice are discarded.\nUNBRIDLED BLOODLUST (Double 1+)\nThis unit has +1 to charge rolls.\nRAGE-FUELLED INVIGORATION (Double 2+)\nEach time a model in this unit makes a Pile-in or Consolidation move, it can move up to 6\" instead of up to 3\".\nTOTAL CARNAGE (Double 3+)\nEach time a model in this unit is destroyed by a melee attack, if it has not fought this phase, roll one D6: on a 4+, do not remove it from play. The destroyed model can fight after the attacking unit has finished making its attacks, and is then removed from play.\nMARTIAL EXCELLENCE (Double 4+ or Triple 1+)\nMelee weapons equipped by models in this unit have the [SUSTAINED HITS 1] ability.\nWARP BLADES (Double 5+ or Triple 2+)\nMelee weapons equipped by models in this unit have the [LETHAL HITS] ability.\nDECAPITATING STRIKES (Double 6 or Triple 3+)\nEach time a model in this unit makes a melee attack that targets an INFANTRY unit, that attack has the [DEVASTATING WOUNDS] ability."
+  }
+ ]
+}

@@ -1,0 +1,1140 @@
+
+Space-Marines-rules-core-cards
+Command Re-roll
+Core
+1 
+CP
+Any Phase
+When to Use
+Immediately after you make one of the following rolls for a friendly unit or model: an advance roll, charge roll, damage roll, hazard roll, hit roll, save roll, wound roll, or a roll to determine the number of attacks generated with a weapon.
+What it Does
+You re-roll that roll. If you are rolling more than one dice together, select one of those dice to re-roll (excluding charge rolls, which you must re-roll in full).
+Quick Reference
+Target
+That unit or model
+Trigger
+Any phase, just after you make one of the following rolls for a friendly unit or model: an Advance roll, Charge roll, Damage roll, Hazard roll, Hit roll, Save roll, Wound roll, or a roll to determine the number of attacks generated with a weapon
+Phase
+Any Phase
+Insane Bravery
+Core
+1 
+CP
+Command Phase
+When to Use
+Right before you make a battle-shock roll for a friendly unit.
+What it Does
+Affects: That unit. That battle-shock roll is automatically successful.
+Quick Reference
+Target
+That unit
+Trigger
+Battle-shock step of your Command phase, just before you make a battle-shock roll for a friendly unit
+Phase
+Command Phase
+Limit
+You cannot use this Stratagem more than once per battle.
+Restriction
+You cannot use this Stratagem more than once per battle.
+tabletoptools.dev
+New Orders
+Core
+1 
+CP
+Command Phase · Strategic Ploy
+When to Use
+At the end of the command phase.
+What it Does
+Affects: One of your active Secondary Mission cards. Discard it and draw one new Secondary Mission card.
+Quick Reference
+Target
+One of your active Secondary Mission cards
+Trigger
+End of your Command phase
+Phase
+Command Phase
+tabletoptools.dev
+Rapid Ingress
+Core
+1 
+CP
+Movement Phase
+When to Use
+At the end of the movement phase.
+What it Does
+Your unit makes an Ingress Move (20.04).
+Quick Reference
+Target
+One friendly unit that is in Strategic Reserves (excluding AIRCRAFT)
+Trigger
+End of your opponent's Movement phase
+Phase
+Movement Phase
+Limit
+You cannot use this Stratagem during the first battle round.
+Restriction
+You cannot use this Stratagem during the first battle round.
+tabletoptools.dev
+Fire Overwatch
+Core
+1 
+CP
+Movement Phase
+When to Use
+At the end of the movement phase.
+What it Does
+Your unit shoots using Snap Shooting (15.09). Snap Shooting: your unit shoots as described in Making Attacks (04), with these restrictions: it can only target one visible enemy unit within 24" of your unit (and only if it is an eligible target); each attack only hits on an unmodified hit roll of 6 (irrespective of the attacking weapon's BS characteristic or any modifiers); and you cannot re-roll hit rolls. After shooting, until the end of the phase, your unit is not eligible to start an action.
+Quick Reference
+Target
+One friendly unengaged unit (excluding TITANIC units)
+Trigger
+End of your opponent's Movement phase
+Phase
+Movement Phase
+Explosives
+Core
+1 
+CP
+Shooting Phase
+When to Use
+Play this during your shooting phase.
+What it Does
+Select one EXPLOSIVES/GRENADES model in your unit; Select one unengaged enemy unit within 8" of and visible to that model; Roll six D6: for each 4+, that enemy unit suffers 1 mortal wound (06.02).
+Quick Reference
+Target
+One friendly unengaged EXPLOSIVES/GRENADES unit that is eligible to shoot and did not make an Advance move this turn
+Trigger
+Your Shooting phase
+Phase
+Shooting Phase
+tabletoptools.dev
+Smokescreen
+Core
+1 
+CP
+Shooting Phase
+When to Use
+At the start of the shooting phase.
+What it Does
+Affects: One friendly SMOKE unit. Until the end of the phase, each time an attack targets either your SMOKE unit, or a unit that is not fully visible to the attacking model because of one or more models in your SMOKE unit, the target has the benefit of cover against that attack (13.08).
+Quick Reference
+Target
+One friendly SMOKE unit
+Trigger
+Start of your opponent's Shooting phase
+Phase
+Shooting Phase
+tabletoptools.dev
+Crushing Impact
+Core
+1 
+CP
+Charge Phase
+When to Use
+Immediately after a friendly monster/vehicle unit ends a charge move.
+What it Does
+Select one enemy unit engaged with your unit; Select one model in your unit engaged with that enemy unit; Roll a number of D6 equal to the Toughness characteristic of that model: for each 1, your unit suffers 1 mortal wound; for each 5+, that enemy unit suffers 1 mortal wound (to a maximum of 6 mortal wounds per unit).
+Quick Reference
+Target
+That MONSTER/VEHICLE unit
+Trigger
+Your Charge phase, just after a friendly MONSTER/VEHICLE unit ends a charge move
+Phase
+Charge Phase
+tabletoptools.dev
+Heroic Intervention
+Core
+1 
+CP
+Charge Phase
+When to Use
+At the end of the charge phase.
+What it Does
+Resolve a charge with your unit (11.02). While doing so, before making the charge roll, you must select one of the following modes: Leap to Defend – when selecting charge targets, you can only select enemy units that made a charge move this phase and are within the maximum distance; or Into the Fray (+1 CP) – when making the charge roll, if the result is greater than 6 (after modifiers), change it to 6, and when selecting charge targets, you can select any enemy units that are within 6" of your unit and within the maximum distance.
+Quick Reference
+Target
+One friendly unengaged unit within 12" of one or more enemy units. You can only select a VEHICLE unit if it is a CHARACTER/WALKER unit
+Trigger
+End of your opponent's Charge phase
+Phase
+Charge Phase
+Epic Challenge
+Core
+1 
+CP
+Fight Phase
+When to Use
+Immediately after a friendly character unit is selected to fight.
+What it Does
+Select one CHARACTER model in your unit. Until the end of the phase, that model's melee weapons have the [PRECISION] ability.
+Quick Reference
+Target
+That CHARACTER unit
+Trigger
+Fight phase, just after a friendly CHARACTER unit is selected to fight
+Phase
+Fight Phase
+tabletoptools.dev
+Counteroffensive
+Core
+2 
+CP
+Fight Phase
+When to Use
+Immediately after an enemy unit has resolved its attacks.
+What it Does
+Until the end of the phase, your unit has the Fights First ability and it must be the next unit you select to fight (12.04).
+Quick Reference
+Target
+One friendly unit that is eligible to fight
+Trigger
+Fight step of your opponent's Fight phase, just after an enemy unit has resolved its attacks
+Phase
+Fight Phase
+tabletoptools.dev
+Assault Brethren
+Space Marines · Detachment Rules
+Detachment Rules
+Assault Mastery
+You can select the assault doctrine one additional time per battle.
+tabletoptools.dev
+Armour of Contempt
+Space Marines · Assault Brethren
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+What it Does
+Attacks that target your unit have -1 AP until that enemy unit has attacked.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Gene-Wrought Might
+Space Marines · Assault Brethren
+1 
+CP
+Fight Phase · Battle Tactic
+When to Use
+Play this when: fight phase, when a friendly ADEPTUS ASTARTES unit is selected to fight.
+What it Does
+Your unit's melee attacks have: [LANCE]. Or: If the assault doctrine is active for your unit, [LANCE] and +1 AP.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Fight phase, when a friendly ADEPTUS ASTARTES unit is selected to fight.
+Phase
+Fight Phase
+tabletoptools.dev
+Duty in Death
+Space Marines · Assault Brethren
+1 
+CP
+Fight Phase · Battle Tactic
+When to Use
+Play this when: fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+What it Does
+When a model in your unit is destroyed, if your unit has not been selected to fight this phase, roll one D6, with +1 to that roll if the assault doctrine is active for your unit: On a 4+, do not remove that model from the battlefield. When your unit has fought, or at the end of the phase (whichever comes first), that model is removed from the battlefield.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+Phase
+Fight Phase
+tabletoptools.dev
+Devastator Brethren
+Space Marines · Detachment Rules
+Detachment Rules
+Devastator Mastery
+You can select the devastator doctrine one additional time per battle.
+tabletoptools.dev
+Armour of Contempt
+Space Marines · Devastator Brethren
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+What it Does
+Attacks that target your unit have -1 AP until that enemy unit has attacked.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Storm of Fire
+Space Marines · Devastator Brethren
+1 
+CP
+Shooting Phase · Strategic Ploy
+When to Use
+Play this during your shooting phase, when a friendly ADEPTUS ASTARTES unit is selected to shoot.
+What it Does
+Your unit's ranged attacks have: [IGNORES COVER]. Or: If the devastator doctrine is active for your unit, [IGNORES COVER] and +1 AP.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Your Shooting phase, when a friendly ADEPTUS ASTARTES unit is selected to shoot.
+Phase
+Shooting Phase
+tabletoptools.dev
+Hail of Vengeance
+Space Marines · Devastator Brethren
+2 
+CP
+Shooting Phase · Strategic Ploy
+When to Use
+Immediately after when an enemy unit has shot, if those attacks destroyed a model in a friendly ADEPTUS ASTARTES unit.
+What it Does
+Your unit shoots using normal shooting, but while doing so your unit can only target that enemy unit.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Your opponent's Shooting phase, when an enemy unit has shot, if those attacks destroyed a model in a friendly ADEPTUS ASTARTES unit.
+Phase
+Shooting Phase
+tabletoptools.dev
+Gauntlet Task Force
+Space Marines · Detachment Rules
+Detachment Rules
+Combined Deployment
+In your Shooting phase, when a friendly ADEPTUS ASTARTES 
+TRANSPORT
+ unit has shot, you can select one enemy unit hit by those 
+attacks
+. That enemy unit is assailed until the end of the turn: While a unit is assailed, when an ADEPTUS ASTARTES unit that disembarked this turn targets that unit, those 
+attacks
+ have [SUSTAINED HITS 1].
+tabletoptools.dev
+Aggressive Disembarkation
+Space Marines · Gauntlet Task Force
+1 
+CP
+Any Phase · Battle Tactic
+When to Use
+At any time, when a friendly ADEPTUS ASTARTES unit embarked within a TRANSPORT is selected to move.
+What it Does
+While making that move, each model in your unit can be set up within the set-up distance of that TRANSPORT. This allows you to set up your unit within the set-up distance of your TRANSPORT, instead of wholly within that distance.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Any phase, when a friendly ADEPTUS ASTARTES unit embarked within a TRANSPORT is selected to move.
+Phase
+Any Phase
+tabletoptools.dev
+Duty is Never Done
+Space Marines · Gauntlet Task Force
+1 
+CP
+Fight Phase · Battle Tactic
+When to Use
+At the end of fight phase.
+What it Does
+Affects: One friendly unengaged ADEPTUS ASTARTES INFANTRY unit that was eligible to fight this phase, is wholly within 6" of a friendly TRANSPORT unit, and is eligible to embark within that TRANSPORT unit. Your unit embarks within that TRANSPORT unit.
+Quick Reference
+Target
+One friendly unengaged ADEPTUS ASTARTES INFANTRY unit that was eligible to fight this phase, is wholly within 6" of a friendly TRANSPORT unit, and is eligible to embark within that TRANSPORT unit.
+Trigger
+End of the Fight phase.
+Phase
+Fight Phase
+tabletoptools.dev
+Storm and Secure
+Space Marines · Gauntlet Task Force
+1 
+CP
+Movement Phase · Strategic Ploy
+When to Use
+At the end of movement phase.
+What it Does
+Select one objective your unit is controlling. That objective is secured.
+Quick Reference
+Target
+One friendly ADEPTUS ASTARTES TRANSPORT unit that has an ADEPTUS ASTARTES BATTLELINE unit embarked within it.
+Trigger
+End of your Movement phase.
+Phase
+Movement Phase
+tabletoptools.dev
+Gladius Task Force
+Space Marines · Detachment Rules
+Detachment Rules
+Codex Discipline
+You can select one combat doctrine one additional time per battle.
+tabletoptools.dev
+Armour of Contempt
+Space Marines · Gladius Task Force
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+What it Does
+Attacks that target your unit have -1 AP until that enemy unit has attacked.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Adaptive Strategy
+Space Marines · Gladius Task Force
+1 
+CP
+Command Phase · Strategic Ploy
+When to Use
+Play this during your command phase.
+What it Does
+Select one combat doctrine. That combat doctrine is active for your unit until the start of your next Command phase.
+Quick Reference
+Target
+One friendly ADEPTUS ASTARTES unit.
+Trigger
+Your Command phase.
+Phase
+Command Phase
+tabletoptools.dev
+A Worthy Death
+Space Marines · Gladius Task Force
+1 
+CP
+Fight Phase · Battle Tactic
+When to Use
+Play this when: fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+What it Does
+When a model in your unit is destroyed, if your unit has not been selected to fight this phase, roll one D6: On a 4+, do not remove that model from the battlefield. When your unit has fought, or at the end of the phase (whichever comes first), that model is removed from the battlefield.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+Phase
+Fight Phase
+tabletoptools.dev
+Storm of Devastation
+Space Marines · Gladius Task Force
+1 
+CP
+Shooting Phase · Strategic Ploy
+When to Use
+Play this during your shooting phase, when a friendly ADEPTUS ASTARTES unit is selected to shoot.
+What it Does
+Your unit's ranged attacks have [IGNORES COVER].
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Your Shooting phase, when a friendly ADEPTUS ASTARTES unit is selected to shoot.
+Phase
+Shooting Phase
+tabletoptools.dev
+Might of Angels
+Space Marines · Gladius Task Force
+1 
+CP
+Fight Phase · Battle Tactic
+When to Use
+Play this when: fight phase, when a friendly ADEPTUS ASTARTES unit is selected to fight.
+What it Does
+Your unit's melee attacks have [LANCE].
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Fight phase, when a friendly ADEPTUS ASTARTES unit is selected to fight.
+Phase
+Fight Phase
+tabletoptools.dev
+Responsive Tactics
+Space Marines · Gladius Task Force
+1 
+CP
+Movement Phase · Wargear
+When to Use
+Immediately after when an enemy unit ends a move within 8" of a friendly unengaged ADEPTUS ASTARTES INFANTRY/MOUNTED unit.
+What it Does
+Your unit can make a normal move of up to D6".
+Quick Reference
+Target
+That ADEPTUS ASTARTES INFANTRY/MOUNTED unit.
+Trigger
+Your opponent's Movement phase, when an enemy unit ends a move within 8" of a friendly unengaged ADEPTUS ASTARTES INFANTRY/MOUNTED unit.
+Phase
+Movement Phase
+tabletoptools.dev
+Gravis Linebreaker Force
+Space Marines · Detachment Rules
+Detachment Rules
+Walking Fortress
+In a turn a friendly GRAVIS unit made a 
+normal move
+, that unit's ranged 
+attacks
+: Do not have [HEAVY]. Have +1 to hit rolls.
+tabletoptools.dev
+Annihilating Force
+Space Marines · Gravis Linebreaker Force
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your Shooting phase or the Fight phase, when a friendly GRAVIS unit is selected to attack.
+What it Does
+Your unit's attacks have [LETHAL HITS].
+Quick Reference
+Target
+That GRAVIS unit.
+Trigger
+Your Shooting phase or the Fight phase, when a friendly GRAVIS unit is selected to attack.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Purgation Push
+Space Marines · Gravis Linebreaker Force
+1 
+CP
+Shooting Phase · Strategic Ploy
+When to Use
+Play this during your shooting phase, when a friendly GRAVIS unit has shot.
+What it Does
+If your unit is unengaged, your unit can make a normal move of up to 5", and must end that move within range of an objective. Your unit is not eligible to declare a charge or embark within a TRANSPORT until the end of the turn.
+Quick Reference
+Target
+That GRAVIS unit.
+Trigger
+Your Shooting phase, when a friendly GRAVIS unit has shot.
+Phase
+Shooting Phase
+tabletoptools.dev
+Armoured Impact
+Space Marines · Gravis Linebreaker Force
+1 
+CP
+Charge Phase · Strategic Ploy
+When to Use
+Play this during your charge phase, when a friendly GRAVIS unit ends a charge move.
+What it Does
+When your unit ends a charge move, you can select one enemy unit engaged with your unit. If you do, roll one D6 for each model in your unit engaged with that enemy unit: For each 3+, that enemy unit suffers 1 mortal wound.
+Quick Reference
+Target
+That GRAVIS unit.
+Trigger
+Your Charge phase, when a friendly GRAVIS unit ends a charge move.
+Phase
+Charge Phase
+tabletoptools.dev
+Gravis Siege Force
+Space Marines · Detachment Rules
+Detachment Rules
+Indomitable Defence
+While a friendly GRAVIS unit is within range of an 
+objective
+, 
+attacks
+ that target that unit with a S greater than that unit's T have -1 to wound rolls.
+tabletoptools.dev
+Annihilating Force
+Space Marines · Gravis Siege Force
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your Shooting phase or the Fight phase, when a friendly GRAVIS unit is selected to attack.
+What it Does
+Your unit's attacks have [LETHAL HITS].
+Quick Reference
+Target
+That GRAVIS unit.
+Trigger
+Your Shooting phase or the Fight phase, when a friendly GRAVIS unit is selected to attack.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Stand Unyielding
+Space Marines · Gravis Siege Force
+1 
+CP
+Movement Phase · Strategic Ploy
+When to Use
+At the end of movement phase.
+What it Does
+Select one objective your unit is controlling. That objective is secured.
+Quick Reference
+Target
+One friendly GRAVIS unit.
+Trigger
+End of your Movement phase.
+Phase
+Movement Phase
+tabletoptools.dev
+Suppression Volleys
+Space Marines · Gravis Siege Force
+1 
+CP
+Shooting Phase · Strategic Ploy
+When to Use
+Play this during your shooting phase, when a friendly GRAVIS unit has shot.
+What it Does
+Select one enemy unit hit by those attacks. That enemy unit makes a battle-shock roll, with -1 to that battle-shock roll.
+Quick Reference
+Target
+That GRAVIS unit.
+Trigger
+Your Shooting phase, when a friendly GRAVIS unit has shot.
+Phase
+Shooting Phase
+tabletoptools.dev
+Ironclad Champions
+Space Marines · Detachment Rules
+Detachment Rules
+Enduring Vengeance
+Friendly ADEPTUS ASTARTES DREADNOUGHT units can re-roll hit rolls of 1.
+tabletoptools.dev
+Adamantine Terror
+Space Marines · Ironclad Champions
+1 
+CP
+Fight Phase · Battle Tactic
+When to Use
+Play this when: start of the Fight phase.
+What it Does
+Each enemy unit engaged with your unit makes a battle-shock roll, with -1 to that battle-shock roll.
+Quick Reference
+Target
+One friendly DREADNOUGHT unit.
+Trigger
+Start of the Fight phase.
+Phase
+Fight Phase
+tabletoptools.dev
+Mercy is Weakness
+Space Marines · Ironclad Champions
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your Shooting phase or the Fight phase, when a friendly DREADNOUGHT unit is selected to attack.
+What it Does
+Your unit's attacks have: [LETHAL HITS]. Or: [SUSTAINED HITS 1].
+Quick Reference
+Target
+That DREADNOUGHT unit.
+Trigger
+Your Shooting phase or the Fight phase, when a friendly DREADNOUGHT unit is selected to attack.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Unstoppable Advance
+Space Marines · Ironclad Champions
+1 
+CP
+Movement & Charge Phase · Strategic Ploy
+When to Use
+Play this when: your Movement/Charge phase, when a friendly DREADNOUGHT unit is selected to move or declares a charge.
+What it Does
+Your unit has MOBILE.
+Quick Reference
+Target
+That DREADNOUGHT unit.
+Trigger
+Your Movement/Charge phase, when a friendly DREADNOUGHT unit is selected to move or declares a charge.
+Phase
+Movement & Charge Phase
+tabletoptools.dev
+Ironstorm Spearhead
+Space Marines · Detachment Rules
+Detachment Rules
+Ironstorm Auto-Targeters
+Friendly ADEPTUS ASTARTES 
+VEHICLE
+ units' (excluding 
+WALKER
+ units) ranged 
+attacks
+ can: Re-roll one 
+hit roll
+. Re-roll one 
+wound roll
+.
+tabletoptools.dev
+Layered Ceramite
+Space Marines · Ironstorm Spearhead
+1 
+CP
+Any Phase · Battle Tactic
+When to Use
+At any time, when a friendly ADEPTUS ASTARTES VEHICLE unit suffers a mortal wound.
+What it Does
+Your unit has Feel No Pain 5+ against mortal wounds.
+Quick Reference
+Target
+That ADEPTUS ASTARTES VEHICLE unit.
+Trigger
+Any phase, when a friendly ADEPTUS ASTARTES VEHICLE unit suffers a mortal wound.
+Phase
+Any Phase
+tabletoptools.dev
+Might of the Machine Spirit
+Space Marines · Ironstorm Spearhead
+1 
+CP
+Command Phase · Strategic Ploy
+When to Use
+Play this during your command phase.
+What it Does
+Until the start of your next Command phase, your unit can ignore modifiers to your unit's: M. BS. Hit rolls and wound rolls.
+Quick Reference
+Target
+One friendly ADEPTUS ASTARTES VEHICLE unit (excluding DEDICATED TRANSPORT/FLY/WALKER units).
+Trigger
+Your Command phase.
+Phase
+Command Phase
+tabletoptools.dev
+Headhunter Doctrine
+Space Marines · Ironstorm Spearhead
+1 
+CP
+Shooting Phase · Strategic Ploy
+When to Use
+Play this during your shooting phase, when a friendly ADEPTUS ASTARTES VEHICLE unit (excluding DEDICATED TRANSPORT/FLY/WALKER units) is selected to shoot.
+What it Does
+Your unit's ranged attacks have [LETHAL HITS: MONSTER/VEHICLE].
+Quick Reference
+Target
+That ADEPTUS ASTARTES VEHICLE unit.
+Trigger
+Your Shooting phase, when a friendly ADEPTUS ASTARTES VEHICLE unit (excluding DEDICATED TRANSPORT/FLY/WALKER units) is selected to shoot.
+Phase
+Shooting Phase
+tabletoptools.dev
+Phobos Shadow Force
+Space Marines · Detachment Rules
+Detachment Rules
+Shadow Masters
+When a friendly PHOBOS or SCOUT SQUAD unit has shot: Those 
+attacks
+ do not prevent that unit from being hidden. Or: That unit can make a 
+normal move
+ of up to 
+D6
+". That unit is not eligible to declare a 
+charge
+ until the end of the turn.
+tabletoptools.dev
+Strike from the Shadows
+Space Marines · Phobos Shadow Force
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your Shooting phase or the Fight phase, when a friendly hidden PHOBOS unit is selected to attack.
+What it Does
+Your unit's attacks have: +1 S. [LETHAL HITS].
+Quick Reference
+Target
+That PHOBOS unit.
+Trigger
+Your Shooting phase or the Fight phase, when a friendly hidden PHOBOS unit is selected to attack.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Mortis Snares
+Space Marines · Phobos Shadow Force
+1 
+CP
+Movement Phase · Strategic Ploy
+When to Use
+At the end of movement phase.
+What it Does
+If your unit is controlling an objective, that objective is snared. While an objective is snared, when an enemy unit ends a move within range of that objective, roll one D6: On a 2+, that enemy unit suffers D6 mortal wounds. That objective is no longer snared.
+Quick Reference
+Target
+One friendly unengaged PHOBOS/SCOUT SQUAD unit.
+Trigger
+End of your Movement phase.
+Phase
+Movement Phase
+tabletoptools.dev
+Tactical Withdrawal
+Space Marines · Phobos Shadow Force
+1 
+CP
+Fight Phase · Wargear
+When to Use
+At the end of opponent's fight phase.
+What it Does
+Place your unit in strategic reserves.
+Quick Reference
+Target
+One friendly unengaged PHOBOS/SCOUT SQUAD unit.
+Trigger
+End of your opponent's Fight phase.
+Phase
+Fight Phase
+tabletoptools.dev
+Phobos Shock Force
+Space Marines · Detachment Rules
+Detachment Rules
+Vanguard Ambushers
+At the end of your Movement phase, if a friendly PHOBOS unit is hidden, that unit's 
+attacks
+ can re-roll wound rolls of 1 until the end of the turn.
+tabletoptools.dev
+Strike from the Shadows
+Space Marines · Phobos Shock Force
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your Shooting phase or the Fight phase, when a friendly hidden PHOBOS unit is selected to attack.
+What it Does
+Your unit's attacks have: +1 S. [LETHAL HITS].
+Quick Reference
+Target
+That PHOBOS unit.
+Trigger
+Your Shooting phase or the Fight phase, when a friendly hidden PHOBOS unit is selected to attack.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Transhuman Reactions
+Space Marines · Phobos Shock Force
+1 
+CP
+Movement Phase · Wargear
+When to Use
+Immediately after when an enemy unit ends a move within 8" of a friendly unengaged PHOBOS unit.
+What it Does
+Your unit can make a normal move of: Up to D6". Or: If the tactical doctrine is active for your unit, up to 6".
+Quick Reference
+Target
+That PHOBOS unit.
+Trigger
+Your opponent's Movement phase, when an enemy unit ends a move within 8" of a friendly unengaged PHOBOS unit.
+Phase
+Movement Phase
+tabletoptools.dev
+Umbral Evasion
+Space Marines · Phobos Shock Force
+1 
+CP
+Shooting Phase · Wargear
+When to Use
+Immediately after when an enemy unit targets a friendly PHOBOS unit.
+What it Does
+Ranged attacks that target your unit have -1 to hit rolls.
+Quick Reference
+Target
+That PHOBOS unit.
+Trigger
+Your opponent's Shooting phase, when an enemy unit targets a friendly PHOBOS unit.
+Phase
+Shooting Phase
+tabletoptools.dev
+Stormlance Task Force
+Space Marines · Detachment Rules
+Detachment Rules
+Lightning-Fast Strike
+Friendly ADEPTUS ASTARTES MOUNTED/SPEEDER units have +2" M.
+tabletoptools.dev
+Wind-Swift Evasion
+Space Marines · Stormlance Task Force
+1 
+CP
+Fight Phase · Battle Tactic
+When to Use
+At the end of fight phase.
+What it Does
+If your unit is unengaged, your unit can make a normal move. Or: If your unit is engaged, your unit can make a fall-back move.
+Quick Reference
+Target
+One friendly ADEPTUS ASTARTES MOUNTED unit that was eligible to fight this phase.
+Trigger
+End of the Fight phase.
+Phase
+Fight Phase
+tabletoptools.dev
+Sudden Onslaught
+Space Marines · Stormlance Task Force
+1 
+CP
+Movement Phase · Strategic Ploy
+When to Use
+Play this during your movement phase, when a friendly ADEPTUS ASTARTES MOUNTED/SPEEDER unit is selected to make an advance move.
+What it Does
+Your unit can change its advance roll to a 6.
+Quick Reference
+Target
+That ADEPTUS ASTARTES MOUNTED/SPEEDER unit.
+Trigger
+Your Movement phase, when a friendly ADEPTUS ASTARTES MOUNTED/SPEEDER unit is selected to make an advance move.
+Phase
+Movement Phase
+tabletoptools.dev
+Hurtling Targets
+Space Marines · Stormlance Task Force
+1 
+CP
+Shooting Phase · Wargear
+When to Use
+Immediately after when an enemy unit targets a friendly ADEPTUS ASTARTES MOUNTED/SPEEDER unit.
+What it Does
+Ranged attacks that target your unit have -1 to hit rolls.
+Quick Reference
+Target
+That ADEPTUS ASTARTES MOUNTED/SPEEDER unit.
+Trigger
+Your opponent's Shooting phase, when an enemy unit targets a friendly ADEPTUS ASTARTES MOUNTED/SPEEDER unit.
+Phase
+Shooting Phase
+tabletoptools.dev
+Tactical Brethren
+Space Marines · Detachment Rules
+Detachment Rules
+Tactical Mastery
+You can select the tactical doctrine one additional time per battle.
+tabletoptools.dev
+Armour of Contempt
+Space Marines · Tactical Brethren
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+What it Does
+Attacks that target your unit have -1 AP until that enemy unit has attacked.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES unit.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Domination Fire
+Space Marines · Tactical Brethren
+1 
+CP
+Shooting Phase · Strategic Ploy
+When to Use
+Play this during your shooting phase, when a friendly ADEPTUS ASTARTES unit has shot.
+What it Does
+Select one enemy unit hit by those attacks. That enemy unit is suppressed until the start of your next turn: While a unit is suppressed, that unit's attacks have -1 to hit rolls.
+Quick Reference
+Target
+That ADEPTUS ASTARTES unit.
+Trigger
+Your Shooting phase, when a friendly ADEPTUS ASTARTES unit has shot.
+Phase
+Shooting Phase
+tabletoptools.dev
+Masterful Tactics
+Space Marines · Tactical Brethren
+1 
+CP
+Movement Phase · Wargear
+When to Use
+Immediately after when an enemy unit ends a move within 8" of a friendly unengaged ADEPTUS ASTARTES INFANTRY/MOUNTED unit.
+What it Does
+Your unit can make a normal move of: Up to D6". Or: If the tactical doctrine is active for your unit, up to 6".
+Quick Reference
+Target
+That ADEPTUS ASTARTES INFANTRY/MOUNTED unit.
+Trigger
+Your opponent's Movement phase, when an enemy unit ends a move within 8" of a friendly unengaged ADEPTUS ASTARTES INFANTRY/MOUNTED unit.
+Phase
+Movement Phase
+tabletoptools.dev
+Tacticus Attack Force
+Space Marines · Detachment Rules
+Detachment Rules
+Wrath of the Chapter
+Friendly TACTICUS units can re-roll 
+advance
+ rolls.
+tabletoptools.dev
+Relentless Assault
+Space Marines · Tacticus Attack Force
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your Shooting phase or the Fight phase, when a friendly TACTICUS unit is selected to attack.
+What it Does
+Your unit's attacks have: [SUSTAINED HITS 1: non-MONSTER/VEHICLE]. Or: [LETHAL HITS: MONSTER/VEHICLE].
+Quick Reference
+Target
+That TACTICUS unit.
+Trigger
+Your Shooting phase or the Fight phase, when a friendly TACTICUS unit is selected to attack.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Transhuman Swiftness
+Space Marines · Tacticus Attack Force
+1 
+CP
+Fight Phase · Battle Tactic
+When to Use
+Play this when: fight phase, when an enemy unit has fought.
+What it Does
+Affects: One friendly TACTICUS unit that is within range of an objective and is eligible to fight. Your unit has Fights First and must be the next unit you select to fight.
+Quick Reference
+Target
+One friendly TACTICUS unit that is within range of an objective and is eligible to fight.
+Trigger
+Fight phase, when an enemy unit has fought.
+Phase
+Fight Phase
+tabletoptools.dev
+Tactical Focus
+Space Marines · Tacticus Attack Force
+1 
+CP
+Fight Phase · Battle Tactic
+When to Use
+Play this when: fight phase, when a friendly TACTICUS unit is selected to make a consolidation move.
+What it Does
+When making that consolidation move, your unit can move up to D3+3".
+Quick Reference
+Target
+That TACTICUS unit.
+Trigger
+Fight phase, when a friendly TACTICUS unit is selected to make a consolidation move.
+Phase
+Fight Phase
+tabletoptools.dev
+Tacticus Firestorm Force
+Space Marines · Detachment Rules
+Detachment Rules
+Codex Fire-Patterns
+Friendly TACTICUS units' [RAPID FIRE] 
+attacks
+ benefit from [RAPID FIRE] when targeting units up to that attack's maximum range.
+tabletoptools.dev
+For the Emperor!
+Space Marines · Tacticus Firestorm Force
+1 
+CP
+Command Phase · Battle Tactic
+When to Use
+Play this when: command phase.
+What it Does
+Your unit has +1 OC until the end of the turn.
+Quick Reference
+Target
+One friendly TACTICUS unit that is within range of an objective.
+Trigger
+Command phase.
+Phase
+Command Phase
+tabletoptools.dev
+Relentless Assault
+Space Marines · Tacticus Firestorm Force
+1 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your Shooting phase or the Fight phase, when a friendly TACTICUS unit is selected to attack.
+What it Does
+Your unit's attacks have: [SUSTAINED HITS 1: non-MONSTER/VEHICLE]. Or: [LETHAL HITS: MONSTER/VEHICLE].
+Quick Reference
+Target
+That TACTICUS unit.
+Trigger
+Your Shooting phase or the Fight phase, when a friendly TACTICUS unit is selected to attack.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Point-Blank Brutality
+Space Marines · Tacticus Firestorm Force
+1 
+CP
+Shooting Phase · Strategic Ploy
+When to Use
+Play this during your shooting phase, when a friendly engaged TACTICUS unit is selected to shoot.
+What it Does
+Your unit's ranged attacks (excluding [BLAST] attacks) have: [CLOSE-QUARTERS]. [IGNORES COVER].
+Quick Reference
+Target
+That TACTICUS unit.
+Trigger
+Your Shooting phase, when a friendly engaged TACTICUS unit is selected to shoot.
+Phase
+Shooting Phase
+tabletoptools.dev
+Terminator Storm Force
+Space Marines · Detachment Rules
+Detachment Rules
+Death Blow
+Friendly ADEPTUS ASTARTES TERMINATOR units have +1 to 
+charge
+ rolls.
+tabletoptools.dev
+Tactical Dreadnought Fortitude
+Space Marines · Terminator Storm Force
+2 
+CP
+Shooting & Fight Phase · Battle Tactic
+When to Use
+Play this when: your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES TERMINATOR unit.
+What it Does
+Attacks that target your unit have -1 D until that enemy unit has attacked.
+Quick Reference
+Target
+That ADEPTUS ASTARTES TERMINATOR unit.
+Trigger
+Your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS ASTARTES TERMINATOR unit.
+Phase
+Shooting & Fight Phase
+tabletoptools.dev
+Merciless Veterans
+Space Marines · Terminator Storm Force
+1 
+CP
+Shooting Phase · Strategic Ploy
+When to Use
+Play this during your shooting phase, when a friendly ADEPTUS ASTARTES TERMINATOR unit is selected to shoot.
+What it Does
+Your unit's ranged attacks have: [LETHAL HITS]. [SUSTAINED HITS 1].
+Quick Reference
+Target
+That ADEPTUS ASTARTES TERMINATOR unit.
+Trigger
+Your Shooting phase, when a friendly ADEPTUS ASTARTES TERMINATOR unit is selected to shoot.
+Phase
+Shooting Phase
+tabletoptools.dev
+Gunship Extraction
+Space Marines · Terminator Storm Force
+1 
+CP
+Fight Phase · Wargear
+When to Use
+At the end of opponent's fight phase.
+What it Does
+Place your unit in strategic reserves.
+Quick Reference
+Target
+One friendly unengaged ADEPTUS ASTARTES TERMINATOR unit.
+Trigger
+End of your opponent's Fight phase.
+Phase
+Fight Phase
+tabletoptools.dev

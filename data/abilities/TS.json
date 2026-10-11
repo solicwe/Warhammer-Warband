@@ -1,0 +1,1480 @@
+{
+ "Cabal of Sorcerers": {
+  "status": "auto",
+  "note": "Rituals at the start of your Shooting phase are attempted for you: the best Ritual per sorcerer, Channel the Warp when it pays (rituals.ts)"
+ },
+ "Cabal of Sorcerers (Aspiring Sorcerer only)": {
+  "status": "auto",
+  "note": "The Aspiring Sorcerer attempts Rituals (rituals.ts)"
+ },
+ "Cabal of Sorcerers (Scarab Occult Sorcerer only)": {
+  "status": "auto",
+  "note": "The Scarab Occult Sorcerer attempts Rituals (rituals.ts)"
+ },
+ "Pact of Sorcery": {
+  "status": "auto",
+  "note": "Checked by the army builder (allied units)"
+ },
+ "Dark Pacts": {
+  "status": "info",
+  "note": "Heretic Astartes army rule (not used by Thousand Sons)"
+ },
+ "Empyric Guidance (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Twisted Sorceries (Psychic)": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "limit": "battle",
+    "label": "Psychic weapons +3 S and +3 A this phase",
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "if": [
+         "psychicWeapon"
+        ],
+        "strength": 3,
+        "attacks": 3
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "limit": "battle",
+    "label": "Psychic weapons +3 S and +3 A this phase",
+    "botIf": [
+     "engaged"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "if": [
+         "psychicWeapon"
+        ],
+        "strength": 3,
+        "attacks": 3
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "Marked by Fate (Psychic)": {
+  "act": {
+   "when": "shootingStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "visible": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "hit": 1
+     },
+     "selfOnly": true,
+     "mark": "Marked by Fate"
+    }
+   ]
+  }
+ },
+ "Arcane Shield (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "inv": 4
+    }
+   }
+  ]
+ },
+ "Rebind Rubricae (Psychic)": {
+  "act": {
+   "when": "command",
+   "if": [
+    "leaderAttached"
+   ],
+   "botIf": [
+    "belowStarting"
+   ],
+   "roll": "D6",
+   "label": "Roll a D6: 1 = D3 mortal wounds, 2-5 = 1 Bodyguard model back, 6 = 2 back",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 2,
+     "max": 5,
+     "do": [
+      {
+       "on": "self",
+       "revive": 1
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "on": "self",
+       "revive": 2
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Malefic Maelstrom (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Glimpse of Eternity (Psychic)": {
+  "freeDie": [
+   {
+    "kind": "setSix",
+    "stage": "any",
+    "limit": "turn"
+   }
+  ],
+  "status": "auto",
+  "note": "Once per turn a Hit or Wound roll becomes a 6, or a failed save is ignored",
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "negateOnce": "turn"
+    }
+   }
+  ]
+ },
+ "Bestial Prophet": {
+  "effects": [
+   {
+    "scope": "led",
+    "hit": 1
+   }
+  ]
+ },
+ "Sacrificial Blessing": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "if": [
+     "leaderAttached"
+    ],
+    "label": "Sacrifice a Bodyguard model: +D3 A and S to Psychic weapons",
+    "do": [
+     {
+      "on": "self",
+      "sacrifice": {
+       "n": "1",
+       "name": "Tzaangor"
+      }
+     },
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buffRoll": {
+       "expr": "D3",
+       "fields": [
+        "attacks",
+        "strength"
+       ],
+       "if": [
+        "psychicWeapon"
+       ]
+      }
+     }
+    ],
+    "botIf": [
+     "minModels:6"
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "if": [
+     "leaderAttached"
+    ],
+    "botIf": [
+     "engaged",
+     "minModels:4"
+    ],
+    "label": "Sacrifice a Bodyguard model: +D3 A and S to Psychic weapons",
+    "do": [
+     {
+      "on": "self",
+      "sacrifice": {
+       "n": "1",
+       "name": "Tzaangor"
+      }
+     },
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buffRoll": {
+       "expr": "D3",
+       "fields": [
+        "attacks",
+        "strength"
+       ],
+       "if": [
+        "psychicWeapon"
+       ]
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "Illusions of Tzeentch (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "targetableWithin": 18
+   }
+  ]
+ },
+ "Binding Tendrils (Psychic)": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Arcane Fire",
+    "units": [
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "move": -2,
+       "chargeBonus": -2
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "ensnared"
+    }
+   ]
+  }
+ },
+ "Scryer of Fates (Psychic)": {
+  "status": "auto",
+  "note": "After both armies are deployed: redeploy up to three units (or put them into Strategic Reserves)"
+ },
+ "Arch-Sorcerer of Tzeentch (Psychic)": {
+  "status": "auto",
+  "note": "+1 to its Psychic test results (rituals.ts)"
+ },
+ "Servile Pawns": {
+  "effects": [
+   {
+    "if": [
+     "near:3:THOUSAND SONS+INFANTRY"
+    ],
+    "loneOperative": true
+   }
+  ]
+ },
+ "Spirit Snare": {
+  "status": "auto",
+  "note": "A Cabal of Sorcerers model destroyed within 9\": +1 to this model's Psychic tests (up to +2)"
+ },
+ "Glamour of Tzeentch (Aura, Psychic)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "THOUSAND SONS",
+     "INFANTRY"
+    ],
+    "stealth": true
+   }
+  ]
+ },
+ "Hunter of Souls": {
+  "effects": [
+   {
+    "if": [
+     "targetCharacter",
+     "targetNotKw:PSYKER"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   },
+   {
+    "if": [
+     "targetCharacter",
+     "targetKw:PSYKER"
+    ],
+    "reroll": [
+     "hits",
+     "wounds"
+    ]
+   }
+  ],
+  "act": [
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "needDestroyed": true,
+    "needCharacterKill": true,
+    "do": [
+     {
+      "on": "self",
+      "heal": "D3"
+     }
+    ]
+   },
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "needDestroyed": true,
+    "needCharacterKill": true,
+    "do": [
+     {
+      "on": "self",
+      "heal": "D3"
+     }
+    ]
+   }
+  ]
+ },
+ "Aetherstride (Psychic)": {
+  "effects": [
+   {
+    "deepStrikeRange": 6
+   },
+   {
+    "if": [
+     "setUpThisTurn"
+    ],
+    "weapon": "Dark Blessing",
+    "abilities": [
+     "sustained hits d3"
+    ]
+   }
+  ]
+ },
+ "Unearthly Power": {
+  "choice": {
+   "name": "Unearthly Power",
+   "pick": 1,
+   "when": "command",
+   "options": [
+    "Impossible Form (Psychic)",
+    "Treason of Tzeentch (Psychic)",
+    "Time Flux (Aura, Psychic)"
+   ]
+  }
+ },
+ "Lord of the Planet of the Sorcerers (Psychic)": {
+  "status": "auto",
+  "note": "Two Rituals a turn, +2 to its Psychic test results (rituals.ts)"
+ },
+ "Impossible Form (Psychic)": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "damage": -1,
+     "notPsychic": true
+    }
+   }
+  ]
+ },
+ "Treason of Tzeentch (Psychic)": {
+  "act": {
+   "when": "oppShootingStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 24
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "attack": "ranged",
+       "abilities": [
+        "hazardous"
+       ]
+      }
+     ],
+     "mark": "Treason of Tzeentch"
+    }
+   ]
+  }
+ },
+ "Time Flux (Aura, Psychic)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "THOUSAND SONS"
+    ],
+    "move": 2
+   }
+  ]
+ },
+ "SUPREME COMMANDER": {
+  "status": "auto",
+  "note": "Checked by the army builder: must be your Warlord"
+ },
+ "Bringers of Change": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "reroll": "wounds1"
+   },
+   {
+    "attack": "ranged",
+    "if": [
+     "targetOnUncontrolledObjective"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Icon of Flame": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "unit",
+    "attack": "ranged",
+    "if": [
+     "notCharacterModel"
+    ],
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Terrifying Assault": {
+  "act": [
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "target": {
+     "side": "enemy",
+     "hit": true
+    },
+    "do": [
+     {
+      "shock": -1,
+      "if": [
+       "targetNearFriendly:9:THOUSAND SONS+PSYKER"
+      ]
+     },
+     {
+      "shock": 0,
+      "if": [
+       "!targetNearFriendly:9:THOUSAND SONS+PSYKER"
+      ]
+     }
+    ]
+   },
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "target": {
+     "side": "enemy",
+     "hit": true
+    },
+    "do": [
+     {
+      "shock": -1,
+      "if": [
+       "targetNearFriendly:9:THOUSAND SONS+PSYKER"
+      ]
+     },
+     {
+      "shock": 0,
+      "if": [
+       "!targetNearFriendly:9:THOUSAND SONS+PSYKER"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "Devoted to Destruction": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "weapon": "!Close combat weapon",
+    "if": [
+     "meleeWeapons:3"
+    ],
+    "attacks": 2
+   }
+  ]
+ },
+ "Sorcerous Support": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "hit": 1,
+      "wound": 1,
+      "psychic": true
+     },
+     "fromThisTransport": true
+    }
+   ]
+  }
+ },
+ "Regenerating Monstrosities": {
+  "act": {
+   "when": "eachCommandStart",
+   "auto": true,
+   "if": [
+    "onBattlefield"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "heal": "3"
+    }
+   ]
+  }
+ },
+ "Flame-wreathed": {
+  "act": {
+   "when": "endOfNormalMove",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "movedOver": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "noCover": true
+     },
+     "until": "turn",
+     "mark": "Flame-wreathed"
+    }
+   ]
+  }
+ },
+ "Assault Ramp": {
+  "effects": [
+   {
+    "assaultDisembark": true
+   }
+  ]
+ },
+ "Ensorcelled Destruction": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetNotMV",
+     "targetPsyHit"
+    ],
+    "strength": 1,
+    "ap": 1
+   }
+  ]
+ },
+ "Ensorcelled Annihilation": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetMV",
+     "targetPsyHit"
+    ],
+    "reroll": [
+     "hits",
+     "damage"
+    ]
+   }
+  ]
+ },
+ "Siege Shield": {
+  "effects": [
+   {
+    "noBigGunsPenalty": true
+   }
+  ],
+  "status": "auto",
+  "note": "No penalty for big guns in combat; vehicles can already shoot units in Engagement Range"
+ },
+ "Blazing Salvoes": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "suppressed"
+    }
+   ]
+  }
+ },
+ "Snarling Protector": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1
+    }
+   },
+   {
+    "stratRepeat": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "limit": "phase"
+    }
+   },
+   {
+    "rerollCharge": true,
+    "if": [
+     "nearEngaged:12:PSYKER"
+    ]
+   }
+  ],
+  "status": "auto",
+  "note": "Heroic Intervention −1CP and usable again; charge re-roll while a friendly engaged PSYKER is within 12\""
+ },
+ "Scuttling Walker": {
+  "effects": [
+   {
+    "moveThroughModels": true,
+    "mobile": true
+   }
+  ]
+ },
+ "Destroyer of Futures (Once per phase, per unit)": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "counteroffensive"
+     ],
+     "cp": 1,
+     "limit": "phase"
+    }
+   },
+   {
+    "stratRepeat": {
+     "ids": [
+      "counteroffensive"
+     ],
+     "limit": "phase"
+    }
+   }
+  ]
+ },
+ "Ambushing Hunters": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "if": [
+    "farFromEnemies:6"
+   ],
+   "botUse": "never",
+   "label": "Go into Strategic Reserves",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Brayhorn": {
+  "gear": true,
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Herd Banner": {
+  "gear": true,
+  "effects": [
+   {
+    "if": [
+     "onControlledObjective"
+    ],
+    "ld": 1
+   }
+  ]
+ },
+ "Rites of Coalescence": {
+  "effects": [
+   {
+    "if": [
+     "contains:Sorcerer"
+    ],
+    "defend": {
+     "wound": -1
+    }
+   }
+  ]
+ },
+ "Prophesied Doom": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "perModel": true,
+   "each": {
+    "on": 4,
+    "do": [
+     {
+      "mortals": "1"
+     }
+    ]
+   }
+  }
+ },
+ "Mutating Vortex (Aura)": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 6,
+    "each": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "max": 3,
+     "do": [
+      {
+       "mortals": "1"
+      }
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "do": [
+      {
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "mortals": "D6"
+      }
+     ]
+    }
+   ],
+   "do": [
+    {
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Immaterial Flare (Aura)": {
+  "status": "auto",
+  "note": "+1 to Psychic tests of nearby sorcerers that Channel the Warp (rituals.ts)"
+ },
+ "Prophetic Sentinels": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "fire-overwatch",
+      "heroic-intervention"
+     ],
+     "cp": 1,
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Malign Trickery": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "if": [
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "move": "D6"
+    }
+   ]
+  }
+ },
+ "One Head Looks Forward": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "onBattlefield"
+   ],
+   "ldTest": true,
+   "pass": [
+    {
+     "on": "self",
+     "cp": 1
+    }
+   ]
+  }
+ },
+ "One Head Looks Back (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 12,
+    "stratTax": {
+     "cp": 1,
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Daemon Lord of Tzeentch (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "SCINTILLATING LEGIONS"
+    ],
+    "attack": "ranged",
+    "strength": 1
+   }
+  ]
+ },
+ "Master of Magicks (Psychic)": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "if": [
+     "!marked:magicks"
+    ],
+    "label": "Bolt of Change [SUSTAINED HITS D3]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "Bolt of Change",
+        "abilities": [
+         "sustained hits d3"
+        ]
+       }
+      ],
+      "mark": "magicks"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "if": [
+     "!marked:magicks"
+    ],
+    "botUse": "never",
+    "label": "Bolt of Change [LETHAL HITS]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "Bolt of Change",
+        "abilities": [
+         "lethal hits"
+        ]
+       }
+      ],
+      "mark": "magicks"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "if": [
+     "!marked:magicks"
+    ],
+    "botUse": "never",
+    "label": "Bolt of Change [IGNORES COVER]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "Bolt of Change",
+        "abilities": [
+         "ignores cover"
+        ]
+       }
+      ],
+      "mark": "magicks"
+     }
+    ]
+   }
+  ]
+ },
+ "Bounding Leaps": {
+  "effects": [
+   {
+    "eligible": [
+     "shootAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Slashing Dive": {
+  "act": {
+   "when": "endOfNormalMove",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "movedOver": true
+   },
+   "perModel": true,
+   "each": {
+    "on": 4,
+    "do": [
+     {
+      "mortals": "1"
+     }
+    ]
+   }
+  }
+ },
+ "Split": {
+  "status": "auto",
+  "note": "Destroyed Pink Horrors may become two Blue Horrors, Blue Horrors a Brimstone Horror (4+)"
+ },
+ "Daemonic Icon": {
+  "gear": true,
+  "effects": [
+   {
+    "ldSet": 6
+   }
+  ]
+ },
+ "Instrument of Chaos": {
+  "gear": true,
+  "effects": [
+   {
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "HORRORS ARE PINK. HORRORS ARE BLUE. WHEREONCE THERE WAS ONE, NOW THERE ARE TWO.": {
+  "status": "auto",
+  "note": "Once no Pink Horror is left, the unit has Sullen Malevolence and Exploding Horrors"
+ },
+ "Sullen Malevolence (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "if": [
+     "contains:Blue"
+    ],
+    "ld": -1
+   }
+  ]
+ },
+ "Exploding Horrors": {
+  "act": {
+   "when": "selectedToFight",
+   "if": [
+    "contains:Brimstone"
+   ],
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "label": "Brimstone Horrors explode (4+: 1 mortal wound each)",
+   "do": [
+    {
+     "explodeModels": {
+      "name": "Brimstone",
+      "on": 4
+     }
+    }
+   ]
+  }
+ },
+ "Arcane Might": {
+  "effects": [
+   {
+    "if": [
+     "psychicWeapon"
+    ],
+    "strength": 1
+   },
+   {
+    "if": [
+     "psychicWeapon",
+     "inFlow"
+    ],
+    "strength": 1
+   }
+  ]
+ },
+ "Empowered Manifestation": {
+  "effects": [
+   {
+    "if": [
+     "inFlow"
+    ],
+    "rerollHazard": true
+   }
+  ],
+  "status": "auto",
+  "note": "+6\" to its Rituals while wholly within the Flow of Magic (rituals.ts)"
+ },
+ "Empyric Onslaught": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "if": [
+     "psychicWeapon",
+     "inFlow"
+    ],
+    "attacks": 3
+   }
+  ]
+ },
+ "Noctilith Mantle": {
+  "status": "auto",
+  "note": "Its unit is always wholly within the Flow of Magic; its models attempt no Rituals"
+ },
+ "Lord of Forbidden Lore": {
+  "status": "auto",
+  "note": "+6\" to the range of its Rituals (rituals.ts)"
+ },
+ "Incandaeum": {
+  "status": "auto",
+  "note": "Once per battle it may attempt Doombolt although it was already attempted this phase (rituals.ts)"
+ },
+ "Umbralefic Crystal": {
+  "act": {
+   "when": "command",
+   "limit": "battle",
+   "per": "army",
+   "if": [
+    "notEngaged"
+   ],
+   "botUse": "never",
+   "label": "Go into Strategic Reserves (Deep Strike), arrive next Movement phase",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true,
+     "earlyArrival": true
+    },
+    {
+     "on": "self",
+     "buff": [
+      {
+       "deepStrike": true
+      }
+     ],
+     "until": "endOfNextTurn"
+    }
+   ]
+  }
+ },
+ "Eldritch Vortex of E’taph": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "psychicWeapon"
+    ],
+    "strength": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Nethershriek Mind-eater": {
+  "act": {
+   "when": "shootingStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "visible": true
+   },
+   "do": [
+    {
+     "shockMortals": {
+      "mod": 0,
+      "mortals": "3"
+     }
+    }
+   ]
+  }
+ },
+ "Diabolic Savant": {
+  "status": "auto",
+  "note": "+1 to its Psychic tests when it Channels the Warp near Scintillating Legions (rituals.ts)"
+ },
+ "Duplicitous Malediction": {
+  "status": "auto",
+  "note": "After both armies are deployed: redeploy up to three units (or put them into Strategic Reserves)"
+ },
+ "Tome of True Names": {
+  "act": [
+   {
+    "when": "anyPhase",
+    "limit": "battle",
+    "botUse": "never",
+    "label": "2+ invulnerable save until the end of the phase",
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "defend": {
+         "inv": 2
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "when": "attacked",
+    "auto": true,
+    "botOnly": true,
+    "limit": "battle",
+    "if": [
+     "dangerousAttack"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "defend": {
+         "inv": 2
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "Warpmeld Dagger": {
+  "status": "auto",
+  "note": "Before the Psychic test result: suffer D3 mortal wounds, add them to the result (used for hard Rituals)"
+ },
+ "Diamond of Distortion": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Bray Lord": {
+  "effects": [
+   {
+    "scouts": 6
+   }
+  ]
+ },
+ "Flowing Flesh": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 4
+    }
+   }
+  ],
+  "status": "auto",
+  "note": "Feel No Pain 4+ and W5"
+ },
+ "Risen Rubricae": {
+  "act": {
+   "when": "formation",
+   "auto": true,
+   "target": {
+    "side": "friendly",
+    "units": [
+     "RUBRICAE",
+     "BATTLELINE"
+    ],
+    "each": true,
+    "count": 2,
+    "anywhere": true
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "infiltrators": true
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  }
+ },
+ "Arcane Thralls (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 9,
+    "units": [
+     "RUBRICAE"
+    ],
+    "rerollShock": true
+   }
+  ]
+ },
+ "Lord of the Rubricae": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "modelKw:RUBRICAE"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "The Stave Abominus": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "abilities": [
+     "sustained hits d3",
+     "devastating wounds"
+    ]
+   }
+  ]
+ },
+ "Warp Syphon": {
+  "status": "auto",
+  "note": "Re-rolls the Channel die when it makes a double or falls short: a nearby vehicle takes 1 mortal wound (rituals.ts)"
+ },
+ "The Perplexing Cloak": {
+  "effects": [
+   {
+    "if": [
+     "near:3:THOUSAND SONS+VEHICLE"
+    ],
+    "loneOperative": true
+   }
+  ]
+ },
+ "Biomechanical Mutation": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "THOUSAND SONS",
+     "VEHICLE"
+    ],
+    "damaged": true
+   },
+   "botUse": "damaged",
+   "label": "A vehicle within 6\" regains D3 wounds",
+   "do": [
+    {
+     "heal": "D3"
+    }
+   ]
+  }
+ },
+ "Warp-cursed Runemaster": {
+  "status": "auto",
+  "note": "+6\" to its Rituals near a Thousand Sons vehicle (rituals.ts)"
+ },
+ "Eruption of Vitality": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "limit": "battle",
+   "per": "army",
+   "do": [
+    {
+     "on": "self",
+     "reviveLater": {
+      "on": 2,
+      "wounds": 3
+     }
+    }
+   ]
+  },
+  "status": "auto",
+  "note": "At the end of the phase on a 2+ it returns with 3 wounds"
+ },
+ "Curse of Life": {
+  "status": "auto",
+  "note": "Sorcerous Invigoration heals 3 more (rituals.ts)"
+ },
+ "Walking Rampart": {
+  "effects": [
+   {
+    "if": [
+     "near:3:SEKHETAR ROBOTS"
+    ],
+    "loneOperative": true
+   }
+  ],
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 3,
+    "units": [
+     "SEKHETAR ROBOTS"
+    ],
+    "damaged": true
+   },
+   "botUse": "damaged",
+   "label": "Soul Bound: Sekhetar Robots within 3\" heal D3+1",
+   "do": [
+    {
+     "heal": "D3+1"
+    }
+   ]
+  }
+ },
+ "Occulus Infernum": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "SEKHETAR ROBOTS"
+    ]
+   },
+   "label": "Sekhetar Robots within 6\": ranged attacks +1 BS until your next turn",
+   "do": [
+    {
+     "buff": [
+      {
+       "attack": "ranged",
+       "hit": 1
+      }
+     ],
+     "until": "nextTurnStart"
+    }
+   ]
+  }
+ },
+ "Unravelled Fates": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "MUTANT"
+    ],
+    "shocked": true
+   },
+   "label": "A battle-shocked MUTANT unit within 6\" recovers",
+   "do": [
+    {
+     "unshock": true
+    }
+   ]
+  }
+ },
+ "Thicket of Bladed Bone": {
+  "effects": [
+   {
+    "attack": "melee",
+    "ap": 1,
+    "abilities": [
+     "cleave 1"
+    ]
+   }
+  ]
+ }
+}

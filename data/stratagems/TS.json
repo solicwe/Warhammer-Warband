@@ -1,0 +1,821 @@
+{
+ "_comment": "Thousand Sons stratagems (Faction Pack v1.3) in machine-readable form. Keys: stratagem NAME (as on the card) or NAME@Detachment. See docs/EDITING.md.",
+ "rules": {
+  "KALEIDOSCOPIC TEMPEST": {
+   "effects": [
+    {
+     "stealth": true
+    },
+    {
+     "if": [
+      "inFlow"
+     ],
+     "detection": -3
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "WARDING HEX": {
+   "unitIf": [
+    "onControlledObjective",
+    "inFlow"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "status": "auto"
+  },
+  "THROUGH THE VEIL": {
+   "targetFrom": "reserves",
+   "targetKw": [
+    "RUBRIC MARINES|SCARAB OCCULT TERMINATORS"
+   ],
+   "effects": [
+    {
+     "if": [
+      "kw:RUBRIC MARINES"
+     ],
+     "deepStrike": true
+    },
+    {
+     "if": [
+      "kw:SCARAB OCCULT TERMINATORS"
+     ],
+     "deepStrikeRange": 6,
+     "deepStrikeInFlow": true
+    }
+   ],
+   "status": "auto",
+   "note": "Scarab Occult: wholly within your Flow of Magic, more than 6\" away; no charge this turn"
+  },
+  "WRATH OF THE DOOMED": {
+   "effects": [
+    {
+     "fightOnDeath": 4
+    },
+    {
+     "if": [
+      "inFlow"
+     ],
+     "fightOnDeath": 3
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "SCOURING WARPFLAME": {
+   "unitIf": [
+    "inFlow"
+   ],
+   "buffs": [
+    "ignoresCover"
+   ],
+   "effects": [
+    {
+     "afterShootNoCover": true
+    }
+   ],
+   "bot": "attack",
+   "status": "auto",
+   "note": "After shooting you pick one enemy unit hit: it loses the Benefit of Cover this phase"
+  },
+  "STRANDS OF TIME": {
+   "unitIf": [
+    "fellBack"
+   ],
+   "choice": [
+    {
+     "label": "Shoot",
+     "effects": [
+      {
+       "eligible": [
+        "shootAfterFallBack"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Charge",
+     "effects": [
+      {
+       "eligible": [
+        "chargeAfterFallBack"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Shoot and charge (in Flow)",
+     "if": [
+      "inFlow"
+     ],
+     "effects": [
+      {
+       "eligible": [
+        "shootAfterFallBack",
+        "chargeAfterFallBack"
+       ]
+      }
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "DEVASTATING SORCERY": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "if": [
+      "psychicWeapon"
+     ],
+     "reroll": [
+      "hits",
+      "wounds"
+     ]
+    },
+    {
+     "weaponRange": 9
+    }
+   ],
+   "bot": "attack",
+   "status": "auto",
+   "note": "+9\" to Psychic weapons' Range"
+  },
+  "PSYCHIC DOMINION": {
+   "effects": [
+    {
+     "defend": {
+      "fnp": 4,
+      "fnpVs": "psychic"
+     }
+    }
+   ],
+   "enemy": {
+    "lastActor": true
+   },
+   "enemyEffects": [
+    {
+     "if": [
+      "psychicWeapon"
+     ],
+     "abilities": [
+      "hazardous"
+     ]
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "DESTINED BY FATE": {
+   "targetKw": [
+    "PSYKER"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "negateOncePerPhase": true
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto",
+   "note": "The first failed save on the unit this phase deals 0 damage"
+  },
+  "DESECRATION OF WORLDS": {
+   "unitIf": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "status": "auto"
+  },
+  "ARCANE FOCUS": {
+   "bot": "never",
+   "status": "auto",
+   "note": "Used from the Ritual panel: re-roll a Psychic test that Channelled the Warp"
+  },
+  "EGOTISTICAL POWER": {
+   "choice": [
+    {
+     "label": "Imbued Manifestation",
+     "effects": [
+      {
+       "weaponRange": 6,
+       "if": [
+        "psychicWeapon"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Psychic Maelstrom",
+     "effects": [
+      {
+       "if": [
+        "psychicWeapon"
+       ],
+       "wound": 1
+      }
+     ]
+    },
+    {
+     "label": "Wrath of the Immaterium",
+     "effects": [
+      {
+       "if": [
+        "psychicWeapon"
+       ],
+       "abilities": [
+        "devastating"
+       ]
+      }
+     ]
+    }
+   ],
+   "until": "nextCommand",
+   "bot": "never",
+   "status": "auto"
+  },
+  "SULPHUROUS VEIL": {
+   "buffs": [
+    "enemyHit-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "GLIMMERSHIFT PORTAL": {
+   "react": "fightPhaseEnd",
+   "targetKw": [
+    "SCINTILLATING LEGIONS"
+   ],
+   "unitIf": [
+    "!engaged",
+    "farFromEnemies:6"
+   ],
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "auto",
+   "note": "Up to two non-MONSTER units (tap a second unit), or one MONSTER",
+   "extraTargets": {
+    "count": 2,
+    "notKw": [
+     "MONSTER"
+    ]
+   }
+  },
+  "CHRONOSORCEROUS BLEED": {
+   "react": "enemyChargePhaseStart",
+   "targetKw": [
+    "PSYKER|SCINTILLATING LEGIONS"
+   ],
+   "unitIf": [
+    "!engaged"
+   ],
+   "enemy": {
+    "range": 12,
+    "visible": true
+   },
+   "enemyEffects": [
+    {
+     "chargeBonus": -1
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "FRACTAL DISJUNCTION": {
+   "targetKw": [
+    "SCINTILLATING LEGIONS"
+   ],
+   "unitIf": [
+    "!kw:MONSTER"
+   ],
+   "effects": [
+    {
+     "targetableWithin": 18
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "ETHEREAL PHANTASM": {
+   "react": "enemyMoved",
+   "targetKw": [
+    "SCINTILLATING LEGIONS"
+   ],
+   "unitIf": [
+    "nearLast:8",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "D6"
+    }
+   ],
+   "status": "auto"
+  },
+  "DECEPTIVE GLAMOUR": {
+   "targetKw": [
+    "THOUSAND SONS"
+   ],
+   "effects": [
+    {
+     "glamour": true
+    }
+   ],
+   "bot": "defend",
+   "status": "auto",
+   "note": "Enemy models engaged with a Scintillating Legions unit must attack it instead"
+  },
+  "GIFT OF CHANGE": {
+   "react": "modelDestroyed",
+   "ctxModel": "CHARACTER",
+   "special": [
+    "spawnAtDeath"
+   ],
+   "limit": "round",
+   "botReact": "always",
+   "status": "auto",
+   "note": "A one-model Tzeentch Chaos Spawn is set up where the character died, at the end of the phase",
+   "ctxModelNot": "MONSTER",
+   "targetFrom": "destroyed"
+  },
+  "TOUCHED BY TZEENTCH": {
+   "targetKw": [
+    "MUTANT"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterAdvance",
+      "chargeAfterAdvance"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto",
+   "note": "Shoot OR charge after Advancing"
+  },
+  "BLESSED TRANSMUTATIONS": {
+   "targetKw": [
+    "TZAANGORS"
+   ],
+   "unitIf": [
+    "belowStarting",
+    "near:12:THOUSAND SONS+PSYKER"
+   ],
+   "do": [
+    {
+     "reviveRoll": "D3+1"
+    }
+   ],
+   "status": "auto"
+  },
+  "WARPED VICISSITUDE": {
+   "targetKw": [
+    "TZAANGORS"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "inv": 4
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "TWISTED MIRAGE": {
+   "targetFrom": "reserves",
+   "targetKw": [
+    "MUTANT"
+   ],
+   "effects": [
+    {
+     "if": [
+      "!kw:MONSTER"
+     ],
+     "deepStrikeRange": 6
+    },
+    {
+     "if": [
+      "kw:MONSTER"
+     ],
+     "deepStrikeRange": 8
+    },
+    {
+     "deepStrike": true
+    }
+   ],
+   "until": "turn",
+   "status": "auto"
+  },
+  "DERANGED FEROCITY": {
+   "targetKw": [
+    "MUTANT"
+   ],
+   "effects": [
+    {
+     "pileIn": 6,
+     "consolidate": 6,
+     "fightReach3": true
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "UNWAVERING PHALANX": {
+   "react": "enemyChargeMoveEnd",
+   "targetKw": [
+    "RUBRIC MARINES"
+   ],
+   "unitIf": [
+    "engagedWithLast"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "woundIfStronger": -1
+     }
+    }
+   ],
+   "until": "turn",
+   "botReact": "always",
+   "status": "auto"
+  },
+  "IMPLACABLE GUARDIANS": {
+   "targetKw": [
+    "RUBRIC MARINES"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "damage": -1
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto",
+   "note": "Not on the PSYKER model (Aspiring Sorcerer)"
+  },
+  "REVENGE OF THE RUBRICAE": {
+   "react": "modelDestroyed",
+   "ctxModel": "Sorcerer",
+   "unitIf": [
+    "kw:RUBRICAE",
+    "shootingPhase",
+    "!ownTurn"
+   ],
+   "enemy": {
+    "killer": true
+   },
+   "special": [
+    "shootAt"
+   ],
+   "botReact": "shoot",
+   "status": "auto"
+  },
+  "ARDENT AUTOMATA": {
+   "targetKw": [
+    "RUBRICAE"
+   ],
+   "unitIf": [
+    "fellBack"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterFallBack",
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "INEXORABLE ADVANCE": {
+   "targetKw": [
+    "RUBRICAE"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "ignoreMods": true
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "INFERNAL FUSILLADE": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "weapon": "inferno",
+     "abilities": [
+      "psychic"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "HEX-MARKED ARMOUR": {
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "buffs": [
+    "enemyAp-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "ENSORCELLED INFUSION": {
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "unitIf": [
+    "near:6:THOUSAND SONS+PSYKER"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "psychic"
+     ],
+     "wound": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "MUTATE LANDSCAPE": {
+   "unitIf": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    },
+    {
+     "mutate": true
+    }
+   ],
+   "status": "auto"
+  },
+  "MALEVOLENT ANIMUS": {
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "unitIf": [
+    "near:6:THOUSAND SONS+PSYKER"
+   ],
+   "effects": [
+    {
+     "ignoreMods": true
+    }
+   ],
+   "until": "nextCommand",
+   "bot": "never",
+   "status": "auto"
+  },
+  "CYBERSPIRIT MACHINATIONS": {
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "unitIf": [
+    "fellBack",
+    "near:6:THOUSAND SONS+PSYKER"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterFallBack",
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "WARPFLAME GARGOYLES": {
+   "react": "enemyChargeMoveEnd",
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "unitIf": [
+    "engagedWithLast"
+   ],
+   "enemy": {
+    "lastActor": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 5,
+      "n": 6
+     }
+    },
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "MULTITUDINOUS LIMBS": {
+   "targetKw": [
+    "INFANTRY|MOUNTED"
+   ],
+   "unitIf": [
+    "kw:PSYKER"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "actionAfterAdvance",
+      "actionAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "RELENTLESS REBIRTH": {
+   "targetKw": [
+    "INFANTRY|MOUNTED"
+   ],
+   "unitIf": [
+    "kw:PSYKER"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "fnp": 5,
+      "fnpVs": "mortal"
+     }
+    }
+   ],
+   "bot": "never",
+   "status": "auto",
+   "note": "The bot uses it by itself when the unit suffers mortal wounds"
+  },
+  "MUTAGENIC MAGICKS": {
+   "react": "fightStart",
+   "targetKw": [
+    "PSYKER"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "enemy": {
+    "engaged": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 4,
+      "n": 6
+     }
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "WARP FIELDS": {
+   "targetKw": [
+    "SEKHETAR ROBOTS"
+   ],
+   "unitIf": [
+    "near:12:THOUSAND SONS+PSYKER"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "vs": "ranged",
+      "woundIfStronger": -1
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "ECTOPLASMIC EXTRUSION": {
+   "targetKw": [
+    "SEKHETAR ROBOTS"
+   ],
+   "unitIf": [
+    "near:12:THOUSAND SONS+PSYKER"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterAction"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "ARCANE VENTING": {
+   "targetKw": [
+    "SEKHETAR ROBOTS"
+   ],
+   "unitIf": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "status": "auto"
+  },
+  "THE LAND WRITHES": {
+   "targetKw": [
+    "MONSTER"
+   ],
+   "unitIf": [
+    "kw:MUTANT"
+   ],
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "TEMPORAL INSTABILITY": {
+   "targetKw": [
+    "INFANTRY|MOUNTED"
+   ],
+   "unitIf": [
+    "kw:MUTANT"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "actionAfterAdvance",
+      "actionAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "PRISMATIC DISPLACEMENT": {
+   "targetKw": [
+    "INFANTRY|MOUNTED"
+   ],
+   "unitIf": [
+    "kw:MUTANT"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    },
+    {
+     "eligible": [
+      "shootAfterAdvance",
+      "chargeAfterAdvance",
+      "shootAfterFallBack",
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  }
+ }
+}
