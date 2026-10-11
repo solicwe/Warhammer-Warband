@@ -25,7 +25,11 @@ function audio(): AudioContext | null {
 
 // coming back to the page (or the next tap after it) resumes the sound
 if (typeof window !== 'undefined') {
-  const wake = () => { if (ctx && ctx.state !== 'running' && document.visibilityState === 'visible') void ctx.resume().catch(() => undefined); };
+  // the first tap creates the sound context: one made later, outside a tap (the roll-off that opens a game), stays muted
+  const wake = (e?: Event) => {
+    if (!ctx && e?.type === 'pointerdown') audio();
+    if (ctx && ctx.state !== 'running' && document.visibilityState === 'visible') void ctx.resume().catch(() => undefined);
+  };
   document.addEventListener('visibilitychange', wake);
   window.addEventListener('pageshow', wake);
   window.addEventListener('pointerdown', wake, { passive: true });

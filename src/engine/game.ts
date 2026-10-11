@@ -1576,6 +1576,15 @@ export function heroicCandidates(s: GameState, p: PlayerId): UnitState[] {
     && boardUnits(s, other(p)).some((e) => unitDistance(u, e) <= RULES.charge.declareRange));
 }
 
+/** Which Heroic Intervention a unit should use: Leap to Defend (1CP) when an enemy unit that just charged is in
+ *  reach, else Into the Fray (2CP) when any enemy is within 6"; null when neither applies. */
+export function heroicMode(s: GameState, p: PlayerId, u: UnitState): 'leap' | 'fray' | null {
+  const foes = boardUnits(s, other(p));
+  if (foes.some((e) => e.chargedTurn === s.turn && unitDistance(u, e) <= RULES.charge.declareRange)) return 'leap';
+  if (!canUseStratagem(s, p, 'heroic-intervention', u, 2) && foes.some((e) => unitDistance(u, e) <= 6)) return 'fray';
+  return null;
+}
+
 export function counteroffensiveCandidates(s: GameState, p: PlayerId): UnitState[] {
   if (!s.fight || s.fight.step !== 'fight' || canUseStratagem(s, p, 'counteroffensive')) return [];
   return boardUnits(s, p).filter((u) => !u.battleShocked && fightEligibleNow(s, u));

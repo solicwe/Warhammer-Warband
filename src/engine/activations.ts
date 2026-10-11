@@ -203,7 +203,11 @@ function gearBearers(a: AbilityData, rule: AbilityRule, ms: ModelState[]) {
 
 export function actsOfUnit(s: GameState, u: UnitState, includeDead = false): ActDef[] {
   const out: ActDef[] = [];
+  const seen = new Set<string>();
   for (const a of u.abilities ?? []) {
+    // a combined unit can list the same ability twice (two characters with it): one set of buttons
+    if (seen.has(a.name)) continue;
+    seen.add(a.name);
     const rule = abilityRule(u, a);
     const specs = specsOf(rule);
     if (!specs.length || abilityOff(u, a)) continue;

@@ -739,7 +739,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     /** The unit picture: tap it to read the datasheet (abilities) before adding. */
     const peekArt = (name: string) => (
       <span className="ab-pop-art" role="button" tabIndex={0} aria-label={`${name} datasheet`} onClick={(e) => { e.stopPropagation(); setPeek(name); }}>
-        <UnitArt sheet={sheetOf(name)} /><span className="ab-pop-info" aria-hidden="true">i</span>
+        <UnitArt sheet={sheetOf(name)} />
       </span>
     );
     /** Who this roster unit is already joined with ("with Chaos Lord", "led by Master of Executions"). */
