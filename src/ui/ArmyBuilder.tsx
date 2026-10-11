@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { hasFactionRules } from '../engine/effects';
 import { addonLines, supportIn, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { Em } from './Em';
@@ -229,6 +230,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null); // the ⋮ quick menu
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(startPicker ? { factionId: null } : null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
+  const [peek, setPeek] = useState<string | null>(null); // a datasheet opened from the ⋮ pickers (its abilities)
   const [resetArmed, setResetArmed] = useState(false);
   useEffect(() => setView(null), [adding]); // the datasheet opened under a row of the add list
   const [note, setNote] = useState<string | null>(null);
@@ -718,7 +720,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const bodySupport = body && !supportIn(list, sheet) && !list.units.some((c) => c.attachTo === body.uid && supportIn(list, sheetOf(c.datasheet)))
       && faction.datasheets.some((d) => allowed(d) && supportIn(list, d) && d.leads.includes(body.datasheet) && pointsOptions(d).length);
     const squadsFor = sheet?.leads.length && !body ? [...new Set(sheet.leads)].map((n) => sheetOf(n)).filter((d): d is DatasheetData => !!d && allowed(d) && pointsOptions(d).length > 0) : [];
-    const close = () => setPop(null);
+    const close = () => { setPop(null); setPeek(null); };
     const w = pop.mode && pop.mode !== 'size' ? Math.min(340, window.innerWidth - 16) : 260;
     const left = Math.max(8, Math.min(window.innerWidth - w - 8, pop.x - w));
     const top = pop.mode && pop.mode !== 'size' ? Math.max(8, Math.min(pop.y + 4, window.innerHeight * 0.15)) : Math.max(8, Math.min(pop.y + 4, window.innerHeight * 0.45));
@@ -726,13 +728,26 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const attach = (charUid: string, bodyUid: string, msg: string) => { setUnit(charUid, { attachTo: bodyUid, embarkIn: undefined }); setNote(msg); close(); };
 
     /** A unit already in the roster (white): tap to use it. */
+    /** The unit picture: tap it to read the datasheet (abilities) before adding. */
+    const peekArt = (name: string) => (
+      <span className="ab-pop-art" role="button" tabIndex={0} aria-label={`${name} datasheet`} onClick={(e) => { e.stopPropagation(); setPeek(name); }}>
+        <UnitArt sheet={sheetOf(name)} /><span className="ab-pop-info" aria-hidden="true">i</span>
+      </span>
+    );
+    /** Who this roster unit is already joined with ("with Chaos Lord", "led by Master of Executions"). */
+    const joinedNote = (x: ArmyUnitEntry) => {
+      const host = x.attachTo ? list.units.find((c) => c.uid === x.attachTo) : undefined;
+      const led = list.units.filter((c) => c.attachTo === x.uid).map((c) => c.datasheet);
+      return host ? `Joined with ${host.datasheet}` : led.length ? `Led by ${led.join(' + ')}` : 'Not joined yet';
+    };
     const rosterCard = (x: ArmyUnitEntry, onPick: (x: ArmyUnitEntry) => void) => (
       <button key={`has-${x.uid}`} type="button" className="ab-pop-card has" onClick={() => onPick(x)}>
         <span className="ab-pop-card-head">
-          <UnitArt sheet={sheetOf(x.datasheet)} />
+          {peekArt(x.datasheet)}
           <span className="ab-pop-card-text">
             <span className="ab-pop-name">{x.datasheet}</span>
             <span className="ab-pop-line"><span className="ab-pop-pts">{unitPoints(x)} pts</span> <span className="muted">({x.models})</span></span>
+            <span className="ab-pop-sub">{joinedNote(x)}</span>
           </span>
         </span>
       </button>
@@ -741,7 +756,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const newCard = (d: DatasheetData, onNew: (models: number) => void) => (
       <div key={`new-${d.name}`} className="ab-pop-card">
         <div className="ab-pop-card-head">
-          <UnitArt sheet={d} />
+          {peekArt(d.name)}
           <div className="ab-pop-card-text">
             <div className="ab-pop-name">{d.name}</div>
             {pointsOptions(d).map((o) => (
@@ -867,6 +882,14 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     return (
       <div className="ab-pop-backdrop" onClick={close}>
         <div className="ab-pop" style={{ left, top, width: w, maxHeight }} onClick={(e) => e.stopPropagation()}>{content}</div>
+        {peek && sheetOf(peek) && (
+          <div className="tray-backdrop" onClick={(e) => { e.stopPropagation(); setPeek(null); }}>
+            <div className="tray" role="dialog" aria-label={`${peek} datasheet`} onClick={(e) => e.stopPropagation()}>
+              <div className="tray-head"><span className="sheet-title grow">{peek}</span><button className="btn small ghost" onClick={() => setPeek(null)}>Close</button></div>
+              <DatasheetView sheet={sheetOf(peek)!} factionId={faction.id} />
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -885,18 +908,21 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
             <button className="btn small ghost" onClick={() => setPicker(null)}>Close</button>
           </div>
           {!step && groups.map((g) => {
-            const fs = index.factions.filter((f) => (f.group ?? 'Other') === g && f.datasheets > 0 && f.detachments > 0);
+            // factions whose rules are all written up first; the rest (rules read from the card text only) greyed out
+            const fs = index.factions.filter((f) => (f.group ?? 'Other') === g && f.datasheets > 0 && f.detachments > 0)
+              .sort((a, b) => Number(hasFactionRules(b.id)) - Number(hasFactionRules(a.id)));
             if (!fs.length) return null;
             return (
               <div key={g} className="ab-fgroup">
                 <div className="ab-fgroup-title">{g}</div>
                 <div className="ab-fgrid">
                   {fs.map((f) => (
-                    <button key={f.id} type="button" className={`ab-fcard ${f.id === list.factionId ? 'on' : ''}`}
+                    <button key={f.id} type="button" className={`ab-fcard ${f.id === list.factionId ? 'on' : ''} ${hasFactionRules(f.id) ? '' : 'wip'}`}
                       onClick={() => (f.subfactions?.length ? (f.id === list.factionId ? setPicker({ factionId: f.id }) : (choose(f.id), setPicker({ factionId: f.id }))) : choose(f.id))}>
                       <Emblem factionId={f.id} color={f.id === list.factionId ? sub?.color : undefined} sub={f.id === list.factionId ? list.subfaction : undefined} />
                       <span className="ab-fname">{f.name}</span>
                       {f.subfactions?.length ? <span className="ab-sub">{f.subfactions.length} sub-factions <Icon name="next" size={13} /></span> : null}
+                      {!hasFactionRules(f.id) && <span className="ab-sub">Rules not finished</span>}
                     </button>
                   ))}
                 </div>

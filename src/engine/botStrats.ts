@@ -21,7 +21,7 @@ import { unitVisibleTo } from './visibility';
 import type { AttackSession, GameState, PlayerId, StratagemData, TimedEffect, UnitState } from './types';
 
 /** Does the bot's logic take this player's decisions (a bot, or a player on auto rules)? */
-export const isBot = (s: GameState, p: PlayerId) => (s.bots ?? (s.botPlayer != null ? [s.botPlayer] : [])).includes(p) || (s.autoRules ?? []).includes(p);
+export const isBot = (s: GameState, p: PlayerId) => (s.bots ?? (s.botPlayer != null ? [s.botPlayer] : [])).includes(p) || ((s.autoRules ?? []).includes(p) && !(s.decides ?? []).includes(p));
 
 /** Can the bot afford this now and still keep a CP for a re-roll (until the last round)? */
 const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= lastRound(s) ? 0 : 1) => s.players[p].cp - cost >= keep;
@@ -127,7 +127,7 @@ export function tryRule<R>(s: GameState, u: UnitState, label: string, rule: Stra
 /** The bot's usable stratagems for a unit of the kind it wants ('attack' / 'defend'), with their rules. */
 function usable(s: GameState, p: PlayerId, u: UnitState, use: 'attack' | 'defend') {
   return s.players[p].detachments.flatMap((d) => d.stratagems.map((st) => ({ st, rule: stratRule(st, s.players[p].factionId, d.name) })))
-    .filter(({ st, rule }) => rule.bot === use && !rule.react && !rule.enemy && !stratagemBlock(s, p, st, u) && spare(s, p, stratCost(s, st.id, u, st.cp)))
+    .filter(({ st, rule }) => rule.bot === use && !rule.react && (!rule.enemy || !!rule.enemyMark) && !stratagemBlock(s, p, st, u) && spare(s, p, stratCost(s, st.id, u, st.cp)))
     // "select either …": each option is a separate candidate (Red Thirst ones too: the bot only takes them when they pay)
     .flatMap(({ st, rule }) => (rule.choice?.length ? stratChoices(s, rule, u).filter(({ o }) => !o.shock).map(({ i }) => ({ st, rule: withChoice(rule, i) as StratRule, choice: i as number | undefined })) : [{ st, rule, choice: undefined as number | undefined }]));
 }
@@ -138,12 +138,22 @@ export function botOffensiveStratagem(s: GameState, u: UnitState, kind: 'shoot' 
   if (!targets.length || u.battleShocked) return;
   const best0 = () => Math.max(0, ...targets.map((t) => attackValue(s, u, t, kind)));
   const base = best0();
-  let best: { st: StratagemData; gain: number; choice?: number } | null = null;
+  let best: { st: StratagemData; gain: number; choice?: number; enemyId?: string } | null = null;
   for (const { st, rule, choice } of usable(s, p, u, 'attack')) {
+    if (rule.enemyMark) {
+      // "select one enemy unit: against it …" (Devoted Duellists): the target it gains most against
+      for (const t of targets) {
+        const nt = t.timed?.length ?? 0;
+        (t.timed ??= []).push({ e: {}, label: st.name, until: 'phase', by: p, mark: rule.enemyMark, turn: s.turn });
+        const gain = (() => { try { return tryRule(s, u, st.name, rule, () => attackValue(s, u, t, kind)) - attackValue(s, u, t, kind); } finally { t.timed!.length = nt; } })();
+        if (gain > (best?.gain ?? 0)) best = { st, gain, choice, enemyId: t.id };
+      }
+      continue;
+    }
     const gain = tryRule(s, u, st.name, rule, best0) - base;
     if (gain > (best?.gain ?? 0)) best = { st, gain, choice };
   }
-  if (best && best.gain >= cpWorth(s, p) * best.st.cp) applyDetachmentStratagem(s, p, best.st, u.id, { choice: best.choice });
+  if (best && best.gain >= cpWorth(s, p) * best.st.cp) applyDetachmentStratagem(s, p, best.st, u.id, { choice: best.choice, enemyId: best.enemyId });
 }
 
 /** Expected points lost to this attack, with the target's current effects (and those of `rule`, when given). */

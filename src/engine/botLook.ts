@@ -23,9 +23,10 @@ const STYLES: Record<string, Partial<BotW>> = {
  *  different on each copy, so one lucky roll doesn't decide it), and how long it may think on a phone. */
 const LEVELS: Record<BotLevel, { styles: string[]; samples: number; budget: number }> = {
   easy: { styles: [], samples: 0, budget: 0 },
-  normal: { styles: ['steady', 'aggressive', 'careful'], samples: 1, budget: 9000 },
-  hard: { styles: ['steady', 'aggressive', 'careful'], samples: 2, budget: 20000 },
-  expert: { styles: ['steady', 'aggressive', 'careful', 'objectives', 'hunt'], samples: 3, budget: 40000 },
+  // every level plays forward: the look picks between pressing styles, never sitting back
+  normal: { styles: ['steady', 'aggressive'], samples: 1, budget: 9000 },
+  hard: { styles: ['steady', 'aggressive', 'hunt'], samples: 2, budget: 20000 },
+  expert: { styles: ['steady', 'aggressive', 'objectives', 'hunt'], samples: 3, budget: 40000 },
 };
 export const levelOf = (s: GameState, p?: PlayerId): BotLevel => (p !== undefined ? s.botLevels?.[p] : undefined) ?? s.botLevel ?? 'normal';
 /** How long the app lets the bot think about its turn at this level (a Web Worker, so the screen never freezes). */

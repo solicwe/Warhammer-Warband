@@ -15,7 +15,7 @@ import {
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
 import { baseDist, circleTouchesPoly, dist } from './geometry';
-import { alive, boardUnits, engagedEnemies, hasKw, heroFx, log, onBoard, other, pace, phaseKey, pushFx, unitById, unitDistance } from './state';
+import { alive, boardUnits, engagedEnemies, hasKw, heroFx, log, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from './state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
@@ -403,7 +403,7 @@ export function actTargets(s: GameState, def: ActDef, ctx: FireCtx = {}): UnitSt
     out = [c];
   }
   if (t.each && t.count !== undefined) {
-    const sizes: Record<string, number> = { incursion: 2, strike: 3, onslaught: 4 };
+    const sizes: Record<string, number> = { incursion: 2, strike: 3, 'strike-force': 3, onslaught: 4 };
     const n = t.count === 'round' ? s.round : t.count === 'battleSize' ? sizes[s.players[u.owner].battleSize ?? 'strike'] ?? 3 : t.count;
     const foes = boardUnits(s, other(u.owner));
     const gap = (x: UnitState) => (onBoard(x) && foes.length ? Math.min(...foes.map((e) => unitDistance(x, e))) : 99);
@@ -608,6 +608,8 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       s.fight.fought = s.fight.fought.filter((id) => id !== on.id);
       if (!s.fight.eligible.includes(on.id)) s.fight.eligible.push(on.id);
       s.fight.forcedNext = on.id;
+      // "the bearer can fight one additional time": only the ability's models fight
+      if (a.bearerOnly && def.bearers.length) on.fightOnly = { key: phaseKey(s), models: def.bearers.map((m) => m.id) };
       log(s, `${def.name}: ${on.name} fights again next`, 'info', u.owner);
     }
     if (a.fightNext && s.fight) { s.fight.forcedNext = on.id; log(s, `${def.name}: ${on.name} must be the next unit to fight`, 'info', u.owner); }
@@ -741,7 +743,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       if (loe && loe.sources.includes('Daemonettes')) { const n = revive(s, loe, rollExpr(s, 'D3+3').total); log(s, `${def.name}: ${n} Daemonettes return to ${loe.name}`, 'info', u.owner); }
       else if (loe) { const n = heal(loe, 3); log(s, `${def.name}: ${loe.name} regains ${n} wounds`, 'info', u.owner); }
     }
-    if (a.chargeOnlyTarget && target) { u.chargeOnly = { turn: s.turn, ids: [target.id] }; log(s, `${def.name}: ${u.name}'s charge must end engaged with ${target.name}`, 'info', u.owner); }
+    if (a.chargeOnlyTarget && target) { u.chargeMust = { turn: s.turn, id: target.id }; log(s, `${def.name}: ${u.name}'s charge must end engaged with ${target.name}`, 'info', u.owner); }
     if (a.embarkNear) embarkNearHook?.(s, on, a.embarkNear, def.name);
     if (a.setQuarry && target) { u.quarry = target.id; log(s, `${def.name}: target ${target.name}`, 'info', u.owner); }
     if (a.setPriority) {
@@ -934,7 +936,7 @@ export function fire(s: GameState, trigger: Trigger, units: UnitState[], ctx: Fi
   for (const u of units) {
     for (const def of actsOfUnit(s, u, trigger === 'onDeath')) {
       if (def.spec.when !== trigger || !def.spec.auto) continue;
-      if (def.spec.botOnly && !(s.bots ?? []).includes(u.owner) && !(s.autoRules ?? []).includes(u.owner)) continue;
+      if (def.spec.botOnly && !playsItself(s, u.owner)) continue;
       if (trigger === 'onDeath') {
         // "when this model is destroyed": only the model that died; otherwise only when the whole unit is gone
         if (def.spec.modelDeath ? !def.bearers.some((b) => b.id === ctx.deadModelId) : alive(u).length > 0) continue;

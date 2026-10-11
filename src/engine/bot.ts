@@ -18,6 +18,7 @@ import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, re
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, styleChosen } from './botLook';
 import { unitVisibleTo } from './visibility';
+import { botAllowChargeStratagem, botDetectionStratagem, botIgnorePenaltiesStratagem, botTauntStratagem, botUnshotStratagem } from './botPlus';
 import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, botChargeBonusStratagem, botCommandExtras, botFightEndActs, botIgnoreModsStratagem, botReadyStratagem, botShieldStratagem, botTeleportActs } from './botPlus';
 import { botAdvanceActs, botArrivalStratagem, botCharacterStratagem, botFightChoice, botFightStartStratagems, botFightsFirstStratagem, botLooseDisembark, botMobileStratagem, botPileStratagem, botRedeployActs, botShootActs, botShootOnTheMove, botAdvanceStratagem, botAfterShootMove, botConsolidateStratagem, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
@@ -176,6 +177,7 @@ export function botCommand(s: GameState) {
   botUseActs(s, p, ['command', 'anyCommand', 'battleStart', 'opponentTurnEnd', 'anyPhase']);
   botDoctrineActs(s, p);
   botCommandStratagems(s, p);
+  botIgnorePenaltiesStratagem(s, p);
   botCommandExtras(s, p);
   botCharacterStratagem(s, p);
   botRedeployActs(s, p);
@@ -406,6 +408,8 @@ const shotValue = (s: GameState, u: UnitState, t: UnitState, ev: number) => shot
 export function botShootOne(s: GameState): boolean {
   // Thousand Sons: Rituals come first, at the start of the phase
   if (ritualsPending(s, s.active)) { botRituals(s, s.active); return true; }
+  const startKey = `${s.turn}|shootStart|${s.active}`;
+  if (!(s.botTried ?? []).includes(startKey)) { s.botTried = [...(s.botTried ?? []), startKey]; botDetectionStratagem(s, s.active); }
   const mine = boardUnits(s, s.active);
   // a unit that fired some of its weapons carries on with the rest (split fire), e.g. after the player rolled saves
   const busy = mine.find((u) => tried(s, u) && !u.selectedToShoot && u.weaponsFired.length > 0 && shootingModes(s, u).length > 0);
@@ -467,6 +471,7 @@ export function botShootOne(s: GameState): boolean {
     u.selectedToShoot = true;
     if (!s.window && !s.attack) withRuleCache(() => botAfterShootMove(s, u));
     if (!s.window && !s.attack) botAfterShootStratagems(s, u);
+    if (!s.window && !s.attack) botUnshotStratagem(s, u);
     return true;
   }
   return false;
@@ -482,7 +487,7 @@ export function botShooting(s: GameState) {
 /** One charge for the active player. `eager` (the player tapped "Charge for me"): any unit with a fair chance goes in. */
 export function botChargeOne(s: GameState, eager = false): boolean {
   for (const u of boardUnits(s, s.active)) {
-    if (!tried(s, u)) botAdvanceChargeStratagem(s, u);
+    if (!tried(s, u)) { botAdvanceChargeStratagem(s, u); botAllowChargeStratagem(s, u); }
     if (tried(s, u) || chargeEligibility(s, u)) continue;
     markTried(s, u);
     const enemies = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.charge.declareRange);
@@ -507,7 +512,7 @@ export function botChargeOne(s: GameState, eager = false): boolean {
     const p = p2d6(unitDistance(u, best));
     // shooters only charge weak, close targets; brawlers accept long shots
     if (value(best) <= (eager ? -4 : 0) || p < (eager ? 0.2 : brawler ? 0.25 : 0.58)) continue;
-    botChargeBonusStratagem(s, u, unitDistance(u, best));
+    botChargeBonusStratagem(s, u, unitDistance(u, best), best);
     declareCharge(s, u);
     let opts = chargeTargetOptions(s, u);
     if (!opts.length && canDetReroll(s, u, 'charge')) { detReroll(s, u, 'charge'); opts = chargeTargetOptions(s, u); }
@@ -516,7 +521,9 @@ export function botChargeOne(s: GameState, eager = false): boolean {
       opts = chargeTargetOptions(s, u);
     }
     if (!opts.length) return true;
-    const target = [...opts].sort((a, b) => value(b) - value(a))[0];
+    // Lethal Obsession / Refusal to be Outdone: the unit it must reach comes first
+    const must = (u.chargeMust?.turn === s.turn ? opts.find((e) => e.id === u.chargeMust!.id) : undefined) ?? (unitFlags(s, u).chargeMustEngaged ? opts.find((e) => engagedEnemies(s, e).length > 0) : undefined);
+    const target = must ?? [...opts].sort((a, b) => value(b) - value(a))[0];
     if (autoCharge(s, u, [target.id])) { botCrushingImpact(s, u, target.id); return true; }
     // fall back to the nearest legal target
     const near = [...opts].sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
@@ -570,6 +577,7 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
       s.botTried = [...(s.botTried ?? []), startKey];
       botFightStartStratagems(s, f.stepPlayer);
       botShieldStratagem(s, f.stepPlayer);
+      botTauntStratagem(s, f.stepPlayer);
       botUseActs(s, f.stepPlayer, ['fightStartButton']);
     }
     for (const u of boardUnits(s, f.stepPlayer)) {

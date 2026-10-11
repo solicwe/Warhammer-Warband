@@ -58,6 +58,7 @@ function groupBy(rows, key) {
 export function htmlToText(s = '') {
   return s
     .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/t[dh]>/gi, ' ¦ ') // table cells stay apart: the app draws "a ¦ b ¦ c" lines as a table
     .replace(/<\/(p|li|div|tr)>/gi, '\n')
     .replace(/<li>/gi, '• ')
     .replace(/<[^>]+>/g, '')
@@ -66,6 +67,7 @@ export function htmlToText(s = '') {
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(+d))
     .replace(/[ \t]+/g, ' ')
     .replace(/\n\s+/g, '\n')
+    .split('\n').filter((l) => !/^[\s¦]+$/.test(l)).map((l) => (l.includes('¦') ? l.replace(/(\s*¦\s*)+$/, '').replace(/^(\s*¦\s*)+/, '') : l)).join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }

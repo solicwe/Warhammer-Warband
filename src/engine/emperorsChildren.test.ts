@@ -2,12 +2,12 @@
 // Poisons, every ability automatic, and whole bot games in every detachment.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildShootPools } from './attack';
+import { buildFightPools, buildShootPools } from './attack';
 import { botAct } from './bot';
 import { abilityStatus, effectsFor, unitFlags } from './effects';
 import { favouredOnKill, initFavoured, noteTarget, pledgeRoundEnd, poisonTick, setPledge, snapshotEngaged } from './emperorsChildren';
 import { buildUnits } from './army';
-import { createGame, formationAt, placeUnit } from './game';
+import { chargeTargetOptions, createGame, formationAt, placeUnit, validateMove } from './game';
 import { PRESETS } from '../ui/presets';
 import type { ArmyList, FactionData, GameState } from './types';
 
@@ -82,6 +82,37 @@ describe('detachments', () => {
     const w0 = e.models.reduce((a, m) => a + m.wounds, 0);
     for (let i = 0; i < 12; i++) poisonTick(s);
     expect(e.models.reduce((a, m) => a + m.wounds, 0)).toBeLessThan(w0);
+  });
+});
+
+describe('card wording', () => {
+  it('Lethal Obsession: other units can be charged too, but the obsession target must be among them', () => {
+    const s = game(ecList('Mercurial Host'));
+    s.terrain = s.terrain.filter((t) => s.objectives.some((o) => o.terrainId === t.id));
+    const tor = unit(s, 0, 'Tormentors');
+    const [a, b] = s.units.filter((u) => u.owner === 1).slice(0, 2);
+    placeUnit(s, tor, formationAt(tor, { x: 22, y: 30 }));
+    placeUnit(s, a, formationAt(a, { x: 22, y: 36 }));
+    placeUnit(s, b, formationAt(b, { x: 28, y: 36 }));
+    s.phase = 'charge'; s.active = 0; tor.chargeRoll = 12;
+    tor.chargeMust = { turn: s.turn, id: a.id };
+    expect(chargeTargetOptions(s, tor).map((e) => e.id).sort()).toEqual([a.id, b.id].sort());
+    expect(validateMove(s, tor, 'charge', new Map(), { targets: [b.id] }).errors.join()).toMatch(/Must charge/);
+    tor.chargeMust = { turn: s.turn, id: 'nobody' };
+    expect(chargeTargetOptions(s, tor)).toEqual([]);
+  });
+  it('Rise to the Challenge: only the bearer fights again', () => {
+    const s = game(ecList('Peerless Bladesmen'));
+    const tor = unit(s, 0, 'Tormentors');
+    const lord = tor.models.find((m) => m.source === 'Lord Exultant')!;
+    tor.fightOnly = { key: `${s.turn}:${s.phase}`, models: [lord.id] };
+    const e = s.units.find((u) => u.owner === 1)!;
+    for (const m of tor.models) { m.x = 20; m.y = 20; }
+    for (const m of e.models) { m.x = 20.5; m.y = 20; }
+    tor.status = 'board'; e.status = 'board';
+    const r = buildFightPools(s, tor.id, e.id);
+    expect(r.pools.length).toBeGreaterThan(0);
+    expect(r.pools.every((p) => p.models === 1)).toBe(true);
   });
 });
 

@@ -1,6 +1,6 @@
 // Reads detachment stratagem text (WHEN / TARGET / EFFECT) so the game can offer them at the right time
 // and apply the common effects automatically. Anything it cannot read is still usable: CP is spent and logged.
-import { raisePledge } from './emperorsChildren';
+import { favouredOnKill, raisePledge } from './emperorsChildren';
 import acStrats from '../../data/stratagems/AC.json';
 import orkStrats from '../../data/stratagems/ORK.json';
 import { reactWorth } from './botPlus';
@@ -23,6 +23,7 @@ import {
   alive, boardUnits, canUseStratagem, engagedEnemies, log, onBoard, other, setReactHook, spendStratagem, stratCost, unitById, unitDistance,
   type ReactCtx, type ReactOn,
   heroFx,
+  phaseKey, playsItself,
 } from './state';
 import type { BuffKind, GameState, Phase, PlayerId, Pt, StratagemData, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
@@ -50,6 +51,8 @@ export interface StratRule {
   enemy?: EnemyPick;
   /** timed effects put on the picked enemy unit(s) ("that enemy unit is pinned …") */
   enemyEffects?: Effect[];
+  /** a mark put on the picked enemy unit (conditions `targetMarked:<mark>` read it: Devoted Duellists) */
+  enemyMark?: string;
   /** the TARGET is a unit in Reserves (arriving by Deep Strike this phase), or one destroyed this phase */
   targetFrom?: 'reserves' | 'destroyed' | 'embarked';
   /** the target also counts for up to this many units (Guerrilla Tactics: up to two PHOBOS/SCOUT units) */
@@ -75,6 +78,8 @@ export interface StratRule {
   ctxModel?: string;
   /** … and must not have this keyword (Gift of Change: excluding MONSTER) */
   ctxModelNot?: string;
+  /** the bot (only) uses it when these conditions hold on the unit (a person may use it any time) */
+  botIf?: string[];
   /** reactions: when the bot uses it (default never) */
   botReact?: 'always' | 'shoot' | 'charge';
 }
@@ -465,7 +470,8 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
   const enemies = rule.enemy
     ? (rule.enemy.all ? stratEnemies(s, p, rule, u, use.ctx) : [stratEnemies(s, p, rule, u, use.ctx).find((e) => e.id === use.enemyId) ?? stratEnemies(s, p, rule, u, use.ctx)[0]].filter((e): e is UnitState => !!e))
     : u && u.owner !== p ? [u] : [];
-  for (const e of enemies) for (const fx of rule.enemyEffects ?? []) addTimed(s, e, { e: fx, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p });
+  for (const e of enemies) for (const fx of rule.enemyEffects ?? []) addTimed(s, e, { e: fx, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, ...(rule.enemyMark ? { mark: rule.enemyMark } : {}) });
+  if (rule.enemyMark && !(rule.enemyEffects ?? []).length) for (const e of enemies) addTimed(s, e, { e: {}, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, mark: rule.enemyMark });
   // one-off actions: on the own unit, or on the enemy unit for stratagems that pick one
   const holder = own[0] ?? s.units.find((x) => x.owner === p && x.status === 'board');
   if (rule.do?.length && holder) {
@@ -676,7 +682,7 @@ function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto:
     const kind = o.rule.do?.some((a) => a.reserves) ? 'reserves' : o.rule.do?.some((a) => a.surge) ? 'surge' : o.rule.do?.some((a) => a.move) ? 'move'
       : o.rule.special?.some((x) => x.startsWith('embark')) ? 'embark' : null;
     if (!kind || o.rule.enemy) return null;
-    const u = o.units.find((x) => reactWorth(s, x, o.st, kind));
+    const u = o.units.find((x) => (o.rule.botIf ?? []).every((c) => cond(c, { s, A: x, holder: x })) && reactWorth(s, x, o.st, kind));
     return u ? { u, choice: stratChoices(s, o.rule, u)[0]?.i } : null;
   }
   if (!auto) {
@@ -684,6 +690,7 @@ function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto:
   }
   let best: { u: UnitState; enemyId?: string; v: number } | null = null;
   for (const u of o.units) {
+    if (!auto && !(o.rule.botIf ?? []).every((c) => cond(c, { s, A: u, holder: u }))) continue;
     const es = o.rule.enemy ? stratEnemies(s, p, o.rule, u, ctx) : [];
     if (o.rule.enemy && !o.rule.enemy.all && !es.length) continue;
     let v = 1;
@@ -714,7 +721,7 @@ function handleReact(s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx): boo
   if (on === 'enemyMoved') pilinOut(s, p, ctx);
   const offers = reactionOffers(s, p, on, ctx);
   if (!offers.length) return false;
-  const bot = (s.bots ?? []).includes(p) || (s.autoRules ?? []).includes(p);
+  const bot = playsItself(s, p);
   const autos = s.players[p].autoStrats ?? [];
   for (const o of offers) {
     const isAuto = !bot && autos.includes(o.st.id);
@@ -797,6 +804,34 @@ onAttackFinished((s, at, info) => {
 });
 
 // deaths: "when a friendly DEATH COMPANY unit is destroyed", "just after an ANCIENT model is destroyed", "your Oath target is destroyed"
+// Emperor's Children: stratagems the bot plays when one of its units wipes out an enemy unit
+onModelKilled((s, u, _m, killerId) => {
+  if (alive(u).length || !killerId) return;
+  const k = s.units.find((x) => x.id === killerId);
+  if (!k || !onBoard(k) || !playsItself(s, k.owner)) return;
+  const p = k.owner;
+  const find = (name: string) => s.players[p].detachments.flatMap((d) => d.stratagems).find((st) => st.name === name);
+  const can = (name: string, x: UnitState, keep = 1) => { const st = find(name); return st && !stratagemBlock(s, p, st, x) && s.players[p].cp >= stratCost(s, st.id, x, st.cp) + keep ? st : undefined; };
+  favouredOnKill(s, k);
+  // Unbound Arrogance: the pledge is already beaten, so raising it is a free Pact point
+  const ua = can('UNBOUND ARROGANCE', k);
+  if (ua && cond('pledgeBeaten', { s, A: k })) applyDetachmentStratagem(s, p, ua, k.id);
+  const fav = s.players[p].favoured === k.id;
+  // Diabolic Majesty: the new Favoured Champions terrify the enemy units around them
+  const dm = fav && s.players[p].favouredTurn === s.turn ? can('DIABOLIC MAJESTY', k) : undefined;
+  if (dm && boardUnits(s, other(p)).some((e) => unitDistance(k, e) <= 6)) applyDetachmentStratagem(s, p, dm, k.id);
+  // Heightened Jealousy: other CHARACTER units still to fight this phase hit harder
+  const hj = fav && s.phase === 'fight' ? can('HEIGHTENED JEALOUSY', k, 2) : undefined;
+  if (hj && boardUnits(s, p).some((x) => x.id !== k.id && alive(x).some((mm) => mm.isCharacter) && !x.fought && engagedEnemies(s, x).length)) applyDetachmentStratagem(s, p, hj, k.id);
+  // Ecstatic Slaughter: a Legions of Excess kill lets an Emperor's Children unit nearby charge
+  if (s.phase === 'fight' && k.factionKeywords.includes('LEGIONS OF EXCESS')) {
+    const x = boardUnits(s, p).find((f) => f.factionKeywords.includes('EMPEROR’S CHILDREN') && unitDistance(f, k) <= 6 && !engagedEnemies(s, f).length && !f.fought
+      && boardUnits(s, other(p)).some((e) => unitDistance(f, e) <= 8));
+    const es = x && can('ECSTATIC SLAUGHTER', x);
+    if (x && es) { (k.used ??= {}).killedUnit = phaseKey(s); applyDetachmentStratagem(s, p, es, x.id); }
+  }
+});
+
 onModelKilled((s, u, m, killerId) => {
   const queue = (p: PlayerId, on: ReactOn, ctx: ReactCtx) => {
     if (!reactionOffers(s, p, on, ctx).length) return;

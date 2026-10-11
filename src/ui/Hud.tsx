@@ -146,7 +146,6 @@ export function tally(s: GameState, round: number | null, vpAtStart: [number, nu
   return { round: round ?? s.round, vp, pts, units, mvp, luck };
 }
 
-const luckText = (x: number | null) => (x === null ? '—' : x >= 0.1 ? `+${Math.round(x * 100)}% lucky` : x <= -0.1 ? `${Math.round(x * 100)}% unlucky` : 'average');
 
 /** Between battle rounds (and at the end): the round in numbers. Tap anywhere to go on. */
 export function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; t: RoundTally; final?: boolean; onClose: () => void; actions?: ReactNode }) {
@@ -168,9 +167,6 @@ export function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; 
           <span className="rc-l">Destroyed</span>
           <span className="num">{t.pts[0]} pts{t.units[0] ? ` · ${t.units[0]} unit${t.units[0] > 1 ? 's' : ''}` : ''}</span>
           <span className="num">{t.pts[1]} pts{t.units[1] ? ` · ${t.units[1]} unit${t.units[1] > 1 ? 's' : ''}` : ''}</span>
-          <span className="rc-l">{final ? 'Dice luck' : 'Dice so far'}</span>
-          <span className={`rc-luck ${(t.luck[0] ?? 0) >= 0.1 ? 'up' : (t.luck[0] ?? 0) <= -0.1 ? 'down' : ''}`}>{luckText(t.luck[0])}</span>
-          <span className={`rc-luck ${(t.luck[1] ?? 0) >= 0.1 ? 'up' : (t.luck[1] ?? 0) <= -0.1 ? 'down' : ''}`}>{luckText(t.luck[1])}</span>
         </div>
         {t.mvp && <div className="rc-mvp"><Icon name="trophy" size={16} /> {final ? 'Unit of the battle' : 'Unit of the round'}: <b className={t.mvp.owner ? 'p1' : 'p0'}>{t.mvp.name}</b> <span className="muted">· {t.mvp.pts} pts destroyed</span></div>}
         {actions ? <div className="rc-acts">{actions}</div> : <div className="rc-tap">Tap to continue</div>}

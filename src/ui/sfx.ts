@@ -17,9 +17,18 @@ function audio(): AudioContext | null {
   if (!on) return null;
   try {
     ctx ??= new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    if (ctx.state === 'suspended') void ctx.resume();
+    // iOS leaves it 'interrupted' after switching apps or tabs: wake it up whatever the state
+    if (ctx.state !== 'running') void ctx.resume().catch(() => undefined);
     return ctx;
   } catch { return null; }
+}
+
+// coming back to the page (or the next tap after it) resumes the sound
+if (typeof window !== 'undefined') {
+  const wake = () => { if (ctx && ctx.state !== 'running' && document.visibilityState === 'visible') void ctx.resume().catch(() => undefined); };
+  document.addEventListener('visibilitychange', wake);
+  window.addEventListener('pageshow', wake);
+  window.addEventListener('pointerdown', wake, { passive: true });
 }
 
 /** One note: an oscillator with a quick attack and an exponential fall. */

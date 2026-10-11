@@ -45,16 +45,17 @@ const armyValue = (s: GameState, p: PlayerId) => boardUnits(s, p).reduce((a, u) 
 /** How to play this battle round, and how much to fear losses (a factor on the movement scoring's caution). */
 export function stanceFor(s: GameState, p: PlayerId): { stance: Stance; risk: number } {
   if (lastTurn(s, p) && !botOff('allin')) return { stance: 'all-in', risk: 0.3 };
-  if (s.round <= 1) return { stance: 'open', risk: 1 };
+  // an aggressive army at every level: it goes forward from the first turn and keeps pressing (the home objective
+  // keeps its one guard, the missions their objectives); only a big late lead makes it a little more careful
+  if (s.round <= 1) return { stance: 'open', risk: 0.7 };
   const lead = vpOf(s, p) - vpOf(s, other(p));
   const strength = armyValue(s, p) / Math.max(1, armyValue(s, other(p)));
-  // late in the battle the score matters more than the armies left
   const late = pace(s) >= 3;
-  if (late && lead >= 12) return { stance: 'hold', risk: 1.3 };
-  if (late && lead <= -12) return { stance: 'push', risk: 0.65 };
-  if (strength >= 1.35) return { stance: 'push', risk: 0.8 };
-  if (strength <= 0.7) return { stance: 'hold', risk: 1.2 };
-  return { stance: 'push', risk: 1 };
+  if (late && lead >= 15) return { stance: 'push', risk: 0.9 };
+  if (late && lead <= -12) return { stance: 'push', risk: 0.5 };
+  if (strength >= 1.35) return { stance: 'push', risk: 0.55 };
+  if (strength <= 0.7) return { stance: 'push', risk: 0.8 };
+  return { stance: 'push', risk: 0.65 };
 }
 
 /**

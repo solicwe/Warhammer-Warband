@@ -164,7 +164,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   // Heresy Undone: after Advancing / Falling Back it may only shoot auspex scanned units
   if (aFlags.onlyTargetMarked && (A.move === 'advance' || A.move === 'fallback') && !(T.timed ?? []).some((t) => t.mark === aFlags.onlyTargetMarked && t.by === A.owner)) return { pools: [], notes, error: 'After Advancing / Falling Back it can only shoot a unit marked by the auspex scan' };
 
-  const thrill = thrillBlock(s, A, T);
+  // Advancing with [ASSAULT] weapons does not need Thrill Seekers, so no restriction then
+  const thrill = A.move === 'advance' && opt.mode === 'assault' ? null : thrillBlock(s, A, T);
   if (thrill) return { pools: [], notes, error: thrill };
 
   // Seal of Shrouding / Blazing Icon / Linebreaker Onslaught: enemy units cannot snap-shoot this unit
@@ -302,7 +303,8 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
   const T = unitById(s, targetId);
   const T_T = targetToughness(T, s);
   const pools = new Map<string, Pool>();
-  const fighters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : alive(A);
+  const only = A.fightOnly && A.fightOnly.key === `${s.turn}:${s.phase}` ? A.fightOnly.models : undefined;
+  const fighters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : only ? alive(A).filter((m) => only.includes(m.id)) : alive(A);
   // Angel's Sacrifice: models in Engagement Range of the taunting unit must attack it
   const taunters = unitFlags(s, T).taunt ? [] : engagedEnemies(s, A).filter((e) => unitFlags(s, e).taunt);
   const glamour = unitFlags(s, T).glamour;
@@ -412,11 +414,15 @@ function attackNote(p: Pool): string {
 
 export function expectedDamage(s: GameState, pool: Pool, target: UnitState): { attacks: number; hits: number; wounds: number; unsaved: number; models: number } {
   const attacks = pool.instances.reduce((a, i) => a + exprAverage(i.A) + i.extras.reduce((b, e) => b + exprAverage(e), 0) + i.flat + (pool.attackBonus ?? 0), 0);
-  const pHit = pool.autoHit ? 1 : pool.hitOn6Only ? 1 / 6 : Math.max(1, Math.min(5, 7 - ((pool.skill ?? 7) - pool.hitMod))) / 6;
-  const pCrit = pool.autoHit ? 0 : 1 / 6;
+  const pHit0 = pool.autoHit ? 1 : pool.hitOn6Only ? 1 / 6 : Math.max(1, Math.min(5, 7 - ((pool.skill ?? 7) - pool.hitMod))) / 6;
+  // re-rolls: a failed (or a 1) hit is rolled again, which also brings more 6s
+  const hitAgain = pool.autoHit ? 0 : pool.rerollAllHits ? 1 - pHit0 : pool.rerollHits1 ? 1 / 6 : 0;
+  const pHit = pHit0 + hitAgain * pHit0;
+  const pCrit = pool.autoHit ? 0 : (1 / 6) * (1 + hitAgain);
   const sus = pool.sustained ? exprAverage(pool.sustained) : 0;
   const hits = attacks * (pHit + pCrit * sus);
-  const pW = Math.max(1, Math.min(5, 7 - (pool.woundNeed - pool.woundMod))) / 6;
+  const pW0 = Math.max(1, Math.min(5, 7 - (pool.woundNeed - pool.woundMod))) / 6;
+  const pW = pW0 + (pool.rerollAllWounds ? 1 - pW0 : pool.rerollWounds12 ? Math.min(2 / 6, 1 - pW0) : pool.rerollWounds1 ? 1 / 6 : 0) * pW0;
   const lethal = pool.lethal ? attacks * pCrit : 0;
   const wounds = (hits - lethal) * pW + lethal;
   const m = alive(target)[0];

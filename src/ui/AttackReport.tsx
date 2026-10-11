@@ -1,6 +1,6 @@
 // The attack told like a scoring hand in Balatro: the count climbs stage by stage (shots → hits → wounds → through
 // the saves), every rule that changed the odds lights up at the stage where it acts, then the result lands with a
-// thump that grows with what was destroyed — and how lucky the dice were against the average.
+// thump that grows with what was destroyed.
 import { useEffect, useRef, useState } from 'react';
 import type { AttackReport as Report, FxEvent, GameState, PlayerId, UnitState } from '../engine/types';
 import { Icon } from './Icon';
@@ -108,8 +108,6 @@ export function AttackReport({ s, quick, onShake, onBusy, level }: Props) {
   const vals = [r.shots, r.hits, r.wounds, r.unsaved];
   const labels = [fight ? 'Attacks' : 'Shots', 'Hits', 'Wounds', 'Through'];
   const landed = t >= resultAt;
-  const luck = r.expected >= 0.3 ? (r.killed - r.expected) / r.expected : null;
-  const luckTag = luck === null ? null : luck >= 0.25 ? { cls: 'up', text: `Lucky +${Math.round(luck * 100)}%` } : luck <= -0.25 ? { cls: 'down', text: `Unlucky ${Math.round(luck * 100)}%` } : { cls: 'even', text: 'As expected' };
   const out = t > total - 220;
   // one mark per model the target had: the slain ones are crossed out when the result lands
   const pips = Math.min(r.before, 20);
@@ -160,7 +158,6 @@ export function AttackReport({ s, quick, onShake, onBusy, level }: Props) {
             {landed && (r.destroyed ? <>Destroyed<small>{r.pts} pts</small></> : r.killed ? <><span className="num">{r.killed}</span> slain<small>{r.pts ? `${r.pts} pts` : `${r.dmg} damage`}</small></> : r.dmg ? <><span className="num">{r.dmg}</span> damage<small>none slain</small></> : <>No damage</>)}
           </div>
         </div>
-        {landed && luckTag && <span className={`atk-luck ${luckTag.cls}`}>{luckTag.text}</span>}
       </div>
     </div>
   );

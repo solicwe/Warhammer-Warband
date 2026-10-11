@@ -3,7 +3,7 @@
 // or read from the ability text by abilityText.ts for factions without a file),
 // and temporary effects / marks put on units by abilities (e.g. "suppressed" until your next turn).
 // Rules are data: an Effect says WHO it applies to (scope), WHEN (conditions) and WHAT changes.
-import { sensationalOk } from './emperorsChildren';
+import { destroyedThisRound, sensationalOk } from './emperorsChildren';
 import abilityData from '../../data/ability-rules.json';
 import acAbilities from '../../data/abilities/AC.json';
 import orkAbilities from '../../data/abilities/ORK.json';
@@ -160,6 +160,10 @@ export interface Effect {
   poisoned?: boolean; // Daemonic Poisons: at the start of each Command phase, 4+: D3 mortal wounds (emperorsChildren.ts)
   desperateMinus?: number; // enemy units falling back from it subtract this from their Desperate Escape tests (if: checked on this unit)
   sensational?: boolean; // Sensational Performance used: +1 S/AP was taken, so these attacks have the targeting restrictions
+  chargeMustEngaged?: boolean; // its charge must end engaged with an enemy unit that was already engaged (Refusal to be Outdone)
+  chargeNeedEngagedBy?: string; // after Advancing / Falling Back it may only charge units engaged with a unit with this keyword (Sycophantic Surge)
+  consolidateEngage?: boolean; // a Consolidation of more than 3" must end engaged (Incessant Violence)
+  deepStrikeNear?: { range: number; kw: string }; // Deep Strike: set up wholly within X" of a friendly unit with this keyword (Dark Apparitions)
   thrill?: boolean; // Thrill Seekers: shoot / charge after Advancing or Falling Back, with its targeting restrictions (thrill.ts)
   onlyTargetMarked?: string; // after Advancing / Falling Back it may only shoot or charge units with this mark (Heresy Undone: "auspex")
   svSet?: number; // the bearers' Save characteristic is this (Blood-forged Armour: 2+), fixed at Declare Battle Formations
@@ -792,6 +796,12 @@ export function cond(c: string, x: Ctx): boolean {
     // made a Charge move in the previous turn and destroyed an enemy unit in that turn's Fight phase (Terrifying Spectacle)
     case 'lastTurnChargedKill': return A.chargedTurn === s.turn - 1 && s.destroyedByTurn.some((d) => d.killerId === A.id && d.turn === s.turn - 1 && d.phase === 'fight');
     case 'sensationalOk': return sensationalOk(s, A);
+    case 'extraAttacksWeapon': return !!x.p && (x.p.abilities ?? []).includes('extra attacks');
+    case 'vehicleNotWalker': return hasKw(A, 'VEHICLE') && !hasKw(A, 'WALKER');
+    // a friendly LEGIONS OF EXCESS unit within 6" destroyed an enemy unit this phase (Ecstatic Slaughter)
+    case 'loeHurtNear6': return boardUnits(s, A.owner).some((f) => f.factionKeywords.includes('LEGIONS OF EXCESS') && onBoard(f) && unitDistance(A, f) <= 6 + 1e-6 && (f.models.some((m) => m.dead) || alive(f).some((m) => m.wounds < m.profile.W)));
+    case 'pledgeBeaten': { const pl = s.players[A.owner].pledge; return !!pl && pl.round === s.round && destroyedThisRound(s, A.owner) > pl.n; }
+    case 'loeKillNear6': return boardUnits(s, A.owner).some((f) => f.factionKeywords.includes('LEGIONS OF EXCESS') && (f.used ?? {}).killedUnit === phaseKey(s) && unitDistance(A, f) <= 6 + 1e-6);
     case 'sustainedWeapon': return !!x.p && (x.p.abilities ?? []).some((k) => /^sustained hits/.test(k));
     case 'killedModelThisPhase': return (A.used ?? {}).killedModel === phaseKey(s);
     case 'chargeTargetEngagedWith:RAVENWING': return boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= 12 + 1e-6 && boardUnits(s, A.owner).some((f) => hasKw(f, 'RAVENWING') && engagedEnemies(s, f).some((g) => g.id === e.id)));
@@ -1186,6 +1196,10 @@ export function unitFlags(s: GameState, u: UnitState) {
     shockOnKill: es.some((e) => e.shockOnKill),
     onlyTargetMarked: es.find((e) => e.onlyTargetMarked)?.onlyTargetMarked,
     thrill: es.some((e) => e.thrill),
+    chargeMustEngaged: es.some((e) => e.chargeMustEngaged),
+    chargeNeedEngagedBy: es.find((e) => e.chargeNeedEngagedBy)?.chargeNeedEngagedBy,
+    consolidateEngage: es.some((e) => e.consolidateEngage),
+    deepStrikeNear: es.find((e) => e.deepStrikeNear)?.deepStrikeNear,
     sensational: es.some((e) => e.sensational),
     poisoned: es.some((e) => e.poisoned),
     deadlyDemiseOn: Math.min(6, ...es.map((e) => e.deadlyDemiseOn ?? 6)),

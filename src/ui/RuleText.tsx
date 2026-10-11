@@ -4,15 +4,22 @@ import type { ReactNode } from 'react';
 import { emph } from './Em';
 
 type Bullet = { text: string; sub: string[] };
-type Block = { kind: 'p'; text: string } | { kind: 'ul'; items: Bullet[] } | { kind: 'note'; label: string; text: string };
+type Block = { kind: 'p'; text: string } | { kind: 'ul'; items: Bullet[] } | { kind: 'note'; label: string; text: string } | { kind: 'table'; rows: string[][] };
 
 const isBullet = (l: string) => /^[•●▪-]\s*/.test(l);
 const strip = (l: string) => l.replace(/^[•●▪-]\s*/, '');
-const isHeading = (l: string, next?: string) => !!next && !isBullet(l) && l.length <= 60 && !/[.:;!?"”]$/.test(l) && !/^(Designer|Example)/.test(l);
+const isHeading = (l: string, next?: string) => !!next && !isBullet(l) && !l.includes('¦') && !next.includes('¦') && l.length <= 60 && !/[.:;!?"”]$/.test(l) && !/^(Designer|Example)/.test(l);
 
 function blocks(lines: string[]): Block[] {
   const out: Block[] = [];
   for (const l of lines) {
+    // a table row from the data ("Incursion ¦ Up to 2 units ¦ Up to 2 units")
+    if (l.includes('¦')) {
+      const prev = out[out.length - 1];
+      const row = l.split('¦').map((c) => c.trim());
+      if (prev?.kind === 'table') prev.rows.push(row); else out.push({ kind: 'table', rows: [row] });
+      continue;
+    }
     const note = /^(Designer[’']s Note|Example):\s*/.exec(l);
     if (note) { out.push({ kind: 'note', label: note[1], text: l.slice(note[0].length) }); continue; }
     if (isBullet(l)) {
@@ -31,6 +38,24 @@ function blocks(lines: string[]): Block[] {
 function renderBlocks(bs: Block[], flavourFirst: boolean, names?: string[]): ReactNode[] {
   const e = (t: string) => emph(t, names);
   return bs.map((b, i) => {
+    if (b.kind === 'table') {
+      const n = Math.max(...b.rows.map((x) => x.length));
+      const head = (row: string[]) => row.every((c) => !/[a-z]/.test(c));
+      return (
+        <div key={i} className="rt-table-wrap">
+          <table className="rt-table">
+            <tbody>
+              {b.rows.map((row, j) => {
+                // a short first row spans its last cell over the rest; a short later row sits under the spanned heading
+                const cells = row.length < n && j > 0 ? [...Array(n - row.length).fill(''), ...row] : row;
+                const Cell = head(row) ? 'th' : 'td';
+                return <tr key={j}>{cells.map((c, k) => <Cell key={k} colSpan={k === cells.length - 1 && cells.length < n ? n - cells.length + 1 : undefined}>{c && e(c)}</Cell>)}</tr>;
+              })}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
     if (b.kind === 'note') return <div key={i} className="rt-note"><b>{b.label}</b> {e(b.text)}</div>;
     if (b.kind === 'ul') {
       return (

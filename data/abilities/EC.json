@@ -482,7 +482,8 @@
        "name": "Flawless Blade"
       }
      }
-    ]
+    ],
+    "limit": "phase"
    }
   ]
  },
@@ -781,20 +782,20 @@
  "Rise to the Challenge": {
   "act": {
    "when": "fightEnd",
+   "auto": true,
    "limit": "battle",
    "if": [
-    "nearModels:1:3"
+    "enemyModelsEngaged:3"
    ],
-   "botUse": "always",
-   "label": "Fight one more time",
    "do": [
     {
      "on": "self",
+     "bearerOnly": true,
      "fightAgain": true
     }
    ]
   },
-  "note": "The extra fight is made by the whole unit (the bearer’s attacks are what count)"
+  "note": "At the end of the Fight phase, engaged with 3+ enemy models: the bearer fights once more"
  },
  "Sublime Prescience": {
   "act": {
@@ -919,6 +920,9 @@
    {
     "scope": "model",
     "attack": "melee",
+    "if": [
+     "!extraAttacksWeapon"
+    ],
     "attacks": 1
    }
   ],
@@ -947,7 +951,7 @@
     }
    ]
   },
-  "note": "The +1 A goes to the bearer’s melee weapons"
+  "note": "+1 A on the bearer’s main melee weapon (a model fights with one, plus [EXTRA ATTACKS] ones)"
  },
  "Warp Walker": {
   "effects": [

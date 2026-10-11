@@ -149,3 +149,6 @@ let reactHook: ReactHook | null = null;
 export const setReactHook = (fn: ReactHook) => { reactHook = fn; };
 /** Tell the reaction system a moment has come for player p. True when p used a stratagem / a prompt was opened. */
 export const emitReact = (s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx = {}) => (reactHook ? reactHook(s, p, on, ctx) : false);
+
+/** The game makes this player's choices: a bot, or a person who left the rules to the app (not one who decides). */
+export const playsItself = (s: GameState, p: PlayerId) => (s.bots ?? []).includes(p) || ((s.autoRules ?? []).includes(p) && !(s.decides ?? []).includes(p));

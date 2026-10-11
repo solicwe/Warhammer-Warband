@@ -2694,7 +2694,7 @@
    "grants": [
     {
      "units": [
-      "LEGIONARIES|CULTIST MOB"
+      "LEGIONARIES"
      ],
      "name": "Masters of Misdirection",
      "rule": {
@@ -2703,7 +2703,6 @@
         "when": "formation",
         "auto": true,
         "limit": "battle",
-        "per": "army",
         "target": {
          "side": "friendly",
          "units": [
@@ -2723,12 +2722,21 @@
           "until": "battle"
          }
         ]
-       },
+       }
+      ]
+     }
+    },
+    {
+     "units": [
+      "CULTIST MOB"
+     ],
+     "name": "Masters of Misdirection (Cultist Mobs)",
+     "rule": {
+      "act": [
        {
         "when": "formation",
         "auto": true,
         "limit": "battle",
-        "per": "army",
         "target": {
          "side": "friendly",
          "units": [

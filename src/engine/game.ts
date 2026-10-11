@@ -258,9 +258,9 @@ export function createGame(o: NewGameOptions): GameState {
   // Declare Battle Formations: abilities fixed for the battle, "choose two of these", Master of the Fleet …
   applyStaticEffects(s);
   initAbilityChoices(s);
-  // abilities that give a core rule at deployment (Blackwing Shroud: Infiltrators)
-  for (const u of s.units) if (!u.core.infiltrators && unitFlags(s, u).infiltrators) u.core.infiltrators = true;
   fireAll(s, 'formation', 'both');
+  // abilities that give a core rule at deployment (Blackwing Shroud, Masters of Misdirection: Infiltrators)
+  for (const u of s.units) if (!u.core.infiltrators && unitFlags(s, u).infiltrators) u.core.infiltrators = true;
   startOfBattle(s);
   return s;
 }
@@ -386,6 +386,8 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
   if (kind === 'charge' || kind === 'heroic' as MoveKind) {
     const targets = (opt.targets ?? []).map((id) => unitById(s, id));
     for (const t of targets) if (!eng.includes(t)) errors.push(`Must end engaged with the target ${t.name}`);
+    if (kind === 'charge' && u.chargeMust?.turn === s.turn && !targets.some((t) => t.id === u.chargeMust!.id)) errors.push(`Must charge ${unitById(s, u.chargeMust.id).name} too (it must end engaged with it)`);
+    if (kind === 'charge' && unitFlags(s, u).chargeMustEngaged && !targets.some((t) => engagedEnemies(s, t).some((f) => f.id !== u.id))) errors.push('Refusal to be Outdone: must charge an enemy unit that is already engaged');
     for (const e of eng) if (!targets.includes(e)) errors.push(`Cannot end engaged with a unit that was not a target (${e.name})`);
     for (const m of alive(u)) {
       const path = paths.get(m.id);
@@ -407,6 +409,7 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
       }
     }
     if (kind === 'pileIn' && !eng.length) errors.push('After a pile-in move the unit must be engaged');
+    if (kind === 'consolidate' && !eng.length && unitFlags(s, u).consolidateEngage && alive(u).some((m) => pathLength(paths.get(m.id) ?? []) > 3 + 1e-6)) errors.push('Incessant Violence: a Consolidation of more than 3" must end engaged');
   }
   return { ok: errors.length === 0, errors: [...new Set(errors)], bad: [...bad] };
 }
@@ -429,6 +432,8 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
       const keep = homer ? 8 : how === 'deepStrike' ? fl!.deepStrikeRange : RULES.reserves.enemyDistance;
       if (enemies.some((e) => alive(e).some((n) => dist(p, n) - m.r - n.r <= keep))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
     }
+    const dsNear = how === 'deepStrike' ? fl!.deepStrikeNear : undefined;
+    if (dsNear && !boardUnits(s, u.owner).some((f) => f.id !== u.id && (hasKw(f, dsNear.kw) || f.factionKeywords.includes(dsNear.kw)) && alive(f).some((n) => dist(p, n) + m.r - n.r <= dsNear.range + 1e-6))) { errors.push(`Must be set up wholly within ${dsNear.range}" of a friendly ${dsNear.kw} unit`); bad.add(m.id); }
     if (how === 'deepStrike' && fl!.deepStrikeInFlow && !circleInFlow(s, u.owner, p, m.r)) { errors.push('Through the Veil: must be set up wholly within your Flow of Magic'); bad.add(m.id); }
     if (how === 'ingress' || how === 'deepStrike') {
       for (const { e, omni } of omnis) {
@@ -884,6 +889,8 @@ export function endPhase(s: GameState) {
   } else if (s.phase === 'fight') {
     if (phaseEndReactions(s, 'fightPhaseEnd', [other(s.active), s.active])) return;
     fireFor(s, 'fightEnd', 'both');
+    // Rise to the Challenge: a unit gets to fight once more before the phase ends
+    if (s.fight?.forcedNext && s.fight.eligible.includes(s.fight.forcedNext)) return;
     phaseEndHook?.(s, 'fight');
     fireFor(s, 'opponentFightEnd', other(s.active));
     s.fight = null;
@@ -1324,7 +1331,7 @@ export function rerollCharge(s: GameState, u: UnitState, fly = false, cap?: numb
 }
 
 export function chargeTargetOptions(s: GameState, u: UnitState, opts: { onlyChargedThisPhase?: boolean; within?: number } = {}): UnitState[] {
-  return boardUnits(s, other(u.owner)).filter((e) => {
+  const out = boardUnits(s, other(u.owner)).filter((e) => {
     if (hasKw(e, 'AIRCRAFT') && !hasKw(u, 'FLY')) return false;
     const d = unitDistance(u, e);
     if (d > RULES.charge.declareRange || d > chargeReach(s, u, [e]) + 1e-6) return false;
@@ -1334,8 +1341,14 @@ export function chargeTargetOptions(s: GameState, u: UnitState, opts: { onlyChar
     const only = unitFlags(s, u).onlyTargetMarked;
     if (only && (u.move === 'advance' || u.move === 'fallback') && !(e.timed ?? []).some((t) => t.mark === only && t.by === u.owner)) return false;
     if (thrillBlock(s, u, e)) return false;
+    const by = unitFlags(s, u).chargeNeedEngagedBy;
+    if (by && (u.move === 'advance' || u.move === 'fallback') && !engagedEnemies(s, e).some((f) => hasKw(f, by) || f.factionKeywords.includes(by))) return false;
     return true;
   });
+  // Lethal Obsession / Refusal to be Outdone: no charge at all when the unit it must reach is out of reach
+  if (u.chargeMust?.turn === s.turn && !out.some((e) => e.id === u.chargeMust!.id)) return [];
+  if (unitFlags(s, u).chargeMustEngaged && !out.some((e) => engagedEnemies(s, e).length > 0)) return [];
+  return out;
 }
 
 export function commitCharge(s: GameState, u: UnitState, paths: Map<string, Pt[]>, targets: string[]) {

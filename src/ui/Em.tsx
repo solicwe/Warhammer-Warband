@@ -1,6 +1,7 @@
 // Rule text with its key terms in bold, so a card reads at a glance: KEYWORDS, re-rolls, +1/-1 modifiers, weapon
 // abilities and core rules, distances and rolls, and the names of units, stratagems and abilities the page passes in.
 import { Fragment, type ReactNode } from 'react';
+import { RuleText } from './RuleText';
 
 const TERMS = [
   // modifiers and re-rolls
@@ -53,5 +54,7 @@ export function emph(text: string, names?: string[]): ReactNode[] {
 }
 
 export function Em({ text, names }: { text: string; names?: string[] }) {
+  // rule text with a table in it ("Incursion ¦ Up to 2 units") gets the block layout
+  if (text.includes('¦')) return <RuleText text={text} names={names} />;
   return <Fragment>{emph(text, names)}</Fragment>;
 }

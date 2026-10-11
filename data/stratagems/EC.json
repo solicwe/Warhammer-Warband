@@ -54,7 +54,6 @@
      "move": "6"
     }
    ],
-   "botReact": "always",
    "status": "auto"
   },
   "CRUEL RAIDERS": {
@@ -74,11 +73,11 @@
   "INCESSANT VIOLENCE": {
    "effects": [
     {
-     "consolidate": 6
+     "consolidate": 6,
+     "consolidateEngage": true
     }
    ],
    "bot": "never",
-   "note": "The 6\" Consolidation must end engaged",
    "status": "auto"
   },
   "CRUEL BLADESMAN": {
@@ -132,13 +131,16 @@
   "CUT DOWN THE WEAK": {
    "react": "enemyFallBack",
    "unitIf": [
-    "nearLast:6"
+    "nearLast:6",
+    "!vehicleNotWalker"
    ],
+   "enemy": {
+    "lastActor": true
+   },
    "special": [
     "charge"
    ],
    "botReact": "charge",
-   "note": "The charge must target the unit that fell back; no Charge bonus (a VEHICLE only if it is a WALKER)",
    "status": "auto"
   },
   "DEATH ECSTASY": {
@@ -235,7 +237,12 @@
     "disembarkNear6"
    ],
    "bot": "never",
-   "status": "auto"
+   "status": "auto",
+   "botReact": "always",
+   "botIf": [
+    "belowHalfW",
+    "hasEmbarked"
+   ]
   },
   "SUSTAINED BY AGONY": {
    "react": "ownKilled",
@@ -245,7 +252,10 @@
     }
    ],
    "botReact": "always",
-   "status": "auto"
+   "status": "auto",
+   "botIf": [
+    "loeHurtNear6"
+   ]
   },
   "SYCOPHANTIC SURGE": {
    "targetKw": [
@@ -256,11 +266,11 @@
      "eligible": [
       "chargeAfterAdvance",
       "chargeAfterFallBack"
-     ]
+     ],
+     "chargeNeedEngagedBy": "EMPEROR’S CHILDREN"
     }
    ],
    "bot": "never",
-   "note": "One of the charge targets must be engaged with an Emperor’s Children unit",
    "status": "auto"
   },
   "UNCANNY REACTIONS": {
@@ -290,14 +300,14 @@
   "ECSTATIC SLAUGHTER": {
    "unitIf": [
     "notEngaged",
-    "near:6:LEGIONS OF EXCESS"
+    "loeKillNear6"
    ],
    "special": [
     "charge"
    ],
    "bot": "never",
-   "note": "After a Legions of Excess unit within 6\" destroyed an enemy unit; a unit that already fought cannot fight again this phase",
-   "status": "auto"
+   "status": "auto",
+   "note": "A unit that already fought this phase cannot fight again"
   },
   "DARK APPARITIONS": {
    "react": "fightPhaseEnd",
@@ -314,12 +324,15 @@
    ],
    "effects": [
     {
-     "deepStrikeRange": 6
+     "deepStrikeRange": 6,
+     "deepStrikeNear": {
+      "range": 8,
+      "kw": "EMPEROR’S CHILDREN"
+     }
     }
    ],
    "until": "nextTurnStart",
    "bot": "never",
-   "note": "Arriving by Deep Strike next turn: more than 6\" from enemy units, wholly within 8\" of an Emperor’s Children unit",
    "status": "auto"
   },
   "MARTIAL PERFECTION": {
@@ -348,7 +361,6 @@
    "special": [
     "raisePledge"
    ],
-   "bot": "never",
    "status": "auto"
   },
   "PROTECTION OF THE DARK PRINCE": {
@@ -394,9 +406,14 @@
    "targetKw": [
     "CHARACTER"
    ],
+   "enemy": {},
+   "enemyMark": "Devoted Duellists",
    "effects": [
     {
      "attack": "melee",
+     "if": [
+      "targetMarked:Devoted Duellists"
+     ],
      "abilities": [
       "sustained hits 1"
      ]
@@ -437,11 +454,12 @@
    ],
    "effects": [
     {
-     "rerollCharge": true
+     "rerollCharge": true,
+     "chargeMustEngaged": true
     }
    ],
+   "until": "turn",
    "bot": "never",
-   "note": "The charge must end engaged with an enemy unit that was already engaged",
    "status": "auto"
   },
   "DIABOLIC MAJESTY": {
@@ -484,7 +502,6 @@
      "surge": "D6"
     }
    ],
-   "botReact": "always",
    "status": "auto"
   },
   "BEAUTIFUL DEATH": {
@@ -597,7 +614,6 @@
      "surge": "D6"
     }
    ],
-   "botReact": "always",
    "status": "auto"
   },
   "DELIGHT IN AGONY": {
@@ -709,7 +725,6 @@
      "move": "D3+3"
     }
    ],
-   "botReact": "always",
    "status": "auto"
   },
   "HONOUR IS FOR FOOLS": {

@@ -25,7 +25,7 @@ import {
 import {
   abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../engine/activations';
-import { activeLabels, effectsFor, isRiled, unitFlags, type Effect } from '../engine/effects';
+import { activeLabels, effectsFor, isRiled, unitFlags, withRuleCache, type Effect } from '../engine/effects';
 import { activeIds, applyPick, BLESSINGS, blessingById, rerollBlessings } from '../engine/blessings';
 import { botPledge, setPledge } from '../engine/emperorsChildren';
 import { BlessingsPanel } from './Blessings';
@@ -132,13 +132,6 @@ function fxTags(e: Effect): [string, boolean][] {
   if (e.critHitOn) o.push([`Crit hit ${e.critHitOn}+`, true]);
   return o;
 }
-/** Active Blessings of Khorne on a unit, as their short text. */
-const unitBlessingTags = (s: GameState, u: UnitState): [string, boolean][] => {
-  const P = s.players[u.owner];
-  if (!P.blessings && !P.blessingExtras?.length && !u.timed?.some((t) => t.mark === 'allBlessings')) return [];
-  const ids = new Set(effectsFor(s, u).map((a) => BLESSINGS.find((b) => b.name === a.label)?.id).filter(Boolean));
-  return BLESSINGS.filter((b) => ids.has(b.id)).map((b) => [b.short, true]);
-};
 const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
   'hit+1': ['+1 Hit', true], 'hit-1': ['−1 Hit', false], 'wound+1': ['+1 Wound', true], 'wound-1': ['−1 Wound', false],
   rerollHits1: ['Re-roll Hit 1s', true], rerollHits: ['Re-roll Hits', true], rerollWounds1: ['Re-roll Wound 1s', true], rerollWounds: ['Re-roll Wounds', true],
@@ -703,24 +696,36 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     for (const l of ls) (badges[u.id] ??= []).push(l);
   }
   // temporary buffs / debuffs (abilities, stratagems, marks) as "+1 Hit" / "−2\" M" tags under each unit
-  const buffTags: Record<string, [string, boolean][]> = {};
-  const riled: string[] = [];
-  for (const u of s.units) {
-    if (!onBoard(u)) continue;
-    // plus auras of other units that always apply (a conditional one only matters at the moment it holds)
-    const auras = effectsFor(s, u).filter((a) => a.from && a.holder.id !== u.id && !a.e.if?.length).flatMap((a) => fxTags(a.e));
-    // army-wide buffs on this unit: detachment rules and choices, doctrines, Blessings of Khorne (always-on parts)
-    const own = new Set(u.abilities.map((a) => a.name));
-    const army = effectsFor(s, u).filter((a) => !a.from && a.holder.id === u.id && !own.has(a.label) && !BLESSINGS.some((b) => b.name === a.label) && !u.timed?.some((t) => t.label === a.label) && !a.e.if?.length).flatMap((a) => fxTags(a.e));
-    const bless = unitBlessingTags(s, u);
-    const riledTags: [string, boolean][] = isRiled(s, u) ? [['5+ inv', true], ['Assault', true], ['Adv & Charge', true]] : [];
-    if (s.players[u.owner].favoured === u.id) riledTags.push(['Favoured: re-roll Wounds', true]);
-    const tags = [...riledTags, ...bless, ...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...army, ...auras];
-    const seen = new Set<string>();
-    const uniq = tags.filter(([t]) => !seen.has(t) && !!seen.add(t));
-    if (uniq.length) buffTags[u.id] = uniq;
-    if (u.abilities.some((a) => a.name === 'Waaagh!') || u.riledUntil !== undefined || u.timed?.some((t) => t.e.riled)) if (isRiled(s, u)) riled.push(u.id);
-  }
+  // worked out once per game state (every unit's rules are read: costly to redo on each render)
+  const { buffTags, riled, armyChips } = useMemo(() => withRuleCache(() => {
+    const buffTags: Record<string, [string, boolean][]> = {};
+    const riled: string[] = [];
+    // buffs every unit of an army has (detachment rules, WAAAGH!) go on one card above the map, not on each unit
+    const armyChips: [Map<string, string[]>, Map<string, string[]>] = [new Map(), new Map()];
+    const chip = (p: PlayerId, label: string, tags: string[]) => { const m = armyChips[p]; m.set(label, [...new Set([...(m.get(label) ?? []), ...tags])]); };
+    for (const u of s.units) {
+      if (!onBoard(u)) continue;
+      // plus auras of other units that always apply (a conditional one only matters at the moment it holds)
+      const auras = effectsFor(s, u).filter((a) => a.from && a.holder.id !== u.id && !a.e.if?.length).flatMap((a) => fxTags(a.e));
+      // army-wide buffs on this unit: detachment rules and choices, doctrines, Blessings of Khorne (always-on parts)
+      const own = new Set(u.abilities.map((a) => a.name));
+      for (const a of effectsFor(s, u)) {
+        if (a.from || a.holder.id !== u.id || own.has(a.label) || BLESSINGS.some((b) => b.name === a.label) || u.timed?.some((t) => t.label === a.label) || a.e.if?.length) continue;
+        const t = fxTags(a.e).map(([x]) => x);
+        if (t.length) chip(u.owner, a.label, t);
+      }
+      const waaagh = u.abilities.some((a) => a.name === 'Waaagh!') && s.players[u.owner].riledUntilTurn >= s.turn;
+      if (waaagh) chip(u.owner, 'WAAAGH!', ['5+ inv', 'Assault', 'Adv & Charge']);
+      const riledTags: [string, boolean][] = isRiled(s, u) && !waaagh ? [['5+ inv', true], ['Assault', true], ['Adv & Charge', true]] : [];
+      if (s.players[u.owner].favoured === u.id) riledTags.push(['Favoured: re-roll Wounds', true]);
+      const tags = [...riledTags, ...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...auras];
+      const seen = new Set<string>();
+      const uniq = tags.filter(([t]) => !seen.has(t) && !!seen.add(t));
+      if (uniq.length) buffTags[u.id] = uniq;
+      if (u.abilities.some((a) => a.name === 'Waaagh!') || u.riledUntil !== undefined || u.timed?.some((t) => t.e.riled)) if (isRiled(s, u)) riled.push(u.id);
+    }
+    return { buffTags, riled, armyChips };
+  }), [s]);
   const losLines: { a: Pt; b: Pt; cover: boolean }[] = [];
   const noLos: string[] = [];
   if (mode?.k === 'shoot' && modeUnit) {
@@ -2097,8 +2102,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             ))}
           </div>
         )}
-        {s.phase !== 'deploy' && ([0, 1] as PlayerId[]).some((p) => activeIds(s, p).length || s.players[p].pledge?.round === s.round || s.players[p].pactPoints) && (
-          <div className="blessbar" aria-label="Blessings of Khorne this round">
+        {s.phase !== 'deploy' && ([0, 1] as PlayerId[]).some((p) => activeIds(s, p).length || s.players[p].pledge?.round === s.round || s.players[p].pactPoints || armyChips[p].size) && (
+          <div className="blessbar" aria-label="Army-wide buffs">
+            {([0, 1] as PlayerId[]).flatMap((p) => [...armyChips[p]].map(([label, tags]) => (
+              <button key={`a${p}${label}`} type="button" className={`p${p}`} onClick={() => flash(`${label} (every unit): ${tags.join(' · ')}`)}>{label} <span className="muted">{tags.join(' · ')}</span></button>
+            )))}
             {([0, 1] as PlayerId[]).flatMap((p) => activeIds(s, p).map((id) => {
               const b = blessingById(id)!;
               return <button key={`${p}${id}`} type="button" className={`p${p}`} onClick={() => flash(`${b.name}: ${b.text}`)}>{b.name} <span className="muted">{b.short}</span></button>;

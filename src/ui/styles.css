@@ -1365,3 +1365,20 @@ details > .strat-card { margin-top: 6px; }
 .bk-row.ok .bk-need { color: var(--good); }
 .bk-short { grid-column: 1 / -1; font-size: 13px; }
 .bk-text { grid-column: 1 / -1; font-size: 13px; color: var(--text); padding-top: 4px; border-top: 1px dashed var(--line-2); }
+
+/* rules text tables (battle-size tables …) */
+.rt-table-wrap { overflow-x: auto; margin: 6px 0; }
+.rt-table { border-collapse: collapse; font-size: 13px; min-width: 60%; }
+.rt-table th, .rt-table td { border: 1px solid var(--line-2); padding: 4px 8px; text-align: center; }
+.rt-table th { background: var(--surface-2, var(--surface)); font: 600 12px var(--font-cond); letter-spacing: 0.04em; }
+.rt-table td:first-child { text-align: left; font-weight: 600; }
+
+/* ⋮ pickers: dim what is behind; the unit picture opens its datasheet */
+.ab-pop-backdrop { background: rgba(0, 0, 0, 0.45); }
+.ab-pop-art { position: relative; display: flex; flex: none; cursor: pointer; }
+.ab-pop-art .ab-art { width: 64px; min-height: 64px; height: 100%; border-radius: 0; }
+.ab-pop-info { position: absolute; right: 3px; bottom: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: var(--on-fill); font: 700 12px/18px var(--font-ui); text-align: center; }
+.ab-pop-card .ab-pop-sub { font-size: 12px; color: var(--text-2); }
+
+/* factions whose rules are not finished yet */
+.ab-fcard.wip { opacity: 0.45; filter: grayscale(1); }

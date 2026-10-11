@@ -247,6 +247,8 @@ export interface UnitState {
   extraMove?: { max: number; label: string; kind: 'extra' | 'surge'; phase?: string; endIn?: 'dzOrObjective' | 'objective'; asMove?: boolean }; // a move granted by an ability, not yet made
   arriveEarly?: number; // battle round in which this unit may already arrive from Reserves (High King of Fenris …)
   chargeOnly?: { turn: number; ids: string[] }; // this turn the charge must end engaged with one of these (Snarling Protector)
+  chargeMust?: { turn: number; id: string }; // this turn any charge it makes must end engaged with this unit (Lethal Obsession)
+  fightOnly?: { key: string; models: string[] }; // this phase only these models fight (Rise to the Challenge: the bearer fights again)
   noChargeTurn?: number; // turn in which this unit cannot declare a charge (Meteoric Descent …)
   fellBackFrom?: string[]; // enemy units engaged with this unit when it fell back this turn
   detRerolled?: string; // `${turn}:advance|charge`: free detachment re-roll used

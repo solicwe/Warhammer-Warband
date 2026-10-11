@@ -7,9 +7,9 @@ import { cpWorth, tryRule } from './botStrats';
 import { dist } from './geometry';
 import { unitVisibleTo } from './visibility';
 import { centre, isBrawler, maxRange, moveOf, objPoint, onObjective, unitValue } from './botEval';
-import { rollMods, targetHasCover, unitDoctrines, unitFlags } from './effects';
+import { effectsFor, rollMods, targetHasCover, unitDoctrines, unitFlags } from './effects';
 import { chargeEligibility, commitMove, consolidateMode, levelOfControl, setPhaseEndHook, validateMove } from './game';
-import { alive, boardUnits, engagedEnemies, isEngaged, onBoard as onBoardUnit, other, unitDistance } from './state';
+import { alive, boardUnits, engagedEnemies, isEngaged, onBoard as onBoardUnit, other, playsItself, unitDistance } from './state';
 import { applyDetachmentStratagem, stratagemBlock, stratRule, stratChoices } from './stratagems';
 import type { GameState, PlayerId, StratagemData, UnitState } from './types';
 import { pace, stratCost } from './state';
@@ -273,7 +273,8 @@ export function botPileStratagem(s: GameState, u: UnitState, step: 'pileIn' | 'c
   }
   if (need <= 2.9 || need > 6) return;
   for (const { st, rule } of strats(s, u.owner)) {
-    if (rule.react || !dosOf(rule).some((a) => a[key])) continue;
+    const fxKey = step === 'pileIn' ? 'pileIn' : 'consolidate';
+    if (rule.react || !(dosOf(rule).some((a) => a[key]) || fxOf(rule).some((e) => (e[fxKey] ?? 0) > 3))) continue;
     if (!ready(s, u.owner, st, u)) continue;
     applyDetachmentStratagem(s, u.owner, st, u.id);
     return;
@@ -284,7 +285,7 @@ export function botPileStratagem(s: GameState, u: UnitState, step: 'pileIn' | 'c
 export function botMobileStratagem(s: GameState, u: UnitState, M: number) {
   if (alive(u).every((m) => m.keywords.includes('INFANTRY'))) return;
   for (const { st, rule } of strats(s, u.owner)) {
-    if (rule.react || !fxOf(rule).some((e) => e.mobile)) continue;
+    if (rule.react || !fxOf(rule).some((e) => e.mobile || e.moveThroughModels)) continue;
     if (!ready(s, u.owner, st, u)) continue;
     const base = planMove(s, u, M, ctxFor(s, u));
     const withIt = tryRule(s, u, st.name, rule, () => planMove(s, u, M, ctxFor(s, u)));
@@ -424,7 +425,7 @@ export function jumpWorth(s: GameState, u: UnitState): boolean {
 // the end of the enemy's Fight phase: units that may now leave for Strategic Reserves
 setPhaseEndHook((s, phase) => {
   const p = other(s.active);
-  if (phase === 'fight' && ((s.bots ?? []).includes(p) || (s.autoRules ?? []).includes(p))) botRedeployActs(s, p);
+  if (phase === 'fight' && playsItself(s, p)) botRedeployActs(s, p);
 });
 
 // ---------- Adeptus Custodes decisions (and any faction with the same kind of rule) ----------
@@ -441,10 +442,15 @@ export function botAdvanceChargeStratagem(s: GameState, u: UnitState) {
 }
 
 /** +X to the charge roll (Fury of the Emperor) for a long charge. */
-export function botChargeBonusStratagem(s: GameState, u: UnitState, gap: number) {
+export function botChargeBonusStratagem(s: GameState, u: UnitState, gap: number, target?: UnitState) {
   if (gap <= 7) return;
+  const reroll = rollMods(s, u).rerollCharge;
   for (const { st, rule } of strats(s, u.owner)) {
-    if (rule.react || !fxOf(rule).some((e) => (e.chargeBonus ?? 0) > 0) || !ready(s, u.owner, st, u)) continue;
+    const fx = fxOf(rule);
+    const helps = fx.some((e) => (e.chargeBonus ?? 0) > 0) || (!reroll && fx.some((e) => e.rerollCharge));
+    if (rule.react || !helps || !ready(s, u.owner, st, u)) continue;
+    // Refusal to be Outdone: only when the unit is going for an enemy that is already engaged
+    if (fx.some((e) => e.chargeMustEngaged) && !(target && engagedEnemies(s, target).length)) continue;
     applyDetachmentStratagem(s, u.owner, st, u.id);
     return;
   }
@@ -541,5 +547,66 @@ export function botIgnoreModsStratagem(s: GameState, u: UnitState) {
     if (rule.react || rule.until !== 'turn' || !fxOf(rule).some((e) => e.ignoreMods) || !ready(s, u.owner, st, u)) continue;
     applyDetachmentStratagem(s, u.owner, st, u.id);
     return;
+  }
+}
+
+// ---------- Emperor's Children decisions (and any faction with the same kind of rule) ----------
+
+/** A melee unit that disembarked and may not charge: an assault disembark after all (Ceaseless Onslaught). */
+export function botAllowChargeStratagem(s: GameState, u: UnitState) {
+  if (!u.cantCharge || !isBrawler(s, u) || isEngaged(s, u) || !boardUnits(s, other(u.owner)).some((e) => unitDistance(u, e) <= 9)) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || !dosOf(rule).some((a) => a.allowCharge) || !ready(s, u.owner, st, u)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    return;
+  }
+}
+
+/** After shooting: its shots do not give it away (Absolute Sensory Overload), for a valuable unit the enemy can reach. */
+export function botUnshotStratagem(s: GameState, u: UnitState) {
+  if (unitValue(u) < 100 || !boardUnits(s, other(u.owner)).some((e) => unitDistance(u, e) <= 24)) return;
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (rule.react || !dosOf(rule).some((a) => a.unshot) || !ready(s, u.owner, st, u, 2)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    return;
+  }
+}
+
+/** Start of the Shooting phase: an enemy unit hiding near one of ours gets a bigger detection range (Agonised Cacophony). */
+export function botDetectionStratagem(s: GameState, p: PlayerId) {
+  const mine = boardUnits(s, p);
+  for (const { st, rule } of strats(s, p)) {
+    if (rule.react || !rule.enemy || !(rule.enemyEffects ?? []).some((e) => e.detection)) continue;
+    for (const u of mine.filter((x) => ready(s, p, st, x))) {
+      const range = rule.enemy.range ?? 12;
+      const t = boardUnits(s, other(p)).filter((e) => unitDistance(u, e) <= range && !mine.some((f) => alive(f).some((m) => unitVisibleTo(s, m, e))))
+        .sort((a, b) => unitValue(b) - unitValue(a))[0];
+      if (!t || unitValue(t) < 90) continue;
+      applyDetachmentStratagem(s, p, st, u.id, { enemyId: t.id });
+      return;
+    }
+  }
+}
+
+/** Start of the Fight phase: a cheap unit draws every attack onto itself, off a valuable one engaged with the same enemy (Embrace the Pain). */
+export function botTauntStratagem(s: GameState, p: PlayerId) {
+  for (const { st, rule } of strats(s, p)) {
+    if (rule.react || !fxOf(rule).some((e) => e.taunt)) continue;
+    const pick = boardUnits(s, p).filter((x) => ready(s, p, st, x)).map((x) => {
+      const shield = engagedEnemies(s, x).flatMap((e) => boardUnits(s, p).filter((y) => y.id !== x.id && engagedEnemies(s, y).some((f) => f.id === e.id)));
+      return { x, v: Math.max(0, ...shield.map((y) => unitValue(y))) - unitValue(x) };
+    }).sort((a, b) => b.v - a.v)[0];
+    if (pick && pick.v >= 100) applyDetachmentStratagem(s, p, st, pick.x.id);
+  }
+}
+
+/** Command phase: ignore hit / wound penalties this turn (Unshakeable Opponents) for a valuable unit facing enemies with them. */
+export function botIgnorePenaltiesStratagem(s: GameState, p: PlayerId) {
+  const foes = boardUnits(s, other(p));
+  const penal = (e: UnitState) => effectsFor(s, e).some((a) => (a.e.defend?.hit ?? 0) < 0 || (a.e.defend?.wound ?? 0) < 0) || unitFlags(s, e).stealth;
+  for (const { st, rule } of strats(s, p)) {
+    if (rule.react || !fxOf(rule).some((e) => e.ignoreHitMods)) continue;
+    const u = boardUnits(s, p).filter((x) => ready(s, p, st, x) && foes.some((e) => unitDistance(x, e) <= 18 && penal(e))).sort((a, b) => unitValue(b) - unitValue(a))[0];
+    if (u && unitValue(u) >= 150) applyDetachmentStratagem(s, p, st, u.id);
   }
 }

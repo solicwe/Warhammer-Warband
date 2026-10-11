@@ -698,9 +698,9 @@ function BoardImpl(props: BoardProps) {
               const maxY = Math.max(...pts.map((p, i) => p.y + ms[i].r)) + (u.transport && s.units.some((x) => x.embarkedIn === u.id && x.status === 'embarked') ? 1.9 : 0.75);
               return (
                 <text x={cx} y={maxY} fontSize={Math.max(0.8, fs * 0.75)} textAnchor="middle" stroke="#000" strokeWidth={0.14} paintOrder="stroke" pointerEvents="none" fontWeight={800}>
-                  {/* the selected unit lists every tag; the others the first four */}
-                  {(isSel ? tags : tags.slice(0, 4)).map(([t, good], k) => <tspan key={k} fill={good ? '#86efac' : '#fca5a5'}>{k ? '  ' : ''}{t}</tspan>)}
-                  {!isSel && tags.length > 4 && <tspan fill="#fff">  +{tags.length - 4}</tspan>}
+                  {/* two tags under a unit, four under the selected one; the rest are counted */}
+                  {tags.slice(0, isSel ? 4 : 2).map(([t, good], k) => <tspan key={k} fill={good ? '#86efac' : '#fca5a5'}>{k ? '  ' : ''}{t}</tspan>)}
+                  {tags.length > (isSel ? 4 : 2) && <tspan fill="#fff">  +{tags.length - (isSel ? 4 : 2)}</tspan>}
                 </text>
               );
             })() : null}

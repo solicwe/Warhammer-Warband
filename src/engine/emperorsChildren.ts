@@ -48,7 +48,7 @@ const warlordOnBoard = (s: GameState, p: PlayerId) => s.units.find((u) => u.owne
 // ---------- Coterie of the Conceited: Pledges to the Dark Prince ----------
 
 /** Enemy units destroyed in this battle round (a turn number is the round's first or second turn). */
-const destroyedThisRound = (s: GameState, p: PlayerId) => s.destroyedByTurn.filter((d) => d.owner !== p && Math.floor(d.turn / 2) + 1 === s.round).length;
+export const destroyedThisRound = (s: GameState, p: PlayerId) => s.destroyedByTurn.filter((d) => d.owner !== p && Math.floor(d.turn / 2) + 1 === s.round).length;
 
 /** The bot's pledge: how many enemy units it can expect to finish this round (at least 1). */
 export function botPledge(s: GameState, p: PlayerId): number {
