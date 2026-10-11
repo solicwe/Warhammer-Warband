@@ -780,6 +780,17 @@ function offerExtraMove(s: GameState, u: UnitState, label: string) {
   s.window = { kind: 'abilityMove', player: u.owner, offers: [{ unitId: u.id, key: '', label }], label };
 }
 
+/** Scouring Warpflame: once the unit has shot (every gun fired, or another unit is picked to shoot), one enemy unit it
+ *  hit loses the Benefit of Cover for the rest of the phase. */
+function scouringDue(s: GameState, A: UnitState, force: boolean) {
+  if (!unitFlags(s, A).afterShootNoCover || (A.used ??= {}).scouring === phaseKey(s)) return;
+  const hit = A.lastHits?.key === phaseKey(s) ? A.lastHits.ids.map((id) => unitById(s, id)).filter(onBoard) : [];
+  if (!hit.length) return;
+  if (!force && alive(A).some((m) => m.weapons.some((w) => w.profiles[0].range !== 'Melee' && !A.weaponsFired.includes(w.name)))) return;
+  A.used.scouring = phaseKey(s);
+  offerPickUnit(s, A, 'Scouring Warpflame: pick an enemy unit hit — it cannot have the Benefit of Cover this phase', hit, [{ on: 'target', incoming: { attack: 'ranged', noCover: true }, until: 'phase' }]);
+}
+
 /** A rule asks for one unit: the bot (or a player on auto rules) takes the most valuable one, a player gets a prompt. */
 function offerPickUnit(s: GameState, holder: UnitState, label: string, units: UnitState[], acts: Action[]) {
   const auto = (s.bots ?? []).includes(holder.owner) || (s.autoRules ?? []).includes(holder.owner);
@@ -949,7 +960,10 @@ export function botUseActs(s: GameState, p: PlayerId, when?: Trigger[], unitId?:
     if (use === 'always' && (m.def.spec.limit === 'battle' || m.def.spec.battleUses) && ['selectedToShoot', 'shooting'].includes(m.def.spec.when)
       && pace(s) < 4 && !boardUnits(s, other(p)).some((e) => unitDistance(m.def.holder, e) <= 12)) continue;
     if (use === 'healthy' && alive(m.def.holder).reduce((a, x) => a + x.wounds, 0) * 2 <= m.def.holder.models.reduce((a, x) => a + x.profile.W, 0)) continue;
-    if (m.def.spec.do?.some((a) => a.move || a.surge || a.reserves)) continue; // moves need a plan the bot does not make
+    // Pulse Jet: a long move instead of its own, taken while the enemy is still far off (the move is planned in botWindow)
+    const longMove = m.def.spec.do?.some((a) => a.asMove);
+    if (longMove && boardUnits(s, other(p)).some((e) => unitDistance(m.def.holder, e) <= 14)) continue;
+    if (!longMove && m.def.spec.do?.some((a) => a.move || a.surge || a.reserves)) continue; // moves need a plan the bot does not make
     if (!(m.def.spec.botIf ?? []).every((c) => cond(c, { s, A: m.def.holder, holder: m.def.holder, bearers: m.def.bearers }))) continue;
     const pick = m.def.spec.target && m.def.spec.target.side !== 'self' && !m.def.spec.target.each ? bestTarget(s, m.def, m.targets) : undefined;
     useAct(s, m.def, pick);
@@ -963,6 +977,7 @@ export function unitSelected(s: GameState, u: UnitState, kind: 'shoot' | 'fight'
   u.used[key] = phaseKey(s);
   // Dark Pacts: made here for bots and players who leave their rules to the app; a player who decides picks it on screen
   autoPact(s, u, kind, (p) => (s.decides ?? []).includes(p) && !(s.bots ?? []).includes(p));
+  if (kind === 'shoot') for (const o of boardUnits(s, u.owner)) if (o.id !== u.id) scouringDue(s, o, true);
   fire(s, kind === 'shoot' ? 'selectedToShoot' : 'selectedToFight', [u]);
 }
 
@@ -1207,14 +1222,7 @@ onAttackFinished((s, at, info) => {
   }
   if (!at.free) {
     if (at.kind === 'shoot' && s.phase === 'shooting' && A.owner === s.active) fire(s, 'afterShooting', [A], ctx);
-    // Scouring Warpflame: one enemy unit it hit loses the Benefit of Cover for the rest of the phase
-    if (at.kind === 'shoot' && unitFlags(s, A).afterShootNoCover && (A.used ??= {}).scouring !== phaseKey(s)) {
-      const hit = (A.lastHits?.ids ?? []).map((id) => unitById(s, id)).filter(onBoard);
-      if (hit.length) {
-        A.used.scouring = phaseKey(s);
-        offerPickUnit(s, A, 'Scouring Warpflame: pick an enemy unit hit — it cannot have the Benefit of Cover this phase', hit, [{ on: 'target', incoming: { attack: 'ranged', noCover: true }, until: 'phase' }]);
-      }
-    }
+    if (at.kind === 'shoot') scouringDue(s, A, false);
     if (at.kind === 'fight') fire(s, 'afterFighting', [A], ctx);
   }
   if (at.kind !== 'fight' && info.woundsLost > 0 && T.owner !== s.active && onBoard(T)) fire(s, 'shotByEnemy', [T], { targetId: A.id, modelsKilled: info.modelsKilled });

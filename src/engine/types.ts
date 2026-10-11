@@ -161,6 +161,7 @@ export interface ModelState {
   profile: ModelProfileData;
   source: string; // datasheet name the model comes from
   isCharacter: boolean;
+  deadlyDemise?: string; // this model alone has Deadly Demise X (Warphead), even inside a bigger unit
   ritualBonus?: number; // Spirit Snare: + to its Psychic test results (max 2)
   isBodyguard: boolean;
   keywords: string[];
@@ -244,6 +245,7 @@ export interface UnitState {
   lastHits?: { key: string; ids: string[]; byWeapon?: Record<string, string[]> }; // enemy units hit this phase
   extraMove?: { max: number; label: string; kind: 'extra' | 'surge'; phase?: string; endIn?: 'dzOrObjective' | 'objective'; asMove?: boolean }; // a move granted by an ability, not yet made
   arriveEarly?: number; // battle round in which this unit may already arrive from Reserves (High King of Fenris …)
+  chargeOnly?: { turn: number; ids: string[] }; // this turn the charge must end engaged with one of these (Snarling Protector)
   noChargeTurn?: number; // turn in which this unit cannot declare a charge (Meteoric Descent …)
   fellBackFrom?: string[]; // enemy units engaged with this unit when it fell back this turn
   detRerolled?: string; // `${turn}:advance|charge`: free detachment re-roll used

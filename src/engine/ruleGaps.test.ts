@@ -37,7 +37,7 @@ describe('Orks', () => {
     const gun = boss.models[0].weapons.find((w) => w.name === 'Da Gobshot Thunderbuss');
     expect(gun?.profiles[0]).toMatchObject({ range: 24, A: '6', S: 7, AP: -2, D: '2' });
     expect(gun?.profiles[0].abilities).toContain('rapid fire 6');
-    expect(U(s, 'p1-x2').core.deadlyDemise).toBe('D6');
+    expect(U(s, 'p1-x2').models[0].deadlyDemise).toBe('D6');
     // Blitzboss: the transport the Warboss rides gets +2" Move and a 5+ invulnerable save
     const s2 = game([['Rubric Marines', 5]], 'Hexwarp Thrallband', [['Warboss', 1, undefined, { enhancement: 'Blitzboss', warlord: true }], ['Trukk', 1]], 'Brute Bosses');
     const trukk = put(s2, 'p1-x1', { x: 30, y: 30 });

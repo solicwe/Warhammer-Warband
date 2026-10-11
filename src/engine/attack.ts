@@ -740,7 +740,8 @@ export const onMortalWounds = (fn: MortalHook) => { mortalHooks.push(fn); };
 export const onAttackStart = (fn: StartHook) => { startHooks.push(fn); };
 
 export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: string) {
-  const ddOn = u.core.deadlyDemise ? unitFlags(s, u).deadlyDemiseOn : 6; // worked out while the model still stands
+  const dd = m.deadlyDemise ?? (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1) ? u.core.deadlyDemise : undefined);
+  const ddOn = dd ? unitFlags(s, u).deadlyDemiseOn : 6; // worked out while the model still stands
   m.dead = true;
   m.wounds = 0;
   (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || m.keywords.includes('CHARACTER'), W: m.profile.W });
@@ -754,17 +755,17 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
-  if (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1)) {
+  if (dd) {
     // Vengeful Animus: no roll, it blows up anyway
     // Detonator (Deceptors): the opponent makes it explode without a roll
     const sure = emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id }) || (!m.keywords.includes('TITANIC') && emitReact(s, other(u.owner), 'enemyDeadlyDemise', { unitId: u.id, modelId: m.id }));
     const r = sure ? 6 : d6(s);
     if (r >= ddOn) { // Warpfire Infusion: 5+ near a sorcerer
-      log(s, `Deadly Demise (${u.core.deadlyDemise}) from ${m.name}: ${sure ? 'it explodes' : 'rolled a 6!'}`, 'roll');
+      log(s, `Deadly Demise (${dd}) from ${m.name}: ${sure ? 'it explodes' : 'rolled a 6!'}`, 'roll');
       // Machine Wrath: the wreck makes one last move before it blows
       emitReact(s, u.owner, 'deadlyDemiseSix', { unitId: u.id, modelId: m.id, six: true });
       for (const v of s.units.filter((x) => x.id !== u.id && onBoard(x))) {
-        if (alive(v).some((n) => baseDist(n, m) <= RULES.deadlyDemiseRange)) applyMortalWounds(s, v, rollExpr(s, u.core.deadlyDemise).total, 'Deadly Demise');
+        if (alive(v).some((n) => baseDist(n, m) <= RULES.deadlyDemiseRange)) applyMortalWounds(s, v, rollExpr(s, dd).total, 'Deadly Demise');
       }
     } else log(s, `Deadly Demise from ${m.name}: rolled ${r} (no explosion)`, 'roll');
   }

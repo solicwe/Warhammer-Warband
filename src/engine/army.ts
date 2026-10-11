@@ -692,9 +692,9 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       const w = /This model has \+(\d+) W\b/i.exec(enh.text);
       if (w) { m.profile = { ...m.profile, W: m.profile.W + +w[1] }; m.wounds = m.profile.W; }
       // "… and a Wounds characteristic of 5" (Flowing Flesh)
-      // shortcut: Deadly Demise from an enhancement (Warphead) only blows up when the bearer is on its own, not inside a mob
+      // Deadly Demise from an enhancement (Warphead): the bearer explodes, even inside a mob
       const dd = /Has Deadly Demise (D?\d+)/i.exec(enh.text);
-      if (dd) units[units.length - 1].core.deadlyDemise = dd[1];
+      if (dd) m.deadlyDemise = dd[1];
       const wSet = /a Wounds characteristic of (\d+)/i.exec(enh.text);
       if (wSet) { m.profile = { ...m.profile, W: +wSet[1] }; m.wounds = m.profile.W; }
       // "Name [KEYWORD, KEYWORD]: Range 12" | A 3 | BS 2+ …" — the bracketed words are the weapon's abilities

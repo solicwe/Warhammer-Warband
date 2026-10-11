@@ -974,7 +974,14 @@ export function detReroll(s: GameState, u: UnitState, what: 'advance' | 'charge'
   u.detRerolled = `${s.turn}:${what}`;
   log(s, `${u.name}: re-roll ${what === 'advance' ? 'Advance' : 'Charge'} for free (Detachment rule)`, 'info', u.owner);
   if (what === 'advance') rollAdvance(s, u);
-  else { u.declaredCharge = false; declareCharge(s, u, fly, cap); }
+  else {
+    // Snarling Protector: that re-roll means ending engaged with an enemy unit engaged with the friendly PSYKER
+    if (u.abilities.some((a) => a.name === 'Snarling Protector')) {
+      const psy = boardUnits(s, u.owner).filter((f) => f.id !== u.id && hasKw(f, 'PSYKER') && unitDistance(u, f) <= 12 + 1e-6);
+      u.chargeOnly = { turn: s.turn, ids: psy.flatMap((f) => engagedEnemies(s, f).map((e) => e.id)) };
+    }
+    u.declaredCharge = false; declareCharge(s, u, fly, cap);
+  }
 }
 
 /** Blackstar Cluster Launcher: after a Normal move, one enemy unit it flew over takes 6D6, a mortal wound per 5+
@@ -1307,6 +1314,7 @@ export function chargeTargetOptions(s: GameState, u: UnitState, opts: { onlyChar
     const d = unitDistance(u, e);
     if (d > RULES.charge.declareRange || d > chargeReach(s, u, [e]) + 1e-6) return false;
     if (opts.within !== undefined && d > opts.within) return false;
+    if (u.chargeOnly?.turn === s.turn && !u.chargeOnly.ids.includes(e.id)) return false;
     if (opts.onlyChargedThisPhase && e.chargedTurn !== s.turn) return false;
     const only = unitFlags(s, u).onlyTargetMarked;
     if (only && (u.move === 'advance' || u.move === 'fallback') && !(e.timed ?? []).some((t) => t.mark === only && t.by === u.owner)) return false;
