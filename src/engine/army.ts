@@ -694,7 +694,7 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       if (w) { m.profile = { ...m.profile, W: m.profile.W + +w[1] }; m.wounds = m.profile.W; }
       // "… and a Wounds characteristic of 5" (Flowing Flesh)
       // Deadly Demise from an enhancement (Warphead): the bearer explodes, even inside a mob
-      const dd = /Has Deadly Demise (D?\d+)/i.exec(enh.text);
+      const dd = /(?:Has|has the) Deadly Demise (D?\d+(?:\+\d+)?)/i.exec(enh.text);
       if (dd) m.deadlyDemise = dd[1];
       const wSet = /a Wounds characteristic of (\d+)/i.exec(enh.text);
       if (wSet) { m.profile = { ...m.profile, W: +wSet[1] }; m.wounds = m.profile.W; }
@@ -934,7 +934,8 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     const sheet = faction.datasheets.find((d) => d.name === name);
     if (!sheet) continue;
     const limit = sheet.keywords.includes('EPIC HERO') ? 1 : sheet.maxPerArmy ? sheet.maxPerArmy
-      : sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT') ? size.unitLimit * 2 : size.unitLimit;
+      : sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT')
+        || (list.detachments.includes('Cult of Blood') && (name === 'Jakhals' || name === 'Goremongers')) ? size.unitLimit * 2 : size.unitLimit;
     if (n > limit) errs.push(`${name}: maximum ${limit} per army`);
   }
   if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('The army needs at least one CHARACTER (Warlord)');

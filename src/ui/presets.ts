@@ -81,4 +81,20 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'e8', datasheet: 'Helbrute', models: 1, pts: 125 },
     ],
   },
+  WE: {
+    name: 'World Eaters (Quick)',
+    factionId: 'WE',
+    battleSize: 'incursion',
+    detachments: ['Berzerker Warband'],
+    units: [
+      { uid: 'w1', datasheet: 'Khorne Berzerkers', models: 10, pts: 160 },
+      { uid: 'w2', datasheet: 'Lord on Juggernaut', models: 1, pts: 95, attachTo: 'w1', warlord: true, enhancement: 'Battle-lust', enhancementPts: 20 },
+      { uid: 'w3', datasheet: 'Khorne Berzerkers', models: 10, pts: 160 },
+      { uid: 'w4', datasheet: 'Master of Executions', models: 1, pts: 60, attachTo: 'w3' },
+      { uid: 'w5', datasheet: 'Jakhals', models: 10, pts: 65 },
+      { uid: 'w6', datasheet: 'Eightbound', models: 3, pts: 125 },
+      { uid: 'w7', datasheet: 'Maulerfiend', models: 1, pts: 140 },
+      { uid: 'w8', datasheet: 'Chaos Rhino', models: 1, pts: 75 },
+    ],
+  },
 };

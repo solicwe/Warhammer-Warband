@@ -71,10 +71,9 @@ const ST_ICON: Partial<Record<AbilityStatus, IconName>> = { auto: 'check', parti
 function AbilityBadge({ u, a }: { u: UnitState; a: AbilityData }) {
   const st = abilityStatus(u, a);
   if (st.status === 'core') return null;
-  const ic = ST_ICON[st.status];
-  // a small mark only: the full status and note on a long press / hover, so the card stays compact
-  if (st.status === 'auto') return null;
-  return <>{' '}<span className={`ab-st ${st.status}`} title={`${ST_LABEL[st.status]}${st.note ? ` — ${st.note}` : ''}`}>{ic && <Icon name={ic} size={12} />}</span></>;
+  // a small tick: green = the game does it, red = not (yet) automated; the full status and note on hover
+  const ok = st.status === 'auto';
+  return <>{' '}<span className={`ab-tick ${ok ? 'ok' : 'todo'}`} title={`${ST_LABEL[st.status]}${st.note ? ` — ${st.note}` : ''}`}><Icon name={ok ? 'check' : 'close'} size={11} /></span></>;
 }
 
 /** Model lines with the same characteristics show once ("Intercessor Sergeant / Intercessor"). */

@@ -3381,6 +3381,292 @@
      }
     }
    ]
+  },
+  "Blessings of Khorne": {
+   "auto": "full",
+   "armyRule": true,
+   "manual": "Rolled at the start of each battle round (blessings.ts): the bot and Automatic pick the best pair, otherwise you pick"
+  },
+  "Pact of Blood": {
+   "auto": "full",
+   "armyRule": true,
+   "manual": "Blood Legions units only with Khorne Daemonkin (checked in the army builder)"
+  },
+  "Berzerker Warband": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "WORLD EATERS"
+     ],
+     "attack": "melee",
+     "attacks": 1
+    }
+   ]
+  },
+  "Vessels of Wrath": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "WORLD EATERS",
+      "CHARACTER",
+      "!EPIC HERO"
+     ],
+     "attack": "melee",
+     "if": [
+      "!notCharacterModel"
+     ],
+     "ap": 1
+    }
+   ],
+   "manual": "Wrath of Khorne: the game takes +1 AP (not [CLEAVE 1])"
+  },
+  "Cult of Blood": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "JAKHALS|GOREMONGERS"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    }
+   ],
+   "choice": {
+    "name": "Idols of Khorne",
+    "when": "command",
+    "uses": "eachOnce",
+    "pick": 1,
+    "options": [
+     {
+      "id": "rage",
+      "name": "Idol of Infinite Rage",
+      "text": "Jakhals / Goremongers near a World Eaters MONSTER (6\") or TITANIC (9\") unit: +1 to Hit and Wound",
+      "effects": [
+       {
+        "units": [
+         "JAKHALS|GOREMONGERS"
+        ],
+        "if": [
+         "nearIdol"
+        ],
+        "hit": 1,
+        "wound": 1
+       }
+      ]
+     },
+     {
+      "id": "wrath",
+      "name": "Idol of Burning Wrath",
+      "text": "Jakhals / Goremongers near the idol: +1\" Move, +1 to Advance and Charge rolls",
+      "effects": [
+       {
+        "units": [
+         "JAKHALS|GOREMONGERS"
+        ],
+        "if": [
+         "nearIdol"
+        ],
+        "move": 1,
+        "advanceBonus": 1,
+        "chargeBonus": 1
+       }
+      ]
+     },
+     {
+      "id": "blood",
+      "name": "Idol of Blessed Blood",
+      "text": "Jakhals / Goremongers near the idol: 4+ invulnerable save",
+      "effects": [
+       {
+        "units": [
+         "JAKHALS|GOREMONGERS"
+        ],
+        "if": [
+         "nearIdol"
+        ],
+        "defend": {
+         "inv": 4
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "Khorne Daemonkin": {
+   "auto": "full",
+   "choice": {
+    "name": "Blood Tithe",
+    "when": "tithe",
+    "uses": "eachOnce",
+    "pick": 1,
+    "options": [
+     {
+      "id": "might",
+      "name": "Might of Khorne",
+      "cost": 5,
+      "text": "Blood Legions units gain the Blessings of Khorne ability",
+      "effects": []
+     },
+     {
+      "id": "boon",
+      "name": "Boon of Blood",
+      "cost": 4,
+      "text": "Blood Legions units have a 4+ invulnerable save",
+      "effects": [
+       {
+        "units": [
+         "BLOOD LEGIONS"
+        ],
+        "defend": {
+         "inv": 4
+        }
+       }
+      ]
+     },
+     {
+      "id": "rage",
+      "name": "Daemonic Rage",
+      "cost": 3,
+      "text": "Blood Legions melee weapons have [LANCE]",
+      "effects": [
+       {
+        "units": [
+         "BLOOD LEGIONS"
+        ],
+        "attack": "melee",
+        "abilities": [
+         "lance"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "abjuration",
+      "name": "Enraged Abjuration",
+      "cost": 2,
+      "text": "Blood Legions and World Eaters models: Feel No Pain 5+ against psychic attacks and mortal wounds",
+      "effects": [
+       {
+        "units": [
+         "BLOOD LEGIONS|WORLD EATERS"
+        ],
+        "defend": {
+         "fnp": 5,
+         "fnpVs": "mortalPsychic"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "manual": "Blood Tithe points: +1 on a 3+ each time a World Eaters / Blood Legions unit destroys an enemy unit; spend them in your Command phase"
+  },
+  "Possessed Slaughterband": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "WORLD EATERS",
+      "POSSESSED"
+     ],
+     "name": "Brazen Fury",
+     "rule": {
+      "act": [
+       {
+        "when": "shotByEnemy",
+        "auto": true,
+        "limit": "phase",
+        "needModelsLost": true,
+        "if": [
+         "!hasAbility:Malicious Vigour"
+        ],
+        "do": [
+         {
+          "on": "self",
+          "surge": "D6"
+         }
+        ]
+       },
+       {
+        "when": "shotByEnemy",
+        "auto": true,
+        "limit": "phase",
+        "needModelsLost": true,
+        "if": [
+         "hasAbility:Malicious Vigour"
+        ],
+        "do": [
+         {
+          "on": "self",
+          "surge": "6"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Goretrack Onslaught": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "WORLD EATERS"
+     ],
+     "if": [
+      "disembarkedThisTurn"
+     ],
+     "chargeBonus": 1
+    },
+    {
+     "units": [
+      "WORLD EATERS"
+     ],
+     "if": [
+      "disembarkedThisTurn"
+     ],
+     "attack": "melee",
+     "abilities": [
+      "lance"
+     ]
+    }
+   ]
+  },
+  "Brazen Engines": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "DAEMON",
+      "VEHICLE"
+     ],
+     "name": "Terror of Khorne",
+     "rule": {
+      "act": {
+       "when": "fightStart",
+       "auto": true,
+       "target": {
+        "side": "enemy",
+        "engaged": true
+       },
+       "do": [
+        {
+         "shock": -1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  "Butchers of Khorne": {
+   "auto": "full",
+   "manual": "Adamantine Avalanche: at the start of each Fight phase with an engaged Terminator Squad, one more Blessing for Terminator Squads (blessings.ts)"
   }
  }
 }

@@ -26,6 +26,7 @@ import {
   abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../engine/activations';
 import { activeLabels, effectsFor, isRiled, unitFlags, type Effect } from '../engine/effects';
+import { applyPick, blessingById, type Blessing } from '../engine/blessings';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { advantage, applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen, type Intent } from '../engine/botLook';
@@ -95,6 +96,9 @@ const pName = (s: GameState, p: PlayerId) => s.players[p].name;
 /** What the look worker answers: progress while it plays the ways out, then the style (and, pondering, the board it starts from). */
 type LookMsg = { id: number; sig?: string | null; name?: string; values?: Record<string, number>; intents?: Intent[]; progress?: { name: string; value: number; done: number; total: number } };
 
+
+/** One line of what a Blessing of Khorne does. */
+const blessingText = (b: Blessing) => ({ bloodlust: '+1 to charge', invigoration: 'pile in / consolidate 6"', carnage: 'fight on death 4+', martial: '[SUSTAINED HITS 1] melee', warp: '[LETHAL HITS] melee', decap: '[DEVASTATING WOUNDS] vs INFANTRY' } as Record<string, string>)[b.id] ?? '';
 
 const sg = (n: number) => (n > 0 ? `+${n}` : `−${-n}`);
 /** Short "+1 Hit" tags for an effect on a unit, and whether it helps that unit. */
@@ -1045,6 +1049,19 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <div className="unit-strip">{rapidIngressCandidates(s, p).map((u) => unitPill(u, false, () => setMode({ k: 'place', unitId: u.id, how: hasDeepStrike(s, u) ? 'deepStrike' : 'ingress', rapid: unitFlags(s, u).oppMoveIngress ? 'free' : true })))}</div>
           {rapidIngressCandidates(s, p).some((u) => unitFlags(s, u).oppMoveIngress) && <div className="tiny muted">Units with an ability (e.g. Deff from the Shadows) arrive free, no CP</div>}
           {skip}
+        </>
+      );
+    }
+    if (w.kind === 'blessings') {
+      return (
+        <>
+          <div className="handoff">{pName(s, p)}: {w.extra?.label ?? 'Blessings of Khorne'} — rolled {w.dice.join(' · ')}</div>
+          {w.picks.map((pk, i) => (
+            <button key={i} className="btn" onClick={() => act((g) => { if (g.window?.kind === 'blessings') applyPick(g, g.window.player, pk, g.window.extra); })}>
+              {pk.reborn ? 'Reborn in Blood (triple 6): Angron returns' : pk.ids.map((id) => { const b = blessingById(id)!; return `${b.name} — ${blessingText(b)}`; }).join(' + ')}
+            </button>
+          ))}
+          <button className="btn ghost" onClick={() => act((g) => { if (g.window?.kind === 'blessings') applyPick(g, g.window.player, null); })}>None</button>
         </>
       );
     }

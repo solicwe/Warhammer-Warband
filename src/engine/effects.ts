@@ -9,6 +9,7 @@ import orkAbilities from '../../data/abilities/ORK.json';
 import smAbilities from '../../data/abilities/SM.json';
 import tsAbilities from '../../data/abilities/TS.json';
 import csmAbilities from '../../data/abilities/CSM.json';
+import weAbilities from '../../data/abilities/WE.json';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { deploymentById, RULES, toPoly } from './config';
@@ -20,6 +21,7 @@ import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, U
 import { abilityLabel, condApplies, parseAbility } from './weapons';
 import { hasLos, isHidden, setVisibilityHooks } from './visibility';
 import { setThroughHook } from './pathing';
+import { activeIds, blessingById, unitBlessings } from './blessings';
 import { inFlow } from './flow';
 
 export type Eligibility = 'shootAfterAdvance' | 'shootAfterFallBack' | 'chargeAfterAdvance' | 'chargeAfterFallBack' | 'actionWhileEngaged' | 'actionWhileShocked' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction';
@@ -139,6 +141,10 @@ export interface Effect {
   enemyPileMinus?: number; // enemy units engaged with it pile in / consolidate this much less (Dacatarai in Dread Host)
   freeConsolidate?: boolean; // consolidation does not need to end closer to the closest enemy model
   afterShootNoCover?: boolean; // Scouring Warpflame: after shooting, one enemy unit it hit cannot have the Benefit of Cover this phase
+  surgeFixed?: number; // its surge moves are up to this far instead of rolled (Berzerker's Wrath: 8")
+  moveSet?: number; // the models' Move characteristic is this (Aggressive Advance: 10")
+  surgeReroll?: boolean; // a surge move's distance can be re-rolled (Forwards, for Blood!)
+  suppressOnHit?: boolean; // after it shoots, one enemy unit it hit is suppressed (Unleash Hell)
   fightReach3?: boolean; // Deranged Ferocity: models within 3" of an enemy unit engaged with this unit also fight it
   glamour?: boolean; // Deceptive Glamour: enemy models only attack this unit when no Scintillating Legions unit is in reach
   taunt?: boolean; // enemy models in Engagement Range must target this unit with all their attacks
@@ -150,6 +156,7 @@ export interface Effect {
   creepingDread?: number; // Creeping Dread: in the opponent's Command phase, enemy PSYKER / below-strength units this close test at -1
   shockOnKill?: boolean; // after its attacks destroy models, that unit takes a Battle-shock test
   onlyTargetMarked?: string; // after Advancing / Falling Back it may only shoot or charge units with this mark (Heresy Undone: "auspex")
+  svSet?: number; // the bearers' Save characteristic is this (Blood-forged Armour: 2+), fixed at Declare Battle Formations
   statM?: number; // fixed change to the bearers' Move characteristic
   rangeBonus?: number; // ranged weapons +X" Range
   strengthPer5Models?: boolean; // +1 S for every 5 models in the unit (or embarked within it)
@@ -194,8 +201,9 @@ export type Limit = 'battle' | 'round' | 'turn' | 'phase';
 // ---------- rule tables ----------
 
 /** `random`: picking it rolls this many D6 instead; each result N makes the Nth option (of those without `random`) active */
-export interface DetChoiceOption { id: string; name: string; text: string; effects: Effect[]; random?: number }
-export interface DetChoice { name: string; when: 'command' | 'round' | 'battle'; uses: 'eachOnce' | 'limit' | 'free'; limit?: number; pick?: number; options: DetChoiceOption[] }
+export interface DetChoiceOption { id: string; name: string; text: string; effects: Effect[]; random?: number; cost?: number }
+/** when 'tithe': bought with Blood Tithe points in the Command phase, active for the rest of the battle (they add up) */
+export interface DetChoice { name: string; when: 'command' | 'round' | 'battle' | 'tithe'; uses: 'eachOnce' | 'limit' | 'free'; limit?: number; pick?: number; options: DetChoiceOption[] }
 /** An ability a detachment / army rule gives to units ("Friendly CHAPLAIN units have the following ability: …"). */
 export interface DetGrant { units: string[]; models?: string; name: string; rule: AbilityRule }
 export interface FreeDieSpec { kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' | 'damage' | 'any'; limit: Limit; count?: number; units?: string[]; if?: string[]; attack?: 'melee' | 'ranged' }
@@ -269,6 +277,7 @@ const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   ORK: orkAbilities as unknown as Record<string, AbilityRule>,
   TS: tsAbilities as unknown as Record<string, AbilityRule>,
   CSM: csmAbilities as unknown as Record<string, AbilityRule>,
+  WE: weAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
 export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
@@ -450,6 +459,13 @@ function collectEffects(s: GameState, u: UnitState): Active[] {
       ruleEffects(u, h, g.rule.effects, g.name, h.sources[0], () => alive(h).filter((m) => !g.models || m.keywords.includes(g.models)), out);
     }
   }
+  // Blessings of Khorne: units with the ability (Blood Legions via Might of Khorne or near an Icon of War)
+  const P = s.players[u.owner];
+  if (P.blessings || P.blessingExtras?.length || u.timed?.some((t) => t.mark === 'allBlessings')) {
+    const q = u.abilities.some((a) => a.name === 'Blessings of Khorne') || (u.factionKeywords.includes('BLOOD LEGIONS')
+      && ((P.det?.['Khorne Daemonkin']?.active ?? []).includes('might') || boardUnits(s, u.owner).some((f) => f.enhancements.some((e) => e.name === 'Icon of War') && unitDistance(f, u) <= 6)));
+    for (const id of unitBlessings(s, u, q)) { const b = blessingById(id)!; for (const e of b.effects) out.push({ e, label: b.name, holder: u }); }
+  }
   for (const t of u.timed ?? []) out.push({ e: t.e, label: t.label, holder: u, bearers: t.models ? u.models.filter((m) => !m.dead && t.models!.includes(m.id)) : undefined });
   return out;
 }
@@ -560,6 +576,8 @@ export function cond(c: string, x: Ctx): boolean {
   const { s, A, T } = x;
   if (c.startsWith('!')) return !cond(c.slice(1), x);
   if (c.startsWith('near:')) return nearCond(x, c);
+  // a Blessing of Khorne active for the army this round (Battle-lust: Unbridled Bloodlust)
+  if (c.startsWith('blessing:')) return activeIds(s, A.owner).includes(c.slice(9));
   // Snarling Protector: a friendly engaged PSYKER unit is within 12"
   if (c.startsWith('nearEngaged:')) { const [, d, k] = c.split(':'); return boardUnits(s, A.owner).some((f) => f.id !== A.id && hasKw(f, k) && engagedEnemies(s, f).length > 0 && unitDistance(A, f) <= Number(d) + 1e-6); }
   // "wholly within 12\" of your opponent's deployment zone"
@@ -722,6 +740,12 @@ export function cond(c: string, x: Ctx): boolean {
     case 'fightPhase': return s.phase === 'fight';
     case 'shootingPhase': return s.phase === 'shooting';
     case 'leaderAttached': return hasLivingLeader(A);
+    // Idols of Khorne: within 6" of a friendly World Eaters MONSTER or 9" of a TITANIC unit (+3" Chosen of the Blood God)
+    case 'nearIdol': return boardUnits(s, A.owner).some((f) => f.id !== A.id && f.factionKeywords.includes('WORLD EATERS') && (hasKw(f, 'MONSTER') || hasKw(f, 'TITANIC'))
+      && unitDistance(A, f) <= (hasKw(f, 'TITANIC') ? 9 : 6) + (f.enhancements.some((e) => e.name === 'Chosen of the Blood God') ? 3 : 0) + 1e-6);
+    // The Scent of Blood: an enemy unit below Starting Strength / Half-strength within 9"
+    case 'enemyNearBelowStart': return boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= 9 + 1e-6 && alive(e).length < e.startingStrength);
+    case 'enemyNearBelowHalf': return boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= 9 + 1e-6 && alive(e).length * 2 < e.startingStrength);
     case 'warlord': {
       // "if a model with this ability is your WARLORD": the bearer itself, not a Warboss leading the Warlord's unit
       const H = x.holder ?? A;
@@ -1116,6 +1140,10 @@ export function unitFlags(s: GameState, u: UnitState) {
     taunt: es.some((e) => e.taunt),
     glamour: es.some((e) => e.glamour),
     fightReach3: es.some((e) => e.fightReach3),
+    moveSet: Math.max(0, ...es.map((e) => e.moveSet ?? 0)),
+    surgeFixed: Math.max(0, ...es.map((e) => e.surgeFixed ?? 0)),
+    surgeReroll: es.some((e) => e.surgeReroll),
+    suppressOnHit: es.some((e) => e.suppressOnHit),
     afterShootNoCover: es.some((e) => e.afterShootNoCover),
     shieldOfHonour: es.some((e) => e.shieldOfHonour),
     targetableWithin: Math.min(99, ...es.map((e) => e.targetableWithin ?? 99)),
@@ -1304,13 +1332,14 @@ export function applyStaticEffects(s: GameState) {
     for (const a of u.abilities) {
       const rule = abilityRule(u, a);
       for (const e of rule?.effects ?? []) {
-        if (!e.mobile && !e.addKeywords && !e.removeKeywords && !e.statM) continue;
+        if (!e.mobile && !e.addKeywords && !e.removeKeywords && !e.statM && !e.svSet) continue;
         if (!(e.if ?? []).every((c) => cond(c, { s, A: u, holder: u }))) continue;
         const ms = (e.scope === 'model' || e.scope === undefined) && rule ? bearersOf(u, a, rule) : alive(u);
         for (const m of ms) {
           const add = [...(e.addKeywords ?? []), ...(e.mobile ? ['MOBILE'] : [])];
           m.keywords = [...new Set([...m.keywords.filter((k) => !(e.removeKeywords ?? []).includes(k)), ...add])];
           if (e.statM && m.profile.M !== undefined && m.profile.M !== null) m.profile = { ...m.profile, M: m.profile.M + e.statM };
+          if (e.svSet && m.profile.Sv > e.svSet) m.profile = { ...m.profile, Sv: e.svSet };
         }
         u.keywords = [...new Set(alive(u).flatMap((m) => m.keywords))];
       }

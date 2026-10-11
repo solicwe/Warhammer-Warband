@@ -24,11 +24,14 @@ export function detChoices(s: GameState, p: PlayerId): DetChoiceNow[] {
     if (ch.when === 'command') open = inCommand && st.pickedTurn !== s.turn && (ch.uses !== 'limit' || st.count < (ch.limit ?? 1));
     if (ch.when === 'round') open = inCommand && st.round !== s.round;
     if (ch.when === 'battle') open = inCommand && st.active.length < (ch.pick ?? 1) && st.count === 0;
+    const tithe = s.players[p].tithe ?? 0;
+    if (ch.when === 'tithe') open = s.phase === 'command' && st.pickedTurn !== s.turn && ch.options.some((o) => !st.active.includes(o.id) && (o.cost ?? 0) <= tithe);
     const left = d.name === DOCTRINES ? doctrineUsesLeft(s, p, ch.options.map((o) => o.id), st.used) : null;
     const options = ch.options.map((o) => ({
       o,
       why: left ? (left[o.id] ? null : 'All uses spent this battle')
-        : (ch.uses === 'eachOnce' || ch.uses === 'limit') && st.used.includes(o.id) ? 'Already used this battle' : null,
+        : (ch.uses === 'eachOnce' || ch.uses === 'limit') && st.used.includes(o.id) ? 'Already used this battle'
+        : ch.when === 'tithe' && (o.cost ?? 0) > tithe ? `Needs ${o.cost} Blood Tithe points (${tithe})` : null,
     }));
     out.push({ rule: d.name, choice: ch, state: st, open, options });
   }
@@ -55,7 +58,8 @@ export function pickDetChoice(s: GameState, p: PlayerId, rule: string, ids: stri
     ids = [...new Set(dice.map((v) => pool[Math.min(v, pool.length) - 1].id))];
   }
   const st = (detState(s, p)[rule] ??= { active: [], used: [], count: 0 });
-  st.active = [...ids];
+  if (now.choice.when === 'tithe') s.players[p].tithe = (s.players[p].tithe ?? 0) - ids.reduce((a, id) => a + (now.choice.options.find((o) => o.id === id)?.cost ?? 0), 0);
+  st.active = now.choice.when === 'tithe' ? [...new Set([...st.active, ...ids])] : [...ids];
   st.used = rule === DOCTRINES ? [...st.used, ...ids] : [...new Set([...st.used, ...ids])];
   st.count += 1;
   st.pickedTurn = s.turn;

@@ -6,13 +6,15 @@ import { reactWorth } from './botPlus';
 import smStrats from '../../data/stratagems/SM.json';
 import tsStrats from '../../data/stratagems/TS.json';
 import csmStrats from '../../data/stratagems/CSM.json';
+import weStrats from '../../data/stratagems/WE.json';
+import { blessingsRoll } from './blessings';
 import { parseAbilityText } from './abilityText';
 import { runActions, shockTest, type Action } from './activations';
 import { kwPhrase } from './army';
 import { buildShootPools, expectedDamage, finishAttack, onAttackFinished, onModelKilled, resolveAll, startAttack } from './attack';
 import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
 import {
-  afterReaction, autoCharge, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, formationAt, validateDisembark,
+  afterReaction, autoCharge, setUnleashWrath, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, formationAt, validateDisembark,
 } from './game';
 import { baseDist, dist } from './geometry';
 import {
@@ -76,7 +78,7 @@ export interface StratRule {
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'reserveAgain' | 'spawnAtDeath' | 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap';
+export type Special = 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -109,6 +111,7 @@ const BOOKS: Record<string, Record<string, StratRule>> = {
   ORK: (orkStrats as unknown as { rules: Record<string, StratRule> }).rules,
   TS: (tsStrats as unknown as { rules: Record<string, StratRule> }).rules,
   CSM: (csmStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  WE: (weStrats as unknown as { rules: Record<string, StratRule> }).rules,
 };
 
 const OFFENCE_BUFFS: BuffKind[] = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
@@ -450,6 +453,9 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
     for (const k of buffs) x.buffs.push({ kind: k, until, label: st.name });
     const chars = rule.characterOnly ? alive(x).filter((m) => m.isCharacter || m.keywords.includes('CHARACTER')).map((m) => m.id) : undefined;
     for (const e of rule.effects ?? []) addTimed(s, x, { e, label: st.name, until: rule.until ?? 'phase', by: p, mark: rule.mark, models: chars });
+    // Berzerker's Wrath after the surge was already offered: that move is now up to 8"
+    const fixed = Math.max(0, ...(rule.effects ?? []).map((e) => e.surgeFixed ?? 0));
+    if (fixed && x.extraMove?.kind === 'surge') x.extraMove.max = fixed;
     if (rule.addWounds) for (const m of alive(x).filter((m) => chars?.includes(m.id) ?? true)) { m.profile = { ...m.profile, W: m.profile.W + rule.addWounds }; m.wounds += rule.addWounds; }
     if (rule.shock && !x.battleShocked) { x.battleShocked = true; log(s, `${st.name}: ${x.name} gives in to the Red Thirst → Battle-shocked`, 'info', p); }
   }
@@ -522,6 +528,31 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       const t = (enemy && opts.find((e) => e.id === enemy.id)) ?? opts[0];
       if (!t || !autoCharge(s, u, [t.id])) { log(s, `${label}: ${u.name}'s charge fails`, 'info', p); u.declaredCharge = false; return; }
       u.chargedTurn = -1; // no Charge bonus (Fights First, Lance …) this turn
+      return;
+    }
+    // Skulls for the Skull Throne!: one more Blessing of Khorne until the end of the battle round
+    case 'blessingOne': blessingsRoll(s, p, { label: label, until: 'round' }); return;
+    // Summoned by Slaughter: a Bloodletters unit in Reserves arrives within 9" of the destroyed unit, more than 6" from enemies
+    case 'summonNear': {
+      const dead = ctx.victimId ? unitById(s, ctx.victimId) : undefined;
+      const spot = dead?.models[dead.models.length - 1];
+      const bl = s.units.find((x) => x.owner === p && x.status === 'reserves' && x.sources.includes('Bloodletters'));
+      if (!spot || !bl) { log(s, `${label}: no Bloodletters unit in Reserves`, 'info', p); return; }
+      addTimed(s, bl, { e: { deepStrike: true, deepStrikeRange: 6 }, label, until: 'phase', by: p });
+      const pos = findPlacement(s, bl, 'deepStrike', spot, (q) => [...q.values()].every((pt) => dist(pt, spot) <= 9 + 1e-6));
+      if (!pos || !ingressUnit(s, bl, pos).ok) { log(s, `${label}: no room for ${bl.name}`, 'info', p); return; }
+      log(s, `${label}: ${bl.name} is summoned where ${dead!.name} fell`, 'info', p);
+      return;
+    }
+    // Fury Unleashed: the Berzerkers inside jump out and surge D6+2" at the enemy
+    case 'disembarkSurge': {
+      const x = embarkedIn(s, u).find((y) => y.keywords.includes('KHORNE BERZERKERS') || y.sources.includes('Khorne Berzerkers'));
+      if (!x) { log(s, `${label}: no Khorne Berzerkers embarked`, 'info', p); return; }
+      const foe = boardUnits(s, other(p)).sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
+      const pos = placeNear(s, x, u, 3, foe ? alive(foe)[0] : null, (q) => validateDisembark(s, x, u, q).ok);
+      if (!pos) { log(s, `${label}: no room to disembark`, 'info', p); return; }
+      disembarkUnit(s, x, u, pos);
+      runActions(s, label, x, [{ on: 'self', surge: 'D6+2' }], null);
       return;
     }
     // Gift of Change: a Chaos Spawn appears where the character died, at the end of the phase
@@ -616,7 +647,7 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
   for (const d of s.players[p].detachments) for (const st of d.stratagems) {
     const rule = stratRule(st, s.players[p].factionId, d.name);
     if (rule.react !== on) continue;
-    if (rule.killedKw && !(ctx.victimId && unitById(s, ctx.victimId).models.some((m) => m.keywords.includes(rule.killedKw!)))) continue;
+    if (rule.killedKw && !(ctx.victimId && unitById(s, ctx.victimId).models.some((m) => rule.killedKw!.split('|').some((k) => m.keywords.includes(k))))) continue;
     if (rule.ctxModel && ctx.modelId) {
       const m = ctx.unitId ? unitById(s, ctx.unitId).models.find((x) => x.id === ctx.modelId) : undefined;
       if (!m || !(m.keywords.includes(rule.ctxModel) || new RegExp(rule.ctxModel, 'i').test(m.name))) continue;
@@ -705,14 +736,28 @@ function handleReact(s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx): boo
 function pilinOut(s: GameState, p: PlayerId, ctx: ReactCtx) {
   const e = ctx.unitId ? unitById(s, ctx.unitId) : undefined;
   if (!e || !onBoard(e) || !((s.bots ?? []).includes(p) || (s.autoRules ?? []).includes(p))) return;
-  for (const t of boardUnits(s, p).filter((x) => x.abilities.some((a) => a.name === 'Pilin’ Out' || a.name === "Pilin' Out") && unitDistance(x, e) <= 8 + 1e-6)) {
+  // Pilin' Out (Orks), Meet Any Challenge (World Eaters Rhino): passengers jump out when an enemy unit ends a move within 8"
+  for (const t of boardUnits(s, p).filter((x) => x.abilities.some((a) => a.name === 'Pilin’ Out' || a.name === "Pilin' Out" || a.name === 'Meet Any Challenge') && unitDistance(x, e) <= 8 + 1e-6)) {
+    const meet = t.abilities.some((a) => a.name === 'Meet Any Challenge');
     for (const x of embarkedIn(s, t)) {
       const pos = placeNear(s, x, t, 3, alive(e)[0] ?? null, (q) => validateDisembark(s, x, t, q).ok);
       if (!pos) continue;
       disembarkUnit(s, x, t, pos);
-      x.cantCharge = true;
-      log(s, `Pilin' Out: ${x.name} jumps out of ${t.name}`, 'info', p);
+      if (!meet) x.cantCharge = true;
+      log(s, `${meet ? 'Meet Any Challenge' : "Pilin' Out"}: ${x.name} jumps out of ${t.name}`, 'info', p);
     }
+  }
+}
+
+/** Unleash Wrath (Defiler): an enemy unit set up within 12" of it — it shoots that unit, or charges it when it can't. */
+export function unleashWrath(s: GameState, arrived: UnitState) {
+  if (s.round < 1 || !onBoard(arrived)) return;
+  for (const d of boardUnits(s, other(arrived.owner)).filter((x) => x.abilities.some((a) => a.name === 'Unleash Wrath') && unitDistance(x, arrived) <= 12 + 1e-6)) {
+    if ((d.used ??= {}).unleashWrath === String(s.turn)) continue;
+    d.used.unleashWrath = String(s.turn);
+    const r = buildShootPools(s, d.id, arrived.id, { mode: 'normal' });
+    if (!r.error && r.pools.length) shootNow(s, d, arrived, 'Unleash Wrath');
+    else if (!engagedEnemies(s, d).length) runSpecial(s, d.owner, 'charge', 'Unleash Wrath', d, arrived, {});
   }
 }
 
@@ -724,6 +769,7 @@ export const REACT_LABEL: Partial<Record<ReactOn, string>> = {
 };
 
 setReactHook(handleReact);
+setUnleashWrath(unleashWrath);
 
 // the attack sequence: "just after an enemy unit has shot", "after your unit has shot / fought"
 onAttackFinished((s, at, info) => {

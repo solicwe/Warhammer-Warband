@@ -3,7 +3,7 @@
 import { botRituals, ritualsPending } from './botRituals';
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from './attack';
 import { RULES } from './config';
-import { baitUnit, deployPosture, smartPlacement } from './deploy';
+import { smartPlacement } from './deploy';
 import { dist, polyCentroid } from './geometry';
 import { detChoices, pickDetChoice } from './detachments';
 import {
@@ -12,6 +12,7 @@ import {
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName } from './game';
+import { applyPick } from './blessings';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, resolvePickUnit, unitSelected } from './activations';
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, styleChosen } from './botLook';
@@ -88,8 +89,7 @@ export function botDeploy(s: GameState) {
   if (!u) return;
   // the plan for the whole army, said once
   if (!s.log.some((l) => l.player === p && /deploys (open|closed)/.test(l.text))) {
-    const posture = deployPosture(s, p), bait = baitUnit(s, p);
-    log(s, `${s.players[p].name} deploys ${posture === 'open' ? 'open: the enemy is built for melee, so it takes ground forward' : 'closed: out of sight of the enemy guns'}${bait ? `, with ${bait.name} out in the open as bait` : ''}`, 'info', p);
+    log(s, `${s.players[p].name} deploys closed: every unit as far out of sight of the enemy as it can be`, 'info', p);
   }
   // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
   if (hasDeepStrike(s, u) && sendToReserves(s, u.id) === null) return;
@@ -618,6 +618,7 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
 export function botWindow(s: GameState) {
   const w = s.window;
   if (!w) return;
+  if (w.kind === 'blessings') { applyPick(s, w.player, w.picks[0] ?? null, w.extra); return; }
   if (w.kind === 'pickUnit') { resolvePickUnit(s, [...w.units].sort((a, b) => unitById(s, b).pts - unitById(s, a).pts)[0]); return; }
   if (w.kind === 'abilityMove') {
     // reaction moves ("an enemy ended a move near this unit") are taken when there is somewhere better to be

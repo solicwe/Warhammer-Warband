@@ -780,18 +780,19 @@ export function bestFallBack(s: GameState, u: UnitState, max: number, ctx: Ctx, 
 export function bestArrival(s: GameState, u: UnitState, how: 'ingress' | 'deepStrike'): Spot | null {
   const ctx = ctxFor(s, u);
   const near: Pt[] = [];
+  const ring: Pt[] = []; // tried as they are (one placement check each), not searched around like `near`
   if (u.homer) near.push(u.homer); // Teleport Homer: arriving by its token
   for (const n of objectiveNeeds(s, u.owner)) if (n.need > 0) near.push(objPoint(s, n.o));
   for (const f of [...ctx.foes].sort((a, b) => unitValue(b.u) - unitValue(a.u)).slice(0, 3)) {
     near.push(centre(f.u));
     // a melee unit dropping in wants the closest legal ring around a target (just over 9"), from every side
-    if (how === 'deepStrike' && ctx.brawler) for (let k = 0; k < 8; k++) near.push({ x: centre(f.u).x + Math.cos((k * Math.PI) / 4) * 10, y: centre(f.u).y + Math.sin((k * Math.PI) / 4) * 10 });
+    if (how === 'deepStrike' && ctx.brawler) for (let k = 0; k < 8; k++) ring.push({ x: centre(f.u).x + Math.cos((k * Math.PI) / 4) * (10 + u.models[0].r), y: centre(f.u).y + Math.sin((k * Math.PI) / 4) * (10 + u.models[0].r) });
   }
   near.push(...s.objectives.map((o) => objPoint(s, o)));
   let best: { pos: Spot; v: number } | null = null;
   const seen = new Set<string>();
-  for (const p of near) {
-    const pos = findPlacement(s, u, how, p);
+  for (const p of [...near, ...ring]) {
+    const pos = ring.includes(p) ? formationAt(u, p, s.players[u.owner].role === 'defender') : findPlacement(s, u, how, p);
     if (!pos || !validatePlacement(s, u, pos, how).ok) continue;
     const key = [...pos.values()].map((q) => `${q.x.toFixed(1)},${q.y.toFixed(1)}`).join(';');
     if (seen.has(key)) continue;

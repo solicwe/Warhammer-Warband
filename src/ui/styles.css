@@ -1341,3 +1341,6 @@ details > .strat-card { margin-top: 6px; }
 .ork-flame { transform-box: fill-box; transform-origin: 50% 100%; animation: ork-flicker 0.7s ease-in-out infinite alternate; }
 @keyframes ork-flicker { 0% { transform: scale(0.92, 0.85) skewX(-4deg); opacity: 0.8; } 100% { transform: scale(1.04, 1.08) skewX(4deg); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .ork-flame { animation: none; } }
+.ab-tick { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; vertical-align: -2px; }
+.ab-tick.ok { background: var(--good-soft); color: var(--good); }
+.ab-tick.todo { background: var(--bad-soft, rgba(220, 60, 60, 0.15)); color: var(--bad); }

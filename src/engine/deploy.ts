@@ -92,12 +92,13 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   // Infiltrators: anywhere more than 9" from the enemy deployment zone
   const how = opt.how ?? 'deploy';
   // the bot's plan for the whole army (the player's "place it for me" always plays it safe)
-  const isBot = (s.bots ?? []).includes(u.owner);
-  const posture: Posture = isBot ? deployPosture(s, u.owner) : 'closed';
-  const bait = isBot && baitUnit(s, u.owner)?.id === u.id;
+  // every unit starts as well hidden as the zone allows: nothing is left out in the open for a first-turn alpha strike
+  const bait = false;
 
   // where the enemy could stand (sight checks), and the objectives
-  const watchers = samplePoly(enemyZone, 6).map(lookout);
+  // the enemy's zone, plus the enemy models already on the table (they deploy in turns: those are known)
+  const placed = s.units.filter((e) => e.owner !== u.owner && onBoard(e)).flatMap(alive);
+  const watchers = [...samplePoly(enemyZone, 4).map(lookout), ...placed.filter((_, i) => i % Math.max(1, Math.ceil(placed.length / 16)) === 0).map((m) => lookout(m))];
   const objs = s.objectives.map((o) => ({ o, p: polyCentroid(objectiveTerrain(s, o).poly) }));
   // its own home objective (some layouts put it on the zone's edge, outside the zone itself) and any inside the zone
   const home = objs.filter(({ o, p }) => (o.type === 'home' && o.owner === u.owner) || pointInPoly(p, zone));
@@ -132,7 +133,6 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
       else if (brawler || fast) score += forward * 8;
       else if (range >= 30) score += (1 - Math.abs(forward - 0.35)) * 3;
       else score += forward * 3;
-      if (posture === 'open' && how === 'deploy') score += forward * 4;
 
       // objectives out in the middle: Infiltrators sit on one, others start where they reach one in their first move
       if (holdsGround || how === 'infiltrate') {
@@ -162,8 +162,8 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   // sight checks for many spots: a hidden spot a little further back often beats the open one in front
   const worth = Math.min(2, (u.pts * alive(u).length) / Math.max(1, u.startingStrength) / 120);
   // the best by position, plus the best spots in cover (often a little further back, and out of sight)
-  const pool = [...cands.slice(0, 70)];
-  for (const c of cands.slice(70).filter((c) => c.ms.some((m) => withinTerrain(s, m, ['light', 'dense']))).slice(0, 50)) pool.push(c);
+  // every open spot gets its sight check: the hidden one is the one to find, wherever it is in the zone
+  const pool = cands.slice(0, 400);
   for (const cand of pool) {
     if (vehicle && !canLeave(s, u, cand.pos)) continue;
     let score = cand.score;
@@ -173,7 +173,7 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
     // a tournament player hides what matters most from the first turn of shooting
     // closed: hide; open: being seen matters much less; the bait wants to be seen
     if (bait) score += seen * 8;
-    else score -= seen * (brawler || how === 'infiltrate' ? 14 : 11) * (0.6 + 0.4 * worth) * (posture === 'open' ? (brawler ? 0.35 : 0.7) : 1);
+    else score -= seen * 40 * (0.75 + 0.25 * worth);
     // shooters: sight of the middle objectives from here (to shoot whatever goes onto them)
     if (!brawler && range >= 18 && middle.length) {
       const lanes = middle.filter(({ p }) => dist(cand.centre, p) <= range + 3 && eyes.some((m) => roughLos(s, m, lookout(p)))).length;

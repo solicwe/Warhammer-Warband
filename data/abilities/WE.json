@@ -1,0 +1,1044 @@
+{
+ "Blessings of Khorne": {
+  "status": "auto",
+  "note": "World Eaters army rule: rolled at the start of each battle round (blessings.ts)"
+ },
+ "Reborn in Blood": {
+  "status": "auto",
+  "note": "A triple 6 in the Blessings roll while Angron is destroyed brings him back (Deep Strike, 8 wounds)"
+ },
+ "Wrathful Presence": {
+  "choice": {
+   "name": "Wrathful Presence",
+   "pick": 1,
+   "when": "command",
+   "options": [
+    "The Blood God’s Favour",
+    "Overwhelming Wrath (Aura)",
+    "Driven by Ultimate Rage (Aura)"
+   ]
+  }
+ },
+ "SUPREME COMMANDER": {
+  "status": "auto",
+  "note": "Checked by the army builder: Angron must be your Warlord"
+ },
+ "The Blood God’s Favour": {
+  "status": "auto",
+  "note": "Blessings of Khorne roll: up to six dice that pay for nothing are re-rolled"
+ },
+ "Overwhelming Wrath (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "fallBackLdTest": true
+   }
+  ]
+ },
+ "Driven by Ultimate Rage (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WORLD EATERS"
+    ],
+    "attack": "melee",
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Legendary Killer": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "The Betrayer": {
+  "act": {
+   "when": "chargeEnd",
+   "auto": true,
+   "if": [
+    "notEngaged",
+    "leaderAttached"
+   ],
+   "ldTest": true,
+   "fail": [
+    {
+     "on": "self",
+     "sacrifice": {
+      "n": "1",
+      "name": "Khorne Berzerker"
+     }
+    }
+   ]
+  }
+ },
+ "Berzerker Frenzy": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "reviveLater": {
+      "on": 2,
+      "wounds": 3
+     }
+    }
+   ]
+  }
+ },
+ "Fire Riders": {
+  "effects": [
+   {
+    "scope": "led",
+    "deepStrike": true,
+    "moveThroughModels": true,
+    "mobile": true
+   }
+  ]
+ },
+ "Bloody Stampede": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "max": 3,
+     "do": [
+      {
+       "mortals": "1"
+      }
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "do": [
+      {
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "mortals": "D3+3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Lord of Murder": {
+  "effects": [
+   {
+    "if": [
+     "near:3:WORLD EATERS+INFANTRY"
+    ],
+    "loneOperative": true
+   }
+  ]
+ },
+ "Devastating Assault": {
+  "effects": [
+   {
+    "if": [
+     "charged"
+    ],
+    "attack": "melee",
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
+ },
+ "Direct the Slaughter": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 12,
+    "units": [
+     "WORLD EATERS"
+    ],
+    "stratDiscount": {
+     "ids": [
+      "*"
+     ],
+     "cp": 1,
+     "limit": "round",
+     "perArmy": true
+    }
+   }
+  ]
+ },
+ "Aggressive Advance": {
+  "effects": [
+   {
+    "scope": "led",
+    "moveSet": 10,
+    "mobile": true
+   }
+  ]
+ },
+ "Crush All Who Stand Before Us": {
+  "effects": [
+   {
+    "fightReach3": true
+   }
+  ]
+ },
+ "Forwards, for Blood!": {
+  "effects": [
+   {
+    "scope": "led",
+    "rerollAdvance": true,
+    "surgeReroll": true
+   }
+  ]
+ },
+ "A Worthy Skull": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "targetCharacter"
+    ],
+    "reroll": [
+     "hits",
+     "wounds"
+    ]
+   }
+  ],
+  "act": [
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "needCharacterKill": true,
+    "do": [
+     {
+      "cp": 1
+     }
+    ]
+   },
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "needCharacterKill": true,
+    "do": [
+     {
+      "cp": 1
+     }
+    ]
+   }
+  ]
+ },
+ "Blood Surge": {
+  "act": {
+   "when": "shotByEnemy",
+   "auto": true,
+   "limit": "phase",
+   "needModelsLost": true,
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6+2"
+    }
+   ]
+  }
+ },
+ "Icon of Khorne": {
+  "status": "auto",
+  "note": "Each unit it destroys gives a Bloodshed point: one more die in your next Blessings of Khorne roll"
+ },
+ "Murderous Charge": {
+  "effects": [
+   {
+    "if": [
+     "charged"
+    ],
+    "attack": "melee",
+    "strength": 1
+   }
+  ]
+ },
+ "Objective Ravaged": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ]
+  }
+ },
+ "Bloody Fury": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetClosest"
+    ],
+    "reroll": "hits"
+   },
+   {
+    "rerollCharge": true
+   }
+  ],
+  "note": "Re-rolling the charge: make it at the closest enemy unit"
+ },
+ "Beacons of Rage (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WORLD EATERS"
+    ],
+    "attack": "melee",
+    "if": [
+     "targetNotMV"
+    ],
+    "hit": 1
+   },
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WORLD EATERS"
+    ],
+    "attack": "melee",
+    "if": [
+     "targetNotMV",
+     "targetBelowHalf"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Rend and Tear": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "targetMV"
+    ],
+    "damage": 1
+   }
+  ]
+ },
+ "Devoted to Destruction": {
+  "effects": [
+   {
+    "if": [
+     "twoMeleeWeapons"
+    ],
+    "attack": "melee",
+    "weapon": "!close combat weapon",
+    "attacks": 2
+   }
+  ]
+ },
+ "Frenzy": {
+  "act": {
+   "when": "attacked",
+   "auto": true,
+   "limit": "turn",
+   "if": [
+    "fightPhase"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "fightAgain": true
+    }
+   ]
+  }
+ },
+ "To Slake its Rage": {
+  "effects": [
+   {
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   }
+  ]
+ },
+ "Assault Ramp": {
+  "effects": [
+   {
+    "assaultDisembark": true
+   }
+  ]
+ },
+ "Punishing Suppression": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "suppressed"
+    }
+   ]
+  }
+ },
+ "Blood-hungry Annihilator": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetClosest",
+     "targetMV",
+     "targetWithin:18"
+    ],
+    "reroll": [
+     "wounds",
+     "damage"
+    ]
+   }
+  ]
+ },
+ "Furious Onslaught": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetClosest",
+     "targetWithin:18"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "The Scent of Blood": {
+  "effects": [
+   {
+    "if": [
+     "enemyNearBelowStart",
+     "!enemyNearBelowHalf"
+    ],
+    "chargeBonus": 1
+   },
+   {
+    "if": [
+     "enemyNearBelowHalf"
+    ],
+    "chargeBonus": 2
+   }
+  ]
+ },
+ "Savage Exaltation": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "targetBelowStarting"
+    ],
+    "hit": 1
+   },
+   {
+    "attack": "melee",
+    "if": [
+     "targetBelowHalf"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Meet Any Challenge": {
+  "status": "auto",
+  "note": "An enemy unit ending a move within 8\" in your opponent's Movement phase: the passengers jump out (bot / Automatic)"
+ },
+ "Airborne Predator": {
+  "effects": [
+   {
+    "if": [
+     "targetFly"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Idol of Blessed Blood": {
+  "status": "auto",
+  "note": "One more die in the Blessings of Khorne roll while it is on the battlefield"
+ },
+ "Super-heavy War Engine": {
+  "effects": [
+   {
+    "moveThroughModels": true,
+    "mobile": true
+   }
+  ]
+ },
+ "Bloodied Terror": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "shock": 0,
+     "if": [
+      "!targetBelowHalf"
+     ]
+    },
+    {
+     "shock": -1,
+     "if": [
+      "targetBelowHalf"
+     ]
+    }
+   ]
+  }
+ },
+ "Swooping Predator": {
+  "act": {
+   "when": "endOfNormalMove",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "movedOver": true
+   },
+   "do": [
+    {
+     "mortalRoll": {
+      "on": 4,
+      "n": 6
+     }
+    }
+   ]
+  }
+ },
+ "Loping Speed": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "if": [
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "move": "D6"
+    }
+   ]
+  }
+ },
+ "Rage Eternal": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "if": [
+    "leaderAttached",
+    "belowStarting"
+   ],
+   "label": "Return one destroyed Bodyguard model",
+   "do": [
+    {
+     "on": "self",
+     "revive": 1
+    }
+   ]
+  }
+ },
+ "Possessed Lord": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "botIf": [
+    "engaged"
+   ],
+   "label": "+3 A and [DEVASTATING WOUNDS] for its melee weapons this phase",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "attack": "melee",
+       "attacks": 3,
+       "abilities": [
+        "devastating wounds"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "LORD OF THE EIGHTBOUND": {
+  "effects": [
+   {
+    "if": [
+     "leaderAttached",
+     "bodyKw:POSSESSED"
+    ],
+    "deepStrike": true,
+    "scouts": 6
+   }
+  ]
+ },
+ "Pact of Blood": {
+  "status": "auto",
+  "note": "Blood Legions units only with Khorne Daemonkin (checked in the army builder)"
+ },
+ "Rage Embodied (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "BLOOD LEGIONS"
+    ],
+    "attack": "melee",
+    "attacks": 1
+   }
+  ]
+ },
+ "Murderlust": {
+  "effects": [
+   {
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   }
+  ]
+ },
+ "Daemon Lord of Khorne (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "BLOOD LEGIONS"
+    ],
+    "attack": "melee",
+    "hit": 1
+   }
+  ]
+ },
+ "Relentless Carnage": {
+  "act": {
+   "when": "fightEnd",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "do": [
+    {
+     "mortalRoll": {
+      "on": 4,
+      "n": 8
+     }
+    }
+   ]
+  }
+ },
+ "Bane of Cowards": {
+  "effects": [
+   {
+    "forceDesperate": true
+   }
+  ]
+ },
+ "Daemonic Icon": {
+  "gear": true,
+  "effects": [
+   {
+    "ldSet": 6
+   }
+  ]
+ },
+ "Instrument of Chaos": {
+  "gear": true,
+  "effects": [
+   {
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Brass Stampede": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "perModel": true,
+   "each": {
+    "on": 4,
+    "do": [
+     {
+      "mortals": "D3"
+     }
+    ]
+   }
+  }
+ },
+ "Hunters from the Warp": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "limit": "turn",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Into Strategic Reserves",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Collar of Khorne": {
+  "gear": true,
+  "effects": [
+   {
+    "defend": {
+     "fnp": 3,
+     "fnpVs": "psychic"
+    }
+   }
+  ]
+ },
+ "Scuttling Walker": {
+  "effects": [
+   {
+    "moveThroughModels": true,
+    "mobile": true
+   }
+  ]
+ },
+ "Unleash Wrath": {
+  "status": "auto",
+  "note": "An enemy unit set up within 12\": the Defiler shoots it (or charges it when it can't)"
+ },
+ "Berzerker Glaive": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "weapon": "!extra",
+    "attacks": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Helm of Brazen Ire": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "damage": 1
+    }
+   }
+  ]
+ },
+ "Favoured of Khorne": {
+  "status": "auto",
+  "note": "Blessings of Khorne roll: up to two dice that pay for nothing are re-rolled"
+ },
+ "Battle-lust": {
+  "effects": [
+   {
+    "rerollCharge": true
+   },
+   {
+    "if": [
+     "blessing:bloodlust"
+    ],
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Archslaughterer": {
+  "act": {
+   "when": "command",
+   "limit": "battle",
+   "per": "army",
+   "botIf": [
+    "any"
+   ],
+   "label": "Every Blessing of Khorne active for this unit until your next turn",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {}
+     ],
+     "until": "nextTurnStart",
+     "mark": "allBlessings"
+    }
+   ]
+  }
+ },
+ "Gateways to Glory": {
+  "effects": [
+   {
+    "mobile": true,
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Chosen of the Blood God": {
+  "status": "auto",
+  "note": "+3\" to its Idols of Khorne auras"
+ },
+ "Butcher Lord": {
+  "effects": [
+   {
+    "infiltrators": true
+   }
+  ]
+ },
+ "Brazen Form": {
+  "effects": [
+   {
+    "scope": "model",
+    "toughness": 1
+   },
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Strategic Slaughter": {
+  "status": "auto",
+  "note": "After deployment: redeploy up to three Jakhals / Goremongers units (or put them into Strategic Reserves)"
+ },
+ "Icon of War": {
+  "status": "auto",
+  "note": "Blood Legions units within 6\" have the Blessings of Khorne ability"
+ },
+ "Blood-forged Armour": {
+  "effects": [
+   {
+    "scope": "model",
+    "svSet": 2
+   }
+  ],
+  "note": "Its death gives 1 Blood Tithe point"
+ },
+ "Disciple of Khorne": {
+  "effects": [
+   {
+    "deepStrike": true
+   }
+  ],
+  "note": "Counts as BLOOD LEGIONS"
+ },
+ "Blade of Endless Bloodshed": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 1,
+    "strength": 1,
+    "damage": 1
+   }
+  ],
+  "note": "A melee kill always gives a Blood Tithe point"
+ },
+ "Malicious Vigour": {
+  "status": "auto",
+  "note": "Brazen Fury moves count as a roll of 6"
+ },
+ "Killing Clarity": {
+  "act": [
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "needUnitDestroyed": true,
+    "roll": "D6",
+    "table": [
+     {
+      "min": 4,
+      "do": [
+       {
+        "on": "self",
+        "cp": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "needUnitDestroyed": true,
+    "roll": "D6",
+    "table": [
+     {
+      "min": 4,
+      "do": [
+       {
+        "on": "self",
+        "cp": 1
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "Frenzied Focus": {
+  "effects": [
+   {
+    "critHitOn": 5
+   }
+  ]
+ },
+ "Violent Demise": {
+  "effects": [
+   {
+    "deadlyDemiseOn": 2
+   }
+  ]
+ },
+ "Murderous Onslaught": {
+  "effects": [
+   {
+    "if": [
+     "disembarkedThisTurn"
+    ],
+    "noSnapTarget": true
+   }
+  ]
+ },
+ "Aggressive Deployment": {
+  "effects": [
+   {
+    "scope": "transport",
+    "units": [
+     "DEDICATED TRANSPORT"
+    ],
+    "scouts": 9
+   }
+  ]
+ },
+ "Unleash Hell": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "VEHICLE"
+    ],
+    "suppressOnHit": true
+   },
+   {
+    "scope": "transport",
+    "suppressOnHit": true
+   }
+  ]
+ },
+ "Infernal Infusion": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "botIf": [
+    "engaged"
+   ],
+   "label": "Fights First this phase",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "fightsFirst": true
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Talons of Butchery": {
+  "effects": [
+   {
+    "attack": "melee",
+    "weapon": "maulerfiend fists",
+    "abilities": [
+     "cleave 2"
+    ]
+   }
+  ]
+ },
+ "Murder-Forged Entity": {
+  "effects": [
+   {
+    "addKeywords": [
+     "DAEMON"
+    ]
+   }
+  ]
+ },
+ "Sanctified in Slaughter": {
+  "effects": [
+   {
+    "oc": 1
+   }
+  ]
+ },
+ "Gore-Stained Veterans": {
+  "effects": [
+   {
+    "attack": "melee",
+    "hit": 1
+   }
+  ]
+ }
+}

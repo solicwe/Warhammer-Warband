@@ -307,6 +307,12 @@ export interface ObjectiveState {
 }
 
 export interface PlayerState {
+  /** World Eaters: Blessings of Khorne active this battle round, extra ones (one phase / round, maybe for a keyword only), Bloodshed points */
+  blessings?: { round: number; ids: string[] };
+  blessingExtras?: { id: string; kw?: string; key: string }[];
+  bloodshed?: number;
+  /** Khorne Daemonkin: Blood Tithe points */
+  tithe?: number;
   /** a unit the army can add mid-battle (Gift of Change: a one-model Tzeentch Chaos Spawn), cloned when it arrives */
   spawnTemplate?: UnitState;
   name: string;
@@ -525,6 +531,8 @@ export type Window =
   | { kind: 'counteroffensive'; player: PlayerId }
   /** abilities that let units react out of turn ("if an enemy unit ends a move within 8\", this unit can make a Normal move") */
   | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
+  /** Blessings of Khorne: the dice rolled and the ways to use them; the player picks one (or none) */
+  | { kind: 'blessings'; player: PlayerId; dice: number[]; picks: import('./blessings').BlessingPick[]; extra?: { label: string; kw?: string; until: 'phase' | 'round' } }
   /** a rule asks the player to pick one unit ("select one enemy unit hit by those attacks"); `acts` go to it */
   | { kind: 'pickUnit'; player: PlayerId; label: string; units: string[]; holderId: string; acts: import('./activations').Action[] }
   /** detachment stratagems the player can use right now, at a moment the engine reported ("just after an enemy unit has shot") */
@@ -638,7 +646,7 @@ export interface GameState {
   /** destroyed models that fight / shoot after the attacking unit has finished (resolved by activations.ts) */
   /** the last unit to move / attack / declare a charge, for reactions ("just after an enemy unit has shot") */
   /** after deployment: a player re-deploying units (Master of Deceit, Strategium Command, Cerebrex Logic Engine) */
-  redeploy?: { player: PlayerId; left: number; infantryOnly: boolean; source: string; done: PlayerId[] };
+  redeploy?: { player: PlayerId; left: number; infantryOnly: boolean; source: string; done: PlayerId[]; units?: string[] };
   /** Priority Target Identified: terrain features identified this turn (enemy units within have +3" detection range) */
   identified?: { terrainId: string; by: PlayerId; turn: number }[];
   lastAct?: { unitId: string; owner: PlayerId; kind: 'move' | 'attack' | 'charge'; turn: number; phase: Phase; targets: string[]; lost: string[]; halved: string[]; fellBackFrom?: string[] };

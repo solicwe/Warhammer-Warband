@@ -24,7 +24,7 @@ export type Trigger =
   | 'selectedToFight' | 'fightStart' | 'fightStartButton' | 'afterFighting' | 'endOfCharge'
   | 'anyPhase' | 'opponentTurnEnd' | 'opponentFightEnd' | 'onDeath' | 'friendlyDeath' | 'shotByEnemy' | 'enemyMovedNear' | 'enemyFellBack'
   | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks' | 'movementStart' | 'fightEnd' | 'attackStart'
-  | 'attacked' | 'friendlyTargeted' | 'fightEndButton' | 'chargeStart'
+  | 'attacked' | 'friendlyTargeted' | 'fightEndButton' | 'chargeStart' | 'chargeEnd'
   | 'shootingStart' | 'oppShootingStart' | 'eachCommandStart';
 
 export type Until = TimedEffect['until'];
@@ -115,6 +115,10 @@ export interface Action {
   unready?: boolean; // … it used its ka'tah ability and is no longer readied
   setMark?: boolean; // Sword of the Throne: the target becomes this model's mark
   fightNext?: boolean; // the unit must be the next one its player selects to fight (Indomitable Guardians)
+  fightAgain?: boolean;
+  idol?: string; // Brazen Idol: this Idols of Khorne ability is the army's active one until your next Command phase
+  tithe?: string; // gain this many Blood Tithe points (A Worthy Skull: D3)
+  reviveNear?: { range: number; units: string[] }; // Daemontide: models return to the closest such unit within X" (Mounted 1, Beast D3, Infantry D6) // the unit is eligible to fight again this phase and must fight next (Helbrute Frenzy)
   moreBattleUses?: boolean; // its (once per battle) abilities that were used can be used one more time (Gilded Champion)
   splitSingles?: boolean; // the unit splits into units of one model each (Unleash the Lions)
   buffRoll?: { expr: string; fields: ('attacks' | 'strength')[]; if?: string[] }; // roll now, then +that to these characteristics (Sacrificial Blessing: D3)
@@ -564,6 +568,36 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     }
     if (a.ready && !on.readied) { on.readied = true; log(s, `${def.name}: ${on.name} is readied`, 'info', u.owner); }
     if (a.unready) on.readied = false;
+    if (a.idol) {
+      const st = ((s.players[u.owner].det ??= {})['Cult of Blood'] ??= { active: [], used: [], count: 0 });
+      st.active = [a.idol];
+      log(s, `${def.name}: ${a.idol === 'rage' ? 'Idol of Infinite Rage' : a.idol === 'wrath' ? 'Idol of Burning Wrath' : 'Idol of Blessed Blood'} is active`, 'info', u.owner);
+    }
+    if (a.tithe) {
+      const n = rollExpr(s, a.tithe).total;
+      s.players[u.owner].tithe = (s.players[u.owner].tithe ?? 0) + n;
+      log(s, `${def.name}: +${n} Blood Tithe points (${s.players[u.owner].tithe})`, 'info', u.owner);
+    }
+    if (a.reviveNear) {
+      const t = boardUnits(s, on.owner).filter((f) => unitMatches(f, a.reviveNear!.units) && unitDistance(f, on) <= a.reviveNear!.range + 1e-6 && f.models.some((m) => m.dead && !m.isCharacter))
+        .sort((x, y) => unitDistance(x, on) - unitDistance(y, on))[0];
+      if (t) {
+        const n = hasKw(t, 'MOUNTED') ? 1 : hasKw(t, 'BEAST') ? rollExpr(s, 'D3').total : rollExpr(s, 'D6').total;
+        let back = 0;
+        for (const m of t.models.filter((x) => x.dead && !x.isCharacter).slice(0, n)) {
+          m.dead = false; m.wounds = m.profile.W;
+          if (setBackUp(s, t, m, alive(t).find((x) => x.id !== m.id) ?? m)) back++; else { m.dead = true; m.wounds = 0; }
+        }
+        log(s, `${def.name}: ${back} model(s) return to ${t.name}`, 'info', u.owner);
+      }
+    }
+    if (a.fightAgain && s.fight && alive(on).length) {
+      on.fought = false;
+      s.fight.fought = s.fight.fought.filter((id) => id !== on.id);
+      if (!s.fight.eligible.includes(on.id)) s.fight.eligible.push(on.id);
+      s.fight.forcedNext = on.id;
+      log(s, `${def.name}: ${on.name} fights again next`, 'info', u.owner);
+    }
     if (a.fightNext && s.fight) { s.fight.forcedNext = on.id; log(s, `${def.name}: ${on.name} must be the next unit to fight`, 'info', u.owner); }
     if (a.moreBattleUses) {
       for (const d of actsOfUnit(s, on).filter((x) => x.spec.limit === 'battle' && timesUsed(s, x) > 0)) {
@@ -681,7 +715,10 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       offerExtraMove(s, on, `${def.name}: move ${max}"`);
     }
     if (a.surge) {
-      on.extraMove = { max: rollExpr(s, a.surge).total, label: def.name, kind: 'surge', phase: phaseKey(s) };
+      let max = unitFlags(s, on).surgeFixed || rollExpr(s, a.surge).total; // Berzerker's Wrath: up to 8" instead of rolling
+      // Forwards, for Blood!: a low surge distance is rolled again
+      if (unitFlags(s, on).surgeReroll && max < 5 && /D6/i.test(a.surge)) { const again = rollExpr(s, a.surge).total; log(s, `${def.name}: surge distance re-rolled ${max} → ${again}`, 'roll', u.owner); max = again; }
+      on.extraMove = { max, label: def.name, kind: 'surge', phase: phaseKey(s) };
       log(s, `${def.name}: ${on.name} can surge ${on.extraMove.max}" (towards the closest enemy)`, 'info', u.owner);
       offerExtraMove(s, on, `${def.name}: surge ${on.extraMove.max}"`);
     }
@@ -789,6 +826,16 @@ function scouringDue(s: GameState, A: UnitState, force: boolean) {
   if (!force && alive(A).some((m) => m.weapons.some((w) => w.profiles[0].range !== 'Melee' && !A.weaponsFired.includes(w.name)))) return;
   A.used.scouring = phaseKey(s);
   offerPickUnit(s, A, 'Scouring Warpflame: pick an enemy unit hit — it cannot have the Benefit of Cover this phase', hit, [{ on: 'target', incoming: { attack: 'ranged', noCover: true }, until: 'phase' }]);
+}
+
+/** Unleash Hell: a vehicle near the bearer (or carrying it) has shot — one enemy unit it hit is suppressed (−1 to Hit). */
+function unleashHellDue(s: GameState, A: UnitState, force: boolean) {
+  if (s.phase !== 'shooting' || A.owner !== s.active || !unitFlags(s, A).suppressOnHit || (A.used ??= {}).unleash === phaseKey(s)) return;
+  const hit = A.lastHits?.key === phaseKey(s) ? A.lastHits.ids.map((id) => unitById(s, id)).filter(onBoard) : [];
+  if (!hit.length) return;
+  if (!force && alive(A).some((m) => m.weapons.some((w) => w.profiles[0].range !== 'Melee' && !A.weaponsFired.includes(w.name)))) return;
+  A.used.unleash = phaseKey(s);
+  offerPickUnit(s, A, 'Unleash Hell: pick an enemy unit hit — it is suppressed (−1 to Hit) until your next turn', hit, [{ on: 'target', buff: [{ hit: -1 }], until: 'nextTurnStart', mark: 'suppressed' }]);
 }
 
 /** A rule asks for one unit: the bot (or a player on auto rules) takes the most valuable one, a player gets a prompt. */
@@ -918,7 +965,7 @@ export interface ManualAct { def: ActDef; targets: UnitState[]; why: string | nu
 
 const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge',
   'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks', 'movementStart', 'fightEnd', 'attackStart',
-  'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart'];
+  'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart', 'chargeEnd'];
 
 /** Abilities player p can use by pressing a button right now. */
 export function manualActs(s: GameState, p: PlayerId): ManualAct[] {
@@ -977,7 +1024,7 @@ export function unitSelected(s: GameState, u: UnitState, kind: 'shoot' | 'fight'
   u.used[key] = phaseKey(s);
   // Dark Pacts: made here for bots and players who leave their rules to the app; a player who decides picks it on screen
   autoPact(s, u, kind, (p) => (s.decides ?? []).includes(p) && !(s.bots ?? []).includes(p));
-  if (kind === 'shoot') for (const o of boardUnits(s, u.owner)) if (o.id !== u.id) scouringDue(s, o, true);
+  if (kind === 'shoot') for (const o of boardUnits(s, u.owner)) if (o.id !== u.id) { scouringDue(s, o, true); unleashHellDue(s, o, true); }
   fire(s, kind === 'shoot' ? 'selectedToShoot' : 'selectedToFight', [u]);
 }
 
@@ -1222,7 +1269,7 @@ onAttackFinished((s, at, info) => {
   }
   if (!at.free) {
     if (at.kind === 'shoot' && s.phase === 'shooting' && A.owner === s.active) fire(s, 'afterShooting', [A], ctx);
-    if (at.kind === 'shoot') scouringDue(s, A, false);
+    if (at.kind === 'shoot') { scouringDue(s, A, false); unleashHellDue(s, A, false); }
     if (at.kind === 'fight') fire(s, 'afterFighting', [A], ctx);
   }
   if (at.kind !== 'fight' && info.woundsLost > 0 && T.owner !== s.active && onBoard(T)) fire(s, 'shotByEnemy', [T], { targetId: A.id, modelsKilled: info.modelsKilled });
@@ -1337,6 +1384,30 @@ onModelKilled((s, u) => {
     const hunter = mine.find((f) => unitFlags(s, f).retargetOath && (f.used ??= {}).retarget !== String(s.round));
     const next = hunter && boardUnits(s, u.owner).filter((e) => alive(hunter).some((m) => unitVisibleTo(s, m, e))).sort((a, b) => unitDistance(hunter, a) - unitDistance(hunter, b))[0];
     if (hunter && next) { hunter.used!.retarget = String(s.round); P.oathTarget = next.id; log(s, `${hunter.name}: new Vendetta target → ${next.name}`, 'info', p); }
+  }
+});
+
+// World Eaters: Bloodshed points (Icon of Khorne) and Blood Tithe points (Khorne Daemonkin) when a unit is wiped out
+onModelKilled((s, u, m, killerId) => {
+  // Blood-forged Armour: the bearer dying gives a Blood Tithe point
+  if (u.enhancements.some((e) => e.name === 'Blood-forged Armour' && (e.model === m.source)) && activeRules(s, u.owner).includes('Khorne Daemonkin')) {
+    s.players[u.owner].tithe = (s.players[u.owner].tithe ?? 0) + 1;
+    log(s, 'Blood-forged Armour: +1 Blood Tithe point', 'info', u.owner);
+  }
+  if (alive(u).length || !killerId) return;
+  const k = unitById(s, killerId);
+  if (k.owner === u.owner) return;
+  const P = s.players[k.owner];
+  if (k.abilities.some((a) => a.name === 'Icon of Khorne') && alive(k).some((x) => (x.gear ?? []).some((g) => /icon of khorne/i.test(g)))) {
+    P.bloodshed = (P.bloodshed ?? 0) + 1;
+    log(s, `${k.name}: Icon of Khorne → +1 Bloodshed point (${P.bloodshed})`, 'info', k.owner);
+  }
+  if (activeRules(s, k.owner).includes('Khorne Daemonkin') && k.factionKeywords.some((x) => x === 'WORLD EATERS' || x === 'BLOOD LEGIONS')) {
+    // Blade of Endless Bloodshed: a melee kill always gives the point
+    const sure = s.attack?.kind === 'fight' && k.enhancements.some((e) => e.name === 'Blade of Endless Bloodshed');
+    const r = sure ? 6 : d6(s);
+    if (r >= 3) P.tithe = (P.tithe ?? 0) + 1;
+    log(s, `Blood Tithe: ${k.name} destroyed ${u.name}${sure ? '' : `, rolled ${r} (3+)`}${r >= 3 ? ` → +1 BTP (${P.tithe})` : ''}`, 'roll', k.owner);
   }
 });
 

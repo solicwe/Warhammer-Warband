@@ -5,6 +5,7 @@ import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MI
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
+import { blessingsRoll, blessingsRoundStart } from './blessings';
 import { circleInFlow } from './flow';
 import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointInPoly, pointSegDist, polyCentroid, segSegDist } from './geometry';
 import {
@@ -337,7 +338,8 @@ export function pileDistance(s: GameState, u: UnitState, kind: 'pileIn' | 'conso
 
 export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOptions = {}): number {
   if (opt.maxOverride !== undefined) return opt.maxOverride;
-  const M = (m.profile.M ?? 0) + unitFlags(s, u).move;
+  const fl = unitFlags(s, u);
+  const M = (fl.moveSet || (m.profile.M ?? 0)) + fl.move;
   let max = 0;
   if (kind === 'normal' || kind === 'fallback') max = M;
   else if (kind === 'advance') max = M + (u.advanceRoll ?? 0);
@@ -414,6 +416,8 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
   endChecks(s, u, pos, errors, bad);
   const enemies = boardUnits(s, other(u.owner));
   const enemyZone = zoneOf(s, other(u.owner));
+  const fl = how === 'deploy' ? null : unitFlags(s, u); // worked out once, not per model
+  const omnis = how === 'ingress' || how === 'deepStrike' ? enemies.map((e) => ({ e, omni: unitFlags(s, e).omniScrambler })).filter((x) => x.omni) : [];
   for (const m of alive(u)) {
     const p = pos.get(m.id) ?? m;
     if (how === 'deploy' && !circleWhollyInPoly(p, m.r, zoneOf(s, u.owner))) { errors.push('Must be set up wholly within your deployment zone'); bad.add(m.id); }
@@ -421,14 +425,13 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
     const homer = u.homer && how !== 'deploy' && how !== 'infiltrate' && s.active !== u.owner ? u.homer : undefined;
     if (homer && dist(p, homer) - m.r > 3 + EPS) { errors.push('Teleport Homer: must be set up within 3" of the token'); bad.add(m.id); }
     if (how !== 'deploy') {
-      const keep = homer ? 8 : how === 'deepStrike' ? unitFlags(s, u).deepStrikeRange : RULES.reserves.enemyDistance;
+      const keep = homer ? 8 : how === 'deepStrike' ? fl!.deepStrikeRange : RULES.reserves.enemyDistance;
       if (enemies.some((e) => alive(e).some((n) => dist(p, n) - m.r - n.r <= keep))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
     }
-    if (how === 'deepStrike' && unitFlags(s, u).deepStrikeInFlow && !circleInFlow(s, u.owner, p, m.r)) { errors.push('Through the Veil: must be set up wholly within your Flow of Magic'); bad.add(m.id); }
+    if (how === 'deepStrike' && fl!.deepStrikeInFlow && !circleInFlow(s, u.owner, p, m.r)) { errors.push('Through the Veil: must be set up wholly within your Flow of Magic'); bad.add(m.id); }
     if (how === 'ingress' || how === 'deepStrike') {
-      for (const e of enemies) {
-        const omni = unitFlags(s, e).omniScrambler;
-        if (omni && alive(e).some((n) => dist(p, n) - m.r - n.r <= omni)) { errors.push(`Cannot be set up within ${omni}" of ${e.name} (Omni-scramblers)`); bad.add(m.id); }
+      for (const { e, omni } of omnis) {
+        if (alive(e).some((n) => dist(p, n) - m.r - n.r <= omni)) { errors.push(`Cannot be set up within ${omni}" of ${e.name} (Omni-scramblers)`); bad.add(m.id); }
       }
     }
     if (how === 'infiltrate' && circleTouchesPoly(p, m.r + RULES.reserves.enemyDistance, enemyZone)) { errors.push(`Infiltrators must be more than ${RULES.reserves.enemyDistance}" from the enemy deployment zone`); bad.add(m.id); }
@@ -583,7 +586,7 @@ export function placeUnit(s: GameState, u: UnitState, pos: Map<string, Pt>) {
   for (const m of alive(u)) { const p = pos.get(m.id)!; m.x = p.x; m.y = p.y; }
   u.status = 'board';
   u.setUpTurn = s.turn;
-  if (s.phase !== 'deploy' && s.phase !== 'scouts') arrivalShock(s, u);
+  if (s.phase !== 'deploy' && s.phase !== 'scouts') { arrivalShock(s, u); unleashWrathHook?.(s, u); }
   // Seeker of the Unfound: the first time it is set up, it picks an objective (the nearest one out in the field)
   if (!u.seekerObjective && unitHasAbility(u, 'Seeker of the Unfound') && s.objectives.length) {
     const c = polyCentroid(alive(u));
@@ -629,10 +632,15 @@ function nextDeployer(s: GameState) {
 }
 
 // the army's own units (Space Marines, Adeptus Custodes) — not allies
-const isAstartes = (u: UnitState) => ['ADEPTUS ASTARTES', 'ADEPTUS CUSTODES', 'THOUSAND SONS'].some((k) => u.factionKeywords.includes(k) || hasKw(u, k));
+const isAstartes = (u: UnitState) => ['ADEPTUS ASTARTES', 'ADEPTUS CUSTODES', 'THOUSAND SONS', 'WORLD EATERS'].some((k) => u.factionKeywords.includes(k) || hasKw(u, k));
 
 /** Abilities that let a player redeploy units once both armies are deployed: how many, and of which kind. */
-const REDEPLOY: { name: string; n: number; infantryOnly: boolean }[] = [
+/** Unleash Wrath (stratagems.ts registers it: it shoots or charges, which lives there). */
+let unleashWrathHook: ((s: GameState, u: UnitState) => void) | null = null;
+export const setUnleashWrath = (fn: (s: GameState, u: UnitState) => void) => { unleashWrathHook = fn; };
+
+const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string[] }[] = [
+  { name: 'Strategic Slaughter', n: 3, infantryOnly: false, units: ['JAKHALS', 'GOREMONGERS'] }, // World Eaters: Cult of Blood
   { name: 'Master of Deceit', n: 3, infantryOnly: true },
   { name: 'Strategium Command', n: 3, infantryOnly: false },
   // Enhancements that redeploy (2026 Codex)
@@ -657,7 +665,7 @@ function redeployFor(s: GameState, p: PlayerId) {
 export function redeployCandidates(s: GameState): UnitState[] {
   const r = s.redeploy;
   if (!r) return [];
-  return s.units.filter((u) => u.owner === r.player && (u.status === 'board' || u.status === 'reserves') && isAstartes(u) && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && !u.transport);
+  return s.units.filter((u) => u.owner === r.player && (u.status === 'board' || u.status === 'reserves') && isAstartes(u) && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && (!r.units || r.units.some((k) => hasKw(u, k))) && !u.transport);
 }
 
 /** Pick a unit up: it is placed again (deployment rules) or, with toReserves, goes into Strategic Reserves (no limit). */
@@ -689,7 +697,7 @@ function finishDeployment(s: GameState) {
     if (doneP.includes(p)) continue;
     const r = redeployFor(s, p);
     if (!r) continue;
-    s.redeploy = { player: p, left: r.n, infantryOnly: r.infantryOnly, source: r.name, done: doneP };
+    s.redeploy = { player: p, left: r.n, infantryOnly: r.infantryOnly, source: r.name, done: doneP, units: r.units };
     s.deployTurn = p;
     log(s, `${r.name}: ${s.players[p].name} can redeploy ${r.n} unit(s)${r.infantryOnly ? ' (INFANTRY)' : ''}: set up again or move into Strategic Reserves`, 'info', p);
     return;
@@ -747,7 +755,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
   if (s.turn === 0) { initSagas(s); fireAll(s, 'battleStart', 'both'); }
-  if (p === s.firstPlayer) fireAll(s, 'roundStart', 'both');
+  if (p === s.firstPlayer) { blessingsRoundStart(s); fireAll(s, 'roundStart', 'both'); }
   startCommand(s);
 }
 
@@ -865,6 +873,7 @@ export function endPhase(s: GameState) {
   } else if (s.phase === 'charge') {
     if (phaseEndReactions(s, 'enemyChargePhaseEnd', [other(s.active)])) return;
     miraculousSaviour(s);
+    fireFor(s, 'chargeEnd', s.active);
     s.phase = 'fight';
     startFight(s);
     openWindow(s, 'endOfCharge');
@@ -1444,6 +1453,10 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
 
 function startFight(s: GameState) {
   s.fight = { step: 'pileIn', stepPlayer: s.active, chooser: s.active, eligible: [], fought: [], forcedNext: null, movedThisStep: [] };
+  // Adamantine Avalanche (Butchers of Khorne): an engaged Terminator Squad means one more Blessing for them this phase
+  for (const p of [s.active, other(s.active)]) {
+    if (activeRules(s, p).includes('Butchers of Khorne') && boardUnits(s, p).some((u) => u.keywords.includes('TERMINATOR SQUAD') && isEngaged(s, u))) blessingsRoll(s, p, { label: 'Adamantine Avalanche', kw: 'TERMINATOR SQUAD', until: 'phase' });
+  }
   fireFor(s, 'fightStart', s.active);
   fireFor(s, 'fightStart', other(s.active));
 }
@@ -1653,8 +1666,14 @@ export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingre
   const ref = near ?? (zone ? ec : polyCentroid(zoneOf(s, u.owner)));
   cands.sort((a, b) => dist(a, ref) - dist(b, ref));
   const up = s.players[u.owner].role === 'defender';
+  // arriving: spots whose centre is already too close to an enemy model are skipped before the full check (the
+  // formation is built around its centre, so that model would break the distance anyway)
+  const keep = how === 'deploy' ? 0 : Math.min(u.homer ? 8 : 99, how === 'deepStrike' ? unitFlags(s, u).deepStrikeRange : RULES.reserves.enemyDistance);
+  const foes = keep ? boardUnits(s, other(u.owner)).flatMap(alive) : [];
+  const r0 = Math.min(...alive(u).map((m) => m.r));
   for (const c of cands) {
     if (zone && !circleTouchesPoly(c, 0, zone)) continue;
+    if (keep && foes.some((n) => dist(c, n) - n.r - r0 <= keep)) continue;
     // a big unit arriving from Strategic Reserves has to fit within 6" of an edge: try it in two long rows too
     const tries = how === 'ingress' && alive(u).length > 5 ? [formationAt(u, c, up), wideFormation(u, c, true), wideFormation(u, c, false)] : [formationAt(u, c, up)];
     for (const pos of tries) if (validatePlacement(s, u, pos, how).ok && (!accept || accept(pos))) return pos;
@@ -1820,6 +1839,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
   u.disembarkedFrom = t.id;
   log(s, `${u.name} disembarks (${assault ? 'Assault: can still charge' : mode === 'rapid' ? 'Rapid' : mode === 'tactical' ? 'Tactical' : 'Combat'} Disembark)`, 'info', u.owner);
   arrivalShock(s, u);
+  unleashWrathHook?.(s, u);
   fire(s, 'passengerDisembarks', [t], { targetId: u.id });
   return chk;
 }

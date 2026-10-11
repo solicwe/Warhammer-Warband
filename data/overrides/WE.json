@@ -1,0 +1,263 @@
+{
+ "datasheets": [
+  {
+   "name": "Chaos Terminators",
+   "models": [
+    {
+     "name": "Chaos Terminators",
+     "T": 6
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Khorne Berzerkers",
+   "models": [
+    {
+     "name": "Khorne Berzerkers",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Chainblade",
+     "profiles": [
+      {
+       "name": "Chainblade",
+       "S": 5
+      }
+     ]
+    }
+   ],
+   "abilities": [
+    {
+     "name": "Murderous Charge",
+     "type": "Datasheet",
+     "text": "If this unit made a charge move this turn, this unit’s melee attacks have +1 S."
+    }
+   ]
+  },
+  {
+   "name": "Khârn The Betrayer",
+   "models": [
+    {
+     "name": "Khârn The Betrayer",
+     "T": 5
+    }
+   ]
+  },
+  {
+   "name": "Master of Executions",
+   "models": [
+    {
+     "name": "Master of Executions",
+     "T": 5
+    }
+   ],
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Lord Invocatus",
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Land Raider",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Predator Annihilator",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Predator Destructor",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Rhino",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Helbrute",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Angron",
+   "abilities": [
+    {
+     "name": "Driven by Ultimate Rage (Aura)",
+     "type": "Primarch",
+     "text": "While a friendly WORLD EATERS unit is within 6\" of this unit, that unit’s melee attacks can:\n• Re-roll hit rolls of 1.\n• Re-roll wound rolls of 1."
+    }
+   ]
+  }
+ ],
+ "detachments": [
+  {
+   "name": "Berzerker Warband",
+   "rules": [
+    {
+     "name": "Relentless Rage",
+     "text": "Friendly WORLD EATERS units’ melee attacks have +1 A."
+    }
+   ]
+  }
+ ],
+ "armyRules": [
+  {
+   "name": "Oath of Moment",
+   "_delete": true
+  },
+  {
+   "name": "Dark Pacts",
+   "_delete": true
+  }
+ ]
+}
