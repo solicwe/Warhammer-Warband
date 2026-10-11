@@ -52,8 +52,8 @@ export function loadImageManifest(): Promise<void> {
  *  list has loaded (or when this view can't read it), the list as it was at the last build stands in for it: the
  *  files themselves are served to every view of the page. */
 export const getPortrait = (datasheet: string): string | undefined =>
-  cache[datasheet] ?? (cloud[datasheet] ? `/_blob/${cloud[datasheet].asset}` : undefined)
-  ?? (!cloudLoaded && seedOn && SEED[datasheet] ? `/_blob/${SEED[datasheet]}` : undefined) ?? served[datasheet];
+  cache[datasheet] ?? (cloud[datasheet] ? `/_blob/${cloud[datasheet].asset}` : undefined) ?? served[datasheet]
+  ?? (!cloudLoaded && seedOn && SEED[datasheet] ? `/_blob/${SEED[datasheet]}` : undefined);
 /** A unit whose models have different names (Wardens of Ultramar, a squad's sergeant): each model name can have its
  *  own picture, stored under "Datasheet::Model name"; a model without one shows the unit's picture. */
 export const modelPortraitKey = (datasheet: string, model: string) => `${datasheet}::${model}`;
@@ -95,7 +95,8 @@ let cloud: Record<string, CloudDoc> = {};
 /** the page's photo list has arrived from its storage (then it alone counts: a removed photo stays removed) */
 let cloudLoaded = false;
 /** on the published page (not a local copy, where there is no file store to serve the photos) */
-const seedOn = typeof location !== 'undefined' && location.protocol === 'https:' && !/^(localhost|127\.|\[::1\])/.test(location.hostname);
+// (only the claude.ai build: on any other site the /_blob/ files don't exist)
+const seedOn = !!import.meta.env?.VITE_ARTIFACT && typeof location !== 'undefined' && location.protocol === 'https:' && !/^(localhost|127\.|\[::1\])/.test(location.hostname);
 // shortcut: the list is copied from the page's store at build time (cloudSeed.json); photos added later show only once
 // the store answers. Refresh the file before each publish.
 const SEED: Record<string, string> = cloudSeed as Record<string, string>;
