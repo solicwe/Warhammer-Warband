@@ -1,7 +1,7 @@
 // Sounds made on the spot with Web Audio (no sound files): short clicks, thuds and chimes that tell the player what
 // just happened without looking. Browsers only allow sound after the first tap, which a game always has.
 
-export type Sfx = 'tick' | 'hit' | 'wound' | 'kill' | 'destroy' | 'vp' | 'gem' | 'spend' | 'turn' | 'dice' | 'land' | 'card' | 'think' | 'bad' | 'good';
+export type Sfx = 'tick' | 'hit' | 'wound' | 'kill' | 'destroy' | 'vp' | 'gem' | 'spend' | 'turn' | 'dice' | 'land' | 'card' | 'think' | 'bad' | 'good' | 'shock' | 'heal' | 'arrive' | 'charge';
 
 const PREF = 'sfx-on';
 let on = (() => { try { return localStorage.getItem(PREF) !== '0'; } catch { return true; } })();
@@ -25,7 +25,11 @@ function audio(): AudioContext | null {
 
 // coming back to the page (or the next tap after it) resumes the sound
 if (typeof window !== 'undefined') {
-  const wake = () => { if (ctx && ctx.state !== 'running' && document.visibilityState === 'visible') void ctx.resume().catch(() => undefined); };
+  // the first tap creates the sound context: one made later, outside a tap (the roll-off that opens a game), stays muted
+  const wake = (e?: Event) => {
+    if (!ctx && e?.type === 'pointerdown') audio();
+    if (ctx && ctx.state !== 'running' && document.visibilityState === 'visible') void ctx.resume().catch(() => undefined);
+  };
   document.addEventListener('visibilitychange', wake);
   window.addEventListener('pageshow', wake);
   window.addEventListener('pointerdown', wake, { passive: true });
@@ -117,5 +121,13 @@ export function play(kind: Sfx, step = 0, size = 0) {
     case 'good': [659.25, 987.77].forEach((f, i) => tone(a, f, t + i * 0.08, 0.2, 'triangle', 0.1)); break;
     case 'think': tone(a, 660 + step * 40, t, 0.06, 'sine', 0.03); break;
     case 'bad': tone(a, 220, t, 0.22, 'square', 0.05, 0.7); break;
+    // a unit breaks: two clashing low notes falling away
+    case 'shock': tone(a, 233, t, 0.45, 'sawtooth', 0.05, 0.5); tone(a, 247, t, 0.45, 'sawtooth', 0.04, 0.48); break;
+    // wounds regained: a soft rising shimmer
+    case 'heal': [659.25, 830.61, 987.77, 1318.5].forEach((f, i) => tone(a, f, t + i * 0.06, 0.3, 'sine', 0.06)); break;
+    // from Reserves: a rush of air down, then the landing
+    case 'arrive': noise(a, t, 0.35, 0.12, 3200, 'highpass'); noise(a, t + 0.3, 0.2, 0.35, 500); tone(a, 80, t + 0.3, 0.35, 'sine', 0.3, 0.5); break;
+    // a charge slams home
+    case 'charge': noise(a, t, 0.12, 0.3, 800); tone(a, 120, t, 0.18, 'sine', 0.25, 0.6); break;
   }
 }

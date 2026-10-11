@@ -37,6 +37,21 @@ function standsIn(m: ModelState, t: TerrainPiece): boolean {
   return pointInPoly(m, t.poly);
 }
 
+/** The unit of each model (looked up once per set of units). */
+const unitOfModel = new WeakMap<UnitState[], Map<string, UnitState>>();
+function unitOf(s: GameState, m: ModelState): UnitState | undefined {
+  if (!s.units) return undefined;
+  let map = unitOfModel.get(s.units);
+  if (!map) { map = new Map(s.units.flatMap((u) => u.models.map((x) => [x.id, u] as [string, UnitState]))); unitOfModel.set(s.units, map); }
+  return map.get(m.id);
+}
+/** A unit stands in a terrain area when any of its models stands in it: all its models see out of it and are seen in it. */
+function unitStandsIn(s: GameState, m: ModelState, t: TerrainPiece): boolean {
+  if (standsIn(m, t)) return true;
+  const u = unitOf(s, m);
+  return !!u && u.models.some((x) => !x.dead && standsIn(x, t));
+}
+
 /** Two terrain areas whose footprints all but touch (a hairline left between them where the layout was traced):
  *  the crack between them is closed, so no line of sight slips through a corner the two pieces share. */
 interface Bridge { poly: Pt[]; box: Box; of: [TerrainPiece, TerrainPiece]; dense: boolean }
@@ -155,7 +170,7 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
   const y0 = Math.min(a.y - a.r, b.y - b.r), y1 = Math.max(a.y + a.r, b.y + b.r);
   const near = s.terrain.filter((t) => { const q = boxOf(t); return q.x1 >= x0 && q.x0 <= x1 && q.y1 >= y0 && q.y0 <= y1; });
   const obscuring = near.filter((t) => (denseOnly ? t.category === 'dense' : t.category !== 'exposed'));
-  const areas: { poly: Pt[] }[] = obscuring.filter((t) => !standsIn(a, t) && !standsIn(b, t));
+  const areas: { poly: Pt[] }[] = obscuring.filter((t) => !unitStandsIn(s, a, t) && !unitStandsIn(s, b, t));
   for (const br of bridgesOf(s)) {
     if (denseOnly && !br.dense) continue;
     const q = br.box;
@@ -164,7 +179,7 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
     areas.push(br);
   }
   // both models in the same area: each sees its own stretch of it
-  const own = obscuring.filter((t) => !areas.includes(t)).map((t) => ({ t, reach: SEE_IN_AREA * (+standsIn(a, t) + +standsIn(b, t)) }));
+  const own = obscuring.filter((t) => !areas.includes(t)).map((t) => ({ t, reach: SEE_IN_AREA * (+unitStandsIn(s, a, t) + +unitStandsIn(s, b, t)) }));
   return { grid: wallGridOf(s), areas, own };
 }
 

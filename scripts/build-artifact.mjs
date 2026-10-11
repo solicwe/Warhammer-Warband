@@ -32,7 +32,12 @@ for (const f of fs.readdirSync(path.join(ROOT, 'public/data/factions'))) fs.copy
 const IMG = path.join(ROOT, 'public/images');
 let images = 0;
 if (fs.existsSync(IMG)) {
-  fs.cpSync(IMG, path.join(OUT, 'images'), { recursive: true, filter: (src) => !/(\.gitkeep|README\.md)$/.test(src) });
-  images = Object.values(JSON.parse(fs.readFileSync(path.join(IMG, 'manifest.json'), 'utf8')).units ?? {}).reduce((a, f) => a + Object.keys(f).length, 0);
+  // the photos in names.json came from the web app's own photo store, which serves them there: not published twice
+  const named = new Set(Object.values(fs.existsSync(path.join(IMG, 'names.json')) ? JSON.parse(fs.readFileSync(path.join(IMG, 'names.json'), 'utf8')) : {}).map((f) => path.join(IMG, f)));
+  fs.cpSync(IMG, path.join(OUT, 'images'), { recursive: true, filter: (src) => !/(\.gitkeep|README\.md|names\.json)$/.test(src) && !named.has(src) });
+  const manifest = JSON.parse(fs.readFileSync(path.join(IMG, 'manifest.json'), 'utf8'));
+  for (const f of Object.values(manifest.units ?? {})) for (const [k, v] of Object.entries(f)) if (named.has(path.join(IMG, v))) delete f[k];
+  fs.writeFileSync(path.join(OUT, 'images/manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+  images = Object.values(manifest.units ?? {}).reduce((a, f) => a + Object.keys(f).length, 0);
 }
 console.log(`artifact/index.html ${(page.length / 1024).toFixed(0)} KB + ${fs.readdirSync(path.join(OUT, 'data/factions')).length} faction files + ${images} unit images`);

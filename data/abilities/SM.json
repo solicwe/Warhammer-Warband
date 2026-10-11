@@ -3432,7 +3432,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Assault Doctrine (this unit)",
+    "label": "Assault Doctrine: charge after Advancing (this unit)",
     "do": [
      {
       "on": "self",
@@ -3448,7 +3448,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Devastator Doctrine (this unit)",
+    "label": "Devastator Doctrine: ranged weapons get [ASSAULT] (this unit)",
     "do": [
      {
       "on": "self",
@@ -3464,7 +3464,7 @@
     "when": "command",
     "limit": "phase",
     "botUse": "never",
-    "label": "Tactical Doctrine (this unit)",
+    "label": "Tactical Doctrine: shoot and charge after Falling Back (this unit)",
     "do": [
      {
       "on": "self",

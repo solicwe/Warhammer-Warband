@@ -15,7 +15,7 @@ import {
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
 import { baseDist, circleTouchesPoly, dist } from './geometry';
-import { alive, boardUnits, engagedEnemies, hasKw, heroFx, log, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from './state';
+import { alive, boardUnits, centreOf, engagedEnemies, hasKw, heroFx, log, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from './state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
@@ -203,7 +203,11 @@ function gearBearers(a: AbilityData, rule: AbilityRule, ms: ModelState[]) {
 
 export function actsOfUnit(s: GameState, u: UnitState, includeDead = false): ActDef[] {
   const out: ActDef[] = [];
+  const seen = new Set<string>();
   for (const a of u.abilities ?? []) {
+    // a combined unit can list the same ability twice (two characters with it): one set of buttons
+    if (seen.has(a.name)) continue;
+    seen.add(a.name);
     const rule = abilityRule(u, a);
     const specs = specsOf(rule);
     if (!specs.length || abilityOff(u, a)) continue;
@@ -419,7 +423,7 @@ export interface FireCtx {
   killedCharacter?: boolean; modelsKilled?: number; melee?: boolean; deadModelId?: string;
 }
 
-function heal(u: UnitState, n: number) {
+function heal(s: GameState, u: UnitState, n: number) {
   let left = n;
   const ms = alive(u).filter((m) => m.wounds < m.profile.W).sort((a, b) => b.profile.W - a.profile.W);
   for (const m of ms) {
@@ -428,6 +432,7 @@ function heal(u: UnitState, n: number) {
     left -= k;
     if (!left) break;
   }
+  if (n - left > 0) pushFx(s, { kind: 'heal', unitId: u.id, owner: u.owner, at: centreOf(u), n: n - left });
   return n - left;
 }
 
@@ -460,6 +465,7 @@ function revive(s: GameState, u: UnitState, n: number) {
     if (!setBackUp(s, u, m, { x: anchor.x + anchor.r + m.r + 0.1, y: anchor.y })) { m.dead = true; m.wounds = 0; break; }
     k += 1;
   }
+  if (k) pushFx(s, { kind: 'heal', unitId: u.id, owner: u.owner, at: centreOf(u), n: k, revive: true });
   return k;
 }
 
@@ -474,7 +480,7 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
   const passed = total >= ld;
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'failed!'}${mod ? ` (${mod})` : ''}`, good: passed });
   log(s, `${why}: ${u.name} Battle-shock test [${r.join('+')}]${mod ? ` ${mod}` : ''} = ${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'Battle-shocked!'}`, 'roll', u.owner);
-  if (!passed && !u.battleShocked) { u.battleShocked = true; fire(s, 'becameShocked', [u]); }
+  if (!passed && !u.battleShocked) { u.battleShocked = true; pushFx(s, { kind: 'shock', unitId: u.id, owner: u.owner, at: centreOf(u) }); fire(s, 'becameShocked', [u]); }
   return passed;
 }
 
@@ -545,7 +551,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
         log(s, `${def.name}: the traitor is revealed — ${u.sources[0]} takes ${victim.name}'s place and leads ${target.name}`, 'info', u.owner);
       }
     }
-    if (a.healNear) for (const f of boardUnits(s, on.owner).filter((f) => unitDistance(f, on) <= a.healNear!.range + 1e-6 && (!a.healNear!.units || unitMatches(f, a.healNear!.units)))) { heal(f, rollExpr(s, a.healNear.heal).total); log(s, `${def.name}: ${f.name} heals`, 'info', u.owner); }
+    if (a.healNear) for (const f of boardUnits(s, on.owner).filter((f) => unitDistance(f, on) <= a.healNear!.range + 1e-6 && (!a.healNear!.units || unitMatches(f, a.healNear!.units)))) { heal(s, f, rollExpr(s, a.healNear.heal).total); log(s, `${def.name}: ${f.name} heals`, 'info', u.owner); }
     if (a.buffNear) {
       const near = boardUnits(s, on.owner).filter((f) => (a.buffNear!.one ? f.id !== on.id : true) && unitDistance(f, on) <= a.buffNear!.range + 1e-6 && (!a.buffNear!.units || unitMatches(f, a.buffNear!.units)) && alive(on).some((m) => unitVisibleTo(s, m, f) || f.id === on.id))
         .sort((x, y) => (y.pts * alive(y).length) / y.startingStrength - (x.pts * alive(x).length) / x.startingStrength);
@@ -672,7 +678,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       if (n) addTimed(s, on, { e: { attack: 'melee', weapon: q.weapon, attacks: n }, label: def.name, until: a.until ?? 'phase', by: u.owner, models });
       log(s, `${def.name}: +${n} A`, 'info', u.owner);
     }
-    if (a.heal) { const n = heal(on, rollExpr(s, a.heal).total); log(s, `${def.name}: ${on.name} regains ${n} wounds`, 'info', u.owner); }
+    if (a.heal) { const n = heal(s, on, rollExpr(s, a.heal).total); log(s, `${def.name}: ${on.name} regains ${n} wounds`, 'info', u.owner); }
     if (a.reviveRoll) { const n = revive(s, on, rollExpr(s, a.reviveRoll).total); log(s, `${def.name}: ${n} model(s) returned to ${on.name}`, 'info', u.owner); }
     if (a.mutate) {
       for (const o of s.objectives) {
@@ -741,7 +747,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       const loe = boardUnits(s, u.owner).filter((f) => f.factionKeywords.includes('LEGIONS OF EXCESS') && unitDistance(f, on) <= a.agonyHeal! + 1e-6)
         .sort((x, y) => y.models.filter((m) => m.dead).length - x.models.filter((m) => m.dead).length)[0];
       if (loe && loe.sources.includes('Daemonettes')) { const n = revive(s, loe, rollExpr(s, 'D3+3').total); log(s, `${def.name}: ${n} Daemonettes return to ${loe.name}`, 'info', u.owner); }
-      else if (loe) { const n = heal(loe, 3); log(s, `${def.name}: ${loe.name} regains ${n} wounds`, 'info', u.owner); }
+      else if (loe) { const n = heal(s, loe, 3); log(s, `${def.name}: ${loe.name} regains ${n} wounds`, 'info', u.owner); }
     }
     if (a.chargeOnlyTarget && target) { u.chargeMust = { turn: s.turn, id: target.id }; log(s, `${def.name}: ${u.name}'s charge must end engaged with ${target.name}`, 'info', u.owner); }
     if (a.embarkNear) embarkNearHook?.(s, on, a.embarkNear, def.name);

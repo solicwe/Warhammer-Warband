@@ -73,3 +73,16 @@ describe('a hairline between two terrain areas (layout tracing)', () => {
     expect(hasLos(s, model(19, 4), model(19, 24))).toBe(true);
   });
 });
+
+describe('a unit in a terrain area', () => {
+  it('one of its models standing in the area puts the whole unit in it: the others see out and are seen', () => {
+    const t = area(18, 10, 21, 30, 'light');
+    const inside = { ...model(19, 20), id: 'a1', dead: false } as unknown as ModelState;
+    const outside = { ...model(16.5, 20), id: 'a2', dead: false } as unknown as ModelState;
+    const viewer = { ...model(30, 20), id: 'b1', dead: false } as unknown as ModelState;
+    const lone = { units: [], terrain: [t] } as unknown as GameState;
+    const squad = { units: [{ id: 'A', models: [inside, outside] }, { id: 'B', models: [viewer] }], terrain: [t] } as unknown as GameState;
+    expect(hasLos(lone, outside, viewer)).toBe(false); // on its own, the whole area is in between
+    expect(hasLos(squad, outside, viewer)).toBe(true); // its unit-mate stands in the area: it sees out of it
+  });
+});

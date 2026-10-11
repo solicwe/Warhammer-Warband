@@ -506,7 +506,11 @@ export interface AttackSession {
 /** Visual events for the board (animations). Not rules state; capped to the last few. */
 export type FxEvent =
   | { seq: number; kind: 'move'; unitId: string; owner: PlayerId; moveKind: MoveKind; paths: [string, Pt[]][] }
-  | { seq: number; kind: 'place'; unitId: string; owner: PlayerId }
+  | { seq: number; kind: 'place'; unitId: string; owner: PlayerId; at?: Pt }
+  /** a unit fails a Battle-shock test */
+  | { seq: number; kind: 'shock'; unitId: string; owner: PlayerId; at: Pt }
+  /** wounds regained or destroyed models returned */
+  | { seq: number; kind: 'heal'; unitId: string; owner: PlayerId; at: Pt; n: number; revive?: boolean }
   | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[];
       style?: 'bullet' | 'beam' | 'flame' | 'blast' | 'melee'; shooters?: Pt[]; victims?: Pt[]; shots?: number; hits?: number;
       /** one entry per weapon fired, so each weapon gets its own look (plasma balls, assault cannon streams …) */

@@ -15,7 +15,7 @@ import { rollN } from '../engine/dice';
 import {
   autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
-  formationAt, heroicCandidates, hullSpots, ingressUnit, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
+  formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
@@ -43,7 +43,7 @@ import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/second
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../engine/stratagems';
 import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
-import { polyCentroid } from '../engine/geometry';
+import { dist, polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../engine/deploy';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
@@ -798,8 +798,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const confirmPlace = () => {
     if (mode?.k !== 'place' || !draft) return;
-    const pos = lastPos(draft);
+    let pos = lastPos(draft);
     const u = U(mode.unitId);
+    // a spot that breaks a rule (against a board edge, on a wall, too close to an enemy): slide to the nearest legal one
+    if (mode.how !== 'disembark' && !validatePlacement(s, u, pos, mode.how).ok) {
+      const mid = (m: Map<string, Pt>) => { const q = [...m.values()]; return { x: q.reduce((a, p) => a + p.x, 0) / q.length, y: q.reduce((a, p) => a + p.y, 0) / q.length }; };
+      const near = mid(pos);
+      const fit = findPlacement(s, u, mode.how, near);
+      // only a small slide: a spot far away is not what the player chose
+      if (fit && dist(mid(fit), near) <= 6) {
+        pos = fit;
+        setDraft(placePaths(fit));
+        flash('Moved to the nearest legal spot');
+      }
+    }
     if (mode.how === 'disembark') {
       const t = U(mode.transportId!);
       const chk = validateDisembark(s, u, t, pos);
@@ -971,6 +983,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // ---------- datasheet abilities you press ----------
 
   const [actPick, setActPick] = useState<string | null>(null); // ability whose target is being picked
+  /** "Assault Doctrine: charge after Advancing (this unit)" → "Assault Doctrine" */
+  const optLabel = (l: string) => (l.split(':')[0] || l).replace(/\s*\(.*\)\s*$/, '').trim();
   const shortName = (n: string) => n.replace(/\s*\((?:once|psychic|psyker|first)[^)]*\)\s*$/i, '').replace(/\s*\(Aura\)\s*$/i, '');
   /** Buttons for abilities player p can use right now ("Once per battle, in your Command phase …"). */
   /** The full rule text behind an ability button: the datasheet / enhancement ability, else the army or detachment rule. */
@@ -994,36 +1008,56 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <div className="ab-bar">
         <div className="tiny muted"><Icon name="ability" size={13} /> Abilities you can use now</div>
-        {list.map((m) => {
-          const k = `${m.def.holder.id}|${m.def.key}`;
-          const t = m.def.spec.target;
-          const pickOne = !!t && t.side !== 'self' && !t.each && m.targets.length > 1;
-          const use = (targetId?: string) => {
-            const res = act((g) => {
-              const err = useActByKey(g, m.def.holder.id, m.def.key, targetId);
-              const gu = unitById(g, m.def.holder.id);
-              return { err, move: gu.extraMove && gu.extraMove.phase === `${g.turn}:${g.phase}` && !g.window ? gu.extraMove.kind : null };
-            });
-            setActPick(null);
-            if (res.err) flash(res.err);
-            else flash(`Used ${shortName(m.def.name)}`);
-          };
-          const text = actRuleText(m.def.holder, m.def.name);
+        {[...new Set(list.map((m) => m.def.holder.id))].map((hid) => {
+          const mine = list.filter((m) => m.def.holder.id === hid);
+          const holder = mine[0].def.holder;
+          const names = [...new Set(mine.map((m) => m.def.name))];
           return (
-            <div key={k} className="ab-item">
-              <button className={`btn small ${actPick === k ? 'on' : ''}`} disabled={!!m.why} title={m.why ?? m.label} onClick={() => (pickOne ? setActPick(actPick === k ? null : k) : use(m.targets[0]?.id))}>
-                <b>{shortName(m.def.name)}</b>{!only.unitId && <span className="tiny"> · {m.def.holder.name.length > 22 ? m.def.holder.name.slice(0, 21) + '…' : m.def.holder.name}</span>}
-              </button>
-              <button className={`ab-info ${explain === k ? 'on' : ''}`} aria-label={`What is ${shortName(m.def.name)}?`} onClick={() => setExplain(explain === k ? null : k)}>?</button>
-              <span className="tiny muted">{m.why ?? m.label}{m.def.spec.limit === 'battle' ? ' (once per battle)' : m.def.spec.limit === 'round' ? ' (once per battle round)' : ''}</span>
-              {explain === k && (
-                <div className="ab-explain">
-                  <div className="ab-explain-title">{m.def.name} <span className="tiny muted">· {m.def.holder.name}</span></div>
-                  {text ? <RuleText text={text} /> : <div className="small">{m.label}</div>}
-                  <div className="tiny muted"><b>What it does here:</b> {m.label || 'see the rule above'}{m.def.spec.limit === 'battle' ? ' · once per battle' : m.def.spec.limit === 'round' ? ' · once per battle round' : m.def.spec.limit === 'turn' ? ' · once per turn' : m.def.spec.limit === 'phase' ? ' · once per phase' : ''}{m.why ? ` · now: ${m.why}` : ''}</div>
-                </div>
-              )}
-              {actPick === k && <div className="unit-strip">{m.targets.map((x) => unitPill(x, false, () => use(x.id)))}</div>}
+            <div key={hid} className="ab-unit">
+              {!only.unitId && <div className="ab-unit-name"><b>{holder.name}</b></div>}
+              {names.map((name) => {
+                const opts = mine.filter((m) => m.def.name === name);
+                const ek = `${hid}|${name}`;
+                const text = actRuleText(holder, name);
+                const limit = opts[0].def.spec.limit;
+                return (
+                  <div key={ek} className="ab-item">
+                    <span className="ab-name">{shortName(name)}</span>
+                    {opts.map((m) => {
+                      const k = `${hid}|${m.def.key}`;
+                      const t = m.def.spec.target;
+                      const pickOne = !!t && t.side !== 'self' && !t.each && m.targets.length > 1;
+                      const use = (targetId?: string) => {
+                        const res = act((g) => {
+                          const err = useActByKey(g, hid, m.def.key, targetId);
+                          const gu = unitById(g, hid);
+                          return { err, move: gu.extraMove && gu.extraMove.phase === `${g.turn}:${g.phase}` && !g.window ? gu.extraMove.kind : null };
+                        });
+                        setActPick(null);
+                        if (res.err) flash(res.err);
+                        else flash(`${holder.name}: ${opts.length > 1 ? optLabel(m.label) : shortName(name)}`);
+                      };
+                      return (
+                        <span key={k} className="ab-opt">
+                          <button className={`btn small ${actPick === k ? 'on' : ''}`} disabled={!!m.why} title={m.why ?? m.label} onClick={() => (pickOne ? setActPick(actPick === k ? null : k) : use(m.targets[0]?.id))}>
+                            {opts.length > 1 ? optLabel(m.label) : 'Use'}
+                          </button>
+                          {actPick === k && <div className="unit-strip">{m.targets.map((x) => unitPill(x, false, () => use(x.id)))}</div>}
+                        </span>
+                      );
+                    })}
+                    <button className={`ab-info ${explain === ek ? 'on' : ''}`} aria-label={`What is ${shortName(name)}?`} onClick={() => setExplain(explain === ek ? null : ek)}>?</button>
+                    {explain === ek && (
+                      <div className="ab-explain">
+                        <div className="ab-explain-title">{name} <span className="tiny muted">· {holder.name}</span></div>
+                        {text ? <RuleText text={text} /> : null}
+                        {opts.map((m) => <div key={m.def.key} className="tiny muted">• {m.why ? `${m.label} — now: ${m.why}` : m.label}</div>)}
+                        {limit && <div className="tiny muted">{limit === 'battle' ? 'Once per battle' : limit === 'round' ? 'Once per battle round' : limit === 'turn' ? 'Once per turn' : 'Once per phase'}</div>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           );
         })}
@@ -1140,13 +1174,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return (
         <>
           <div className="handoff">{pName(s, p)}: use Heroic Intervention?</div>
-          {heroicCandidates(s, p).map((u) => (
-            <div key={u.id} className="row">
-              <span className="grow small">{u.name}</span>
-              <button className="btn small" onClick={() => { act((g) => { const gu = unitById(g, u.id); spendStratagem(g, p, 'heroic-intervention', gu); declareCharge(g, gu); }); setMode({ k: 'charge', unitId: u.id, targets: [], heroic: 'leap' }, startPaths(u)); }}>Leap to Defend 1CP</button>
-              <button className="btn small" disabled={!!canUseStratagem(s, p, 'heroic-intervention', u, 2)} onClick={() => { act((g) => { const gu = unitById(g, u.id); spendStratagem(g, p, 'heroic-intervention', gu, 2); declareCharge(g, gu, false, 6); }); setMode({ k: 'charge', unitId: u.id, targets: [], heroic: 'fray' }, startPaths(u)); }}>Into the Fray 2CP</button>
-            </div>
-          ))}
+          <div className="tiny muted">The game picks the right option: <b>Leap to Defend</b> (1CP) when a unit that just charged is in reach, else <b>Into the Fray</b> (2CP, enemy within 6", charge roll at most 6).</div>
+          {heroicCandidates(s, p).map((u) => {
+            const how = heroicMode(s, p, u);
+            const go = () => {
+              act((g) => { const gu = unitById(g, u.id); spendStratagem(g, p, 'heroic-intervention', gu, how === 'fray' ? 2 : undefined); declareCharge(g, gu, false, how === 'fray' ? 6 : undefined); });
+              setMode({ k: 'charge', unitId: u.id, targets: [], heroic: how! }, startPaths(u));
+            };
+            return (
+              <div key={u.id} className="row">
+                <span className="grow small"><b>{u.name}</b></span>
+                <button className="btn small" disabled={!how} onClick={go}>{how === 'leap' ? 'Leap to Defend · 1CP' : how === 'fray' ? 'Into the Fray · 2CP' : 'No target in reach'}</button>
+              </div>
+            );
+          })}
           {skip}
         </>
       );

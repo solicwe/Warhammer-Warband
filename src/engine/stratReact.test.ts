@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { applyMortalWounds, buildShootPools, finishAttack, resolveAll, startAttack } from './attack';
 import { effectsFor, ocOf } from './effects';
-import { commitMove, createGame, formationAt, placeUnit } from './game';
+import { commitMove, createGame, formationAt, heroicMode, placeUnit } from './game';
 import { alive } from './state';
 import { answerReaction, applyDetachmentStratagem, stratagemBlock } from './stratagems';
 import type { ArmyList, FactionData, GameState, PlayerId, Pt, StratagemData } from './types';
@@ -141,5 +141,22 @@ describe('stratagem reactions', () => {
     s.phase = 'shooting'; s.active = 1;
     applyDetachmentStratagem(s, 0, strat(s, 0, 'TACTICAL DREADNOUGHT FORTITUDE'), t.id);
     expect(t.buffs.some((b) => b.kind === 'damage-1')).toBe(true);
+  });
+});
+
+describe('Heroic Intervention picks its option', () => {
+  it('Leap to Defend when a unit that just charged is in reach, else Into the Fray within 6", else nothing', () => {
+    const s = game([['Captain', 1, 80]], [], [['Boyz', 10, 80]]);
+    s.phase = 'charge'; s.active = 1;
+    const cap = s.units.find((u) => u.owner === 0)!;
+    const boyz = s.units.find((u) => u.owner === 1)!;
+    put(s, cap.id, { x: 30, y: 22 });
+    put(s, boyz.id, { x: 34, y: 22 });
+    boyz.chargedTurn = s.turn;
+    expect(heroicMode(s, 0, cap)).toBe('leap');
+    boyz.chargedTurn = -1;
+    expect(heroicMode(s, 0, cap)).toBe('fray');
+    put(s, boyz.id, { x: 45, y: 22 });
+    expect(heroicMode(s, 0, cap)).toBeNull();
   });
 });

@@ -8,7 +8,7 @@ import { lastRound } from '../engine/state';
 import type { GameState } from '../engine/types';
 import { Emblem, titleCase } from './ArmyBuilder';
 import { useFactions, type FactionIndex } from './data';
-import { Icon } from './Icon';
+import { Icon, Logo } from './Icon';
 import { armyColor } from './Sheet';
 import type { Army } from './library';
 
@@ -42,7 +42,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
   return (
     <div className="app home">
       <header className="appbar">
-        <span className="brand">Pocket Warband</span>
+        <span className="brand"><Logo size={30} />Pocket Warband</span>
         <span className="appbar-note">11th edition</span>
       </header>
       <main className="screen">
