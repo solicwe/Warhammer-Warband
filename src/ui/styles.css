@@ -152,7 +152,6 @@ details summary { cursor: pointer; }
 /* ---------- app bar ---------- */
 .appbar { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--line); flex: none; }
 .brand { display: inline-flex; align-items: baseline; gap: 7px; font: 700 23px/1 var(--font-cond); letter-spacing: 0.02em; text-transform: uppercase; color: var(--text); }
-.brand-sub { font-weight: 500; font-size: 16px; letter-spacing: 0.14em; color: var(--text-2); }
 .appbar-note { margin-left: auto; font: 500 12px var(--font-cond); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
 .appbar-title { font: 600 19px var(--font-cond); letter-spacing: 0.05em; text-transform: uppercase; }
 
