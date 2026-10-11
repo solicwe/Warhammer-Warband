@@ -1,4 +1,4 @@
-import { abilityStatus, type AbilityStatus } from '../engine/effects';
+import { abilityRule, abilityStatus, type AbilityStatus } from '../engine/effects';
 import { strength } from '../engine/state';
 import type { AbilityData, DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
@@ -6,7 +6,7 @@ import { Portrait, tokenKind, type TokenKind } from './Tokens';
 import { modelPortraitKey, usePastePortrait } from './portraits';
 import { datasheetVariants, pictureVariants, type PictureVariant } from './loadout';
 import { Icon, type IconName } from './Icon';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Em } from './Em';
 
 /** The characteristics band, laid out like the printed datasheet: framed boxes, the invulnerable save as a shield. */
@@ -72,12 +72,9 @@ function AbilityBadge({ u, a }: { u: UnitState; a: AbilityData }) {
   const st = abilityStatus(u, a);
   if (st.status === 'core') return null;
   const ic = ST_ICON[st.status];
-  return (
-    <>
-      {' '}<span className={`ab-st ${st.status}`}>{ic && <Icon name={ic} size={12} />} {ST_LABEL[st.status]}</span>
-      {st.note && <span className="tiny muted"> {st.note}</span>}
-    </>
-  );
+  // a small mark only: the full status and note on a long press / hover, so the card stays compact
+  if (st.status === 'auto') return null;
+  return <>{' '}<span className={`ab-st ${st.status}`} title={`${ST_LABEL[st.status]}${st.note ? ` — ${st.note}` : ''}`}>{ic && <Icon name={ic} size={12} />}</span></>;
 }
 
 /** Model lines with the same characteristics show once ("Intercessor Sergeant / Intercessor"). */
@@ -137,12 +134,25 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
       </div>
       <Weapons weapons={sheet.weapons} />
       {sheet.options.length > 0 && <details><summary className="small">Wargear options</summary>{sheet.options.map((o, i) => <div key={i} className="small">• <Em text={o} /></div>)}</details>}
+      {(() => {
+        // like the printed datasheet: "pick one of these" abilities (The Warmaster, Unearthly Power …) and special rules
+        // (Supreme Commander) get their own band above ABILITIES
+        const ab = (a: AbilityData, i: number) => <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{factionId && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: factionId }} />} <Em text={a.text} names={names} /></div>;
+        const out: ReactNode[] = [];
+        for (const a of sheet.abilities) {
+          const ch = factionId ? abilityRule(probe, { ...a, sheet: sheet.name, faction: factionId })?.choice : undefined;
+          const opts = ch ? sheet.abilities.filter((x) => ch.options.includes(x.name)) : [];
+          if (opts.length) out.push(<div key={`c${a.name}`} className="ds-sec">{a.name.toUpperCase()}</div>, ...opts.map(ab));
+        }
+        for (const a of sheet.abilities.filter((x) => /^Special/.test(x.type))) out.push(<div key={`s${a.name}`} className="ds-sec">{a.name.toUpperCase()}</div>, <div key={`st${a.name}`} className="ds-ab"><Em text={a.text} names={names} /></div>);
+        return out;
+      })()}
       <div className="ds-sec">ABILITIES</div>
       {(['Core', 'Faction'] as const).map((t) => {
         const xs = sheet.abilities.filter((a) => a.type === t);
         return xs.length ? <div key={t} className="ds-line ds-rule">{t.toUpperCase()}: <b>{xs.map((a) => `${a.name}${a.param ? ` ${a.param}` : ''}`).join(', ')}</b></div> : null;
       })}
-      {sheet.abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction').map((a, i) => (
+      {sheet.abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction' && !/^Special/.test(a.type) && !sheet.abilities.some((c) => factionId && abilityRule(probe, { ...c, sheet: sheet.name, faction: factionId })?.choice?.options.includes(a.name))).map((a, i) => (
         <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{factionId && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: factionId }} />} <Em text={a.text} names={names} /></div>
       ))}
       {sheet.damaged && <div className="ds-ab"><b>DAMAGED: 1-{sheet.damaged.w} WOUNDS REMAINING:</b> <Em text={sheet.damaged.text} /></div>}
