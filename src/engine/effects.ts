@@ -174,6 +174,8 @@ export interface Effect {
   cpOnOathKill?: number; // your Oath / focus target destroyed while this unit is on the battlefield: on X+ gain 1CP (Eye of Abaddon)
   retargetOath?: boolean; // … a new target is picked (the closest visible enemy unit) once per battle round (Weaponised Hatred)
   cpOnKillNear?: { range: number; on: number }; // an enemy unit destroyed within X": on Y+ gain 1CP (Soul Harvester)
+  autoPassShock?: boolean; // its Battle-shock tests are passed automatically (Mob Mentality)
+  shieldsNear?: number; // Grot Shields: hits against a friendly ORKS INFANTRY unit within X" become 1 mortal wound on this unit each
   thralls?: boolean; // Mortal Thralls: wound rolls against this unit hit a DAMNED unit within 3" instead (mortal wounds = Damage)
   arriveShock?: number; // set up on the battlefield: one enemy INFANTRY / MOUNTED unit this close and visible takes a Battle-shock test
   arriveShockAll?: number; // … every enemy unit this close takes one (Dread Reputation)
@@ -299,8 +301,10 @@ export type AbilityStatus = 'auto' | 'partial' | 'manual' | 'info' | 'none' | 'c
 export function abilityStatus(u: UnitState, a: AbilityData): { status: AbilityStatus; note?: string } {
   if (a.type === 'Core') return { status: 'core' };
   const r = abilityRule(u, a);
+  // army rules (Aegis of the Emperor, Martial Ka'tah …) live with the detachment rules
+  if (!r && DET_RULES[a.name]) return { status: DET_RULES[a.name].auto === 'full' ? 'auto' : DET_RULES[a.name].auto === 'partial' ? 'partial' : 'manual' };
   if (!r) return { status: 'none' };
-  const does = !!(r.effects?.length || r.act || r.choice || r.freeDie || r.split);
+  const does = !!(r.effects?.length || r.act || r.choice || r.freeDie || r.split || r.doctrines);
   return { status: r.status ?? (does ? 'auto' : 'info'), note: r.note };
 }
 
@@ -556,6 +560,9 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('enemyOnObjectiveWithin:')) { const d = Number(c.split(':')[1]); return boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= d + 1e-6 && s.objectives.some((o) => unitInRange(s, e, o))); }
   // Choice Samples: a friendly HERETIC ASTARTES INFANTRY unit within X" is below its Starting Strength
   if (c.startsWith('nearBelowStart:')) { const d = Number(c.split(':')[1]); return boardUnits(s, A.owner).some((f) => f.id !== A.id && hasKw(f, 'INFANTRY') && f.factionKeywords.includes('HERETIC ASTARTES') && alive(f).length < f.startingStrength && unitDistance(A, f) <= d + 1e-6); }
+  if (c.startsWith('minModels:')) return alive(A).length >= Number(c.slice(10));
+  // a unit embarked within this TRANSPORT has this keyword (Targetin' Gizmos: a Big Mek inside)
+  if (c.startsWith('embarkedKw:')) { const k = c.slice(11); return s.units.some((x) => x.status === 'embarked' && x.embarkedIn === A.id && alive(x).some((m) => m.keywords.includes(k))); }
   if (c.startsWith('hasAbility:')) return A.abilities.some((a) => a.name === c.slice(11));
   if (c.startsWith('targetWithin:')) return !!T && unitDistance(A, T) <= Number(c.split(':')[1]) + 1e-6;
   // Cultist's Brand: every other model in the unit (Dark Disciples aside) is DAMNED
@@ -1099,6 +1106,8 @@ export function unitFlags(s: GameState, u: UnitState) {
     terrorBelowMod: Math.min(0, ...es.map((e) => e.terrorBelowMod ?? 0)),
     chargedMinus: Math.max(0, ...es.map((e) => e.chargedMinus ?? 0)),
     thralls: es.some((e) => e.thralls),
+    autoPassShock: es.some((e) => e.autoPassShock),
+    shieldsNear: Math.max(0, ...es.map((e) => e.shieldsNear ?? 0)),
     ignoreMoveMods: es.some((e) => e.ignoreMoveMods),
     chargeBonusVsOath: es.reduce((a, e) => a + (e.chargeBonusVsOath ?? 0), 0),
     cpOnOathKill: Math.min(7, ...es.map((e) => e.cpOnOathKill ?? 7)),

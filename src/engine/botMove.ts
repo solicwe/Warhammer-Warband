@@ -782,7 +782,11 @@ export function bestArrival(s: GameState, u: UnitState, how: 'ingress' | 'deepSt
   const near: Pt[] = [];
   if (u.homer) near.push(u.homer); // Teleport Homer: arriving by its token
   for (const n of objectiveNeeds(s, u.owner)) if (n.need > 0) near.push(objPoint(s, n.o));
-  for (const f of [...ctx.foes].sort((a, b) => unitValue(b.u) - unitValue(a.u)).slice(0, 3)) near.push(centre(f.u));
+  for (const f of [...ctx.foes].sort((a, b) => unitValue(b.u) - unitValue(a.u)).slice(0, 3)) {
+    near.push(centre(f.u));
+    // a melee unit dropping in wants the closest legal ring around a target (just over 9"), from every side
+    if (how === 'deepStrike' && ctx.brawler) for (let k = 0; k < 8; k++) near.push({ x: centre(f.u).x + Math.cos((k * Math.PI) / 4) * 10, y: centre(f.u).y + Math.sin((k * Math.PI) / 4) * 10 });
+  }
   near.push(...s.objectives.map((o) => objPoint(s, o)));
   let best: { pos: Spot; v: number } | null = null;
   const seen = new Set<string>();
@@ -802,7 +806,8 @@ export function bestArrival(s: GameState, u: UnitState, how: 'ingress' | 'deepSt
       for (const m of ms) { const q = pos.get(m.id); if (q) { m.x = q.x; m.y = q.y; } }
       const gap = Math.min(...ctx.foes.map((f) => unitDistance(u, f.u)));
       for (const [m, x, y] of saved) { m.x = x; m.y = y; }
-      v -= 1.2 * Math.max(0, gap - 12);
+      // a melee unit 13" away is a turn late; land as close as the rules allow
+      v -= ctx.brawler ? 4 * Math.max(0, gap - 9.5) : 1.2 * Math.max(0, gap - 12);
       v += 0.8 * arrivalStrike(s, u, pos);
     }
     if (!best || v > best.v) best = { pos, v };

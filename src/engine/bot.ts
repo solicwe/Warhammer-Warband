@@ -329,7 +329,8 @@ export function botMoveOne(s: GameState): boolean {
         const strike = withRuleCache(() => arrivalStrike(s, u, pos));
         const valuable = boardUnits(s, other(s.active)).some((e) => unitValue(e) >= 150);
         const grabs = oc(u) > 0 && s.objectives.some((o) => o.controller !== s.active && [...pos.values()].some((q) => Math.hypot(q.x - o.x, q.y - o.y) <= 3.5));
-        const wait = botOff('dswait') ? (valuable ? 0.3 : 0.2) : (valuable ? 0.18 : 0.1);
+        // a melee unit's damage is next turn's charge (a 9" charge is a long shot), so it doesn't sit in reserve waiting
+        const wait = isBrawler(s, u) ? 0 : botOff('dswait') ? (valuable ? 0.3 : 0.2) : (valuable ? 0.18 : 0.1);
         if (!grabs && strike < unitValue(u) * wait) { log(s, `${u.name} waits in reserve for a better target`, 'info', s.active); continue; }
       }
       if (pos && validatePlacement(s, u, pos, how).ok) { ingressUnit(s, u, pos); return true; }

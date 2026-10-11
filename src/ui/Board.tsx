@@ -33,6 +33,10 @@ export interface BoardProps {
   rings?: Ring[];
   zones?: boolean;
   badges?: Record<string, string[]>;
+  /** temporary buffs / debuffs on a unit ("+1 Hit", "−2\" M"): green good, red bad, under the unit */
+  buffTags?: Record<string, [string, boolean][]>;
+  /** Ork units riled up (WAAAGH! …): green flames on their models */
+  riled?: string[];
   losLines?: { a: Pt; b: Pt; cover: boolean }[];
   onTapUnit?: (unitId: string, modelId: string) => void;
   measure?: { a?: Pt; b?: Pt; label?: string; los?: boolean };
@@ -573,6 +577,8 @@ function BoardImpl(props: BoardProps) {
         const pts = ms.map((m) => posOf(u, m.id, m));
         const cx = pts.reduce((a, p) => a + p.x, 0) / Math.max(1, pts.length);
         const minY = Math.min(...pts.map((p, i) => p.y - ms[i].r));
+        const riled = props.riled?.includes(u.id);
+        const tags = props.buffTags?.[u.id];
         return (
           <g key={u.id}>
             {isDraft && ms.map((m) => {
@@ -597,6 +603,12 @@ function BoardImpl(props: BoardProps) {
                   {(isSel || isPicked) && !isDraft && <circle cx={p.x} cy={p.y} r={m.r + 0.3} fill="none" stroke={isSel ? '#f5b83d' : '#ffffff'} strokeWidth={0.18} className="sel-ring" pointerEvents="none" />}
                   {isTarget && !isPicked && !isSel && <circle cx={p.x} cy={p.y} r={m.r + 0.28} fill="none" stroke="#fde68a" strokeWidth={0.1} strokeDasharray="0.3 0.2" pointerEvents="none" />}
                   {isSolo && <circle cx={p.x} cy={p.y} r={m.r + 0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
+                  {riled && (
+                    <g pointerEvents="none">
+                      <path className="ork-flame" d={`M ${p.x - m.r * 0.95} ${p.y} Q ${p.x - m.r * 1.25} ${p.y - m.r * 1.2} ${p.x - m.r * 0.45} ${p.y - m.r * 1.95} Q ${p.x - m.r * 0.35} ${p.y - m.r * 1.3} ${p.x} ${p.y - m.r * 2.5} Q ${p.x + m.r * 0.3} ${p.y - m.r * 1.35} ${p.x + m.r * 0.5} ${p.y - m.r * 1.95} Q ${p.x + m.r * 1.25} ${p.y - m.r * 1.2} ${p.x + m.r * 0.95} ${p.y} Z`} fill="url(#ork-flame)" />
+                      <circle cx={p.x} cy={p.y} r={m.r + 0.12} fill="none" stroke="#4ade80" strokeWidth={0.16} opacity={0.85} className="fx-glow" />
+                    </g>
+                  )}
                   <circle
                     cx={p.x} cy={p.y} r={m.r}
                     fill={bad ? '#7f1d1d' : '#1d2129'}
@@ -681,6 +693,16 @@ function BoardImpl(props: BoardProps) {
                 </g>
               );
             })()}
+            {tags?.length && pts.length > 0 ? (() => {
+              // under the unit (below the transport chip): what is boosting or hampering it right now
+              const maxY = Math.max(...pts.map((p, i) => p.y + ms[i].r)) + (u.transport && s.units.some((x) => x.embarkedIn === u.id && x.status === 'embarked') ? 1.9 : 0.75);
+              return (
+                <text x={cx} y={maxY} fontSize={0.8} textAnchor="middle" stroke="#000" strokeWidth={0.14} paintOrder="stroke" pointerEvents="none" fontWeight={800}>
+                  {tags.slice(0, 4).map(([t, good], k) => <tspan key={k} fill={good ? '#86efac' : '#fca5a5'}>{k ? '  ' : ''}{t}</tspan>)}
+                  {tags.length > 4 && <tspan fill="#fff">  +{tags.length - 4}</tspan>}
+                </text>
+              );
+            })() : null}
             {u.battleShocked && pts.length > 0 && (
               <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 3.1 : 2.2)})`} pointerEvents="none">
                 <rect x={-3.9} y={-0.55} width={7.8} height={1.1} rx={0.55} fill="#4c1d95" stroke="#e9d5ff" strokeWidth={0.09} />

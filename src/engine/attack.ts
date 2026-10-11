@@ -265,8 +265,10 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const extras: string[] = [];
       let flat = 0;
       const rf = getAbility(p, 'rapid-fire', T.keywords);
-      if (rf && (half || fx.some((a) => a.e.rapidFireFullRange))) extras.push(rf.value ?? '1');
-      else if (half && grants(fx, inc, 'rapid fire 1')) extras.push('1');
+      // Close-range Dakka: a granted [RAPID FIRE 1] on a weapon that has it already adds 1 to its value
+      const rfPlus = grants(fx, inc, 'rapid fire +1') ? 1 : 0;
+      if (rf && (half || fx.some((a) => a.e.rapidFireFullRange))) extras.push(rfPlus ? `${rf.value ?? '1'}+1` : rf.value ?? '1');
+      else if (half && (grants(fx, inc, 'rapid fire 1') || rfPlus)) extras.push('1');
       const blast = getAbility(p, 'blast', T.keywords);
       if (blast) flat += parseInt(blast.value ?? '1', 10) * Math.floor(tModels.length / 5);
       else if (grants(fx, inc, 'blast 1')) flat += Math.floor(tModels.length / 5);
@@ -346,7 +348,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       }
       pool.models += 1;
       const cleave = getAbility(p, 'cleave', T.keywords);
-      const cleaveN = cleave ? parseInt(cleave.value ?? '1', 10) : grants(fx, inc, 'cleave 1') ? 1 : 0; // Into the Fray
+      const cleaveN = (cleave ? parseInt(cleave.value ?? '1', 10) : grants(fx, inc, 'cleave 1') || grants(fx, inc, 'cleave +1') ? 1 : 0) + (cleave && grants(fx, inc, 'cleave +1') ? 1 : 0); // Into the Fray; Mow 'Em Down: +1
       pool.instances.push({ A: p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
@@ -631,8 +633,17 @@ export function rollWounds(s: GameState) {
   const at = s.attack!;
   const p = at.pools[at.idx];
   const hw = hitsForWounding(p, s);
-  const { auto } = hw;
-  let { rolls } = hw;
+  let { auto, rolls } = hw;
+  // Grot Shields: a Gretchin unit within 3" takes each hit as 1 mortal wound and the attack ends there
+  const Tg = unitById(s, at.targetId);
+  const grots = (auto || rolls) && at.kind === 'shoot' && hasKw(Tg, 'INFANTRY') && !hasKw(Tg, 'GRETCHIN') && Tg.factionKeywords.includes('ORKS')
+    ? boardUnits(s, Tg.owner).find((g) => g.id !== Tg.id && unitFlags(s, g).shieldsNear > 0 && unitDistance(g, Tg) <= unitFlags(s, g).shieldsNear + 1e-6) : undefined;
+  if (grots) {
+    const n = auto + rolls;
+    log(s, `Grot Shields: ${grots.name} takes ${n} hit(s) meant for ${Tg.name} → ${n} mortal wounds`, 'info', Tg.owner);
+    applyMortalWounds(s, grots, n, 'Grot Shields');
+    auto = 0; rolls = 0;
+  }
   // Mortal Thralls: no Wound roll; the DAMNED unit within 3" (visible to the attackers) takes the Damage as mortal wounds
   const T0 = unitById(s, at.targetId), A0 = unitById(s, at.attackerId);
   const thrall = rolls && unitFlags(s, T0).thralls
@@ -731,6 +742,8 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   m.wounds = 0;
   (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || m.keywords.includes('CHARACTER'), W: m.profile.W });
   if (u.transport && m.keywords.includes('TRANSPORT')) transportHook?.(s, u, m);
+  // Servitors: the Cenobyte Servitors are destroyed with Chaplain Grimaldus
+  if (/grimaldus/i.test(m.name) && u.abilities.some((a) => a.name === 'Servitors')) for (const x of alive(u).filter((n) => /servitor/i.test(n.name))) { x.dead = true; x.wounds = 0; }
   if (!alive(u).length) {
     u.status = 'destroyed';
     s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id, killerId: s.attack?.attackerId, phase: s.phase });

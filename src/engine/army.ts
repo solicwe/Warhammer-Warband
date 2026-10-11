@@ -101,6 +101,8 @@ export function kwPhrase(phrase: string, kws: string[]): boolean {
 /** Can this model ride in the transport, and how many places does it take? */
 export function transportFit(t: TransportInfo, kws: string[]): { why: string | null; space: number } {
   if (kws.some((k) => normKw(k) === 'TRANSPORT')) return { why: 'A TRANSPORT cannot embark', space: 0 };
+  // Logan Grimnar: rides transports that can carry Terminators, taking the space of 4 models
+  if (kws.some((k) => normKw(k) === 'LOGAN GRIMNAR')) return /terminator/i.test(t.text) ? { why: null, space: 4 } : { why: 'Only transports that carry TERMINATOR models', space: 0 };
   const no = t.forbid.filter((f) => kwPhrase(f, kws));
   if (no.length && !(t.except ?? []).some((e) => kwPhrase(e, kws))) return { why: `Cannot carry ${no.join(', ')}`, space: 0 };
   if (t.kinds?.length) {
@@ -744,6 +746,9 @@ export function unitPoints(u: ArmyUnitEntry): number {
   return u.pts + (u.enhancementPts ?? 0) + (u.wargearPts ?? 0);
 }
 
+/** Support character in this list (Captain of the Honour Guard: Cato Sicarius is Support while Marneus Calgar is in the army). */
+const supportIn = (list: ArmyList, d?: DatasheetData) => !!d && (d.isSupport || (d.name === 'Cato Sicarius' && list.units.some((u) => u.datasheet === 'Marneus Calgar')));
+
 /** Enhancements a unit may take from the selected detachments (25.04). */
 /**
  * The bodyguard units `entry` (a leader or a support character) can join: those its datasheet can lead that do
@@ -756,7 +761,7 @@ export function attachOptions(list: ArmyList, faction: FactionData, entry: ArmyU
   // Sorrowscent Vulture (Nightmare Hunt): the bearer can also lead WARP TALONS
   const leads = entry.enhancement === 'Sorrowscent Vulture' ? [...me.leads, 'Warp Talons'] : me.leads;
   return list.units.filter((b) => b.uid !== entry.uid && !b.attachTo && leads.includes(b.datasheet)
-    && !list.units.some((o) => o.uid !== entry.uid && o.attachTo === b.uid && !!sheetOf(o.datasheet)?.isSupport === me.isSupport));
+    && !list.units.some((o) => o.uid !== entry.uid && o.attachTo === b.uid && supportIn(list, sheetOf(o.datasheet)) === supportIn(list, me)));
 }
 
 /**
@@ -929,6 +934,8 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     // Supreme Commander (Trajann Valoris): must be the Warlord
     if (sheet?.abilities.some((a) => a.name.toUpperCase() === 'SUPREME COMMANDER') && !u.warlord) errs.push(`${u.datasheet} must be your Warlord (Supreme Commander)`);
     // ANATHEMA PSYKANA characters can't be the Warlord (Null Maiden Vigil allows it)
+    // Force of Untamed Destruction (Murderfang): "This model cannot be your WARLORD"
+    if (u.warlord && sheet?.abilities.some((ab) => /cannot be your WARLORD/i.test(ab.text ?? ''))) errs.push(`${u.datasheet} cannot be your Warlord`);
     if (u.warlord && sheet?.factionKeywords.includes('ANATHEMA PSYKANA') && !list.detachments.includes('Null Maiden Vigil')) errs.push(`${u.datasheet} (ANATHEMA PSYKANA) cannot be your Warlord`);
   }
   // allied units (Scintillating Legions in a Thousand Sons army): only with a detachment that allows them, up to a points cap, never the Warlord
@@ -978,7 +985,7 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
   // 24.34 Support: a bodyguard unit takes at most one leader unit and one support unit
   for (const body of list.units) {
     const joined = list.units.filter((u) => u.attachTo === body.uid).map((u) => faction.datasheets.find((d) => d.name === u.datasheet)).filter(Boolean) as DatasheetData[];
-    const sup = joined.filter((d) => d.isSupport), lead = joined.filter((d) => !d.isSupport);
+    const sup = joined.filter((d) => supportIn(list, d)), lead = joined.filter((d) => !supportIn(list, d));
     if (lead.length > 1) errs.push(`${body.datasheet}: only one Leader (${lead.map((d) => d.name).join(', ')})`);
     if (sup.length > 1) errs.push(`${body.datasheet}: only one Support (${sup.map((d) => d.name).join(', ')})`);
   }

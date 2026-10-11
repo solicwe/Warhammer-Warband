@@ -1338,3 +1338,7 @@ details > .strat-card { margin-top: 6px; }
 .ds-sheet .ds-line { font-size: 12px; padding: 4px 10px; }
 .ds-sheet .ds-sec { font-size: 13px; padding: 3px 10px; margin-top: 4px; }
 .ds-sheet .ab-st { vertical-align: -1px; padding: 0 3px; }
+/* riled-up Orks: green flames flicker on their models */
+.ork-flame { transform-box: fill-box; transform-origin: 50% 100%; animation: ork-flicker 0.7s ease-in-out infinite alternate; }
+@keyframes ork-flicker { 0% { transform: scale(0.92, 0.85) skewX(-4deg); opacity: 0.8; } 100% { transform: scale(1.04, 1.08) skewX(4deg); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ork-flame { animation: none; } }

@@ -74,7 +74,7 @@ export interface StratRule {
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap';
+export type Special = 'reserveAgain' | 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -84,6 +84,8 @@ export interface StratOption {
   mark?: string;
   /** Red Thirst: the unit becomes Battle-shocked */
   shock?: boolean;
+  /** this option costs this many CP more (Hulking Brutes: +1CP for -1 to every wound roll) */
+  cpExtra?: number;
 }
 export interface EnemyPick {
   range?: number; engaged?: boolean; visible?: boolean; kw?: string[]; notKw?: string[];
@@ -411,7 +413,7 @@ const condText = (c: string) => COND_TH[c] ?? (c.startsWith('nearLast:') ? `must
 export interface StratUse { choice?: number; enemyId?: string; extraIds?: string[]; ctx?: ReactCtx }
 
 /** The rule with the chosen option folded in. */
-export function withChoice(rule: StratRule, choice?: number): StratRule & { mark?: string; shock?: boolean } {
+export function withChoice(rule: StratRule, choice?: number): StratRule & { mark?: string; shock?: boolean; cpExtra?: number } {
   const o = choice !== undefined ? rule.choice?.[choice] : undefined;
   if (!o) return rule;
   return {
@@ -420,7 +422,7 @@ export function withChoice(rule: StratRule, choice?: number): StratRule & { mark
     effects: [...(rule.effects ?? []), ...(o.effects ?? [])],
     do: [...(rule.do ?? []), ...(o.do ?? [])],
     enemyEffects: [...(rule.enemyEffects ?? []), ...(o.enemyEffects ?? [])],
-    mark: o.mark, shock: o.shock,
+    mark: o.mark, shock: o.shock, cpExtra: o.cpExtra,
   };
 }
 
@@ -437,6 +439,7 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
   const costUnit = plan.target === 'own' && u?.owner === p && rule.targetFrom !== 'destroyed' ? u : undefined;
   const cp = stratCost(s, st.id, costUnit, st.cp);
   spendStratagem(s, p, st.id, costUnit, st.cp);
+  if (rule.cpExtra) { s.players[p].cp -= rule.cpExtra; log(s, `${st.name}: +${rule.cpExtra}CP for that option`, 'cp', p); }
   if (rule.limit) (s.players[p].stratLimits ??= {})[st.id] = rule.limit === 'battle' ? -1 : s.round;
   const buffs = rule.buffs ?? [];
   const until = rule.until === 'turn' || rule.until === 'nextCommand' ? 'turn' : 'phase';
@@ -517,6 +520,13 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       const t = (enemy && opts.find((e) => e.id === enemy.id)) ?? opts[0];
       if (!t || !autoCharge(s, u, [t.id])) { log(s, `${label}: ${u.name}'s charge fails`, 'info', p); u.declaredCharge = false; return; }
       u.chargedTurn = -1; // no Charge bonus (Fights First, Lance …) this turn
+      return;
+    }
+    // Infested War Zone: the destroyed unit comes back, whole, in Strategic Reserves
+    case 'reserveAgain': {
+      for (const m of u.models) { m.dead = false; m.wounds = m.profile.W; }
+      u.status = 'reserves'; u.battleShocked = false;
+      log(s, `${label}: a new ${u.name} waits in Strategic Reserves`, 'info', p);
       return;
     }
     case 'embark': case 'embarkEmpty': case 'embarkHeavy': {
@@ -657,6 +667,7 @@ function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto:
 
 function handleReact(s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx): boolean {
   if (s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'gameover') return false;
+  if (on === 'enemyMoved') pilinOut(s, p, ctx);
   const offers = reactionOffers(s, p, on, ctx);
   if (!offers.length) return false;
   const bot = (s.bots ?? []).includes(p) || (s.autoRules ?? []).includes(p);
@@ -678,6 +689,22 @@ function handleReact(s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx): boo
   }
   s.window = { kind: 'stratReaction', player: p, on, ctx, offers: left.map((o) => ({ stratId: o.st.id, units: o.units.map((u) => u.id) })), label: REACT_LABEL[on] ?? on };
   return true;
+}
+
+/** Pilin' Out (Trukk): an enemy unit ends a move within 8" → the passengers get out (rapid disembark: no charge this
+ *  turn). Done for the bot and for players on automatic rules, when the passengers are melee units that want to fight. */
+function pilinOut(s: GameState, p: PlayerId, ctx: ReactCtx) {
+  const e = ctx.unitId ? unitById(s, ctx.unitId) : undefined;
+  if (!e || !onBoard(e) || !((s.bots ?? []).includes(p) || (s.autoRules ?? []).includes(p))) return;
+  for (const t of boardUnits(s, p).filter((x) => x.abilities.some((a) => a.name === 'Pilin’ Out' || a.name === "Pilin' Out") && unitDistance(x, e) <= 8 + 1e-6)) {
+    for (const x of embarkedIn(s, t)) {
+      const pos = placeNear(s, x, t, 3, alive(e)[0] ?? null, (q) => validateDisembark(s, x, t, q).ok);
+      if (!pos) continue;
+      disembarkUnit(s, x, t, pos);
+      x.cantCharge = true;
+      log(s, `Pilin' Out: ${x.name} jumps out of ${t.name}`, 'info', p);
+    }
+  }
 }
 
 export const REACT_LABEL: Partial<Record<ReactOn, string>> = {

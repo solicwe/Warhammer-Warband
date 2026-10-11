@@ -6,24 +6,26 @@
     {
      "attack": "melee",
      "abilities": [
-      "cleave 1"
+      "cleave 1",
+      "cleave +1"
      ]
     }
    ],
-   "status": "partial",
-   "note": "If the weapon already has [CLEAVE], +1: apply manually"
+   "bot": "attack",
+   "status": "auto"
   },
   "CLOSE-RANGE DAKKA": {
    "effects": [
     {
      "attack": "ranged",
      "abilities": [
-      "rapid fire 1"
+      "rapid fire 1",
+      "rapid fire +1"
      ]
     }
    ],
-   "status": "partial",
-   "note": "If the weapon already has [RAPID FIRE], +1: apply manually"
+   "bot": "attack",
+   "status": "auto"
   },
   "ORKS IS NEVER BEATEN": {
    "effects": [
@@ -46,24 +48,49 @@
   "CRAZED RAMPAGE": {
    "effects": [
     {
+     "if": [
+      "!kw:DEFF DREAD"
+     ],
      "fightOnDeath": 4
+    },
+    {
+     "if": [
+      "kw:DEFF DREAD"
+     ],
+     "fightOnDeath": 1
     }
    ],
-   "bot": "never",
-   "status": "partial",
-   "note": "+3 per roll if Deff Dread: apply manually"
+   "bot": "defend",
+   "status": "auto"
   },
   "HULKING BRUTES": {
-   "effects": [
+   "choice": [
     {
-     "defend": {
-      "woundIfStronger": -1,
-      "vs": "ranged"
-     }
+     "label": "Attacks with S > your T: -1 to wound",
+     "effects": [
+      {
+       "defend": {
+        "vs": "ranged",
+        "woundIfStronger": -1
+       }
+      }
+     ]
+    },
+    {
+     "label": "Every ranged attack: -1 to wound (+1CP)",
+     "effects": [
+      {
+       "defend": {
+        "vs": "ranged",
+        "wound": -1
+       }
+      }
+     ],
+     "cpExtra": 1
     }
    ],
-   "status": "partial",
-   "note": "+1CP option (−1 to Wound for every attack): apply manually"
+   "bot": "defend",
+   "status": "auto"
   },
   "SPEEDIEST FREEKS": {
    "effects": [
@@ -99,11 +126,22 @@
   "GOADED INTO ACTION": {
    "do": [
     {
+     "on": "self",
+     "if": [
+      "!riled"
+     ],
      "surge": "D6"
+    },
+    {
+     "on": "self",
+     "if": [
+      "riled"
+     ],
+     "surge": "D6",
+     "moveReroll": true
     }
    ],
-   "status": "partial",
-   "note": "Re-roll D6 if riled up: apply manually"
+   "status": "auto"
   },
   "WHERE D'YA FINK YOU'RE GOING?": {
    "effects": [
@@ -112,7 +150,8 @@
     }
    ],
    "bot": "never",
-   "status": "partial"
+   "status": "auto",
+   "note": "MONSTER / VEHICLE units make one Desperate Escape roll per model (not three extra per Beast Snagga unit)"
   },
   "MIND MOSTLY ON THE MISSION": {
    "effects": [
@@ -141,21 +180,39 @@
   "GRAB IT": {
    "do": [
     {
+     "on": "self",
      "move": "6",
      "noCharge": true
     }
    ],
-   "status": "partial",
-   "note": "Must end on an objective"
+   "special": [
+    "moveEndObjective"
+   ],
+   "status": "auto"
   },
   "SCARPER!": {
+   "react": "enemyMoved",
+   "unitIf": [
+    "notEngaged",
+    "nearLast:8"
+   ],
    "do": [
     {
+     "on": "self",
+     "if": [
+      "!leaderAttached"
+     ],
      "move": "D6"
+    },
+    {
+     "on": "self",
+     "if": [
+      "leaderAttached"
+     ],
+     "move": "6"
     }
    ],
-   "status": "partial",
-   "note": "6\" if the unit has a Leader"
+   "status": "auto"
   },
   "WHIRLIGIG EVASION": {
    "do": [
@@ -164,6 +221,140 @@
      "moveIfRiled": "6"
     }
    ]
+  },
+  "DELICIOUS EATING SQUIGS": {
+   "do": [
+    {
+     "on": "self",
+     "healNear": {
+      "range": 3,
+      "units": [
+       "ORKS",
+       "INFANTRY"
+      ],
+      "heal": "3"
+     }
+    }
+   ],
+   "status": "auto"
+  },
+  "MOB MENTALITY": {
+   "unitIf": [
+    "minModels:13"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buffNear": {
+      "range": 12,
+      "units": [
+       "ORKS"
+      ],
+      "effects": [
+       {
+        "autoPassShock": true
+       }
+      ],
+      "one": false
+     }
+    }
+   ],
+   "status": "auto",
+   "note": "Applies to every ORKS unit within 12\" (the card: one of them)"
+  },
+  "IMPENDING KRUNCH": {
+   "react": "chargeMoveEnd",
+   "enemy": {
+    "engaged": true,
+    "all": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "KEEP IT RUNNIN'": {
+   "react": "fightPhaseEnd",
+   "unitIf": [
+    "notEngaged"
+   ],
+   "special": [
+    "embark"
+   ],
+   "status": "auto"
+  },
+  "DRIVE-BY BUSTIN'": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "hit": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto",
+   "note": "+1 to Hit for the whole transport's shooting"
+  },
+  "GUN-CRAZY SHOW-OFFS": {
+   "react": "enemyShot",
+   "unitIf": [
+    "lostToLast"
+   ],
+   "enemy": {
+    "lastActor": true
+   },
+   "special": [
+    "shootAt"
+   ],
+   "botReact": "shoot",
+   "status": "auto"
+  },
+  "INFESTED WAR ZONE": {
+   "react": "ownDestroyed",
+   "targetFrom": "destroyed",
+   "targetKw": [
+    "GRETCHIN"
+   ],
+   "special": [
+    "reserveAgain"
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "GROT SHIELDS": {
+   "targetKw": [
+    "GRETCHIN"
+   ],
+   "effects": [
+    {
+     "shieldsNear": 3
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "FLYIN' HEADBUTT": {
+   "react": "ownDestroyed",
+   "targetFrom": "destroyed",
+   "targetKw": [
+    "AIRCRAFT"
+   ],
+   "enemy": {},
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 4,
+      "n": 8
+     }
+    }
+   ],
+   "botReact": "always",
+   "status": "auto",
+   "note": "Any enemy unit (the card: within 12\"); its Deadly Demise is still rolled"
   }
  }
 }

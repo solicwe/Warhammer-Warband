@@ -806,8 +806,8 @@
   }
  },
  "SUPREME COMMANDER": {
-  "status": "info",
-  "note": "Must be the Warlord"
+  "status": "auto",
+  "note": "Checked by the army builder: must be your Warlord"
  },
  "Primarch of the XIII (Aura)": {
   "effects": [
@@ -4365,8 +4365,8 @@
   "note": "Psyker level: psychic abilities used in a battle round add up to at most the unit's psyker level"
  },
  "Special Move Types": {
-  "status": "info",
-  "note": "Shock / Assault disembark: used when disembarking (handled via the transport's ability)"
+  "status": "auto",
+  "note": "Shock / Assault disembark: done by the transport's ability"
  },
  "Hunter": {
   "status": "auto",
@@ -4397,8 +4397,8 @@
   ]
  },
  "Supreme Commander": {
-  "status": "info",
-  "note": "Must be the Warlord (select in the army builder)"
+  "status": "auto",
+  "note": "Checked by the army builder: must be your Warlord"
  },
  "Strategic Acumen": {
   "act": [
@@ -4542,15 +4542,15 @@
   }
  },
  "Chief Librarian (psyker level 3)": {
-  "status": "info",
+  "status": "auto",
   "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
  },
  "Librarian (psyker level 1)": {
-  "status": "info",
+  "status": "auto",
   "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
  },
  "Rune Priest (psyker level 3)": {
-  "status": "info",
+  "status": "auto",
   "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
  },
  "Hood of Hellfire (Psychic)": {
@@ -4645,8 +4645,8 @@
   }
  },
  "Captain of the Honour Guard": {
-  "status": "info",
-  "note": "If Marneus Calgar is included: Leader becomes Support (can attach to the same unit)"
+  "status": "auto",
+  "note": "With Marneus Calgar in the army it attaches as Support (army builder)"
  },
  "Knight Champion of Macragge (Once per phase, per army)": {
   "act": {
@@ -5820,8 +5820,8 @@
   "note": "Split into 2 units of 5 in the army builder (⋮ menu)"
  },
  "Embarking within Transports": {
-  "status": "info",
-  "note": "Can embark in transports that carry TERMINATOR, takes 4 slots"
+  "status": "auto",
+  "note": "Rides transports that carry TERMINATOR models, taking 4 spaces"
  },
  "Murder-maker [Aura]": {
   "effects": [
@@ -5836,8 +5836,8 @@
   ]
  },
  "Force of Untamed Destruction": {
-  "status": "info",
-  "note": "Cannot be the Warlord"
+  "status": "auto",
+  "note": "Checked by the army builder: cannot be your Warlord"
  },
  "Beastial Fury": {
   "effects": [
@@ -5947,8 +5947,8 @@
   }
  },
  "Servitors": {
-  "status": "info",
-  "note": "Grimaldus destroyed: all Servitors destroyed (apply manually)"
+  "status": "auto",
+  "note": "When Grimaldus dies, the Cenobyte Servitors die too"
  },
  "Sigismund's Heir": {
   "effects": [
@@ -7343,7 +7343,7 @@
     "assaultDisembark": true
    }
   ],
-  "status": "partial",
-  "note": "Units disembarking after it moved can still charge (assault disembark move by hand)"
+  "status": "auto",
+  "note": "Units disembarking after it made a Normal move can still charge"
  }
 }

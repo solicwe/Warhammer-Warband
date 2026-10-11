@@ -84,6 +84,7 @@ export function TokenSprites() {
           <path d="M50 58 L45 66 H55 Z" fill="#33302a" />
         </symbol>
  <clipPath id="clip-round" clipPathUnits="objectBoundingBox"><circle cx="0.5" cy="0.5" r="0.5" /></clipPath>
+      <linearGradient id="ork-flame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor="#16a34a" stopOpacity="0.95" /><stop offset="0.55" stopColor="#4ade80" stopOpacity="0.85" /><stop offset="1" stopColor="#d9f99d" stopOpacity="0.15" /></linearGradient>
         <symbol id="tok-crown" viewBox="0 0 100 60">
           <path d="M6 54 L14 10 L34 34 L50 4 L66 34 L86 10 L94 54 Z" fill="#f5b83d" stroke="#5a3d00" strokeWidth="5" />
         </symbol>

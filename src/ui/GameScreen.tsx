@@ -25,7 +25,7 @@ import {
 import {
   abilityChoices, acceptOffer, closeOffers, freeDiceNow, manualActs, pickAbilities, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../engine/activations';
-import { activeLabels, unitFlags } from '../engine/effects';
+import { activeLabels, isRiled, unitFlags, type Effect } from '../engine/effects';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
 import { advantage, applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen, type Intent } from '../engine/botLook';
@@ -94,6 +94,45 @@ const mergePaths = (base: Paths, add: Paths): Paths => { const o = new Map(base)
 const pName = (s: GameState, p: PlayerId) => s.players[p].name;
 /** What the look worker answers: progress while it plays the ways out, then the style (and, pondering, the board it starts from). */
 type LookMsg = { id: number; sig?: string | null; name?: string; values?: Record<string, number>; intents?: Intent[]; progress?: { name: string; value: number; done: number; total: number } };
+
+
+const sg = (n: number) => (n > 0 ? `+${n}` : `−${-n}`);
+/** Short "+1 Hit" tags for an effect on a unit, and whether it helps that unit. */
+function fxTags(e: Effect): [string, boolean][] {
+  const o: [string, boolean][] = [];
+  const att = e.attack === 'melee' ? ' melee' : e.attack === 'ranged' ? ' shoot' : '';
+  const num = (v: number | undefined, name: string, goodUp = true) => { if (v) o.push([`${sg(v)} ${name}`, (v > 0) === goodUp]); };
+  num(e.hit, `Hit${att}`); num(e.wound, `Wound${att}`); num(e.ap, 'AP'); num(e.strength, 'S'); num(e.attacks, 'A'); num(e.damage, 'D');
+  num(e.move, 'M'); num(e.ld, 'Ld'); num(e.oc, 'OC'); num(e.toughness, 'T'); num(e.chargeBonus, 'Charge');
+  if (e.reroll) o.push([`Re-roll${att}`, true]);
+  for (const a of e.abilities ?? []) if (a !== 'psychic') o.push([a.replace(/\b\w/g, (c) => c.toUpperCase()), true]);
+  const d = e.defend;
+  if (d) {
+    if (d.hit) o.push([`${sg(d.hit)} to be hit`, d.hit < 0]);
+    if (d.wound) o.push([`${sg(d.wound)} to be wounded`, d.wound < 0]);
+    if (d.ap) o.push([`AP ${sg(-d.ap)} vs it`, d.ap > 0]);
+    if (d.damage) o.push(['−1 D vs it', true]);
+    if (d.inv) o.push([`${d.inv}+ inv`, true]);
+    if (d.fnp) o.push([`FNP ${d.fnp}+`, true]);
+    if (d.save) o.push([`+${d.save} Sv`, true]);
+    if (d.cover) o.push(['Cover', true]);
+  }
+  if (e.fightsFirst) o.push(['Fights first', true]);
+  if (e.stealth) o.push(['Stealth', true]);
+  if (e.loneOperative) o.push(['Lone Op', true]);
+  if (e.cannotFallBack) o.push(['No Fall Back', false]);
+  if (e.noOverwatch) o.push(['No Overwatch', false]);
+  if (e.grounded) o.push(['Grounded', false]);
+  return o;
+}
+const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
+  'hit+1': ['+1 Hit', true], 'hit-1': ['−1 Hit', false], 'wound+1': ['+1 Wound', true], 'wound-1': ['−1 Wound', false],
+  rerollHits1: ['Re-roll Hit 1s', true], rerollHits: ['Re-roll Hits', true], rerollWounds1: ['Re-roll Wound 1s', true], rerollWounds: ['Re-roll Wounds', true],
+  'ap+1': ['+1 AP', true], lethal: ['Lethal Hits', true], sustained1: ['Sustained 1', true], devastating: ['Dev Wounds', true], ignoresCover: ['Ignores Cover', true],
+  fnp4: ['FNP 4+', true], fnp5: ['FNP 5+', true], fnp6: ['FNP 6+', true], 'save+1': ['+1 Sv', true], 'damage-1': ['−1 D vs it', true], smoke: ['Smoke', true],
+  'enemyHit-1': ['−1 to be hit', true], 'enemyWound-1': ['−1 to be wounded', true], 'enemyAp-1': ['AP −1 vs it', true], cover: ['Cover', true],
+  fightsFirst: ['Fights first', true], 'advanceCharge+1': ['+1 Adv/Charge', true],
+};
 
 export function GameScreen({ initial, onExit }: { initial: GameState; onExit: () => void }) {
   const { state: s, act, undo, canUndo } = useGame(initial);
@@ -648,6 +687,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (!onBoard(u)) continue;
     const ls = new Set([...u.buffs.map((b) => b.label), ...(u.timed ?? []).map((x) => x.label)].filter((l): l is string => !!l && stratNames.has(l)));
     for (const l of ls) (badges[u.id] ??= []).push(l);
+  }
+  // temporary buffs / debuffs (abilities, stratagems, marks) as "+1 Hit" / "−2\" M" tags under each unit
+  const buffTags: Record<string, [string, boolean][]> = {};
+  const riled: string[] = [];
+  for (const u of s.units) {
+    if (!onBoard(u)) continue;
+    const tags = [...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e))];
+    const seen = new Set<string>();
+    const uniq = tags.filter(([t]) => !seen.has(t) && !!seen.add(t));
+    if (uniq.length) buffTags[u.id] = uniq;
+    if (u.abilities.some((a) => a.name === 'Waaagh!') || u.riledUntil !== undefined || u.timed?.some((t) => t.e.riled)) if (isRiled(s, u)) riled.push(u.id);
   }
   const losLines: { a: Pt; b: Pt; cover: boolean }[] = [];
   const noLos: string[] = [];
@@ -2014,6 +2064,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           picked={picked}
           rings={rings}
           badges={badges}
+          buffTags={buffTags}
+          riled={riled}
           goals={goals}
           losLines={losLines}
           noLos={noLos}

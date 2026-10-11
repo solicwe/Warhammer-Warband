@@ -12,8 +12,8 @@
   "note": "The Scarab Occult Sorcerer attempts Rituals (rituals.ts)"
  },
  "Pact of Sorcery": {
-  "status": "info",
-  "note": "Scintillating Legions units only with the Changehost of Deceit (checked in the army builder)"
+  "status": "auto",
+  "note": "Checked by the army builder (allied units)"
  },
  "Dark Pacts": {
   "status": "info",
@@ -167,8 +167,16 @@
     "limit": "turn"
    }
   ],
-  "status": "partial",
-  "note": "Once per turn a Hit or Wound roll becomes a 6 (saving throws: not offered)"
+  "status": "auto",
+  "note": "Once per turn a Hit or Wound roll becomes a 6, or a failed save is ignored",
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "negateOnce": "turn"
+    }
+   }
+  ]
  },
  "Bestial Prophet": {
   "effects": [
@@ -447,8 +455,8 @@
   ]
  },
  "SUPREME COMMANDER": {
-  "status": "info",
-  "note": "If included, must be the WARLORD"
+  "status": "auto",
+  "note": "Checked by the army builder: must be your Warlord"
  },
  "Bringers of Change": {
   "effects": [
@@ -636,8 +644,8 @@
     "noBigGunsPenalty": true
    }
   ],
-  "status": "partial",
-  "note": "No penalty for big guns in combat; shooting the demolisher cannon into combat is up to you"
+  "status": "auto",
+  "note": "No penalty for big guns in combat; vehicles can already shoot units in Engagement Range"
  },
  "Blazing Salvoes": {
   "act": {
@@ -1373,8 +1381,8 @@
     }
    ]
   },
-  "status": "partial",
-  "note": "Rolls at the end of the phase: 2+ it returns with 3 wounds (next to its unit)"
+  "status": "auto",
+  "note": "At the end of the phase on a 2+ it returns with 3 wounds"
  },
  "Curse of Life": {
   "status": "auto",

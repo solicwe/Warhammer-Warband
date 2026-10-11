@@ -639,6 +639,7 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean }[] = [
   { name: 'Scryer of Fates (Psychic)', n: 3, infantryOnly: false }, // Thousand Sons: Ahriman
   { name: 'Duplicitous Malediction', n: 3, infantryOnly: false },
   { name: 'Fleet Command', n: 3, infantryOnly: false }, // Chaos Space Marines: Masters of the Maelstrom
+  { name: "Kaptin's Hat", n: 3, infantryOnly: true }, // Orks: Wreckas enhancement
 ];
 
 function redeployFor(s: GameState, p: PlayerId) {
@@ -792,6 +793,7 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
   } else {
     const ld = bestLd(u, s);
     const mod = unitFlags(s, u).ignoreMods ? 0 : t.mod ?? 0;
+    if (unitFlags(s, u).autoPassShock) { t.result = 12; t.passed = true; t.auto = true; log(s, `${u.name}: Battle-shock test passed automatically`, 'info', u.owner); return; }
     let r = rollN(s, 2);
     t.result = r[0] + r[1] + mod;
     t.passed = t.result >= ld;

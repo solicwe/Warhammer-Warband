@@ -101,8 +101,8 @@
   ]
  },
  "Supreme Commander": {
-  "status": "info",
-  "note": "If included, must be the WARLORD"
+  "status": "auto",
+  "note": "Checked by the army builder: must be your Warlord"
  },
  "Praesidium Shield": {
   "gear": true,

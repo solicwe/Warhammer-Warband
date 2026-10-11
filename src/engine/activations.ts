@@ -124,6 +124,8 @@ export interface Action {
   mutate?: boolean; // Mutate Landscape: the objective the unit controls is mutated (enemy units ending a move on it: 4+ D3 mortal wounds)
   pactTest?: { pass?: Effect[] }; // Desperate Pact: Leadership test; failed → D3 mortal wounds, passed → these effects (until `until`)
   mortalsTable?: { min: number; expr: string }[]; // roll one D6: the highest row it reaches is the mortal wounds the target suffers
+  healNear?: { range: number; units?: string[]; heal: string }; // every friendly unit within X" (with these keywords) heals (Delicious Eating Squigs)
+  buffNear?: { range: number; units?: string[]; effects: Effect[]; one?: boolean }; // timed effects on friendly units within X" (one: the closest other one)
   addKeyword?: string; // the unit gains this keyword for the rest of the battle (Daemonic Possession)
   ldFailMortals?: string; // the target takes a Leadership test; failed → it suffers these mortal wounds (Gift of Chaos)
   addWounds?: number; // +X to the Wounds characteristic for the rest of the battle (the ability's models; Living Carapace)
@@ -517,6 +519,12 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
         s.units = s.units.filter((x) => x.id !== u.id);
         log(s, `${def.name}: the traitor is revealed — ${u.sources[0]} takes ${victim.name}'s place and leads ${target.name}`, 'info', u.owner);
       }
+    }
+    if (a.healNear) for (const f of boardUnits(s, on.owner).filter((f) => unitDistance(f, on) <= a.healNear!.range + 1e-6 && (!a.healNear!.units || unitMatches(f, a.healNear!.units)))) { heal(f, rollExpr(s, a.healNear.heal).total); log(s, `${def.name}: ${f.name} heals`, 'info', u.owner); }
+    if (a.buffNear) {
+      const near = boardUnits(s, on.owner).filter((f) => (a.buffNear!.one ? f.id !== on.id : true) && unitDistance(f, on) <= a.buffNear!.range + 1e-6 && (!a.buffNear!.units || unitMatches(f, a.buffNear!.units)) && alive(on).some((m) => unitVisibleTo(s, m, f) || f.id === on.id))
+        .sort((x, y) => (y.pts * alive(y).length) / y.startingStrength - (x.pts * alive(x).length) / x.startingStrength);
+      for (const f of a.buffNear.one ? near.slice(0, 1) : near) for (const e of a.buffNear.effects) addTimed(s, f, { e, label: def.name, until: a.until ?? 'phase', by: u.owner });
     }
     if (a.pactTest) {
       if (!ldTest(s, on, `${def.name} (Desperate Pact)`)) applyMortalWounds(s, on, rollExpr(s, 'D3').total, 'Desperate Pact');
