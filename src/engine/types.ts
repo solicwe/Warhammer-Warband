@@ -199,6 +199,7 @@ export interface TransportInfo {
 }
 
 export interface UnitState {
+  startEngaged?: { turn: number; ids: string[] }; // enemy units it was engaged with at the start of this turn (Thrill Seekers)
   id: string;
   owner: PlayerId;
   name: string;
@@ -307,6 +308,10 @@ export interface ObjectiveState {
 }
 
 export interface PlayerState {
+  favoured?: string; // Slaanesh's Chosen: the unit that is the army's Favoured Champions
+  favouredTurn?: number; // … last changed in this turn (only the first kill in each turn passes it on)
+  pledge?: { round: number; n: number; boosted?: boolean }; // Coterie of the Conceited: this battle round's pledge to Slaanesh
+  pactPoints?: number; // … Pact points gained so far
   /** World Eaters: Blessings of Khorne active this battle round, extra ones (one phase / round, maybe for a keyword only), Bloodshed points */
   blessings?: { round: number; ids: string[] };
   blessingExtras?: { id: string; kw?: string; key: string }[];
@@ -532,6 +537,7 @@ export type Window =
   /** abilities that let units react out of turn ("if an enemy unit ends a move within 8\", this unit can make a Normal move") */
   | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
   /** Blessings of Khorne: the dice rolled and the ways to use them; the player picks one (or none) */
+  | { kind: 'pledge'; player: PlayerId; max: number }
   | { kind: 'blessings'; player: PlayerId; dice: number[]; picks: import('./blessings').BlessingPick[]; extra?: { label: string; kw?: string; until: 'phase' | 'round' }; rerolls?: number; rerollFrom?: string }
   /** a rule asks the player to pick one unit ("select one enemy unit hit by those attacks"); `acts` go to it */
   | { kind: 'pickUnit'; player: PlayerId; label: string; units: string[]; holderId: string; acts: import('./activations').Action[] }
@@ -585,6 +591,7 @@ export interface BattleStats {
 }
 
 export interface GameState {
+  phaseTargets?: { key: string; list: [string, string][] }; // [attacker or charger, target] this phase (Thrill Seekers)
   version: 3;
   rng: number;
   round: number;
@@ -660,7 +667,7 @@ export interface GameState {
   tempCharacters?: { unitId: string; modelId: string; by: PlayerId }[];
   /** Gift of Change: Chaos Spawn to set up at the end of the phase where a character died */
   spawns?: { owner: PlayerId; x: number; y: number; label: string }[];
-  revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number }[];
+  revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number; ld?: boolean; woundsRoll?: string }[];
   /** mortal wounds a unit suffers at the end of the current phase (Warpmeld Sacrifice) */
   phaseMortals?: { unitId: string; expr: string; label: string }[];
   /** Split (Horrors): destroyed Horrors that roll to split once the attacking unit has finished its attacks */

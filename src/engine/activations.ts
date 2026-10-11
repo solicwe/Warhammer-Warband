@@ -9,6 +9,7 @@ import {
 import { RULES } from './config';
 import { autoPact } from './darkPacts';
 import { d6, rollExpr, rollN } from './dice';
+import { favouredOnKill } from './emperorsChildren';
 import {
   abilityOff, abilityRule, abilitySheet, activeRules, addTimed, cond, DET_RULES, fightOnDeathFor, grantsOf, isRiled, retaliateFor, type AbilityRule, type Effect, type FreeDieSpec,
   type Incoming, type Limit, unitFlags, unitMatches,
@@ -66,7 +67,7 @@ export interface Action {
   mark?: string;
   heal?: string; // wounds regained (on the most damaged model)
   revive?: number; // destroyed models returned
-  reviveLater?: { on: number; wounds: number }; // this model rolls at the end of the phase to come back
+  reviveLater?: { on: number; wounds: number; ld?: boolean; woundsRoll?: string }; // this model rolls at the end of the phase to come back (ld: a Leadership test instead; woundsRoll: with that many wounds)
   mortals?: string; // mortal wounds
   mortalsVehicle?: string; // … instead, if the unit is a VEHICLE
   mortalsMV?: string; // … instead, if the unit is a MONSTER or VEHICLE
@@ -98,7 +99,7 @@ export interface Action {
   log?: string;
   // stratagem actions
   if?: string[]; // only when these conditions hold (on the unit using it; "target…" ones on the other unit)
-  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; n?: number; nWounds?: boolean }; // one D6 per model engaged with the target (or n dice): each X+ is a mortal wound
+  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; n?: number; nWounds?: boolean; dmg?: string; shockIfAny?: number }; // dmg: each success inflicts this many (D3); shockIfAny: a Battle-shock test (this modifier) if any got through // one D6 per model engaged with the target (or n dice): each X+ is a mortal wound
   ldFail?: Effect[]; // the target takes a Leadership test; failed → these effects (until `until`)
   setOath?: boolean; // the target becomes your Oath of Moment target
   pileInRoll?: string; // Pile-in moves up to this many inches (rolled now) this phase
@@ -133,10 +134,19 @@ export interface Action {
   buffNear?: { range: number; units?: string[]; effects: Effect[]; one?: boolean }; // timed effects on friendly units within X" (one: the closest other one)
   addKeyword?: string; // the unit gains this keyword for the rest of the battle (Daemonic Possession)
   ldFailMortals?: string; // the target takes a Leadership test; failed → it suffers these mortal wounds (Gift of Chaos)
+  ldMod?: number; ldModIf?: string[]; // … with this modifier to the test (when these conditions hold for the target)
+  allowCharge?: boolean; // the unit can declare a charge this turn after all (Ceaseless Onslaught: an assault disembark)
+  agonyHeal?: number; // Sustained by Agony: one friendly LEGIONS OF EXCESS unit within X": Daemonettes get D3+3 models back, others 3 wounds
+  chargeOnlyTarget?: boolean; // the unit's charges this turn must end engaged with the target (Lethal Obsession)
+  embarkNear?: number; // the target embarks within a friendly TRANSPORT it is wholly within this many inches of (Accomplished Tactician)
   addWounds?: number; // +X to the Wounds characteristic for the rest of the battle (the ability's models; Living Carapace)
   soulLink?: boolean; // the bearer copies the datasheet abilities of a CHARACTER in the target unit and gains PSYKER (Soul Link)
   falsehood?: boolean; // one model of the target unit is replaced by this unit's model, which joins it as its Leader (Falsehood)
 }
+
+/** Embarking by a rule lives with the transports (game.ts registers it). */
+let embarkNearHook: ((s: GameState, u: UnitState, range: number, why: string) => void) | null = null;
+export const setEmbarkNear = (fn: typeof embarkNearHook) => { embarkNearHook = fn; };
 
 export interface ActSpec {
   when: Trigger;
@@ -469,10 +479,10 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
 }
 
 /** Leadership test for an ability: 2D6 >= the best Ld of the unit. */
-export function ldTest(s: GameState, u: UnitState, why: string): boolean {
+export function ldTest(s: GameState, u: UnitState, why: string, mod = 0): boolean {
   const r = rollN(s, 2);
   const ld = ldOf(s, u);
-  const ok = r[0] + r[1] >= ld;
+  const ok = r[0] + r[1] + mod >= ld;
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Leadership · ${u.name}`, dice: r, result: `${r[0] + r[1]} vs ${ld}+ → ${ok ? 'passed' : 'failed'}`, good: ok });
   log(s, `${why}: Leadership test ${u.name} [${r.join('+')}] = ${r[0] + r[1]} vs ${ld}+ → ${ok ? 'passed' : 'failed'}`, 'roll', u.owner);
   return ok;
@@ -495,12 +505,14 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       const n = q.nWounds ? Math.min(q.max ?? 99, alive(u).reduce((x, m) => x + m.wounds, 0)) : q.n ?? (q.all ? alive(u).length : alive(u).filter((m) => alive(on).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length);
       const plus = q.plus && (q.plusIf ?? []).every((c) => cond(c, { s, A: u, T: on, holder: u })) ? q.plus : 0;
       const dice = rollN(s, Math.max(1, n));
-      const hits = Math.min(q.max ?? 99, dice.filter((v) => v + plus >= q.on).length);
+      const succ = dice.filter((v) => v + plus >= q.on).length;
+      const hits = Math.min(q.max ?? 99, q.dmg ? Array.from({ length: succ }, () => rollExpr(s, q.dmg!).total).reduce((x, y) => x + y, 0) : succ);
       log(s, `${def.name}: rolled [${dice.join(' ')}]${plus ? ` +${plus}` : ''} → ${on.name} suffers ${hits} mortal wounds`, 'roll', u.owner);
       if (hits) applyMortalWounds(s, on, hits, def.name);
+      if (hits && q.shockIfAny !== undefined && onBoard(on)) shockTest(s, on, q.shockIfAny, def.name);
     }
     if (a.ldFail && !ldTest(s, on, def.name)) for (const e of a.ldFail) addTimed(s, on, { e, label: def.name, until: a.until ?? 'turn', by: u.owner });
-    if (a.ldFailMortals && !ldTest(s, on, def.name)) { const n = rollExpr(s, a.ldFailMortals).total; log(s, `${def.name}: ${on.name} suffers ${n} mortal wound(s)`, 'roll', u.owner); applyMortalWounds(s, on, n, def.name); }
+    if (a.ldFailMortals && !ldTest(s, on, def.name, a.ldMod && (a.ldModIf ?? []).every((c) => cond(c, { s, A: u, T: on, holder: u })) ? a.ldMod : 0)) { const n = rollExpr(s, a.ldFailMortals).total; log(s, `${def.name}: ${on.name} suffers ${n} mortal wound(s)`, 'roll', u.owner); applyMortalWounds(s, on, n, def.name); }
     if (a.addWounds) for (const m of (def.bearers?.length ? def.bearers : alive(on)).filter((m) => !m.dead)) { m.profile = { ...m.profile, W: m.profile.W + a.addWounds }; m.wounds += a.addWounds; }
     if (a.soulLink && target) {
       const bs = def.bearers?.[0]?.source;
@@ -669,8 +681,8 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.reviveLater && ctx.deadModelId) {
       const m = on.models.find((x) => x.id === ctx.deadModelId);
       if (m) {
-        (s.revivals ??= []).push({ unitId: on.id, modelId: m.id, label: def.name, on: a.reviveLater.on, wounds: a.reviveLater.wounds, x: m.x, y: m.y });
-        log(s, `${def.name}: ${m.name} rolls to return at the end of the phase (${a.reviveLater.on}+)`, 'info', u.owner);
+        (s.revivals ??= []).push({ unitId: on.id, modelId: m.id, label: def.name, on: a.reviveLater.on, wounds: a.reviveLater.wounds, x: m.x, y: m.y, ld: a.reviveLater.ld, woundsRoll: a.reviveLater.woundsRoll });
+        log(s, `${def.name}: ${m.name} ${a.reviveLater.ld ? 'takes a Leadership test' : `rolls (${a.reviveLater.on}+)`} to return at the end of the phase`, 'info', u.owner);
       }
     }
     if (a.mortals || a.mortalsVehicle || a.mortalsMV) {
@@ -722,6 +734,15 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       log(s, `${def.name}: ${on.name} can surge ${on.extraMove.max}" (towards the closest enemy)`, 'info', u.owner);
       offerExtraMove(s, on, `${def.name}: surge ${on.extraMove.max}"`);
     }
+    if (a.allowCharge) { on.cantCharge = false; log(s, `${def.name}: ${on.name} can still charge this turn`, 'info', u.owner); }
+    if (a.agonyHeal) {
+      const loe = boardUnits(s, u.owner).filter((f) => f.factionKeywords.includes('LEGIONS OF EXCESS') && unitDistance(f, on) <= a.agonyHeal! + 1e-6)
+        .sort((x, y) => y.models.filter((m) => m.dead).length - x.models.filter((m) => m.dead).length)[0];
+      if (loe && loe.sources.includes('Daemonettes')) { const n = revive(s, loe, rollExpr(s, 'D3+3').total); log(s, `${def.name}: ${n} Daemonettes return to ${loe.name}`, 'info', u.owner); }
+      else if (loe) { const n = heal(loe, 3); log(s, `${def.name}: ${loe.name} regains ${n} wounds`, 'info', u.owner); }
+    }
+    if (a.chargeOnlyTarget && target) { u.chargeOnly = { turn: s.turn, ids: [target.id] }; log(s, `${def.name}: ${u.name}'s charge must end engaged with ${target.name}`, 'info', u.owner); }
+    if (a.embarkNear) embarkNearHook?.(s, on, a.embarkNear, def.name);
     if (a.setQuarry && target) { u.quarry = target.id; log(s, `${def.name}: target ${target.name}`, 'info', u.owner); }
     if (a.setPriority) {
       const o = s.objectives.find((q) => alive(on).some((m) => dist(m, q) <= 3 + m.r)) ?? s.objectives.find((q) => q.type === 'central') ?? s.objectives[0];
@@ -840,7 +861,7 @@ function unleashHellDue(s: GameState, A: UnitState, force: boolean) {
 
 /** A rule asks for one unit: the bot (or a player on auto rules) takes the most valuable one, a player gets a prompt. */
 function offerPickUnit(s: GameState, holder: UnitState, label: string, units: UnitState[], acts: Action[]) {
-  const auto = (s.bots ?? []).includes(holder.owner) || (s.autoRules ?? []).includes(holder.owner);
+  const auto = (s.bots ?? []).includes(holder.owner) || ((s.autoRules ?? []).includes(holder.owner) && !(s.decides ?? []).includes(holder.owner));
   if (auto || units.length === 1 || s.window) { runActions(s, label.split(':')[0], holder, acts, [...units].sort((a, b) => b.pts - a.pts)[0]); return; }
   s.window = { kind: 'pickUnit', player: holder.owner, label, units: units.map((u) => u.id), holderId: holder.id, acts };
 }
@@ -1365,6 +1386,30 @@ export function arrivalShock(s: GameState, u: UnitState) {
 
 // An enemy unit is wiped out: Eye of Abaddon / Weaponised Hatred (your Oath / focus / Vendetta target), Soul Harvester,
 // Architect of Ruin (a new hated foe)
+// Slaanesh's Chosen: a CHARACTER unit that wipes out an enemy unit becomes the Favoured Champions
+onModelKilled((s, u, _m, killerId) => {
+  if (!alive(u).length && killerId) favouredOnKill(s, s.units.find((x) => x.id === killerId));
+});
+
+// Accomplished Tactician: in the opponent's Shooting phase, a unit near the bearer that was hit can embark within a
+// friendly transport it is wholly within 6" of (once per turn). The bot does it when the unit lost wounds.
+onAttackFinished((s, at, info) => {
+  if (at.kind !== 'shoot' || !info.hits) return;
+  const T = unitById(s, at.targetId);
+  if (!onBoard(T) || T.owner === s.active || engagedEnemies(s, T).length || hasKw(T, 'TRANSPORT')) return;
+  const holder = boardUnits(s, T.owner).find((h) => h.abilities.some((a) => a.name === 'Accomplished Tactician') && unitDistance(h, T) <= 9 + 1e-6 && (h.used ?? {}).tactician !== String(s.turn));
+  if (!holder) return;
+  const t = boardUnits(s, T.owner).find((x) => x.transport && alive(T).every((m) => alive(x).some((n) => baseDist(m, n) <= 6 + 1e-6)));
+  if (!t) return;
+  const person = !(s.bots ?? []).includes(T.owner) && (s.decides ?? []).includes(T.owner);
+  if (person && s.window) return;
+  if (!person && !info.woundsLost) return;
+  (holder.used ??= {}).tactician = String(s.turn);
+  const acts: Action[] = [{ embarkNear: 6 }];
+  if (person) s.window = { kind: 'pickUnit', player: T.owner, label: `Accomplished Tactician: ${T.name} embarks within ${t.name}? (pick it, or skip)`, units: [T.id], holderId: holder.id, acts };
+  else runActions(s, 'Accomplished Tactician', holder, acts, T);
+});
+
 onModelKilled((s, u) => {
   if (alive(u).length) return;
   const p = other(u.owner);
@@ -1375,7 +1420,7 @@ onModelKilled((s, u) => {
     const fl = unitFlags(s, f);
     if (isMark && fl.cpOnOathKill <= 6) { const r = d6(s); log(s, `${f.name}: focus of hatred destroyed, rolled ${r} (${fl.cpOnOathKill}+)${r >= fl.cpOnOathKill ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnOathKill) P.cp += 1; }
     if (fl.cpOnKillNear && unitDistance(f, u) <= fl.cpOnKillNear.range + 1e-6) { const r = d6(s); log(s, `${f.name}: enemy unit destroyed nearby, rolled ${r} (${fl.cpOnKillNear.on}+)${r >= fl.cpOnKillNear.on ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnKillNear.on) P.cp += 1; }
-    if (f.quarry === u.id && f.abilities.some((a) => a.name === 'Architect of Ruin')) {
+    if (f.quarry === u.id && f.abilities.some((a) => a.name === 'Architect of Ruin' || a.name === 'Monarch of the Hunt')) {
       const next = boardUnits(s, u.owner).sort((a, b) => b.pts - a.pts)[0];
       if (next) { f.quarry = next.id; log(s, `${f.name}: new hated foe → ${next.name}`, 'info', p); }
     }
@@ -1530,11 +1575,17 @@ export function resolveRevivals(s: GameState) {
     const u = unitById(s, r.unitId);
     const m = u.models.find((x) => x.id === r.modelId);
     if (!m || !m.dead) continue;
-    const v = d6(s);
-    log(s, `${r.label}: ${m.name} rolled ${v} (${r.on}+)`, 'roll', u.owner);
-    if (v < r.on) continue;
+    if (r.ld) {
+      const t = rollN(s, 2);
+      log(s, `${r.label}: ${m.name} Leadership test [${t.join('+')}] = ${t[0] + t[1]} vs ${m.profile.Ld}+`, 'roll', u.owner);
+      if (t[0] + t[1] < m.profile.Ld) continue;
+    } else {
+      const v = d6(s);
+      log(s, `${r.label}: ${m.name} rolled ${v} (${r.on}+)`, 'roll', u.owner);
+      if (v < r.on) continue;
+    }
     m.dead = false;
-    m.wounds = Math.min(m.profile.W, r.wounds);
+    m.wounds = Math.min(m.profile.W, r.woundsRoll ? rollExpr(s, r.woundsRoll).total : r.wounds);
     if (!setBackUp(s, u, m, { x: r.x, y: r.y })) { m.dead = true; m.wounds = 0; log(s, `${r.label}: no room to set it up`, 'info', u.owner); continue; }
     if (u.status === 'destroyed') { u.status = 'board'; s.destroyedByTurn = s.destroyedByTurn.filter((d) => d.unitId !== u.id); }
     pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });

@@ -1,0 +1,1182 @@
+{
+ "Thrill Seekers": {
+  "effects": [
+   {
+    "eligible": [
+     "shootAfterAdvance",
+     "shootAfterFallBack",
+     "chargeAfterAdvance",
+     "chargeAfterFallBack"
+    ],
+    "thrill": true
+   }
+  ],
+  "note": "Shoots and charges after Advancing / Falling Back; then it cannot target a unit it was engaged with at the start of the turn or one another unit already charged or attacked this phase"
+ },
+ "Pact of Excess": {
+  "status": "auto",
+  "note": "Checked by the army builder: Legions of Excess units only come with the Carnival of Excess detachment"
+ },
+ "SUPREME COMMANDER": {
+  "status": "auto",
+  "note": "Checked by the army builder: Fulgrim must be your Warlord"
+ },
+ "Daemonic Poisons": {
+  "act": [
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "target": {
+     "side": "enemy",
+     "hit": true
+    },
+    "if": [
+     "!targetMarked:Poisoned"
+    ],
+    "do": [
+     {
+      "buff": [
+       {
+        "poisoned": true
+       }
+      ],
+      "until": "battle",
+      "mark": "Poisoned"
+     }
+    ]
+   },
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "target": {
+     "side": "enemy",
+     "hit": true
+    },
+    "do": [
+     {
+      "buff": [
+       {
+        "poisoned": true
+       }
+      ],
+      "until": "battle",
+      "mark": "Poisoned"
+     }
+    ]
+   }
+  ],
+  "note": "A unit it hit is poisoned for the rest of the battle: at the start of each Command phase, 4+: D3 mortal wounds"
+ },
+ "Daemon Primarch of Slaanesh": {
+  "choice": {
+   "name": "Daemon Primarch of Slaanesh",
+   "pick": 1,
+   "when": "command",
+   "options": [
+    "Beguiling Form",
+    "Daemonic Speed",
+    "Enthralling Hypnosis (Aura)"
+   ]
+  }
+ },
+ "Beguiling Form": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Daemonic Speed": {
+  "effects": [
+   {
+    "fightsFirst": true
+   }
+  ]
+ },
+ "Enthralling Hypnosis (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "fallBackLdTest": true
+   }
+  ]
+ },
+ "Perfectionists": {
+  "effects": [
+   {
+    "scope": "led",
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Euphoric Strikes": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "botIf": [
+    "engaged"
+   ],
+   "label": "+3 A and +1 AP for its melee weapons this phase",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "attack": "melee",
+       "attacks": 3,
+       "ap": 1
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "LORD OF THE HOST": {
+  "effects": [
+   {
+    "if": [
+     "bodyKw:BATTLELINE",
+     "body:Tormentors"
+    ],
+    "infiltrators": true
+   },
+   {
+    "if": [
+     "bodyKw:BATTLELINE"
+    ],
+    "scouts": 6
+   }
+  ],
+  "note": "Leading a Battleline unit: Infiltrators and Scouts 6\" (Infractors have no Infiltrators, so that unit only scouts)"
+ },
+ "Objective Defiled": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "onOwnObjective"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "secure": true
+    }
+   ]
+  }
+ },
+ "Icon of Excess": {
+  "gear": true,
+  "act": [
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "needUnitDestroyed": true,
+    "limit": "phase",
+    "ldTest": true,
+    "pass": [
+     {
+      "on": "self",
+      "cp": 1
+     }
+    ]
+   },
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "needUnitDestroyed": true,
+    "limit": "phase",
+    "ldTest": true,
+    "pass": [
+     {
+      "on": "self",
+      "cp": 1
+     }
+    ]
+   }
+  ]
+ },
+ "Excessive Assault": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "!targetInRangeOfObjective"
+    ],
+    "reroll": "wounds1"
+   },
+   {
+    "attack": "melee",
+    "if": [
+     "targetInRangeOfObjective"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Lethal Obsession": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "botIf": [
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "rerollCharge": true
+      }
+     ],
+     "until": "turn"
+    },
+    {
+     "chargeOnlyTarget": true
+    }
+   ]
+  },
+  "note": "After shooting: re-roll its charge this turn, which must end engaged with the unit it hit"
+ },
+ "Assault Ramp": {
+  "effects": [
+   {
+    "assaultDisembark": true
+   }
+  ]
+ },
+ "Assault Vehicle": {
+  "effects": [
+   {
+    "disembarkAfterAdvance": true
+   }
+  ]
+ },
+ "A Challenge Worthy of Skill": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "targetKw:CHARACTER|MONSTER|WALKER"
+    ],
+    "reroll": [
+     "hits",
+     "wounds"
+    ]
+   }
+  ]
+ },
+ "Duellist’s Hubris": {
+  "effects": [
+   {
+    "if": [
+     "!leaderAttached"
+    ],
+    "fightsFirst": true
+   }
+  ]
+ },
+ "Obsessive Annunciation": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "ranged",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Doom Siren": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "mortalRoll": {
+      "on": 4,
+      "n": 3,
+      "shockIfAny": 0
+     }
+    }
+   ]
+  }
+ },
+ "Warped Interference (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "vs": "ranged",
+     "cover": true
+    }
+   }
+  ]
+ },
+ "Wracking Agonies (Psychic)": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Agonising Energies",
+    "units": [
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "move": -2,
+       "chargeBonus": -2
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "Wracked with agonies"
+    }
+   ]
+  }
+ },
+ "Lord of Excess": {
+  "effects": [
+   {
+    "if": [
+     "near:3:SLAANESH+INFANTRY"
+    ],
+    "loneOperative": true
+   }
+  ]
+ },
+ "Excessive Vigour (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "SLAANESH"
+    ],
+    "if": [
+     "charged"
+    ],
+    "attack": "melee",
+    "ap": 1
+   }
+  ]
+ },
+ "Ecstatic Death": {
+  "effects": [
+   {
+    "fightOnDeath": 2
+   }
+  ]
+ },
+ "Daemonic Destruction": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "do": [
+    {
+     "mortalRoll": {
+      "on": 4,
+      "nWounds": true,
+      "max": 6
+     }
+    }
+   ]
+  }
+ },
+ "Stimulated by Pain": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Terrifying Crescendo": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "ld": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "Terrifying Crescendo"
+    }
+   ]
+  }
+ },
+ "Daemonic Patrons": {
+  "act": [
+   {
+    "when": "selectedToFight",
+    "limit": "phase",
+    "botIf": [
+     "engaged"
+    ],
+    "label": "Call upon daemonic patrons: Critical Wounds on 3+ (a model dies if it kills nothing)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "critWoundOn": 3
+       }
+      ],
+      "until": "phase"
+     },
+     {
+      "on": "self",
+      "mark": "Daemonic Patrons",
+      "buff": [],
+      "until": "turn"
+     }
+    ]
+   },
+   {
+    "when": "fightEnd",
+    "auto": true,
+    "if": [
+     "marked:Daemonic Patrons",
+     "!killedModelThisPhase"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "sacrifice": {
+       "n": "1",
+       "name": "Flawless Blade"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "Scuttling Horrors": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "limit": "phase",
+   "if": [
+    "unengaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "move": "6"
+    }
+   ]
+  }
+ },
+ "Glutton for Punishment": {
+  "effects": [
+   {
+    "if": [
+     "belowStartingW"
+    ],
+    "hit": 1
+   },
+   {
+    "if": [
+     "belowHalfW"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Airborne Predator": {
+  "act": {
+   "when": "endOfNormalMove",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "movedOver": true
+   },
+   "do": [
+    {
+     "mortalRoll": {
+      "on": 4,
+      "n": 2,
+      "plus": 1,
+      "plusIf": [
+       "targetFly"
+      ],
+      "dmg": "D3"
+     }
+    }
+   ]
+  }
+ },
+ "Scuttling Walker": {
+  "effects": [
+   {
+    "moveThroughModels": true,
+    "mobile": true
+   }
+  ]
+ },
+ "Revel in Desecration": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "targetNotBelowHalf"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "No Prey Can Evade": {
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Monarch of the Hunt": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "targetQuarry"
+    ],
+    "reroll": [
+     "hits",
+     "wounds"
+    ]
+   }
+  ],
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "limit": "battle",
+   "target": {
+    "side": "enemy",
+    "anywhere": true
+   },
+   "do": [
+    {
+     "setQuarry": true
+    }
+   ]
+  },
+  "note": "Quarry: the most valuable enemy unit; a new one when it is destroyed"
+ },
+ "Horrifying Beauty": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "shock": 0,
+     "if": [
+      "!targetBelowHalf"
+     ]
+    },
+    {
+     "shock": -1,
+     "if": [
+      "targetBelowHalf"
+     ]
+    }
+   ]
+  }
+ },
+ "Daemonic Icon": {
+  "gear": true,
+  "effects": [
+   {
+    "ldSet": 6
+   }
+  ]
+ },
+ "Instrument of Chaos": {
+  "gear": true,
+  "effects": [
+   {
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Soporific Musk": {
+  "effects": [
+   {
+    "forceDesperate": true
+   },
+   {
+    "if": [
+     "targetBattleShocked"
+    ],
+    "desperateMinus": 1
+   }
+  ]
+ },
+ "Daemon Lord of Slaanesh (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONS OF EXCESS"
+    ],
+    "attack": "melee",
+    "ap": 1
+   }
+  ]
+ },
+ "Mesmerising Form": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Shining Aegis": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "svSet": 3
+   }
+  ]
+ },
+ "Unholy Speed": {
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Steeped in Suffering": {
+  "effects": [
+   {
+    "if": [
+     "targetBelowStarting"
+    ],
+    "hit": 1
+   },
+   {
+    "if": [
+     "targetBelowHalf"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Intoxicating Musk": {
+  "effects": [
+   {
+    "defend": {
+     "vs": "melee",
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Tactical Perfection": {
+  "status": "auto",
+  "note": "After both armies are deployed: redeploy up to two Emperor’s Children units (or put them into Strategic Reserves)"
+ },
+ "Loathsome Dexterity": {
+  "effects": [
+   {
+    "moveThroughModels": true
+   }
+  ]
+ },
+ "Faultless Opportunist": {
+  "effects": [
+   {
+    "stratRepeat": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "limit": "phase"
+    },
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "Blinding Speed": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "botIf": [
+    "engaged"
+   ],
+   "label": "Fights First this phase",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "fightsFirst": true
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Distortion": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Rise to the Challenge": {
+  "act": {
+   "when": "fightEnd",
+   "limit": "battle",
+   "if": [
+    "nearModels:1:3"
+   ],
+   "botUse": "always",
+   "label": "Fight one more time",
+   "do": [
+    {
+     "on": "self",
+     "fightAgain": true
+    }
+   ]
+  },
+  "note": "The extra fight is made by the whole unit (the bearer’s attacks are what count)"
+ },
+ "Sublime Prescience": {
+  "act": {
+   "when": "movement",
+   "limit": "turn",
+   "target": {
+    "side": "friendly",
+    "inReserves": true,
+    "units": [
+     "EMPEROR’S CHILDREN",
+     "TRANSPORT"
+    ]
+   },
+   "label": "A Transport in Reserves may arrive one battle round early",
+   "do": [
+    {
+     "earlyArrival": true
+    }
+   ]
+  }
+ },
+ "Spearhead Striker": {
+  "effects": [
+   {
+    "if": [
+     "disembarkedThisTurn"
+    ],
+    "rerollCharge": true,
+    "noSnapTarget": true
+   }
+  ]
+ },
+ "Accomplished Tactician": {
+  "act": {
+   "when": "shotByEnemy",
+   "limit": "turn",
+   "target": {
+    "side": "friendly",
+    "range": 9,
+    "ctxUnit": true
+   },
+   "botUse": "damaged",
+   "label": "Embark a unit that was hit into a Transport within 6\"",
+   "do": [
+    {
+     "embarkNear": 6
+    }
+   ]
+  }
+ },
+ "Heretek Adept": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "EMPEROR’S CHILDREN",
+     "VEHICLE"
+    ],
+    "defend": {
+     "negateOnce": "round"
+    }
+   }
+  ]
+ },
+ "Empyric Suffusion": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "Dark Blessings": {
+  "act": [
+   {
+    "when": "anyPhase",
+    "limit": "battle",
+    "botUse": "never",
+    "label": "3+ invulnerable save until the end of the phase",
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "defend": {
+         "inv": 3
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "when": "attacked",
+    "auto": true,
+    "botOnly": true,
+    "limit": "battle",
+    "do": [
+     {
+      "on": "self",
+      "bearerOnly": true,
+      "buff": [
+       {
+        "defend": {
+         "inv": 3
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "Possessed Blade": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 1
+   }
+  ],
+  "act": {
+   "when": "selectedToFight",
+   "limit": "phase",
+   "botIf": [
+    "engaged"
+   ],
+   "label": "+1 D, [DEVASTATING WOUNDS] and [HAZARDOUS] this phase",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "attack": "melee",
+       "damage": 1,
+       "abilities": [
+        "devastating wounds",
+        "hazardous"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  },
+  "note": "The +1 A goes to the bearer’s melee weapons"
+ },
+ "Warp Walker": {
+  "effects": [
+   {
+    "advanceFixed": 6,
+    "moveThroughModels": true
+   }
+  ]
+ },
+ "Pledge of Eternal Servitude": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "reviveLater": {
+      "on": 0,
+      "ld": true,
+      "wounds": 6,
+      "woundsRoll": "D6"
+     }
+    }
+   ]
+  }
+ },
+ "Pledge of Dark Glory": {
+  "effects": [
+   {
+    "scope": "led",
+    "ld": 1,
+    "oc": 1
+   },
+   {
+    "if": [
+     "leaderAttached"
+    ],
+    "scope": "model",
+    "ld": 1,
+    "oc": 1
+   }
+  ]
+ },
+ "Pledge of Mortal Pain": {
+  "act": {
+   "when": "shootingStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "visible": true
+   },
+   "do": [
+    {
+     "ldFailMortals": "3",
+     "ldMod": -2,
+     "ldModIf": [
+      "targetBattleShocked"
+     ]
+    }
+   ]
+  }
+ },
+ "Pledge of Unholy Fortune": {
+  "freeDie": {
+   "kind": "setSix",
+   "stage": "any",
+   "limit": "turn",
+   "if": [
+    "notBattleShocked"
+   ]
+  }
+ },
+ "Eager to Prove": {
+  "effects": [
+   {
+    "rerollCharge": true
+   },
+   {
+    "if": [
+     "favoured"
+    ],
+    "move": 2
+   }
+  ]
+ },
+ "Repulsed by Weakness": {
+  "effects": [
+   {
+    "forceDesperate": true
+   },
+   {
+    "if": [
+     "favoured"
+    ],
+    "desperateMinus": 1
+   }
+  ]
+ },
+ "Proud and Vainglorious": {
+  "effects": [
+   {
+    "rerollShock": true
+   },
+   {
+    "if": [
+     "favoured"
+    ],
+    "oc": 1
+   }
+  ]
+ },
+ "Slayer of Champions": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "abilities": [
+     "precision"
+    ]
+   },
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "targetCharacter"
+    ],
+    "strength": 1,
+    "ap": 1
+   }
+  ]
+ },
+ "Tears of the Phoenix": {
+  "effects": [
+   {
+    "attack": "melee",
+    "ignoreHitMods": true,
+    "ignoreWoundMods": true
+   }
+  ]
+ },
+ "Exalted Patron": {
+  "effects": [
+   {
+    "scope": "model",
+    "statM": 1
+   }
+  ]
+ },
+ "Soulstain Made Manifest": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "do": [
+    {
+     "shock": -1
+    }
+   ]
+  }
+ },
+ "Spiritsliver": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 1,
+    "attacks": 1
+   }
+  ]
+ },
+ "Cacophonic Accompaniment": {
+  "effects": [
+   {
+    "scope": "model",
+    "deepStrike": true
+   },
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Frenzied Ferocity": {
+  "effects": [
+   {
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Euphoric Crown": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 1
+   }
+  ]
+ },
+ "Howling Plate": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "ap": 1
+   }
+  ]
+ },
+ "Eager Patrons": {
+  "effects": [
+   {
+    "move": 2
+   }
+  ]
+ },
+ "Beguiling Grotesquerie": {
+  "effects": [
+   {
+    "noSnapTarget": true
+   }
+  ]
+ }
+}

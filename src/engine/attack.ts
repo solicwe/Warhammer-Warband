@@ -8,6 +8,7 @@ import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, Uni
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
+import { noteTarget, sensationalBlock, thrillBlock } from './emperorsChildren';
 
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
@@ -163,6 +164,9 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   // Heresy Undone: after Advancing / Falling Back it may only shoot auspex scanned units
   if (aFlags.onlyTargetMarked && (A.move === 'advance' || A.move === 'fallback') && !(T.timed ?? []).some((t) => t.mark === aFlags.onlyTargetMarked && t.by === A.owner)) return { pools: [], notes, error: 'After Advancing / Falling Back it can only shoot a unit marked by the auspex scan' };
 
+  const thrill = thrillBlock(s, A, T);
+  if (thrill) return { pools: [], notes, error: thrill };
+
   // Seal of Shrouding / Blazing Icon / Linebreaker Onslaught: enemy units cannot snap-shoot this unit
   if (opt.mode === 'snap' && unitFlags(s, T).noSnapTarget) return { pools: [], notes, error: 'This unit cannot be targeted by snap shooting' };
   const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : [...alive(A), ...firingDeck(s, A, opt)];
@@ -303,6 +307,8 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
   const taunters = unitFlags(s, T).taunt ? [] : engagedEnemies(s, A).filter((e) => unitFlags(s, e).taunt);
   const glamour = unitFlags(s, T).glamour;
   const reach3 = unitFlags(s, A).fightReach3 && engagedEnemies(s, A).some((e) => e.id === T.id);
+  const sens = sensationalBlock(s, A, T);
+  if (sens) return { pools: [], notes: [], error: sens };
   for (const m of fighters) {
     if (!modelEngagedWith(m, T) && !(reach3 && alive(T).some((t) => baseDist(m, t) <= 3 + 1e-6))) continue;
     if (taunters.some((e) => modelEngagedWith(m, e))) continue;
@@ -464,6 +470,7 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
   // a low random number of attacks: the bot (or a player who turned it on) re-rolls the worst one
   const low = s.attack.pools.map((p, i) => ({ i, gap: attackRerollGap(p) })).filter((x) => x.gap >= 1).sort((a, b) => b.gap - a.gap)[0];
   if (low && wantsCR(s, A.owner, 'attacks', A)) rerollAttackCount(s, low.i);
+  noteTarget(s, s.attack.attackerId, s.attack.targetId);
   for (const h of startHooks) h(s, s.attack);
 }
 

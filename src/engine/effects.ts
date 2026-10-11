@@ -3,6 +3,7 @@
 // or read from the ability text by abilityText.ts for factions without a file),
 // and temporary effects / marks put on units by abilities (e.g. "suppressed" until your next turn).
 // Rules are data: an Effect says WHO it applies to (scope), WHEN (conditions) and WHAT changes.
+import { sensationalOk } from './emperorsChildren';
 import abilityData from '../../data/ability-rules.json';
 import acAbilities from '../../data/abilities/AC.json';
 import orkAbilities from '../../data/abilities/ORK.json';
@@ -10,6 +11,7 @@ import smAbilities from '../../data/abilities/SM.json';
 import tsAbilities from '../../data/abilities/TS.json';
 import csmAbilities from '../../data/abilities/CSM.json';
 import weAbilities from '../../data/abilities/WE.json';
+import ecAbilities from '../../data/abilities/EC.json';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { deploymentById, RULES, toPoly } from './config';
@@ -155,6 +157,10 @@ export interface Effect {
   forceShockAura?: number; // in the opponent's next Command phase, enemy units this close must take a Battle-shock test
   creepingDread?: number; // Creeping Dread: in the opponent's Command phase, enemy PSYKER / below-strength units this close test at -1
   shockOnKill?: boolean; // after its attacks destroy models, that unit takes a Battle-shock test
+  poisoned?: boolean; // Daemonic Poisons: at the start of each Command phase, 4+: D3 mortal wounds (emperorsChildren.ts)
+  desperateMinus?: number; // enemy units falling back from it subtract this from their Desperate Escape tests (if: checked on this unit)
+  sensational?: boolean; // Sensational Performance used: +1 S/AP was taken, so these attacks have the targeting restrictions
+  thrill?: boolean; // Thrill Seekers: shoot / charge after Advancing or Falling Back, with its targeting restrictions (thrill.ts)
   onlyTargetMarked?: string; // after Advancing / Falling Back it may only shoot or charge units with this mark (Heresy Undone: "auspex")
   svSet?: number; // the bearers' Save characteristic is this (Blood-forged Armour: 2+), fixed at Declare Battle Formations
   statM?: number; // fixed change to the bearers' Move characteristic
@@ -278,6 +284,7 @@ const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   TS: tsAbilities as unknown as Record<string, AbilityRule>,
   CSM: csmAbilities as unknown as Record<string, AbilityRule>,
   WE: weAbilities as unknown as Record<string, AbilityRule>,
+  EC: ecAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
 export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
@@ -619,6 +626,11 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('farFromEnemies:')) { const r = Number(c.slice(15)); return onBoard(A) && !boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= r + 1e-6); }
   if (c.startsWith('nearMarked:')) { const [, mark, rs] = c.split(':'); return boardUnits(s, other(A.owner)).some((e) => (e.timed ?? []).some((t) => t.mark === mark && t.by === A.owner) && unitDistance(A, e) <= Number(rs) + 1e-6); }
   if (c.startsWith('nearModels:')) return nearModelsCond(x, c);
+  // wholly within X" of one or more battlefield edges (every model near the same or any edge)
+  if (c.startsWith('nearEdge:')) { const d = Number(c.slice(9)); const W = RULES.battlefield.width, H = RULES.battlefield.height; return alive(A).every((m) => Math.min(m.x, m.y, W - m.x, H - m.y) + m.r <= d + 1e-6); }
+  if (c.startsWith('enemyEngagedWithin:')) { const r = Number(c.slice(19)); return boardUnits(s, other(A.owner)).some((e) => engagedEnemies(s, e).length > 0 && unitDistance(A, e) <= r + 1e-6); }
+  if (c.startsWith('pact:')) return (s.players[A.owner].pactPoints ?? 0) >= Number(c.slice(5));
+  if (c.startsWith('enemyModelsEngaged:')) return engagedEnemies(s, A).flatMap(alive).filter((e) => alive(A).some((m) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length >= Number(c.slice(19));
   if (c.startsWith('bodyKw:')) return A.sources.length > 1 && alive(A).some((m) => m.source === A.sources[0] && m.keywords.includes(c.slice(7)));
   if (c.startsWith('minModels:')) return alive(A).length >= Number(c.slice(10));
   if (c.startsWith('minModelsNamed:')) { const [, n, k] = c.split(':'); return alive(A).filter((m) => wk(m.name).includes(wk(n))).length >= Number(k); }
@@ -776,6 +788,11 @@ export function cond(c: string, x: Ctx): boolean {
     case 'attackSLessT': return !!x.p && !!T && (x.p.S ?? 0) < Math.max(...alive(T).map((n) => n.profile.T));
     case 'transportMoved': return (A.move === 'normal' || A.move === 'advance') && A.setUpTurn !== s.turn;
     case 'destroyedUnitThisPhase': return (A.used ?? {}).killedUnit === phaseKey(s);
+    case 'favoured': return s.players[A.owner].favoured === A.id;
+    // made a Charge move in the previous turn and destroyed an enemy unit in that turn's Fight phase (Terrifying Spectacle)
+    case 'lastTurnChargedKill': return A.chargedTurn === s.turn - 1 && s.destroyedByTurn.some((d) => d.killerId === A.id && d.turn === s.turn - 1 && d.phase === 'fight');
+    case 'sensationalOk': return sensationalOk(s, A);
+    case 'sustainedWeapon': return !!x.p && (x.p.abilities ?? []).some((k) => /^sustained hits/.test(k));
     case 'killedModelThisPhase': return (A.used ?? {}).killedModel === phaseKey(s);
     case 'chargeTargetEngagedWith:RAVENWING': return boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= 12 + 1e-6 && boardUnits(s, A.owner).some((f) => hasKw(f, 'RAVENWING') && engagedEnemies(s, f).some((g) => g.id === e.id)));
     case 'attackSLeqT': return !!x.p && !!T && (x.p.S ?? 0) <= Math.max(...alive(T).map((n) => n.profile.T));
@@ -1168,6 +1185,9 @@ export function unitFlags(s: GameState, u: UnitState) {
     charKillShock: Math.max(0, ...es.map((e) => e.charKillShock ?? 0)),
     shockOnKill: es.some((e) => e.shockOnKill),
     onlyTargetMarked: es.find((e) => e.onlyTargetMarked)?.onlyTargetMarked,
+    thrill: es.some((e) => e.thrill),
+    sensational: es.some((e) => e.sensational),
+    poisoned: es.some((e) => e.poisoned),
     deadlyDemiseOn: Math.min(6, ...es.map((e) => e.deadlyDemiseOn ?? 6)),
   };
 }

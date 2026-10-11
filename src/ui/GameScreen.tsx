@@ -27,6 +27,7 @@ import {
 } from '../engine/activations';
 import { activeLabels, effectsFor, isRiled, unitFlags, type Effect } from '../engine/effects';
 import { activeIds, applyPick, BLESSINGS, blessingById, rerollBlessings } from '../engine/blessings';
+import { botPledge, setPledge } from '../engine/emperorsChildren';
 import { BlessingsPanel } from './Blessings';
 import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
 import { botAct, botShouldAct, botStep } from '../engine/bot';
@@ -713,6 +714,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const army = effectsFor(s, u).filter((a) => !a.from && a.holder.id === u.id && !own.has(a.label) && !BLESSINGS.some((b) => b.name === a.label) && !u.timed?.some((t) => t.label === a.label) && !a.e.if?.length).flatMap((a) => fxTags(a.e));
     const bless = unitBlessingTags(s, u);
     const riledTags: [string, boolean][] = isRiled(s, u) ? [['5+ inv', true], ['Assault', true], ['Adv & Charge', true]] : [];
+    if (s.players[u.owner].favoured === u.id) riledTags.push(['Favoured: re-roll Wounds', true]);
     const tags = [...riledTags, ...bless, ...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...army, ...auras];
     const seen = new Set<string>();
     const uniq = tags.filter(([t]) => !seen.has(t) && !!seen.add(t));
@@ -1071,6 +1073,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <BlessingsPanel title={`${pName(s, p)}: ${w.extra?.label ?? 'Blessings of Khorne'}`} dice={w.dice} picks={w.picks} rerolls={w.rerolls ?? 0} rerollFrom={w.rerollFrom}
           onReroll={(idx) => { const e = act((g) => rerollBlessings(g, idx)); if (e) flash(e); }}
           onPick={(pk) => act((g) => { if (g.window?.kind === 'blessings') applyPick(g, g.window.player, pk, g.window.extra); })} />
+      );
+    }
+    if (w.kind === 'pledge') {
+      const pp = s.players[p].pactPoints ?? 0;
+      return (
+        <>
+          <div className="handoff">{pName(s, p)}: Pledges to the Dark Prince</div>
+          <div className="tiny muted">How many enemy units will be destroyed this battle round? Kept: that many Pact points (now {pp}). Broken: your Warlord suffers D3 mortal wounds.</div>
+          <div className="tiny muted">Pact bonuses: 1+ re-roll Hit 1s · 3+ re-roll Wound 1s · 5+ [LETHAL HITS] + [SUSTAINED HITS 1] in melee · 7+ Critical Hits on 5+</div>
+          <div className="row wrap">{Array.from({ length: w.max + 1 }, (_, n) => <button key={n} type="button" className={`btn ${n === botPledge(s, p) ? 'primary' : ''}`} onClick={() => act((g) => setPledge(g, p, n))}>{n}</button>)}</div>
+        </>
       );
     }
     if (w.kind === 'pickUnit') {
@@ -2084,12 +2097,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             ))}
           </div>
         )}
-        {s.phase !== 'deploy' && ([0, 1] as PlayerId[]).some((p) => activeIds(s, p).length) && (
+        {s.phase !== 'deploy' && ([0, 1] as PlayerId[]).some((p) => activeIds(s, p).length || s.players[p].pledge?.round === s.round || s.players[p].pactPoints) && (
           <div className="blessbar" aria-label="Blessings of Khorne this round">
             {([0, 1] as PlayerId[]).flatMap((p) => activeIds(s, p).map((id) => {
               const b = blessingById(id)!;
               return <button key={`${p}${id}`} type="button" className={`p${p}`} onClick={() => flash(`${b.name}: ${b.text}`)}>{b.name} <span className="muted">{b.short}</span></button>;
             }))}
+            {([0, 1] as PlayerId[]).filter((p) => s.players[p].pledge?.round === s.round || s.players[p].pactPoints).map((p) => (
+              <button key={`pact${p}`} type="button" className={`p${p}`} onClick={() => flash('Pact bonuses: 1+ re-roll Hit 1s · 3+ re-roll Wound 1s · 5+ [LETHAL HITS] + [SUSTAINED HITS 1] in melee · 7+ Critical Hits on 5+')}>
+                {s.players[p].pledge?.round === s.round ? `Pledge ${s.players[p].pledge!.n} · ` : ''}Pact {s.players[p].pactPoints ?? 0}
+              </button>
+            ))}
           </div>
         )}
       </header>

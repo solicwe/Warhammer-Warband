@@ -1,4 +1,5 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
+import { initFavoured, noteTarget, pledgeRoundEnd, pledgeRoundStart, poisonTick, snapshotEngaged, thrillBlock } from './emperorsChildren';
 import { buildUnits, forChapter, transportFit } from './army';
 import { applyMortalWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
@@ -18,9 +19,9 @@ import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
 import { canCrossDense, endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathLength } from './pathing';
 import { detOnCommandStart } from './detachments';
-import { activeRules, addTimed, applyStaticEffects, canDo, effectsFor, expireTimed, isRiled, modelDefence, modelOc, rollMods, unitFlags } from './effects';
+import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelDefence, modelOc, rollMods, unitFlags } from './effects';
 import './rituals';
-import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setZoneCheck } from './activations';
+import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck } from './activations';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -632,7 +633,7 @@ function nextDeployer(s: GameState) {
 }
 
 // the army's own units (Space Marines, Adeptus Custodes) — not allies
-const isAstartes = (u: UnitState) => ['ADEPTUS ASTARTES', 'ADEPTUS CUSTODES', 'THOUSAND SONS', 'WORLD EATERS'].some((k) => u.factionKeywords.includes(k) || hasKw(u, k));
+const isAstartes = (u: UnitState) => ['ADEPTUS ASTARTES', 'ADEPTUS CUSTODES', 'THOUSAND SONS', 'WORLD EATERS', 'HERETIC ASTARTES', 'EMPEROR’S CHILDREN'].some((k) => u.factionKeywords.includes(k) || hasKw(u, k));
 
 /** Abilities that let a player redeploy units once both armies are deployed: how many, and of which kind. */
 /** Unleash Wrath (stratagems.ts registers it: it shoots or charges, which lives there). */
@@ -641,6 +642,7 @@ export const setUnleashWrath = (fn: (s: GameState, u: UnitState) => void) => { u
 
 const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string[] }[] = [
   { name: 'Strategic Slaughter', n: 3, infantryOnly: false, units: ['JAKHALS', 'GOREMONGERS'] }, // World Eaters: Cult of Blood
+  { name: 'Tactical Perfection', n: 2, infantryOnly: false, units: ['EMPEROR’S CHILDREN'] }, // Emperor's Children: Mercurial Host
   { name: 'Master of Deceit', n: 3, infantryOnly: true },
   { name: 'Strategium Command', n: 3, infantryOnly: false },
   // Enhancements that redeploy (2026 Codex)
@@ -750,12 +752,13 @@ export function startTurn(s: GameState, p: PlayerId) {
   s.active = p;
   expireTimed(s, 'turnStart', p);
   resetTurnFlags(s);
+  snapshotEngaged(s);
   s.controlAtTurnStart = s.objectives.map((o) => o.controller);
   onTurnStart(s);
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
-  if (s.turn === 0) { initSagas(s); fireAll(s, 'battleStart', 'both'); }
-  if (p === s.firstPlayer) { blessingsRoundStart(s); fireAll(s, 'roundStart', 'both'); }
+  if (s.turn === 0) { initSagas(s); initFavoured(s); fireAll(s, 'battleStart', 'both'); }
+  if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); fireAll(s, 'roundStart', 'both'); }
   startCommand(s);
 }
 
@@ -770,6 +773,7 @@ function startCommand(s: GameState) {
   if (s.tempCharacters) s.tempCharacters = s.tempCharacters.filter((x) => x.by !== s.active);
   for (const p of [0, 1] as PlayerId[]) s.players[p].cp += RULES.cpPerCommandPhase;
   log(s, `+${RULES.cpPerCommandPhase}CP to both players (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
+  poisonTick(s);
   fireFor(s, 'commandStart', s.active);
   fireFor(s, 'eachCommandStart', 'both');
   drawUpTo(s, s.active);
@@ -933,6 +937,7 @@ function endTurn(s: GameState) {
   const second = s.active !== s.firstPlayer;
   if (!second) { s.phase = 'command'; startTurn(s, other(s.active)); return; }
   // end of battle round
+  pledgeRoundEnd(s);
   if (s.round === RULES.reserves.destroyedAfterRound) {
     for (const u of s.units) if (u.status === 'reserves' && !hasKw(u, 'AIRCRAFT')) {
       u.status = 'destroyed';
@@ -1037,7 +1042,8 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
   u.maxMoved = Math.max(u.maxMoved, maxMoved);
   if (kind === 'fallback' && (u.battleShocked || forced.length)) {
     // Desperate Escape: hazard roll per model, made before moving (resolved here for simplicity)
-    const worse = forced.length && u.battleShocked ? 1 : 0; // forced by an ability while also battle-shocked: −1 to each test
+    // forced by an ability while also battle-shocked: −1 to each test; Repulsed by Weakness (Favoured Champions): −1 more
+    const worse = (forced.length && u.battleShocked ? 1 : 0) + Math.max(0, ...forced.flatMap((e) => effectsFor(s, e).filter((a) => a.e.desperateMinus && (a.e.if ?? []).every((c) => cond(c, { s, A: e, T: u, holder: a.holder }))).map((a) => a.e.desperateMinus!)));
     const { fails } = hazardTest(s, u, alive(u).length, `Desperate Escape${forced.length ? ` (forced by ${forced.map((f) => f.name).join(', ')})` : ''}`, worse);
     if (fails) applyMortalWounds(s, u, fails * (alive(u).every(isMV) ? RULES.hazard.mortalWoundsMonsterVehicle : RULES.hazard.mortalWounds), 'Desperate Escape');
   }
@@ -1327,6 +1333,7 @@ export function chargeTargetOptions(s: GameState, u: UnitState, opts: { onlyChar
     if (opts.onlyChargedThisPhase && e.chargedTurn !== s.turn) return false;
     const only = unitFlags(s, u).onlyTargetMarked;
     if (only && (u.move === 'advance' || u.move === 'fallback') && !(e.timed ?? []).some((t) => t.mark === only && t.by === u.owner)) return false;
+    if (thrillBlock(s, u, e)) return false;
     return true;
   });
 }
@@ -1335,6 +1342,7 @@ export function commitCharge(s: GameState, u: UnitState, paths: Map<string, Pt[]
   commitMove(s, u, 'charge', paths);
   u.chargedTurn = s.turn;
   u.chargeTargets = targets;
+  for (const t of targets) noteTarget(s, u.id, t);
   if (s.lastAct?.unitId === u.id && s.lastAct.kind === 'charge') s.lastAct.targets = [...targets];
   log(s, `${u.name} charges successfully → ${targets.map((t) => unitById(s, t).name).join(', ')} (Fights First)`, 'info', u.owner);
   fire(s, 'endOfCharge', [u], { targetId: targets[0] });
@@ -1775,10 +1783,10 @@ export function canEmbarkIn(s: GameState, u: UnitState, t: UnitState): string | 
 }
 
 /** Embark during deployment (Declare Battle Formations) or after a normal/advance/fall-back move (18.02). */
-export function embarkUnit(s: GameState, u: UnitState, t: UnitState, duringDeploy = false): string | null {
+export function embarkUnit(s: GameState, u: UnitState, t: UnitState, duringDeploy = false, byRule = false): string | null {
   const why = canEmbarkIn(s, u, t);
   if (why) return why;
-  if (!duringDeploy) {
+  if (!duringDeploy && !byRule) {
     if (unitFlags(s, t).noEmbark) return 'Cannot embark in this transport once the battle has begun';
     if (!['normal', 'advance', 'fallback'].includes(u.move ?? '')) return 'Must make a Normal / Advance / Fall Back move to embark';
     if (u.setUpTurn === s.turn) return 'A unit set up this turn cannot embark';
@@ -1790,6 +1798,12 @@ export function embarkUnit(s: GameState, u: UnitState, t: UnitState, duringDeplo
   if (duringDeploy) nextDeployer(s);
   return null;
 }
+
+// a rule embarks a unit within a friendly transport it is wholly within X" of (Accomplished Tactician, Onto the Next)
+setEmbarkNear((s, u, range, why) => {
+  const t = boardUnits(s, u.owner).find((x) => x.transport && x.id !== u.id && alive(u).every((m) => alive(x).some((n) => baseDist(m, n) <= range + 1e-6)) && !canEmbarkIn(s, u, x));
+  if (t && !embarkUnit(s, u, t, false, true)) log(s, `${why}: ${u.name} embarks within ${t.name}`, 'info', u.owner);
+});
 
 export const embarkedIn = (s: GameState, t: UnitState) => s.units.filter((u) => u.embarkedIn === t.id && u.status === 'embarked');
 

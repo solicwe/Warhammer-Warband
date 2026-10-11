@@ -13,6 +13,7 @@ import {
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName } from './game';
 import { applyPick } from './blessings';
+import { botPledge, setPledge } from './emperorsChildren';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, resolvePickUnit, unitSelected } from './activations';
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, styleChosen } from './botLook';
@@ -619,6 +620,7 @@ export function botWindow(s: GameState) {
   const w = s.window;
   if (!w) return;
   if (w.kind === 'blessings') { applyPick(s, w.player, w.picks[0] ?? null, w.extra); return; }
+  if (w.kind === 'pledge') { setPledge(s, w.player, botPledge(s, w.player)); return; }
   if (w.kind === 'pickUnit') { resolvePickUnit(s, [...w.units].sort((a, b) => unitById(s, b).pts - unitById(s, a).pts)[0]); return; }
   if (w.kind === 'abilityMove') {
     // reaction moves ("an enemy ended a move near this unit") are taken when there is somewhere better to be

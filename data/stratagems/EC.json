@@ -1,0 +1,731 @@
+{
+ "_comment": "Emperor’s Children stratagems (Faction Pack v1.3, 30 Sep 2026) in machine-readable form. Keys: stratagem NAME (as on the card).",
+ "rules": {
+  "HONOUR THE PRINCE": {
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "effects": [
+    {
+     "advanceFixed": 6
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "CAPRICIOUS REACTIONS": {
+   "buffs": [
+    "enemyHit-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "COMBAT STIMMS": {
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "buffs": [
+    "enemyWound-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "VIOLENT EXCESS": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "DARK VIGOUR": {
+   "react": "enemyMoved",
+   "unitIf": [
+    "nearLast:8",
+    "!kw:BEAST",
+    "!kw:VEHICLE"
+   ],
+   "do": [
+    {
+     "move": "6"
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "CRUEL RAIDERS": {
+   "react": "fightPhaseEnd",
+   "unitIf": [
+    "nearEdge:9",
+    "farFromEnemies:3"
+   ],
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "INCESSANT VIOLENCE": {
+   "effects": [
+    {
+     "consolidate": 6
+    }
+   ],
+   "bot": "never",
+   "note": "The 6\" Consolidation must end engaged",
+   "status": "auto"
+  },
+  "CRUEL BLADESMAN": {
+   "unitIf": [
+    "charged"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "ap": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "DEFT PARRY": {
+   "buffs": [
+    "enemyHit-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "TERRIFYING SPECTACLE": {
+   "react": "enemyCommandStart",
+   "unitIf": [
+    "lastTurnChargedKill"
+   ],
+   "enemy": {
+    "range": 6,
+    "all": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0,
+     "if": [
+      "!targetBelowHalf"
+     ]
+    },
+    {
+     "on": "target",
+     "shock": -1,
+     "if": [
+      "targetBelowHalf"
+     ]
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "CUT DOWN THE WEAK": {
+   "react": "enemyFallBack",
+   "unitIf": [
+    "nearLast:6"
+   ],
+   "special": [
+    "charge"
+   ],
+   "botReact": "charge",
+   "note": "The charge must target the unit that fell back; no Charge bonus (a VEHICLE only if it is a WALKER)",
+   "status": "auto"
+  },
+  "DEATH ECSTASY": {
+   "effects": [
+    {
+     "fightOnDeath": 1
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "DYNAMIC BREAKTHROUGH": {
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "effects": [
+    {
+     "moveThroughModels": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "OUTFLANKING STRIKE": {
+   "react": "fightPhaseEnd",
+   "targetKw": [
+    "TRANSPORT"
+   ],
+   "unitIf": [
+    "nearEdge:9"
+   ],
+   "extraTargets": {
+    "count": 1,
+    "kw": [
+     "DEDICATED TRANSPORT"
+    ]
+   },
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "ADVANCE AND CLAIM": {
+   "targetKw": [
+    "TRANSPORT"
+   ],
+   "unitIf": [
+    "embarkedKw:TORMENTORS",
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "ONTO THE NEXT": {
+   "react": "fightPhaseEnd",
+   "unitIf": [
+    "destroyedUnitThisPhase"
+   ],
+   "special": [
+    "embark"
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "CEASELESS ONSLAUGHT": {
+   "unitIf": [
+    "disembarkedThisTurn"
+   ],
+   "do": [
+    {
+     "allowCharge": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "REACTIVE DISEMBARKATION": {
+   "react": "ownAttacked",
+   "targetKw": [
+    "TRANSPORT"
+   ],
+   "unitIf": [
+    "hasEmbarked"
+   ],
+   "special": [
+    "disembarkNear6"
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "SUSTAINED BY AGONY": {
+   "react": "ownKilled",
+   "do": [
+    {
+     "agonyHeal": 6
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "SYCOPHANTIC SURGE": {
+   "targetKw": [
+    "LEGIONS OF EXCESS"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "chargeAfterAdvance",
+      "chargeAfterFallBack"
+     ]
+    }
+   ],
+   "bot": "never",
+   "note": "One of the charge targets must be engaged with an Emperor’s Children unit",
+   "status": "auto"
+  },
+  "UNCANNY REACTIONS": {
+   "targetKw": [
+    "SLAANESH"
+   ],
+   "buffs": [
+    "enemyHit-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "VIOLENT CRESCENDO": {
+   "targetKw": [
+    "SLAANESH"
+   ],
+   "effects": [
+    {
+     "pileIn": 6,
+     "consolidate": 6,
+     "freeConsolidate": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "ECSTATIC SLAUGHTER": {
+   "unitIf": [
+    "notEngaged",
+    "near:6:LEGIONS OF EXCESS"
+   ],
+   "special": [
+    "charge"
+   ],
+   "bot": "never",
+   "note": "After a Legions of Excess unit within 6\" destroyed an enemy unit; a unit that already fought cannot fight again this phase",
+   "status": "auto"
+  },
+  "DARK APPARITIONS": {
+   "react": "fightPhaseEnd",
+   "targetKw": [
+    "DAEMONETTES"
+   ],
+   "unitIf": [
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "effects": [
+    {
+     "deepStrikeRange": 6
+    }
+   ],
+   "until": "nextTurnStart",
+   "bot": "never",
+   "note": "Arriving by Deep Strike next turn: more than 6\" from enemy units, wholly within 8\" of an Emperor’s Children unit",
+   "status": "auto"
+  },
+  "MARTIAL PERFECTION": {
+   "effects": [
+    {
+     "reroll": "hits"
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "UNSHAKEABLE OPPONENTS": {
+   "effects": [
+    {
+     "ignoreHitMods": true,
+     "ignoreWoundMods": true
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "UNBOUND ARROGANCE": {
+   "react": "ownKilled",
+   "limit": "round",
+   "special": [
+    "raisePledge"
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "PROTECTION OF THE DARK PRINCE": {
+   "effects": [
+    {
+     "defend": {
+      "fnp": 6
+     }
+    },
+    {
+     "defend": {
+      "fnp": 4,
+      "fnpVs": "mortal"
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "EMBRACE THE PAIN": {
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "effects": [
+    {
+     "taunt": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "ARMOUR OF ABHORRENCE": {
+   "buffs": [
+    "enemyAp-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "DEVOTED DUELLISTS": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "HEIGHTENED JEALOUSY": {
+   "unitIf": [
+    "favoured"
+   ],
+   "do": [
+    {
+     "buffNear": {
+      "range": 99,
+      "units": [
+       "EMPEROR’S CHILDREN",
+       "CHARACTER"
+      ],
+      "effects": [
+       {
+        "strength": 1
+       }
+      ]
+     }
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "REFUSAL TO BE OUTDONE": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "unitIf": [
+    "enemyEngagedWithin:12"
+   ],
+   "effects": [
+    {
+     "rerollCharge": true
+    }
+   ],
+   "bot": "never",
+   "note": "The charge must end engaged with an enemy unit that was already engaged",
+   "status": "auto"
+  },
+  "DIABOLIC MAJESTY": {
+   "unitIf": [
+    "favoured"
+   ],
+   "limit": "round",
+   "enemy": {
+    "range": 6,
+    "all": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "VENGEFUL SURGE": {
+   "react": "enemyShot",
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "unitIf": [
+    "targetOfLast",
+    "notEngaged"
+   ],
+   "effects": [
+    {
+     "surgeReroll": true,
+     "if": [
+      "!favoured"
+     ]
+    }
+   ],
+   "do": [
+    {
+     "surge": "D6"
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "BEAUTIFUL DEATH": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "effects": [
+    {
+     "fightOnDeath": 4,
+     "if": [
+      "!favoured"
+     ]
+    },
+    {
+     "fightOnDeath": 3,
+     "if": [
+      "favoured"
+     ]
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "CONTEMPTUOUS DISREGARD": {
+   "effects": [
+    {
+     "defend": {
+      "woundIfStronger": -1
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "PRIDEFUL SUPERIORITY": {
+   "effects": [
+    {
+     "if": [
+      "targetCharacter"
+     ],
+     "reroll": [
+      "hits",
+      "wounds"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "CLOSE-QUARTERS EXCRUCIATION": {
+   "effects": [
+    {
+     "if": [
+      "within12"
+     ],
+     "strength": 1,
+     "ap": 1
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "EUPHORIC INSPIRATION": {
+   "targetKw": [
+    "DAEMON"
+   ],
+   "effects": [
+    {
+     "rerollCharge": true
+    }
+   ],
+   "do": [
+    {
+     "buffNear": {
+      "range": 6,
+      "units": [
+       "EMPEROR’S CHILDREN"
+      ],
+      "effects": [
+       {
+        "rerollCharge": true
+       }
+      ]
+     }
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "SINUOUS BREACH": {
+   "targetKw": [
+    "DAEMON"
+   ],
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "CATALYTIC STIMULUS": {
+   "react": "enemyShot",
+   "unitIf": [
+    "lostToLast",
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "surge": "D6"
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "DELIGHT IN AGONY": {
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "effects": [
+    {
+     "defend": {
+      "woundIfStronger": -1
+     }
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "PSYCHEDELIC SOULFLAME": {
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "effects": [
+    {
+     "strength": 2
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "WARP PLUNGE": {
+   "react": "fightPhaseEnd",
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "unitIf": [
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "ABSOLUTE SENSORY OVERLOAD": {
+   "targetKw": [
+    "BATTLELINE"
+   ],
+   "do": [
+    {
+     "unshot": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "AGONISED CACOPHONY": {
+   "targetKw": [
+    "BATTLELINE"
+   ],
+   "enemy": {
+    "range": 12,
+    "visible": true
+   },
+   "enemyEffects": [
+    {
+     "detection": 6
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "POSSESSIVE MANIA": {
+   "targetKw": [
+    "BATTLELINE"
+   ],
+   "unitIf": [
+    "onObjective"
+   ],
+   "buffs": [
+    "enemyAp-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "SINGLE-MINDED STRIKE": {
+   "targetKw": [
+    "FLAWLESS BLADES"
+   ],
+   "effects": [
+    {
+     "chargeThroughModels": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "INTOXICATED BY TRIUMPH": {
+   "react": "enemyFallBack",
+   "targetKw": [
+    "FLAWLESS BLADES"
+   ],
+   "unitIf": [
+    "fellBackFromLast",
+    "notEngaged"
+   ],
+   "do": [
+    {
+     "move": "D3+3"
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "HONOUR IS FOR FOOLS": {
+   "targetKw": [
+    "FLAWLESS BLADES"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "precision"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  }
+ }
+}

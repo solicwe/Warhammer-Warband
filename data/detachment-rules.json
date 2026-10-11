@@ -3667,6 +3667,350 @@
   "Butchers of Khorne": {
    "auto": "full",
    "manual": "Adamantine Avalanche: at the start of each Fight phase with an engaged Terminator Squad, one more Blessing for Terminator Squads (blessings.ts)"
+  },
+  "Thrill Seekers": {
+   "auto": "full",
+   "armyRule": true,
+   "manual": "Emperor’s Children units shoot and charge after Advancing or Falling Back; the targeting restrictions are checked by the game"
+  },
+  "Pact of Excess": {
+   "auto": "full",
+   "armyRule": true,
+   "manual": "Legions of Excess units only with the Carnival of Excess detachment (checked in the army builder)"
+  },
+  "Mercurial Host": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "rerollAdvance": true
+    }
+   ]
+  },
+  "Peerless Bladesmen": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "name": "Exquisite Swordsmanship",
+     "rule": {
+      "act": [
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "if": [
+         "charged",
+         "!marked:Exquisite Swordsmanship"
+        ],
+        "botIf": [
+         "lethalBetter"
+        ],
+        "label": "Exquisite Swordsmanship: [LETHAL HITS] for its melee weapons",
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "attack": "melee",
+            "abilities": [
+             "lethal hits"
+            ]
+           }
+          ],
+          "until": "phase",
+          "mark": "Exquisite Swordsmanship"
+         }
+        ]
+       },
+       {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "if": [
+         "charged",
+         "!marked:Exquisite Swordsmanship"
+        ],
+        "botIf": [
+         "!lethalBetter"
+        ],
+        "label": "Exquisite Swordsmanship: [SUSTAINED HITS 1] for its melee weapons",
+        "do": [
+         {
+          "on": "self",
+          "buff": [
+           {
+            "attack": "melee",
+            "abilities": [
+             "sustained hits 1"
+            ]
+           }
+          ],
+          "until": "phase",
+          "mark": "Exquisite Swordsmanship"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "manual": "After a Charge move, pick [LETHAL HITS] or [SUSTAINED HITS 1] when the unit is selected to fight (the bot takes Lethal Hits against tougher targets)"
+  },
+  "Rapid Evisceration": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN",
+      "TRANSPORT"
+     ],
+     "reroll": [
+      "hits1",
+      "wounds1"
+     ]
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN",
+      "!TRANSPORT"
+     ],
+     "if": [
+      "disembarkedThisTurn"
+     ],
+     "reroll": [
+      "hits1",
+      "wounds1"
+     ]
+    }
+   ]
+  },
+  "Carnival of Excess": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "near:6:LEGIONS OF EXCESS"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "near:6:LEGIONS OF EXCESS",
+      "sustainedWeapon"
+     ],
+     "critHitOn": 5
+    },
+    {
+     "units": [
+      "LEGIONS OF EXCESS"
+     ],
+     "if": [
+      "near:6:EMPEROR’S CHILDREN"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "LEGIONS OF EXCESS"
+     ],
+     "if": [
+      "near:6:EMPEROR’S CHILDREN",
+      "sustainedWeapon"
+     ],
+     "critHitOn": 5
+    }
+   ],
+   "manual": "Empowered units (within 6\" of the other kind): [SUSTAINED HITS 1], or Critical Hits on 5+ for weapons that already have it. Legions of Excess points caps checked in the army builder"
+  },
+  "Coterie of the Conceited": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "pact:1"
+     ],
+     "reroll": "hits1"
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "pact:3"
+     ],
+     "reroll": "wounds1"
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "pact:5"
+     ],
+     "attack": "melee",
+     "abilities": [
+      "lethal hits",
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "pact:7"
+     ],
+     "critHitOn": 5
+    }
+   ],
+   "manual": "Start of each battle round: pledge a number of enemy units to destroy (you pick; the bot estimates). Kept: + that many Pact points; broken: the Warlord suffers D3 mortal wounds"
+  },
+  "Slaanesh’s Chosen": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN",
+      "CHARACTER"
+     ],
+     "ignoreMoveMods": true
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "favoured"
+     ],
+     "reroll": "wounds"
+    }
+   ],
+   "manual": "Favoured Champions: the Warlord’s unit at the start; then the first EC CHARACTER unit in each turn to destroy an enemy unit"
+  },
+  "Court of the Phoenician": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "name": "Sensational Performance",
+     "rule": {
+      "act": {
+       "when": "selectedToFight",
+       "limit": "phase",
+       "if": [
+        "charged"
+       ],
+       "botIf": [
+        "sensationalOk"
+       ],
+       "label": "Sensational Performance: +1 S and AP (not against a unit it was engaged with at the start of the turn or one already attacked this phase)",
+       "do": [
+        {
+         "on": "self",
+         "buff": [
+          {
+           "attack": "melee",
+           "strength": 1,
+           "ap": 1,
+           "sensational": true
+          }
+         ],
+         "until": "phase"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "effects": [
+    {
+     "units": [
+      "FULGRIM"
+     ],
+     "stratDiscount": {
+      "ids": [
+       "000010655004",
+       "000010655003"
+      ],
+      "cp": 1,
+      "limit": "round",
+      "perArmy": true
+     }
+    }
+   ]
+  },
+  "Elegant Brutes": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN",
+      "TERMINATOR"
+     ],
+     "if": [
+      "setUpThisTurn"
+     ],
+     "chargeBonus": 1
+    }
+   ]
+  },
+  "Frenzied Host": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "advanced",
+      "modelKw:BATTLELINE"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    },
+    {
+     "units": [
+      "EMPEROR’S CHILDREN"
+     ],
+     "if": [
+      "fellBack",
+      "modelKw:BATTLELINE"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ]
+  },
+  "Spectacle of Slaughter": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "FLAWLESS BLADES"
+     ],
+     "fightsFirst": true
+    }
+   ]
   }
  }
 }

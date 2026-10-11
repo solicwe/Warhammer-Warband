@@ -97,4 +97,19 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'w8', datasheet: 'Chaos Rhino', models: 1, pts: 75 },
     ],
   },
+  EC: {
+    name: 'Emperor’s Children (Quick)',
+    factionId: 'EC',
+    battleSize: 'incursion',
+    detachments: ['Mercurial Host'],
+    units: [
+      { uid: 'c1', datasheet: 'Tormentors', models: 10, pts: 170 },
+      { uid: 'c2', datasheet: 'Lord Exultant', models: 1, pts: 95, attachTo: 'c1', warlord: true },
+      { uid: 'c3', datasheet: 'Infractors', models: 10, pts: 175 },
+      { uid: 'c4', datasheet: 'Flawless Blades', models: 3, pts: 95 },
+      { uid: 'c5', datasheet: 'Lucius the Eternal', models: 1, pts: 130, attachTo: 'c4' },
+      { uid: 'c6', datasheet: 'Noise Marines', models: 6, pts: 160 },
+      { uid: 'c7', datasheet: 'Maulerfiend', models: 1, pts: 120 },
+    ],
+  },
 };
