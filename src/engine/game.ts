@@ -313,9 +313,12 @@ export interface MoveOptions { fly?: boolean; targets?: string[]; maxOverride?: 
 /** The charge distance against these targets: Siegecraft takes 2 off when one of them has it (not on top of other
  *  negative modifiers to the roll). */
 export function chargeReach(s: GameState, u: UnitState, targets: (string | UnitState)[] = []): number {
-  const roll = u.chargeRoll ?? 0;
-  const pen = Math.max(0, ...targets.map((t) => unitFlags(s, typeof t === 'string' ? unitById(s, t) : t).chargedMinus));
-  return pen && rollMods(s, u).chargeBonus >= 0 ? Math.max(0, roll - pen) : roll;
+  const ts = targets.map((t) => (typeof t === 'string' ? unitById(s, t) : t));
+  const f = unitFlags(s, u);
+  // Eager for Vengeance: +X when the focus of hatred is one of the targets
+  const roll = (u.chargeRoll ?? 0) + (f.chargeBonusVsOath && ts.some((t) => s.players[u.owner].oathTarget === t.id) ? f.chargeBonusVsOath : 0);
+  const pen = Math.max(0, ...ts.map((t) => unitFlags(s, t).chargedMinus));
+  return pen && rollMods(s, u).chargeBonus >= 0 && !f.ignoreMoveMods && !f.ignoreMods ? Math.max(0, roll - pen) : roll;
 }
 
 /** How far a Pile-in / Consolidation move may go (3", or more with stratagems such as Shock Onslaught). */
@@ -837,6 +840,8 @@ export function endPhase(s: GameState) {
     s.phase = 'movement';
     expireTimed(s, 'movementStart', s.active);
     fireFor(s, 'movementStart', s.active);
+    // Falsehood: the hidden Chaos Lord in Reserves can take a Legionary's place now
+    fire(s, 'movementStart', s.units.filter((u) => u.owner === s.active && u.status === 'reserves' && u.enhancements.some((e) => e.name === 'Falsehood')));
   } else if (s.phase === 'movement') {
     for (const u of boardUnits(s, s.active)) if (!u.move) { u.move = 'stationary'; u.lastStationaryTurn = s.turn; }
     s.phase = 'shooting';
@@ -1792,7 +1797,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
   u.embarkedIn = null;
   u.setUpTurn = s.turn;
   u.disembarkedTurn = s.turn;
-  const assault = mode === 'rapid' && t.move !== 'advance' && unitFlags(s, t).assaultDisembark;
+  const assault = mode === 'rapid' && t.move !== 'advance' && (unitFlags(s, t).assaultDisembark || unitFlags(s, u).assaultDisembark); // Raid Leader: the passenger's own
   if (mode === 'tactical') u.move = null; // may still make a normal or advance move
   else { u.move = 'stationary'; u.cantCharge = !assault; }
   u.disembarkedFrom = t.id;

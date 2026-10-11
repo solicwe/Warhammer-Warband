@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { applyDetachmentStratagem, stratRule } from './stratagems';
 import { botAct } from './bot';
-import { abilityRule, DET_RULES, effectsFor } from './effects';
+import { abilityRule, abilityStatus, DET_RULES, effectsFor } from './effects';
+import { abilityChoices, fire } from './activations';
 import { buildUnits, listPoints, validateList } from './army';
 import { chargeReach, createGame, formationAt, markRuleName, placeUnit, setOathTarget, startTurn } from './game';
 import { buildShootPools, rollHits, rollWounds, startAttack } from './attack';
@@ -192,6 +193,45 @@ describe('the rest of the pack', () => {
     const act = s.players[0].det?.['Creations of Bile']?.active ?? [];
     expect(act.length).toBeGreaterThanOrEqual(1);
     expect(act).not.toContain('random');
+  });
+});
+
+describe('everything automatic', () => {
+  it('every datasheet ability and enhancement resolves by itself', () => {
+    const all = list('CSM', CSM.datasheets.map((d) => [d.name, d.points[0]?.options[0]?.models ?? 1, 0] as Row), 'Veterans of the Long War');
+    const not: string[] = [];
+    for (const u of buildUnits(all, CSM, 0)) for (const a of u.abilities) { const st = abilityStatus(u, a).status; if (st !== 'auto' && st !== 'core') not.push(`${a.name}@${u.sources[0]}: ${st}`); }
+    for (const e of CSM.detachments.flatMap((d) => d.enhancements)) { const r = (csmAbilities as Record<string, { status?: string }>)[e.name]; if (r?.status && r.status !== 'auto') not.push(`${e.name}: ${r.status}`); }
+    expect([...new Set(not)]).toEqual([]);
+  });
+  it('Daemonic Allegiance picked in the army builder: the keyword and its ability, no choice in the battle', () => {
+    const l = list('CSM', [['Heretic Astartes Daemon Prince', 1, 0]], 'Veterans of the Long War');
+    l.units[0].mark = 'KHORNE';
+    const s = createGame({ lists: [l, list('ORK', [['Boyz', 10, 80]], '')], factions: [CSM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 3 });
+    const dp = s.units.find((u) => u.owner === 0)!;
+    expect(dp.keywords).toContain('KHORNE');
+    expect(abilityChoices(s, 0).some((c) => c.unit.id === dp.id)).toBe(false);
+    expect(dp.abilityPicks?.on).toEqual(['Khorne']);
+  });
+  it('Falsehood: the Chaos Lord waits in Reserves, then takes a Legionary\'s place and leads the squad', () => {
+    const s = game([['Legionaries', 5, 95], ['Chaos Lord', 1, 95]], [['Boyz', 10, 80]], 'Deceptors');
+    const leg = put(s, 'p0-x0', { x: 20, y: 20 });
+    const lord = s.units.find((u) => u.id === 'p0-x1')!;
+    lord.enhancements = [{ name: 'Falsehood', text: '', model: 'Chaos Lord' }];
+    lord.abilities.push({ name: 'Falsehood', type: 'Enhancement', text: '', sheet: 'Chaos Lord', faction: 'CSM' });
+    lord.status = 'reserves';
+    fire(s, 'movementStart', [lord]);
+    expect(s.units.some((u) => u.id === lord.id)).toBe(false);
+    expect(leg.sources).toContain('Chaos Lord');
+    expect(alive(leg).length).toBe(5);
+  });
+  it('Siege Crawler ignores a Siegecraft-style penalty to its charge', () => {
+    const s = game([['Maulerfiend', 1, 0]], [['Boyz', 10, 80]]);
+    const m = put(s, 'p0-x0', { x: 20, y: 20 });
+    const e = put(s, 'p1-x0', { x: 28, y: 20 });
+    e.timed = [{ e: { chargedMinus: 2 }, label: 't', until: 'battle', by: 1, turn: 0 }];
+    m.chargeRoll = 9;
+    expect(chargeReach(s, m, [e])).toBe(9);
   });
 });
 

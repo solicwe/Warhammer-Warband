@@ -20,8 +20,8 @@
   "note": "A passed Dark Pact test of 7+ gives 1CP (darkPacts.ts)"
  },
  "SUPREME COMMANDER": {
-  "status": "info",
-  "note": "Abaddon must be your Warlord (army builder)"
+  "status": "auto",
+  "note": "Checked by the army builder: Abaddon must be your Warlord"
  },
  "Paragon of Hatred (Aura)": {
   "effects": [
@@ -123,9 +123,7 @@
      "shootBack": true
     }
    ]
-  },
-  "status": "partial",
-  "note": "Shoots back at the attacker after it has shot (once per turn)"
+  }
  },
  "Enhanced Warriors": {
   "effects": [
@@ -144,9 +142,7 @@
     ],
     "toughness": 1
    }
-  ],
-  "status": "partial",
-  "note": "+1 S (melee) and +1 T to the Bodyguard models while Fabius leads them"
+  ]
  },
  "Surgeon Acolyte": {
   "effects": [
@@ -155,12 +151,10 @@
      "contains:Fabius Bile"
     ],
     "defend": {
-     "negateOncePerPhase": true
+     "negateOnce": "turn"
     }
    }
-  ],
-  "status": "partial",
-  "note": "Once per phase (the card: once per turn) a failed save does no damage while Fabius lives"
+  ]
  },
  "Chirurgeon": {
   "act": {
@@ -384,8 +378,7 @@
     "Slaanesh"
    ]
   },
-  "status": "partial",
-  "note": "Pick the god at the first Command phase (the card: when you build the army) and keep it"
+  "note": "Picked in the army builder (unit settings); the keyword and its bonus apply all battle"
  },
  "Khorne": {
   "effects": [
@@ -438,7 +431,7 @@
     },
     "do": [
      {
-      "mortals": "D3",
+      "ldFailMortals": "D3",
       "if": [
        "targetPsyHit"
       ]
@@ -454,28 +447,24 @@
     },
     "do": [
      {
-      "mortals": "D3",
+      "ldFailMortals": "D3",
       "if": [
        "targetPsyHit"
       ]
      }
     ]
    }
-  ],
-  "status": "partial",
-  "note": "The target takes D3 mortal wounds (its Leadership test is not rolled: counted as failed half the time is not modelled)"
+  ]
  },
  "Chaos Familiar": {
   "effects": [
    {
     "scope": "model",
     "defend": {
-     "negateOncePerPhase": true
+     "negateOnce": "battle"
     }
    }
-  ],
-  "status": "partial",
-  "note": "Applied once per phase (the card: once per battle)"
+  ]
  },
  "Warptime (Psychic)": {
   "effects": [
@@ -529,6 +518,13 @@
      "near:3:HERETIC ASTARTES+VEHICLE"
     ],
     "loneOperative": true
+   },
+   {
+    "if": [
+     "hasAbility:Crown of Worms",
+     "near:6:HERETIC ASTARTES+VEHICLE"
+    ],
+    "loneOperative": true
    }
   ]
  },
@@ -542,7 +538,11 @@
     "units": [
      "HERETIC ASTARTES",
      "VEHICLE"
-    ]
+    ],
+    "rangeBonusIf": {
+     "ability": "Crown of Worms",
+     "add": 3
+    }
    },
    "label": "Vehicle within 3\": regain D3 W, +1 to Hit",
    "do": [
@@ -569,7 +569,11 @@
     "range": 12,
     "units": [
      "VEHICLE"
-    ]
+    ],
+    "rangeBonusIf": {
+     "ability": "Crown of Worms",
+     "add": 3
+    }
    },
    "do": [
     {
@@ -702,9 +706,7 @@
     "range": 6,
     "ld": -1
    }
-  ],
-  "status": "partial",
-  "note": "Enemies within 6\": Leadership worse by 1 (same as −1 to their tests)"
+  ]
  },
  "Terrifying Assault": {
   "act": {
@@ -784,9 +786,7 @@
    {
     "noBigGunsPenalty": true
    }
-  ],
-  "status": "partial",
-  "note": "No −1 to Hit while engaged (shooting the unit it is engaged with: close-quarters shooting)"
+  ]
  },
  "Warp Rift Firepower": {
   "act": {
@@ -847,11 +847,9 @@
  "Siege Crawler": {
   "effects": [
    {
-    "ignoreMods": true
+    "ignoreMoveMods": true
    }
-  ],
-  "status": "partial",
-  "note": "Ignores modifiers (Move, Advance and Charge as well as the rest)"
+  ]
  },
  "Scuttling Walker": {
   "effects": [
@@ -913,13 +911,9 @@
  "Herald of the Apocalypse (Aura)": {
   "effects": [
    {
-    "scope": "enemyAura",
-    "range": 6,
-    "forceShockAura": 6
+    "terrorBelow": 6
    }
-  ],
-  "status": "partial",
-  "note": "Below-strength enemies within 6\" take a Battle-shock test in your opponent's Command phase"
+  ]
  },
  "Daemonkin (Psychic)": {
   "effects": [
@@ -1126,11 +1120,11 @@
   ]
  },
  "Malign Cover": {
-  "status": "info",
+  "status": "auto",
   "note": "Cover from the Noctilith Crown: worked out by the terrain line of sight"
  },
  "Fortification": {
-  "status": "info",
+  "status": "auto",
   "note": "Fortification rules (engaged with a fortification: −1 to Hit for non-Pistol shots)"
  },
  "Bestial Raiders": {
@@ -1138,9 +1132,7 @@
    {
     "arriveFromRound": 1
    }
-  ],
-  "status": "partial",
-  "note": "Can arrive from Strategic Reserves from the first battle round"
+  ]
  },
  "Faithful Flock": {
   "effects": [
@@ -1230,14 +1222,16 @@
   "effects": [
    {
     "if": [
-     "contains:Traitor Enforcer"
+     "contains:Traitor Enforcer",
+     "leaderAttached"
     ],
     "stratDiscount": {
      "ids": [
       "fire-overwatch"
      ],
      "cp": 1,
-     "limit": "turn"
+     "limit": "turn",
+     "sacrifice": true
     },
     "stratRepeat": {
      "ids": [
@@ -1246,9 +1240,7 @@
      "limit": "turn"
     }
    }
-  ],
-  "status": "partial",
-  "note": "Fire Overwatch for 0CP once per turn (the Bodyguard model it costs is removed by you)"
+  ]
  },
  "Mutated Bodyguard": {
   "effects": [
@@ -1261,9 +1253,7 @@
      "fnp": 4
     }
    }
-  ],
-  "status": "partial",
-  "note": "Feel No Pain 4+ (applied to the unit's Character models)"
+  ]
  },
  "Twisted Defence Force": {
   "effects": [
@@ -1302,8 +1292,27 @@
     }
    }
   ],
-  "status": "partial",
-  "note": "−1 to Hit for attacks against it from within 18\" (the attackers' [HAZARDOUS]: roll yourself)"
+  "act": {
+   "when": "attacked",
+   "auto": true,
+   "do": [
+    {
+     "on": "attacker",
+     "if": [
+      "targetWithin:18"
+     ],
+     "buff": [
+      {
+       "attack": "ranged",
+       "abilities": [
+        "hazardous"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
  },
  "Indentured Daemon Engines": {
   "effects": [
@@ -1327,13 +1336,12 @@
     {
      "mortalRoll": {
       "on": 4,
-      "n": 6
+      "nWounds": true,
+      "max": 6
      }
     }
    ]
-  },
-  "status": "partial",
-  "note": "One D6 per remaining wound (up to 6): each 4+ is a mortal wound"
+  }
  },
  "Flying Horror": {
   "act": {
@@ -1351,7 +1359,7 @@
   }
  },
  "Blessings of Khorne": {
-  "status": "info",
+  "status": "auto",
   "note": "World Eaters army rule: not used in a Chaos Space Marines army"
  },
  "Blood Surge": {
@@ -1369,11 +1377,11 @@
   }
  },
  "Icon of Khorne": {
-  "status": "info",
+  "status": "auto",
   "note": "Bloodshed points are for World Eaters armies"
  },
  "Cabal of Sorcerers (Aspiring Sorcerer only)": {
-  "status": "info",
+  "status": "auto",
   "note": "Thousand Sons army rule: not used in a Chaos Space Marines army"
  },
  "Bringers of Change": {
@@ -1381,20 +1389,18 @@
    {
     "attack": "ranged",
     "if": [
-     "!targetOnObjective"
+     "!targetOnUncontrolledObjective"
     ],
     "reroll": "wounds1"
    },
    {
     "attack": "ranged",
     "if": [
-     "targetOnObjective"
+     "targetOnUncontrolledObjective"
     ],
     "reroll": "wounds"
    }
-  ],
-  "status": "partial",
-  "note": "Full re-roll against units on an objective (the card: one you do not control)"
+  ]
  },
  "Icon of Flame": {
   "gear": true,
@@ -1411,11 +1417,11 @@
   ]
  },
  "Nurgle’s Gift (Aura)": {
-  "status": "info",
+  "status": "auto",
   "note": "Death Guard army rule: not used in a Chaos Space Marines army"
  },
  "Infused with the Blessings of Nurgle": {
-  "status": "info",
+  "status": "auto",
   "note": "No effect in a Chaos Space Marines army (Faction Pack FAQ)"
  },
  "Icon of Despair (Aura)": {
@@ -1488,11 +1494,11 @@
   ]
  },
  "ATTACHED UNIT": {
-  "status": "info",
+  "status": "auto",
   "note": "Leaders that can join Legionaries can join this unit (army builder)"
  },
  "Thrill Seekers": {
-  "status": "info",
+  "status": "auto",
   "note": "Emperor's Children army rule: not used in a Chaos Space Marines army"
  },
  "Terrifying Crescendo": {
@@ -1517,24 +1523,40 @@
   }
  },
  "Choice Samples": {
-  "act": {
-   "when": "command",
-   "if": [
-    "contains:Garreon"
-   ],
-   "botIf": [
-    "belowStarting"
-   ],
-   "label": "Return 1 destroyed model",
-   "do": [
-    {
-     "on": "self",
-     "revive": 1
-    }
-   ]
-  },
-  "status": "partial",
-  "note": "The model back (the +1CP option when a nearby infantry unit is below strength: not offered)"
+  "act": [
+   {
+    "when": "command",
+    "limit": "phase",
+    "if": [
+     "contains:Garreon"
+    ],
+    "botIf": [
+     "belowStarting"
+    ],
+    "label": "Return 1 destroyed model",
+    "do": [
+     {
+      "on": "self",
+      "revive": 1
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "if": [
+     "contains:Garreon",
+     "nearBelowStart:3"
+    ],
+    "label": "Gain 1CP (an infantry unit within 3\" is below Starting Strength)",
+    "do": [
+     {
+      "on": "self",
+      "cp": 1
+     }
+    ]
+   }
+  ]
  },
  "Fleet Command": {
   "status": "auto",
@@ -1564,28 +1586,48 @@
   }
  },
  "Trophy Takers": {
-  "act": {
-   "when": "afterFighting",
-   "auto": true,
-   "needUnitDestroyed": true,
-   "limit": "battle",
-   "do": [
-    {
-     "on": "self",
-     "buff": [
-      {
-       "oc": 1,
-       "if": [
-        "notBattleShocked"
-       ]
-      }
-     ],
-     "until": "battle"
-    }
-   ]
-  },
-  "status": "partial",
-  "note": "+1 OC after it first destroys a unit in a fight (destroying one by shooting: not counted)"
+  "act": [
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "needUnitDestroyed": true,
+    "limit": "battle",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "oc": 1,
+        "if": [
+         "notBattleShocked"
+        ]
+       }
+      ],
+      "until": "battle"
+     }
+    ]
+   },
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "needUnitDestroyed": true,
+    "limit": "battle",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "oc": 1,
+        "if": [
+         "notBattleShocked"
+        ]
+       }
+      ],
+      "until": "battle"
+     }
+    ]
+   }
+  ]
  },
  "Brutal Raider": {
   "effects": [
@@ -1603,11 +1645,13 @@
  "Raider’s Due": {
   "effects": [
    {
+    "if": [
+     "enemyOnObjectiveWithin:12"
+    ],
     "rerollCharge": true
    }
   ],
-  "status": "partial",
-  "note": "Charge re-roll offered (only meant when an enemy on an objective is within 12\"; ending the charge engaged with it is up to you)"
+  "note": "The charge must end engaged with one of those enemy units: pick them as its targets"
  },
  "Headlong Destruction": {
   "effects": [
@@ -1641,9 +1685,7 @@
      "setQuarry": true
     }
    ]
-  },
-  "status": "partial",
-  "note": "Hated foe picked at the start of the battle (a new one after it is destroyed: not offered)"
+  }
  },
  "Crushing Charge": {
   "effects": [
@@ -1799,41 +1841,36 @@
      "fellBack"
     ],
     "hit": 1
+   },
+   {
+    "chargeBonusVsOath": 1
    }
-  ],
-  "status": "partial",
-  "note": "+1 to Charge rolls against the focus of hatred: by hand"
+  ]
  },
  "Eye of Abaddon": {
-  "act": {
-   "when": "anyPhase",
-   "limit": "phase",
-   "label": "Focus of hatred destroyed: roll for 1CP",
-   "roll": "D6",
-   "table": [
-    {
-     "min": 4,
-     "do": [
-      {
-       "on": "self",
-       "cp": 1
-      }
-     ]
-    }
-   ],
-   "botUse": "never"
-  },
-  "status": "partial",
-  "note": "Tap it when your focus of hatred is destroyed"
+  "effects": [
+   {
+    "cpOnOathKill": 4
+   }
+  ]
  },
  "Mark of Legend": {
-  "freeDie": {
-   "kind": "reroll",
-   "stage": "any",
-   "limit": "turn"
-  },
-  "status": "partial",
-  "note": "The saving throw re-roll is by hand"
+  "freeDie": [
+   {
+    "kind": "reroll",
+    "stage": "any",
+    "limit": "turn"
+   }
+  ],
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "negateOnce": "turn"
+    }
+   }
+  ],
+  "note": "The saving-throw re-roll is played as: once per turn a failed save does no damage"
  },
  "Warmaster’s Gift": {
   "effects": [
@@ -1842,15 +1879,9 @@
     "if": [
      "targetOath"
     ],
-    "abilities": [
-     "anti-infantry 5+",
-     "anti-vehicle 5+",
-     "anti-monster 5+"
-    ]
+    "critWoundOn": 5
    }
-  ],
-  "status": "partial",
-  "note": "Critical Wound on 5+ against the focus of hatred (as Anti 5+ against its main keywords)"
+  ]
  },
  "Cursed Fang": {
   "effects": [
@@ -1865,8 +1896,36 @@
   ]
  },
  "Falsehood": {
-  "status": "manual",
-  "note": "Set up in Reserves; swap in for a LEGIONARIES or CHOSEN model in a Movement phase: by hand"
+  "act": [
+   {
+    "when": "formation",
+    "auto": true,
+    "limit": "battle",
+    "do": [
+     {
+      "on": "self",
+      "reserves": true
+     }
+    ]
+   },
+   {
+    "when": "movementStart",
+    "auto": true,
+    "limit": "battle",
+    "target": {
+     "side": "friendly",
+     "units": [
+      "LEGIONARIES|CHOSEN"
+     ]
+    },
+    "do": [
+     {
+      "on": "target",
+      "falsehood": true
+     }
+    ]
+   }
+  ]
  },
  "Shroud of Obfuscation": {
   "effects": [
@@ -1879,8 +1938,27 @@
   ]
  },
  "Soul Link": {
-  "status": "manual",
-  "note": "Copies another character's datasheet abilities until your next Command phase: by hand"
+  "act": {
+   "when": "commandStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "units": [
+     "HERETIC ASTARTES",
+     "INFANTRY",
+     "CHARACTER",
+     "!EPIC HERO"
+    ],
+    "notSelf": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "soulLink": true
+    }
+   ]
+  }
  },
  "Despot’s Claim": {
   "act": {
@@ -2000,12 +2078,10 @@
   "effects": [
    {
     "defend": {
-     "negateOncePerPhase": true
+     "negateOnce": "round"
     }
    }
-  ],
-  "status": "partial",
-  "note": "The card: once per battle round"
+  ]
  },
  "Iron Artifice": {
   "effects": [
@@ -2065,12 +2141,13 @@
  "Cultist’s Brand": {
   "effects": [
    {
+    "if": [
+     "othersDamned"
+    ],
     "rerollAdvance": true,
     "rerollCharge": true
    }
-  ],
-  "status": "partial",
-  "note": "Only if every other model is DAMNED (not checked)"
+  ]
  },
  "Incendiary Goad": {
   "effects": [
@@ -2093,11 +2170,12 @@
  "Warped Foresight": {
   "effects": [
    {
+    "if": [
+     "leaderAttached"
+    ],
     "scouts": 6
    }
-  ],
-  "status": "partial",
-  "note": "Only while leading a unit with Scouts 6\" (not checked)"
+  ]
  },
  "Forge’s Blessing": {
   "act": {
@@ -2139,8 +2217,14 @@
   "note": "Handled with the Dark Pact (contract invoked within 3\")"
  },
  "Soul Harvester": {
-  "status": "manual",
-  "note": "Enemy unit destroyed within 12\": 5+ → 1CP, roll by hand"
+  "effects": [
+   {
+    "cpOnKillNear": {
+     "range": 12,
+     "on": 5
+    }
+   }
+  ]
  },
  "Surgical Precision": {
   "effects": [
@@ -2162,8 +2246,18 @@
     }
    }
   ],
-  "status": "partial",
-  "note": "+1 Wounds is not tracked"
+  "act": {
+   "when": "formation",
+   "auto": true,
+   "limit": "battle",
+   "bearerOnly": true,
+   "do": [
+    {
+     "on": "self",
+     "addWounds": 1
+    }
+   ]
+  }
  },
  "Helm of All-seeing": {
   "effects": [
@@ -2243,9 +2337,7 @@
    {
     "scouts": 6
    }
-  ],
-  "status": "partial",
-  "note": "May also lead WARP TALONS (attach in the army builder)"
+  ]
  },
  "Voice of the Tyrant": {
   "effects": [
@@ -2265,8 +2357,7 @@
    {
     "assaultDisembark": true
    }
-  ],
-  "status": "partial"
+  ]
  },
  "Dread Reputation": {
   "effects": [
@@ -2289,24 +2380,11 @@
   ]
  },
  "Weaponised Hatred": {
-  "act": {
-   "when": "anyPhase",
-   "limit": "round",
-   "target": {
-    "side": "enemy",
-    "visible": true
-   },
-   "label": "Weaponised Hatred: new Vendetta target",
-   "do": [
-    {
-     "on": "target",
-     "setOath": true
-    }
-   ],
-   "botUse": "never"
-  },
-  "status": "partial",
-  "note": "Use after your Vendetta target is destroyed"
+  "effects": [
+   {
+    "retargetOath": true
+   }
+  ]
  },
  "Eyes of the Hunter": {
   "effects": [
@@ -2421,8 +2499,8 @@
   ]
  },
  "Crown of Worms": {
-  "status": "partial",
-  "note": "+3\" to the Warpsmith's ability ranges: by hand"
+  "status": "auto",
+  "note": "+3\" to the ranges of Warpsmith, Master of Mechanisms and Enrage Machine Spirits"
  },
  "Pact of Destruction": {
   "effects": [
@@ -2430,8 +2508,21 @@
     "rerollPactLd": true
    }
   ],
-  "status": "partial",
-  "note": "Heal 3 after killing a model with a Dark Pact: by hand"
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "marked:darkPact",
+    "killedModelThisPhase"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "heal": "3"
+    }
+   ]
+  }
  },
  "Eye of Oblivion": {
   "act": {

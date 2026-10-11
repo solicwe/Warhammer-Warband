@@ -32,6 +32,7 @@ export type Until = TimedEffect['until'];
 export interface TargetSpec {
   side: 'self' | 'friendly' | 'enemy';
   range?: number; // within X" of the ability's models
+  rangeBonusIf?: { ability: string; add: number }; // … X" further when the unit also has this ability (Crown of Worms)
   engaged?: boolean; // enemy unit engaged with the ability's unit
   visible?: boolean;
   units?: string[]; // keyword filters
@@ -96,7 +97,7 @@ export interface Action {
   log?: string;
   // stratagem actions
   if?: string[]; // only when these conditions hold (on the unit using it; "target…" ones on the other unit)
-  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; n?: number }; // one D6 per model engaged with the target (or n dice): each X+ is a mortal wound
+  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; n?: number; nWounds?: boolean }; // one D6 per model engaged with the target (or n dice): each X+ is a mortal wound
   ldFail?: Effect[]; // the target takes a Leadership test; failed → these effects (until `until`)
   setOath?: boolean; // the target becomes your Oath of Moment target
   pileInRoll?: string; // Pile-in moves up to this many inches (rolled now) this phase
@@ -124,6 +125,10 @@ export interface Action {
   pactTest?: { pass?: Effect[] }; // Desperate Pact: Leadership test; failed → D3 mortal wounds, passed → these effects (until `until`)
   mortalsTable?: { min: number; expr: string }[]; // roll one D6: the highest row it reaches is the mortal wounds the target suffers
   addKeyword?: string; // the unit gains this keyword for the rest of the battle (Daemonic Possession)
+  ldFailMortals?: string; // the target takes a Leadership test; failed → it suffers these mortal wounds (Gift of Chaos)
+  addWounds?: number; // +X to the Wounds characteristic for the rest of the battle (the ability's models; Living Carapace)
+  soulLink?: boolean; // the bearer copies the datasheet abilities of a CHARACTER in the target unit and gains PSYKER (Soul Link)
+  falsehood?: boolean; // one model of the target unit is replaced by this unit's model, which joins it as its Leader (Falsehood)
 }
 
 export interface ActSpec {
@@ -351,7 +356,7 @@ export function actTargets(s: GameState, def: ActDef, ctx: FireCtx = {}): UnitSt
   let out = pool.filter((x) => {
     if (t.notSelf && x.id === u.id) return false;
     if (!unitMatches(x, t.units)) return false;
-    if (t.range !== undefined && x.id !== u.id && !near(ms, x, t.range)) return false;
+    if (t.range !== undefined && x.id !== u.id && !near(ms, x, t.range + (t.rangeBonusIf && u.abilities.some((a) => a.name === t.rangeBonusIf!.ability) ? t.rangeBonusIf.add : 0))) return false;
     if (t.engaged && !engagedEnemies(s, u).some((e) => e.id === x.id)) return false;
     if (t.visible && !ms.some((m) => unitVisibleTo(s, m, x))) return false;
     if (t.shocked && !x.battleShocked) return false;
@@ -472,7 +477,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.if && !a.if.every((c) => cond(c, { s, A: u, T: target ?? undefined, holder: u, bearers: def.bearers }))) continue;
     if (a.mortalRoll) {
       const q = a.mortalRoll;
-      const n = q.n ?? (q.all ? alive(u).length : alive(u).filter((m) => alive(on).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length);
+      const n = q.nWounds ? Math.min(q.max ?? 99, alive(u).reduce((x, m) => x + m.wounds, 0)) : q.n ?? (q.all ? alive(u).length : alive(u).filter((m) => alive(on).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length);
       const plus = q.plus && (q.plusIf ?? []).every((c) => cond(c, { s, A: u, T: on, holder: u })) ? q.plus : 0;
       const dice = rollN(s, Math.max(1, n));
       const hits = Math.min(q.max ?? 99, dice.filter((v) => v + plus >= q.on).length);
@@ -480,6 +485,39 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       if (hits) applyMortalWounds(s, on, hits, def.name);
     }
     if (a.ldFail && !ldTest(s, on, def.name)) for (const e of a.ldFail) addTimed(s, on, { e, label: def.name, until: a.until ?? 'turn', by: u.owner });
+    if (a.ldFailMortals && !ldTest(s, on, def.name)) { const n = rollExpr(s, a.ldFailMortals).total; log(s, `${def.name}: ${on.name} suffers ${n} mortal wound(s)`, 'roll', u.owner); applyMortalWounds(s, on, n, def.name); }
+    if (a.addWounds) for (const m of (def.bearers?.length ? def.bearers : alive(on)).filter((m) => !m.dead)) { m.profile = { ...m.profile, W: m.profile.W + a.addWounds }; m.wounds += a.addWounds; }
+    if (a.soulLink && target) {
+      const bs = def.bearers?.[0]?.source;
+      const ch = alive(target).find((m) => m.isCharacter && m.keywords.includes('INFANTRY') && !m.keywords.includes('EPIC HERO') && m.source !== bs);
+      if (bs && ch) {
+        u.soulOwn ??= u.abilities.filter((x) => x.sheet === bs && x.type === 'Datasheet');
+        const copied = target.abilities.filter((x) => x.sheet === ch.source && x.type === 'Datasheet').map((x) => ({ ...x, sheet: bs }));
+        u.abilities = [...u.abilities.filter((x) => !(x.sheet === bs && x.type === 'Datasheet')), ...copied];
+        for (const m of def.bearers ?? []) if (!m.keywords.includes('PSYKER')) m.keywords = [...m.keywords, 'PSYKER'];
+        if (!u.keywords.includes('PSYKER')) u.keywords.push('PSYKER');
+        log(s, `${def.name}: ${u.name} takes on the abilities of ${ch.name} (${copied.map((x) => x.name).join(', ') || 'none'})`, 'info', u.owner);
+      }
+    }
+    if (a.falsehood && target && u.status === 'reserves') {
+      const foes = boardUnits(s, other(u.owner)).flatMap(alive);
+      const gap = (m: ModelState) => Math.min(99, ...foes.map((e) => baseDist(m, e)));
+      const victim = alive(target).filter((m) => !m.isCharacter).sort((x, y) => gap(x) - gap(y))[0];
+      if (victim) {
+        victim.dead = true; victim.wounds = 0; // destroyed ignoring rules triggered by a model being destroyed
+        for (const m of alive(u)) { m.x = victim.x; m.y = victim.y; m.isBodyguard = false; }
+        target.models.push(...u.models);
+        target.sources.push(...u.sources);
+        target.abilities.push(...u.abilities);
+        target.enhancements.push(...u.enhancements);
+        target.keywords = [...new Set([...target.keywords, ...u.keywords])];
+        target.pts += u.pts;
+        target.isWarlordUnit ||= u.isWarlordUnit;
+        target.name = `${u.name} + ${target.name}`;
+        s.units = s.units.filter((x) => x.id !== u.id);
+        log(s, `${def.name}: the traitor is revealed — ${u.sources[0]} takes ${victim.name}'s place and leads ${target.name}`, 'info', u.owner);
+      }
+    }
     if (a.pactTest) {
       if (!ldTest(s, on, `${def.name} (Desperate Pact)`)) applyMortalWounds(s, on, rollExpr(s, 'D3').total, 'Desperate Pact');
       else for (const e of a.pactTest.pass ?? []) addTimed(s, on, { e, label: def.name, until: a.until ?? 'phase', by: u.owner });
@@ -1037,6 +1075,9 @@ export function abilityChoices(s: GameState, p: PlayerId): AbilityChoiceNow[] {
       const ch = abilityRule(u, a)?.choice;
       if (!ch) continue;
       if (ch.if && !ch.if.every((c) => cond(c, { s, A: u, holder: u }))) continue;
+      // picked in the army builder (Daemonic Allegiance: the god keyword the unit was given) — not a choice in the battle
+      const fixed = ch.options.filter((o) => u.keywords.includes(o.toUpperCase()));
+      if (fixed.length >= ch.pick) { u.abilityPicks ??= { pool: ch.options, on: fixed.slice(0, ch.pick) }; continue; }
       out.push({ unit: u, name: ch.name, pick: ch.pick, options: ch.options, on: u.abilityPicks?.on ?? ch.options.slice(0, ch.pick) });
     }
   }
@@ -1225,11 +1266,36 @@ export function arrivalShock(s: GameState, u: UnitState) {
   }
 }
 
+// An enemy unit is wiped out: Eye of Abaddon / Weaponised Hatred (your Oath / focus / Vendetta target), Soul Harvester,
+// Architect of Ruin (a new hated foe)
+onModelKilled((s, u) => {
+  if (alive(u).length) return;
+  const p = other(u.owner);
+  const P = s.players[p];
+  const mine = boardUnits(s, p);
+  const isMark = P.oathTarget === u.id;
+  for (const f of mine) {
+    const fl = unitFlags(s, f);
+    if (isMark && fl.cpOnOathKill <= 6) { const r = d6(s); log(s, `${f.name}: focus of hatred destroyed, rolled ${r} (${fl.cpOnOathKill}+)${r >= fl.cpOnOathKill ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnOathKill) P.cp += 1; }
+    if (fl.cpOnKillNear && unitDistance(f, u) <= fl.cpOnKillNear.range + 1e-6) { const r = d6(s); log(s, `${f.name}: enemy unit destroyed nearby, rolled ${r} (${fl.cpOnKillNear.on}+)${r >= fl.cpOnKillNear.on ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnKillNear.on) P.cp += 1; }
+    if (f.quarry === u.id && f.abilities.some((a) => a.name === 'Architect of Ruin')) {
+      const next = boardUnits(s, u.owner).sort((a, b) => b.pts - a.pts)[0];
+      if (next) { f.quarry = next.id; log(s, `${f.name}: new hated foe → ${next.name}`, 'info', p); }
+    }
+  }
+  if (isMark) {
+    const hunter = mine.find((f) => unitFlags(s, f).retargetOath && (f.used ??= {}).retarget !== String(s.round));
+    const next = hunter && boardUnits(s, u.owner).filter((e) => alive(hunter).some((m) => unitVisibleTo(s, m, e))).sort((a, b) => unitDistance(hunter, a) - unitDistance(hunter, b))[0];
+    if (hunter && next) { hunter.used!.retarget = String(s.round); P.oathTarget = next.id; log(s, `${hunter.name}: new Vendetta target → ${next.name}`, 'info', p); }
+  }
+});
+
 // Selfless Demise / Glut of Souls: counted while the attack runs, resolved when it is over
 const deathMW = new Map<string, number>();
 onModelKilled((s, u, m, killerId) => {
   const killer0 = killerId ? unitById(s, killerId) : undefined;
   if (s.attack && killer0 && killer0.owner !== u.owner) {
+    (killer0.used ??= {}).killedModel = phaseKey(s);
     const on = unitFlags(s, u).deathRetaliate;
     if (on <= 6 && d6(s) >= on) deathMW.set(killer0.id, (deathMW.get(killer0.id) ?? 0) + 1);
     const h = unitFlags(s, killer0).healOnKill;

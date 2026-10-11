@@ -645,7 +645,17 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               </div>
             </div>
           )}
-          {sheet && list.detachments.includes('Pactbound Zealots') && markable(sheet) && (
+          {sheet && sheet.abilities.some((x) => x.name === 'Daemonic Allegiance') && (
+            <div className="field"><span>Daemonic Allegiance <span className="tiny muted">the god this Daemon Prince serves (keyword + bonus)</span></span>
+              <div className="wg-chips">
+                {['NURGLE', 'KHORNE', 'TZEENTCH', 'SLAANESH'].map((k) => {
+                  const on = (u.mark ?? 'NURGLE') === k;
+                  return <button key={k} type="button" className={on ? 'on' : ''} aria-pressed={on} onClick={() => setUnit(u.uid, { mark: k })}>{on && <Icon name="check" size={16} />}{k.charAt(0) + k.slice(1).toLowerCase()}</button>;
+                })}
+              </div>
+            </div>
+          )}
+          {sheet && list.detachments.includes('Pactbound Zealots') && markable(sheet) && !sheet.abilities.some((x) => x.name === 'Daemonic Allegiance') && (
             <div className="field"><span>Mark of Chaos <span className="tiny muted">Pactbound Zealots · after a passed Dark Pact</span></span>
               <div className="wg-chips">
                 {CHAOS_MARKS.filter((k) => !(k === 'KHORNE' && sheet.keywords.includes('PSYKER'))).map((k) => {

@@ -232,6 +232,7 @@ export interface UnitState {
   lastStationaryTurn?: number; // turn the unit last Remained Stationary
   riledUntil?: number; // Orks: riled up by an ability until this turn index (inclusive)
   quarry?: string; // Headhunters: enemy unit id
+  soulOwn?: AbilityData[]; // Soul Link: the bearer's own datasheet abilities while it copies another character's
   readied?: boolean; // Adeptus Custodes Martial Ka'tah: the unit can use one ka'tah ability
   mark?: string; // Blade Champion's Sword of the Throne: enemy unit id
   timed?: TimedEffect[]; // temporary effects and marks from abilities

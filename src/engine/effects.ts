@@ -45,6 +45,7 @@ export interface Defend {
   save?: number; // +X to save rolls (better armour save)
   minHit?: number; // attacks that target this unit fail on an unmodified hit roll below this (Speediest Freeks: 4)
   negateOncePerPhase?: boolean; // once per phase: a failed save's damage becomes 0
+  negateOnce?: 'turn' | 'round' | 'battle'; // … once per turn / battle round / battle instead (Surgeon Acolyte, Bastion Plate, Chaos Familiar)
   notPsychic?: boolean; // the Damage change does not apply to Psychic Attacks (Impossible Form)
   // legacy names used by the first version of detachment-rules.json
   woundMinusIfStronger?: boolean;
@@ -94,7 +95,7 @@ export interface Effect {
   cannotFallBack?: boolean; noOverwatch?: boolean; noSnapTarget?: boolean; cannotBeHidden?: boolean; detection?: number; rangeMinus?: number;
   rerollAdvance?: boolean; rerollCharge?: boolean; advanceSix?: boolean; advanceBonus?: number; chargeBonus?: number; rerollShock?: boolean;
   advanceSelfMortals?: string;
-  stratDiscount?: { ids: string[]; cp: number; limit?: Limit; perArmy?: boolean };
+  stratDiscount?: { ids: string[]; cp: number; limit?: Limit; perArmy?: boolean; sacrifice?: boolean }; // sacrifice: one Bodyguard model is destroyed each time (Brutal Example)
   stratTax?: { cp: number; limit?: Limit }; // enemy aura: your opponent's stratagems on their units near it cost more
   stratCpChance?: number; // targeting this unit with a stratagem: on X+ gain 1CP
   riled?: boolean;
@@ -167,6 +168,12 @@ export interface Effect {
   pactBoth?: boolean; // a Dark Pact gives both [LETHAL HITS] and [SUSTAINED HITS 1] (Ruination's Bounty)
   terrorBelow?: number; // enemy units below Starting Strength this close take a Battle-shock test in their Command phase (Terror Descends)
   terrorBelowMod?: number; // … with this modifier (Terror Made Manifest: -1)
+  ignoreMoveMods?: boolean; // ignore modifiers to its Move characteristic and Advance / Charge rolls (Siege Crawler)
+  chargeBonusVsOath?: number; // +X to the Charge roll when a target of the charge is your Oath / focus of hatred
+  critWoundOn?: number; // unmodified Wound rolls of X+ score a Critical Wound
+  cpOnOathKill?: number; // your Oath / focus target destroyed while this unit is on the battlefield: on X+ gain 1CP (Eye of Abaddon)
+  retargetOath?: boolean; // … a new target is picked (the closest visible enemy unit) once per battle round (Weaponised Hatred)
+  cpOnKillNear?: { range: number; on: number }; // an enemy unit destroyed within X": on Y+ gain 1CP (Soul Harvester)
   thralls?: boolean; // Mortal Thralls: wound rolls against this unit hit a DAMNED unit within 3" instead (mortal wounds = Damage)
   arriveShock?: number; // set up on the battlefield: one enemy INFANTRY / MOUNTED unit this close and visible takes a Battle-shock test
   arriveShockAll?: number; // … every enemy unit this close takes one (Dread Reputation)
@@ -545,6 +552,14 @@ export function cond(c: string, x: Ctx): boolean {
     const d = Number(c.slice(12));
     return alive(A).length > 0 && alive(A).every((m) => pointInPoly(m, z) || Math.min(...polyEdges(z).map((e) => pointSegDist(m, e))) + m.r <= d + 1e-6);
   }
+  // Raider's Due: an enemy unit within range of an objective is within X" of this unit
+  if (c.startsWith('enemyOnObjectiveWithin:')) { const d = Number(c.split(':')[1]); return boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= d + 1e-6 && s.objectives.some((o) => unitInRange(s, e, o))); }
+  // Choice Samples: a friendly HERETIC ASTARTES INFANTRY unit within X" is below its Starting Strength
+  if (c.startsWith('nearBelowStart:')) { const d = Number(c.split(':')[1]); return boardUnits(s, A.owner).some((f) => f.id !== A.id && hasKw(f, 'INFANTRY') && f.factionKeywords.includes('HERETIC ASTARTES') && alive(f).length < f.startingStrength && unitDistance(A, f) <= d + 1e-6); }
+  if (c.startsWith('hasAbility:')) return A.abilities.some((a) => a.name === c.slice(11));
+  if (c.startsWith('targetWithin:')) return !!T && unitDistance(A, T) <= Number(c.split(':')[1]) + 1e-6;
+  // Cultist's Brand: every other model in the unit (Dark Disciples aside) is DAMNED
+  if (c === 'othersDamned') return alive(A).every((m) => (x.bearers ?? []).some((b) => b.id === m.id) || m.keywords.includes('DAMNED') || /dark disciple/i.test(m.name));
   // "visible to a friendly HURON BLACKHEART model": a friendly model with this name can see the unit
   if (c.startsWith('seenBy:')) { const n = wk(c.slice(7)); return boardUnits(s, A.owner).some((f) => alive(f).some((m) => (wk(m.name).includes(n) || wk(m.source).includes(n)) && (f.id === A.id || alive(A).some((o) => hasLos(s, m, o))))); }
   if (c.startsWith('contains:')) { const n = wk(c.slice(9)); return alive(A).some((m) => wk(m.name).includes(n) || wk(m.source).includes(n)); }
@@ -714,6 +729,7 @@ export function cond(c: string, x: Ctx): boolean {
     case 'attackSLessT': return !!x.p && !!T && (x.p.S ?? 0) < Math.max(...alive(T).map((n) => n.profile.T));
     case 'transportMoved': return (A.move === 'normal' || A.move === 'advance') && A.setUpTurn !== s.turn;
     case 'destroyedUnitThisPhase': return (A.used ?? {}).killedUnit === phaseKey(s);
+    case 'killedModelThisPhase': return (A.used ?? {}).killedModel === phaseKey(s);
     case 'chargeTargetEngagedWith:RAVENWING': return boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= 12 + 1e-6 && boardUnits(s, A.owner).some((f) => hasKw(f, 'RAVENWING') && engagedEnemies(s, f).some((g) => g.id === e.id)));
     case 'attackSLeqT': return !!x.p && !!T && (x.p.S ?? 0) <= Math.max(...alive(T).map((n) => n.profile.T));
     case 'enemyPsykerWithin12': return boardUnits(s, other(A.owner)).some((e) => hasKw(e, 'PSYKER') && unitDistance(A, e) <= 12 + 1e-6);
@@ -747,7 +763,7 @@ const rerolls = (e: { reroll?: Reroll | Reroll[] }): Reroll[] => (e.reroll ? (Ar
 export function offenceFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, w: WeaponData, p: WeaponProfileData, kind: 'melee' | 'ranged', d: number): Active[] {
   const x: Ctx = { s, A, T, m, w, p, d, kind };
   return effectsFor(s, A).filter((a) => (!a.e.attack || a.e.attack === kind) && modelOk(a, m) && weaponOk(a, w, p) && holds(a, x)
-    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange));
+    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange));
 }
 
 /** Marks on the target ("hit by Multi-spectrum Array: +1 to hit for your ADEPTUS ASTARTES") that help this attacker. */
@@ -840,6 +856,7 @@ function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list:
     if (e.attacks) { pool.attackBonus = (pool.attackBonus ?? 0) + e.attacks; bump(a.label, `+${e.attacks} A`); }
     if (e.damage) { pool.damage = addToExpr(pool.damage, e.damage); bump(a.label, `+${e.damage} D`); }
     if (e.critHitOn) { pool.critHitOn = Math.min(pool.critHitOn ?? 6, e.critHitOn); bump(a.label, `crit hit ${e.critHitOn}+`); }
+    if (e.critWoundOn) { pool.critWoundOn = Math.min(pool.critWoundOn, e.critWoundOn); bump(a.label, `crit wound ${e.critWoundOn}+`); }
     if (e.ignoreHitMods) { pool.ignoreHitMods = true; bump(a.label, 'ignores Hit roll modifiers'); }
     if (e.ignoreWoundMods) { pool.ignoreWoundMods = true; bump(a.label, 'ignores Wound roll modifiers'); }
     if (e.strengthPer5Models) {
@@ -934,11 +951,13 @@ export const untargetableAt = (s: GameState, T: UnitState, d: number) => d > 12 
 export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'melee' | 'ranged' | 'mortal', psychic = false) {
   const list = kind === 'mortal' ? effectsFor(s, T).filter((a) => a.e.defend && modelOk(a, m) && holds(a, { s, A: T, m })) : defencesFor(s, T, kind, m);
   let damage = 0, halve = false, inv: number | null = null, fnp: number | null = null, saveBonusD1 = 0, save = 0, negate = false;
+  let negateKey: 'turn' | 'round' | 'battle' | undefined;
   for (const a of list) {
     const df = a.e.defend!;
     if (a.bearers && !a.bearers.some((b) => b.id === m.id)) continue;
     if (kind !== 'mortal') {
       if (df.negateOncePerPhase && T.used?.[`negate:${m.id}`] !== phaseKey(s)) negate = true;
+      if (df.negateOnce && T.used?.[`negate:${df.negateOnce}`] !== negatePeriod(s, df.negateOnce)) { negate = true; negateKey = df.negateOnce; }
       if (df.damage && !(df.notPsychic && psychic)) damage += df.damage;
       if (df.halveDamage) halve = true;
       if (df.inv && (inv === null || df.inv < inv)) inv = df.inv;
@@ -951,7 +970,7 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
       if (ok && (fnp === null || df.fnp < fnp)) fnp = df.fnp;
     }
   }
-  return { damage, halve, inv, fnp, saveBonusD1, save, negate };
+  return { damage, halve, inv, fnp, saveBonusD1, save, negate, negateKey };
 }
 
 /** Abilities of one model even after it was destroyed ("If this model is destroyed by a melee attack…"). */
@@ -989,7 +1008,10 @@ export function retaliateFor(s: GameState, u: UnitState, m: ModelState): { on: n
 }
 
 /** Use the once-per-phase "change the Damage of that attack to 0" of a model. */
-export const useNegate = (s: GameState, T: UnitState, m: ModelState) => { (T.used ??= {})[`negate:${m.id}`] = phaseKey(s); };
+const negatePeriod = (s: GameState, k: 'turn' | 'round' | 'battle') => (k === 'turn' ? `t${s.turn}` : k === 'round' ? `r${s.round}` : 'battle');
+export const useNegate = (s: GameState, T: UnitState, m: ModelState, k?: 'turn' | 'round' | 'battle') => {
+  if (k) (T.used ??= {})[`negate:${k}`] = negatePeriod(s, k); else (T.used ??= {})[`negate:${m.id}`] = phaseKey(s);
+};
 
 // ---------- eligibility, rolls, stats ----------
 
@@ -1005,8 +1027,8 @@ export function rollMods(s: GameState, u: UnitState) {
     rerollAdvance: es.some((e) => e.rerollAdvance),
     rerollCharge: es.some((e) => e.rerollCharge),
     advanceSix: es.some((e) => e.advanceSix),
-    advanceBonus: es.reduce((a, e) => a + (e.advanceBonus ?? 0), 0),
-    chargeBonus: es.reduce((a, e) => a + (es.some((x) => x.ignoreMods) ? Math.max(0, e.chargeBonus ?? 0) : e.chargeBonus ?? 0), 0),
+    advanceBonus: es.reduce((a, e) => a + (es.some((x) => x.ignoreMods || x.ignoreMoveMods) ? Math.max(0, e.advanceBonus ?? 0) : e.advanceBonus ?? 0), 0),
+    chargeBonus: es.reduce((a, e) => a + (es.some((x) => x.ignoreMods || x.ignoreMoveMods) ? Math.max(0, e.chargeBonus ?? 0) : e.chargeBonus ?? 0), 0),
     advanceFixed: Math.max(0, ...es.map((e) => e.advanceFixed ?? 0)),
     rerollShock: es.some((e) => e.rerollShock),
     rerollPactLd: es.some((e) => e.rerollPactLd || e.rerollShock),
@@ -1025,7 +1047,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     infiltrators: es.some((e) => e.infiltrators),
     fightsFirst: es.some((e) => e.fightsFirst),
     scouts: Math.max(0, ...es.map((e) => e.scouts ?? 0)),
-    move: es.some((e) => e.ignoreMods) ? es.reduce((a, e) => a + Math.max(0, e.move ?? 0), 0) : es.reduce((a, e) => a + (e.move ?? 0), 0),
+    move: es.some((e) => e.ignoreMods || e.ignoreMoveMods) ? es.reduce((a, e) => a + Math.max(0, e.move ?? 0), 0) : es.reduce((a, e) => a + (e.move ?? 0), 0),
     ld: es.reduce((a, e) => a + (e.ld ?? 0), 0),
     toughness: es.reduce((a, e) => a + (e.toughness ?? 0), 0),
     cannotFallBack: es.some((e) => e.cannotFallBack),
@@ -1077,6 +1099,11 @@ export function unitFlags(s: GameState, u: UnitState) {
     terrorBelowMod: Math.min(0, ...es.map((e) => e.terrorBelowMod ?? 0)),
     chargedMinus: Math.max(0, ...es.map((e) => e.chargedMinus ?? 0)),
     thralls: es.some((e) => e.thralls),
+    ignoreMoveMods: es.some((e) => e.ignoreMoveMods),
+    chargeBonusVsOath: es.reduce((a, e) => a + (e.chargeBonusVsOath ?? 0), 0),
+    cpOnOathKill: Math.min(7, ...es.map((e) => e.cpOnOathKill ?? 7)),
+    retargetOath: es.some((e) => e.retargetOath),
+    cpOnKillNear: es.find((e) => e.cpOnKillNear)?.cpOnKillNear,
     arriveShock: Math.max(0, ...es.map((e) => e.arriveShock ?? 0)),
     arriveShockAll: Math.max(0, ...es.map((e) => e.arriveShockAll ?? 0)),
     deathRetaliate: Math.min(7, ...es.map((e) => e.deathRetaliate ?? 7)),
@@ -1117,6 +1144,8 @@ function stratSpent(s: GameState, u: UnitState, stratId: string) {
     const d = discount.e.stratDiscount!;
     if (d.limit) limitBag(s, discount, d.perArmy)[`strat:${discount.label}`] = periodKey(s, d.limit);
     log(s, `${discount.label}: Stratagem costs ${d.cp}CP less`, 'cp', u.owner);
+    const m = d.sacrifice ? alive(u).find((x) => !x.isCharacter) : undefined;
+    if (m) { m.dead = true; m.wounds = 0; log(s, `${discount.label}: ${m.name} is destroyed`, 'info', u.owner); }
   }
   if (tax) {
     const t = tax.e.stratTax!;

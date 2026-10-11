@@ -697,6 +697,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   if (mode?.k === 'charge' && modeUnit) {
     for (const m of alive(modeUnit)) if (alive(modeUnit).length <= 3) rings.push({ c: m, r: (modeUnit.chargeRoll ?? 0) + m.r, color: 'rgba(245,184,61,0.5)', dash: true });
   }
+  // arriving from Reserves (Deep Strike / Strategic Reserves): how close to the enemy it may not be set up
+  if (mode?.k === 'place' && modeUnit && (mode.how === 'deepStrike' || mode.how === 'ingress')) {
+    const keep = mode.how === 'deepStrike' ? unitFlags(s, modeUnit).deepStrikeRange : RULES.reserves.enemyDistance;
+    for (const e of boardUnits(s, other(modeUnit.owner))) for (const n of alive(e)) rings.push({ c: n, r: n.r + keep, color: 'rgba(239,68,68,0.55)', dash: true });
+  }
 
   // ---------- generic confirm helpers ----------
 

@@ -636,7 +636,8 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
     const fnp = sheets.map((sh) => gearFnp(sh, models.filter((m) => m.source === sh.name).flatMap((m) => m.gear ?? []))).filter((x): x is number => x !== undefined);
     if (fnp.length) core.fnp = Math.min(core.fnp ?? 7, ...fnp);
     // Marks of Chaos: the keyword picked in the army builder
-    const marks = [...new Set([e, ...joiners].map((x) => x.mark).filter((k): k is string => !!k))];
+    // (Daemonic Allegiance with none picked: Nurgle, its first option)
+    const marks = [...new Set([e, ...joiners].map((x) => x.mark ?? (sheetOf(x).abilities.some((a) => a.name === 'Daemonic Allegiance') ? 'NURGLE' : undefined)).filter((k): k is string => !!k))];
     if (marks.length) for (const m of models) m.keywords = [...new Set([...m.keywords, ...marks])];
     const keywords = [...new Set([...sheets.flatMap((s) => s.keywords), ...marks])];
     units.push({
@@ -752,7 +753,9 @@ export function attachOptions(list: ArmyList, faction: FactionData, entry: ArmyU
   const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
   const me = sheetOf(entry.datasheet);
   if (!me?.leads.length) return [];
-  return list.units.filter((b) => b.uid !== entry.uid && !b.attachTo && me.leads.includes(b.datasheet)
+  // Sorrowscent Vulture (Nightmare Hunt): the bearer can also lead WARP TALONS
+  const leads = entry.enhancement === 'Sorrowscent Vulture' ? [...me.leads, 'Warp Talons'] : me.leads;
+  return list.units.filter((b) => b.uid !== entry.uid && !b.attachTo && leads.includes(b.datasheet)
     && !list.units.some((o) => o.uid !== entry.uid && o.attachTo === b.uid && !!sheetOf(o.datasheet)?.isSupport === me.isSupport));
 }
 
@@ -970,7 +973,7 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (!u.attachTo) continue;
     const leader = faction.datasheets.find((d) => d.name === u.datasheet);
     const body = list.units.find((b) => b.uid === u.attachTo);
-    if (!leader || !body || !leader.leads.includes(body.datasheet)) errs.push(`${u.datasheet} cannot be attached to ${body?.datasheet ?? '?'}`);
+    if (!leader || !body || !(leader.leads.includes(body.datasheet) || (u.enhancement === 'Sorrowscent Vulture' && body.datasheet === 'Warp Talons'))) errs.push(`${u.datasheet} cannot be attached to ${body?.datasheet ?? '?'}`);
   }
   // 24.34 Support: a bodyguard unit takes at most one leader unit and one support unit
   for (const body of list.units) {
