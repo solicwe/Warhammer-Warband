@@ -625,10 +625,10 @@ function BoardImpl(props: BoardProps) {
                     : <use href={`#tok-${modelToken(m)}`} x={p.x - m.r * 0.82} y={p.y - m.r * 0.82} width={m.r * 1.64} height={m.r * 1.64} pointerEvents="none" />}
                   {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
                   {m.profile.W > 1 && m.wounds < m.profile.W && (() => {
-                    // wounds left on a dark badge with an outline, so it reads over any token art
-                    const fsz = Math.max(0.62, Math.min(1.1, m.r * 0.7));
+                    // wounds left on a small badge sitting on the base's rim, so the photo stays visible
+                    const fsz = Math.max(0.5, Math.min(0.9, m.r * 0.55));
                     const low = m.wounds * 2 <= m.profile.W;
-                    const by = p.y + m.r * 0.55;
+                    const by = p.y + m.r * 0.98;
                     return (
                       <g pointerEvents="none">
                         <rect x={p.x - fsz * 0.62} y={by - fsz * 0.72} width={fsz * 1.24} height={fsz * 0.98} rx={fsz * 0.3} fill="rgba(0,0,0,0.78)" stroke={low ? '#f87171' : '#fde68a'} strokeWidth={0.06} />
