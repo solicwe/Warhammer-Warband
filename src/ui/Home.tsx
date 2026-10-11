@@ -9,6 +9,7 @@ import type { GameState } from '../engine/types';
 import { Emblem, titleCase } from './ArmyBuilder';
 import { useFactions, type FactionIndex } from './data';
 import { Icon } from './Icon';
+import { armyColor } from './Sheet';
 import type { Army } from './library';
 
 interface Props {
@@ -100,7 +101,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
             const pts = listPoints(a, facs[a.factionId]);
             const over = pts > size.points;
             return (
-              <div key={a.id} className={`army ${menu === a.id ? 'open' : ''}`}>
+              <div key={a.id} className={`army ${menu === a.id ? 'open' : ''}`} style={{ ['--accent' as string]: armyColor(a.factionId, a.subfaction), ['--accent-2' as string]: armyColor(a.factionId, a.subfaction) }}>
                 <button className="army-main" onClick={() => onOpen(a.id)}>
                   <Emblem factionId={a.factionId} sub={a.subfaction} />
                   <span className="army-text">

@@ -1162,11 +1162,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         {summary.map((d) => {
           const ch = choices.find((c) => c.rule === d.name);
           const need = ch?.choice.pick ?? 1;
-          const pick = (ids: string[]) => { const e = act((g) => pickDetChoice(g, p, d.name, ids)); if (e) flash(e); else { setDetPick([]); flash(`${ch!.choice.name}: ${ids.map((id) => ch!.choice.options.find((o) => o.id === id)?.name).join(' + ')}`); } };
+          const pick = (ids: string[]) => { const e = act((g) => pickDetChoice(g, p, d.name, ids)); if (e) flash(e); else { setDetPick([]); flash(`${ch!.choice.name}: ${ids.map((id) => { const o = ch!.choice.options.find((x) => x.id === id); return o ? `${o.name} — ${o.text}` : id; }).join(' · ')}`); } };
           return (
             <div key={d.name} className="det-row">
               <div className="small"><b>Detachment: {d.name}</b> <span className={`det-auto ${d.auto}`}>{AUTO_LABEL[d.auto]}</span></div>
-              {d.active.length > 0 && <div className="small"><span className="chip on">Active: {d.active.join(' + ')}</span></div>}
+              {d.active.length > 0 && <div className="small"><span className="chip on">Active: {d.active.join(' + ')}</span>{(() => { const txt = d.active.map((n) => ch?.choice.options.find((o) => o.name === n)?.text).filter(Boolean); return txt.length ? <span className="tiny"> — {txt.join(' · ')}</span> : null; })()}</div>}
               {ch && ch.open && (
                 <div className="det-choice">
                   <div className="tiny muted">{ch.choice.name} — select {need}{ch.choice.when === 'command' ? ' (until your next Command phase)' : ch.choice.when === 'round' ? ' (for the battle round)' : ' (for the battle)'}{ch.choice.uses === 'eachOnce' ? ' · each once per battle' : ch.choice.uses === 'limit' ? ` · ${ch.choice.limit} uses (${(ch.choice.limit ?? 1) - ch.state.count} left)` : ''}</div>

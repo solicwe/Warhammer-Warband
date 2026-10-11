@@ -120,7 +120,6 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
 
   const choices = useMemo(() => [
     ...armies.map((a) => ({ ref: { kind: 'list', id: a.id } as ArmyRef, list: a as ArmyList })),
-    ...Object.entries(PRESETS).map(([fid, l]) => ({ ref: { kind: 'preset', factionId: fid } as ArmyRef, list: l })),
   ], [armies]);
   const same = (a: ArmyRef, b: ArmyRef) => (a.kind === 'list' ? b.kind === 'list' && a.id === b.id : b.kind === 'preset' && a.factionId === b.factionId);
 

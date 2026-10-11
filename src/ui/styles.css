@@ -1314,3 +1314,23 @@ details > .strat-card { margin-top: 6px; }
 @media (prefers-reduced-motion: reduce) { .sel-ring { animation: none; } }
 .prof-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; min-width: 0; }
 .prof-btn small { font-size: 11px; line-height: 1.25; white-space: normal; }
+
+/* datasheet abilities: one box each so they read apart */
+.ds-sheet .ds-ab { margin: 0 8px; padding: 8px 10px; border: 1px solid #c9c9c9; border-left: 4px solid var(--ds-band, #555); border-radius: 6px; background: #fafafa; }
+.ds-sheet .ds-ab + .ds-ab { margin-top: 2px; }
+/* enhancements: a thin rule between the name, the text and the footer, like the datasheet */
+.enh-card .enh-text { border-top: 1px dotted var(--line); padding-top: 6px; }
+.enh-card .enh-foot { border-top: 1px dotted var(--line); padding-top: 6px; }
+/* the army builder and the army cards wear the army's own colour (Chapter colours for Space Marines) instead of brass */
+.ab .ab-top { box-shadow: inset 0 -2px 0 var(--accent); }
+.ab .slate { --brass: var(--accent); background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 55%, #fff), var(--accent) 35%, color-mix(in srgb, var(--accent) 35%, #000) 70%, var(--accent)); }
+.ab .slate-in::before, .ab .slate-in::after { border-color: var(--accent); }
+.ab .ab-head.slate .slate-in { box-shadow: inset 0 3px 0 var(--accent); }
+.ab .ab-head.slate .ab-faction { color: color-mix(in srgb, var(--accent) 70%, #fff); }
+.ab .ab-head.slate .emb-ring { stroke: var(--accent); }
+.ab .ab-head.slate .ab-name-input:focus, .ab .ab-head.slate .ab-reset:hover { border-color: var(--accent); }
+.ab .ab-section-head::before { background: var(--accent); }
+.ab .disp-chip.on, .ab .ab-head.slate .disp-chip:not(.off) { background: var(--accent) !important; color: #fff; }
+.army .emb-ring { stroke: var(--accent); }
+.army .meter i { background: var(--accent); }
+.army { box-shadow: inset 3px 0 0 var(--accent); }

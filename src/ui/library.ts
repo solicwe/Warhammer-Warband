@@ -17,9 +17,10 @@ const valid = (l: unknown): l is ArmyList => !!l && typeof l === 'object' && Arr
 export function loadArmies(): Army[] {
   try {
     const v = JSON.parse(localStorage.getItem(ARMIES_KEY) ?? 'null');
-    if (Array.isArray(v)) return v.filter(valid).map(withId);
+    // the ready-made "(Quick)" lists are gone from the app
+    if (Array.isArray(v)) return v.filter(valid).filter((a) => !/\(Quick\)$/.test(a.name ?? '')).map(withId);
   } catch { /* fall through */ }
-  let start: ArmyList[] = [PRESETS.SM, PRESETS.ORK];
+  let start: ArmyList[] = [];
   try {
     const old = JSON.parse(localStorage.getItem(OLD_PAIR_KEY) ?? 'null');
     if (Array.isArray(old) && old.every(valid)) start = old;
@@ -47,12 +48,12 @@ export interface BattlePrefs {
 }
 
 export function loadBattlePrefs(armies: Army[]): BattlePrefs {
-  const fallback = (i: number): ArmyRef => (armies[i] ? { kind: 'list', id: armies[i].id } : { kind: 'preset', factionId: i ? 'ORK' : 'SM' });
+  const fallback = (i: number): ArmyRef => { const a = armies[i] ?? armies[0]; return a ? { kind: 'list', id: a.id } : { kind: 'preset', factionId: i ? 'ORK' : 'SM' }; };
   const base: BattlePrefs = { mode: 'bot', sides: [fallback(0), fallback(1)], names: ['Player 1', 'Player 2'], secMode: 'tactical', layoutPick: '', level: 'hard', rounds: 5 };
   try {
     const v = JSON.parse(localStorage.getItem(BATTLE_KEY) ?? 'null') as Partial<BattlePrefs> | null;
     if (!v) return base;
-    const ok = (r?: ArmyRef): r is ArmyRef => !!r && (r.kind === 'preset' ? !!PRESETS[r.factionId] : armies.some((a) => a.id === r.id));
+    const ok = (r?: ArmyRef): r is ArmyRef => !!r && (r.kind === 'preset' ? !armies.length && !!PRESETS[r.factionId] : armies.some((a) => a.id === r.id));
     return {
       ...base, ...v,
       sides: [ok(v.sides?.[0]) ? v.sides![0] : base.sides[0], ok(v.sides?.[1]) ? v.sides![1] : base.sides[1]],

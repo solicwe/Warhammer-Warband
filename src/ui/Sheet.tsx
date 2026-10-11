@@ -98,6 +98,18 @@ const DS_COLOR: Record<string, string> = {
   CD: '#4e1a3d', AE: '#20545a', DRU: '#2d2240', NEC: '#1f4a2c', TYR: '#4a2348', GC: '#3c2f52', TAU: '#2e5a6b', LoV: '#5a3c1c',
   AM: '#3d4a2a', AS: '#6a1a1f', AdM: '#6b1d16', GK: '#3d4d5c', AoI: '#3a3f47', QI: '#1d3a5f', QT: '#3b2a2a', TL: '#3a3a3a', UA: '#3a3f47',
 };
+/** The army's own colour for highlights (Chapter colours for Space Marines), bright enough on dark and light grounds. */
+const ARMY_COLOR: Record<string, string> = {
+  SM: '#3b6fd1', ORK: '#5a9a2c', AC: '#c9a13b', TS: '#2a8fc0', CSM: '#c23a2e', DG: '#7f9a34', WE: '#c8262a', EC: '#b04aa6',
+  CD: '#b03a7a', AE: '#2f9aa3', DRU: '#7a5fb8', NEC: '#2fa35a', TYR: '#9a4ab0', GC: '#7a5fb0', TAU: '#3aa0c0', LoV: '#c07a2a',
+  AM: '#7a9a3a', AS: '#c0303a', AdM: '#c04a2a', GK: '#8aa0b8', AoI: '#8a93a3', QI: '#3a78c0', QT: '#a05a5a', TL: '#9a9a9a', UA: '#8a93a3',
+};
+const CHAPTER_COLOR: Record<string, string> = {
+  ULTRAMARINES: '#2f63c9', 'BLOOD ANGELS': '#c8262f', 'DARK ANGELS': '#2e8a46', 'SPACE WOLVES': '#7d9bb3', 'BLACK TEMPLARS': '#9aa0a8',
+  DEATHWATCH: '#8a93a3', 'IMPERIAL FISTS': '#e0b018', 'IRON HANDS': '#7f8a96', 'RAVEN GUARD': '#6f7a8c', SALAMANDERS: '#2f9a3a', 'WHITE SCARS': '#d23a3a',
+};
+export const armyColor = (factionId?: string, sub?: string) => (sub && CHAPTER_COLOR[sub]) || ARMY_COLOR[factionId ?? ''] || '#c9a13b';
+
 export const dsColor = (factionId?: string) => DS_COLOR[factionId ?? ''] ?? '#2c4440';
 
 export function DatasheetView({ sheet, factionId, variants }: { sheet: DatasheetData; factionId?: string; variants?: PictureVariant[] }) {

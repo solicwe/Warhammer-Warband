@@ -7,9 +7,8 @@ import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionDat
 import { Icon } from './Icon';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { listDisposition, listDispositionOptions } from '../engine/game';
-import { PRESETS } from './presets';
 import { DET_RULES } from '../engine/detachments';
-import { DatasheetView, ModelPictures } from './Sheet';
+import { armyColor, DatasheetView, ModelPictures } from './Sheet';
 import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';
 import { getPortrait, setPortrait, usePortraitsVersion } from './portraits';
@@ -260,11 +259,9 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const choose = (factionId: string, subfaction?: string) => {
     setPicker(null);
     if (factionId !== list.factionId) {
-      // a faction with a ready-made list starts from it (Adeptus Custodes …), others from an empty list
       // a brand-new army starts empty, named after its faction
-      const quick = startPicker ? undefined : PRESETS[factionId];
       const named = startPicker && (!list.name || list.name === 'New army') ? index?.factions.find((f) => f.id === factionId)?.name ?? list.name : list.name;
-      onChange(quick && !subfaction ? { ...structuredClone(quick), battleSize: list.battleSize } : { ...list, name: named, factionId, subfaction, detachments: [], units: [] });
+      onChange({ ...list, name: named, factionId, subfaction, detachments: [], units: [] });
       return;
     }
     if (!faction) return;
@@ -936,7 +933,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   };
 
   return (
-    <div className="ab">
+    <div className="ab" style={{ ['--accent' as string]: armyColor(list.factionId, list.subfaction), ['--accent-2' as string]: armyColor(list.factionId, list.subfaction) }}>
       <header className="ab-top">
         <button type="button" className="ab-icon" aria-label="Back" onClick={onDone}><Icon name="back" size={22} /></button>
         <div className="ab-tabs" role="tablist">
