@@ -43,6 +43,8 @@ export interface DatasheetData {
   role: string;
   keywords: string[];
   factionKeywords: string[];
+  ally?: string; // an allied unit from another book (its faction id: QI, QT, TL, AoI, CD)
+  allyName?: string;
   subfaction?: string; // e.g. the Chapter keyword ("BLOOD ANGELS"); absent = usable by any sub-faction
   models: ModelProfileData[];
   composition: CompositionData[];

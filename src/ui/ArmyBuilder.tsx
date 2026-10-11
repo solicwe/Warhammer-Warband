@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../engine/effects';
 import { addonLines, supportIn, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
+import { ALLIES } from '../engine/allies';
 import { Em } from './Em';
 import { dispositionById, dispositionId, RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
@@ -22,18 +23,20 @@ interface Props {
   startPicker?: boolean;
 }
 
-type Section = 'characters' | 'battleline' | 'transports' | 'others';
+type Section = 'characters' | 'battleline' | 'transports' | 'others' | 'allies';
 const SECTIONS: { id: Section; title: string }[] = [
   { id: 'characters', title: 'Characters' },
   { id: 'battleline', title: 'Battleline' },
   { id: 'others', title: 'Others' },
   { id: 'transports', title: 'Dedicated Transports' },
+  { id: 'allies', title: 'Allied Units' },
 ];
 
 /** Units listed under Others although they carry the CHARACTER keyword (bodyguard-style Epic Heroes). */
 const OTHERS = new Set(['Victrix Honour Guard']);
 
 function sectionOf(d: DatasheetData | undefined): Section {
+  if (d?.ally) return 'allies';
   if (!d || OTHERS.has(d.name)) return 'others';
   if (d.keywords.includes('CHARACTER') || /Character|Epic Hero/.test(d.role)) return 'characters';
   if (d.keywords.includes('BATTLELINE') || d.role === 'Battleline') return 'battleline';
@@ -371,7 +374,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const listTab = () => (
     <>
       {errors.length > 0 && <div className="ab-errors">{errors.map((e) => <div key={e}>{e}</div>)}</div>}
-      {SECTIONS.map((sec) => {
+      {SECTIONS.filter((sec) => sec.id !== 'allies' || faction?.datasheets.some((d) => d.ally)).map((sec) => {
         // a unit with its Leader / Support shows as one card, in the section of its (first) character
         const joined = (b: ArmyUnitEntry) => list.units.filter((c) => c.attachTo === b.uid);
         const homeOf = (u: ArmyUnitEntry): string => {
@@ -548,7 +551,9 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const title = SECTIONS.find((x) => x.id === adding)!.title;
     const sheets = faction.datasheets
       .filter((d) => allowed(d) && sectionOf(d) === adding && d.name.toLowerCase().includes(q.toLowerCase()) && pointsOptions(d).length)
-      .sort((a, b) => KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) || Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
+      .sort((a, b) => (a.allyName ?? '').localeCompare(b.allyName ?? '') || KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) || Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
+    // the allied list is grouped by the book each unit comes from
+    const groupOf = (d: DatasheetData) => (d.ally ? `${d.allyName} · ${unitKind(d)}` : unitKind(d));
     return (
       <div className="tray-backdrop" onClick={() => setAdding(null)}>
         <div className="tray" onClick={(e) => e.stopPropagation()}>
@@ -557,13 +562,18 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
             <button className="btn small ghost" onClick={() => setAdding(null)}>Close</button>
           </div>
           <input placeholder="Search datasheets…" value={q} onChange={(e) => setQ(e.target.value)} />
+          {adding === 'allies' && (
+            <div className="tiny muted">
+              Allowed for this army: {[...new Map(faction.datasheets.filter((d) => d.ally).map((d) => [d.ally!, d])).values()].map((d) => `${d.allyName} (${ALLIES.find((a) => a.id === d.ally)?.rule})`).join(' · ')}. Allies are never the Warlord.
+            </div>
+          )}
           <div className="ab-pick">
             {sheets.map((d, i) => {
               const count = list.units.filter((u) => u.datasheet === d.name).length;
               const open = view === d.name;
-              const kind = unitKind(d);
+              const kind = groupOf(d);
               return [
-                (i === 0 || unitKind(sheets[i - 1]) !== kind) && <div key={`kind-${kind}`} className="ab-kind">{kind}</div>,
+                (i === 0 || groupOf(sheets[i - 1]) !== kind) && <div key={`kind-${kind}`} className="ab-kind">{kind}</div>,
                 <div key={d.id} className={`ab-row ${open ? 'open' : ''}`}>
                   <button type="button" className="ab-row-main" onClick={() => setView(open ? null : d.name)}>
                     <UnitArt sheet={d} />

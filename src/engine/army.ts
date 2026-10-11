@@ -1,5 +1,6 @@
 // Turns an army list (datasheet names + sizes + attachments) into UnitState objects.
 import detData from '../../data/detachment-rules.json';
+import { allyErrors } from './allies';
 import { exprAverage } from './dice';
 import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelProfileData, ModelState, PlayerId, TransportInfo, UnitState, WargearOption, WargearPick, WeaponData } from './types';
 
@@ -795,7 +796,8 @@ export function autoAttach(list: ArmyList, faction: FactionData): ArmyList {
 
 export function enhancementOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry) {
   const sheet = faction.datasheets.find((d) => d.name === entry.datasheet);
-  if (!sheet || sheet.keywords.includes('EPIC HERO')) return [];
+  // allied units take no Enhancements (Freeblades, Dreadblades, Daemonic Pact; the others' own detachments aren't ours)
+  if (!sheet || sheet.keywords.includes('EPIC HERO') || sheet.ally) return [];
   const isChar = sheet.keywords.includes('CHARACTER');
   return faction.detachments
     .filter((d) => list.detachments.includes(d.name))
@@ -963,6 +965,7 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (allyPts > cap) errs.push(`${k} units: ${allyPts} pts — at most ${cap} pts at this battle size`);
     if (allies.some((u) => u.warlord) && new RegExp(`No ${k} models from your army can be your WARLORD`, 'i').test(allyRule!.text)) errs.push(`${k} models cannot be your Warlord`);
   }
+  errs.push(...allyErrors(list, faction, size.points, unitPoints));
   // "This detachment has the MUTANT tag and cannot be taken with another MUTANT detachment"
   const tags = faction.detachments.filter((d) => list.detachments.includes(d.name)).flatMap((d) => d.rules.map((r) => /has the (\w+) tag/.exec(r.text)?.[1]).filter(Boolean).map((tag) => ({ tag: tag!, d: d.name })));
   for (const tg of new Set(tags.map((x) => x.tag))) if (tags.filter((x) => x.tag === tg).length > 1) errs.push(`Only one ${tg} Detachment: ${tags.filter((x) => x.tag === tg).map((x) => x.d).join(', ')}`);

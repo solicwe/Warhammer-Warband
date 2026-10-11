@@ -163,8 +163,10 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
             {sheet.composition.map((c) => <div key={c.text}>• <b>{c.text}</b></div>)}
             {(() => {
               // "Ancient: combat knife, …. Company Champion: …" → one row per model, its kit as a list
+              // "Ephrael Stern is equipped with: …\nKyganil … is equipped with: …" → one row per named model
+              const each = sheet.loadoutText.split('\n').map((l) => /^(?:The |Every |Each )?(.+?) (?:is|are) equipped with:\s*(.*)$/i.exec(l.trim())).filter((m): m is RegExpExecArray => !!m);
               const text = sheet.loadoutText.replace(/^.*?equipped with:\s*/i, '').trim();
-              const rows = text.split(/\.\s+(?=[A-Z][^:.]{1,60}:)/).map((r) => r.replace(/\.$/, '').trim()).filter(Boolean)
+              const rows = each.length > 1 ? each.map((m) => ({ who: m[1], kit: m[2].replace(/\.\s*$/, '').split(/;\s*/).map((x) => x.trim()).filter(Boolean) })) : text.split(/\.\s+(?=[A-Z][^:.]{1,60}:)/).map((r) => r.replace(/\.$/, '').trim()).filter(Boolean)
                 .map((r) => { const i = r.indexOf(':'); return i > 0 && i < 60 ? { who: r.slice(0, i), kit: r.slice(i + 1).split(/,\s*/).map((x) => x.trim()).filter(Boolean) } : { who: '', kit: [r] }; });
               if (rows.length < 2 && !rows[0]?.who) return <div><b>This model is equipped with:</b> {text}</div>;
               return (

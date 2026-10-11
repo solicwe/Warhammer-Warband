@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { allySources, withAllies } from '../engine/allies';
 import type { FactionData } from '../engine/types';
 
 export interface FactionIndex {
@@ -16,8 +17,21 @@ export function loadIndex(): Promise<FactionIndex> {
   return indexPromise;
 }
 
+const raw = new Map<string, Promise<FactionData>>();
+function loadRaw(id: string): Promise<FactionData> {
+  if (!raw.has(id)) raw.set(id, fetch(`./data/factions/${id}.json?v=${__DATA_VERSION__}`).then((r) => r.json()));
+  return raw.get(id)!;
+}
+
+/** A faction's data with the allied units its army may bring from other books (Knights, Titans, Agents, Daemons). */
 export function loadFaction(id: string): Promise<FactionData> {
-  if (!cache.has(id)) cache.set(id, fetch(`./data/factions/${id}.json?v=${__DATA_VERSION__}`).then((r) => r.json()));
+  if (!cache.has(id)) {
+    cache.set(id, Promise.all([loadRaw(id), loadIndex().catch(() => null)]).then(async ([f, idx]) => {
+      const srcs = allySources(id, idx?.factions.find((x) => x.id === id)?.group);
+      const allies = await Promise.all(srcs.map((src) => loadRaw(src.id).then((data) => ({ src, data })).catch(() => null)));
+      return withAllies(f, allies.filter((a): a is NonNullable<typeof a> => !!a));
+    }));
+  }
   return cache.get(id)!;
 }
 
