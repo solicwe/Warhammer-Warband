@@ -1,6 +1,6 @@
 // Turns an army list (datasheet names + sizes + attachments) into UnitState objects.
 import detData from '../../data/detachment-rules.json';
-import { allyErrors } from './allies';
+import { allyErrors, DETACHMENT_ALLIES, detachmentAllyOf } from './allies';
 import { exprAverage } from './dice';
 import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelProfileData, ModelState, PlayerId, TransportInfo, UnitState, WargearOption, WargearPick, WeaponData } from './types';
 
@@ -988,9 +988,9 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (pact.caps && xs.some((u) => u.warlord)) errs.push(`A ${pact.kw} model cannot be your Warlord`);
   }
   // Mechanicus Allies (Questor Forgepact) / Wretched Thralls (Iconoclast Fiefdom): up to 500 points, only with that detachment
-  for (const al of [{ id: 'QI', kw: 'ADEPTUS MECHANICUS', det: 'Questor Forgepact' }, { id: 'QT', kw: 'DAMNED', det: 'Iconoclast Fiefdom' }]) {
+  for (const al of DETACHMENT_ALLIES) {
     if (faction.id !== al.id) continue;
-    const xs = list.units.filter((u) => { const d = faction.datasheets.find((x) => x.name === u.datasheet); return !!d && (d.factionKeywords.includes(al.kw) || d.keywords.includes(al.kw)); });
+    const xs = list.units.filter((u) => { const d = faction.datasheets.find((x) => x.name === u.datasheet); return !!d && !!detachmentAllyOf(faction.id, d); });
     if (!xs.length) continue;
     if (!list.detachments.includes(al.det)) { errs.push(`${al.kw} units can only be included with the ${al.det} detachment`); continue; }
     const pts = xs.reduce((a, u) => a + unitPoints(u), 0);
