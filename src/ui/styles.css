@@ -1361,6 +1361,10 @@ details > .strat-card { margin-top: 6px; }
 .buffcol.left, .buffcol.right { top: 8px; max-height: calc(100% - 16px); }
 .buffcol.right { left: auto; right: 8px; }
 .buffcol .buffcard { flex: none; max-height: none; }
+/* no room beside the battlefield (phones): small see-through cards on its edge */
+.buffcol.over { gap: 4px; max-height: 40%; opacity: 0.92; }
+.buffcol.over .buffcard { padding: 4px 7px; font-size: 10.5px; line-height: 1.3; }
+.buffcol.over .buffcard b { font-size: 11.5px; }
 .buffcard b { font: 700 13px var(--font-cond); letter-spacing: 0.02em; }
 .bk-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text-2); cursor: pointer; }
 .bk-row.ok { border-color: var(--good); color: var(--text); }

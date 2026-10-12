@@ -450,11 +450,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const wrapRef = useRef<HTMLDivElement>(null);
   const [gutter, setGutter] = useState(0);
   const measureGutter = () => {
-    const w = wrapRef.current, svg = w?.querySelector('svg');
-    if (!w || !svg) return;
-    const vb = svg.viewBox.baseVal, W = w.clientWidth, H = w.clientHeight;
-    const g = Math.floor((W - Math.min(W, (H * vb.width) / (vb.height || 1))) / 2);
-    setGutter(g >= 170 ? Math.min(g, 280) : 0);
+    // where the battlefield's left edge lands on screen (zoom and the ruler margins included)
+    const w = wrapRef.current, svg = w?.querySelector('svg'), m = svg?.getScreenCTM();
+    if (!w || !svg || !m) return;
+    setGutter(Math.max(0, Math.floor(m.e - w.getBoundingClientRect().left)));
   };
   useEffect(measureGutter);
   useEffect(() => { window.addEventListener('resize', measureGutter); return () => window.removeEventListener('resize', measureGutter); }, []);
@@ -2210,8 +2209,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onShake={(lv) => { if (!lv) return; setShake(lv); window.setTimeout(() => setShake(0), 420 + lv * 80); }} />
         {botSays && actingBot === null && !spectate && <div className="bot-caption">{botSays}</div>}
         {toast && <div className="toast">{toast}</div>}
-        {hasBuffs && gutter > 0 && ([0, 1] as PlayerId[]).map((p) => (
-          <div key={p} className={`buffcol ${buffSide(p)}`} style={{ width: gutter - 16 }} aria-label={`${s.players[p].name}: army-wide buffs`}>{buffCards(p)}</div>
+        {/* beside the battlefield when there is room, else on its edge */}
+        {hasBuffs && ([0, 1] as PlayerId[]).map((p) => (
+          <div key={p} className={`buffcol ${buffSide(p)} ${gutter < 140 ? 'over' : ''}`} style={{ width: gutter < 140 ? Math.max(gutter - 12, 110) : Math.min(gutter - 16, 280) }} aria-label={`${s.players[p].name}: army-wide buffs`}>{buffCards(p)}</div>
         ))}
         {s.campaign && <RelicStrip relics={s.campaign.relics} rules={s.campaign.rules} onInfo={flash} />}
         {tape.on && (
@@ -2238,9 +2238,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <Commander quiet={actingBot === null && !thinking && !(says && Date.now() - says.k < 6000)} s={s} p={commanderP} says={says && says.p === commanderP ? says.text : null}
             think={thinking && actingBot === commanderP ? think ?? { values: {}, done: 0, total: 0 } : null}
             planning={!actingBot && ponderProg ? ponderProg : null} />
-        )}
-        {hasBuffs && !gutter && (
-          <div className="buffcards" aria-label="Army-wide buffs">{([0, 1] as PlayerId[]).flatMap(buffCards)}</div>
         )}
         <div className={`panel ${actor ? 's1' : ''}`}>
           {bots.length === 0 && s.phase !== 'deploy' && s.phase !== 'gameover' && !s.window && <div className="label"><span className={`side-dot s${actor}`} aria-hidden="true" /> {pName(s, actor)} to act</div>}
