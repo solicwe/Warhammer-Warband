@@ -21,7 +21,7 @@ import {
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
-  pileDistance, endRedeploy, redeployCandidates, redeployUnit } from '../engine/game';
+  pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../engine/activations';
@@ -446,6 +446,18 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<string | null>(null);
   const [sheetModel, setSheetModel] = useState<string | undefined>();
+  // empty room left and right of the board (the board keeps its shape): army buffs sit there on a wide screen
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [gutter, setGutter] = useState(0);
+  const measureGutter = () => {
+    const w = wrapRef.current, svg = w?.querySelector('svg');
+    if (!w || !svg) return;
+    const vb = svg.viewBox.baseVal, W = w.clientWidth, H = w.clientHeight;
+    const g = Math.floor((W - Math.min(W, (H * vb.width) / (vb.height || 1))) / 2);
+    setGutter(g >= 170 ? Math.min(g, 280) : 0);
+  };
+  useEffect(measureGutter);
+  useEffect(() => { window.addEventListener('resize', measureGutter); return () => window.removeEventListener('resize', measureGutter); }, []);
   const taps = useRef<{ id?: string; t: number[] }>({ t: [] });
   const [showBuffs, setShowBuffs] = useState(false);
   const [fly, setFly] = useState(false);
@@ -2122,6 +2134,22 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }).find((t) => !coach.seen.includes(t.id)) ?? null
     : null;
 
+  // army-wide buff cards of one side
+  const buffCards = (p: PlayerId) => [
+    ...[...armyChips[p]].map(([label, tags]) => <div key={`a${p}${label}`} className={`buffcard p${p}`}><b>{label}</b><span>Every unit: {tags.join(' · ')}</span></div>),
+    ...activeIds(s, p).map((id) => { const b = blessingById(id)!; return <div key={`${p}${id}`} className={`buffcard p${p}`}><b>{b.name}</b><span>{b.text}</span></div>; }),
+    ...(s.players[p].pledge?.round === s.round || s.players[p].pactPoints
+      ? [<div key={`pact${p}`} className={`buffcard p${p}`}><b>{s.players[p].pledge?.round === s.round ? `Pledge ${s.players[p].pledge!.n} · ` : ''}Pact {s.players[p].pactPoints ?? 0}</b><span>{PACT_BONUSES}</span></div>]
+      : []),
+  ];
+  const hasBuffs = s.phase !== 'deploy' && ([0, 1] as PlayerId[]).some((p) => buffCards(p).length > 0);
+  // where an army's buff column goes: beside its own deployment zone (left / right, or top / bottom of the left side)
+  const buffSide = (p: PlayerId) => {
+    const mid = (q: PlayerId) => { const z = zoneOf(s, q); return { x: z.reduce((a, v) => a + v.x, 0) / z.length, y: z.reduce((a, v) => a + v.y, 0) / z.length }; };
+    const a = mid(p), o = mid((1 - p) as PlayerId);
+    return Math.abs(a.x - o.x) > Math.abs(a.y - o.y) ? (a.x < o.x ? 'left' : 'right') : a.y < o.y ? 'top' : 'bottom';
+  };
+
   return (
     <div className={`game ${(reporting || rolling) && actingBot === null ? 'telling' : ''}`}>
       <header className="game-top">
@@ -2151,7 +2179,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
       </header>
-      <div className={`board-wrap shake-${shake}`}>
+      <div ref={wrapRef} className={`board-wrap shake-${shake}`}>
         <Board
           s={s}
           viewer={actor}
@@ -2182,6 +2210,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onShake={(lv) => { if (!lv) return; setShake(lv); window.setTimeout(() => setShake(0), 420 + lv * 80); }} />
         {botSays && actingBot === null && !spectate && <div className="bot-caption">{botSays}</div>}
         {toast && <div className="toast">{toast}</div>}
+        {hasBuffs && gutter > 0 && ([0, 1] as PlayerId[]).map((p) => (
+          <div key={p} className={`buffcol ${buffSide(p)}`} style={{ width: gutter - 16 }} aria-label={`${s.players[p].name}: army-wide buffs`}>{buffCards(p)}</div>
+        ))}
         {s.campaign && <RelicStrip relics={s.campaign.relics} rules={s.campaign.rules} onInfo={flash} />}
         {tape.on && (
           <div className="tape-bar">
@@ -2208,21 +2239,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             think={thinking && actingBot === commanderP ? think ?? { values: {}, done: 0, total: 0 } : null}
             planning={!actingBot && ponderProg ? ponderProg : null} />
         )}
-        {s.phase !== 'deploy' && ([0, 1] as PlayerId[]).some((p) => activeIds(s, p).length || s.players[p].pledge?.round === s.round || s.players[p].pactPoints || armyChips[p].size) && (
-          <div className="buffcards" aria-label="Army-wide buffs">
-            {([0, 1] as PlayerId[]).flatMap((p) => [...armyChips[p]].map(([label, tags]) => (
-              <div key={`a${p}${label}`} className={`buffcard p${p}`}><b>{label}</b><span>Every unit: {tags.join(' · ')}</span></div>
-            )))}
-            {([0, 1] as PlayerId[]).flatMap((p) => activeIds(s, p).map((id) => {
-              const b = blessingById(id)!;
-              return <div key={`${p}${id}`} className={`buffcard p${p}`}><b>{b.name}</b><span>{b.text}</span></div>;
-            }))}
-            {([0, 1] as PlayerId[]).filter((p) => s.players[p].pledge?.round === s.round || s.players[p].pactPoints).map((p) => (
-              <div key={`pact${p}`} className={`buffcard p${p}`}>
-                <b>{s.players[p].pledge?.round === s.round ? `Pledge ${s.players[p].pledge!.n} · ` : ''}Pact {s.players[p].pactPoints ?? 0}</b><span>{PACT_BONUSES}</span>
-              </div>
-            ))}
-          </div>
+        {hasBuffs && !gutter && (
+          <div className="buffcards" aria-label="Army-wide buffs">{([0, 1] as PlayerId[]).flatMap(buffCards)}</div>
         )}
         <div className={`panel ${actor ? 's1' : ''}`}>
           {bots.length === 0 && s.phase !== 'deploy' && s.phase !== 'gameover' && !s.window && <div className="label"><span className={`side-dot s${actor}`} aria-hidden="true" /> {pName(s, actor)} to act</div>}

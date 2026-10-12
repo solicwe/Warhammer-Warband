@@ -253,9 +253,19 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
       {u.enhancements.map((e) => (
         <div key={e.name} className="sheet"><b>Enhancement: {e.name}</b> <span className="tiny muted">({e.model})</span>{'\n'}<Em text={e.text} /></div>
       ))}
-      {u.abilities.map((a, i) => (
+      {/* like the printed datasheet: the unit's own abilities in full, Core and Faction (army rules) by name only */}
+      {u.abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction').map((a, i) => (
         <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({a.type}{a.model ? ` · ${a.model}` : ''})</span><AbilityBadge u={u} a={a} />{a.text ? <>{'\n'}<Em text={a.text} names={u.abilities.map((x) => x.name)} /></> : ''}</div>
       ))}
+      {(['Core', 'Faction'] as const).map((t) => {
+        const xs = u.abilities.filter((a) => a.type === t);
+        return xs.length > 0 && (
+          <details key={t} className="sheet">
+            <summary><b>{t.toUpperCase()}:</b> {xs.map((a) => `${a.name}${a.param ? ` ${a.param}` : ''}`).join(', ')}</summary>
+            {xs.map((a, i) => <div key={i}><b>{a.name}</b><AbilityBadge u={u} a={a} />{a.text ? <>{'\n'}<Em text={a.text} names={u.abilities.map((x) => x.name)} /></> : ''}</div>)}
+          </details>
+        );
+      })}
       <div className="kw">{[...u.factionKeywords, ...u.keywords].join(', ')}</div>
     </div>
   );
