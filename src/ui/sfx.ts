@@ -27,12 +27,15 @@ function audio(): AudioContext | null {
 if (typeof window !== 'undefined') {
   // the first tap creates the sound context: one made later, outside a tap (the roll-off that opens a game), stays muted
   const wake = (e?: Event) => {
-    if (!ctx && e?.type === 'pointerdown') audio();
-    if (ctx && ctx.state !== 'running' && document.visibilityState === 'visible') void ctx.resume().catch(() => undefined);
+    // leaving the page: drop the context; mobile browsers can hand back one that says 'running' but stays silent
+    if (document.visibilityState === 'hidden') { void ctx?.close().catch(() => undefined); ctx = null; return; }
+    if (!ctx && e && e.type !== 'visibilitychange' && e.type !== 'pageshow') audio();
+    if (ctx && ctx.state !== 'running') void ctx.resume().catch(() => undefined);
   };
   document.addEventListener('visibilitychange', wake);
   window.addEventListener('pageshow', wake);
-  window.addEventListener('pointerdown', wake, { passive: true });
+  window.addEventListener('pagehide', () => { void ctx?.close().catch(() => undefined); ctx = null; });
+  for (const t of ['pointerdown', 'touchend', 'click', 'keydown']) window.addEventListener(t, wake, { passive: true });
 }
 
 /** One note: an oscillator with a quick attack and an exponential fall. */

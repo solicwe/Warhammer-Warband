@@ -464,7 +464,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       </div>
       {chosenDets.length > 0 && dSection('rule', 'Detachment Rule', chosenDets.flatMap((d) => d.rules.map((r) => ruleCard(d.name + r.name, r.name, chosenDets.length > 1 ? d.name : '', r.text))))}
       {chosenDets.length > 0 && dSection('enh', 'Enhancements', chosenDets.flatMap((d) => d.enhancements.map((e) => ruleCard(d.name + e.name, e.name, `${e.pts}pts`, e.text))), chosenDets.reduce((a, d) => a + d.enhancements.length, 0))}
-      {chosenDets.length > 0 && dSection('strat', 'Stratagems', chosenDets.flatMap((d) => d.stratagems.map((st) => ruleCard(d.name + st.name, st.name, `${st.cp}CP`, `${st.type}\n${st.text}`))), chosenDets.reduce((a, d) => a + d.stratagems.length, 0))}
+      {chosenDets.length > 0 && dSection('strat', 'Stratagems', chosenDets.flatMap((d) => d.stratagems.map((st) => ruleCard(d.name + st.name, st.name, `${st.cp}CP`, st.text))), chosenDets.reduce((a, d) => a + d.stratagems.length, 0))}
       {dSection('core', 'Core Stratagems', RULES.coreStratagems.map((st) => ruleCard(st.id, st.name, `${st.cp}CP`, `${st.when}\n${st.text}`)))}
       {dSection('army', 'Army Rule', chapterRules(faction.armyRules, list.subfaction).map((r) => (
         <div key={r.name} className="dt-card">
@@ -534,7 +534,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                     <button type="button" className="dt-sub" onClick={() => toggleSec(`${d.name}:enh`)}>Enhancements ({d.enhancements.length})<span className={`dt-chev ${sec('enh') ? 'up' : ''}`}><Icon name="down" size={16} /></span></button>
                     {sec('enh') && d.enhancements.map((e) => ruleCard(e.name, e.name, `${e.pts}pts`, e.text))}
                     <button type="button" className="dt-sub" onClick={() => toggleSec(`${d.name}:strat`)}>Stratagems ({d.stratagems.length})<span className={`dt-chev ${sec('strat') ? 'up' : ''}`}><Icon name="down" size={16} /></span></button>
-                    {sec('strat') && d.stratagems.map((st) => ruleCard(st.name, st.name, `${st.cp}CP`, `${st.type}\n${st.text}`))}
+                    {sec('strat') && d.stratagems.map((st) => ruleCard(st.name, st.name, `${st.cp}CP`, st.text))}
                   </div>
                 )}
               </div>
@@ -778,14 +778,23 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       </div>
     );
     /** A unit card for the embark lists: picture, names, a note under them. */
-    const rideCard = (key: string, sheetName: string, title: string, note: string, cls: string, disabled: boolean, onClick: () => void, val?: string) => (
+    const rideCard = (key: string, sheetName: string, title: string, note: string, cls: string, disabled: boolean, onClick: () => void, val?: string, r?: ArmyUnitEntry) => {
+      // the leaders riding with it (small pictures) and every enhancement in the group, so two alike squads tell apart
+      const group = r ? [...list.units.filter((c) => c.attachTo === r.uid), r] : [];
+      const leaders = group.slice(0, -1);
+      const enh = group.filter((x) => x.enhancement).map((x) => `${x.enhancement} (${x.datasheet})`);
+      return (
       <button key={key} type="button" className={`ab-pop-ride ${cls}`} disabled={disabled} onClick={onClick}>
-        <UnitArt sheet={sheetOf(sheetName)} />
-        <span className="grow">{title}{note && <span className="ab-pop-sub">{note}</span>}</span>
+        <span className="ab-ride-art">
+          <UnitArt sheet={sheetOf(sheetName)} />
+          {leaders.length > 0 && <span className="ab-ride-leads">{leaders.map((c) => <UnitArt key={c.uid} sheet={sheetOf(c.datasheet)} />)}</span>}
+        </span>
+        <span className="grow">{title}{enh.length > 0 && <span className="ab-pop-sub ab-ride-enh">{enh.join(' · ')}</span>}{note && <span className="ab-pop-sub">{note}</span>}</span>
         {val && <span className="ab-pop-val">{val}</span>}
         {cls === 'on' && <Icon name="check" size={20} />}
       </button>
-    );
+      );
+    };
 
     let content: React.ReactNode;
     if (pop.mode === 'squad') {
@@ -827,7 +836,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
             const on = r.embarkIn === u.uid;
             return rideCard(r.uid, r.datasheet, names(r), on ? `${c.need} slots · tap to disembark` : c.full ? `No room: needs ${c.need}, ${Math.max(0, c.capacity - c.used)} left` : `${c.need} slots`,
               on ? 'on' : c.full ? 'full' : '', !on && c.full,
-              () => { setUnit(r.uid, { embarkIn: on ? undefined : u.uid }); setNote(on ? `${r.datasheet} left ${u.datasheet}` : `${r.datasheet} starts embarked in ${u.datasheet}`); });
+              () => { setUnit(r.uid, { embarkIn: on ? undefined : u.uid }); setNote(on ? `${r.datasheet} left ${u.datasheet}` : `${r.datasheet} starts embarked in ${u.datasheet}`); }, undefined, r);
           })}
         </>
       );

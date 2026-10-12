@@ -73,8 +73,25 @@ function renderBlocks(bs: Block[], flavourFirst: boolean, names?: string[]): Rea
   });
 }
 
+const isCaps = (l: string) => l.length >= 3 && !/[a-z]/.test(l);
+
 export function RuleText({ text, names }: { text: string; names?: string[] }) {
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  // CAPITALISED section titles (CONTAGION RANGE, AFFLICTED) above Title Case options (the Plagues): one section each
+  const caps = lines.flatMap((l, i) => (isHeading(l, lines[i + 1]) && isCaps(l) ? [i] : []));
+  if (caps.length && lines.some((l, i) => isHeading(l, lines[i + 1]) && !isCaps(l) && i > caps[0])) {
+    return (
+      <div className="rt">
+        {caps[0] > 0 && <RuleText text={lines.slice(0, caps[0]).join('\n')} names={names} />}
+        {caps.map((h, k) => (
+          <div key={h}>
+            <div className="rt-sec">{lines[h]}</div>
+            <RuleText text={lines.slice(h + 1, caps[k + 1] ?? lines.length).join('\n')} names={names} />
+          </div>
+        ))}
+      </div>
+    );
+  }
   // named options: a short title line followed by its body, repeated (at least two of them)
   // a title's body is never itself a title ("This unit has +1 to charge rolls" with its full stop missing)
   const heads: number[] = [];
