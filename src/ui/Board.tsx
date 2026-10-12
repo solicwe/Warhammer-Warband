@@ -610,6 +610,8 @@ function BoardImpl(props: BoardProps) {
             {ms.map((m, i) => {
               const p = pts[i];
               const bad = props.bad?.includes(m.id);
+              // the photo fits the narrow side of an oval or hull base
+              const pr = m.hl ? (m.hw ?? m.r) : m.r;
               const isSolo = isDraft && solo.includes(m.id);
               return (
                 <g key={m.id} data-unit={u.id} onPointerDown={(e) => startModelDrag(e, u.id, m.id)} style={{ cursor: isDraft ? 'grab' : 'pointer' }}>
@@ -633,8 +635,8 @@ function BoardImpl(props: BoardProps) {
                     strokeDasharray={u.battleShocked ? '0.25 0.15' : undefined}
                   />
                   {getModelPortrait(m)
-                    ? <image href={getModelPortrait(m)} x={p.x - m.r * 0.9} y={p.y - m.r * 0.9} width={m.r * 1.8} height={m.r * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
-                    : <use href={`#tok-${modelToken(m)}`} x={p.x - m.r * 0.82} y={p.y - m.r * 0.82} width={m.r * 1.64} height={m.r * 1.64} pointerEvents="none" />}
+                    ? <image href={getModelPortrait(m)} x={p.x - pr * 0.9} y={p.y - pr * 0.9} width={pr * 1.8} height={pr * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
+                    : <use href={`#tok-${modelToken(m)}`} x={p.x - pr * 0.82} y={p.y - pr * 0.82} width={pr * 1.64} height={pr * 1.64} pointerEvents="none" />}
                   {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
                   {m.profile.W > 1 && m.wounds < m.profile.W && (() => {
                     // wounds left on a small badge sitting on the base's rim, so the photo stays visible
