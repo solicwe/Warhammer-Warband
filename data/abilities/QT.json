@@ -1,0 +1,998 @@
+{
+ "_comment": "Chaos Knights (Codex + Faction Pack v1.2, 26 Aug 2026): datasheet abilities and enhancements. Harbingers of Dread, Malefic Surge, Marked Prey and the rest of the army rules: data/detachment-rules.json + src/engine/knights.ts. DAMNED units copy the Chaos Space Marines entries.",
+ "Fiery Faith": {
+  "effects": [
+   {
+    "scope": "led",
+    "rerollShock": true
+   }
+  ]
+ },
+ "Faithful Flock": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "contains:Cult Demagogue"
+    ],
+    "defend": {
+     "inv": 5
+    }
+   }
+  ]
+ },
+ "Dark Ritual": {
+  "act": {
+   "when": "command",
+   "limit": "battle",
+   "if": [
+    "contains:Cult Demagogue"
+   ],
+   "botIf": [
+    "enemyCharacterWithin12"
+   ],
+   "label": "+1 to Hit and Wound and charge after Advancing this turn",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "hit": 1,
+       "wound": 1,
+       "eligible": [
+        "chargeAfterAdvance"
+       ]
+      }
+     ],
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ "Chaos Icon": {
+  "gear": true,
+  "effects": [
+   {
+    "rerollPactLd": true
+   }
+  ]
+ },
+ "Brutal Example": {
+  "effects": [
+   {
+    "if": [
+     "contains:Traitor Enforcer",
+     "leaderAttached"
+    ],
+    "stratDiscount": {
+     "ids": [
+      "fire-overwatch"
+     ],
+     "cp": 1,
+     "limit": "turn",
+     "sacrifice": true
+    },
+    "stratRepeat": {
+     "ids": [
+      "fire-overwatch"
+     ],
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Mutated Bodyguard": {
+  "effects": [
+   {
+    "if": [
+     "contains:Traitor Ogryn"
+    ],
+    "scope": "model",
+    "defend": {
+     "fnp": 4
+    }
+   }
+  ]
+ },
+ "Accursed Horde": {
+  "act": {
+   "when": "shotByEnemy",
+   "auto": true,
+   "limit": "phase",
+   "needModelsLost": true,
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6"
+    }
+   ]
+  }
+ },
+ "Bestial Raiders": {
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ]
+ },
+ "Twisted Defence Force": {
+  "effects": [
+   {
+    "if": [
+     "onObjective"
+    ],
+    "defend": {
+     "save": 1,
+     "vs": "ranged"
+    }
+   }
+  ]
+ },
+ "Dark Pacts": {
+  "status": "info",
+  "note": "Only when the Army Faction is HERETIC ASTARTES: not in a Chaos Knights army"
+ },
+ "Searing Flames": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Acheron flame cannon"
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "attack": "ranged",
+      "noCover": true
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Storm of Bolts": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "suppressed"
+    }
+   ]
+  }
+ },
+ "Shock Charge": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "crushing-impact"
+     ],
+     "cp": 9
+    },
+    "stratRepeat": {
+     "ids": [
+      "crushing-impact"
+     ],
+     "limit": "phase"
+    }
+   }
+  ]
+ },
+ "Macro-extinction Protocols": {
+  "effects": [
+   {
+    "if": [
+     "targetMV"
+    ],
+    "hit": 1
+   },
+   {
+    "if": [
+     "targetKw:TITANIC|TOWERING"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Repair Auto-simulacra": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "belowStartingW"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "heal": "D3"
+    }
+   ]
+  }
+ },
+ "Bastion of Firepower": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "stationary"
+    ],
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Grav-pinned": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Graviton crusher",
+    "units": [
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "move": -2,
+       "chargeBonus": -2
+      }
+     ],
+     "until": "endOfNextTurn",
+     "mark": "grav-pinned"
+    }
+   ]
+  }
+ },
+ "Sunderer of Fortresses": {
+  "effects": [
+   {
+    "if": [
+     "targetKw:VEHICLE"
+    ],
+    "strength": 1,
+    "damage": 1
+   },
+   {
+    "if": [
+     "targetKw:FORTIFICATION"
+    ],
+    "strength": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Conversion@Chaos Acastus Knight Asterius": {
+  "effects": [
+   {
+    "weapon": "conversion",
+    "if": [
+     "beyond:24"
+    ],
+    "critHitOn": 4
+   }
+  ]
+ },
+ "Conversion@War Dog Moirax": {
+  "effects": [
+   {
+    "weapon": "conversion",
+    "if": [
+     "beyond:12"
+    ],
+    "critHitOn": 4
+   }
+  ]
+ },
+ "Protection Protocols": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1
+    },
+    "stratRepeat": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "limit": "phase"
+    }
+   }
+  ]
+ },
+ "Unrestrained Terror (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WAR DOG"
+    ],
+    "fightStartShock": 0
+   }
+  ]
+ },
+ "Dark Fervour (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WAR DOG"
+    ],
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   }
+  ]
+ },
+ "Offerings for the Dark Gods (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WAR DOG"
+    ],
+    "attack": "ranged",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Consumed with Hunger (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WAR DOG"
+    ],
+    "if": [
+     "targetKw:TITANIC|TOWERING"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Huntmaster (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WAR DOG"
+    ],
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   }
+  ]
+ },
+ "Preysight (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WAR DOG"
+    ],
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Dread Dominion (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 9,
+    "units": [
+     "WAR DOG"
+    ],
+    "ld": 1,
+    "oc": 1
+   }
+  ]
+ },
+ "Seething Hatred": {
+  "freeDie": {
+   "kind": "reroll",
+   "stage": "any",
+   "limit": "phase"
+  }
+ },
+ "Infernal Aegis (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WAR DOG"
+    ],
+    "defend": {
+     "cover": true
+    }
+   }
+  ]
+ },
+ "Bastion of Corruption": {
+  "effects": [
+   {
+    "omniScrambler": 12
+   }
+  ]
+ },
+ "Obsessive Ruthlessness": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ],
+    "ignoreHitMods": true,
+    "ignoreWoundMods": true
+   }
+  ]
+ },
+ "Taskmaster (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 9,
+    "units": [
+     "WAR DOG"
+    ],
+    "attack": "ranged",
+    "reroll": "hits1"
+   }
+  ]
+ },
+ "Bloodlust": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
+ },
+ "Frenzied Rampage (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 9,
+    "units": [
+     "WAR DOG"
+    ],
+    "attack": "melee",
+    "reroll": "hits1"
+   }
+  ]
+ },
+ "Executioner": {
+  "effects": [
+   {
+    "if": [
+     "targetBelowHalf"
+    ],
+    "hit": 1
+   }
+  ],
+  "act": [
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "needDestroyed": true,
+    "target": {
+     "side": "enemy",
+     "each": true,
+     "nearCtx": 3
+    },
+    "do": [
+     {
+      "on": "target",
+      "shock": 0
+     }
+    ]
+   },
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "needDestroyed": true,
+    "target": {
+     "side": "enemy",
+     "each": true,
+     "nearCtx": 3
+    },
+    "do": [
+     {
+      "on": "target",
+      "shock": 0
+     }
+    ]
+   }
+  ]
+ },
+ "Stalker": {
+  "effects": [
+   {
+    "if": [
+     "targetIsolated"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Karnivore": {
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Methodical Destruction": {
+  "effects": [
+   {
+    "if": [
+     "targetQuarry"
+    ],
+    "reroll": "wounds"
+   }
+  ],
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "anywhere": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "setQuarry": true
+    }
+   ]
+  }
+ },
+ "Close-range Killers (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 9,
+    "units": [
+     "WAR DOG"
+    ],
+    "if": [
+     "targetClosest"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Vortex Terrors (Psychic)": {
+  "act": {
+   "when": "shootingStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 24,
+    "visible": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Warp Storms (Psychic)": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 9,
+    "each": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 3,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Nightmare’s Master": {
+  "effects": [
+   {
+    "fightStartShock": 0
+   }
+  ]
+ },
+ "Tyrant’s Shadow": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "secure": true
+    }
+   ]
+  },
+  "note": "The objective stays yours until your opponent controls it (its Deathly Terror aura is not added)"
+ },
+ "Malevolent Heraldry": {
+  "status": "auto",
+  "note": "Random Dread abilities: the two dice are rolled once"
+ },
+ "Veil of Medrengard": {
+  "effects": [
+   {
+    "defend": {
+     "inv": 4,
+     "vs": "ranged"
+    }
+   },
+   {
+    "defend": {
+     "inv": 5,
+     "vs": "melee"
+    }
+   }
+  ]
+ },
+ "Cruel Lashmaster (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "DAMNED"
+    ],
+    "move": 2
+   }
+  ]
+ },
+ "Iconoclast Idol (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "DAMNED"
+    ],
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "Knight Diabolus": {
+  "effects": [
+   {
+    "attack": "melee",
+    "hit": 1
+   }
+  ]
+ },
+ "Blasphemous Engine": {
+  "effects": [
+   {
+    "statW": 2
+   }
+  ],
+  "note": "Its Malefic Surge Leadership test is re-rolled when failed"
+ },
+ "Fleshmetal Fusion": {
+  "effects": [
+   {
+    "toughness": 1
+   }
+  ]
+ },
+ "Bestial Aspect": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   }
+  ]
+ },
+ "Throne Mechanicum of Skulls": {
+  "effects": [
+   {
+    "rerollCharge": true
+   }
+  ],
+  "act": {
+   "when": "chargeStart",
+   "limit": "battle",
+   "if": [
+    "advanced"
+   ],
+   "botUse": "always",
+   "label": "Charge after Advancing this phase",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "eligible": [
+        "chargeAfterAdvance"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Blade of Celerity": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   }
+  ],
+  "act": {
+   "when": "fightStart",
+   "limit": "battle",
+   "botUse": "always",
+   "botIf": [
+    "engaged"
+   ],
+   "label": "Fights First this phase",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "fightsFirst": true
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Warp-borne Stalker": {
+  "effects": [
+   {
+    "deepStrike": true
+   }
+  ],
+  "act": {
+   "when": "opponentTurnEnd",
+   "limit": "battle",
+   "if": [
+    "notEngaged"
+   ],
+   "botUse": "damaged",
+   "label": "Into Strategic Reserves",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Putrid Carapace": {
+  "effects": [
+   {
+    "svSet": 2
+   }
+  ],
+  "act": {
+   "when": "eachCommandStart",
+   "limit": "battle",
+   "if": [
+    "belowStartingW"
+   ],
+   "botUse": "damaged",
+   "label": "Regain up to D6 lost wounds",
+   "do": [
+    {
+     "on": "self",
+     "heal": "D6"
+    }
+   ]
+  }
+ },
+ "Mirror of Fates": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 12,
+    "stratTax": {
+     "cp": 1,
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Blessing of the Dark Master": {
+  "effects": [
+   {
+    "stealth": true
+   },
+   {
+    "defend": {
+     "negateOnce": "battle"
+    }
+   }
+  ]
+ },
+ "Preyslayer’s Mantle": {
+  "status": "auto",
+  "note": "The bearer has the Super-heavy Walker ability (moves through models and terrain)"
+ },
+ "Final Howl (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "WAR DOG"
+    ],
+    "reroll": "wounds1"
+   }
+  ]
+ },
+ "Loping Predator": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   }
+  ]
+ },
+ "Panoply of the Cursed Knight": {
+  "effects": [
+   {
+    "defend": {
+     "ap": 1
+    }
+   }
+  ]
+ },
+ "Aspect of the Beast": {
+  "status": "auto",
+  "note": "Start of your Command phase: one more Dread ability for the bearer (knights.ts)"
+ },
+ "Hunter’s Helm": {
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Octagram of Conjuration": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 9,
+    "units": [
+     "WAR DOG"
+    ],
+    "shockAfterAttack": 0
+   }
+  ]
+ },
+ "Throne Tyrannicus": {
+  "status": "auto",
+  "note": "Your Command phase: the closest other CHARACTER Knight within 9\" is affected by the bearer’s War Dog auras (knights.ts)"
+ },
+ "Pterrorshade Rookery": {
+  "act": {
+   "when": "selectedToShoot",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 24,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "detection": 6
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Hate-Filled Dominion": {
+  "effects": [
+   {
+    "rerollAttackRolls": true
+   }
+  ]
+ },
+ "Soul-Spoor Auspicator": {
+  "effects": [
+   {
+    "rangeBonus": 6
+   }
+  ]
+ },
+ "Snarling Rivalry": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ }
+}

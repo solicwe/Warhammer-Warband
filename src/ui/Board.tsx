@@ -10,7 +10,7 @@ import { loadoutLabels, shortItem } from './loadout';
 import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import type { SecondaryGoal } from '../engine/secondaries';
-import type { FxEvent, GameState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
+import type { FxEvent, GameState, ModelState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
 import { play, type Sfx } from './sfx';
 
 export type Paths = Map<string, Pt[]>;
@@ -85,6 +85,18 @@ interface DragState {
   solo?: boolean; // single picked model: re-aim its move from where it started
   grab?: Pt; // that model's position when the drag began
   last?: Paths; // the draft as last sent
+}
+
+/** A model's base drawn to its real shape: round, oval, or a vehicle hull (rounded rectangle), turned to its facing;
+ *  `grow` draws it that much bigger all round (selection rings, Engagement Range). */
+function BaseShape({ m, p, grow = 0, ...rest }: { m: ModelState; p: Pt; grow?: number } & React.SVGProps<SVGElement>) {
+  const attrs = rest as Record<string, unknown>;
+  if (!m.hl) return <circle cx={p.x} cy={p.y} r={m.r + grow} {...attrs} />;
+  const hw = (m.hw ?? m.r) + grow, len = m.hl + hw, deg = ((m.rot ?? 0) * 180) / Math.PI;
+  const t = `rotate(${deg} ${p.x} ${p.y})`;
+  return m.hull
+    ? <rect x={p.x - len} y={p.y - hw} width={len * 2} height={hw * 2} rx={hw * 0.45} transform={t} {...attrs} />
+    : <ellipse cx={p.x} cy={p.y} rx={len} ry={hw} transform={t} {...attrs} />;
 }
 
 function BoardImpl(props: BoardProps) {
@@ -567,7 +579,7 @@ function BoardImpl(props: BoardProps) {
       ))}
       {/* engagement range of enemies while moving */}
       {draftUnit && enemyOfDraft !== undefined && s.units.filter((u) => u.owner !== enemyOfDraft && onBoard(u)).flatMap((u) => alive(u).map((m) => (
-        <circle key={`e${m.id}`} cx={m.x} cy={m.y} r={m.r + RULES.engagementRange} fill="rgba(255,80,80,0.06)" stroke="rgba(255,80,80,0.25)" strokeWidth={0.04} />
+        <BaseShape key={`e${m.id}`} m={m} p={m} grow={RULES.engagementRange} fill="rgba(255,80,80,0.06)" stroke="rgba(255,80,80,0.25)" strokeWidth={0.04} />
       )))}
       {units.map((u) => {
         const isDraft = draft && draftUnit === u.id;
@@ -589,7 +601,7 @@ function BoardImpl(props: BoardProps) {
               if (!p || p.length < 2) return null;
               return (
                 <g key={`g${m.id}`} pointerEvents="none">
-                  <circle cx={p[0].x} cy={p[0].y} r={m.r} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.06} strokeDasharray="0.2 0.15" />
+                  <BaseShape m={m} p={p[0]} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.06} strokeDasharray="0.2 0.15" />
                   <polyline points={p.map((q) => `${q.x},${q.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth={0.07} />
                   {ms.length <= 6 && maxFor && <circle cx={p[0].x} cy={p[0].y} r={maxFor(m.id) + m.r} fill="none" stroke="rgba(245,184,61,0.35)" strokeWidth={0.06} />}
                 </g>
@@ -601,19 +613,19 @@ function BoardImpl(props: BoardProps) {
               const isSolo = isDraft && solo.includes(m.id);
               return (
                 <g key={m.id} data-unit={u.id} onPointerDown={(e) => startModelDrag(e, u.id, m.id)} style={{ cursor: isDraft ? 'grab' : 'pointer' }}>
-                  <circle cx={p.x} cy={p.y} r={Math.max(m.r, 0.35) + 0.35} fill="transparent" />
-                  {acting.has(u.id) && <circle cx={p.x} cy={p.y} r={m.r + 0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
-                  {(isSel || isPicked) && !isDraft && <circle cx={p.x} cy={p.y} r={m.r + 0.3} fill="none" stroke={isSel ? '#f5b83d' : '#ffffff'} strokeWidth={0.18} className="sel-ring" pointerEvents="none" />}
-                  {isTarget && !isPicked && !isSel && <circle cx={p.x} cy={p.y} r={m.r + 0.28} fill="none" stroke="#fde68a" strokeWidth={0.1} strokeDasharray="0.3 0.2" pointerEvents="none" />}
-                  {isSolo && <circle cx={p.x} cy={p.y} r={m.r + 0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
+                  <BaseShape m={m} p={p} grow={Math.max(0, 0.35 - m.r) + 0.35} fill="transparent" />
+                  {acting.has(u.id) && <BaseShape m={m} p={p} grow={0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
+                  {(isSel || isPicked) && !isDraft && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke={isSel ? '#f5b83d' : '#ffffff'} strokeWidth={0.18} className="sel-ring" pointerEvents="none" />}
+                  {isTarget && !isPicked && !isSel && <BaseShape m={m} p={p} grow={0.28} fill="none" stroke="#fde68a" strokeWidth={0.1} strokeDasharray="0.3 0.2" pointerEvents="none" />}
+                  {isSolo && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
                   {riled && (
                     <g pointerEvents="none">
                       <path className="ork-flame" d={`M ${p.x - m.r * 0.95} ${p.y} Q ${p.x - m.r * 1.25} ${p.y - m.r * 1.2} ${p.x - m.r * 0.45} ${p.y - m.r * 1.95} Q ${p.x - m.r * 0.35} ${p.y - m.r * 1.3} ${p.x} ${p.y - m.r * 2.5} Q ${p.x + m.r * 0.3} ${p.y - m.r * 1.35} ${p.x + m.r * 0.5} ${p.y - m.r * 1.95} Q ${p.x + m.r * 1.25} ${p.y - m.r * 1.2} ${p.x + m.r * 0.95} ${p.y} Z`} fill="url(#ork-flame)" />
-                      <circle cx={p.x} cy={p.y} r={m.r + 0.12} fill="none" stroke="#4ade80" strokeWidth={0.16} opacity={0.85} className="fx-glow" />
+                      <BaseShape m={m} p={p} grow={0.12} fill="none" stroke="#4ade80" strokeWidth={0.16} opacity={0.85} className="fx-glow" />
                     </g>
                   )}
-                  <circle
-                    cx={p.x} cy={p.y} r={m.r}
+                  <BaseShape
+                    m={m} p={p}
                     fill={bad ? '#7f1d1d' : '#1d2129'}
                     fillOpacity={1}
                     stroke={bad ? '#fca5a5' : isSel || isDraft ? '#f5b83d' : isPicked ? '#ffffff' : isTarget ? '#fde68a' : col}

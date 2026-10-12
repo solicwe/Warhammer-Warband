@@ -4,6 +4,7 @@ import { activeRules, DET_RULES, DOCTRINES, doctrineUsesLeft, type DetChoice, ty
 import { rollN } from './dice';
 import { log } from './state';
 import { PLAGUE_IDS, setPlague } from './deathGuard';
+import { choicePicked, choiceWhy } from './knights';
 import type { DetChoiceState, GameState, PlayerId } from './types';
 
 export { DET_RULES };
@@ -23,8 +24,8 @@ export function detChoices(s: GameState, p: PlayerId): DetChoiceNow[] {
     const inCommand = s.phase === 'command' && s.active === p;
     let open = inCommand;
     if (ch.when === 'command') open = inCommand && st.pickedTurn !== s.turn && (ch.uses !== 'limit' || st.count < (ch.limit ?? 1));
-    if (ch.when === 'round') open = inCommand && st.round !== s.round;
-    if (ch.when === 'battle') open = inCommand && st.active.length < (ch.pick ?? 1) && st.count === 0;
+    if (ch.when === 'round') open = inCommand && st.round !== s.round && (!ch.rounds || ch.rounds.includes(s.round));
+    if (ch.when === 'battle') open = inCommand && st.count === 0 && (ch.keep || st.active.length < (ch.pick ?? 1));
     const tithe = s.players[p].tithe ?? 0;
     if (ch.when === 'tithe') open = s.phase === 'command' && st.pickedTurn !== s.turn && ch.options.some((o) => !st.active.includes(o.id) && (o.cost ?? 0) <= tithe);
     const left = d.name === DOCTRINES ? doctrineUsesLeft(s, p, ch.options.map((o) => o.id), st.used) : null;
@@ -32,7 +33,7 @@ export function detChoices(s: GameState, p: PlayerId): DetChoiceNow[] {
       o,
       why: left ? (left[o.id] ? null : 'All uses spent this battle')
         : (ch.uses === 'eachOnce' || ch.uses === 'limit') && st.used.includes(o.id) ? 'Already used this battle'
-        : ch.when === 'tithe' && (o.cost ?? 0) > tithe ? `Needs ${o.cost} Blood Tithe points (${tithe})` : null,
+        : ch.when === 'tithe' && (o.cost ?? 0) > tithe ? `Needs ${o.cost} Blood Tithe points (${tithe})` : choiceWhy(s, p, d.name, o),
     }));
     out.push({ rule: d.name, choice: ch, state: st, open, options });
   }
@@ -45,27 +46,36 @@ export function pickDetChoice(s: GameState, p: PlayerId, rule: string, ids: stri
   if (!now.open) return 'Cannot be selected now';
   const need = now.choice.pick ?? 1;
   if (ids.length !== need) return `Select ${need}`;
+  const groups = now.choice.groups;
+  if (groups && groups.some((g) => ids.filter((id) => now.options.find((x) => x.o.id === id)?.o.group === g).length !== 1)) return `Select one of each: ${groups.join(', ')}`;
   for (const id of ids) {
     const o = now.options.find((x) => x.o.id === id);
     if (!o) return 'No such option';
     if (o.why) return o.why;
   }
   // "or randomly determine two by rolling two D6" (Experimental Augmentations): duplicates count once
-  const rnd = now.choice.options.find((o) => o.id === ids[0] && o.random);
-  if (rnd) {
-    const pool = now.choice.options.filter((o) => !o.random);
+  const randomly = ids.some((id) => now.choice.options.find((o) => o.id === id)?.random);
+  ids = [...new Set(ids.flatMap((id) => {
+    const rnd = now.choice.options.find((o) => o.id === id && o.random);
+    if (!rnd) return [id];
+    const pool = now.choice.options.filter((o) => !o.random && o.group === rnd.group);
     const dice = rollN(s, rnd.random!);
-    log(s, `${now.choice.name}: rolled [${dice.join(' ')}]`, 'roll', p);
-    ids = [...new Set(dice.map((v) => pool[Math.min(v, pool.length) - 1].id))];
-  }
+    log(s, `${rnd.name}: rolled [${dice.join(' ')}]`, 'roll', p);
+    // a D6 table of fewer options (Code Chivalric: 1-2, 3-4, 5-6); six options: one each
+    // … a result already sworn (Heroes of Legend) becomes one that was not
+    const used = s.players[p].det?.[rule]?.used ?? [];
+    return dice.map((v) => pool[groups ? Math.ceil((v * pool.length) / 6) - 1 : Math.min(v, pool.length) - 1].id)
+      .map((id) => (groups && used.includes(id) ? pool.find((o) => !used.includes(o.id))?.id ?? id : id));
+  }))];
   const st = (detState(s, p)[rule] ??= { active: [], used: [], count: 0 });
   if (now.choice.when === 'tithe') s.players[p].tithe = (s.players[p].tithe ?? 0) - ids.reduce((a, id) => a + (now.choice.options.find((o) => o.id === id)?.cost ?? 0), 0);
-  st.active = now.choice.when === 'tithe' ? [...new Set([...st.active, ...ids])] : [...ids];
+  st.active = now.choice.when === 'tithe' || now.choice.keep ? [...new Set([...st.active, ...ids])] : [...ids];
   st.used = rule === DOCTRINES ? [...st.used, ...ids] : [...new Set([...st.used, ...ids])];
   if (PLAGUE_IDS.includes(ids[0])) setPlague(s, p, ids[0]); // Nurgle's Gift / Manifold Maladies
   st.count += 1;
   st.pickedTurn = s.turn;
   st.round = s.round;
+  choicePicked(s, p, rule, ids, randomly); // Code Chivalric's Oath, Harbingers of Dread
   const names = ids.map((id) => now.choice.options.find((o) => o.id === id)!.name).join(' + ');
   log(s, `${now.choice.name}: ${names}`, 'info', p);
   return null;

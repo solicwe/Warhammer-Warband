@@ -56,7 +56,7 @@
    "id": "QT",
    "name": "Chaos Knights",
    "group": "Chaos",
-   "datasheets": 18,
+   "datasheets": 27,
    "detachments": 8
   },
   {
@@ -112,7 +112,7 @@
    "id": "QI",
    "name": "Imperial Knights",
    "group": "Imperium",
-   "datasheets": 18,
+   "datasheets": 27,
    "detachments": 8
   },
   {

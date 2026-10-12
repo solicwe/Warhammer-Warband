@@ -172,7 +172,11 @@ export interface ModelState {
   gear?: string[]; // non-weapon wargear: shields, banners, icons …
   x: number;
   y: number;
-  r: number; // base radius in inches
+  r: number; // base radius in inches (the mean radius of an oval base or hull)
+  hw?: number; // oval base / hull: half its width (inches)
+  hl?: number; // oval base / hull: half its length beyond the width, along its facing (inches)
+  rot?: number; // oval base / hull: which way its long axis points (radians)
+  hull?: true; // set up without a base: drawn as the vehicle's hull, not an oval
   wounds: number;
   dead: boolean;
 }
@@ -329,6 +333,10 @@ export interface PlayerState {
   /** Death Guard: the army's Plague, a second one (Final Ingredient / Host of the Hybridised Pox), places that make
    *  enemy units Afflicted (Worldblight / Signal Pox objectives, Blighted Land terrain), the Numberless Horde template */
   plague?: string;
+  /** Imperial Knights: the Oaths sworn (Code Chivalric), Honoured, the Gate Warden defensive line, expended Enhancements */
+  knights?: { deeds: string[]; qualities: string[]; random?: boolean; honoured?: boolean; done?: boolean; fulfilled: number; tyrant?: string; roundBase?: number; line?: string[]; expended?: string[] };
+  /** Chaos Knights: Paragons of Terror's extra Dread ability can be selected now */
+  dreadBonus?: boolean;
   extraPlague?: string;
   blight?: { objId?: string; terrain?: number; untilTurn?: number }[];
   poxTemplate?: UnitState;

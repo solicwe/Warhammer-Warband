@@ -116,23 +116,35 @@ export function transportFit(t: TransportInfo, kws: string[]): { why: string | n
 
 const MM_PER_INCH = 25.4;
 
-/** Round token sizes (inches) for hull models without a base: about half the mean of the hull's length and width. */
-const HULLS: [RegExp, number][] = [
-  [/stompa/i, 4.5], [/land raider/i, 3.0], [/hammerfall/i, 3.0], [/battlewagon|gunwagon/i, 2.8], [/bossbunka/i, 2.6],
-  [/drop pod/i, 2.5], [/predator|vindicator|whirlwind|rhino|razorback/i, 2.1], [/trukk/i, 1.9], [/invader atv/i, 1.5], [/mek gun/i, 1.2],
+/** Hull sizes in inches (length × width) for vehicles set up without a base. */
+const HULLS: [RegExp, number, number][] = [
+  [/stompa/i, 9, 8], [/land raider/i, 7.3, 4.6], [/battlewagon|gunwagon/i, 6.5, 4.5], [/khorne lord of skulls/i, 9, 6.5],
+  [/baneblade|banehammer|banesword|doomhammer|hellhammer|shadowsword|stormlord|stormsword|astraeus/i, 9.5, 6],
+  [/rogal dorn/i, 7, 5], [/leman russ/i, 6, 4.4], [/repulsor|coronus/i, 6.5, 4.3], [/plagueburst crawler/i, 6, 4.3],
+  [/gladiator|caladius/i, 5.3, 4], [/impulsor/i, 5, 3.7], [/chimera|taurox|hydra|basilisk|manticore|deathstrike|wyvern|hellhound|immolator|exorcist|castigator|hippogriff|goliath/i, 5.5, 4],
+  [/predator|vindicator|whirlwind/i, 4.9, 4], [/rhino|razorback/i, 4.7, 3.6], [/pallas/i, 4, 3], [/trukk/i, 4.5, 3],
+  [/invader atv/i, 3.3, 2], [/centaur/i, 3, 2.5],
 ];
+/** Round sizes (inches) for the rest set up without a base. */
+const ROUND: [RegExp, number][] = [[/hammerfall|bossbunka/i, 3.0], [/drop pod/i, 2.5], [/mek gun/i, 1.2]];
 
-export function baseRadius(sheet: DatasheetData, profileIdx: number): number {
+/** A model's footprint: its mean radius `r`, and for an oval base or hull its half-width and axis half-length. */
+export function baseShape(sheet: DatasheetData, profileIdx: number): { r: number; hw?: number; hl?: number; hull?: true } {
   const prof = sheet.models[profileIdx];
   const b = prof?.base;
-  if (b && b.w > 0) return (b.w + b.h) / 4 / MM_PER_INCH;
-  const hull = HULLS.find(([re]) => re.test(prof?.name ?? '') || re.test(sheet.name));
-  if (hull) return hull[1];
+  const name = (re: RegExp) => re.test(prof?.name ?? '') || re.test(sheet.name);
+  const oval = (len: number, wid: number) => (len - wid < 0.05 ? { r: (len + wid) / 4 } : { r: (len + wid) / 4, hw: wid / 2, hl: (len - wid) / 2 });
+  if (b && b.w > 0) return oval(b.w / MM_PER_INCH, b.h / MM_PER_INCH);
+  const hull = HULLS.find(([re]) => name(re));
+  if (hull) return { ...oval(hull[1], hull[2]), hull: true };
+  const round = ROUND.find(([re]) => name(re));
+  if (round) return { r: round[1] };
   const w = prof?.W ?? 0;
-  if (sheet.keywords.includes('VEHICLE')) return w >= 16 ? 2.8 : w >= 12 ? 2.4 : 2.0;
-  if (sheet.keywords.includes('MONSTER')) return 1.8;
-  return w >= 6 ? 1.2 : 0.63;
+  if (sheet.keywords.includes('VEHICLE')) return w >= 16 ? { ...oval(7, 4.4), hull: true } : w >= 12 ? { ...oval(5.5, 4), hull: true } : { r: 2.0 };
+  if (sheet.keywords.includes('MONSTER')) return { r: 1.8 };
+  return { r: w >= 6 ? 1.2 : 0.63 };
 }
+export const baseRadius = (sheet: DatasheetData, profileIdx: number) => baseShape(sheet, profileIdx).r;
 
 const norm = (s: string) => s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
 const singular = (s: string) => norm(s).replace(/\*+/g, '').replace(/(ies)$/, 'y').replace(/men$/, 'man').replace(/s$/, '');
@@ -581,7 +593,8 @@ function makeModels(sheet: DatasheetData, e: Pick<ArmyUnitEntry, 'models' | 'war
       weapons,
       ...(gear.length ? { gear } : {}),
       x: -100, y: -100,
-      r: baseRadius(sheet, p.profile),
+      ...baseShape(sheet, p.profile),
+      rot: Math.PI / 2, // set again at the start of a game: pointing from its deployment zone to the enemy
       wounds: profile.W,
       dead: false,
     };
@@ -821,7 +834,8 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
   const sheet = faction.datasheets.find((d) => d.name === entry.datasheet);
   // allied units take no Enhancements (Freeblades, Dreadblades, Daemonic Pact; the others' own detachments aren't ours)
   if (!sheet || sheet.keywords.includes('EPIC HERO') || sheet.ally) return [];
-  const isChar = sheet.keywords.includes('CHARACTER');
+  // Houndpack Lance: three War Dog units are CHARACTERS (Enhancements, Warlord)
+  const isChar = sheet.keywords.includes('CHARACTER') || (list.detachments.includes('Houndpack Lance') && sheet.keywords.includes('WAR DOG'));
   return faction.detachments
     .filter((d) => list.detachments.includes(d.name))
     .flatMap((d) => d.enhancements.map((e) => ({ ...e, detachment: d.name })))
@@ -973,7 +987,23 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (cap && pts > cap) errs.push(`${pact.det}: ${pts} pts of ${pact.kw} units — at most ${cap} pts at this battle size`);
     if (pact.caps && xs.some((u) => u.warlord)) errs.push(`A ${pact.kw} model cannot be your Warlord`);
   }
-  if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('The army needs at least one CHARACTER (Warlord)');
+  // Mechanicus Allies (Questor Forgepact) / Wretched Thralls (Iconoclast Fiefdom): up to 500 points, only with that detachment
+  for (const al of [{ id: 'QI', kw: 'ADEPTUS MECHANICUS', det: 'Questor Forgepact' }, { id: 'QT', kw: 'DAMNED', det: 'Iconoclast Fiefdom' }]) {
+    if (faction.id !== al.id) continue;
+    const xs = list.units.filter((u) => { const d = faction.datasheets.find((x) => x.name === u.datasheet); return !!d && (d.factionKeywords.includes(al.kw) || d.keywords.includes(al.kw)); });
+    if (!xs.length) continue;
+    if (!list.detachments.includes(al.det)) { errs.push(`${al.kw} units can only be included with the ${al.det} detachment`); continue; }
+    const pts = xs.reduce((a, u) => a + unitPoints(u), 0);
+    if (pts > 500) errs.push(`${al.det}: ${pts} pts of ${al.kw} units — at most 500 pts`);
+  }
+  // Houndpack Lance: three or more War Dog units, three of them are CHARACTERS
+  if (list.detachments.includes('Houndpack Lance')) {
+    const dogs = list.units.filter((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('WAR DOG'));
+    if (dogs.length < 3) errs.push(`Houndpack Lance: the army must include three or more WAR DOG units (${dogs.length})`);
+    if (dogs.filter((u) => u.enhancement || u.warlord).length > 3) errs.push('Houndpack Lance: only three WAR DOG units are CHARACTERS (Enhancements and the Warlord)');
+  }
+  const houndChar = (d?: { keywords: string[] }) => !!d && list.detachments.includes('Houndpack Lance') && d.keywords.includes('WAR DOG');
+  if (!list.units.some((u) => { const d = faction.datasheets.find((x) => x.name === u.datasheet); return d?.keywords.includes('CHARACTER') || houndChar(d); })) errs.push('The army needs at least one CHARACTER (Warlord)');
   if (!list.units.some((u) => u.warlord)) errs.push('No Warlord selected (tap a character\'s ⋮ → Make Warlord)');
   for (const u of list.units) {
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);

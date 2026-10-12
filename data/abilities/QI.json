@@ -1,0 +1,1117 @@
+{
+ "_comment": "Imperial Knights (Codex + Faction Pack v1.2, 26 Aug 2026): datasheet abilities and enhancements. Bondsman abilities: 'bond' is what they do to the ARMIGER model they affect (knights.ts). The Oath, the defensive line and the rest of the army rules: data/detachment-rules.json + src/engine/knights.ts.",
+ "Paladin’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "abilities": [
+     "lethal hits"
+    ]
+   },
+   {
+    "attack": "melee",
+    "abilities": [
+     "lance"
+    ]
+   }
+  ]
+ },
+ "Errant’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "rerollAdvance": true
+   },
+   {
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   }
+  ]
+ },
+ "Warden’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "abilities": [
+     "sustained hits 1"
+    ]
+   },
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Gallant’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "rerollCharge": true
+   },
+   {
+    "attack": "melee",
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Crusader’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "attack": "ranged",
+    "hit": 1
+   }
+  ]
+ },
+ "Acheron’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "fightStartShock": -1
+   }
+  ]
+ },
+ "Atrapos’ Duty (Bondsman)": {
+  "bond": [
+   {
+    "if": [
+     "targetKw:TITANIC|TOWERING"
+    ],
+    "reroll": [
+     "hits",
+     "wounds"
+    ]
+   }
+  ]
+ },
+ "Castigator’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "sustained hits 1"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Lancer’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   }
+  ]
+ },
+ "Magaera’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetClosest"
+    ],
+    "strength": 1,
+    "ap": 1
+   }
+  ]
+ },
+ "Styrix’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "shockAfterAttack": -1
+   }
+  ]
+ },
+ "Mentor (Bondsman)": {
+  "bond": [
+   {
+    "if": [
+     "bondQuarry"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Defender’s Duty (Bondsman)": {
+  "bond": [
+   {
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Martial Pride": {
+  "effects": [
+   {
+    "consolidate": 6,
+    "consolidateEngage": true
+   }
+  ]
+ },
+ "Punishing Salvoes": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "stationary"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Bastion of Firepower": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "stationary"
+    ],
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Searing Flames": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Acheron flame cannon"
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "attack": "ranged",
+      "noCover": true
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Macro-extinction Protocols": {
+  "effects": [
+   {
+    "if": [
+     "targetMV"
+    ],
+    "hit": 1
+   },
+   {
+    "if": [
+     "targetKw:TITANIC|TOWERING"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Storm of Bolts": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "suppressed"
+    }
+   ]
+  }
+ },
+ "Suppression Protocols": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ],
+    "hitWeapon": "Armiger autocannon"
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "suppressed"
+    }
+   ]
+  }
+ },
+ "Shock Charge": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "crushing-impact"
+     ],
+     "cp": 9
+    },
+    "stratRepeat": {
+     "ids": [
+      "crushing-impact"
+     ],
+     "limit": "phase"
+    }
+   }
+  ]
+ },
+ "Repair Auto-simulacra": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "belowStartingW"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "heal": "D3"
+    }
+   ]
+  }
+ },
+ "Grav-pinned": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Graviton crusher",
+    "units": [
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "move": -2,
+       "chargeBonus": -2
+      }
+     ],
+     "until": "endOfNextTurn",
+     "mark": "grav-pinned"
+    }
+   ]
+  }
+ },
+ "Impetuous Glory": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "weapon": "strike",
+    "attacks": 1
+   },
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "weapon": "sweep",
+    "attacks": 2
+   }
+  ]
+ },
+ "Exemplar of the Code": {
+  "effects": [
+   {
+    "if": [
+     "targetQuarry"
+    ],
+    "reroll": "wounds"
+   }
+  ],
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "anywhere": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "setQuarry": true
+    }
+   ]
+  }
+ },
+ "Legendary Freeblade": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "*"
+     ],
+     "cp": 1,
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Ion Aegis (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ARMIGER"
+    ],
+    "defend": {
+     "cover": true,
+     "vs": "ranged"
+    }
+   }
+  ]
+ },
+ "Titan Hunter": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ],
+    "reroll": "damage"
+   }
+  ]
+ },
+ "Thundershock": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Thundercoil harpoon"
+   },
+   "do": [
+    {
+     "on": "target",
+     "thundershock": true
+    }
+   ]
+  }
+ },
+ "Sunderer of Fortresses": {
+  "effects": [
+   {
+    "if": [
+     "targetKw:VEHICLE"
+    ],
+    "strength": 1,
+    "damage": 1
+   },
+   {
+    "if": [
+     "targetKw:FORTIFICATION"
+    ],
+    "strength": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Conversion@Acastus Knight Asterius": {
+  "effects": [
+   {
+    "weapon": "conversion",
+    "if": [
+     "beyond:24"
+    ],
+    "critHitOn": 4
+   }
+  ]
+ },
+ "Conversion@Armiger Moirax": {
+  "effects": [
+   {
+    "weapon": "conversion",
+    "if": [
+     "beyond:12"
+    ],
+    "critHitOn": 4
+   }
+  ]
+ },
+ "Conversion@Knight Defender": {
+  "effects": [
+   {
+    "weapon": "conversion",
+    "if": [
+     "beyond:18"
+    ],
+    "critHitOn": 4
+   }
+  ]
+ },
+ "Protection Protocols": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 9
+    },
+    "stratRepeat": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "limit": "phase"
+    }
+   }
+  ]
+ },
+ "Selfless Protector": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 3,
+    "notSelf": true,
+    "units": [
+     "IMPERIAL KNIGHTS",
+     "WALKER"
+    ],
+    "defend": {
+     "cover": true,
+     "inv": 4,
+     "vs": "ranged"
+    }
+   }
+  ],
+  "note": "Knights within 3\" of the Defender count as partly hidden behind it (cover and a 4+ invulnerable save against ranged attacks)"
+ },
+ "Ram Jets": {
+  "act": {
+   "when": "movement",
+   "auto": true,
+   "limit": "phase",
+   "do": [
+    {
+     "on": "self",
+     "buffRoll": {
+      "expr": "D3",
+      "fields": [
+       "move"
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "Thundercharge": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "hasWeapon:Thundershock spear",
+     "hasWeapon:Bellatus reaper chainsword"
+    ],
+    "attacks": 2
+   }
+  ]
+ },
+ "Doctrina Imperatives": {
+  "status": "info",
+  "note": "Not used by Mechanicus Allies in a Questor Forgepact (Faction Pack FAQ)"
+ },
+ "Lord of the Machine Cult": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Data-spike": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "units": [
+     "VEHICLE"
+    ]
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 4,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D6"
+      },
+      {
+       "on": "target",
+       "buff": [
+        {
+         "attack": "melee",
+         "hit": -1
+        }
+       ],
+       "until": "phase"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Defend the Divine Work": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "botUse": "damaged",
+   "label": "4+ invulnerable save this phase",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "defend": {
+        "inv": 4
+       }
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Enhanced data-tether": {
+  "effects": [
+   {
+    "stratCpChance": 5
+   }
+  ]
+ },
+ "Rad-saturation (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 3,
+    "units": [
+     "!VEHICLE"
+    ],
+    "oc": -1
+   }
+  ]
+ },
+ "Magos Questoris": {
+  "status": "auto",
+  "note": "Sacristan Pledge heals 2 more wounds"
+ },
+ "Knight of the Opus Machina (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS MECHANICUS"
+    ],
+    "attack": "melee",
+    "hit": 1,
+    "ap": 1
+   }
+  ]
+ },
+ "Bearer of the Iron Chalice": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "visible": true,
+    "notSelf": true,
+    "units": [
+     "IMPERIAL KNIGHTS",
+     "WALKER"
+    ],
+    "damaged": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "heal": "D3",
+     "if": [
+      "!honoured"
+     ]
+    },
+    {
+     "on": "target",
+     "heal": "3",
+     "if": [
+      "honoured"
+     ]
+    }
+   ]
+  }
+ },
+ "Bearer of the Evanescent Ion": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "visible": true,
+    "notSelf": true,
+    "units": [
+     "IMPERIAL KNIGHTS",
+     "WALKER"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "stealth": true
+      }
+     ],
+     "until": "nextMovement"
+    }
+   ]
+  }
+ },
+ "Bearer of the Judicant’s Helm": {
+  "act": {
+   "when": "shootingStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "visible": true,
+    "notSelf": true,
+    "units": [
+     "IMPERIAL KNIGHTS",
+     "WALKER"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "attack": "ranged",
+       "abilities": [
+        "ignores cover"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Bearer of the Lancer’s Sigil": {
+  "act": {
+   "when": "chargeStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "visible": true,
+    "notSelf": true,
+    "units": [
+     "IMPERIAL KNIGHTS",
+     "WALKER"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "rerollCharge": true
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Acquisitor-at-Arms": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 99,
+    "units": [
+     "ARMIGER"
+    ],
+    "if": [
+     "bondedTo",
+     "holderOnLine",
+     "lineClear"
+    ],
+    "oc": 10
+   }
+  ]
+ },
+ "Purgation’s Hand": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "onLine"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Augury Halo": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "onLine"
+    ],
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Vengeful Tread": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "crushing-impact"
+     ],
+     "cp": 9,
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Herald of Triumph": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "fresh:Herald of Triumph"
+   ],
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    },
+    {
+     "on": "self",
+     "expend": "Herald of Triumph"
+    }
+   ]
+  }
+ },
+ "Wyrmslayer Divination": {
+  "act": {
+   "when": "selectedToShoot",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "fresh:Wyrmslayer Divination",
+    "enemyFly"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "attack": "ranged",
+       "if": [
+        "targetFly"
+       ],
+       "reroll": "hits"
+      }
+     ],
+     "until": "phase"
+    },
+    {
+     "on": "self",
+     "expend": "Wyrmslayer Divination"
+    }
+   ]
+  }
+ },
+ "Pennant of Silvered Fury": {
+  "act": {
+   "when": "selectedToFight",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "fresh:Pennant of Silvered Fury",
+    "engaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "attack": "melee",
+       "abilities": [
+        "sustained hits 2"
+       ]
+      }
+     ],
+     "until": "phase"
+    },
+    {
+     "on": "self",
+     "expend": "Pennant of Silvered Fury"
+    }
+   ]
+  }
+ },
+ "Crushing Condemnation": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "limit": "phase",
+   "needDestroyed": true,
+   "if": [
+    "fresh:Crushing Condemnation"
+   ],
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "visible": true,
+    "unengaged": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 4,
+      "n": 6
+     }
+    },
+    {
+     "on": "self",
+     "expend": "Crushing Condemnation"
+    }
+   ]
+  }
+ },
+ "Mentor’s Pride": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 99,
+    "units": [
+     "ARMIGER"
+    ],
+    "if": [
+     "bondedTo",
+     "twoBonded"
+    ],
+    "reroll": "hits1"
+   }
+  ]
+ },
+ "Fables of Nightmare": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 99,
+    "units": [
+     "ARMIGER"
+    ],
+    "if": [
+     "bondedTo",
+     "twoBonded"
+    ],
+    "attack": "melee",
+    "abilities": [
+     "precision"
+    ]
+   }
+  ]
+ },
+ "Tales of Heroism": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 99,
+    "units": [
+     "ARMIGER"
+    ],
+    "if": [
+     "bondedTo",
+     "twoBonded"
+    ],
+    "attack": "melee",
+    "ignoreHitMods": true,
+    "ignoreWoundMods": true
+   }
+  ]
+ },
+ "Martial Tuition": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 99,
+    "units": [
+     "ARMIGER"
+    ],
+    "if": [
+     "bondedTo",
+     "twoBonded"
+    ],
+    "stratDiscount": {
+     "ids": [
+      "counteroffensive"
+     ],
+     "cp": 9,
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Bringer of Justice": {
+  "effects": [
+   {
+    "attack": "melee",
+    "attacks": 2,
+    "hit": 1
+   }
+  ]
+ },
+ "Hunter’s Eye": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Mysterious Guardian": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "limit": "battle",
+   "per": "army",
+   "if": [
+    "notEngaged"
+   ],
+   "botUse": "damaged",
+   "label": "Into Strategic Reserves with Deep Strike (comes back next Movement phase)",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "deepStrike": true
+      }
+     ],
+     "until": "endOfNextTurn"
+    },
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Sanctuary": {
+  "effects": [
+   {
+    "defend": {
+     "inv": 5
+    }
+   }
+  ]
+ },
+ "Blessed Plate": {
+  "effects": [
+   {
+    "toughness": 1
+   }
+  ]
+ },
+ "Archeotech Autoloaders": {
+  "effects": [
+   {
+    "rerollAttackRolls": true
+   }
+  ]
+ },
+ "Gyro-Optimised Actuators": {
+  "effects": [
+   {
+    "addKeywords": [
+     "MOBILE"
+    ]
+   }
+  ]
+ },
+ "Ancestral Overbleed": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "fire-overwatch",
+      "heroic-intervention"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ }
+}

@@ -11,11 +11,12 @@ import { autoPact } from './darkPacts';
 import { d6, rollExpr, rollN } from './dice';
 import { favouredOnKill } from './emperorsChildren';
 import { blightedLand, extraPlague, eyestingerStorm, signalPox } from './deathGuard';
+import { bondAgain, expend, knightsAttackDone, knightsShockFailed, longLeash } from './knights';
 import {
   abilityOff, abilityRule, abilitySheet, activeRules, addTimed, cond, DET_RULES, fightOnDeathFor, grantsOf, isRiled, retaliateFor, type AbilityRule, type Effect, type FreeDieSpec,
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
-import { baseDist, circleTouchesPoly, dist } from './geometry';
+import { baseDist, bodyAt, bodyTouchesPoly, circleTouchesPoly, dist, gap, ptGap } from './geometry';
 import { alive, boardUnits, centreOf, engagedEnemies, hasKw, heroFx, log, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from './state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
@@ -54,6 +55,8 @@ export interface TargetSpec {
   ctxUnit?: boolean; // the unit the trigger is about (e.g. the unit disembarking)
   advanced?: boolean; // a unit that made an Advance move this turn
   movedOver?: boolean; // an enemy unit this unit moved over in its last Normal move
+  unengaged?: boolean; // an enemy unit not engaged with any unit of this army (Crushing Condemnation)
+  nearCtx?: number; // within X" of the unit the trigger is about, even a destroyed one (Executioner)
 }
 
 export interface Action {
@@ -123,7 +126,7 @@ export interface Action {
   reviveNear?: { range: number; units: string[] }; // Daemontide: models return to the closest such unit within X" (Mounted 1, Beast D3, Infantry D6) // the unit is eligible to fight again this phase and must fight next (Helbrute Frenzy)
   moreBattleUses?: boolean; // its (once per battle) abilities that were used can be used one more time (Gilded Champion)
   splitSingles?: boolean; // the unit splits into units of one model each (Unleash the Lions)
-  buffRoll?: { expr: string; fields: ('attacks' | 'strength')[]; if?: string[] }; // roll now, then +that to these characteristics (Sacrificial Blessing: D3)
+  buffRoll?: { expr: string; fields: ('attacks' | 'strength' | 'move')[]; if?: string[] }; // roll now, then +that to these characteristics (Sacrificial Blessing: D3)
   explodeModels?: { name: string; on: number }; // these models roll a D6 each: on X+ the model is destroyed and the target suffers 1 mortal wound
   shockMortals?: { mod: number; mortals: string }; // the target takes a Battle-shock test; if it fails it also suffers these mortal wounds (Nethershriek Mind-eater)
   phaseEndMortals?: string; // at the end of the phase the unit suffers these mortal wounds (Warpmeld Sacrifice)
@@ -136,6 +139,12 @@ export interface Action {
   addKeyword?: string; // the unit gains this keyword for the rest of the battle (Daemonic Possession)
   ldFailMortals?: string; // the target takes a Leadership test; failed → it suffers these mortal wounds (Gift of Chaos)
   ldMod?: number; ldModIf?: string[]; // … with this modifier to the test (when these conditions hold for the target)
+  expend?: string; // Valour's Reward: this Enhancement is expended until the army fulfils an Oath again
+  rallyNear?: { range: number; units?: string[] }; // Battle-shocked friendly units within X" take a Leadership test: passed, no longer Battle-shocked (Vox-howl)
+  shockFail?: Effect[]; // the target takes a Battle-shock test; failed → these effects too (until `until`; Unleash Balefire)
+  leash?: boolean; // A Long Leash: two War Dog units count as within range of this unit's auras
+  bondFar?: number; // Helm Conditioning: the unit's Bondsman abilities that found no ARMIGER pick one within this range
+  thundershock?: boolean; // Thundershock: the target and each other enemy unit within 6" of it, 4+: D3 mortal wounds
   allowCharge?: boolean; // the unit can declare a charge this turn after all (Ceaseless Onslaught: an assault disembark)
   agonyHeal?: number; // Sustained by Agony: one friendly LEGIONS OF EXCESS unit within X": Daemonettes get D3+3 models back, others 3 wounds
   chargeOnlyTarget?: boolean; // the unit's charges this turn must end engaged with the target (Lethal Obsession)
@@ -399,6 +408,8 @@ export function actTargets(s: GameState, def: ActDef, ctx: FireCtx = {}): UnitSt
     if (t.charged && x.chargedTurn !== s.turn) return false;
     if (t.advanced && x.move !== 'advance') return false;
     if (t.movedOver && !(u.movedOver?.key === phaseKey(s) && u.movedOver.ids.includes(x.id))) return false;
+    if (t.unengaged && engagedEnemies(s, x).some((e) => e.owner === u.owner)) return false;
+    if (t.nearCtx !== undefined) { const k = ctx.targetId ? unitById(s, ctx.targetId) : undefined; if (!k || x.id === k.id || !near(k.models, x, t.nearCtx)) return false; }
     if (t.notLoneOperative && (x.core.loneOperative || unitFlags(s, x).loneOperative) && x.sources.length === 1) return false;
     if (t.hit) {
       const h = u.lastHits;
@@ -447,7 +458,7 @@ export function setBackUp(s: GameState, u: UnitState, m: ModelState, at: { x: nu
   const enemies = boardUnits(s, other(u.owner)).flatMap(alive);
   const others = s.units.filter((x) => onBoard(x) || x.id === u.id).flatMap(alive).filter((o) => o.id !== m.id);
   const ok = (p: { x: number; y: number }) => p.x - m.r >= 0 && p.y - m.r >= 0 && p.x + m.r <= RULES.battlefield.width && p.y + m.r <= RULES.battlefield.height
-    && others.every((o) => dist(o, p) >= o.r + m.r - 0.01) && enemies.every((e) => dist(e, p) - e.r - m.r > RULES.engagementRange + 0.02);
+    && others.every((o) => dist(o, p) >= o.r + m.r - 0.01) && enemies.every((e) => gap(e, bodyAt(m, p)) > RULES.engagementRange + 0.02);
   if (ok(at)) { m.x = at.x; m.y = at.y; return true; }
   for (let ring = 1; ring <= 16; ring++) {
     for (let k = 0; k < 16; k++) {
@@ -487,6 +498,7 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'failed!'}${mod ? ` (${mod})` : ''}`, good: passed });
   log(s, `${why}: ${u.name} Battle-shock test [${r.join('+')}]${mod ? ` ${mod}` : ''} = ${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'Battle-shocked!'}`, 'roll', u.owner);
   if (!passed && !u.battleShocked) { u.battleShocked = true; pushFx(s, { kind: 'shock', unitId: u.id, owner: u.owner, at: centreOf(u) }); fire(s, 'becameShocked', [u]); }
+  if (!passed) knightsShockFailed(s, u);
   // Tome of Bounteous Blessings: a passed test heals D3 wounds (a Battleline unit gets D3 models back instead)
   if (passed && unitFlags(s, u).shockPassHeal) {
     const n = rollExpr(s, 'D3').total;
@@ -641,6 +653,20 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       log(s, `${def.name}: ${on.name} can use its (Once per battle) ability again`, 'info', u.owner);
     }
     if (a.splitSingles) splitSingles(s, on, def.name);
+    if (a.bondFar) bondAgain(s, on, a.bondFar);
+    if (a.leash) longLeash(s, on);
+    if (a.rallyNear) for (const f of boardUnits(s, on.owner).filter((x) => x.battleShocked && unitMatches(x, a.rallyNear!.units) && unitDistance(x, on) <= a.rallyNear!.range + 1e-6)) if (ldTest(s, f, def.name)) { f.battleShocked = false; log(s, `${f.name} is no longer Battle-shocked`, 'info', f.owner); }
+    if (a.shockFail && !shockTest(s, on, 0, def.name)) for (const e of a.shockFail) addTimed(s, on, { e, label: def.name, until: a.until ?? 'phase', by: u.owner });
+    if (a.expend) { expend(s, u.owner, a.expend); log(s, `${a.expend} is expended (it comes back when the army fulfils an Oath)`, 'info', u.owner); }
+    if (a.thundershock && target) {
+      for (const e of [target, ...boardUnits(s, target.owner).filter((x) => x.id !== target.id && unitDistance(x, target) <= 6 + 1e-6)]) {
+        const r = d6(s);
+        if (r < 4) { log(s, `${def.name}: ${e.name} rolled ${r}`, 'roll', u.owner); continue; }
+        const n = rollExpr(s, 'D3').total;
+        log(s, `${def.name}: ${e.name} rolled ${r} → struck by arcing energies, ${n} mortal wound(s)`, 'roll', u.owner);
+        applyMortalWounds(s, e, n, def.name);
+      }
+    }
     if (a.buffRoll) {
       const n = rollExpr(s, a.buffRoll.expr).total;
       const e: Effect = { if: a.buffRoll.if };
@@ -694,7 +720,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.reviveRoll) { const n = revive(s, on, rollExpr(s, a.reviveRoll).total); log(s, `${def.name}: ${n} model(s) returned to ${on.name}`, 'info', u.owner); }
     if (a.mutate) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.mutated = u.owner; o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is mutated`, 'info', u.owner); }
+        if (o.controller === u.owner && alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6)) { o.mutated = u.owner; o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is mutated`, 'info', u.owner); }
       }
     }
     if (a.revive) { const n = revive(s, on, a.revive); if (n) log(s, `${def.name}: ${n} model(s) returned to ${on.name}`, 'info', u.owner); }
@@ -765,7 +791,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.embarkNear) embarkNearHook?.(s, on, a.embarkNear, def.name);
     if (a.setQuarry && target) { u.quarry = target.id; log(s, `${def.name}: target ${target.name}`, 'info', u.owner); }
     if (a.setPriority) {
-      const o = s.objectives.find((q) => alive(on).some((m) => dist(m, q) <= 3 + m.r)) ?? s.objectives.find((q) => q.type === 'central') ?? s.objectives[0];
+      const o = s.objectives.find((q) => alive(on).some((m) => ptGap(m, q) <= 3)) ?? s.objectives.find((q) => q.type === 'central') ?? s.objectives[0];
       if (o) { s.players[u.owner].priorityObjective = o.id; log(s, `${def.name}: objective ${o.id}`, 'info', u.owner); }
     }
     if (a.setSlayer) {
@@ -775,7 +801,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     }
     if (a.secure) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is secured`, 'info', u.owner); }
+        if (o.controller === u.owner && alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6)) { o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is secured`, 'info', u.owner); }
       }
     }
     if (a.identifyTerrain) {
@@ -783,24 +809,24 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       const foes = boardUnits(s, other(u.owner));
       let best: { id: string; v: number } | null = null;
       for (const t of s.terrain.filter((q) => q.category !== 'exposed')) {
-        const v = foes.filter((e) => alive(e).some((m) => circleTouchesPoly(m, m.r, t.poly))).reduce((a2, e) => a2 + e.pts, 0);
+        const v = foes.filter((e) => alive(e).some((m) => bodyTouchesPoly(m, 0, t.poly))).reduce((a2, e) => a2 + e.pts, 0);
         if (v > (best?.v ?? 0)) best = { id: t.id, v };
       }
       if (best) { (s.identified ??= []).push({ terrainId: best.id, by: u.owner, turn: s.turn }); log(s, `${def.name}: terrain ${best.id} identified (enemies within it +3" detection range)`, 'info', u.owner); }
     }
     if (a.snare) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.snared = u.owner; log(s, `${def.name}: objective ${o.id} is snared`, 'info', u.owner); }
+        if (o.controller === u.owner && alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6)) { o.snared = u.owner; log(s, `${def.name}: objective ${o.id} is snared`, 'info', u.owner); }
       }
     }
     if (a.secureDead) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && on.models.some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is secured`, 'info', u.owner); }
+        if (o.controller === u.owner && on.models.some((m) => ptGap(m, o) <= 3 + 1e-6)) { o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is secured`, 'info', u.owner); }
       }
     }
     if (a.sabotage) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && alive(on).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) { o.sabotaged = u.owner; o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is sabotaged (enemy units ending a move on it may suffer D3 mortal wounds)`, 'info', u.owner); }
+        if (o.controller === u.owner && alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6)) { o.sabotaged = u.owner; o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is sabotaged (enemy units ending a move on it may suffer D3 mortal wounds)`, 'info', u.owner); }
       }
     }
     if (a.vow) {
@@ -1258,7 +1284,7 @@ export function initAbilityChoices(s: GameState) {
 // ---------- hooks from the attack sequence ----------
 
 /** Destroyed models that fight / shoot back before they are removed ("Heroic Last Stand", "For the Chapter!"). */
-function runDeathQueue(s: GameState) {
+export function runDeathQueue(s: GameState) {
   const queue = s.deathQueue ?? [];
   if (!queue.length || s.attack) return;
   s.deathQueue = [];
@@ -1335,6 +1361,13 @@ onAttackFinished((s, at, info) => {
     if (at.kind === 'fight') fire(s, 'afterFighting', [A], ctx);
   }
   if (at.kind !== 'fight' && info.woundsLost > 0 && T.owner !== s.active && onBoard(T)) fire(s, 'shotByEnemy', [T], { targetId: A.id, modelsKilled: info.modelsKilled });
+  // Styrix's Duty: once per phase, one enemy unit it hit takes a Battle-shock test (−1)
+  const sa = unitFlags(s, A).shockAfterAttack;
+  if (sa !== null && info.hits > 0 && onBoard(T) && (A.used ??= {}).styrix !== phaseKey(s)) { A.used.styrix = phaseKey(s); shockTest(s, T, sa, 'Styrix’s Duty'); }
+  knightsAttackDone(s, A, T); // Malefic Surge: Diabolic Power / Unnatural Fortitude used
+  // Conquerors Without Mercy: it destroyed an enemy unit this phase — every enemy unit within 6" takes a Battle-shock test
+  const ksa = unitFlags(s, A).killShockAura;
+  if (ksa && at.kind === 'fight' && info.destroyed && (A.used ??= {}).conquer !== phaseKey(s)) { A.used.conquer = phaseKey(s); for (const e of boardUnits(s, T.owner).filter((x) => unitDistance(A, x) <= ksa + 1e-6)) shockTest(s, e, 0, 'Conquerors Without Mercy'); }
   runDeathQueue(s);
 });
 
@@ -1385,7 +1418,7 @@ export function sagaBoasts(s: GameState, at: 'turnEnd' | 'commandEnd') {
     if (!g || g.kind !== 'bold' || g.done) continue;
     const heroes = boardUnits(s, p).filter((u) => hasKw(u, 'CHARACTER') && u.factionKeywords.includes('SPACE WOLVES'));
     if (at === 'turnEnd' && heroes.some((u) => wholly(s, u, other(p)))) sagaTick(s, p, 'Boast: Overrun Their Position', 'overrun');
-    if (at === 'commandEnd' && p === s.active && s.round >= 2 && heroes.some((u) => s.objectives.some((o) => o.controller === p && !(o.type === 'home' && o.owner === p) && alive(u).some((m) => dist(m, o) <= 3 + m.r)))) sagaTick(s, p, 'Boast: Hold the Line', 'hold');
+    if (at === 'commandEnd' && p === s.active && s.round >= 2 && heroes.some((u) => s.objectives.some((o) => o.controller === p && !(o.type === 'home' && o.owner === p) && alive(u).some((m) => ptGap(m, o) <= 3)))) sagaTick(s, p, 'Boast: Hold the Line', 'hold');
   }
 }
 let wholly: (s: GameState, u: UnitState, zoneOwner: PlayerId) => boolean = () => false;
@@ -1463,7 +1496,7 @@ onModelKilled((s, u) => {
     const fl = unitFlags(s, f);
     if (isMark && fl.cpOnOathKill <= 6) { const r = d6(s); log(s, `${f.name}: focus of hatred destroyed, rolled ${r} (${fl.cpOnOathKill}+)${r >= fl.cpOnOathKill ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnOathKill) P.cp += 1; }
     if (fl.cpOnKillNear && unitDistance(f, u) <= fl.cpOnKillNear.range + 1e-6) { const r = d6(s); log(s, `${f.name}: enemy unit destroyed nearby, rolled ${r} (${fl.cpOnKillNear.on}+)${r >= fl.cpOnKillNear.on ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnKillNear.on) P.cp += 1; }
-    if (f.quarry === u.id && f.abilities.some((a) => a.name === 'Architect of Ruin' || a.name === 'Monarch of the Hunt')) {
+    if (f.quarry === u.id && f.abilities.some((a) => ['Architect of Ruin', 'Monarch of the Hunt', 'Exemplar of the Code', 'Methodical Destruction'].includes(a.name))) {
       const next = boardUnits(s, u.owner).sort((a, b) => b.pts - a.pts)[0];
       if (next) { f.quarry = next.id; log(s, `${f.name}: new hated foe → ${next.name}`, 'info', p); }
     }

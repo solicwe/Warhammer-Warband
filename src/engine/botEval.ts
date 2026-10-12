@@ -3,7 +3,7 @@
 import { woundNeed } from './attack';
 import { exprAverage } from './dice';
 import { isRiled } from './effects';
-import { circleTouchesPoly, polyCentroid } from './geometry';
+import { bodyTouchesPoly, circleTouchesPoly, polyCentroid } from './geometry';
 import { levelOfControl, objectiveTerrain } from './game';
 import { alive, boardUnits, other } from './state';
 import { isMelee } from './weapons';
@@ -65,7 +65,7 @@ export function p2d6(n: number): number {
 
 export const onObjective = (s: GameState, u: UnitState, o: ObjectiveState) => {
   const t = objectiveTerrain(s, o);
-  return alive(u).some((m) => circleTouchesPoly(m, m.r, t.poly));
+  return alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
 };
 export const objPoint = (s: GameState, o: ObjectiveState) => polyCentroid(objectiveTerrain(s, o).poly);
 export const oc = (u: UnitState) => (u.battleShocked ? 0 : alive(u).reduce((a, m) => a + (m.profile.OC ?? 0), 0));

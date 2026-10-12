@@ -4,7 +4,7 @@
 import { activeRules, addTimed, type Effect } from './effects';
 import { applyMortalWounds } from './attack';
 import { rollExpr, rollN } from './dice';
-import { baseDist, circleTouchesPoly, dist } from './geometry';
+import { baseDist, bodyAt, bodyTouchesPoly, circleTouchesPoly, dist, gap } from './geometry';
 import { unitInRange } from './missions';
 import { alive, boardUnits, hasKw, log, onBoard, other, unitDistance } from './state';
 import type { GameState, ModelState, PlayerId, Pt, UnitState } from './types';
@@ -70,7 +70,7 @@ export function isAfflicted(s: GameState, T: UnitState): boolean {
       if (o && (b.untilTurn !== undefined || o.controller === p) && unitInRange(s, T, o)) return true;
     }
     const t = b.terrain !== undefined ? s.terrain[b.terrain] : undefined;
-    if (t && alive(T).some((n) => circleTouchesPoly(n, n.r + 3, t.poly))) return true;
+    if (t && alive(T).some((n) => bodyTouchesPoly(n, 3, t.poly))) return true;
   }
   // Avatars of Decay: enemy units within 6" of that Plague Legions unit this phase
   if (boardUnits(s, p).some((f) => marked(f, 'Avatars of Decay', p) && unitDistance(f, T) <= 6 + 1e-6)) return true;
@@ -208,7 +208,7 @@ export function signalPox(s: GameState, u: UnitState, label: string) {
 export function blightedLand(s: GameState, u: UnitState, label: string) {
   const foes = boardUnits(s, other(u.owner));
   const idx = s.terrain.map((t, i) => ({ t, i })).filter(({ t }) => alive(u).some((m) => circleTouchesPoly(m, 24, t.poly)));
-  const score = (i: number) => foes.filter((e) => alive(e).some((n) => circleTouchesPoly(n, n.r + 3, s.terrain[i].poly))).reduce((a, e) => a + e.pts, 0);
+  const score = (i: number) => foes.filter((e) => alive(e).some((n) => bodyTouchesPoly(n, 3, s.terrain[i].poly))).reduce((a, e) => a + e.pts, 0);
   const best = idx.sort((a, b) => score(b.i) - score(a.i))[0];
   if (!best) { log(s, `${label}: no terrain feature within 24"`, 'info', u.owner); return; }
   const P = s.players[u.owner];
@@ -269,7 +269,7 @@ export function dsKeep(s: GameState, u: UnitState, e: UnitState, pt: Pt, m: Mode
 
 /** Putrefying Stink: enemy models cannot start or end an Advance move within 9" of a Foul Blightspawn. */
 export function stinkBlocks(s: GameState, u: UnitState, m: ModelState, from: Pt, to: Pt): boolean {
-  const near = (p: Pt, n: ModelState) => dist(p, n) - m.r - n.r <= 9 + 1e-6;
+  const near = (p: Pt, n: ModelState) => gap(bodyAt(m, p), n) <= 9 + 1e-6;
   return boardUnits(s, other(u.owner)).some((e) => hasAb(e, 'Putrefying Stink') && alive(e).some((n) => n.source === 'Foul Blightspawn' && (near(from, n) || near(to, n))));
 }
 

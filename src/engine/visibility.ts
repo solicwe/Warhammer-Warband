@@ -1,7 +1,7 @@
 // Line of sight on a 2D board (06.01, 13.07-13.11).
 // Terrain areas with light/dense features are obscuring; dense walls are Solid at ground level.
 import { RULES } from './config';
-import { baseDist, circleTouchesPoly, pointInPoly, pointSegDist, samplePoints, segCrossesPoly, segLengthInPoly, segSegDist, segsTouch } from './geometry';
+import { baseDist, bodyTouchesPoly, circleTouchesPoly, pointInPoly, pointSegDist, samplePoints, segCrossesPoly, segLengthInPoly, segSegDist, segsTouch } from './geometry';
 import { alive, everyModelKw } from './state';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 
@@ -250,7 +250,7 @@ export function isHidden(s: GameState, u: UnitState, m: ModelState): boolean {
   if (!['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k))) return false;
   if (hooks.cannotBeHidden?.(s, u)) return false;
   if (shotRecently(s, u)) return false;
-  return s.terrain.some((t) => t.category !== 'exposed' && circleTouchesPoly(m, m.r, t.poly));
+  return s.terrain.some((t) => t.category !== 'exposed' && bodyTouchesPoly(m, 0, t.poly));
 }
 
 export function detectionRange(s: GameState, observer: ModelState, u: UnitState, m: ModelState): number {
@@ -275,7 +275,7 @@ export function unitVisibleTo(s: GameState, observer: ModelState, u: UnitState):
 export function hasCover(s: GameState, attacker: ModelState, target: UnitState): boolean {
   if (target.core.stealth || target.buffs.some((b) => b.kind === 'smoke' || b.kind === 'cover')) return true;
   return alive(target).every((m) => {
-    const inArea = ['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) && s.terrain.some((t) => circleTouchesPoly(m, m.r, t.poly));
+    const inArea = ['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) && s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly));
     return inArea || !fullyVisible(s, attacker, m);
   });
 }

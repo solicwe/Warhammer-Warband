@@ -1,7 +1,7 @@
 // Movement helpers: what a model may pass through, routing around walls / enemy models (A*),
 // and settling a dragged draft into legal end positions (models stop at base contact instead of overlapping).
 import { RULES } from './config';
-import { dist, pointSegDist, segSegDist } from './geometry';
+import { axis, bodyAt, dist, gap, girth, pointSegDist, ptGap, segSegDist, type Body , onTable } from './geometry';
 import { alive, boardUnits, hasKw, onBoard, other } from './state';
 import type { GameState, ModelState, MoveKind, Pt, Seg, UnitState } from './types';
 
@@ -11,9 +11,11 @@ const H = RULES.battlefield.height;
 export const canCrossDense = (m: ModelState) => ['INFANTRY', 'BEASTS', 'SWARM', 'MOBILE'].some((k) => m.keywords.includes(k));
 
 /** Abilities that let a unit move through enemy models ("Get Out da Way!", Shokk-boosta); registered by effects.ts. */
-type ThroughHook = (s: GameState, u: UnitState, kind: MoveKind) => 'all' | 'nonMV' | null;
+type ThroughHook = (s: GameState, u: UnitState, kind: MoveKind) => 'all' | 'nonMV' | 'titanic' | null;
 let throughHook: ThroughHook | null = null;
-export const setThroughHook = (fn: ThroughHook) => { throughHook = fn; };
+/** …and the units whose moves go through terrain features (Super-heavy Walker, Imperious Advance). */
+let terrainHook: ((s: GameState, u: UnitState, kind: MoveKind) => boolean) | null = null;
+export const setThroughHook = (fn: ThroughHook, terrain?: (s: GameState, u: UnitState, kind: MoveKind) => boolean) => { throughHook = fn; terrainHook = terrain ?? null; };
 export const isMV = (m: ModelState) => m.keywords.includes('MONSTER') || m.keywords.includes('VEHICLE');
 
 /** Walls a model may not move through: dense terrain taller than 2" for anything but INFANTRY / BEASTS / SWARM / MOBILE.
@@ -29,9 +31,10 @@ export const wallClearance = (m: ModelState, blocking: boolean) => (blocking ? m
 /** Objective markers are 40mm discs: models move over them but cannot end a move (or be set up) on top of one. */
 export const OBJECTIVE_MARKER_R = 0.79;
 /** Where a model may END a move or be set up: not on a wall (its base can lean over a little) nor on an objective marker. */
-export function endSpotBlocked(s: GameState, m: { r: number }, p: Pt): 'wall' | 'objective' | null {
-  for (const t of s.terrain) for (const w of t.walls) if (pointSegDist(p, w) < m.r * 0.85) return 'wall';
-  for (const o of s.objectives) if (dist(p, o) < m.r + OBJECTIVE_MARKER_R - 0.05) return 'objective';
+export function endSpotBlocked(s: GameState, m: Body, p: Pt): 'wall' | 'objective' | null {
+  const ax = axis(bodyAt(m, p));
+  for (const t of s.terrain) for (const w of t.walls) if (segSegDist(ax, w) < girth(m) * 0.85) return 'wall';
+  for (const o of s.objectives) if (pointSegDist(o, ax) < girth(m) + OBJECTIVE_MARKER_R - 0.05) return 'objective';
   return null;
 }
 
@@ -44,9 +47,9 @@ function ctxFor(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: 
   const through = opt.fly || desperate || (isMV(m) && (kind === 'normal' || kind === 'advance'));
   const thr = throughHook?.(s, u, kind) ?? null;
   const enemies = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive)
-    .filter((e) => thr !== 'all' && !(thr === 'nonMV' && !isMV(e)))
+    .filter((e) => thr !== 'all' && !(thr === 'nonMV' && !isMV(e)) && !(thr === 'titanic' && !e.keywords.includes('TITANIC')))
     .filter((e) => !through || (isMV(m) && isMV(e) && !opt.fly && !desperate));
-  return { m, enemies, walls: blockingWalls(s, m, opt.fly, ends), clear: wallClearance(m, true) };
+  return { m, enemies, walls: terrainHook?.(s, u, kind) ? [] : blockingWalls(s, m, opt.fly, ends), clear: wallClearance(m, true) };
 }
 
 /** Why a straight step a→b is illegal for this model ("enemy" / "wall"), or null. `first`: the model may leave a spot it already overlaps. */
@@ -119,7 +122,7 @@ function routeSearch(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, 
   const all = ctxFor(s, u, kind, m, opt, [from, to]);
   // only what lies within reach of this move can be in the way
   const reach = maxLen + 1.5;
-  const c: Ctx = { ...all, enemies: all.enemies.filter((e) => dist(e, from) <= reach + e.r + m.r), walls: all.walls.filter((w) => pointSegDist(from, w) <= reach + all.clear) };
+  const c: Ctx = { ...all, enemies: all.enemies.filter((e) => ptGap(e, from) <= reach + m.r), walls: all.walls.filter((w) => pointSegDist(from, w) <= reach + all.clear) };
   const far = dist(from, to);
   if (far <= maxLen + 1e-6 ? !stepBlocked(c, from, to, true) : false) return [from, to];
   // out of reach but nothing in the way: the straight line gets as close as any route could
@@ -347,24 +350,24 @@ export function settleMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
   }
   const keepOutOfEr = ['normal', 'advance', 'fallback', 'ingress', 'scout', 'extra'].includes(kind);
   const enemies = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive);
-  const statics: (Pt & { r: number; id: string })[] = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap(alive);
-  const settled: (Pt & { r: number; id: string })[] = alive(u).filter((m) => !movers.includes(m)).map((m) => ({ x: m.x, y: m.y, r: m.r, id: m.id }));
+  const statics: Body[] = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap(alive);
+  const settled: Body[] = alive(u).filter((m) => !movers.includes(m)).map((m) => bodyAt(m, m));
   // a charging model that moves at all has to end closer to the charge targets than it started
   const targetModels = kind === 'charge' && opt.targets?.length ? s.units.filter((x) => opt.targets!.includes(x.id)).flatMap(alive) : [];
   // …and may not end engaged with an enemy unit it did not declare
   const bystanders = kind === 'charge' ? boardUnits(s, other(u.owner)).filter((e) => !opt.targets?.includes(e.id) && !hasKw(e, 'AIRCRAFT')).flatMap(alive) : [];
-  const gap = (p: Pt, m: ModelState) => Math.min(...targetModels.map((e) => dist(p, e) - e.r - m.r));
+  const gapAt = (p: Pt, m: ModelState) => Math.min(...targetModels.map((e) => gap(bodyAt(m, p), e)));
   // until a mover is settled its starting spot stays taken (it may end up staying there)
-  const pending = new Map(movers.map((m) => [m.id, { x: m.x, y: m.y, r: m.r, id: m.id }]));
+  const pending = new Map(movers.map((m) => [m.id, bodyAt(m, m)]));
   const ok = (m: ModelState, p: Pt) => {
-    if (p.x - m.r < -0.01 || p.y - m.r < -0.01 || p.x + m.r > W + 0.01 || p.y + m.r > H + 0.01) return false;
-    if (statics.some((o) => dist(p, o) < o.r + m.r - 0.02)) return false;
-    if (settled.some((o) => dist(p, o) < o.r + m.r - 0.02)) return false;
-    for (const [id, o] of pending) if (id !== m.id && dist(p, o) < o.r + m.r - 0.02) return false;
+    if (!onTable(bodyAt(m, p), W, H, 0.01)) return false;
+    if (statics.some((o) => gap(bodyAt(m, p), o) < -0.02)) return false;
+    if (settled.some((o) => gap(bodyAt(m, p), o) < -0.02)) return false;
+    for (const [id, o] of pending) if (id !== m.id && gap(bodyAt(m, p), o) < -0.02) return false;
     if (endSpotBlocked(s, m, p)) return false;
-    if (keepOutOfEr && enemies.some((e) => dist(p, e) - e.r - m.r <= RULES.engagementRange + 1e-6)) return false;
-    if (targetModels.length && gap(p, m) > gap(m, m) - 1e-6) return false;
-    if (bystanders.some((e) => dist(p, e) - e.r - m.r <= RULES.engagementRange + 1e-6)) return false;
+    if (keepOutOfEr && enemies.some((e) => gap(bodyAt(m, p), e) <= RULES.engagementRange + 1e-6)) return false;
+    if (targetModels.length && gapAt(p, m) > gapAt(m, m) - 1e-6) return false;
+    if (bystanders.some((e) => gap(bodyAt(m, p), e) <= RULES.engagementRange + 1e-6)) return false;
     return true;
   };
   const c = (m: ModelState, to: Pt) => ctxFor(s, u, kind, m, opt, [m, to]);
@@ -398,7 +401,7 @@ export function settleMove(s: GameState, u: UnitState, kind: MoveKind, paths: Ma
     const p = next[next.length - 1];
     out.set(m.id, next);
     pending.delete(m.id);
-    settled.push({ x: p.x, y: p.y, r: m.r, id: m.id });
+    settled.push(bodyAt(m, p));
   }
   return out;
 }
