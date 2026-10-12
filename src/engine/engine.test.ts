@@ -483,6 +483,15 @@ describe('wargear', () => {
     expect(sgt.weapons.map((w) => w.name).sort()).toEqual(['Autopistol', 'Chainsword', 'Close combat weapon']);
     expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Chainfist')).map((m) => m.name)).toEqual(['Navis Armsman']);
   });
+  it('"For every 5 Inquisitorial Agents …" options go to the Agents, not the Gun Servitors', () => {
+    const AOI = JSON.parse(fs.readFileSync('public/data/factions/AoI.json', 'utf8')) as FactionData;
+    const sheet = AOI.datasheets.find((d) => d.name === 'Inquisitorial Agents')!;
+    const evi = sheet.wargearOptions!.findIndex((o) => o.choices.some((c) => c.includes('Eviscerator')));
+    expect(sheet.wargearOptions![evi]).toMatchObject({ scope: 'perN', who: 'Inquisitorial Agent' });
+    const u = one(AOI, 'AoI', { uid: 'a', datasheet: sheet.name, models: 7, pts: 0, wargear: [{ opt: evi, choice: 0, count: 1 }] });
+    expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Eviscerator')).map((m) => m.name)).toEqual(['Inquisitorial Agents']);
+    expect(u.models.some((m) => m.name.includes('*'))).toBe(false);
+  });
   it('vehicles carry every listed weapon', () => {
     const lr = one(SM, 'SM', { uid: 'a', datasheet: 'Land Raider', models: 1, pts: 245 });
     expect(lr.models[0].weapons.filter((w) => w.name === 'Godhammer Lascannon')).toHaveLength(2);

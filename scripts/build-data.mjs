@@ -168,7 +168,7 @@ export function parseWargearOption(text, weapons = []) {
   t = t.replace(/\s*\([^)]*cannot be equipped with[^)]*\)/gi, '').trim();
   // "This model can be equipped with 1 havoc launcher or can replace 1 combi-bolter with 1 havoc launcher": the gain is what counts
   t = t.replace(/^(This model can be equipped with [^.]+?) or can replace .*$/i, '$1.');
-  if ((m = t.match(/^For every (\d+|\w+) models? in (?:this|the) unit,? (?:up to )?(\d+|\w+)?/i))) {
+  if ((m = t.match(/^For every (\d+|\w+) (?:models?|[A-Z][\w' -]+?) in (?:this|the) unit,? (?:up to )?(\d+|\w+)?/i))) {
     opt.scope = 'perN'; opt.per = Number(m[1]) || WORDS[m[1].toLowerCase()] || 5; opt.max = Number(m[2]) || WORDS[(m[2] ?? '').toLowerCase()] || 1;
   } else if (/^Any number of/i.test(t)) opt.scope = 'any';
   else if (/^All (?:of )?(?:the )?(?:[\w-]+ ){0,3}(?:models|in this unit)/i.test(t)) opt.scope = 'all';
@@ -180,8 +180,10 @@ export function parseWargearOption(text, weapons = []) {
   if (opt.who === '*') {
     if ((m = t.match(/^(?:The|An?|Each|Every) ([A-Z][\w -]+?)(?:'s|(?<=s)'(?= )| can)/))) opt.who = whoClean(m[1]);
     else if ((m = t.match(/^(?:Any number of|Up to \w+|One|1|All(?: of the)?) ([A-Z][\w -]+?)(?: models?)?(?:'s| can)/))) opt.who = whoClean(m[1]);
-    else if ((m = t.match(/^For every \w+ models? in this unit,? (?:up to \w+ )?(?:1 |one )?([A-Z][\w -]+?)(?: models?)?(?:'s| equipped| can)/))) opt.who = whoClean(m[1]);
+    else if ((m = t.match(/^For every \w+ (?:models?|[A-Z][\w' -]+?) in this unit,? (?:up to \w+ )?(?:1 |one )?([A-Z][\w -]+?)(?: models?)?(?:'s|(?<=s)'(?= )| equipped| can)/))) opt.who = whoClean(m[1]);
   }
+  // "For every 5 Inquisitorial Agents in this unit, it can be equipped with …": one of the counted models carries it
+  if (opt.who === '*' && (m = t.match(/^For every \w+ ([A-Z][\w' -]+?) in (?:this|the) unit/))) opt.who = whoClean(m[1]);
   // what is replaced: "have their X replaced", "X's Y can be replaced", "can replace its X with …"
   let choiceBody = null;
   if ((m = t.match(/can (?:each )?replace (?:its|their) (.+?) with (.+)$/i))) { opt.replace = items(m[1]); choiceBody = m[2]; }

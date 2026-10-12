@@ -135,7 +135,7 @@ export function baseRadius(sheet: DatasheetData, profileIdx: number): number {
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
-const singular = (s: string) => norm(s).replace(/(ies)$/, 'y').replace(/men$/, 'man').replace(/s$/, '');
+const singular = (s: string) => norm(s).replace(/\*+/g, '').replace(/(ies)$/, 'y').replace(/men$/, 'man').replace(/s$/, '');
 
 function matchProfile(sheet: DatasheetData, name?: string): number {
   if (!name || sheet.models.length === 1) return 0;
@@ -218,7 +218,7 @@ function planModels(sheet: DatasheetData, count: number, addons: string[] = []):
     const profile = sheet.models[part.profile];
     const kits = loadoutItemsFor(sheet, part.comp, profile.name, part.count);
     const one = (sheet.composition.find((c) => c.name === part.comp)?.max ?? 2) <= 1;
-    const name = part.comp && part.comp !== profile.name ? (one ? part.comp : part.comp.replace(/men$/, 'man').replace(/s$/, '')) : profile.name;
+    const name = part.comp && part.comp !== profile.name ? (one ? part.comp : part.comp.replace(/\*+$/, '').replace(/men$/, 'man').replace(/s$/, '')) : profile.name;
     for (let i = 0; i < part.count; i++) out.push({ name, comp: part.comp, profile: part.profile, items: [...kits[i]], used: [] });
   }
   return out;
