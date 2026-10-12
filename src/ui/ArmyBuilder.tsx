@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../engine/effects';
 import { addonLines, supportIn, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
-import { ALLIES } from '../engine/allies';
+import { ALLIES, detachmentAllyOf } from '../engine/allies';
 import { Em } from './Em';
 import { dispositionById, dispositionId, RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
@@ -35,8 +35,8 @@ const SECTIONS: { id: Section; title: string }[] = [
 /** Units listed under Others although they carry the CHARACTER keyword (bodyguard-style Epic Heroes). */
 const OTHERS = new Set(['Victrix Honour Guard']);
 
-function sectionOf(d: DatasheetData | undefined): Section {
-  if (d?.ally) return 'allies';
+function sectionOf(d: DatasheetData | undefined, factionId?: string): Section {
+  if (d?.ally || (d && detachmentAllyOf(factionId, d))) return 'allies';
   if (!d || OTHERS.has(d.name)) return 'others';
   if (d.keywords.includes('CHARACTER') || /Character|Epic Hero/.test(d.role)) return 'characters';
   if (d.keywords.includes('BATTLELINE') || d.role === 'Battleline') return 'battleline';
@@ -257,6 +257,9 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const subs = faction?.subfactions;
   const sub: SubfactionData | undefined = subs?.options.find((o) => o.keyword === list.subfaction);
   const allowed = (x: { subfaction?: string }) => !x.subfaction || x.subfaction === list.subfaction;
+  // Mechanicus Allies / Wretched Thralls: listed only once their detachment is chosen
+  const detAlly = (d: DatasheetData) => detachmentAllyOf(list.factionId, d);
+  const offered = (d: DatasheetData) => { const a = detAlly(d); return allowed(d) && (!a || list.detachments.includes(a.det)); };
   const subTag = (k?: string) => (k ? subs?.options.find((o) => o.keyword === k)?.name ?? titleCase(k) : '');
 
   /** Switch faction (clears the list) or only the sub-faction (keeps what is still legal). */
@@ -322,7 +325,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       `${list.detachments.join(', ') || 'No Detachment'} · ${pts}/${size.points} pts`,
       '',
       ...SECTIONS.flatMap((sec) => {
-        const us = list.units.filter((u) => sectionOf(sheetOf(u.datasheet)) === sec.id);
+        const us = list.units.filter((u) => sectionOf(sheetOf(u.datasheet), list.factionId) === sec.id);
         if (!us.length) return [];
         return [`${sec.title.toUpperCase()}`, ...us.map((u) => {
           const wg = wargearSummary(sheetOf(u.datasheet), u);
@@ -373,14 +376,14 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const listTab = () => (
     <>
       {errors.length > 0 && <div className="ab-errors">{errors.map((e) => <div key={e}>{e}</div>)}</div>}
-      {SECTIONS.filter((sec) => sec.id !== 'allies' || faction?.datasheets.some((d) => d.ally)).map((sec) => {
+      {SECTIONS.filter((sec) => sec.id !== 'allies' || faction?.datasheets.some((d) => d.ally || (detAlly(d) && offered(d))) || list.units.some((u) => sectionOf(sheetOf(u.datasheet), list.factionId) === 'allies')).map((sec) => {
         // a unit with its Leader / Support shows as one card, in the section of its (first) character
         const joined = (b: ArmyUnitEntry) => list.units.filter((c) => c.attachTo === b.uid);
         const homeOf = (u: ArmyUnitEntry): string => {
           const body = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
           if (body) return homeOf(body);
           const first = joined(u)[0];
-          return sectionOf(sheetOf((first ?? u).datasheet));
+          return sectionOf(sheetOf((first ?? u).datasheet), list.factionId);
         };
         const inRide = (u: ArmyUnitEntry) => !!u.embarkIn && list.units.some((t) => t.uid === u.embarkIn);
         const us = list.units.filter((u) => (!u.attachTo || !list.units.some((b) => b.uid === u.attachTo)) && !inRide(u) && homeOf(u) === sec.id);
@@ -549,10 +552,10 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     if (!adding || !faction) return null;
     const title = SECTIONS.find((x) => x.id === adding)!.title;
     const sheets = faction.datasheets
-      .filter((d) => allowed(d) && sectionOf(d) === adding && d.name.toLowerCase().includes(q.toLowerCase()) && pointsOptions(d).length)
+      .filter((d) => offered(d) && sectionOf(d, list.factionId) === adding && d.name.toLowerCase().includes(q.toLowerCase()) && pointsOptions(d).length)
       .sort((a, b) => (a.allyName ?? '').localeCompare(b.allyName ?? '') || KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) || Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
     // the allied list is grouped by the book each unit comes from
-    const groupOf = (d: DatasheetData) => (d.ally ? `${d.allyName} · ${unitKind(d)}` : unitKind(d));
+    const groupOf = (d: DatasheetData) => (d.ally ? `${d.allyName} · ${unitKind(d)}` : detAlly(d) ? `${detAlly(d)!.rule} · ${unitKind(d)}` : unitKind(d));
     return (
       <div className="tray-backdrop" onClick={() => setAdding(null)}>
         <div className="tray" onClick={(e) => e.stopPropagation()}>
@@ -563,7 +566,8 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           <input placeholder="Search datasheets…" value={q} onChange={(e) => setQ(e.target.value)} />
           {adding === 'allies' && (
             <div className="tiny muted">
-              Allowed for this army: {[...new Map(faction.datasheets.filter((d) => d.ally).map((d) => [d.ally!, d])).values()].map((d) => `${d.allyName} (${ALLIES.find((a) => a.id === d.ally)?.rule})`).join(' · ')}. Allies are never the Warlord.
+              Allowed for this army: {[...[...new Map(faction.datasheets.filter((d) => d.ally).map((d) => [d.ally!, d])).values()].map((d) => `${d.allyName} (${ALLIES.find((a) => a.id === d.ally)?.rule})`),
+                ...new Set(faction.datasheets.filter((d) => detAlly(d) && offered(d)).map((d) => `${detAlly(d)!.rule} (${detAlly(d)!.det}, up to 500 pts)`))].join(' · ')}. Allies are never the Warlord.
             </div>
           )}
           <div className="ab-pick">

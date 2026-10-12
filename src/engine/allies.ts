@@ -21,6 +21,14 @@ export const ALLIES: AllySource[] = [
   { id: 'CD', rule: 'Daemonic Pact', army: (id) => id === 'CSM' || id === 'QT', unit: (d) => d.factionKeywords.includes('LEGIONES DAEMONICA') },
 ];
 
+/** Units from another book that only one detachment of the army allows (up to 500 pts): Mechanicus Allies, Wretched Thralls. */
+export const DETACHMENT_ALLIES = [
+  { id: 'QI', kw: 'ADEPTUS MECHANICUS', det: 'Questor Forgepact', rule: 'Mechanicus Allies' },
+  { id: 'QT', kw: 'DAMNED', det: 'Iconoclast Fiefdom', rule: 'Wretched Thralls' },
+];
+export const detachmentAllyOf = (factionId: string | undefined, d: { keywords: string[]; factionKeywords: string[] }) =>
+  DETACHMENT_ALLIES.find((a) => a.id === factionId && (d.factionKeywords.includes(a.kw) || d.keywords.includes(a.kw)));
+
 export const allySources = (factionId: string, group?: string) => ALLIES.filter((a) => a.army(factionId, group));
 
 /** The army's faction data with the datasheets its allies may bring (a unit it already has stays its own). */
