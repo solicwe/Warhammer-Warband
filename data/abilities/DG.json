@@ -1,0 +1,1361 @@
+{
+ "_comment": "Death Guard (Codex + Faction Pack v1.3, 30 Sep 2026): datasheet abilities and enhancements. Afflicted / Contagion Range / Plagues live in src/engine/deathGuard.ts.",
+ "Pact of Decay": {
+  "status": "auto",
+  "note": "Checked by the army builder: Plague Legions units only come with the Tallyband Summoners detachment"
+ },
+ "SUPREME COMMANDER": {
+  "status": "auto",
+  "note": "Checked by the army builder: Mortarion must be your Warlord"
+ },
+ "DEPLOYMENT": {
+  "status": "info",
+  "note": "Both parts are one model"
+ },
+ "Fortification": {
+  "status": "info"
+ },
+ "Diseased Cover": {
+  "status": "info",
+  "note": "Line of sight through the Malignifier is read as terrain by the board"
+ },
+ "Infused with the Blessings of Nurgle": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "buff": [],
+     "until": "nextTurnStart",
+     "mark": "Afflicted"
+    }
+   ]
+  }
+ },
+ "Icon of Despair (Aura)": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "ld": -1
+   }
+  ]
+ },
+ "Diseased Malice": {
+  "effects": [
+   {
+    "if": [
+     "targetAfflicted"
+    ],
+    "wound": 1
+   }
+  ]
+ },
+ "Froth-spattered Frenzy": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "weapon": "!Close combat weapon",
+    "if": [
+     "meleeWeapons:3"
+    ],
+    "attacks": 2
+   }
+  ]
+ },
+ "Fire Support": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "reroll": "wounds"
+     },
+     "fromThisTransport": true,
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Assault Ramp": {
+  "effects": [
+   {
+    "assaultDisembark": true
+   }
+  ]
+ },
+ "Metalophagic Infection": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "MONSTER|VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "mortalRoll": {
+      "on": 5,
+      "n": 1,
+      "plus": 1,
+      "plusIf": [
+       "targetAfflicted"
+      ],
+      "dmg": "D3"
+     }
+    }
+   ]
+  }
+ },
+ "Hail of Corrosive Disease": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "incoming": {
+      "attack": "ranged",
+      "ap": 1,
+      "units": [
+       "DEATH GUARD"
+      ]
+     },
+     "until": "phase",
+     "mark": "Corrosive Disease",
+     "if": [
+      "!targetMarked:Corrosive Disease"
+     ]
+    }
+   ]
+  }
+ },
+ "Lethal Ichor": {
+  "effects": [
+   {
+    "retaliate": {
+     "on": 4,
+     "max": 6
+    }
+   }
+  ]
+ },
+ "Death Guard Defenders": {
+  "effects": [
+   {
+    "if": [
+     "near:3:DEATH GUARD+INFANTRY"
+    ],
+    "loneOperative": true
+   }
+  ]
+ },
+ "Fevered Strategist": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 12,
+    "units": [
+     "DEATH GUARD"
+    ],
+    "stratDiscount": {
+     "ids": [
+      "*"
+     ],
+     "cp": 1,
+     "limit": "round",
+     "perArmy": true
+    }
+   }
+  ]
+ },
+ "Miasma of Pestilence (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "DEATH GUARD"
+    ],
+    "defend": {
+     "vs": "ranged",
+     "cover": true
+    }
+   }
+  ]
+ },
+ "Horrifying Visage": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "do": [
+    {
+     "shock": -1
+    }
+   ]
+  }
+ },
+ "Enfeebling Miasma (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ],
+    "forceDesperate": true
+   },
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ],
+    "if": [
+     "battleShocked"
+    ],
+    "desperateMinus": 1
+   }
+  ]
+ },
+ "The Destroyer Hive": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Eater Plague (Psychic)": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true,
+    "notLoneOperative": true
+   },
+   "label": "Eater Plague: D6 — 1: D3 mortal wounds to Typhus' unit, 2-5: D6, 6: D3+3 to the target",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 2,
+     "max": 5,
+     "do": [
+      {
+       "mortals": "D6"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "mortals": "D3+3"
+      }
+     ]
+    }
+   ],
+   "botUse": "always"
+  }
+ },
+ "Vector of Disease": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "abilities": [
+     "sustained hits 1",
+     "lance"
+    ]
+   }
+  ]
+ },
+ "Unholy Resilience": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "reviveLater": {
+      "on": 2,
+      "wounds": 3
+     }
+    }
+   ]
+  }
+ },
+ "Gift of Contagion (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "targetAfflicted"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Pestilent Fallout (Psychic)": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Plague Wind",
+    "units": [
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "move": -2
+      }
+     ],
+     "until": "endOfNextTurn",
+     "mark": "Enfeebled"
+    }
+   ]
+  }
+ },
+ "Curse of the Walking Pox": {
+  "effects": [
+   {
+    "reviveOnKill": true
+   }
+  ],
+  "note": "Each enemy model (not MONSTER / VEHICLE) its Poxwalkers destroy brings one Poxwalker back"
+ },
+ "Hovering Death": {
+  "effects": [
+   {
+    "eligible": [
+     "shootAfterFallBack",
+     "chargeAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Explosive Blight": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "needDestroyed": true,
+   "limit": "phase",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 5,
+     "do": [
+      {
+       "on": "self",
+       "afflictNear": 6
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Sickening Vitality": {
+  "effects": [
+   {
+    "scope": "led",
+    "move": 1,
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Tocsin of Misery (Aura)": {
+  "effects": [
+   {
+    "terrorBelow": 9,
+    "terrorPsykerMod": -1
+   }
+  ]
+ },
+ "Blinding Spray": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "botIf": [
+    "engaged"
+   ],
+   "label": "Blinding Spray: this unit fights first this phase",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "fightsFirst": true
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Putrefying Stink": {
+  "status": "auto",
+  "note": "Enemy models cannot start or end an Advance move within 9\" of it (checked on the move)"
+ },
+ "Foul Infusion": {
+  "effects": [
+   {
+    "scope": "led",
+    "abilities": [
+     "lethal hits"
+    ],
+    "critHitOn": 5
+   }
+  ]
+ },
+ "Extraction of Fresh Disease": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "needDestroyed": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "oc": 6
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  }
+ },
+ "Tainted Narthecium": {
+  "act": [
+   {
+    "when": "command",
+    "auto": true,
+    "limit": "phase",
+    "if": [
+     "leaderAttached",
+     "!enh:Needle of Nurgle"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "revive": 1
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "auto": true,
+    "limit": "phase",
+    "if": [
+     "leaderAttached",
+     "enh:Needle of Nurgle"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "reviveRoll": "D3"
+     }
+    ]
+   }
+  ]
+ },
+ "Inflamed Infections": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "fightPhase",
+     "!targetBelowHalf"
+    ],
+    "critHitOn": 5
+   },
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "fightPhase",
+     "targetBelowHalf"
+    ],
+    "critHitOn": 4
+   }
+  ]
+ },
+ "Malicious Calculations": {
+  "effects": [
+   {
+    "scope": "led",
+    "ignoreHitMods": true
+   }
+  ]
+ },
+ "Sevenfold Chant": {
+  "act": {
+   "when": "command",
+   "auto": true,
+   "limit": "phase",
+   "roll": "2D6",
+   "table": [
+    {
+     "min": 7,
+     "do": [
+      {
+       "on": "self",
+       "cp": 1
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Silent Bodyguard": {
+  "effects": [
+   {
+    "if": [
+     "leaderAttached"
+    ],
+    "defend": {
+     "fnp": 4,
+     "charOnly": true
+    }
+   }
+  ]
+ },
+ "Death Approaches": {
+  "status": "auto",
+  "note": "Deep Strike in your Movement phase: 6\" from Afflicted enemy units, 8\" from the others (checked on placement)"
+ },
+ "Blistering Fusillade": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "any:startingStrength5||leaderAttached",
+     "targetAfflicted"
+    ],
+    "strength": 1,
+    "ap": 1
+   }
+  ]
+ },
+ "Tank Hunters": {
+  "effects": [
+   {
+    "if": [
+     "shootingPhase",
+     "targetMV"
+    ],
+    "hit": 1,
+    "wound": 1
+   }
+  ]
+ },
+ "Spore-laced Shock Waves": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Plagueburst mortar"
+   },
+   "do": [
+    {
+     "mortalRoll": {
+      "on": 6,
+      "n": 1,
+      "plus": 1,
+      "plusIf": [
+       "targetAfflicted"
+      ],
+      "dmg": "D3"
+     },
+     "alsoNear": 3
+    }
+   ]
+  }
+ },
+ "Lord of the Death Guard": {
+  "status": "auto",
+  "note": "Once per turn: Diseased Influence, Boon of Death or Inflamed Reprisal"
+ },
+ "Host of Plagues": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 6,
+    "each": true
+   },
+   "do": [
+    {
+     "mortalRoll": {
+      "on": 3,
+      "n": 1,
+      "plus": 1,
+      "plusIf": [
+       "targetAfflicted"
+      ],
+      "dmg": "D3"
+     }
+    }
+   ]
+  }
+ },
+ "Diseased Influence": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "limit": "turn",
+   "if": [
+    "unengaged",
+    "!marked:Lord of the Death Guard"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "move": "5"
+    },
+    {
+     "on": "self",
+     "buff": [],
+     "until": "turn",
+     "mark": "Lord of the Death Guard"
+    }
+   ]
+  },
+  "note": "Mortarion's own unit makes the 5\" move"
+ },
+ "Boon of Death": {
+  "act": {
+   "when": "friendlyTargeted",
+   "auto": true,
+   "range": 6,
+   "limit": "turn",
+   "if": [
+    "fightPhase",
+    "!marked:Lord of the Death Guard"
+   ],
+   "deathUnits": [
+    "DEATH GUARD"
+   ],
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "DEATH GUARD"
+    ]
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "fightOnDeath": 2
+      }
+     ],
+     "until": "phase"
+    },
+    {
+     "on": "self",
+     "buff": [],
+     "until": "turn",
+     "mark": "Lord of the Death Guard"
+    }
+   ],
+   "needMelee": true
+  }
+ },
+ "Inflamed Reprisal": {
+  "act": {
+   "when": "friendlyTargeted",
+   "auto": true,
+   "range": 6,
+   "limit": "turn",
+   "oppShooting": true,
+   "if": [
+    "!marked:Lord of the Death Guard"
+   ],
+   "deathUnits": [
+    "DEATH GUARD"
+   ],
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "DEATH GUARD"
+    ]
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "attack": "ranged",
+       "hit": -1
+      }
+     ],
+     "until": "phase"
+    },
+    {
+     "on": "target",
+     "shootBack": true
+    },
+    {
+     "on": "self",
+     "buff": [],
+     "until": "turn",
+     "mark": "Lord of the Death Guard"
+    }
+   ]
+  },
+  "note": "The targeted unit shoots back with -1 to hit (worse BS)"
+ },
+ "Virulent Aura": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "ranged",
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Blight Bombardment": {
+  "act": {
+   "when": "shootingStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 30,
+    "visible": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "attack": "ranged",
+      "reroll": "hits1",
+      "blastReroll": true,
+      "units": [
+       "DEATH GUARD"
+      ]
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Putrescent Fog (Aura)": {
+  "effects": [
+   {
+    "omniScrambler": 12
+   }
+  ]
+ },
+ "Unclean Icon": {
+  "effects": [
+   {
+    "scope": "led",
+    "oc": 1
+   }
+  ]
+ },
+ "Blessed Icon of Disease": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "shocked": true,
+    "units": [
+     "DEATH GUARD"
+    ]
+   },
+   "label": "A Battle-shocked Death Guard unit within 12\" is no longer Battle-shocked",
+   "do": [
+    {
+     "unshock": true
+    }
+   ]
+  }
+ },
+ "Gift of Poxes": {
+  "status": "auto",
+  "note": "+3\" Contagion Range for this model"
+ },
+ "Shroud of Disease": {
+  "effects": [
+   {
+    "scope": "led",
+    "targetableWithin": 18
+   }
+  ]
+ },
+ "Virulent Blessing (Psychic)": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 24,
+    "visible": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "damage": 1,
+      "units": [
+       "PLAGUE LEGIONS"
+      ]
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Deluge of Nurgle (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "move": -2,
+    "oc": -1
+   }
+  ]
+ },
+ "Daemon Lord of Nurgle (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "PLAGUE LEGIONS"
+    ],
+    "toughness": 1
+   }
+  ]
+ },
+ "Nurgle’s Rot (Psychic)": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "range": 12
+   },
+   "do": [
+    {
+     "buff": [
+      {
+       "toughness": -1
+      }
+     ],
+     "until": "nextMovement",
+     "mark": "Rotted"
+    }
+   ]
+  }
+ },
+ "Reverberating Summons": {
+  "effects": [
+   {
+    "summonsOnKill": true
+   }
+  ],
+  "note": "Each model the Doomsday bell destroys: one Plaguebearer returns to a Plaguebearers unit within 12\""
+ },
+ "Infected Outbreak": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "onOwnObjective"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "secure": true
+    }
+   ]
+  }
+ },
+ "Daemonic Icon": {
+  "gear": true,
+  "effects": [
+   {
+    "ldSet": 6
+   }
+  ]
+ },
+ "Instrument of Chaos": {
+  "gear": true,
+  "effects": [
+   {
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Death’s Heads": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "reroll": "wounds",
+      "units": [
+       "PLAGUE LEGIONS"
+      ]
+     },
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ "Grotesque Regeneration": {
+  "status": "auto",
+  "note": "End of each phase: a wounded Beast regains all its wounds"
+ },
+ "Mischief Makers": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 1,
+    "attack": "melee",
+    "if": [
+     "fightPhase"
+    ],
+    "hit": -1
+   }
+  ]
+ },
+ "Scuttling Walker": {
+  "effects": [
+   {
+    "moveThroughModels": true,
+    "mobile": true
+   }
+  ]
+ },
+ "Barrage of Filth": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "noCover": true
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Insectile Murmuration": {
+  "effects": [
+   {
+    "if": [
+     "targetAfflicted"
+    ],
+    "reroll": "wounds1"
+   }
+  ]
+ },
+ "Plagueveil": {
+  "effects": [
+   {
+    "detection": -3
+   }
+  ]
+ },
+ "Daemon Weapon of Nurgle": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "critHitOn": 5
+   }
+  ]
+ },
+ "Furnace of Plagues": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 1,
+    "attacks": 1,
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
+ },
+ "Arch Contaminator": {
+  "effects": [
+   {
+    "if": [
+     "onControlledObjective"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Revolting Regeneration": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Eye of Affliction": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetAfflicted"
+    ],
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Bilemaw Blight": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "weapon": "Plague Wind",
+    "if": [
+     "shootingPhase"
+    ],
+    "weaponRange": 12
+   }
+  ]
+ },
+ "Shriekworm Familiar": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "fire-overwatch"
+     ],
+     "cp": 1,
+     "limit": "round"
+    }
+   }
+  ]
+ },
+ "Tendrilous Emissions": {
+  "effects": [
+   {
+    "if": [
+     "near:3:DEATH GUARD+VEHICLE"
+    ],
+    "loneOperative": true
+   },
+   {
+    "scope": "aura",
+    "range": 3,
+    "units": [
+     "VEHICLE"
+    ],
+    "attack": "ranged",
+    "if": [
+     "targetSeenByHolder"
+    ],
+    "reroll": "wounds1"
+   }
+  ]
+ },
+ "Final Ingredient": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "needCharacterKill": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "dg": "extraPlague"
+    }
+   ]
+  }
+ },
+ "Visions of Virulence": {
+  "status": "auto",
+  "note": "Units enfeebled by its Pestilent Fallout are also Afflicted"
+ },
+ "Needle of Nurgle": {
+  "status": "auto",
+  "note": "Tainted Narthecium returns D3 models"
+ },
+ "Cornucophagus": {
+  "status": "auto",
+  "note": "Enemy units within its Contagion Range also have a second Plague (the first one the army did not choose)"
+ },
+ "Beckoning Blight": {
+  "status": "auto",
+  "note": "Plague Legions Deep Striking wholly within 12\" of the bearer: 6\" from enemy models"
+ },
+ "Fell Harvester": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 2
+   }
+  ]
+ },
+ "Entropic Knell": {
+  "effects": [
+   {
+    "terrorBelow": 6,
+    "terrorBelowMod": -1
+   }
+  ]
+ },
+ "Tome of Bounteous Blessings": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 12,
+    "units": [
+     "PLAGUE LEGIONS"
+    ],
+    "shockBonus": 1,
+    "shockPassHeal": true
+   }
+  ]
+ },
+ "Witherbone Pipes": {
+  "effects": [
+   {
+    "if": [
+     "body:Poxwalkers"
+    ],
+    "oc": 1,
+    "shockBonus": 1
+   }
+  ]
+ },
+ "Lord of the Walking Pox": {
+  "effects": [
+   {
+    "if": [
+     "body:Poxwalkers"
+    ],
+    "arriveFromRound": 1
+   }
+  ]
+ },
+ "Sorrowsyphon": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "weapon": "Plague Wind",
+    "if": [
+     "body:Poxwalkers"
+    ],
+    "damage": 1
+   }
+  ],
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "body:Poxwalkers",
+    "hasWeapon:Plague Wind"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "sacrifice": {
+      "n": "D3",
+      "name": "Poxwalker"
+     }
+    }
+   ]
+  }
+ },
+ "Talisman of Burgeoning": {
+  "effects": [
+   {
+    "if": [
+     "body:Poxwalkers",
+     "leaderAttached"
+    ],
+    "toughness": 1
+   }
+  ]
+ },
+ "Face of Death": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Vile Vigour": {
+  "effects": [
+   {
+    "if": [
+     "leaderAttached"
+    ],
+    "move": 1,
+    "rerollAdvance": true
+   }
+  ]
+ },
+ "Warprot Talisman": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "auto": true,
+   "limit": "battle",
+   "if": [
+    "notEngaged",
+    "belowHalfW"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  },
+  "note": "Used when the unit is Below Half-strength and unengaged"
+ },
+ "Helm of the Fly King": {
+  "effects": [
+   {
+    "if": [
+     "leaderAttached"
+    ],
+    "targetableWithin": 18
+   }
+  ]
+ },
+ "Parasitic Woe‑Reaper": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "limit": "phase",
+   "do": [
+    {
+     "on": "self",
+     "heal": "D3"
+    }
+   ]
+  }
+ },
+ "Lancet of the Worldsore": {
+  "effects": [
+   {
+    "mobile": true
+   }
+  ]
+ },
+ "Rejuvenating Swarm": {
+  "effects": [
+   {
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Host of the Hybridised Pox": {
+  "act": {
+   "when": "command",
+   "limit": "battle",
+   "per": "army",
+   "label": "Host of the Hybridised Pox: enemy units within this unit's Contagion Range also have a second Plague",
+   "botUse": "round2",
+   "do": [
+    {
+     "on": "self",
+     "buff": [],
+     "until": "battle",
+     "mark": "Hybridised Pox"
+    }
+   ]
+  }
+ }
+}

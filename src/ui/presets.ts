@@ -112,4 +112,20 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'c7', datasheet: 'Maulerfiend', models: 1, pts: 120 },
     ],
   },
+  DG: {
+    name: 'Death Guard (Quick)',
+    factionId: 'DG',
+    battleSize: 'incursion',
+    detachments: ['Virulent Vectorium'],
+    units: [
+      { uid: 'd1', datasheet: 'Blightlord Terminators', models: 5, pts: 185 },
+      { uid: 'd2', datasheet: 'Lord of Contagion', models: 1, pts: 110, attachTo: 'd1', warlord: true },
+      { uid: 'd3', datasheet: 'Plague Marines', models: 10, pts: 175 },
+      { uid: 'd4', datasheet: 'Biologus Putrifier', models: 1, pts: 60, attachTo: 'd3' },
+      { uid: 'd5', datasheet: 'Plague Marines', models: 5, pts: 90 },
+      { uid: 'd6', datasheet: 'Malignant Plaguecaster', models: 1, pts: 60, attachTo: 'd5' },
+      { uid: 'd7', datasheet: 'Poxwalkers', models: 10, pts: 65 },
+      { uid: 'd8', datasheet: 'Plagueburst Crawler', models: 1, pts: 170 },
+    ],
+  },
 };

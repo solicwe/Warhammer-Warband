@@ -135,7 +135,7 @@ export function baseRadius(sheet: DatasheetData, profileIdx: number): number {
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
-const singular = (s: string) => norm(s).replace(/(ies)$/, 'y').replace(/s$/, '');
+const singular = (s: string) => norm(s).replace(/\*+/g, '').replace(/(ies)$/, 'y').replace(/men$/, 'man').replace(/s$/, '');
 
 function matchProfile(sheet: DatasheetData, name?: string): number {
   if (!name || sheet.models.length === 1) return 0;
@@ -163,13 +163,17 @@ function canonItem(sheet: DatasheetData, item: string): string {
 const weaponNamed = (sheet: DatasheetData, name: string) => sheet.weapons.find((w) => w.name === name) ?? sheet.weapons.find((w) => wkey(w.name) === wkey(name));
 
 /** Default items of one model: weapon names (a weapon listed twice is carried twice) plus non-weapon gear. */
-function loadoutItems(sheet: DatasheetData, compName: string | undefined, profileName: string): string[] {
-  const keys = Object.keys(sheet.loadout);
-  let key: string | undefined = keys.find((k) => k === '*');
-  if (compName || profileName) {
-    const cand = [compName, profileName].filter(Boolean).map((s) => singular(s!));
-    key = keys.find((k) => cand.some((c) => singular(k) === c || singular(k).includes(c) || c.includes(singular(k)))) ?? key;
-  }
+/** "One other Navis Armsman" → { n: 1, base: "navis armsman" }; "other Voidsman" / "Lasgun Squad" → { n: 0, … } */
+const QUAL = /^(?:(one|two|three|\d+)\s+)?(?:(?:the\s+)?other\s+)?(.+)$/i;
+const NUM: Record<string, number> = { one: 1, two: 2, three: 3 };
+function loadoutKey(k: string): { n: number; base: string } {
+  const m = QUAL.exec(k.trim())!;
+  return { n: m[1] ? NUM[m[1].toLowerCase()] ?? Number(m[1]) : 0, base: singular(m[2]) };
+}
+
+const keyMatches = (base: string, cand: string[]) => base === 'model' || cand.some((c) => base === c || base.includes(c) || c.includes(base));
+
+function itemsOf(sheet: DatasheetData, key: string | undefined): string[] {
   const out: string[] = [];
   const from = new Map<string, string>(); // canonical item -> loadout text it came from
   for (const it of key ? sheet.loadout[key] : []) {
@@ -185,6 +189,22 @@ function loadoutItems(sheet: DatasheetData, compName: string | undefined, profil
   return [...out, ...[ranged, melee].filter((w): w is WeaponData => !!w).map((w) => w.name)];
 }
 
+/** The default kit of each of `count` models: keys naming a number of them ("One Voidsman", "1 other Cadian Veteran
+ *  Guardsman") go first, in the card's order; the rest carry the plain one ("other Voidsman", "other model"). */
+function loadoutItemsFor(sheet: DatasheetData, compName: string | undefined, profileName: string, count: number): string[][] {
+  const keys = Object.keys(sheet.loadout);
+  const cand = [compName, profileName].filter(Boolean).map((x) => singular(x!));
+  const parsed = keys.map((k) => ({ k, ...loadoutKey(k) }));
+  const plain = parsed.find((p) => !p.n && p.base !== 'model' && keyMatches(p.base, cand))?.k
+    ?? keys.find((k) => k === '*')
+    ?? parsed.find((p) => keyMatches(p.base, cand))?.k;
+  const out: string[][] = [];
+  for (const p of parsed.filter((x) => x.n && x.base !== 'model' && keyMatches(x.base, cand))) for (let i = 0; i < p.n && out.length < count; i++) out.push(itemsOf(sheet, p.k));
+  const rest = plain && loadoutKey(plain).n && out.length ? parsed.find((p) => p.base === 'model')?.k ?? plain : plain;
+  while (out.length < count) out.push(itemsOf(sheet, rest));
+  return out;
+}
+
 // ---------- wargear ----------
 
 interface ModelPlan { name: string; comp?: string; profile: number; items: string[]; used: number[] }
@@ -196,9 +216,10 @@ function planModels(sheet: DatasheetData, count: number, addons: string[] = []):
   const out: ModelPlan[] = [];
   for (const part of parts) {
     const profile = sheet.models[part.profile];
-    const items = loadoutItems(sheet, part.comp, profile.name);
-    const name = part.comp && part.comp !== profile.name ? part.comp.replace(/s$/, '') : profile.name;
-    for (let i = 0; i < part.count; i++) out.push({ name, comp: part.comp, profile: part.profile, items: [...items], used: [] });
+    const kits = loadoutItemsFor(sheet, part.comp, profile.name, part.count);
+    const one = (sheet.composition.find((c) => c.name === part.comp)?.max ?? 2) <= 1;
+    const name = part.comp && part.comp !== profile.name ? (one ? part.comp : part.comp.replace(/\*+$/, '').replace(/men$/, 'man').replace(/s$/, '')) : profile.name;
+    for (let i = 0; i < part.count; i++) out.push({ name, comp: part.comp, profile: part.profile, items: [...kits[i]], used: [] });
   }
   return out;
 }
@@ -246,11 +267,12 @@ export function choiceItems(o: WargearOption, pk: Pick<WargearPick, 'choice' | '
 /** How many models (or copies, for `stack`) may take option `o` in a unit of `size` models. */
 export function wargearMax(sheet: DatasheetData, o: WargearOption, size: number, addons: string[] = []): number {
   if (o.minModels && size < o.minModels) return 0;
-  const n = whoModels(planModels(sheet, size, addons), o.who).length;
+  const plans = planModels(sheet, size, addons);
+  const n = whoModels(plans, o.who).length;
   switch (o.scope) {
     case 'one': return Math.min(1, n);
     case 'upTo': return o.stack ? o.max ?? 1 : Math.min(o.max ?? 1, n);
-    case 'perN': return Math.min(n, Math.floor(size / (o.per ?? 5)) * (o.max ?? 1));
+    case 'perN': return Math.min(n, Math.floor((o.perOf ? whoModels(plans, o.perOf).length : size) / (o.per ?? 5)) * (o.max ?? 1));
     default: return n; // any, all
   }
 }
@@ -651,6 +673,7 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       owner,
       name: joiners.length ? `${joiners.map((j) => j.datasheet).join(' + ')} + ${sheet.name}` : sheet.name,
       sources: sheets.map((s) => s.name),
+      ...(joiners.length || !sheet.leads?.length ? {} : { leads: sheet.leads }),
       keywords,
       factionKeywords: [...new Set(sheets.flatMap((s) => s.factionKeywords))],
       models,
@@ -939,6 +962,16 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
       : sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT')
         || (list.detachments.includes('Cult of Blood') && (name === 'Jakhals' || name === 'Goremongers')) ? size.unitLimit * 2 : size.unitLimit;
     if (n > limit) errs.push(`${name}: maximum ${limit} per army`);
+  }
+  // Pact of Decay / Pact of Excess: the book's daemons only come with their detachment (Plague Legions: up to 500 / 1000 / 1500 pts, never the Warlord)
+  for (const pact of [{ kw: 'PLAGUE LEGIONS', det: 'Tallyband Summoners', caps: [500, 1000, 1500] }, { kw: 'LEGIONS OF EXCESS', det: 'Carnival of Excess' }]) {
+    const xs = list.units.filter((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.factionKeywords.includes(pact.kw));
+    if (!xs.length) continue;
+    if (!list.detachments.includes(pact.det)) { errs.push(`${pact.kw} units can only be included with the ${pact.det} detachment`); continue; }
+    const cap = pact.caps?.[size.points <= 1000 ? 0 : size.points <= 2000 ? 1 : 2];
+    const pts = xs.reduce((a, u) => a + unitPoints(u), 0);
+    if (cap && pts > cap) errs.push(`${pact.det}: ${pts} pts of ${pact.kw} units — at most ${cap} pts at this battle size`);
+    if (pact.caps && xs.some((u) => u.warlord)) errs.push(`A ${pact.kw} model cannot be your Warlord`);
   }
   if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('The army needs at least one CHARACTER (Warlord)');
   if (!list.units.some((u) => u.warlord)) errs.push('No Warlord selected (tap a character\'s ⋮ → Make Warlord)');

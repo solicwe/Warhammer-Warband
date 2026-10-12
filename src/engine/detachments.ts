@@ -3,6 +3,7 @@
 import { activeRules, DET_RULES, DOCTRINES, doctrineUsesLeft, type DetChoice, type DetChoiceOption, type DetRule } from './effects';
 import { rollN } from './dice';
 import { log } from './state';
+import { PLAGUE_IDS, setPlague } from './deathGuard';
 import type { DetChoiceState, GameState, PlayerId } from './types';
 
 export { DET_RULES };
@@ -61,6 +62,7 @@ export function pickDetChoice(s: GameState, p: PlayerId, rule: string, ids: stri
   if (now.choice.when === 'tithe') s.players[p].tithe = (s.players[p].tithe ?? 0) - ids.reduce((a, id) => a + (now.choice.options.find((o) => o.id === id)?.cost ?? 0), 0);
   st.active = now.choice.when === 'tithe' ? [...new Set([...st.active, ...ids])] : [...ids];
   st.used = rule === DOCTRINES ? [...st.used, ...ids] : [...new Set([...st.used, ...ids])];
+  if (PLAGUE_IDS.includes(ids[0])) setPlague(s, p, ids[0]); // Nurgle's Gift / Manifold Maladies
   st.count += 1;
   st.pickedTurn = s.turn;
   st.round = s.round;

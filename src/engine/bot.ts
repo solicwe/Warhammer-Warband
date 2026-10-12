@@ -14,6 +14,7 @@ import {
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName } from './game';
 import { applyPick } from './blessings';
 import { botPledge, setPledge } from './emperorsChildren';
+import { botPlague, PLAGUE_IDS } from './deathGuard';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, resolvePickUnit, unitSelected } from './activations';
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, styleChosen } from './botLook';
@@ -208,6 +209,8 @@ function botDetachmentChoices(s: GameState, p: PlayerId, mine: UnitState[], enem
       if (pick) pickDetChoice(s, p, c.rule, [pick]);
       continue;
     }
+    // Nurgle's Gift / Manifold Maladies: the Plague that hurts this opponent most
+    if (free.every((id) => PLAGUE_IDS.includes(id))) { pickDetChoice(s, p, c.rule, [botPlague(s, p)].filter((id) => free.includes(id)).concat(free).slice(0, 1)); continue; }
     if (ids.length === want) pickDetChoice(s, p, c.rule, ids);
   }
 }

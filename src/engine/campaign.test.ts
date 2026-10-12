@@ -25,6 +25,13 @@ describe('campaign', () => {
     }
   });
 
+  it('a campaign start list is a random draw: different runs, different units', () => {
+    const sm = load('SM');
+    const lists = [11, 22, 33, 44, 55].map((seed) => autoList(sm, 500, seed, true).units.map((u) => u.datasheet).sort().join());
+    expect(new Set(lists).size).toBeGreaterThan(2);
+    for (const seed of [11, 22]) expect(autoList(sm, 500, seed, true).units.some((u) => u.warlord)).toBe(true);
+  });
+
   it('plays a run: battle, reward, relics in battle, a loss costs Fate', () => {
     const sm = load('SM');
     const list = autoList(sm, 500, 3);

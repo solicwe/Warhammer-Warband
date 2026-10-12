@@ -1,4 +1,5 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
+import { dgBattleStart, dgCommandEnd, dgCommandStart, dgPhaseEnd, dgRoundStart, dsKeep, stinkBlocks } from './deathGuard';
 import { initFavoured, noteTarget, pledgeRoundEnd, pledgeRoundStart, poisonTick, snapshotEngaged, thrillBlock } from './emperorsChildren';
 import { buildUnits, forChapter, transportFit } from './army';
 import { applyMortalWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed } from './attack';
@@ -211,6 +212,15 @@ export function createGame(o: NewGameOptions): GameState {
     if (!s.players[i].detachments.some((d) => d.stratagems.some((st) => /Tzeentch Chaos Spawn/i.test(st.text)))) continue;
     s.players[i].spawnTemplate = buildUnits({ ...o.lists[i], units: [{ uid: 'gift-spawn', datasheet: 'Chaos Spawn', models: 1, pts: 0 }] }, o.factions[i], i)[0];
   }
+  // Numberless Horde (Shamblerot Vectorium): Poxwalkers units of 10 that join the army in later battle rounds (Battleline)
+  for (const i of [0, 1] as const) {
+    if (!o.lists[i].detachments.includes('Shamblerot Vectorium') || !o.factions[i].datasheets.some((d) => d.name === 'Poxwalkers')) continue;
+    const t = buildUnits({ ...o.lists[i], units: [{ uid: 'horde', datasheet: 'Poxwalkers', models: 10, pts: 0 }] }, o.factions[i], i)[0];
+    if (!t) continue;
+    t.keywords = [...new Set([...t.keywords, 'BATTLELINE'])];
+    t.models.forEach((m) => { m.keywords = [...new Set([...m.keywords, 'BATTLELINE'])]; });
+    s.players[i].poxTemplate = t;
+  }
   const ro = rollOff(s);
   log(s, `Roll-off for Attacker / Defender: ${o.names[0]} ${ro.a} – ${o.names[1]} ${ro.b} → ${o.names[ro.winner]} is the Attacker`, 'roll', null);
   s.attackerPlayer = ro.winner;
@@ -365,6 +375,7 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     const len = pathLength(path);
     const max = maxMoveDistance(s, u, kind, m, opt);
     if (len > max + 0.02) { errors.push(`${m.name} moved ${len.toFixed(1)}", more than ${max.toFixed(1)}"`); bad.add(m.id); }
+    if (kind === 'advance' && stinkBlocks(s, u, m, path[0], path[path.length - 1])) { errors.push('Putrefying Stink: cannot start or end an Advance move within 9" of a Foul Blightspawn'); bad.add(m.id); }
     const why = pathBlocked(s, u, kind, m, path, opt);
     if (why === 'enemy') { errors.push(`${m.name} cannot move through enemy models`); bad.add(m.id); }
     if (why === 'wall') { errors.push(`${m.name} cannot move through a terrain wall — release and a way around will be found`); bad.add(m.id); }
@@ -430,7 +441,9 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
     if (homer && dist(p, homer) - m.r > 3 + EPS) { errors.push('Teleport Homer: must be set up within 3" of the token'); bad.add(m.id); }
     if (how !== 'deploy') {
       const keep = homer ? 8 : how === 'deepStrike' ? fl!.deepStrikeRange : RULES.reserves.enemyDistance;
-      if (enemies.some((e) => alive(e).some((n) => dist(p, n) - m.r - n.r <= keep))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
+      // Death Approaches / Beckoning Blight: closer to some enemy units
+      const keepFor = (e: UnitState) => (how === 'deepStrike' ? Math.min(keep, dsKeep(s, u, e, p, m) ?? keep) : keep);
+      if (enemies.some((e) => alive(e).some((n) => dist(p, n) - m.r - n.r <= keepFor(e)))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
     }
     const dsNear = how === 'deepStrike' ? fl!.deepStrikeNear : undefined;
     if (dsNear && !boardUnits(s, u.owner).some((f) => f.id !== u.id && (hasKw(f, dsNear.kw) || f.factionKeywords.includes(dsNear.kw)) && alive(f).some((n) => dist(p, n) + m.r - n.r <= dsNear.range + 1e-6))) { errors.push(`Must be set up wholly within ${dsNear.range}" of a friendly ${dsNear.kw} unit`); bad.add(m.id); }
@@ -762,8 +775,8 @@ export function startTurn(s: GameState, p: PlayerId) {
   onTurnStart(s);
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
-  if (s.turn === 0) { initSagas(s); initFavoured(s); fireAll(s, 'battleStart', 'both'); }
-  if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); fireAll(s, 'roundStart', 'both'); }
+  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); fireAll(s, 'battleStart', 'both'); }
+  if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); dgRoundStart(s); fireAll(s, 'roundStart', 'both'); }
   startCommand(s);
 }
 
@@ -779,6 +792,7 @@ function startCommand(s: GameState) {
   for (const p of [0, 1] as PlayerId[]) s.players[p].cp += RULES.cpPerCommandPhase;
   log(s, `+${RULES.cpPerCommandPhase}CP to both players (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
   poisonTick(s);
+  dgCommandStart(s);
   fireFor(s, 'commandStart', s.active);
   fireFor(s, 'eachCommandStart', 'both');
   drawUpTo(s, s.active);
@@ -793,7 +807,7 @@ function startCommand(s: GameState) {
   // Terror Descends / Terror Made Manifest: enemy units below Starting Strength near them must test
   const terrorSrc = boardUnits(s, other(s.active)).filter((e) => unitFlags(s, e).terrorBelow > 0);
   const terror = (u: UnitState) => onBoard(u) && alive(u).length < u.startingStrength ? terrorSrc.filter((e) => unitDistance(u, e) <= unitFlags(s, e).terrorBelow + 1e-6) : [];
-  const terrorMod = (u: UnitState) => Math.min(0, ...terror(u).map((e) => unitFlags(s, e).terrorBelowMod));
+  const terrorMod = (u: UnitState) => Math.min(0, ...terror(u).map((e) => unitFlags(s, e).terrorBelowMod + (hasKw(u, 'PSYKER') ? unitFlags(s, e).terrorPsykerMod : 0)));
   s.shockTests = s.units
     .filter((u) => u.owner === s.active && u.status !== 'destroyed' && u.status !== 'pending' && alive(u).length)
     .filter((u) => u.battleShocked || strength(u) === 'half' || strength(u) === 'belowHalf' || (onBoard(u) && forced(u)) || dreaded(u) || terror(u).length > 0)
@@ -850,11 +864,13 @@ export function endPhase(s: GameState) {
       for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) o.secured = s.active;
     }
   }
+  dgPhaseEnd(s);
   resolveRevivals(s);
   if (s.window?.kind === 'abilityMove') s.window = null;
   expireTimed(s, 'phaseEnd', s.active);
   if (s.phase === 'command') {
     fireFor(s, 'commandEnd', s.active);
+    dgCommandEnd(s);
     // Uphold the Honour of the Emperor (Templar Vows): objectives held now stay yours
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtCommandEnd || !hasKw(u, 'INFANTRY')) continue;

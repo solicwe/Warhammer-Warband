@@ -9,6 +9,7 @@ import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 import { noteTarget, sensationalBlock, thrillBlock } from './emperorsChildren';
+import { putridHit } from './deathGuard';
 
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
@@ -153,7 +154,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const notes: string[] = [];
   const pools = new Map<string, Pool>();
   const tModels = alive(T);
-  const tEngaged = isEngaged(s, T);
+  // All Is Rot: enemy units engaged only with that Plague Legions unit can still be shot
+  const tEngaged = engagedEnemies(s, T).some((f) => !unitFlags(s, f).allIsRot);
   const engagedWithTarget = engagedEnemies(s, A).some((e) => e.id === T.id);
   const tIsMV = tModels.some(isMV);
   if (opt.mode !== 'closeQuarters' && tEngaged && !tIsMV) return { pools: [], notes, error: 'The target is engaged and cannot be shot (unless MONSTER / VEHICLE)' };
@@ -462,7 +464,8 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     timedAtStart: { a: A.timed?.length ?? 0, t: T.timed?.length ?? 0 },
   };
   // Nightforged Battery: ranged weapons re-roll a low number of attacks for free
-  if (kind === 'shoot' && unitFlags(s, A).rerollAttackRolls) {
+  // … or against a unit marked by Overwhelming Generosity
+  if (kind === 'shoot' && (unitFlags(s, A).rerollAttackRolls || (T.timed ?? []).some((t) => t.e.incoming?.rerollAttacks && t.by === A.owner && A.factionKeywords.includes('DEATH GUARD')))) {
     for (const p of s.attack.pools) for (const r of p.attackRolls ?? []) {
       if (r.rerolled || r.total >= exprAverage(r.expr)) continue;
       const again = rollExpr(s, r.expr).total;
@@ -658,6 +661,17 @@ export function rollWounds(s: GameState) {
     applyMortalWounds(s, grots, n, 'Grot Shields');
     auto = 0; rolls = 0;
   }
+  // Shambling Wall: each attack is taken by the Poxwalkers nearby instead (Damage = Poxwalkers destroyed, no save)
+  const wall = (auto || rolls) && at.kind === 'shoot' && unitFlags(s, Tg).poxWall
+    ? boardUnits(s, Tg.owner).find((x) => x.sources.includes('Poxwalkers') && unitDistance(x, Tg) <= 3 + 1e-6 && alive(unitById(s, at.attackerId)).some((m) => unitVisibleTo(s, m, x))) : undefined;
+  if (wall) {
+    let n = 0;
+    for (let i = 0; i < auto + rolls; i++) n += rollExpr(s, p.damage ?? p.profile.D).total;
+    const dead = alive(wall).filter((m) => m.source === 'Poxwalkers').slice(0, n);
+    for (const m of dead) killModel(s, wall, m);
+    log(s, `Shambling Wall: ${auto + rolls} attack(s) on ${Tg.name} are taken by ${wall.name} → ${dead.length} Poxwalker(s) destroyed`, 'info', Tg.owner);
+    auto = 0; rolls = 0;
+  }
   // Mortal Thralls: no Wound roll; the DAMNED unit within 3" (visible to the attackers) takes the Damage as mortal wounds
   const T0 = unitById(s, at.targetId), A0 = unitById(s, at.attackerId);
   const thrall = rolls && unitFlags(s, T0).thralls
@@ -776,7 +790,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
       // Machine Wrath: the wreck makes one last move before it blows
       emitReact(s, u.owner, 'deadlyDemiseSix', { unitId: u.id, modelId: m.id, six: true });
       for (const v of s.units.filter((x) => x.id !== u.id && onBoard(x))) {
-        if (alive(v).some((n) => baseDist(n, m) <= RULES.deadlyDemiseRange)) applyMortalWounds(s, v, rollExpr(s, dd).total, 'Deadly Demise');
+        if (alive(v).some((n) => baseDist(n, m) <= RULES.deadlyDemiseRange)) { applyMortalWounds(s, v, rollExpr(s, dd).total, 'Deadly Demise'); putridHit(s, u, v); }
       }
     } else log(s, `Deadly Demise from ${m.name}: rolled ${r} (no explosion)`, 'roll');
   }
@@ -953,7 +967,8 @@ export function finishAttack(s: GameState) {
   const at = s.attack!;
   const A = unitById(s, at.attackerId);
   const T = unitById(s, at.targetId);
-  const haz = at.pools.reduce((a, p) => a + p.hazardous, 0);
+  // one hazard roll per Hazardous weapon used in the attack, however many models fired it
+  const haz = at.pools.filter((p) => p.hazardous > 0).length;
   if (haz && alive(A).length) {
     // Rites of Thermal Appeasement: +1 to hazard rolls for its plasma weapons
     const plasma = A.abilities.some((a) => a.name === 'Rites of Thermal Appeasement') && at.pools.every((p) => !p.hazardous || /plasma/i.test(p.weapon));

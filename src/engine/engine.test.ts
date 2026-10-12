@@ -472,6 +472,31 @@ describe('wargear', () => {
     expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Thunder Hammer') && m.profile.W === 4)).toHaveLength(2);
     expect(u.models.filter((m) => m.profile.W === 3)).toHaveLength(3);
   });
+  it("options for one Navis Armsman never land on the Sergeant-at-Arms (\"Armsmen\", \"Sergeant-at-Arms'\")", () => {
+    const AOI = JSON.parse(fs.readFileSync('public/data/factions/AoI.json', 'utf8')) as FactionData;
+    const sheet = AOI.datasheets.find((d) => d.name === 'Imperial Navy Breachers')!;
+    const fist = sheet.wargearOptions!.findIndex((o) => o.choices.some((c) => c.includes('Chainfist')));
+    const sgtOpt = sheet.wargearOptions!.findIndex((o) => o.who === 'Navis Sergeant-at-Arms');
+    expect(sheet.wargearOptions![sgtOpt].replace).toEqual(['Navis shotgun']);
+    const u = one(AOI, 'AoI', { uid: 'a', datasheet: sheet.name, models: 10, pts: 0, wargear: [{ opt: fist, choice: 0, count: 1 }, { opt: sgtOpt, choice: 0, count: 1 }] });
+    const sgt = u.models.find((m) => m.name === 'Navis Sergeant-at-Arms')!;
+    expect(sgt.weapons.map((w) => w.name).sort()).toEqual(['Autopistol', 'Chainsword', 'Close combat weapon']);
+    expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Chainfist')).map((m) => m.name)).toEqual(['Navis Armsman']);
+  });
+  it('"For every 5 Inquisitorial Agents …" options go to the Agents, not the Gun Servitors', () => {
+    const AOI = JSON.parse(fs.readFileSync('public/data/factions/AoI.json', 'utf8')) as FactionData;
+    const sheet = AOI.datasheets.find((d) => d.name === 'Inquisitorial Agents')!;
+    const evi = sheet.wargearOptions!.findIndex((o) => o.choices.some((c) => c.includes('Eviscerator')));
+    expect(sheet.wargearOptions![evi]).toMatchObject({ scope: 'perN', who: 'Inquisitorial Agent' });
+    const u = one(AOI, 'AoI', { uid: 'a', datasheet: sheet.name, models: 7, pts: 0, wargear: [{ opt: evi, choice: 0, count: 1 }] });
+    expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Eviscerator')).map((m) => m.name)).toEqual(['Inquisitorial Agents']);
+    expect(u.models.some((m) => m.name.includes('*'))).toBe(false);
+    // the cap counts Agents only (every 5 Agents), not the Gun Servitors
+    for (const size of [6, 10, 12]) {
+      const agents = one(AOI, 'AoI', { uid: 'b', datasheet: sheet.name, models: size, pts: 0 }).models.filter((m) => m.name === 'Inquisitorial Agents').length;
+      expect(wargearMax(sheet, sheet.wargearOptions![evi], size)).toBe(Math.floor(agents / 5));
+    }
+  });
   it('vehicles carry every listed weapon', () => {
     const lr = one(SM, 'SM', { uid: 'a', datasheet: 'Land Raider', models: 1, pts: 245 });
     expect(lr.models[0].weapons.filter((w) => w.name === 'Godhammer Lascannon')).toHaveLength(2);

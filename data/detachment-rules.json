@@ -4019,6 +4019,162 @@
      "fightsFirst": true
     }
    ]
+  },
+  "Nurgle’s Gift (Aura)": {
+   "auto": "full",
+   "armyRule": true,
+   "needKw": "DEATH GUARD",
+   "choice": {
+    "name": "Plague",
+    "when": "battle",
+    "uses": "free",
+    "pick": 1,
+    "options": [
+     {
+      "id": "rattlejoint",
+      "name": "Rattlejoint Ague",
+      "text": "Afflicted enemy units: worsen their Save by 1",
+      "effects": []
+     },
+     {
+      "id": "skullsquirm",
+      "name": "Skullsquirm Blight",
+      "text": "Afflicted enemy units: their ranged attacks give the target cover, -1 to hit in melee",
+      "effects": []
+     },
+     {
+      "id": "scabrous",
+      "name": "Scabrous Soulrot",
+      "text": "Afflicted enemy units: -1 Move, Leadership and OC (OC at least 1)",
+      "effects": []
+     }
+    ]
+   },
+   "manual": "Contagion Range 3\"/6\"/9\" (rounds 1/2/3+, at most 12\"): enemy units within it are Afflicted (-1 T and the Plague you pick in your first Command phase)"
+  },
+  "Flyblown Host": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "PLAGUE MARINES"
+     ],
+     "name": "Verminous Haze",
+     "rule": {
+      "act": [
+       {
+        "when": "formation",
+        "auto": true,
+        "limit": "battle",
+        "target": {
+         "side": "friendly",
+         "units": [
+          "PLAGUE MARINES"
+         ],
+         "anywhere": true,
+         "each": true,
+         "count": 2
+        },
+        "do": [
+         {
+          "buff": [
+           {
+            "infiltrators": true
+           }
+          ],
+          "until": "battle"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Virulent Vectorium": {
+   "auto": "full",
+   "manual": "End of your Command phase: objectives your Death Guard units control are secured; enemy units in range of them are Afflicted while you keep them (deathGuard.ts)"
+  },
+  "Mortarion’s Hammer": {
+   "auto": "full",
+   "manual": "Start of each battle round: the most valuable enemy units (1/2/3 by battle size) more than 12\" from your army are Afflicted this round"
+  },
+  "Champions of Contagion": {
+   "auto": "full",
+   "choice": {
+    "name": "Manifold Maladies",
+    "when": "round",
+    "uses": "free",
+    "pick": 1,
+    "options": [
+     {
+      "id": "rattlejoint",
+      "name": "Rattlejoint Ague",
+      "text": "Afflicted enemy units: worsen their Save by 1",
+      "effects": []
+     },
+     {
+      "id": "skullsquirm",
+      "name": "Skullsquirm Blight",
+      "text": "Afflicted enemy units: their ranged attacks give the target cover, -1 to hit in melee",
+      "effects": []
+     },
+     {
+      "id": "scabrous",
+      "name": "Scabrous Soulrot",
+      "text": "Afflicted enemy units: -1 Move, Leadership and OC (OC at least 1)",
+      "effects": []
+     }
+    ]
+   }
+  },
+  "Tallyband Summoners": {
+   "auto": "full",
+   "manual": "Plague Legions units within 7\" of a Death Guard unit spread Nurgle's Gift; Death Guard units within 7\" of a Plague Legions unit get +3\" Contagion Range"
+  },
+  "Shamblerot Vectorium": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "POXWALKERS"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    }
+   ],
+   "manual": "Numberless Horde: in your Command phase in battle rounds 2-3 / 2-4 / 2-5 a new Poxwalkers unit (10) joins your Strategic Reserves"
+  },
+  "Death Lord’s Chosen": {
+   "auto": "full",
+   "manual": "In your opponent's Command phase each Afflicted enemy unit rolls 2D6 (-1 Below Half-strength): 6 or less = D3 mortal wounds"
+  },
+  "Contagion Engines": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "FOETID BLOAT-DRONE|FOETID BLOAT-DRONE WITH HEAVY BLIGHT LAUNCHER|HELBRUTE|MYPHITIC BLIGHT-HAULER"
+     ],
+     "addKeywords": [
+      "CONTAGION ENGINE"
+     ]
+    },
+    {
+     "units": [
+      "FOETID BLOAT-DRONE|FOETID BLOAT-DRONE WITH HEAVY BLIGHT LAUNCHER|HELBRUTE|MYPHITIC BLIGHT-HAULER"
+     ],
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    }
+   ]
+  },
+  "Paragons of Putrescence": {
+   "auto": "full",
+   "manual": "Death Guard CHARACTER units have +3\" Contagion Range (at most 12\")"
   }
  }
 }

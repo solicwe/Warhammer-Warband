@@ -70,7 +70,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       const f = await loadFaction(pickId);
       if (!playable(f)) { setErr(`${f.name} has too few units in the data for a campaign yet. Pick another army.`); return; }
       const seed = Date.now() >>> 0;
-      const list = { ...autoList(f, START_POINTS, seed % 997), name: `${f.name} strike force` };
+      const list = { ...autoList(f, START_POINTS, seed, true), name: `${f.name} strike force` };
       // only armies whose rules are all written up: theirs play as they should
       const enemies = (index?.factions ?? []).map((x) => x.id).filter((id) => id !== f.id && hasFactionRules(id));
       setFac(f);

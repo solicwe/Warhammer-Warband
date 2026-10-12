@@ -32,7 +32,8 @@ const rand = (seed: number) => {
 /** Factions with a list of their own (not just allies for others). */
 export const playable = (f: FactionData) => autoList(f).units.length >= 3;
 
-export function autoList(f: FactionData, points = 1000, seed = 1): ArmyList {
+/** wild: ignore how hard a unit hits and pick at random (a campaign start that differs every run). */
+export function autoList(f: FactionData, points = 1000, seed = 1, wild = false): ArmyList {
   const rnd = rand(seed + f.id.length * 31);
   // the faction's own units (allies from other books carry other faction keywords)
   const count = new Map<string, number>();
@@ -53,7 +54,7 @@ export function autoList(f: FactionData, points = 1000, seed = 1): ArmyList {
     left -= o.pts + (e.wargearPts ?? 0);
     return e;
   };
-  const score = (d: DatasheetData) => { const o = price(d); return punch(d, o.pts, o.models) * (0.75 + rnd() * 0.5); };
+  const score = (d: DatasheetData) => { if (wild) return rnd(); const o = price(d); return punch(d, o.pts, o.models) * (0.75 + rnd() * 0.5); };
   // the warlord: a character that leads a squad the faction has, and its bodyguard
   const leaders = usable.filter((d) => d.keywords.includes('CHARACTER') && !d.isSupport && d.leads.some((b) => usable.some((x) => x.name === b)) && price(d).pts <= points * 0.2);
   const lead = leaders.sort((a, b) => score(b) - score(a))[0];
