@@ -1354,6 +1354,13 @@ details > .strat-card { margin-top: 6px; }
 .buffcards { flex: none; display: flex; gap: 8px; padding: 6px 10px; overflow-x: auto; scroll-snap-type: x mandatory; background: var(--surface-2); border-top: 1px solid var(--line); }
 .buffcard { flex: 0 0 min(240px, 72vw); max-height: 92px; overflow-y: auto; scroll-snap-align: start; display: flex; flex-direction: column; gap: 2px; padding: 6px 9px; border: 1px solid var(--line-2); border-left: 4px solid var(--p0); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 12px; line-height: 1.35; }
 .buffcard.p1 { border-left-color: var(--p1); }
+/* wide screens: each army's buffs beside the board, next to its own deployment zone */
+.buffcol { position: absolute; left: 8px; display: flex; flex-direction: column; gap: 8px; max-height: calc(50% - 16px); overflow-y: auto; z-index: 2; }
+.buffcol.top { top: 8px; }
+.buffcol.bottom { bottom: 8px; }
+.buffcol.left, .buffcol.right { top: 8px; max-height: calc(100% - 16px); }
+.buffcol.right { left: auto; right: 8px; }
+.buffcol .buffcard { flex: none; max-height: none; }
 .buffcard b { font: 700 13px var(--font-cond); letter-spacing: 0.02em; }
 .bk-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text-2); cursor: pointer; }
 .bk-row.ok { border-color: var(--good); color: var(--text); }
