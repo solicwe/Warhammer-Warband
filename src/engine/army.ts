@@ -267,11 +267,12 @@ export function choiceItems(o: WargearOption, pk: Pick<WargearPick, 'choice' | '
 /** How many models (or copies, for `stack`) may take option `o` in a unit of `size` models. */
 export function wargearMax(sheet: DatasheetData, o: WargearOption, size: number, addons: string[] = []): number {
   if (o.minModels && size < o.minModels) return 0;
-  const n = whoModels(planModels(sheet, size, addons), o.who).length;
+  const plans = planModels(sheet, size, addons);
+  const n = whoModels(plans, o.who).length;
   switch (o.scope) {
     case 'one': return Math.min(1, n);
     case 'upTo': return o.stack ? o.max ?? 1 : Math.min(o.max ?? 1, n);
-    case 'perN': return Math.min(n, Math.floor(size / (o.per ?? 5)) * (o.max ?? 1));
+    case 'perN': return Math.min(n, Math.floor((o.perOf ? whoModels(plans, o.perOf).length : size) / (o.per ?? 5)) * (o.max ?? 1));
     default: return n; // any, all
   }
 }

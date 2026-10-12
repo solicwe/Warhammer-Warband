@@ -168,8 +168,10 @@ export function parseWargearOption(text, weapons = []) {
   t = t.replace(/\s*\([^)]*cannot be equipped with[^)]*\)/gi, '').trim();
   // "This model can be equipped with 1 havoc launcher or can replace 1 combi-bolter with 1 havoc launcher": the gain is what counts
   t = t.replace(/^(This model can be equipped with [^.]+?) or can replace .*$/i, '$1.');
-  if ((m = t.match(/^For every (\d+|\w+) (?:models?|[A-Z][\w' -]+?) in (?:this|the) unit,? (?:up to )?(\d+|\w+)?/i))) {
-    opt.scope = 'perN'; opt.per = Number(m[1]) || WORDS[m[1].toLowerCase()] || 5; opt.max = Number(m[2]) || WORDS[(m[2] ?? '').toLowerCase()] || 1;
+  if ((m = t.match(/^For every (\d+|\w+) (models?|[A-Z][\w' -]+?) in (?:this|the) unit,? (?:up to )?(\d+|\w+)?/i))) {
+    opt.scope = 'perN'; opt.per = Number(m[1]) || WORDS[m[1].toLowerCase()] || 5; opt.max = Number(m[3]) || WORDS[(m[3] ?? '').toLowerCase()] || 1;
+    // "For every 5 Inquisitorial Agents": only those models count, not the Gun Servitors
+    if (!/^models?$/i.test(m[2])) opt.perOf = m[2].trim();
   } else if (/^Any number of/i.test(t)) opt.scope = 'any';
   else if (/^All (?:of )?(?:the )?(?:[\w-]+ ){0,3}(?:models|in this unit)/i.test(t)) opt.scope = 'all';
   else if ((m = t.match(/^Up to (\d+|\w+)/i))) { opt.scope = 'upTo'; opt.max = Number(m[1]) || WORDS[m[1].toLowerCase()] || 1; }

@@ -491,6 +491,11 @@ describe('wargear', () => {
     const u = one(AOI, 'AoI', { uid: 'a', datasheet: sheet.name, models: 7, pts: 0, wargear: [{ opt: evi, choice: 0, count: 1 }] });
     expect(u.models.filter((m) => m.weapons.some((w) => w.name === 'Eviscerator')).map((m) => m.name)).toEqual(['Inquisitorial Agents']);
     expect(u.models.some((m) => m.name.includes('*'))).toBe(false);
+    // the cap counts Agents only (every 5 Agents), not the Gun Servitors
+    for (const size of [6, 10, 12]) {
+      const agents = one(AOI, 'AoI', { uid: 'b', datasheet: sheet.name, models: size, pts: 0 }).models.filter((m) => m.name === 'Inquisitorial Agents').length;
+      expect(wargearMax(sheet, sheet.wargearOptions![evi], size)).toBe(Math.floor(agents / 5));
+    }
   });
   it('vehicles carry every listed weapon', () => {
     const lr = one(SM, 'SM', { uid: 'a', datasheet: 'Land Raider', models: 1, pts: 245 });

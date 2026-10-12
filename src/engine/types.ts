@@ -72,6 +72,7 @@ export interface WargearOption {
   /** one: the named/only model · upTo: up to `max` models · perN: `max` per `per` models · any: any number · all: every model or none */
   scope: 'one' | 'upTo' | 'perN' | 'any' | 'all';
   per?: number;
+  perOf?: string; // perN: the models that are counted ("For every 5 Inquisitorial Agents"), else every model
   max?: number;
   stack?: boolean; // "This model can be equipped with up to 4 X": count = copies on the one model
   minModels?: number; // "If this unit contains 12 models, …"
