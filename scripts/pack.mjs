@@ -196,7 +196,9 @@ function pointsOf(u) {
     for (const so of u.sizeOptions) {
       const models = so.counts.reduce((a, c) => a + c.max, 0);
       const tier = [...tiers].reverse().find((t) => models >= t.minModels) ?? tiers[0];
-      sizes.push({ models, pts: tier.pts + so.counts.reduce((a, c) => a + (c.pts || 0), 0) });
+      // a size can cost extra on top of the tier (Headtakers: +30 for 3 Hunting Wolves); the same model count keeps the last listed
+      for (let k = sizes.length - 1; k >= 0; k--) if (sizes[k].models === models) sizes.splice(k, 1);
+      sizes.push({ models, pts: tier.pts + (so.pts || 0) + so.counts.reduce((a, c) => a + (c.pts || 0), 0) });
     }
   } else {
     const tiers = [{ minModels: u.minModels, pts: u.basePoints }, ...[...u.pointsTiers].sort((a, b) => a.minModels - b.minModels)];
