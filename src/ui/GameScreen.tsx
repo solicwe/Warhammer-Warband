@@ -446,17 +446,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<string | null>(null);
   const [sheetModel, setSheetModel] = useState<string | undefined>();
-  // empty room left and right of the board (the board keeps its shape): army buffs sit there on a wide screen
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [gutter, setGutter] = useState(0);
-  const measureGutter = () => {
-    // where the battlefield's left edge lands on screen (zoom and the ruler margins included)
-    const w = wrapRef.current, svg = w?.querySelector('svg'), m = svg?.getScreenCTM();
-    if (!w || !svg || !m) return;
-    setGutter(Math.max(0, Math.floor(m.e - w.getBoundingClientRect().left)));
-  };
-  useEffect(measureGutter);
-  useEffect(() => { window.addEventListener('resize', measureGutter); return () => window.removeEventListener('resize', measureGutter); }, []);
   const taps = useRef<{ id?: string; t: number[] }>({ t: [] });
   const [showBuffs, setShowBuffs] = useState(false);
   const [fly, setFly] = useState(false);
@@ -2141,13 +2130,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       ? [<div key={`pact${p}`} className={`buffcard p${p}`}><b>{s.players[p].pledge?.round === s.round ? `Pledge ${s.players[p].pledge!.n} · ` : ''}Pact {s.players[p].pactPoints ?? 0}</b><span>{PACT_BONUSES}</span></div>]
       : []),
   ];
-  const hasBuffs = s.phase !== 'deploy' && ([0, 1] as PlayerId[]).some((p) => buffCards(p).length > 0);
   // where an army's buff column goes: beside its own deployment zone (left / right, or top / bottom of the left side)
-  const buffSide = (p: PlayerId) => {
+  const buffSide = (p: PlayerId): 'left' | 'right' | 'top' | 'bottom' => {
     const mid = (q: PlayerId) => { const z = zoneOf(s, q); return { x: z.reduce((a, v) => a + v.x, 0) / z.length, y: z.reduce((a, v) => a + v.y, 0) / z.length }; };
     const a = mid(p), o = mid((1 - p) as PlayerId);
     return Math.abs(a.x - o.x) > Math.abs(a.y - o.y) ? (a.x < o.x ? 'left' : 'right') : a.y < o.y ? 'top' : 'bottom';
   };
+  // army-wide buffs lie on the table beside the battlefield, next to each army's deployment zone
+  const sideCards = s.phase === 'deploy' ? [] : ([0, 1] as PlayerId[]).map((p) => ({ p, at: buffSide(p), cards: buffCards(p) }));
 
   return (
     <div className={`game ${(reporting || rolling) && actingBot === null ? 'telling' : ''}`}>
@@ -2178,7 +2168,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
       </header>
-      <div ref={wrapRef} className={`board-wrap shake-${shake}`}>
+      <div className={`board-wrap shake-${shake}`}>
         <Board
           s={s}
           viewer={actor}
@@ -2204,15 +2194,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onDraft={(d) => { setDraft(d); setCheck(null); }}
           onDragEnd={onDragEnd}
           plan={planArrows}
+          side={sideCards}
         />
         <AttackReport s={s} level={((spectate && speed === 2) || (rush && actingBot !== null)) && fxLevel === 'full' ? 'short' : fxLevel} quick={(o) => spectate || rush || bots.includes(o)} onBusy={setReporting}
           onShake={(lv) => { if (!lv) return; setShake(lv); window.setTimeout(() => setShake(0), 420 + lv * 80); }} />
         {botSays && actingBot === null && !spectate && <div className="bot-caption">{botSays}</div>}
         {toast && <div className="toast">{toast}</div>}
-        {/* beside the battlefield when there is room, else on its edge */}
-        {hasBuffs && ([0, 1] as PlayerId[]).map((p) => (
-          <div key={p} className={`buffcol ${buffSide(p)} ${gutter < 140 ? 'over' : ''}`} style={{ width: gutter < 140 ? Math.max(gutter - 12, 110) : Math.min(gutter - 16, 280) }} aria-label={`${s.players[p].name}: army-wide buffs`}>{buffCards(p)}</div>
-        ))}
         {s.campaign && <RelicStrip relics={s.campaign.relics} rules={s.campaign.rules} onInfo={flash} />}
         {tape.on && (
           <div className="tape-bar">

@@ -51,7 +51,12 @@ export interface BoardProps {
   onDragEnd?: (p: Paths) => void;
   /** the enemy's likely attacks next turn (its look ahead): an arrow from each attacker to its target */
   plan?: { from: Pt; to: Pt; melee: boolean; label: string }[];
+  /** cards laid on the table beside the battlefield, next to each army's deployment zone (army-wide buffs) */
+  side?: { p: PlayerId; at: 'left' | 'right' | 'top' | 'bottom'; cards: React.ReactNode[] }[];
 }
+
+/** Width of the table beside the battlefield that holds the side cards, in inches; card text is laid out at PX px per inch. */
+const SIDE = 13, PX = 20;
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -170,7 +175,11 @@ function BoardImpl(props: BoardProps) {
     return () => clearTimeout(tm);
   }, [s.objectives]);
   const svgRef = useRef<SVGSVGElement>(null);
-  const [vb, setVb] = useState({ x: -1, y: -1, w: W + 2, h: H + 2 });
+  // the whole table: the battlefield plus the strips the side cards lie on
+  const sides = (props.side ?? []).filter((x) => x.cards.length);
+  const padL = sides.some((x) => x.at !== 'right') ? SIDE : 0, padR = sides.some((x) => x.at === 'right') ? SIDE : 0;
+  const home = useMemo(() => ({ x: -1 - padL, y: -1, w: W + 2 + padL + padR, h: H + 2 }), [padL, padR]);
+  const [vb, setVb] = useState(home);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const pan = useRef<{ id: number; sx: number; sy: number; vb: typeof vb; moved: boolean } | null>(null);
   const pinch = useRef<{ d: number; vb: typeof vb; mid: Pt } | null>(null);
@@ -190,12 +199,8 @@ function BoardImpl(props: BoardProps) {
   useEffect(() => {
     const el = svgRef.current;
     if (!el) return;
-    const fit = () => setVb({ x: -1, y: -1, w: W + 2, h: H + 2 });
-    fit();
-    const ro = new ResizeObserver(() => {});
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+    setVb(home);
+  }, [home]);
 
   const zoomAt = (factor: number, c: Pt, base = vb) => {
     const w = Math.min(W * 2.5, Math.max(8, base.w * factor));
@@ -791,6 +796,20 @@ function BoardImpl(props: BoardProps) {
         </g>
       )}
       <rect x={0} y={0} width={W} height={H} fill="none" stroke="#000" strokeWidth={0.15} pointerEvents="none" />
+      {sides.map(({ p, at, cards }) => {
+        const x = at === 'right' ? W + 1 : -SIDE - 0.5, y = at === 'bottom' ? H / 2 + 0.5 : 0, h = at === 'top' || at === 'bottom' ? H / 2 - 0.5 : H;
+        return (
+          <g key={p}>
+            <rect x={x - 0.3} y={y - 0.3} width={SIDE - 0.1} height={h + 0.6} rx={0.6} fill="rgba(255,255,255,0.04)" stroke={p ? 'var(--p1)' : 'var(--p0)'} strokeOpacity={0.5} strokeWidth={0.08} />
+            <foreignObject x={x} y={y} width={SIDE - 0.5} height={h}>
+              <div className={`table-cards ${at}`} style={{ width: (SIDE - 0.5) * PX, height: h * PX, transform: `scale(${1 / PX})` }}>
+                <div className={`table-head p${p}`}>{s.players[p].name} · army buffs</div>
+                {cards}
+              </div>
+            </foreignObject>
+          </g>
+        );
+      })}
     </svg>
     <svg className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
       <FxLayer fx={fx} />
