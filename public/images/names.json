@@ -967,5 +967,21 @@
  "Purifier Squad::Purifier::Close combat weapon+Psycannon+Purifying Flame": "units/GK/purifier-squad-purifier-close-combat-weapon-psycannon-purifying-flame-bef6901b.jpg",
  "Brotherhood Terminator Squad::Terminator::Nemesis force weapon+Psycannon": "units/GK/brotherhood-terminator-squad-terminator-nemesis-force-weapon-psycannon-c95613f2.jpg",
  "Strike Squad": "units/GK/strike-squad-d30cb5b5.jpg",
- "Kroot Farstalkers::Kroot Hound": "units/TAU/kroot-farstalkers-kroot-hound-064d6104.jpg"
+ "Kroot Farstalkers::Kroot Hound": "units/TAU/kroot-farstalkers-kroot-hound-064d6104.jpg",
+ "Firesight Team": "units/TAU/firesight-team-1f19bd9c.jpg",
+ "Commander In Enforcer Battlesuit": "units/TAU/commander-in-enforcer-battlesuit-a8f9f2fa.jpg",
+ "Ethereal": "units/TAU/ethereal-11991093.jpg",
+ "Commander Shadowsun": "units/TAU/commander-shadowsun-6923a5f9.jpg",
+ "emblem:TAU:": "units/TAU/emblem-tau-19bf0214.png",
+ "The Twin Lance::Ri’Locai – EPIC HERO": "units/TAU/the-twin-lance-ri-locai-epic-hero-86f334a8.jpg",
+ "The Twin Lance": "units/TAU/the-twin-lance-86f334a8.jpg",
+ "Kroot Trail Shaper": "units/TAU/kroot-trail-shaper-c1da4ec3.jpg",
+ "Cadre Fireblade": "units/TAU/cadre-fireblade-7286780b.jpg",
+ "Kroot War Shaper": "units/TAU/kroot-war-shaper-58ceafad.jpg",
+ "Commander In Coldstar Battlesuit": "units/TAU/commander-in-coldstar-battlesuit-758f4a1f.jpg",
+ "Darkstrider": "units/TAU/darkstrider-f1c96203.jpg",
+ "Kroot Lone-Spear": "units/TAU/kroot-lone-spear-32608b3d.jpg",
+ "The Twin Lance::Ri’Lantar – EPIC HERO": "units/TAU/the-twin-lance-ri-lantar-epic-hero-0a8113d1.jpg",
+ "Commander Farsight": "units/TAU/commander-farsight-63a57438.jpg",
+ "Kroot Flesh Shaper": "units/TAU/kroot-flesh-shaper-67567ee0.jpg"
 }

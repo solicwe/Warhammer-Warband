@@ -1,0 +1,407 @@
+{
+ "_comment": "Imperial Knights stratagems (Codex + Faction Pack v1.2, 26 Aug 2026) the card reader can't read. Keys: stratagem NAME (as on the card), NAME@Detachment when two share a name.",
+ "rules": {
+  "IN THE SHADOW OF GIANTS": {
+   "targetKw": [
+    "ADEPTUS MECHANICUS"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "actionAfterAdvance",
+      "actionAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "FULL TILT@Valourstrike Lance": {
+   "effects": [
+    {
+     "move": 2,
+     "advanceBonus": 2
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "RUN THEM THROUGH!": {
+   "effects": [
+    {
+     "attack": "melee",
+     "abilities": [
+      "lance"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "TACTICAL FOIL": {
+   "react": "enemyMoved",
+   "unitIf": [
+    "nearLast:8",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "move": "D6"
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "DRIVE THEM OUT!": {
+   "effects": [
+    {
+     "if": [
+      "targetOnLine"
+     ],
+     "critHitOn": 5
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "MARSHAL THE DEFENCE": {
+   "effects": [
+    {
+     "move": 3
+    }
+   ],
+   "extraTargets": {
+    "count": 1,
+    "kw": [
+     "IMPERIAL KNIGHTS"
+    ]
+   },
+   "bot": "never",
+   "status": "auto"
+  },
+  "FORTRESS OF INTIMIDATION": {
+   "react": "enemyChargePhaseStart",
+   "targetKw": [
+    "TITANIC"
+   ],
+   "unitIf": [
+    "onLine"
+   ],
+   "effects": [
+    {
+     "chargedShock": -1
+    }
+   ],
+   "botReact": "always",
+   "status": "auto",
+   "note": "An enemy unit declaring a charge within 12\" of it takes the test"
+  },
+  "MOMENT OF GLORY": {
+   "targetKw": [
+    "TITANIC"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "effects": [
+    {
+     "consolidate": 6,
+     "consolidateEngage": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "HERO’S TREAD": {
+   "targetKw": [
+    "TITANIC"
+   ],
+   "unitIf": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto",
+   "note": "The objective stays yours until your opponent controls it"
+  },
+  "EXEMPLAR’S WISDOM": {
+   "targetKw": [
+    "TITANIC"
+   ],
+   "enemy": {
+    "hitBy": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "ap": 1,
+      "units": [
+       "ARMIGER"
+      ]
+     },
+     "until": "phase"
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "VIRTUE OF COURAGE": {
+   "react": "fightStart",
+   "targetKw": [
+    "ARMIGER|TITANIC"
+   ],
+   "enemy": {},
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "hit": 1,
+      "units": [
+       "ARMIGER"
+      ]
+     },
+     "until": "phase"
+    }
+   ],
+   "botReact": "always",
+   "botIf": [
+    "engaged"
+   ],
+   "status": "auto"
+  },
+  "THIN THEIR RANKS": {
+   "targetKw": [
+    "ARMIGER|TITANIC"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "units": [
+      "ARMIGER"
+     ],
+     "abilities": [
+      "rapid fire 1"
+     ]
+    }
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buffNear": {
+      "range": 24,
+      "units": [
+       "ARMIGER"
+      ],
+      "effects": [
+       {
+        "attack": "ranged",
+        "abilities": [
+         "rapid fire 1"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "MANTLE OF THE MENTOR": {
+   "targetKw": [
+    "ARMIGER|TITANIC"
+   ],
+   "effects": [
+    {
+     "units": [
+      "ARMIGER"
+     ],
+     "eligible": [
+      "shootAfterFallBack"
+     ]
+    }
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buffNear": {
+      "range": 24,
+      "units": [
+       "ARMIGER"
+      ],
+      "effects": [
+       {
+        "eligible": [
+         "shootAfterFallBack"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "SQUIRES OFTHE HUNT": {
+   "react": "fightPhaseEnd",
+   "targetKw": [
+    "ARMIGER"
+   ],
+   "unitIf": [
+    "nearEdge:9",
+    "!engaged"
+   ],
+   "do": [
+    {
+     "reserves": true
+    }
+   ],
+   "status": "auto"
+  },
+  "NOBLE SACRIFICE": {
+   "react": "deadlyDemise",
+   "targetFrom": "destroyed",
+   "effects": [
+    {
+     "if": [
+      "!kw:ARMIGER"
+     ],
+     "deadlyDemiseOn": 4
+    },
+    {
+     "if": [
+      "kw:ARMIGER"
+     ],
+     "deadlyDemiseOn": 3
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "POINT‑BLANK BARRAGE": {
+   "effects": [
+    {
+     "attack": "ranged",
+     "if": [
+      "blastWeapon"
+     ],
+     "abilities": [
+      "close-quarters"
+     ]
+    }
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "bot": "never",
+   "status": "auto",
+   "note": "Hazard: an unmodified 1 to hit against an engaged unit is a mortal wound back (not rolled)"
+  },
+  "FULL TILT@Freeblade Company": {
+   "effects": [
+    {
+     "if": [
+      "!kw:ARMIGER|BELLATUS"
+     ],
+     "advanceFixed": 6
+    },
+    {
+     "if": [
+      "kw:ARMIGER|BELLATUS"
+     ],
+     "advanceFixed": 9
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "FIRE SHOCKED": {
+   "targetKw": [
+    "DOMINUS"
+   ],
+   "enemy": {
+    "hitBy": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "FOEBREAKER FIRESTORM": {
+   "targetKw": [
+    "DOMINUS"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "if": [
+      "blastWeapon"
+     ],
+     "attacks": 1,
+     "abilities": [
+      "close-quarters"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "NEURAL LASH": {
+   "targetKw": [
+    "ARMIGER"
+   ],
+   "unitIf": [
+    "battleShocked",
+    "near:12:TITANIC"
+   ],
+   "do": [
+    {
+     "unshock": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto",
+   "note": "Use it on the Battle-shocked ARMIGER within 12\" of your TITANIC Knight"
+  },
+  "HELM CONDITIONING": {
+   "targetKw": [
+    "TITANIC"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "bondFar": 18
+    }
+   ],
+   "bot": "never",
+   "status": "auto",
+   "note": "A Bondsman ability of this Knight that found no ARMIGER within 12\" picks one within 18\""
+  },
+  "HONOURED TO SERVE": {
+   "targetKw": [
+    "ARMIGER"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "actionAfterShooting"
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  }
+ }
+}

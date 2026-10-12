@@ -128,4 +128,29 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'd8', datasheet: 'Plagueburst Crawler', models: 1, pts: 170 },
     ],
   },
+  QI: {
+    name: 'Imperial Knights (Quick)',
+    factionId: 'QI',
+    battleSize: 'incursion',
+    detachments: ['Spearhead-At-Arms'],
+    units: [
+      { uid: 'k1', datasheet: 'Knight Paladin', models: 1, pts: 375, warlord: true },
+      { uid: 'k2', datasheet: 'Knight Destrier', models: 1, pts: 265 },
+      { uid: 'k3', datasheet: 'Armiger Warglaive', models: 1, pts: 140 },
+      { uid: 'k4', datasheet: 'Armiger Helverin', models: 1, pts: 140 },
+    ],
+  },
+  QT: {
+    name: 'Chaos Knights (Quick)',
+    factionId: 'QT',
+    battleSize: 'incursion',
+    detachments: ['Traitoris Lance'],
+    units: [
+      { uid: 'q1', datasheet: 'Knight Desecrator', models: 1, pts: 350, warlord: true },
+      { uid: 'q2', datasheet: 'War Dog Karnivore', models: 1, pts: 145 },
+      { uid: 'q3', datasheet: 'War Dog Executioner', models: 1, pts: 130 },
+      { uid: 'q4', datasheet: 'War Dog Stalker', models: 1, pts: 135 },
+      { uid: 'q5', datasheet: 'War Dog Brigand', models: 1, pts: 135 },
+    ],
+  },
 };

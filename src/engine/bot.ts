@@ -4,7 +4,7 @@ import { botRituals, ritualsPending } from './botRituals';
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from './attack';
 import { RULES } from './config';
 import { smartPlacement } from './deploy';
-import { dist } from './geometry';
+import { dist, gap } from './geometry';
 import { detChoices, pickDetChoice } from './detachments';
 import {
   autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitMove, consolidateEligible, consolidateMode,
@@ -198,7 +198,9 @@ function botDetachmentChoices(s: GameState, p: PlayerId, mine: UnitState[], enem
     const want = c.choice.pick ?? 1;
     // generic order: the rule's own preference list for doctrines, else the listed order (round / battle choices)
     const order = [...(prefer[c.choice.when] ?? []), ...c.choice.options.map((o) => o.id)];
-    const ids = [...new Set(order.filter((id) => free.includes(id)))].slice(0, want);
+    let ids = [...new Set(order.filter((id) => free.includes(id)))].slice(0, want);
+    // one from each group (Code Chivalric: the first Deed and the first Quality left, in the rule's listed order)
+    if (c.choice.groups) ids = c.choice.groups.map((g) => free.find((id) => c.choice.options.find((o) => o.id === id)?.group === g && !c.choice.options.find((o) => o.id === id)?.random)).filter((x): x is string => !!x);
     // keep limited-use rules (e.g. 3 doctrines in 5 rounds) for when the armies are close
     if (c.choice.uses === 'limit' && !near && pace(s) < 3) continue;
     // Combat Doctrines (each once per battle): only when it does something this turn — tactical to leave a fight and

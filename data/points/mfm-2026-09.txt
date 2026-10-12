@@ -192,6 +192,15 @@ QT | Knight Tyrant | =390/410
 QT | Knight Abominant | t1:=350
 QT | Knight Desecrator | t1:=350
 QT | Knight Rampager | t1:=350
+QT | Chaos Acastus Knight Asterius | =785/860
+QT | Chaos Acastus Knight Porphyrion | =725/800
+QT | Chaos Cerastus Knight Lancer | =385/415
+QT | Chaos Cerastus Knight Castigator | =370/385
+QT | Chaos Cerastus Knight Acheron | =370/385
+QT | Chaos Cerastus Knight Atrapos | =385/415
+QT | Chaos Questoris Knight Magaera | =375/390
+QT | Chaos Questoris Knight Styrix | =365/380
+QT | War Dog Moirax | =150/160
 CSM | Accursed Cultists | 16=185/205
 CSM | Heretic Astartes Daemon Prince | =155
 CSM | Heretic Astartes Daemon Prince with Wings | =170
@@ -283,6 +292,15 @@ QI | Knight Defender | =385/405
 QI | Knight Valiant | =390/405
 QI | Knight Warden | =365/380
 QI | Cerastus Knight Atrapos | =420/440
+QI | Knight Destrier | =265/280
+QI | Acastus Knight Asterius | =785/860
+QI | Acastus Knight Porphyrion | =725/800
+QI | Cerastus Knight Lancer | =415/435
+QI | Cerastus Knight Castigator | =380/395
+QI | Cerastus Knight Acheron | =380/395
+QI | Questoris Knight Magaera | =385/400
+QI | Questoris Knight Styrix | =375/390
+QI | Armiger Moirax | =150/160
 LoV | Cthonian Beserks | 5=90,10=180
 LoV | Kapricus Defenders | 1=75/95,2=150/170
 LoV | Hernkyn Pioneers | 3=85/95,6=170/180

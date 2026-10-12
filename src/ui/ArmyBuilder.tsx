@@ -718,7 +718,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const aboard = cargo.some(({ r }) => r.embarkIn === u.uid);
     const cargoShown = aboard ? cargo.filter(({ r, c }) => r.embarkIn === u.uid || !c.full) : cargo;
     const opts = sheet ? pointsOptions(sheet) : [];
-    const isChar = !!sheet?.keywords.includes('CHARACTER');
+    const isChar = !!sheet?.keywords.includes('CHARACTER') || (list.detachments.includes('Houndpack Lance') && !!sheet?.keywords.includes('WAR DOG'));
     // characters that could join this squad: Leader slot, then Support slot
     const leadersFor = (support: boolean) => faction.datasheets.filter((d) => allowed(d) && d.leads.includes(u.datasheet) && supportIn(list, d) === support && pointsOptions(d).length);
     const hasLeader = joined.some((x) => x.d && !supportIn(list, x.d));

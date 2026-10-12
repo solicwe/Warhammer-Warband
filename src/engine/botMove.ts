@@ -5,7 +5,7 @@
 import { buildShootPools, expectedDamage, shootingModes } from './attack';
 import { primaryById, RULES } from './config';
 import { chargeEligibility, findPlacement, formationAt, hasDeepStrike, levelOfControl, validateMove, validatePlacement, zoneOf } from './game';
-import { circleTouchesPoly, dist, pointInPoly, polyCentroid } from './geometry';
+import { bodyTouchesPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
 import { blockingWalls, distanceField, pathLength, pointAt, routeAround } from './pathing';
 import { alive, boardUnits, hasKw, isEngaged, other, pace, unitDistance } from './state';
 import { hasLos } from './visibility';
@@ -241,7 +241,7 @@ export function unitQuarter(u: UnitState): number | null {
   if (!ms.length) return null;
   const c = { x: BOARD_W / 2, y: BOARD_H / 2 };
   const q0 = quarterOf(ms[0]);
-  const ok = ms.every((m) => quarterOf(m) === q0 && dist(m, c) - m.r > 6 && Math.abs(m.x - c.x) >= m.r && Math.abs(m.y - c.y) >= m.r);
+  const ok = ms.every((m) => quarterOf(m) === q0 && ptGap(m, c) > 6 && Math.abs(m.x - c.x) >= m.r && Math.abs(m.y - c.y) >= m.r);
   return ok ? q0 : null;
 }
 
@@ -343,7 +343,7 @@ function cardJobs(s: GameState, p: PlayerId): Map<string, { aim: Pt; card: strin
       else if (id === 'plunder' || id === 'cleanse' || id === 'a-tempting-target') {
         spots = g.objectives.map((oid) => s.objectives.find((o) => o.id === oid)).filter((o): o is NonNullable<typeof o> => !!o)
           .filter((o) => id === 'a-tempting-target' || !(o.type === 'home' && o.owner === p) || pace(s) >= 4).map((o) => objPoint(s, o));
-        done = (u) => spots.some((q) => alive(u).some((m) => dist(m, q) <= 3 + m.r));
+        done = (u) => spots.some((q) => alive(u).some((m) => ptGap(m, q) <= 3));
       }
       if (!spots.length) continue;
       // the unit that is cheapest to send: points, plus how many moves it needs (a unit two moves away is no use this turn)
@@ -385,7 +385,7 @@ function denialFor(s: GameState, u: UnitState, ctx: Ctx): Ctx['denial'] {
     }
   }
   const others = boardUnits(s, u.owner).filter((f) => f.id !== u.id).flatMap(alive);
-  const covered = pts.map((p) => others.some((m) => dist(m, p) - m.r < 9));
+  const covered = pts.map((p) => others.some((m) => ptGap(m, p) < 9));
   const open = covered.filter((x) => !x).length;
   if (!open) return undefined;
   return { pts, covered, per: (waiting * 0.15) / pts.length };
@@ -406,7 +406,7 @@ function denialScore(u: UnitState, ctx: Ctx): number {
   if (!d) return 0;
   let n = 0;
   const ms = alive(u);
-  d.pts.forEach((p, i) => { if (!d.covered[i] && ms.some((m) => dist(m, p) - m.r < 9)) n++; });
+  d.pts.forEach((p, i) => { if (!d.covered[i] && ms.some((m) => ptGap(m, p) < 9)) n++; });
   return n * d.per;
 }
 
@@ -542,7 +542,7 @@ function seen(s: GameState, e: UnitState, u: UnitState): boolean {
 /** Expected loss (in points) during the enemy's next turn: shots from units in range after a move, charges from brawlers. */
 function dangerScore(s: GameState, u: UnitState, ctx: Ctx): number {
   let shots = 0, melee = 0;
-  const infantryInCover = alive(u).every((m) => ['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) && s.terrain.some((t) => t.category !== 'exposed' && circleTouchesPoly(m, m.r, t.poly)));
+  const infantryInCover = alive(u).every((m) => ['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) && s.terrain.some((t) => t.category !== 'exposed' && bodyTouchesPoly(m, 0, t.poly)));
   for (const f of ctx.foes) {
     const gap = unitDistance(u, f.u);
     if (f.range > 0 && f.rk > 0 && gap <= f.range + f.M) {
@@ -583,7 +583,7 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
   if (ctx.deliver) v -= w.pullDeliver * Math.max(0, dist(c, ctx.deliver) - 9);
   if (ctx.claim && !ctx.deliver) {
     // standing on it is what secures it: a clear reward for getting there, and a pull until then
-    const on = alive(u).some((m) => dist(m, ctx.claim!) <= 3 + m.r);
+    const on = alive(u).some((m) => ptGap(m, ctx.claim!) <= 3);
     v += on ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.claim) - 2);
   }
   if (ctx.front && !ctx.brawler) {
@@ -603,7 +603,7 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
   if (ctx.escort && alive(ctx.escort.u).length) v -= ctx.escort.weight * 2 * Math.max(0, unitDistance(u, ctx.escort.u) - (ctx.escort.range - 1));
   if (ctx.post && !ctx.deliver && !ctx.quarter) {
     // its post in the plan: standing on an objective it holds, or the screening spot (anywhere close will do)
-    const on = (ctx.role === 'home' || ctx.role === 'anchor') && alive(u).some((m) => dist(m, ctx.post!) <= 3 + m.r);
+    const on = (ctx.role === 'home' || ctx.role === 'anchor') && alive(u).some((m) => ptGap(m, ctx.post!) <= 3);
     const far = ctx.toPost?.(lead);
     const gap = routeGap(far, dist(c, ctx.post));
     v += on ? w.claimBonus * 0.6 : -w.pullPost * Math.max(0, gap - 2);
@@ -652,9 +652,9 @@ function crowdScore(s: GameState, u: UnitState): number {
   let v = 0;
   for (const f of boardUnits(s, u.owner)) {
     if (f.id === u.id || f.transport || u.transport) continue;
-    let gap = 99;
-    for (const a of ms) for (const b of alive(f)) gap = Math.min(gap, dist(a, b) - a.r - b.r);
-    if (gap < 1) v += BW(u.owner).crowdTouch; else if (gap < 3) v += BW(u.owner).crowdNear;
+    let near = 99;
+    for (const a of ms) for (const b of alive(f)) near = Math.min(near, gap(a, b));
+    if (near < 1) v += BW(u.owner).crowdTouch; else if (near < 3) v += BW(u.owner).crowdNear;
   }
   return v;
 }

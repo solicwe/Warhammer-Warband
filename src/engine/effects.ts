@@ -5,6 +5,7 @@
 // Rules are data: an Effect says WHO it applies to (scope), WHEN (conditions) and WHAT changes.
 import { destroyedThisRound, sensationalOk } from './emperorsChildren';
 import { dgEffects, isAfflicted } from './deathGuard';
+import { auraBonus, knightsCond, knightsEffects, superHeavy } from './knights';
 import abilityData from '../../data/ability-rules.json';
 import acAbilities from '../../data/abilities/AC.json';
 import orkAbilities from '../../data/abilities/ORK.json';
@@ -14,11 +15,13 @@ import csmAbilities from '../../data/abilities/CSM.json';
 import weAbilities from '../../data/abilities/WE.json';
 import ecAbilities from '../../data/abilities/EC.json';
 import dgAbilities from '../../data/abilities/DG.json';
+import qiAbilities from '../../data/abilities/QI.json';
+import qtAbilities from '../../data/abilities/QT.json';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { deploymentById, RULES, toPoly } from './config';
 import { d6, exprAverage } from './dice';
-import { baseDist, circleTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from './geometry';
+import { baseDist, bodyTouchesPoly, circleTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from './geometry';
 import { setActionEligibilityHook, unitInRange } from './missions';
 import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, unitDistance, withinTerrain } from './state';
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, UnitState, WeaponData, WeaponProfileData } from './types';
@@ -28,7 +31,7 @@ import { setThroughHook } from './pathing';
 import { activeIds, blessingById, unitBlessings } from './blessings';
 import { inFlow } from './flow';
 
-export type Eligibility = 'shootAfterAdvance' | 'shootAfterFallBack' | 'chargeAfterAdvance' | 'chargeAfterFallBack' | 'actionWhileEngaged' | 'actionWhileShocked' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction';
+export type Eligibility = 'shootAfterAdvance' | 'shootAfterFallBack' | 'chargeAfterAdvance' | 'chargeAfterFallBack' | 'actionWhileEngaged' | 'actionWhileShocked' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction' | 'actionAfterShooting';
 export type Reroll = 'hits1' | 'hits' | 'wounds1' | 'wounds12' | 'wounds' | 'damage' | 'damageOne';
 
 export interface Defend {
@@ -174,6 +177,7 @@ export interface Effect {
   onlyTargetMarked?: string; // after Advancing / Falling Back it may only shoot or charge units with this mark (Heresy Undone: "auspex")
   svSet?: number; // the bearers' Save characteristic is this (Blood-forged Armour: 2+), fixed at Declare Battle Formations
   statM?: number; // fixed change to the bearers' Move characteristic
+  statW?: number; // fixed change to the bearers' Wounds characteristic (Blasphemous Engine)
   rangeBonus?: number; // ranged weapons +X" Range
   strengthPer5Models?: boolean; // +1 S for every 5 models in the unit (or embarked within it)
   fightOnDeathRiled?: number; // … +X to that roll while riled up
@@ -220,6 +224,11 @@ export interface Effect {
   ocMin1?: boolean; // the OC penalty cannot take a model below 1 (Scabrous Soulrot)
   shockBonus?: number; // +X to its Battle-shock (and Leadership) tests (Witherbone Pipes, Tome of Bounteous Blessings)
   shockPassHeal?: boolean; // a passed Battle-shock test: one model regains D3 wounds (Battleline: D3 models return)
+  fightStartShock?: number; // start of the Fight phase: enemy units engaged with it take a Battle-shock test with this modifier (Acheron's Duty)
+  shockAfterAttack?: number; // after it shot or fought: one enemy unit it hit takes a Battle-shock test with this modifier (Styrix's Duty)
+  throughTerrain?: boolean; // its moves go through terrain features (Imperious Advance, Flush the Quarry)
+  chargedShock?: number; // an enemy unit declaring a charge within 12" of it takes a Battle-shock test with this modifier (Fortress of Intimidation)
+  killShockAura?: number; // after it fought: if it destroyed an enemy unit, every enemy unit within X" takes a Battle-shock test (Conquerors Without Mercy)
 }
 
 export type Limit = 'battle' | 'round' | 'turn' | 'phase';
@@ -227,9 +236,11 @@ export type Limit = 'battle' | 'round' | 'turn' | 'phase';
 // ---------- rule tables ----------
 
 /** `random`: picking it rolls this many D6 instead; each result N makes the Nth option (of those without `random`) active */
-export interface DetChoiceOption { id: string; name: string; text: string; effects: Effect[]; random?: number; cost?: number }
+export interface DetChoiceOption { id: string; name: string; text: string; effects: Effect[]; random?: number; cost?: number; group?: string }
 /** when 'tithe': bought with Blood Tithe points in the Command phase, active for the rest of the battle (they add up) */
-export interface DetChoice { name: string; when: 'command' | 'round' | 'battle' | 'tithe'; uses: 'eachOnce' | 'limit' | 'free'; limit?: number; pick?: number; options: DetChoiceOption[] }
+/** groups: one option from each group (Code Chivalric: a Deed and a Quality); rounds: only these battle rounds;
+ *  keep: picks add to the ones already active (Harbingers of Dread) */
+export interface DetChoice { name: string; when: 'command' | 'round' | 'battle' | 'tithe'; uses: 'eachOnce' | 'limit' | 'free'; limit?: number; pick?: number; options: DetChoiceOption[]; groups?: string[]; rounds?: number[]; keep?: boolean }
 /** An ability a detachment / army rule gives to units ("Friendly CHAPLAIN units have the following ability: …"). */
 export interface DetGrant { units: string[]; models?: string; name: string; rule: AbilityRule }
 export interface FreeDieSpec { kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' | 'damage' | 'any'; limit: Limit; count?: number; units?: string[]; if?: string[]; attack?: 'melee' | 'ranged' }
@@ -294,6 +305,7 @@ export interface AbilityRule {
   freeDie?: FreeDieSpec | FreeDieSpec[];
   parsed?: boolean; // read from the ability text (abilityText.ts), not hand-written
   doctrines?: string[]; // Combat Doctrines always active for the unit with this ability (Codex Adept …)
+  bond?: Effect[]; // Bondsman: what the ability does to the ARMIGER model it affects (knights.ts)
 }
 
 /** Hand-written rules per faction (Wahapedia faction id); a few cross-faction ones live in data/ability-rules.json. */
@@ -306,6 +318,8 @@ const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   WE: weAbilities as unknown as Record<string, AbilityRule>,
   EC: ecAbilities as unknown as Record<string, AbilityRule>,
   DG: dgAbilities as unknown as Record<string, AbilityRule>,
+  QI: qiAbilities as unknown as Record<string, AbilityRule>,
+  QT: qtAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
 export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
@@ -324,6 +338,9 @@ export function abilityRule(u: UnitState, a: AbilityData): AbilityRule | undefin
   return r;
 }
 
+/** Factions whose file holds only what the text reader can't read. */
+const PARSE_TOO = new Set(['QI', 'QT']);
+
 function findRule(a: AbilityData, sheet: string): AbilityRule | undefined {
   const books = a.faction ? [FACTION_RULES[a.faction]].filter(Boolean) : Object.values(FACTION_RULES);
   for (const b of books) {
@@ -334,7 +351,7 @@ function findRule(a: AbilityData, sheet: string): AbilityRule | undefined {
   if (c) return c;
   if (a.type === 'Core' || a.type === 'Faction') return undefined;
   // factions without a hand-written file: read the common patterns from the text
-  return a.faction && FACTION_RULES[a.faction] ? undefined : parseAbilityText(a.name, a.text);
+  return a.faction && FACTION_RULES[a.faction] && !PARSE_TOO.has(a.faction) ? undefined : parseAbilityText(a.name, a.text);
 }
 
 /** How much of an ability the app plays by itself, for the unit sheet. */
@@ -345,7 +362,7 @@ export function abilityStatus(u: UnitState, a: AbilityData): { status: AbilitySt
   // army rules (Aegis of the Emperor, Martial Ka'tah …) live with the detachment rules
   if (!r && DET_RULES[a.name]) return { status: DET_RULES[a.name].auto === 'full' ? 'auto' : DET_RULES[a.name].auto === 'partial' ? 'partial' : 'manual' };
   if (!r) return { status: 'none' };
-  const does = !!(r.effects?.length || r.act || r.choice || r.freeDie || r.split || r.doctrines);
+  const does = !!(r.effects?.length || r.act || r.choice || r.freeDie || r.split || r.doctrines || r.bond);
   return { status: r.status ?? (does ? 'auto' : 'info'), note: r.note };
 }
 
@@ -425,7 +442,7 @@ const hasLivingLeader = (u: UnitState) => u.sources.length > 1 && alive(u).some(
 
 /** Every effect that currently applies to unit u, from any source. */
 /** The effects of one ability (of unit h) that reach unit u, by scope. */
-function ruleEffects(u: UnitState, h: UnitState, effects: Effect[], label: string, sheet: string, getBearers: () => ModelState[], out: Active[]) {
+function ruleEffects(s: GameState, u: UnitState, h: UnitState, effects: Effect[], label: string, sheet: string, getBearers: () => ModelState[], out: Active[]) {
   for (const e of effects) {
     const scope = e.scope ?? 'unit';
     if (scope === 'army') {
@@ -442,11 +459,19 @@ function ruleEffects(u: UnitState, h: UnitState, effects: Effect[], label: strin
       if (!onBoard(h) || !onBoard(u)) continue;
       if (scope === 'aura' && (h.owner !== u.owner || (e.notSelf && h.id === u.id))) continue;
       if (scope === 'enemyAura' && h.owner === u.owner) continue;
-      if (!unitMatches(u, e.units)) continue;
       const bs = getBearers();
       if (!bs.length) continue;
-      const r = (e.range ?? 6) + (e.rangeBonusIf && h.abilities.some((x) => x.name === e.rangeBonusIf!.ability) ? e.rangeBonusIf.add : 0);
-      if (h.id !== u.id && !bs.some((b) => alive(u).some((m) => baseDist(b, m) <= r + 1e-6))) continue;
+      const r = (e.range ?? 6) + (e.rangeBonusIf && h.abilities.some((x) => x.name === e.rangeBonusIf!.ability) ? e.rangeBonusIf.add : 0) + auraBonus(s, h);
+      const near = (x: UnitState) => alive(x).some((m) => bs.some((b) => baseDist(b, m) <= r + 1e-6));
+      // Chaos Knights: auras for War Dogs also reach the Knight itself (Masters of the Pack: two War Dog models in range)
+      // and a CHARACTER marked by Throne Tyrannicus; A Long Leash puts War Dogs in range of an ABHORRENT unit's auras
+      const dogAura = scope === 'aura' && (e.units ?? []).some((k) => k.includes('WAR DOG'));
+      const tied = dogAura && (u.timed ?? []).some((t) => t.mark === `tyrannicus:${h.id}`);
+      const master = dogAura && h.id === u.id && hasKw(h, 'TITANIC') && activeRules(s, h.owner).includes('Helhunt Lance')
+        && boardUnits(s, h.owner).filter((x) => hasKw(x, 'WAR DOG')).flatMap((x) => alive(x).filter((m) => bs.some((b) => baseDist(b, m) <= r + 1e-6))).length >= 2;
+      if (!unitMatches(u, e.units) && !tied && !master) continue;
+      const leashed = (u.timed ?? []).some((t) => t.mark === `leash:${h.id}`);
+      if (h.id !== u.id && !near(u) && !leashed && !tied) continue;
       out.push({ e, label, holder: h, from: bs });
       continue;
     }
@@ -480,11 +505,11 @@ function collectEffects(s: GameState, u: UnitState): Active[] {
       const rule = abilityRule(h, a);
       if (!rule?.effects?.length || abilityOff(h, a)) continue;
       let bearers: ModelState[] | undefined;
-      ruleEffects(u, h, rule.effects, a.name, abilitySheet(h, a), () => (bearers ??= bearersOf(h, a, rule)), out);
+      ruleEffects(s, u, h, rule.effects, a.name, abilitySheet(h, a), () => (bearers ??= bearersOf(h, a, rule)), out);
     }
     for (const g of grantsOf(s, h)) {
       if (!g.rule.effects?.length) continue;
-      ruleEffects(u, h, g.rule.effects, g.name, h.sources[0], () => alive(h).filter((m) => !g.models || m.keywords.includes(g.models)), out);
+      ruleEffects(s, u, h, g.rule.effects, g.name, h.sources[0], () => alive(h).filter((m) => !g.models || m.keywords.includes(g.models)), out);
     }
   }
   // Blessings of Khorne: units with the ability (Blood Legions via Might of Khorne or near an Icon of War)
@@ -497,6 +522,8 @@ function collectEffects(s: GameState, u: UnitState): Active[] {
   for (const t of u.timed ?? []) out.push({ e: t.e, label: t.label, holder: u, bearers: t.models ? u.models.filter((m) => !m.dead && t.models!.includes(m.id)) : undefined });
   // Death Guard: Afflicted (-1 T) and the Plagues
   out.push(...dgEffects(s, u));
+  // Chaos Knights: Malefic Surge
+  out.push(...knightsEffects(s, u));
   return out;
 }
 
@@ -602,10 +629,16 @@ export function lastEnemyAct(s: GameState, p: PlayerId) {
   return u ? { a, u } : null;
 }
 
+const KNIGHT_CONDS = /^(quality:|dread:|fresh:|honoured$|onLine$|holderOnLine$|lineClear$|targetOnLine$|bonded$|bondedTo$|twoBonded$|bondQuarry$|knightAdvanced$|empowered$|warlordOnBoard$|enemyFly$)/;
+
+/** What a Bondsman ability does to the ARMIGER model it affects (knights.ts). */
+export const bondOf = (u: UnitState, name: string) => { const a = u.abilities.find((x) => x.name === name); return a ? abilityRule(u, a)?.bond : undefined; };
+
 export function cond(c: string, x: Ctx): boolean {
   const { s, A, T } = x;
   if (c.startsWith('!')) return !cond(c.slice(1), x);
   if (c.startsWith('near:')) return nearCond(x, c);
+  if (KNIGHT_CONDS.test(c)) return knightsCond(c, x) ?? false;
   // a Blessing of Khorne active for the army this round (Battle-lust: Unbridled Bloodlust)
   if (c.startsWith('blessing:')) return activeIds(s, A.owner).includes(c.slice(9));
   // Snarling Protector: a friendly engaged PSYKER unit is within 12"
@@ -1243,6 +1276,11 @@ export function unitFlags(s: GameState, u: UnitState) {
     summonsOnKill: es.some((e) => e.summonsOnKill),
     terrorPsykerMod: Math.min(0, ...es.map((e) => e.terrorPsykerMod ?? 0)),
     shockPassHeal: es.some((e) => e.shockPassHeal),
+    fightStartShock: es.reduce<number | null>((a, e) => (e.fightStartShock === undefined ? a : Math.min(a ?? 0, e.fightStartShock)), null),
+    shockAfterAttack: es.reduce<number | null>((a, e) => (e.shockAfterAttack === undefined ? a : Math.min(a ?? 0, e.shockAfterAttack)), null),
+    throughTerrain: es.some((e) => e.throughTerrain),
+    killShockAura: Math.max(0, ...es.map((e) => e.killShockAura ?? 0)),
+    chargedShock: es.reduce<number | null>((a, e) => (e.chargedShock === undefined ? a : Math.min(a ?? 0, e.chargedShock)), null),
   };
 }
 
@@ -1363,7 +1401,7 @@ setVisibilityHooks({
   loneOperative: loneOperativeNow,
   detection: (s, u) => (u.timed ?? []).reduce((a, t) => a + (t.e.detection ?? 0), 0)
     // an identified terrain feature: enemy units within it are seen from 3" further
-    + ((s.identified ?? []).some((x) => x.turn === s.turn && x.by !== u.owner && alive(u).some((m) => { const t = s.terrain.find((q) => q.id === x.terrainId); return !!t && circleTouchesPoly(m, m.r, t.poly); })) ? 3 : 0),
+    + ((s.identified ?? []).some((x) => x.turn === s.turn && x.by !== u.owner && alive(u).some((m) => { const t = s.terrain.find((q) => q.id === x.terrainId); return !!t && bodyTouchesPoly(m, 0, t.poly); })) ? 3 : 0),
   cannotBeHidden: (_s, u) => (u.timed ?? []).some((t) => t.e.cannotBeHidden),
   spotting: (s, obs, u) => {
     if (s.phase !== 'shooting' || s.active === u.owner) return 0;
@@ -1390,8 +1428,11 @@ setThroughHook((s, u, kind) => {
   const f = unitFx(s, u).map((a) => a.e);
   if (f.some((e) => e.moveThroughModels)) return 'all';
   if (kind === 'charge' && f.some((e) => e.chargeThroughModels)) return 'nonMV';
+  // Super-heavy Walker: Normal, Advance and Fall Back moves go through every model but TITANIC ones
+  if (SUPER_HEAVY.includes(kind) && superHeavy(u)) return 'titanic';
   return null;
-});
+}, (s, u, kind) => (SUPER_HEAVY.includes(kind) && superHeavy(u)) || unitFx(s, u).some((a) => a.e.throughTerrain));
+const SUPER_HEAVY = ['normal', 'advance', 'fallback'];
 
 // ---------- fixed at Declare Battle Formations ----------
 
@@ -1408,7 +1449,7 @@ export function applyStaticEffects(s: GameState) {
     for (const a of u.abilities) {
       const rule = abilityRule(u, a);
       for (const e of rule?.effects ?? []) {
-        if (!e.mobile && !e.addKeywords && !e.removeKeywords && !e.statM && !e.svSet) continue;
+        if (!e.mobile && !e.addKeywords && !e.removeKeywords && !e.statM && !e.svSet && !e.statW) continue;
         if (!(e.if ?? []).every((c) => cond(c, { s, A: u, holder: u }))) continue;
         const ms = (e.scope === 'model' || e.scope === undefined) && rule ? bearersOf(u, a, rule) : alive(u);
         for (const m of ms) {
@@ -1416,6 +1457,7 @@ export function applyStaticEffects(s: GameState) {
           m.keywords = [...new Set([...m.keywords.filter((k) => !(e.removeKeywords ?? []).includes(k)), ...add])];
           if (e.statM && m.profile.M !== undefined && m.profile.M !== null) m.profile = { ...m.profile, M: m.profile.M + e.statM };
           if (e.svSet && m.profile.Sv > e.svSet) m.profile = { ...m.profile, Sv: e.svSet };
+          if (e.statW) { m.profile = { ...m.profile, W: m.profile.W + e.statW }; m.wounds += e.statW; }
         }
         u.keywords = [...new Set(alive(u).flatMap((m) => m.keywords))];
       }

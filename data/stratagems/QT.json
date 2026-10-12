@@ -1,0 +1,463 @@
+{
+ "_comment": "Chaos Knights stratagems (Codex + Faction Pack v1.2, 26 Aug 2026) the card reader can't read. Keys: stratagem NAME (as on the card), NAME@Detachment when two share a name.",
+ "rules": {
+  "CONQUERORS WITHOUT MERCY": {
+   "unitIf": [
+    "charged"
+   ],
+   "effects": [
+    {
+     "attack": "melee",
+     "ap": 1
+    },
+    {
+     "killShockAura": 6
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "IMPERIOUS ADVANCE": {
+   "targetKw": [
+    "WAR DOG|TITANIC"
+   ],
+   "extraTargets": {
+    "count": 1,
+    "kw": [
+     "WAR DOG"
+    ]
+   },
+   "effects": [
+    {
+     "moveThroughModels": true,
+     "throughTerrain": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto",
+   "note": "Up to two War Dog units, or one TITANIC unit"
+  },
+  "A LONG LEASH": {
+   "targetKw": [
+    "ABHORRENT"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "leash": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto",
+   "note": "The two closest War Dog units"
+  },
+  "PTERRORSHADES": {
+   "enemy": {
+    "range": 12,
+    "shocked": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 4,
+      "n": 6
+     }
+    },
+    {
+     "on": "self",
+     "heal": "3"
+    }
+   ],
+   "limit": "round",
+   "bot": "never",
+   "status": "auto",
+   "note": "Your unit regains 3 wounds (the six dice are not matched one by one)"
+  },
+  "DARK SACRIFICE": {
+   "targetKw": [
+    "DAMNED"
+   ],
+   "unitIf": [
+    "!kw:ACCURSED CULTISTS",
+    "near:9:CHAOS KNIGHTS+WALKER"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "mortals": "D3+3"
+    },
+    {
+     "on": "self",
+     "healNear": {
+      "range": 9,
+      "units": [
+       "CHAOS KNIGHTS",
+       "WALKER"
+      ],
+      "heal": "D3+3"
+     }
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "COURSING THRALLS": {
+   "targetKw": [
+    "DAMNED"
+   ],
+   "enemy": {
+    "range": 12,
+    "visible": true
+   },
+   "enemyEffects": [
+    {
+     "detection": 6
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "PROFANE SYMBIOSIS": {
+   "unitIf": [
+    "!empowered"
+   ],
+   "special": [
+    "maleficSurge"
+   ],
+   "limit": "round",
+   "bot": "never",
+   "status": "auto"
+  },
+  "CORRUPTING TAINT": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "unitIf": [
+    "empowered",
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "UNLEASH BALEFIRE": {
+   "enemy": {
+    "hitBy": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shockFail": [
+      {
+       "move": -2,
+       "chargeBonus": -2
+      }
+     ],
+     "until": "endOfNextTurn"
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "TITANIC DUEL@Lords of Dread": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "enemy": {
+    "kw": [
+     "MONSTER",
+     "VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "reroll": [
+       "hits1",
+       "wounds1"
+      ]
+     },
+     "selfOnly": true,
+     "until": "phase"
+    },
+    {
+     "on": "target",
+     "incoming": {
+      "reroll": [
+       "hits",
+       "wounds"
+      ]
+     },
+     "selfOnly": true,
+     "until": "phase",
+     "if": [
+      "targetKw:TITANIC"
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "TROPHY HUNTER": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "effects": [
+    {
+     "consolidate": 6,
+     "consolidateEngage": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "SPITEFUL DEMISE": {
+   "react": "deadlyDemise",
+   "targetFrom": "destroyed",
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "effects": [
+    {
+     "deadlyDemiseOn": 4
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "CLAIMED FOR THE DARK GODS": {
+   "react": "commandStart",
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "unitIf": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "secure": true
+    }
+   ],
+   "botReact": "always",
+   "status": "auto",
+   "note": "The objective stays yours until your opponent controls it"
+  },
+  "CRUSHED LIKE VERMIN": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "enemy": {
+    "movedOver": true,
+    "notKw": [
+     "MONSTER",
+     "VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 4,
+      "n": 6,
+      "shockIfAny": 0
+     }
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "VOX-HOWL": {
+   "targetKw": [
+    "WAR DOG"
+   ],
+   "unitIf": [
+    "kw:CHARACTER"
+   ],
+   "enemy": {
+    "range": 6,
+    "all": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    },
+    {
+     "on": "self",
+     "rallyNear": {
+      "range": 6,
+      "units": [
+       "WAR DOG"
+      ]
+     }
+    }
+   ],
+   "limit": "round",
+   "bot": "never",
+   "status": "auto"
+  },
+  "ANIMALISTIC RAGE": {
+   "react": "ownDestroyed",
+   "targetFrom": "destroyed",
+   "targetKw": [
+    "WAR DOG"
+   ],
+   "special": [
+    "deathStrike"
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "HUNGRY FOR COMBAT": {
+   "react": "fightStart",
+   "targetKw": [
+    "WAR DOG"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "extraTargets": {
+    "count": 3,
+    "kw": [
+     "WAR DOG"
+    ]
+   },
+   "enemy": {
+    "engaged": true
+   },
+   "enemyMark": "Hungry for Combat",
+   "effects": [
+    {
+     "if": [
+      "targetMarked:Hungry for Combat"
+     ],
+     "critHitOn": 5
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "FLUSH THE QUARRY": {
+   "targetKw": [
+    "TITANIC"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buffNear": {
+      "range": 6,
+      "units": [
+       "WAR DOG"
+      ],
+      "effects": [
+       {
+        "moveThroughModels": true,
+        "throughTerrain": true
+       }
+      ]
+     }
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "MERCILESS FUSILLADE": {
+   "targetKw": [
+    "TITANIC"
+   ],
+   "enemy": {
+    "visible": true
+   },
+   "enemyMark": "Merciless Fusillade",
+   "effects": [
+    {
+     "if": [
+      "targetMarked:Merciless Fusillade"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buffNear": {
+      "range": 12,
+      "units": [
+       "WAR DOG"
+      ],
+      "effects": [
+       {
+        "if": [
+         "targetMarked:Merciless Fusillade"
+        ],
+        "abilities": [
+         "sustained hits 1"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "bot": "never",
+   "status": "auto",
+   "note": "Shoot or fight only the picked unit while it is an eligible target"
+  },
+  "INTIMIDATING REMINDER": {
+   "targetKw": [
+    "KNIGHT TYRANT"
+   ],
+   "enemy": {
+    "hitBy": true
+   },
+   "enemyEffects": [
+    {
+     "hit": -1
+    }
+   ],
+   "enemyUntil": "nextCommand",
+   "bot": "never",
+   "status": "auto"
+  },
+  "PITILESS FOCUS": {
+   "targetKw": [
+    "KNIGHT TYRANT"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterFallBack"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "LEASH OF THE MASTERS": {
+   "targetKw": [
+    "WAR DOG"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "actionAfterShooting"
+     ]
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  }
+ }
+}

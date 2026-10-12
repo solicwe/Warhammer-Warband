@@ -1,0 +1,22 @@
+{
+ "_comment": "Chaos Knights Faction Pack v1.2 (26 Aug 2026). Dark Pacts is the Heretic Astartes army rule (DAMNED units in an Iconoclast Fiefdom do not use it). War Dog Moirax profile per the pack.",
+ "armyRules": [
+  {
+   "name": "Dark Pacts",
+   "_delete": true
+  }
+ ],
+ "datasheets": [
+  {
+   "name": "War Dog Moirax",
+   "models": [
+    {
+     "name": "War Dog Moirax",
+     "T": 9,
+     "W": 14,
+     "OC": 6
+    }
+   ]
+  }
+ ]
+}

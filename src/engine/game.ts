@@ -1,5 +1,6 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
 import { dgBattleStart, dgCommandEnd, dgCommandStart, dgPhaseEnd, dgRoundStart, dsKeep, stinkBlocks } from './deathGuard';
+import { knightsBattleStart, knightsCommandStart, knightsMoved, knightsRoundEnd, knightsRoundStart, knightsShockFailed, knightsShootingStart, knightsTurnEnd, knightsTurnStart } from './knights';
 import { initFavoured, noteTarget, pledgeRoundEnd, pledgeRoundStart, poisonTick, snapshotEngaged, thrillBlock } from './emperorsChildren';
 import { buildUnits, forChapter, transportFit } from './army';
 import { applyMortalWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed } from './attack';
@@ -9,7 +10,7 @@ import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
 import { blessingsRoll, blessingsRoundStart } from './blessings';
 import { circleInFlow } from './flow';
-import { baseDist, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, dist, EPS, pointInPoly, pointSegDist, polyCentroid } from './geometry';
+import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
@@ -22,7 +23,7 @@ import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathLength } fro
 import { detOnCommandStart } from './detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from './effects';
 import './rituals';
-import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck } from './activations';
+import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from './activations';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -250,6 +251,11 @@ export function createGame(o: NewGameOptions): GameState {
     P.armyRules = P.armyRules.filter((r) => r.name !== 'Oath of Moment');
     for (const u of s.units) if (u.owner === p) u.abilities = u.abilities.filter((a) => a.name !== 'Oath of Moment');
   }
+  // oval bases and hulls start pointing from their deployment zone towards the enemy's
+  for (const p of [0, 1] as PlayerId[]) {
+    const a = polyCentroid(zoneOf(s, p)), b = polyCentroid(zoneOf(s, other(p)));
+    for (const u of s.units) if (u.owner === p) for (const m of u.models) if (m.hl) m.rot = Math.atan2(b.y - a.y, b.x - a.x);
+  }
   // Declare Battle Formations: units that start the battle embarked (chosen in the army builder)
   for (const p of [0, 1] as PlayerId[]) {
     for (const e of o.lists[p].units) {
@@ -276,7 +282,7 @@ export function createGame(o: NewGameOptions): GameState {
 }
 
 export const zoneOf = (s: GameState, p: PlayerId) => toPoly(deploymentById(s.deploymentId).zones[s.players[p].role]);
-setZoneCheck((s, u, owner) => alive(u).length > 0 && alive(u).every((m) => circleWhollyInPoly(m, m.r, zoneOf(s, owner))));
+setZoneCheck((s, u, owner) => alive(u).length > 0 && alive(u).every((m) => bodyWhollyInPoly(m, zoneOf(s, owner))));
 export const territoryOf = (s: GameState, p: PlayerId) => toPoly(deploymentById(s.deploymentId).territory[s.players[p].role]);
 
 // ---------- placement / movement validation ----------
@@ -290,11 +296,11 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
   const all = s.units.filter((x) => onBoard(x) || x.id === u.id).flatMap((x) => alive(x).map((m) => ({ m, owner: x.owner, unit: x.id })));
   for (const m of models) {
     const p = pos.get(m.id) ?? m;
-    if (p.x - m.r < -EPS || p.y - m.r < -EPS || p.x + m.r > W + EPS || p.y + m.r > H + EPS) { errors.push(`${m.name} is off the battlefield`); bad.add(m.id); }
+    if (!onTable(bodyAt(m, p), W, H, EPS)) { errors.push(`${m.name} is off the battlefield`); bad.add(m.id); }
     for (const o of all) {
       if (o.m.id === m.id) continue;
       const op = o.unit === u.id ? pos.get(o.m.id) ?? o.m : o.m;
-      if (dist(p, op) < m.r + o.m.r - 0.02) { errors.push(`${m.name} overlaps another model`); bad.add(m.id); break; }
+      if (gap(bodyAt(m, p), bodyAt(o.m, op)) < -0.02) { errors.push(`${m.name} overlaps another model`); bad.add(m.id); break; }
     }
     const spot = endSpotBlocked(s, m, p);
     if (spot === 'wall') { errors.push(`${m.name} ends on a wall`); bad.add(m.id); }
@@ -304,15 +310,15 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
         errors.push(`${m.name} cannot end on top of a container (13.06)`); bad.add(m.id);
       }
       // a sealed container: nothing stands inside it or half over its side; some models can end on its roof
-      if (t.box && circleTouchesPoly(p, m.r - 0.05, t.box)) {
-        const roof = circleWhollyInPoly(p, m.r, t.box) && ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
+      if (t.box && bodyTouchesPoly(bodyAt(m, p), -0.05, t.box)) {
+        const roof = bodyWhollyInPoly(bodyAt(m, p), t.box) && ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
         if (!roof) { errors.push(`${m.name} cannot overlap a container (place it beside the container or wholly on its roof)`); bad.add(m.id); }
       }
     }
   }
   if (models.length > 1) {
     const pts = models.map((m) => pos.get(m.id) ?? m);
-    const probs = coherencyProblems(pts, RULES.coherency.near, RULES.coherency.max, models.map((m) => m.r));
+    const probs = coherencyProblems(pts, RULES.coherency.near, RULES.coherency.max, models);
     if (probs.length) { errors.push(`Out of Unit Coherency (each model within ${RULES.coherency.near}" of another, all within ${RULES.coherency.max}")`); probs.forEach((i) => bad.add(models[i].id)); }
   }
 }
@@ -321,7 +327,7 @@ function engagedAt(s: GameState, u: UnitState, pos: Map<string, Pt>, enemy?: Uni
   const enemies = enemy ? [enemy] : boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT'));
   return enemies.filter((e) => alive(u).some((m) => {
     const p = pos.get(m.id) ?? m;
-    return alive(e).some((n) => dist(p, n) - m.r - n.r <= RULES.engagementRange + 1e-6);
+    return alive(e).some((n) => gap(bodyAt(m, p), n) <= RULES.engagementRange + 1e-6);
   }));
 }
 
@@ -383,15 +389,15 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
   endChecks(s, u, pos, errors, bad);
   const eng = engagedAt(s, u, pos);
   if (kind === 'scout') {
-    const enemiesNear = boardUnits(s, other(u.owner)).some((e) => alive(u).some((m) => { const p = pos.get(m.id) ?? m; return alive(e).some((n) => dist(p, n) - m.r - n.r <= RULES.reserves.enemyDistance); }));
+    const enemiesNear = boardUnits(s, other(u.owner)).some((e) => alive(u).some((m) => { const p = pos.get(m.id) ?? m; return alive(e).some((n) => gap(bodyAt(m, p), n) <= RULES.reserves.enemyDistance); }));
     if (enemiesNear) errors.push(`A Scout move must end more than ${RULES.reserves.enemyDistance}" from all enemy units`);
   }
   if (['normal', 'advance', 'fallback', 'ingress', 'extra', 'surge'].includes(kind) && eng.length) { errors.push(`Cannot end within Engagement Range (${RULES.engagementRange}") of an enemy`); }
   // Rigid Discipline: the move must end wholly in the deployment zone or within range of an objective
   if (kind === 'extra' && u.extraMove?.endIn) {
     const at = alive(u).map((m) => { const pth = paths.get(m.id); return { ...m, ...(pth ? pth[pth.length - 1] : {}) }; });
-    const inDz = u.extraMove.endIn === 'dzOrObjective' && at.every((m) => circleWhollyInPoly(m, m.r, zoneOf(s, u.owner)));
-    const onObj = s.objectives.some((o) => at.some((m) => dist(m, o) <= 3 + m.r + 1e-6));
+    const inDz = u.extraMove.endIn === 'dzOrObjective' && at.every((m) => bodyWhollyInPoly(m, zoneOf(s, u.owner)));
+    const onObj = s.objectives.some((o) => at.some((m) => ptGap(m, o) <= 3 + 1e-6));
     if (!inDz && !onObj) errors.push(u.extraMove.endIn === 'objective' ? 'Must end within range of an objective' : 'Must end wholly within your deployment zone or within range of an objective');
   }
   if (kind === 'charge' || kind === 'heroic' as MoveKind) {
@@ -404,7 +410,7 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
       const path = paths.get(m.id);
       if (!path || path.length < 2 || pathLength(path) < 0.01) continue;
       const before = Math.min(...targets.flatMap((t) => alive(t).map((n) => baseDist(m, n))));
-      const after = Math.min(...targets.flatMap((t) => alive(t).map((n) => dist(path[path.length - 1], n) - m.r - n.r)));
+      const after = Math.min(...targets.flatMap((t) => alive(t).map((n) => gap(bodyAt(m, path[path.length - 1]), n))));
       if (after > before + 1e-6) { errors.push(`${m.name} must end closer to the target`); bad.add(m.id); }
     }
   }
@@ -416,7 +422,7 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
       if (enemyModels.some((e) => baseDist(m, e) <= 0.05)) { errors.push(`${m.name} is in base contact with an enemy and cannot move`); bad.add(m.id); }
       for (const e of engagedBefore) if (modelEngagedWith(m, e)) {
         const p = path[path.length - 1];
-        if (!alive(e).some((n) => dist(p, n) - m.r - n.r <= RULES.engagementRange + 1e-6)) { errors.push(`${m.name} must stay engaged with ${e.name}`); bad.add(m.id); }
+        if (!alive(e).some((n) => gap(bodyAt(m, p), n) <= RULES.engagementRange + 1e-6)) { errors.push(`${m.name} must stay engaged with ${e.name}`); bad.add(m.id); }
       }
     }
     if (kind === 'pileIn' && !eng.length) errors.push('After a pile-in move the unit must be engaged');
@@ -435,29 +441,29 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
   const omnis = how === 'ingress' || how === 'deepStrike' ? enemies.map((e) => ({ e, omni: unitFlags(s, e).omniScrambler })).filter((x) => x.omni) : [];
   for (const m of alive(u)) {
     const p = pos.get(m.id) ?? m;
-    if (how === 'deploy' && !circleWhollyInPoly(p, m.r, zoneOf(s, u.owner))) { errors.push('Must be set up wholly within your deployment zone'); bad.add(m.id); }
+    if (how === 'deploy' && !bodyWhollyInPoly(bodyAt(m, p), zoneOf(s, u.owner))) { errors.push('Must be set up wholly within your deployment zone'); bad.add(m.id); }
     // Teleport Homer: arriving in the opponent's turn (Rapid Ingress, 0CP) is within 3" of its token, and 8" is enough
     const homer = u.homer && how !== 'deploy' && how !== 'infiltrate' && s.active !== u.owner ? u.homer : undefined;
-    if (homer && dist(p, homer) - m.r > 3 + EPS) { errors.push('Teleport Homer: must be set up within 3" of the token'); bad.add(m.id); }
+    if (homer && ptGap(bodyAt(m, p), homer) > 3 + EPS) { errors.push('Teleport Homer: must be set up within 3" of the token'); bad.add(m.id); }
     if (how !== 'deploy') {
       const keep = homer ? 8 : how === 'deepStrike' ? fl!.deepStrikeRange : RULES.reserves.enemyDistance;
       // Death Approaches / Beckoning Blight: closer to some enemy units
       const keepFor = (e: UnitState) => (how === 'deepStrike' ? Math.min(keep, dsKeep(s, u, e, p, m) ?? keep) : keep);
-      if (enemies.some((e) => alive(e).some((n) => dist(p, n) - m.r - n.r <= keepFor(e)))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
+      if (enemies.some((e) => alive(e).some((n) => gap(bodyAt(m, p), n) <= keepFor(e)))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
     }
     const dsNear = how === 'deepStrike' ? fl!.deepStrikeNear : undefined;
-    if (dsNear && !boardUnits(s, u.owner).some((f) => f.id !== u.id && (hasKw(f, dsNear.kw) || f.factionKeywords.includes(dsNear.kw)) && alive(f).some((n) => dist(p, n) + m.r - n.r <= dsNear.range + 1e-6))) { errors.push(`Must be set up wholly within ${dsNear.range}" of a friendly ${dsNear.kw} unit`); bad.add(m.id); }
+    if (dsNear && !boardUnits(s, u.owner).some((f) => f.id !== u.id && (hasKw(f, dsNear.kw) || f.factionKeywords.includes(dsNear.kw)) && alive(f).some((n) => ptGap(n, p) + reachOf(m) <= dsNear.range + 1e-6))) { errors.push(`Must be set up wholly within ${dsNear.range}" of a friendly ${dsNear.kw} unit`); bad.add(m.id); }
     if (how === 'deepStrike' && fl!.deepStrikeInFlow && !circleInFlow(s, u.owner, p, m.r)) { errors.push('Through the Veil: must be set up wholly within your Flow of Magic'); bad.add(m.id); }
     if (how === 'ingress' || how === 'deepStrike') {
       for (const { e, omni } of omnis) {
-        if (alive(e).some((n) => dist(p, n) - m.r - n.r <= omni)) { errors.push(`Cannot be set up within ${omni}" of ${e.name} (Omni-scramblers)`); bad.add(m.id); }
+        if (alive(e).some((n) => gap(bodyAt(m, p), n) <= omni)) { errors.push(`Cannot be set up within ${omni}" of ${e.name} (Omni-scramblers)`); bad.add(m.id); }
       }
     }
-    if (how === 'infiltrate' && circleTouchesPoly(p, m.r + RULES.reserves.enemyDistance, enemyZone)) { errors.push(`Infiltrators must be more than ${RULES.reserves.enemyDistance}" from the enemy deployment zone`); bad.add(m.id); }
+    if (how === 'infiltrate' && bodyTouchesPoly(bodyAt(m, p), RULES.reserves.enemyDistance, enemyZone)) { errors.push(`Infiltrators must be more than ${RULES.reserves.enemyDistance}" from the enemy deployment zone`); bad.add(m.id); }
     if (how === 'ingress') {
       const edge = Math.min(p.x + m.r, p.y + m.r, W - p.x + m.r, H - p.y + m.r);
       if (Math.min(p.x, p.y, W - p.x, H - p.y) + m.r > RULES.reserves.edgeDistance + EPS || edge < 0) { errors.push(`An ingress move must end within ${RULES.reserves.edgeDistance}" of a battlefield edge`); bad.add(m.id); }
-      if (s.round < RULES.reserves.noEnemyZoneBeforeRound && circleTouchesPoly(p, m.r, enemyZone)) { errors.push('Cannot be set up in the enemy deployment zone before battle round 3'); bad.add(m.id); }
+      if (s.round < RULES.reserves.noEnemyZoneBeforeRound && bodyTouchesPoly(bodyAt(m, p), 0, enemyZone)) { errors.push('Cannot be set up in the enemy deployment zone before battle round 3'); bad.add(m.id); }
     }
   }
   if (engagedAt(s, u, pos).length) errors.push('Must be set up unengaged');
@@ -467,14 +473,16 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
 /** Formation helper: lay out a unit around a point in rows with 0.5" gaps. */
 export function formationAt(u: UnitState, c: Pt, facingUp = true): Map<string, Pt> {
   const ms = alive(u);
-  const maxR = Math.max(...ms.map((m) => m.r));
-  const step = maxR * 2 + (ms.length > 12 ? 0.3 : 0.6);
+  // spacing from each base's extent along x and y (an oval base or hull is longer one way)
+  const pad = ms.length > 12 ? 0.3 : 0.6;
+  const box = ms.map((m) => bodyBox(bodyAt(m, { x: 0, y: 0 })));
+  const stepX = Math.max(...box.map((k) => k.x1 - k.x0)) + pad, stepY = Math.max(...box.map((k) => k.y1 - k.y0)) + pad;
   const perRow = Math.max(1, Math.ceil(Math.sqrt(ms.length)));
   const rows = Math.ceil(ms.length / perRow);
   const slots: Pt[] = ms.map((_, i) => {
     const row = Math.floor(i / perRow), col = i % perRow;
     const inRow = Math.min(perRow, ms.length - row * perRow);
-    return { x: c.x + (col - (inRow - 1) / 2) * step, y: c.y + (row - (rows - 1) / 2) * step * (facingUp ? 1 : -1) };
+    return { x: c.x + (col - (inRow - 1) / 2) * stepX, y: c.y + (row - (rows - 1) / 2) * stepY * (facingUp ? 1 : -1) };
   });
   // characters and big models take the central slots so casualties don't strand them
   const slotOrder = slots.map((p, i) => i).sort((a, b) => dist(slots[a], c) - dist(slots[b], c));
@@ -502,22 +510,22 @@ export function ringFormation(u: UnitState, tm: ModelState, angle: number, maxAr
 export function fitFormation(s: GameState, u: UnitState, tm: ModelState, angle: number, within = 3, engage = false): Map<string, Pt> | null {
   const reach = tm.r + within + 2;
   const others = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap((x) => alive(x).map((m) => ({ m, foe: x.owner !== u.owner && !hasKw(x, 'AIRCRAFT') })))
-    .filter(({ m }) => dist(m, tm) - m.r <= reach + 1);
+    .filter(({ m }) => ptGap(m, tm) <= reach + 1);
   const walls = s.terrain.flatMap((t) => t.walls).filter((w) => pointSegDist(tm, w) <= reach + 1);
   const objectives = s.objectives.filter((o) => dist(o, tm) <= reach + 3);
   const boxes = s.terrain.filter((t) => (t.box || t.kind === 'container') && t.poly.some((q) => dist(q, tm) <= reach + 12));
   const free = (m: ModelState, p: Pt) => {
-    if (p.x - m.r < 0 || p.y - m.r < 0 || p.x + m.r > W || p.y + m.r > H) return false;
+    if (!onTable(bodyAt(m, p), W, H)) return false;
     for (const o of others) {
-      const gap = dist(p, o.m) - m.r - o.m.r;
-      if (gap < 0.02 || (o.foe && !engage && gap <= RULES.engagementRange + 0.02)) return false;
+      const g = gap(bodyAt(m, p), o.m);
+      if (g < 0.02 || (o.foe && !engage && g <= RULES.engagementRange + 0.02)) return false;
     }
     if (walls.some((w) => pointSegDist(p, w) < m.r * 0.85 + 0.02)) return false;
     if (objectives.some((o) => dist(p, o) < m.r + OBJECTIVE_MARKER_R)) return false;
     const walker = ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
     for (const t of boxes) {
       if (t.kind === 'container' && pointInPoly(p, t.poly) && !walker) return false;
-      if (t.box && circleTouchesPoly(p, m.r - 0.05, t.box) && !(walker && circleWhollyInPoly(p, m.r, t.box))) return false;
+      if (t.box && bodyTouchesPoly(bodyAt(m, p), -0.05, t.box) && !(walker && bodyWhollyInPoly(bodyAt(m, p), t.box))) return false;
     }
     return true;
   };
@@ -538,7 +546,9 @@ function packFormation(u: UnitState, tm: ModelState, angle: number, within: numb
   const out = new Map<string, Pt>();
   const ax = { x: Math.cos(angle), y: Math.sin(angle) };
   for (const m of ms) {
-    const rIn = tm.r + m.r + 0.08, rOut = tm.r + within - m.r - 0.03;
+    // a hull is longer one way: search from its narrowest to its widest reach, keeping each spot clear of the hull and
+    // the whole base within `within`
+    const rIn = girth(tm) + girth(m) + 0.08, rOut = reachOf(tm) + within - girth(m) - 0.03;
     if (rOut < rIn) return null;
     let best: { p: Pt; score: number } | null = null;
     for (let R = rIn; R <= rOut + 1e-9; R += 0.12) {
@@ -547,10 +557,11 @@ function packFormation(u: UnitState, tm: ModelState, angle: number, within: numb
         for (const sgn of k ? [1, -1] : [1]) {
           const a = angle + sgn * k * step;
           const p = { x: tm.x + Math.cos(a) * R, y: tm.y + Math.sin(a) * R };
-          if (placed.some((q) => Math.hypot(q.x - p.x, q.y - p.y) < q.r + m.r + 0.06)) continue;
+          if (tm.hl && (gap(bodyAt(m, p), tm) < 0.08 || ptGap(tm, p) + reachOf(m) > within - 0.03)) continue;
+          if (placed.some((q) => gap(q, bodyAt(m, p)) < 0.06)) continue;
           if (free && !free(m, p)) continue;
           // stay in coherency with the models already out (within 2" of one of them)
-          if (placed.length && !placed.some((q) => Math.hypot(q.x - p.x, q.y - p.y) - q.r - m.r <= 1.9)) continue;
+          if (placed.length && !placed.some((q) => gap(q, bodyAt(m, p)) <= 1.9)) continue;
           // the middle of the chosen side first, then outwards; a model further from the hull only when it packs tighter
           const side = Math.abs(((a - angle + 3 * Math.PI) % (2 * Math.PI)) - Math.PI) * R;
           const toward = (p.x - tm.x) * ax.x + (p.y - tm.y) * ax.y;
@@ -560,7 +571,7 @@ function packFormation(u: UnitState, tm: ModelState, angle: number, within: numb
       }
     }
     if (!best) return null;
-    placed.push({ ...best.p, r: m.r });
+    placed.push(bodyAt(m, best.p));
     out.set(m.id, best.p);
   }
   return out;
@@ -775,8 +786,9 @@ export function startTurn(s: GameState, p: PlayerId) {
   onTurnStart(s);
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
-  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); fireAll(s, 'battleStart', 'both'); }
-  if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); dgRoundStart(s); fireAll(s, 'roundStart', 'both'); }
+  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); fireAll(s, 'battleStart', 'both'); }
+  if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); dgRoundStart(s); knightsRoundStart(s); fireAll(s, 'roundStart', 'both'); }
+  knightsTurnStart(s);
   startCommand(s);
 }
 
@@ -793,6 +805,7 @@ function startCommand(s: GameState) {
   log(s, `+${RULES.cpPerCommandPhase}CP to both players (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
   poisonTick(s);
   dgCommandStart(s);
+  knightsCommandStart(s);
   fireFor(s, 'commandStart', s.active);
   fireFor(s, 'eachCommandStart', 'both');
   drawUpTo(s, s.active);
@@ -847,6 +860,7 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
   u.battleShocked = !t.passed;
   if (was && t.passed) log(s, `${u.name} is no longer Battle-shocked`, 'info', u.owner);
   if (!was && !t.passed) fire(s, 'becameShocked', [u]);
+  if (!t.passed) knightsShockFailed(s, u);
 }
 
 /** The bot's decisions at the end of a phase of the other player (Echo of the Ravenspire …), set by botPlus.ts. */
@@ -861,7 +875,7 @@ export function endPhase(s: GameState) {
     // Uphold the Honour of the Emperor (Vow-sworn Crusaders): objectives INFANTRY control now are secured
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtMovementEnd || !hasKw(u, 'INFANTRY')) continue;
-      for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) o.secured = s.active;
+      for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) o.secured = s.active;
     }
   }
   dgPhaseEnd(s);
@@ -874,7 +888,7 @@ export function endPhase(s: GameState) {
     // Uphold the Honour of the Emperor (Templar Vows): objectives held now stay yours
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtCommandEnd || !hasKw(u, 'INFANTRY')) continue;
-      for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) o.secured = s.active;
+      for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) o.secured = s.active;
     }
     sagaBoasts(s, 'commandEnd');
     scoreTiming(s, 'endOfYourCommandPhase');
@@ -887,6 +901,7 @@ export function endPhase(s: GameState) {
     for (const u of boardUnits(s, s.active)) if (!u.move) { u.move = 'stationary'; u.lastStationaryTurn = s.turn; }
     s.phase = 'shooting';
     // "at the start of your (opponent's) Shooting phase" (Marked by Fate, Treason of Tzeentch …)
+    knightsShootingStart(s);
     fireFor(s, 'shootingStart', s.active);
     fireFor(s, 'oppShootingStart', other(s.active));
     openWindow(s, 'endOfMovement');
@@ -938,7 +953,7 @@ function endTurn(s: GameState) {
   // Regaining coherency (03.03)
   for (const u of boardUnits(s)) {
     let models = alive(u);
-    let probs = coherencyProblems(models, RULES.coherency.near, RULES.coherency.max, models.map((m) => m.r));
+    let probs = coherencyProblems(models, RULES.coherency.near, RULES.coherency.max, models);
     while (probs.length && models.length > 1) {
       const c = polyCentroid(models);
       // controlling player's choice: drop ordinary, low-wound models first, furthest from the group
@@ -946,12 +961,13 @@ function endTurn(s: GameState) {
       killModel(s, u, worst);
       log(s, `${u.name}: ${worst.name} removed (out of Unit Coherency)`, 'info', u.owner);
       models = alive(u);
-      probs = coherencyProblems(models, RULES.coherency.near, RULES.coherency.max, models.map((m) => m.r));
+      probs = coherencyProblems(models, RULES.coherency.near, RULES.coherency.max, models);
     }
   }
   // Aircraft return to reserves at the end of the opponent's turn
   for (const u of boardUnits(s, other(s.active))) if (hasKw(u, 'AIRCRAFT')) u.status = 'reserves';
   updateControl(s);
+  knightsTurnEnd(s);
   sagaBoasts(s, 'turnEnd');
   onTurnEnd(s);
   scoreTiming(s, 'endOfYourTurn');
@@ -961,6 +977,7 @@ function endTurn(s: GameState) {
   if (!second) { s.phase = 'command'; startTurn(s, other(s.active)); return; }
   // end of battle round
   pledgeRoundEnd(s);
+  knightsRoundEnd(s);
   if (s.round === RULES.reserves.destroyedAfterRound) {
     for (const u of s.units) if (u.status === 'reserves' && !hasKw(u, 'AIRCRAFT')) {
       u.status = 'destroyed';
@@ -1025,9 +1042,9 @@ export function detReroll(s: GameState, u: UnitState, what: 'advance' | 'charge'
  *  (always worth it, so it happens by itself, on the enemy unit worth the most). */
 /** Enemy units the unit's models passed over during this move. */
 function movedOverUnits(s: GameState, u: UnitState, paths: Map<string, Pt[]>): UnitState[] {
-  const segs = alive(u).flatMap((m) => { const p = paths.get(m.id) ?? []; return p.slice(1).map((q, i) => ({ a: p[i], b: q, r: m.r })); });
+  const segs = alive(u).flatMap((m) => { const p = paths.get(m.id) ?? []; return p.slice(1).map((q, i) => ({ a: p[i], b: q, r: girth(m) })); });
   if (!segs.length) return [];
-  return s.units.filter((e) => e.owner !== u.owner && onBoard(e) && alive(e).some((n) => segs.some((g) => pointSegDist(n, g) <= n.r + g.r)));
+  return s.units.filter((e) => e.owner !== u.owner && onBoard(e) && alive(e).some((n) => segs.some((g) => segSegDist(axis(n), g) <= girth(n) + g.r)));
 }
 
 function blackstarLaunch(s: GameState, u: UnitState, paths: Map<string, Pt[]>) {
@@ -1039,6 +1056,17 @@ function blackstarLaunch(s: GameState, u: UnitState, paths: Map<string, Pt[]>) {
   const n = r.filter((x) => x >= 5).length;
   log(s, `Blackstar Cluster Launcher: ${u.name} flies over ${t.name} [${r.join(' ')}] = ${n} MW`, 'roll', u.owner);
   if (n) applyMortalWounds(s, t, n, 'Blackstar Cluster Launcher');
+}
+
+/** An oval base or hull turns to face the way it last travelled, the way a vehicle drives — only when the turned
+ *  base still fits (on the table, clear of other models and walls) and is engaged with exactly the same enemy models. */
+function faceTravel(s: GameState, m: ModelState, from: Pt) {
+  if (dist(from, m) < 0.3) return;
+  const turned = { ...bodyAt(m, m), rot: Math.atan2(m.y - from.y, m.x - from.x) };
+  const others = s.units.filter((x) => onBoard(x)).flatMap(alive).filter((o) => o.id !== m.id);
+  const engaged = (b: Body) => others.map((o) => gap(b, o) <= RULES.engagementRange + 1e-6).join();
+  if (!onTable(turned, W, H) || endSpotBlocked(s, turned, turned) || others.some((o) => gap(turned, o) < -0.02) || engaged(turned) !== engaged(m)) return;
+  m.rot = turned.rot;
 }
 
 export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Map<string, Pt[]>) {
@@ -1055,7 +1083,9 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
     maxMoved = Math.max(maxMoved, pathLength(path));
     const end = path[path.length - 1];
     m.x = end.x; m.y = end.y;
+    if (m.hl) faceTravel(s, m, path[path.length - 2]);
   }
+  if (['normal', 'advance', 'fallback'].includes(kind)) knightsMoved(s, u, paths);
   if (['normal', 'advance', 'fallback', 'stationary', 'ingress'].includes(kind)) u.move = kind;
   if (['normal', 'advance', 'fallback'].includes(kind)) s.lastAct = { unitId: u.id, owner: u.owner, kind: 'move', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
   const reactAfterMove = ['normal', 'advance', 'fallback'].includes(kind) && u.owner === s.active && s.phase === 'movement';
@@ -1102,7 +1132,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
 function sabotageCheck(s: GameState, u: UnitState) {
   for (const o of s.objectives) {
     // Mortis Snares: one trap, sprung by the first enemy unit that ends a move in range
-    if (o.snared !== undefined && o.snared !== null && o.snared !== u.owner && alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) {
+    if (o.snared !== undefined && o.snared !== null && o.snared !== u.owner && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) {
       const by = o.snared;
       o.snared = null;
       const r = d6(s);
@@ -1111,7 +1141,7 @@ function sabotageCheck(s: GameState, u: UnitState) {
       if (mw) applyMortalWounds(s, u, mw, 'Mortis Snares');
       if (!onBoard(u)) return;
     }
-    if (o.mutated !== undefined && o.mutated !== null && o.mutated !== u.owner && o.controller === o.mutated && alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) {
+    if (o.mutated !== undefined && o.mutated !== null && o.mutated !== u.owner && o.controller === o.mutated && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) {
       const r = d6(s);
       const mw = r >= 4 ? rollExpr(s, 'D3').total : 0;
       log(s, `Mutate Landscape: ${u.name} ended a move on the mutated objective — rolled ${r}${mw ? ` → ${mw} mortal wounds` : ''}`, 'roll', o.mutated);
@@ -1119,7 +1149,7 @@ function sabotageCheck(s: GameState, u: UnitState) {
       if (!onBoard(u)) return;
     }
     if (o.sabotaged === undefined || o.sabotaged === null || o.sabotaged === u.owner || o.controller !== o.sabotaged) continue;
-    if (!alive(u).some((m) => dist(m, o) <= 3 + m.r + 1e-6)) continue;
+    if (!alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) continue;
     const r = d6(s);
     const mw = r >= 2 ? rollExpr(s, 'D3').total : 0;
     log(s, `A Deadly Prize: ${u.name} ended a move on the sabotaged objective — rolled ${r}${mw ? ` → ${mw} mortal wounds` : ''}`, 'roll', o.sabotaged);
@@ -1159,7 +1189,7 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   const chk = validatePlacement(s, u, pos, how);
   if (!chk.ok) return chk;
   // Meteoric Descent: set up closer than usual, then no charge this turn
-  const closest = Math.min(99, ...boardUnits(s, other(u.owner)).flatMap((e) => alive(e).flatMap((n) => alive(u).map((m) => { const p = pos.get(m.id) ?? m; return dist(p, n) - m.r - n.r; }))));
+  const closest = Math.min(99, ...boardUnits(s, other(u.owner)).flatMap((e) => alive(e).flatMap((n) => alive(u).map((m) => { const p = pos.get(m.id) ?? m; return gap(bodyAt(m, p), n); }))));
   u.move = 'ingress'; // before placing: rules on arrival (Dread Reputation) read it
   placeUnit(s, u, pos);
   pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
@@ -1182,7 +1212,7 @@ function dropPodAssault(s: GameState, pod: UnitState) {
   for (const p of s.units.filter((x) => x.status === 'embarked' && x.embarkedIn === pod.id)) {
     let done = false;
     for (const pos of hullSpots(s, p, hull, away)) {
-      const far = alive(p).every((m) => { const q = pos.get(m.id)!; return enemies.every((n) => dist(q, n) - m.r - n.r > 8); });
+      const far = alive(p).every((m) => { const q = pos.get(m.id)!; return enemies.every((n) => gap(bodyAt(m, q), n) > 8); });
       if (far && validateDisembark(s, p, pod, pos).ok) { disembarkUnit(s, p, pod, pos); done = true; break; }
     }
     log(s, done ? `Drop Pod Assault: ${p.name} disembarks from ${pod.name} (more than 8" from enemies)` : `Drop Pod Assault: no room for ${p.name} more than 8" from enemies — it stays in the pod`, 'info', pod.owner);
@@ -1253,6 +1283,9 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `Charge ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });
   log(s, `${u.name} declares a charge: 2D6 [${r.join('+')}] = ${r[0] + r[1]}${fly ? ' (Fly −2)' : ''}${cap !== undefined && r[0] + r[1] > cap ? ` → capped at ${cap}` : ''}`, 'roll', u.owner);
+  // Fortress of Intimidation: charging near that Knight means a Battle-shock test first
+  const fort = boardUnits(s, other(u.owner)).find((e) => unitFlags(s, e).chargedShock !== null && unitDistance(u, e) <= 12 + 1e-6);
+  if (fort) shockTest(s, u, unitFlags(s, fort).chargedShock!, fort.name);
   if (declaredInOwnTurn) emitReact(s, other(u.owner), 'enemyChargeDeclared', { unitId: u.id });
   if (declaredInOwnTurn) emergencyEmbark(s, u);
   return r;
@@ -1296,8 +1329,7 @@ function miraculousSaviour(s: GameState) {
       let pos: Map<string, Pt> | null = null;
       for (const n of alive(e)) {
         for (let k = 0; k < 12 && !pos; k++) {
-          const a = (k / 12) * Math.PI * 2, d = n.r + m.r + 0.4;
-          const q = new Map([[m.id, { x: n.x + Math.cos(a) * d, y: n.y + Math.sin(a) * d }]]);
+          const q = new Map([[m.id, contactAt(m, n, (k / 12) * Math.PI * 2, 0.4)]]);
           const errors: string[] = [], bad = new Set<string>();
           endChecks(s, u, q, errors, bad);
           if (!errors.length) pos = q;
@@ -1398,20 +1430,20 @@ export function crushingImpact(s: GameState, u: UnitState, targetId: string) {
  *  1) shift the whole unit as a block (keeps coherency), 2) pull individual models into base contact if the unit stays coherent. */
 export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], maxDist: number, opts: { objective?: Pt } = {}): Map<string, Pt[]> {
   const ms = alive(u);
-  const others = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap((x) => alive(x).map((m) => ({ x: m.x, y: m.y, r: m.r })));
+  const others = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap((x) => alive(x).map((m) => bodyAt(m, m)));
   const enemyModels = targets.flatMap(alive);
   const avoid = boardUnits(s, other(u.owner)).filter((e) => !targets.includes(e) && !hasKw(e, 'AIRCRAFT')).flatMap(alive);
-  const clearOfOthers = (p: Pt, r: number) => avoid.every((e) => dist(p, e) - e.r - r > RULES.engagementRange + 0.05);
+  const clearOfOthers = (b: Body) => avoid.every((e) => gap(b, e) > RULES.engagementRange + 0.05);
   const pos = new Map<string, Pt>(ms.map((m) => [m.id, { x: m.x, y: m.y }]));
-  const free = (id: string, p: Pt, r: number) => p.x - r >= 0 && p.y - r >= 0 && p.x + r <= W && p.y + r <= H
-    && others.every((o) => dist(p, o) >= o.r + r - 0.01)
-    && ms.every((m) => m.id === id || dist(p, pos.get(m.id)!) >= m.r + r - 0.01)
-    && !endSpotBlocked(s, { r }, p) && clearOfOthers(p, r);
-  const coherent = () => coherencyProblems(ms.map((m) => pos.get(m.id)!), RULES.coherency.near, RULES.coherency.max, ms.map((m) => m.r)).length === 0;
-  const gapTo = (m: ModelState, p: Pt) => Math.min(...enemyModels.map((e) => dist(p, e) - e.r - m.r));
+  const free = (id: string, b: Body) => onTable(b, W, H)
+    && others.every((o) => gap(o, b) >= -0.01)
+    && ms.every((m) => m.id === id || gap(bodyAt(m, pos.get(m.id)!), b) >= -0.01)
+    && !endSpotBlocked(s, b, b) && clearOfOthers(b);
+  const coherent = () => coherencyProblems(ms.map((m) => pos.get(m.id)!), RULES.coherency.near, RULES.coherency.max, ms).length === 0;
+  const gapTo = (m: ModelState, p: Pt) => Math.min(...enemyModels.map((e) => gap(bodyAt(m, p), e)));
   // each model goes in a straight line from where it stands: that line must not pass through an enemy model
   const foesAll = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive);
-  const clearLine = (m: ModelState, p: Pt) => foesAll.every((e) => pointSegDist(e, { a: { x: m.x, y: m.y }, b: p }) >= e.r + m.r - 0.03);
+  const clearLine = (m: ModelState, p: Pt) => foesAll.every((e) => segSegDist(axis(e), { a: { x: m.x, y: m.y }, b: p }) >= girth(e) + girth(m) - 0.03);
   const inContact = (m: ModelState) => enemyModels.some((e) => baseDist(m, e) <= 0.05);
 
   // 1) block shift
@@ -1433,8 +1465,8 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
       const trial = new Map(ms.map((m) => [m.id, { x: m.x + dir!.x * k, y: m.y + dir!.y * k }]));
       const ok = ms.every((m) => {
         const p = trial.get(m.id)!;
-        return p.x - m.r >= 0 && p.y - m.r >= 0 && p.x + m.r <= W && p.y + m.r <= H && others.every((o) => dist(p, o) >= o.r + m.r - 0.01)
-          && !endSpotBlocked(s, m, p) && clearOfOthers(p, m.r) && clearLine(m, p);
+        return onTable(bodyAt(m, p), W, H) && others.every((o) => gap(bodyAt(m, p), o) >= -0.01)
+          && !endSpotBlocked(s, m, p) && clearOfOthers(bodyAt(m, p)) && clearLine(m, p);
       });
       if (ok) { for (const [id, p] of trial) pos.set(id, p); break; }
     }
@@ -1452,9 +1484,9 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
       for (const e of enemyModels) {
         for (let a = 0; a < 24; a++) {
           const ang = Math.atan2(cur.y - e.y, cur.x - e.x) + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 12);
-          const c = { x: e.x + Math.cos(ang) * (e.r + m.r + 0.02), y: e.y + Math.sin(ang) * (e.r + m.r + 0.02) };
+          const c = contactAt(m, e, ang, 0.02);
           const travel = dist(m, c);
-          if (travel > maxDist + 1e-6 || !free(m.id, c, m.r) || !clearLine(m, c)) continue;
+          if (travel > maxDist + 1e-6 || !free(m.id, bodyAt(m, c)) || !clearLine(m, c)) continue;
           if (travel < bestScore) { bestScore = travel; best = c; }
         }
       }
@@ -1464,14 +1496,14 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
         pos.set(m.id, cur);
       }
       // no base contact within reach: get as close as it can (inside engagement range still fights)
-      const near = enemyModels.reduce((a, e) => (dist(cur, e) - e.r < dist(cur, a) - a.r ? e : a));
+      const near = enemyModels.reduce((a, e) => (ptGap(e, cur) < ptGap(a, cur) ? e : a));
       const L = dist(cur, near);
       if (L < 0.01) continue;
       const step = { x: (near.x - cur.x) / L, y: (near.y - cur.y) / L };
-      const most = Math.min(maxDist - dist(m, cur), L - near.r - m.r - 0.02);
+      const most = Math.min(maxDist - dist(m, cur), L - girth(near) - girth(m) - 0.02);
       for (let k = most; k > 0.1; k -= 0.25) {
         const c = { x: cur.x + step.x * k, y: cur.y + step.y * k };
-        if (dist(m, c) > maxDist + 1e-6 || !free(m.id, c, m.r) || !clearLine(m, c)) continue;
+        if (dist(m, c) > maxDist + 1e-6 || !free(m.id, bodyAt(m, c)) || !clearLine(m, c)) continue;
         pos.set(m.id, c);
         if (coherent()) break;
         pos.set(m.id, cur);
@@ -1493,6 +1525,12 @@ function startFight(s: GameState) {
   // Adamantine Avalanche (Butchers of Khorne): an engaged Terminator Squad means one more Blessing for them this phase
   for (const p of [s.active, other(s.active)]) {
     if (activeRules(s, p).includes('Butchers of Khorne') && boardUnits(s, p).some((u) => u.keywords.includes('TERMINATOR SQUAD') && isEngaged(s, u))) blessingsRoll(s, p, { label: 'Adamantine Avalanche', kw: 'TERMINATOR SQUAD', until: 'phase' });
+  }
+  // Acheron's Duty, Unrestrained Terror, Nightmare's Master: enemy units engaged with them take a Battle-shock test
+  for (const u of boardUnits(s)) {
+    const mod = unitFlags(s, u).fightStartShock;
+    if (mod === null) continue;
+    for (const e of engagedEnemies(s, u)) shockTest(s, e, mod, `${u.name}`);
   }
   fireFor(s, 'fightStart', s.active);
   fireFor(s, 'fightStart', other(s.active));
@@ -1556,7 +1594,7 @@ export function consolidateMode(s: GameState, u: UnitState): { mode: 'ongoing' |
   const eng = engagedEnemies(s, u);
   // Establish Supremacy: an objective consolidation even while engaged
   if (eng.length && unitFlags(s, u).objConsolidate) {
-    const obj = s.objectives.find((o) => alive(u).some((m) => circleTouchesPoly(m, m.r + RULES.consolidate.range, objectiveTerrain(s, o).poly)));
+    const obj = s.objectives.find((o) => alive(u).some((m) => bodyTouchesPoly(m, RULES.consolidate.range, objectiveTerrain(s, o).poly)));
     if (obj) return { mode: 'objective', enemies: [], objective: obj };
   }
   if (eng.length) return { mode: 'ongoing', enemies: eng };
@@ -1564,7 +1602,7 @@ export function consolidateMode(s: GameState, u: UnitState): { mode: 'ongoing' |
   if (near.length) return { mode: 'engaging', enemies: near };
   const obj = s.objectives.find((o) => {
     const t = s.terrain.find((x) => x.id === o.terrainId)!;
-    return alive(u).some((m) => circleTouchesPoly(m, m.r + RULES.consolidate.range, t.poly));
+    return alive(u).some((m) => bodyTouchesPoly(m, RULES.consolidate.range, t.poly));
   });
   if (obj) return { mode: 'objective', enemies: [], objective: obj };
   return { mode: null, enemies: [] };
@@ -1678,7 +1716,7 @@ export function levelOfControl(s: GameState, o: ObjectiveState): [number, number
   const t = objectiveTerrain(s, o);
   const lv: [number, number] = [0, 0];
   for (const u of boardUnits(s)) {
-    for (const m of alive(u)) if (circleTouchesPoly(m, m.r, t.poly)) lv[u.owner] += modelOc(s, u, m);
+    for (const m of alive(u)) if (bodyTouchesPoly(m, 0, t.poly)) lv[u.owner] += modelOc(s, u, m);
   }
   return lv;
 }
@@ -1731,7 +1769,7 @@ export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingre
  *  a big unit within 6" of a board edge. */
 export function wideFormation(u: UnitState, c: Pt, alongX: boolean): Map<string, Pt> {
   const ms = [...alive(u)].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter));
-  const r = Math.max(...ms.map((m) => m.r));
+  const r = Math.max(...ms.map(reachOf));
   // staggered rows (each half a base along): the rows sit closer, so more of them fit in 6"
   const step = r * 2 + 0.05, rowStep = step * 0.87;
   const rowsMax = Math.max(1, Math.floor((6 - 2 * r - 0.1) / rowStep) + 1);
@@ -1865,7 +1903,7 @@ export function validateDisembark(s: GameState, u: UnitState, t: UnitState, pos:
   for (const m of alive(u)) {
     const p = pos.get(m.id) ?? m;
     const tm = alive(t).reduce((a, b) => (dist(p, a) <= dist(p, b) ? a : b));
-    if (dist(p, tm) - tm.r + (loose ? -m.r : m.r) > range + 0.02) { errors.push(loose ? `Must be set up within ${range}" of the transport` : `Must be set up wholly within ${range}" of the transport`); bad.add(m.id); }
+    if ((loose ? gap(tm, bodyAt(m, p)) : ptGap(tm, p) + reachOf(m)) > range + 0.02) { errors.push(loose ? `Must be set up within ${range}" of the transport` : `Must be set up wholly within ${range}" of the transport`); bad.add(m.id); }
   }
   if (mode !== 'combat' && engagedAt(s, u, pos).length) errors.push('Disembarking units must be set up unengaged');
   return { ok: !errors.length, errors: [...new Set(errors)], bad: [...bad] };
@@ -1908,7 +1946,7 @@ export function emergencyDisembark(s: GameState, t: UnitState, tm: ModelState) {
         const pos = formationAt(u, c);
         const errs: string[] = [];
         endChecks(s, u, pos, errs, new Set());
-        const within = alive(u).every((m) => { const p = pos.get(m.id)!; return dist(p, tm) - tm.r + m.r <= 6 + 0.02; });
+        const within = alive(u).every((m) => { const p = pos.get(m.id)!; return ptGap(tm, p) + reachOf(m) <= 6 + 0.02; });
         if (!errs.length && within) placed = pos;
       }
     }

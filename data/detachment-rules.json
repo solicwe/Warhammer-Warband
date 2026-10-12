@@ -4175,6 +4175,567 @@
   "Paragons of Putrescence": {
    "auto": "full",
    "manual": "Death Guard CHARACTER units have +3\" Contagion Range (at most 12\")"
+  },
+  "Code Chivalric": {
+   "auto": "full",
+   "armyRule": true,
+   "needKw": "IMPERIAL KNIGHTS",
+   "choice": {
+    "name": "Oath",
+    "when": "battle",
+    "uses": "eachOnce",
+    "keep": true,
+    "pick": 2,
+    "groups": [
+     "deed",
+     "quality"
+    ],
+    "options": [
+     {
+      "id": "reclaim",
+      "group": "deed",
+      "name": "We swear to reclaim the realm…",
+      "text": "Deed: at the end of your opponent’s turn you control more objective markers than they do",
+      "effects": []
+     },
+     {
+      "id": "tally",
+      "group": "deed",
+      "name": "We pledge to reap a great tally…",
+      "text": "Deed: more enemy units destroyed in a battle round than the battle round number",
+      "effects": []
+     },
+     {
+      "id": "tyrant",
+      "group": "deed",
+      "name": "We vow to lay low the tyrant…",
+      "text": "Deed: the most expensive enemy CHARACTER (picked now) is destroyed",
+      "effects": []
+     },
+     {
+      "id": "deed-random",
+      "group": "deed",
+      "name": "Random Deed (roll a D6)",
+      "text": "Roll for the Deed: 3CP instead of 2CP when the Oath is fulfilled",
+      "effects": [],
+      "random": 1
+     },
+     {
+      "id": "valour",
+      "group": "quality",
+      "name": "…with our martial valour risen over all.",
+      "text": "Quality: each time a Knight shoots or fights, re-roll one Hit roll and one Wound roll",
+      "effects": []
+     },
+     {
+      "id": "eager",
+      "group": "quality",
+      "name": "…and we are eager for the challenge.",
+      "text": "Quality: +2\" Move, +1 to Advance and Charge rolls",
+      "effects": [
+       {
+        "units": [
+         "IMPERIAL KNIGHTS",
+         "WALKER"
+        ],
+        "move": 2,
+        "advanceBonus": 1,
+        "chargeBonus": 1
+       }
+      ]
+     },
+     {
+      "id": "legacy",
+      "group": "quality",
+      "name": "…yet shall our legacy be unsullied.",
+      "text": "Quality: +2 Objective Control and +1 Leadership",
+      "effects": [
+       {
+        "units": [
+         "IMPERIAL KNIGHTS",
+         "WALKER"
+        ],
+        "oc": 2,
+        "ld": 1
+       }
+      ]
+     },
+     {
+      "id": "quality-random",
+      "group": "quality",
+      "name": "Random Quality (roll a D6)",
+      "text": "Roll for the Quality: 3CP instead of 2CP when the Oath is fulfilled",
+      "effects": [],
+      "random": 1
+     }
+    ]
+   },
+   "freeDie": [
+    {
+     "kind": "reroll",
+     "stage": "hit",
+     "limit": "phase",
+     "units": [
+      "IMPERIAL KNIGHTS",
+      "WALKER"
+     ],
+     "if": [
+      "quality:valour"
+     ]
+    },
+    {
+     "kind": "reroll",
+     "stage": "wound",
+     "limit": "phase",
+     "units": [
+      "IMPERIAL KNIGHTS",
+      "WALKER"
+     ],
+     "if": [
+      "quality:valour"
+     ]
+    }
+   ],
+   "manual": "Swear an Oath (a Deed and a Quality) in your first Command phase; fulfilling the Deed makes the army Honoured and gives 2CP (3CP if rolled) — knights.ts"
+  },
+  "Bondsman": {
+   "auto": "full",
+   "armyRule": true,
+   "needKw": "IMPERIAL KNIGHTS",
+   "manual": "Your Command phase: each Knight with a Bondsman ability affects the closest friendly ARMIGER model within 12\" that no other Bondsman ability affects (knights.ts)"
+  },
+  "Super-heavy Walker": {
+   "auto": "full",
+   "armyRule": true,
+   "manual": "Normal / Advance / Fall Back moves go through models (not TITANIC) and terrain; crossing terrain taller than 4\": roll a D6, on a 1 the model is Battle-shocked"
+  },
+  "Questor Forgepact": {
+   "auto": "full",
+   "grants": [
+    {
+     "units": [
+      "IMPERIAL KNIGHTS",
+      "WALKER"
+     ],
+     "name": "Assisted Targeting (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+         "ADEPTUS MECHANICUS"
+        ],
+        "attack": "ranged",
+        "hit": 1,
+        "abilities": [
+         "heavy"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "units": [
+      "TECH-PRIEST"
+     ],
+     "name": "Sacristan Pledge",
+     "rule": {
+      "act": {
+       "when": "command",
+       "limit": "phase",
+       "auto": true,
+       "target": {
+        "side": "friendly",
+        "range": 3,
+        "units": [
+         "IMPERIAL KNIGHTS",
+         "WALKER"
+        ],
+        "damaged": true
+       },
+       "label": "Heal a Knight within 3\": D3 wounds",
+       "do": [
+        {
+         "on": "target",
+         "heal": "D3"
+        },
+        {
+         "on": "target",
+         "heal": "2",
+         "if": [
+          "enh:Magos Questoris"
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "manual": "Mechanicus Allies: Tech-Priests, Marshals, Rangers and Vanguard up to 500 points (checked by the army builder); their Doctrina Imperatives do not apply (FAQ)"
+  },
+  "Valourstrike Lance": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "IMPERIAL KNIGHTS"
+     ],
+     "attack": "ranged",
+     "if": [
+      "knightAdvanced"
+     ],
+     "abilities": [
+      "assault"
+     ]
+    }
+   ]
+  },
+  "Gate Warden Lance": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "IMPERIAL KNIGHTS"
+     ],
+     "if": [
+      "onLine"
+     ],
+     "ignoreHitMods": true,
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ],
+   "manual": "Start of the first battle round: the two objectives closest to your deployment zone become your foundations; Knights whose base crosses the line between them are on your defensive line (knights.ts)"
+  },
+  "Questoris Companions": {
+   "auto": "full",
+   "manual": "Heroes of Legend: once your Oath is fulfilled, swear another at the start of your turn (no Deed or Quality twice; fulfilled again: 1CP); Valour’s Reward: expended Enhancements come back each time an Oath is fulfilled"
+  },
+  "Spearhead-At-Arms": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ARMIGER"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    }
+   ],
+   "manual": "Knightly Teachings: a Bondsman ability used by one model only affects up to three ARMIGER models within 12\" (15\" while Honoured)"
+  },
+  "Freeblade Company": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "IMPERIAL KNIGHTS",
+      "WALKER"
+     ],
+     "defend": {
+      "fnp": 6
+     }
+    }
+   ],
+   "acts": [
+    {
+     "when": "commandStart",
+     "auto": true,
+     "units": [
+      "IMPERIAL KNIGHTS",
+      "WALKER"
+     ],
+     "if": [
+      "belowStartingW"
+     ],
+     "do": [
+      {
+       "on": "self",
+       "heal": "1"
+      }
+     ]
+    }
+   ]
+  },
+  "Dominus Foebreakers": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "IMPERIAL KNIGHTS",
+      "DOMINUS"
+     ],
+     "if": [
+      "targetInTerrain"
+     ],
+     "hit": 1
+    }
+   ]
+  },
+  "Throne-Bonded Outriders": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ARMIGER"
+     ],
+     "attack": "ranged",
+     "if": [
+      "bonded"
+     ],
+     "abilities": [
+      "ignores cover"
+     ]
+    }
+   ]
+  },
+  "Harbingers of Dread": {
+   "auto": "full",
+   "armyRule": true,
+   "needKw": "CHAOS KNIGHTS",
+   "choice": {
+    "name": "Dread",
+    "when": "round",
+    "rounds": [
+     1,
+     3,
+     5
+    ],
+    "uses": "eachOnce",
+    "keep": true,
+    "pick": 1,
+    "options": [
+     {
+      "id": "despair",
+      "name": "Despair (Aura)",
+      "text": "Enemy units within 9\": -1 Leadership (on top of Deathly Terror)",
+      "effects": []
+     },
+     {
+      "id": "doom",
+      "name": "Doom",
+      "text": "+1 to wound against Battle-shocked units",
+      "effects": [
+       {
+        "units": [
+         "CHAOS KNIGHTS",
+         "WALKER"
+        ],
+        "if": [
+         "dread:doom",
+         "targetBattleShocked"
+        ],
+        "wound": 1
+       }
+      ]
+     },
+     {
+      "id": "darkness",
+      "name": "Darkness",
+      "text": "Stealth",
+      "effects": [
+       {
+        "units": [
+         "CHAOS KNIGHTS",
+         "WALKER"
+        ],
+        "if": [
+         "dread:darkness"
+        ],
+        "stealth": true
+       }
+      ]
+     },
+     {
+      "id": "dismay",
+      "name": "Dismay (Aura)",
+      "text": "Enemy units below Starting Strength within 9\" take a Battle-shock test in your opponent’s Command phase",
+      "effects": []
+     },
+     {
+      "id": "delirium",
+      "name": "Delirium (Aura)",
+      "text": "Below Half-strength enemy units within 9\" that fail a Battle-shock test suffer D3 mortal wounds",
+      "effects": []
+     },
+     {
+      "id": "dominion",
+      "name": "Dominion",
+      "text": "+3\" to the range of its Aura abilities",
+      "effects": []
+     },
+     {
+      "id": "random",
+      "name": "Randomly select two (roll 2D6)",
+      "text": "Roll two D6: each result 1-6 becomes active (Despair, Doom, Darkness, Dismay, Delirium, Dominion)",
+      "effects": [],
+      "random": 2
+     }
+    ]
+   },
+   "grants": [
+    {
+     "units": [
+      "CHAOS KNIGHTS",
+      "WALKER"
+     ],
+     "name": "Deathly Terror (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "scope": "enemyAura",
+        "range": 9,
+        "ld": -1
+       }
+      ]
+     }
+    },
+    {
+     "units": [
+      "CHAOS KNIGHTS",
+      "WALKER"
+     ],
+     "name": "Despair (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "scope": "enemyAura",
+        "range": 9,
+        "ld": -1,
+        "if": [
+         "dread:despair"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "units": [
+      "CHAOS KNIGHTS",
+      "WALKER"
+     ],
+     "name": "Dismay (Aura)",
+     "rule": {
+      "effects": [
+       {
+        "if": [
+         "dread:dismay"
+        ],
+        "terrorBelow": 9
+       }
+      ]
+     }
+    }
+   ],
+   "manual": "Deathly Terror is active from the start; at the start of battle rounds 1, 3 and 5 select one more Dread ability or roll two at random (knights.ts: Delirium, Dominion)"
+  },
+  "Traitoris Lance": {
+   "auto": "full",
+   "manual": "Paragons of Terror: in the first battle round, one more Dread ability (selected, not rolled)"
+  },
+  "Iconoclast Fiefdom": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "DAMNED"
+     ],
+     "rerollShock": true
+    }
+   ],
+   "manual": "DAMNED units up to 500 points (checked by the army builder)"
+  },
+  "Infernal Lance": {
+   "auto": "full",
+   "manual": "Your Command phase: each Chaos Knights unit makes a Malefic Surge (Leadership test, failed: D3 mortal wounds) and is Empowered until your next Command phase: the first time it shoots or fights its weapons get [LETHAL HITS] or [SUSTAINED HITS 1] (Diabolic Power); attacked in your opponent’s turn first: 5+ invulnerable save or Feel No Pain 6+ (Unnatural Fortitude) — knights.ts"
+  },
+  "Lords of Dread": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "CHAOS KNIGHTS",
+      "CHARACTER"
+     ],
+     "oc": 2
+    }
+   ],
+   "grants": [
+    {
+     "units": [
+      "CHAOS KNIGHTS",
+      "CHARACTER"
+     ],
+     "name": "Tyrannical Court",
+     "rule": {
+      "effects": [
+       {
+        "if": [
+         "warlordOnBoard"
+        ],
+        "stratDiscount": {
+         "ids": [
+          "000010309002"
+         ],
+         "cp": 1,
+         "limit": "round",
+         "perArmy": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Houndpack Lance": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "WAR DOG"
+     ],
+     "addKeywords": [
+      "BATTLELINE"
+     ]
+    },
+    {
+     "units": [
+      "WAR DOG"
+     ],
+     "if": [
+      "targetMarked:Marked Prey"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ],
+   "manual": "Start of your Command phase: the most dangerous enemy unit becomes the Marked Prey; three WAR DOG units are CHARACTERS (Enhancements, Warlord) — knights.ts"
+  },
+  "Helhunt Lance": {
+   "auto": "full",
+   "manual": "Masters of the Pack: a TITANIC Chaos Knight is affected by its own War Dog auras while two or more War Dog models are within range of them"
+  },
+  "Bastions of Tyranny": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "KNIGHT TYRANT"
+     ],
+     "if": [
+      "targetBattleShocked"
+     ],
+     "hit": 1
+    }
+   ]
+  },
+  "Hunting Warpack": {
+   "auto": "full",
+   "manual": "Scenting Fear: once per battle round, start of your Shooting phase: the visible enemy unit within 12\" of a War Dog it would most like to shoot gets +6\" detection range (knights.ts)"
   }
  }
 }

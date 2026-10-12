@@ -540,7 +540,8 @@ describe('moving by drag: settling, routing, vehicles and walls', () => {
   it('a Land Raider next to a wall can drive away from it, and is routed around a wall in its way', () => {
     const s = lrGame();
     const lr = s.units.find((x) => x.name === 'Land Raider')!;
-    expect(lr.models[0].r).toBeCloseTo(3.0);
+    expect(lr.models[0].r).toBeCloseTo(2.975); // a 7.3" × 4.6" hull
+    expect(lr.models[0].hl).toBeGreaterThan(1);
     s.terrain.push(wall({ x: 20, y: 10 }, { x: 20, y: 30 }));
     placeUnit(s, lr, new Map([[lr.models[0].id, { x: 18.4, y: 20 }]])); // hull already touching the wall
     const m = lr.models[0];

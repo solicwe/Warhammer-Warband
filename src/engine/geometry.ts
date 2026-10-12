@@ -3,9 +3,45 @@ import type { ModelState, Pt, Seg } from './types';
 export const dist = (a: Pt, b: Pt) => Math.hypot(a.x - b.x, a.y - b.y);
 export const EPS = 0.01;
 
-/** Edge-to-edge distance between two round bases (0 when touching or overlapping). */
-export const baseDist = (a: ModelState | (Pt & { r: number }), b: ModelState | (Pt & { r: number })) =>
-  Math.max(0, dist(a, b) - a.r - b.r);
+/** A model's footprint. Round bases: a circle of radius `r`. Oval bases and vehicle hulls: a capsule (a segment of
+ *  half-length `hl` turned `rot` radians, swept by radius `hw`) — `r` then stays the mean radius for rough estimates. */
+export type Body = Pt & { r: number; hw?: number; hl?: number; rot?: number };
+
+/** The footprint's long axis (a single point for a round base). */
+export function axis(b: Body): Seg {
+  if (!b.hl) return { a: b, b };
+  const c = Math.cos(b.rot ?? 0) * b.hl, n = Math.sin(b.rot ?? 0) * b.hl;
+  return { a: { x: b.x - c, y: b.y - n }, b: { x: b.x + c, y: b.y + n } };
+}
+/** The footprint's half-width around its axis. */
+export const girth = (b: Body) => (b.hl ? b.hw ?? b.r : b.r);
+/** The farthest any part of the base reaches from its centre. */
+export const reachOf = (b: Body) => (b.hl ? b.hl + (b.hw ?? b.r) : b.r);
+/** The same model standing at another spot (same footprint and facing). */
+export const bodyAt = (m: Body, p: Pt & { rot?: number }): Body => ({ x: p.x, y: p.y, r: m.r, hw: m.hw, hl: m.hl, rot: p.rot ?? m.rot });
+/** Edge-to-edge distance between two bases; negative when they overlap. */
+export const gap = (a: Body, b: Body) => (a.hl || b.hl ? segSegDist(axis(a), axis(b)) - girth(a) - girth(b) : dist(a, b) - a.r - b.r);
+/** Distance from a point to the edge of a base; negative inside it. */
+export const ptGap = (b: Body, p: Pt) => (b.hl ? pointSegDist(p, axis(b)) - girth(b) : dist(b, p) - b.r);
+/** Edge-to-edge distance between two bases (0 when touching or overlapping). */
+export const baseDist = (a: ModelState | Body, b: ModelState | Body) => Math.max(0, gap(a, b));
+/** The base's bounding box. */
+export function bodyBox(b: Body) {
+  const ax = axis(b), g = girth(b);
+  return { x0: Math.min(ax.a.x, ax.b.x) - g, y0: Math.min(ax.a.y, ax.b.y) - g, x1: Math.max(ax.a.x, ax.b.x) + g, y1: Math.max(ax.a.y, ax.b.y) + g };
+}
+/** Any part of the base, grown by `extra`, inside the polygon. */
+export function bodyTouchesPoly(b: Body, extra: number, poly: Pt[]): boolean {
+  if (!b.hl) return circleTouchesPoly(b, b.r + extra, poly);
+  const ax = axis(b);
+  return pointInPoly(ax.a, poly) || pointInPoly(ax.b, poly) || polyEdges(poly).some((e) => segSegDist(ax, e) <= girth(b) + extra);
+}
+/** Every part of the base inside the polygon. */
+export function bodyWhollyInPoly(b: Body, poly: Pt[]): boolean {
+  if (!b.hl) return circleWhollyInPoly(b, b.r, poly);
+  const ax = axis(b);
+  return pointInPoly(ax.a, poly) && pointInPoly(ax.b, poly) && polyEdges(poly).every((e) => segSegDist(ax, e) >= girth(b) - EPS);
+}
 
 export function pointSegDist(p: Pt, s: Seg): number {
   const dx = s.b.x - s.a.x, dy = s.b.y - s.a.y;
@@ -121,10 +157,11 @@ export function polyCentroid(poly: Pt[]): Pt {
 }
 
 /** Coherency (03.03): every model within `near` of one other, and within `max` of all others, as one group. */
-export function coherencyProblems(models: Pt[], near: number, max: number, radii: number[]): number[] {
+export function coherencyProblems(models: Pt[], near: number, max: number, radii: (number | Body)[]): number[] {
   const n = models.length;
   if (n <= 1) return [];
-  const d = (i: number, j: number) => Math.max(0, dist(models[i], models[j]) - radii[i] - radii[j]);
+  const body = (i: number): Body => { const r = radii[i]; return typeof r === 'number' ? { x: models[i].x, y: models[i].y, r } : bodyAt(r, models[i]); };
+  const d = (i: number, j: number) => Math.max(0, gap(body(i), body(j)));
   const bad = new Set<number>();
   // connected via `near` links
   const seen = new Set<number>([0]);
@@ -147,3 +184,19 @@ export function coherencyProblems(models: Pt[], near: number, max: number, radii
 }
 
 export const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+/** The whole base on a W × H battlefield (`slack` allows a hair over the edge). */
+export function onTable(b: Body, W: number, H: number, slack = 0): boolean {
+  if (!b.hl) return b.x - b.r >= -slack && b.y - b.r >= -slack && b.x + b.r <= W + slack && b.y + b.r <= H + slack;
+  const k = bodyBox(b);
+  return k.x0 >= -slack && k.y0 >= -slack && k.x1 <= W + slack && k.y1 <= H + slack;
+}
+
+/** Where `m` stands to touch `e` (edge to edge `clear`) coming from angle `ang` (radians, from e's centre). */
+export function contactAt(m: Body, e: Body, ang: number, clear: number): Pt {
+  const ray = (d: number) => ({ x: e.x + Math.cos(ang) * d, y: e.y + Math.sin(ang) * d });
+  if (!m.hl && !e.hl) return ray(e.r + m.r + clear);
+  let lo = 0, hi = reachOf(e) + reachOf(m) + clear + 0.1;
+  for (let k = 0; k < 24; k++) { const mid = (lo + hi) / 2; if (gap(bodyAt(m, ray(mid)), e) < clear) lo = mid; else hi = mid; }
+  return ray(hi);
+}

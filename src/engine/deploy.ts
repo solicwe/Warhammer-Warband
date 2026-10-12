@@ -6,7 +6,7 @@
 //  - units spread out rather than packed together (blast weapons, room to move), vehicles never boxed in.
 import { RULES } from './config';
 import { formationAt, objectiveTerrain, validatePlacement, zoneOf } from './game';
-import { circleTouchesPoly, dist, pointInPoly, polyCentroid } from './geometry';
+import { circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
 import { canLeave } from './botMove';
 import { isBrawler, maxRange, moveOf, oc, unitValue } from './botEval';
 import { alive, onBoard, other, withinTerrain } from './state';
@@ -105,7 +105,7 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   const middle = objs.filter(({ p }) => !pointInPoly(p, zone) && !pointInPoly(p, enemyZone));
   const friends = s.units.filter((f) => f.owner === u.owner && f.id !== u.id && onBoard(f));
   // held by a unit that stays there: a mob of Boyz standing on it now charges off in the first turn
-  const homeHeld = (p: Pt) => friends.some((f) => oc(f) > 0 && !isBrawler(s, f) && alive(f).some((m) => dist(m, p) <= 3 + m.r));
+  const homeHeld = (p: Pt) => friends.some((f) => oc(f) > 0 && !isBrawler(s, f) && alive(f).some((m) => ptGap(m, p) <= 3));
   const zoneDepth = Math.max(1, ...samplePoly(zone, 3).map((p) => dist(p, ec))) - Math.min(...samplePoly(zone, 3).map((p) => dist(p, ec)));
   const frontDist = Math.min(...samplePoly(zone, 3).map((p) => dist(p, ec)));
 
@@ -136,18 +136,18 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
 
       // objectives out in the middle: Infiltrators sit on one, others start where they reach one in their first move
       if (holdsGround || how === 'infiltrate') {
-        const dMid = Math.min(99, ...middle.map(({ p }) => Math.min(...ms.map((m) => dist(m, p) - m.r))));
+        const dMid = Math.min(99, ...middle.map(({ p }) => Math.min(...ms.map((m) => ptGap(m, p)))));
         // snipers stay back in cover; others take an objective only from cover
         if (how === 'infiltrate' && range < 30) score += (dMid <= 3 ? 5 : Math.max(0, 3 - dMid / 3)) * (covered > 0.5 ? 1 : 0.4);
         else if (dMid <= moveOf(u) + 3) score += 3;
       }
       // somebody with OC on the home objective
       // (worth more than being forward or in cover: a unit placed wrong at the start plays the whole battle wrong)
-      for (const { p } of home) if (holdsGround && cheap && !homeHeld(p) && ms.some((m) => dist(m, p) <= 3 + m.r)) score += 14;
+      for (const { p } of home) if (holdsGround && cheap && !homeHeld(p) && ms.some((m) => ptGap(m, p) <= 3)) score += 14;
 
       // spread out: no packing next to other units
       for (const f of friends) {
-        const d = Math.min(...alive(f).map((fm) => Math.min(...ms.map((m) => dist(m, fm) - m.r - fm.r))));
+        const d = Math.min(...alive(f).map((fm) => Math.min(...ms.map((m) => gap(m, fm)))));
         if (d < 1.5) score -= 4; else if (d < 4) score -= 1.5;
       }
 

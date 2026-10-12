@@ -1,6 +1,6 @@
 // Chapter Approved 2026-27 secondary missions, scored automatically from the board state.
 import { MISSIONS, RULES, secondaryById, toPoly, deploymentById, type SecondaryRule } from './config';
-import { circleTouchesPoly, circleWhollyInPoly, dist, pointInPoly } from './geometry';
+import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, dist, gap, pointInPoly, ptGap } from './geometry';
 import { territoryPoly, unitInRange, zonePoly } from './missions';
 import { pushFx, alive, boardUnits, hasKw, log, onBoard, other, unitById } from './state';
 import type { GameState, PlayerId, UnitState } from './types';
@@ -10,10 +10,10 @@ const H = RULES.battlefield.height;
 const CENTRE = { x: W / 2, y: H / 2 };
 
 const counts = (u: UnitState) => !u.battleShocked && !hasKw(u, 'AIRCRAFT');
-const whollyIn = (u: UnitState, poly: { x: number; y: number }[]) => alive(u).every((m) => circleWhollyInPoly(m, m.r, poly));
+const whollyIn = (u: UnitState, poly: { x: number; y: number }[]) => alive(u).every((m) => bodyWhollyInPoly(m, poly));
 const inNML = (s: GameState, u: UnitState) => {
   const za = zonePoly(s, 0), zb = zonePoly(s, 1);
-  return alive(u).every((m) => !circleTouchesPoly(m, m.r, za) && !circleTouchesPoly(m, m.r, zb));
+  return alive(u).every((m) => !bodyTouchesPoly(m, 0, za) && !bodyTouchesPoly(m, 0, zb));
 };
 const objInNML = (s: GameState, o: { x: number; y: number }) => !pointInPoly(o, zonePoly(s, 0)) && !pointInPoly(o, zonePoly(s, 1));
 
@@ -23,7 +23,7 @@ export function presenceQuarters(s: GameState, p: PlayerId): number {
   for (const u of boardUnits(s, p)) {
     if (!counts(u)) continue;
     const ms = alive(u);
-    if (ms.some((m) => dist(m, CENTRE) - m.r <= 6)) continue;
+    if (ms.some((m) => ptGap(m, CENTRE) <= 6)) continue;
     const q = (m: { x: number; y: number }) => (m.x < W / 2 ? 0 : 1) + (m.y < H / 2 ? 0 : 2);
     const q0 = q(ms[0]);
     if (ms.every((m) => q(m) === q0 && Math.abs(m.x - W / 2) >= m.r && Math.abs(m.y - H / 2) >= m.r)) qs.add(q0);
@@ -88,8 +88,8 @@ function cond(s: GameState, p: PlayerId, c: string): number {
       return home || (exp.length > 0 && exp.every((o) => o.controller === p)) ? 1 : 0;
     }
     case 'centreGround': {
-      const near = (q: PlayerId, r: number) => boardUnits(s, q).some((u) => alive(u).some((m) => dist(m, CENTRE) - m.r <= r));
-      const mine = boardUnits(s, p).some((u) => counts(u) && alive(u).some((m) => dist(m, CENTRE) - m.r <= 3));
+      const near = (q: PlayerId, r: number) => boardUnits(s, q).some((u) => alive(u).some((m) => ptGap(m, CENTRE) <= r));
+      const mine = boardUnits(s, p).some((u) => counts(u) && alive(u).some((m) => ptGap(m, CENTRE) <= 3));
       if (!mine) return 0;
       return !near(e, 6) ? 2 : !near(e, 3) ? 1 : 0;
     }
@@ -298,10 +298,10 @@ export function secondaryChance(s: GameState, p: PlayerId, id: string): number {
   const mine = boardUnits(s, p).filter(counts);
   const foes = boardUnits(s, e);
   const M = (u: UnitState) => Math.max(0, ...alive(u).map((m) => m.profile.M ?? 0));
-  const gap = (a: UnitState, b: UnitState) => Math.min(...alive(a).flatMap((m) => alive(b).map((n) => dist(m, n) - m.r - n.r)));
+  const unitGap = (a: UnitState, b: UnitState) => Math.min(...alive(a).flatMap((m) => alive(b).map((n) => gap(m, n))));
   // within a move plus the unit's longest gun (or a charge for units without guns)
   const range = (u: UnitState) => Math.max(8, ...alive(u).flatMap((m) => m.weapons.flatMap((w) => w.profiles.map((pr) => (typeof pr.range === 'number' ? pr.range : Number(pr.range) || 0)))));
-  const reachUnit = (t: UnitState) => mine.some((u) => gap(u, t) <= M(u) + range(u));
+  const reachUnit = (t: UnitState) => mine.some((u) => unitGap(u, t) <= M(u) + range(u));
   const reachPt = (pt: { x: number; y: number }, extra = 3) => mine.some((u) => alive(u).some((m) => dist(m, pt) <= M(u) + extra));
   const g = secondaryGoal(s, p, id);
   switch (id) {

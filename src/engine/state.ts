@@ -1,5 +1,5 @@
 import { RULES } from './config';
-import { baseDist, circleTouchesPoly } from './geometry';
+import { baseDist, bodyTouchesPoly, circleTouchesPoly } from './geometry';
 import type { FxEvent, GameState, LogEntry, ModelState, PlayerId, SkillStyle, UnitState } from './types';
 
 export const unitById = (s: GameState, id: string) => s.units.find((u) => u.id === id)!;
@@ -141,7 +141,7 @@ export function wantsCR(s: GameState, player: PlayerId, _what: AutoReroll, unit?
 }
 
 export function withinTerrain(s: GameState, m: ModelState, categories: string[] = ['exposed', 'light', 'dense']) {
-  return s.terrain.filter((t) => categories.includes(t.category) && circleTouchesPoly(m, m.r, t.poly));
+  return s.terrain.filter((t) => categories.includes(t.category) && bodyTouchesPoly(m, 0, t.poly));
 }
 
 // ---------- stratagem reactions ----------

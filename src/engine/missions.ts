@@ -1,7 +1,7 @@
 // Chapter Approved 2026-27 primary missions: Force Disposition matchups, objective actions,
 // operation markers and the scoring conditions of all 25 primary cards.
 import { deploymentById, MISSIONS, primaryById, RULES, toPoly, type ScoringRule } from './config';
-import { circleTouchesPoly, circleWhollyInPoly, dist, pointInPoly, polyCentroid } from './geometry';
+import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
 import { alive, boardUnits, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, unitById } from './state';
 import type { GameState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
@@ -25,9 +25,9 @@ export const territoryPoly = (s: GameState, p: PlayerId) => toPoly(deploymentByI
 /** Is any model of the unit within range of the objective (inside its terrain area)? */
 export const unitInRange = (s: GameState, u: UnitState, o: ObjectiveState) => {
   const t = objTerrain(s, o);
-  return alive(u).some((m) => circleTouchesPoly(m, m.r, t.poly));
+  return alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
 };
-const unitInTerrain = (u: UnitState, t: TerrainPiece) => alive(u).some((m) => circleTouchesPoly(m, m.r, t.poly));
+const unitInTerrain = (u: UnitState, t: TerrainPiece) => alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
 const isOwnHome = (o: ObjectiveState, p: PlayerId) => o.type === 'home' && o.owner === p;
 const isEnemyHome = (o: ObjectiveState, p: PlayerId) => o.type === 'home' && o.owner === other(p);
 const objInTerritory = (s: GameState, o: ObjectiveState, p: PlayerId) => pointInPoly(o, territoryPoly(s, p));
@@ -150,7 +150,7 @@ export interface ActionOption { action: string; name: string; unitId: string; ob
 
 /** Why this unit cannot start an action (core rules 16), or null. */
 /** Abilities that let units start actions while engaged / after advancing, or shoot after starting one (registered by effects.ts). */
-type EligHook = (s: GameState, u: UnitState, what: 'actionWhileEngaged' | 'actionWhileShocked' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction') => boolean;
+type EligHook = (s: GameState, u: UnitState, what: 'actionWhileEngaged' | 'actionWhileShocked' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction' | 'actionAfterShooting') => boolean;
 let eligHook: EligHook | null = null;
 export const setActionEligibilityHook = (fn: EligHook) => { eligHook = fn; };
 const may = (s: GameState, u: UnitState, what: Parameters<EligHook>[2]) => !!eligHook?.(s, u, what);
@@ -163,7 +163,7 @@ export function actionBlock(s: GameState, u: UnitState): string | null {
   if (isEngaged(s, u) && !hasKw(u, 'TITANIC') && !may(s, u, 'actionWhileEngaged')) return 'engaged';
   if (u.move === 'advance' && !may(s, u, 'actionAfterAdvance')) return 'Advanced';
   if (u.move === 'fallback' && !may(s, u, 'actionAfterFallBack')) return 'Fell Back';
-  if (u.shotTurn === s.turn) return 'Already shot this phase';
+  if (u.shotTurn === s.turn && !may(s, u, 'actionAfterShooting')) return 'Already shot this phase';
   if (s.pendingActions.some((a) => a.unitId === u.id) || s.players[u.owner].mission.done.some((d) => d.unitId === u.id && d.turn === s.turn)) return 'Already performed an action this turn';
   return null;
 }
@@ -242,7 +242,7 @@ function actionOptionsFor(s: GameState, p: PlayerId, id: string): ActionOption[]
         const already = new Set(P.mission.surveilled.filter((x) => x.turn === s.turn).map((x) => x.unitId));
         for (const e of boardUnits(s, other(p))) {
           if (already.has(e.id)) continue;
-          if (!alive(u).some((m) => alive(e).some((n) => dist(m, n) - m.r - n.r <= 18) && unitVisibleTo(s, m, e))) continue;
+          if (!alive(u).some((m) => alive(e).some((n) => gap(m, n) <= 18) && unitVisibleTo(s, m, e))) continue;
           out.push({ action: id, name: def.name, unitId: u.id, targetId: e.id, label: nm(e.name) });
         }
         break;
@@ -362,7 +362,7 @@ function tableQuarters(s: GameState, p: PlayerId): number {
   const quarters = new Set<number>();
   for (const u of boardUnits(s, p)) {
     const ms = alive(u);
-    if (ms.some((m) => dist(m, c) - m.r <= 6)) continue;
+    if (ms.some((m) => ptGap(m, c) <= 6)) continue;
     const q = (m: Pt) => (m.x < W / 2 ? 0 : 1) + (m.y < H / 2 ? 0 : 2);
     const q0 = q(ms[0]);
     if (ms.every((m) => q(m) === q0 && (Math.abs(m.x - W / 2) >= m.r) && (Math.abs(m.y - H / 2) >= m.r))) quarters.add(q0);
@@ -428,7 +428,7 @@ export function evalCondition(s: GameState, p: PlayerId, c: string): number {
     case 'perExtractThisTurn': return doneNow('extract-intelligence').length;
     case 'ownMarkers3Plus': return s.markers.filter((m) => m.owner === p).length >= 3 ? 1 : 0;
     case 'ownMarkerAtEnemyHome': return s.objectives.some((o) => isEnemyHome(o, p) && s.markers.some((m) => m.owner === p && circleTouchesPoly({ x: m.x, y: m.y }, 0.5, objTerrain(s, o).poly))) ? 1 : 0;
-    case 'noEnemyInYourTerritory': { const terr = territoryPoly(s, p); return boardUnits(s, other(p)).some((u) => alive(u).every((m) => circleWhollyInPoly(m, m.r, terr))) ? 0 : 1; }
+    case 'noEnemyInYourTerritory': { const terr = territoryPoly(s, p); return boardUnits(s, other(p)).some((u) => alive(u).every((m) => bodyWhollyInPoly(m, terr))) ? 0 : 1; }
     case 'securedAssetThisTurn': return doneNow('secure-asset').length ? 1 : 0;
     case 'ownMarkersAtControlledCentral': return s.markers.filter((m) => m.owner === p && mine.some((o) => o.type === 'central' && circleTouchesPoly({ x: m.x, y: m.y }, 0.5, objTerrain(s, o).poly))).length;
     case 'sensorSweepThisTurn': return doneNow('sensor-sweep').length ? 1 : 0;

@@ -11,16 +11,19 @@ import csmStrats from '../../data/stratagems/CSM.json';
 import weStrats from '../../data/stratagems/WE.json';
 import ecStrats from '../../data/stratagems/EC.json';
 import dgStrats from '../../data/stratagems/DG.json';
+import qiStrats from '../../data/stratagems/QI.json';
+import qtStrats from '../../data/stratagems/QT.json';
 import { blessingsRoll } from './blessings';
 import { parseAbilityText } from './abilityText';
-import { ldTest, runActions, shockTest, type Action } from './activations';
+import { ldTest, runActions, runDeathQueue, shockTest, type Action } from './activations';
+import { maleficSurge } from './knights';
 import { kwPhrase } from './army';
 import { buildShootPools, expectedDamage, finishAttack, onAttackFinished, onModelKilled, resolveAll, startAttack } from './attack';
 import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
 import {
   afterReaction, autoCharge, setUnleashWrath, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, formationAt, validateDisembark,
 } from './game';
-import { baseDist, dist } from './geometry';
+import { baseDist, bodyAt, dist, gap, ptGap } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, log, onBoard, other, setReactHook, spendStratagem, stratCost, unitById, unitDistance,
   type ReactCtx, type ReactOn,
@@ -87,7 +90,7 @@ export interface StratRule {
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap' | 'raisePledge' | 'putrid' | 'attachNear' | 'mireslick';
+export type Special = 'deathStrike' | 'maleficSurge' | 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap' | 'raisePledge' | 'putrid' | 'attachNear' | 'mireslick';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -114,6 +117,10 @@ export interface EnemyPick {
   fellBack?: boolean;
   /** only an enemy unit within Contagion Range of this unit (Aggravus Spasms) */
   contagion?: boolean;
+  /** only a Battle-shocked enemy unit (Pterrorshades) */
+  shocked?: boolean;
+  /** only an enemy unit this unit moved over in its last Normal move (Crushed Like Vermin) */
+  movedOver?: boolean;
 }
 
 const BOOKS: Record<string, Record<string, StratRule>> = {
@@ -125,6 +132,8 @@ const BOOKS: Record<string, Record<string, StratRule>> = {
   WE: (weStrats as unknown as { rules: Record<string, StratRule> }).rules,
   EC: (ecStrats as unknown as { rules: Record<string, StratRule> }).rules,
   DG: (dgStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  QI: (qiStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  QT: (qtStrats as unknown as { rules: Record<string, StratRule> }).rules,
 };
 
 const OFFENCE_BUFFS: BuffKind[] = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
@@ -380,9 +389,11 @@ export function stratEnemies(s: GameState, p: PlayerId, rule: StratRule, u: Unit
     if (q.kw && !q.kw.some((k) => e.keywords.includes(k) || e.factionKeywords.includes(k))) return false;
     if (q.notKw && q.notKw.some((k) => e.keywords.includes(k))) return false;
     if (q.fellBack && e.move !== 'fallback') return false;
+    if (q.shocked && !e.battleShocked) return false;
     if (!u || !onBoard(u)) return !(q.range || q.engaged || q.visible || q.hitBy);
     if (q.engaged && !engagedEnemies(s, u).some((x) => x.id === e.id)) return false;
     if (q.contagion && !inContagionOf(s, u, e)) return false;
+    if (q.movedOver && !(u.movedOver?.key === `${s.turn}:${s.phase}` && u.movedOver.ids.includes(e.id))) return false;
     if (q.range !== undefined && unitDistance(u, e) > q.range + 1e-6) return false;
     if (q.visible && !alive(u).some((m) => unitVisibleTo(s, m, e))) return false;
     if (q.hitBy) {
@@ -533,6 +544,10 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
   if (!u) return;
   switch (sp) {
     case 'shootAt': if (enemy) shootNow(s, u, enemy, label); return;
+    // Animalistic Rage: the destroyed unit shoots (or fights) the unit that destroyed it before it is removed
+    case 'deathStrike': if (ctx.killerId) { (s.deathQueue ??= []).push({ unitId: u.id, modelIds: u.models.map((m) => m.id), targetId: ctx.killerId, kind: s.phase === 'fight' ? 'fight' : 'shoot', label }); runDeathQueue(s); } return;
+    // Profane Symbiosis: the unit makes a Malefic Surge now
+    case 'maleficSurge': maleficSurge(s, u); return;
     // Power of the Machine Spirit: snap shooting, or normal shooting once the unit is at or below half-strength
     case 'shootAtSnap': if (enemy) shootNow(s, u, enemy, label, alive(u).length * 2 <= u.startingStrength || alive(u).reduce((a, m) => a + m.wounds, 0) * 2 <= u.models.reduce((a, m) => a + m.profile.W, 0) ? 'normal' : 'snap'); return;
     case 'charge': case 'chargeCap6': {
@@ -624,8 +639,8 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       const foe = boardUnits(s, other(p)).sort((a, b) => unitDistance(u, a) - unitDistance(u, b))[0];
       const pos = placeNear(s, x, u, 6, foe ? alive(foe)[0] : null, (q) => [...q.entries()].every(([id, pt]) => {
         const m = x.models.find((mm) => mm.id === id)!;
-        return pt.x >= m.r && pt.y >= m.r && alive(u).some((n) => dist(pt, n) - n.r + m.r <= 6 + 1e-6)
-          && !s.units.some((o) => o.id !== x.id && onBoard(o) && alive(o).some((n) => dist(pt, n) < n.r + m.r - 0.01));
+        return pt.x >= m.r && pt.y >= m.r && alive(u).some((n) => ptGap(n, pt) + m.r <= 6 + 1e-6)
+          && !s.units.some((o) => o.id !== x.id && onBoard(o) && alive(o).some((n) => gap(bodyAt(m, pt), n) < -0.01));
       }));
       if (!pos) { log(s, `${label}: no room to disembark`, 'info', p); return; }
       for (const m of alive(x)) { const q = pos.get(m.id)!; m.x = q.x; m.y = q.y; }
@@ -637,7 +652,7 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       // Machine Wrath: the wreck moves before it blows up, to catch as many enemy units as it can
       const m = u.models.find((x) => x.id === ctx.modelId) ?? u.models[0];
       const M = m.profile.M ?? 0;
-      const val = (pt: Pt) => s.units.filter((v) => v.id !== u.id && onBoard(v) && alive(v).some((n) => dist(n, pt) - n.r - m.r <= 6))
+      const val = (pt: Pt) => s.units.filter((v) => v.id !== u.id && onBoard(v) && alive(v).some((n) => gap(n, bodyAt(m, pt)) <= 6))
         .reduce((a, v) => a + (v.owner === p ? -1.5 : 1) * v.pts, 0);
       let best = { pt: { x: m.x, y: m.y }, v: val(m) };
       for (let a = 0; a < 16; a++) for (const f of [0.5, 1]) {

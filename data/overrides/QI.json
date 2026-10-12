@@ -1,0 +1,9 @@
+{
+ "_comment": "Imperial Knights Faction Pack v1.2 (26 Aug 2026). Doctrina Imperatives belongs to Adeptus Mechanicus armies: Mechanicus Allies in a Questor Forgepact do not use it (FAQ).",
+ "armyRules": [
+  {
+   "name": "Doctrina Imperatives",
+   "_delete": true
+  }
+ ]
+}
