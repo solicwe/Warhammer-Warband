@@ -1315,7 +1315,7 @@
    {
     "loneOperative": true,
     "if": [
-     "near:3:ADEPTUS ASTARTES+VEHICLE"
+     "near:3:SPACE WOLVES+VEHICLE"
     ]
    }
   ]
@@ -1328,7 +1328,7 @@
     "side": "friendly",
     "range": 3,
     "units": [
-     "ADEPTUS ASTARTES",
+     "SPACE WOLVES",
      "VEHICLE"
     ]
    },
@@ -6371,5 +6371,18 @@
   ],
   "status": "auto",
   "note": "Units disembarking after it made a Normal move can still charge"
+ },
+ "Predatory Instinct@Fenrisian Wolves": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "limit": "turn",
+   "do": [
+    {
+     "on": "self",
+     "move": "D6"
+    }
+   ]
+  }
  }
 }

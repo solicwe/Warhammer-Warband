@@ -6,7 +6,7 @@
  "author": "Roboute Guilliman",
  "gameSystemId": "wh40k-11e_main",
  "baseCatalogueName": "Imperium - Space Marines",
- "revision": 189,
+ "revision": 197,
  "origin": "local",
  "markEntryNames": false,
  "localEdits": false,
@@ -22557,7 +22557,7 @@
     },
     {
      "id": "baal-predator--heavy-bolters",
-     "name": "Heavy Bolters",
+     "name": "Heavy Bolter",
      "selectOne": false,
      "profiles": [
       {
@@ -22569,7 +22569,7 @@
        "strength": "5",
        "ap": "-1",
        "damage": "2",
-       "keywords": "Assault, Sustained Hits 1"
+       "keywords": "Assault, Rapid Fire 2, Sustained Hits 1"
       }
      ]
     },
@@ -22662,6 +22662,42 @@
        "keywords": "Rapid Fire 2"
       }
      ]
+    },
+    {
+     "id": "baal-predator--heavy-flamer-2",
+     "name": "Heavy Flamer",
+     "selectOne": false,
+     "profiles": [
+      {
+       "name": "",
+       "melee": false,
+       "range": "12\"",
+       "attacks": "3",
+       "skill": "N/A",
+       "strength": "5",
+       "ap": "-1",
+       "damage": "1",
+       "keywords": "Assault, Blast 2, Torrent"
+      }
+     ]
+    },
+    {
+     "id": "baal-predator--heavy-bolter",
+     "name": "Heavy Bolter",
+     "selectOne": false,
+     "profiles": [
+      {
+       "name": "",
+       "melee": false,
+       "range": "36\"",
+       "attacks": "3",
+       "skill": "3+",
+       "strength": "5",
+       "ap": "-1",
+       "damage": "2",
+       "keywords": "Assault, Rapid Fire 2, Sustained Hits 1"
+      }
+     ]
     }
    ],
    "models": [
@@ -22747,6 +22783,9 @@
          "weapons": [
           {
            "weaponId": "baal-predator--heavy-flamer"
+          },
+          {
+           "weaponId": "baal-predator--heavy-flamer-2"
           }
          ],
          "upgradeName": "",
@@ -22758,6 +22797,9 @@
          "weapons": [
           {
            "weaponId": "baal-predator--heavy-bolters"
+          },
+          {
+           "weaponId": "baal-predator--heavy-bolter"
           }
          ],
          "upgradeName": "",
@@ -26434,7 +26476,7 @@
        "melee": true,
        "range": "",
        "attacks": "3",
-       "skill": "4+",
+       "skill": "3+",
        "strength": "12",
        "ap": "-2",
        "damage": "3",
@@ -26453,7 +26495,7 @@
        "range": "36\"",
        "attacks": "3",
        "skill": "3+",
-       "strength": "7",
+       "strength": "9",
        "ap": "-2",
        "damage": "2",
        "keywords": "Blast 1"
@@ -26464,7 +26506,7 @@
        "range": "36\"",
        "attacks": "3",
        "skill": "3+",
-       "strength": "8",
+       "strength": "10",
        "ap": "-3",
        "damage": "3",
        "keywords": "Blast 1, Hazardous"
@@ -29067,6 +29109,24 @@
        "keywords": "Blast 1, Devastating Wounds"
       }
      ]
+    },
+    {
+     "id": "ravenwing-dark-talon--hurricane-bolter-2",
+     "name": "Hurricane Bolter",
+     "selectOne": false,
+     "profiles": [
+      {
+       "name": "",
+       "melee": false,
+       "range": "24\"",
+       "attacks": "6",
+       "skill": "3+",
+       "strength": "5",
+       "ap": "-1",
+       "damage": "1",
+       "keywords": "Rapid Fire 6, Twin-linked"
+      }
+     ]
     }
    ],
    "models": [
@@ -29116,6 +29176,9 @@
          "weapons": [
           {
            "weaponId": "ravenwing-dark-talon--hurricane-bolter"
+          },
+          {
+           "weaponId": "ravenwing-dark-talon--hurricane-bolter-2"
           }
          ],
          "upgradeName": "",
@@ -29601,7 +29664,7 @@
        "strength": "6",
        "ap": "-1",
        "damage": "2",
-       "keywords": "Blast 2, Torrent"
+       "keywords": "Torrent"
       },
       {
        "name": "Focused",
@@ -29609,7 +29672,7 @@
        "range": "36\"",
        "attacks": "1",
        "skill": "2+",
-       "strength": "11",
+       "strength": "10",
        "ap": "-2",
        "damage": "5",
        "keywords": ""
@@ -29862,7 +29925,7 @@
     {
      "id": "blood-claws--m-blood-claw",
      "name": "Blood Claw",
-     "min": 8,
+     "min": 9,
      "max": 19,
      "perModels": 0,
      "isDefault": true,
@@ -30028,7 +30091,7 @@
     {
      "id": "fenrisian-wolves--a-predatory-instinct",
      "name": "Predatory Instinct",
-     "description": "Once per turn, when an enemy unit ends a Normal, Advance or Fall Back move within 9\" of this unit, it can make a Normal move of up to D6\""
+     "description": "Once per turn, when an enemy unit ends a Normal, Advance or Fall Back move within 8\" of this unit, it can make a Normal move of up to D6\""
     },
     {
      "id": "fenrisian-wolves--a-hunting-hounds",
@@ -30165,7 +30228,7 @@
        "strength": "5",
        "ap": "-1",
        "damage": "1",
-       "keywords": "Rapid Fire 1"
+       "keywords": "Assault, Rapid Fire 1"
       }
      ]
     },
@@ -30485,17 +30548,17 @@
     {
      "id": "iron-priest--a-iron-priest",
      "name": "Iron Priest",
-     "description": "While this model is within 3\" of one or more friendly ADEPTUS ASTARTES VEHICLE units, this model has the Lone Operative ability"
+     "description": "While this model is within 3\" of one or more friendly SPACE WOLVES VEHICLE units, this model has the Lone Operative ability"
     },
     {
      "id": "iron-priest--a-gift-of-the-iron-wolf",
      "name": "Gift of the Iron Wolf",
-     "description": "In your Movement phase, at the start or end of this unit's move, you can select one friendly ADEPTUS ASTARTES VEHICLE model within 3\" of this model:\n- That VEHICLE model heals D3 wounds.\n- That VEHICLE model's attacks can ignore modifiers to hit rolls and wound rolls until the start of your next Movement phase."
+     "description": "In your Movement phase, at the start or end of this unit's move, you can select one friendly SPACE WOLVES VEHICLE model within 3\" of this model:\n- That VEHICLE model heals D3 wounds.\n- That VEHICLE model's attacks can ignore modifiers to hit rolls and wound rolls until the start of your next Movement phase."
     },
     {
      "id": "iron-priest--a-judgement-of-the-omnissiah",
      "name": "Judgement of the Omnissiah",
-     "description": "This model's melee attacks that target an enemy unit engaged with one or more friendly ADEPTUS ASTARTES VEHICLE units can re-roll wound rolls."
+     "description": "This model's melee attacks that target an enemy unit engaged with one or more friendly SPACE WOLVES VEHICLE units can re-roll wound rolls."
     }
    ],
    "coreAbilities": [],
@@ -30697,7 +30760,7 @@
        "melee": false,
        "range": "24\"",
        "attacks": "2",
-       "skill": "3+",
+       "skill": "2+",
        "strength": "5",
        "ap": "-1",
        "damage": "1",
@@ -31096,7 +31159,7 @@
        "attacks": "D3+3",
        "skill": "3+",
        "strength": "7",
-       "ap": "-2",
+       "ap": "-1",
        "damage": "1",
        "keywords": "Psychic, Sustained Hits 2"
       },
@@ -31294,7 +31357,7 @@
        "strength": "5",
        "ap": "-1",
        "damage": "1",
-       "keywords": "Close-quarters"
+       "keywords": ""
       }
      ]
     }
@@ -32004,7 +32067,7 @@
        "strength": "6",
        "ap": "-1",
        "damage": "2",
-       "keywords": "Blast 2, Torrent"
+       "keywords": "Torrent"
       },
       {
        "name": "Focused",
@@ -32161,13 +32224,16 @@
      "wargear": [
       {
        "id": "venerable-dreadnought--m-venerable-dreadnought--slot-ranged",
-       "name": "Ranged weapon",
+       "name": "Main weapons",
        "optional": false,
        "options": [
         {
          "weapons": [
           {
            "weaponId": "venerable-dreadnought--assault-cannon"
+          },
+          {
+           "weaponId": "venerable-dreadnought--dreadnought-combat-weapon"
           }
          ],
          "upgradeName": "",
@@ -32179,6 +32245,9 @@
          "weapons": [
           {
            "weaponId": "venerable-dreadnought--helfrost-cannon"
+          },
+          {
+           "weaponId": "venerable-dreadnought--dreadnought-combat-weapon"
           }
          ],
          "upgradeName": "",
@@ -32190,26 +32259,43 @@
          "weapons": [
           {
            "weaponId": "venerable-dreadnought--multi-melta"
+          },
+          {
+           "weaponId": "venerable-dreadnought--dreadnought-combat-weapon"
           }
          ],
          "upgradeName": "",
          "upgradeText": "",
          "statMods": [],
+         "pts": 0
+        },
+        {
+         "weapons": [
+          {
+           "weaponId": "venerable-dreadnought--fenrisian-great-axe"
+          }
+         ],
+         "upgradeName": "Blizzard Shield",
+         "upgradeText": "The bearer has a 4+ invulnerable save.",
+         "statMods": [
+          {
+           "characteristic": "InSv",
+           "type": "set",
+           "value": "4+"
+          }
+         ],
          "pts": 0
         }
        ]
       },
       {
        "id": "venerable-dreadnought--m-venerable-dreadnought--slot-melee",
-       "name": "Melee weapon",
+       "name": "Storm bolter or heavy flamer",
        "optional": false,
        "options": [
         {
          "weapons": [
           {
-           "weaponId": "venerable-dreadnought--dreadnought-combat-weapon"
-          },
-          {
            "weaponId": "venerable-dreadnought--storm-bolter"
           }
          ],
@@ -32221,55 +32307,12 @@
         {
          "weapons": [
           {
-           "weaponId": "venerable-dreadnought--dreadnought-combat-weapon"
-          },
-          {
            "weaponId": "venerable-dreadnought--heavy-flamer"
           }
          ],
          "upgradeName": "",
          "upgradeText": "",
          "statMods": [],
-         "pts": 0
-        },
-        {
-         "weapons": [
-          {
-           "weaponId": "venerable-dreadnought--fenrisian-great-axe"
-          },
-          {
-           "weaponId": "venerable-dreadnought--storm-bolter"
-          }
-         ],
-         "upgradeName": "Blizzard Shield",
-         "upgradeText": "The bearer has a 4+ invulnerable save.",
-         "statMods": [
-          {
-           "characteristic": "InSv",
-           "type": "set",
-           "value": "4+"
-          }
-         ],
-         "pts": 0
-        },
-        {
-         "weapons": [
-          {
-           "weaponId": "venerable-dreadnought--fenrisian-great-axe"
-          },
-          {
-           "weaponId": "venerable-dreadnought--heavy-flamer"
-          }
-         ],
-         "upgradeName": "Blizzard Shield",
-         "upgradeText": "The bearer has a 4+ invulnerable save.",
-         "statMods": [
-          {
-           "characteristic": "InSv",
-           "type": "set",
-           "value": "4+"
-          }
-         ],
          "pts": 0
         }
        ]
@@ -32338,42 +32381,6 @@
        "ap": "-2",
        "damage": "2",
        "keywords": ""
-      }
-     ]
-    },
-    {
-     "id": "wolf-guard-battle-leader--master-crafted-bolt-carbine",
-     "name": "Master-crafted Bolt Carbine",
-     "selectOne": false,
-     "profiles": [
-      {
-       "name": "",
-       "melee": false,
-       "range": "24\"",
-       "attacks": "2",
-       "skill": "3+",
-       "strength": "5",
-       "ap": "-1",
-       "damage": "2",
-       "keywords": ""
-      }
-     ]
-    },
-    {
-     "id": "wolf-guard-battle-leader--master-crafted-heavy-bolt-pistol",
-     "name": "Master-crafted Heavy Bolt Pistol",
-     "selectOne": false,
-     "profiles": [
-      {
-       "name": "",
-       "melee": false,
-       "range": "18\"",
-       "attacks": "1",
-       "skill": "3+",
-       "strength": "5",
-       "ap": "-1",
-       "damage": "2",
-       "keywords": "Close-quarters"
       }
      ]
     },
@@ -32476,7 +32483,7 @@
       },
       {
        "id": "wolf-guard-battle-leader--m-wolf-guard-battle-leader--slot-replace-storm-shield",
-       "name": "Storm Shield or ranged weapon",
+       "name": "Storm Shield or plasma pistol",
        "optional": false,
        "options": [
         {
@@ -32496,28 +32503,6 @@
          "weapons": [
           {
            "weaponId": "wolf-guard-battle-leader--plasma-pistol"
-          }
-         ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        },
-        {
-         "weapons": [
-          {
-           "weaponId": "wolf-guard-battle-leader--master-crafted-bolt-carbine"
-          }
-         ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        },
-        {
-         "weapons": [
-          {
-           "weaponId": "wolf-guard-battle-leader--master-crafted-heavy-bolt-pistol"
           }
          ],
          "upgradeName": "",
@@ -32572,7 +32557,7 @@
     {
      "id": "wolf-guard-headtakers--a-headhunters",
      "name": "Headhunters",
-     "description": "At the start of the battle, select one unit from your opponent's army to be this unit's quarry. Weapons equipped by HEADTAKERS models in this unit have the [DEVASTATING WOUNDS] and [PRECISION] abilities while targeting it's quarry. Each time this unit's quarry is destroyed, select one new enemy unit to be this unit's quarry. This ability can be used even if this unit is embarked within\na Transport"
+     "description": "At the start of the battle, select one unit from your opponent's army to be this unit's quarry. Weapons equipped by models in this unit have the [DEVASTATING WOUNDS] and [PRECISION] abilities while targeting it's quarry. Each time this unit's quarry is destroyed, select one new enemy unit to be this unit's quarry. This ability can be used even if this unit is embarked within\na Transport"
     },
     {
      "id": "wolf-guard-headtakers--a-hunting-hounds",
@@ -32597,7 +32582,7 @@
        "range": "",
        "attacks": "4",
        "skill": "3+",
-       "strength": "6",
+       "strength": "5",
        "ap": "-2",
        "damage": "2",
        "keywords": ""
@@ -32662,9 +32647,9 @@
    "models": [
     {
      "id": "wolf-guard-headtakers--m-wolf-guard-headtaker-w-storm-shield",
-     "name": "Wolf Guard Headtaker w/ Storm Shield",
+     "name": "Wolf Guard Headtaker",
      "min": 0,
-     "max": 6,
+     "max": 0,
      "perModels": 0,
      "isDefault": true,
      "pts": 0,
@@ -32675,7 +32660,7 @@
       "W": "3",
       "LD": "6+",
       "OC": "1",
-      "InSv": "4+"
+      "InSv": ""
      },
      "keywords": [
       "Imperium",
@@ -32703,8 +32688,8 @@
        ]
       },
       {
-       "id": "wolf-guard-headtakers--m-wolf-guard-headtaker-w-storm-shield--slot-master-crafted-power-weapon-and-storm-shield",
-       "name": "Master-crafted Power Weapon and Storm Shield",
+       "id": "wolf-guard-headtakers--m-wolf-guard-headtaker-w-storm-shield--slot-melee",
+       "name": "Melee weapons",
        "optional": false,
        "options": [
         {
@@ -32713,62 +32698,17 @@
            "weaponId": "wolf-guard-headtakers--master-crafted-power-weapon"
           }
          ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        }
-       ]
-      }
-     ]
-    },
-    {
-     "id": "wolf-guard-headtakers--m-wolf-guard-headtaker-w-paired-weapons",
-     "name": "Wolf Guard Headtaker w/ paired weapons",
-     "min": 0,
-     "max": 6,
-     "perModels": 0,
-     "isDefault": false,
-     "pts": 0,
-     "stats": {
-      "M": "7\"",
-      "T": "5",
-      "Sv": "3+",
-      "W": "3",
-      "LD": "6+",
-      "OC": "1",
-      "InSv": ""
-     },
-     "keywords": [
-      "Imperium",
-      "Tacticus",
-      "Wolf Guard",
-      "Headtakers"
-     ],
-     "wargear": [
-      {
-       "id": "wolf-guard-headtakers--m-wolf-guard-headtaker-w-paired-weapons--slot-heavy-bolt-pistol",
-       "name": "Heavy Bolt Pistol",
-       "optional": false,
-       "options": [
-        {
-         "weapons": [
+         "upgradeName": "Storm Shield",
+         "upgradeText": "The bearer has a 4+ invulnerable save.",
+         "statMods": [
           {
-           "weaponId": "wolf-guard-headtakers--heavy-bolt-pistol"
+           "characteristic": "InSv",
+           "type": "set",
+           "value": "4+"
           }
          ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
          "pts": 0
-        }
-       ]
-      },
-      {
-       "id": "wolf-guard-headtakers--m-wolf-guard-headtaker-w-paired-weapons--slot-paired-master-crafted-power-weapons",
-       "name": "Paired Master-crafted Power Weapons",
-       "optional": false,
-       "options": [
+        },
         {
          "weapons": [
           {
@@ -32788,10 +32728,10 @@
      "id": "wolf-guard-headtakers--m-hunting-wolves",
      "name": "Hunting Wolves",
      "min": 0,
-     "max": 6,
+     "max": 0,
      "perModels": 0,
      "isDefault": false,
-     "pts": 10,
+     "pts": 0,
      "stats": {
       "M": "10\"",
       "T": "4",
@@ -32828,16 +32768,76 @@
      ]
     }
    ],
-   "sizeOptions": [],
+   "sizeOptions": [
+    {
+     "id": "wolf-guard-headtakers--size-3-0",
+     "name": "3 Headtakers",
+     "pts": 0,
+     "counts": [
+      {
+       "modelName": "Wolf Guard Headtaker",
+       "min": 3,
+       "max": 3,
+       "pts": 0
+      }
+     ]
+    },
+    {
+     "id": "wolf-guard-headtakers--size-3-3",
+     "name": "3 Headtakers and 3 Hunting Wolves",
+     "pts": 30,
+     "counts": [
+      {
+       "modelName": "Wolf Guard Headtaker",
+       "min": 3,
+       "max": 3,
+       "pts": 0
+      },
+      {
+       "modelName": "Hunting Wolves",
+       "min": 3,
+       "max": 3,
+       "pts": 0
+      }
+     ]
+    },
+    {
+     "id": "wolf-guard-headtakers--size-6-0",
+     "name": "6 Headtakers",
+     "pts": 85,
+     "counts": [
+      {
+       "modelName": "Wolf Guard Headtaker",
+       "min": 6,
+       "max": 6,
+       "pts": 0
+      }
+     ]
+    },
+    {
+     "id": "wolf-guard-headtakers--size-6-6",
+     "name": "6 Headtakers and 6 Hunting Wolves",
+     "pts": 145,
+     "counts": [
+      {
+       "modelName": "Wolf Guard Headtaker",
+       "min": 6,
+       "max": 6,
+       "pts": 0
+      },
+      {
+       "modelName": "Hunting Wolves",
+       "min": 6,
+       "max": 6,
+       "pts": 0
+      }
+     ]
+    }
+   ],
    "minModels": 3,
    "maxModels": 12,
    "basePoints": 85,
-   "pointsTiers": [
-    {
-     "minModels": 4,
-     "pts": 170
-    }
-   ],
+   "pointsTiers": [],
    "duplicateTaxPts": 10,
    "duplicateTaxFromCopy": 3,
    "maxPerArmy": 3,
@@ -32884,7 +32884,7 @@
        "range": "",
        "attacks": "4",
        "skill": "3+",
-       "strength": "6",
+       "strength": "5",
        "ap": "-2",
        "damage": "2",
        "keywords": ""
@@ -32901,7 +32901,7 @@
        "melee": false,
        "range": "24\"",
        "attacks": "2",
-       "skill": "2+",
+       "skill": "3+",
        "strength": "5",
        "ap": "-1",
        "damage": "1",
@@ -32919,7 +32919,7 @@
        "melee": false,
        "range": "24\"",
        "attacks": "6",
-       "skill": "2+",
+       "skill": "3+",
        "strength": "6",
        "ap": "-2",
        "damage": "1",
@@ -33181,45 +33181,6 @@
      ]
     },
     {
-     "id": "wolf-guard-terminators--m-wolf-guard-terminator-w-storm-bolter-claws",
-     "name": "Wolf Guard Terminator w/ twin lightning claws",
-     "min": 0,
-     "max": 9,
-     "perModels": 0,
-     "isDefault": false,
-     "pts": 0,
-     "stats": {
-      "M": "6\"",
-      "T": "6",
-      "Sv": "2+",
-      "W": "3",
-      "LD": "6+",
-      "OC": "1",
-      "InSv": "4+"
-     },
-     "keywords": [],
-     "wargear": [
-      {
-       "id": "wolf-guard-terminators--m-wolf-guard-terminator-w-storm-bolter-claws--slot-claws",
-       "name": "Twin Lightning Claws",
-       "optional": false,
-       "options": [
-        {
-         "weapons": [
-          {
-           "weaponId": "wolf-guard-terminators--twin-lightning-claws"
-          }
-         ],
-         "upgradeName": "",
-         "upgradeText": "",
-         "statMods": [],
-         "pts": 0
-        }
-       ]
-      }
-     ]
-    },
-    {
      "id": "wolf-guard-terminators--m-wolf-guard-terminator-pack-leader",
      "name": "Wolf Guard Terminator Pack Leader",
      "min": 1,
@@ -33364,7 +33325,7 @@
        "strength": "6",
        "ap": "-1",
        "damage": "2",
-       "keywords": "Cleave 1"
+       "keywords": ""
       }
      ]
     },
@@ -33538,7 +33499,7 @@
        "strength": "5",
        "ap": "-2",
        "damage": "2",
-       "keywords": "Assault, Precision, Rapid Fire 1"
+       "keywords": "Lethal Hits: non-MONSTER/VEHICLE, Precision"
       }
      ]
     },
@@ -33570,7 +33531,7 @@
        "name": "",
        "melee": false,
        "range": "12\"",
-       "attacks": "D3",
+       "attacks": "2",
        "skill": "3+",
        "strength": "5",
        "ap": "-1",
@@ -33581,7 +33542,7 @@
     },
     {
      "id": "wolf-scouts--combat-blade",
-     "name": "Combat Blade",
+     "name": "Combat Knife",
      "selectOne": false,
      "profiles": [
       {
@@ -33691,25 +33652,6 @@
        "keywords": "Close-quarters"
       }
      ]
-    },
-    {
-     "id": "wolf-scouts--combat-blade-2",
-     "name": "Combat Blade",
-     "selectOne": false,
-     "profiles": [
-      {
-       "name": "",
-       "melee": true,
-       "range": "",
-       "attacks": "4",
-       "skill": "3+",
-       "strength": "4",
-       "ap": "-1",
-       "damage": "1",
-       "keywords": ""
-      }
-     ],
-     "maxPerUnit": 1
     }
    ],
    "models": [
@@ -33867,13 +33809,14 @@
            "weaponId": "wolf-scouts--plasma-pistol"
           },
           {
-           "weaponId": "wolf-scouts--combat-blade-2"
+           "weaponId": "wolf-scouts--combat-blade"
           }
          ],
          "upgradeName": "Haywire Mine",
          "upgradeText": "Once per battle, at the start of any phase, you can select one enemy unit within 3\" of the bearer and roll one D6: on a 2+, that enemy unit suffers D3 mortal wounds, or 2D3 mortal wounds instead if it is a ^^**Vehicle**^^ unit.",
          "statMods": [],
-         "pts": 0
+         "pts": 0,
+         "maxPerUnit": 1
         },
         {
          "weapons": [
@@ -34076,7 +34019,7 @@
        "range": "",
        "attacks": "3",
        "skill": "3+",
-       "strength": "5",
+       "strength": "6",
        "ap": "-2",
        "damage": "2",
        "keywords": "Sustained Hits 1"
@@ -34095,7 +34038,7 @@
        "attacks": "2",
        "skill": "4+",
        "strength": "4",
-       "ap": "0",
+       "ap": "-1",
        "damage": "1",
        "keywords": "Assault, Blast 1"
       }
@@ -34235,7 +34178,7 @@
     {
      "id": "wulfen-dreadnought--a-bestial-rage",
      "name": "Bestial Rage",
-     "description": "Each time an enemy unit is selected to shoot, after that unit has shot, if this model lost one or more wounds as a result of those attacks, this model can make a Bestial Rage move. To do so, roll one D6, adding 1 to the result: this model can be moved a number of inches up to the result, but must finish that move as close as possible to the closest enemy unit(excluding AIRCRAFT). When doing so, this model can be moved within Engagement Range of that enemy unit. Each model can only make one Bestial Rage move per phase."
+     "description": "In your opponent's Shooting phase, when an enemy unit has shot, if this model lost a wound as a result of those attacks, this unit can make a surge move of up to D6+1\"."
     },
     {
      "id": "wulfen-dreadnought--a-violent-fury",
@@ -34501,7 +34444,7 @@
        "range": "",
        "attacks": "3",
        "skill": "3+",
-       "strength": "8",
+       "strength": "10",
        "ap": "-3",
        "damage": "3",
        "keywords": "Devastating Wounds, Hunter: MONSTER/VEHICLE"
@@ -34520,7 +34463,7 @@
        "attacks": "2",
        "skill": "4+",
        "strength": "4",
-       "ap": "0",
+       "ap": "-1",
        "damage": "1",
        "keywords": "Assault, Blast 1"
       }
@@ -36450,7 +36393,7 @@
        "strength": "5",
        "ap": "-1",
        "damage": "2",
-       "keywords": "Anti-INFANTRY 4+, Devastating Wounds, Rapid Fire 1"
+       "keywords": "Anti-INFANTRY 4+, Devastating Wounds"
       }
      ]
     }
@@ -37286,6 +37229,42 @@
        "keywords": ""
       }
      ]
+    },
+    {
+     "id": "corvus-blackstar--blackstar-rocket-launcher-2",
+     "name": "Blackstar Rocket Launcher",
+     "selectOne": false,
+     "profiles": [
+      {
+       "name": "",
+       "melee": false,
+       "range": "30\"",
+       "attacks": "4",
+       "skill": "3+",
+       "strength": "5",
+       "ap": "-1",
+       "damage": "1",
+       "keywords": "Blast 1"
+      }
+     ]
+    },
+    {
+     "id": "corvus-blackstar--stormstrike-missile-launcher-2",
+     "name": "Stormstrike Missile Launcher",
+     "selectOne": false,
+     "profiles": [
+      {
+       "name": "",
+       "melee": false,
+       "range": "48\"",
+       "attacks": "1",
+       "skill": "3+",
+       "strength": "10",
+       "ap": "-2",
+       "damage": "3",
+       "keywords": ""
+      }
+     ]
     }
    ],
    "models": [
@@ -37382,6 +37361,9 @@
          "weapons": [
           {
            "weaponId": "corvus-blackstar--blackstar-rocket-launcher"
+          },
+          {
+           "weaponId": "corvus-blackstar--blackstar-rocket-launcher-2"
           }
          ],
          "upgradeName": "",
@@ -37393,6 +37375,9 @@
          "weapons": [
           {
            "weaponId": "corvus-blackstar--stormstrike-missile-launcher"
+          },
+          {
+           "weaponId": "corvus-blackstar--stormstrike-missile-launcher-2"
           }
          ],
          "upgradeName": "",
@@ -37499,7 +37484,7 @@
        "melee": true,
        "range": "",
        "attacks": "3",
-       "skill": "4+",
+       "skill": "3+",
        "strength": "8",
        "ap": "-2",
        "damage": "3",
@@ -37528,7 +37513,7 @@
        "melee": true,
        "range": "",
        "attacks": "3",
-       "skill": "4+",
+       "skill": "3+",
        "strength": "12",
        "ap": "-2",
        "damage": "3",
@@ -37666,7 +37651,7 @@
        "range": "36\"",
        "attacks": "3",
        "skill": "3+",
-       "strength": "7",
+       "strength": "9",
        "ap": "-2",
        "damage": "2",
        "keywords": "Blast 1"
@@ -37677,7 +37662,7 @@
        "range": "36\"",
        "attacks": "3",
        "skill": "3+",
-       "strength": "8",
+       "strength": "10",
        "ap": "-3",
        "damage": "3",
        "keywords": "Blast 1, Hazardous"
@@ -37947,6 +37932,23 @@
          "upgradeText": "",
          "statMods": [],
          "pts": 0
+        },
+        {
+         "weapons": [
+          {
+           "weaponId": "deathwatch-terminator-squad--thunder-hammer"
+          }
+         ],
+         "upgradeName": "Storm Shield",
+         "upgradeText": "This model has +1 W.",
+         "statMods": [
+          {
+           "characteristic": "W",
+           "type": "increment",
+           "value": "1"
+          }
+         ],
+         "pts": 5
         }
        ]
       }
@@ -37959,7 +37961,7 @@
      "max": 2,
      "perModels": 5,
      "isDefault": false,
-     "pts": 5,
+     "pts": 0,
      "stats": {
       "M": "5\"",
       "T": "6",
