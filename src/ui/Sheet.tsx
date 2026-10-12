@@ -9,15 +9,15 @@ import { Icon } from './Icon';
 import { useState, type ReactNode } from 'react';
 import { Em } from './Em';
 
-/** The characteristics band, laid out like the printed datasheet: framed boxes, the invulnerable save as a shield. */
+/** The characteristics band, laid out like the printed datasheet: framed boxes, the invulnerable save as a shield under Sv. */
 function Stats({ p, noInv }: { p: ModelProfileData; noInv?: boolean }) {
   const cells: [string, string][] = [['M', p.M != null ? `${p.M}"` : '-'], ['T', String(p.T)], ['Sv', `${p.Sv}+`], ['W', String(p.W)], ['Ld', `${p.Ld}+`], ['OC', p.OC != null ? String(p.OC) : '-']];
   return (
     <div className="ds-stats">
       <div className="ds-statrow">
         {cells.map(([k, v]) => <div key={k} className="ds-stat"><span>{k}</span><b>{v}</b></div>)}
+        {p.InSv && !noInv ? <div className="ds-inv" title="Invulnerable save"><span className="ds-shield">{p.InSv}+</span></div> : null}
       </div>
-      {p.InSv && !noInv ? <div className="ds-inv"><span className="ds-shield">{p.InSv}+</span><span>INVULNERABLE SAVE</span></div> : null}
     </div>
   );
 }
@@ -206,14 +206,16 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
   );
 }
 
-export function UnitView({ u }: { u: UnitState }) {
+/** `model`: the model tapped on the board, listed first with its own weapons. */
+export function UnitView({ u, model }: { u: UnitState; model?: string }) {
   usePastePortrait(u.models.find((m) => m.isCharacter)?.source ?? u.sources[0]);
-  const groups = new Map<string, { p: ModelProfileData; n: number; weapons: WeaponData[]; name: string; gear: string[] }>();
-  for (const m of u.models) {
+  const groups = new Map<string, { p: ModelProfileData; n: number; weapons: WeaponData[]; name: string; gear: string[]; tapped?: boolean }>();
+  const tapped = u.models.find((m) => m.id === model && !m.dead);
+  for (const m of tapped ? [tapped, ...u.models.filter((x) => x !== tapped)] : u.models) {
     if (m.dead) continue;
     // models with different wargear are listed separately
     const k = [m.source, m.name, m.profile.W, m.profile.InSv, ...m.weapons.map((w) => w.name), ...(m.gear ?? [])].join('|');
-    const g = groups.get(k) ?? { p: m.profile, n: 0, weapons: m.weapons, name: m.name, gear: m.gear ?? [] };
+    const g = groups.get(k) ?? { p: m.profile, n: 0, weapons: m.weapons, name: m.name, gear: m.gear ?? [], tapped: m === tapped };
     g.n += 1;
     groups.set(k, g);
   }
@@ -242,8 +244,8 @@ export function UnitView({ u }: { u: UnitState }) {
         {u.buffs.map((b, i) => <span key={i} className="chip">{b.label ?? b.kind}</span>)}
       </div>
       {[...groups.values()].map((g, i) => (
-        <div key={i}>
-          <div className="small muted">{g.n}× {g.name}{g.gear.length ? ` · ${g.gear.join(', ')}` : ''}</div>
+        <div key={i} className={g.tapped ? 'uv-tapped' : undefined}>
+          <div className="small muted">{g.tapped ? <b>Tapped model · </b> : null}{g.n}× {g.name}{g.gear.length ? ` · ${g.gear.join(', ')}` : ''}</div>
           <Stats p={g.p} />
           <Weapons weapons={g.weapons} />
         </div>

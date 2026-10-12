@@ -445,6 +445,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [check, setCheck] = useState<MoveCheck | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<string | null>(null);
+  const [sheetModel, setSheetModel] = useState<string | undefined>();
+  const taps = useRef<{ id?: string; t: number[] }>({ t: [] });
   const [showBuffs, setShowBuffs] = useState(false);
   const [fly, setFly] = useState(false);
   const [showStrats, setShowStrats] = useState(false);
@@ -558,6 +560,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const picked = ritMap ? ritMap.picked : mode?.k === 'shoot' || mode?.k === 'fight' || mode?.k === 'explosives' ? (mode.target ? [mode.target] : []) : mode?.k === 'charge' ? mode.targets : [];
 
   const onTapUnit = (unitId: string, modelId?: string) => {
+    // three quick taps on a model: its datasheet with the weapons it carries
+    const now = performance.now(), tp = taps.current;
+    tp.t = tp.id === modelId ? [...tp.t.filter((t) => now - t < 700), now] : [now];
+    tp.id = modelId;
+    if (tp.t.length >= 3) { tp.t = []; setSheetModel(modelId); setSheet(unitId); return; }
     if (tape.on) {
       const m = U(unitId).models.find((x) => x.id === modelId && !x.dead) ?? alive(U(unitId))[0];
       if (m) measureTap({ x: m.x, y: m.y }, { u: unitId, m: m.id });
@@ -912,7 +919,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       ...u.buffs.map((b) => (b.label && !BUFFS.some((x) => x.kind === b.kind) ? `${EFFECT_LABEL[b.kind] ?? b.kind} (${b.label})` : BUFFS.find((x) => x.kind === b.kind)?.label ?? EFFECT_LABEL[b.kind] ?? b.kind)),
     ].filter(Boolean) as string[];
     return (
-      <div className="row unit-card" style={{ flexWrap: 'nowrap', gap: 10 }} onClick={() => setSheet(u.id)}>
+      <div className="row unit-card" style={{ flexWrap: 'nowrap', gap: 10 }} onClick={() => { setSheetModel(undefined); setSheet(u.id); }}>
         <Portrait kind={unitToken(u)} owner={u.owner} character={u.models.some((x) => x.isCharacter && !x.dead)} size={40} datasheet={lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source} fallback={lead.source} />
         <div className="grow">
           <div style={{ fontWeight: 700 }} className={u.owner ? 'p1' : 'p0'}>{u.name} <span className="muted tiny">{alive(u).length}/{u.startingStrength}</span></div>
@@ -2143,22 +2150,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             ))}
           </div>
         )}
-        {s.phase !== 'deploy' && ([0, 1] as PlayerId[]).some((p) => activeIds(s, p).length || s.players[p].pledge?.round === s.round || s.players[p].pactPoints || armyChips[p].size) && (
-          <div className="blessbar" aria-label="Army-wide buffs">
-            {([0, 1] as PlayerId[]).flatMap((p) => [...armyChips[p]].map(([label, tags]) => (
-              <button key={`a${p}${label}`} type="button" className={`p${p}`} onClick={() => flash(`${label} (every unit): ${tags.join(' · ')}`)}>{label} <span className="muted">{tags.join(' · ')}</span></button>
-            )))}
-            {([0, 1] as PlayerId[]).flatMap((p) => activeIds(s, p).map((id) => {
-              const b = blessingById(id)!;
-              return <button key={`${p}${id}`} type="button" className={`p${p}`} onClick={() => flash(`${b.name}: ${b.text}`)}>{b.name} <span className="muted">{b.short}</span></button>;
-            }))}
-            {([0, 1] as PlayerId[]).filter((p) => s.players[p].pledge?.round === s.round || s.players[p].pactPoints).map((p) => (
-              <button key={`pact${p}`} type="button" className={`p${p}`} onClick={() => flash(PACT_BONUSES)}>
-                {s.players[p].pledge?.round === s.round ? `Pledge ${s.players[p].pledge!.n} · ` : ''}Pact {s.players[p].pactPoints ?? 0}
-              </button>
-            ))}
-          </div>
-        )}
       </header>
       <div className={`board-wrap shake-${shake}`}>
         <Board
@@ -2217,6 +2208,22 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             think={thinking && actingBot === commanderP ? think ?? { values: {}, done: 0, total: 0 } : null}
             planning={!actingBot && ponderProg ? ponderProg : null} />
         )}
+        {s.phase !== 'deploy' && ([0, 1] as PlayerId[]).some((p) => activeIds(s, p).length || s.players[p].pledge?.round === s.round || s.players[p].pactPoints || armyChips[p].size) && (
+          <div className="buffcards" aria-label="Army-wide buffs">
+            {([0, 1] as PlayerId[]).flatMap((p) => [...armyChips[p]].map(([label, tags]) => (
+              <div key={`a${p}${label}`} className={`buffcard p${p}`}><b>{label}</b><span>Every unit: {tags.join(' · ')}</span></div>
+            )))}
+            {([0, 1] as PlayerId[]).flatMap((p) => activeIds(s, p).map((id) => {
+              const b = blessingById(id)!;
+              return <div key={`${p}${id}`} className={`buffcard p${p}`}><b>{b.name}</b><span>{b.text}</span></div>;
+            }))}
+            {([0, 1] as PlayerId[]).filter((p) => s.players[p].pledge?.round === s.round || s.players[p].pactPoints).map((p) => (
+              <div key={`pact${p}`} className={`buffcard p${p}`}>
+                <b>{s.players[p].pledge?.round === s.round ? `Pledge ${s.players[p].pledge!.n} · ` : ''}Pact {s.players[p].pactPoints ?? 0}</b><span>{PACT_BONUSES}</span>
+              </div>
+            ))}
+          </div>
+        )}
         <div className={`panel ${actor ? 's1' : ''}`}>
           {bots.length === 0 && s.phase !== 'deploy' && s.phase !== 'gameover' && !s.window && <div className="label"><span className={`side-dot s${actor}`} aria-hidden="true" /> {pName(s, actor)} to act</div>}
           {panel()}
@@ -2262,7 +2269,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className="tray-backdrop" onClick={() => setSheet(null)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
             <div className="tray-head"><span className="grow" /><button className="icon-btn" aria-label="Close" onClick={() => setSheet(null)}><Icon name="close" /></button></div>
-            <UnitView u={U(sheet)} />
+            <UnitView u={U(sheet)} model={sheetModel} />
             {abilityBar(U(sheet).owner, { unitId: sheet })}
             {/* for rules the app does not apply by itself: switch an effect on for this phase */}
             {!bots.includes(U(sheet).owner) && onBoard(U(sheet)) && buffPanel(U(sheet))}

@@ -385,6 +385,10 @@ button.ab-faction { border: none; background: none; padding: 0; text-align: left
 .ab-pop-line { padding: 2px 8px 2px 0; font-size: 14px; }
 .ab-pop button.ab-pop-ride { gap: 12px; min-height: 64px; padding: 6px 16px 6px 8px; }
 .ab-pop-ride .ab-art { width: 52px; height: 52px; }
+.ab-ride-art { position: relative; flex: 0 0 auto; }
+.ab-ride-leads { position: absolute; right: -6px; bottom: -4px; display: flex; gap: 2px; }
+.ab-pop-ride .ab-ride-leads .ab-art { width: 24px; height: 24px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface); }
+.ab-ride-enh { color: var(--accent); }
 .ab-pop button.ab-pop-ride.full .ab-art { opacity: 0.45; }
 
 /* wargear choices */
@@ -469,7 +473,7 @@ button.ab-faction { border: none; background: none; padding: 0; text-align: left
 .ds-statrow { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; max-width: 420px; }
 .ds-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 7px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); font: 600 12px var(--font-cond); letter-spacing: 0.1em; color: var(--text-2); }
 .ds-stat b { font: 700 22px/1 var(--font-cond); letter-spacing: 0; color: var(--text); font-variant-numeric: tabular-nums; }
-.ds-inv { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font: 600 13px var(--font-cond); letter-spacing: 0.1em; color: var(--text-2); }
+.ds-inv { grid-column: 3; display: flex; justify-content: center; }
 .ds-shield { display: grid; place-items: center; width: 34px; height: 36px; background: var(--text); color: var(--bg); font: 700 15px var(--font-cond); clip-path: polygon(0 0, 100% 0, 100% 62%, 50% 100%, 0 62%); }
 .ds-sec { margin: 8px 14px 0; padding-top: 12px; border-top: 1px solid var(--line); font: 600 14px var(--font-cond); letter-spacing: 0.12em; color: var(--text-2); }
 .ds-line { margin: 0 14px; padding: 4px 0; font-size: 13px; color: var(--text-2); }
@@ -515,6 +519,7 @@ button.ab-faction { border: none; background: none; padding: 0; text-align: left
 .rt-opts { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
 .rt-opt + .rt-opt { border-top: 1px solid var(--line); }
 .rt-opt-head { padding: 6px 10px; background: var(--surface-2); font: 600 15px var(--font-cond); letter-spacing: 0.02em; }
+.rt-sec { margin: 10px 0 4px; font: 700 13px var(--font-cond); letter-spacing: 0.08em; color: var(--muted, inherit); border-bottom: 1px solid var(--line, currentColor); padding-bottom: 2px; }
 .rt-opt-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
 b.em { font-weight: 700; color: var(--text); }
 .dt-card-text b.em, .enh-text b.em, .ds-ab b.em, .rt b.em, .sheet b.em { font-weight: 700; }
@@ -811,8 +816,7 @@ details > .strat-card { margin-top: 6px; }
 .ds-sheet .ds-stat b { display: grid; place-items: center; width: 100%; min-height: 34px; border-radius: 5px; background: #fff; color: #111; font-size: 20px; box-shadow: inset 0 0 0 2px var(--ds-band); }
 .ds-mname { flex: 1 1 90px; min-width: 90px; padding-top: 14px; color: #fff; font: 800 14px var(--font-cond); letter-spacing: 0.04em; }
 .ds-mname small { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0; color: #d0d6da; }
-.ds-sheet .ds-inv { margin: 4px 0 0 60px; gap: 0; color: #fff; }
-.ds-sheet .ds-inv > span:last-child { padding: 3px 10px; background: var(--ds-band); font-size: 12px; }
+.ds-sheet .ds-inv { margin-top: 2px; }
 .ds-sheet .ds-shield { width: 32px; height: 36px; background: #fff; color: #111; box-shadow: inset 0 0 0 2px var(--ds-band); }
 .ds-sheet .ds-wt { margin-top: 0; }
 .ds-sheet .ds-wt th { background: var(--ds-band); color: #fff; border-bottom: 0; padding-top: 5px; padding-bottom: 5px; }
@@ -1347,9 +1351,10 @@ details > .strat-card { margin-top: 6px; }
 .bk-pick-name { font-weight: 700; font-size: 14px; }
 .bk-pick-fx { font-size: 12px; opacity: 0.85; }
 .bk-more { justify-self: start; padding: 2px 0; border: none; background: none; color: var(--accent); font-size: 13px; cursor: pointer; text-decoration: underline; }
-.blessbar { display: flex; gap: 6px; padding: 2px 8px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
-.blessbar button { flex: none; padding: 0 8px; line-height: 18px; min-height: 0; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text); font-size: 11px; cursor: pointer; }
-.blessbar .p0 { border-color: var(--p0); } .blessbar .p1 { border-color: var(--p1); }
+.buffcards { flex: none; display: flex; gap: 8px; padding: 6px 10px; overflow-x: auto; scroll-snap-type: x mandatory; background: var(--surface-2); border-top: 1px solid var(--line); }
+.buffcard { flex: 0 0 min(240px, 72vw); max-height: 92px; overflow-y: auto; scroll-snap-align: start; display: flex; flex-direction: column; gap: 2px; padding: 6px 9px; border: 1px solid var(--line-2); border-left: 4px solid var(--p0); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 12px; line-height: 1.35; }
+.buffcard.p1 { border-left-color: var(--p1); }
+.buffcard b { font: 700 13px var(--font-cond); letter-spacing: 0.02em; }
 .bk-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text-2); cursor: pointer; }
 .bk-row.ok { border-color: var(--good); color: var(--text); }
 .bk-name { font-weight: 700; }
@@ -1373,3 +1378,4 @@ details > .strat-card { margin-top: 6px; }
 
 /* factions whose rules are not finished yet */
 .ab-fcard.wip { opacity: 0.45; filter: grayscale(1); }
+.uv-tapped { padding: 6px 8px; border: 2px solid var(--accent); border-radius: 8px; }
