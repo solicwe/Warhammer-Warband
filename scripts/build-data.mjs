@@ -178,14 +178,14 @@ export function parseWargearOption(text, weapons = []) {
   // who: "The Intercessor Sergeant's …", "Any number of Initiates can …", "One Incursor can …", "1 Nob model can …"
   const whoClean = (w) => (/^models?$/i.test(w) ? '*' : w.replace(/ in this unit$/i, '').replace(/ (?:equipped with|that|who) .*$/i, '').replace(/ models?$/i, '').trim());
   if (opt.who === '*') {
-    if ((m = t.match(/^(?:The|An?|Each|Every) ([A-Z][\w -]+?)(?:'s| can)/))) opt.who = whoClean(m[1]);
+    if ((m = t.match(/^(?:The|An?|Each|Every) ([A-Z][\w -]+?)(?:'s|(?<=s)'(?= )| can)/))) opt.who = whoClean(m[1]);
     else if ((m = t.match(/^(?:Any number of|Up to \w+|One|1|All(?: of the)?) ([A-Z][\w -]+?)(?: models?)?(?:'s| can)/))) opt.who = whoClean(m[1]);
     else if ((m = t.match(/^For every \w+ models? in this unit,? (?:up to \w+ )?(?:1 |one )?([A-Z][\w -]+?)(?: models?)?(?:'s| equipped| can)/))) opt.who = whoClean(m[1]);
   }
   // what is replaced: "have their X replaced", "X's Y can be replaced", "can replace its X with …"
   let choiceBody = null;
   if ((m = t.match(/can (?:each )?replace (?:its|their) (.+?) with (.+)$/i))) { opt.replace = items(m[1]); choiceBody = m[2]; }
-  else if ((m = t.match(/have (?:their|its) (.+?) replaced/i)) || (m = t.match(/(?:'s|their|its) (.+?) (?:can )?(?:each )?(?:be )?replaced/i))) opt.replace = items(m[1]);
+  else if ((m = t.match(/have (?:their|its) (.+?) replaced/i)) || (m = t.match(/(?:'s|s'|their|its) (.+?) (?:can )?(?:each )?(?:be )?replaced/i))) opt.replace = items(m[1]);
   // "… replaced with 1 twin lightning claws, or two different weapons from the following list: • …"
   if ((m = t.match(/(two|three|2|3) different (?:weapons|items) from the following list:?\*?\s*(.+)$/i))) {
     opt.pick = Number(m[1]) || WORDS[m[1].toLowerCase()];

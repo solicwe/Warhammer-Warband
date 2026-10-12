@@ -1317,7 +1317,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                     {ch.options.map(({ o, why }) => (
                       <button key={o.id} className={`btn small ${detPick.includes(o.id) ? 'on' : ''}`} disabled={!!why} title={why ?? o.text}
                         onClick={() => (need === 1 ? pick([o.id]) : setDetPick((cur) => (cur.includes(o.id) ? cur.filter((x) => x !== o.id) : [...cur, o.id].slice(-need))))}>
-                        <b>{o.name}</b><span className="tiny"> {why ?? o.text}</span>
+                        <b>{o.name}</b><span className="tiny"> {why ?? (ch.state.used.includes(o.id) ? `extra use (${d.name}) — ${o.text}` : o.text)}</span>
                       </button>
                     ))}
                   </div>
