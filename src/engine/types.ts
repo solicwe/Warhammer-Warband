@@ -202,6 +202,9 @@ export interface TransportInfo {
 
 export interface UnitState {
   startEngaged?: { turn: number; ids: string[] }; // enemy units it was engaged with at the start of this turn (Thrill Seekers)
+  plagueExtra?: string;
+  leads?: string[]; // a lone CHARACTER: the datasheets it can lead (attaching during the battle: Mobile Vector)
+  putrid?: boolean; // Putrid Detonation: its Deadly Demise makes the units it hurts Afflicted // Cornucophagus: the Plague enemy units within this unit's Contagion Range also have
   id: string;
   owner: PlayerId;
   name: string;
@@ -322,6 +325,12 @@ export interface PlayerState {
   bloodshed?: number;
   /** Khorne Daemonkin: Blood Tithe points */
   tithe?: number;
+  /** Death Guard: the army's Plague, a second one (Final Ingredient / Host of the Hybridised Pox), places that make
+   *  enemy units Afflicted (Worldblight / Signal Pox objectives, Blighted Land terrain), the Numberless Horde template */
+  plague?: string;
+  extraPlague?: string;
+  blight?: { objId?: string; terrain?: number; untilTurn?: number }[];
+  poxTemplate?: UnitState;
   /** a unit the army can add mid-battle (Gift of Change: a one-model Tzeentch Chaos Spawn), cloned when it arrives */
   spawnTemplate?: UnitState;
   name: string;

@@ -1,6 +1,7 @@
 // Reads detachment stratagem text (WHEN / TARGET / EFFECT) so the game can offer them at the right time
 // and apply the common effects automatically. Anything it cannot read is still usable: CP is spent and logged.
 import { favouredOnKill, raisePledge } from './emperorsChildren';
+import { attachNear, inContagionOf } from './deathGuard';
 import acStrats from '../../data/stratagems/AC.json';
 import orkStrats from '../../data/stratagems/ORK.json';
 import { reactWorth } from './botPlus';
@@ -9,9 +10,10 @@ import tsStrats from '../../data/stratagems/TS.json';
 import csmStrats from '../../data/stratagems/CSM.json';
 import weStrats from '../../data/stratagems/WE.json';
 import ecStrats from '../../data/stratagems/EC.json';
+import dgStrats from '../../data/stratagems/DG.json';
 import { blessingsRoll } from './blessings';
 import { parseAbilityText } from './abilityText';
-import { runActions, shockTest, type Action } from './activations';
+import { ldTest, runActions, shockTest, type Action } from './activations';
 import { kwPhrase } from './army';
 import { buildShootPools, expectedDamage, finishAttack, onAttackFinished, onModelKilled, resolveAll, startAttack } from './attack';
 import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
@@ -85,7 +87,7 @@ export interface StratRule {
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap' | 'raisePledge';
+export type Special = 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap' | 'raisePledge' | 'putrid' | 'attachNear' | 'mireslick';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -110,6 +112,8 @@ export interface EnemyPick {
   hitBy?: boolean | string;
   /** only an enemy unit that Fell Back this turn */
   fellBack?: boolean;
+  /** only an enemy unit within Contagion Range of this unit (Aggravus Spasms) */
+  contagion?: boolean;
 }
 
 const BOOKS: Record<string, Record<string, StratRule>> = {
@@ -120,6 +124,7 @@ const BOOKS: Record<string, Record<string, StratRule>> = {
   CSM: (csmStrats as unknown as { rules: Record<string, StratRule> }).rules,
   WE: (weStrats as unknown as { rules: Record<string, StratRule> }).rules,
   EC: (ecStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  DG: (dgStrats as unknown as { rules: Record<string, StratRule> }).rules,
 };
 
 const OFFENCE_BUFFS: BuffKind[] = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
@@ -377,6 +382,7 @@ export function stratEnemies(s: GameState, p: PlayerId, rule: StratRule, u: Unit
     if (q.fellBack && e.move !== 'fallback') return false;
     if (!u || !onBoard(u)) return !(q.range || q.engaged || q.visible || q.hitBy);
     if (q.engaged && !engagedEnemies(s, u).some((x) => x.id === e.id)) return false;
+    if (q.contagion && !inContagionOf(s, u, e)) return false;
     if (q.range !== undefined && unitDistance(u, e) > q.range + 1e-6) return false;
     if (q.visible && !alive(u).some((m) => unitVisibleTo(s, m, e))) return false;
     if (q.hitBy) {
@@ -542,6 +548,13 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
     // Skulls for the Skull Throne!: one more Blessing of Khorne until the end of the battle round
     case 'blessingOne': blessingsRoll(s, p, { label: label, until: 'round' }); return;
     case 'raisePledge': raisePledge(s, p); return;
+    // Death Guard
+    case 'putrid': u.putrid = true; return;
+    case 'attachNear': attachNear(s, u, label); return;
+    case 'mireslick': {
+      if (enemy && !ldTest(s, enemy, label)) { addTimed(s, enemy, { e: { mustStay: true }, label, until: 'turn', by: p }); log(s, `${label}: ${enemy.name} must Remain Stationary`, 'info', p); }
+      return;
+    }
     // Summoned by Slaughter: a Bloodletters unit in Reserves arrives within 9" of the destroyed unit, more than 6" from enemies
     case 'summonNear': {
       const dead = ctx.victimId ? unitById(s, ctx.victimId) : undefined;

@@ -1,0 +1,706 @@
+{
+ "_comment": "Death Guard stratagems (Codex + Faction Pack v1.3, 30 Sep 2026) in machine-readable form. Keys: stratagem NAME (as on the card).",
+ "rules": {
+  "EYE OF THE SWARM": {
+   "targetKw": [
+    "PLAGUE MARINES"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "close-quarters"
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "DRONING HORROR": {
+   "targetKw": [
+    "PLAGUE MARINES"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "reroll": "hits1"
+    },
+    {
+     "attack": "ranged",
+     "if": [
+      "halfRange"
+     ],
+     "reroll": "wounds1"
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "NAUSEATING PAROXYSMS": {
+   "react": "fightStart",
+   "targetKw": [
+    "PLAGUE MARINES"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "enemy": {
+    "engaged": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "DISGUSTINGLY RESILIENT": {
+   "buffs": [
+    "damage-1"
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "LEECHSPORE ERUPTION": {
+   "unitIf": [
+    "belowStartingW"
+   ],
+   "enemy": {
+    "range": 3
+   },
+   "do": [
+    {
+     "on": "self",
+     "dg": "leechspore"
+    }
+   ],
+   "bot": "never",
+   "note": "Uses the model that lost the most wounds",
+   "status": "auto"
+  },
+  "PLAGUESURGE": {
+   "unitIf": [
+    "warlord"
+   ],
+   "effects": [
+    {
+     "contagionArmy": 3
+    }
+   ],
+   "until": "nextCommand",
+   "bot": "never",
+   "status": "auto"
+  },
+  "PUTRID DETONATION": {
+   "react": "deadlyDemise",
+   "targetFrom": "destroyed",
+   "unitIf": [
+    "any:kw:VEHICLE||kw:MONSTER"
+   ],
+   "special": [
+    "putrid"
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "OVERWHELMING GENEROSITY": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "enemy": {
+    "visible": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "attack": "ranged",
+      "rerollAttacks": true,
+      "units": [
+       "DEATH GUARD"
+      ]
+     },
+     "until": "phase"
+    }
+   ],
+   "bot": "never",
+   "status": "auto",
+   "note": "Death Guard units re-roll a low number of attacks against that unit this phase"
+  },
+  "CREEPING BLIGHT": {
+   "targetKw": [
+    "INFANTRY"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "if": [
+      "targetAfflicted"
+     ],
+     "reroll": [
+      "hits",
+      "wounds"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "DRAWN TO DESPAIR": {
+   "effects": [
+    {
+     "if": [
+      "targetInOwnDz",
+      "targetNotKw:AIRCRAFT"
+     ],
+     "reroll": "hits"
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "STINKING MIRE": {
+   "react": "enemyChargePhaseStart",
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "unitIf": [
+    "notEngaged"
+   ],
+   "enemy": {
+    "range": 12,
+    "visible": true
+   },
+   "enemyEffects": [
+    {
+     "chargeBonus": -1
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "BLIGHTED LAND": {
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "dg": "blightedLand"
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "RELENTLESS GRIND": {
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "EYESTINGER STORM": {
+   "react": "enemyCommandStart",
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "dg": "eyestinger"
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "FONT OF FILTH": {
+   "targetKw": [
+    "VEHICLE"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "assault"
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "BLESSINGS OF FILTH": {
+   "unitIf": [
+    "leaderAttached"
+   ],
+   "effects": [
+    {
+     "critHitOn": 5
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "GROTESQUE FORTITUDE": {
+   "unitIf": [
+    "leaderAttached"
+   ],
+   "effects": [
+    {
+     "toughness": 2
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "MALIGNANCE MAGNIFIED": {
+   "unitIf": [
+    "leaderAttached"
+   ],
+   "effects": [
+    {
+     "if": [
+      "targetBelowStarting"
+     ],
+     "reroll": [
+      "hits",
+      "wounds"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "RABID INFUSION": {
+   "react": "fightStart",
+   "unitIf": [
+    "twoCharacters",
+    "engaged"
+   ],
+   "effects": [
+    {
+     "fightsFirst": true
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "MOBILE VECTOR": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "unitIf": [
+    "!leaderAttached"
+   ],
+   "special": [
+    "attachNear"
+   ],
+   "bot": "never",
+   "note": "Joins the closest friendly unit within 2\" it can lead",
+   "status": "auto"
+  },
+  "DEATH’S HEADS": {
+   "targetKw": [
+    "BIOLOGUS PUTRIFIER"
+   ],
+   "unitIf": [
+    "notEngaged"
+   ],
+   "enemy": {
+    "range": 8,
+    "visible": true,
+    "notKw": [
+     "VEHICLE"
+    ]
+   },
+   "enemyMark": "All Plagues",
+   "enemyUntil": "nextTurnStart",
+   "bot": "never",
+   "status": "auto"
+  },
+  "CLUTCHING CORRUPTION": {
+   "effects": [
+    {
+     "if": [
+      "targetEngagedWithKw:PLAGUE LEGIONS"
+     ],
+     "reroll": "hits"
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "ALL IS ROT": {
+   "targetKw": [
+    "PLAGUE LEGIONS"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "effects": [
+    {
+     "allIsRot": true
+    }
+   ],
+   "bot": "never",
+   "note": "Your other units can shoot enemy units engaged with it; each wound those enemy units lose: 5+ = 1 mortal wound to this unit",
+   "status": "auto"
+  },
+  "AVATARS OF DECAY": {
+   "targetKw": [
+    "PLAGUE LEGIONS"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [],
+     "until": "phase",
+     "mark": "Avatars of Decay"
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "FLESHY AVALANCHE": {
+   "targetKw": [
+    "MONSTER"
+   ],
+   "effects": [
+    {
+     "mobile": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "PERSISTENT PESTS": {
+   "react": "ownDestroyed",
+   "targetFrom": "destroyed",
+   "targetKw": [
+    "NURGLINGS"
+   ],
+   "limit": "battle",
+   "special": [
+    "reserveAgain"
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "MIRESLICK": {
+   "react": "enemyFallBack",
+   "targetKw": [
+    "PLAGUE LEGIONS"
+   ],
+   "unitIf": [
+    "engagedWithLast"
+   ],
+   "enemy": {
+    "lastActor": true,
+    "notKw": [
+     "MONSTER",
+     "VEHICLE"
+    ]
+   },
+   "special": [
+    "mireslick"
+   ],
+   "botReact": "always",
+   "note": "The enemy unit takes a Leadership test; failed: it Remains Stationary instead",
+   "status": "auto"
+  },
+  "GNAWING HUNGER": {
+   "targetKw": [
+    "POXWALKERS"
+   ],
+   "effects": [
+    {
+     "move": 1
+    },
+    {
+     "attack": "melee",
+     "attacks": 1,
+     "strength": 1
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "status": "auto"
+  },
+  "SHOCK AND HORROR": {
+   "react": "chargeMoveEnd",
+   "unitIf": [
+    "engaged"
+   ],
+   "enemy": {
+    "engaged": true,
+    "all": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "HIDDEN AMONGST THE DEAD": {
+   "targetFrom": "reserves",
+   "targetKw": [
+    "POXWALKERS"
+   ],
+   "unitIf": [
+    "!leaderAttached"
+   ],
+   "effects": [
+    {
+     "deepStrike": true
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "SMEARED WITH FILTH": {
+   "react": "ownDestroyed",
+   "targetFrom": "destroyed",
+   "targetKw": [
+    "POXWALKERS"
+   ],
+   "enemy": {
+    "killer": true
+   },
+   "enemyMark": "Afflicted",
+   "enemyUntil": "battle",
+   "botReact": "always",
+   "status": "auto"
+  },
+  "SHAMBLING WALL": {
+   "react": "ownAttacked",
+   "unitIf": [
+    "nearModels:3:POXWALKERS"
+   ],
+   "effects": [
+    {
+     "poxWall": 3
+    }
+   ],
+   "botReact": "always",
+   "note": "Each attack allocated to the unit destroys Poxwalkers within 3\" equal to its Damage instead (no save)",
+   "status": "auto"
+  },
+  "GRIP OF THE WALKING POX": {
+   "react": "ownAttacked",
+   "targetKw": [
+    "POXWALKERS"
+   ],
+   "effects": [
+    {
+     "deathRetaliate": 6
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "GRIM REAPERS": {
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "effects": [
+    {
+     "if": [
+      "targetNotMV"
+     ],
+     "reroll": "hits"
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "SIGNAL POX": {
+   "targetKw": [
+    "LORD OF VIRULENCE"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "dg": "signalPox"
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "BLOOMING PESTILENCE": {
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "effects": [
+    {
+     "contagion": 3
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "MORTARION'S TEACHINGS": {
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "effects": [
+    {
+     "attack": "ranged",
+     "abilities": [
+      "assault",
+      "heavy"
+     ]
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "SICKENING IMPACT": {
+   "react": "chargeMoveEnd",
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "unitIf": [
+    "engaged"
+   ],
+   "enemy": {
+    "engaged": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 2,
+      "max": 6
+     }
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "UNDYING SPITE": {
+   "targetKw": [
+    "TERMINATOR"
+   ],
+   "effects": [
+    {
+     "fightOnDeath": 4
+    }
+   ],
+   "bot": "defend",
+   "status": "auto"
+  },
+  "SOULROT FLUX": {
+   "react": "enemyFallBack",
+   "targetKw": [
+    "CONTAGION ENGINE"
+   ],
+   "unitIf": [
+    "engagedWithLast"
+   ],
+   "enemy": {
+    "lastActor": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalsTable": [
+      {
+       "min": 1,
+       "expr": "1"
+      },
+      {
+       "min": 2,
+       "expr": "D3"
+      },
+      {
+       "min": 6,
+       "expr": "3"
+      }
+     ]
+    }
+   ],
+   "botReact": "always",
+   "status": "auto"
+  },
+  "BLOODRUST DELUGE": {
+   "targetKw": [
+    "CONTAGION ENGINE"
+   ],
+   "enemy": {
+    "visible": true
+   },
+   "enemyMark": "Afflicted",
+   "enemyUntil": "phase",
+   "bot": "never",
+   "status": "auto"
+  },
+  "FRESH VECTORS": {
+   "targetKw": [
+    "CONTAGION ENGINE"
+   ],
+   "effects": [
+    {
+     "reroll": "wounds1"
+    }
+   ],
+   "bot": "attack",
+   "status": "auto"
+  },
+  "TERRITORIAL INFECTION": {
+   "react": "commandStart",
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "effects": [
+    {
+     "oc": 1
+    }
+   ],
+   "until": "turn",
+   "bot": "never",
+   "botIf": [
+    "onObjective"
+   ],
+   "status": "auto"
+  },
+  "AGGRAVUS SPASMS": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "enemy": {
+    "visible": true,
+    "contagion": true
+   },
+   "enemyEffects": [
+    {
+     "detection": 6
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  },
+  "SIMULTANEOUS CONTAMINATION": {
+   "targetKw": [
+    "CHARACTER"
+   ],
+   "effects": [
+    {
+     "eligible": [
+      "shootAfterAction"
+     ]
+    }
+   ],
+   "bot": "never",
+   "status": "auto"
+  }
+ }
+}

@@ -11,9 +11,10 @@
 | **Thousand Sons (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T, inferno S/AP, stratagem) อยู่ใน `data/overrides/TS.json`; Rituals (Cabal of Sorcerers) อยู่ใน `src/engine/rituals.ts` + bot ใน `src/engine/botRituals.ts`; Flow of Magic ใน `src/engine/flow.ts` |
 | **Chaos Space Marines (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T5/T6, boltgun S5 AP-1 …) อยู่ใน `data/overrides/CSM.json`; Dark Pacts อยู่ใน `src/engine/darkPacts.ts` (mark `darkPact`, ผ่านเทสต์ได้ mark `pactOk:lethal` / `pactOk:sustained`); focus of hatred / Vendetta ใช้ช่องเดียวกับ Oath of Moment (`markRuleName` ใน `src/engine/game.ts`) |
 | **Emperor's Children (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T5/T6, W3, bolt S5 AP-1, Frantic Focus, Vengeful Surge) อยู่ใน `data/overrides/EC.json`; Thrill Seekers (ข้อจำกัดเป้า), Pledges to the Dark Prince (Pact points), Favoured Champions, Sensational Performance, Daemonic Poisons อยู่ใน `src/engine/emperorsChildren.ts` |
-| Ability ของ datasheet | `data/abilities/SM.json`, `data/abilities/ORK.json`, `data/abilities/AC.json`, `data/abilities/TS.json`, `data/abilities/CSM.json`, `data/abilities/WE.json`, `data/abilities/EC.json` (รวม enhancement) |
+| **Death Guard (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (bolt/combi S5 AP-1, ตาราง Contagion Range) อยู่ใน `data/overrides/DG.json`; Nurgle's Gift (Contagion Range, Afflicted, Plagues), Worldblight, Miasmic Bombardment, Deadly Vectors, Numberless Horde, Blighted Land, Signal Pox อยู่ใน `src/engine/deathGuard.ts` |
+| Ability ของ datasheet | `data/abilities/SM.json`, `data/abilities/ORK.json`, `data/abilities/AC.json`, `data/abilities/TS.json`, `data/abilities/CSM.json`, `data/abilities/WE.json`, `data/abilities/EC.json`, `data/abilities/DG.json` (รวม enhancement) |
 | กฎ Detachment / Army rule | `data/detachment-rules.json` |
-| **Stratagem ของ detachment** | `data/stratagems/SM.json`, `data/stratagems/ORK.json`, `data/stratagems/AC.json`, `data/stratagems/TS.json`, `data/stratagems/CSM.json`, `data/stratagems/WE.json`, `data/stratagems/EC.json` |
+| **Stratagem ของ detachment** | `data/stratagems/SM.json`, `data/stratagems/ORK.json`, `data/stratagems/AC.json`, `data/stratagems/TS.json`, `data/stratagems/CSM.json`, `data/stratagems/WE.json`, `data/stratagems/EC.json`, `data/stratagems/DG.json` |
 | Core rules, core stratagems (Command Re-roll ฯลฯ) | `data/core-rules.json` |
 | Mission, secondary, terrain kind | `data/missions.json` |
 | แผนที่ (layout, objective, ruin) | `data/layouts.json` |

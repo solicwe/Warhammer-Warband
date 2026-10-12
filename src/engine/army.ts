@@ -672,6 +672,7 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       owner,
       name: joiners.length ? `${joiners.map((j) => j.datasheet).join(' + ')} + ${sheet.name}` : sheet.name,
       sources: sheets.map((s) => s.name),
+      ...(joiners.length || !sheet.leads?.length ? {} : { leads: sheet.leads }),
       keywords,
       factionKeywords: [...new Set(sheets.flatMap((s) => s.factionKeywords))],
       models,
@@ -960,6 +961,16 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
       : sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT')
         || (list.detachments.includes('Cult of Blood') && (name === 'Jakhals' || name === 'Goremongers')) ? size.unitLimit * 2 : size.unitLimit;
     if (n > limit) errs.push(`${name}: maximum ${limit} per army`);
+  }
+  // Pact of Decay / Pact of Excess: the book's daemons only come with their detachment (Plague Legions: up to 500 / 1000 / 1500 pts, never the Warlord)
+  for (const pact of [{ kw: 'PLAGUE LEGIONS', det: 'Tallyband Summoners', caps: [500, 1000, 1500] }, { kw: 'LEGIONS OF EXCESS', det: 'Carnival of Excess' }]) {
+    const xs = list.units.filter((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.factionKeywords.includes(pact.kw));
+    if (!xs.length) continue;
+    if (!list.detachments.includes(pact.det)) { errs.push(`${pact.kw} units can only be included with the ${pact.det} detachment`); continue; }
+    const cap = pact.caps?.[size.points <= 1000 ? 0 : size.points <= 2000 ? 1 : 2];
+    const pts = xs.reduce((a, u) => a + unitPoints(u), 0);
+    if (cap && pts > cap) errs.push(`${pact.det}: ${pts} pts of ${pact.kw} units — at most ${cap} pts at this battle size`);
+    if (pact.caps && xs.some((u) => u.warlord)) errs.push(`A ${pact.kw} model cannot be your Warlord`);
   }
   if (!list.units.some((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.keywords.includes('CHARACTER'))) errs.push('The army needs at least one CHARACTER (Warlord)');
   if (!list.units.some((u) => u.warlord)) errs.push('No Warlord selected (tap a character\'s ⋮ → Make Warlord)');

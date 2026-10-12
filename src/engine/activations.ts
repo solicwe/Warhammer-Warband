@@ -10,6 +10,7 @@ import { RULES } from './config';
 import { autoPact } from './darkPacts';
 import { d6, rollExpr, rollN } from './dice';
 import { favouredOnKill } from './emperorsChildren';
+import { blightedLand, extraPlague, eyestingerStorm, signalPox } from './deathGuard';
 import {
   abilityOff, abilityRule, abilitySheet, activeRules, addTimed, cond, DET_RULES, fightOnDeathFor, grantsOf, isRiled, retaliateFor, type AbilityRule, type Effect, type FreeDieSpec,
   type Incoming, type Limit, unitFlags, unitMatches,
@@ -138,6 +139,11 @@ export interface Action {
   allowCharge?: boolean; // the unit can declare a charge this turn after all (Ceaseless Onslaught: an assault disembark)
   agonyHeal?: number; // Sustained by Agony: one friendly LEGIONS OF EXCESS unit within X": Daemonettes get D3+3 models back, others 3 wounds
   chargeOnlyTarget?: boolean; // the unit's charges this turn must end engaged with the target (Lethal Obsession)
+  /** Death Guard rules that pick a place or a Plague (deathGuard.ts); leechspore: a D6 per wound the unit's model lost,
+   *  each 5+ is a mortal wound on the target and a wound regained (at most 6) */
+  afflictNear?: number; // every enemy unit within X" of this unit is Afflicted until your next turn (Explosive Blight)
+  alsoNear?: number; // do this to every other enemy unit within X" of the target too (Spore-laced Shock Waves)
+  dg?: 'signalPox' | 'blightedLand' | 'eyestinger' | 'extraPlague' | 'leechspore';
   embarkNear?: number; // the target embarks within a friendly TRANSPORT it is wholly within this many inches of (Accomplished Tactician)
   addWounds?: number; // +X to the Wounds characteristic for the rest of the battle (the ability's models; Living Carapace)
   soulLink?: boolean; // the bearer copies the datasheet abilities of a CHARACTER in the target unit and gains PSYKER (Soul Link)
@@ -476,11 +482,17 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
   if (!onBoard(u)) return true;
   const r = rollN(s, 2);
   const ld = ldOf(s, u);
-  const total = r[0] + r[1] + mod;
+  const total = r[0] + r[1] + mod + unitFlags(s, u).shockBonus;
   const passed = total >= ld;
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'failed!'}${mod ? ` (${mod})` : ''}`, good: passed });
   log(s, `${why}: ${u.name} Battle-shock test [${r.join('+')}]${mod ? ` ${mod}` : ''} = ${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'Battle-shocked!'}`, 'roll', u.owner);
   if (!passed && !u.battleShocked) { u.battleShocked = true; pushFx(s, { kind: 'shock', unitId: u.id, owner: u.owner, at: centreOf(u) }); fire(s, 'becameShocked', [u]); }
+  // Tome of Bounteous Blessings: a passed test heals D3 wounds (a Battleline unit gets D3 models back instead)
+  if (passed && unitFlags(s, u).shockPassHeal) {
+    const n = rollExpr(s, 'D3').total;
+    if (hasKw(u, 'BATTLELINE')) { const dead = u.models.filter((x) => x.dead).slice(0, n); for (const x of dead) { x.dead = false; x.wounds = x.profile.W; } if (dead.length) log(s, `${u.name}: ${dead.length} model(s) return (Tome of Bounteous Blessings)`, 'info', u.owner); }
+    else { const m = alive(u).find((x) => x.wounds < x.profile.W); if (m) { m.wounds = Math.min(m.profile.W, m.wounds + n); log(s, `${u.name}: ${m.name} regains ${n} wound(s) (Tome of Bounteous Blessings)`, 'info', u.owner); } }
+  }
   return passed;
 }
 
@@ -488,7 +500,7 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
 export function ldTest(s: GameState, u: UnitState, why: string, mod = 0): boolean {
   const r = rollN(s, 2);
   const ld = ldOf(s, u);
-  const ok = r[0] + r[1] + mod >= ld;
+  const ok = r[0] + r[1] + mod + unitFlags(s, u).shockBonus >= ld;
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Leadership · ${u.name}`, dice: r, result: `${r[0] + r[1]} vs ${ld}+ → ${ok ? 'passed' : 'failed'}`, good: ok });
   log(s, `${why}: Leadership test ${u.name} [${r.join('+')}] = ${r[0] + r[1]} vs ${ld}+ → ${ok ? 'passed' : 'failed'}`, 'roll', u.owner);
   return ok;
@@ -820,10 +832,31 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     }
     if (a.shootBack && ctx.killerId) {
       const k = unitById(s, ctx.killerId);
+      // "that unit can shoot" (Inflamed Reprisal): the friendly unit that was targeted, not the ability's own unit
+      const by = a.on === 'target' ? on : u;
       if (onBoard(k)) {
-        (s.deathQueue ??= []).push({ unitId: u.id, modelIds: alive(u).map((m) => m.id), targetId: k.id, kind: 'shoot', label: def.name, alive: true });
-        log(s, `${def.name}: ${u.name} will shoot back at ${k.name} after its attacks`, 'info', u.owner);
+        (s.deathQueue ??= []).push({ unitId: by.id, modelIds: alive(by).map((m) => m.id), targetId: k.id, kind: 'shoot', label: def.name, alive: true });
+        log(s, `${def.name}: ${by.name} will shoot back at ${k.name} after its attacks`, 'info', u.owner);
       }
+    }
+    if (a.afflictNear) {
+      const hit = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= a.afflictNear! + 1e-6);
+      for (const e of hit) addTimed(s, e, { e: {}, label: def.name, until: 'nextTurnStart', by: u.owner, mark: 'Afflicted' });
+      if (hit.length) log(s, `${def.name}: ${hit.map((e) => e.name).join(', ')} are Afflicted until your next turn`, 'info', u.owner);
+    }
+    if (a.alsoNear && target) {
+      for (const e of boardUnits(s, target.owner).filter((x) => x.id !== target.id && unitDistance(x, target) <= a.alsoNear! + 1e-6)) doActions(s, def, [{ ...a, alsoNear: undefined }], e, ctx);
+    }
+    if (a.dg === 'signalPox') signalPox(s, u, def.name);
+    if (a.dg === 'blightedLand') blightedLand(s, u, def.name);
+    if (a.dg === 'extraPlague') extraPlague(s, u.owner, def.name);
+    if (a.dg === 'eyestinger') eyestingerStorm(s, u, def.name, (e) => shockTest(s, e, 0, def.name));
+    if (a.dg === 'leechspore' && target) {
+      const m = alive(u).filter((x) => x.wounds < x.profile.W).sort((x, y) => (y.profile.W - y.wounds) - (x.profile.W - x.wounds))[0];
+      const dice = m ? rollN(s, Math.min(6, m.profile.W - m.wounds)) : [];
+      const n = Math.min(6, dice.filter((v) => v >= 5).length);
+      log(s, `${def.name}: rolled [${dice.join(' ')}] → ${target.name} suffers ${n} mortal wound(s)${m && n ? `, ${m.name} regains ${n}` : ''}`, 'roll', u.owner);
+      if (n) { applyMortalWounds(s, target, n, def.name); if (m) m.wounds = Math.min(m.profile.W, m.wounds + n); }
     }
     if (a.splashMortals) {
       const others = boardUnits(s, on.owner).filter((x) => x.id !== on.id && alive(x).some((m) => alive(on).some((n) => baseDist(m, n) <= a.splashMortals!.range + 1e-6)));
@@ -1366,11 +1399,13 @@ onAttackStart((s, at) => {
   // the target reacts ("when an enemy unit targets this unit …")
   fire(s, 'attacked', [T], { targetId: A.id, killerId: A.id, melee: at.kind === 'fight' });
   // friendly units nearby react ("when a friendly PHOBOS unit within 6" is selected as the target of an attack")
-  if (at.kind !== 'fight' && s.phase === 'shooting' && T.owner !== s.active) {
+  // (Boon of Death: in the Fight phase, for abilities that ask for a melee attack)
+  if ((at.kind !== 'fight' && s.phase === 'shooting' && T.owner !== s.active) || at.kind === 'fight') {
     for (const f of boardUnits(s, T.owner)) {
       if (f.id === T.id) continue;
       for (const def of actsOfUnit(s, f)) {
         if (def.spec.when !== 'friendlyTargeted' || !def.spec.auto || !limitLeft(s, def) || !unitMatches(T, def.spec.deathUnits)) continue;
+        if (!!def.spec.needMelee !== (at.kind === 'fight')) continue;
         if (!near(def.bearers, T, def.spec.range ?? 6)) continue;
         // "that friendly unit has …" (Adept of the Omnissiah): the act's target is the unit being shot
         useAct(s, def, def.spec.target?.side === 'friendly' ? T.id : undefined, { killerId: A.id, targetId: A.id });
@@ -1472,7 +1507,18 @@ onModelKilled((s, u, m, killerId) => {
     (killer0.used ??= {}).killedModel = phaseKey(s);
     const on = unitFlags(s, u).deathRetaliate;
     if (on <= 6 && d6(s) >= on) deathMW.set(killer0.id, (deathMW.get(killer0.id) ?? 0) + 1);
-    const h = unitFlags(s, killer0).healOnKill;
+    // Curse of the Walking Pox / Reverberating Summons: the dead come back
+    const kf = unitFlags(s, killer0);
+    if (kf.reviveOnKill && !m.keywords.includes('MONSTER') && !m.keywords.includes('VEHICLE')) {
+      const back = killer0.models.find((x) => x.dead && x.source === 'Poxwalkers' && !x.isCharacter);
+      if (back) { back.dead = false; back.wounds = back.profile.W; log(s, `Curse of the Walking Pox: a Poxwalker returns to ${killer0.name}`, 'info', killer0.owner); }
+    }
+    if (kf.summonsOnKill && /doomsday bell/i.test(s.attack.pools[s.attack.idx]?.weapon ?? '')) {
+      const pb = boardUnits(s, killer0.owner).find((f) => f.sources.includes('Plaguebearers') && f.models.some((x) => x.dead) && unitDistance(f, killer0) <= 12 + 1e-6);
+      const back = pb?.models.find((x) => x.dead);
+      if (pb && back) { back.dead = false; back.wounds = back.profile.W; log(s, `Reverberating Summons: a Plaguebearer returns to ${pb.name}`, 'info', killer0.owner); }
+    }
+    const h = kf.healOnKill;
     const key = `glut:${phaseKey(s)}`;
     const used = Number((killer0.used ??= {})[key] ?? 0);
     if (h && used < h.max && d6(s) >= h.on) {
@@ -1610,3 +1656,17 @@ export const fireAll = (s: GameState, trigger: Trigger, p: PlayerId | 'both') =>
   fire(s, trigger, s.units.filter((u) => (p === 'both' || u.owner === p) && u.status !== 'destroyed' && alive(u).length > 0));
 
 export const rulePresent = (u: UnitState, a: AbilityData) => !!abilityRule(u, a);
+
+// All Is Rot: each wound lost by an enemy unit engaged with that Plague Legions unit: 5+ = 1 mortal wound to it
+onAttackFinished((s, at) => {
+  const T = s.units.find((x) => x.id === at.targetId);
+  if (!T) return;
+  const lost = (at.woundsBefore ?? 0) - alive(T).reduce((a, m) => a + m.wounds, 0);
+  if (lost <= 0) return;
+  const rot = boardUnits(s, other(T.owner)).find((f) => (f.timed ?? []).some((t) => t.e.allIsRot) && alive(f).some((m) => alive(T).some((n) => baseDist(m, n) <= 1 + 1e-6)));
+  if (!rot) return;
+  const dice = rollN(s, lost);
+  const n = dice.filter((v) => v >= 5).length;
+  log(s, `All Is Rot: ${T.name} lost ${lost} wound(s) — rolled [${dice.join(' ')}] → ${rot.name} suffers ${n} mortal wound(s)`, 'roll', rot.owner);
+  if (n) applyMortalWounds(s, rot, n, 'All Is Rot');
+});

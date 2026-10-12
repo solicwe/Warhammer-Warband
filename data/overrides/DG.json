@@ -1,0 +1,292 @@
+{
+ "datasheets": [
+  {
+   "name": "Plague Marines",
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Boltgun",
+     "profiles": [
+      {
+       "name": "Boltgun",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Plague knives",
+     "profiles": [
+      {
+       "name": "Plague knives",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Plague Surgeon",
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Malignant Plaguecaster",
+   "weapons": [
+    {
+     "name": "Bolt pistol",
+     "profiles": [
+      {
+       "name": "Bolt pistol",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Icon Bearer",
+   "weapons": [
+    {
+     "name": "Boltgun",
+     "profiles": [
+      {
+       "name": "Boltgun",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Plague knife",
+     "profiles": [
+      {
+       "name": "Plague knife",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Blightlord Terminators",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Land Raider",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Predator Annihilator",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Predator Destructor",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Rhino",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "Combi-weapon",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Helbrute",
+   "weapons": [
+    {
+     "name": "Combi-bolter",
+     "profiles": [
+      {
+       "name": "Combi-bolter",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Foul Blightspawn",
+   "weapons": [
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Tallyman",
+   "weapons": [
+    {
+     "name": "Close combat weapon",
+     "profiles": [
+      {
+       "name": "Close combat weapon",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Biologus Putrifier",
+   "weapons": [
+    {
+     "name": "Plague knives",
+     "profiles": [
+      {
+       "name": "Plague knives",
+       "S": 5,
+       "AP": -1
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "armyRules": [
+  {
+   "name": "Nurgle’s Gift (Aura)",
+   "text": "If your Army Faction is DEATH GUARD, while an enemy unit is within Contagion Range of one or more Death Guard models from your army, it is Afflicted (see below).\nCONTAGION RANGE\nContagion Range changes over the course of the battle:\n• Battle round 1: 3\"\n• Battle round 2: 6\"\n• Battle round 3+: 9\"\nContagion Range cannot be greater than 12\" after modifiers.\nAFFLICTED\nDuring the Declare Battle Formations step, select one of the Plagues below. Until the end of the battle, while an enemy unit is Afflicted, subtract 1 from the Toughness characteristic of models in that unit, and that unit has the effect of your chosen Plague.\nSkullsquirm Blight\nThis horrifying affliction sees the minds and senses of the victim gnawed gradually away from within.\n• Each time a model in this unit makes a ranged attack, enemy units have the benefit of cover against that attack.\n• Each time a model in this unit makes a melee attack, subtract 1 from the Hit roll.\nRattlejoint Ague\nLimbs shuddering with fever palsy, bones turned brittle as glass, these warriors can barely act to defend themselves.\nWorsen the Save characteristic of models in this unit by 1.\nScabrous Soulrot\nVictims of this insidious ailment become glassy eyed and morose as their very animus and essence decay.\nWorsen the Move, Leadership, and Objective Control characteristics of models in this unit by 1 (this rule can only worsen a model’s Objective Control characteristic to a minimum of 1)."
+  }
+ ]
+}
