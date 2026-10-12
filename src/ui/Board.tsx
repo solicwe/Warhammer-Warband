@@ -633,7 +633,7 @@ function BoardImpl(props: BoardProps) {
                   )}
                   <BaseShape
                     m={m} p={p}
-                    fill={bad ? '#7f1d1d' : '#1d2129'}
+                    fill={bad ? '#7f1d1d' : getModelPortrait(m) ? '#ffffff' : '#1d2129'}
                     fillOpacity={1}
                     stroke={bad ? '#fca5a5' : isSel || isDraft ? '#f5b83d' : isPicked ? '#ffffff' : isTarget ? '#fde68a' : col}
                     strokeWidth={isSel || isDraft || isTarget || isPicked || bad ? 0.16 : 0.12}
