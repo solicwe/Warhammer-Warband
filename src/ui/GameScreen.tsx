@@ -1912,7 +1912,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       setSel(u.id);
       act((g) => unitSelected(g, unitById(g, u.id), 'fight'));
       const eng = engagedEnemies(s, u);
-      if (eng.length) setMode({ k: 'fight', unitId: u.id, target: eng.length === 1 ? eng[0] : null, epic: false });
+      if (eng.length) setMode({ k: 'fight', unitId: u.id, target: eng.length === 1 ? eng[0].id : null, epic: false });
       else setMode({ k: 'pile', unitId: u.id, kind: 'pileIn', overrun: true }, startPaths(u));
     };
     const overrunReady = selUnit && cands.units.includes(selUnit) && !isEngaged(s, selUnit);

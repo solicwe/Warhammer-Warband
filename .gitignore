@@ -6,3 +6,4 @@ artifact
 __pycache__/
 tsconfig.tsbuildinfo
 .claude/settings.local.json
+.aider*
