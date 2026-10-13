@@ -98,8 +98,6 @@ const pName = (s: GameState, p: PlayerId) => s.players[p].name;
 /** What the look worker answers: progress while it plays the ways out, then the style (and, pondering, the board it starts from). */
 type LookMsg = { id: number; sig?: string | null; name?: string; values?: Record<string, number>; intents?: Intent[]; progress?: { name: string; value: number; done: number; total: number } };
 
-
-
 const sg = (n: number) => (n > 0 ? `+${n}` : `−${-n}`);
 /** Short "+1 Hit" tags for an effect on a unit, and whether it helps that unit. */
 function fxTags(e: Effect): [string, boolean][] {
@@ -157,7 +155,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [cardSide, setCardSide] = useState<PlayerId | null>(null); // whose cards the card viewer shows
   const [showGoals, setShowGoals] = useState(true);
   const [showMissions, setShowMissions] = useState(false);
-  const [showLog, setShowLog] = useState(false);
   // how much the screen tells about each attack (the player's choice, kept on this device), and sound on/off
   const [fxLevel, setFxLevelRaw] = useState<FxLevel>(loadFxLevel);
   const setFxLevel = (v: FxLevel) => { setFxLevelRaw(v); try { localStorage.setItem(FX_PREF, v); } catch { /* this session only */ } };
@@ -245,8 +242,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }, 800);
     return () => window.clearTimeout(t);
   }, [s, ponderFor]); // eslint-disable-line react-hooks/exhaustive-deps
-  // the player is reading (mission cards, the log, the menu, a rule): the game waits instead of moving under them
-  const viewing = showCards || showMissions || showLog || showMenu || !!explain || !!summary;
+  // the player is reading (mission cards, the menu, a rule): the game waits instead of moving under them
+  const viewing = showCards || showMissions || showMenu || !!explain || !!summary;
   useEffect(() => {
     if (!bots.length || rolling || reporting || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0)) return;
     const who = actingBot;
@@ -492,7 +489,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         else if (showStrats) setShowStrats(false);
         else if (showCards) setShowCards(false);
         else if (showMissions) setShowMissions(false);
-        else if (showLog) setShowLog(false);
         else if (sheet) setSheet(null);
         else if (tape.on) setTape({ on: false });
         else if (mode) setMode(null);
@@ -608,7 +604,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       else if (mode.k === 'shoot' || mode.k === 'fight' || mode.k === 'explosives') setModeRaw({ ...mode, target: unitId });
       return;
     }
-    if (!mode) setSel(unitId);
+    if (!mode) setSel(null);
   };
 
   const measureTap = (p: Pt, ref?: { u: string; m: string }) => {
@@ -1784,7 +1780,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         {!selUnit && <div className="hint"><span>Pick a unit within 12" of the enemy: roll 2D6, then tap a target in reach</span></div>}
-        <div className="unit-strip">{mine.map((x) => unitPill(x, !!chargeEligibility(s, x)))}</div>
+        <div className="unit-strip">{mine.map((x) => unitPill(x, !chargeEligibility(s, x)))}</div>
         {u && (
           <>
             {unitCard(u)}
@@ -2145,10 +2141,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className="topbar">
           <button className="icon-btn" onClick={() => setShowMenu(true)} aria-label="Menu"><Icon name="menu" size={24} /></button>
           <SideScore s={s} p={0} label={sideLabel(0)} onOpen={() => { setCardSide(0); setShowCards(true); }} />
-          <button className="round-box" onClick={() => setShowLog(true)} aria-label="Battle log">
+          <div className="round-box" aria-label="Battle status">
             <span className="rb-round">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : `Round ${s.round}/${lastRound(s)}`}</span>
             <span className={`rb-turn ${s.active ? 'p1' : 'p0'}`}>{turnText}</span>
-          </button>
+          </div>
           <SideScore s={s} p={1} label={sideLabel(1)} onOpen={() => { setCardSide(1); setShowCards(true); }} />
           <button className="tb-tool" onClick={() => { setCardSide(null); setShowCards(true); }} aria-label="Mission cards">
             <span className="tb-ico"><Icon name="cards" size={22} />{s.players[me].secActive.length > 0 && <i className="tb-badge">{s.players[me].secActive.length}</i>}</span>
@@ -2232,7 +2228,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         </div>
         {/* on a computer there is room for the latest events (on a phone they are in the Battle log) */}
         <div className="feed" aria-label="Latest events">
-          <div className="feed-head"><span>Latest</span><button className="linkish" onClick={() => setShowLog(true)}>Full log</button></div>
+          <div className="feed-head"><span>Latest</span></div>
           {s.log.filter((l) => l.kind !== 'roll').slice(-8).reverse().map((l, i) => (
             <div key={s.log.length - i} className={`feed-row ${l.kind ?? ''} ${l.player === 1 ? 's1' : l.player === 0 ? 's0' : ''}`}>{l.text}</div>
           ))}
@@ -2368,9 +2364,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               <button className="menu-item" onClick={() => { setShowMenu(false); setTape({ on: true }); }}>
                 <Icon name="ruler" size={22} /><span><b>Tape measure</b><small>Distance and line of sight</small></span>
               </button>
-              <button className="menu-item" onClick={() => { setShowMenu(false); setShowLog(true); }}>
-                <Icon name="hint" size={22} /><span><b>Battle log</b><small>Everything so far, and both armies' rules</small></span>
-              </button>
               <button className="menu-item" onClick={() => { setShowMenu(false); setShowMissions(true); }}>
                 <Icon name="objective" size={22} /><span><b>Mission rules</b><small>Scoring for both sides, manual scoring</small></span>
               </button>
@@ -2418,7 +2411,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <StratUseCard key={r.st.id + (stratUnit || '')} s={s} p={p} st={r.st} rule={r.rule} detachment={r.detachment} bot={bots.includes(p)}
             units={(r.plan.target === 'own' ? stratCandidates(s, p, r.st) : r.plan.target === 'enemy' && !r.rule.enemy ? boardUnits(s, other(p)) : []).filter((u) => !tgtUnit || u.id === tgtUnit.id || u.owner !== tgtUnit.owner)}
             auto={P.autoStrats?.includes(r.st.id)}
-            onAuto={r.rule.react ? () => act((g) => { const GP = g.players[p]; GP.autoStrats = GP.autoStrats?.includes(r.st.id) ? GP.autoStrats.filter((x) => x !== r.st.id) : [...(GP.autoStrats ?? []), r.st.id]; }) : undefined}
+            onAuto={r.rule.react ? () => act((g) => { const GP = g.players[p]; GP.autoStrats = GP.autoStrats?.includes(r.st.id) ? GP.autoStrats.filter((q) => q !== r.st.id) : [...(GP.autoStrats ?? []), r.st.id]; }) : undefined}
             onUse={(unitId, use) => {
               const eff = act((g) => applyDetachmentStratagem(g, p, r.st, unitId, use));
               const on = unitId ? s.units.find((u) => u.id === unitId)?.name : undefined;
@@ -2463,28 +2456,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         );
       })()}
-
-      {showLog && (
-        <div className="tray-backdrop" onClick={() => setShowLog(false)}>
-          <div className="tray" onClick={(e) => e.stopPropagation()}>
-            <div className="sheet-title">Battle log</div>
-            <div className="log">
-              {[...s.log].reverse().map((l, i) => <div key={i} className={l.kind}>{l.round ? `R${l.round} ` : ''}{l.text}</div>)}
-            </div>
-            <button className="btn small" onClick={() => { setShowLog(false); setShowMissions(true); }}>Both players' Primary / Secondary Missions</button>
-            {s.players.map((p, i) => (
-              <details key={i}>
-                <summary className={i ? 'p1' : 'p0'}>{p.name}: Army rules & Detachments</summary>
-                {chapterRules(p.armyRules, p.subfaction).map((r) => <div key={r.name} className="sheet rt-wrap"><b>{r.name}</b><RuleText text={r.text} /></div>)}
-                {p.detachments.map((d) => (
-                  <div key={d.id} className="sheet"><b>{d.name}</b> ({d.forceDisposition}){'\n'}{d.rules.map((r) => `• ${r.name}: ${r.text}`).join('\n')}{'\n'}<i>Stratagems:</i>{'\n'}{d.stratagems.map((st) => `• ${st.name} (${st.cp}CP) — ${st.text}`).join('\n')}</div>
-                ))}
-              </details>
-            ))}
-            <button className="btn" onClick={() => setShowLog(false)}>Close</button>
-          </div>
-        </div>
-      )}
 
       {summary && !final && <RoundSummary s={s} t={summary} onClose={() => setSummary(null)} />}
       {final && (
