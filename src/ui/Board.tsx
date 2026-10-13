@@ -23,6 +23,12 @@ export interface BoardProps {
   selected?: string | null;
   draftUnit?: string | null;
   draft?: Paths | null;
+  /** numbers shared with a unit-selection list, to identify units with duplicate names */
+  unitNumbers?: Record<string, number>;
+  /** draw an inset guide this many inches from the battlefield edge */
+  edgeGuide?: number;
+  /** show the keep-out distance around a deployment zone while placing a unit */
+  zoneGuide?: { poly: Pt[]; distance: number };
   maxFor?: (modelId: string) => number;
   /** the legal route for a model dragged along [start, wanted end]: around walls it can't cross, stopping where it can't go on */
   walk?: (modelId: string, path: Pt[]) => Pt[];
@@ -512,6 +518,27 @@ function BoardImpl(props: BoardProps) {
         <text key={`tx${i}`} x={i * 6 + 0.15} y={H - 0.25} fontSize={0.6} fill="rgba(255,255,255,0.4)">{i * 6}"</text>
       ))}
       {terrainEls}
+      {props.edgeGuide !== undefined && props.edgeGuide > 0 && props.edgeGuide * 2 < Math.min(W, H) && (
+        <g pointerEvents="none">
+          <rect x={props.edgeGuide} y={props.edgeGuide} width={W - props.edgeGuide * 2} height={H - props.edgeGuide * 2}
+            fill="none" stroke="#f5d48a" strokeWidth={0.16} strokeDasharray="0.65 0.35" />
+          <text x={props.edgeGuide + 0.35} y={props.edgeGuide + 0.95} fontSize={0.72} fill="#f5d48a" stroke="#111" strokeWidth={0.12} paintOrder="stroke" fontWeight={900}>
+            {props.edgeGuide}" FROM EDGE
+          </text>
+        </g>
+      )}
+      {props.zoneGuide && (
+        <g pointerEvents="none">
+          <polygon points={props.zoneGuide.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill="none"
+            stroke="rgba(239,68,68,0.18)" strokeWidth={props.zoneGuide.distance * 2} strokeLinejoin="round" />
+          <polygon points={props.zoneGuide.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill="none"
+            stroke="rgba(252,165,165,0.8)" strokeWidth={0.13} strokeDasharray="0.55 0.3" />
+          <text x={props.zoneGuide.poly[0].x + 0.35} y={props.zoneGuide.poly[0].y + 0.95} fontSize={0.72}
+            fill="#fecaca" stroke="#111" strokeWidth={0.12} paintOrder="stroke" fontWeight={900}>
+            {props.zoneGuide.distance}" FROM ENEMY DEPLOYMENT ZONE
+          </text>
+        </g>
+      )}
       {s.units.filter((u) => u.homer && u.status === 'reserves').map((u) => (
         <g key={'homer-' + u.id} pointerEvents="none">
           <circle cx={u.homer!.x} cy={u.homer!.y} r={3} fill="none" stroke={u.owner ? 'var(--p1)' : 'var(--p0)'} strokeWidth={0.15} strokeDasharray="0.5 0.3" />
@@ -597,6 +624,7 @@ function BoardImpl(props: BoardProps) {
         const pts = ms.map((m) => posOf(u, m.id, m));
         const cx = pts.reduce((a, p) => a + p.x, 0) / Math.max(1, pts.length);
         const minY = Math.min(...pts.map((p, i) => p.y - ms[i].r));
+        const unitNumber = props.unitNumbers?.[u.id];
         const riled = props.riled?.includes(u.id);
         const tags = props.buffTags?.[u.id];
         return (
@@ -702,6 +730,12 @@ function BoardImpl(props: BoardProps) {
                 {props.badges[u.id].join('  ')}
               </text>
             ) : null}
+            {unitNumber !== undefined && pts.length > 0 && (
+              <g transform={`translate(${cx} ${minY - 0.65})`} pointerEvents="none">
+                <circle r={0.55} fill="#f5d48a" stroke="#111" strokeWidth={0.12} />
+                <text y={0.2} fontSize={0.62} textAnchor="middle" fill="#111" fontWeight={900}>{unitNumber}</text>
+              </g>
+            )}
             {u.transport && pts.length > 0 && (() => {
               const pax = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
               if (!pax.length) return null;

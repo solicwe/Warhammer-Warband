@@ -470,6 +470,55 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
   return { ok: !errors.length, errors: [...new Set(errors)], bad: [...bad] };
 }
 
+/** Nudge only invalid models toward nearby legal spots without disturbing already-valid placement. */
+export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>, how: 'ingress' | 'deepStrike' | 'infiltrate'): Map<string, Pt> {
+  const out = new Map(pos);
+  if (how === 'ingress') {
+    const models = alive(u);
+    const nearestEdge = models.reduce((best, m) => {
+      const p = out.get(m.id) ?? m;
+      const edges = [p.x, p.y, W - p.x, H - p.y];
+      const edge = edges.indexOf(Math.min(...edges));
+      return edges[edge] < best.distance ? { edge, distance: edges[edge] } : best;
+    }, { edge: 0, distance: Infinity }).edge;
+    const shift = models.reduce((delta, m) => {
+      const p = out.get(m.id) ?? m, keep = RULES.reserves.edgeDistance - m.r - EPS;
+      if (nearestEdge === 0) return Math.min(delta, keep - p.x);
+      if (nearestEdge === 1) return Math.min(delta, keep - p.y);
+      if (nearestEdge === 2) return Math.max(delta, W - keep - p.x);
+      return Math.max(delta, H - keep - p.y);
+    }, nearestEdge < 2 ? 0 : 0);
+    for (const m of models) {
+      const p = out.get(m.id) ?? m;
+      out.set(m.id, nearestEdge % 2 === 0 ? { ...p, x: p.x + shift } : { ...p, y: p.y + shift });
+    }
+  }
+  for (let pass = 0; pass < alive(u).length; pass++) {
+    const before = validatePlacement(s, u, out, how);
+    if (before.ok) break;
+    const bad = new Set(before.bad);
+    let changed = false;
+    for (const m of alive(u)) {
+      if (!bad.has(m.id)) continue;
+      const start = out.get(m.id) ?? m;
+      search: for (let step = 1; step <= 12; step++) for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 2, d = step * 0.25;
+        const trial = new Map(out);
+        trial.set(m.id, { x: start.x + Math.cos(a) * d, y: start.y + Math.sin(a) * d });
+        const check = validatePlacement(s, u, trial, how);
+        if (!check.bad.includes(m.id) && check.bad.length < before.bad.length && check.bad.every((id) => bad.has(id))) {
+          out.set(m.id, trial.get(m.id)!);
+          changed = true;
+          break search;
+        }
+      }
+      if (changed) break;
+    }
+    if (!changed) break;
+  }
+  return out;
+}
+
 /** Formation helper: lay out a unit around a point in rows with 0.5" gaps. */
 export function formationAt(u: UnitState, c: Pt, facingUp = true): Map<string, Pt> {
   const ms = alive(u);

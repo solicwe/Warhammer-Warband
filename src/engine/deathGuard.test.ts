@@ -8,7 +8,7 @@ import { abilityStatus, modelDefence, modelOc, unitFlags } from './effects';
 import { buildUnits, validateList } from './army';
 import { contagionRange, dgCommandEnd, dgCommandStart, dgRoundStart, isAfflicted, plaguesOn } from './deathGuard';
 import { pickDetChoice } from './detachments';
-import { createGame, formationAt, placeUnit, validatePlacement } from './game';
+import { createGame, formationAt, nudgePlacement, placeUnit, validatePlacement } from './game';
 import { stratRuleFor } from './stratagems';
 import { PRESETS } from '../ui/presets';
 import type { ArmyList, FactionData, GameState } from './types';
@@ -131,8 +131,24 @@ describe('detachments', () => {
     expect(gap).toBeGreaterThan(6);
     expect(gap).toBeLessThan(8);
     expect(validatePlacement(s, ds, pos, 'deepStrike').ok).toBe(false);
+    const adjusted = nudgePlacement(s, ds, pos, 'deepStrike');
+    expect(validatePlacement(s, ds, adjusted, 'deepStrike').ok).toBe(true);
+    expect([...adjusted].some(([id, p]) => Math.hypot(p.x - pos.get(id)!.x, p.y - pos.get(id)!.y) > 0.001)).toBe(true);
     e.timed = [{ e: {}, label: 'x', until: 'battle', by: 0, turn: 0, mark: 'Afflicted' }];
     expect(validatePlacement(s, ds, pos, 'deepStrike').errors.join()).not.toMatch(/more than/);
+  });
+  it('Strategic Reserves nudge back into the 6" battlefield-edge corridor', () => {
+    const s = game(dgList('Virulent Vectorium', [{ uid: 'ds', datasheet: 'Deathshroud Terminators', models: 3, pts: 150 }]));
+    s.terrain = [];
+    s.objectives = [];
+    s.round = 3;
+    const ds = unit(s, 0, 'Deathshroud Terminators');
+    ds.status = 'reserves';
+    const pos = formationAt(ds, { x: 15, y: 15 });
+    expect(validatePlacement(s, ds, pos, 'ingress').ok).toBe(false);
+    const adjusted = nudgePlacement(s, ds, pos, 'ingress');
+    expect(validatePlacement(s, ds, adjusted, 'ingress').ok).toBe(true);
+    expect([...adjusted].some(([id, p]) => Math.hypot(p.x - pos.get(id)!.x, p.y - pos.get(id)!.y) > 0.001)).toBe(true);
   });
 });
 

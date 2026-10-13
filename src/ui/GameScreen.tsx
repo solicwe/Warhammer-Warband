@@ -15,7 +15,7 @@ import { rollN } from '../engine/dice';
 import {
   autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
-  formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
+  formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
@@ -552,7 +552,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const tg = c && r ? ritualTargets(s, c, r).map((t) => t.id) : [];
     return { cs, c, tg, targets: c && r ? tg : [...new Set(cs.map((x) => x.unit.id))], picked: c && r ? (rit.target ? [rit.target] : []) : c ? [c.unit.id] : [] };
   })();
-  const targets = s.window?.kind === 'pickUnit' ? s.window.units : stratPick ? stratPick.ids : ritMap ? ritMap.targets : mode?.k === 'shoot' ? shootTargets : mode?.k === 'charge' ? chargeOpts : mode?.k === 'fight' ? fightTargets : mode?.k === 'explosives' ? explosiveTargets : mode?.k === 'crush' ? crushTargets : [];
+  const heroicWindow = !mode && s.window?.kind === 'heroicIntervention' ? s.window : null;
+  const heroicSelection = heroicWindow !== null;
+  const heroicPick = heroicWindow ? heroicCandidates(s, heroicWindow.player) : [];
+  const heroicNumbers = Object.fromEntries(heroicPick.map((u, i) => [u.id, i + 1]));
+  const targets = s.window?.kind === 'pickUnit' ? s.window.units : stratPick ? stratPick.ids : ritMap ? ritMap.targets : heroicPick.length ? heroicPick.map((u) => u.id) : mode?.k === 'shoot' ? shootTargets : mode?.k === 'charge' ? chargeOpts : mode?.k === 'fight' ? fightTargets : mode?.k === 'explosives' ? explosiveTargets : mode?.k === 'crush' ? crushTargets : [];
   const picked = ritMap ? ritMap.picked : mode?.k === 'shoot' || mode?.k === 'fight' || mode?.k === 'explosives' ? (mode.target ? [mode.target] : []) : mode?.k === 'charge' ? mode.targets : [];
 
   const onTapUnit = (unitId: string, modelId?: string) => {
@@ -614,8 +618,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (tape.on) { measureTap(p); return; }
     if (mode?.k === 'place') {
       const u = U(mode.unitId);
-      setDraft(placePaths(formationAt(u, p, s.players[u.owner].role === 'defender')));
-      setCheck(null);
+      let pos = formationAt(u, p, s.players[u.owner].role === 'defender');
+      if (mode.how === 'ingress' || mode.how === 'deepStrike' || mode.how === 'infiltrate') pos = nudgePlacement(s, u, pos, mode.how);
+      setDraft(placePaths(pos));
+      const chk = mode.how === 'deepStrike' || mode.how === 'infiltrate' ? validatePlacement(s, u, pos, mode.how) : null;
+      setCheck(chk?.ok ? null : chk);
       return;
     }
     if (!mode) setSel(null);
@@ -646,6 +653,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     ? settleMove(s, modeUnit, draftKind, d, { fly: mode?.k === 'move' ? mode.fly : undefined, targets: mode?.k === 'charge' ? mode.targets : undefined, maxFor: (m) => maxFor(m.id) })
     : d);
   const onDragEnd = (d: Paths) => {
+    if (mode?.k === 'place' && modeUnit && (mode.how === 'ingress' || mode.how === 'deepStrike' || mode.how === 'infiltrate')) {
+      const pos = nudgePlacement(s, modeUnit, lastPos(d), mode.how);
+      setDraft(placePaths(pos));
+      const chk = validatePlacement(s, modeUnit, pos, mode.how);
+      setCheck(chk.ok ? null : chk);
+      return;
+    }
     if (!modeUnit || !draftKind) return;
     const st = settleDraft(d);
     setDraft(st);
@@ -775,11 +789,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   if (mode?.k === 'charge' && modeUnit) {
     for (const m of alive(modeUnit)) if (alive(modeUnit).length <= 3) rings.push({ c: m, r: (modeUnit.chargeRoll ?? 0) + m.r, color: 'rgba(245,184,61,0.5)', dash: true });
   }
-  // arriving from Reserves (Deep Strike / Strategic Reserves): how close to the enemy it may not be set up
-  if (mode?.k === 'place' && modeUnit && (mode.how === 'deepStrike' || mode.how === 'ingress')) {
+  // Keep-out distance while arriving or infiltrating: model circles mark enemy ranges.
+  if (mode?.k === 'place' && modeUnit && (mode.how === 'deepStrike' || mode.how === 'ingress' || mode.how === 'infiltrate')) {
     const keep = mode.how === 'deepStrike' ? unitFlags(s, modeUnit).deepStrikeRange : RULES.reserves.enemyDistance;
     for (const e of boardUnits(s, other(modeUnit.owner))) for (const n of alive(e)) rings.push({ c: n, r: n.r + keep, color: 'rgba(239,68,68,0.55)', dash: true });
   }
+  const zoneGuide = mode?.k === 'place' && mode.how === 'infiltrate' && modeUnit
+    ? { poly: zoneOf(s, other(modeUnit.owner)), distance: RULES.reserves.enemyDistance }
+    : undefined;
 
   // ---------- generic confirm helpers ----------
 
@@ -803,6 +820,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode?.k !== 'place' || !draft) return;
     let pos = lastPos(draft);
     const u = U(mode.unitId);
+    let nudged = false;
+    if (mode.how === 'ingress' || mode.how === 'deepStrike' || mode.how === 'infiltrate') {
+      const original = pos;
+      const adjusted = nudgePlacement(s, u, original, mode.how);
+      nudged = [...adjusted].some(([id, p]) => dist(p, original.get(id) ?? p) > 0.001);
+      if (nudged) { pos = adjusted; setDraft(placePaths(pos)); }
+    }
     // a spot that breaks a rule (against a board edge, on a wall, too close to an enemy): slide to the nearest legal one
     if (mode.how !== 'disembark' && !validatePlacement(s, u, pos, mode.how).ok) {
       const mid = (m: Map<string, Pt>) => { const q = [...m.values()]; return { x: q.reduce((a, p) => a + p.x, 0) / q.length, y: q.reduce((a, p) => a + p.y, 0) / q.length }; };
@@ -812,9 +836,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (fit && dist(mid(fit), near) <= 6) {
         pos = fit;
         setDraft(placePaths(fit));
-        flash('Moved to the nearest legal spot');
+        flash(nudged ? 'Moved models to a legal position' : 'Moved to the nearest legal spot');
       }
-    }
+    } else if (nudged) flash('Moved models to keep the required distance');
     if (mode.how === 'disembark') {
       const t = U(mode.transportId!);
       const chk = validateDisembark(s, u, t, pos);
@@ -1178,7 +1202,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <>
           <div className="handoff">{pName(s, p)}: use Heroic Intervention?</div>
           <div className="tiny muted">The game picks the right option: <b>Leap to Defend</b> (1CP) when a unit that just charged is in reach, else <b>Into the Fray</b> (2CP, enemy within 6", charge roll at most 6).</div>
-          {heroicCandidates(s, p).map((u) => {
+          {heroicPick.map((u, i) => {
             const how = heroicMode(s, p, u);
             const go = () => {
               act((g) => { const gu = unitById(g, u.id); spendStratagem(g, p, 'heroic-intervention', gu, how === 'fray' ? 2 : undefined); declareCharge(g, gu, false, how === 'fray' ? 6 : undefined); });
@@ -1186,7 +1210,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             };
             return (
               <div key={u.id} className="row">
-                <span className="grow small"><b>{u.name}</b></span>
+                <span className="grow small"><b>{i + 1}. {u.name}</b></span>
                 <button className="btn small" disabled={!how} onClick={go}>{how === 'leap' ? 'Leap to Defend · 1CP' : how === 'fray' ? 'Into the Fray · 2CP' : 'No target in reach'}</button>
               </div>
             );
@@ -1235,7 +1259,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const u = U(mode.unitId);
     return (
       <>
-        <div className="small">Set up <b>{u.name}</b>: tap the battlefield{mode.how === 'deploy' ? ' in your deployment zone' : mode.how === 'disembark' ? ` within ${disembarkMode(s, U(mode.transportId!)) === 'combat' ? 6 : 3}" of the transport (${disembarkMode(s, U(mode.transportId!))} disembark)` : mode.how === 'deepStrike' ? ` (more than ${RULES.reserves.enemyDistance}" from enemies)` : ` (within ${RULES.reserves.edgeDistance}" of a battlefield edge, more than ${RULES.reserves.enemyDistance}" from enemies)`} then drag to adjust</div>
+        <div className="small">Set up <b>{u.name}</b>: tap the battlefield{mode.how === 'deploy' ? ' in your deployment zone' : mode.how === 'disembark' ? ` within ${disembarkMode(s, U(mode.transportId!)) === 'combat' ? 6 : 3}" of the transport (${disembarkMode(s, U(mode.transportId!))} disembark)` : mode.how === 'deepStrike' ? ` (more than ${unitFlags(s, u).deepStrikeRange}" from enemies)` : mode.how === 'infiltrate' ? ` (more than ${RULES.reserves.enemyDistance}" from the enemy deployment zone)` : ` (within ${RULES.reserves.edgeDistance}" of a battlefield edge, more than ${RULES.reserves.enemyDistance}" from enemies)`} then drag to adjust</div>
         <div className="row">
           <span className="tiny muted grow">Drag = whole unit · tap a model = move that model</span>
           <button className="btn small" onClick={autoPlace}>Auto place</button>
@@ -2171,6 +2195,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           selected={sel}
           draftUnit={draftUnit}
           draft={draft}
+          unitNumbers={heroicNumbers}
+          edgeGuide={mode?.k === 'place' && mode.how === 'ingress' ? RULES.reserves.edgeDistance : undefined}
+          zoneGuide={zoneGuide}
           maxFor={mode?.k === 'place' ? undefined : maxFor}
           walk={mode?.k === 'place' ? undefined : walkDraft}
           animateMoves={bots.length ? bots : undefined}
@@ -2187,7 +2214,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onTapUnit={onTapUnit}
           measure={tape.on ? { a: tape.a, b: tape.b, label: tapeInfo?.text, los: tapeInfo?.los } : undefined}
           onTapBoard={onTapBoard}
-          onDraft={(d) => { setDraft(d); setCheck(null); }}
+          onDraft={(d) => {
+            if (mode?.k === 'place' && modeUnit && (mode.how === 'ingress' || mode.how === 'deepStrike' || mode.how === 'infiltrate')) {
+              const pos = nudgePlacement(s, modeUnit, lastPos(d), mode.how);
+              setDraft(placePaths(pos));
+              const chk = validatePlacement(s, modeUnit, pos, mode.how);
+              setCheck(chk.ok ? null : chk);
+            } else { setDraft(d); setCheck(null); }
+          }}
           onDragEnd={onDragEnd}
           plan={planArrows}
           side={sideCards}
