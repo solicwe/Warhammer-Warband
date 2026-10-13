@@ -334,7 +334,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return () => window.clearTimeout(t);
   }, [s, actingBot, act, botSays, rolling, reporting, thinking, stepping, viewing, worker, speed, spectate, bots.length, rush]); // eslint-disable-line react-hooks/exhaustive-deps
   // the hurry lasts for the bot's turn only
-  useEffect(() => { if (actingBot === null && !spectate) setRush(false); }, [actingBot, spectate]);
+  useEffect(() => { if (!actingBot === null && !spectate) setRush(false); }, [actingBot, spectate]);
   // what happens on the table, in the bot commander's words: kills and losses, objectives changing hands, charges
   const heard = useRef({ fx: s.fxSeq ?? 0, log: s.log.length, ctrl: s.objectives.map((o) => o.controller) });
   useEffect(() => {
@@ -1461,7 +1461,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             : <div className="muted small">The transport Advanced / Fell Back: no disembarking this phase</div>;
         })()}
         {rides.map((t) => {
-          // embark: after a Normal / Advance / Fall Back move, every model within 3" of the transport
+          // embark: after a Normal / Advance / Fall Back move, every model内的 3" of the transport
           const far = alive(moved!).filter((m) => !alive(t).some((n) => baseDist(m, n) <= 3 + 1e-6)).length;
           return (
             <button key={t.id} className="btn" disabled={far > 0} onClick={() => { const e = act((g) => embarkUnit(g, unitById(g, moved!.id), unitById(g, t.id))); if (e) flash(e); else setSel(null); }}>
@@ -1683,7 +1683,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           {res && !res.error && res.notes.map((n) => <div key={n} className="err">{n}</div>)}
           <div className="row">
             <button className="btn" onClick={() => setMode(null)}>Cancel</button>
-            <button className="btn primary grow" data-coach="fire" disabled={!res || !!res.error || !res.pools.length} onClick={() => {
+            <button className="btn primary grow" data-coach="fire" disabled={!res || !res.pools.length} onClick={() => {
               const auto = onAuto(s, modeUnit.owner);
               act((g) => {
                 const gu = unitById(g, modeUnit.id);
@@ -1912,7 +1912,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       setSel(u.id);
       act((g) => unitSelected(g, unitById(g, u.id), 'fight'));
       const eng = engagedEnemies(s, u);
-      if (eng.length) setMode({ k: 'fight', unitId: u.id, target: eng.length === 1 ? eng[0].id : null, epic: false });
+      if (eng.length) setMode({ k: 'fight', unitId: u.id, target: eng.length === 1 ? eng[0] : null, epic: false });
       else setMode({ k: 'pile', unitId: u.id, kind: 'pileIn', overrun: true }, startPaths(u));
     };
     const overrunReady = selUnit && cands.units.includes(selUnit) && !isEngaged(s, selUnit);
@@ -2225,13 +2225,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className={`panel ${actor ? 's1' : ''}`}>
           {bots.length === 0 && s.phase !== 'deploy' && s.phase !== 'gameover' && !s.window && <div className="label"><span className={`side-dot s${actor}`} aria-hidden="true" /> {pName(s, actor)} to act</div>}
           {panel()}
-        </div>
-        {/* on a computer there is room for the latest events (on a phone they are in the Battle log) */}
-        <div className="feed" aria-label="Latest events">
-          <div className="feed-head"><span>Latest</span></div>
-          {s.log.filter((l) => l.kind !== 'roll').slice(-8).reverse().map((l, i) => (
-            <div key={s.log.length - i} className={`feed-row ${l.kind ?? ''} ${l.player === 1 ? 's1' : l.player === 0 ? 's0' : ''}`}>{l.text}</div>
-          ))}
         </div>
       </aside>
 
