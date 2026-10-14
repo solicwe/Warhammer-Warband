@@ -206,7 +206,7 @@ export function knightsTurnStart(s: GameState) {
 export function knightsCommandStart(s: GameState) {
   const p = s.active;
   const rules = activeRules(s, p);
-  if (rules.includes('Bondsman')) bondsman(s, p);
+  if (rules.includes('Bondsman') || boardUnits(s, p).some((u) => u.abilities.some((a) => /\(Bondsman\)/.test(a.name)))) bondsman(s, p);
   if (rules.includes('Infernal Lance')) for (const u of boardUnits(s, p).filter((x) => x.factionKeywords.includes('CHAOS KNIGHTS') && hasKw(x, 'WALKER'))) maleficSurge(s, u);
   if (rules.includes('Houndpack Lance')) markedPrey(s, p);
   // Throne Tyrannicus: the closest other CHARACTER Knight within 9" is affected by the bearer's War Dog auras

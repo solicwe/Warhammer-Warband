@@ -6,8 +6,9 @@
 //   npm run images -- --missing   also list the datasheets of SM / ORK that have no image yet
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIR = path.join(ROOT, 'public/images');
 const UNITS = path.join(DIR, 'units');
 const EXT = /\.(webp|jpe?g|png|avif|gif)$/i;

@@ -327,14 +327,16 @@ export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
 /** The datasheet an ability came from (abilities of attached units carry it). */
 export const abilitySheet = (u: UnitState, a: AbilityData) => a.sheet ?? (u.sources.length === 1 ? u.sources[0] : a.model && u.sources.includes(a.model) ? a.model : u.sources[0]);
 
-const ruleMemo = new WeakMap<AbilityData, { sheet: string; r: AbilityRule | undefined }>();
+const ruleMemo = new WeakMap<AbilityData, { unit: UnitState; sheet: string; sourceFaction?: string; r: AbilityRule | undefined }>();
 
 export function abilityRule(u: UnitState, a: AbilityData): AbilityRule | undefined {
   const sheet = abilitySheet(u, a);
   const hit = ruleMemo.get(a);
-  if (hit && hit.sheet === sheet) return hit.r;
-  const r = findRule(a, sheet);
-  ruleMemo.set(a, { sheet, r });
+  if (hit?.unit === u && hit.sheet === sheet && hit.sourceFaction === a.faction) return hit.r;
+  const keywords = u.models?.find((m) => m.source === sheet)?.keywords ?? [];
+  const faction = keywords.includes('IMPERIAL KNIGHTS') ? 'QI' : keywords.includes('CHAOS KNIGHTS') ? 'QT' : a.faction;
+  const r = findRule(faction === a.faction ? a : { ...a, faction }, sheet);
+  ruleMemo.set(a, { unit: u, sheet, sourceFaction: a.faction, r });
   return r;
 }
 

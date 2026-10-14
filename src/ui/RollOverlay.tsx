@@ -55,7 +55,7 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
 
   useEffect(() => {
     if ((s.fxSeq ?? 0) < seen.current) { seen.current = s.fxSeq ?? 0; setQueue([]); return; } // undo
-    const add = (s.fx ?? []).filter((e): e is RollFx => e.seq > seen.current && (e.kind === 'roll' || e.kind === 'rolloff' || e.kind === 'cards' || e.kind === 'primary'));
+    const add = (s.fx ?? []).filter((e): e is RollFx => e.seq > seen.current && ((e.kind === 'roll' && !e.unitId) || e.kind === 'rolloff' || e.kind === 'cards' || e.kind === 'primary'));
     seen.current = s.fxSeq ?? 0;
     // when only bots play, skip the minor rolls so the overlay does not hide the game
     const shown = quick ? add.filter((e) => e.kind === 'rolloff' || e.kind === 'cards' || e.kind === 'primary' || e.title.startsWith('Charge')) : add;

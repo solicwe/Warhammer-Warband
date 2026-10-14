@@ -692,10 +692,10 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       models,
       startingStrength: models.length,
       abilities: [
-        ...sheets.flatMap((s) => s.abilities.map((a) => ({ ...a, sheet: s.name, faction: faction.id, model: a.model || (sheets.length > 1 ? s.name : undefined) }))),
+        ...sheets.flatMap((s) => s.abilities.map((a) => ({ ...a, sheet: s.name, faction: s.ally ?? faction.id, model: a.model || (sheets.length > 1 ? s.name : undefined) }))),
         // Horrors are Pink, Horrors are Blue: once no Pink Horror is left, the unit uses the Blue Horrors abilities (switched in abilityOff)
         ...(sheet.abilities.some((a) => a.name.startsWith('HORRORS ARE PINK')) ? (faction.datasheets.find((d) => d.name === 'Blue Horrors')?.abilities ?? [])
-          .filter((a) => BLUE_ONLY.includes(a.name)).map((a) => ({ ...a, sheet: sheet.name, faction: faction.id })) : []),
+          .filter((a) => BLUE_ONLY.includes(a.name)).map((a) => ({ ...a, sheet: sheet.name, faction: sheet.ally ?? faction.id })) : []),
         // an Enhancement works like an ability of the character carrying it (rules in data/abilities)
         ...[e, ...joiners].filter((x) => x.enhancement).map((x) => {
           const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);

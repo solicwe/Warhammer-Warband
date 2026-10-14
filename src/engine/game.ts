@@ -12,7 +12,7 @@ import { blessingsRoll, blessingsRoundStart } from './blessings';
 import { circleInFlow } from './flow';
 import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
 import {
-  alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
+  alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
   heroFx, phaseKey,
 } from './state';
@@ -1284,6 +1284,7 @@ export function markRuleName(s: GameState, p: PlayerId): string | null {
   const r = activeRules(s, p);
   return r.includes('Veterans of the Long War') ? 'Focus of Hatred' : r.includes('Renegade Warband') ? 'Vendetta' : null;
 }
+export const markRuleLabel = (s: GameState, p: PlayerId) => markRuleName(s, p)?.split(' ')[0].toUpperCase() ?? 'MARK';
 export const unitHasAbility = (u: UnitState, name: string) => u.abilities.some((a) => a.name === name);
 export const isRiledUp = (s: GameState, u: UnitState) => isRiled(s, u);
 
@@ -1330,7 +1331,7 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   total += rollMods(s, u).chargeBonus;
   u.chargeRoll = Math.max(0, total - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0));
   const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
-  pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `Charge ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near });
+  pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `Charge ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near, unitId: u.id, at: centreOf(u) });
   log(s, `${u.name} declares a charge: 2D6 [${r.join('+')}] = ${r[0] + r[1]}${fly ? ' (Fly −2)' : ''}${cap !== undefined && r[0] + r[1] > cap ? ` → capped at ${cap}` : ''}`, 'roll', u.owner);
   // Fortress of Intimidation: charging near that Knight means a Battle-shock test first
   const fort = boardUnits(s, other(u.owner)).find((e) => unitFlags(s, e).chargedShock !== null && unitDistance(u, e) <= 12 + 1e-6);

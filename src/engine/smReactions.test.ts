@@ -4,8 +4,10 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botAct } from './bot';
 import { commitMove, createGame, declareCharge, deployUnit, endPhase, endRedeploy, findPlacement, formationAt, ingressUnit, placeUnit, redeployCandidates, redeployUnit, validatePlacement } from './game';
-import { baseDist } from './geometry';
+import { baseDist, pointInPoly, polyCentroid } from './geometry';
 import { alive, isEngaged } from './state';
+import { zonePoly } from './missions';
+import { RULES } from './config';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -66,6 +68,9 @@ describe('Space Marine abilities with their own moment', () => {
     const s = game([['Terminator Squad', 5, 170]], [['Boyz', 10, 90]]);
     const t = s.units.find((u) => u.id === 'p0-x0')!;
     expect(t.homer).toBeDefined();
+    expect(pointInPoly(t.homer!, zonePoly(s, t.owner))).toBe(true);
+    const edgeDistance = (p: Pt) => Math.min(p.x, p.y, RULES.battlefield.width - p.x, RULES.battlefield.height - p.y);
+    expect(edgeDistance(t.homer!)).toBeLessThan(edgeDistance(polyCentroid(zonePoly(s, t.owner))));
     t.status = 'reserves';
     s.active = 1;
     const far = formationAt(t, { x: t.homer!.x > 22 ? 6 : 38, y: t.homer!.y });

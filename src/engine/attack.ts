@@ -2,7 +2,7 @@
 import { weaponFx } from './weaponFx';
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
-import { baseDist, clamp, coherencyProblems } from './geometry';
+import { baseDist, clamp, coherencyProblems, reachOf } from './geometry';
 import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
@@ -789,8 +789,11 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
       log(s, `Deadly Demise (${dd}) from ${m.name}: ${sure ? 'it explodes' : 'rolled a 6!'}`, 'roll');
       // Machine Wrath: the wreck makes one last move before it blows
       emitReact(s, u.owner, 'deadlyDemiseSix', { unitId: u.id, modelId: m.id, six: true });
-      for (const v of s.units.filter((x) => x.id !== u.id && onBoard(x))) {
-        if (alive(v).some((n) => baseDist(n, m) <= RULES.deadlyDemiseRange)) { applyMortalWounds(s, v, rollExpr(s, dd).total, 'Deadly Demise'); putridHit(s, u, v); }
+      const targets = s.units.filter((v) => v.id !== u.id && onBoard(v) && alive(v).some((n) => baseDist(n, m) <= RULES.deadlyDemiseRange));
+      pushFx(s, { kind: 'explosion', at: { x: m.x, y: m.y }, range: RULES.deadlyDemiseRange, radius: RULES.deadlyDemiseRange + reachOf(m), hits: targets.length });
+      for (const v of targets) {
+        applyMortalWounds(s, v, rollExpr(s, dd).total, 'Deadly Demise');
+        putridHit(s, u, v);
       }
     } else log(s, `Deadly Demise from ${m.name}: rolled ${r} (no explosion)`, 'roll');
   }

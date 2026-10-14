@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { allySources, withAllies } from './allies';
-import { unitPoints, validateList } from './army';
+import { ALLIES, allySources, withAllies } from './allies';
+import { buildUnits, unitPoints, validateList } from './army';
 import type { ArmyList, FactionData } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -24,6 +24,20 @@ describe('allied units', () => {
     expect([...new Set(sm.datasheets.map((d) => d.ally).filter(Boolean))].sort()).toEqual(['AoI', 'QI', 'TL']);
     expect(sm.datasheets.find((d) => d.name === 'Skitarii Rangers')).toBeUndefined();
     expect(allySources('ORK', 'Xenos')).toEqual([]);
+  });
+
+  it('retains the originating faction for abilities on every allied datasheet', () => {
+    for (const src of ALLIES) {
+      const own = load(src.id);
+      const hostId = src.id === 'QI' || src.id === 'TL' || src.id === 'AoI' ? 'SM' : 'CSM';
+      const group = hostId === 'SM' ? 'Imperium' : 'Chaos';
+      const host = load(hostId);
+      const datasheet = own.datasheets.find((d) => src.unit(d) && d.abilities.length > 0);
+      expect(datasheet, `${src.id} has an allied datasheet with abilities`).toBeDefined();
+      const faction = withAllies(host, [{ src, data: own }]);
+      const units = buildUnits(list(hostId, [[datasheet!.name, datasheet!.models.length]]), faction, 0);
+      expect(units[0].abilities.filter((a) => a.sheet === datasheet!.name).every((a) => a.faction === src.id)).toBe(true);
+    }
   });
 
   it('checks each rule: one Titanic or three small Knights, one Titan, never the Warlord', () => {

@@ -994,5 +994,24 @@
     ]
    }
   ]
+ },
+ "Brigand": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "if": ["targetInRangeOfObjective"],
+     "abilities": ["ignores cover"]
+   }
+  ]
+ },
+ "Huntsman": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": ["targetMV"],
+    "reroll": "wounds"
+   }
+  ]
  }
 }

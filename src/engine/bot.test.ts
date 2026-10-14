@@ -316,6 +316,7 @@ describe('one-tap charge and pile-in (the player taps the target, the models mov
       const ai = put(s, 'p0-x0', { x: 20, y: 14 });
       const boyz = put(s, 'p1-x0', { x: 20, y: 21 });
       declareCharge(s, ai);
+      expect(s.fx?.find((e) => e.kind === 'roll' && e.unitId === ai.id)).toMatchObject({ unitId: ai.id, at: { x: expect.any(Number), y: expect.any(Number) } });
       if ((ai.chargeRoll ?? 0) < unitDistance(ai, boyz)) continue;
       expect(autoCharge(s, ai, [boyz.id])).toBe(true);
       expect(engagedEnemies(s, ai).map((e) => e.id)).toContain(boyz.id);

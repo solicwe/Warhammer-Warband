@@ -3,7 +3,7 @@ import { RULES } from '../engine/config';
 import { deploymentById, toPoly } from '../engine/config';
 import { dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard } from '../engine/state';
-import { levelOfControl } from '../engine/game';
+import { levelOfControl, markRuleLabel } from '../engine/game';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { loadoutLabels, shortItem } from './loadout';
@@ -126,10 +126,11 @@ function BoardImpl(props: BoardProps) {
     if (!fresh.length) return;
     seen.current = Math.max(...fresh.map((e) => e.seq));
     const t0 = performance.now();
-    const keep = fresh.filter((e) => e.kind !== 'roll' && e.kind !== 'rolloff' && e.kind !== 'cards' && (e.kind !== 'move' || props.animateMoves?.includes(e.owner)));
+    const keep = fresh.filter((e) => (e.kind !== 'roll' || (!!e.unitId && !!e.at)) && e.kind !== 'rolloff' && e.kind !== 'cards' && (e.kind !== 'move' || props.animateMoves?.includes(e.owner)));
     // the new kinds of moment get their sound here (attacks are voiced by the attack report)
     const voice: Partial<Record<FxEvent['kind'], Sfx>> = { shock: 'shock', heal: 'heal', place: 'arrive' };
     for (const k of new Set(keep.map((e) => (e.kind === 'move' && e.moveKind === 'charge' ? 'charge' : voice[e.kind])).filter((x): x is Sfx => !!x))) play(k);
+    if (keep.some((e) => e.kind === 'roll' && !!e.unitId)) play('dice', 2);
     // stagger events from the same step a little so they read in order
     setFx((cur) => [...cur.filter((a) => t0 - a.t0 < FX_MS[a.e.kind]), ...keep.map((e, i) => ({ e, t0: t0 + i * 180 }))]);
   }, [s.fx, s.fxSeq, props.animateMoves]);
@@ -771,7 +772,7 @@ function BoardImpl(props: BoardProps) {
               <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 3.1 : 2.2) - (u.battleShocked ? 1.35 : 0)})`} pointerEvents="none">
                 <rect x={-2.3} y={-0.62} width={4.6} height={1.24} rx={0.25} fill="#7a0c0c" stroke="#f5d48a" strokeWidth={0.1} />
                 <path d="M -1.85 0.32 L -1.4 -0.32 L -0.95 0.32 Z" fill="#f5d48a" />
-                <text x={0.35} y={0.27} fontSize={0.75} textAnchor="middle" fill="#f5d48a" fontWeight={800} letterSpacing={0.06}>OATH</text>
+                <text x={0.35} y={0.27} fontSize={0.75} textAnchor="middle" fill="#f5d48a" fontWeight={800} letterSpacing={0.06}>{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</text>
               </g>
             )}
             {isDraft && maxFor && ms.map((m) => {

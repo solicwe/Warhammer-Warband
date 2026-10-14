@@ -2,15 +2,17 @@
 // Harbingers of Dread, Malefic Surge, the army builder's rules, every ability and stratagem automatic, and bot games.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { allySources, withAllies } from './allies';
+import { actTargets, actsOfUnit, useAct } from './activations';
 import { botAct } from './bot';
-import { abilityStatus, unitFlags } from './effects';
+import { abilityRule, abilityStatus, effectsFor, unitFlags } from './effects';
 import { buildUnits, validateList } from './army';
 import { pickDetChoice } from './detachments';
 import { createGame, formationAt, placeUnit, settleMove } from './game';
 import { knightsCommandStart, knightsTurnEnd } from './knights';
 import { stratRuleFor } from './stratagems';
 import { PRESETS } from '../ui/presets';
-import type { ArmyList, FactionData, GameState } from './types';
+import type { ArmyList, FactionData, GameState, UnitState } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
 const QI = load('QI');
@@ -54,6 +56,92 @@ describe('Imperial Knights', () => {
     knightsCommandStart(s);
     for (const a of [gl, hv]) expect((a.timed ?? []).some((t) => t.mark === `bond:${pal.id}`)).toBe(true);
     expect(gl.keywords).toContain('BATTLELINE');
+  });
+  it('an allied Imperial Knight resolves its own Bondsman ability in a non-Knight army', () => {
+    const source = allySources('SM', 'Imperium').find((a) => a.id === 'QI')!;
+    const host = withAllies(SM, [{ src: source, data: QI }]);
+    const army = { ...PRESETS.SM, units: [
+      ...PRESETS.SM.units,
+      { uid: 'paladin-ally', datasheet: 'Knight Paladin', models: 1, pts: 405 },
+      { uid: 'armiger-ally', datasheet: 'Armiger Warglaive', models: 1, pts: 140 },
+    ] };
+    const s = game(army, host);
+    s.terrain = [];
+    const pal = unit(s, 0, 'Knight Paladin');
+    const armiger = unit(s, 0, 'Armiger Warglaive');
+    placeUnit(s, pal, formationAt(pal, { x: 20, y: 30 }));
+    placeUnit(s, armiger, formationAt(armiger, { x: 29, y: 30 }));
+    s.active = 0; s.phase = 'command';
+    expect(pal.abilities.find((a) => a.name === 'Paladin’s Duty (Bondsman)')?.faction).toBe('QI');
+    knightsCommandStart(s);
+    expect(effectsFor(s, armiger).some((a) => a.e.abilities?.includes('lethal hits'))).toBe(true);
+    const castellan = { ...army.units[0], uid: 'castellan-ally', datasheet: 'Knight Castellan', pts: 525 };
+    const withCastellan = createGame({ lists: [{ ...army, units: [...army.units, castellan] }, PRESETS.SM], factions: [host, SM], names: ['A', 'B'], seed: 3 });
+    const alliedCastellan = unit(withCastellan, 0, 'Knight Castellan');
+    const aegis = alliedCastellan.abilities.find((a) => a.name === 'Ion Aegis (Aura)')!;
+    expect(abilityStatus(alliedCastellan, { ...aegis, faction: 'SM' }).status).toBe('auto');
+    expect(abilityRule(alliedCastellan, { ...aegis, faction: 'SM' })?.effects?.[0].defend?.cover).toBe(true);
+  });
+  it('every Imperial Knight datasheet ability resolves on an ally datasheet preview', () => {
+    const source = allySources('SM', 'Imperium').find((a) => a.id === 'QI')!;
+    const host = withAllies(SM, [{ src: source, data: QI }]);
+    const knightSheets = host.datasheets.filter((d) => d.factionKeywords.includes('IMPERIAL KNIGHTS'));
+    const missing: string[] = [];
+    for (const sheet of knightSheets) {
+      const probe = { sources: [sheet.name], abilities: [], models: [] } as unknown as UnitState;
+      for (const a of sheet.abilities.filter((x) => x.type !== 'Core' && x.type !== 'Faction')) {
+        const status = abilityStatus(probe, { ...a, sheet: sheet.name, faction: sheet.ally ?? host.id }).status;
+        if (status !== 'auto') missing.push(`${sheet.name}: ${a.name} (${status})`);
+      }
+    }
+    expect(missing).toEqual([]);
+    const gallant = host.datasheets.find((d) => d.name === 'Knight Gallant')!;
+    const probe = { sources: [gallant.name], abilities: [] } as unknown as UnitState;
+    const duty = gallant.abilities.find((a) => a.name === 'Gallant’s Duty (Bondsman)')!;
+    expect(abilityRule(probe, { ...duty, sheet: gallant.name, faction: gallant.ally ?? host.id })?.bond).toBeDefined();
+    const pride = gallant.abilities.find((a) => a.name === 'Martial Pride')!;
+    expect(abilityStatus(probe, { ...pride, sheet: gallant.name, faction: gallant.ally ?? host.id }).status).toBe('auto');
+  });
+  it('an allied Chaos Knight resolves its own datasheet ability', () => {
+    const CSM = load('CSM');
+    const source = allySources('CSM', 'Chaos').find((a) => a.id === 'QT')!;
+    const host = withAllies(CSM, [{ src: source, data: QT }]);
+    const army = { ...PRESETS.CSM, units: [...PRESETS.CSM.units, { uid: 'karnivore-ally', datasheet: 'War Dog Karnivore', models: 1, pts: 140 }] };
+    const s = createGame({ lists: [army, PRESETS.SM], factions: [host, SM], names: ['A', 'B'], seed: 3 });
+    const karnivore = unit(s, 0, 'War Dog Karnivore');
+    expect(karnivore.abilities.find((a) => a.name === 'Karnivore')?.faction).toBe('QT');
+    expect(effectsFor(s, karnivore).some((a) => a.e.rerollAdvance && a.e.rerollCharge)).toBe(true);
+    const legacyAbility = { ...karnivore.abilities.find((a) => a.name === 'Karnivore')!, faction: 'CSM' };
+    expect(abilityStatus(karnivore, legacyAbility).status).toBe('auto');
+  });
+  it('every Chaos Knight datasheet ability is implemented', () => {
+    const knightSheets = QT.datasheets.filter((d) => d.factionKeywords.includes('CHAOS KNIGHTS'));
+    const missing: string[] = [];
+    for (const sheet of knightSheets) {
+      const probe = { sources: [sheet.name], abilities: [], models: [] } as unknown as UnitState;
+      for (const a of sheet.abilities.filter((x) => x.type !== 'Core' && x.type !== 'Faction')) {
+        const status = abilityStatus(probe, { ...a, sheet: sheet.name, faction: QT.id }).status;
+        if (status !== 'auto') missing.push(`${sheet.name}: ${a.name} (${status})`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+  it('Canis Rex can remove Battle-shock from an eligible friendly Knight once per battle', () => {
+    const list = { ...PRESETS.QI, detachments: ['Valourstrike Lance'], units: [
+      { uid: 'canis', datasheet: 'Canis Rex', models: 1, pts: 450 },
+      { uid: 'paladin', datasheet: 'Knight Paladin', models: 1, pts: 405 },
+    ] };
+    const s = game(list, QI);
+    const canis = unit(s, 0, 'Canis Rex');
+    const paladin = unit(s, 0, 'Knight Paladin');
+    placeUnit(s, canis, formationAt(canis, { x: 20, y: 30 }));
+    placeUnit(s, paladin, formationAt(paladin, { x: 28, y: 30 }));
+    paladin.battleShocked = true;
+    const action = actsOfUnit(s, canis).find((a) => a.name === 'Chainbreaker')!;
+    expect(actTargets(s, action).map((u) => u.id)).toContain(paladin.id);
+    expect(useAct(s, action, paladin.id)).toBeNull();
+    expect(paladin.battleShocked).toBe(false);
+    expect(useAct(s, action, paladin.id)).toBe('Already used');
   });
   it('Super-heavy Walker: a Normal move goes through infantry', () => {
     const s = game(with_(PRESETS.QI, 'Valourstrike Lance'), QI);

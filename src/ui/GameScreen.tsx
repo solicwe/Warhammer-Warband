@@ -17,7 +17,7 @@ import {
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
   formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
-  validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
+  validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
@@ -604,7 +604,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           flash('Could not move in automatically (blocked / not enough distance): drag the models');
         }
       }
-      else if (mode.k === 'crush') { const rolls = act((g) => crushingImpact(g, unitById(g, mode.unitId), unitId)); flash(`Crushing Impact: [${rolls.join(' ')}]`); setMode(null); }
+      else if (mode.k === 'crush') {
+        const blocked = canUseStratagem(s, U(mode.unitId).owner, 'crushing-impact', U(mode.unitId));
+        if (blocked) flash(blocked);
+        else { const rolls = act((g) => crushingImpact(g, unitById(g, mode.unitId), unitId)); flash(`Crushing Impact: [${rolls.join(' ')}]`); setMode(null); }
+      }
       else if (mode.k === 'shoot' || mode.k === 'fight' || mode.k === 'explosives') setModeRaw({ ...mode, target: unitId });
       return;
     }
@@ -918,7 +922,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           : <span className={`side-dot s${u.owner}`} aria-hidden="true" />;
       })()} {u.name.length > 26 ? u.name.slice(0, 25) + '…' : u.name}
       <span className="muted"> {alive(u).length}/{u.startingStrength}</span>{u.battleShocked ? ' ' : ''}
-      {s.players[1 - u.owner].oathTarget === u.id && <span className="oath-tag">OATH</span>}
+      {s.players[1 - u.owner].oathTarget === u.id && <span className="oath-tag">{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</span>}
     </button>
   );
 
@@ -934,7 +938,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       u.battleShocked && 'Battle-shocked',
       u.chargedTurn === s.turn && 'Fights First',
       isRiledUp(s, u) && 'Riled up 5++',
-      s.players[other(u.owner)].oathTarget === u.id && 'Oath target',
+      s.players[other(u.owner)].oathTarget === u.id && `${markRuleName(s, other(u.owner)) ?? 'Marked'} target`,
       ...u.enhancements.map((e) => e.name),
       ...u.buffs.map((b) => (b.label && !BUFFS.some((x) => x.kind === b.kind) ? `${EFFECT_LABEL[b.kind] ?? b.kind} (${b.label})` : BUFFS.find((x) => x.kind === b.kind)?.label ?? EFFECT_LABEL[b.kind] ?? b.kind)),
     ].filter(Boolean) as string[];
@@ -1372,7 +1376,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               {boardUnits(s, other(s.active)).map((e) => (
                 <button key={e.id} className={`unit-pill ${s.players[s.active].oathTarget === e.id ? 'sel' : ''}`} onClick={() => { act((g) => setOathTarget(g, g.active, e.id)); setSel(e.id); flash(`${markRuleName(s, s.active)} → ${e.name}`); }}>
                   <span className={`side-dot s${e.owner}`} aria-hidden="true" /> {e.name}
-                  {s.players[s.active].oathTarget === e.id && <span className="oath-tag">OATH</span>}
+                  {s.players[s.active].oathTarget === e.id && <span className="oath-tag">{markRuleLabel(s, s.active)}</span>}
                 </button>
               ))}
             </div>
@@ -1563,8 +1567,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="handoff">Rituals · start of the Shooting phase</div>
-        <div className="small muted">Tap a glowing sorcerer on the map (or below), pick a Ritual, then tap its target. Each sorcerer attempts one Ritual (the army each Ritual once). Psychic test: 2D6 (3D6 if you Channel the Warp) — any double costs D3 mortal wounds.</div>
-        <div className="unit-strip">
+        <div className="rit-help small muted">Choose caster → Ritual → target. Each caster and Ritual can be used once per phase. Test: 2D6, or 3D6 with Channel; doubles cause D3 MW.</div>
+        <div className="unit-strip rit-casters">
           {cs.map((x) => (
             <button key={x.model.id} className={`unit-pill ${rit.model === x.model.id ? 'sel' : ''}`} onClick={() => { setRit({ model: x.model.id, channel: rit.channel }); setSel(x.unit.id); }}>
               <span className="side-dot s0" aria-hidden="true" /> {x.model.name}{x.bonus ? ` +${x.bonus}` : ''}{x.tries > 1 ? ` ×${x.tries}` : ''}
@@ -1575,16 +1579,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <div className="rit-list">
             {left.map((x) => (
               <button key={x.id} className={`rit-opt ${rit.ritual === x.id ? 'on' : ''}`} onClick={() => setRit({ ...rit, ritual: x.id, target: undefined })}>
-                <b>{x.name}</b> <span className="num muted">WC {x.wc}</span><small>{x.text}</small>
+                <span className="rit-opt-head"><b>{x.name}</b><span className="rit-wc">WC {x.wc}</span></span>
+                {rit.ritual === x.id && <small>{x.text}</small>}
               </button>
             ))}
           </div>
         )}
         {r && (
           <>
-            <div className="label">{r.side === 'enemy' ? 'Enemy target' : 'Friendly unit'} within {c!.range}"</div>
+            <div className="label rit-target-head">{r.side === 'enemy' ? 'Enemy target' : 'Friendly unit'} · within {c!.range}"</div>
             {targets.length ? (
-              <div className="unit-strip">{targets.map((t) => <button key={t.id} className={`unit-pill ${rit.target === t.id ? 'sel' : ''}`} onClick={() => setRit({ ...rit, target: t.id })}>{t.name}</button>)}</div>
+              <div className="unit-strip rit-targets">{targets.map((t) => <button key={t.id} className={`unit-pill ${rit.target === t.id ? 'sel' : ''}`} onClick={() => setRit({ ...rit, target: t.id })}>{t.name}</button>)}</div>
             ) : <div className="small muted">No unit in range and in sight (a ruin or wall in between blocks sight; a ruin your unit stands in does not)</div>}
             <div className="row">
               <button className={`btn small ${rit.channel ? 'on' : ''}`} aria-pressed={rit.channel} onClick={() => setRit({ ...rit, channel: !rit.channel })}>Channel the Warp (3D6)</button>
@@ -1791,9 +1796,22 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       );
     }
     if (mode?.k === 'crush' && modeUnit) {
+      const blocked = canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit);
       return (
         <>
-          <div className="small"><b>Charge successful!</b> Use Crushing Impact (1CP)? Tap an engaged enemy unit — roll a D6 per T: 5+ deals a mortal wound, a 1 wounds your unit</div>
+          <div className="small"><b>Charge successful!</b> Use Crushing Impact (1CP)? Select an engaged enemy below — roll a D6 per T: 5+ deals a mortal wound, a 1 wounds your unit.</div>
+          {crushTargets.length > 0 && <div className="unit-strip">
+            {crushTargets.map((id) => {
+              const target = U(id);
+              return <button key={id} className="unit-pill" disabled={!!blocked} onClick={() => {
+                const rolls = act((g) => crushingImpact(g, unitById(g, modeUnit.id), id));
+                flash(`Crushing Impact: [${rolls.join(' ')}]`);
+                setMode(null);
+              }}>Use on {target.name}</button>;
+            })}
+          </div>}
+          {blocked && <div className="tiny muted">{blocked}</div>}
+          {!crushTargets.length && <div className="tiny muted">No engaged enemy unit can be targeted.</div>}
           <button className="btn primary" onClick={() => setMode(null)}>Decline → Continue</button>
         </>
       );

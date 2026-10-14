@@ -2,10 +2,10 @@ import { memo, useEffect, useState } from 'react';
 import type { FxEvent, Pt } from '../engine/types';
 import type { WeaponFx } from '../engine/weaponFx';
 
-/** How long each kind of effect plays (ms). Rolls are shown by the screen, not the board. */
-export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 1300, shock: 1500, heal: 1500, attack: 1900, mortal: 1200, skill: 2800, ritual: 2600, roll: 0, rolloff: 0, cards: 0, primary: 0 };
+/** How long each kind of effect plays (ms). Most rolls are shown by the screen; charge rolls stay by their unit. */
+export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 1300, shock: 1500, heal: 1500, attack: 1900, mortal: 1200, skill: 2800, ritual: 2600, explosion: 2400, roll: 2600, rolloff: 0, cards: 0, primary: 0 };
 export interface ActiveFx { e: FxEvent; t0: number }
-const LIVE = new Set<FxEvent['kind']>(['attack', 'mortal', 'skill', 'ritual', 'shock', 'heal']);
+const LIVE = new Set<FxEvent['kind']>(['attack', 'mortal', 'skill', 'ritual', 'shock', 'heal', 'explosion', 'roll']);
 
 /**
  * The effects layer. It runs its own animation clock, so only these few shapes are redrawn
@@ -78,14 +78,36 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
       </g>
     );
   }
+  if (e.kind === 'explosion') return <DeadlyDemiseFx e={e} f={f} />;
   if (e.kind === 'attack') return <AttackFx e={e} f={f} />;
   if (e.kind === 'place' && e.at) return <ArrivalFx at={e.at} f={f} seed={e.seq} />;
   if (e.kind === 'shock') return <ShockFx at={e.at} f={f} seed={e.seq} />;
   if (e.kind === 'heal') return <HealFx at={e.at} f={f} seed={e.seq} n={e.n} revive={!!e.revive} />;
   if (e.kind === 'move') return <ChargeFx paths={e.paths} f={f} seed={e.seq} />;
+  if (e.kind === 'roll' && e.unitId && e.at) return <ChargeRollFx e={e} f={f} />;
   if (e.kind === 'ritual') return <RitualFx e={e} f={f} />;
   if (e.kind === 'skill') return e.grand ? <SkillFx e={e} f={f} /> : <SkillLite e={e} f={(now - a.t0) / SKILL_LITE_MS} />;
   return null;
+}
+
+function ChargeRollFx({ e, f }: { e: Extract<FxEvent, { kind: 'roll' }>; f: number }) {
+  if (!e.at) return null;
+  const fade = f > 0.78 ? (1 - f) / 0.22 : 1;
+  const lift = easeOut(Math.min(1, f * 3)) * 0.35;
+  return (
+    <g transform={`translate(${e.at.x} ${e.at.y - 2.5 - lift})`} opacity={fade}>
+      <rect x={-3.55} y={-1.05} width={7.1} height={2.1} rx={0.28} fill="rgba(12,14,17,0.94)" stroke={e.good ? '#86efac' : '#fca5a5'} strokeWidth={0.1} />
+      <text x={-3.15} y={-0.35} fontSize={0.55} fill="#cbd5e1" fontWeight={800} letterSpacing={0.06}>CHARGE</text>
+      {e.dice.slice(0, 2).map((v, i) => (
+        <g key={i} transform={`translate(${-2.65 + i * 0.9} 0.32)`}>
+          <rect x={-0.34} y={-0.38} width={0.68} height={0.68} rx={0.1} fill="#f7f4ee" stroke="#1a1a1a" strokeWidth={0.06} />
+          <text y={0.2} fontSize={0.48} textAnchor="middle" fill="#171717" fontWeight={900}>{v}</text>
+        </g>
+      ))}
+      <text x={-0.55} y={0.48} fontSize={0.48} fill="#cbd5e1">2D6</text>
+      <text x={0.55} y={0.28} fontSize={0.93} fill={e.good ? '#86efac' : '#fca5a5'} fontWeight={900}>{e.result.replace(/^Charge\s*/, '')}</text>
+    </g>
+  );
 }
 
 type RitualEvent = Extract<FxEvent, { kind: 'ritual' }>;
@@ -236,6 +258,23 @@ function Explosion({ at, k, seed, big = 1 }: { at: Pt; k: number; seed: number; 
         </g>
       )}
       <Debris at={at} k={clamp01(k / 0.6)} seed={seed} n={9} size={big} />
+    </g>
+  );
+}
+
+function DeadlyDemiseFx({ e, f }: { e: Extract<FxEvent, { kind: 'explosion' }>; f: number }) {
+  const wave = easeOut(clamp01(f / 0.42));
+  const fade = f > 0.84 ? (1 - f) / 0.16 : 1;
+  return (
+    <g>
+      {f < 0.65 && <Explosion at={e.at} k={f / 0.65} seed={e.seq} big={0.9} />}
+      <circle cx={e.at.x} cy={e.at.y} r={e.radius * wave} fill="rgba(249,115,22,0.08)" stroke="#fdba74" strokeWidth={0.18} strokeDasharray="0.45 0.25" opacity={fade * 0.8} />
+      <g opacity={fade}>
+        <rect x={e.at.x - 3.3} y={e.at.y - e.radius * wave - 1.05} width={6.6} height={0.9} rx={0.2} fill="rgba(12,14,17,0.9)" stroke="#fdba74" strokeWidth={0.07} />
+        <text x={e.at.x} y={e.at.y - e.radius * wave - 0.42} textAnchor="middle" fontSize={0.58} fill="#fff7ed" stroke="#111" strokeWidth={0.08} paintOrder="stroke" fontWeight={900}>
+          DEADLY DEMISE · {e.range}" · {e.hits} unit{e.hits === 1 ? '' : 's'} hit
+        </text>
+      </g>
     </g>
   );
 }

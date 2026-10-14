@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildFightPools, killModel } from './attack';
+import { d6 } from './dice';
 import { reactionOffers } from './stratagems';
 import { abilityOff, addTimed, effectsFor, unitFlags } from './effects';
 import { actsOfUnit, resolvePickUnit, resolveRevivals } from './activations';
@@ -31,6 +32,21 @@ const U = (s: GameState, id: string) => s.units.find((u) => u.id === id)!;
 function put(s: GameState, id: string, c: Pt) { const u = U(s, id); placeUnit(s, u, formationAt(u, c)); u.setUpTurn = -10; return u; }
 
 describe('Orks', () => {
+  it('Deadly Demise shows an explosion with its range and affected units', () => {
+    const s = game([['Rubric Marines', 5]], 'Hexwarp Thrallband', [['Boyz', 10]], 'Brute Bosses');
+    s.terrain = [];
+    const dread = put(s, 'p0-x0', { x: 20, y: 20 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 26 });
+    dread.models[0].deadlyDemise = 'D6';
+    for (let seed = 1; seed < 100; seed++) {
+      const trial = { rng: seed };
+      if (d6(trial) === 6) { s.rng = seed; break; }
+    }
+    killModel(s, dread, dread.models[0]);
+    expect(s.fx?.find((e) => e.kind === 'explosion')).toMatchObject({ kind: 'explosion', range: 6, radius: expect.any(Number), hits: 1 });
+    expect(boyz.models.filter((m) => !m.dead).length).toBeLessThan(10);
+  });
+
   it('enhancement weapons, Warphead and Blitzboss', () => {
     const s = game([['Rubric Marines', 5]], 'Hexwarp Thrallband', [['Warboss', 1, undefined, { enhancement: 'Da Gobshot Thunderbuss', warlord: true }], ['Trukk', 1], ['Weirdboy', 1, undefined, { enhancement: 'Warphead' }]], 'Brute Bosses');
     const boss = U(s, 'p1-x0');

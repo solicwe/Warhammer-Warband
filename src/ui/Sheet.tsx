@@ -109,6 +109,7 @@ export const dsColor = (factionId?: string) => DS_COLOR[factionId ?? ''] ?? '#2c
 
 export function DatasheetView({ sheet, factionId, variants }: { sheet: DatasheetData; factionId?: string; variants?: PictureVariant[] }) {
   const probe = { sources: [sheet.name], abilities: [] } as unknown as UnitState;
+  const rulesFaction = sheet.ally ?? factionId;
   const [more, setMore] = useState(false);
   usePastePortrait(sheet.name);
   const groups = statGroups(sheet.models);
@@ -135,10 +136,10 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
       {(() => {
         // like the printed datasheet: "pick one of these" abilities (The Warmaster, Unearthly Power …) and special rules
         // (Supreme Commander) get their own band above ABILITIES
-        const ab = (a: AbilityData, i: number) => <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{factionId && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: factionId }} />} <Em text={a.text} names={names} /></div>;
+        const ab = (a: AbilityData, i: number) => <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{rulesFaction && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: rulesFaction }} />} <Em text={a.text} names={names} /></div>;
         const out: ReactNode[] = [];
         for (const a of sheet.abilities) {
-          const ch = factionId ? abilityRule(probe, { ...a, sheet: sheet.name, faction: factionId })?.choice : undefined;
+          const ch = rulesFaction ? abilityRule(probe, { ...a, sheet: sheet.name, faction: rulesFaction })?.choice : undefined;
           const opts = ch ? sheet.abilities.filter((x) => ch.options.includes(x.name)) : [];
           if (opts.length) out.push(<div key={`c${a.name}`} className="ds-sec">{a.name.toUpperCase()}</div>, ...opts.map(ab));
         }
@@ -150,8 +151,8 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
         const xs = sheet.abilities.filter((a) => a.type === t);
         return xs.length ? <div key={t} className="ds-line ds-rule">{t.toUpperCase()}: <b>{xs.map((a) => `${a.name}${a.param ? ` ${a.param}` : ''}`).join(', ')}</b></div> : null;
       })}
-      {sheet.abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction' && !/^Special/.test(a.type) && !sheet.abilities.some((c) => factionId && abilityRule(probe, { ...c, sheet: sheet.name, faction: factionId })?.choice?.options.includes(a.name))).map((a, i) => (
-        <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{factionId && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: factionId }} />} <Em text={a.text} names={names} /></div>
+      {sheet.abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction' && !/^Special/.test(a.type) && !sheet.abilities.some((c) => rulesFaction && abilityRule(probe, { ...c, sheet: sheet.name, faction: rulesFaction })?.choice?.options.includes(a.name))).map((a, i) => (
+        <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{rulesFaction && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: rulesFaction }} />} <Em text={a.text} names={names} /></div>
       ))}
       {sheet.damaged && <div className="ds-ab"><b>DAMAGED: 1-{sheet.damaged.w} WOUNDS REMAINING:</b> <Em text={sheet.damaged.text} /></div>}
       {!more && <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(true)}>MORE INFO <Icon name="down" size={18} /></button>}

@@ -54,6 +54,55 @@
    }
   ]
  },
+ "Seasoned Noble": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "if": ["targetClosest"],
+    "ap": 1
+   }
+  ]
+ },
+ "Aggressive Assault": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "if": ["targetClosest"],
+    "hit": 1
+   }
+  ]
+ },
+ "Thin Their Ranks": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "if": ["targetNotKw:MONSTER|VEHICLE"],
+    "abilities": ["devastating wounds"]
+   }
+  ]
+ },
+ "Chainbreaker": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "units": ["IMPERIUM"],
+    "shocked": true
+   },
+   "label": "Remove Battle-shock from a friendly IMPERIUM unit within 12\"",
+   "do": [
+    {
+     "on": "target",
+     "unshock": true
+    }
+   ]
+  }
+ },
  "Crusader’s Duty (Bondsman)": {
   "bond": [
    {
@@ -145,6 +194,16 @@
    {
     "consolidate": 6,
     "consolidateEngage": true
+   }
+  ]
+ },
+ "Saturation Fire": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "if": ["targetInRangeOfObjective"],
+     "abilities": ["ignores cover"]
    }
   ]
  },

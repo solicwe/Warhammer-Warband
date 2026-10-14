@@ -22,6 +22,16 @@ const objTerrain = (s: GameState, o: ObjectiveState) => s.terrain.find((t) => t.
 export const zonePoly = (s: GameState, p: PlayerId) => toPoly(deploymentById(s.deploymentId).zones[s.players[p].role]);
 export const territoryPoly = (s: GameState, p: PlayerId) => toPoly(deploymentById(s.deploymentId).territory[s.players[p].role]);
 
+function homerPoint(s: GameState, p: PlayerId): Pt {
+  const zone = zonePoly(s, p);
+  const centre = polyCentroid(zone);
+  const edgeDistance = (q: Pt) => Math.min(q.x, q.y, RULES.battlefield.width - q.x, RULES.battlefield.height - q.y);
+  const edge = zone.reduce((best, q) => edgeDistance(q) < edgeDistance(best) ? q : best);
+  const length = dist(edge, centre) || 1;
+  const inset = Math.min(4, length * 0.35);
+  return { x: edge.x + (centre.x - edge.x) * inset / length, y: edge.y + (centre.y - edge.y) * inset / length };
+}
+
 /** Is any model of the unit within range of the objective (inside its terrain area)? */
 export const unitInRange = (s: GameState, u: UnitState, o: ObjectiveState) => {
   const t = objTerrain(s, o);
@@ -40,17 +50,9 @@ const unitControls = (s: GameState, u: UnitState, o: ObjectiveState) => o.contro
 
 /** Start of the battle: Locate and Deny places five operation markers in terrain areas outside the player's zone. */
 export function startOfBattle(s: GameState) {
-  // Teleport Homer: a token for each unit that has one, out of the enemy deployment zone — in front of the objective
-  // nearest the enemy (where a deep-striking unit hurts most), but not on top of it
+  // Teleport Homer: keep the marker on its owner's deployment edge, away from the enemy's approach.
   for (const u of s.units.filter((x) => x.abilities.some((a) => a.name.startsWith('Teleport Homer')) && x.status !== 'destroyed')) {
-    const ez = zonePoly(s, other(u.owner));
-    const ec = polyCentroid(ez);
-    const opts = s.objectives.filter((o) => !pointInPoly(o, ez)).sort((a, b) => dist(a, ec) - dist(b, ec));
-    const o = opts[0];
-    if (!o) continue;
-    const back = { x: o.x - ec.x, y: o.y - ec.y };
-    const L = Math.hypot(back.x, back.y) || 1;
-    u.homer = { x: o.x + (back.x / L) * 4, y: o.y + (back.y / L) * 4 };
+    u.homer = homerPoint(s, u.owner);
   }
   for (const p of [0, 1] as PlayerId[]) {
     if (s.players[p].primaryId !== 'locate-and-deny') continue;
