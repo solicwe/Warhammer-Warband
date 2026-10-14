@@ -49,6 +49,13 @@ describe('allied units', () => {
     expect(allyErrs(sm, list('SM', [['Vindicare Assassin', 1], ['Callidus Assassin', 1], ['Eversor Assassin', 1]])).join()).toMatch(/at most 2 CHARACTER/);
   });
 
+  it('applies the Assigned Agents Retinue exemptions only when their matching Characters are present', () => {
+    const sm = merged('SM', 'Imperium');
+    expect(allyErrs(sm, list('SM', [['Inquisitor', 1], ['Inquisitorial Agents', 6], ['Inquisitorial Agents', 6], ['Inquisitorial Agents', 6]])).join()).not.toMatch(/at most 2 RETINUE/);
+    expect(allyErrs(sm, list('SM', [['Inquisitorial Agents', 6], ['Inquisitorial Agents', 6], ['Inquisitorial Agents', 6]])).join()).toMatch(/at most 2 RETINUE/);
+    expect(allyErrs(sm, list('SM', [['Rogue Trader Entourage', 4], ['Navigator', 1], ['Voidsmen-at-arms', 10], ['Voidsmen-at-arms', 10], ['Voidsmen-at-arms', 10], ['Voidsmen-at-arms', 10], ['Voidsmen-at-arms', 10]])).join()).toMatch(/at most 2 RETINUE/);
+  });
+
   it('the Daemonic Pact caps the points and needs Battleline per god', () => {
     const csm = merged('CSM', 'Chaos');
     const d = csm.datasheets.filter((x) => x.ally === 'CD');

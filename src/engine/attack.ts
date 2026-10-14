@@ -32,6 +32,12 @@ export function targetToughness(u: UnitState, s?: GameState): number {
   const a = alive(u);
   const body = a.filter((m) => m.isBodyguard);
   const pool = body.length ? body : a;
+  if (u.abilities.some((x) => x.name === 'Kill Team')) {
+    const counts = new Map<number, number>();
+    for (const m of pool) counts.set(m.profile.T, (counts.get(m.profile.T) ?? 0) + 1);
+    const majority = Math.max(...counts.values());
+    return Math.max(...[...counts].filter(([, n]) => n === majority).map(([t]) => t)) + (s ? unitFlags(s, u).toughness : 0);
+  }
   return Math.max(...pool.map((m) => m.profile.T)) + (s ? unitFlags(s, u).toughness : 0);
 }
 
@@ -44,8 +50,8 @@ export function woundNeed(S: number, T: number): number {
 }
 
 const riled = isRiled;
-export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState, ranged = true) => {
-  const best = Math.min(m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee').inv ?? 7);
+export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState, ranged = true, psychic = false, attacker?: UnitState) => {
+  const best = Math.min(m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee', psychic, attacker).inv ?? 7);
   return best >= 7 ? null : best;
 };
 
@@ -158,11 +164,14 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const tEngaged = engagedEnemies(s, T).some((f) => !unitFlags(s, f).allIsRot);
   const engagedWithTarget = engagedEnemies(s, A).some((e) => e.id === T.id);
   const tIsMV = tModels.some(isMV);
-  if (opt.mode !== 'closeQuarters' && tEngaged && !tIsMV) return { pools: [], notes, error: 'The target is engaged and cannot be shot (unless MONSTER / VEHICLE)' };
+  const aFlags = unitFlags(s, A);
+  const canShootIntoEngagement = aFlags.shootIntoEngagement > 0
+    && unitDistance(A, T) <= aFlags.shootIntoEngagement + 1e-6
+    && engagedEnemies(s, T).some((f) => f.owner === A.owner);
+  if (opt.mode !== 'closeQuarters' && tEngaged && !tIsMV && !canShootIntoEngagement) return { pools: [], notes, error: 'The target is engaged and cannot be shot (unless MONSTER / VEHICLE)' };
   if (opt.mode === 'closeQuarters' && !engagedWithTarget && !alive(A).some(isMV)) return { pools: [], notes, error: 'Close-quarters can only target a unit it is engaged with' };
   const T_T = targetToughness(T, s);
   const isOwnShootingPhase = s.phase === 'shooting' && A.owner === s.active;
-  const aFlags = unitFlags(s, A);
   // Heresy Undone: after Advancing / Falling Back it may only shoot auspex scanned units
   if (aFlags.onlyTargetMarked && (A.move === 'advance' || A.move === 'fallback') && !(T.timed ?? []).some((t) => t.mark === aFlags.onlyTargetMarked && t.by === A.owner)) return { pools: [], notes, error: 'After Advancing / Falling Back it can only shoot a unit marked by the auspex scan' };
 
@@ -175,7 +184,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : [...alive(A), ...firingDeck(s, A, opt)];
   // sight and cover depend on the model, not the weapon: worked out once per model
   const sees = new Map<ModelState, boolean>();
-  const seesT = (m: ModelState) => { let v = sees.get(m); if (v === undefined) { v = tModels.some((t) => modelVisible(s, m, T, t)); sees.set(m, v); } return v; };
+  const seesT = (m: ModelState) => { let v = sees.get(m); if (v === undefined) { v = tModels.some((t) => modelVisible(s, m, T, t, aFlags.ignoreLoneOperative)); sees.set(m, v); } return v; };
   // a weapon's target must be visible to its unit and in range of the weapon: the model that sees it and the model in
   // range can be different ones (04.02 FAQ), so a squad half inside a ruin shoots with every model in range
   let unitSeen: boolean | undefined;
@@ -219,6 +228,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (d > maxRange + 1e-6) continue;
       if (untargetableAt(s, T, d)) continue;
       if (d > unitFlags(s, T).targetableWithin + 1e-6) continue; // In the Shadow of Great Wings
+      if (T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative && !aFlags.ignoreLoneOperative) continue;
       if (opt.mode === 'closeQuarters' && !isMV(m) && !engagedWithTarget) continue;
       if (hasAbility(p, 'blast') && tEngaged) continue;
       const indirect = opt.mode === 'indirect' && hasAbility(p, 'indirect-fire');
@@ -871,10 +881,10 @@ export function applyDamage(s: GameState) {
     const m = pickModel(g, T)!;
     const kind = at.kind === 'fight' ? 'melee' : 'ranged';
     const psychic = !!p.psychic || hasAbility(p.profile, 'psychic');
-    const md = modelDefence(s, T, m, kind, psychic);
+    const md = modelDefence(s, T, m, kind, psychic, A);
     if (kind === 'melee') (at.allocated ??= {})[m.id] = (at.allocated[m.id] ?? 0) + 1;
     const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0) - (md.saveBonusD1 && p.damage.trim() === '1' ? md.saveBonusD1 : 0) - (md.save ?? 0);
-    const inv = effectiveInSv(s, T, m, at.kind !== 'fight');
+    const inv = effectiveInSv(s, T, m, at.kind !== 'fight', psychic, A);
     let ok = false;
     if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + p.ap >= Math.max(RULES.modifierCaps.bestSave, sv);
     p.saveTargets[i] = `${m.name} (Sv${sv}+${inv ? ` / ${inv}++` : ''}, AP${p.ap})`;

@@ -450,6 +450,11 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
       // Death Approaches / Beckoning Blight: closer to some enemy units
       const keepFor = (e: UnitState) => (how === 'deepStrike' ? Math.min(keep, dsKeep(s, u, e, p, m) ?? keep) : keep);
       if (enemies.some((e) => alive(e).some((n) => gap(bodyAt(m, p), n) <= keepFor(e)))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
+      if (hasKw(u, 'DAEMON') && s.objectives.some((o) => o.warded !== undefined && o.warded !== null && o.warded !== u.owner
+        && o.controller === o.warded && ptGap({ ...m, ...p }, o) <= 6 + EPS)) {
+        errors.push('Cannot set up a DAEMON within 6" of an objective Warded by your opponent');
+        bad.add(m.id);
+      }
     }
     const dsNear = how === 'deepStrike' ? fl!.deepStrikeNear : undefined;
     if (dsNear && !boardUnits(s, u.owner).some((f) => f.id !== u.id && (hasKw(f, dsNear.kw) || f.factionKeywords.includes(dsNear.kw)) && alive(f).some((n) => ptGap(n, p) + reachOf(m) <= dsNear.range + 1e-6))) { errors.push(`Must be set up wholly within ${dsNear.range}" of a friendly ${dsNear.kw} unit`); bad.add(m.id); }
@@ -718,7 +723,7 @@ const isAstartes = (u: UnitState) => ['ADEPTUS ASTARTES', 'ADEPTUS CUSTODES', 'T
 let unleashWrathHook: ((s: GameState, u: UnitState) => void) | null = null;
 export const setUnleashWrath = (fn: (s: GameState, u: UnitState) => void) => { unleashWrathHook = fn; };
 
-const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string[] }[] = [
+const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string[]; imperiumBattleline?: boolean; rollD3?: boolean }[] = [
   { name: 'Strategic Slaughter', n: 3, infantryOnly: false, units: ['JAKHALS', 'GOREMONGERS'] }, // World Eaters: Cult of Blood
   { name: 'Tactical Perfection', n: 2, infantryOnly: false, units: ['EMPEROR’S CHILDREN'] }, // Emperor's Children: Mercurial Host
   { name: 'Master of Deceit', n: 3, infantryOnly: true },
@@ -734,6 +739,7 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string
   { name: 'Duplicitous Malediction', n: 3, infantryOnly: false },
   { name: 'Fleet Command', n: 3, infantryOnly: false }, // Chaos Space Marines: Masters of the Maelstrom
   { name: "Kaptin's Hat", n: 3, infantryOnly: true }, // Orks: Wreckas enhancement
+  { name: 'Warrant of Trade', n: 3, infantryOnly: false, imperiumBattleline: true, rollD3: true },
 ];
 
 function redeployFor(s: GameState, p: PlayerId) {
@@ -745,7 +751,11 @@ function redeployFor(s: GameState, p: PlayerId) {
 export function redeployCandidates(s: GameState): UnitState[] {
   const r = s.redeploy;
   if (!r) return [];
-  return s.units.filter((u) => u.owner === r.player && (u.status === 'board' || u.status === 'reserves') && isAstartes(u) && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && (!r.units || r.units.some((k) => hasKw(u, k))) && !u.transport);
+  return s.units.filter((u) => u.owner === r.player && (u.status === 'board' || u.status === 'reserves')
+    && (r.source === 'Warrant of Trade'
+      ? hasKw(u, 'BATTLELINE') && (hasKw(u, 'IMPERIUM') || u.factionKeywords.includes('IMPERIUM'))
+      : isAstartes(u))
+    && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && (!r.units || r.units.some((k) => hasKw(u, k))) && !u.transport);
 }
 
 /** Pick a unit up: it is placed again (deployment rules) or, with toReserves, goes into Strategic Reserves (no limit). */
@@ -777,9 +787,10 @@ function finishDeployment(s: GameState) {
     if (doneP.includes(p)) continue;
     const r = redeployFor(s, p);
     if (!r) continue;
-    s.redeploy = { player: p, left: r.n, infantryOnly: r.infantryOnly, source: r.name, done: doneP, units: r.units };
+    const left = r.rollD3 ? rollExpr(s, 'D3').total : r.n;
+    s.redeploy = { player: p, left, infantryOnly: r.infantryOnly, source: r.name, done: doneP, units: r.units };
     s.deployTurn = p;
-    log(s, `${r.name}: ${s.players[p].name} can redeploy ${r.n} unit(s)${r.infantryOnly ? ' (INFANTRY)' : ''}: set up again or move into Strategic Reserves`, 'info', p);
+    log(s, `${r.name}: ${s.players[p].name} can redeploy ${left} unit(s)${r.infantryOnly ? ' (INFANTRY)' : ''}: set up again or move into Strategic Reserves`, 'info', p);
     return;
   }
   s.redeploy = undefined;
@@ -1781,6 +1792,7 @@ export function updateControl(s: GameState) {
       if (theirs > mine) { o.secured = null; o.sabotaged = null; } else c = o.secured;
     }
     o.controller = c;
+    if (o.warded != null && c === other(o.warded)) o.warded = null;
   }
 }
 
@@ -1879,7 +1891,12 @@ export function swapSecondary(s: GameState, p: PlayerId, id: string) {
 // ---------- transports ----------
 
 const modelKws = (u: UnitState, m: ModelState) => [...m.keywords, ...u.factionKeywords, m.source];
-const modelSpace = (t: TransportInfo, u: UnitState, m: ModelState) => transportFit(t, modelKws(u, m)).space || 1;
+const modelSpace = (t: TransportInfo, u: UnitState, m: ModelState) => {
+  const killTeam = u.abilities.some((a) => a.name === 'Kill Team');
+  const kws = modelKws(u, m).filter((k) => !killTeam || k.toUpperCase() !== 'GRAVIS');
+  const space = transportFit(t, kws).space || 1;
+  return killTeam && m.name === 'Gravis Veteran' ? Math.max(2, space) : space;
+};
 
 /** Transport space a unit takes (Downtrodden: every 2 Gretchin take the space of 1 model). */
 function unitSpace(t: TransportInfo, u: UnitState) {
@@ -1898,7 +1915,11 @@ export function canEmbarkIn(s: GameState, u: UnitState, t: UnitState): string | 
   if (!T || t.owner !== u.owner || t.id === u.id) return 'Not a transport';
   if (hasKw(u, 'TRANSPORT')) return 'A TRANSPORT cannot embark';
   // every model has to fit the transport's rules (what it carries, what it can't, "excluding …")
+  const inquisitorsUsingBodyguardTransport = u.sources.length > 1
+    ? new Set(u.abilities.filter((a) => a.name === 'Authority of the Inquisition' && a.sheet !== u.sources[0]).map((a) => a.sheet))
+    : new Set<string>();
   for (const m of alive(u)) {
+    if (inquisitorsUsingBodyguardTransport.has(m.source)) continue;
     const why = transportFit(T, modelKws(u, m)).why;
     if (why) return `${m.name}: ${why}`;
   }

@@ -1,0 +1,525 @@
+{
+  "_comment": "Imperial Agents Faction Pack v1.2. Datasheet and enhancement rules; generic text patterns are completed by abilityText.ts.",
+  "Assigned Agents": { "status": "info", "note": "Army access and allied unit caps are enforced when mustering." },
+  "Kill Team": { "status": "auto" },
+  "Death to the Alien": {
+    "status": "auto",
+    "effects": [
+      { "reroll": "hits1" },
+      { "if": ["targetNotKw:IMPERIUM|CHAOS"], "reroll": "hits" }
+    ]
+  },
+  "Astartes Shield": {
+    "status": "auto",
+    "gear": true,
+    "effects": [{ "defend": { "inv": 4 } }]
+  },
+  "Endurant Shield": {
+    "status": "auto",
+    "gear": true,
+    "effects": [{ "defend": { "inv": 4 } }]
+  },
+  "Breaching Team": {
+    "effects": [
+      { "reroll": "wounds1" },
+      { "if": ["targetOnObjective"], "reroll": "wounds" }
+    ]
+  },
+  "Masters of Close Confines": {
+    "effects": [{ "if": ["targetClosest"], "abilities": ["lethal hits"] }]
+  },
+  "Merciless Judgement": {
+    "effects": [{ "if": ["targetBelowHalf"], "wound": 1 }]
+  },
+  "Loyal Henchmen": {
+    "effects": [{ "scope": "bodyguardLed", "defend": { "wound": -1 } }]
+  },
+  "Psyoculum": {
+    "effects": [{ "scope": "led", "abilities": ["anti-psyker 4+"] }]
+  },
+  "Blessed Wardings": {
+    "effects": [{ "scope": "led", "defend": { "inv": 6 } }]
+  },
+  "Abomination": {
+    "effects": [{ "scope": "model", "defend": { "fnp": 2, "fnpVs": "psychic" } }]
+  },
+  "No Mercy": {
+    "effects": [{ "scope": "led", "if": ["targetBelowHalf"], "hit": 1 }]
+  },
+  "Xenos Hunter": {
+    "effects": [{ "scope": "led", "if": ["targetNotKw:IMPERIUM|CHAOS"], "hit": 1 }]
+  },
+  "Holy Hatred": {
+    "effects": [{ "scope": "led", "attack": "melee", "abilities": ["sustained hits 1"] }]
+  },
+  "Ancient’s Banner": {
+    "effects": [{ "oc": 1 }]
+  },
+  "Hammerhand (Psychic)": {
+    "effects": [{ "attack": "melee", "if": ["charged"], "abilities": ["lethal hits"] }]
+  },
+  "Tactical Instinct": {
+    "effects": [{ "scope": "led", "abilities": ["lethal hits"] }]
+  },
+  "Strategic Knowledge": {
+    "effects": [{ "scope": "led", "eligible": ["shootAfterAdvance", "chargeAfterAdvance", "shootAfterFallBack", "chargeAfterFallBack"] }]
+  },
+  "Auspex Array": {
+    "effects": [{ "attack": "ranged", "abilities": ["ignores cover"] }]
+  },
+  "Ministorum Sermon": {
+    "effects": [{ "units": ["MINISTORUM PRIEST"], "attack": "melee", "wound": 1 }]
+  },
+  "Imperial Law": {
+    "act": {
+      "when": "battleStart",
+      "auto": true,
+      "target": { "side": "enemy", "anywhere": true },
+      "do": [{ "buff": [{ "abilities": ["lethal hits", "precision"] }], "until": "battle", "mark": "imperial-law" }]
+    }
+  },
+  "Frenzon": {
+    "effects": [{ "eligible": ["shootAfterAdvance", "chargeAfterAdvance"] }]
+  },
+  "Overkill": {
+    "act": {
+      "when": "movement",
+      "limit": "battle",
+      "do": [{ "buff": [{ "move": 6 }, { "attack": "melee", "attacks": 3 }], "until": "turn" }],
+      "botUse": "always"
+    }
+  },
+  "Soulless Horror": {
+    "act": {
+      "when": "commandStart",
+      "limit": "battle",
+      "target": { "side": "enemy", "range": 9, "each": true },
+      "do": [
+        { "if": ["targetKw:PSYKER"], "shock": -2 },
+        { "if": ["targetNotKw:PSYKER"], "shock": -1 }
+      ]
+    }
+  },
+  "Third Eye (Psychic)": {
+    "act": {
+      "when": "shootingStart",
+      "target": { "side": "enemy", "range": 12, "visible": true },
+      "do": [
+        { "if": ["targetKw:INFANTRY"], "shockMortals": { "mod": 2, "mortals": "3" } },
+        { "if": ["targetNotKw:INFANTRY"], "shockMortals": { "mod": 0, "mortals": "3" } }
+      ]
+    }
+  },
+  "Glovodan Psyber-eagle": {
+    "act": {
+      "when": "commandStart",
+      "target": { "side": "enemy", "range": 18 },
+      "do": [{ "buff": [{ "incoming": { "attack": "ranged", "noCover": true } }], "until": "nextCommand" }]
+    }
+  },
+  "Purge and Cleanse": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "target": { "side": "enemy", "hit": true },
+      "do": [{ "incoming": { "attack": "ranged", "noCover": true }, "until": "phase" }]
+    }
+  },
+  "On My Signal, Fire!": {
+    "act": {
+      "when": "afterShooting",
+      "target": { "side": "enemy", "hit": true },
+      "do": [{ "buff": [{ "units": ["AGENTS OF THE IMPERIUM|IMPERIUM INFANTRY BATTLELINE"], "reroll": "hits" }], "until": "phase" }]
+    }
+  },
+  "Tox-cycler": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "battle",
+      "target": { "side": "enemy", "hit": "Jindarii tox-cycler" },
+      "do": [{ "on": "self", "buff": [{ "weapon": "Jindarii tox-cycler", "strength": 2, "damage": 2 }], "until": "battle" }]
+    }
+  },
+  "One Shot": {
+    "status": "info",
+    "note": "The weapon's One Shot keyword is enforced by the attack engine."
+  },
+  "Arbites Medi-kit": {
+    "act": {
+      "when": "commandStart",
+      "if": ["belowStarting"],
+      "roll": "D3",
+      "table": [
+        { "min": 1, "max": 1, "do": [{ "revive": 1 }] },
+        { "min": 2, "max": 2, "do": [{ "revive": 2 }] },
+        { "min": 3, "do": [{ "revive": 3 }] }
+      ]
+    }
+  },
+  "Narthecium": {
+    "act": {
+      "when": "commandStart",
+      "if": ["belowStarting"],
+      "do": [{ "revive": 1 }]
+    }
+  },
+  "Salvationist Medikit": {
+    "act": {
+      "when": "commandStart",
+      "if": ["belowStarting"],
+      "roll": "D3",
+      "table": [
+        { "min": 1, "max": 1, "do": [{ "revive": 1 }] },
+        { "min": 2, "max": 2, "do": [{ "revive": 2 }] },
+        { "min": 3, "do": [{ "revive": 3 }] }
+      ]
+    }
+  },
+  "Healing Serum": {
+    "act": {
+      "when": "commandStart",
+      "if": ["belowStarting"],
+      "roll": "D3",
+      "table": [
+        { "min": 1, "max": 1, "do": [{ "revive": 1 }] },
+        { "min": 2, "max": 2, "do": [{ "revive": 2 }] },
+        { "min": 3, "do": [{ "revive": 3 }] }
+      ]
+    }
+  },
+  "Nuncio Aquila": {
+    "status": "manual",
+    "note": "Once per battle, select an objective within 6\" of the bearer and Battle-shock eligible enemy units within range of it."
+  },
+  "Nuncio Aquila (Aura)": {
+    "status": "manual",
+    "note": "Once per battle, select an objective within 6\" of the bearer and Battle-shock eligible enemy units within range of it."
+  },
+  "Self Repair": {
+    "act": {
+      "when": "commandStart",
+      "if": ["belowStartingW"],
+      "auto": true,
+      "do": [{ "heal": "1" }]
+    }
+  },
+  "Micromelta Rounds": {
+    "status": "auto",
+    "effects": [
+      {
+        "weapon": "Exitus rifle",
+        "abilities": ["anti-monster 4+", "anti-vehicle 4+"]
+      }
+    ]
+  },
+  "Shieldbreaker": {
+    "act": {
+      "when": "selectedToShoot",
+      "limit": "battle",
+      "label": "Fire a shieldbreaker round",
+      "do": [{ "buff": [{ "weapon": "Exitus rifle", "wound": 1, "critWoundOn": 2 }], "until": "phase" }]
+    }
+  },
+  "Deadshot": {
+    "act": {
+      "when": "selectedToShoot",
+      "label": "Deadshot",
+      "do": [{ "buff": [{ "detection": 15 }, { "ignoreLoneOperative": true }], "until": "phase" }]
+    }
+  },
+  "Acrobatic Escape": {
+    "status": "partial",
+    "note": "The Strategic Reserves option is automatic; the end-of-Fight-phase D6-inch Fall Back move is not represented.",
+    "act": {
+      "when": "opponentTurnEnd",
+      "limit": "turn",
+      "if": ["farFromEnemies:3"],
+      "do": [{ "on": "self", "reserves": true }],
+      "label": "Acrobatic Escape: return to Strategic Reserves"
+    }
+  },
+  "SHADOW ASSIGNMENT": {
+    "status": "partial",
+    "note": "Warlord restrictions and duplicate-Assassin limits are enforced; replacing an Assassin during Declare Battle Formations is not supported."
+  },
+  "Etheric Emergence": {
+    "status": "partial",
+    "effects": [{ "deepStrikeRange": 6 }],
+    "note": "The 6-inch Deep Strike distance is available; the optional no-charge choice is not separately tracked when the unit sets up more than 9 inches away."
+  },
+  "Spy Network": {
+    "status": "auto"
+  },
+  "Gheistskull": {
+    "status": "manual",
+    "note": "The Explosives Stratagem's once-per-battle range extension is not implemented."
+  },
+  "Backroom Deals": {
+    "act": {
+      "when": "formation",
+      "limit": "battle",
+      "per": "army",
+      "target": { "side": "friendly", "units": ["ROGUE TRADER ENTOURAGE"], "count": 1 },
+      "do": [{ "on": "target", "buff": [{ "scope": "led", "infiltrators": true }], "until": "battle" }],
+      "label": "Backroom Deals: grant Infiltrators"
+    }
+  },
+  "Warrant of Trade": {
+    "status": "auto"
+  },
+  "Blackweave Shroud": {
+    "effects": [{ "scope": "model", "defend": { "fnp": 4 } }]
+  },
+  "Universal Anathema": {
+    "effects": [{ "scope": "model", "attack": "melee", "abilities": ["anti-infantry 2+", "anti-monster 4+"] }]
+  },
+  "Ignis Judicium": {
+    "effects": [{ "scope": "model", "attack": "ranged", "abilities": ["devastating wounds", "melta 1", "precision"] }]
+  },
+  "Witch Hunter": {
+    "effects": [{ "scope": "led", "if": ["targetKw:PSYKER"], "reroll": "hits" }]
+  },
+  "Daemon Slayer": {
+    "effects": [{ "scope": "model", "attack": "melee", "attacks": 1, "abilities": ["anti-daemon 3+"] }]
+  },
+  "Beacon Angelis": {
+    "effects": [{ "deepStrike": true }, { "stratDiscount": { "ids": ["rapid-ingress"], "cp": 9 } }]
+  },
+  "Fleetmaster": {
+    "effects": [{ "stratDiscount": { "ids": ["violent-acquisition", "masters-of-the-void", "close-quarters-barrage"], "cp": 9, "limit": "round" } }]
+  },
+  "Formidable Resolve": {
+    "effects": [{ "scope": "model", "ld": 1, "statW": 1 }],
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "target": { "side": "friendly", "range": 12, "shocked": true },
+      "do": [{ "on": "target", "unshock": true }],
+      "label": "Formidable Resolve: remove Battle-shock"
+    }
+  },
+  "No Escape (Aura)": {
+    "effects": [{ "scope": "enemyAura", "range": 6, "fallBackLdTest": true }]
+  },
+  "Amulet of Auto-Chastisement": {
+    "status": "manual",
+    "note": "The Leadership test and its conditional hit penalty or shooting restriction are not implemented."
+  },
+  "Liber Heresius": {
+    "status": "manual",
+    "note": "Post-deployment redeployment of up to three units is not implemented."
+  },
+  "Gift of the Prescient": {
+    "status": "manual",
+    "note": "The once-per-battle free Rapid Ingress and 6-inch setup for Grey Knights Terminators are not implemented."
+  },
+  "Decoy Targets": {
+    "status": "manual",
+    "note": "Destroying a friendly model and repositioning the Callidus Assassin are not implemented."
+  },
+  "Esoteric Explosives": {
+    "status": "manual",
+    "note": "The Explosives Stratagem's improved mortal-wound threshold is not implemented."
+  },
+  "Clandestine Operation": {
+    "status": "partial",
+    "note": "The formation action grants Infiltrators to one selected unit; selecting up to three is not supported.",
+    "act": {
+      "when": "formation",
+      "limit": "battle",
+      "per": "army",
+      "target": { "side": "friendly", "units": ["AGENTS OF THE IMPERIUM", "INFANTRY"], "count": 3 },
+      "do": [{ "on": "target", "buff": [{ "infiltrators": true }], "until": "battle" }],
+      "label": "Grant Infiltrators to up to 3 Agents Infantry units"
+    }
+  },
+  "Combat Landers": {
+    "status": "partial",
+    "note": "The formation action grants Deep Strike to one selected unit; selecting up to three is not supported.",
+    "act": {
+      "when": "formation",
+      "limit": "battle",
+      "per": "army",
+      "target": { "side": "friendly", "units": ["VOIDFARERS"], "count": 3 },
+      "do": [{ "on": "target", "buff": [{ "deepStrike": true }], "until": "battle" }],
+      "label": "Grant Deep Strike to up to 3 Voidfarers units"
+    }
+  },
+  "Digital Weapons": {
+    "status": "partial",
+    "note": "All successful dice are applied to the selected enemy unit; allocating each mortal wound to a different unit is not supported.",
+    "act": {
+      "when": "selectedToFight",
+      "limit": "phase",
+      "target": { "side": "enemy", "engaged": true },
+      "roll": "D6",
+      "rollCount": 3,
+      "each": { "on": 4, "do": [{ "on": "target", "mortals": "1", "precisionMortals": true }] },
+      "label": "Digital Weapons: roll 3D6 for mortal wounds"
+    }
+  },
+  "Blackstar Cluster Launcher": {
+    "act": {
+      "when": "endOfNormalMove",
+      "limit": "phase",
+      "target": { "side": "enemy", "movedOver": true },
+      "roll": "D6",
+      "rollCount": 6,
+      "each": { "on": 5, "do": [{ "on": "target", "mortals": "1" }] },
+      "label": "Cluster Launcher: roll 6D6 for mortal wounds"
+    }
+  },
+  "Intraneural Biotech": {
+    "effects": [
+      { "stratRepeat": { "ids": ["heroic-intervention"], "limit": "phase" } },
+      { "stratDiscount": { "ids": ["heroic-intervention"], "cp": 1, "limit": "phase" } }
+    ]
+  },
+  "Grimoire of True Names (Aura)": {
+    "effects": [
+      { "scope": "enemyAura", "range": 9, "ld": -1 },
+      { "scope": "enemyAura", "range": 9, "units": ["DAEMON"], "hit": -1, "wound": -1 }
+    ]
+  },
+  "Reign of Confusion": {
+    "effects": [{ "scope": "enemyAura", "range": 12, "stratTax": { "cp": 1, "limit": "turn" } }]
+  },
+  "Psychic Assassin": {
+    "effects": [{ "weapon": "Life-draining touch", "if": ["targetKw:PSYKER"], "attacksTo": 6 }]
+  },
+  "Power of the Rosette": {
+    "effects": [{ "stratCpChance": 3 }]
+  },
+  "Psychic Gifts": {
+    "effects": [{ "scope": "model", "addKeywords": ["PSYKER"] }]
+  },
+  "Malefic Wardings (Psychic)": {
+    "effects": [
+      { "scope": "led", "defend": { "inv": 6 } },
+      { "scope": "led", "defend": { "inv": 4, "invVs": "psychic" } },
+      { "scope": "led", "if": ["targetKw:DAEMON"], "defend": { "inv": 4 } }
+    ]
+  },
+  "Psychic Veil (Psychic)": {
+    "act": {
+      "when": "command",
+      "limit": "phase",
+      "roll": "D6",
+      "label": "Psychic Veil: roll a D6",
+      "table": [
+        { "min": 1, "max": 1, "do": [{ "mortals": "D3" }] },
+        { "min": 2, "do": [{ "buff": [{ "targetableWithin": 18 }], "until": "nextCommand" }] }
+      ]
+    }
+  },
+  "Tome-skull": {
+    "act": [
+      {
+        "when": "anyPhase",
+        "uses": 1,
+        "limit": "battle",
+        "target": { "side": "friendly", "range": 6, "shocked": true, "units": ["AGENTS OF THE IMPERIUM"] },
+        "do": [{ "on": "target", "unshock": true }],
+        "label": "Tome-skull: restore a friendly unit"
+      },
+      {
+        "when": "anyPhase",
+        "uses": 1,
+        "limit": "battle",
+        "target": { "side": "enemy", "range": 6 },
+        "do": [{ "on": "target", "shock": 0 }],
+        "label": "Tome-skull: Battle-shock an enemy"
+      }
+    ]
+  },
+  "Defenders of the Faith": {
+    "act": { "when": "commandEnd", "auto": true, "if": ["onOwnObjective"], "do": [{ "on": "self", "secure": true }] }
+  },
+  "Simulacrum Imperials": {
+    "effects": [{ "ld": 1 }]
+  },
+  "Gaze into the Empyrean (Psychic)": {
+    "effects": [{ "scope": "model", "omniScrambler": 12 }]
+  },
+  "Rites of Teleportation": {
+    "effects": [{ "scope": "model", "deepStrike": true, "if": ["modelFrom:Inquisitor"] }]
+  },
+  "Tactical Instinct": {
+    "effects": [{ "scope": "led", "abilities": ["lethal hits"] }]
+  },
+  "Strategic Knowledge": {
+    "effects": [{ "scope": "led", "eligible": ["shootAfterAdvance", "chargeAfterAdvance", "shootAfterFallBack", "chargeAfterFallBack"] }]
+  },
+  "Rites of Battle": {
+    "effects": [{ "stratDiscount": { "ids": ["*"], "cp": 1, "limit": "round", "perArmy": true } }]
+  },
+  "Loyal Henchmen": {
+    "effects": [{ "scope": "unit", "defend": { "wound": -1 }, "if": ["contains:Inquisitor"] }]
+  },
+  "Soulguilt Scanner": {
+    "effects": [{ "attack": "ranged", "abilities": ["ignores cover"] }]
+  },
+  "Infernum Halo-launcher": {
+    "effects": [{ "scope": "model", "addKeywords": ["SMOKE"] }]
+  },
+  "Simulacrum Imperialis": {
+    "effects": [{ "ld": 1 }]
+  },
+  "Ministorum Sermon": {
+    "effects": [{ "attack": "melee", "wound": 1, "if": ["contains:Ministorum Priest"] }]
+  },
+  "Dedication to Duty": {
+    "effects": [{ "fightOnDeath": 4 }]
+  },
+  "Unstoppable Champion": {
+    "act": { "when": "onDeath", "modelDeath": true, "limit": "battle", "do": [{ "reviveLater": { "on": 2, "wounds": 1 } }], "label": "Roll to return with 1 Wound" }
+  },
+  "CAT Unit": {
+    "act": {
+      "when": "selectedToShoot",
+      "limit": "battle",
+      "label": "Use CAT Unit: ranged weapons ignore cover",
+      "do": [{ "buff": [{ "attack": "ranged", "abilities": ["ignores cover"] }], "until": "phase" }]
+    }
+  },
+  "Zealot": {
+    "act": {
+      "when": "selectedToFight",
+      "limit": "battle",
+      "label": "Zealot: +3 Strength and Attacks",
+      "do": [{ "buff": [{ "scope": "model", "attack": "melee", "strength": 3, "attacks": 3 }], "until": "phase" }]
+    }
+  },
+  "Cherub": {
+    "effects": [{
+      "stratDiscount": { "ids": ["command-reroll"], "cp": 9, "limit": "battle" },
+      "stratRepeat": { "ids": ["command-reroll"], "limit": "phase" }
+    }]
+  },
+  "Incensor Cherub": {
+    "effects": [{
+      "stratDiscount": { "ids": ["command-reroll"], "cp": 9, "limit": "battle" },
+      "stratRepeat": { "ids": ["command-reroll"], "limit": "phase" }
+    }]
+  },
+  "Rapid Deployment": {
+    "effects": [{ "scope": "transport", "disembarkAfterAdvance": true }]
+  },
+  "NAVY BODYGUARD": {
+    "status": "info",
+    "note": "The allied Retinue exemption is enforced by Assigned Agents army composition rules."
+  },
+  "INQUISITORIAL HENCHMEN": {
+    "status": "info",
+    "note": "The allied Retinue exemption is enforced by Assigned Agents army composition rules."
+  },
+  "Authority of the Inquisition": {
+    "status": "info",
+    "note": "An attached Inquisitor may use a transport accepted by its Bodyguard."
+  },
+  "ATTACHED UNIT": {
+    "status": "info",
+    "note": "Special bodyguard attachment eligibility is enforced during army building."
+  }
+}

@@ -1,4 +1,5 @@
 import { RULES } from './config';
+import { d6 } from './dice';
 import { baseDist, bodyTouchesPoly, circleTouchesPoly } from './geometry';
 import type { FxEvent, GameState, LogEntry, ModelState, PlayerId, SkillStyle, UnitState } from './types';
 
@@ -45,6 +46,17 @@ export function heroFx(s: GameState, u: UnitState, name: string, defensive = fal
 export function log(s: GameState, text: string, kind?: LogEntry['kind'], player: PlayerId | null = s.active) {
   s.log.push({ turn: s.turn, round: s.round, player, text, kind });
   if (s.log.length > 600) s.log.splice(0, s.log.length - 600);
+}
+
+/** Resolve Coteaz's Spy Network after ability-generated CP; its own refund cannot trigger another refund. */
+export function notifyAbilityCpGain(s: GameState, p: PlayerId, amount: number, source: string) {
+  for (const c of boardUnits(s, other(p)).filter((u) => u.abilities.some((a) => a.name === 'Spy Network'))) {
+    for (let i = 0; i < amount; i++) {
+      const roll = d6(s);
+      if (roll >= 2) s.players[c.owner].cp += 1;
+      log(s, `${c.name} - Spy Network: ${source} gained ${amount}CP, rolled ${roll}${roll >= 2 ? ' -> +1CP' : ''}`, 'roll', c.owner);
+    }
+  }
 }
 
 export function unitDistance(a: UnitState, b: UnitState): number {

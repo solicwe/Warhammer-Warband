@@ -1,0 +1,156 @@
+{
+  "_comment": "Imperial Agents Faction Pack v1.2. Rules are keyed by stratagem name or name@detachment; unlisted effects are read from the card text.",
+  "rules": {
+    "CLOSE-QUARTERS BARRAGE": {
+      "targetKw": ["VOIDFARERS"],
+      "effects": [{ "attack": "ranged", "strength": 1, "ap": 1, "if": ["targetWithin:12"] }],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ADAPTIVE TACTICS": {
+      "targetKw": ["DEATHWATCH"],
+      "choice": [
+        { "label": "Furor Tactics", "mark": "agentsAdaptive", "effects": [{ "abilities": ["sustained hits 1"] }] },
+        { "label": "Malleus Tactics", "mark": "agentsAdaptive", "effects": [{ "abilities": ["lethal hits"] }] },
+        { "label": "Purgatus Tactics", "mark": "agentsAdaptive", "effects": [{ "abilities": ["precision-on-crit"], "if": ["targetWithin:9"] }] }
+      ],
+      "until": "nextCommand",
+      "bot": "attack",
+      "status": "auto"
+    },
+    "EXECUTION ORDER": {
+      "targetKw": ["ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"],
+      "enemy": { "kw": ["CHARACTER"] },
+      "enemyEffects": [{ "incoming": { "abilities": ["precision"] } }],
+      "enemyUntil": "nextCommand",
+      "bot": "attack",
+      "status": "auto"
+    },
+    "KRAKEN ROUNDS": {
+      "targetKw": ["DEATHWATCH INFANTRY"],
+      "unitIf": ["!marked:agentsAmmo"],
+      "effects": [{ "attack": "ranged", "ap": 1, "rangeBonus": 6 }],
+      "mark": "agentsAmmo",
+      "bot": "attack",
+      "status": "auto"
+    },
+    "DRAGONFIRE ROUNDS": {
+      "targetKw": ["DEATHWATCH INFANTRY"],
+      "unitIf": ["!marked:agentsAmmo"],
+      "effects": [{ "attack": "ranged", "abilities": ["assault", "ignores cover"] }],
+      "mark": "agentsAmmo",
+      "bot": "attack",
+      "status": "auto"
+    },
+    "HELLFIRE ROUNDS": {
+      "targetKw": ["DEATHWATCH INFANTRY"],
+      "unitIf": ["!marked:agentsAmmo"],
+      "effects": [{ "attack": "ranged", "if": ["!weaponHas:devastating wounds"], "abilities": ["anti-infantry 2+", "anti-monster 5+"] }],
+      "mark": "agentsAmmo",
+      "bot": "attack",
+      "status": "auto"
+    },
+    "STUN GRENADES": {
+      "targetKw": ["ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"],
+      "unitIf": ["unengaged"],
+      "enemy": { "range": 8, "visible": true, "notKw": ["MONSTER", "VEHICLE"] },
+      "enemyEffects": [{ "hit": -1 }],
+      "enemyUntil": "phase",
+      "do": [{ "on": "target", "shock": 0 }],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "LINE OF FIRE": {
+      "targetKw": ["ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"],
+      "effects": [{ "shootIntoEngagement": 12 }],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "RITUAL OF WARDING": {
+      "targetKw": ["INQUISITOR|INQUISITORIAL AGENTS|ORDO MALLEUS"],
+      "unitIf": ["onControlledObjective"],
+      "do": [{ "on": "self", "wardObjective": true }],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "HEXAGRAMMIC WARDS": {
+      "targetKw": ["ORDO MALLEUS"],
+      "enemy": { "lastActor": true },
+      "effects": [{ "incoming": { "abilities": ["hazardous"], "psychic": true } }],
+      "until": "phase",
+      "bot": "defend",
+      "status": "auto"
+    },
+    "ENSNARING TRAP": {
+      "targetKw": ["AGENTS OF THE IMPERIUM INFANTRY"],
+      "unitIf": ["unengaged"],
+      "enemy": { "range": 6 },
+      "effects": [{ "attack": "melee", "wound": 1, "if": ["kw:CALLIDUS ASSASSIN", "marked:ensnaringTrapCharged"] }],
+      "until": "turn",
+      "special": ["chargeWithCallidusWound"],
+      "react": "enemyChargePhaseEnd",
+      "bot": "charge",
+      "status": "partial",
+      "note": "The Callidus +1 Wound bonus applies after a successful charge; the current charge UI chooses one eligible target at a time."
+    },
+    "RITES OF EXORCISM": {
+      "targetKw": ["INQUISITOR|INQUISITORIAL AGENTS|ORDO MALLEUS"],
+      "enemy": { "range": 12, "visible": true, "kw": ["DAEMON"] },
+      "do": [{
+        "on": "target",
+        "shock": 0,
+        "shockFailEffects": [{ "incoming": { "abilities": ["devastating wounds"] } }]
+      }],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "PRIME TARGET": {
+      "targetKw": ["AGENTS OF THE IMPERIUM"],
+      "effects": [
+        { "if": ["targetKw:CHARACTER"], "reroll": "wounds1" },
+        { "if": ["targetWarlord", "modelKw:OFFICIO ASSASSINORUM"], "reroll": "wounds" }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "BLIND GRENADES": {
+      "targetKw": ["GRENADES|VINDICARE ASSASSIN"],
+      "react": "enemyChargeDeclared",
+      "effects": [
+        { "chargedMinus": 1 },
+        { "chargedMinus": 2, "if": ["kw:VINDICARE ASSASSIN"] }
+      ],
+      "until": "phase",
+      "bot": "defend",
+      "status": "auto"
+    },
+    "RAPID TACTICAL RELOCATION": {
+      "targetKw": ["INQUISITOR|DEATHWATCH INFANTRY"],
+      "unitIf": ["unengaged"],
+      "do": [{ "on": "self", "reserves": true }],
+      "react": "fightPhaseEnd",
+      "bot": "defend",
+      "status": "partial",
+      "note": "The unit returns through normal Strategic Reserves rules (more than 9 inches from enemies), rather than the card's more-than-8-inch setup."
+    },
+    "ORBITAL OVERSIGHT": {
+      "targetKw": ["AGENTS OF THE IMPERIUM INFANTRY"],
+      "effects": [
+        { "targetableWithin": 18 },
+        { "targetableWithin": 6, "if": ["hasAbility:Lone Operative"] }
+      ],
+      "until": "phase",
+      "bot": "defend",
+      "status": "auto"
+    },
+    "DISPLACER FIELD": {
+      "targetKw": ["AGENTS OF THE IMPERIUM CHARACTER"],
+      "unitIf": ["!kw:OFFICIO ASSASSINORUM"],
+      "effects": [{ "defend": { "inv": 4 } }],
+      "until": "phase",
+      "bot": "defend",
+      "status": "partial",
+      "note": "The 4+ invulnerable save is automatic; the 6-inch post-attack Normal move is not."
+    }
+  }
+}

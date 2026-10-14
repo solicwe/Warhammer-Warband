@@ -6,7 +6,7 @@ import { activeRules, addTimed, bondOf, DET_RULES, type DetChoiceOption, type Ef
 import { applyMortalWounds } from './attack';
 import { rollExpr, rollN } from './dice';
 import { baseDist, girth, polyCentroid, segSegDist } from './geometry';
-import { alive, boardUnits, hasKw, log, onBoard, other, strength, unitDistance } from './state';
+import { alive, boardUnits, hasKw, log, notifyAbilityCpGain, onBoard, other, strength, unitDistance } from './state';
 import type { GameState, PlayerId, Pt, UnitState } from './types';
 
 export const CODE = 'Code Chivalric';
@@ -109,6 +109,7 @@ function fulfil(s: GameState, p: PlayerId, why: string) {
   const cp = extra ? 1 : K.random ? 3 : 2;
   s.players[p].cp += cp;
   log(s, `Oath fulfilled (${why}): the army is Honoured, +${cp}CP`, 'cp', p);
+  notifyAbilityCpGain(s, p, cp, 'Code Chivalric');
 }
 
 const deedOf = (s: GameState, p: PlayerId) => { const K = s.players[p].knights; return K && !K.done ? K.deeds[K.deeds.length - 1] : undefined; };

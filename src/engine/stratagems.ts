@@ -13,6 +13,7 @@ import ecStrats from '../../data/stratagems/EC.json';
 import dgStrats from '../../data/stratagems/DG.json';
 import qiStrats from '../../data/stratagems/QI.json';
 import qtStrats from '../../data/stratagems/QT.json';
+import aoiStrats from '../../data/stratagems/AoI.json';
 import { blessingsRoll } from './blessings';
 import { parseAbilityText } from './abilityText';
 import { ldTest, runActions, runDeathQueue, shockTest, type Action } from './activations';
@@ -90,7 +91,7 @@ export interface StratRule {
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'deathStrike' | 'maleficSurge' | 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap' | 'raisePledge' | 'putrid' | 'attachNear' | 'mireslick';
+export type Special = 'deathStrike' | 'maleficSurge' | 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'chargeWithCallidusWound' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap' | 'raisePledge' | 'putrid' | 'attachNear' | 'mireslick';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -134,6 +135,7 @@ const BOOKS: Record<string, Record<string, StratRule>> = {
   DG: (dgStrats as unknown as { rules: Record<string, StratRule> }).rules,
   QI: (qiStrats as unknown as { rules: Record<string, StratRule> }).rules,
   QT: (qtStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  AoI: (aoiStrats as unknown as { rules: Record<string, StratRule> }).rules,
 };
 
 const OFFENCE_BUFFS: BuffKind[] = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
@@ -474,19 +476,24 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
   const buffs = rule.buffs ?? [];
   const until = rule.until === 'turn' || rule.until === 'nextCommand' ? 'turn' : 'phase';
   const own = [u, ...(use.extraIds ?? []).map((id) => unitById(s, id))].filter((x): x is UnitState => !!x && x.owner === p);
+  const enemies = rule.enemy
+    ? (rule.enemy.all ? stratEnemies(s, p, rule, u, use.ctx) : [stratEnemies(s, p, rule, u, use.ctx).find((e) => e.id === use.enemyId) ?? stratEnemies(s, p, rule, u, use.ctx)[0]].filter((e): e is UnitState => !!e))
+    : u && u.owner !== p ? [u] : [];
   for (const x of own) {
     for (const k of buffs) x.buffs.push({ kind: k, until, label: st.name });
     const chars = rule.characterOnly ? alive(x).filter((m) => m.isCharacter || m.keywords.includes('CHARACTER')).map((m) => m.id) : undefined;
-    for (const e of rule.effects ?? []) addTimed(s, x, { e, label: st.name, until: rule.until ?? 'phase', by: p, mark: rule.mark, models: chars });
+    for (const e of rule.effects ?? []) {
+      const applied = e.incoming && enemies.length
+        ? { ...e, incoming: { ...e.incoming, by: enemies[0].owner, units: enemies.map((enemy) => `id:${enemy.id}`) } }
+        : e;
+      addTimed(s, x, { e: applied, label: st.name, until: rule.until ?? 'phase', by: p, mark: rule.mark, models: chars });
+    }
     // Berzerker's Wrath after the surge was already offered: that move is now up to 8"
     const fixed = Math.max(0, ...(rule.effects ?? []).map((e) => e.surgeFixed ?? 0));
     if (fixed && x.extraMove?.kind === 'surge') x.extraMove.max = fixed;
     if (rule.addWounds) for (const m of alive(x).filter((m) => chars?.includes(m.id) ?? true)) { m.profile = { ...m.profile, W: m.profile.W + rule.addWounds }; m.wounds += rule.addWounds; }
     if (rule.shock && !x.battleShocked) { x.battleShocked = true; log(s, `${st.name}: ${x.name} gives in to the Red Thirst → Battle-shocked`, 'info', p); }
   }
-  const enemies = rule.enemy
-    ? (rule.enemy.all ? stratEnemies(s, p, rule, u, use.ctx) : [stratEnemies(s, p, rule, u, use.ctx).find((e) => e.id === use.enemyId) ?? stratEnemies(s, p, rule, u, use.ctx)[0]].filter((e): e is UnitState => !!e))
-    : u && u.owner !== p ? [u] : [];
   for (const e of enemies) for (const fx of rule.enemyEffects ?? []) addTimed(s, e, { e: fx, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, ...(rule.enemyMark ? { mark: rule.enemyMark } : {}) });
   if (rule.enemyMark && !(rule.enemyEffects ?? []).length) for (const e of enemies) addTimed(s, e, { e: {}, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, mark: rule.enemyMark });
   // one-off actions: on the own unit, or on the enemy unit for stratagems that pick one
@@ -550,7 +557,7 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
     case 'maleficSurge': maleficSurge(s, u); return;
     // Power of the Machine Spirit: snap shooting, or normal shooting once the unit is at or below half-strength
     case 'shootAtSnap': if (enemy) shootNow(s, u, enemy, label, alive(u).length * 2 <= u.startingStrength || alive(u).reduce((a, m) => a + m.wounds, 0) * 2 <= u.models.reduce((a, m) => a + m.profile.W, 0) ? 'normal' : 'snap'); return;
-    case 'charge': case 'chargeCap6': {
+    case 'charge': case 'chargeCap6': case 'chargeWithCallidusWound': {
       // a charge out of turn (Leonine Aggression …): only at the enemy units it was allowed to pick, no charge bonus
       // (Selfless Service: a charge roll above 6 counts as 6)
       declareCharge(s, u, false, sp === 'chargeCap6' ? 6 : undefined);
@@ -558,6 +565,7 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       const t = (enemy && opts.find((e) => e.id === enemy.id)) ?? opts[0];
       if (!t || !autoCharge(s, u, [t.id])) { log(s, `${label}: ${u.name}'s charge fails`, 'info', p); u.declaredCharge = false; return; }
       u.chargedTurn = -1; // no Charge bonus (Fights First, Lance …) this turn
+      if (sp === 'chargeWithCallidusWound') addTimed(s, u, { e: {}, label, until: 'turn', by: p, mark: 'ensnaringTrapCharged' });
       return;
     }
     // Skulls for the Skull Throne!: one more Blessing of Khorne until the end of the battle round
@@ -889,4 +897,3 @@ export function answerReaction(s: GameState, stratId: string | null, unitId?: st
 export function stratagemsNow(s: GameState, p: PlayerId) {
   return s.players[p].detachments.flatMap((d) => d.stratagems.map((st) => ({ st, plan: planStratagem(st), detachment: d.name, rule: stratRule(st, s.players[p].factionId, d.name) })));
 }
-

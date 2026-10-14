@@ -532,7 +532,18 @@ export function gearFnp(sheet: DatasheetData, gear: string[]): number | undefine
 
 /** Distribute N models over composition lines: each line gets its minimum, the remainder goes to the largest line. */
 export function distributeModels(sheet: DatasheetData, total: number): { comp?: string; profile: number; count: number }[] {
-  const lines = sheet.composition.filter((c) => c.min !== undefined);
+  const variants: typeof sheet.composition[] = [[]];
+  for (const entry of sheet.composition) {
+    if (/^\s*OR\s*$/i.test(entry.text)) variants.push([]);
+    else if (entry.min !== undefined) variants[variants.length - 1].push(entry);
+  }
+  const lines = variants.find((variant) => {
+    const min = variant.reduce((sum, entry) => sum + entry.min!, 0);
+    const max = variant.reduce((sum, entry) => sum + entry.max!, 0);
+    return total >= min && total <= max;
+  }) ?? variants.filter((variant) => variant.length).sort((a, b) =>
+    b.reduce((sum, entry) => sum + entry.min!, 0) - a.reduce((sum, entry) => sum + entry.min!, 0),
+  )[0] ?? [];
   if (!lines.length) return [{ profile: 0, count: total }];
   const out = lines.map((c) => ({ comp: c.name, profile: matchProfile(sheet, c.name), count: c.min! }));
   let left = total - out.reduce((a, b) => a + b.count, 0);
@@ -701,10 +712,14 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
           const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
           return { name: x.enhancement!, type: 'Enhancement', text: enh?.text ?? '', sheet: x.datasheet, faction: faction.id, model: sheets.length > 1 ? x.datasheet : undefined };
         }),
+        ...[e, ...joiners].flatMap((x) => {
+          const enh = extremisEnhancement(x, list, faction);
+          return enh ? [{ name: enh.name, type: 'Enhancement', text: enh.text, sheet: x.datasheet, faction: faction.id, model: sheets.length > 1 ? x.datasheet : undefined }] : [];
+        }),
       ],
       core,
       // what the list says it costs: unit, enhancement, costed wargear and any duplicate tax
-      pts: [e, ...joiners].reduce((a, j) => a + unitPoints(j) + (tax.get(j.uid) ?? 0), 0),
+      pts: [e, ...joiners].reduce((a, j) => a + unitPoints(j) + (tax.get(j.uid) ?? 0) + extremisPoints(j, list, faction), 0),
       status: 'pending',
       embarkedIn: null,
       transport: parseTransport(sheet.transport),
@@ -714,10 +729,16 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       battleShocked: false,
       isWarlordUnit: !!(e.warlord || joiners.some((j) => j.warlord)),
       warlordSource: [e, ...joiners].find((j) => j.warlord)?.datasheet,
-      enhancements: [e, ...joiners].filter((x) => x.enhancement).map((x) => {
+      enhancements: [
+        ...[e, ...joiners].filter((x) => x.enhancement).map((x) => {
         const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
         return { name: x.enhancement!, text: enh?.text ?? '', model: x.datasheet };
-      }),
+        }),
+        ...[e, ...joiners].flatMap((x) => {
+          const enh = extremisEnhancement(x, list, faction);
+          return enh ? [{ name: enh.name, text: enh.text, model: x.datasheet }] : [];
+        }),
+      ],
       move: null, advanceRoll: null, maxMoved: 0, setUpTurn: -10, shotTurn: -10,
       selectedToShoot: false, declaredCharge: false, chargeRoll: null, chargedTurn: -10, chargeTargets: [],
       fought: false, foughtFirstUntilTurn: -10, stratagemPhase: null, oneShotUsed: [], buffs: [],
@@ -765,7 +786,7 @@ export function pointsOptions(sheet: DatasheetData) {
 
 export function listPoints(list: ArmyList, faction?: FactionData): number {
   const tax = faction ? dupTaxes(list, faction) : null;
-  return list.units.reduce((a, u) => a + unitPoints(u) + (tax?.get(u.uid) ?? 0), 0);
+  return list.units.reduce((a, u) => a + unitPoints(u) + (tax?.get(u.uid) ?? 0) + (faction ? extremisPoints(u, list, faction) : 0), 0);
 }
 
 /** 11th edition duplicate tax: the Nth and later copies of some datasheets cost more (uid → extra points). */
@@ -792,6 +813,23 @@ export function dupTaxes(list: ArmyList, faction: FactionData): Map<string, numb
 export function unitPoints(u: ArmyUnitEntry): number {
   return u.pts + (u.enhancementPts ?? 0) + (u.wargearPts ?? 0);
 }
+
+const EXTREMIS_ABILITIES: Record<string, string> = {
+  'Callidus Assassin': 'Decoy Targets',
+  'Culexus Assassin': 'Esoteric Explosives',
+  'Eversor Assassin': 'Intraneural Biotech',
+  'Vindicare Assassin': 'Micromelta Rounds',
+};
+
+export function extremisEnhancement(u: ArmyUnitEntry, list: ArmyList, faction: FactionData) {
+  if (faction.id !== 'AoI' || !list.detachments.includes('Veiled Blade Elimination Force')) return undefined;
+  const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
+  const ability = EXTREMIS_ABILITIES[u.datasheet];
+  if (!sheet?.keywords.includes('OFFICIO ASSASSINORUM') || !ability) return undefined;
+  return faction.detachments.flatMap((d) => d.enhancements).find((enhancement) => enhancement.name === ability);
+}
+
+export const extremisPoints = (u: ArmyUnitEntry, list: ArmyList, faction: FactionData) => extremisEnhancement(u, list, faction)?.pts ?? 0;
 
 /** Support character in this list (Captain of the Honour Guard: Cato Sicarius is Support while Marneus Calgar is in the army). */
 export const supportIn = (list: ArmyList, d?: DatasheetData) => !!d && (d.isSupport || (d.name === 'Cato Sicarius' && list.units.some((u) => u.datasheet === 'Marneus Calgar')));
@@ -977,6 +1015,13 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
         || (list.detachments.includes('Cult of Blood') && (name === 'Jakhals' || name === 'Goremongers')) ? size.unitLimit * 2 : size.unitLimit;
     if (n > limit) errs.push(`${name}: maximum ${limit} per army`);
   }
+  const shadowAssignment = faction.datasheets.flatMap((sheet) => sheet.abilities
+    .flatMap((ability) => [...(ability.text ?? '').matchAll(/cannot have more than 1 ([A-Z ]+)/g)].map((match) => match[1].trim())));
+  for (const uniqueName of new Set(shadowAssignment)) {
+    const sheetName = faction.datasheets.find((sheet) => sheet.name.toUpperCase() === uniqueName)?.name;
+    const count = list.units.filter((unit) => unit.datasheet === sheetName).length;
+    if (sheetName && count > 1) errs.push(`SHADOW ASSIGNMENT: no more than one ${sheetName}`);
+  }
   // Pact of Decay / Pact of Excess: the book's daemons only come with their detachment (Plague Legions: up to 500 / 1000 / 1500 pts, never the Warlord)
   for (const pact of [{ kw: 'PLAGUE LEGIONS', det: 'Tallyband Summoners', caps: [500, 1000, 1500] }, { kw: 'LEGIONS OF EXCESS', det: 'Carnival of Excess' }]) {
     const xs = list.units.filter((u) => faction.datasheets.find((d) => d.name === u.datasheet)?.factionKeywords.includes(pact.kw));
@@ -1011,7 +1056,7 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (sheet?.abilities.some((a) => a.name.toUpperCase() === 'SUPREME COMMANDER') && !u.warlord) errs.push(`${u.datasheet} must be your Warlord (Supreme Commander)`);
     // ANATHEMA PSYKANA characters can't be the Warlord (Null Maiden Vigil allows it)
     // Force of Untamed Destruction (Murderfang): "This model cannot be your WARLORD"
-    if (u.warlord && sheet?.abilities.some((ab) => /cannot be your WARLORD/i.test(ab.text ?? ''))) errs.push(`${u.datasheet} cannot be your Warlord`);
+    if (u.warlord && sheet?.abilities.some((ab) => /cannot be (?:selected to be )?your WARLORD/i.test(ab.text ?? ''))) errs.push(`${u.datasheet} cannot be your Warlord`);
     if (u.warlord && sheet?.factionKeywords.includes('ANATHEMA PSYKANA') && !list.detachments.includes('Null Maiden Vigil')) errs.push(`${u.datasheet} (ANATHEMA PSYKANA) cannot be your Warlord`);
   }
   // allied units (Scintillating Legions in a Thousand Sons army): only with a detachment that allows them, up to a points cap, never the Warlord

@@ -13,6 +13,7 @@ import { alive } from './state';
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
 const SM = load('SM');
 const ORK = load('ORK');
+const AOI = load('AoI');
 
 function list(factionId: string, units: [string, number, number, string?][]): ArmyList {
   return {
@@ -85,6 +86,17 @@ describe('army building', () => {
     expect(targetToughness(u[0])).toBe(5); // Boyz T5 even though the Warboss is T6
     const groups = allocationGroups(u[0]);
     expect(groups[groups.length - 1].char).toBe(true); // characters last
+  });
+
+  it('uses the Aquila Kill Team majority Toughness instead of its highest profile', () => {
+    const u = buildUnits(list('AoI', [['Aquila Kill Team', 5, 200]]), AOI, 0)[0];
+    expect(u.models).toHaveLength(5);
+    expect(u.models.some((m) => m.profile.T === 6)).toBe(true);
+    expect(targetToughness(u)).toBe(4);
+    const t4 = u.models.find((m) => m.profile.T === 4)!;
+    const t6 = u.models.find((m) => m.profile.T === 6)!;
+    u.models = [{ ...t4, id: 'tie-t4-a' }, { ...t4, id: 'tie-t4-b' }, { ...t6, id: 'tie-t6-a' }, { ...t6, id: 'tie-t6-b' }];
+    expect(targetToughness(u)).toBe(6);
   });
 });
 

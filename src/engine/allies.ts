@@ -69,7 +69,14 @@ export function allyErrors(list: ArmyList, faction: FactionData, sizePoints: num
       const caps = { RETINUE: [1, 2, 3], CHARACTER: [1, 2, 3], REQUISITIONED: [1, 1, 2] };
       const kind = (d: DatasheetData) => (has(d, 'RETINUE') ? 'RETINUE' : has(d, 'CHARACTER') ? 'CHARACTER' : 'REQUISITIONED');
       for (const [k, cap] of Object.entries(caps)) {
-        const n = xs.filter((x) => !has(x.d, 'DEDICATED TRANSPORT') && kind(x.d) === k).length;
+        const units = xs.filter((x) => !has(x.d, 'DEDICATED TRANSPORT') && kind(x.d) === k);
+        const voidfarers = xs.filter((x) => has(x.d, 'VOIDFARERS') && has(x.d, 'CHARACTER')).length;
+        const inquisitors = xs.filter((x) => has(x.d, 'INQUISITOR') && has(x.d, 'CHARACTER')).length;
+        const exemptions = k === 'RETINUE'
+          ? Math.min(units.filter((x) => has(x.d, 'VOIDSMEN-AT-ARMS')).length, voidfarers)
+            + Math.min(units.filter((x) => has(x.d, 'INQUISITORIAL AGENTS')).length, inquisitors)
+          : 0;
+        const n = units.length - exemptions;
         if (n > cap[tier]) errs.push(`Assigned Agents: at most ${cap[tier]} ${k} unit${cap[tier] > 1 ? 's' : ''} at this battle size`);
       }
     }

@@ -6,7 +6,7 @@ import { applyMortalWounds, expectedDamage, buildShootPools, buildFightPools, sh
 import { rollExpr, rollN } from './dice';
 import { activeRules, addTimed, rollMods } from './effects';
 import { bestLd } from './game';
-import { alive, boardUnits, engagedEnemies, hasKw, log, other, phaseKey, pushFx, unitDistance } from './state';
+import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, other, phaseKey, pushFx, unitDistance } from './state';
 import type { GameState, PlayerId, UnitState } from './types';
 
 export type PactPick = 'lethal hits' | 'sustained hits 1';
@@ -51,7 +51,7 @@ export function makeDarkPact(s: GameState, u: UnitState, pick: PactPick): { pass
   }
   const enh = (n: string) => u.enhancements.find((e) => e.name === n);
   // Eye of Tzeentch: a passed test of 8+ gives 1CP
-  if (passed && total >= 8 && enh('Eye of Tzeentch')) { s.players[u.owner].cp += 1; log(s, `Eye of Tzeentch: Dark Pact passed on ${total} → +1CP`, 'cp', u.owner); }
+  if (passed && total >= 8 && enh('Eye of Tzeentch')) { s.players[u.owner].cp += 1; log(s, `Eye of Tzeentch: Dark Pact passed on ${total} → +1CP`, 'cp', u.owner); notifyAbilityCpGain(s, u.owner, 1, 'Eye of Tzeentch'); }
   // Talisman of Burning Blood: +D3 A and S on the bearer's melee weapons instead of +1
   const tal = passed ? enh('Talisman of Burning Blood') : undefined;
   if (tal) {
@@ -64,6 +64,7 @@ export function makeDarkPact(s: GameState, u: UnitState, pick: PactPick): { pass
   if (passed && total >= 7 && u.abilities.some((a) => a.name === 'Dark Destiny')) {
     s.players[u.owner].cp += 1;
     log(s, `Dark Destiny: ${u.name} passed its Dark Pact test on ${total} → +1CP`, 'cp', u.owner);
+    notifyAbilityCpGain(s, u.owner, 1, 'Dark Destiny');
   }
   return { passed, total };
 }

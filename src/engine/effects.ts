@@ -17,13 +17,14 @@ import ecAbilities from '../../data/abilities/EC.json';
 import dgAbilities from '../../data/abilities/DG.json';
 import qiAbilities from '../../data/abilities/QI.json';
 import qtAbilities from '../../data/abilities/QT.json';
+import aoiAbilities from '../../data/abilities/AoI.json';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { deploymentById, RULES, toPoly } from './config';
 import { d6, exprAverage } from './dice';
 import { baseDist, bodyTouchesPoly, circleTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from './geometry';
 import { setActionEligibilityHook, unitInRange } from './missions';
-import { alive, boardUnits, engagedEnemies, hasKw, log, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, unitDistance, withinTerrain } from './state';
+import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, unitDistance, withinTerrain } from './state';
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, UnitState, WeaponData, WeaponProfileData } from './types';
 import { abilityLabel, condApplies, parseAbility } from './weapons';
 import { hasLos, isHidden, setVisibilityHooks } from './visibility';
@@ -44,6 +45,7 @@ export interface Defend {
   damage?: number; // -1 D (minimum 1)
   halveDamage?: boolean;
   inv?: number;
+  invVs?: 'psychic';
   fnp?: number;
   fnpVs?: 'mortal' | 'psychic' | 'mortalPsychic';
   cover?: boolean;
@@ -162,6 +164,7 @@ export interface Effect {
   shieldOfHonour?: boolean; // enemy models engaged with it that attack another unit have -1 to hit and wound (Shield of Honour)
   fightOnDeathCharBonus?: number; // +X to the fight-on-death roll for a CHARACTER model (Duty Unto Death)
   targetableWithin?: number; // can only be targeted by ranged attacks from models within this range
+  ignoreLoneOperative?: boolean; // the attacker's ranged attacks ignore Lone Operative's 12" restriction
   ignoreMods?: boolean; // ignore modifiers to its characteristics and rolls (not saving throws)
   forceShockAura?: number; // in the opponent's next Command phase, enemy units this close must take a Battle-shock test
   creepingDread?: number; // Creeping Dread: in the opponent's Command phase, enemy PSYKER / below-strength units this close test at -1
@@ -192,6 +195,7 @@ export interface Effect {
   stratRepeat?: { ids: string[]; limit: Limit }; // this stratagem can target this unit even if it was used this phase (Countercharge)
   freeDie?: FreeDieSpec[]; // timed: free re-rolls of one die (Prime Target: one hit, one wound and one damage roll)
   weaponRange?: number; // +X" Range for the weapons this effect covers (its weapon / if filters: e.g. Psychic weapons only)
+  shootIntoEngagement?: number; // may shoot non-Blast ranged weapons at enemy units engaged with friendlies within X" (its weapon / if filters: e.g. Psychic weapons only)
   deadlyDemiseOn?: number; // its Deadly Demise inflicts mortal wounds on X+ instead of only a 6 (Warpfire Infusion)
   spotting?: number; // in your Shooting phase enemy units have +X" detection range against this unit (All-Seeing Mutant Hordes)
   rerollRitual?: boolean; // reserved
@@ -320,6 +324,7 @@ const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   DG: dgAbilities as unknown as Record<string, AbilityRule>,
   QI: qiAbilities as unknown as Record<string, AbilityRule>,
   QT: qtAbilities as unknown as Record<string, AbilityRule>,
+  AoI: aoiAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
 export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
@@ -340,7 +345,7 @@ export function abilityRule(u: UnitState, a: AbilityData): AbilityRule | undefin
   return r;
 }
 
-/** Factions whose file holds only what the text reader can't read. */
+/** Factions whose rule files supplement the text reader rather than define every ability. */
 const PARSE_TOO = new Set(['QI', 'QT']);
 
 function findRule(a: AbilityData, sheet: string): AbilityRule | undefined {
@@ -663,6 +668,9 @@ export function cond(c: string, x: Ctx): boolean {
   // the target is engaged with a friendly unit with this keyword (Clutching Corruption: PLAGUE LEGIONS)
   if (c.startsWith('targetEngagedWithKw:')) { const k = c.slice(20); return !!T && boardUnits(s, A.owner).some((f) => (hasKw(f, k) || f.factionKeywords.includes(k)) && engagedEnemies(s, f).some((e) => e.id === T.id)); }
   if (c.startsWith('targetWithin:')) return !!T && unitDistance(A, T) <= Number(c.split(':')[1]) + 1e-6;
+  if (c.startsWith('targetModelsAtLeast:')) return !!T && alive(T).length >= Number(c.slice(20));
+  if (c === 'targetWarlord') return !!T?.isWarlordUnit;
+  if (c.startsWith('weaponHas:')) return !!x.p?.abilities.some((a) => wk(a) === wk(c.slice(10)));
   // Cultist's Brand: every other model in the unit (Dark Disciples aside) is DAMNED
   if (c === 'othersDamned') return alive(A).every((m) => (x.bearers ?? []).some((b) => b.id === m.id) || m.keywords.includes('DAMNED') || /dark disciple/i.test(m.name));
   // "visible to a friendly HURON BLACKHEART model": a friendly model with this name can see the unit
@@ -678,9 +686,10 @@ export function cond(c: string, x: Ctx): boolean {
     return Object.entries(s.players[A.owner].det ?? {}).some(([n, d]) => n !== DOCTRINES && (d as { active?: string[] }).active?.includes(id));
   }
   if (c.startsWith('beyond:')) return (x.d ?? 0) > Number(c.slice(7)) + 1e-6;
-  if (c.startsWith('targetKw:')) return !!T && c.slice(9).split('|').some((k) => T.keywords.includes(k));
+  if (c.startsWith('targetKw:')) return !!T && c.slice(9).split('|').some((k) => T.keywords.includes(k) || T.factionKeywords.includes(k));
   if (c.startsWith('targetNotKw:')) return !!T && !c.slice(12).split('|').some((k) => T.keywords.includes(k));
   if (c.startsWith('targetMarked:')) return !!T && (T.timed ?? []).some((t) => t.mark === c.slice(13) && t.by === A.owner);
+  if (c.startsWith('marked:')) return (A.timed ?? []).some((t) => t.mark === c.slice(7) && t.by === A.owner);
   if (c.startsWith('modelFrom:')) return !!x.m && wk(x.m.source).includes(wk(c.slice(10)));
   if (c.startsWith('modelName:')) return !!x.m && wk(x.m.name).includes(wk(c.slice(10)));
   if (c.startsWith('hasWeapon:')) { const n = wk(c.slice(10)); return (x.bearers?.length ? x.bearers : alive(x.holder ?? A)).some((m) => m.weapons.some((w) => wk(w.name).includes(n))); }
@@ -1089,8 +1098,8 @@ export const targetHasCover = (s: GameState, T: UnitState, d: number) => defence
 export const untargetableAt = (s: GameState, T: UnitState, d: number) => d > 12 + 1e-6 && defencesFor(s, T, 'ranged').some((a) => a.e.defend!.untargetableBeyond12);
 
 /** Damage, invulnerable save and Feel No Pain for one model hit by an attack. */
-export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'melee' | 'ranged' | 'mortal', psychic = false) {
-  const list = kind === 'mortal' ? effectsFor(s, T).filter((a) => a.e.defend && modelOk(a, m) && holds(a, { s, A: T, m })) : defencesFor(s, T, kind, m);
+export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'melee' | 'ranged' | 'mortal', psychic = false, attacker?: UnitState) {
+  const list = kind === 'mortal' ? effectsFor(s, T).filter((a) => a.e.defend && modelOk(a, m) && holds(a, { s, A: T, T: attacker, m })) : defencesFor(s, T, kind, m, attacker);
   let damage = 0, halve = false, inv: number | null = null, fnp: number | null = null, saveBonusD1 = 0, save = 0, worse = 0, negate = false;
   let negateKey: 'turn' | 'round' | 'battle' | undefined;
   for (const a of list) {
@@ -1102,7 +1111,7 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
       if (df.negateOnce && T.used?.[`negate:${df.negateOnce}`] !== negatePeriod(s, df.negateOnce)) { negate = true; negateKey = df.negateOnce; }
       if (df.damage && !(df.notPsychic && psychic)) damage += df.damage;
       if (df.halveDamage) halve = true;
-      if (df.inv && (inv === null || df.inv < inv)) inv = df.inv;
+      if (df.inv && (!df.invVs || (df.invVs === 'psychic' && psychic)) && (inv === null || df.inv < inv)) inv = df.inv;
       if (df.saveBonusD1) saveBonusD1 = Math.max(saveBonusD1, df.saveBonusD1);
       if (df.save) { if (df.save > 0) save = Math.max(save, df.save); else worse += df.save; } // Rattlejoint Ague: worse
     }
@@ -1216,6 +1225,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     ldSet: Math.min(99, ...es.map((e) => e.ldSet ?? 99)),
     advanceHazard: es.some((e) => e.advanceHazard),
     rangeBonus: es.reduce((a, e) => a + (e.rangeBonus ?? 0), 0),
+    shootIntoEngagement: Math.max(0, ...es.map((e) => e.shootIntoEngagement ?? 0)),
     secureAtCommandEnd: es.some((e) => e.secureAtCommandEnd),
     secureAtMovementEnd: es.some((e) => e.secureAtMovementEnd),
     surgeObjective: es.some((e) => e.surgeObjective),
@@ -1242,6 +1252,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     afterShootNoCover: es.some((e) => e.afterShootNoCover),
     shieldOfHonour: es.some((e) => e.shieldOfHonour),
     targetableWithin: Math.min(99, ...es.map((e) => e.targetableWithin ?? 99)),
+    ignoreLoneOperative: es.some((e) => e.ignoreLoneOperative),
     ignoreMods: es.some((e) => e.ignoreMods),
     forceShockAura: Math.max(0, ...es.map((e) => e.forceShockAura ?? 0)),
     creepingDread: Math.max(0, ...es.map((e) => e.creepingDread ?? 0)),
@@ -1327,7 +1338,7 @@ function stratSpent(s: GameState, u: UnitState, stratId: string) {
     if (!a.e.stratCpChance || a.holder.owner !== u.owner) continue;
     const r = d6(s);
     const ok = r >= a.e.stratCpChance;
-    if (ok) s.players[u.owner].cp += 1;
+    if (ok) { s.players[u.owner].cp += 1; notifyAbilityCpGain(s, u.owner, 1, a.label); }
     log(s, `${a.label}: rolled ${r}${ok ? ' → +1CP' : ''}`, 'cp', u.owner);
   }
 }

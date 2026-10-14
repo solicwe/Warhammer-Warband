@@ -317,6 +317,7 @@ export interface ObjectiveState {
   sabotaged?: PlayerId | null; // A Deadly Prize: enemy units ending a move on it may suffer mortal wounds while this player holds it
   mutated?: PlayerId | null; // Mutate Landscape: enemy units ending a move on it roll a D6, 4+ = D3 mortal wounds
   snared?: PlayerId | null; // Mortis Snares: the next enemy unit ending a move in range rolls a D6, 2+ = D6 mortal wounds
+  warded?: PlayerId | null; // Ritual of Warding: enemy Daemons cannot be set up within 6" while this player controls it
 }
 
 export interface PlayerState {
