@@ -328,17 +328,25 @@ export function botExplosives(s: GameState, u: UnitState): boolean {
   const p = u.owner;
   if (!(hasKw(u, 'GRENADES') || hasKw(u, 'EXPLOSIVES')) || u.selectedToShoot || isEngaged(s, u) || u.move === 'advance' || u.move === 'fallback') return false;
   if (canUseStratagem(s, p, 'explosives', u) || !spare(s, p, 1)) return false;
-  // 3 mortal wounds on average: worth most against a few tough models with good saves
+  const flags = unitFlags(s, u);
+  const gheist = flags.gheistskull && !u.used?.['Gheistskull'];
+  const maxRange = gheist ? 18 : 8;
+  const threshold = flags.esotericExplosives ? 3 : 4;
+  const expectedMortal = threshold === 3 ? 4 : 3;
+  // mortal wounds on average: worth most against a few tough models with good saves
   const worth = (t: UnitState) => {
     const m = alive(t)[0];
-    return Math.min(3 / m.profile.W, alive(t).length) * perModel(t);
+    return Math.min(expectedMortal / m.profile.W, alive(t).length) * perModel(t);
   };
-  const t = boardUnits(s, other(p)).filter((e) => !isEngaged(s, e) && unitDistance(u, e) <= 8 && alive(u).some((m) => unitVisibleTo(s, m, e)))
+  const t = boardUnits(s, other(p)).filter((e) => !isEngaged(s, e) && unitDistance(u, e) <= maxRange && alive(u).some((m) => unitVisibleTo(s, m, e)))
     .sort((a, b) => worth(b) - worth(a))[0];
   if (!t || worth(t) < 1.6 * cpWorth(s, p)) return false;
   spendStratagem(s, p, 'explosives', u);
+  if (gheist && unitDistance(u, t) > 8) {
+    (u.used ??= {})['Gheistskull'] = `battle|${s.round}`;
+  }
   const r = rollN(s, 6);
-  const n = r.filter((x) => x >= 4).length;
+  const n = r.filter((x) => x >= threshold).length;
   log(s, `Bot uses Explosives: ${u.name} → ${t.name} [${r.join(' ')}] = ${n} MW`, 'roll', p);
   if (n) applyMortalWounds(s, t, n, 'Explosives');
   return true;

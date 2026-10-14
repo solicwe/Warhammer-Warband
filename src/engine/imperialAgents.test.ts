@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { abilityRule, abilityStatus, DET_RULES, incomingFor, modelDefence, unitFlags, unitGrants } from './effects';
 import { buildUnits, listPoints, validateList } from './army';
 import { botAct } from './bot';
+import { botExplosives } from './botStrats';
 import { applyDetachmentStratagem, stratRule } from './stratagems';
 import { canEmbarkIn, createGame, deployUnit, endRedeploy, findPlacement, formationAt, placeUnit, redeployCandidates, redeployUnit, validatePlacement } from './game';
 import { detChoices, pickDetChoice } from './detachments';
@@ -10,6 +11,7 @@ import { buildShootPools } from './attack';
 import { d6 } from './dice';
 import { addTimed } from './effects';
 import { engagedEnemies, notifyAbilityCpGain, unitDistance } from './state';
+import { PRESETS } from '../ui/presets';
 import type { FactionData, UnitState } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -32,19 +34,12 @@ describe('Imperial Agents rule coverage', () => {
     expect(abilityStatus(probe, { name: 'Micromelta Rounds', type: 'Enhancement', text: '', sheet: 'Vindicare Assassin', faction: AoI.id }).status).toBe('auto');
   });
 
-  it('registers the implemented Imperial Agents enhancements', () => {
-    const supported = [
-      'Blackweave Shroud', 'Universal Anathema', 'Ignis Judicium', 'Witch Hunter', 'Daemon Slayer',
-      'Beacon Angelis', 'Fleetmaster', 'Formidable Resolve', 'Grimoire of True Names (Aura)', 'No Escape (Aura)',
-      'Intraneural Biotech',
-    ];
-    const partial = ['Clandestine Operation', 'Combat Landers', 'Digital Weapons'];
+  it('registers every Imperial Agents enhancement as automated', () => {
     const probe = { sources: ['Inquisitor'], abilities: [], models: [] } as unknown as UnitState;
-    for (const name of supported) {
-      expect(abilityStatus(probe, { name, type: 'Enhancement', text: '', sheet: 'Inquisitor', faction: AoI.id }).status).toBe('auto');
-    }
-    for (const name of partial) {
-      expect(abilityStatus(probe, { name, type: 'Enhancement', text: '', sheet: 'Inquisitor', faction: AoI.id }).status).toBe('partial');
+    for (const det of AoI.detachments) {
+      for (const enh of det.enhancements) {
+        expect(abilityStatus(probe, { name: enh.name, type: 'Enhancement', text: enh.text, sheet: 'Inquisitor', faction: AoI.id }).status).toBe('auto');
+      }
     }
   });
 
@@ -150,7 +145,7 @@ describe('Imperial Agents rule coverage', () => {
     expect(adaptive.choice?.map((option) => option.label)).toEqual(['Furor Tactics', 'Malleus Tactics', 'Purgatus Tactics']);
 
     const relocation = stratRule(find('RAPID TACTICAL RELOCATION'), AoI.id, 'Ordo Xenos Alien Hunters');
-    expect(relocation.status).toBe('partial');
+    expect(relocation.status).toBe('auto');
     expect(relocation.do).toContainEqual({ on: 'self', reserves: true });
 
     const hexagrammic = stratRule(find('HEXAGRAMMIC WARDS'), AoI.id, 'Ordo Malleus Daemon Hunters');
@@ -168,7 +163,7 @@ describe('Imperial Agents rule coverage', () => {
     expect(blind.effects).toContainEqual({ chargedMinus: 2, if: ['kw:VINDICARE ASSASSIN'] });
 
     const displacer = stratRule(find('DISPLACER FIELD'), AoI.id, 'Imperialis Fleet');
-    expect(displacer.status).toBe('partial');
+    expect(displacer.status).toBe('auto');
     expect(displacer.effects).toContainEqual({ defend: { inv: 4 } });
 
     const own = {
@@ -340,7 +335,7 @@ describe('Imperial Agents rule coverage', () => {
       const probe = { sources: [sheet.name], abilities: [], models: [] } as unknown as UnitState;
       for (const ability of sheet.abilities) {
         const status = abilityStatus(probe, { ...ability, sheet: sheet.name, faction: AoI.id }).status;
-        if (!['auto', 'info', 'core'].includes(status)) missing.push(`${sheet.name}: ${ability.name} (${status})`);
+        if (!['auto', 'core'].includes(status)) missing.push(`${sheet.name}: ${ability.name} (${status})`);
       }
     }
     console.log(missing.join('\n'));
@@ -456,4 +451,159 @@ describe('Imperial Agents rule coverage', () => {
     rhino.transport!.forbid.push('INQUISITOR');
     expect(canEmbarkIn(state, ledUnit, rhino)).toBeNull();
   });
+
+  it('allows Strategic Reserves setup in enemy deployment zone with Masters of the Void', () => {
+    const own = {
+      name: 'Agents', factionId: 'AoI', battleSize: 'incursion', detachments: ['Imperialis Fleet'],
+      units: [
+        { uid: 'trader', datasheet: 'Rogue Trader Entourage', models: 4, pts: 75, warlord: true },
+        { uid: 'breachers', datasheet: 'Imperial Navy Breachers', models: 10, pts: 90 },
+      ],
+    };
+    const enemy = {
+      name: 'Space Marines', factionId: 'SM', battleSize: 'incursion', detachments: [],
+      units: [{ uid: 'intercessors', datasheet: 'Intercessor Squad', models: 5, pts: 80 }],
+    };
+    const state = createGame({
+      lists: [own, enemy], factions: [AoI, load('SM')], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3',
+      dispositions: ['take-and-hold', 'take-and-hold'], seed: 42,
+    });
+    const breachers = state.units.find((u) => u.sources.includes('Imperial Navy Breachers'))!;
+    breachers.status = 'reserves';
+    state.round = 2; // Before round 3
+    const testPos = formationAt(breachers, { x: 30, y: 55 });
+    // In enemy deployment zone before round 3
+    const badPlacement = validatePlacement(state, breachers, testPos, 'ingress');
+    expect(badPlacement.errors.some((e) => e.includes('enemy deployment zone before battle round 3'))).toBe(true);
+
+    // Apply Masters of the Void mark
+    const trader = state.units.find((u) => u.sources.includes('Rogue Trader Entourage'))!;
+    addTimed(state, trader, { e: {}, label: 'MASTERS OF THE VOID', until: 'phase', by: 0, mark: 'mastersOfTheVoid' });
+    const goodPlacement = validatePlacement(state, breachers, testPos, 'ingress');
+    expect(goodPlacement.errors.some((e) => e.includes('enemy deployment zone before battle round 3'))).toBe(false);
+  });
+
+  it('allocates precision attacks to bodyguard under Selfless Bodyguard on a 2+', () => {
+    const own = {
+      name: 'Agents', factionId: 'AoI', battleSize: 'incursion', detachments: ['Imperialis Fleet'],
+      units: [
+        { uid: 'breachers', datasheet: 'Imperial Navy Breachers', models: 10, pts: 90 },
+        { uid: 'coteaz', datasheet: 'Inquisitor Coteaz', models: 1, pts: 75, attachTo: 'breachers' },
+      ],
+    };
+    const enemy = {
+      name: 'Space Marines', factionId: 'SM', battleSize: 'incursion', detachments: [],
+      units: [{ uid: 'vindicare', datasheet: 'Vindicare Assassin', models: 1, pts: 110 }],
+    };
+    const state = createGame({
+      lists: [own, enemy], factions: [AoI, load('SM')], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3',
+      dispositions: ['take-and-hold', 'take-and-hold'], seed: 42,
+    });
+    const ledUnit = state.units.find((u) => u.sources.includes('Imperial Navy Breachers'))!;
+    addTimed(state, ledUnit, { e: { protectPrecision: 2 }, label: 'SELFLESS BODYGUARD', until: 'phase', by: 0 });
+    expect(unitFlags(state, ledUnit).protectPrecision).toBe(2);
+  });
+
+  it('allows Deathwatch characters to lead Aquila Kill Team and Inquisitors to lead Sanctifiers with Scouts 6"', () => {
+    const list = {
+      name: 'Agents', factionId: 'AoI', battleSize: 'incursion', detachments: ['Ordo Hereticus Purgation Force'],
+      units: [
+        { uid: 'sanctifiers', datasheet: 'Sanctifiers', models: 5, pts: 70 },
+        { uid: 'inquisitor', datasheet: 'Inquisitor', models: 1, pts: 55, attachTo: 'sanctifiers', warlord: true },
+        { uid: 'aquila', datasheet: 'Aquila Kill Team', models: 5, pts: 110 },
+        { uid: 'artemis', datasheet: 'Watch Captain Artemis', models: 1, pts: 65, attachTo: 'aquila' },
+      ],
+    };
+    const errors = validateList(list, AoI, { points: 1000, dp: 2, unitLimit: 3, enhancements: 3 });
+    expect(errors).toEqual([]);
+
+    const units = buildUnits(list, AoI, 0);
+    const sanctifiersUnit = units.find((u) => u.sources.includes('Sanctifiers'))!;
+    expect(sanctifiersUnit.core.scouts).toBe(6);
+    expect(sanctifiersUnit.keywords).toContain('SCOUTS');
+    expect(sanctifiersUnit.models.every((m) => m.keywords.includes('SCOUTS'))).toBe(true);
+
+    const aquilaUnit = units.find((u) => u.sources.includes('Aquila Kill Team'))!;
+    expect(aquilaUnit.sources).toContain('Watch Captain Artemis');
+  });
+
+  it('allows Gheistskull to target enemies up to 18" away with Explosives', () => {
+    const own = {
+      name: 'Agents', factionId: 'AoI', battleSize: 'incursion', detachments: ['Imperialis Fleet'],
+      units: [{ uid: 'breachers', datasheet: 'Imperial Navy Breachers', models: 10, pts: 90 }],
+    };
+    const enemy = {
+      name: 'Space Marines', factionId: 'SM', battleSize: 'incursion', detachments: [],
+      units: [{ uid: 'intercessors', datasheet: 'Intercessor Squad', models: 5, pts: 80 }],
+    };
+    const state = createGame({
+      lists: [own, enemy], factions: [AoI, load('SM')], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3',
+      dispositions: ['take-and-hold', 'take-and-hold'], seed: 42,
+    });
+    const breachers = state.units.find((u) => u.sources.includes('Imperial Navy Breachers'))!;
+    const intercessors = state.units.find((u) => u.owner === 1)!;
+    placeUnit(state, breachers, formationAt(breachers, { x: 20, y: 20 }));
+    placeUnit(state, intercessors, formationAt(intercessors, { x: 35, y: 20 })); // 15" away: beyond 8", within 18"
+    state.phase = 'shooting';
+    state.round = 1;
+    state.active = 0;
+    state.players[0].cp = 2;
+    expect(unitDistance(breachers, intercessors)).toBeGreaterThan(8);
+    expect(unitDistance(breachers, intercessors)).toBeLessThanOrEqual(18);
+    expect(unitFlags(state, breachers).gheistskull).toBe(true);
+
+    // Bot uses Explosives at 15" distance via Gheistskull
+    expect(botExplosives(state, breachers)).toBe(true);
+    expect(state.players[0].cp).toBe(1);
+    expect(breachers.used?.['Gheistskull']).toBe('battle|1');
+  });
+
+  it('redeploys up to 3 Agents units with Liber Heresius', () => {
+    const own = {
+      name: 'Agents', factionId: 'AoI', battleSize: 'incursion', detachments: ['Ordo Hereticus Purgation Force'],
+      units: [
+        { uid: 'inquisitor', datasheet: 'Inquisitor', models: 1, pts: 55, enhancement: 'Liber Heresius', warlord: true },
+        { uid: 'sanctifiers', datasheet: 'Sanctifiers', models: 5, pts: 70 },
+        { uid: 'breachers', datasheet: 'Imperial Navy Breachers', models: 10, pts: 90 },
+      ],
+    };
+    const enemy = {
+      name: 'Space Marines', factionId: 'SM', battleSize: 'incursion', detachments: [],
+      units: [{ uid: 'intercessors', datasheet: 'Intercessor Squad', models: 5, pts: 80 }],
+    };
+    const state = createGame({ lists: [own, enemy], factions: [AoI, load('SM')], names: ['A', 'B'], seed: 42 });
+    state.bots = [1];
+    let steps = 0;
+    while (state.phase === 'deploy' && !state.redeploy && steps++ < 50) {
+      if (state.deployTurn === 1) { botAct(state); continue; }
+      const unit = state.units.find((candidate) => candidate.owner === 0 && candidate.status === 'pending')!;
+      expect(deployUnit(state, unit.id, findPlacement(state, unit, 'deploy')!)).toMatchObject({ ok: true });
+    }
+    expect(state.redeploy?.source).toBe('Liber Heresius');
+    expect(state.redeploy!.left).toBe(3);
+    const candidates = redeployCandidates(state);
+    expect(candidates.length).toBe(3);
+  });
+
+  for (const det of AoI.detachments.map((d) => d.name)) {
+    it(`bot vs bot reaches game over: ${det}`, () => {
+      const list = { ...PRESETS.AoI, detachments: [det] };
+      const state = createGame({
+        lists: [list, PRESETS.SM], factions: [AoI, load('SM')], names: ['Agents', 'Marines'],
+        deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 42,
+      });
+      state.bots = [0, 1];
+      let steps = 0;
+      while (state.phase !== 'gameover' && steps < 6000) {
+        botAct(state);
+        steps++;
+      }
+      expect(state.phase).toBe('gameover');
+      for (const u of state.units) {
+        for (const m of u.models) {
+          expect(Number.isFinite(m.x) && Number.isFinite(m.y)).toBe(true);
+        }
+      }
+    }, 120000);
+  }
 });

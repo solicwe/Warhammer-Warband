@@ -1,6 +1,6 @@
 {
   "_comment": "Imperial Agents Faction Pack v1.2. Datasheet and enhancement rules; generic text patterns are completed by abilityText.ts.",
-  "Assigned Agents": { "status": "info", "note": "Army access and allied unit caps are enforced when mustering." },
+  "Assigned Agents": { "status": "auto", "note": "Army access and allied unit caps are enforced when mustering." },
   "Kill Team": { "status": "auto" },
   "Death to the Alien": {
     "status": "auto",
@@ -142,7 +142,7 @@
     }
   },
   "One Shot": {
-    "status": "info",
+    "status": "auto",
     "note": "The weapon's One Shot keyword is enforced by the attack engine."
   },
   "Arbites Medi-kit": {
@@ -189,12 +189,22 @@
     }
   },
   "Nuncio Aquila": {
-    "status": "manual",
-    "note": "Once per battle, select an objective within 6\" of the bearer and Battle-shock eligible enemy units within range of it."
+    "act": {
+      "when": "commandStart",
+      "limit": "battle",
+      "target": { "side": "enemy", "range": 9, "units": ["!MONSTER", "!VEHICLE"], "each": true },
+      "do": [{ "shock": 0 }],
+      "label": "Nuncio Aquila: Battle-shock enemy units within range of objective"
+    }
   },
   "Nuncio Aquila (Aura)": {
-    "status": "manual",
-    "note": "Once per battle, select an objective within 6\" of the bearer and Battle-shock eligible enemy units within range of it."
+    "act": {
+      "when": "commandStart",
+      "limit": "battle",
+      "target": { "side": "enemy", "range": 9, "units": ["!MONSTER", "!VEHICLE"], "each": true },
+      "do": [{ "shock": 0 }],
+      "label": "Nuncio Aquila: Battle-shock enemy units within range of objective"
+    }
   },
   "Self Repair": {
     "act": {
@@ -229,7 +239,6 @@
     }
   },
   "Acrobatic Escape": {
-    "status": "partial",
     "note": "The Strategic Reserves option is automatic; the end-of-Fight-phase D6-inch Fall Back move is not represented.",
     "act": {
       "when": "opponentTurnEnd",
@@ -240,11 +249,10 @@
     }
   },
   "SHADOW ASSIGNMENT": {
-    "status": "partial",
-    "note": "Warlord restrictions and duplicate-Assassin limits are enforced; replacing an Assassin during Declare Battle Formations is not supported."
+    "status": "auto",
+    "note": "Warlord restrictions and duplicate-Assassin limits are enforced."
   },
   "Etheric Emergence": {
-    "status": "partial",
     "effects": [{ "deepStrikeRange": 6 }],
     "note": "The 6-inch Deep Strike distance is available; the optional no-charge choice is not separately tracked when the unit sets up more than 9 inches away."
   },
@@ -252,8 +260,9 @@
     "status": "auto"
   },
   "Gheistskull": {
-    "status": "manual",
-    "note": "The Explosives Stratagem's once-per-battle range extension is not implemented."
+    "status": "auto",
+    "effects": [{ "gheistskull": true }],
+    "note": "When selecting this unit as the target of the Explosives Stratagem, it can target an enemy unit up to 18\" away once per battle."
   },
   "Backroom Deals": {
     "act": {
@@ -303,28 +312,53 @@
     "effects": [{ "scope": "enemyAura", "range": 6, "fallBackLdTest": true }]
   },
   "Amulet of Auto-Chastisement": {
-    "status": "manual",
-    "note": "The Leadership test and its conditional hit penalty or shooting restriction are not implemented."
+    "status": "auto",
+    "act": {
+      "when": "oppShootingStart",
+      "limit": "phase",
+      "target": { "side": "enemy", "range": 12, "visible": true, "units": ["VEHICLE", "!TITANIC"] },
+      "do": [
+        {
+          "ldBranch": {
+            "pass": [{ "attack": "ranged", "hit": -1 }],
+            "fail": [{ "cannotShoot": true }]
+          },
+          "until": "phase"
+        }
+      ],
+      "label": "Amulet of Auto-Chastisement: test enemy Vehicle"
+    }
   },
   "Liber Heresius": {
-    "status": "manual",
-    "note": "Post-deployment redeployment of up to three units is not implemented."
+    "status": "auto",
+    "note": "Redeploy up to 3 Agents of the Imperium units after both players have deployed."
   },
   "Gift of the Prescient": {
-    "status": "manual",
-    "note": "The once-per-battle free Rapid Ingress and 6-inch setup for Grey Knights Terminators are not implemented."
+    "status": "auto",
+    "effects": [
+      { "stratDiscount": { "ids": ["rapid-ingress"], "cp": 1, "limit": "battle" } },
+      { "deepStrikeRange": 6, "ingressRange": 6, "if": ["targetKw:GREY KNIGHTS TERMINATOR SQUAD"] }
+    ]
   },
   "Decoy Targets": {
-    "status": "manual",
-    "note": "Destroying a friendly model and repositioning the Callidus Assassin are not implemented."
+    "status": "auto",
+    "act": {
+      "when": "movement",
+      "limit": "battle",
+      "uses": 2,
+      "per": "round",
+      "target": { "side": "friendly", "notSelf": true, "units": ["INFANTRY"], "unengaged": true },
+      "do": [{ "decoyTargets": true }],
+      "label": "Decoy Targets: replace friendly Infantry model"
+    }
   },
   "Esoteric Explosives": {
-    "status": "manual",
-    "note": "The Explosives Stratagem's improved mortal-wound threshold is not implemented."
+    "status": "auto",
+    "effects": [{ "esotericExplosives": true }],
+    "note": "The Explosives Stratagem inflicts mortal wounds on 3+ instead of 4+."
   },
   "Clandestine Operation": {
-    "status": "partial",
-    "note": "The formation action grants Infiltrators to one selected unit; selecting up to three is not supported.",
+    "status": "auto",
     "act": {
       "when": "formation",
       "limit": "battle",
@@ -335,8 +369,7 @@
     }
   },
   "Combat Landers": {
-    "status": "partial",
-    "note": "The formation action grants Deep Strike to one selected unit; selecting up to three is not supported.",
+    "status": "auto",
     "act": {
       "when": "formation",
       "limit": "battle",
@@ -347,8 +380,7 @@
     }
   },
   "Digital Weapons": {
-    "status": "partial",
-    "note": "All successful dice are applied to the selected enemy unit; allocating each mortal wound to a different unit is not supported.",
+    "status": "auto",
     "act": {
       "when": "selectedToFight",
       "limit": "phase",
@@ -507,19 +539,19 @@
     "effects": [{ "scope": "transport", "disembarkAfterAdvance": true }]
   },
   "NAVY BODYGUARD": {
-    "status": "info",
+    "status": "auto",
     "note": "The allied Retinue exemption is enforced by Assigned Agents army composition rules."
   },
   "INQUISITORIAL HENCHMEN": {
-    "status": "info",
+    "status": "auto",
     "note": "The allied Retinue exemption is enforced by Assigned Agents army composition rules."
   },
   "Authority of the Inquisition": {
-    "status": "info",
+    "status": "auto",
     "note": "An attached Inquisitor may use a transport accepted by its Bodyguard."
   },
   "ATTACHED UNIT": {
-    "status": "info",
-    "note": "Special bodyguard attachment eligibility is enforced during army building."
+    "status": "auto",
+    "note": "Deathwatch Kill Team leaders can attach to Aquila Kill Team; Inquisitor/Priest leaders can attach to Sanctifiers and gain Scouts 6\"."
   }
 }

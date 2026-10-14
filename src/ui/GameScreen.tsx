@@ -536,7 +536,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const fightTargets = mode?.k === 'fight' ? engagedEnemies(s, U(mode.unitId)).map((t) => t.id) : [];
   const explosiveTargets = mode?.k === 'explosives'
-    ? boardUnits(s, other(U(mode.unitId).owner)).filter((t) => !isEngaged(s, t) && unitDistance(U(mode.unitId), t) <= 8 && alive(U(mode.unitId)).some((m) => unitVisibleTo(s, m, t))).map((t) => t.id)
+    ? (() => {
+        const u = U(mode.unitId);
+        const flags = unitFlags(s, u);
+        const maxRange = flags.gheistskull && !u.used?.['Gheistskull'] ? 18 : 8;
+        return boardUnits(s, other(u.owner)).filter((t) => !isEngaged(s, t) && unitDistance(u, t) <= maxRange && alive(u).some((m) => unitVisibleTo(s, m, t))).map((t) => t.id);
+      })()
     : [];
   const crushTargets = mode?.k === 'crush' ? engagedEnemies(s, U(mode.unitId)).map((t) => t.id) : [];
 
@@ -1612,23 +1617,31 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const shootPanel = () => {
     if (ritualOn) return ritualPanel();
     if (mode?.k === 'explosives' && modeUnit) {
+      const flags = unitFlags(s, modeUnit);
+      const gheist = flags.gheistskull && !modeUnit.used?.['Gheistskull'];
+      const maxRange = gheist ? 18 : 8;
+      const threshold = flags.esotericExplosives ? 3 : 4;
       return (
         <>
-          <div className="small"><b>Explosives</b> ({modeUnit.name}): tap a visible, unengaged target within 8"</div>
+          <div className="small"><b>Explosives</b> ({modeUnit.name}): tap a visible, unengaged target within {maxRange}"{gheist ? ' (Gheistskull)' : ''}</div>
           <div className="row">
             <button className="btn" onClick={() => setMode(null)}>Cancel</button>
             <button className="btn primary grow" disabled={!mode.target} onClick={() => {
               const res = act((g) => {
                 const gu = unitById(g, modeUnit.id);
                 spendStratagem(g, gu.owner, 'explosives', gu);
+                const tgt = unitById(g, mode.target!);
+                if (gheist && unitDistance(gu, tgt) > 8) {
+                  (gu.used ??= {})['Gheistskull'] = `battle|${g.round}`;
+                }
                 const r = rollN(g, 6);
-                const n = r.filter((x) => x >= 4).length;
-                if (n) applyMortalWounds(g, unitById(g, mode.target!), n, 'Explosives');
-                return r;
+                const n = r.filter((x) => x >= threshold).length;
+                if (n) applyMortalWounds(g, tgt, n, 'Explosives');
+                return { r, n };
               });
-              flash(`Explosives: [${res.join(' ')}] ${res.filter((x) => x >= 4).length} MW`);
+              flash(`Explosives: [${res.r.join(' ')}] ${res.n} MW`);
               setMode(null);
-            }}>Throw (6D6, 4+)</button>
+            }}>Throw (6D6, {threshold}+)</button>
           </div>
         </>
       );

@@ -196,6 +196,11 @@ export interface Effect {
   freeDie?: FreeDieSpec[]; // timed: free re-rolls of one die (Prime Target: one hit, one wound and one damage roll)
   weaponRange?: number; // +X" Range for the weapons this effect covers (its weapon / if filters: e.g. Psychic weapons only)
   shootIntoEngagement?: number; // may shoot non-Blast ranged weapons at enemy units engaged with friendlies within X" (its weapon / if filters: e.g. Psychic weapons only)
+  protectPrecision?: number; // roll X+ to allocate precision attacks to a bodyguard model instead (Selfless Bodyguard)
+  gheistskull?: boolean; // Explosives Stratagem can target an enemy up to 18" away once per battle (Gheistskull)
+  esotericExplosives?: boolean; // Explosives Stratagem inflicts mortal wounds on 3+ instead of 4+ (Esoteric Explosives)
+  cannotShoot?: boolean; // unit is not eligible to shoot this phase (Amulet of Auto-Chastisement)
+  ingressRange?: number; // minimum distance from enemy units when arriving via Rapid Ingress (Gift of the Prescient)
   deadlyDemiseOn?: number; // its Deadly Demise inflicts mortal wounds on X+ instead of only a 6 (Warpfire Infusion)
   spotting?: number; // in your Shooting phase enemy units have +X" detection range against this unit (All-Seeing Mutant Hordes)
   rerollRitual?: boolean; // reserved
@@ -670,6 +675,8 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('targetWithin:')) return !!T && unitDistance(A, T) <= Number(c.split(':')[1]) + 1e-6;
   if (c.startsWith('targetModelsAtLeast:')) return !!T && alive(T).length >= Number(c.slice(20));
   if (c === 'targetWarlord') return !!T?.isWarlordUnit;
+  if (c === 'attached') return A.sources.length > 1;
+  if (c === 'friendlyLostToLast') return (lastEnemyAct(s, A.owner)?.a.lost ?? []).some((id) => id !== A.id);
   if (c.startsWith('weaponHas:')) return !!x.p?.abilities.some((a) => wk(a) === wk(c.slice(10)));
   // Cultist's Brand: every other model in the unit (Dark Disciples aside) is DAMNED
   if (c === 'othersDamned') return alive(A).every((m) => (x.bearers ?? []).some((b) => b.id === m.id) || m.keywords.includes('DAMNED') || /dark disciple/i.test(m.name));
@@ -1253,6 +1260,11 @@ export function unitFlags(s: GameState, u: UnitState) {
     shieldOfHonour: es.some((e) => e.shieldOfHonour),
     targetableWithin: Math.min(99, ...es.map((e) => e.targetableWithin ?? 99)),
     ignoreLoneOperative: es.some((e) => e.ignoreLoneOperative),
+    protectPrecision: Math.min(99, ...es.map((e) => e.protectPrecision ?? 99)),
+    gheistskull: es.some((e) => e.gheistskull),
+    esotericExplosives: es.some((e) => e.esotericExplosives),
+    cannotShoot: es.some((e) => e.cannotShoot),
+    ingressRange: Math.min(RULES.reserves.enemyDistance, ...es.map((e) => e.ingressRange ?? RULES.reserves.enemyDistance)),
     ignoreMods: es.some((e) => e.ignoreMods),
     forceShockAura: Math.max(0, ...es.map((e) => e.forceShockAura ?? 0)),
     creepingDread: Math.max(0, ...es.map((e) => e.creepingDread ?? 0)),

@@ -108,6 +108,8 @@ export interface Action {
   if?: string[]; // only when these conditions hold (on the unit using it; "target…" ones on the other unit)
   mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; n?: number; nWounds?: boolean; dmg?: string; shockIfAny?: number }; // one D6 per model engaged with the target (or n dice): each X+ is a mortal wound (dmg: that many each; shockIfAny: then a Battle-shock test with this modifier)
   ldFail?: Effect[]; // the target takes a Leadership test; failed → these effects (until `until`)
+  ldBranch?: { pass?: Effect[]; fail?: Effect[] }; // Leadership test branching: pass effects vs fail effects
+  decoyTargets?: boolean; // Callidus Assassin replaces a friendly Infantry model, destroying it
   setOath?: boolean; // the target becomes your Oath of Moment target
   pileInRoll?: string; // Pile-in moves up to this many inches (rolled now) this phase
   consolidateRoll?: string; // Consolidation moves up to this many inches (rolled now) this phase
@@ -315,7 +317,13 @@ function markUsed(s: GameState, def: ActDef) {
 }
 
 const BATTLE_SIZE_N: Record<string, number> = { incursion: 1, 'strike-force': 2, strike: 2, onslaught: 3 };
-const usesOf = (s: GameState, def: ActDef) => (def.spec.uses === 'battleSize' ? BATTLE_SIZE_N[s.players[def.holder.owner].battleSize ?? ''] ?? 2 : def.spec.uses ?? 1);
+const usesOf = (s: GameState, def: ActDef) => {
+  if (def.spec.limit === 'battle' && ['Overkill', 'Soulless Horror', 'Shieldbreaker'].includes(def.name)
+    && s.players[def.holder.owner].detachments.some((d) => d.name === 'Veiled Blade Elimination Force')) {
+    return 2;
+  }
+  return def.spec.uses === 'battleSize' ? BATTLE_SIZE_N[s.players[def.holder.owner].battleSize ?? ''] ?? 2 : def.spec.uses ?? 1;
+};
 export const limitLeft = (s: GameState, def: ActDef) => psykerBudgetOk(s, def) && (!def.spec.limit || timesUsed(s, def) < usesOf(s, def))
   && (!def.spec.battleUses || (Number(usedBag(s, def)[`${baseKey(def)}#n`]) || 0) < def.spec.battleUses);
 
@@ -546,6 +554,23 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       if (hits && q.shockIfAny !== undefined && onBoard(on)) shockTest(s, on, q.shockIfAny, def.name);
     }
     if (a.ldFail && !ldTest(s, on, def.name)) for (const e of a.ldFail) addTimed(s, on, { e, label: def.name, until: a.until ?? 'turn', by: u.owner });
+    if (a.ldBranch) {
+      const ok = ldTest(s, on, def.name);
+      const effects = ok ? (a.ldBranch.pass ?? []) : (a.ldBranch.fail ?? []);
+      for (const e of effects) addTimed(s, on, { e, label: def.name, until: a.until ?? 'phase', by: u.owner });
+    }
+    if (a.decoyTargets && target) {
+      const victim = alive(target).find((m) => !m.isCharacter && m.keywords.includes('INFANTRY'));
+      if (victim) {
+        victim.dead = true; victim.wounds = 0;
+        const callidusModel = alive(u)[0];
+        if (callidusModel) {
+          callidusModel.x = victim.x;
+          callidusModel.y = victim.y;
+        }
+        log(s, `${def.name}: ${victim.name} is replaced by ${u.name}`, 'info', u.owner);
+      }
+    }
     if (a.ldFailMortals && !ldTest(s, on, def.name, a.ldMod && (a.ldModIf ?? []).every((c) => cond(c, { s, A: u, T: on, holder: u })) ? a.ldMod : 0)) { const n = rollExpr(s, a.ldFailMortals).total; log(s, `${def.name}: ${on.name} suffers ${n} mortal wound(s)`, 'roll', u.owner); applyMortalWounds(s, on, n, def.name); }
     if (a.addWounds) for (const m of (def.bearers?.length ? def.bearers : alive(on)).filter((m) => !m.dead)) { m.profile = { ...m.profile, W: m.profile.W + a.addWounds }; m.wounds += a.addWounds; }
     if (a.soulLink && target) {

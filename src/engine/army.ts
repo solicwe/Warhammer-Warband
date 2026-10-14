@@ -685,13 +685,18 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       ...joiners.flatMap((j, k) => makeModels(sheetOf(j), j, `${id}-l${k}`, false)),
     ];
     const core = coreAbilities(sheets);
+    // Sanctifiers: ATTACHED UNIT grants attached Ministorum Priest or Inquisitor Scouts 6"
+    if (sheet.name === 'Sanctifiers' && joiners.length > 0) {
+      core.scouts = 6;
+      for (const m of models) if (!m.keywords.includes('SCOUTS')) m.keywords = [...m.keywords, 'SCOUTS'];
+    }
     const fnp = sheets.map((sh) => gearFnp(sh, models.filter((m) => m.source === sh.name).flatMap((m) => m.gear ?? []))).filter((x): x is number => x !== undefined);
     if (fnp.length) core.fnp = Math.min(core.fnp ?? 7, ...fnp);
     // Marks of Chaos: the keyword picked in the army builder
     // (Daemonic Allegiance with none picked: Nurgle, its first option)
     const marks = [...new Set([e, ...joiners].map((x) => x.mark ?? (sheetOf(x).abilities.some((a) => a.name === 'Daemonic Allegiance') ? 'NURGLE' : undefined)).filter((k): k is string => !!k))];
     if (marks.length) for (const m of models) m.keywords = [...new Set([...m.keywords, ...marks])];
-    const keywords = [...new Set([...sheets.flatMap((s) => s.keywords), ...marks])];
+    const keywords = [...new Set([...sheets.flatMap((s) => s.keywords), ...marks, ...(sheet.name === 'Sanctifiers' && joiners.length > 0 ? ['SCOUTS'] : [])])];
     units.push({
       id,
       owner,
@@ -835,18 +840,27 @@ export const extremisPoints = (u: ArmyUnitEntry, list: ArmyList, faction: Factio
 export const supportIn = (list: ArmyList, d?: DatasheetData) => !!d && (d.isSupport || (d.name === 'Cato Sicarius' && list.units.some((u) => u.datasheet === 'Marneus Calgar')));
 
 /** Enhancements a unit may take from the selected detachments (25.04). */
-/**
- * The bodyguard units `entry` (a leader or a support character) can join: those its datasheet can lead that do
- * not already have a character of the same kind (each bodyguard takes one leader and one support, 24.34).
- */
+
+export function canLeaderAttach(leader: DatasheetData, body: DatasheetData, enhancement?: string): boolean {
+  if (leader.leads.includes(body.name)) return true;
+  if (enhancement === 'Sorrowscent Vulture' && body.name === 'Warp Talons') return true;
+  // Aquila Kill Team: ATTACHED UNIT allows Deathwatch Kill Team leaders
+  if (body.name === 'Aquila Kill Team' && leader.leads.includes('Deathwatch Kill Team')) return true;
+  // Sanctifiers: ATTACHED UNIT allows Sisters of Battle Squad Inquisitor / Priest leaders
+  if (body.name === 'Sanctifiers' && leader.leads.includes('Sisters of Battle Squad') && (leader.keywords.includes('INQUISITOR') || leader.keywords.includes('MINISTORUM PRIEST') || leader.name === 'Ministorum Priest')) return true;
+  return false;
+}
+
 export function attachOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry): ArmyUnitEntry[] {
   const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
   const me = sheetOf(entry.datasheet);
   if (!me?.leads.length) return [];
-  // Sorrowscent Vulture (Nightmare Hunt): the bearer can also lead WARP TALONS
-  const leads = entry.enhancement === 'Sorrowscent Vulture' ? [...me.leads, 'Warp Talons'] : me.leads;
-  return list.units.filter((b) => b.uid !== entry.uid && !b.attachTo && leads.includes(b.datasheet)
-    && !list.units.some((o) => o.uid !== entry.uid && o.attachTo === b.uid && supportIn(list, sheetOf(o.datasheet)) === supportIn(list, me)));
+  return list.units.filter((b) => {
+    if (b.uid === entry.uid || b.attachTo) return false;
+    const bodySheet = sheetOf(b.datasheet);
+    if (!bodySheet || !canLeaderAttach(me, bodySheet, entry.enhancement)) return false;
+    return !list.units.some((o) => o.uid !== entry.uid && o.attachTo === b.uid && supportIn(list, sheetOf(o.datasheet)) === supportIn(list, me));
+  });
 }
 
 /**
@@ -1102,7 +1116,8 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (!u.attachTo) continue;
     const leader = faction.datasheets.find((d) => d.name === u.datasheet);
     const body = list.units.find((b) => b.uid === u.attachTo);
-    if (!leader || !body || !(leader.leads.includes(body.datasheet) || (u.enhancement === 'Sorrowscent Vulture' && body.datasheet === 'Warp Talons'))) errs.push(`${u.datasheet} cannot be attached to ${body?.datasheet ?? '?'}`);
+    const bodySheet = body ? faction.datasheets.find((d) => d.name === body.datasheet) : undefined;
+    if (!leader || !body || !bodySheet || !canLeaderAttach(leader, bodySheet, u.enhancement)) errs.push(`${u.datasheet} cannot be attached to ${body?.datasheet ?? '?'}`);
   }
   // 24.34 Support: a bodyguard unit takes at most one leader unit and one support unit
   for (const body of list.units) {

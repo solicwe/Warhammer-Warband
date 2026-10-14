@@ -118,7 +118,7 @@ function finishIgnore(pool: Pool, all = false) {
 export interface BuildResult { pools: Pool[]; notes: string[]; error?: string }
 
 export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
-  if (!onBoard(u) || u.selectedToShoot || (u.move === 'fallback' && !canDo(s, u, 'shootAfterFallBack'))) return [];
+  if (!onBoard(u) || u.selectedToShoot || unitFlags(s, u).cannotShoot || (u.move === 'fallback' && !canDo(s, u, 'shootAfterFallBack'))) return [];
   const weps = alive(u).flatMap((m) => m.weapons.flatMap((w) => w.profiles)).filter((p) => !isMelee(p));
   if (!weps.length) return [];
   const engaged = isEngaged(s, u);
@@ -172,6 +172,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   if (opt.mode === 'closeQuarters' && !engagedWithTarget && !alive(A).some(isMV)) return { pools: [], notes, error: 'Close-quarters can only target a unit it is engaged with' };
   const T_T = targetToughness(T, s);
   const isOwnShootingPhase = s.phase === 'shooting' && A.owner === s.active;
+  if (aFlags.cannotShoot) return { pools: [], notes, error: 'This unit is not eligible to shoot this phase' };
   // Heresy Undone: after Advancing / Falling Back it may only shoot auspex scanned units
   if (aFlags.onlyTargetMarked && (A.move === 'advance' || A.move === 'fallback') && !(T.timed ?? []).some((t) => t.mark === aFlags.onlyTargetMarked && t.by === A.owner)) return { pools: [], notes, error: 'After Advancing / Falling Back it can only shoot a unit marked by the auspex scan' };
 
@@ -874,7 +875,15 @@ export function applyDamage(s: GameState) {
   const order = p.saves.map((d, i) => ({ d, i })).sort((x, y) => x.d.v - y.d.v);
   p.saveTargets = p.saves.map(() => '');
   for (const { d, i } of order) {
-    const usePrecise = precise > 0 && !!precisionGroup && precisionGroup.models.some((m) => !m.dead);
+    let usePrecise = precise > 0 && !!precisionGroup && precisionGroup.models.some((m) => !m.dead);
+    const prot = unitFlags(s, T).protectPrecision;
+    if (usePrecise && prot && prot <= 6 && groups.some((x) => !x.char && x.models.some((m) => !m.dead))) {
+      const roll = d6(s);
+      if (roll >= prot) {
+        usePrecise = false;
+        log(s, `Selfless Bodyguard: rolled ${roll} → Precision allocated to Bodyguard instead`, 'info', T.owner);
+      }
+    }
     if (usePrecise) precise -= 1;
     const g = usePrecise ? precisionGroup : groups.find((x) => x.models.some((m) => !m.dead));
     if (!g) { d.o = 'saved'; p.saveTargets[i] = '—'; continue; }

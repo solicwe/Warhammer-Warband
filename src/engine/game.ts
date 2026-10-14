@@ -446,7 +446,7 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
     const homer = u.homer && how !== 'deploy' && how !== 'infiltrate' && s.active !== u.owner ? u.homer : undefined;
     if (homer && ptGap(bodyAt(m, p), homer) > 3 + EPS) { errors.push('Teleport Homer: must be set up within 3" of the token'); bad.add(m.id); }
     if (how !== 'deploy') {
-      const keep = homer ? 8 : how === 'deepStrike' ? fl!.deepStrikeRange : RULES.reserves.enemyDistance;
+      const keep = homer ? 8 : how === 'deepStrike' ? fl!.deepStrikeRange : Math.min(RULES.reserves.enemyDistance, fl!.ingressRange ?? RULES.reserves.enemyDistance);
       // Death Approaches / Beckoning Blight: closer to some enemy units
       const keepFor = (e: UnitState) => (how === 'deepStrike' ? Math.min(keep, dsKeep(s, u, e, p, m) ?? keep) : keep);
       if (enemies.some((e) => alive(e).some((n) => gap(bodyAt(m, p), n) <= keepFor(e)))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
@@ -468,7 +468,8 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
     if (how === 'ingress') {
       const edge = Math.min(p.x + m.r, p.y + m.r, W - p.x + m.r, H - p.y + m.r);
       if (Math.min(p.x, p.y, W - p.x, H - p.y) + m.r > RULES.reserves.edgeDistance + EPS || edge < 0) { errors.push(`An ingress move must end within ${RULES.reserves.edgeDistance}" of a battlefield edge`); bad.add(m.id); }
-      if (s.round < RULES.reserves.noEnemyZoneBeforeRound && bodyTouchesPoly(bodyAt(m, p), 0, enemyZone)) { errors.push('Cannot be set up in the enemy deployment zone before battle round 3'); bad.add(m.id); }
+      const mastersOfTheVoid = s.units.some((f) => f.owner === u.owner && (f.timed ?? []).some((t) => t.mark === 'mastersOfTheVoid'));
+      if (!mastersOfTheVoid && s.round < RULES.reserves.noEnemyZoneBeforeRound && bodyTouchesPoly(bodyAt(m, p), 0, enemyZone)) { errors.push('Cannot be set up in the enemy deployment zone before battle round 3'); bad.add(m.id); }
     }
   }
   if (engagedAt(s, u, pos).length) errors.push('Must be set up unengaged');
@@ -739,6 +740,7 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string
   { name: 'Duplicitous Malediction', n: 3, infantryOnly: false },
   { name: 'Fleet Command', n: 3, infantryOnly: false }, // Chaos Space Marines: Masters of the Maelstrom
   { name: "Kaptin's Hat", n: 3, infantryOnly: true }, // Orks: Wreckas enhancement
+  { name: 'Liber Heresius', n: 3, infantryOnly: false },
   { name: 'Warrant of Trade', n: 3, infantryOnly: false, imperiumBattleline: true, rollD3: true },
 ];
 
@@ -754,6 +756,8 @@ export function redeployCandidates(s: GameState): UnitState[] {
   return s.units.filter((u) => u.owner === r.player && (u.status === 'board' || u.status === 'reserves')
     && (r.source === 'Warrant of Trade'
       ? hasKw(u, 'BATTLELINE') && (hasKw(u, 'IMPERIUM') || u.factionKeywords.includes('IMPERIUM'))
+      : r.source === 'Liber Heresius'
+      ? hasKw(u, 'AGENTS OF THE IMPERIUM') || u.factionKeywords.includes('AGENTS OF THE IMPERIUM')
       : isAstartes(u))
     && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && (!r.units || r.units.some((k) => hasKw(u, k))) && !u.transport);
 }
@@ -1296,7 +1300,7 @@ export function markRuleName(s: GameState, p: PlayerId): string | null {
   return r.includes('Veterans of the Long War') ? 'Focus of Hatred' : r.includes('Renegade Warband') ? 'Vendetta' : null;
 }
 export const markRuleLabel = (s: GameState, p: PlayerId) => markRuleName(s, p)?.split(' ')[0].toUpperCase() ?? 'MARK';
-export const unitHasAbility = (u: UnitState, name: string) => u.abilities.some((a) => a.name === name);
+export const unitHasAbility = (u: UnitState, name: string) => u.abilities.some((a) => a.name === name) || u.enhancements.some((e) => e.name === name);
 export const isRiledUp = (s: GameState, u: UnitState) => isRiled(s, u);
 
 export function setOathTarget(s: GameState, p: PlayerId, targetId: string) {

@@ -34,36 +34,88 @@
       "id": "furor",
       "name": "Furor Tactics",
       "text": "Deathwatch weapons have Sustained Hits 1.",
-      "effects": [{ "units": ["DEATHWATCH"], "abilities": ["sustained hits 1"], "if": ["!marked:agentsAdaptive"] }]
+      "effects": [
+       {
+        "units": [
+         "DEATHWATCH"
+        ],
+        "abilities": [
+         "sustained hits 1"
+        ],
+        "if": [
+         "!marked:agentsAdaptive"
+        ]
+       }
+      ]
      },
      {
       "id": "malleus",
       "name": "Malleus Tactics",
       "text": "Deathwatch weapons have Lethal Hits.",
-      "effects": [{ "units": ["DEATHWATCH"], "abilities": ["lethal hits"], "if": ["!marked:agentsAdaptive"] }]
+      "effects": [
+       {
+        "units": [
+         "DEATHWATCH"
+        ],
+        "abilities": [
+         "lethal hits"
+        ],
+        "if": [
+         "!marked:agentsAdaptive"
+        ]
+       }
+      ]
      },
      {
       "id": "purgatus",
       "name": "Purgatus Tactics",
       "text": "Deathwatch Critical Wounds have Precision.",
-      "effects": [{ "units": ["DEATHWATCH"], "abilities": ["precision"], "if": ["!marked:agentsAdaptive"] }]
+      "effects": [
+       {
+        "units": [
+         "DEATHWATCH"
+        ],
+        "abilities": [
+         "precision"
+        ],
+        "if": [
+         "!marked:agentsAdaptive"
+        ]
+       }
+      ]
      }
     ]
    }
   },
   "Ordo Hereticus Purgation Force": {
-   "auto": "partial",
-   "manual": "Sustained Hits 1 applies only when the target is a Chaos unit containing at least five models.",
+   "auto": "full",
    "effects": [
     {
-     "units": ["ADEPTUS ARBITES", "INQUISITOR", "INQUISITORIAL AGENTS", "ORDO HERETICUS"],
+     "units": [
+      "ADEPTUS ARBITES",
+      "INQUISITOR",
+      "INQUISITORIAL AGENTS",
+      "ORDO HERETICUS"
+     ],
      "attack": "ranged",
-     "abilities": ["ignores cover"]
+     "abilities": [
+      "ignores cover"
+     ]
     },
     {
-     "units": ["ADEPTUS ARBITES", "INQUISITOR", "INQUISITORIAL AGENTS", "ORDO HERETICUS"],
-     "if": ["targetKw:CHAOS", "targetModelsAtLeast:5"],
-     "abilities": ["sustained hits 1"]
+     "units": [
+      "ADEPTUS ARBITES",
+      "INQUISITOR",
+      "INQUISITORIAL AGENTS",
+      "ORDO HERETICUS"
+     ],
+     "if": [
+      "targetKw:CHAOS",
+      "targetModelsAtLeast:5"
+     ],
+     "abilities": [
+      "sustained hits 1"
+     ]
     }
    ]
   },
@@ -71,23 +123,82 @@
    "auto": "full",
    "effects": [
     {
-     "units": ["INQUISITOR", "INQUISITORIAL AGENTS", "ORDO MALLEUS"],
+     "units": [
+      "INQUISITOR",
+      "INQUISITORIAL AGENTS",
+      "ORDO MALLEUS"
+     ],
      "reroll": "hits1"
     },
     {
-     "units": ["INQUISITOR", "INQUISITORIAL AGENTS", "ORDO MALLEUS"],
-     "if": ["targetKw:DAEMON"],
+     "units": [
+      "INQUISITOR",
+      "INQUISITORIAL AGENTS",
+      "ORDO MALLEUS"
+     ],
+     "if": [
+      "targetKw:DAEMON"
+     ],
      "reroll": "wounds1"
     }
    ]
   },
   "Imperialis Fleet": {
-   "auto": "manual",
-   "manual": "At the start of each Command phase, select one enemy unit for +1 to hit against, or one objective for nearby Agents units to gain +1 Leadership, +1 OC and a 5+ invulnerable save."
+   "auto": "full",
+   "choice": {
+    "name": "At all Costs",
+    "when": "command",
+    "uses": "free",
+    "pick": 1,
+    "options": [
+     {
+      "id": "eliminate",
+      "name": "Eliminate At All Costs",
+      "text": "Add 1 to the Hit roll for attacks targeting the designated enemy unit.",
+      "effects": [
+       {
+        "units": [
+         "AGENTS OF THE IMPERIUM"
+        ],
+        "hit": 1
+       }
+      ]
+     },
+     {
+      "id": "acquire",
+      "name": "Acquire At All Costs",
+      "text": "While in range of an objective marker, improve Leadership and OC by 1 and models have a 5+ invulnerable save.",
+      "effects": [
+       {
+        "units": [
+         "AGENTS OF THE IMPERIUM"
+        ],
+        "if": [
+         "onObjective"
+        ],
+        "ld": 1,
+        "oc": 1,
+        "defend": {
+         "inv": 5
+        }
+       }
+      ]
+     }
+    ]
+   }
   },
   "Veiled Blade Elimination Force": {
-   "auto": "manual",
-   "manual": "Extremis abilities are mandatory for each Officio Assassinorum unit and add the listed points cost. Their use limits are once per battle per ability, or twice per battle under this detachment."
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "OFFICIO ASSASSINORUM"
+     ],
+     "abilities": [
+      "stealth"
+     ]
+    }
+   ]
   },
   "War Horde": {
    "auto": "full",

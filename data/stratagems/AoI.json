@@ -90,8 +90,32 @@
       "special": ["chargeWithCallidusWound"],
       "react": "enemyChargePhaseEnd",
       "bot": "charge",
-      "status": "partial",
-      "note": "The Callidus +1 Wound bonus applies after a successful charge; the current charge UI chooses one eligible target at a time."
+      "status": "auto"
+    },
+    "EXACT PUNISHMENT": {
+      "targetKw": ["ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"],
+      "react": "enemyShot",
+      "enemy": { "lastActor": true },
+      "special": ["shootAt"],
+      "botReact": "shoot",
+      "unitIf": ["shootingPhase", "!ownTurn", "friendlyLostToLast"],
+      "status": "auto"
+    },
+    "SELFLESS BODYGUARD": {
+      "targetKw": ["AGENTS OF THE IMPERIUM"],
+      "react": "ownAttacked",
+      "unitIf": ["attached"],
+      "effects": [{ "protectPrecision": 2 }],
+      "until": "phase",
+      "bot": "defend",
+      "status": "auto"
+    },
+    "MASTERS OF THE VOID": {
+      "targetKw": ["VOIDFARERS CHARACTER"],
+      "mark": "mastersOfTheVoid",
+      "until": "phase",
+      "bot": "defend",
+      "status": "auto"
     },
     "RITES OF EXORCISM": {
       "targetKw": ["INQUISITOR|INQUISITORIAL AGENTS|ORDO MALLEUS"],
@@ -130,8 +154,7 @@
       "do": [{ "on": "self", "reserves": true }],
       "react": "fightPhaseEnd",
       "bot": "defend",
-      "status": "partial",
-      "note": "The unit returns through normal Strategic Reserves rules (more than 9 inches from enemies), rather than the card's more-than-8-inch setup."
+      "status": "auto"
     },
     "ORBITAL OVERSIGHT": {
       "targetKw": ["AGENTS OF THE IMPERIUM INFANTRY"],
@@ -149,8 +172,7 @@
       "effects": [{ "defend": { "inv": 4 } }],
       "until": "phase",
       "bot": "defend",
-      "status": "partial",
-      "note": "The 4+ invulnerable save is automatic; the 6-inch post-attack Normal move is not."
+      "status": "auto"
     }
   }
 }

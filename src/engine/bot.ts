@@ -211,6 +211,20 @@ function botDetachmentChoices(s: GameState, p: PlayerId, mine: UnitState[], enem
       if (pick) pickDetChoice(s, p, c.rule, [pick]);
       continue;
     }
+    // Ordo Xenos Alien Hunters: Mission Tactics (Furor for melee / engaged, Malleus when close, Purgatus for sniping)
+    if (c.rule === 'Ordo Xenos Alien Hunters') {
+      const pick = engaged && free.includes('furor') ? 'furor'
+        : near && free.includes('malleus') ? 'malleus'
+        : pace(s) >= 3 ? free[0] : null;
+      if (pick) pickDetChoice(s, p, c.rule, [pick]);
+      continue;
+    }
+    // Imperialis Fleet: Eliminate when enemy is close, Acquire when controlling objectives
+    if (c.rule === 'Imperialis Fleet') {
+      const pick = near ? 'eliminate' : 'acquire';
+      if (free.includes(pick)) pickDetChoice(s, p, c.rule, [pick]);
+      continue;
+    }
     // Nurgle's Gift / Manifold Maladies: the Plague that hurts this opponent most
     if (free.every((id) => PLAGUE_IDS.includes(id))) { pickDetChoice(s, p, c.rule, [botPlague(s, p)].filter((id) => free.includes(id)).concat(free).slice(0, 1)); continue; }
     if (ids.length === want) pickDetChoice(s, p, c.rule, ids);

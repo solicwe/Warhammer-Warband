@@ -153,4 +153,23 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'q5', datasheet: 'War Dog Brigand', models: 1, pts: 135 },
     ],
   },
+  AoI: {
+    name: 'Imperial Agents (Quick)',
+    factionId: 'AoI',
+    battleSize: 'incursion',
+    detachments: ['Ordo Malleus Daemon Hunters'],
+    units: [
+      { uid: 'i1', datasheet: 'Inquisitor Coteaz', models: 1, pts: 75, warlord: true },
+      { uid: 'i2', datasheet: 'Inquisitorial Agents', models: 6, pts: 50, attachTo: 'i1' },
+      { uid: 'i3', datasheet: 'Grey Knights Terminator Squad', models: 5, pts: 175 },
+      { uid: 'i4', datasheet: 'Deathwatch Kill Team', models: 5, pts: 115 },
+      { uid: 'i5', datasheet: 'Imperial Navy Breachers', models: 10, pts: 90 },
+      { uid: 'i6', datasheet: 'Subductor Squad', models: 11, pts: 85 },
+      { uid: 'i7', datasheet: 'Vindicare Assassin', models: 1, pts: 110 },
+      { uid: 'i8', datasheet: 'Callidus Assassin', models: 1, pts: 100 },
+      { uid: 'i9', datasheet: 'Imperial Rhino', models: 1, pts: 65 },
+      { uid: 'i10', datasheet: 'Ministorum Priest', models: 1, pts: 40 },
+    ],
+  },
 };
+
