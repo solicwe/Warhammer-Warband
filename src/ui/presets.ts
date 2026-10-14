@@ -189,6 +189,23 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'm10', datasheet: 'Chimera', models: 1, pts: 75 },
     ],
   },
+  TYR: {
+    name: 'Tyranids (Quick)',
+    factionId: 'TYR',
+    battleSize: 'incursion',
+    detachments: ['Invasion Fleet'],
+    units: [
+      { uid: 't1', datasheet: 'Hive Tyrant', models: 1, pts: 195, warlord: true, enhancement: 'Adaptive Biology', enhancementPts: 25 },
+      { uid: 't2', datasheet: 'Termagants', models: 20, pts: 110 },
+      { uid: 't3', datasheet: 'Hormagaunts', models: 10, pts: 70 },
+      { uid: 't4', datasheet: 'Genestealers', models: 10, pts: 140 },
+      { uid: 't5', datasheet: 'Broodlord', models: 1, pts: 80, attachTo: 't4' },
+      { uid: 't6', datasheet: 'Zoanthropes', models: 3, pts: 90 },
+      { uid: 't7', datasheet: 'Exocrine', models: 1, pts: 135 },
+      { uid: 't8', datasheet: 'Tyranid Warriors with Melee Bio-weapons', models: 3, pts: 75 },
+      { uid: 't9', datasheet: 'Von Ryan’s Leapers', models: 3, pts: 55 },
+    ],
+  },
 };
 
 

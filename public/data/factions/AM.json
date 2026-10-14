@@ -10781,19 +10781,16 @@
       ],
       "composition": [
         {
-          "name": "Shock Trooper Sergeant and 9 Shock Troopers",
+          "name": "Shock Trooper Sergeant",
           "min": 1,
-          "max": 1,
-          "text": "1 Shock Trooper Sergeant and 9 Shock Troopers"
-        },
-        {
-          "text": "OR"
-        },
-        {
-          "name": "Shock Trooper Sergeants and 18 Shock Troopers",
-          "min": 2,
           "max": 2,
-          "text": "2 Shock Trooper Sergeants and 18 Shock Troopers"
+          "text": "1-2 Shock Trooper Sergeants"
+        },
+        {
+          "name": "Shock Trooper",
+          "min": 9,
+          "max": 18,
+          "text": "9-18 Shock Troopers"
         }
       ],
       "loadout": {
@@ -11141,19 +11138,16 @@
       ],
       "composition": [
         {
-          "name": "Jungle Fighter Sergeant and 9 Jungle Fighters",
+          "name": "Jungle Fighter Sergeant",
           "min": 1,
-          "max": 1,
-          "text": "1 Jungle Fighter Sergeant and 9 Jungle Fighters"
-        },
-        {
-          "text": "OR"
-        },
-        {
-          "name": "Jungle Fighter Sergeants and 18 Jungle Fighters",
-          "min": 2,
           "max": 2,
-          "text": "2 Jungle Fighter Sergeants and 18 Jungle Fighters"
+          "text": "1-2 Jungle Fighter Sergeants"
+        },
+        {
+          "name": "Jungle Fighter",
+          "min": 9,
+          "max": 18,
+          "text": "9-18 Jungle Fighters"
         }
       ],
       "loadout": {

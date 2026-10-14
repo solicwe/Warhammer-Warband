@@ -355,6 +355,7 @@ export interface PlayerState {
   oathTarget: string | null; // Oath of Moment (Adeptus Astartes)
   oathWoundBonus: boolean;
   waaaghUsed: boolean; // Waaagh! War Cry (Orks)
+  shadowInTheWarpUsed?: boolean; // Shadow in the Warp (Tyranids)
   riledUntilTurn: number;
   secMode: 'none' | 'tactical' | 'fixed';
   secDeck: string[];

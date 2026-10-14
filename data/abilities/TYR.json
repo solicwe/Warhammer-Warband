@@ -1,0 +1,664 @@
+{
+  "_comment": "Tyranids Faction Pack v1.3. Datasheet and enhancement rules.",
+  "Synapse": {
+    "status": "auto"
+  },
+  "Shadow in the Warp": {
+    "status": "auto"
+  },
+  "Alpha Warrior": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
+  },
+  "Alpha Invader": {
+    "status": "auto",
+    "effects": [
+      {
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
+  },
+  "Bounding Leap": {
+    "status": "auto",
+    "effects": [
+      {
+        "eligible": [
+          "chargeAfterAdvance"
+        ]
+      }
+    ]
+  },
+  "Apex-beast": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetBattleShocked"
+        ],
+        "hit": 1
+      }
+    ]
+  },
+  "Frenzied Metabolism": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "ranged",
+        "wound": 1
+      }
+    ]
+  },
+  "Bio-stimulus": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "melee",
+        "ap": 1
+      }
+    ]
+  },
+  "Symbiotic Targeting": {
+    "status": "auto",
+    "effects": [
+      {
+        "reroll": "hits1"
+      }
+    ]
+  },
+  "Stalking Forward": {
+    "status": "auto",
+    "effects": [
+      {
+        "throughTerrain": true
+      }
+    ]
+  },
+  "Resilient Organism": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "damageMinus": 1
+        }
+      }
+    ]
+  },
+  "Adaptive Biology": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "fnp": 5
+        }
+      }
+    ]
+  },
+  "Synaptic Linchpin": {
+    "status": "auto",
+    "effects": [
+      {
+        "synapseRange": 9
+      }
+    ]
+  },
+  "Swallow Whole": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "targetKw:INFANTRY|MOUNTED|BEAST"
+        ],
+        "abilities": [
+          "devastating wounds"
+        ]
+      }
+    ]
+  },
+  "Vicious Insight": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "abilities": [
+          "twin-linked"
+        ]
+      }
+    ]
+  },
+  "Aggressive Leader-beast": {
+    "status": "auto",
+    "act": {
+      "when": "enemyShootHit",
+      "do": [
+        {
+          "surge": "D6"
+        }
+      ]
+    }
+  },
+  "Blistering Assault": {
+    "status": "auto",
+    "act": {
+      "when": "enemyShootHit",
+      "do": [
+        {
+          "surge": "D6+2"
+        }
+      ]
+    }
+  },
+  "Skulking Horrors": {
+    "status": "auto",
+    "act": {
+      "when": "enemyMovedNear",
+      "do": [
+        {
+          "move": "D6"
+        }
+      ]
+    }
+  },
+  "Pouncing Leap": {
+    "status": "auto",
+    "note": "Heroic Intervention -1CP."
+  },
+  "Onslaught (Aura, Psychic)": {
+    "status": "auto",
+    "effects": [
+      {
+        "aura": 6,
+        "units": [
+          "TYRANIDS"
+        ],
+        "attack": "ranged",
+        "abilities": [
+          "assault",
+          "lethal hits"
+        ]
+      }
+    ]
+  },
+  "Foul Spores (Aura)": {
+    "status": "auto",
+    "effects": [
+      {
+        "aura": 6,
+        "units": [
+          "TYRANIDS"
+        ],
+        "stealth": true
+      }
+    ]
+  },
+  "Death From Below": {
+    "status": "auto",
+    "act": {
+      "when": "opponentTurnEnd",
+      "do": [
+        {
+          "reserves": true
+        }
+      ]
+    }
+  },
+  "Subterranean Hunter": {
+    "status": "auto",
+    "act": {
+      "when": "fightEnd",
+      "do": [
+        {
+          "reserves": true
+        }
+      ]
+    }
+  },
+  "Singular Purpose": {
+    "status": "auto",
+    "effects": [
+      {
+        "reroll": "hits"
+      },
+      {
+        "reroll": "wounds"
+      }
+    ]
+  },
+  "Harpooned": {
+    "status": "auto",
+    "effects": [
+      {
+        "chargeBonus": 2
+      }
+    ]
+  },
+  "Burning Spray": {
+    "status": "auto",
+    "effects": [
+      {
+        "abilities": [
+          "ignores cover"
+        ]
+      }
+    ]
+  },
+  "Airborne Predator": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetKw:FLY"
+        ],
+        "hit": 1
+      }
+    ]
+  },
+  "Guardian Organism": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "fnp": 5
+        }
+      }
+    ]
+  },
+  "Chitinous Horrors (Aura)": {
+    "status": "auto",
+    "effects": [
+      {
+        "aura": 6,
+        "enemyOc": -1
+      }
+    ]
+  },
+  "Grisly Spectacle": {
+    "status": "auto",
+    "act": {
+      "when": "fightEnd",
+      "do": [
+        {
+          "shock": -1
+        }
+      ]
+    }
+  },
+  "Vanguard Predator": {
+    "status": "auto",
+    "effects": [
+      {
+        "reroll": "wounds1"
+      },
+      {
+        "if": [
+          "targetOnObjective"
+        ],
+        "reroll": "wounds"
+      }
+    ]
+  },
+  "Disruption Bombardment": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "ranged",
+        "slowsEnemy": 2
+      }
+    ]
+  },
+  "Death Scream": {
+    "status": "auto",
+    "act": {
+      "when": "shootingEnd",
+      "do": [
+        {
+          "shock": -1
+        }
+      ]
+    }
+  },
+  "Spore Mine Cysts": {
+    "status": "auto"
+  },
+  "Seed Spore Mines": {
+    "status": "auto"
+  },
+  "Seed Mucolids": {
+    "status": "auto"
+  },
+  "Subterranean Tunnels": {
+    "status": "auto",
+    "effects": [
+      {
+        "deepStrikeRange": 6
+      }
+    ]
+  },
+  "Terror From The Deep": {
+    "status": "auto"
+  },
+  "Grasping Tendrils": {
+    "status": "auto",
+    "effects": [
+      {
+        "cannotFallBack": true
+      }
+    ]
+  },
+  "Will of the Hive Mind": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 12,
+        "units": [
+          "TYRANIDS"
+        ],
+        "stratDiscount": {
+          "ids": [
+            "*"
+          ],
+          "cp": 1,
+          "limit": "round",
+          "perArmy": true
+        }
+      }
+    ]
+  },
+  "Malign Presence": {
+    "status": "auto",
+    "effects": [
+      {
+        "stratTax": {
+          "cp": 1,
+          "limit": "turn"
+        }
+      }
+    ]
+  },
+  "Malign Presence (Aura)": {
+    "status": "auto",
+    "effects": [
+      {
+        "stratTax": {
+          "cp": 1,
+          "limit": "turn"
+        }
+      }
+    ]
+  },
+  "Feed the Swarm": {
+    "status": "auto"
+  },
+  "Elevated Might": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "melee",
+        "reroll": "wounds",
+        "ap": 1
+      }
+    ]
+  },
+  "Ocular Adaptation": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "melee",
+        "hit": 1
+      }
+    ]
+  },
+  "Synaptic Strategy": {
+    "status": "auto"
+  },
+  "Tremor Senses": {
+    "status": "auto"
+  },
+  "Vanguard Intellect": {
+    "status": "auto"
+  },
+  "Trygon Prime": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "melee",
+        "strength": 1,
+        "skill": 1
+      }
+    ]
+  },
+  "Encircling Horrors": {
+    "status": "auto",
+    "act": {
+      "when": "enemyMovedNear",
+      "do": [
+        {
+          "move": "D3+3"
+        }
+      ]
+    }
+  },
+  "Cryptophotaic Camouflage": {
+    "status": "auto"
+  },
+  "Destabilising Predation": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "ranged",
+        "abilities": [
+          "anti-character 2+"
+        ]
+      }
+    ]
+  },
+  "Synaptoprescience": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
+  },
+  "Neuronode": {
+    "status": "auto"
+  },
+  "Chameleonic": {
+    "status": "auto",
+    "effects": [
+      {
+        "stealth": true
+      }
+    ]
+  },
+  "Alien Cunning": {
+    "status": "auto"
+  },
+  "Perfectly Adapted": {
+    "status": "auto",
+    "freeDie": [
+      {
+        "kind": "reroll",
+        "stage": "any",
+        "limit": "turn"
+      }
+    ]
+  },
+  "Hive Commander": {
+    "status": "auto"
+  },
+  "Domination of the Hive Mind (Aura)": {
+    "status": "auto"
+  },
+  "Alpha Leader": {
+    "status": "auto"
+  },
+  "Unstoppable Monster": {
+    "status": "auto"
+  },
+  "Hypnotic Gaze (Psychic)": {
+    "status": "auto"
+  },
+  "Spawn Termagants": {
+    "status": "auto"
+  },
+  "Brood Progenitor (Aura, Psychic)": {
+    "status": "auto"
+  },
+  "Defensive Stance": {
+    "status": "auto"
+  },
+  "Feeder Tendrils": {
+    "status": "auto"
+  },
+  "Pheromone Trail": {
+    "status": "auto"
+  },
+  "Encephalic Diffusion (Aura, Psychic)": {
+    "status": "auto"
+  },
+  "Spirit Leech (Aura, Psychic)": {
+    "status": "auto"
+  },
+  "Warp Field (Aura, Psychic)": {
+    "status": "auto"
+  },
+  "Fear of the Unseen (Aura)": {
+    "status": "auto"
+  },
+  "HUNTER ORGANISM": {
+    "status": "auto"
+  },
+  "Winged Swarm": {
+    "status": "auto"
+  },
+  "Bio-minefield": {
+    "status": "auto"
+  },
+  "Floating Death": {
+    "status": "auto"
+  },
+  "Aerial Seeding": {
+    "status": "auto"
+  },
+  "Hypertoxic Miasma (Aura)": {
+    "status": "auto"
+  },
+  "Hive Defences": {
+    "status": "auto"
+  },
+  "Paroxysm (Psychic)": {
+    "status": "auto"
+  },
+  "Parasitic Infection": {
+    "status": "auto"
+  },
+  "It Itches!": {
+    "status": "auto"
+  },
+  "Neurocytes": {
+    "status": "auto"
+  },
+  "Node Lash (Psychic)": {
+    "status": "auto"
+  },
+  "Psychic Terror (Psychic)": {
+    "status": "auto"
+  },
+  "Neuroloids": {
+    "status": "auto"
+  },
+  "Feeding Frenzy": {
+    "status": "auto"
+  },
+  "Adaptive Instincts (Once per turn, per unit)": {
+    "status": "auto"
+  },
+  "Adaptable Predators": {
+    "status": "auto"
+  },
+  "Death Blow": {
+    "status": "auto"
+  },
+  "Unnatural Resilience": {
+    "status": "auto"
+  },
+  "Harpoon Barbs": {
+    "status": "auto"
+  },
+  "Neural Disruption": {
+    "status": "auto"
+  },
+  "Psychological Saboteur (Aura)": {
+    "status": "auto"
+  },
+  "Hypersensory Array": {
+    "status": "auto"
+  },
+  "Ominous Presence": {
+    "status": "auto"
+  },
+  "Enraged Reserves": {
+    "status": "auto"
+  },
+  "Null Nodules": {
+    "status": "auto"
+  },
+  "Monstrous Nemesis": {
+    "status": "auto"
+  },
+  "Relentless Hunger": {
+    "status": "auto"
+  },
+  "Naturalised Camouflage": {
+    "status": "auto"
+  },
+  "Piercing Talons": {
+    "status": "auto"
+  },
+  "Adrenalised Onslaught": {
+    "status": "auto"
+  },
+  "Regenerating Monstrosity": {
+    "status": "auto"
+  },
+  "Instinctive Defence": {
+    "status": "auto"
+  },
+  "Biophagic Flow (Aura)": {
+    "status": "auto"
+  },
+  "Parasitic Biomorphology": {
+    "status": "auto"
+  },
+  "Hunting Grounds": {
+    "status": "auto"
+  },
+  "Stalker": {
+    "status": "auto"
+  },
+  "Power of the Hive Mind": {
+    "status": "auto"
+  },
+  "Psychostatic Disruption": {
+    "status": "auto"
+  },
+  "Synaptic Control": {
+    "status": "auto"
+  },
+  "The Dirgeheart of Kharis (Aura)": {
+    "status": "auto"
+  }
+}

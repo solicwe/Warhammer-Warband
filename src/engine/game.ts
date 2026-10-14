@@ -25,6 +25,8 @@ import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, exp
 import './rituals';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from './activations';
 
+import { inSynapse } from './tyranids';
+
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
 
@@ -909,17 +911,18 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
     const ld = bestLd(u, s);
     const mod = unitFlags(s, u).ignoreMods ? 0 : t.mod ?? 0;
     if (unitFlags(s, u).autoPassShock) { t.result = 12; t.passed = true; t.auto = true; log(s, `${u.name}: Battle-shock test passed automatically`, 'info', u.owner); return; }
-    let r = rollN(s, 2);
-    t.result = r[0] + r[1] + mod;
+    const syn = inSynapse(s, u);
+    let r = rollN(s, syn ? 3 : 2);
+    t.result = r.reduce((a, b) => a + b, 0) + mod;
     t.passed = t.result >= ld;
     if (!t.passed && rollMods(s, u).rerollShock) {
       log(s, `${u.name}: re-roll Battle-shock (ability)`, 'info', u.owner);
-      r = rollN(s, 2);
-      t.result = r[0] + r[1] + mod;
+      r = rollN(s, syn ? 3 : 2);
+      t.result = r.reduce((a, b) => a + b, 0) + mod;
       t.passed = t.result >= ld;
     }
     pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${t.result} vs Ld ${ld}+ → ${t.passed ? 'passed' : 'failed!'}`, good: t.passed });
-    log(s, `Battle-shock ${u.name}: 2D6 [${r.join('+')}] = ${t.result} vs Ld ${ld}+ → ${t.passed ? 'passed' : 'failed'}`, 'roll', u.owner);
+    log(s, `Battle-shock ${u.name}: ${r.length}D6 [${r.join('+')}] = ${t.result} vs Ld ${ld}+ → ${t.passed ? 'passed' : 'failed'}`, 'roll', u.owner);
   }
   const was = u.battleShocked;
   u.battleShocked = !t.passed;

@@ -24,6 +24,7 @@ import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, 
 import { botAdvanceActs, botArrivalStratagem, botCharacterStratagem, botFightChoice, botFightStartStratagems, botFightsFirstStratagem, botLooseDisembark, botMobileStratagem, botPileStratagem, botRedeployActs, botShootActs, botShootOnTheMove, botAdvanceStratagem, botAfterShootMove, botConsolidateStratagem, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
 import { abilityRule, unitFlags, withRuleCache } from './effects';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, lastRound, log, onBoard, other, pace, spendStratagem, unitById, unitDistance } from './state';
+import { shouldUnleashShadow, unleashShadowInTheWarp } from './tyranids';
 import { actionOptions, startAction } from './missions';
 import { secondaryChance, secondaryDead } from './secondaries';
 import {
@@ -158,6 +159,9 @@ export function botCommand(s: GameState) {
     const brawlers = mine.filter((u) => isBrawler(s, u));
     const close = brawlers.filter((u) => enemies.some((e) => unitDistance(u, e) <= 16));
     if (pace(s) >= 3 || close.length >= Math.max(1, brawlers.length / 2)) callWaaagh(s, p);
+  }
+  if (P.armyRules.some((r) => r.name === 'Shadow in the Warp') && !P.shadowInTheWarpUsed && s.round >= 2) {
+    if (shouldUnleashShadow(s, p)) unleashShadowInTheWarp(s, p);
   }
   botDetachmentChoices(s, p, mine, enemies);
   // Master of Battle: a second Oath of Moment target

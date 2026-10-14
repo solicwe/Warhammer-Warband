@@ -19,6 +19,7 @@ import {
 import { baseDist, bodyAt, bodyTouchesPoly, circleTouchesPoly, dist, gap, ptGap } from './geometry';
 import { alive, boardUnits, centreOf, engagedEnemies, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from './state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from './types';
+import { inSynapse } from './tyranids';
 import { unitVisibleTo } from './visibility';
 
 export type Trigger =
@@ -522,11 +523,13 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
 
 /** Leadership test for an ability: 2D6 >= the best Ld of the unit. */
 export function ldTest(s: GameState, u: UnitState, why: string, mod = 0): boolean {
-  const r = rollN(s, 2);
+  const syn = inSynapse(s, u);
+  const r = rollN(s, syn ? 3 : 2);
   const ld = ldOf(s, u);
-  const ok = r[0] + r[1] + mod + unitFlags(s, u).shockBonus >= ld;
-  pushFx(s, { kind: 'roll', owner: u.owner, title: `Leadership · ${u.name}`, dice: r, result: `${r[0] + r[1]} vs ${ld}+ → ${ok ? 'passed' : 'failed'}`, good: ok });
-  log(s, `${why}: Leadership test ${u.name} [${r.join('+')}] = ${r[0] + r[1]} vs ${ld}+ → ${ok ? 'passed' : 'failed'}`, 'roll', u.owner);
+  const sum = r.reduce((a, b) => a + b, 0);
+  const ok = sum + mod + unitFlags(s, u).shockBonus >= ld;
+  pushFx(s, { kind: 'roll', owner: u.owner, title: `Leadership · ${u.name}`, dice: r, result: `${sum} vs ${ld}+ → ${ok ? 'passed' : 'failed'}`, good: ok });
+  log(s, `${why}: Leadership test ${u.name} [${r.join('+')}] = ${sum} vs ${ld}+ → ${ok ? 'passed' : 'failed'}`, 'roll', u.owner);
   return ok;
 }
 

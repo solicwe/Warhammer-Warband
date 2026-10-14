@@ -19,6 +19,8 @@ import qiAbilities from '../../data/abilities/QI.json';
 import qtAbilities from '../../data/abilities/QT.json';
 import aoiAbilities from '../../data/abilities/AoI.json';
 import amAbilities from '../../data/abilities/AM.json';
+import tyrAbilities from '../../data/abilities/TYR.json';
+import { inSynapse } from './tyranids';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { deploymentById, RULES, toPoly } from './config';
@@ -336,6 +338,7 @@ const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   QT: qtAbilities as unknown as Record<string, AbilityRule>,
   AoI: aoiAbilities as unknown as Record<string, AbilityRule>,
   AM: amAbilities as unknown as Record<string, AbilityRule>,
+  TYR: tyrAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
 export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
@@ -357,7 +360,7 @@ export function abilityRule(u: UnitState, a: AbilityData): AbilityRule | undefin
 }
 
 /** Factions whose rule files supplement the text reader rather than define every ability. */
-const PARSE_TOO = new Set(['QI', 'QT']);
+const PARSE_TOO = new Set(['QI', 'QT', 'TYR']);
 
 function findRule(a: AbilityData, sheet: string): AbilityRule | undefined {
   const books = a.faction ? [FACTION_RULES[a.faction]].filter(Boolean) : Object.values(FACTION_RULES);
@@ -809,7 +812,10 @@ export function cond(c: string, x: Ctx): boolean {
     case 'targetEngagedFriendlyVehicle': return !!T && boardUnits(s, A.owner).some((f) => hasKw(f, 'VEHICLE') && engagedEnemies(s, f).some((e) => e.id === T.id));
     case 'targetOnObjective': return !!T && onObjective(s, T);
     case 'belowStarting': return alive(A).length < A.startingStrength;
+    case 'belowStartingStrength': return alive(A).length < A.startingStrength;
     case 'belowHalf': return alive(A).length * 2 < A.startingStrength;
+    case 'belowHalfStrength': return alive(A).length * 2 < A.startingStrength;
+    case 'inSynapse': return inSynapse(s, A);
     case 'battleShocked': return A.battleShocked;
     case 'notBattleShocked': return !A.battleShocked;
     case 'inTerrain': return alive(A).some((m) => withinTerrain(s, m).length > 0);
@@ -967,6 +973,10 @@ export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, poo
   const notes: string[] = [];
   const hitCap = RULES.modifierCaps.hitRoll, woundCap = RULES.modifierCaps.woundRoll;
   let strength = (pool.profile.S ?? 1) + offenceInto(s, A, T, pool, list, kind, notes);
+  if (kind === 'melee' && inSynapse(s, A)) {
+    strength += 1;
+    notes.push('Synapse +1 S');
+  }
   for (const i of inc) {
     if (i.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + i.hit, -hitCap, hitCap); notes.push(`marked target: +${i.hit} to hit`); }
     if (i.wound) { pool.woundMod = clamp(pool.woundMod + i.wound, -woundCap, woundCap); notes.push(`marked target: +${i.wound} to wound`); }
@@ -1333,7 +1343,7 @@ function stratParts(s: GameState, u: UnitState, stratId: string): StratParts {
   let discount: Active | undefined, tax: Active | undefined;
   for (const a of unitFx(s, u)) {
     const d = a.e.stratDiscount;
-    if (d && a.holder.owner === u.owner && (d.ids.includes(stratId) || d.ids.includes('*')) && limitFree(s, a, 'strat', d.limit, d.perArmy)
+    if (d && a.holder.owner === u.owner && (!d.ids || d.ids.includes(stratId) || d.ids.includes('*')) && limitFree(s, a, 'strat', d.limit, d.perArmy)
       && (!discount || d.cp > discount.e.stratDiscount!.cp)) discount = a;
     const t = a.e.stratTax;
     if (t && a.holder.owner !== u.owner && limitFree(s, a, 'tax', t.limit) && (!tax || t.cp > tax.e.stratTax!.cp)) tax = a;

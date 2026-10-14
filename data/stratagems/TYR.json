@@ -1,0 +1,493 @@
+{
+  "_comment": "Tyranids Faction Pack v1.3 Detachment Stratagems.",
+  "rules": {
+    "ADRENAL SURGE": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "sustained hits 1"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "RAPID REGENERATION": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "fnp": 5
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "DEATH FRENZY": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 4
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "OVERRUN": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "PREDATORY IMPERATIVE": {
+      "targetKw": [
+        "SYNAPSE"
+      ],
+      "effects": [
+        {
+          "aura": 6,
+          "units": [
+            "TYRANIDS"
+          ],
+          "eligible": [
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ENDLESS SWARM": {
+      "targetKw": [
+        "ENDLESS MULTITUDE"
+      ],
+      "status": "auto"
+    },
+    "SWARM-GUIDED SALVOES": {
+      "targetKw": [
+        "MONSTER"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "RAMPAGING MONSTROSITIES": {
+      "targetKw": [
+        "MONSTER"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "reroll": "hits"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SAVAGE ROAR": {
+      "targetKw": [
+        "MONSTER"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "enemyHit": -1
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "MASSIVE IMPACT": {
+      "targetKw": [
+        "MONSTER"
+      ],
+      "status": "auto"
+    },
+    "CORROSIVE VISCERA": {
+      "targetKw": [
+        "MONSTER"
+      ],
+      "effects": [
+        {
+          "deadlyDemise": "D6"
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "UNTRAMMELLED FEROCITY": {
+      "targetKw": [
+        "MONSTER"
+      ],
+      "effects": [
+        {
+          "throughTerrain": true
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "BOUNDING ADVANCE": {
+      "targetKw": [
+        "ENDLESS MULTITUDE"
+      ],
+      "effects": [
+        {
+          "advanceFixed": 6
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SWARMING MASSES": {
+      "targetKw": [
+        "ENDLESS MULTITUDE"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "sustained hits 1"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "TEEMING MASSES": {
+      "targetKw": [
+        "ENDLESS MULTITUDE"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "stealth": true
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "PRESERVATION IMPERATIVE": {
+      "targetKw": [
+        "ENDLESS MULTITUDE"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "inv": 5
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "UNENDING WAVES": {
+      "targetKw": [
+        "ENDLESS MULTITUDE"
+      ],
+      "status": "auto"
+    },
+    "SYNAPTIC GOADING": {
+      "targetKw": [
+        "ENDLESS MULTITUDE"
+      ],
+      "status": "auto"
+    },
+    "SURPRISE ASSAULT": {
+      "targetKw": [
+        "VANGUARD INVADER"
+      ],
+      "effects": [
+        {
+          "hit": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ASSASSIN BEASTS": {
+      "targetKw": [
+        "VANGUARD INVADER"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "precision"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "INVISIBLE HUNTER": {
+      "targetKw": [
+        "VANGUARD INVADER"
+      ],
+      "status": "auto"
+    },
+    "UNSEEN LURKERS": {
+      "targetKw": [
+        "VANGUARD INVADER"
+      ],
+      "effects": [
+        {
+          "loneOperative": true
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "HYPERSENSORY SCILLIA": {
+      "targetKw": [
+        "VANGUARD INVADER"
+      ],
+      "status": "auto"
+    },
+    "SEEDED BROODS": {
+      "targetKw": [
+        "VANGUARD INVADER"
+      ],
+      "status": "auto"
+    },
+    "IRRESISTIBLE WILL": {
+      "targetKw": [
+        "SYNAPSE"
+      ],
+      "effects": [
+        {
+          "reroll": "wounds1"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SYNAPTIC CHANNELLING": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "status": "auto"
+    },
+    "REINFORCED HIVE NODE": {
+      "targetKw": [
+        "SYNAPSE"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "apMinus": 1
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "OVERRIDE INSTINCTS": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "eligible": [
+        "shootAfterFallBack",
+        "chargeAfterFallBack"
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "THE SMOTHERING SHADOW": {
+      "targetKw": [
+        "SYNAPSE"
+      ],
+      "status": "auto"
+    },
+    "IMPERATIVE DOMINANCE": {
+      "targetKw": [
+        "SYNAPSE"
+      ],
+      "status": "auto"
+    },
+    "SYNAPTIC MICRONODES": {
+      "targetKw": [
+        "TYRANID WARRIORS"
+      ],
+      "status": "auto"
+    },
+    "PARASITIC PAYLOAD": {
+      "targetKw": [
+        "TYRANID WARRIORS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ALIEN PHYSIOLOGY": {
+      "targetKw": [
+        "TYRANID WARRIORS"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "wound": -1
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "SWARMING ASSAULT": {
+      "targetKw": [
+        "MONSTER"
+      ],
+      "effects": [
+        {
+          "aura": 6,
+          "reroll": "charges"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ENFILADING EMERGENCE": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "effects": [
+        {
+          "abilities": [
+            "sustained hits 1",
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "TUNNEL NETWORK": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "status": "auto"
+    },
+    "RETREAT BELOW": {
+      "targetKw": [
+        "BURROWERS"
+      ],
+      "status": "auto"
+    },
+    "REPLENISHING SWARMS": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "status": "auto"
+    },
+    "ADAPTIVE OPTIMISATION": {
+      "targetKw": [
+        "BURROWERS"
+      ],
+      "status": "auto"
+    },
+    "COUNTERPREDATION": {
+      "targetKw": [
+        "VANGUARD INVADER"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "strength": 1,
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SCANNER GHEIST": {
+      "targetKw": [
+        "VANGUARD INVADER"
+      ],
+      "status": "auto"
+    },
+    "HYPERSENSORY ADAPTATIONS": {
+      "targetKw": [
+        "VANGUARD INVADER"
+      ],
+      "status": "auto"
+    },
+    "TANGLESTRIKE ROUNDS": {
+      "targetKw": [
+        "NORN ASSIMILATOR"
+      ],
+      "status": "auto"
+    },
+    "LESSER PREY": {
+      "targetKw": [
+        "MONSTER"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "strength": 2
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "CATALYTIC BIOFORTIFICATION": {
+      "targetKw": [
+        "NORN ASSIMILATOR"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "fnp": 4,
+            "fnpVs": "mortal"
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "RAPACIOUS HUNGER": {
+      "status": "auto"
+    },
+    "ABLATIVE CARAPACE": {
+      "status": "auto"
+    },
+    "BROODGUARD IMPULSE": {
+      "status": "auto"
+    },
+    "SECURE BIOMASS": {
+      "status": "auto"
+    },
+    "TYRANNOFORMED": {
+      "status": "auto"
+    },
+    "RECLAIM BIOMASS": {
+      "status": "auto"
+    }
+  }
+}

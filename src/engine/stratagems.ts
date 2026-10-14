@@ -15,6 +15,7 @@ import qiStrats from '../../data/stratagems/QI.json';
 import qtStrats from '../../data/stratagems/QT.json';
 import aoiStrats from '../../data/stratagems/AoI.json';
 import amStrats from '../../data/stratagems/AM.json';
+import tyrStrats from '../../data/stratagems/TYR.json';
 import { blessingsRoll } from './blessings';
 import { parseAbilityText } from './abilityText';
 import { ldTest, runActions, runDeathQueue, shockTest, type Action } from './activations';
@@ -138,6 +139,7 @@ const BOOKS: Record<string, Record<string, StratRule>> = {
   QT: (qtStrats as unknown as { rules: Record<string, StratRule> }).rules,
   AoI: (aoiStrats as unknown as { rules: Record<string, StratRule> }).rules,
   AM: (amStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  TYR: (tyrStrats as unknown as { rules: Record<string, StratRule> }).rules,
 };
 
 const OFFENCE_BUFFS: BuffKind[] = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
