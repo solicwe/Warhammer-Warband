@@ -10,8 +10,8 @@ const TERMS = [
   String.raw`(?:improve|worsen) (?:the )?[A-Z][A-Za-z ]*? characteristic[^.]*? by \d+`,
   String.raw`[+−-]\d+(?:"|”)? (?:to (?:the )?)?(?:Hit|Wound|Damage|Charge|Advance|Toughness|Strength|Attacks|AP|Move|OC|Leadership)?(?: rolls?| characteristic)?`,
   // core rules and weapon abilities
-  String.raw`(?:Lethal Hits|Sustained Hits(?: [\dD+]+)?|Devastating Wounds|Twin-linked|Precision|Lance|Melta(?: \d+)?|Rapid Fire(?: [\dD+]+)?|Anti-[A-Za-z]+ \d\+|Ignores Cover|Indirect Fire|Torrent|Blast|Heavy|Hazardous|Assault|Pistol|Extra Attacks|One Shot)`,
-  String.raw`(?:Feel No Pain \d\+|Deadly Demise [\dD+]+|Deep Strike|Scouts \d+"|Infiltrators|Stealth|Lone Operative|Fights First|Leader|Firing Deck \d+|Benefit of Cover|invulnerable save of \d\+|\d\+ invulnerable save|mortal wounds?|Battle-shock(?:ed)?|Objective Control|Strategic Reserves|Normal move|Fall(?:s)? Back|Advance(?:d|s)?|Heroic Intervention|Fire Overwatch|Oath of Moment|Combat Doctrines?|(?:Assault|Devastator|Tactical) Doctrine|Command points?|\d+CP|sticky|Critical (?:Hit|Wound)s?)`,
+  String.raw`(?:Lethal Hits|Sustained Hits(?: [\dD+]+)?|Devastating Wounds|Twin-linked|Precision|Lance|Melta(?: \d+)?|Rapid Fire(?: [\dD+]+)?|Anti-[A-Za-z]+ \d\+|Ignores Cover|Indirect Fire|Torrent|Blast(?: \d+)?|Heavy|Hazardous|Assault|Pistol|Extra Attacks|One Shot)`,
+  String.raw`(?:Feel No Pain \d\+|Deadly Demise [\dD+]+|Deep Strike|Scouts \d+"|Infiltrators|Stealth|Lone Operative(?: \d+")?|Fights First|Leader|Support|Firing Deck \d+|Benefit of Cover|invulnerable save of \d\+|\d\+ invulnerable save|mortal wounds?|Battle-shock(?:ed)?|Objective Control|Strategic Reserves|Normal move|Fall(?:s)? Back|Advance(?:d|s)?|Heroic Intervention|Fire Overwatch|Oath of Moment|Combat Doctrines?|(?:Assault|Devastator|Tactical) Doctrine|Command points?|\d+CP|sticky|Critical (?:Hit|Wound)s?)`,
   // distances and rolls
   String.raw`\d+(?:\.\d+)?(?:"|”)`, String.raw`D\d(?:\+\d)?`, String.raw`\b\d\+`,
   // KEYWORDS: two or more capital letters, runs of them
@@ -36,7 +36,8 @@ function regexFor(names?: string[]): RegExp {
 }
 
 /** Split text into plain runs and bold key terms. */
-export function emph(text: string, names?: string[]): ReactNode[] {
+export function emph(rawText: string, names?: string[]): ReactNode[] {
+  const text = rawText.replace(/[\u2011\u2012\u2013]/g, '-');
   const re = regexFor(names);
   re.lastIndex = 0;
   const out: ReactNode[] = [];

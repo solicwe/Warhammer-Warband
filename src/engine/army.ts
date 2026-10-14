@@ -28,7 +28,6 @@ export function forChapter(faction: FactionData, subfaction?: string): FactionDa
 
 // Army rules that belong to one Chapter only (the Space Marine pack carries every Chapter's); null = every army.
 const RULE_CHAPTER: Record<string, string | null> = {
-  'Kill Team': 'HIDE', 'Assigned Agents': 'HIDE',
   'Mission Tactics': 'DEATHWATCH', 'Kill Teams': 'DEATHWATCH', Deathwatch: 'DEATHWATCH',
   'Templar Vows': 'BLACK TEMPLARS', 'Heirs of Sigismund': 'BLACK TEMPLARS',
   'The Unforgiven': 'DARK ANGELS', 'The Ravenwing': 'DARK ANGELS', 'The Deathwing': 'DARK ANGELS',

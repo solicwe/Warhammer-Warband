@@ -1,0 +1,596 @@
+{
+  "_comment": "Astra Militarum Faction Pack v1.3. Complete detachment stratagems.",
+  "rules": {
+    "FIELDS OF FIRE": {
+      "targetKw": [
+        "REGIMENT",
+        "SQUADRON"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "STALWART PROTECTOR": {
+      "targetKw": [
+        "VEHICLE"
+      ],
+      "buffs": [
+        "cover"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "COORDINATED ACTION": {
+      "targetKw": [
+        "REGIMENT",
+        "SQUADRON"
+      ],
+      "status": "auto"
+    },
+    "INSPIRED COMMAND": {
+      "targetKw": [
+        "OFFICER"
+      ],
+      "status": "auto"
+    },
+    "FLEXIBLE COMMAND": {
+      "targetKw": [
+        "OFFICER"
+      ],
+      "status": "auto"
+    },
+    "REINFORCEMENTS!": {
+      "targetKw": [
+        "INFANTRY",
+        "REGIMENT"
+      ],
+      "limit": "battle",
+      "status": "auto"
+    },
+    "CLEAR AND SECURE": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetOnObjective"
+          ],
+          "reroll": [
+            "hits",
+            "wounds"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SWIFT INTERCEPTION": {
+      "targetKw": [
+        "TRANSPORT"
+      ],
+      "do": [
+        {
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "HASTY EXTRACTION": {
+      "targetKw": [
+        "INFANTRY"
+      ],
+      "special": [
+        "embark"
+      ],
+      "status": "auto"
+    },
+    "RAPID DISPERSAL": {
+      "targetKw": [
+        "INFANTRY"
+      ],
+      "do": [
+        {
+          "move": "D6"
+        }
+      ],
+      "status": "auto"
+    },
+    "MOVE OUT": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "special": [
+        "embark"
+      ],
+      "status": "auto"
+    },
+    "VOX-RELAY": {
+      "targetKw": [
+        "OFFICER"
+      ],
+      "status": "auto"
+    },
+    "TRENCH FIGHTERS": {
+      "targetKw": [
+        "INFANTRY"
+      ],
+      "special": [
+        "deathStrike"
+      ],
+      "status": "auto"
+    },
+    "CALLOUS SACRIFICE": {
+      "targetKw": [
+        "PLATOON"
+      ],
+      "status": "auto"
+    },
+    "OVER THE TOP": {
+      "targetKw": [
+        "OFFICER"
+      ],
+      "status": "auto"
+    },
+    "FURIOUS FUSILLADE": {
+      "targetKw": [
+        "PLATOON"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "withinHalfRange"
+          ],
+          "attacks": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "MINEFIELD": {
+      "targetKw": [
+        "PLATOON"
+      ],
+      "status": "auto"
+    },
+    "FLARE BURST": {
+      "targetKw": [
+        "CHARACTER"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "within12"
+          ],
+          "reroll": "hits"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "FURIOUS CANNONADE": {
+      "targetKw": [
+        "SQUADRON"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "within12"
+          ],
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "BLAZING ADVANCE": {
+      "targetKw": [
+        "SQUADRON"
+      ],
+      "buffs": [
+        "shootAfterAdvance"
+      ],
+      "status": "auto"
+    },
+    "FINAL HOUR": {
+      "targetKw": [
+        "SQUADRON"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "ignoreMods": true
+        }
+      ],
+      "status": "auto"
+    },
+    "TACTICAL WITHDRAWAL": {
+      "targetKw": [
+        "SQUADRON"
+      ],
+      "buffs": [
+        "shootAfterFallBack"
+      ],
+      "status": "auto"
+    },
+    "CRASH THROUGH": {
+      "targetKw": [
+        "VEHICLE"
+      ],
+      "status": "auto"
+    },
+    "ABLATIVE PLATING": {
+      "targetKw": [
+        "VEHICLE"
+      ],
+      "buffs": [
+        "damage-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "ON MY POSITION": {
+      "targetKw": [
+        "REGIMENT"
+      ],
+      "do": [
+        {
+          "mortals": "D6"
+        }
+      ],
+      "status": "auto"
+    },
+    "FIRING HOT": {
+      "targetKw": [
+        "MILITARUM TEMPESTUS",
+        "KASRKIN"
+      ],
+      "effects": [
+        {
+          "if": [
+            "within12"
+          ],
+          "strength": 1,
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SERVO-DESIGNATORS": {
+      "targetKw": [
+        "MILITARUM TEMPESTUS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SCOUTING OUTRIDERS": {
+      "targetKw": [
+        "MOUNTED",
+        "SQUADRON"
+      ],
+      "do": [
+        {
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "CRACK SHOTS": {
+      "targetKw": [
+        "PLATOON"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "COURAGEOUS DIVERSION": {
+      "targetKw": [
+        "INFANTRY"
+      ],
+      "buffs": [
+        "enemyHit-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "DRAW THEM OUT": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "do": [
+        {
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "SCRAMBLE FIELD": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "status": "auto"
+    },
+    "TANGLEFOOT GRENADES": {
+      "targetKw": [
+        "GRENADES"
+      ],
+      "status": "auto"
+    },
+    "VETERAN SHARPSHOOTERS": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "PURGING FIRE": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "onObjective"
+          ],
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ADDITIONAL ARMOUR": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "buffs": [
+        "enemyAp-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "MORDIAN MINUTE": {
+      "targetKw": [
+        "INFANTRY"
+      ],
+      "effects": [
+        {
+          "strength": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "NO RETREAT!": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "status": "auto"
+    },
+    "SNAP TO IT": {
+      "targetKw": [
+        "OFFICER"
+      ],
+      "status": "auto"
+    },
+    "ACCURACY UNDER PRESSURE": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "effects": [
+        {
+          "reroll": "hits"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ENGINE OF WRATH": {
+      "targetKw": [
+        "TITANIC"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "attacks": 6,
+          "ap": 2
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "IMPOSING ARRIVAL": {
+      "targetKw": [
+        "TITANIC"
+      ],
+      "status": "auto"
+    },
+    "SHATTERING SALVO": {
+      "targetKw": [
+        "TITANIC"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "status": "auto"
+    },
+    "WITHERING FIREPOWER": {
+      "targetKw": [
+        "VEHICLE"
+      ],
+      "status": "auto"
+    },
+    "ADAMANTINE BEHEMOTH": {
+      "targetKw": [
+        "VEHICLE"
+      ],
+      "status": "auto"
+    },
+    "OPENING SALVO": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "effects": [
+        {
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "COMBINED FIRE": {
+      "targetKw": [
+        "ARMOURED SKIRMISHER"
+      ],
+      "effects": [
+        {
+          "strength": 2,
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SUPPORTING ORDNANCE": {
+      "targetKw": [
+        "ARMOURED SKIRMISHER"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetMV"
+          ],
+          "reroll": "hits"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ORDER THE ADVANCE": {
+      "targetKw": [
+        "OFFICER"
+      ],
+      "status": "auto"
+    },
+    "MOBILE FIREBASE": {
+      "targetKw": [
+        "ARMOURED SKIRMISHER"
+      ],
+      "buffs": [
+        "shootAfterAdvance",
+        "shootAfterFallBack"
+      ],
+      "status": "auto"
+    },
+    "BURST OF SPEED": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "do": [
+        {
+          "move": "D6"
+        }
+      ],
+      "status": "auto"
+    },
+    "STIRRED TO ACTION": {
+      "targetKw": [
+        "BULLGRYN SQUAD",
+        "OGRYN SQUAD"
+      ],
+      "do": [
+        {
+          "surge": "D6"
+        }
+      ],
+      "status": "auto"
+    },
+    "LOW PROFILE": {
+      "targetKw": [
+        "RATLINGS"
+      ],
+      "status": "auto"
+    },
+    "THICK-SKULLED OBDURANCE": {
+      "targetKw": [
+        "BULLGRYN SQUAD",
+        "OGRYN SQUAD"
+      ],
+      "buffs": [
+        "enemyAp-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "SUMP-SMOG SCREEN": {
+      "targetKw": [
+        "INFANTRY",
+        "SMOKE"
+      ],
+      "buffs": [
+        "cover"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "TRIGGERED ALERTS": {
+      "targetKw": [
+        "INFANTRY"
+      ],
+      "do": [
+        {
+          "move": "D3+3"
+        }
+      ],
+      "status": "auto"
+    },
+    "CLOSE-RANGE DETECTION": {
+      "targetKw": [
+        "SCOUT SENTINEL",
+        "INFANTRY"
+      ],
+      "status": "auto"
+    }
+  }
+}

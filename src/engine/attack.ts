@@ -290,6 +290,9 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const blast = getAbility(p, 'blast', T.keywords);
       if (blast) flat += parseInt(blast.value ?? '1', 10) * Math.floor(tModels.length / 5);
       else if (grants(fx, inc, 'blast 1')) flat += Math.floor(tModels.length / 5);
+      if (hasAbility(p, 'rapid-fire')) {
+        for (const a of fx) if (a.e.rapidFireAttacks) flat += a.e.rapidFireAttacks;
+      }
       pool.instances.push({ A: p.A, extras, flat });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }

@@ -35,6 +35,7 @@ function homerPoint(s: GameState, p: PlayerId): Pt {
 /** Is any model of the unit within range of the objective (inside its terrain area)? */
 export const unitInRange = (s: GameState, u: UnitState, o: ObjectiveState) => {
   const t = objTerrain(s, o);
+  if (!t?.poly) return false;
   return alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
 };
 const unitInTerrain = (u: UnitState, t: TerrainPiece) => alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));

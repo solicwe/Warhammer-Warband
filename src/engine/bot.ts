@@ -34,6 +34,7 @@ import {
   botCounteroffensive, botCrushingImpact, botEpicChallenge, botExplosives, botHeroic, botOffensiveStratagem, botRapidIngress, botSmokescreen, isBot, wantsBravery,
 } from './botStrats';
 import { answerReaction } from './stratagems';
+import { autoIssueOrders } from './orders';
 import type { GameState, PlayerId, Pt, UnitState } from './types';
 
 
@@ -181,6 +182,7 @@ export function botCommand(s: GameState) {
   botCommandExtras(s, p);
   botCharacterStratagem(s, p);
   botRedeployActs(s, p);
+  autoIssueOrders(s, p);
   endPhase(s);
 }
 

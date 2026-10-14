@@ -696,4 +696,7 @@ export interface GameState {
   phaseMortals?: { unitId: string; expr: string; label: string }[];
   /** Split (Horrors): destroyed Horrors that roll to split once the attacking unit has finished its attacks */
   splits?: { unitId: string; from: 'pink' | 'blue'; x: number; y: number }[];
+  /** Astra Militarum Voice of Command: orders issued this turn by officer unit id */
+  ordersUsed?: Record<string, number>;
 }
+

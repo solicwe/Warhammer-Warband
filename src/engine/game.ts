@@ -858,6 +858,7 @@ export function startTurn(s: GameState, p: PlayerId) {
 
 function startCommand(s: GameState) {
   s.phase = 'command';
+  s.ordersUsed = {};
   expireTimed(s, 'commandStart', s.active);
   // Instant of Grace / Birth of a Saga end
   for (const t of (s.tempCharacters ?? []).filter((x) => x.by === s.active)) {

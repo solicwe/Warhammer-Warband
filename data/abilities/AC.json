@@ -1,1017 +1,1018 @@
 {
- "Aquila Commander": {
-  "act": {
-   "when": "roundStart",
-   "auto": true,
-   "if": [
-    "warlord"
-   ],
-   "do": [
-    {
-     "cp": 1
+  "Aquila Commander": {
+    "act": {
+      "when": "roundStart",
+      "auto": true,
+      "if": [
+        "warlord"
+      ],
+      "do": [
+        {
+          "cp": 1
+        }
+      ]
     }
-   ]
-  }
- },
- "Captain-General (Aura)": {
-  "effects": [
-   {
-    "scope": "aura",
-    "range": 6,
-    "units": [
-     "ADEPTUS CUSTODES",
-     "!MONSTER",
-     "!VEHICLE"
-    ],
-    "reroll": [
-     "hits1",
-     "wounds1"
+  },
+  "Captain-General (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "ADEPTUS CUSTODES",
+          "!MONSTER",
+          "!VEHICLE"
+        ],
+        "reroll": [
+          "hits1",
+          "wounds1"
+        ]
+      }
     ]
-   }
-  ]
- },
- "Moment Shackle (Once per battle, per army)": {
-  "act": [
-   {
-    "when": "fightStartButton",
-    "limit": "battle",
-    "per": "army",
-    "label": "Watcher's Axe +3 A until end of phase",
-    "botIf": [
-     "engaged"
+  },
+  "Moment Shackle (Once per battle, per army)": {
+    "act": [
+      {
+        "when": "fightStartButton",
+        "limit": "battle",
+        "per": "army",
+        "label": "Watcher's Axe +3 A until end of phase",
+        "botIf": [
+          "engaged"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "bearerOnly": true,
+            "buff": [
+              {
+                "attack": "melee",
+                "weapon": "Watcher's Axe",
+                "attacks": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "battle",
+        "per": "army",
+        "label": "3+ invulnerable save until end of phase",
+        "botUse": "never",
+        "do": [
+          {
+            "on": "self",
+            "bearerOnly": true,
+            "buff": [
+              {
+                "defend": {
+                  "inv": 3
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "when": "attacked",
+        "auto": true,
+        "botOnly": true,
+        "limit": "battle",
+        "per": "army",
+        "if": [
+          "dangerousAttack",
+          "!fightPhase"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "bearerOnly": true,
+            "buff": [
+              {
+                "defend": {
+                  "inv": 3
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "Supreme Commander": {
+    "status": "auto",
+    "note": "Checked by the army builder: must be your Warlord"
+  },
+  "Praesidium Shield": {
+    "gear": true,
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "damage": -1
+        }
+      }
+    ]
+  },
+  "Praesidium Shield@Sentinel Guard Sodality": {
+    "effects": [
+      {
+        "defend": {
+          "woundIfStronger": -1
+        }
+      }
+    ]
+  },
+  "Master of Ka'tahs (Once per battle round, per unit)": {
+    "act": [
+      {
+        "when": "anyPhase",
+        "limit": "round",
+        "if": [
+          "!readied"
+        ],
+        "label": "This unit is readied again",
+        "botUse": "never",
+        "do": [
+          {
+            "on": "self",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "when": "selectedToFight",
+        "limit": "round",
+        "if": [
+          "!readied"
+        ],
+        "label": "This unit is readied again",
+        "botIf": [
+          "engagedMV"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "ready": true
+          }
+        ]
+      }
+    ]
+  },
+  "Vengeful Surge (Once per battle, per unit)": {
+    "act": {
+      "when": "shotByEnemy",
+      "auto": true,
+      "limit": "battle",
+      "if": [
+        "notEngaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "surge": "D6+2"
+        }
+      ]
+    }
+  },
+  "Archeotech Teleport-shunter (Once per battle, per unit)": {
+    "act": {
+      "when": "movement",
+      "limit": "battle",
+      "if": [
+        "notEngaged",
+        "notMovedYet"
+      ],
+      "botUse": "never",
+      "label": "Go into Strategic Reserves, then arrive via Ingress this phase",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true,
+          "earlyArrival": true
+        }
+      ]
+    }
+  },
+  "Sweeping Advance (Once per battle, per unit)": {
+    "act": {
+      "when": "fightEndButton",
+      "limit": "battle",
+      "label": "End of Fight phase: make a Normal move (if engaged = Fall Back)",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "move": "M"
+        }
+      ]
+    }
+  },
+  "Swift Onslaught": {
+    "effects": [
+      {
+        "rerollAdvance": true,
+        "rerollCharge": true
+      }
+    ]
+  },
+  "Sword of the Throne": {
+    "effects": [
+      {
+        "scope": "model",
+        "if": [
+          "targetMark"
+        ],
+        "wound": 1
+      }
     ],
-    "do": [
-     {
-      "on": "self",
-      "bearerOnly": true,
-      "buff": [
-       {
+    "act": {
+      "when": "roundStart",
+      "auto": true,
+      "if": [
+        "!markAlive"
+      ],
+      "target": {
+        "side": "enemy",
+        "anywhere": true
+      },
+      "do": [
+        {
+          "setMark": true
+        }
+      ]
+    }
+  },
+  "Vexilla": {
+    "status": "auto",
+    "note": "+1 OC (ignore Ld modifiers: almost no effect)"
+  },
+  "Stand Vigil": {
+    "effects": [
+      {
+        "if": [
+          "objectiveEitherWay"
+        ],
+        "abilities": [
+          "lethal hits: non-monster/vehicle"
+        ]
+      }
+    ]
+  },
+  "Impenetrable Defence": {
+    "effects": [
+      {
+        "if": [
+          "objectiveEitherWay"
+        ],
+        "abilities": [
+          "sustained hits 1: non-monster/vehicle"
+        ]
+      }
+    ]
+  },
+  "Living Fortress": {
+    "effects": [
+      {
+        "defend": {
+          "ap": 1
+        }
+      }
+    ]
+  },
+  "Slayer of Tyrants": {
+    "effects": [
+      {
         "attack": "melee",
-        "weapon": "Watcher's Axe",
-        "attacks": 3
-       }
-      ]
-     }
+        "if": [
+          "targetTougher"
+        ],
+        "wound": 1
+      }
     ]
-   },
-   {
-    "when": "anyPhase",
-    "limit": "battle",
-    "per": "army",
-    "label": "3+ invulnerable save until end of phase",
-    "botUse": "never",
-    "do": [
-     {
-      "on": "self",
-      "bearerOnly": true,
-      "buff": [
-       {
-        "defend": {
-         "inv": 3
+  },
+  "Dread Foe": {
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "targetNotMV"
+        ],
+        "ap": 1
+      }
+    ]
+  },
+  "Reap a Terrible Tally": {
+    "effects": [
+      {
+        "if": [
+          "targetInfantry"
+        ],
+        "reroll": [
+          "hits1",
+          "wounds1"
+        ]
+      }
+    ]
+  },
+  "Take Wing": {
+    "act": {
+      "when": "opponentFightEnd",
+      "if": [
+        "notEngaged"
+      ],
+      "botUse": "never",
+      "label": "Go into Strategic Reserves",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
         }
-       }
       ]
-     }
-    ]
-   },
-   {
-    "when": "attacked",
-    "auto": true,
-    "botOnly": true,
-    "limit": "battle",
-    "per": "army",
-    "if": [
-     "dangerousAttack",
-     "!fightPhase"
-    ],
-    "do": [
-     {
-      "on": "self",
-      "bearerOnly": true,
-      "buff": [
-       {
-        "defend": {
-         "inv": 3
+    }
+  },
+  "Neutronium Cascade Mine (Once per battle, per unit)": {
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "target": {
+        "side": "enemy",
+        "range": 3
+      },
+      "roll": "D6",
+      "label": "Enemies within 3\": 2+ → D3 mortal wounds (MONSTER/VEHICLE 2D3)",
+      "table": [
+        {
+          "min": 2,
+          "do": [
+            {
+              "mortals": "D3",
+              "mortalsMV": "2D3"
+            }
+          ]
         }
-       }
       ]
-     }
-    ]
-   }
-  ]
- },
- "Supreme Commander": {
-  "status": "auto",
-  "note": "Checked by the army builder: must be your Warlord"
- },
- "Praesidium Shield": {
-  "gear": true,
-  "effects": [
-   {
-    "scope": "model",
-    "defend": {
-     "damage": -1
     }
-   }
-  ]
- },
- "Praesidium Shield@Sentinel Guard Sodality": {
-  "effects": [
-   {
-    "defend": {
-     "woundIfStronger": -1
-    }
-   }
-  ]
- },
- "Master of Ka'tahs (Once per battle round, per unit)": {
-  "act": [
-   {
-    "when": "anyPhase",
-    "limit": "round",
-    "if": [
-     "!readied"
-    ],
-    "label": "This unit is readied again",
-    "botUse": "never",
-    "do": [
-     {
-      "on": "self",
-      "ready": true
-     }
-    ]
-   },
-   {
-    "when": "selectedToFight",
-    "limit": "round",
-    "if": [
-     "!readied"
-    ],
-    "label": "This unit is readied again",
-    "botIf": [
-     "engagedMV"
-    ],
-    "do": [
-     {
-      "on": "self",
-      "ready": true
-     }
-    ]
-   }
-  ]
- },
- "Vengeful Surge (Once per battle, per unit)": {
-  "act": {
-   "when": "shotByEnemy",
-   "auto": true,
-   "limit": "battle",
-   "if": [
-    "notEngaged"
-   ],
-   "do": [
-    {
-     "on": "self",
-     "surge": "D6+2"
-    }
-   ]
-  }
- },
- "Archeotech Teleport-shunter (Once per battle, per unit)": {
-  "act": {
-   "when": "movement",
-   "limit": "battle",
-   "if": [
-    "notEngaged",
-    "notMovedYet"
-   ],
-   "botUse": "never",
-   "label": "Go into Strategic Reserves, then arrive via Ingress this phase",
-   "do": [
-    {
-     "on": "self",
-     "reserves": true,
-     "earlyArrival": true
-    }
-   ]
-  }
- },
- "Sweeping Advance (Once per battle, per unit)": {
-  "act": {
-   "when": "fightEndButton",
-   "limit": "battle",
-   "label": "End of Fight phase: make a Normal move (if engaged = Fall Back)",
-   "botUse": "never",
-   "do": [
-    {
-     "on": "self",
-     "move": "M"
-    }
-   ]
-  }
- },
- "Swift Onslaught": {
-  "effects": [
-   {
-    "rerollAdvance": true,
-    "rerollCharge": true
-   }
-  ]
- },
- "Sword of the Throne": {
-  "effects": [
-   {
-    "scope": "model",
-    "if": [
-     "targetMark"
-    ],
-    "wound": 1
-   }
-  ],
-  "act": {
-   "when": "roundStart",
-   "auto": true,
-   "if": [
-    "!markAlive"
-   ],
-   "target": {
-    "side": "enemy",
-    "anywhere": true
-   },
-   "do": [
-    {
-     "setMark": true
-    }
-   ]
-  }
- },
- "Vexilla": {
-  "status": "auto",
-  "note": "+1 OC (ignore Ld modifiers: almost no effect)"
- },
- "Stand Vigil": {
-  "effects": [
-   {
-    "if": [
-     "objectiveEitherWay"
-    ],
-    "abilities": [
-     "lethal hits: non-monster/vehicle"
-    ]
-   }
-  ]
- },
- "Impenetrable Defence": {
-  "effects": [
-   {
-    "if": [
-     "objectiveEitherWay"
-    ],
-    "abilities": [
-     "sustained hits 1: non-monster/vehicle"
-    ]
-   }
-  ]
- },
- "Living Fortress": {
-  "effects": [
-   {
-    "defend": {
-     "ap": 1
-    }
-   }
-  ]
- },
- "Slayer of Tyrants": {
-  "effects": [
-   {
-    "attack": "melee",
-    "if": [
-     "targetTougher"
-    ],
-    "wound": 1
-   }
-  ]
- },
- "Dread Foe": {
-  "effects": [
-   {
-    "attack": "melee",
-    "if": [
-     "targetNotMV"
-    ],
-    "ap": 1
-   }
-  ]
- },
- "Reap a Terrible Tally": {
-  "effects": [
-   {
-    "if": [
-     "targetInfantry"
-    ],
-    "reroll": [
-     "hits1",
-     "wounds1"
-    ]
-   }
-  ]
- },
- "Take Wing": {
-  "act": {
-   "when": "opponentFightEnd",
-   "if": [
-    "notEngaged"
-   ],
-   "botUse": "never",
-   "label": "Go into Strategic Reserves",
-   "do": [
-    {
-     "on": "self",
-     "reserves": true
-    }
-   ]
-  }
- },
- "Neutronium Cascade Mine (Once per battle, per unit)": {
-  "act": {
-   "when": "anyPhase",
-   "limit": "battle",
-   "target": {
-    "side": "enemy",
-    "range": 3
-   },
-   "roll": "D6",
-   "label": "Enemies within 3\": 2+ → D3 mortal wounds (MONSTER/VEHICLE 2D3)",
-   "table": [
-    {
-     "min": 2,
-     "do": [
+  },
+  "Strike from the Skies": {
+    "effects": [
       {
-       "mortals": "D3",
-       "mortalsMV": "2D3"
+        "attack": "ranged",
+        "if": [
+          "ingressThisTurn"
+        ],
+        "reroll": "hits"
       }
-     ]
-    }
-   ]
-  }
- },
- "Strike from the Skies": {
-  "effects": [
-   {
-    "attack": "ranged",
-    "if": [
-     "ingressThisTurn"
-    ],
-    "reroll": "hits"
-   }
-  ]
- },
- "Swift Ruin (Once per phase, per army)": {
-  "effects": [
-   {
-    "stratDiscount": {
-     "ids": [
-      "rapid-ingress"
-     ],
-     "cp": 1,
-     "limit": "phase",
-     "perArmy": true
-    },
-    "stratRepeat": {
-     "ids": [
-      "rapid-ingress"
-     ],
-     "limit": "phase"
-    }
-   }
-  ]
- },
- "Guardian Eternal": {
-  "effects": [
-   {
-    "defend": {
-     "vs": "ranged",
-     "damage": -1
-    }
-   }
-  ]
- },
- "Unyielding Ancient": {
-  "effects": [
-   {
-    "defend": {
-     "woundIfStronger": -1
-    }
-   }
-  ]
- },
- "Quicksilver Execution": {
-  "effects": [
-   {
-    "attack": "melee",
-    "if": [
-     "charged"
-    ],
-    "abilities": [
-     "sustained hits 1"
     ]
-   }
-  ]
- },
- "Death Blow": {
-  "effects": [
-   {
-    "attack": "melee",
-    "if": [
-     "charged"
-    ],
-    "ap": 1
-   }
-  ]
- },
- "Destructor Optics": {
-  "effects": [
-   {
-    "attack": "ranged",
-    "if": [
-     "targetNotMV"
-    ],
-    "ap": 1
-   }
-  ]
- },
- "Advanced Firepower": {
-  "freeDie": [
-   {
-    "kind": "reroll",
-    "stage": "hit",
-    "limit": "phase",
-    "attack": "ranged",
-    "if": [
-     "targetMV"
-    ]
-   },
-   {
-    "kind": "reroll",
-    "stage": "wound",
-    "limit": "phase",
-    "attack": "ranged",
-    "if": [
-     "targetMV"
-    ]
-   },
-   {
-    "kind": "reroll",
-    "stage": "damage",
-    "limit": "phase",
-    "attack": "ranged",
-    "if": [
-     "targetMV"
-    ]
-   }
-  ]
- },
- "Mobile Hunter": {
-  "act": {
-   "when": "afterShootingButton",
-   "limit": "phase",
-   "label": "Make a Normal move of D6\" (cannot charge afterwards)",
-   "do": [
-    {
-     "on": "self",
-     "move": "D6",
-     "noCharge": true
-    }
-   ]
-  }
- },
- "Repulsor Suspensor Technology (Once per phase, per unit)": {
-  "act": {
-   "when": "shotByEnemy",
-   "auto": true,
-   "limit": "phase",
-   "if": [
-    "notEngaged"
-   ],
-   "do": [
-    {
-     "on": "self",
-     "move": "D6"
-    }
-   ]
-  }
- },
- "Assault Vehicle": {
-  "effects": [
-   {
-    "disembarkAfterAdvance": true
-   }
-  ],
-  "note": "Shock disembark: can disembark after the transport Advanced (within 3\"), but cannot charge that turn"
- },
- "Seeker's Instincts": {
-  "effects": [
-   {
-    "move": 2,
-    "rerollAdvance": true,
-    "rerollCharge": true
-   }
-  ]
- },
- "Corner the Quarry": {
-  "effects": [
-   {
-    "forceDesperate": true
-   }
-  ],
-  "note": "Enemies (not MONSTER/VEHICLE) that Fall Back must take Desperate Escape · Battle-shocked −1 to Hazardous"
- },
- "Purity of Execution": {
-  "act": {
-   "when": "shooting",
-   "limit": "phase",
-   "target": {
-    "side": "enemy",
-    "range": 18,
-    "visible": true
-   },
-   "label": "Detected enemy: detection range +3\"",
-   "do": [
-    {
-     "buff": [
+  },
+  "Swift Ruin (Once per phase, per army)": {
+    "effects": [
       {
-       "detection": 3
-      }
-     ],
-     "until": "turn",
-     "mark": "detected"
-    }
-   ]
-  }
- },
- "Deft Parry": {
-  "effects": [
-   {
-    "defend": {
-     "vs": "melee",
-     "hit": -1
-    }
-   }
-  ]
- },
- "Sanctified Flames": {
-  "act": {
-   "when": "afterShooting",
-   "auto": true,
-   "target": {
-    "side": "enemy",
-    "hit": true
-   },
-   "do": [
-    {
-     "shock": -1,
-     "if": [
-      "targetKw:PSYKER"
-     ]
-    },
-    {
-     "shock": 0,
-     "if": [
-      "!targetKw:PSYKER"
-     ]
-    }
-   ]
-  }
- },
- "Bane of Abominations": {
-  "effects": [
-   {
-    "scope": "model",
-    "if": [
-     "targetCharMV"
-    ],
-    "wound": 1
-   }
-  ]
- },
- "Emperor's Light": {
-  "status": "auto",
-  "note": "Emperor's Light weapon [EXTRA ATTACKS] already added to the model"
- },
- "Castellan's Mark": {
-  "status": "auto",
-  "note": "After both players deploy: redeploy up to 3 CUSTODES units (set up again or place into Strategic Reserves)"
- },
- "Eagle's Eye": {
-  "act": [
-   {
-    "when": "anyPhase",
-    "limit": "battle",
-    "per": "army",
-    "label": "3+ invulnerable save until end of phase",
-    "botUse": "never",
-    "do": [
-     {
-      "on": "self",
-      "bearerOnly": true,
-      "buff": [
-       {
-        "defend": {
-         "inv": 3
+        "stratDiscount": {
+          "ids": [
+            "rapid-ingress"
+          ],
+          "cp": 1,
+          "limit": "phase",
+          "perArmy": true
+        },
+        "stratRepeat": {
+          "ids": [
+            "rapid-ingress"
+          ],
+          "limit": "phase"
         }
-       }
-      ]
-     }
+      }
     ]
-   },
-   {
-    "when": "attacked",
-    "auto": true,
-    "botOnly": true,
-    "limit": "battle",
-    "per": "army",
-    "if": [
-     "dangerousAttack"
-    ],
-    "do": [
-     {
-      "on": "self",
-      "bearerOnly": true,
-      "buff": [
-       {
+  },
+  "Guardian Eternal": {
+    "effects": [
+      {
         "defend": {
-         "inv": 3
+          "vs": "ranged",
+          "damage": -1
         }
-       }
+      }
+    ]
+  },
+  "Unyielding Ancient": {
+    "effects": [
+      {
+        "defend": {
+          "woundIfStronger": -1
+        }
+      }
+    ]
+  },
+  "Quicksilver Execution": {
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "charged"
+        ],
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
+  },
+  "Death Blow": {
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "charged"
+        ],
+        "ap": 1
+      }
+    ]
+  },
+  "Destructor Optics": {
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "targetNotMV"
+        ],
+        "ap": 1
+      }
+    ]
+  },
+  "Advanced Firepower": {
+    "freeDie": [
+      {
+        "kind": "reroll",
+        "stage": "hit",
+        "limit": "phase",
+        "attack": "ranged",
+        "if": [
+          "targetMV"
+        ]
+      },
+      {
+        "kind": "reroll",
+        "stage": "wound",
+        "limit": "phase",
+        "attack": "ranged",
+        "if": [
+          "targetMV"
+        ]
+      },
+      {
+        "kind": "reroll",
+        "stage": "damage",
+        "limit": "phase",
+        "attack": "ranged",
+        "if": [
+          "targetMV"
+        ]
+      }
+    ]
+  },
+  "Mobile Hunter": {
+    "act": {
+      "when": "afterShootingButton",
+      "limit": "phase",
+      "label": "Make a Normal move of D6\" (cannot charge afterwards)",
+      "do": [
+        {
+          "on": "self",
+          "move": "D6",
+          "noCharge": true
+        }
       ]
-     }
-    ]
-   }
-  ]
- },
- "Pareldor's Caducatrix": {
-  "act": {
-   "when": "anyPhase",
-   "limit": "battle",
-   "per": "army",
-   "label": "Regain D3+3 wounds",
-   "botUse": "damaged",
-   "target": {
-    "side": "self"
-   },
-   "do": [
-    {
-     "on": "self",
-     "heal": "D3+3"
     }
-   ]
-  }
- },
- "Not a Shell Wasted": {
-  "effects": [
-   {
-    "attack": "ranged",
-    "attacks": 1
-   }
-  ]
- },
- "Radiant Mantle": {
-  "effects": [
-   {
-    "defend": {
-     "hit": -1
+  },
+  "Repulsor Suspensor Technology (Once per phase, per unit)": {
+    "act": {
+      "when": "shotByEnemy",
+      "auto": true,
+      "limit": "phase",
+      "if": [
+        "notEngaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "move": "D6"
+        }
+      ]
     }
-   }
-  ]
- },
- "From the Hall of Armouries": {
-  "effects": [
-   {
-    "scope": "model",
-    "attack": "melee",
-    "abilities": [
-     "devastating wounds"
-    ]
-   }
-  ]
- },
- "Auriferous Orb": {
-  "act": {
-   "when": "afterShooting",
-   "auto": true,
-   "target": {
-    "side": "enemy",
-    "hit": true,
-    "hitWeapon": "auriferous orb"
-   },
-   "do": [
-    {
-     "buff": [
+  },
+  "Assault Vehicle": {
+    "effects": [
       {
-       "hit": -1
+        "disembarkAfterAdvance": true
       }
-     ],
-     "until": "nextTurnStart",
-     "mark": "blinded"
-    }
-   ]
-  }
- },
- "Edge of the Blade": {
-  "effects": [
-   {
-    "scope": "model",
-    "if": [
-     "charged"
     ],
-    "reroll": [
-     "hits1",
-     "wounds1"
-    ]
-   }
-  ]
- },
- "Auric Exemplar": {
-  "effects": [
-   {
-    "scope": "model",
-    "attack": "melee",
-    "abilities": [
-     "cleave 1"
-    ]
-   }
-  ]
- },
- "Flawless Bladework": {
-  "effects": [
-   {
-    "scope": "model",
-    "attack": "melee",
-    "abilities": [
-     "sustained hits 1"
-    ]
-   }
-  ]
- },
- "Genalchemic Warding": {
-  "effects": [
-   {
-    "scope": "model",
-    "defend": {
-     "fnp": 5
-    }
-   }
-  ]
- },
- "Unstoppable Destroyer": {
-  "effects": [
-   {
-    "pileIn": 4,
-    "consolidate": 4,
-    "objConsolidate": true
-   }
-  ]
- },
- "Sally Forth": {
-  "act": {
-   "when": "chargeStart",
-   "auto": true,
-   "target": {
-    "side": "friendly",
-    "range": 6,
-    "units": [
-     "ADEPTUS CUSTODES",
-     "INFANTRY"
-    ],
-    "advanced": true,
-    "closest": true
-   },
-   "do": [
-    {
-     "buff": [
+    "note": "Shock disembark: can disembark after the transport Advanced (within 3\"), but cannot charge that turn"
+  },
+  "Seeker's Instincts": {
+    "effects": [
       {
-       "eligible": [
-        "chargeAfterAdvance"
-       ]
+        "move": 2,
+        "rerollAdvance": true,
+        "rerollCharge": true
       }
-     ],
-     "until": "turn"
-    }
-   ]
-  }
- },
- "Auric Eagle": {
-  "effects": [
-   {
-    "advanceBonus": 1,
-    "chargeBonus": 1
-   }
-  ]
- },
- "Shroud of the Hidden Blade": {
-  "effects": [
-   {
-    "stealth": true,
-    "loneOperative": true
-   }
-  ]
- },
- "Inspirational Exemplar": {
-  "act": {
-   "when": "anyPhase",
-   "limit": "round",
-   "per": "army",
-   "target": {
-    "side": "friendly",
-    "range": 9,
-    "shocked": true,
-    "units": [
-     "ADEPTUS CUSTODES"
     ]
-   },
-   "label": "Friendly units within 9\" are no longer Battle-shocked",
-   "do": [
-    {
-     "unshock": true
-    }
-   ]
-  }
- },
- "Superior Creation": {
-  "act": {
-   "when": "onDeath",
-   "auto": true,
-   "modelDeath": true,
-   "limit": "battle",
-   "do": [
-    {
-     "on": "self",
-     "bearerOnly": true,
-     "reviveLater": {
-      "on": 2,
-      "wounds": 3
-     }
-    }
-   ]
-  }
- },
- "Arae-Shrike": {
-  "effects": [
-   {
-    "omniScrambler": 12
-   }
-  ]
- },
- "Celeritous Sentries": {
-  "effects": [
-   {
-    "stratDiscount": {
-     "ids": [
-      "heroic-intervention"
-     ],
-     "cp": 1,
-     "limit": "phase"
-    },
-    "stratRepeat": {
-     "ids": [
-      "heroic-intervention"
-     ],
-     "limit": "phase"
-    }
-   }
-  ]
- },
- "Lightning Descent": {
-  "effects": [
-   {
-    "arriveFromRound": 1
-   }
-  ]
- },
- "Leonine Ferocity": {
-  "effects": [
-   {
-    "stratDiscount": {
-     "ids": [
-      "rapid-ingress"
-     ],
-     "cp": 1,
-     "limit": "phase",
-     "perArmy": true
-    },
-    "stratRepeat": {
-     "ids": [
-      "rapid-ingress"
-     ],
-     "limit": "phase"
-    }
-   }
-  ]
- },
- "Memento Moritoi": {
-  "effects": [
-   {
-    "scope": "model",
-    "attack": "melee",
-    "attacks": 1,
-    "strength": 1,
-    "damage": 1
-   }
-  ]
- },
- "Augury Uplink": {
-  "effects": [
-   {
-    "scope": "model",
-    "defend": {
-     "fnp": 5
-    }
-   }
-  ]
- },
- "Combat Deployment": {
-  "act": {
-   "when": "passengerDisembarks",
-   "auto": true,
-   "target": {
-    "side": "friendly",
-    "ctxUnit": true,
-    "units": [
-     "ADEPTUS CUSTODES"
-    ]
-   },
-   "do": [
-    {
-     "buff": [
+  },
+  "Corner the Quarry": {
+    "effects": [
       {
-       "rerollCharge": true,
-       "noSnapTarget": true
+        "forceDesperate": true
       }
-     ],
-     "until": "turn"
+    ],
+    "note": "Enemies (not MONSTER/VEHICLE) that Fall Back must take Desperate Escape · Battle-shocked −1 to Hazardous"
+  },
+  "Purity of Execution": {
+    "act": {
+      "when": "shooting",
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 18,
+        "visible": true
+      },
+      "label": "Detected enemy: detection range +3\"",
+      "do": [
+        {
+          "buff": [
+            {
+              "detection": 3
+            }
+          ],
+          "until": "turn",
+          "mark": "detected"
+        }
+      ]
     }
-   ]
-  }
- },
- "Anti-Gravitic Mobility": {
-  "effects": [
-   {
-    "eligible": [
-     "shootAfterFallBack"
+  },
+  "Deft Parry": {
+    "effects": [
+      {
+        "defend": {
+          "vs": "melee",
+          "hit": -1
+        }
+      }
     ]
-   }
-  ]
- },
- "Oblivion Knight": {
-  "effects": [
-   {
-    "if": [
-     "!any:targetKw:PSYKER||targetBattleShocked"
-    ],
-    "hit": 1
-   },
-   {
-    "if": [
-     "any:targetKw:PSYKER||targetBattleShocked"
-    ],
-    "hit": 1,
-    "wound": 1
-   }
-  ]
- },
- "Huntress' Eye": {
-  "act": {
-   "when": "movement",
-   "limit": "phase",
-   "target": {
-    "side": "enemy",
-    "range": 12,
-    "visible": true
-   },
-   "label": "Enemies within 12\" -1 to Battle-shock tests",
-   "do": [
-    {
-     "shock": -1
+  },
+  "Sanctified Flames": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "shock": -1,
+          "if": [
+            "targetKw:PSYKER"
+          ]
+        },
+        {
+          "shock": 0,
+          "if": [
+            "!targetKw:PSYKER"
+          ]
+        }
+      ]
     }
-   ]
-  }
- },
- "Golden Laurels": {
-  "effects": [
-   {
-    "scope": "led",
-    "defend": {
-     "vs": "melee",
-     "ap": 1
+  },
+  "Bane of Abominations": {
+    "effects": [
+      {
+        "scope": "model",
+        "if": [
+          "targetCharMV"
+        ],
+        "wound": 1
+      }
+    ]
+  },
+  "Emperor's Light": {
+    "status": "auto",
+    "note": "Emperor's Light weapon [EXTRA ATTACKS] already added to the model"
+  },
+  "Castellan's Mark": {
+    "status": "auto",
+    "note": "After both players deploy: redeploy up to 3 CUSTODES units (set up again or place into Strategic Reserves)"
+  },
+  "Eagle's Eye": {
+    "act": [
+      {
+        "when": "anyPhase",
+        "limit": "battle",
+        "per": "army",
+        "label": "3+ invulnerable save until end of phase",
+        "botUse": "never",
+        "do": [
+          {
+            "on": "self",
+            "bearerOnly": true,
+            "buff": [
+              {
+                "defend": {
+                  "inv": 3
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "when": "attacked",
+        "auto": true,
+        "botOnly": true,
+        "limit": "battle",
+        "per": "army",
+        "if": [
+          "dangerousAttack"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "bearerOnly": true,
+            "buff": [
+              {
+                "defend": {
+                  "inv": 3
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "Pareldor's Caducatrix": {
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "per": "army",
+      "label": "Regain D3+3 wounds",
+      "botUse": "damaged",
+      "target": {
+        "side": "self"
+      },
+      "do": [
+        {
+          "on": "self",
+          "heal": "D3+3"
+        }
+      ]
     }
-   }
-  ]
- },
- "Hero of Lion's Gate": {
-  "freeDie": {
-   "kind": "setSix",
-   "stage": "any",
-   "limit": "battle"
+  },
+  "Not a Shell Wasted": {
+    "effects": [
+      {
+        "attack": "ranged",
+        "attacks": 1
+      }
+    ]
+  },
+  "Radiant Mantle": {
+    "effects": [
+      {
+        "defend": {
+          "hit": -1
+        }
+      }
+    ]
+  },
+  "From the Hall of Armouries": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "abilities": [
+          "devastating wounds"
+        ]
+      }
+    ]
+  },
+  "Auriferous Orb": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "auriferous orb"
+      },
+      "do": [
+        {
+          "buff": [
+            {
+              "hit": -1
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "blinded"
+        }
+      ]
+    }
+  },
+  "Edge of the Blade": {
+    "effects": [
+      {
+        "scope": "model",
+        "if": [
+          "charged"
+        ],
+        "reroll": [
+          "hits1",
+          "wounds1"
+        ]
+      }
+    ]
+  },
+  "Auric Exemplar": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "abilities": [
+          "cleave 1"
+        ]
+      }
+    ]
+  },
+  "Flawless Bladework": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
+  },
+  "Genalchemic Warding": {
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "fnp": 5
+        }
+      }
+    ]
+  },
+  "Unstoppable Destroyer": {
+    "effects": [
+      {
+        "pileIn": 4,
+        "consolidate": 4,
+        "objConsolidate": true
+      }
+    ]
+  },
+  "Sally Forth": {
+    "act": {
+      "when": "chargeStart",
+      "auto": true,
+      "target": {
+        "side": "friendly",
+        "range": 6,
+        "units": [
+          "ADEPTUS CUSTODES",
+          "INFANTRY"
+        ],
+        "advanced": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "buff": [
+            {
+              "eligible": [
+                "chargeAfterAdvance"
+              ]
+            }
+          ],
+          "until": "turn"
+        }
+      ]
+    }
+  },
+  "Auric Eagle": {
+    "effects": [
+      {
+        "advanceBonus": 1,
+        "chargeBonus": 1
+      }
+    ]
+  },
+  "Shroud of the Hidden Blade": {
+    "effects": [
+      {
+        "stealth": true,
+        "loneOperative": true
+      }
+    ]
+  },
+  "Inspirational Exemplar": {
+    "act": {
+      "when": "anyPhase",
+      "limit": "round",
+      "per": "army",
+      "target": {
+        "side": "friendly",
+        "range": 9,
+        "shocked": true,
+        "units": [
+          "ADEPTUS CUSTODES"
+        ]
+      },
+      "label": "Friendly units within 9\" are no longer Battle-shocked",
+      "do": [
+        {
+          "unshock": true
+        }
+      ]
+    }
+  },
+  "Superior Creation": {
+    "act": {
+      "when": "onDeath",
+      "auto": true,
+      "modelDeath": true,
+      "limit": "battle",
+      "per": "army",
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "reviveLater": {
+            "on": 2,
+            "wounds": 3
+          }
+        }
+      ]
+    }
+  },
+  "Arae-Shrike": {
+    "effects": [
+      {
+        "omniScrambler": 12
+      }
+    ]
+  },
+  "Celeritous Sentries": {
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "cp": 1,
+          "limit": "phase"
+        },
+        "stratRepeat": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "limit": "phase"
+        }
+      }
+    ]
+  },
+  "Lightning Descent": {
+    "effects": [
+      {
+        "arriveFromRound": 1
+      }
+    ]
+  },
+  "Leonine Ferocity": {
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "rapid-ingress"
+          ],
+          "cp": 1,
+          "limit": "phase",
+          "perArmy": true
+        },
+        "stratRepeat": {
+          "ids": [
+            "rapid-ingress"
+          ],
+          "limit": "phase"
+        }
+      }
+    ]
+  },
+  "Memento Moritoi": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "attacks": 1,
+        "strength": 1,
+        "damage": 1
+      }
+    ]
+  },
+  "Augury Uplink": {
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "fnp": 5
+        }
+      }
+    ]
+  },
+  "Combat Deployment": {
+    "act": {
+      "when": "passengerDisembarks",
+      "auto": true,
+      "target": {
+        "side": "friendly",
+        "ctxUnit": true,
+        "units": [
+          "ADEPTUS CUSTODES"
+        ]
+      },
+      "do": [
+        {
+          "buff": [
+            {
+              "rerollCharge": true,
+              "noSnapTarget": true
+            }
+          ],
+          "until": "turn"
+        }
+      ]
+    }
+  },
+  "Anti-Gravitic Mobility": {
+    "effects": [
+      {
+        "eligible": [
+          "shootAfterFallBack"
+        ]
+      }
+    ]
+  },
+  "Oblivion Knight": {
+    "effects": [
+      {
+        "if": [
+          "!any:targetKw:PSYKER||targetBattleShocked"
+        ],
+        "hit": 1
+      },
+      {
+        "if": [
+          "any:targetKw:PSYKER||targetBattleShocked"
+        ],
+        "hit": 1,
+        "wound": 1
+      }
+    ]
+  },
+  "Huntress' Eye": {
+    "act": {
+      "when": "movement",
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "visible": true
+      },
+      "label": "Enemies within 12\" -1 to Battle-shock tests",
+      "do": [
+        {
+          "shock": -1
+        }
+      ]
+    }
+  },
+  "Golden Laurels": {
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "vs": "melee",
+          "ap": 1
+        }
+      }
+    ]
+  },
+  "Hero of Lion's Gate": {
+    "freeDie": {
+      "kind": "setSix",
+      "stage": "any",
+      "limit": "battle"
+    }
   }
- }
 }

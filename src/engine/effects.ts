@@ -18,6 +18,7 @@ import dgAbilities from '../../data/abilities/DG.json';
 import qiAbilities from '../../data/abilities/QI.json';
 import qtAbilities from '../../data/abilities/QT.json';
 import aoiAbilities from '../../data/abilities/AoI.json';
+import amAbilities from '../../data/abilities/AM.json';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { deploymentById, RULES, toPoly } from './config';
@@ -54,6 +55,7 @@ export interface Defend {
   strengthMinus?: number;
   saveBonusD1?: number;
   save?: number; // +X to save rolls (better armour save)
+  saveMax3?: boolean; // save bonus cannot improve to better than 3+ (Take Cover!)
   minHit?: number; // attacks that target this unit fail on an unmodified hit roll below this (Speediest Freeks: 4)
   negateOncePerPhase?: boolean; // once per phase: a failed save's damage becomes 0
   negateOnce?: 'turn' | 'round' | 'battle'; // … once per turn / battle round / battle instead (Surgeon Acolyte, Bastion Plate, Chaos Familiar)
@@ -92,6 +94,8 @@ export interface Effect {
   if?: string[];
   // offence
   hit?: number; wound?: number; ap?: number; strength?: number; attacks?: number; damage?: number;
+  skill?: number; // improves WS / BS characteristic by X (Take Aim!, Fix Bayonets!)
+  rapidFireAttacks?: number; // improves Attacks of Rapid Fire weapons by X (First Rank, Fire! Second Rank, Fire!)
   reroll?: Reroll | Reroll[];
   abilities?: string[];
   critHitOn?: number;
@@ -143,6 +147,7 @@ export interface Effect {
   slowed?: boolean; // selected to move: roll D6, mortal wounds and less Move (Stasis Bomb)
   noBigGunsPenalty?: boolean;
   attacksTo?: number; // the weapon's Attacks characteristic becomes X
+  damageTo?: number; // the weapon's Damage characteristic becomes X
   rangeBonusIf?: { ability: string; add: number }; // aura range grows when the holder also has this ability
   embarkedOc?: boolean; // add the OC of models embarked within this model
   ldSet?: number;
@@ -330,6 +335,7 @@ const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   QI: qiAbilities as unknown as Record<string, AbilityRule>,
   QT: qtAbilities as unknown as Record<string, AbilityRule>,
   AoI: aoiAbilities as unknown as Record<string, AbilityRule>,
+  AM: amAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
 export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
@@ -817,6 +823,7 @@ export function cond(c: string, x: Ctx): boolean {
     case 'setUpThisTurn': return A.setUpTurn === s.turn;
     case 'chargedOrArrived': return A.chargedTurn === s.turn || A.move === 'ingress' || A.setUpTurn === s.turn;
     case 'disembarkedThisTurn': return A.disembarkedTurn === s.turn;
+    case 'hasOrder': return (A.timed ?? []).some((t) => t.label.startsWith('Order: '));
     case 'heavyWeapon': return !!x.p && x.p.abilities.some((a) => a === 'heavy' || a.startsWith('heavy'));
     case 'blastWeapon': return !!x.p && x.p.abilities.includes('blast');
     case 'plasmaWeapon': return /plasma/i.test(`${x.w?.name ?? ''} ${x.p?.name ?? ''}`);
@@ -1006,6 +1013,7 @@ function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list:
   const bump = (label: string, txt: string) => notes.push(`${label}: ${txt}`);
   for (const a of list) {
     const e = a.e;
+    if (e.skill && pool.skill !== null) { pool.skill = clamp(pool.skill - e.skill, RULES.modifierCaps.bestSkill, RULES.modifierCaps.worstSkill); bump(a.label, `+${e.skill} ${kind === 'melee' ? 'WS' : 'BS'}`); }
     if (e.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + e.hit, -hitCap, hitCap); bump(a.label, `${e.hit > 0 ? '+' : ''}${e.hit} hit`); }
     if (e.wound) { pool.woundMod = clamp(pool.woundMod + e.wound, -woundCap, woundCap); bump(a.label, `${e.wound > 0 ? '+' : ''}${e.wound} wound`); }
     if (e.ap) { pool.ap -= e.ap; bump(a.label, `+${e.ap} AP`); }
@@ -1027,6 +1035,7 @@ function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list:
       if (add) { pool.attackBonus = (pool.attackBonus ?? 0) + add; bump(a.label, `+${add} A`); }
     }
     if (e.attacksTo) { pool.instances = pool.instances.map((i) => ({ ...i, A: String(e.attacksTo) })); pool.profile = { ...pool.profile, A: String(e.attacksTo) }; bump(a.label, `A${e.attacksTo}`); }
+    if (e.damageTo) { pool.damage = String(e.damageTo); bump(a.label, `D${e.damageTo}`); }
     for (const r of rerolls(e)) applyReroll(pool, r, a.label, notes);
     for (const ab of e.abilities ?? []) applyAbility(pool, ab, a.label, notes, kind, A, s, T);
   }
@@ -1120,7 +1129,11 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
       if (df.halveDamage) halve = true;
       if (df.inv && (!df.invVs || (df.invVs === 'psychic' && psychic)) && (inv === null || df.inv < inv)) inv = df.inv;
       if (df.saveBonusD1) saveBonusD1 = Math.max(saveBonusD1, df.saveBonusD1);
-      if (df.save) { if (df.save > 0) save = Math.max(save, df.save); else worse += df.save; } // Rattlejoint Ague: worse
+      if (df.save) {
+        let add = df.save;
+        if (df.saveMax3 && m.profile.Sv - add < 3) add = Math.max(0, m.profile.Sv - 3);
+        if (add > 0) save = Math.max(save, add); else if (df.save < 0) worse += df.save;
+      }
     }
     if (df.fnp) {
       const vs = df.fnpVs;

@@ -43,6 +43,7 @@ import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/second
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../engine/stratagems';
 import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
+import { isOfficer, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../engine/orders';
 import { dist, polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../engine/deploy';
 import {
@@ -434,6 +435,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   }, [pileKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [sel, setSel] = useState<string | null>(null);
+  const [orderOfficerId, setOrderOfficerId] = useState<string | null>(null);
+  const [orderTargetId, setOrderTargetId] = useState<string | null>(null);
   const [mode, setModeRaw] = useState<Mode | null>(null);
   const [draft, setDraft] = useState<Paths | null>(null);
   // the joystick's loop outlives a render: it settles the latest draft when let go
@@ -1420,6 +1423,60 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               : <button className="btn small primary" disabled={s.players[s.active].waaaghUsed} onClick={() => act((g) => callWaaagh(g, g.active))}>{s.players[s.active].waaaghUsed ? 'Used' : 'WAAAGH!!!'}</button>}
           </div>
         )}
+        {hasArmyRule(s, s.active, 'Voice of Command') && (() => {
+          const officers = boardUnits(s, s.active).filter(isOfficer);
+          if (!officers.length) return null;
+          const activeOfficer = officers.find((o) => o.id === orderOfficerId) ?? officers.find((o) => ordersRemaining(s, o) > 0) ?? officers[0];
+          const targets = activeOfficer ? boardUnits(s, s.active).filter((t) => canOfficerTarget(activeOfficer, t, s)) : [];
+          const activeTarget = targets.find((t) => t.id === orderTargetId) ?? targets[0];
+          const allowed = activeOfficer ? officerAllowedOrders(activeOfficer) : [];
+          return (
+            <div className="card" style={{ padding: 8 }}>
+              <div className="small"><b>Voice of Command</b> — select an Officer, an eligible friendly unit, and an Order to issue until your next Command phase</div>
+              <div style={{ marginTop: 6, marginBottom: 4 }} className="tiny muted">Officers:</div>
+              <div className="unit-strip">
+                {officers.map((o) => {
+                  const rem = ordersRemaining(s, o);
+                  return (
+                    <button key={o.id} className={`unit-pill ${activeOfficer?.id === o.id ? 'sel' : ''}`} onClick={() => { setOrderOfficerId(o.id); setOrderTargetId(null); }}>
+                      <span className={`side-dot s${o.owner}`} aria-hidden="true" /> {o.name} {rem > 0 ? `(${rem} left)` : '(done)'}
+                    </button>
+                  );
+                })}
+              </div>
+              {activeOfficer && ordersRemaining(s, activeOfficer) > 0 && targets.length > 0 && (
+                <>
+                  <div style={{ marginTop: 8, marginBottom: 4 }} className="tiny muted">Eligible Targets ({activeOfficer.name}):</div>
+                  <div className="unit-strip">
+                    {targets.map((t) => {
+                      const cur = currentOrders(t);
+                      return (
+                        <button key={t.id} className={`unit-pill ${activeTarget?.id === t.id ? 'sel' : ''}`} onClick={() => setOrderTargetId(t.id)}>
+                          <span className={`side-dot s${t.owner}`} aria-hidden="true" /> {t.name} {cur.length ? `[${cur.join(', ')}]` : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {activeTarget && (
+                    <>
+                      <div style={{ marginTop: 8, marginBottom: 4 }} className="tiny muted">Issue Order to {activeTarget.name}:</div>
+                      <div className="det-opts">
+                        {allowed.map((ord) => (
+                          <button key={ord} className="btn small" onClick={() => {
+                            act((g) => issueOrder(g, activeOfficer.id, activeTarget.id, ord));
+                            flash(`${activeOfficer.name} issued ${ord} to ${activeTarget.name}`);
+                          }}>
+                            {ord}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })()}
         {detPanel(s.active)}
         {tests.length === 0 && <div className="muted small">No Battle-shock tests needed</div>}
         {tests.map((t) => {

@@ -1,0 +1,1108 @@
+{
+  "_comment": "Astra Militarum Faction Pack v1.3. Comprehensive datasheet, order, and enhancement rules.",
+  "Voice of Command": {
+    "status": "auto",
+    "note": "Orders issued during Command phase and after disembark/arrival."
+  },
+  "ORDERS": {
+    "status": "auto"
+  },
+  "Vox-net": {
+    "status": "auto",
+    "note": "Issues orders up to 24\"."
+  },
+  "Master Vox": {
+    "status": "auto",
+    "gear": true,
+    "note": "Issues orders up to 24\"."
+  },
+  "Command Rod": {
+    "status": "auto",
+    "gear": true,
+    "note": "Bearer can issue one additional Order."
+  },
+  "Vox-caster": {
+    "status": "auto",
+    "gear": true
+  },
+  "Medi-pack": {
+    "status": "auto",
+    "gear": true,
+    "effects": [
+      {
+        "defend": {
+          "fnp": 6
+        }
+      }
+    ]
+  },
+  "Regimental Standard": {
+    "status": "auto",
+    "gear": true,
+    "effects": [
+      {
+        "oc": 1
+      }
+    ]
+  },
+  "Death Befitting An Officer": {
+    "status": "auto"
+  },
+  "Deadly Demise": {
+    "status": "auto"
+  },
+  "Scouts": {
+    "status": "auto"
+  },
+  "Firing Deck": {
+    "status": "auto"
+  },
+  "Leader": {
+    "status": "auto"
+  },
+  "Infiltrators": {
+    "status": "auto"
+  },
+  "Stealth": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "stealth": true
+        }
+      }
+    ]
+  },
+  "Deep Strike": {
+    "status": "auto"
+  },
+  "Feel No Pain": {
+    "status": "auto"
+  },
+  "Fights First": {
+    "status": "auto"
+  },
+  "Lone Operative": {
+    "status": "auto"
+  },
+  "One Shot": {
+    "status": "auto"
+  },
+  "Covering Fire": {
+    "status": "auto"
+  },
+  "EMBARKING": {
+    "status": "auto"
+  },
+  "DEPLOYMENT": {
+    "status": "auto"
+  },
+  "Hover": {
+    "status": "auto"
+  },
+  "Fortification": {
+    "status": "auto"
+  },
+  "SUPREME COMMANDER": {
+    "status": "auto"
+  },
+  "USING COMMISSAR GRAVES": {
+    "status": "auto"
+  },
+  "Daring Recon": {
+    "status": "auto",
+    "act": {
+      "when": "shootingStart",
+      "target": {
+        "side": "enemy",
+        "range": 18,
+        "visible": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "attack": "ranged",
+            "reroll": "hits1",
+            "noCover": true
+          },
+          "until": "phase"
+        }
+      ]
+    }
+  },
+  "Mobile Hunter-killers": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetMV"
+        ],
+        "reroll": "wounds1"
+      }
+    ]
+  },
+  "Mobile Command Vehicle": {
+    "status": "auto",
+    "note": "Embarked Officer can issue orders."
+  },
+  "Rapid Deployment": {
+    "status": "auto",
+    "note": "Units can disembark after transport advances."
+  },
+  "Flush Them Out": {
+    "status": "auto",
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "attack": "ranged",
+            "noCover": true
+          },
+          "until": "phase"
+        }
+      ]
+    }
+  },
+  "Earthshaker Rounds": {
+    "status": "auto",
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "!TITANIC"
+        ]
+      },
+      "do": [
+        {
+          "buff": [
+            {
+              "move": -2,
+              "charge": -2
+            }
+          ],
+          "until": "endOfNextTurn"
+        }
+      ]
+    }
+  },
+  "Flak Battery": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetFly"
+        ],
+        "reroll": "hits"
+      }
+    ]
+  },
+  "Suppression Bombardment": {
+    "status": "auto",
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "INFANTRY"
+        ]
+      },
+      "do": [
+        {
+          "buff": [
+            {
+              "hit": -1
+            }
+          ],
+          "until": "endOfNextTurn"
+        }
+      ]
+    }
+  },
+  "Furious Barrage": {
+    "status": "auto",
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "shock": true
+        }
+      ]
+    }
+  },
+  "Deathstrike Missile": {
+    "status": "auto"
+  },
+  "Plasma Warhead": {
+    "status": "auto"
+  },
+  "Armoured Spearhead": {
+    "status": "auto",
+    "effects": [
+      {
+        "reroll": "hits1"
+      },
+      {
+        "if": [
+          "targetOnObjective"
+        ],
+        "reroll": "hits"
+      }
+    ]
+  },
+  "Line-breaker": {
+    "status": "auto"
+  },
+  "Rolling Fortress": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 3,
+        "units": [
+          "ASTRA MILITARUM"
+        ],
+        "defend": {
+          "cover": true
+        }
+      }
+    ]
+  },
+  "Tremor Quake": {
+    "status": "auto",
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "buff": [
+            {
+              "move": -2,
+              "charge": -2
+            }
+          ],
+          "until": "endOfNextTurn"
+        }
+      ]
+    }
+  },
+  "Armour Obliteration": {
+    "status": "auto"
+  },
+  "Close-range Titan Killer": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetMV",
+          "within12"
+        ],
+        "wound": 1
+      }
+    ]
+  },
+  "Close-quarters Warfare": {
+    "status": "auto"
+  },
+  "Titan-killer": {
+    "status": "auto",
+    "effects": [
+      {
+        "weapon": "volcano cannon",
+        "if": [
+          "targetMV"
+        ],
+        "reroll": "wounds1",
+        "abilities": [
+          "devastating wounds"
+        ]
+      },
+      {
+        "weapon": "volcano cannon",
+        "if": [
+          "targetKw:TITANIC"
+        ],
+        "reroll": "wounds"
+      }
+    ]
+  },
+  "Mount Up!": {
+    "status": "auto"
+  },
+  "Concussive Wave": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "charged"
+        ],
+        "strength": 2
+      }
+    ]
+  },
+  "Summary Execution": {
+    "status": "auto",
+    "act": {
+      "when": "command",
+      "limit": "round",
+      "target": {
+        "range": 6,
+        "units": [
+          "ASTRA MILITARUM"
+        ],
+        "shocked": true
+      },
+      "do": [
+        {
+          "unshock": true
+        }
+      ]
+    }
+  },
+  "Political Overwatch": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "ASTRA MILITARUM INFANTRY",
+          "ASTRA MILITARUM MOUNTED"
+        ],
+        "shock": {
+          "reroll": true
+        }
+      }
+    ]
+  },
+  "Tempestor Prime": {
+    "status": "auto"
+  },
+  "Transport Support": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "disembarkedThisTurn"
+        ],
+        "reroll": "wounds1"
+      }
+    ]
+  },
+  "Point-blank Barrage": {
+    "status": "auto"
+  },
+  "Wall of Muscle": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "damage": -1
+        }
+      }
+    ]
+  },
+  "Brute Shield": {
+    "status": "auto",
+    "gear": true,
+    "effects": [
+      {
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
+  },
+  "Slabshield": {
+    "status": "auto",
+    "gear": true
+  },
+  "Shoot Sharp and Scarper": {
+    "status": "auto",
+    "act": {
+      "when": "afterShooting",
+      "move": 5
+    }
+  },
+  "Ratling Battlemutt": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "fnp": 6
+        }
+      }
+    ]
+  },
+  "Demolition Gear": {
+    "status": "auto"
+  },
+  "Ogryn Bodyguard": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "bodyguardLed",
+        "defend": {
+          "wound": -1
+        }
+      }
+    ]
+  },
+  "Thunderous Head-butt": {
+    "status": "auto",
+    "act": {
+      "when": "fightStart",
+      "target": {
+        "side": "enemy",
+        "engaged": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "do": [
+            {
+              "mortals": "D3"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "LOYAL PROTECTOR": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "bodyguardLed",
+        "defend": {
+          "wound": -1
+        }
+      }
+    ]
+  },
+  "Airborne Insertion": {
+    "status": "auto"
+  },
+  "Malign Wardings(Psychic)": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "fnp": 4,
+          "fnpVs": "psychic"
+        }
+      }
+    ]
+  },
+  "Psychic Barrier (Psychic)": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "inv": 4,
+          "invVs": "ranged"
+        }
+      }
+    ]
+  },
+  "War Hymns": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "melee",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
+  },
+  "Holy Piety": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
+  },
+  "Enginseer": {
+    "status": "auto"
+  },
+  "Omnissiah’s Blessing": {
+    "status": "auto",
+    "act": {
+      "when": "command",
+      "target": {
+        "range": 3,
+        "units": [
+          "ASTRA MILITARUM VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "heal": "D3"
+        },
+        {
+          "buff": [
+            {
+              "defend": {
+                "inv": 4
+              }
+            }
+          ],
+          "until": "nextCommand"
+        }
+      ]
+    }
+  },
+  "Vengeance for the Omnissiah": {
+    "status": "auto",
+    "effects": [
+      {
+        "weapon": "enginseer axe",
+        "if": [
+          "avengeVehicle"
+        ],
+        "attacks": 3,
+        "abilities": [
+          "devastating wounds"
+        ]
+      }
+    ]
+  },
+  "One-man Army": {
+    "status": "auto",
+    "effects": [
+      {
+        "hit": 1,
+        "wound": 1
+      }
+    ]
+  },
+  "Like Fighting a Shadow": {
+    "status": "auto"
+  },
+  "LONER": {
+    "status": "auto"
+  },
+  "Tanith Camo-cloaks": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "stealth": true
+        }
+      },
+      {
+        "if": [
+          "inCover"
+        ],
+        "defend": {
+          "save": 1
+        }
+      }
+    ]
+  },
+  "Covert Stealth Team": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "stealth": true
+        }
+      }
+    ]
+  },
+  "The Lord Solar": {
+    "status": "auto"
+  },
+  "The Collegiate Astrolex": {
+    "status": "auto",
+    "act": {
+      "when": "commandStart",
+      "limit": "battle",
+      "do": [
+        {
+          "cp": 1
+        }
+      ]
+    }
+  },
+  "Lord Castellan": {
+    "status": "auto",
+    "note": "Creed can issue 2 orders to the same Regiment unit."
+  },
+  "Tactical Genius": {
+    "status": "auto",
+    "freeStrat": {
+      "limit": "round"
+    }
+  },
+  "Senior Officer": {
+    "status": "auto"
+  },
+  "Get Back in the Fight": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "eligible": [
+          "shootAfterFallBack"
+        ]
+      }
+    ]
+  },
+  "Cadia Stands!": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "ignoreMods": true
+      }
+    ]
+  },
+  "Shock Troops": {
+    "status": "auto",
+    "objSticky": true
+  },
+  "Jungle Fighters": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "charged"
+        ],
+        "strength": 1,
+        "ap": 1
+      }
+    ]
+  },
+  "Warrior Elite": {
+    "status": "auto",
+    "effects": [
+      {
+        "reroll": "hits1"
+      }
+    ]
+  },
+  "Melta Mine": {
+    "status": "auto"
+  },
+  "Horsemasters": {
+    "status": "auto",
+    "effects": [
+      {
+        "eligible": [
+          "shootAfterAdvance",
+          "chargeAfterAdvance"
+        ]
+      }
+    ]
+  },
+  "Ablative Plating": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "save": 1
+        }
+      }
+    ]
+  },
+  "Emplacement Platform": {
+    "status": "auto"
+  },
+  "Reinforced Cover": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 3,
+        "units": [
+          "ASTRA MILITARUM INFANTRY"
+        ],
+        "defend": {
+          "cover": true
+        }
+      }
+    ]
+  },
+  "Defence Line": {
+    "status": "auto"
+  },
+  "Urban Warfare": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetInCover"
+        ],
+        "abilities": [
+          "ignores cover"
+        ]
+      }
+    ]
+  },
+  "Gung-ho Executioners": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetBelowHalf"
+        ],
+        "hit": 1
+      }
+    ]
+  },
+  "Withering Hail": {
+    "status": "auto",
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "attack": "ranged",
+            "ap": 1
+          },
+          "until": "phase"
+        }
+      ]
+    }
+  },
+  "Mow Down the Enemy": {
+    "status": "auto",
+    "effects": [
+      {
+        "weapon": "punisher gatling cannon",
+        "if": [
+          "targetInfantry"
+        ],
+        "abilities": [
+          "devastating wounds"
+        ]
+      }
+    ]
+  },
+  "Tank-killer": {
+    "status": "auto",
+    "effects": [
+      {
+        "weapon": "vanquisher battle cannon",
+        "if": [
+          "targetMV"
+        ],
+        "reroll": "damage"
+      }
+    ]
+  },
+  "Storm Troopers": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "ranged",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      },
+      {
+        "attack": "ranged",
+        "if": [
+          "targetOnObjective"
+        ],
+        "abilities": [
+          "sustained hits 2"
+        ]
+      }
+    ]
+  },
+  "Precision Drop": {
+    "status": "auto"
+  },
+  "Servo-sentry": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "ranged",
+        "abilities": [
+          "anti-infantry 4+"
+        ]
+      }
+    ]
+  },
+  "Grim Determination": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "belowStarting"
+        ],
+        "hit": 1
+      },
+      {
+        "if": [
+          "belowHalf"
+        ],
+        "wound": 1
+      }
+    ]
+  },
+  "Alchemyk Counteragents": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "fnp": 6
+        }
+      }
+    ]
+  },
+  "Servo-scribes": {
+    "status": "auto",
+    "effects": [
+      {
+        "oc": 1
+      }
+    ]
+  },
+  "Tough to Kill": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "fnp": 5
+        }
+      }
+    ]
+  },
+  "Leading the Charge": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "rolls": {
+          "chargeBonus": 2
+        }
+      }
+    ]
+  },
+  "Gung-ho Command": {
+    "status": "auto"
+  },
+  "Called Shots": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "ranged",
+        "abilities": [
+          "precision"
+        ]
+      }
+    ]
+  },
+  "Grenadiers": {
+    "status": "auto"
+  },
+  "Remote Mine": {
+    "status": "auto"
+  },
+  "Bring it Down!": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetMV"
+        ],
+        "wound": 1
+      }
+    ]
+  },
+  "Final Duty": {
+    "status": "auto"
+  },
+  "Remorseless Barrage": {
+    "status": "auto",
+    "effects": [
+      {
+        "reroll": "hits1"
+      }
+    ]
+  },
+  "Rearm, Reload, Fire": {
+    "status": "auto",
+    "effects": [
+      {
+        "attack": "ranged",
+        "abilities": [
+          "heavy"
+        ]
+      }
+    ]
+  },
+  "Screening Line": {
+    "status": "auto",
+    "note": "Enemy units cannot Deep Strike within 12\"."
+  },
+  "Will of Iron": {
+    "status": "auto",
+    "resurrect": {
+      "on": 2,
+      "wounds": 3
+    }
+  },
+  "Hero of Hades Hive": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "fnp": 5,
+          "fnpVs": "mortal"
+        }
+      },
+      {
+        "scope": "led",
+        "attack": "melee",
+        "hit": 1
+      }
+    ]
+  },
+  "Counterstrategist": {
+    "status": "auto",
+    "note": "Opponent stratagem cost +1CP"
+  },
+  "Decisive Command": {
+    "status": "auto"
+  },
+  "Inspiring Hero (Aura)": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "ASTRA MILITARUM"
+        ],
+        "ld": 1
+      }
+    ]
+  },
+  "Mechanised Spearhead": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "disembarkedThisTurn"
+        ],
+        "reroll": "wounds1"
+      }
+    ]
+  },
+  "Brutal Disciplinarian": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "melee",
+        "hit": 1
+      }
+    ]
+  },
+  "Aquiline Prow": {
+    "status": "auto",
+    "effects": [
+      {
+        "defend": {
+          "inv": 5
+        }
+      }
+    ]
+  },
+  "Icon of Discipline": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "ld": 1
+      }
+    ]
+  },
+  "Convoy Escort Vehicle": {
+    "status": "auto"
+  },
+  "Rapid Strike Vehicle": {
+    "status": "auto"
+  },
+  "Independent Operatives": {
+    "status": "auto"
+  },
+  "Vox-relay Beacon": {
+    "status": "auto"
+  },
+  "Death Mask of Ollanius": {
+    "status": "auto",
+    "effects": [
+      {
+        "shockedOc": 1
+      }
+    ]
+  },
+  "Drill Commander": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "ranged",
+        "if": [
+          "stationary"
+        ],
+        "critHitOn": 5
+      }
+    ]
+  },
+  "Grand Strategist": {
+    "status": "auto",
+    "note": "+1 Order in Command phase."
+  },
+  "Reactive Command": {
+    "status": "auto",
+    "note": "Issue 1 order when enemy set up within 8\"."
+  },
+  "Regimental Banner": {
+    "status": "partial"
+  }
+}

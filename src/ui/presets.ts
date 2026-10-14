@@ -171,5 +171,24 @@ export const PRESETS: Record<string, ArmyList> = {
       { uid: 'i10', datasheet: 'Ministorum Priest', models: 1, pts: 40 },
     ],
   },
+  AM: {
+    name: 'Astra Militarum (Quick)',
+    factionId: 'AM',
+    battleSize: 'incursion',
+    detachments: ['Combined Arms'],
+    units: [
+      { uid: 'm1', datasheet: 'Lord Solar Leontus', models: 1, pts: 120, warlord: true },
+      { uid: 'm2', datasheet: 'Cadian Command Squad', models: 5, pts: 60, enhancement: 'Grand Strategist', enhancementPts: 15 },
+      { uid: 'm3', datasheet: 'Cadian Shock Troops', models: 10, pts: 70 },
+      { uid: 'm4', datasheet: 'Catachan Jungle Fighters', models: 10, pts: 70 },
+      { uid: 'm5', datasheet: 'Kasrkin', models: 10, pts: 105 },
+      { uid: 'm6', datasheet: 'Bullgryn Squad', models: 3, pts: 90 },
+      { uid: 'm7', datasheet: 'Leman Russ Battle Tank', models: 1, pts: 160 },
+      { uid: 'm8', datasheet: 'Basilisk', models: 1, pts: 115 },
+      { uid: 'm9', datasheet: 'Scout Sentinels', models: 1, pts: 55 },
+      { uid: 'm10', datasheet: 'Chimera', models: 1, pts: 75 },
+    ],
+  },
 };
+
 

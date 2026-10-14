@@ -1,177 +1,590 @@
 {
-  "_comment": "Imperial Agents Faction Pack v1.2. Rules are keyed by stratagem name or name@detachment; unlisted effects are read from the card text.",
+  "_comment": "Imperial Agents Faction Pack v1.3. All 30 Detachment Stratagems supported.",
   "rules": {
     "CLOSE-QUARTERS BARRAGE": {
-      "targetKw": ["VOIDFARERS"],
-      "effects": [{ "attack": "ranged", "strength": 1, "ap": 1, "if": ["targetWithin:12"] }],
+      "targetKw": [
+        "VOIDFARERS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "strength": 1,
+          "ap": 1,
+          "if": [
+            "targetWithin:12"
+          ]
+        }
+      ],
       "bot": "attack",
       "status": "auto"
     },
     "ADAPTIVE TACTICS": {
-      "targetKw": ["DEATHWATCH"],
+      "targetKw": [
+        "DEATHWATCH"
+      ],
       "choice": [
-        { "label": "Furor Tactics", "mark": "agentsAdaptive", "effects": [{ "abilities": ["sustained hits 1"] }] },
-        { "label": "Malleus Tactics", "mark": "agentsAdaptive", "effects": [{ "abilities": ["lethal hits"] }] },
-        { "label": "Purgatus Tactics", "mark": "agentsAdaptive", "effects": [{ "abilities": ["precision-on-crit"], "if": ["targetWithin:9"] }] }
+        {
+          "label": "Furor Tactics",
+          "mark": "agentsAdaptive",
+          "effects": [
+            {
+              "abilities": [
+                "sustained hits 1"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Malleus Tactics",
+          "mark": "agentsAdaptive",
+          "effects": [
+            {
+              "abilities": [
+                "lethal hits"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Purgatus Tactics",
+          "mark": "agentsAdaptive",
+          "effects": [
+            {
+              "abilities": [
+                "precision-on-crit"
+              ],
+              "if": [
+                "targetWithin:9"
+              ]
+            }
+          ]
+        }
       ],
       "until": "nextCommand",
       "bot": "attack",
       "status": "auto"
     },
     "EXECUTION ORDER": {
-      "targetKw": ["ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"],
-      "enemy": { "kw": ["CHARACTER"] },
-      "enemyEffects": [{ "incoming": { "abilities": ["precision"] } }],
+      "targetKw": [
+        "ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"
+      ],
+      "enemy": {
+        "kw": [
+          "CHARACTER"
+        ]
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "abilities": [
+              "precision"
+            ]
+          }
+        }
+      ],
       "enemyUntil": "nextCommand",
       "bot": "attack",
       "status": "auto"
     },
     "KRAKEN ROUNDS": {
-      "targetKw": ["DEATHWATCH INFANTRY"],
-      "unitIf": ["!marked:agentsAmmo"],
-      "effects": [{ "attack": "ranged", "ap": 1, "rangeBonus": 6 }],
+      "targetKw": [
+        "DEATHWATCH INFANTRY"
+      ],
+      "unitIf": [
+        "!marked:agentsAmmo"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "ap": 1,
+          "rangeBonus": 6
+        }
+      ],
       "mark": "agentsAmmo",
       "bot": "attack",
       "status": "auto"
     },
     "DRAGONFIRE ROUNDS": {
-      "targetKw": ["DEATHWATCH INFANTRY"],
-      "unitIf": ["!marked:agentsAmmo"],
-      "effects": [{ "attack": "ranged", "abilities": ["assault", "ignores cover"] }],
+      "targetKw": [
+        "DEATHWATCH INFANTRY"
+      ],
+      "unitIf": [
+        "!marked:agentsAmmo"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "assault",
+            "ignores cover"
+          ]
+        }
+      ],
       "mark": "agentsAmmo",
       "bot": "attack",
       "status": "auto"
     },
     "HELLFIRE ROUNDS": {
-      "targetKw": ["DEATHWATCH INFANTRY"],
-      "unitIf": ["!marked:agentsAmmo"],
-      "effects": [{ "attack": "ranged", "if": ["!weaponHas:devastating wounds"], "abilities": ["anti-infantry 2+", "anti-monster 5+"] }],
+      "targetKw": [
+        "DEATHWATCH INFANTRY"
+      ],
+      "unitIf": [
+        "!marked:agentsAmmo"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "!weaponHas:devastating wounds"
+          ],
+          "abilities": [
+            "anti-infantry 2+",
+            "anti-monster 5+"
+          ]
+        }
+      ],
       "mark": "agentsAmmo",
       "bot": "attack",
       "status": "auto"
     },
     "STUN GRENADES": {
-      "targetKw": ["ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"],
-      "unitIf": ["unengaged"],
-      "enemy": { "range": 8, "visible": true, "notKw": ["MONSTER", "VEHICLE"] },
-      "enemyEffects": [{ "hit": -1 }],
+      "targetKw": [
+        "ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"
+      ],
+      "unitIf": [
+        "unengaged"
+      ],
+      "enemy": {
+        "range": 8,
+        "visible": true,
+        "notKw": [
+          "MONSTER",
+          "VEHICLE"
+        ]
+      },
+      "enemyEffects": [
+        {
+          "hit": -1
+        }
+      ],
       "enemyUntil": "phase",
-      "do": [{ "on": "target", "shock": 0 }],
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ],
       "bot": "defend",
       "status": "auto"
     },
     "LINE OF FIRE": {
-      "targetKw": ["ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"],
-      "effects": [{ "shootIntoEngagement": 12 }],
+      "targetKw": [
+        "ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"
+      ],
+      "effects": [
+        {
+          "shootIntoEngagement": 12
+        }
+      ],
       "bot": "attack",
       "status": "auto"
     },
     "RITUAL OF WARDING": {
-      "targetKw": ["INQUISITOR|INQUISITORIAL AGENTS|ORDO MALLEUS"],
-      "unitIf": ["onControlledObjective"],
-      "do": [{ "on": "self", "wardObjective": true }],
+      "targetKw": [
+        "INQUISITOR|INQUISITORIAL AGENTS|ORDO MALLEUS"
+      ],
+      "unitIf": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "wardObjective": true
+        }
+      ],
       "bot": "defend",
       "status": "auto"
     },
     "HEXAGRAMMIC WARDS": {
-      "targetKw": ["ORDO MALLEUS"],
-      "enemy": { "lastActor": true },
-      "effects": [{ "incoming": { "abilities": ["hazardous"], "psychic": true } }],
+      "targetKw": [
+        "ORDO MALLEUS"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "effects": [
+        {
+          "incoming": {
+            "abilities": [
+              "hazardous"
+            ],
+            "psychic": true
+          }
+        }
+      ],
       "until": "phase",
       "bot": "defend",
       "status": "auto"
     },
     "ENSNARING TRAP": {
-      "targetKw": ["AGENTS OF THE IMPERIUM INFANTRY"],
-      "unitIf": ["unengaged"],
-      "enemy": { "range": 6 },
-      "effects": [{ "attack": "melee", "wound": 1, "if": ["kw:CALLIDUS ASSASSIN", "marked:ensnaringTrapCharged"] }],
+      "targetKw": [
+        "AGENTS OF THE IMPERIUM INFANTRY"
+      ],
+      "unitIf": [
+        "unengaged"
+      ],
+      "enemy": {
+        "range": 6
+      },
+      "effects": [
+        {
+          "attack": "melee",
+          "wound": 1,
+          "if": [
+            "kw:CALLIDUS ASSASSIN",
+            "marked:ensnaringTrapCharged"
+          ]
+        }
+      ],
       "until": "turn",
-      "special": ["chargeWithCallidusWound"],
+      "special": [
+        "chargeWithCallidusWound"
+      ],
       "react": "enemyChargePhaseEnd",
       "bot": "charge",
       "status": "auto"
     },
     "EXACT PUNISHMENT": {
-      "targetKw": ["ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"],
+      "targetKw": [
+        "ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"
+      ],
       "react": "enemyShot",
-      "enemy": { "lastActor": true },
-      "special": ["shootAt"],
+      "enemy": {
+        "lastActor": true
+      },
+      "special": [
+        "shootAt"
+      ],
       "botReact": "shoot",
-      "unitIf": ["shootingPhase", "!ownTurn", "friendlyLostToLast"],
+      "unitIf": [
+        "shootingPhase",
+        "!ownTurn",
+        "friendlyLostToLast"
+      ],
       "status": "auto"
     },
     "SELFLESS BODYGUARD": {
-      "targetKw": ["AGENTS OF THE IMPERIUM"],
+      "targetKw": [
+        "AGENTS OF THE IMPERIUM"
+      ],
       "react": "ownAttacked",
-      "unitIf": ["attached"],
-      "effects": [{ "protectPrecision": 2 }],
+      "unitIf": [
+        "attached"
+      ],
+      "effects": [
+        {
+          "protectPrecision": 2
+        }
+      ],
       "until": "phase",
       "bot": "defend",
       "status": "auto"
     },
     "MASTERS OF THE VOID": {
-      "targetKw": ["VOIDFARERS CHARACTER"],
+      "targetKw": [
+        "VOIDFARERS CHARACTER"
+      ],
       "mark": "mastersOfTheVoid",
       "until": "phase",
       "bot": "defend",
       "status": "auto"
     },
     "RITES OF EXORCISM": {
-      "targetKw": ["INQUISITOR|INQUISITORIAL AGENTS|ORDO MALLEUS"],
-      "enemy": { "range": 12, "visible": true, "kw": ["DAEMON"] },
-      "do": [{
-        "on": "target",
-        "shock": 0,
-        "shockFailEffects": [{ "incoming": { "abilities": ["devastating wounds"] } }]
-      }],
+      "targetKw": [
+        "INQUISITOR|INQUISITORIAL AGENTS|ORDO MALLEUS"
+      ],
+      "enemy": {
+        "range": 12,
+        "visible": true,
+        "kw": [
+          "DAEMON"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0,
+          "shockFailEffects": [
+            {
+              "incoming": {
+                "abilities": [
+                  "devastating wounds"
+                ]
+              }
+            }
+          ]
+        }
+      ],
       "bot": "attack",
       "status": "auto"
     },
     "PRIME TARGET": {
-      "targetKw": ["AGENTS OF THE IMPERIUM"],
+      "targetKw": [
+        "AGENTS OF THE IMPERIUM"
+      ],
       "effects": [
-        { "if": ["targetKw:CHARACTER"], "reroll": "wounds1" },
-        { "if": ["targetWarlord", "modelKw:OFFICIO ASSASSINORUM"], "reroll": "wounds" }
+        {
+          "if": [
+            "targetKw:CHARACTER"
+          ],
+          "reroll": "wounds1"
+        },
+        {
+          "if": [
+            "targetWarlord",
+            "modelKw:OFFICIO ASSASSINORUM"
+          ],
+          "reroll": "wounds"
+        }
       ],
       "bot": "attack",
       "status": "auto"
     },
     "BLIND GRENADES": {
-      "targetKw": ["GRENADES|VINDICARE ASSASSIN"],
+      "targetKw": [
+        "GRENADES|VINDICARE ASSASSIN"
+      ],
       "react": "enemyChargeDeclared",
       "effects": [
-        { "chargedMinus": 1 },
-        { "chargedMinus": 2, "if": ["kw:VINDICARE ASSASSIN"] }
+        {
+          "chargedMinus": 1
+        },
+        {
+          "chargedMinus": 2,
+          "if": [
+            "kw:VINDICARE ASSASSIN"
+          ]
+        }
       ],
       "until": "phase",
       "bot": "defend",
       "status": "auto"
     },
     "RAPID TACTICAL RELOCATION": {
-      "targetKw": ["INQUISITOR|DEATHWATCH INFANTRY"],
-      "unitIf": ["unengaged"],
-      "do": [{ "on": "self", "reserves": true }],
+      "targetKw": [
+        "INQUISITOR|DEATHWATCH INFANTRY"
+      ],
+      "unitIf": [
+        "unengaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
+        }
+      ],
       "react": "fightPhaseEnd",
       "bot": "defend",
       "status": "auto"
     },
     "ORBITAL OVERSIGHT": {
-      "targetKw": ["AGENTS OF THE IMPERIUM INFANTRY"],
+      "targetKw": [
+        "AGENTS OF THE IMPERIUM INFANTRY"
+      ],
       "effects": [
-        { "targetableWithin": 18 },
-        { "targetableWithin": 6, "if": ["hasAbility:Lone Operative"] }
+        {
+          "targetableWithin": 18
+        },
+        {
+          "targetableWithin": 6,
+          "if": [
+            "hasAbility:Lone Operative"
+          ]
+        }
       ],
       "until": "phase",
       "bot": "defend",
       "status": "auto"
     },
     "DISPLACER FIELD": {
-      "targetKw": ["AGENTS OF THE IMPERIUM CHARACTER"],
-      "unitIf": ["!kw:OFFICIO ASSASSINORUM"],
-      "effects": [{ "defend": { "inv": 4 } }],
+      "targetKw": [
+        "AGENTS OF THE IMPERIUM CHARACTER"
+      ],
+      "unitIf": [
+        "!kw:OFFICIO ASSASSINORUM"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "inv": 4
+          }
+        }
+      ],
       "until": "phase",
       "bot": "defend",
+      "status": "auto"
+    },
+    "ARMOUR OF CONTEMPT": {
+      "targetKw": [
+        "DEATHWATCH"
+      ],
+      "buffs": [
+        "enemyAp-1"
+      ],
+      "react": "targetedByAttack",
+      "bot": "defend",
+      "status": "auto"
+    },
+    "TRUESILVER ARMOUR": {
+      "targetKw": [
+        "GREY KNIGHTS TERMINATOR SQUAD"
+      ],
+      "buffs": [
+        "enemyAp-1"
+      ],
+      "react": "targetedByAttack",
+      "bot": "defend",
+      "status": "auto"
+    },
+    "DISPENSE JUSTICE": {
+      "targetKw": [
+        "ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"
+      ],
+      "effects": [
+        {
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "INVIOLATE JURISDICTION": {
+      "targetKw": [
+        "ADEPTUS ARBITES|INQUISITORIAL AGENTS|ORDO HERETICUS"
+      ],
+      "unitIf": [
+        "onObjective"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "fnp": 5
+          }
+        }
+      ],
+      "react": "targetedByAttack",
+      "bot": "defend",
+      "status": "auto"
+    },
+    "STEEL HEART": {
+      "targetKw": [
+        "GREY KNIGHTS TERMINATOR SQUAD"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "attack",
+      "status": "auto"
+    },
+    "PSYBOLT AMMUNITION": {
+      "targetKw": [
+        "GREY KNIGHTS TERMINATOR SQUAD"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "EMPEROR’S WILL": {
+      "targetKw": [
+        "AGENTS OF THE IMPERIUM"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterAdvance",
+            "shootAfterFallBack"
+          ]
+        }
+      ],
+      "until": "phase",
+      "bot": "attack",
+      "status": "auto"
+    },
+    "VIOLENT ACQUISITION": {
+      "targetKw": [
+        "AGENTS OF THE IMPERIUM"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetOnObjective"
+          ],
+          "abilities": [
+            "sustained hits 1",
+            "lance",
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "HYPERSTIMMS": {
+      "targetKw": [
+        "CHARACTER"
+      ],
+      "effects": [
+        {
+          "toughness": 1
+        },
+        {
+          "if": [
+            "source:Eversor Assassin"
+          ],
+          "defend": {
+            "fnp": 4
+          }
+        }
+      ],
+      "react": "targetedByAttack",
+      "bot": "defend",
+      "status": "auto"
+    },
+    "WILL-SAPPING SALVO": {
+      "targetKw": [
+        "INFANTRY"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "sustained hits 1"
+          ]
+        },
+        {
+          "if": [
+            "source:Culexus Assassin"
+          ],
+          "attack": "ranged",
+          "damageTo": 3
+        }
+      ],
+      "bot": "attack",
       "status": "auto"
     }
   }

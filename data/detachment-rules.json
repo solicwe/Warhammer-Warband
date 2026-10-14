@@ -4922,6 +4922,288 @@
   "Hunting Warpack": {
    "auto": "full",
    "manual": "Scenting Fear: once per battle round, start of your Shooting phase: the visible enemy unit within 12\" of a War Dog it would most like to shoot gets +6\" detection range (knights.ts)"
+  },
+  "Combined Arms": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "REGIMENT"
+     ],
+     "attack": "ranged",
+     "if": [
+      "targetNotMV"
+     ],
+     "abilities": [
+      "lethal hits"
+     ]
+    },
+    {
+     "units": [
+      "SQUADRON"
+     ],
+     "attack": "ranged",
+     "if": [
+      "targetMV"
+     ],
+     "abilities": [
+      "lethal hits"
+     ]
+    }
+   ]
+  },
+  "Born Soldiers": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "REGIMENT"
+     ],
+     "attack": "ranged",
+     "if": [
+      "targetNotMV"
+     ],
+     "abilities": [
+      "lethal hits"
+     ]
+    },
+    {
+     "units": [
+      "SQUADRON"
+     ],
+     "attack": "ranged",
+     "if": [
+      "targetMV"
+     ],
+     "abilities": [
+      "lethal hits"
+     ]
+    }
+   ]
+  },
+  "Mechanised Assault": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ASTRA MILITARUM"
+     ],
+     "attack": "ranged",
+     "if": [
+      "disembarkedThisTurn"
+     ],
+     "wound": 1
+    }
+   ]
+  },
+  "Armoured Fist": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ASTRA MILITARUM"
+     ],
+     "attack": "ranged",
+     "if": [
+      "disembarkedThisTurn"
+     ],
+     "wound": 1
+    }
+   ]
+  },
+  "Recon Element": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ASTRA MILITARUM",
+      "!TITANIC"
+     ],
+     "stealth": true
+    }
+   ]
+  },
+  "Masters of Camouflage": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ASTRA MILITARUM",
+      "!TITANIC"
+     ],
+     "stealth": true
+    }
+   ]
+  },
+  "Hammer of the Emperor": {
+   "auto": "full",
+   "rolls": {
+    "advanceSix": true
+   }
+  },
+  "Iron Tread": {
+   "auto": "full",
+   "rolls": {
+    "advanceSix": true
+   }
+  },
+  "Bridgehead Strike": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "MILITARUM TEMPESTUS"
+     ],
+     "attack": "ranged",
+     "if": [
+      "setUpThisTurn"
+     ],
+     "hit": 1
+    }
+   ]
+  },
+  "Fire Zone Purge": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "MILITARUM TEMPESTUS"
+     ],
+     "attack": "ranged",
+     "if": [
+      "setUpThisTurn"
+     ],
+     "hit": 1
+    }
+   ]
+  },
+  "Grizzled Company": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ASTRA MILITARUM"
+     ],
+     "if": [
+      "hasOrder"
+     ],
+     "reroll": "hits1"
+    }
+   ]
+  },
+  "Ruthless Discipline": {
+   "auto": "full",
+   "effects": [
+    {
+     "units": [
+      "ASTRA MILITARUM"
+     ],
+     "if": [
+      "hasOrder"
+     ],
+     "reroll": "hits1"
+    }
+   ]
+  },
+  "Steel Hammer": {
+   "auto": "full",
+   "note": "Titanic/Squadron can shoot into Engagement Range without penalty, even with Blast weapons"
+  },
+  "Ceaseless Cannonade": {
+   "auto": "full",
+   "note": "Titanic/Squadron can shoot into Engagement Range without penalty, even with Blast weapons"
+  },
+  "Armoured Infantry": {
+   "auto": "full",
+   "note": "Officers can issue Orders to Squadron units"
+  },
+  "Squadron Command": {
+   "auto": "full",
+   "note": "Officers can issue Orders to Squadron units"
+  },
+  "Abhuman Auxiliaries": {
+   "auto": "full",
+   "note": "Bullgryn/Ogryn/Ratlings have ABHUMAN; Commissar can issue Take Aim! and orders to ABHUMAN"
+  },
+  "Absolutist Principles": {
+   "auto": "full",
+   "note": "Bullgryn/Ogryn/Ratlings have ABHUMAN; Commissar can issue Take Aim! and orders to ABHUMAN"
+  },
+  "Designation Force": {
+   "auto": "full",
+   "note": "Signal Flares: Scout Sentinel and Infantry Smoke can designate enemy within 12\" for +3\" detection range"
+  },
+  "Designated Targets": {
+   "auto": "full",
+   "note": "Signal Flares: Scout Sentinel and Infantry Smoke can designate enemy within 12\" for +3\" detection range"
+  },
+  "Siege Regiment": {
+   "auto": "full",
+   "choice": {
+    "name": "Artillery Support",
+    "when": "round",
+    "uses": "free",
+    "pick": 1,
+    "options": [
+     {
+      "id": "creeping-barrage",
+      "name": "Creeping Barrage",
+      "text": "Enemy units >12\" away on 5+ are shaken (-2\" M, -2 to charge rolls)."
+     },
+     {
+      "id": "incendiary-bombardment",
+      "name": "Incendiary Bombardment",
+      "text": "Enemy units >12\" away are scattered (no Benefit of Cover)."
+     },
+     {
+      "id": "smoke-shells",
+      "name": "Smoke Shells",
+      "text": "Friendly units have Stealth.",
+      "effects": [
+       {
+        "units": [
+         "ASTRA MILITARUM"
+        ],
+        "stealth": true
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "Artillery Support": {
+   "auto": "full",
+   "choice": {
+    "name": "Artillery Support",
+    "when": "round",
+    "uses": "free",
+    "pick": 1,
+    "options": [
+     {
+      "id": "creeping-barrage",
+      "name": "Creeping Barrage",
+      "text": "Enemy units >12\" away on 5+ are shaken (-2\" M, -2 to charge rolls)."
+     },
+     {
+      "id": "incendiary-bombardment",
+      "name": "Incendiary Bombardment",
+      "text": "Enemy units >12\" away are scattered (no Benefit of Cover)."
+     },
+     {
+      "id": "smoke-shells",
+      "name": "Smoke Shells",
+      "text": "Friendly units have Stealth.",
+      "effects": [
+       {
+        "units": [
+         "ASTRA MILITARUM"
+        ],
+        "stealth": true
+       }
+      ]
+     }
+    ]
+   }
   }
  }
 }
