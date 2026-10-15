@@ -717,7 +717,7 @@ export interface GameState {
   fx?: FxEvent[];
   stats?: BattleStats;
   /** a campaign battle: the map node, the player's relics and the enemy's special rules (ids, see campaign.ts) */
-  campaign?: { node: string; relics: string[]; rules: string[] };
+  campaign?: { node: string; relics: string[]; rules: string[]; relicLevels?: Record<string, number> };
   table?: { width: number; height: number };
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

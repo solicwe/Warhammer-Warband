@@ -7,7 +7,7 @@ import { autoList, playable } from '../engine/autoList';
 import {
   afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
   bossRuleById, buyHonorForUnit, cheapest, dismissUnit, enter, loadRun, makeOffer,
-  newRun, reachable, recruitUnit, relicById, saveRun, START_POINTS, takeReward,
+  newRun, reachable, recruitUnit, relicById, relicDesc, rerollOffer, saveRun, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
 } from '../engine/campaign';
 import { hasFactionRules } from '../engine/effects';
@@ -219,7 +219,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             </button>
           </div>
           {run.relics.length > 0 && (
-            <div className="cmp-relics">{run.relics.map((id) => <RelicToken key={id} id={id} big onInfo={setInfo} />)}</div>
+            <div className="cmp-relics">{run.relics.map((id) => <RelicToken key={id} id={id} lvl={run.relicLevels?.[id] ?? 1} big onInfo={setInfo} />)}</div>
           )}
           <details className="cmp-units">
             <summary>Active Roster ({run.list.units.length} units)</summary>
@@ -248,20 +248,47 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
         {run.offer && fac && (
           <section className="cmp-offer" aria-label="Choose a reward">
-            <div className="cmp-kicker center">Choose one reward</div>
+            <div className="cmp-kicker center" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span style={{ fontWeight: 800 }}>{(run.picksLeft ?? 1) > 1 ? `Boss Spoils: Choose 2 (${run.picksLeft} picks left)` : 'Choose one reward'}</span>
+              <button
+                type="button"
+                className="btn small"
+                disabled={(run.freeRerolls ?? 0) <= 0 && (run.scrap ?? 0) < 30}
+                onClick={() => {
+                  const next = rerollOffer(run, fac);
+                  setRun(next);
+                  saveRun(next);
+                  play('dice', 2);
+                  setInfo((run.freeRerolls ?? 0) > 0 ? 'Spun! (Free reroll)' : 'Spun! (-30 Scrap)');
+                }}
+                style={{ padding: '4px 10px', fontSize: '0.8rem', fontWeight: 700 }}
+              >
+                <Icon name="reroll" size={14} /> Spin {(run.freeRerolls ?? 0) > 0 ? '(Free)' : '(30 Scrap)'}
+              </button>
+            </div>
             <div className="cmp-cards">
               {run.offer.map((rw, i) => {
                 const relic = rw.kind === 'relic' ? relicById(rw.id) : null;
+                const curLvl = rw.kind === 'relic' ? (run.relicLevels?.[rw.id] ?? (run.relics.includes(rw.id) ? 1 : 0)) : 0;
+                const isUpgrade = curLvl > 0;
+                const nextLvl = curLvl + 1;
                 return (
-                  <button key={i} className={`cmp-card slate k-${rw.kind} ${relic?.rare ? 'rare' : ''}`} style={{ animationDelay: `${i * 90}ms` }} onClick={() => take(rw)}>
+                  <button key={i} className={`cmp-card slate k-${rw.kind} ${relic?.rare ? 'rare' : ''} ${isUpgrade ? 'upgrade' : ''}`} style={{ animationDelay: `${i * 90}ms`, position: 'relative' }} onClick={() => take(rw)}>
                     <span className="slate-in">
-                      <span className="cmp-card-kind">{rw.kind === 'unit' ? 'Reinforcements' : rw.kind === 'relic' ? (relic?.rare ? 'Rare relic' : 'Relic') : rw.kind === 'scrap' ? 'Scrap Cache' : 'Command'}</span>
-                      {rw.kind === 'relic' && <RelicToken id={rw.id} big />}
+                      <span className="cmp-card-kind" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{rw.kind === 'unit' ? 'Reinforcements' : isUpgrade ? 'Upgrade' : rw.kind === 'relic' ? (relic?.rare ? 'Rare relic' : 'Relic') : rw.kind === 'scrap' ? 'Scrap Cache' : 'Command'}</span>
+                        {isUpgrade && <span className="chip warn small" style={{ fontSize: '0.72rem', padding: '1px 6px', fontWeight: 800 }}>Lv.{nextLvl}</span>}
+                      </span>
+                      {rw.kind === 'relic' && <RelicToken id={rw.id} lvl={isUpgrade ? nextLvl : 1} big />}
                       {rw.kind === 'unit' && <span className="cmp-card-icon"><Icon name="plus" size={22} /></span>}
                       {rw.kind === 'cp' && <span className="cmp-card-icon"><Icon name="strat" size={22} /></span>}
                       {rw.kind === 'scrap' && <span className="cmp-card-icon"><Icon name="shop" size={22} /></span>}
-                      <b className="cmp-card-name">{rw.kind === 'unit' ? rw.datasheet : rw.kind === 'relic' ? relic?.name : rw.kind === 'scrap' ? `+${rw.amount} Scrap` : '+1 CP every battle'}</b>
-                      <span className="cmp-card-text">{rw.kind === 'unit' ? `${rw.models} models · ${rw.pts} pts joins army` : rw.kind === 'relic' ? relic?.text : rw.kind === 'scrap' ? `Add ${rw.amount} scrap to buy armory upgrades.` : 'Start each battle with one more CP.'}</span>
+                      <b className="cmp-card-name">
+                        {rw.kind === 'unit' ? rw.datasheet : rw.kind === 'relic' ? (isUpgrade ? `${relic?.name} (Lv.${nextLvl})` : relic?.name) : rw.kind === 'scrap' ? `+${rw.amount} Scrap` : '+1 CP every battle'}
+                      </b>
+                      <span className="cmp-card-text">
+                        {rw.kind === 'unit' ? `${rw.models} models · ${rw.pts} pts joins army` : rw.kind === 'relic' && relic ? relicDesc(relic, isUpgrade ? nextLvl : 1) : rw.kind === 'scrap' ? `Add ${rw.amount} scrap to buy armory upgrades.` : 'Start each battle with one more CP.'}
+                      </span>
                     </span>
                   </button>
                 );

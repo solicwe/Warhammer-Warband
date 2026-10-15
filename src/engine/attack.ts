@@ -227,6 +227,10 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       let pi = Math.min(opt.profile?.[w.name] ?? 0, w.profiles.length - 1);
       if (!hunts(w.profiles[pi])) pi = w.profiles.findIndex(hunts);
       if (pi < 0) continue;
+      if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(w.profiles[pi], 'assault')) {
+        const assaultIdx = w.profiles.findIndex((q) => hasAbility(q, 'assault') && hunts(q));
+        if (assaultIdx >= 0) pi = assaultIdx;
+      }
       const p = w.profiles[pi];
       if (hasAbility(p, 'one-shot') && A.oneShotUsed.includes(w.name)) continue;
       const baseRange = typeof p.range === 'number' ? p.range : 0;

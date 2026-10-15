@@ -11,7 +11,7 @@ import {
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, markFought,
   openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
-  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName } from './game';
+  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName, startConsolidate } from './game';
 import { applyPick } from './blessings';
 import { botPledge, setPledge } from './emperorsChildren';
 import { botPlague, PLAGUE_IDS } from './deathGuard';
@@ -650,7 +650,13 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
     return true;
   }
   const c = fightCandidates(s);
-  if (c.player === null) return false;
+  if (c.player === null) {
+    if (f.step === 'fight') {
+      startConsolidate(s);
+      return true;
+    }
+    return false;
+  }
   if (only !== undefined && c.player !== only) return false;
   // fight with the unit that does the most damage first
   const pick = (x: UnitState) => Math.max(0, ...engagedEnemies(s, x).map((e) => meleeKills(x, e) * perModel(e)));
@@ -779,7 +785,14 @@ export function botStep(s: GameState, bot: PlayerId): boolean {
   if (s.window) { if (s.window.player === bot) { botWindow(s); return true; } return false; }
   if (s.phase === 'deploy') { if (s.deployTurn !== bot) return false; botDeploy(s); return true; }
   if (s.phase === 'scouts') { if (s.deployTurn !== bot) return false; botScouts(s, bot); return true; }
-  if (s.phase === 'fight') return botFightStep(s, bot);
+  if (s.phase === 'fight') {
+    if (botFightStep(s, bot)) return true;
+    if (s.fight && s.fight.step === 'fight' && !fightCandidates(s).units.length) {
+      startConsolidate(s);
+      return true;
+    }
+    return false;
+  }
   if (s.phase === 'gameover' || s.active !== bot) return false;
   const one = s.phase === 'movement' ? botMoveOne : s.phase === 'shooting' ? botShootOne : s.phase === 'charge' ? botChargeOne : null;
   if (one) { if (!one(s)) endPhase(s); return true; }

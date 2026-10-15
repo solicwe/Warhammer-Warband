@@ -467,6 +467,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     setStratPlayer(who); setStratUnit(sel && s.units.find((u) => u.id === sel)?.owner === (who ?? actor) ? sel : ''); setShowStrats(true);
   };
   const [freeAdvRR, setFreeAdvRR] = useState<string | null>(null);
+  const [actPick, setActPick] = useState<string | null>(null);
 
   const setMode = (m: Mode | null, d: Paths | null = null) => { setModeRaw(m); setDraft(d); setCheck(null); joyOff.current = { x: 0, y: 0 }; };
   // moving without a finger over the models: the joystick walks the unit (how far it has gone from where it stood)
@@ -571,7 +572,19 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const heroicSelection = heroicWindow !== null;
   const heroicPick = heroicWindow ? heroicCandidates(s, heroicWindow.player) : [];
   const heroicNumbers = Object.fromEntries(heroicPick.map((u, i) => [u.id, i + 1]));
-  const targets = s.window?.kind === 'pickUnit' ? s.window.units : stratPick ? stratPick.ids : ritMap ? ritMap.targets : heroicPick.length ? heroicPick.map((u) => u.id) : mode?.k === 'shoot' ? shootTargets : mode?.k === 'charge' ? chargeOpts : mode?.k === 'fight' ? fightTargets : mode?.k === 'explosives' ? explosiveTargets : mode?.k === 'crush' ? crushTargets : [];
+  const actTargets = actPick ? (manualActs(s, actor).find((m) => `${m.def.holder.id}|${m.def.key}` === actPick)?.targets.map((t) => t.id) ?? []) : [];
+  const targets = s.window?.kind === 'pickUnit' ? s.window.units
+    : stratPick ? stratPick.ids
+    : actPick ? actTargets
+    : (!mode && s.window?.kind === 'fireOverwatch' && s.window.player === actor) ? overwatchCandidates(s, s.window.player).map((u) => u.id)
+    : ritMap ? ritMap.targets
+    : heroicPick.length ? heroicPick.map((u) => u.id)
+    : mode?.k === 'shoot' ? shootTargets
+    : mode?.k === 'charge' ? chargeOpts
+    : mode?.k === 'fight' ? fightTargets
+    : mode?.k === 'explosives' ? explosiveTargets
+    : mode?.k === 'crush' ? crushTargets
+    : [];
   const picked = ritMap ? ritMap.picked : mode?.k === 'shoot' || mode?.k === 'fight' || mode?.k === 'explosives' ? (mode.target ? [mode.target] : []) : mode?.k === 'charge' ? mode.targets : [];
 
   const onTapUnit = (unitId: string, modelId?: string) => {
@@ -584,6 +597,30 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const m = U(unitId).models.find((x) => x.id === modelId && !x.dead) ?? alive(U(unitId))[0];
       if (m) measureTap({ x: m.x, y: m.y }, { u: unitId, m: m.id });
       return;
+    }
+    if (actPick) {
+      const actEntry = manualActs(s, actor).find((m) => `${m.def.holder.id}|${m.def.key}` === actPick);
+      if (actEntry && actEntry.targets.some((t) => t.id === unitId)) {
+        const hid = actEntry.def.holder.id;
+        const res = act((g) => {
+          const err = useActByKey(g, hid, actEntry.def.key, unitId);
+          const gu = unitById(g, hid);
+          return { err, move: gu.extraMove && gu.extraMove.phase === `${g.turn}:${g.phase}` && !g.window ? gu.extraMove.kind : null };
+        });
+        setActPick(null);
+        if (res.err) flash(res.err);
+        else flash(`${actEntry.def.holder.name}: ${actEntry.label}`);
+        return;
+      }
+    }
+    if (s.window?.kind === 'fireOverwatch' && s.window.player === actor) {
+      const ows = overwatchCandidates(s, s.window.player);
+      if (ows.some((c) => c.id === unitId)) {
+        setSel(unitId);
+        setMode({ k: 'shoot', unitId, smode: 'snap', target: null, useCQ: false, profile: {}, overwatch: true });
+        flash(`Fire Overwatch: select target for ${U(unitId).name}`);
+        return;
+      }
     }
     if (stratPick) {
       if (stratPick.ids.includes(unitId)) { setSel(unitId); setStratPlayer(stratPick.p); setStratUnit(unitId); setShowStrats(true); setStratPick(null); }
@@ -1082,7 +1119,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   // ---------- datasheet abilities you press ----------
 
-  const [actPick, setActPick] = useState<string | null>(null); // ability whose target is being picked
   /** "Assault Doctrine: charge after Advancing (this unit)" → "Assault Doctrine" */
   const optLabel = (l: string) => (l.split(':')[0] || l).replace(/\s*\(.*\)\s*$/, '').trim();
   const shortName = (n: string) => n.replace(/\s*\((?:once|psychic|psyker|first)[^)]*\)\s*$/i, '').replace(/\s*\(Aura\)\s*$/i, '');
@@ -2312,6 +2348,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         </div>
       </div>
     );
+    if (s.window && (!actingBot || s.window.player !== actingBot)) return windowPanel();
     // the bot's turn: what it just did, in a line (the commander above says why)
     if (actingBot !== null) return (
       <div className="bot-act">
@@ -2443,7 +2480,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           s={s}
           viewer={actor}
           selected={sel}
-          movable={s.phase === 'movement' && !mode ? s.units.filter((u) => u.owner === s.active && onBoard(u) && !u.move).map((u) => u.id) : undefined}
+          movable={
+            s.phase === 'movement' && !mode ? s.units.filter((u) => u.owner === s.active && onBoard(u) && !u.move).map((u) => u.id)
+            : (!mode && s.window?.kind === 'fireOverwatch' && s.window.player === actor) ? overwatchCandidates(s, s.window.player).map((u) => u.id)
+            : undefined
+          }
           draftUnit={draftUnit}
           draft={draft}
           unitNumbers={heroicNumbers}
@@ -2481,7 +2522,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onShake={(lv) => { if (!lv) return; setShake(lv); window.setTimeout(() => setShake(0), 420 + lv * 80); }} />
         {botSays && actingBot === null && !spectate && <div className="bot-caption">{botSays}</div>}
         {toast && <div className="toast">{toast}</div>}
-        {s.campaign && <RelicStrip relics={s.campaign.relics} rules={s.campaign.rules} onInfo={flash} />}
+        {s.campaign && <RelicStrip relics={s.campaign.relics} rules={s.campaign.rules} relicLevels={s.campaign.relicLevels} onInfo={flash} />}
         {tape.on && (
           <div className="tape-bar">
             <span>{tapeInfo ? tapeInfo.line : tape.a ? 'Tap the second point (tap a model = base to base + line of sight)' : 'Tape measure: tap a model or a first point'}</span>

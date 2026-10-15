@@ -1710,7 +1710,7 @@ export function markFought(s: GameState, u: UnitState) {
   if (!fightCandidates(s).units.length) startConsolidate(s);
 }
 
-function startConsolidate(s: GameState) {
+export function startConsolidate(s: GameState) {
   const f = s.fight!;
   f.step = 'consolidate';
   f.stepPlayer = s.active;

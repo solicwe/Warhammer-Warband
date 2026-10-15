@@ -12,25 +12,27 @@ const RELIC_ICON: Record<string, IconName> = {
 };
 const RULE_ICON: Record<string, IconName> = { 'iron-will': 'hold', deadeye: 'target', warlord: 'leader', numbers: 'objective', armour: 'hold', savage: 'charge' };
 
-export function RelicToken({ id, enemy, big, onInfo }: { id: string; enemy?: boolean; big?: boolean; onInfo?: (text: string) => void }) {
+export function RelicToken({ id, enemy, big, lvl, onInfo }: { id: string; enemy?: boolean; big?: boolean; lvl?: number; onInfo?: (text: string) => void }) {
   const r = enemy ? bossRuleById(id) : relicById(id);
   if (!r) return null;
   const rare = !enemy && relicById(id)?.rare;
-  const cls = `relic ${enemy ? 'enemy' : ''} ${rare ? 'rare' : ''} ${big ? 'big' : ''}`;
+  const cls = `relic ${enemy ? 'enemy' : ''} ${rare ? 'rare' : ''} ${big ? 'big' : ''} ${lvl && lvl > 1 ? 'upgraded' : ''}`;
   const icon = <Icon name={(enemy ? RULE_ICON[id] : RELIC_ICON[id]) ?? 'enhancement'} size={big ? 22 : 16} />;
+  const badge = lvl && lvl > 1 ? <span className="relic-lvl-badge">Lv.{lvl}</span> : null;
   // inside another button (a reward card) it is only a picture
-  if (!onInfo) return <span className={cls} title={`${r.name}: ${r.text}`} aria-hidden="true">{icon}</span>;
+  if (!onInfo) return <span className={cls} title={`${r.name}${lvl && lvl > 1 ? ` (Lv.${lvl})` : ''}: ${r.text}`} aria-hidden="true">{icon}{badge}</span>;
   return (
-    <button type="button" className={cls} title={`${r.name}: ${r.text}`} aria-label={`${r.name}: ${r.text}`}
-      onClick={(e) => { e.stopPropagation(); onInfo(`${r.name}: ${r.text}`); }}>
+    <button type="button" className={cls} title={`${r.name}${lvl && lvl > 1 ? ` (Lv.${lvl})` : ''}: ${r.text}`} aria-label={`${r.name}${lvl && lvl > 1 ? ` (Lv.${lvl})` : ''}: ${r.text}`}
+      onClick={(e) => { e.stopPropagation(); onInfo(`${r.name}${lvl && lvl > 1 ? ` (Lv.${lvl})` : ''}: ${r.text}`); }}>
       {icon}
+      {badge}
     </button>
   );
 }
 
 /** The player's relics and the enemy's rules: one small badge in the board's corner (it never covers the models);
  *  tapping it opens them for a few seconds, tapping a token says what it does. */
-export function RelicStrip({ relics, rules, onInfo }: { relics: string[]; rules: string[]; onInfo: (text: string) => void }) {
+export function RelicStrip({ relics, rules, relicLevels, onInfo }: { relics: string[]; rules: string[]; relicLevels?: Record<string, number>; onInfo: (text: string) => void }) {
   const [open, setOpen] = useState(false);
   useEffect(() => { if (!open) return; const t = window.setTimeout(() => setOpen(false), 6000); return () => window.clearTimeout(t); }, [open]);
   if (!relics.length && !rules.length) return null;
@@ -44,7 +46,7 @@ export function RelicStrip({ relics, rules, onInfo }: { relics: string[]; rules:
   }
   return (
     <div className="relic-strip" aria-label="Relics and enemy rules">
-      {relics.map((id) => <RelicToken key={id} id={id} onInfo={onInfo} />)}
+      {relics.map((id) => <RelicToken key={id} id={id} lvl={relicLevels?.[id] ?? 1} onInfo={onInfo} />)}
       {rules.length > 0 && relics.length > 0 && <span className="relic-sep" aria-hidden="true" />}
       {rules.map((id) => <RelicToken key={id} id={id} enemy onInfo={onInfo} />)}
       <button type="button" className="relic-close" aria-label="Hide" onClick={() => setOpen(false)}><Icon name="close" size={14} /></button>

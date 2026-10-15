@@ -58,6 +58,7 @@ export interface Run {
   /** nodes cleared, in order (the last one is where the player stands) */
   path: string[];
   relics: string[];
+  relicLevels?: Record<string, number>;
   /** extra CP at the start of every battle */
   cp: number;
   fate: number;
@@ -67,6 +68,9 @@ export interface Run {
   fighting?: string;
   /** rewards to pick one from */
   offer?: Reward[];
+  picksLeft?: number;
+  freeRerolls?: number;
+  rerollCount?: number;
   /** what happened, newest last */
   story: string[];
   over?: 'won' | 'lost';
@@ -117,6 +121,67 @@ export const RELICS: Relic[] = [
   { id: 'adamantine_will', name: 'Adamantine Will', text: 'Every model has Feel No Pain 5+ against mortal wounds.', e: { defend: { fnp: 5, fnpVs: 'mortal' } } },
 ];
 export const relicById = (id: string) => RELICS.find((r) => r.id === id);
+
+export function relicLevel(run: Run, id: string): number {
+  return run.relicLevels?.[id] ?? (run.relics.includes(id) ? 1 : 0);
+}
+
+export function scaleRelicEffect(e: Effect, lvl: number): Effect {
+  if (lvl <= 1) return { ...e };
+  const out: Effect = { ...e };
+  if (out.move) out.move = out.move * lvl;
+  if (out.damage) out.damage = out.damage * lvl;
+  if (out.ap) out.ap = out.ap * lvl;
+  if (out.rangeBonus) out.rangeBonus = out.rangeBonus * lvl;
+  if (out.oc) out.oc = out.oc * lvl;
+  if (out.strength) out.strength = out.strength * lvl;
+  if (out.toughness) out.toughness = out.toughness * lvl;
+  if (out.attacks) out.attacks = out.attacks * lvl;
+  if (out.wound) out.wound = out.wound * lvl;
+  if (out.advanceBonus) out.advanceBonus = out.advanceBonus * lvl;
+  if (out.chargeBonus) out.chargeBonus = out.chargeBonus * lvl;
+  if (out.reroll === 'hits1' && lvl >= 2) out.reroll = 'hits';
+  if (out.reroll === 'wounds1' && lvl >= 2) out.reroll = 'wounds';
+  if (out.defend) {
+    out.defend = { ...out.defend };
+    if (out.defend.save) out.defend.save = out.defend.save * lvl;
+    if (out.defend.fnp) out.defend.fnp = Math.max(3, out.defend.fnp - (lvl - 1));
+    if (out.defend.inv) out.defend.inv = Math.max(3, out.defend.inv - (lvl - 1));
+    if (out.defend.damage) out.defend.damage = out.defend.damage * lvl;
+    if (out.defend.hit) out.defend.hit = out.defend.hit * lvl;
+    if (out.defend.wound) out.defend.wound = out.defend.wound * lvl;
+  }
+  if (out.abilities?.length) {
+    out.abilities = out.abilities.map((a) => {
+      if (a === 'sustained hits 1') return `sustained hits ${lvl}`;
+      return a;
+    });
+  }
+  return out;
+}
+
+export function relicDesc(r: Relic, lvl = 1): string {
+  if (lvl <= 1) return r.text;
+  let t = r.text;
+  if (r.e.move) t = t.replace(/\+1" Move/, `+${lvl}" Move`);
+  if (r.e.damage) t = t.replace(/\+1 Damage/, `+${lvl} Damage`);
+  if (r.e.ap) t = t.replace(/by 1/, `by ${lvl}`).replace(/\+1 AP/, `+${lvl} AP`);
+  if (r.e.rangeBonus) t = t.replace(/\+3" Range/, `+${3 * lvl}" Range`);
+  if (r.e.oc) t = t.replace(/\+1 Objective Control/, `+${lvl} Objective Control`);
+  if (r.e.strength) t = t.replace(/\+1 Strength/, `+${lvl} Strength`);
+  if (r.e.toughness) t = t.replace(/\+1 Toughness/, `+${lvl} Toughness`);
+  if (r.e.attacks) t = t.replace(/\+1 Attack/, `+${lvl} Attacks`);
+  if (r.e.wound) t = t.replace(/\+1 to Wound/, `+${lvl} to Wound`);
+  if (r.e.advanceBonus) t = t.replace(/\+1 to Advance/, `+${lvl} to Advance`);
+  if (r.e.defend?.fnp) t = t.replace(/Feel No Pain 6\+/, `Feel No Pain ${Math.max(3, 7 - lvl)}+`).replace(/Feel No Pain 5\+/, `Feel No Pain ${Math.max(3, 6 - lvl)}+`);
+  if (r.e.defend?.inv) t = t.replace(/4\+ invulnerable/, `${Math.max(3, 5 - lvl)}+ invulnerable`).replace(/5\+ invulnerable/, `${Math.max(3, 6 - lvl)}+ invulnerable`);
+  if (r.e.defend?.save) t = t.replace(/add 1 to/, `add ${lvl} to`);
+  if (r.e.reroll === 'hits1' && lvl >= 2) t = t.replace(/re-roll Hit rolls of 1/, 're-roll ALL Hit rolls');
+  if (r.e.reroll === 'wounds1' && lvl >= 2) t = t.replace(/re-roll Wound rolls of 1/, 're-roll ALL Wound rolls');
+  if (r.id === 'fury' && lvl >= 2) t = t.replace(/SUSTAINED HITS 1/, `SUSTAINED HITS ${lvl}`);
+  if (r.id === 'cache' && lvl >= 2) t = t.replace(/\+1 CP/, `+${lvl} CP`);
+  return t;
+}
 
 /** The enemy's special rules (elite battles have one, the boss two). */
 export interface BossRule { id: string; name: string; text: string; units?: string; e: Effect }
@@ -195,7 +260,7 @@ export function makeMap(seed: number, enemies: string[]): MapNode[] {
 export function newRun(faction: FactionData, list: ArmyList, enemies: string[], seed = Date.now()): Run {
   return {
     version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, enemies.filter((e) => e !== faction.id && e !== 'TL')),
-    path: [], relics: [], cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
+    path: [], relics: [], relicLevels: {}, freeRerolls: 1, cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
   };
 }
 
@@ -215,10 +280,14 @@ const mainKeyword = (f: FactionData) => {
   return [...count].sort((a, b) => b[1] - a[1])[0]?.[0];
 };
 
-/** Three rewards to pick one from after a win (an elite battle offers relics; a supply drop a mix). */
+/** Three rewards to pick one from after a win (an elite/boss battle offers relics; a supply drop a mix). */
 export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt = 0): Reward[] {
   const r = rng(run.seed + run.path.length * 101 + salt * 7 + 3);
-  const relics = (rare: boolean) => pickN(RELICS.filter((x) => !run.relics.includes(x.id) && (rare || !x.rare)), 3, r).map((x): Reward => ({ kind: 'relic', id: x.id }));
+  const maxLvl = 3;
+  // Allow duplicate relics up to level 3 so they can level up (Vampire Survivors style)
+  const eligibleRelics = RELICS.filter((x) => (run.relicLevels?.[x.id] ?? (run.relics.includes(x.id) ? 1 : 0)) < maxLvl);
+  const count = (kind === 'boss' || kind === 'elite') ? 5 : 3;
+  const relics = (rare: boolean) => pickN(eligibleRelics.filter((x) => rare || !x.rare), count, r).map((x): Reward => ({ kind: 'relic', id: x.id }));
   const units = (n: number, cap: number) => pickN(usable(faction, mainKeyword(faction)).filter((d) => { const o = cheapest(d); return o.pts >= 50 && o.pts <= cap; }), n, r)
     .map((d): Reward => { const o = cheapest(d); return { kind: 'unit', datasheet: d.name, models: o.models, pts: o.pts }; });
   if (kind === 'elite' || kind === 'boss') return relics(true);
@@ -229,9 +298,36 @@ export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt =
   return [...units(1, cap), ...relics(false).slice(0, 1), scrapReward];
 }
 
+export function rerollOffer(run: Run, faction: FactionData): Run {
+  const spinCost = 30;
+  const free = (run.freeRerolls ?? 0) > 0;
+  if (!free && (run.scrap ?? 0) < spinCost) return run;
+  const scrap = free ? run.scrap : (run.scrap ?? 0) - spinCost;
+  const freeRerolls = free ? (run.freeRerolls ?? 0) - 1 : 0;
+  const salt = (run.rerollCount ?? 0) + 1;
+  const at = run.path.length ? run.map.find((n) => n.id === run.path[run.path.length - 1]) : null;
+  const kind = at?.kind ?? 'battle';
+  const offer = makeOffer(run, faction, kind, salt);
+  return {
+    ...run,
+    scrap,
+    freeRerolls,
+    rerollCount: salt,
+    offer,
+    story: [...run.story, free ? 'Spin used (Free)' : `Spin used (-${spinCost} Scrap)`],
+  };
+}
+
 export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
-  const next: Run = { ...run, offer: undefined, story: [...run.story] };
-  if (rw.kind === 'relic') { next.relics = [...run.relics, rw.id]; next.story.push(`Relic: ${relicById(rw.id)?.name}`); if (rw.id === 'cache') next.cp += 1; }
+  const next: Run = { ...run, story: [...run.story] };
+  if (rw.kind === 'relic') {
+    const curLvl = run.relicLevels?.[rw.id] ?? (run.relics.includes(rw.id) ? 1 : 0);
+    const newLvl = curLvl + 1;
+    next.relicLevels = { ...(run.relicLevels ?? {}), [rw.id]: newLvl };
+    if (!run.relics.includes(rw.id)) next.relics = [...run.relics, rw.id];
+    next.story.push(curLvl > 0 ? `Upgraded: ${relicById(rw.id)?.name} to Lv.${newLvl}` : `Relic: ${relicById(rw.id)?.name}`);
+    if (rw.id === 'cache') next.cp += 1;
+  }
   if (rw.kind === 'cp') { next.cp = run.cp + 1; next.story.push('+1 CP every battle'); }
   if (rw.kind === 'scrap') { next.scrap = (run.scrap ?? 0) + rw.amount; next.story.push(`Salvaged +${rw.amount} Scrap`); }
   if (rw.kind === 'fate') { next.fate = Math.min(3, run.fate + rw.amount); next.story.push(`Gained +${rw.amount} Fate`); }
@@ -241,6 +337,18 @@ export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
     const e: ArmyUnitEntry = syncWargear(d, defaultWargear(d, { uid, datasheet: rw.datasheet, models: rw.models, pts: rw.pts }));
     next.list = { ...run.list, units: [...run.list.units, e] };
     next.story.push(`Reinforcements: ${rw.datasheet}`);
+  }
+
+  // Handle multiple picks (e.g. boss battles allow 2 picks!)
+  const left = (run.picksLeft ?? 1) - 1;
+  if (left > 0 && run.offer && run.offer.length > 1) {
+    next.picksLeft = left;
+    next.offer = run.offer.filter((o) => o !== rw);
+  } else {
+    next.picksLeft = undefined;
+    next.offer = undefined;
+    const at = run.path.length ? run.map.find((n) => n.id === run.path[run.path.length - 1]) : null;
+    if (at?.kind === 'boss') next.over = 'won';
   }
   return next;
 }
@@ -262,7 +370,7 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
     const fate = run.fate - 1;
     return { ...run, fighting: undefined, fate, over: fate <= 0 ? 'lost' : undefined, story: [...run.story, `Defeated by ${enemyName}${fate > 0 ? ` · ${fate} Fate left` : ''}`] };
   }
-  const scrapGain = node.kind === 'boss' ? 250 : node.kind === 'elite' ? 140 : 70;
+  const scrapGain = node.kind === 'boss' ? 300 : node.kind === 'elite' ? 140 : 70;
   // Units that took part gain +1 XP
   const updatedUnits = run.list.units.map((u) => ({ ...u, xp: (u.xp ?? 0) + 1 }));
   const next: Run = {
@@ -271,11 +379,12 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
     path: [...run.path, node.id],
     wins: run.wins + 1,
     scrap: (run.scrap ?? 0) + scrapGain,
+    freeRerolls: 1,
     list: { ...run.list, units: updatedUnits },
-    story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap)${node.kind === 'boss' ? ' — the campaign is won' : ''}`],
+    story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap)${node.kind === 'boss' ? ' — the Warlord is vanquished!' : ''}`],
   };
-  next.offer = node.kind === 'boss' ? undefined : makeOffer(next, faction, node.kind);
-  if (node.kind === 'boss') next.over = 'won';
+  next.picksLeft = node.kind === 'boss' ? 2 : 1;
+  next.offer = makeOffer(next, faction, node.kind);
   return next;
 }
 
@@ -287,7 +396,11 @@ export function applyCampaign(s: GameState, run: Run, rules: string[]) {
   for (const id of run.relics) {
     const r = relicById(id);
     if (!r || id === 'cache') continue;
-    for (const u of s.units.filter((x) => x.owner === me && hasKwIn(x, r.units))) addTimed(s, u, { e: { ...r.e }, label: r.name, until: 'battle', by: me });
+    const lvl = run.relicLevels?.[id] ?? 1;
+    const eff = scaleRelicEffect(r.e, lvl);
+    for (const u of s.units.filter((x) => x.owner === me && hasKwIn(x, r.units))) {
+      addTimed(s, u, { e: eff, label: lvl > 1 ? `${r.name} Lv.${lvl}` : r.name, until: 'battle', by: me });
+    }
   }
   // Apply per-unit Battle Honors from run.list.units!
   for (const entry of run.list.units) {
@@ -305,8 +418,9 @@ export function applyCampaign(s: GameState, run: Run, rules: string[]) {
     if (!b) continue;
     for (const u of s.units.filter((x) => x.owner === foe && hasKwIn(x, b.units))) addTimed(s, u, { e: { ...b.e }, label: b.name, until: 'battle', by: foe });
   }
-  s.players[me].cp += run.cp;
-  s.campaign = { node: run.fighting ?? '', relics: [...run.relics], rules: [...rules] };
+  const cacheLvl = run.relicLevels?.['cache'] ?? (run.relics.includes('cache') ? 1 : 0);
+  s.players[me].cp += run.cp + (cacheLvl > 1 ? cacheLvl - 1 : 0);
+  s.campaign = { node: run.fighting ?? '', relics: [...run.relics], rules: [...rules], relicLevels: { ...(run.relicLevels ?? {}) } };
 }
 
 /** Purchase a Battle Honor for a unit using Scrap */
