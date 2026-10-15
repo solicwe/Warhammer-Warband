@@ -75,7 +75,6 @@ const ICONS = {
   heal: <><path {...S} d="M12 5v14M5 12h14" /><rect {...S} x="2" y="2" width="20" height="20" rx="4" /></>,
   shop: <><path {...S} d="M3 9l2-5h14l2 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path {...S} d="M3 9h18M9 13a3 3 0 0 0 6 0" /></>,
   swords: <><path {...S} d="M14.5 17.5L3 6V3h3l11.5 11.5" /><path {...S} d="M13 19l6-6M16 16l4 4" /><path {...S} d="M9.5 17.5L21 6V3h-3L6.5 14.5" /><path {...S} d="M11 19l-6-6M8 16l-4 4" /></>,
-  sandbox: <><rect {...S} x="3" y="3" width="18" height="18" rx="2" /><path {...S} d="M3 9h18M9 21V9" /><circle {...F} cx="6" cy="6" r="1.2" /><circle {...F} cx="15" cy="15" r="2" /></>,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof ICONS;

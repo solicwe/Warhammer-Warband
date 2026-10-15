@@ -719,7 +719,6 @@ export interface GameState {
   /** a campaign battle: the map node, the player's relics and the enemy's special rules (ids, see campaign.ts) */
   campaign?: { node: string; relics: string[]; rules: string[] };
   table?: { width: number; height: number };
-  sandbox?: boolean;
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;
   /** destroyed models that fight / shoot after the attacking unit has finished (resolved by activations.ts) */

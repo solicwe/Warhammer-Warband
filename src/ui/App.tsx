@@ -4,7 +4,6 @@ import type { GameState } from '../engine/types';
 import { ArmyBuilder } from './ArmyBuilder';
 import { BattleSetup } from './BattleSetup';
 import { CampaignScreen } from './Campaign';
-import { SandboxScreen } from './Sandbox';
 import { resetCoach } from './Coach';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { GameScreen } from './GameScreen';
@@ -13,7 +12,7 @@ import { loadArmies, loadBattlePrefs, saveArmies, saveBattlePrefs, withAutoRules
 import { clearSaved, loadSaved } from './store';
 import { TokenSprites } from './Tokens';
 
-type Screen = { kind: 'home' } | { kind: 'build'; id: string; fresh?: boolean } | { kind: 'battle' } | { kind: 'game'; state: GameState } | { kind: 'campaign' } | { kind: 'sandbox' };
+type Screen = { kind: 'home' } | { kind: 'build'; id: string; fresh?: boolean } | { kind: 'battle' } | { kind: 'game'; state: GameState } | { kind: 'campaign' };
 
 /** Keeps a rendering bug from taking the whole app down; the game itself is already saved. */
 class Guard extends Component<{ children: ReactNode; onReset: () => void }, { error: string | null }> {
@@ -68,9 +67,6 @@ export default function App() {
   if (screen.kind === 'campaign') {
     return wrap(<CampaignScreen index={index} saved={saved} onBack={goHome} onPlay={(s) => setScreen({ kind: 'game', state: s })} onClearSaved={() => { clearSaved(); setSaved(null); }} />);
   }
-  if (screen.kind === 'sandbox') {
-    return wrap(<SandboxScreen index={index} onBack={goHome} onPlayBattle={(s) => setScreen({ kind: 'game', state: s })} />);
-  }
   if (screen.kind === 'build') {
     const a = armies.find((x) => x.id === screen.id);
     if (!a) return wrap(<div className="screen"><button className="btn" onClick={goHome}>Back to home</button></div>);
@@ -104,7 +100,6 @@ export default function App() {
         onDelete={(id) => setArmies((xs) => xs.filter((x) => x.id !== id))}
         onBattle={() => setScreen({ kind: 'battle' })}
         onCampaign={() => setScreen({ kind: 'campaign' })}
-        onSandbox={() => setScreen({ kind: 'sandbox' })}
         onTutorial={() => {
           // a first battle with every tip: against an easy bot, short, Primary Mission only
           resetCoach();
