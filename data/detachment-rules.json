@@ -5801,6 +5801,25 @@
     },
     "Chorus of Condemnation": {
       "auto": "full"
+    },
+    "For the Greater Good": {
+      "auto": "full",
+      "armyRule": true
+    },
+    "Kauyon": {
+      "auto": "full"
+    },
+    "Mont’ka": {
+      "auto": "full"
+    },
+    "Mont'ka": {
+      "auto": "full"
+    },
+    "Retaliation Cadre": {
+      "auto": "full"
+    },
+    "Kroot Hunting Pack": {
+      "auto": "full"
     }
   }
 }

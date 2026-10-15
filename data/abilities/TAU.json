@@ -1,0 +1,698 @@
+{
+  "_comment": "T’au Empire Faction Pack v1.2. Complete datasheet, army rule, detachment and enhancement rules.",
+  "For the Greater Good": {
+    "status": "auto",
+    "note": "Observer unit marks visible enemy as Spotted. Guided units gain +1 BS and [IGNORES COVER] (if Markerlight) against Spotted unit (-1 BS vs non-spotted)."
+  },
+  "Patient Hunter": {
+    "status": "auto",
+    "note": "Rounds 3+: ranged attacks have [SUSTAINED HITS 1]. While Guided, ignore modifiers to BS and Hit rolls against Spotted unit."
+  },
+  "Killing Blow": {
+    "status": "auto",
+    "note": "Rounds 1-3: ranged weapons have [ASSAULT]. While Guided, ranged attacks have [LETHAL HITS]."
+  },
+  "Bonded Heroes": {
+    "status": "auto",
+    "note": "Battlesuit models: +1 S to ranged attacks within 12\", +1 AP within 8\"."
+  },
+  "Hunter’s Instincts": {
+    "status": "auto",
+    "note": "Kroot attacks: +1 to Hit if target is below Starting Strength, and +1 to Wound if Below Half-strength."
+  },
+  "Skirmish Fighters": {
+    "status": "auto",
+    "note": "Kroot models have 6+ invulnerable save against melee attacks and 5+ invulnerable save against ranged attacks."
+  },
+  "Coldstar Commander": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "abilities": [
+          "assault"
+        ],
+        "kind": "ranged"
+      },
+      {
+        "scope": "led",
+        "move": 12
+      }
+    ],
+    "note": "While leading a unit, models have Move 12\" and ranged weapons have [ASSAULT]."
+  },
+  "Enforcer Commander": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "def": {
+          "ap": 1,
+          "kind": "ranged"
+        }
+      }
+    ],
+    "note": "While leading a unit, worsen Armour Penetration of ranged attacks targeting that unit by 1."
+  },
+  "Volley Fire": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "attacks": 1,
+        "kind": "ranged"
+      }
+    ],
+    "note": "While leading a unit, add 1 to Attacks of ranged weapons."
+  },
+  "Crack Shot": {
+    "status": "auto",
+    "note": "On a Critical Wound with ranged attack, that attack has AP -3."
+  },
+  "Way of the Short Blade": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "within9"
+        ],
+        "wound": 1
+      }
+    ],
+    "note": "While leading a unit, attacks targeting enemy within 9\" add 1 to Wound roll."
+  },
+  "Failure Is Not an Option": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "fnp": 5
+      }
+    ],
+    "note": "While leading a unit, models have Feel No Pain 5+."
+  },
+  "Coordinated Leadership": {
+    "status": "auto",
+    "note": "At end of Command phase, roll D6: on 4+, gain 1CP."
+  },
+  "Structural Analyser": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "wound": 1,
+        "kind": "ranged"
+      }
+    ],
+    "note": "While leading a unit, ranged attacks add 1 to Wound roll."
+  },
+  "Breach and Clear": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetOnObjective"
+        ],
+        "reroll": "wounds",
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged attacks targeting enemy within range of objective marker re-roll Wound roll."
+  },
+  "Armour Hunter": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetMV"
+        ],
+        "hit": 1,
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged attacks targeting MONSTER or VEHICLE add 1 to Hit roll."
+  },
+  "Sunforge": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetMV"
+        ],
+        "reroll": "wounds",
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged attacks targeting MONSTER or VEHICLE re-roll Wound roll and Damage roll."
+  },
+  "Fireknife": {
+    "status": "auto",
+    "effects": [
+      {
+        "reroll": "hits1",
+        "kind": "ranged"
+      },
+      {
+        "if": [
+          "targetFullStrength"
+        ],
+        "reroll": "hits",
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged attacks re-roll Hit roll of 1; if target is at Starting Strength, re-roll Hit roll."
+  },
+  "Starscythe": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetNotMV"
+        ],
+        "ap": 1,
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged attacks (excluding MONSTERS and VEHICLES) improve AP by 1."
+  },
+  "Velocity Tracker": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetFly"
+        ],
+        "reroll": "hits",
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged attacks targeting FLY unit re-roll Hit roll."
+  },
+  "Ground Strike Fighter": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetNotFly"
+        ],
+        "hit": 1,
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged attacks targeting enemy that cannot FLY add 1 to Hit roll."
+  },
+  "Titan-killer": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetCharMV"
+        ],
+        "reroll": "hits",
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged attacks targeting TITANIC or TOWERING re-roll Hit roll."
+  },
+  "Weapon Support System": {
+    "status": "auto",
+    "effects": [
+      {
+        "ignoreHitMods": true,
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ignore any or all modifiers to the Hit roll for ranged attacks."
+  },
+  "Support System": {
+    "status": "auto",
+    "effects": [
+      {
+        "ignoreHitMods": true,
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ignore any or all modifiers to the Hit roll."
+  },
+  "Hero of the Empire (Aura)": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "reroll": "hits1",
+        "kind": "ranged"
+      }
+    ],
+    "note": "Friendly T’AU EMPIRE units within 6\" re-roll Hit rolls of 1 on ranged attacks."
+  },
+  "Command-link Drone (Aura)": {
+    "status": "auto",
+    "note": "While within 6\", each time you target a friendly T’AU EMPIRE unit with a Stratagem, roll D6: on 5+, gain 1CP."
+  },
+  "Advanced Guardian Drone": {
+    "status": "auto",
+    "note": "Each time a ranged attack targets bearer, subtract 1 from Wound roll."
+  },
+  "Agile Combatant": {
+    "status": "auto",
+    "effects": [
+      {
+        "eligible": [
+          "shootAfterFallBack"
+        ]
+      }
+    ],
+    "note": "Eligible to shoot in a turn in which it Fell Back."
+  },
+  "Battlesuit Support System": {
+    "status": "auto",
+    "effects": [
+      {
+        "eligible": [
+          "shootAfterFallBack"
+        ]
+      }
+    ],
+    "note": "Eligible to shoot in a turn in which it Fell Back."
+  },
+  "Forward Observers": {
+    "status": "auto",
+    "note": "When this unit is Observer, Guided units targeting the Spotted unit re-roll Hit rolls of 1 and Wound rolls of 1."
+  },
+  "Target Uploaded": {
+    "status": "auto",
+    "note": "Can be Observer even if already shot, and can mark up to two enemy units as Spotted."
+  },
+  "Precise Targeting": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetSpotted"
+        ],
+        "reroll": "hits",
+        "kind": "ranged"
+      }
+    ],
+    "note": "Each time a model makes an attack targeting a Spotted unit, re-roll the Hit roll."
+  },
+  "Exemplars of Mont’ka": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetClosest"
+        ],
+        "abilities": [
+          "sustained hits 1",
+          "ignores cover"
+        ],
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged attacks targeting closest eligible target have [SUSTAINED HITS 1] and [IGNORES COVER]."
+  },
+  "Ritual Butchery": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "abilities": [
+          "sustained hits 1"
+        ],
+        "kind": "melee"
+      }
+    ],
+    "note": "Melee weapons have [SUSTAINED HITS 1]."
+  },
+  "Rites of Feasting": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "fnp": 6
+      }
+    ],
+    "note": "While leading a unit, models have Feel No Pain 6+ (5+ if unit destroyed enemy in Fight phase)."
+  },
+  "Shield Generator": {
+    "status": "auto",
+    "invuln": 4,
+    "note": "Bearer has a 4+ invulnerable save."
+  },
+  "Hover Drone": {
+    "status": "auto",
+    "effects": [
+      {
+        "move": 10
+      }
+    ],
+    "note": "Bearer can FLY and has Move characteristic of 10\"."
+  },
+  "Pech’ra": {
+    "status": "auto",
+    "effects": [
+      {
+        "abilities": [
+          "ignores cover"
+        ],
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged weapons equipped by bearer’s unit have [IGNORES COVER]."
+  },
+  "Oversight Drone": {
+    "status": "auto",
+    "note": "Once per battle, ranged weapons have [IGNORES COVER]."
+  },
+  "Fieldcraft": {
+    "status": "auto",
+    "note": "Objective marker remains under control even if no models within range (sticky objective)."
+  },
+  "Stealth Drones": {
+    "status": "auto",
+    "note": "Twice per battle, change Damage of an allocated attack to 0."
+  },
+  "Nova Charge": {
+    "status": "auto",
+    "note": "Once per battle, selected ranged weapon gains [DEVASTATING WOUNDS]."
+  },
+  "Targeting Array": {
+    "status": "auto",
+    "note": "Each time selected to shoot, re-roll one Hit roll or one Wound roll."
+  },
+  "Puretide's Teachings": {
+    "status": "auto",
+    "note": "Once per battle round, reduce CP cost of a Stratagem by 1CP."
+  },
+  "War Leader": {
+    "status": "auto",
+    "note": "Once per battle round, reduce CP cost of a Stratagem by 1CP."
+  },
+  "SUPREME COMMANDER": {
+    "status": "auto",
+    "note": "Shadowsun must be your Warlord."
+  },
+  "INDEPENDENT POWER": {
+    "status": "auto",
+    "note": "Cannot include Ethereal units if army includes Commander Farsight."
+  },
+  "Jammer Array": {
+    "status": "auto",
+    "note": "Enemy units from Reserves cannot set up within 12\"."
+  },
+  "Grav-inhibitor Drone": {
+    "status": "auto",
+    "note": "Subtract 2 from Charge rolls made for enemy units declaring a charge against this unit."
+  },
+  "Pulse Accelerator Drone": {
+    "status": "auto",
+    "note": "Add 6\" to Range of pulse carbines."
+  },
+  "Recon Drone": {
+    "status": "auto",
+    "note": "Bearer equipped with drone burst cannon and unit has Infiltrators."
+  },
+  "Drone Harassment Tactics": {
+    "status": "auto",
+    "note": "End of Movement phase, enemy within 12\" takes Battle-shock test."
+  },
+  "Rapid Deployment": {
+    "status": "auto",
+    "note": "Units can disembark after Devilfish Advances."
+  },
+  "Advanced Armour": {
+    "status": "auto",
+    "effects": [
+      {
+        "fnp": 4
+      }
+    ],
+    "note": "Feel No Pain 4+ against mortal wounds."
+  },
+  "Advanced Scouting": {
+    "status": "auto",
+    "note": "Ranged hits allow other Kroot models to re-roll Hit rolls against that enemy until end of turn."
+  },
+  "Fire and Fade": {
+    "status": "auto",
+    "note": "After shooting, can make Normal move up to 6\" (cannot charge)."
+  },
+  "Kroot Linebreakers": {
+    "status": "auto",
+    "note": "End of Charge move: roll D6 per model within Engagement Range; on 4+ inflict D3 mortal wounds."
+  },
+  "Kroot Packmates": {
+    "status": "auto",
+    "note": "When friendly Kroot Infantry within 6\" is targeted by enemy shooting, shoot back at that enemy."
+  },
+  "Loping Pounce": {
+    "status": "auto",
+    "effects": [
+      {
+        "eligible": [
+          "chargeAfterAdvance"
+        ]
+      }
+    ],
+    "note": "Eligible to charge in a turn in which it Advanced if within 6\" of Kroot Infantry."
+  },
+  "Hunting Hounds": {
+    "status": "auto",
+    "note": "OC is 1 while within 12\" of friendly Kroot Character."
+  },
+  "Trail Finding": {
+    "status": "auto",
+    "note": "Opponent's Movement phase: enemy ends move within 8\", make Normal move up to D6\"."
+  },
+  "Kroot Ambush": {
+    "status": "auto",
+    "note": "After deployment, redeploy this unit and one other friendly Kroot unit into Strategic Reserves."
+  },
+  "Root of Honour": {
+    "status": "auto",
+    "note": "Once per battle, select friendly Kroot unit within 12\" that is Battle-shocked: it is no longer Battle-shocked."
+  },
+  "Bounty Hunters": {
+    "status": "auto",
+    "note": "Select one enemy unit at start of battle: attacks against it have [LETHAL HITS] and [PRECISION]."
+  },
+  "Neocapacitor Shields": {
+    "status": "auto",
+    "note": "Start of opponent's Charge phase: enemy within 12\" takes Battle-shock test and -1 to Charge rolls."
+  },
+  "Retro-thrusters": {
+    "status": "auto",
+    "note": "End of Fight phase: Normal move up to 6\" or Fall Back."
+  },
+  "Airborne Agility": {
+    "status": "auto",
+    "note": "End of opponent's turn, place into Strategic Reserves."
+  },
+  "Homing Beacon": {
+    "status": "auto",
+    "note": "Once per battle, Rapid Ingress Stratagem for 0CP within 3\" and > 8\" away from enemy."
+  },
+  "Pulse Bombs": {
+    "status": "auto",
+    "note": "End of opponent's Fight phase, roll 6 D6: each 4+ deals 1 mortal wound to visible enemy within 24\"."
+  },
+  "Suppression Volley": {
+    "status": "auto",
+    "note": "After shooting, enemy INFANTRY hit is suppressed: -1 to Hit rolls until start of next turn."
+  },
+  "DS8 Support Turret": {
+    "status": "auto",
+    "note": "If unit Remains Stationary, equipped with support turret missile system."
+  },
+  "BODYGUARD": {
+    "status": "auto",
+    "note": "If starting strength 20, can attach up to two Leader units."
+  },
+  "Heavy Walker": {
+    "status": "auto",
+    "note": "Can move over models and terrain 4\" or less in height."
+  },
+  "Droneport": {
+    "status": "auto",
+    "note": "Shoots drone defender weapons against every eligible target."
+  },
+  "Fortification": {
+    "status": "auto",
+    "note": "Rules for enemy units engaged only with Fortifications."
+  },
+  "Tidewall Cover": {
+    "status": "auto",
+    "note": "Models not fully visible have Benefit of Cover."
+  },
+  "Tidewall Defence Platform": {
+    "status": "auto",
+    "note": "Increases Wounds characteristic to 15."
+  },
+  "One Shot": {
+    "status": "auto",
+    "note": "Can only shoot with this weapon once per battle."
+  },
+  "MV15 Gun Drone": {
+    "status": "auto",
+    "note": "Bearer equipped with twin pulse blaster."
+  },
+  "Precision of the Patient Hunter": {
+    "status": "auto",
+    "effects": [
+      {
+        "hit": 1,
+        "kind": "ranged"
+      }
+    ],
+    "note": "+1 to Hit on ranged attacks (+1 to Wound from round 3 onwards)."
+  },
+  "Through Unity, Devastation": {
+    "status": "auto",
+    "note": "While Observer, Guided unit gains [LETHAL HITS] against Spotted unit."
+  },
+  "Coordinated Exploitation": {
+    "status": "auto",
+    "note": "While Observer, Guided unit gains [SUSTAINED HITS 1] against Spotted unit."
+  },
+  "Exemplar of the Kauyon": {
+    "status": "auto",
+    "note": "Patient Hunter applies from second battle round onwards."
+  },
+  "Exemplar of the Mont’ka": {
+    "status": "auto",
+    "note": "Killing Blow applies during fourth battle round as well."
+  },
+  "Strategic Conqueror": {
+    "status": "auto",
+    "note": "+1 OC on chosen objective marker."
+  },
+  "Strike Swiftly": {
+    "status": "auto",
+    "note": "Up to two friendly units gain Scouts 6\"."
+  },
+  "Internal Grenade Racks": {
+    "status": "auto",
+    "note": "GRENADES keyword; moving over enemy inflicts mortal wounds on 4+."
+  },
+  "Prototype Weapon System": {
+    "status": "auto",
+    "note": "Ranged weapons gain [LETHAL HITS] or [SUSTAINED HITS 1]."
+  },
+  "Puretide Engram Neurochip": {
+    "status": "auto",
+    "note": "When targeted by Stratagem, 4+ gain 1CP."
+  },
+  "Starflare Ignition System": {
+    "status": "auto",
+    "note": "End of opponent's turn, place into Strategic Reserves."
+  },
+  "Borthrod Gland": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "critHitOn": 5,
+        "kind": "melee"
+      }
+    ],
+    "note": "Melee attacks score Critical Hits on unmodified 5+."
+  },
+  "Kroothawk Flock": {
+    "status": "auto",
+    "effects": [
+      {
+        "abilities": [
+          "ignores cover"
+        ],
+        "kind": "ranged"
+      }
+    ],
+    "note": "Ranged weapons have [IGNORES COVER]; 12\" deep strike denial."
+  },
+  "Nomadic Hunter": {
+    "status": "auto",
+    "effects": [
+      {
+        "scope": "led",
+        "move": 3
+      },
+      {
+        "scope": "led",
+        "abilities": [
+          "assault"
+        ],
+        "kind": "ranged"
+      }
+    ],
+    "note": "+3\" Move and ranged weapons have [ASSAULT]."
+  },
+  "Root-carved Weapons": {
+    "status": "auto",
+    "effects": [
+      {
+        "abilities": [
+          "precision",
+          "devastating wounds"
+        ]
+      }
+    ],
+    "note": "Weapons have [PRECISION] and [DEVASTATING WOUNDS]."
+  },
+  "Solid-image Projection Unit": {
+    "status": "auto",
+    "note": "Redeploy up to three units into Strategic Reserves."
+  },
+  "Student of Kauyon": {
+    "status": "auto",
+    "note": "Up to 3 Kroot Carnivore/Farstalker units gain Deep Strike."
+  },
+  "Admired Leader": {
+    "status": "auto",
+    "note": "Command phase: Kroot/Vespid within 12\" gets +1 Ld and OC."
+  },
+  "Thermoneutronic Projector": {
+    "status": "auto",
+    "note": "T'au Flamer has +2 S, +1 AP and D."
+  },
+  "Plasma Accelerator Rifle": {
+    "status": "auto",
+    "note": "Plasma Rifle has +2 S, +1 A, AP and D."
+  },
+  "Supernova Launcher": {
+    "status": "auto",
+    "note": "Airbursting Frag Projector has +3 S, +1 AP and D."
+  },
+  "Negation Emitters": {
+    "status": "auto",
+    "note": "Unit has -3\" detection range."
+  },
+  "Unmasking Suite": {
+    "status": "auto",
+    "note": "Enemy unit has +9\" detection range until this unit shoots."
+  },
+  "KEYWORDS": {
+    "status": "auto",
+    "note": "Kroot Carnivore units have the Battleline keyword."
+  },
+  "Integrated Command Structure": {
+    "status": "auto",
+    "note": "Auxiliary Cadre rules for Kroot and Vespid."
+  },
+  "Superior Craftsmanship": {
+    "status": "auto",
+    "effects": [
+      {
+        "rangeBonus": 6,
+        "kind": "ranged"
+      }
+    ],
+    "note": "Battlesuit Character ranged attacks have +6\" Range."
+  },
+  "Expert Fieldcraft": {
+    "status": "auto",
+    "note": "Shooting attacks do not prevent unit from being hidden."
+  }
+}

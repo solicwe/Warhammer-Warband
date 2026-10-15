@@ -704,5 +704,7 @@ export interface GameState {
   splits?: { unitId: string; from: 'pink' | 'blue'; x: number; y: number }[];
   /** Astra Militarum Voice of Command: orders issued this turn by officer unit id */
   ordersUsed?: Record<string, number>;
+  /** T'au Empire For the Greater Good: Guided, Observer, and Spotted unit pairings this phase */
+  ftggPairs?: { guidedId: string; observerId: string; spottedId: string; turn: number; phase: Phase }[];
 }
 

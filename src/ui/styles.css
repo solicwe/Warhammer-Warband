@@ -585,8 +585,12 @@ b.em { font-weight: 700; color: var(--text); }
 .big-result { text-align: center; padding: 4px; font: 700 24px var(--font-cond); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
 .need { font: 500 12.5px var(--font-ui); color: var(--text-2); }
 .loadout-line { color: var(--text); }
-.fx-labels { color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .oath-tag { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 3px; background: var(--accent); color: var(--on-fill); font: 700 11px/1.5 var(--font-cond); letter-spacing: 0.08em; vertical-align: 1px; }
+.oath-tag.spotted-tag { background: linear-gradient(135deg, #b71c1c, #d32f2f); color: #fff; border: 1px solid rgba(255, 138, 128, 0.6); box-shadow: 0 0 6px rgba(211, 47, 47, 0.4); }
+.oath-tag.observer-tag { background: linear-gradient(135deg, #004d40, #00796b); color: #e0f2f1; border: 1px solid rgba(128, 203, 196, 0.5); box-shadow: 0 0 6px rgba(0, 121, 107, 0.3); }
+.oath-tag.guided-tag { background: linear-gradient(135deg, #e65100, #f57c00); color: #fff; border: 1px solid rgba(255, 204, 128, 0.6); box-shadow: 0 0 6px rgba(245, 124, 0, 0.4); }
+.buffcard.tau-ftgg { border-left: 3px solid #ff9800; background: rgba(26, 20, 12, 0.88); }
+.army-rule-banner.tau-banner { background: linear-gradient(90deg, rgba(230, 81, 0, 0.15), rgba(0, 121, 107, 0.1)); border-left: 3px solid #ff9800; }
 .action-box { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 6px; background: var(--warn-soft); }
 .action-box .btn { text-align: left; }
 .transport-box { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 6px; background: var(--surface-2); }

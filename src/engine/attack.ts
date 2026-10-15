@@ -8,6 +8,7 @@ import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, Uni
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { sororitasUnitDestroyed } from './sororitas';
+import { ftggAttackModifiers, isTauArmy } from './tau';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 import { noteTarget, sensationalBlock, thrillBlock } from './emperorsChildren';
 import { putridHit } from './deathGuard';
@@ -129,7 +130,8 @@ export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
     return modes;
   }
   if (u.move === 'advance' && !canDo(s, u, 'shootAfterAdvance')) {
-    if (riled(s, u) || weps.some((p) => hasAbility(p, 'assault')) || unitGrants(s, u, 'assault', 'ranged')) modes.push('assault');
+    const montka = isTauArmy(s, u.owner) && (s.players[u.owner].detachments ?? []).some((d) => d.name.toLowerCase().includes('mont')) && s.round <= 3;
+    if (riled(s, u) || weps.some((p) => hasAbility(p, 'assault')) || unitGrants(s, u, 'assault', 'ranged') || montka) modes.push('assault');
     return modes;
   }
   modes.push('normal');
@@ -225,7 +227,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const fx = offenceFor(s, A, m, T, w, p, 'ranged', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
       const inc = incomingFor(s, A, m, T, 'ranged').filter((i) => !i.psychic || psy);
-      if (opt.mode === 'assault' && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault')) continue;
+      const montka = isTauArmy(s, A.owner) && (s.players[A.owner].detachments ?? []).some((d) => d.name.toLowerCase().includes('mont')) && s.round <= 3;
+      if (opt.mode === 'assault' && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !montka) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
       if (d > maxRange + 1e-6) continue;
       if (untargetableAt(s, T, d)) continue;
@@ -237,8 +240,9 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (!indirect && !unitSees()) continue;
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
-      const mods: Mods = { skillDelta: 0, skillNotes: [], hit: 0, hitNotes: [] };
-      const ignoresCover = hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
+      const ftgg = ftggAttackModifiers(s, A, T, d);
+      const mods: Mods = { skillDelta: ftgg.skillDelta, skillNotes: [...ftgg.notes.filter((n) => n.includes('BS'))], hit: ftgg.hitMod, hitNotes: [...ftgg.notes.filter((n) => n.includes('hit'))] };
+      const ignoresCover = ftgg.ignoresCover || hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
       const cover = indirect || aFlags.givesCover || (!ignoresCover && (coverOf(m) || targetHasCover(s, T, d)));
       if (cover) { mods.skillDelta += 1; mods.skillNotes.push('Cover −1 BS'); }
       if (m.keywords.includes('TOWERING') && d <= RULES.plungingFire.toweringRange && !T.keywords.includes('AIRCRAFT')) { mods.skillDelta -= 1; mods.skillNotes.push('Plunging Fire +1 BS'); }
@@ -273,14 +277,20 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         }
         const melta = getAbility(p, 'melta', T.keywords);
         if (melta && half) pool.damage = `${p.D}+${melta.value ?? 0}`.replace(/^(\d+)\+(\d+)$/, (_, a, b) => String(+a + +b));
-        pool.woundNeed = woundNeed(p.S ?? 1, T_T);
-        const wm = clamp(buffSum(A, 'wound+1', 'wound-1'), -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
+        const strength = (p.S ?? 1) + ftgg.strengthBonus;
+        pool.woundNeed = woundNeed(strength, T_T);
+        if (ftgg.apBonus) pool.ap -= ftgg.apBonus;
+        const wm = clamp(buffSum(A, 'wound+1', 'wound-1') + ftgg.woundMod, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundMod = wm;
-        pool.woundNote = `S${p.S} vs T${T_T}` + (wm ? ` · Buff ${wm > 0 ? '+' : ''}${wm}` : '');
+        pool.woundNote = `S${strength} vs T${T_T}` + (wm ? ` · Buff ${wm > 0 ? '+' : ''}${wm}` : '');
+        if (ftgg.rerollHits1) pool.rerollHits1 = true;
+        if (ftgg.rerollWounds1) pool.rerollWounds1 = true;
+        if (ftgg.lethal) pool.lethal = true;
+        if (ftgg.sustained && !pool.sustained) pool.sustained = ftgg.sustained;
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         applyAttackEffects(s, A, T, pool, fx, inc, 'ranged', d, T_T, woundNeed);
-        finishIgnore(pool, unitFlags(s, A).ignoreMods);
+        finishIgnore(pool, unitFlags(s, A).ignoreMods || ftgg.ignoreMods);
         pools.set(key, pool);
       }
       pool.models += 1;

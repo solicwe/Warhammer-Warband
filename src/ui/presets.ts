@@ -701,4 +701,43 @@ export const PRESETS: Record<string, ArmyList> = {
       },
     ],
   },
+  TAU: {
+    name: 'T’au Empire (Quick)',
+    factionId: 'TAU',
+    battleSize: 'incursion',
+    detachments: ['Mont’ka'],
+    units: [
+      {
+        uid: 't1', datasheet: 'Commander In Coldstar Battlesuit', models: 1, pts: 95, warlord: true, enhancement: 'Exemplar of the Mont’ka', enhancementPts: 10, attachTo: 't2',
+      },
+      {
+        uid: 't2', datasheet: 'Crisis Sunforge Battlesuits', models: 3, pts: 125,
+      },
+      {
+        uid: 't3', datasheet: 'Cadre Fireblade', models: 1, pts: 50, attachTo: 't4', enhancement: 'Strategic Conqueror', enhancementPts: 15,
+      },
+      {
+        uid: 't4', datasheet: 'Breacher Team', models: 10, pts: 80,
+      },
+      {
+        uid: 't5', datasheet: 'Devilfish', models: 1, pts: 75,
+      },
+      {
+        uid: 't6', datasheet: 'Stealth Battlesuits', models: 5, pts: 100,
+      },
+      {
+        uid: 't7', datasheet: 'Hammerhead Gunship', models: 1, pts: 150,
+      },
+      {
+        uid: 't8', datasheet: 'Ghostkeel Battlesuit', models: 1, pts: 150,
+      },
+      {
+        uid: 't9', datasheet: 'Pathfinder Team', models: 10, pts: 85,
+      },
+      {
+        uid: 't10', datasheet: 'Kroot Carnivores', models: 10, pts: 65,
+      },
+    ],
+  },
 };
+

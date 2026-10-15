@@ -44,6 +44,7 @@ import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, 
 import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
 import { isOfficer, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../engine/orders';
+import { isTauArmy } from '../engine/tau';
 import { dist, polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../engine/deploy';
 import {
@@ -722,6 +723,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (t.label.startsWith('Order: ')) (badges[u.id] ??= []).push(`📢 ${t.label.slice(7)}`);
     }
   }
+  // T’au Empire For the Greater Good: prominent observer/spotted/guided badges
+  if (s.phase === 'shooting') {
+    for (const pair of s.ftggPairs ?? []) {
+      if (pair.turn === s.turn && pair.phase === s.phase) {
+        (badges[pair.spottedId] ??= []).push('🎯 Spotted (+1 BS)');
+        (badges[pair.observerId] ??= []).push('📡 Observer');
+        (badges[pair.guidedId] ??= []).push('⚡ Guided');
+      }
+    }
+  }
   // Stratagems in effect: a tag on the unit that got it, so it is clear the CP went to that unit only
   const stratNames = new Set(s.players.flatMap((P) => P.detachments.flatMap((d) => d.stratagems.map((st) => st.name))));
   for (const u of s.units) {
@@ -943,6 +954,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       })()} {u.name.length > 26 ? u.name.slice(0, 25) + '…' : u.name}
       <span className="muted"> {alive(u).length}/{u.startingStrength}</span>{u.battleShocked ? ' ' : ''}
       {s.players[1 - u.owner].oathTarget === u.id && <span className="oath-tag">{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</span>}
+      {s.ftggPairs?.some((p) => p.spottedId === u.id && p.turn === s.turn && p.phase === s.phase) && <span className="oath-tag spotted-tag">SPOTTED</span>}
+      {s.ftggPairs?.some((p) => p.observerId === u.id && p.turn === s.turn && p.phase === s.phase) && <span className="oath-tag observer-tag">OBSERVER</span>}
+      {s.ftggPairs?.some((p) => p.guidedId === u.id && p.turn === s.turn && p.phase === s.phase) && <span className="oath-tag guided-tag">GUIDED</span>}
     </button>
   ); };
 
@@ -1780,6 +1794,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   <div className="statline">
                     Hit <b>{p.autoHit ? 'auto' : p.hitOn6Only ? '6' : `${p.skill}+`}</b>{p.hitMod ? ` (${p.hitMod > 0 ? '+' : ''}${p.hitMod})` : ''} · Wound <b>{p.woundNeed}+</b>{p.woundMod ? ` (+${p.woundMod})` : ''} · AP <b>{p.ap}</b> · D <b>{p.damage}</b>
                     {covered ? ` · cover ${covered}/${models}` : ''}{p.rerollAllHits ? ' · Oath' : ''}
+                    {p.skillNote?.includes('For the Greater Good +1 BS') && <span className="oath-tag guided-tag">🎯 Guided +1 BS</span>}
+                    {p.skillNote?.includes('For the Greater Good (non-spotted)') && <span className="oath-tag" style={{ background: '#c62828' }}>⚠️ Non-spotted −1 BS</span>}
+                    {p.rerollHits1 && p.rerollWounds1 && <span className="oath-tag observer-tag">📡 Spotter 1s</span>}
                   </div>
                 </div>
               );
