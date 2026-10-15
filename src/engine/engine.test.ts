@@ -120,7 +120,9 @@ describe('shooting', () => {
 describe('fight', () => {
   it('only engaged models attack, cleave adds dice', () => {
     const s = game();
-    const boss = buildUnits(list('ORK', [['Warboss', 1, 100]]), ORK, 1)[0];
+    const l = list('ORK', [['Warboss', 1, 100]]);
+    l.units[0].wargear = [];
+    const boss = buildUnits(l, ORK, 1)[0];
     boss.id = 'boss';
     s.units.push(boss);
     const tgt = put(s, s.units[0].id, { x: 22, y: 30 });

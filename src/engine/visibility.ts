@@ -30,34 +30,6 @@ function boxOf(t: TerrainPiece): Box {
   return b;
 }
 
-/** Is the model in this terrain area, so the area doesn't hide what's beyond it (13.10)?
- *  A model stands in an area if its centre is inside, or (for large models / vehicles or models substantially on the plate)
- *  its base is on the plate. Also, if two terrain pieces form parts of the same ruin (connected by a bridge or sharing an
- *  objective feature), standing in one part allows seeing out through the feature without the sister piece obscuring it. */
-function modelInPiece(m: ModelState, t: TerrainPiece): boolean {
-  if (pointInPoly(m, t.poly)) return true;
-  if (!bodyTouchesPoly(m, 0, t.poly)) return false;
-  // large models (vehicles, walkers, monsters, or bases >= 1" radius) or models whose centre is within half radius of the plate
-  const isLarge = m.r >= 1.0 || (m.keywords && ['VEHICLE', 'MONSTER', 'WALKER'].some((k) => m.keywords.includes(k)));
-  if (isLarge) return true;
-  return polyDist(m, t.poly) <= m.r * 0.5;
-}
-
-function standsIn(s: GameState, m: ModelState, t: TerrainPiece): boolean {
-  if (modelInPiece(m, t)) return true;
-  // If m stands in a piece connected to t (parts of the same split ruin or bridge), t doesn't obscure m
-  for (const br of bridgesOf(s)) {
-    if (br.of.includes(t)) {
-      const other = br.of[0] === t ? br.of[1] : br.of[0];
-      if (modelInPiece(m, other) || pointInPoly(m, br.poly) || bodyTouchesPoly(m, 0, br.poly)) return true;
-    }
-  }
-  if (t.objectiveId) {
-    const sisters = s.terrain.filter((x) => x !== t && x.objectiveId === t.objectiveId);
-    if (sisters.some((x) => modelInPiece(m, x))) return true;
-  }
-  return false;
-}
 
 // Line-of-sight checks are evaluated model-to-model (13.10): a model standing in an
 // obscuring terrain feature sees out of it and can be seen into it; a model outside behind
@@ -175,6 +147,69 @@ function wallsNear(g: WallGrid, p: Pt, r: number): Wall[] {
   return out;
 }
 
+/** Is the model in this terrain area, so the area doesn't hide what's beyond it (13.10)?
+ *  A model stands in an area if its centre is inside, or (for large models / vehicles or models substantially on the plate)
+ *  its base touches the plate. Also, if two terrain pieces form parts of the same ruin (connected by a bridge or sharing an
+ *  objective feature), standing in one part allows seeing out through the feature without the sister piece obscuring it. */
+function modelInPiece(m: ModelState, t: TerrainPiece): boolean {
+  if (pointInPoly(m, t.poly)) return true;
+  const b = boxOf(t);
+  if (m.x < b.x0 - m.r || m.x > b.x1 + m.r || m.y < b.y0 - m.r || m.y > b.y1 + m.r) return false;
+  const isLarge = m.r >= 1.0 || (m.keywords && ['VEHICLE', 'MONSTER', 'WALKER'].some((k) => m.keywords.includes(k)));
+  if (!bodyTouchesPoly(m, 0, t.poly)) return false;
+  if (isLarge) return true;
+  return polyDist(m, t.poly) <= m.r * 0.5;
+}
+
+interface ConnectedTerrain {
+  sisters: TerrainPiece[];
+  bridges: Bridge[];
+}
+const connectedByList = new WeakMap<TerrainPiece[], Map<TerrainPiece, ConnectedTerrain>>();
+
+function connectedMapOf(s: GameState): Map<TerrainPiece, ConnectedTerrain> {
+  let map = connectedByList.get(s.terrain);
+  if (map) return map;
+  map = new Map();
+  const bridges = bridgesOf(s);
+  for (const t of s.terrain) {
+    const sisters: TerrainPiece[] = [];
+    const tBridges: Bridge[] = [];
+    for (const br of bridges) {
+      if (br.of.includes(t)) {
+        tBridges.push(br);
+        const other = br.of[0] === t ? br.of[1] : br.of[0];
+        if (!sisters.includes(other)) sisters.push(other);
+      }
+    }
+    if (t.objectiveId) {
+      for (const x of s.terrain) {
+        if (x !== t && x.objectiveId === t.objectiveId && !sisters.includes(x)) {
+          sisters.push(x);
+        }
+      }
+    }
+    map.set(t, { sisters, bridges: tBridges });
+  }
+  connectedByList.set(s.terrain, map);
+  return map;
+}
+
+function standsIn(s: GameState, m: ModelState, t: TerrainPiece): boolean {
+  if (modelInPiece(m, t)) return true;
+  const conn = connectedMapOf(s).get(t);
+  if (!conn || (!conn.sisters.length && !conn.bridges.length)) return false;
+  for (const sister of conn.sisters) {
+    if (modelInPiece(m, sister)) return true;
+  }
+  for (const br of conn.bridges) {
+    const q = br.box;
+    if (m.x < q.x0 - m.r || m.x > q.x1 + m.r || m.y < q.y0 - m.r || m.y > q.y1 + m.r) continue;
+    if (pointInPoly(m, br.poly) || bodyTouchesPoly(m, 0, br.poly)) return true;
+  }
+  return false;
+}
+
 function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false): Blockers {
   // only terrain overlapping the box around both models can be crossed by a line between them
   const x0 = Math.min(a.x - a.r, b.x - b.r), x1 = Math.max(a.x + a.r, b.x + b.r);
@@ -186,7 +221,7 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
     if (denseOnly && !br.dense) continue;
     const q = br.box;
     if (q.x1 < x0 || q.x0 > x1 || q.y1 < y0 || q.y0 > y1) continue;
-    if ([a, b].some((m) => br.of.some((t) => standsIn(s, m, t)) || pointInPoly(m, br.poly) || bodyTouchesPoly(m, 0, br.poly))) continue;
+    if ([a, b].some((m) => br.of.some((t) => standsIn(s, m, t)) || pointInPoly(m, br.poly) || (m.r >= 1.0 && bodyTouchesPoly(m, 0, br.poly)))) continue;
     areas.push(br);
   }
   // an area either model stands in does not block (13.10): a model inside sees out and is seen in it; walls still block

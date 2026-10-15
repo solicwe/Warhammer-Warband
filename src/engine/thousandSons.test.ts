@@ -19,7 +19,7 @@ const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${
 const TS = load('TS');
 const ORK = load('ORK');
 
-type Row = [string, number, number, string?, Partial<{ enhancement: string; warlord: boolean }>?];
+type Row = [string, number, number, string?, Partial<{ enhancement: string; warlord: boolean; wargear: any[] }>?];
 const list = (factionId: string, units: Row[], det = 'Hexwarp Thrallband'): ArmyList => ({
   name: 't', factionId, battleSize: 'incursion', detachments: factionId === 'TS' ? [det] : [],
   units: units.map(([d, n, pts, attachTo, extra], i) => ({ uid: `x${i}`, datasheet: d, models: n, pts, attachTo, ...extra })),
@@ -169,7 +169,7 @@ describe('Hexwarp Thrallband: Flow of Magic', () => {
 
 describe('Thousand Sons stratagems', () => {
   it('Infernal Fusillade gives inferno weapons [PSYCHIC]', () => {
-    const s = game([['Rubric Marines', 5, 100]], [['Boyz', 10, 90]], 'Rubricae Phalanx');
+    const s = game([['Rubric Marines', 5, 100, undefined, { wargear: [] }]], [['Boyz', 10, 90]], 'Rubricae Phalanx');
     const rm = put(s, 'p0-x0', { x: 20, y: 30 });
     const boyz = put(s, 'p1-x0', { x: 20, y: 40 });
     s.phase = 'shooting'; s.players[0].cp = 5;
