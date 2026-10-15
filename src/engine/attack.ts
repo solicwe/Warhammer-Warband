@@ -876,8 +876,11 @@ export function rollSavesAndDamage(s: GameState) {
   const at = s.attack!;
   const p = at.pools[at.idx];
   const devCrits = p.devastating ? p.wounds.filter((d) => d.o === 'critWound').length : 0;
-  const normal = p.wounds.filter((d) => d.o === 'wound' || (d.o === 'critWound' && !p.devastating)).length + p.autoWounds;
-  p.saves = rollN(s, normal).map((v) => ({ v, o: 'pass' }));
+  const normalCrits = !p.devastating ? p.wounds.filter((d) => d.o === 'critWound').length : 0;
+  const normalWounds = p.wounds.filter((d) => d.o === 'wound').length + p.autoWounds;
+  const normal = normalCrits + normalWounds;
+  const rolls = rollN(s, normal);
+  p.saves = rolls.map((v, idx) => ({ v, o: 'pass' as const, ...(idx < normalCrits ? { crit: true } : {}) }));
   at.stage = 'damage';
   p.mortalFromDev = Array.from({ length: devCrits }, () => 0);
 }
@@ -915,9 +918,10 @@ export function applyDamage(s: GameState) {
     if (kind === 'melee') (at.allocated ??= {})[m.id] = (at.allocated[m.id] ?? 0) + 1;
     const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0) - (md.saveBonusD1 && p.damage.trim() === '1' ? md.saveBonusD1 : 0) - (md.save ?? 0);
     const inv = effectiveInSv(s, T, m, at.kind !== 'fight', psychic, A);
+    const effAp = p.ap - (d.crit && p.critWoundAp ? p.critWoundAp : 0);
     let ok = false;
-    if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + p.ap >= Math.max(RULES.modifierCaps.bestSave, sv);
-    p.saveTargets[i] = `${m.name} (Sv${sv}+${inv ? ` / ${inv}++` : ''}, AP${p.ap})`;
+    if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + effAp >= Math.max(RULES.modifierCaps.bestSave, sv);
+    p.saveTargets[i] = `${m.name} (Sv${sv}+${inv ? ` / ${inv}++` : ''}, AP${effAp})`;
     d.o = ok ? 'saved' : 'fail';
     if (!ok) {
       let dr = rollExpr(s, p.damage);

@@ -78,6 +78,7 @@ export interface Incoming {
   units?: string[]; // only attacks by these units of the marking player
   attack?: 'melee' | 'ranged';
   hit?: number; wound?: number; ap?: number;
+  critWoundAp?: number; // improves AP by X on a Critical Wound
   reroll?: Reroll | Reroll[];
   abilities?: string[];
   noCover?: boolean;
@@ -99,6 +100,7 @@ export interface Effect {
   if?: string[];
   // offence
   hit?: number; wound?: number; ap?: number; strength?: number; attacks?: number; damage?: number;
+  critWoundAp?: number; // improves AP by X on a Critical Wound
   skill?: number; // improves WS / BS characteristic by X (Take Aim!, Fix Bayonets!)
   rapidFireAttacks?: number; // improves Attacks of Rapid Fire weapons by X (First Rank, Fire! Second Rank, Fire!)
   reroll?: Reroll | Reroll[];
@@ -937,7 +939,7 @@ const rerolls = (e: { reroll?: Reroll | Reroll[] }): Reroll[] => (e.reroll ? (Ar
 export function offenceFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, w: WeaponData, p: WeaponProfileData, kind: 'melee' | 'ranged', d: number): Active[] {
   const x: Ctx = { s, A, T, m, w, p, d, kind };
   return effectsFor(s, A).filter((a) => (!a.e.attack || a.e.attack === kind) && modelOk(a, m) && weaponOk(a, w, p) && holds(a, x)
-    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange || a.e.skill));
+    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.critWoundAp || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange || a.e.skill));
 }
 
 /** Marks on the target ("hit by Multi-spectrum Array: +1 to hit for your ADEPTUS ASTARTES") that help this attacker. */
@@ -987,6 +989,7 @@ export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, poo
     if (i.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + i.hit, -hitCap, hitCap); notes.push(`marked target: +${i.hit} to hit`); }
     if (i.wound) { pool.woundMod = clamp(pool.woundMod + i.wound, -woundCap, woundCap); notes.push(`marked target: +${i.wound} to wound`); }
     if (i.ap) { pool.ap -= i.ap; notes.push(`marked target: +${i.ap} AP`); }
+    if (i.critWoundAp) { pool.critWoundAp = (pool.critWoundAp ?? 0) + i.critWoundAp; notes.push(`marked target: +${i.critWoundAp} AP on critical wound`); }
     for (const r of rerolls(i)) applyReroll(pool, r, 'marked target', notes);
     if (i.blastReroll && pool.profile.abilities.includes('blast')) applyReroll(pool, 'hits', 'marked target (Blast)', notes);
     if (i.damage) { pool.damage = addToExpr(pool.damage, i.damage); notes.push(`marked target: +${i.damage} D`); }
@@ -1032,6 +1035,7 @@ function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list:
     if (e.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + e.hit, -hitCap, hitCap); bump(a.label, `${e.hit > 0 ? '+' : ''}${e.hit} hit`); }
     if (e.wound) { pool.woundMod = clamp(pool.woundMod + e.wound, -woundCap, woundCap); bump(a.label, `${e.wound > 0 ? '+' : ''}${e.wound} wound`); }
     if (e.ap) { pool.ap -= e.ap; bump(a.label, `+${e.ap} AP`); }
+    if (e.critWoundAp) { pool.critWoundAp = (pool.critWoundAp ?? 0) + e.critWoundAp; bump(a.label, `+${e.critWoundAp} AP on critical wound`); }
     if (e.strength) { strength += e.strength; bump(a.label, `+${e.strength} S`); }
     if (e.attacks) { pool.attackBonus = (pool.attackBonus ?? 0) + e.attacks; bump(a.label, `+${e.attacks} A`); }
     if (e.damage) { pool.damage = addToExpr(pool.damage, e.damage); bump(a.label, `+${e.damage} D`); }

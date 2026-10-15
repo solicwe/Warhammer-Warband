@@ -109,7 +109,12 @@ export const setStratBlockHook = (h: (s: GameState, u: UnitState) => string | nu
 export const setStratHooks = (discount: DiscountHook, spent: SpentHook, repeat?: RepeatHook) => { discountHook = discount; spentHook = spent; repeatHook = repeat ?? null; };
 export const stratCost = (s: GameState, id: string, unit?: UnitState, cost?: number) => {
   const def = RULES.coreStratagems.find((x) => x.id === id);
-  const base = cost ?? def?.cp ?? 1;
+  let base = cost ?? def?.cp ?? 1;
+  const sc = unit?.abilities.find((a) => a.name === 'Striding Colossus');
+  if (sc) {
+    const mult = /four times/i.test(sc.text) ? 4 : /three times/i.test(sc.text) ? 3 : 2;
+    base *= mult;
+  }
   return unit && discountHook ? Math.max(0, base - discountHook(s, unit, id)) : base;
 };
 

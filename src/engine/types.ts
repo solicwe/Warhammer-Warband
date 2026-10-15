@@ -448,7 +448,7 @@ export interface TurnSnapshot {
 export interface LogEntry { turn: number; round: number; player: PlayerId | null; text: string; kind?: 'roll' | 'info' | 'vp' | 'cp' | 'kill' }
 
 export type DieOutcome = 'miss' | 'hit' | 'crit' | 'auto' | 'wound' | 'critWound' | 'saved' | 'fail' | 'pass';
-export interface Die { v: number; o: DieOutcome; rerolled?: boolean; orig?: number }
+export interface Die { v: number; o: DieOutcome; rerolled?: boolean; orig?: number; crit?: boolean }
 
 export interface Pool {
   snap?: boolean; // Snap Shooting: 6s hit but are not critical hits (15.09)
@@ -498,6 +498,7 @@ export interface Pool {
   precisionOnCrit?: boolean; // only attacks that scored a critical hit have [PRECISION]
   noHazard?: boolean; // hazardous tests automatically passed
   ap: number;
+  critWoundAp?: number; // extra AP on a critical wound (Titanic Fire Support)
   damage: string;
   hazardous: number;
   hits: Die[];

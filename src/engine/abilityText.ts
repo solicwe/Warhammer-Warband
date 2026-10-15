@@ -69,7 +69,7 @@ function abilityList(x: string): string[] | null {
 function attackMods(x: string): Partial<Effect> | null {
   const e: Partial<Effect> = {};
   const rr: Reroll[] = [];
-  const clauses = x.replace(/\.$/, '').split(/\s*(?:,? and |, |; |: )\s*(?=add|you can|re-roll|improve|that attack|\+\d|\[|can re-roll)/);
+  const clauses = x.replace(/\.$/, '').split(/(?<!on a critical (?:wound|hit))\s*(?:,? and |, |; |: )\s*(?=add|you can|re-roll|improve|that attack|\+\d|\[|can re-roll)/);
   for (let c of clauses) {
     c = c.trim().replace(/^and /, '');
     let m: RegExpExecArray | null;
@@ -81,6 +81,7 @@ function attackMods(x: string): Partial<Effect> | null {
     else if (/^(?:you can )?re-roll a wound roll of 1$|^(?:can )?re-roll wound rolls of 1$/.test(c)) rr.push('wounds1');
     else if (/^(?:you )?(?:can )?re-roll the damage roll$|^(?:can )?re-roll damage rolls$/.test(c)) rr.push('damage');
     else if ((m = /^improve the armou?r penetration characteristic of (?:that attack|those attacks) by (\d)$|^\+(\d) ap$/.exec(c))) e.ap = Number(m[1] ?? m[2]);
+    else if ((m = /^on a critical wound,? improve the armou?r penetration characteristic of (?:that attack|those attacks) by (\d)$/.exec(c))) e.critWoundAp = Number(m[1]);
     else if ((m = /^add (\d) to the strength characteristic of (?:that attack|those attacks)$|^\+(\d) s$/.exec(c))) e.strength = Number(m[1] ?? m[2]);
     else if ((m = /^add (\d) to the damage characteristic of (?:that attack|those attacks)$|^improve the damage characteristic of (?:that attack|those attacks) by (\d)$|^\+(\d) d$/.exec(c))) e.damage = Number(m[1] ?? m[2] ?? m[3]);
     else if ((m = /^\+(\d) a$/.exec(c))) e.attacks = Number(m[1]);
@@ -149,7 +150,7 @@ function unitClause(c: string): Partial<Effect> | null {
   if (/^you can re-roll advance rolls made for (?:this|that) unit$|^(?:this|that) unit can re-roll advance rolls$/.test(c)) return { rerollAdvance: true };
   if (/^you can re-roll charge rolls made for (?:this|that) unit$|^(?:this|that) unit can re-roll charge rolls$/.test(c)) return { rerollCharge: true };
   if (/^you can re-roll advance and charge rolls made for (?:this|that|the bearer's) unit$/.test(c)) return { rerollAdvance: true, rerollCharge: true };
-  if ((m = /^(?:this|that|this model's) unit is eligible to (shoot|declare a charge|shoot and declare a charge) in a turn in which it (advanced|fell back|advanced or fell back|advanced and\/or fell back)$/.exec(c))) {
+  if ((m = /^(?:this|that|this model's) (?:unit|model) is eligible to (shoot|declare a charge|shoot and declare a charge) in a turn in which it (advanced|fell back|advanced or fell back|advanced and\/or fell back)$/.exec(c))) {
     const el: NonNullable<Effect['eligible']> = [];
     const adv = /advanced/.test(m[2]), fb = /fell back/.test(m[2]);
     if (/shoot/.test(m[1])) { if (adv) el.push('shootAfterAdvance'); if (fb) el.push('shootAfterFallBack'); }
@@ -227,6 +228,9 @@ function wholeText(t: string): AbilityRule | null {
     || /^once per battle round, you can select one model from your army with this ability(?:\. that model's unit can be targeted with a stratagem| and target that model's unit with a stratagem)\. if it does, reduce the cp cost of that use of that stratagem by 1cp\.?$/.test(t)) {
     return { parsed: true, effects: [{ stratDiscount: { ids: ['*'], cp: 1, limit: 'round', perArmy: true } }] };
   }
+  if ((m = /^each time you target this (?:model|unit) with a stratagem, you must spend (twice|three times|four times) that stratagem's stated cp cost to do so\.?$/.exec(t))) {
+    return { parsed: true, effects: [], status: 'auto', note: `Stratagems targeting this model cost ${m[1]} CP` };
+  }
   if ((m = /^once per turn, when your opponent targets a unit from their army within (\d+)" of this model with a stratagem, (?:this model|you) can use this ability\. if (?:you|it) do(?:es)?,? increase the cp cost of that use of that stratagem by 1cp\.?$/.exec(t))) {
     return { parsed: true, effects: [{ scope: 'enemyAura', range: Number(m[1]), stratTax: { cp: 1, limit: 'turn' } }] };
   }
@@ -300,7 +304,7 @@ function wholeText(t: string): AbilityRule | null {
   if ((m = /^each time a model in this unit is destroyed, if that model has not fought this phase, roll one d6\. on a (\d)\+, do not remove (?:it|the destroyed model) from play;? (?:it|the destroyed model) can fight after the attacking (?:model's )?unit has finished making its attacks, and is then removed from play\.?$/.exec(t))) {
     return { parsed: true, effects: [{ fightOnDeath: Number(m[1]) }] };
   }
-  if ((m = /^(?:if|each time) this unit advances, do not make an advance roll(?: for it)?\. instead, until the end of the phase, add (\d)" to the move characteristic of models in this unit\.?$/.exec(t))) {
+  if ((m = /^(?:if|each time) this (?:unit|model) advances, do not make an advance roll(?: for it)?\. instead, until the end of the phase, add (\d+)" to the move characteristic of (?:models in this unit|this model)\.?$/i.exec(t))) {
     return { parsed: true, effects: [{ advanceFixed: Number(m[1]) }] };
   }
   if ((m = /^each time a model in this unit is destroyed by a melee attack, if that model has not fought this phase, roll one d6\. on a (\d)\+, do not remove it from play;? (?:that|the) destroyed model can fight after the attacking (?:model's )?unit has finished making its attacks, and is then removed from play\.?$/.exec(t))) {

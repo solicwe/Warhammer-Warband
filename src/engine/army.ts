@@ -117,15 +117,42 @@ const MM_PER_INCH = 25.4;
 
 /** Hull sizes in inches (length × width) for vehicles set up without a base. */
 const HULLS: [RegExp, number, number][] = [
+  [/warlord titan/i, 16, 14],
+  [/warbringer/i, 13.5, 11],
+  [/reaver titan/i, 12, 10],
+  [/warhound titan/i, 8.5, 7],
+  [/hierophant/i, 14, 11],
+  [/thunderhawk/i, 19, 17],
+  [/gargantuan squiggoth/i, 11, 6.5],
+  [/acastus knight/i, 8.5, 7],
+  [/astraeus/i, 11, 8],
   [/stompa/i, 9, 8], [/land raider/i, 7.3, 4.6], [/battlewagon|gunwagon/i, 6.5, 4.5], [/khorne lord of skulls/i, 9, 6.5],
-  [/baneblade|banehammer|banesword|doomhammer|hellhammer|shadowsword|stormlord|stormsword|astraeus/i, 9.5, 6],
-  [/rogal dorn/i, 7, 5], [/leman russ/i, 6, 4.4], [/repulsor|coronus/i, 6.5, 4.3], [/plagueburst crawler/i, 6, 4.3],
-  [/gladiator|caladius/i, 5.3, 4], [/impulsor/i, 5, 3.7], [/chimera|taurox|hydra|basilisk|manticore|deathstrike|wyvern|hellhound|immolator|exorcist|castigator|hippogriff|goliath/i, 5.5, 4],
+  [/baneblade|banehammer|banesword|doomhammer|hellhammer|shadowsword|stormlord|stormsword/i, 9.5, 6],
+  [/hekaton land fortress/i, 7, 4.5],
+  [/rogal dorn/i, 7, 5], [/leman russ|commissar graves/i, 6, 4.4], [/repulsor|coronus/i, 6.5, 4.3], [/plagueburst crawler/i, 6, 4.3],
+  [/gladiator|caladius/i, 5.3, 4], [/skorpius/i, 5.5, 3.8], [/impulsor/i, 5, 3.7], [/sagitaur/i, 4.8, 3.2],
+  [/chimera|taurox|hydra|basilisk|manticore|deathstrike|wyvern|hellhound|immolator|exorcist|castigator|hippogriff|goliath/i, 5.5, 4],
   [/predator|vindicator|whirlwind/i, 4.9, 4], [/rhino|razorback/i, 4.7, 3.6], [/pallas/i, 4, 3], [/trukk/i, 4.5, 3],
   [/invader atv/i, 3.3, 2], [/centaur/i, 3, 2.5],
+  [/triarch stalker/i, 6, 6],
+  [/tidewall shieldline/i, 7.5, 2.5],
+  [/tidewall droneport|tidewall gunrig/i, 5.5, 5.5],
+  [/aegis defence line/i, 8, 2],
+  [/noctilith crown/i, 8, 4],
+  [/skull altar/i, 5, 5],
+  [/feculent gnarlmaw/i, 4.5, 4],
+  [/miasmic malignifier/i, 5, 4],
+  [/sporocyst/i, 4.5, 4.5],
 ];
 /** Round sizes (inches) for the rest set up without a base. */
-const ROUND: [RegExp, number][] = [[/hammerfall|bossbunka/i, 3.0], [/drop pod/i, 2.5], [/mek gun/i, 1.2]];
+const ROUND: [RegExp, number][] = [
+  [/hammerfall|bossbunka/i, 3.0],
+  [/drop pod/i, 2.5],
+  [/telemon/i, 2.0],
+  [/convergence of dominion/i, 1.5],
+  [/contemptor-(?:galatus|achillus)/i, 1.2],
+  [/mek gun/i, 1.2],
+];
 
 /** A model's footprint: its mean radius `r`, and for an oval base or hull its half-width and axis half-length. */
 export function baseShape(sheet: DatasheetData, profileIdx: number): { r: number; hw?: number; hl?: number; hull?: true } {
@@ -139,8 +166,9 @@ export function baseShape(sheet: DatasheetData, profileIdx: number): { r: number
   const round = ROUND.find(([re]) => name(re));
   if (round) return { r: round[1] };
   const w = prof?.W ?? 0;
+  if (sheet.keywords.includes('TITANIC')) return w >= 80 ? { ...oval(16, 14), hull: true } : w >= 50 ? { ...oval(12, 10), hull: true } : { ...oval(9, 7), hull: true };
   if (sheet.keywords.includes('VEHICLE')) return w >= 16 ? { ...oval(7, 4.4), hull: true } : w >= 12 ? { ...oval(5.5, 4), hull: true } : { r: 2.0 };
-  if (sheet.keywords.includes('MONSTER')) return { r: 1.8 };
+  if (sheet.keywords.includes('MONSTER')) return w >= 20 ? { ...oval(10, 7), hull: true } : { r: 1.8 };
   return { r: w >= 6 ? 1.2 : 0.63 };
 }
 export const baseRadius = (sheet: DatasheetData, profileIdx: number) => baseShape(sheet, profileIdx).r;
