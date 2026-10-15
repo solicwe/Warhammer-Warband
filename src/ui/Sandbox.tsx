@@ -238,73 +238,86 @@ export function SandboxScreen({ index, onBack, onPlayBattle }: Props) {
         </button>
       </header>
 
-      <main className="screen" style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 960, margin: '0 auto', width: '100%' }}>
+      <main className="screen" style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 1040, margin: '0 auto', width: '100%' }}>
         {/* Map Scale Selection */}
         <section className="slate"><div className="slate-in">
           <div className="cmp-kicker">Battlefield Dimensions & Realistic Scale</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8, marginTop: 8 }}>
-            {SCALES.map((sc) => (
-              <button
-                key={sc.id}
-                className={`btn ${scale.id === sc.id ? 'primary' : 'ghost'}`}
-                style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 12px' }}
-                onClick={() => setScale(sc)}
-              >
-                <b>{sc.name}</b>
-                <span className="tiny muted">{sc.note}</span>
-              </button>
-            ))}
+          <div className="sandbox-scale-grid">
+            {SCALES.map((sc) => {
+              const isSel = scale.id === sc.id;
+              return (
+                <button
+                  key={sc.id}
+                  className={`sandbox-scale-card ${isSel ? 'active' : ''}`}
+                  onClick={() => setScale(sc)}
+                  aria-pressed={isSel}
+                >
+                  <div className="scale-head">
+                    <span className="scale-name">{sc.name}</span>
+                    <span className="scale-badge">{isSel ? 'Selected' : `${sc.width}"×${sc.height}"`}</span>
+                  </div>
+                  <div className="scale-note">{sc.note}</div>
+                </button>
+              );
+            })}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
-            <span className="label">Engagement Distance:</span>
-            {[12, 18, 24, 36, 48].map((d) => (
-              <button
-                key={d}
-                className={`btn small ${distance === d ? 'primary' : ''}`}
-                onClick={() => setDistance(d)}
-              >
-                {d}"
-              </button>
-            ))}
-            <span className="tiny muted">({distance < 24 ? 'Point-blank / Rapid Fire' : distance === 24 ? 'Standard Firefight' : 'Long-range Artillery / Sniper'})</span>
+          <div className="sandbox-dist-bar">
+            <span className="sandbox-dist-label">Engagement Distance:</span>
+            <div className="sandbox-dist-pills">
+              {[12, 18, 24, 36, 48].map((d) => (
+                <button
+                  key={d}
+                  className={`sandbox-dist-btn ${distance === d ? 'active' : ''}`}
+                  onClick={() => setDistance(d)}
+                >
+                  {d}"
+                </button>
+              ))}
+            </div>
+            <span className="sandbox-dist-note">
+              {distance <= 12 ? 'Point-blank / Pistols & Rapid Fire' : distance <= 18 ? 'Close Quarters / Assault Weapons' : distance === 24 ? 'Standard Firefight Range' : distance === 36 ? 'Long-range / Heavy Weapons' : 'Extreme Range / Artillery & Snipers'}
+            </span>
           </div>
         </div></section>
 
         {/* Armies Side-by-Side Builder */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 12 }}>
           {/* Side 0 (Blue Force) */}
-          <section className="slate" style={{ borderTop: '3px solid var(--p0)' }}><div className="slate-in">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <section className="slate" style={{ borderTop: '3px solid #3b82f6' }}><div className="slate-in">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Emblem factionId={faction0Id} />
                 <div>
-                  <b style={{ color: 'var(--p0)', fontSize: 16 }}>Attacker Force (Blue)</b>
-                  <div className="tiny muted">{pts0} pts · {side0Units.length} squads</div>
+                  <b style={{ color: '#60a5fa', fontSize: 16, fontFamily: 'var(--font-cond)', letterSpacing: '0.04em' }}>Attacker Force (Blue)</b>
+                  <div style={{ fontSize: 13, color: '#cbd5e1', fontWeight: 500 }}>{pts0} pts · {side0Units.length} squads</div>
                 </div>
               </div>
               <select
                 value={faction0Id}
                 onChange={(e) => setFaction0Id(e.target.value)}
-                style={{ background: 'var(--surface-3)', color: 'var(--text)', border: '1px solid var(--line)', padding: '4px 8px', borderRadius: 6 }}
+                className="sandbox-select"
               >
                 {(index?.factions ?? []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10, maxHeight: 220, overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12, maxHeight: 240, overflowY: 'auto' }}>
               {side0Units.map((u) => {
                 const photo = getPortrait(u.datasheet);
                 return (
-                  <div key={u.uid} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 6, background: 'var(--surface-2)', borderRadius: 6 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {photo ? <img src={photo} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
-                        : <span style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-3)', display: 'grid', placeItems: 'center' }}><Icon name="fight" size={14} /></span>}
-                      <span style={{ fontSize: 13 }}>{u.datasheet} ×{u.models}</span>
+                  <div key={u.uid} className="sandbox-unit-row">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {photo ? <img src={photo} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }} />
+                        : <span style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(255,255,255,0.08)', display: 'grid', placeItems: 'center' }}><Icon name="fight" size={16} /></span>}
+                      <div>
+                        <span className="sandbox-unit-name">{u.datasheet}</span>
+                        <span className="sandbox-unit-count">×{u.models}</span>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span className="tiny muted">{u.pts} pts</span>
-                      <button className="icon-btn" onClick={() => removeUnitFromSide(0, u.uid)} aria-label="Remove"><Icon name="delete" size={15} /></button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', fontFamily: 'var(--font-cond)' }}>{u.pts} pts</span>
+                      <button className="icon-btn" onClick={() => removeUnitFromSide(0, u.uid)} aria-label="Remove"><Icon name="delete" size={16} /></button>
                     </div>
                   </div>
                 );
@@ -312,11 +325,11 @@ export function SandboxScreen({ index, onBack, onPlayBattle }: Props) {
             </div>
 
             {/* Quick Add for Side 0 */}
-            <div style={{ marginTop: 8 }}>
-              <span className="tiny muted">Spawn Squad:</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                {fac0?.datasheets.slice(0, 6).map((d) => (
-                  <button key={d.name} className="btn small" onClick={() => addUnitToSide(0, d.name)}>
+            <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 6 }}>Spawn Squad:</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {fac0?.datasheets.slice(0, 8).map((d) => (
+                  <button key={d.name} className="sandbox-spawn-chip" onClick={() => addUnitToSide(0, d.name)}>
                     + {d.name}
                   </button>
                 ))}
@@ -325,37 +338,40 @@ export function SandboxScreen({ index, onBack, onPlayBattle }: Props) {
           </div></section>
 
           {/* Side 1 (Red Force) */}
-          <section className="slate" style={{ borderTop: '3px solid var(--p1)' }}><div className="slate-in">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <section className="slate" style={{ borderTop: '3px solid #ef4444' }}><div className="slate-in">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Emblem factionId={faction1Id} />
                 <div>
-                  <b style={{ color: 'var(--p1)', fontSize: 16 }}>Target Force (Red)</b>
-                  <div className="tiny muted">{pts1} pts · {side1Units.length} squads</div>
+                  <b style={{ color: '#f87171', fontSize: 16, fontFamily: 'var(--font-cond)', letterSpacing: '0.04em' }}>Target Force (Red)</b>
+                  <div style={{ fontSize: 13, color: '#cbd5e1', fontWeight: 500 }}>{pts1} pts · {side1Units.length} squads</div>
                 </div>
               </div>
               <select
                 value={faction1Id}
                 onChange={(e) => setFaction1Id(e.target.value)}
-                style={{ background: 'var(--surface-3)', color: 'var(--text)', border: '1px solid var(--line)', padding: '4px 8px', borderRadius: 6 }}
+                className="sandbox-select"
               >
                 {(index?.factions ?? []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10, maxHeight: 220, overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12, maxHeight: 240, overflowY: 'auto' }}>
               {side1Units.map((u) => {
                 const photo = getPortrait(u.datasheet);
                 return (
-                  <div key={u.uid} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 6, background: 'var(--surface-2)', borderRadius: 6 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {photo ? <img src={photo} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
-                        : <span style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-3)', display: 'grid', placeItems: 'center' }}><Icon name="fight" size={14} /></span>}
-                      <span style={{ fontSize: 13 }}>{u.datasheet} ×{u.models}</span>
+                  <div key={u.uid} className="sandbox-unit-row">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {photo ? <img src={photo} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }} />
+                        : <span style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(255,255,255,0.08)', display: 'grid', placeItems: 'center' }}><Icon name="fight" size={16} /></span>}
+                      <div>
+                        <span className="sandbox-unit-name">{u.datasheet}</span>
+                        <span className="sandbox-unit-count">×{u.models}</span>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span className="tiny muted">{u.pts} pts</span>
-                      <button className="icon-btn" onClick={() => removeUnitFromSide(1, u.uid)} aria-label="Remove"><Icon name="delete" size={15} /></button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', fontFamily: 'var(--font-cond)' }}>{u.pts} pts</span>
+                      <button className="icon-btn" onClick={() => removeUnitFromSide(1, u.uid)} aria-label="Remove"><Icon name="delete" size={16} /></button>
                     </div>
                   </div>
                 );
@@ -363,11 +379,11 @@ export function SandboxScreen({ index, onBack, onPlayBattle }: Props) {
             </div>
 
             {/* Quick Add for Side 1 */}
-            <div style={{ marginTop: 8 }}>
-              <span className="tiny muted">Spawn Squad:</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                {fac1?.datasheets.slice(0, 6).map((d) => (
-                  <button key={d.name} className="btn small" onClick={() => addUnitToSide(1, d.name)}>
+            <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 6 }}>Spawn Squad:</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {fac1?.datasheets.slice(0, 8).map((d) => (
+                  <button key={d.name} className="sandbox-spawn-chip" onClick={() => addUnitToSide(1, d.name)}>
                     + {d.name}
                   </button>
                 ))}
@@ -379,51 +395,65 @@ export function SandboxScreen({ index, onBack, onPlayBattle }: Props) {
         {/* Mass Firefight Action Bar */}
         <section className="slate"><div className="slate-in">
           <div className="cmp-kicker">Firefight Simulation Controls</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
-            <button className="btn primary big" disabled={busy || !side0Units.length || !side1Units.length} onClick={() => runMassVolley(0)}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
+            <button
+              className="btn primary big"
+              style={{ fontWeight: 800, letterSpacing: '0.05em' }}
+              disabled={busy || !side0Units.length || !side1Units.length}
+              onClick={() => runMassVolley(0)}
+            >
               <Icon name="shoot" size={18} /> Mass Volley (Attacker Fires)
             </button>
-            <button className="btn big" disabled={busy || !side0Units.length || !side1Units.length} onClick={() => runMassVolley(1)}>
+            <button
+              className="btn big"
+              style={{ background: '#991b1b', borderColor: '#dc2626', color: '#fff', fontWeight: 800, letterSpacing: '0.05em' }}
+              disabled={busy || !side0Units.length || !side1Units.length}
+              onClick={() => runMassVolley(1)}
+            >
               <Icon name="shoot" size={18} /> Return Fire (Target Fires)
             </button>
-            <button className="btn big" onClick={() => { setFireStats(null); setSimState(null); play('card'); }}>
+            <button
+              className="btn big"
+              style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.2)', color: '#e2e8f0' }}
+              onClick={() => { setFireStats(null); setSimState(null); play('card'); }}
+            >
               <Icon name="undo" size={18} /> Restore / Reset Firefight
             </button>
           </div>
 
           {/* Combat Statistics Display */}
           {fireStats && (
-            <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
-              <div className="cmp-title" style={{ fontSize: 18 }}>Firefight Results & Damage Analytics</div>
+            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+              <div className="cmp-title" style={{ fontSize: 17, color: '#fef08a' }}>Firefight Results & Damage Analytics</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, marginTop: 10 }}>
-                <div style={{ background: 'var(--surface-2)', padding: 10, borderRadius: 8, textAlign: 'center' }}>
-                  <div className="tiny muted">Shots Fired</div>
-                  <b style={{ fontSize: 20 }}>{fireStats.shots}</b>
+                <div className="sandbox-stat-tile">
+                  <div className="tile-label">Shots Fired</div>
+                  <b className="tile-val" style={{ color: '#f8fafc' }}>{fireStats.shots}</b>
                 </div>
-                <div style={{ background: 'var(--surface-2)', padding: 10, borderRadius: 8, textAlign: 'center' }}>
-                  <div className="tiny muted">Hits Landed</div>
-                  <b style={{ fontSize: 20, color: '#60a5fa' }}>{fireStats.hits}</b>
+                <div className="sandbox-stat-tile">
+                  <div className="tile-label">Hits Landed</div>
+                  <b className="tile-val" style={{ color: '#60a5fa' }}>{fireStats.hits}</b>
                 </div>
-                <div style={{ background: 'var(--surface-2)', padding: 10, borderRadius: 8, textAlign: 'center' }}>
-                  <div className="tiny muted">Wounds Scored</div>
-                  <b style={{ fontSize: 20, color: '#f59e0b' }}>{fireStats.wounds}</b>
+                <div className="sandbox-stat-tile">
+                  <div className="tile-label">Wounds Scored</div>
+                  <b className="tile-val" style={{ color: '#f59e0b' }}>{fireStats.wounds}</b>
                 </div>
-                <div style={{ background: 'var(--surface-2)', padding: 10, borderRadius: 8, textAlign: 'center' }}>
-                  <div className="tiny muted">Failed Saves</div>
-                  <b style={{ fontSize: 20, color: '#f87171' }}>{fireStats.savesFailed}</b>
+                <div className="sandbox-stat-tile">
+                  <div className="tile-label">Failed Saves</div>
+                  <b className="tile-val" style={{ color: '#f87171' }}>{fireStats.savesFailed}</b>
                 </div>
-                <div style={{ background: 'var(--surface-2)', padding: 10, borderRadius: 8, textAlign: 'center' }}>
-                  <div className="tiny muted">Damage Done</div>
-                  <b style={{ fontSize: 20, color: '#ef4444' }}>{fireStats.damage}</b>
+                <div className="sandbox-stat-tile">
+                  <div className="tile-label">Damage Done</div>
+                  <b className="tile-val" style={{ color: '#ef4444' }}>{fireStats.damage}</b>
                 </div>
-                <div style={{ background: 'var(--surface-2)', padding: 10, borderRadius: 8, textAlign: 'center' }}>
-                  <div className="tiny muted">Models Slain</div>
-                  <b style={{ fontSize: 20, color: '#ec4899' }}>{fireStats.modelsSlain}</b>
+                <div className="sandbox-stat-tile">
+                  <div className="tile-label">Models Slain</div>
+                  <b className="tile-val" style={{ color: '#ec4899' }}>{fireStats.modelsSlain}</b>
                 </div>
               </div>
 
               {fireStats.details.length > 0 && (
-                <div style={{ marginTop: 10, maxHeight: 120, overflowY: 'auto', background: 'var(--surface-3)', padding: 8, borderRadius: 6, fontSize: 12 }}>
+                <div className="sandbox-log-box">
                   {fireStats.details.map((d, i) => <div key={i}>{d}</div>)}
                 </div>
               )}
