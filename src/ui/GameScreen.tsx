@@ -611,7 +611,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           const cu = U(ch.unitId);
           flash(`${cu.name} charges ${U(unitId).name}!`);
           if (ch.heroic) act((g) => { g.window = heroicCandidates(g, cu.owner).length ? { kind: 'heroicIntervention', player: cu.owner } : null; });
-          if (hasKw(cu, 'MONSTER') || hasKw(cu, 'VEHICLE')) setMode({ k: 'crush', unitId: cu.id }); else setMode(null);
+          const canCrush = canUseStratagem(s, cu.owner, 'crushing-impact', cu) === null && isEngaged(s, cu);
+          if (canCrush) setMode({ k: 'crush', unitId: cu.id }); else setMode(null);
         } else {
           const targetsNow = ch.targets.includes(unitId) ? ch.targets : [...ch.targets, unitId];
           setModeRaw({ ...ch, targets: targetsNow });
@@ -1933,9 +1934,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <>
           <div className="big-result">Charge roll: {roll}"</div>
           {chargeOpts.length ? <div className="hint"><span>Tap a highlighted enemy unit: your unit charges it</span></div> : <div className="small">No target within the rolled distance: the charge fails</div>}
+          {canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit) === null && (
+            <div className="small" style={{ color: '#fca5a5', marginTop: '0.2rem' }}>
+              Crushing Impact (1CP) available: rolls T{alive(modeUnit)[0]?.profile.T ?? 4}D6 on impact
+            </div>
+          )}
           {mode.targets.length > 0 && moveControls('charge', () => confirmMove('charge', () => {
             finish();
-            if (hasKw(modeUnit, 'MONSTER') || hasKw(modeUnit, 'VEHICLE')) setTimeout(() => setModeRaw({ k: 'crush', unitId: modeUnit.id }), 0);
+            const canCrush = canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit) === null && isEngaged(s, modeUnit);
+            if (canCrush) setTimeout(() => setModeRaw({ k: 'crush', unitId: modeUnit.id }), 0);
           }), <button className="btn small" onClick={() => { const add = autoApproach(s, modeUnit, mode.targets.map(U), roll); setDraft(mergePaths(startPaths(modeUnit), add)); setCheck(null); }}>Auto</button>)}
           {check && !check.ok && <div className="tiny muted">Doesn't fit? Tap Auto, or "Cancel charge" (counts as a failed charge), then End Charge → Fight</div>}
           <div className="row">
@@ -1948,23 +1955,40 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }
     if (mode?.k === 'crush' && modeUnit) {
       const blocked = canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit);
+      const tVal = alive(modeUnit)[0]?.profile.T ?? 4;
       return (
-        <>
-          <div className="small"><b>Charge successful!</b> Use Crushing Impact (1CP)? Select an engaged enemy below — roll a D6 per T: 5+ deals a mortal wound, a 1 wounds your unit.</div>
-          {crushTargets.length > 0 && <div className="unit-strip">
-            {crushTargets.map((id) => {
-              const target = U(id);
-              return <button key={id} className="unit-pill" disabled={!!blocked} onClick={() => {
-                const rolls = act((g) => crushingImpact(g, unitById(g, modeUnit.id), id));
-                flash(`Crushing Impact: [${rolls.join(' ')}]`);
-                setMode(null);
-              }}>Use on {target.name}</button>;
-            })}
-          </div>}
-          {blocked && <div className="tiny muted">{blocked}</div>}
-          {!crushTargets.length && <div className="tiny muted">No engaged enemy unit can be targeted.</div>}
-          <button className="btn primary" onClick={() => setMode(null)}>Decline → Continue</button>
-        </>
+        <div style={{ padding: '0.4rem 0' }}>
+          <div className="small" style={{ marginBottom: '0.35rem' }}>
+            <b style={{ color: '#fca5a5' }}>Charge successful!</b> Use <b>Crushing Impact (1CP)</b>?
+          </div>
+          <div style={{ fontSize: '0.82rem', color: '#cbd5e1', marginBottom: '0.5rem' }}>
+            Roll {tVal}D6 for {modeUnit.name} (T{tVal}): each 5+ deals 1 mortal wound to target (max 6), each 1 deals 1 mortal wound to {modeUnit.name}.
+          </div>
+          {crushTargets.length > 0 && (
+            <div className="row wrap" style={{ gap: '0.4rem', marginBottom: '0.6rem' }}>
+              {crushTargets.map((id) => {
+                const target = U(id);
+                return (
+                  <button
+                    key={id}
+                    className="btn primary"
+                    disabled={!!blocked}
+                    onClick={() => {
+                      const rolls = act((g) => crushingImpact(g, unitById(g, modeUnit.id), id));
+                      flash(`Crushing Impact vs ${target.name}: [${rolls.join(' ')}]`);
+                      setMode(null);
+                    }}
+                  >
+                    Crush {target.name} ({tVal}D6)
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {blocked && <div className="tiny muted" style={{ marginBottom: '0.4rem' }}>{blocked}</div>}
+          {!crushTargets.length && <div className="tiny muted" style={{ marginBottom: '0.4rem' }}>No engaged enemy unit can be targeted.</div>}
+          <button className="btn ghost" onClick={() => setMode(null)}>Decline (save 1CP) → Continue</button>
+        </div>
       );
     }
     const mine = boardUnits(s, s.active);
@@ -1983,6 +2007,40 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 {hasKw(u, 'FLY') && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
               </div>
             )}
+            {u.declaredCharge && isEngaged(s, u) && (() => {
+              const blocked = canUseStratagem(s, u.owner, 'crushing-impact', u);
+              const enemies = engagedEnemies(s, u);
+              const tVal = alive(u)[0]?.profile.T ?? 4;
+              return (
+                <div style={{ marginTop: '0.5rem', padding: '0.6rem 0.8rem', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <span style={{ fontWeight: 800, color: '#fca5a5', fontSize: '0.9rem' }}>Crushing Impact (1CP)</span>
+                    <span style={{ fontSize: '0.8rem', color: '#fecaca' }}>T{tVal} ({tVal}D6)</span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '0.45rem' }}>
+                    Roll {tVal}D6: each 5+ deals 1 mortal wound to target (max 6), each 1 deals 1 mortal wound to {u.name}.
+                  </div>
+                  {blocked ? (
+                    <div className="tiny muted">{blocked}</div>
+                  ) : (
+                    <div className="row wrap" style={{ gap: '0.4rem' }}>
+                      {enemies.map((t) => (
+                        <button
+                          key={t.id}
+                          className="btn small primary"
+                          onClick={() => {
+                            const rolls = act((g) => crushingImpact(g, unitById(g, u.id), t.id));
+                            flash(`Crushing Impact vs ${t.name}: [${rolls.join(' ')}]`);
+                          }}
+                        >
+                          Crush {t.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </>
         )}
         {onAuto(s, s.active) && mine.some((x) => !chargeEligibility(s, x) && !x.declaredCharge) && (
@@ -1992,10 +2050,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               const before = new Set(boardUnits(g, g.active).filter((x) => x.declaredCharge).map((x) => x.id));
               autoCharges(g);
               const now = boardUnits(g, g.active).filter((x) => x.declaredCharge && !before.has(x.id));
-              return { n: now.length, made: now.filter((x) => isEngaged(g, x)).length, short: now.filter((x) => !isEngaged(g, x)).map((x) => `${x.name} rolled ${x.chargeRoll}"`) };
+              const madeUnits = now.filter((x) => isEngaged(g, x)).map((x) => x.id);
+              return { n: now.length, made: madeUnits, short: now.filter((x) => !isEngaged(g, x)).map((x) => `${x.name} rolled ${x.chargeRoll}"`) };
             });
-            setSel(null);
-            if (res) flash(!res.n ? 'No unit has a fair chance to reach an enemy' : `${res.made} of ${res.n} charge${res.n > 1 ? 's' : ''} made it in${res.short.length ? ` · ${res.short.join(', ')}` : ''}`);
+            if (res?.made.length === 1 && canUseStratagem(s, s.active, 'crushing-impact', unitById(s, res.made[0])) === null) {
+              setMode({ k: 'crush', unitId: res.made[0] });
+            } else {
+              setSel(res?.made[0] ?? null);
+            }
+            if (res) flash(!res.n ? 'No unit has a fair chance to reach an enemy' : `${res.made.length} of ${res.n} charge${res.n > 1 ? 's' : ''} made it in${res.short.length ? ` · ${res.short.join(', ')}` : ''}`);
           }}>Charge for me</button>
         )}
         {abilityBar(s.active, { whens: ['anyPhase'] })}
