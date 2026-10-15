@@ -8240,7 +8240,13 @@
           "name": "Harridan"
         }
       ],
-      "loadout": "This model is equipped with: 2 dire bio-cannons; gargantuan scything talons.",
+      "loadout": {
+        "*": [
+          "Dire bio-cannon",
+          "Dire bio-cannon",
+          "Gargantuan scything talons"
+        ]
+      },
       "wargear": [],
       "leads": [],
       "isSupport": false,
@@ -8255,7 +8261,8 @@
           ]
         }
       ],
-      "transport": "This model has a transport capacity of 20 Gargoyles models and 1 Winged Tyranid Prime model."
+      "transport": "This model has a transport capacity of 20 Gargoyles models and 1 Winged Tyranid Prime model.",
+      "loadoutText": "This model is equipped with: 2 dire bio-cannons; gargantuan scything talons."
     },
     {
       "id": "000000840052",
@@ -8391,7 +8398,15 @@
           "name": "Hierophant"
         }
       ],
-      "loadout": "This model is equipped with: bio-plasma torrent; 2 dire bio-cannons; lashwhip pods; titanic scything talons.",
+      "loadout": {
+        "*": [
+          "Bio-plasma torrent",
+          "Dire bio-cannon",
+          "Dire bio-cannon",
+          "Lashwhip pods",
+          "Titanic scything talons"
+        ]
+      },
       "wargear": [],
       "leads": [],
       "isSupport": false,
@@ -8406,7 +8421,8 @@
           ]
         }
       ],
-      "transport": "This model has a transport capacity of 20 Tyranids Infantry models. Each model with a Wounds characteristic of more than 1 takes up the space of 3 models. This model cannot transport models that can Fly."
+      "transport": "This model has a transport capacity of 20 Tyranids Infantry models. Each model with a Wounds characteristic of more than 1 takes up the space of 3 models. This model cannot transport models that can Fly.",
+      "loadoutText": "This model is equipped with: bio-plasma torrent; 2 dire bio-cannons; lashwhip pods; titanic scything talons."
     }
   ]
 }

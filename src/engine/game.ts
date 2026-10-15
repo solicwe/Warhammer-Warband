@@ -26,6 +26,7 @@ import './rituals';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from './activations';
 
 import { inSynapse } from './tyranids';
+import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart, tryActOfFaith } from './sororitas';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -855,6 +856,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); dgRoundStart(s); knightsRoundStart(s); fireAll(s, 'roundStart', 'both'); }
   knightsTurnStart(s);
+  sororitasTurnStart(s, p);
   startCommand(s);
 }
 
@@ -947,12 +949,14 @@ export function endPhase(s: GameState) {
     }
   }
   dgPhaseEnd(s);
+  resetPhaseActsOfFaith(s);
   resolveRevivals(s);
   if (s.window?.kind === 'abilityMove') s.window = null;
   expireTimed(s, 'phaseEnd', s.active);
   if (s.phase === 'command') {
     fireFor(s, 'commandEnd', s.active);
     dgCommandEnd(s);
+    sororitasCommandEnd(s, s.active);
     // Uphold the Honour of the Emperor (Templar Vows): objectives held now stay yours
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtCommandEnd || !hasKw(u, 'INFANTRY')) continue;
@@ -1075,7 +1079,9 @@ export function rollAdvance(s: GameState, u: UnitState) {
     log(s, `${u.name} Advance: no roll, +${det.advanceFixed}"`, 'info', u.owner);
     return;
   }
-  const raw = det.advanceSix ? 6 : d6(s);
+  let raw = det.advanceSix ? 6 : d6(s);
+  const aof = tryActOfFaith(s, u, 'advance');
+  if (aof !== null) raw = aof;
   const bonus = (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0) + det.advanceBonus;
   u.advanceRoll = raw + bonus;
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Advance · ${u.name}`, dice: [raw], result: `M + ${u.advanceRoll}"${bonus ? ` (+${bonus})` : ''}${det.advanceSix ? ' (Detachment: 6)' : ''}`, good: u.advanceRoll >= 4 });
@@ -1344,12 +1350,14 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   s.lastAct = { unitId: u.id, owner: u.owner, kind: 'charge', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
   const declaredInOwnTurn = u.owner === s.active && s.phase === 'charge';
   const r = rollN(s, 2);
+  const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
+  const aof = tryActOfFaith(s, u, 'charge', { need: near });
+  if (aof !== null) r[0] = aof;
   let total = r[0] + r[1];
   if (cap !== undefined) total = Math.min(total, cap);
   if (u.buffs.some((b) => b.kind === 'advanceCharge+1')) total += 1;
   total += rollMods(s, u).chargeBonus;
   u.chargeRoll = Math.max(0, total - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0));
-  const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Charge · ${u.name}`, dice: r, result: `Charge ${u.chargeRoll}"`, good: u.chargeRoll + 1e-6 >= near, unitId: u.id, at: centreOf(u) });
   log(s, `${u.name} declares a charge: 2D6 [${r.join('+')}] = ${r[0] + r[1]}${fly ? ' (Fly −2)' : ''}${cap !== undefined && r[0] + r[1] > cap ? ` → capped at ${cap}` : ''}`, 'roll', u.owner);
   // Fortress of Intimidation: charging near that Knight means a Battle-shock test first
@@ -1531,13 +1539,26 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
   }
   if (dir && !ms.some(inContact)) {
     for (let k = need; k > 0.05; k -= 0.25) {
-      const trial = new Map(ms.map((m) => [m.id, { x: m.x + dir!.x * k, y: m.y + dir!.y * k }]));
-      const ok = ms.every((m) => {
-        const p = trial.get(m.id)!;
-        return onTable(bodyAt(m, p), W, H) && others.every((o) => gap(bodyAt(m, p), o) >= -0.01)
-          && !endSpotBlocked(s, m, p) && clearOfOthers(bodyAt(m, p)) && clearLine(m, p);
-      });
-      if (ok) { for (const [id, p] of trial) pos.set(id, p); break; }
+      const trial = new Map<string, Pt>();
+      for (const m of ms) {
+        let bestP = { x: m.x, y: m.y };
+        for (let sub = k; sub >= 0; sub -= 0.5) {
+          const cand = { x: m.x + dir!.x * sub, y: m.y + dir!.y * sub };
+          if (onTable(bodyAt(m, cand), W, H) && others.every((o) => gap(bodyAt(m, cand), o) >= -0.01)
+            && !endSpotBlocked(s, m, cand) && clearOfOthers(bodyAt(m, cand)) && clearLine(m, cand)) {
+            bestP = cand;
+            break;
+          }
+        }
+        trial.set(m.id, bestP);
+      }
+      const trialPts = ms.map((m) => trial.get(m.id)!);
+      if (coherencyProblems(trialPts, RULES.coherency.near, RULES.coherency.max, ms).length === 0) {
+        if (ms.some((m) => dist(m, trial.get(m.id)!) > 0.1)) {
+          for (const [id, p] of trial) pos.set(id, p);
+          break;
+        }
+      }
     }
   }
   // 2) individual refinement into contact

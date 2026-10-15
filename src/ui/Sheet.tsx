@@ -107,6 +107,145 @@ export const armyColor = (factionId?: string, sub?: string) => (sub && CHAPTER_C
 
 export const dsColor = (factionId?: string) => DS_COLOR[factionId ?? ''] ?? '#2c4440';
 
+interface ParsedBulletOption {
+  name?: string;
+  text: string;
+}
+
+function parseBulletChoices(text: string): { intro: string; options: ParsedBulletOption[] } | null {
+  if (!/(?:select|choose) (?:one|two|three|\d+) of the following|one of the following abilities/i.test(text)) return null;
+  const lines = text.split('\n');
+  const bulletIdx = lines.findIndex((l) => /^[•\-\*]\s+/.test(l.trim()));
+  if (bulletIdx <= 0) return null;
+  const intro = lines.slice(0, bulletIdx).join(' ').trim();
+  const rawBullets: string[] = [];
+  for (let i = bulletIdx; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (/^[•\-\*]\s+/.test(l)) {
+      rawBullets.push(l.replace(/^[•\-\*]\s+/, ''));
+    } else if (rawBullets.length > 0 && l.length > 0) {
+      rawBullets[rawBullets.length - 1] += ' ' + l;
+    }
+  }
+  if (rawBullets.length < 2) return null;
+  const options = rawBullets.map((b) => {
+    const m = /^([^:]{2,45}):\s*(.*)$/.exec(b);
+    if (m && !/^(?:Note|Designer's Note|Example)$/i.test(m[1])) {
+      return { name: m[1].trim(), text: m[2].trim() };
+    }
+    return { text: b };
+  });
+  return { intro, options };
+}
+
+export function renderAbilitiesContent(
+  abilities: AbilityData[],
+  unit: UnitState,
+  sheetName: string,
+  rulesFaction?: string,
+  names?: string[],
+  damaged?: DatasheetData['damaged']
+): ReactNode[] {
+  const ab = (a: AbilityData, i: number) => (
+    <div key={i} className="ds-ab">
+      <b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>
+      {rulesFaction && <AbilityBadge u={unit} a={{ ...a, sheet: sheetName, faction: rulesFaction }} />}
+      {' '}<Em text={a.text} names={names} />
+    </div>
+  );
+
+  const out: ReactNode[] = [];
+  const handledAbilityNames = new Set<string>();
+
+  // 1a. Choice abilities defined via abilityRule choice (e.g. Unearthly Power, The Warmaster, Lord of the Death Guard)
+  for (const a of abilities) {
+    const ch = rulesFaction ? abilityRule(unit, { ...a, sheet: sheetName, faction: rulesFaction })?.choice : undefined;
+    const opts = ch ? abilities.filter((x) => ch.options.includes(x.name)) : [];
+    if (opts.length > 0) {
+      out.push(
+        <div key={`sec-c-${a.name}`} className="ds-sec">{a.name.toUpperCase()}</div>,
+        ...opts.map(ab)
+      );
+      opts.forEach((o) => handledAbilityNames.add(o.name));
+    }
+  }
+
+  // 1b. Any Primarch type abilities not yet handled (group under their parent or section)
+  const primarchUnclaimed = abilities.filter((a) => a.type === 'Primarch' && !handledAbilityNames.has(a.name));
+  if (primarchUnclaimed.length > 0) {
+    const parentChoice = abilities.find((a) => a.type !== 'Primarch' && /(?:select|choose) one of the (?:following|abilities)/i.test(a.text));
+    const title = parentChoice ? parentChoice.name : 'PRIMARCH ABILITIES';
+    out.push(
+      <div key="sec-primarch" className="ds-sec">{title.toUpperCase()}</div>,
+      ...primarchUnclaimed.map(ab)
+    );
+    primarchUnclaimed.forEach((o) => handledAbilityNames.add(o.name));
+  }
+
+  // 1c. Abilities whose text contains bullet choices (e.g. Singular Purpose, Adaptive Instincts, Moment Shackle)
+  for (const a of abilities) {
+    if (a.type === 'Core' || a.type === 'Faction' || handledAbilityNames.has(a.name)) continue;
+    const bc = parseBulletChoices(a.text);
+    if (bc) {
+      out.push(
+        <div key={`sec-bc-${a.name}`} className="ds-sec">{a.name.toUpperCase()}</div>,
+        <div key={`intro-${a.name}`} className="ds-ab small muted" style={{ fontStyle: 'italic', paddingBottom: 2 }}>
+          {rulesFaction && <AbilityBadge u={unit} a={{ ...a, sheet: sheetName, faction: rulesFaction }} />}
+          {' '}<Em text={bc.intro} names={names} />
+        </div>,
+        ...bc.options.map((opt, oi) => (
+          <div key={`bco-${a.name}-${oi}`} className="ds-ab">
+            {opt.name ? <b>{opt.name}: </b> : <span>• </span>}
+            <Em text={opt.text} names={names} />
+          </div>
+        ))
+      );
+      handledAbilityNames.add(a.name);
+    }
+  }
+
+  // 1d. Special section rules (e.g. SUPREME COMMANDER, DEPLOYMENT, etc.)
+  for (const a of abilities.filter((x) => /^Special/.test(x.type))) {
+    out.push(
+      <div key={`sec-s-${a.name}`} className="ds-sec">{a.name.toUpperCase()}</div>,
+      <div key={`st-${a.name}`} className="ds-ab"><Em text={a.text} names={names} /></div>
+    );
+    handledAbilityNames.add(a.name);
+  }
+
+  // 2. ABILITIES header
+  out.push(<div key="sec-abilities" className="ds-sec">ABILITIES</div>);
+
+  // 3. Core & Faction rules
+  for (const t of ['Core', 'Faction'] as const) {
+    const xs = abilities.filter((a) => a.type === t);
+    if (xs.length > 0) {
+      out.push(
+        <div key={`rule-${t}`} className="ds-line ds-rule">
+          {t.toUpperCase()}: <b>{xs.map((a) => `${a.name}${a.param ? ` ${a.param}` : ''}`).join(', ')}</b>
+        </div>
+      );
+    }
+  }
+
+  // 4. Remaining datasheet abilities
+  const remaining = abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction' && !handledAbilityNames.has(a.name));
+  for (let i = 0; i < remaining.length; i++) {
+    out.push(ab(remaining[i], i));
+  }
+
+  // 5. Damaged profile (if any)
+  if (damaged) {
+    out.push(
+      <div key="sec-damaged" className="ds-ab">
+        <b>DAMAGED: 1-{damaged.w} WOUNDS REMAINING:</b> <Em text={damaged.text} />
+      </div>
+    );
+  }
+
+  return out;
+}
+
 export function DatasheetView({ sheet, factionId, variants }: { sheet: DatasheetData; factionId?: string; variants?: PictureVariant[] }) {
   const probe = { sources: [sheet.name], abilities: [] } as unknown as UnitState;
   const rulesFaction = sheet.ally ?? factionId;
@@ -133,28 +272,7 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
       </div>
       <Weapons weapons={sheet.weapons} />
       {sheet.options.length > 0 && <details><summary className="small">Wargear options</summary>{sheet.options.map((o, i) => <div key={i} className="small">• <Em text={o} /></div>)}</details>}
-      {(() => {
-        // like the printed datasheet: "pick one of these" abilities (The Warmaster, Unearthly Power …) and special rules
-        // (Supreme Commander) get their own band above ABILITIES
-        const ab = (a: AbilityData, i: number) => <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{rulesFaction && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: rulesFaction }} />} <Em text={a.text} names={names} /></div>;
-        const out: ReactNode[] = [];
-        for (const a of sheet.abilities) {
-          const ch = rulesFaction ? abilityRule(probe, { ...a, sheet: sheet.name, faction: rulesFaction })?.choice : undefined;
-          const opts = ch ? sheet.abilities.filter((x) => ch.options.includes(x.name)) : [];
-          if (opts.length) out.push(<div key={`c${a.name}`} className="ds-sec">{a.name.toUpperCase()}</div>, ...opts.map(ab));
-        }
-        for (const a of sheet.abilities.filter((x) => /^Special/.test(x.type))) out.push(<div key={`s${a.name}`} className="ds-sec">{a.name.toUpperCase()}</div>, <div key={`st${a.name}`} className="ds-ab"><Em text={a.text} names={names} /></div>);
-        return out;
-      })()}
-      <div className="ds-sec">ABILITIES</div>
-      {(['Core', 'Faction'] as const).map((t) => {
-        const xs = sheet.abilities.filter((a) => a.type === t);
-        return xs.length ? <div key={t} className="ds-line ds-rule">{t.toUpperCase()}: <b>{xs.map((a) => `${a.name}${a.param ? ` ${a.param}` : ''}`).join(', ')}</b></div> : null;
-      })}
-      {sheet.abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction' && !/^Special/.test(a.type) && !sheet.abilities.some((c) => rulesFaction && abilityRule(probe, { ...c, sheet: sheet.name, faction: rulesFaction })?.choice?.options.includes(a.name))).map((a, i) => (
-        <div key={i} className="ds-ab"><b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>{rulesFaction && <AbilityBadge u={probe} a={{ ...a, sheet: sheet.name, faction: rulesFaction }} />} <Em text={a.text} names={names} /></div>
-      ))}
-      {sheet.damaged && <div className="ds-ab"><b>DAMAGED: 1-{sheet.damaged.w} WOUNDS REMAINING:</b> <Em text={sheet.damaged.text} /></div>}
+      {renderAbilitiesContent(sheet.abilities, probe, sheet.name, rulesFaction, names, sheet.damaged)}
       {!more && <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(true)}>MORE INFO <Icon name="down" size={18} /></button>}
       {more && (
         <>
@@ -242,6 +360,9 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
         {u.core.fnp && <span className="chip">FNP {u.core.fnp}+</span>}
         {u.core.stealth && <span className="chip">Stealth</span>}
         {u.core.deepStrike && <span className="chip">Deep Strike</span>}
+        {(u.timed ?? []).filter((t) => t.label.startsWith('Order: ')).map((t, i) => (
+          <span key={`ord-${i}`} className="chip on" style={{ background: '#1c3d24', color: '#86efac', borderColor: '#22c55e', fontWeight: 800 }}>📢 {t.label}</span>
+        ))}
         {u.buffs.map((b, i) => <span key={i} className="chip">{b.label ?? b.kind}</span>)}
       </div>
       {[...groups.values()].map((g, i) => (
@@ -254,21 +375,28 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
       {u.enhancements.map((e) => (
         <div key={e.name} className="sheet"><b>Enhancement: {e.name}</b> <span className="tiny muted">({e.model})</span>{'\n'}<Em text={e.text} /></div>
       ))}
-      {u.abilities.filter((a) => a.type !== 'Core' && a.type !== 'Faction').map((a, i) => {
-        const cleanType = a.type.replace(/\s*\([пл]евая колонка\)/gi, '');
+      {(() => {
+        const rulesFaction = u.abilities.find((a) => a.faction)?.faction
+          ?? (u.factionKeywords.includes('THOUSAND SONS') ? 'TS'
+          : u.factionKeywords.includes('WORLD EATERS') ? 'WE'
+          : u.factionKeywords.includes('DEATH GUARD') ? 'DG'
+          : u.factionKeywords.includes('EMPEROR’S CHILDREN') || u.factionKeywords.includes("EMPEROR'S CHILDREN") ? 'EC'
+          : u.factionKeywords.includes('CHAOS SPACE MARINES') ? 'CSM'
+          : u.factionKeywords.includes('TYRANIDS') ? 'TYR'
+          : u.factionKeywords.includes('ADEPTUS CUSTODES') ? 'AC'
+          : u.factionKeywords.includes('ASTRA MILITARUM') ? 'AM'
+          : u.factionKeywords.includes('ORKS') ? 'ORK'
+          : u.factionKeywords.includes('IMPERIAL KNIGHTS') ? 'QI'
+          : u.factionKeywords.includes('CHAOS KNIGHTS') ? 'QT'
+          : u.factionKeywords.includes('AGENTS OF THE IMPERIUM') ? 'AoI'
+          : u.factionKeywords.includes('ADEPTUS ASTARTES') ? 'SM'
+          : undefined);
         return (
-          <div key={i} className="sheet"><b>{a.name}{a.param ? ` ${a.param}` : ''}</b> <span className="tiny muted">({cleanType}{a.model ? ` · ${a.model}` : ''})</span><AbilityBadge u={u} a={a} />{a.text ? <>{'\n'}<Em text={a.text} names={u.abilities.map((x) => x.name)} /></> : ''}</div>
+          <div className="ds-sheet" style={{ ['--ds-band' as string]: dsColor(rulesFaction), borderRadius: 8, overflow: 'hidden' }}>
+            {renderAbilitiesContent(u.abilities, u, u.sources[0] ?? u.name, rulesFaction, u.abilities.map((x) => x.name))}
+          </div>
         );
-      })}
-      {(['Core', 'Faction'] as const).map((t) => {
-        const xs = u.abilities.filter((a) => a.type === t);
-        return xs.length > 0 && (
-          <details key={t} className="sheet">
-            <summary><b>{t.toUpperCase()}:</b> {xs.map((a) => `${a.name}${a.param ? ` ${a.param}` : ''}`).join(', ')}</summary>
-            {xs.map((a, i) => <div key={i}><b>{a.name}</b><AbilityBadge u={u} a={a} />{a.text ? <>{'\n'}<Em text={a.text} names={u.abilities.map((x) => x.name)} /></> : ''}</div>)}
-          </details>
-        );
-      })}
+      })()}
       <div className="kw">{[...u.factionKeywords, ...u.keywords].join(', ')}</div>
     </div>
   );

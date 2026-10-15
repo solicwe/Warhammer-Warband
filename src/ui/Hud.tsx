@@ -41,11 +41,21 @@ export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; 
     if (d > 0) { setGain({ n: d, k: Date.now() }); play('vp'); }
   }, [vp]);
   useEffect(() => { if (!gain) return; const t = setTimeout(() => setGain(null), 1600); return () => clearTimeout(t); }, [gain]);
+  const miracleDice = P.miracleDice ?? [];
   return (
-    <button className={`side-score s${p}`} onClick={onOpen} aria-label={`${label}: ${vp} VP, ${P.cp} CP — open mission cards`}>
+    <button className={`side-score s${p}`} onClick={onOpen} aria-label={`${label}: ${vp} VP, ${P.cp} CP${miracleDice.length ? `, ${miracleDice.length} Miracle Dice` : ''} — open mission cards`}>
       <span className="ss-label">{label}</span>
       <span className="ss-vp num">{shown}<small>VP</small></span>
       <CpGems cp={P.cp} />
+      {miracleDice.length > 0 && (
+        <span className="miracle-pool" title={`Miracle Dice pool: ${miracleDice.slice().sort((a, b) => b - a).join(', ')}`}>
+          <Icon name="dice" size={11} />
+          {miracleDice.slice().sort((a, b) => b - a).slice(0, 4).map((d, i) => (
+            <i key={i} className="miracle-die">{d}</i>
+          ))}
+          {miracleDice.length > 4 && <b className="miracle-more">+{miracleDice.length - 4}</b>}
+        </span>
+      )}
       {gain && <span key={gain.k} className="ss-gain">+{gain.n} VP</span>}
     </button>
   );

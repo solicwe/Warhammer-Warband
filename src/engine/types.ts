@@ -247,6 +247,7 @@ export interface UnitState {
   soulOwn?: AbilityData[]; // Soul Link: the bearer's own datasheet abilities while it copies another character's
   readied?: boolean; // Adeptus Custodes Martial Ka'tah: the unit can use one ka'tah ability
   mark?: string; // Blade Champion's Sword of the Throne: enemy unit id
+  cherubUsed?: boolean; // Adepta Sororitas: Cherub once per battle
   timed?: TimedEffect[]; // temporary effects and marks from abilities
   split?: string; // split off another unit at Declare Battle Formations (Combat Squads …): the other unit's id
   sagaDone?: boolean; // Slayer's Oath: this unit has the completed-Saga benefits
@@ -356,6 +357,10 @@ export interface PlayerState {
   oathWoundBonus: boolean;
   waaaghUsed: boolean; // Waaagh! War Cry (Orks)
   shadowInTheWarpUsed?: boolean; // Shadow in the Warp (Tyranids)
+  /** Adepta Sororitas: Miracle Dice pool (Acts of Faith) */
+  miracleDice?: number[];
+  /** Units that performed an Act of Faith this phase */
+  actsOfFaithUsed?: string[];
   riledUntilTurn: number;
   secMode: 'none' | 'tactical' | 'fixed';
   secDeck: string[];

@@ -7,6 +7,7 @@ import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEne
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
+import { sororitasUnitDestroyed } from './sororitas';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 import { noteTarget, sensationalBlock, thrillBlock } from './emperorsChildren';
 import { putridHit } from './deathGuard';
@@ -248,6 +249,9 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
       const bh = buffSum(A, 'hit+1', 'hit-1');
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
+      for (const a of fx) {
+        if (a.e.skill) { mods.skillDelta -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} BS`); }
+      }
       const psychic = hasAbility(p, 'psychic');
       const fm = finishPoolMods(p, mods, psychic);
       const half = d <= range / 2 + 1e-6;
@@ -352,9 +356,12 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       if (shamed) { mods.hit -= 1; mods.hitNotes.push('Shield of Honour −1'); }
       const bh = buffSum(A, 'hit+1', 'hit-1');
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
+      for (const a of fx) {
+        if (a.e.skill) { mods.skillDelta -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} WS`); }
+      }
       const fm = finishPoolMods(p, mods, hasAbility(p, 'psychic'));
       const precision = opt.epicChallengeModel === m.id;
-      const key = [m.source, w.name, fm.hit, precision, shamed, fxKey(fx, inc)].join('|');
+      const key = [m.source, w.name, fm.skill, fm.hit, precision, shamed, fxKey(fx, inc)].join('|');
       let pool = pools.get(key);
       if (!pool) {
         pool = newPool(key, w, p, T);
@@ -791,6 +798,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     u.status = 'destroyed';
     s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id, killerId: s.attack?.attackerId, phase: s.phase });
     onUnitDestroyed(s, u, s.attack?.attackerId);
+    sororitasUnitDestroyed(s, u);
     log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);

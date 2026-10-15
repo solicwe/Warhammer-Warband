@@ -715,6 +715,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   for (const g of goals) for (const id of g.units) (badges[id] ??= []).push(`Target: ${g.name}`);
   // Rituals on a unit this phase (Destiny's Ruin, Twist of Fate): a tag so the player sees who is marked
   for (const u of s.units) for (const t of u.timed ?? []) if (t.mark && RITUAL_NAMES.has(t.mark) && onBoard(u)) (badges[u.id] ??= []).push(t.mark);
+  // Astra Militarum Orders (Voice of Command): a prominent order badge above the unit so the active skill is immediately clear
+  for (const u of s.units) {
+    if (!onBoard(u)) continue;
+    for (const t of u.timed ?? []) {
+      if (t.label.startsWith('Order: ')) (badges[u.id] ??= []).push(`📢 ${t.label.slice(7)}`);
+    }
+  }
   // Stratagems in effect: a tag on the unit that got it, so it is clear the CP went to that unit only
   const stratNames = new Set(s.players.flatMap((P) => P.detachments.flatMap((d) => d.stratagems.map((st) => st.name))));
   for (const u of s.units) {
@@ -745,7 +752,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (waaagh) chip(u.owner, 'WAAAGH!', ['5+ inv', 'Assault', 'Adv & Charge']);
       const riledTags: [string, boolean][] = isRiled(s, u) && !waaagh ? [['5+ inv', true], ['Assault', true], ['Adv & Charge', true]] : [];
       if (s.players[u.owner].favoured === u.id) riledTags.push(['Favoured: re-roll Wounds', true]);
-      const tags = [...riledTags, ...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...auras];
+      const orderTags: [string, boolean][] = (u.timed ?? [])
+        .filter((t) => t.label.startsWith('Order: '))
+        .map((t) => [`📢 ${t.label.slice(7)}`, true]);
+      const tags = [...riledTags, ...orderTags, ...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...auras];
       const seen = new Set<string>();
       const uniq = tags.filter(([t]) => !seen.has(t) && !!seen.add(t));
       if (uniq.length) buffTags[u.id] = uniq;
@@ -920,8 +930,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   // ---------- render helpers ----------
 
-  const unitPill = (u: UnitState, done: boolean, onClick?: () => void) => (
-    <button key={u.id} className={`unit-pill ${done ? 'done' : ''} ${sel === u.id ? 'sel' : ''} ${u.battleShocked ? 'shock' : ''}`} onClick={onClick ?? (() => { setSel(u.id); })}>
+  const unitPill = (u: UnitState, done: boolean, onClick?: () => void) => {
+    const canMove = s.phase === 'movement' && !done && u.owner === s.active && !u.move;
+    return (
+      <button key={u.id} className={`unit-pill ${done ? 'done' : ''} ${sel === u.id ? 'sel' : ''} ${canMove ? 'can-move' : ''} ${u.battleShocked ? 'shock' : ''}`} onClick={onClick ?? (() => { setSel(u.id); })}>
       {(() => {
         // the unit's picture (its leader's when it has one), so a unit is found by sight, not by name
         const lead = u.models.find((m) => m.isCharacter) ?? u.models[0];
@@ -932,7 +944,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <span className="muted"> {alive(u).length}/{u.startingStrength}</span>{u.battleShocked ? ' ' : ''}
       {s.players[1 - u.owner].oathTarget === u.id && <span className="oath-tag">{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</span>}
     </button>
-  );
+  ); };
 
   const selUnit = sel ? s.units.find((u) => u.id === sel) ?? null : null;
 
@@ -2237,6 +2249,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     ...(s.players[p].pledge?.round === s.round || s.players[p].pactPoints
       ? [<div key={`pact${p}`} className={`buffcard p${p}`}><b>{s.players[p].pledge?.round === s.round ? `Pledge ${s.players[p].pledge!.n} · ` : ''}Pact {s.players[p].pactPoints ?? 0}</b><span>{PACT_BONUSES}</span></div>]
       : []),
+    ...(s.players[p].miracleDice && s.players[p].miracleDice!.length > 0
+      ? [<div key={`miracle${p}`} className={`buffcard p${p}`}><b>Miracle Dice ({s.players[p].miracleDice!.length})</b><span>Pool: {s.players[p].miracleDice!.slice().sort((a, b) => b - a).map((d) => `[${d}]`).join(' ')}</span></div>]
+      : []),
   ];
   // where an army's buff column goes: beside its own deployment zone (left / right, or top / bottom of the left side)
   const buffSide = (p: PlayerId): 'left' | 'right' | 'top' | 'bottom' => {
@@ -2281,6 +2296,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           s={s}
           viewer={actor}
           selected={sel}
+          movable={s.phase === 'movement' && !mode ? s.units.filter((u) => u.owner === s.active && onBoard(u) && !u.move).map((u) => u.id) : undefined}
           draftUnit={draftUnit}
           draft={draft}
           unitNumbers={heroicNumbers}

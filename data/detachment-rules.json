@@ -5638,6 +5638,169 @@
     },
     "Feed the Swarm": {
       "auto": "full"
+    },
+    "Hallowed Martyrs": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": ["ADEPTA SORORITAS"],
+          "if": ["belowStartingStrength"],
+          "hit": 1
+        },
+        {
+          "units": ["ADEPTA SORORITAS"],
+          "if": ["belowHalfStrength"],
+          "wound": 1
+        }
+      ]
+    },
+    "The Blood of Martyrs": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": ["ADEPTA SORORITAS"],
+          "if": ["belowStartingStrength"],
+          "hit": 1
+        },
+        {
+          "units": ["ADEPTA SORORITAS"],
+          "if": ["belowHalfStrength"],
+          "wound": 1
+        }
+      ]
+    },
+    "Bringers of Flame": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": ["ADEPTA SORORITAS"],
+          "attack": "ranged",
+          "abilities": ["assault"]
+        },
+        {
+          "units": ["ADEPTA SORORITAS"],
+          "attack": "ranged",
+          "if": ["within6"],
+          "strength": 1
+        }
+      ]
+    },
+    "Fervent Purgation": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": ["ADEPTA SORORITAS"],
+          "attack": "ranged",
+          "abilities": ["assault"]
+        },
+        {
+          "units": ["ADEPTA SORORITAS"],
+          "attack": "ranged",
+          "if": ["within6"],
+          "strength": 1
+        }
+      ]
+    },
+    "Sacred Champions": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": ["CELESTIAN"],
+          "hit": 1
+        }
+      ]
+    },
+    "Holy Quest": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": ["CELESTIAN"],
+          "hit": 1
+        }
+      ]
+    },
+    "Penitent Host": {
+      "auto": "full",
+      "choice": {
+        "name": "Vows of Atonement",
+        "when": "command",
+        "uses": "eachOnce",
+        "pick": 1,
+        "options": [
+          {
+            "id": "ties",
+            "name": "The Ties of Duty",
+            "text": "ADEPTA SORORITAS units can declare a charge in a turn in which they Advanced or Fell Back.",
+            "effects": [
+              {
+                "units": ["ADEPTA SORORITAS"],
+                "eligible": { "chargeAfterAdvance": true, "chargeAfterFallBack": true }
+              }
+            ]
+          },
+          {
+            "id": "grace",
+            "name": "Grace of the Penitent",
+            "text": "Friendly PENITENT units have Feel No Pain 5+.",
+            "effects": [
+              {
+                "units": ["PENITENT"],
+                "defend": { "fnp": 5 }
+              }
+            ]
+          },
+          {
+            "id": "rage",
+            "name": "Righteous Rage",
+            "text": "Friendly PENITENT melee attacks have +1 S and +1 D.",
+            "effects": [
+              {
+                "units": ["PENITENT"],
+                "attack": "melee",
+                "strength": 1,
+                "damage": 1
+              }
+            ]
+          },
+          {
+            "id": "blood",
+            "name": "Blood of the Martyrs",
+            "text": "Friendly PENITENT melee attacks have Sustained Hits 1 (Sustained Hits 2 while below half).",
+            "effects": [
+              {
+                "units": ["PENITENT"],
+                "attack": "melee",
+                "if": ["belowStartingStrength"],
+                "abilities": ["sustained hits 1"]
+              },
+              {
+                "units": ["PENITENT"],
+                "attack": "melee",
+                "if": ["belowHalfStrength"],
+                "abilities": ["sustained hits 2"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "Desperate for Redemption": {
+      "auto": "full"
+    },
+    "Army of Faith": {
+      "auto": "full"
+    },
+    "Champions of Faith": {
+      "auto": "full"
+    },
+    "Righteous Purpose": {
+      "auto": "full"
+    },
+    "Sanctified Orators": {
+      "auto": "full"
+    },
+    "Chorus of Condemnation": {
+      "auto": "full"
     }
   }
 }

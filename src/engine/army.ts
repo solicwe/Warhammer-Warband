@@ -204,13 +204,38 @@ function itemsOf(sheet: DatasheetData, key: string | undefined): string[] {
  *  Guardsman") go first, in the card's order; the rest carry the plain one ("other Voidsman", "other model"). */
 function loadoutItemsFor(sheet: DatasheetData, compName: string | undefined, profileName: string, count: number): string[][] {
   const keys = Object.keys(sheet.loadout);
-  const cand = [compName, profileName].filter(Boolean).map((x) => singular(x!));
+  const comp = compName ? singular(compName) : '';
+  const prof = profileName ? singular(profileName) : '';
   const parsed = keys.map((k) => ({ k, ...loadoutKey(k) }));
-  const plain = parsed.find((p) => !p.n && p.base !== 'model' && keyMatches(p.base, cand))?.k
+
+  const matchKey = (p: { k: string; n: number; base: string }, checkExact: boolean) => {
+    if (p.base === 'model') return true;
+    if (comp) {
+      if (checkExact ? p.base === comp : (p.base.includes(comp) || comp.includes(p.base))) return true;
+    }
+    if (prof) {
+      if (checkExact ? p.base === prof : (p.base.includes(prof) || prof.includes(p.base))) return true;
+    }
+    return false;
+  };
+
+  const hasExact = parsed.some((p) => p.base !== 'model' && matchKey(p, true));
+  const isLeader = (s: string) => /champion|sergeant|nob|boss|leader/i.test(s);
+  const matchFuzzy = (p: { k: string; n: number; base: string }) => {
+    if (hasExact) return false;
+    if (isLeader(comp) !== isLeader(p.base)) return false;
+    return matchKey(p, false);
+  };
+
+  const plain = parsed.find((p) => !p.n && p.base !== 'model' && matchKey(p, true))?.k
+    ?? parsed.find((p) => !p.n && p.base !== 'model' && matchFuzzy(p))?.k
     ?? keys.find((k) => k === '*')
-    ?? parsed.find((p) => keyMatches(p.base, cand))?.k;
+    ?? parsed.find((p) => matchKey(p, true))?.k
+    ?? parsed.find((p) => matchFuzzy(p))?.k;
   const out: string[][] = [];
-  for (const p of parsed.filter((x) => x.n && x.base !== 'model' && keyMatches(x.base, cand))) for (let i = 0; i < p.n && out.length < count; i++) out.push(itemsOf(sheet, p.k));
+  for (const p of parsed.filter((x) => x.n && x.base !== 'model' && (matchKey(x, true) || matchFuzzy(x)))) {
+    for (let i = 0; i < p.n && out.length < count; i++) out.push(itemsOf(sheet, p.k));
+  }
   const rest = plain && loadoutKey(plain).n && out.length ? parsed.find((p) => p.base === 'model')?.k ?? plain : plain;
   while (out.length < count) out.push(itemsOf(sheet, rest));
   return out;

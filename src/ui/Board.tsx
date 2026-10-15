@@ -4,6 +4,7 @@ import { deploymentById, toPoly } from '../engine/config';
 import { dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard } from '../engine/state';
 import { levelOfControl, markRuleLabel } from '../engine/game';
+import { unitFlags } from '../engine/effects';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { loadoutLabels, shortItem } from './loadout';
@@ -21,6 +22,8 @@ export interface BoardProps {
   s: GameState;
   viewer: PlayerId;
   selected?: string | null;
+  /** unit IDs eligible to move this phase: highlighted so the player sees who can move */
+  movable?: string[];
   draftUnit?: string | null;
   draft?: Paths | null;
   /** numbers shared with a unit-selection list, to identify units with duplicate names */
@@ -620,6 +623,7 @@ function BoardImpl(props: BoardProps) {
         const isSel = props.selected === u.id;
         const isTarget = props.targets?.includes(u.id);
         const isPicked = props.picked?.includes(u.id);
+        const isMovable = props.movable?.includes(u.id);
         const col = COLORS[u.owner];
         const ms = alive(u);
         const labels = loadoutLabels(u); // which model carries what, in a squad with mixed wargear
@@ -653,6 +657,7 @@ function BoardImpl(props: BoardProps) {
                   <BaseShape m={m} p={p} grow={Math.max(0, 0.35 - m.r) + 0.35} fill="transparent" />
                   {acting.has(u.id) && <BaseShape m={m} p={p} grow={0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
                   {(isSel || isPicked) && !isDraft && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke={isSel ? '#f5b83d' : '#ffffff'} strokeWidth={0.18} className="sel-ring" pointerEvents="none" />}
+                  {isMovable && !isSel && !isDraft && !isPicked && <BaseShape m={m} p={p} grow={0.24} fill="none" stroke="#38bdf8" strokeWidth={0.13} strokeDasharray="0.32 0.18" className="movable-ring" pointerEvents="none" />}
                   {isTarget && !isPicked && !isSel && <BaseShape m={m} p={p} grow={0.28} fill="none" stroke="#fde68a" strokeWidth={0.1} strokeDasharray="0.3 0.2" pointerEvents="none" />}
                   {isSolo && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
                   {riled && (
@@ -722,10 +727,18 @@ function BoardImpl(props: BoardProps) {
                 </g>
               );
             })}
-            {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (
-              <text x={cx} y={minY - 0.35} fontSize={fs * 0.85} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
+            {(isSel || isPicked || isDraft || isMovable || vb.w < 30) && pts.length > 0 && (
+              <text x={cx} y={minY - 0.35} fontSize={fs * 0.85} textAnchor="middle" fill={isMovable && !isSel ? '#bae6fd' : isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
                 {u.name.length > 22 ? u.name.slice(0, 21) + '…' : u.name}{u.battleShocked ? ' !' : ''}
               </text>
+            )}
+            {isMovable && !isSel && !props.badges?.[u.id]?.length && pts.length > 0 && (
+              <g transform={`translate(${cx} ${minY - 1.05})`} pointerEvents="none">
+                <rect x={-1.8} y={-0.38} width={3.6} height={0.76} rx={0.38} fill="#0c4a6e" stroke="#38bdf8" strokeWidth={0.08} />
+                <text y={0.18} fontSize={0.52} textAnchor="middle" fill="#e0f2fe" fontWeight={800} letterSpacing={0.03}>
+                  MOVE {(alive(u)[0]?.profile.M ?? 0) + unitFlags(s, u).move}"
+                </text>
+              </g>
             )}
             {props.badges?.[u.id]?.length ? (
               <text x={cx} y={minY - 1.2} fontSize={0.75} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={800}>

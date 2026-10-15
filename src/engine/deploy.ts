@@ -10,6 +10,7 @@ import { circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from '
 import { canLeave } from './botMove';
 import { isBrawler, maxRange, moveOf, oc, unitValue } from './botEval';
 import { alive, onBoard, other, withinTerrain } from './state';
+import { homeScoresVp } from './botPlan';
 import type { GameState, ModelState, Pt, UnitState } from './types';
 import { roughLos } from './visibility';
 
@@ -143,7 +144,9 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
       }
       // somebody with OC on the home objective
       // (worth more than being forward or in cover: a unit placed wrong at the start plays the whole battle wrong)
-      for (const { p } of home) if (holdsGround && cheap && !homeHeld(p) && ms.some((m) => ptGap(m, p) <= 3)) score += 14;
+      if (homeScoresVp(s, u.owner)) {
+        for (const { p } of home) if (holdsGround && cheap && !homeHeld(p) && ms.some((m) => ptGap(m, p) <= 3)) score += 14;
+      }
 
       // spread out: no packing next to other units
       for (const f of friends) {

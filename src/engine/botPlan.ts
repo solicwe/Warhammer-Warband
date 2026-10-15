@@ -8,6 +8,7 @@ import { alive, boardUnits, hasKw, isEngaged, lastRound, other, pace } from './s
 import { centre, isBrawler, maxRange, moveOf, objPoint, oc, unitPunch, unitValue } from './botEval';
 import { hasAbility } from './weapons';
 import { botOff } from './botWeights';
+import { primaryById } from './config';
 import type { GameState, PlayerId, Pt, UnitState } from './types';
 
 /**
@@ -40,6 +41,42 @@ export const lastTurn = (s: GameState, p: PlayerId) => s.round >= lastRound(s) &
 const vpOf = (s: GameState, p: PlayerId) => s.players[p].vp + s.players[p].secVp;
 const armyValue = (s: GameState, p: PlayerId) => boardUnits(s, p).reduce((a, u) => a + unitValue(u), 0)
   + s.units.filter((u) => u.owner === p && (u.status === 'reserves' || u.status === 'embarked')).reduce((a, u) => a + unitValue(u), 0);
+
+/**
+ * Does holding our own home objective score any VP in this battle right now?
+ * Returns false when the primary mission specifically excludes home (e.g. perObjectiveControlledExclHome)
+ * and no active secondary cards require holding home (defend-stronghold).
+ */
+export function homeScoresVp(s: GameState, p: PlayerId): boolean {
+  const P = s.players[p];
+  if (!P) return true;
+  // Check active secondaries
+  const secondaries = P.secActive ?? [];
+  if (secondaries.some((c) => c === 'defend-stronghold' || c === 'controlOwnHome')) return true;
+
+  // Check primary scoring rules
+  const prim = P.primaryId ? primaryById(P.primaryId) : undefined;
+  const rules = prim?.scoring ?? [];
+  if (!rules.length) return true;
+
+  let anyExcl = false;
+  for (const r of rules) {
+    const cond = r.condition;
+    // Conditions where own home gives VP or is needed
+    if (cond === 'perObjectiveControlled' || cond === 'controlMoreThanOpponent' ||
+        cond === 'control2Plus' || cond === 'control3Plus' || cond === 'control4Plus' ||
+        cond === 'perNonHomeIfHomeControlled' || cond === 'onlyOneOwnMarkerHeld') {
+      return true;
+    }
+    if (cond === 'perObjectiveControlledExclHome' || cond === 'controlAnyExclHome' || cond === 'controlAnyExclHomes') {
+      anyExcl = true;
+    }
+  }
+
+  // If mission only has excluding-home conditions and no rules that reward home
+  if (anyExcl) return false;
+  return true;
+}
 
 /** How to play this battle round, and how much to fear losses (a factor on the movement scoring's caution). */
 export function stanceFor(s: GameState, p: PlayerId): { stance: Stance; risk: number } {
@@ -123,9 +160,8 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
     const heavy = alive(u).some((m) => m.weapons.some((w) => w.profiles.some((pr) => hasAbility(pr, 'heavy'))));
     if (!i.brawler && i.range >= 30 && (i.M <= 6 || heavy) && i.value < 260) jobs.set(u.id, { role: 'firebase', why: `${i.range}" guns` });
   }
-
   // home: the unit that loses the least by standing still there — cheap, scores OC, shoots well enough from it
-  const home = s.objectives.find((o) => o.type === 'home' && o.owner === p);
+  const home = homeScoresVp(s, p) ? s.objectives.find((o) => o.type === 'home' && o.owner === p) : undefined;
   if (home) {
     const hp = objPoint(s, home);
     const cands = mine.filter((u) => (free(u) || jobs.get(u.id)!.role === 'firebase') && info.get(u.id)!.oc > 0 && !isEngaged(s, u))

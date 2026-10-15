@@ -22,7 +22,9 @@ const namedSquad = (ms: ModelState[]) => new Set(ms.map((m) => m.name).filter((n
 /** "Twin Lightning Claws" → "Claws", "Thunder Hammer" → "Hammer", "Storm Shield" → "Shield": the word that tells kits apart. */
 export function itemTag(name: string): string {
   if (/storm shield/i.test(name)) return 'Shield';
-  return name.replace(/^((twin|master-crafted|astartes|archeotech|relic|artificer|lightning|thunder|power)[\s-]+)+/i, '').replace(/\s*\(.*?\)\s*/g, ' ').trim() || name;
+  if (/power weapon/i.test(name)) return 'Power Weapon';
+  if (/close combat weapon/i.test(name)) return '';
+  return name.replace(/^((twin|master-crafted|astartes|archeotech|relic|artificer|lightning|thunder)[\s-]+)+/i, '').replace(/\s*\(.*?\)\s*/g, ' ').trim() || name;
 }
 
 /** model id → what sets its kit apart (`tag` for the token, `full` for the unit card). */
@@ -89,15 +91,27 @@ export function pictureVariants(source: string, models: ModelState[]): PictureVa
   const all = [...groups.values()];
   const names = [...new Set(all.map((g) => g.name))];
   if (all.length < 2) return [];
-  const common = all[0].kit.filter((x) => all.every((g) => g.kit.includes(x)));
+
+  const isMelee = (w: string) => /chainsword|power\s+(weapon|sword|axe|fist|lance)|thunder hammer|force\s+|claws|blade|halberd|spear|relic weapon|eviscerator|talons|maul/i.test(w);
+  const isGear = (w: string) => /vox-caster|icon|banner|shield|mine|pack|signum|array|auspex|narthecium|teleport/i.test(w);
+
   return all.map((g) => {
     const split = all.filter((x) => x.name === g.name).length > 1;
     const nameKey = g.name && g.name !== source ? modelPortraitKey(source, g.name) : source;
     if (!split) return { key: nameKey, fallback: [source], label: g.name || source };
-    // weapons before wargear: "Hammer + Shield"
-    const own = g.kit.filter((x) => !common.includes(x)).sort((a, b) => Number((g.m.gear ?? []).includes(a)) - Number((g.m.gear ?? []).includes(b)));
-    const tag = own.length ? own.slice(0, 2).map(itemTag).join(' + ') : 'standard kit';
-    return { key: modelVariantKey(source, g.name, g.kit), fallback: [nameKey, source], label: `${names.length > 1 ? g.name : g.name || source} · ${tag}` };
+
+    // Filter out generic close combat weapon if the model has other weapons
+    const nonGeneric = g.kit.filter((x) => !/^close combat weapon$/i.test(x.trim()));
+    const pool = nonGeneric.length ? nonGeneric : g.kit;
+
+    // Ranged weapons first, then special melee, then wargear
+    const ranged = pool.filter((w) => !isMelee(w) && !isGear(w));
+    const melee = pool.filter(isMelee);
+    const gear = pool.filter(isGear);
+    const display = [...ranged, ...melee, ...gear].map(itemTag).filter(Boolean);
+    const tag = display.length ? display.join(' + ') : 'standard kit';
+
+    return { key: modelVariantKey(source, g.name, g.kit), fallback: [nameKey, source], label: `${g.name || source} · ${tag}` };
   }).sort((a, b) => a.label.localeCompare(b.label));
 }
 

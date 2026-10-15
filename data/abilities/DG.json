@@ -633,6 +633,16 @@
  },
  "Lord of the Death Guard": {
   "status": "auto",
+  "choice": {
+   "name": "Lord of the Death Guard",
+   "pick": 1,
+   "when": "turn",
+   "options": [
+    "Diseased Influence",
+    "Boon of Death",
+    "Inflamed Reprisal"
+   ]
+  },
   "note": "Once per turn: Diseased Influence, Boon of Death or Inflamed Reprisal"
  },
  "Host of Plagues": {

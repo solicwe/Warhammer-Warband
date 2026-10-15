@@ -1,5 +1,5 @@
 import { addTimed, type Effect, activeRules } from './effects';
-import { alive, boardUnits, log, onBoard, unitById, unitDistance } from './state';
+import { alive, boardUnits, centreOf, log, onBoard, pushFx, unitById, unitDistance } from './state';
 import type { GameState, PlayerId, UnitState } from './types';
 
 export type OrderName =
@@ -110,10 +110,8 @@ export function issueOrder(s: GameState, officerId: string, targetId: string, or
     addTimed(s, target, { e, label: `Order: ${order}`, until: 'nextCommand', by: officer.owner });
   }
 
-  s.ordersUsed ??= {};
-  s.ordersUsed[officer.id] = (s.ordersUsed[officer.id] ?? 0) + 1;
-
-  log(s, `Voice of Command: ${officer.name} issued ${order} to ${target.name}`, 'info', officer.owner);
+  pushFx(s, { kind: 'skill', unitId: officer.id, owner: officer.owner, at: centreOf(target), name: 'Voice of Command', who: `${officer.name} → ${order}`, style: 'tech', epic: false });
+  log(s, `📢 Voice of Command (Army Rule): ${officer.name} issued order: ${order} to ${target.name}`, 'info', officer.owner);
   return null;
 }
 
