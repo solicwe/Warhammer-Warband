@@ -389,6 +389,13 @@ export function syncList(list: ArmyList, faction: FactionData): ArmyList {
     // the enhancement's price follows the current points too
     const enh = u.enhancement ? faction.detachments.filter((d) => list.detachments.includes(d.name)).flatMap((d) => d.enhancements).find((e) => e.name === u.enhancement) : undefined;
     if (enh && enh.pts !== u.enhancementPts) next = { ...next, enhancementPts: enh.pts };
+    if (faction.id === 'AoI' && list.detachments.includes('Veiled Blade Elimination Force') && next.enhancement === undefined) {
+      const ext = EXTREMIS_ABILITIES[next.datasheet];
+      if (ext) {
+        const enhObj = faction.detachments.flatMap((d) => d.enhancements).find((e) => e.name === ext);
+        if (enhObj) next = { ...next, enhancement: ext, enhancementPts: enhObj.pts };
+      }
+    }
     if (next.pts !== u.pts || next.enhancementPts !== u.enhancementPts || (next.wargearPts ?? 0) !== (u.wargearPts ?? 0) || JSON.stringify(next.wargear ?? []) !== JSON.stringify(u.wargear ?? [])) { changed = true; return next; }
     return u;
   });
@@ -851,6 +858,7 @@ const EXTREMIS_ABILITIES: Record<string, string> = {
 };
 
 export function extremisEnhancement(u: ArmyUnitEntry, list: ArmyList, faction: FactionData) {
+  if (u.enhancement) return undefined;
   if (faction.id !== 'AoI' || !list.detachments.includes('Veiled Blade Elimination Force')) return undefined;
   const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
   const ability = EXTREMIS_ABILITIES[u.datasheet];
@@ -909,13 +917,39 @@ export function autoAttach(list: ArmyList, faction: FactionData): ArmyList {
 export function enhancementOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry) {
   const sheet = faction.datasheets.find((d) => d.name === entry.datasheet);
   // allied units take no Enhancements (Freeblades, Dreadblades, Daemonic Pact; the others' own detachments aren't ours)
-  if (!sheet || sheet.keywords.includes('EPIC HERO') || sheet.ally) return [];
-  // Houndpack Lance: three War Dog units are CHARACTERS (Enhancements, Warlord)
-  const isChar = sheet.keywords.includes('CHARACTER') || (list.detachments.includes('Houndpack Lance') && sheet.keywords.includes('WAR DOG'));
-  return faction.detachments
+  if (!sheet || sheet.ally) return [];
+
+  // Officio Assassinorum in Veiled Blade Elimination Force can take enhancements despite EPIC HERO
+  const isOfficioVeiled = faction.id === 'AoI' && list.detachments.includes('Veiled Blade Elimination Force') && sheet.keywords.includes('OFFICIO ASSASSINORUM');
+
+  // Detachment rules granting CHARACTER status:
+  const isChar = sheet.keywords.includes('CHARACTER')
+    || (list.detachments.includes('Houndpack Lance') && sheet.keywords.includes('WAR DOG'))
+    || (list.detachments.includes('Subterranean Assault') && sheet.name.toLowerCase().includes('trygon'))
+    || (list.detachments.includes('Steel Hammer') && sheet.keywords.includes('TITANIC') && sheet.factionKeywords.includes('ASTRA MILITARUM'))
+    || (list.detachments.some((d) => d === 'Eldritch Raiders' || d === 'Corsair Coterie') && (sheet.keywords.includes('ANHRATHE') || sheet.factionKeywords.includes('ANHRATHE')));
+
+  const allDetEnhancements = faction.detachments
     .filter((d) => list.detachments.includes(d.name))
-    .flatMap((d) => d.enhancements.map((e) => ({ ...e, detachment: d.name })))
-    .filter((e) => isChar || e.upgrade);
+    .flatMap((d) => d.enhancements.map((e) => ({ ...e, detachment: d.name })));
+
+  // If this unit is an EPIC HERO, it can only take an enhancement if:
+  // - It's Officio Assassinorum in Veiled Blade Elimination Force, OR
+  // - The enhancement specifically names this datasheet/model
+  if (sheet.keywords.includes('EPIC HERO') && !isOfficioVeiled) {
+    const hasNamedEnh = allDetEnhancements.some((e) => {
+      const fit = enhancementFits(e.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(entry.mark ? [entry.mark] : [])]);
+      return fit?.ok === true;
+    });
+    if (!hasNamedEnh) return [];
+  }
+
+  return allDetEnhancements.filter((e) => {
+    if (isChar || e.upgrade) return true;
+    // If the enhancement specifically fits this datasheet/unit, allow it (e.g. Wulfen, Vespid, Goremongers, etc.)
+    const fit = enhancementFits(e.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(entry.mark ? [entry.mark] : [])]);
+    return fit?.ok === true;
+  });
 }
 
 /**
@@ -1127,7 +1161,12 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (!isUpgrade(n) && same > 1) errs.push(`Enhancement "${n}" can only be taken once`);
     if (isUpgrade(n) && same > 3) errs.push(`Upgrade "${n}" can be taken at most 3 times`);
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
-    if (sheet?.keywords.includes('EPIC HERO')) errs.push(`${u.datasheet} is an EPIC HERO and cannot take Enhancements`);
+    const enhObj = allEnh.find((e) => e.name === n);
+    const isAllowedEpic = (list.detachments.includes('Veiled Blade Elimination Force') && sheet?.keywords.includes('OFFICIO ASSASSINORUM'))
+      || (enhObj && enhancementFits(enhObj.text, [...(sheet?.keywords ?? []), ...(sheet?.factionKeywords ?? []), sheet?.name ?? '', ...(u.mark ? [u.mark] : [])])?.ok);
+    if (sheet?.keywords.includes('EPIC HERO') && !isAllowedEpic) {
+      errs.push(`${u.datasheet} is an EPIC HERO and cannot take Enhancements`);
+    }
     if (!faction.detachments.some((d) => list.detachments.includes(d.name) && d.enhancements.some((e) => e.name === n))) errs.push(`Enhancement "${n}" is not in the selected Detachments`);
   }
   if (enhCount > (size as { enhancements?: number }).enhancements!) errs.push(`Too many Enhancements: ${enhCount}/${(size as { enhancements?: number }).enhancements}`);

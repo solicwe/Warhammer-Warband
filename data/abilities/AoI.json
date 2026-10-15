@@ -403,6 +403,7 @@
     }
   },
   "Intraneural Biotech": {
+    "status": "auto",
     "effects": [
       { "stratRepeat": { "ids": ["heroic-intervention"], "limit": "phase" } },
       { "stratDiscount": { "ids": ["heroic-intervention"], "cp": 1, "limit": "phase" } }
