@@ -75,3 +75,4 @@ describe('Leagues of Votann ability status check', () => {
     console.log(`Successfully verified all ${checked} Leagues of Votann abilities have status "auto"!`);
   });
 });
+

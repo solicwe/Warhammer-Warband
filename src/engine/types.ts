@@ -371,6 +371,13 @@ export interface PlayerState {
   yieldPoints?: number;
   /** Leagues of Votann: Active stance */
   votannAbility?: 'Hostile Acquisition' | 'Fortify Takeover';
+  /** Adeptus Mechanicus: Active Doctrina Imperative */
+  admechImperative?: 'Protector Imperative' | 'Conqueror Imperative';
+  /** Adeptus Mechanicus: Haloscreed Halo Override units and ability */
+  admechHaloOverrideUnits?: string[];
+  admechHaloOverrideAbility?: 'Electromotive Energisation' | 'Microactuator Bracing' | 'Predation Protocols' | 'Muted Servomotors';
+  /** Belisarius Cawl: Machine Vengeance target unit id */
+  machineVengeanceTarget?: string | null;
   riledUntilTurn: number;
   secMode: 'none' | 'tactical' | 'fixed';
   secDeck: string[];

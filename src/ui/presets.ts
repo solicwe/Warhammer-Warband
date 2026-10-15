@@ -822,5 +822,40 @@ export const PRESETS: Record<string, ArmyList> = {
       },
     ],
   },
+  AdM: {
+    name: 'Adeptus Mechanicus (Quick)',
+    factionId: 'AdM',
+    battleSize: 'incursion',
+    detachments: ['Rad-Zone Corps'],
+    units: [
+      {
+        uid: 'adm1', datasheet: 'Belisarius Cawl', models: 1, pts: 220, warlord: true,
+      },
+      {
+        uid: 'adm2', datasheet: 'Skitarii Rangers', models: 10, pts: 85,
+      },
+      {
+        uid: 'adm3', datasheet: 'Skitarii Vanguard', models: 10, pts: 85,
+      },
+      {
+        uid: 'adm4', datasheet: 'Kataphron Breachers', models: 3, pts: 140,
+      },
+      {
+        uid: 'adm5', datasheet: 'Onager Dunecrawler', models: 1, pts: 150,
+      },
+      {
+        uid: 'adm6', datasheet: 'Ironstrider Ballistarii', models: 1, pts: 80,
+      },
+      {
+        uid: 'adm7', datasheet: 'Sicarian Ruststalkers', models: 5, pts: 75,
+      },
+      {
+        uid: 'adm8', datasheet: 'Serberys Raiders', models: 3, pts: 60,
+      },
+      {
+        uid: 'adm9', datasheet: 'Pteraxii Skystalkers', models: 5, pts: 75,
+      },
+    ],
+  },
 };
 

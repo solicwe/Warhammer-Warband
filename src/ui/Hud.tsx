@@ -73,6 +73,14 @@ export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; 
           <small style={{ fontSize: 9, opacity: 0.85, marginLeft: 2 }}>{P.votannAbility === 'Hostile Acquisition' ? 'Hostile' : 'Fortify'}</small>
         </span>
       )}
+      {P.admechImperative && (
+        <span className="miracle-pool admech-pool" title={`Doctrina Imperatives: ${P.admechImperative}`}>
+          <Icon name="gear" size={11} />
+          <b className="miracle-more" style={{ color: '#e74c3c' }}>
+            {P.admechImperative.startsWith('Protector') ? 'Protector' : 'Conqueror'}
+          </b>
+        </span>
+      )}
       {gain && <span key={gain.k} className="ss-gain">+{gain.n} VP</span>}
     </button>
   );
