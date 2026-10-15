@@ -18,7 +18,7 @@ import { botPlague, PLAGUE_IDS } from './deathGuard';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, resolvePickUnit, unitSelected } from './activations';
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, styleChosen } from './botLook';
-import { unitVisibleTo } from './visibility';
+import { roughLos, unitVisibleTo } from './visibility';
 import { botAllowChargeStratagem, botDetectionStratagem, botIgnorePenaltiesStratagem, botTauntStratagem, botUnshotStratagem } from './botPlus';
 import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, botChargeBonusStratagem, botCommandExtras, botFightEndActs, botIgnoreModsStratagem, botReadyStratagem, botShieldStratagem, botTeleportActs } from './botPlus';
 import { botAdvanceActs, botArrivalStratagem, botCharacterStratagem, botFightChoice, botFightStartStratagems, botFightsFirstStratagem, botLooseDisembark, botMobileStratagem, botPileStratagem, botRedeployActs, botShootActs, botShootOnTheMove, botAdvanceStratagem, botAfterShootMove, botConsolidateStratagem, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
@@ -435,24 +435,54 @@ export function botShootOne(s: GameState): boolean {
   const startKey = `${s.turn}|shootStart|${s.active}`;
   if (!(s.botTried ?? []).includes(startKey)) { s.botTried = [...(s.botTried ?? []), startKey]; botDetectionStratagem(s, s.active); }
   const mine = boardUnits(s, s.active);
+
+  // Pre-filter: any unit that has no ranged weapons or cannot shoot this phase is marked tried immediately
+  for (const u of mine) {
+    if (!tried(s, u) && !shootingModes(s, u).length) {
+      markTried(s, u);
+    }
+  }
+
   // a unit that fired some of its weapons carries on with the rest (split fire), e.g. after the player rolled saves
   const busy = mine.find((u) => tried(s, u) && !u.selectedToShoot && u.weaponsFired.length > 0 && shootingModes(s, u).length > 0);
+  const untried = mine.filter((u) => !tried(s, u));
+  if (!untried.length && !busy) return false;
+
   // the unit that loses the most if its best target is gone shoots first (a lascannon on the tank, the bolters on what
   // is left): what its best target is worth over its second best. Flexible units go last and finish things off.
   const foes = boardUnits(s, other(s.active));
+  const canSeeFoe = (u: UnitState, e: UnitState) => {
+    const uAlive = alive(u), eAlive = alive(e);
+    if (!uAlive.length || !eAlive.length) return false;
+    const targetModel = eAlive[0];
+    if (uAlive.length <= 3) return uAlive.some((m) => roughLos(s, m, targetModel));
+    return roughLos(s, uAlive[0], targetModel) || roughLos(s, uAlive[uAlive.length - 1], targetModel) || roughLos(s, uAlive[Math.floor(uAlive.length / 2)], targetModel);
+  };
   const regret = (u: UnitState) => {
-    const vals = foes.filter((e) => unitDistance(u, e) <= maxRange(u) + 0.5 && alive(u).some((m) => unitVisibleTo(s, m, e)))
+    const rMax = maxRange(u);
+    if (rMax <= 0) return -1;
+    const inRange = foes.filter((e) => unitDistance(u, e) <= rMax + 0.5);
+    if (!inRange.length) return -1;
+    const vals = inRange.filter((e) => canSeeFoe(u, e))
       .map((e) => shotValue(s, u, e, Math.min(alive(e).length, rangedKills(u, e)))).sort((a, b) => b - a);
     return vals.length ? vals[0] - (vals[1] ?? 0) : -1;
   };
-  const options = (u: UnitState) => foes.filter((e) => unitDistance(u, e) <= maxRange(u) + 0.5 && alive(u).some((m) => unitVisibleTo(s, m, e))).length;
+  const options = (u: UnitState) => {
+    const rMax = maxRange(u);
+    if (rMax <= 0) return 0;
+    return foes.filter((e) => unitDistance(u, e) <= rMax + 0.5 && canSeeFoe(u, e)).length;
+  };
   const order = busy ? [busy] : botOff('order')
-    ? mine.filter((u) => !tried(s, u)).map((u) => ({ u, n: options(u) })).sort((a, b) => (a.n || 99) - (b.n || 99)).map((x) => x.u)
-    : mine.filter((u) => !tried(s, u)).map((u) => ({ u, r: regret(u) })).sort((a, b) => b.r - a.r).map((x) => x.u);
+    ? untried.map((u) => ({ u, n: options(u) })).sort((a, b) => (a.n || 99) - (b.n || 99)).map((x) => x.u)
+    : untried.map((u) => ({ u, r: regret(u) })).sort((a, b) => b.r - a.r).map((x) => x.u);
+
   for (const u of order) {
     if (!busy && tried(s, u)) continue;
     const modes = shootingModes(s, u);
-    if (!modes.length) continue;
+    if (!modes.length) {
+      markTried(s, u);
+      continue;
+    }
     const mode = modes[0];
     const rank = () => boardUnits(s, other(u.owner)).map((t) => {
       const r = buildShootPools(s, u.id, t.id, { mode });
@@ -460,6 +490,8 @@ export function botShootOne(s: GameState): boolean {
       const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, t).models, 0);
       return { t, v: shotValue(s, u, t, ev) };
     }).filter((x): x is { t: UnitState; v: number } => !!x).sort((a, b) => b.v - a.v);
+
+    const ranked = rank();
     if (!busy) {
       markTried(s, u);
       unitSelected(s, u, 'shoot');
@@ -474,7 +506,7 @@ export function botShootOne(s: GameState): boolean {
         const pick = acts
           .filter((o) => !(o.action === 'surveil' && already('surveil')))
           .sort((a, b) => Number(b.objId?.startsWith('home') ?? 0) - Number(a.objId?.startsWith('home') ?? 0))[0];
-        const best = rank()[0]?.v ?? 0;
+        const best = ranked[0]?.v ?? 0;
         if (pick && (ACTION_VP[pick.action] ?? 3) * 16 >= best) {
           startAction(s, pick);
           return true;
@@ -482,12 +514,14 @@ export function botShootOne(s: GameState): boolean {
       }
       botExplosives(s, u);
     }
-    const ranked = rank();
+
+    let didShoot = false;
     if (!busy && ranked.length) botOffensiveStratagem(s, u, 'shoot', ranked.slice(0, 3).map((x) => x.t));
     for (const { t } of ranked) {
       if (!onBoard(t)) continue;
       const r = buildShootPools(s, u.id, t.id, { mode });
       if (r.error || !r.pools.length) continue;
+      didShoot = true;
       if (!botAttack(s, 'shoot', u.id, t.id, r.pools)) return true;
       if (!u.selectedToShoot) continue; // split fire: remaining weapons try the next target
       break;
@@ -496,7 +530,7 @@ export function botShootOne(s: GameState): boolean {
     if (!s.window && !s.attack) withRuleCache(() => botAfterShootMove(s, u));
     if (!s.window && !s.attack) botAfterShootStratagems(s, u);
     if (!s.window && !s.attack) botUnshotStratagem(s, u);
-    return true;
+    if (didShoot || s.attack || s.window) return true;
   }
   return false;
 }

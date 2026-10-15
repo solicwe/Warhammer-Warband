@@ -341,7 +341,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return () => window.clearTimeout(t);
   }, [s, actingBot, act, botSays, rolling, reporting, thinking, stepping, viewing, worker, speed, spectate, bots.length, rush]); // eslint-disable-line react-hooks/exhaustive-deps
   // the hurry lasts for the bot's turn only
-  useEffect(() => { if (!actingBot === null && !spectate) setRush(false); }, [actingBot, spectate]);
+  useEffect(() => { if (actingBot === null && !spectate) setRush(false); }, [actingBot, spectate]);
+  useEffect(() => { stepOnMain.current = false; }, [s.turn, s.phase]);
   // what happens on the table, in the bot commander's words: kills and losses, objectives changing hands, charges
   const heard = useRef({ fx: s.fxSeq ?? 0, log: s.log.length, ctrl: s.objectives.map((o) => o.controller) });
   useEffect(() => {
