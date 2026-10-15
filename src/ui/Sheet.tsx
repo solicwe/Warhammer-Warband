@@ -76,12 +76,13 @@ function AbilityBadge({ u, a }: { u: UnitState; a: AbilityData }) {
 }
 
 /** Model lines with the same characteristics show once ("Intercessor Sergeant / Intercessor"). */
-function statGroups(models: ModelProfileData[]) {
+export function statGroups(models: ModelProfileData[]) {
   const key = (m: ModelProfileData) => [m.M, m.T, m.Sv, m.W, m.Ld, m.OC, m.InSv ?? ''].join('|');
   const out: { names: string[]; base: string; p: ModelProfileData }[] = [];
   for (const m of models) {
-    const g = out.find((x) => key(x.p) === key(m) && x.base === m.base.text);
-    if (g) g.names.push(m.name); else out.push({ names: [m.name], base: m.base.text, p: m });
+    const baseText = m.base?.text ?? '';
+    const g = out.find((x) => key(x.p) === key(m) && x.base === baseText);
+    if (g) g.names.push(m.name); else out.push({ names: [m.name], base: baseText, p: m });
   }
   return out;
 }
@@ -266,12 +267,12 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
         {groups.map((g, gi) => (
           <div key={g.names.join('|')} className="ds-statline">
             <Stats p={g.p} noInv={gi < groups.length - 1 && groups.every((x) => x.p.InSv === g.p.InSv)} />
-            <div className="ds-mname">{(groups.length > 1 ? g.names.join(' / ') : sheet.models.length > 1 ? 'All models' : sheet.name).toUpperCase()}<small>base {g.base}</small></div>
+            <div className="ds-mname">{(groups.length > 1 ? g.names.join(' / ') : sheet.models.length > 1 ? 'All models' : sheet.name).toUpperCase()}{g.base ? <small>base {g.base}</small> : null}</div>
           </div>
         ))}
       </div>
       <Weapons weapons={sheet.weapons} />
-      {sheet.options.length > 0 && <details><summary className="small">Wargear options</summary>{sheet.options.map((o, i) => <div key={i} className="small">• <Em text={o} /></div>)}</details>}
+      {(sheet.options ?? []).length > 0 && <details><summary className="small">Wargear options</summary>{(sheet.options ?? []).map((o, i) => <div key={i} className="small">• <Em text={o} /></div>)}</details>}
       {renderAbilitiesContent(sheet.abilities, probe, sheet.name, rulesFaction, names, sheet.damaged)}
       {!more && <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(true)}>MORE INFO <Icon name="down" size={18} /></button>}
       {more && (
@@ -317,7 +318,7 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
             const v = all.length ? all : names.length > 1 ? names.map((n) => ({ key: n === sheet.name ? sheet.name : modelPortraitKey(sheet.name, n), fallback: [sheet.name], label: n })) : [];
             return <div className="ds-pics"><ModelPictures variants={v} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} /></div>;
           })()}
-          <div className="tiny muted">Data: Wahapedia (<a href={sheet.link} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>source</a>)</div>
+          {sheet.link && <div className="tiny muted">Data: Wahapedia (<a href={sheet.link} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>source</a>)</div>}
           <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(false)}>LESS <span className="dt-chev up"><Icon name="down" size={18} /></span></button>
         </>
       )}

@@ -122,3 +122,4 @@ describe('Assassin and special unit Enhancements', () => {
     expect(opts.some((e) => e.name === 'Strategic Slaughter')).toBe(true);
   });
 });
+

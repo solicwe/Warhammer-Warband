@@ -727,18 +727,10 @@ function BoardImpl(props: BoardProps) {
                 </g>
               );
             })}
-            {(isSel || isPicked || isDraft || isMovable || vb.w < 30) && pts.length > 0 && (
-              <text x={cx} y={minY - 0.35} fontSize={fs * 0.85} textAnchor="middle" fill={isMovable && !isSel ? '#bae6fd' : isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
+            {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (
+              <text x={cx} y={minY - 0.35} fontSize={fs * 0.85} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
                 {u.name.length > 22 ? u.name.slice(0, 21) + '…' : u.name}{u.battleShocked ? ' !' : ''}
               </text>
-            )}
-            {isMovable && !isSel && !props.badges?.[u.id]?.length && pts.length > 0 && (
-              <g transform={`translate(${cx} ${minY - 1.05})`} pointerEvents="none">
-                <rect x={-1.8} y={-0.38} width={3.6} height={0.76} rx={0.38} fill="#0c4a6e" stroke="#38bdf8" strokeWidth={0.08} />
-                <text y={0.18} fontSize={0.52} textAnchor="middle" fill="#e0f2fe" fontWeight={800} letterSpacing={0.03}>
-                  MOVE {(alive(u)[0]?.profile.M ?? 0) + unitFlags(s, u).move}"
-                </text>
-              </g>
             )}
             {props.badges?.[u.id]?.length ? (
               <text x={cx} y={minY - 1.2} fontSize={0.75} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={800}>

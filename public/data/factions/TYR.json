@@ -8173,7 +8173,12 @@
           "inv": null,
           "W": 30,
           "Ld": 8,
-          "OC": 0
+          "OC": 0,
+          "base": {
+            "w": 120,
+            "h": 92,
+            "text": "120 x 92mm oval"
+          }
         }
       ],
       "weapons": [
@@ -8262,7 +8267,9 @@
         }
       ],
       "transport": "This model has a transport capacity of 20 Gargoyles models and 1 Winged Tyranid Prime model.",
-      "loadoutText": "This model is equipped with: 2 dire bio-cannons; gargantuan scything talons."
+      "loadoutText": "This model is equipped with: 2 dire bio-cannons; gargantuan scything talons.",
+      "link": "https://wahapedia.ru/wh40k10ed/factions/tyranids/Harridan",
+      "options": []
     },
     {
       "id": "000000840052",
@@ -8291,7 +8298,12 @@
           "inv": 5,
           "W": 30,
           "Ld": 8,
-          "OC": 12
+          "OC": 12,
+          "base": {
+            "w": 0,
+            "h": 0,
+            "text": "Use model"
+          }
         }
       ],
       "weapons": [
@@ -8422,7 +8434,9 @@
         }
       ],
       "transport": "This model has a transport capacity of 20 Tyranids Infantry models. Each model with a Wounds characteristic of more than 1 takes up the space of 3 models. This model cannot transport models that can Fly.",
-      "loadoutText": "This model is equipped with: bio-plasma torrent; 2 dire bio-cannons; lashwhip pods; titanic scything talons."
+      "loadoutText": "This model is equipped with: bio-plasma torrent; 2 dire bio-cannons; lashwhip pods; titanic scything talons.",
+      "link": "https://wahapedia.ru/wh40k10ed/factions/tyranids/Hierophant",
+      "options": []
     }
   ]
 }

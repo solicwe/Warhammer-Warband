@@ -228,7 +228,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
       const inc = incomingFor(s, A, m, T, 'ranged').filter((i) => !i.psychic || psy);
       const montka = isTauArmy(s, A.owner) && (s.players[A.owner].detachments ?? []).some((d) => d.name.toLowerCase().includes('mont')) && s.round <= 3;
-      if (opt.mode === 'assault' && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !montka) continue;
+      if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !montka) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
       if (d > maxRange + 1e-6) continue;
       if (untargetableAt(s, T, d)) continue;

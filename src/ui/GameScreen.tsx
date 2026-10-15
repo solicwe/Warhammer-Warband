@@ -621,7 +621,19 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       else if (mode.k === 'shoot' || mode.k === 'fight' || mode.k === 'explosives') setModeRaw({ ...mode, target: unitId });
       return;
     }
-    if (!mode) setSel(null);
+    if (!mode) {
+      if (s.phase === 'shooting') {
+        const targetU = U(unitId);
+        const smodes = shootingModes(s, targetU);
+        if (targetU.owner === s.active && !targetU.selectedToShoot && smodes.length > 0) {
+          setSel(unitId);
+          act((g) => autoSelectToShoot(g, unitById(g, unitId)));
+          setMode({ k: 'shoot', unitId, smode: smodes[0], target: null, useCQ: false, profile: {} });
+          return;
+        }
+      }
+      setSel(sel === unitId ? null : unitId);
+    }
   };
 
   const measureTap = (p: Pt, ref?: { u: string; m: string }) => {
@@ -952,7 +964,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           datasheet={lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source} fallback={lead.source} /></span>
           : <span className={`side-dot s${u.owner}`} aria-hidden="true" />;
       })()} {u.name.length > 26 ? u.name.slice(0, 25) + '…' : u.name}
-      <span className="muted"> {alive(u).length}/{u.startingStrength}</span>{u.battleShocked ? ' ' : ''}
+      <span className="muted"> {alive(u).length}/{u.startingStrength}</span>
+      {canMove && <span className="muted" style={{ color: '#38bdf8', fontWeight: 600 }}> · {(alive(u)[0]?.profile.M ?? 0) + unitFlags(s, u).move}"</span>}
+      {u.battleShocked ? ' ' : ''}
       {s.players[1 - u.owner].oathTarget === u.id && <span className="oath-tag">{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</span>}
       {s.ftggPairs?.some((p) => p.spottedId === u.id && p.turn === s.turn && p.phase === s.phase) && <span className="oath-tag spotted-tag">SPOTTED</span>}
       {s.ftggPairs?.some((p) => p.observerId === u.id && p.turn === s.turn && p.phase === s.phase) && <span className="oath-tag observer-tag">OBSERVER</span>}
@@ -1739,7 +1753,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return (
         <>
           {pactRow(modeUnit)}
-          <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' ? 'Shoot' : mode.smode}{mode.target ? <> <Icon name="target" size={14} /> {U(mode.target).name}</> : ' · tap a target'}</span></div>
+          <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' || mode.smode === 'assault' ? 'Shoot' : mode.smode === 'closeQuarters' ? 'Close-quarters' : mode.smode}{mode.target ? <> <Icon name="target" size={14} /> {U(mode.target).name}</> : ' · tap a target'}</span></div>
           {!mode.overwatch && remaining.length > 1 && (
             <div className="row">
               <span className="label">Weapons shooting this target</span>
@@ -1833,13 +1847,31 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const canExplode = u && !u.selectedToShoot && !isEngaged(s, u) && u.move !== 'advance' && u.move !== 'fallback' && (hasKw(u, 'GRENADES') || hasKw(u, 'EXPLOSIVES')) && !canUseStratagem(s, u.owner, 'explosives', u);
     return (
       <>
-        {!selUnit && <div className="hint"><span>Pick a unit to shoot with, then its target (range, sight and cover are checked for you)</span></div>}
-        <div className="unit-strip">{mine.map((x) => unitPill(x, x.selectedToShoot || shootingModes(s, x).length === 0))}</div>
+        <div className="unit-strip">
+          {mine.map((x) => {
+            const smodes = shootingModes(s, x);
+            const canShoot = !x.selectedToShoot && smodes.length > 0;
+            return unitPill(x, !canShoot, () => {
+              setSel(x.id);
+              if (canShoot) {
+                act((g) => autoSelectToShoot(g, unitById(g, x.id)));
+                setMode({ k: 'shoot', unitId: x.id, smode: smodes[0], target: null, useCQ: false, profile: {} });
+              }
+            });
+          })}
+        </div>
         {u && (
           <>
             {unitCard(u)}
             <div className="row acts">
-              {modes.map((m, i) => <button key={m} className="btn primary" data-coach={i === 0 ? 'shoot' : undefined} onClick={() => { act((g) => autoSelectToShoot(g, unitById(g, u.id))); setMode({ k: 'shoot', unitId: u.id, smode: m, target: null, useCQ: false, profile: {} }); }}><Icon name="shoot" /> {m === 'normal' ? 'Shoot' : m === 'assault' ? 'Assault (after Advancing)' : m === 'closeQuarters' ? 'Close-quarters' : 'Indirect'}</button>)}
+              {modes.length > 0 && (
+                <button className="btn primary" data-coach="shoot" onClick={() => {
+                  act((g) => autoSelectToShoot(g, unitById(g, u.id)));
+                  setMode({ k: 'shoot', unitId: u.id, smode: modes[0], target: null, useCQ: false, profile: {} });
+                }}>
+                  <Icon name="shoot" /> Shoot
+                </button>
+              )}
               {modes.length === 0 && <span className="muted small">{u.selectedToShoot ? 'Already shot' : u.move === 'fallback' ? 'Fell Back: cannot shoot' : u.move === 'advance' ? 'Advanced (no Assault weapons)' : 'Cannot shoot'}</span>}
               {canExplode && <button className="btn small" onClick={() => setMode({ k: 'explosives', unitId: u.id, target: null })}>Explosives 1CP</button>}
               {u.weaponsFired.length > 0 && !u.selectedToShoot && <button className="btn small ghost" onClick={() => act((g) => endUnitShooting(unitById(g, u.id)))}>Done shooting with this unit</button>}
