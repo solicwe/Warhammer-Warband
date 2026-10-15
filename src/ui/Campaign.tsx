@@ -351,12 +351,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
       {/* Roster & Armory Customization Modal */}
       {showRoster && fac && (
-        <div className="modal-backdrop" onClick={() => setShowRoster(false)}>
-          <div className="modal-card slate" style={{ maxWidth: 640, maxHeight: '88vh', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, borderBottom: '1px solid var(--line)' }}>
+        <div className="cmp-modal-backdrop" onClick={() => setShowRoster(false)}>
+          <div className="cmp-armory-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cmp-armory-header">
               <div>
-                <b style={{ fontSize: 17, textTransform: 'uppercase' }}>Roster & Armory</b>
-                <div className="tiny muted">{pts} pts · {run.list.units.length} units in force</div>
+                <div className="cmp-armory-title">Roster & Armory</div>
+                <div className="cmp-armory-sub">{pts} pts · {run.list.units.length} units in force</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span className="cmp-scrap"><Icon name="shop" size={14} /> <b>{run.scrap ?? 0}</b> Scrap</span>
@@ -364,41 +364,44 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               </div>
             </div>
 
-            <div className="seg" style={{ margin: '10px 0' }}>
-              <button className={rosterTab === 'roster' ? 'on' : ''} onClick={() => setRosterTab('roster')}>
-                Army Roster ({run.list.units.length})
-              </button>
-              <button className={rosterTab === 'recruit' ? 'on' : ''} onClick={() => setRosterTab('recruit')}>
-                Recruit Reinforcements
-              </button>
-            </div>
+            <div className="cmp-armory-body">
+              <div className="cmp-armory-tabs">
+                <button className={`cmp-armory-tab ${rosterTab === 'roster' ? 'active' : ''}`} onClick={() => setRosterTab('roster')}>
+                  Active Roster ({run.list.units.length})
+                </button>
+                <button className={`cmp-armory-tab ${rosterTab === 'recruit' ? 'active' : ''}`} onClick={() => setRosterTab('recruit')}>
+                  Recruit Reinforcements
+                </button>
+              </div>
 
-            <div style={{ overflowY: 'auto', flex: 1, paddingRight: 4 }}>
               {rosterTab === 'roster' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {run.list.units.map((u) => {
                     const d = fac.datasheets.find((x) => x.name === u.datasheet);
                     const photo = getPortrait(u.datasheet);
                     const isUpgrading = upgradingUid === u.uid;
                     const isEditingWargear = wargearUid === u.uid;
                     return (
-                      <div key={u.uid} className="slate-in" style={{ background: 'var(--surface-2)', borderRadius: 8, padding: 10 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          {photo ? <img src={photo} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--line)' }} />
-                            : <span style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-3)', display: 'grid', placeItems: 'center' }}><Icon name="fight" size={20} /></span>}
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span className="cmp-rank-badge">{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
-                              <b>{u.datasheet}</b>
-                            </div>
-                            <div className="tiny muted">{u.models} {u.models === 1 ? 'model' : 'models'} · {u.pts + (u.wargearPts ?? 0)} pts</div>
-                            {u.honors?.length ? (
-                              <div style={{ marginTop: 4 }}>
-                                {u.honors.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
+                      <div key={u.uid} className="cmp-roster-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                            {photo ? <img src={photo} alt="" className="cmp-roster-img" />
+                              : <div className="cmp-roster-img" style={{ display: 'grid', placeItems: 'center' }}><Icon name="fight" size={20} /></div>}
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <span className="cmp-rank-badge">{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
+                                <span className="cmp-roster-name">{u.datasheet}</span>
                               </div>
-                            ) : null}
+                              <div className="cmp-roster-meta">{u.models} {u.models === 1 ? 'model' : 'models'} · {u.pts + (u.wargearPts ?? 0)} pts</div>
+                              {u.honors?.length ? (
+                                <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                  {u.honors.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                             <button className={`btn small ${isUpgrading ? 'primary' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); }}>
                               <Icon name="shop" size={14} /> Honors
                             </button>
@@ -408,7 +411,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                               </button>
                             ) : null}
                             {run.list.units.length > 1 && (
-                              <button className="btn small danger" onClick={() => { setRun(dismissUnit(run, u.uid)); play('bad'); }}>
+                              <button className="btn small danger" onClick={() => { setRun(dismissUnit(run, u.uid)); play('bad'); }} title="Dismiss squad">
                                 <Icon name="delete" size={14} />
                               </button>
                             )}
@@ -417,24 +420,24 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                         {/* Battle Honors upgrade drawer */}
                         {isUpgrading && (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
-                            <div className="cmp-kicker" style={{ marginBottom: 6 }}>Available Battle Honors</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 6 }}>
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                            <div className="cmp-kicker" style={{ marginBottom: 8, color: '#fef08a' }}>Available Battle Honors</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 8 }}>
                               {BATTLE_HONORS.map((h) => {
                                 const has = (u.honors ?? []).includes(h.id);
                                 const canAfford = (run.scrap ?? 0) >= h.cost;
                                 return (
-                                  <div key={h.id} style={{ padding: 8, borderRadius: 6, background: 'var(--surface)', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                  <div key={h.id} style={{ padding: 10, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                     <div>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <b>{h.name}</b>
+                                        <b style={{ color: '#f8fafc', fontSize: 14 }}>{h.name}</b>
                                         <span className="cmp-scrap"><Icon name="shop" size={12} /> {h.cost}</span>
                                       </div>
-                                      <div className="tiny muted" style={{ marginTop: 2 }}>{h.desc}</div>
+                                      <div style={{ fontSize: 12.5, color: '#cbd5e1', marginTop: 4, lineHeight: 1.35 }}>{h.desc}</div>
                                     </div>
                                     <button
                                       className="btn small primary"
-                                      style={{ marginTop: 6 }}
+                                      style={{ marginTop: 8 }}
                                       disabled={has || !canAfford}
                                       onClick={() => { setRun(buyHonorForUnit(run, u.uid, h.id)); play('good'); }}
                                     >
@@ -449,13 +452,13 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                         {/* Wargear Drawer */}
                         {isEditingWargear && d && (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
-                            <div className="cmp-kicker" style={{ marginBottom: 6 }}>Wargear Options</div>
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                            <div className="cmp-kicker" style={{ marginBottom: 8, color: '#fef08a' }}>Wargear Options</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                               {d.wargearOptions?.map((opt, optIdx) => (
-                                <div key={optIdx} style={{ padding: 6, background: 'var(--surface)', borderRadius: 6, fontSize: 12 }}>
+                                <div key={optIdx} style={{ padding: 8, background: 'rgba(255,255,255,0.04)', borderRadius: 6, fontSize: 12.5, color: '#cbd5e1' }}>
                                   <div>{opt.text}</div>
-                                  <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                                  <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                                     {opt.choices.map((ch, chIdx) => {
                                       const pick = (u.wargear ?? []).find((w) => w.opt === optIdx && w.choice === chIdx);
                                       const isChosen = !!pick && pick.count > 0;
@@ -491,8 +494,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
               {rosterTab === 'recruit' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div className="hint" style={{ marginBottom: 6 }}>
-                    <span>Recruit new datasheets into your strike force using accumulated Scrap currency.</span>
+                  <div className="cmp-armory-hint">
+                    Recruit new datasheets into your strike force using accumulated Scrap currency.
                   </div>
                   {fac.datasheets
                     .filter((d) => d.points[0]?.options?.length && !d.keywords.includes('EPIC HERO') && !d.keywords.includes('FORTIFICATION'))
@@ -502,21 +505,21 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       const photo = getPortrait(d.name);
                       const canAfford = (run.scrap ?? 0) >= o.pts;
                       return (
-                        <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 8, background: 'var(--surface-2)', borderRadius: 8 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            {photo ? <img src={photo} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
-                              : <span style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface-3)', display: 'grid', placeItems: 'center' }}><Icon name="plus" size={18} /></span>}
+                        <div key={d.name} className="cmp-roster-row">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            {photo ? <img src={photo} alt="" className="cmp-roster-img" />
+                              : <div className="cmp-roster-img" style={{ display: 'grid', placeItems: 'center' }}><Icon name="plus" size={18} /></div>}
                             <div>
-                              <b>{d.name}</b>
-                              <div className="tiny muted">{o.models} models · {o.pts} pts</div>
+                              <div className="cmp-roster-name">{d.name}</div>
+                              <div className="cmp-roster-meta">{o.models} models · {o.pts} pts</div>
                             </div>
                           </div>
                           <button
-                            className="btn small primary"
+                            className="cmp-btn-recruit"
                             disabled={!canAfford}
                             onClick={() => { setRun(recruitUnit(run, fac, d.name)); play('good'); }}
                           >
-                            <Icon name="plus" size={14} /> Recruit ({o.pts} Scrap)
+                            <Icon name="plus" size={13} /> Recruit ({o.pts} Scrap)
                           </button>
                         </div>
                       );

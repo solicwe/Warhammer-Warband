@@ -1872,5 +1872,155 @@ select option, .sandbox-select option {
   box-shadow: 0 0 12px rgba(226, 180, 100, 0.3);
 }
 
+/* ---------- Campaign Armory & Roster Modal ---------- */
+.cmp-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.cmp-armory-modal {
+  width: min(100%, 680px);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: #14171d !important;
+  border: 2px solid #d3a04a !important;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85), 0 0 24px rgba(211, 160, 74, 0.22);
+  overflow: hidden;
+  color: #f8fafc;
+}
+.cmp-armory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(0, 0, 0, 0.5) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.cmp-armory-title {
+  font: 800 18px var(--font-cond);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fef08a;
+}
+.cmp-armory-sub {
+  font-size: 13px;
+  color: #cbd5e1;
+  margin-top: 2px;
+}
+.cmp-armory-body {
+  padding: 14px 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cmp-armory-tabs {
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+}
+.cmp-armory-tab {
+  flex: 1;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #94a3b8;
+  font: 700 14px var(--font-cond);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  text-align: center;
+}
+.cmp-armory-tab:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.05);
+}
+.cmp-armory-tab.active {
+  background: #d3a04a !important;
+  border-color: #d3a04a !important;
+  color: #17120a !important;
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(211, 160, 74, 0.35);
+}
+.cmp-armory-hint {
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.cmp-roster-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  gap: 12px;
+  transition: all 0.12s ease;
+}
+.cmp-roster-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.cmp-roster-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #1c2026;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex: none;
+}
+.cmp-roster-name {
+  font: 700 15px var(--font-cond);
+  color: #f8fafc;
+}
+.cmp-roster-meta {
+  font-size: 12.5px;
+  color: #cbd5e1;
+}
+.cmp-btn-recruit {
+  background: #d3a04a !important;
+  border: 1.5px solid #e2b464 !important;
+  color: #17120a !important;
+  font: 700 13.5px var(--font-cond) !important;
+  padding: 6px 14px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+.cmp-btn-recruit:hover:not(:disabled) {
+  background: #e2b464 !important;
+  box-shadow: 0 0 10px rgba(226, 180, 100, 0.4);
+}
+.cmp-btn-recruit:disabled {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #64748b !important;
+  cursor: not-allowed;
+  opacity: 1 !important;
+}
+
+
 
 
