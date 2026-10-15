@@ -857,5 +857,49 @@ export const PRESETS: Record<string, ArmyList> = {
       },
     ],
   },
+  DRU: {
+    name: 'Drukhari (Quick)',
+    factionId: 'DRU',
+    battleSize: 'incursion',
+    detachments: ['Skysplinter Assault'],
+    units: [
+      {
+        uid: 'dru1', datasheet: 'Archon', models: 1, pts: 80, warlord: true, attachTo: 'dru2',
+      },
+      {
+        uid: 'dru2', datasheet: 'Kabalite Warriors', models: 10, pts: 110, embarkIn: 'dru6',
+      },
+      {
+        uid: 'dru3', datasheet: 'Lelith Hesperax', models: 1, pts: 80, attachTo: 'dru4',
+      },
+      {
+        uid: 'dru4', datasheet: 'Wyches', models: 10, pts: 90,
+      },
+      {
+        uid: 'dru5', datasheet: 'Incubi', models: 5, pts: 90, embarkIn: 'dru7',
+      },
+      {
+        uid: 'dru6', datasheet: 'Raider', models: 1, pts: 75,
+      },
+      {
+        uid: 'dru7', datasheet: 'Venom', models: 1, pts: 65,
+      },
+      {
+        uid: 'dru8', datasheet: 'Scourges with Heavy Weapons', models: 5, pts: 110,
+      },
+      {
+        uid: 'dru9', datasheet: 'Ravager', models: 1, pts: 110,
+      },
+      {
+        uid: 'dru10', datasheet: 'Mandrakes', models: 5, pts: 80,
+      },
+      {
+        uid: 'dru11', datasheet: 'Cronos', models: 1, pts: 55,
+      },
+      {
+        uid: 'dru12', datasheet: 'Wracks', models: 5, pts: 55,
+      },
+    ],
+  },
 };
 

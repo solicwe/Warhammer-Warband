@@ -30,6 +30,7 @@ import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart, tryActO
 import { aeldariBattleStart, aeldariCommandEnd, aeldariTurnStart, resetPhaseStrandsOfFate, tryFateDie } from './aeldari';
 import { votannBattleStart, votannCommandEnd } from './votann';
 import { admechCommandStart, admechRoundStart } from './admech';
+import { drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd } from './drukhari';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -856,7 +857,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   onTurnStart(s);
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
-  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); votannBattleStart(s); admechRoundStart(s); fireAll(s, 'battleStart', 'both'); }
+  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); votannBattleStart(s); admechRoundStart(s); drukhariBattleStart(s); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); dgRoundStart(s); knightsRoundStart(s); admechRoundStart(s); fireAll(s, 'roundStart', 'both'); }
   knightsTurnStart(s);
   sororitasTurnStart(s, p);
@@ -880,6 +881,7 @@ function startCommand(s: GameState) {
   dgCommandStart(s);
   knightsCommandStart(s);
   admechCommandStart(s, s.active);
+  drukhariCommandStart(s, s.active);
   fireFor(s, 'commandStart', s.active);
   fireFor(s, 'eachCommandStart', 'both');
   drawUpTo(s, s.active);
@@ -956,6 +958,7 @@ export function endPhase(s: GameState) {
   dgPhaseEnd(s);
   resetPhaseActsOfFaith(s);
   resetPhaseStrandsOfFate(s);
+  drukhariPhaseEnd(s);
   resolveRevivals(s);
   if (s.window?.kind === 'abilityMove') s.window = null;
   expireTimed(s, 'phaseEnd', s.active);

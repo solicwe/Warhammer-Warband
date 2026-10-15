@@ -102,6 +102,12 @@ export function Emblem({ factionId, color, sub }: { factionId: string; color?: s
           <circle cx="32" cy="32" r="7" fill="#ffffff" />
           <path d="M32 25 V39 M25 32 H39" stroke="#1a1a1a" strokeWidth="2" />
         </g>
+      ) : factionId === 'DRU' ? (
+        <g fill="#113a35" stroke="#041210" strokeWidth="2" strokeLinejoin="round">
+          <path d="M32 10 L44 26 L38 28 L48 44 L32 54 L16 44 L26 28 L20 26 Z" fill="#1b524b" />
+          <path d="M32 18 L36 32 L32 46 L28 32 Z" fill="#2dd4bf" />
+          <circle cx="32" cy="32" r="3" fill="#ffffff" />
+        </g>
       ) : (
         <g fill="none" stroke="#b0b0b0" strokeWidth="3"><circle cx="32" cy="32" r="12" /><path d="M32 12 V20 M32 44 V52 M12 32 H20 M44 32 H52" /></g>
       )}

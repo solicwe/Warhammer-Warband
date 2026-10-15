@@ -26,6 +26,8 @@ import aeAbilities from '../../data/abilities/AE.json';
 import lovAbilities from '../../data/abilities/LoV.json';
 import tlAbilities from '../../data/abilities/TL.json';
 import admAbilities from '../../data/abilities/AdM.json';
+import druAbilities from '../../data/abilities/DRU.json';
+import { isUnitEmpowered } from './drukhari';
 import { inSynapse } from './tyranids';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
@@ -353,6 +355,7 @@ const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   LoV: lovAbilities as unknown as Record<string, AbilityRule>,
   TL: tlAbilities as unknown as Record<string, AbilityRule>,
   AdM: admAbilities as unknown as Record<string, AbilityRule>,
+  DRU: druAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
 export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
@@ -374,7 +377,7 @@ export function abilityRule(u: UnitState, a: AbilityData): AbilityRule | undefin
 }
 
 /** Factions whose rule files supplement the text reader rather than define every ability. */
-const PARSE_TOO = new Set(['QI', 'QT', 'TYR', 'AS', 'TAU', 'AE', 'LoV', 'TL', 'AdM']);
+const PARSE_TOO = new Set(['QI', 'QT', 'TYR', 'AS', 'TAU', 'AE', 'LoV', 'TL', 'AdM', 'DRU']);
 
 function findRule(a: AbilityData, sheet: string): AbilityRule | undefined {
   const books = a.faction ? [FACTION_RULES[a.faction]].filter(Boolean) : Object.values(FACTION_RULES);
@@ -1212,6 +1215,9 @@ export const useNegate = (s: GameState, T: UnitState, m: ModelState, k?: 'turn' 
 // ---------- eligibility, rolls, stats ----------
 
 export function canDo(s: GameState, u: UnitState, what: Eligibility): boolean {
+  if (what === 'chargeAfterAdvance' || what === 'chargeAfterFallBack') {
+    if (isUnitEmpowered(s, u) && (u.name.includes('Wyches') || u.abilities.some((a) => a.name.includes('Acrobatic Gladiators')))) return true;
+  }
   return effectsFor(s, u).some((a) => a.e.eligible?.includes(what) && holds(a, { s, A: u }));
 }
 

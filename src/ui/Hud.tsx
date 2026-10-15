@@ -81,6 +81,12 @@ export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; 
           </b>
         </span>
       )}
+      {P.painTokens !== undefined && (
+        <span className="miracle-pool drukhari-pool" title={`Power from Pain: ${P.painTokens} Pain token${P.painTokens === 1 ? '' : 's'}`}>
+          <Icon name="skull" size={11} />
+          <b className="miracle-more" style={{ color: '#2dd4bf' }}>{P.painTokens} Pain</b>
+        </span>
+      )}
       {gain && <span key={gain.k} className="ss-gain">+{gain.n} VP</span>}
     </button>
   );

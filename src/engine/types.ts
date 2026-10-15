@@ -378,6 +378,12 @@ export interface PlayerState {
   admechHaloOverrideAbility?: 'Electromotive Energisation' | 'Microactuator Bracing' | 'Predation Protocols' | 'Muted Servomotors';
   /** Belisarius Cawl: Machine Vengeance target unit id */
   machineVengeanceTarget?: string | null;
+  /** Drukhari: Pain Token pool (Power from Pain) */
+  painTokens?: number;
+  /** Drukhari: Units empowered by spending a Pain token this phase */
+  empoweredUnits?: string[];
+  /** Drukhari: Reaper's Wager detachment side winning the wager */
+  drukhariWagerWinning?: 'Drukhari' | 'Harlequins';
   riledUntilTurn: number;
   secMode: 'none' | 'tactical' | 'fixed';
   secDeck: string[];

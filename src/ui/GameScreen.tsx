@@ -984,6 +984,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       {s.ftggPairs?.some((p) => p.observerId === u.id && p.turn === s.turn && p.phase === s.phase) && <span className="oath-tag observer-tag">OBSERVER</span>}
       {s.ftggPairs?.some((p) => p.guidedId === u.id && p.turn === s.turn && p.phase === s.phase) && <span className="oath-tag guided-tag">GUIDED</span>}
       {s.players[1 - u.owner].machineVengeanceTarget === u.id && <span className="oath-tag" style={{ background: '#7f1d1d', color: '#fca5a5' }}>MACHINE VENGEANCE</span>}
+      {s.players[u.owner].empoweredUnits?.includes(u.id) && <span className="oath-tag" style={{ background: '#134e4a', color: '#5eead4' }}>EMPOWERED</span>}
     </button>
   ); };
 
@@ -2325,6 +2326,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       : []),
     ...(s.players[p].admechImperative
       ? [<div key={`admech${p}`} className={`buffcard p${p}`}><b>Doctrina Imperatives</b><span>Active: <b>{s.players[p].admechImperative}</b>{s.players[p].admechImperative.startsWith('Protector') ? ' (Ranged [HEAVY], +1 BS; near Battleline: −1 to be hit in melee)' : ' (Ranged [ASSAULT], +1 WS; near Battleline: +1 AP to all attacks)'}</span></div>]
+      : []),
+    ...(s.players[p].painTokens !== undefined
+      ? [<div key={`drukhari${p}`} className={`buffcard p${p}`}><b>Power from Pain ({s.players[p].painTokens} Tokens)</b><span>Spend 1 Pain token to Empower a unit{s.players[p].drukhariWagerWinning ? ` · Reaper's Wager: ${s.players[p].drukhariWagerWinning} winning` : ''}</span></div>]
       : []),
   ];
   // where an army's buff column goes: beside its own deployment zone (left / right, or top / bottom of the left side)
