@@ -10,7 +10,7 @@ import { Icon } from './Icon';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { listDisposition, listDispositionOptions } from '../engine/game';
 import { DET_RULES } from '../engine/detachments';
-import { armyColor, DatasheetView } from './Sheet';
+import { armyColor, dsColor, DatasheetView } from './Sheet';
 import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';
 import { getPortrait, setPortrait, usePortraitsVersion } from './portraits';
@@ -114,6 +114,27 @@ export function Emblem({ factionId, color, sub }: { factionId: string; color?: s
           <path d="M32 8 L35 18 L32 16 L29 18 Z M32 56 L35 46 L32 48 L29 46 Z M8 32 L18 35 L16 32 L18 29 Z M56 32 L46 35 L48 32 L46 29 Z M15 15 L25 21 L23 19 L21 25 Z M49 15 L43 25 L41 23 L47 21 Z M15 49 L21 39 L23 41 L17 43 Z M49 49 L39 43 L41 41 L43 47 Z" fill="#ef4444" />
           <path d="M32 16 V48 M16 32 H48 M21 21 L43 43 M21 43 L43 21" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
           <circle cx="32" cy="32" r="3" fill="#fef08a" />
+        </g>
+      ) : factionId === 'GC' ? (
+        <g fill="#581c87" stroke="#c084fc" strokeWidth="2" strokeLinejoin="round">
+          <circle cx="32" cy="32" r="14" fill="#3b0764" stroke="#c084fc" strokeWidth="2" />
+          <path d="M32 14 C42 14 48 24 46 36 C44 46 34 50 32 50 C30 50 20 46 18 36 C16 24 22 14 32 14 Z" fill="none" stroke="#e9d5ff" strokeWidth="2.5" />
+          <path d="M32 18 C38 22 40 30 38 38 C36 44 32 46 32 46 C32 46 28 44 26 38 C24 30 26 22 32 18 Z" fill="#a855f7" />
+          <circle cx="32" cy="28" r="3" fill="#fbcfe8" />
+          <path d="M22 24 L14 18 M42 24 L50 18 M20 36 L12 38 M44 36 L52 38" stroke="#c084fc" strokeWidth="2.5" strokeLinecap="round" />
+        </g>
+      ) : factionId === 'NEC' ? (
+        <g fill="#052e16" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round">
+          <circle cx="32" cy="22" r="8" fill="#14532d" stroke="#4ade80" strokeWidth="2" />
+          <path d="M32 30 V52 M24 38 H40 M26 52 H38" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" />
+          <path d="M22 22 L14 30 M42 22 L50 30" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="32" cy="22" r="3" fill="#86efac" />
+        </g>
+      ) : factionId === 'GK' ? (
+        <g fill="#1e293b" stroke="#38bdf8" strokeWidth="2" strokeLinejoin="round">
+          <path d="M32 10 L46 16 L44 38 Q42 48 32 54 Q22 48 20 38 L18 16 Z" fill="#0f172a" stroke="#94a3b8" strokeWidth="2" />
+          <path d="M32 16 V46 M24 22 H40 M30 46 H34" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="32" cy="16" r="2.5" fill="#e0f2fe" />
         </g>
       ) : (
         <g fill="none" stroke="#b0b0b0" strokeWidth="3"><circle cx="32" cy="32" r="12" /><path d="M32 12 V20 M32 44 V52 M12 32 H20 M44 32 H52" /></g>
@@ -263,6 +284,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const [view, setView] = useState<string | null>(null);
   const [peek, setPeek] = useState<string | null>(null); // a datasheet opened from the ⋮ pickers (its abilities)
   const [resetArmed, setResetArmed] = useState(false);
+  const [panelCollapse, setPanelCollapse] = useState<{ [uid: string]: { sheet?: boolean; enh?: boolean; wargear?: boolean } }>({});
   useEffect(() => setView(null), [adding]); // the datasheet opened under a row of the add list
   const [note, setNote] = useState<string | null>(null);
 
@@ -651,40 +673,84 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     if (!faction) return null;
     const sheet = sheetOf(u.datasheet);
     const enh = enhancementOptions(list, faction, u);
+    const dsCol = dsColor(faction.id);
+
+    const isSheetOpen = panelCollapse[u.uid]?.sheet !== false;
+    const isEnhOpen = panelCollapse[u.uid]?.enh !== false;
+    const isWargearOpen = panelCollapse[u.uid]?.wargear !== false;
+
+    const toggleSection = (section: 'sheet' | 'enh' | 'wargear') => {
+      setPanelCollapse((prev) => ({
+        ...prev,
+        [u.uid]: {
+          ...prev[u.uid],
+          [section]: prev[u.uid]?.[section] !== undefined ? !prev[u.uid]?.[section] : false,
+        },
+      }));
+    };
+
     return (
-      <div className="ab-inline" key={`panel-${u.uid}`}>
+      <div className="ab-inline" key={`panel-${u.uid}`} style={{
+        ['--accent' as string]: dsCol,
+        ['--ds-band' as string]: dsCol,
+        ['--accent-soft' as string]: `color-mix(in srgb, ${dsCol} 25%, transparent)`,
+      }}>
         <div className="ab-inline-body">
-          {sheet && <DatasheetView sheet={sheet} factionId={faction.id} variants={(() => {
-            // the picture slots this entry's models use on the board (one per loadout once the wargear differs)
-            try { return datasheetVariants(sheet, buildUnits({ ...list, units: [{ ...u, attachTo: undefined }] }, faction, 0).flatMap((x) => x.models)); } catch { return undefined; }
-          })()} />}
-          {!sheet && <div className="sheet-title">{u.datasheet}</div>}
+          <div className="ab-collapsible-section">
+            <button type="button" className="ab-section-toggle" onClick={() => toggleSection('sheet')}>
+              <span className="row gap-2" style={{ alignItems: 'center' }}>
+                <Icon name={isSheetOpen ? "down" : "next"} size={16} />
+                <span>Datasheet Profile & Rules</span>
+              </span>
+              <span className="tiny muted">{isSheetOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
+            </button>
+            {isSheetOpen && sheet && (
+              <DatasheetView sheet={sheet} factionId={faction.id} variants={(() => {
+                try { return datasheetVariants(sheet, buildUnits({ ...list, units: [{ ...u, attachTo: undefined }] }, faction, 0).flatMap((x) => x.models)); } catch { return undefined; }
+              })()} />
+            )}
+            {isSheetOpen && !sheet && <div className="sheet-title">{u.datasheet}</div>}
+          </div>
+
           <div className="ab-panel-title">Unit settings · <span className="ab-pts">{ptsOf(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</span></div>
+
           {(enh.length > 0 || u.enhancement) && (
-            <div className="field"><span><Icon name="enhancement" size={15} /> Enhancement <span className="tiny muted">tap to add / remove</span></span>
-              <div className="enh-list">
-                {u.enhancement && !enh.some((o) => o.name === u.enhancement) && (
-                  <button type="button" className="enh-card on" onClick={() => setUnit(u.uid, { enhancement: undefined, enhancementPts: undefined })}>
-                    <span className="enh-head"><b>{u.enhancement}</b><span>not in the selected Detachments · tap to remove</span></span>
-                  </button>
-                )}
-                {enh.map((o) => {
-                  const on = u.enhancement === o.name;
-                  const taken = list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
-                  const fit = sheet ? enhancementFits(o.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]) : null;
-                  if (fit && !fit.ok && !on) return <div key={o.detachment + o.name} className="enh-card off"><span className="enh-head"><b>{o.name}</b><span>+{o.pts} pts</span></span><span className="enh-foot">Not allowed: {fit.need} only</span></div>;
-                  return (
-                    <button key={o.detachment + o.name} type="button" className={`enh-card ${on ? 'on' : ''} ${taken ? 'taken' : ''}`}
-                      onClick={() => setUnit(u.uid, on ? { enhancement: undefined, enhancementPts: undefined } : { enhancement: o.name, enhancementPts: o.pts })}>
-                      <span className="enh-head"><b>{o.name}</b><span>{on ? <><Icon name="check" size={15} /> Selected</> : `+${o.pts} pts`}</span></span>
-                      {o.text && <span className="enh-text"><Em text={o.text} names={ruleNames} /></span>}
-                      <span className="enh-foot">{o.detachment}{o.upgrade ? ' · Upgrade' : ''}{taken ? ` · taken by ${taken.datasheet} (one per army)` : ''}</span>
+            <div className="ab-collapsible-section field">
+              <button type="button" className="ab-section-toggle" onClick={() => toggleSection('enh')}>
+                <span className="row gap-2" style={{ alignItems: 'center' }}>
+                  <Icon name={isEnhOpen ? "down" : "next"} size={16} />
+                  <Icon name="enhancement" size={15} />
+                  <span>Enhancement</span>
+                  {u.enhancement && <span className="ab-badge-selected">{u.enhancement} (+{u.enhancementPts} pts)</span>}
+                </span>
+                <span className="tiny muted">{isEnhOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
+              </button>
+              {isEnhOpen && (
+                <div className="enh-list">
+                  {u.enhancement && !enh.some((o) => o.name === u.enhancement) && (
+                    <button type="button" className="enh-card on" onClick={() => setUnit(u.uid, { enhancement: undefined, enhancementPts: undefined })}>
+                      <span className="enh-head"><b>{u.enhancement}</b><span>not in the selected Detachments · tap to remove</span></span>
                     </button>
-                  );
-                })}
-              </div>
+                  )}
+                  {enh.map((o) => {
+                    const on = u.enhancement === o.name;
+                    const taken = list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
+                    const fit = sheet ? enhancementFits(o.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]) : null;
+                    if (fit && !fit.ok && !on) return <div key={o.detachment + o.name} className="enh-card off"><span className="enh-head"><b>{o.name}</b><span>+{o.pts} pts</span></span><span className="enh-foot">Not allowed: {fit.need} only</span></div>;
+                    return (
+                      <button key={o.detachment + o.name} type="button" className={`enh-card ${on ? 'on' : ''} ${taken ? 'taken' : ''}`}
+                        onClick={() => setUnit(u.uid, on ? { enhancement: undefined, enhancementPts: undefined } : { enhancement: o.name, enhancementPts: o.pts })}>
+                        <span className="enh-head"><b>{o.name}</b><span>{on ? <><Icon name="check" size={15} /> Selected</> : `+${o.pts} pts`}</span></span>
+                        {o.text && <span className="enh-text"><Em text={o.text} names={ruleNames} /></span>}
+                        <span className="enh-foot">{o.detachment}{o.upgrade ? ' · Upgrade' : ''}{taken ? ` · taken by ${taken.datasheet} (one per army)` : ''}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
+
           {sheet && sheet.abilities.some((x) => x.name === 'Daemonic Allegiance') && (
             <div className="field"><span>Daemonic Allegiance <span className="tiny muted">the god this Daemon Prince serves (keyword + bonus)</span></span>
               <div className="wg-chips">
@@ -695,6 +761,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               </div>
             </div>
           )}
+
           {sheet && list.detachments.includes('Pactbound Zealots') && markable(sheet) && !sheet.abilities.some((x) => x.name === 'Daemonic Allegiance') && (
             <div className="field"><span>Mark of Chaos <span className="tiny muted">Pactbound Zealots · after a passed Dark Pact</span></span>
               <div className="wg-chips">
@@ -705,7 +772,22 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               </div>
             </div>
           )}
-          {sheet && <WargearEditor sheet={sheet} u={u} onChange={(patch) => setUnit(u.uid, patch)} />}
+
+          {sheet && (
+            <div className="ab-collapsible-section field">
+              <button type="button" className="ab-section-toggle" onClick={() => toggleSection('wargear')}>
+                <span className="row gap-2" style={{ alignItems: 'center' }}>
+                  <Icon name={isWargearOpen ? "down" : "next"} size={16} />
+                  <Icon name="wargear" size={15} />
+                  <b>Wargear Options</b>
+                  {u.wargearPts ? <span className="ab-badge-selected">+{u.wargearPts} pts</span> : null}
+                </span>
+                <span className="tiny muted">{isWargearOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
+              </button>
+              {isWargearOpen && <WargearEditor sheet={sheet} u={u} onChange={(patch) => setUnit(u.uid, patch)} />}
+            </div>
+          )}
+
           {(() => {
             const sp = splitRuleOf(sheet, list.detachments);
             if (!sp) return null;

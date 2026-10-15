@@ -31,7 +31,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
   const run = loadRun();
   const runLayer = run ? Math.max(0, ...run.path.map((id) => (run.map.find((n) => n.id === id)?.layer ?? -1) + 1)) : 0;
   const runLayers = run ? Math.max(...run.map.map((n) => n.layer)) + 1 : 0;
-  const [menu, setMenu] = useState<string | null>(null);
+  const [pop, setPop] = useState<{ id: string; x: number; y: number } | null>(null);
   const facs = useFactions(armies.map((a) => a.factionId)); // points with the duplicate tax, as in the army builder
   const [armed, setArmed] = useState<string | null>(null); // a delete that needs a second tap (dialogs are blocked here)
   useEffect(() => { if (!armed) return; const t = window.setTimeout(() => setArmed(null), 3000); return () => window.clearTimeout(t); }, [armed]);
@@ -101,7 +101,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
             const pts = listPoints(a, facs[a.factionId]);
             const over = pts > size.points;
             return (
-              <div key={a.id} className={`army ${menu === a.id ? 'open' : ''}`} style={{ ['--accent' as string]: armyColor(a.factionId, a.subfaction), ['--accent-2' as string]: armyColor(a.factionId, a.subfaction) }}>
+              <div key={a.id} className="army" style={{ ['--accent' as string]: armyColor(a.factionId, a.subfaction), ['--accent-2' as string]: armyColor(a.factionId, a.subfaction) }}>
                 <button className="army-main" onClick={() => onOpen(a.id)}>
                   <Emblem factionId={a.factionId} sub={a.subfaction} />
                   <span className="army-text">
@@ -115,23 +115,49 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
                     </span>
                   </span>
                 </button>
-                <button className="army-more" aria-label={`More for ${a.name || 'this army'}`} aria-expanded={menu === a.id} onClick={() => { setMenu(menu === a.id ? null : a.id); setArmed(null); }}>
+                <button
+                  className="army-more"
+                  aria-label={`More for ${a.name || 'this army'}`}
+                  aria-expanded={pop?.id === a.id}
+                  onClick={(e) => {
+                    const r = e.currentTarget.getBoundingClientRect();
+                    setPop(pop?.id === a.id ? null : { id: a.id, x: r.right, y: r.bottom });
+                    setArmed(null);
+                  }}
+                >
                   <Icon name="more" size={20} />
                 </button>
-                {menu === a.id && (
-                  <div className="army-menu">
-                    <button onClick={() => { setMenu(null); onDuplicate(a.id); }}><Icon name="duplicate" size={18} />Duplicate</button>
-                    <button className={armed === a.id ? 'danger' : ''} onClick={() => {
-                      if (armed !== a.id) { setArmed(a.id); return; }
-                      setArmed(null); setMenu(null); onDelete(a.id);
-                    }}><Icon name="delete" size={18} />{armed === a.id ? 'Tap again to delete' : 'Delete'}</button>
-                  </div>
-                )}
               </div>
             );
           })}
           {!armies.length && <div className="empty">No armies yet. Tap “New army” to build one.</div>}
         </section>
+
+        {pop && (() => {
+          const a = armies.find((x) => x.id === pop.id);
+          if (!a) return null;
+          const w = 240;
+          const pad = 8;
+          const left = Math.max(pad, Math.min(window.innerWidth - w - pad, pop.x - w));
+          const top = Math.min(window.innerHeight - 130, Math.max(pad, pop.y + 4));
+          return (
+            <div className="ab-pop-backdrop" onClick={() => { setPop(null); setArmed(null); }}>
+              <div className="ab-pop" style={{ left, top, width: w }} onClick={(e) => e.stopPropagation()}>
+                <button type="button" onClick={() => { setPop(null); onDuplicate(a.id); }}>
+                  <Icon name="duplicate" size={22} />
+                  <span>Duplicate</span>
+                </button>
+                <button type="button" className={armed === a.id ? 'danger' : ''} onClick={() => {
+                  if (armed !== a.id) { setArmed(a.id); return; }
+                  setArmed(null); setPop(null); onDelete(a.id);
+                }}>
+                  <Icon name="delete" size={22} />
+                  <span>{armed === a.id ? 'Tap again to delete' : 'Delete'}</span>
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         <footer className="foot">Datasheets: Wahapedia 11th edition export{index ? ` · updated ${index.lastUpdate.slice(0, 10)}` : ''} · Core Rules June 2026 · Warhammer 40,000 is a trademark of Games Workshop</footer>
       </main>

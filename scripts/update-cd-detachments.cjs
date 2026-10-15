@@ -83,3 +83,4 @@ for (const [k, v] of Object.entries(cdDetachments)) {
 
 fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 console.log('Successfully updated detachment-rules.json with', Object.keys(cdDetachments).length, 'Chaos Daemons rules!');
+

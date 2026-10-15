@@ -1409,3 +1409,10 @@ details > .strat-card { margin-top: 6px; }
 /* factions whose rules are not finished yet */
 .ab-fcard.wip { opacity: 0.45; filter: grayscale(1); }
 .uv-tapped { padding: 6px 8px; border: 2px solid var(--accent); border-radius: 8px; }
+
+/* collapsible sections in unit settings */
+.ab-collapsible-section { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface); margin-top: 6px; }
+.ab-section-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 4px 0; border: none; background: transparent; color: var(--text); font: 600 15px var(--font-cond); cursor: pointer; text-align: left; }
+.ab-section-toggle:hover { color: var(--accent); }
+.ab-badge-selected { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; background: var(--accent-soft, rgba(255, 255, 255, 0.1)); color: var(--accent); font: 600 12px var(--font-cond); margin-left: 6px; border: 1px solid var(--accent); }
+

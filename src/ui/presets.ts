@@ -937,5 +937,107 @@ export const PRESETS: Record<string, ArmyList> = {
       },
     ],
   },
+  GC: {
+    name: 'Genestealer Cults (Quick)',
+    factionId: 'GC',
+    battleSize: 'incursion',
+    detachments: ['Host of Ascension'],
+    units: [
+      {
+        uid: 'gc1', datasheet: 'Primus', models: 1, pts: 60, warlord: true,
+        enhancement: 'Our Time Is Nigh', enhancementPts: 20, attachTo: 'gc2',
+      },
+      {
+        uid: 'gc2', datasheet: 'Neophyte Hybrids', models: 20, pts: 135,
+      },
+      {
+        uid: 'gc3', datasheet: 'Patriarch', models: 1, pts: 80, attachTo: 'gc4',
+      },
+      {
+        uid: 'gc4', datasheet: 'Purestrain Genestealers', models: 10, pts: 140,
+      },
+      {
+        uid: 'gc5', datasheet: 'Aberrants', models: 5, pts: 140,
+      },
+      {
+        uid: 'gc6', datasheet: 'Acolyte Hybrids With Autopistols', models: 5, pts: 70,
+      },
+      {
+        uid: 'gc7', datasheet: 'Hybrid Metamorphs', models: 5, pts: 75,
+      },
+      {
+        uid: 'gc8', datasheet: 'Achilles Ridgerunners', models: 1, pts: 95,
+      },
+      {
+        uid: 'gc9', datasheet: 'Goliath Truck', models: 1, pts: 75,
+      },
+      {
+        uid: 'gc10', datasheet: 'Reductus Saboteur', models: 1, pts: 70,
+      },
+    ],
+  },
+  NEC: {
+    name: 'Necrons (Quick)',
+    factionId: 'NEC',
+    battleSize: 'incursion',
+    detachments: ['Awakened Dynasty'],
+    units: [
+      {
+        uid: 'nec1', datasheet: 'Overlord', models: 1, pts: 90, warlord: true,
+        enhancement: 'Veil of Darkness', enhancementPts: 20, attachTo: 'nec2',
+      },
+      {
+        uid: 'nec2', datasheet: 'Lychguard', models: 10, pts: 160,
+      },
+      {
+        uid: 'nec3', datasheet: 'Necron Warriors', models: 20, pts: 190,
+      },
+      {
+        uid: 'nec4', datasheet: 'Immortals', models: 10, pts: 130,
+      },
+      {
+        uid: 'nec5', datasheet: 'Skorpekh Destroyers', models: 3, pts: 85,
+      },
+      {
+        uid: 'nec6', datasheet: 'Canoptek Doomstalker', models: 1, pts: 130,
+      },
+      {
+        uid: 'nec7', datasheet: 'Lokhust Heavy Destroyers', models: 2, pts: 100,
+      },
+      {
+        uid: 'nec8', datasheet: 'Canoptek Scarab Swarms', models: 3, pts: 40,
+      },
+    ],
+  },
+  GK: {
+    name: 'Grey Knights (Quick)',
+    factionId: 'GK',
+    battleSize: 'incursion',
+    detachments: ['Warpbane Task Force'],
+    units: [
+      {
+        uid: 'gk1', datasheet: 'Grand Master', models: 1, pts: 100, warlord: true,
+        enhancement: 'Mandulian Reliquary', enhancementPts: 20, attachTo: 'gk2',
+      },
+      {
+        uid: 'gk2', datasheet: 'Brotherhood Terminator Squad', models: 5, pts: 185,
+      },
+      {
+        uid: 'gk3', datasheet: 'Nemesis Dreadknight', models: 1, pts: 205,
+      },
+      {
+        uid: 'gk4', datasheet: 'Strike Squad', models: 5, pts: 125,
+      },
+      {
+        uid: 'gk5', datasheet: 'Interceptor Squad', models: 5, pts: 135,
+      },
+      {
+        uid: 'gk6', datasheet: 'Paladin Squad', models: 4, pts: 185,
+      },
+    ],
+  },
 };
+
+
+
 

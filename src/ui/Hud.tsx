@@ -93,6 +93,12 @@ export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; 
           <b className="miracle-more" style={{ color: '#ec4899' }}>{P.fluxTokens} Flux</b>
         </span>
       )}
+      {P.resurgencePoints !== undefined && (
+        <span className="miracle-pool gc-pool" title={`Cult Ambush: ${P.resurgencePoints} Resurgence point${P.resurgencePoints === 1 ? '' : 's'}`}>
+          <Icon name="reserves" size={11} />
+          <b className="miracle-more" style={{ color: '#a855f7' }}>{P.resurgencePoints} Resurgence</b>
+        </span>
+      )}
       {gain && <span key={gain.k} className="ss-gain">+{gain.n} VP</span>}
     </button>
   );

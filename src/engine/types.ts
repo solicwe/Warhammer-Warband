@@ -391,6 +391,12 @@ export interface PlayerState {
   corruptedObjectives?: string[];
   /** Chaos Daemons: Units that performed Seductive Gambit this turn */
   seductiveGambitUnits?: string[];
+  /** Genestealer Cults: Resurgence points pool (Cult Ambush) */
+  resurgencePoints?: number;
+  /** Genestealer Cults: Cult Ambush marker positions on battlefield */
+  cultAmbushMarkers?: Pt[];
+  /** Necrons: Obeisance Phalanx Worthy Foe designated target */
+  worthyFoeUnitId?: string;
   riledUntilTurn: number;
   secMode: 'none' | 'tactical' | 'fixed';
   secDeck: string[];

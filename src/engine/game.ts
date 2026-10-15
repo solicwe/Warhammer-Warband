@@ -32,6 +32,9 @@ import { votannBattleStart, votannCommandEnd } from './votann';
 import { admechCommandStart, admechRoundStart } from './admech';
 import { drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd } from './drukhari';
 import { daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsPhaseEnd } from './daemons';
+import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultBattleStart, cultIconCommandPhase } from './cult';
+import { necBattleStart, necCommandStart } from './necrons';
+import { gkEndOpponentTurn } from './greyKnights';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -287,6 +290,8 @@ export function createGame(o: NewGameOptions): GameState {
   for (const u of s.units) if (!u.core.infiltrators && unitFlags(s, u).infiltrators) u.core.infiltrators = true;
   startOfBattle(s);
   daemonsBattleStart(s);
+  cultBattleStart(s);
+  necBattleStart(s);
   return s;
 }
 
@@ -860,7 +865,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   onTurnStart(s);
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
-  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); votannBattleStart(s); admechRoundStart(s); drukhariBattleStart(s); daemonsBattleStart(s); fireAll(s, 'battleStart', 'both'); }
+  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); votannBattleStart(s); admechRoundStart(s); drukhariBattleStart(s); daemonsBattleStart(s); cultBattleStart(s); necBattleStart(s); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); dgRoundStart(s); knightsRoundStart(s); admechRoundStart(s); fireAll(s, 'roundStart', 'both'); }
   knightsTurnStart(s);
   sororitasTurnStart(s, p);
@@ -886,6 +891,8 @@ function startCommand(s: GameState) {
   admechCommandStart(s, s.active);
   drukhariCommandStart(s, s.active);
   daemonsCommandStart(s);
+  cultIconCommandPhase(s, s.active);
+  necCommandStart(s, s.active);
   fireFor(s, 'commandStart', s.active);
   fireFor(s, 'eachCommandStart', 'both');
   drawUpTo(s, s.active);
@@ -954,6 +961,7 @@ export function endPhase(s: GameState) {
   updateControl(s);
   if (s.phase === 'movement') {
     fireFor(s, 'movementEnd', s.active);
+    cultAmbushArrival(s);
     updateControl(s);
     // Uphold the Honour of the Emperor (Vow-sworn Crusaders): objectives INFANTRY control now are secured
     for (const u of boardUnits(s, s.active)) {
@@ -1059,6 +1067,7 @@ function endTurn(s: GameState) {
   updateControl(s);
   knightsTurnEnd(s);
   sagaBoasts(s, 'turnEnd');
+  gkEndOpponentTurn(s);
   onTurnEnd(s);
   scoreTiming(s, 'endOfYourTurn');
   for (const p of [0, 1] as PlayerId[]) scorePrimary(s, 'endOfAnyTurn', p);
@@ -1217,7 +1226,10 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
   }
   // remember whom it fell back from ("an enemy unit that was engaged with your unit ends a Fall Back move")
   if (kind === 'fallback' && s.lastAct?.unitId === u.id) s.lastAct.fellBackFrom = engagedBefore.map((e) => e.id);
-  if (['normal', 'advance', 'fallback', 'charge'].includes(kind)) sabotageCheck(s, u);
+  if (['normal', 'advance', 'fallback', 'charge'].includes(kind)) {
+    sabotageCheck(s, u);
+    cultAmbushCheckEnemyMoved(s, u);
+  }
   // stratagems: "just after an enemy unit ends a Normal, Advance or Fall Back move" (Squad Tactics …)
   if (reactAfterMove) emitReact(s, other(u.owner), 'enemyMoved', { unitId: u.id });
 }
@@ -1289,7 +1301,10 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
   if (closest <= RULES.reserves.enemyDistance || (how === 'deepStrike' && unitFlags(s, u).deepStrikeInFlow)) u.noChargeTurn = s.turn;
   log(s, `${u.name} arrives (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closest <= RULES.reserves.enemyDistance ? ' within 9" of the enemy → cannot charge this turn' : ''}`, 'info', u.owner);
-  if (u.owner === s.active && s.phase === 'movement') offerReactions(s, 'enemyMovedNear', u);
+  if (u.owner === s.active && s.phase === 'movement') {
+    offerReactions(s, 'enemyMovedNear', u);
+    cultAmbushCheckEnemyMoved(s, u);
+  }
   if (unitHasAbility(u, 'Drop Pod Assault')) dropPodAssault(s, u);
   if (u.homer && s.active !== u.owner) { log(s, `Teleport Homer: ${u.name} arrives at the token (token removed)`, 'info', u.owner); u.homer = undefined; }
   return chk;

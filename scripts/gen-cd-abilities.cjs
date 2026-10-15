@@ -117,3 +117,4 @@ const out = {
 const targetPath = path.join(process.cwd(), 'data', 'abilities', 'CD.json');
 fs.writeFileSync(targetPath, JSON.stringify(out, null, 2), 'utf8');
 console.log('Successfully generated', Object.keys(out).length, 'entries to', targetPath);
+

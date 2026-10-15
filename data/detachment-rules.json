@@ -6083,6 +6083,311 @@
           ]
         }
       ]
+    },
+    "Cult Ambush": {
+      "auto": "full",
+      "armyRule": true,
+      "desc": "Starts with Resurgence points (Incursion: 6, Strike Force: 10, Onslaught: 14). When a unit is destroyed, spend Resurgence points to return it to Cult Ambush and place a Cult Ambush marker >9\" from enemies."
+    },
+    "Cult Icon": {
+      "auto": "full",
+      "armyRule": true,
+      "desc": "In your Command phase, 1 destroyed model is returned to this unit (or D3 destroyed models if this unit is within range of an objective marker you control)."
+    },
+    "Host of Ascension": {
+      "auto": "full",
+      "desc": "A Perfect Ambush: Each time a Genestealer Cults unit is set up from Reserves or Cult Ambush, until the end of the turn, ranged weapons have [SUSTAINED HITS 1] and melee weapons score Critical Hits on an unmodified Hit roll of 5+."
+    },
+    "A Perfect Ambush": {
+      "auto": "full",
+      "desc": "Units arriving from Reserves get [SUSTAINED HITS 1] on ranged attacks and [CRITICAL HITS 5+] in melee."
+    },
+    "Xenocreed Congregation": {
+      "auto": "full",
+      "desc": "Unquestioning Fanaticism: Each time a Battleline model is destroyed in melee, on a 5+ it can make 1 melee attack before removal. Characters grant their unit 5+ Feel No Pain."
+    },
+    "Unquestioning Fanaticism": {
+      "auto": "full",
+      "desc": "Battleline models fight on death on 5+ in melee; Characters grant 5+ Feel No Pain."
+    },
+    "Biosanctic Broodsurge": {
+      "auto": "full",
+      "desc": "Hypermorphic Fury: Aberrant, Genestealer and Abominant models get +1 Attack to melee weapons. While within 6\" of a friendly Patriarch or Biophagus, add 1 to Wound rolls."
+    },
+    "Hypermorphic Fury": {
+      "auto": "full",
+      "desc": "+1 Melee Attack for Aberrant/Genestealer/Abominant; +1 to Wound within 6\" of Patriarch or Biophagus."
+    },
+    "Outlander Claw": {
+      "auto": "full",
+      "desc": "Rapid Takeover: Vehicle and Mounted units gain [SCOUTS 6\"] and re-roll Wound rolls of 1."
+    },
+    "Rapid Takeover": {
+      "auto": "full",
+      "desc": "Vehicle and Mounted units have [SCOUTS 6\"] and re-roll Wound rolls of 1.",
+      "effects": [
+        {
+          "units": [
+            "kw:VEHICLE",
+            "kw:MOUNTED"
+          ],
+          "scouts": 6,
+          "attack": {
+            "rerollWounds1": true
+          }
+        }
+      ]
+    },
+    "Brood Brother Auxilia": {
+      "auto": "full",
+      "desc": "Integrated Tactics: Astra Militarum units up to 500/1000 pts can be included. +1 to Hit when attacking enemy units targeted by Astra Militarum."
+    },
+    "Integrated Tactics": {
+      "auto": "full",
+      "desc": "+1 to Hit when attacking enemy units targeted by friendly Astra Militarum units."
+    },
+    "BROOD BROTHERS": {
+      "auto": "full",
+      "desc": "Allows Astra Militarum detachment allies in your army."
+    },
+    "Final Day": {
+      "auto": "full",
+      "desc": "Psionic Parasitism / Star Children’s Blessing: Each round choose +2\" Move, [LETHAL HITS] on ranged weapons, or 5+ Invulnerable save."
+    },
+    "Psionic Parasitism": {
+      "auto": "full",
+      "desc": "In Command phase, pick one blessing: +2\" Move, [LETHAL HITS] on ranged, or 5+ Invulnerable."
+    },
+    "Heroes of the Uprising": {
+      "auto": "full",
+      "desc": "Killer Reputation: Characters get +1 Attack and +1 Strength in melee, and leading units re-roll Advance and Charge rolls."
+    },
+    "Killer Reputation": {
+      "auto": "full",
+      "desc": "+1 Attack and +1 Strength to Character melee weapons; re-roll Advance and Charge while leading a unit."
+    },
+    "Purestrain Broodswarm": {
+      "auto": "full",
+      "desc": "Enemy Within: Purestrain Genestealers gain [STEALTH] and [INFILTRATORS], and can arrive from Reserves within 6\" of enemy units."
+    },
+    "Enemy Within": {
+      "auto": "full",
+      "desc": "Purestrain Genestealers have [STEALTH] and [INFILTRATORS], and can deep strike within 6\" of enemy units.",
+      "effects": [
+        {
+          "units": [
+            "PURESTRAIN GENESTEALERS"
+          ],
+          "stealth": true,
+          "core": {
+            "infiltrators": true
+          }
+        }
+      ]
+    },
+    "Xenocult Masses": {
+      "auto": "full",
+      "desc": "Hordes of the Faithful: Place 1 additional Cult Ambush marker within 6\" of each placed marker. Neophyte Hybrids gain +1 to Hit while within range of an objective."
+    },
+    "Hordes of the Faithful": {
+      "auto": "full",
+      "desc": "Place 1 extra Cult Ambush marker within 6\"; Neophyte Hybrids gain +1 to Hit on objectives."
+    },
+    "Reanimation Protocols": {
+      "auto": "full",
+      "armyRule": true,
+      "desc": "At the start of your Command phase, each Necrons unit activates Reanimation Protocols: reanimates D3 wounds, restoring lost wounds to damaged models or returning destroyed models with full wounds."
+    },
+    "Awakened Dynasty": {
+      "auto": "full",
+      "desc": "Command Protocols: While a Necrons unit is being led by a Character, each time a model in that unit makes an attack, add 1 to the Hit roll."
+    },
+    "Command Protocols": {
+      "auto": "full",
+      "desc": "While led by a Character, models in the unit add 1 to Hit rolls."
+    },
+    "Annihilation Legion": {
+      "auto": "full",
+      "desc": "Annihilation Protocol: Destroyer Cult and Flayed Ones units re-roll Charge rolls and add 1 to Charge rolls. In melee, models can fight on death on a 4+."
+    },
+    "Annihilation Protocol": {
+      "auto": "full",
+      "desc": "Destroyer Cult and Flayed Ones re-roll and get +1 to Charge rolls; 4+ fight on death in melee."
+    },
+    "Canoptek Court": {
+      "auto": "full",
+      "desc": "Power Matrix: Cryptek and Canoptek models re-roll Hit rolls of 1 (or re-roll all Hit rolls if within the Power Matrix or within range of an objective you control)."
+    },
+    "Power Matrix": {
+      "auto": "full",
+      "desc": "Cryptek and Canoptek models re-roll Hit rolls of 1 (or all Hit rolls within Power Matrix / controlled objectives)."
+    },
+    "Obeisance Phalanx": {
+      "auto": "full",
+      "desc": "Worthy Foes: At the start of the battle, select one enemy unit. Overlord, Lychguard and Triarch units add 1 to Wound rolls against that enemy unit."
+    },
+    "Worthy Foes": {
+      "auto": "full",
+      "desc": "+1 to Wound rolls for Overlord, Lychguard, and Triarch units against the designated Worthy Foe."
+    },
+    "Hypercrypt Legion": {
+      "auto": "full",
+      "desc": "Hyperphasing: At the end of your opponent’s turn, you can select up to 2 Necrons units (excluding units within Engagement Range) and place them into Strategic Reserves."
+    },
+    "Hyperphasing": {
+      "auto": "full",
+      "desc": "Pick up to 2 units at end of opponent turn and place into Strategic Reserves."
+    },
+    "Starshatter Arsenal": {
+      "auto": "full",
+      "desc": "Relentless Onslaught: Necrons Vehicle weapons have [LETHAL HITS] when targeting units within range of an objective marker."
+    },
+    "Relentless Onslaught": {
+      "auto": "full",
+      "desc": "Necrons Vehicle weapons have [LETHAL HITS] against targets within range of an objective marker."
+    },
+    "Cryptek Conclave": {
+      "auto": "full",
+      "desc": "Technosorcerous Augmentations: Cryptek models improve the invulnerable save of their unit to 5+ and critical hits score on 5+."
+    },
+    "Technosorcerous Augmentations": {
+      "auto": "full",
+      "desc": "Cryptek units gain 5+ invulnerable save and Critical Hits on 5+."
+    },
+    "Cursed Legion": {
+      "auto": "full",
+      "desc": "Cold Fervour: Flayed Ones and Destroyer Cult units gain +1 to Hit when targeting enemy units below Starting Strength."
+    },
+    "Cold Fervour": {
+      "auto": "full",
+      "desc": "+1 to Hit against below Starting Strength enemy units for Flayed Ones and Destroyer Cult."
+    },
+    "Pantheon of Woe": {
+      "auto": "full",
+      "desc": "Cosmic Distortion: C’tan Shard models have a 4+ Feel No Pain against mortal wounds and their aura ranges are increased by 3\"."
+    },
+    "Cosmic Distortion": {
+      "auto": "full",
+      "desc": "C’tan Shards gain 4+ Feel No Pain against mortal wounds and +3\" aura ranges."
+    },
+    "Hand of the Dynasty": {
+      "auto": "full",
+      "desc": "Hypermotility Protocols: Immortals and Necron Warriors ranged weapons have [ASSAULT] and can advance without failing action eligibility."
+    },
+    "Hypermotility Protocols": {
+      "auto": "full",
+      "desc": "Immortals and Necron Warriors ranged attacks have [ASSAULT]; Advance moves do not prevent starting actions."
+    },
+    "Skyshroud Spearhead": {
+      "auto": "full",
+      "desc": "Transdimensional Deployment: Tomb Blades units have Deep Strike and +1 to Hit on ranged attacks during the turn they arrive from Reserves."
+    },
+    "Transdimensional Deployment": {
+      "auto": "full",
+      "desc": "Tomb Blades gain Deep Strike and +1 to Hit on ingress/reserves arrival turn."
+    },
+    "The Phaeron's Armoury": {
+      "auto": "full",
+      "desc": "Empowered Engines: Necrons Titanic Fly units have +6\" Move."
+    },
+    "Empowered Engines": {
+      "auto": "full",
+      "desc": "Necrons Titanic Fly units have +6\" Move."
+    },
+    "Teleport Assault": {
+      "auto": "full",
+      "armyRule": true,
+      "desc": "At the end of your opponent’s turn, select up to N Grey Knights units (Incursion: 2, Strike Force: 3, Onslaught: 4) and place them into Strategic Reserves. In your next Movement phase, they can arrive via Deep Strike."
+    },
+    "Teleport Strike Force": {
+      "auto": "full",
+      "desc": "Teleport Shunt: Each time a Grey Knights unit with Teleport Assault Advances, until the end of the phase it can Fly and is eligible to shoot and charge."
+    },
+    "Teleport Shunt": {
+      "auto": "full",
+      "desc": "Advance moves grant Fly and do not prevent shooting or charging."
+    },
+    "Warpbane Task Force": {
+      "auto": "full",
+      "desc": "Hallowed Ground: While a friendly Grey Knights unit is within range of an objective marker you control or wholly within your territory, improve its invulnerable save by 1 (to a max of 4+) and add 1 to Hit rolls."
+    },
+    "Hallowed Ground": {
+      "auto": "full",
+      "desc": "+1 to Hit rolls and improved invulnerable save while on controlled objectives or in own territory."
+    },
+    "Brotherhood Strike": {
+      "auto": "full",
+      "desc": "Fury of Titan: Brotherhood Terminator and Paladin Squad models re-roll Hit rolls of 1."
+    },
+    "Fury of Titan": {
+      "auto": "full",
+      "desc": "Brotherhood Terminator and Paladin models re-roll Hit rolls of 1.",
+      "effects": [
+        {
+          "units": [
+            "kw:TERMINATOR"
+          ],
+          "attack": {
+            "rerollHits1": true
+          }
+        }
+      ]
+    },
+    "Hallowed Conclave": {
+      "auto": "full",
+      "desc": "Duty Before All: Grey Knights Character models gain +1 Attack to melee weapons and +1 to Objective Control."
+    },
+    "Duty Before All": {
+      "auto": "full",
+      "desc": "Character models gain +1 Melee Attack and +1 OC."
+    },
+    "Banishers": {
+      "auto": "full",
+      "desc": "Channelled Force: Melee weapons equipped by Grey Knights models gain [LETHAL HITS]. In addition, against Daemon and Psyker units, add 1 to the Damage characteristic."
+    },
+    "Channelled Force": {
+      "auto": "full",
+      "desc": "Melee weapons have [LETHAL HITS]; +1 Damage against Daemon and Psyker targets."
+    },
+    "Sanctic Spearhead": {
+      "auto": "full",
+      "desc": "Mailed Fist: Nemesis Dreadknight models add 1 to the Damage characteristic of melee attacks during the turn they charged."
+    },
+    "Mailed Fist": {
+      "auto": "full",
+      "desc": "+1 Damage to Nemesis Dreadknight melee attacks on the turn they charged."
+    },
+    "Augurium Task Force": {
+      "auto": "full",
+      "desc": "Prescient Redeployment: After determining who has the first turn, you can redeploy up to 3 Grey Knights units."
+    },
+    "Prescient Redeployment": {
+      "auto": "full",
+      "desc": "Redeploy up to 3 units after first turn is determined."
+    },
+    "Argent Assault": {
+      "auto": "full",
+      "desc": "Dauntless Champions: When a Paladin Squad is selected to fight, if Strength is lower than target Toughness, add 1 to Wound rolls."
+    },
+    "Dauntless Champions": {
+      "auto": "full",
+      "desc": "Paladin Squad models get +1 to Wound when Strength < target Toughness."
+    },
+    "Fires of Purgation": {
+      "auto": "full",
+      "desc": "Searing Soulflame: When a Purgation Squad pins an enemy unit, that enemy makes a Battle-shock test with a -1 modifier."
+    },
+    "Searing Soulflame": {
+      "auto": "full",
+      "desc": "Pinned units test Battle-shock at -1."
+    },
+    "Immaterial Interdiction": {
+      "auto": "full",
+      "desc": "Echojump: After shooting, an Interceptor Squad can make a D6\" surge move."
+    },
+    "Echojump": {
+      "auto": "full",
+      "desc": "Interceptor Squads can make a D6\" surge move after shooting."
     }
   }
 }

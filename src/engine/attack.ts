@@ -13,6 +13,9 @@ import { votannAttackModifiers, votannDefenseModifiers, votannUnitDestroyed } fr
 import { admechAttackModifiers, admechDefenseModifiers, unitActiveImperatives } from './admech';
 import { drukhariAttackModifiers, drukhariDefenseModifiers, drukhariUnitDestroyed } from './drukhari';
 import { daemonsAttackModifiers, daemonsDefenseModifiers, daemonsUnitDestroyed } from './daemons';
+import { cultAttackModifiers, cultDefenseModifiers, cultAmbushUnitDestroyed } from './cult';
+import { necAttackModifiers, necDefenseModifiers } from './necrons';
+import { gkAttackModifiers, gkDefenseModifiers } from './greyKnights';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 import { noteTarget, sensationalBlock, thrillBlock } from './emperorsChildren';
 import { putridHit } from './deathGuard';
@@ -242,7 +245,13 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const druDef = drukhariDefenseModifiers(s, A, T, 'ranged', p);
       const cd = daemonsAttackModifiers(s, A, T, d, 'ranged', p, w.name);
       const cdDef = daemonsDefenseModifiers(s, A, T, 'ranged', p);
-      if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !montka && !adm.assault) continue;
+      const cult = cultAttackModifiers(s, A, T, d, 'ranged', p, w.name);
+      const cultDef = cultDefenseModifiers(s, A, T, 'ranged', p);
+      const nec = necAttackModifiers(s, A, T, d, 'ranged', p, w.name);
+      const necDef = necDefenseModifiers(s, A, T, 'ranged', p);
+      const gk = gkAttackModifiers(s, A, T, d, 'ranged', p, w.name);
+      const gkDef = gkDefenseModifiers(s, A, T, 'ranged', p);
+      if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !montka && !adm.assault && !nec.assault) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
       if (d > maxRange + 1e-6) continue;
       if (untargetableAt(s, T, d)) continue;
@@ -257,7 +266,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const mods: Mods = {
         skillDelta: ftgg.skillDelta - (adm.bsBonus || 0),
         skillNotes: [...ftgg.notes.filter((n) => n.includes('BS')), ...adm.notes.filter((n) => n.includes('BS'))],
-        hit: ftgg.hitMod + votann.hitMod + adm.hitMod + admDef.hitMod + dru.hitMod + druDef.hitMod + cd.hitMod + cdDef.hitMod,
+        hit: ftgg.hitMod + votann.hitMod + adm.hitMod + admDef.hitMod + dru.hitMod + druDef.hitMod + cd.hitMod + cdDef.hitMod + cult.hitMod + cultDef.hitMod + nec.hitMod + necDef.hitMod + gk.hitMod + gkDef.hitMod,
         hitNotes: [
           ...ftgg.notes.filter((n) => n.includes('hit')),
           ...votann.notes.filter((n) => n.includes('Hit')),
@@ -265,6 +274,9 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
           ...dru.notes.filter((n) => n.includes('hit') || n.includes('Hit')),
           ...cd.notes.filter((n) => n.includes('hit') || n.includes('Hit')),
           ...cdDef.notes.filter((n) => n.includes('hit')),
+          ...cult.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
+          ...nec.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
+          ...gk.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
         ],
       };
       const ignoresCover = ftgg.ignoresCover || votann.ignoresCover || adm.ignoresCover || dru.ignoresCover || hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
@@ -304,18 +316,24 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         if (melta && half) pool.damage = `${p.D}+${melta.value ?? 0}`.replace(/^(\d+)\+(\d+)$/, (_, a, b) => String(+a + +b));
         const strength = (p.S ?? 1) + ftgg.strengthBonus + votann.strengthBonus;
         pool.woundNeed = woundNeed(strength, T_T);
-        if (ftgg.apBonus + votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus) pool.ap -= (ftgg.apBonus + votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus);
-        if (def.apWorsen + admDef.apWorsen + cdDef.apWorsen) pool.ap = Math.min(0, pool.ap + def.apWorsen + admDef.apWorsen + cdDef.apWorsen);
-        const wm = clamp(buffSum(A, 'wound+1', 'wound-1') + ftgg.woundMod + votann.woundMod + def.woundMod + adm.woundMod + dru.woundMod + druDef.woundMod + cd.woundMod + cdDef.woundMod, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
+        if (ftgg.apBonus + votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus + cult.apBonus + nec.apBonus + gk.apBonus) pool.ap -= (ftgg.apBonus + votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus + cult.apBonus + nec.apBonus + gk.apBonus);
+        if (def.apWorsen + admDef.apWorsen + cdDef.apWorsen + cultDef.apWorsen + necDef.apWorsen + gkDef.apWorsen) pool.ap = Math.min(0, pool.ap + def.apWorsen + admDef.apWorsen + cdDef.apWorsen + cultDef.apWorsen + necDef.apWorsen + gkDef.apWorsen);
+        const wm = clamp(buffSum(A, 'wound+1', 'wound-1') + ftgg.woundMod + votann.woundMod + def.woundMod + adm.woundMod + dru.woundMod + druDef.woundMod + cd.woundMod + cdDef.woundMod + cult.woundMod + cultDef.woundMod + nec.woundMod + necDef.woundMod + gk.woundMod + gkDef.woundMod, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundMod = wm;
-        pool.woundNote = `S${strength} vs T${T_T}` + (wm ? ` · Buff ${wm > 0 ? '+' : ''}${wm}` : '') + (def.notes.length ? ` · ${def.notes.join(' · ')}` : '') + (dru.notes.length ? ` · ${dru.notes.join(' · ')}` : '') + (cd.notes.length ? ` · ${cd.notes.join(' · ')}` : '');
-        if (ftgg.rerollHits1 || votann.rerollHits1 || adm.rerollHits1 || dru.rerollHits1 || cd.rerollHits1) pool.rerollHits1 = true;
-        if (ftgg.rerollWounds1 || votann.rerollWounds1 || adm.rerollWounds1 || dru.rerollWounds1 || cd.rerollWounds1) pool.rerollWounds1 = true;
-        if (votann.rerollHits || adm.rerollHits || dru.rerollHits || cd.rerollHits) pool.rerollAllHits = true;
-        if (votann.rerollWounds || dru.rerollWounds || cd.rerollWounds) pool.rerollAllWounds = true;
-        if (ftgg.lethal || votann.lethal || adm.lethal || dru.lethal || cd.lethal) pool.lethal = true;
-        if (cd.devastating) pool.devastating = true;
-        if (cd.sustained && !pool.sustained) pool.sustained = cd.sustained;
+        pool.woundNote = `S${strength} vs T${T_T}` + (wm ? ` · Buff ${wm > 0 ? '+' : ''}${wm}` : '') + (def.notes.length ? ` · ${def.notes.join(' · ')}` : '') + (dru.notes.length ? ` · ${dru.notes.join(' · ')}` : '') + (cd.notes.length ? ` · ${cd.notes.join(' · ')}` : '') + (cult.notes.length ? ` · ${cult.notes.join(' · ')}` : '') + (nec.notes.length ? ` · ${nec.notes.join(' · ')}` : '') + (gk.notes.length ? ` · ${gk.notes.join(' · ')}` : '');
+        if (ftgg.rerollHits1 || votann.rerollHits1 || adm.rerollHits1 || dru.rerollHits1 || cd.rerollHits1 || cult.rerollHits1 || nec.rerollHits1 || gk.rerollHits1) pool.rerollHits1 = true;
+        if (ftgg.rerollWounds1 || votann.rerollWounds1 || adm.rerollWounds1 || dru.rerollWounds1 || cd.rerollWounds1 || cult.rerollWounds1 || nec.rerollWounds1 || gk.rerollWounds1) pool.rerollWounds1 = true;
+        if (votann.rerollHits || adm.rerollHits || dru.rerollHits || cd.rerollHits || cult.rerollHits || nec.rerollHits || gk.rerollHits) pool.rerollAllHits = true;
+        if (votann.rerollWounds || dru.rerollWounds || cd.rerollWounds || cult.rerollWounds || nec.rerollWounds || gk.rerollWounds) pool.rerollAllWounds = true;
+        if (ftgg.lethal || votann.lethal || adm.lethal || dru.lethal || cd.lethal || cult.lethal || nec.lethal || gk.lethal) pool.lethal = true;
+        if (cd.devastating || cult.devastating || nec.devastating || gk.devastating) pool.devastating = true;
+        if (cult.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = cult.critHitThreshold;
+        if (nec.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = nec.critHitThreshold;
+        if (gk.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = gk.critHitThreshold;
+        if (cult.sustained && !pool.sustained) pool.sustained = cult.sustained;
+        else if (nec.sustained && !pool.sustained) pool.sustained = nec.sustained;
+        else if (gk.sustained && !pool.sustained) pool.sustained = gk.sustained;
+        else if (cd.sustained && !pool.sustained) pool.sustained = cd.sustained;
         else if (dru.sustained && !pool.sustained) pool.sustained = dru.sustained;
         else if (adm.sustained && !pool.sustained) pool.sustained = adm.sustained;
         else if (votann.sustained && !pool.sustained) pool.sustained = votann.sustained;
@@ -401,16 +419,25 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       const druDef = drukhariDefenseModifiers(s, A, T, 'melee', p);
       const cd = daemonsAttackModifiers(s, A, T, 0, 'melee', p, w.name);
       const cdDef = daemonsDefenseModifiers(s, A, T, 'melee', p);
+      const cult = cultAttackModifiers(s, A, T, 0, 'melee', p, w.name);
+      const cultDef = cultDefenseModifiers(s, A, T, 'melee', p);
+      const nec = necAttackModifiers(s, A, T, 0, 'melee', p, w.name);
+      const necDef = necDefenseModifiers(s, A, T, 'melee', p);
+      const gk = gkAttackModifiers(s, A, T, 0, 'melee', p, w.name);
+      const gkDef = gkDefenseModifiers(s, A, T, 'melee', p);
       const mods: Mods = {
         skillDelta: adm.wsBonus ? -adm.wsBonus : 0,
         skillNotes: [...adm.notes.filter((n) => n.includes('WS'))],
-        hit: votann.hitMod + adm.hitMod + admDef.hitMod + dru.hitMod + druDef.hitMod + cd.hitMod + cdDef.hitMod,
+        hit: votann.hitMod + adm.hitMod + admDef.hitMod + dru.hitMod + druDef.hitMod + cd.hitMod + cdDef.hitMod + cult.hitMod + cultDef.hitMod + nec.hitMod + necDef.hitMod + gk.hitMod + gkDef.hitMod,
         hitNotes: [
           ...votann.notes.filter((n) => n.includes('Hit')),
           ...admDef.notes.filter((n) => n.includes('hit')),
           ...dru.notes.filter((n) => n.includes('hit') || n.includes('Hit')),
           ...cd.notes.filter((n) => n.includes('hit') || n.includes('Hit')),
           ...cdDef.notes.filter((n) => n.includes('hit')),
+          ...cult.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
+          ...nec.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
+          ...gk.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
         ],
       };
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
@@ -432,7 +459,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         if (precision) pool.precision = true;
         const strength = (p.S ?? 1) + votann.strengthBonus;
         pool.woundNeed = woundNeed(strength, T_T);
-        let wm = buffSum(A, 'wound+1', 'wound-1') + votann.woundMod + def.woundMod + adm.woundMod + dru.woundMod + druDef.woundMod + cd.woundMod + cdDef.woundMod;
+        let wm = buffSum(A, 'wound+1', 'wound-1') + votann.woundMod + def.woundMod + adm.woundMod + dru.woundMod + druDef.woundMod + cd.woundMod + cdDef.woundMod + cult.woundMod + cultDef.woundMod + nec.woundMod + necDef.woundMod + gk.woundMod + gkDef.woundMod;
         const notes = [`S${strength} vs T${T_T}`];
         if (hasAbility(p, 'lance', T.keywords) && A.chargedTurn === s.turn) { wm += 1; notes.push('Lance +1'); }
         if (shamed) { wm -= 1; notes.push('Shield of Honour −1'); }
@@ -440,17 +467,26 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         if (adm.notes.length) notes.push(...adm.notes.filter((n) => !n.includes('WS') && !n.includes('AP')));
         if (dru.notes.length) notes.push(...dru.notes.filter((n) => !n.includes('Hit')));
         if (cd.notes.length) notes.push(...cd.notes.filter((n) => !n.includes('Hit') && !n.includes('hit')));
+        if (cult.notes.length) notes.push(...cult.notes.filter((n) => !n.includes('Hit') && !n.includes('hit')));
+        if (nec.notes.length) notes.push(...nec.notes.filter((n) => !n.includes('Hit') && !n.includes('hit')));
+        if (gk.notes.length) notes.push(...gk.notes.filter((n) => !n.includes('Hit') && !n.includes('hit')));
         pool.woundMod = clamp(wm, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundNote = notes.join(' · ');
-        if (votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus) pool.ap -= (votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus);
-        if (def.apWorsen + admDef.apWorsen + cdDef.apWorsen) pool.ap = Math.min(0, pool.ap + def.apWorsen + admDef.apWorsen + cdDef.apWorsen);
-        if (votann.rerollHits1 || adm.rerollHits1 || dru.rerollHits1 || cd.rerollHits1) pool.rerollHits1 = true;
-        if (votann.rerollWounds1 || adm.rerollWounds1 || dru.rerollWounds1 || cd.rerollWounds1) pool.rerollWounds1 = true;
-        if (votann.rerollHits || adm.rerollHits || dru.rerollHits || cd.rerollHits) pool.rerollAllHits = true;
-        if (votann.rerollWounds || dru.rerollWounds || cd.rerollWounds) pool.rerollAllWounds = true;
-        if (votann.lethal || adm.lethal || dru.lethal || cd.lethal) pool.lethal = true;
-        if (cd.devastating) pool.devastating = true;
-        if (cd.sustained && !pool.sustained) pool.sustained = cd.sustained;
+        if (votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus + cult.apBonus + nec.apBonus + gk.apBonus) pool.ap -= (votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus + cult.apBonus + nec.apBonus + gk.apBonus);
+        if (def.apWorsen + admDef.apWorsen + cdDef.apWorsen + cultDef.apWorsen + necDef.apWorsen + gkDef.apWorsen) pool.ap = Math.min(0, pool.ap + def.apWorsen + admDef.apWorsen + cdDef.apWorsen + cultDef.apWorsen + necDef.apWorsen + gkDef.apWorsen);
+        if (votann.rerollHits1 || adm.rerollHits1 || dru.rerollHits1 || cd.rerollHits1 || cult.rerollHits1 || nec.rerollHits1 || gk.rerollHits1) pool.rerollHits1 = true;
+        if (votann.rerollWounds1 || adm.rerollWounds1 || dru.rerollWounds1 || cd.rerollWounds1 || cult.rerollWounds1 || nec.rerollWounds1 || gk.rerollWounds1) pool.rerollWounds1 = true;
+        if (votann.rerollHits || adm.rerollHits || dru.rerollHits || cd.rerollHits || cult.rerollHits || nec.rerollHits || gk.rerollHits) pool.rerollAllHits = true;
+        if (votann.rerollWounds || dru.rerollWounds || cd.rerollWounds || cult.rerollWounds || nec.rerollWounds || gk.rerollWounds) pool.rerollAllWounds = true;
+        if (votann.lethal || adm.lethal || dru.lethal || cd.lethal || cult.lethal || nec.lethal || gk.lethal) pool.lethal = true;
+        if (cd.devastating || cult.devastating || nec.devastating || gk.devastating) pool.devastating = true;
+        if (cult.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = cult.critHitThreshold;
+        if (nec.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = nec.critHitThreshold;
+        if (gk.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = gk.critHitThreshold;
+        if (cult.sustained && !pool.sustained) pool.sustained = cult.sustained;
+        else if (nec.sustained && !pool.sustained) pool.sustained = nec.sustained;
+        else if (gk.sustained && !pool.sustained) pool.sustained = gk.sustained;
+        else if (cd.sustained && !pool.sustained) pool.sustained = cd.sustained;
         else if (dru.sustained && !pool.sustained) pool.sustained = dru.sustained;
         else if (adm.sustained && !pool.sustained) pool.sustained = adm.sustained;
         else if (votann.sustained && !pool.sustained) pool.sustained = votann.sustained;
@@ -464,7 +500,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       pool.models += 1;
       const cleave = getAbility(p, 'cleave', T.keywords);
       const cleaveN = (cleave ? parseInt(cleave.value ?? '1', 10) : grants(fx, inc, 'cleave 1') || grants(fx, inc, 'cleave +1') ? 1 : 0) + (cleave && grants(fx, inc, 'cleave +1') ? 1 : 0); // Into the Fray; Mow 'Em Down: +1
-      pool.instances.push({ A: p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) + (dru.attacksBonus || 0) });
+      pool.instances.push({ A: p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) + (dru.attacksBonus || 0) + (cult.attacksBonus || 0) + (nec.attacksBonus || 0) + (gk.attacksBonus || 0) });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
   }
@@ -883,6 +919,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     votannUnitDestroyed(s, u, s.attack?.attackerId);
     drukhariUnitDestroyed(s, u, s.attack?.attackerId ? s.units.find((x) => x.id === s.attack?.attackerId) : undefined);
     daemonsUnitDestroyed(s, u, s.attack?.attackerId ? s.units.find((x) => x.id === s.attack?.attackerId) : undefined);
+    cultAmbushUnitDestroyed(s, u);
     log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
