@@ -42,8 +42,9 @@ export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; 
   }, [vp]);
   useEffect(() => { if (!gain) return; const t = setTimeout(() => setGain(null), 1600); return () => clearTimeout(t); }, [gain]);
   const miracleDice = P.miracleDice ?? [];
+  const fateDice = P.fateDice ?? [];
   return (
-    <button className={`side-score s${p}`} onClick={onOpen} aria-label={`${label}: ${vp} VP, ${P.cp} CP${miracleDice.length ? `, ${miracleDice.length} Miracle Dice` : ''} — open mission cards`}>
+    <button className={`side-score s${p}`} onClick={onOpen} aria-label={`${label}: ${vp} VP, ${P.cp} CP${miracleDice.length ? `, ${miracleDice.length} Miracle Dice` : ''}${fateDice.length ? `, ${fateDice.length} Fate Dice` : ''} — open mission cards`}>
       <span className="ss-label">{label}</span>
       <span className="ss-vp num">{shown}<small>VP</small></span>
       <CpGems cp={P.cp} />
@@ -54,6 +55,15 @@ export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; 
             <i key={i} className="miracle-die">{d}</i>
           ))}
           {miracleDice.length > 4 && <b className="miracle-more">+{miracleDice.length - 4}</b>}
+        </span>
+      )}
+      {fateDice.length > 0 && (
+        <span className="miracle-pool fate-pool" title={`Fate Dice pool: ${fateDice.slice().sort((a, b) => b - a).join(', ')}`}>
+          <Icon name="dice" size={11} />
+          {fateDice.slice().sort((a, b) => b - a).slice(0, 4).map((d, i) => (
+            <i key={i} className="miracle-die fate-die">{d}</i>
+          ))}
+          {fateDice.length > 4 && <b className="miracle-more fate-more">+{fateDice.length - 4}</b>}
         </span>
       )}
       {gain && <span key={gain.k} className="ss-gain">+{gain.n} VP</span>}

@@ -27,6 +27,7 @@ import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ld
 
 import { inSynapse } from './tyranids';
 import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart, tryActOfFaith } from './sororitas';
+import { aeldariBattleStart, aeldariCommandEnd, aeldariTurnStart, resetPhaseStrandsOfFate, tryFateDie } from './aeldari';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -853,10 +854,11 @@ export function startTurn(s: GameState, p: PlayerId) {
   onTurnStart(s);
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
-  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); fireAll(s, 'battleStart', 'both'); }
+  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); dgRoundStart(s); knightsRoundStart(s); fireAll(s, 'roundStart', 'both'); }
   knightsTurnStart(s);
   sororitasTurnStart(s, p);
+  aeldariTurnStart(s, p);
   startCommand(s);
 }
 
@@ -950,6 +952,7 @@ export function endPhase(s: GameState) {
   }
   dgPhaseEnd(s);
   resetPhaseActsOfFaith(s);
+  resetPhaseStrandsOfFate(s);
   resolveRevivals(s);
   if (s.window?.kind === 'abilityMove') s.window = null;
   expireTimed(s, 'phaseEnd', s.active);
@@ -957,6 +960,7 @@ export function endPhase(s: GameState) {
     fireFor(s, 'commandEnd', s.active);
     dgCommandEnd(s);
     sororitasCommandEnd(s, s.active);
+    aeldariCommandEnd(s, s.active);
     // Uphold the Honour of the Emperor (Templar Vows): objectives held now stay yours
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtCommandEnd || !hasKw(u, 'INFANTRY')) continue;
@@ -1082,6 +1086,8 @@ export function rollAdvance(s: GameState, u: UnitState) {
   let raw = det.advanceSix ? 6 : d6(s);
   const aof = tryActOfFaith(s, u, 'advance');
   if (aof !== null) raw = aof;
+  const fate = tryFateDie(s, u, 'advance');
+  if (fate !== null) raw = fate;
   const bonus = (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0) + det.advanceBonus;
   u.advanceRoll = raw + bonus;
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Advance · ${u.name}`, dice: [raw], result: `M + ${u.advanceRoll}"${bonus ? ` (+${bonus})` : ''}${det.advanceSix ? ' (Detachment: 6)' : ''}`, good: u.advanceRoll >= 4 });
@@ -1353,6 +1359,8 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
   const aof = tryActOfFaith(s, u, 'charge', { need: near });
   if (aof !== null) r[0] = aof;
+  const fate = tryFateDie(s, u, 'charge', { need: near });
+  if (fate !== null) r[0] = fate;
   let total = r[0] + r[1];
   if (cap !== undefined) total = Math.min(total, cap);
   if (u.buffs.some((b) => b.kind === 'advanceCharge+1')) total += 1;

@@ -739,5 +739,53 @@ export const PRESETS: Record<string, ArmyList> = {
       },
     ],
   },
+  AE: {
+    name: 'Aeldari (Quick)',
+    factionId: 'AE',
+    battleSize: 'incursion',
+    detachments: ['Warhost'],
+    units: [
+      {
+        uid: 'ae1', datasheet: 'Farseer', models: 1, pts: 60, warlord: true,
+        enhancement: 'Phoenix Gem', enhancementPts: 35, attachTo: 'ae2',
+      },
+      {
+        uid: 'ae2', datasheet: 'Guardian Defenders', models: 11, pts: 90,
+        wargear: [{ opt: 0, choice: 1, count: 1 }], // Bright lance
+      },
+      {
+        uid: 'ae3', datasheet: 'Asurmen', models: 1, pts: 135, attachTo: 'ae4',
+      },
+      {
+        uid: 'ae4', datasheet: 'Dire Avengers', models: 5, pts: 70,
+      },
+      {
+        uid: 'ae5', datasheet: 'Fire Dragons', models: 5, pts: 110,
+      },
+      {
+        uid: 'ae6', datasheet: 'Wave Serpent', models: 1, pts: 115,
+        wargear: [
+          { opt: 0, choice: 1, count: 1 }, // Twin bright lance
+          { opt: 1, choice: 0, count: 1 }, // Shuriken cannon
+        ],
+      },
+      {
+        uid: 'ae7', datasheet: 'Wraithlord', models: 1, pts: 125,
+        wargear: [
+          { opt: 1, choice: 0, count: 1 }, // Ghostglaive
+          { opt: 2, choice: 1, count: 2 }, // 2x Bright lance
+        ],
+      },
+      {
+        uid: 'ae8', datasheet: 'Swooping Hawks', models: 5, pts: 95,
+      },
+      {
+        uid: 'ae9', datasheet: 'War Walkers', models: 1, pts: 80,
+      },
+      {
+        uid: 'ae10', datasheet: 'Howling Banshees', models: 5, pts: 85,
+      },
+    ],
+  },
 };
 

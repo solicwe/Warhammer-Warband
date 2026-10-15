@@ -5820,6 +5820,72 @@
     },
     "Kroot Hunting Pack": {
       "auto": "full"
+    },
+    "Strands of Fate": {
+      "auto": "full",
+      "armyRule": true
+    },
+    "Battle Focus": {
+      "auto": "full",
+      "armyRule": true
+    },
+    "Battle Host": {
+      "auto": "full",
+      "freeDie": [
+        {
+          "kind": "reroll",
+          "stage": "hit",
+          "limit": "phase",
+          "units": ["AELDARI"]
+        },
+        {
+          "kind": "reroll",
+          "stage": "wound",
+          "limit": "phase",
+          "units": ["AELDARI"]
+        }
+      ]
+    },
+    "Warhost": {
+      "auto": "full"
+    },
+    "Guardian Battlehost": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": ["GUARDIAN"],
+          "if": ["objectiveEitherWay"],
+          "hit": 1
+        }
+      ]
+    },
+    "Aspect Host": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": ["ASPECT WARRIOR"],
+          "reroll": "hits1"
+        }
+      ]
+    },
+    "Windrider Host": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": ["MOUNTED|VEHICLE"],
+          "abilities": ["assault"]
+        }
+      ]
+    },
+    "Spirit Conclave": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": ["WRAITH CONSTRUCT"],
+          "if": ["near:6:SPIRITSEER"],
+          "reroll": "hits1"
+        }
+      ]
     }
   }
 }

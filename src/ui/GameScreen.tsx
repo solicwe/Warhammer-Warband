@@ -2269,6 +2269,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     ...(s.players[p].miracleDice && s.players[p].miracleDice!.length > 0
       ? [<div key={`miracle${p}`} className={`buffcard p${p}`}><b>Miracle Dice ({s.players[p].miracleDice!.length})</b><span>Pool: {s.players[p].miracleDice!.slice().sort((a, b) => b - a).map((d) => `[${d}]`).join(' ')}</span></div>]
       : []),
+    ...(s.players[p].fateDice && s.players[p].fateDice!.length > 0
+      ? [<div key={`fate${p}`} className={`buffcard p${p}`}><b>Fate Dice ({s.players[p].fateDice!.length})</b><span>Pool: {s.players[p].fateDice!.slice().sort((a, b) => b - a).map((d) => `[${d}]`).join(' ')}</span></div>]
+      : []),
+    ...(s.players[p].battleFocusTokens !== undefined && s.players[p].battleFocusTokens! > 0
+      ? [<div key={`bf${p}`} className={`buffcard p${p}`}><b>Battle Focus</b><span>Tokens: {s.players[p].battleFocusTokens}</span></div>]
+      : []),
   ];
   // where an army's buff column goes: beside its own deployment zone (left / right, or top / bottom of the left side)
   const buffSide = (p: PlayerId): 'left' | 'right' | 'top' | 'bottom' => {

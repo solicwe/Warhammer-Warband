@@ -361,6 +361,12 @@ export interface PlayerState {
   miracleDice?: number[];
   /** Units that performed an Act of Faith this phase */
   actsOfFaithUsed?: string[];
+  /** Aeldari: Fate Dice pool (Strands of Fate) */
+  fateDice?: number[];
+  /** Units that used a Fate Die this phase */
+  strandsOfFateUsed?: string[];
+  /** Aeldari: Battle Focus tokens */
+  battleFocusTokens?: number;
   riledUntilTurn: number;
   secMode: 'none' | 'tactical' | 'fixed';
   secDeck: string[];
