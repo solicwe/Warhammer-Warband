@@ -209,7 +209,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const ponder = useRef<{ w: Worker | null; id: number; p: PlayerId; turn: number; board: string; sig?: string | null; name?: string; intents?: Intent[]; view?: ThinkView; wait?: (name: string) => void } | null>(null);
   const stopPonder = () => { ponder.current?.w?.terminate(); ponder.current = null; setPonderProg(null); };
   useEffect(() => stopPonder, []);
-  const ponderFor = bots.length === 1 && s.active !== bots[0] && (s.phase === 'shooting' || s.phase === 'charge' || s.phase === 'fight') ? bots[0] : null;
+  const ponderFor = !s.campaign && bots.length === 1 && s.active !== bots[0] && (s.phase === 'shooting' || s.phase === 'charge' || s.phase === 'fight') ? bots[0] : null;
   useEffect(() => {
     if (ponderFor === null || lookBudget(s, ponderFor) <= 0) return;
     // the same board as the thinking started from (the player only ended a phase): it stands
@@ -260,6 +260,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         const first = intents.find((x) => s.units.some((u) => u.id === x.targetId && onBoard(u)));
         if (first) window.setTimeout(() => speak(who, 'target', { t: unitById(sRef.current, first.targetId).name }), 2400);
       };
+      if (rush || lookBudget(s, who) <= 0) {
+        stopPonder();
+        done('steady');
+        return;
+      }
       // it thought this turn out during the player's: the same board, so the same answer (or wait for it to finish)
       const pre = ponder.current;
       if (pre && pre.p === who && pre.sig && pre.sig === lookSig(s)) {
@@ -301,8 +306,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     // bot-vs-bot: nobody "has" the step (e.g. ending the fight phase) — let the driver move the game on
     const drive = who === null && spectate && !s.attack;
     if (who === null && !drive) return;
-    const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command';
-    const delay = (quick ? 350 : 950) / (spectate && speed === 2 ? 3 : 1) / (rush ? 5 : 1);
+    const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command' || s.window != null;
+    const delay = (quick ? 100 : 650) / (spectate && speed === 2 ? 3 : 1) / (rush ? 5 : 1);
     const caption = (before: GameState, after: GameState) => {
       const fresh = after.log.slice(before.log.length).filter((e) => e.kind !== 'roll' || /charge|Advance/i.test(e.text));
       if (fresh.length) { setBotSays(fresh[fresh.length - 1].text); }
@@ -318,7 +323,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const sent = s;
       const id = Math.random();
       setStepping(true);
-      const giveUp = window.setTimeout(() => { worker.onmessage = null; setStepping(false); stepOnMain.current = true; if (sRef.current === sent) onMain(); }, 20000);
+      const giveUp = window.setTimeout(() => { worker.onmessage = null; setStepping(false); stepOnMain.current = true; if (sRef.current === sent) onMain(); }, 5000);
       worker.onmessage = (e: MessageEvent<{ id: number; state: GameState | null; error?: string | null }>) => {
         if (e.data.id !== id) return;
         window.clearTimeout(giveUp);

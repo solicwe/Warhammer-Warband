@@ -206,12 +206,12 @@ export function reachable(run: Run): MapNode[] {
   return at ? run.map.filter((n) => at.next.includes(n.id)) : run.map.filter((n) => n.layer === 0);
 }
 
-const usable = (f: FactionData, main?: string) => f.datasheets.filter((d) => d.points[0]?.options?.length && !d.subfaction && d.models.length && d.weapons.length
+const usable = (f: FactionData, main?: string) => f.datasheets.filter((d) => !d.ally && d.points[0]?.options?.length && !d.subfaction && d.models.length && d.weapons.length
   && !d.keywords.includes('FORTIFICATION') && !d.keywords.includes('AIRCRAFT') && !d.keywords.includes('EPIC HERO') && !d.transport && (!main || d.factionKeywords.includes(main)));
 export const cheapest = (d: DatasheetData) => [...d.points[0].options].sort((a, b) => a.pts - b.pts)[0];
 const mainKeyword = (f: FactionData) => {
   const count = new Map<string, number>();
-  for (const d of f.datasheets) for (const k of d.factionKeywords) count.set(k, (count.get(k) ?? 0) + 1);
+  for (const d of f.datasheets.filter((d) => !d.ally)) for (const k of d.factionKeywords) count.set(k, (count.get(k) ?? 0) + 1);
   return [...count].sort((a, b) => b[1] - a[1])[0]?.[0];
 };
 
@@ -328,7 +328,7 @@ export function buyHonorForUnit(run: Run, unitUid: string, honorId: string): Run
 
 /** Buy and recruit a new unit into the campaign roster using Scrap */
 export function recruitUnit(run: Run, faction: FactionData, datasheetName: string): Run {
-  const d = faction.datasheets.find((x) => x.name === datasheetName);
+  const d = faction.datasheets.find((x) => x.name === datasheetName && !x.ally);
   if (!d) return run;
   const o = cheapest(d);
   if (!o || (run.scrap ?? 0) < o.pts) return run;

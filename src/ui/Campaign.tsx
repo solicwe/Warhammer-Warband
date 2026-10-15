@@ -498,7 +498,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     Recruit new datasheets into your strike force using accumulated Scrap currency.
                   </div>
                   {fac.datasheets
-                    .filter((d) => d.points[0]?.options?.length && !d.keywords.includes('EPIC HERO') && !d.keywords.includes('FORTIFICATION'))
+                    .filter((d) => !d.ally && d.points[0]?.options?.length && !d.keywords.includes('EPIC HERO') && !d.keywords.includes('FORTIFICATION'))
                     .map((d) => {
                       const o = cheapest(d);
                       if (!o) return null;

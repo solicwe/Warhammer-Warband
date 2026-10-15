@@ -647,63 +647,66 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
 
 // ---------- reactions ----------
 
-/** Fire Overwatch when it is worth the CP, otherwise decline the window. */
+/** Fire Overwatch when it is worth the CP, otherwise decline the window. Resolves chained bot reaction windows. */
 export function botWindow(s: GameState) {
-  const w = s.window;
-  if (!w) return;
-  if (w.kind === 'blessings') { applyPick(s, w.player, w.picks[0] ?? null, w.extra); return; }
-  if (w.kind === 'pledge') { setPledge(s, w.player, botPledge(s, w.player)); return; }
-  if (w.kind === 'pickUnit') { resolvePickUnit(s, [...w.units].sort((a, b) => unitById(s, b).pts - unitById(s, a).pts)[0]); return; }
-  if (w.kind === 'abilityMove') {
-    // reaction moves ("an enemy ended a move near this unit") are taken when there is somewhere better to be
-    for (const o of [...w.offers]) {
-      const u = unitById(s, o.unitId);
-      if (!o.key || !onBoard(u)) continue;
-      const mv = Number(/(\d+)"/.exec(o.label)?.[1] ?? moveOf(u));
-      if (withRuleCache(() => moveGain(s, u, mv)) > unitValue(u) * 0.05) acceptOffer(s, u.id, o.key);
-    }
-    // surge moves go towards the closest enemy; other extra moves to the best spot the planner finds
-    for (const o of [...w.offers]) {
-      const u = unitById(s, o.unitId);
-      if (o.key || !u.extraMove || !onBoard(u)) continue;
-      if (u.extraMove.kind !== 'surge') { withRuleCache(() => botExtraMove(s, u)); continue; }
-      const foes = boardUnits(s, other(u.owner)).sort((a, b) => unitDistance(u, a) - unitDistance(u, b));
-      if (u.extraMove.kind !== 'surge' || !foes.length) continue;
-      let near: Pt = alive(foes[0]).reduce((a, m) => (dist(m, centre(u)) < dist(a, centre(u)) ? m : a));
-      // Purge and Sanctify: the closest objective instead, when it isn't ours yet
-      if (unitFlags(s, u).surgeObjective) {
-        const o = [...s.objectives].sort((a, b) => dist(a, centre(u)) - dist(b, centre(u)))[0];
-        if (o && o.controller !== u.owner) near = { x: o.x, y: o.y };
+  let loops = 0;
+  const p = s.window?.player;
+  while (s.window && (s.window.player === p || isBot(s, s.window.player)) && !s.attack && loops++ < 12) {
+    const w = s.window;
+    if (w.kind === 'blessings') { applyPick(s, w.player, w.picks[0] ?? null, w.extra); continue; }
+    if (w.kind === 'pledge') { setPledge(s, w.player, botPledge(s, w.player)); continue; }
+    if (w.kind === 'pickUnit') { resolvePickUnit(s, [...w.units].sort((a, b) => unitById(s, b).pts - unitById(s, a).pts)[0]); continue; }
+    if (w.kind === 'abilityMove') {
+      // reaction moves ("an enemy ended a move near this unit") are taken when there is somewhere better to be
+      for (const o of [...w.offers]) {
+        const u = unitById(s, o.unitId);
+        if (!o.key || !onBoard(u)) continue;
+        const mv = Number(/(\d+)"/.exec(o.label)?.[1] ?? moveOf(u));
+        if (withRuleCache(() => moveGain(s, u, mv)) > unitValue(u) * 0.05) acceptOffer(s, u.id, o.key);
       }
-      const [paths] = movesTowards(s, u, 'surge', u.extraMove.max - 0.05, near, { count: 1 });
-      if (paths) commitMove(s, u, 'surge', paths);
+      // surge moves go towards the closest enemy; other extra moves to the best spot the planner finds
+      for (const o of [...w.offers]) {
+        const u = unitById(s, o.unitId);
+        if (o.key || !u.extraMove || !onBoard(u)) continue;
+        if (u.extraMove.kind !== 'surge') { withRuleCache(() => botExtraMove(s, u)); continue; }
+        const foes = boardUnits(s, other(u.owner)).sort((a, b) => unitDistance(u, a) - unitDistance(u, b));
+        if (u.extraMove.kind !== 'surge' || !foes.length) continue;
+        let near: Pt = alive(foes[0]).reduce((a, m) => (dist(m, centre(u)) < dist(a, centre(u)) ? m : a));
+        // Purge and Sanctify: the closest objective instead, when it isn't ours yet
+        if (unitFlags(s, u).surgeObjective) {
+          const o = [...s.objectives].sort((a, b) => dist(a, centre(u)) - dist(b, centre(u)))[0];
+          if (o && o.controller !== u.owner) near = { x: o.x, y: o.y };
+        }
+        const [paths] = movesTowards(s, u, 'surge', u.extraMove.max - 0.05, near, { count: 1 });
+        if (paths) commitMove(s, u, 'surge', paths);
+      }
+      closeOffers(s);
+      continue;
     }
-    closeOffers(s);
-    return;
-  }
-  if (w.kind === 'stratReaction') { answerReaction(s, null); return; } // bots decide their reactions as they happen
-  if (w.kind === 'rapidIngress') { botRapidIngress(s, w.player); closeWindow(s); return; }
-  if (w.kind === 'smokescreen') { botSmokescreen(s, w.player); closeWindow(s); return; }
-  if (w.kind === 'heroicIntervention') { botHeroic(s, w.player); closeWindow(s); return; }
-  if (w.kind === 'counteroffensive') { if (!botCounteroffensive(s, w.player)) closeWindow(s); return; }
-  if (w.kind === 'fireOverwatch' && s.players[w.player].cp >= 2) {
-    let best: { u: UnitState; t: UnitState; v: number } | null = null;
-    for (const u of overwatchCandidates(s, w.player)) {
-      for (const t of boardUnits(s, other(w.player))) {
-        const r = buildShootPools(s, u.id, t.id, { mode: 'snap' });
-        if (r.error || !r.pools.length) continue;
-        const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, t).models, 0);
-        const v = shotValue(s, u, t, ev);
-        if (!best || v > best.v) best = { u, t, v };
+    if (w.kind === 'stratReaction') { answerReaction(s, null); continue; } // bots decide their reactions as they happen
+    if (w.kind === 'rapidIngress') { botRapidIngress(s, w.player); closeWindow(s); continue; }
+    if (w.kind === 'smokescreen') { botSmokescreen(s, w.player); closeWindow(s); continue; }
+    if (w.kind === 'heroicIntervention') { botHeroic(s, w.player); closeWindow(s); continue; }
+    if (w.kind === 'counteroffensive') { if (!botCounteroffensive(s, w.player)) closeWindow(s); continue; }
+    if (w.kind === 'fireOverwatch' && s.players[w.player].cp >= 2) {
+      let best: { u: UnitState; t: UnitState; v: number } | null = null;
+      for (const u of overwatchCandidates(s, w.player)) {
+        for (const t of boardUnits(s, other(w.player))) {
+          const r = buildShootPools(s, u.id, t.id, { mode: 'snap' });
+          if (r.error || !r.pools.length) continue;
+          const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, t).models, 0);
+          const v = shotValue(s, u, t, ev);
+          if (!best || v > best.v) best = { u, t, v };
+        }
+      }
+      if (best && best.v >= 12) {
+        const r = buildShootPools(s, best.u.id, best.t.id, { mode: 'snap' });
+        spendStratagem(s, w.player, 'fire-overwatch', best.u);
+        if (!botAttack(s, 'overwatch', best.u.id, best.t.id, r.pools)) return; // closing the dice tray closes the window
       }
     }
-    if (best && best.v >= 12) {
-      const r = buildShootPools(s, best.u.id, best.t.id, { mode: 'snap' });
-      spendStratagem(s, w.player, 'fire-overwatch', best.u);
-      if (!botAttack(s, 'overwatch', best.u.id, best.t.id, r.pools)) return; // closing the dice tray closes the window
-    }
+    closeWindow(s);
   }
-  closeWindow(s);
 }
 
 /** Pre-battle Scouts moves: each unit takes the move the planner likes best (forward onto objectives, into cover), or stays. */

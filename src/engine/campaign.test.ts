@@ -64,4 +64,25 @@ describe('campaign', () => {
     expect(run.fate).toBe(0);
     expect(run.over).toBe('lost');
   });
+
+  it('campaign starter list and recruit options do not get overwritten by allied units (e.g. GK with AoI)', () => {
+    const gk = load('GK');
+    const aoi = load('AoI');
+    // Simulate withAllies appending AoI datasheets marked as ally
+    const gkWithAllies: FactionData = {
+      ...gk,
+      datasheets: [
+        ...gk.datasheets,
+        ...aoi.datasheets.map((d) => ({ ...d, ally: 'AoI', allyName: 'Imperial Agents' })),
+      ],
+    };
+    for (const seed of [1, 2, 3, 42, 999]) {
+      const list = autoList(gkWithAllies, 500, seed, true);
+      for (const u of list.units) {
+        const d = gk.datasheets.find((x) => x.name === u.datasheet);
+        expect(d).toBeDefined();
+        expect(d?.factionKeywords).toContain('GREY KNIGHTS');
+      }
+    }
+  });
 });

@@ -30,7 +30,15 @@ const LEVELS: Record<BotLevel, { styles: string[]; samples: number; budget: numb
 };
 export const levelOf = (s: GameState, p?: PlayerId): BotLevel => (p !== undefined ? s.botLevels?.[p] : undefined) ?? s.botLevel ?? 'normal';
 /** How long the app lets the bot think about its turn at this level (a Web Worker, so the screen never freezes). */
-export const lookBudget = (s: GameState, p?: PlayerId) => LEVELS[levelOf(s, p)].budget;
+export const lookBudget = (s: GameState, p?: PlayerId) => {
+  if (s.campaign) {
+    const lvl = levelOf(s, p);
+    if (lvl === 'easy') return 0;
+    if (lvl === 'normal') return 1000;
+    return 1800; // hard / expert in campaign: fast, snappy evaluation without multi-second stalls
+  }
+  return LEVELS[levelOf(s, p)].budget;
+};
 
 /** Points of army a VP is worth when comparing outcomes (a 1000-point game is decided by a few dozen VP). */
 const VP_POINTS = 15;
