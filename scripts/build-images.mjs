@@ -54,6 +54,8 @@ for (const [name, file] of Object.entries(names)) {
 
 fs.mkdirSync(DIR, { recursive: true });
 fs.writeFileSync(path.join(DIR, 'manifest.json'), JSON.stringify({ version: 1, units }, null, 2) + '\n');
+const UI_NAMES = path.join(ROOT, 'src/ui/names.json');
+if (fs.existsSync(NAMES)) fs.copyFileSync(NAMES, UI_NAMES);
 console.log(`public/images/manifest.json: ${count} images`);
 if (unmatched.length) console.log(`no datasheet matches (rename to the datasheet name, e.g. intercessor-squad.webp):\n  ${unmatched.join('\n  ')}`);
 if (process.argv.includes('--missing')) {

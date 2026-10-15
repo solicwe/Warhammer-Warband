@@ -133,6 +133,9 @@ export interface ArmyUnitEntry {
   addons?: string[]; // optional extra models bought separately, e.g. "Invader ATV"
   split?: boolean; // split into two units at Declare Battle Formations (Combat Squads …)
   embarkIn?: string; // uid of the TRANSPORT this unit starts the battle embarked within
+  xp?: number; // battle experience in campaign
+  honors?: string[]; // battle honors / upgrades applied to this unit
+  customName?: string;
 }
 
 export interface ArmyList {
@@ -715,6 +718,8 @@ export interface GameState {
   stats?: BattleStats;
   /** a campaign battle: the map node, the player's relics and the enemy's special rules (ids, see campaign.ts) */
   campaign?: { node: string; relics: string[]; rules: string[] };
+  table?: { width: number; height: number };
+  sandbox?: boolean;
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;
   /** destroyed models that fight / shoot after the attacking unit has finished (resolved by activations.ts) */

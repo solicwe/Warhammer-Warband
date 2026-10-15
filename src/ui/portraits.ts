@@ -5,6 +5,7 @@
 //     exported as a zip in the same folder layout, ready to drop into `public/images/units/` and upload.
 import { useEffect, useSyncExternalStore } from 'react';
 import cloudSeed from './cloudSeed.json';
+import namesSeed from './names.json';
 
 const KEY = 'w40k11-portraits';
 let cache: Record<string, string> = {};
@@ -31,7 +32,7 @@ export interface ImageManifest { version: number; units: Record<string, Record<s
 export function applyManifest(m: ImageManifest, base = IMAGE_BASE) {
   const next: Record<string, string> = {};
   for (const faction of Object.values(m.units ?? {})) {
-    for (const [name, file] of Object.entries(faction)) next[name] ??= /^(https?:|data:|\/)/.test(file) ? file : base + file;
+    for (const [name, file] of Object.entries(faction)) next[name] = /^(https?:|data:|\/)/.test(file) ? file : base + file;
   }
   served = next;
   version++;
@@ -44,16 +45,45 @@ export function loadImageManifest(): Promise<void> {
   manifestLoad ??= (typeof fetch === 'function' ? fetch(IMAGE_BASE + 'manifest.json') : Promise.reject())
     .then((r) => (r.ok ? r.json() : Promise.reject()))
     .then((m: ImageManifest) => applyManifest(m))
-    .catch(() => undefined);
+    .catch(() => {
+      // Offline / bundled fallback
+      applyManifest({ version: 1, units: { all: namesSeed as Record<string, string> } }, IMAGE_BASE);
+    });
   return manifestLoad;
 }
+
+const fromSeed = (name: string): string | undefined => {
+  const f = (namesSeed as Record<string, string>)[name];
+  return f ? (/^(https?:|data:|\/)/.test(f) ? f : IMAGE_BASE + f) : undefined;
+};
 
 /** The picture to show: the player's own photo, else the web page's, else the server image. Until the page's photo
  *  list has loaded (or when this view can't read it), the list as it was at the last build stands in for it: the
  *  files themselves are served to every view of the page. */
-export const getPortrait = (datasheet: string): string | undefined =>
-  cache[datasheet] ?? (cloud[datasheet] ? `/_blob/${cloud[datasheet].asset}` : undefined) ?? served[datasheet]
-  ?? (!cloudLoaded && seedOn && SEED[datasheet] ? `/_blob/${SEED[datasheet]}` : undefined);
+export const getPortrait = (datasheet: string): string | undefined => {
+  if (!datasheet) return undefined;
+  const direct = cache[datasheet] ?? (cloud[datasheet] ? `/_blob/${cloud[datasheet].asset}` : undefined) ?? served[datasheet]
+    ?? (!cloudLoaded && seedOn && SEED[datasheet] ? `/_blob/${SEED[datasheet]}` : undefined);
+  if (direct) return direct;
+  // Quote normalization (' vs ’)
+  const straight = datasheet.replace(/[’`]/g, "'");
+  const curly = datasheet.replace(/['`]/g, '’');
+  if (straight !== datasheet) {
+    const s = cache[straight] ?? (cloud[straight] ? `/_blob/${cloud[straight].asset}` : undefined) ?? served[straight]
+      ?? (!cloudLoaded && seedOn && SEED[straight] ? `/_blob/${SEED[straight]}` : undefined);
+    if (s) return s;
+  }
+  if (curly !== datasheet) {
+    const c = cache[curly] ?? (cloud[curly] ? `/_blob/${cloud[curly].asset}` : undefined) ?? served[curly]
+      ?? (!cloudLoaded && seedOn && SEED[curly] ? `/_blob/${SEED[curly]}` : undefined);
+    if (c) return c;
+  }
+  if (Object.keys(served).length === 0) {
+    const seedHit = fromSeed(datasheet) || (straight !== datasheet ? fromSeed(straight) : undefined) || (curly !== datasheet ? fromSeed(curly) : undefined);
+    if (seedHit) return seedHit;
+  }
+  return undefined;
+};
 /** A unit whose models have different names (Wardens of Ultramar, a squad's sergeant): each model name can have its
  *  own picture, stored under "Datasheet::Model name"; a model without one shows the unit's picture. */
 export const modelPortraitKey = (datasheet: string, model: string) => `${datasheet}::${model}`;

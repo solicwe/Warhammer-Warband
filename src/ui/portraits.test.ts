@@ -29,6 +29,9 @@ describe('server images', () => {
     expect(getPortrait('Intercessor Squad')).toBe('https://srv/images/units/SM/intercessor-squad.webp');
     expect(getPortrait('Boyz')).toBe('https://cdn.example/boyz.jpg');
     expect(getPortrait('Warboss')).toBeUndefined();
+    applyManifest({ version: 1, units: { CD: { 'Be’lakor': 'units/CD/belakor.jpg' } } }, 'https://srv/images/');
+    expect(getPortrait('Be’lakor')).toBe('https://srv/images/units/CD/belakor.jpg');
+    expect(getPortrait("Be'lakor")).toBe('https://srv/images/units/CD/belakor.jpg');
   });
 
   it('the export zip is a valid archive', () => {

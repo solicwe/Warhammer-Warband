@@ -1,16 +1,23 @@
-// The campaign screen: pick a faction, then walk a branching map of short battles to the boss. Between battles the
-// player picks a reward (a unit, a relic, a Command Point) and sees their army grow; three defeats end the run.
+// The campaign screen: pick a faction, then walk a branching map of short battles to the boss.
+// Features a full roguelike engine: scrap currency, unit veterancy, battle honors, armory, medicae tents,
+// and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
-import { autoAttach, listPoints, syncList } from '../engine/army';
+import { autoAttach, defaultWargear, listPoints, syncList, syncWargear } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
-import { afterBattle, applyCampaign, bossRuleById, enter, loadRun, newRun, reachable, relicById, saveRun, START_POINTS, takeReward, type MapNode, type Reward, type Run } from '../engine/campaign';
+import {
+  afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
+  bossRuleById, buyHonorForUnit, cheapest, dismissUnit, enter, loadRun, makeOffer,
+  newRun, reachable, recruitUnit, relicById, saveRun, START_POINTS, takeReward,
+  type MapNode, type Reward, type Run,
+} from '../engine/campaign';
 import { hasFactionRules } from '../engine/effects';
 import { createGame } from '../engine/game';
-import type { FactionData, GameState } from '../engine/types';
+import type { ArmyUnitEntry, FactionData, GameState, WargearPick } from '../engine/types';
 import { Emblem } from './ArmyBuilder';
 import { loadFaction, type FactionIndex } from './data';
 import { Icon, type IconName } from './Icon';
 import { withAutoRules } from './library';
+import { getPortrait } from './portraits';
 import { RelicToken } from './Relics';
 import { play } from './sfx';
 
@@ -24,10 +31,12 @@ interface Props {
 }
 
 const KIND: Record<MapNode['kind'], { name: string; icon: IconName; note: string }> = {
-  battle: { name: 'Battle', icon: 'fight', note: 'A short battle: 3 rounds. Win to pick a reward.' },
-  elite: { name: 'Elite enemy', icon: 'skull', note: 'Tougher, with a special rule. Its reward is a choice of relics.' },
-  supply: { name: 'Supply drop', icon: 'cards', note: 'No battle: pick one of three rewards.' },
-  boss: { name: 'Warlord', icon: 'trophy', note: 'The last battle: a big army with two special rules.' },
+  battle: { name: 'Battle', icon: 'fight', note: 'A short 3-round battle. Win to earn Scrap and rewards.' },
+  elite: { name: 'Elite enemy', icon: 'skull', note: 'Tougher foe with a boss rule. Yields high Scrap and rare relics.' },
+  armory: { name: 'Munitorum Depot', icon: 'shop', note: 'Field depot: buy Battle Honors for units, hire reinforcements, or customize wargear.' },
+  medicae: { name: 'Medicae Field Camp', icon: 'heal', note: 'Restore lost Fate or hold a tactical briefing to gain +1 CP per battle.' },
+  supply: { name: 'Supply drop', icon: 'cards', note: 'Secure a supply cache: choose from units, relics, or scrap.' },
+  boss: { name: 'The Warlord', icon: 'trophy', note: 'The final confrontation: a massive army with two special rules.' },
 };
 const LEVEL: Record<string, string> = { easy: 'Easy', normal: 'Normal', hard: 'Hard', expert: 'Expert' };
 
@@ -41,6 +50,13 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [armed, setArmed] = useState(false);
+
+  // Roguelike Roster & Armory state
+  const [showRoster, setShowRoster] = useState(false);
+  const [rosterTab, setRosterTab] = useState<'roster' | 'recruit'>('roster');
+  const [upgradingUid, setUpgradingUid] = useState<string | null>(null);
+  const [wargearUid, setWargearUid] = useState<string | null>(null);
+
   useEffect(() => { if (!info) return; const t = window.setTimeout(() => setInfo(null), 3200); return () => window.clearTimeout(t); }, [info]);
   useEffect(() => { if (!armed) return; const t = window.setTimeout(() => setArmed(false), 3000); return () => window.clearTimeout(t); }, [armed]);
 
@@ -52,7 +68,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     let live = true;
     loadFaction(run.factionId).then((f) => { if (live) setFac(f); }).catch(() => setErr('Could not load the army data.'));
     return () => { live = false; };
-  }, [run?.factionId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run?.factionId]);
 
   // a campaign battle just finished: its result moves the run on
   const battle = saved?.campaign && run?.fighting && saved.campaign.node === run.fighting ? saved : null;
@@ -62,7 +78,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     play(battle.winner === 1 ? 'bad' : 'vp');
     setRun(next);
     onClearSaved();
-  }, [fac, battle?.phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fac, battle?.phase]);
 
   const begin = async () => {
     setBusy(true); setErr(null);
@@ -70,8 +86,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       const f = await loadFaction(pickId);
       if (!playable(f)) { setErr(`${f.name} has too few units in the data for a campaign yet. Pick another army.`); return; }
       const seed = Date.now() >>> 0;
-      const list = { ...autoList(f, START_POINTS, seed, true), name: `${f.name} strike force` };
-      // only armies whose rules are all written up: theirs play as they should (excluding Titanicus)
+      const list = { ...autoList(f, START_POINTS, seed, true), name: `${f.name} Strike Force` };
       const enemies = (index?.factions ?? []).map((x) => x.id).filter((id) => id !== f.id && hasFactionRules(id) && id !== 'TL');
       setFac(f);
       setRun(newRun(f, list, enemies.length ? enemies : ['ORK'], seed));
@@ -102,35 +117,58 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
   const go = (node: MapNode) => {
     if (!run || !fac) return;
-    if (node.kind === 'supply') { setRun(enter(run, node.id, fac)); setFocus(null); play('card'); return; }
+    if (node.kind === 'supply' || node.kind === 'armory' || node.kind === 'medicae') {
+      setRun(enter(run, node.id, fac));
+      setFocus(null);
+      play('card');
+      if (node.kind === 'armory') setShowRoster(true);
+      return;
+    }
     void fight(node);
   };
-  const take = (rw: Reward) => { if (!run || !fac) return; setRun(takeReward(run, rw, fac)); play(rw.kind === 'relic' ? 'good' : 'gem'); };
+
+  const take = (rw: Reward) => {
+    if (!run || !fac) return;
+    setRun(takeReward(run, rw, fac));
+    play(rw.kind === 'relic' ? 'good' : 'gem');
+  };
 
   const open = useMemo(() => (run ? reachable(run) : []), [run]);
   const focused = run?.map.find((n) => n.id === (focus ?? run.fighting)) ?? null;
 
+  // Rank calculator based on XP
+  const rankLabel = (xp = 0) => {
+    if (xp >= 3) return 'Legendary';
+    if (xp >= 2) return 'Veteran';
+    if (xp >= 1) return 'Blooded';
+    return 'Recruit';
+  };
+
   if (!run) {
     const groups = new Map<string, { id: string; name: string }[]>();
-    for (const f of (index?.factions ?? []).filter((x) => hasFactionRules(x.id) && x.id !== 'TL')) { const g = f.group ?? 'Armies'; groups.set(g, [...(groups.get(g) ?? []), f]); }
+    for (const f of (index?.factions ?? []).filter((x) => hasFactionRules(x.id) && x.id !== 'TL')) {
+      const g = f.group ?? 'Armies';
+      groups.set(g, [...(groups.get(g) ?? []), f]);
+    }
     return (
       <div className="app campaign">
         <header className="appbar">
           <button className="icon-btn" aria-label="Back" onClick={onBack}><span className="chev-left" aria-hidden="true" /></button>
-          <span className="appbar-title">Campaign</span>
+          <span className="appbar-title">Roguelike Campaign</span>
         </header>
         <main className="screen">
           <section className="cmp-intro slate"><div className="slate-in">
-            <div className="cmp-kicker">A run of short battles</div>
+            <div className="cmp-kicker">Roguelike Tactical Run</div>
             <div className="cmp-title">Fight your way to the Warlord</div>
             <ul className="cmp-points">
               <li><Icon name="fight" size={16} /> {START_POINTS}-point army, 3-round battles</li>
-              <li><Icon name="cards" size={16} /> Win: pick 1 of 3 reward cards</li>
-              <li><Icon name="hold" size={16} /> 3 Fate: each defeat costs one</li>
+              <li><Icon name="shop" size={16} /> Earn Scrap: customize roster, buy Battle Honors & reinforcements</li>
+              <li><Icon name="cards" size={16} /> Relics & boons: stack powerful army-wide modifiers</li>
+              <li><Icon name="fate" size={16} /> 3 Fate: each defeat costs one</li>
             </ul>
           </div></section>
           <section className="group pad" aria-label="Your army">
-            <div className="group-head"><h3>Your army</h3><span className="group-note">picked for you from the faction's units</span></div>
+            <div className="group-head"><h3>Your army</h3><span className="group-note">select your starting faction</span></div>
             {[...groups].map(([g, fs]) => (
               <div key={g} className="cmp-fgroup">
                 <span className="label">{g}</span>
@@ -145,7 +183,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             ))}
           </section>
           {err && <div className="err" role="alert">{err}</div>}
-          <div className="cta-bar"><button className="btn primary big wide" disabled={busy || !index} onClick={begin}>{busy ? 'Mustering…' : `Begin with ${nameOf(pickId)}`}</button></div>
+          <div className="cta-bar"><button className="btn primary big wide" disabled={busy || !index} onClick={begin}>{busy ? 'Mustering…' : `Begin Campaign with ${nameOf(pickId)}`}</button></div>
         </main>
       </div>
     );
@@ -156,30 +194,45 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const rowH = 76;
   const at = run.path[run.path.length - 1];
   const pos = (n: MapNode) => ({ x: 12 + n.x * 76, y: (layers - 1 - n.layer) * rowH + rowH / 2 });
+
   return (
     <div className="app campaign">
       <header className="appbar">
         <button className="icon-btn" aria-label="Back" onClick={onBack}><span className="chev-left" aria-hidden="true" /></button>
         <span className="appbar-title">Campaign</span>
+        <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span></span>
         <span className="cmp-fate" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
           {[0, 1, 2].map((i) => <i key={i} className={i < run.fate ? 'on' : ''} />)}
         </span>
       </header>
+
       <main className="screen">
         <section className="cmp-army slate"><div className="slate-in">
           <div className="cmp-army-top">
             <span className="cmp-emblem"><Emblem factionId={run.factionId} /></span>
             <span className="cmp-army-text">
               <b>{run.list.name}</b>
-              <span className="muted small"><span className="num">{pts}</span> pts · {run.list.units.length} units · {run.wins} {run.wins === 1 ? 'win' : 'wins'}{run.cp ? ` · +${run.cp} CP each battle` : ''}</span>
+              <span className="muted small"><span className="num">{pts}</span> pts · {run.list.units.length} units · {run.wins} {run.wins === 1 ? 'win' : 'wins'}{run.cp ? ` · +${run.cp} CP` : ''}</span>
             </span>
+            <button className="btn small primary cmp-roster-btn" style={{ marginLeft: 'auto' }} onClick={() => setShowRoster(true)}>
+              <Icon name="swords" size={15} /> Roster & Armory
+            </button>
           </div>
           {run.relics.length > 0 && (
             <div className="cmp-relics">{run.relics.map((id) => <RelicToken key={id} id={id} big onInfo={setInfo} />)}</div>
           )}
           <details className="cmp-units">
-            <summary>Army list</summary>
-            {run.list.units.map((u) => <div key={u.uid} className="cmp-unit"><span>{u.datasheet}{u.models > 1 ? ` ×${u.models}` : ''}</span><span className="num muted">{u.pts + (u.wargearPts ?? 0)}</span></div>)}
+            <summary>Active Roster ({run.list.units.length} units)</summary>
+            {run.list.units.map((u) => (
+              <div key={u.uid} className="cmp-unit">
+                <div>
+                  <span className="cmp-rank-badge">{rankLabel(u.xp)}</span>
+                  <span>{u.datasheet}{u.models > 1 ? ` ×${u.models}` : ''}</span>
+                  {u.honors?.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
+                </div>
+                <span className="num muted">{u.pts + (u.wargearPts ?? 0)} pts</span>
+              </div>
+            ))}
           </details>
         </div></section>
 
@@ -187,7 +240,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           <section className={`cmp-over slate ${run.over}`}><div className="slate-in">
             <div className="cmp-kicker">{run.over === 'won' ? 'Campaign won' : 'Campaign lost'}</div>
             <div className="cmp-title"><Icon name={run.over === 'won' ? 'trophy' : 'skull'} size={24} /> {run.over === 'won' ? 'The Warlord has fallen' : 'Your forces are spent'}</div>
-            <div className="small">{run.wins} battles won · {run.relics.length} relics · {run.list.units.length} units at the end</div>
+            <div className="small">{run.wins} battles won · {run.relics.length} relics · {run.list.units.length} units · {run.scrap ?? 0} Scrap remaining</div>
             <ol className="cmp-story">{run.story.slice(-8).map((t, i) => <li key={i}>{t}</li>)}</ol>
             <button className="btn primary" onClick={() => { setRun(null); setFocus(null); }}>New campaign</button>
           </div></section>
@@ -202,12 +255,13 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 return (
                   <button key={i} className={`cmp-card slate k-${rw.kind} ${relic?.rare ? 'rare' : ''}`} style={{ animationDelay: `${i * 90}ms` }} onClick={() => take(rw)}>
                     <span className="slate-in">
-                      <span className="cmp-card-kind">{rw.kind === 'unit' ? 'Reinforcements' : rw.kind === 'relic' ? (relic?.rare ? 'Rare relic' : 'Relic') : 'Command'}</span>
+                      <span className="cmp-card-kind">{rw.kind === 'unit' ? 'Reinforcements' : rw.kind === 'relic' ? (relic?.rare ? 'Rare relic' : 'Relic') : rw.kind === 'scrap' ? 'Scrap Cache' : 'Command'}</span>
                       {rw.kind === 'relic' && <RelicToken id={rw.id} big />}
                       {rw.kind === 'unit' && <span className="cmp-card-icon"><Icon name="plus" size={22} /></span>}
                       {rw.kind === 'cp' && <span className="cmp-card-icon"><Icon name="strat" size={22} /></span>}
-                      <b className="cmp-card-name">{rw.kind === 'unit' ? rw.datasheet : rw.kind === 'relic' ? relic?.name : '+1 CP every battle'}</b>
-                      <span className="cmp-card-text">{rw.kind === 'unit' ? `${rw.models} ${rw.models === 1 ? 'model' : 'models'} · ${rw.pts} pts joins your army` : rw.kind === 'relic' ? relic?.text : 'Start each battle with one more Command Point for Stratagems.'}</span>
+                      {rw.kind === 'scrap' && <span className="cmp-card-icon"><Icon name="shop" size={22} /></span>}
+                      <b className="cmp-card-name">{rw.kind === 'unit' ? rw.datasheet : rw.kind === 'relic' ? relic?.name : rw.kind === 'scrap' ? `+${rw.amount} Scrap` : '+1 CP every battle'}</b>
+                      <span className="cmp-card-text">{rw.kind === 'unit' ? `${rw.models} models · ${rw.pts} pts joins army` : rw.kind === 'relic' ? relic?.text : rw.kind === 'scrap' ? `Add ${rw.amount} scrap to buy armory upgrades.` : 'Start each battle with one more CP.'}</span>
                     </span>
                   </button>
                 );
@@ -258,13 +312,34 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 {focused.enemy.rules.map((id) => { const b = bossRuleById(id)!; return <div key={id} className="cmp-rule"><RelicToken id={id} enemy /> <span><b>{b.name}</b> — {b.text}</span></div>; })}
               </>
             ) : <div className="small">{KIND[focused.kind].note}</div>}
+
+            {focused.kind === 'medicae' && (
+              <div className="row" style={{ marginTop: 8, gap: 8 }}>
+                <button className="btn small primary" disabled={run.fate >= 3 || (run.scrap ?? 0) < 60} onClick={() => { setRun(applyMedicaeService(run, 'fate')); play('good'); }}>
+                  <Icon name="heal" size={14} /> Restore 1 Fate (60 Scrap)
+                </button>
+                <button className="btn small" disabled={(run.scrap ?? 0) < 45} onClick={() => { setRun(applyMedicaeService(run, 'cp')); play('good'); }}>
+                  <Icon name="strat" size={14} /> War Council: +1 CP (45 Scrap)
+                </button>
+              </div>
+            )}
+
+            {focused.kind === 'armory' && (
+              <div style={{ marginTop: 8 }}>
+                <button className="btn small primary" onClick={() => setShowRoster(true)}>
+                  <Icon name="shop" size={14} /> Open Armory & Upgrade Roster
+                </button>
+              </div>
+            )}
+
             {focused.enemy && <div className="tiny muted">{KIND[focused.kind].note}</div>}
             {err && <div className="err" role="alert">{err}</div>}
-            <button className="btn primary big wide" disabled={busy || !fac} onClick={() => go(focused)}>
-              {busy ? 'Deploying…' : focused.kind === 'supply' ? 'Open the supply drop' : run.fighting === focused.id ? 'Fight again' : 'Fight'}
+            <button className="btn primary big wide" style={{ marginTop: 10 }} disabled={busy || !fac} onClick={() => go(focused)}>
+              {busy ? 'Deploying…' : focused.kind === 'supply' ? 'Open Supply Drop' : focused.kind === 'armory' ? 'Enter Armory Depot' : focused.kind === 'medicae' ? 'Enter Medicae Camp' : run.fighting === focused.id ? 'Fight Again' : 'Engage Battle'}
             </button>
           </div></section>
         )}
+
         {!focused && open.length > 0 && !run.offer && <div className="hint center"><span>Tap a lit node on the map to choose your road</span></div>}
 
         {!run.over && (
@@ -273,6 +348,186 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           </button>
         )}
       </main>
+
+      {/* Roster & Armory Customization Modal */}
+      {showRoster && fac && (
+        <div className="modal-backdrop" onClick={() => setShowRoster(false)}>
+          <div className="modal-card slate" style={{ maxWidth: 640, maxHeight: '88vh', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, borderBottom: '1px solid var(--line)' }}>
+              <div>
+                <b style={{ fontSize: 17, textTransform: 'uppercase' }}>Roster & Armory</b>
+                <div className="tiny muted">{pts} pts · {run.list.units.length} units in force</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span className="cmp-scrap"><Icon name="shop" size={14} /> <b>{run.scrap ?? 0}</b> Scrap</span>
+                <button className="icon-btn" onClick={() => setShowRoster(false)} aria-label="Close"><Icon name="close" size={20} /></button>
+              </div>
+            </div>
+
+            <div className="seg" style={{ margin: '10px 0' }}>
+              <button className={rosterTab === 'roster' ? 'on' : ''} onClick={() => setRosterTab('roster')}>
+                Army Roster ({run.list.units.length})
+              </button>
+              <button className={rosterTab === 'recruit' ? 'on' : ''} onClick={() => setRosterTab('recruit')}>
+                Recruit Reinforcements
+              </button>
+            </div>
+
+            <div style={{ overflowY: 'auto', flex: 1, paddingRight: 4 }}>
+              {rosterTab === 'roster' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {run.list.units.map((u) => {
+                    const d = fac.datasheets.find((x) => x.name === u.datasheet);
+                    const photo = getPortrait(u.datasheet);
+                    const isUpgrading = upgradingUid === u.uid;
+                    const isEditingWargear = wargearUid === u.uid;
+                    return (
+                      <div key={u.uid} className="slate-in" style={{ background: 'var(--surface-2)', borderRadius: 8, padding: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          {photo ? <img src={photo} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--line)' }} />
+                            : <span style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-3)', display: 'grid', placeItems: 'center' }}><Icon name="fight" size={20} /></span>}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span className="cmp-rank-badge">{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
+                              <b>{u.datasheet}</b>
+                            </div>
+                            <div className="tiny muted">{u.models} {u.models === 1 ? 'model' : 'models'} · {u.pts + (u.wargearPts ?? 0)} pts</div>
+                            {u.honors?.length ? (
+                              <div style={{ marginTop: 4 }}>
+                                {u.honors.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            <button className={`btn small ${isUpgrading ? 'primary' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); }}>
+                              <Icon name="shop" size={14} /> Honors
+                            </button>
+                            {d?.wargearOptions?.length ? (
+                              <button className={`btn small ${isEditingWargear ? 'primary' : ''}`} onClick={() => { setWargearUid(isEditingWargear ? null : u.uid); setUpgradingUid(null); }}>
+                                <Icon name="wargear" size={14} /> Wargear
+                              </button>
+                            ) : null}
+                            {run.list.units.length > 1 && (
+                              <button className="btn small danger" onClick={() => { setRun(dismissUnit(run, u.uid)); play('bad'); }}>
+                                <Icon name="delete" size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Battle Honors upgrade drawer */}
+                        {isUpgrading && (
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
+                            <div className="cmp-kicker" style={{ marginBottom: 6 }}>Available Battle Honors</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 6 }}>
+                              {BATTLE_HONORS.map((h) => {
+                                const has = (u.honors ?? []).includes(h.id);
+                                const canAfford = (run.scrap ?? 0) >= h.cost;
+                                return (
+                                  <div key={h.id} style={{ padding: 8, borderRadius: 6, background: 'var(--surface)', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                    <div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <b>{h.name}</b>
+                                        <span className="cmp-scrap"><Icon name="shop" size={12} /> {h.cost}</span>
+                                      </div>
+                                      <div className="tiny muted" style={{ marginTop: 2 }}>{h.desc}</div>
+                                    </div>
+                                    <button
+                                      className="btn small primary"
+                                      style={{ marginTop: 6 }}
+                                      disabled={has || !canAfford}
+                                      onClick={() => { setRun(buyHonorForUnit(run, u.uid, h.id)); play('good'); }}
+                                    >
+                                      {has ? 'Equipped' : !canAfford ? 'Need Scrap' : `Purchase (${h.cost} Scrap)`}
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Wargear Drawer */}
+                        {isEditingWargear && d && (
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
+                            <div className="cmp-kicker" style={{ marginBottom: 6 }}>Wargear Options</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              {d.wargearOptions?.map((opt, optIdx) => (
+                                <div key={optIdx} style={{ padding: 6, background: 'var(--surface)', borderRadius: 6, fontSize: 12 }}>
+                                  <div>{opt.text}</div>
+                                  <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                                    {opt.choices.map((ch, chIdx) => {
+                                      const pick = (u.wargear ?? []).find((w) => w.opt === optIdx && w.choice === chIdx);
+                                      const isChosen = !!pick && pick.count > 0;
+                                      return (
+                                        <button
+                                          key={chIdx}
+                                          className={`btn small ${isChosen ? 'primary' : ''}`}
+                                          onClick={() => {
+                                            const old = u.wargear ?? [];
+                                            const nextPicks: WargearPick[] = isChosen
+                                              ? old.filter((w) => !(w.opt === optIdx && w.choice === chIdx))
+                                              : [...old.filter((w) => w.opt !== optIdx), { opt: optIdx, choice: chIdx, count: opt.scope === 'all' || opt.scope === 'any' ? u.models : 1 }];
+                                            const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? syncWargear(d, { ...x, wargear: nextPicks }) : x));
+                                            setRun({ ...run, list: { ...run.list, units: updatedUnits } });
+                                            play('tick');
+                                          }}
+                                        >
+                                          {ch.join(' + ') || 'Default'}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {rosterTab === 'recruit' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="hint" style={{ marginBottom: 6 }}>
+                    <span>Recruit new datasheets into your strike force using accumulated Scrap currency.</span>
+                  </div>
+                  {fac.datasheets
+                    .filter((d) => d.points[0]?.options?.length && !d.keywords.includes('EPIC HERO') && !d.keywords.includes('FORTIFICATION'))
+                    .map((d) => {
+                      const o = cheapest(d);
+                      if (!o) return null;
+                      const photo = getPortrait(d.name);
+                      const canAfford = (run.scrap ?? 0) >= o.pts;
+                      return (
+                        <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 8, background: 'var(--surface-2)', borderRadius: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            {photo ? <img src={photo} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+                              : <span style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface-3)', display: 'grid', placeItems: 'center' }}><Icon name="plus" size={18} /></span>}
+                            <div>
+                              <b>{d.name}</b>
+                              <div className="tiny muted">{o.models} models · {o.pts} pts</div>
+                            </div>
+                          </div>
+                          <button
+                            className="btn small primary"
+                            disabled={!canAfford}
+                            onClick={() => { setRun(recruitUnit(run, fac, d.name)); play('good'); }}
+                          >
+                            <Icon name="plus" size={14} /> Recruit ({o.pts} Scrap)
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {info && <div className="toast" role="status">{info}</div>}
     </div>
   );

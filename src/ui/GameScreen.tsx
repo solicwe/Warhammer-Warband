@@ -1767,7 +1767,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return (
         <>
           {pactRow(modeUnit)}
-          <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' || mode.smode === 'assault' ? 'Shoot' : mode.smode === 'closeQuarters' ? 'Close-quarters' : mode.smode}{mode.target ? <> <Icon name="target" size={14} /> {U(mode.target).name}</> : ' · tap a target'}</span></div>
+          <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' || mode.smode === 'assault' ? 'Shoot' : mode.smode === 'closeQuarters' ? 'Close-quarters' : mode.smode}{mode.target ? <> <Icon name="target" size={14} /> {U(mode.target).name}</> : targets.length ? ` · tap a target (${targets.length} in reach)` : ' · no enemy in range and sight'}</span></div>
           {!mode.overwatch && remaining.length > 1 && (
             <div className="row">
               <span className="label">Weapons shooting this target</span>
@@ -2425,7 +2425,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn small" onClick={() => setStratPick(null)}>Cancel</button>
           </div>
         )}
-        {mode?.k === 'shoot' && !mode.target && <div className="toast">{targets.length ? `Tap a highlighted enemy unit (${targets.length} in reach)` : 'No enemy in range and in sight of this unit (a ruin or wall in between blocks sight; a ruin your unit stands in does not)'}</div>}
         {planReady && !mode && (
           <button className={`plan-toggle ${showPlan ? 'on' : ''}`} aria-pressed={showPlan} onClick={() => setShowPlan((v) => !v)}>
             <Icon name="bot" size={16} /> {showPlan ? 'Hide enemy plan' : 'Enemy plan'}

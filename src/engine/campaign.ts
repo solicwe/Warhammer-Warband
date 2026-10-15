@@ -1,13 +1,12 @@
 // A campaign: a run of short battles across a branching map, roguelite style. The player starts with a small army of
-// one faction and picks a road through the map: battles, elite enemies with a special rule, supply drops, a boss at the
-// end. Each win offers one of three rewards: a new unit, a relic (a rule for the whole army, like a joker in Balatro)
-// or a Command Point every battle. A loss costs one of three Fate points; the run ends when Fate runs out.
+// one faction and picks a road through the map: battles, elite enemies with a special rule, supply drops, armories,
+// medicae tents, and a boss at the end.
 import { addTimed } from './effects';
 import type { Effect } from './effects';
 import { defaultWargear, syncWargear } from './army';
-import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState } from './types';
+import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState, WargearPick } from './types';
 
-export type NodeKind = 'battle' | 'elite' | 'supply' | 'boss';
+export type NodeKind = 'battle' | 'elite' | 'supply' | 'armory' | 'medicae' | 'boss';
 
 export interface MapNode {
   id: string;
@@ -24,7 +23,31 @@ export interface MapNode {
 export type Reward =
   | { kind: 'unit'; datasheet: string; models: number; pts: number }
   | { kind: 'relic'; id: string }
-  | { kind: 'cp' };
+  | { kind: 'cp' }
+  | { kind: 'scrap'; amount: number }
+  | { kind: 'fate'; amount: number };
+
+export interface BattleHonor {
+  id: string;
+  name: string;
+  desc: string;
+  cost: number;
+  e: Effect;
+}
+
+export const BATTLE_HONORS: BattleHonor[] = [
+  { id: 'hardened', name: 'Hardened Armor', desc: '+1 Toughness characteristic.', cost: 60, e: { toughness: 1 } },
+  { id: 'weapon_master', name: 'Weapon Masters', desc: 'Improve Ballistic Skill and Weapon Skill by 1.', cost: 75, e: { skill: 1 } },
+  { id: 'swift', name: 'Swift Assault', desc: '+2" Move, and +1 to Advance and Charge rolls.', cost: 50, e: { move: 2, advanceBonus: 1, chargeBonus: 1 } },
+  { id: 'master_crafted', name: 'Master-crafted Weapons', desc: 'Improve the AP of all attacks by 1.', cost: 80, e: { ap: 1 } },
+  { id: 'iron_will', name: 'Iron Will', desc: 'Models have Feel No Pain 6+, and re-roll Battle-shock tests.', cost: 70, e: { defend: { fnp: 6 }, rerollShock: true } },
+  { id: 'lethal_spec', name: 'Deadly Marksmen', desc: 'Ranged attacks have [LETHAL HITS].', cost: 90, e: { abilities: ['lethal hits'], attack: 'ranged' } },
+  { id: 'sustained_fury', name: 'Savage Frenzy', desc: 'Melee attacks have [SUSTAINED HITS 1].', cost: 90, e: { abilities: ['sustained hits 1'], attack: 'melee' } },
+  { id: 'reinforced_save', name: 'Reinforced Carapace', desc: 'Add 1 to saving throws against all attacks.', cost: 85, e: { defend: { save: 1 } } },
+  { id: 'heroic_strike', name: 'Heroic Might', desc: '+1 Attack characteristic on melee weapons.', cost: 65, e: { attacks: 1, attack: 'melee' } },
+  { id: 'range_finders', name: 'Advanced Targeters', desc: 'Ranged weapons gain +4" range and ignore cover.', cost: 60, e: { rangeBonus: 4, abilities: ['ignores cover'], attack: 'ranged' } },
+];
+export const battleHonorById = (id: string) => BATTLE_HONORS.find((h) => h.id === id);
 
 export interface Run {
   version: 1;
@@ -38,6 +61,8 @@ export interface Run {
   /** extra CP at the start of every battle */
   cp: number;
   fate: number;
+  /** Requisition and Scrap currency for armory purchases, upgrades and recruitment */
+  scrap: number;
   /** the battle being fought */
   fighting?: string;
   /** rewards to pick one from */
@@ -83,6 +108,13 @@ export const RELICS: Relic[] = [
   { id: 'shield', name: 'Storm Shield Drills', text: 'INFANTRY units have a 5+ invulnerable save.', units: 'INFANTRY', e: { defend: { inv: 5 } }, rare: true },
   { id: 'devastate', name: 'Executioner Shells', text: 'Ranged attacks have [DEVASTATING WOUNDS].', e: { abilities: ['devastating wounds'], attack: 'ranged' }, rare: true },
   { id: 'grip', name: 'Iron Grip', text: 'Every unit: +1 Objective Control.', e: { oc: 1 }, rare: true },
+  // Additional expanded relics
+  { id: 'void_shield', name: 'Void Shield Generator', text: 'VEHICLE and MONSTER units have a 4+ invulnerable save.', units: 'VEHICLE|MONSTER', e: { defend: { inv: 4 } }, rare: true },
+  { id: 'digi_weapons', name: 'Digital Weapons', text: 'CHARACTER units: melee attacks score Critical Hits on an unmodified 5+.', units: 'CHARACTER', e: { critHitOn: 5, attack: 'melee' }, rare: true },
+  { id: 'plasma_coils', name: 'Supercharged Coils', text: 'Ranged weapons: +1 Strength and +1 Damage.', e: { strength: 1, damage: 1, attack: 'ranged' }, rare: true },
+  { id: 'teleport_beacon', name: 'Teleport Transponder', text: 'Every unit gains Deep Strike and Infiltrators.', e: { abilities: ['deep strike', 'infiltrators'] }, rare: true },
+  { id: 'shock_assault', name: 'Shock Assault Doctrine', text: 'Melee weapons: +1 Attack and +1 Strength on turns you charge.', e: { attacks: 1, strength: 1, attack: 'melee' } },
+  { id: 'adamantine_will', name: 'Adamantine Will', text: 'Every model has Feel No Pain 5+ against mortal wounds.', e: { defend: { fnp: 5, fnpVs: 'mortal' } } },
 ];
 export const relicById = (id: string) => RELICS.find((r) => r.id === id);
 
@@ -119,19 +151,24 @@ export function makeMap(seed: number, enemies: string[]): MapNode[] {
   const r = rng(seed * 7919 + 13);
   const nodes: MapNode[] = [];
   LAYERS.forEach((n, layer) => {
-    let supplies = 0;
+    let specialCount = 0;
     for (let i = 0; i < n; i++) {
       const last = layer === LAYERS.length - 1;
-      // at most one supply drop and one elite a layer: most roads are battles
       const kind: NodeKind = last ? 'boss' : layer === 0 ? 'battle'
         : (() => {
           const x = r();
-          if (layer >= 2 && x < 0.3 && !nodes.some((m) => m.layer === layer && m.kind === 'elite')) return 'elite';
-          if (x < 0.6 && layer !== 5 && supplies === 0) { supplies++; return 'supply'; }
+          if (layer >= 2 && x < 0.28 && !nodes.some((m) => m.layer === layer && m.kind === 'elite')) return 'elite';
+          if (x < 0.52 && specialCount === 0) {
+            specialCount++;
+            if (layer === 1 || layer === 3) return 'medicae';
+            if (layer === 2 || layer === 4) return 'armory';
+            return 'supply';
+          }
+          if (x < 0.68 && specialCount === 0) { specialCount++; return 'supply'; }
           return 'battle';
         })();
       const node: MapNode = { id: `n${layer}-${i}`, layer, kind, x: (i + 0.5) / n, next: [] };
-      if (kind !== 'supply') {
+      if (['battle', 'elite', 'boss'].includes(kind)) {
         const pts = Math.round((450 + layer * 90 + (kind === 'elite' ? 150 : 0) + (kind === 'boss' ? 300 : 0)) / 10) * 10;
         const rules = kind === 'elite' ? pickN(BOSS_RULES, 1, r).map((b) => b.id) : kind === 'boss' ? pickN(BOSS_RULES, 2, r).map((b) => b.id) : [];
         const level: BotLevel = kind === 'boss' ? 'hard' : kind === 'elite' ? (layer >= 4 ? 'hard' : 'normal') : LEVEL_BY_LAYER[layer];
@@ -158,7 +195,7 @@ export function makeMap(seed: number, enemies: string[]): MapNode[] {
 export function newRun(faction: FactionData, list: ArmyList, enemies: string[], seed = Date.now()): Run {
   return {
     version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, enemies.filter((e) => e !== faction.id && e !== 'TL')),
-    path: [], relics: [], cp: 0, fate: 3, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
+    path: [], relics: [], cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
   };
 }
 
@@ -171,7 +208,7 @@ export function reachable(run: Run): MapNode[] {
 
 const usable = (f: FactionData, main?: string) => f.datasheets.filter((d) => d.points[0]?.options?.length && !d.subfaction && d.models.length && d.weapons.length
   && !d.keywords.includes('FORTIFICATION') && !d.keywords.includes('AIRCRAFT') && !d.keywords.includes('EPIC HERO') && !d.transport && (!main || d.factionKeywords.includes(main)));
-const cheapest = (d: DatasheetData) => [...d.points[0].options].sort((a, b) => a.pts - b.pts)[0];
+export const cheapest = (d: DatasheetData) => [...d.points[0].options].sort((a, b) => a.pts - b.pts)[0];
 const mainKeyword = (f: FactionData) => {
   const count = new Map<string, number>();
   for (const d of f.datasheets) for (const k of d.factionKeywords) count.set(k, (count.get(k) ?? 0) + 1);
@@ -186,15 +223,18 @@ export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt =
     .map((d): Reward => { const o = cheapest(d); return { kind: 'unit', datasheet: d.name, models: o.models, pts: o.pts }; });
   if (kind === 'elite' || kind === 'boss') return relics(true);
   const cap = 140 + run.path.length * 25;
-  if (kind === 'supply') return [...units(1, cap), ...relics(false).slice(0, 1), { kind: 'cp' }];
-  // a won battle: one new unit or one of two relics (more powers to build a run around)
-  return [...units(1, cap), ...relics(false).slice(0, 2)];
+  const scrapReward: Reward = { kind: 'scrap', amount: Math.round(60 + r() * 50) };
+  if (kind === 'supply') return [...units(1, cap), ...relics(false).slice(0, 1), scrapReward];
+  // a won battle: one new unit, one relic, or scrap/cp
+  return [...units(1, cap), ...relics(false).slice(0, 1), scrapReward];
 }
 
 export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
   const next: Run = { ...run, offer: undefined, story: [...run.story] };
   if (rw.kind === 'relic') { next.relics = [...run.relics, rw.id]; next.story.push(`Relic: ${relicById(rw.id)?.name}`); if (rw.id === 'cache') next.cp += 1; }
   if (rw.kind === 'cp') { next.cp = run.cp + 1; next.story.push('+1 CP every battle'); }
+  if (rw.kind === 'scrap') { next.scrap = (run.scrap ?? 0) + rw.amount; next.story.push(`Salvaged +${rw.amount} Scrap`); }
+  if (rw.kind === 'fate') { next.fate = Math.min(3, run.fate + rw.amount); next.story.push(`Gained +${rw.amount} Fate`); }
   if (rw.kind === 'unit') {
     const d = faction.datasheets.find((x) => x.name === rw.datasheet);
     const uid = `c${run.path.length}${Math.floor(Math.random() * 1e6).toString(36)}`;
@@ -205,10 +245,12 @@ export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
   return next;
 }
 
-/** Walk to a node: a supply drop gives its rewards at once, a battle waits to be fought. */
+/** Walk to a node: peaceful nodes resolve their choices, battles wait to be fought. */
 export function enter(run: Run, nodeId: string, faction: FactionData): Run {
   const node = run.map.find((n) => n.id === nodeId)!;
   if (node.kind === 'supply') return { ...run, path: [...run.path, nodeId], offer: makeOffer(run, faction, 'supply'), story: [...run.story, 'Supply drop'] };
+  if (node.kind === 'armory') return { ...run, path: [...run.path, nodeId], scrap: (run.scrap ?? 0) + 40, story: [...run.story, 'Munitorum Armory reached (+40 Scrap)'] };
+  if (node.kind === 'medicae') return { ...run, path: [...run.path, nodeId], story: [...run.story, 'Medicae Field Camp reached'] };
   return { ...run, fighting: nodeId };
 }
 
@@ -220,7 +262,18 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
     const fate = run.fate - 1;
     return { ...run, fighting: undefined, fate, over: fate <= 0 ? 'lost' : undefined, story: [...run.story, `Defeated by ${enemyName}${fate > 0 ? ` · ${fate} Fate left` : ''}`] };
   }
-  const next: Run = { ...run, fighting: undefined, path: [...run.path, node.id], wins: run.wins + 1, story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName}${node.kind === 'boss' ? ' — the campaign is won' : ''}`] };
+  const scrapGain = node.kind === 'boss' ? 250 : node.kind === 'elite' ? 140 : 70;
+  // Units that took part gain +1 XP
+  const updatedUnits = run.list.units.map((u) => ({ ...u, xp: (u.xp ?? 0) + 1 }));
+  const next: Run = {
+    ...run,
+    fighting: undefined,
+    path: [...run.path, node.id],
+    wins: run.wins + 1,
+    scrap: (run.scrap ?? 0) + scrapGain,
+    list: { ...run.list, units: updatedUnits },
+    story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap)${node.kind === 'boss' ? ' — the campaign is won' : ''}`],
+  };
   next.offer = node.kind === 'boss' ? undefined : makeOffer(next, faction, node.kind);
   if (node.kind === 'boss') next.over = 'won';
   return next;
@@ -236,6 +289,17 @@ export function applyCampaign(s: GameState, run: Run, rules: string[]) {
     if (!r || id === 'cache') continue;
     for (const u of s.units.filter((x) => x.owner === me && hasKwIn(x, r.units))) addTimed(s, u, { e: { ...r.e }, label: r.name, until: 'battle', by: me });
   }
+  // Apply per-unit Battle Honors from run.list.units!
+  for (const entry of run.list.units) {
+    if (!entry.honors?.length) continue;
+    const matching = s.units.filter((u) => u.owner === me && (u.id.includes(entry.uid) || u.name === entry.datasheet));
+    for (const u of matching) {
+      for (const hid of entry.honors) {
+        const h = battleHonorById(hid);
+        if (h) addTimed(s, u, { e: { ...h.e }, label: h.name, until: 'battle', by: me });
+      }
+    }
+  }
   for (const id of rules) {
     const b = bossRuleById(id);
     if (!b) continue;
@@ -243,6 +307,73 @@ export function applyCampaign(s: GameState, run: Run, rules: string[]) {
   }
   s.players[me].cp += run.cp;
   s.campaign = { node: run.fighting ?? '', relics: [...run.relics], rules: [...rules] };
+}
+
+/** Purchase a Battle Honor for a unit using Scrap */
+export function buyHonorForUnit(run: Run, unitUid: string, honorId: string): Run {
+  const honor = battleHonorById(honorId);
+  if (!honor || (run.scrap ?? 0) < honor.cost) return run;
+  const units = run.list.units.map((u) => {
+    if (u.uid !== unitUid) return u;
+    const honors = [...(u.honors ?? []), honorId];
+    return { ...u, honors };
+  });
+  return {
+    ...run,
+    scrap: (run.scrap ?? 0) - honor.cost,
+    list: { ...run.list, units },
+    story: [...run.story, `Battle Honor: ${honor.name} granted`],
+  };
+}
+
+/** Buy and recruit a new unit into the campaign roster using Scrap */
+export function recruitUnit(run: Run, faction: FactionData, datasheetName: string): Run {
+  const d = faction.datasheets.find((x) => x.name === datasheetName);
+  if (!d) return run;
+  const o = cheapest(d);
+  if (!o || (run.scrap ?? 0) < o.pts) return run;
+  const uid = `c${run.path.length}${Math.floor(Math.random() * 1e6).toString(36)}`;
+  const e: ArmyUnitEntry = syncWargear(d, defaultWargear(d, { uid, datasheet: d.name, models: o.models, pts: o.pts }));
+  return {
+    ...run,
+    scrap: (run.scrap ?? 0) - o.pts,
+    list: { ...run.list, units: [...run.list.units, e] },
+    story: [...run.story, `Recruited: ${d.name} (${o.pts} pts)`],
+  };
+}
+
+/** Retire / dismiss a unit from the campaign roster */
+export function dismissUnit(run: Run, unitUid: string): Run {
+  if (run.list.units.length <= 1) return run;
+  const target = run.list.units.find((u) => u.uid === unitUid);
+  const units = run.list.units.filter((u) => u.uid !== unitUid);
+  return {
+    ...run,
+    list: { ...run.list, units },
+    story: [...run.story, `Retired: ${target?.datasheet ?? 'Unit'}`],
+  };
+}
+
+/** Modify wargear picks for a unit in the campaign roster */
+export function updateRosterWargear(run: Run, faction: FactionData, unitUid: string, wargear: WargearPick[]): Run {
+  const units = run.list.units.map((u) => {
+    if (u.uid !== unitUid) return u;
+    const d = faction.datasheets.find((x) => x.name === u.datasheet);
+    const updated = { ...u, wargear };
+    return d ? syncWargear(d, updated) : updated;
+  });
+  return { ...run, list: { ...run.list, units } };
+}
+
+/** Use Medicae Tent services */
+export function applyMedicaeService(run: Run, service: 'fate' | 'cp'): Run {
+  if (service === 'fate') {
+    if (run.fate >= 3 || (run.scrap ?? 0) < 60) return run;
+    return { ...run, fate: run.fate + 1, scrap: (run.scrap ?? 0) - 60, story: [...run.story, 'Medicae: Restored 1 Fate'] };
+  } else {
+    if ((run.scrap ?? 0) < 45) return run;
+    return { ...run, cp: run.cp + 1, scrap: (run.scrap ?? 0) - 45, story: [...run.story, 'Field Briefing: +1 CP each battle'] };
+  }
 }
 
 export function loadRun(): Run | null {

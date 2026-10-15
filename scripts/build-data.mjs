@@ -8,9 +8,10 @@
 // (see data/overrides/README.md), so they survive every re-import.
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { factionFromPack, packFile } from './pack.mjs';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RAW = path.join(ROOT, 'data/raw');
 const OVERRIDES = path.join(ROOT, 'data/overrides');
 const OUT = path.join(ROOT, 'public/data');

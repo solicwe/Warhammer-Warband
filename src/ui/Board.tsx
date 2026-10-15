@@ -67,8 +67,6 @@ export interface BoardProps {
 /** Width of the table beside the battlefield that holds the side cards, in inches; card text is laid out at PX px per inch. */
 const SIDE = 13, PX = 20;
 
-const W = RULES.battlefield.width;
-const H = RULES.battlefield.height;
 const COLORS = ['#3a9ad9', '#e0453f'];
 const SOFT = ['rgba(58,154,217,0.16)', 'rgba(224,69,63,0.16)'];
 
@@ -116,6 +114,8 @@ function BaseShape({ m, p, grow = 0, ...rest }: { m: ModelState; p: Pt; grow?: n
 function BoardImpl(props: BoardProps) {
   usePortraitsVersion();
   const { s, draft, draftUnit, maxFor, onDraft, walk } = props;
+  const W = s.table?.width ?? RULES.battlefield.width;
+  const H = s.table?.height ?? RULES.battlefield.height;
   // models picked for single-model adjustment (tap a model of the moving unit); otherwise a drag moves the whole unit
   const [solo, setSolo] = useState<string[]>([]);
   useEffect(() => setSolo([]), [draftUnit]);
@@ -188,7 +188,7 @@ function BoardImpl(props: BoardProps) {
   // the whole table: the battlefield plus the strips the side cards lie on
   const sides = (props.side ?? []).filter((x) => x.cards.length);
   const padL = sides.some((x) => x.at !== 'right') ? SIDE : 0, padR = sides.some((x) => x.at === 'right') ? SIDE : 0;
-  const home = useMemo(() => ({ x: -1 - padL, y: -1, w: W + 2 + padL + padR, h: H + 2 }), [padL, padR]);
+  const home = useMemo(() => ({ x: -1 - padL, y: -1, w: W + 2 + padL + padR, h: H + 2 }), [padL, padR, W, H]);
   const [vb, setVb] = useState(home);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const pan = useRef<{ id: number; sx: number; sy: number; vb: typeof vb; moved: boolean } | null>(null);
@@ -364,7 +364,7 @@ function BoardImpl(props: BoardProps) {
   const terrainKey = s.terrain.map((t) => t.id).join('|');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   // ground + footprint art painted once into one picture (dozens of clipped images would be redrawn on every frame)
-  const backdrop = useBackdrop(s.terrain, terrainKey, ground);
+  const backdrop = useBackdrop(s.terrain, terrainKey, ground, W, H);
   const backdropReady = !!backdrop;
   const terrainEls = useMemo(() => s.terrain.map((t) => {
         const pts = t.poly.map((p) => `${p.x},${p.y}`).join(' ');
@@ -895,7 +895,13 @@ const loadImg = (href: string) => {
 /** The battlefield's ground and every terrain plate's footprint art, drawn once on a canvas: one picture under the
  *  board instead of dozens of clipped images that would be redrawn whenever a unit moves. Null until it is ready (or
  *  if the art can't be loaded — the plain plates are drawn then). */
-function useBackdrop(terrain: TerrainPiece[], key: string, ground: string | null): string | null {
+function useBackdrop(
+  terrain: TerrainPiece[],
+  key: string,
+  ground: string | null,
+  w: number = RULES.battlefield.width,
+  h: number = RULES.battlefield.height,
+): string | null {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let dead = false, made: string | null = null;
@@ -903,15 +909,15 @@ function useBackdrop(terrain: TerrainPiece[], key: string, ground: string | null
     (async () => {
       try {
         const c = document.createElement('canvas');
-        c.width = Math.round(W * PPI); c.height = Math.round(H * PPI);
+        c.width = Math.round(w * PPI); c.height = Math.round(h * PPI);
         const g = c.getContext('2d');
         if (!g) return;
         g.scale(PPI, PPI);
-        g.fillStyle = '#5d5648'; g.fillRect(0, 0, W, H);
+        g.fillStyle = '#5d5648'; g.fillRect(0, 0, w, h);
         if (ground) {
           const tile = await loadImg(ground);
           const pat = g.createPattern(tile, 'repeat');
-          if (pat) { pat.setTransform(new DOMMatrix().scale(11 / tile.width, 11 / tile.height)); g.fillStyle = pat; g.fillRect(0, 0, W, H); }
+          if (pat) { pat.setTransform(new DOMMatrix().scale(11 / tile.width, 11 / tile.height)); g.fillStyle = pat; g.fillRect(0, 0, w, h); }
         }
         for (const t of terrain) {
           if (t.kind === 'crater' || t.kind === 'barricade' || t.kind === 'container' || t.kind === 'objective-area') continue;
@@ -941,7 +947,7 @@ function useBackdrop(terrain: TerrainPiece[], key: string, ground: string | null
     })();
     return () => { dead = true; if (made) URL.revokeObjectURL(made); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, ground]);
+  }, [key, ground, w, h]);
   return url;
 }
 

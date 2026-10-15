@@ -22,12 +22,13 @@ interface Props {
   onDelete: (id: string) => void;
   onBattle: () => void;
   onCampaign: () => void;
+  onSandbox: () => void;
   onTutorial: () => void;
   onContinue: () => void;
   onAbandon: () => void;
 }
 
-export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelete, onBattle, onCampaign, onTutorial, onContinue, onAbandon }: Props) {
+export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelete, onBattle, onCampaign, onSandbox, onTutorial, onContinue, onAbandon }: Props) {
   const run = loadRun();
   const runLayer = run ? Math.max(0, ...run.path.map((id) => (run.map.find((n) => n.id === id)?.layer ?? -1) + 1)) : 0;
   const runLayers = run ? Math.max(...run.map.map((n) => n.layer)) + 1 : 0;
@@ -79,7 +80,13 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
           <button className="mode slate" onClick={onCampaign}>
             <span className="slate-in">
               <span className="mode-icon"><Icon name="trophy" size={22} /></span>
-              <span className="mode-text"><b>Campaign</b><small>{run && !run.over ? `Stage ${Math.min(runLayer + 1, runLayers)} of ${runLayers} · ${run.fate} Fate` : 'Short battles, relics and a Warlord at the end'}</small></span>
+              <span className="mode-text"><b>Campaign (Roguelike)</b><small>{run && !run.over ? `Stage ${Math.min(runLayer + 1, runLayers)} of ${runLayers} · ${run.fate} Fate · ${run.scrap ?? 0} Scrap` : 'Branching battles, armory, battle honors, and Warlord'}</small></span>
+            </span>
+          </button>
+          <button className="mode slate" onClick={onSandbox}>
+            <span className="slate-in">
+              <span className="mode-icon"><Icon name="sandbox" size={22} /></span>
+              <span className="mode-text"><b>Sandbox / Massive Battle</b><small>Lore-accurate large map firefight test with custom squads and range simulation</small></span>
             </span>
           </button>
           <button className="mode slate" onClick={onTutorial}>

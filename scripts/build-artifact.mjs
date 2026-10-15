@@ -1,8 +1,8 @@
 // Packs dist/ into a single self-contained page (artifact/index.html) + data files, for publishing as a web link.
 import fs from 'node:fs';
-import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
 const OUT = path.join(ROOT, 'artifact');
 const html = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
@@ -32,11 +32,8 @@ for (const f of fs.readdirSync(path.join(ROOT, 'public/data/factions'))) fs.copy
 const IMG = path.join(ROOT, 'public/images');
 let images = 0;
 if (fs.existsSync(IMG)) {
-  // the photos in names.json came from the web app's own photo store, which serves them there: not published twice
-  const named = new Set(Object.values(fs.existsSync(path.join(IMG, 'names.json')) ? JSON.parse(fs.readFileSync(path.join(IMG, 'names.json'), 'utf8')) : {}).map((f) => path.join(IMG, f)));
-  fs.cpSync(IMG, path.join(OUT, 'images'), { recursive: true, filter: (src) => !/(\.gitkeep|README\.md|names\.json)$/.test(src) && !named.has(src) });
+  fs.cpSync(IMG, path.join(OUT, 'images'), { recursive: true, filter: (src) => !/(\.gitkeep|README\.md)$/.test(src) });
   const manifest = JSON.parse(fs.readFileSync(path.join(IMG, 'manifest.json'), 'utf8'));
-  for (const f of Object.values(manifest.units ?? {})) for (const [k, v] of Object.entries(f)) if (named.has(path.join(IMG, v))) delete f[k];
   fs.writeFileSync(path.join(OUT, 'images/manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
   images = Object.values(manifest.units ?? {}).reduce((a, f) => a + Object.keys(f).length, 0);
 }
