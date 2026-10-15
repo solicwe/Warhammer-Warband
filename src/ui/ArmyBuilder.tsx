@@ -89,6 +89,12 @@ export function Emblem({ factionId, color, sub }: { factionId: string; color?: s
           <circle cx="32" cy="33" r="6" fill="#d9b44a" /><circle cx="32" cy="33" r="2.5" fill="#0e3b48" />
           <path d="M32 12 V18 M22 15 L25 20 M42 15 L39 20" stroke="#d9b44a" strokeWidth="2.5" strokeLinecap="round" />
         </g>
+      ) : factionId === 'LoV' ? (
+        <g fill="#c07a2a" stroke="#2a1805" strokeWidth="2" strokeLinejoin="round">
+          <path d="M16 20 L32 14 L48 20 L44 34 L32 40 L20 34 Z" fill="#c07a2a" />
+          <path d="M24 24 L32 20 L40 24 L38 32 L32 35 L26 32 Z" fill="#ffd700" />
+          <path d="M32 40 L32 50 M26 48 L38 48" stroke="#ffd700" strokeWidth="2.5" />
+        </g>
       ) : (
         <g fill="none" stroke="#b0b0b0" strokeWidth="3"><circle cx="32" cy="32" r="12" /><path d="M32 12 V20 M32 44 V52 M12 32 H20 M44 32 H52" /></g>
       )}

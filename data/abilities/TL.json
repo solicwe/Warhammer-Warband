@@ -1,0 +1,27 @@
+{
+  "_comment": "Adeptus Titanicus Faction Pack. Complete datasheet, wargear, and army rules.",
+  "Towering Example": {
+    "status": "auto",
+    "note": "Muster without detachments (0 DP). Any Titanic model can be your Warlord without CHARACTER keyword."
+  },
+  "Striding Colossus": {
+    "status": "auto",
+    "note": "Each time you target this model with a Stratagem, you must spend three times that Stratagem’s stated CP cost to do so."
+  },
+  "Flank Speed": {
+    "status": "auto",
+    "note": "Each time this model Advances, do not make an Advance roll for it. Instead, until the end of the phase, add 8\" to the Move characteristic of this model."
+  },
+  "God-machine": {
+    "status": "auto",
+    "note": "This model is eligible to shoot and declare a charge in a turn in which it Fell Back."
+  },
+  "Wrath of the Omnissiah": {
+    "status": "auto",
+    "note": "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. That unit must take a Battle-shock test."
+  },
+  "Titanic Fire Support": {
+    "status": "auto",
+    "note": "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. Until the end of the phase, each time a friendly Imperium model makes an attack that targets that enemy unit, on a Critical Wound, improve the Armour Penetration characteristic of that attack by 1."
+  }
+}

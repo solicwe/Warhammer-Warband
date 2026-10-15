@@ -23,6 +23,8 @@ import tyrAbilities from '../../data/abilities/TYR.json';
 import asAbilities from '../../data/abilities/AS.json';
 import tauAbilities from '../../data/abilities/TAU.json';
 import aeAbilities from '../../data/abilities/AE.json';
+import lovAbilities from '../../data/abilities/LoV.json';
+import tlAbilities from '../../data/abilities/TL.json';
 import { inSynapse } from './tyranids';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
@@ -347,6 +349,8 @@ const FACTION_RULES: Record<string, Record<string, AbilityRule>> = {
   AS: asAbilities as unknown as Record<string, AbilityRule>,
   TAU: tauAbilities as unknown as Record<string, AbilityRule>,
   AE: aeAbilities as unknown as Record<string, AbilityRule>,
+  LoV: lovAbilities as unknown as Record<string, AbilityRule>,
+  TL: tlAbilities as unknown as Record<string, AbilityRule>,
 };
 const COMMON_RULES = (abilityData as unknown as { rules: Record<string, AbilityRule> }).rules;
 export const hasFactionRules = (id: string) => !!FACTION_RULES[id];
@@ -368,7 +372,7 @@ export function abilityRule(u: UnitState, a: AbilityData): AbilityRule | undefin
 }
 
 /** Factions whose rule files supplement the text reader rather than define every ability. */
-const PARSE_TOO = new Set(['QI', 'QT', 'TYR', 'AS', 'TAU', 'AE']);
+const PARSE_TOO = new Set(['QI', 'QT', 'TYR', 'AS', 'TAU', 'AE', 'LoV', 'TL']);
 
 function findRule(a: AbilityData, sheet: string): AbilityRule | undefined {
   const books = a.faction ? [FACTION_RULES[a.faction]].filter(Boolean) : Object.values(FACTION_RULES);
