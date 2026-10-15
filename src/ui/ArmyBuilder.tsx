@@ -108,6 +108,13 @@ export function Emblem({ factionId, color, sub }: { factionId: string; color?: s
           <path d="M32 18 L36 32 L32 46 L28 32 Z" fill="#2dd4bf" />
           <circle cx="32" cy="32" r="3" fill="#ffffff" />
         </g>
+      ) : factionId === 'CD' ? (
+        <g fill="#991b1b" stroke="#f59e0b" strokeWidth="2" strokeLinejoin="round">
+          <circle cx="32" cy="32" r="8" fill="#450a0a" stroke="#f59e0b" strokeWidth="2" />
+          <path d="M32 8 L35 18 L32 16 L29 18 Z M32 56 L35 46 L32 48 L29 46 Z M8 32 L18 35 L16 32 L18 29 Z M56 32 L46 35 L48 32 L46 29 Z M15 15 L25 21 L23 19 L21 25 Z M49 15 L43 25 L41 23 L47 21 Z M15 49 L21 39 L23 41 L17 43 Z M49 49 L39 43 L41 41 L43 47 Z" fill="#ef4444" />
+          <path d="M32 16 V48 M16 32 H48 M21 21 L43 43 M21 43 L43 21" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="32" cy="32" r="3" fill="#fef08a" />
+        </g>
       ) : (
         <g fill="none" stroke="#b0b0b0" strokeWidth="3"><circle cx="32" cy="32" r="12" /><path d="M32 12 V20 M32 44 V52 M12 32 H20 M44 32 H52" /></g>
       )}
@@ -144,7 +151,7 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
   const opts = sheet.wargearOptions ?? [];
   const addons = addonLines(sheet);
   if (!opts.length && !addons.length) return null;
-  const picks = u.wargear ?? [];
+  const picks = u.wargear ?? defaultWargear(sheet, u).wargear ?? [];
   const cost = (items: string[]) => items.reduce((a, n) => a + (sheet.wargearCosts?.find((c) => wkey(c.name) === wkey(n))?.pts ?? 0), 0);
   // what a swap changes per model: what it gains minus what it gives up (claws for hammer + shield: −5)
   const costTag = (items: string[], instead: string[] = []) => { const c = cost(items) - cost(instead); return c ? <span className={`wg-cost ${c < 0 ? 'less' : ''}`}>{c > 0 ? `+${c}` : `−${-c}`}/model</span> : null; };
@@ -154,15 +161,6 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
     <div className="field">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
         <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· some weapons cost points (shown as +pts each)</span> : null}</span>
-        <button
-          type="button"
-          className="btn small ghost"
-          style={{ fontSize: 11, padding: '2px 8px', display: 'inline-flex', alignItems: 'center', gap: 4 }}
-          onClick={() => onChange(defaultWargear(sheet, { ...u, wargear: undefined }))}
-          title="Equip all free additions and optimal weapons"
-        >
-          <Icon name="wargear" size={13} /> Auto-equip Free Wargear
-        </button>
       </div>
       {opts.map((o, i) => {
         const max = wargearMax(sheet, o, u.models, u.addons);

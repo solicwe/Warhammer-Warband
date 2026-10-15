@@ -319,6 +319,7 @@ export interface ObjectiveState {
   mutated?: PlayerId | null; // Mutate Landscape: enemy units ending a move on it roll a D6, 4+ = D3 mortal wounds
   snared?: PlayerId | null; // Mortis Snares: the next enemy unit ending a move in range rolls a D6, 2+ = D6 mortal wounds
   warded?: PlayerId | null; // Ritual of Warding: enemy Daemons cannot be set up within 6" while this player controls it
+  corrupted?: PlayerId | null; // Chaos Daemons: Corrupt Realspace / Blood Tainted objective under Daemons control with 6" Shadow of Chaos
 }
 
 export interface PlayerState {
@@ -384,6 +385,12 @@ export interface PlayerState {
   empoweredUnits?: string[];
   /** Drukhari: Reaper's Wager detachment side winning the wager */
   drukhariWagerWinning?: 'Drukhari' | 'Harlequins';
+  /** Chaos Daemons: Scintillating Legion Flux tokens pool */
+  fluxTokens?: number;
+  /** Chaos Daemons: Corrupted objective IDs (6" Shadow of Chaos aura + sticky control) */
+  corruptedObjectives?: string[];
+  /** Chaos Daemons: Units that performed Seductive Gambit this turn */
+  seductiveGambitUnits?: string[];
   riledUntilTurn: number;
   secMode: 'none' | 'tactical' | 'fixed';
   secDeck: string[];

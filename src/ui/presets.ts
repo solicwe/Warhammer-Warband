@@ -901,5 +901,41 @@ export const PRESETS: Record<string, ArmyList> = {
       },
     ],
   },
+  CD: {
+    name: 'Chaos Daemons (Quick)',
+    factionId: 'CD',
+    battleSize: 'incursion',
+    detachments: ['Daemonic Incursion'],
+    units: [
+      {
+        uid: 'cd1', datasheet: 'Bloodthirster', models: 1, pts: 320, warlord: true,
+        enhancement: 'A’rgath, the King of Blades', enhancementPts: 20,
+      },
+      {
+        uid: 'cd2', datasheet: 'Skulltaker', models: 1, pts: 85, attachTo: 'cd3',
+      },
+      {
+        uid: 'cd3', datasheet: 'Bloodletters', models: 10, pts: 110,
+      },
+      {
+        uid: 'cd4', datasheet: 'Flesh Hounds', models: 5, pts: 80,
+      },
+      {
+        uid: 'cd5', datasheet: 'Plaguebearers', models: 10, pts: 115,
+      },
+      {
+        uid: 'cd6', datasheet: 'Beasts Of Nurgle', models: 1, pts: 80,
+      },
+      {
+        uid: 'cd7', datasheet: 'Flamers', models: 3, pts: 65,
+      },
+      {
+        uid: 'cd8', datasheet: 'Screamers', models: 3, pts: 80,
+      },
+      {
+        uid: 'cd9', datasheet: 'Nurglings', models: 3, pts: 45,
+      },
+    ],
+  },
 };
 

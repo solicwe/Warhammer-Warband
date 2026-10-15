@@ -694,7 +694,8 @@ function makeModels(sheet: DatasheetData, e: Pick<ArmyUnitEntry, 'models' | 'war
   const maxW = sheet.models?.length ? Math.max(...sheet.models.map((m) => m.W)) : 1;
   const attendantRe = /veteran|disciple|acolyte|servitor|corv|cog|assistant|menhir|geminae|other|scion|guardsm|ghost|ravener/i;
   const plans = planModels(sheet, e.models, e.addons);
-  applyWargear(sheet, plans, e.wargear ?? []);
+  const picks = e.wargear ?? defaultWargear(sheet, e as ArmyUnitEntry).wargear ?? [];
+  applyWargear(sheet, plans, picks);
   return plans.map((p, i) => {
     const weapons = p.items.map((n) => weaponNamed(sheet, n)).filter((w): w is WeaponData => !!w);
     const gear = p.items.filter((n) => !weaponNamed(sheet, n));

@@ -31,6 +31,7 @@ import { aeldariBattleStart, aeldariCommandEnd, aeldariTurnStart, resetPhaseStra
 import { votannBattleStart, votannCommandEnd } from './votann';
 import { admechCommandStart, admechRoundStart } from './admech';
 import { drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd } from './drukhari';
+import { daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsPhaseEnd } from './daemons';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -285,6 +286,7 @@ export function createGame(o: NewGameOptions): GameState {
   // abilities that give a core rule at deployment (Blackwing Shroud, Masters of Misdirection: Infiltrators)
   for (const u of s.units) if (!u.core.infiltrators && unitFlags(s, u).infiltrators) u.core.infiltrators = true;
   startOfBattle(s);
+  daemonsBattleStart(s);
   return s;
 }
 
@@ -453,7 +455,8 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
     const homer = u.homer && how !== 'deploy' && how !== 'infiltrate' && s.active !== u.owner ? u.homer : undefined;
     if (homer && ptGap(bodyAt(m, p), homer) > 3 + EPS) { errors.push('Teleport Homer: must be set up within 3" of the token'); bad.add(m.id); }
     if (how !== 'deploy') {
-      const keep = homer ? 8 : how === 'deepStrike' ? fl!.deepStrikeRange : Math.min(RULES.reserves.enemyDistance, fl!.ingressRange ?? RULES.reserves.enemyDistance);
+      const daemonKeep = how === 'deepStrike' ? daemonsDeepStrikeDist(s, u, p) : 9;
+      const keep = homer ? 8 : how === 'deepStrike' ? Math.min(fl!.deepStrikeRange, daemonKeep) : Math.min(RULES.reserves.enemyDistance, fl!.ingressRange ?? RULES.reserves.enemyDistance);
       // Death Approaches / Beckoning Blight: closer to some enemy units
       const keepFor = (e: UnitState) => (how === 'deepStrike' ? Math.min(keep, dsKeep(s, u, e, p, m) ?? keep) : keep);
       if (enemies.some((e) => alive(e).some((n) => gap(bodyAt(m, p), n) <= keepFor(e)))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
@@ -857,7 +860,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   onTurnStart(s);
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
-  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); votannBattleStart(s); admechRoundStart(s); drukhariBattleStart(s); fireAll(s, 'battleStart', 'both'); }
+  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); votannBattleStart(s); admechRoundStart(s); drukhariBattleStart(s); daemonsBattleStart(s); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); dgRoundStart(s); knightsRoundStart(s); admechRoundStart(s); fireAll(s, 'roundStart', 'both'); }
   knightsTurnStart(s);
   sororitasTurnStart(s, p);
@@ -882,6 +885,7 @@ function startCommand(s: GameState) {
   knightsCommandStart(s);
   admechCommandStart(s, s.active);
   drukhariCommandStart(s, s.active);
+  daemonsCommandStart(s);
   fireFor(s, 'commandStart', s.active);
   fireFor(s, 'eachCommandStart', 'both');
   drawUpTo(s, s.active);
@@ -918,7 +922,8 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
     t.result = 0; t.passed = true; t.auto = true;
   } else {
     const ld = bestLd(u, s);
-    const mod = unitFlags(s, u).ignoreMods ? 0 : t.mod ?? 0;
+    const dMod = daemonBattleShockMod(s, u);
+    const mod = (unitFlags(s, u).ignoreMods ? 0 : t.mod ?? 0) + dMod;
     if (unitFlags(s, u).autoPassShock) { t.result = 12; t.passed = true; t.auto = true; log(s, `${u.name}: Battle-shock test passed automatically`, 'info', u.owner); return; }
     const syn = inSynapse(s, u);
     let r = rollN(s, syn ? 3 : 2);
@@ -938,6 +943,7 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
   if (was && t.passed) log(s, `${u.name} is no longer Battle-shocked`, 'info', u.owner);
   if (!was && !t.passed) fire(s, 'becameShocked', [u]);
   if (!t.passed) knightsShockFailed(s, u);
+  daemonsOnBattleShockResult(s, u, t.passed);
 }
 
 /** The bot's decisions at the end of a phase of the other player (Echo of the Ravenspire …), set by botPlus.ts. */
@@ -959,6 +965,7 @@ export function endPhase(s: GameState) {
   resetPhaseActsOfFaith(s);
   resetPhaseStrandsOfFate(s);
   drukhariPhaseEnd(s);
+  daemonsPhaseEnd(s);
   resolveRevivals(s);
   if (s.window?.kind === 'abilityMove') s.window = null;
   expireTimed(s, 'phaseEnd', s.active);

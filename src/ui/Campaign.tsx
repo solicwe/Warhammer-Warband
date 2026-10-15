@@ -71,8 +71,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       if (!playable(f)) { setErr(`${f.name} has too few units in the data for a campaign yet. Pick another army.`); return; }
       const seed = Date.now() >>> 0;
       const list = { ...autoList(f, START_POINTS, seed, true), name: `${f.name} strike force` };
-      // only armies whose rules are all written up: theirs play as they should
-      const enemies = (index?.factions ?? []).map((x) => x.id).filter((id) => id !== f.id && hasFactionRules(id));
+      // only armies whose rules are all written up: theirs play as they should (excluding Titanicus)
+      const enemies = (index?.factions ?? []).map((x) => x.id).filter((id) => id !== f.id && hasFactionRules(id) && id !== 'TL');
       setFac(f);
       setRun(newRun(f, list, enemies.length ? enemies : ['ORK'], seed));
       play('turn');
@@ -112,7 +112,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
   if (!run) {
     const groups = new Map<string, { id: string; name: string }[]>();
-    for (const f of (index?.factions ?? []).filter((x) => hasFactionRules(x.id))) { const g = f.group ?? 'Armies'; groups.set(g, [...(groups.get(g) ?? []), f]); }
+    for (const f of (index?.factions ?? []).filter((x) => hasFactionRules(x.id) && x.id !== 'TL')) { const g = f.group ?? 'Armies'; groups.set(g, [...(groups.get(g) ?? []), f]); }
     return (
       <div className="app campaign">
         <header className="appbar">

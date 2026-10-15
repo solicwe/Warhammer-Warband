@@ -87,6 +87,12 @@ export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; 
           <b className="miracle-more" style={{ color: '#2dd4bf' }}>{P.painTokens} Pain</b>
         </span>
       )}
+      {P.fluxTokens !== undefined && (
+        <span className="miracle-pool cd-pool" title={`Fates in Flux: ${P.fluxTokens} Flux token${P.fluxTokens === 1 ? '' : 's'}`}>
+          <Icon name="sparkles" size={11} />
+          <b className="miracle-more" style={{ color: '#ec4899' }}>{P.fluxTokens} Flux</b>
+        </span>
+      )}
       {gain && <span key={gain.k} className="ss-gain">+{gain.n} VP</span>}
     </button>
   );

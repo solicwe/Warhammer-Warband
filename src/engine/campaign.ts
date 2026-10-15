@@ -157,7 +157,7 @@ export function makeMap(seed: number, enemies: string[]): MapNode[] {
 
 export function newRun(faction: FactionData, list: ArmyList, enemies: string[], seed = Date.now()): Run {
   return {
-    version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, enemies.filter((e) => e !== faction.id)),
+    version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, enemies.filter((e) => e !== faction.id && e !== 'TL')),
     path: [], relics: [], cp: 0, fate: 3, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
   };
 }
