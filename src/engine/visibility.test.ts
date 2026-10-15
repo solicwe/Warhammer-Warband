@@ -86,3 +86,22 @@ describe('model-level obscuring in a unit', () => {
     expect(hasLos(squad, outside, viewer)).toBe(false); // outside behind the ruin: still blocked by obscuring terrain
   });
 });
+
+describe('large bases and split ruins (13.10)', () => {
+  it('a large model (Dreadnought / Walker) on a ruin plate sees out to enemy in the open', () => {
+    const ruin = area(18, 10, 26, 30, 'dense', [[P(18, 10), P(18, 20)]]); // wall only on left
+    const dread = { ...model(18.5, 25, 1.77), keywords: ['VEHICLE', 'WALKER'] } as unknown as ModelState;
+    const enemy = model(32, 25, 0.63);
+    expect(hasLos(board(ruin), dread, enemy)).toBe(true);
+  });
+
+  it('a model in one half of a split ruin sees out through the feature without the sister piece obscuring it', () => {
+    const halfA = area(10, 10, 20, 20, 'dense');
+    const halfB = area(20.2, 10, 30, 20, 'dense'); // hairline gap <= 0.6" -> bridge connects them
+    const shooter = model(15, 15, 0.63); // in halfA
+    const target = model(25, 30, 0.63); // outside below halfB
+    // Shooter looks towards target: line leaves halfA, passes near/through halfB footprint
+    expect(hasLos(board(halfA, halfB), shooter, target)).toBe(true);
+  });
+});
+
