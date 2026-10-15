@@ -111,6 +111,85 @@ function BaseShape({ m, p, grow = 0, ...rest }: { m: ModelState; p: Pt; grow?: n
     : <ellipse cx={p.x} cy={p.y} rx={len} ry={hw} transform={t} {...attrs} />;
 }
 
+/** Calculate hit flinch / recoil / twitch offset for a model being shot, struck, or caught in explosions. */
+function modelFlinch(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): { x: number; y: number; intensity: number } | null {
+  if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return null;
+  for (const a of fx) {
+    if (a.e.kind === 'attack' && a.e.targetId === u.id) {
+      const f = (now - a.t0) / FX_MS.attack;
+      if (f < 0.08 || f > 0.72) continue;
+      const dx = (a.e.to?.x ?? m.x) - a.e.from.x;
+      const dy = (a.e.to?.y ?? m.y) - a.e.from.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const ux = dx / dist, uy = dy / dist;
+      const px = -uy, py = ux;
+      const r = m.hl ? (m.hw ?? m.r) : m.r;
+      const baseKick = Math.min(0.38, Math.max(0.16, r * 0.38));
+      let hash = a.e.seq;
+      for (let i = 0; i < m.id.length; i++) hash = ((hash * 31) + m.id.charCodeAt(i)) | 0;
+      hash = Math.abs(hash);
+
+      const progress = (f - 0.08) / 0.47;
+      if (progress <= 1) {
+        const shotCount = Math.min(14, Math.max(5, a.e.hits ?? a.e.shots ?? 8));
+        const shotIndex = progress * shotCount;
+        const phaseOffset = ((hash % 100) / 100) * 0.35;
+        const shotPhase = (shotIndex + phaseOffset) % 1;
+        const kick = Math.exp(-shotPhase * 4.5) * Math.sin(shotPhase * Math.PI);
+        const shudder = Math.sin(f * 95 + hash) * 0.06;
+        const lateral = Math.sin(f * 65 + hash * 3) * 0.09;
+        const recoilMag = baseKick * kick * 2.2 + shudder;
+        const lateralMag = baseKick * lateral;
+        const intensity = Math.min(1, kick * 1.5 + Math.abs(shudder) * 5);
+        return {
+          x: ux * recoilMag + px * lateralMag,
+          y: uy * recoilMag + py * lateralMag,
+          intensity,
+        };
+      } else {
+        const rec = (f - 0.55) / 0.17;
+        const settle = Math.exp(-rec * 5) * Math.cos(rec * Math.PI * 3);
+        const recoilMag = baseKick * 0.35 * settle;
+        return {
+          x: ux * recoilMag,
+          y: uy * recoilMag,
+          intensity: Math.max(0, settle * 0.4),
+        };
+      }
+    }
+    if (a.e.kind === 'mortal' && a.e.unitId === u.id) {
+      const f = (now - a.t0) / FX_MS.mortal;
+      if (f < 0.05 || f > 0.65) continue;
+      let hash = a.e.seq;
+      for (let i = 0; i < m.id.length; i++) hash = ((hash * 31) + m.id.charCodeAt(i)) | 0;
+      hash = Math.abs(hash);
+      const shake = Math.sin(f * 85 + hash) * Math.exp(-f * 5) * 0.25;
+      return {
+        x: shake,
+        y: Math.cos(f * 70 + hash) * Math.exp(-f * 5) * 0.2,
+        intensity: Math.exp(-f * 4),
+      };
+    }
+    if (a.e.kind === 'explosion') {
+      const f = (now - a.t0) / FX_MS.explosion;
+      if (f > 0.02 && f < 0.5) {
+        const d = Math.hypot(m.x - a.e.at.x, m.y - a.e.at.y);
+        if (d <= a.e.range) {
+          const dx = m.x - a.e.at.x, dy = m.y - a.e.at.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const push = (1 - d / a.e.range) * (1 - f / 0.5) * 0.35;
+          return {
+            x: (dx / len) * push,
+            y: (dy / len) * push,
+            intensity: 1 - f / 0.5,
+          };
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function BoardImpl(props: BoardProps) {
   usePortraitsVersion();
   const { s, draft, draftUnit, maxFor, onDraft, walk } = props;
@@ -144,15 +223,15 @@ function BoardImpl(props: BoardProps) {
     const id = setTimeout(() => { const t = performance.now(); setFx((cur) => cur.filter((a) => t - a.t0 < FX_MS[a.e.kind])); }, Math.max(16, end - performance.now() + 20));
     return () => clearTimeout(id);
   }, [fx]);
-  // only unit moves need the whole board redrawn every frame, and only while they glide
-  const moving = fx.some((a) => a.e.kind === 'move');
+  // redraw every frame during unit moves, or while models flinch from attacks, explosions or mortal wounds
+  const animating = fx.some((a) => a.e.kind === 'move' || a.e.kind === 'attack' || a.e.kind === 'mortal' || a.e.kind === 'explosion');
   useEffect(() => {
-    if (!moving) return;
+    if (!animating) return;
     let raf = 0;
     const tick = () => { setNow(performance.now()); raf = requestAnimationFrame(tick); };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [moving]);
+  }, [animating]);
   const animPos = useMemo(() => {
     const m = new Map<string, Pt>();
     for (const a of fx) {
@@ -652,9 +731,19 @@ function BoardImpl(props: BoardProps) {
               // the photo fits the narrow side of an oval or hull base
               const pr = m.hl ? (m.hw ?? m.r) : m.r;
               const isSolo = isDraft && solo.includes(m.id);
+              const flinch = modelFlinch(u, m, fx, now);
               return (
-                <g key={m.id} data-unit={u.id} onPointerDown={(e) => startModelDrag(e, u.id, m.id)} style={{ cursor: isDraft ? 'grab' : 'pointer' }}>
+                <g
+                  key={m.id}
+                  data-unit={u.id}
+                  onPointerDown={(e) => startModelDrag(e, u.id, m.id)}
+                  style={{ cursor: isDraft ? 'grab' : 'pointer' }}
+                  transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
+                >
                   <BaseShape m={m} p={p} grow={Math.max(0, 0.35 - m.r) + 0.35} fill="transparent" />
+                  {flinch && flinch.intensity > 0.15 && (
+                    <BaseShape m={m} p={p} grow={0.16} fill="none" stroke="#ef4444" strokeWidth={0.14} opacity={flinch.intensity * 0.75} className="fx-glow" pointerEvents="none" />
+                  )}
                   {acting.has(u.id) && <BaseShape m={m} p={p} grow={0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
                   {(isSel || isPicked) && !isDraft && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke={isSel ? '#f5b83d' : '#ffffff'} strokeWidth={0.18} className="sel-ring" pointerEvents="none" />}
                   {isMovable && !isSel && !isDraft && !isPicked && <BaseShape m={m} p={p} grow={0.24} fill="none" stroke="#38bdf8" strokeWidth={0.13} strokeDasharray="0.32 0.18" className="movable-ring" pointerEvents="none" />}
