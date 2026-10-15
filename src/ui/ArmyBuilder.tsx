@@ -470,11 +470,11 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
         <div className="grow dt-top-text">
           <input className="ab-title dt-name" aria-label="Army name" value={list.name} placeholder="Army name" onChange={(e) => set({ name: e.target.value })} />
           <button type="button" className="dt-faction linkish" onClick={() => setPicker({ factionId: subs ? list.factionId : null })}>{factionName}{subs ? ` · ${sub?.name ?? `Select ${subs.label}`}` : ''} <Icon name="next" size={14} /></button>
-          <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || 'No Detachment selected'}</div>
-          {chosenDets.length > 0 && <div className="tiny">{dispositionChips()} {chosenDets.reduce((x, d) => x + d.dp, 0)}/{size.dp} DP</div>}
+          <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || (list.factionId === 'TL' ? 'Towering Example (No Detachment)' : 'No Detachment selected')}</div>
+          {chosenDets.length > 0 ? <div className="tiny">{dispositionChips()} {chosenDets.reduce((x, d) => x + d.dp, 0)}/{size.dp} DP</div> : (list.factionId === 'TL' ? <div className="tiny">{dispositionChips()}</div> : null)}
           <div className="tiny muted">{size.name} · {pts}/{size.points} pts</div>
         </div>
-        <button type="button" className="dt-gear" aria-label="Change Detachment" onClick={() => setDetPicker(true)}><Icon name="gear" size={26} /></button>
+        {faction.detachments.length > 0 && <button type="button" className="dt-gear" aria-label="Change Detachment" onClick={() => setDetPicker(true)}><Icon name="gear" size={26} /></button>}
       </div>
       {chosenDets.length > 0 && dSection('rule', 'Detachment Rule', chosenDets.flatMap((d) => d.rules.map((r) => ruleCard(d.name + r.name, r.name, chosenDets.length > 1 ? d.name : '', r.text))))}
       {chosenDets.length > 0 && dSection('enh', 'Enhancements', chosenDets.flatMap((d) => d.enhancements.map((e) => ruleCard(d.name + e.name, e.name, `${e.pts}pts`, e.text))), chosenDets.reduce((a, d) => a + d.enhancements.length, 0))}
@@ -733,7 +733,11 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const aboard = cargo.some(({ r }) => r.embarkIn === u.uid);
     const cargoShown = aboard ? cargo.filter(({ r, c }) => r.embarkIn === u.uid || !c.full) : cargo;
     const opts = sheet ? pointsOptions(sheet) : [];
-    const isChar = !!sheet?.keywords.includes('CHARACTER') || (list.detachments.includes('Houndpack Lance') && !!sheet?.keywords.includes('WAR DOG'));
+    const isChar = !!sheet?.keywords.includes('CHARACTER')
+      || (list.detachments.includes('Houndpack Lance') && !!sheet?.keywords.includes('WAR DOG'))
+      || list.factionId === 'TL'
+      || !!sheet?.keywords.includes('ADEPTUS TITANICUS')
+      || !!sheet?.factionKeywords.includes('ADEPTUS TITANICUS');
     // characters that could join this squad: Leader slot, then Support slot
     const leadersFor = (support: boolean) => faction.datasheets.filter((d) => allowed(d) && d.leads.includes(u.datasheet) && supportIn(list, d) === support && pointsOptions(d).length);
     const hasLeader = joined.some((x) => x.d && !supportIn(list, x.d));

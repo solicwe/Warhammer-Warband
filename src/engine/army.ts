@@ -1195,10 +1195,14 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (dogs.filter((u) => u.enhancement || u.warlord).length > 3) errs.push('Houndpack Lance: only three WAR DOG units are CHARACTERS (Enhancements and the Warlord)');
   }
   const houndChar = (d?: { keywords: string[] }) => !!d && list.detachments.includes('Houndpack Lance') && d.keywords.includes('WAR DOG');
-  if (!list.units.some((u) => { const d = faction.datasheets.find((x) => x.name === u.datasheet); return d?.keywords.includes('CHARACTER') || houndChar(d); })) errs.push('The army needs at least one CHARACTER (Warlord)');
+  const titanWarlordEligible = (d?: DatasheetData) => !!d && (faction.id === 'TL' || d.keywords.includes('ADEPTUS TITANICUS') || d.factionKeywords.includes('ADEPTUS TITANICUS'));
+  if (!list.units.some((u) => { const d = faction.datasheets.find((x) => x.name === u.datasheet); return d?.keywords.includes('CHARACTER') || houndChar(d) || titanWarlordEligible(d); })) errs.push('The army needs at least one CHARACTER (Warlord)');
   if (!list.units.some((u) => u.warlord)) errs.push('No Warlord selected (tap a character\'s ⋮ → Make Warlord)');
   for (const u of list.units) {
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
+    if (u.warlord && !sheet?.keywords.includes('CHARACTER') && !houndChar(sheet) && !titanWarlordEligible(sheet)) {
+      errs.push(`${u.datasheet} is not a CHARACTER and cannot be your Warlord`);
+    }
     // Supreme Commander (Trajann Valoris): must be the Warlord
     if (sheet?.abilities.some((a) => a.name.toUpperCase() === 'SUPREME COMMANDER') && !u.warlord) errs.push(`${u.datasheet} must be your Warlord (Supreme Commander)`);
     // ANATHEMA PSYKANA characters can't be the Warlord (Null Maiden Vigil allows it)

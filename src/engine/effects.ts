@@ -1213,9 +1213,10 @@ const unitFx = (s: GameState, u: UnitState) => effectsFor(s, u).filter((a) => ho
 
 export function rollMods(s: GameState, u: UnitState) {
   const es = unitFx(s, u).map((a) => a.e);
+  const votannHostile = s.players[u.owner]?.votannAbility === 'Hostile Acquisition' && (u.factionKeywords.includes('LEAGUES OF VOTANN') || u.keywords.includes('LEAGUES OF VOTANN'));
   return {
-    rerollAdvance: es.some((e) => e.rerollAdvance),
-    rerollCharge: es.some((e) => e.rerollCharge),
+    rerollAdvance: es.some((e) => e.rerollAdvance) || votannHostile,
+    rerollCharge: es.some((e) => e.rerollCharge) || votannHostile,
     advanceSix: es.some((e) => e.advanceSix),
     advanceBonus: es.reduce((a, e) => a + (es.some((x) => x.ignoreMods || x.ignoreMoveMods) ? Math.max(0, e.advanceBonus ?? 0) : e.advanceBonus ?? 0), 0),
     chargeBonus: es.reduce((a, e) => a + (es.some((x) => x.ignoreMods || x.ignoreMoveMods) ? Math.max(0, e.chargeBonus ?? 0) : e.chargeBonus ?? 0), 0),

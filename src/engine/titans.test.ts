@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { baseShape } from './army';
+import { baseShape, validateList } from './army';
+import { listDisposition } from './game';
 import { parseAbilityText } from './abilityText';
 import { stratCost, canUseStratagem } from './state';
 import { superHeavy } from './knights';
 import { rollHits, rollWounds, rollSavesAndDamage, applyDamage } from './attack';
-import type { DatasheetData, GameState, UnitState, ModelState } from './types';
+import type { DatasheetData, GameState, UnitState, ModelState, ArmyList, FactionData } from './types';
 import tlFaction from '../../public/data/factions/TL.json';
 import smFaction from '../../public/data/factions/SM.json';
 import tyrFaction from '../../public/data/factions/TYR.json';
@@ -376,4 +377,51 @@ describe('Titan Abilities', () => {
     expect(p.saves[1].o).toBe('saved');
     expect(p.saveTargets[1]).toContain('AP-1');
   });
+
+  describe('Adeptus Titanicus Muster & Towering Example', () => {
+    it('allows Warhound Titan to be Warlord without CHARACTER keyword and no detachments', () => {
+      const list: ArmyList = {
+        name: 'Titan Army',
+        battleSize: 'Strike Force',
+        factionId: 'TL',
+        detachments: [],
+        units: [
+          { uid: 'u1', datasheet: 'Warhound Titan', models: 1, pts: 1100, warlord: true },
+        ],
+      };
+      const size = { points: 2000, dp: 2, unitLimit: 3, enhancements: 3 };
+      const errs = validateList(list, tlFaction as unknown as FactionData, size);
+      expect(errs).toEqual([]);
+    });
+
+    it('requires a Warlord even for Adeptus Titanicus', () => {
+      const list: ArmyList = {
+        name: 'Titan Army',
+        battleSize: 'Strike Force',
+        factionId: 'TL',
+        detachments: [],
+        units: [
+          { uid: 'u1', datasheet: 'Warhound Titan', models: 1, pts: 1100, warlord: false },
+        ],
+      };
+      const size = { points: 2000, dp: 2, unitLimit: 3, enhancements: 3 };
+      const errs = validateList(list, tlFaction as unknown as FactionData, size);
+      expect(errs).toContain("No Warlord selected (tap a character's ⋮ → Make Warlord)");
+    });
+
+    it('defaults Force Disposition to Take and Hold for Adeptus Titanicus', () => {
+      const list: ArmyList = {
+        name: 'Titan Army',
+        battleSize: 'Strike Force',
+        factionId: 'TL',
+        detachments: [],
+        units: [
+          { uid: 'u1', datasheet: 'Warhound Titan', models: 1, pts: 1100, warlord: true },
+        ],
+      };
+      const disp = listDisposition(list, tlFaction as unknown as FactionData);
+      expect(disp).toBe('take-and-hold');
+    });
+  });
 });
+

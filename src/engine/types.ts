@@ -367,6 +367,10 @@ export interface PlayerState {
   strandsOfFateUsed?: string[];
   /** Aeldari: Battle Focus tokens */
   battleFocusTokens?: number;
+  /** Leagues of Votann: Yield Points (Prioritised Efficiency) */
+  yieldPoints?: number;
+  /** Leagues of Votann: Active stance */
+  votannAbility?: 'Hostile Acquisition' | 'Fortify Takeover';
   riledUntilTurn: number;
   secMode: 'none' | 'tactical' | 'fixed';
   secDeck: string[];

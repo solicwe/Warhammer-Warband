@@ -9,6 +9,7 @@ import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { sororitasUnitDestroyed } from './sororitas';
 import { ftggAttackModifiers, isTauArmy } from './tau';
+import { votannAttackModifiers, votannDefenseModifiers, votannUnitDestroyed } from './votann';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 import { noteTarget, sensationalBlock, thrillBlock } from './emperorsChildren';
 import { putridHit } from './deathGuard';
@@ -241,8 +242,15 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
       const ftgg = ftggAttackModifiers(s, A, T, d);
-      const mods: Mods = { skillDelta: ftgg.skillDelta, skillNotes: [...ftgg.notes.filter((n) => n.includes('BS'))], hit: ftgg.hitMod, hitNotes: [...ftgg.notes.filter((n) => n.includes('hit'))] };
-      const ignoresCover = ftgg.ignoresCover || hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
+      const votann = votannAttackModifiers(s, A, T, d, 'ranged');
+      const def = votannDefenseModifiers(s, A, T, p, d);
+      const mods: Mods = {
+        skillDelta: ftgg.skillDelta,
+        skillNotes: [...ftgg.notes.filter((n) => n.includes('BS'))],
+        hit: ftgg.hitMod + votann.hitMod,
+        hitNotes: [...ftgg.notes.filter((n) => n.includes('hit')), ...votann.notes.filter((n) => n.includes('Hit'))],
+      };
+      const ignoresCover = ftgg.ignoresCover || votann.ignoresCover || hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
       const cover = indirect || aFlags.givesCover || (!ignoresCover && (coverOf(m) || targetHasCover(s, T, d)));
       if (cover) { mods.skillDelta += 1; mods.skillNotes.push('Cover −1 BS'); }
       if (m.keywords.includes('TOWERING') && d <= RULES.plungingFire.toweringRange && !T.keywords.includes('AIRCRAFT')) { mods.skillDelta -= 1; mods.skillNotes.push('Plunging Fire +1 BS'); }
@@ -277,16 +285,20 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         }
         const melta = getAbility(p, 'melta', T.keywords);
         if (melta && half) pool.damage = `${p.D}+${melta.value ?? 0}`.replace(/^(\d+)\+(\d+)$/, (_, a, b) => String(+a + +b));
-        const strength = (p.S ?? 1) + ftgg.strengthBonus;
+        const strength = (p.S ?? 1) + ftgg.strengthBonus + votann.strengthBonus;
         pool.woundNeed = woundNeed(strength, T_T);
-        if (ftgg.apBonus) pool.ap -= ftgg.apBonus;
-        const wm = clamp(buffSum(A, 'wound+1', 'wound-1') + ftgg.woundMod, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
+        if (ftgg.apBonus + votann.apBonus) pool.ap -= (ftgg.apBonus + votann.apBonus);
+        if (def.apWorsen) pool.ap = Math.min(0, pool.ap + def.apWorsen);
+        const wm = clamp(buffSum(A, 'wound+1', 'wound-1') + ftgg.woundMod + votann.woundMod + def.woundMod, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundMod = wm;
-        pool.woundNote = `S${strength} vs T${T_T}` + (wm ? ` · Buff ${wm > 0 ? '+' : ''}${wm}` : '');
-        if (ftgg.rerollHits1) pool.rerollHits1 = true;
-        if (ftgg.rerollWounds1) pool.rerollWounds1 = true;
-        if (ftgg.lethal) pool.lethal = true;
-        if (ftgg.sustained && !pool.sustained) pool.sustained = ftgg.sustained;
+        pool.woundNote = `S${strength} vs T${T_T}` + (wm ? ` · Buff ${wm > 0 ? '+' : ''}${wm}` : '') + (def.notes.length ? ` · ${def.notes.join(' · ')}` : '');
+        if (ftgg.rerollHits1 || votann.rerollHits1) pool.rerollHits1 = true;
+        if (ftgg.rerollWounds1 || votann.rerollWounds1) pool.rerollWounds1 = true;
+        if (votann.rerollHits) pool.rerollAllHits = true;
+        if (votann.rerollWounds) pool.rerollAllWounds = true;
+        if (ftgg.lethal || votann.lethal) pool.lethal = true;
+        if (votann.sustained && !pool.sustained) pool.sustained = votann.sustained;
+        else if (ftgg.sustained && !pool.sustained) pool.sustained = ftgg.sustained;
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         applyAttackEffects(s, A, T, pool, fx, inc, 'ranged', d, T_T, woundNeed);
@@ -359,7 +371,9 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       const fx = offenceFor(s, A, m, T, w, p, 'melee', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
       const inc = incomingFor(s, A, m, T, 'melee').filter((i) => !i.psychic || psy);
-      const mods: Mods = { skillDelta: 0, skillNotes: [], hit: 0, hitNotes: [] };
+      const votann = votannAttackModifiers(s, A, T, 0, 'melee');
+      const def = votannDefenseModifiers(s, A, T, p, 0);
+      const mods: Mods = { skillDelta: 0, skillNotes: [], hit: votann.hitMod, hitNotes: [...votann.notes.filter((n) => n.includes('Hit'))] };
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
       // Shield of Honour: this model is engaged with that unit but attacks another one
       const shamed = engagedEnemies(s, A).some((e) => e.id !== T.id && unitFlags(s, e).shieldOfHonour && modelEngagedWith(m, e));
@@ -377,13 +391,23 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         pool = newPool(key, w, p, T);
         pool.skill = fm.skill; pool.hitMod = fm.hit; pool.hitNote = mods.hitNotes.join(' · ');
         if (precision) pool.precision = true;
-        pool.woundNeed = woundNeed(p.S ?? 1, T_T);
-        let wm = buffSum(A, 'wound+1', 'wound-1');
-        const notes = [`S${p.S} vs T${T_T}`];
+        const strength = (p.S ?? 1) + votann.strengthBonus;
+        pool.woundNeed = woundNeed(strength, T_T);
+        let wm = buffSum(A, 'wound+1', 'wound-1') + votann.woundMod + def.woundMod;
+        const notes = [`S${strength} vs T${T_T}`];
         if (hasAbility(p, 'lance', T.keywords) && A.chargedTurn === s.turn) { wm += 1; notes.push('Lance +1'); }
         if (shamed) { wm -= 1; notes.push('Shield of Honour −1'); }
+        if (def.notes.length) notes.push(...def.notes);
         pool.woundMod = clamp(wm, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundNote = notes.join(' · ');
+        if (votann.apBonus) pool.ap -= votann.apBonus;
+        if (def.apWorsen) pool.ap = Math.min(0, pool.ap + def.apWorsen);
+        if (votann.rerollHits1) pool.rerollHits1 = true;
+        if (votann.rerollWounds1) pool.rerollWounds1 = true;
+        if (votann.rerollHits) pool.rerollAllHits = true;
+        if (votann.rerollWounds) pool.rerollAllWounds = true;
+        if (votann.lethal) pool.lethal = true;
+        if (votann.sustained && !pool.sustained) pool.sustained = votann.sustained;
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         applyAttackEffects(s, A, T, pool, fx, inc, 'melee', d, T_T, woundNeed);
@@ -809,6 +833,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id, killerId: s.attack?.attackerId, phase: s.phase });
     onUnitDestroyed(s, u, s.attack?.attackerId);
     sororitasUnitDestroyed(s, u);
+    votannUnitDestroyed(s, u, s.attack?.attackerId);
     log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);

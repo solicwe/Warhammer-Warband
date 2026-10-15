@@ -28,6 +28,7 @@ import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ld
 import { inSynapse } from './tyranids';
 import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart, tryActOfFaith } from './sororitas';
 import { aeldariBattleStart, aeldariCommandEnd, aeldariTurnStart, resetPhaseStrandsOfFate, tryFateDie } from './aeldari';
+import { votannBattleStart, votannCommandEnd } from './votann';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -854,7 +855,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   onTurnStart(s);
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
-  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); fireAll(s, 'battleStart', 'both'); }
+  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); votannBattleStart(s); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); dgRoundStart(s); knightsRoundStart(s); fireAll(s, 'roundStart', 'both'); }
   knightsTurnStart(s);
   sororitasTurnStart(s, p);
@@ -961,6 +962,7 @@ export function endPhase(s: GameState) {
     dgCommandEnd(s);
     sororitasCommandEnd(s, s.active);
     aeldariCommandEnd(s, s.active);
+    votannCommandEnd(s, s.active);
     // Uphold the Honour of the Emperor (Templar Vows): objectives held now stay yours
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtCommandEnd || !hasKw(u, 'INFANTRY')) continue;

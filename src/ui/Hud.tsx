@@ -66,6 +66,13 @@ export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; 
           {fateDice.length > 4 && <b className="miracle-more fate-more">+{fateDice.length - 4}</b>}
         </span>
       )}
+      {P.votannAbility && (
+        <span className="miracle-pool votann-pool" title={`Prioritised Efficiency: ${P.votannAbility} (${P.yieldPoints ?? 0} YP)`}>
+          <Icon name="radar" size={11} />
+          <b className="miracle-more" style={{ color: '#ffb347' }}>{P.yieldPoints ?? 0}YP</b>
+          <small style={{ fontSize: 9, opacity: 0.85, marginLeft: 2 }}>{P.votannAbility === 'Hostile Acquisition' ? 'Hostile' : 'Fortify'}</small>
+        </span>
+      )}
       {gain && <span key={gain.k} className="ss-gain">+{gain.n} VP</span>}
     </button>
   );

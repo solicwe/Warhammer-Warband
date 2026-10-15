@@ -787,5 +787,40 @@ export const PRESETS: Record<string, ArmyList> = {
       },
     ],
   },
+  LoV: {
+    name: 'Leagues of Votann (Quick)',
+    factionId: 'LoV',
+    battleSize: 'incursion',
+    detachments: ['Hearthband'],
+    units: [
+      {
+        uid: 'lov1', datasheet: 'Ûthar the Destined', models: 1, pts: 100, warlord: true, attachTo: 'lov2',
+      },
+      {
+        uid: 'lov2', datasheet: 'Hearthkyn Warriors', models: 10, pts: 90,
+      },
+      {
+        uid: 'lov3', datasheet: 'Einhyr Champion', models: 1, pts: 65, enhancement: 'Bastion Shield', enhancementPts: 25, attachTo: 'lov4',
+      },
+      {
+        uid: 'lov4', datasheet: 'Einhyr Hearthguard', models: 5, pts: 130,
+      },
+      {
+        uid: 'lov5', datasheet: 'Sagitaur', models: 1, pts: 85,
+      },
+      {
+        uid: 'lov6', datasheet: 'Cthonian Beserks', models: 5, pts: 90, embarkIn: 'lov5',
+      },
+      {
+        uid: 'lov7', datasheet: 'Hernkyn Pioneers', models: 3, pts: 85,
+      },
+      {
+        uid: 'lov8', datasheet: 'Brôkhyr Thunderkyn', models: 3, pts: 80,
+      },
+      {
+        uid: 'lov9', datasheet: 'Hekaton Land Fortress', models: 1, pts: 250,
+      },
+    ],
+  },
 };
 

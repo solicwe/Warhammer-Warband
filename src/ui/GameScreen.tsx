@@ -2322,6 +2322,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     ...(s.players[p].battleFocusTokens !== undefined && s.players[p].battleFocusTokens! > 0
       ? [<div key={`bf${p}`} className={`buffcard p${p}`}><b>Battle Focus</b><span>Tokens: {s.players[p].battleFocusTokens}</span></div>]
       : []),
+    ...(s.players[p].votannAbility
+      ? [<div key={`votann${p}`} className={`buffcard p${p}`}><b>Prioritised Efficiency ({s.players[p].yieldPoints ?? 0} YP)</b><span>Active: <b>{s.players[p].votannAbility}</b>{s.players[p].votannAbility === 'Hostile Acquisition' ? ' (+1 Hit vs objective targets, re-roll Advance & Charge)' : ' (+1 Hit from controlled objectives, −1 to Wound if S > T)'}</span></div>]
+      : []),
   ];
   // where an army's buff column goes: beside its own deployment zone (left / right, or top / bottom of the left side)
   const buffSide = (p: PlayerId): 'left' | 'right' | 'top' | 'bottom' => {
