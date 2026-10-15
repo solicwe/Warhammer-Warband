@@ -706,6 +706,8 @@ export interface GameState {
   decides?: PlayerId[];
   /** players who asked the app to deploy (and make Scouts moves for) the rest of their army */
   autoDeploy?: PlayerId[];
+  /** players who chose to deploy all units directly onto the battlefield without placing in reserves */
+  deployAllOnField?: PlayerId[];
   /** vs bot: the player rolls their own saves when the bot attacks (and can use Command Re-roll then). Default on. */
   defenderRolls?: boolean;
   /** ability re-rolls ("re-roll the Hit roll", Oath of Moment …) wait for the dice to be picked; off: every failed die is re-rolled at once */
@@ -716,8 +718,7 @@ export interface GameState {
   botIgnoresCards?: PlayerId[];
   fx?: FxEvent[];
   stats?: BattleStats;
-  /** a campaign battle: the map node, the player's relics and the enemy's special rules (ids, see campaign.ts) */
-  campaign?: { node: string; relics: string[]; rules: string[]; relicLevels?: Record<string, number> };
+  campaign?: { node: string; relics: string[]; rules: string[]; relicLevels?: Record<string, number>; lootedObjectives?: string[] };
   table?: { width: number; height: number };
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

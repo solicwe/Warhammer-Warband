@@ -32,11 +32,24 @@ const rand = (seed: number) => {
 /** Factions with a list of their own (not just allies for others). */
 export const playable = (f: FactionData) => autoList(f).units.length >= 3;
 
+export const AUX_EXCLUSIONS: Record<string, string[]> = {
+  GC: ['ASTRA MILITARUM', 'TYRANIDS'],
+  QI: ['ADEPTUS MECHANICUS'],
+  QT: ['HERETIC ASTARTES'],
+  DRU: ['HARLEQUINS', 'ASURYANI', 'YNNARI'],
+  DG: ['PLAGUE LEGIONS'],
+  TS: ['SCINTILLATING LEGIONS'],
+  WE: ['BLOOD LEGIONS'],
+  EC: ['LEGIONS OF EXCESS'],
+  CSM: ['WORLD EATERS', 'THOUSAND SONS', 'DEATH GUARD', 'EMPEROR’S CHILDREN'],
+};
+
 /** wild: ignore how hard a unit hits and pick at random (a campaign start that differs every run). */
 export function autoList(f: FactionData, points = 1000, seed = 1, wild = false): ArmyList {
   const rnd = rand(seed + f.id.length * 31);
+  const excl = AUX_EXCLUSIONS[f.id] ?? [];
   // the faction's own units (allies from other books carry other faction keywords)
-  const ownDatasheets = f.datasheets.filter((d) => !d.ally);
+  const ownDatasheets = f.datasheets.filter((d) => !d.ally && !excl.some((k) => (d.factionKeywords || []).includes(k)));
   const count = new Map<string, number>();
   for (const d of ownDatasheets) for (const k of d.factionKeywords) count.set(k, (count.get(k) ?? 0) + 1);
   const main = [...count].sort((a, b) => b[1] - a[1])[0]?.[0];

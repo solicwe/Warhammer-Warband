@@ -621,6 +621,9 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
   if (low && wantsCR(s, A.owner, 'attacks', A)) rerollAttackCount(s, low.i);
   noteTarget(s, s.attack.attackerId, s.attack.targetId);
   for (const h of startHooks) h(s, s.attack);
+  if (s.campaign) {
+    resolveAll(s);
+  }
 }
 
 /** How far below its average the worst random number of attacks of a pool is (0: nothing to re-roll). */
@@ -925,6 +928,18 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     daemonsUnitDestroyed(s, u, s.attack?.attackerId ? s.units.find((x) => x.id === s.attack?.attackerId) : undefined);
     cultAmbushUnitDestroyed(s, u);
     log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
+    if (s.campaign) {
+      const killerOwner = s.attack ? unitById(s, s.attack.attackerId).owner : other(u.owner);
+      const vpEarned = Math.max(5, Math.round((u.pts ?? 50) / 10));
+      s.players[killerOwner].vp += vpEarned;
+      log(s, `${u.name} destroyed: +${vpEarned} VP to ${s.players[killerOwner].name}`, 'kill', killerOwner);
+      const enemyAlive = s.units.filter((x) => x.owner === other(killerOwner) && x.status !== 'destroyed');
+      if (!enemyAlive.length) {
+        s.winner = killerOwner;
+        s.phase = 'gameover';
+        log(s, `All enemy units destroyed! ${s.players[killerOwner].name} wins!`, 'vp', killerOwner);
+      }
+    }
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
   if (dd) {

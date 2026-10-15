@@ -990,12 +990,25 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const onTrayClose = () => {
     const at = s.attack!;
     const attacker = U(at.attackerId);
+    const targetId = at.targetId;
     act((g) => {
       finishAttack(g);
       if (at.kind === 'overwatch') closeWindow(g);
       if (at.kind === 'fight') { markFought(g, unitById(g, attacker.id)); openCounteroffensive(g, attacker.owner); }
     });
     setMode(null);
+    // If target was destroyed in melee and attacker is human player, allow them to consolidate/move normally
+    if (at.kind === 'fight' && !bots.includes(attacker.owner)) {
+      const targetAfter = s.units.find((x) => x.id === targetId);
+      const attackerAfter = s.units.find((x) => x.id === attacker.id);
+      if (attackerAfter && attackerAfter.status === 'board' && (!targetAfter || targetAfter.status === 'destroyed' || !isEngaged(s, attackerAfter))) {
+        if (consolidateEligible(s, attackerAfter) && consolidateMode(s, attackerAfter).mode) {
+          setMode({ k: 'pile', unitId: attackerAfter.id, kind: 'consolidate' }, startPaths(attackerAfter));
+          setSel(attackerAfter.id);
+          flash(`${attackerAfter.name}: Squad destroyed! Consolidate move up to 3"`);
+        }
+      }
+    }
   };
 
   const onReroll = (stage: 'hit' | 'wound' | 'save', i: number) => {
@@ -1409,7 +1422,34 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className="handoff">{pName(s, p)} ({s.players[p].role === 'attacker' ? 'Attacker' : 'Defender'}) deploys: players alternate one unit at a time</div>
         <div className="unit-strip">{pending.map((x) => unitPill(x, false))}</div>
         {!bots.includes(p) && pending.length > 0 && !(s.autoDeploy ?? []).includes(p) && (
-          <button className="btn" data-coach="deploy-auto" onClick={() => { act((g) => { g.autoDeploy = [...(g.autoDeploy ?? []), p]; }); setSel(null); }}>Deploy the rest for me</button>
+          <div className="row wrap" style={{ gap: '0.5rem', marginBottom: '0.4rem' }}>
+            <button
+              className="btn"
+              data-coach="deploy-all"
+              onClick={() => {
+                act((g) => {
+                  g.autoDeploy = [...(g.autoDeploy ?? []), p];
+                  g.deployAllOnField = [...(g.deployAllOnField ?? []), p];
+                });
+                setSel(null);
+              }}
+            >
+              <Icon name="move" size={14} /> ลงสนามทั้งหมด (Deploy all on field)
+            </button>
+            <button
+              className="btn"
+              data-coach="deploy-auto"
+              onClick={() => {
+                act((g) => {
+                  g.autoDeploy = [...(g.autoDeploy ?? []), p];
+                  g.deployAllOnField = (g.deployAllOnField ?? []).filter((x) => x !== p);
+                });
+                setSel(null);
+              }}
+            >
+              <Icon name="reserves" size={14} /> ตามเดิม (Deploy with Reserves)
+            </button>
+          </div>
         )}
         {u ? (
           <div className="row">
@@ -1917,6 +1957,31 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             });
           })}
         </div>
+        {actionOptions(s).length > 0 && (
+          <div style={{ background: 'rgba(37, 99, 235, 0.15)', border: '1px solid rgba(59, 130, 246, 0.5)', borderRadius: 8, padding: '8px 12px', margin: '6px 0' }}>
+            <div style={{ fontWeight: 700, color: '#93c5fd', fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Icon name="objective" size={15} /> Mission Actions Available:
+            </div>
+            <div className="row wrap" style={{ gap: 6 }}>
+              {actionOptions(s).map((o) => {
+                const performer = s.units.find((x) => x.id === o.unitId);
+                return (
+                  <button
+                    key={o.unitId + o.action + (o.objId ?? '') + (o.terrainId ?? '') + (o.targetId ?? '')}
+                    className="btn small primary"
+                    onClick={() => {
+                      act((g) => startAction(g, o));
+                      flash(`${o.name}: started (${performer?.name ?? ''})`);
+                      setSel(o.unitId);
+                    }}
+                  >
+                    <b>{performer?.name}</b>: {o.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {u && (
           <>
             {unitCard(u)}
@@ -1970,14 +2035,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <>
           <div className="big-result">Charge roll: {roll}"</div>
           {chargeOpts.length ? <div className="hint"><span>Tap a highlighted enemy unit: your unit charges it</span></div> : <div className="small">No target within the rolled distance: the charge fails</div>}
-          {canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit) === null && (
+          {(hasKw(modeUnit, 'MONSTER') || hasKw(modeUnit, 'VEHICLE')) && canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit) === null && (
             <div className="small" style={{ color: '#fca5a5', marginTop: '0.2rem' }}>
               Crushing Impact (1CP) available: rolls T{alive(modeUnit)[0]?.profile.T ?? 4}D6 on impact
             </div>
           )}
           {mode.targets.length > 0 && moveControls('charge', () => confirmMove('charge', () => {
             finish();
-            const canCrush = canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit) === null && isEngaged(s, modeUnit);
+            const canCrush = (hasKw(modeUnit, 'MONSTER') || hasKw(modeUnit, 'VEHICLE')) && canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit) === null && isEngaged(s, modeUnit);
             if (canCrush) setTimeout(() => setModeRaw({ k: 'crush', unitId: modeUnit.id }), 0);
           }), <button className="btn small" onClick={() => { const add = autoApproach(s, modeUnit, mode.targets.map(U), roll); setDraft(mergePaths(startPaths(modeUnit), add)); setCheck(null); }}>Auto</button>)}
           {check && !check.ok && <div className="tiny muted">Doesn't fit? Tap Auto, or "Cancel charge" (counts as a failed charge), then End Charge → Fight</div>}
@@ -2043,7 +2108,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 {hasKw(u, 'FLY') && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
               </div>
             )}
-            {u.declaredCharge && isEngaged(s, u) && (() => {
+            {u.declaredCharge && isEngaged(s, u) && (hasKw(u, 'MONSTER') || hasKw(u, 'VEHICLE')) && (() => {
               const blocked = canUseStratagem(s, u.owner, 'crushing-impact', u);
               const enemies = engagedEnemies(s, u);
               const tVal = alive(u)[0]?.profile.T ?? 4;
@@ -2141,32 +2206,30 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const fightPanel = () => {
     const f = s.fight!;
     if (mode?.k === 'pile') return pilePanel();
-    if (f.step === 'pileIn' || f.step === 'consolidate') {
-      const p = f.stepPlayer;
-      const list = boardUnits(s, p).filter((u) => (f.step === 'pileIn' ? pileInEligible(s, u) : consolidateEligible(s, u) && consolidateMode(s, u).mode));
-      return (
-        <>
-          <div className="handoff">{f.step === 'pileIn' ? 'Pile-in' : 'Consolidate'} · {pName(s, p)} {p === s.active ? '(active player first)' : ''}</div>
-          {list.length === 0 && <div className="muted small">No units to move</div>}
-          {list.some((u) => !f.movedThisStep.includes(u.id)) && <div className="hint"><span>Tap a unit to{f.step === 'pileIn' ? ' pile in' : ' consolidate'} automatically (to place it yourself: Undo in the menu, then drag)</span></div>}
-          <div className="unit-strip">{list.map((u) => unitPill(u, f.movedThisStep.includes(u.id), () => {
-            setSel(u.id);
-            if (f.movedThisStep.includes(u.id)) return;
-            const kind = f.step === 'pileIn' ? 'pileIn' : 'consolidate';
-            if (act((g) => autoPileMove(g, unitById(g, u.id), kind))) flash(`${u.name}: ${kind === 'pileIn' ? 'Pile-in' : 'Consolidate'} done`);
-            else setMode({ k: 'pile', unitId: u.id, kind }, startPaths(u));
-          }))}</div>
-          {list.filter((u) => !f.movedThisStep.includes(u.id)).length > 1 && (
-            <button className="btn" onClick={() => {
-              const kind = f.step === 'pileIn' ? 'pileIn' : 'consolidate';
-              const n = act((g) => list.filter((u) => !g.fight!.movedThisStep.includes(u.id)).filter((u) => autoPileMove(g, unitById(g, u.id), kind)).length);
-              flash(`${kind === 'pileIn' ? 'Pile-in' : 'Consolidate'}: ${n} unit(s)`);
-            }}>{f.step === 'pileIn' ? 'Pile-in' : 'Consolidate'} all units automatically</button>
-          )}
-          {f.step === 'pileIn' && abilityBar(p, { whens: ['fightStartButton', 'anyPhase'] })}
-          <button className="btn primary" onClick={() => { act((g) => (f.step === 'pileIn' ? endPileInStep(g) : endConsolidateStep(g))); setMode(null); setSel(null); }}>Done <Icon name="next" /></button>
-        </>
-      );
+    if (f.step === 'pileIn') {
+      setTimeout(() => act((g) => {
+        if (!g.fight) return;
+        for (const p of [g.active, other(g.active)]) {
+          for (const u of boardUnits(g, p).filter((x) => pileInEligible(g, x))) {
+            autoPileMove(g, u, 'pileIn');
+          }
+        }
+        endPileInStep(g);
+        endPileInStep(g);
+      }), 0);
+      return null;
+    }
+    if (f.step === 'consolidate') {
+      setTimeout(() => act((g) => {
+        if (!g.fight) return;
+        for (const p of [g.active, other(g.active)]) {
+          for (const u of boardUnits(g, p).filter((x) => consolidateEligible(g, x) && consolidateMode(g, x).mode)) {
+            autoPileMove(g, u, 'consolidate');
+          }
+        }
+        endPhase(g);
+      }), 0);
+      return null;
     }
     // fight step
     if (mode?.k === 'fight' && modeUnit) {

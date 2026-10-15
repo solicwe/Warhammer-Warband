@@ -4,6 +4,7 @@
 import { addTimed } from './effects';
 import type { Effect } from './effects';
 import { defaultWargear, syncWargear } from './army';
+import { AUX_EXCLUSIONS } from './autoList';
 import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState, WargearPick } from './types';
 
 export type NodeKind = 'battle' | 'elite' | 'supply' | 'armory' | 'medicae' | 'boss';
@@ -79,7 +80,7 @@ export interface Run {
 }
 
 /** Relics: rules on the player's whole army (or on units with a keyword), for every battle of the run. */
-export interface Relic { id: string; name: string; text: string; units?: string; e: Effect; rare?: boolean }
+export interface Relic { id: string; name: string; text: string; units?: string; e: Effect; rare?: boolean; factionId?: string }
 export const RELICS: Relic[] = [
   { id: 'litany', name: 'Litany of Hate', text: 'BATTLELINE units re-roll Hit rolls of 1.', units: 'BATTLELINE', e: { reroll: 'hits1' } },
   { id: 'stimms', name: 'Combat Stimms', text: 'INFANTRY units have Feel No Pain 6+.', units: 'INFANTRY', e: { defend: { fnp: 6 } } },
@@ -119,6 +120,29 @@ export const RELICS: Relic[] = [
   { id: 'teleport_beacon', name: 'Teleport Transponder', text: 'Every unit gains Deep Strike and Infiltrators.', e: { abilities: ['deep strike', 'infiltrators'] }, rare: true },
   { id: 'shock_assault', name: 'Shock Assault Doctrine', text: 'Melee weapons: +1 Attack and +1 Strength on turns you charge.', e: { attacks: 1, strength: 1, attack: 'melee' } },
   { id: 'adamantine_will', name: 'Adamantine Will', text: 'Every model has Feel No Pain 5+ against mortal wounds.', e: { defend: { fnp: 5, fnpVs: 'mortal' } } },
+  // Unique Faction Relics
+  { id: 'sm_indomitus', factionId: 'SM', name: 'Armor of the Indomitus', text: 'Space Marines: +1 Save and +1 Toughness.', units: 'INFANTRY', e: { defend: { save: 1 }, toughness: 1 }, rare: true },
+  { id: 'tyr_synaptic_chitin', factionId: 'TYR', name: 'Synaptic Chitin Weave', text: 'Tyranids: Melee attacks have [LETHAL HITS] and [SUSTAINED HITS 1].', e: { abilities: ['lethal hits', 'sustained hits 1'], attack: 'melee' }, rare: true },
+  { id: 'ork_cybork', factionId: 'ORK', name: 'Super-Cybork Body', text: 'Orks: Feel No Pain 5+ and +1 Attack in melee.', e: { defend: { fnp: 5 }, attacks: 1, attack: 'melee' }, rare: true },
+  { id: 'am_kurov_aquila', factionId: 'AM', name: 'Kurov\'s Aquila', text: 'Astra Militarum: +2 CP at start of battle and orders apply army-wide.', e: {}, rare: true },
+  { id: 'csm_liber', factionId: 'CSM', name: 'Liber Hereticus', text: 'Chaos Space Marines: Melee weapons have +1 AP and +1 Damage.', e: { ap: 1, damage: 1, attack: 'melee' }, rare: true },
+  { id: 'gc_ambush_banner', factionId: 'GC', name: 'Icon of the Cult Unveiled', text: 'Genestealer Cults: Every unit gains Infiltrators, +2" Move, and +1 to Wound on Charge.', e: { move: 2, abilities: ['infiltrators'], wound: 1 }, rare: true },
+  { id: 'nec_veil', factionId: 'NEC', name: 'Veil of Darkness', text: 'Necrons: INFANTRY units gain a 4+ invulnerable save.', units: 'INFANTRY', e: { defend: { inv: 4 } }, rare: true },
+  { id: 'tau_puretide', factionId: 'TAU', name: 'Puretide Engram Chip', text: 'T\'au Empire: Ranged weapons have +1 to Hit, [IGNORES COVER] and +6" Range.', e: { hit: 1, rangeBonus: 6, abilities: ['ignores cover'], attack: 'ranged' }, rare: true },
+  { id: 'ac_auramite', factionId: 'AC', name: 'Auramite Bastion', text: 'Adeptus Custodes: Incoming Damage reduced by 1 and 4+ Feel No Pain vs mortals.', e: { defend: { damage: 1, fnp: 4, fnpVs: 'mortal' } }, rare: true },
+  { id: 'gk_nemesis_soul', factionId: 'GK', name: 'Soul-warding Glaives', text: 'Grey Knights: Melee attacks have [DEVASTATING WOUNDS] and +1 Damage.', e: { abilities: ['devastating wounds'], damage: 1, attack: 'melee' }, rare: true },
+  { id: 'dru_crucible', factionId: 'DRU', name: 'Crucible of Agonies', text: 'Drukhari: Melee and ranged weapons gain [LETHAL HITS] and +1 AP.', e: { abilities: ['lethal hits'], ap: 1 }, rare: true },
+  { id: 'ae_phoenix_gem', factionId: 'AE', name: 'Phoenix Gem of Asuryan', text: 'Aeldari: Re-roll Hit rolls of 1 and units gain a 4+ invulnerable save.', e: { reroll: 'hits1', defend: { inv: 4 } }, rare: true },
+  { id: 'dg_plague_skull', factionId: 'DG', name: 'Plague Skull of Glothila', text: 'Death Guard: +1 Toughness, Feel No Pain 5+, and +1 to Wound.', e: { toughness: 1, defend: { fnp: 5 }, wound: 1 }, rare: true },
+  { id: 'ts_athanaean', factionId: 'TS', name: 'Athenaean Sorcery Scrolls', text: 'Thousand Sons: Ranged attacks have [DEVASTATING WOUNDS] and +2 AP.', e: { abilities: ['devastating wounds'], ap: 2, attack: 'ranged' }, rare: true },
+  { id: 'we_brazen_glaive', factionId: 'WE', name: 'Berzerker Glaive of Khorne', text: 'World Eaters: +2 Attacks and +2 Strength in melee, and Fights First.', e: { attacks: 2, strength: 2, fightsFirst: true, attack: 'melee' }, rare: true },
+  { id: 'lov_crest', factionId: 'LoV', name: 'Ancestral Hearth Crest', text: 'Leagues of Votann: +1 Toughness, +1 to Wound, and +1 Save.', e: { toughness: 1, wound: 1, defend: { save: 1 } }, rare: true },
+  { id: 'adm_autocaduceus', factionId: 'AdM', name: 'Autocaduceus of Arkhan Land', text: 'Adeptus Mechanicus: VEHICLES have 4+ invulnerable save and +1 to Hit.', e: { defend: { inv: 4 }, hit: 1, attack: 'ranged' }, rare: true },
+  { id: 'cd_argath', factionId: 'CD', name: 'A\'rgath, King of Blades', text: 'Chaos Daemons: Melee attacks score Critical Hits on 5+ and have +1 Damage.', e: { critHitOn: 5, damage: 1, attack: 'melee' }, rare: true },
+  { id: 'as_saint_lucius', factionId: 'AS', name: 'Book of Saint Lucius', text: 'Adepta Sororitas: Units have +1 OC, +1 to Hit, and 5+ invulnerable save.', e: { oc: 1, hit: 1, defend: { inv: 5 } }, rare: true },
+  { id: 'aoi_rosette', factionId: 'AoI', name: 'Rosette of the Inquisitor Lord', text: 'Imperial Agents: +2 CP, and ranged attacks have [LETHAL HITS] and [IGNORES COVER].', e: { abilities: ['lethal hits', 'ignores cover'], attack: 'ranged' }, rare: true },
+  { id: 'qi_sanctuary', factionId: 'QI', name: 'Sanctuary Ion Shield', text: 'Imperial Knights: 4+ invulnerable save in melee and ranged.', e: { defend: { inv: 4 } }, rare: true },
+  { id: 'qt_warpsight', factionId: 'QT', name: 'Helm of Warpsight', text: 'Chaos Knights: Ranged attacks ignore cover, +1 to Hit, and +1 AP.', e: { abilities: ['ignores cover'], hit: 1, ap: 1, attack: 'ranged' }, rare: true },
 ];
 export const relicById = (id: string) => RELICS.find((r) => r.id === id);
 
@@ -271,8 +295,11 @@ export function reachable(run: Run): MapNode[] {
   return at ? run.map.filter((n) => at.next.includes(n.id)) : run.map.filter((n) => n.layer === 0);
 }
 
-const usable = (f: FactionData, main?: string) => f.datasheets.filter((d) => !d.ally && d.points[0]?.options?.length && !d.subfaction && d.models.length && d.weapons.length
-  && !d.keywords.includes('FORTIFICATION') && !d.keywords.includes('AIRCRAFT') && !d.keywords.includes('EPIC HERO') && !d.transport && (!main || d.factionKeywords.includes(main)));
+const usable = (f: FactionData, main?: string) => {
+  const excl = AUX_EXCLUSIONS[f.id] ?? [];
+  return f.datasheets.filter((d) => !d.ally && !excl.some((k) => (d.factionKeywords || []).includes(k)) && d.points[0]?.options?.length && !d.subfaction && d.models.length && d.weapons.length
+    && !d.keywords.includes('FORTIFICATION') && !d.keywords.includes('AIRCRAFT') && !d.keywords.includes('EPIC HERO') && !d.transport && (!main || d.factionKeywords.includes(main)));
+};
 export const cheapest = (d: DatasheetData) => [...d.points[0].options].sort((a, b) => a.pts - b.pts)[0];
 const mainKeyword = (f: FactionData) => {
   const count = new Map<string, number>();
@@ -285,9 +312,22 @@ export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt =
   const r = rng(run.seed + run.path.length * 101 + salt * 7 + 3);
   const maxLvl = 3;
   // Allow duplicate relics up to level 3 so they can level up (Vampire Survivors style)
-  const eligibleRelics = RELICS.filter((x) => (run.relicLevels?.[x.id] ?? (run.relics.includes(x.id) ? 1 : 0)) < maxLvl);
+  // Filter relics to only generic relics or relics of this faction
+  const eligibleRelics = RELICS.filter((x) => {
+    if (x.factionId && x.factionId !== faction.id) return false;
+    return (run.relicLevels?.[x.id] ?? (run.relics.includes(x.id) ? 1 : 0)) < maxLvl;
+  });
   const count = (kind === 'boss' || kind === 'elite') ? 5 : 3;
-  const relics = (rare: boolean) => pickN(eligibleRelics.filter((x) => rare || !x.rare), count, r).map((x): Reward => ({ kind: 'relic', id: x.id }));
+  const factionRelics = eligibleRelics.filter((x) => x.factionId === faction.id);
+  const relics = (rare: boolean) => {
+    const pool = eligibleRelics.filter((x) => rare || !x.rare);
+    const chosen = pickN(pool, count, r).map((x): Reward => ({ kind: 'relic', id: x.id }));
+    if (factionRelics.length && !chosen.some((c) => c.kind === 'relic' && factionRelics.some((fr) => fr.id === c.id)) && r() < 0.75) {
+      const fpick = factionRelics[Math.floor(r() * factionRelics.length)];
+      if (chosen.length) chosen[0] = { kind: 'relic', id: fpick.id };
+    }
+    return chosen;
+  };
   const units = (n: number, cap: number) => pickN(usable(faction, mainKeyword(faction)).filter((d) => { const o = cheapest(d); return o.pts >= 50 && o.pts <= cap; }), n, r)
     .map((d): Reward => { const o = cheapest(d); return { kind: 'unit', datasheet: d.name, models: o.models, pts: o.pts }; });
   if (kind === 'elite' || kind === 'boss') return relics(true);
@@ -442,7 +482,8 @@ export function buyHonorForUnit(run: Run, unitUid: string, honorId: string): Run
 
 /** Buy and recruit a new unit into the campaign roster using Scrap */
 export function recruitUnit(run: Run, faction: FactionData, datasheetName: string): Run {
-  const d = faction.datasheets.find((x) => x.name === datasheetName && !x.ally);
+  const excl = AUX_EXCLUSIONS[faction.id] ?? [];
+  const d = faction.datasheets.find((x) => x.name === datasheetName && !x.ally && !excl.some((k) => (x.factionKeywords || []).includes(k)));
   if (!d) return run;
   const o = cheapest(d);
   if (!o || (run.scrap ?? 0) < o.pts) return run;

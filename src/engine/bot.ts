@@ -96,7 +96,7 @@ export function botDeploy(s: GameState) {
     log(s, `${s.players[p].name} deploys closed: every unit as far out of sight of the enemy as it can be`, 'info', p);
   }
   // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
-  if (hasDeepStrike(s, u) && sendToReserves(s, u.id) === null) return;
+  if (!(s.deployAllOnField ?? []).includes(p) && hasDeepStrike(s, u) && sendToReserves(s, u.id) === null) return;
   // a vehicle must not be set up where ruin walls box it in for the whole game
   // Infiltrators set up forward, on an objective or in cover near one
   if (u.core.infiltrators) {

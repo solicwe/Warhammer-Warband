@@ -291,6 +291,46 @@ function BoardImpl(props: BoardProps) {
     setVb(home);
   }, [home]);
 
+  // Smooth camera zoom and pan towards selected unit
+  const selectedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!props.selected) {
+      selectedRef.current = null;
+      return;
+    }
+    if (props.selected === selectedRef.current) return;
+    selectedRef.current = props.selected;
+    const u = s.units.find((x) => x.id === props.selected);
+    if (!u) return;
+    const ms = alive(u);
+    if (!ms.length) return;
+    const cx = ms.reduce((sum, m) => sum + m.x, 0) / ms.length;
+    const cy = ms.reduce((sum, m) => sum + m.y, 0) / ms.length;
+
+    const targetW = Math.min(home.w, 20);
+    const targetH = (targetW / home.w) * home.h;
+    const targetX = Math.max(home.x, Math.min(home.x + home.w - targetW, cx - targetW / 2));
+    const targetY = Math.max(home.y, Math.min(home.y + home.h - targetH, cy - targetH / 2));
+    const startVb = { ...vb };
+    const startTime = performance.now();
+    const duration = 280;
+
+    let animId = 0;
+    const animateCamera = (now: number) => {
+      const p = Math.min(1, (now - startTime) / duration);
+      const easeVal = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      setVb({
+        x: startVb.x + (targetX - startVb.x) * easeVal,
+        y: startVb.y + (targetY - startVb.y) * easeVal,
+        w: startVb.w + (targetW - startVb.w) * easeVal,
+        h: startVb.h + (targetH - startVb.h) * easeVal,
+      });
+      if (p < 1) animId = requestAnimationFrame(animateCamera);
+    };
+    animId = requestAnimationFrame(animateCamera);
+    return () => cancelAnimationFrame(animId);
+  }, [props.selected, home]);
+
   const zoomAt = (factor: number, c: Pt, base = vb) => {
     const w = Math.min(W * 2.5, Math.max(8, base.w * factor));
     const h = (w / base.w) * base.h;
@@ -741,9 +781,6 @@ function BoardImpl(props: BoardProps) {
                   transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
                 >
                   <BaseShape m={m} p={p} grow={Math.max(0, 0.35 - m.r) + 0.35} fill="transparent" />
-                  {flinch && flinch.intensity > 0.15 && (
-                    <BaseShape m={m} p={p} grow={0.16} fill="none" stroke="#ef4444" strokeWidth={0.14} opacity={flinch.intensity * 0.75} className="fx-glow" pointerEvents="none" />
-                  )}
                   {acting.has(u.id) && <BaseShape m={m} p={p} grow={0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
                   {(isSel || isPicked) && !isDraft && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke={isSel ? '#f5b83d' : '#ffffff'} strokeWidth={0.18} className="sel-ring" pointerEvents="none" />}
                   {isMovable && !isSel && !isDraft && !isPicked && <BaseShape m={m} p={p} grow={0.24} fill="none" stroke="#38bdf8" strokeWidth={0.13} strokeDasharray="0.32 0.18" className="movable-ring" pointerEvents="none" />}

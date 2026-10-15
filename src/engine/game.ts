@@ -1859,10 +1859,32 @@ export function updateControl(s: GameState) {
     }
     o.controller = c;
     if (o.warded != null && c === other(o.warded)) o.warded = null;
+
+    // In Roguelike mode: capturing objectives grants loot rewards instead of primary VP!
+    if (s.campaign && c === 0 && !s.campaign.lootedObjectives?.includes(o.id)) {
+      (s.campaign.lootedObjectives ??= []).push(o.id);
+      const roll = (s.turn * 31 + Math.floor(o.x * 7 + o.y)) % 100;
+      let rewardText = '';
+      if (roll < 60) {
+        s.players[0].vp += 5;
+        rewardText = '+25 Scrap salvaged!';
+      } else if (roll < 85) {
+        s.players[0].cp += 1;
+        rewardText = 'Munitions cache secured (+1 CP)!';
+      } else {
+        s.players[0].vp += 5;
+        rewardText = 'Field supply secured (+5 VP)!';
+      }
+      log(s, `Objective Secured (${o.id}): ${rewardText}`, 'vp', 0);
+    }
   }
 }
 
 export function scoreTiming(s: GameState, timing: 'endOfYourCommandPhase' | 'endOfYourTurn' | 'endOfBattle', player: PlayerId = s.active) {
+  if (s.campaign) {
+    // In Roguelike mode, mission victory is elimination of enemy units, not holding objectives
+    return;
+  }
   scorePrimary(s, timing, player);
 }
 
