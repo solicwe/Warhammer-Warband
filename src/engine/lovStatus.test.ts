@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { abilityStatus } from './effects';
-import lovFaction from '../../public/data/factions/LOV.json';
+import lovFaction from '../../public/data/factions/LoV.json';
 import type { UnitState } from './types';
 
 describe('Leagues of Votann ability status check', () => {

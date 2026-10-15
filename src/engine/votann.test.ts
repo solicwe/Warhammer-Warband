@@ -13,7 +13,7 @@ import {
 import { validateList } from './army';
 import { rollMods } from './effects';
 import type { GameState, UnitState, PlayerState, FactionData, ArmyList } from './types';
-import lovFaction from '../../public/data/factions/LOV.json';
+import lovFaction from '../../public/data/factions/LoV.json';
 import smFaction from '../../public/data/factions/SM.json';
 
 function mockGameState(): GameState {

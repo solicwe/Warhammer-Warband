@@ -9,7 +9,7 @@ import type { DatasheetData, GameState, UnitState, ModelState, ArmyList, Faction
 import tlFaction from '../../public/data/factions/TL.json';
 import smFaction from '../../public/data/factions/SM.json';
 import tyrFaction from '../../public/data/factions/TYR.json';
-import votannFaction from '../../public/data/factions/LOV.json';
+import votannFaction from '../../public/data/factions/LoV.json';
 import tauFaction from '../../public/data/factions/TAU.json';
 import necronFaction from '../../public/data/factions/NEC.json';
 import acFaction from '../../public/data/factions/AC.json';
@@ -71,14 +71,14 @@ describe('Unit Sizes & Footprints (HULLS & ROUND)', () => {
     expect(astShape.hw).toBeCloseTo(4.0);
     expect(astShape.hl).toBeCloseTo(1.5);
 
-    const hekaton = votannFaction.datasheets.find((d) => d.name === 'Hekaton Land Fortress')!;
+    const hekaton = (votannFaction.datasheets as any[]).find((d: any) => d.name === 'Hekaton Land Fortress')!;
     const hekShape = baseShape(hekaton as unknown as DatasheetData, 0);
     expect(hekShape.hull).toBe(true);
     // len = 7, wid = 4.5 => hw = 2.25, hl = 1.25
     expect(hekShape.hw).toBeCloseTo(2.25);
     expect(hekShape.hl).toBeCloseTo(1.25);
 
-    const sagitaur = votannFaction.datasheets.find((d) => d.name === 'Sagitaur')!;
+    const sagitaur = (votannFaction.datasheets as any[]).find((d: any) => d.name === 'Sagitaur')!;
     const sagShape = baseShape(sagitaur as unknown as DatasheetData, 0);
     expect(sagShape.hull).toBe(true);
     // len = 4.8, wid = 3.2 => hw = 1.6, hl = 0.8
