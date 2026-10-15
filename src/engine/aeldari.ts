@@ -49,7 +49,7 @@ export function gainFateDice(
   }
 
   s.players[p].fateDice!.sort((a, b) => b - a);
-  log(s, `🔮 Strands of Fate (Army Rule): ${s.players[p].name} gained Fate dice: [${gained.join(', ')}] (${reason}) — Pool: [${s.players[p].fateDice!.join(', ')}]`, 'info', p);
+  log(s, `[Fate] Strands of Fate (Army Rule): ${s.players[p].name} gained Fate dice: [${gained.join(', ')}] (${reason}) — Pool: [${s.players[p].fateDice!.join(', ')}]`, 'info', p);
   pushFx(s, { kind: 'skill', unitId: '', owner: p, at: { x: 22, y: 15 }, name: 'Strands of Fate', who: `+${count} Fate Die: ${gained.join(', ')}`, style: 'psychic', epic: false });
   return gained;
 }
@@ -68,7 +68,7 @@ export function aeldariBattleStart(s: GameState) {
         s.players[p].fateDice = [];
         const rolled = rollN(s, numDice);
         s.players[p].fateDice = [...rolled].sort((a, b) => b - a);
-        log(s, `🔮 Strands of Fate: ${s.players[p].name} rolled initial Fate dice pool (${numDice} dice${hasEldrad ? ' including +3 from Eldrad' : ''}): [${s.players[p].fateDice.join(', ')}]`, 'info', p);
+        log(s, `[Fate] Strands of Fate: ${s.players[p].name} rolled initial Fate dice pool (${numDice} dice${hasEldrad ? ' including +3 from Eldrad' : ''}): [${s.players[p].fateDice.join(', ')}]`, 'info', p);
         pushFx(s, { kind: 'skill', unitId: '', owner: p, at: { x: 22, y: 15 }, name: 'Strands of Fate', who: `Initial Pool: [${s.players[p].fateDice.join(', ')}]`, style: 'psychic', epic: true });
       }
 
@@ -95,7 +95,7 @@ export function aeldariTurnStart(s: GameState, activePlayer: PlayerId) {
         if (hasStrategist) tokens += 1;
 
         s.players[p].battleFocusTokens = tokens;
-        log(s, `⚡ Battle Focus: ${s.players[p].name} received ${tokens} Battle Focus tokens for Battle Round ${Math.ceil(s.turn / 2)}`, 'info', p);
+        log(s, `[Battle Focus]: ${s.players[p].name} received ${tokens} Battle Focus tokens for Battle Round ${Math.ceil(s.turn / 2)}`, 'info', p);
       }
     }
   }
@@ -141,7 +141,7 @@ export function aeldariCommandEnd(s: GameState, p: PlayerId) {
       const oldVal = pool[minIdx];
       pool[minIdx] = 6;
       pool.sort((a, b) => b - a);
-      log(s, `🔮 Farseer Branching Fates: changed lowest Fate die ${oldVal} to 6! — Pool: [${pool.join(', ')}]`, 'info', p);
+      log(s, `[Fate] Farseer Branching Fates: changed lowest Fate die ${oldVal} to 6! — Pool: [${pool.join(', ')}]`, 'info', p);
       pushFx(s, { kind: 'skill', unitId: farseer.id, owner: p, at: alive(farseer)[0] ?? { x: 22, y: 15 }, name: 'Branching Fates', who: `${oldVal} → 6`, style: 'psychic', epic: false });
     }
   }
@@ -194,7 +194,7 @@ export function useFateDie(
   s.players[u.owner].strandsOfFateUsed ??= [];
   s.players[u.owner].strandsOfFateUsed!.push(u.id);
 
-  log(s, `🔮 Strands of Fate: ${u.name} substituted a ${rollType} die with Fate die [${val}] — Pool left: [${pool.join(', ')}]`, 'roll', u.owner);
+  log(s, `[Fate] Strands of Fate: ${u.name} substituted a ${rollType} die with Fate die [${val}] — Pool left: [${pool.join(', ')}]`, 'roll', u.owner);
   pushFx(s, { kind: 'skill', unitId: u.id, owner: u.owner, at: alive(u)[0] ?? { x: 22, y: 15 }, name: 'Strands of Fate', who: `${rollType}: ${val}`, style: 'psychic', epic: false });
 
   return val;

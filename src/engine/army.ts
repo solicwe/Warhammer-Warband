@@ -484,6 +484,51 @@ export function defaultWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntr
   };
   const legal = (picks: WargearPick[]) => !wargearProblems(sheet, { ...e, wargear: picks }).length;
   let picks: WargearPick[] = [];
+
+  // 1. Auto-equip all free additions (o.replace.length === 0, cost 0 pts: icons, drones, missiles, extra wargear)
+  opts.forEach((o, i) => {
+    if (o.replace.length > 0 || (o.minModels && e.models < o.minModels)) return;
+    const max = wargearMax(sheet, o, e.models, e.addons);
+    if (max <= 0) return;
+    const freeChoices = o.choices
+      .map((items, choice) => ({ choice, items }))
+      .filter((c) => c.items.length > 0 && costOf(c.items) === 0);
+    if (!freeChoices.length) return;
+
+    let used = picks.filter((p) => p.opt === i).reduce((sum, p) => sum + p.count, 0);
+    // Pass 1: distribute across distinct free choices (ideal for drones and options forbidding duplicates)
+    for (const fc of freeChoices) {
+      if (used >= max) break;
+      const stepCount = (freeChoices.length === 1 || o.scope === 'all') ? max - used : 1;
+      for (let cnt = stepCount; cnt > 0; cnt--) {
+        const candidate = [...picks, { opt: i, choice: fc.choice, count: cnt }];
+        if (legal(candidate)) {
+          picks = candidate;
+          used += cnt;
+          break;
+        }
+      }
+    }
+    // Pass 2: if slots remain and stack/duplicates are allowed, fill remaining slots
+    if (used < max && (o.stack || o.scope === 'any' || o.scope === 'all')) {
+      for (const fc of freeChoices) {
+        if (used >= max) break;
+        for (let cnt = max - used; cnt > 0; cnt--) {
+          const existing = picks.find((p) => p.opt === i && p.choice === fc.choice);
+          const next = existing
+            ? picks.map((p) => (p === existing ? { ...p, count: p.count + cnt } : p))
+            : [...picks, { opt: i, choice: fc.choice, count: cnt }];
+          if (legal(next)) {
+            picks = next;
+            used += cnt;
+            break;
+          }
+        }
+      }
+    }
+  });
+
+  // 2. Weapon swaps: greedily pick replacements that increase overall unit firepower
   let now = unitPower(picks);
   for (let round = 0; round < opts.length; round++) {
     let best: { picks: WargearPick[]; v: number } | null = null;
@@ -1110,9 +1155,11 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
   for (const [name, n] of counts) {
     const sheet = faction.datasheets.find((d) => d.name === name);
     if (!sheet) continue;
-    const limit = sheet.keywords.includes('EPIC HERO') ? 1 : sheet.maxPerArmy ? sheet.maxPerArmy
-      : sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT')
-        || (list.detachments.includes('Cult of Blood') && (name === 'Jakhals' || name === 'Goremongers')) ? size.unitLimit * 2 : size.unitLimit;
+    const isEpicHero = sheet.keywords.includes('EPIC HERO') || sheet.maxPerArmy === 1;
+    const isBattleline = sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT')
+      || (list.detachments.includes('Cult of Blood') && (name === 'Jakhals' || name === 'Goremongers'))
+      || sheet.maxPerArmy === 6;
+    const limit = isEpicHero ? 1 : isBattleline ? size.unitLimit * 2 : size.unitLimit;
     if (n > limit) errs.push(`${name}: maximum ${limit} per army`);
   }
   const shadowAssignment = faction.datasheets.flatMap((sheet) => sheet.abilities

@@ -133,7 +133,18 @@ function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUn
   const single = sheet.models.length === 1 && (sheet.composition.length <= 1);
   return (
     <div className="field">
-      <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· some weapons cost points (shown as +pts each)</span> : null}</span>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+        <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· some weapons cost points (shown as +pts each)</span> : null}</span>
+        <button
+          type="button"
+          className="btn small ghost"
+          style={{ fontSize: 11, padding: '2px 8px', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+          onClick={() => onChange(defaultWargear(sheet, { ...u, wargear: undefined }))}
+          title="Equip all free additions and optimal weapons"
+        >
+          <Icon name="wargear" size={13} /> Auto-equip Free Wargear
+        </button>
+      </div>
       {opts.map((o, i) => {
         const max = wargearMax(sheet, o, u.models, u.addons);
         const mine = picks.filter((p) => p.opt === i);
@@ -480,7 +491,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     </>
   );
 
-  /** The ⚙ page: every detachment of the faction, open one to read it, tick one to use it. */
+  /** The Detachments page: every detachment of the faction, open one to read it, tick one to use it. */
   const detPickerPage = () => {
     if (!detPicker || !faction) return null;
     const dets = faction.detachments.filter((d) => d.forceDisposition && (allowed(d) || list.detachments.includes(d.name)))

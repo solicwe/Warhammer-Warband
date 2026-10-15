@@ -26,7 +26,10 @@
   "modifierCaps": { "hitRoll": 1, "woundRoll": 1, "bestSkill": 2, "worstSkill": 6, "bestSave": 2 },
   "battleSizes": [
     { "id": "incursion", "name": "Incursion", "points": 1000, "dp": 2, "enhancements": 2, "unitLimit": 2 },
-    { "id": "strike-force", "name": "Strike Force", "points": 2000, "dp": 3, "enhancements": 4, "unitLimit": 3 }
+    { "id": "strike-force", "name": "Strike Force", "points": 2000, "dp": 3, "enhancements": 4, "unitLimit": 3 },
+    { "id": "onslaught", "name": "Onslaught", "points": 3000, "dp": 4, "enhancements": 6, "unitLimit": 4 },
+    { "id": "war-zone", "name": "War Zone", "points": 4000, "dp": 5, "enhancements": 8, "unitLimit": 5 },
+    { "id": "apocalypse", "name": "Apocalypse", "points": 5000, "dp": 6, "enhancements": 10, "unitLimit": 6 }
   ],
   "coreStratagems": [
     { "id": "command-reroll", "name": "Command Re-roll", "cp": 1, "when": "Just after an Advance / Charge / Damage / Hazardous / Hit / Save / Wound roll", "text": "Re-roll 1 die (Charge re-rolls both 2D6)" },

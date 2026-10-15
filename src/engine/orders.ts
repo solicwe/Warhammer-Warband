@@ -111,7 +111,7 @@ export function issueOrder(s: GameState, officerId: string, targetId: string, or
   }
 
   pushFx(s, { kind: 'skill', unitId: officer.id, owner: officer.owner, at: centreOf(target), name: 'Voice of Command', who: `${officer.name} → ${order}`, style: 'tech', epic: false });
-  log(s, `📢 Voice of Command (Army Rule): ${officer.name} issued order: ${order} to ${target.name}`, 'info', officer.owner);
+  log(s, `[Order] Voice of Command (Army Rule): ${officer.name} issued order: ${order} to ${target.name}`, 'info', officer.owner);
   return null;
 }
 

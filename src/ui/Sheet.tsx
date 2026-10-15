@@ -362,7 +362,7 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
         {u.core.stealth && <span className="chip">Stealth</span>}
         {u.core.deepStrike && <span className="chip">Deep Strike</span>}
         {(u.timed ?? []).filter((t) => t.label.startsWith('Order: ')).map((t, i) => (
-          <span key={`ord-${i}`} className="chip on" style={{ background: '#1c3d24', color: '#86efac', borderColor: '#22c55e', fontWeight: 800 }}>📢 {t.label}</span>
+          <span key={`ord-${i}`} className="chip on" style={{ background: '#1c3d24', color: '#86efac', borderColor: '#22c55e', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="bullhorn" size={13} /> {t.label}</span>
         ))}
         {u.buffs.map((b, i) => <span key={i} className="chip">{b.label ?? b.kind}</span>)}
       </div>

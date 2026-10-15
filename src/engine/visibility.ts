@@ -37,20 +37,9 @@ function standsIn(m: ModelState, t: TerrainPiece): boolean {
   return pointInPoly(m, t.poly);
 }
 
-/** The unit of each model (looked up once per set of units). */
-const unitOfModel = new WeakMap<UnitState[], Map<string, UnitState>>();
-function unitOf(s: GameState, m: ModelState): UnitState | undefined {
-  if (!s.units) return undefined;
-  let map = unitOfModel.get(s.units);
-  if (!map) { map = new Map(s.units.flatMap((u) => u.models.map((x) => [x.id, u] as [string, UnitState]))); unitOfModel.set(s.units, map); }
-  return map.get(m.id);
-}
-/** A unit stands in a terrain area when any of its models stands in it: all its models see out of it and are seen in it. */
-function unitStandsIn(s: GameState, m: ModelState, t: TerrainPiece): boolean {
-  if (standsIn(m, t)) return true;
-  const u = unitOf(s, m);
-  return !!u && u.models.some((x) => !x.dead && standsIn(x, t));
-}
+// Line-of-sight checks are evaluated model-to-model (13.10): a model standing in an
+// obscuring terrain feature sees out of it and can be seen into it; a model outside behind
+// the terrain feature remains obscured even if other models in its unit are inside.
 
 /** Two terrain areas whose footprints all but touch (a hairline left between them where the layout was traced):
  *  the crack between them is closed, so no line of sight slips through a corner the two pieces share. */
@@ -170,7 +159,7 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
   const y0 = Math.min(a.y - a.r, b.y - b.r), y1 = Math.max(a.y + a.r, b.y + b.r);
   const near = s.terrain.filter((t) => { const q = boxOf(t); return q.x1 >= x0 && q.x0 <= x1 && q.y1 >= y0 && q.y0 <= y1; });
   const obscuring = near.filter((t) => (denseOnly ? t.category === 'dense' : t.category !== 'exposed'));
-  const areas: { poly: Pt[] }[] = obscuring.filter((t) => !unitStandsIn(s, a, t) && !unitStandsIn(s, b, t));
+  const areas: { poly: Pt[] }[] = obscuring.filter((t) => !standsIn(a, t) && !standsIn(b, t));
   for (const br of bridgesOf(s)) {
     if (denseOnly && !br.dense) continue;
     const q = br.box;
@@ -178,7 +167,7 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
     if ([a, b].some((m) => br.of.some((t) => standsIn(m, t)) || pointInPoly(m, br.poly))) continue;
     areas.push(br);
   }
-  // an area either unit stands in does not block (13.10): its models see out of it and are seen in it; walls still block
+  // an area either model stands in does not block (13.10): a model inside sees out and is seen in it; walls still block
   return { grid: wallGridOf(s), areas };
 }
 

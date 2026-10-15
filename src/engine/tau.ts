@@ -122,7 +122,7 @@ export function pairFtgg(s: GameState, guidedId: string, observerId: string, spo
     isStealth ? 're-roll 1s to hit & wound' : '',
   ].filter(Boolean).join(' · ');
 
-  log(s, `🎯 For the Greater Good: ${observer.name} observed ${spotted.name} for ${guided.name} (${details})`, 'info', guided.owner);
+  log(s, `[Greater Good] For the Greater Good: ${observer.name} observed ${spotted.name} for ${guided.name} (${details})`, 'info', guided.owner);
   const oModel = alive(observer)[0];
   if (oModel) {
     pushFx(s, {

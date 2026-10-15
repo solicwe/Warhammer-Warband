@@ -732,16 +732,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   for (const u of s.units) {
     if (!onBoard(u)) continue;
     for (const t of u.timed ?? []) {
-      if (t.label.startsWith('Order: ')) (badges[u.id] ??= []).push(`📢 ${t.label.slice(7)}`);
+      if (t.label.startsWith('Order: ')) (badges[u.id] ??= []).push(`[Order] ${t.label.slice(7)}`);
     }
   }
   // T’au Empire For the Greater Good: prominent observer/spotted/guided badges
   if (s.phase === 'shooting') {
     for (const pair of s.ftggPairs ?? []) {
       if (pair.turn === s.turn && pair.phase === s.phase) {
-        (badges[pair.spottedId] ??= []).push('🎯 Spotted (+1 BS)');
-        (badges[pair.observerId] ??= []).push('📡 Observer');
-        (badges[pair.guidedId] ??= []).push('⚡ Guided');
+        (badges[pair.spottedId] ??= []).push('[SPOTTED +1 BS]');
+        (badges[pair.observerId] ??= []).push('[OBSERVER]');
+        (badges[pair.guidedId] ??= []).push('[GUIDED]');
       }
     }
   }
@@ -777,7 +777,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (s.players[u.owner].favoured === u.id) riledTags.push(['Favoured: re-roll Wounds', true]);
       const orderTags: [string, boolean][] = (u.timed ?? [])
         .filter((t) => t.label.startsWith('Order: '))
-        .map((t) => [`📢 ${t.label.slice(7)}`, true]);
+        .map((t) => [`[Order] ${t.label.slice(7)}`, true]);
       const tags = [...riledTags, ...orderTags, ...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...auras];
       const seen = new Set<string>();
       const uniq = tags.filter(([t]) => !seen.has(t) && !!seen.add(t));
@@ -825,10 +825,25 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return { text: `${centre.toFixed(1)}"`, line: `Distance ${centre.toFixed(1)}" (point to point) · ${hasLos(s, pt(tape.a), pt(tape.b)) ? 'clear of obscuring terrain' : 'crosses obscuring terrain'}`, los: hasLos(s, pt(tape.a), pt(tape.b)) };
     }
     const tu = U(tape.mb!.u);
+    const au = U(tape.ma!.u);
     const los = hasLos(s, ma, mb);
-    const vis = tape.ma!.u !== tape.mb!.u && modelVisible(s, ma, tu, mb);
-    const why = !los ? 'Not visible: obscured by terrain' : vis || tape.ma!.u === tape.mb!.u ? 'Visible' : isHidden(s, tu, mb) ? 'In line of sight but Hidden: get within detection range' : 'Not visible';
-    return { text: `${baseDist(ma, mb).toFixed(1)}"`, line: `Base to base ${baseDist(ma, mb).toFixed(1)}" (centre to centre ${centre.toFixed(1)}") · ${why}`, los: los && (vis || tape.ma!.u === tape.mb!.u) };
+    const diffUnit = tape.ma!.u !== tape.mb!.u;
+    const vis = diffUnit && modelVisible(s, ma, tu, mb);
+    const otherVisibleInUnit = diffUnit && !vis && alive(tu).some((om) => om.id !== mb.id && (modelVisible(s, ma, tu, om) || alive(au).some((oa) => modelVisible(s, oa, tu, om))));
+    let why = '';
+    if (!los) {
+      why = 'Not visible: obscured by terrain/wall';
+      if (otherVisibleInUnit) why += ' · (Unit is targetable via other visible squadmates)';
+    } else if (vis || !diffUnit) {
+      why = 'Visible (in line of sight)';
+    } else if (isHidden(s, tu, mb)) {
+      why = 'In line of sight but Hidden: get within detection range';
+      if (otherVisibleInUnit) why += ' · (Unit is targetable via other visible squadmates)';
+    } else {
+      why = 'Not visible';
+      if (otherVisibleInUnit) why += ' · (Unit is targetable via other visible squadmates)';
+    }
+    return { text: `${baseDist(ma, mb).toFixed(1)}"`, line: `Base to base ${baseDist(ma, mb).toFixed(1)}" (centre to centre ${centre.toFixed(1)}") · ${why}`, los: los && (vis || !diffUnit) };
   })();
   const rings: Ring[] = [];
   if (mode?.k === 'charge' && modeUnit) {
@@ -1808,9 +1823,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   <div className="statline">
                     Hit <b>{p.autoHit ? 'auto' : p.hitOn6Only ? '6' : `${p.skill}+`}</b>{p.hitMod ? ` (${p.hitMod > 0 ? '+' : ''}${p.hitMod})` : ''} · Wound <b>{p.woundNeed}+</b>{p.woundMod ? ` (+${p.woundMod})` : ''} · AP <b>{p.ap}</b> · D <b>{p.damage}</b>
                     {covered ? ` · cover ${covered}/${models}` : ''}{p.rerollAllHits ? ' · Oath' : ''}
-                    {p.skillNote?.includes('For the Greater Good +1 BS') && <span className="oath-tag guided-tag">🎯 Guided +1 BS</span>}
-                    {p.skillNote?.includes('For the Greater Good (non-spotted)') && <span className="oath-tag" style={{ background: '#c62828' }}>⚠️ Non-spotted −1 BS</span>}
-                    {p.rerollHits1 && p.rerollWounds1 && <span className="oath-tag observer-tag">📡 Spotter 1s</span>}
+                    {p.skillNote?.includes('For the Greater Good +1 BS') && <span className="oath-tag guided-tag"><Icon name="crosshair" size={12} /> Guided +1 BS</span>}
+                    {p.skillNote?.includes('For the Greater Good (non-spotted)') && <span className="oath-tag" style={{ background: '#c62828' }}><Icon name="shock" size={12} /> Non-spotted −1 BS</span>}
+                    {p.rerollHits1 && p.rerollWounds1 && <span className="oath-tag observer-tag"><Icon name="radar" size={12} /> Spotter 1s</span>}
                   </div>
                 </div>
               );

@@ -44,7 +44,7 @@ export function gainMiracleDice(s: GameState, p: PlayerId, count = 1, fixedValue
   }
 
   s.players[p].miracleDice!.sort((a, b) => b - a);
-  log(s, `✨ Acts of Faith (Army Rule): ${s.players[p].name} gained Miracle dice: [${gained.join(', ')}] (${reason}) — Pool: [${s.players[p].miracleDice!.join(', ')}]`, 'info', p);
+  log(s, `[Miracle] Acts of Faith (Army Rule): ${s.players[p].name} gained Miracle dice: [${gained.join(', ')}] (${reason}) — Pool: [${s.players[p].miracleDice!.join(', ')}]`, 'info', p);
   pushFx(s, { kind: 'skill', unitId: '', owner: p, at: { x: 22, y: 15 }, name: 'Acts of Faith', who: `+${count} Miracle Die: ${gained.join(', ')}`, style: 'holy', epic: false });
   return gained;
 }
@@ -192,7 +192,7 @@ export function performActOfFaith(
   s.players[u.owner].actsOfFaithUsed ??= [];
   s.players[u.owner].actsOfFaithUsed!.push(u.id);
 
-  log(s, `✨ Act of Faith: ${u.name} substituted a ${rollType} die with Miracle die [${val}] — Pool left: [${pool.join(', ')}]`, 'roll', u.owner);
+  log(s, `[Miracle] Act of Faith: ${u.name} substituted a ${rollType} die with Miracle die [${val}] — Pool left: [${pool.join(', ')}]`, 'roll', u.owner);
   pushFx(s, { kind: 'skill', unitId: u.id, owner: u.owner, at: alive(u)[0] ?? { x: 22, y: 15 }, name: 'Act of Faith', who: `${rollType}: ${val}`, style: 'holy', epic: false });
 
   // Cherub ability: once per battle, after performing an Act of Faith, gain 1 Miracle die

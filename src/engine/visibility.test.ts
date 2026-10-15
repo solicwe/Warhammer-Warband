@@ -75,15 +75,14 @@ describe('a hairline between two terrain areas (layout tracing)', () => {
   });
 });
 
-describe('a unit in a terrain area', () => {
-  it('one of its models standing in the area puts the whole unit in it: the others see out and are seen', () => {
+describe('model-level obscuring in a unit', () => {
+  it('models standing outside behind an obscuring ruin cannot see through it, even if a squadmate stands inside', () => {
     const t = area(18, 10, 21, 30, 'light');
     const inside = { ...model(19, 20), id: 'a1', dead: false } as unknown as ModelState;
     const outside = { ...model(16.5, 20), id: 'a2', dead: false } as unknown as ModelState;
     const viewer = { ...model(30, 20), id: 'b1', dead: false } as unknown as ModelState;
-    const lone = { units: [], terrain: [t] } as unknown as GameState;
     const squad = { units: [{ id: 'A', models: [inside, outside] }, { id: 'B', models: [viewer] }], terrain: [t] } as unknown as GameState;
-    expect(hasLos(lone, outside, viewer)).toBe(false); // on its own, the whole area is in between
-    expect(hasLos(squad, outside, viewer)).toBe(true); // its unit-mate stands in the area: it sees out of it
+    expect(hasLos(squad, inside, viewer)).toBe(true); // inside the ruin: sees out to viewer
+    expect(hasLos(squad, outside, viewer)).toBe(false); // outside behind the ruin: still blocked by obscuring terrain
   });
 });

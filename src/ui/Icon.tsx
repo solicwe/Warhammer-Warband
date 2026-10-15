@@ -65,6 +65,13 @@ const ICONS = {
   // the hand of Secondary Mission cards, and Stratagems (spent from Command points)
   cards: <><rect {...S} x="8" y="3" width="12" height="16" rx="2" /><path {...S} d="M5 6.5V19a2 2 0 0 0 2 2h9" /></>,
   strat: <><path {...S} d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" /><path {...S} d="M13 7.5l-3.5 5h3l-1 4 3.5-5h-3z" /></>,
+  // tactical markers & army rules (replacing emojis)
+  bullhorn: <><path {...S} d="M3 11v2a1 1 0 0 0 1 1h3l7 4V6l-7 4H4a1 1 0 0 0-1 1z" /><path {...S} d="M17 9a4 4 0 0 1 0 6" /><path {...S} d="M7 14v4a1 1 0 0 0 1 1h1" /></>,
+  crosshair: <><circle {...S} cx="12" cy="12" r="7" /><path {...S} d="M12 2v3M12 19v3M2 12h3M19 12h3" /><circle {...F} cx="12" cy="12" r="1.5" /></>,
+  radar: <><path {...S} d="M12 20a8 8 0 1 0-8-8" /><path {...S} d="M12 16a4 4 0 1 0-4-4" /><circle {...F} cx="12" cy="12" r="1.5" /><path {...S} d="M12 12L18 6" /></>,
+  zap: <path {...S} d="M13 2L4 14h7v8l9-12h-7z" />,
+  sparkles: <><path {...S} d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" /><path {...S} d="M19 17l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" /></>,
+  fate: <><polygon {...S} points="12 2 20 7 20 17 12 22 4 17 4 7" /><circle {...F} cx="12" cy="12" r="2.5" /></>,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof ICONS;
