@@ -732,7 +732,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   for (const u of s.units) {
     if (!onBoard(u)) continue;
     for (const t of u.timed ?? []) {
-      if (t.label.startsWith('Order: ')) (badges[u.id] ??= []).push(`[Order] ${t.label.slice(7)}`);
+      if (t.label.startsWith('Order: ')) (badges[u.id] ??= []).push(`[Order: ${t.label.slice(7)}]`);
     }
   }
   // T’au Empire For the Greater Good: prominent observer/spotted/guided badges
@@ -775,10 +775,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (waaagh) chip(u.owner, 'WAAAGH!', ['5+ inv', 'Assault', 'Adv & Charge']);
       const riledTags: [string, boolean][] = isRiled(s, u) && !waaagh ? [['5+ inv', true], ['Assault', true], ['Adv & Charge', true]] : [];
       if (s.players[u.owner].favoured === u.id) riledTags.push(['Favoured: re-roll Wounds', true]);
-      const orderTags: [string, boolean][] = (u.timed ?? [])
-        .filter((t) => t.label.startsWith('Order: '))
-        .map((t) => [`[Order] ${t.label.slice(7)}`, true]);
-      const tags = [...riledTags, ...orderTags, ...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...auras];
+      const tags = [...riledTags, ...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...auras];
       const seen = new Set<string>();
       const uniq = tags.filter(([t]) => !seen.has(t) && !!seen.add(t));
       if (uniq.length) buffTags[u.id] = uniq;

@@ -690,21 +690,26 @@ let uidCounter = 0;
 export const newUid = (p = 'u') => `${p}${Date.now().toString(36)}${(uidCounter++).toString(36)}`;
 
 function makeModels(sheet: DatasheetData, e: Pick<ArmyUnitEntry, 'models' | 'wargear' | 'addons'>, unitId: string, bodyguard: boolean): ModelState[] {
-  const isChar = sheet.keywords.includes('CHARACTER');
+  const isCharUnit = sheet.keywords.includes('CHARACTER');
+  const maxW = sheet.models?.length ? Math.max(...sheet.models.map((m) => m.W)) : 1;
+  const attendantRe = /veteran|disciple|acolyte|servitor|corv|cog|assistant|menhir|geminae|other|scion|guardsm|ghost|ravener/i;
   const plans = planModels(sheet, e.models, e.addons);
   applyWargear(sheet, plans, e.wargear ?? []);
   return plans.map((p, i) => {
     const weapons = p.items.map((n) => weaponNamed(sheet, n)).filter((w): w is WeaponData => !!w);
     const gear = p.items.filter((n) => !weaponNamed(sheet, n));
     const profile = gearProfile(sheet, gear, sheet.models[p.profile]);
+    const isAttendant = sheet.models.length > 1 && profile.W < maxW && attendantRe.test(p.name || profile.name);
+    const modelIsChar = isCharUnit && !isAttendant;
+    const keywords = [...sheet.keywords, ...sheet.factionKeywords].filter((k) => modelIsChar || k !== 'CHARACTER');
     return {
       id: `${unitId}-m${i}`,
       name: p.name,
       profile,
       source: sheet.name,
-      isCharacter: isChar,
+      isCharacter: modelIsChar,
       isBodyguard: bodyguard,
-      keywords: [...sheet.keywords, ...sheet.factionKeywords],
+      keywords,
       weapons,
       ...(gear.length ? { gear } : {}),
       x: -100, y: -100,
