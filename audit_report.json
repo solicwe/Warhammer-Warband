@@ -1,0 +1,1622 @@
+{
+  "timestamp": "2026-10-16T15:14:21.852Z",
+  "totalFactions": 25,
+  "botChecks": {
+    "oathOfMoment": true,
+    "waaagh": true,
+    "synapse": true,
+    "darkPacts": true,
+    "combatResolutionPassive": true,
+    "durationExpiration": true
+  },
+  "cappingPass": true,
+  "keywordPass": true,
+  "errorsCount": 0,
+  "allErrors": [],
+  "factions": {
+    "AC": {
+      "factionId": "AC",
+      "factionName": "Adeptus Custodes",
+      "totalDetachments": 13,
+      "implementedDetachments": 13,
+      "detachmentStatuses": {
+        "Guardians of the Throne": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Aquilan Shield": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Emperor's Chosen": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Emissaries Imperatus": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Dread Host": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Shadowkeepers": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Solar Watch": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Auric Champions": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Honoured Companions": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Lions of the Emperor": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Might of the Moritoi": {
+          "status": "PASS",
+          "effectsCount": 3
+        },
+        "Grav-Assault Force": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Null Maiden Vigil": {
+          "status": "PASS",
+          "effectsCount": 1
+        }
+      },
+      "armyRulesStatuses": {
+        "Aegis of the Emperor": {
+          "status": "PASS"
+        },
+        "Aquila Commander": {
+          "status": "PASS"
+        },
+        "Daughters of the Abyss": {
+          "status": "PASS"
+        },
+        "Special Move Types": {
+          "status": "PASS"
+        },
+        "Martial Ka'tah": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "AdM": {
+      "factionId": "AdM",
+      "factionName": "Adeptus Mechanicus",
+      "totalDetachments": 10,
+      "implementedDetachments": 0,
+      "detachmentStatuses": {
+        "Rad-Zone Corps": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Skitarii Hunter Cohort": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Data-Psalm Conclave": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Explorator Maniple": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Cohort Cybernetica": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Haloscreed Battle Clade": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Eradication Cohort": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Cohort Acquisitus": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Lords of the Forge": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Luminen Auto-choir": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        }
+      },
+      "armyRulesStatuses": {
+        "Doctrina Imperatives": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "AE": {
+      "factionId": "AE",
+      "factionName": "Aeldari",
+      "totalDetachments": 15,
+      "implementedDetachments": 5,
+      "detachmentStatuses": {
+        "Armoured Warhost": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Warhost": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Windrider Host": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Spirit Conclave": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Guardian Battlehost": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Ghosts of the Webway": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Devoted of Ynnead": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Seer Council": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Aspect Host": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Serpent’s Brood": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Eldritch Raiders": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Corsair Coterie": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Fateful Performance": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Path of the Outcast": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Twilight Flickers": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        }
+      },
+      "armyRulesStatuses": {
+        "Strands of Fate": {
+          "status": "PASS"
+        },
+        "Battle Focus": {
+          "status": "PASS"
+        },
+        "Agile Manoeuvres": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Disparate Paths": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "AM": {
+      "factionId": "AM",
+      "factionName": "Astra Militarum",
+      "totalDetachments": 11,
+      "implementedDetachments": 11,
+      "detachmentStatuses": {
+        "Combined Arms": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Bridgehead Strike": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Siege Regiment": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Mechanised Assault": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Hammer of the Emperor": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Recon Element": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Grizzled Company": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Steel Hammer": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Armoured Infantry": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Abhuman Auxiliaries": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Designation Force": {
+          "status": "PASS",
+          "effectsCount": 0
+        }
+      },
+      "armyRulesStatuses": {
+        "Voice of Command": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "AoI": {
+      "factionId": "AoI",
+      "factionName": "Imperial Agents",
+      "totalDetachments": 5,
+      "implementedDetachments": 5,
+      "detachmentStatuses": {
+        "Ordo Xenos Alien Hunters": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Ordo Hereticus Purgation Force": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Ordo Malleus Daemon Hunters": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Imperialis Fleet": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Veiled Blade Elimination Force": {
+          "status": "PASS",
+          "effectsCount": 1
+        }
+      },
+      "armyRulesStatuses": {
+        "Assigned Agents": {
+          "status": "PASS"
+        },
+        "Kill Team": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "AS": {
+      "factionId": "AS",
+      "factionName": "Adepta Sororitas",
+      "totalDetachments": 8,
+      "implementedDetachments": 8,
+      "detachmentStatuses": {
+        "Hallowed Martyrs": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Penitent Host": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Bringers of Flame": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Army of Faith": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Champions of Faith": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Chorus of Condemnation": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Sacred Champions": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Sanctified Orators": {
+          "status": "PASS",
+          "effectsCount": 0
+        }
+      },
+      "armyRulesStatuses": {
+        "Acts of Faith": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "CD": {
+      "factionId": "CD",
+      "factionName": "Chaos Daemons",
+      "totalDetachments": 9,
+      "implementedDetachments": 9,
+      "detachmentStatuses": {
+        "Daemonic Incursion": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Legion of Excess": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Scintillating Legion": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Blood Legion": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Plague Legion": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Shadow Legion": {
+          "status": "PASS",
+          "effectsCount": 3
+        },
+        "Cavalcade of Chaos": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Lords of the Warp": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Warptide": {
+          "status": "PASS",
+          "effectsCount": 1
+        }
+      },
+      "armyRulesStatuses": {
+        "Dark Pacts": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "The Shadow of Chaos": {
+          "status": "PASS"
+        },
+        "Daemonic Pact": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "CSM": {
+      "factionId": "CSM",
+      "factionName": "Chaos Space Marines",
+      "totalDetachments": 17,
+      "implementedDetachments": 17,
+      "detachmentStatuses": {
+        "Pactbound Zealots": {
+          "status": "PASS",
+          "effectsCount": 6
+        },
+        "Veterans of the Long War": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Deceptors": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Renegade Raiders": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Dread Talons": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Fellhammer Siege-host": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Chaos Cult": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Soulforged Warpack": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Creations of Bile": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Cabal of Chaos": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Nightmare Hunt": {
+          "status": "PASS",
+          "effectsCount": 4
+        },
+        "Huron’s Marauders": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Renegade Warband": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Warpstrike Champions": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Cult of the Arkifane": {
+          "status": "PASS",
+          "effectsCount": 3
+        },
+        "Devotees of Destruction": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Murdertalon Raiders": {
+          "status": "PASS",
+          "effectsCount": 4
+        }
+      },
+      "armyRulesStatuses": {
+        "Dark Pacts": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Cult of the Dark Gods": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "DG": {
+      "factionId": "DG",
+      "factionName": "Death Guard",
+      "totalDetachments": 9,
+      "implementedDetachments": 9,
+      "detachmentStatuses": {
+        "Flyblown Host": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Virulent Vectorium": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Mortarion’s Hammer": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Champions of Contagion": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Tallyband Summoners": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Shamblerot Vectorium": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Death Lord’s Chosen": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Contagion Engines": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Paragons of Putrescence": {
+          "status": "PASS",
+          "effectsCount": 0
+        }
+      },
+      "armyRulesStatuses": {
+        "Nurgle’s Gift (Aura)": {
+          "status": "PASS"
+        },
+        "Pact of Decay": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "DRU": {
+      "factionId": "DRU",
+      "factionName": "Drukhari",
+      "totalDetachments": 9,
+      "implementedDetachments": 0,
+      "detachmentStatuses": {
+        "Skysplinter Assault": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Reaper’s Wager": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Realspace Raiders": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Spectacle of Spite": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Covenite Coterie": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Kabalite Cartel": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Exhibition of Slaughter": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Kabalite Agonysts": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Tools of Torment": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        }
+      },
+      "armyRulesStatuses": {
+        "Power from Pain": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Battle Focus": {
+          "status": "PASS"
+        },
+        "Disparate Paths": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Corsairs and Travelling Players": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "EC": {
+      "factionId": "EC",
+      "factionName": "Emperor’s Children",
+      "totalDetachments": 10,
+      "implementedDetachments": 10,
+      "detachmentStatuses": {
+        "Mercurial Host": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Peerless Bladesmen": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Rapid Evisceration": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Carnival of Excess": {
+          "status": "PASS",
+          "effectsCount": 4
+        },
+        "Coterie of the Conceited": {
+          "status": "PASS",
+          "effectsCount": 4
+        },
+        "Slaanesh’s Chosen": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Court of the Phoenician": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Elegant Brutes": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Frenzied Host": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Spectacle of Slaughter": {
+          "status": "PASS",
+          "effectsCount": 1
+        }
+      },
+      "armyRulesStatuses": {
+        "Thrill Seekers": {
+          "status": "PASS"
+        },
+        "Pact of Excess": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "GC": {
+      "factionId": "GC",
+      "factionName": "Genestealer Cults",
+      "totalDetachments": 9,
+      "implementedDetachments": 9,
+      "detachmentStatuses": {
+        "Host of Ascension": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Xenocreed Congregation": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Biosanctic Broodsurge": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Outlander Claw": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Brood Brother Auxilia": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Final Day": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Heroes of the Uprising": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Purestrain Broodswarm": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Xenocult Masses": {
+          "status": "PASS",
+          "effectsCount": 0
+        }
+      },
+      "armyRulesStatuses": {
+        "Synapse": {
+          "status": "PASS"
+        },
+        "Shadow in the Warp": {
+          "status": "PASS"
+        },
+        "Cult Ambush": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "GK": {
+      "factionId": "GK",
+      "factionName": "Grey Knights",
+      "totalDetachments": 9,
+      "implementedDetachments": 9,
+      "detachmentStatuses": {
+        "Warpbane Task Force": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Brotherhood Strike": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Hallowed Conclave": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Banishers": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Sanctic Spearhead": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Augurium Task Force": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Argent Assault": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Fires of Purgation": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Immaterial Interdiction": {
+          "status": "PASS",
+          "effectsCount": 0
+        }
+      },
+      "armyRulesStatuses": {
+        "Gate of Infinity": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "LoV": {
+      "factionId": "LoV",
+      "factionName": "Leagues of Votann",
+      "totalDetachments": 10,
+      "implementedDetachments": 0,
+      "detachmentStatuses": {
+        "Hearthband": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Needgaârd Oathband": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Persecution Prospect": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Dêlve Assault Shift": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Brandfast Oathband": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Hearthfyre Arsenal": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Mercenary Oathband": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Armoured Trailblazers": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Farseekers": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Hearthguard Covenant": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        }
+      },
+      "armyRulesStatuses": {
+        "Prioritised Efficiency": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "NEC": {
+      "factionId": "NEC",
+      "factionName": "Necrons",
+      "totalDetachments": 12,
+      "implementedDetachments": 12,
+      "detachmentStatuses": {
+        "Awakened Dynasty": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Annihilation Legion": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Canoptek Court": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Obeisance Phalanx": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Hypercrypt Legion": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Starshatter Arsenal": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Cryptek Conclave": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Cursed Legion": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Pantheon of Woe": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Hand of the Dynasty": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Skyshroud Spearhead": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "The Phaeron's Armoury": {
+          "status": "PASS",
+          "effectsCount": 0
+        }
+      },
+      "armyRulesStatuses": {
+        "Reanimation Protocols": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "ORK": {
+      "factionId": "ORK",
+      "factionName": "Orks",
+      "totalDetachments": 15,
+      "implementedDetachments": 15,
+      "detachmentStatuses": {
+        "War Horde": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Da Big Hunt": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Kult of Speed": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Dread Mob": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Green Tide": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Bully Boyz": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Taktikal Brigade": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Blitz Brigade": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Wreckas": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Runt Swarm": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Shoota Boyz": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Madcap Meks": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Brute Bosses": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Flyboyz": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Wurrband": {
+          "status": "PASS",
+          "effectsCount": 0
+        }
+      },
+      "armyRulesStatuses": {
+        "Waaagh!": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Da Boss": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Unstable Energies": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Special Move Types": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "QI": {
+      "factionId": "QI",
+      "factionName": "Imperial Knights",
+      "totalDetachments": 8,
+      "implementedDetachments": 8,
+      "detachmentStatuses": {
+        "Questor Forgepact": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Valourstrike Lance": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Gate Warden Lance": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Questoris Companions": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Spearhead-At-Arms": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Freeblade Company": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Dominus Foebreakers": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Throne-Bonded Outriders": {
+          "status": "PASS",
+          "effectsCount": 1
+        }
+      },
+      "armyRulesStatuses": {
+        "Code Chivalric": {
+          "status": "PASS"
+        },
+        "Bondsman": {
+          "status": "PASS"
+        },
+        "Super-heavy Walker": {
+          "status": "PASS"
+        },
+        "Freeblades": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "QT": {
+      "factionId": "QT",
+      "factionName": "Chaos Knights",
+      "totalDetachments": 8,
+      "implementedDetachments": 8,
+      "detachmentStatuses": {
+        "Traitoris Lance": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Iconoclast Fiefdom": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Infernal Lance": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Lords of Dread": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Houndpack Lance": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Helhunt Lance": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Bastions of Tyranny": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Hunting Warpack": {
+          "status": "PASS",
+          "effectsCount": 0
+        }
+      },
+      "armyRulesStatuses": {
+        "Harbingers of Dread": {
+          "status": "PASS"
+        },
+        "Super-heavy Walker": {
+          "status": "PASS"
+        },
+        "Dreadblades": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "SM": {
+      "factionId": "SM",
+      "factionName": "Space Marines",
+      "totalDetachments": 35,
+      "implementedDetachments": 35,
+      "detachmentStatuses": {
+        "Gladius Task Force": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Assault Brethren": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Tactical Brethren": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Devastator Brethren": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Terminator Storm Force": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Tacticus Attack Force": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Tacticus Firestorm Force": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Phobos Shadow Force": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Phobos Shock Force": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Gravis Linebreaker Force": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Gravis Siege Force": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Stormlance Task Force": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Ironclad Champions": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Gauntlet Task Force": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Ironstorm Spearhead": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Blade of Ultramar": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Ceramite Sentinels": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Forgefather's Seekers": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Medusa's Wrath": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Shadowmark Talon": {
+          "status": "PASS",
+          "effectsCount": 3
+        },
+        "Spearpoint Task Force": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Angelic Inheritors": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Encarmine Speartip": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Wrath of the Doomed": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Black Spear Task Force": {
+          "status": "PASS",
+          "effectsCount": 3
+        },
+        "Deathwatch Support": {
+          "status": "PASS",
+          "effectsCount": 3
+        },
+        "Inner Circle Task Force": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Wrath of the Rock": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Darkflight Pursuit": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Marshal's Household": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Vow-sworn Crusaders": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Fist of the God-Emperor": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Champions of Fenris": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Saga of the Beastslayer": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Saga of the Great Wolf": {
+          "status": "PASS",
+          "effectsCount": 6
+        }
+      },
+      "armyRulesStatuses": {
+        "Combat Doctrines": {
+          "status": "PASS"
+        },
+        "Transhuman Strategist": {
+          "status": "PASS"
+        },
+        "Librarius": {
+          "status": "PASS"
+        },
+        "Hunter": {
+          "status": "PASS"
+        },
+        "Special Move Types": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "TAU": {
+      "factionId": "TAU",
+      "factionName": "T’au Empire",
+      "totalDetachments": 7,
+      "implementedDetachments": 4,
+      "detachmentStatuses": {
+        "Kauyon": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Mont’ka": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Retaliation Cadre": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Kroot Hunting Pack": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Auxiliary Cadre": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Experimental Prototype Cadre": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        },
+        "Advanced Acquisition Cadre": {
+          "status": "NEEDS_MANUAL_REVIEW",
+          "reason": "Detachment rule not defined in data/detachment-rules.json"
+        }
+      },
+      "armyRulesStatuses": {
+        "For the Greater Good": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "TL": {
+      "factionId": "TL",
+      "factionName": "Adeptus Titanicus",
+      "totalDetachments": 0,
+      "implementedDetachments": 0,
+      "detachmentStatuses": {},
+      "armyRulesStatuses": {
+        "Towering Example": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Titanic Support": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Titanicus Traitoris": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Designer’s Note": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Super-heavy Walker": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "TS": {
+      "factionId": "TS",
+      "factionName": "Thousand Sons",
+      "totalDetachments": 9,
+      "implementedDetachments": 9,
+      "detachmentStatuses": {
+        "Hexwarp Thrallband": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Grand Coven": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Changehost of Deceit": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Warpmeld Pact": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Rubricae Phalanx": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Warpforged Cabal": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Ritual of Regeneration": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Sekhetar Cohort": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Servants of Change": {
+          "status": "PASS",
+          "effectsCount": 2
+        }
+      },
+      "armyRulesStatuses": {
+        "Cabal of Sorcerers": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        },
+        "Pact of Sorcery": {
+          "status": "PASS",
+          "reason": "Engine native execution"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "TYR": {
+      "factionId": "TYR",
+      "factionName": "Tyranids",
+      "totalDetachments": 10,
+      "implementedDetachments": 10,
+      "detachmentStatuses": {
+        "Invasion Fleet": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Crusher Stampede": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Unending Swarm": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Assimilation Swarm": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Vanguard Onslaught": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Synaptic Nexus": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Warrior Bioform Onslaught": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Subterranean Assault": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Ambush Predators": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Talons of the Norn Queen": {
+          "status": "PASS",
+          "effectsCount": 0
+        }
+      },
+      "armyRulesStatuses": {
+        "Synapse": {
+          "status": "PASS"
+        },
+        "Shadow in the Warp": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "UA": {
+      "factionId": "UA",
+      "factionName": "Unbound Adversaries",
+      "totalDetachments": 0,
+      "implementedDetachments": 0,
+      "detachmentStatuses": {},
+      "armyRulesStatuses": {},
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    },
+    "WE": {
+      "factionId": "WE",
+      "factionName": "World Eaters",
+      "totalDetachments": 8,
+      "implementedDetachments": 8,
+      "detachmentStatuses": {
+        "Berzerker Warband": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Vessels of Wrath": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Cult of Blood": {
+          "status": "PASS",
+          "effectsCount": 1
+        },
+        "Khorne Daemonkin": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Possessed Slaughterband": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Goretrack Onslaught": {
+          "status": "PASS",
+          "effectsCount": 2
+        },
+        "Brazen Engines": {
+          "status": "PASS",
+          "effectsCount": 0
+        },
+        "Butchers of Khorne": {
+          "status": "PASS",
+          "effectsCount": 0
+        }
+      },
+      "armyRulesStatuses": {
+        "Blessings of Khorne": {
+          "status": "PASS"
+        },
+        "Pact of Blood": {
+          "status": "PASS"
+        }
+      },
+      "combatPassivesCheck": "PASS",
+      "modifierCappingCheck": "PASS",
+      "keywordFilteringCheck": "PASS",
+      "botAutomationCheck": "PASS",
+      "errors": []
+    }
+  }
+}
