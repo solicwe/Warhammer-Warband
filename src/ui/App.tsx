@@ -98,6 +98,13 @@ export default function App() {
         }}
         onDuplicate={(id) => setArmies((xs) => { const a = xs.find((x) => x.id === id); return a ? [...xs, { ...structuredClone(a), id: newUid('a'), name: `${a.name || 'Army'} (copy)`, updatedAt: Date.now() }] : xs; })}
         onDelete={(id) => setArmies((xs) => xs.filter((x) => x.id !== id))}
+        onImportArmies={(newArmies) => {
+          setArmies((xs) => {
+            const existingIds = new Set(xs.map((x) => x.id));
+            const toAdd = newArmies.map((a) => (existingIds.has(a.id) ? { ...a, id: newUid('a') } : a));
+            return [...xs, ...toAdd];
+          });
+        }}
         onBattle={() => setScreen({ kind: 'battle' })}
         onCampaign={() => setScreen({ kind: 'campaign' })}
         onTutorial={() => {
