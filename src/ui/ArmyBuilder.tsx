@@ -233,12 +233,31 @@ export function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u:
               o.choices.map((c, ci) => {
                 const cur = mine.find((p) => p.choice === ci)?.count ?? 0;
                 const setN = (n: number) => put(i, [...mine.filter((p) => p.choice !== ci), ...(n > 0 ? [{ opt: i, choice: ci, count: n }] : [])]);
+                const onAdd = () => {
+                  if (used < max) {
+                    setN(cur + 1);
+                  } else if (max > 0) {
+                    const other = mine.find((p) => p.choice !== ci && p.count > 0);
+                    if (other) {
+                      const nextMine = mine.map((p) => {
+                        if (p.choice === other.choice) return { ...p, count: p.count - 1 };
+                        if (p.choice === ci) return { ...p, count: p.count + 1 };
+                        return p;
+                      }).filter((p) => p.count > 0);
+                      if (!mine.some((p) => p.choice === ci)) {
+                        nextMine.push({ opt: i, choice: ci, count: 1 });
+                      }
+                      put(i, nextMine);
+                    }
+                  }
+                };
+                const canAdd = used < max || (max > 0 && cur < max && mine.some((p) => p.choice !== ci && p.count > 0));
                 return (
                   <div key={ci} className="wg-step">
                     <span className="grow">{itemsLabel(c)}{costTag(c, o.replace)}</span>
                     <button type="button" aria-label={`Remove ${itemsLabel(c)}`} disabled={cur <= 0} onClick={() => setN(cur - 1)}>−</button>
                     <b>{cur}</b>
-                    <button type="button" aria-label={`Add ${itemsLabel(c)}`} disabled={used >= max} onClick={() => setN(cur + 1)}>+</button>
+                    <button type="button" aria-label={`Add ${itemsLabel(c)}`} disabled={!canAdd} onClick={onAdd}>+</button>
                   </div>
                 );
               })

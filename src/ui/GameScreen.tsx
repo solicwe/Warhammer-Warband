@@ -50,7 +50,7 @@ import { smartPlacement } from '../engine/deploy';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from '../engine/state';
-import type { BuffKind, GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
+import type { BuffKind, GameState, ModelState, MoveKind, PlayerId, Pt, UnitState, WeaponData, WeaponProfileData } from '../engine/types';
 import { hasCover, hasLos, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
 import { baseDist } from '../engine/geometry';
 import { Portrait, unitToken } from './Tokens';
@@ -648,7 +648,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           const cu = U(ch.unitId);
           flash(`${cu.name} charges ${U(unitId).name}!`);
           if (ch.heroic) act((g) => { g.window = heroicCandidates(g, cu.owner).length ? { kind: 'heroicIntervention', player: cu.owner } : null; });
-          const canCrush = canUseStratagem(s, cu.owner, 'crushing-impact', cu) === null && isEngaged(s, cu);
+          const canCrush = (hasKw(cu, 'MONSTER') || hasKw(cu, 'VEHICLE')) && canUseStratagem(s, cu.owner, 'crushing-impact', cu) === null && isEngaged(s, cu);
           if (canCrush) setMode({ k: 'crush', unitId: cu.id }); else setMode(null);
         } else {
           const targetsNow = ch.targets.includes(unitId) ? ch.targets : [...ch.targets, unitId];
@@ -658,7 +658,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         }
       }
       else if (mode.k === 'crush') {
-        const blocked = canUseStratagem(s, U(mode.unitId).owner, 'crushing-impact', U(mode.unitId));
+        const u = U(mode.unitId);
+        if (!hasKw(u, 'MONSTER') && !hasKw(u, 'VEHICLE')) {
+          setMode(null);
+          return;
+        }
+        const blocked = canUseStratagem(s, u.owner, 'crushing-impact', u);
         if (blocked) flash(blocked);
         else { const rolls = act((g) => crushingImpact(g, unitById(g, mode.unitId), unitId)); flash(`Crushing Impact: [${rolls.join(' ')}]`); setMode(null); }
       }
@@ -1845,45 +1850,178 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const remaining = unfiredWeaponNames(modeUnit);
       const firedAny = modeUnit.weaponsFired.length > 0;
       const res = mode.target ? buildShootPools(s, modeUnit.id, mode.target, opt) : null;
-      const multi = alive(modeUnit)[0]?.weapons.filter((w) => !isMelee(w.profiles[0]) && w.profiles.length > 1) ?? [];
-      const hasCQ = alive(modeUnit).some((m) => m.weapons.some((w) => hasAbility(w.profiles[0], 'close-quarters'))) && alive(modeUnit).some((m) => m.weapons.some((w) => !isMelee(w.profiles[0]) && !hasAbility(w.profiles[0], 'close-quarters')));
+      // Collect all distinct ranged multi-profile weapons across ALL alive models
+      const multiMap = new Map<string, WeaponData>();
+      for (const m of alive(modeUnit)) {
+        for (const w of m.weapons) {
+          if (!isMelee(w.profiles[0]) && w.profiles.length > 1 && !multiMap.has(w.name)) {
+            multiMap.set(w.name, w);
+          }
+        }
+      }
+      const allMulti = [...multiMap.values()];
+
+      // Collect CQ (pistols) and non-CQ ranged weapons
+      const cqWeapons = new Map<string, WeaponData>();
+      const nonCqWeapons = new Map<string, WeaponData>();
+      for (const m of alive(modeUnit)) {
+        for (const w of m.weapons) {
+          if (isMelee(w.profiles[0])) continue;
+          if (hasAbility(w.profiles[0], 'close-quarters')) {
+            if (!cqWeapons.has(w.name)) cqWeapons.set(w.name, w);
+          } else {
+            if (!nonCqWeapons.has(w.name)) nonCqWeapons.set(w.name, w);
+          }
+        }
+      }
+      const hasCQ = cqWeapons.size > 0 && nonCqWeapons.size > 0;
+
+      // Filter multi-profile weapons relevant to current selection
+      const multi = allMulti.filter((w) => {
+        const isCq = hasAbility(w.profiles[0], 'close-quarters');
+        if (mode.useCQ) return isCq;
+        if (!isCq) return true;
+        return alive(modeUnit).some((m) => m.weapons.some((mw) => mw.name === w.name) && !m.weapons.some((mw) => !isMelee(mw.profiles[0]) && !hasAbility(mw.profiles[0], 'close-quarters')));
+      });
+
+      // Filter remaining weapons to only those that can actually fire in this mode
+      const activeRemaining = remaining.filter((wName) => {
+        const isCq = cqWeapons.has(wName);
+        if (mode.useCQ) return isCq;
+        if (!isCq) return true;
+        return alive(modeUnit).some((m) => m.weapons.some((mw) => mw.name === wName) && !m.weapons.some((mw) => !isMelee(mw.profiles[0]) && !hasAbility(mw.profiles[0], 'close-quarters')));
+      });
+
       return (
         <>
           {pactRow(modeUnit)}
           <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' || mode.smode === 'assault' ? 'Shoot' : mode.smode === 'closeQuarters' ? 'Close-quarters' : mode.smode}{mode.target ? <> <Icon name="target" size={14} /> {U(mode.target).name}</> : targets.length ? ` · tap a target (${targets.length} in reach)` : ' · no enemy in range and sight'}</span></div>
-          {!mode.overwatch && remaining.length > 1 && (
-            <div className="row">
-              <span className="label">Weapons shooting this target</span>
-              {remaining.map((n) => {
-                const off = (mode.skip ?? []).includes(n);
-                return <button key={n} className={`btn small ${off ? '' : 'on'}`} aria-pressed={!off} onClick={() => setModeRaw({ ...mode, skip: off ? (mode.skip ?? []).filter((x) => x !== n) : [...(mode.skip ?? []), n] })}>{!off && <Icon name="check" size={16} />}{n}</button>;
+          {hasCQ && mode.smode !== 'closeQuarters' && !firedAny && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', margin: '0.4rem 0' }}>
+              <div style={{ fontSize: '0.78rem', color: '#9ca3af' }}>Fire Mode (models shoot standard weapons or pistols, not both):</div>
+              <div className="row wrap" style={{ gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  className={`btn small ${!mode.useCQ ? 'on' : ''}`}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    textAlign: 'left',
+                    padding: '0.45rem 0.75rem',
+                    border: !mode.useCQ ? '1px solid #d99b26' : '1px solid #374151',
+                    background: !mode.useCQ ? 'rgba(217, 155, 38, 0.15)' : '#1a1f29',
+                    borderRadius: '6px'
+                  }}
+                  onClick={() => setModeRaw({ ...mode, useCQ: false })}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    {!mode.useCQ && <Icon name="check" size={13} />}
+                    <b style={{ color: !mode.useCQ ? '#fbbf24' : '#e5e7eb', fontSize: '0.85rem' }}>Standard Weapons</b>
+                  </div>
+                  <div style={{ fontSize: '0.74rem', color: !mode.useCQ ? '#fef08a' : '#9ca3af', marginTop: '2px' }}>
+                    {[...nonCqWeapons.keys()].join(', ') || 'Ranged weapons'}
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  className={`btn small ${mode.useCQ ? 'on' : ''}`}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    textAlign: 'left',
+                    padding: '0.45rem 0.75rem',
+                    border: mode.useCQ ? '1px solid #d99b26' : '1px solid #374151',
+                    background: mode.useCQ ? 'rgba(217, 155, 38, 0.15)' : '#1a1f29',
+                    borderRadius: '6px'
+                  }}
+                  onClick={() => setModeRaw({ ...mode, useCQ: true })}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    {mode.useCQ && <Icon name="check" size={13} />}
+                    <b style={{ color: mode.useCQ ? '#fbbf24' : '#e5e7eb', fontSize: '0.85rem' }}>Pistols [CLOSE-QUARTERS]</b>
+                  </div>
+                  <div style={{ fontSize: '0.74rem', color: mode.useCQ ? '#fef08a' : '#9ca3af', marginTop: '2px' }}>
+                    {[...cqWeapons.values()].map((w) => {
+                      const p = w.profiles[0];
+                      return `${w.name} (${p.range}" A${p.A} ${p.skill ? `${p.skill}+` : 'N/A'} S${p.S ?? '-'} AP${p.AP} D${p.D})`;
+                    }).join(', ') || 'Pistols'}
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+          {multi.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', margin: '0.4rem 0' }}>
+              {multi.map((w) => {
+                const curIdx = Math.min(mode.profile[w.name] ?? 0, w.profiles.length - 1);
+                return (
+                  <div key={w.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#e5e7eb', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span><b>{w.name}</b> Profile:</span>
+                    </div>
+                    <div className="row wrap" style={{ gap: '0.4rem' }}>
+                      {w.profiles.map((p: WeaponProfileData, idx: number) => {
+                        const isSelected = curIdx === idx;
+                        const statsStr = `${p.range ?? '-'}${typeof p.range === 'number' ? '"' : ''} A${p.A} ${p.skill ? `${p.skill}+` : 'N/A'} S${p.S ?? '-'} AP${p.AP} D${p.D}${p.abilities.length ? ` [${p.abilities.map((a: string) => a.toUpperCase()).join(', ')}]` : ''}`;
+                        return (
+                          <button
+                            key={p.name}
+                            type="button"
+                            className={`btn small ${isSelected ? 'on' : ''}`}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'flex-start',
+                              textAlign: 'left',
+                              padding: '0.4rem 0.65rem',
+                              border: isSelected ? '1px solid #d99b26' : '1px solid #374151',
+                              background: isSelected ? 'rgba(217, 155, 38, 0.15)' : '#1a1f29',
+                              borderRadius: '6px',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => {
+                              setModeRaw({ ...mode, profile: { ...mode.profile, [w.name]: idx } });
+                              flash(`${w.name} → ${p.name}: ${statsStr}`);
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              {isSelected && <Icon name="check" size={13} />}
+                              <b style={{ color: isSelected ? '#fbbf24' : '#e5e7eb', fontSize: '0.82rem' }}>{p.name}</b>
+                            </div>
+                            <div style={{ fontSize: '0.73rem', color: isSelected ? '#fef08a' : '#9ca3af', marginTop: '2px' }}>
+                              {statsStr}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
               })}
             </div>
           )}
-          <div className="row">
-            {hasCQ && mode.smode !== 'closeQuarters' && !firedAny && (
-              // each model fires its pistols or its other guns, not both
-              <div className="seg grow" role="radiogroup" aria-label="Weapons to fire">
-                <button type="button" role="radio" aria-checked={!mode.useCQ} className={!mode.useCQ ? 'on' : ''} onClick={() => setModeRaw({ ...mode, useCQ: false })}>Guns</button>
-                <button type="button" role="radio" aria-checked={!!mode.useCQ} className={mode.useCQ ? 'on' : ''} onClick={() => setModeRaw({ ...mode, useCQ: true })}>Pistols</button>
-              </div>
-            )}
-            {multi.map((w) => {
-              // the profile in use and what it shoots with, so a tap shows what changed
-              const stats = (q: (typeof w.profiles)[number]) => `${q.range ?? '-'}${typeof q.range === 'number' ? '"' : ''} A${q.A} ${q.skill ? `${q.skill}+` : 'N/A'} S${q.S ?? '-'} AP${q.AP} D${q.D}${q.abilities.length ? ` [${q.abilities.join(', ')}]` : ''}`;
-              const cur = w.profiles[mode.profile[w.name] ?? 0];
-              return (
-                <button key={w.name} className="btn small prof-btn" onClick={() => {
-                  const i = ((mode.profile[w.name] ?? 0) + 1) % w.profiles.length;
-                  setModeRaw({ ...mode, profile: { ...mode.profile, [w.name]: i } });
-                  flash(`${w.name} → ${w.profiles[i].name}: ${stats(w.profiles[i])}`);
-                }}>
-                  <span>{w.name}: <b>{cur.name}</b> <Icon name="reroll" size={13} /></span>
-                  <small className="muted">{stats(cur)}</small>
-                </button>
-              );
-            })}
-          </div>
+          {!mode.overwatch && activeRemaining.length > 1 && (
+            <div className="row wrap" style={{ alignItems: 'center', gap: '0.4rem', margin: '0.35rem 0' }}>
+              <span className="label" style={{ fontSize: '0.78rem', color: '#9ca3af' }}>Weapons shooting this target:</span>
+              {activeRemaining.map((n) => {
+                const off = (mode.skip ?? []).includes(n);
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`btn small ${off ? '' : 'on'}`}
+                    aria-pressed={!off}
+                    onClick={() => setModeRaw({ ...mode, skip: off ? (mode.skip ?? []).filter((x) => x !== n) : [...(mode.skip ?? []), n] })}
+                  >
+                    {!off && <Icon name="check" size={14} />}{n}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {!mode.overwatch && abilityBar(modeUnit.owner, { unitId: modeUnit.id, whens: ['selectedToShoot', 'shooting'] })}
           {res?.error && <div className="err">{res.error}</div>}
           {res && !res.error && (() => {
@@ -2055,6 +2193,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       );
     }
     if (mode?.k === 'crush' && modeUnit) {
+      if (!hasKw(modeUnit, 'MONSTER') && !hasKw(modeUnit, 'VEHICLE')) {
+        setMode(null);
+        return null;
+      }
       const blocked = canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit);
       const tVal = alive(modeUnit)[0]?.profile.T ?? 4;
       return (
@@ -2088,7 +2230,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           )}
           {blocked && <div className="tiny muted" style={{ marginBottom: '0.4rem' }}>{blocked}</div>}
           {!crushTargets.length && <div className="tiny muted" style={{ marginBottom: '0.4rem' }}>No engaged enemy unit can be targeted.</div>}
-          <button className="btn ghost" onClick={() => setMode(null)}>Decline (save 1CP) → Continue</button>
+          <div className="row" style={{ marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              className="btn"
+              style={{ minWidth: '150px' }}
+              onClick={() => setMode(null)}
+            >
+              Cancel / Decline (Save 1CP)
+            </button>
+          </div>
         </div>
       );
     }
@@ -2154,8 +2305,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               const madeUnits = now.filter((x) => isEngaged(g, x)).map((x) => x.id);
               return { n: now.length, made: madeUnits, short: now.filter((x) => !isEngaged(g, x)).map((x) => `${x.name} rolled ${x.chargeRoll}"`) };
             });
-            if (res?.made.length === 1 && canUseStratagem(s, s.active, 'crushing-impact', unitById(s, res.made[0])) === null) {
-              setMode({ k: 'crush', unitId: res.made[0] });
+            const crushCandidate = res?.made.length === 1 ? unitById(s, res.made[0]) : null;
+            if (crushCandidate && (hasKw(crushCandidate, 'MONSTER') || hasKw(crushCandidate, 'VEHICLE')) && canUseStratagem(s, s.active, 'crushing-impact', crushCandidate) === null) {
+              setMode({ k: 'crush', unitId: crushCandidate.id });
             } else {
               setSel(res?.made[0] ?? null);
             }

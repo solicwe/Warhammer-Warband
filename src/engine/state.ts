@@ -130,6 +130,7 @@ export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit
     if (unit.stratagemPhase === phaseKey(s)) return 'This unit was already targeted by a Stratagem this phase';
   }
   if (id === 'insane-bravery' && p.insaneBraveryUsed) return 'Once per battle';
+  if (id === 'crushing-impact' && unit && !hasKw(unit, 'MONSTER') && !hasKw(unit, 'VEHICLE')) return 'Only MONSTER or VEHICLE units can use Crushing Impact';
   return null;
 }
 
