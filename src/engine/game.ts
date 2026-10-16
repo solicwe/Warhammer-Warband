@@ -152,6 +152,8 @@ export interface NewGameOptions {
   secondaryMode?: 'none' | 'tactical' | 'fixed';
   /** a short game: battle rounds before it ends (default 5) */
   maxRounds?: number;
+  /** override primary mission id (e.g. roguelike-annihilation) */
+  primaryId?: string;
 }
 
 export const emptyMission = (): MissionState => ({ trapped: [], decoyed: [], consecrated: [], triangulated: [], condemned: [], consecrationUnits: [], surveilled: [], done: [] });
@@ -208,7 +210,7 @@ export function createGame(o: NewGameOptions): GameState {
       secMode: o.secondaryMode ?? 'none', secDeck: [], secActive: [], secVp: 0, secByRound: [0, 0, 0, 0, 0, 0], secFixedVp: {}, secSwapUsed: false,
       armyRules: o.factions[i].armyRules,
       detachments: o.factions[i].detachments.filter((d) => o.lists[i].detachments.includes(d.name)),
-      disposition: disp[i], primaryId: primaryFor(disp[i], disp[1 - i]).id, mission: emptyMission(), sec: { guards: [], cleansed: [], plundered: [] },
+      disposition: o.primaryId ? 'purge-the-foe' : disp[i], primaryId: o.primaryId ?? primaryFor(disp[i], disp[1 - i]).id, mission: emptyMission(), sec: { guards: [], cleansed: [], plundered: [] },
       subfaction: o.lists[i].subfaction,
       battleSize: o.lists[i].battleSize,
     })) as unknown as GameState['players'],

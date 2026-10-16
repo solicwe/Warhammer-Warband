@@ -2337,7 +2337,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 {prim.scoring.map((r) => (
                   <div key={r.text + r.rounds} className="small prim-row">
                     <span className="tiny muted">{roundsText(r.rounds, lastRound(s))} · {whenTh[r.when]}</span>
-                    <div>{r.text} <b>{r.tiers ? '' : `${r.vp}VP`}</b>{r.bonus ? <span className="muted"> {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</div>
+                    <div>{r.text} {r.tiers ? '' : r.vp > 0 ? <b>{r.vp}VP</b> : null}{r.bonus ? <span className="muted"> {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</div>
                   </div>
                 ))}
                 {act0 && <div className="tiny"><b>Action: {act0.name}</b> — {act0.text}</div>}
@@ -2692,7 +2692,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   {prim.scoring.map((r) => (
                     <div key={r.text + r.rounds} className="mc-rule">
                       <div className="mc-rule-when"><span className="mc-round">{rounds(r.rounds)}</span> {whenTh[r.when] ?? r.when}</div>
-                      <div className="mc-rule-body"><span className="grow">{r.text}{r.bonus ? <span className="muted"> · {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</span>{!r.tiers && <span className="mc-vp">{r.vp} VP</span>}</div>
+                      <div className="mc-rule-body"><span className="grow">{r.text}{r.bonus ? <span className="muted"> · {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</span>{!r.tiers && r.vp > 0 && <span className="mc-vp">{r.vp} VP</span>}</div>
                     </div>
                   ))}
                   {act0 && <div className="mc-action"><b>Action · {act0.name}</b><div>{act0.text}</div></div>}

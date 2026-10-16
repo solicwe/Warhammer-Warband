@@ -26,7 +26,8 @@ export type Reward =
   | { kind: 'relic'; id: string }
   | { kind: 'cp' }
   | { kind: 'scrap'; amount: number }
-  | { kind: 'fate'; amount: number };
+  | { kind: 'fate'; amount: number }
+  | { kind: 'detachment'; name: string };
 
 export interface BattleHonor {
   id: string;
@@ -330,12 +331,20 @@ export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt =
   };
   const units = (n: number, cap: number) => pickN(usable(faction, mainKeyword(faction)).filter((d) => { const o = cheapest(d); return o.pts >= 50 && o.pts <= cap; }), n, r)
     .map((d): Reward => { const o = cheapest(d); return { kind: 'unit', datasheet: d.name, models: o.models, pts: o.pts }; });
-  if (kind === 'elite' || kind === 'boss') return relics(true);
+  const unpickedDets = (faction.detachments ?? []).filter((d) => !(run.list.detachments ?? []).includes(d.name));
+  const detReward: Reward | null = unpickedDets.length ? { kind: 'detachment', name: unpickedDets[Math.floor(r() * unpickedDets.length)].name } : null;
+
+  if (kind === 'elite' || kind === 'boss') {
+    const list = relics(true);
+    if (kind === 'boss' && detReward && list.length > 0) list[list.length - 1] = detReward;
+    return list;
+  }
   const cap = 140 + run.path.length * 25;
   const scrapReward: Reward = { kind: 'scrap', amount: Math.round(60 + r() * 50) };
-  if (kind === 'supply') return [...units(1, cap), ...relics(false).slice(0, 1), scrapReward];
-  // a won battle: one new unit, one relic, or scrap/cp
-  return [...units(1, cap), ...relics(false).slice(0, 1), scrapReward];
+  if (kind === 'supply') return [...units(1, cap), ...relics(false).slice(0, 1), detReward && r() < 0.5 ? detReward : scrapReward];
+  // a won battle: one new unit, one relic, or scrap/detachment
+  const thirdReward = detReward && r() < 0.45 ? detReward : scrapReward;
+  return [...units(1, cap), ...relics(false).slice(0, 1), thirdReward];
 }
 
 export function rerollOffer(run: Run, faction: FactionData): Run {
@@ -377,6 +386,13 @@ export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
     const e: ArmyUnitEntry = syncWargear(d, defaultWargear(d, { uid, datasheet: rw.datasheet, models: rw.models, pts: rw.pts }));
     next.list = { ...run.list, units: [...run.list.units, e] };
     next.story.push(`Reinforcements: ${rw.datasheet}`);
+  }
+  if (rw.kind === 'detachment') {
+    const cur = run.list.detachments ?? [];
+    if (!cur.includes(rw.name)) {
+      next.list = { ...run.list, detachments: [...cur, rw.name] };
+    }
+    next.story.push(`Tactical Doctrine: Adopted ${rw.name}`);
   }
 
   // Handle multiple picks (e.g. boss battles allow 2 picks!)
@@ -433,6 +449,11 @@ const hasKwIn = (u: UnitState, units?: string) => !units || units.split('|').som
 /** Put the run's relics on the player's army and the enemy's special rules on theirs, for the whole battle. */
 export function applyCampaign(s: GameState, run: Run, rules: string[]) {
   const me: PlayerId = 0, foe: PlayerId = 1;
+  // Set Roguelike Annihilation primary mission for both players
+  for (const p of [me, foe]) {
+    s.players[p].primaryId = 'roguelike-annihilation';
+    s.players[p].disposition = 'purge-the-foe';
+  }
   for (const id of run.relics) {
     const r = relicById(id);
     if (!r || id === 'cache') continue;
@@ -529,6 +550,19 @@ export function applyMedicaeService(run: Run, service: 'fate' | 'cp'): Run {
     if ((run.scrap ?? 0) < 45) return run;
     return { ...run, cp: run.cp + 1, scrap: (run.scrap ?? 0) - 45, story: [...run.story, 'Field Briefing: +1 CP each battle'] };
   }
+}
+
+/** Requisition / adopt a new detachment into the campaign army using Scrap */
+export function adoptDetachment(run: Run, detachmentName: string, cost = 100): Run {
+  if ((run.scrap ?? 0) < cost) return run;
+  const cur = run.list.detachments ?? [];
+  if (cur.includes(detachmentName)) return run;
+  return {
+    ...run,
+    scrap: (run.scrap ?? 0) - cost,
+    list: { ...run.list, detachments: [...cur, detachmentName] },
+    story: [...run.story, `Armory Requisition: Adopted ${detachmentName} (-${cost} Scrap)`],
+  };
 }
 
 export function loadRun(): Run | null {

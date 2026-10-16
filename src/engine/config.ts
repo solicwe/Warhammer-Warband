@@ -86,4 +86,30 @@ export const deploymentById = (id: string): DeploymentDef => {
   const l = LAYOUTS.find((d) => d.id === id) ?? LAYOUTS[0];
   return { ...l, name: deploymentName(l.deployment) };
 };
-export const primaryById = (id: string) => MISSIONS.primaries.find((p) => p.id === id)!;
+export const ROGUELIKE_PRIMARY: PrimaryDef = {
+  id: 'roguelike-annihilation',
+  name: 'Annihilation (กวาดล้างศัตรู)',
+  forceDisposition: 'purge-the-foe',
+  vs: 'purge-the-foe',
+  scoring: [
+    {
+      rounds: [1, 2, 3, 4, 5],
+      when: 'endOfAnyTurn',
+      condition: 'enemyDestroyed',
+      vp: 0,
+      text: 'ทำลายยูนิตศัตรูเพื่อรับแต้ม VP ตามมูลค่าแต้มจริงของยูนิตนั้น หากกวาดล้างศัตรูได้หมดทั้งสนามจะชนะทันที! (Eliminate enemy units to score VP equal to their points value. Total annihilation wins immediately!)',
+    },
+    {
+      rounds: [1, 2, 3, 4, 5],
+      when: 'endOfAnyTurn',
+      condition: 'captureLoot',
+      vp: 0,
+      text: 'การยึดจุด Objective แต่ละจุดเป็นครั้งแรก จะได้รับรางวัล Scrap (+25 Scrap), +1 CP หรือฟื้นฟู Fate ทันที! (Capturing an Objective marker awards +25 Scrap or +1 CP!)',
+    },
+  ],
+};
+
+export const primaryById = (id: string): PrimaryDef => {
+  if (id === 'roguelike-annihilation') return ROGUELIKE_PRIMARY;
+  return MISSIONS.primaries.find((p) => p.id === id) ?? ROGUELIKE_PRIMARY;
+};

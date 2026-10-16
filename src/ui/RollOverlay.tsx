@@ -200,7 +200,7 @@ export function PrimaryCard({ s, owner, faceUp = true, delay = 0 }: { s: GameSta
           {prim.scoring.map((r) => (
             <div key={r.text + r.rounds} className="prim-rule">
               <div className="sec-when"><Icon name="wait" size={12} /> {roundsText(r.rounds, lastRound(s))} · {WHEN_TH[r.when] ?? r.when}</div>
-              <div>{r.text} {!r.tiers && <b>{r.vp} VP</b>}{r.bonus ? <span> · {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</div>
+              <div>{r.text} {!r.tiers && r.vp > 0 ? <b>{r.vp} VP</b> : null}{r.bonus ? <span> · {r.bonusText ?? ''} (+{r.bonus.vp})</span> : null}</div>
             </div>
           ))}
           {act && <div className="prim-rule"><b>Action: {act.name}</b> — {act.text}</div>}
