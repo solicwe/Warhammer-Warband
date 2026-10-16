@@ -191,14 +191,18 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
         <div className="cmp-modal-backdrop" onClick={() => setShowSync(false)}>
           <div className="cmp-armory-modal" style={{ width: 'min(100%, 580px)' }} onClick={(e) => e.stopPropagation()}>
             <div className="cmp-armory-header">
-              <div>
+              <button className="cmp-back-btn" onClick={() => setShowSync(false)} aria-label="ย้อนกลับ">
+                <Icon name="back" size={18} />
+                <span>ย้อนกลับ</span>
+              </button>
+              <div className="cmp-armory-header-center">
                 <div className="cmp-armory-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Icon name="cloud" size={20} />
-                  <span>Sync & Backup (รูปภาพและกองทัพ)</span>
+                  <Icon name="cloud" size={18} />
+                  <span>Sync & Backup</span>
                 </div>
-                <div className="cmp-armory-sub">ย้ายรูปตัวละครและกองทัพข้ามเครื่อง หรือเตรียมไฟล์ขึ้น Cloudflare</div>
+                <div className="cmp-armory-sub">ย้ายรูปตัวละครและกองทัพข้ามเครื่อง</div>
               </div>
-              <button className="btn ghost small" onClick={() => setShowSync(false)} aria-label="Close">
+              <button className="cmp-close-btn" onClick={() => setShowSync(false)} aria-label="Close">
                 <Icon name="close" size={18} />
               </button>
             </div>
@@ -377,6 +381,13 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
                   <li>รูปจะถูกขึ้นระบบบน Cloudflare ทันที ทุกเครื่องที่เข้าเว็บจะมองเห็นรูปตรงกัน</li>
                 </ol>
               </div>
+            </div>
+
+            <div className="cmp-armory-footer">
+              <button className="cmp-footer-btn" onClick={() => setShowSync(false)}>
+                <Icon name="check" size={18} />
+                <span>เสร็จสิ้น / ย้อนกลับ</span>
+              </button>
             </div>
           </div>
         </div>

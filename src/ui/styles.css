@@ -154,6 +154,9 @@ details summary { cursor: pointer; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font: 700 23px/1 var(--font-cond); letter-spacing: 0.02em; text-transform: uppercase; color: var(--text); }
 .appbar-note { margin-left: auto; font: 500 12px var(--font-cond); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
 .appbar-title { font: 600 19px var(--font-cond); letter-spacing: 0.05em; text-transform: uppercase; }
+.appbar-back-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line-2); color: var(--text); font: 700 13px var(--font-cond); text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; flex: none; transition: all 0.12s ease; }
+.appbar-back-btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+.appbar-back-btn:active { transform: scale(0.96); }
 
 /* ---------- grouped lists (home, setup) ---------- */
 .group { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
@@ -1433,8 +1436,8 @@ select option {
   position: fixed;
   inset: 0;
   z-index: 120;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1442,64 +1445,125 @@ select option {
 }
 .cmp-armory-modal {
   width: min(100%, 680px);
-  max-height: 88vh;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  background: #14171d !important;
+  background: #111418 !important;
   border: 2px solid #d3a04a !important;
   border-radius: 12px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85), 0 0 24px rgba(211, 160, 74, 0.22);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.95), 0 0 24px rgba(211, 160, 74, 0.25);
   overflow: hidden;
-  color: #f8fafc;
+  color: #f8fafc !important;
 }
 .cmp-armory-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
-  background: rgba(0, 0, 0, 0.5) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 12px 16px;
+  background: #0d0f12 !important;
+  border-bottom: 1px solid rgba(211, 160, 74, 0.3);
+  gap: 10px;
+  flex: none;
+}
+.cmp-armory-header-center {
+  flex: 1;
+  min-width: 0;
+}
+.cmp-armory-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
 }
 .cmp-armory-title {
-  font: 800 18px var(--font-cond);
-  letter-spacing: 0.06em;
+  font: 800 17px var(--font-cond);
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #fef08a;
+  line-height: 1.15;
 }
 .cmp-armory-sub {
-  font-size: 13px;
-  color: #cbd5e1;
-  margin-top: 2px;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+.cmp-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: rgba(211, 160, 74, 0.16) !important;
+  border: 1px solid rgba(211, 160, 74, 0.5) !important;
+  color: #fef08a !important;
+  font: 700 13px var(--font-cond) !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  flex: none;
+}
+.cmp-back-btn:hover {
+  background: rgba(211, 160, 74, 0.3) !important;
+  border-color: #fef08a !important;
+}
+.cmp-back-btn:active {
+  transform: scale(0.96);
+}
+.cmp-close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #cbd5e1 !important;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  flex: none;
+}
+.cmp-close-btn:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: #f87171 !important;
+  color: #ffffff !important;
 }
 .cmp-armory-body {
-  padding: 14px 18px;
+  padding: 12px 16px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  -webkit-overflow-scrolling: touch;
 }
 .cmp-armory-tabs {
   display: flex;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.4);
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.5);
   padding: 4px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  flex: none;
 }
 .cmp-armory-tab {
   flex: 1;
-  padding: 8px 14px;
+  padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid transparent;
   background: transparent;
   color: #94a3b8;
-  font: 700 14px var(--font-cond);
+  font: 700 13px var(--font-cond);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.12s ease;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 .cmp-armory-tab:hover {
   color: #f8fafc;
@@ -1513,46 +1577,145 @@ select option {
   box-shadow: 0 0 12px rgba(211, 160, 74, 0.35);
 }
 .cmp-armory-hint {
-  padding: 10px 14px;
+  padding: 9px 12px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #cbd5e1;
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 1.4;
-  margin-bottom: 6px;
 }
-.cmp-roster-row {
+
+/* Card layout inside modal: NEVER squishes text */
+.cmp-roster-card {
+  display: flex;
+  flex-direction: column;
+  background: #171b22 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  gap: 10px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.cmp-roster-card:hover {
+  background: #1c212a !important;
+  border-color: rgba(211, 160, 74, 0.35) !important;
+}
+.cmp-card-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.cmp-card-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #0f1215;
+  border: 1.5px solid rgba(211, 160, 74, 0.4);
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.cmp-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cmp-roster-img-ph {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  background: #14181e;
+}
+.cmp-card-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cmp-card-badges {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 8px;
-  gap: 12px;
-  transition: all 0.12s ease;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
 }
-.cmp-roster-row:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-.cmp-roster-img {
-  width: 44px;
-  height: 44px;
-  border-radius: 6px;
-  object-fit: cover;
-  background: #1c2026;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  flex: none;
+.cmp-card-pts {
+  font: 700 12.5px var(--font-cond);
+  color: #fef08a;
+  background: rgba(211, 160, 74, 0.15);
+  border: 1px solid rgba(211, 160, 74, 0.35);
+  padding: 1px 7px;
+  border-radius: 4px;
 }
 .cmp-roster-name {
   font: 700 15px var(--font-cond);
   color: #f8fafc;
+  line-height: 1.25;
+  word-break: break-word;
 }
 .cmp-roster-meta {
-  font-size: 12.5px;
+  font-size: 12px;
   color: #cbd5e1;
+}
+.cmp-card-del-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  flex: none;
+}
+.cmp-card-del-btn:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: #f87171 !important;
+  color: #ffffff !important;
+}
+.cmp-card-actions {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 8px;
+  flex-wrap: wrap;
+}
+.cmp-card-btn {
+  flex: 1 1 120px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: #232932 !important;
+  border: 1px solid #3e4654 !important;
+  color: #e2e8f0 !important;
+  font: 700 13px var(--font-cond) !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.cmp-card-btn:hover {
+  background: #2d3440 !important;
+  border-color: #d3a04a !important;
+  color: #ffffff !important;
+}
+.cmp-card-btn.active {
+  background: #d3a04a !important;
+  border-color: #e2b464 !important;
+  color: #17120a !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 10px rgba(211, 160, 74, 0.35);
 }
 .cmp-btn-recruit {
   background: #d3a04a !important;
@@ -1576,7 +1739,78 @@ select option {
   cursor: not-allowed;
   opacity: 1 !important;
 }
+.cmp-armory-footer {
+  padding: 10px 16px;
+  background: #0d0f12 !important;
+  border-top: 1px solid rgba(211, 160, 74, 0.3);
+  flex: none;
+  display: flex;
+}
+.cmp-footer-btn {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  background: #d3a04a !important;
+  border: 1px solid #e2b464 !important;
+  color: #17120a !important;
+  font: 800 15px var(--font-cond) !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.cmp-footer-btn:hover {
+  background: #e2b464 !important;
+}
 
+/* Guarantee dark theme inside armory modal even in light mode */
+.cmp-armory-modal .btn {
+  background: #232932 !important;
+  border: 1px solid #3e4654 !important;
+  color: #e2e8f0 !important;
+}
+.cmp-armory-modal .btn:hover:not(:disabled) {
+  background: #2d3440 !important;
+  border-color: #d3a04a !important;
+  color: #ffffff !important;
+}
+.cmp-armory-modal .btn.primary {
+  background: #d3a04a !important;
+  border-color: #e2b464 !important;
+  color: #17120a !important;
+  font-weight: 700 !important;
+}
+.cmp-armory-modal .btn.danger {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #fca5a5 !important;
+}
 
-
-
+/* Mobile responsive full viewport overrides */
+@media (max-width: 640px) {
+  .cmp-modal-backdrop {
+    padding: 0;
+  }
+  .cmp-armory-modal {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none !important;
+  }
+  .cmp-armory-header {
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  .cmp-armory-footer {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .cmp-armory-tab {
+    font-size: 11.5px;
+    padding: 8px 4px;
+    letter-spacing: 0.02em;
+  }
+}

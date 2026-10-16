@@ -161,7 +161,7 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
   return (
     <div className="app setup">
       <header className="appbar">
-        <button className="icon-btn" aria-label="Back" onClick={onBack}><span className="chev-left" aria-hidden="true" /></button>
+        <button className="appbar-back-btn" aria-label="ย้อนกลับ" onClick={onBack}><Icon name="back" size={18} /><span>ย้อนกลับ</span></button>
         <span className="appbar-title">New battle</span>
       </header>
       <main className="screen">

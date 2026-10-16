@@ -154,7 +154,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     return (
       <div className="app campaign">
         <header className="appbar">
-          <button className="icon-btn" aria-label="Back" onClick={onBack}><span className="chev-left" aria-hidden="true" /></button>
+          <button className="appbar-back-btn" aria-label="ย้อนกลับ" onClick={onBack}><Icon name="back" size={18} /><span>ย้อนกลับ</span></button>
           <span className="appbar-title">Roguelike Campaign</span>
         </header>
         <main className="screen">
@@ -199,7 +199,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   return (
     <div className="app campaign">
       <header className="appbar">
-        <button className="icon-btn" aria-label="Back" onClick={onBack}><span className="chev-left" aria-hidden="true" /></button>
+        <button className="appbar-back-btn" aria-label="ย้อนกลับ" onClick={onBack}><Icon name="back" size={18} /><span>ย้อนกลับ</span></button>
         <span className="appbar-title">Campaign</span>
         <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span></span>
         <span className="cmp-fate" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
@@ -383,13 +383,19 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         <div className="cmp-modal-backdrop" onClick={() => setShowRoster(false)}>
           <div className="cmp-armory-modal" onClick={(e) => e.stopPropagation()}>
             <div className="cmp-armory-header">
-              <div>
+              <button className="cmp-back-btn" onClick={() => setShowRoster(false)} aria-label="ย้อนกลับ">
+                <Icon name="back" size={18} />
+                <span>ย้อนกลับ</span>
+              </button>
+              <div className="cmp-armory-header-center">
                 <div className="cmp-armory-title">Roster & Armory</div>
                 <div className="cmp-armory-sub">{pts} pts · {run.list.units.length} units in force</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span className="cmp-scrap"><Icon name="shop" size={14} /> <b>{run.scrap ?? 0}</b> Scrap</span>
-                <button className="icon-btn" onClick={() => setShowRoster(false)} aria-label="Close"><Icon name="close" size={20} /></button>
+              <div className="cmp-armory-header-right">
+                <span className="cmp-scrap"><Icon name="shop" size={14} /> <b>{run.scrap ?? 0}</b></span>
+                <button className="cmp-close-btn" onClick={() => setShowRoster(false)} aria-label="Close">
+                  <Icon name="close" size={18} />
+                </button>
               </div>
             </div>
 
@@ -407,47 +413,51 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               </div>
 
               {rosterTab === 'roster' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {run.list.units.map((u) => {
                     const d = fac.datasheets.find((x) => x.name === u.datasheet);
                     const photo = getPortrait(u.datasheet);
                     const isUpgrading = upgradingUid === u.uid;
                     const isEditingWargear = wargearUid === u.uid;
                     return (
-                      <div key={u.uid} className="cmp-roster-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                      <div key={u.uid} className="cmp-roster-card">
+                        <div className="cmp-card-main">
+                          <div className="cmp-card-thumb">
                             {photo ? <img src={photo} alt="" className="cmp-roster-img" />
-                              : <div className="cmp-roster-img" style={{ display: 'grid', placeItems: 'center' }}><Icon name="fight" size={20} /></div>}
-                            <div style={{ minWidth: 0, flex: 1 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                <span className="cmp-rank-badge">{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
-                                <span className="cmp-roster-name">{u.datasheet}</span>
-                              </div>
-                              <div className="cmp-roster-meta">{u.models} {u.models === 1 ? 'model' : 'models'} · {u.pts + (u.wargearPts ?? 0)} pts</div>
-                              {u.honors?.length ? (
-                                <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                  {u.honors.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
-                                </div>
-                              ) : null}
+                              : <div className="cmp-roster-img-ph"><Icon name="fight" size={22} /></div>}
+                          </div>
+                          <div className="cmp-card-details">
+                            <div className="cmp-card-badges">
+                              <span className="cmp-rank-badge">{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
+                              <span className="cmp-card-pts">{u.pts + (u.wargearPts ?? 0)} pts</span>
                             </div>
+                            <div className="cmp-roster-name">{u.datasheet}</div>
+                            <div className="cmp-roster-meta">{u.models} {u.models === 1 ? 'model' : 'models'}</div>
+                            {u.honors?.length ? (
+                              <div className="cmp-honors-list">
+                                {u.honors.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
+                              </div>
+                            ) : null}
                           </div>
 
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                            <button className={`btn small ${isUpgrading ? 'primary' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); }}>
-                              <Icon name="shop" size={14} /> Honors
+                          {run.list.units.length > 1 && (
+                            <button className="cmp-card-del-btn" onClick={() => { setRun(dismissUnit(run, u.uid)); play('bad'); }} title="Dismiss squad" aria-label="Dismiss squad">
+                              <Icon name="delete" size={16} />
                             </button>
-                            {d?.wargearOptions?.length ? (
-                              <button className={`btn small ${isEditingWargear ? 'primary' : ''}`} onClick={() => { setWargearUid(isEditingWargear ? null : u.uid); setUpgradingUid(null); }}>
-                                <Icon name="wargear" size={14} /> Wargear
-                              </button>
-                            ) : null}
-                            {run.list.units.length > 1 && (
-                              <button className="btn small danger" onClick={() => { setRun(dismissUnit(run, u.uid)); play('bad'); }} title="Dismiss squad">
-                                <Icon name="delete" size={14} />
-                              </button>
-                            )}
-                          </div>
+                          )}
+                        </div>
+
+                        <div className="cmp-card-actions">
+                          <button className={`cmp-card-btn ${isUpgrading ? 'active' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); }}>
+                            <Icon name="shop" size={14} />
+                            <span>Battle Honors {u.honors?.length ? `(${u.honors.length})` : ''}</span>
+                          </button>
+                          {d?.wargearOptions?.length ? (
+                            <button className={`cmp-card-btn ${isEditingWargear ? 'active' : ''}`} onClick={() => { setWargearUid(isEditingWargear ? null : u.uid); setUpgradingUid(null); }}>
+                              <Icon name="wargear" size={14} />
+                              <span>Wargear</span>
+                            </button>
+                          ) : null}
                         </div>
 
                         {/* Battle Honors upgrade drawer */}
@@ -525,7 +535,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               )}
 
               {rosterTab === 'recruit' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div className="cmp-armory-hint">
                     Recruit new datasheets into your strike force using accumulated Scrap currency.
                   </div>
@@ -537,22 +547,27 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       const photo = getPortrait(d.name);
                       const canAfford = (run.scrap ?? 0) >= o.pts;
                       return (
-                        <div key={d.name} className="cmp-roster-row">
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            {photo ? <img src={photo} alt="" className="cmp-roster-img" />
-                              : <div className="cmp-roster-img" style={{ display: 'grid', placeItems: 'center' }}><Icon name="plus" size={18} /></div>}
-                            <div>
+                        <div key={d.name} className="cmp-roster-card">
+                          <div className="cmp-card-main">
+                            <div className="cmp-card-thumb">
+                              {photo ? <img src={photo} alt="" className="cmp-roster-img" />
+                                : <div className="cmp-roster-img-ph"><Icon name="plus" size={20} /></div>}
+                            </div>
+                            <div className="cmp-card-details">
                               <div className="cmp-roster-name">{d.name}</div>
-                              <div className="cmp-roster-meta">{o.models} models · {o.pts} pts</div>
+                              <div className="cmp-roster-meta">{o.models} models · <span className="cmp-card-pts">{o.pts} pts</span></div>
                             </div>
                           </div>
-                          <button
-                            className="cmp-btn-recruit"
-                            disabled={!canAfford}
-                            onClick={() => { setRun(recruitUnit(run, fac, d.name)); play('good'); }}
-                          >
-                            <Icon name="plus" size={13} /> Recruit ({o.pts} Scrap)
-                          </button>
+                          <div className="cmp-card-actions">
+                            <button
+                              className="cmp-btn-recruit"
+                              style={{ width: '100%', minHeight: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                              disabled={!canAfford}
+                              onClick={() => { setRun(recruitUnit(run, fac, d.name)); play('good'); }}
+                            >
+                              <Icon name="plus" size={14} /> Recruit ({o.pts} Scrap)
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -569,13 +584,13 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     <div className="cmp-kicker" style={{ color: '#4ade80', marginBottom: 8, fontSize: 13 }}>
                       Active Detachments ({run.list.detachments?.length ?? 0})
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       {(run.list.detachments ?? []).map((detName) => {
                         const det = fac.detachments.find((d) => d.name === detName);
                         const rulesText = det?.rules?.map((r) => `${r.name}: ${r.text}`).join('\n\n') || 'Detachment abilities and stratagems active.';
                         return (
-                          <div key={detName} className="cmp-roster-row" style={{ flexDirection: 'column', alignItems: 'stretch', background: 'rgba(74, 222, 128, 0.06)', border: '1px solid rgba(74, 222, 128, 0.25)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div key={detName} className="cmp-roster-card" style={{ background: 'rgba(74, 222, 128, 0.06)', borderColor: 'rgba(74, 222, 128, 0.3)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <span className="chip ok small" style={{ fontWeight: 800 }}>ACTIVE</span>
                                 <b style={{ color: '#f8fafc', fontSize: 15 }}>{detName}</b>
@@ -604,20 +619,33 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         <div className="cmp-kicker" style={{ color: '#fef08a', marginBottom: 8, fontSize: 13 }}>
                           Available Detachments to Requisition
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                           {available.map((d) => {
                             const cost = 100;
                             const canAfford = (run.scrap ?? 0) >= cost;
                             const rulesText = d.rules?.map((r) => `${r.name}: ${r.text}`).join('\n\n') || '';
                             return (
-                              <div key={d.name} className="cmp-roster-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                              <div key={d.name} className="cmp-roster-card">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <b style={{ color: '#f8fafc', fontSize: 14 }}>{d.name}</b>
                                     {d.forceDisposition && <span className="disp-chip small">{d.forceDisposition}</span>}
                                   </div>
+                                </div>
+                                {rulesText && (
+                                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, whiteSpace: 'pre-line', lineHeight: 1.35 }}>
+                                    {rulesText}
+                                  </div>
+                                )}
+                                {d.stratagems?.length ? (
+                                  <div className="tiny muted" style={{ marginTop: 2 }}>
+                                    Stratagems: {d.stratagems.map((s) => s.name).join(', ')}
+                                  </div>
+                                ) : null}
+                                <div className="cmp-card-actions">
                                   <button
-                                    className="btn small primary"
+                                    className="cmp-card-btn active"
+                                    style={{ width: '100%', minHeight: '38px', justifyContent: 'center' }}
                                     disabled={!canAfford}
                                     onClick={() => {
                                       const next = adoptDetachment(run, d.name, cost);
@@ -629,16 +657,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                     <Icon name="plus" size={13} /> {canAfford ? `Adopt Detachment (${cost} Scrap)` : `Need ${cost} Scrap`}
                                   </button>
                                 </div>
-                                {rulesText && (
-                                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6, whiteSpace: 'pre-line', lineHeight: 1.35 }}>
-                                    {rulesText}
-                                  </div>
-                                )}
-                                {d.stratagems?.length ? (
-                                  <div className="tiny muted" style={{ marginTop: 4 }}>
-                                    Stratagems: {d.stratagems.map((s) => s.name).join(', ')}
-                                  </div>
-                                ) : null}
                               </div>
                             );
                           })}
@@ -648,6 +666,13 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   })()}
                 </div>
               )}
+            </div>
+
+            <div className="cmp-armory-footer">
+              <button className="cmp-footer-btn" onClick={() => setShowRoster(false)}>
+                <Icon name="check" size={18} />
+                <span>เสร็จสิ้น / ย้อนกลับ</span>
+              </button>
             </div>
           </div>
         </div>
