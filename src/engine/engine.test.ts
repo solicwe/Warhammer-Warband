@@ -651,18 +651,17 @@ describe('detachment rules', () => {
 });
 
 describe('end positions', () => {
-  it('a model cannot end a move on top of an objective marker', () => {
+  it('a model can move over and end a move on top of an objective marker', () => {
     const s = createGame({
-      lists: [list('SM', [['Intercessor Squad', 5, 80]]), list('ORK', [['Boyz', 10, 90]])],
+      lists: [list('SM', [['Captain', 1, 80]]), list('ORK', [['Warboss', 1, 65]])],
       factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3', dispositions: ['take-and-hold', 'take-and-hold'], seed: 42,
     });
     s.terrain = [];
     const o = s.objectives[2];
-    const u = put(s, s.units[0].id, { x: o.x, y: o.y - 6 });
+    const u = put(s, s.units[0].id, { x: o.x, y: o.y - 4 });
     const m = alive(u)[0];
     const onIt = validateMove(s, u, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: o.x, y: o.y }]]]));
-    expect(onIt.errors.some((e) => /objective marker/.test(e))).toBe(true);
-    const beside = validateMove(s, u, 'normal', new Map([[m.id, [{ x: m.x, y: m.y }, { x: o.x, y: o.y - 1.6 }]]]));
-    expect(beside.errors.some((e) => /objective marker/.test(e))).toBe(false);
+    expect(onIt.ok).toBe(true);
+    expect(onIt.errors.some((e) => /objective marker/.test(e))).toBe(false);
   });
 });

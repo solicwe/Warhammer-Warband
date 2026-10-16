@@ -593,7 +593,6 @@ export function fitFormation(s: GameState, u: UnitState, tm: ModelState, angle: 
       if (g < 0.02 || (o.foe && !engage && g <= RULES.engagementRange + 0.02)) return false;
     }
     if (walls.some((w) => pointSegDist(p, w) < m.r * 0.85 + 0.02)) return false;
-    if (objectives.some((o) => dist(p, o) < m.r + OBJECTIVE_MARKER_R)) return false;
     const walker = ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
     for (const t of boxes) {
       if (t.kind === 'container' && pointInPoly(p, t.poly) && !walker) return false;
