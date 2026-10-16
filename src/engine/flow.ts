@@ -25,6 +25,7 @@ export function flowAreas(s: GameState, p: PlayerId): { nml: boolean; opp: boole
 /** Is the unit wholly within its army's Flow of Magic? */
 export function inFlow(s: GameState, u: UnitState): boolean {
   if (!onBoard(u)) return false;
+  if (!isThousandSonsArmy(s, u.owner)) return false;
   if (u.enhancements.some((e) => e.name === NOCTILITH)) return true;
   return alive(u).every((m) => circleInFlow(s, u.owner, m, m.r));
 }

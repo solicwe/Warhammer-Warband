@@ -1141,7 +1141,7 @@ function BoardImpl(props: BoardProps) {
         const tags = props.buffTags?.[u.id];
         const hasFlowOfMagic = isThousandSonsArmy(s, u.owner);
         const unitInFlow = hasFlowOfMagic && inFlow(s, u);
-        const isDaemon = isDaemonUnit(u) || isDaemonsArmy(s, u.owner);
+        const isDaemon = isDaemonUnit(u) && isDaemonsArmy(s, u.owner);
         const unitInShadow = isDaemon && isUnderShadowOfChaos(s, u.owner, u);
         const enemyInShadow = !isDaemon && isDaemonsArmy(s, other(u.owner)) && isUnderShadowOfChaos(s, other(u.owner), u);
         const hasPsychicWep = ms.some((m) => m.weapons.some((w) => w.profiles.some((p) => p.abilities.includes('psychic'))));

@@ -1243,10 +1243,11 @@ details > .strat-card { margin-top: 6px; }
 .cmp-node.supply { border-style: dashed; border-color: #f59e0b; color: #fbbf24; background: #261b0c; }
 .cmp-node.armory { border-color: #38bdf8; color: #7dd3fc; background: #0c2333; }
 .cmp-node.medicae { border-color: #4ade80; color: #86efac; background: #0c2918; }
-.cmp-scrap { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(217, 119, 6, 0.42)); color: #fbbf24; border: 1.5px solid #f59e0b; padding: 3px 9px; border-radius: 7px; font-size: 13.5px; font-weight: 700; box-shadow: 0 0 10px rgba(245, 158, 11, 0.3); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
-.cmp-scrap .num, .cmp-scrap b { color: #fffbeb; font-weight: 800; letter-spacing: 0.02em; }
-.cmp-scrap svg { color: #fde047; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6)); }
-.cmp-roster-btn { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.cmp-scrap { display: inline-flex; align-items: center; gap: 6px; background: #171b22 !important; border: 1.5px solid #d3a04a !important; color: #fef08a !important; padding: 4px 10px; border-radius: 6px; font-size: 13.5px; font-weight: 700; box-shadow: 0 0 10px rgba(211, 160, 74, 0.25); }
+.cmp-scrap .num, .cmp-scrap b { color: #fef08a; font-weight: 800; }
+.cmp-scrap svg { color: #fef08a; filter: drop-shadow(0 0 3px rgba(211, 160, 74, 0.5)); }
+.cmp-roster-btn { display: inline-flex; align-items: center; gap: 6px; background: rgba(211, 160, 74, 0.22) !important; border: 1.5px solid #d3a04a !important; color: #fef08a !important; font: 700 13px var(--font-cond) !important; letter-spacing: 0.04em; text-transform: uppercase; padding: 6px 14px !important; border-radius: 6px !important; cursor: pointer; transition: all 0.12s ease; }
+.cmp-roster-btn:hover { background: #d3a04a !important; color: #17120a !important; }
 .cmp-honor-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(201, 163, 92, 0.2); color: #f1e3c4; border: 1px solid rgba(201, 163, 92, 0.4); margin: 2px; }
 .cmp-rank-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(74, 222, 128, 0.2); color: #86efac; border: 1px solid rgba(74, 222, 128, 0.4); margin-right: 6px; }
 .cmp-node.done { background: radial-gradient(circle at 35% 30%, #f0cf8e, #c9a35c 55%, #8a6a2f); border-color: #f0cf8e; color: #1a140a; opacity: 1; }

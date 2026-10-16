@@ -204,4 +204,27 @@ describe('Chaos Daemons Engine', () => {
     const def = daemonsDefenseModifiers(s, enemy, belakor, 'ranged');
     expect(def.hitMod).toBe(-1); // distance > 18"
   });
+
+  it('Heldrake with DAEMON keyword in CSM is not treated as Legiones Daemonica unit', async () => {
+    const { isDaemonUnit } = await import('./daemons');
+    const heldrake: UnitState = {
+      id: 'h1',
+      owner: 0,
+      name: 'Heldrake',
+      sources: ['Heldrake'],
+      keywords: ['DAEMON', 'CHAOS', 'HELDRAKE', 'FLY', 'VEHICLE'],
+      factionKeywords: ['HERETIC ASTARTES'],
+      models: [{ id: 'm1', name: 'Heldrake', dead: false, wounds: 12, profile: { M: 12, T: 9, Sv: 3, W: 12, Ld: 6, OC: 2 }, x: 10, y: 10, r: 2 }],
+      abilities: [],
+      status: 'board',
+      core: {},
+    } as unknown as UnitState;
+
+    expect(isDaemonUnit(heldrake)).toBe(false);
+
+    const s = makeMockState();
+    s.players[0].factionId = 'CSM';
+    s.players[0].detachments = [{ name: 'Veterans of the Long War', dp: 3 }] as never;
+    expect(isUnderShadowOfChaos(s, 0, heldrake)).toBe(false);
+  });
 });

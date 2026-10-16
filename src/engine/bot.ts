@@ -454,9 +454,9 @@ export function botShootOne(s: GameState): boolean {
   const canSeeFoe = (u: UnitState, e: UnitState) => {
     const uAlive = alive(u), eAlive = alive(e);
     if (!uAlive.length || !eAlive.length) return false;
-    const targetModel = eAlive[0];
-    if (uAlive.length <= 3) return uAlive.some((m) => roughLos(s, m, targetModel));
-    return roughLos(s, uAlive[0], targetModel) || roughLos(s, uAlive[uAlive.length - 1], targetModel) || roughLos(s, uAlive[Math.floor(uAlive.length / 2)], targetModel);
+    const shooters = uAlive.length <= 3 ? uAlive : [uAlive[0], uAlive[uAlive.length - 1], uAlive[Math.floor(uAlive.length / 2)]];
+    const targets = eAlive.length <= 3 ? eAlive : [eAlive[0], eAlive[eAlive.length - 1], eAlive[Math.floor(eAlive.length / 2)]];
+    return shooters.some((m) => targets.some((t) => roughLos(s, m, t)));
   };
   const regret = (u: UnitState) => {
     const rMax = maxRange(u);

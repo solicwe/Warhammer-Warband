@@ -404,7 +404,7 @@ export function syncWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntry):
   }
   // the unit's own price follows the current points (a Munitorum Field Manual update changes lists already made)
   const base = pointsOptions(sheet).find((o) => o.models === e.models)?.pts ?? e.pts;
-  const next: ArmyUnitEntry = { ...e, pts: base, wargear: wargear.length ? wargear : undefined };
+  const next: ArmyUnitEntry = { ...e, pts: base, wargear: e.wargear !== undefined ? wargear : (wargear.length ? wargear : undefined) };
   const wp = wargearPoints(sheet, next);
   return { ...next, wargearPts: wp || undefined };
 }
@@ -1014,13 +1014,9 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
 
   // If this unit is an EPIC HERO, it can only take an enhancement if:
   // - It's Officio Assassinorum in Veiled Blade Elimination Force, OR
-  // - The enhancement specifically names this datasheet/model
+  // - The active detachment explicitly permits EPIC HERO enhancements
   if (sheet.keywords.includes('EPIC HERO') && !isOfficioVeiled) {
-    const hasNamedEnh = allDetEnhancements.some((e) => {
-      const fit = enhancementFits(e.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(entry.mark ? [entry.mark] : [])]);
-      return fit?.ok === true;
-    });
-    if (!hasNamedEnh) return [];
+    return [];
   }
 
   return allDetEnhancements.filter((e) => {
@@ -1247,8 +1243,7 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (isUpgrade(n) && same > 3) errs.push(`Upgrade "${n}" can be taken at most 3 times`);
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
     const enhObj = allEnh.find((e) => e.name === n);
-    const isAllowedEpic = (list.detachments.includes('Veiled Blade Elimination Force') && sheet?.keywords.includes('OFFICIO ASSASSINORUM'))
-      || (enhObj && enhancementFits(enhObj.text, [...(sheet?.keywords ?? []), ...(sheet?.factionKeywords ?? []), sheet?.name ?? '', ...(u.mark ? [u.mark] : [])])?.ok);
+    const isAllowedEpic = list.detachments.includes('Veiled Blade Elimination Force') && sheet?.keywords.includes('OFFICIO ASSASSINORUM');
     if (sheet?.keywords.includes('EPIC HERO') && !isAllowedEpic) {
       errs.push(`${u.datasheet} is an EPIC HERO and cannot take Enhancements`);
     }

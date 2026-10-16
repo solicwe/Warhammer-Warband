@@ -25,7 +25,7 @@ export function hasAnyKw(u: UnitState, kw: string): boolean {
 }
 
 export function isDaemonUnit(u: UnitState): boolean {
-  return hasAnyKw(u, 'LEGIONES DAEMONICA') || hasAnyKw(u, 'DAEMON');
+  return hasAnyKw(u, 'LEGIONES DAEMONICA');
 }
 
 export function isDaemonsArmy(s: GameState, p: PlayerId): boolean {
@@ -46,6 +46,7 @@ export function godOf(u: UnitState): 'Khorne' | 'Tzeentch' | 'Nurgle' | 'Slaanes
 /** Check if an area or unit is within a player's Shadow of Chaos. */
 export function isUnderShadowOfChaos(s: GameState, daemonPlayer: PlayerId, target: Pt | UnitState): boolean {
   const p = daemonPlayer;
+  if (!isDaemonsArmy(s, p)) return false;
   const ownZone = zonePoly(s, p);
   const oppZone = zonePoly(s, other(p));
 

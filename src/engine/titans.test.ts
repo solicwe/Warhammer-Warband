@@ -422,6 +422,106 @@ describe('Titan Abilities', () => {
       const disp = listDisposition(list, tlFaction as unknown as FactionData);
       expect(disp).toBe('take-and-hold');
     });
+
+    it('Titan units actively draw line of sight across ruins and shoot', async () => {
+      const { buildShootPools } = await import('./attack');
+      const { hasLos } = await import('./visibility');
+      const state: GameState = {
+        round: 1,
+        turn: 1,
+        phase: 'shooting',
+        active: 0,
+        players: [
+          { id: 0, factionId: 'TL', name: 'Titans', cp: 3, detachments: [], armyRules: [] },
+          { id: 1, factionId: 'SM', name: 'Marines', cp: 3, detachments: [], armyRules: [] },
+        ],
+        units: [
+          {
+            id: 'titan-1',
+            owner: 0,
+            status: 'board',
+            name: 'Warhound Titan',
+            sources: ['Warhound Titan'],
+            keywords: ['VEHICLE', 'TITANIC', 'TOWERING'],
+            factionKeywords: ['ADEPTUS TITANICUS'],
+            weaponsFired: [],
+            models: [
+              {
+                id: 'm-titan',
+                name: 'Warhound Titan',
+                source: 'Warhound Titan',
+                keywords: ['VEHICLE', 'TITANIC', 'TOWERING'],
+                weapons: [
+                  {
+                    name: 'Warhound vulcan mega-bolter',
+                    profiles: [{ name: 'Warhound vulcan mega-bolter', range: 36, A: '20', skill: 3, S: 6, AP: -1, D: '2', abilities: ['sustained hits 1'] }],
+                  },
+                ],
+                profile: { M: 14, T: 10, Sv: 3, W: 40, Ld: 6, OC: 8 },
+                wounds: 40,
+                dead: false,
+                x: 10,
+                y: 10,
+                r: 3.875,
+              },
+            ],
+            abilities: [],
+            enhancements: [],
+            core: {},
+            buffs: [],
+          },
+          {
+            id: 'target-1',
+            owner: 1,
+            status: 'board',
+            name: 'Intercessors',
+            sources: ['Intercessors'],
+            keywords: ['INFANTRY'],
+            factionKeywords: ['ADEPTUS ASTARTES'],
+            models: [
+              {
+                id: 'm-target',
+                name: 'Intercessor',
+                source: 'Intercessors',
+                keywords: ['INFANTRY'],
+                weapons: [],
+                profile: { M: 6, T: 4, Sv: 3, W: 2, Ld: 6, OC: 2 },
+                wounds: 2,
+                dead: false,
+                x: 10,
+                y: 35,
+                r: 0.63,
+              },
+            ],
+            abilities: [],
+            enhancements: [],
+            core: {},
+            buffs: [],
+          },
+        ],
+        terrain: [
+          {
+            id: 'ruin-1',
+            category: 'dense',
+            poly: [{ x: 5, y: 20 }, { x: 25, y: 20 }, { x: 25, y: 25 }, { x: 5, y: 25 }],
+            walls: [],
+          },
+        ],
+        objectives: [],
+        markers: [],
+        destroyedByTurn: [],
+        log: [],
+      } as unknown as GameState;
+
+      const mTitan = state.units[0].models[0];
+      const mTarget = state.units[1].models[0];
+      // Despite ruin between (y: 20-25), line of sight is clear for towering titan
+      expect(hasLos(state, mTitan, mTarget)).toBe(true);
+
+      const r = buildShootPools(state, 'titan-1', 'target-1', { mode: 'normal' });
+      expect(r.error).toBeUndefined();
+      expect(r.pools.length).toBeGreaterThan(0);
+    });
   });
 });
 

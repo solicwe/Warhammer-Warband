@@ -90,6 +90,7 @@ function bridgesOf(s: GameState): Bridge[] {
 type Wall = { a: Pt; b: Pt };
 interface WallGrid { cells: Map<number, Wall[]> }
 const CELL = 2;
+const emptyWallGrid: WallGrid = { cells: new Map() };
 const gridByList = new WeakMap<TerrainPiece[], WallGrid>();
 const cellKey = (cx: number, cy: number) => cy * 1000 + cx;
 function wallGridOf(s: GameState): WallGrid {
@@ -211,6 +212,13 @@ function standsIn(s: GameState, m: ModelState, t: TerrainPiece): boolean {
 }
 
 function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false): Blockers {
+  const isToweringOrTitanic = (m: ModelState) => (m.keywords ?? []).some((k) => k === 'TOWERING' || k === 'TITANIC' || k === 'AIRCRAFT');
+  const towering = isToweringOrTitanic(a) || isToweringOrTitanic(b);
+  if (towering) {
+    // 10th edition: TOWERING, TITANIC and AIRCRAFT models ignore obscuring ruin footprints
+    // Physical walls also do not block line of sight to/from towering models, which stand high above ruins
+    return { grid: emptyWallGrid, areas: [] };
+  }
   // only terrain overlapping the box around both models can be crossed by a line between them
   const x0 = Math.min(a.x - a.r, b.x - b.r), x1 = Math.max(a.x + a.r, b.x + b.r);
   const y0 = Math.min(a.y - a.r, b.y - b.r), y1 = Math.max(a.y + a.r, b.y + b.r);

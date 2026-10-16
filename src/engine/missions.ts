@@ -161,7 +161,7 @@ const may = (s: GameState, u: UnitState, what: Parameters<EligHook>[2]) => !!eli
 
 export function actionBlock(s: GameState, u: UnitState): string | null {
   if (!onBoard(u)) return 'Not on the battlefield';
-  if (hasKw(u, 'AIRCRAFT') || hasKw(u, 'FORTIFICATION')) return 'AIRCRAFT/FORTIFICATION';
+  if (hasKw(u, 'AIRCRAFT') || hasKw(u, 'FORTIFICATION') || hasKw(u, 'TITANIC')) return 'AIRCRAFT/FORTIFICATION/TITANIC';
   if (u.battleShocked && !may(s, u, 'actionWhileShocked')) return 'battle-shocked';
   if (!ocOf(u)) return 'OC is 0';
   if (isEngaged(s, u) && !hasKw(u, 'TITANIC') && !may(s, u, 'actionWhileEngaged')) return 'engaged';

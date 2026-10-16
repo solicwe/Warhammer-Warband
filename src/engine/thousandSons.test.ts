@@ -223,4 +223,14 @@ describe('Thousand Sons in a game', () => {
     expect(s.phase).toBe('gameover');
     expect(s.log.some((l) => /Psychic test/.test(l.text) && l.player === 0)).toBe(true);
   });
+
+  it('prevents cross-faction allied units (e.g. in CSM) from using Cabal of Sorcerers rituals', () => {
+    const s = game([['Rubric Marines', 5, 100]], [['Boyz', 10, 90]]);
+    // Simulate player 0 having CSM faction
+    s.players[0].factionId = 'CSM';
+    s.phase = 'shooting';
+    s.active = 0;
+    expect(casters(s, 0)).toEqual([]);
+    expect(ritualsPending(s, 0)).toBe(false);
+  });
 });

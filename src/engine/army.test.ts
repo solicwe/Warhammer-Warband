@@ -125,3 +125,29 @@ describe('3000, 4000, 5000 points battle sizes and scaling rules', () => {
   });
 });
 
+describe('Epic Hero Enhancement Restrictions', () => {
+  const SM = JSON.parse(fs.readFileSync('public/data/factions/SM.json', 'utf8')) as FactionData;
+  const SIZE = { points: 2000, dp: 3, unitLimit: 3, enhancements: 3 };
+
+  it('prohibits EPIC HERO from taking enhancements in validateList', () => {
+    const list: ArmyList = {
+      name: 't', factionId: 'SM', battleSize: 'strike', detachments: ['Gladius Task Force'],
+      units: [
+        { uid: 'g', datasheet: 'Roboute Guilliman', models: 1, pts: 350, warlord: true, enhancement: 'Adept of the Codex' },
+      ],
+    };
+    const errs = validateList(list, SM, SIZE);
+    expect(errs.some((e) => /Roboute Guilliman is an EPIC HERO and cannot take Enhancements/.test(e))).toBe(true);
+  });
+
+  it('enhancementOptions returns empty array for EPIC HERO unless allowed by detachment', async () => {
+    const { enhancementOptions } = await import('./army');
+    const list: ArmyList = {
+      name: 't', factionId: 'SM', battleSize: 'strike', detachments: ['Gladius Task Force'],
+      units: [],
+    };
+    const opts = enhancementOptions(list, SM, { uid: 'g', datasheet: 'Roboute Guilliman', models: 1, pts: 350 });
+    expect(opts).toEqual([]);
+  });
+});
+

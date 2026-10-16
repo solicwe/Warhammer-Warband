@@ -206,13 +206,25 @@ export function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u:
             {radio ? (
               <div className="wg-chips">
                 <button type="button" className={!mine.length ? 'on' : ''} onClick={() => put(i, [])}>{o.replace.length ? 'Keep' : 'None'}</button>
-                {o.choices.map((c, ci) => (
-                  <button type="button" key={ci} className={mine.some((p) => p.choice === ci) ? 'on' : ''} onClick={() => put(i, [{ opt: i, choice: ci, count: o.scope === 'all' ? max : 1 }])}>
-                    {itemsLabel(c)}{costTag(c, o.replace)}
-                  </button>
-                ))}
+                {o.choices.map((c, ci) => {
+                  const on = mine.some((p) => p.choice === ci);
+                  return (
+                    <button
+                      type="button"
+                      key={ci}
+                      className={on ? 'on' : ''}
+                      onClick={() => put(i, on ? [] : [{ opt: i, choice: ci, count: o.scope === 'all' ? max : 1 }])}
+                    >
+                      {itemsLabel(c)}{costTag(c, o.replace)}
+                    </button>
+                  );
+                })}
                 {o.pick && (
-                  <button type="button" className={pickSel ? 'on' : ''} onClick={() => put(i, [{ opt: i, choice: -1, count: 1, picks: pickSel?.picks ?? pickDefault() }])}>
+                  <button
+                    type="button"
+                    className={pickSel ? 'on' : ''}
+                    onClick={() => put(i, pickSel ? [] : [{ opt: i, choice: -1, count: 1, picks: pickDefault() }])}
+                  >
                     Select {o.pick} from the list
                   </button>
                 )}

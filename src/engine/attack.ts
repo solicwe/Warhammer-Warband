@@ -116,11 +116,9 @@ function applyUnitBuffs(pool: Pool, u: UnitState) {
 
 function applyFlowOfMagic(s: GameState, A: UnitState, pool: Pool, psychic: boolean) {
   if (!psychic) return;
-  const isTs = (A.factionKeywords ?? []).includes('THOUSAND SONS') || (A.keywords ?? []).includes('THOUSAND SONS') || isThousandSonsArmy(s, A.owner);
+  if (!isThousandSonsArmy(s, A.owner)) return;
+  const isTs = (A.factionKeywords ?? []).includes('THOUSAND SONS') || (A.keywords ?? []).includes('THOUSAND SONS');
   if (!isTs) return;
-  const dets = s.players[A.owner]?.detachments ?? [];
-  const hasFlow = dets.length === 0 || isThousandSonsArmy(s, A.owner);
-  if (!hasFlow) return;
   if (inFlow(s, A)) {
     pool.woundMod = clamp(pool.woundMod + 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
     pool.woundNote = [pool.woundNote, 'Flow of Magic: +1 Wound'].filter(Boolean).join(' · ');
@@ -144,7 +142,7 @@ function finishIgnore(pool: Pool, all = false) {
 export interface BuildResult { pools: Pool[]; notes: string[]; error?: string }
 
 export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
-  if (!onBoard(u) || u.selectedToShoot || unitFlags(s, u).cannotShoot || (u.move === 'fallback' && !canDo(s, u, 'shootAfterFallBack'))) return [];
+  if (!onBoard(u) || u.selectedToShoot || unitFlags(s, u).cannotShoot || (u.move === 'fallback' && !canDo(s, u, 'shootAfterFallBack') && !hasKw(u, 'TITANIC'))) return [];
   const weps = alive(u).flatMap((m) => m.weapons.flatMap((w) => w.profiles)).filter((p) => !isMelee(p));
   if (!weps.length) return [];
   const engaged = isEngaged(s, u);

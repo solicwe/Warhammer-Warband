@@ -33,6 +33,7 @@ export interface Caster { unit: UnitState; model: ModelState; tries: number; bon
 
 /** Models of player p that can attempt Rituals now, with how many attempts they have left. */
 export function casters(s: GameState, p: PlayerId): Caster[] {
+  if (s.players[p]?.factionId !== 'TS') return [];
   const R = ritualState(s, p);
   const out: Caster[] = [];
   const add = (u: UnitState, m: ModelState) => {
@@ -88,6 +89,7 @@ export function ritualsLeft(s: GameState, p: PlayerId, c?: Caster): Ritual[] {
 
 /** Is it the start of player p's Shooting phase with Rituals that can still be attempted? */
 export function ritualsPending(s: GameState, p: PlayerId): boolean {
+  if (s.players[p]?.factionId !== 'TS') return false;
   if (s.phase !== 'shooting' || s.active !== p || s.window || s.attack) return false;
   const R = ritualState(s, p);
   if (R.done) return false;

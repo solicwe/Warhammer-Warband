@@ -166,6 +166,9 @@ const STYLE_NAME: Record<string, string> = { steady: 'As planned', aggressive: '
 export function Commander({ s, p, says, think, planning, quiet }: { s: GameState; p: PlayerId; says: string | null; think: ThinkView | null; planning?: { done: number; total: number } | null; quiet?: boolean }) {
   const P = s.players[p];
   const v = voiceOf(P.factionId);
+  const warlordUnit = s.units.find((u) => u.owner === p && u.isWarlordUnit)
+    ?? s.units.find((u) => u.owner === p && u.keywords.includes('CHARACTER'));
+  const speakerTitle = warlordUnit?.warlordSource ?? warlordUnit?.name ?? v.title;
   const entries = think ? Object.entries(think.values) : [];
   const lo = Math.min(...entries.map(([, x]) => x), 0), hi = Math.max(...entries.map(([, x]) => x), 1);
   const best = entries.length ? entries.reduce((a, b) => (b[1] > a[1] ? b : a))[0] : null;
@@ -174,7 +177,7 @@ export function Commander({ s, p, says, think, planning, quiet }: { s: GameState
       <span className="cmd-emblem"><Emblem factionId={P.factionId} sub={P.subfaction} /></span>
       <div className="cmd-body">
         <div className="cmd-name">
-          <b>{v.title}</b> <span className="muted">· {P.name}</span>
+          <b>{speakerTitle}</b> <span className="muted">· {warlordUnit ? 'Warlord' : P.name}</span>
           {think && <span className="cmd-thinking"><Icon name="wait" size={13} /> thinking{think.total ? ` ${think.done}/${think.total}` : '…'}</span>}
           {!think && planning && <span className="cmd-thinking quiet" title="The bot works out its next turn while you play yours"><Icon name="wait" size={13} /> planning its turn {planning.done}/{planning.total}</span>}
         </div>
