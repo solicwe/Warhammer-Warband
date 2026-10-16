@@ -525,6 +525,11 @@ function AbilityBadgeImpl({
           cursor: 'pointer',
           outline: 'none',
           whiteSpace: 'nowrap',
+          maxWidth: '160px',
+          maxHeight: '26px',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          boxSizing: 'border-box',
           transition: 'all 0.15s ease',
           pointerEvents: 'auto',
           ...style,
@@ -535,7 +540,9 @@ function AbilityBadgeImpl({
             <path d="M9 1 L3 9 L8 9 L7 15 L13 7 L8 7 Z" />
           </svg>
         )}
-        <span>{info.badgeLabel}</span>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '110px' }}>
+          {info.badgeLabel}
+        </span>
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" strokeWidth="1.5" style={{ opacity: 0.9, flexShrink: 0 }}>
           <circle cx="8" cy="8" r="7" />
           <circle cx="8" cy="4.8" r="0.8" fill="#F59E0B" />

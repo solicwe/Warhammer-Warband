@@ -10,7 +10,7 @@ import { unitFlags } from '../engine/effects';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { loadoutLabels, shortItem } from './loadout';
-import { AbilityBadge } from './AbilityBadgePopover';
+import { getAbilityOrWeaponInfo, PopoverCard, type AbilityOrWeaponInfo } from './AbilityBadgePopover';
 import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import { getPlayerFactionTheme, getUnitFactionTheme } from './factionColors';
@@ -358,6 +358,50 @@ function modelFlinch(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): 
   return null;
 }
 
+/** Is this model currently in the process of taking fatal damage before the damage numbers / hit fx finish? */
+function isDyingModel(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): boolean {
+  if (!m.dead) return false;
+  for (const a of fx) {
+    if (a.e.kind === 'attack' && a.e.targetId === u.id) {
+      const f = (now - a.t0) / FX_MS.attack;
+      if (f < 0.75 && (a.e.killed ?? 0) > 0) return true;
+    }
+    if (a.e.kind === 'mortal' && a.e.unitId === u.id) {
+      const f = (now - a.t0) / FX_MS.mortal;
+      if (f < 0.75) return true;
+    }
+  }
+  return false;
+}
+
+/** Delay wound deduction until damage numbers and impact effects pop up first (Thai req: เลขดาเมจกับเอฟเฟคขึ้นก่อน ค่อยให้เลือดลด) */
+function getModelDisplayWounds(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): { wounds: number; low: boolean; fading?: number } {
+  for (const a of fx) {
+    if (a.e.kind === 'attack' && a.e.targetId === u.id) {
+      const f = (now - a.t0) / FX_MS.attack;
+      // f < 0.55: attacks are flying and damage numbers/effects are popping up first!
+      if (f < 0.55 && (a.e.dmg ?? 0) > 0) {
+        const prev = Math.min(m.profile.W, (m.dead ? 1 : m.wounds) + (a.e.dmg ?? 1));
+        return { wounds: prev, low: prev * 2 <= m.profile.W };
+      }
+      if (m.dead && f >= 0.55 && f < 0.75) {
+        return { wounds: 0, low: true, fading: Math.max(0, (0.75 - f) / 0.2) };
+      }
+    }
+    if (a.e.kind === 'mortal' && a.e.unitId === u.id) {
+      const f = (now - a.t0) / FX_MS.mortal;
+      if (f < 0.55 && (a.e.n ?? 0) > 0) {
+        const prev = Math.min(m.profile.W, (m.dead ? 1 : m.wounds) + (a.e.n ?? 1));
+        return { wounds: prev, low: prev * 2 <= m.profile.W };
+      }
+      if (m.dead && f >= 0.55 && f < 0.75) {
+        return { wounds: 0, low: true, fading: Math.max(0, (0.75 - f) / 0.2) };
+      }
+    }
+  }
+  return { wounds: m.wounds, low: m.wounds * 2 <= m.profile.W };
+}
+
 function BoardImpl(props: BoardProps) {
   usePortraitsVersion();
   const { s, draft, draftUnit, maxFor, onDraft, walk } = props;
@@ -367,6 +411,8 @@ function BoardImpl(props: BoardProps) {
   const SOFT = [p0Theme.soft, p1Theme.soft];
   const W = s.table?.width ?? RULES.battlefield.width;
   const H = s.table?.height ?? RULES.battlefield.height;
+  // board popover for clicked interactive ability/wargear badges
+  const [boardPopover, setBoardPopover] = useState<{ info: AbilityOrWeaponInfo; rect: DOMRect } | null>(null);
   // models picked for single-model adjustment (tap a model of the moving unit); otherwise a drag moves the whole unit
   const [solo, setSolo] = useState<string[]>([]);
   useEffect(() => setSolo([]), [draftUnit]);
@@ -668,7 +714,7 @@ function BoardImpl(props: BoardProps) {
   const dep = deploymentById(s.deploymentId);
   const attacker = s.attackerPlayer;
   const defender = (1 - attacker) as PlayerId;
-  const fs = Math.max(0.55, vb.w / 45);
+  const fs = Math.min(0.65, Math.max(0.42, vb.w / 55));
 
   const units = useMemo(() => s.units.filter((u) => onBoard(u) || u.id === draftUnit), [s.units, draftUnit]);
   const enemyOfDraft = draftUnit ? s.units.find((u) => u.id === draftUnit)?.owner : undefined;
@@ -812,9 +858,9 @@ function BoardImpl(props: BoardProps) {
             <polygon points={ownPts} fill="rgba(6, 182, 212, 0.12)" />
             <polygon points={ownPts} fill="none" stroke="rgba(34, 211, 238, 0.35)" strokeWidth={0.38} strokeDasharray="1.2 0.6" />
             <polygon points={ownPts} fill="url(#flow-magic-pattern)" stroke="#22d3ee" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
-            <g transform={`translate(${ownCentroid.x} ${ownCentroid.y})`}>
-              <rect x={-4.4} y={-0.5} width={8.8} height={1.0} rx={0.5} fill="rgba(8, 47, 73, 0.92)" stroke="#22d3ee" strokeWidth={0.08} />
-              <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#67e8f9" fontWeight={900}>FLOW OF MAGIC (OWN ZONE)</text>
+            <g transform={`translate(${ownCentroid.x} ${ownCentroid.y})`} opacity={0.18}>
+              <rect x={-3.4} y={-0.34} width={6.8} height={0.68} rx={0.34} fill="rgba(8, 47, 73, 0.6)" stroke="#22d3ee" strokeWidth={0.06} strokeDasharray="0.3 0.15" />
+              <text y={0.12} fontSize={0.34} textAnchor="middle" fill="#67e8f9" fontWeight={800} letterSpacing={0.05}>FLOW OF MAGIC (OWN ZONE)</text>
             </g>
 
             {/* No Man's Land: active when controlling half of NML objectives */}
@@ -823,9 +869,9 @@ function BoardImpl(props: BoardProps) {
                 <path d={nmlD} fillRule="evenodd" fill="rgba(6, 182, 212, 0.14)" />
                 <path d={nmlD} fillRule="evenodd" fill="none" stroke="rgba(34, 211, 238, 0.35)" strokeWidth={0.36} strokeDasharray="1.2 0.6" />
                 <path d={nmlD} fillRule="evenodd" fill="url(#flow-magic-pattern)" stroke="#22d3ee" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
-                <g transform={`translate(${W / 2} ${H / 2})`}>
-                  <rect x={-5.8} y={-0.55} width={11.6} height={1.1} rx={0.55} fill="rgba(8, 47, 73, 0.94)" stroke="#22d3ee" strokeWidth={0.1} />
-                  <text y={0.28} fontSize={0.56} textAnchor="middle" fill="#67e8f9" fontWeight={900}>FLOW OF MAGIC: NO MAN'S LAND (+1 WOUND)</text>
+                <g transform={`translate(${W / 2} ${H / 2})`} opacity={0.18}>
+                  <rect x={-4.4} y={-0.34} width={8.8} height={0.68} rx={0.34} fill="rgba(8, 47, 73, 0.6)" stroke="#22d3ee" strokeWidth={0.06} strokeDasharray="0.3 0.15" />
+                  <text y={0.12} fontSize={0.34} textAnchor="middle" fill="#67e8f9" fontWeight={800} letterSpacing={0.05}>FLOW OF MAGIC: NO MAN'S LAND (+1 WOUND)</text>
                 </g>
               </g>
             )}
@@ -836,9 +882,9 @@ function BoardImpl(props: BoardProps) {
                 <polygon points={oppPts} fill="rgba(6, 182, 212, 0.14)" />
                 <polygon points={oppPts} fill="none" stroke="rgba(34, 211, 238, 0.35)" strokeWidth={0.38} strokeDasharray="1.2 0.6" />
                 <polygon points={oppPts} fill="url(#flow-magic-pattern)" stroke="#22d3ee" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
-                <g transform={`translate(${oppCentroid.x} ${oppCentroid.y})`}>
-                  <rect x={-5.2} y={-0.5} width={10.4} height={1.0} rx={0.5} fill="rgba(8, 47, 73, 0.92)" stroke="#22d3ee" strokeWidth={0.08} />
-                  <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#67e8f9" fontWeight={900}>FLOW OF MAGIC: ENEMY ZONE BREACHED</text>
+                <g transform={`translate(${oppCentroid.x} ${oppCentroid.y})`} opacity={0.18}>
+                  <rect x={-3.9} y={-0.34} width={7.8} height={0.68} rx={0.34} fill="rgba(8, 47, 73, 0.6)" stroke="#22d3ee" strokeWidth={0.06} strokeDasharray="0.3 0.15" />
+                  <text y={0.12} fontSize={0.34} textAnchor="middle" fill="#67e8f9" fontWeight={800} letterSpacing={0.05}>FLOW OF MAGIC: ENEMY ZONE BREACHED</text>
                 </g>
               </g>
             )}
@@ -858,9 +904,9 @@ function BoardImpl(props: BoardProps) {
             <polygon points={ownPts} fill="rgba(147, 51, 234, 0.12)" />
             <polygon points={ownPts} fill="none" stroke="rgba(192, 132, 252, 0.35)" strokeWidth={0.38} strokeDasharray="1.2 0.6" />
             <polygon points={ownPts} fill="url(#shadow-chaos-pattern)" stroke="#c084fc" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
-            <g transform={`translate(${ownCentroid.x} ${ownCentroid.y})`}>
-              <rect x={-4.8} y={-0.5} width={9.6} height={1.0} rx={0.5} fill="rgba(59, 7, 100, 0.92)" stroke="#c084fc" strokeWidth={0.08} />
-              <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#d8b4fe" fontWeight={900}>SHADOW OF CHAOS (OWN ZONE)</text>
+            <g transform={`translate(${ownCentroid.x} ${ownCentroid.y})`} opacity={0.18}>
+              <rect x={-3.4} y={-0.34} width={6.8} height={0.68} rx={0.34} fill="rgba(59, 7, 100, 0.6)" stroke="#c084fc" strokeWidth={0.06} strokeDasharray="0.3 0.15" />
+              <text y={0.12} fontSize={0.34} textAnchor="middle" fill="#d8b4fe" fontWeight={800} letterSpacing={0.05}>SHADOW OF CHAOS (OWN ZONE)</text>
             </g>
 
             {/* No Man's Land */}
@@ -869,9 +915,9 @@ function BoardImpl(props: BoardProps) {
                 <path d={nmlD} fillRule="evenodd" fill="rgba(147, 51, 234, 0.14)" />
                 <path d={nmlD} fillRule="evenodd" fill="none" stroke="rgba(192, 132, 252, 0.35)" strokeWidth={0.36} strokeDasharray="1.2 0.6" />
                 <path d={nmlD} fillRule="evenodd" fill="url(#shadow-chaos-pattern)" stroke="#c084fc" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
-                <g transform={`translate(${W / 2} ${H / 2})`}>
-                  <rect x={-5.8} y={-0.55} width={11.6} height={1.1} rx={0.55} fill="rgba(59, 7, 100, 0.94)" stroke="#c084fc" strokeWidth={0.1} />
-                  <text y={0.28} fontSize={0.56} textAnchor="middle" fill="#d8b4fe" fontWeight={900}>SHADOW OF CHAOS: NO MAN'S LAND</text>
+                <g transform={`translate(${W / 2} ${H / 2})`} opacity={0.18}>
+                  <rect x={-4.4} y={-0.34} width={8.8} height={0.68} rx={0.34} fill="rgba(59, 7, 100, 0.6)" stroke="#c084fc" strokeWidth={0.06} strokeDasharray="0.3 0.15" />
+                  <text y={0.12} fontSize={0.34} textAnchor="middle" fill="#d8b4fe" fontWeight={800} letterSpacing={0.05}>SHADOW OF CHAOS: NO MAN'S LAND</text>
                 </g>
               </g>
             )}
@@ -882,9 +928,9 @@ function BoardImpl(props: BoardProps) {
                 <polygon points={oppPts} fill="rgba(147, 51, 234, 0.14)" />
                 <polygon points={oppPts} fill="none" stroke="rgba(192, 132, 252, 0.35)" strokeWidth={0.38} strokeDasharray="1.2 0.6" />
                 <polygon points={oppPts} fill="url(#shadow-chaos-pattern)" stroke="#c084fc" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
-                <g transform={`translate(${oppCentroid.x} ${oppCentroid.y})`}>
-                  <rect x={-5.2} y={-0.5} width={10.4} height={1.0} rx={0.5} fill="rgba(59, 7, 100, 0.92)" stroke="#c084fc" strokeWidth={0.08} />
-                  <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#d8b4fe" fontWeight={900}>SHADOW OF CHAOS: ENEMY ZONE</text>
+                <g transform={`translate(${oppCentroid.x} ${oppCentroid.y})`} opacity={0.18}>
+                  <rect x={-3.9} y={-0.34} width={7.8} height={0.68} rx={0.34} fill="rgba(59, 7, 100, 0.6)" stroke="#c084fc" strokeWidth={0.06} strokeDasharray="0.3 0.15" />
+                  <text y={0.12} fontSize={0.34} textAnchor="middle" fill="#d8b4fe" fontWeight={800} letterSpacing={0.05}>SHADOW OF CHAOS: ENEMY ZONE</text>
                 </g>
               </g>
             )}
@@ -1271,7 +1317,7 @@ function BoardImpl(props: BoardProps) {
         const isMovable = props.movable?.includes(u.id);
         const col = COLORS[u.owner];
         const uTheme = getUnitFactionTheme(s, u);
-        const ms = alive(u);
+        const ms = u.models.filter((m) => !m.dead || isDyingModel(u, m, fx, now));
         const labels = loadoutLabels(u); // which model carries what, in a squad with mixed wargear
         const pts = ms.map((m) => posOf(u, m.id, m));
         const cx = pts.reduce((a, p) => a + p.x, 0) / Math.max(1, pts.length);
@@ -1306,6 +1352,7 @@ function BoardImpl(props: BoardProps) {
               const pr = m.hl ? (m.hw ?? m.r) : m.r;
               const isSolo = isDraft && solo.includes(m.id);
               const flinch = modelFlinch(u, m, fx, now);
+              const disp = getModelDisplayWounds(u, m, fx, now);
               return (
                 <g
                   key={m.id}
@@ -1313,6 +1360,7 @@ function BoardImpl(props: BoardProps) {
                   onPointerDown={(e) => startModelDrag(e, u.id, m.id)}
                   style={{ cursor: isDraft ? 'grab' : 'pointer' }}
                   transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
+                  opacity={disp.fading !== undefined ? disp.fading : 1}
                 >
                   <BaseShape m={m} p={p} grow={Math.max(0, 0.35 - m.r) + 0.35} fill="transparent" />
                   {acting.has(u.id) && <BaseShape m={m} p={p} grow={0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
@@ -1345,15 +1393,14 @@ function BoardImpl(props: BoardProps) {
                     ? <image href={getModelPortrait(m)} x={p.x - pr * 0.9} y={p.y - pr * 0.9} width={pr * 1.8} height={pr * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
                     : <use href={`#tok-${modelToken(m)}`} x={p.x - pr * 0.82} y={p.y - pr * 0.82} width={pr * 1.64} height={pr * 1.64} pointerEvents="none" />}
                   {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
-                  {m.profile.W > 1 && m.wounds < m.profile.W && (() => {
+                  {((m.profile.W > 1 && disp.wounds < m.profile.W) || (m.dead && disp.wounds > 0)) && (() => {
                     // wounds left on a small badge sitting on the base's rim, so the photo stays visible
-                    const fsz = Math.max(0.5, Math.min(0.9, m.r * 0.55));
-                    const low = m.wounds * 2 <= m.profile.W;
+                    const fsz = Math.max(0.48, Math.min(0.85, m.r * 0.55));
                     const by = p.y + m.r * 0.98;
                     return (
                       <g pointerEvents="none">
-                        <rect x={p.x - fsz * 0.62} y={by - fsz * 0.72} width={fsz * 1.24} height={fsz * 0.98} rx={fsz * 0.3} fill="rgba(0,0,0,0.78)" stroke={low ? '#f87171' : '#fde68a'} strokeWidth={0.06} />
-                        <text x={p.x} y={by + fsz * 0.1} fontSize={fsz} textAnchor="middle" fill={low ? '#fca5a5' : '#fff7d6'} stroke="#000" strokeWidth={fsz * 0.22} paintOrder="stroke" fontWeight={900}>{m.wounds}</text>
+                        <rect x={p.x - fsz * 0.62} y={by - fsz * 0.72} width={fsz * 1.24} height={fsz * 0.98} rx={fsz * 0.3} fill="rgba(0,0,0,0.78)" stroke={disp.low ? '#f87171' : '#fde68a'} strokeWidth={0.06} />
+                        <text x={p.x} y={by + fsz * 0.1} fontSize={fsz} textAnchor="middle" fill={disp.low ? '#fca5a5' : '#fff7d6'} stroke="#000" strokeWidth={fsz * 0.22} paintOrder="stroke" fontWeight={900}>{disp.wounds}</text>
                       </g>
                     );
                   })()}
@@ -1367,50 +1414,82 @@ function BoardImpl(props: BoardProps) {
                   {labels.has(m.id) && vb.w < 30 && (isSel || isDraft) && (() => {
                     const raw = labels.get(m.id)!;
                     const items = raw.replace(/ \+$/, '').split('+').map((x) => x.trim()).filter(Boolean);
-                    const foW = Math.max(9, m.r * 6);
-                    const foH = 1.6;
-                    // Clamp leftX so the badge container NEVER goes outside the board [0.5, W - foW - 0.5]
-                    const leftX = Math.max(0.5, Math.min(W - foW - 0.5, p.x - foW / 2));
-                    // Place above or below model depending on vertical space so it doesn't get cut off or hidden
-                    const placeAbove = p.y + m.r + 0.15 + foH > H && p.y - m.r - foH - 0.15 >= 0;
-                    const topY = placeAbove ? p.y - m.r - foH - 0.15 : p.y + m.r + 0.15;
+                    if (!items.length) return null;
+                    const pillH = 0.44;
+                    const placeAbove = p.y + m.r + 0.2 + pillH > H && p.y - m.r - pillH - 0.2 >= 0;
+                    const badgeY = placeAbove ? p.y - m.r - 0.28 : p.y + m.r + 0.32;
                     return (
-                      <foreignObject
-                        x={leftX}
-                        y={topY}
-                        width={foW}
-                        height={foH}
-                        style={{ pointerEvents: 'none', overflow: 'visible' }}
-                      >
-                        <div
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            flexWrap: 'nowrap',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: '4px',
-                            pointerEvents: 'none',
-                          }}
-                        >
-                          {items.map((item, k) => (
-                            <AbilityBadge
+                      <g key={`badge-${m.id}`} pointerEvents="none">
+                        {items.slice(0, 2).map((item, k) => {
+                          const info = getAbilityOrWeaponInfo(item, u, m);
+                          const label = info.badgeLabel || item;
+                          const shortText = label.length > 14 ? label.slice(0, 13) + '…' : label;
+                          const pillW = Math.max(1.6, Math.min(2.8, shortText.length * 0.16 + 0.65));
+                          const offX = items.length === 1 ? 0 : (k === 0 ? -pillW / 2 - 0.08 : pillW / 2 + 0.08);
+                          const bx = Math.max(pillW / 2 + 0.2, Math.min(W - pillW / 2 - 0.2, p.x + offX));
+                          return (
+                            <g
                               key={k}
-                              name={item}
-                              unit={u}
-                              model={m}
-                              compact
-                              style={{
-                                transform: 'scale(0.85)',
-                                transformOrigin: 'center center',
-                                pointerEvents: 'auto',
-                                boxShadow: '0 2px 6px rgba(0,0,0,0.8)',
-                                flexShrink: 0,
+                              className="board-ability-pill"
+                              transform={`translate(${bx} ${badgeY})`}
+                              pointerEvents="auto"
+                              style={{ cursor: 'pointer' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setBoardPopover({ info, rect: e.currentTarget.getBoundingClientRect() });
                               }}
-                            />
-                          ))}
-                        </div>
-                      </foreignObject>
+                            >
+                              <rect
+                                x={-pillW / 2}
+                                y={-pillH / 2}
+                                width={pillW}
+                                height={pillH}
+                                rx={pillH / 2}
+                                fill="rgba(18, 20, 23, 0.94)"
+                                stroke="#374151"
+                                strokeWidth={0.04}
+                                className="board-pill-rect"
+                              />
+                              {info.category.variant === 'cp' && (
+                                <path
+                                  d="M -0.15 -0.12 L -0.05 0 L -0.12 0 L -0.02 0.14 L 0.08 -0.02 L 0.01 -0.02 Z"
+                                  transform={`translate(${-pillW / 2 + 0.25} 0) scale(0.8)`}
+                                  fill="#34D399"
+                                />
+                              )}
+                              <text
+                                x={info.category.variant === 'cp' ? 0.08 : -0.1}
+                                y={0.08}
+                                fontSize={0.24}
+                                textAnchor="middle"
+                                fill="#E2E8F0"
+                                fontWeight={700}
+                              >
+                                {shortText}
+                              </text>
+                              <circle
+                                cx={pillW / 2 - 0.2}
+                                cy={0}
+                                r={0.11}
+                                fill="none"
+                                stroke="#F59E0B"
+                                strokeWidth={0.03}
+                                opacity={0.9}
+                              />
+                              <text
+                                x={pillW / 2 - 0.2}
+                                y={0.05}
+                                fontSize={0.15}
+                                textAnchor="middle"
+                                fill="#F59E0B"
+                                fontWeight={900}
+                              >
+                                i
+                              </text>
+                            </g>
+                          );
+                        })}
+                      </g>
                     );
                   })()}
                   {props.noLos?.includes(m.id) && (
@@ -1424,51 +1503,46 @@ function BoardImpl(props: BoardProps) {
               );
             })}
             {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (
-              <text x={cx} y={minY - 0.35} fontSize={fs * 0.85} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
-                {u.name.length > 22 ? u.name.slice(0, 21) + '…' : u.name}{u.battleShocked ? ' !' : ''}
+              <text x={cx} y={minY - 0.35} fontSize={Math.min(0.56, fs * 0.85)} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
+                {u.name.length > 20 ? u.name.slice(0, 19) + '…' : u.name}{u.battleShocked ? ' !' : ''}
               </text>
             )}
-            {props.badges?.[u.id]?.length ? (
-              isSel ? (
-                <foreignObject
-                  x={Math.max(0.5, Math.min(W - 12.5, cx - 6))}
-                  y={minY - 1.8}
-                  width={12}
-                  height={1.5}
-                  style={{ pointerEvents: 'none', overflow: 'visible' }}
-                >
-                  <div
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      flexWrap: 'nowrap',
-                      justifyContent: 'center',
-                      gap: '4px',
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    {props.badges[u.id].map((b, i) => (
-                      <AbilityBadge
-                        key={i}
-                        name={b}
-                        unit={u}
-                        compact
-                        style={{
-                          transform: 'scale(0.85)',
-                          transformOrigin: 'top center',
-                          pointerEvents: 'auto',
-                          boxShadow: '0 2px 6px rgba(0,0,0,0.8)',
-                        }}
-                      />
-                    ))}
-                  </div>
-                </foreignObject>
-              ) : (
-                <text x={cx} y={minY - 1.2} fontSize={0.75} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={800}>
-                  {props.badges[u.id].join('  ')}
-                </text>
-              )
-            ) : null}
+            {props.badges?.[u.id]?.length && pts.length > 0 ? (() => {
+              const uBadges = props.badges![u.id]!;
+              const bCount = Math.min(uBadges.length, 3);
+              return (
+                <g transform={`translate(${cx} ${minY - 0.95})`} pointerEvents="none">
+                  {uBadges.slice(0, 3).map((b, i) => {
+                    const bOffset = (i - (bCount - 1) / 2) * 2.6;
+                    const bText = b.length > 15 ? b.slice(0, 14) + '…' : b;
+                    const pillW = Math.max(1.6, Math.min(2.5, bText.length * 0.16 + 0.5));
+                    return (
+                      <g key={i} transform={`translate(${bOffset} 0)`}>
+                        <rect
+                          x={-pillW / 2}
+                          y={-0.22}
+                          width={pillW}
+                          height={0.44}
+                          rx={0.22}
+                          fill="rgba(18, 20, 23, 0.92)"
+                          stroke="#F59E0B"
+                          strokeWidth={0.04}
+                        />
+                        <text
+                          y={0.08}
+                          fontSize={0.24}
+                          textAnchor="middle"
+                          fill="#FDE68A"
+                          fontWeight={800}
+                        >
+                          {bText}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </g>
+              );
+            })() : null}
             {unitNumber !== undefined && pts.length > 0 && (
               <g transform={`translate(${cx} ${minY - 0.65})`} pointerEvents="none">
                 <circle r={0.55} fill="#f5d48a" stroke="#111" strokeWidth={0.12} />
@@ -1500,50 +1574,50 @@ function BoardImpl(props: BoardProps) {
               );
             })() : null}
             {u.battleShocked && pts.length > 0 && (
-              <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 3.1 : 2.2)})`} pointerEvents="none">
-                <rect x={-3.9} y={-0.55} width={7.8} height={1.1} rx={0.55} fill="#4c1d95" stroke="#e9d5ff" strokeWidth={0.09} />
-                <SvgIcon name="charge" x={-3.2} y={0} size={0.75} color="#f5f3ff" />
-                <text x={0.35} y={0.25} fontSize={0.66} textAnchor="middle" fill="#f5f3ff" fontWeight={900}>BATTLE-SHOCKED</text>
+              <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 1.45 : 0.85)})`} pointerEvents="none">
+                <rect x={-2.4} y={-0.32} width={4.8} height={0.64} rx={0.32} fill="#4c1d95" stroke="#e9d5ff" strokeWidth={0.06} />
+                <SvgIcon name="charge" x={-1.8} y={0} size={0.45} color="#f5f3ff" />
+                <text x={0.2} y={0.12} fontSize={0.36} textAnchor="middle" fill="#f5f3ff" fontWeight={900}>BATTLE-SHOCKED</text>
               </g>
             )}
             {s.players[1 - u.owner].oathTarget === u.id && pts.length > 0 && (
-              <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 3.1 : 2.2) - (u.battleShocked ? 1.35 : 0)})`} pointerEvents="none">
-                <rect x={-2.3} y={-0.62} width={4.6} height={1.24} rx={0.25} fill="#7a0c0c" stroke="#f5d48a" strokeWidth={0.1} />
-                <path d="M -1.85 0.32 L -1.4 -0.32 L -0.95 0.32 Z" fill="#f5d48a" />
-                <text x={0.35} y={0.27} fontSize={0.75} textAnchor="middle" fill="#f5d48a" fontWeight={800} letterSpacing={0.06}>{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</text>
+              <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 1.45 : 0.85) - (u.battleShocked ? 0.75 : 0)})`} pointerEvents="none">
+                <rect x={-1.8} y={-0.32} width={3.6} height={0.64} rx={0.18} fill="#7a0c0c" stroke="#f5d48a" strokeWidth={0.06} />
+                <path d="M -1.3 0.16 L -1.0 -0.16 L -0.7 0.16 Z" fill="#f5d48a" />
+                <text x={0.2} y={0.12} fontSize={0.38} textAnchor="middle" fill="#f5d48a" fontWeight={800} letterSpacing={0.04}>{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</text>
               </g>
             )}
             {pts.length > 0 && (() => {
-              const baseBadgeY = minY - (props.badges?.[u.id]?.length ? 3.1 : 2.2) - (u.battleShocked ? 1.35 : 0) - (s.players[1 - u.owner].oathTarget === u.id ? 1.4 : 0);
+              const baseBadgeY = minY - (props.badges?.[u.id]?.length ? 1.45 : 0.85) - (u.battleShocked ? 0.75 : 0) - (s.players[1 - u.owner].oathTarget === u.id ? 0.75 : 0);
               if (unitInFlow) {
                 return (
                   <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none" className="flow-magic-aura">
-                    <rect x={-3.6} y={-0.45} width={7.2} height={0.9} rx={0.45} fill="rgba(8, 47, 73, 0.94)" stroke="#22d3ee" strokeWidth={0.08} />
-                    <text y={0.18} fontSize={0.48} textAnchor="middle" fill="#67e8f9" fontWeight={900}>✦ IN FLOW OF MAGIC (+1 W)</text>
+                    <rect x={-2.4} y={-0.28} width={4.8} height={0.56} rx={0.28} fill="rgba(8, 47, 73, 0.92)" stroke="#22d3ee" strokeWidth={0.05} />
+                    <text y={0.10} fontSize={0.28} textAnchor="middle" fill="#67e8f9" fontWeight={800} letterSpacing={0.04}>✦ IN FLOW OF MAGIC (+1 W)</text>
                   </g>
                 );
               }
               if (hasFlowOfMagic && hasPsychicWep) {
                 return (
                   <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none">
-                    <rect x={-3.3} y={-0.42} width={6.6} height={0.84} rx={0.42} fill="rgba(15, 23, 42, 0.9)" stroke="#0284c7" strokeWidth={0.08} />
-                    <text y={0.18} fontSize={0.44} textAnchor="middle" fill="#7dd3fc" fontWeight={800}>PSYCHIC (RE-ROLL 1s)</text>
+                    <rect x={-2.2} y={-0.26} width={4.4} height={0.52} rx={0.26} fill="rgba(15, 23, 42, 0.9)" stroke="#0284c7" strokeWidth={0.05} />
+                    <text y={0.10} fontSize={0.26} textAnchor="middle" fill="#7dd3fc" fontWeight={800} letterSpacing={0.03}>PSYCHIC (RE-ROLL 1s)</text>
                   </g>
                 );
               }
               if (unitInShadow) {
                 return (
                   <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none" className="shadow-chaos-aura">
-                    <rect x={-3.6} y={-0.45} width={7.2} height={0.9} rx={0.45} fill="rgba(59, 7, 100, 0.94)" stroke="#c084fc" strokeWidth={0.08} />
-                    <text y={0.18} fontSize={0.48} textAnchor="middle" fill="#e9d5ff" fontWeight={900}>✦ IN SHADOW OF CHAOS</text>
+                    <rect x={-2.4} y={-0.28} width={4.8} height={0.56} rx={0.28} fill="rgba(59, 7, 100, 0.92)" stroke="#c084fc" strokeWidth={0.05} />
+                    <text y={0.10} fontSize={0.28} textAnchor="middle" fill="#e9d5ff" fontWeight={800} letterSpacing={0.04}>✦ IN SHADOW OF CHAOS</text>
                   </g>
                 );
               }
               if (enemyInShadow) {
                 return (
                   <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none" className="shadow-chaos-aura">
-                    <rect x={-3.6} y={-0.45} width={7.2} height={0.9} rx={0.45} fill="rgba(88, 28, 135, 0.92)" stroke="#a855f7" strokeWidth={0.08} />
-                    <text y={0.18} fontSize={0.46} textAnchor="middle" fill="#f3e8ff" fontWeight={800}>✦ SHADOW OF CHAOS (-1 BS)</text>
+                    <rect x={-2.3} y={-0.28} width={4.6} height={0.56} rx={0.28} fill="rgba(88, 28, 135, 0.92)" stroke="#a855f7" strokeWidth={0.05} />
+                    <text y={0.10} fontSize={0.26} textAnchor="middle" fill="#f3e8ff" fontWeight={800} letterSpacing={0.03}>✦ SHADOW OF CHAOS (-1 BS)</text>
                   </g>
                 );
               }
@@ -1623,6 +1697,13 @@ function BoardImpl(props: BoardProps) {
     <svg className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
       <FxLayer fx={fx} />
     </svg>
+    {boardPopover && (
+      <PopoverCard
+        info={boardPopover.info}
+        anchorRect={boardPopover.rect}
+        onClose={() => setBoardPopover(null)}
+      />
+    )}
     </>
   );
 }
