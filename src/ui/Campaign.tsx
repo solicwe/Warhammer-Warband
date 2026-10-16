@@ -490,7 +490,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           {canLead && (
                             <button className={`cmp-card-btn ${isAttaching ? 'active' : ''}`} onClick={() => { setAttachingUid(isAttaching ? null : u.uid); setUpgradingUid(null); setWargearUid(null); }}>
                               <Icon name="swords" size={14} />
-                              <span>{attachedSquad ? `Attached: ${attachedSquad.datasheet}` : 'Attach to Squad'}</span>
+                              <span>Attach</span>
                             </button>
                           )}
                           <button className={`cmp-card-btn ${isUpgrading ? 'active' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); setAttachingUid(null); }}>
@@ -544,11 +544,21 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                               <div className="cmp-kicker" style={{ color: '#fef08a' }}>Wargear Configuration</div>
                               <button
                                 type="button"
-                                className="btn small primary"
                                 onClick={() => setWargearUid(null)}
-                                style={{ padding: '3px 10px', fontSize: '12px' }}
+                                title="Close"
+                                aria-label="Close"
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#94a3b8',
+                                  cursor: 'pointer',
+                                  padding: '4px 6px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  borderRadius: '4px',
+                                }}
                               >
-                                Done
+                                <Icon name="close" size={14} />
                               </button>
                             </div>
                             <WargearEditor
@@ -579,48 +589,130 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         {isAttaching && canLead && d && (
                           <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <div className="cmp-kicker" style={{ color: '#fef08a' }}>Squad Attachment</div>
+                              <div className="cmp-kicker" style={{ color: '#fef08a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Icon name="swords" size={13} />
+                                <span>Squad Attachment</span>
+                              </div>
                               <button
                                 type="button"
-                                className="btn small primary"
                                 onClick={() => setAttachingUid(null)}
-                                style={{ padding: '3px 10px', fontSize: '12px' }}
+                                title="Close"
+                                aria-label="Close"
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#94a3b8',
+                                  cursor: 'pointer',
+                                  padding: '4px 6px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  borderRadius: '4px',
+                                }}
                               >
-                                Done
+                                <Icon name="close" size={14} />
                               </button>
                             </div>
-                            <div style={{ fontSize: 12.5, color: '#94a3b8', marginBottom: 10 }}>
+                            <div style={{ fontSize: 12.5, color: '#94a3b8', marginBottom: 10, lineHeight: 1.4 }}>
                               Characters can attach to an eligible bodyguard squad before battle, sharing wounds and granting leadership abilities according to 40k rules.
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                               {/* Solo Option */}
                               <div
-                                style={{
-                                  padding: '10px 12px',
-                                  borderRadius: 8,
-                                  background: !u.attachTo ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255, 255, 255, 0.04)',
-                                  border: `1px solid ${!u.attachTo ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'}`,
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                <div>
-                                  <b style={{ color: '#f8fafc', fontSize: 13.5 }}>Deploy Solo (Independent Character)</b>
-                                  <div style={{ fontSize: 12, color: '#cbd5e1' }}>Fight as a standalone single-model unit on the battlefield</div>
-                                </div>
-                                <button
-                                  className={`btn small ${!u.attachTo ? 'subtle' : 'primary'}`}
-                                  disabled={!u.attachTo}
-                                  onClick={() => {
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => {
+                                  if (u.attachTo) {
                                     const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: undefined } : x));
                                     setRun({ ...run, list: { ...run.list, units: updatedUnits } });
                                     play('tick');
-                                  }}
-                                >
-                                  {!u.attachTo ? 'Active (Solo)' : 'Deploy Solo'}
-                                </button>
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    if (u.attachTo) {
+                                      const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: undefined } : x));
+                                      setRun({ ...run, list: { ...run.list, units: updatedUnits } });
+                                      play('tick');
+                                    }
+                                  }
+                                }}
+                                style={{
+                                  padding: '12px 14px',
+                                  borderRadius: 8,
+                                  background: !u.attachTo ? 'rgba(217, 155, 38, 0.12)' : '#181B22',
+                                  border: !u.attachTo ? '1.5px solid #F59E0B' : '1px solid #262930',
+                                  boxShadow: !u.attachTo ? '0 0 12px rgba(245, 158, 11, 0.2)' : 'none',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  cursor: !u.attachTo ? 'default' : 'pointer',
+                                  transition: 'all 0.15s ease',
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                  <div
+                                    style={{
+                                      width: 38,
+                                      height: 38,
+                                      borderRadius: 6,
+                                      background: !u.attachTo ? 'rgba(217, 155, 38, 0.2)' : '#1F242D',
+                                      border: `1px solid ${!u.attachTo ? 'rgba(245, 158, 11, 0.4)' : '#374151'}`,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      color: !u.attachTo ? '#FBBF24' : '#9CA3AF',
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    <Icon name="leader" size={20} />
+                                  </div>
+                                  <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                      <b style={{ color: !u.attachTo ? '#FBBF24' : '#F8FAFC', fontSize: 13.5 }}>Deploy Solo</b>
+                                      <span style={{ fontSize: 11, color: '#9CA3AF' }}>(Independent Character)</span>
+                                    </div>
+                                    <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>
+                                      Fight as a standalone single-model unit on the battlefield
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  {!u.attachTo ? (
+                                    <span
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 4,
+                                        padding: '4px 10px',
+                                        borderRadius: 6,
+                                        background: 'rgba(245, 158, 11, 0.2)',
+                                        border: '1px solid rgba(245, 158, 11, 0.4)',
+                                        color: '#FBBF24',
+                                        fontSize: '11.5px',
+                                        fontWeight: 700,
+                                        letterSpacing: '0.03em',
+                                      }}
+                                    >
+                                      <Icon name="check" size={13} /> ACTIVE
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="btn small"
+                                      style={{
+                                        border: '1px solid #374151',
+                                        background: '#1F242D',
+                                        color: '#E5E7EB',
+                                        fontSize: '12px',
+                                        padding: '4px 12px',
+                                      }}
+                                    >
+                                      Deploy Solo
+                                    </button>
+                                  )}
+                                </div>
                               </div>
 
                               {/* Eligible bodyguard squads */}
@@ -645,43 +737,113 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   return (
                                     <div
                                       key={body.uid}
+                                      role="button"
+                                      tabIndex={0}
+                                      onClick={() => {
+                                        if (!isCurrent) {
+                                          const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: body.uid } : x));
+                                          setRun({ ...run, list: { ...run.list, units: updatedUnits } });
+                                          play('good');
+                                        }
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                          if (!isCurrent) {
+                                            const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: body.uid } : x));
+                                            setRun({ ...run, list: { ...run.list, units: updatedUnits } });
+                                            play('good');
+                                          }
+                                        }
+                                      }}
                                       style={{
-                                        padding: '10px 12px',
+                                        padding: '12px 14px',
                                         borderRadius: 8,
-                                        background: isCurrent ? 'rgba(74, 222, 128, 0.12)' : 'rgba(255, 255, 255, 0.04)',
-                                        border: `1px solid ${isCurrent ? '#4ade80' : 'rgba(255, 255, 255, 0.1)'}`,
+                                        background: isCurrent ? 'rgba(217, 155, 38, 0.12)' : '#181B22',
+                                        border: isCurrent ? '1.5px solid #F59E0B' : '1px solid #262930',
+                                        boxShadow: isCurrent ? '0 0 12px rgba(245, 158, 11, 0.2)' : 'none',
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
-                                        gap: 10,
+                                        gap: 12,
+                                        cursor: isCurrent ? 'default' : 'pointer',
+                                        transition: 'all 0.15s ease',
                                       }}
                                     >
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                         {bodyPhoto ? (
-                                          <img src={bodyPhoto} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover' }} />
+                                          <img
+                                            src={bodyPhoto}
+                                            alt=""
+                                            style={{
+                                              width: 38,
+                                              height: 38,
+                                              borderRadius: 6,
+                                              objectFit: 'cover',
+                                              border: `1px solid ${isCurrent ? 'rgba(245, 158, 11, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
+                                              flexShrink: 0,
+                                            }}
+                                          />
                                         ) : (
-                                          <div style={{ width: 36, height: 36, borderRadius: 6, background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          <div
+                                            style={{
+                                              width: 38,
+                                              height: 38,
+                                              borderRadius: 6,
+                                              background: isCurrent ? 'rgba(245, 158, 11, 0.2)' : '#1e293b',
+                                              border: `1px solid ${isCurrent ? 'rgba(245, 158, 11, 0.4)' : '#374151'}`,
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              color: isCurrent ? '#FBBF24' : '#9CA3AF',
+                                              flexShrink: 0,
+                                            }}
+                                          >
                                             <Icon name="fight" size={18} />
                                           </div>
                                         )}
                                         <div>
-                                          <b style={{ color: '#f8fafc', fontSize: 13.5 }}>{body.datasheet}</b>
-                                          <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                                          <b style={{ color: isCurrent ? '#FBBF24' : '#F8FAFC', fontSize: 13.5 }}>{body.datasheet}</b>
+                                          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
                                             {body.models} {body.models === 1 ? 'model' : 'models'} · {body.pts + (body.wargearPts ?? 0)} pts
                                           </div>
                                         </div>
                                       </div>
-                                      <button
-                                        className={`btn small ${isCurrent ? 'subtle' : 'primary'}`}
-                                        disabled={isCurrent}
-                                        onClick={() => {
-                                          const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: body.uid } : x));
-                                          setRun({ ...run, list: { ...run.list, units: updatedUnits } });
-                                          play('good');
-                                        }}
-                                      >
-                                        {isCurrent ? 'Attached' : 'Attach to Squad'}
-                                      </button>
+
+                                      <div>
+                                        {isCurrent ? (
+                                          <span
+                                            style={{
+                                              display: 'inline-flex',
+                                              alignItems: 'center',
+                                              gap: 4,
+                                              padding: '4px 10px',
+                                              borderRadius: 6,
+                                              background: 'rgba(245, 158, 11, 0.2)',
+                                              border: '1px solid rgba(245, 158, 11, 0.4)',
+                                              color: '#FBBF24',
+                                              fontSize: '11.5px',
+                                              fontWeight: 700,
+                                              letterSpacing: '0.03em',
+                                            }}
+                                          >
+                                            <Icon name="check" size={13} /> ATTACHED
+                                          </span>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            className="btn small"
+                                            style={{
+                                              border: '1px solid #374151',
+                                              background: '#1F242D',
+                                              color: '#E5E7EB',
+                                              fontSize: '12px',
+                                              padding: '4px 12px',
+                                            }}
+                                          >
+                                            Attach
+                                          </button>
+                                        )}
+                                      </div>
                                     </div>
                                   );
                                 });

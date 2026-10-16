@@ -19,12 +19,23 @@ export function RelicToken({ id, enemy, big, lvl, onInfo }: { id: string; enemy?
   const cls = `relic ${enemy ? 'enemy' : ''} ${rare ? 'rare' : ''} ${big ? 'big' : ''} ${lvl && lvl > 1 ? 'upgraded' : ''}`;
   const icon = <Icon name={(enemy ? RULE_ICON[id] : RELIC_ICON[id]) ?? 'enhancement'} size={big ? 22 : 16} />;
   const badge = lvl && lvl > 1 ? <span className="relic-lvl-badge">Lv.{lvl}</span> : null;
+  const title = `${r.name}${lvl && lvl > 1 ? ` (Lv.${lvl})` : ''}: ${r.text}`;
   // inside another button (a reward card) it is only a picture
-  if (!onInfo) return <span className={cls} title={`${r.name}${lvl && lvl > 1 ? ` (Lv.${lvl})` : ''}: ${r.text}`} aria-hidden="true">{icon}{badge}</span>;
+  if (!onInfo) return (
+    <span className={`relic-wrap ${big ? 'big' : ''}`} title={title} aria-hidden="true">
+      <span className={cls}>{icon}</span>
+      {badge}
+    </span>
+  );
   return (
-    <button type="button" className={cls} title={`${r.name}${lvl && lvl > 1 ? ` (Lv.${lvl})` : ''}: ${r.text}`} aria-label={`${r.name}${lvl && lvl > 1 ? ` (Lv.${lvl})` : ''}: ${r.text}`}
-      onClick={(e) => { e.stopPropagation(); onInfo(`${r.name}${lvl && lvl > 1 ? ` (Lv.${lvl})` : ''}: ${r.text}`); }}>
-      {icon}
+    <button
+      type="button"
+      className={`relic-wrap ${big ? 'big' : ''}`}
+      title={title}
+      aria-label={title}
+      onClick={(e) => { e.stopPropagation(); onInfo(title); }}
+    >
+      <span className={cls}>{icon}</span>
       {badge}
     </button>
   );
