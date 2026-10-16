@@ -1227,10 +1227,12 @@ details > .strat-card { margin-top: 6px; }
 .cmp-node:disabled { cursor: default; opacity: 0.55; }
 .cmp-node.elite { border-radius: 10px; transform: translate(-50%, -50%) rotate(45deg); } .cmp-node.elite svg { transform: rotate(-45deg); }
 .cmp-node.boss { width: 60px; height: 60px; border-color: #8f2d25; color: #f08c84; background: #2a1a19; }
-.cmp-node.supply { border-style: dashed; }
+.cmp-node.supply { border-style: dashed; border-color: #f59e0b; color: #fbbf24; background: #261b0c; }
 .cmp-node.armory { border-color: #38bdf8; color: #7dd3fc; background: #0c2333; }
 .cmp-node.medicae { border-color: #4ade80; color: #86efac; background: #0c2918; }
-.cmp-scrap { display: inline-flex; align-items: center; gap: 5px; background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.35); padding: 3px 8px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+.cmp-scrap { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(217, 119, 6, 0.42)); color: #fbbf24; border: 1.5px solid #f59e0b; padding: 3px 9px; border-radius: 7px; font-size: 13.5px; font-weight: 700; box-shadow: 0 0 10px rgba(245, 158, 11, 0.3); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
+.cmp-scrap .num, .cmp-scrap b { color: #fffbeb; font-weight: 800; letter-spacing: 0.02em; }
+.cmp-scrap svg { color: #fde047; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6)); }
 .cmp-roster-btn { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
 .cmp-honor-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(201, 163, 92, 0.2); color: #f1e3c4; border: 1px solid rgba(201, 163, 92, 0.4); margin: 2px; }
 .cmp-rank-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(74, 222, 128, 0.2); color: #86efac; border: 1px solid rgba(74, 222, 128, 0.4); margin-right: 6px; }

@@ -201,7 +201,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       <header className="appbar">
         <button className="appbar-back-btn" aria-label="ย้อนกลับ" onClick={onBack}><Icon name="back" size={18} /><span>ย้อนกลับ</span></button>
         <span className="appbar-title">Campaign</span>
-        <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span></span>
+        <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span> <span>Scrap</span></span>
         <span className="cmp-fate" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
           {[0, 1, 2].map((i) => <i key={i} className={i < run.fate ? 'on' : ''} />)}
         </span>

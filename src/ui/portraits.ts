@@ -106,6 +106,7 @@ export function setPortrait(datasheet: string, dataUrl: string | null): boolean 
   save();
   // on the web link: the photo goes up to the site (shown at once from here, kept locally until the upload lands)
   if (dataUrl) void uploadToCloud(datasheet, dataUrl);
+  else void removeFromCloud(datasheet);
   return portraitsPersisted;
 }
 

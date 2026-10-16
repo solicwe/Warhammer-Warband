@@ -11,7 +11,7 @@ import { loadoutLabels, shortItem } from './loadout';
 import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import type { SecondaryGoal } from '../engine/secondaries';
-import type { FxEvent, GameState, ModelState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
+import type { FxEvent, GameState, ModelState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
 import { play, type Sfx } from './sfx';
 
 export type Paths = Map<string, Pt[]>;
@@ -69,6 +69,173 @@ const SIDE = 13, PX = 20;
 
 const COLORS = ['#3a9ad9', '#e0453f'];
 const SOFT = ['rgba(58,154,217,0.16)', 'rgba(224,69,63,0.16)'];
+
+export interface ObjectiveDetachmentEffect {
+  id: string;
+  radius: number; // in inches
+  color: string;
+  fill: string;
+  badgeBg: string;
+  badgeBorder: string;
+  title: string;
+  desc: string;
+}
+
+export function getObjectiveEffects(s: GameState, o: ObjectiveState): ObjectiveDetachmentEffect[] {
+  const effects: ObjectiveDetachmentEffect[] = [];
+  const ctrl = o.controller;
+
+  // 1. Chaos Daemons - Shadow of Chaos (6" aura)
+  const isCorrupted = o.corrupted !== null && o.corrupted !== undefined;
+  const isListedCorrupted = (s.players[0]?.corruptedObjectives ?? []).includes(o.id) || (s.players[1]?.corruptedObjectives ?? []).includes(o.id);
+  const isDaemonCtrl = ctrl !== null && (s.players[ctrl]?.factionId === 'CD' || (s.players[ctrl]?.detachments ?? []).some((d) => [
+    'Daemonic Incursion', 'Legion of Excess', 'Scintillating Legion', 'Blood Legion',
+    'Plague Legion', 'Shadow Legion', 'Cavalcade of Chaos', 'Lords of the Warp', 'Warptide',
+  ].includes(d.name)));
+
+  if (isCorrupted || isListedCorrupted || isDaemonCtrl) {
+    effects.push({
+      id: 'shadow-of-chaos',
+      radius: 6.0,
+      color: '#c084fc',
+      fill: 'url(#warp-shadow)',
+      badgeBg: 'rgba(76, 29, 149, 0.92)',
+      badgeBorder: '#a855f7',
+      title: 'SHADOW OF CHAOS (6")',
+      desc: 'Deep Strike 6" · +1 Ld (Enemy -1 Ld)',
+    });
+  }
+
+  // 2. Grey Knights - Warpbane Task Force (Hallowed Ground - 3" zone)
+  if (ctrl !== null && (s.players[ctrl]?.detachments ?? []).some((d) => d.name === 'Warpbane Task Force')) {
+    effects.push({
+      id: 'hallowed-ground',
+      radius: 3.0,
+      color: '#38bdf8',
+      fill: 'url(#hallowed-ground)',
+      badgeBg: 'rgba(12, 74, 110, 0.92)',
+      badgeBorder: '#0284c7',
+      title: 'HALLOWED GROUND (3")',
+      desc: 'Grey Knights: +1 to Hit · 4+ Invulnerable Save',
+    });
+  }
+
+  // 3. Necrons - Canoptek Court (Power Matrix - 6" aura)
+  if (ctrl !== null && (s.players[ctrl]?.detachments ?? []).some((d) => d.name === 'Canoptek Court')) {
+    effects.push({
+      id: 'power-matrix',
+      radius: 6.0,
+      color: '#4ade80',
+      fill: 'url(#power-matrix)',
+      badgeBg: 'rgba(20, 83, 45, 0.92)',
+      badgeBorder: '#16a34a',
+      title: 'POWER MATRIX (6")',
+      desc: 'Cryptek & Canoptek: Re-roll All Hits',
+    });
+  }
+
+  // 4. Leagues of Votann - Fortified Position (3" zone)
+  if (ctrl !== null && s.players[ctrl]?.factionId === 'LOV') {
+    effects.push({
+      id: 'fortified-position',
+      radius: 3.0,
+      color: '#fbbf24',
+      fill: 'url(#fortified-ground)',
+      badgeBg: 'rgba(120, 53, 15, 0.92)',
+      badgeBorder: '#d97706',
+      title: 'FORTIFIED POSITION (3")',
+      desc: 'Votann: +1 to Hit Attacking from here',
+    });
+  }
+
+  // 5. Dark Angels - Vowed Objective (3" zone)
+  const isVowed = (s.players[0]?.vowed ?? []).includes(o.id) || (s.players[1]?.vowed ?? []).includes(o.id);
+  if (isVowed) {
+    effects.push({
+      id: 'vowed-objective',
+      radius: 3.0,
+      color: '#fde047',
+      fill: 'rgba(250, 204, 21, 0.16)',
+      badgeBg: 'rgba(113, 63, 18, 0.92)',
+      badgeBorder: '#ca8a04',
+      title: 'VOWED OBJECTIVE (3")',
+      desc: 'Inner Circle: +1 to Wound vs enemy on it',
+    });
+  }
+
+  // 6. Death Guard - Blighted Objective (3" zone)
+  const isBlighted = s.players.some((p) => (p.blight ?? []).some((b) => b.objId === o.id));
+  if (isBlighted) {
+    effects.push({
+      id: 'blighted-objective',
+      radius: 3.0,
+      color: '#a3e635',
+      fill: 'rgba(132, 204, 22, 0.16)',
+      badgeBg: 'rgba(54, 83, 20, 0.92)',
+      badgeBorder: '#65a30d',
+      title: 'BLIGHTED OBJECTIVE (3")',
+      desc: 'Enemies in range become Afflicted (-1 T)',
+    });
+  }
+
+  // 7. Sticky Objective (Secured - 3" zone)
+  if (o.secured !== null && o.secured !== undefined && o.controller === o.secured) {
+    effects.push({
+      id: 'secured-sticky',
+      radius: 3.0,
+      color: '#34d399',
+      fill: 'url(#secured-ground)',
+      badgeBg: 'rgba(6, 78, 59, 0.92)',
+      badgeBorder: '#059669',
+      title: 'SECURED (STICKY)',
+      desc: 'Controlled even if vacated until enemy takes it',
+    });
+  }
+
+  // 8. Warded Objective (6" aura)
+  if (o.warded !== null && o.warded !== undefined) {
+    effects.push({
+      id: 'warded-zone',
+      radius: 6.0,
+      color: '#60a5fa',
+      fill: 'rgba(37, 99, 235, 0.16)',
+      badgeBg: 'rgba(30, 58, 138, 0.92)',
+      badgeBorder: '#2563eb',
+      title: 'WARDED (6")',
+      desc: 'Enemy Daemons cannot Deep Strike within 6"',
+    });
+  }
+
+  // 9. Sabotaged / Mutated / Snared (3" hazard)
+  if (o.sabotaged != null || o.mutated != null || o.snared != null) {
+    effects.push({
+      id: 'sabotaged-hazard',
+      radius: 3.0,
+      color: '#f87171',
+      fill: 'url(#sabotaged-ground)',
+      badgeBg: 'rgba(127, 29, 29, 0.92)',
+      badgeBorder: '#dc2626',
+      title: o.sabotaged != null ? 'SABOTAGED (3")' : o.snared != null ? 'MORTIS SNARE (3")' : 'MUTATED LANDSCAPE (3")',
+      desc: 'Enemy moving here takes D3 Mortal Wounds',
+    });
+  }
+
+  // 10. Roguelike Supply Cache (3" zone)
+  if (s.campaign && o.controller === null) {
+    effects.push({
+      id: 'supply-cache',
+      radius: 3.0,
+      color: '#facc15',
+      fill: 'url(#supply-cache)',
+      badgeBg: 'rgba(113, 63, 18, 0.92)',
+      badgeBorder: '#ca8a04',
+      title: 'SUPPLY CACHE (3")',
+      desc: 'First capture awards +25 Scrap / +1 CP',
+    });
+  }
+
+  return effects;
+}
 
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
@@ -622,6 +789,41 @@ function BoardImpl(props: BoardProps) {
         <radialGradient id="crater"><stop offset="0" stopColor="#2f2a22" /><stop offset="0.7" stopColor="#4a4336" /><stop offset="1" stopColor="#6d6452" /></radialGradient>
         <linearGradient id="fx-flame" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#fff3c4" /><stop offset="0.4" stopColor="#fb923c" /><stop offset="1" stopColor="#b91c1c" stopOpacity="0.2" /></linearGradient>
         <radialGradient id="objdisc"><stop offset="0" stopColor="#f1f2f4" /><stop offset="1" stopColor="#8d939c" /></radialGradient>
+        <radialGradient id="warp-shadow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#c084fc" stopOpacity="0.36" />
+          <stop offset="60%" stopColor="#9333ea" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#7e22ce" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="hallowed-ground" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.38" />
+          <stop offset="60%" stopColor="#0284c7" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#0369a1" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="power-matrix" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#4ade80" stopOpacity="0.38" />
+          <stop offset="60%" stopColor="#16a34a" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="fortified-ground" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.38" />
+          <stop offset="60%" stopColor="#d97706" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="secured-ground" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#34d399" stopOpacity="0.32" />
+          <stop offset="60%" stopColor="#059669" stopOpacity="0.15" />
+          <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="sabotaged-ground" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#f87171" stopOpacity="0.4" />
+          <stop offset="60%" stopColor="#dc2626" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#991b1b" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="supply-cache" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fde047" stopOpacity="0.38" />
+          <stop offset="60%" stopColor="#eab308" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#a16207" stopOpacity="0" />
+        </radialGradient>
       </defs>
       {backdrop
         ? <image href={backdrop} x={0} y={0} width={W} height={H} preserveAspectRatio="none" />
@@ -696,8 +898,48 @@ function BoardImpl(props: BoardProps) {
         const top = Math.min(...ys);
         const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
         const label = o.type === 'home' ? 'HOME' : o.type === 'central' ? 'CENTRE' : 'OBJ';
+        const effects = getObjectiveEffects(s, o);
+
         return (
           <g key={o.id} pointerEvents="none">
+            {/* Territory / Detachment Aura Circles */}
+            {effects.map((eff) => (
+              <g key={eff.id}>
+                <circle
+                  cx={o.x}
+                  cy={o.y}
+                  r={eff.radius}
+                  fill={eff.fill}
+                  stroke={eff.color}
+                  strokeWidth={0.14}
+                  strokeDasharray="0.6 0.3"
+                  opacity={0.88}
+                />
+                <circle
+                  cx={o.x}
+                  cy={o.y}
+                  r={eff.radius - 0.28}
+                  fill="none"
+                  stroke={eff.color}
+                  strokeWidth={0.06}
+                  opacity={0.45}
+                />
+                <text
+                  x={o.x + eff.radius - 0.25}
+                  y={o.y - 0.2}
+                  fontSize={0.42}
+                  fill={eff.color}
+                  fontWeight={800}
+                  textAnchor="end"
+                  stroke="#000"
+                  strokeWidth={0.08}
+                  paintOrder="stroke"
+                >
+                  {eff.radius}"
+                </text>
+              </g>
+            ))}
+
             <polygon points={t.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill={ctrl === null ? 'rgba(245,184,61,0.08)' : SOFT[ctrl]} stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.16} strokeDasharray="0.6 0.25" />
             <circle cx={o.x} cy={o.y} r={0.79} fill="url(#objdisc)" stroke="#111" strokeWidth={0.08} />
             <circle cx={o.x} cy={o.y} r={0.55} fill="none" stroke={ctrl === null ? '#555' : COLORS[ctrl]} strokeWidth={0.18} />
@@ -711,6 +953,34 @@ function BoardImpl(props: BoardProps) {
                 <tspan fill={COLORS[0]}>{a}</tspan><tspan fill="#aaa"> : </tspan><tspan fill={COLORS[1]}>{b}</tspan>
               </text>
             </g>
+
+            {/* Detachment Territory Effect Badges */}
+            {effects.map((eff, idx) => {
+              const badgeW = 7.4;
+              const badgeH = 0.95;
+              const clampedX = Math.max(badgeW / 2 + 0.5, Math.min(W - badgeW / 2 - 0.5, cx));
+              const badgeY = top > 2.8 ? (top - 0.55 - (idx + 1) * 1.1) : (top + 0.65 + idx * 1.1);
+              return (
+                <g key={eff.id} transform={`translate(${clampedX} ${badgeY})`}>
+                  <rect
+                    x={-badgeW / 2}
+                    y={-badgeH / 2}
+                    width={badgeW}
+                    height={badgeH}
+                    rx={0.38}
+                    fill={eff.badgeBg}
+                    stroke={eff.badgeBorder}
+                    strokeWidth={0.08}
+                  />
+                  <text x={0} y={-0.08} fontSize={0.44} textAnchor="middle" fill="#ffffff" fontWeight={900}>
+                    {eff.title}
+                  </text>
+                  <text x={0} y={0.32} fontSize={0.34} textAnchor="middle" fill={eff.color} fontWeight={700}>
+                    {eff.desc}
+                  </text>
+                </g>
+              );
+            })}
           </g>
         );
       })}
