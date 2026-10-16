@@ -168,7 +168,7 @@ function scopeLabel(o: WargearOption, max: number) {
 }
 
 /** Wargear choices of one list entry: swaps, extra weapons, "pick two from the list", add-on models. */
-function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUnitEntry; onChange: (patch: Partial<ArmyUnitEntry>) => void }) {
+export function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUnitEntry; onChange: (patch: Partial<ArmyUnitEntry>) => void }) {
   const opts = sheet.wargearOptions ?? [];
   const addons = addonLines(sheet);
   if (!opts.length && !addons.length) return null;

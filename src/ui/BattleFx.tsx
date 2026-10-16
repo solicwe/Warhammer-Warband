@@ -36,7 +36,7 @@ export const FxLayer = memo(function FxLayer({ fx }: { fx: ActiveFx[] }) {
   );
 });
 
-const GLOWS: Record<string, string> = { amber: '#fbbf24', orange: '#f97316', red: '#ef4444', blue: '#60a5fa', cyan: '#67e8f9', purple: '#c084fc', green: '#a3e635', white: '#ffffff', molten: '#fde68a' };
+const GLOWS: Record<string, string> = { amber: '#fbbf24', orange: '#f97316', red: '#ef4444', blue: '#60a5fa', cyan: '#67e8f9', purple: '#c084fc', green: '#a3e635', white: '#ffffff', molten: '#fde68a', pink: '#f472b6' };
 type GlowColor = keyof typeof GLOWS;
 
 const FxDefs = memo(function FxDefs() {
@@ -299,6 +299,10 @@ const SHOT: Record<WeaponFx, { max: number; span: number; travel: number }> = {
   flame: { max: 4, span: 0.2, travel: 0.18 },
   missile: { max: 4, span: 0.3, travel: 0.22 },
   shell: { max: 4, span: 0.3, travel: 0.24 },
+  gauss: { max: 6, span: 0.26, travel: 0.1 },
+  shuriken: { max: 10, span: 0.32, travel: 0.12 },
+  bio: { max: 8, span: 0.3, travel: 0.15 },
+  sonic: { max: 4, span: 0.35, travel: 0.18 },
   slash: { max: 10, span: 0.42, travel: 0.06 },
   power: { max: 10, span: 0.42, travel: 0.06 },
   chain: { max: 10, span: 0.42, travel: 0.06 },
@@ -316,6 +320,10 @@ const TRACER: Partial<Record<WeaponFx, [string, string, GlowColor]>> = {
   shoota: ['#facc15', '#fef9c3', 'amber'],
   pulse: ['#22d3ee', '#ecfeff', 'cyan'],
   shotgun: ['#f59e0b', '#fff7d6', 'amber'],
+  gauss: ['#22c55e', '#bbf7d0', 'green'],
+  shuriken: ['#38bdf8', '#e0f2fe', 'cyan'],
+  bio: ['#84cc16', '#d9f99d', 'green'],
+  sonic: ['#ec4899', '#fbcfe8', 'pink'],
 };
 
 /** Shooting / melee effect: every weapon in the attack has its own look; then damage and casualties. */
@@ -354,10 +362,10 @@ function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
       const ang = Math.atan2(impact.y - src.y, impact.x - src.x);
       if (MELEE.has(v.fx)) { meleeHit(v.fx, `${vi}-${i}`, impact, hit, f - t0, sd, over, under); continue; }
       // muzzle flash (gatlings get one long flickering flash per gun instead)
-      if (v.fx !== 'gatling' && v.fx !== 'flame' && v.fx !== 'psychic') {
-        const mk = (f - t0) / (v.fx === 'las' || v.fx === 'melta' || v.fx === 'volkite' ? 0.12 : 0.07);
+      if (v.fx !== 'gatling' && v.fx !== 'flame' && v.fx !== 'psychic' && v.fx !== 'sonic') {
+        const mk = (f - t0) / (v.fx === 'las' || v.fx === 'melta' || v.fx === 'volkite' || v.fx === 'gauss' ? 0.12 : 0.07);
         if (mk > 0 && mk < 1) over.push(<Muzzle key={`m${vi}-${i}`} at={src} ang={ang} k={mk} sd={sd} fx={v.fx} />);
-        if (mk > 0 && mk < 1 && v.fx !== 'las' && v.fx !== 'lightning') under.push(<Puff key={`gs${vi}-${i}`} at={{ x: src.x + (noise(sd, 60) - 0.5) * 0.6, y: src.y - mk * 0.4 }} k={mk * 0.5} r={v.fx === 'missile' ? 1.4 : 0.7} color="rgba(190,185,175,0.35)" />);
+        if (mk > 0 && mk < 1 && v.fx !== 'las' && v.fx !== 'lightning' && v.fx !== 'gauss') under.push(<Puff key={`gs${vi}-${i}`} at={{ x: src.x + (noise(sd, 60) - 0.5) * 0.6, y: src.y - mk * 0.4 }} k={mk * 0.5} r={v.fx === 'missile' ? 1.4 : 0.7} color="rgba(190,185,175,0.35)" />);
       }
       const key = `${vi}-${i}`;
       switch (v.fx) {
@@ -578,6 +586,110 @@ function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           if (xk > 0 && xk < 1) under.push(<Explosion key={`x${key}`} at={impact} k={xk} seed={sd} big={1.1} />);
           break;
         }
+        case 'gauss': {
+          if (k > 0 && k < 1) {
+            const head = lerp(src, impact, k), tail = lerp(src, impact, Math.max(0, k - 0.28));
+            over.push(
+              <g key={`gs${key}`}>
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={0.5} strokeLinecap="round" opacity={0.4} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#86efac" strokeWidth={0.2} strokeLinecap="round" opacity={0.9} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#f0fdf4" strokeWidth={0.08} strokeLinecap="round" />
+                <Glow at={head} r={0.55} color="green" />
+              </g>,
+            );
+          }
+          const xk = (f - t0 - S.travel) / 0.35;
+          if (xk > 0 && xk < 1) {
+            over.push(
+              <g key={`gx${key}`}>
+                <Glow at={impact} r={0.7 + xk * (hit ? 1.4 : 0.8)} color="green" op={1 - xk} />
+                <circle cx={impact.x} cy={impact.y} r={0.3 + easeOut(xk) * 1.6} fill="none" stroke="#86efac" strokeWidth={0.1 * (1 - xk)} opacity={1 - xk} />
+              </g>,
+            );
+            if (hit) over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={xk} color="#bbf7d0" size={1.1} />);
+            else missDirt(key, impact, xk, sd, under);
+          }
+          break;
+        }
+        case 'shuriken': {
+          if (k > 0 && k < 1) {
+            const p = lerp(src, impact, k);
+            const trail = lerp(src, impact, Math.max(0, k - 0.2));
+            const spinDeg = ((f - t0) * 1800 + sd * 30) % 360;
+            over.push(
+              <g key={`sh${key}`}>
+                <line x1={trail.x} y1={trail.y} x2={p.x} y2={p.y} stroke="#38bdf8" strokeWidth={0.16} strokeLinecap="round" opacity={0.55} />
+                <g transform={`translate(${p.x} ${p.y}) rotate(${spinDeg})`}>
+                  <polygon points="-0.18,-0.05 0,-0.18 0.18,-0.05 0.05,0 0.18,0.05 0,0.18 -0.18,0.05 -0.05,0" fill="#f0f9ff" stroke="#0284c7" strokeWidth={0.03} />
+                  <circle r={0.05} fill="#38bdf8" />
+                </g>
+                <Glow at={p} r={0.4} color="cyan" op={0.7} />
+              </g>,
+            );
+          }
+          if (hit && ik > 0 && ik < 1) {
+            over.push(<Glow key={`pop${key}`} at={impact} r={0.5 * (0.6 + ik)} color="cyan" op={1 - ik} />);
+            over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={ik} color="#bae6fd" size={0.9} />);
+          } else if (!hit) missDirt(key, impact, ik, sd, under);
+          break;
+        }
+        case 'bio': {
+          if (k > 0 && k < 1) {
+            const p = lerp(src, impact, k);
+            const wob = Math.sin(k * 24 + sd) * 0.1;
+            const nx = -Math.sin(ang), ny = Math.cos(ang);
+            const bp = { x: p.x + nx * wob, y: p.y + ny * wob };
+            const trail = lerp(src, impact, Math.max(0, k - 0.16));
+            under.push(<Puff key={`bf${key}`} at={trail} k={k * 0.6} r={0.4} color="rgba(132, 204, 22, 0.35)" />);
+            over.push(
+              <g key={`bp${key}`}>
+                <Glow at={bp} r={0.55} color="green" op={0.8} />
+                <ellipse cx={bp.x} cy={bp.y} rx={0.18} ry={0.1} transform={`rotate(${(ang * 180) / Math.PI} ${bp.x} ${bp.y})`} fill="#4d7c0f" stroke="#bef264" strokeWidth={0.04} />
+              </g>,
+            );
+          }
+          const xk = (f - t0 - S.travel) / 0.32;
+          if (xk > 0 && xk < 1) {
+            over.push(<Glow key={`bg${key}`} at={impact} r={0.6 + xk * (hit ? 1.2 : 0.6)} color="green" op={1 - xk} />);
+            if (hit) {
+              over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={xk} color="#a3e635" size={1.0} />);
+              under.push(<Puff key={`bsp${key}`} at={impact} k={xk} r={0.85} color="rgba(101, 163, 13, 0.55)" />);
+            } else missDirt(key, impact, xk, sd, under);
+          }
+          break;
+        }
+        case 'sonic': {
+          if (k > 0 && k < 1) {
+            for (let j = 0; j < 3; j++) {
+              const sk = Math.max(0, k - j * 0.08);
+              const sp = lerp(src, impact, sk);
+              const wr = 0.3 + (1 - sk) * 0.2 + j * 0.14;
+              over.push(
+                <ellipse
+                  key={`sw${key}-${j}`}
+                  cx={sp.x}
+                  cy={sp.y}
+                  rx={wr * 0.45}
+                  ry={wr}
+                  transform={`rotate(${(ang * 180) / Math.PI + 90} ${sp.x} ${sp.y})`}
+                  fill="none"
+                  stroke={j === 0 ? '#fbcfe8' : '#f472b6'}
+                  strokeWidth={0.09}
+                  opacity={0.85 - j * 0.22}
+                />,
+              );
+            }
+            over.push(<Glow key={`sg${key}`} at={lerp(src, impact, k)} r={0.65} color="pink" op={0.75} />);
+          }
+          const xk = (f - t0 - S.travel) / 0.35;
+          if (xk > 0 && xk < 1) {
+            over.push(<circle key={`sx${key}`} cx={impact.x} cy={impact.y} r={0.4 + easeOut(xk) * 2.0} fill="none" stroke="#f472b6" strokeWidth={0.12 * (1 - xk)} opacity={1 - xk} />);
+            over.push(<Glow key={`sh${key}`} at={impact} r={0.8 + xk * 0.9} color="pink" op={1 - xk} />);
+            if (hit) over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={xk} color="#fbcfe8" size={1.1} />);
+            else under.push(<circle key={`sd${key}`} cx={impact.x} cy={impact.y} r={0.5} fill="url(#fx-scorch)" opacity={1 - xk} />);
+          }
+          break;
+        }
       }
     }
     // gatlings: a long flickering muzzle flash on each gun and brass casings flying out
@@ -629,9 +741,9 @@ function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
 
 /** the flash at the end of a barrel */
 function Muzzle({ at, ang, k, sd, fx }: { at: Pt; ang: number; k: number; sd: number; fx: WeaponFx }) {
-  const big = (fx === 'heavyBolt' || fx === 'missile' || fx === 'shell' ? 1.3 : fx === 'gatling' ? 1 : fx === 'sniper' || fx === 'pulse' ? 0.75 : 0.9) * 0.85;
-  const col: GlowColor = fx === 'plasma' ? 'cyan' : fx === 'las' ? 'red' : fx === 'melta' || fx === 'volkite' ? 'orange' : fx === 'grav' ? 'purple' : fx === 'lightning' ? 'cyan' : 'amber';
-  const core = fx === 'plasma' ? '#e0f7ff' : fx === 'las' ? '#fee2e2' : '#fff7d6';
+  const big = (fx === 'heavyBolt' || fx === 'missile' || fx === 'shell' || fx === 'sonic' ? 1.3 : fx === 'gatling' ? 1 : fx === 'sniper' || fx === 'pulse' || fx === 'shuriken' ? 0.75 : 0.9) * 0.85;
+  const col: GlowColor = fx === 'plasma' ? 'cyan' : fx === 'las' ? 'red' : fx === 'melta' || fx === 'volkite' ? 'orange' : fx === 'grav' ? 'purple' : fx === 'lightning' ? 'cyan' : fx === 'gauss' || fx === 'bio' ? 'green' : fx === 'sonic' ? 'pink' : fx === 'shuriken' ? 'cyan' : 'amber';
+  const core = fx === 'plasma' ? '#e0f7ff' : fx === 'las' ? '#fee2e2' : fx === 'gauss' ? '#f0fdf4' : fx === 'shuriken' ? '#f0f9ff' : fx === 'bio' ? '#ecfccb' : fx === 'sonic' ? '#fdf2f8' : '#fff7d6';
   const star = Array.from({ length: 10 }, (_, j) => {
     // the flash goes forwards: long ahead, short to the sides, almost nothing behind
     const a = ang + (j / 10) * Math.PI * 2, fwd = Math.max(0, Math.cos((j / 10) * Math.PI * 2));

@@ -13,7 +13,7 @@ import {
 import { hasFactionRules } from '../engine/effects';
 import { createGame } from '../engine/game';
 import type { ArmyUnitEntry, FactionData, GameState, WargearPick } from '../engine/types';
-import { Emblem } from './ArmyBuilder';
+import { Emblem, WargearEditor } from './ArmyBuilder';
 import { loadFaction, type FactionIndex } from './data';
 import { Icon, type IconName } from './Icon';
 import { withAutoRules } from './library';
@@ -495,36 +495,37 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         {/* Wargear Drawer */}
                         {isEditingWargear && d && (
                           <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                            <div className="cmp-kicker" style={{ marginBottom: 8, color: '#fef08a' }}>Wargear Options</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                              {d.wargearOptions?.map((opt, optIdx) => (
-                                <div key={optIdx} style={{ padding: 8, background: 'rgba(255,255,255,0.04)', borderRadius: 6, fontSize: 12.5, color: '#cbd5e1' }}>
-                                  <div>{opt.text}</div>
-                                  <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                                    {opt.choices.map((ch, chIdx) => {
-                                      const pick = (u.wargear ?? []).find((w) => w.opt === optIdx && w.choice === chIdx);
-                                      const isChosen = !!pick && pick.count > 0;
-                                      return (
-                                        <button
-                                          key={chIdx}
-                                          className={`btn small ${isChosen ? 'primary' : ''}`}
-                                          onClick={() => {
-                                            const old = u.wargear ?? [];
-                                            const nextPicks: WargearPick[] = isChosen
-                                              ? old.filter((w) => !(w.opt === optIdx && w.choice === chIdx))
-                                              : [...old.filter((w) => w.opt !== optIdx), { opt: optIdx, choice: chIdx, count: opt.scope === 'all' || opt.scope === 'any' ? u.models : 1 }];
-                                            const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? syncWargear(d, { ...x, wargear: nextPicks }) : x));
-                                            setRun({ ...run, list: { ...run.list, units: updatedUnits } });
-                                            play('tick');
-                                          }}
-                                        >
-                                          {ch.join(' + ') || 'Default'}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              ))}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                              <div className="cmp-kicker" style={{ color: '#fef08a' }}>Wargear Configuration</div>
+                              <button
+                                type="button"
+                                className="btn small primary"
+                                onClick={() => setWargearUid(null)}
+                                style={{ padding: '3px 10px', fontSize: '12px' }}
+                              >
+                                เสร็จสิ้น
+                              </button>
+                            </div>
+                            <WargearEditor
+                              sheet={d}
+                              u={u}
+                              onChange={(patch) => {
+                                const next = { ...u, ...patch };
+                                const synced = syncWargear(d, next);
+                                const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? synced : x));
+                                setRun({ ...run, list: { ...run.list, units: updatedUnits } });
+                                play('tick');
+                              }}
+                            />
+                            <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end' }}>
+                              <button
+                                type="button"
+                                className="btn small primary"
+                                onClick={() => setWargearUid(null)}
+                                style={{ padding: '6px 14px', fontSize: '13px' }}
+                              >
+                                เสร็จสิ้น / บันทึก Wargear
+                              </button>
                             </div>
                           </div>
                         )}
