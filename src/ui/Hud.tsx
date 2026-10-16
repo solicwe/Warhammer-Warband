@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { GameState, PlayerId } from '../engine/types';
 import { lastRound } from '../engine/state';
+import { flowAreas, isThousandSonsArmy } from '../engine/flow';
 import { Emblem } from './ArmyBuilder';
 import { Icon } from './Icon';
 import { play } from './sfx';
@@ -99,6 +100,19 @@ export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; 
           <b className="miracle-more" style={{ color: '#a855f7' }}>{P.resurgencePoints} Resurgence</b>
         </span>
       )}
+      {isThousandSonsArmy(s, p) && (() => {
+        const flow = flowAreas(s, p);
+        const zones: string[] = ['Own'];
+        if (flow.nml) zones.push('NML');
+        if (flow.opp) zones.push('Enemy');
+        const summary = zones.join('+');
+        return (
+          <span className="miracle-pool ts-flow-pool" title={`Flow of Magic: Psychic attacks re-roll 1s to wound (+1 to wound if wholly within Flow). Active zones: ${zones.join(', ')}`}>
+            <Icon name="sparkles" size={11} />
+            <b className="miracle-more" style={{ color: '#22d3ee' }}>Flow: {summary}</b>
+          </span>
+        );
+      })()}
       {gain && <span key={gain.k} className="ss-gain">+{gain.n} VP</span>}
     </button>
   );

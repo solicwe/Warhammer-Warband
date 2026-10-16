@@ -165,6 +165,26 @@ describe('Hexwarp Thrallband: Flow of Magic', () => {
     s.players[0].flow = undefined;
     expect(inFlow(s, a) && inFlow(s, b)).toBe(true);
   });
+  it('psychic attacks get +1 to wound wholly within Flow of Magic, and re-roll 1s outside', () => {
+    const s = game([['Sorcerer', 1, 95], ['Sorcerer', 1, 95]], [['Boyz', 10, 90]]);
+    s.phase = 'shooting';
+    const inside = put(s, 'p0-x0', { x: 30, y: 4 });
+    const outside = put(s, 'p0-x1', { x: 30, y: 30 });
+    const boyz = put(s, 'p1-x0', { x: 30, y: 16 });
+    s.players[0].flow = undefined;
+
+    const resInside = buildShootPools(s, inside.id, boyz.id, { mode: 'normal' });
+    const psyInside = resInside.pools.find((p) => p.psychic);
+    expect(psyInside).toBeDefined();
+    expect(psyInside?.woundMod).toBe(1);
+    expect(psyInside?.woundNote).toContain('Flow of Magic: +1 Wound');
+
+    const resOutside = buildShootPools(s, outside.id, boyz.id, { mode: 'normal' });
+    const psyOutside = resOutside.pools.find((p) => p.psychic);
+    expect(psyOutside).toBeDefined();
+    expect(psyOutside?.rerollWounds1).toBe(true);
+    expect(psyOutside?.woundNote).toContain('Flow of Magic: re-roll 1s');
+  });
 });
 
 describe('Thousand Sons stratagems', () => {

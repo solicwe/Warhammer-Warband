@@ -38,3 +38,9 @@ export function circleInFlow(s: GameState, p: PlayerId, m: { x: number; y: numbe
   if (opp) return circleWhollyInPoly(m, r, ownZ) || circleWhollyInPoly(m, r, oppZ);
   return circleWhollyInPoly(m, r, ownZ);
 }
+
+export function isThousandSonsArmy(s: GameState, p: PlayerId): boolean {
+  const P = s.players[p];
+  if (!P) return false;
+  return P.factionId === 'TS' || (P.detachments ?? []).some((d) => d.name === 'Hexwarp Thrallband' || d.name === 'Flow of Magic' || (d.rules ?? []).some((r) => r.name === 'Flow of Magic'));
+}

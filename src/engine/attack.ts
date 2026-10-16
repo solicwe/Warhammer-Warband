@@ -19,6 +19,7 @@ import { gkAttackModifiers, gkDefenseModifiers } from './greyKnights';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 import { noteTarget, sensationalBlock, thrillBlock } from './emperorsChildren';
 import { putridHit } from './deathGuard';
+import { inFlow, isThousandSonsArmy } from './flow';
 
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
@@ -100,7 +101,7 @@ function newPool(key: string, w: WeaponData, p: WeaponProfileData, target: UnitS
     woundNeed: 4, woundMod: 0, woundNote: '', critWoundOn: Math.min(6, anti),
     sustained: sus ? (sus.value ?? '1') : null,
     lethal: hasAbility(p, 'lethal-hits', tk), devastating: hasAbility(p, 'devastating-wounds', tk), twinLinked: hasAbility(p, 'twin-linked', tk),
-    precision: hasAbility(p, 'precision', tk), ap: p.AP, damage: p.D, hazardous: 0,
+    precision: hasAbility(p, 'precision', tk), psychic: hasAbility(p, 'psychic'), ap: p.AP, damage: p.D, hazardous: 0,
     hits: [], wounds: [], autoWounds: 0, saves: [], saveTargets: [], mortalFromDev: [], damageLines: [], killed: 0, done: false,
   };
 }
@@ -111,6 +112,22 @@ function applyUnitBuffs(pool: Pool, u: UnitState) {
   if (u.buffs.some((b) => b.kind === 'sustained1') && !pool.sustained) pool.sustained = '1';
   const ap = u.buffs.filter((b) => b.kind === 'ap+1').length;
   if (ap) pool.ap = pool.ap - ap;
+}
+
+function applyFlowOfMagic(s: GameState, A: UnitState, pool: Pool, psychic: boolean) {
+  if (!psychic) return;
+  const isTs = (A.factionKeywords ?? []).includes('THOUSAND SONS') || (A.keywords ?? []).includes('THOUSAND SONS') || isThousandSonsArmy(s, A.owner);
+  if (!isTs) return;
+  const dets = s.players[A.owner]?.detachments ?? [];
+  const hasFlow = dets.length === 0 || isThousandSonsArmy(s, A.owner);
+  if (!hasFlow) return;
+  if (inFlow(s, A)) {
+    pool.woundMod = clamp(pool.woundMod + 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
+    pool.woundNote = [pool.woundNote, 'Flow of Magic: +1 Wound'].filter(Boolean).join(' · ');
+  } else {
+    pool.rerollWounds1 = true;
+    pool.woundNote = [pool.woundNote, 'Flow of Magic: re-roll 1s'].filter(Boolean).join(' · ');
+  }
 }
 
 /** "Ignore any or all modifiers to BS/WS and the Hit roll": drop the bad ones once everything is folded in. */
@@ -318,7 +335,10 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         }
         const melta = getAbility(p, 'melta', T.keywords);
         if (melta && half) pool.damage = `${p.D}+${melta.value ?? 0}`.replace(/^(\d+)\+(\d+)$/, (_, a, b) => String(+a + +b));
-        const strength = (p.S ?? 1) + ftgg.strengthBonus + votann.strengthBonus;
+        let strength = (p.S ?? 1) + ftgg.strengthBonus + votann.strengthBonus;
+        if (psy && isThousandSonsArmy(s, A.owner) && A.enhancements?.some((e) => e.name === 'Arcane Might')) {
+          strength += inFlow(s, A) ? 2 : 1;
+        }
         pool.woundNeed = woundNeed(strength, T_T);
         if (ftgg.apBonus + votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus + cult.apBonus + nec.apBonus + gk.apBonus) pool.ap -= (ftgg.apBonus + votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus + cult.apBonus + nec.apBonus + gk.apBonus);
         if (def.apWorsen + admDef.apWorsen + cdDef.apWorsen + cultDef.apWorsen + necDef.apWorsen + gkDef.apWorsen) pool.ap = Math.min(0, pool.ap + def.apWorsen + admDef.apWorsen + cdDef.apWorsen + cultDef.apWorsen + necDef.apWorsen + gkDef.apWorsen);
@@ -343,8 +363,10 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         else if (votann.sustained && !pool.sustained) pool.sustained = votann.sustained;
         else if (ftgg.sustained && !pool.sustained) pool.sustained = ftgg.sustained;
         if (dru.critWoundOn && (!pool.critWoundOn || dru.critWoundOn < pool.critWoundOn)) pool.critWoundOn = dru.critWoundOn;
+        if (psy) pool.psychic = true;
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
+        applyFlowOfMagic(s, A, pool, psy);
         applyAttackEffects(s, A, T, pool, fx, inc, 'ranged', d, T_T, woundNeed);
         finishIgnore(pool, unitFlags(s, A).ignoreMods || ftgg.ignoreMods);
         pools.set(key, pool);
@@ -362,6 +384,9 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       else if (grants(fx, inc, 'blast 1')) flat += Math.floor(tModels.length / 5);
       if (hasAbility(p, 'rapid-fire')) {
         for (const a of fx) if (a.e.rapidFireAttacks) flat += a.e.rapidFireAttacks;
+      }
+      if (m.isCharacter && A.enhancements?.some((e) => e.name === 'Empyric Onslaught') && psy && inFlow(s, A)) {
+        flat += 3;
       }
       pool.instances.push({ A: p.A, extras, flat });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
@@ -461,7 +486,10 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         pool = newPool(key, w, p, T);
         pool.skill = fm.skill; pool.hitMod = fm.hit; pool.hitNote = mods.hitNotes.join(' · ');
         if (precision) pool.precision = true;
-        const strength = (p.S ?? 1) + votann.strengthBonus;
+        let strength = (p.S ?? 1) + votann.strengthBonus;
+        if (psy && isThousandSonsArmy(s, A.owner) && A.enhancements?.some((e) => e.name === 'Arcane Might')) {
+          strength += inFlow(s, A) ? 2 : 1;
+        }
         pool.woundNeed = woundNeed(strength, T_T);
         let wm = buffSum(A, 'wound+1', 'wound-1') + votann.woundMod + def.woundMod + adm.woundMod + dru.woundMod + druDef.woundMod + cd.woundMod + cdDef.woundMod + cult.woundMod + cultDef.woundMod + nec.woundMod + necDef.woundMod + gk.woundMod + gkDef.woundMod;
         const notes = [`S${strength} vs T${T_T}`];
@@ -495,8 +523,10 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         else if (adm.sustained && !pool.sustained) pool.sustained = adm.sustained;
         else if (votann.sustained && !pool.sustained) pool.sustained = votann.sustained;
         if (dru.critWoundOn && (!pool.critWoundOn || dru.critWoundOn < pool.critWoundOn)) pool.critWoundOn = dru.critWoundOn;
+        if (psy) pool.psychic = true;
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
+        applyFlowOfMagic(s, A, pool, psy);
         applyAttackEffects(s, A, T, pool, fx, inc, 'melee', d, T_T, woundNeed);
         finishIgnore(pool, unitFlags(s, A).ignoreMods);
         pools.set(key, pool);

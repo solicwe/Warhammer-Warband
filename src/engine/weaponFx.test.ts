@@ -94,3 +94,4 @@ describe('weaponFx classification', () => {
     expect(weaponFx('Neuro disruptor', mockProfile('Neuro disruptor'), false)).toBe('psychic');
   });
 });
+
