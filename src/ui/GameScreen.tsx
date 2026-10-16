@@ -37,6 +37,7 @@ import { advantage, applyStyle, boardSig, lookBudget, lookSig, setLookahead, sty
 import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
+import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { attemptRitual, casters, endRituals, RITUALS, ritualsLeft, ritualsPending, ritualTargets, testOdds } from '../engine/rituals';
@@ -152,6 +153,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [speed, setSpeed] = useState<0 | 1 | 2>(1); // bot-vs-bot: pause / normal / fast
   // the player hurries the bot's turn along: shorter pauses between its steps, results-only reports
   const [rush, setRush] = useState(false);
+  const abortThinkingRef = useRef<(() => void) | null>(null);
   const [coach, setCoachRaw] = useState(loadCoach);
   const setCoach = (c: ReturnType<typeof loadCoach>) => { setCoachRaw(c); saveCoach(c); };
   const [showMenu, setShowMenu] = useState(false);
@@ -254,6 +256,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     // start of a bot's Movement phase: pick how to play the turn before moving anything
     if (who !== null && s.phase === 'movement' && s.active === who && !styleChosen(s)) {
       const done = (name: string, intents: Intent[] = []) => {
+        abortThinkingRef.current = null;
         setThinking(false); setThink(null);
         styleRef.current = { p: who, name };
         act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); });
@@ -262,7 +265,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         const first = intents.find((x) => s.units.some((u) => u.id === x.targetId && onBoard(u)));
         if (first) window.setTimeout(() => speak(who, 'target', { t: unitById(sRef.current, first.targetId).name }), 2400);
       };
-      if (rush || lookBudget(s, who) <= 0) {
+      abortThinkingRef.current = () => {
+        stopPonder();
+        if (worker) worker.onmessage = null;
+        done('steady');
+      };
+      const effectiveBudget = rush ? 0 : Math.min(lookBudget(s, who), 2800);
+      if (effectiveBudget <= 0) {
         stopPonder();
         done('steady');
         return;
@@ -275,7 +284,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           setThinking(true);
           speak(who, 'think');
           if (pre.view) setThink(pre.view);
-          const fallback = window.setTimeout(() => { stopPonder(); done('steady'); }, lookBudget(s, who) + 10000);
+          const fallback = window.setTimeout(() => { stopPonder(); done('steady'); }, effectiveBudget + 600);
           pre.wait = (name) => { window.clearTimeout(fallback); const it = pre.intents; stopPonder(); done(name, it); };
           return;
         }
@@ -287,8 +296,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       setBotSays(null);
       const id = Math.random();
       // the worker stops looking by itself when the level's thinking time is up; this only catches a worker that hangs
-      // (a shorter wait would give up while it is still thinking, and leave it busy for the bot's next steps)
-      const fallback = window.setTimeout(() => { worker.onmessage = null; done('steady'); }, lookBudget(s, who) + 10000);
+      const fallback = window.setTimeout(() => { worker.onmessage = null; done('steady'); }, effectiveBudget + 600);
       worker.onmessage = (e: MessageEvent<LookMsg>) => {
         if (e.data.id !== id) return;
         if (e.data.progress) {
@@ -325,7 +333,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const sent = s;
       const id = Math.random();
       setStepping(true);
-      const giveUp = window.setTimeout(() => { worker.onmessage = null; setStepping(false); stepOnMain.current = true; if (sRef.current === sent) onMain(); }, 5000);
+      const giveUp = window.setTimeout(() => { worker.onmessage = null; setStepping(false); stepOnMain.current = true; if (sRef.current === sent) onMain(); }, 2000);
       worker.onmessage = (e: MessageEvent<{ id: number; state: GameState | null; error?: string | null }>) => {
         if (e.data.id !== id) return;
         window.clearTimeout(giveUp);
@@ -2529,8 +2537,33 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (actingBot !== null) return (
       <div className="bot-act">
         <span className={`bot-dot s${actingBot}`} />
-        <span className="grow">{thinking ? `${pName(s, actingBot)} is weighing its turn…` : botSays ?? `${pName(s, actingBot)} is playing…`}</span>
-        <button className={`btn small ff ${rush ? 'on' : ''}`} aria-pressed={rush} onClick={() => setRush((v) => !v)} title="Speed up the bot's turn: shorter pauses, results only">
+        <span
+          className="grow"
+          onClick={() => { if (thinking && abortThinkingRef.current) abortThinkingRef.current(); }}
+          style={{ cursor: thinking ? 'pointer' : 'default' }}
+          title={thinking ? 'Tap to skip thinking and move now' : undefined}
+        >
+          {thinking ? `${pName(s, actingBot)} is weighing its turn… (tap to move)` : botSays ?? `${pName(s, actingBot)} is playing…`}
+        </span>
+        {thinking && (
+          <button
+            className="btn small primary"
+            onClick={() => { if (abortThinkingRef.current) abortThinkingRef.current(); }}
+            title="Force bot to move immediately without waiting"
+            style={{ fontWeight: 700 }}
+          >
+            Move Now
+          </button>
+        )}
+        <button
+          className={`btn small ff ${rush ? 'on' : ''}`}
+          aria-pressed={rush}
+          onClick={() => {
+            if (thinking && abortThinkingRef.current) abortThinkingRef.current();
+            setRush((v) => !v);
+          }}
+          title="Speed up the bot's turn: shorter pauses, results only"
+        >
           <Icon name="advance" size={16} /> {rush ? 'Fast' : 'Faster'}
         </button>
       </div>
@@ -2595,10 +2628,30 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       ? [<div key={`pact${p}`} className={`buffcard p${p}`}><b>{s.players[p].pledge?.round === s.round ? `Pledge ${s.players[p].pledge!.n} · ` : ''}Pact {s.players[p].pactPoints ?? 0}</b><span>{PACT_BONUSES}</span></div>]
       : []),
     ...(s.players[p].miracleDice && s.players[p].miracleDice!.length > 0
-      ? [<div key={`miracle${p}`} className={`buffcard p${p}`}><b>Miracle Dice ({s.players[p].miracleDice!.length})</b><span>Pool: {s.players[p].miracleDice!.slice().sort((a, b) => b - a).map((d) => `[${d}]`).join(' ')}</span></div>]
+      ? [<div key={`miracle${p}`} className={`buffcard p${p}`}>
+          <b>Miracle Dice ({s.players[p].miracleDice!.length})</b>
+          <div className="dice-pool-row">
+            <span className="tiny muted">Pool:</span>
+            <div className="dice-list">
+              {s.players[p].miracleDice!.slice().sort((a, b) => b - a).map((d, i) => (
+                <DiceFace key={i} value={d} size={22} variant="miracle" />
+              ))}
+            </div>
+          </div>
+        </div>]
       : []),
     ...(s.players[p].fateDice && s.players[p].fateDice!.length > 0
-      ? [<div key={`fate${p}`} className={`buffcard p${p}`}><b>Fate Dice ({s.players[p].fateDice!.length})</b><span>Pool: {s.players[p].fateDice!.slice().sort((a, b) => b - a).map((d) => `[${d}]`).join(' ')}</span></div>]
+      ? [<div key={`fate${p}`} className={`buffcard p${p}`}>
+          <b>Fate Dice ({s.players[p].fateDice!.length})</b>
+          <div className="dice-pool-row">
+            <span className="tiny muted">Pool:</span>
+            <div className="dice-list">
+              {s.players[p].fateDice!.slice().sort((a, b) => b - a).map((d, i) => (
+                <DiceFace key={i} value={d} size={22} variant="fate" />
+              ))}
+            </div>
+          </div>
+        </div>]
       : []),
     ...(s.players[p].battleFocusTokens !== undefined && s.players[p].battleFocusTokens! > 0
       ? [<div key={`bf${p}`} className={`buffcard p${p}`}><b>Battle Focus</b><span>Tokens: {s.players[p].battleFocusTokens}</span></div>]

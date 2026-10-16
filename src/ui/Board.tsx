@@ -1283,12 +1283,17 @@ function BoardImpl(props: BoardProps) {
                   {labels.has(m.id) && vb.w < 30 && (isSel || isDraft) && (() => {
                     const raw = labels.get(m.id)!;
                     const items = raw.replace(/ \+$/, '').split('+').map((x) => x.trim()).filter(Boolean);
-                    const foW = Math.max(6, m.r * 4.5);
-                    const foH = 1.8;
+                    const foW = Math.max(9, m.r * 6);
+                    const foH = 1.6;
+                    // Clamp leftX so the badge container NEVER goes outside the board [0.5, W - foW - 0.5]
+                    const leftX = Math.max(0.5, Math.min(W - foW - 0.5, p.x - foW / 2));
+                    // Place above or below model depending on vertical space so it doesn't get cut off or hidden
+                    const placeAbove = p.y + m.r + 0.15 + foH > H && p.y - m.r - foH - 0.15 >= 0;
+                    const topY = placeAbove ? p.y - m.r - foH - 0.15 : p.y + m.r + 0.15;
                     return (
                       <foreignObject
-                        x={p.x - foW / 2}
-                        y={p.y + m.r + 0.15}
+                        x={leftX}
+                        y={topY}
                         width={foW}
                         height={foH}
                         style={{ pointerEvents: 'none', overflow: 'visible' }}
@@ -1296,12 +1301,11 @@ function BoardImpl(props: BoardProps) {
                         <div
                           style={{
                             width: '100%',
-                            height: '100%',
                             display: 'flex',
-                            flexWrap: 'wrap',
+                            flexWrap: 'nowrap',
                             justifyContent: 'center',
-                            alignItems: 'flex-start',
-                            gap: '3px',
+                            alignItems: 'center',
+                            gap: '4px',
                             pointerEvents: 'none',
                           }}
                         >
@@ -1313,10 +1317,11 @@ function BoardImpl(props: BoardProps) {
                               model={m}
                               compact
                               style={{
-                                transform: 'scale(0.8)',
-                                transformOrigin: 'top center',
+                                transform: 'scale(0.85)',
+                                transformOrigin: 'center center',
                                 pointerEvents: 'auto',
                                 boxShadow: '0 2px 6px rgba(0,0,0,0.8)',
+                                flexShrink: 0,
                               }}
                             />
                           ))}
@@ -1342,7 +1347,7 @@ function BoardImpl(props: BoardProps) {
             {props.badges?.[u.id]?.length ? (
               isSel ? (
                 <foreignObject
-                  x={cx - 6}
+                  x={Math.max(0.5, Math.min(W - 12.5, cx - 6))}
                   y={minY - 1.8}
                   width={12}
                   height={1.5}
@@ -1352,6 +1357,7 @@ function BoardImpl(props: BoardProps) {
                     style={{
                       width: '100%',
                       display: 'flex',
+                      flexWrap: 'nowrap',
                       justifyContent: 'center',
                       gap: '4px',
                       pointerEvents: 'none',

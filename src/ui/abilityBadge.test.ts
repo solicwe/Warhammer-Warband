@@ -34,7 +34,7 @@ describe('AbilityBadgePopover', () => {
   it('resolves Grenade Launcher with special icon badge', () => {
     const info = getAbilityOrWeaponInfo('Grenade Launcher');
     expect(info.title).toBe('Astartes Grenade Launcher');
-    expect(info.badgeLabel).toBe('Grenade Launcher ⚡');
+    expect(info.badgeLabel).toBe('Grenade Launcher');
     expect(info.category.label).toBe('Ranged Weapon');
     expect(info.stats?.s).toBe('9');
     expect(info.keywords).toContain('[BLAST]');
@@ -42,7 +42,7 @@ describe('AbilityBadgePopover', () => {
 
   it('resolves +CP shorthand into human-readable rule and emerald badge', () => {
     const info = getAbilityOrWeaponInfo('+CP');
-    expect(info.badgeLabel).toBe('⚡ +1 CP');
+    expect(info.badgeLabel).toBe('+1 CP');
     expect(info.category.label).toBe('Gains +1 CP');
     expect(info.category.variant).toBe('cp');
     expect(info.summary).toContain('Gain 1 Command Point');

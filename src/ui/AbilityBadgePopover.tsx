@@ -42,7 +42,7 @@ const KNOWN_DATA: Record<string, Partial<AbilityOrWeaponInfo>> = {
   },
   'grenade launcher': {
     title: 'Astartes Grenade Launcher',
-    badgeLabel: 'Grenade Launcher ⚡',
+    badgeLabel: 'Grenade Launcher',
     category: { label: 'Ranged Weapon', variant: 'ranged' },
     summary: 'Versatile auxiliary launcher firing either high-explosive Frag rounds against swarms or high-impact Krak rounds against armored foes.',
     stats: { range: '24"', a: 'D3', bs: '3+', s: '9', ap: '-2', d: 'D3' },
@@ -50,7 +50,7 @@ const KNOWN_DATA: Record<string, Partial<AbilityOrWeaponInfo>> = {
   },
   'astartes grenade launcher': {
     title: 'Astartes Grenade Launcher',
-    badgeLabel: 'Grenade Launcher ⚡',
+    badgeLabel: 'Grenade Launcher',
     category: { label: 'Ranged Weapon', variant: 'ranged' },
     summary: 'Versatile auxiliary launcher firing either high-explosive Frag rounds against swarms or high-impact Krak rounds against armored foes.',
     stats: { range: '24"', a: 'D3', bs: '3+', s: '9', ap: '-2', d: 'D3' },
@@ -58,37 +58,37 @@ const KNOWN_DATA: Record<string, Partial<AbilityOrWeaponInfo>> = {
   },
   '+cp': {
     title: 'Tactical Precision',
-    badgeLabel: '⚡ +1 CP',
+    badgeLabel: '+1 CP',
     category: { label: 'Gains +1 CP', variant: 'cp' },
     summary: 'Gain 1 Command Point (CP) on a 4+ roll whenever you target this unit with a Stratagem.',
   },
   '+1 cp': {
     title: 'Command Uplink',
-    badgeLabel: '⚡ +1 CP',
+    badgeLabel: '+1 CP',
     category: { label: 'Gains +1 CP', variant: 'cp' },
     summary: 'Gain 1 Command Point (CP) on a 4+ roll whenever you target this unit with a Stratagem.',
   },
   '+1 cp ability': {
     title: 'Command Uplink',
-    badgeLabel: '⚡ +1 CP',
+    badgeLabel: '+1 CP',
     category: { label: 'Gains +1 CP', variant: 'cp' },
     summary: 'Gain 1 Command Point (CP) on a 4+ roll whenever you target this unit with a Stratagem.',
   },
   'stealth': {
     title: 'Stealth',
-    badgeLabel: 'Stealth 👁️',
+    badgeLabel: 'Stealth',
     category: { label: 'Core Ability', variant: 'ability' },
     summary: 'Subtract 1 from Hit rolls made against this unit by ranged attacks.',
   },
   'cover': {
     title: 'Benefit of Cover',
-    badgeLabel: 'Cover 🛡️',
+    badgeLabel: 'Cover',
     category: { label: 'Battlefield Benefit', variant: 'buff' },
     summary: 'Add 1 to armor saving throws made against ranged attacks (excludes 3+ or better saves against AP 0).',
   },
   'fights first': {
     title: 'Fights First',
-    badgeLabel: 'Fights First ⚔️',
+    badgeLabel: 'Fights First',
     category: { label: 'Core Ability', variant: 'ability' },
     summary: 'This unit is eligible to fight in the Fight phase before units without Fights First, even if it did not charge.',
   },
@@ -106,7 +106,7 @@ const KNOWN_DATA: Record<string, Partial<AbilityOrWeaponInfo>> = {
   },
   'oath of moment': {
     title: 'Oath of Moment',
-    badgeLabel: 'Oath Target 🎯',
+    badgeLabel: 'Oath Target',
     category: { label: 'Army Rule', variant: 'special' },
     summary: 'Designated enemy priority target. Friendly Adeptus Astartes units re-roll Hit rolls when attacking this unit.',
   },
@@ -118,13 +118,13 @@ const KNOWN_DATA: Record<string, Partial<AbilityOrWeaponInfo>> = {
   },
   'observer': {
     title: 'Observer Unit',
-    badgeLabel: 'Observer 🔭',
+    badgeLabel: 'Observer',
     category: { label: 'T’au For the Greater Good', variant: 'ability' },
     summary: 'Designating enemy targets for friendly Guided squads to improve their accuracy.',
   },
   'guided': {
     title: 'Guided Squad',
-    badgeLabel: 'Guided 🎯',
+    badgeLabel: 'Guided',
     category: { label: 'T’au For the Greater Good', variant: 'buff' },
     summary: 'Receiving targeting telemetry from an Observer unit, gaining +1 to Ballistic Skill vs spotted targets.',
   },
@@ -161,7 +161,7 @@ export function getAbilityOrWeaponInfo(
   if (k.includes('cp') || k.includes('+cp')) {
     return {
       title: 'Command Uplink',
-      badgeLabel: '⚡ +1 CP',
+      badgeLabel: '+1 CP',
       category: { label: 'Gains +1 CP', variant: 'cp' },
       summary: 'Gain 1 Command Point (CP) on a 4+ roll whenever you target this unit with a Stratagem.',
     };
@@ -177,13 +177,11 @@ export function getAbilityOrWeaponInfo(
   if (matchedWeapon && matchedWeapon.profiles.length > 0) {
     const prof: WeaponProfileData = matchedWeapon.profiles[0];
     const isMelee = prof.range === 'Melee';
-    const isSpecial = (prof.abilities ?? []).length > 0;
 
     let badgeLabel = matchedWeapon.name;
     if (badgeLabel.length > 18) {
       badgeLabel = badgeLabel.replace(/^(Astartes|Master-crafted|Relic)\s+/i, '');
     }
-    if (isSpecial) badgeLabel += ' ⚡';
 
     const kw = (prof.abilities ?? []).map((a) => (a.startsWith('[') ? a.toUpperCase() : `[${a.toUpperCase()}]`));
 
@@ -532,8 +530,17 @@ function AbilityBadgeImpl({
           ...style,
         }}
       >
+        {info.category.variant === 'cp' && (
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="#34D399" style={{ flexShrink: 0 }}>
+            <path d="M9 1 L3 9 L8 9 L7 15 L13 7 L8 7 Z" />
+          </svg>
+        )}
         <span>{info.badgeLabel}</span>
-        <span style={{ color: '#F59E0B', fontSize: '10px', opacity: 0.85, fontWeight: 700 }}>ⓘ</span>
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" strokeWidth="1.5" style={{ opacity: 0.9, flexShrink: 0 }}>
+          <circle cx="8" cy="8" r="7" />
+          <circle cx="8" cy="4.8" r="0.8" fill="#F59E0B" />
+          <path d="M7 7.5 H8 V12 H9" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </button>
 
       {open && <PopoverCard info={info} anchorRect={rect} onClose={() => setOpen(false)} />}

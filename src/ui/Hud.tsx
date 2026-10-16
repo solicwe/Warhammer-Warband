@@ -6,6 +6,7 @@ import type { GameState, PlayerId } from '../engine/types';
 import { lastRound } from '../engine/state';
 import { flowAreas, isThousandSonsArmy } from '../engine/flow';
 import { Emblem } from './ArmyBuilder';
+import { DiceFace } from './DiceFace';
 import { Icon } from './Icon';
 import { play } from './sfx';
 import { voiceOf } from './voice';
@@ -51,18 +52,16 @@ export const SideScore = memo(function SideScore({ s, p, label, onOpen }: { s: G
       <CpGems cp={P.cp} />
       {miracleDice.length > 0 && (
         <span className="miracle-pool" title={`Miracle Dice pool: ${miracleDice.slice().sort((a, b) => b - a).join(', ')}`}>
-          <Icon name="dice" size={11} />
           {miracleDice.slice().sort((a, b) => b - a).slice(0, 4).map((d, i) => (
-            <i key={i} className="miracle-die">{d}</i>
+            <DiceFace key={i} value={d} size={15} variant="miracle" />
           ))}
           {miracleDice.length > 4 && <b className="miracle-more">+{miracleDice.length - 4}</b>}
         </span>
       )}
       {fateDice.length > 0 && (
         <span className="miracle-pool fate-pool" title={`Fate Dice pool: ${fateDice.slice().sort((a, b) => b - a).join(', ')}`}>
-          <Icon name="dice" size={11} />
           {fateDice.slice().sort((a, b) => b - a).slice(0, 4).map((d, i) => (
-            <i key={i} className="miracle-die fate-die">{d}</i>
+            <DiceFace key={i} value={d} size={15} variant="fate" />
           ))}
           {fateDice.length > 4 && <b className="miracle-more fate-more">+{fateDice.length - 4}</b>}
         </span>
