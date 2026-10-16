@@ -522,7 +522,9 @@ export function recruitUnit(run: Run, faction: FactionData, datasheetName: strin
 export function dismissUnit(run: Run, unitUid: string): Run {
   if (run.list.units.length <= 1) return run;
   const target = run.list.units.find((u) => u.uid === unitUid);
-  const units = run.list.units.filter((u) => u.uid !== unitUid);
+  const units = run.list.units
+    .filter((u) => u.uid !== unitUid)
+    .map((u) => (u.attachTo === unitUid ? { ...u, attachTo: undefined } : u));
   return {
     ...run,
     list: { ...run.list, units },

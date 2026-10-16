@@ -5,6 +5,7 @@ import { chapterRules } from '../engine/army';
 import { RuleText } from './RuleText';
 import { modelPortraitKey } from './portraits';
 import { loadoutSummary } from './loadout';
+import { AbilityBadge } from './AbilityBadgePopover';
 import { Em } from './Em';
 import {
   applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, finishAttack, meleeWeapons, rerollOne, resolveAll, shootingModes, startAttack, stepAttack,
@@ -1029,8 +1030,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const unitPill = (u: UnitState, done: boolean, onClick?: () => void) => {
     const canMove = s.phase === 'movement' && !done && u.owner === s.active && !u.move;
+    const canCharge = s.phase === 'charge' && !done && u.owner === s.active && !u.declaredCharge && !chargeEligibility(s, u);
     return (
-      <button key={u.id} className={`unit-pill ${done ? 'done' : ''} ${sel === u.id ? 'sel' : ''} ${canMove ? 'can-move' : ''} ${u.battleShocked ? 'shock' : ''}`} onClick={onClick ?? (() => { setSel(u.id); })}>
+      <button key={u.id} className={`unit-pill ${done ? 'done' : ''} ${sel === u.id ? 'sel' : ''} ${canMove || canCharge ? 'can-move' : ''} ${u.battleShocked ? 'shock' : ''}`} onClick={onClick ?? (() => { setSel(u.id); })}>
       {(() => {
         // the unit's picture (its leader's when it has one), so a unit is found by sight, not by name
         const lead = u.models.find((m) => m.isCharacter) ?? u.models[0];
@@ -1075,8 +1077,38 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             M <b>{m.profile.M !== undefined && m.profile.M !== null ? m.profile.M + unitFlags(s, u).move : '-'}"</b> · T <b>{m.profile.T}</b> · Sv <b>{m.profile.Sv}+</b>{m.profile.InSv ? <> · <b>{m.profile.InSv}++</b></> : null} · W <b>{m.wounds}/{m.profile.W}</b> · Ld <b>{bestLd(u, s)}+</b> · OC <b>{u.battleShocked ? '-' : m.profile.OC ?? '-'}</b>
           </div>
           {flags.length > 0 && <div className="tiny" style={{ color: 'var(--warn)' }}>{flags.join(' · ')}</div>}
-          {(() => { const kit = loadoutSummary(u); return kit.length ? <div className="tiny loadout-line"><Icon name="shoot" size={13} /> {kit.join(' · ')}</div> : null; })()}
-          {(() => { const ls = activeLabels(s, u); return ls.length ? <div className="tiny fx-labels"><Icon name="ability" size={13} /> {ls.slice(0, 6).join(' · ')}{ls.length > 6 ? ` +${ls.length - 6}` : ''}</div> : null; })()}
+          {(() => {
+            const kit = loadoutSummary(u);
+            if (!kit.length) return null;
+            return (
+              <div className="tiny loadout-line" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                <Icon name="shoot" size={13} />
+                {kit.map((item, idx) => {
+                  const clean = item.replace(/^\d+×\s*/, '');
+                  const count = item.match(/^(\d+×)\s*/)?.[1];
+                  return (
+                    <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                      {count && <span style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600 }}>{count}</span>}
+                      <AbilityBadge name={clean} unit={u} compact />
+                    </span>
+                  );
+                })}
+              </div>
+            );
+          })()}
+          {(() => {
+            const ls = activeLabels(s, u);
+            if (!ls.length) return null;
+            return (
+              <div className="tiny fx-labels" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                <Icon name="ability" size={13} />
+                {ls.slice(0, 6).map((label, idx) => (
+                  <AbilityBadge key={idx} name={label} unit={u} compact />
+                ))}
+                {ls.length > 6 ? <span style={{ color: '#94a3b8', fontSize: 11 }}>+{ls.length - 6}</span> : null}
+              </div>
+            );
+          })()}
         </div>
         <Icon name="next" size={18} className="muted" />
       </div>
@@ -2249,7 +2281,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         {!selUnit && <div className="hint"><span>Pick a unit within 12" of the enemy: roll 2D6, then tap a target in reach</span></div>}
-        <div className="unit-strip">{mine.map((x) => unitPill(x, !chargeEligibility(s, x)))}</div>
+        <div className="unit-strip">{mine.map((x) => unitPill(x, !!x.declaredCharge))}</div>
         {u && (
           <>
             {unitCard(u)}

@@ -2,7 +2,7 @@
 // Features a full roguelike engine: scrap currency, unit veterancy, battle honors, armory, medicae tents,
 // and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
-import { autoAttach, defaultWargear, listPoints, syncList, syncWargear } from '../engine/army';
+import { attachOptions, autoAttach, defaultWargear, listPoints, syncList, syncWargear } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
@@ -56,6 +56,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const [rosterTab, setRosterTab] = useState<'roster' | 'recruit' | 'detachments'>('roster');
   const [upgradingUid, setUpgradingUid] = useState<string | null>(null);
   const [wargearUid, setWargearUid] = useState<string | null>(null);
+  const [attachingUid, setAttachingUid] = useState<string | null>(null);
 
   useEffect(() => { if (!info) return; const t = window.setTimeout(() => setInfo(null), 3200); return () => window.clearTimeout(t); }, [info]);
   useEffect(() => { if (!armed) return; const t = window.setTimeout(() => setArmed(false), 3000); return () => window.clearTimeout(t); }, [armed]);
@@ -103,7 +104,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       const enemyList = autoList(ef, node.enemy.pts, node.enemy.seed);
       const r = run.fighting === node.id ? run : enter(run, node.id, fac);
       const s = createGame({
-        lists: [autoAttach(syncList(r.list, fac), fac), autoAttach(syncList(enemyList, ef), ef)], factions: [fac, ef],
+        lists: [syncList(r.list, fac), autoAttach(syncList(enemyList, ef), ef)], factions: [fac, ef],
         names: ['You', node.kind === 'boss' ? `${ef.name} Warlord` : ef.name], secondaryMode: 'none', maxRounds: 3, seed: node.enemy.seed,
         primaryId: 'roguelike-annihilation',
       });
@@ -224,16 +225,30 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           )}
           <details className="cmp-units">
             <summary>Active Roster ({run.list.units.length} units)</summary>
-            {run.list.units.map((u) => (
-              <div key={u.uid} className="cmp-unit">
-                <div>
-                  <span className="cmp-rank-badge">{rankLabel(u.xp)}</span>
-                  <span>{u.datasheet}{u.models > 1 ? ` ×${u.models}` : ''}</span>
-                  {u.honors?.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
+            {run.list.units.map((u) => {
+              const attachedSquad = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined;
+              const ledBy = run.list.units.filter((x) => x.attachTo === u.uid);
+              return (
+                <div key={u.uid} className="cmp-unit">
+                  <div>
+                    <span className="cmp-rank-badge">{rankLabel(u.xp)}</span>
+                    <span>{u.datasheet}{u.models > 1 ? ` ×${u.models}` : ''}</span>
+                    {attachedSquad && (
+                      <span className="cmp-honor-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)' }}>
+                        Attached to {attachedSquad.datasheet}
+                      </span>
+                    )}
+                    {ledBy.length > 0 && (
+                      <span className="cmp-honor-badge" style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)' }}>
+                        Led by {ledBy.map((l) => l.datasheet).join(', ')}
+                      </span>
+                    )}
+                    {u.honors?.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
+                  </div>
+                  <span className="num muted">{u.pts + (u.wargearPts ?? 0)} pts</span>
                 </div>
-                <span className="num muted">{u.pts + (u.wargearPts ?? 0)} pts</span>
-              </div>
-            ))}
+              );
+            })}
           </details>
         </div></section>
 
@@ -418,6 +433,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     const photo = getPortrait(u.datasheet);
                     const isUpgrading = upgradingUid === u.uid;
                     const isEditingWargear = wargearUid === u.uid;
+                    const isAttaching = attachingUid === u.uid;
+                    const canLead = Boolean(d?.leads && d.leads.length > 0);
+                    const attachedSquad = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined;
+                    const attachedLeaders = run.list.units.filter((x) => x.attachTo === u.uid);
                     return (
                       <div key={u.uid} className="cmp-roster-card">
                         <div className="cmp-card-main">
@@ -432,6 +451,27 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             </div>
                             <div className="cmp-roster-name">{u.datasheet}</div>
                             <div className="cmp-roster-meta">{u.models} {u.models === 1 ? 'model' : 'models'}</div>
+                            {attachedSquad && (
+                              <div style={{ marginTop: 4 }}>
+                                <span className="chip subtle small" style={{ color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.1)' }}>
+                                  Attached to: {attachedSquad.datasheet}
+                                </span>
+                              </div>
+                            )}
+                            {canLead && !u.attachTo && (
+                              <div style={{ marginTop: 4 }}>
+                                <span className="chip subtle small" style={{ color: '#94a3b8' }}>
+                                  Unattached (Solo)
+                                </span>
+                              </div>
+                            )}
+                            {attachedLeaders.length > 0 && (
+                              <div style={{ marginTop: 4 }}>
+                                <span className="chip subtle small" style={{ color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.1)' }}>
+                                  Led by: {attachedLeaders.map((l) => l.datasheet).join(', ')}
+                                </span>
+                              </div>
+                            )}
                             {u.honors?.length ? (
                               <div className="cmp-honors-list">
                                 {u.honors.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
@@ -447,12 +487,18 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         </div>
 
                         <div className="cmp-card-actions">
-                          <button className={`cmp-card-btn ${isUpgrading ? 'active' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); }}>
+                          {canLead && (
+                            <button className={`cmp-card-btn ${isAttaching ? 'active' : ''}`} onClick={() => { setAttachingUid(isAttaching ? null : u.uid); setUpgradingUid(null); setWargearUid(null); }}>
+                              <Icon name="swords" size={14} />
+                              <span>{attachedSquad ? `Attached: ${attachedSquad.datasheet}` : 'Attach to Squad'}</span>
+                            </button>
+                          )}
+                          <button className={`cmp-card-btn ${isUpgrading ? 'active' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); setAttachingUid(null); }}>
                             <Icon name="shop" size={14} />
                             <span>Battle Honors {u.honors?.length ? `(${u.honors.length})` : ''}</span>
                           </button>
                           {d?.wargearOptions?.length ? (
-                            <button className={`cmp-card-btn ${isEditingWargear ? 'active' : ''}`} onClick={() => { setWargearUid(isEditingWargear ? null : u.uid); setUpgradingUid(null); }}>
+                            <button className={`cmp-card-btn ${isEditingWargear ? 'active' : ''}`} onClick={() => { setWargearUid(isEditingWargear ? null : u.uid); setUpgradingUid(null); setAttachingUid(null); }}>
                               <Icon name="wargear" size={14} />
                               <span>Wargear</span>
                             </button>
@@ -525,6 +571,121 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                               >
                                 Done / Save Wargear
                               </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Squad Attachment Drawer */}
+                        {isAttaching && canLead && d && (
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                              <div className="cmp-kicker" style={{ color: '#fef08a' }}>Squad Attachment</div>
+                              <button
+                                type="button"
+                                className="btn small primary"
+                                onClick={() => setAttachingUid(null)}
+                                style={{ padding: '3px 10px', fontSize: '12px' }}
+                              >
+                                Done
+                              </button>
+                            </div>
+                            <div style={{ fontSize: 12.5, color: '#94a3b8', marginBottom: 10 }}>
+                              Characters can attach to an eligible bodyguard squad before battle, sharing wounds and granting leadership abilities according to 40k rules.
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                              {/* Solo Option */}
+                              <div
+                                style={{
+                                  padding: '10px 12px',
+                                  borderRadius: 8,
+                                  background: !u.attachTo ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                                  border: `1px solid ${!u.attachTo ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'}`,
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <div>
+                                  <b style={{ color: '#f8fafc', fontSize: 13.5 }}>Deploy Solo (Independent Character)</b>
+                                  <div style={{ fontSize: 12, color: '#cbd5e1' }}>Fight as a standalone single-model unit on the battlefield</div>
+                                </div>
+                                <button
+                                  className={`btn small ${!u.attachTo ? 'subtle' : 'primary'}`}
+                                  disabled={!u.attachTo}
+                                  onClick={() => {
+                                    const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: undefined } : x));
+                                    setRun({ ...run, list: { ...run.list, units: updatedUnits } });
+                                    play('tick');
+                                  }}
+                                >
+                                  {!u.attachTo ? 'Active (Solo)' : 'Deploy Solo'}
+                                </button>
+                              </div>
+
+                              {/* Eligible bodyguard squads */}
+                              {(() => {
+                                const eligible = attachOptions(run.list, fac, u);
+                                if (eligible.length === 0) {
+                                  return (
+                                    <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.15)', color: '#94a3b8', fontSize: 12.5 }}>
+                                      <div>No eligible bodyguard squads currently in your roster to attach to.</div>
+                                      {d.leads?.length ? (
+                                        <div style={{ marginTop: 4, color: '#64748b', fontSize: 11.5 }}>
+                                          This Character can lead: {d.leads.join(', ')}
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  );
+                                }
+
+                                return eligible.map((body) => {
+                                  const isCurrent = u.attachTo === body.uid;
+                                  const bodyPhoto = getPortrait(body.datasheet);
+                                  return (
+                                    <div
+                                      key={body.uid}
+                                      style={{
+                                        padding: '10px 12px',
+                                        borderRadius: 8,
+                                        background: isCurrent ? 'rgba(74, 222, 128, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                                        border: `1px solid ${isCurrent ? '#4ade80' : 'rgba(255, 255, 255, 0.1)'}`,
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        gap: 10,
+                                      }}
+                                    >
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        {bodyPhoto ? (
+                                          <img src={bodyPhoto} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover' }} />
+                                        ) : (
+                                          <div style={{ width: 36, height: 36, borderRadius: 6, background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Icon name="fight" size={18} />
+                                          </div>
+                                        )}
+                                        <div>
+                                          <b style={{ color: '#f8fafc', fontSize: 13.5 }}>{body.datasheet}</b>
+                                          <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                                            {body.models} {body.models === 1 ? 'model' : 'models'} · {body.pts + (body.wargearPts ?? 0)} pts
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <button
+                                        className={`btn small ${isCurrent ? 'subtle' : 'primary'}`}
+                                        disabled={isCurrent}
+                                        onClick={() => {
+                                          const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: body.uid } : x));
+                                          setRun({ ...run, list: { ...run.list, units: updatedUnits } });
+                                          play('good');
+                                        }}
+                                      >
+                                        {isCurrent ? 'Attached' : 'Attach to Squad'}
+                                      </button>
+                                    </div>
+                                  );
+                                });
+                              })()}
                             </div>
                           </div>
                         )}

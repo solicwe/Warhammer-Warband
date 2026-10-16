@@ -11,6 +11,7 @@ import { unitFlags } from '../engine/effects';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { loadoutLabels, shortItem } from './loadout';
+import { AbilityBadge } from './AbilityBadgePopover';
 import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import type { SecondaryGoal } from '../engine/secondaries';
@@ -52,7 +53,7 @@ export interface BoardProps {
   riled?: string[];
   losLines?: { a: Pt; b: Pt; cover: boolean }[];
   onTapUnit?: (unitId: string, modelId: string) => void;
-  measure?: { a?: Pt; b?: Pt; label?: string; los?: boolean };
+  measure?: { a?: Pt; b?: Pt; label?: string; los?: boolean; why?: string };
   /** what the viewer's secondary mission cards want on the table (drawn in gold) */
   goals?: SecondaryGoal[];
   /** shooting: models of the firing unit that cannot see the chosen target (they don't shoot it) */
@@ -1219,23 +1220,47 @@ function BoardImpl(props: BoardProps) {
                     </g>
                   )}
                   {labels.has(m.id) && vb.w < 30 && (isSel || isDraft) && (() => {
-                    // only the unit in hand: everyone's kit at once buries the board in words
-                    // shown once zoomed in; one item per line ("Hammer" / "Shield"), shrunk to the base's width so
-                    // neighbours' labels don't run into each other
                     const raw = labels.get(m.id)!;
-                    // whole words, never cut: a long name breaks at its space / hyphen ("Kombi-" / "skorcha")
-                    const lines = raw.replace(/ \+$/, '').split('+').flatMap((x) => {
-                      const w = shortItem(x, 24);
-                      const cut = w.length > 8 ? Math.max(w.lastIndexOf(' ', Math.ceil(w.length / 2) + 2), w.indexOf('-') + 1) : 0;
-                      return cut > 1 && cut < w.length - 1 ? [w.slice(0, cut).trim(), w.slice(cut).trim()] : [w];
-                    });
-                    if (raw.endsWith(' +')) lines[lines.length - 1] += '+';
-                    const longest = Math.max(...lines.map((x) => x.length));
-                    const fsz = Math.max(0.2, Math.min(Math.max(0.36, Math.min(0.6, vb.w * 0.022)), (m.r * 2 + 0.35) / (0.58 * longest)));
+                    const items = raw.replace(/ \+$/, '').split('+').map((x) => x.trim()).filter(Boolean);
+                    const foW = Math.max(6, m.r * 4.5);
+                    const foH = 1.8;
                     return (
-                      <text x={p.x} y={p.y + m.r + fsz * 1.0} fontSize={fsz} textAnchor="middle" fill="#fff7d6" stroke="#000" strokeWidth={fsz * 0.26} paintOrder="stroke" fontWeight={800} pointerEvents="none">
-                        {lines.map((x, k) => <tspan key={k} x={p.x} dy={k ? fsz * 1.05 : 0}>{x}</tspan>)}
-                      </text>
+                      <foreignObject
+                        x={p.x - foW / 2}
+                        y={p.y + m.r + 0.15}
+                        width={foW}
+                        height={foH}
+                        style={{ pointerEvents: 'none', overflow: 'visible' }}
+                      >
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            justifyContent: 'center',
+                            alignItems: 'flex-start',
+                            gap: '3px',
+                            pointerEvents: 'none',
+                          }}
+                        >
+                          {items.map((item, k) => (
+                            <AbilityBadge
+                              key={k}
+                              name={item}
+                              unit={u}
+                              model={m}
+                              compact
+                              style={{
+                                transform: 'scale(0.8)',
+                                transformOrigin: 'top center',
+                                pointerEvents: 'auto',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.8)',
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </foreignObject>
                     );
                   })()}
                   {props.noLos?.includes(m.id) && (
@@ -1254,9 +1279,44 @@ function BoardImpl(props: BoardProps) {
               </text>
             )}
             {props.badges?.[u.id]?.length ? (
-              <text x={cx} y={minY - 1.2} fontSize={0.75} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={800}>
-                {props.badges[u.id].join('  ')}
-              </text>
+              isSel ? (
+                <foreignObject
+                  x={cx - 6}
+                  y={minY - 1.8}
+                  width={12}
+                  height={1.5}
+                  style={{ pointerEvents: 'none', overflow: 'visible' }}
+                >
+                  <div
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    {props.badges[u.id].map((b, i) => (
+                      <AbilityBadge
+                        key={i}
+                        name={b}
+                        unit={u}
+                        compact
+                        style={{
+                          transform: 'scale(0.85)',
+                          transformOrigin: 'top center',
+                          pointerEvents: 'auto',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.8)',
+                        }}
+                      />
+                    ))}
+                  </div>
+                </foreignObject>
+              ) : (
+                <text x={cx} y={minY - 1.2} fontSize={0.75} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={800}>
+                  {props.badges[u.id].join('  ')}
+                </text>
+              )
             ) : null}
             {unitNumber !== undefined && pts.length > 0 && (
               <g transform={`translate(${cx} ${minY - 0.65})`} pointerEvents="none">
@@ -1387,7 +1447,7 @@ function BoardImpl(props: BoardProps) {
                 <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={col} strokeWidth={0.2} strokeDasharray={props.measure.los === false ? '0.5 0.3' : undefined} />
                 {Array.from({ length: n }, (_, i) => <line key={i} x1={a.x + ux * (i + 1) - uy * 0.35} y1={a.y + uy * (i + 1) + ux * 0.35} x2={a.x + ux * (i + 1) + uy * 0.35} y2={a.y + uy * (i + 1) - ux * 0.35} stroke={col} strokeWidth={(i + 1) % 6 === 0 ? 0.14 : 0.07} />)}
                 <circle cx={b.x} cy={b.y} r={0.35} fill={col} stroke="#000" strokeWidth={0.08} />
-                <text x={mx} y={my - 0.6} fontSize={1.2} textAnchor="middle" fill={col} stroke="#000" strokeWidth={0.18} paintOrder="stroke" fontWeight={900}>{props.measure.label ?? `${d.toFixed(1)}"`}{props.measure.los === false ? ' (not visible)' : ''}</text>
+                <text x={mx} y={my - 0.6} fontSize={1.2} textAnchor="middle" fill={col} stroke="#000" strokeWidth={0.18} paintOrder="stroke" fontWeight={900}>{props.measure.label ?? `${d.toFixed(1)}"`}{props.measure.los === false ? ` (${props.measure.why || 'not visible'})` : ''}</text>
               </>
             );
           })()}

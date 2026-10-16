@@ -317,7 +317,6 @@ export function detectionRange(s: GameState, observer: ModelState, u: UnitState,
 export function modelVisible(s: GameState, observer: ModelState, u: UnitState, m: ModelState, ignoreLoneOperative = false): boolean {
   const d = baseDist(observer, m);
   if (!ignoreLoneOperative && u.sources.length === 1 && (u.core.loneOperative || hooks.loneOperative?.(s, u)) && d > (u.core.loneOperative ?? 12)) return false;
-  if (isHidden(s, u, m) && d > detectionRange(s, observer, u, m)) return false;
   return hasLos(s, observer, m);
 }
 
