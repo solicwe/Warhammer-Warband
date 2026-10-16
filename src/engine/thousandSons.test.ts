@@ -185,6 +185,19 @@ describe('Hexwarp Thrallband: Flow of Magic', () => {
     expect(psyOutside?.rerollWounds1).toBe(true);
     expect(psyOutside?.woundNote).toContain('Flow of Magic: re-roll 1s');
   });
+  it('does not apply Flow of Magic when detachment is not Hexwarp Thrallband (e.g. Grand Coven)', () => {
+    const s = game([['Sorcerer', 1, 95]], [['Boyz', 10, 90]], 'Grand Coven');
+    s.phase = 'shooting';
+    const sorc = put(s, 'p0-x0', { x: 30, y: 4 });
+    const boyz = put(s, 'p1-x0', { x: 30, y: 16 });
+    expect(inFlow(s, sorc)).toBe(false);
+
+    const res = buildShootPools(s, sorc.id, boyz.id, { mode: 'normal' });
+    const psy = res.pools.find((p) => p.psychic);
+    expect(psy).toBeDefined();
+    expect(psy?.woundMod).toBe(0);
+    expect(psy?.woundNote ?? '').not.toContain('Flow of Magic');
+  });
 });
 
 describe('Thousand Sons stratagems', () => {

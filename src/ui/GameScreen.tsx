@@ -69,6 +69,7 @@ import { AttackReport } from './AttackReport';
 import { AdvantageBar, Commander, RoundSummary, SideScore, tally, type RoundTally, type ThinkView } from './Hud';
 import { play, setSoundOn, soundOn } from './sfx';
 import { line, type VoiceEvent } from './voice';
+import { getPlayerFactionTheme } from './factionColors';
 
 type FxLevel = 'full' | 'short' | 'off';
 const FX_PREF = 'fx-level';
@@ -2674,9 +2675,23 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
   // army-wide buffs lie on the table beside the battlefield, next to each army's deployment zone
   const sideCards = s.phase === 'deploy' ? [] : ([0, 1] as PlayerId[]).map((p) => ({ p, at: buffSide(p), cards: buffCards(p) }));
+  const p0Theme = getPlayerFactionTheme(s, 0);
+  const p1Theme = getPlayerFactionTheme(s, 1);
 
   return (
-    <div className={`game ${(reporting || rolling) && actingBot === null ? 'telling' : ''}`}>
+    <div
+      className={`game ${(reporting || rolling) && actingBot === null ? 'telling' : ''}`}
+      style={{
+        '--p0': p0Theme.primary,
+        '--p0-accent': p0Theme.secondary,
+        '--p0-soft': p0Theme.soft,
+        '--p0-glow': p0Theme.glow,
+        '--p1': p1Theme.primary,
+        '--p1-accent': p1Theme.secondary,
+        '--p1-soft': p1Theme.soft,
+        '--p1-glow': p1Theme.glow,
+      } as React.CSSProperties}
+    >
       <header className="game-top">
         <div className="topbar">
           <button className="icon-btn" onClick={() => setShowMenu(true)} aria-label="Menu"><Icon name="menu" size={24} /></button>
@@ -2852,7 +2867,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               </div>
 
               <section className="mc-sec">
-                <div className="mc-head"><span className="mc-kicker">Primary Mission</span><span className="disp-chip" style={{ background: disp.color }}>{disp.name}</span></div>
+                <div className="mc-head">
+                  <span className="mc-kicker">Primary Mission</span>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <span className="prim-status-pill">Active · Round {s.round}/{lastRound(s)}</span>
+                    <span className="disp-chip" style={{ background: disp.color }}>{disp.name}</span>
+                  </div>
+                </div>
                 <div className="mc-prim">
                   <div className="mc-prim-name">{prim.name}</div>
                   {prim.scoring.map((r) => (

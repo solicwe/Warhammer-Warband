@@ -1,9 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RULES } from '../engine/config';
-import { deploymentById, toPoly } from '../engine/config';
+import { RULES, MISSIONS, deploymentById, toPoly } from '../engine/config';
 import { dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard, other } from '../engine/state';
-import { flowAreas, inFlow, isThousandSonsArmy } from '../engine/flow';
+import { flowAreas, inFlow, hasFlowOfMagic } from '../engine/flow';
 import { isDaemonsArmy, isDaemonUnit, isUnderShadowOfChaos } from '../engine/daemons';
 import { zonePoly } from '../engine/missions';
 import { levelOfControl, markRuleLabel } from '../engine/game';
@@ -14,6 +13,7 @@ import { loadoutLabels, shortItem } from './loadout';
 import { AbilityBadge } from './AbilityBadgePopover';
 import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
+import { getPlayerFactionTheme, getUnitFactionTheme } from './factionColors';
 import type { SecondaryGoal } from '../engine/secondaries';
 import type { FxEvent, GameState, ModelState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
 import { play, type Sfx } from './sfx';
@@ -70,9 +70,6 @@ export interface BoardProps {
 
 /** Width of the table beside the battlefield that holds the side cards, in inches; card text is laid out at PX px per inch. */
 const SIDE = 13, PX = 20;
-
-const COLORS = ['#3a9ad9', '#e0453f'];
-const SOFT = ['rgba(58,154,217,0.16)', 'rgba(224,69,63,0.16)'];
 
 export interface ObjectiveDetachmentEffect {
   id: string;
@@ -364,6 +361,10 @@ function modelFlinch(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): 
 function BoardImpl(props: BoardProps) {
   usePortraitsVersion();
   const { s, draft, draftUnit, maxFor, onDraft, walk } = props;
+  const p0Theme = getPlayerFactionTheme(s, 0);
+  const p1Theme = getPlayerFactionTheme(s, 1);
+  const COLORS = [p0Theme.primary, p1Theme.primary];
+  const SOFT = [p0Theme.soft, p1Theme.soft];
   const W = s.table?.width ?? RULES.battlefield.width;
   const H = s.table?.height ?? RULES.battlefield.height;
   // models picked for single-model adjustment (tap a model of the moving unit); otherwise a drag moves the whole unit
@@ -791,7 +792,7 @@ function BoardImpl(props: BoardProps) {
   const territoryAuras = useMemo(() => {
     if (props.zones === false) return null;
     return ([0, 1] as PlayerId[]).map((p) => {
-      const hasFlow = isThousandSonsArmy(s, p);
+      const hasFlow = hasFlowOfMagic(s, p);
       const hasShadow = isDaemonsArmy(s, p);
       if (!hasFlow && !hasShadow) return null;
 
@@ -907,13 +908,13 @@ function BoardImpl(props: BoardProps) {
 
     for (const u of s.units) {
       const ms = alive(u);
-      const hasFlowOfMagic = isThousandSonsArmy(s, u.owner);
-      const unitInFlow = hasFlowOfMagic && inFlow(s, u);
+      const unitHasFlow = hasFlowOfMagic(s, u.owner);
+      const unitInFlow = unitHasFlow && inFlow(s, u);
       const isDaemon = isDaemonUnit(u) && isDaemonsArmy(s, u.owner);
       const unitInShadow = isDaemon && isUnderShadowOfChaos(s, u.owner, u);
       const enemyInShadow = !isDaemon && isDaemonsArmy(s, other(u.owner)) && isUnderShadowOfChaos(s, other(u.owner), u);
       const hasPsychicWep = ms.some((m) => m.weapons.some((w) => w.profiles.some((p) => p.abilities.includes('psychic'))));
-      map.set(u.id, { hasFlowOfMagic, unitInFlow, isDaemon, unitInShadow, enemyInShadow, hasPsychicWep });
+      map.set(u.id, { hasFlowOfMagic: unitHasFlow, unitInFlow, isDaemon, unitInShadow, enemyInShadow, hasPsychicWep });
     }
     return map;
   }, [s]);
@@ -1078,6 +1079,19 @@ function BoardImpl(props: BoardProps) {
         const label = o.type === 'home' ? 'HOME' : o.type === 'central' ? 'CENTRE' : 'OBJ';
         const effects = getObjectiveEffects(s, o);
 
+        const pendingAction = s.pendingActions?.find((x) => x.objId === o.id);
+        const isContested = a > 0 && b > 0;
+        const isInProgress = !!pendingAction || isContested;
+        const pendingActionDef = pendingAction ? MISSIONS.actions[pendingAction.action] : null;
+        const pendingTheme = pendingAction ? getPlayerFactionTheme(s, pendingAction.player) : null;
+
+        const isSecured = o.secured != null;
+        const isCleansed = s.players.some((p) => p.sec?.cleansed?.some((x) => x.objId === o.id));
+        const isConsecrated = s.players.some((p) => p.mission?.consecrated?.includes(o.id));
+        const isDecoyed = s.players.some((p) => p.mission?.decoyed?.includes(o.id));
+        const isTriangulated = s.players.some((p) => p.mission?.triangulated?.includes(o.id));
+        const isCompleted = isSecured || isCleansed || isConsecrated || isDecoyed || isTriangulated;
+
         return (
           <g key={o.id} pointerEvents="none">
             {/* Territory / Detachment Aura Circles */}
@@ -1119,17 +1133,72 @@ function BoardImpl(props: BoardProps) {
             ))}
 
             <polygon points={t.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill={ctrl === null ? 'rgba(245,184,61,0.08)' : SOFT[ctrl]} stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.16} strokeDasharray="0.6 0.25" />
+
+            {/* In-Progress Animated Dashed Halo */}
+            {isInProgress && (
+              <circle
+                cx={o.x} cy={o.y} r={1.16}
+                fill="none"
+                stroke={pendingAction ? pendingTheme!.primary : '#f59e0b'}
+                strokeWidth={0.15}
+                strokeDasharray="0.32 0.18"
+                className="obj-inprogress-pulse"
+              />
+            )}
+
+            {/* Completed Glow Halo */}
+            {isCompleted && (
+              <circle
+                cx={o.x} cy={o.y} r={1.06}
+                fill="none"
+                stroke={ctrl !== null ? COLORS[ctrl] : '#10b981'}
+                strokeWidth={0.16}
+                className="obj-completed-glow"
+              />
+            )}
+
             <circle cx={o.x} cy={o.y} r={0.79} fill="url(#objdisc)" stroke="#111" strokeWidth={0.08} />
             <circle cx={o.x} cy={o.y} r={0.55} fill="none" stroke={ctrl === null ? '#555' : COLORS[ctrl]} strokeWidth={0.18} />
             <text x={o.x} y={o.y + 0.27} fontSize={0.75} textAnchor="middle" fill="#111" fontWeight={900}>{i + 1}</text>
-            {o.secured != null && <g><circle cx={o.x + 1.15} cy={o.y - 0.75} r={0.62} fill="rgba(12,13,16,0.9)" stroke={COLORS[o.secured]} strokeWidth={0.08} /><SvgIcon name="hold" x={o.x + 1.15} y={o.y - 0.75} size={0.8} color={COLORS[o.secured]} /></g>}
+            
+            {/* Completed Check Badge */}
+            {isCompleted && (
+              <g>
+                <circle cx={o.x + 1.15} cy={o.y - 0.75} r={0.62} fill="rgba(12,13,16,0.92)" stroke="#10b981" strokeWidth={0.08} />
+                <SvgIcon name="check" x={o.x + 1.15} y={o.y - 0.75} size={0.7} color="#10b981" />
+              </g>
+            )}
+            {o.secured != null && !isCompleted && <g><circle cx={o.x + 1.15} cy={o.y - 0.75} r={0.62} fill="rgba(12,13,16,0.9)" stroke={COLORS[o.secured]} strokeWidth={0.08} /><SvgIcon name="hold" x={o.x + 1.15} y={o.y - 0.75} size={0.8} color={COLORS[o.secured]} /></g>}
             {o.warded != null && <g><circle cx={o.x + 1.15} cy={o.y + 0.75} r={0.55} fill="rgba(12,13,16,0.9)" stroke={COLORS[o.warded]} strokeWidth={0.08} /><text x={o.x + 1.15} y={o.y + 0.95} fontSize={0.62} textAnchor="middle" fill={COLORS[o.warded]} fontWeight={900}>W</text></g>}
+            
             <g transform={`translate(${cx} ${top - 0.55})`}>
               <rect x={-2.1} y={-0.5} width={4.2} height={0.95} rx={0.45} fill="rgba(12,13,16,0.85)" stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.06} />
               <text x={-1.85} y={0.2} fontSize={0.55} fill="#f5b83d" fontWeight={800}>{label}</text>
               <text x={1.95} y={0.2} fontSize={0.55} textAnchor="end" fontWeight={800}>
                 <tspan fill={COLORS[0]}>{a}</tspan><tspan fill="#aaa"> : </tspan><tspan fill={COLORS[1]}>{b}</tspan>
               </text>
+              {pendingAction ? (
+                <g transform="translate(0 0.95)">
+                  <rect x={-2.4} y={-0.38} width={4.8} height={0.76} rx={0.3} fill="rgba(14,16,20,0.92)" stroke={pendingTheme!.primary} strokeWidth={0.07} />
+                  <text x={0} y={0.16} fontSize={0.36} textAnchor="middle" fill={pendingTheme!.primary} fontWeight={800}>
+                    ACTION: {pendingActionDef?.name?.toUpperCase() ?? 'IN PROGRESS'}
+                  </text>
+                </g>
+              ) : isContested ? (
+                <g transform="translate(0 0.95)">
+                  <rect x={-2.1} y={-0.38} width={4.2} height={0.76} rx={0.3} fill="rgba(14,16,20,0.92)" stroke="#f59e0b" strokeWidth={0.07} />
+                  <text x={0} y={0.16} fontSize={0.36} textAnchor="middle" fill="#f59e0b" fontWeight={800}>
+                    CONTESTED
+                  </text>
+                </g>
+              ) : isCompleted ? (
+                <g transform="translate(0 0.95)">
+                  <rect x={-2.2} y={-0.38} width={4.4} height={0.76} rx={0.3} fill="rgba(14,16,20,0.92)" stroke="#10b981" strokeWidth={0.07} />
+                  <text x={0} y={0.16} fontSize={0.36} textAnchor="middle" fill="#10b981" fontWeight={800}>
+                    {isSecured ? 'SECURED' : isCleansed ? 'CLEANSED' : isConsecrated ? 'CONSECRATED' : 'COMPLETED'}
+                  </text>
+                </g>
+              ) : null}
             </g>
 
             {/* Detachment Territory Effect Badges */}
@@ -1173,7 +1242,16 @@ function BoardImpl(props: BoardProps) {
         const ms = u ? alive(u) : [];
         if (!ms.length) return null;
         const c = { x: ms.reduce((q, m) => q + m.x, 0) / ms.length, y: Math.min(...ms.map((m) => m.y - m.r)) };
-        return <text key={a.unitId + a.action} x={c.x} y={c.y - 0.6} fontSize={0.7} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.12} paintOrder="stroke" fontWeight={800} pointerEvents="none">action…</text>;
+        const actTheme = getPlayerFactionTheme(s, a.player);
+        const actDef = MISSIONS.actions[a.action];
+        return (
+          <g key={a.unitId + a.action} pointerEvents="none">
+            <rect x={c.x - 2.4} y={c.y - 1.25} width={4.8} height={0.76} rx={0.35} fill="rgba(12,14,18,0.92)" stroke={actTheme.primary} strokeWidth={0.08} />
+            <text x={c.x} y={c.y - 0.74} fontSize={0.38} textAnchor="middle" fill={actTheme.primary} fontWeight={800}>
+              {actDef?.name?.toUpperCase() ?? 'ACTION'}...
+            </text>
+          </g>
+        );
       })}
       {props.rings?.map((r, i) => (
         <circle key={`r${i}`} cx={r.c.x} cy={r.c.y} r={r.r} fill="none" stroke={r.color} strokeWidth={0.08} strokeDasharray={r.dash ? '0.35 0.25' : undefined} />
@@ -1192,6 +1270,7 @@ function BoardImpl(props: BoardProps) {
         const isPicked = props.picked?.includes(u.id);
         const isMovable = props.movable?.includes(u.id);
         const col = COLORS[u.owner];
+        const uTheme = getUnitFactionTheme(s, u);
         const ms = alive(u);
         const labels = loadoutLabels(u); // which model carries what, in a squad with mixed wargear
         const pts = ms.map((m) => posOf(u, m.id, m));
@@ -1237,7 +1316,12 @@ function BoardImpl(props: BoardProps) {
                 >
                   <BaseShape m={m} p={p} grow={Math.max(0, 0.35 - m.r) + 0.35} fill="transparent" />
                   {acting.has(u.id) && <BaseShape m={m} p={p} grow={0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
-                  {(isSel || isPicked) && !isDraft && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke={isSel ? '#f5b83d' : '#ffffff'} strokeWidth={0.18} className="sel-ring" pointerEvents="none" />}
+                  {(isSel || isPicked) && !isDraft && (
+                    <>
+                      <BaseShape m={m} p={p} grow={0.44} fill="none" stroke={uTheme.glow} strokeWidth={0.24} opacity={0.85} className="faction-aura-glow" pointerEvents="none" />
+                      <BaseShape m={m} p={p} grow={0.26} fill="none" stroke={isSel ? uTheme.primary : uTheme.secondary} strokeWidth={0.16} className="sel-ring" pointerEvents="none" />
+                    </>
+                  )}
                   {isMovable && !isSel && !isDraft && !isPicked && <BaseShape m={m} p={p} grow={0.24} fill="none" stroke="#38bdf8" strokeWidth={0.13} strokeDasharray="0.32 0.18" className="movable-ring" pointerEvents="none" />}
                   {isTarget && !isPicked && !isSel && <BaseShape m={m} p={p} grow={0.28} fill="none" stroke="#fde68a" strokeWidth={0.1} strokeDasharray="0.3 0.2" pointerEvents="none" />}
                   {isSolo && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
@@ -1253,7 +1337,7 @@ function BoardImpl(props: BoardProps) {
                     m={m} p={p}
                     fill={bad ? '#7f1d1d' : getModelPortrait(m) ? '#ffffff' : '#1d2129'}
                     fillOpacity={1}
-                    stroke={bad ? '#fca5a5' : isSel || isDraft ? '#f5b83d' : isPicked ? '#ffffff' : isTarget ? '#fde68a' : col}
+                    stroke={bad ? '#fca5a5' : isSel || isDraft ? uTheme.primary : isPicked ? uTheme.secondary : isTarget ? '#fde68a' : col}
                     strokeWidth={isSel || isDraft || isTarget || isPicked || bad ? 0.16 : 0.12}
                     strokeDasharray={u.battleShocked ? '0.25 0.15' : undefined}
                   />

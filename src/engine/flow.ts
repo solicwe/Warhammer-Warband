@@ -9,10 +9,23 @@ import type { GameState, PlayerId, UnitState } from './types';
 export const FLOW_DETACHMENT = 'Hexwarp Thrallband';
 const NOCTILITH = 'Noctilith Mantle';
 
+/** Checks whether a player's army currently has the Flow of Magic detachment rule active. */
+export function hasFlowOfMagic(s: GameState, p: PlayerId): boolean {
+  const P = s.players[p];
+  if (!P || P.factionId !== 'TS') return false;
+  return (P.detachments ?? []).some(
+    (d) => d.name === FLOW_DETACHMENT || d.name === 'Flow of Magic' || (d.rules ?? []).some((r) => r.name === 'Flow of Magic')
+  );
+}
+
 /** Which areas are in player p's Flow of Magic this phase (worked out the first time it is asked in a phase). */
 export function flowAreas(s: GameState, p: PlayerId): { nml: boolean; opp: boolean } {
-  const key = phaseKey(s);
   const P = s.players[p];
+  if (!P || !hasFlowOfMagic(s, p)) {
+    if (P?.flow) delete P.flow;
+    return { nml: false, opp: false };
+  }
+  const key = phaseKey(s);
   if (P.flow?.key === key) return P.flow;
   const own = zonePoly(s, p), opp = zonePoly(s, other(p));
   const nmlObjs = s.objectives.filter((o) => !pointInPoly(o, own) && !pointInPoly(o, opp));
@@ -25,7 +38,7 @@ export function flowAreas(s: GameState, p: PlayerId): { nml: boolean; opp: boole
 /** Is the unit wholly within its army's Flow of Magic? */
 export function inFlow(s: GameState, u: UnitState): boolean {
   if (!onBoard(u)) return false;
-  if (!isThousandSonsArmy(s, u.owner)) return false;
+  if (!hasFlowOfMagic(s, u.owner)) return false;
   if (u.enhancements.some((e) => e.name === NOCTILITH)) return true;
   const models = alive(u);
   if (!models.length) return false;
@@ -45,6 +58,7 @@ export function inFlow(s: GameState, u: UnitState): boolean {
 
 /** Is a base at this spot wholly within player p's Flow of Magic? */
 export function circleInFlow(s: GameState, p: PlayerId, m: { x: number; y: number }, r: number): boolean {
+  if (!hasFlowOfMagic(s, p)) return false;
   const { nml, opp } = flowAreas(s, p);
   if (nml && opp) return true;
   const ownZ = zonePoly(s, p);
@@ -60,7 +74,5 @@ export function circleInFlow(s: GameState, p: PlayerId, m: { x: number; y: numbe
 }
 
 export function isThousandSonsArmy(s: GameState, p: PlayerId): boolean {
-  const P = s.players[p];
-  if (!P) return false;
-  return P.factionId === 'TS' || (P.detachments ?? []).some((d) => d.name === 'Hexwarp Thrallband' || d.name === 'Flow of Magic' || (d.rules ?? []).some((r) => r.name === 'Flow of Magic'));
+  return hasFlowOfMagic(s, p);
 }

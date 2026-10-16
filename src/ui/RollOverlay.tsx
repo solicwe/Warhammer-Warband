@@ -162,14 +162,24 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
 /** A secondary mission card: face down it shows the back, face up its name, when it scores and how. */
 export function SecondaryCard({ id, faceUp = true, delay = 0, owner, progress, dead }: { id: string; faceUp?: boolean; delay?: number; owner?: 0 | 1; progress?: string; dead?: boolean }) {
   const def = secondaryById(id);
+  const isCompleted = progress?.includes('+');
   return (
     <div className={`sec-card ${faceUp ? 'up' : ''} ${owner === 1 ? 'p1' : 'p0'}`} style={{ animationDelay: `${delay}ms` }}>
       <div className="sec-face sec-back"><Icon name="objective" size={42} /><span>SECONDARY</span></div>
       <div className="sec-face sec-front">
-        <div className="sec-name">{def.name}</div>
+        <div className="sec-card-header">
+          <div className="sec-name">{def.name}</div>
+          {dead ? (
+            <span className="sec-status-badge dead">FAILED</span>
+          ) : isCompleted ? (
+            <span className="sec-status-badge completed">READY TO SCORE</span>
+          ) : (
+            <span className="sec-status-badge in-progress">IN PROGRESS</span>
+          )}
+        </div>
         <div className="sec-when"><Icon name="wait" size={13} /> {def.when}</div>
         <div className="sec-text">{def.text}</div>
-        {progress && <div className={`sec-progress ${dead ? 'dead' : ''}`}>{progress}</div>}
+        {progress && <div className={`sec-progress ${dead ? 'dead' : isCompleted ? 'completed' : ''}`}>{progress}</div>}
       </div>
     </div>
   );

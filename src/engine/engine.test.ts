@@ -348,6 +348,26 @@ describe('sub-factions (Chapters)', () => {
     const ok = validateList({ ...l, subfaction: 'SPACE WOLVES' }, SM, size);
     expect(ok.some((e) => e.includes('Saga of the Great Wolf') || e.includes(wolf.name))).toBe(false);
   });
+  it('restricts enhancements to CHARACTER units only', async () => {
+    const { enhancementOptions, validateList } = await import('./army');
+    const size = { points: 2000, dp: 3, unitLimit: 3, enhancements: 3 };
+    const tactical = { uid: 'u1', datasheet: 'Tactical Squad', models: 10, pts: 140 };
+    const captain = { uid: 'u2', datasheet: 'Captain', models: 1, pts: 80 };
+    const list: ArmyList = { name: 't', factionId: 'SM', battleSize: 'strike', detachments: ['Gladius Task Force'], units: [tactical, captain] };
+
+    // Non-character units cannot see enhancement options
+    const tacOptions = enhancementOptions(list, SM, tactical);
+    expect(tacOptions.length).toBe(0);
+
+    // Characters can see enhancement options
+    const capOptions = enhancementOptions(list, SM, captain);
+    expect(capOptions.length).toBeGreaterThan(0);
+
+    // If a non-character is given an enhancement, validateList reports an error
+    const invalidList = { ...list, units: [{ ...tactical, enhancement: 'Adept of the Codex' }, captain] };
+    const errs = validateList(invalidList, SM, size);
+    expect(errs.some((e) => e.includes('Tactical Squad is not a CHARACTER'))).toBe(true);
+  });
 });
 
 describe('detachment stratagems', () => {

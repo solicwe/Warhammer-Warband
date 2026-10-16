@@ -1020,10 +1020,11 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
   }
 
   return allDetEnhancements.filter((e) => {
-    if (isChar || e.upgrade) return true;
-    // If the enhancement specifically fits this datasheet/unit, allow it (e.g. Wulfen, Vespid, Goremongers, etc.)
+    if (!isChar && !e.upgrade) return false;
+    // Check if the enhancement specifically fits this datasheet/unit (e.g. ADEPTUS ASTARTES, PSYKER, CAPTAIN only)
     const fit = enhancementFits(e.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(entry.mark ? [entry.mark] : [])]);
-    return fit?.ok === true;
+    if (fit && !fit.ok) return false;
+    return true;
   });
 }
 
@@ -1246,6 +1247,14 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     const isAllowedEpic = list.detachments.includes('Veiled Blade Elimination Force') && sheet?.keywords.includes('OFFICIO ASSASSINORUM');
     if (sheet?.keywords.includes('EPIC HERO') && !isAllowedEpic) {
       errs.push(`${u.datasheet} is an EPIC HERO and cannot take Enhancements`);
+    }
+    const isChar = sheet?.keywords.includes('CHARACTER')
+      || (list.detachments.includes('Houndpack Lance') && sheet?.keywords.includes('WAR DOG'))
+      || (list.detachments.includes('Subterranean Assault') && sheet?.name.toLowerCase().includes('trygon'))
+      || (list.detachments.includes('Steel Hammer') && sheet?.keywords.includes('TITANIC') && sheet?.factionKeywords.includes('ASTRA MILITARUM'))
+      || (list.detachments.some((d) => d === 'Eldritch Raiders' || d === 'Corsair Coterie') && (sheet?.keywords.includes('ANHRATHE') || sheet?.factionKeywords.includes('ANHRATHE')));
+    if (!isChar && !enhObj?.upgrade) {
+      errs.push(`${u.datasheet} is not a CHARACTER and cannot take Enhancements`);
     }
     if (!faction.detachments.some((d) => list.detachments.includes(d.name) && d.enhancements.some((e) => e.name === n))) errs.push(`Enhancement "${n}" is not in the selected Detachments`);
   }
