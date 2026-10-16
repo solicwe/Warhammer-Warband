@@ -886,6 +886,12 @@ function startCommand(s: GameState) {
   if (s.tempCharacters) s.tempCharacters = s.tempCharacters.filter((x) => x.by !== s.active);
   for (const p of [0, 1] as PlayerId[]) s.players[p].cp += RULES.cpPerCommandPhase;
   log(s, `+${RULES.cpPerCommandPhase}CP to both players (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
+  if (s.campaign && s.active === 0) {
+    const objsHeld = s.objectives.filter((o) => o.controller === 0).length;
+    const roundScrap = 150 + objsHeld * 50;
+    s.campaignScrap = (s.campaignScrap ?? 0) + roundScrap;
+    log(s, `Logistics Requisition (Round ${s.round}): +${roundScrap} Scrap generated (${150} base + ${objsHeld * 50} from ${objsHeld} objectives held)`, 'vp', 0);
+  }
   poisonTick(s);
   dgCommandStart(s);
   knightsCommandStart(s);
@@ -1861,31 +1867,27 @@ export function updateControl(s: GameState) {
     o.controller = c;
     if (o.warded != null && c === other(o.warded)) o.warded = null;
 
-    // In Roguelike mode: capturing objectives grants loot rewards instead of primary VP!
+    // In Roguelike mode: capturing objectives grants loot rewards and scrap!
     if (s.campaign && c === 0 && !s.campaign.lootedObjectives?.includes(o.id)) {
       (s.campaign.lootedObjectives ??= []).push(o.id);
+      s.players[0].vp += 5;
+      const scrapGain = 100;
+      s.campaignScrap = (s.campaignScrap ?? 0) + scrapGain;
       const roll = (s.turn * 31 + Math.floor(o.x * 7 + o.y)) % 100;
-      let rewardText = '';
-      if (roll < 60) {
-        s.players[0].vp += 5;
-        rewardText = '+25 Scrap salvaged!';
-      } else if (roll < 85) {
+      let bonusText = '';
+      if (roll < 50) {
         s.players[0].cp += 1;
-        rewardText = 'Munitions cache secured (+1 CP)!';
+        bonusText = ' & Munitions cache (+1 CP)';
       } else {
         s.players[0].vp += 5;
-        rewardText = 'Field supply secured (+5 VP)!';
+        bonusText = ' & Field supply (+5 extra VP)';
       }
-      log(s, `Objective Secured (${o.id}): ${rewardText}`, 'vp', 0);
+      log(s, `Objective Secured (${o.id}): +${scrapGain} Scrap salvaged! (+5 VP${bonusText})`, 'vp', 0);
     }
   }
 }
 
 export function scoreTiming(s: GameState, timing: 'endOfYourCommandPhase' | 'endOfYourTurn' | 'endOfBattle', player: PlayerId = s.active) {
-  if (s.campaign) {
-    // In Roguelike mode, mission victory is elimination of enemy units, not holding objectives
-    return;
-  }
   scorePrimary(s, timing, player);
 }
 

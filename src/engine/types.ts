@@ -719,6 +719,7 @@ export interface GameState {
   fx?: FxEvent[];
   stats?: BattleStats;
   campaign?: { node: string; relics: string[]; rules: string[]; relicLevels?: Record<string, number>; lootedObjectives?: string[] };
+  campaignScrap?: number; // scrap salvaged during campaign battle
   table?: { width: number; height: number };
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

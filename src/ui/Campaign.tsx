@@ -75,7 +75,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const battle = saved?.campaign && run?.fighting && saved.campaign.node === run.fighting ? saved : null;
   useEffect(() => {
     if (!run || !fac || !battle || battle.phase !== 'gameover') return;
-    const next = afterBattle(run, battle.winner, fac, battle.players[1].name);
+    const next = afterBattle(run, battle.winner, fac, battle.players[1].name, battle.campaignScrap ?? 0);
     play(battle.winner === 1 ? 'bad' : 'vp');
     setRun(next);
     onClearSaved();

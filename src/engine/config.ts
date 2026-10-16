@@ -93,18 +93,32 @@ export const ROGUELIKE_PRIMARY: PrimaryDef = {
   vs: 'purge-the-foe',
   scoring: [
     {
-      rounds: [1, 2, 3, 4, 5],
+      rounds: [1, 5],
       when: 'endOfAnyTurn',
       condition: 'enemyDestroyed',
       vp: 0,
       text: 'Eliminate enemy units to score VP equal to their points value. Total annihilation wins immediately!',
     },
     {
-      rounds: [1, 2, 3, 4, 5],
+      rounds: [1, 5],
       when: 'endOfAnyTurn',
       condition: 'captureLoot',
-      vp: 0,
-      text: 'Capturing an Objective marker for the first time awards +25 Scrap, +1 CP, or restores Fate!',
+      vp: 5,
+      text: 'Capturing an Objective marker awards +100 Scrap, +1 CP, and +5 VP!',
+    },
+    {
+      rounds: [1, 5],
+      when: 'endOfYourCommandPhase',
+      condition: 'perObjectiveControlled',
+      vp: 5,
+      text: 'Control objectives (5 VP each per round)',
+    },
+    {
+      rounds: [1, 5],
+      when: 'endOfYourCommandPhase',
+      condition: 'controlMoreThanOpponent',
+      vp: 5,
+      text: 'Control more objectives than your opponent (5 VP)',
     },
   ],
 };

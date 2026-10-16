@@ -918,17 +918,8 @@ b.em { font-weight: 700; color: var(--text); }
 }
 
 .strat-kw {
-  display: inline-block;
-  background: #1F242D;
-  color: #E5E7EB;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 0.9em;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  margin: 0 1px;
-  vertical-align: baseline;
+  font-weight: 700;
+  color: #F9FAFB;
 }
 
 .strat-dist {

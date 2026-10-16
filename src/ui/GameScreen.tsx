@@ -6,6 +6,7 @@ import { RuleText } from './RuleText';
 import { modelPortraitKey } from './portraits';
 import { loadoutSummary } from './loadout';
 import { AbilityBadge } from './AbilityBadgePopover';
+import { WeaponFireModePanel } from './WeaponFireModePanel';
 import { Em } from './Em';
 import {
   applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, finishAttack, meleeWeapons, rerollOne, resolveAll, shootingModes, startAttack, stepAttack,
@@ -1928,113 +1929,21 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <>
           {pactRow(modeUnit)}
           <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' || mode.smode === 'assault' ? 'Shoot' : mode.smode === 'closeQuarters' ? 'Close-quarters' : mode.smode}{mode.target ? <> <Icon name="target" size={14} /> {U(mode.target).name}</> : targets.length ? ` · tap a target (${targets.length} in reach)` : ' · no enemy in range and sight'}</span></div>
-          {hasCQ && mode.smode !== 'closeQuarters' && !firedAny && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', margin: '0.4rem 0' }}>
-              <div style={{ fontSize: '0.78rem', color: '#9ca3af' }}>Fire Mode (models shoot standard weapons or pistols, not both):</div>
-              <div className="row wrap" style={{ gap: '0.5rem' }}>
-                <button
-                  type="button"
-                  className={`btn small ${!mode.useCQ ? 'on' : ''}`}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    textAlign: 'left',
-                    padding: '0.45rem 0.75rem',
-                    border: !mode.useCQ ? '1px solid #d99b26' : '1px solid #374151',
-                    background: !mode.useCQ ? 'rgba(217, 155, 38, 0.15)' : '#1a1f29',
-                    borderRadius: '6px'
-                  }}
-                  onClick={() => setModeRaw({ ...mode, useCQ: false })}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    {!mode.useCQ && <Icon name="check" size={13} />}
-                    <b style={{ color: !mode.useCQ ? '#fbbf24' : '#e5e7eb', fontSize: '0.85rem' }}>Standard Weapons</b>
-                  </div>
-                  <div style={{ fontSize: '0.74rem', color: !mode.useCQ ? '#fef08a' : '#9ca3af', marginTop: '2px' }}>
-                    {[...nonCqWeapons.keys()].join(', ') || 'Ranged weapons'}
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  className={`btn small ${mode.useCQ ? 'on' : ''}`}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    textAlign: 'left',
-                    padding: '0.45rem 0.75rem',
-                    border: mode.useCQ ? '1px solid #d99b26' : '1px solid #374151',
-                    background: mode.useCQ ? 'rgba(217, 155, 38, 0.15)' : '#1a1f29',
-                    borderRadius: '6px'
-                  }}
-                  onClick={() => setModeRaw({ ...mode, useCQ: true })}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    {mode.useCQ && <Icon name="check" size={13} />}
-                    <b style={{ color: mode.useCQ ? '#fbbf24' : '#e5e7eb', fontSize: '0.85rem' }}>Pistols [CLOSE-QUARTERS]</b>
-                  </div>
-                  <div style={{ fontSize: '0.74rem', color: mode.useCQ ? '#fef08a' : '#9ca3af', marginTop: '2px' }}>
-                    {[...cqWeapons.values()].map((w) => {
-                      const p = w.profiles[0];
-                      return `${w.name} (${p.range}" A${p.A} ${p.skill ? `${p.skill}+` : 'N/A'} S${p.S ?? '-'} AP${p.AP} D${p.D})`;
-                    }).join(', ') || 'Pistols'}
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-          {multi.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', margin: '0.4rem 0' }}>
-              {multi.map((w) => {
-                const curIdx = Math.min(mode.profile[w.name] ?? 0, w.profiles.length - 1);
-                return (
-                  <div key={w.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#e5e7eb', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <span><b>{w.name}</b> Profile:</span>
-                    </div>
-                    <div className="row wrap" style={{ gap: '0.4rem' }}>
-                      {w.profiles.map((p: WeaponProfileData, idx: number) => {
-                        const isSelected = curIdx === idx;
-                        const statsStr = `${p.range ?? '-'}${typeof p.range === 'number' ? '"' : ''} A${p.A} ${p.skill ? `${p.skill}+` : 'N/A'} S${p.S ?? '-'} AP${p.AP} D${p.D}${p.abilities.length ? ` [${p.abilities.map((a: string) => a.toUpperCase()).join(', ')}]` : ''}`;
-                        return (
-                          <button
-                            key={p.name}
-                            type="button"
-                            className={`btn small ${isSelected ? 'on' : ''}`}
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'flex-start',
-                              textAlign: 'left',
-                              padding: '0.4rem 0.65rem',
-                              border: isSelected ? '1px solid #d99b26' : '1px solid #374151',
-                              background: isSelected ? 'rgba(217, 155, 38, 0.15)' : '#1a1f29',
-                              borderRadius: '6px',
-                              cursor: 'pointer'
-                            }}
-                            onClick={() => {
-                              setModeRaw({ ...mode, profile: { ...mode.profile, [w.name]: idx } });
-                              flash(`${w.name} → ${p.name}: ${statsStr}`);
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                              {isSelected && <Icon name="check" size={13} />}
-                              <b style={{ color: isSelected ? '#fbbf24' : '#e5e7eb', fontSize: '0.82rem' }}>{p.name}</b>
-                            </div>
-                            <div style={{ fontSize: '0.73rem', color: isSelected ? '#fef08a' : '#9ca3af', marginTop: '2px' }}>
-                              {statsStr}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <WeaponFireModePanel
+            hasCQ={hasCQ}
+            smode={mode.smode}
+            firedAny={firedAny}
+            useCQ={Boolean(mode.useCQ)}
+            nonCqWeapons={nonCqWeapons}
+            cqWeapons={cqWeapons}
+            multi={multi}
+            profileChoices={mode.profile ?? {}}
+            onSelectCQ={(useCQ) => setModeRaw({ ...mode, useCQ })}
+            onSelectProfile={(weaponName, idx, profileName) => {
+              setModeRaw({ ...mode, profile: { ...mode.profile, [weaponName]: idx } });
+              flash(`${weaponName} → ${profileName}`);
+            }}
+          />
           {!mode.overwatch && activeRemaining.length > 1 && (
             <div className="row wrap" style={{ alignItems: 'center', gap: '0.4rem', margin: '0.35rem 0' }}>
               <span className="label" style={{ fontSize: '0.78rem', color: '#9ca3af' }}>Weapons shooting this target:</span>

@@ -285,7 +285,7 @@ export function makeMap(seed: number, enemies: string[]): MapNode[] {
 export function newRun(faction: FactionData, list: ArmyList, enemies: string[], seed = Date.now()): Run {
   return {
     version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, enemies.filter((e) => e !== faction.id && e !== 'TL')),
-    path: [], relics: [], relicLevels: {}, freeRerolls: 1, cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
+    path: [], relics: [], relicLevels: {}, freeRerolls: 1, cp: 0, fate: 3, scrap: 300, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
   };
 }
 
@@ -419,14 +419,23 @@ export function enter(run: Run, nodeId: string, faction: FactionData): Run {
 }
 
 /** The battle's result: a win moves the player on and offers rewards, a loss costs a Fate point (a draw counts as a win). */
-export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction: FactionData, enemyName: string): Run {
+export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction: FactionData, enemyName: string, battleScrap = 0): Run {
   if (!run.fighting) return run;
   const node = run.map.find((n) => n.id === run.fighting)!;
   if (winner === 1) {
     const fate = run.fate - 1;
-    return { ...run, fighting: undefined, fate, over: fate <= 0 ? 'lost' : undefined, story: [...run.story, `Defeated by ${enemyName}${fate > 0 ? ` · ${fate} Fate left` : ''}`] };
+    const salvage = Math.floor((battleScrap || 0) * 0.5);
+    return {
+      ...run,
+      fighting: undefined,
+      fate,
+      scrap: (run.scrap ?? 0) + salvage,
+      over: fate <= 0 ? 'lost' : undefined,
+      story: [...run.story, `Defeated by ${enemyName}${salvage > 0 ? ` (+${salvage} Scrap salvaged)` : ''}${fate > 0 ? ` · ${fate} Fate left` : ''}`],
+    };
   }
-  const scrapGain = node.kind === 'boss' ? 300 : node.kind === 'elite' ? 140 : 70;
+  const baseGain = node.kind === 'boss' ? 500 : node.kind === 'elite' ? 250 : 150;
+  const scrapGain = baseGain + (battleScrap || 0);
   // Units that took part gain +1 XP
   const updatedUnits = run.list.units.map((u) => ({ ...u, xp: (u.xp ?? 0) + 1 }));
   const next: Run = {
@@ -437,7 +446,7 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
     scrap: (run.scrap ?? 0) + scrapGain,
     freeRerolls: 1,
     list: { ...run.list, units: updatedUnits },
-    story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap)${node.kind === 'boss' ? ' — the Warlord is vanquished!' : ''}`],
+    story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap${battleScrap > 0 ? `: ${baseGain} victory + ${battleScrap} battle loot` : ''})${node.kind === 'boss' ? ' — the Warlord is vanquished!' : ''}`],
   };
   next.picksLeft = node.kind === 'boss' ? 2 : 1;
   next.offer = makeOffer(next, faction, node.kind);

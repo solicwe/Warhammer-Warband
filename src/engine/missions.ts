@@ -444,7 +444,9 @@ export function evalCondition(s: GameState, p: PlayerId, c: string): number {
 }
 
 export function ruleActive(r: ScoringRule, round: number, timing: string, last = 5): boolean {
-  if (round < r.rounds[0] || round > r.rounds[1]) return false;
+  const minRound = Math.min(...r.rounds);
+  const maxRound = Math.max(...r.rounds);
+  if (round < minRound || round > maxRound) return false;
   if (timing === 'endOfBattle') return r.when === 'endOfBattle';
   if (r.when === 'endOfAnyTurn') return timing === 'endOfAnyTurn';
   if (round === last && r.round5When) return r.round5When === timing;

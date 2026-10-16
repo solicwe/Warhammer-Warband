@@ -62,7 +62,7 @@ function highlightRuleTokens(text: string): ReactNode[] {
       if (EXCLUDED_KW.has(kw.toUpperCase())) {
         out.push(kw);
       } else {
-        out.push(<span key={key} className="strat-kw">{kw}</span>);
+        out.push(<b key={key} className="strat-kw">{kw}</b>);
       }
     } else if (term) {
       out.push(<b key={key} className="strat-term">{term}</b>);
