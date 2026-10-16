@@ -31,7 +31,7 @@ export function getKeywordBadgeStyle(kw: string): { bg: string; color: string; b
 }
 
 /** Compact Mini Stat Grid row for a weapon profile */
-export function MiniStatGrid({ profile }: { profile: WeaponProfileData }) {
+export const MiniStatGrid = React.memo(function MiniStatGrid({ profile }: { profile: WeaponProfileData }) {
   const rangeStr = profile.range === 'Melee' ? 'Melee' : `${profile.range}"`;
   const skillStr = profile.skill ? `${profile.skill}+` : 'N/A';
   const strStr = profile.S !== null && profile.S !== undefined ? String(profile.S) : '-';
@@ -72,10 +72,10 @@ export function MiniStatGrid({ profile }: { profile: WeaponProfileData }) {
       </div>
     </div>
   );
-}
+});
 
 /** Color-coded keyword badges row */
-export function KeywordBadges({ abilities }: { abilities: string[] }) {
+export const KeywordBadges = React.memo(function KeywordBadges({ abilities }: { abilities: string[] }) {
   if (!abilities || !abilities.length) return null;
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
@@ -103,7 +103,7 @@ export function KeywordBadges({ abilities }: { abilities: string[] }) {
       })}
     </div>
   );
-}
+});
 
 const statBoxStyle: React.CSSProperties = {
   background: '#141820',
@@ -133,7 +133,7 @@ const statValueStyle: React.CSSProperties = {
   lineHeight: 1.1,
 };
 
-export function WeaponFireModePanel({
+export const WeaponFireModePanel = React.memo(function WeaponFireModePanel({
   hasCQ,
   smode,
   firedAny,
@@ -496,5 +496,5 @@ export function WeaponFireModePanel({
       )}
     </div>
   );
-}
+});
 

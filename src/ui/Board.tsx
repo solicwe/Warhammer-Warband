@@ -545,22 +545,38 @@ function BoardImpl(props: BoardProps) {
     pan.current = { id: e.pointerId, sx: e.clientX, sy: e.clientY, vb, moved: false };
   };
 
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!pointers.current.has(e.pointerId)) return;
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const moveRaf = useRef(0);
+  const pendingPointer = useRef<{ pointerId: number; clientX: number; clientY: number } | null>(null);
+  const propsRef = useRef({ draft, onDraft, walk, maxFor, toBoard, zoomAt });
+  propsRef.current = { draft, onDraft, walk, maxFor, toBoard, zoomAt };
+
+  useEffect(() => {
+    return () => {
+      if (moveRaf.current) cancelAnimationFrame(moveRaf.current);
+    };
+  }, []);
+
+  const flushPointerMove = useCallback(() => {
+    moveRaf.current = 0;
+    const pending = pendingPointer.current;
+    if (!pending) return;
+    const { pointerId, clientX, clientY } = pending;
+    pendingPointer.current = null;
+
     if (pinch.current && pointers.current.size >= 2) {
       const [a, b] = [...pointers.current.values()];
       const d = Math.hypot(a.x - b.x, a.y - b.y);
-      zoomAt(pinch.current.d / Math.max(d, 1), pinch.current.mid, pinch.current.vb);
+      propsRef.current.zoomAt(pinch.current.d / Math.max(d, 1), pinch.current.mid, pinch.current.vb);
       return;
     }
     const dg = drag.current;
-    if (dg && dg.pointerId === e.pointerId) {
-      const p = toBoard(e.clientX, e.clientY);
+    if (dg && dg.pointerId === pointerId) {
+      const { draft: curDraft, onDraft: curOnDraft, walk: curWalk, maxFor: curMaxFor, toBoard: curToBoard } = propsRef.current;
+      const p = curToBoard(clientX, clientY);
       const dx = p.x - dg.start.x, dy = p.y - dg.start.y;
       if (!dg.moved && Math.hypot(dx, dy) < 0.25) return;
       dg.moved = true;
-      if (!dg.models.length || !onDraft) return;
+      if (!dg.models.length || !curOnDraft || !curDraft) return;
       if (dg.solo && dg.grab) {
         // one model: straight line from where it started this move, clamped to its own maximum
         const id = dg.models[0];
@@ -568,47 +584,64 @@ function BoardImpl(props: BoardProps) {
         const origin = path[0];
         let end = { x: dg.grab.x + dx, y: dg.grab.y + dy };
         if (path.length >= 2) {
-          const max = maxFor?.(id) ?? Infinity;
+          const max = curMaxFor?.(id) ?? Infinity;
           const d = dist(origin, end);
           if (d > max) end = { x: origin.x + ((end.x - origin.x) * max) / d, y: origin.y + ((end.y - origin.y) * max) / d };
         }
-        const next: Paths = new Map(draft!);
-        next.set(id, path.length < 2 ? [end] : walk ? walk(id, [origin, end]) : [origin, end]);
+        const next: Paths = new Map(curDraft);
+        next.set(id, path.length < 2 ? [end] : curWalk ? curWalk(id, [origin, end]) : [origin, end]);
         dg.last = next;
-        onDraft(next);
+        curOnDraft(next);
         return;
       }
       // each model ends at most its maximum from where it started this move: one at its limit slides along that
       // circle instead of freezing the whole unit, so the unit can always be dragged on in any direction
-      const next: Paths = new Map(draft!);
+      const next: Paths = new Map(curDraft);
       for (const id of dg.models) {
         const path = dg.base.get(id)!;
         const last = path[path.length - 1];
         let end = { x: last.x + dx, y: last.y + dy };
         if (path.length >= 2) {
           const o = path[0];
-          const max = maxFor?.(id) ?? Infinity;
+          const max = curMaxFor?.(id) ?? Infinity;
           const d = dist(o, end);
           if (d > max) end = { x: o.x + ((end.x - o.x) * max) / d, y: o.y + ((end.y - o.y) * max) / d };
         }
-        next.set(id, path.length < 2 ? [end] : walk ? walk(id, [path[0], end]) : [path[0], end]);
+        next.set(id, path.length < 2 ? [end] : curWalk ? curWalk(id, [path[0], end]) : [path[0], end]);
       }
       dg.last = next;
-      onDraft(next);
+      curOnDraft(next);
       return;
     }
     const pn = pan.current;
-    if (pn && pn.id === e.pointerId) {
-      const dx = e.clientX - pn.sx, dy = e.clientY - pn.sy;
+    if (pn && pn.id === pointerId) {
+      const dx = clientX - pn.sx, dy = clientY - pn.sy;
       if (!pn.moved && Math.hypot(dx, dy) < 6) return;
       pn.moved = true;
-      const rect = svgRef.current!.getBoundingClientRect();
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect) return;
       const scale = Math.max(pn.vb.w / rect.width, pn.vb.h / rect.height);
       setVb({ ...pn.vb, x: pn.vb.x - dx * scale, y: pn.vb.y - dy * scale });
+    }
+  }, []);
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!pointers.current.has(e.pointerId)) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    pendingPointer.current = { pointerId: e.pointerId, clientX: e.clientX, clientY: e.clientY };
+    if (!moveRaf.current) {
+      moveRaf.current = requestAnimationFrame(flushPointerMove);
     }
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
+    if (moveRaf.current) {
+      cancelAnimationFrame(moveRaf.current);
+      moveRaf.current = 0;
+    }
+    if (pendingPointer.current) {
+      flushPointerMove();
+    }
     pointers.current.delete(e.pointerId);
     if (pointers.current.size < 2) pinch.current = null;
     const dg = drag.current;

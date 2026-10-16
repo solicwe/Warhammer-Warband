@@ -1,7 +1,7 @@
 // The attack told like a scoring hand in Balatro: the count climbs stage by stage (shots → hits → wounds → through
 // the saves), every rule that changed the odds lights up at the stage where it acts, then the result lands with a
 // thump that grows with what was destroyed.
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import type { AttackReport as Report, FxEvent, GameState, PlayerId, UnitState } from '../engine/types';
 import { Icon } from './Icon';
 import { modelPortraitKey } from './portraits';
@@ -9,7 +9,7 @@ import { play } from './sfx';
 import { Portrait, unitToken } from './Tokens';
 
 /** A unit's face: its leader's picture (the unit's own when the leader has none); a red cross when it is wiped out. */
-function UnitFace({ u, dead }: { u: UnitState | undefined; dead?: boolean }) {
+const UnitFace = memo(function UnitFace({ u, dead }: { u: UnitState | undefined; dead?: boolean }) {
   if (!u) return <span className="atk-face" />;
   const lead = u.models.find((m) => m.isCharacter) ?? u.models[0];
   return (
@@ -19,7 +19,7 @@ function UnitFace({ u, dead }: { u: UnitState | undefined; dead?: boolean }) {
       {dead && <span className="atk-x" aria-label="destroyed" />}
     </span>
   );
-}
+});
 
 type AttackFx = Extract<FxEvent, { kind: 'attack' }> & { report: Report };
 
@@ -37,7 +37,7 @@ interface Props {
 
 const STAGES = ['attacks', 'hit', 'wound', 'save'] as const;
 
-export function AttackReport({ s, quick, onShake, onBusy, level }: Props) {
+export const AttackReport = memo(function AttackReport({ s, quick, onShake, onBusy, level }: Props) {
   const seen = useRef(s.fxSeq ?? 0);
   const [queue, setQueue] = useState<AttackFx[]>([]);
   const [cur, setCur] = useState<{ e: AttackFx; t0: number } | null>(null);
@@ -161,4 +161,4 @@ export function AttackReport({ s, quick, onShake, onBusy, level }: Props) {
       </div>
     </div>
   );
-}
+});

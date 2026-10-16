@@ -226,7 +226,7 @@ describe('Engine Functional & Integration Audit Suite', () => {
       expect(hasCover(s, attackerModel, orkTarget)).toBe(false);
 
       // Stealth unit
-      orkTarget.core.stealth = 1;
+      orkTarget.core.stealth = true;
       expect(hasCover(s, attackerModel, orkTarget)).toBe(true);
       orkTarget.core.stealth = undefined;
 
@@ -236,7 +236,7 @@ describe('Engine Functional & Integration Audit Suite', () => {
       expect(normalShoot.pools.some((p) => p.skillNote.toLowerCase().includes('cover'))).toBe(true);
 
       // Ignores Cover weapon ability removes penalty
-      smUnit.buffs.push({ kind: 'ignoresCover', label: 'Ignores Cover Test' });
+      smUnit.buffs.push({ kind: 'ignoresCover', label: 'Ignores Cover Test', until: 'phase' });
       const ignoresCoverShoot = buildShootPools(s, smUnit.id, orkTarget.id, { mode: 'normal' });
       expect(ignoresCoverShoot.pools.some((p) => p.skillNote.toLowerCase().includes('cover'))).toBe(false);
 
@@ -245,3 +245,4 @@ describe('Engine Functional & Integration Audit Suite', () => {
     });
   });
 });
+

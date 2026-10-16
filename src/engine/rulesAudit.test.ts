@@ -15,7 +15,7 @@ function loadFaction(id: string): FactionData {
 
 function putOnBoard(s: GameState, u: UnitState, pos: Pt) {
   placeUnit(s, u, formationAt(u, pos));
-  u.status = 'active';
+  u.status = 'board';
   u.setUpTurn = -10;
 }
 
@@ -156,17 +156,18 @@ describe('Warhammer 40k Army & Detachment Rules Audit Suite', () => {
       });
       s.phase = 'shooting';
       s.active = 0;
+      s.terrain = [];
       const smUnit = s.units.find((u) => u.owner === 0 && u.models.some((m) => m.weapons.some((w) => w.profiles.some((p) => typeof p.range === 'number'))))!;
       const orkUnit = s.units.find((u) => u.owner === 1)!;
-      putOnBoard(s, smUnit, { x: 20, y: 20 });
-      putOnBoard(s, orkUnit, { x: 20, y: 28 });
+      putOnBoard(s, smUnit, { x: 5, y: 20 });
+      putOnBoard(s, orkUnit, { x: 20, y: 20 });
 
       // Inject 3 stacked +1 Hit and +2 Wound buffs
-      smUnit.buffs.push({ kind: 'hit+1', label: 'Buff 1' });
-      smUnit.buffs.push({ kind: 'hit+1', label: 'Buff 2' });
-      smUnit.buffs.push({ kind: 'hit+1', label: 'Buff 3' });
-      smUnit.buffs.push({ kind: 'wound+1', label: 'WoundBuff 1' });
-      smUnit.buffs.push({ kind: 'wound+1', label: 'WoundBuff 2' });
+      smUnit.buffs.push({ kind: 'hit+1', label: 'Buff 1', until: 'phase' });
+      smUnit.buffs.push({ kind: 'hit+1', label: 'Buff 2', until: 'phase' });
+      smUnit.buffs.push({ kind: 'hit+1', label: 'Buff 3', until: 'phase' });
+      smUnit.buffs.push({ kind: 'wound+1', label: 'WoundBuff 1', until: 'phase' });
+      smUnit.buffs.push({ kind: 'wound+1', label: 'WoundBuff 2', until: 'phase' });
 
       const shootResult = buildShootPools(s, smUnit.id, orkUnit.id, { mode: 'normal' });
       expect(shootResult.pools.length).toBeGreaterThan(0);

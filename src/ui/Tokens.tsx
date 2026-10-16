@@ -1,6 +1,6 @@
 // Original token art (simple vector portraits) for models and unit cards.
 import { Icon } from './Icon';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import type { ModelState, UnitState } from '../engine/types';
 import { fileToPortrait, getPortrait, hasOwnPortrait, setPortrait, usePortraitsVersion } from './portraits';
 
@@ -97,7 +97,7 @@ export function TokenSprites() {
   );
 }
 
-export function Portrait({ kind, owner, character, size = 56, datasheet, editable, fallback }: { kind: TokenKind; owner: 0 | 1; character?: boolean; size?: number; datasheet?: string; editable?: boolean; fallback?: string | string[] }) {
+export const Portrait = memo(function Portrait({ kind, owner, character, size = 56, datasheet, editable, fallback }: { kind: TokenKind; owner: 0 | 1; character?: boolean; size?: number; datasheet?: string; editable?: boolean; fallback?: string | string[] }) {
   usePortraitsVersion();
   const input = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -119,7 +119,7 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
   return (
     <span className="portrait" style={{ width: size, height: size }} onClick={() => editable && input.current?.click()}>
       {photo
-        ? <img className={`portrait-img ${borrowed && editable ? 'borrowed' : ''}`} src={photo} alt="" style={{ borderColor: rim }} onError={() => setBroken(photo)} />
+        ? <img loading="lazy" decoding="async" className={`portrait-img ${borrowed && editable ? 'borrowed' : ''}`} src={photo} alt="" style={{ borderColor: rim }} onError={() => setBroken(photo)} />
         : (
           <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" style={{ cursor: editable ? 'pointer' : undefined }}>
             <circle cx="50" cy="50" r="48" fill="var(--surface2)" />
@@ -135,4 +135,4 @@ export function Portrait({ kind, owner, character, size = 56, datasheet, editabl
       {editable && datasheet && hasOwnPortrait(datasheet) && <button type="button" className="portrait-x" onClick={(e) => { e.stopPropagation(); if (datasheet) setPortrait(datasheet, null); }} aria-label="Remove image">×</button>}
     </span>
   );
-}
+});

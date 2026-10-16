@@ -547,29 +547,28 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }).map((t) => t.id);
   }, [s, mode]);
 
-  const fightTargets = mode?.k === 'fight' ? engagedEnemies(s, U(mode.unitId)).map((t) => t.id) : [];
-  const explosiveTargets = mode?.k === 'explosives'
-    ? (() => {
-        const u = U(mode.unitId);
-        const flags = unitFlags(s, u);
-        const maxRange = flags.gheistskull && !u.used?.['Gheistskull'] ? 18 : 8;
-        return boardUnits(s, other(u.owner)).filter((t) => !isEngaged(s, t) && unitDistance(u, t) <= maxRange && alive(u).some((m) => unitVisibleTo(s, m, t))).map((t) => t.id);
-      })()
-    : [];
-  const crushTargets = mode?.k === 'crush' ? engagedEnemies(s, U(mode.unitId)).map((t) => t.id) : [];
+  const fightTargets = useMemo(() => mode?.k === 'fight' ? engagedEnemies(s, U(mode.unitId)).map((t) => t.id) : [], [s, mode]);
+  const explosiveTargets = useMemo(() => {
+    if (mode?.k !== 'explosives') return [];
+    const u = U(mode.unitId);
+    const flags = unitFlags(s, u);
+    const maxRange = flags.gheistskull && !u.used?.['Gheistskull'] ? 18 : 8;
+    return boardUnits(s, other(u.owner)).filter((t) => !isEngaged(s, t) && unitDistance(u, t) <= maxRange && alive(u).some((m) => unitVisibleTo(s, m, t))).map((t) => t.id);
+  }, [s, mode]);
+  const crushTargets = useMemo(() => mode?.k === 'crush' ? engagedEnemies(s, U(mode.unitId)).map((t) => t.id) : [], [s, mode]);
 
   // Thousand Sons: the player picks their Rituals at the start of the Shooting phase (sorcerer, Ritual, target, Channel)
   const [rit, setRit] = useState<{ model?: string; ritual?: string; target?: string; channel: boolean }>({ channel: false });
   const ritualOn = !mode && s.phase === 'shooting' && decides(s, s.active) && !bots.includes(s.active) && ritualsPending(s, s.active);
   // on the map: the sorcerers glow until one is picked, then the units its Ritual can target
-  const ritMap = (() => {
+  const ritMap = useMemo(() => {
     if (!ritualOn) return null;
     const cs = casters(s, s.active);
     const c = cs.find((x) => x.model.id === rit.model);
     const r = c ? ritualsLeft(s, s.active, c).find((x) => x.id === rit.ritual) : undefined;
     const tg = c && r ? ritualTargets(s, c, r).map((t) => t.id) : [];
     return { cs, c, tg, targets: c && r ? tg : [...new Set(cs.map((x) => x.unit.id))], picked: c && r ? (rit.target ? [rit.target] : []) : c ? [c.unit.id] : [] };
-  })();
+  }, [s, ritualOn, rit]);
   const heroicWindow = !mode && s.window?.kind === 'heroicIntervention' ? s.window : null;
   const heroicSelection = heroicWindow !== null;
   const heroicPick = heroicWindow ? heroicCandidates(s, heroicWindow.player) : [];
@@ -772,37 +771,39 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   );
 
   // Cover / Hidden badges and line-of-sight lines while choosing a shooting target
-  const badges: Record<string, string[]> = {};
-  // the cards of the player at the screen: what they want is drawn on the board, target units get a tag
   const me: PlayerId = human ?? actor;
-  const goals = showGoals && s.phase !== 'deploy' ? s.players[me].secActive.map((id) => secondaryGoal(s, me, id)) : [];
-  for (const g of goals) for (const id of g.units) (badges[id] ??= []).push(`Target: ${g.name}`);
-  // Rituals on a unit this phase (Destiny's Ruin, Twist of Fate): a tag so the player sees who is marked
-  for (const u of s.units) for (const t of u.timed ?? []) if (t.mark && RITUAL_NAMES.has(t.mark) && onBoard(u)) (badges[u.id] ??= []).push(t.mark);
-  // Astra Militarum Orders (Voice of Command): a prominent order badge above the unit so the active skill is immediately clear
-  for (const u of s.units) {
-    if (!onBoard(u)) continue;
-    for (const t of u.timed ?? []) {
-      if (t.label.startsWith('Order: ')) (badges[u.id] ??= []).push(`[Order: ${t.label.slice(7)}]`);
-    }
-  }
-  // T’au Empire For the Greater Good: prominent observer/spotted/guided badges
-  if (s.phase === 'shooting') {
-    for (const pair of s.ftggPairs ?? []) {
-      if (pair.turn === s.turn && pair.phase === s.phase) {
-        (badges[pair.spottedId] ??= []).push('[SPOTTED +1 BS]');
-        (badges[pair.observerId] ??= []).push('[OBSERVER]');
-        (badges[pair.guidedId] ??= []).push('[GUIDED]');
+  const goals = useMemo(() => {
+    return showGoals && s.phase !== 'deploy' ? s.players[me].secActive.map((id) => secondaryGoal(s, me, id)) : [];
+  }, [showGoals, s, me]);
+
+  const baseBadges = useMemo(() => {
+    const b: Record<string, string[]> = {};
+    for (const g of goals) for (const id of g.units) (b[id] ??= []).push(`Target: ${g.name}`);
+    for (const u of s.units) for (const t of u.timed ?? []) if (t.mark && RITUAL_NAMES.has(t.mark) && onBoard(u)) (b[u.id] ??= []).push(t.mark);
+    for (const u of s.units) {
+      if (!onBoard(u)) continue;
+      for (const t of u.timed ?? []) {
+        if (t.label.startsWith('Order: ')) (b[u.id] ??= []).push(`[Order: ${t.label.slice(7)}]`);
       }
     }
-  }
-  // Stratagems in effect: a tag on the unit that got it, so it is clear the CP went to that unit only
-  const stratNames = new Set(s.players.flatMap((P) => P.detachments.flatMap((d) => d.stratagems.map((st) => st.name))));
-  for (const u of s.units) {
-    if (!onBoard(u)) continue;
-    const ls = new Set([...u.buffs.map((b) => b.label), ...(u.timed ?? []).map((x) => x.label)].filter((l): l is string => !!l && stratNames.has(l)));
-    for (const l of ls) (badges[u.id] ??= []).push(l);
-  }
+    if (s.phase === 'shooting') {
+      for (const pair of s.ftggPairs ?? []) {
+        if (pair.turn === s.turn && pair.phase === s.phase) {
+          (b[pair.spottedId] ??= []).push('[SPOTTED +1 BS]');
+          (b[pair.observerId] ??= []).push('[OBSERVER]');
+          (b[pair.guidedId] ??= []).push('[GUIDED]');
+        }
+      }
+    }
+    const stratNames = new Set(s.players.flatMap((P) => P.detachments.flatMap((d) => d.stratagems.map((st) => st.name))));
+    for (const u of s.units) {
+      if (!onBoard(u)) continue;
+      const ls = new Set([...u.buffs.map((buff) => buff.label), ...(u.timed ?? []).map((x) => x.label)].filter((l): l is string => !!l && stratNames.has(l)));
+      for (const l of ls) (b[u.id] ??= []).push(l);
+    }
+    return b;
+  }, [goals, s]);
+
   // temporary buffs / debuffs (abilities, stratagems, marks) as "+1 Hit" / "−2\" M" tags under each unit
   // worked out once per game state (every unit's rules are read: costly to redo on each render)
   const { buffTags, riled, armyChips } = useMemo(() => withRuleCache(() => {
@@ -834,36 +835,44 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }
     return { buffTags, riled, armyChips };
   }), [s]);
-  const losLines: { a: Pt; b: Pt; cover: boolean }[] = [];
-  const noLos: string[] = [];
-  if (mode?.k === 'shoot' && modeUnit) {
-    const shooters = alive(modeUnit);
-    for (const id of shootTargets.filter((x) => x === mode.target)) {
-      const T = U(id);
-      const b: string[] = [];
-      if (shooters.some((m) => hasCover(s, m, T))) b.push('Cover −1 BS');
-      if (alive(T).some((m) => isHidden(s, T, m))) b.push('Hidden');
-      if (b.length) badges[id] = b;
+
+  const { badges, losLines, noLos } = useMemo(() => {
+    const badges: Record<string, string[]> = {};
+    for (const [k, v] of Object.entries(baseBadges)) {
+      badges[k] = [...v];
     }
-    // distance to every target the unit can pick, in inches (closest base to base)
-    for (const id of shootTargets) badges[id] = [`${unitDistance(modeUnit, U(id)).toFixed(1)}"`, ...(badges[id] ?? [])];
-    if (mode.target) {
-      const T = U(mode.target);
-      for (const m of shooters) {
-        const vis = alive(T).filter((t) => modelVisible(s, m, T, t));
-        if (!vis.length) { noLos.push(m.id); continue; }
-        const t = vis.reduce((x, y) => (baseDist(m, x) <= baseDist(m, y) ? x : y));
-        losLines.push({ a: m, b: t, cover: hasCover(s, m, T) });
+    const losLines: { a: Pt; b: Pt; cover: boolean }[] = [];
+    const noLos: string[] = [];
+    if (mode?.k === 'shoot' && modeUnit) {
+      const shooters = alive(modeUnit);
+      for (const id of shootTargets.filter((x) => x === mode.target)) {
+        const T = U(id);
+        const b: string[] = [];
+        if (shooters.some((m) => hasCover(s, m, T))) b.push('Cover −1 BS');
+        if (alive(T).some((m) => isHidden(s, T, m))) b.push('Hidden');
+        if (b.length) badges[id] = b;
+      }
+      for (const id of shootTargets) badges[id] = [`${unitDistance(modeUnit, U(id)).toFixed(1)}"`, ...(badges[id] ?? [])];
+      if (mode.target) {
+        const T = U(mode.target);
+        for (const m of shooters) {
+          const vis = alive(T).filter((t) => modelVisible(s, m, T, t));
+          if (!vis.length) { noLos.push(m.id); continue; }
+          const t = vis.reduce((x, y) => (baseDist(m, x) <= baseDist(m, y) ? x : y));
+          losLines.push({ a: m, b: t, cover: hasCover(s, m, T) });
+        }
       }
     }
-  }
-  if (modeUnit && (mode?.k === 'charge' || mode?.k === 'fight' || mode?.k === 'explosives')) {
-    for (const id of targets) badges[id] = [`${unitDistance(modeUnit, U(id)).toFixed(1)}"`, ...(badges[id] ?? [])];
-  }
+    if (modeUnit && (mode?.k === 'charge' || mode?.k === 'fight' || mode?.k === 'explosives')) {
+      for (const id of targets) badges[id] = [`${unitDistance(modeUnit, U(id)).toFixed(1)}"`, ...(badges[id] ?? [])];
+    }
+    return { badges, losLines, noLos };
+  }, [baseBadges, mode, modeUnit, shootTargets, targets, s]);
+
   // tape measure: tap two points on the board
   const [tape, setTape] = useState<{ on: boolean; a?: Pt; b?: Pt; ma?: { u: string; m: string }; mb?: { u: string; m: string } }>({ on: false });
   // between two models the tape measures base to base (how ranges work) and checks line of sight through terrain
-  const tapeInfo = (() => {
+  const tapeInfo = useMemo(() => {
     if (!tape.a || !tape.b) return null;
     const mOf = (r?: { u: string; m: string }) => (r ? s.units.find((u) => u.id === r.u)?.models.find((x) => x.id === r.m && !x.dead) : undefined);
     const ma = mOf(tape.ma), mb = mOf(tape.mb);
@@ -892,16 +901,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (otherVisibleInUnit) why += ' · (Unit is targetable via other visible squadmates)';
     }
     return { text: `${baseDist(ma, mb).toFixed(1)}"`, line: `Base to base ${baseDist(ma, mb).toFixed(1)}" (centre to centre ${centre.toFixed(1)}") · ${why}`, los: los && (vis || !diffUnit) };
-  })();
-  const rings: Ring[] = [];
-  if (mode?.k === 'charge' && modeUnit) {
-    for (const m of alive(modeUnit)) if (alive(modeUnit).length <= 3) rings.push({ c: m, r: (modeUnit.chargeRoll ?? 0) + m.r, color: 'rgba(245,184,61,0.5)', dash: true });
-  }
-  // Keep-out distance while arriving or infiltrating: model circles mark enemy ranges.
-  if (mode?.k === 'place' && modeUnit && (mode.how === 'deepStrike' || mode.how === 'ingress' || mode.how === 'infiltrate')) {
-    const keep = mode.how === 'deepStrike' ? unitFlags(s, modeUnit).deepStrikeRange : RULES.reserves.enemyDistance;
-    for (const e of boardUnits(s, other(modeUnit.owner))) for (const n of alive(e)) rings.push({ c: n, r: n.r + keep, color: 'rgba(239,68,68,0.55)', dash: true });
-  }
+  }, [tape, s]);
+
+  const rings: Ring[] = useMemo(() => {
+    const r: Ring[] = [];
+    if (mode?.k === 'charge' && modeUnit) {
+      for (const m of alive(modeUnit)) if (alive(modeUnit).length <= 3) r.push({ c: m, r: (modeUnit.chargeRoll ?? 0) + m.r, color: 'rgba(245,184,61,0.5)', dash: true });
+    }
+    // Keep-out distance while arriving or infiltrating: model circles mark enemy ranges.
+    if (mode?.k === 'place' && modeUnit && (mode.how === 'deepStrike' || mode.how === 'ingress' || mode.how === 'infiltrate')) {
+      const keep = mode.how === 'deepStrike' ? unitFlags(s, modeUnit).deepStrikeRange : RULES.reserves.enemyDistance;
+      for (const e of boardUnits(s, other(modeUnit.owner))) for (const n of alive(e)) r.push({ c: n, r: n.r + keep, color: 'rgba(239,68,68,0.55)', dash: true });
+    }
+    return r;
+  }, [mode, modeUnit, s]);
   const zoneGuide = mode?.k === 'place' && mode.how === 'infiltrate' && modeUnit
     ? { poly: zoneOf(s, other(modeUnit.owner)), distance: RULES.reserves.enemyDistance }
     : undefined;

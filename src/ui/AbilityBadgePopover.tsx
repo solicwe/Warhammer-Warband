@@ -475,7 +475,7 @@ const statValStyle: React.CSSProperties = {
 };
 
 /** Interactive Pill Badge with Popover trigger */
-export function AbilityBadge({
+function AbilityBadgeImpl({
   name,
   unit,
   model,
@@ -494,7 +494,7 @@ export function AbilityBadge({
   const [rect, setRect] = useState<DOMRect | null>(null);
   const badgeRef = useRef<HTMLButtonElement>(null);
 
-  const info = getAbilityOrWeaponInfo(name, unit, model);
+  const info = React.useMemo(() => getAbilityOrWeaponInfo(name, unit, model), [name, unit, model]);
 
   const handleToggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -540,3 +540,6 @@ export function AbilityBadge({
     </>
   );
 }
+
+export const AbilityBadge = React.memo(AbilityBadgeImpl);
+

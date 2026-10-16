@@ -1,7 +1,7 @@
 // What sits round the board and tells the player how the battle stands, at a glance and as it changes:
 // each side's VP (a "+5 VP" rises when they score) and CP as gems (a gem pops in when gained, shatters when spent),
 // who has the upper hand (the advantage bar), the bot's commander speaking, and the summaries between rounds.
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { GameState, PlayerId } from '../engine/types';
 import { lastRound } from '../engine/state';
 import { flowAreas, isThousandSonsArmy } from '../engine/flow';
@@ -30,7 +30,7 @@ function useCount(value: number, ms = 450): number {
 }
 
 /** One side's score: label, VP (counting up, with a rising "+N VP"), and CP as gems. Tapping opens their cards. */
-export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; label: string; onOpen: () => void }) {
+export const SideScore = memo(function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; label: string; onOpen: () => void }) {
   const P = s.players[p];
   const vp = P.vp + P.secVp;
   const shown = useCount(vp);
@@ -116,10 +116,10 @@ export function SideScore({ s, p, label, onOpen }: { s: GameState; p: PlayerId; 
       {gain && <span key={gain.k} className="ss-gain">+{gain.n} VP</span>}
     </button>
   );
-}
+});
 
 /** Command points as gems: a new one pops in with a glint, a spent one shatters. */
-export function CpGems({ cp }: { cp: number }) {
+export const CpGems = memo(function CpGems({ cp }: { cp: number }) {
   const prev = useRef(cp);
   const [burst, setBurst] = useState<{ kind: 'gain' | 'spend'; n: number; k: number } | null>(null);
   useEffect(() => {
@@ -139,10 +139,10 @@ export function CpGems({ cp }: { cp: number }) {
       {cp === 0 && !burst && <b className="gem-zero">0 CP</b>}
     </span>
   );
-}
+});
 
 /** Who has the upper hand, as the bot weighs it (VP, objectives held, army left): player 0's share, 0..1. */
-export function AdvantageBar({ share, names }: { share: number; names: [string, string] }) {
+export const AdvantageBar = memo(function AdvantageBar({ share, names }: { share: number; names: [string, string] }) {
   const pct = Math.round(share * 100);
   const lead = pct >= 50 ? 0 : 1;
   const by = Math.abs(pct - 50) * 2;
@@ -153,7 +153,7 @@ export function AdvantageBar({ share, names }: { share: number; names: [string, 
       <i className="adv-1" style={{ width: `${100 - pct}%` }} />
     </div>
   );
-}
+});
 
 export interface ThinkView { values: Record<string, number>; done: number; total: number }
 
@@ -163,7 +163,7 @@ const STYLE_NAME: Record<string, string> = { steady: 'As planned', aggressive: '
  * The bot's commander: its army's emblem, a title, and what it says. While it thinks, the ways of playing the turn it
  * is weighing fill in as each is played out on copies of the game (the best one leads).
  */
-export function Commander({ s, p, says, think, planning, quiet }: { s: GameState; p: PlayerId; says: string | null; think: ThinkView | null; planning?: { done: number; total: number } | null; quiet?: boolean }) {
+export const Commander = memo(function Commander({ s, p, says, think, planning, quiet }: { s: GameState; p: PlayerId; says: string | null; think: ThinkView | null; planning?: { done: number; total: number } | null; quiet?: boolean }) {
   const P = s.players[p];
   const v = voiceOf(P.factionId);
   const warlordUnit = s.units.find((u) => u.owner === p && u.isWarlordUnit)
@@ -195,7 +195,7 @@ export function Commander({ s, p, says, think, planning, quiet }: { s: GameState
       </div>
     </div>
   );
-}
+});
 
 export interface RoundTally { round: number; vp: [number, number]; pts: [number, number]; units: [number, number]; mvp: { name: string; owner: PlayerId; pts: number } | null }
 
@@ -216,7 +216,7 @@ export function tally(s: GameState, round: number | null, vpAtStart: [number, nu
 }
 
 /** Between battle rounds (and at the end): the round in numbers. Tap anywhere to go on. */
-export function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; t: RoundTally; final?: boolean; onClose: () => void; actions?: ReactNode }) {
+export const RoundSummary = memo(function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; t: RoundTally; final?: boolean; onClose: () => void; actions?: ReactNode }) {
   const names = [s.players[0].name, s.players[1].name];
   const win = s.winner;
   return (
@@ -242,4 +242,4 @@ export function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; 
       </div>
     </div>
   );
-}
+});
