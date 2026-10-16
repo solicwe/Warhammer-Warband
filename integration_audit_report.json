@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-10-16T15:32:43.317Z",
+  "modules": {
+    "abilities": {
+      "status": "PASS",
+      "checks": [
+        "Active ability UI button successfully generated in Movement Phase",
+        "Active ability button execution: correctly healed target, applied ignore-modifiers buff, and logged to game history",
+        "Passive auras and detachment rules evaluated automatically without manual button clicks"
+      ]
+    },
+    "stratagems": {
+      "status": "PASS",
+      "checks": [
+        "Stratagem becomes available when conditions (phase, unengaged, CP) are satisfied",
+        "Stratagem correctly blocked when insufficient CP",
+        "Stratagem correctly blocked when unit is Battle-shocked",
+        "Grenades range check strictly enforced: enemy at 0.0\" eligible, enemy at 9.0\" blocked",
+        "Use Stratagem button successfully spent 1 CP and logged stratagem to phase usage",
+        "Grenades resolution: rolled 6D6 [6, 5, 2, 4, 2, 4], dealt 4 Mortal Wounds directly to target unit"
+      ]
+    },
+    "lineOfSight": {
+      "status": "PASS",
+      "checks": [
+        "Solid obscuring terrain area blocks Line of Sight between outside models",
+        "Model inside obscuring ruin can draw Line of Sight outward through open side",
+        "Solid ruin wall accurately stops Line of Sight rays even when model stands inside the footprint",
+        "True Line of Sight accurately detects clear sightlines just beyond obscuring terrain boundaries",
+        "Indirect Fire weapon ability bypasses standard Line of Sight obscuring restrictions"
+      ]
+    },
+    "coverMechanics": {
+      "status": "PASS",
+      "checks": [
+        "Infantry models within terrain footprint accurately detected as having Benefit of Cover",
+        "Models in open ground correctly detected without Benefit of Cover",
+        "Stealth rule grants Benefit of Cover regardless of terrain footprint",
+        "Shooting pool calculation applies Cover −1 BS modifier to attacking weapons",
+        "[IGNORES COVER] ability nullifies target Benefit of Cover",
+        "Armor Save cannot be modified better than 2+ (capped at RULES.modifierCaps.bestSave)"
+      ]
+    }
+  },
+  "missingButtons": [],
+  "terrainPhysicsLog": [
+    "Raycast left(10,20) to right(34,20) across dense ruin(18..26): LoS = false (expected: false)",
+    "Raycast inside(20,20) to right(34,20) out of ruin: LoS = true (expected: true)",
+    "Raycast inside(20,20) to north(22,5) through ruin wall y=10: LoS = false (expected: false)",
+    "Raycast past ruin boundary (10,32)->(34,32): LoS = true (expected: true)",
+    "Cover boundary test: Infantry target at (20,20) inside terrain footprint (15..25): hasCover = true (expected: true)",
+    "Open ground test: Target at (5,35) in open field: hasCover = false (expected: false)"
+  ],
+  "errors": []
+}

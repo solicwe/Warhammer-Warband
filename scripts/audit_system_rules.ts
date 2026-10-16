@@ -392,3 +392,4 @@ if (process.argv[1] && process.argv[1].includes('audit_system_rules')) {
     process.exit(1);
   });
 }
+
