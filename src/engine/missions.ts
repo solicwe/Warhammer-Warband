@@ -19,8 +19,30 @@ export const mulberryPick = (seed: number, n: number) => {
 // ---------- geometry helpers ----------
 
 const objTerrain = (s: GameState, o: ObjectiveState) => s.terrain.find((t) => t.id === o.terrainId)!;
-export const zonePoly = (s: GameState, p: PlayerId) => toPoly(deploymentById(s.deploymentId).zones[s.players[p].role]);
-export const territoryPoly = (s: GameState, p: PlayerId) => toPoly(deploymentById(s.deploymentId).territory[s.players[p].role]);
+
+const zonePolyCache = new Map<string, Pt[]>();
+export const zonePoly = (s: GameState, p: PlayerId): Pt[] => {
+  const role = s.players[p]?.role ?? (p === 0 ? 'attacker' : 'defender');
+  const key = `${s.deploymentId}|${role}`;
+  let poly = zonePolyCache.get(key);
+  if (!poly) {
+    poly = toPoly(deploymentById(s.deploymentId).zones[role]);
+    zonePolyCache.set(key, poly);
+  }
+  return poly;
+};
+
+const territoryPolyCache = new Map<string, Pt[]>();
+export const territoryPoly = (s: GameState, p: PlayerId): Pt[] => {
+  const role = s.players[p]?.role ?? (p === 0 ? 'attacker' : 'defender');
+  const key = `${s.deploymentId}|${role}`;
+  let poly = territoryPolyCache.get(key);
+  if (!poly) {
+    poly = toPoly(deploymentById(s.deploymentId).territory[role]);
+    territoryPolyCache.set(key, poly);
+  }
+  return poly;
+};
 
 function homerPoint(s: GameState, p: PlayerId): Pt {
   const zone = zonePoly(s, p);

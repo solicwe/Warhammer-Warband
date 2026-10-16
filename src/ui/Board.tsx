@@ -787,6 +787,136 @@ function BoardImpl(props: BoardProps) {
           </g>
         );
       }), [terrainKey, backdropReady]);
+
+  const territoryAuras = useMemo(() => {
+    if (props.zones === false) return null;
+    return ([0, 1] as PlayerId[]).map((p) => {
+      const hasFlow = isThousandSonsArmy(s, p);
+      const hasShadow = isDaemonsArmy(s, p);
+      if (!hasFlow && !hasShadow) return null;
+
+      const ownZ = zonePoly(s, p);
+      const oppZ = zonePoly(s, other(p));
+      const ownPts = ownZ.map((pt) => `${pt.x},${pt.y}`).join(' ');
+      const oppPts = oppZ.map((pt) => `${pt.x},${pt.y}`).join(' ');
+      const nmlD = `M 0 0 L ${W} 0 L ${W} ${H} L 0 ${H} Z M ${ownZ.map((pt) => `${pt.x} ${pt.y}`).join(' L ')} Z M ${oppZ.map((pt) => `${pt.x} ${pt.y}`).join(' L ')} Z`;
+      const ownCentroid = polyCentroid(ownZ);
+      const oppCentroid = polyCentroid(oppZ);
+
+      if (hasFlow) {
+        const flow = flowAreas(s, p);
+        return (
+          <g key={`flow-of-magic-${p}`} pointerEvents="none" className="flow-magic-aura">
+            {/* Own deployment zone: ALWAYS in Flow of Magic */}
+            <polygon points={ownPts} fill="rgba(6, 182, 212, 0.12)" />
+            <polygon points={ownPts} fill="none" stroke="rgba(34, 211, 238, 0.35)" strokeWidth={0.38} strokeDasharray="1.2 0.6" />
+            <polygon points={ownPts} fill="url(#flow-magic-pattern)" stroke="#22d3ee" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
+            <g transform={`translate(${ownCentroid.x} ${ownCentroid.y})`}>
+              <rect x={-4.4} y={-0.5} width={8.8} height={1.0} rx={0.5} fill="rgba(8, 47, 73, 0.92)" stroke="#22d3ee" strokeWidth={0.08} />
+              <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#67e8f9" fontWeight={900}>FLOW OF MAGIC (OWN ZONE)</text>
+            </g>
+
+            {/* No Man's Land: active when controlling half of NML objectives */}
+            {flow.nml && (
+              <g>
+                <path d={nmlD} fillRule="evenodd" fill="rgba(6, 182, 212, 0.14)" />
+                <path d={nmlD} fillRule="evenodd" fill="none" stroke="rgba(34, 211, 238, 0.35)" strokeWidth={0.36} strokeDasharray="1.2 0.6" />
+                <path d={nmlD} fillRule="evenodd" fill="url(#flow-magic-pattern)" stroke="#22d3ee" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
+                <g transform={`translate(${W / 2} ${H / 2})`}>
+                  <rect x={-5.8} y={-0.55} width={11.6} height={1.1} rx={0.55} fill="rgba(8, 47, 73, 0.94)" stroke="#22d3ee" strokeWidth={0.1} />
+                  <text y={0.28} fontSize={0.56} textAnchor="middle" fill="#67e8f9" fontWeight={900}>FLOW OF MAGIC: NO MAN'S LAND (+1 WOUND)</text>
+                </g>
+              </g>
+            )}
+
+            {/* Opponent Zone: active when controlling half of enemy zone objectives */}
+            {flow.opp && (
+              <g>
+                <polygon points={oppPts} fill="rgba(6, 182, 212, 0.14)" />
+                <polygon points={oppPts} fill="none" stroke="rgba(34, 211, 238, 0.35)" strokeWidth={0.38} strokeDasharray="1.2 0.6" />
+                <polygon points={oppPts} fill="url(#flow-magic-pattern)" stroke="#22d3ee" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
+                <g transform={`translate(${oppCentroid.x} ${oppCentroid.y})`}>
+                  <rect x={-5.2} y={-0.5} width={10.4} height={1.0} rx={0.5} fill="rgba(8, 47, 73, 0.92)" stroke="#22d3ee" strokeWidth={0.08} />
+                  <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#67e8f9" fontWeight={900}>FLOW OF MAGIC: ENEMY ZONE BREACHED</text>
+                </g>
+              </g>
+            )}
+          </g>
+        );
+      }
+
+      if (hasShadow) {
+        const nmlObjs = s.objectives.filter((o) => !pointInPoly(o, ownZ) && !pointInPoly(o, oppZ));
+        const controlsNml = nmlObjs.length > 0 && nmlObjs.filter((o) => o.controller === p).length * 2 >= nmlObjs.length;
+        const oppObjs = s.objectives.filter((o) => pointInPoly(o, oppZ));
+        const controlsOpp = oppObjs.length > 0 && oppObjs.filter((o) => o.controller === p).length * 2 >= oppObjs.length;
+
+        return (
+          <g key={`shadow-of-chaos-${p}`} pointerEvents="none" className="shadow-chaos-aura">
+            {/* Own deployment zone: ALWAYS in Shadow of Chaos */}
+            <polygon points={ownPts} fill="rgba(147, 51, 234, 0.12)" />
+            <polygon points={ownPts} fill="none" stroke="rgba(192, 132, 252, 0.35)" strokeWidth={0.38} strokeDasharray="1.2 0.6" />
+            <polygon points={ownPts} fill="url(#shadow-chaos-pattern)" stroke="#c084fc" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
+            <g transform={`translate(${ownCentroid.x} ${ownCentroid.y})`}>
+              <rect x={-4.8} y={-0.5} width={9.6} height={1.0} rx={0.5} fill="rgba(59, 7, 100, 0.92)" stroke="#c084fc" strokeWidth={0.08} />
+              <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#d8b4fe" fontWeight={900}>SHADOW OF CHAOS (OWN ZONE)</text>
+            </g>
+
+            {/* No Man's Land */}
+            {controlsNml && (
+              <g>
+                <path d={nmlD} fillRule="evenodd" fill="rgba(147, 51, 234, 0.14)" />
+                <path d={nmlD} fillRule="evenodd" fill="none" stroke="rgba(192, 132, 252, 0.35)" strokeWidth={0.36} strokeDasharray="1.2 0.6" />
+                <path d={nmlD} fillRule="evenodd" fill="url(#shadow-chaos-pattern)" stroke="#c084fc" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
+                <g transform={`translate(${W / 2} ${H / 2})`}>
+                  <rect x={-5.8} y={-0.55} width={11.6} height={1.1} rx={0.55} fill="rgba(59, 7, 100, 0.94)" stroke="#c084fc" strokeWidth={0.1} />
+                  <text y={0.28} fontSize={0.56} textAnchor="middle" fill="#d8b4fe" fontWeight={900}>SHADOW OF CHAOS: NO MAN'S LAND</text>
+                </g>
+              </g>
+            )}
+
+            {/* Opponent Zone */}
+            {controlsOpp && (
+              <g>
+                <polygon points={oppPts} fill="rgba(147, 51, 234, 0.14)" />
+                <polygon points={oppPts} fill="none" stroke="rgba(192, 132, 252, 0.35)" strokeWidth={0.38} strokeDasharray="1.2 0.6" />
+                <polygon points={oppPts} fill="url(#shadow-chaos-pattern)" stroke="#c084fc" strokeWidth={0.18} strokeDasharray="1.2 0.6" />
+                <g transform={`translate(${oppCentroid.x} ${oppCentroid.y})`}>
+                  <rect x={-5.2} y={-0.5} width={10.4} height={1.0} rx={0.5} fill="rgba(59, 7, 100, 0.92)" stroke="#c084fc" strokeWidth={0.08} />
+                  <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#d8b4fe" fontWeight={900}>SHADOW OF CHAOS: ENEMY ZONE</text>
+                </g>
+              </g>
+            )}
+          </g>
+        );
+      }
+
+      return null;
+    });
+  }, [props.zones, s.deploymentId, s.players, s.objectives, W, H]);
+
+  const unitStatusMap = useMemo(() => {
+    const map = new Map<string, {
+      hasFlowOfMagic: boolean;
+      unitInFlow: boolean;
+      isDaemon: boolean;
+      unitInShadow: boolean;
+      enemyInShadow: boolean;
+      hasPsychicWep: boolean;
+    }>();
+
+    for (const u of s.units) {
+      const ms = alive(u);
+      const hasFlowOfMagic = isThousandSonsArmy(s, u.owner);
+      const unitInFlow = hasFlowOfMagic && inFlow(s, u);
+      const isDaemon = isDaemonUnit(u) && isDaemonsArmy(s, u.owner);
+      const unitInShadow = isDaemon && isUnderShadowOfChaos(s, u.owner, u);
+      const enemyInShadow = !isDaemon && isDaemonsArmy(s, other(u.owner)) && isUnderShadowOfChaos(s, other(u.owner), u);
+      const hasPsychicWep = ms.some((m) => m.weapons.some((w) => w.profiles.some((p) => p.abilities.includes('psychic'))));
+      map.set(u.id, { hasFlowOfMagic, unitInFlow, isDaemon, unitInShadow, enemyInShadow, hasPsychicWep });
+    }
+    return map;
+  }, [s]);
   return (
     <>
     <svg
@@ -861,14 +991,7 @@ function BoardImpl(props: BoardProps) {
           <stop offset="60%" stopColor="#eab308" stopOpacity="0.18" />
           <stop offset="100%" stopColor="#a16207" stopOpacity="0" />
         </radialGradient>
-        <filter id="flow-glow" x="-25%" y="-25%" width="150%" height="150%">
-          <feGaussianBlur stdDeviation="0.32" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-        <filter id="shadow-glow" x="-25%" y="-25%" width="150%" height="150%">
-          <feGaussianBlur stdDeviation="0.32" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
+
         <pattern id="flow-magic-pattern" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
           <path d="M 0 0 L 3 3 M 3 0 L 0 3" fill="none" stroke="rgba(34, 211, 238, 0.22)" strokeWidth="0.12" strokeDasharray="0.8 0.4" />
           <circle cx="1.5" cy="1.5" r="0.25" fill="rgba(103, 232, 249, 0.3)" />
@@ -889,103 +1012,7 @@ function BoardImpl(props: BoardProps) {
         </>
       )}
       {/* Detachment Territory Auras: Thousand Sons Flow of Magic & Chaos Daemons Shadow of Chaos */}
-      {props.zones !== false && ([0, 1] as PlayerId[]).map((p) => {
-        const hasFlow = isThousandSonsArmy(s, p);
-        const hasShadow = isDaemonsArmy(s, p);
-        if (!hasFlow && !hasShadow) return null;
-
-        const ownZ = zonePoly(s, p);
-        const oppZ = zonePoly(s, other(p));
-        const ownPts = ownZ.map((pt) => `${pt.x},${pt.y}`).join(' ');
-        const oppPts = oppZ.map((pt) => `${pt.x},${pt.y}`).join(' ');
-        const nmlD = `M 0 0 L ${W} 0 L ${W} ${H} L 0 ${H} Z M ${ownZ.map((pt) => `${pt.x} ${pt.y}`).join(' L ')} Z M ${oppZ.map((pt) => `${pt.x} ${pt.y}`).join(' L ')} Z`;
-        const ownCentroid = polyCentroid(ownZ);
-        const oppCentroid = polyCentroid(oppZ);
-
-        if (hasFlow) {
-          const flow = flowAreas(s, p);
-          return (
-            <g key={`flow-of-magic-${p}`} pointerEvents="none" className="flow-magic-aura">
-              {/* Own deployment zone: ALWAYS in Flow of Magic */}
-              <polygon points={ownPts} fill="rgba(6, 182, 212, 0.12)" />
-              <polygon points={ownPts} fill="url(#flow-magic-pattern)" stroke="#22d3ee" strokeWidth={0.22} strokeDasharray="1.2 0.6" filter="url(#flow-glow)" />
-              <g transform={`translate(${ownCentroid.x} ${ownCentroid.y})`}>
-                <rect x={-4.4} y={-0.5} width={8.8} height={1.0} rx={0.5} fill="rgba(8, 47, 73, 0.92)" stroke="#22d3ee" strokeWidth={0.08} />
-                <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#67e8f9" fontWeight={900}>FLOW OF MAGIC (OWN ZONE)</text>
-              </g>
-
-              {/* No Man's Land: active when controlling half of NML objectives */}
-              {flow.nml && (
-                <g>
-                  <path d={nmlD} fillRule="evenodd" fill="rgba(6, 182, 212, 0.14)" />
-                  <path d={nmlD} fillRule="evenodd" fill="url(#flow-magic-pattern)" stroke="#22d3ee" strokeWidth={0.2} strokeDasharray="1.2 0.6" filter="url(#flow-glow)" />
-                  <g transform={`translate(${W / 2} ${H / 2})`}>
-                    <rect x={-5.8} y={-0.55} width={11.6} height={1.1} rx={0.55} fill="rgba(8, 47, 73, 0.94)" stroke="#22d3ee" strokeWidth={0.1} />
-                    <text y={0.28} fontSize={0.56} textAnchor="middle" fill="#67e8f9" fontWeight={900}>FLOW OF MAGIC: NO MAN'S LAND (+1 WOUND)</text>
-                  </g>
-                </g>
-              )}
-
-              {/* Opponent Zone: active when controlling half of enemy zone objectives */}
-              {flow.opp && (
-                <g>
-                  <polygon points={oppPts} fill="rgba(6, 182, 212, 0.14)" />
-                  <polygon points={oppPts} fill="url(#flow-magic-pattern)" stroke="#22d3ee" strokeWidth={0.24} strokeDasharray="1.2 0.6" filter="url(#flow-glow)" />
-                  <g transform={`translate(${oppCentroid.x} ${oppCentroid.y})`}>
-                    <rect x={-5.2} y={-0.5} width={10.4} height={1.0} rx={0.5} fill="rgba(8, 47, 73, 0.92)" stroke="#22d3ee" strokeWidth={0.08} />
-                    <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#67e8f9" fontWeight={900}>FLOW OF MAGIC: ENEMY ZONE BREACHED</text>
-                  </g>
-                </g>
-              )}
-            </g>
-          );
-        }
-
-        if (hasShadow) {
-          const nmlObjs = s.objectives.filter((o) => !pointInPoly(o, ownZ) && !pointInPoly(o, oppZ));
-          const controlsNml = nmlObjs.length > 0 && nmlObjs.filter((o) => o.controller === p).length * 2 >= nmlObjs.length;
-          const oppObjs = s.objectives.filter((o) => pointInPoly(o, oppZ));
-          const controlsOpp = oppObjs.length > 0 && oppObjs.filter((o) => o.controller === p).length * 2 >= oppObjs.length;
-
-          return (
-            <g key={`shadow-of-chaos-${p}`} pointerEvents="none" className="shadow-chaos-aura">
-              {/* Own deployment zone: ALWAYS in Shadow of Chaos */}
-              <polygon points={ownPts} fill="rgba(147, 51, 234, 0.12)" />
-              <polygon points={ownPts} fill="url(#shadow-chaos-pattern)" stroke="#c084fc" strokeWidth={0.22} strokeDasharray="1.2 0.6" filter="url(#shadow-glow)" />
-              <g transform={`translate(${ownCentroid.x} ${ownCentroid.y})`}>
-                <rect x={-4.8} y={-0.5} width={9.6} height={1.0} rx={0.5} fill="rgba(59, 7, 100, 0.92)" stroke="#c084fc" strokeWidth={0.08} />
-                <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#d8b4fe" fontWeight={900}>SHADOW OF CHAOS (OWN ZONE)</text>
-              </g>
-
-              {/* No Man's Land */}
-              {controlsNml && (
-                <g>
-                  <path d={nmlD} fillRule="evenodd" fill="rgba(147, 51, 234, 0.14)" />
-                  <path d={nmlD} fillRule="evenodd" fill="url(#shadow-chaos-pattern)" stroke="#c084fc" strokeWidth={0.2} strokeDasharray="1.2 0.6" filter="url(#shadow-glow)" />
-                  <g transform={`translate(${W / 2} ${H / 2})`}>
-                    <rect x={-5.8} y={-0.55} width={11.6} height={1.1} rx={0.55} fill="rgba(59, 7, 100, 0.94)" stroke="#c084fc" strokeWidth={0.1} />
-                    <text y={0.28} fontSize={0.56} textAnchor="middle" fill="#d8b4fe" fontWeight={900}>SHADOW OF CHAOS: NO MAN'S LAND</text>
-                  </g>
-                </g>
-              )}
-
-              {/* Opponent Zone */}
-              {controlsOpp && (
-                <g>
-                  <polygon points={oppPts} fill="rgba(147, 51, 234, 0.14)" />
-                  <polygon points={oppPts} fill="url(#shadow-chaos-pattern)" stroke="#c084fc" strokeWidth={0.24} strokeDasharray="1.2 0.6" filter="url(#shadow-glow)" />
-                  <g transform={`translate(${oppCentroid.x} ${oppCentroid.y})`}>
-                    <rect x={-5.2} y={-0.5} width={10.4} height={1.0} rx={0.5} fill="rgba(59, 7, 100, 0.92)" stroke="#c084fc" strokeWidth={0.08} />
-                    <text y={0.25} fontSize={0.52} textAnchor="middle" fill="#d8b4fe" fontWeight={900}>SHADOW OF CHAOS: ENEMY ZONE</text>
-                  </g>
-                </g>
-              )}
-            </g>
-          );
-        }
-
-        return null;
-      })}
+      {territoryAuras}
       <polygon points={toPoly(dep.territory.attacker).map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth={0.1} strokeDasharray="0.5 0.4" pointerEvents="none" />
       {Array.from({ length: Math.floor(H / 6) + 1 }, (_, i) => (
         <text key={`ty${i}`} x={0.2} y={i * 6 + 0.5} fontSize={0.6} fill="rgba(255,255,255,0.4)">{i * 6}"</text>
@@ -1173,12 +1200,13 @@ function BoardImpl(props: BoardProps) {
         const unitNumber = props.unitNumbers?.[u.id];
         const riled = props.riled?.includes(u.id);
         const tags = props.buffTags?.[u.id];
-        const hasFlowOfMagic = isThousandSonsArmy(s, u.owner);
-        const unitInFlow = hasFlowOfMagic && inFlow(s, u);
-        const isDaemon = isDaemonUnit(u) && isDaemonsArmy(s, u.owner);
-        const unitInShadow = isDaemon && isUnderShadowOfChaos(s, u.owner, u);
-        const enemyInShadow = !isDaemon && isDaemonsArmy(s, other(u.owner)) && isUnderShadowOfChaos(s, other(u.owner), u);
-        const hasPsychicWep = ms.some((m) => m.weapons.some((w) => w.profiles.some((p) => p.abilities.includes('psychic'))));
+        const st = unitStatusMap.get(u.id);
+        const hasFlowOfMagic = st?.hasFlowOfMagic ?? false;
+        const unitInFlow = st?.unitInFlow ?? false;
+        const isDaemon = st?.isDaemon ?? false;
+        const unitInShadow = st?.unitInShadow ?? false;
+        const enemyInShadow = st?.enemyInShadow ?? false;
+        const hasPsychicWep = st?.hasPsychicWep ?? false;
         return (
           <g key={u.id}>
             {isDraft && ms.map((m) => {

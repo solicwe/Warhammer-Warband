@@ -560,15 +560,22 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // Thousand Sons: the player picks their Rituals at the start of the Shooting phase (sorcerer, Ritual, target, Channel)
   const [rit, setRit] = useState<{ model?: string; ritual?: string; target?: string; channel: boolean }>({ channel: false });
   const ritualOn = !mode && s.phase === 'shooting' && decides(s, s.active) && !bots.includes(s.active) && ritualsPending(s, s.active);
+  const ritCasters = useMemo(() => (ritualOn ? casters(s, s.active) : []), [s, ritualOn]);
+  const ritActiveCaster = useMemo(() => ritCasters.find((x) => x.model.id === rit.model) ?? null, [ritCasters, rit.model]);
+  const ritActiveLeft = useMemo(() => (ritActiveCaster ? ritualsLeft(s, s.active, ritActiveCaster) : []), [s, ritActiveCaster]);
+  const ritActiveRitual = useMemo(() => (ritActiveLeft.find((x) => x.id === rit.ritual) ?? null), [ritActiveLeft, rit.ritual]);
+  const ritActiveTargets = useMemo(() => (ritActiveCaster && ritActiveRitual ? ritualTargets(s, ritActiveCaster, ritActiveRitual) : []), [s, ritActiveCaster, ritActiveRitual]);
+  const ritActiveOdds = useMemo(() => (ritActiveCaster && ritActiveRitual ? testOdds(rit.channel ? 3 : 2, ritActiveCaster.bonus, ritActiveRitual.wc) : null), [ritActiveCaster, ritActiveRitual, rit.channel]);
+
   // on the map: the sorcerers glow until one is picked, then the units its Ritual can target
   const ritMap = useMemo(() => {
     if (!ritualOn) return null;
-    const cs = casters(s, s.active);
-    const c = cs.find((x) => x.model.id === rit.model);
-    const r = c ? ritualsLeft(s, s.active, c).find((x) => x.id === rit.ritual) : undefined;
-    const tg = c && r ? ritualTargets(s, c, r).map((t) => t.id) : [];
+    const cs = ritCasters;
+    const c = ritActiveCaster;
+    const r = ritActiveRitual;
+    const tg = ritActiveTargets.map((t) => t.id);
     return { cs, c, tg, targets: c && r ? tg : [...new Set(cs.map((x) => x.unit.id))], picked: c && r ? (rit.target ? [rit.target] : []) : c ? [c.unit.id] : [] };
-  }, [s, ritualOn, rit]);
+  }, [ritualOn, ritCasters, ritActiveCaster, ritActiveRitual, ritActiveTargets, rit.target]);
   const heroicWindow = !mode && s.window?.kind === 'heroicIntervention' ? s.window : null;
   const heroicSelection = heroicWindow !== null;
   const heroicPick = heroicWindow ? heroicCandidates(s, heroicWindow.player) : [];
@@ -1808,12 +1815,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const ritualPanel = () => {
     const p = s.active;
-    const cs = casters(s, p);
-    const c = cs.find((x) => x.model.id === rit.model) ?? null;
-    const left = c ? ritualsLeft(s, p, c) : [];
-    const r = left.find((x) => x.id === rit.ritual) ?? null;
-    const targets = c && r ? ritualTargets(s, c, r) : [];
-    const odds = c && r ? testOdds(rit.channel ? 3 : 2, c.bonus, r.wc) : null;
+    const cs = ritCasters;
+    const c = ritActiveCaster;
+    const left = ritActiveLeft;
+    const r = ritActiveRitual;
+    const targets = ritActiveTargets;
+    const odds = ritActiveOdds;
     return (
       <>
         <div className="handoff">Rituals · start of the Shooting phase</div>

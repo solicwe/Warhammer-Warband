@@ -27,16 +27,35 @@ export function inFlow(s: GameState, u: UnitState): boolean {
   if (!onBoard(u)) return false;
   if (!isThousandSonsArmy(s, u.owner)) return false;
   if (u.enhancements.some((e) => e.name === NOCTILITH)) return true;
-  return alive(u).every((m) => circleInFlow(s, u.owner, m, m.r));
+  const models = alive(u);
+  if (!models.length) return false;
+  const { nml, opp } = flowAreas(s, u.owner);
+  if (nml && opp) return true;
+  const ownZ = zonePoly(s, u.owner);
+  if (nml) {
+    const oppZ = zonePoly(s, other(u.owner));
+    return models.every((m) => !circleTouchesPoly(m, m.r, oppZ) || circleWhollyInPoly(m, m.r, ownZ));
+  }
+  if (opp) {
+    const oppZ = zonePoly(s, other(u.owner));
+    return models.every((m) => circleWhollyInPoly(m, m.r, ownZ) || circleWhollyInPoly(m, m.r, oppZ));
+  }
+  return models.every((m) => circleWhollyInPoly(m, m.r, ownZ));
 }
 
 /** Is a base at this spot wholly within player p's Flow of Magic? */
 export function circleInFlow(s: GameState, p: PlayerId, m: { x: number; y: number }, r: number): boolean {
   const { nml, opp } = flowAreas(s, p);
-  const ownZ = zonePoly(s, p), oppZ = zonePoly(s, other(p));
   if (nml && opp) return true;
-  if (nml) return !circleTouchesPoly(m, r, oppZ) || circleWhollyInPoly(m, r, ownZ);
-  if (opp) return circleWhollyInPoly(m, r, ownZ) || circleWhollyInPoly(m, r, oppZ);
+  const ownZ = zonePoly(s, p);
+  if (nml) {
+    const oppZ = zonePoly(s, other(p));
+    return !circleTouchesPoly(m, r, oppZ) || circleWhollyInPoly(m, r, ownZ);
+  }
+  if (opp) {
+    const oppZ = zonePoly(s, other(p));
+    return circleWhollyInPoly(m, r, ownZ) || circleWhollyInPoly(m, r, oppZ);
+  }
   return circleWhollyInPoly(m, r, ownZ);
 }
 

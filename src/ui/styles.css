@@ -605,19 +605,27 @@ b.em { font-weight: 700; color: var(--text); }
 .bot-caption b { color: #ffffff; margin-right: 6px; }
 @keyframes cap-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 .fx-glow { opacity: 0.85; }
-@keyframes flowPulse {
-  0%, 100% { opacity: 0.84; }
-  50% { opacity: 1; }
-}
 .flow-magic-aura {
-  animation: flowPulse 2.8s ease-in-out infinite;
-}
-@keyframes shadowPulse {
-  0%, 100% { opacity: 0.84; }
-  50% { opacity: 1; }
+  opacity: 0.95;
 }
 .shadow-chaos-aura {
-  animation: shadowPulse 2.8s ease-in-out infinite;
+  opacity: 0.95;
+}
+@media (min-width: 1024px) {
+  @keyframes flowPulse {
+    0%, 100% { opacity: 0.86; }
+    50% { opacity: 1; }
+  }
+  .flow-magic-aura {
+    animation: flowPulse 3.5s ease-in-out infinite;
+  }
+  @keyframes shadowPulse {
+    0%, 100% { opacity: 0.86; }
+    50% { opacity: 1; }
+  }
+  .shadow-chaos-aura {
+    animation: shadowPulse 3.5s ease-in-out infinite;
+  }
 }
 .goal-ring { opacity: 0.9; }
 .sec-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
