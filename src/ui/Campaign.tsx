@@ -154,7 +154,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     return (
       <div className="app campaign">
         <header className="appbar">
-          <button className="appbar-back-btn" aria-label="ย้อนกลับ" onClick={onBack}><Icon name="back" size={18} /><span>ย้อนกลับ</span></button>
+          <button className="appbar-back-btn" aria-label="Back" onClick={onBack}><Icon name="back" size={18} /><span>Back</span></button>
           <span className="appbar-title">Roguelike Campaign</span>
         </header>
         <main className="screen">
@@ -199,7 +199,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   return (
     <div className="app campaign">
       <header className="appbar">
-        <button className="appbar-back-btn" aria-label="ย้อนกลับ" onClick={onBack}><Icon name="back" size={18} /><span>ย้อนกลับ</span></button>
+        <button className="appbar-back-btn" aria-label="Back" onClick={onBack}><Icon name="back" size={18} /><span>Back</span></button>
         <span className="appbar-title">Campaign</span>
         <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span> <span>Scrap</span></span>
         <span className="cmp-fate" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
@@ -523,7 +523,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                 onClick={() => setWargearUid(null)}
                                 style={{ padding: '6px 14px', fontSize: '13px' }}
                               >
-                                เสร็จสิ้น / บันทึก Wargear
+                                Done / Save Wargear
                               </button>
                             </div>
                           </div>
@@ -671,7 +671,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <div className="cmp-armory-footer">
               <button className="cmp-footer-btn" onClick={() => setShowRoster(false)}>
                 <Icon name="check" size={18} />
-                <span>เสร็จสิ้น / ย้อนกลับ</span>
+                <span>Done / Back</span>
               </button>
             </div>
           </div>

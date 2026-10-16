@@ -1434,7 +1434,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 setSel(null);
               }}
             >
-              <Icon name="move" size={14} /> ลงสนามทั้งหมด (Deploy all on field)
+              <Icon name="move" size={14} /> Deploy All on Field
             </button>
             <button
               className="btn"
@@ -1447,7 +1447,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 setSel(null);
               }}
             >
-              <Icon name="reserves" size={14} /> ตามเดิม (Deploy with Reserves)
+              <Icon name="reserves" size={14} /> Standard Deploy (with Reserves)
             </button>
           </div>
         )}
