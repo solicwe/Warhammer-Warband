@@ -5077,7 +5077,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Deathleaper"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Deathleaper",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003878",
@@ -5211,7 +5213,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Parasite-Of-Mortrex"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Parasite-Of-Mortrex",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003879",
@@ -5421,7 +5425,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Winged-Hive-Tyrant"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Winged-Hive-Tyrant",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003880",
@@ -5540,7 +5546,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Winged-Tyranid-Prime"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Winged-Tyranid-Prime",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003881",
@@ -5662,7 +5670,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Gargoyles"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Gargoyles",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003882",
@@ -5795,7 +5805,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Tyrannocyte"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Tyrannocyte",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003883",
@@ -5914,7 +5926,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Lictor"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Lictor",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003884",
@@ -6047,7 +6061,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Mawloc"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Mawloc",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003885",
@@ -6181,7 +6197,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Neurolictor"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Neurolictor",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003886",
@@ -6292,7 +6310,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Raveners"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Raveners",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003887",
@@ -6423,7 +6443,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Trygon"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Trygon",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003888",
@@ -6534,7 +6556,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Von-Ryan-s-Leapers"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Von-Ryan-s-Leapers",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000003938",
@@ -6823,7 +6847,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Cadian-Castellan"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Cadian-Castellan",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003939",
@@ -7328,7 +7354,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Cadian-Command-Squad"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Cadian-Command-Squad",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003940",
@@ -7898,7 +7926,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Catachan-Command-Squad"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Catachan-Command-Squad",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003941",
@@ -8421,7 +8451,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Krieg-Command-Squad"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Krieg-Command-Squad",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003942",
@@ -8986,7 +9018,9 @@
           "pts": 5
         }
       ],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Commander"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Commander",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003943",
@@ -9145,7 +9179,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Primaris-Psyker"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Primaris-Psyker",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003944",
@@ -9477,7 +9513,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Rogal-Dorn-Commander"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Rogal-Dorn-Commander",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003948",
@@ -9836,7 +9874,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Cadian-Shock-Troops"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Cadian-Shock-Troops",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003949",
@@ -10039,7 +10079,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Catachan-Jungle-Fighters"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Catachan-Jungle-Fighters",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003950",
@@ -10540,7 +10582,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Death-Korps-Of-Krieg"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Death-Korps-Of-Krieg",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003951",
@@ -10840,7 +10884,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Chimera"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Chimera",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003952",
@@ -10995,7 +11041,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Taurox"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Taurox",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003953",
@@ -11265,7 +11313,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Taurox-Prime"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Taurox-Prime",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003955",
@@ -11370,7 +11420,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Aegis-Defence-Line"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Aegis-Defence-Line",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003960",
@@ -11683,7 +11735,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Armoured-Sentinels"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Armoured-Sentinels",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003961",
@@ -11891,7 +11945,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Artillery-Team"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Artillery-Team",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003962",
@@ -12132,7 +12188,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Attilan-Rough-Riders"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Attilan-Rough-Riders",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003963",
@@ -12402,7 +12460,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Baneblade"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Baneblade",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003964",
@@ -12628,7 +12688,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Banehammer"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Banehammer",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003965",
@@ -12847,7 +12909,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Banesword"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Banesword",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003966",
@@ -13057,7 +13121,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Basilisk"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Basilisk",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003967",
@@ -13295,7 +13361,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Cadian-Heavy-Weapons-Squad"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Cadian-Heavy-Weapons-Squad",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003968",
@@ -13539,7 +13607,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Catachan-Heavy-Weapons-Squad"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Catachan-Heavy-Weapons-Squad",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003969",
@@ -13691,7 +13761,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Death-Riders"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Death-Riders",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003970",
@@ -13907,7 +13979,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Deathstrike"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Deathstrike",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003971",
@@ -14134,7 +14208,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Doomhammer"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Doomhammer",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003972",
@@ -14338,7 +14414,9 @@
           "pts": 10
         }
       ],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Field-Ordnance-Battery"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Field-Ordnance-Battery",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003973",
@@ -14609,7 +14687,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hellhammer"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hellhammer",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003974",
@@ -14891,7 +14971,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hellhound"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hellhound",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003975",
@@ -15091,7 +15173,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hydra"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hydra",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003976",
@@ -15586,7 +15670,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Kasrkin"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Kasrkin",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003977",
@@ -15988,7 +16074,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Krieg-Combat-Engineers"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Krieg-Combat-Engineers",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003978",
@@ -16203,7 +16291,9 @@
           "pts": 5
         }
       ],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Krieg-Heavy-Weapons-Squad"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Krieg-Heavy-Weapons-Squad",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003979",
@@ -16563,7 +16653,9 @@
           "pts": 5
         }
       ],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Battle-Tank"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Battle-Tank",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003980",
@@ -16923,7 +17015,9 @@
           "pts": 5
         }
       ],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Demolisher"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Demolisher",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003981",
@@ -17284,7 +17378,9 @@
           "pts": 5
         }
       ],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Eradicator"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Eradicator",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003982",
@@ -17657,7 +17753,9 @@
           "pts": 5
         }
       ],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Executioner"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Executioner",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003983",
@@ -18018,7 +18116,9 @@
           "pts": 5
         }
       ],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Exterminator"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Exterminator",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003984",
@@ -18376,7 +18476,9 @@
           "pts": 5
         }
       ],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Punisher"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Punisher",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003985",
@@ -18736,7 +18838,9 @@
           "pts": 5
         }
       ],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Vanquisher"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Leman-Russ-Vanquisher",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003986",
@@ -18947,7 +19051,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Manticore"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Manticore",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003987",
@@ -19269,7 +19375,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Rogal-Dorn-Battle-Tank"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Rogal-Dorn-Battle-Tank",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003988",
@@ -19588,7 +19696,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Scout-Sentinels"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Scout-Sentinels",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003989",
@@ -19807,7 +19917,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Shadowsword"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Shadowsword",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003990",
@@ -20052,7 +20164,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Stormlord"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Stormlord",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003991",
@@ -20271,7 +20385,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Stormsword"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Stormsword",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000003992",
@@ -20482,7 +20598,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Wyvern"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Wyvern",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000004118",
@@ -20678,7 +20796,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hyperadapted-Raveners"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hyperadapted-Raveners",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     },
     {
       "id": "000004222",
@@ -20810,7 +20930,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Centaur-RSV"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Centaur-RSV",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000004223",
@@ -21052,7 +21174,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hippogriff-AFV"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hippogriff-AFV",
+      "ally": "AM",
+      "allyName": "Brood Brothers (Astra Militarum)"
     },
     {
       "id": "000004226",
@@ -21179,7 +21303,9 @@
         }
       ],
       "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/The-Red-Terror"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/genestealer-cults/The-Red-Terror",
+      "ally": "TYR",
+      "allyName": "Tyranids"
     }
   ]
 }

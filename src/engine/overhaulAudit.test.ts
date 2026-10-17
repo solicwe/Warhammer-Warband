@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createGame, placeUnit, formationAt, triggerDynamicDramaEngine, expandRoguelikeMap, polygonArea, fightingArmyPoints, isFightEvenlyMatched } from './game';
-import { hasLos, hasCover, modelVisible, isInfantryBeastUnit, isInfantryBeastLoneOpActive } from './visibility';
+import { hasLos, hasCover, modelVisible, isInfantryBeastUnit, isInfantryBeastLoneOpActive, getUnitLoneOpRange } from './visibility';
 import { stratagemShortSummary, type StratRule } from './stratagems';
 import { cpWorth } from './botStrats';
 import { PRESETS } from '../ui/presets';
@@ -126,9 +126,18 @@ describe('Core Rules, UI & Rogue-like Comprehensive Overhaul Tests', () => {
       attacker.y = 7;
       expect(modelVisible(s, attacker, beastUnit, targetModel)).toBe(true);
 
+      // Lone Operative range is 15" for Infantry Beast in terrain
+      expect(getUnitLoneOpRange(s, beastUnit)).toBe(15);
+
       // If unit fired this turn => rule deactivates
       beastUnit.shotTurn = s.turn;
       expect(isInfantryBeastLoneOpActive(s, beastUnit)).toBe(false);
+
+      // Standard Lone Operative has 12" range (when not attached to a bodyguard squad)
+      const standardLoneOpUnit = s.units.find((u) => u.owner === 0)!;
+      standardLoneOpUnit.sources = ['Vindicare Assassin'];
+      standardLoneOpUnit.core.loneOperative = 12;
+      expect(getUnitLoneOpRange(s, standardLoneOpUnit)).toBe(12);
     });
   });
 

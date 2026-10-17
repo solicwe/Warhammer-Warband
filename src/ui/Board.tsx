@@ -1,13 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RULES, MISSIONS, deploymentById, toPoly } from '../engine/config';
-import { bodyTouchesPoly, dist, pointInPoly, polyCentroid } from '../engine/geometry';
+import { baseDist, bodyTouchesPoly, dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard, other } from '../engine/state';
 import { flowAreas, inFlow, hasFlowOfMagic } from '../engine/flow';
 import { isDaemonsArmy, isDaemonUnit, isUnderShadowOfChaos } from '../engine/daemons';
 import { zonePoly } from '../engine/missions';
 import { levelOfControl, markRuleLabel, scaledPoly } from '../engine/game';
 import { loneOperativeNow, unitFlags } from '../engine/effects';
-import { isInfantryBeastLoneOpActive, modelVisible } from '../engine/visibility';
+import { getUnitLoneOpRange, isInfantryBeastLoneOpActive, modelVisible } from '../engine/visibility';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { loadoutLabels, shortItem } from './loadout';
@@ -923,6 +923,7 @@ function BoardImpl(props: BoardProps) {
       hasPsychicWep: boolean;
       hasStealth: boolean;
       hasLoneOp: boolean;
+      loRange: number | null;
       isInfBeastOp: boolean;
       hasCover: boolean;
     }>();
@@ -937,8 +938,9 @@ function BoardImpl(props: BoardProps) {
       const hasPsychicWep = ms.some((m) => m.weapons?.some((w) => w.profiles?.some((p) => p.abilities?.includes('psychic'))));
       const uFlags = unitFlags(s, u);
       const isInfBeastOp = isInfantryBeastLoneOpActive(s, u);
+      const loRange = getUnitLoneOpRange(s, u);
       const hasStealth = !!(u.core.stealth || uFlags.stealth || u.buffs?.some((b) => b.kind === 'smoke'));
-      const hasLoneOp = !!(isInfBeastOp || ((!u.sources || u.sources.length <= 1) && (u.core.loneOperative || loneOperativeNow(s, u) || uFlags.loneOperative)));
+      const hasLoneOp = loRange !== null;
       const hasCover = !!(u.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke') || ms.some((m) => s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly))));
       map.set(u.id, {
         hasFlowOfMagic: unitHasFlow,
@@ -949,6 +951,7 @@ function BoardImpl(props: BoardProps) {
         hasPsychicWep,
         hasStealth,
         hasLoneOp,
+        loRange,
         isInfBeastOp,
         hasCover,
       });
@@ -1327,6 +1330,7 @@ function BoardImpl(props: BoardProps) {
         const hasLoneOp = st?.hasLoneOp ?? false;
         const hasCover = st?.hasCover ?? false;
         const isInfBeastOp = st?.isInfBeastOp ?? false;
+        const loRange = st?.loRange ?? null;
         const selectedUnit = props.selected ? s.units.find((x) => x.id === props.selected) : null;
         return (
           <g key={u.id}>
@@ -1370,7 +1374,22 @@ function BoardImpl(props: BoardProps) {
               const isSolo = isDraft && solo.includes(m.id);
               const flinch = modelFlinch(u, m, fx, now);
               const disp = getModelDisplayWounds(u, m, fx, now);
-              const isHiddenFromSelected = !!(selectedUnit && u.owner !== selectedUnit.owner && !alive(selectedUnit).some((sm) => modelVisible(s, sm, u, m)));
+              const isEnemy = u.owner !== props.viewer;
+              let isUntargetable = false;
+              if (isEnemy) {
+                if (selectedUnit && selectedUnit.owner === props.viewer) {
+                  // Active player has a unit selected: check if selected unit has any line of sight or is within Lone Op range
+                  isUntargetable = !alive(selectedUnit).some((sm) => modelVisible(s, sm, u, m));
+                } else if (hasLoneOp) {
+                  // No unit selected: if enemy has Lone Operative (12" or 15"), check if ANY friendly model is within range
+                  const activeRange = loRange ?? 12;
+                  const friendlyModels = s.units.filter((fu) => fu.owner === props.viewer && onBoard(fu)).flatMap((fu) => alive(fu));
+                  const anyFriendlyInRange = friendlyModels.some((fm) => baseDist(fm, m) <= activeRange);
+                  if (!anyFriendlyInRange) {
+                    isUntargetable = true;
+                  }
+                }
+              }
               return (
                 <g
                   key={m.id}
@@ -1378,7 +1397,7 @@ function BoardImpl(props: BoardProps) {
                   onPointerDown={(e) => startModelDrag(e, u.id, m.id)}
                   style={{
                     cursor: isDraft ? 'grab' : 'pointer',
-                    ...(isHiddenFromSelected ? { filter: 'grayscale(100%) opacity(0.5)' } : {}),
+                    ...(isUntargetable ? { filter: 'grayscale(100%) opacity(0.45)' } : {}),
                   }}
                   transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
                   opacity={disp.fading !== undefined ? disp.fading : 1}
@@ -1399,7 +1418,7 @@ function BoardImpl(props: BoardProps) {
                   {hasStealth && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#38bdf8" strokeWidth={0.14} strokeDasharray="0.22 0.14" opacity={0.88} className="stealth-aura" pointerEvents="none" />}
                   {hasLoneOp && <BaseShape m={m} p={p} grow={0.38} fill="none" stroke="#fbbf24" strokeWidth={0.12} strokeDasharray="0.35 0.15" opacity={0.9} className="lone-op-aura" pointerEvents="none" />}
                   {hasLoneOp && (isSel || isTarget || isPicked) && (
-                    <circle cx={p.x} cy={p.y} r={isInfBeastOp ? 15 : (u.core.loneOperative ?? 12)} fill="rgba(251, 191, 36, 0.02)" stroke="#fbbf24" strokeWidth={0.08} strokeDasharray="0.6 0.3" opacity={0.65} pointerEvents="none" />
+                    <circle cx={p.x} cy={p.y} r={loRange ?? 12} fill="rgba(251, 191, 36, 0.02)" stroke="#fbbf24" strokeWidth={0.08} strokeDasharray="0.6 0.3" opacity={0.65} pointerEvents="none" />
                   )}
                   {riled && (
                     <g pointerEvents="none">
@@ -1430,12 +1449,12 @@ function BoardImpl(props: BoardProps) {
                       </g>
                     );
                   })()}
-                  {isInfBeastOp && (
+                  {hasLoneOp && (
                     <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
-                      <circle r={0.36} fill="#064e3b" stroke="#10b981" strokeWidth={0.08} />
-                      <path d="M -0.16 0.13 C -0.14 -0.14 0.14 -0.14 0.16 0.13 C 0.08 0.09 -0.08 0.09 -0.16 0.13 Z" fill="#34d399" />
-                      <circle cx={0} cy={-0.12} r={0.065} fill="#6ee7b7" />
-                      <line x1={-0.2} y1={-0.2} x2={0.2} y2={0.2} stroke="#f87171" strokeWidth={0.05} />
+                      <circle r={0.36} fill={isInfBeastOp ? '#064e3b' : '#0f172a'} stroke={isInfBeastOp ? '#10b981' : '#f59e0b'} strokeWidth={0.08} />
+                      <text y={0.11} fontSize={0.26} textAnchor="middle" fill={isInfBeastOp ? '#6ee7b7' : '#fbbf24'} fontWeight={900}>
+                        {loRange ? `${loRange}"` : '12"'}
+                      </text>
                     </g>
                   )}
                   {labels.has(m.id) && vb.w >= 30 && (

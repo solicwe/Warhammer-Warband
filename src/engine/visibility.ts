@@ -316,13 +316,11 @@ export function detectionRange(s: GameState, observer: ModelState, u: UnitState,
 /** Check if unit is an "Infantry Beast" */
 export function isInfantryBeastUnit(u: UnitState): boolean {
   const typeStr = (u as any).type;
-  if (typeof typeStr === 'string' && typeStr.toLowerCase().includes('infantry') && typeStr.toLowerCase().includes('beast')) {
+  if (typeof typeStr === 'string' && (typeStr.toLowerCase().includes('infantry') || typeStr.toLowerCase().includes('beast'))) {
     return true;
   }
-  const allKw = [...u.keywords, ...u.models.flatMap((m) => m.keywords)];
-  const hasInf = allKw.some((k) => k.toUpperCase() === 'INFANTRY');
-  const hasBst = allKw.some((k) => k.toUpperCase() === 'BEAST' || k.toUpperCase() === 'BEASTS');
-  return hasInf && hasBst;
+  const allKw = [...u.keywords, ...u.models.flatMap((m) => m.keywords)].map((k) => k.toUpperCase());
+  return allKw.includes('INFANTRY') || allKw.includes('BEAST') || allKw.includes('BEASTS') || allKw.includes('SWARM');
 }
 
 /** Check if "Infantry Beast" 15" Lone Operative stealth rule is active:
@@ -349,14 +347,28 @@ export function isInfantryBeastLoneOpActive(s: GameState, u: UnitState): boolean
   return false;
 }
 
+/** Returns the effective Lone Operative range in inches (15" or 12"), or null if unit does not have Lone Operative active. */
+export function getUnitLoneOpRange(s: GameState, u: UnitState): number | null {
+  if (isInfantryBeastLoneOpActive(s, u)) return 15;
+  // If attached to a bodyguard squad (sources > 1), Lone Operative is suppressed under 10th rules
+  if (u.sources && u.sources.length > 1) return null;
+  if (u.core.loneOperative !== undefined) return u.core.loneOperative;
+  const hasKw = u.keywords.some((k) => k.toLowerCase() === 'lone operative') ||
+    u.models.some((m) => m.keywords.some((k) => k.toLowerCase() === 'lone operative')) ||
+    (u.abilities ?? []).some((a) => a.name.toLowerCase() === 'lone operative');
+  if (hasKw || hooks.loneOperative?.(s, u)) {
+    return 12;
+  }
+  return null;
+}
+
 /** Can `observer` see model `m` of unit `u`, applying Hidden, Lone Operative, and Infantry Beast 15" rule. */
 export function modelVisible(s: GameState, observer: ModelState, u: UnitState, m: ModelState, ignoreLoneOperative = false): boolean {
-  const d = baseDist(observer, m);
   if (!ignoreLoneOperative) {
-    if (isInfantryBeastLoneOpActive(s, u)) {
-      if (d > 15) return false;
-    } else if ((!u.sources || u.sources.length <= 1) && (u.core.loneOperative || hooks.loneOperative?.(s, u)) && d > (u.core.loneOperative ?? 12)) {
-      return false;
+    const loRange = getUnitLoneOpRange(s, u);
+    if (loRange !== null) {
+      const d = baseDist(observer, m);
+      if (d > loRange) return false;
     }
   }
   return hasLos(s, observer, m);
@@ -375,7 +387,7 @@ export function unitVisibleTo(s: GameState, observer: ModelState, u: UnitState):
  */
 export function hasCover(s: GameState, attacker: ModelState, target: UnitState): boolean {
   if (target.core.stealth || target.buffs.some((b) => b.kind === 'smoke' || b.kind === 'cover')) return true;
-  return alive(target).every((m) => {
+  return alive(target).some((m) => {
     // Check if target model is inside a footprint that the attacker is NOT inside (Rule 2)
     const inDifferentFootprint = s.terrain.some((t) =>
       t.category !== 'exposed' &&
@@ -384,9 +396,25 @@ export function hasCover(s: GameState, attacker: ModelState, target: UnitState):
     );
     if (inDifferentFootprint) return true;
 
-    // Attacker inside footprint + Target inside SAME footprint (Rule 4): Target does NOT gain cover from shared footprint.
-    // Attacker inside footprint + Target outside footprint (Rule 3): Target does NOT gain cover from attacker's footprint.
-    // Check if intervening terrain or walls partially obscure target:
+    const attackerInSame = s.terrain.some((t) => t.category !== 'exposed' && standsIn(s, attacker, t) && standsIn(s, m, t));
+    if (attackerInSame) {
+      // Rule 4: Attacker inside + Target inside SAME Footprint = Target does NOT gain cover from that shared footprint.
+      return false;
+    }
+
+    const attackerInAny = s.terrain.some((t) => t.category !== 'exposed' && standsIn(s, attacker, t));
+    if (attackerInAny) {
+      // Rule 3: Attacker inside + Target outside = Target does NOT gain cover from attacker's footprint
+      const otherIntervening = s.terrain.some((t) =>
+        t.category !== 'exposed' &&
+        !standsIn(s, attacker, t) &&
+        !standsIn(s, m, t) &&
+        segCrossesPoly({ a: attacker, b: m }, t.poly)
+      );
+      if (otherIntervening) return true;
+      return false;
+    }
+
     if (!fullyVisible(s, attacker, m)) return true;
     return false;
   });
