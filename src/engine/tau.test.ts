@@ -265,4 +265,35 @@ describe('T’au Empire Army Rule: For the Greater Good', () => {
     expect(modsBelowHalf.hitMod).toBe(1);
     expect(modsBelowHalf.woundMod).toBe(1);
   });
+
+  it("Ta'unar Supremacy Armour: builds with 30 wounds, 790 pts, and Coordinated Strike re-rolls 1s when Guided", async () => {
+    const { buildUnits } = await import('./army');
+    const fs = await import('fs');
+    const tau = JSON.parse(fs.readFileSync('public/data/factions/TAU.json', 'utf8'));
+    const list = {
+      name: 'Tau Test',
+      factionId: 'TAU',
+      battleSize: 'strike',
+      detachments: [],
+      units: [{ uid: 'tn-1', datasheet: "Ta'unar Supremacy Armour", models: 1, pts: 790 }],
+    };
+    const units = buildUnits(list, tau, 0);
+    expect(units.length).toBe(1);
+    const taunar = units[0];
+    expect(taunar.models[0].wounds).toBe(30);
+    expect(taunar.pts).toBe(790);
+    expect(taunar.keywords).toContain('TITANIC');
+    expect(taunar.keywords).toContain('TOWERING');
+
+    // Test Coordinated Strike
+    const plainObserver = createDummyUnit('u-plain-obs', 'Strike Team', 0, ['INFANTRY'], ['For the Greater Good']);
+    s.units.push(plainObserver, taunar);
+    pairFtgg(s, taunar.id, plainObserver.id, enemyIntercessors.id);
+
+    const mods = ftggAttackModifiers(s, taunar, enemyIntercessors, 24);
+    expect(mods.isGuided).toBe(true);
+    expect(mods.isSpotted).toBe(true);
+    expect(mods.rerollHits1).toBe(true);
+  });
 });
+

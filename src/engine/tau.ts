@@ -228,6 +228,12 @@ export function ftggAttackModifiers(s: GameState, A: UnitState, T: UnitState, di
         bonus.notes.push('Forward Observers: re-roll 1s');
       }
 
+      // Coordinated Strike (Ta'unar Supremacy Armour)
+      if (A.abilities.some((a) => a.name === 'Coordinated Strike')) {
+        bonus.rerollHits1 = true;
+        bonus.notes.push('Coordinated Strike: re-roll 1s');
+      }
+
       // Through Unity, Devastation (enhancement)
       if (observer && observer.enhancements?.some((e) => e.name === 'Through Unity, Devastation')) {
         bonus.lethal = true;
