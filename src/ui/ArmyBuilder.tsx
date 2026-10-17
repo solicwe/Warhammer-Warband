@@ -1139,7 +1139,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   return (
     <div className="ab" style={{ ['--accent' as string]: armyColor(list.factionId, list.subfaction), ['--accent-2' as string]: armyColor(list.factionId, list.subfaction) }}>
       <header className="ab-top">
-        <button type="button" className="ab-icon" aria-label="Back" onClick={onDone}><Icon name="back" size={22} /></button>
+        <button type="button" className="appbar-back-btn" aria-label="Back" onClick={onDone}>&lt;</button>
         <div className="ab-tabs" role="tablist">
           <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => setTab('list')}>List</button>
           <button role="tab" aria-selected={tab === 'detachment'} className={tab === 'detachment' ? 'on' : ''} onClick={() => setTab('detachment')}>Detachment</button>

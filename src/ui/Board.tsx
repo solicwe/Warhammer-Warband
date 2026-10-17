@@ -284,6 +284,8 @@ function BaseShape({ m, p, grow = 0, ...rest }: { m: ModelState; p: Pt; grow?: n
 /** Calculate hit flinch / recoil / twitch offset for a model being shot, struck, or caught in explosions. */
 function modelFlinch(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): { x: number; y: number; intensity: number } | null {
   if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return null;
+  // Dead models must NEVER flinch/shake unless actively dying from this specific attack event
+  if (m.dead && !isDyingModel(u, m, fx, now)) return null;
   for (const a of fx) {
     if (a.e.kind === 'attack' && a.e.targetId === u.id) {
       const f = (now - a.t0) / FX_MS.attack;
@@ -365,12 +367,12 @@ function isDyingModel(u: UnitState, m: ModelState, fx: ActiveFx[], now: number):
   if (!m.dead) return false;
   for (const a of fx) {
     if (a.e.kind === 'attack' && a.e.targetId === u.id) {
-      if (a.e.deadIds && !a.e.deadIds.includes(m.id)) continue;
+      if (!a.e.deadIds || !a.e.deadIds.includes(m.id)) continue;
       const f = (now - a.t0) / FX_MS.attack;
       if (f < 0.75 && (a.e.killed ?? 0) > 0) return true;
     }
     if (a.e.kind === 'mortal' && a.e.unitId === u.id) {
-      if (a.e.deadIds && !a.e.deadIds.includes(m.id)) continue;
+      if (!a.e.deadIds || !a.e.deadIds.includes(m.id)) continue;
       const f = (now - a.t0) / FX_MS.mortal;
       if (f < 0.75) return true;
     }
@@ -382,7 +384,7 @@ function isDyingModel(u: UnitState, m: ModelState, fx: ActiveFx[], now: number):
 function getModelDisplayWounds(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): { wounds: number; low: boolean; fading?: number } {
   for (const a of fx) {
     if (a.e.kind === 'attack' && a.e.targetId === u.id) {
-      if (m.dead && a.e.deadIds && !a.e.deadIds.includes(m.id)) continue;
+      if (m.dead && (!a.e.deadIds || !a.e.deadIds.includes(m.id))) continue;
       const f = (now - a.t0) / FX_MS.attack;
       // f < 0.55: attacks are flying and damage numbers/effects are popping up first!
       if (f < 0.55 && (a.e.dmg ?? 0) > 0) {
@@ -395,7 +397,7 @@ function getModelDisplayWounds(u: UnitState, m: ModelState, fx: ActiveFx[], now:
       }
     }
     if (a.e.kind === 'mortal' && a.e.unitId === u.id) {
-      if (m.dead && a.e.deadIds && !a.e.deadIds.includes(m.id)) continue;
+      if (m.dead && (!a.e.deadIds || !a.e.deadIds.includes(m.id))) continue;
       const f = (now - a.t0) / FX_MS.mortal;
       if (f < 0.55 && (a.e.n ?? 0) > 0) {
         if (m.dead && (!a.e.deadIds || !a.e.deadIds.includes(m.id))) continue;
@@ -1851,9 +1853,8 @@ function BoardImpl(props: BoardProps) {
         right: 12,
         bottom: 12,
         zIndex: 5,
-        background: 'rgba(17, 24, 39, 0.85)',
-        backdropFilter: 'blur(4px)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
+        background: '#111827',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
         color: '#f3f4f6',
         borderRadius: 6,
         padding: '5px 9px',
@@ -1862,7 +1863,6 @@ function BoardImpl(props: BoardProps) {
         gap: 6,
         fontSize: '12px',
         fontWeight: 600,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
       }}
     >
       <Icon name="ruler" size={14} /> Fit Board

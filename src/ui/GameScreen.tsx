@@ -222,7 +222,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const ponder = useRef<{ w: Worker | null; id: number; p: PlayerId; turn: number; board: string; sig?: string | null; name?: string; intents?: Intent[]; view?: ThinkView; wait?: (name: string) => void } | null>(null);
   const stopPonder = () => { ponder.current?.w?.terminate(); ponder.current = null; setPonderProg(null); };
   useEffect(() => stopPonder, []);
-  const ponderFor = !s.campaign && bots.length === 1 && s.active !== bots[0] && (s.phase === 'shooting' || s.phase === 'charge' || s.phase === 'fight') ? bots[0] : null;
+  const isMobileScreen = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)')?.matches;
+  const ponderFor = !isMobileScreen && !s.campaign && bots.length === 1 && s.active !== bots[0] && (s.phase === 'shooting' || s.phase === 'charge' || s.phase === 'fight') ? bots[0] : null;
   useEffect(() => {
     if (ponderFor === null || lookBudget(s, ponderFor) <= 0) return;
     // the same board as the thinking started from (the player only ended a phase): it stands
@@ -279,7 +280,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         if (worker) worker.onmessage = null;
         done('steady');
       };
-      const effectiveBudget = rush ? 0 : Math.min(lookBudget(s, who), 2800);
+      const effectiveBudget = rush || s.campaign || isMobileScreen ? 0 : Math.min(lookBudget(s, who), 2800);
       if (effectiveBudget <= 0) {
         stopPonder();
         done(s.campaign ? 'rogue' : 'steady');

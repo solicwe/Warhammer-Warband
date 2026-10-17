@@ -156,7 +156,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     return (
       <div className="app campaign">
         <header className="appbar">
-          <button className="appbar-back-btn" aria-label="Back" onClick={onBack}><Icon name="back" size={18} /><span>Back</span></button>
+          <button className="appbar-back-btn" aria-label="Back" onClick={onBack}>&lt;</button>
           <span className="appbar-title">Roguelike Campaign</span>
         </header>
         <main className="screen">
@@ -201,7 +201,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   return (
     <div className="app campaign">
       <header className="appbar">
-        <button className="appbar-back-btn" aria-label="Back" onClick={onBack}><Icon name="back" size={18} /><span>Back</span></button>
+        <button className="appbar-back-btn" aria-label="Back" onClick={onBack}>&lt;</button>
         <span className="appbar-title">Campaign · Sector {run.loop ?? 1}</span>
         <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span> <span>Scrap</span></span>
         <span className="cmp-fate" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
@@ -428,9 +428,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         <div className="cmp-modal-backdrop" onClick={() => setShowRoster(false)}>
           <div className="cmp-armory-modal" onClick={(e) => e.stopPropagation()}>
             <div className="cmp-armory-header">
-              <button type="button" className="appbar-back-btn" aria-label="Back" onClick={() => setShowRoster(false)}>
-                <Icon name="back" size={16} /> Back
-              </button>
+              <button type="button" className="appbar-back-btn" aria-label="Back" onClick={() => setShowRoster(false)}>&lt;</button>
               <div className="cmp-armory-header-center">
                 <div className="cmp-armory-title">Roster & Armory</div>
                 <div className="cmp-armory-sub">{pts} pts · {run.list.units.length} units in force</div>
@@ -1190,7 +1188,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <div className="cmp-armory-footer">
               <button className="cmp-footer-btn" onClick={() => setShowRoster(false)}>
                 <Icon name="check" size={18} />
-                <span>Done / Back</span>
+                <span>Done</span>
               </button>
             </div>
           </div>
