@@ -2182,7 +2182,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                     )}
                     {tHasCover && (
                       <span className="oath-tag" style={{ background: 'rgba(74, 222, 128, 0.18)', borderColor: '#4ade80', color: '#86efac', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <Icon name="shield" size={13} /> Benefit of Cover (+1 Sv)
+                        <Icon name="shield" size={13} /> Benefit of Cover (−1 BS)
                       </span>
                     )}
                     {tHasLoneOp && (

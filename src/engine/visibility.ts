@@ -381,7 +381,7 @@ export function unitVisibleTo(s: GameState, observer: ModelState, u: UnitState):
 /** Benefit of cover (13.08) against attacks from one attacking model.
  * Strict Footprint Matrix:
  * 1. Attacker outside + Target outside + Ray crosses Footprint: BLOCKED
- * 2. Attacker outside + Target inside Footprint: LoS ESTABLISHED, Target gains Benefit of Cover (-1 BS / +1 Sv).
+ * 2. Attacker outside + Target inside Footprint: LoS ESTABLISHED, Target gains Benefit of Cover (-1 BS).
  * 3. Attacker inside Footprint + Target outside Footprint: LoS ESTABLISHED, Target does NOT gain Cover from that footprint.
  * 4. Attacker inside Footprint + Target inside SAME Footprint: LoS ESTABLISHED, Target does NOT gain Cover from shared footprint.
  */

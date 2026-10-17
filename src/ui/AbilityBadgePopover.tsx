@@ -82,9 +82,9 @@ const KNOWN_DATA: Record<string, Partial<AbilityOrWeaponInfo>> = {
   },
   'cover': {
     title: 'Benefit of Cover',
-    badgeLabel: 'Cover',
+    badgeLabel: 'Cover −1 BS',
     category: { label: 'Battlefield Benefit', variant: 'buff' },
-    summary: 'Add 1 to armor saving throws made against ranged attacks (excludes 3+ or better saves against AP 0).',
+    summary: 'Subtract 1 from the Ballistic Skill (BS) of incoming ranged attacks made against this unit.',
   },
   'fights first': {
     title: 'Fights First',

@@ -1652,7 +1652,7 @@ function BoardImpl(props: BoardProps) {
             {(isSel || isPicked || isTarget) && (hasStealth || hasLoneOp || hasCover || isInfBeastOp) && pts.length > 0 && (() => {
               const tacticalTags: { text: string; color: string; border: string; bg: string; icon: 'stealth' | 'shield' | 'radar' }[] = [];
               if (hasStealth) tacticalTags.push({ text: 'Stealth −1 Hit', color: '#38bdf8', border: '#0284c7', bg: 'rgba(14, 165, 233, 0.25)', icon: 'stealth' });
-              if (hasCover) tacticalTags.push({ text: 'Cover +1 Sv', color: '#4ade80', border: '#16a34a', bg: 'rgba(34, 197, 94, 0.25)', icon: 'shield' });
+              if (hasCover) tacticalTags.push({ text: 'Cover −1 BS', color: '#4ade80', border: '#16a34a', bg: 'rgba(34, 197, 94, 0.25)', icon: 'shield' });
               if (isInfBeastOp) tacticalTags.push({ text: 'Lone Op 15" (Beast)', color: '#10b981', border: '#059669', bg: 'rgba(16, 185, 129, 0.25)', icon: 'stealth' });
               else if (hasLoneOp) tacticalTags.push({ text: 'Lone Op 12"', color: '#fbbf24', border: '#d97706', bg: 'rgba(245, 158, 11, 0.25)', icon: 'radar' });
               const tCount = tacticalTags.length;
