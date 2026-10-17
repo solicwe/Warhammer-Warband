@@ -31,12 +31,12 @@ interface Props {
 }
 
 const KIND: Record<MapNode['kind'], { name: string; icon: IconName; note: string }> = {
-  battle: { name: 'Battle', icon: 'fight', note: 'A short 3-round battle. Win to earn Scrap and rewards.' },
-  elite: { name: 'Elite enemy', icon: 'skull', note: 'Tougher foe with a boss rule. Yields high Scrap and rare relics.' },
+  battle: { name: 'Battle', icon: 'fight', note: 'A 3-round battle. Win to earn Scrap and rewards.' },
+  elite: { name: 'Elite Miniboss', icon: 'skull', note: 'A 3-round battle against a tougher foe with a boss rule. Yields high Scrap and rare relics.' },
   armory: { name: 'Munitorum Depot', icon: 'shop', note: 'Field depot: buy Battle Honors for units, hire reinforcements, or customize wargear.' },
   medicae: { name: 'Medicae Field Camp', icon: 'heal', note: 'Restore lost Fate or hold a tactical briefing to gain +1 CP per battle.' },
   supply: { name: 'Supply drop', icon: 'cards', note: 'Secure a supply cache: choose from units, relics, or scrap.' },
-  boss: { name: 'The Warlord', icon: 'trophy', note: 'The final confrontation: a massive army with two special rules.' },
+  boss: { name: 'The Warlord Boss', icon: 'trophy', note: 'A 5-round climactic battle against the enemy warlord with two special rules.' },
 };
 const LEVEL: Record<string, string> = { easy: 'Easy', normal: 'Normal', hard: 'Hard', expert: 'Expert' };
 
@@ -104,9 +104,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       if (!ef || !playable(ef)) ef = await loadFaction('ORK');
       const enemyList = autoList(ef, node.enemy.pts, node.enemy.seed);
       const r = run.fighting === node.id ? run : enter(run, node.id, fac);
+      const isBoss = node.kind === 'boss';
+      const maxRounds = isBoss ? 5 : 3;
       const s = createGame({
         lists: [syncList(r.list, fac), autoAttach(syncList(enemyList, ef), ef)], factions: [fac, ef],
-        names: ['You', node.kind === 'boss' ? `${ef.name} Warlord` : ef.name], secondaryMode: 'none', maxRounds: 3, seed: node.enemy.seed,
+        names: ['You', isBoss ? `${ef.name} Warlord` : ef.name], secondaryMode: 'none', maxRounds, seed: node.enemy.seed,
         primaryId: 'roguelike-annihilation',
       });
       s.botPlayer = 1;

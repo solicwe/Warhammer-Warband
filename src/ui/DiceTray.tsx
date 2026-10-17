@@ -89,26 +89,32 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
   const attackerBot = botSides.includes(A.owner);
   const defenderBot = botSides.includes(T.owner);
 
+  useEffect(() => {
+    if (done) {
+      onClose();
+    }
+  }, [done, onClose]);
+
   const stageOf = (pool: Pool) => (pool !== p ? 'done' : at.stage);
   const st = stageOf(p);
   const hitShown = p.hits.length > 0 || (p.autoHit && st !== 'hit');
   const pending = !done ? p.reroll : undefined;
-  const nextLabel = done
-    ? 'Finish Attack'
-    : pending
-      ? `Re-roll ${pending.picks.length} selected`
-      : st === 'hit'
-        ? `Roll to Hit (${p.attacks} dice)`
-        : st === 'wound'
-          ? 'Roll to Wound'
-          : st === 'save'
-            ? `${s.players[T.owner].name}: Roll Saving Throws`
-            : 'Allocate Damage';
+  const nextLabel = pending
+    ? `Re-roll ${pending.picks.length} selected`
+    : st === 'hit'
+      ? `Roll to Hit (${p.attacks} dice)`
+      : st === 'wound'
+        ? 'Roll to Wound'
+        : st === 'save'
+          ? `${s.players[T.owner].name}: Roll Saving Throws`
+          : 'Allocate Damage';
 
   const pickRow = (stage: 'hit' | 'wound') =>
     pending?.stage === stage && onPick && !botSides.includes(A.owner)
       ? { pick: (d: Die) => rerollable(p, d), picked: pending.picks, onPick: (i: number) => onPick(i) }
       : null;
+
+  if (done) return null;
 
   // bot auto-rolling
   const [hold, setHold] = useState(false);
@@ -166,9 +172,6 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
   const tLead = T.models.find((m) => m.isCharacter && !m.dead) ?? T.models.find((m) => !m.dead) ?? T.models[0];
   const aPortraitKey = aLead ? (aLead.name && aLead.name !== aLead.source ? modelPortraitKey(aLead.source, aLead.name) : aLead.source) : '';
   const tPortraitKey = tLead ? (tLead.name && tLead.name !== tLead.source ? modelPortraitKey(tLead.source, tLead.name) : tLead.source) : '';
-
-  const tRemainingModels = T.models.filter((m) => !m.dead).length;
-  const tPctHealth = Math.round((tRemainingModels / Math.max(1, T.startingStrength)) * 100);
 
   return (
     <div className="tray-backdrop">
@@ -235,11 +238,8 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
           <div className={`combat-step ${st === 'wound' ? 'active' : p.wounds.length || p.autoWounds ? 'done' : ''}`}>
             {(p.wounds.length > 0 || p.autoWounds) && st !== 'wound' && st !== 'hit' ? <Icon name="check" size={13} /> : null} 2. Wound
           </div>
-          <div className={`combat-step ${st === 'save' ? 'active' : p.saves.length ? 'done' : ''}`}>
-            {p.saves.length > 0 && st === 'damage' ? <Icon name="check" size={13} /> : null} 3. Save
-          </div>
-          <div className={`combat-step ${st === 'damage' || done ? 'active' : ''}`}>
-            {done ? <Icon name="check" size={13} /> : null} 4. Result
+          <div className={`combat-step ${st === 'save' || st === 'damage' ? 'active' : p.saves.length ? 'done' : ''}`}>
+            {p.saves.length > 0 && st === 'damage' ? <Icon name="check" size={13} /> : null} 3. Save & Damage
           </div>
         </div>
 
@@ -440,46 +440,11 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
           </div>
         )}
 
-        {/* Combat Outcome Breakdown */}
-        {at.pools.filter((x) => x.done).length > 0 && (
-          <div className="combat-dice-box" style={{ margin: '0 14px' }}>
-            <div style={{ fontWeight: 800, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8' }}>
-              Combat Casualties & Damage
-            </div>
-            {at.pools.filter((x) => x.done).map((x, i) => (
-              <div key={i} className="small" style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <b>{x.weapon}</b>
-                  <span>Destroyed: <b style={{ color: '#ef4444' }}>{x.killed}</b></span>
-                </div>
-                <div className="tiny muted">
-                  {x.attacks} attacks · {x.hits.filter((h) => h.o !== 'miss').length} hit · {x.wounds.filter((w) => w.o !== 'fail').length + x.autoWounds} wound
-                  {x.damageLines.length > 0 && ` · ${x.damageLines.join(', ')}`}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {done && (
-          <div style={{ margin: '0 14px', padding: '12px', background: '#141b24', border: '1px solid #1e293b', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 700 }}>{T.name} Status</span>
-              <span style={{ fontWeight: 800, color: tRemainingModels === 0 ? '#ef4444' : '#4ade80' }}>
-                {tRemainingModels} / {T.startingStrength} Models Alive ({tPctHealth}%)
-              </span>
-            </div>
-            <div className="meter" style={{ width: '100%', maxWidth: 'none', height: 6 }}>
-              <i style={{ width: `${tPctHealth}%`, background: tRemainingModels === 0 ? '#ef4444' : '#22c55e' }} />
-            </div>
-          </div>
-        )}
-
         {/* Sticky Action Footer */}
         <div className="sticky-act tray-act" style={{ padding: '12px 14px' }}>
           <button
             className={`btn primary big wide ${cool ? 'cooling' : ''}`}
-            onClick={guarded(done ? onClose : onStep)}
+            onClick={guarded(onStep)}
             style={{ fontWeight: 800, letterSpacing: '0.04em' }}
           >
             {nextLabel}

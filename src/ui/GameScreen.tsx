@@ -3240,7 +3240,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               <Icon name="skull" size={26} />
               <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{s.reinforcementAlert.text}</div>
             </div>
-            <div style={{ color: '#e2e8f0', fontSize: '0.92rem' }}>Strategic sensors have detected unexpected hostile reserve forces mobilizing onto the battle grid!</div>
+            <div style={{ color: '#e2e8f0', fontSize: '0.92rem' }}>Strategic sensors have detected unexpected hostile reserve forces mobilizing onto the battle grid! Battle extended to 5 Rounds.</div>
             <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '10px 14px' }}>
               <div style={{ fontWeight: 700, color: '#fca5a5' }}>{s.reinforcementAlert.unitName}</div>
               <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{s.reinforcementAlert.factionName} · {s.reinforcementAlert.count} models · Round {s.reinforcementAlert.round} Strategic Reserves</div>

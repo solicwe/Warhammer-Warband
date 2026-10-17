@@ -1388,7 +1388,6 @@ function BoardImpl(props: BoardProps) {
                   {unitInShadow && <BaseShape m={m} p={p} grow={0.34} fill="none" stroke="#c084fc" strokeWidth={0.16} strokeDasharray="0.45 0.22" opacity={0.9} className="shadow-chaos-aura" pointerEvents="none" />}
                   {hasStealth && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#38bdf8" strokeWidth={0.14} strokeDasharray="0.22 0.14" opacity={0.88} className="stealth-aura" pointerEvents="none" />}
                   {hasLoneOp && <BaseShape m={m} p={p} grow={0.38} fill="none" stroke="#fbbf24" strokeWidth={0.12} strokeDasharray="0.35 0.15" opacity={0.9} className="lone-op-aura" pointerEvents="none" />}
-                  {(hasCover || s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly))) && <BaseShape m={m} p={p} grow={0.2} fill="none" stroke="#4ade80" strokeWidth={0.12} strokeDasharray="0.25 0.12" opacity={0.82} className="cover-aura" pointerEvents="none" />}
                   {hasLoneOp && (isSel || isTarget || isPicked) && (
                     <circle cx={p.x} cy={p.y} r={u.core.loneOperative ?? 12} fill="rgba(251, 191, 36, 0.02)" stroke="#fbbf24" strokeWidth={0.08} strokeDasharray="0.6 0.3" opacity={0.65} pointerEvents="none" />
                   )}
@@ -1664,14 +1663,14 @@ function BoardImpl(props: BoardProps) {
                 </g>
               );
             })()}
-            {tags?.length && pts.length > 0 ? (() => {
+            {(isSel || isPicked) && tags?.length && pts.length > 0 ? (() => {
               // under the unit (below the transport chip): what is boosting or hampering it right now
               const maxY = Math.max(...pts.map((p, i) => p.y + ms[i].r)) + (u.transport && s.units.some((x) => x.embarkedIn === u.id && x.status === 'embarked') ? 1.9 : 0.75);
               return (
-                <text x={cx} y={maxY} fontSize={Math.max(0.8, fs * 0.75)} textAnchor="middle" stroke="#000" strokeWidth={0.14} paintOrder="stroke" pointerEvents="none" fontWeight={800}>
-                  {/* two tags under a unit, four under the selected one; the rest are counted */}
-                  {tags.slice(0, isSel ? 4 : 2).map(([t, good], k) => <tspan key={k} fill={good ? '#86efac' : '#fca5a5'}>{k ? '  ' : ''}{t}</tspan>)}
-                  {tags.length > (isSel ? 4 : 2) && <tspan fill="#fff">  +{tags.length - (isSel ? 4 : 2)}</tspan>}
+                <text x={cx} y={maxY} fontSize={Math.max(0.48, Math.min(0.68, fs * 0.65))} textAnchor="middle" stroke="#000" strokeWidth={0.08} paintOrder="stroke" pointerEvents="none" fontWeight={800}>
+                  {/* four tags under the selected one; the rest are counted */}
+                  {tags.slice(0, 4).map(([t, good], k) => <tspan key={k} fill={good ? '#86efac' : '#fca5a5'}>{k ? '  ' : ''}{t}</tspan>)}
+                  {tags.length > 4 && <tspan fill="#fff">  +{tags.length - 4}</tspan>}
                 </text>
               );
             })() : null}

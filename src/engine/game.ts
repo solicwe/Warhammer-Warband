@@ -2202,7 +2202,10 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
 
   s.units.push(cloned);
 
-  const alertText = `WARNING: ENEMY REINFORCEMENTS DETECTED! ${cloned.name} (${cloned.models.length} models) arriving from strategic reserves!`;
+  // Strategic Event in campaign: battle duration extends to 5 rounds
+  s.maxRounds = 5;
+
+  const alertText = `WARNING: STRATEGIC EVENT! Enemy reinforcements (${cloned.name}, ${cloned.models.length} models) arriving from strategic reserves! Battle extended to Round 5!`;
   log(s, alertText, 'kill', 1);
 
   s.reinforcementAlert = {
@@ -2210,7 +2213,7 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
     factionName: s.players[1].name,
     round: s.round,
     count: cloned.models.length,
-    text: 'WARNING: ENEMY REINFORCEMENTS DETECTED',
+    text: 'STRATEGIC EVENT: ENEMY REINFORCEMENTS DETECTED (5 ROUNDS)',
   };
 
   return true;

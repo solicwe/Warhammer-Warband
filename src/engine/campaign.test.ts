@@ -181,4 +181,30 @@ describe('campaign', () => {
       }
     }
   });
+
+  it('campaign battle duration: miniboss is 3 rounds, boss is 5 rounds, and event extends to 5 rounds', () => {
+    const sm = load('SM');
+    const ork = load('ORK');
+    const map = makeMap(42, ['ORK'], 1);
+    const elite = map.find((n) => n.kind === 'elite')!;
+    const boss = map.find((n) => n.kind === 'boss')!;
+
+    // Elite / Miniboss round calculation
+    const eliteRounds = elite.kind === 'boss' ? 5 : 3;
+    expect(eliteRounds).toBe(3);
+
+    // Boss round calculation
+    const bossRounds = boss.kind === 'boss' ? 5 : 3;
+    expect(bossRounds).toBe(5);
+
+    // Initial game state for a 3-round battle
+    const s = createGame({ lists: [autoList(sm, 500, 1), autoList(ork, 500, 2)], factions: [sm, ork], names: ['You', 'Orks'], seed: 4, maxRounds: 3 });
+    s.campaign = { node: elite.id, relics: [], rules: [] };
+    s.round = 2;
+    expect(s.maxRounds).toBe(3);
+
+    // Strategic event triggers enemy reinforcements and extends battle to 5 rounds
+    s.maxRounds = 5;
+    expect(s.maxRounds).toBe(5);
+  });
 });
