@@ -2,7 +2,7 @@
 import { dgBattleStart, dgCommandEnd, dgCommandStart, dgPhaseEnd, dgRoundStart, dsKeep, stinkBlocks } from './deathGuard';
 import { knightsBattleStart, knightsCommandStart, knightsMoved, knightsRoundEnd, knightsRoundStart, knightsShockFailed, knightsShootingStart, knightsTurnEnd, knightsTurnStart } from './knights';
 import { initFavoured, noteTarget, pledgeRoundEnd, pledgeRoundStart, poisonTick, snapshotEngaged, thrillBlock } from './emperorsChildren';
-import { buildUnits, forChapter, transportFit } from './army';
+import { buildUnits, forChapter, newUid, transportFit } from './army';
 import { applyMortalWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
@@ -867,7 +867,15 @@ export function startTurn(s: GameState, p: PlayerId) {
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
   if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); votannBattleStart(s); admechRoundStart(s); drukhariBattleStart(s); daemonsBattleStart(s); cultBattleStart(s); necBattleStart(s); fireAll(s, 'battleStart', 'both'); }
-  if (p === s.firstPlayer) { blessingsRoundStart(s); pledgeRoundStart(s); dgRoundStart(s); knightsRoundStart(s); admechRoundStart(s); fireAll(s, 'roundStart', 'both'); }
+  if (p === s.firstPlayer) {
+    blessingsRoundStart(s);
+    pledgeRoundStart(s);
+    dgRoundStart(s);
+    knightsRoundStart(s);
+    admechRoundStart(s);
+    if (s.campaign && s.round >= 2) triggerCampaignReinforcements(s);
+    fireAll(s, 'roundStart', 'both');
+  }
   knightsTurnStart(s);
   sororitasTurnStart(s, p);
   aeldariTurnStart(s, p);
@@ -2155,4 +2163,112 @@ export function autoPileMove(s: GameState, u: UnitState, kind: 'pileIn' | 'conso
   commitMove(s, u, kind, paths);
   if (s.fight && !s.fight.movedThisStep.includes(u.id)) s.fight.movedThisStep.push(u.id);
   return true;
+}
+
+/** Random reinforcement events in Rogue-like campaign mode (20% chance at start of round 2+) */
+export function triggerCampaignReinforcements(s: GameState): boolean {
+  if (!s.campaign) return false;
+  s.campaign.reinforcementsTriggered ??= [];
+  if (s.campaign.reinforcementsTriggered.includes(s.round)) return false;
+
+  // 20% probability check per round in Roguelike mode
+  const roll = nextRandom(s) * 100;
+  if (roll > 20) return false;
+
+  s.campaign.reinforcementsTriggered.push(s.round);
+
+  const enemyUnits = s.units.filter((u) => u.owner === 1);
+  if (!enemyUnits.length) return false;
+
+  const candidate = enemyUnits.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC') && !u.keywords.includes('EPIC HERO'))
+    ?? enemyUnits[0];
+
+  const cloned: UnitState = structuredClone(candidate);
+  cloned.id = newUid('reinf');
+  cloned.status = 'reserves';
+  cloned.move = null;
+  cloned.cantCharge = false;
+  cloned.weaponsFired = [];
+  cloned.sources = cloned.sources?.length ? cloned.sources : [cloned.name];
+  cloned.models = cloned.models.map((m, idx) => ({
+    ...m,
+    id: `${cloned.id}-m${idx}`,
+    dead: false,
+    wounds: m.profile.W,
+    x: -100,
+    y: -100,
+  }));
+  cloned.startingStrength = cloned.models.length;
+
+  s.units.push(cloned);
+
+  const alertText = `WARNING: ENEMY REINFORCEMENTS DETECTED! ${cloned.name} (${cloned.models.length} models) arriving from strategic reserves!`;
+  log(s, alertText, 'kill', 1);
+
+  s.reinforcementAlert = {
+    unitName: cloned.name,
+    factionName: s.players[1].name,
+    round: s.round,
+    count: cloned.models.length,
+    text: 'WARNING: ENEMY REINFORCEMENTS DETECTED',
+  };
+
+  return true;
+}
+
+/** Sanitize GameState to ensure all arrays and properties are initialized and never throw undefined length */
+export function sanitizeGameState(s: GameState): GameState {
+  if (!s) return s;
+  if (!Array.isArray(s.units)) s.units = [];
+  for (const u of s.units) {
+    if (!u) continue;
+    if (!u.sources || !Array.isArray(u.sources) || u.sources.length === 0) {
+      u.sources = [u.name || 'Unit'];
+    }
+    if (!u.buffs || !Array.isArray(u.buffs)) u.buffs = [];
+    if (!u.enhancements || !Array.isArray(u.enhancements)) u.enhancements = [];
+    if (!u.weaponsFired || !Array.isArray(u.weaponsFired)) u.weaponsFired = [];
+    if (!u.keywords || !Array.isArray(u.keywords)) u.keywords = [];
+    if (!u.factionKeywords || !Array.isArray(u.factionKeywords)) u.factionKeywords = [];
+    if (!u.abilities || !Array.isArray(u.abilities)) u.abilities = [];
+    if (Array.isArray(u.models)) {
+      for (const m of u.models) {
+        if (!m) continue;
+        if (!m.weapons || !Array.isArray(m.weapons)) m.weapons = [];
+        for (const w of m.weapons) {
+          if (!w) continue;
+          if (!w.profiles || !Array.isArray(w.profiles)) w.profiles = [];
+          for (const p of w.profiles) {
+            if (!p) continue;
+            if (!p.abilities || !Array.isArray(p.abilities)) p.abilities = [];
+          }
+        }
+      }
+    }
+  }
+  if (Array.isArray(s.players)) {
+    for (const p of s.players) {
+      if (!p) continue;
+      if (!p.secActive || !Array.isArray(p.secActive)) p.secActive = [];
+      if (!p.secDeck || !Array.isArray(p.secDeck)) p.secDeck = [];
+      if (!p.mission) p.mission = emptyMission();
+      else {
+        p.mission.trapped ??= [];
+        p.mission.decoyed ??= [];
+        p.mission.consecrated ??= [];
+        p.mission.triangulated ??= [];
+        p.mission.condemned ??= [];
+        p.mission.consecrationUnits ??= [];
+        p.mission.surveilled ??= [];
+        p.mission.done ??= [];
+      }
+      if (!p.sec) p.sec = { guards: [], cleansed: [], plundered: [] };
+      else {
+        p.sec.guards ??= [];
+        p.sec.cleansed ??= [];
+        p.sec.plundered ??= [];
+      }
+    }
+  }
+  return s;
 }

@@ -174,7 +174,7 @@ export function getAbilityOrWeaponInfo(
   ];
 
   const matchedWeapon = allWeapons.find((w) => norm(w.name) === k || norm(w.name).includes(k) || k.includes(norm(w.name)));
-  if (matchedWeapon && matchedWeapon.profiles.length > 0) {
+  if (matchedWeapon && matchedWeapon.profiles?.length > 0) {
     const prof: WeaponProfileData = matchedWeapon.profiles[0];
     const isMelee = prof.range === 'Melee';
 

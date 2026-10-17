@@ -372,7 +372,7 @@ export function stratTargetOk(st: StratagemData, u: UnitState): boolean {
   const tgt = section(st.text, 'TARGET').replace(/[’]/g, "'");
   const m = /\b([A-Z][A-Z'-]+(?:[ /][A-Z][A-Z'-]+)*)\b/.exec(tgt.replace(/^(?:One|That|Up to \w+)\s+/, ''));
   if (!m || m[1].length < 3) return true;
-  const kws = [...u.keywords, ...u.factionKeywords, ...u.sources];
+  const kws = [...u.keywords, ...u.factionKeywords, ...(u.sources ?? [u.name])];
   return m[1].split('/').some((alt) => kwPhrase(alt.trim(), kws));
 }
 

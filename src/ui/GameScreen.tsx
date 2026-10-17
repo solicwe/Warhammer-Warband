@@ -40,6 +40,7 @@ import { Icon } from './Icon';
 import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
+import { InlineErrorBoundary } from './InlineErrorBoundary';
 import { attemptRitual, casters, endRituals, RITUALS, ritualsLeft, ritualsPending, ritualTargets, testOdds } from '../engine/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/secondaries';
@@ -460,6 +461,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   }, [pileKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [sel, setSel] = useState<string | null>(null);
+  const selUnit = sel ? s.units.find((u) => u.id === sel) ?? null : null;
   const [orderOfficerId, setOrderOfficerId] = useState<string | null>(null);
   const [orderTargetId, setOrderTargetId] = useState<string | null>(null);
   const [mode, setModeRaw] = useState<Mode | null>(null);
@@ -492,6 +494,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // ending a phase where nothing was done needs a second tap (protects against mis-taps)
   const [armed, setArmed] = useState<string | null>(null);
   useEffect(() => { if (!armed) return; const tm = window.setTimeout(() => setArmed(null), 3500); return () => window.clearTimeout(tm); }, [armed]);
+  useEffect(() => { if (s.reinforcementAlert) play('bad'); }, [s.reinforcementAlert]);
   /** The phase's way out: what is left undone shows under it, and ending with nothing done asks once more. */
   const endButton = (key: string, label: string, idle: boolean, why: string, note?: string) => (
     <div className="sticky-act">
@@ -499,7 +502,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         if (idle && armed !== key) { setArmed(key); flash(`${why} — tap again to confirm`); return; }
         setArmed(null);
         play('turn');
-        act((g) => { if (g.phase === 'movement') autoEndMovement(g, g.active); endPhase(g); }); setSel(null); setMode(null);
+        setSel(null);
+        setMode(null);
+        setDraft(null);
+        setCheck(null);
+        setActPick(null);
+        setStratPick(null);
+        setTape({ on: false });
+        act((g) => { if (g.phase === 'movement') autoEndMovement(g, g.active); endPhase(g); });
       }}>
         <span className="end-l">{armed === key ? `Confirm ${label}?` : label} <Icon name="next" /></span>
         {note && armed !== key && <span className="end-note">{note}</span>}
@@ -911,6 +921,98 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return { badges, losLines, noLos };
   }, [baseBadges, mode, modeUnit, shootTargets, targets, s]);
 
+  const quickActions = useMemo(() => {
+    if (!sel || !selUnit || selUnit.owner !== s.active) return undefined;
+    const actions: { label: string; icon?: string; primary?: boolean; onClick: () => void }[] = [];
+    if (s.phase === 'movement' && onBoard(selUnit) && !selUnit.move) {
+      if (!isEngaged(s, selUnit)) {
+        const mDist = (alive(selUnit)[0]?.profile.M ?? 0) + unitFlags(s, selUnit).move;
+        actions.push({
+          label: `Move ${mDist}"`,
+          primary: true,
+          onClick: () => {
+            const ok = act((g) => {
+              const gu = unitById(g, selUnit.id);
+              if (!beginMove(g, gu, 'normal')) return false;
+              return true;
+            });
+            if (ok) setMode({ k: 'move', unitId: selUnit.id, kind: 'normal', fly: fly && hasKw(selUnit, 'FLY') }, startPaths(selUnit));
+            else flash(`${selUnit.name} must Remain Stationary`);
+          },
+        });
+        actions.push({
+          label: 'Advance',
+          onClick: () => {
+            const ok = act((g) => {
+              const gu = unitById(g, selUnit.id);
+              if (!beginMove(g, gu, 'advance')) return false;
+              rollAdvance(g, gu);
+              return true;
+            });
+            if (ok) setMode({ k: 'move', unitId: selUnit.id, kind: 'advance', fly: fly && hasKw(selUnit, 'FLY') }, startPaths(selUnit));
+          },
+        });
+      } else {
+        actions.push({
+          label: 'Fall back',
+          primary: true,
+          onClick: () => {
+            const ok = act((g) => {
+              const gu = unitById(g, selUnit.id);
+              if (!beginMove(g, gu, 'fallback')) return false;
+              return true;
+            });
+            if (ok) setMode({ k: 'move', unitId: selUnit.id, kind: 'fallback', fly: fly && hasKw(selUnit, 'FLY') }, startPaths(selUnit));
+          },
+        });
+      }
+      actions.push({
+        label: 'Hold',
+        onClick: () => {
+          act((g) => remainStationary(g, unitById(g, selUnit.id)));
+          setSel(null);
+        },
+      });
+    } else if (s.phase === 'shooting' && onBoard(selUnit) && !selUnit.selectedToShoot) {
+      const smodes = shootingModes(s, selUnit);
+      if (smodes.length > 0) {
+        actions.push({
+          label: 'Shoot',
+          primary: true,
+          onClick: () => {
+            act((g) => autoSelectToShoot(g, unitById(g, selUnit.id)));
+            setMode({ k: 'shoot', unitId: selUnit.id, smode: smodes[0], target: null, useCQ: false, profile: {} });
+          },
+        });
+      }
+    } else if (s.phase === 'charge' && onBoard(selUnit) && !selUnit.declaredCharge && !chargeEligibility(s, selUnit)) {
+      actions.push({
+        label: 'Charge',
+        primary: true,
+        onClick: () => {
+          act((g) => autoDeclareCharge(g, unitById(g, selUnit.id), fly));
+          setMode({ k: 'charge', unitId: selUnit.id, targets: [] }, startPaths(selUnit));
+        },
+      });
+    } else if (s.phase === 'fight' && onBoard(selUnit) && !selUnit.fought && isEngaged(s, selUnit)) {
+      actions.push({
+        label: 'Fight',
+        primary: true,
+        onClick: () => {
+          const eng = engagedEnemies(s, selUnit).map((e) => e.id);
+          setModeRaw({ k: 'fight', unitId: selUnit.id, target: eng.length === 1 ? eng[0] : null, epic: false });
+        },
+      });
+    }
+    actions.push({
+      label: 'Sheet',
+      onClick: () => {
+        setSheet(selUnit.id);
+      },
+    });
+    return actions.length > 0 ? { unitId: selUnit.id, actions } : undefined;
+  }, [sel, selUnit, s, fly]);
+
   // tape measure: tap two points on the board
   const [tape, setTape] = useState<{ on: boolean; a?: Pt; b?: Pt; ma?: { u: string; m: string }; mb?: { u: string; m: string } }>({ on: false });
   // between two models the tape measures base to base (how ranges work) and checks line of sight through terrain
@@ -1107,8 +1209,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       {s.players[u.owner].empoweredUnits?.includes(u.id) && <span className="oath-tag" style={{ background: '#134e4a', color: '#5eead4' }}>EMPOWERED</span>}
     </button>
   ); };
-
-  const selUnit = sel ? s.units.find((u) => u.id === sel) ?? null : null;
 
   const unitCard = (u: UnitState) => {
     const m = alive(u)[0];
@@ -1713,7 +1813,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             </div>
           );
         })}
-        <div className="sticky-act"><button className="btn primary big wide" disabled={pending.length > 0} onClick={() => { act((g) => endPhase(g)); setSel(null); }}>{pending.length ? `Roll the Battle-shock tests first (${pending.length})` : 'To Movement'}</button></div>
+        <div className="sticky-act"><button className="btn primary big wide" disabled={pending.length > 0} onClick={() => {
+          setSel(null);
+          setMode(null);
+          setDraft(null);
+          setCheck(null);
+          setActPick(null);
+          setStratPick(null);
+          setTape({ on: false });
+          play('turn');
+          act((g) => endPhase(g));
+        }}>{pending.length ? `Roll the Battle-shock tests first (${pending.length})` : 'To Movement'}</button></div>
       </>
     );
   };
@@ -1798,14 +1908,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           };
           return (
             <>
-              {unitCard(u)}
-              <div className="row acts">
-                {!isEngaged(s, u) && <button className="btn" data-coach="normal" onClick={() => start('normal')}><Icon name="move" /> Normal {(alive(u)[0].profile.M ?? 0) + unitFlags(s, u).move}"</button>}
+              <div className="row acts sticky-action-bar">
+                {!isEngaged(s, u) && <button className="btn primary" data-coach="normal" onClick={() => start('normal')}><Icon name="move" /> Normal {(alive(u)[0].profile.M ?? 0) + unitFlags(s, u).move}"</button>}
                 {!isEngaged(s, u) && <button className="btn" onClick={() => start('advance')}><Icon name="advance" /> Advance</button>}
                 {isEngaged(s, u) && <button className="btn" onClick={() => start('fallback')}><Icon name="fallback" /> Fall back</button>}
                 <button className="btn" onClick={() => { act((g) => remainStationary(g, unitById(g, u.id))); setSel(null); }}><Icon name="hold" /> Remain Stationary</button>
                 {canFly && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
               </div>
+              {unitCard(u)}
             </>
           );
         })()}
@@ -1925,12 +2035,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode?.k === 'shoot' && modeUnit) {
       const opt = { mode: mode.smode, useCloseQuarters: mode.useCQ, profile: mode.profile, skipWeapons: mode.skip };
       const remaining = unfiredWeaponNames(modeUnit);
-      const firedAny = modeUnit.weaponsFired.length > 0;
+      const firedAny = (modeUnit.weaponsFired?.length ?? 0) > 0;
       const res = mode.target ? buildShootPools(s, modeUnit.id, mode.target, opt) : null;
       // Collect all distinct ranged multi-profile weapons across ALL alive models
       const multiMap = new Map<string, WeaponData>();
       for (const m of alive(modeUnit)) {
-        for (const w of m.weapons) {
+        for (const w of m.weapons ?? []) {
+          if (!w.profiles?.length) continue;
           if (!isMelee(w.profiles[0]) && w.profiles.length > 1 && !multiMap.has(w.name)) {
             multiMap.set(w.name, w);
           }
@@ -1942,8 +2053,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const cqWeapons = new Map<string, WeaponData>();
       const nonCqWeapons = new Map<string, WeaponData>();
       for (const m of alive(modeUnit)) {
-        for (const w of m.weapons) {
-          if (isMelee(w.profiles[0])) continue;
+        for (const w of m.weapons ?? []) {
+          if (!w.profiles?.length || isMelee(w.profiles[0])) continue;
           if (hasAbility(w.profiles[0], 'close-quarters')) {
             if (!cqWeapons.has(w.name)) cqWeapons.set(w.name, w);
           } else {
@@ -1955,10 +2066,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
       // Filter multi-profile weapons relevant to current selection
       const multi = allMulti.filter((w) => {
+        if (!w.profiles?.length) return false;
         const isCq = hasAbility(w.profiles[0], 'close-quarters');
         if (mode.useCQ) return isCq;
         if (!isCq) return true;
-        return alive(modeUnit).some((m) => m.weapons.some((mw) => mw.name === w.name) && !m.weapons.some((mw) => !isMelee(mw.profiles[0]) && !hasAbility(mw.profiles[0], 'close-quarters')));
+        return alive(modeUnit).some((m) => m.weapons?.some((mw) => mw.name === w.name) && !m.weapons?.some((mw) => mw.profiles?.length && !isMelee(mw.profiles[0]) && !hasAbility(mw.profiles[0], 'close-quarters')));
       });
 
       // Filter remaining weapons to only those that can actually fire in this mode
@@ -1966,7 +2078,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         const isCq = cqWeapons.has(wName);
         if (mode.useCQ) return isCq;
         if (!isCq) return true;
-        return alive(modeUnit).some((m) => m.weapons.some((mw) => mw.name === wName) && !m.weapons.some((mw) => !isMelee(mw.profiles[0]) && !hasAbility(mw.profiles[0], 'close-quarters')));
+        return alive(modeUnit).some((m) => m.weapons?.some((mw) => mw.name === wName) && !m.weapons?.some((mw) => mw.profiles?.length && !isMelee(mw.profiles[0]) && !hasAbility(mw.profiles[0], 'close-quarters')));
       });
 
       return (
@@ -2130,8 +2242,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         )}
         {u && (
           <>
-            {unitCard(u)}
-            <div className="row acts">
+            <div className="row acts sticky-action-bar">
               {modes.length > 0 && (
                 <button className="btn primary" data-coach="shoot" onClick={() => {
                   act((g) => autoSelectToShoot(g, unitById(g, u.id)));
@@ -2144,6 +2255,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               {canExplode && <button className="btn small" onClick={() => setMode({ k: 'explosives', unitId: u.id, target: null })}>Explosives 1CP</button>}
               {u.weaponsFired.length > 0 && !u.selectedToShoot && <button className="btn small ghost" onClick={() => act((g) => endUnitShooting(unitById(g, u.id)))}>Done shooting with this unit</button>}
             </div>
+            {unitCard(u)}
             {u.weaponsFired.length > 0 && !u.selectedToShoot && <div className="tiny muted">Already fired: {u.weaponsFired.join(', ')} · its other weapons can shoot another target</div>}
             {actionOptions(s).filter((o) => o.unitId === u.id).length > 0 && (
               <div className="action-box">
@@ -2260,13 +2372,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className="unit-strip">{mine.map((x) => unitPill(x, !!x.declaredCharge))}</div>
         {u && (
           <>
-            {unitCard(u)}
-            {why ? <div className="muted small">Cannot charge: {why}</div> : (
-              <div className="row">
+            {why ? <div className="muted small" style={{ marginBottom: 6 }}>Cannot charge: {why}</div> : (
+              <div className="row sticky-action-bar">
                 <button className="btn primary" data-coach="charge" onClick={() => { act((g) => autoDeclareCharge(g, unitById(g, u.id), fly)); setMode({ k: 'charge', unitId: u.id, targets: [] }, startPaths(u)); }}>Declare charge (2D6)</button>
                 {hasKw(u, 'FLY') && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
               </div>
             )}
+            {unitCard(u)}
             {u.declaredCharge && isEngaged(s, u) && (hasKw(u, 'MONSTER') || hasKw(u, 'VEHICLE')) && (() => {
               const blocked = canUseStratagem(s, u.owner, 'crushing-impact', u);
               const enemies = engagedEnemies(s, u);
@@ -2395,7 +2507,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode?.k === 'fight' && modeUnit) {
       const u = modeUnit;
       // a choice only for models that carry more than one melee weapon; every other model just fights with its own
-      const own = (m: ModelState) => meleeWeapons(m).filter((w) => !hasAbility(w.profiles[0], 'extra-attacks'));
+      const own = (m: ModelState) => meleeWeapons(m).filter((w) => w.profiles?.length && !hasAbility(w.profiles[0], 'extra-attacks'));
       const weapons = [...new Map(alive(u).filter((m) => own(m).length > 1).flatMap(own).map((w) => [w.name, w])).values()];
       const chars = alive(u).filter((m) => m.isCharacter);
       const ec = canUseStratagem(s, u.owner, 'epic-challenge', u);
@@ -2481,9 +2593,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             const disp = dispositionById(P.disposition as DispositionId);
             const M = P.mission;
             const notes = [
-              M.trapped.length && `trapped ${M.trapped.length}`, M.decoyed.length && `decoyed ${M.decoyed.length}`, M.consecrated.length && `consecrated ${M.consecrated.length}`,
-              M.triangulated.length && `triangulated ${M.triangulated.length}`, M.condemned.length && `condemned: ${M.condemned.map((id) => U(id).name).join(', ')}`,
-              s.markers.filter((m) => m.owner === p).length && `operation marker ${s.markers.filter((m) => m.owner === p).length}`,
+              M?.trapped?.length ? `trapped ${M.trapped.length}` : null,
+              M?.decoyed?.length ? `decoyed ${M.decoyed.length}` : null,
+              M?.consecrated?.length ? `consecrated ${M.consecrated.length}` : null,
+              M?.triangulated?.length ? `triangulated ${M.triangulated.length}` : null,
+              M?.condemned?.length ? `condemned: ${M.condemned.map((id) => U(id).name).join(', ')}` : null,
+              s.markers?.filter((m) => m.owner === p).length ? `operation marker ${s.markers.filter((m) => m.owner === p).length}` : null,
             ].filter(Boolean);
             const act0 = prim.action ? MISSIONS.actions[prim.action] : undefined;
             return (
@@ -2767,48 +2882,51 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         )}
       </header>
       <div className={`board-wrap shake-${shake}`}>
-        <Board
-          s={s}
-          viewer={actor}
-          selected={sel}
-          movable={
-            s.phase === 'movement' && !mode ? s.units.filter((u) => u.owner === s.active && onBoard(u) && !u.move).map((u) => u.id)
-            : (!mode && s.window?.kind === 'fireOverwatch' && s.window.player === actor) ? overwatchCandidates(s, s.window.player).map((u) => u.id)
-            : undefined
-          }
-          draftUnit={draftUnit}
-          draft={draft}
-          unitNumbers={heroicNumbers}
-          edgeGuide={mode?.k === 'place' && mode.how === 'ingress' ? RULES.reserves.edgeDistance : undefined}
-          zoneGuide={zoneGuide}
-          maxFor={mode?.k === 'place' ? undefined : maxFor}
-          walk={mode?.k === 'place' ? undefined : walkDraft}
-          animateMoves={bots.length ? bots : undefined}
-          bad={check?.bad}
-          targets={targets}
-          picked={picked}
-          rings={rings}
-          badges={badges}
-          buffTags={buffTags}
-          riled={riled}
-          goals={goals}
-          losLines={losLines}
-          noLos={noLos}
-          onTapUnit={onTapUnit}
-          measure={tape.on ? { a: tape.a, b: tape.b, label: tapeInfo?.text, los: tapeInfo?.los } : undefined}
-          onTapBoard={onTapBoard}
-          onDraft={(d) => {
-            if (mode?.k === 'place' && modeUnit && (mode.how === 'ingress' || mode.how === 'deepStrike' || mode.how === 'infiltrate')) {
-              const pos = nudgePlacement(s, modeUnit, lastPos(d), mode.how);
-              setDraft(placePaths(pos));
-              const chk = validatePlacement(s, modeUnit, pos, mode.how);
-              setCheck(chk.ok ? null : chk);
-            } else { setDraft(d); setCheck(null); }
-          }}
-          onDragEnd={onDragEnd}
-          plan={planArrows}
-          side={sideCards}
-        />
+        <InlineErrorBoundary name="Battlefield Board" onRecover={() => { setSel(null); setMode(null); setDraft(null); }}>
+          <Board
+            s={s}
+            viewer={actor}
+            selected={sel}
+            movable={
+              s.phase === 'movement' && !mode ? s.units.filter((u) => u.owner === s.active && onBoard(u) && !u.move).map((u) => u.id)
+              : (!mode && s.window?.kind === 'fireOverwatch' && s.window.player === actor) ? overwatchCandidates(s, s.window.player).map((u) => u.id)
+              : undefined
+            }
+            draftUnit={draftUnit}
+            draft={draft}
+            unitNumbers={heroicNumbers}
+            edgeGuide={mode?.k === 'place' && mode.how === 'ingress' ? RULES.reserves.edgeDistance : undefined}
+            zoneGuide={zoneGuide}
+            maxFor={mode?.k === 'place' ? undefined : maxFor}
+            walk={mode?.k === 'place' ? undefined : walkDraft}
+            animateMoves={bots.length ? bots : undefined}
+            bad={check?.bad}
+            targets={targets}
+            picked={picked}
+            rings={rings}
+            badges={badges}
+            buffTags={buffTags}
+            riled={riled}
+            goals={goals}
+            losLines={losLines}
+            noLos={noLos}
+            quickActions={quickActions}
+            onTapUnit={onTapUnit}
+            measure={tape.on ? { a: tape.a, b: tape.b, label: tapeInfo?.text, los: tapeInfo?.los } : undefined}
+            onTapBoard={onTapBoard}
+            onDraft={(d) => {
+              if (mode?.k === 'place' && modeUnit && (mode.how === 'ingress' || mode.how === 'deepStrike' || mode.how === 'infiltrate')) {
+                const pos = nudgePlacement(s, modeUnit, lastPos(d), mode.how);
+                setDraft(placePaths(pos));
+                const chk = validatePlacement(s, modeUnit, pos, mode.how);
+                setCheck(chk.ok ? null : chk);
+              } else { setDraft(d); setCheck(null); }
+            }}
+            onDragEnd={onDragEnd}
+            plan={planArrows}
+            side={sideCards}
+          />
+        </InlineErrorBoundary>
         <AttackReport s={s} level={((spectate && speed === 2) || (rush && actingBot !== null)) && fxLevel === 'full' ? 'short' : fxLevel} quick={(o) => spectate || rush || bots.includes(o)} onBusy={setReporting}
           onShake={(lv) => { if (!lv) return; setShake(lv); window.setTimeout(() => setShake(0), 420 + lv * 80); }} />
         {botSays && actingBot === null && !spectate && <div className="bot-caption">{botSays}</div>}
@@ -2840,7 +2958,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         )}
         <div className={`panel ${actor ? 's1' : ''}`}>
           {bots.length === 0 && s.phase !== 'deploy' && s.phase !== 'gameover' && !s.window && <div className="label"><span className={`side-dot s${actor}`} aria-hidden="true" /> {pName(s, actor)} to act</div>}
-          {panel()}
+          <InlineErrorBoundary name={`Phase: ${s.phase}`} onRecover={() => { setSel(null); setMode(null); setDraft(null); setCheck(null); }}>
+            {panel()}
+          </InlineErrorBoundary>
         </div>
       </aside>
 
@@ -3077,6 +3197,23 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn" onClick={(e) => { e.stopPropagation(); setFinalSeen(true); }}>See the board</button>
             <button className="btn primary" onClick={(e) => { e.stopPropagation(); onExit(); }}>{s.campaign ? 'Back to the campaign' : 'Back to home'}</button>
           </>} />
+      )}
+
+      {s.reinforcementAlert && (
+        <div className="tray-backdrop" style={{ zIndex: 9999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="card" style={{ maxWidth: '440px', width: '100%', background: 'linear-gradient(180deg, #1e1111 0%, #110c0c 100%)', border: '2px solid #ef4444', borderRadius: '12px', padding: '20px', boxShadow: '0 0 30px rgba(239, 68, 68, 0.4)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f87171' }}>
+              <Icon name="skull" size={26} />
+              <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{s.reinforcementAlert.text}</div>
+            </div>
+            <div style={{ color: '#e2e8f0', fontSize: '0.92rem' }}>Strategic sensors have detected unexpected hostile reserve forces mobilizing onto the battle grid!</div>
+            <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '10px 14px' }}>
+              <div style={{ fontWeight: 700, color: '#fca5a5' }}>{s.reinforcementAlert.unitName}</div>
+              <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{s.reinforcementAlert.factionName} · {s.reinforcementAlert.count} models · Round {s.reinforcementAlert.round} Strategic Reserves</div>
+            </div>
+            <button className="btn primary big wide" style={{ background: '#dc2626', borderColor: '#ef4444', fontWeight: 700 }} onClick={() => { act((g) => { g.reinforcementAlert = null; }); }}>Acknowledge Threat</button>
+          </div>
+        </div>
       )}
     </div>
   );

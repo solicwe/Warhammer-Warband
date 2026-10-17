@@ -316,7 +316,7 @@ export function detectionRange(s: GameState, observer: ModelState, u: UnitState,
 /** Can `observer` see model `m` of unit `u`, applying Hidden and Lone Operative. */
 export function modelVisible(s: GameState, observer: ModelState, u: UnitState, m: ModelState, ignoreLoneOperative = false): boolean {
   const d = baseDist(observer, m);
-  if (!ignoreLoneOperative && u.sources.length === 1 && (u.core.loneOperative || hooks.loneOperative?.(s, u)) && d > (u.core.loneOperative ?? 12)) return false;
+  if (!ignoreLoneOperative && (!u.sources || u.sources.length <= 1) && (u.core.loneOperative || hooks.loneOperative?.(s, u)) && d > (u.core.loneOperative ?? 12)) return false;
   return hasLos(s, observer, m);
 }
 

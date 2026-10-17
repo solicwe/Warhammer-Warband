@@ -718,7 +718,8 @@ export interface GameState {
   botIgnoresCards?: PlayerId[];
   fx?: FxEvent[];
   stats?: BattleStats;
-  campaign?: { node: string; relics: string[]; rules: string[]; relicLevels?: Record<string, number>; lootedObjectives?: string[] };
+  campaign?: { node: string; relics: string[]; rules: string[]; relicLevels?: Record<string, number>; lootedObjectives?: string[]; reinforcementsTriggered?: number[] };
+  reinforcementAlert?: { unitName: string; factionName: string; round: number; count: number; text: string } | null;
   campaignScrap?: number; // scrap salvaged during campaign battle
   table?: { width: number; height: number };
   botTried?: string[]; // bot bookkeeping: units already considered this phase

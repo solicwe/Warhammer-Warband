@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GameState } from '../engine/types';
+import { sanitizeGameState } from '../engine/game';
 
 const KEY = 'w40k11-save';
 
@@ -11,7 +12,10 @@ export function loadSaved(): GameState | null {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as GameState;
-    return s && s.version === SAVE_VERSION && Array.isArray(s.units) ? s : null; // saves from older app versions are ignored
+    if (s && s.version === SAVE_VERSION && Array.isArray(s.units)) {
+      return sanitizeGameState(s);
+    }
+    return null; // saves from older app versions are ignored
   } catch {
     return null;
   }
@@ -46,13 +50,15 @@ if (typeof window !== 'undefined') {
 
 /** Game state holder: every action runs synchronously on a clone of the latest state, then autosaves. */
 export function useGame(initial: GameState) {
-  const ref = useRef<GameState>(initial);
+  const sanitized = sanitizeGameState(initial);
+  const ref = useRef<GameState>(sanitized);
   const history = useRef<GameState[]>([]);
-  const [state, setState] = useState<GameState>(initial);
+  const [state, setState] = useState<GameState>(sanitized);
   const [undoCount, setUndoCount] = useState(0);
   // a battle left before its first action is still there to continue from the home screen
   useEffect(() => { queueSave(ref.current); }, []);
   const commit = (next: GameState) => {
+    sanitizeGameState(next);
     ref.current = next;
     setState(next);
     queueSave(next);

@@ -66,6 +66,8 @@ export interface BoardProps {
   plan?: { from: Pt; to: Pt; melee: boolean; label: string }[];
   /** cards laid on the table beside the battlefield, next to each army's deployment zone (army-wide buffs) */
   side?: { p: PlayerId; at: 'left' | 'right' | 'top' | 'bottom'; cards: React.ReactNode[] }[];
+  /** quick floating contextual action menu above selected unit */
+  quickActions?: { unitId: string; actions: { label: string; icon?: string; primary?: boolean; onClick: () => void }[] };
 }
 
 /** Width of the table beside the battlefield that holds the side cards, in inches; card text is laid out at PX px per inch. */
@@ -928,7 +930,7 @@ function BoardImpl(props: BoardProps) {
       const isDaemon = isDaemonUnit(u) && isDaemonsArmy(s, u.owner);
       const unitInShadow = isDaemon && isUnderShadowOfChaos(s, u.owner, u);
       const enemyInShadow = !isDaemon && isDaemonsArmy(s, other(u.owner)) && isUnderShadowOfChaos(s, other(u.owner), u);
-      const hasPsychicWep = ms.some((m) => m.weapons.some((w) => w.profiles.some((p) => p.abilities.includes('psychic'))));
+      const hasPsychicWep = ms.some((m) => m.weapons?.some((w) => w.profiles?.some((p) => p.abilities?.includes('psychic'))));
       const uFlags = unitFlags(s, u);
       const hasStealth = !!(u.core.stealth || uFlags.stealth || u.buffs?.some((b) => b.kind === 'smoke'));
       const hasLoneOp = !!((!u.sources || u.sources.length <= 1) && (u.core.loneOperative || loneOperativeNow(s, u) || uFlags.loneOperative));
@@ -1535,6 +1537,50 @@ function BoardImpl(props: BoardProps) {
                 </g>
               );
             })() : null}
+            {props.quickActions?.unitId === u.id && pts.length > 0 && (() => {
+              const qa = props.quickActions.actions;
+              const btnW = 2.1;
+              const gap = 0.22;
+              const qaY = minY - (props.badges?.[u.id]?.length ? 2.3 : (hasStealth || hasLoneOp || hasCover) ? 2.0 : 1.4);
+              return (
+                <g transform={`translate(${cx} ${qaY})`} pointerEvents="auto">
+                  {qa.map((act, i) => {
+                    const offX = (i - (qa.length - 1) / 2) * (btnW + gap);
+                    return (
+                      <g
+                        key={act.label}
+                        transform={`translate(${offX} 0)`}
+                        style={{ cursor: 'pointer' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          act.onClick();
+                        }}
+                      >
+                        <rect
+                          x={-btnW / 2}
+                          y={-0.34}
+                          width={btnW}
+                          height={0.68}
+                          rx={0.34}
+                          fill={act.primary ? '#2563eb' : 'rgba(15, 23, 42, 0.94)'}
+                          stroke={act.primary ? '#60a5fa' : 'rgba(255, 255, 255, 0.3)'}
+                          strokeWidth={0.06}
+                        />
+                        <text
+                          y={0.11}
+                          fontSize={0.32}
+                          textAnchor="middle"
+                          fill="#ffffff"
+                          fontWeight={800}
+                        >
+                          {act.label}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </g>
+              );
+            })()}
             {(isSel || isPicked || isTarget) && (hasStealth || hasLoneOp || hasCover) && pts.length > 0 && (() => {
               const tacticalTags: { text: string; color: string; border: string; bg: string; icon: 'stealth' | 'shield' | 'radar' }[] = [];
               if (hasStealth) tacticalTags.push({ text: 'Stealth −1 Hit', color: '#38bdf8', border: '#0284c7', bg: 'rgba(14, 165, 233, 0.25)', icon: 'stealth' });

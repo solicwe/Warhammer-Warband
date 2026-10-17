@@ -422,7 +422,7 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
           : undefined);
         return (
           <div className="ds-sheet" style={{ ['--ds-band' as string]: dsColor(rulesFaction), borderRadius: 8, overflow: 'hidden' }}>
-            {renderAbilitiesContent(u.abilities, u, u.sources[0] ?? u.name, rulesFaction, u.abilities.map((x) => x.name))}
+            {renderAbilitiesContent(u.abilities, u, u.sources?.[0] ?? u.name, rulesFaction, u.abilities.map((x) => x.name))}
           </div>
         );
       })()}

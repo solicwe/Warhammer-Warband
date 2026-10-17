@@ -110,7 +110,7 @@ export function ritualTargets(s: GameState, c: Caster, r: Ritual): UnitState[] {
     if (r.side === 'friendly') return u.factionKeywords.some((k) => k === 'THOUSAND SONS' || k === 'SCINTILLATING LEGIONS') && !engagedEnemies(s, u).length;
     if (r.id === 'doombolt') {
       // a Lone Operative on its own can only be picked from within 12"
-      const lone = (u.core.loneOperative || unitFlags(s, u).loneOperative) && u.sources.length === 1;
+      const lone = (u.core.loneOperative || unitFlags(s, u).loneOperative) && (!u.sources || u.sources.length <= 1);
       if (lone && !alive(u).some((n) => baseDist(c.model, n) <= 12 + 1e-6)) return false;
     }
     return true;

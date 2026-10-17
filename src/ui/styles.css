@@ -584,6 +584,7 @@ b.em { font-weight: 700; color: var(--text); }
 .tray .sticky-act.tray-act { margin: 0 -16px calc(-16px - env(safe-area-inset-bottom, 0px)); padding: 10px 16px calc(16px + env(safe-area-inset-bottom, 0px)); bottom: calc(-16px - env(safe-area-inset-bottom, 0px)); }
 .row.acts { align-items: stretch; }
 .acts > .btn:not(.small) { flex: 1 1 0; min-width: 88px; min-height: 60px; padding: 6px 8px; flex-direction: column; gap: 3px; font: 600 14px/1.15 var(--font-ui); text-align: center; }
+.sticky-action-bar { position: sticky; top: 0; z-index: 12; background: var(--surface-1, #1e293b); padding: 8px 0; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); }
 .big-result { text-align: center; padding: 4px; font: 700 24px var(--font-cond); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
 .need { font: 500 12.5px var(--font-ui); color: var(--text-2); }
 .loadout-line { color: var(--text); }

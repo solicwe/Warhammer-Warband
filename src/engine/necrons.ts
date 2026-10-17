@@ -26,7 +26,7 @@ export function isNecronArmy(s: GameState, p: PlayerId): boolean {
 export function activateReanimation(s: GameState, u: UnitState, extraBonus = 0): number {
   if (!isNecronUnit(u) || !alive(u).length) return 0;
 
-  const isWarriors = (u.sources[0] ?? u.name).toLowerCase().includes('warrior');
+  const isWarriors = (u.sources?.[0] ?? u.name).toLowerCase().includes('warrior');
   // Necron Warriors: D3+3 (or D3 if not near an objective in 10e index, or straight D3+3 on their datasheet: D6 / D3+3)
   const baseExpr = isWarriors ? 'D3+1' : 'D3';
   let totalWounds = rollExpr(s, baseExpr).total + extraBonus;
