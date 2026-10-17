@@ -1860,31 +1860,6 @@ function BoardImpl(props: BoardProps) {
         onClose={() => setBoardPopover(null)}
       />
     )}
-    <button
-      type="button"
-      className="btn small board-zoom-btn"
-      onClick={() => setVb(home)}
-      title="Reset View / Zoom Out"
-      aria-label="Reset View"
-      style={{
-        position: 'absolute',
-        right: 12,
-        bottom: 12,
-        zIndex: 5,
-        background: '#111827',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        color: '#f3f4f6',
-        borderRadius: 6,
-        padding: '5px 9px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        fontSize: '12px',
-        fontWeight: 600,
-      }}
-    >
-      <Icon name="ruler" size={14} /> Fit Board
-    </button>
     </>
   );
 }
