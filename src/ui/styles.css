@@ -1597,6 +1597,8 @@ b.em { font-weight: 700; color: var(--text); }
 .side-score:hover { background: var(--surface-2); }
 .side-score.s0 { color: var(--p0); }
 .side-score.s1 { color: var(--p1); }
+.side-score.s0 .ss-label { color: #60a5fa !important; font-weight: 800; }
+.side-score.s1 .ss-label { color: #f87171 !important; font-weight: 800; }
 .ss-label { font: 600 10.5px var(--font-cond); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-2); }
 .ss-vp { font: 700 21px/1 var(--font-cond); font-variant-numeric: tabular-nums; }
 .ss-vp small { font: 600 10px var(--font-cond); margin-left: 2px; color: var(--text-3); letter-spacing: 0.08em; }
@@ -1615,10 +1617,10 @@ b.em { font-weight: 700; color: var(--text); }
 .miracle-die.fate-die { background: #0c4a6e; color: #38bdf8; border: 1px solid #0284c7; box-shadow: 0 0 4px rgba(56, 189, 248, 0.4); }
 .miracle-more { font: 700 9px var(--font-cond); color: #ffd700; margin-left: 1px; }
 .miracle-more.fate-more { color: #38bdf8; }
-.round-box { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 48px; padding: 2px 4px; border: none; border-radius: 8px; background: transparent; cursor: pointer; color: var(--text); }
+.round-box { flex: 0 1 auto; min-width: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 48px; padding: 2px 8px; border: none; border-radius: 8px; background: transparent; cursor: pointer; color: var(--text); }
 .round-box:hover { background: var(--surface-2); }
 .rb-round { font: 700 15px/1.1 var(--font-cond); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
-.rb-turn { max-width: 100%; font: 600 12.5px/1.2 var(--font-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rb-turn { max-width: 100%; font: 600 11.5px/1.2 var(--font-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .adv { display: flex; height: 4px; background: var(--sunk); }
 .adv > i { display: block; height: 100%; transition: width 0.9s cubic-bezier(.3, .8, .3, 1); }
 .adv-0 { background: var(--p0); }

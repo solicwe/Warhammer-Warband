@@ -205,7 +205,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     window.addEventListener('game-error', onErr);
     window.addEventListener('save-error', onSave);
     return () => { window.removeEventListener('game-error', onErr); window.removeEventListener('save-error', onSave); };
-  });
+  }, []);
 
   // single-player: let the bot take its steps one at a time so the board animates; caption what it just did
   const [botSays, setBotSays] = useState<string | null>(null);
@@ -229,7 +229,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const stopPonder = () => { ponder.current?.w?.terminate(); ponder.current = null; setPonderProg(null); };
   useEffect(() => stopPonder, []);
   const isMobileScreen = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)')?.matches;
-  const ponderFor = !isMobileScreen && !s.campaign && bots.length === 1 && s.active !== bots[0] && (s.phase === 'shooting' || s.phase === 'charge' || s.phase === 'fight') ? bots[0] : null;
+  const ponderFor = null;
   useEffect(() => {
     if (ponderFor === null || lookBudget(s, ponderFor) <= 0) return;
     // the same board as the thinking started from (the player only ended a phase): it stands
@@ -286,7 +286,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         if (worker) worker.onmessage = null;
         done('steady');
       };
-      const effectiveBudget = rush || s.campaign || isMobileScreen ? 0 : Math.min(lookBudget(s, who), 2800);
+      const effectiveBudget = rush || s.campaign || isMobileScreen ? 0 : Math.min(lookBudget(s, who), 250);
       if (effectiveBudget <= 0) {
         stopPonder();
         done(s.campaign ? 'rogue' : 'steady');
@@ -333,7 +333,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const drive = who === null && spectate && !s.attack;
     if (who === null && !drive) return;
     const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command' || s.window != null;
-    const delay = (quick ? 80 : s.campaign ? 320 : 650) / (spectate && speed === 2 ? 3 : 1) / (rush ? 5 : 1);
+    const delay = (quick ? 60 : s.campaign ? 200 : 240) / (spectate && speed === 2 ? 3 : 1) / (rush ? 5 : 1);
     const caption = (before: GameState, after: GameState) => {
       const fresh = after.log.slice(before.log.length).filter((e) => e.kind !== 'roll' || /charge|Advance/i.test(e.text));
       if (fresh.length) { setBotSays(fresh[fresh.length - 1].text); }
@@ -2759,10 +2759,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const draftUnit = mode && (mode.k === 'move' || mode.k === 'place' || mode.k === 'charge' || mode.k === 'pile') ? mode.unitId : null;
   // the sides as the player thinks of them: "You" and "Bot" against the bot, else the players' names
   const sideLabel = (p: PlayerId) => (bots.length === 1 ? (bots.includes(p) ? 'Bot' : 'You') : s.players[p].name.replace(/ Bot$/, ''));
-  const turnText = s.phase === 'deploy' ? `${layoutName} · ${pName(s, s.deployTurn)} sets up`
-    : s.phase === 'scouts' ? 'Scouts moves'
+  const activeSideName = s.active === 0 ? 'Blue' : 'Red';
+  const turnText = s.phase === 'deploy' ? 'Deploy'
+    : s.phase === 'scouts' ? 'Scouts'
     : s.phase === 'gameover' ? 'Battle over'
-    : bots.length === 1 ? (bots.includes(s.active) ? `${pName(s, s.active)}'s turn` : 'Your turn') : `${pName(s, s.active)}'s turn`;
+    : bots.length === 1 ? (bots.includes(s.active) ? `${activeSideName} Turn` : 'Your turn') : `${activeSideName} Turn`;
   // the commander on screen: whoever spoke last, else the bot whose turn it is
   const commanderP: PlayerId | null = bots.length ? (actingBot ?? (says && bots.includes(says.p) ? says.p : bots[0])) : null;
   // the enemy's likely attacks next turn, drawn on request while it is the player's turn

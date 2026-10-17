@@ -321,6 +321,14 @@ const ALTERNATE_THEMES: Record<string, FactionTheme> = {
     soft: 'rgba(234, 179, 8, 0.18)',
     glow: 'rgba(234, 179, 8, 0.6)',
   },
+  AdM: {
+    id: 'AdM_ALT',
+    name: 'Adeptus Mechanicus (Ryza Ochre)',
+    primary: '#ea580c',
+    secondary: '#fb923c',
+    soft: 'rgba(234, 88, 12, 0.18)',
+    glow: 'rgba(234, 88, 12, 0.6)',
+  },
   TS: {
     id: 'TS_ALT',
     name: 'Thousand Sons (Changehost)',
