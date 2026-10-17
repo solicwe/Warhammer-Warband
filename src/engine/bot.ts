@@ -17,7 +17,7 @@ import { botPledge, setPledge } from './emperorsChildren';
 import { botPlague, PLAGUE_IDS } from './deathGuard';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, resolvePickUnit, unitSelected } from './activations';
 import { botOff, W } from './botWeights';
-import { applyStyle, chooseTurnStyle, styleChosen } from './botLook';
+import { applyStyle, chooseTurnStyle, lookBudget, styleChosen } from './botLook';
 import { roughLos, unitVisibleTo } from './visibility';
 import { botAllowChargeStratagem, botDetectionStratagem, botIgnorePenaltiesStratagem, botTauntStratagem, botUnshotStratagem } from './botPlus';
 import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, botChargeBonusStratagem, botCommandExtras, botFightEndActs, botIgnoreModsStratagem, botReadyStratagem, botShieldStratagem, botTeleportActs } from './botPlus';
@@ -335,7 +335,7 @@ function cargoOffFirst(s: GameState, t: UnitState, plans: { paths?: Map<string, 
 /** Move (or bring in) one unit. Returns false when there is nothing left to do this phase. */
 export function botMoveOne(s: GameState): boolean {
   // once per turn, before anything moves: try the turn a few ways on copies of the game and keep the best style
-  if (s.phase === 'movement' && !styleChosen(s)) applyStyle(s, s.active, chooseTurnStyle(s, s.active));
+  if (s.phase === 'movement' && !styleChosen(s)) applyStyle(s, s.active, chooseTurnStyle(s, s.active, lookBudget(s, s.active)));
   botUseActs(s, s.active, ['movement']);
   botTeleportActs(s, s.active);
   if (!s.botTried?.includes(`${s.turn}|jump|${s.active}`)) { (s.botTried ??= []).push(`${s.turn}|jump|${s.active}`); botRedeployActs(s, s.active); }

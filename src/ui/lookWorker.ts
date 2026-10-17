@@ -20,7 +20,7 @@ self.onmessage = (e: MessageEvent<Msg>) => {
     let error: string | null = null;
     try {
       // the turn's style (picked by a look) is this worker's bot weights for that side
-      if (m.style) applyStyle(structuredClone(g), m.style.p, m.style.name);
+      if (m.style) applyStyle(g, m.style.p, m.style.name);
       if (m.who === null) botAct(g); else botStep(g, m.who);
     } catch (err) { error = err instanceof Error ? err.message : String(err); }
     self.postMessage({ id: m.id, state: error ? null : g, error });

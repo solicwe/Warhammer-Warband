@@ -975,11 +975,11 @@ export function weaponRangeFor(s: GameState, A: UnitState, m: ModelState, T: Uni
 
 /** Does the unit get a weapon ability from some effect, whatever the target (e.g. [ASSAULT] for Advance + shoot)? */
 export function unitGrants(s: GameState, u: UnitState, ability: string, kind: 'melee' | 'ranged'): boolean {
-  return effectsFor(s, u).some((a) => (!a.e.attack || a.e.attack === kind) && a.e.abilities?.includes(ability)
+  return effectsFor(s, u).some((a) => (!a.e.attack || a.e.attack === kind) && (Array.isArray(a.e.abilities) ? a.e.abilities.includes(ability) : a.e.abilities === ability)
     && (a.e.if ?? []).every((c) => /^target|^within|Weapon$|^!target/.test(c) || cond(c, { s, A: u, holder: a.holder, bearers: a.from ?? a.bearers })));
 }
 
-export const grants = (list: Active[], inc: Incoming[], ability: string) => list.some((a) => a.e.abilities?.includes(ability)) || inc.some((i) => i.abilities?.includes(ability));
+export const grants = (list: Active[], inc: Incoming[], ability: string) => list.some((a) => (Array.isArray(a.e.abilities) ? a.e.abilities.includes(ability) : a.e.abilities === ability)) || inc.some((i) => (Array.isArray(i.abilities) ? i.abilities.includes(ability) : i.abilities === ability));
 
 /** Stable key so models with the same effects share an attack pool. */
 export const fxKey = (list: Active[], inc: Incoming[]) => [...list.map((a) => `${a.label}:${JSON.stringify(a.e)}`), ...inc.map((i) => JSON.stringify(i))].sort().join(';');
@@ -1226,7 +1226,11 @@ export function canDo(s: GameState, u: UnitState, what: Eligibility): boolean {
   if (what === 'chargeAfterAdvance' || what === 'chargeAfterFallBack') {
     if (isUnitEmpowered(s, u) && (u.name.includes('Wyches') || u.abilities.some((a) => a.name.includes('Acrobatic Gladiators')))) return true;
   }
-  return effectsFor(s, u).some((a) => a.e.eligible?.includes(what) && holds(a, { s, A: u }));
+  return effectsFor(s, u).some((a) => {
+    const el = a.e?.eligible;
+    const match = Array.isArray(el) ? el.includes(what) : (typeof el === 'string' ? el === what : false);
+    return match && holds(a, { s, A: u });
+  });
 }
 
 const unitFx = (s: GameState, u: UnitState) => effectsFor(s, u).filter((a) => holds(a, { s, A: u }));

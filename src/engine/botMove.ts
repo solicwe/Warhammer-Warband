@@ -31,6 +31,7 @@ export function withFastPlanning<T>(fn: () => T): T {
   fastPlanning = true;
   try { return fn(); } finally { fastPlanning = was; }
 }
+export const isFastPlanning = (s: GameState, u?: UnitState) => fastPlanning || !!s.campaign || (u ? (s.botLevels?.[u.owner] ?? s.botLevel) === 'easy' : s.botLevel === 'easy');
 type Spot = Map<string, Pt>;
 
 const W = RULES.battlefield.width;
@@ -116,7 +117,7 @@ export function movesTowards(s: GameState, u: UnitState, kind: MoveKind, max: nu
   if (L < 0.5) return [];
   const vopt = { fly, maxOverride: opt.ignoreMax ? max : undefined };
   const out: Paths[] = [];
-  const want = opt.count ?? (fastPlanning ? 1 : 2);
+  const want = opt.count ?? (isFastPlanning(s, u) ? 1 : 2);
   let below = Infinity;
   const step = Math.max(0.35, L / 8);
   for (let len = L; len >= 0.45 && out.length < want; len -= step) {
@@ -467,7 +468,7 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
     ctx.deliver = cargo.some((x) => isBrawler(s, x)) ? enemy ?? field : field ?? enemy;
   }
   const lead = leaderOf(u);
-  if (lead && blockingWalls(s, lead).length) {
+  if (!isFastPlanning(s, u) && lead && blockingWalls(s, lead).length) {
     if (target) ctx.toTarget = distanceField(s, u, 'normal', lead, alive(target));
     if (ctx.ocNeed.length) ctx.toObjective = distanceField(s, u, 'normal', lead, ctx.ocNeed);
     if (ctx.front) ctx.toFront = distanceField(s, u, 'normal', lead, [ctx.front]);
@@ -742,7 +743,7 @@ export interface Plan { kind: MoveKind | 'stationary'; paths?: Paths; score: num
 export function bestMove(s: GameState, u: UnitState, kind: MoveKind, max: number, ctx: Ctx, opt: MoveOpts & { aims?: Pt[]; noStay?: boolean } = {}): Plan {
   let best: Plan = opt.noStay ? { kind: 'stationary', score: -Infinity } : { kind: 'stationary', score: scoreSpot(s, u, 'stationary', null, ctx) };
   const byAim: { aim: Pt; score: number }[] = [];
-  for (const aim of opt.aims ?? (fastPlanning ? aimsFor(s, u, max, ctx).slice(0, 7) : aimsFor(s, u, max, ctx))) {
+  for (const aim of opt.aims ?? (isFastPlanning(s, u) ? aimsFor(s, u, max, ctx).slice(0, 7) : aimsFor(s, u, max, ctx))) {
     let top = -Infinity;
     for (const paths of movesTowards(s, u, kind, max, aim, opt)) {
       const moved = Math.max(0, ...[...paths.values()].map(pathLength));

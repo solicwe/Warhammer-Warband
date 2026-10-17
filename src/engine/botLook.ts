@@ -17,6 +17,21 @@ const STYLES: Record<string, Partial<BotW>> = {
   // the expert also tries playing the turn for the objectives, and for the kill
   objectives: { objective: 55, pullHolder: 2.6, pullObjective: 0.9, claimPull: 3.2, homeExpensive: 0.1 },
   hunt: { pullHammer: 1.2, pullBrawler: 1.2, chargeNonBrawler: 0.9, cautionOther: 0.6, cautionBrawler: 0.25 },
+  rogue: {
+    objective: 65,
+    pullObjective: 1.0,
+    pullHolder: 2.5,
+    claimBonus: 25,
+    claimPull: 2.8,
+    pullBrawler: 1.25,
+    pullRange: 0.85,
+    pullHammer: 1.2,
+    chargeNonBrawler: 0.85,
+    cautionOther: 0.35,
+    cautionBrawler: 0.2,
+    cautionHolder: 0.2,
+    advanceMargin: 0.5,
+  },
 };
 
 /** What each level tries: the ways of playing the turn, how many rolls of the dice each is played on (the dice are
@@ -31,12 +46,7 @@ const LEVELS: Record<BotLevel, { styles: string[]; samples: number; budget: numb
 export const levelOf = (s: GameState, p?: PlayerId): BotLevel => (p !== undefined ? s.botLevels?.[p] : undefined) ?? s.botLevel ?? 'normal';
 /** How long the app lets the bot think about its turn at this level (a Web Worker, so the screen never freezes). */
 export const lookBudget = (s: GameState, p?: PlayerId) => {
-  if (s.campaign) {
-    const lvl = levelOf(s, p);
-    if (lvl === 'easy') return 0;
-    if (lvl === 'normal') return 1000;
-    return 1800; // hard / expert in campaign: fast, snappy evaluation without multi-second stalls
-  }
+  if (s.campaign) return 0;
   return LEVELS[levelOf(s, p)].budget;
 };
 
@@ -121,6 +131,7 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Inf
 /** The style that leaves p best off after playing this turn and the opponent's next one on copies of the game. */
 export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs?: number): string {
   if (!enabled || inRollout || s.phase === 'gameover') return 'steady';
+  if (s.campaign) return 'rogue';
   let best = { name: 'steady', v: -Infinity };
   for (const [name, v] of Object.entries(styleValues(s, p, budgetMs))) if (v > best.v + 1e-6) best = { name, v };
   return best.name;
@@ -179,7 +190,7 @@ export function applyStyle(s: GameState, p: PlayerId, name: string) {
   own[p] ??= W(p);
   s.botTried = [...(s.botTried ?? []), styleKey(s)];
   setBotWeights(p, { ...own[p]!, ...(STYLES[name] ?? {}) });
-  const how: Record<string, string> = { aggressive: 'aggressively', careful: 'carefully', objectives: 'for the objectives', hunt: 'for the kill' };
+  const how: Record<string, string> = { aggressive: 'aggressively', careful: 'carefully', objectives: 'for the objectives', hunt: 'for the kill', rogue: 'aggressively for objectives and the kill' };
   if (name !== 'steady') s.log.push({ turn: s.turn, round: s.round, player: p, kind: 'info', text: `${s.players[p].name}: plays this turn ${how[name] ?? name} (looked ahead: it plays out better)` });
 }
 

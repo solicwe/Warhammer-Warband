@@ -300,7 +300,7 @@ export function botShootOnTheMove(s: GameState, u: UnitState) {
   if (!maxRange(u) || isBrawler(s, u)) return;
   if (!boardUnits(s, other(u.owner)).some((e) => unitDistance(u, e) <= maxRange(u) + moveOf(u))) return;
   for (const { st, rule } of strats(s, u.owner)) {
-    if (rule.react || !fxOf(rule).some((e) => e.eligible?.includes('shootAfterFallBack') || e.abilities?.includes('assault'))) continue;
+    if (rule.react || !fxOf(rule).some((e) => (Array.isArray(e.eligible) ? e.eligible.includes('shootAfterFallBack') : e.eligible === 'shootAfterFallBack') || (Array.isArray(e.abilities) ? e.abilities.includes('assault') : e.abilities === 'assault'))) continue;
     if (!ready(s, u.owner, st, u)) continue;
     applyDetachmentStratagem(s, u.owner, st, u.id);
     return;
@@ -435,7 +435,7 @@ export function botAdvanceChargeStratagem(s: GameState, u: UnitState) {
   if (u.move !== 'advance' || !isBrawler(s, u) || !chargeEligibility(s, u)?.startsWith('Advance')) return;
   if (!boardUnits(s, other(u.owner)).some((e) => unitDistance(u, e) <= 9)) return;
   for (const { st, rule } of strats(s, u.owner)) {
-    if (rule.react || !fxOf(rule).some((e) => e.eligible?.includes('chargeAfterAdvance')) || !ready(s, u.owner, st, u)) continue;
+    if (rule.react || !fxOf(rule).some((e) => (Array.isArray(e.eligible) ? e.eligible.includes('chargeAfterAdvance') : e.eligible === 'chargeAfterAdvance')) || !ready(s, u.owner, st, u)) continue;
     applyDetachmentStratagem(s, u.owner, st, u.id);
     return;
   }

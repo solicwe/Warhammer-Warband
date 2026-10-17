@@ -274,7 +274,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const effectiveBudget = rush ? 0 : Math.min(lookBudget(s, who), 2800);
       if (effectiveBudget <= 0) {
         stopPonder();
-        done('steady');
+        done(s.campaign ? 'rogue' : 'steady');
         return;
       }
       // it thought this turn out during the player's: the same board, so the same answer (or wait for it to finish)
@@ -318,7 +318,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const drive = who === null && spectate && !s.attack;
     if (who === null && !drive) return;
     const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command' || s.window != null;
-    const delay = (quick ? 100 : 650) / (spectate && speed === 2 ? 3 : 1) / (rush ? 5 : 1);
+    const delay = (quick ? 80 : s.campaign ? 320 : 650) / (spectate && speed === 2 ? 3 : 1) / (rush ? 5 : 1);
     const caption = (before: GameState, after: GameState) => {
       const fresh = after.log.slice(before.log.length).filter((e) => e.kind !== 'roll' || /charge|Advance/i.test(e.text));
       if (fresh.length) { setBotSays(fresh[fresh.length - 1].text); }
