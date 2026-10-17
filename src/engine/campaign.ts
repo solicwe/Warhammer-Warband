@@ -3,7 +3,7 @@
 // medicae tents, and a boss at the end.
 import { addTimed } from './effects';
 import type { Effect } from './effects';
-import { defaultWargear, syncWargear } from './army';
+import { defaultWargear, pointsOptions, syncWargear } from './army';
 import { AUX_EXCLUSIONS } from './autoList';
 import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState, WargearPick } from './types';
 
@@ -511,11 +511,12 @@ export function buyHonorForUnit(run: Run, unitUid: string, honorId: string): Run
 }
 
 /** Buy and recruit a new unit into the campaign roster using Scrap */
-export function recruitUnit(run: Run, faction: FactionData, datasheetName: string): Run {
+export function recruitUnit(run: Run, faction: FactionData, datasheetName: string, chosenModels?: number): Run {
   const excl = AUX_EXCLUSIONS[faction.id] ?? [];
   const d = faction.datasheets.find((x) => x.name === datasheetName && !x.ally && !excl.some((k) => (x.factionKeywords || []).includes(k)));
   if (!d) return run;
-  const o = cheapest(d);
+  const opts = pointsOptions(d);
+  const o = (chosenModels ? opts.find((x) => x.models === chosenModels) : undefined) ?? cheapest(d);
   if (!o || (run.scrap ?? 0) < o.pts) return run;
   const uid = `c${run.path.length}${Math.floor(Math.random() * 1e6).toString(36)}`;
   const e: ArmyUnitEntry = syncWargear(d, defaultWargear(d, { uid, datasheet: d.name, models: o.models, pts: o.pts }));
@@ -523,7 +524,85 @@ export function recruitUnit(run: Run, faction: FactionData, datasheetName: strin
     ...run,
     scrap: (run.scrap ?? 0) - o.pts,
     list: { ...run.list, units: [...run.list.units, e] },
-    story: [...run.story, `Recruited: ${d.name} (${o.pts} pts)`],
+    story: [...run.story, `Recruited: ${d.name} (${o.models} models, ${o.pts} pts)`],
+  };
+}
+
+/** Change the model count / squad size of a unit in the campaign roster */
+export function changeSquadSize(run: Run, faction: FactionData, unitUid: string, targetModels: number): Run {
+  const u = run.list.units.find((x) => x.uid === unitUid);
+  if (!u) return run;
+  const d = faction.datasheets.find((x) => x.name === u.datasheet);
+  if (!d) return run;
+  const opts = pointsOptions(d);
+  const targetOpt = opts.find((o) => o.models === targetModels);
+  if (!targetOpt || targetOpt.models === u.models) return run;
+
+  const currentOpt = opts.find((o) => o.models === u.models) ?? { pts: u.pts };
+  const scrapDiff = targetOpt.pts - currentOpt.pts;
+  if (scrapDiff > 0 && (run.scrap ?? 0) < scrapDiff) return run;
+
+  const untouched = JSON.stringify(u.wargear ?? []) === JSON.stringify(defaultWargear(d, { ...u, wargear: undefined }).wargear ?? []);
+  const updatedUnit: ArmyUnitEntry = syncWargear(d, untouched
+    ? defaultWargear(d, { ...u, models: targetOpt.models, pts: targetOpt.pts, wargear: undefined })
+    : { ...u, models: targetOpt.models, pts: targetOpt.pts });
+
+  const units = run.list.units.map((x) => (x.uid === unitUid ? updatedUnit : x));
+  const scrap = scrapDiff > 0 ? (run.scrap ?? 0) - scrapDiff : (run.scrap ?? 0);
+  const story = [...run.story, scrapDiff > 0
+    ? `Reinforced ${u.datasheet} to ${targetOpt.models} models (-${scrapDiff} Scrap)`
+    : `Reorganized ${u.datasheet} to ${targetOpt.models} models`];
+
+  return {
+    ...run,
+    scrap,
+    list: { ...run.list, units },
+    story,
+  };
+}
+
+/** Combine / merge two squads of the same datasheet in the campaign roster */
+export function combineSquads(run: Run, faction: FactionData, targetUid: string, sourceUid: string): Run {
+  if (targetUid === sourceUid) return run;
+  const target = run.list.units.find((x) => x.uid === targetUid);
+  const source = run.list.units.find((x) => x.uid === sourceUid);
+  if (!target || !source || target.datasheet !== source.datasheet) return run;
+
+  const d = faction.datasheets.find((x) => x.name === target.datasheet);
+  if (!d) return run;
+
+  const opts = pointsOptions(d);
+  const combinedModels = target.models + source.models;
+  const matchedOpt = opts.find((o) => o.models === combinedModels)
+    ?? opts.filter((o) => o.models <= combinedModels).sort((a, b) => b.models - a.models)[0]
+    ?? opts[opts.length - 1];
+
+  if (!matchedOpt) return run;
+
+  const combinedXp = (target.xp ?? 0) + (source.xp ?? 0);
+  const combinedHonors = [...new Set([...(target.honors ?? []), ...(source.honors ?? [])])];
+
+  const combinedEntry: ArmyUnitEntry = syncWargear(d, defaultWargear(d, {
+    ...target,
+    models: matchedOpt.models,
+    pts: matchedOpt.pts,
+    xp: combinedXp,
+    honors: combinedHonors,
+    wargear: undefined,
+  }));
+
+  const units = run.list.units
+    .filter((x) => x.uid !== sourceUid)
+    .map((x) => {
+      if (x.uid === targetUid) return combinedEntry;
+      if (x.attachTo === sourceUid) return { ...x, attachTo: targetUid };
+      return x;
+    });
+
+  return {
+    ...run,
+    list: { ...run.list, units },
+    story: [...run.story, `Combined squads: ${target.datasheet} merged into ${matchedOpt.models}-model squad`],
   };
 }
 

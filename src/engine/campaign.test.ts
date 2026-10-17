@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { autoList } from './autoList';
-import { afterBattle, applyCampaign, enter, makeMap, newRun, reachable, takeReward } from './campaign';
+import { afterBattle, applyCampaign, changeSquadSize, combineSquads, enter, makeMap, newRun, reachable, recruitUnit, takeReward } from './campaign';
 import { effectsFor } from './effects';
 import { createGame } from './game';
 import type { FactionData } from './types';
@@ -84,5 +84,50 @@ describe('campaign', () => {
         expect(d?.factionKeywords).toContain('GREY KNIGHTS');
       }
     }
+  });
+
+  it('allows changing squad size to 10 models and combining squads in roguelike campaign', () => {
+    const sm = load('SM');
+    const list = autoList(sm, 500, 3);
+    let run = newRun(sm, list, ['ORK'], 42);
+    run.scrap = 300;
+
+    // Recruit a 5-man Intercessor Squad
+    run = recruitUnit(run, sm, 'Intercessor Squad', 5);
+    const unit1 = run.list.units.find((u) => u.datasheet === 'Intercessor Squad' && u.models === 5)!;
+    expect(unit1).toBeDefined();
+    expect(unit1.models).toBe(5);
+
+    // 1. Change squad size directly from 5 to 10 models using Scrap
+    const scrapBefore = run.scrap;
+    run = changeSquadSize(run, sm, unit1.uid, 10);
+    const updated1 = run.list.units.find((u) => u.uid === unit1.uid)!;
+    expect(updated1.models).toBe(10);
+    expect(updated1.pts).toBe(175);
+    expect(run.scrap).toBe(scrapBefore - 80); // 175 - 95 = 80 Scrap spent
+
+    // 2. Recruit a second 5-man Intercessor Squad
+    run = recruitUnit(run, sm, 'Intercessor Squad', 5);
+    // And recruit a third 5-man Intercessor Squad
+    run = recruitUnit(run, sm, 'Intercessor Squad', 5);
+    const squads = run.list.units.filter((u) => u.datasheet === 'Intercessor Squad' && u.models === 5);
+    expect(squads.length).toBe(2);
+
+    // Give one of them some XP and an honor
+    squads[0].xp = 5;
+    squads[0].honors = ['hardened'];
+    squads[1].xp = 3;
+    squads[1].honors = ['weapon_master'];
+
+    // Combine the two 5-man squads into one 10-man squad for free
+    const countBefore = run.list.units.length;
+    run = combineSquads(run, sm, squads[0].uid, squads[1].uid);
+    expect(run.list.units.length).toBe(countBefore - 1); // duplicate squad removed
+
+    const merged = run.list.units.find((u) => u.uid === squads[0].uid)!;
+    expect(merged.models).toBe(10);
+    expect(merged.pts).toBe(175);
+    expect(merged.xp).toBe(8); // 5 + 3 combined
+    expect(merged.honors).toEqual(expect.arrayContaining(['hardened', 'weapon_master']));
   });
 });

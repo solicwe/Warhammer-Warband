@@ -2,11 +2,11 @@
 // Features a full roguelike engine: scrap currency, unit veterancy, battle honors, armory, medicae tents,
 // and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
-import { attachOptions, autoAttach, defaultWargear, listPoints, syncList, syncWargear } from '../engine/army';
+import { attachOptions, autoAttach, defaultWargear, listPoints, pointsOptions, syncList, syncWargear } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
-  bossRuleById, buyHonorForUnit, cheapest, dismissUnit, enter, loadRun, makeOffer,
+  bossRuleById, buyHonorForUnit, changeSquadSize, cheapest, combineSquads, dismissUnit, enter, loadRun, makeOffer,
   newRun, reachable, recruitUnit, relicById, relicDesc, rerollOffer, saveRun, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
 } from '../engine/campaign';
@@ -57,6 +57,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const [upgradingUid, setUpgradingUid] = useState<string | null>(null);
   const [wargearUid, setWargearUid] = useState<string | null>(null);
   const [attachingUid, setAttachingUid] = useState<string | null>(null);
+  const [sizingUid, setSizingUid] = useState<string | null>(null);
 
   useEffect(() => { if (!info) return; const t = window.setTimeout(() => setInfo(null), 3200); return () => window.clearTimeout(t); }, [info]);
   useEffect(() => { if (!armed) return; const t = window.setTimeout(() => setArmed(false), 3000); return () => window.clearTimeout(t); }, [armed]);
@@ -434,7 +435,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     const isUpgrading = upgradingUid === u.uid;
                     const isEditingWargear = wargearUid === u.uid;
                     const isAttaching = attachingUid === u.uid;
+                    const isSizing = sizingUid === u.uid;
                     const canLead = Boolean(d?.leads && d.leads.length > 0);
+                    const sizeOpts = d ? pointsOptions(d) : [];
+                    const otherSquads = run.list.units.filter((x) => x.uid !== u.uid && x.datasheet === u.datasheet);
+                    const canResizeOrMerge = sizeOpts.length > 1 || otherSquads.length > 0;
                     const attachedSquad = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined;
                     const attachedLeaders = run.list.units.filter((x) => x.attachTo === u.uid);
                     return (
@@ -488,17 +493,23 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                         <div className="cmp-card-actions">
                           {canLead && (
-                            <button className={`cmp-card-btn ${isAttaching ? 'active' : ''}`} onClick={() => { setAttachingUid(isAttaching ? null : u.uid); setUpgradingUid(null); setWargearUid(null); }}>
+                            <button className={`cmp-card-btn ${isAttaching ? 'active' : ''}`} onClick={() => { setAttachingUid(isAttaching ? null : u.uid); setUpgradingUid(null); setWargearUid(null); setSizingUid(null); }}>
                               <Icon name="swords" size={14} />
                               <span>Attach</span>
                             </button>
                           )}
-                          <button className={`cmp-card-btn ${isUpgrading ? 'active' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); setAttachingUid(null); }}>
+                          {canResizeOrMerge && (
+                            <button className={`cmp-card-btn ${isSizing ? 'active' : ''}`} onClick={() => { setSizingUid(isSizing ? null : u.uid); setUpgradingUid(null); setWargearUid(null); setAttachingUid(null); }}>
+                              <Icon name="size" size={14} />
+                              <span>{otherSquads.length ? `Combine (${otherSquads.length}) / Size` : `Size (${u.models})`}</span>
+                            </button>
+                          )}
+                          <button className={`cmp-card-btn ${isUpgrading ? 'active' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); setAttachingUid(null); setSizingUid(null); }}>
                             <Icon name="shop" size={14} />
                             <span>Battle Honors {u.honors?.length ? `(${u.honors.length})` : ''}</span>
                           </button>
                           {d?.wargearOptions?.length ? (
-                            <button className={`cmp-card-btn ${isEditingWargear ? 'active' : ''}`} onClick={() => { setWargearUid(isEditingWargear ? null : u.uid); setUpgradingUid(null); setAttachingUid(null); }}>
+                            <button className={`cmp-card-btn ${isEditingWargear ? 'active' : ''}`} onClick={() => { setWargearUid(isEditingWargear ? null : u.uid); setUpgradingUid(null); setAttachingUid(null); setSizingUid(null); }}>
                               <Icon name="wargear" size={14} />
                               <span>Wargear</span>
                             </button>
@@ -851,6 +862,120 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             </div>
                           </div>
                         )}
+
+                        {/* Squad Size & Combine Squads drawer */}
+                        {isSizing && (
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                            {sizeOpts.length > 1 && (
+                              <div style={{ marginBottom: otherSquads.length ? 14 : 0 }}>
+                                <div className="cmp-kicker" style={{ marginBottom: 8, color: '#38bdf8' }}>
+                                  Squad Size (จำนวนโมเดลในกอง)
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
+                                  {sizeOpts.map((o) => {
+                                    const isCurrent = u.models === o.models;
+                                    const currentOpt = sizeOpts.find((x) => x.models === u.models) ?? { pts: u.pts };
+                                    const scrapDiff = o.pts - currentOpt.pts;
+                                    const canAfford = scrapDiff <= 0 || (run.scrap ?? 0) >= scrapDiff;
+                                    return (
+                                      <div
+                                        key={o.models}
+                                        style={{
+                                          padding: 10,
+                                          borderRadius: 8,
+                                          background: isCurrent ? 'rgba(56, 189, 248, 0.12)' : 'rgba(255,255,255,0.04)',
+                                          border: isCurrent ? '1.5px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          justifyContent: 'space-between',
+                                          gap: 8,
+                                        }}
+                                      >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                          <b style={{ color: '#f8fafc', fontSize: 14 }}>{o.models} {o.models === 1 ? 'model' : 'models'}</b>
+                                          <span className="cmp-card-pts">{o.pts} pts</span>
+                                        </div>
+                                        {isCurrent ? (
+                                          <span className="chip ok small" style={{ width: 'fit-content' }}>
+                                            <Icon name="check" size={12} /> Current ({o.models})
+                                          </span>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            className="btn small primary"
+                                            disabled={!canAfford}
+                                            onClick={() => {
+                                              setRun(changeSquadSize(run, fac, u.uid, o.models));
+                                              play('good');
+                                            }}
+                                          >
+                                            {scrapDiff > 0 ? `Reinforce (-${scrapDiff} Scrap)` : `Reorganize to ${o.models}`}
+                                          </button>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            {otherSquads.length > 0 && (
+                              <div style={{ marginTop: sizeOpts.length > 1 ? 12 : 0 }}>
+                                <div className="cmp-kicker" style={{ marginBottom: 6, color: '#f59e0b' }}>
+                                  Combine Squads (รวมกอง)
+                                </div>
+                                <div className="tiny muted" style={{ marginBottom: 8 }}>
+                                  Merge a duplicate squad into this unit for free. Total models, Experience, and Battle Honors are combined!
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                  {otherSquads.map((src) => {
+                                    const combinedModels = u.models + src.models;
+                                    const matchedOpt = sizeOpts.find((o) => o.models === combinedModels)
+                                      ?? sizeOpts.filter((o) => o.models <= combinedModels).sort((a, b) => b.models - a.models)[0]
+                                      ?? sizeOpts[sizeOpts.length - 1];
+                                    const targetCount = matchedOpt ? matchedOpt.models : combinedModels;
+                                    return (
+                                      <div
+                                        key={src.uid}
+                                        style={{
+                                          padding: 10,
+                                          borderRadius: 8,
+                                          background: 'rgba(245, 158, 11, 0.08)',
+                                          border: '1px solid rgba(245, 158, 11, 0.25)',
+                                          display: 'flex',
+                                          justifyContent: 'space-between',
+                                          alignItems: 'center',
+                                          flexWrap: 'wrap',
+                                          gap: 8,
+                                        }}
+                                      >
+                                        <div>
+                                          <div style={{ fontWeight: 700, color: '#fef08a', fontSize: 13.5 }}>
+                                            {src.datasheet} ({src.models} models)
+                                          </div>
+                                          <div className="tiny muted">
+                                            XP {src.xp ?? 0}{src.honors?.length ? ` · ${src.honors.length} honors` : ''} → Combine to {targetCount} models
+                                          </div>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          className="btn small"
+                                          style={{ background: '#d97706', borderColor: '#f59e0b', color: '#fff', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                                          onClick={() => {
+                                            setRun(combineSquads(run, fac, u.uid, src.uid));
+                                            play('good');
+                                          }}
+                                        >
+                                          <Icon name="size" size={13} /> Combine into {targetCount} models (Free)
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -865,10 +990,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   {fac.datasheets
                     .filter((d) => !d.ally && d.points[0]?.options?.length && !d.keywords.includes('EPIC HERO') && !d.keywords.includes('FORTIFICATION'))
                     .map((d) => {
-                      const o = cheapest(d);
-                      if (!o) return null;
+                      const opts = pointsOptions(d);
+                      if (!opts.length) return null;
                       const photo = getPortrait(d.name);
-                      const canAfford = (run.scrap ?? 0) >= o.pts;
                       return (
                         <div key={d.name} className="cmp-roster-card">
                           <div className="cmp-card-main">
@@ -878,18 +1002,26 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             </div>
                             <div className="cmp-card-details">
                               <div className="cmp-roster-name">{d.name}</div>
-                              <div className="cmp-roster-meta">{o.models} models · <span className="cmp-card-pts">{o.pts} pts</span></div>
+                              <div className="cmp-roster-meta">
+                                {opts.map((o) => `${o.models} models (${o.pts} pts)`).join(' · ')}
+                              </div>
                             </div>
                           </div>
-                          <div className="cmp-card-actions">
-                            <button
-                              className="cmp-btn-recruit"
-                              style={{ width: '100%', minHeight: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                              disabled={!canAfford}
-                              onClick={() => { setRun(recruitUnit(run, fac, d.name)); play('good'); }}
-                            >
-                              <Icon name="plus" size={14} /> Recruit ({o.pts} Scrap)
-                            </button>
+                          <div className="cmp-card-actions" style={{ flexWrap: 'wrap', gap: 6 }}>
+                            {opts.map((o) => {
+                              const canAfford = (run.scrap ?? 0) >= o.pts;
+                              return (
+                                <button
+                                  key={o.models}
+                                  className="cmp-btn-recruit"
+                                  style={{ flex: '1 1 140px', minHeight: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                                  disabled={!canAfford}
+                                  onClick={() => { setRun(recruitUnit(run, fac, d.name, o.models)); play('good'); }}
+                                >
+                                  <Icon name="plus" size={14} /> Recruit {o.models} models ({o.pts} Scrap)
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       );
