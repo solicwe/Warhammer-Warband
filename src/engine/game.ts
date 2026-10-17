@@ -2232,10 +2232,36 @@ export function polygonArea(poly: Pt[]): number {
   return Math.abs(a / 2);
 }
 
+/** Calculate active fighting army points alive on the battlefield (accounting for model casualties). */
+export function fightingArmyPoints(s: GameState, p: PlayerId): number {
+  const activeUnits = s.units.filter((u) => u.owner === p && (u.status === 'board' || u.status === 'embarked') && alive(u).length > 0);
+  const pool = activeUnits.length > 0 ? activeUnits : s.units.filter((u) => u.owner === p && u.status !== 'destroyed' && alive(u).length > 0);
+  return pool.reduce((sum, u) => {
+    const aliveCount = alive(u).length;
+    const initialCount = Math.max(1, u.startingStrength);
+    return sum + Math.round((u.pts * aliveCount) / initialCount);
+  }, 0);
+}
+
+/** Check if fighting armies are evenly matched ("สูสี"):
+ * Evaluates whether player's fighting force and enemy fighting force are closely matched.
+ * Both sides must have surviving forces, and the strength ratio must be competitive (>= 0.60
+ * or points delta <= 250), preventing Titan from spawning if either side is already wiped out or heavily unbalanced.
+ */
+export function isFightEvenlyMatched(s: GameState): boolean {
+  const playerPts = fightingArmyPoints(s, 0);
+  const aiPts = fightingArmyPoints(s, 1);
+  if (playerPts <= 0 || aiPts <= 0) return false;
+  const maxPts = Math.max(playerPts, aiPts);
+  const minPts = Math.min(playerPts, aiPts);
+  const ratio = minPts / maxPts;
+  return ratio >= 0.60 || (maxPts - minPts) <= 250;
+}
+
 /** Dynamic Drama Engine for Rogue-like mode:
  * Checks conditions at the start of every Battle Round:
  * 1. Rubberband Trigger (Catch-up): VP Delta >= 30 forces High-Threat Event (elite spawn 9" away or Warp Storm debuff).
- * 2. Boss Spawns (Titan Class): Round >= 3 and Player VP >= 50 has 5% baseline probability to spawn a Titan-class unit with screen flash and warning banner.
+ * 2. Boss Spawns (Titan Class): Round >= 3, Player VP >= 50, and armies are evenly matched ("สูสี") in fighting points (5% baseline probability).
  */
 export function triggerDynamicDramaEngine(s: GameState): boolean {
   if (!s.campaign) return false;
@@ -2305,18 +2331,22 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
   }
 
   // 2. Boss Spawns (Titan Class): Round >= 3 AND Player VP >= 50, 5% baseline probability
-  if (s.round >= 3 && playerVp >= 50 && !s.campaign.titanSpawned) {
+  // Check if our fighting army points are evenly matched with the opponent ("สูสี")
+  if (s.round >= 3 && playerVp >= 50 && !s.campaign.titanSpawned && isFightEvenlyMatched(s)) {
     const titanRoll = nextRandom(s);
     if (titanRoll < 0.05) {
       s.campaign.titanSpawned = true;
       triggeredAny = true;
       s.screenShake = Date.now();
 
+      const playerPts = fightingArmyPoints(s, 0);
+      const aiPts = fightingArmyPoints(s, 1);
+
       s.titanAlert = {
         unitName: 'Warlord Titan Supreme Commander',
         factionName: s.players[1].name,
         round: s.round,
-        text: 'TITAN DETECTED: GOD-ENGINE SUPREME COMMANDER ENGAGED',
+        text: `TITAN DETECTED: EVEN MATCH (${playerPts} vs ${aiPts} PTS)`,
         triggered: true,
       };
 
@@ -2365,7 +2395,7 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
       titan.startingStrength = 1;
 
       s.units.push(titan);
-      log(s, `TITAN DETECTED: God-Engine Warhound Titan has arrived with Void Shields active!`, 'kill', 1);
+      log(s, `TITAN DETECTED: Evenly matched engagement (${playerPts} vs ${aiPts} pts). God-Engine Warhound Titan has arrived with Void Shields active!`, 'kill', 1);
     }
   }
 

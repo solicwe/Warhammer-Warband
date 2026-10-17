@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { createGame, placeUnit, formationAt, triggerDynamicDramaEngine, expandRoguelikeMap, polygonArea } from './game';
+import { createGame, placeUnit, formationAt, triggerDynamicDramaEngine, expandRoguelikeMap, polygonArea, fightingArmyPoints, isFightEvenlyMatched } from './game';
 import { hasLos, hasCover, modelVisible, isInfantryBeastUnit, isInfantryBeastLoneOpActive } from './visibility';
 import { stratagemShortSummary, type StratRule } from './stratagems';
 import { cpWorth } from './botStrats';
@@ -156,7 +156,7 @@ describe('Core Rules, UI & Rogue-like Comprehensive Overhaul Tests', () => {
       expect(hasWarpStorm || hasElite).toBe(true);
     });
 
-    it('triggers Titan Boss spawn when round >= 3 and Player VP >= 50', () => {
+    it('triggers Titan Boss spawn when round >= 3, Player VP >= 50, and fighting army points are evenly matched', () => {
       const s = createGame({
         lists: [PRESETS.SM, PRESETS.ORK],
         factions: [SM, ORK],
@@ -168,12 +168,42 @@ describe('Core Rules, UI & Rogue-like Comprehensive Overhaul Tests', () => {
       s.players[0].vp = 55;
       s.players[1].vp = 30;
 
-      // Force probability check success
+      // Both armies start with full points (1000 vs 1000), so they are evenly matched
+      expect(isFightEvenlyMatched(s)).toBe(true);
+
       const triggered = triggerDynamicDramaEngine(s);
       if (s.titanAlert) {
         expect(s.titanAlert.text).toContain('TITAN DETECTED');
         expect(s.units.some((u) => u.keywords.includes('TITANIC'))).toBe(true);
       }
+    });
+
+    it('blocks Titan Boss spawn when fighting army points are not evenly matched', () => {
+      const s = createGame({
+        lists: [PRESETS.SM, PRESETS.ORK],
+        factions: [SM, ORK],
+        names: ['Player', 'Bot'],
+        seed: 42,
+      });
+      s.campaign = { node: 'boss-1', relics: [], rules: [], reinforcementsTriggered: [] };
+      s.round = 3;
+      s.players[0].vp = 55;
+      s.players[1].vp = 30;
+
+      // Simulate heavy casualties on AI: all enemy units except 1 model destroyed
+      const aiUnits = s.units.filter((u) => u.owner === 1);
+      aiUnits.slice(1).forEach((u) => {
+        u.status = 'destroyed';
+        u.models.forEach((m) => { m.dead = true; });
+      });
+
+      // Player has ~1000 pts, AI has < 100 pts => Not evenly matched
+      expect(isFightEvenlyMatched(s)).toBe(false);
+
+      // Titan must NOT spawn
+      triggerDynamicDramaEngine(s);
+      expect(s.titanAlert).toBeUndefined();
+      expect(s.units.some((u) => u.keywords.includes('TITANIC'))).toBe(false);
     });
   });
 
