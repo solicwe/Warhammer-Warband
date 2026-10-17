@@ -14,8 +14,8 @@ const UnitFace = memo(function UnitFace({ u, dead }: { u: UnitState | undefined;
   const lead = u.models.find((m) => m.isCharacter) ?? u.models[0];
   return (
     <span className={`atk-face s${u.owner} ${dead ? 'dead' : ''}`}>
-      <Portrait kind={unitToken(u)} owner={u.owner} character={u.models.some((m) => m.isCharacter)} size={44}
-        datasheet={lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source} fallback={lead.source} />
+      <Portrait kind={unitToken(u)} owner={u.owner} character={u.models.some((m) => m.isCharacter)} size={24}
+        datasheet={lead?.name && lead?.name !== lead?.source ? modelPortraitKey(lead.source, lead.name) : lead?.source} fallback={lead?.source} />
       {dead && <span className="atk-x" aria-label="destroyed" />}
     </span>
   );
@@ -53,10 +53,10 @@ export const AttackReport = memo(function AttackReport({ s, quick, onShake, onBu
   }, [s.fx, s.fxSeq, level]);
 
   const fast = cur ? quick(cur.e.owner) : false;
-  const step = level === 'short' ? 0 : fast ? 110 : 230; // ms per stage
+  const step = level === 'short' ? 0 : fast ? 85 : 150; // ms per stage
   const stages = level === 'short' ? 0 : STAGES.length;
-  const resultAt = stages * step + (level === 'short' ? 0 : 120);
-  const hold = fast ? 900 : 1500;
+  const resultAt = stages * step + (level === 'short' ? 0 : 80);
+  const hold = fast ? 600 : 950;
   const total = resultAt + hold;
 
   // the next report starts when the last one is done
@@ -106,26 +106,18 @@ export const AttackReport = memo(function AttackReport({ s, quick, onShake, onBu
   const at = (i: number) => t >= i * step;
   const shown = (i: number) => Math.min(1, Math.max(0, (t - i * step) / Math.max(1, step * 0.9)));
   const vals = [r.shots, r.hits, r.wounds, r.unsaved];
-  const labels = [fight ? 'Attacks' : 'Shots', 'Hits', 'Wounds', 'Through'];
+  const labels = [fight ? 'Atk' : 'Shot', 'Hit', 'Wnd', 'Thru'];
   const landed = t >= resultAt;
-  const out = t > total - 220;
-  // one mark per model the target had: the slain ones are crossed out when the result lands
-  const pips = Math.min(r.before, 20);
-  const slainPips = Math.min(r.killed, pips);
+  const out = t > total - 200;
+
   return (
     <div className={`atk-report slate o${cur.e.owner} ${out ? 'out' : ''} ${fast ? 'fast' : ''}`} role="status" aria-live="polite" onClick={() => setCur(null)}>
       <div className="slate-in">
         <div className="atk-vs">
           <UnitFace u={A} />
-          <span className="atk-who">
-            <b className={cur.e.owner ? 'p1' : 'p0'}>{r.attacker}</b>
-            <small>{r.weapons.slice(0, 2).join(' · ')}{r.weapons.length > 2 ? ` +${r.weapons.length - 2}` : ''}</small>
-          </span>
-          <Icon name={fight ? 'fight' : 'target'} size={18} className="atk-arrow" />
-          <span className="atk-who right">
-            <b className={cur.e.owner ? 'p0' : 'p1'}>{r.target}</b>
-            <small>{r.before} {r.before === 1 ? 'model' : 'models'}</small>
-          </span>
+          <span className={`atk-who ${cur.e.owner ? 'p1' : 'p0'}`}>{r.attacker}</span>
+          <Icon name={fight ? 'fight' : 'target'} size={13} className="atk-arrow" />
+          <span className={`atk-who right ${cur.e.owner ? 'p0' : 'p1'}`}>{r.target}</span>
           <UnitFace u={T} dead={landed && r.destroyed} />
         </div>
         {stages > 0 && (
@@ -138,24 +130,14 @@ export const AttackReport = memo(function AttackReport({ s, quick, onShake, onBu
             ))}
           </div>
         )}
-        {stages > 0 && r.chips.length > 0 && (
-          <div className="atk-chips">
-            {r.chips.map((c) => {
-              const i = STAGES.indexOf(c.stage);
-              return <span key={c.label} className={`atk-chip ${at(i) ? 'lit' : ''} ${at(i) && !at(i + 1) ? 'pop' : ''}`}>{c.label}</span>;
-            })}
-          </div>
-        )}
         <div className="atk-foot">
-          <div className="atk-pips" aria-hidden="true">
-            {Array.from({ length: pips }, (_, i) => {
-              const slain = landed && i >= pips - slainPips;
-              return <i key={i} className={slain ? 'slain' : ''} style={slain ? { animationDelay: `${(i - (pips - slainPips)) * 45}ms` } : undefined} />;
-            })}
-            {r.before > 20 && <b>+{r.before - 20}</b>}
-          </div>
-          <div className={`atk-result ${landed ? 'land' : ''} ${r.destroyed ? 'dead' : r.killed ? 'kill' : 'none'}`}>
-            {landed && (r.destroyed ? <>Destroyed<small>{r.pts} pts</small></> : r.killed ? <><span className="num">{r.killed}</span> slain<small>{r.pts ? `${r.pts} pts` : `${r.dmg} damage`}</small></> : r.dmg ? <><span className="num">{r.dmg}</span> damage<small>none slain</small></> : <>No damage</>)}
+          <div className={`atk-result ${landed ? 'land' : ''} ${r.destroyed ? 'dead' : r.killed ? 'kill' : r.dmg ? 'hit' : 'none'}`}>
+            {landed && (
+              r.destroyed ? <>Destroyed <small>{r.pts} pts</small></>
+              : r.killed ? <><span className="num">{r.killed}</span> slain <small>{r.pts ? `${r.pts} pts` : `${r.dmg} dmg`}</small></>
+              : r.dmg ? <><span className="num">{r.dmg}</span> damage</>
+              : <>No damage</>
+            )}
           </div>
         </div>
       </div>

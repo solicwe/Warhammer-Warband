@@ -218,6 +218,16 @@ export function tally(s: GameState, round: number | null, vpAtStart: [number, nu
 export const RoundSummary = memo(function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; t: RoundTally; final?: boolean; onClose: () => void; actions?: ReactNode }) {
   const names = [s.players[0].name, s.players[1].name];
   const win = s.winner;
+
+  // Auto-dismiss between rounds after a brief delay, allowing gameplay to continue smoothly
+  useEffect(() => {
+    if (final) return;
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [final, onClose]);
+
   return (
     <div className="tray-backdrop center" onClick={final ? undefined : onClose}>
       <div className={`round-card slate ${final ? 'final' : ''}`} role="dialog" aria-label={final ? 'Battle result' : `Round ${t.round} summary`} onClick={final ? undefined : onClose}>
@@ -236,7 +246,7 @@ export const RoundSummary = memo(function RoundSummary({ s, t, final, onClose, a
           <span className="num">{t.pts[1]} pts{t.units[1] ? ` · ${t.units[1]} unit${t.units[1] > 1 ? 's' : ''}` : ''}</span>
         </div>
         {t.mvp && <div className="rc-mvp"><Icon name="trophy" size={16} /> {final ? 'Unit of the battle' : 'Unit of the round'}: <b className={t.mvp.owner ? 'p1' : 'p0'}>{t.mvp.name}</b> <span className="muted">· {t.mvp.pts} pts destroyed</span></div>}
-        {actions ? <div className="rc-acts">{actions}</div> : <div className="rc-tap">Tap to continue</div>}
+        {actions ? <div className="rc-acts">{actions}</div> : <div className="rc-tap">{final ? 'Tap to continue' : 'Auto-continuing · Tap to skip'}</div>}
        </div>
       </div>
     </div>
