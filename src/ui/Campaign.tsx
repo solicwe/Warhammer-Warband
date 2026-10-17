@@ -2,7 +2,7 @@
 // Features a full roguelike engine: scrap currency, unit veterancy, battle honors, armory, medicae tents,
 // and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
-import { attachOptions, autoAttach, defaultWargear, enhancementFits, enhancementOptions, listPoints, pointsOptions, syncList, syncWargear, wargearSummary } from '../engine/army';
+import { attachOptions, autoAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
@@ -59,7 +59,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const [rosterTab, setRosterTab] = useState<'roster' | 'recruit' | 'detachments'>('roster');
   const [menu, setMenu] = useState<string | null>(null);
   const [panelCollapse, setPanelCollapse] = useState<Record<string, Record<string, boolean>>>({});
-  const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'size' | 'attach' } | null>(null);
+  const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null);
+  const [peek, setPeek] = useState<string | null>(null);
   const [recruitQ, setRecruitQ] = useState('');
   const [recruitSize, setRecruitSize] = useState<string | null>(null);
   const [recruitView, setRecruitView] = useState<string | null>(null);
@@ -67,6 +68,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const closeRoster = () => {
     setShowRoster(false);
     setPop(null);
+    setPeek(null);
     setRecruitSize(null);
     setRecruitView(null);
   };
@@ -229,27 +231,203 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const pos = (n: MapNode) => ({ x: 12 + n.x * 76, y: (layers - 1 - n.layer) * rowH + rowH / 2 });
 
   const quickMenu = () => {
-    if (!pop || !fac) return null;
-    const u = run.list.units.find((x) => x.uid === pop.uid);
-    if (!u) return null;
-    const sheet = fac.datasheets.find((x) => x.name === u.datasheet);
-    const opts = sheet ? pointsOptions(sheet) : [];
+    const u = pop ? run.list.units.find((x) => x.uid === pop.uid) : undefined;
+    if (!pop || !u || !fac) return null;
+    const sheet = fac.datasheets.find((d) => d.name === u.datasheet);
     const body = u.attachTo ? run.list.units.find((b) => b.uid === u.attachTo) : undefined;
-    const isChar = !!sheet?.keywords?.includes('CHARACTER')
-      || (run.list.detachments?.includes('Houndpack Lance') && !!sheet?.keywords?.includes('WAR DOG'))
+    const joined = run.list.units.filter((c) => c.attachTo === u.uid).map((c) => ({ c, d: fac.datasheets.find((d) => d.name === c.datasheet) }));
+    const rider = body ?? u; // a Leader rides with the unit it leads
+    const rideIn = rider.embarkIn ? run.list.units.find((t) => t.uid === rider.embarkIn) : undefined;
+    const isTransport = !!parseTransport(sheet?.transport) || !!sheet?.keywords.includes('TRANSPORT');
+    // transports this unit could ride (a full one still shows, in red) / units this transport could carry
+    const rides = isTransport ? [] : run.list.units.filter((t) => t.uid !== rider.uid && parseTransport(fac.datasheets.find((d) => d.name === t.datasheet)?.transport))
+      .map((t) => ({ t, c: embarkCheck(run.list, fac, rider.uid, t.uid) })).filter(({ c }) => !c.why || c.full);
+    const myLoad = transportLoads(run.list, fac).find((t) => t.uid === u.uid);
+    const cargo = !myLoad ? [] : run.list.units.filter((r) => r.uid !== u.uid && !r.attachTo)
+      .filter((r) => !r.embarkIn || r.embarkIn === u.uid || !run.list.units.some((t) => t.uid === r.embarkIn))
+      .map((r) => ({ r, c: embarkCheck(run.list, fac, r.uid, u.uid) })).filter(({ c }) => !c.why || c.full);
+    // once units are aboard, only they and what still fits show; an empty transport lists everything it can carry
+    const aboard = cargo.some(({ r }) => r.embarkIn === u.uid);
+    const cargoShown = aboard ? cargo.filter(({ r, c }) => r.embarkIn === u.uid || !c.full) : cargo;
+    const opts = sheet ? pointsOptions(sheet) : [];
+    const isChar = !!sheet?.keywords.includes('CHARACTER')
+      || (run.list.detachments?.includes('Houndpack Lance') && !!sheet?.keywords.includes('WAR DOG'))
       || run.factionId === 'TL'
-      || !!sheet?.keywords?.includes('ADEPTUS TITANICUS')
-      || !!sheet?.factionKeywords?.includes('ADEPTUS TITANICUS');
-    const attachables = !u.attachTo ? attachOptions(run.list, fac, u) : [];
+      || !!sheet?.keywords.includes('ADEPTUS TITANICUS')
+      || !!sheet?.factionKeywords.includes('ADEPTUS TITANICUS');
 
-    const close = () => setPop(null);
-    const w = pop.mode ? Math.min(340, window.innerWidth - 16) : 260;
+    const allowed = (x: { subfaction?: string }) => !x.subfaction || x.subfaction === run.list.subfaction;
+    // characters that could join this squad: Leader slot, then Support slot
+    const leadersFor = (support: boolean) => fac.datasheets.filter((d) => allowed(d) && !d.ally && d.leads?.includes(u.datasheet) && supportIn(run.list, d) === support && pointsOptions(d).length);
+    const hasLeader = joined.some((x) => x.d && !supportIn(run.list, x.d));
+    const hasSupport = joined.some((x) => x.d && supportIn(run.list, x.d));
+    const canLeader = !u.attachTo && !hasLeader && leadersFor(false).length > 0;
+    const canSupport = !u.attachTo && !hasSupport && leadersFor(true).length > 0;
+    // a Leader in a squad: Add Support works on the squad it leads
+    const bodySupport = body && !supportIn(run.list, sheet) && !run.list.units.some((c) => c.attachTo === body.uid && supportIn(run.list, fac.datasheets.find((d) => d.name === c.datasheet)))
+      && fac.datasheets.some((d) => allowed(d) && !d.ally && supportIn(run.list, d) && d.leads?.includes(body.datasheet) && pointsOptions(d).length);
+    const squadsFor = sheet?.leads?.length && !body ? [...new Set(sheet.leads)].map((n) => fac.datasheets.find((d) => d.name === n)).filter((d): d is DatasheetData => !!d && allowed(d) && !d.ally && pointsOptions(d).length > 0) : [];
+
+    const close = () => { setPop(null); setPeek(null); };
+    const w = pop.mode && pop.mode !== 'size' ? Math.min(340, window.innerWidth - 16) : 260;
     const left = Math.max(8, Math.min(window.innerWidth - w - 8, pop.x - w));
-    const top = Math.max(8, Math.min(pop.y + 4, window.innerHeight * 0.45));
-    const maxHeight = window.innerHeight - top - 16;
+    const top = pop.mode && pop.mode !== 'size' ? Math.max(8, Math.min(pop.y + 4, window.innerHeight * 0.15)) : Math.max(8, Math.min(pop.y + 4, window.innerHeight * 0.45));
+    const maxHeight = window.innerHeight - top - 8;
+
+    const setUnit = (uid: string, patch: Partial<ArmyUnitEntry>) => {
+      const units = run.list.units.map((x) => {
+        if (x.uid !== uid) return x;
+        const d = fac.datasheets.find((s) => s.name === x.datasheet);
+        const untouched = patch.models !== undefined && patch.models !== x.models
+          && JSON.stringify(x.wargear ?? []) === JSON.stringify(defaultWargear(d, { ...x, wargear: undefined }).wargear ?? []);
+        const next = { ...x, ...patch };
+        return syncWargear(d, untouched ? defaultWargear(d, { ...next, wargear: undefined }) : next);
+      });
+      setRun({ ...run, list: { ...run.list, units } });
+    };
+
+    const attach = (charUid: string, bodyUid: string, msg: string) => {
+      setUnit(charUid, { attachTo: bodyUid, embarkIn: undefined });
+      setInfo(msg);
+      close();
+    };
+
+    /** The unit picture: tap it to read the datasheet (abilities) before adding. */
+    const peekArt = (name: string) => (
+      <span className="ab-pop-art" role="button" tabIndex={0} aria-label={`${name} datasheet`} onClick={(e) => { e.stopPropagation(); setPeek(name); }}>
+        <UnitArt sheet={fac.datasheets.find((d) => d.name === name)} />
+      </span>
+    );
+
+    /** Who this roster unit is already joined with ("with Chaos Lord", "led by Master of Executions"). */
+    const joinedNote = (x: ArmyUnitEntry) => {
+      const host = x.attachTo ? run.list.units.find((c) => c.uid === x.attachTo) : undefined;
+      const led = run.list.units.filter((c) => c.attachTo === x.uid).map((c) => c.datasheet);
+      return host ? `Joined with ${host.datasheet}` : led.length ? `Led by ${led.join(' + ')}` : 'Not joined yet';
+    };
+
+    /** A unit already in the roster (white): tap to use it. */
+    const rosterCard = (x: ArmyUnitEntry, onPick: (x: ArmyUnitEntry) => void) => (
+      <button key={`has-${x.uid}`} type="button" className="ab-pop-card has" onClick={() => onPick(x)}>
+        <span className="ab-pop-card-head">
+          {peekArt(x.datasheet)}
+          <span className="ab-pop-card-text">
+            <span className="ab-pop-name">{x.datasheet}</span>
+            <span className="ab-pop-line"><span className="ab-pop-pts">{x.pts + (x.wargearPts ?? 0) + (x.enhancementPts ?? 0)} pts</span> <span className="muted">({x.models})</span></span>
+            <span className="ab-pop-sub">{joinedNote(x)}</span>
+          </span>
+        </span>
+      </button>
+    );
+
+    /** A datasheet to add new (grey), one + per size. */
+    const newCard = (d: DatasheetData, onNew: (models: number) => void) => {
+      const isEpicHero = (d.keywords || []).includes('EPIC HERO');
+      const already = isEpicHero && run.list.units.some((x) => x.datasheet === d.name);
+      return (
+        <div key={`new-${d.name}`} className="ab-pop-card" style={already ? { opacity: 0.6 } : undefined}>
+          <div className="ab-pop-card-head">
+            {peekArt(d.name)}
+            <div className="ab-pop-card-text">
+              <div className="ab-pop-name">{d.name}</div>
+              {pointsOptions(d).map((o) => {
+                const canAfford = (run.scrap ?? 0) >= o.pts;
+                const disabled = !canAfford || already;
+                return (
+                  <button key={o.models} type="button" className="ab-pop-size" disabled={disabled} onClick={() => onNew(o.models)}>
+                    <span className="ab-pop-pts">{o.pts} Scrap</span> <span className="muted">({o.models})</span>
+                    <span className="ab-pop-plus">{already ? 'Limit 1' : canAfford ? '+' : 'Need Scrap'}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    /** A unit card for the embark lists: picture, names, a note under them. */
+    const rideCard = (key: string, sheetName: string, title: string, note: string, cls: string, disabled: boolean, onClick: () => void, val?: string, r?: ArmyUnitEntry) => {
+      const group = r ? [...run.list.units.filter((c) => c.attachTo === r.uid), r] : [];
+      const leaders = group.slice(0, -1);
+      const enh = group.filter((x) => x.enhancement).map((x) => `${x.enhancement} (${x.datasheet})`);
+      return (
+        <button key={key} type="button" className={`ab-pop-ride ${cls}`} disabled={disabled} onClick={onClick}>
+          <span className="ab-ride-art">
+            <UnitArt sheet={fac.datasheets.find((d) => d.name === sheetName)} />
+            {leaders.length > 0 && <span className="ab-ride-leads">{leaders.map((c) => <UnitArt key={c.uid} sheet={fac.datasheets.find((d) => d.name === c.datasheet)} />)}</span>}
+          </span>
+          <span className="grow">{title}{enh.length > 0 && <span className="ab-pop-sub ab-ride-enh">{enh.join(' · ')}</span>}{note && <span className="ab-pop-sub">{note}</span>}</span>
+          {val && <span className="ab-pop-val">{val}</span>}
+          {cls === 'on' && <Icon name="check" size={20} />}
+        </button>
+      );
+    };
 
     let content: React.ReactNode;
-    if (pop.mode === 'size') {
+    if (pop.mode === 'squad') {
+      content = (
+        <>
+          <div className="ab-pop-head">{supportIn(run.list, sheet) ? 'Add Squad (as Support)' : 'Add Squad (as Leader)'}</div>
+          {attachOptions(run.list, fac, u).filter((b) => squadsFor.some((d) => d.name === b.datasheet))
+            .map((b) => rosterCard(b, () => attach(u.uid, b.uid, `${u.datasheet} joined ${b.datasheet}`)))}
+          {squadsFor.map((d) => newCard(d, (models) => {
+            const nextRun = recruitUnit(run, fac, d.name, models);
+            if (nextRun !== run) {
+              const newBody = nextRun.list.units[nextRun.list.units.length - 1];
+              const updatedUnits = nextRun.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: newBody.uid, embarkIn: undefined } : x));
+              setRun({ ...nextRun, list: { ...nextRun.list, units: updatedUnits } });
+              setInfo(`Recruited ${d.name}; ${u.datasheet} joined it`);
+              play('good');
+              close();
+            }
+          }))}
+        </>
+      );
+    } else if (pop.mode === 'leader' || pop.mode === 'support') {
+      const support = pop.mode === 'support';
+      content = (
+        <>
+          <div className="ab-pop-head">{support ? 'Add Support' : 'Add Leader'} · {u.datasheet}</div>
+          {run.list.units.filter((c) => leadersFor(support).some((d) => d.name === c.datasheet) && attachOptions(run.list, fac, c).some((b) => b.uid === u.uid))
+            .map((c) => rosterCard(c, () => attach(c.uid, u.uid, `${c.datasheet} joined ${u.datasheet}`)))}
+          {leadersFor(support).map((d) => newCard(d, (models) => {
+            const nextRun = recruitUnit(run, fac, d.name, models);
+            if (nextRun !== run) {
+              const newChar = nextRun.list.units[nextRun.list.units.length - 1];
+              const updatedUnits = nextRun.list.units.map((x) => (x.uid === newChar.uid ? { ...x, attachTo: u.uid, embarkIn: undefined } : x));
+              setRun({ ...nextRun, list: { ...nextRun.list, units: updatedUnits } });
+              setInfo(`Recruited ${d.name} to ${u.datasheet}`);
+              play('good');
+              close();
+            }
+          }))}
+        </>
+      );
+    } else if (pop.mode === 'embark' && myLoad) {
+      // the transport's own menu: tick the units that start the battle inside it
+      const names = (r: ArmyUnitEntry) => [...run.list.units.filter((c) => c.attachTo === r.uid).map((c) => c.datasheet), r.datasheet].join(' + ');
+      content = (
+        <>
+          <div className="ab-pop-head">Embark · {u.datasheet} <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></div>
+          {cargoShown.map(({ r, c }) => {
+            const on = r.embarkIn === u.uid;
+            return rideCard(r.uid, r.datasheet, names(r), on ? `${c.need} slots · tap to disembark` : c.full ? `No room: needs ${c.need}, ${Math.max(0, c.capacity - c.used)} left` : `${c.need} slots`,
+              on ? 'on' : c.full ? 'full' : '', !on && c.full,
+              () => { setUnit(r.uid, { embarkIn: on ? undefined : u.uid }); setInfo(on ? `${r.datasheet} left ${u.datasheet}` : `${r.datasheet} starts embarked in ${u.datasheet}`); }, undefined, r);
+          })}
+        </>
+      );
+    } else if (pop.mode === 'embark') {
+      content = (
+        <>
+          <div className="ab-pop-head">Start embarked{body ? ` (whole unit with ${body.datasheet})` : ''}</div>
+          {rides.map(({ t, c }) => rideCard(t.uid, t.datasheet, t.datasheet, c.full ? `Full: needs ${c.need}, ${Math.max(0, c.capacity - c.used)} left` : '',
+            rider.embarkIn === t.uid ? 'on' : c.full ? 'full' : '', c.full,
+            () => { setUnit(rider.uid, { embarkIn: t.uid }); setInfo(`${rider.datasheet} starts embarked in ${t.datasheet}`); close(); }, `${c.used}/${c.capacity}`))}
+        </>
+      );
+    } else if (pop.mode === 'size') {
       content = (
         <>
           <div className="ab-pop-head">Unit size · {u.datasheet}</div>
@@ -283,80 +461,36 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           })}
         </>
       );
-    } else if (pop.mode === 'attach') {
-      content = (
-        <>
-          <div className="ab-pop-head">Attach {u.datasheet} to Squad</div>
-          {attachables.map((target) => (
-            <button
-              key={target.uid}
-              type="button"
-              className="ab-pop-card has"
-              style={{ width: 'calc(100% - 16px)', padding: '10px 14px' }}
-              onClick={() => {
-                const nextUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: target.uid } : x));
-                setRun({ ...run, list: { ...run.list, units: nextUnits } });
-                setInfo(`${u.datasheet} attached to ${target.datasheet}`);
-                close();
-              }}
-            >
-              <span className="ab-pop-name">{target.datasheet} ({target.models} models)</span>
-            </button>
-          ))}
-        </>
-      );
     } else {
       content = (
         <>
-          {attachables.length > 0 && (
-            <button type="button" onClick={() => setPop({ ...pop, mode: 'attach' })}>
-              <Icon name="plus" size={22} />Attach to Squad
-            </button>
-          )}
+          {squadsFor.length > 0 && <button type="button" onClick={() => setPop({ ...pop, mode: 'squad' })}><Icon name="plus" size={22} />Add Squad</button>}
+          {canLeader && <button type="button" onClick={() => setPop({ ...pop, mode: 'leader' })}><Icon name="plus" size={22} />Add Leader</button>}
+          {canSupport && <button type="button" onClick={() => setPop({ ...pop, mode: 'support' })}><Icon name="plus" size={22} />Add Support</button>}
+          {bodySupport && <button type="button" onClick={() => setPop({ ...pop, uid: body!.uid, mode: 'support' })}><Icon name="plus" size={22} />Add Support <span className="ab-pop-val">{body!.datasheet}</span></button>}
           {body && (
-            <button
-              type="button"
-              onClick={() => {
-                const nextUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: undefined } : x));
-                setRun({ ...run, list: { ...run.list, units: nextUnits } });
-                setInfo(`${u.datasheet} left ${body.datasheet}`);
-                close();
-              }}
-            >
+            <button type="button" onClick={() => { setUnit(u.uid, { attachTo: undefined }); setInfo(`${u.datasheet} left ${body.datasheet}`); close(); }}>
               <Icon name="leave" size={22} />Leave Squad
             </button>
           )}
-          {opts.length > 1 && (
-            <button type="button" onClick={() => setPop({ ...pop, mode: 'size' })}>
-              <Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span>
-            </button>
+          {myLoad && cargo.length > 0 && (
+            <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></button>
           )}
+          {!isTransport && (rideIn ? (
+            <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setInfo(`${rider.datasheet} left ${rideIn.datasheet}`); close(); }}>
+              <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{rideIn.datasheet}</span>
+            </button>
+          ) : rides.length > 0 && (
+            <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark</button>
+          ))}
+          {opts.length > 1 && <button type="button" onClick={() => setPop({ ...pop, mode: 'size' })}><Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span></button>}
           {isChar && (
-            <button
-              type="button"
-              className={u.warlord ? 'on' : ''}
-              onClick={() => {
-                const nextUnits = run.list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false }));
-                setRun({ ...run, list: { ...run.list, units: nextUnits } });
-                close();
-              }}
-            >
-              <Icon name={u.warlord ? 'check' : 'leader'} size={22} />
-              {u.warlord ? 'Warlord' : 'Make Warlord'}
-            </button>
-          )}
-          {run.list.units.length > 1 && (
-            <button
-              type="button"
-              style={{ color: '#ef4444' }}
-              onClick={() => {
-                setRun(dismissUnit(run, u.uid));
-                play('bad');
-                setInfo(`Dismissed ${u.datasheet}`);
-                close();
-              }}
-            >
-              <Icon name="delete" size={22} />Dismiss Squad
+            <button type="button" className={u.warlord ? 'on' : ''} onClick={() => {
+              const nextUnits = run.list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false }));
+              setRun({ ...run, list: { ...run.list, units: nextUnits } });
+              close();
+            }}>
+              <Icon name={u.warlord ? 'check' : 'leader'} size={22} />{u.warlord ? 'Warlord' : 'Make Warlord'}
             </button>
           )}
         </>
@@ -379,6 +513,17 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         >
           {content}
         </div>
+        {peek && fac.datasheets.find((d) => d.name === peek) && (
+          <div className="tray-backdrop" style={{ zIndex: 160 }} onClick={(e) => { e.stopPropagation(); setPeek(null); }}>
+            <div className="tray" role="dialog" aria-label={`${peek} datasheet`} onClick={(e) => e.stopPropagation()}>
+              <div className="tray-head">
+                <span className="sheet-title grow">{peek}</span>
+                <button className="btn small ghost" onClick={() => setPeek(null)}>Close</button>
+              </div>
+              <DatasheetView sheet={fac.datasheets.find((d) => d.name === peek)!} factionId={fac.id} />
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -1018,11 +1163,19 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   const sheet = fac.datasheets.find((x) => x.name === u.datasheet);
                   const body = u.attachTo ? run.list.units.find((b) => b.uid === u.attachTo) : undefined;
                   const leads = body;
+                  const rider = body ?? u;
+                  const rideIn = rider.embarkIn ? run.list.units.find((t) => t.uid === rider.embarkIn) : undefined;
+                  const rides = rideIn ? fac.datasheets.find((x) => x.name === rideIn.datasheet) : undefined;
+                  const load = transportLoads(run.list, fac).find((t) => t.uid === u.uid);
+                  const carried = load?.riders.map((r) => run.list.units.find((x) => x.uid === r)?.datasheet).filter(Boolean) ?? [];
                   const wg = wargearSummary(sheet, u);
                   const line = [
                     u.warlord && 'Warlord',
-                    leads && (inGroup ? 'Attached Leader' : `Attached with ${leads.datasheet}`),
+                    leads && !inGroup && `${supportIn(run.list, sheet) ? 'Support for' : 'Leading'} ${leads.datasheet}`,
+                    leads && inGroup && (supportIn(run.list, sheet) ? 'Support' : 'Leader'),
                     u.honors?.length ? `${u.honors.length} Battle ${u.honors.length === 1 ? 'Honor' : 'Honors'}` : null,
+                    rides && (inGroup ? 'Embarked' : `Starts embarked in ${rides.name}`),
+                    load && (carried.length ? `Carrying ${carried.join(', ')} (${load.used}/${load.capacity})` : `Empty (0/${load.capacity})`),
                   ].filter(Boolean).join(' · ');
 
                   const isOpen = menu === u.uid;
@@ -1070,11 +1223,16 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         const d = fac.datasheets.find((x) => x.name === (first ?? u).datasheet);
                         return sectionOf(d, run.factionId);
                       };
-                      const us = run.list.units.filter((u) => (!u.attachTo || !run.list.units.some((b) => b.uid === u.attachTo)) && homeOf(u) === sec.id);
+                      const inRide = (u: ArmyUnitEntry) => !!u.embarkIn && run.list.units.some((t) => t.uid === u.embarkIn);
+                      const us = run.list.units.filter((u) => (!u.attachTo || !run.list.units.some((b) => b.uid === u.attachTo)) && !inRide(u) && homeOf(u) === sec.id);
                       if (!us.length) return null;
 
+                      const bySupport = (a: ArmyUnitEntry, b: ArmyUnitEntry) =>
+                        Number(!!supportIn(run.list, fac.datasheets.find((x) => x.name === a.datasheet))) -
+                        Number(!!supportIn(run.list, fac.datasheets.find((x) => x.name === b.datasheet)));
+
                       const squadRows = (u: ArmyUnitEntry, inGroup: boolean) => [
-                        ...joined(u).map((c) => unitRow(c, true)),
+                        ...joined(u).sort(bySupport).map((c) => unitRow(c, true)),
                         unitRow(u, inGroup || joined(u).length > 0),
                       ];
 
@@ -1085,11 +1243,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             <button type="button" className="ab-add" aria-label={`Recruit ${sec.title}`} onClick={() => setRosterTab('recruit')}>+</button>
                           </div>
                           {us.map((u) => {
-                            const attachCount = joined(u).length;
-                            if (!attachCount) return unitRow(u);
+                            const riders = run.list.units.filter((r) => r.embarkIn === u.uid && !r.attachTo);
+                            if (!joined(u).length && !riders.length) return unitRow(u);
                             return (
                               <div key={u.uid} className="ab-group">
                                 {squadRows(u, true)}
+                                {riders.map((r) => <div key={`ride-${r.uid}`} className="ab-ride">{squadRows(r, true)}</div>)}
                               </div>
                             );
                           })}
