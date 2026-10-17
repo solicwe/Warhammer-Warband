@@ -1651,37 +1651,41 @@ function BoardImpl(props: BoardProps) {
             })()}
             {(isSel || isPicked || isTarget) && (hasStealth || hasLoneOp || hasCover || isInfBeastOp) && pts.length > 0 && (() => {
               const tacticalTags: { text: string; color: string; border: string; bg: string; icon: 'stealth' | 'shield' | 'radar' }[] = [];
-              if (hasStealth) tacticalTags.push({ text: 'Stealth −1 Hit', color: '#38bdf8', border: '#0284c7', bg: 'rgba(14, 165, 233, 0.25)', icon: 'stealth' });
-              if (hasCover) tacticalTags.push({ text: 'Cover −1 BS', color: '#4ade80', border: '#16a34a', bg: 'rgba(34, 197, 94, 0.25)', icon: 'shield' });
-              if (isInfBeastOp) tacticalTags.push({ text: 'Lone Op 15" (Beast)', color: '#10b981', border: '#059669', bg: 'rgba(16, 185, 129, 0.25)', icon: 'stealth' });
-              else if (hasLoneOp) tacticalTags.push({ text: 'Lone Op 12"', color: '#fbbf24', border: '#d97706', bg: 'rgba(245, 158, 11, 0.25)', icon: 'radar' });
+              if (hasStealth) tacticalTags.push({ text: 'Stealth −1 Hit', color: '#38bdf8', border: '#38bdf8', bg: '#090d16', icon: 'stealth' });
+              if (hasCover) tacticalTags.push({ text: 'Cover −1 BS', color: '#4ade80', border: '#4ade80', bg: '#090d16', icon: 'shield' });
+              if (isInfBeastOp) tacticalTags.push({ text: 'Lone Op 15" (Beast)', color: '#34d399', border: '#34d399', bg: '#090d16', icon: 'stealth' });
+              else if (hasLoneOp) tacticalTags.push({ text: 'Lone Op 12"', color: '#fbbf24', border: '#fbbf24', bg: '#090d16', icon: 'radar' });
               const tCount = tacticalTags.length;
               const tagY = props.badges?.[u.id]?.length ? minY - 1.55 : minY - 0.95;
+              const pillW = 2.9;
+              const pillSpacing = pillW + 0.35;
               return (
                 <g transform={`translate(${cx} ${tagY})`} pointerEvents="none">
                   {tacticalTags.map((tag, i) => {
-                    const off = (i - (tCount - 1) / 2) * 2.8;
-                    const pillW = Math.max(2.2, tag.text.length * 0.16 + 0.7);
+                    const off = (i - (tCount - 1) / 2) * pillSpacing;
                     return (
                       <g key={tag.text} transform={`translate(${off} 0)`}>
                         <rect
                           x={-pillW / 2}
-                          y={-0.22}
+                          y={-0.25}
                           width={pillW}
-                          height={0.44}
-                          rx={0.22}
-                          fill={tag.bg}
+                          height={0.5}
+                          rx={0.25}
+                          fill="#090d16"
                           stroke={tag.border}
-                          strokeWidth={0.05}
+                          strokeWidth={0.07}
                         />
-                        <SvgIcon name={tag.icon} x={-pillW / 2 + 0.28} y={0} size={0.3} color={tag.color} />
+                        <SvgIcon name={tag.icon} x={-pillW / 2 + 0.35} y={0} size={0.32} color={tag.color} />
                         <text
-                          x={0.12}
+                          x={0.16}
                           y={0.08}
-                          fontSize={0.23}
+                          fontSize={0.24}
                           textAnchor="middle"
                           fill={tag.color}
-                          fontWeight={800}
+                          fontWeight={900}
+                          stroke="#000"
+                          strokeWidth={0.03}
+                          paintOrder="stroke"
                         >
                           {tag.text}
                         </text>

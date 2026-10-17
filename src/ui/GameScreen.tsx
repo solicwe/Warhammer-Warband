@@ -2176,17 +2176,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 {(tHasStealth || tHasCover || tHasLoneOp) && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
                     {tHasStealth && (
-                      <span className="oath-tag" style={{ background: 'rgba(56, 189, 248, 0.18)', borderColor: '#38bdf8', color: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <span className="oath-tag" style={{ background: '#090d16', borderColor: '#38bdf8', color: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 800 }}>
                         <Icon name="stealth" size={13} /> Stealth (−1 to Hit)
                       </span>
                     )}
                     {tHasCover && (
-                      <span className="oath-tag" style={{ background: 'rgba(74, 222, 128, 0.18)', borderColor: '#4ade80', color: '#86efac', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <span className="oath-tag" style={{ background: '#090d16', borderColor: '#4ade80', color: '#4ade80', display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 800 }}>
                         <Icon name="shield" size={13} /> Benefit of Cover (−1 BS)
                       </span>
                     )}
                     {tHasLoneOp && (
-                      <span className="oath-tag" style={{ background: 'rgba(251, 191, 36, 0.18)', borderColor: '#fbbf24', color: '#fde047', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <span className="oath-tag" style={{ background: '#090d16', borderColor: '#fbbf24', color: '#fbbf24', display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 800 }}>
                         <Icon name="radar" size={13} /> Lone Operative (12")
                       </span>
                     )}
