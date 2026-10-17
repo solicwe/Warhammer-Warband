@@ -3,7 +3,10 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { autoList } from './autoList';
-import { afterBattle, applyCampaign, changeSquadSize, combineSquads, continueNextLoop, enter, makeMap, newRun, reachable, recruitUnit, takeReward } from './campaign';
+import {
+  afterBattle, applyCampaign, buyEnhancementForUnit, changeSquadSize, combineSquads, continueNextLoop,
+  enhancementScrapCost, enter, makeMap, newRun, reachable, recruitUnit, removeEnhancementFromUnit, takeReward
+} from './campaign';
 import { effectsFor } from './effects';
 import { createGame } from './game';
 import type { FactionData } from './types';
@@ -212,4 +215,36 @@ describe('campaign', () => {
     s.maxRounds = 5;
     expect(s.maxRounds).toBe(5);
   });
+
+  it('allows purchasing and unequipping detachment enhancements for characters using Scrap in roguelike campaign', () => {
+    const sm = load('SM');
+    const list = autoList(sm, 500, 3);
+    let run = newRun(sm, list, ['ORK'], 42);
+    run.scrap = 200;
+
+    const char = run.list.units.find((u) => {
+      const d = sm.datasheets.find((x) => x.name === u.datasheet);
+      return d?.keywords.includes('CHARACTER') && !d.keywords.includes('EPIC HERO');
+    })!;
+    expect(char).toBeDefined();
+
+    const initialScrap = run.scrap;
+    const cost = enhancementScrapCost(20);
+    expect(cost).toBe(60);
+
+    // Buy enhancement
+    run = buyEnhancementForUnit(run, sm, char.uid, 'Adept of the Codex', 20);
+    const updatedChar = run.list.units.find((u) => u.uid === char.uid)!;
+    expect(updatedChar.enhancement).toBe('Adept of the Codex');
+    expect(updatedChar.enhancementPts).toBe(20);
+    expect(run.scrap).toBe(initialScrap - cost);
+
+    // Unequip & refund enhancement
+    run = removeEnhancementFromUnit(run, char.uid);
+    const refundedChar = run.list.units.find((u) => u.uid === char.uid)!;
+    expect(refundedChar.enhancement).toBeUndefined();
+    expect(refundedChar.enhancementPts).toBeUndefined();
+    expect(run.scrap).toBe(initialScrap);
+  });
 });
+

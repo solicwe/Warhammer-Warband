@@ -63,7 +63,6 @@ import { Board, type Paths, type Ring } from './Board';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
 import { canMakePact, madePact, makeDarkPact, type PactPick } from '../engine/darkPacts';
-import { RelicStrip } from './Relics';
 import { UnitView } from './Sheet';
 import { useGame } from './store';
 import { AttackReport } from './AttackReport';
@@ -2965,7 +2964,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onShake={(lv) => { if (!lv) return; setShake(lv); window.setTimeout(() => setShake(0), 420 + lv * 80); }} />
         {botSays && actingBot === null && !spectate && <div className="bot-caption">{botSays}</div>}
         {toast && <div className="toast">{toast}</div>}
-        {s.campaign && <RelicStrip relics={s.campaign.relics} rules={s.campaign.rules} relicLevels={s.campaign.relicLevels} onInfo={flash} />}
         {tape.on && (
           <div className="tape-bar">
             <span>{tapeInfo ? tapeInfo.line : tape.a ? 'Tap the second point (tap a model = base to base + line of sight)' : 'Tape measure: tap a model or a first point'}</span>

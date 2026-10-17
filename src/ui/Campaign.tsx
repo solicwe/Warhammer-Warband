@@ -2,12 +2,13 @@
 // Features a full roguelike engine: scrap currency, unit veterancy, battle honors, armory, medicae tents,
 // and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
-import { attachOptions, autoAttach, defaultWargear, listPoints, pointsOptions, syncList, syncWargear, wargearSummary } from '../engine/army';
+import { attachOptions, autoAttach, defaultWargear, enhancementFits, enhancementOptions, listPoints, pointsOptions, syncList, syncWargear, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
-  bossRuleById, buyHonorForUnit, changeSquadSize, cheapest, combineSquads, continueNextLoop, dismissUnit, enter, loadRun, makeOffer,
-  newRun, reachable, recruitUnit, relicById, relicDesc, rerollOffer, saveRun, START_POINTS, takeReward,
+  bossRuleById, buyEnhancementForUnit, buyHonorForUnit, changeSquadSize, cheapest, continueNextLoop, dismissUnit,
+  enhancementScrapCost, enter, loadRun, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
+  removeEnhancementFromUnit, rerollOffer, saveRun, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
 } from '../engine/campaign';
 import { hasFactionRules } from '../engine/effects';
@@ -20,6 +21,7 @@ import { withAutoRules } from './library';
 import { getPortrait } from './portraits';
 import { RelicToken } from './Relics';
 import { play } from './sfx';
+import { Em } from './Em';
 
 interface Props {
   index: FactionIndex | null;
@@ -58,6 +60,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const [wargearUid, setWargearUid] = useState<string | null>(null);
   const [attachingUid, setAttachingUid] = useState<string | null>(null);
   const [sizingUid, setSizingUid] = useState<string | null>(null);
+  const [enhancingUid, setEnhancingUid] = useState<string | null>(null);
 
   useEffect(() => { if (!info) return; const t = window.setTimeout(() => setInfo(null), 3200); return () => window.clearTimeout(t); }, [info]);
   useEffect(() => { if (!armed) return; const t = window.setTimeout(() => setArmed(false), 3000); return () => window.clearTimeout(t); }, [armed]);
@@ -481,10 +484,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             const isEditingWargear = wargearUid === u.uid;
                             const isAttaching = attachingUid === u.uid;
                             const isSizing = sizingUid === u.uid;
+                            const isEnhancing = enhancingUid === u.uid;
                             const canLead = Boolean(d?.leads && d.leads.length > 0);
                             const sizeOpts = d ? pointsOptions(d) : [];
-                            const otherSquads = run.list.units.filter((x) => x.uid !== u.uid && x.datasheet === u.datasheet);
-                            const canResizeOrMerge = sizeOpts.length > 1 || otherSquads.length > 0;
+                            const canResize = sizeOpts.length > 1;
+                            const enhOpts = fac ? enhancementOptions(run.list, fac, u) : [];
+                            const canTakeEnh = enhOpts.length > 0 || Boolean(u.enhancement);
                             const attachedSquad = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined;
                             const attachedLeaders = run.list.units.filter((x) => x.attachTo === u.uid);
                             return (
@@ -497,7 +502,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   <div className="cmp-card-details">
                                     <div className="cmp-card-badges">
                                       <span className="cmp-rank-badge">{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
-                                      <span className="cmp-card-pts">{u.pts + (u.wargearPts ?? 0)} pts</span>
+                                      <span className="cmp-card-pts">{u.pts + (u.wargearPts ?? 0) + (u.enhancementPts ?? 0)} pts</span>
                                     </div>
                                     <div className="cmp-roster-name">{u.datasheet}</div>
                                     <div className="cmp-roster-meta">{u.models} {u.models === 1 ? 'model' : 'models'}</div>
@@ -505,6 +510,14 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                       <div style={{ marginTop: 2, fontSize: 11.5, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4 }}>
                                         <Icon name="wargear" size={12} />
                                         <span>{wg}</span>
+                                      </div>
+                                    )}
+                                    {u.enhancement && (
+                                      <div style={{ marginTop: 4 }}>
+                                        <span className="chip warn small" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 700, borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.15)' }}>
+                                          <Icon name="enhancement" size={13} />
+                                          <span>{u.enhancement} (+{u.enhancementPts ?? 0} pts)</span>
+                                        </span>
                                       </div>
                                     )}
                                     {attachedSquad && (
@@ -555,23 +568,29 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                         <div className="cmp-card-actions">
                           {canLead && (
-                            <button className={`cmp-card-btn ${isAttaching ? 'active' : ''}`} onClick={() => { setAttachingUid(isAttaching ? null : u.uid); setUpgradingUid(null); setWargearUid(null); setSizingUid(null); }}>
+                            <button className={`cmp-card-btn ${isAttaching ? 'active' : ''}`} onClick={() => { setAttachingUid(isAttaching ? null : u.uid); setUpgradingUid(null); setWargearUid(null); setSizingUid(null); setEnhancingUid(null); }}>
                               <Icon name="swords" size={14} />
                               <span>Attach</span>
                             </button>
                           )}
-                          {canResizeOrMerge && (
-                            <button className={`cmp-card-btn ${isSizing ? 'active' : ''}`} onClick={() => { setSizingUid(isSizing ? null : u.uid); setUpgradingUid(null); setWargearUid(null); setAttachingUid(null); }}>
+                          {canResize && (
+                            <button className={`cmp-card-btn ${isSizing ? 'active' : ''}`} onClick={() => { setSizingUid(isSizing ? null : u.uid); setUpgradingUid(null); setWargearUid(null); setAttachingUid(null); setEnhancingUid(null); }}>
                               <Icon name="size" size={14} />
-                              <span>{otherSquads.length ? `Combine (${otherSquads.length}) / Size` : `Size (${u.models})`}</span>
+                              <span>Size ({u.models})</span>
                             </button>
                           )}
-                          <button className={`cmp-card-btn ${isUpgrading ? 'active' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); setAttachingUid(null); setSizingUid(null); }}>
+                          {canTakeEnh && (
+                            <button className={`cmp-card-btn ${isEnhancing ? 'active' : ''}`} onClick={() => { setEnhancingUid(isEnhancing ? null : u.uid); setUpgradingUid(null); setWargearUid(null); setAttachingUid(null); setSizingUid(null); }}>
+                              <Icon name="enhancement" size={14} />
+                              <span>Enhancement{u.enhancement ? ' (Equipped)' : ''}</span>
+                            </button>
+                          )}
+                          <button className={`cmp-card-btn ${isUpgrading ? 'active' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); setAttachingUid(null); setSizingUid(null); setEnhancingUid(null); }}>
                             <Icon name="shop" size={14} />
                             <span>Battle Honors {u.honors?.length ? `(${u.honors.length})` : ''}</span>
                           </button>
                           {d?.wargearOptions?.length ? (
-                            <button className={`cmp-card-btn ${isEditingWargear ? 'active' : ''}`} onClick={() => { setWargearUid(isEditingWargear ? null : u.uid); setUpgradingUid(null); setAttachingUid(null); setSizingUid(null); }}>
+                            <button className={`cmp-card-btn ${isEditingWargear ? 'active' : ''}`} onClick={() => { setWargearUid(isEditingWargear ? null : u.uid); setUpgradingUid(null); setAttachingUid(null); setSizingUid(null); setEnhancingUid(null); }}>
                               <Icon name="wargear" size={14} />
                               <span>Wargear</span>
                             </button>
@@ -943,7 +962,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         {isSizing && (
                           <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                             {sizeOpts.length > 1 && (
-                              <div style={{ marginBottom: otherSquads.length ? 14 : 0 }}>
+                              <div>
                                 <div className="cmp-kicker" style={{ marginBottom: 8, color: '#38bdf8' }}>
                                   Squad Size (จำนวนโมเดลในกอง)
                                 </div>
@@ -994,62 +1013,140 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                 </div>
                               </div>
                             )}
+                          </div>
+                        )}
 
-                            {otherSquads.length > 0 && (
-                              <div style={{ marginTop: sizeOpts.length > 1 ? 12 : 0 }}>
-                                <div className="cmp-kicker" style={{ marginBottom: 6, color: '#f59e0b' }}>
-                                  Combine Squads (รวมกอง)
+                        {/* Enhancement (สกิลเสริม) Drawer */}
+                        {isEnhancing && fac && (
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                              <div className="cmp-kicker" style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Icon name="enhancement" size={13} />
+                                <span>Detachment Enhancements (สกิลเสริม)</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setEnhancingUid(null)}
+                                title="Close"
+                                aria-label="Close"
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#94a3b8',
+                                  cursor: 'pointer',
+                                  padding: '4px 6px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  borderRadius: '4px',
+                                }}
+                              >
+                                <Icon name="close" size={14} />
+                              </button>
+                            </div>
+                            <div style={{ fontSize: 12.5, color: '#94a3b8', marginBottom: 10, lineHeight: 1.4 }}>
+                              Equip a specialized Detachment Enhancement to this Character using Scrap. In accordance with 40k rules, each enhancement can only be taken once per army.
+                            </div>
+
+                            {/* If character already has an enhancement equipped */}
+                            {u.enhancement && (
+                              <div style={{ marginBottom: 12, padding: 12, borderRadius: 8, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                <div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <span className="chip warn small" style={{ fontWeight: 700 }}>Currently Equipped</span>
+                                    <b style={{ color: '#fef08a', fontSize: 14 }}>{u.enhancement}</b>
+                                    <span className="tiny muted">(+{u.enhancementPts ?? 0} pts)</span>
+                                  </div>
                                 </div>
-                                <div className="tiny muted" style={{ marginBottom: 8 }}>
-                                  Merge a duplicate squad into this unit for free. Total models, Experience, and Battle Honors are combined!
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                  {otherSquads.map((src) => {
-                                    const combinedModels = u.models + src.models;
-                                    const matchedOpt = sizeOpts.find((o) => o.models === combinedModels)
-                                      ?? sizeOpts.filter((o) => o.models <= combinedModels).sort((a, b) => b.models - a.models)[0]
-                                      ?? sizeOpts[sizeOpts.length - 1];
-                                    const targetCount = matchedOpt ? matchedOpt.models : combinedModels;
-                                    return (
-                                      <div
-                                        key={src.uid}
-                                        style={{
-                                          padding: 10,
-                                          borderRadius: 8,
-                                          background: 'rgba(245, 158, 11, 0.08)',
-                                          border: '1px solid rgba(245, 158, 11, 0.25)',
-                                          display: 'flex',
-                                          justifyContent: 'space-between',
-                                          alignItems: 'center',
-                                          flexWrap: 'wrap',
-                                          gap: 8,
-                                        }}
-                                      >
+                                <button
+                                  type="button"
+                                  className="btn small"
+                                  style={{ border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
+                                  onClick={() => {
+                                    setRun(removeEnhancementFromUnit(run, u.uid));
+                                    play('bad');
+                                  }}
+                                >
+                                  Unequip & Refund (+{enhancementScrapCost(u.enhancementPts ?? 0)} Scrap)
+                                </button>
+                              </div>
+                            )}
+
+                            {/* List of available enhancements */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 8 }}>
+                              {enhOpts.map((o) => {
+                                const isCurrent = u.enhancement === o.name;
+                                const taken = run.list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
+                                const fit = d ? enhancementFits(o.text, [...d.keywords, ...d.factionKeywords, d.name, ...(u.mark ? [u.mark] : [])]) : null;
+                                const cost = enhancementScrapCost(o.pts);
+                                const refund = u.enhancement ? enhancementScrapCost(u.enhancementPts ?? 0) : 0;
+                                const netCost = cost - refund;
+                                const canAfford = netCost <= 0 || (run.scrap ?? 0) >= netCost;
+                                return (
+                                  <div
+                                    key={o.detachment + o.name}
+                                    style={{
+                                      padding: 10,
+                                      borderRadius: 8,
+                                      background: isCurrent ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255,255,255,0.04)',
+                                      border: isCurrent ? '1.5px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      justifyContent: 'space-between',
+                                      gap: 8,
+                                      opacity: taken || (fit && !fit.ok) ? 0.6 : 1,
+                                    }}
+                                  >
+                                    <div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
                                         <div>
-                                          <div style={{ fontWeight: 700, color: '#fef08a', fontSize: 13.5 }}>
-                                            {src.datasheet} ({src.models} models)
-                                          </div>
-                                          <div className="tiny muted">
-                                            XP {src.xp ?? 0}{src.honors?.length ? ` · ${src.honors.length} honors` : ''} → Combine to {targetCount} models
-                                          </div>
+                                          <b style={{ color: isCurrent ? '#fef08a' : '#f8fafc', fontSize: 13.5 }}>{o.name}</b>
+                                          <div className="tiny muted">{o.detachment} · +{o.pts} pts</div>
                                         </div>
+                                        <span className="cmp-scrap"><Icon name="shop" size={12} /> {cost}</span>
+                                      </div>
+                                      {fit && !fit.ok && (
+                                        <div style={{ marginTop: 4, color: '#f87171', fontSize: 11.5, fontWeight: 600 }}>
+                                          Requires: {fit.need}
+                                        </div>
+                                      )}
+                                      {o.text && (
+                                        <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 6, lineHeight: 1.35 }}>
+                                          <Em text={o.text} />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div style={{ marginTop: 8 }}>
+                                      {isCurrent ? (
+                                        <span className="chip ok small" style={{ width: '100%', justifyContent: 'center' }}>
+                                          <Icon name="check" size={12} /> Equipped
+                                        </span>
+                                      ) : taken ? (
+                                        <span className="chip subtle small" style={{ width: '100%', justifyContent: 'center', color: '#94a3b8' }}>
+                                          Equipped on {taken.datasheet}
+                                        </span>
+                                      ) : fit && !fit.ok ? (
+                                        <button type="button" className="btn small" disabled style={{ width: '100%' }}>
+                                          Not Eligible
+                                        </button>
+                                      ) : (
                                         <button
                                           type="button"
-                                          className="btn small"
-                                          style={{ background: '#d97706', borderColor: '#f59e0b', color: '#fff', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                                          className="btn small primary"
+                                          disabled={!canAfford}
+                                          style={{ width: '100%' }}
                                           onClick={() => {
-                                            setRun(combineSquads(run, fac, u.uid, src.uid));
+                                            setRun(buyEnhancementForUnit(run, fac, u.uid, o.name, o.pts));
                                             play('good');
                                           }}
                                         >
-                                          <Icon name="size" size={13} /> Combine into {targetCount} models (Free)
+                                          {!canAfford ? `Need Scrap (${netCost > 0 ? netCost : cost})` : `Equip (${cost} Scrap)`}
                                         </button>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            )}
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
                       </div>

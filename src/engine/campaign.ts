@@ -520,6 +520,52 @@ export function buyHonorForUnit(run: Run, unitUid: string, honorId: string): Run
   };
 }
 
+/** Calculate the Scrap cost of an Enhancement (points * 3, minimum 40) */
+export const enhancementScrapCost = (pts: number) => Math.max(40, pts * 3);
+
+/** Purchase and equip a detachment enhancement on a character in the campaign roster using Scrap */
+export function buyEnhancementForUnit(
+  run: Run,
+  faction: FactionData,
+  unitUid: string,
+  enhancementName: string,
+  pts: number
+): Run {
+  const u = run.list.units.find((x) => x.uid === unitUid);
+  if (!u) return run;
+
+  const cost = enhancementScrapCost(pts);
+  const refund = u.enhancement ? enhancementScrapCost(u.enhancementPts ?? 0) : 0;
+  const netCost = cost - refund;
+  if ((run.scrap ?? 0) < netCost) return run;
+
+  const units = run.list.units.map((x) => (x.uid === unitUid ? { ...x, enhancement: enhancementName, enhancementPts: pts } : x));
+  return {
+    ...run,
+    scrap: (run.scrap ?? 0) - netCost,
+    list: { ...run.list, units },
+    story: [...run.story, `Armory: Equipped ${enhancementName} on ${u.datasheet} (-${netCost} Scrap)`],
+  };
+}
+
+/** Remove an equipped detachment enhancement and refund its Scrap */
+export function removeEnhancementFromUnit(
+  run: Run,
+  unitUid: string
+): Run {
+  const u = run.list.units.find((x) => x.uid === unitUid);
+  if (!u || !u.enhancement) return run;
+
+  const refund = enhancementScrapCost(u.enhancementPts ?? 0);
+  const units = run.list.units.map((x) => (x.uid === unitUid ? { ...x, enhancement: undefined, enhancementPts: undefined } : x));
+  return {
+    ...run,
+    scrap: (run.scrap ?? 0) + refund,
+    list: { ...run.list, units },
+    story: [...run.story, `Armory: Unequipped ${u.enhancement} from ${u.datasheet} (+${refund} Scrap refunded)`],
+  };
+}
+
 /** Buy and recruit a new unit into the campaign roster using Scrap */
 export function recruitUnit(run: Run, faction: FactionData, datasheetName: string, chosenModels?: number): Run {
   const excl = AUX_EXCLUSIONS[faction.id] ?? [];
