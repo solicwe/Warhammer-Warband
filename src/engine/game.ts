@@ -2640,9 +2640,88 @@ export function sanitizeGameState(s: GameState): GameState {
       }
     }
   }
+  if (Array.isArray(s.objectives) && Array.isArray(s.terrain)) {
+    const R = 3 + 20 / 25.4;
+    for (let i = 0; i < s.objectives.length; i++) {
+      const o = s.objectives[i];
+      let tp = s.terrain.find((t) => t.id === o.terrainId && t.kind === 'objective-area');
+      if (!tp) {
+        for (const t of s.terrain) {
+          if (t.objectiveId === o.id && t.kind !== 'objective-area') {
+            delete t.objectiveId;
+          }
+        }
+        const objId = `obj-t${i}`;
+        tp = s.terrain.find((t) => t.id === objId);
+        if (!tp) {
+          tp = {
+            id: objId,
+            kind: 'objective-area',
+            label: `Objective ${i + 1} (40mm marker, range 3")`,
+            category: 'exposed',
+            height: 0,
+            walls: [],
+            obstacles: [],
+            poly: Array.from({ length: 32 }, (_, k) => ({
+              x: Math.round((o.x + R * Math.cos((k / 32) * Math.PI * 2)) * 10) / 10,
+              y: Math.round((o.y + R * Math.sin((k / 32) * Math.PI * 2)) * 10) / 10,
+            })),
+            objectiveId: o.id,
+          };
+          s.terrain.push(tp);
+        }
+        o.terrainId = tp.id;
+      }
+    }
+  }
+
   if (s.table) {
-    s.table.width = Math.max(RULES.battlefield.width, s.table.width || RULES.battlefield.width);
-    s.table.height = Math.max(RULES.battlefield.height, s.table.height || RULES.battlefield.height);
+    const allowExp = !!(s.campaign as { allowDynamicExpansion?: boolean } | undefined)?.allowDynamicExpansion;
+    if (!allowExp) {
+      if (s.terrain?.some((t) => t.id.startsWith('proc-t'))) {
+        s.terrain = s.terrain.filter((t) => !t.id.startsWith('proc-t'));
+      }
+      const maxPts = Math.max(
+        s.units.filter((u) => u.owner === 0).reduce((sum, u) => sum + (u.pts ?? 0), 0),
+        s.units.filter((u) => u.owner === 1).reduce((sum, u) => sum + (u.pts ?? 0), 0)
+      );
+      const stdW = maxPts >= 4000 ? 60 : 44;
+      const stdH = maxPts >= 3000 ? 90 : 60;
+      if (s.table.width > stdW || s.table.height > stdH) {
+        const sx = stdW / s.table.width;
+        const sy = stdH / s.table.height;
+        s.table.width = stdW;
+        s.table.height = stdH;
+        for (const t of s.terrain) {
+          t.poly = t.poly.map((p) => ({ x: Math.round(p.x * sx * 10) / 10, y: Math.round(p.y * sy * 10) / 10 }));
+          if (t.walls) {
+            t.walls = t.walls.map((w) => ({
+              a: { x: Math.round(w.a.x * sx * 10) / 10, y: Math.round(w.a.y * sy * 10) / 10 },
+              b: { x: Math.round(w.b.x * sx * 10) / 10, y: Math.round(w.b.y * sy * 10) / 10 },
+            }));
+          }
+          if (t.obstacles) {
+            t.obstacles = t.obstacles.map((ob) => ({
+              a: { x: Math.round(ob.a.x * sx * 10) / 10, y: Math.round(ob.a.y * sy * 10) / 10 },
+              b: { x: Math.round(ob.b.x * sx * 10) / 10, y: Math.round(ob.b.y * sy * 10) / 10 },
+            }));
+          }
+        }
+        for (const o of s.objectives) {
+          o.x = Math.round(o.x * sx * 10) / 10;
+          o.y = Math.round(o.y * sy * 10) / 10;
+        }
+        for (const u of s.units) {
+          for (const m of u.models) {
+            m.x = Math.round(m.x * sx * 10) / 10;
+            m.y = Math.round(m.y * sy * 10) / 10;
+          }
+        }
+      }
+    } else {
+      s.table.width = Math.max(RULES.battlefield.width, s.table.width || RULES.battlefield.width);
+      s.table.height = Math.max(RULES.battlefield.height, s.table.height || RULES.battlefield.height);
+    }
   }
   return s;
 }
