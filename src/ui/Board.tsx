@@ -1585,15 +1585,15 @@ function BoardImpl(props: BoardProps) {
                           width={btnW}
                           height={0.68}
                           rx={0.34}
-                          fill={act.primary ? '#2563eb' : 'rgba(15, 23, 42, 0.94)'}
-                          stroke={act.primary ? '#60a5fa' : 'rgba(255, 255, 255, 0.3)'}
+                          fill={act.primary ? '#d99b26' : '#121417'}
+                          stroke={act.primary ? '#f59e0b' : 'rgba(217, 155, 38, 0.45)'}
                           strokeWidth={0.06}
                         />
                         <text
                           y={0.11}
                           fontSize={0.32}
                           textAnchor="middle"
-                          fill="#ffffff"
+                          fill={act.primary ? '#0f172a' : '#f1f5f9'}
                           fontWeight={800}
                         >
                           {act.label}

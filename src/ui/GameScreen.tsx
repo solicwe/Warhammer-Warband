@@ -931,18 +931,31 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const quickActions = useMemo(() => {
     if (!sel || !selUnit || selUnit.owner !== s.active) return undefined;
     const actions: { label: string; icon?: string; primary?: boolean; onClick: () => void }[] = [];
-    if (s.phase === 'movement' && onBoard(selUnit) && !selUnit.move) {
-      if (!isEngaged(s, selUnit)) {
-        const mDist = (alive(selUnit)[0]?.profile.M ?? 0) + unitFlags(s, selUnit).move;
+    if (s.phase === 'movement' && onBoard(selUnit)) {
+      if (selUnit.move && reopenMove && reopenMove.mode.unitId === selUnit.id) {
         actions.push({
-          label: `Move ${mDist}"`,
+          label: 'Undo Move',
           primary: true,
           onClick: () => {
-            const ok = act((g) => {
-              const gu = unitById(g, selUnit.id);
-              if (!beginMove(g, gu, 'normal')) return false;
-              return true;
-            });
+            const lm = reopenMove;
+            undo();
+            setLastMove(null);
+            setSel(lm.mode.unitId);
+            setMode(lm.mode, lm.paths);
+          },
+        });
+      } else if (!selUnit.move) {
+        if (!isEngaged(s, selUnit)) {
+          const mDist = (alive(selUnit)[0]?.profile.M ?? 0) + unitFlags(s, selUnit).move;
+          actions.push({
+            label: `Move ${mDist}"`,
+            primary: true,
+            onClick: () => {
+              const ok = act((g) => {
+                const gu = unitById(g, selUnit.id);
+                if (!beginMove(g, gu, 'normal')) return false;
+                return true;
+              });
             if (ok) setMode({ k: 'move', unitId: selUnit.id, kind: 'normal', fly: fly && hasKw(selUnit, 'FLY') }, startPaths(selUnit));
             else flash(`${selUnit.name} must Remain Stationary`);
           },
@@ -973,13 +986,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           },
         });
       }
-      actions.push({
-        label: 'Hold',
-        onClick: () => {
-          act((g) => remainStationary(g, unitById(g, selUnit.id)));
-          setSel(null);
-        },
-      });
+        actions.push({
+          label: 'Hold',
+          onClick: () => {
+            act((g) => remainStationary(g, unitById(g, selUnit.id)));
+            setSel(null);
+          },
+        });
+      }
     } else if (s.phase === 'shooting' && onBoard(selUnit) && !selUnit.selectedToShoot) {
       const smodes = shootingModes(s, selUnit);
       if (smodes.length > 0) {
@@ -1018,7 +1032,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       },
     });
     return actions.length > 0 ? { unitId: selUnit.id, actions } : undefined;
-  }, [sel, selUnit, s, fly]);
+  }, [sel, selUnit, s, fly, reopenMove]);
 
   // tape measure: tap two points on the board
   const [tape, setTape] = useState<{ on: boolean; a?: Pt; b?: Pt; ma?: { u: string; m: string }; mb?: { u: string; m: string } }>({ on: false });

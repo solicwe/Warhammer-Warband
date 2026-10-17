@@ -221,8 +221,8 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
           </div>
 
           {!done && (
-            <button className="btn small" onClick={guarded(onSkip)} style={{ marginLeft: 6 }}>
-              Skip
+            <button className="btn small primary" onClick={guarded(onSkip)} style={{ marginLeft: 6, background: '#d99b26', borderColor: '#f59e0b', color: '#0f172a', fontWeight: 800 }} title="Instantly resolve all rolls and calculate damage">
+              1-Click Resolve
             </button>
           )}
         </div>

@@ -896,9 +896,9 @@ function startCommand(s: GameState) {
   log(s, `+${RULES.cpPerCommandPhase}CP to both players (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
   if (s.campaign && s.active === 0) {
     const objsHeld = s.objectives.filter((o) => o.controller === 0).length;
-    const roundScrap = 150 + objsHeld * 50;
+    const roundScrap = 25 + objsHeld * 10;
     s.campaignScrap = (s.campaignScrap ?? 0) + roundScrap;
-    log(s, `Logistics Requisition (Round ${s.round}): +${roundScrap} Scrap generated (${150} base + ${objsHeld * 50} from ${objsHeld} objectives held)`, 'vp', 0);
+    log(s, `Logistics Requisition (Round ${s.round}): +${roundScrap} Scrap generated (${25} base + ${objsHeld * 10} from ${objsHeld} objectives held)`, 'vp', 0);
   }
   poisonTick(s);
   dgCommandStart(s);
@@ -1879,7 +1879,7 @@ export function updateControl(s: GameState) {
     if (s.campaign && c === 0 && !s.campaign.lootedObjectives?.includes(o.id)) {
       (s.campaign.lootedObjectives ??= []).push(o.id);
       s.players[0].vp += 5;
-      const scrapGain = 100;
+      const scrapGain = 20;
       s.campaignScrap = (s.campaignScrap ?? 0) + scrapGain;
       const roll = (s.turn * 31 + Math.floor(o.x * 7 + o.y)) % 100;
       let bonusText = '';

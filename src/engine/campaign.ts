@@ -292,7 +292,7 @@ export function makeMap(seed: number, enemies: string[], loop = 1): MapNode[] {
 export function newRun(faction: FactionData, list: ArmyList, enemies: string[], seed = Date.now()): Run {
   return {
     version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, enemies.filter((e) => e !== faction.id && e !== 'TL')),
-    path: [], relics: [], relicLevels: {}, freeRerolls: 1, cp: 0, fate: 3, scrap: 300, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
+    path: [], relics: [], relicLevels: {}, freeRerolls: 1, cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
   };
 }
 
@@ -347,7 +347,7 @@ export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt =
     return list;
   }
   const cap = 140 + run.path.length * 25;
-  const scrapReward: Reward = { kind: 'scrap', amount: Math.round(60 + r() * 50) };
+  const scrapReward: Reward = { kind: 'scrap', amount: Math.round(25 + r() * 25) };
   if (kind === 'supply') return [...units(1, cap), ...relics(false).slice(0, 1), detReward && r() < 0.5 ? detReward : scrapReward];
   // a won battle: one new unit, one relic, or scrap/detachment
   const thirdReward = detReward && r() < 0.45 ? detReward : scrapReward;
@@ -420,7 +420,7 @@ export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
 export function enter(run: Run, nodeId: string, faction: FactionData): Run {
   const node = run.map.find((n) => n.id === nodeId)!;
   if (node.kind === 'supply') return { ...run, path: [...run.path, nodeId], offer: makeOffer(run, faction, 'supply'), story: [...run.story, 'Supply drop'] };
-  if (node.kind === 'armory') return { ...run, path: [...run.path, nodeId], scrap: (run.scrap ?? 0) + 40, story: [...run.story, 'Munitorum Armory reached (+40 Scrap)'] };
+  if (node.kind === 'armory') return { ...run, path: [...run.path, nodeId], scrap: (run.scrap ?? 0) + 25, story: [...run.story, 'Munitorum Armory reached (+25 Scrap)'] };
   if (node.kind === 'medicae') return { ...run, path: [...run.path, nodeId], story: [...run.story, 'Medicae Field Camp reached'] };
   return { ...run, fighting: nodeId };
 }
@@ -441,7 +441,7 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
       story: [...run.story, `Defeated by ${enemyName}${salvage > 0 ? ` (+${salvage} Scrap salvaged)` : ''}${fate > 0 ? ` · ${fate} Fate left` : ''}`],
     };
   }
-  const baseGain = node.kind === 'boss' ? 500 : node.kind === 'elite' ? 250 : 150;
+  const baseGain = node.kind === 'boss' ? 120 : node.kind === 'elite' ? 70 : 45;
   const scrapGain = baseGain + (battleScrap || 0);
   // Units that took part gain +1 XP
   const updatedUnits = run.list.units.map((u) => ({ ...u, xp: (u.xp ?? 0) + 1 }));
