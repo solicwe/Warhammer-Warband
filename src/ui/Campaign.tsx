@@ -428,8 +428,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         <div className="cmp-modal-backdrop" onClick={() => setShowRoster(false)}>
           <div className="cmp-armory-modal" onClick={(e) => e.stopPropagation()}>
             <div className="cmp-armory-header">
-              <button type="button" className="ab-icon" aria-label="Back" onClick={() => setShowRoster(false)}>
-                <Icon name="back" size={22} />
+              <button type="button" className="appbar-back-btn" aria-label="Back" onClick={() => setShowRoster(false)}>
+                <Icon name="back" size={16} /> Back
               </button>
               <div className="cmp-armory-header-center">
                 <div className="cmp-armory-title">Roster & Armory</div>
@@ -437,8 +437,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               </div>
               <div className="cmp-armory-header-right">
                 <span className="cmp-scrap"><Icon name="shop" size={14} /> <b>{run.scrap ?? 0}</b></span>
-                <button type="button" className="ab-icon" onClick={() => setShowRoster(false)} aria-label="Close">
-                  <Icon name="close" size={20} />
+                <button type="button" className="cmp-close-btn" onClick={() => setShowRoster(false)} aria-label="Close" title="Close">
+                  <Icon name="close" size={18} />
                 </button>
               </div>
             </div>
