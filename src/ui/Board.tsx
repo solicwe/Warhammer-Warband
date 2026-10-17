@@ -739,7 +739,7 @@ function BoardImpl(props: BoardProps) {
           );
         }
         if (t.kind === 'objective-area') {
-          return <polygon key={t.id} points={pts} fill="rgba(245,184,61,0.05)" stroke="none" pointerEvents="none" />;
+          return null;
         }
         // terrain area: baseplate, rubble, ruin walls (block sight) and obstacles (low, cover only)
         const cxp = t.poly.reduce((a, p) => a + p.x, 0) / t.poly.length, cyp = t.poly.reduce((a, p) => a + p.y, 0) / t.poly.length;
@@ -1110,12 +1110,12 @@ function BoardImpl(props: BoardProps) {
         </g>
       ))}
       {s.objectives.map((o, i) => {
-        const t = s.terrain.find((x) => x.id === o.terrainId)!;
         const [a, b] = levelOfControl(s, o);
         const ctrl = o.controller;
-        const xs = t.poly.map((p) => p.x), ys = t.poly.map((p) => p.y);
-        const top = Math.min(...ys);
-        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const objRadius = 3 + 20 / 25.4; // 3" control zone from 40mm marker edge = ~3.787"
+        const top = o.y - objRadius;
+        const cx = o.x;
+        const bannerY = top > 1.8 ? top - 0.55 : o.y + objRadius + 1.25;
         const label = o.type === 'home' ? 'HOME' : o.type === 'central' ? 'CENTRE' : 'OBJ';
         const effects = getObjectiveEffects(s, o);
 
@@ -1172,7 +1172,16 @@ function BoardImpl(props: BoardProps) {
               </g>
             ))}
 
-            <polygon points={t.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill={ctrl === null ? 'rgba(245,184,61,0.08)' : SOFT[ctrl]} stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.16} strokeDasharray="0.6 0.25" />
+            {/* Standard 3" Objective Control Area (40mm marker + 3" radius) */}
+            <circle
+              cx={o.x}
+              cy={o.y}
+              r={objRadius}
+              fill={ctrl === null ? 'rgba(245,184,61,0.08)' : SOFT[ctrl]}
+              stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]}
+              strokeWidth={0.16}
+              strokeDasharray="0.6 0.25"
+            />
 
             {/* In-Progress Animated Dashed Halo */}
             {isInProgress && (
@@ -1211,7 +1220,7 @@ function BoardImpl(props: BoardProps) {
             {o.secured != null && !isCompleted && <g><circle cx={o.x + 1.15} cy={o.y - 0.75} r={0.62} fill="rgba(12,13,16,0.9)" stroke={COLORS[o.secured]} strokeWidth={0.08} /><SvgIcon name="hold" x={o.x + 1.15} y={o.y - 0.75} size={0.8} color={COLORS[o.secured]} /></g>}
             {o.warded != null && <g><circle cx={o.x + 1.15} cy={o.y + 0.75} r={0.55} fill="rgba(12,13,16,0.9)" stroke={COLORS[o.warded]} strokeWidth={0.08} /><text x={o.x + 1.15} y={o.y + 0.95} fontSize={0.62} textAnchor="middle" fill={COLORS[o.warded]} fontWeight={900}>W</text></g>}
             
-            <g transform={`translate(${cx} ${top - 0.55})`}>
+            <g transform={`translate(${cx} ${bannerY})`}>
               <rect x={-2.1} y={-0.5} width={4.2} height={0.95} rx={0.45} fill="rgba(12,13,16,0.85)" stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.06} />
               <text x={-1.85} y={0.2} fontSize={0.55} fill="#f5b83d" fontWeight={800}>{label}</text>
               <text x={1.95} y={0.2} fontSize={0.55} textAnchor="end" fontWeight={800}>
@@ -1246,7 +1255,7 @@ function BoardImpl(props: BoardProps) {
               const badgeW = 5.6;
               const badgeH = 0.78;
               const clampedX = Math.max(badgeW / 2 + 0.5, Math.min(W - badgeW / 2 - 0.5, cx));
-              const badgeY = top > 2.8 ? (top - 0.45 - (idx + 1) * 0.9) : (top + 0.55 + idx * 0.9);
+              const badgeY = top > 2.8 ? (bannerY - (idx + 1) * 0.9) : (bannerY + 0.95 + (idx + 1) * 0.9);
               return (
                 <g key={eff.id} transform={`translate(${clampedX} ${badgeY})`}>
                   <rect

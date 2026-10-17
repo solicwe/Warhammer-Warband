@@ -140,24 +140,24 @@ function buildTerrain(layoutId: string, tableSize?: { width: number; height: num
     const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
     const ox = Math.round(o.x * sx * 10) / 10;
     const oy = Math.round(o.y * sy * 10) / 10;
-    const at = { x: ox, y: oy };
-    const under = terrain.filter((t) => t.kind !== 'objective-area' && (pointInPoly(at, t.poly) || t.poly.some((q, k) => pointSegDist(at, { a: q, b: t.poly[(k + 1) % t.poly.length] }) <= 1.6 * Math.max(sx, sy))));
-    let tp = under.length === 1 ? under[0] : undefined;
-    if (under.length > 1) {
-      // the objective covers them all: one area around the pieces (it doesn't block sight; the pieces still do)
-      tp = { id: `obj-t${i}`, kind: 'objective-area', label: 'Objective (terrain)', category: 'exposed', height: 0, walls: [], obstacles: [], poly: convexHull(under.flatMap((t) => t.poly)) };
-      terrain.push(tp);
-      for (const t of under) t.objectiveId = `${o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`}`;
-    }
-    if (!tp) {
-      // objective in the open (no terrain on it): a 40mm marker, in range within 3" of it (14) — a circle of
-      // 3" + the marker's radius around its centre, so control works the same way as for terrain objectives
-      const R = 3 + 20 / 25.4;
-      tp = { id: `obj-t${i}`, kind: 'objective-area', label: 'Objective (40mm marker, range 3")', category: 'exposed', height: 0, walls: [], obstacles: [],
-        poly: Array.from({ length: 32 }, (_, k) => ({ x: ox + R * Math.cos((k / 32) * Math.PI * 2), y: oy + R * Math.sin((k / 32) * Math.PI * 2) })) };
-      terrain.push(tp);
-    }
-    tp.objectiveId = id;
+    // In Warhammer 40k 10th Edition: an objective is a 40mm marker, controlled within 3" radius.
+    // Ruins and buildings are independent terrain features and must NOT be hijacked as the objective.
+    const R = 3 + 20 / 25.4;
+    const tp: TerrainPiece = {
+      id: `obj-t${i}`,
+      kind: 'objective-area',
+      label: `Objective ${i + 1} (40mm marker, range 3")`,
+      category: 'exposed',
+      height: 0,
+      walls: [],
+      obstacles: [],
+      poly: Array.from({ length: 32 }, (_, k) => ({
+        x: Math.round((ox + R * Math.cos((k / 32) * Math.PI * 2)) * 10) / 10,
+        y: Math.round((oy + R * Math.sin((k / 32) * Math.PI * 2)) * 10) / 10,
+      })),
+      objectiveId: id,
+    };
+    terrain.push(tp);
     return { id, type: o.type, owner: undefined, x: ox, y: oy, terrainId: tp.id, controller: null, ownerRole: o.owner ?? undefined } as ObjectiveState & { ownerRole?: string };
   });
   return { terrain, objectives };
@@ -1912,10 +1912,15 @@ export function objectiveTerrain(s: GameState, o: ObjectiveState) {
 }
 
 export function levelOfControl(s: GameState, o: ObjectiveState): [number, number] {
-  const t = objectiveTerrain(s, o);
+  const t = s.terrain.find((x) => x.id === o.terrainId);
   const lv: [number, number] = [0, 0];
+  const objR = 3 + 20 / 25.4; // 3" control range from 40mm marker edge = ~3.787"
   for (const u of boardUnits(s)) {
-    for (const m of alive(u)) if (bodyTouchesPoly(m, 0, t.poly)) lv[u.owner] += modelOc(s, u, m);
+    for (const m of alive(u)) {
+      const inDist = Math.hypot(m.x - o.x, m.y - o.y) <= objR + (m.r ?? 0.6) + 1e-4;
+      const inPoly = !!t?.poly && t.kind === 'objective-area' && bodyTouchesPoly(m, 0, t.poly);
+      if (inDist || inPoly) lv[u.owner] += modelOc(s, u, m);
+    }
   }
   return lv;
 }
@@ -2465,8 +2470,8 @@ export function expandRoguelikeMap(s: GameState): boolean {
   const playerPts = fightingArmyPoints(s, 0);
   const aiPts = fightingArmyPoints(s, 1);
   const maxPts = Math.max(playerPts, aiPts);
-  // Normal/Standard games (< 3000 pts) are locked to standard 44"x60" without right-side wasteland
-  if (maxPts < 3000 && !(s.campaign as { allowDynamicExpansion?: boolean }).allowDynamicExpansion) return false;
+  // Dynamic mid-battle expansion is only permitted if explicitly enabled by campaign flag
+  if (!(s.campaign as { allowDynamicExpansion?: boolean })?.allowDynamicExpansion) return false;
 
   const baseW = RULES.battlefield.width;
   const baseH = RULES.battlefield.height;
@@ -2555,10 +2560,13 @@ export function expandRoguelikeMap(s: GameState): boolean {
 
     const pieceArea = pw * ph;
     const isDense = kind === 'ruin';
-    const walls = isDense ? [
-      { a: { x: x0, y: y0 }, b: { x: x0 + pw, y: y0 } },
-      { a: { x: x0, y: y0 }, b: { x: x0, y: y0 + ph } },
-    ] : [];
+    const rot = Math.floor(nextRandom(s) * 4);
+    const walls = isDense ? (
+      rot === 0 ? [{ a: { x: x0, y: y0 }, b: { x: x0 + pw, y: y0 } }, { a: { x: x0, y: y0 }, b: { x: x0, y: y0 + ph } }] :
+      rot === 1 ? [{ a: { x: x0 + pw, y: y0 }, b: { x: x0 + pw, y: y0 + ph } }, { a: { x: x0, y: y0 }, b: { x: x0 + pw, y: y0 } }] :
+      rot === 2 ? [{ a: { x: x0, y: y0 + ph }, b: { x: x0 + pw, y: y0 + ph } }, { a: { x: x0 + pw, y: y0 + ph }, b: { x: x0 + pw, y: y0 } }] :
+      [{ a: { x: x0, y: y0 }, b: { x: x0, y: y0 + ph } }, { a: { x: x0, y: y0 + ph }, b: { x: x0 + pw, y: y0 + ph } }]
+    ) : [];
 
     const newPiece: TerrainPiece = {
       id: `proc-t${nextIdx++}`,
