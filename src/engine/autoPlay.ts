@@ -25,8 +25,8 @@ const once = (s: GameState, key: string) => {
 /** Does player p (on auto rules) have a decision the app should take now? */
 export function autoDue(s: GameState, p: PlayerId): boolean {
   if (s.attack || s.phase === 'gameover') return false;
-  // "deploy for me": the rest of the army is set up (and Scouts moves made) by the bot's placement
-  if ((s.autoDeploy ?? []).includes(p) && !(s.bots ?? []).includes(p) && (s.phase === 'deploy' || s.phase === 'scouts') && !s.window) return s.deployTurn === p;
+  // "deploy for me": the rest of the army is set up by the bot's placement (Scouts moves are controlled manually)
+  if ((s.autoDeploy ?? []).includes(p) && !(s.bots ?? []).includes(p) && s.phase === 'deploy' && !s.window) return s.deployTurn === p;
   if (!onAuto(s, p)) return false;
   if (s.window) return s.window.player === p && !decides(s, p);
   const P = s.players[p];
@@ -46,7 +46,6 @@ export function autoDue(s: GameState, p: PlayerId): boolean {
 export function autoStep(s: GameState, p: PlayerId): boolean {
   if (!autoDue(s, p)) return false;
   if ((s.autoDeploy ?? []).includes(p) && s.phase === 'deploy' && !s.window) { botDeploy(s); return true; }
-  if ((s.autoDeploy ?? []).includes(p) && s.phase === 'scouts' && !s.window) { botScouts(s, p); return true; }
   if (s.window) { botWindow(s); return true; }
   if (s.phase === 'deploy') { once(s, `fixed|${p}`); botPickFixed(s, p); return true; }
   if (s.phase === 'command') { botCommand(s); return true; }

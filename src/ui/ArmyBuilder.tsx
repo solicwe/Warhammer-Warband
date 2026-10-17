@@ -144,7 +144,7 @@ export function Emblem({ factionId, color, sub }: { factionId: string; color?: s
 }
 
 /** Wide picture block for a unit row: the user's photo, or the token art. */
-function UnitArt({ sheet }: { sheet?: DatasheetData }) {
+export function UnitArt({ sheet }: { sheet?: DatasheetData }) {
   usePortraitsVersion();
   const photo = sheet ? getPortrait(sheet.name) : undefined;
   const kind = sheet ? tokenKind(sheet.keywords, sheet.factionKeywords) : 'generic';
@@ -168,20 +168,25 @@ function scopeLabel(o: WargearOption, max: number) {
 }
 
 /** Wargear choices of one list entry: swaps, extra weapons, "pick two from the list", add-on models. */
-export function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUnitEntry; onChange: (patch: Partial<ArmyUnitEntry>) => void }) {
+export function WargearEditor({ sheet, u, onChange, scrapMode = false }: { sheet: DatasheetData; u: ArmyUnitEntry; onChange: (patch: Partial<ArmyUnitEntry>) => void; scrapMode?: boolean }) {
   const opts = sheet.wargearOptions ?? [];
   const addons = addonLines(sheet);
   if (!opts.length && !addons.length) return null;
   const picks = u.wargear ?? defaultWargear(sheet, u).wargear ?? [];
   const cost = (items: string[]) => items.reduce((a, n) => a + (sheet.wargearCosts?.find((c) => wkey(c.name) === wkey(n))?.pts ?? 0), 0);
   // what a swap changes per model: what it gains minus what it gives up (claws for hammer + shield: −5)
-  const costTag = (items: string[], instead: string[] = []) => { const c = cost(items) - cost(instead); return c ? <span className={`wg-cost ${c < 0 ? 'less' : ''}`}>{c > 0 ? `+${c}` : `−${-c}`}/model</span> : null; };
+  const costTag = (items: string[], instead: string[] = []) => {
+    const c = cost(items) - cost(instead);
+    if (!c) return null;
+    const tag = scrapMode ? (c > 0 ? `+${c} Scrap` : `−${-c} Scrap`) : (c > 0 ? `+${c}` : `−${-c}`);
+    return <span className={`wg-cost ${c < 0 ? 'less' : ''}`}>{tag}/model</span>;
+  };
   const put = (opt: number, next: WargearPick[]) => onChange({ wargear: [...picks.filter((p) => p.opt !== opt), ...next] });
   const single = sheet.models.length === 1 && (sheet.composition.length <= 1);
   return (
     <div className="field">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· some weapons cost points (shown as +pts each)</span> : null}</span>
+        <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· {scrapMode ? 'some weapons cost Scrap (shown as +Scrap each)' : 'some weapons cost points (shown as +pts each)'}</span> : null}</span>
       </div>
       {opts.map((o, i) => {
         const max = wargearMax(sheet, o, u.models, u.addons);

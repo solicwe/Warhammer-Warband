@@ -14,7 +14,8 @@ import {
 import { hasFactionRules } from '../engine/effects';
 import { createGame } from '../engine/game';
 import type { ArmyUnitEntry, FactionData, GameState, WargearPick } from '../engine/types';
-import { Emblem, SECTIONS, sectionOf, WargearEditor } from './ArmyBuilder';
+import { Emblem, SECTIONS, sectionOf, UnitArt, WargearEditor } from './ArmyBuilder';
+import { DatasheetView } from './Sheet';
 import { loadFaction, type FactionIndex } from './data';
 import { Icon, type IconName } from './Icon';
 import { withAutoRules } from './library';
@@ -56,11 +57,24 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   // Roguelike Roster & Armory state
   const [showRoster, setShowRoster] = useState(false);
   const [rosterTab, setRosterTab] = useState<'roster' | 'recruit' | 'detachments'>('roster');
-  const [upgradingUid, setUpgradingUid] = useState<string | null>(null);
-  const [wargearUid, setWargearUid] = useState<string | null>(null);
-  const [attachingUid, setAttachingUid] = useState<string | null>(null);
-  const [sizingUid, setSizingUid] = useState<string | null>(null);
-  const [enhancingUid, setEnhancingUid] = useState<string | null>(null);
+  const [menu, setMenu] = useState<string | null>(null);
+  const [panelCollapse, setPanelCollapse] = useState<Record<string, Record<string, boolean>>>({});
+
+  const isSectionOpen = (uid: string, section: string, defaultOpen = true) => {
+    return panelCollapse[uid]?.[section] !== undefined ? panelCollapse[uid][section] : defaultOpen;
+  };
+  const toggleSection = (uid: string, section: string, defaultOpen = true) => {
+    setPanelCollapse((prev) => {
+      const cur = prev[uid]?.[section] !== undefined ? prev[uid][section] : defaultOpen;
+      return {
+        ...prev,
+        [uid]: {
+          ...prev[uid],
+          [section]: !cur,
+        },
+      };
+    });
+  };
 
   useEffect(() => { if (!info) return; const t = window.setTimeout(() => setInfo(null), 3200); return () => window.clearTimeout(t); }, [info]);
   useEffect(() => { if (!armed) return; const t = window.setTimeout(() => setArmed(false), 3000); return () => window.clearTimeout(t); }, [armed]);
@@ -459,149 +473,53 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 </button>
               </div>
 
-              {rosterTab === 'roster' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {SECTIONS.filter((sec) => sec.id !== 'allies' || run.list.units.some((u) => sectionOf(fac.datasheets.find((x) => x.name === u.datasheet), run.factionId) === 'allies')).map((sec) => {
-                    const secUnits = run.list.units.filter((u) => {
-                      const d = fac.datasheets.find((x) => x.name === u.datasheet);
-                      return sectionOf(d, run.factionId) === sec.id;
-                    });
-                    if (!secUnits.length) return null;
-                    return (
-                      <section key={sec.id} className="ab-section">
-                        <div className="ab-section-head">
-                          <span>{sec.title}</span>
-                          <span className="tiny muted" style={{ fontWeight: 'normal', textTransform: 'none', letterSpacing: 'normal' }}>
-                            {secUnits.length} {secUnits.length === 1 ? 'unit' : 'units'}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          {secUnits.map((u) => {
-                            const d = fac.datasheets.find((x) => x.name === u.datasheet);
-                            const photo = getPortrait(u.datasheet);
-                            const wg = wargearSummary(d, u);
-                            const isUpgrading = upgradingUid === u.uid;
-                            const isEditingWargear = wargearUid === u.uid;
-                            const isAttaching = attachingUid === u.uid;
-                            const isSizing = sizingUid === u.uid;
-                            const isEnhancing = enhancingUid === u.uid;
-                            const canLead = Boolean(d?.leads && d.leads.length > 0);
-                            const sizeOpts = d ? pointsOptions(d) : [];
-                            const canResize = sizeOpts.length > 1;
-                            const enhOpts = fac ? enhancementOptions(run.list, fac, u) : [];
-                            const canTakeEnh = enhOpts.length > 0 || Boolean(u.enhancement);
-                            const attachedSquad = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined;
-                            const attachedLeaders = run.list.units.filter((x) => x.attachTo === u.uid);
-                            return (
-                              <div key={u.uid} className="cmp-roster-card">
-                                <div className="cmp-card-main">
-                                  <div className="cmp-card-thumb">
-                                    {photo ? <img src={photo} alt="" className="cmp-roster-img" />
-                                      : <div className="cmp-roster-img-ph"><Icon name="fight" size={22} /></div>}
-                                  </div>
-                                  <div className="cmp-card-details">
-                                    <div className="cmp-card-badges">
-                                      <span className="cmp-rank-badge">{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
-                                      <span className="cmp-card-pts">{u.pts + (u.wargearPts ?? 0) + (u.enhancementPts ?? 0)} pts</span>
-                                    </div>
-                                    <div className="cmp-roster-name">{u.datasheet}</div>
-                                    <div className="cmp-roster-meta">{u.models} {u.models === 1 ? 'model' : 'models'}</div>
-                                    {wg && (
-                                      <div style={{ marginTop: 2, fontSize: 11.5, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                        <Icon name="wargear" size={12} />
-                                        <span>{wg}</span>
-                                      </div>
-                                    )}
-                                    {u.enhancement && (
-                                      <div style={{ marginTop: 4 }}>
-                                        <span className="chip warn small" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 700, borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.15)' }}>
-                                          <Icon name="enhancement" size={13} />
-                                          <span>{u.enhancement} (+{u.enhancementPts ?? 0} pts)</span>
-                                        </span>
-                                      </div>
-                                    )}
-                                    {attachedSquad && (
-                              <div style={{ marginTop: 4 }}>
-                                <span className="chip subtle small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.1)' }}>
-                                  {getPortrait(attachedSquad.datasheet) && (
-                                    <img src={getPortrait(attachedSquad.datasheet)!} alt="" style={{ width: 16, height: 16, borderRadius: 3, objectFit: 'cover' }} />
-                                  )}
-                                  Attached with: {attachedSquad.datasheet}
-                                </span>
-                              </div>
-                            )}
-                            {canLead && !u.attachTo && (
-                              <div style={{ marginTop: 4 }}>
-                                <span className="chip subtle small" style={{ color: '#94a3b8' }}>
-                                  Unattached (Solo)
-                                </span>
-                              </div>
-                            )}
-                            {attachedLeaders.length > 0 && (
-                              <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                {attachedLeaders.map((l) => {
-                                  const lPhoto = getPortrait(l.datasheet);
-                                  return (
-                                    <span key={l.uid} className="chip subtle small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.1)' }}>
-                                      {lPhoto && (
-                                        <img src={lPhoto} alt="" style={{ width: 16, height: 16, borderRadius: 3, objectFit: 'cover' }} />
-                                      )}
-                                      Led by: {l.datasheet}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            )}
-                            {u.honors?.length ? (
-                              <div className="cmp-honors-list">
-                                {u.honors.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
-                              </div>
-                            ) : null}
+              {rosterTab === 'roster' && (() => {
+                const unitPanel = (u: ArmyUnitEntry) => {
+                  const sheet = fac.datasheets.find((x) => x.name === u.datasheet);
+                  const canLead = Boolean(sheet?.leads && sheet.leads.length > 0);
+                  const sizeOpts = sheet ? pointsOptions(sheet) : [];
+                  const canResize = sizeOpts.length > 1;
+                  const enhOpts = fac ? enhancementOptions(run.list, fac, u) : [];
+                  const canTakeEnh = enhOpts.length > 0 || Boolean(u.enhancement);
+                  const attachedSquad = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined;
+
+                  const isSheetOpen = isSectionOpen(u.uid, 'sheet', false);
+                  const isHonorsOpen = isSectionOpen(u.uid, 'honors', true);
+                  const isWargearOpen = isSectionOpen(u.uid, 'wargear', true);
+                  const isEnhOpen = isSectionOpen(u.uid, 'enh', false);
+                  const isSizeOpen = isSectionOpen(u.uid, 'size', false);
+                  const isAttachOpen = isSectionOpen(u.uid, 'attach', false);
+
+                  return (
+                    <div className="ab-inline" key={`panel-${u.uid}`}>
+                      <div className="ab-inline-body">
+                        {/* 1. Datasheet Profile & Rules */}
+                        {sheet && (
+                          <div className="ab-collapsible-section">
+                            <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'sheet', false)}>
+                              <span className="row gap-2" style={{ alignItems: 'center' }}>
+                                <Icon name={isSheetOpen ? 'down' : 'next'} size={16} />
+                                <span>Datasheet Profile & Rules</span>
+                              </span>
+                              <span className="tiny muted">{isSheetOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
+                            </button>
+                            {isSheetOpen && <DatasheetView sheet={sheet} factionId={fac.id} />}
                           </div>
+                        )}
 
-                          {run.list.units.length > 1 && (
-                            <button className="cmp-card-del-btn" onClick={() => { setRun(dismissUnit(run, u.uid)); play('bad'); }} title="Dismiss squad" aria-label="Dismiss squad">
-                              <Icon name="delete" size={16} />
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="cmp-card-actions">
-                          {canLead && (
-                            <button className={`cmp-card-btn ${isAttaching ? 'active' : ''}`} onClick={() => { setAttachingUid(isAttaching ? null : u.uid); setUpgradingUid(null); setWargearUid(null); setSizingUid(null); setEnhancingUid(null); }}>
-                              <Icon name="swords" size={14} />
-                              <span>Attach</span>
-                            </button>
-                          )}
-                          {canResize && (
-                            <button className={`cmp-card-btn ${isSizing ? 'active' : ''}`} onClick={() => { setSizingUid(isSizing ? null : u.uid); setUpgradingUid(null); setWargearUid(null); setAttachingUid(null); setEnhancingUid(null); }}>
-                              <Icon name="size" size={14} />
-                              <span>Size ({u.models})</span>
-                            </button>
-                          )}
-                          {canTakeEnh && (
-                            <button className={`cmp-card-btn ${isEnhancing ? 'active' : ''}`} onClick={() => { setEnhancingUid(isEnhancing ? null : u.uid); setUpgradingUid(null); setWargearUid(null); setAttachingUid(null); setSizingUid(null); }}>
-                              <Icon name="enhancement" size={14} />
-                              <span>Enhancement{u.enhancement ? ' (Equipped)' : ''}</span>
-                            </button>
-                          )}
-                          <button className={`cmp-card-btn ${isUpgrading ? 'active' : ''}`} onClick={() => { setUpgradingUid(isUpgrading ? null : u.uid); setWargearUid(null); setAttachingUid(null); setSizingUid(null); setEnhancingUid(null); }}>
-                            <Icon name="shop" size={14} />
-                            <span>Battle Honors {u.honors?.length ? `(${u.honors.length})` : ''}</span>
+                        {/* 2. Battle Honors */}
+                        <div className="ab-collapsible-section field">
+                          <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'honors', true)}>
+                            <span className="row gap-2" style={{ alignItems: 'center' }}>
+                              <Icon name={isHonorsOpen ? 'down' : 'next'} size={16} />
+                              <Icon name="shop" size={15} />
+                              <b>Battle Honors (Veterancy)</b>
+                              {u.honors?.length ? <span className="ab-badge-selected">{u.honors.length} honors</span> : null}
+                            </span>
+                            <span className="tiny muted">{isHonorsOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
                           </button>
-                          {d?.wargearOptions?.length ? (
-                            <button className={`cmp-card-btn ${isEditingWargear ? 'active' : ''}`} onClick={() => { setWargearUid(isEditingWargear ? null : u.uid); setUpgradingUid(null); setAttachingUid(null); setSizingUid(null); setEnhancingUid(null); }}>
-                              <Icon name="wargear" size={14} />
-                              <span>Wargear</span>
-                            </button>
-                          ) : null}
-                        </div>
-
-                        {/* Battle Honors upgrade drawer */}
-                        {isUpgrading && (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                            <div className="cmp-kicker" style={{ marginBottom: 8, color: '#fef08a' }}>Available Battle Honors</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 8 }}>
+                          {isHonorsOpen && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 8, marginTop: 8 }}>
                               {BATTLE_HONORS.map((h) => {
                                 const has = (u.honors ?? []).includes(h.id);
                                 const canAfford = (run.scrap ?? 0) >= h.cost;
@@ -609,10 +527,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   <div key={h.id} style={{ padding: 10, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                     <div>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <b style={{ color: '#f8fafc', fontSize: 14 }}>{h.name}</b>
+                                        <b style={{ color: '#f8fafc', fontSize: 13.5 }}>{h.name}</b>
                                         <span className="cmp-scrap"><Icon name="shop" size={12} /> {h.cost}</span>
                                       </div>
-                                      <div style={{ fontSize: 12.5, color: '#cbd5e1', marginTop: 4, lineHeight: 1.35 }}>{h.desc}</div>
+                                      <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 4, lineHeight: 1.35 }}>{h.desc}</div>
                                     </div>
                                     <button
                                       className="btn small primary"
@@ -626,206 +544,266 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                 );
                               })}
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
 
-                        {/* Wargear Drawer */}
-                        {isEditingWargear && d && (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <div className="cmp-kicker" style={{ color: '#fef08a' }}>Wargear Configuration</div>
-                              <button
-                                type="button"
-                                onClick={() => setWargearUid(null)}
-                                title="Close"
-                                aria-label="Close"
-                                style={{
-                                  background: 'transparent',
-                                  border: 'none',
-                                  color: '#94a3b8',
-                                  cursor: 'pointer',
-                                  padding: '4px 6px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  borderRadius: '4px',
-                                }}
-                              >
-                                <Icon name="close" size={14} />
-                              </button>
-                            </div>
-                            <WargearEditor
-                              sheet={d}
-                              u={u}
-                              onChange={(patch) => {
-                                const next = { ...u, ...patch };
-                                const synced = syncWargear(d, next);
-                                const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? synced : x));
-                                setRun({ ...run, list: { ...run.list, units: updatedUnits } });
-                                play('tick');
-                              }}
-                            />
-                            <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end' }}>
-                              <button
-                                type="button"
-                                className="btn small primary"
-                                onClick={() => setWargearUid(null)}
-                                style={{ padding: '6px 14px', fontSize: '13px' }}
-                              >
-                                Done / Save Wargear
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Squad Attachment Drawer */}
-                        {isAttaching && canLead && d && (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <div className="cmp-kicker" style={{ color: '#fef08a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <Icon name="swords" size={13} />
-                                <span>Squad Attachment</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setAttachingUid(null)}
-                                title="Close"
-                                aria-label="Close"
-                                style={{
-                                  background: 'transparent',
-                                  border: 'none',
-                                  color: '#94a3b8',
-                                  cursor: 'pointer',
-                                  padding: '4px 6px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  borderRadius: '4px',
-                                }}
-                              >
-                                <Icon name="close" size={14} />
-                              </button>
-                            </div>
-                            <div style={{ fontSize: 12.5, color: '#94a3b8', marginBottom: 10, lineHeight: 1.4 }}>
-                              Characters can attach to an eligible bodyguard squad before battle, sharing wounds and granting leadership abilities according to 40k rules.
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                              {/* Solo Option */}
-                              <div
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => {
-                                  if (u.attachTo) {
-                                    const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: undefined } : x));
-                                    setRun({ ...run, list: { ...run.list, units: updatedUnits } });
+                        {/* 3. Wargear Options with Scrap mode */}
+                        {sheet && (sheet.wargearOptions?.length || sheet.wargearCosts?.length) ? (
+                          <div className="ab-collapsible-section field">
+                            <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'wargear', true)}>
+                              <span className="row gap-2" style={{ alignItems: 'center' }}>
+                                <Icon name={isWargearOpen ? 'down' : 'next'} size={16} />
+                                <Icon name="wargear" size={15} />
+                                <b>Wargear Options</b>
+                                {u.wargearPts ? <span className="ab-badge-selected">+{u.wargearPts} pts (Scrap)</span> : null}
+                              </span>
+                              <span className="tiny muted">{isWargearOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
+                            </button>
+                            {isWargearOpen && (
+                              <WargearEditor
+                                sheet={sheet}
+                                u={u}
+                                scrapMode={true}
+                                onChange={(patch) => {
+                                  const next = { ...u, ...patch };
+                                  const synced = syncWargear(sheet, next);
+                                  const prevWargearPts = u.wargearPts ?? 0;
+                                  const nextWargearPts = synced.wargearPts ?? 0;
+                                  const scrapDiff = nextWargearPts - prevWargearPts;
+                                  if (scrapDiff > 0 && (run.scrap ?? 0) < scrapDiff) {
+                                    setInfo(`Need ${scrapDiff} Scrap for this wargear upgrade!`);
+                                    play('bad');
+                                    return;
+                                  }
+                                  const nextScrap = (run.scrap ?? 0) - scrapDiff;
+                                  const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? synced : x));
+                                  setRun({ ...run, scrap: Math.max(0, nextScrap), list: { ...run.list, units: updatedUnits } });
+                                  if (scrapDiff > 0) {
+                                    setInfo(`Equipped wargear (-${scrapDiff} Scrap)`);
+                                    play('good');
+                                  } else if (scrapDiff < 0) {
+                                    setInfo(`Unequipped wargear (+${-scrapDiff} Scrap refunded)`);
+                                    play('good');
+                                  } else {
                                     play('tick');
                                   }
                                 }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
+                              />
+                            )}
+                          </div>
+                        ) : null}
+
+                        {/* 4. Detachment Enhancements (with Scrap) */}
+                        {(canTakeEnh || u.enhancement) && (
+                          <div className="ab-collapsible-section field">
+                            <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'enh', false)}>
+                              <span className="row gap-2" style={{ alignItems: 'center' }}>
+                                <Icon name={isEnhOpen ? 'down' : 'next'} size={16} />
+                                <Icon name="enhancement" size={15} />
+                                <b>Enhancement (Scrap)</b>
+                                {u.enhancement && <span className="ab-badge-selected">{u.enhancement} (+{u.enhancementPts} pts)</span>}
+                              </span>
+                              <span className="tiny muted">{isEnhOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
+                            </button>
+                            {isEnhOpen && (
+                              <div style={{ marginTop: 8 }}>
+                                {u.enhancement && (
+                                  <div style={{ marginBottom: 12, padding: 10, borderRadius: 8, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                      <span className="chip warn small" style={{ fontWeight: 700 }}>Currently Equipped</span>
+                                      <b style={{ color: '#fef08a', fontSize: 13.5 }}>{u.enhancement}</b>
+                                      <span className="tiny muted">(+{u.enhancementPts ?? 0} pts)</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="btn small"
+                                      style={{ border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
+                                      onClick={() => {
+                                        setRun(removeEnhancementFromUnit(run, u.uid));
+                                        play('bad');
+                                      }}
+                                    >
+                                      Unequip & Refund (+{enhancementScrapCost(u.enhancementPts ?? 0)} Scrap)
+                                    </button>
+                                  </div>
+                                )}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 8 }}>
+                                  {enhOpts.map((o) => {
+                                    const isCurrent = u.enhancement === o.name;
+                                    const taken = run.list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
+                                    const fit = sheet ? enhancementFits(o.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]) : null;
+                                    const cost = enhancementScrapCost(o.pts);
+                                    const refund = u.enhancement ? enhancementScrapCost(u.enhancementPts ?? 0) : 0;
+                                    const netCost = cost - refund;
+                                    const canAfford = netCost <= 0 || (run.scrap ?? 0) >= netCost;
+                                    return (
+                                      <div
+                                        key={o.detachment + o.name}
+                                        style={{
+                                          padding: 10,
+                                          borderRadius: 8,
+                                          background: isCurrent ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255,255,255,0.04)',
+                                          border: isCurrent ? '1.5px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          justifyContent: 'space-between',
+                                          gap: 8,
+                                          opacity: taken || (fit && !fit.ok) ? 0.6 : 1,
+                                        }}
+                                      >
+                                        <div>
+                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
+                                            <div>
+                                              <b style={{ color: isCurrent ? '#fef08a' : '#f8fafc', fontSize: 13.5 }}>{o.name}</b>
+                                              <div className="tiny muted">{o.detachment} · +{o.pts} pts</div>
+                                            </div>
+                                            <span className="cmp-scrap"><Icon name="shop" size={12} /> {cost}</span>
+                                          </div>
+                                          {fit && !fit.ok && <div style={{ marginTop: 4, color: '#f87171', fontSize: 11.5, fontWeight: 600 }}>Requires: {fit.need}</div>}
+                                          {o.text && <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 6, lineHeight: 1.35 }}><Em text={o.text} /></div>}
+                                        </div>
+                                        <div style={{ marginTop: 8 }}>
+                                          {isCurrent ? (
+                                            <span className="chip ok small" style={{ width: '100%', justifyContent: 'center' }}>
+                                              <Icon name="check" size={12} /> Equipped
+                                            </span>
+                                          ) : taken ? (
+                                            <span className="chip subtle small" style={{ width: '100%', justifyContent: 'center', color: '#94a3b8' }}>
+                                              Equipped on {taken.datasheet}
+                                            </span>
+                                          ) : fit && !fit.ok ? (
+                                            <button type="button" className="btn small" disabled style={{ width: '100%' }}>Not Eligible</button>
+                                          ) : (
+                                            <button
+                                              type="button"
+                                              className="btn small primary"
+                                              disabled={!canAfford}
+                                              style={{ width: '100%' }}
+                                              onClick={() => {
+                                                setRun(buyEnhancementForUnit(run, fac, u.uid, o.name, o.pts));
+                                                play('good');
+                                              }}
+                                            >
+                                              {!canAfford ? `Need Scrap (${netCost > 0 ? netCost : cost})` : `Equip (${cost} Scrap)`}
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* 5. Squad Size & Reinforce */}
+                        {canResize && (
+                          <div className="ab-collapsible-section field">
+                            <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'size', false)}>
+                              <span className="row gap-2" style={{ alignItems: 'center' }}>
+                                <Icon name={isSizeOpen ? 'down' : 'next'} size={16} />
+                                <Icon name="size" size={15} />
+                                <b>Squad Size & Reinforce</b>
+                                <span className="ab-badge-selected">{u.models} models</span>
+                              </span>
+                              <span className="tiny muted">{isSizeOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
+                            </button>
+                            {isSizeOpen && (
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8, marginTop: 8 }}>
+                                {sizeOpts.map((o) => {
+                                  const isCurrent = u.models === o.models;
+                                  const currentOpt = sizeOpts.find((x) => x.models === u.models) ?? { pts: u.pts };
+                                  const scrapDiff = o.pts - currentOpt.pts;
+                                  const canAfford = scrapDiff <= 0 || (run.scrap ?? 0) >= scrapDiff;
+                                  return (
+                                    <div
+                                      key={o.models}
+                                      style={{
+                                        padding: 10,
+                                        borderRadius: 8,
+                                        background: isCurrent ? 'rgba(56, 189, 248, 0.12)' : 'rgba(255,255,255,0.04)',
+                                        border: isCurrent ? '1.5px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
+                                        gap: 8,
+                                      }}
+                                    >
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <b style={{ color: '#f8fafc', fontSize: 13.5 }}>{o.models} {o.models === 1 ? 'model' : 'models'}</b>
+                                        <span className="cmp-card-pts">{o.pts} pts</span>
+                                      </div>
+                                      {isCurrent ? (
+                                        <span className="chip ok small" style={{ width: 'fit-content' }}>
+                                          <Icon name="check" size={12} /> Current ({o.models})
+                                        </span>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          className="btn small primary"
+                                          disabled={!canAfford}
+                                          onClick={() => {
+                                            setRun(changeSquadSize(run, fac, u.uid, o.models));
+                                            play('good');
+                                          }}
+                                        >
+                                          {scrapDiff > 0 ? `Reinforce (-${scrapDiff} Scrap)` : `Reorganize to ${o.models}`}
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* 6. Squad Attachment */}
+                        {canLead && (
+                          <div className="ab-collapsible-section field">
+                            <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'attach', false)}>
+                              <span className="row gap-2" style={{ alignItems: 'center' }}>
+                                <Icon name={isAttachOpen ? 'down' : 'next'} size={16} />
+                                <Icon name="swords" size={15} />
+                                <b>Squad Attachment</b>
+                                {u.attachTo ? <span className="ab-badge-selected">Attached with {attachedSquad?.datasheet}</span> : <span className="tiny muted">(Solo)</span>}
+                              </span>
+                              <span className="tiny muted">{isAttachOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
+                            </button>
+                            {isAttachOpen && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => {
                                     if (u.attachTo) {
                                       const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: undefined } : x));
                                       setRun({ ...run, list: { ...run.list, units: updatedUnits } });
                                       play('tick');
                                     }
-                                  }
-                                }}
-                                style={{
-                                  padding: '12px 14px',
-                                  borderRadius: 8,
-                                  background: !u.attachTo ? 'rgba(217, 155, 38, 0.12)' : '#181B22',
-                                  border: !u.attachTo ? '1.5px solid #F59E0B' : '1px solid #262930',
-                                  boxShadow: !u.attachTo ? '0 0 12px rgba(245, 158, 11, 0.2)' : 'none',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  cursor: !u.attachTo ? 'default' : 'pointer',
-                                  transition: 'all 0.15s ease',
-                                }}
-                              >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                  <div
-                                    style={{
-                                      width: 38,
-                                      height: 38,
-                                      borderRadius: 6,
-                                      background: !u.attachTo ? 'rgba(217, 155, 38, 0.2)' : '#1F242D',
-                                      border: `1px solid ${!u.attachTo ? 'rgba(245, 158, 11, 0.4)' : '#374151'}`,
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      color: !u.attachTo ? '#FBBF24' : '#9CA3AF',
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    <Icon name="leader" size={20} />
-                                  </div>
+                                  }}
+                                  style={{
+                                    padding: '10px 12px',
+                                    borderRadius: 8,
+                                    background: !u.attachTo ? 'rgba(217, 155, 38, 0.12)' : '#181B22',
+                                    border: !u.attachTo ? '1.5px solid #F59E0B' : '1px solid #262930',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    cursor: !u.attachTo ? 'default' : 'pointer',
+                                  }}
+                                >
                                   <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                      <b style={{ color: !u.attachTo ? '#FBBF24' : '#F8FAFC', fontSize: 13.5 }}>Deploy Solo</b>
-                                      <span style={{ fontSize: 11, color: '#9CA3AF' }}>(Independent Character)</span>
-                                    </div>
-                                    <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>
-                                      Fight as a standalone single-model unit on the battlefield
-                                    </div>
+                                    <b style={{ color: !u.attachTo ? '#F59E0B' : '#F8FAFC', fontSize: 13.5 }}>Solo Operation (Unattached)</b>
+                                    <div style={{ fontSize: 12, color: '#94a3b8' }}>Operates independently as a single Character</div>
                                   </div>
+                                  {!u.attachTo && <span className="chip ok small"><Icon name="check" size={12} /> Active</span>}
                                 </div>
-
-                                <div>
-                                  {!u.attachTo ? (
-                                    <span
-                                      style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: 4,
-                                        padding: '4px 10px',
-                                        borderRadius: 6,
-                                        background: 'rgba(245, 158, 11, 0.2)',
-                                        border: '1px solid rgba(245, 158, 11, 0.4)',
-                                        color: '#FBBF24',
-                                        fontSize: '11.5px',
-                                        fontWeight: 700,
-                                        letterSpacing: '0.03em',
-                                      }}
-                                    >
-                                      <Icon name="check" size={13} /> ACTIVE
-                                    </span>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      className="btn small"
-                                      style={{
-                                        border: '1px solid #374151',
-                                        background: '#1F242D',
-                                        color: '#E5E7EB',
-                                        fontSize: '12px',
-                                        padding: '4px 12px',
-                                      }}
-                                    >
-                                      Deploy Solo
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Eligible bodyguard squads */}
-                              {(() => {
-                                const eligible = attachOptions(run.list, fac, u);
-                                if (eligible.length === 0) {
-                                  return (
-                                    <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.15)', color: '#94a3b8', fontSize: 12.5 }}>
-                                      <div>No eligible bodyguard squads currently in your roster to attach to.</div>
-                                      {d.leads?.length ? (
-                                        <div style={{ marginTop: 4, color: '#64748b', fontSize: 11.5 }}>
-                                          This Character can lead: {d.leads.join(', ')}
-                                        </div>
-                                      ) : null}
-                                    </div>
-                                  );
-                                }
-
-                                return eligible.map((body) => {
+                                {attachOptions(run.list, fac, u).map((opt) => {
+                                  const body = run.list.units.find((x) => x.uid === opt.uid);
+                                  if (!body) return null;
                                   const isCurrent = u.attachTo === body.uid;
-                                  const bodyPhoto = getPortrait(body.datasheet);
                                   return (
                                     <div
                                       key={body.uid}
@@ -838,326 +816,127 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                           play('good');
                                         }
                                       }}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                          if (!isCurrent) {
-                                            const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: body.uid } : x));
-                                            setRun({ ...run, list: { ...run.list, units: updatedUnits } });
-                                            play('good');
-                                          }
-                                        }
-                                      }}
                                       style={{
-                                        padding: '12px 14px',
+                                        padding: '10px 12px',
                                         borderRadius: 8,
-                                        background: isCurrent ? 'rgba(217, 155, 38, 0.12)' : '#181B22',
+                                        background: isCurrent ? 'rgba(245, 158, 11, 0.12)' : '#181B22',
                                         border: isCurrent ? '1.5px solid #F59E0B' : '1px solid #262930',
-                                        boxShadow: isCurrent ? '0 0 12px rgba(245, 158, 11, 0.2)' : 'none',
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
-                                        gap: 12,
                                         cursor: isCurrent ? 'default' : 'pointer',
-                                        transition: 'all 0.15s ease',
                                       }}
                                     >
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        {bodyPhoto ? (
-                                          <img
-                                            src={bodyPhoto}
-                                            alt=""
-                                            style={{
-                                              width: 38,
-                                              height: 38,
-                                              borderRadius: 6,
-                                              objectFit: 'cover',
-                                              border: `1px solid ${isCurrent ? 'rgba(245, 158, 11, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
-                                              flexShrink: 0,
-                                            }}
-                                          />
-                                        ) : (
-                                          <div
-                                            style={{
-                                              width: 38,
-                                              height: 38,
-                                              borderRadius: 6,
-                                              background: isCurrent ? 'rgba(245, 158, 11, 0.2)' : '#1e293b',
-                                              border: `1px solid ${isCurrent ? 'rgba(245, 158, 11, 0.4)' : '#374151'}`,
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                              color: isCurrent ? '#FBBF24' : '#9CA3AF',
-                                              flexShrink: 0,
-                                            }}
-                                          >
-                                            <Icon name="fight" size={18} />
-                                          </div>
-                                        )}
-                                        <div>
-                                          <b style={{ color: isCurrent ? '#FBBF24' : '#F8FAFC', fontSize: 13.5 }}>{body.datasheet}</b>
-                                          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-                                            {body.models} {body.models === 1 ? 'model' : 'models'} · {body.pts + (body.wargearPts ?? 0)} pts
-                                          </div>
-                                        </div>
-                                      </div>
-
                                       <div>
-                                        {isCurrent ? (
-                                          <span
-                                            style={{
-                                              display: 'inline-flex',
-                                              alignItems: 'center',
-                                              gap: 6,
-                                              padding: '4px 10px',
-                                              borderRadius: 6,
-                                              background: 'rgba(245, 158, 11, 0.2)',
-                                              border: '1px solid rgba(245, 158, 11, 0.4)',
-                                              color: '#FBBF24',
-                                              fontSize: '11.5px',
-                                              fontWeight: 700,
-                                              letterSpacing: '0.03em',
-                                            }}
-                                          >
-                                            <Icon name="check" size={13} /> Attached with {u.datasheet}
-                                            {photo && (
-                                              <img
-                                                src={photo}
-                                                alt=""
-                                                style={{
-                                                  width: 22,
-                                                  height: 22,
-                                                  borderRadius: 4,
-                                                  objectFit: 'cover',
-                                                  border: '1px solid rgba(245, 158, 11, 0.5)',
-                                                  marginLeft: 2,
-                                                }}
-                                              />
-                                            )}
-                                          </span>
-                                        ) : (
-                                          <button
-                                            type="button"
-                                            className="btn small"
-                                            style={{
-                                              border: '1px solid #374151',
-                                              background: '#1F242D',
-                                              color: '#E5E7EB',
-                                              fontSize: '12px',
-                                              padding: '4px 12px',
-                                            }}
-                                          >
-                                            Attach
-                                          </button>
-                                        )}
+                                        <b style={{ color: isCurrent ? '#F59E0B' : '#F8FAFC', fontSize: 13.5 }}>{body.datasheet}</b>
+                                        <div style={{ fontSize: 12, color: '#94a3b8' }}>{body.models} models · {body.pts + (body.wargearPts ?? 0)} pts</div>
                                       </div>
+                                      {isCurrent ? <span className="chip ok small"><Icon name="check" size={12} /> Attached</span> : <span className="btn small">Attach</span>}
                                     </div>
                                   );
-                                });
-                              })()}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Squad Size & Combine Squads drawer */}
-                        {isSizing && (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                            {sizeOpts.length > 1 && (
-                              <div>
-                                <div className="cmp-kicker" style={{ marginBottom: 8, color: '#38bdf8' }}>
-                                  Squad Size (จำนวนโมเดลในกอง)
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
-                                  {sizeOpts.map((o) => {
-                                    const isCurrent = u.models === o.models;
-                                    const currentOpt = sizeOpts.find((x) => x.models === u.models) ?? { pts: u.pts };
-                                    const scrapDiff = o.pts - currentOpt.pts;
-                                    const canAfford = scrapDiff <= 0 || (run.scrap ?? 0) >= scrapDiff;
-                                    return (
-                                      <div
-                                        key={o.models}
-                                        style={{
-                                          padding: 10,
-                                          borderRadius: 8,
-                                          background: isCurrent ? 'rgba(56, 189, 248, 0.12)' : 'rgba(255,255,255,0.04)',
-                                          border: isCurrent ? '1.5px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
-                                          display: 'flex',
-                                          flexDirection: 'column',
-                                          justifyContent: 'space-between',
-                                          gap: 8,
-                                        }}
-                                      >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                          <b style={{ color: '#f8fafc', fontSize: 14 }}>{o.models} {o.models === 1 ? 'model' : 'models'}</b>
-                                          <span className="cmp-card-pts">{o.pts} pts</span>
-                                        </div>
-                                        {isCurrent ? (
-                                          <span className="chip ok small" style={{ width: 'fit-content' }}>
-                                            <Icon name="check" size={12} /> Current ({o.models})
-                                          </span>
-                                        ) : (
-                                          <button
-                                            type="button"
-                                            className="btn small primary"
-                                            disabled={!canAfford}
-                                            onClick={() => {
-                                              setRun(changeSquadSize(run, fac, u.uid, o.models));
-                                              play('good');
-                                            }}
-                                          >
-                                            {scrapDiff > 0 ? `Reinforce (-${scrapDiff} Scrap)` : `Reorganize to ${o.models}`}
-                                          </button>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
+                                })}
                               </div>
                             )}
                           </div>
                         )}
 
-                        {/* Enhancement (สกิลเสริม) Drawer */}
-                        {isEnhancing && fac && (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <div className="cmp-kicker" style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <Icon name="enhancement" size={13} />
-                                <span>Detachment Enhancements (สกิลเสริม)</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setEnhancingUid(null)}
-                                title="Close"
-                                aria-label="Close"
-                                style={{
-                                  background: 'transparent',
-                                  border: 'none',
-                                  color: '#94a3b8',
-                                  cursor: 'pointer',
-                                  padding: '4px 6px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  borderRadius: '4px',
-                                }}
-                              >
-                                <Icon name="close" size={14} />
-                              </button>
-                            </div>
-                            <div style={{ fontSize: 12.5, color: '#94a3b8', marginBottom: 10, lineHeight: 1.4 }}>
-                              Equip a specialized Detachment Enhancement to this Character using Scrap. In accordance with 40k rules, each enhancement can only be taken once per army.
-                            </div>
-
-                            {/* If character already has an enhancement equipped */}
-                            {u.enhancement && (
-                              <div style={{ marginBottom: 12, padding: 12, borderRadius: 8, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                                <div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <span className="chip warn small" style={{ fontWeight: 700 }}>Currently Equipped</span>
-                                    <b style={{ color: '#fef08a', fontSize: 14 }}>{u.enhancement}</b>
-                                    <span className="tiny muted">(+{u.enhancementPts ?? 0} pts)</span>
-                                  </div>
-                                </div>
-                                <button
-                                  type="button"
-                                  className="btn small"
-                                  style={{ border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
-                                  onClick={() => {
-                                    setRun(removeEnhancementFromUnit(run, u.uid));
-                                    play('bad');
-                                  }}
-                                >
-                                  Unequip & Refund (+{enhancementScrapCost(u.enhancementPts ?? 0)} Scrap)
-                                </button>
-                              </div>
-                            )}
-
-                            {/* List of available enhancements */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 8 }}>
-                              {enhOpts.map((o) => {
-                                const isCurrent = u.enhancement === o.name;
-                                const taken = run.list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
-                                const fit = d ? enhancementFits(o.text, [...d.keywords, ...d.factionKeywords, d.name, ...(u.mark ? [u.mark] : [])]) : null;
-                                const cost = enhancementScrapCost(o.pts);
-                                const refund = u.enhancement ? enhancementScrapCost(u.enhancementPts ?? 0) : 0;
-                                const netCost = cost - refund;
-                                const canAfford = netCost <= 0 || (run.scrap ?? 0) >= netCost;
-                                return (
-                                  <div
-                                    key={o.detachment + o.name}
-                                    style={{
-                                      padding: 10,
-                                      borderRadius: 8,
-                                      background: isCurrent ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255,255,255,0.04)',
-                                      border: isCurrent ? '1.5px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      justifyContent: 'space-between',
-                                      gap: 8,
-                                      opacity: taken || (fit && !fit.ok) ? 0.6 : 1,
-                                    }}
-                                  >
-                                    <div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
-                                        <div>
-                                          <b style={{ color: isCurrent ? '#fef08a' : '#f8fafc', fontSize: 13.5 }}>{o.name}</b>
-                                          <div className="tiny muted">{o.detachment} · +{o.pts} pts</div>
-                                        </div>
-                                        <span className="cmp-scrap"><Icon name="shop" size={12} /> {cost}</span>
-                                      </div>
-                                      {fit && !fit.ok && (
-                                        <div style={{ marginTop: 4, color: '#f87171', fontSize: 11.5, fontWeight: 600 }}>
-                                          Requires: {fit.need}
-                                        </div>
-                                      )}
-                                      {o.text && (
-                                        <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 6, lineHeight: 1.35 }}>
-                                          <Em text={o.text} />
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div style={{ marginTop: 8 }}>
-                                      {isCurrent ? (
-                                        <span className="chip ok small" style={{ width: '100%', justifyContent: 'center' }}>
-                                          <Icon name="check" size={12} /> Equipped
-                                        </span>
-                                      ) : taken ? (
-                                        <span className="chip subtle small" style={{ width: '100%', justifyContent: 'center', color: '#94a3b8' }}>
-                                          Equipped on {taken.datasheet}
-                                        </span>
-                                      ) : fit && !fit.ok ? (
-                                        <button type="button" className="btn small" disabled style={{ width: '100%' }}>
-                                          Not Eligible
-                                        </button>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          className="btn small primary"
-                                          disabled={!canAfford}
-                                          style={{ width: '100%' }}
-                                          onClick={() => {
-                                            setRun(buyEnhancementForUnit(run, fac, u.uid, o.name, o.pts));
-                                            play('good');
-                                          }}
-                                        >
-                                          {!canAfford ? `Need Scrap (${netCost > 0 ? netCost : cost})` : `Equip (${cost} Scrap)`}
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
+                        <button type="button" className="ab-moreinfo" onClick={() => setMenu(null)}>
+                          Close <Icon name="down" size={18} />
+                        </button>
                       </div>
-                    );
-                  })}
-                        </div>
-                      </section>
-                    );
-                  })}
-                </div>
-              )}
+                    </div>
+                  );
+                };
+
+                const unitRow = (u: ArmyUnitEntry, inGroup = false) => {
+                  const sheet = fac.datasheets.find((x) => x.name === u.datasheet);
+                  const body = u.attachTo ? run.list.units.find((b) => b.uid === u.attachTo) : undefined;
+                  const leads = body;
+                  const wg = wargearSummary(sheet, u);
+                  const line = [
+                    u.warlord && 'Warlord',
+                    leads && (inGroup ? 'Attached Leader' : `Attached with ${leads.datasheet}`),
+                    u.honors?.length ? `${u.honors.length} Battle ${u.honors.length === 1 ? 'Honor' : 'Honors'}` : null,
+                  ].filter(Boolean).join(' · ');
+
+                  const isOpen = menu === u.uid;
+                  const row = (
+                    <div key={u.uid} className={`ab-row ${inGroup ? 'in-group' : ''} ${isOpen ? 'open' : ''}`}>
+                      <button type="button" className="ab-row-main" onClick={() => setMenu(isOpen ? null : u.uid)}>
+                        <span className="ab-art-wrap"><UnitArt sheet={sheet} /></span>
+                        <span className="ab-row-text">
+                          <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
+                          <span className="ab-pts">
+                            {u.pts + (u.wargearPts ?? 0) + (u.enhancementPts ?? 0)} pts
+                            <span className="cmp-rank-badge" style={{ marginLeft: 6 }}>{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
+                            {u.enhancement && <span className="ab-enh" style={{ marginLeft: 6 }}> {u.enhancement}</span>}
+                          </span>
+                          {line && <span className="ab-sub">{line}</span>}
+                          {wg && <span className="ab-sub ab-wg"><Icon name="wargear" size={13} /> {wg}</span>}
+                        </span>
+                      </button>
+                      {run.list.units.length > 1 && (
+                        <button
+                          type="button"
+                          className="ab-kebab"
+                          style={{ color: '#ef4444' }}
+                          aria-label={`Dismiss ${u.datasheet}`}
+                          title="Dismiss squad"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRun(dismissUnit(run, u.uid));
+                            play('bad');
+                          }}
+                        >
+                          <Icon name="delete" size={18} />
+                        </button>
+                      )}
+                    </div>
+                  );
+
+                  return isOpen ? [row, unitPanel(u)] : row;
+                };
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {SECTIONS.filter((sec) => sec.id !== 'allies' || run.list.units.some((u) => sectionOf(fac.datasheets.find((x) => x.name === u.datasheet), run.factionId) === 'allies')).map((sec) => {
+                      const joined = (b: ArmyUnitEntry) => run.list.units.filter((c) => c.attachTo === b.uid);
+                      const homeOf = (u: ArmyUnitEntry): string => {
+                        const body = u.attachTo ? run.list.units.find((b) => b.uid === u.attachTo) : undefined;
+                        if (body) return homeOf(body);
+                        const first = joined(u)[0];
+                        const d = fac.datasheets.find((x) => x.name === (first ?? u).datasheet);
+                        return sectionOf(d, run.factionId);
+                      };
+                      const us = run.list.units.filter((u) => (!u.attachTo || !run.list.units.some((b) => b.uid === u.attachTo)) && homeOf(u) === sec.id);
+                      if (!us.length) return null;
+
+                      const squadRows = (u: ArmyUnitEntry, inGroup: boolean) => [
+                        ...joined(u).map((c) => unitRow(c, true)),
+                        unitRow(u, inGroup || joined(u).length > 0),
+                      ];
+
+                      return (
+                        <section key={sec.id} className="ab-section">
+                          <div className="ab-section-head">
+                            <span>{sec.title}</span>
+                            <button type="button" className="ab-add" aria-label={`Recruit ${sec.title}`} onClick={() => setRosterTab('recruit')}>+</button>
+                          </div>
+                          {us.map((u) => {
+                            const attachCount = joined(u).length;
+                            if (!attachCount) return unitRow(u);
+                            return (
+                              <div key={u.uid} className="ab-group">
+                                {squadRows(u, true)}
+                              </div>
+                            );
+                          })}
+                        </section>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               {rosterTab === 'recruit' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
