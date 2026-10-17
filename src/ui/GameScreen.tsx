@@ -3213,7 +3213,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
       {s.reinforcementAlert && (
         <div className="tray-backdrop" style={{ zIndex: 9999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="card" style={{ maxWidth: '440px', width: '100%', background: 'linear-gradient(180deg, #1e1111 0%, #110c0c 100%)', border: '2px solid #ef4444', borderRadius: '12px', padding: '20px', boxShadow: '0 0 30px rgba(239, 68, 68, 0.4)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="card" style={{ maxWidth: '440px', width: '100%', background: 'linear-gradient(180deg, #1e1111 0%, #110c0c 100%)', border: '2px solid #ef4444', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f87171' }}>
               <Icon name="skull" size={26} />
               <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{s.reinforcementAlert.text}</div>
