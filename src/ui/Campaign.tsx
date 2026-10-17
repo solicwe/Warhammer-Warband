@@ -6,7 +6,7 @@ import { attachOptions, autoAttach, defaultWargear, embarkCheck, enhancementFits
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
-  bossRuleById, buyEnhancementForUnit, buyHonorForUnit, changeSquadSize, cheapest, continueNextLoop, dismissUnit,
+  bossRuleById, buyEnhancementForUnit, buyHonorForUnit, changeSquadSize, cheapest, continueNextLoop,
   enhancementScrapCost, enter, loadRun, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
   removeEnhancementFromUnit, rerollOffer, saveRun, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
@@ -473,6 +473,19 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               <Icon name="leave" size={22} />Leave Squad
             </button>
           )}
+          {joined.map(({ c }) => (
+            <button
+              key={c.uid}
+              type="button"
+              onClick={() => {
+                setUnit(c.uid, { attachTo: undefined });
+                setInfo(`${c.datasheet} left ${u.datasheet}`);
+                close();
+              }}
+            >
+              <Icon name="leave" size={22} />Detach {c.datasheet}
+            </button>
+          ))}
           {myLoad && cargo.length > 0 && (
             <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></button>
           )}
