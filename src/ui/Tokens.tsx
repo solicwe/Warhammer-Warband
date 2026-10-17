@@ -122,7 +122,7 @@ export const Portrait = memo(function Portrait({ kind, owner, character, size = 
         ? <img loading="lazy" decoding="async" className={`portrait-img ${borrowed && editable ? 'borrowed' : ''}`} src={photo} alt="" style={{ borderColor: rim }} onError={() => setBroken(photo)} />
         : (
           <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" style={{ cursor: editable ? 'pointer' : undefined }}>
-            <circle cx="50" cy="50" r="48" fill="var(--surface2)" />
+            <circle cx="50" cy="50" r="48" fill="#ffffff" />
             <use href={`#tok-${kind}`} x="14" y="16" width="72" height="72" />
             <circle cx="50" cy="50" r="47" fill="none" stroke={rim} strokeWidth="4" />
             {editable && <text x="50" y="96" fontSize="13" textAnchor="middle" fill="var(--muted)">+ Image</text>}

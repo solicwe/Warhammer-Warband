@@ -958,6 +958,44 @@ function BoardImpl(props: BoardProps) {
     }
     return map;
   }, [s]);
+
+  const untargetableModelIds = useMemo(() => {
+    const set = new Set<string>();
+    if (!s || props.viewer === undefined) return set;
+    const friendlyUnits = s.units.filter((fu) => fu.owner === props.viewer && onBoard(fu));
+    const friendlyModels = friendlyUnits.flatMap((fu) => alive(fu));
+    const selectedUnit = props.selected ? s.units.find((x) => x.id === props.selected) : null;
+    const selAlive = selectedUnit && selectedUnit.owner === props.viewer ? alive(selectedUnit) : null;
+
+    for (const u of s.units) {
+      if (u.owner === props.viewer || !onBoard(u)) continue;
+      const st = unitStatusMap.get(u.id);
+      const hasLoneOp = st?.hasLoneOp ?? false;
+      const loRange = st?.loRange ?? null;
+      const activeRange = loRange ?? 12;
+
+      for (const m of alive(u)) {
+        if (selAlive && selAlive.length > 0) {
+          // Line of sight / targetability from active selected unit
+          const canBeTargeted = selAlive.some((sm) => modelVisible(s, sm, u, m));
+          if (!canBeTargeted) set.add(m.id);
+        } else if (hasLoneOp) {
+          // When no unit is selected, grey out Lone Operative if no friendly model is within range
+          const anyFriendlyInRange = friendlyModels.some((fm) => baseDist(fm, m) <= activeRange);
+          if (!anyFriendlyInRange) set.add(m.id);
+        }
+      }
+    }
+    return set;
+  }, [s, props.selected, props.viewer, unitStatusMap]);
+
+  const engagementRings = useMemo(() => {
+    if (!draftUnit || enemyOfDraft === undefined) return [];
+    return s.units
+      .filter((u) => u.owner !== enemyOfDraft && onBoard(u))
+      .flatMap((u) => alive(u).map((m) => ({ id: m.id, m })));
+  }, [draftUnit, enemyOfDraft, s.units]);
+
   return (
     <>
     <svg
@@ -1309,9 +1347,9 @@ function BoardImpl(props: BoardProps) {
         <line key={`los${i}`} x1={l.a.x} y1={l.a.y} x2={l.b.x} y2={l.b.y} stroke={l.cover ? '#fbbf24' : '#86efac'} strokeWidth={0.07} strokeDasharray="0.3 0.2" opacity={0.85} pointerEvents="none" />
       ))}
       {/* engagement range of enemies while moving */}
-      {draftUnit && enemyOfDraft !== undefined && s.units.filter((u) => u.owner !== enemyOfDraft && onBoard(u)).flatMap((u) => alive(u).map((m) => (
-        <BaseShape key={`e${m.id}`} m={m} p={m} grow={RULES.engagementRange} fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.55)" strokeWidth={0.06} strokeDasharray="0.3 0.15" />
-      )))}
+      {engagementRings.map(({ id, m }) => (
+        <BaseShape key={`e${id}`} m={m} p={m} grow={RULES.engagementRange} fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.55)" strokeWidth={0.06} strokeDasharray="0.3 0.15" />
+      ))}
       {units.map((u) => {
         const isDraft = draft && draftUnit === u.id;
         const isSel = props.selected === u.id;
@@ -1340,7 +1378,6 @@ function BoardImpl(props: BoardProps) {
         const hasCover = st?.hasCover ?? false;
         const isInfBeastOp = st?.isInfBeastOp ?? false;
         const loRange = st?.loRange ?? null;
-        const selectedUnit = props.selected ? s.units.find((x) => x.id === props.selected) : null;
         return (
           <g key={u.id}>
             {isDraft && ms.map((m) => {
@@ -1384,21 +1421,7 @@ function BoardImpl(props: BoardProps) {
               const flinch = modelFlinch(u, m, fx, now);
               const disp = getModelDisplayWounds(u, m, fx, now);
               const isEnemy = u.owner !== props.viewer;
-              let isUntargetable = false;
-              if (isEnemy) {
-                if (selectedUnit && selectedUnit.owner === props.viewer) {
-                  // Active player has a unit selected: check if selected unit has any line of sight or is within Lone Op range
-                  isUntargetable = !alive(selectedUnit).some((sm) => modelVisible(s, sm, u, m));
-                } else if (hasLoneOp) {
-                  // No unit selected: if enemy has Lone Operative (12" or 15"), check if ANY friendly model is within range
-                  const activeRange = loRange ?? 12;
-                  const friendlyModels = s.units.filter((fu) => fu.owner === props.viewer && onBoard(fu)).flatMap((fu) => alive(fu));
-                  const anyFriendlyInRange = friendlyModels.some((fm) => baseDist(fm, m) <= activeRange);
-                  if (!anyFriendlyInRange) {
-                    isUntargetable = true;
-                  }
-                }
-              }
+              const isUntargetable = isEnemy && untargetableModelIds.has(m.id);
               return (
                 <g
                   key={m.id}
@@ -1437,7 +1460,7 @@ function BoardImpl(props: BoardProps) {
                   )}
                   <BaseShape
                     m={m} p={p}
-                    fill={bad ? '#7f1d1d' : '#181c24'}
+                    fill={bad ? '#7f1d1d' : '#ffffff'}
                     fillOpacity={1}
                     stroke={bad ? '#fca5a5' : isSel || isDraft ? uTheme.primary : isPicked ? uTheme.secondary : isTarget ? '#fde68a' : col}
                     strokeWidth={isSel || isDraft || isTarget || isPicked || bad ? 0.16 : 0.12}

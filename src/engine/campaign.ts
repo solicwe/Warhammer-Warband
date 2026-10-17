@@ -264,11 +264,15 @@ export function makeMap(seed: number, enemies: string[], loop = 1): MapNode[] {
         })();
       const node: MapNode = { id: `n${layer}-${i}`, layer, kind, x: (i + 0.5) / n, next: [] };
       if (['battle', 'elite', 'boss'].includes(kind)) {
-        const basePts = loop > 1 ? 1000 + (loop - 2) * 200 : 480;
-        const layerPts = layer * (loop > 1 ? 150 : 100);
-        const elitePts = kind === 'elite' ? (loop > 1 ? 250 : 180) : 0;
-        const bossPts = kind === 'boss' ? (loop > 1 ? 450 : 350) : 0;
-        const pts = Math.round((basePts + layerPts + elitePts + bossPts) / 10) * 10;
+        // Continuous roguelike point scaling:
+        // Sector 1: 500 pts at layer 0 -> 2,000 pts at the boss!
+        // Sector 2 (Endless restart): Starts at 2,000+ pts at layer 0 -> 4,000 pts at the boss!
+        // Subsequent sectors continue scaling upward seamlessly (2,000++ pts, never dropping back).
+        const loopBase = loop === 1 ? 500 : 2000 + (loop - 2) * 1500;
+        const layerPts = layer * (loop === 1 ? 200 : 250);
+        const elitePts = kind === 'elite' ? (loop === 1 ? 200 : 250) : 0;
+        const bossPts = kind === 'boss' ? (loop === 1 ? 300 : 500) : 0;
+        const pts = Math.round((loopBase + layerPts + elitePts + bossPts) / 10) * 10;
         const extraRules = loop > 1 ? Math.min(3, loop) : 0;
         const rules = kind === 'elite' ? pickN(BOSS_RULES, 1 + extraRules, r).map((b) => b.id) : kind === 'boss' ? pickN(BOSS_RULES, 2 + extraRules, r).map((b) => b.id) : (loop > 1 && layer >= 2 ? pickN(BOSS_RULES, 1, r).map((b) => b.id) : []);
         const level: BotLevel = loop > 1 ? 'expert' : kind === 'boss' ? 'hard' : kind === 'elite' ? 'hard' : LEVEL_BY_LAYER[layer];

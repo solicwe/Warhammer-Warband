@@ -80,10 +80,11 @@ export function autoList(f: FactionData, points = 1000, seed = 1, wild = false):
   // Battleline holds the objectives
   const lines = usable.filter((d) => d.keywords.includes('BATTLELINE') && price(d).pts <= points * 0.25).sort((a, b) => score(b) - score(a));
   for (const d of lines.slice(0, 2)) add(d);
-  // then the hardest-hitting units per point, at most two of each and none worth more than 40% of the army
+  // then the hardest-hitting units per point, allowing up to 3-4 duplicates (6 for Battleline) for large armies
   const rest = usable.filter((d) => !d.keywords.includes('CHARACTER') || !d.leads.length).filter((d) => price(d).pts <= points * 0.4 && !d.keywords.includes('EPIC HERO'));
-  for (let guard = 0; guard < 30 && left > 40; guard++) {
-    const fits = rest.filter((d) => price(d).pts <= left && units.filter((u) => u.datasheet === d.name).length < 2);
+  const maxDup = (d: DatasheetData) => (d.keywords.includes('BATTLELINE') ? 6 : points >= 2000 ? 4 : 3);
+  for (let guard = 0; guard < 80 && left > 40; guard++) {
+    const fits = rest.filter((d) => price(d).pts <= left && units.filter((u) => u.datasheet === d.name).length < maxDup(d));
     if (!fits.length) break;
     const pick = fits.sort((a, b) => score(b) - score(a))[Math.floor(rnd() * Math.min(3, fits.length))];
     add(pick);
