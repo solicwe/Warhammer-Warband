@@ -901,3 +901,45 @@ export function answerReaction(s: GameState, stratId: string | null, unitId?: st
 export function stratagemsNow(s: GameState, p: PlayerId) {
   return s.players[p].detachments.flatMap((d) => d.stratagems.map((st) => ({ st, plan: planStratagem(st), detachment: d.name, rule: stratRule(st, s.players[p].factionId, d.name) })));
 }
+
+/** Punchy quick-summary of a Stratagem for UI menus (displayed in bold Amber) */
+export function stratagemShortSummary(st: StratagemData, rule?: StratRule): string {
+  if (st.short_summary) return st.short_summary;
+
+  if (rule?.buffs?.length) {
+    const b = rule.buffs;
+    if (b.includes('fnp5')) return 'Gain 5+ FNP vs all damage';
+    if (b.includes('fnp6')) return 'Gain 6+ Feel No Pain';
+    if (b.includes('fnp4')) return 'Gain 4+ Feel No Pain';
+    if (b.includes('damage-1')) return '−1 Damage taken (min 1)';
+    if (b.includes('hit+1') && b.includes('wound+1')) return '+1 to Hit and Wound rolls';
+    if (b.includes('hit+1')) return '+1 to Hit rolls';
+    if (b.includes('wound+1')) return '+1 to Wound rolls';
+    if (b.includes('cover')) return 'Gain Benefit of Cover';
+  }
+
+  if (rule?.effects?.length) {
+    for (const eff of rule.effects) {
+      if (eff.defend?.fnpVs === 'mortal') return `Gain ${eff.defend.fnp ?? 5}+ FNP vs Mortal Wounds`;
+      if (eff.defend?.fnp) return `Gain ${eff.defend.fnp}+ Feel No Pain`;
+      if (eff.abilities?.includes('lethal hits')) return 'Weapons gain [LETHAL HITS]';
+      if (eff.abilities?.includes('sustained hits 1')) return 'Weapons gain [SUSTAINED HITS 1]';
+      if (eff.abilities?.includes('lance')) return 'Weapons gain [LANCE] (+1 to Wound)';
+      if (eff.reroll === 'hits') return 'Re-roll all failed Hit rolls';
+      if (eff.reroll === 'hits1') return 'Re-roll Hit rolls of 1';
+      if (eff.reroll === 'wounds') return 'Re-roll all failed Wound rolls';
+      if (eff.reroll === 'wounds1') return 'Re-roll Wound rolls of 1';
+    }
+  }
+
+  if (rule?.note && rule.note.length <= 60) return rule.note;
+
+  const m = /EFFECT:\s*([^.\n]+(?:\.[^.\n]+)?)/i.exec(st.text);
+  if (m && m[1]) {
+    const eff = m[1].trim();
+    if (eff.length <= 60) return eff;
+    return eff.slice(0, 57) + '…';
+  }
+
+  return st.type || 'Tactical Stratagem';
+}

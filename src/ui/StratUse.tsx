@@ -2,7 +2,7 @@
 // Shared by the Stratagem tray and the prompt the game opens at a stratagem's moment ("just after an enemy unit has shot").
 import { useState, type ReactNode } from 'react';
 import { alive, onBoard, stratCost, type ReactCtx } from '../engine/state';
-import { EFFECT_LABEL, stratagemBlock, stratChoices, stratEnemies, type StratRule, type StratUse as Use } from '../engine/stratagems';
+import { EFFECT_LABEL, stratagemBlock, stratChoices, stratEnemies, stratagemShortSummary, type StratRule, type StratUse as Use } from '../engine/stratagems';
 import type { GameState, PlayerId, StratagemData, UnitState } from '../engine/types';
 import { Icon } from './Icon';
 
@@ -187,33 +187,28 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
         {rule.note && <div className="strat-note">{rule.note}</div>}
       </div>
 
-      {/* 2. Collapsible "Full text" Rules Section */}
-      <div className="strat-accordion-wrap">
-        <button
-          type="button"
-          className="strat-accordion-btn"
-          onClick={() => setFullTextOpen((o) => !o)}
-          aria-expanded={fullTextOpen}
-        >
-          <span className="strat-accordion-line" />
-          <span className="strat-accordion-label">
-            <Icon name="down" size={13} className={`strat-accordion-icon ${fullTextOpen ? 'open' : ''}`} />
-            <span>{fullTextOpen ? 'Hide full text' : 'Full text'}</span>
-          </span>
-          <span className="strat-accordion-line" />
-        </button>
-
-        {fullTextOpen && (
-          <div className="strat-rules-inset">
-            {sections.map((sec, idx) => (
-              <div key={idx} className="strat-rule-block">
-                {sec.label && <span className="strat-rule-tag">{sec.label}:</span>}{' '}
-                <span className="strat-rule-body">{highlightRuleTokens(sec.text)}</span>
-              </div>
-            ))}
-          </div>
-        )}
+      {/* Quick Summary in bold Amber text */}
+      <div className="strat-summary-banner" style={{ margin: '8px 0 6px', padding: '6px 10px', background: 'rgba(245, 158, 11, 0.1)', borderLeft: '3px solid #F59E0B', borderRadius: '4px' }}>
+        <div style={{ color: '#F59E0B', fontWeight: 800, fontSize: '13.5px', letterSpacing: '0.01em' }}>
+          {stratagemShortSummary(st, rule)}
+        </div>
       </div>
+
+      {/* 2. Collapsible <details> Accordion for verbose WHEN, TARGET, EFFECT text */}
+      <details className="strat-details-accordion" style={{ margin: '6px 0 10px', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '6px', border: '1px solid #334155', padding: '6px 8px' }}>
+        <summary style={{ cursor: 'pointer', color: '#94A3B8', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', userSelect: 'none' }}>
+          <Icon name="down" size={12} />
+          <span>Rules Detail (WHEN / TARGET / EFFECT)</span>
+        </summary>
+        <div className="strat-rules-inset" style={{ marginTop: '8px', borderTop: '1px solid #334155', paddingTop: '6px' }}>
+          {sections.map((sec, idx) => (
+            <div key={idx} className="strat-rule-block" style={{ marginBottom: '4px', fontSize: '12.5px', lineHeight: 1.4 }}>
+              {sec.label && <span className="strat-rule-tag" style={{ fontWeight: 700, color: '#F59E0B' }}>{sec.label}:</span>}{' '}
+              <span className="strat-rule-body" style={{ color: '#CBD5E1' }}>{highlightRuleTokens(sec.text)}</span>
+            </div>
+          ))}
+        </div>
+      </details>
 
       {/* Bot notification */}
       {timingOk && bot && (

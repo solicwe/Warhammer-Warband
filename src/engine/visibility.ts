@@ -1,7 +1,7 @@
 // Line of sight on a 2D board (06.01, 13.07-13.11).
 // Terrain areas with light/dense features are obscuring; dense walls are Solid at ground level.
 import { RULES } from './config';
-import { baseDist, bodyTouchesPoly, circleTouchesPoly, pointInPoly, pointSegDist, samplePoints, segCrossesPoly, segLengthInPoly, segSegDist, segsTouch } from './geometry';
+import { baseDist, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, pointInPoly, pointSegDist, samplePoints, segCrossesPoly, segLengthInPoly, segSegDist, segsTouch } from './geometry';
 import { alive, everyModelKw } from './state';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 
@@ -313,10 +313,52 @@ export function detectionRange(s: GameState, observer: ModelState, u: UnitState,
   return range;
 }
 
-/** Can `observer` see model `m` of unit `u`, applying Hidden and Lone Operative. */
+/** Check if unit is an "Infantry Beast" */
+export function isInfantryBeastUnit(u: UnitState): boolean {
+  const typeStr = (u as any).type;
+  if (typeof typeStr === 'string' && typeStr.toLowerCase().includes('infantry') && typeStr.toLowerCase().includes('beast')) {
+    return true;
+  }
+  const allKw = [...u.keywords, ...u.models.flatMap((m) => m.keywords)];
+  const hasInf = allKw.some((k) => k.toUpperCase() === 'INFANTRY');
+  const hasBst = allKw.some((k) => k.toUpperCase() === 'BEAST' || k.toUpperCase() === 'BEASTS');
+  return hasInf && hasBst;
+}
+
+/** Check if "Infantry Beast" 15" Lone Operative stealth rule is active:
+ * IF Unit.type === "Infantry Beast" AND Unit.hasFiredThisTurn === false AND Unit.isWhollyWithinTerrain === true
+ * Effect: Dynamically append Lone Operative keyword and restrict ranged targeting to 15".
+ */
+export function isInfantryBeastLoneOpActive(s: GameState, u: UnitState): boolean {
+  if (!isInfantryBeastUnit(u)) return false;
+  // Unit.hasFiredThisTurn === false
+  const hasFired = (u as any).hasFiredThisTurn === true || u.shotTurn === s.turn || (u.weaponsFired && u.weaponsFired.length > 0);
+  if (hasFired) return false;
+  // Unit.isWhollyWithinTerrain === true
+  const ms = alive(u);
+  if (!ms.length) return false;
+  const whollyIn = ms.every((m) =>
+    s.terrain.some((t) => t.category !== 'exposed' && bodyWhollyInPoly(m, t.poly))
+  );
+  if (whollyIn) {
+    if (!u.keywords.includes('Lone Operative') && !u.keywords.includes('LONE OPERATIVE')) {
+      u.keywords.push('Lone Operative');
+    }
+    return true;
+  }
+  return false;
+}
+
+/** Can `observer` see model `m` of unit `u`, applying Hidden, Lone Operative, and Infantry Beast 15" rule. */
 export function modelVisible(s: GameState, observer: ModelState, u: UnitState, m: ModelState, ignoreLoneOperative = false): boolean {
   const d = baseDist(observer, m);
-  if (!ignoreLoneOperative && (!u.sources || u.sources.length <= 1) && (u.core.loneOperative || hooks.loneOperative?.(s, u)) && d > (u.core.loneOperative ?? 12)) return false;
+  if (!ignoreLoneOperative) {
+    if (isInfantryBeastLoneOpActive(s, u)) {
+      if (d > 15) return false;
+    } else if ((!u.sources || u.sources.length <= 1) && (u.core.loneOperative || hooks.loneOperative?.(s, u)) && d > (u.core.loneOperative ?? 12)) {
+      return false;
+    }
+  }
   return hasLos(s, observer, m);
 }
 
@@ -324,13 +366,31 @@ export function unitVisibleTo(s: GameState, observer: ModelState, u: UnitState):
   return alive(u).some((m) => modelVisible(s, observer, u, m));
 }
 
-/** Benefit of cover (13.08) against attacks from one attacking model. */
+/** Benefit of cover (13.08) against attacks from one attacking model.
+ * Strict Footprint Matrix:
+ * 1. Attacker outside + Target outside + Ray crosses Footprint: BLOCKED
+ * 2. Attacker outside + Target inside Footprint: LoS ESTABLISHED, Target gains Benefit of Cover (-1 BS / +1 Sv).
+ * 3. Attacker inside Footprint + Target outside Footprint: LoS ESTABLISHED, Target does NOT gain Cover from that footprint.
+ * 4. Attacker inside Footprint + Target inside SAME Footprint: LoS ESTABLISHED, Target does NOT gain Cover from shared footprint.
+ */
 export function hasCover(s: GameState, attacker: ModelState, target: UnitState): boolean {
   if (target.core.stealth || target.buffs.some((b) => b.kind === 'smoke' || b.kind === 'cover')) return true;
   return alive(target).every((m) => {
-    const inArea = ['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) && s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly));
-    return inArea || !fullyVisible(s, attacker, m);
+    // Check if target model is inside a footprint that the attacker is NOT inside (Rule 2)
+    const inDifferentFootprint = s.terrain.some((t) =>
+      t.category !== 'exposed' &&
+      standsIn(s, m, t) &&
+      !standsIn(s, attacker, t)
+    );
+    if (inDifferentFootprint) return true;
+
+    // Attacker inside footprint + Target inside SAME footprint (Rule 4): Target does NOT gain cover from shared footprint.
+    // Attacker inside footprint + Target outside footprint (Rule 3): Target does NOT gain cover from attacker's footprint.
+    // Check if intervening terrain or walls partially obscure target:
+    if (!fullyVisible(s, attacker, m)) return true;
+    return false;
   });
 }
 
 export const unitIsInfantryLike = (u: UnitState) => everyModelKw(u, ['INFANTRY', 'BEASTS', 'SWARM']);
+

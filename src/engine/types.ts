@@ -89,7 +89,7 @@ export interface WargearOption {
 export interface WargearPick { opt: number; choice: number; count: number; picks?: string[] }
 
 export interface EnhancementData { id: string; name: string; pts: number; upgrade: boolean; text: string }
-export interface StratagemData { id: string; name: string; cp: number; type: string; turn: string; phase: string; text: string }
+export interface StratagemData { id: string; name: string; cp: number; type: string; turn: string; phase: string; text: string; short_summary?: string }
 
 export interface DetachmentData {
   id: string;
@@ -718,8 +718,11 @@ export interface GameState {
   botIgnoresCards?: PlayerId[];
   fx?: FxEvent[];
   stats?: BattleStats;
-  campaign?: { node: string; relics: string[]; rules: string[]; relicLevels?: Record<string, number>; lootedObjectives?: string[]; reinforcementsTriggered?: number[] };
+  campaign?: { node: string; relics: string[]; rules: string[]; relicLevels?: Record<string, number>; lootedObjectives?: string[]; reinforcementsTriggered?: number[]; dramaRounds?: number[]; titanSpawned?: boolean };
   reinforcementAlert?: { unitName: string; factionName: string; round: number; count: number; text: string } | null;
+  titanAlert?: { unitName: string; factionName: string; round: number; text: string; triggered: boolean } | null;
+  screenShake?: number;
+  warpStormActive?: boolean;
   campaignScrap?: number; // scrap salvaged during campaign battle
   table?: { width: number; height: number };
   botTried?: string[]; // bot bookkeeping: units already considered this phase

@@ -32,15 +32,15 @@
     { "id": "apocalypse", "name": "Apocalypse", "points": 5000, "dp": 6, "enhancements": 10, "unitLimit": 6 }
   ],
   "coreStratagems": [
-    { "id": "command-reroll", "name": "Command Re-roll", "cp": 1, "when": "Just after an Advance / Charge / Damage / Hazardous / Hit / Save / Wound roll", "text": "Re-roll 1 die (Charge re-rolls both 2D6)" },
-    { "id": "epic-challenge", "name": "Epic Challenge", "cp": 1, "when": "Fight phase, when a CHARACTER unit is selected to fight", "text": "1 CHARACTER gains [PRECISION] on melee weapons until end of phase" },
-    { "id": "insane-bravery", "name": "Insane Bravery", "cp": 1, "when": "Your Battle-shock step, before rolling", "text": "Automatically pass a Battle-shock test (once per battle)", "oncePerBattle": true },
-    { "id": "explosives", "name": "Explosives", "cp": 1, "when": "Your Shooting phase", "text": "An EXPLOSIVES/GRENADES unit selects a visible enemy within 8\", rolls 6D6, each 4+ = 1 mortal wound", "range": 8, "dice": 6, "woundOn": 4 },
-    { "id": "crushing-impact", "name": "Crushing Impact", "cp": 1, "when": "Your Charge phase, after a MONSTER/VEHICLE has finished charging", "text": "Roll D6 equal to T: each 5+ = 1 mortal wound to an enemy (max 6), each 1 = 1 mortal wound to itself", "woundOn": 5, "max": 6 },
-    { "id": "rapid-ingress", "name": "Rapid Ingress", "cp": 1, "when": "End of opponent's Movement phase", "text": "A unit in Reserves makes an Ingress move (not in battle round 1)" },
-    { "id": "fire-overwatch", "name": "Fire Overwatch", "cp": 1, "when": "End of opponent's Movement phase", "text": "An unengaged unit makes Snap Shooting attacks (hits only on 6, range 24\")" },
-    { "id": "smokescreen", "name": "Smokescreen", "cp": 1, "when": "Start of the opponent's Shooting phase", "text": "SMOKE unit gains the Benefit of Cover until end of phase" },
-    { "id": "heroic-intervention", "name": "Heroic Intervention", "cp": 1, "intoTheFrayExtraCp": 1, "when": "End of opponent's Charge phase", "text": "Leap to Defend: charge a unit that just charged / Into the Fray (+1CP): charge roll max 6, any target within 6\"" },
-    { "id": "counteroffensive", "name": "Counteroffensive", "cp": 2, "when": "Opponent's Fight step, after an enemy unit has fought", "text": "Our unit gains Fights First and fights next" }
+    { "id": "command-reroll", "name": "Command Re-roll", "cp": 1, "short_summary": "Re-roll 1 Hit, Wound, Damage or Save roll", "when": "Just after an Advance / Charge / Damage / Hazardous / Hit / Save / Wound roll", "text": "Re-roll 1 die (Charge re-rolls both 2D6)" },
+    { "id": "epic-challenge", "name": "Epic Challenge", "cp": 1, "short_summary": "Gain [PRECISION] on melee attacks", "when": "Fight phase, when a CHARACTER unit is selected to fight", "text": "1 CHARACTER gains [PRECISION] on melee weapons until end of phase" },
+    { "id": "insane-bravery", "name": "Insane Bravery", "cp": 1, "short_summary": "Automatically pass Battle-shock test", "when": "Your Battle-shock step, before rolling", "text": "Automatically pass a Battle-shock test (once per battle)", "oncePerBattle": true },
+    { "id": "explosives", "name": "Explosives", "cp": 1, "short_summary": "Roll 6D6: each 4+ deals 1 Mortal Wound", "when": "Your Shooting phase", "text": "An EXPLOSIVES/GRENADES unit selects a visible enemy within 8\", rolls 6D6, each 4+ = 1 mortal wound", "range": 8, "dice": 6, "woundOn": 4 },
+    { "id": "crushing-impact", "name": "Crushing Impact", "cp": 1, "short_summary": "Roll T dice: 5+ deals Mortal Wounds", "when": "Your Charge phase, after a MONSTER/VEHICLE has finished charging", "text": "Roll D6 equal to T: each 5+ = 1 mortal wound to an enemy (max 6), each 1 = 1 mortal wound to itself", "woundOn": 5, "max": 6 },
+    { "id": "rapid-ingress", "name": "Rapid Ingress", "cp": 1, "short_summary": "Arrive from Reserves in opponent's turn", "when": "End of opponent's Movement phase", "text": "A unit in Reserves makes an Ingress move (not in battle round 1)" },
+    { "id": "fire-overwatch", "name": "Fire Overwatch", "cp": 1, "short_summary": "Shoot out-of-phase on 6s (Snap Shooting)", "when": "End of opponent's Movement phase", "text": "An unengaged unit makes Snap Shooting attacks (hits only on 6, range 24\")" },
+    { "id": "smokescreen", "name": "Smokescreen", "cp": 1, "short_summary": "Gain Benefit of Cover & Stealth (-1 to Hit)", "when": "Start of the opponent's Shooting phase", "text": "SMOKE unit gains the Benefit of Cover until end of phase" },
+    { "id": "heroic-intervention", "name": "Heroic Intervention", "cp": 1, "intoTheFrayExtraCp": 1, "short_summary": "Charge into combat in opponent's Charge phase", "when": "End of opponent's Charge phase", "text": "Leap to Defend: charge a unit that just charged / Into the Fray (+1CP): charge roll max 6, any target within 6\"" },
+    { "id": "counteroffensive", "name": "Counteroffensive", "cp": 2, "short_summary": "Gain Fights First and fight immediately", "when": "Opponent's Fight step, after an enemy unit has fought", "text": "Our unit gains Fights First and fights next" }
   ]
 }

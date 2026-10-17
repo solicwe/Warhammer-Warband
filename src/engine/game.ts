@@ -873,7 +873,11 @@ export function startTurn(s: GameState, p: PlayerId) {
     dgRoundStart(s);
     knightsRoundStart(s);
     admechRoundStart(s);
-    if (s.campaign && s.round >= 2) triggerCampaignReinforcements(s);
+    if (s.campaign) {
+      if (s.round >= 2) triggerCampaignReinforcements(s);
+      triggerDynamicDramaEngine(s);
+      expandRoguelikeMap(s);
+    }
     fireAll(s, 'roundStart', 'both');
   }
   knightsTurnStart(s);
@@ -2215,6 +2219,240 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
     count: cloned.models.length,
     text: 'STRATEGIC EVENT: ENEMY REINFORCEMENTS DETECTED (5 ROUNDS)',
   };
+
+  return true;
+}
+
+/** Polygon Area helper using shoelace formula */
+export function polygonArea(poly: Pt[]): number {
+  let a = 0;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    a += (poly[j].x + poly[i].x) * (poly[j].y - poly[i].y);
+  }
+  return Math.abs(a / 2);
+}
+
+/** Dynamic Drama Engine for Rogue-like mode:
+ * Checks conditions at the start of every Battle Round:
+ * 1. Rubberband Trigger (Catch-up): VP Delta >= 30 forces High-Threat Event (elite spawn 9" away or Warp Storm debuff).
+ * 2. Boss Spawns (Titan Class): Round >= 3 and Player VP >= 50 has 5% baseline probability to spawn a Titan-class unit with screen flash and warning banner.
+ */
+export function triggerDynamicDramaEngine(s: GameState): boolean {
+  if (!s.campaign) return false;
+  s.campaign.dramaRounds ??= [];
+  if (s.campaign.dramaRounds.includes(s.round)) return false;
+  s.campaign.dramaRounds.push(s.round);
+
+  let triggeredAny = false;
+  const playerVp = s.players[0].vp;
+  const aiVp = s.players[1].vp;
+  const vpDelta = playerVp - aiVp;
+
+  // 1. Rubberband Trigger (Catch-up): VP Delta >= 30
+  if (vpDelta >= 30) {
+    triggeredAny = true;
+    const playerUnits = s.units.filter((u) => u.owner === 0 && onBoard(u) && alive(u).length > 0);
+    const mostExp = [...playerUnits].sort((a, b) => b.pts - a.pts)[0];
+    const enemyTemplates = s.units.filter((u) => u.owner === 1);
+
+    const roll = nextRandom(s);
+    if (roll < 0.5 && mostExp && enemyTemplates.length > 0) {
+      const cand = enemyTemplates.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC')) ?? enemyTemplates[0];
+      const elite: UnitState = structuredClone(cand);
+      elite.id = newUid('elite-drama');
+      elite.name = `Elite Strike ${cand.name}`;
+      elite.status = 'board';
+      elite.move = null;
+      elite.cantCharge = false;
+      elite.weaponsFired = [];
+      elite.sources = [elite.name];
+      elite.pts = Math.round(cand.pts * 1.3);
+      elite.keywords = Array.from(new Set([...elite.keywords, 'ELITE']));
+
+      const leaderM = alive(mostExp)[0];
+      const angle = nextRandom(s) * Math.PI * 2;
+      const targetPos = {
+        x: Math.max(3, Math.min((s.table?.width ?? 44) - 3, leaderM.x + Math.cos(angle) * 9)),
+        y: Math.max(3, Math.min((s.table?.height ?? 30) - 3, leaderM.y + Math.sin(angle) * 9)),
+      };
+
+      elite.models = elite.models.map((m, idx) => ({
+        ...m,
+        id: `${elite.id}-m${idx}`,
+        dead: false,
+        wounds: m.profile.W + 1,
+        x: targetPos.x + (idx % 3) * 1.2,
+        y: targetPos.y + Math.floor(idx / 3) * 1.2,
+      }));
+      elite.startingStrength = elite.models.length;
+      s.units.push(elite);
+      s.screenShake = Date.now();
+      log(s, `DRAMA CATCH-UP EVENT: Player leads by ${vpDelta} VP! Elite strike squad deployed 9" from ${mostExp.name}!`, 'kill', 1);
+    } else {
+      s.warpStormActive = true;
+      for (const u of playerUnits) {
+        (u.timed ??= []).push({
+          e: { advanceBonus: -2, chargeBonus: -2 },
+          label: 'Warp Storm: -2" Adv & Charge',
+          until: 'turn',
+          by: 1,
+          turn: s.turn,
+        });
+      }
+      s.screenShake = Date.now();
+      log(s, `DRAMA CATCH-UP EVENT: Player leads by ${vpDelta} VP! Warp Storm erupted: All player units suffer -2" to Advance & Charge!`, 'kill', 1);
+    }
+  }
+
+  // 2. Boss Spawns (Titan Class): Round >= 3 AND Player VP >= 50, 5% baseline probability
+  if (s.round >= 3 && playerVp >= 50 && !s.campaign.titanSpawned) {
+    const titanRoll = nextRandom(s);
+    if (titanRoll < 0.05) {
+      s.campaign.titanSpawned = true;
+      triggeredAny = true;
+      s.screenShake = Date.now();
+
+      s.titanAlert = {
+        unitName: 'Warlord Titan Supreme Commander',
+        factionName: s.players[1].name,
+        round: s.round,
+        text: 'TITAN DETECTED: GOD-ENGINE SUPREME COMMANDER ENGAGED',
+        triggered: true,
+      };
+
+      const titanCand = s.units.find((u) => u.owner === 1) ?? s.units[0];
+      const titan: UnitState = structuredClone(titanCand);
+      titan.id = newUid('titan-boss');
+      titan.owner = 1;
+      titan.name = 'God-Engine Warhound Titan';
+      titan.sources = ['Titan Datasheet'];
+      titan.keywords = ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'CHARACTER'];
+      titan.pts = 800;
+      titan.status = 'board';
+      titan.isWarlordUnit = true;
+      titan.abilities = [{ name: 'Void Shields', text: '4+ Invulnerable save against ranged attacks.', type: 'datasheet' }];
+      titan.core = { fnp: 5 };
+      titan.move = null;
+      titan.cantCharge = false;
+      titan.weaponsFired = [];
+      titan.models = [{
+        id: `${titan.id}-m0`,
+        name: 'Warhound Titan',
+        source: 'Warhound Titan',
+        isCharacter: true,
+        isBodyguard: false,
+        keywords: ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'CHARACTER'],
+        weapons: [{
+          name: 'Plasma Blastgun',
+          profiles: [{
+            name: 'Overcharge',
+            range: 48,
+            A: '4D3',
+            skill: 3,
+            S: 10,
+            AP: -3,
+            D: '4',
+            abilities: ['blast'],
+          }],
+        }],
+        x: Math.max(5, (s.table?.width ?? 44) - 8),
+        y: (s.table?.height ?? 30) / 2,
+        r: 2.5,
+        wounds: 30,
+        dead: false,
+        profile: { name: 'Warhound Titan', M: 10, T: 12, Sv: 2, W: 30, Ld: 6, OC: 10, InSv: 4, base: { w: 120, h: 92, text: '120 x 92mm' } },
+      }];
+      titan.startingStrength = 1;
+
+      s.units.push(titan);
+      log(s, `TITAN DETECTED: God-Engine Warhound Titan has arrived with Void Shields active!`, 'kill', 1);
+    }
+  }
+
+  return triggeredAny;
+}
+
+/** Rogue-like Dynamic Map Scaling & Generation:
+ * Score-Based Expansion: Current Grid Size = Base Size (44x30) + (Player VP * Expansion Multiplier).
+ * Triggers screen shake and dynamically renders new grid tiles and terrain on outer edges.
+ * Maintains strict 25% footprint coverage ratio mixing heavy obscuring ruins, light craters, and barricades.
+ */
+export function expandRoguelikeMap(s: GameState): boolean {
+  if (!s.campaign) return false;
+  s.table ??= { width: 44, height: 30 };
+  const baseW = 44, baseH = 30;
+  const targetW = Math.max(baseW, Math.round(baseW + (s.players[0].vp * 0.35)));
+  const targetH = Math.max(baseH, Math.round(baseH + (s.players[0].vp * 0.25)));
+
+  if (targetW <= s.table.width && targetH <= s.table.height) return false;
+
+  const oldW = s.table.width;
+  const oldH = s.table.height;
+  s.table.width = targetW;
+  s.table.height = targetH;
+  s.screenShake = Date.now();
+
+  log(s, `Map Expanded! Dimensions increased from ${oldW}"×${oldH}" to ${targetW}"×${targetH}" (VP: ${s.players[0].vp})`, 'vp', 0);
+
+  // Maintain strict 25% footprint coverage ratio
+  const totalArea = targetW * targetH;
+  const targetTerrainArea = totalArea * 0.25;
+
+  const currentTerrainArea = s.terrain
+    .filter((t) => t.kind !== 'objective-area')
+    .reduce((sum, t) => sum + polygonArea(t.poly), 0);
+
+  let neededArea = targetTerrainArea - currentTerrainArea;
+  let nextIdx = s.terrain.length + 1;
+  const kinds: ('ruin' | 'crater' | 'barricade')[] = ['ruin', 'crater', 'barricade', 'ruin'];
+  let kIdx = 0;
+
+  while (neededArea > 10 && nextIdx < 60) {
+    const kind = kinds[kIdx % kinds.length];
+    kIdx++;
+    const inRightBand = nextRandom(s) > 0.5;
+    let x0: number, y0: number, pw: number, ph: number;
+
+    if (inRightBand && targetW > oldW) {
+      pw = kind === 'ruin' ? 6 : kind === 'crater' ? 5 : 4;
+      ph = kind === 'ruin' ? 4 : kind === 'crater' ? 5 : 2;
+      x0 = oldW + nextRandom(s) * Math.max(1, (targetW - oldW - pw));
+      y0 = 2 + nextRandom(s) * (targetH - ph - 4);
+    } else {
+      pw = kind === 'ruin' ? 5 : kind === 'crater' ? 4 : 4;
+      ph = kind === 'ruin' ? 4 : kind === 'crater' ? 4 : 2;
+      x0 = 2 + nextRandom(s) * (targetW - pw - 4);
+      y0 = oldH + nextRandom(s) * Math.max(1, (targetH - oldH - ph));
+    }
+
+    const poly = [
+      { x: x0, y: y0 },
+      { x: x0 + pw, y: y0 },
+      { x: x0 + pw, y: y0 + ph },
+      { x: x0, y: y0 + ph },
+    ];
+
+    const pieceArea = pw * ph;
+    const isDense = kind === 'ruin';
+    const walls = isDense ? [
+      { a: { x: x0, y: y0 }, b: { x: x0 + pw, y: y0 } },
+      { a: { x: x0, y: y0 }, b: { x: x0, y: y0 + ph } },
+    ] : [];
+
+    const newPiece: TerrainPiece = {
+      id: `proc-t${nextIdx++}`,
+      kind: isDense ? 'ruin' : 'crater',
+      label: isDense ? 'Outer Obscuring Ruin (Dense)' : kind === 'crater' ? 'Light Crater' : 'Barricade',
+      category: isDense ? 'dense' : 'light',
+      height: isDense ? 5 : 1,
+      poly,
+      walls,
+      obstacles: kind === 'barricade' ? [{ a: { x: x0, y: y0 + ph / 2 }, b: { x: x0 + pw, y: y0 + ph / 2 } }] : [],
+    };
+
+    s.terrain.push(newPiece);
+    neededArea -= pieceArea;
+  }
 
   return true;
 }

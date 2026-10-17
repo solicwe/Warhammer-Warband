@@ -500,7 +500,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // ending a phase where nothing was done needs a second tap (protects against mis-taps)
   const [armed, setArmed] = useState<string | null>(null);
   useEffect(() => { if (!armed) return; const tm = window.setTimeout(() => setArmed(null), 3500); return () => window.clearTimeout(tm); }, [armed]);
-  useEffect(() => { if (s.reinforcementAlert) play('bad'); }, [s.reinforcementAlert]);
+  useEffect(() => { if (s.reinforcementAlert || s.titanAlert) play('bad'); }, [s.reinforcementAlert, s.titanAlert]);
   /** The phase's way out: what is left undone shows under it, and ending with nothing done asks once more. */
   const endButton = (key: string, label: string, idle: boolean, why: string, note?: string) => (
     <div className="sticky-act">
@@ -2914,7 +2914,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
       </header>
-      <div className={`board-wrap shake-${shake}`}>
+      <div className={`board-wrap ${s.screenShake && Date.now() - s.screenShake < 850 ? 'shake-expand' : shake ? `shake-${shake}` : ''}`}>
         <InlineErrorBoundary name="Battlefield Board" onRecover={() => { setSel(null); setMode(null); setDraft(null); }}>
           <Board
             s={s}
@@ -2982,7 +2982,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </button>
         )}
       </div>
-      <aside className={`game-side ${(reporting || rolling) && actingBot === null ? 'tucked' : ''}`}>
+      <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''}`}>
         {commanderP !== null && (
           <Commander quiet={actingBot === null && !thinking && !(says && Date.now() - says.k < 6000)} s={s} p={commanderP} says={says && says.p === commanderP ? says.text : null}
             think={thinking && actingBot === commanderP ? think ?? { values: {}, done: 0, total: 0 } : null}
@@ -3246,6 +3246,29 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn primary big wide" style={{ background: '#dc2626', borderColor: '#ef4444', fontWeight: 700 }} onClick={() => { act((g) => { g.reinforcementAlert = null; }); }}>Acknowledge Threat</button>
           </div>
         </div>
+      )}
+      {s.titanAlert && (
+        <>
+          <div className="titan-screen-flash" />
+          <div className="tray-backdrop" style={{ zIndex: 99999, background: 'rgba(20, 0, 0, 0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }} onClick={() => { act((g) => { g.titanAlert = null; }); }}>
+            <div className="card titan-banner" style={{ maxWidth: '480px', width: '100%', background: 'linear-gradient(180deg, #350808 0%, #150505 100%)', border: '3px solid #ef4444', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 0 40px rgba(239,68,68,0.5)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#f87171' }}>
+                <Icon name="skull" size={32} />
+                <div style={{ fontWeight: 900, fontSize: '1.2rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fca5a5' }}>{s.titanAlert.text}</div>
+              </div>
+              <div style={{ fontSize: '14.5px', color: '#fecaca', lineHeight: 1.4 }}>
+                A colossal <b>{s.titanAlert.unitName}</b> has made landfall. Void Shields active. All friendly units prepare for catastrophic engagement!
+              </div>
+              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '8px', padding: '10px 14px' }}>
+                <div style={{ fontWeight: 800, color: '#fca5a5' }}>{s.titanAlert.unitName}</div>
+                <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>{s.titanAlert.factionName} · TITAN CLASS · Battle Round {s.titanAlert.round}</div>
+              </div>
+              <button className="btn primary big wide" style={{ background: '#dc2626', borderColor: '#ef4444', color: '#fff', fontWeight: 800, minHeight: '44px' }} onClick={() => { act((g) => { g.titanAlert = null; }); play('turn'); }}>
+                Acknowledge Titan Threat
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

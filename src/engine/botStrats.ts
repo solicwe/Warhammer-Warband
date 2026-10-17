@@ -24,7 +24,7 @@ import type { AttackSession, GameState, PlayerId, StratagemData, TimedEffect, Un
 export const isBot = (s: GameState, p: PlayerId) => (s.botPlayer != null && !s.bots && s.botPlayer === p) || playsItself(s, p);
 
 /** Can the bot afford this now and still keep a CP for a re-roll (until the last round)? */
-const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= lastRound(s) ? 0 : 1) => s.players[p].cp - cost >= keep;
+const spare = (s: GameState, p: PlayerId, cost: number, keep = s.campaign || s.round >= lastRound(s) ? 0 : 1) => s.players[p].cp - cost >= keep;
 
 /**
  * What one CP is worth right now, in points of damage done or saved. A good player spends CP every turn: points left
@@ -32,6 +32,7 @@ const spare = (s: GameState, p: PlayerId, cost: number, keep = s.round >= lastRo
  * round spends what's left).
  */
 export function cpWorth(s: GameState, p: PlayerId): number {
+  if (s.campaign) return 2; // Aggressive CP spending in Rogue-like mode
   // the battle's last turn: a CP not spent now is never spent
   if (s.round >= lastRound(s) && s.active !== s.firstPlayer) return 1;
   const left = Math.max(1, lastRound(s) + 1 - s.round); // rounds still to play, this one included
@@ -78,6 +79,13 @@ setDiceHook((s, stage) => {
     if (canUseStratagem(s, A.owner, 'command-reroll', A) || !spare(s, A.owner, 1)) return;
     const i = dice.findIndex((d) => failed(d) && !d.rerolled);
     if (i < 0 || (stage === 'hit' && p.noHitReroll)) return;
+    const isHighValue = unitValue(A) >= 80 || A.isWarlordUnit || A.models.some((m) => m.profile.W >= 3);
+    if (s.campaign && isHighValue && s.players[A.owner].cp >= 1) {
+      spendStratagem(s, A.owner, 'command-reroll', A);
+      rerollOne(s, stage, i);
+      log(s, `Bot CP Override: ${A.name} aggressively re-rolls failed ${stage} roll (${p.weapon})`, 'roll', A.owner);
+      return;
+    }
     const need = stage === 'hit' ? (p.hitOn6Only ? 6 : Math.max(2, Math.min(6, (p.skill ?? 7) - p.hitMod))) : Math.max(2, Math.min(6, p.woundNeed - p.woundMod));
     const gain = dieWorth(s, at, stage) * ((7 - need) / 6);
     if (gain < cpWorth(s, A.owner) - 2) return;
@@ -153,6 +161,12 @@ export function botOffensiveStratagem(s: GameState, u: UnitState, kind: 'shoot' 
     const gain = tryRule(s, u, st.name, rule, best0) - base;
     if (gain > (best?.gain ?? 0)) best = { st, gain, choice };
   }
+  const isHighVal = unitValue(u) >= 80 || u.isWarlordUnit || u.models.some((m) => m.profile.W >= 3);
+  if (s.campaign && isHighVal && s.players[p].cp >= 1 && best) {
+    applyDetachmentStratagem(s, p, best.st, u.id, { choice: best.choice, enemyId: best.enemyId });
+    log(s, `Bot CP Override: ${u.name} aggressively triggers ${best.st.name} for offensive buff!`, 'info', p);
+    return;
+  }
   if (best && best.gain >= cpWorth(s, p) * best.st.cp) applyDetachmentStratagem(s, p, best.st, u.id, { choice: best.choice, enemyId: best.enemyId });
 }
 
@@ -198,10 +212,24 @@ onAttackStart((s, at) => {
   else if (at.kind === 'fight') botFightOnDeath(s, T, base / Math.max(1, alive(T).length * perModel(T)));
 });
 
-/** Mortal wounds coming in: "Feel No Pain 5+ against mortal wounds" (Layered Ceramite …) when they would hurt. */
+/** Mortal wounds coming in: "Feel No Pain 5+ against mortal wounds" (Omnissiah's Grace, Layered Ceramite …) when they would hurt. */
 onMortalWounds((s, u, n) => {
   const p = u.owner;
   if (!isBot(s, p) || u.battleShocked) return;
+
+  // Rogue-like mode Bot AI Override: If Bot.CP >= 1 and mortal wounds allocated -> Automatically trigger Omnissiah's Grace / FNP defensive stratagem
+  if (s.campaign && s.players[p].cp >= 1) {
+    for (const d of s.players[p].detachments) for (const st of d.stratagems) {
+      const rule = stratRule(st, s.players[p].factionId, d.name);
+      const isDefensive = (rule.effects ?? []).some((e) => e.defend?.fnpVs === 'mortal' || e.defend?.fnp) || (rule.buffs ?? []).some((b) => b.startsWith('fnp') || b === 'damage-1');
+      if (isDefensive && !stratagemBlock(s, p, st, u) && s.players[p].cp >= stratCost(s, st.id, u, st.cp)) {
+        applyDetachmentStratagem(s, p, st, u.id);
+        log(s, `Bot CP Override: Automatically triggered defensive stratagem ${st.name} against mortal wounds!`, 'info', p);
+        return;
+      }
+    }
+  }
+
   const loss = Math.min(alive(u).length, n / Math.max(1, alive(u)[0]?.profile.W ?? 1)) * perModel(u);
   if (loss < 8 && n < 3) return;
   for (const d of s.players[p].detachments) for (const st of d.stratagems) {

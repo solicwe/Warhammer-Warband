@@ -7,6 +7,7 @@ import { isDaemonsArmy, isDaemonUnit, isUnderShadowOfChaos } from '../engine/dae
 import { zonePoly } from '../engine/missions';
 import { levelOfControl, markRuleLabel } from '../engine/game';
 import { loneOperativeNow, unitFlags } from '../engine/effects';
+import { isInfantryBeastLoneOpActive, modelVisible } from '../engine/visibility';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { loadoutLabels, shortItem } from './loadout';
@@ -922,6 +923,7 @@ function BoardImpl(props: BoardProps) {
       hasPsychicWep: boolean;
       hasStealth: boolean;
       hasLoneOp: boolean;
+      isInfBeastOp: boolean;
       hasCover: boolean;
     }>();
 
@@ -934,8 +936,9 @@ function BoardImpl(props: BoardProps) {
       const enemyInShadow = !isDaemon && isDaemonsArmy(s, other(u.owner)) && isUnderShadowOfChaos(s, other(u.owner), u);
       const hasPsychicWep = ms.some((m) => m.weapons?.some((w) => w.profiles?.some((p) => p.abilities?.includes('psychic'))));
       const uFlags = unitFlags(s, u);
+      const isInfBeastOp = isInfantryBeastLoneOpActive(s, u);
       const hasStealth = !!(u.core.stealth || uFlags.stealth || u.buffs?.some((b) => b.kind === 'smoke'));
-      const hasLoneOp = !!((!u.sources || u.sources.length <= 1) && (u.core.loneOperative || loneOperativeNow(s, u) || uFlags.loneOperative));
+      const hasLoneOp = !!(isInfBeastOp || ((!u.sources || u.sources.length <= 1) && (u.core.loneOperative || loneOperativeNow(s, u) || uFlags.loneOperative)));
       const hasCover = !!(u.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke') || ms.some((m) => s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly))));
       map.set(u.id, {
         hasFlowOfMagic: unitHasFlow,
@@ -946,6 +949,7 @@ function BoardImpl(props: BoardProps) {
         hasPsychicWep,
         hasStealth,
         hasLoneOp,
+        isInfBeastOp,
         hasCover,
       });
     }
@@ -1322,6 +1326,8 @@ function BoardImpl(props: BoardProps) {
         const hasStealth = st?.hasStealth ?? false;
         const hasLoneOp = st?.hasLoneOp ?? false;
         const hasCover = st?.hasCover ?? false;
+        const isInfBeastOp = st?.isInfBeastOp ?? false;
+        const selectedUnit = props.selected ? s.units.find((x) => x.id === props.selected) : null;
         return (
           <g key={u.id}>
             {isDraft && ms.map((m) => {
@@ -1364,12 +1370,16 @@ function BoardImpl(props: BoardProps) {
               const isSolo = isDraft && solo.includes(m.id);
               const flinch = modelFlinch(u, m, fx, now);
               const disp = getModelDisplayWounds(u, m, fx, now);
+              const isHiddenFromSelected = !!(selectedUnit && u.owner !== selectedUnit.owner && !alive(selectedUnit).some((sm) => modelVisible(s, sm, u, m)));
               return (
                 <g
                   key={m.id}
                   data-unit={u.id}
                   onPointerDown={(e) => startModelDrag(e, u.id, m.id)}
-                  style={{ cursor: isDraft ? 'grab' : 'pointer' }}
+                  style={{
+                    cursor: isDraft ? 'grab' : 'pointer',
+                    ...(isHiddenFromSelected ? { filter: 'grayscale(100%) opacity(0.5)' } : {}),
+                  }}
                   transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
                   opacity={disp.fading !== undefined ? disp.fading : 1}
                 >
@@ -1389,7 +1399,7 @@ function BoardImpl(props: BoardProps) {
                   {hasStealth && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#38bdf8" strokeWidth={0.14} strokeDasharray="0.22 0.14" opacity={0.88} className="stealth-aura" pointerEvents="none" />}
                   {hasLoneOp && <BaseShape m={m} p={p} grow={0.38} fill="none" stroke="#fbbf24" strokeWidth={0.12} strokeDasharray="0.35 0.15" opacity={0.9} className="lone-op-aura" pointerEvents="none" />}
                   {hasLoneOp && (isSel || isTarget || isPicked) && (
-                    <circle cx={p.x} cy={p.y} r={u.core.loneOperative ?? 12} fill="rgba(251, 191, 36, 0.02)" stroke="#fbbf24" strokeWidth={0.08} strokeDasharray="0.6 0.3" opacity={0.65} pointerEvents="none" />
+                    <circle cx={p.x} cy={p.y} r={isInfBeastOp ? 15 : (u.core.loneOperative ?? 12)} fill="rgba(251, 191, 36, 0.02)" stroke="#fbbf24" strokeWidth={0.08} strokeDasharray="0.6 0.3" opacity={0.65} pointerEvents="none" />
                   )}
                   {riled && (
                     <g pointerEvents="none">
@@ -1420,6 +1430,14 @@ function BoardImpl(props: BoardProps) {
                       </g>
                     );
                   })()}
+                  {isInfBeastOp && (
+                    <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
+                      <circle r={0.36} fill="#064e3b" stroke="#10b981" strokeWidth={0.08} />
+                      <path d="M -0.16 0.13 C -0.14 -0.14 0.14 -0.14 0.16 0.13 C 0.08 0.09 -0.08 0.09 -0.16 0.13 Z" fill="#34d399" />
+                      <circle cx={0} cy={-0.12} r={0.065} fill="#6ee7b7" />
+                      <line x1={-0.2} y1={-0.2} x2={0.2} y2={0.2} stroke="#f87171" strokeWidth={0.05} />
+                    </g>
+                  )}
                   {labels.has(m.id) && vb.w >= 30 && (
                     // zoomed out: words don't fit, a letter badge tells the kits apart (C = Claws, H = Hammer…)
                     <g pointerEvents="none">
@@ -1603,11 +1621,12 @@ function BoardImpl(props: BoardProps) {
                 </g>
               );
             })()}
-            {(isSel || isPicked || isTarget) && (hasStealth || hasLoneOp || hasCover) && pts.length > 0 && (() => {
+            {(isSel || isPicked || isTarget) && (hasStealth || hasLoneOp || hasCover || isInfBeastOp) && pts.length > 0 && (() => {
               const tacticalTags: { text: string; color: string; border: string; bg: string; icon: 'stealth' | 'shield' | 'radar' }[] = [];
               if (hasStealth) tacticalTags.push({ text: 'Stealth −1 Hit', color: '#38bdf8', border: '#0284c7', bg: 'rgba(14, 165, 233, 0.25)', icon: 'stealth' });
               if (hasCover) tacticalTags.push({ text: 'Cover +1 Sv', color: '#4ade80', border: '#16a34a', bg: 'rgba(34, 197, 94, 0.25)', icon: 'shield' });
-              if (hasLoneOp) tacticalTags.push({ text: 'Lone Op 12"', color: '#fbbf24', border: '#d97706', bg: 'rgba(245, 158, 11, 0.25)', icon: 'radar' });
+              if (isInfBeastOp) tacticalTags.push({ text: 'Lone Op 15" (Beast)', color: '#10b981', border: '#059669', bg: 'rgba(16, 185, 129, 0.25)', icon: 'stealth' });
+              else if (hasLoneOp) tacticalTags.push({ text: 'Lone Op 12"', color: '#fbbf24', border: '#d97706', bg: 'rgba(245, 158, 11, 0.25)', icon: 'radar' });
               const tCount = tacticalTags.length;
               const tagY = props.badges?.[u.id]?.length ? minY - 1.55 : minY - 0.95;
               return (

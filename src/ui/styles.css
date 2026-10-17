@@ -48,22 +48,22 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111316; --surface: #1a1d21; --surface-2: #21252a; --sunk: #15181b; --line: #2b3036; --line-2: #3d444c;
-    --text: #e6e9ec; --text-2: #a1a9b1; --text-3: #6d767f;
-    --accent: #d3a04a; --accent-2: #e2b464; --accent-soft: #2e2617; --on-fill: #17120a;
+    --bg: #0F172A; --surface: #1E293B; --surface-2: #334155; --sunk: #0B1120; --line: #334155; --line-2: #475569;
+    --text: #F8FAFC; --text-2: #94A3B8; --text-3: #64748B;
+    --accent: #F59E0B; --accent-2: #D97706; --accent-soft: rgba(245, 158, 11, 0.15); --on-fill: #0F172A;
     --p0: #6aa5e3; --p1: #e2675c; --p0-soft: #1a2838; --p1-soft: #381e1c;
-    --good: #5db07f; --warn: #e0a540; --bad: #e66a60; --good-soft: #182b20; --warn-soft: #31281a; --bad-soft: #381e1c;
-    --thumb: #262b31; --board: #1b1e22; --overlay: rgba(0, 0, 0, 0.62); --shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+    --good: #5db07f; --warn: #F59E0B; --bad: #e66a60; --good-soft: #182b20; --warn-soft: #31281a; --bad-soft: #381e1c;
+    --thumb: #334155; --board: #0B1120; --overlay: rgba(0, 0, 0, 0.65); --shadow: 0 14px 34px rgba(0, 0, 0, 0.65);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #111316; --surface: #1a1d21; --surface-2: #21252a; --sunk: #15181b; --line: #2b3036; --line-2: #3d444c;
-  --text: #e6e9ec; --text-2: #a1a9b1; --text-3: #6d767f;
-  --accent: #d3a04a; --accent-2: #e2b464; --accent-soft: #2e2617; --on-fill: #17120a;
+  --bg: #0F172A; --surface: #1E293B; --surface-2: #334155; --sunk: #0B1120; --line: #334155; --line-2: #475569;
+  --text: #F8FAFC; --text-2: #94A3B8; --text-3: #64748B;
+  --accent: #F59E0B; --accent-2: #D97706; --accent-soft: rgba(245, 158, 11, 0.15); --on-fill: #0F172A;
   --p0: #6aa5e3; --p1: #e2675c; --p0-soft: #1a2838; --p1-soft: #381e1c;
-  --good: #5db07f; --warn: #e0a540; --bad: #e66a60; --good-soft: #182b20; --warn-soft: #31281a; --bad-soft: #381e1c;
-  --thumb: #262b31; --board: #1b1e22; --overlay: rgba(0, 0, 0, 0.62); --shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+  --good: #5db07f; --warn: #F59E0B; --bad: #e66a60; --good-soft: #182b20; --warn-soft: #31281a; --bad-soft: #381e1c;
+  --thumb: #334155; --board: #0B1120; --overlay: rgba(0, 0, 0, 0.65); --shadow: 0 14px 34px rgba(0, 0, 0, 0.65);
   color-scheme: dark;
 }
 
@@ -2111,6 +2111,118 @@ b.em { font-weight: 700; color: var(--text); }
   .atk-l { font-size: 10px; }
   .atk-chips { display: none; }
   .atk-result { font-size: 18px; }
+}
+
+/* ---------- Mobile-first Bottom Sheet Modal (< 768px) & Touch Targets ---------- */
+@media (max-width: 768px) {
+  /* Completely disable fixed side panels; convert to Bottom Sheet Modal drawer */
+  .game {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+  }
+  .game > .board-wrap {
+    flex: 1 1 auto;
+    height: 100%;
+    width: 100%;
+  }
+  .game-side,
+  .game-side.draggable-drawer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-height: 60vh !important;
+    height: auto !important;
+    z-index: 100 !important;
+    background: #1E293B !important;
+    border-top: 2px solid #F59E0B !important;
+    border-radius: 16px 16px 0 0 !important;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.75) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  .game-side.draggable-drawer::before {
+    content: '';
+    display: block;
+    width: 44px;
+    height: 5px;
+    border-radius: 2.5px;
+    background: #475569;
+    margin: 8px auto 6px;
+    flex: none;
+  }
+  .game-side.tucked {
+    transform: translateY(105%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  .game-side .panel {
+    max-height: calc(60vh - 28px) !important;
+    overflow-y: auto !important;
+    border-top: none !important;
+    background: transparent !important;
+    padding: 6px 12px 16px !important;
+  }
+  /* Enforce minimum touch target sizes: 44x44px */
+  button, .btn, .icon-btn, .action-btn, .seg button, .unit-pill, .tb-tool, .plan-toggle {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    touch-action: manipulation;
+  }
+}
+
+/* Titan Warning Screen Flash & Banner */
+.titan-screen-flash {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.7) 0%, rgba(185, 28, 28, 0.9) 100%);
+  z-index: 99999;
+  pointer-events: none;
+  animation: titan-flash 1.6s ease-out forwards;
+}
+@keyframes titan-flash {
+  0% { opacity: 0; }
+  20% { opacity: 0.9; }
+  50% { opacity: 0.6; }
+  80% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+.titan-banner {
+  animation: titan-banner-pulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes titan-banner-pulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 10px #ef4444); }
+  100% { transform: scale(1.04); filter: drop-shadow(0 0 26px #dc2626); }
+}
+
+.board-wrap.shake-expand > svg { animation: shake-expand 0.5s ease-in-out; }
+.board-wrap.shake-titan > svg { animation: shake-titan 0.8s cubic-bezier(.36,.07,.19,.97); }
+@keyframes shake-expand {
+  0%, 100% { transform: none; }
+  20% { transform: translate(-4px, 3px) rotate(-0.3deg); }
+  40% { transform: translate(4px, -3px) rotate(0.3deg); }
+  60% { transform: translate(-3px, 2px); }
+  80% { transform: translate(2px, -1px); }
+}
+@keyframes shake-titan {
+  0%, 100% { transform: none; }
+  15% { transform: translate(-8px, 6px) scale(1.02) rotate(-0.5deg); }
+  30% { transform: translate(8px, -6px) rotate(0.5deg); }
+  45% { transform: translate(-6px, 4px) rotate(-0.3deg); }
+  60% { transform: translate(5px, -3px); }
+  80% { transform: translate(-3px, 2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .titan-screen-flash { animation: none; display: none; }
+  .titan-banner { animation: none; }
+  .board-wrap.shake-expand > svg, .board-wrap.shake-titan > svg { animation: none; }
 }
 .pill-face { display: inline-grid; place-items: center; width: 26px; height: 26px; flex: none; vertical-align: middle; margin: -4px 2px -4px -6px; }
 .pill-face > * { max-width: 26px; max-height: 26px; }
