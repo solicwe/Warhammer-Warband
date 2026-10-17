@@ -611,6 +611,30 @@ b.em { font-weight: 700; color: var(--text); }
 .shadow-chaos-aura {
   opacity: 0.95;
 }
+.stealth-aura {
+  opacity: 0.88;
+  animation: stealthPulse 3.2s ease-in-out infinite;
+}
+.lone-op-aura {
+  opacity: 0.9;
+  animation: lonePulse 2.8s ease-in-out infinite;
+}
+.cover-aura {
+  opacity: 0.82;
+  animation: coverPulse 3.5s ease-in-out infinite;
+}
+@keyframes stealthPulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 0.95; }
+}
+@keyframes lonePulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+@keyframes coverPulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 0.95; }
+}
 @media (min-width: 1024px) {
   @keyframes flowPulse {
     0%, 100% { opacity: 0.86; }

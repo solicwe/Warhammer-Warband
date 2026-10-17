@@ -130,4 +130,22 @@ describe('campaign', () => {
     expect(merged.xp).toBe(8); // 5 + 3 combined
     expect(merged.honors).toEqual(expect.arrayContaining(['hardened', 'weapon_master']));
   });
+
+  it('allows recruiting Epic Heroes into the campaign roster but limits them to max 1', () => {
+    const sm = load('SM');
+    const list = autoList(sm, 500, 3);
+    let run = newRun(sm, list, ['ORK'], 42);
+    run.scrap = 500;
+
+    // Recruit Marneus Calgar
+    const countBefore = run.list.units.length;
+    run = recruitUnit(run, sm, 'Marneus Calgar');
+    expect(run.list.units.length).toBe(countBefore + 1);
+    expect(run.list.units.some((u) => u.datasheet === 'Marneus Calgar')).toBe(true);
+
+    // Attempting to recruit Marneus Calgar again should be rejected
+    const countAfter = run.list.units.length;
+    run = recruitUnit(run, sm, 'Marneus Calgar');
+    expect(run.list.units.length).toBe(countAfter);
+  });
 });

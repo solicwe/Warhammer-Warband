@@ -235,13 +235,24 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     <span className="cmp-rank-badge">{rankLabel(u.xp)}</span>
                     <span>{u.datasheet}{u.models > 1 ? ` ×${u.models}` : ''}</span>
                     {attachedSquad && (
-                      <span className="cmp-honor-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)' }}>
-                        Attached to {attachedSquad.datasheet}
+                      <span className="cmp-honor-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)' }}>
+                        {getPortrait(attachedSquad.datasheet) && (
+                          <img src={getPortrait(attachedSquad.datasheet)!} alt="" style={{ width: 14, height: 14, borderRadius: 3, objectFit: 'cover' }} />
+                        )}
+                        Attached with {attachedSquad.datasheet}
                       </span>
                     )}
                     {ledBy.length > 0 && (
-                      <span className="cmp-honor-badge" style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)' }}>
-                        Led by {ledBy.map((l) => l.datasheet).join(', ')}
+                      <span className="cmp-honor-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)' }}>
+                        {ledBy.map((l) => {
+                          const lp = getPortrait(l.datasheet);
+                          return (
+                            <span key={l.uid} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              {lp && <img src={lp} alt="" style={{ width: 14, height: 14, borderRadius: 3, objectFit: 'cover' }} />}
+                              Led by {l.datasheet}
+                            </span>
+                          );
+                        })}
                       </span>
                     )}
                     {u.honors?.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
@@ -458,8 +469,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             <div className="cmp-roster-meta">{u.models} {u.models === 1 ? 'model' : 'models'}</div>
                             {attachedSquad && (
                               <div style={{ marginTop: 4 }}>
-                                <span className="chip subtle small" style={{ color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.1)' }}>
-                                  Attached to: {attachedSquad.datasheet}
+                                <span className="chip subtle small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.1)' }}>
+                                  {getPortrait(attachedSquad.datasheet) && (
+                                    <img src={getPortrait(attachedSquad.datasheet)!} alt="" style={{ width: 16, height: 16, borderRadius: 3, objectFit: 'cover' }} />
+                                  )}
+                                  Attached with: {attachedSquad.datasheet}
                                 </span>
                               </div>
                             )}
@@ -471,10 +485,18 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                               </div>
                             )}
                             {attachedLeaders.length > 0 && (
-                              <div style={{ marginTop: 4 }}>
-                                <span className="chip subtle small" style={{ color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.1)' }}>
-                                  Led by: {attachedLeaders.map((l) => l.datasheet).join(', ')}
-                                </span>
+                              <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                {attachedLeaders.map((l) => {
+                                  const lPhoto = getPortrait(l.datasheet);
+                                  return (
+                                    <span key={l.uid} className="chip subtle small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.1)' }}>
+                                      {lPhoto && (
+                                        <img src={lPhoto} alt="" style={{ width: 16, height: 16, borderRadius: 3, objectFit: 'cover' }} />
+                                      )}
+                                      Led by: {l.datasheet}
+                                    </span>
+                                  );
+                                })}
                               </div>
                             )}
                             {u.honors?.length ? (
@@ -826,7 +848,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             style={{
                                               display: 'inline-flex',
                                               alignItems: 'center',
-                                              gap: 4,
+                                              gap: 6,
                                               padding: '4px 10px',
                                               borderRadius: 6,
                                               background: 'rgba(245, 158, 11, 0.2)',
@@ -837,7 +859,21 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                               letterSpacing: '0.03em',
                                             }}
                                           >
-                                            <Icon name="check" size={13} /> ATTACHED
+                                            <Icon name="check" size={13} /> Attached with {u.datasheet}
+                                            {photo && (
+                                              <img
+                                                src={photo}
+                                                alt=""
+                                                style={{
+                                                  width: 22,
+                                                  height: 22,
+                                                  borderRadius: 4,
+                                                  objectFit: 'cover',
+                                                  border: '1px solid rgba(245, 158, 11, 0.5)',
+                                                  marginLeft: 2,
+                                                }}
+                                              />
+                                            )}
                                           </span>
                                         ) : (
                                           <button
@@ -988,20 +1024,29 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     Recruit new datasheets into your strike force using accumulated Scrap currency.
                   </div>
                   {fac.datasheets
-                    .filter((d) => !d.ally && d.points[0]?.options?.length && !d.keywords.includes('EPIC HERO') && !d.keywords.includes('FORTIFICATION'))
+                    .filter((d) => !d.ally && d.points[0]?.options?.length && !d.keywords.includes('FORTIFICATION'))
                     .map((d) => {
                       const opts = pointsOptions(d);
                       if (!opts.length) return null;
                       const photo = getPortrait(d.name);
+                      const isEpicHero = (d.keywords || []).includes('EPIC HERO');
+                      const alreadyInForce = isEpicHero && run.list.units.some((u) => u.datasheet === d.name);
                       return (
-                        <div key={d.name} className="cmp-roster-card">
+                        <div key={d.name} className="cmp-roster-card" style={alreadyInForce ? { opacity: 0.65 } : undefined}>
                           <div className="cmp-card-main">
                             <div className="cmp-card-thumb">
                               {photo ? <img src={photo} alt="" className="cmp-roster-img" />
                                 : <div className="cmp-roster-img-ph"><Icon name="plus" size={20} /></div>}
                             </div>
                             <div className="cmp-card-details">
-                              <div className="cmp-roster-name">{d.name}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <div className="cmp-roster-name">{d.name}</div>
+                                {isEpicHero && (
+                                  <span className="chip subtle small" style={{ color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.4)', background: 'rgba(192, 132, 252, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
+                                    Epic Hero
+                                  </span>
+                                )}
+                              </div>
                               <div className="cmp-roster-meta">
                                 {opts.map((o) => `${o.models} models (${o.pts} pts)`).join(' · ')}
                               </div>
@@ -1010,15 +1055,16 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           <div className="cmp-card-actions" style={{ flexWrap: 'wrap', gap: 6 }}>
                             {opts.map((o) => {
                               const canAfford = (run.scrap ?? 0) >= o.pts;
+                              const canRecruit = canAfford && !alreadyInForce;
                               return (
                                 <button
                                   key={o.models}
                                   className="cmp-btn-recruit"
                                   style={{ flex: '1 1 140px', minHeight: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                                  disabled={!canAfford}
+                                  disabled={!canRecruit}
                                   onClick={() => { setRun(recruitUnit(run, fac, d.name, o.models)); play('good'); }}
                                 >
-                                  <Icon name="plus" size={14} /> Recruit {o.models} models ({o.pts} Scrap)
+                                  <Icon name="plus" size={14} /> {alreadyInForce ? 'Already Recruited (Limit 1)' : `Recruit ${o.models} models (${o.pts} Scrap)`}
                                 </button>
                               );
                             })}

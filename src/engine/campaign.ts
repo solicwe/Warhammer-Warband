@@ -515,6 +515,7 @@ export function recruitUnit(run: Run, faction: FactionData, datasheetName: strin
   const excl = AUX_EXCLUSIONS[faction.id] ?? [];
   const d = faction.datasheets.find((x) => x.name === datasheetName && !x.ally && !excl.some((k) => (x.factionKeywords || []).includes(k)));
   if (!d) return run;
+  if ((d.keywords || []).includes('EPIC HERO') && run.list.units.some((x) => x.datasheet === d.name)) return run;
   const opts = pointsOptions(d);
   const o = (chosenModels ? opts.find((x) => x.models === chosenModels) : undefined) ?? cheapest(d);
   if (!o || (run.scrap ?? 0) < o.pts) return run;

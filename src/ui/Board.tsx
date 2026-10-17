@@ -1,12 +1,12 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RULES, MISSIONS, deploymentById, toPoly } from '../engine/config';
-import { dist, pointInPoly, polyCentroid } from '../engine/geometry';
+import { bodyTouchesPoly, dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard, other } from '../engine/state';
 import { flowAreas, inFlow, hasFlowOfMagic } from '../engine/flow';
 import { isDaemonsArmy, isDaemonUnit, isUnderShadowOfChaos } from '../engine/daemons';
 import { zonePoly } from '../engine/missions';
 import { levelOfControl, markRuleLabel } from '../engine/game';
-import { unitFlags } from '../engine/effects';
+import { loneOperativeNow, unitFlags } from '../engine/effects';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { loadoutLabels, shortItem } from './loadout';
@@ -916,6 +916,9 @@ function BoardImpl(props: BoardProps) {
       unitInShadow: boolean;
       enemyInShadow: boolean;
       hasPsychicWep: boolean;
+      hasStealth: boolean;
+      hasLoneOp: boolean;
+      hasCover: boolean;
     }>();
 
     for (const u of s.units) {
@@ -926,7 +929,21 @@ function BoardImpl(props: BoardProps) {
       const unitInShadow = isDaemon && isUnderShadowOfChaos(s, u.owner, u);
       const enemyInShadow = !isDaemon && isDaemonsArmy(s, other(u.owner)) && isUnderShadowOfChaos(s, other(u.owner), u);
       const hasPsychicWep = ms.some((m) => m.weapons.some((w) => w.profiles.some((p) => p.abilities.includes('psychic'))));
-      map.set(u.id, { hasFlowOfMagic: unitHasFlow, unitInFlow, isDaemon, unitInShadow, enemyInShadow, hasPsychicWep });
+      const uFlags = unitFlags(s, u);
+      const hasStealth = !!(u.core.stealth || uFlags.stealth || u.buffs?.some((b) => b.kind === 'smoke'));
+      const hasLoneOp = !!(u.sources.length === 1 && (u.core.loneOperative || loneOperativeNow(s, u) || uFlags.loneOperative));
+      const hasCover = !!(u.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke') || ms.some((m) => s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly))));
+      map.set(u.id, {
+        hasFlowOfMagic: unitHasFlow,
+        unitInFlow,
+        isDaemon,
+        unitInShadow,
+        enemyInShadow,
+        hasPsychicWep,
+        hasStealth,
+        hasLoneOp,
+        hasCover,
+      });
     }
     return map;
   }, [s]);
@@ -1298,6 +1315,9 @@ function BoardImpl(props: BoardProps) {
         const unitInShadow = st?.unitInShadow ?? false;
         const enemyInShadow = st?.enemyInShadow ?? false;
         const hasPsychicWep = st?.hasPsychicWep ?? false;
+        const hasStealth = st?.hasStealth ?? false;
+        const hasLoneOp = st?.hasLoneOp ?? false;
+        const hasCover = st?.hasCover ?? false;
         return (
           <g key={u.id}>
             {isDraft && ms.map((m) => {
@@ -1341,6 +1361,12 @@ function BoardImpl(props: BoardProps) {
                   {isSolo && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
                   {unitInFlow && <BaseShape m={m} p={p} grow={0.34} fill="none" stroke="#22d3ee" strokeWidth={0.16} strokeDasharray="0.45 0.22" opacity={0.9} className="flow-magic-aura" pointerEvents="none" />}
                   {unitInShadow && <BaseShape m={m} p={p} grow={0.34} fill="none" stroke="#c084fc" strokeWidth={0.16} strokeDasharray="0.45 0.22" opacity={0.9} className="shadow-chaos-aura" pointerEvents="none" />}
+                  {hasStealth && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#38bdf8" strokeWidth={0.14} strokeDasharray="0.22 0.14" opacity={0.88} className="stealth-aura" pointerEvents="none" />}
+                  {hasLoneOp && <BaseShape m={m} p={p} grow={0.38} fill="none" stroke="#fbbf24" strokeWidth={0.12} strokeDasharray="0.35 0.15" opacity={0.9} className="lone-op-aura" pointerEvents="none" />}
+                  {(hasCover || s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly))) && <BaseShape m={m} p={p} grow={0.2} fill="none" stroke="#4ade80" strokeWidth={0.12} strokeDasharray="0.25 0.12" opacity={0.82} className="cover-aura" pointerEvents="none" />}
+                  {hasLoneOp && (isSel || isTarget || isPicked) && (
+                    <circle cx={p.x} cy={p.y} r={u.core.loneOperative ?? 12} fill="rgba(251, 191, 36, 0.02)" stroke="#fbbf24" strokeWidth={0.08} strokeDasharray="0.6 0.3" opacity={0.65} pointerEvents="none" />
+                  )}
                   {riled && (
                     <g pointerEvents="none">
                       <path className="ork-flame" d={`M ${p.x - m.r * 0.95} ${p.y} Q ${p.x - m.r * 1.25} ${p.y - m.r * 1.2} ${p.x - m.r * 0.45} ${p.y - m.r * 1.95} Q ${p.x - m.r * 0.35} ${p.y - m.r * 1.3} ${p.x} ${p.y - m.r * 2.5} Q ${p.x + m.r * 0.3} ${p.y - m.r * 1.35} ${p.x + m.r * 0.5} ${p.y - m.r * 1.95} Q ${p.x + m.r * 1.25} ${p.y - m.r * 1.2} ${p.x + m.r * 0.95} ${p.y} Z`} fill="url(#ork-flame)" />
@@ -1509,6 +1535,47 @@ function BoardImpl(props: BoardProps) {
                 </g>
               );
             })() : null}
+            {(isSel || isPicked || isTarget) && (hasStealth || hasLoneOp || hasCover) && pts.length > 0 && (() => {
+              const tacticalTags: { text: string; color: string; border: string; bg: string; icon: 'stealth' | 'shield' | 'radar' }[] = [];
+              if (hasStealth) tacticalTags.push({ text: 'Stealth −1 Hit', color: '#38bdf8', border: '#0284c7', bg: 'rgba(14, 165, 233, 0.25)', icon: 'stealth' });
+              if (hasCover) tacticalTags.push({ text: 'Cover +1 Sv', color: '#4ade80', border: '#16a34a', bg: 'rgba(34, 197, 94, 0.25)', icon: 'shield' });
+              if (hasLoneOp) tacticalTags.push({ text: 'Lone Op 12"', color: '#fbbf24', border: '#d97706', bg: 'rgba(245, 158, 11, 0.25)', icon: 'radar' });
+              const tCount = tacticalTags.length;
+              const tagY = props.badges?.[u.id]?.length ? minY - 1.55 : minY - 0.95;
+              return (
+                <g transform={`translate(${cx} ${tagY})`} pointerEvents="none">
+                  {tacticalTags.map((tag, i) => {
+                    const off = (i - (tCount - 1) / 2) * 2.8;
+                    const pillW = Math.max(2.2, tag.text.length * 0.16 + 0.7);
+                    return (
+                      <g key={tag.text} transform={`translate(${off} 0)`}>
+                        <rect
+                          x={-pillW / 2}
+                          y={-0.22}
+                          width={pillW}
+                          height={0.44}
+                          rx={0.22}
+                          fill={tag.bg}
+                          stroke={tag.border}
+                          strokeWidth={0.05}
+                        />
+                        <SvgIcon name={tag.icon} x={-pillW / 2 + 0.28} y={0} size={0.3} color={tag.color} />
+                        <text
+                          x={0.12}
+                          y={0.08}
+                          fontSize={0.23}
+                          textAnchor="middle"
+                          fill={tag.color}
+                          fontWeight={800}
+                        >
+                          {tag.text}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </g>
+              );
+            })()}
             {unitNumber !== undefined && pts.length > 0 && (
               <g transform={`translate(${cx} ${minY - 0.65})`} pointerEvents="none">
                 <circle r={0.55} fill="#f5d48a" stroke="#111" strokeWidth={0.12} />

@@ -27,7 +27,7 @@ import {
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../engine/activations';
-import { activeLabels, effectsFor, isRiled, unitFlags, withRuleCache, type Effect } from '../engine/effects';
+import { activeLabels, effectsFor, isRiled, loneOperativeNow, unitFlags, withRuleCache, type Effect } from '../engine/effects';
 import { activeIds, applyPick, BLESSINGS, blessingById, rerollBlessings } from '../engine/blessings';
 import { botPledge, setPledge } from '../engine/emperorsChildren';
 import { BlessingsPanel } from './Blessings';
@@ -48,7 +48,7 @@ import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
 import { isOfficer, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../engine/orders';
 import { isTauArmy } from '../engine/tau';
-import { dist, polyCentroid } from '../engine/geometry';
+import { bodyTouchesPoly, dist, polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../engine/deploy';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
@@ -1987,6 +1987,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           {res && !res.error && (() => {
             // one row per weapon profile; cover can differ per shooter, so pools are merged for display
             const T = U(mode.target!);
+            const tFlags = unitFlags(s, T);
+            const tHasStealth = !!(T.core.stealth || tFlags.stealth || T.buffs?.some((b) => b.kind === 'smoke'));
+            const tHasLoneOp = !!(T.sources.length === 1 && (T.core.loneOperative || loneOperativeNow(s, T) || tFlags.loneOperative));
+            const tHasCover = !!(T.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke') || alive(T).some((m) => s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly))));
             const groups = new Map<string, typeof res.pools>();
             for (const p of res.pools) { const k = p.weapon + '|' + p.profile.name; groups.set(k, [...(groups.get(k) ?? []), p]); }
             let total = 0, slain = 0;
@@ -2012,6 +2016,25 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             });
             return (
               <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {(tHasStealth || tHasCover || tHasLoneOp) && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                    {tHasStealth && (
+                      <span className="oath-tag" style={{ background: 'rgba(56, 189, 248, 0.18)', borderColor: '#38bdf8', color: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Icon name="stealth" size={13} /> Stealth (−1 to Hit)
+                      </span>
+                    )}
+                    {tHasCover && (
+                      <span className="oath-tag" style={{ background: 'rgba(74, 222, 128, 0.18)', borderColor: '#4ade80', color: '#86efac', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Icon name="shield" size={13} /> Benefit of Cover (+1 Sv)
+                      </span>
+                    )}
+                    {tHasLoneOp && (
+                      <span className="oath-tag" style={{ background: 'rgba(251, 191, 36, 0.18)', borderColor: '#fbbf24', color: '#fde047', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Icon name="radar" size={13} /> Lone Operative (12")
+                      </span>
+                    )}
+                  </div>
+                )}
                 {rows}
                 <div className="expect"><b className="num">≈ {slain < 0.95 ? slain.toFixed(1) : Math.round(slain)}</b> of {alive(T).length} {alive(T).length === 1 ? 'model' : 'models'} slain on average <span className="muted">({total.toFixed(1)} wounds through the saves)</span></div>
               </div>
