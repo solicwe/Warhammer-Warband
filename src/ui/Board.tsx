@@ -5,7 +5,7 @@ import { alive, onBoard, other } from '../engine/state';
 import { flowAreas, inFlow, hasFlowOfMagic } from '../engine/flow';
 import { isDaemonsArmy, isDaemonUnit, isUnderShadowOfChaos } from '../engine/daemons';
 import { zonePoly } from '../engine/missions';
-import { levelOfControl, markRuleLabel } from '../engine/game';
+import { levelOfControl, markRuleLabel, scaledPoly } from '../engine/game';
 import { loneOperativeNow, unitFlags } from '../engine/effects';
 import { isInfantryBeastLoneOpActive, modelVisible } from '../engine/visibility';
 import { modelToken } from './Tokens';
@@ -1045,13 +1045,13 @@ function BoardImpl(props: BoardProps) {
       <rect x={0} y={0} width={W} height={H} fill="url(#grid)" />
       {props.zones !== false && (
         <>
-          <polygon points={toPoly(dep.zones.attacker).map((p) => `${p.x},${p.y}`).join(' ')} fill={SOFT[attacker]} stroke={COLORS[attacker]} strokeWidth={0.1} strokeDasharray="0.5 0.3" />
-          <polygon points={toPoly(dep.zones.defender).map((p) => `${p.x},${p.y}`).join(' ')} fill={SOFT[defender]} stroke={COLORS[defender]} strokeWidth={0.1} strokeDasharray="0.5 0.3" />
+          <polygon points={scaledPoly(dep.zones.attacker, W, H).map((p) => `${p.x},${p.y}`).join(' ')} fill={SOFT[attacker]} stroke={COLORS[attacker]} strokeWidth={0.1} strokeDasharray="0.5 0.3" />
+          <polygon points={scaledPoly(dep.zones.defender, W, H).map((p) => `${p.x},${p.y}`).join(' ')} fill={SOFT[defender]} stroke={COLORS[defender]} strokeWidth={0.1} strokeDasharray="0.5 0.3" />
         </>
       )}
       {/* Detachment Territory Auras: Thousand Sons Flow of Magic & Chaos Daemons Shadow of Chaos */}
       {territoryAuras}
-      <polygon points={toPoly(dep.territory.attacker).map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth={0.1} strokeDasharray="0.5 0.4" pointerEvents="none" />
+      <polygon points={scaledPoly(dep.territory.attacker, W, H).map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth={0.1} strokeDasharray="0.5 0.4" pointerEvents="none" />
       {Array.from({ length: Math.floor(H / 6) + 1 }, (_, i) => (
         <text key={`ty${i}`} x={0.2} y={i * 6 + 0.5} fontSize={0.6} fill="rgba(255,255,255,0.4)">{i * 6}"</text>
       ))}
@@ -1240,10 +1240,10 @@ function BoardImpl(props: BoardProps) {
 
             {/* Detachment Territory Effect Badges */}
             {effects.map((eff, idx) => {
-              const badgeW = 7.4;
-              const badgeH = 0.95;
+              const badgeW = 5.6;
+              const badgeH = 0.78;
               const clampedX = Math.max(badgeW / 2 + 0.5, Math.min(W - badgeW / 2 - 0.5, cx));
-              const badgeY = top > 2.8 ? (top - 0.55 - (idx + 1) * 1.1) : (top + 0.65 + idx * 1.1);
+              const badgeY = top > 2.8 ? (top - 0.45 - (idx + 1) * 0.9) : (top + 0.55 + idx * 0.9);
               return (
                 <g key={eff.id} transform={`translate(${clampedX} ${badgeY})`}>
                   <rect
@@ -1251,15 +1251,15 @@ function BoardImpl(props: BoardProps) {
                     y={-badgeH / 2}
                     width={badgeW}
                     height={badgeH}
-                    rx={0.38}
+                    rx={0.3}
                     fill={eff.badgeBg}
                     stroke={eff.badgeBorder}
-                    strokeWidth={0.08}
+                    strokeWidth={0.07}
                   />
-                  <text x={0} y={-0.08} fontSize={0.44} textAnchor="middle" fill="#ffffff" fontWeight={900}>
+                  <text x={0} y={-0.06} fontSize={0.38} textAnchor="middle" fill="#ffffff" fontWeight={900}>
                     {eff.title}
                   </text>
-                  <text x={0} y={0.32} fontSize={0.34} textAnchor="middle" fill={eff.color} fontWeight={700}>
+                  <text x={0} y={0.26} fontSize={0.28} textAnchor="middle" fill={eff.color} fontWeight={700}>
                     {eff.desc}
                   </text>
                 </g>
@@ -1409,7 +1409,7 @@ function BoardImpl(props: BoardProps) {
                   )}
                   <BaseShape
                     m={m} p={p}
-                    fill={bad ? '#7f1d1d' : getModelPortrait(m) ? '#ffffff' : '#1d2129'}
+                    fill={bad ? '#7f1d1d' : '#181c24'}
                     fillOpacity={1}
                     stroke={bad ? '#fca5a5' : isSel || isDraft ? uTheme.primary : isPicked ? uTheme.secondary : isTarget ? '#fde68a' : col}
                     strokeWidth={isSel || isDraft || isTarget || isPicked || bad ? 0.16 : 0.12}

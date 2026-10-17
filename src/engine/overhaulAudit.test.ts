@@ -215,9 +215,12 @@ describe('Core Rules, UI & Rogue-like Comprehensive Overhaul Tests', () => {
         names: ['Player', 'Bot'],
         seed: 42,
       });
-      s.campaign = { node: 'battle-1', relics: [], rules: [] };
-      s.players[0].vp = 40;
+      // Standard games (< 3000 pts) remain locked to 44x60
+      expect(expandRoguelikeMap(s)).toBe(false);
 
+      // In large battles / allowed expansion, dynamically scale symmetrically
+      s.campaign = { node: 'battle-1', relics: [], rules: [], allowDynamicExpansion: true };
+      s.players[0].vp = 40;
       const expanded = expandRoguelikeMap(s);
       expect(expanded).toBe(true);
       expect(s.table!.width).toBeGreaterThan(44);

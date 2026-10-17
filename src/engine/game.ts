@@ -68,27 +68,50 @@ function convexHull(pts: Pt[]): Pt[] {
   return [...lo.slice(0, -1), ...up.slice(0, -1)];
 }
 
-function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
+function buildTerrain(layoutId: string, tableSize?: { width: number; height: number }): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
   const L = deploymentById(layoutId);
-  const seg = (w: number[]): Seg => ({ a: { x: w[0], y: w[1] }, b: { x: w[2], y: w[3] } });
+  const targetW = tableSize?.width ?? RULES.battlefield.width;
+  const targetH = tableSize?.height ?? RULES.battlefield.height;
+  const sx = targetW / 44;
+  const sy = targetH / 60;
+  const seg = (w: number[]): Seg => ({
+    a: { x: Math.round(w[0] * sx * 10) / 10, y: Math.round(w[1] * sy * 10) / 10 },
+    b: { x: Math.round(w[2] * sx * 10) / 10, y: Math.round(w[3] * sy * 10) / 10 },
+  });
   // Some layouts trace a plate with a solid block in its middle as three pieces: two plates and a small piece whose
   // rough walls outline the block. That small piece becomes the block itself (its four true edges), and the
   // plates' walls that only mark the block's ends go.
   const blocks: Pt[][] = [];
   const raw = L.terrain.map((t) => {
-    if (t.box || t.obstacles.length || t.walls.length < 3 || t.poly.length !== 4) return t;
-    const P = t.poly.map(([x, y]) => ({ x, y }));
-    if (Math.max(...P.map((p, k) => dist(p, P[(k + 1) % 4]))) > 3.5) return t;
+    const scaledPoly = t.poly.map(([x, y]) => [Math.round(x * sx * 10) / 10, Math.round(y * sy * 10) / 10]);
+    const scaledWalls = t.walls.map(([x0, y0, x1, y1]) => [
+      Math.round(x0 * sx * 10) / 10,
+      Math.round(y0 * sy * 10) / 10,
+      Math.round(x1 * sx * 10) / 10,
+      Math.round(y1 * sy * 10) / 10,
+    ]);
+    const scaledObstacles = t.obstacles.map(([x0, y0, x1, y1]) => [
+      Math.round(x0 * sx * 10) / 10,
+      Math.round(y0 * sy * 10) / 10,
+      Math.round(x1 * sx * 10) / 10,
+      Math.round(y1 * sy * 10) / 10,
+    ]);
+    const scaledBox = t.box?.map(([x, y]) => [Math.round(x * sx * 10) / 10, Math.round(y * sy * 10) / 10]);
+    const item = { ...t, poly: scaledPoly, walls: scaledWalls, obstacles: scaledObstacles, ...(scaledBox ? { box: scaledBox } : {}) };
+
+    if (item.box || item.obstacles.length || item.walls.length < 3 || item.poly.length !== 4) return item;
+    const P = item.poly.map(([x, y]) => ({ x, y }));
+    if (Math.max(...P.map((p, k) => dist(p, P[(k + 1) % 4]))) > 3.5 * Math.max(sx, sy)) return item;
     const ux = (P[1].x - P[0].x) / (dist(P[0], P[1]) || 1), uy = (P[1].y - P[0].y) / (dist(P[0], P[1]) || 1);
-    const ends = t.walls.flatMap(([x0, y0, x1, y1]) => [{ x: x0, y: y0 }, { x: x1, y: y1 }]);
+    const ends = item.walls.flatMap(([x0, y0, x1, y1]) => [{ x: x0, y: y0 }, { x: x1, y: y1 }]);
     const us = ends.map((p) => (p.x - P[0].x) * ux + (p.y - P[0].y) * uy), vs = ends.map((p) => -(p.x - P[0].x) * uy + (p.y - P[0].y) * ux);
     const [u0, u1, v0, v1] = [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)];
     const at = (u: number, v: number) => ({ x: P[0].x + ux * u - uy * v, y: P[0].y + uy * u + ux * v });
     const box = [at(u0, v0), at(u1, v0), at(u1, v1), at(u0, v1)];
     blocks.push(box);
-    return { ...t, poly: box.map((p) => [p.x, p.y]), walls: [], box: box.map((p) => [p.x, p.y]) };
+    return { ...item, poly: box.map((p) => [p.x, p.y]), walls: [], box: box.map((p) => [p.x, p.y]) };
   });
-  const nearBlock = (w: number[]) => blocks.some((b) => [{ x: w[0], y: w[1] }, { x: w[2], y: w[3] }].every((p) => b.some((q, k) => pointSegDist(p, { a: q, b: b[(k + 1) % 4] }) < 0.7)));
+  const nearBlock = (w: number[]) => blocks.some((b) => [{ x: w[0], y: w[1] }, { x: w[2], y: w[3] }].every((p) => b.some((q, k) => pointSegDist(p, { a: q, b: b[(k + 1) % 4] }) < 0.7 * Math.max(sx, sy))));
   const terrain: TerrainPiece[] = raw.map((t0, i) => {
     const t = blocks.length && !t0.box ? { ...t0, walls: t0.walls.filter((w) => !nearBlock(w)) } : t0;
     const box = t.box?.map(([x, y]) => ({ x, y }));
@@ -97,7 +120,7 @@ function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: 
       // a solid block (container) on the plate: its outline was traced as several rough, overlapping segments;
       // its four true edges replace them, and walls elsewhere on the plate stay
       const edges = box.map((a, k) => ({ a, b: box[(k + 1) % box.length] }));
-      const onBox = (w: Seg) => [w.a, w.b].every((p) => edges.some((e) => pointSegDist(p, e) < 0.6));
+      const onBox = (w: Seg) => [w.a, w.b].every((p) => edges.some((e) => pointSegDist(p, e) < 0.6 * Math.max(sx, sy)));
       walls = [...edges, ...walls.filter((w) => !onBox(w))];
     }
     return {
@@ -115,10 +138,10 @@ function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: 
   });
   const objectives: ObjectiveState[] = L.objectives.map((o, i) => {
     const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
-    // every piece the 40mm marker sits on or touches: a centre ruin built of two halves is one objective
-    const at = { x: o.x, y: o.y };
-    // (the marker on the seam of a split ruin: the piece it stands on and the piece across the seam, within 1.6")
-    const under = terrain.filter((t) => t.kind !== 'objective-area' && (pointInPoly(at, t.poly) || t.poly.some((q, k) => pointSegDist(at, { a: q, b: t.poly[(k + 1) % t.poly.length] }) <= 1.6)));
+    const ox = Math.round(o.x * sx * 10) / 10;
+    const oy = Math.round(o.y * sy * 10) / 10;
+    const at = { x: ox, y: oy };
+    const under = terrain.filter((t) => t.kind !== 'objective-area' && (pointInPoly(at, t.poly) || t.poly.some((q, k) => pointSegDist(at, { a: q, b: t.poly[(k + 1) % t.poly.length] }) <= 1.6 * Math.max(sx, sy))));
     let tp = under.length === 1 ? under[0] : undefined;
     if (under.length > 1) {
       // the objective covers them all: one area around the pieces (it doesn't block sight; the pieces still do)
@@ -131,11 +154,11 @@ function buildTerrain(layoutId: string): { terrain: TerrainPiece[]; objectives: 
       // 3" + the marker's radius around its centre, so control works the same way as for terrain objectives
       const R = 3 + 20 / 25.4;
       tp = { id: `obj-t${i}`, kind: 'objective-area', label: 'Objective (40mm marker, range 3")', category: 'exposed', height: 0, walls: [], obstacles: [],
-        poly: Array.from({ length: 32 }, (_, k) => ({ x: o.x + R * Math.cos((k / 32) * Math.PI * 2), y: o.y + R * Math.sin((k / 32) * Math.PI * 2) })) };
+        poly: Array.from({ length: 32 }, (_, k) => ({ x: ox + R * Math.cos((k / 32) * Math.PI * 2), y: oy + R * Math.sin((k / 32) * Math.PI * 2) })) };
       terrain.push(tp);
     }
     tp.objectiveId = id;
-    return { id, type: o.type, owner: undefined, x: o.x, y: o.y, terrainId: tp.id, controller: null, ownerRole: o.owner ?? undefined } as ObjectiveState & { ownerRole?: string };
+    return { id, type: o.type, owner: undefined, x: ox, y: oy, terrainId: tp.id, controller: null, ownerRole: o.owner ?? undefined } as ObjectiveState & { ownerRole?: string };
   });
   return { terrain, objectives };
 }
@@ -192,7 +215,24 @@ export function createGame(o: NewGameOptions): GameState {
     const r = mulberryPick((o.seed ?? Date.now()) >>> 0, opts.length);
     layoutId = (opts[r] ?? LAYOUTS[0]).id;
   }
-  const { terrain, objectives } = buildTerrain(layoutId);
+  const pts0 = o.lists[0].units.reduce((sum, u) => sum + (u.pts ?? 0), 0);
+  const pts1 = o.lists[1].units.reduce((sum, u) => sum + (u.pts ?? 0), 0);
+  const maxPts = Math.max(pts0, pts1);
+  const isHighPoints = maxPts >= 3000 || o.lists[0].battleSize === 'onslaught' || o.lists[0].battleSize === 'war-zone' || o.lists[0].battleSize === 'apocalypse';
+
+  let tableWidth = RULES.battlefield.width;
+  let tableHeight = RULES.battlefield.height;
+  if (isHighPoints) {
+    if (maxPts >= 4000) {
+      tableWidth = 60;
+      tableHeight = 90;
+    } else {
+      tableWidth = 44;
+      tableHeight = 90;
+    }
+  }
+
+  const { terrain, objectives } = buildTerrain(layoutId, { width: tableWidth, height: tableHeight });
   const s: GameState = {
     version: 3,
     rng: (o.seed ?? Date.now()) >>> 0,
@@ -218,7 +258,7 @@ export function createGame(o: NewGameOptions): GameState {
     terrain, objectives,
     deploymentId: layoutId,
     attackerPlayer: 0,
-    table: { width: RULES.battlefield.width, height: RULES.battlefield.height },
+    table: { width: tableWidth, height: tableHeight },
     window: null, attack: null, fight: null, shockTests: [],
     destroyedByTurn: [], controlAtTurnStart: [], log: [], winner: null,
     markers: [], pendingActions: [], turnStart: null, modelDeaths: [],
@@ -298,9 +338,21 @@ export function createGame(o: NewGameOptions): GameState {
   return s;
 }
 
-export const zoneOf = (s: GameState, p: PlayerId) => toPoly(deploymentById(s.deploymentId).zones[s.players[p].role]);
+export const scaledPoly = (arr: number[][], w: number, h: number): Pt[] => {
+  const sx = w / 44, sy = h / 60;
+  return arr.map(([x, y]) => ({ x: Math.round(x * sx * 10) / 10, y: Math.round(y * sy * 10) / 10 }));
+};
+export const zoneOf = (s: GameState, p: PlayerId) => {
+  const w = s.table?.width ?? RULES.battlefield.width;
+  const h = s.table?.height ?? RULES.battlefield.height;
+  return scaledPoly(deploymentById(s.deploymentId).zones[s.players[p].role], w, h);
+};
 setZoneCheck((s, u, owner) => alive(u).length > 0 && alive(u).every((m) => bodyWhollyInPoly(m, zoneOf(s, owner))));
-export const territoryOf = (s: GameState, p: PlayerId) => toPoly(deploymentById(s.deploymentId).territory[s.players[p].role]);
+export const territoryOf = (s: GameState, p: PlayerId) => {
+  const w = s.table?.width ?? RULES.battlefield.width;
+  const h = s.table?.height ?? RULES.battlefield.height;
+  return scaledPoly(deploymentById(s.deploymentId).territory[s.players[p].role], w, h);
+};
 
 // ---------- placement / movement validation ----------
 
@@ -2410,6 +2462,12 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
  */
 export function expandRoguelikeMap(s: GameState): boolean {
   if (!s.campaign) return false;
+  const playerPts = fightingArmyPoints(s, 0);
+  const aiPts = fightingArmyPoints(s, 1);
+  const maxPts = Math.max(playerPts, aiPts);
+  // Normal/Standard games (< 3000 pts) are locked to standard 44"x60" without right-side wasteland
+  if (maxPts < 3000 && !(s.campaign as { allowDynamicExpansion?: boolean }).allowDynamicExpansion) return false;
+
   const baseW = RULES.battlefield.width;
   const baseH = RULES.battlefield.height;
   s.table ??= { width: baseW, height: baseH };
@@ -2427,6 +2485,35 @@ export function expandRoguelikeMap(s: GameState): boolean {
   s.screenShake = Date.now();
 
   log(s, `Map Expanded! Dimensions increased from ${oldW}"×${oldH}" to ${targetW}"×${targetH}" (VP: ${s.players[0].vp})`, 'vp', 0);
+
+  // Symmetrically scale existing terrain, walls, obstacles, objectives and models
+  const sx = targetW / oldW;
+  const sy = targetH / oldH;
+  for (const t of s.terrain) {
+    t.poly = t.poly.map((p) => ({ x: Math.round(p.x * sx * 10) / 10, y: Math.round(p.y * sy * 10) / 10 }));
+    if (t.walls) {
+      t.walls = t.walls.map((w) => ({
+        a: { x: Math.round(w.a.x * sx * 10) / 10, y: Math.round(w.a.y * sy * 10) / 10 },
+        b: { x: Math.round(w.b.x * sx * 10) / 10, y: Math.round(w.b.y * sy * 10) / 10 },
+      }));
+    }
+    if (t.obstacles) {
+      t.obstacles = t.obstacles.map((ob) => ({
+        a: { x: Math.round(ob.a.x * sx * 10) / 10, y: Math.round(ob.a.y * sy * 10) / 10 },
+        b: { x: Math.round(ob.b.x * sx * 10) / 10, y: Math.round(ob.b.y * sy * 10) / 10 },
+      }));
+    }
+  }
+  for (const o of s.objectives) {
+    o.x = Math.round(o.x * sx * 10) / 10;
+    o.y = Math.round(o.y * sy * 10) / 10;
+  }
+  for (const u of s.units) {
+    for (const m of u.models) {
+      m.x = Math.round(m.x * sx * 10) / 10;
+      m.y = Math.round(m.y * sy * 10) / 10;
+    }
+  }
 
   // Maintain strict 25% footprint coverage ratio
   const totalArea = targetW * targetH;
