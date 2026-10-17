@@ -2,6 +2,9 @@ import type { GameState } from './types';
 
 // Seeded PRNG (mulberry32) so a battle can be replayed and saved deterministically.
 export function nextRandom(state: { rng: number }): number {
+  if (state.rng === undefined || state.rng === null || Number.isNaN(state.rng)) {
+    state.rng = (Math.random() * 0xffffffff) >>> 0;
+  }
   let t = (state.rng = (state.rng + 0x6d2b79f5) >>> 0);
   t = Math.imul(t ^ (t >>> 15), t | 1);
   t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
@@ -13,10 +16,10 @@ export const rollN = (s: { rng: number }, n: number) => Array.from({ length: n }
 
 export interface DiceExpr { n: number; sides: number; add: number }
 
-// "D6+2", "2D6", "D3", "3", " 2D6" -> expression
+// "D6+2", "2D6", "D3", "3", " 2D6", "D6\"" -> expression
 export function parseDice(expr: string | number | null | undefined): DiceExpr {
   if (expr === null || expr === undefined) return { n: 0, sides: 0, add: 0 };
-  const s = String(expr).replace(/\s+/g, '').toUpperCase();
+  const s = String(expr).replace(/["”″'']/g, '').replace(/\s+/g, '').toUpperCase();
   const m = /^(\d*)D(\d+)(?:\+(\d+))?$/.exec(s);
   if (m) return { n: m[1] ? +m[1] : 1, sides: +m[2], add: m[3] ? +m[3] : 0 };
   const n = parseInt(s, 10);

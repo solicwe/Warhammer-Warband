@@ -295,7 +295,7 @@ function wholeText(t: string): AbilityRule | null {
   if ((m = /^each time this (?:model's )?unit ends a charge move, each enemy unit within engagement range of (?:that|this) unit must take a battle-shock test(, subtracting 1 from that test)?\.?$/.exec(t))) {
     return { parsed: true, act: { when: 'endOfCharge', auto: true, target: { side: 'enemy', engaged: true, each: true }, do: [{ shock: m[1] ? -1 : 0 }] } };
   }
-  if ((m = /^in your opponent's movement phase, (?:each time|if) an enemy unit ends a (?:normal, advance or fall back )?move within (\d+)" of this unit, if this unit is not within engagement range of (?:one or more|any) enemy units, (?:this unit|it) can make a normal move of up to (d6|d3|\d+)"?\.?$/.exec(t))) {
+  if ((m = /^(?:in your opponent's movement phase, )?(?:each time|if|when) an enemy unit ends a (?:normal, advance or fall back |any kind of )?move within (\d+)" of this (?:unit|model), if this unit is (?:not within engagement range of (?:one or more|any) enemy units|unengaged), (?:this unit|it) can make a normal move of up to (d\d+(?:\+\d+)?|\d+)"?\.?$/.exec(t))) {
     return { parsed: true, act: { when: 'enemyMovedNear', range: Number(m[1]), limit: 'phase', if: ['unengaged'], do: [{ on: 'self', move: m[2].toUpperCase() }] } };
   }
   if (/^each time a model in this unit is destroyed, if that model has not fought this phase, do not remove it from play\. the destroyed model can fight after the attacking (?:model's )?unit has finished making its attacks, and is then removed from play\.?$/.test(t)) {

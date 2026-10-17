@@ -363,10 +363,12 @@ function isDyingModel(u: UnitState, m: ModelState, fx: ActiveFx[], now: number):
   if (!m.dead) return false;
   for (const a of fx) {
     if (a.e.kind === 'attack' && a.e.targetId === u.id) {
+      if (a.e.deadIds && !a.e.deadIds.includes(m.id)) continue;
       const f = (now - a.t0) / FX_MS.attack;
       if (f < 0.75 && (a.e.killed ?? 0) > 0) return true;
     }
     if (a.e.kind === 'mortal' && a.e.unitId === u.id) {
+      if (a.e.deadIds && !a.e.deadIds.includes(m.id)) continue;
       const f = (now - a.t0) / FX_MS.mortal;
       if (f < 0.75) return true;
     }
@@ -378,9 +380,11 @@ function isDyingModel(u: UnitState, m: ModelState, fx: ActiveFx[], now: number):
 function getModelDisplayWounds(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): { wounds: number; low: boolean; fading?: number } {
   for (const a of fx) {
     if (a.e.kind === 'attack' && a.e.targetId === u.id) {
+      if (m.dead && a.e.deadIds && !a.e.deadIds.includes(m.id)) continue;
       const f = (now - a.t0) / FX_MS.attack;
       // f < 0.55: attacks are flying and damage numbers/effects are popping up first!
       if (f < 0.55 && (a.e.dmg ?? 0) > 0) {
+        if (m.dead && (!a.e.deadIds || !a.e.deadIds.includes(m.id))) continue;
         const prev = Math.min(m.profile.W, (m.dead ? 1 : m.wounds) + (a.e.dmg ?? 1));
         return { wounds: prev, low: prev * 2 <= m.profile.W };
       }
@@ -389,8 +393,10 @@ function getModelDisplayWounds(u: UnitState, m: ModelState, fx: ActiveFx[], now:
       }
     }
     if (a.e.kind === 'mortal' && a.e.unitId === u.id) {
+      if (m.dead && a.e.deadIds && !a.e.deadIds.includes(m.id)) continue;
       const f = (now - a.t0) / FX_MS.mortal;
       if (f < 0.55 && (a.e.n ?? 0) > 0) {
+        if (m.dead && (!a.e.deadIds || !a.e.deadIds.includes(m.id))) continue;
         const prev = Math.min(m.profile.W, (m.dead ? 1 : m.wounds) + (a.e.n ?? 1));
         return { wounds: prev, low: prev * 2 <= m.profile.W };
       }
@@ -508,46 +514,6 @@ function BoardImpl(props: BoardProps) {
     if (!el) return;
     setVb(home);
   }, [home]);
-
-  // Smooth camera zoom and pan towards selected unit
-  const selectedRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!props.selected) {
-      selectedRef.current = null;
-      return;
-    }
-    if (props.selected === selectedRef.current) return;
-    selectedRef.current = props.selected;
-    const u = s.units.find((x) => x.id === props.selected);
-    if (!u) return;
-    const ms = alive(u);
-    if (!ms.length) return;
-    const cx = ms.reduce((sum, m) => sum + m.x, 0) / ms.length;
-    const cy = ms.reduce((sum, m) => sum + m.y, 0) / ms.length;
-
-    const targetW = Math.min(home.w, 20);
-    const targetH = (targetW / home.w) * home.h;
-    const targetX = Math.max(home.x, Math.min(home.x + home.w - targetW, cx - targetW / 2));
-    const targetY = Math.max(home.y, Math.min(home.y + home.h - targetH, cy - targetH / 2));
-    const startVb = { ...vb };
-    const startTime = performance.now();
-    const duration = 280;
-
-    let animId = 0;
-    const animateCamera = (now: number) => {
-      const p = Math.min(1, (now - startTime) / duration);
-      const easeVal = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
-      setVb({
-        x: startVb.x + (targetX - startVb.x) * easeVal,
-        y: startVb.y + (targetY - startVb.y) * easeVal,
-        w: startVb.w + (targetW - startVb.w) * easeVal,
-        h: startVb.h + (targetH - startVb.h) * easeVal,
-      });
-      if (p < 1) animId = requestAnimationFrame(animateCamera);
-    };
-    animId = requestAnimationFrame(animateCamera);
-    return () => cancelAnimationFrame(animId);
-  }, [props.selected, home]);
 
   const zoomAt = (factor: number, c: Pt, base = vb) => {
     const w = Math.min(W * 2.5, Math.max(8, base.w * factor));

@@ -805,17 +805,40 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.move) {
       const heavy = a.moveIfHeavyTransport && hasKw(u, 'TRANSPORT') && Math.max(...u.models.map((m) => m.profile.W)) >= 14;
       const expr = heavy ? a.moveIfHeavyTransport! : a.moveIfRiled && isRiled(s, on) ? a.moveIfRiled : a.move;
-      let max = expr === 'M' ? Math.max(0, ...alive(on).map((m) => m.profile.M ?? 0)) + unitFlags(s, on).move : rollExpr(s, expr).total;
-      if (a.moveReroll && expr !== 'M' && max < 4) { const again = rollExpr(s, expr).total; log(s, `${def.name}: move distance re-rolled ${max} → ${again}`, 'roll', u.owner); max = again; }
+      const roll = expr === 'M' ? { total: Math.max(0, ...alive(on).map((m) => m.profile.M ?? 0)) + unitFlags(s, on).move, dice: [] } : rollExpr(s, expr);
+      let max = roll.total;
+      if (roll.dice.length) {
+        pushFx(s, { kind: 'roll', owner: u.owner, title: `${def.name} · ${on.name}`, dice: roll.dice, result: `Move up to ${max}"`, good: max >= 3, unitId: on.id, at: centreOf(on) });
+      }
+      if (a.moveReroll && expr !== 'M' && max < 4) {
+        const again = rollExpr(s, expr);
+        log(s, `${def.name}: move distance re-rolled ${max} → ${again.total}`, 'roll', u.owner);
+        max = again.total;
+        if (again.dice.length) {
+          pushFx(s, { kind: 'roll', owner: u.owner, title: `${def.name} (Re-roll) · ${on.name}`, dice: again.dice, result: `Move up to ${max}"`, good: max >= 3, unitId: on.id, at: centreOf(on) });
+        }
+      }
       on.extraMove = { max, label: def.name, kind: 'extra', phase: phaseKey(s), ...(a.asMove ? { asMove: true } : {}) };
       if (a.noCharge) on.cantCharge = true;
       log(s, `${def.name}: ${on.name} can move ${max}"${a.noCharge ? ' (cannot charge this turn)' : ''}`, 'info', u.owner);
       offerExtraMove(s, on, `${def.name}: move ${max}"`);
     }
     if (a.surge) {
-      let max = unitFlags(s, on).surgeFixed || rollExpr(s, a.surge).total; // Berzerker's Wrath: up to 8" instead of rolling
+      const fixed = unitFlags(s, on).surgeFixed;
+      const roll = fixed ? { total: fixed, dice: [] } : rollExpr(s, a.surge);
+      let max = roll.total;
+      if (roll.dice.length) {
+        pushFx(s, { kind: 'roll', owner: u.owner, title: `${def.name} · ${on.name}`, dice: roll.dice, result: `Surge up to ${max}"`, good: max >= 3, unitId: on.id, at: centreOf(on) });
+      }
       // Forwards, for Blood!: a low surge distance is rolled again
-      if (unitFlags(s, on).surgeReroll && max < 5 && /D6/i.test(a.surge)) { const again = rollExpr(s, a.surge).total; log(s, `${def.name}: surge distance re-rolled ${max} → ${again}`, 'roll', u.owner); max = again; }
+      if (unitFlags(s, on).surgeReroll && max < 5 && /D6/i.test(a.surge)) {
+        const again = rollExpr(s, a.surge);
+        log(s, `${def.name}: surge distance re-rolled ${max} → ${again.total}`, 'roll', u.owner);
+        max = again.total;
+        if (again.dice.length) {
+          pushFx(s, { kind: 'roll', owner: u.owner, title: `${def.name} (Re-roll) · ${on.name}`, dice: again.dice, result: `Surge up to ${max}"`, good: max >= 3, unitId: on.id, at: centreOf(on) });
+        }
+      }
       on.extraMove = { max, label: def.name, kind: 'surge', phase: phaseKey(s) };
       log(s, `${def.name}: ${on.name} can surge ${on.extraMove.max}" (towards the closest enemy)`, 'info', u.owner);
       offerExtraMove(s, on, `${def.name}: surge ${on.extraMove.max}"`);

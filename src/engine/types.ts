@@ -578,13 +578,13 @@ export type FxEvent =
   | { seq: number; kind: 'heal'; unitId: string; owner: PlayerId; at: Pt; n: number; revive?: boolean }
   /** the blast and range of a Deadly Demise explosion */
   | { seq: number; kind: 'explosion'; at: Pt; range: number; radius: number; hits: number }
-  | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[];
+  | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[]; deadIds?: string[];
       style?: 'bullet' | 'beam' | 'flame' | 'blast' | 'melee'; shooters?: Pt[]; victims?: Pt[]; shots?: number; hits?: number;
       /** one entry per weapon fired, so each weapon gets its own look (plasma balls, assault cannon streams …) */
       volleys?: { fx: WeaponFx; shots: number; hits: number; models: number }[];
       /** the attack told step by step (the screen counts it up stage by stage) */
       report?: AttackReport }
-  | { seq: number; kind: 'mortal'; unitId: string; n: number; at: Pt }
+  | { seq: number; kind: 'mortal'; unitId: string; n: number; at: Pt; deadIds?: string[] }
   /** a roll worth showing big on screen (advance, charge, battle-shock) */
   | { seq: number; kind: 'roll'; owner: PlayerId | null; title: string; dice: number[]; result: string; good?: boolean; unitId?: string; at?: Pt }
   /** roll-off between the players */

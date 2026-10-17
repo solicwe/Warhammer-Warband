@@ -330,9 +330,9 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
 export function UnitView({ u, model }: { u: UnitState; model?: string }) {
   usePastePortrait(u.models.find((m) => m.isCharacter)?.source ?? u.sources[0]);
   const groups = new Map<string, { p: ModelProfileData; n: number; weapons: WeaponData[]; name: string; gear: string[]; tapped?: boolean }>();
-  const tapped = u.models.find((m) => m.id === model && !m.dead);
-  for (const m of tapped ? [tapped, ...u.models.filter((x) => x !== tapped)] : u.models) {
-    if (m.dead) continue;
+  const activeModels = u.models.some((m) => !m.dead) ? u.models.filter((m) => !m.dead) : u.models;
+  const tapped = activeModels.find((m) => m.id === model);
+  for (const m of tapped ? [tapped, ...activeModels.filter((x) => x !== tapped)] : activeModels) {
     // models with different wargear are listed separately
     const k = [m.source, m.name, m.profile.W, m.profile.InSv, ...m.weapons.map((w) => w.name), ...(m.gear ?? [])].join('|');
     const g = groups.get(k) ?? { p: m.profile, n: 0, weapons: m.weapons, name: m.name, gear: m.gear ?? [], tapped: m === tapped };
@@ -366,6 +366,33 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
         ))}
         {u.buffs.map((b, i) => <span key={i} className="chip">{b.label ?? b.kind}</span>)}
       </div>
+      {(() => {
+        const allWeps = new Map<string, { w: WeaponData; count: number }>();
+        const targetModels = u.models.some((m) => !m.dead) ? u.models.filter((m) => !m.dead) : u.models;
+        for (const m of targetModels) {
+          for (const w of m.weapons) {
+            const entry = allWeps.get(w.name) ?? { w, count: 0 };
+            entry.count += 1;
+            allWeps.set(w.name, entry);
+          }
+        }
+        if (!allWeps.size) return null;
+        return (
+          <div className="sheet" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 10px' }}>
+            <div className="small muted" style={{ fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Icon name="shoot" size={14} /> Equipped Weapons & Wargear
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {[...allWeps.values()].map(({ w, count }) => (
+                <span key={w.name} className="chip" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <Icon name={w.profiles.some((p) => p.range !== 'Melee') ? 'shoot' : 'fight'} size={12} />
+                  <b>{count > 1 ? `${count}× ` : ''}{w.name}</b>
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
       {[...groups.values()].map((g, i) => (
         <div key={i} className={g.tapped ? 'uv-tapped' : undefined}>
           <div className="small muted">{g.tapped ? <b>Tapped model · </b> : null}{g.n}× {g.name}{g.gear.length ? ` · ${g.gear.join(', ')}` : ''}</div>

@@ -1011,6 +1011,7 @@ export function applyMortalWounds(s: GameState, u: UnitState, n: number, source:
   let killed = 0;
   let modelsHit = 0;
   let current: ModelState | undefined;
+  const deadIds: string[] = [];
   for (let i = 0; i < n; i++) {
     const a = alive(u);
     if (!a.length) break;
@@ -1022,10 +1023,13 @@ export function applyMortalWounds(s: GameState, u: UnitState, n: number, source:
       modelsHit += 1;
     }
     loseWounds(s, u, current, 1, undefined, 'mortal');
-    if (current.dead) killed += 1;
+    if (current.dead) {
+      killed += 1;
+      deadIds.push(current.id);
+    }
   }
   const hitAt = alive(u)[0] ?? u.models.find((m) => m.dead);
-  if (hitAt) pushFx(s, { kind: 'mortal', unitId: u.id, n, at: { x: hitAt.x, y: hitAt.y } });
+  if (hitAt) pushFx(s, { kind: 'mortal', unitId: u.id, n, at: { x: hitAt.x, y: hitAt.y }, deadIds: deadIds.length ? deadIds : undefined });
   log(s, `${u.name} suffers ${n} mortal wounds (${source})${killed ? ` → ${killed} slain` : ''}`, 'roll', u.owner);
   return killed;
 }
@@ -1212,7 +1216,7 @@ export function finishAttack(s: GameState) {
     const st = (s.stats ??= { kills: [] });
     if (dead.length) st.kills.push({ round: s.round, turn: s.turn, by: A.owner, attackerId: A.id, targetId: T.id, models: dead.length, pts, destroyed: !alive(T).length });
     pushFx(s, {
-      kind: 'attack', attackKind: at.kind, attackerId: A.id, targetId: T.id, owner: A.owner, from: c(alive(A).length ? alive(A) : A.models), to: c(tm), dmg, killed: dead.length, dead: dead.map(pt),
+      kind: 'attack', attackKind: at.kind, attackerId: A.id, targetId: T.id, owner: A.owner, from: c(alive(A).length ? alive(A) : A.models), to: c(tm), dmg, killed: dead.length, dead: dead.map(pt), deadIds: dead.map((m) => m.id),
       style, shooters: (alive(A).length ? alive(A) : A.models).slice(0, 12).map(pt), victims: before.slice(0, 12).map(pt),
       shots: at.pools.reduce((a, p) => a + p.attacks, 0), hits: at.pools.reduce((a, p) => a + p.hits.filter((h) => h.o !== 'miss').length, 0),
       volleys: at.pools.filter((p) => p.attacks > 0).slice(0, 6).map((p) => ({ fx: weaponFx(p.weapon, p.profile, at.kind === 'fight'), shots: p.attacks, hits: p.hits.filter((h) => h.o !== 'miss').length, models: p.models })),

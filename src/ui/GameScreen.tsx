@@ -464,8 +464,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<string | null>(null);
   const [sheetModel, setSheetModel] = useState<string | undefined>();
-  const taps = useRef<{ id?: string; t: number[] }>({ t: [] });
-  const [showBuffs, setShowBuffs] = useState(false);
+  const taps = useRef<{ unitId?: string; modelId?: string; t: number[] }>({ t: [] });
   const [fly, setFly] = useState(false);
   const [showStrats, setShowStrats] = useState(false);
   const [stratUnit, setStratUnit] = useState<string>('');
@@ -605,11 +604,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const picked = ritMap ? ritMap.picked : mode?.k === 'shoot' || mode?.k === 'fight' || mode?.k === 'explosives' ? (mode.target ? [mode.target] : []) : mode?.k === 'charge' ? mode.targets : [];
 
   const onTapUnit = (unitId: string, modelId?: string) => {
-    // three quick taps on a model: its datasheet with the weapons it carries
+    // two quick taps on a model / unit: its datasheet with the weapons it carries
     const now = performance.now(), tp = taps.current;
-    tp.t = tp.id === modelId ? [...tp.t.filter((t) => now - t < 700), now] : [now];
-    tp.id = modelId;
-    if (tp.t.length >= 3) { tp.t = []; setSheetModel(modelId); setSheet(unitId); return; }
+    const same = (tp.unitId === unitId) && (!modelId || !tp.modelId || tp.modelId === modelId);
+    tp.t = same ? [...tp.t.filter((t) => now - t < 700), now] : [now];
+    tp.unitId = unitId;
+    tp.modelId = modelId;
+    if (tp.t.length >= 2) { tp.t = []; setSheetModel(modelId); setSheet(unitId); return; }
     if (tape.on) {
       const m = U(unitId).models.find((x) => x.id === modelId && !x.dead) ?? alive(U(unitId))[0];
       if (m) measureTap({ x: m.x, y: m.y }, { u: unitId, m: m.id });
@@ -1108,7 +1109,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
           {flags.length > 0 && <div className="tiny" style={{ color: 'var(--warn)' }}>{flags.join(' · ')}</div>}
           {(() => {
-            const kit = loadoutSummary(u);
+            let kit = loadoutSummary(u);
+            if (!kit.length) {
+              const counts = new Map<string, number>();
+              for (const mdl of (alive(u).length ? alive(u) : u.models)) {
+                for (const w of mdl.weapons) {
+                  counts.set(w.name, (counts.get(w.name) ?? 0) + 1);
+                }
+              }
+              kit = [...counts.entries()].map(([name, n]) => (n > 1 ? `${n}× ${name}` : name));
+            }
             if (!kit.length) return null;
             return (
               <div className="tiny loadout-line" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
@@ -1144,26 +1154,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       </div>
     );
   };
-
-  const buffPanel = (u: UnitState) => (
-    <div>
-      <button className="btn small ghost" onClick={() => setShowBuffs((x) => !x)}><Icon name={showBuffs ? 'down' : 'next'} size={16} /> Ability buffs{u.buffs.length ? ` (${u.buffs.length})` : ''}</button>
-      {showBuffs && (
-        <div className="row" style={{ marginTop: 6 }}>
-          {BUFFS.map((b) => {
-            const on = u.buffs.some((x) => x.kind === b.kind);
-            return (
-              <button key={b.kind} className={`btn small ${on ? 'on' : ''}`} onClick={() => act((g) => {
-                const gu = unitById(g, u.id);
-                gu.buffs = on ? gu.buffs.filter((x) => x.kind !== b.kind) : [...gu.buffs, { kind: b.kind, until: 'phase', label: b.label }];
-              })}>{b.label}</button>
-            );
-          })}
-          <div className="tiny muted" style={{ width: '100%' }}>For datasheet / Detachment abilities the app does not automate (lasts until the end of the phase)</div>
-        </div>
-      )}
-    </div>
-  );
 
   const joystick = () => {
     if (mode?.k !== 'move' || !modeUnit) return null;
@@ -2831,8 +2821,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <div className="tray-head"><span className="grow" /><button className="icon-btn" aria-label="Close" onClick={() => setSheet(null)}><Icon name="close" /></button></div>
             <UnitView u={U(sheet)} model={sheetModel} />
             {abilityBar(U(sheet).owner, { unitId: sheet })}
-            {/* for rules the app does not apply by itself: switch an effect on for this phase */}
-            {!bots.includes(U(sheet).owner) && onBoard(U(sheet)) && buffPanel(U(sheet))}
           </div>
         </div>
       )}
