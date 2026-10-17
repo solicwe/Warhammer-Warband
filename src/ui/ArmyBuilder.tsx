@@ -23,8 +23,8 @@ interface Props {
   startPicker?: boolean;
 }
 
-type Section = 'characters' | 'battleline' | 'transports' | 'others' | 'allies';
-const SECTIONS: { id: Section; title: string }[] = [
+export type Section = 'characters' | 'battleline' | 'others' | 'transports' | 'allies';
+export const SECTIONS: { id: Section; title: string }[] = [
   { id: 'characters', title: 'Characters' },
   { id: 'battleline', title: 'Battleline' },
   { id: 'others', title: 'Others' },
@@ -35,7 +35,7 @@ const SECTIONS: { id: Section; title: string }[] = [
 /** Units listed under Others although they carry the CHARACTER keyword (bodyguard-style Epic Heroes). */
 const OTHERS = new Set(['Victrix Honour Guard']);
 
-function sectionOf(d: DatasheetData | undefined, factionId?: string): Section {
+export function sectionOf(d: DatasheetData | undefined, factionId?: string): Section {
   if (d?.ally || (d && detachmentAllyOf(factionId, d))) return 'allies';
   if (!d || OTHERS.has(d.name)) return 'others';
   if (d.keywords.includes('CHARACTER') || /Character|Epic Hero/.test(d.role)) return 'characters';

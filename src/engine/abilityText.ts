@@ -225,7 +225,7 @@ function afterShot(t: string): AbilityRule | null {
 function wholeText(t: string): AbilityRule | null {
   let m: RegExpExecArray | null;
   if (/^once per battle round, one (?:unit|model) from your army with this ability can use it when its unit is targeted with a stratagem\. if it does, reduce the cp cost of that (?:use|usage) of that stratagem by 1cp\.?$/.test(t)
-    || /^once per battle round, you can select one model from your army with this ability(?:\. that model's unit can be targeted with a stratagem| and target that model's unit with a stratagem)\. if it does, reduce the cp cost of that use of that stratagem by 1cp\.?$/.test(t)) {
+    || /^once per battle round, you can select one model from your army with this ability(?:\. that model's unit can be targeted with a stratagem| and target that model's unit with a stratagem)\. if it does, reduce the cp cost of that (?:use|usage) of that stratagem by 1cp\.?$/.test(t)) {
     return { parsed: true, effects: [{ stratDiscount: { ids: ['*'], cp: 1, limit: 'round', perArmy: true } }] };
   }
   if ((m = /^each time you target this (?:model|unit) with a stratagem, you must spend (twice|three times|four times) that stratagem's stated cp cost to do so\.?$/.exec(t))) {

@@ -177,6 +177,20 @@
    ]
   }
  },
+ "Lord of Chaos": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "*"
+     ],
+     "cp": 1,
+     "limit": "round",
+     "perArmy": true
+    }
+   }
+  ]
+ },
  "Lord of Chaos@Chaos Lord": {
   "effects": [
    {

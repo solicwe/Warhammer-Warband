@@ -174,6 +174,11 @@ describe('campaign', () => {
     expect(boss2.enemy!.pts).toBeGreaterThan(boss1.enemy!.pts);
     expect(boss2.enemy!.rules.length).toBeGreaterThanOrEqual(boss1.enemy!.rules.length);
 
+    // In loop 2 (Endless mode), starting layer battles are 1000+ points and expert bot level
+    const layer0Node = map2.find((n) => n.layer === 0 && n.enemy)!;
+    expect(layer0Node.enemy!.pts).toBeGreaterThanOrEqual(1000);
+    expect(layer0Node.enemy!.level).toBe('expert');
+
     // No easy bot in roguelike maps
     for (const n of map2) {
       if (n.enemy?.level) {

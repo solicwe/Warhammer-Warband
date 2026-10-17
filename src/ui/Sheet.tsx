@@ -70,9 +70,9 @@ const ST_LABEL: Record<AbilityStatus, string> = { auto: 'Automated', partial: 'P
 function AbilityBadge({ u, a }: { u: UnitState; a: AbilityData }) {
   const st = abilityStatus(u, a);
   if (st.status === 'core') return null;
-  // a small tick: green = the game does it, red = not (yet) automated; the full status and note on hover
   const ok = st.status === 'auto';
-  return <>{' '}<span className={`ab-tick ${ok ? 'ok' : 'todo'}`} title={`${ST_LABEL[st.status]}${st.note ? ` — ${st.note}` : ''}`}><Icon name={ok ? 'check' : 'close'} size={11} /></span></>;
+  if (!ok) return null;
+  return <>{' '}<span className="ab-tick ok" title={`${ST_LABEL[st.status]}${st.note ? ` — ${st.note}` : ''}`}><Icon name="check" size={11} /></span></>;
 }
 
 /** Model lines with the same characteristics show once ("Intercessor Sergeant / Intercessor"). */
@@ -147,20 +147,24 @@ export function renderAbilitiesContent(
   names?: string[],
   damaged?: DatasheetData['damaged']
 ): ReactNode[] {
-  const ab = (a: AbilityData, i: number) => (
-    <div key={i} className="ds-ab">
-      <b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>
-      {rulesFaction && <AbilityBadge u={unit} a={{ ...a, sheet: sheetName, faction: rulesFaction }} />}
-      {' '}<Em text={a.text} names={names} />
-    </div>
-  );
+  const ab = (a: AbilityData, i: number) => {
+    const abSheet = a.sheet ?? a.model ?? (a as any).source ?? sheetName;
+    return (
+      <div key={i} className="ds-ab">
+        <b>{a.name}{a.param ? ` ${a.param}` : ''}:</b>
+        {rulesFaction && <AbilityBadge u={unit} a={{ ...a, sheet: abSheet, faction: rulesFaction }} />}
+        {' '}<Em text={a.text} names={names} />
+      </div>
+    );
+  };
 
   const out: ReactNode[] = [];
   const handledAbilityNames = new Set<string>();
 
   // 1a. Choice abilities defined via abilityRule choice (e.g. Unearthly Power, The Warmaster, Lord of the Death Guard)
   for (const a of abilities) {
-    const ch = rulesFaction ? abilityRule(unit, { ...a, sheet: sheetName, faction: rulesFaction })?.choice : undefined;
+    const abSheet = a.sheet ?? a.model ?? (a as any).source ?? sheetName;
+    const ch = rulesFaction ? abilityRule(unit, { ...a, sheet: abSheet, faction: rulesFaction })?.choice : undefined;
     const opts = ch ? abilities.filter((x) => ch.options.includes(x.name)) : [];
     if (opts.length > 0) {
       out.push(
@@ -188,10 +192,11 @@ export function renderAbilitiesContent(
     if (a.type === 'Core' || a.type === 'Faction' || handledAbilityNames.has(a.name)) continue;
     const bc = parseBulletChoices(a.text);
     if (bc) {
+      const abSheet = a.sheet ?? a.model ?? (a as any).source ?? sheetName;
       out.push(
         <div key={`sec-bc-${a.name}`} className="ds-sec">{a.name.toUpperCase()}</div>,
         <div key={`intro-${a.name}`} className="ds-ab small muted" style={{ fontStyle: 'italic', paddingBottom: 2 }}>
-          {rulesFaction && <AbilityBadge u={unit} a={{ ...a, sheet: sheetName, faction: rulesFaction }} />}
+          {rulesFaction && <AbilityBadge u={unit} a={{ ...a, sheet: abSheet, faction: rulesFaction }} />}
           {' '}<Em text={bc.intro} names={names} />
         </div>,
         ...bc.options.map((opt, oi) => (
@@ -410,7 +415,7 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
           : u.factionKeywords.includes('WORLD EATERS') ? 'WE'
           : u.factionKeywords.includes('DEATH GUARD') ? 'DG'
           : u.factionKeywords.includes('EMPEROR’S CHILDREN') || u.factionKeywords.includes("EMPEROR'S CHILDREN") ? 'EC'
-          : u.factionKeywords.includes('CHAOS SPACE MARINES') ? 'CSM'
+          : u.factionKeywords.includes('CHAOS SPACE MARINES') || u.factionKeywords.includes('HERETIC ASTARTES') ? 'CSM'
           : u.factionKeywords.includes('TYRANIDS') ? 'TYR'
           : u.factionKeywords.includes('ADEPTUS CUSTODES') ? 'AC'
           : u.factionKeywords.includes('ASTRA MILITARUM') ? 'AM'

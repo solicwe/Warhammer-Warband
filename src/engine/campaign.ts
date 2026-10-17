@@ -264,11 +264,14 @@ export function makeMap(seed: number, enemies: string[], loop = 1): MapNode[] {
         })();
       const node: MapNode = { id: `n${layer}-${i}`, layer, kind, x: (i + 0.5) / n, next: [] };
       if (['battle', 'elite', 'boss'].includes(kind)) {
-        const loopScale = Math.max(0, loop - 1);
-        const pts = Math.round((480 + loopScale * 140 + layer * (100 + loopScale * 25) + (kind === 'elite' ? 180 + loopScale * 50 : 0) + (kind === 'boss' ? 350 + loopScale * 100 : 0)) / 10) * 10;
-        const extraRules = Math.min(2, loopScale);
-        const rules = kind === 'elite' ? pickN(BOSS_RULES, 1 + extraRules, r).map((b) => b.id) : kind === 'boss' ? pickN(BOSS_RULES, 2 + extraRules, r).map((b) => b.id) : [];
-        const level: BotLevel = loop > 1 ? 'hard' : kind === 'boss' ? 'hard' : kind === 'elite' ? 'hard' : LEVEL_BY_LAYER[layer];
+        const basePts = loop > 1 ? 1000 + (loop - 2) * 200 : 480;
+        const layerPts = layer * (loop > 1 ? 150 : 100);
+        const elitePts = kind === 'elite' ? (loop > 1 ? 250 : 180) : 0;
+        const bossPts = kind === 'boss' ? (loop > 1 ? 450 : 350) : 0;
+        const pts = Math.round((basePts + layerPts + elitePts + bossPts) / 10) * 10;
+        const extraRules = loop > 1 ? Math.min(3, loop) : 0;
+        const rules = kind === 'elite' ? pickN(BOSS_RULES, 1 + extraRules, r).map((b) => b.id) : kind === 'boss' ? pickN(BOSS_RULES, 2 + extraRules, r).map((b) => b.id) : (loop > 1 && layer >= 2 ? pickN(BOSS_RULES, 1, r).map((b) => b.id) : []);
+        const level: BotLevel = loop > 1 ? 'expert' : kind === 'boss' ? 'hard' : kind === 'elite' ? 'hard' : LEVEL_BY_LAYER[layer];
         node.enemy = { factionId: enemies[Math.floor(r() * enemies.length)], pts, level, rules, seed: Math.floor(r() * 1e9) };
       }
       nodes.push(node);

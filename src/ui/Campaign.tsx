@@ -2,7 +2,7 @@
 // Features a full roguelike engine: scrap currency, unit veterancy, battle honors, armory, medicae tents,
 // and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
-import { attachOptions, autoAttach, defaultWargear, listPoints, pointsOptions, syncList, syncWargear } from '../engine/army';
+import { attachOptions, autoAttach, defaultWargear, listPoints, pointsOptions, syncList, syncWargear, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
@@ -13,7 +13,7 @@ import {
 import { hasFactionRules } from '../engine/effects';
 import { createGame } from '../engine/game';
 import type { ArmyUnitEntry, FactionData, GameState, WargearPick } from '../engine/types';
-import { Emblem, WargearEditor } from './ArmyBuilder';
+import { Emblem, SECTIONS, sectionOf, WargearEditor } from './ArmyBuilder';
 import { loadFaction, type FactionIndex } from './data';
 import { Icon, type IconName } from './Icon';
 import { withAutoRules } from './library';
@@ -457,35 +457,57 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               </div>
 
               {rosterTab === 'roster' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {run.list.units.map((u) => {
-                    const d = fac.datasheets.find((x) => x.name === u.datasheet);
-                    const photo = getPortrait(u.datasheet);
-                    const isUpgrading = upgradingUid === u.uid;
-                    const isEditingWargear = wargearUid === u.uid;
-                    const isAttaching = attachingUid === u.uid;
-                    const isSizing = sizingUid === u.uid;
-                    const canLead = Boolean(d?.leads && d.leads.length > 0);
-                    const sizeOpts = d ? pointsOptions(d) : [];
-                    const otherSquads = run.list.units.filter((x) => x.uid !== u.uid && x.datasheet === u.datasheet);
-                    const canResizeOrMerge = sizeOpts.length > 1 || otherSquads.length > 0;
-                    const attachedSquad = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined;
-                    const attachedLeaders = run.list.units.filter((x) => x.attachTo === u.uid);
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {SECTIONS.filter((sec) => sec.id !== 'allies' || run.list.units.some((u) => sectionOf(fac.datasheets.find((x) => x.name === u.datasheet), run.factionId) === 'allies')).map((sec) => {
+                    const secUnits = run.list.units.filter((u) => {
+                      const d = fac.datasheets.find((x) => x.name === u.datasheet);
+                      return sectionOf(d, run.factionId) === sec.id;
+                    });
+                    if (!secUnits.length) return null;
                     return (
-                      <div key={u.uid} className="cmp-roster-card">
-                        <div className="cmp-card-main">
-                          <div className="cmp-card-thumb">
-                            {photo ? <img src={photo} alt="" className="cmp-roster-img" />
-                              : <div className="cmp-roster-img-ph"><Icon name="fight" size={22} /></div>}
-                          </div>
-                          <div className="cmp-card-details">
-                            <div className="cmp-card-badges">
-                              <span className="cmp-rank-badge">{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
-                              <span className="cmp-card-pts">{u.pts + (u.wargearPts ?? 0)} pts</span>
-                            </div>
-                            <div className="cmp-roster-name">{u.datasheet}</div>
-                            <div className="cmp-roster-meta">{u.models} {u.models === 1 ? 'model' : 'models'}</div>
-                            {attachedSquad && (
+                      <section key={sec.id} className="ab-section">
+                        <div className="ab-section-head">
+                          <span>{sec.title}</span>
+                          <span className="tiny muted" style={{ fontWeight: 'normal', textTransform: 'none', letterSpacing: 'normal' }}>
+                            {secUnits.length} {secUnits.length === 1 ? 'unit' : 'units'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          {secUnits.map((u) => {
+                            const d = fac.datasheets.find((x) => x.name === u.datasheet);
+                            const photo = getPortrait(u.datasheet);
+                            const wg = wargearSummary(d, u);
+                            const isUpgrading = upgradingUid === u.uid;
+                            const isEditingWargear = wargearUid === u.uid;
+                            const isAttaching = attachingUid === u.uid;
+                            const isSizing = sizingUid === u.uid;
+                            const canLead = Boolean(d?.leads && d.leads.length > 0);
+                            const sizeOpts = d ? pointsOptions(d) : [];
+                            const otherSquads = run.list.units.filter((x) => x.uid !== u.uid && x.datasheet === u.datasheet);
+                            const canResizeOrMerge = sizeOpts.length > 1 || otherSquads.length > 0;
+                            const attachedSquad = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined;
+                            const attachedLeaders = run.list.units.filter((x) => x.attachTo === u.uid);
+                            return (
+                              <div key={u.uid} className="cmp-roster-card">
+                                <div className="cmp-card-main">
+                                  <div className="cmp-card-thumb">
+                                    {photo ? <img src={photo} alt="" className="cmp-roster-img" />
+                                      : <div className="cmp-roster-img-ph"><Icon name="fight" size={22} /></div>}
+                                  </div>
+                                  <div className="cmp-card-details">
+                                    <div className="cmp-card-badges">
+                                      <span className="cmp-rank-badge">{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
+                                      <span className="cmp-card-pts">{u.pts + (u.wargearPts ?? 0)} pts</span>
+                                    </div>
+                                    <div className="cmp-roster-name">{u.datasheet}</div>
+                                    <div className="cmp-roster-meta">{u.models} {u.models === 1 ? 'model' : 'models'}</div>
+                                    {wg && (
+                                      <div style={{ marginTop: 2, fontSize: 11.5, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <Icon name="wargear" size={12} />
+                                        <span>{wg}</span>
+                                      </div>
+                                    )}
+                                    {attachedSquad && (
                               <div style={{ marginTop: 4 }}>
                                 <span className="chip subtle small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.1)' }}>
                                   {getPortrait(attachedSquad.datasheet) && (
@@ -1031,6 +1053,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           </div>
                         )}
                       </div>
+                    );
+                  })}
+                        </div>
+                      </section>
                     );
                   })}
                 </div>
