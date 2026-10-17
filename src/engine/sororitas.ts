@@ -216,29 +216,50 @@ export function tryActOfFaith(
   if (!pool.length) return null;
 
   if (rollType === 'charge') {
-    // If charge distance is known (context.need), pick a die that makes charge succeed
     const need = context?.need ?? 7;
-    // We already roll 1D6 normally; if we have a 5 or 6 Miracle die, charge has very high success rate!
-    const best = pool[0];
-    if (best >= 5 || (need <= 6 && best >= 4)) {
-      return performActOfFaith(s, u, undefined, Math.max(1, need - 6), 'Charge roll');
+    if (need <= 12) {
+      const minNeeded = Math.min(6, Math.max(2, Math.ceil(need / 2)));
+      if (pool.some((v) => v >= minNeeded)) {
+        return performActOfFaith(s, u, undefined, minNeeded, 'Charge roll');
+      }
     }
   } else if (rollType === 'save') {
-    // High-damage attack on important model (character or tank)
     const need = context?.need ?? 4;
     const dmg = context?.damage ?? 1;
-    if ((dmg >= 3 || context?.isCharacter) && pool.some((v) => v >= need)) {
+    if ((dmg >= 2 || context?.isCharacter || pool.length >= 3) && pool.some((v) => v >= need)) {
       return performActOfFaith(s, u, undefined, need, 'Saving throw');
     }
   } else if (rollType === 'damage') {
-    // Turn a variable D6 or D3 damage into max (e.g. melta)
     if (pool.some((v) => v >= 5)) {
       return performActOfFaith(s, u, 6, 5, 'Damage roll');
+    } else if (pool.some((v) => v >= 4) && pool.length >= 3) {
+      return performActOfFaith(s, u, 4, 4, 'Damage roll');
     }
   } else if (rollType === 'advance') {
-    // Only if we need high advance roll and have high die
-    if (context?.need && context.need >= 5 && pool.some((v) => v >= 5)) {
-      return performActOfFaith(s, u, 6, 5, 'Advance roll');
+    const need = context?.need ?? 4;
+    if (pool.some((v) => v >= need) && pool.length >= 2) {
+      return performActOfFaith(s, u, undefined, need, 'Advance roll');
+    }
+  } else if (rollType === 'hit') {
+    const need = context?.need ?? 3;
+    if (context?.best && pool.some((v) => v === 6)) {
+      return performActOfFaith(s, u, 6, 6, 'Hit roll (Critical)');
+    }
+    if (pool.some((v) => v >= need) && (pool.length >= 3 || context?.isCharacter || (context?.damage ?? 1) >= 2)) {
+      return performActOfFaith(s, u, undefined, need, 'Hit roll');
+    }
+  } else if (rollType === 'wound') {
+    const need = context?.need ?? 4;
+    if (context?.best && pool.some((v) => v === 6)) {
+      return performActOfFaith(s, u, 6, 6, 'Wound roll (Critical)');
+    }
+    if (pool.some((v) => v >= need) && (pool.length >= 3 || context?.isCharacter || (context?.damage ?? 1) >= 2)) {
+      return performActOfFaith(s, u, undefined, need, 'Wound roll');
+    }
+  } else if (rollType === 'shock') {
+    const need = context?.need ?? 4;
+    if (need <= 6 && pool.some((v) => v >= need)) {
+      return performActOfFaith(s, u, undefined, need, 'Battle-shock test');
     }
   }
 

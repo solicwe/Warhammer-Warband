@@ -9,9 +9,11 @@ import { AbilityBadge } from './AbilityBadgePopover';
 import { WeaponFireModePanel } from './WeaponFireModePanel';
 import { Em } from './Em';
 import {
-  applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, finishAttack, meleeWeapons, rerollOne, resolveAll, shootingModes, startAttack, stepAttack,
+  applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, finishAttack, forceDie, meleeWeapons, rerollOne, resolveAll, shootingModes, startAttack, stepAttack,
   type ShootMode,
 } from '../engine/attack';
+import { performActOfFaith } from '../engine/sororitas';
+import { useFateDie } from '../engine/aeldari';
 import { deploymentById, dispositionById, MISSIONS, primaryById, RULES, secondaryById, type DispositionId } from '../engine/config';
 import { rollN } from '../engine/dice';
 import {
@@ -1201,6 +1203,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const u = unitById(g, stage === 'save' ? at.targetId : at.attackerId);
       spendStratagem(g, u.owner, 'command-reroll', u);
       rerollOne(g, stage, i);
+    });
+  };
+
+  const onActOfFaith = (stage: 'hit' | 'wound' | 'save', index: number, value: number, isDefender: boolean, isFate: boolean) => {
+    act((g) => {
+      const at = g.attack;
+      if (!at) return;
+      const u = unitById(g, isDefender ? at.targetId : at.attackerId);
+      const substitutedVal = isFate
+        ? useFateDie(g, u, value, undefined, `${stage.toUpperCase()} roll`)
+        : performActOfFaith(g, u, value, undefined, `${stage.toUpperCase()} roll`);
+      if (substitutedVal !== null) {
+        forceDie(g, stage, index, substitutedVal);
+      }
     });
   };
 
@@ -3006,6 +3022,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           botSides={bots}
           onStep={() => act((g) => stepAttack(g))}
           onReroll={onReroll}
+          onActOfFaith={onActOfFaith}
           onFree={(k, i) => { const e = act((g) => useFreeDie(g, k, i)); if (e) flash(e); }}
           onSkip={() => act((g) => resolveAll(g))}
           onClose={onTrayClose}

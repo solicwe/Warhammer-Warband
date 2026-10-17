@@ -213,23 +213,49 @@ export function tryFateDie(
 
   if (rollType === 'charge') {
     const need = context?.need ?? 7;
-    const minNeeded = Math.min(6, Math.max(5, need - 3));
-    if (pool.some((v) => v >= minNeeded)) {
-      return useFateDie(s, u, undefined, minNeeded, 'Charge roll');
+    if (need <= 12) {
+      const minNeeded = Math.min(6, Math.max(2, Math.ceil(need / 2)));
+      if (pool.some((v) => v >= minNeeded)) {
+        return useFateDie(s, u, undefined, minNeeded, 'Charge roll');
+      }
     }
   } else if (rollType === 'save') {
     const need = context?.need ?? 4;
     const dmg = context?.damage ?? 1;
-    if ((dmg >= 3 || context?.isCharacter) && pool.some((v) => v >= need)) {
+    if ((dmg >= 2 || context?.isCharacter || pool.length >= 3) && pool.some((v) => v >= need)) {
       return useFateDie(s, u, undefined, need, 'Saving throw');
     }
   } else if (rollType === 'damage') {
     if (pool.some((v) => v >= 5)) {
       return useFateDie(s, u, 6, 5, 'Damage roll');
+    } else if (pool.some((v) => v >= 4) && pool.length >= 3) {
+      return useFateDie(s, u, 4, 4, 'Damage roll');
     }
   } else if (rollType === 'advance') {
-    if (context?.need && context.need >= 5 && pool.some((v) => v >= 5)) {
-      return useFateDie(s, u, 6, 5, 'Advance roll');
+    const need = context?.need ?? 4;
+    if (pool.some((v) => v >= need) && pool.length >= 2) {
+      return useFateDie(s, u, undefined, need, 'Advance roll');
+    }
+  } else if (rollType === 'hit') {
+    const need = context?.need ?? 3;
+    if (context?.best && pool.some((v) => v === 6)) {
+      return useFateDie(s, u, 6, 6, 'Hit roll (Critical)');
+    }
+    if (pool.some((v) => v >= need) && (pool.length >= 3 || context?.isCharacter || (context?.damage ?? 1) >= 2)) {
+      return useFateDie(s, u, undefined, need, 'Hit roll');
+    }
+  } else if (rollType === 'wound') {
+    const need = context?.need ?? 4;
+    if (context?.best && pool.some((v) => v === 6)) {
+      return useFateDie(s, u, 6, 6, 'Wound roll (Critical)');
+    }
+    if (pool.some((v) => v >= need) && (pool.length >= 3 || context?.isCharacter || (context?.damage ?? 1) >= 2)) {
+      return useFateDie(s, u, undefined, need, 'Wound roll');
+    }
+  } else if (rollType === 'shock') {
+    const need = context?.need ?? 4;
+    if (need <= 6 && pool.some((v) => v >= need)) {
+      return useFateDie(s, u, undefined, need, 'Battle-shock test');
     }
   }
 

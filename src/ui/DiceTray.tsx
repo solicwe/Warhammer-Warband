@@ -4,6 +4,8 @@ import { canUseStratagem, unitById } from '../engine/state';
 import type { Die, GameState, Pool } from '../engine/types';
 import { abilityLabel, abilitiesOf } from '../engine/weapons';
 import { rerollable } from '../engine/attack';
+import { canPerformActOfFaith } from '../engine/sororitas';
+import { canUseFateDie } from '../engine/aeldari';
 import { Icon } from './Icon';
 import { play } from './sfx';
 import { Portrait, unitToken } from './Tokens';
@@ -29,6 +31,8 @@ interface Props {
   botSides?: (0 | 1)[];
   /** Command Re-roll on the random number of attacks (now), or on the next low damage roll (a switch) */
   onCR?: (what: 'attacks' | 'damage') => void;
+  /** substitute a die using an Act of Faith (Sororitas) or Strands of Fate (Aeldari) */
+  onActOfFaith?: (stage: 'hit' | 'wound' | 'save', index: number, value: number, isDefender: boolean, isFate: boolean) => void;
 }
 
 const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `${n}` : '');
@@ -55,7 +59,7 @@ function DiceRow({ dice, cls, pick, onPick, picked }: { dice: Die[]; cls: (d: Di
   );
 }
 
-export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree, onPick, auto, botSides = [], onCR }: Props) {
+export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree, onPick, auto, botSides = [], onCR, onActOfFaith }: Props) {
   const at = s.attack!;
   const [rr, setRr] = useState<null | 'hit' | 'wound' | 'save'>(null);
   const [fd, setFd] = useState<string | null>(null); // free die being used: tap the die
@@ -88,6 +92,100 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
   const defenderCR = canUseStratagem(s, T.owner, 'command-reroll', T);
   const attackerBot = botSides.includes(A.owner);
   const defenderBot = botSides.includes(T.owner);
+
+  const [actFaith, setActFaith] = useState<{
+    isDefender: boolean;
+    isFate: boolean;
+    val: number;
+    stage: 'hit' | 'wound' | 'save';
+  } | null>(null);
+
+  const canAttackerAOF = !attackerBot && canPerformActOfFaith(s, A);
+  const canAttackerFate = !attackerBot && canUseFateDie(s, A);
+  const attackerMiraclePool = s.players[A.owner]?.miracleDice ?? [];
+  const attackerFatePool = s.players[A.owner]?.fateDice ?? [];
+
+  const canDefenderAOF = !defenderBot && canPerformActOfFaith(s, T);
+  const canDefenderFate = !defenderBot && canUseFateDie(s, T);
+  const defenderMiraclePool = s.players[T.owner]?.miracleDice ?? [];
+  const defenderFatePool = s.players[T.owner]?.fateDice ?? [];
+
+  const hasAttackerDialogus = A.models.some((m) => m.name.includes('Dialogus') && !m.dead);
+  const hasDefenderDialogus = T.models.some((m) => m.name.includes('Dialogus') && !m.dead);
+
+  const renderFaithButtons = (stage: 'hit' | 'wound' | 'save', isDefender: boolean) => {
+    const isAOF = isDefender ? canDefenderAOF : canAttackerAOF;
+    const isFate = isDefender ? canDefenderFate : canAttackerFate;
+    const mPool = isDefender ? defenderMiraclePool : attackerMiraclePool;
+    const fPool = isDefender ? defenderFatePool : attackerFatePool;
+    const hasDialogus = isDefender ? hasDefenderDialogus : hasAttackerDialogus;
+
+    if (!isAOF && !isFate) return null;
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignSelf: 'flex-start', margin: '4px 0' }}>
+        {isAOF && mPool.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
+            <span className="tiny" style={{ color: '#ffd700', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Icon name="ability" size={14} /> Act of Faith:
+            </span>
+            {mPool.map((v, idx) => {
+              const active = actFaith?.stage === stage && actFaith.isDefender === isDefender && !actFaith.isFate && actFaith.val === v;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`btn small ${active ? 'on' : ''}`}
+                  style={{ minWidth: 26, padding: '1px 6px', fontWeight: 800, borderColor: '#eab308', background: active ? '#854d0e' : undefined }}
+                  onClick={() => {
+                    setRr(null);
+                    setFd(null);
+                    setActFaith(active ? null : { isDefender, isFate: false, val: v, stage });
+                  }}
+                  title={hasDialogus ? `Miracle die ${v} (Boosted to 6 by Dialogus)` : `Miracle die ${v}`}
+                >
+                  {v}{hasDialogus ? '→6' : ''}
+                </button>
+              );
+            })}
+            {actFaith?.stage === stage && actFaith.isDefender === isDefender && !actFaith.isFate && (
+              <span className="tiny" style={{ color: '#ffd700' }}>Tap a die to substitute</span>
+            )}
+          </div>
+        )}
+
+        {isFate && fPool.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
+            <span className="tiny" style={{ color: '#38bdf8', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Icon name="dice" size={14} /> Strands of Fate:
+            </span>
+            {fPool.map((v, idx) => {
+              const active = actFaith?.stage === stage && actFaith.isDefender === isDefender && actFaith.isFate && actFaith.val === v;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`btn small ${active ? 'on' : ''}`}
+                  style={{ minWidth: 26, padding: '1px 6px', fontWeight: 800, borderColor: '#0284c7', background: active ? '#0369a1' : undefined }}
+                  onClick={() => {
+                    setRr(null);
+                    setFd(null);
+                    setActFaith(active ? null : { isDefender, isFate: true, val: v, stage });
+                  }}
+                  title={`Fate die ${v}`}
+                >
+                  {v}
+                </button>
+              );
+            })}
+            {actFaith?.stage === stage && actFaith.isDefender === isDefender && actFaith.isFate && (
+              <span className="tiny" style={{ color: '#38bdf8' }}>Tap a die to substitute</span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (done) {
@@ -316,10 +414,26 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                     <DiceRow
                       dice={p.hits}
                       cls={hitCls}
-                      pick={rr === 'hit' ? (d) => d.o === 'miss' && !d.rerolled : fdSpec?.stage === 'hit' && st === 'wound' ? freeCan : undefined}
+                      pick={
+                        actFaith?.stage === 'hit' && !actFaith.isDefender
+                          ? (d) => !d.rerolled
+                          : rr === 'hit'
+                            ? (d) => d.o === 'miss' && !d.rerolled
+                            : fdSpec?.stage === 'hit' && st === 'wound'
+                              ? freeCan
+                              : undefined
+                      }
                       onPick={(i) => {
-                        if (rr === 'hit') { onReroll('hit', i); setRr(null); }
-                        else if (fd) { onFree?.(fd, i); setFd(null); }
+                        if (actFaith?.stage === 'hit' && !actFaith.isDefender) {
+                          onActOfFaith?.('hit', i, actFaith.val, false, actFaith.isFate);
+                          setActFaith(null);
+                        } else if (rr === 'hit') {
+                          onReroll('hit', i);
+                          setRr(null);
+                        } else if (fd) {
+                          onFree?.(fd, i);
+                          setFd(null);
+                        }
                       }}
                     />
                   )}
@@ -333,12 +447,13 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                       </span>
                     )}
                   </div>
+                  {st === 'wound' && !pending && !attackerBot && renderFaithButtons('hit', false)}
                   {st === 'wound' && !pending && !p.autoHit && !attackerBot && freeButtons('hit')}
                   {st === 'wound' && !pending && !p.autoHit && !p.noHitReroll && !attackerBot && (
                     <button
                       className={`btn small ${rr === 'hit' ? 'on' : ''}`}
                       disabled={!!attackerCR || !p.hits.some((d) => d.o === 'miss' && !d.rerolled)}
-                      onClick={() => setRr(rr === 'hit' ? null : 'hit')}
+                      onClick={() => { setActFaith(null); setRr(rr === 'hit' ? null : 'hit'); }}
                       style={{ alignSelf: 'flex-start' }}
                     >
                       Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'hit' ? '- tap a failed die' : ''}
@@ -367,10 +482,26 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                       <DiceRow
                         dice={p.wounds}
                         cls={woundCls}
-                        pick={rr === 'wound' ? (d) => d.o === 'fail' && !d.rerolled : fdSpec?.stage === 'wound' && st === 'save' ? freeCan : undefined}
+                        pick={
+                          actFaith?.stage === 'wound' && !actFaith.isDefender
+                            ? (d) => !d.rerolled
+                            : rr === 'wound'
+                              ? (d) => d.o === 'fail' && !d.rerolled
+                              : fdSpec?.stage === 'wound' && st === 'save'
+                                ? freeCan
+                                : undefined
+                        }
                         onPick={(i) => {
-                          if (rr === 'wound') { onReroll('wound', i); setRr(null); }
-                          else if (fd) { onFree?.(fd, i); setFd(null); }
+                          if (actFaith?.stage === 'wound' && !actFaith.isDefender) {
+                            onActOfFaith?.('wound', i, actFaith.val, false, actFaith.isFate);
+                            setActFaith(null);
+                          } else if (rr === 'wound') {
+                            onReroll('wound', i);
+                            setRr(null);
+                          } else if (fd) {
+                            onFree?.(fd, i);
+                            setFd(null);
+                          }
                         }}
                       />
                     )}
@@ -382,12 +513,13 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                         </span>
                       )}
                     </div>
+                    {st === 'save' && !pending && !attackerBot && renderFaithButtons('wound', false)}
                     {st === 'save' && !pending && !attackerBot && freeButtons('wound')}
                     {st === 'save' && !pending && !attackerBot && (
                       <button
                         className={`btn small ${rr === 'wound' ? 'on' : ''}`}
                         disabled={!!attackerCR || !p.wounds.some((d) => d.o === 'fail' && !d.rerolled)}
-                        onClick={() => setRr(rr === 'wound' ? null : 'wound')}
+                        onClick={() => { setActFaith(null); setRr(rr === 'wound' ? null : 'wound'); }}
                         style={{ alignSelf: 'flex-start' }}
                       >
                         Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'wound' ? '- tap a failed die' : ''}
@@ -420,20 +552,37 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                 <DiceRow
                   dice={p.saves}
                   cls={saveCls}
-                  pick={rr === 'save' ? (d) => !d.rerolled : undefined}
-                  onPick={(i) => { onReroll('save', i); setRr(null); }}
+                  pick={
+                    actFaith?.stage === 'save' && actFaith.isDefender
+                      ? (d) => !d.rerolled
+                      : rr === 'save'
+                        ? (d) => !d.rerolled
+                        : undefined
+                  }
+                  onPick={(i) => {
+                    if (actFaith?.stage === 'save' && actFaith.isDefender) {
+                      onActOfFaith?.('save', i, actFaith.val, true, actFaith.isFate);
+                      setActFaith(null);
+                    } else if (rr === 'save') {
+                      onReroll('save', i);
+                      setRr(null);
+                    }
+                  }}
                 />
                 {defenderBot ? (
                   <div className="tiny muted"><Icon name="bot" size={13} /> {s.players[T.owner].name} decides its own save re-rolls</div>
                 ) : (
-                  <button
-                    className={`btn small ${rr === 'save' ? 'on' : ''}`}
-                    disabled={!!defenderCR || !p.saves.length}
-                    onClick={() => setRr(rr === 'save' ? null : 'save')}
-                    style={{ alignSelf: 'flex-start' }}
-                  >
-                    {s.players[T.owner].name}: Command Re-roll Save 1CP {defenderCR ? `(${defenderCR})` : rr === 'save' ? '- tap a failed die' : ''}
-                  </button>
+                  <>
+                    {renderFaithButtons('save', true)}
+                    <button
+                      className={`btn small ${rr === 'save' ? 'on' : ''}`}
+                      disabled={!!defenderCR || !p.saves.length}
+                      onClick={() => { setActFaith(null); setRr(rr === 'save' ? null : 'save'); }}
+                      style={{ alignSelf: 'flex-start' }}
+                    >
+                      {s.players[T.owner].name}: Command Re-roll Save 1CP {defenderCR ? `(${defenderCR})` : rr === 'save' ? '- tap a failed die' : ''}
+                    </button>
+                  </>
                 )}
               </div>
             )}

@@ -7,7 +7,8 @@ import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEne
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
-import { sororitasUnitDestroyed } from './sororitas';
+import { sororitasUnitDestroyed, tryActOfFaith } from './sororitas';
+import { tryFateDie } from './aeldari';
 import { ftggAttackModifiers, isTauArmy } from './tau';
 import { votannAttackModifiers, votannDefenseModifiers, votannUnitDestroyed } from './votann';
 import { admechAttackModifiers, admechDefenseModifiers, unitActiveImperatives } from './admech';
@@ -679,15 +680,16 @@ export function rerollAttackCount(s: GameState, idx: number): string | null {
   return null;
 }
 
-/** Change one die of the current stage to a value ("change that roll to an unmodified 6"). */
-export function forceDie(s: GameState, stage: 'hit' | 'wound', index: number, v: number) {
+/** Change one die of the current stage to a value ("change that roll to an unmodified 6", Miracle/Fate substitution). */
+export function forceDie(s: GameState, stage: 'hit' | 'wound' | 'save', index: number, v: number) {
   const at = s.attack!;
   const p = at.pools[at.idx];
   if (stage === 'hit') { const d = p.hits[index]; p.hits[index] = { v, o: evalHit(p, v), rerolled: true, orig: d.v }; }
-  else { const d = p.wounds[index]; p.wounds[index] = { v, o: evalWound(p, v), rerolled: true, orig: d.v }; }
+  else if (stage === 'wound') { const d = p.wounds[index]; p.wounds[index] = { v, o: evalWound(p, v), rerolled: true, orig: d.v }; }
+  else if (stage === 'save') { const d = p.saves[index]; p.saves[index] = { v, o: 'pass', rerolled: true, orig: d.v }; }
 }
 
-function evalHit(p: Pool, v: number): Die['o'] {
+export function evalHit(p: Pool, v: number): Die['o'] {
   if (v === 1) return 'miss';
   if (v >= (p.snap ? 6 : p.critHitOn ?? 6)) return p.snap ? (v === 6 ? 'hit' : 'miss') : 'crit';
   if (p.hitOn6Only) return 'miss';
@@ -695,7 +697,7 @@ function evalHit(p: Pool, v: number): Die['o'] {
   return v + p.hitMod >= (p.skill ?? 7) ? 'hit' : 'miss';
 }
 
-function evalWound(p: Pool, v: number): Die['o'] {
+export function evalWound(p: Pool, v: number): Die['o'] {
   if (v === 1) return 'fail';
   if (v === 6 || v >= p.critWoundOn) return 'critWound';
   return v + p.woundMod >= p.woundNeed ? 'wound' : 'fail';
@@ -741,6 +743,19 @@ export function rollHits(s: GameState) {
   } else {
     p.hits = rollN(s, p.attacks).map((v) => ({ v, o: evalHit(p, v) }));
     const A = unitById(s, at.attackerId);
+    if (p.hits.some((h) => h.o === 'miss')) {
+      const aofHit = tryActOfFaith(s, A, 'hit', { need: p.skill ?? 3, best: !!(p.lethal || p.sustained), damage: exprAverage(p.damage), isCharacter: A.models.some((m) => m.isCharacter) });
+      if (aofHit !== null) {
+        const missIdx = p.hits.findIndex((h) => h.o === 'miss');
+        if (missIdx >= 0) p.hits[missIdx] = { v: aofHit, o: evalHit(p, aofHit), rerolled: true, orig: p.hits[missIdx].v };
+      } else {
+        const fateHit = tryFateDie(s, A, 'hit', { need: p.skill ?? 3, best: !!(p.lethal || p.sustained), damage: exprAverage(p.damage), isCharacter: A.models.some((m) => m.isCharacter) });
+        if (fateHit !== null) {
+          const missIdx = p.hits.findIndex((h) => h.o === 'miss');
+          if (missIdx >= 0) p.hits[missIdx] = { v: fateHit, o: evalHit(p, fateHit), rerolled: true, orig: p.hits[missIdx].v };
+        }
+      }
+    }
     const all = p.rerollAllHits || A.buffs.some((b) => b.kind === 'rerollHits');
     const ones = p.rerollHits1 || A.buffs.some((b) => b.kind === 'rerollHits1');
     if (!p.noHitReroll && (all || ones)) offerReroll(s, p, 'hit', all ? 'all' : 'ones');
@@ -859,6 +874,19 @@ export function rollWounds(s: GameState) {
   p.autoWounds = auto;
   p.wounds = rollN(s, rolls).map((v) => ({ v, o: evalWound(p, v) }));
   const A = unitById(s, at.attackerId);
+  if (p.wounds.some((w) => w.o === 'fail')) {
+    const aofWound = tryActOfFaith(s, A, 'wound', { need: p.woundNeed, best: !!p.devastating, damage: exprAverage(p.damage), isCharacter: A.models.some((m) => m.isCharacter) });
+    if (aofWound !== null) {
+      const failIdx = p.wounds.findIndex((w) => w.o === 'fail');
+      if (failIdx >= 0) p.wounds[failIdx] = { v: aofWound, o: evalWound(p, aofWound), rerolled: true, orig: p.wounds[failIdx].v };
+    } else {
+      const fateWound = tryFateDie(s, A, 'wound', { need: p.woundNeed, best: !!p.devastating, damage: exprAverage(p.damage), isCharacter: A.models.some((m) => m.isCharacter) });
+      if (fateWound !== null) {
+        const failIdx = p.wounds.findIndex((w) => w.o === 'fail');
+        if (failIdx >= 0) p.wounds[failIdx] = { v: fateWound, o: evalWound(p, fateWound), rerolled: true, orig: p.wounds[failIdx].v };
+      }
+    }
+  }
   const rrAll = p.twinLinked || p.rerollAllWounds || A.buffs.some((b) => b.kind === 'rerollWounds');
   const rr1 = p.rerollWounds1 || A.buffs.some((b) => b.kind === 'rerollWounds1');
   if (rrAll || rr1 || p.rerollWounds12) offerReroll(s, p, 'wound', rrAll ? 'all' : p.rerollWounds12 ? 'onesTwos' : 'ones');
@@ -1083,10 +1111,43 @@ export function applyDamage(s: GameState) {
     const effAp = p.ap - (d.crit && p.critWoundAp ? p.critWoundAp : 0);
     let ok = false;
     if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + effAp >= Math.max(RULES.modifierCaps.bestSave, sv);
+    if (!ok && !d.rerolled) {
+      const minSv = Math.min(inv ?? 99, Math.max(RULES.modifierCaps.bestSave, sv) - effAp);
+      if (minSv <= 6) {
+        const aofSv = tryActOfFaith(s, T, 'save', { need: minSv, damage: exprAverage(p.damage), isCharacter: m.isCharacter });
+        if (aofSv !== null) {
+          d.v = aofSv;
+          ok = true;
+          d.rerolled = true;
+        } else {
+          const fateSv = tryFateDie(s, T, 'save', { need: minSv, damage: exprAverage(p.damage), isCharacter: m.isCharacter });
+          if (fateSv !== null) {
+            d.v = fateSv;
+            ok = true;
+            d.rerolled = true;
+          }
+        }
+      }
+    }
     p.saveTargets[i] = `${m.name} (Sv${sv}+${inv ? ` / ${inv}++` : ''}, AP${effAp})`;
     d.o = ok ? 'saved' : 'fail';
     if (!ok) {
       let dr = rollExpr(s, p.damage);
+      if (dr.dice.length && dr.total < exprAverage(p.damage)) {
+        const aofDmg = tryActOfFaith(s, A, 'damage');
+        if (aofDmg !== null) {
+          const flat = p.damage.includes('+') ? parseInt(p.damage.split('+')[1]) : 0;
+          dr = { total: aofDmg + flat, dice: [aofDmg] };
+          p.damageLines.push(`Act of Faith: Damage substituted with Miracle die [${aofDmg}] = ${dr.total}`);
+        } else {
+          const fateDmg = tryFateDie(s, A, 'damage');
+          if (fateDmg !== null) {
+            const flat = p.damage.includes('+') ? parseInt(p.damage.split('+')[1]) : 0;
+            dr = { total: fateDmg + flat, dice: [fateDmg] };
+            p.damageLines.push(`Strands of Fate: Damage substituted with Fate die [${fateDmg}] = ${dr.total}`);
+          }
+        }
+      }
       if ((p.rerollDamage || (p.rerollDamageOne && dr.total < m.wounds)) && dr.dice.length && dr.total < exprAverage(p.damage)) {
         const again = rollExpr(s, p.damage); p.damageLines.push(`re-roll damage ${dr.total}→${again.total}`); dr = again; p.rerollDamageOne = false;
       } else if (dr.dice.length && dr.total < exprAverage(p.damage) && dr.total < m.wounds && freeDamageHook?.(s)) {

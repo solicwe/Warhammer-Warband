@@ -23,6 +23,8 @@ import { alive, boardUnits, centreOf, engagedEnemies, hasKw, heroFx, log, notify
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from './types';
 import { inSynapse } from './tyranids';
 import { unitVisibleTo } from './visibility';
+import { tryActOfFaith } from './sororitas';
+import { tryFateDie } from './aeldari';
 
 export type Trigger =
   | 'formation' | 'battleStart' | 'roundStart' | 'commandStart' | 'command' | 'anyCommand' | 'commandEnd'
@@ -510,8 +512,24 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
   const ld = ldOf(s, u);
   const dMod = daemonBattleShockMod(s, u);
   const effMod = mod + dMod;
-  const total = r[0] + r[1] + effMod + unitFlags(s, u).shockBonus;
-  const passed = total >= ld;
+  let total = r[0] + r[1] + effMod + unitFlags(s, u).shockBonus;
+  let passed = total >= ld;
+  if (!passed) {
+    const needOnDie = ld - effMod - unitFlags(s, u).shockBonus - r[1];
+    const aof = tryActOfFaith(s, u, 'shock', { need: needOnDie });
+    if (aof !== null) {
+      r[0] = aof;
+      total = r[0] + r[1] + effMod + unitFlags(s, u).shockBonus;
+      passed = total >= ld;
+    } else {
+      const fate = tryFateDie(s, u, 'shock', { need: needOnDie });
+      if (fate !== null) {
+        r[0] = fate;
+        total = r[0] + r[1] + effMod + unitFlags(s, u).shockBonus;
+        passed = total >= ld;
+      }
+    }
+  }
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'failed!'}${effMod ? ` (${effMod})` : ''}`, good: passed });
   log(s, `${why}: ${u.name} Battle-shock test [${r.join('+')}]${effMod ? ` ${effMod}` : ''} = ${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'Battle-shocked!'}`, 'roll', u.owner);
   if (!passed && !u.battleShocked) { u.battleShocked = true; pushFx(s, { kind: 'shock', unitId: u.id, owner: u.owner, at: centreOf(u) }); fire(s, 'becameShocked', [u]); }

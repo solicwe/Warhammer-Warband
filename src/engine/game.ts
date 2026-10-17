@@ -1014,6 +1014,22 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
       t.result = r.reduce((a, b) => a + b, 0) + mod;
       t.passed = t.result >= ld;
     }
+    if (!t.passed) {
+      const needOnDie = ld - mod - r[1];
+      const aofShock = tryActOfFaith(s, u, 'shock', { need: needOnDie });
+      if (aofShock !== null) {
+        r[0] = aofShock;
+        t.result = r.reduce((a, b) => a + b, 0) + mod;
+        t.passed = t.result >= ld;
+      } else {
+        const fateShock = tryFateDie(s, u, 'shock', { need: needOnDie });
+        if (fateShock !== null) {
+          r[0] = fateShock;
+          t.result = r.reduce((a, b) => a + b, 0) + mod;
+          t.passed = t.result >= ld;
+        }
+      }
+    }
     pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${t.result} vs Ld ${ld}+ → ${t.passed ? 'passed' : 'failed!'}`, good: t.passed });
     log(s, `Battle-shock ${u.name}: ${r.length}D6 [${r.join('+')}] = ${t.result} vs Ld ${ld}+ → ${t.passed ? 'passed' : 'failed'}`, 'roll', u.owner);
   }
@@ -1179,10 +1195,14 @@ export function rollAdvance(s: GameState, u: UnitState) {
     return;
   }
   let raw = det.advanceSix ? 6 : d6(s);
-  const aof = tryActOfFaith(s, u, 'advance');
-  if (aof !== null) raw = aof;
-  const fate = tryFateDie(s, u, 'advance');
-  if (fate !== null) raw = fate;
+  if (raw < 4) {
+    const aof = tryActOfFaith(s, u, 'advance', { need: 4 });
+    if (aof !== null) raw = aof;
+    else {
+      const fate = tryFateDie(s, u, 'advance', { need: 4 });
+      if (fate !== null) raw = fate;
+    }
+  }
   const bonus = (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0) + det.advanceBonus;
   u.advanceRoll = raw + bonus;
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Advance · ${u.name}`, dice: [raw], result: `M + ${u.advanceRoll}"${bonus ? ` (+${bonus})` : ''}${det.advanceSix ? ' (Detachment: 6)' : ''}`, good: u.advanceRoll >= 4 });
@@ -1458,10 +1478,22 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   const declaredInOwnTurn = u.owner === s.active && s.phase === 'charge';
   const r = rollN(s, 2);
   const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
-  const aof = tryActOfFaith(s, u, 'charge', { need: near });
-  if (aof !== null) r[0] = aof;
-  const fate = tryFateDie(s, u, 'charge', { need: near });
-  if (fate !== null) r[0] = fate;
+  const bonus = (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0) + rollMods(s, u).chargeBonus - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0);
+  if (r[0] + r[1] + bonus < near) {
+    const higher = Math.max(r[0], r[1]);
+    const needOnOther = near - higher - bonus;
+    if (needOnOther <= 6) {
+      const aof = tryActOfFaith(s, u, 'charge', { need: needOnOther });
+      if (aof !== null) {
+        if (r[0] <= r[1]) r[0] = aof; else r[1] = aof;
+      } else {
+        const fate = tryFateDie(s, u, 'charge', { need: needOnOther });
+        if (fate !== null) {
+          if (r[0] <= r[1]) r[0] = fate; else r[1] = fate;
+        }
+      }
+    }
+  }
   let total = r[0] + r[1];
   if (cap !== undefined) total = Math.min(total, cap);
   if (u.buffs.some((b) => b.kind === 'advanceCharge+1')) total += 1;
