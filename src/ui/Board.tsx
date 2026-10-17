@@ -420,8 +420,8 @@ function BoardImpl(props: BoardProps) {
   const p1Theme = getPlayerFactionTheme(s, 1);
   const COLORS = [p0Theme.primary, p1Theme.primary];
   const SOFT = [p0Theme.soft, p1Theme.soft];
-  const W = s.table?.width ?? RULES.battlefield.width;
-  const H = s.table?.height ?? RULES.battlefield.height;
+  const W = Math.max(RULES.battlefield.width, s.table?.width ?? RULES.battlefield.width);
+  const H = Math.max(RULES.battlefield.height, s.table?.height ?? RULES.battlefield.height);
   // board popover for clicked interactive ability/wargear badges
   const [boardPopover, setBoardPopover] = useState<{ info: AbilityOrWeaponInfo; rect: DOMRect } | null>(null);
   // models picked for single-model adjustment (tap a model of the moving unit); otherwise a drag moves the whole unit

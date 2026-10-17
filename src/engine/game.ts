@@ -218,6 +218,7 @@ export function createGame(o: NewGameOptions): GameState {
     terrain, objectives,
     deploymentId: layoutId,
     attackerPlayer: 0,
+    table: { width: RULES.battlefield.width, height: RULES.battlefield.height },
     window: null, attack: null, fight: null, shockTests: [],
     destroyedByTurn: [], controlAtTurnStart: [], log: [], winner: null,
     markers: [], pendingActions: [], turnStart: null, modelDeaths: [],
@@ -2298,8 +2299,8 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
       const leaderM = alive(mostExp)[0];
       const angle = nextRandom(s) * Math.PI * 2;
       const targetPos = {
-        x: Math.max(3, Math.min((s.table?.width ?? 44) - 3, leaderM.x + Math.cos(angle) * 9)),
-        y: Math.max(3, Math.min((s.table?.height ?? 30) - 3, leaderM.y + Math.sin(angle) * 9)),
+        x: Math.max(3, Math.min((s.table?.width ?? RULES.battlefield.width) - 3, leaderM.x + Math.cos(angle) * 9)),
+        y: Math.max(3, Math.min((s.table?.height ?? RULES.battlefield.height) - 3, leaderM.y + Math.sin(angle) * 9)),
       };
 
       elite.models = elite.models.map((m, idx) => ({
@@ -2385,8 +2386,8 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
             abilities: ['blast'],
           }],
         }],
-        x: Math.max(5, (s.table?.width ?? 44) - 8),
-        y: (s.table?.height ?? 30) / 2,
+        x: Math.max(5, (s.table?.width ?? RULES.battlefield.width) - 8),
+        y: (s.table?.height ?? RULES.battlefield.height) / 2,
         r: 2.5,
         wounds: 30,
         dead: false,
@@ -2409,10 +2410,13 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
  */
 export function expandRoguelikeMap(s: GameState): boolean {
   if (!s.campaign) return false;
-  s.table ??= { width: 44, height: 30 };
-  const baseW = 44, baseH = 30;
+  const baseW = RULES.battlefield.width;
+  const baseH = RULES.battlefield.height;
+  s.table ??= { width: baseW, height: baseH };
+  s.table.width = Math.max(baseW, s.table.width);
+  s.table.height = Math.max(baseH, s.table.height);
   const targetW = Math.max(baseW, Math.round(baseW + (s.players[0].vp * 0.35)));
-  const targetH = Math.max(baseH, Math.round(baseH + (s.players[0].vp * 0.25)));
+  const targetH = Math.max(baseH, Math.round(baseH + (s.players[0].vp * 0.35)));
 
   if (targetW <= s.table.width && targetH <= s.table.height) return false;
 
@@ -2540,6 +2544,10 @@ export function sanitizeGameState(s: GameState): GameState {
         p.sec.plundered ??= [];
       }
     }
+  }
+  if (s.table) {
+    s.table.width = Math.max(RULES.battlefield.width, s.table.width || RULES.battlefield.width);
+    s.table.height = Math.max(RULES.battlefield.height, s.table.height || RULES.battlefield.height);
   }
   return s;
 }

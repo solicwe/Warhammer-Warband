@@ -2876,11 +2876,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
           <SideScore s={s} p={1} label={sideLabel(1)} onOpen={() => { setCardSide(1); setShowCards(true); }} />
           <button className="tb-tool" onClick={() => { setCardSide(null); setShowCards(true); }} aria-label="Mission cards">
-            <span className="tb-ico"><Icon name="cards" size={22} />{s.players[me].secActive.length > 0 && <i className="tb-badge">{s.players[me].secActive.length}</i>}</span>
+            <span className="tb-ico"><Icon name="cards" size={20} />{s.players[me].secActive.length > 0 && <i className="tb-badge">{s.players[me].secActive.length}</i>}</span>
             <span className="tb-lbl">Mission</span>
           </button>
           <button className="tb-tool" onClick={() => openStrats()} aria-label="Stratagems">
-            <span className="tb-ico"><Icon name="strat" size={22} /></span>
+            <span className="tb-ico"><Icon name="strat" size={20} /></span>
             <span className="tb-lbl">Strat</span>
           </button>
           <button
@@ -2889,7 +2889,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             aria-label="Auto battle"
             style={autoPlay ? { color: '#4ade80' } : undefined}
           >
-            <span className="tb-ico"><Icon name="bot" size={22} /></span>
+            <span className="tb-ico"><Icon name="bot" size={20} /></span>
             <span className="tb-lbl">{autoPlay ? 'Auto ON' : 'Auto'}</span>
           </button>
           {canUndo && (
@@ -2900,7 +2900,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               title="Undo last action (Ctrl+Z)"
               style={{ color: '#f59e0b' }}
             >
-              <span className="tb-ico"><Icon name="undo" size={22} /></span>
+              <span className="tb-ico"><Icon name="undo" size={20} /></span>
               <span className="tb-lbl">Undo</span>
             </button>
           )}

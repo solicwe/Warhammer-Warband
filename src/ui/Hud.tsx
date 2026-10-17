@@ -96,7 +96,7 @@ export const SideScore = memo(function SideScore({ s, p, label, onOpen }: { s: G
       {P.resurgencePoints !== undefined && (
         <span className="miracle-pool gc-pool" title={`Cult Ambush: ${P.resurgencePoints} Resurgence point${P.resurgencePoints === 1 ? '' : 's'}`}>
           <Icon name="reserves" size={11} />
-          <b className="miracle-more" style={{ color: '#a855f7' }}>{P.resurgencePoints} Resurgence</b>
+          <b className="miracle-more" style={{ color: '#a855f7' }}>{P.resurgencePoints} RP</b>
         </span>
       )}
       {isThousandSonsArmy(s, p) && (() => {
