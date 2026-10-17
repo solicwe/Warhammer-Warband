@@ -2871,6 +2871,18 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <span className="tb-ico"><Icon name="bot" size={22} /></span>
             <span className="tb-lbl">{autoPlay ? 'Auto ON' : 'Auto'}</span>
           </button>
+          {canUndo && (
+            <button
+              className="tb-tool undo-tool"
+              onClick={() => { undo(); setMode(null); flash('Undone one step'); }}
+              aria-label="Undo action"
+              title="Undo last action (Ctrl+Z)"
+              style={{ color: '#f59e0b' }}
+            >
+              <span className="tb-ico"><Icon name="undo" size={22} /></span>
+              <span className="tb-lbl">Undo</span>
+            </button>
+          )}
         </div>
         {s.phase !== 'deploy' && <AdvantageBar share={advantage(s)} names={[s.players[0].name, s.players[1].name]} />}
         {['command', 'movement', 'shooting', 'charge', 'fight'].includes(s.phase) && (

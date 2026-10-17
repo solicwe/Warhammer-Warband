@@ -218,6 +218,10 @@ export const BOSS_RULES: BossRule[] = [
   { id: 'numbers', name: 'Overwhelming Numbers', text: 'Enemy units: +1 Objective Control.', e: { oc: 1 } },
   { id: 'armour', name: 'Ceramite Armour', text: 'Enemy VEHICLE and MONSTER units: +1 Toughness.', units: 'VEHICLE|MONSTER', e: { toughness: 1 } },
   { id: 'savage', name: 'Savage Charge', text: 'Enemy units re-roll Charge rolls and Wound rolls of 1 in melee.', e: { rerollCharge: true, reroll: 'wounds1', attack: 'melee' } },
+  { id: 'void-shields', name: 'Void Shields', text: 'Enemy units have a 5+ Invulnerable save.', e: { defend: { inv: 5 } } },
+  { id: 'toxic-munitions', name: 'Toxic Munitions', text: 'Enemy ranged attacks have [LETHAL HITS].', e: { abilities: ['lethal hits'], attack: 'ranged' } },
+  { id: 'relentless-foe', name: 'Relentless Assault', text: 'Enemy units can re-roll Advance and Charge rolls.', e: { rerollAdvance: true, rerollCharge: true } },
+  { id: 'furious-swarms', name: 'Furious Swarm', text: 'Enemy units have [SUSTAINED HITS 1] on melee attacks.', e: { abilities: ['sustained hits 1'], attack: 'melee' } },
 ];
 export const bossRuleById = (id: string) => BOSS_RULES.find((r) => r.id === id);
 

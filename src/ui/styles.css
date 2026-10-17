@@ -2086,6 +2086,14 @@ b.em { font-weight: 700; color: var(--text); }
 }
 @media (prefers-reduced-motion: reduce) { .obj-inprogress-pulse { animation: none; } }
 
+.obj-contested-pulse { animation: obj-contest-spin 2s linear infinite; }
+@keyframes obj-contest-spin {
+  0% { stroke-dashoffset: 0; opacity: 0.8; stroke: #f59e0b; }
+  50% { opacity: 1; stroke: #ef4444; }
+  100% { stroke-dashoffset: -2; opacity: 0.8; stroke: #f59e0b; }
+}
+@media (prefers-reduced-motion: reduce) { .obj-contested-pulse { animation: none; } }
+
 .obj-completed-glow { animation: obj-complete-pulse 2.4s ease-in-out infinite; }
 @keyframes obj-complete-pulse {
   0%, 100% { opacity: 0.65; stroke-width: 0.13; }

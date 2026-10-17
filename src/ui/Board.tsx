@@ -1173,7 +1173,7 @@ function BoardImpl(props: BoardProps) {
                 stroke={pendingAction ? pendingTheme!.primary : '#f59e0b'}
                 strokeWidth={0.15}
                 strokeDasharray="0.32 0.18"
-                className="obj-inprogress-pulse"
+                className={isContested ? 'obj-contested-pulse' : 'obj-inprogress-pulse'}
               />
             )}
 
@@ -1292,7 +1292,7 @@ function BoardImpl(props: BoardProps) {
       ))}
       {/* engagement range of enemies while moving */}
       {draftUnit && enemyOfDraft !== undefined && s.units.filter((u) => u.owner !== enemyOfDraft && onBoard(u)).flatMap((u) => alive(u).map((m) => (
-        <BaseShape key={`e${m.id}`} m={m} p={m} grow={RULES.engagementRange} fill="rgba(255,80,80,0.06)" stroke="rgba(255,80,80,0.25)" strokeWidth={0.04} />
+        <BaseShape key={`e${m.id}`} m={m} p={m} grow={RULES.engagementRange} fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.55)" strokeWidth={0.06} strokeDasharray="0.3 0.15" />
       )))}
       {units.map((u) => {
         const isDraft = draft && draftUnit === u.id;
@@ -1325,11 +1325,32 @@ function BoardImpl(props: BoardProps) {
             {isDraft && ms.map((m) => {
               const p = draft!.get(m.id);
               if (!p || p.length < 2) return null;
+              const used = pathLen(p);
+              const maxAllowed = maxFor ? maxFor(m.id) : 999;
+              const exceeds = used > maxAllowed + 0.05;
+              const isBad = props.bad?.includes(m.id) || exceeds;
+              const strokeColor = isBad ? '#ef4444' : '#10b981';
               return (
                 <g key={`g${m.id}`} pointerEvents="none">
                   <BaseShape m={m} p={p[0]} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.06} strokeDasharray="0.2 0.15" />
-                  <polyline points={p.map((q) => `${q.x},${q.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth={0.07} />
-                  {ms.length <= 6 && maxFor && <circle cx={p[0].x} cy={p[0].y} r={maxFor(m.id) + m.r} fill="none" stroke="rgba(245,184,61,0.35)" strokeWidth={0.06} />}
+                  <polyline
+                    points={p.map((q) => `${q.x},${q.y}`).join(' ')}
+                    fill="none"
+                    stroke={strokeColor}
+                    strokeWidth={isBad ? 0.11 : 0.08}
+                    strokeDasharray={isBad ? '0.35 0.18' : undefined}
+                  />
+                  {ms.length <= 6 && maxFor && (
+                    <circle
+                      cx={p[0].x}
+                      cy={p[0].y}
+                      r={maxAllowed + m.r}
+                      fill="none"
+                      stroke={exceeds ? '#ef4444' : 'rgba(245,184,61,0.45)'}
+                      strokeWidth={0.06}
+                      strokeDasharray="0.3 0.2"
+                    />
+                  )}
                 </g>
               );
             })}
@@ -1708,7 +1729,43 @@ function BoardImpl(props: BoardProps) {
               const used = pathLen(p);
               if (used < 0.05) return null;
               const e = p[p.length - 1];
-              return <text key={`d${m.id}`} x={e.x} y={e.y - m.r - 0.2} fontSize={0.55} textAnchor="middle" fill="#fde68a" stroke="#000" strokeWidth={0.08} paintOrder="stroke" pointerEvents="none">{used.toFixed(1)}/{maxFor(m.id).toFixed(0)}"</text>;
+              const maxAllowed = maxFor(m.id);
+              const exceeds = used > maxAllowed + 0.05;
+              const isBad = props.bad?.includes(m.id) || exceeds;
+              const label = isBad
+                ? exceeds
+                  ? `Exceeds: ${used.toFixed(1)}" > ${maxAllowed.toFixed(0)}"`
+                  : `Illegal Position`
+                : `${used.toFixed(1)}" / ${maxAllowed.toFixed(0)}"`;
+              const badgeBg = isBad ? 'rgba(127,29,29,0.92)' : 'rgba(6,78,59,0.92)';
+              const badgeBorder = isBad ? '#ef4444' : '#10b981';
+              const badgeText = isBad ? '#fca5a5' : '#a7f3d0';
+              const pillW = Math.max(2.4, label.length * 0.22);
+              const pillH = 0.54;
+              return (
+                <g key={`d${m.id}`} pointerEvents="none">
+                  <rect
+                    x={e.x - pillW / 2}
+                    y={e.y - m.r - pillH - 0.2}
+                    width={pillW}
+                    height={pillH}
+                    rx={0.22}
+                    fill={badgeBg}
+                    stroke={badgeBorder}
+                    strokeWidth={0.06}
+                  />
+                  <text
+                    x={e.x}
+                    y={e.y - m.r - 0.38}
+                    fontSize={0.34}
+                    textAnchor="middle"
+                    fill={badgeText}
+                    fontWeight={800}
+                  >
+                    {label}
+                  </text>
+                </g>
+              );
             })}
           </g>
         );
