@@ -307,7 +307,12 @@ button.ab-faction { border: none; background: none; padding: 0; text-align: left
 .ab-add { width: 36px; height: 36px; flex: none; border: 1px solid var(--line-2); border-radius: 6px; background: var(--surface); color: var(--text); font: 400 22px/1 var(--font-ui); display: grid; place-items: center; cursor: pointer; }
 .ab-add:hover { border-color: var(--text-3); }
 .ab-add.dark { border-color: var(--accent); color: var(--accent); }
-.ab-row { display: flex; align-items: stretch; min-height: 76px; background: var(--surface); color: var(--text); }
+.ab-add:disabled,
+.ab-add.dark:disabled { border-color: rgba(255, 255, 255, 0.15) !important; color: #64748b !important; background: rgba(255, 255, 255, 0.03) !important; opacity: 0.4 !important; cursor: not-allowed !important; pointer-events: none !important; }
+.ab-row { display: flex; align-items: stretch; min-height: 76px; background: var(--surface); color: var(--text); transition: opacity 0.15s ease, filter 0.15s ease; }
+.ab-row.unaffordable { opacity: 0.45; filter: grayscale(0.75); }
+.ab-row.unaffordable:hover { opacity: 0.6; }
+.ab-row.already-recruited { opacity: 0.4; filter: grayscale(0.85); }
 .ab-row-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 10px 0 10px 10px; border: none; background: transparent; color: inherit; text-align: left; cursor: pointer; font: inherit; }
 .ab-row-main:hover { background: var(--surface-2); }
 .ab-row.open { box-shadow: inset 3px 0 0 var(--accent); }
@@ -356,6 +361,8 @@ button.ab-faction { border: none; background: none; padding: 0; text-align: left
 .ab-add-size { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--accent-soft); border-top: 1px solid var(--line); }
 .ab-add-size .ab-pop-head { padding: 0 2px; }
 .ab-add-size button.ab-pop-size { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 50px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--surface); color: var(--text); font: 500 16px var(--font-ui); text-align: left; cursor: pointer; }
+.ab-add-size button.ab-pop-size:disabled { opacity: 0.45; filter: grayscale(0.75); cursor: not-allowed; border-color: var(--line); }
+.ab-add-size button.ab-pop-size:disabled .ab-pop-plus { background: rgba(255, 255, 255, 0.08); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); }
 .ab-add-size .ab-pop-models { font-weight: 700; }
 .ab-add-size .ab-pop-pts { font: 700 17px var(--font-cond); color: var(--text); }
 .ab-add-size .ab-pop-plus { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; min-width: 64px; height: 34px; border-radius: 6px; background: var(--accent); color: var(--on-fill); font: 600 14px var(--font-ui); }

@@ -324,8 +324,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     const newCard = (d: DatasheetData, onNew: (models: number) => void) => {
       const isEpicHero = (d.keywords || []).includes('EPIC HERO');
       const already = isEpicHero && run.list.units.some((x) => x.datasheet === d.name);
+      const minCost = cheapest(d)?.pts ?? pointsOptions(d)[0]?.pts ?? 0;
+      const canAffordAny = (run.scrap ?? 0) >= minCost;
+      const isDim = already || !canAffordAny;
       return (
-        <div key={`new-${d.name}`} className="ab-pop-card" style={already ? { opacity: 0.6 } : undefined}>
+        <div key={`new-${d.name}`} className="ab-pop-card" style={isDim ? { opacity: 0.5, filter: 'grayscale(0.75)' } : undefined}>
           <div className="ab-pop-card-head">
             {peekArt(d.name)}
             <div className="ab-pop-card-text">
@@ -334,7 +337,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 const canAfford = (run.scrap ?? 0) >= o.pts;
                 const disabled = !canAfford || already;
                 return (
-                  <button key={o.models} type="button" className="ab-pop-size" disabled={disabled} onClick={() => onNew(o.models)}>
+                  <button key={o.models} type="button" className="ab-pop-size" disabled={disabled} onClick={() => onNew(o.models)} style={disabled ? { opacity: 0.45, filter: 'grayscale(0.75)' } : undefined}>
                     <span className="ab-pop-pts">{o.pts} Scrap</span> <span className="muted">({o.models})</span>
                     <span className="ab-pop-plus">{already ? 'Limit 1' : canAfford ? '+' : 'Need Scrap'}</span>
                   </button>
@@ -436,12 +439,14 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             const currentOpt = opts.find((x) => x.models === u.models) ?? { pts: u.pts };
             const diff = o.pts - currentOpt.pts;
             const canAfford = diff <= 0 || (run.scrap ?? 0) >= diff;
+            const disabled = !canAfford && !isCurrent;
             return (
               <button
                 key={o.models}
                 type="button"
                 className={`ab-pop-size ${isCurrent ? 'on' : ''}`}
-                disabled={!canAfford && !isCurrent}
+                disabled={disabled}
+                style={disabled ? { opacity: 0.45, filter: 'grayscale(0.75)' } : undefined}
                 onClick={() => {
                   if (isCurrent) { close(); return; }
                   const next = changeSquadSize(run, fac, u.uid, o.models);
@@ -848,7 +853,20 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                 const has = (u.honors ?? []).includes(h.id);
                                 const canAfford = (run.scrap ?? 0) >= h.cost;
                                 return (
-                                  <div key={h.id} style={{ padding: 10, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                  <div
+                                    key={h.id}
+                                    style={{
+                                      padding: 10,
+                                      borderRadius: 8,
+                                      background: 'rgba(255,255,255,0.04)',
+                                      border: '1px solid rgba(255,255,255,0.1)',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      justifyContent: 'space-between',
+                                      opacity: !has && !canAfford ? 0.45 : 1,
+                                      filter: !has && !canAfford ? 'grayscale(0.75)' : 'none',
+                                    }}
+                                  >
                                     <div>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <b style={{ color: '#f8fafc', fontSize: 13.5 }}>{h.name}</b>
@@ -972,7 +990,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                           flexDirection: 'column',
                                           justifyContent: 'space-between',
                                           gap: 8,
-                                          opacity: taken || (fit && !fit.ok) ? 0.6 : 1,
+                                          opacity: taken || (fit && !fit.ok) || (!isCurrent && !canAfford) ? 0.45 : 1,
+                                          filter: taken || (fit && !fit.ok) || (!isCurrent && !canAfford) ? 'grayscale(0.75)' : 'none',
                                         }}
                                       >
                                         <div>
@@ -1322,12 +1341,19 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   const canAffordAny = (run.scrap ?? 0) >= minCost;
                                   const isOpenPeek = recruitView === d.name;
                                   const isOpenSize = recruitSize === d.name;
+                                  const isUnaffordable = !canAffordAny && !alreadyInForce;
 
                                   return [
                                     <div
                                       key={d.name}
-                                      className={`ab-row ${isOpenPeek ? 'open' : ''}`}
-                                      style={alreadyInForce ? { opacity: 0.6 } : undefined}
+                                      className={`ab-row ${isOpenPeek ? 'open' : ''} ${alreadyInForce ? 'already-recruited' : ''} ${isUnaffordable ? 'unaffordable' : ''}`}
+                                      style={
+                                        alreadyInForce
+                                          ? { opacity: 0.45, filter: 'grayscale(0.85)' }
+                                          : isUnaffordable
+                                          ? { opacity: 0.45, filter: 'grayscale(0.75)' }
+                                          : undefined
+                                      }
                                     >
                                       <button
                                         type="button"
@@ -1345,8 +1371,13 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                               </span>
                                             )}
                                           </span>
-                                          <span className="ab-pts">
+                                          <span className="ab-pts" style={isUnaffordable ? { color: '#94a3b8' } : undefined}>
                                             {opts.map((o) => `${o.models}: ${o.pts}`).join(' / ')} Scrap
+                                            {isUnaffordable && (
+                                              <span className="tiny" style={{ marginLeft: 6, color: '#f87171', fontWeight: 600 }}>
+                                                (Need {minCost - (run.scrap ?? 0)} more)
+                                              </span>
+                                            )}
                                           </span>
                                           <span className="ab-sub">
                                             {alreadyInForce
@@ -1391,6 +1422,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                               type="button"
                                               className="ab-pop-size"
                                               disabled={disabled}
+                                              style={disabled ? { opacity: 0.45, filter: 'grayscale(0.75)' } : undefined}
                                               onClick={() => {
                                                 if (disabled) return;
                                                 const next = recruitUnit(run, fac, d.name, o.models);
@@ -1403,8 +1435,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                               }}
                                             >
                                               <span className="ab-pop-models">{o.models} {o.models === 1 ? 'model' : 'models'}</span>
-                                              <span className="ab-pop-pts">{o.pts} Scrap</span>
-                                              <span className="ab-pop-plus">
+                                              <span className="ab-pop-pts" style={!canAfford ? { color: '#94a3b8' } : undefined}>{o.pts} Scrap</span>
+                                              <span className="ab-pop-plus" style={disabled ? { background: 'rgba(255,255,255,0.08)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)' } : undefined}>
                                                 {disabled ? (alreadyInForce ? 'Limit 1' : 'Need Scrap') : '+ Recruit'}
                                               </span>
                                             </button>
@@ -1485,7 +1517,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             const canAfford = (run.scrap ?? 0) >= cost;
                             const rulesText = d.rules?.map((r) => `${r.name}: ${r.text}`).join('\n\n') || '';
                             return (
-                              <div key={d.name} className="cmp-roster-card">
+                              <div key={d.name} className="cmp-roster-card" style={!canAfford ? { opacity: 0.5, filter: 'grayscale(0.75)' } : undefined}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <b style={{ color: '#f8fafc', fontSize: 14 }}>{d.name}</b>
