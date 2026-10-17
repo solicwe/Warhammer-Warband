@@ -747,6 +747,196 @@ b.em { font-weight: 700; color: var(--text); }
 .log .kill { color: var(--bad); }
 .log .roll { color: var(--text-2); }
 .log .cp { color: var(--good); }
+
+/* ---------- Modernized Combat Resolution Modal ---------- */
+.combat-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #0f141c;
+  border: 1px solid #1e293b;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  color: #e2e8f0;
+}
+
+.combat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #141b24;
+  border-bottom: 1px solid #1e293b;
+  border-radius: 12px 12px 0 0;
+  gap: 8px;
+}
+
+.combat-side-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.combat-side-tag.right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.combat-unit-title {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.combat-faction-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.combat-phase-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+}
+
+.combat-phase-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #38bdf8;
+}
+
+.combat-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 0 14px;
+}
+
+.combat-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  background: #141b24;
+  border: 1px solid #1e293b;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: all 0.2s ease;
+}
+
+.combat-step.active {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: #0ea5e9;
+  color: #38bdf8;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
+}
+
+.combat-step.done {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.combat-weapon-card {
+  margin: 0 14px;
+  padding: 10px 12px;
+  background: #141b24;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.combat-weapon-name {
+  font-weight: 800;
+  font-size: 14px;
+  color: #f1f5f9;
+}
+
+.combat-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.combat-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  background: #1e293b;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.combat-stat-pill b {
+  color: #f8fafc;
+}
+
+.combat-stat-pill.accent {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.combat-requirement-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin: 0 14px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.85);
+  border-left: 3px solid #38bdf8;
+  font-size: 13px;
+  color: #e2e8f0;
+}
+
+.combat-dice-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 14px;
+}
+
+.combat-dice-box {
+  background: #141b24;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.combat-actions-dock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 14px;
+}
+
 /* ---------- Modern Warhammer 40k Stratagem Card ---------- */
 .strat-card {
   display: flex;
