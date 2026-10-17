@@ -133,14 +133,27 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
       q.saves.filter((d) => d.rerolled).length,
     0,
   );
+  const weaponAbilities = abilitiesOf(p.profile).map(abilityLabel);
   const lastRolled = useRef(rolled);
   useEffect(() => {
     if (rolled > lastRolled.current) {
+      if (st === 'hit') {
+        const isMelee = p.profile.range === 'Melee' || at.kind === 'fight';
+        const hasTorrent = p.autoHit || /torrent|flamer/i.test(p.weapon) || /torrent/i.test(weaponAbilities.join(' '));
+        const isMelta = /melta/i.test(p.weapon) || /melta/i.test(weaponAbilities.join(' '));
+        const isPlasma = /plasma/i.test(p.weapon) || /hazardous/i.test(weaponAbilities.join(' '));
+        const isBolt = /bolt/i.test(p.weapon);
+        if (isMelee) play('melee');
+        else if (hasTorrent) play('flamer');
+        else if (isMelta) play('melta');
+        else if (isPlasma) play('plasma');
+        else if (isBolt) play('bolt');
+      }
       play('dice', Math.min(8, rolled - lastRolled.current));
       window.setTimeout(() => play('land'), 420);
     }
     lastRolled.current = rolled;
-  }, [rolled]);
+  }, [rolled, st, p, at.kind, weaponAbilities]);
 
   const hitCls = (d: Die) => d.o;
   const woundCls = (d: Die) => d.o;
@@ -153,8 +166,6 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
   const tLead = T.models.find((m) => m.isCharacter && !m.dead) ?? T.models.find((m) => !m.dead) ?? T.models[0];
   const aPortraitKey = aLead ? (aLead.name && aLead.name !== aLead.source ? modelPortraitKey(aLead.source, aLead.name) : aLead.source) : '';
   const tPortraitKey = tLead ? (tLead.name && tLead.name !== tLead.source ? modelPortraitKey(tLead.source, tLead.name) : tLead.source) : '';
-
-  const weaponAbilities = abilitiesOf(p.profile).map(abilityLabel);
 
   const tRemainingModels = T.models.filter((m) => !m.dead).length;
   const tPctHealth = Math.round((tRemainingModels / Math.max(1, T.startingStrength)) * 100);

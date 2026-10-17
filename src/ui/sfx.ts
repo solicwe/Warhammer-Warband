@@ -1,7 +1,7 @@
 // Sounds made on the spot with Web Audio (no sound files): short clicks, thuds and chimes that tell the player what
 // just happened without looking. Browsers only allow sound after the first tap, which a game always has.
 
-export type Sfx = 'tick' | 'hit' | 'wound' | 'kill' | 'destroy' | 'vp' | 'gem' | 'spend' | 'turn' | 'dice' | 'land' | 'card' | 'think' | 'bad' | 'good' | 'shock' | 'heal' | 'arrive' | 'charge';
+export type Sfx = 'tick' | 'hit' | 'wound' | 'kill' | 'destroy' | 'vp' | 'gem' | 'spend' | 'turn' | 'dice' | 'land' | 'card' | 'think' | 'bad' | 'good' | 'shock' | 'heal' | 'arrive' | 'charge' | 'bolt' | 'plasma' | 'melta' | 'flamer' | 'melee';
 
 const PREF = 'sfx-on';
 let on = (() => { try { return localStorage.getItem(PREF) !== '0'; } catch { return true; } })();
@@ -132,5 +132,25 @@ export function play(kind: Sfx, step = 0, size = 0) {
     case 'arrive': noise(a, t, 0.35, 0.12, 3200, 'highpass'); noise(a, t + 0.3, 0.2, 0.35, 500); tone(a, 80, t + 0.3, 0.35, 'sine', 0.3, 0.5); break;
     // a charge slams home
     case 'charge': noise(a, t, 0.12, 0.3, 800); tone(a, 120, t, 0.18, 'sine', 0.25, 0.6); break;
+    // weapon soundscapes
+    case 'bolt':
+      noise(a, t, 0.08, 0.3, 1400);
+      tone(a, 130, t, 0.12, 'square', 0.2, 0.5);
+      break;
+    case 'plasma':
+      tone(a, 780, t, 0.14, 'sawtooth', 0.12, 0.4);
+      tone(a, 85, t + 0.04, 0.25, 'sine', 0.3, 0.5);
+      break;
+    case 'melta':
+      noise(a, t, 0.24, 0.3, 3400, 'bandpass');
+      tone(a, 65, t + 0.04, 0.24, 'sine', 0.35, 0.4);
+      break;
+    case 'flamer':
+      noise(a, t, 0.32, 0.22, 900, 'lowpass');
+      break;
+    case 'melee':
+      noise(a, t, 0.08, 0.26, 2400, 'bandpass');
+      tone(a, 150, t, 0.1, 'sawtooth', 0.18, 0.5);
+      break;
   }
 }
