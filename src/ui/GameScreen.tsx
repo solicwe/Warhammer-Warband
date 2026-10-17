@@ -189,7 +189,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   useEffect(() => { if (!says) return; const t = window.setTimeout(() => setSaysTick((x) => x + 1), 6100); return () => window.clearTimeout(t); }, [says]);
   const speak = (p: PlayerId, ev: VoiceEvent, names: { u?: string; t?: string } = {}) => {
     if (!bots.includes(p)) return;
-    setSays({ p, text: line(s.players[p].factionId, ev, names), k: Date.now() });
+    try {
+      const fId = s.players[p]?.factionId ?? 'SM';
+      const text = line(fId, ev, names);
+      if (text) setSays({ p, text, k: Date.now() });
+    } catch {
+      // Voice should never interrupt game logic
+    }
   };
 
   // engine errors become a message instead of a crash

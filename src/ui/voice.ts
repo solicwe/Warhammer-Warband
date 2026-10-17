@@ -3,7 +3,7 @@
 // talk carries information instead of filling time. A line is never said twice in a row.
 
 export type VoiceEvent =
-  | 'think' | 'steady' | 'aggressive' | 'careful' | 'objectives' | 'hunt'
+  | 'think' | 'steady' | 'aggressive' | 'careful' | 'objectives' | 'hunt' | 'rogue'
   | 'target' | 'kill' | 'loss' | 'objective' | 'objectiveLost' | 'charge' | 'ahead' | 'behind' | 'win' | 'lose';
 
 interface Voice { title: string; lines: Partial<Record<VoiceEvent, string[]>> }
@@ -16,6 +16,7 @@ const GENERIC: Record<VoiceEvent, string[]> = {
   careful: ['Hold back. Let them come to us.', 'Patience. Keep out of their sights.'],
   objectives: ['Take the ground. The objectives decide this.', 'Secure the objectives. Everything else waits.'],
   hunt: ['Find their strongest unit and break it.', 'Hunt them down.'],
+  rogue: ['No retreat, no surrender! Eliminate them!', 'Crush the invaders! Advance and destroy!', 'Engage all hostiles! Leave none standing!'],
   target: ['{t} goes first.', 'Focus on {t}.'],
   kill: ['{t} is finished.', 'Scratch {t} from their roster.'],
   loss: ['We lost {u}. Close the gap.', '{u} has fallen. Fight on.'],
@@ -38,6 +39,7 @@ const VOICES: Record<string, Voice> = {
       careful: ['Sneaky like. Dey won\'t see us comin\'.', 'Hide behind dat wall. …For now.'],
       objectives: ['Grab dem shiny bitz! Dey\'re OURS!', 'Stand on da fings. Dat\'s how ya win, apparently.'],
       hunt: ['Find da biggest one an\' krump it!', 'Who\'s da toughest? I wanna bash \'im.'],
+      rogue: ['NO RETREAT! KRUMP \'EM ALL!', 'WAAAGH! TEAR \'EM TO BITZ!'],
       target: ['Oi, {t}! You\'re next!', '{t} looks like a good fight.'],
       kill: ['Ha! {t} got krumped!', 'Dat\'s {t} done. NEXT!', 'More teef for me!'],
       loss: ['{u} got krumped. Dey wuz weak anyway.', 'Oi! Who let {u} die?!'],
@@ -59,6 +61,7 @@ const VOICES: Record<string, Voice> = {
       careful: ['Use the cover. Make them come to us.', 'Patience, brothers. Let them overreach.'],
       objectives: ['Secure the objectives. Victory is held, not taken.', 'Claim the ground. Hold it.'],
       hunt: ['Identify their commander. Eliminate.', 'Strike at the heart of their force.'],
+      rogue: ['No retreat! Slay every foe in our path!', 'Purge them without mercy!'],
       target: ['All fire on {t}.', '{t} is designated. Engage.'],
       kill: ['{t} purged.', 'The Emperor\'s judgement on {t}.', 'Target eliminated.'],
       loss: ['{u} has fallen. Their sacrifice is noted.', 'We lost {u}. Avenge them.'],
@@ -379,11 +382,13 @@ const last = new Map<string, string>();
 
 /** A line for this moment, in this faction's voice (falling back on a plain one), never the one said just before. */
 export function line(factionId: string, ev: VoiceEvent, names: { u?: string; t?: string } = {}): string {
-  const pool = voiceOf(factionId).lines[ev] ?? GENERIC[ev];
+  const v = voiceOf(factionId);
+  const pool = v?.lines?.[ev] ?? GENERIC[ev] ?? GENERIC.steady ?? [];
+  if (!pool || pool.length === 0) return '';
   const key = `${factionId}|${ev}`;
   const prev = last.get(key);
   const options = pool.length > 1 ? pool.filter((x) => x !== prev) : pool;
-  const pick = options[Math.floor(Math.random() * options.length)];
+  const pick = options[Math.floor(Math.random() * options.length)] ?? pool[0] ?? '';
   last.set(key, pick);
   return pick.replace('{u}', names.u ?? 'our unit').replace('{t}', names.t ?? 'that unit');
 }
