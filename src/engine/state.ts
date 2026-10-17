@@ -60,8 +60,25 @@ export function notifyAbilityCpGain(s: GameState, p: PlayerId, amount: number, s
 }
 
 export function unitDistance(a: UnitState, b: UnitState): number {
+  const ma = alive(a);
+  const mb = alive(b);
+  if (!ma.length || !mb.length) return Infinity;
   let best = Infinity;
-  for (const m of alive(a)) for (const n of alive(b)) best = Math.min(best, baseDist(m, n));
+  for (let i = 0; i < ma.length; i++) {
+    const m = ma[i];
+    const mr = m.hl ? Math.max(m.r, m.hw ?? m.r) + (m.hl ?? 0) : m.r;
+    for (let j = 0; j < mb.length; j++) {
+      const n = mb[j];
+      const nr = n.hl ? Math.max(n.r, n.hw ?? n.r) + (n.hl ?? 0) : n.r;
+      const maxR = mr + nr;
+      const dx = Math.abs(m.x - n.x);
+      if (dx - maxR >= best) continue;
+      const dy = Math.abs(m.y - n.y);
+      if (dy - maxR >= best) continue;
+      const d = baseDist(m, n);
+      if (d < best) best = d;
+    }
+  }
   return best;
 }
 
@@ -70,7 +87,16 @@ export const lastRound = (s: GameState) => s.maxRounds ?? RULES.battleRounds;
 /** How far into the battle this is, as the round of a full 5-round game (a short game's rounds count for more). */
 export const pace = (s: GameState) => (s.maxRounds ? (s.round * RULES.battleRounds) / s.maxRounds : s.round);
 
-export const modelEngagedWith = (m: ModelState, u: UnitState) => alive(u).some((n) => baseDist(m, n) <= RULES.engagementRange + 1e-6);
+export const modelEngagedWith = (m: ModelState, u: UnitState) => {
+  const mr = m.hl ? Math.max(m.r, m.hw ?? m.r) + (m.hl ?? 0) : m.r;
+  const er = RULES.engagementRange + 1e-6;
+  return alive(u).some((n) => {
+    const nr = n.hl ? Math.max(n.r, n.hw ?? n.r) + (n.hl ?? 0) : n.r;
+    const maxR = mr + nr + er;
+    if (Math.abs(m.x - n.x) > maxR || Math.abs(m.y - n.y) > maxR) return false;
+    return baseDist(m, n) <= er;
+  });
+};
 
 export function engagedEnemies(s: GameState, u: UnitState): UnitState[] {
   if (!onBoard(u)) return [];

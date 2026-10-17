@@ -284,7 +284,10 @@ function BaseShape({ m, p, grow = 0, ...rest }: { m: ModelState; p: Pt; grow?: n
 
 /** Calculate hit flinch / recoil / twitch offset for a model being shot, struck, or caught in explosions. */
 function modelFlinch(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): { x: number; y: number; intensity: number } | null {
+  if (!fx.length) return null;
   if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return null;
+  const relevant = fx.some((a) => (a.e.kind === 'attack' && a.e.targetId === u.id) || (a.e.kind === 'mortal' && a.e.unitId === u.id) || a.e.kind === 'explosion');
+  if (!relevant) return null;
   // Dead models must NEVER flinch/shake unless actively dying from this specific attack event
   if (m.dead && !isDyingModel(u, m, fx, now)) return null;
   for (const a of fx) {
@@ -365,7 +368,9 @@ function modelFlinch(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): 
 
 /** Is this model currently in the process of taking fatal damage before the damage numbers / hit fx finish? */
 function isDyingModel(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): boolean {
-  if (!m.dead) return false;
+  if (!m.dead || !fx.length) return false;
+  const relevant = fx.some((a) => (a.e.kind === 'attack' && a.e.targetId === u.id) || (a.e.kind === 'mortal' && a.e.unitId === u.id));
+  if (!relevant) return false;
   for (const a of fx) {
     if (a.e.kind === 'attack' && a.e.targetId === u.id) {
       if (!a.e.deadIds || !a.e.deadIds.includes(m.id)) continue;
@@ -383,6 +388,9 @@ function isDyingModel(u: UnitState, m: ModelState, fx: ActiveFx[], now: number):
 
 /** Delay wound deduction until damage numbers and impact effects pop up first (Thai req: เลขดาเมจกับเอฟเฟคขึ้นก่อน ค่อยให้เลือดลด) */
 function getModelDisplayWounds(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): { wounds: number; low: boolean; fading?: number } {
+  if (!fx.length) return { wounds: m.wounds, low: m.wounds * 2 <= m.profile.W };
+  const relevant = fx.some((a) => (a.e.kind === 'attack' && a.e.targetId === u.id) || (a.e.kind === 'mortal' && a.e.unitId === u.id));
+  if (!relevant) return { wounds: m.wounds, low: m.wounds * 2 <= m.profile.W };
   for (const a of fx) {
     if (a.e.kind === 'attack' && a.e.targetId === u.id) {
       if (m.dead && (!a.e.deadIds || !a.e.deadIds.includes(m.id))) continue;
@@ -457,7 +465,15 @@ function BoardImpl(props: BoardProps) {
   useEffect(() => {
     if (!animating) return;
     let raf = 0;
-    const tick = () => { setNow(performance.now()); raf = requestAnimationFrame(tick); };
+    let lastTick = 0;
+    const tick = (time: number) => {
+      // Throttle board full re-render animation to ~30 FPS (33ms) to prevent pegging 120Hz/144Hz displays
+      if (time - lastTick >= 33) {
+        lastTick = time;
+        setNow(time);
+      }
+      raf = requestAnimationFrame(tick);
+    };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [animating]);
@@ -928,7 +944,22 @@ function BoardImpl(props: BoardProps) {
       hasCover: boolean;
     }>();
 
+    // Precompute terrain bounding boxes once for fast spatial culling
+    const terrainWithBoxes = s.terrain
+      .filter((t) => t.category !== 'exposed')
+      .map((t) => {
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (const p of t.poly) {
+          if (p.x < minX) minX = p.x;
+          if (p.x > maxX) maxX = p.x;
+          if (p.y < minY) minY = p.y;
+          if (p.y > maxY) maxY = p.y;
+        }
+        return { t, minX, maxX, minY, maxY };
+      });
+
     for (const u of s.units) {
+      if (!onBoard(u)) continue;
       const ms = alive(u);
       const unitHasFlow = hasFlowOfMagic(s, u.owner);
       const unitInFlow = unitHasFlow && inFlow(s, u);
@@ -941,7 +972,16 @@ function BoardImpl(props: BoardProps) {
       const loRange = getUnitLoneOpRange(s, u);
       const hasStealth = !!(u.core.stealth || uFlags.stealth || u.buffs?.some((b) => b.kind === 'smoke'));
       const hasLoneOp = loRange !== null;
-      const hasCover = !!(u.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke') || ms.some((m) => s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly))));
+      const hasCover = !!(
+        u.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke') ||
+        ms.some((m) => {
+          const mr = m.hl ? Math.max(m.r, m.hw ?? m.r) + (m.hl ?? 0) : m.r;
+          return terrainWithBoxes.some(({ t, minX, maxX, minY, maxY }) => {
+            if (m.x + mr < minX || m.x - mr > maxX || m.y + mr < minY || m.y - mr > maxY) return false;
+            return bodyTouchesPoly(m, 0, t.poly);
+          });
+        })
+      );
       map.set(u.id, {
         hasFlowOfMagic: unitHasFlow,
         unitInFlow,
@@ -962,10 +1002,12 @@ function BoardImpl(props: BoardProps) {
   const untargetableModelIds = useMemo(() => {
     const set = new Set<string>();
     if (!s || props.viewer === undefined) return set;
-    const friendlyUnits = s.units.filter((fu) => fu.owner === props.viewer && onBoard(fu));
-    const friendlyModels = friendlyUnits.flatMap((fu) => alive(fu));
     const selectedUnit = props.selected ? s.units.find((x) => x.id === props.selected) : null;
     const selAlive = selectedUnit && selectedUnit.owner === props.viewer ? alive(selectedUnit) : null;
+    const isTargetingActive = s.phase === 'shooting' || (props.targets && props.targets.length > 0);
+
+    const friendlyUnits = s.units.filter((fu) => fu.owner === props.viewer && onBoard(fu));
+    const friendlyModels = friendlyUnits.flatMap((fu) => alive(fu));
 
     for (const u of s.units) {
       if (u.owner === props.viewer || !onBoard(u)) continue;
@@ -975,19 +1017,34 @@ function BoardImpl(props: BoardProps) {
       const activeRange = loRange ?? 12;
 
       for (const m of alive(u)) {
-        if (selAlive && selAlive.length > 0) {
-          // Line of sight / targetability from active selected unit
+        if (selAlive && selAlive.length > 0 && isTargetingActive) {
+          // Check Lone Operative first (fast distance check)
+          if (hasLoneOp && selAlive.every((sm) => Math.abs(sm.x - m.x) > activeRange || Math.abs(sm.y - m.y) > activeRange || baseDist(sm, m) > activeRange)) {
+            set.add(m.id);
+            continue;
+          }
+          // If allowed targets specified, skip non-targets without raycasting
+          if (props.targets && props.targets.length > 0 && !props.targets.includes(u.id)) {
+            set.add(m.id);
+            continue;
+          }
+          // Distance culling before raycasting: beyond 48"
+          if (selAlive.every((sm) => Math.abs(sm.x - m.x) > 48 || Math.abs(sm.y - m.y) > 48)) {
+            set.add(m.id);
+            continue;
+          }
+          // Check line of sight from closest friendly model first
           const canBeTargeted = selAlive.some((sm) => modelVisible(s, sm, u, m));
           if (!canBeTargeted) set.add(m.id);
         } else if (hasLoneOp) {
-          // When no unit is selected, grey out Lone Operative if no friendly model is within range
-          const anyFriendlyInRange = friendlyModels.some((fm) => baseDist(fm, m) <= activeRange);
+          // Outside active targeting, check Lone Operative with AABB early-out
+          const anyFriendlyInRange = friendlyModels.some((fm) => Math.abs(fm.x - m.x) <= activeRange && Math.abs(fm.y - m.y) <= activeRange && baseDist(fm, m) <= activeRange);
           if (!anyFriendlyInRange) set.add(m.id);
         }
       }
     }
     return set;
-  }, [s, props.selected, props.viewer, unitStatusMap]);
+  }, [s, props.selected, props.viewer, props.targets, unitStatusMap]);
 
   const engagementRings = useMemo(() => {
     if (!draftUnit || enemyOfDraft === undefined) return [];
@@ -1429,7 +1486,7 @@ function BoardImpl(props: BoardProps) {
                   onPointerDown={(e) => startModelDrag(e, u.id, m.id)}
                   style={{
                     cursor: isDraft ? 'grab' : 'pointer',
-                    ...(isUntargetable ? { filter: 'grayscale(100%) opacity(0.45)' } : {}),
+                    ...(isUntargetable ? { opacity: 0.45 } : {}),
                   }}
                   transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
                   opacity={disp.fading !== undefined ? disp.fading : 1}

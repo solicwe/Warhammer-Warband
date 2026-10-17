@@ -28,7 +28,10 @@ export function itemTag(name: string): string {
 }
 
 /** model id → what sets its kit apart (`tag` for the token, `full` for the unit card). */
+const loadoutsCache = new WeakMap<UnitState, Map<string, { tag: string; full: string }>>();
 function loadouts(u: UnitState): Map<string, { tag: string; full: string }> {
+  const cached = loadoutsCache.get(u);
+  if (cached) return cached;
   const out = new Map<string, { tag: string; full: string }>();
   const bySource = new Map<string, ModelState[]>();
   for (const m of u.models) bySource.set(m.source, [...(bySource.get(m.source) ?? []), m]);
@@ -65,12 +68,18 @@ function loadouts(u: UnitState): Map<string, { tag: string; full: string }> {
       out.set(m.id, { tag, full: tag === m.name.split(' ').pop() ? `${m.name}: ${sorted.join(' + ')}` : sorted.join(' + ') });
     });
   }
+  loadoutsCache.set(u, out);
   return out;
 }
 
 /** model id → short label for the token, only for models whose kit needs telling apart. */
+const labelsCache = new WeakMap<UnitState, Map<string, string>>();
 export function loadoutLabels(u: UnitState): Map<string, string> {
-  return new Map([...loadouts(u)].map(([id, l]) => [id, l.tag]));
+  const cached = labelsCache.get(u);
+  if (cached) return cached;
+  const res = new Map([...loadouts(u)].map(([id, l]) => [id, l.tag]));
+  labelsCache.set(u, res);
+  return res;
 }
 
 /** For the unit card: who carries what in a mixed squad ("3× Thunder Hammer + Storm Shield", "Lucia Vestha: …"). */

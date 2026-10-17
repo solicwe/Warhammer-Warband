@@ -590,6 +590,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   }, [s, mode]);
   const crushTargets = useMemo(() => mode?.k === 'crush' ? engagedEnemies(s, U(mode.unitId)).map((t) => t.id) : [], [s, mode]);
 
+  const eligibleChargeUnits = useMemo(() => {
+    if (s.phase !== 'charge') return new Set<string>();
+    const activeUnits = s.units.filter((u) => u.owner === s.active && onBoard(u) && !u.declaredCharge);
+    const set = new Set<string>();
+    for (const u of activeUnits) {
+      if (!chargeEligibility(s, u)) set.add(u.id);
+    }
+    return set;
+  }, [s.phase, s.turn, s.active, s.units]);
+
   // Thousand Sons: the player picks their Rituals at the start of the Shooting phase (sorcerer, Ritual, target, Channel)
   const [rit, setRit] = useState<{ model?: string; ritual?: string; target?: string; channel: boolean }>({ channel: false });
   const ritualOn = !mode && s.phase === 'shooting' && decides(s, s.active) && !bots.includes(s.active) && ritualsPending(s, s.active);
@@ -1224,7 +1234,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const unitPill = (u: UnitState, done: boolean, onClick?: () => void) => {
     const canMove = s.phase === 'movement' && !done && u.owner === s.active && !u.move;
-    const canCharge = s.phase === 'charge' && !done && u.owner === s.active && !u.declaredCharge && !chargeEligibility(s, u);
+    const canCharge = s.phase === 'charge' && !done && u.owner === s.active && !u.declaredCharge && eligibleChargeUnits.has(u.id);
     return (
       <button key={u.id} className={`unit-pill ${done ? 'done' : ''} ${sel === u.id ? 'sel' : ''} ${canMove || canCharge ? 'can-move' : ''} ${u.battleShocked ? 'shock' : ''}`} onClick={onClick ?? (() => { setSel(u.id); })}>
       {(() => {
@@ -2451,7 +2461,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             })()}
           </>
         )}
-        {onAuto(s, s.active) && mine.some((x) => !chargeEligibility(s, x) && !x.declaredCharge) && (
+        {onAuto(s, s.active) && eligibleChargeUnits.size > 0 && (
           <button className="btn" onClick={() => {
             // what happened, unit by unit: who made it in, who rolled too short
             const res = act((g) => {
@@ -2474,7 +2484,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
         {redoButton()}
         {(() => {
-          const can = mine.filter((x) => !chargeEligibility(s, x)).length;
+          const can = eligibleChargeUnits.size;
           return endButton('charge', 'End Charge → Fight', can > 0 && !mine.some((x) => x.declaredCharge), 'Some units can still charge',
             can ? `${can} unit${can > 1 ? 's' : ''} can still charge` : 'No unit in charge range');
         })()}
