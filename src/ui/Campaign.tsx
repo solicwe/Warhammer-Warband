@@ -13,7 +13,7 @@ import {
 } from '../engine/campaign';
 import { hasFactionRules } from '../engine/effects';
 import { createGame } from '../engine/game';
-import type { ArmyUnitEntry, FactionData, GameState, WargearPick } from '../engine/types';
+import type { ArmyUnitEntry, DatasheetData, FactionData, GameState, WargearPick } from '../engine/types';
 import { Emblem, SECTIONS, sectionOf, UnitArt, WargearEditor } from './ArmyBuilder';
 import { DatasheetView } from './Sheet';
 import { loadFaction, type FactionIndex } from './data';
@@ -59,6 +59,17 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const [rosterTab, setRosterTab] = useState<'roster' | 'recruit' | 'detachments'>('roster');
   const [menu, setMenu] = useState<string | null>(null);
   const [panelCollapse, setPanelCollapse] = useState<Record<string, Record<string, boolean>>>({});
+  const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'size' | 'attach' } | null>(null);
+  const [recruitQ, setRecruitQ] = useState('');
+  const [recruitSize, setRecruitSize] = useState<string | null>(null);
+  const [recruitView, setRecruitView] = useState<string | null>(null);
+
+  const closeRoster = () => {
+    setShowRoster(false);
+    setPop(null);
+    setRecruitSize(null);
+    setRecruitView(null);
+  };
 
   const isSectionOpen = (uid: string, section: string, defaultOpen = true) => {
     return panelCollapse[uid]?.[section] !== undefined ? panelCollapse[uid][section] : defaultOpen;
@@ -216,6 +227,161 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const rowH = 76;
   const at = run.path?.length ? run.path[run.path.length - 1] : undefined;
   const pos = (n: MapNode) => ({ x: 12 + n.x * 76, y: (layers - 1 - n.layer) * rowH + rowH / 2 });
+
+  const quickMenu = () => {
+    if (!pop || !fac) return null;
+    const u = run.list.units.find((x) => x.uid === pop.uid);
+    if (!u) return null;
+    const sheet = fac.datasheets.find((x) => x.name === u.datasheet);
+    const opts = sheet ? pointsOptions(sheet) : [];
+    const body = u.attachTo ? run.list.units.find((b) => b.uid === u.attachTo) : undefined;
+    const isChar = !!sheet?.keywords?.includes('CHARACTER')
+      || (run.list.detachments?.includes('Houndpack Lance') && !!sheet?.keywords?.includes('WAR DOG'))
+      || run.factionId === 'TL'
+      || !!sheet?.keywords?.includes('ADEPTUS TITANICUS')
+      || !!sheet?.factionKeywords?.includes('ADEPTUS TITANICUS');
+    const attachables = !u.attachTo ? attachOptions(run.list, fac, u) : [];
+
+    const close = () => setPop(null);
+    const w = pop.mode ? Math.min(340, window.innerWidth - 16) : 260;
+    const left = Math.max(8, Math.min(window.innerWidth - w - 8, pop.x - w));
+    const top = Math.max(8, Math.min(pop.y + 4, window.innerHeight * 0.45));
+    const maxHeight = window.innerHeight - top - 16;
+
+    let content: React.ReactNode;
+    if (pop.mode === 'size') {
+      content = (
+        <>
+          <div className="ab-pop-head">Unit size · {u.datasheet}</div>
+          {opts.map((o) => {
+            const isCurrent = u.models === o.models;
+            const currentOpt = opts.find((x) => x.models === u.models) ?? { pts: u.pts };
+            const diff = o.pts - currentOpt.pts;
+            const canAfford = diff <= 0 || (run.scrap ?? 0) >= diff;
+            return (
+              <button
+                key={o.models}
+                type="button"
+                className={`ab-pop-size ${isCurrent ? 'on' : ''}`}
+                disabled={!canAfford && !isCurrent}
+                onClick={() => {
+                  if (isCurrent) { close(); return; }
+                  const next = changeSquadSize(run, fac, u.uid, o.models);
+                  if (next !== run) {
+                    setRun(next);
+                    play(diff > 0 ? 'good' : 'tick');
+                    setInfo(diff > 0 ? `Reinforced ${u.datasheet} to ${o.models} models (-${diff} Scrap)` : `Reorganized ${u.datasheet} to ${o.models} models`);
+                  }
+                  close();
+                }}
+              >
+                <span className="ab-pop-pts">{o.pts} pts</span>
+                <span className="muted">({o.models} models{diff > 0 ? ` · +${diff} Scrap` : ''})</span>
+                <span className="ab-pop-plus">{isCurrent ? <Icon name="check" size={18} /> : '+'}</span>
+              </button>
+            );
+          })}
+        </>
+      );
+    } else if (pop.mode === 'attach') {
+      content = (
+        <>
+          <div className="ab-pop-head">Attach {u.datasheet} to Squad</div>
+          {attachables.map((target) => (
+            <button
+              key={target.uid}
+              type="button"
+              className="ab-pop-card has"
+              style={{ width: 'calc(100% - 16px)', padding: '10px 14px' }}
+              onClick={() => {
+                const nextUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: target.uid } : x));
+                setRun({ ...run, list: { ...run.list, units: nextUnits } });
+                setInfo(`${u.datasheet} attached to ${target.datasheet}`);
+                close();
+              }}
+            >
+              <span className="ab-pop-name">{target.datasheet} ({target.models} models)</span>
+            </button>
+          ))}
+        </>
+      );
+    } else {
+      content = (
+        <>
+          {attachables.length > 0 && (
+            <button type="button" onClick={() => setPop({ ...pop, mode: 'attach' })}>
+              <Icon name="plus" size={22} />Attach to Squad
+            </button>
+          )}
+          {body && (
+            <button
+              type="button"
+              onClick={() => {
+                const nextUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: undefined } : x));
+                setRun({ ...run, list: { ...run.list, units: nextUnits } });
+                setInfo(`${u.datasheet} left ${body.datasheet}`);
+                close();
+              }}
+            >
+              <Icon name="leave" size={22} />Leave Squad
+            </button>
+          )}
+          {opts.length > 1 && (
+            <button type="button" onClick={() => setPop({ ...pop, mode: 'size' })}>
+              <Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span>
+            </button>
+          )}
+          {isChar && (
+            <button
+              type="button"
+              className={u.warlord ? 'on' : ''}
+              onClick={() => {
+                const nextUnits = run.list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false }));
+                setRun({ ...run, list: { ...run.list, units: nextUnits } });
+                close();
+              }}
+            >
+              <Icon name={u.warlord ? 'check' : 'leader'} size={22} />
+              {u.warlord ? 'Warlord' : 'Make Warlord'}
+            </button>
+          )}
+          {run.list.units.length > 1 && (
+            <button
+              type="button"
+              style={{ color: '#ef4444' }}
+              onClick={() => {
+                setRun(dismissUnit(run, u.uid));
+                play('bad');
+                setInfo(`Dismissed ${u.datasheet}`);
+                close();
+              }}
+            >
+              <Icon name="delete" size={22} />Dismiss Squad
+            </button>
+          )}
+        </>
+      );
+    }
+
+    return (
+      <div
+        className="ab-pop-backdrop"
+        style={{ zIndex: 150 }}
+        onClick={(e) => {
+          e.stopPropagation();
+          close();
+        }}
+      >
+        <div
+          className="ab-pop"
+          style={{ left, top, width: w, maxHeight, zIndex: 151 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {content}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="app campaign">
@@ -444,17 +610,17 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
       {/* Roster & Armory Customization Modal */}
       {showRoster && fac && (
-        <div className="cmp-modal-backdrop" onClick={() => setShowRoster(false)}>
+        <div className="cmp-modal-backdrop" onClick={closeRoster}>
           <div className="cmp-armory-modal" onClick={(e) => e.stopPropagation()}>
             <div className="cmp-armory-header">
-              <button type="button" className="appbar-back-btn" aria-label="Back" onClick={() => setShowRoster(false)}>&lt;</button>
+              <button type="button" className="appbar-back-btn" aria-label="Back" onClick={closeRoster}>&lt;</button>
               <div className="cmp-armory-header-center">
                 <div className="cmp-armory-title">Roster & Armory</div>
                 <div className="cmp-armory-sub">{pts} pts · {run.list.units.length} units in force</div>
               </div>
               <div className="cmp-armory-header-right">
                 <span className="cmp-scrap"><Icon name="shop" size={14} /> <b>{run.scrap ?? 0}</b></span>
-                <button type="button" className="cmp-close-btn" onClick={() => setShowRoster(false)} aria-label="Close" title="Close">
+                <button type="button" className="cmp-close-btn" onClick={closeRoster} aria-label="Close" title="Close">
                   <Icon name="close" size={18} />
                 </button>
               </div>
@@ -875,22 +1041,18 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           {wg && <span className="ab-sub ab-wg"><Icon name="wargear" size={13} /> {wg}</span>}
                         </span>
                       </button>
-                      {run.list.units.length > 1 && (
-                        <button
-                          type="button"
-                          className="ab-kebab"
-                          style={{ color: '#ef4444' }}
-                          aria-label={`Dismiss ${u.datasheet}`}
-                          title="Dismiss squad"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setRun(dismissUnit(run, u.uid));
-                            play('bad');
-                          }}
-                        >
-                          <Icon name="delete" size={18} />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        className="ab-kebab"
+                        aria-label={`Options for ${u.datasheet}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const r = e.currentTarget.getBoundingClientRect();
+                          setPop({ uid: u.uid, x: r.right, y: r.bottom });
+                        }}
+                      >
+                        <Icon name="more" size={22} />
+                      </button>
                     </div>
                   );
 
@@ -939,59 +1101,164 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               })()}
 
               {rosterTab === 'recruit' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div className="cmp-armory-hint">
-                    Recruit new datasheets into your strike force using accumulated Scrap currency.
+                    Recruit reinforcements into your strike force using accumulated Scrap currency.
                   </div>
-                  {fac.datasheets
-                    .filter((d) => !d.ally && d.points?.[0]?.options?.length && !d.keywords?.includes('FORTIFICATION'))
-                    .map((d) => {
-                      const opts = pointsOptions(d);
-                      if (!opts.length) return null;
-                      const photo = getPortrait(d.name);
-                      const isEpicHero = (d.keywords || []).includes('EPIC HERO');
-                      const alreadyInForce = isEpicHero && run.list.units.some((u) => u.datasheet === d.name);
-                      return (
-                        <div key={d.name} className="cmp-roster-card" style={alreadyInForce ? { opacity: 0.65 } : undefined}>
-                          <div className="cmp-card-main">
-                            <div className="cmp-card-thumb">
-                              {photo ? <img src={photo} alt="" className="cmp-roster-img" />
-                                : <div className="cmp-roster-img-ph"><Icon name="plus" size={20} /></div>}
-                            </div>
-                            <div className="cmp-card-details">
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                <div className="cmp-roster-name">{d.name}</div>
-                                {isEpicHero && (
-                                  <span className="chip subtle small" style={{ color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.4)', background: 'rgba(192, 132, 252, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
-                                    Epic Hero
-                                  </span>
-                                )}
+
+                  <input
+                    placeholder="Search datasheets to recruit…"
+                    value={recruitQ}
+                    onChange={(e) => setRecruitQ(e.target.value)}
+                  />
+
+                  {(() => {
+                    const qClean = recruitQ.trim().toLowerCase();
+                    const availableSheets = fac.datasheets.filter(
+                      (d) => !d.ally && d.points?.[0]?.options?.length && !d.keywords?.includes('FORTIFICATION')
+                    );
+                    const matchesQ = (d: DatasheetData) =>
+                      !qClean ||
+                      d.name.toLowerCase().includes(qClean) ||
+                      (d.role && d.role.toLowerCase().includes(qClean)) ||
+                      (d.keywords && d.keywords.some((k) => k.toLowerCase().includes(qClean)));
+
+                    const filtered = availableSheets.filter(matchesQ);
+                    if (!filtered.length) {
+                      return <div className="ab-empty">No datasheets found matching &quot;{recruitQ}&quot;</div>;
+                    }
+
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        {SECTIONS.filter((sec) => sec.id !== 'allies').map((sec) => {
+                          const sheetsInSec = filtered.filter((d) => sectionOf(d, fac.id) === sec.id);
+                          if (!sheetsInSec.length) return null;
+
+                          return (
+                            <section key={sec.id} className="ab-section">
+                              <div className="ab-section-head">
+                                <span>{sec.title}</span>
+                                <span className="tiny muted" style={{ textTransform: 'none' }}>{sheetsInSec.length} available</span>
                               </div>
-                              <div className="cmp-roster-meta">
-                                {opts.map((o) => `${o.models} models (${o.pts} pts)`).join(' · ')}
+                              <div className="ab-pick">
+                                {sheetsInSec.map((d) => {
+                                  const opts = pointsOptions(d);
+                                  const count = run.list.units.filter((u) => u.datasheet === d.name).length;
+                                  const isEpicHero = (d.keywords || []).includes('EPIC HERO');
+                                  const alreadyInForce = isEpicHero && count > 0;
+                                  const minCost = cheapest(d)?.pts ?? opts[0]?.pts ?? 0;
+                                  const canAffordAny = (run.scrap ?? 0) >= minCost;
+                                  const isOpenPeek = recruitView === d.name;
+                                  const isOpenSize = recruitSize === d.name;
+
+                                  return [
+                                    <div
+                                      key={d.name}
+                                      className={`ab-row ${isOpenPeek ? 'open' : ''}`}
+                                      style={alreadyInForce ? { opacity: 0.6 } : undefined}
+                                    >
+                                      <button
+                                        type="button"
+                                        className="ab-row-main"
+                                        onClick={() => setRecruitView(isOpenPeek ? null : d.name)}
+                                      >
+                                        <span className="ab-art-wrap"><UnitArt sheet={d} /></span>
+                                        <span className="ab-row-text">
+                                          <span className="ab-name">
+                                            {d.name}
+                                            {count ? <span className="ab-count"> ×{count}</span> : null}
+                                            {isEpicHero && (
+                                              <span className="chip subtle small" style={{ marginLeft: 6, color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.4)', background: 'rgba(192, 132, 252, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
+                                                Epic Hero
+                                              </span>
+                                            )}
+                                          </span>
+                                          <span className="ab-pts">
+                                            {opts.map((o) => `${o.models}: ${o.pts}`).join(' / ')} Scrap
+                                          </span>
+                                          <span className="ab-sub">
+                                            {alreadyInForce
+                                              ? 'Already Recruited (Limit 1)'
+                                              : d.role || (d.keywords ? d.keywords.slice(0, 3).join(', ') : '')}
+                                          </span>
+                                        </span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="ab-add dark"
+                                        aria-label={`Recruit ${d.name}`}
+                                        title={alreadyInForce ? 'Limit 1 (Already recruited)' : !canAffordAny ? `Need ${minCost} Scrap` : `Recruit ${d.name}`}
+                                        disabled={alreadyInForce || !canAffordAny}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (alreadyInForce) return;
+                                          if (opts.length > 1) {
+                                            setRecruitSize(isOpenSize ? null : d.name);
+                                          } else if (canAffordAny) {
+                                            const next = recruitUnit(run, fac, d.name, opts[0].models);
+                                            if (next !== run) {
+                                              setRun(next);
+                                              play('good');
+                                              setInfo(`Recruited ${d.name}!`);
+                                            }
+                                          }
+                                        }}
+                                      >
+                                        +
+                                      </button>
+                                    </div>,
+                                    isOpenSize && (
+                                      <div key={`size-${d.name}`} className="ab-add-size">
+                                        <div className="ab-pop-head">Unit size · {d.name}</div>
+                                        {opts.map((o) => {
+                                          const canAfford = (run.scrap ?? 0) >= o.pts;
+                                          const disabled = !canAfford || alreadyInForce;
+                                          return (
+                                            <button
+                                              key={o.models}
+                                              type="button"
+                                              className="ab-pop-size"
+                                              disabled={disabled}
+                                              onClick={() => {
+                                                if (disabled) return;
+                                                const next = recruitUnit(run, fac, d.name, o.models);
+                                                if (next !== run) {
+                                                  setRun(next);
+                                                  play('good');
+                                                  setInfo(`Recruited ${d.name} (${o.models} models)!`);
+                                                  setRecruitSize(null);
+                                                }
+                                              }}
+                                            >
+                                              <span className="ab-pop-models">{o.models} {o.models === 1 ? 'model' : 'models'}</span>
+                                              <span className="ab-pop-pts">{o.pts} Scrap</span>
+                                              <span className="ab-pop-plus">
+                                                {disabled ? (alreadyInForce ? 'Limit 1' : 'Need Scrap') : '+ Recruit'}
+                                              </span>
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    ),
+                                    isOpenPeek && (
+                                      <div className="ab-inline" key={`peek-${d.name}`}>
+                                        <div className="ab-inline-body">
+                                          <DatasheetView sheet={d} factionId={fac.id} />
+                                          <button type="button" className="ab-moreinfo" onClick={() => setRecruitView(null)}>
+                                            Close <Icon name="down" size={18} />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ),
+                                  ];
+                                })}
                               </div>
-                            </div>
-                          </div>
-                          <div className="cmp-card-actions" style={{ flexWrap: 'wrap', gap: 6 }}>
-                            {opts.map((o) => {
-                              const canAfford = (run.scrap ?? 0) >= o.pts;
-                              const canRecruit = canAfford && !alreadyInForce;
-                              return (
-                                <button
-                                  key={o.models}
-                                  className="cmp-btn-recruit"
-                                  style={{ flex: '1 1 140px', minHeight: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                                  disabled={!canRecruit}
-                                  onClick={() => { setRun(recruitUnit(run, fac, d.name, o.models)); play('good'); }}
-                                >
-                                  <Icon name="plus" size={14} /> {alreadyInForce ? 'Already Recruited (Limit 1)' : `Recruit ${o.models} models (${o.pts} Scrap)`}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
+                            </section>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -1090,12 +1357,13 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             </div>
 
             <div className="cmp-armory-footer">
-              <button className="cmp-footer-btn" onClick={() => setShowRoster(false)}>
+              <button className="cmp-footer-btn" onClick={closeRoster}>
                 <Icon name="check" size={18} />
                 <span>Done</span>
               </button>
             </div>
           </div>
+          {quickMenu()}
         </div>
       )}
 
