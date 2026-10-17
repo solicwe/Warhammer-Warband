@@ -53,6 +53,7 @@ export const battleHonorById = (id: string) => BATTLE_HONORS.find((h) => h.id ==
 
 export interface Run {
   version: 1;
+  loop?: number;
   seed: number;
   factionId: string;
   list: ArmyList;
@@ -234,11 +235,11 @@ const pickN = <T,>(xs: T[], n: number, r: () => number): T[] => {
 
 export const START_POINTS = 500;
 const LAYERS = [2, 3, 3, 3, 3, 2, 1];
-const LEVEL_BY_LAYER: BotLevel[] = ['easy', 'normal', 'normal', 'normal', 'hard', 'hard', 'hard'];
+const LEVEL_BY_LAYER: BotLevel[] = ['normal', 'normal', 'hard', 'hard', 'hard', 'hard', 'hard'];
 
 /** The map: seven layers, each node leading to one or two nodes of the next; the last is the boss. */
-export function makeMap(seed: number, enemies: string[]): MapNode[] {
-  const r = rng(seed * 7919 + 13);
+export function makeMap(seed: number, enemies: string[], loop = 1): MapNode[] {
+  const r = rng(seed * 7919 + 13 + loop * 101);
   const nodes: MapNode[] = [];
   LAYERS.forEach((n, layer) => {
     let specialCount = 0;
@@ -259,9 +260,11 @@ export function makeMap(seed: number, enemies: string[]): MapNode[] {
         })();
       const node: MapNode = { id: `n${layer}-${i}`, layer, kind, x: (i + 0.5) / n, next: [] };
       if (['battle', 'elite', 'boss'].includes(kind)) {
-        const pts = Math.round((450 + layer * 90 + (kind === 'elite' ? 150 : 0) + (kind === 'boss' ? 300 : 0)) / 10) * 10;
-        const rules = kind === 'elite' ? pickN(BOSS_RULES, 1, r).map((b) => b.id) : kind === 'boss' ? pickN(BOSS_RULES, 2, r).map((b) => b.id) : [];
-        const level: BotLevel = kind === 'boss' ? 'hard' : kind === 'elite' ? (layer >= 4 ? 'hard' : 'normal') : LEVEL_BY_LAYER[layer];
+        const loopScale = Math.max(0, loop - 1);
+        const pts = Math.round((480 + loopScale * 140 + layer * (100 + loopScale * 25) + (kind === 'elite' ? 180 + loopScale * 50 : 0) + (kind === 'boss' ? 350 + loopScale * 100 : 0)) / 10) * 10;
+        const extraRules = Math.min(2, loopScale);
+        const rules = kind === 'elite' ? pickN(BOSS_RULES, 1 + extraRules, r).map((b) => b.id) : kind === 'boss' ? pickN(BOSS_RULES, 2 + extraRules, r).map((b) => b.id) : [];
+        const level: BotLevel = loop > 1 ? 'hard' : kind === 'boss' ? 'hard' : kind === 'elite' ? 'hard' : LEVEL_BY_LAYER[layer];
         node.enemy = { factionId: enemies[Math.floor(r() * enemies.length)], pts, level, rules, seed: Math.floor(r() * 1e9) };
       }
       nodes.push(node);
@@ -653,6 +656,29 @@ export function adoptDetachment(run: Run, detachmentName: string, cost = 100): R
     scrap: (run.scrap ?? 0) - cost,
     list: { ...run.list, detachments: [...cur, detachmentName] },
     story: [...run.story, `Armory Requisition: Adopted ${detachmentName} (-${cost} Scrap)`],
+  };
+}
+
+/** Continue a won campaign run into the next sector with harder enemies (Endless Rogue Mode) */
+export function continueNextLoop(run: Run, faction: FactionData): Run {
+  const nextLoop = (run.loop ?? 1) + 1;
+  const newSeed = Math.floor(Math.random() * 1e9);
+  const existingEnemies = [...new Set(run.map.map((n) => n.enemy?.factionId).filter((x): x is string => !!x))];
+  const nextEnemies = existingEnemies.length ? existingEnemies : ['ORK', 'TYR', 'NEC', 'SM', 'CSM'];
+  const newMap = makeMap(newSeed, nextEnemies, nextLoop);
+  return {
+    ...run,
+    loop: nextLoop,
+    seed: newSeed,
+    map: newMap,
+    path: [],
+    fighting: undefined,
+    offer: undefined,
+    picksLeft: undefined,
+    over: undefined,
+    fate: Math.min(5, (run.fate ?? 0) + 2),
+    scrap: (run.scrap ?? 0) + 120,
+    story: [...run.story, `Entered Sector ${nextLoop} (Endless Mode)! Enemy forces reinforced. (+120 Scrap, +2 Fate)`],
   };
 }
 

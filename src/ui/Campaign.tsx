@@ -6,7 +6,7 @@ import { attachOptions, autoAttach, defaultWargear, listPoints, pointsOptions, s
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
-  bossRuleById, buyHonorForUnit, changeSquadSize, cheapest, combineSquads, dismissUnit, enter, loadRun, makeOffer,
+  bossRuleById, buyHonorForUnit, changeSquadSize, cheapest, combineSquads, continueNextLoop, dismissUnit, enter, loadRun, makeOffer,
   newRun, reachable, recruitUnit, relicById, relicDesc, rerollOffer, saveRun, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
 } from '../engine/campaign';
@@ -195,14 +195,14 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const pts = listPoints(run.list, fac ?? undefined);
   const layers = Math.max(...run.map.map((n) => n.layer)) + 1;
   const rowH = 76;
-  const at = run.path[run.path.length - 1];
+  const at = run.path?.length ? run.path[run.path.length - 1] : undefined;
   const pos = (n: MapNode) => ({ x: 12 + n.x * 76, y: (layers - 1 - n.layer) * rowH + rowH / 2 });
 
   return (
     <div className="app campaign">
       <header className="appbar">
         <button className="appbar-back-btn" aria-label="Back" onClick={onBack}><Icon name="back" size={18} /><span>Back</span></button>
-        <span className="appbar-title">Campaign</span>
+        <span className="appbar-title">Campaign · Sector {run.loop ?? 1}</span>
         <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span> <span>Scrap</span></span>
         <span className="cmp-fate" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
           {[0, 1, 2].map((i) => <i key={i} className={i < run.fate ? 'on' : ''} />)}
@@ -215,7 +215,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <span className="cmp-emblem"><Emblem factionId={run.factionId} /></span>
             <span className="cmp-army-text">
               <b>{run.list.name}</b>
-              <span className="muted small"><span className="num">{pts}</span> pts · {run.list.units.length} units · {run.wins} {run.wins === 1 ? 'win' : 'wins'}{run.cp ? ` · +${run.cp} CP` : ''}</span>
+              <span className="muted small">Sector {run.loop ?? 1} · <span className="num">{pts}</span> pts · {run.list.units.length} units · {run.wins} {run.wins === 1 ? 'win' : 'wins'}{run.cp ? ` · +${run.cp} CP` : ''}</span>
             </span>
             <button className="btn small primary cmp-roster-btn" style={{ marginLeft: 'auto' }} onClick={() => setShowRoster(true)}>
               <Icon name="swords" size={15} /> Roster & Armory
@@ -270,7 +270,25 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <div className="cmp-title"><Icon name={run.over === 'won' ? 'trophy' : 'skull'} size={24} /> {run.over === 'won' ? 'The Warlord has fallen' : 'Your forces are spent'}</div>
             <div className="small">{run.wins} battles won · {run.relics.length} relics · {run.list.units.length} units · {run.scrap ?? 0} Scrap remaining</div>
             <ol className="cmp-story">{run.story.slice(-8).map((t, i) => <li key={i}>{t}</li>)}</ol>
-            <button className="btn primary" onClick={() => { setRun(null); setFocus(null); }}>New campaign</button>
+            {run.over === 'won' && fac ? (
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '0.75rem' }}>
+                <button
+                  className="btn primary big"
+                  onClick={() => {
+                    const next = continueNextLoop(run, fac);
+                    setRun(next);
+                    saveRun(next);
+                    setFocus(null);
+                    play('good');
+                  }}
+                >
+                  <Icon name="next" size={18} /> Enter Sector {(run.loop ?? 1) + 1} (Endless Mode)
+                </button>
+                <button className="btn secondary" onClick={() => { setRun(null); setFocus(null); }}>Start new campaign</button>
+              </div>
+            ) : (
+              <button className="btn primary" onClick={() => { setRun(null); setFocus(null); }}>New campaign</button>
+            )}
           </div></section>
         )}
 
@@ -1024,7 +1042,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     Recruit new datasheets into your strike force using accumulated Scrap currency.
                   </div>
                   {fac.datasheets
-                    .filter((d) => !d.ally && d.points[0]?.options?.length && !d.keywords.includes('FORTIFICATION'))
+                    .filter((d) => !d.ally && d.points?.[0]?.options?.length && !d.keywords?.includes('FORTIFICATION'))
                     .map((d) => {
                       const opts = pointsOptions(d);
                       if (!opts.length) return null;

@@ -328,7 +328,7 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
 
 /** `model`: the model tapped on the board, listed first with its own weapons. */
 export function UnitView({ u, model }: { u: UnitState; model?: string }) {
-  usePastePortrait(u.models.find((m) => m.isCharacter)?.source ?? u.sources[0]);
+  usePastePortrait(u.models.find((m) => m.isCharacter)?.source ?? u.sources?.[0] ?? u.name);
   const groups = new Map<string, { p: ModelProfileData; n: number; weapons: WeaponData[]; name: string; gear: string[]; tapped?: boolean }>();
   const activeModels = u.models.some((m) => !m.dead) ? u.models.filter((m) => !m.dead) : u.models;
   const tapped = activeModels.find((m) => m.id === model);
@@ -340,10 +340,11 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
     groups.set(k, g);
   }
   const st = strength(u);
+  const sources = u.sources?.length ? u.sources : [u.name];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="ds-head">
-        {u.sources.map((src) => (
+        {sources.map((src) => (
           <Portrait key={src} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} character={u.models.some((m) => m.source === src && m.isCharacter)} size={56} datasheet={src} editable />
         ))}
         <div className="grow">
@@ -351,7 +352,7 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
           <div className="tiny">Tap the picture or paste to set one · saved on this device</div>
         </div>
       </div>
-      {u.sources.map((src) => {
+      {sources.map((src) => {
         return <ModelPictures key={src} variants={pictureVariants(src, u.models)} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} />;
       })}
       <div className="row small">

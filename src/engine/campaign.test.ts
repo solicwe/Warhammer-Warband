@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { autoList } from './autoList';
-import { afterBattle, applyCampaign, changeSquadSize, combineSquads, enter, makeMap, newRun, reachable, recruitUnit, takeReward } from './campaign';
+import { afterBattle, applyCampaign, changeSquadSize, combineSquads, continueNextLoop, enter, makeMap, newRun, reachable, recruitUnit, takeReward } from './campaign';
 import { effectsFor } from './effects';
 import { createGame } from './game';
 import type { FactionData } from './types';
@@ -147,5 +147,38 @@ describe('campaign', () => {
     const countAfter = run.list.units.length;
     run = recruitUnit(run, sm, 'Marneus Calgar');
     expect(run.list.units.length).toBe(countAfter);
+  });
+
+  it('supports endless campaign loops with scaling difficulty in subsequent sectors', () => {
+    const sm = load('SM');
+    const list = autoList(sm, 500, 3);
+    let run = newRun(sm, list, ['ORK'], 42);
+    run.over = 'won';
+    run.wins = 6;
+    run.fate = 1;
+    run.scrap = 50;
+
+    const sector2 = continueNextLoop(run, sm);
+    expect(sector2.loop).toBe(2);
+    expect(sector2.over).toBeUndefined();
+    expect(sector2.path).toEqual([]);
+    expect(sector2.fate).toBe(3); // 1 + 2 bonus fate
+    expect(sector2.scrap).toBe(170); // 50 + 120 bonus scrap
+    expect(sector2.map.length).toBeGreaterThan(0);
+
+    // Difficulty scaling check: Sector 2 boss should have higher points and more rules than Sector 1 boss
+    const map1 = makeMap(42, ['ORK'], 1);
+    const map2 = makeMap(42, ['ORK'], 2);
+    const boss1 = map1.find((n) => n.kind === 'boss')!;
+    const boss2 = map2.find((n) => n.kind === 'boss')!;
+    expect(boss2.enemy!.pts).toBeGreaterThan(boss1.enemy!.pts);
+    expect(boss2.enemy!.rules.length).toBeGreaterThanOrEqual(boss1.enemy!.rules.length);
+
+    // No easy bot in roguelike maps
+    for (const n of map2) {
+      if (n.enemy?.level) {
+        expect(n.enemy.level).not.toBe('easy');
+      }
+    }
   });
 });

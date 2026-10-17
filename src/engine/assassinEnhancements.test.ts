@@ -80,7 +80,7 @@ describe('Assassin and special unit Enhancements', () => {
     expect(opts.some((e) => e.name === 'Trygon Prime')).toBe(true);
   });
 
-  it('allows Wulfen to take Hunter’s Guile in Saga of the Beastslayer', () => {
+  it('does not allow non-CHARACTER units like Wulfen to take Hunter’s Guile, but allows a CHARACTER', () => {
     const list: ArmyList = {
       name: 'Wolves',
       factionId: 'SM',
@@ -88,13 +88,17 @@ describe('Assassin and special unit Enhancements', () => {
       detachments: ['Saga of the Beastslayer'],
       units: [
         { uid: 'w1', datasheet: 'Wulfen', models: 5, pts: 80 },
+        { uid: 'c1', datasheet: 'Captain', models: 1, pts: 80 },
       ],
     };
-    const opts = enhancementOptions(list, SM, list.units[0]);
-    expect(opts.some((e) => e.name === "Hunter's Guile")).toBe(true);
+    const wulfenOpts = enhancementOptions(list, SM, list.units[0]);
+    expect(wulfenOpts.some((e) => e.name === "Hunter's Guile")).toBe(false);
+
+    const capOpts = enhancementOptions(list, SM, list.units[1]);
+    expect(capOpts.some((e) => e.name === "Hunter's Guile")).toBe(true);
   });
 
-  it('allows Vespid Stingwings to take Admired Leader in Auxiliary Cadre', () => {
+  it('does not allow non-CHARACTER units like Vespid Stingwings to take Admired Leader, but allows a CHARACTER', () => {
     const list: ArmyList = {
       name: 'Aux',
       factionId: 'TAU',
@@ -102,13 +106,17 @@ describe('Assassin and special unit Enhancements', () => {
       detachments: ['Auxiliary Cadre'],
       units: [
         { uid: 'v1', datasheet: 'Vespid Stingwings', models: 5, pts: 65 },
+        { uid: 'c1', datasheet: 'Cadre Fireblade', models: 1, pts: 50 },
       ],
     };
-    const opts = enhancementOptions(list, TAU, list.units[0]);
-    expect(opts.some((e) => e.name === 'Admired Leader')).toBe(true);
+    const vespidOpts = enhancementOptions(list, TAU, list.units[0]);
+    expect(vespidOpts.some((e) => e.name === 'Admired Leader')).toBe(false);
+
+    const firebladeOpts = enhancementOptions(list, TAU, list.units[1]);
+    expect(firebladeOpts.some((e) => e.name === 'Admired Leader')).toBe(true);
   });
 
-  it('allows Goremongers to take Strategic Slaughter in Cult of Blood', () => {
+  it('does not allow non-CHARACTER units like Goremongers to take Strategic Slaughter, but allows a CHARACTER', () => {
     const list: ArmyList = {
       name: 'Khorne',
       factionId: 'WE',
@@ -116,10 +124,14 @@ describe('Assassin and special unit Enhancements', () => {
       detachments: ['Cult of Blood'],
       units: [
         { uid: 'g1', datasheet: 'Goremongers', models: 10, pts: 85 },
+        { uid: 'm1', datasheet: 'Master of Executions', models: 1, pts: 105 },
       ],
     };
-    const opts = enhancementOptions(list, WE, list.units[0]);
-    expect(opts.some((e) => e.name === 'Strategic Slaughter')).toBe(true);
+    const goreOpts = enhancementOptions(list, WE, list.units[0]);
+    expect(goreOpts.some((e) => e.name === 'Strategic Slaughter')).toBe(false);
+
+    const moeOpts = enhancementOptions(list, WE, list.units[1]);
+    expect(moeOpts.some((e) => e.name === 'Strategic Slaughter')).toBe(true);
   });
 });
 

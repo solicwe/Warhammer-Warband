@@ -148,7 +148,14 @@ const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
 
 export function GameScreen({ initial, onExit }: { initial: GameState; onExit: () => void }) {
   const { state: s, act, undo, canUndo } = useGame(initial);
-  const bots: PlayerId[] = s.bots ?? (s.botPlayer != null ? [s.botPlayer] : []);
+  const [autoPlay, setAutoPlay] = useState(false);
+  const bots: PlayerId[] = useMemo(() => {
+    const base = s.bots ?? (s.botPlayer != null ? [s.botPlayer] : []);
+    if (autoPlay) {
+      return [0, 1] as PlayerId[];
+    }
+    return base;
+  }, [s.bots, s.botPlayer, autoPlay]);
   const spectate = bots.length === 2;
   const actingBot = bots.find((b) => botShouldAct(s, b)) ?? null;
   const [speed, setSpeed] = useState<0 | 1 | 2>(1); // bot-vs-bot: pause / normal / fast
@@ -687,6 +694,24 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       }
       else if (mode.k === 'shoot' || mode.k === 'fight' || mode.k === 'explosives') setModeRaw({ ...mode, target: unitId });
       return;
+    }
+    if (mode?.k === 'shoot') {
+      const friendlyU = U(unitId);
+      if (friendlyU && friendlyU.owner === s.active && friendlyU.id !== mode.unitId) {
+        const smodes = shootingModes(s, friendlyU);
+        if (!friendlyU.selectedToShoot && smodes.length > 0) {
+          setSel(unitId);
+          act((g) => autoSelectToShoot(g, unitById(g, unitId)));
+          setMode({ k: 'shoot', unitId, smode: smodes[0], target: null, useCQ: false, profile: {} });
+          return;
+        } else if (friendlyU.selectedToShoot) {
+          flash(`${friendlyU.name} has already shot this turn`);
+          return;
+        } else {
+          flash(`${friendlyU.name} cannot shoot (no valid weapons or advanced)`);
+          return;
+        }
+      }
     }
     if (!mode) {
       if (s.phase === 'shooting') {
@@ -1989,7 +2014,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             const T = U(mode.target!);
             const tFlags = unitFlags(s, T);
             const tHasStealth = !!(T.core.stealth || tFlags.stealth || T.buffs?.some((b) => b.kind === 'smoke'));
-            const tHasLoneOp = !!(T.sources.length === 1 && (T.core.loneOperative || loneOperativeNow(s, T) || tFlags.loneOperative));
+            const tHasLoneOp = !!((!T.sources || T.sources.length <= 1) && (T.core.loneOperative || loneOperativeNow(s, T) || tFlags.loneOperative));
             const tHasCover = !!(T.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke') || alive(T).some((m) => s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly))));
             const groups = new Map<string, typeof res.pools>();
             for (const p of res.pools) { const k = p.weapon + '|' + p.profile.name; groups.set(k, [...(groups.get(k) ?? []), p]); }
@@ -2721,6 +2746,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <button className="tb-tool" onClick={() => openStrats()} aria-label="Stratagems">
             <span className="tb-ico"><Icon name="strat" size={22} /></span>
             <span className="tb-lbl">Strat</span>
+          </button>
+          <button
+            className={`tb-tool ${autoPlay ? 'active' : ''}`}
+            onClick={() => setAutoPlay((v) => !v)}
+            aria-label="Auto battle"
+            style={autoPlay ? { color: '#4ade80' } : undefined}
+          >
+            <span className="tb-ico"><Icon name="bot" size={22} /></span>
+            <span className="tb-lbl">{autoPlay ? 'Auto ON' : 'Auto'}</span>
           </button>
         </div>
         {s.phase !== 'deploy' && <AdvantageBar share={advantage(s)} names={[s.players[0].name, s.players[1].name]} />}

@@ -11,7 +11,7 @@ import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { loadoutLabels, shortItem } from './loadout';
 import { getAbilityOrWeaponInfo, PopoverCard, type AbilityOrWeaponInfo } from './AbilityBadgePopover';
-import { SvgIcon } from './Icon';
+import { Icon, SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import { getPlayerFactionTheme, getUnitFactionTheme } from './factionColors';
 import type { SecondaryGoal } from '../engine/secondaries';
@@ -931,7 +931,7 @@ function BoardImpl(props: BoardProps) {
       const hasPsychicWep = ms.some((m) => m.weapons.some((w) => w.profiles.some((p) => p.abilities.includes('psychic'))));
       const uFlags = unitFlags(s, u);
       const hasStealth = !!(u.core.stealth || uFlags.stealth || u.buffs?.some((b) => b.kind === 'smoke'));
-      const hasLoneOp = !!(u.sources.length === 1 && (u.core.loneOperative || loneOperativeNow(s, u) || uFlags.loneOperative));
+      const hasLoneOp = !!((!u.sources || u.sources.length <= 1) && (u.core.loneOperative || loneOperativeNow(s, u) || uFlags.loneOperative));
       const hasCover = !!(u.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke') || ms.some((m) => s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly))));
       map.set(u.id, {
         hasFlowOfMagic: unitHasFlow,
@@ -1737,6 +1737,33 @@ function BoardImpl(props: BoardProps) {
         onClose={() => setBoardPopover(null)}
       />
     )}
+    <button
+      type="button"
+      className="btn small board-zoom-btn"
+      onClick={() => setVb(home)}
+      title="Reset View / Zoom Out"
+      aria-label="Reset View"
+      style={{
+        position: 'absolute',
+        right: 12,
+        bottom: 12,
+        zIndex: 5,
+        background: 'rgba(17, 24, 39, 0.85)',
+        backdropFilter: 'blur(4px)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        color: '#f3f4f6',
+        borderRadius: 6,
+        padding: '5px 9px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        fontSize: '12px',
+        fontWeight: 600,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+      }}
+    >
+      <Icon name="ruler" size={14} /> Fit Board
+    </button>
     </>
   );
 }
