@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildShootPools, buildFightPools } from './attack';
 import { buildUnits } from './army';
-import { botAct } from './bot';
-import { DET_RULES, modelDefence, unitFlags, abilityStatus, incomingFor, activeRules } from './effects';
+import { botAct } from '../ai/bot';
+import { DET_RULES, modelDefence, unitFlags, abilityStatus, incomingFor, activeRules } from '../rules-engine/effects';
 import { createGame, deployUnit, findPlacement } from './game';
 import {
   isOfficer,
@@ -15,7 +15,7 @@ import {
   ordersRemaining,
   currentOrders,
   autoIssueOrders,
-} from './orders';
+} from '../factions/orders';
 import { PRESETS } from '../ui/presets';
 import { alive } from './state';
 import type { FactionData, GameState, UnitState } from './types';

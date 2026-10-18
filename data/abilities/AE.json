@@ -1,6 +1,6 @@
 {
   "_comment": "Aeldari Faction Pack v1.4. Complete datasheet, army rule, detachment and enhancement rules.",
-  "Strands of Fate": {
+  "Strands of Fate": { "code": true,
     "status": "auto",
     "note": "Fate dice pool at start of battle. Substitute 1 Fate die per phase for Advance, Battle-shock, Charge, Damage, Hit, Save, or Wound roll."
   },
@@ -20,7 +20,7 @@
     "status": "auto",
     "note": "Once per turn, you can change the result of one Fate dice to a 6."
   },
-  "Defenders of the Shrines": {
+  "Defenders of the Shrines": { "code": true,
     "status": "auto",
     "note": "At end of Command phase, if this unit controls an objective, roll D6: on 4+, gain 1 Fate die."
   },
@@ -647,7 +647,7 @@
     "status": "auto",
     "note": "Each time this model makes a Normal, Advance or Fall Back move, it can move through models and terrain features. When doing so, it can move within Engagement Range of enemy models, but cannot end t..."
   },
-  "Overlord": {
+  "Overlord": { "code": true,
     "status": "auto",
     "note": "While this model is leading a unit, each time a model in that unit makes an attack, re-roll a Wound roll of 1. While that unit is below its Starting Strength, each time a model in that unit makes a..."
   },
@@ -667,7 +667,7 @@
     "status": "auto",
     "note": "Each time an enemy unit (excluding MONSTERS and VEHICLES) within Engagement Range of one or more units from your army with this ability is selected to Fall Back, all models in that enemy unit must ..."
   },
-  "Tormentors": {
+  "Tormentors": { "code": true,
     "status": "auto",
     "note": "At the start of the Fight phase, each enemy unit within Engagement Range of one or more units from your army with this ability must take a Battle-shock test."
   },
@@ -751,11 +751,11 @@
     "status": "auto",
     "note": "AELDARI PSYKER model only. At the start of your Shooting phase, select one visible friendly AELDARI VEHICLE unit within 6\" of this model. That VEHICLE unit’s ranged attacks have +1 to hit rolls."
   },
-  "Phoenix Gem": {
+  "Phoenix Gem": { "code": true,
     "status": "auto",
     "note": "Asuryani model only. The first time the bearer is destroyed, remove it from play, then, at the end of the phase, roll one D6: on a 2+, set the bearer back up on the battlefield as close as possible..."
   },
-  "Timeless Strategist": {
+  "Timeless Strategist": { "code": true,
     "status": "auto",
     "note": "Asuryani model only. At the start of the battle round, if the bearer is on the battlefield (or any Transport it is embarked within is on the battlefield), you receive 1 additional Battle Focus token."
   },

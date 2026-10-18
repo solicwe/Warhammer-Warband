@@ -1,7 +1,7 @@
 // Secondary missions: cards really are drawn at random, shown, and score VP in a played game.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { botAct } from './bot';
+import { botAct } from '../ai/bot';
 import { createGame } from './game';
 import type { ArmyList, FactionData } from './types';
 

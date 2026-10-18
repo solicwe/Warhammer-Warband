@@ -1,13 +1,13 @@
 {
   "_comment": "Astra Militarum Faction Pack v1.3. Comprehensive datasheet, order, and enhancement rules.",
-  "Voice of Command": {
+  "Voice of Command": { "code": true,
     "status": "auto",
     "note": "Orders issued during Command phase and after disembark/arrival."
   },
   "ORDERS": {
     "status": "auto"
   },
-  "Vox-net": {
+  "Vox-net": { "code": true,
     "status": "auto",
     "note": "Issues orders up to 24\"."
   },
@@ -48,19 +48,19 @@
   "Death Befitting An Officer": {
     "status": "auto"
   },
-  "Deadly Demise": {
+  "Deadly Demise": { "code": true,
     "status": "auto"
   },
-  "Scouts": {
+  "Scouts": { "code": true,
     "status": "auto"
   },
-  "Firing Deck": {
+  "Firing Deck": { "code": true,
     "status": "auto"
   },
-  "Leader": {
+  "Leader": { "code": true,
     "status": "auto"
   },
-  "Infiltrators": {
+  "Infiltrators": { "code": true,
     "status": "auto"
   },
   "Stealth": {
@@ -73,19 +73,19 @@
       }
     ]
   },
-  "Deep Strike": {
+  "Deep Strike": { "code": true,
     "status": "auto"
   },
-  "Feel No Pain": {
+  "Feel No Pain": { "code": true,
     "status": "auto"
   },
-  "Fights First": {
+  "Fights First": { "code": true,
     "status": "auto"
   },
-  "Lone Operative": {
+  "Lone Operative": { "code": true,
     "status": "auto"
   },
-  "One Shot": {
+  "One Shot": { "code": true,
     "status": "auto"
   },
   "Covering Fire": {
@@ -94,16 +94,16 @@
   "EMBARKING": {
     "status": "auto"
   },
-  "DEPLOYMENT": {
+  "DEPLOYMENT": { "code": true,
     "status": "auto"
   },
-  "Hover": {
+  "Hover": { "code": true,
     "status": "auto"
   },
   "Fortification": {
-    "status": "auto"
+    "status": "info"
   },
-  "SUPREME COMMANDER": {
+  "SUPREME COMMANDER": { "code": true,
     "status": "auto"
   },
   "USING COMMISSAR GRAVES": {
@@ -1100,7 +1100,7 @@
       }
     ]
   },
-  "Grand Strategist": {
+  "Grand Strategist": { "code": true,
     "status": "auto",
     "note": "+1 Order in Command phase."
   },

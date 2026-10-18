@@ -1,4 +1,4 @@
-// Bot Elo ladder: the live bot (src/engine/bot*.ts) plays the frozen baseline (src/engine/baseline) with every
+// Bot Elo ladder: the live bot (src/ai/bot*.ts) plays the frozen baseline (src/ai/baseline) with every
 // faction, each pairing from both sides on the same map, on several CPU cores. The score turns into an Elo
 // difference; the baseline's rating plus that difference is the live bot's rating, kept in data/bot-elo.json so every
 // change to the bot can be checked against the last one.

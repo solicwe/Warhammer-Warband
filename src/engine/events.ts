@@ -1,9 +1,9 @@
 // The engine's extension points. The core (game.ts, attack.ts, effects.ts, activations.ts ...) emits events and asks
-// these hooks; faction modules register in factionHooks.ts. No core file imports a faction module.
-import type { MoveKind, ModelState, Phase, PlayerId, Pt, UnitState } from './types';
-import type { Action } from './activations';
+// these hooks; faction modules register in src/factions/index.ts. No core file imports a faction module.
+import type { MoveKind, ModelState, Phase, PlayerId, Pt, StratagemData, UnitState } from './types';
+import type { Action } from '../rules-engine/activations';
 import type { GameState } from './types';
-import type { Active, Ctx, DetChoiceOption, Eligibility } from './effects';
+import type { Active, Ctx, DetChoiceOption, Eligibility } from '../rules-engine/effects';
 
 // ---------- events: something happened ----------
 
@@ -54,7 +54,7 @@ type Handler<K extends EventName> = (s: GameState, e: GameEvents[K]) => void;
 
 const handlers: { [K in EventName]?: Handler<K>[] } = {};
 
-/** Subscribe to an event. Handlers run in the order they were added (factionHooks.ts fixes that order). */
+/** Subscribe to an event. Handlers run in the order they were added (src/factions/index.ts fixes that order). */
 export function on<K extends EventName>(name: K, fn: Handler<K>) {
   ((handlers[name] ??= []) as Handler<K>[]).push(fn);
 }
@@ -249,3 +249,15 @@ export function choiceBlocked(s: GameState, p: PlayerId, rule: string, o: DetCho
 export function choicePickedHooks(s: GameState, p: PlayerId, rule: string, ids: string[], randomly: boolean) {
   for (const h of choiceHooks) h.picked?.(s, p, rule, ids, randomly);
 }
+
+// ---------- the bot's judgement, asked by the rules (registered by src/ai) ----------
+
+export type ReactKind = 'move' | 'surge' | 'reserves' | 'embark';
+let reactWorthFn: (s: GameState, u: UnitState, st: StratagemData, kind: ReactKind) => boolean = () => false;
+
+/** The bot sets how it judges a reactive move / redeploy stratagem (src/ai/botPlus.ts). Without a bot: never worth it. */
+export function setReactWorth(fn: typeof reactWorthFn) {
+  reactWorthFn = fn;
+}
+
+export const reactWorth = (s: GameState, u: UnitState, st: StratagemData, kind: ReactKind) => reactWorthFn(s, u, st, kind);

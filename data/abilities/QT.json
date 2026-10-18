@@ -885,7 +885,7 @@
    }
   ]
  },
- "Preyslayer’s Mantle": {
+ "Preyslayer’s Mantle": { "code": true,
   "status": "auto",
   "note": "The bearer has the Super-heavy Walker ability (moves through models and terrain)"
  },
@@ -920,7 +920,7 @@
    }
   ]
  },
- "Aspect of the Beast": {
+ "Aspect of the Beast": { "code": true,
   "status": "auto",
   "note": "Start of your Command phase: one more Dread ability for the bearer (knights.ts)"
  },
@@ -944,7 +944,7 @@
    }
   ]
  },
- "Throne Tyrannicus": {
+ "Throne Tyrannicus": { "code": true,
   "status": "auto",
   "note": "Your Command phase: the closest other CHARACTER Knight within 9\" is affected by the bearer’s War Dog auras (knights.ts)"
  },

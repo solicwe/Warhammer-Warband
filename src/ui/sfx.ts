@@ -1,16 +1,16 @@
 // Sounds made on the spot with Web Audio (no sound files): short clicks, thuds and chimes that tell the player what
 // just happened without looking. Browsers only allow sound after the first tap, which a game always has.
+import { KEYS, readText, writeText } from '../services/storage';
 
 export type Sfx = 'tick' | 'hit' | 'wound' | 'kill' | 'destroy' | 'vp' | 'gem' | 'spend' | 'turn' | 'dice' | 'land' | 'card' | 'think' | 'bad' | 'good' | 'shock' | 'heal' | 'arrive' | 'charge' | 'bolt' | 'plasma' | 'melta' | 'flamer' | 'melee';
 
-const PREF = 'sfx-on';
-let on = (() => { try { return localStorage.getItem(PREF) !== '0'; } catch { return true; } })();
+let on = readText(KEYS.sound) !== '0';
 let ctx: AudioContext | null = null;
 
 export const soundOn = () => on;
 export function setSoundOn(v: boolean) {
   on = v;
-  try { localStorage.setItem(PREF, v ? '1' : '0'); } catch { /* private window: this session only */ }
+  writeText(KEYS.sound, v ? '1' : '0');
 }
 
 function audio(): AudioContext | null {

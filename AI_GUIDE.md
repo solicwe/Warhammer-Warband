@@ -17,8 +17,8 @@ Read `ARCHITECTURE.md` first. This file is the checklist for the common changes.
 2. Add or fix the entry in `data/abilities/<ID>.json`. Key: the ability name, or `Name@Datasheet` when two
    datasheets share a name with different rules. Enhancements use the same file and the enhancement name.
 3. Passive rule: `"effects": [...]`. Rule used at a moment: `"act": { "when": ..., "do": [...] }`. Copy a similar
-   entry from `data/abilities/SM.json`; the field reference is the `Effect` interface in `src/engine/effects.ts`
-   and `Action` in `src/engine/activations.ts`.
+   entry from `data/abilities/SM.json`; the field reference is the `Effect` interface in `src/rules-engine/effects.ts`
+   and `Action` in `src/rules-engine/activations.ts`.
 4. Conditions go in `if` and must be ones `cond()` in `effects.ts` handles. Need a new one: add a case to `cond()`
    (keep it a pure function of the context) and use it.
 5. Add a test in the faction's test file that builds a unit and checks the number the rule changes.
@@ -38,17 +38,16 @@ Entry in `data/detachment-rules.json`, key = detachment name (army rules: rule n
 
 1. `npm run data -- --fetch` (or put CSVs in `data/raw/`), then fix wrong values in `data/overrides/<ID>.json`.
 2. Create `data/abilities/<ID>.json` and `data/stratagems/<ID>.json`; register them in `FACTION_RULES`
-   (`src/engine/effects.ts`) and `BOOKS` (`src/engine/stratagems.ts`).
+   (`src/rules-engine/effects.ts`) and `BOOKS` (`src/rules-engine/stratagems.ts`).
 3. Detachment rules in `data/detachment-rules.json`.
-4. Army rule mechanics that keep state (tokens, marks, per-round choices): write `src/engine/<faction>.ts` with
-   plain functions of `GameState`, then register them in `src/engine/factionHooks.ts`: `on(event, fn)` for
+4. Army rule mechanics that keep state (tokens, marks, per-round choices): write `src/factions/<faction>.ts` with
+   plain functions of `GameState`, then register them in `src/factions/index.ts`: `on(event, fn)` for
    something that happens, `addModifier` for a value several rules adjust, `addCombatMods` for attack modifiers,
    `addCondition` / `addEffectSource` for rule data. ARCHITECTURE.md lists every hook. Never import a faction module
-   from a core file (`game.ts`, `attack.ts`, `effects.ts`, `activations.ts`, `stratagems.ts`, `detachments.ts`);
-   `src/engine/layers.test.ts` fails if you do.
+   or bot code from `src/engine/` or `src/rules-engine/`; `src/engine/layers.test.ts` fails if you do.
 5. A quick-play list in `PRESETS` (`src/ui/presets.ts`) so the faction can be picked for a fast game and is
    covered by the bot-vs-bot tests.
-6. Tests: `src/engine/<faction>.test.ts`, then the whole suite.
+6. Tests: `src/factions/<faction>.test.ts`, then the whole suite.
 
 ## Add a game mode
 

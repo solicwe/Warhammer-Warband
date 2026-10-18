@@ -2,11 +2,11 @@
 // abilities work, and a whole game against Orks plays through with the bot using them.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { actsOfUnit, manualActs, useActByKey } from './activations';
+import { actsOfUnit, manualActs, useActByKey } from '../rules-engine/activations';
 import { buildFightPools } from './attack';
-import { applyDetachmentStratagem } from './stratagems';
-import { botAct } from './bot';
-import { abilityRule, DET_RULES } from './effects';
+import { applyDetachmentStratagem } from '../rules-engine/stratagems';
+import { botAct } from '../ai/bot';
+import { abilityRule, DET_RULES } from '../rules-engine/effects';
 import { buildUnits, enhancementFits, listPoints, validateList } from './army';
 import { createGame, endPhase, formationAt, placeUnit } from './game';
 import type { ArmyList, FactionData, GameState, Pt } from './types';

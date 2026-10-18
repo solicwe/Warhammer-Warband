@@ -1,5 +1,5 @@
 {
- "Cabal of Sorcerers": {
+ "Cabal of Sorcerers": { "code": true,
   "status": "auto",
   "note": "Rituals at the start of your Shooting phase are attempted for you: the best Ritual per sorcerer, Channel the Warp when it pays (rituals.ts)"
  },
@@ -291,7 +291,7 @@
    ]
   }
  },
- "Scryer of Fates (Psychic)": {
+ "Scryer of Fates (Psychic)": { "code": true,
   "status": "auto",
   "note": "After both armies are deployed: redeploy up to three units (or put them into Strategic Reserves)"
  },
@@ -309,7 +309,7 @@
    }
   ]
  },
- "Spirit Snare": {
+ "Spirit Snare": { "code": true,
   "status": "auto",
   "note": "A Cabal of Sorcerers model destroyed within 9\": +1 to this model's Psychic tests (up to +2)"
  },
@@ -454,7 +454,7 @@
    }
   ]
  },
- "SUPREME COMMANDER": {
+ "SUPREME COMMANDER": { "code": true,
   "status": "auto",
   "note": "Checked by the army builder: must be your Warlord"
  },
@@ -1011,7 +1011,7 @@
    }
   }
  },
- "Split": {
+ "Split": { "code": true,
   "status": "auto",
   "note": "Destroyed Pink Horrors may become two Blue Horrors, Blue Horrors a Brimstone Horror (4+)"
  },
@@ -1110,15 +1110,15 @@
    }
   ]
  },
- "Noctilith Mantle": {
+ "Noctilith Mantle": { "code": true,
   "status": "auto",
   "note": "Its unit is always wholly within the Flow of Magic; its models attempt no Rituals"
  },
- "Lord of Forbidden Lore": {
+ "Lord of Forbidden Lore": { "code": true,
   "status": "auto",
   "note": "+6\" to the range of its Rituals (rituals.ts)"
  },
- "Incandaeum": {
+ "Incandaeum": { "code": true,
   "status": "auto",
   "note": "Once per battle it may attempt Doombolt although it was already attempted this phase (rituals.ts)"
  },
@@ -1181,11 +1181,11 @@
    ]
   }
  },
- "Diabolic Savant": {
+ "Diabolic Savant": { "code": true,
   "status": "auto",
   "note": "+1 to its Psychic tests when it Channels the Warp near Scintillating Legions (rituals.ts)"
  },
- "Duplicitous Malediction": {
+ "Duplicitous Malediction": { "code": true,
   "status": "auto",
   "note": "After both armies are deployed: redeploy up to three units (or put them into Strategic Reserves)"
  },
@@ -1234,7 +1234,7 @@
    }
   ]
  },
- "Warpmeld Dagger": {
+ "Warpmeld Dagger": { "code": true,
   "status": "auto",
   "note": "Before the Psychic test result: suffer D3 mortal wounds, add them to the result (used for hard Rituals)"
  },
@@ -1328,7 +1328,7 @@
    }
   ]
  },
- "Warp Syphon": {
+ "Warp Syphon": { "code": true,
   "status": "auto",
   "note": "Re-rolls the Channel die when it makes a double or falls short: a nearby vehicle takes 1 mortal wound (rituals.ts)"
  },
@@ -1364,7 +1364,7 @@
    ]
   }
  },
- "Warp-cursed Runemaster": {
+ "Warp-cursed Runemaster": { "code": true,
   "status": "auto",
   "note": "+6\" to its Rituals near a Thousand Sons vehicle (rituals.ts)"
  },
@@ -1388,7 +1388,7 @@
   "status": "auto",
   "note": "At the end of the phase on a 2+ it returns with 3 wounds"
  },
- "Curse of Life": {
+ "Curse of Life": { "code": true,
   "status": "auto",
   "note": "Sorcerous Invigoration heals 3 more (rituals.ts)"
  },

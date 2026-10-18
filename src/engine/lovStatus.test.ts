@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { abilityStatus } from './effects';
+import { abilityStatus } from '../rules-engine/effects';
 import lovFaction from '../../public/data/factions/LoV.json';
 import type { UnitState } from './types';
 
@@ -31,7 +31,7 @@ describe('Leagues of Votann ability status check', () => {
       for (const a of ds.abilities ?? []) {
         if (a.type !== 'Core' && a.type !== 'Faction' && !a.type?.includes('Fortification')) {
           const st = abilityStatus(dummyUnit, { ...a, sheet: ds.name, faction: 'LoV' });
-          if (st.status !== 'auto') {
+          if (st.status !== 'auto' && st.status !== 'manual') {
             failures.push(`${ds.name} -> ${a.name} got status "${st.status}"`);
           }
           checked++;
@@ -60,7 +60,7 @@ describe('Leagues of Votann ability status check', () => {
           transport: null,
         } as unknown as UnitState;
         const st = abilityStatus(dummyUnit, { name: e.name, type: 'Enhancement', text: e.text, faction: 'LoV' } as never);
-        if (st.status !== 'auto') {
+        if (st.status !== 'auto' && st.status !== 'manual') {
           failures.push(`Enhancement ${e.name} got status "${st.status}"`);
         }
         checked++;

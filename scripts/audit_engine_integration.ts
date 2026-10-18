@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createGame, formationAt, placeUnit } from '../src/engine/game';
-import { activeRules, DET_RULES, effectsFor, modelDefence } from '../src/engine/effects';
-import { actsOfUnit, manualActs, useActByKey } from '../src/engine/activations';
+import { activeRules, DET_RULES, effectsFor, modelDefence } from '../src/rules-engine/effects';
+import { actsOfUnit, manualActs, useActByKey } from '../src/rules-engine/activations';
 import { buildShootPools, applyMortalWounds } from '../src/engine/attack';
 import { canUseStratagem, spendStratagem, unitDistance, hasKw } from '../src/engine/state';
 import { hasLos, hasCover, fullyVisible } from '../src/engine/visibility';

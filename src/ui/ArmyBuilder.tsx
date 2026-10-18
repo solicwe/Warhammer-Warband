@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { hasFactionRules } from '../engine/effects';
+import { hasFactionRules } from '../rules-engine/effects';
 import { addonLines, supportIn, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { ALLIES, detachmentAllyOf } from '../engine/allies';
@@ -9,7 +9,7 @@ import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionDat
 import { Icon } from './Icon';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { listDisposition, listDispositionOptions } from '../engine/game';
-import { DET_RULES } from '../engine/detachments';
+import { DET_RULES } from '../rules-engine/detachments';
 import { armyColor, dsColor, DatasheetView } from './Sheet';
 import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';

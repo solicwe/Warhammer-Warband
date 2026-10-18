@@ -14,7 +14,7 @@ import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
 export const setFreeDamageHook = (h: (s: GameState) => boolean) => { freeDamageHook = h; };
-import { addToExpr, applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from './effects';
+import { addToExpr, applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from '../rules-engine/effects';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
 

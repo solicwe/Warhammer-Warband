@@ -2,11 +2,11 @@
 // and writes each game's VP margin (A minus B). Run by scripts/tune.mjs; only runs with TUNE_JOB set.
 import fs from 'node:fs';
 import { describe, it } from 'vitest';
-import * as live from './bot';
-import * as base from './baseline/bot';
+import * as live from '../ai/bot';
+import * as base from '../ai/baseline/bot';
 const { botAct } = live;
-import { setBotWeights, type BotW } from './botWeights';
-import { resetLookahead, setLookahead } from './botLook';
+import { setBotWeights, type BotW } from '../ai/botWeights';
+import { resetLookahead, setLookahead } from '../ai/botLook';
 import type { DispositionId } from './config';
 import { createGame } from './game';
 import { autoList } from './autoList';
@@ -56,7 +56,7 @@ export function playTune(g: TuneGame, wA: Partial<BotW>, wB: Partial<BotW>, base
   try {
     let steps = 0;
     if (!baselineB) while (s.phase !== 'gameover' && steps < 12000) { botAct(s); steps++; }
-    // A/B against the frozen baseline bot (src/engine/baseline): side B's decisions come from the old code
+    // A/B against the frozen baseline bot (src/ai/baseline): side B's decisions come from the old code
     else while (s.phase !== 'gameover' && steps < 12000) {
       steps++;
       const who = ([0, 1] as PlayerId[]).find((p) => live.botShouldAct(s, p));

@@ -2,10 +2,10 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { applyMortalWounds, buildShootPools, finishAttack, resolveAll, startAttack } from './attack';
-import { effectsFor, ocOf } from './effects';
+import { effectsFor, ocOf } from '../rules-engine/effects';
 import { commitMove, createGame, formationAt, heroicMode, placeUnit } from './game';
 import { alive } from './state';
-import { answerReaction, applyDetachmentStratagem, stratagemBlock } from './stratagems';
+import { answerReaction, applyDetachmentStratagem, stratagemBlock } from '../rules-engine/stratagems';
 import type { ArmyList, FactionData, GameState, PlayerId, Pt, StratagemData } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;

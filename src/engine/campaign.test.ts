@@ -7,7 +7,7 @@ import {
   afterBattle, applyCampaign, buyEnhancementForUnit, changeSquadSize, combineSquads, continueNextLoop,
   enhancementScrapCost, enter, makeMap, newRun, reachable, recruitUnit, removeEnhancementFromUnit, takeReward
 } from './campaign';
-import { effectsFor } from './effects';
+import { effectsFor } from '../rules-engine/effects';
 import { createGame } from './game';
 import type { FactionData } from './types';
 

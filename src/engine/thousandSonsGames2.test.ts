@@ -1,7 +1,7 @@
 // Thousand Sons: every detachment plays a whole game with the bot (split over two files so they run in parallel).
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { botAct } from './bot';
+import { botAct } from '../ai/bot';
 import { buildUnits } from './army';
 import { createGame } from './game';
 import { PRESETS } from '../ui/presets';

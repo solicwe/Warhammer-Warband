@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { freeDiceNow } from '../engine/activations';
+import { freeDiceNow } from '../rules-engine/activations';
 import { canUseStratagem, unitById } from '../engine/state';
 import type { Die, GameState, Pool } from '../engine/types';
 import { abilityLabel, abilitiesOf } from '../engine/weapons';
 import { rerollable } from '../engine/attack';
-import { canPerformActOfFaith } from '../engine/sororitas';
-import { canUseFateDie } from '../engine/aeldari';
+import { canPerformActOfFaith } from '../factions/sororitas';
+import { canUseFateDie } from '../factions/aeldari';
 import { Icon } from './Icon';
 import { play } from './sfx';
 import { Portrait, unitToken } from './Tokens';

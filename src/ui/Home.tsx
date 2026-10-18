@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { RULES } from '../engine/config';
 import { listPoints } from '../engine/army';
-import { loadRun } from '../engine/campaign';
+import { loadRun } from '../services/storage';
 import { lastRound } from '../engine/state';
 import type { GameState } from '../engine/types';
 import { Emblem, titleCase } from './ArmyBuilder';

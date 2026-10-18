@@ -1,6 +1,6 @@
 {
   "_comment": "T’au Empire Faction Pack v1.2. Complete datasheet, army rule, detachment and enhancement rules.",
-  "For the Greater Good": {
+  "For the Greater Good": { "code": true,
     "status": "auto",
     "note": "Observer unit marks visible enemy as Spotted. Guided units gain +1 BS and [IGNORES COVER] (if Markerlight) against Spotted unit (-1 BS vs non-spotted)."
   },
@@ -277,11 +277,11 @@
     ],
     "note": "Eligible to shoot in a turn in which it Fell Back."
   },
-  "Forward Observers": {
+  "Forward Observers": { "code": true,
     "status": "auto",
     "note": "When this unit is Observer, Guided units targeting the Spotted unit re-roll Hit rolls of 1 and Wound rolls of 1."
   },
-  "Target Uploaded": {
+  "Target Uploaded": { "code": true,
     "status": "auto",
     "note": "Can be Observer even if already shot, and can mark up to two enemy units as Spotted."
   },
@@ -397,7 +397,7 @@
     "status": "auto",
     "note": "Once per battle round, reduce CP cost of a Stratagem by 1CP."
   },
-  "SUPREME COMMANDER": {
+  "SUPREME COMMANDER": { "code": true,
     "status": "auto",
     "note": "Shadowsun must be your Warlord."
   },
@@ -526,7 +526,7 @@
     "note": "Shoots drone defender weapons against every eligible target."
   },
   "Fortification": {
-    "status": "auto",
+    "status": "info",
     "note": "Rules for enemy units engaged only with Fortifications."
   },
   "Tidewall Cover": {
@@ -537,7 +537,7 @@
     "status": "auto",
     "note": "Increases Wounds characteristic to 15."
   },
-  "One Shot": {
+  "One Shot": { "code": true,
     "status": "auto",
     "note": "Can only shoot with this weapon once per battle."
   },
@@ -555,11 +555,11 @@
     ],
     "note": "+1 to Hit on ranged attacks (+1 to Wound from round 3 onwards)."
   },
-  "Through Unity, Devastation": {
+  "Through Unity, Devastation": { "code": true,
     "status": "auto",
     "note": "While Observer, Guided unit gains [LETHAL HITS] against Spotted unit."
   },
-  "Coordinated Exploitation": {
+  "Coordinated Exploitation": { "code": true,
     "status": "auto",
     "note": "While Observer, Guided unit gains [SUSTAINED HITS 1] against Spotted unit."
   },
@@ -567,11 +567,11 @@
     "status": "auto",
     "note": "Patient Hunter applies from second battle round onwards."
   },
-  "Exemplar of the Mont’ka": {
+  "Exemplar of the Mont’ka": { "code": true,
     "status": "auto",
     "note": "Killing Blow applies during fourth battle round as well."
   },
-  "Strategic Conqueror": {
+  "Strategic Conqueror": { "code": true,
     "status": "auto",
     "note": "+1 OC on chosen objective marker."
   },

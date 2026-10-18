@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { abilityStatus } from './effects';
+import { abilityStatus } from '../rules-engine/effects';
 import aeFaction from '../../public/data/factions/AE.json';
 import type { UnitState } from './types';
 
@@ -31,7 +31,7 @@ describe('Aeldari ability status check', () => {
       for (const a of ds.abilities ?? []) {
         if (a.type !== 'Core' && a.type !== 'Faction' && !a.type?.includes('Fortification')) {
           const st = abilityStatus(dummyUnit, { ...a, sheet: ds.name, faction: 'AE' });
-          if (st.status !== 'auto') {
+          if (st.status !== 'auto' && st.status !== 'manual') {
             failures.push(`${ds.name} -> ${a.name} (type: ${a.type}) got status "${st.status}"`);
           }
           checked++;

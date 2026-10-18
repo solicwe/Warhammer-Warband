@@ -1,10 +1,10 @@
 {
   "_comment": "Leagues of Votann Faction Pack v1.2. Complete datasheet, detachment, enhancement, and army rules.",
-  "Prioritised Efficiency": {
+  "Prioritised Efficiency": { "code": true,
     "status": "auto",
     "note": "Yield Points (YP) tracking and dual stances (Hostile Acquisition / Fortify Takeover). Auto-switches to Fortify Takeover at 7+ YP."
   },
-  "Ancestral Fortune": {
+  "Ancestral Fortune": { "code": true,
     "status": "auto",
     "note": "Once per turn, you can spend 1YP to change one Hit roll, one Wound roll or one saving throw made for this model to an unmodified 6."
   },
@@ -112,7 +112,7 @@
     "status": "auto",
     "note": "Each time this model makes a ranged attack, you can ignore any or all modifiers to the following: that attack’s Ballistic Skill characteristic; the Hit roll."
   },
-  "One Shot": {
+  "One Shot": { "code": true,
     "status": "auto",
     "note": "The bearer can only shoot with this weapon once per battle."
   },
@@ -144,7 +144,7 @@
     "status": "auto",
     "note": "Once per turn, in your Shooting phase, one model with this ability can use it when it is selected to shoot. If it does, you must spend 1YP and, until the end of the phase, ranged weapons equipped by that model have the [SUSTAINED HITS 1] ability and, after that model has shot this phase, if one or more enemy units were destroyed by those attacks, you can gain up to 2YP."
   },
-  "Overcharge": {
+  "Overcharge": { "code": true,
     "status": "auto",
     "note": "Each time the bearer takes a Hazardous test for this weapon profile, subtract 2 from the result."
   },
@@ -192,7 +192,7 @@
     "status": "auto",
     "note": "Each time a Leagues of Votann model from your army makes an attack with a weapon that targets the closest eligible target or a target that is within Engagement Range of that model’s unit: • Re-roll a Wound roll of 1. • If your unit is a Kâhl, Einhyr Hearthguard or Ûthar the Destined unit, improve the Armour Penetration characteristic of that attack by 1."
   },
-  "Bastion Shield": {
+  "Bastion Shield": { "code": true,
     "status": "auto",
     "note": "LEAGUES OF VOTANN model only. Each time a ranged attack targets the bearer’s unit, if the attacking model is within 12\" of the bearer’s unit, worsen the Armour Penetration characteristic of that attack by 1. If you spend 1YP, until the end of the phase, if the attacking model is within 18\" of the bearer’s unit, worsen the Armour Penetration characteristic of that attack by 1 instead."
   },
@@ -208,7 +208,7 @@
     "status": "auto",
     "note": "KÂHL model only. In the Fight phase, when a model in this unit is destroyed, if this unit has not been selected to fight this phase, roll one D6: on a 4+, do not remove that model from the battlefield; after this unit has fought, or at the end of the phase (whichever comes first), that model is removed from the battlefield."
   },
-  "Martial Leverage": {
+  "Martial Leverage": { "code": true,
     "status": "auto",
     "note": "Each time an enemy unit is destroyed, you gain 1YP."
   },
@@ -312,7 +312,7 @@
     "status": "auto",
     "note": "Your Leagues of Votann units do not have the Hostile Acquisition or Fortify Takeover abilities except as described in this rule. At the start of the battle, your LEAGUES OF VOTANN units have the Hostile Acquisition ability. At the end of your Command phase, you can spend 3YP. If you do, LEAGUES OF VOTANN units from your army lose the Hostile Acquisition ability and gain the Fortify Takeover ability, or vice versa."
   },
-  "Mercenary Prospector": {
+  "Mercenary Prospector": { "code": true,
     "status": "auto",
     "note": "Kâhl model only. Each time an enemy unit is destroyed by the bearer’s unit, gain 2YP."
   },

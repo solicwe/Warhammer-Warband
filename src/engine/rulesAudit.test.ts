@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createGame, formationAt, placeUnit, setOathTarget, callWaaagh } from './game';
-import { activeRules, DET_RULES, effectsFor, addTimed, expireTimed } from './effects';
+import { activeRules, DET_RULES, effectsFor, addTimed, expireTimed } from '../rules-engine/effects';
 import { buildShootPools } from './attack';
 import { PRESETS } from '../ui/presets';
 import { RULES } from './config';

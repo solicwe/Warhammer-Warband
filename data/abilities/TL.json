@@ -4,7 +4,7 @@
     "status": "auto",
     "note": "Muster without detachments (0 DP). Any Titanic model can be your Warlord without CHARACTER keyword."
   },
-  "Striding Colossus": {
+  "Striding Colossus": { "code": true,
     "status": "auto",
     "note": "Each time you target this model with a Stratagem, you must spend three times that Stratagem’s stated CP cost to do so."
   },

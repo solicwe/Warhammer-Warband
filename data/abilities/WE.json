@@ -1,9 +1,9 @@
 {
- "Blessings of Khorne": {
+ "Blessings of Khorne": { "code": true,
   "status": "auto",
   "note": "World Eaters army rule: rolled at the start of each battle round (blessings.ts)"
  },
- "Reborn in Blood": {
+ "Reborn in Blood": { "code": true,
   "status": "auto",
   "note": "A triple 6 in the Blessings roll while Angron is destroyed brings him back (Deep Strike, 8 wounds)"
  },
@@ -19,11 +19,11 @@
    ]
   }
  },
- "SUPREME COMMANDER": {
+ "SUPREME COMMANDER": { "code": true,
   "status": "auto",
   "note": "Checked by the army builder: Angron must be your Warlord"
  },
- "The Blood God’s Favour": {
+ "The Blood God’s Favour": { "code": true,
   "status": "auto",
   "note": "Blessings of Khorne roll: up to six dice that pay for nothing are re-rolled"
  },
@@ -269,7 +269,7 @@
    ]
   }
  },
- "Icon of Khorne": {
+ "Icon of Khorne": { "code": true,
   "status": "auto",
   "note": "Each unit it destroys gives a Bloodshed point: one more die in your next Blessings of Khorne roll"
  },
@@ -485,7 +485,7 @@
    }
   ]
  },
- "Meet Any Challenge": {
+ "Meet Any Challenge": { "code": true,
   "status": "auto",
   "note": "An enemy unit ending a move within 8\" in your opponent's Movement phase: the passengers jump out (bot / Automatic)"
  },
@@ -499,7 +499,7 @@
    }
   ]
  },
- "Idol of Blessed Blood": {
+ "Idol of Blessed Blood": { "code": true,
   "status": "auto",
   "note": "One more die in the Blessings of Khorne roll while it is on the battlefield"
  },
@@ -759,7 +759,7 @@
    }
   ]
  },
- "Unleash Wrath": {
+ "Unleash Wrath": { "code": true,
   "status": "auto",
   "note": "An enemy unit set up within 12\": the Defiler shoots it (or charges it when it can't)"
  },
@@ -784,7 +784,7 @@
    }
   ]
  },
- "Favoured of Khorne": {
+ "Favoured of Khorne": { "code": true,
   "status": "auto",
   "note": "Blessings of Khorne roll: up to two dice that pay for nothing are re-rolled"
  },
@@ -827,7 +827,7 @@
    }
   ]
  },
- "Chosen of the Blood God": {
+ "Chosen of the Blood God": { "code": true,
   "status": "auto",
   "note": "+3\" to its Idols of Khorne auras"
  },
@@ -852,11 +852,11 @@
    }
   ]
  },
- "Strategic Slaughter": {
+ "Strategic Slaughter": { "code": true,
   "status": "auto",
   "note": "After deployment: redeploy up to three Jakhals / Goremongers units (or put them into Strategic Reserves)"
  },
- "Icon of War": {
+ "Icon of War": { "code": true,
   "status": "auto",
   "note": "Blood Legions units within 6\" have the Blessings of Khorne ability"
  },

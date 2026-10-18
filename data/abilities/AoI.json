@@ -1,7 +1,7 @@
 {
   "_comment": "Imperial Agents Faction Pack v1.2. Datasheet and enhancement rules; generic text patterns are completed by abilityText.ts.",
-  "Assigned Agents": { "status": "auto", "note": "Army access and allied unit caps are enforced when mustering." },
-  "Kill Team": { "status": "auto" },
+  "Assigned Agents": { "code": true, "status": "auto", "note": "Army access and allied unit caps are enforced when mustering." },
+  "Kill Team": { "code": true, "status": "auto" },
   "Death to the Alien": {
     "status": "auto",
     "effects": [
@@ -141,7 +141,7 @@
       "do": [{ "on": "self", "buff": [{ "weapon": "Jindarii tox-cycler", "strength": 2, "damage": 2 }], "until": "battle" }]
     }
   },
-  "One Shot": {
+  "One Shot": { "code": true,
     "status": "auto",
     "note": "The weapon's One Shot keyword is enforced by the attack engine."
   },
@@ -249,14 +249,14 @@
     }
   },
   "SHADOW ASSIGNMENT": {
-    "status": "auto",
+    "status": "info",
     "note": "Warlord restrictions and duplicate-Assassin limits are enforced."
   },
   "Etheric Emergence": {
     "effects": [{ "deepStrikeRange": 6 }],
     "note": "The 6-inch Deep Strike distance is available; the optional no-charge choice is not separately tracked when the unit sets up more than 9 inches away."
   },
-  "Spy Network": {
+  "Spy Network": { "code": true,
     "status": "auto"
   },
   "Gheistskull": {
@@ -274,7 +274,7 @@
       "label": "Backroom Deals: grant Infiltrators"
     }
   },
-  "Warrant of Trade": {
+  "Warrant of Trade": { "code": true,
     "status": "auto"
   },
   "Blackweave Shroud": {
@@ -329,7 +329,7 @@
       "label": "Amulet of Auto-Chastisement: test enemy Vehicle"
     }
   },
-  "Liber Heresius": {
+  "Liber Heresius": { "code": true,
     "status": "auto",
     "note": "Redeploy up to 3 Agents of the Imperium units after both players have deployed."
   },
@@ -540,19 +540,19 @@
     "effects": [{ "scope": "transport", "disembarkAfterAdvance": true }]
   },
   "NAVY BODYGUARD": {
-    "status": "auto",
+    "status": "info",
     "note": "The allied Retinue exemption is enforced by Assigned Agents army composition rules."
   },
   "INQUISITORIAL HENCHMEN": {
-    "status": "auto",
+    "status": "info",
     "note": "The allied Retinue exemption is enforced by Assigned Agents army composition rules."
   },
-  "Authority of the Inquisition": {
+  "Authority of the Inquisition": { "code": true,
     "status": "auto",
     "note": "An attached Inquisitor may use a transport accepted by its Bodyguard."
   },
   "ATTACHED UNIT": {
-    "status": "auto",
+    "status": "info",
     "note": "Deathwatch Kill Team leaders can attach to Aquila Kill Team; Inquisitor/Priest leaders can attach to Sanctifiers and gain Scouts 6\"."
   }
 }

@@ -1,7 +1,7 @@
 // Bot-vs-bot battles with many different datasheets, so every ability's code path runs in real games.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { botAct } from './bot';
+import { botAct } from '../ai/bot';
 import { createGame } from './game';
 import type { ArmyList, FactionData, GameState } from './types';
 

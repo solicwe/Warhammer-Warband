@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { acceptOffer, actsOfUnit, fire, freeDiceNow, manualActs, resolveRevivals, useActByKey, useFreeDie } from './activations';
-import { detChoices, pickDetChoice } from './detachments';
+import { acceptOffer, actsOfUnit, fire, freeDiceNow, manualActs, resolveRevivals, useActByKey, useFreeDie } from '../rules-engine/activations';
+import { detChoices, pickDetChoice } from '../rules-engine/detachments';
 import { buildFightPools, buildShootPools, finishAttack, resolveAll, rollHits, startAttack } from './attack';
-import { abilityRule, effectsFor } from './effects';
+import { abilityRule, effectsFor } from '../rules-engine/effects';
 import { commitMove, createGame, endPhase, formationAt, placeUnit, updateControl } from './game';
 import { alive } from './state';
 import type { ArmyList, FactionData, GameState, Pt } from './types';

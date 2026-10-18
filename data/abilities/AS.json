@@ -1,6 +1,6 @@
 {
   "_comment": "Adepta Sororitas Faction Pack v1.4. Complete datasheet and enhancement rules.",
-  "Acts of Faith": {
+  "Acts of Faith": { "code": true,
     "status": "auto",
     "note": "Substitute 1 dice roll per phase per unit using a Miracle die (sororitas.ts)"
   },
@@ -21,7 +21,7 @@
     "status": "auto",
     "note": "When selected to shoot or fight, discard 1 Miracle die to add 3 to the Attacks of Fidelis and the Lance of Illumination. Gain 1 Miracle die when an enemy unit is destroyed by this model."
   },
-  "SUPREME COMMANDER": {
+  "SUPREME COMMANDER": { "code": true,
     "status": "auto",
     "note": "Checked by the army builder: Morvenn Vahl must be your Warlord."
   },
@@ -85,7 +85,7 @@
       }
     ]
   },
-  "One Shot": {
+  "One Shot": { "code": true,
     "status": "auto",
     "note": "The bearer can only shoot with this weapon once per battle."
   },
@@ -128,11 +128,11 @@
     "status": "auto",
     "note": "While leading a unit, each Miracle die used in an Act of Faith is changed to an unmodified 6."
   },
-  "Cherub": {
+  "Cherub": { "code": true,
     "status": "auto",
     "note": "Once per battle, after performing an Act of Faith, gain 1 Miracle die."
   },
-  "Cherubs": {
+  "Cherubs": { "code": true,
     "status": "auto",
     "note": "Twice per battle, after performing an Act of Faith, gain 1 Miracle die."
   },
@@ -140,7 +140,7 @@
     "status": "auto",
     "note": "Sticky objectives: an objective marker controlled by this unit remains under your control until opponent controls it."
   },
-  "Simulacrum Imperialis": {
+  "Simulacrum Imperialis": { "code": true,
     "status": "auto",
     "gear": true,
     "note": "At end of Command phase, for each controlled objective with unit in range, roll D6: on 4+, gain 1 Miracle die of that value."
@@ -470,7 +470,7 @@
       }
     ]
   },
-  "Salvationist Medikit": {
+  "Salvationist Medikit": { "code": true,
     "status": "auto",
     "gear": true,
     "note": "In your Command phase, if on battlefield, return up to D3 destroyed models."

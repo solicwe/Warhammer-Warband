@@ -6,16 +6,22 @@ that plays the five phases, a bot opponent, and a roguelite campaign. React 19 +
 ## Layers
 
 ```
-data/ (rule data, JSON)            public/data/factions/*.json (datasheets, generated)
-        \                                  /
-         +--> src/engine/  (pure TypeScript, no DOM) <-- src/ui/ (React)
-                  |   game state in, game state out          |
-                  +--> bot*.ts (the bot uses the same API) --+
+src/ui/            React screens: army builder, battle, campaign map
+src/ai/            the bot: movement, targets, stratagems, lookahead (runs in a Web Worker in the browser)
+src/factions/      army rules that keep state of their own; index.ts registers them with the engine
+src/rules-engine/  rules as data: effects, activations, stratagems, detachment rules, the ability text reader
+src/engine/        game state, the turn loop, dice, attacks, line of sight, terrain, missions, events
+src/services/      what the app keeps on the device (storage.ts); the place a cloud sync hooks in
+data/              the rules as JSON; public/data/factions/*.json holds the datasheets
 ```
 
-- **`src/engine/`** knows nothing about React. Every rule is a function of `GameState` (see `types.ts`). The UI and
-  the bot call the same functions, so anything the player can do the bot can do, and every game can be replayed
-  from its seed.
+Dependencies go one way: `ui -> ai -> factions -> rules-engine -> engine`. The engine and the rules engine never
+import a faction module or bot code (`src/engine/layers.test.ts` checks it); `game.ts` loads `src/factions/index.ts`,
+which registers every faction with the hooks below.
+
+- **`src/engine/`** and **`src/rules-engine/`** know nothing about React. Every rule is a function of `GameState`
+  (see `src/engine/types.ts`). The UI and the bot call the same functions, so anything the player can do the bot can
+  do, and every game can be replayed from its seed.
 - **`src/ui/`** renders a `GameState` and turns taps into engine calls. Game state lives in `store.ts` (`useGame`):
   each action clones the state, applies one engine call and keeps an undo snapshot.
 - **`data/`** holds the rules as data. Most rules are added or fixed here without touching code.
@@ -26,9 +32,8 @@ data/ (rule data, JSON)            public/data/factions/*.json (datasheets, gene
 Charge, Fight (`endPhase` moves from one to the next) -> end of turn -> end of round -> game over.
 
 Faction rules (Knights' Code Chivalric, Drukhari Pain tokens, Daemons' Shadow of Chaos ...) do not live in the core.
-The core files (`game.ts`, `attack.ts`, `effects.ts`, `activations.ts`, `stratagems.ts`, `detachments.ts`) import
-no faction module. They emit events and ask the hooks in `events.ts` and `combatMods.ts`; each faction module
-registers in `factionHooks.ts`.
+The engine and rules engine import no faction module. They emit events and ask the hooks in `src/engine/events.ts`
+and `src/engine/combatMods.ts`; each faction module registers in `src/factions/index.ts`.
 
 ### Events (`on(name, handler)`)
 
@@ -87,7 +92,7 @@ Questions several rules can answer; `events.ts` combines the answers.
 | `addTargetFilter` | a stratagem target filter | `contagion` |
 | `addChoiceHooks` | detachment / army rule choices (why an option is blocked, what picking it does) | Code Chivalric, Nurgle's Gift |
 
-Handlers and providers run in the order they are registered in `factionHooks.ts`. The dice come from one seeded
+Handlers and providers run in the order they are registered in `src/factions/index.ts`. The dice come from one seeded
 generator, so that order is part of the game's behaviour and must not change by accident. Register functions
 through an arrow (`(s, u) => fn(s, u)`), not by value: modules can load in either order.
 
@@ -112,7 +117,7 @@ Timed effects (`addTimed`) carry an `until` (`phase`, `turn`, `nextCommand` ...)
 at that point, so nothing a rule grants outlives it.
 
 Where the data cannot express a rule, the faction has a module (`knights.ts`, `drukhari.ts`, `rituals.ts` ...)
-hooked in through `factionHooks.ts`, and `cond()` / the effect collectors ask the module.
+hooked in through `src/factions/index.ts`, and `cond()` / the effect collectors ask the module.
 
 `rulesData.test.ts` checks the data against the engine: an unknown condition, trigger or misused key fails the
 build, because the engine would otherwise skip that rule silently. `docs/RULES_STATUS.md` lists per faction which

@@ -1,6 +1,6 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
 import { battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
-import './factionHooks';
+import '../factions/index';
 import { buildUnits, forChapter, newUid, transportFit } from './army';
 import { applyMortalWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
@@ -17,10 +17,9 @@ import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKi
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
 import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathLength } from './pathing';
-import { detOnCommandStart } from './detachments';
-import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from './effects';
-import './rituals';
-import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from './activations';
+import { detOnCommandStart } from '../rules-engine/detachments';
+import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
+import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
 
 
 const W = RULES.battlefield.width;

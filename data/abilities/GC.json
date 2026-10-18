@@ -1,13 +1,13 @@
 {
-  "Deep Strike": {
+  "Deep Strike": { "code": true,
     "status": "auto",
     "note": "DEEP STRIKE24.09 There are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation. Each time this unit makes an ingress move (20."
   },
-  "Infiltrators": {
+  "Infiltrators": { "code": true,
     "status": "auto",
     "note": "INFILTRATORS24.20 Many armies employ reconnaissance units who can sit concealed, waiting for the right moment to strike. During deployment, if every model in a unit has this ability, it can be set up anywhere on the battlefield that is more than 8\" horizontally from your opponent’s deployment zone and all enemy units."
   },
-  "Leader": {
+  "Leader": { "code": true,
     "status": "auto",
     "note": "LEADER24.22 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
   },
@@ -23,7 +23,7 @@
     "status": "auto",
     "note": "Once per battle, at the start of the Fight phase, this model can use its psychic familiar. If it does, until the end of the phase, add 6\" to the range of its Cosmic Horror ability. Designer’s Note: Place a Psychic Familiar token next to the model, removing it once this ability has been used."
   },
-  "SUPREME COMMANDER": {
+  "SUPREME COMMANDER": { "code": true,
     "status": "auto",
     "note": "• You cannot include more than one PATRIARCH model in your army. • If this model is in your army, it must be your Warlord."
   },
@@ -43,7 +43,7 @@
     "status": "auto",
     "note": "If your army includes one or more models with this ability, after both players have deployed their armies, select up to three GENESTEALER CULTS units from your army and redeploy them."
   },
-  "Scouts": {
+  "Scouts": { "code": true,
     "status": "auto",
     "note": "SCOUTS24.31 Scouts form the vanguard of many armies. Unnoticed by the enemy, they range ahead of the main force. This ability always takes the form Scouts X\"."
   },
@@ -63,7 +63,7 @@
     "status": "auto",
     "note": "At the start of your Command phase, roll one D6 for each objective marker you control that has one or more units from your army with this ability within range of it. If one or more of the results is a 4+, you gain 1CP."
   },
-  "Cult Icon": {
+  "Cult Icon": { "code": true,
     "status": "auto",
     "note": "In your Command phase, you can return up to D3 destroyed models to the bearer’s unit. If the bearer’s unit is within range of an objective marker you control, you can return up to 3 destroyed models to that unit instead."
   },
@@ -71,7 +71,7 @@
     "status": "auto",
     "note": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
   },
-  "Feel No Pain": {
+  "Feel No Pain": { "code": true,
     "status": "auto",
     "note": "FEEL NO PAIN24.12 The hardiest warriors refuse to be laid low, even by wounds that should by all rights prove lethal. This ability always takes the form Feel No Pain X+. Each time a model with this ability would lose a wound, roll one D6: on an X+, that wound is not lost."
   },
@@ -87,11 +87,11 @@
     "status": "auto",
     "note": "This unit is eligible to declare a charge in a turn in which it Advanced."
   },
-  "Deadly Demise": {
+  "Deadly Demise": { "code": true,
     "status": "auto",
     "note": "DEADLY DEMISE24.08 From detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat. This ability always takes the form Deadly Demise X."
   },
-  "Firing Deck": {
+  "Firing Deck": { "code": true,
     "status": "auto",
     "note": "FIRING DECK24.14 Some transports have dedicated platforms or firing ports from which embarked passengers can lay down a withering hail of munitions. This ability always takes the form Firing Deck X."
   },
@@ -111,7 +111,7 @@
     "status": "auto",
     "note": "The first time this model is destroyed, roll one D6 at the end of the phase. On a 2+, set this model back up on the battlefield as close as possible to where it was destroyed and not within Engagement Range of any enemy units, with its full wounds remaining."
   },
-  "Stealth": {
+  "Stealth": { "code": true,
     "status": "auto",
     "note": "STEALTH24.33 The stealthiest warriors can evade the attentions, and the bullets, of their foes. If every model in a unit has this ability, each time a ranged attack targets that unit, that unit has the benefit of cover against that attack (13.08)."
   },
@@ -123,7 +123,7 @@
     "status": "auto",
     "note": "In your Shooting phase, after this model’s unit has shot, if it is not within Engagement Range of any enemy units, that unit can make a Normal move of up to 6\" as if it were your Movement phase. If it does, until the end of the turn, that unit is not eligible to declare a charge."
   },
-  "Support": {
+  "Support": { "code": true,
     "status": "auto",
     "note": "SUPPORT24.34 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
   },
@@ -135,7 +135,7 @@
     "status": "auto",
     "note": "Enemy units that are set up on the battlefield as Reinforcements cannot be set up within 12\" of this model."
   },
-  "Fights First": {
+  "Fights First": { "code": true,
     "status": "auto",
     "note": "FIGHTS FIRST24.13 Those possessed of lightning-fast reactions may strike before the opponent can react. While every model in a unit has this ability, that unit is a Fights First unit. See the Resolve Fights First Combats step in the Fight phase (12.04)."
   },
@@ -147,7 +147,7 @@
     "status": "auto",
     "note": "While this model is leading a unit, other Character models attached to that unit have the Feel No Pain 4+ ability."
   },
-  "Lone Operative": {
+  "Lone Operative": { "code": true,
     "status": "auto",
     "note": "LONE OPERATIVE24.24 Assassins and other covert agents are difficult to pinpoint in the storm of battle. Unless part of an attached unit, this unit is not visible to enemy models unless they are within 12\" of this unit, and it cannot be targeted by [INDIRECT FIRE] weapons unless the attacking model i..."
   },
@@ -223,7 +223,7 @@
     "status": "auto",
     "note": "Once per battle, when an enemy unit ends a Normal, Advance or Fall Back move within 8\" of this model, this model can use its Reductus mine. If it does, roll one D6: on a 2+, that enemy unit suffers D3+3 mortal wounds."
   },
-  "One Shot": {
+  "One Shot": { "code": true,
     "status": "auto",
     "note": "The bearer can only shoot with this weapon once per battle."
   },
@@ -263,7 +263,7 @@
     "status": "auto",
     "note": "At the start of the Fight phase, select one enemy unit within Engagement Range of this model. That enemy unit must take a Battle-shock test."
   },
-  "Shadow in the Warp": {
+  "Shadow in the Warp": { "code": true,
     "status": "auto",
     "note": "If your Army Faction is TYRANIDS, once per battle, in either player’s Command phase, if one or more units from your army with this ability are on the battlefield, you can unleash the Shadow in the Warp. When you do, each enemy unit on the battlefield must take a Battle-shock test."
   },
@@ -363,7 +363,7 @@
     "status": "auto",
     "note": "Once per battle, when issuing an Order, the Lord Commissar can issue one additional Order. Designer’s Note: Place a Servo-scribes token next to the unit, removing it when this ability has been used."
   },
-  "Vox-net": {
+  "Vox-net": { "code": true,
     "status": "auto",
     "note": "Each time this model issues an Order, it can issue it to an eligible unit up to 12\" away."
   },
@@ -440,10 +440,10 @@
     "note": "While an ASTRA MILITARUM INFANTRY model has the Benefit of Cover as a result of this terrain feature (see above), that model has a 4+ invulnerable save."
   },
   "Fortification": {
-    "status": "auto",
+    "status": "info",
     "note": "While an enemy unit is only within Engagement Range of one or more FORTIFICATIONS from your army: • That unit can still be selected as the target of ranged attacks, but each time such an attack is made, unless it is made with a Pistol, subtract 1 from the Hit roll."
   },
-  "DEPLOYMENT": {
+  "DEPLOYMENT": { "code": true,
     "status": "auto",
     "note": "When this model is set up, it will consist of 1 platform section, up to 5 shield sections, up to 2 broken shield sections, and up to 2 end sections."
   },
@@ -635,7 +635,7 @@
     "status": "auto",
     "note": "GENESTEALER CULTS model only. Each time the bearer is set up on the battlefield as Reinforcements, until the end of your next Fight phase, ranged weapons equipped by models in the bearer’s unit have the [LETHAL HITS] ability."
   },
-  "Our Time Is Nigh": {
+  "Our Time Is Nigh": { "code": true,
     "status": "auto",
     "note": "GENESTEALER CULTS model only. Once per battle, when the bearer’s unit declares a charge, the bearer can use this Enhancement. If it does, until the end of the phase, add 2 to Charge rolls made for the bearer’s unit."
   },

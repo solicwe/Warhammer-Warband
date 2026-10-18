@@ -71,7 +71,7 @@ npm run artifact   # รวมเป็นหน้าเดียว + ไฟ�
 | แผนที่แข่ง (layout) | `data/layouts.json` สร้างด้วย `python3 scripts/extract-layouts.py <โฟลเดอร์ภาพ layout> > data/layouts.json` |
 | Primary / Secondary / action | `data/missions.json` (`primaries`, `secondaries`, `actions`) |
 | กฎ Detachment ที่ระบบทำให้อัตโนมัติ (โบนัส, เงื่อนไข, Combat Doctrines ฯลฯ) | `data/detachment-rules.json` (ใส่ชื่อ detachment แล้วเขียน effect ตามคำอธิบายบนหัวไฟล์) |
-| Datasheet abilities | `data/abilities/<FACTION>.json` — คีย์คือชื่อ ability (หรือ `ชื่อ@datasheet`), `effects` = ผลถาวร/ออร่า, `act` = ปุ่ม/ทริกเกอร์ (ดูชนิดฟิลด์ใน `src/engine/effects.ts` และ `src/engine/activations.ts`); faction ที่ไม่มีไฟล์จะใช้ตัวอ่านข้อความ `src/engine/abilityText.ts` |
+| Datasheet abilities | `data/abilities/<FACTION>.json` — คีย์คือชื่อ ability (หรือ `ชื่อ@datasheet`), `effects` = ผลถาวร/ออร่า, `act` = ปุ่ม/ทริกเกอร์ (ดูชนิดฟิลด์ใน `src/rules-engine/effects.ts` และ `src/rules-engine/activations.ts`); faction ที่ไม่มีไฟล์จะใช้ตัวอ่านข้อความ `src/rules-engine/abilityText.ts` |
 | Wargear options / ราคาอาวุธ | มาจาก Wahapedia อัตโนมัติ (`npm run data`) แก้ด้วยมือได้ใน `data/overrides/<FACTION>.json` (`wargearOptions`, `wargearCosts`) |
 | กลุ่ม Faction (Imperium / Chaos / Xenos) และ sub-faction เช่น Chapter ของ Space Marines | `data/factions-meta.json` แล้ว `npm run data` (detachment จับคู่ Chapter อัตโนมัติจากเนื้อกฎ ถ้าผิดใส่ใน `detachments: { "ชื่อ": "KEYWORD" }`) |
 | ตัวเลขกฎหลัก (engagement, coherency, CP, ระยะ charge, cap ของ modifier, core stratagems) | `data/core-rules.json` |

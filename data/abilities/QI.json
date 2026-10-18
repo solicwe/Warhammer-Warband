@@ -697,7 +697,7 @@
    }
   ]
  },
- "Magos Questoris": {
+ "Magos Questoris": { "code": true,
   "status": "auto",
   "note": "Sacristan Pledge heals 2 more wounds"
  },

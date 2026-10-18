@@ -2,7 +2,7 @@
 // Shared by the Stratagem tray and the prompt the game opens at a stratagem's moment ("just after an enemy unit has shot").
 import { useState, type ReactNode } from 'react';
 import { alive, onBoard, stratCost, type ReactCtx } from '../engine/state';
-import { EFFECT_LABEL, stratagemBlock, stratChoices, stratEnemies, stratagemShortSummary, type StratRule, type StratUse as Use } from '../engine/stratagems';
+import { EFFECT_LABEL, stratagemBlock, stratChoices, stratEnemies, stratagemShortSummary, type StratRule, type StratUse as Use } from '../rules-engine/stratagems';
 import type { GameState, PlayerId, StratagemData, UnitState } from '../engine/types';
 import { Icon } from './Icon';
 

@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { KEYS, readJSON, removeKey, writeJSON } from '../services/storage';
 import type { GameState } from '../engine/types';
 import { sanitizeGameState } from '../engine/game';
 
-const KEY = 'w40k11-save';
 
 export const SAVE_VERSION = 3;
 
 export function loadSaved(): GameState | null {
   flushSave(); // a save still waiting goes in first
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return null;
-    const s = JSON.parse(raw) as GameState;
+    const s = readJSON<GameState>(KEYS.game);
     if (s && s.version === SAVE_VERSION && Array.isArray(s.units)) {
       return sanitizeGameState(s);
     }
@@ -23,7 +21,7 @@ export function loadSaved(): GameState | null {
 
 export function clearSaved() {
   pending = null;
-  try { localStorage.removeItem(KEY); } catch { /* ignore */ }
+  removeKey(KEYS.game);
 }
 
 /** Write the save now (a long game is a big string: done when the app is idle, or when the page is hidden). */
@@ -34,10 +32,8 @@ function flushSave() {
   if (!pending) return;
   const s = pending;
   pending = null;
-  try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {
-    // storage full or blocked: say so (the game screen shows it), or the battle is silently lost on close
-    window.dispatchEvent(new CustomEvent('save-error'));
-  }
+  // storage full or blocked: say so (the game screen shows it), or the battle is silently lost on close
+  if (!writeJSON(KEYS.game, s)) window.dispatchEvent(new CustomEvent('save-error'));
 }
 function queueSave(s: GameState) {
   pending = s;

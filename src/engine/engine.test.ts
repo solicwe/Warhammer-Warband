@@ -5,7 +5,7 @@ import { allocationGroups, applyDamage, buildFightPools, buildShootPools, rollSa
 import { parseDice } from './dice';
 import { coherencyProblems } from './geometry';
 import { canDetReroll, chargeEligibility, commitCharge, createGame, endPhase, fightCandidates, formationAt, maxMoveDistance, placeUnit, rollAdvance, settleMove, validateMove } from './game';
-import { detChoices, detOnCommandStart, pickDetChoice } from './detachments';
+import { detChoices, detOnCommandStart, pickDetChoice } from '../rules-engine/detachments';
 import type { ArmyList, ArmyUnitEntry, FactionData, GameState, Pt, TerrainPiece } from './types';
 import { parseAbility } from './weapons';
 import { alive } from './state';
@@ -212,7 +212,7 @@ describe('phase flow', () => {
 
 describe('army rules', () => {
   it('Combat Doctrines: the devastator doctrine gives ranged attacks [ASSAULT] (shoot after advancing)', async () => {
-    const { pickDetChoice } = await import('./detachments');
+    const { pickDetChoice } = await import('../rules-engine/detachments');
     const s = game();
     const a = put(s, s.units[0].id, { x: 22, y: 10 });
     const t = put(s, s.units[2].id, { x: 22, y: 25 });
@@ -372,7 +372,7 @@ describe('sub-factions (Chapters)', () => {
 
 describe('detachment stratagems', () => {
   it('reads timing, target and effects from the text', async () => {
-    const { planStratagem } = await import('./stratagems');
+    const { planStratagem } = await import('../rules-engine/stratagems');
     const aoc = SM.detachments.flatMap((d) => d.stratagems).find((x) => x.name === 'ARMOUR OF CONTEMPT')!;
     const plan = planStratagem(aoc);
     expect(plan.turn).toBe('either');
@@ -381,7 +381,7 @@ describe('detachment stratagems', () => {
     expect(plan.effects).toEqual(['enemyAp-1']);
   });
   it('blocks the wrong phase and applies a defensive effect when the dice are rolled', async () => {
-    const { applyDetachmentStratagem, stratagemBlock } = await import('./stratagems');
+    const { applyDetachmentStratagem, stratagemBlock } = await import('../rules-engine/stratagems');
     const { rollHits } = await import('./attack');
     const s = game();
     s.terrain = s.terrain.filter((t) => t.objectiveId); // open ground: this is about the stratagem, not sight lines

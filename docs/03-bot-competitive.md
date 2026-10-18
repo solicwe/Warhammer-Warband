@@ -1,6 +1,6 @@
 # บอทแบบนักแข่ง: ใช้ CP / Stratagem / Reserves อย่างไร
 
-เอกสารนี้สรุปหลักคิดที่นักแข่ง 40K ใช้ แล้วแปลงเป็นกติกาที่บอทใช้จริง (โค้ดอยู่ใน `src/engine/botStrats.ts`, `bot.ts`, `botMove.ts`)
+เอกสารนี้สรุปหลักคิดที่นักแข่ง 40K ใช้ แล้วแปลงเป็นกติกาที่บอทใช้จริง (โค้ดอยู่ใน `src/ai/botStrats.ts`, `bot.ts`, `botMove.ts`)
 วัดผลด้วย arena: `ARENA=1 ARENA_GAMES=4 npx vitest run src/engine/arena.test.ts` (บอทปัจจุบันเล่นกับ baseline ที่แช่แข็งไว้)
 
 ## 1. CP คือทรัพยากรที่ต้องใช้ให้หมด

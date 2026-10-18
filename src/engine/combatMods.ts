@@ -1,5 +1,5 @@
 // Army-rule modifiers to an attack (Doctrina Imperatives, Power from Pain, For the Greater Good ...). Faction modules
-// register a provider in factionHooks.ts; attack.ts asks for the combined result once per weapon profile.
+// register a provider in src/factions/index.ts; attack.ts asks for the combined result once per weapon profile.
 import type { GameState, ModelState, Pool, UnitState, WeaponProfileData } from './types';
 
 /** What one rule changes about an attack. Every field is optional: a provider fills in only what it changes. */

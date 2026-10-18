@@ -1,10 +1,10 @@
 {
   "_comment": "Chaos Daemons Faction Pack v1.2. Complete datasheet, detachment, enhancement, and army rules.",
-  "Deep Strike": {
+  "Deep Strike": { "code": true,
     "status": "auto",
     "note": "DEEP STRIKE24.09 There are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation. Each time this unit makes an ingress move (20."
   },
-  "Leader": {
+  "Leader": { "code": true,
     "status": "auto",
     "note": "LEADER24.22 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
   },
@@ -24,7 +24,7 @@
     "status": "auto",
     "note": "The bearer has the Feel No Pain 3+ ability against Psychic Attacks and mortal wounds."
   },
-  "Deadly Demise": {
+  "Deadly Demise": { "code": true,
     "status": "auto",
     "note": "DEADLY DEMISE24.08 From detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat. This ability always takes the form Deadly Demise X."
   },
@@ -117,11 +117,11 @@
     "status": "auto",
     "note": "Once per turn, when your opponent targets a unit from their army within 12\" of this model with a stratagem, you can use this ability. If you do, increase the CP cost of the use of that stratagem by 1CP."
   },
-  "Lone Operative": {
+  "Lone Operative": { "code": true,
     "status": "auto",
     "note": "LONE OPERATIVE24.24 Assassins and other covert agents are difficult to pinpoint in the storm of battle. Unless part of an attached unit, this unit is not visible to enemy models unless they are within 12\" of this unit, and it cannot be targeted by [INDIRECT FIRE] weapons unless the attacking model i..."
   },
-  "Stealth": {
+  "Stealth": { "code": true,
     "status": "auto",
     "note": "STEALTH24.33 The stealthiest warriors can evade the attentions, and the bullets, of their foes. If every model in a unit has this ability, each time a ranged attack targets that unit, that unit has the benefit of cover against that attack (13.08)."
   },
@@ -181,7 +181,7 @@
     "status": "auto",
     "note": "Keep a tally of how many enemy models are destroyed by Nurgle Legiones Daemonica models from your army during the battle. At the start of your Command phase, if this tally is 7 or more, you gain 1CP and the tally is reset to 0."
   },
-  "Feel No Pain": {
+  "Feel No Pain": { "code": true,
     "status": "auto",
     "note": "FEEL NO PAIN24.12 The hardiest warriors refuse to be laid low, even by wounds that should by all rights prove lethal. This ability always takes the form Feel No Pain X+. Each time a model with this ability would lose a wound, roll one D6: on an X+, that wound is not lost."
   },
@@ -210,7 +210,7 @@
     "status": "auto",
     "note": "If you control an objective marker at the end of your Command phase and this unit is within range of that objective marker, that objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
   },
-  "Infiltrators": {
+  "Infiltrators": { "code": true,
     "status": "auto",
     "note": "INFILTRATORS24.20 Many armies employ reconnaissance units who can sit concealed, waiting for the right moment to strike. During deployment, if every model in a unit has this ability, it can be set up anywhere on the battlefield that is more than 8\" horizontally from your opponent’s deployment zone and all enemy units."
   },
@@ -218,11 +218,11 @@
     "status": "auto",
     "note": "Each time an enemy unit (excluding TITANIC units) within Engagement Range of one or more units with this ability is selected to fight, until the end of the phase, each time a model in that enemy unit makes a melee attack, subtract 1 from the Hit roll."
   },
-  "Scouts": {
+  "Scouts": { "code": true,
     "status": "auto",
     "note": "SCOUTS24.31 Scouts form the vanguard of many armies. Unnoticed by the enemy, they range ahead of the main force. This ability always takes the form Scouts X\"."
   },
-  "Grotesque Regeneration": {
+  "Grotesque Regeneration": { "code": true,
     "status": "auto",
     "note": "At the end of each phase, if a Beasts of Nurgle model in this unit has lost any wounds but is not destroyed, that model regains all of its lost wounds."
   },
@@ -230,7 +230,7 @@
     "status": "auto",
     "note": "In your Shooting phase, after this unit has shot, select one enemy unit hit by one or more of those attacks. Until the end of the turn, each time a friendly Nurgle Legiones Daemonica unit makes an attack that targets that unit, you can re-roll the Wound roll."
   },
-  "Fights First": {
+  "Fights First": { "code": true,
     "status": "auto",
     "note": "FIGHTS FIRST24.13 Those possessed of lightning-fast reactions may strike before the opponent can react. While every model in a unit has this ability, that unit is a Fights First unit. See the Resolve Fights First Combats step in the Fight phase (12.04)."
   },
@@ -295,7 +295,7 @@
     "status": "auto",
     "note": "At the start of the battle round, select one Shadow Form ability (see below). Until the end of the battle round, this model has that ability."
   },
-  "SUPREME COMMANDER": {
+  "SUPREME COMMANDER": { "code": true,
     "status": "auto",
     "note": "If this model is in your army, it must be your Warlord."
   },
@@ -331,7 +331,7 @@
     "status": "auto",
     "note": "If this model has the KHORNE keyword, add 2 to the Strength characteristic of this model’s hellforged weapons."
   },
-  "Daemon Prince of Tzeentch": {
+  "Daemon Prince of Tzeentch": { "code": true,
     "status": "auto",
     "note": "If this model has the TZEENTCH keyword, add 3 to the Attacks characteristic of this model’s infernal cannon."
   },
@@ -436,14 +436,14 @@
     "note": "Each time a ranged attack is allocated to a model, if that model is not fully visible to every model in the attacking unit because of this FORTIFICATION, that model has the Benefit of Cover against that attack."
   },
   "Fortification": {
-    "status": "auto",
+    "status": "info",
     "note": "While an enemy unit is only within Engagement Range of one or more Fortifications from your army: • That unit can still be selected as the target of ranged attacks, but each time such an attack is made, unless it is made with a Pistol, subtract 1 from the Hit roll."
   },
   "Shadow of Khorne (Aura)": {
     "status": "auto",
     "note": "The area of the battlefield within 6\" of this FORTIFICATION is considered to be within your army’s Shadow of Chaos. In addition, while a friendly Khorne Legiones Daemonica unit is within 6\" of this FORTIFICATION, each time you take a Battle-shock test for that unit, you can re-roll that test."
   },
-  "Cover": {
+  "Cover": { "code": true,
     "status": "auto",
     "note": "Each time a ranged attack is allocated to a model, if that model is not fully visible to every model in the attacking unit because of this FORTIFICATION, that model has the Benefit of Cover against that attack."
   },
@@ -467,7 +467,7 @@
     "status": "auto",
     "note": "You can re-roll Advance and Charge rolls made for this model."
   },
-  "Monarch of the Hunt": {
+  "Monarch of the Hunt": { "code": true,
     "status": "auto",
     "note": "At the start of the first battle round, select one enemy unit to be this model’s quarry. Each time this model makes a melee attack that targets its quarry, you can re-roll the Hit roll and you can re-roll the Wound roll. Each time this model’s quarry is destroyed, select one new enemy unit to be this model’s quarry."
   },
@@ -487,15 +487,15 @@
     "status": "auto",
     "note": "At the end of the Fight phase, you can select one enemy unit within Engagement Range of this model and roll eight D6: for each 4+, that enemy unit suffers 1 mortal wound."
   },
-  "Split": {
+  "Split": { "code": true,
     "status": "auto",
     "note": "Each time a BLUE HORROR model in this unit is destroyed, after the attacking unit has finished making its attacks, if this unit is not destroyed, roll one D6 for that model. On a 4+, add one BRIMSTONE HORROR model to this unit."
   },
-  "Sullen Malevolence (Aura)": {
+  "Sullen Malevolence (Aura)": { "code": true,
     "status": "auto",
     "note": "While an enemy unit is within 6\" of this unit, if this unit contains one or more BLUE HORROR models, worsen the Leadership characteristic of models in that enemy unit by 1."
   },
-  "Exploding Horrors": {
+  "Exploding Horrors": { "code": true,
     "status": "auto",
     "note": "Each time this unit is selected to fight, you can select one enemy unit within Engagement Range of it, then select one or more BRIMSTONE HORROR models in this unit. For each BRIMSTONE HORROR model you select, roll one D6: on a 4+, that model is destroyed and that enemy unit suffers 1 mortal wound."
   },
@@ -707,11 +707,11 @@
     "status": "auto",
     "note": "LEGIONES DAEMONICA BATTLELINE unit only. When you target this unit with the Heroic Intervention/Fire Overwatch stratagem, that use is -1 CP."
   },
-  "Dark Pacts": {
+  "Dark Pacts": { "code": true,
     "status": "auto",
     "note": "If your Army Faction is HERETIC ASTARTES, each time a unit with this ability is selected to shoot or fight, it can make a Dark Pact. If it does, it must first take a Leadership test before any effects of that Dark Pact are resolved; if that test is failed, that unit suffers D3 mortal wounds."
   },
-  "Daemonic Pact": {
+  "Daemonic Pact": { "code": true,
     "status": "auto",
     "note": "If every model from your army has the Chaos Knights or Heretic Astartes keyword, you can include LEGIONES DAEMONICA units in your army, even if they do not have the Faction keyword you selected in the Select Army Faction step."
   }

@@ -3,11 +3,11 @@
     "status": "auto",
     "note": "At the end of your opponent’s turn, you can select up to N Grey Knights units (Incursion: 2, Strike Force: 3, Onslaught: 4) and place them into Strategic Reserves. In your next Movement phase, they can arrive via Deep Strike."
   },
-  "Deep Strike": {
+  "Deep Strike": { "code": true,
     "status": "auto",
     "note": "DEEP STRIKE24.09 There are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation. Each time this unit makes an ingress move (20."
   },
-  "Leader": {
+  "Leader": { "code": true,
     "status": "auto",
     "note": "LEADER24.22 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
   },
@@ -55,7 +55,7 @@
     "status": "auto",
     "note": "Each time this model makes an attack that targets a CHARACTER unit, you can re-roll the Hit roll."
   },
-  "Scouts": {
+  "Scouts": { "code": true,
     "status": "auto",
     "note": "SCOUTS24.31 Scouts form the vanguard of many armies. Unnoticed by the enemy, they range ahead of the main force. This ability always takes the form Scouts X\"."
   },
@@ -95,7 +95,7 @@
     "status": "auto",
     "note": "In your Shooting phase, after this unit has shot, select one enemy unit (excluding MONSTERS and VEHICLES) hit by one or more of those attacks: until the start of your next turn, that enemy unit is pinned."
   },
-  "Deadly Demise": {
+  "Deadly Demise": { "code": true,
     "status": "auto",
     "note": "DEADLY DEMISE24.08 From detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat. This ability always takes the form Deadly Demise X."
   },
@@ -107,7 +107,7 @@
     "status": "auto",
     "note": "Each time a unit disembarks from this model after it has made a Normal move, that unit makes an assault disembark move (Core Rules, 18.06) for that disembarkation."
   },
-  "One Shot": {
+  "One Shot": { "code": true,
     "status": "auto",
     "note": "The bearer can only shoot with this weapon once per battle."
   },
@@ -115,7 +115,7 @@
     "status": "auto",
     "note": "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. Until the end of the turn, each time a friendly model that disembarked from this TRANSPORT this turn makes an attack that targets that enemy unit, improve the Armour Penetration characterist..."
   },
-  "Firing Deck": {
+  "Firing Deck": { "code": true,
     "status": "auto",
     "note": "FIRING DECK24.14 Some transports have dedicated platforms or firing ports from which embarked passengers can lay down a withering hail of munitions. This ability always takes the form Firing Deck X."
   },
@@ -123,7 +123,7 @@
     "status": "auto",
     "note": "While a friendly Grey Knights unit is wholly within 6\" of this unit, models in that unit have the Feel No Pain 6+ ability against mortal wounds."
   },
-  "Hover": {
+  "Hover": { "code": true,
     "status": "auto",
     "note": "HOVER24.17 Some airborne vehicles can use vectored thrusters or anti-gravity technology to hover and skim over the battlefield, the better to hunt their prey or deploy embarked troops. Each time this unit takes to the skies (21.03), do not subtract 2\" from the maximum distance."
   },
@@ -179,7 +179,7 @@
     "status": "auto",
     "note": "Certain areas of the battlefield are within your army’s Hallowed Ground, as follows: • Your deployment zone is always within your army’s Hallowed Ground. • The area of the battlefield within 6\" of one or more Purifier Squad units from your army is within your army’s Hallowed Ground."
   },
-  "Mandulian Reliquary": {
+  "Mandulian Reliquary": { "code": true,
     "status": "auto",
     "note": "GREY KNIGHTS model only. While the bearer’s unit is not Battle-shocked, add 3 to the bearer’s Objective Control characteristic."
   },

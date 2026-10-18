@@ -2,21 +2,21 @@
 // that does it and a few words say why. Each tip shows once; the player can put them away at any time and bring them
 // back from the menu (or "How to play" on the home screen).
 import { useEffect, useLayoutEffect, useState } from 'react';
+import { KEYS, readJSON, writeJSON } from '../services/storage';
 import type { GameState, PlayerId } from '../engine/types';
 import { Icon } from './Icon';
 
-const KEY = 'coach';
 
 interface CoachPrefs { off: boolean; seen: string[] }
 
 export function loadCoach(): CoachPrefs {
   try {
-    const v = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Partial<CoachPrefs> | null;
+    const v = readJSON<Partial<CoachPrefs>>(KEYS.coach);
     return { off: !!v?.off, seen: Array.isArray(v?.seen) ? v!.seen : [] };
   } catch { return { off: false, seen: [] }; }
 }
 export function saveCoach(c: CoachPrefs) {
-  try { localStorage.setItem(KEY, JSON.stringify(c)); } catch { /* private window: this session only */ }
+  writeJSON(KEYS.coach, c);
 }
 /** Start the tips again from the first one (How to play). */
 export function resetCoach() { saveCoach({ off: false, seen: [] }); }
