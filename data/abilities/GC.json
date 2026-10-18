@@ -384,7 +384,19 @@
     "note": "Each time this model is selected to shoot, you can re-roll one Hit roll, you can re-roll one Wound roll and you can re-roll one Damage roll when resolving its attacks."
   },
   "Shock Troops": {
-    "status": "auto",
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "if": [
+        "onOwnObjective"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "secure": true
+        }
+      ]
+    },
     "note": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
   },
   "Vox-caster": {

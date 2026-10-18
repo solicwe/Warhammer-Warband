@@ -806,9 +806,6 @@
   "act": {
    "when": "selectedToShoot",
    "limit": "battle",
-   "botIf": [
-    "!any"
-   ],
    "label": "Ranged weapons gain [INDIRECT FIRE] this phase",
    "do": [
     {
@@ -837,9 +834,6 @@
  "Daemonic Ordnance": {
   "act": {
    "when": "selectedToShoot",
-   "botIf": [
-    "any"
-   ],
    "label": "Ranged weapons gain [DEVASTATING WOUNDS] and [HAZARDOUS] this phase",
    "do": [
     {

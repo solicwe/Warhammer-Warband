@@ -94,8 +94,8 @@
     "effects": [
       {
         "scope": "led",
+        "svSet": 2,
         "defend": {
-          "save": 2,
           "inv": 4
         }
       }
@@ -386,9 +386,8 @@
     "gear": true,
     "effects": [
       {
-        "defend": {
-          "save": 3
-        }
+        "svSet": 3,
+        "statM": -1
       }
     ]
   },

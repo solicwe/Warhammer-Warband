@@ -145,7 +145,7 @@
         {
           "attack": "ranged",
           "if": [
-            "withinHalfRange"
+            "halfRange"
           ],
           "attacks": 1
         }

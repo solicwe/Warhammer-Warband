@@ -32,7 +32,7 @@
         "abilities": [
           "assault"
         ],
-        "kind": "ranged"
+        "attack": "ranged"
       },
       {
         "scope": "led",
@@ -48,7 +48,7 @@
         "scope": "led",
         "def": {
           "ap": 1,
-          "kind": "ranged"
+          "attack": "ranged"
         }
       }
     ],
@@ -60,7 +60,7 @@
       {
         "scope": "led",
         "attacks": 1,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "While leading a unit, add 1 to Attacks of ranged weapons."
@@ -75,7 +75,7 @@
       {
         "scope": "led",
         "if": [
-          "within9"
+          "within:9"
         ],
         "wound": 1
       }
@@ -102,7 +102,7 @@
       {
         "scope": "led",
         "wound": 1,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "While leading a unit, ranged attacks add 1 to Wound roll."
@@ -115,7 +115,7 @@
           "targetOnObjective"
         ],
         "reroll": "wounds",
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks targeting enemy within range of objective marker re-roll Wound roll."
@@ -128,7 +128,7 @@
           "targetMV"
         ],
         "hit": 1,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks targeting MONSTER or VEHICLE add 1 to Hit roll."
@@ -141,7 +141,7 @@
           "targetMV"
         ],
         "reroll": "wounds",
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks targeting MONSTER or VEHICLE re-roll Wound roll and Damage roll."
@@ -151,14 +151,14 @@
     "effects": [
       {
         "reroll": "hits1",
-        "kind": "ranged"
+        "attack": "ranged"
       },
       {
         "if": [
           "targetFullStrength"
         ],
         "reroll": "hits",
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks re-roll Hit roll of 1; if target is at Starting Strength, re-roll Hit roll."
@@ -171,7 +171,7 @@
           "targetNotMV"
         ],
         "ap": 1,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks (excluding MONSTERS and VEHICLES) improve AP by 1."
@@ -184,7 +184,7 @@
           "targetFly"
         ],
         "reroll": "hits",
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks targeting FLY unit re-roll Hit roll."
@@ -197,7 +197,7 @@
           "targetNotFly"
         ],
         "hit": 1,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks targeting enemy that cannot FLY add 1 to Hit roll."
@@ -210,7 +210,7 @@
           "targetCharMV"
         ],
         "reroll": "hits",
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks targeting TITANIC or TOWERING re-roll Hit roll."
@@ -220,7 +220,7 @@
     "effects": [
       {
         "ignoreHitMods": true,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ignore any or all modifiers to the Hit roll for ranged attacks."
@@ -230,7 +230,7 @@
     "effects": [
       {
         "ignoreHitMods": true,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ignore any or all modifiers to the Hit roll."
@@ -242,7 +242,7 @@
         "scope": "aura",
         "range": 6,
         "reroll": "hits1",
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Friendly T’AU EMPIRE units within 6\" re-roll Hit rolls of 1 on ranged attacks."
@@ -293,7 +293,7 @@
           "targetSpotted"
         ],
         "reroll": "hits",
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Each time a model makes an attack targeting a Spotted unit, re-roll the Hit roll."
@@ -309,7 +309,7 @@
           "sustained hits 1",
           "ignores cover"
         ],
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks targeting closest eligible target have [SUSTAINED HITS 1] and [IGNORES COVER]."
@@ -322,7 +322,7 @@
         "abilities": [
           "sustained hits 1"
         ],
-        "kind": "melee"
+        "attack": "melee"
       }
     ],
     "note": "Melee weapons have [SUSTAINED HITS 1]."
@@ -339,8 +339,14 @@
   },
   "Shield Generator": {
     "status": "auto",
-    "invuln": 4,
-    "note": "Bearer has a 4+ invulnerable save."
+    "note": "Bearer has a 4+ invulnerable save.",
+    "effects": [
+      {
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
   },
   "Hover Drone": {
     "status": "auto",
@@ -358,7 +364,7 @@
         "abilities": [
           "ignores cover"
         ],
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged weapons equipped by bearer’s unit have [IGNORES COVER]."
@@ -544,7 +550,7 @@
     "effects": [
       {
         "hit": 1,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "+1 to Hit on ranged attacks (+1 to Wound from round 3 onwards)."
@@ -595,7 +601,7 @@
       {
         "scope": "led",
         "critHitOn": 5,
-        "kind": "melee"
+        "attack": "melee"
       }
     ],
     "note": "Melee attacks score Critical Hits on unmodified 5+."
@@ -607,7 +613,7 @@
         "abilities": [
           "ignores cover"
         ],
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged weapons have [IGNORES COVER]; 12\" deep strike denial."
@@ -624,7 +630,7 @@
         "abilities": [
           "assault"
         ],
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "+3\" Move and ranged weapons have [ASSAULT]."
@@ -686,7 +692,7 @@
     "effects": [
       {
         "rangeBonus": 6,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Battlesuit Character ranged attacks have +6\" Range."
@@ -694,5 +700,17 @@
   "Expert Fieldcraft": {
     "status": "auto",
     "note": "Shooting attacks do not prevent unit from being hidden."
+  },
+  "Coordinated Strike": {
+    "status": "auto",
+    "effects": [
+      {
+        "if": [
+          "targetSpotted"
+        ],
+        "reroll": "hits1"
+      }
+    ],
+    "note": "While Guided, attacks against the Spotted unit re-roll a Hit roll of 1."
   }
 }

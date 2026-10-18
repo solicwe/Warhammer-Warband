@@ -554,7 +554,7 @@
         },
         {
           "if": [
-            "source:Eversor Assassin"
+            "body:Eversor Assassin"
           ],
           "defend": {
             "fnp": 4
@@ -578,7 +578,7 @@
         },
         {
           "if": [
-            "source:Culexus Assassin"
+            "body:Culexus Assassin"
           ],
           "attack": "ranged",
           "damageTo": 3

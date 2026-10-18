@@ -806,9 +806,6 @@
    "when": "command",
    "limit": "battle",
    "per": "army",
-   "botIf": [
-    "any"
-   ],
    "label": "Every Blessing of Khorne active for this unit until your next turn",
    "do": [
     {

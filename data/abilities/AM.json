@@ -592,10 +592,7 @@
         "if": [
           "avengeVehicle"
         ],
-        "attacks": 3,
-        "abilities": [
-          "devastating wounds"
-        ]
+        "attacks": 3
       }
     ]
   },
@@ -691,8 +688,20 @@
     ]
   },
   "Shock Troops": {
-    "status": "auto",
-    "objSticky": true
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "if": [
+        "onOwnObjective"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "secure": true
+        }
+      ]
+    },
+    "note": "End of your Command phase: an objective it holds stays yours."
   },
   "Jungle Fighters": {
     "status": "auto",
@@ -764,9 +773,6 @@
     "status": "auto",
     "effects": [
       {
-        "if": [
-          "targetInCover"
-        ],
         "abilities": [
           "ignores cover"
         ]
