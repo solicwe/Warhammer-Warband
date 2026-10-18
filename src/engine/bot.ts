@@ -11,7 +11,7 @@ import {
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, markFought,
   openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
-  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName, startConsolidate } from './game';
+  canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName, nextDeployer, startConsolidate } from './game';
 import { applyPick } from './blessings';
 import { botPledge, setPledge } from './emperorsChildren';
 import { botPlague, PLAGUE_IDS } from './deathGuard';
@@ -108,8 +108,9 @@ export function botDeploy(s: GameState) {
   if (sendToReserves(s, u.id)) {
     // could not place or reserve: last resort, drop the unit
     u.status = 'destroyed';
-    const o = other(p);
-    if (s.units.some((x) => x.owner === o && x.status === 'pending')) s.deployTurn = o;
+    log(s, `${u.name} could not be set up and is removed`, 'info', p);
+    // the last unit of both armies: this also ends deployment
+    nextDeployer(s);
   }
 }
 

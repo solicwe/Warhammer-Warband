@@ -13,6 +13,22 @@ const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${
 const list = (f: string, u: [string, number, number][]): ArmyList => ({ name: 't', factionId: f, battleSize: 'incursion', detachments: [], units: u.map(([d, n, p], i) => ({ uid: `x${i}`, datasheet: d, models: n, pts: p })) });
 
 describe('smart deployment', () => {
+  it('a last unit that fits nowhere is dropped and deployment still ends (no hang)', () => {
+    const s = createGame({
+      lists: [list('SM', [['Intercessor Squad', 5, 80], ['Captain', 1, 80]]), list('ORK', [['Boyz', 10, 80]])],
+      factions: [load('SM'), load('ORK')], names: ['A', 'B'], seed: 2,
+    });
+    s.bots = [0, 1];
+    // too big for the board and too costly for Strategic Reserves
+    const cap = s.units.find((u) => u.owner === 0 && u.name === 'Captain')!;
+    cap.pts = 99999;
+    for (const m of cap.models) m.r = 40;
+    let steps = 0;
+    while (s.phase === 'deploy' && steps < 200) { botAct(s); steps++; }
+    expect(s.phase).not.toBe('deploy');
+    expect(cap.status).toBe('destroyed');
+  });
+
   it('every unit is deployed, units are not packed against each other, and it stays quick', () => {
     const s = createGame({
       lists: [
