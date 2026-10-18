@@ -132,7 +132,7 @@ const KNOWN_DATA: Record<string, Partial<AbilityOrWeaponInfo>> = {
 
 /** Normalize names for lookup (strip punctuation, extra spaces) */
 function norm(s: string): string {
-  return s.toLowerCase().replace(/^[+⚡🎯🛡️👁️⚔️\s]+|[+⚡🎯🛡️👁️⚔️\s]+$/g, '').replace(/–/g, '-').trim();
+  return s.toLowerCase().replace(/^[+\u26A1\u{1F3AF}\u{1F6E1}\u{1F441}\u2694\uFE0F\s]+|[+\u26A1\u{1F3AF}\u{1F6E1}\u{1F441}\u2694\uFE0F\s]+$/gu, '').replace(/–/g, '-').trim();
 }
 
 /** Resolve complete ability or weapon details from model / unit data or fallback tables */
