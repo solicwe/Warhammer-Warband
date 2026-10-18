@@ -129,3 +129,9 @@ export const sensationalBlock = (s: GameState, A: UnitState, T: UnitState): stri
 
 /** Worth using Sensational Performance: an engaged enemy unit it may still attack. */
 export const sensationalOk = (s: GameState, A: UnitState) => engagedEnemies(s, A).some((e) => !restrictedTarget(s, A, e, ''));
+
+/** Slaanesh's Chosen: a CHARACTER unit that wipes out an enemy unit becomes the Favoured Champions. */
+export function ecUnitWiped(s: GameState, u: UnitState, killerId: string | undefined) {
+  if (alive(u).length || !killerId) return;
+  favouredOnKill(s, s.units.find((x) => x.id === killerId));
+}

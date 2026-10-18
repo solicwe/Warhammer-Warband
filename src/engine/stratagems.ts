@@ -1,7 +1,5 @@
 // Reads detachment stratagem text (WHEN / TARGET / EFFECT) so the game can offer them at the right time
 // and apply the common effects automatically. Anything it cannot read is still usable: CP is spent and logged.
-import { favouredOnKill, raisePledge } from './emperorsChildren';
-import { attachNear, inContagionOf } from './deathGuard';
 import acStrats from '../../data/stratagems/AC.json';
 import orkStrats from '../../data/stratagems/ORK.json';
 import { reactWorth } from './botPlus';
@@ -16,10 +14,9 @@ import qtStrats from '../../data/stratagems/QT.json';
 import aoiStrats from '../../data/stratagems/AoI.json';
 import amStrats from '../../data/stratagems/AM.json';
 import tyrStrats from '../../data/stratagems/TYR.json';
-import { blessingsRoll } from './blessings';
 import { parseAbilityText } from './abilityText';
+import { emit, runStratSpecial, targetFilter } from './events';
 import { ldTest, runActions, runDeathQueue, shockTest, type Action } from './activations';
-import { maleficSurge } from './knights';
 import { kwPhrase } from './army';
 import { buildShootPools, expectedDamage, finishAttack, onAttackFinished, onModelKilled, resolveAll, startAttack } from './attack';
 import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
@@ -398,7 +395,7 @@ export function stratEnemies(s: GameState, p: PlayerId, rule: StratRule, u: Unit
     if (q.shocked && !e.battleShocked) return false;
     if (!u || !onBoard(u)) return !(q.range || q.engaged || q.visible || q.hitBy);
     if (q.engaged && !engagedEnemies(s, u).some((x) => x.id === e.id)) return false;
-    if (q.contagion && !inContagionOf(s, u, e)) return false;
+    if (q.contagion && !targetFilter('contagion', s, u, e)) return false;
     if (q.movedOver && !(u.movedOver?.key === `${s.turn}:${s.phase}` && u.movedOver.ids.includes(e.id))) return false;
     if (q.range !== undefined && unitDistance(u, e) > q.range + 1e-6) return false;
     if (q.visible && !alive(u).some((m) => unitVisibleTo(s, m, e))) return false;
@@ -553,12 +550,13 @@ function placeNear(s: GameState, u: UnitState, t: UnitState, range: number, towa
 
 function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: UnitState | undefined, enemy: UnitState | undefined, ctx: ReactCtx) {
   if (!u) return;
+  // faction mechanics (Malefic Surge, Skulls for the Skull Throne ...): factionHooks.ts
+  if (runStratSpecial(s, sp, { p, u, enemy, label })) return;
   switch (sp) {
     case 'shootAt': if (enemy) shootNow(s, u, enemy, label); return;
     // Animalistic Rage: the destroyed unit shoots (or fights) the unit that destroyed it before it is removed
     case 'deathStrike': if (ctx.killerId) { (s.deathQueue ??= []).push({ unitId: u.id, modelIds: u.models.map((m) => m.id), targetId: ctx.killerId, kind: s.phase === 'fight' ? 'fight' : 'shoot', label }); runDeathQueue(s); } return;
     // Profane Symbiosis: the unit makes a Malefic Surge now
-    case 'maleficSurge': maleficSurge(s, u); return;
     // Power of the Machine Spirit: snap shooting, or normal shooting once the unit is at or below half-strength
     case 'shootAtSnap': if (enemy) shootNow(s, u, enemy, label, alive(u).length * 2 <= u.startingStrength || alive(u).reduce((a, m) => a + m.wounds, 0) * 2 <= u.models.reduce((a, m) => a + m.profile.W, 0) ? 'normal' : 'snap'); return;
     case 'charge': case 'chargeCap6': case 'chargeWithCallidusWound': {
@@ -573,11 +571,8 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
       return;
     }
     // Skulls for the Skull Throne!: one more Blessing of Khorne until the end of the battle round
-    case 'blessingOne': blessingsRoll(s, p, { label: label, until: 'round' }); return;
-    case 'raisePledge': raisePledge(s, p); return;
     // Death Guard
     case 'putrid': u.putrid = true; return;
-    case 'attachNear': attachNear(s, u, label); return;
     case 'mireslick': {
       if (enemy && !ldTest(s, enemy, label)) { addTimed(s, enemy, { e: { mustStay: true }, label, until: 'turn', by: p }); log(s, `${label}: ${enemy.name} must Remain Stationary`, 'info', p); }
       return;
@@ -843,33 +838,8 @@ onAttackFinished((s, at, info) => {
   }
 });
 
-// Emperor's Children: stratagems the bot plays when one of its units wipes out an enemy unit
-onModelKilled((s, u, _m, killerId) => {
-  if (alive(u).length || !killerId) return;
-  const k = s.units.find((x) => x.id === killerId);
-  if (!k || !onBoard(k) || !playsItself(s, k.owner)) return;
-  const p = k.owner;
-  const find = (name: string) => s.players[p].detachments.flatMap((d) => d.stratagems).find((st) => st.name === name);
-  const can = (name: string, x: UnitState, keep = 1) => { const st = find(name); return st && !stratagemBlock(s, p, st, x) && s.players[p].cp >= stratCost(s, st.id, x, st.cp) + keep ? st : undefined; };
-  favouredOnKill(s, k);
-  // Unbound Arrogance: the pledge is already beaten, so raising it is a free Pact point
-  const ua = can('UNBOUND ARROGANCE', k);
-  if (ua && cond('pledgeBeaten', { s, A: k })) applyDetachmentStratagem(s, p, ua, k.id);
-  const fav = s.players[p].favoured === k.id;
-  // Diabolic Majesty: the new Favoured Champions terrify the enemy units around them
-  const dm = fav && s.players[p].favouredTurn === s.turn ? can('DIABOLIC MAJESTY', k) : undefined;
-  if (dm && boardUnits(s, other(p)).some((e) => unitDistance(k, e) <= 6)) applyDetachmentStratagem(s, p, dm, k.id);
-  // Heightened Jealousy: other CHARACTER units still to fight this phase hit harder
-  const hj = fav && s.phase === 'fight' ? can('HEIGHTENED JEALOUSY', k, 2) : undefined;
-  if (hj && boardUnits(s, p).some((x) => x.id !== k.id && alive(x).some((mm) => mm.isCharacter) && !x.fought && engagedEnemies(s, x).length)) applyDetachmentStratagem(s, p, hj, k.id);
-  // Ecstatic Slaughter: a Legions of Excess kill lets an Emperor's Children unit nearby charge
-  if (s.phase === 'fight' && k.factionKeywords.includes('LEGIONS OF EXCESS')) {
-    const x = boardUnits(s, p).find((f) => f.factionKeywords.includes('EMPEROR’S CHILDREN') && unitDistance(f, k) <= 6 && !engagedEnemies(s, f).length && !f.fought
-      && boardUnits(s, other(p)).some((e) => unitDistance(f, e) <= 8));
-    const es = x && can('ECSTATIC SLAUGHTER', x);
-    if (x && es) { (k.used ??= {}).killedUnit = phaseKey(s); applyDetachmentStratagem(s, p, es, x.id); }
-  }
-});
+// a model was destroyed: faction reactions after the core ones (factionHooks.ts)
+onModelKilled((s, u, m, killerId) => emit(s, 'modelKilled', { u, m, killerId }));
 
 // deaths: "when a friendly DEATH COMPANY unit is destroyed", "just after an ANCIENT model is destroyed", "your Oath target is destroyed"
 onModelKilled((s, u, m, killerId) => {

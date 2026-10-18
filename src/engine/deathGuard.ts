@@ -273,3 +273,12 @@ export function stinkBlocks(s: GameState, u: UnitState, m: ModelState, from: Pt,
   return boardUnits(s, other(u.owner)).some((e) => hasAb(e, 'Putrefying Stink') && alive(e).some((n) => n.source === 'Foul Blightspawn' && (near(from, n) || near(to, n))));
 }
 
+/** Leechspore Eruption: the most wounded model of the unit rolls one D6 per lost wound (up to 6); each 5+ is a mortal
+ *  wound on the target and heals that model. */
+export function leechspore(s: GameState, u: UnitState, target: UnitState, label: string) {
+  const m = alive(u).filter((x) => x.wounds < x.profile.W).sort((x, y) => (y.profile.W - y.wounds) - (x.profile.W - x.wounds))[0];
+  const dice = m ? rollN(s, Math.min(6, m.profile.W - m.wounds)) : [];
+  const n = Math.min(6, dice.filter((v) => v >= 5).length);
+  log(s, `${label}: rolled [${dice.join(' ')}] → ${target.name} suffers ${n} mortal wound(s)${m && n ? `, ${m.name} regains ${n}` : ''}`, 'roll', u.owner);
+  if (n) { applyMortalWounds(s, target, n, label); if (m) m.wounds = Math.min(m.profile.W, m.wounds + n); }
+}

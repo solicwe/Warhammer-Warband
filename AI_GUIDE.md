@@ -41,8 +41,11 @@ Entry in `data/detachment-rules.json`, key = detachment name (army rules: rule n
    (`src/engine/effects.ts`) and `BOOKS` (`src/engine/stratagems.ts`).
 3. Detachment rules in `data/detachment-rules.json`.
 4. Army rule mechanics that keep state (tokens, marks, per-round choices): write `src/engine/<faction>.ts` with
-   plain functions of `GameState`, then subscribe them in `src/engine/factionHooks.ts` with `on(event, fn)`. Do not
-   call them from `game.ts`. Values that several rules adjust use `addModifier`.
+   plain functions of `GameState`, then register them in `src/engine/factionHooks.ts`: `on(event, fn)` for
+   something that happens, `addModifier` for a value several rules adjust, `addCombatMods` for attack modifiers,
+   `addCondition` / `addEffectSource` for rule data. ARCHITECTURE.md lists every hook. Never import a faction module
+   from a core file (`game.ts`, `attack.ts`, `effects.ts`, `activations.ts`, `stratagems.ts`, `detachments.ts`);
+   `src/engine/layers.test.ts` fails if you do.
 5. A quick-play list in `PRESETS` (`src/ui/presets.ts`) so the faction can be picked for a fast game and is
    covered by the bot-vs-bot tests.
 6. Tests: `src/engine/<faction>.test.ts`, then the whole suite.

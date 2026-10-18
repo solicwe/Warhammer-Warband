@@ -4,7 +4,8 @@
 // triple 6 to bring Angron back. Butchers of Khorne and Skulls for the Skull Throne add one more Blessing for a while.
 // The bot and a player on automatic rules pick the best pair; a player who decides gets the dice and the choices.
 import { rollN } from './dice';
-import { alive, log, onBoard, phaseKey, playsItself, pushFx } from './state';
+import { activeRules, type Active } from './effects';
+import { alive, boardUnits, isEngaged, log, onBoard, other, phaseKey, playsItself, pushFx, unitDistance } from './state';
 import type { Effect } from './effects';
 import type { GameState, PlayerId, UnitState } from './types';
 
@@ -174,4 +175,25 @@ export function unitBlessings(s: GameState, u: UnitState, qualifies: boolean): s
     ids.add(x.id);
   }
   return [...ids];
+}
+
+/** Adamantine Avalanche (Butchers of Khorne): an engaged Terminator Squad at the start of the Fight phase means one more
+ *  Blessing for them this phase. */
+export function butchersFightStart(s: GameState) {
+  for (const p of [s.active, other(s.active)]) {
+    if (activeRules(s, p).includes('Butchers of Khorne') && boardUnits(s, p).some((u) => u.keywords.includes('TERMINATOR SQUAD') && isEngaged(s, u))) blessingsRoll(s, p, { label: 'Adamantine Avalanche', kw: 'TERMINATOR SQUAD', until: 'phase' });
+  }
+}
+
+/** The Blessings in force for this unit as effects: units with the ability, and Blood Legions through Might of Khorne
+ *  or near an Icon of War. */
+export function blessingEffects(s: GameState, u: UnitState): Active[] {
+  const out: Active[] = [];
+  const P = s.players[u.owner];
+  if (P.blessings || P.blessingExtras?.length || u.timed?.some((t) => t.mark === 'allBlessings')) {
+    const q = u.abilities.some((a) => a.name === 'Blessings of Khorne') || (u.factionKeywords.includes('BLOOD LEGIONS')
+      && ((P.det?.['Khorne Daemonkin']?.active ?? []).includes('might') || boardUnits(s, u.owner).some((f) => f.enhancements.some((e) => e.name === 'Icon of War') && unitDistance(f, u) <= 6)));
+    for (const id of unitBlessings(s, u, q)) { const b = blessingById(id)!; for (const e of b.effects) out.push({ e, label: b.name, holder: u }); }
+  }
+  return out;
 }

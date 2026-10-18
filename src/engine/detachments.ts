@@ -3,8 +3,7 @@
 import { activeRules, DET_RULES, DOCTRINES, doctrineUsesLeft, type DetChoice, type DetChoiceOption, type DetRule } from './effects';
 import { rollN } from './dice';
 import { log } from './state';
-import { PLAGUE_IDS, setPlague } from './deathGuard';
-import { choicePicked, choiceWhy } from './knights';
+import { choiceBlocked, choicePickedHooks } from './events';
 import type { DetChoiceState, GameState, PlayerId } from './types';
 
 export { DET_RULES };
@@ -33,7 +32,7 @@ export function detChoices(s: GameState, p: PlayerId): DetChoiceNow[] {
       o,
       why: left ? (left[o.id] ? null : 'All uses spent this battle')
         : (ch.uses === 'eachOnce' || ch.uses === 'limit') && st.used.includes(o.id) ? 'Already used this battle'
-        : ch.when === 'tithe' && (o.cost ?? 0) > tithe ? `Needs ${o.cost} Blood Tithe points (${tithe})` : choiceWhy(s, p, d.name, o),
+        : ch.when === 'tithe' && (o.cost ?? 0) > tithe ? `Needs ${o.cost} Blood Tithe points (${tithe})` : choiceBlocked(s, p, d.name, o),
     }));
     out.push({ rule: d.name, choice: ch, state: st, open, options });
   }
@@ -71,11 +70,10 @@ export function pickDetChoice(s: GameState, p: PlayerId, rule: string, ids: stri
   if (now.choice.when === 'tithe') s.players[p].tithe = (s.players[p].tithe ?? 0) - ids.reduce((a, id) => a + (now.choice.options.find((o) => o.id === id)?.cost ?? 0), 0);
   st.active = now.choice.when === 'tithe' || now.choice.keep ? [...new Set([...st.active, ...ids])] : [...ids];
   st.used = rule === DOCTRINES ? [...st.used, ...ids] : [...new Set([...st.used, ...ids])];
-  if (PLAGUE_IDS.includes(ids[0])) setPlague(s, p, ids[0]); // Nurgle's Gift / Manifold Maladies
   st.count += 1;
   st.pickedTurn = s.turn;
   st.round = s.round;
-  choicePicked(s, p, rule, ids, randomly); // Code Chivalric's Oath, Harbingers of Dread
+  choicePickedHooks(s, p, rule, ids, randomly); // Nurgle's Gift, Code Chivalric's Oath, Harbingers of Dread ...
   const names = ids.map((id) => now.choice.options.find((o) => o.id === id)!.name).join(' + ');
   log(s, `${now.choice.name}: ${names}`, 'info', p);
   return null;

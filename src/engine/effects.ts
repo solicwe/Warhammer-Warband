@@ -3,9 +3,6 @@
 // or read from the ability text by abilityText.ts for factions without a file),
 // and temporary effects / marks put on units by abilities (e.g. "suppressed" until your next turn).
 // Rules are data: an Effect says WHO it applies to (scope), WHEN (conditions) and WHAT changes.
-import { destroyedThisRound, sensationalOk } from './emperorsChildren';
-import { dgEffects, isAfflicted } from './deathGuard';
-import { auraBonus, knightsCond, knightsEffects, superHeavy } from './knights';
 import abilityData from '../../data/ability-rules.json';
 import acAbilities from '../../data/abilities/AC.json';
 import orkAbilities from '../../data/abilities/ORK.json';
@@ -31,8 +28,6 @@ import cdAbilities from '../../data/abilities/CD.json';
 import gcAbilities from '../../data/abilities/GC.json';
 import necAbilities from '../../data/abilities/NEC.json';
 import gkAbilities from '../../data/abilities/GK.json';
-import { isUnitEmpowered } from './drukhari';
-import { inSynapse } from './tyranids';
 import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { deploymentById, RULES, toPoly } from './config';
@@ -43,10 +38,8 @@ import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onB
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, UnitState, WeaponData, WeaponProfileData } from './types';
 import { abilityLabel, condApplies, parseAbility } from './weapons';
 import { hasCover, hasLos, isHidden, setVisibilityHooks } from './visibility';
-import { getFtggPairForGuided } from './tau';
 import { setThroughHook } from './pathing';
-import { activeIds, blessingById, unitBlessings } from './blessings';
-import { inFlow } from './flow';
+import { auraRangeBonus, condExact, condPatterns, effectSources, eligibleByRule, meleeStrength, moveThroughModels, moveThroughTerrain } from './events';
 
 export type Eligibility = 'shootAfterAdvance' | 'shootAfterFallBack' | 'chargeAfterAdvance' | 'chargeAfterFallBack' | 'actionWhileEngaged' | 'actionWhileShocked' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction' | 'actionAfterShooting';
 export type Reroll = 'hits1' | 'hits' | 'wounds1' | 'wounds12' | 'wounds' | 'damage' | 'damageOne';
@@ -508,7 +501,7 @@ function ruleEffects(s: GameState, u: UnitState, h: UnitState, effects: Effect[]
       if (scope === 'enemyAura' && h.owner === u.owner) continue;
       const bs = getBearers();
       if (!bs.length) continue;
-      const r = (e.range ?? 6) + (e.rangeBonusIf && h.abilities.some((x) => x.name === e.rangeBonusIf!.ability) ? e.rangeBonusIf.add : 0) + auraBonus(s, h);
+      const r = (e.range ?? 6) + (e.rangeBonusIf && h.abilities.some((x) => x.name === e.rangeBonusIf!.ability) ? e.rangeBonusIf.add : 0) + auraRangeBonus(s, h);
       const near = (x: UnitState) => alive(x).some((m) => bs.some((b) => baseDist(b, m) <= r + 1e-6));
       // Chaos Knights: auras for War Dogs also reach the Knight itself (Masters of the Pack: two War Dog models in range)
       // and a CHARACTER marked by Throne Tyrannicus; A Long Leash puts War Dogs in range of an ABHORRENT unit's auras
@@ -559,18 +552,9 @@ function collectEffects(s: GameState, u: UnitState): Active[] {
       ruleEffects(s, u, h, g.rule.effects, g.name, h.sources[0], () => alive(h).filter((m) => !g.models || m.keywords.includes(g.models)), out);
     }
   }
-  // Blessings of Khorne: units with the ability (Blood Legions via Might of Khorne or near an Icon of War)
-  const P = s.players[u.owner];
-  if (P.blessings || P.blessingExtras?.length || u.timed?.some((t) => t.mark === 'allBlessings')) {
-    const q = u.abilities.some((a) => a.name === 'Blessings of Khorne') || (u.factionKeywords.includes('BLOOD LEGIONS')
-      && ((P.det?.['Khorne Daemonkin']?.active ?? []).includes('might') || boardUnits(s, u.owner).some((f) => f.enhancements.some((e) => e.name === 'Icon of War') && unitDistance(f, u) <= 6)));
-    for (const id of unitBlessings(s, u, q)) { const b = blessingById(id)!; for (const e of b.effects) out.push({ e, label: b.name, holder: u }); }
-  }
   for (const t of u.timed ?? []) out.push({ e: t.e, label: t.label, holder: u, bearers: t.models ? u.models.filter((m) => !m.dead && t.models!.includes(m.id)) : undefined });
-  // Death Guard: Afflicted (-1 T) and the Plagues
-  out.push(...dgEffects(s, u));
-  // Chaos Knights: Malefic Surge
-  out.push(...knightsEffects(s, u));
+  // army-rule effects kept by faction modules (Blessings of Khorne, Plagues, Malefic Surge ...)
+  for (const src of effectSources) out.push(...src(s, u));
   return out;
 }
 
@@ -676,7 +660,6 @@ export function lastEnemyAct(s: GameState, p: PlayerId) {
   return u ? { a, u } : null;
 }
 
-const KNIGHT_CONDS = /^(quality:|dread:|fresh:|honoured$|onLine$|holderOnLine$|lineClear$|targetOnLine$|bonded$|bondedTo$|twoBonded$|bondQuarry$|knightAdvanced$|empowered$|warlordOnBoard$|enemyFly$)/;
 
 /** What a Bondsman ability does to the ARMIGER model it affects (knights.ts). */
 export const bondOf = (u: UnitState, name: string) => { const a = u.abilities.find((x) => x.name === name); return a ? abilityRule(u, a)?.bond : undefined; };
@@ -688,9 +671,9 @@ export function cond(c: string, x: Ctx): boolean {
   const { s, A, T } = x;
   if (c.startsWith('!')) return !cond(c.slice(1), x);
   if (c.startsWith('near:')) return nearCond(x, c);
-  if (KNIGHT_CONDS.test(c)) return knightsCond(c, x) ?? false;
-  // a Blessing of Khorne active for the army this round (Battle-lust: Unbridled Bloodlust)
-  if (c.startsWith('blessing:')) return activeIds(s, A.owner).includes(c.slice(9));
+  const own = condExact.get(c);
+  if (own) return own(c, x);
+  for (const q of condPatterns) if (q.re.test(c)) return q.fn(c, x);
   // Snarling Protector: a friendly engaged PSYKER unit is within 12"
   if (c.startsWith('nearEngaged:')) { const [, d, k] = c.split(':'); return boardUnits(s, A.owner).some((f) => f.id !== A.id && hasKw(f, k) && engagedEnemies(s, f).length > 0 && unitDistance(A, f) <= Number(d) + 1e-6); }
   // "wholly within 12\" of your opponent's deployment zone"
@@ -772,7 +755,6 @@ export function cond(c: string, x: Ctx): boolean {
   }
   if (c.startsWith('meleeWeapons:')) return !!x.m && x.m.weapons.filter((w) => w.profiles[0].range === 'Melee').length >= Number(c.slice(13));
   switch (c) {
-    case 'inFlow': return inFlow(s, x.holder ?? A);
     case 'targetPsyHit': return !!T && T.psyHit?.key === `${s.turn}|${s.phase}` && T.psyHit.by === A.owner;
     case 'targetOnUncontrolledObjective': return !!T && s.objectives.some((o) => o.controller !== A.owner && unitInRange(s, T, o));
     case 'readied': return !!A.readied;
@@ -844,7 +826,6 @@ export function cond(c: string, x: Ctx): boolean {
     case 'belowStartingStrength': return alive(A).length < A.startingStrength;
     case 'belowHalf': return alive(A).length * 2 < A.startingStrength;
     case 'belowHalfStrength': return alive(A).length * 2 < A.startingStrength;
-    case 'inSynapse': return inSynapse(s, A);
     case 'battleShocked': return A.battleShocked;
     case 'notBattleShocked': return !A.battleShocked;
     case 'inTerrain': return alive(A).some((m) => withinTerrain(s, m).length > 0);
@@ -910,12 +891,10 @@ export function cond(c: string, x: Ctx): boolean {
     case 'favoured': return s.players[A.owner].favoured === A.id;
     // made a Charge move in the previous turn and destroyed an enemy unit in that turn's Fight phase (Terrifying Spectacle)
     case 'lastTurnChargedKill': return A.chargedTurn === s.turn - 1 && s.destroyedByTurn.some((d) => d.killerId === A.id && d.turn === s.turn - 1 && d.phase === 'fight');
-    case 'sensationalOk': return sensationalOk(s, A);
     case 'extraAttacksWeapon': return !!x.p && (x.p.abilities ?? []).includes('extra attacks');
     case 'vehicleNotWalker': return hasKw(A, 'VEHICLE') && !hasKw(A, 'WALKER');
     // a friendly LEGIONS OF EXCESS unit within 6" has lost models or wounds (Sustained by Agony has something to bring back)
     case 'loeHurtNear6': return boardUnits(s, A.owner).some((f) => f.factionKeywords.includes('LEGIONS OF EXCESS') && onBoard(f) && unitDistance(A, f) <= 6 + 1e-6 && (f.models.some((m) => m.dead) || alive(f).some((m) => m.wounds < m.profile.W)));
-    case 'pledgeBeaten': { const pl = s.players[A.owner].pledge; return !!pl && pl.round === s.round && destroyedThisRound(s, A.owner) > pl.n; }
     // a friendly LEGIONS OF EXCESS unit within 6" destroyed an enemy unit this phase (Ecstatic Slaughter)
     case 'loeKillNear6': return boardUnits(s, A.owner).some((f) => f.factionKeywords.includes('LEGIONS OF EXCESS') && (f.used ?? {}).killedUnit === phaseKey(s) && unitDistance(A, f) <= 6 + 1e-6);
     case 'sustainedWeapon': return !!x.p && (x.p.abilities ?? []).some((k) => /^sustained hits/.test(k));
@@ -925,11 +904,9 @@ export function cond(c: string, x: Ctx): boolean {
     case 'enemyPsykerWithin12': return boardUnits(s, other(A.owner)).some((e) => hasKw(e, 'PSYKER') && unitDistance(A, e) <= 12 + 1e-6);
     case 'unengaged': return engagedEnemies(s, A).length === 0;
     // Death Guard: the target is Afflicted / within half the weapon's range / in its own deployment zone
-    case 'targetAfflicted': return !!T && isAfflicted(s, T);
     case 'halfRange': return !!x.p && typeof x.p.range === 'number' && (x.d ?? Infinity) <= x.p.range / 2 + 1e-6;
     case 'targetInOwnDz': return !!T && alive(T).some((m) => pointInPoly(m, toPoly(deploymentById(s.deploymentId).zones[s.players[T.owner].role])));
     case 'targetSeenByHolder': return !!T && (x.bearers?.length ? x.bearers : alive(x.holder ?? A)).some((b) => alive(T).some((o) => hasLos(s, b, o)));
-    case 'targetSpotted': { const pr = getFtggPairForGuided(s, A); return !!T && !!pr && pr.spottedId === T.id; }
     // defending: the attacker's model sees this unit in cover
     case 'inCover': return !!T && alive(T).some((am) => hasCover(s, am, A));
     case 'avengeVehicle': return (A.triggered ?? []).includes('avengeVehicle');
@@ -1006,10 +983,7 @@ export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, poo
   const notes: string[] = [];
   const hitCap = RULES.modifierCaps.hitRoll, woundCap = RULES.modifierCaps.woundRoll;
   let strength = (pool.profile.S ?? 1) + offenceInto(s, A, T, pool, list, kind, notes);
-  if (kind === 'melee' && inSynapse(s, A)) {
-    strength += 1;
-    notes.push('Synapse +1 S');
-  }
+  if (kind === 'melee') for (const b of meleeStrength(s, A)) { strength += b.n; notes.push(b.note); }
   for (const i of inc) {
     if (i.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + i.hit, -hitCap, hitCap); notes.push(`marked target: +${i.hit} to hit`); }
     if (i.wound) { pool.woundMod = clamp(pool.woundMod + i.wound, -woundCap, woundCap); notes.push(`marked target: +${i.wound} to wound`); }
@@ -1232,7 +1206,7 @@ export const useNegate = (s: GameState, T: UnitState, m: ModelState, k?: 'turn' 
 
 export function canDo(s: GameState, u: UnitState, what: Eligibility): boolean {
   if (what === 'chargeAfterAdvance' || what === 'chargeAfterFallBack') {
-    if (isUnitEmpowered(s, u) && (u.name.includes('Wyches') || u.abilities.some((a) => a.name.includes('Acrobatic Gladiators')))) return true;
+    if (eligibleByRule(s, u, what)) return true;
   }
   return effectsFor(s, u).some((a) => {
     const el = a.e?.eligible;
@@ -1519,10 +1493,8 @@ setThroughHook((s, u, kind) => {
   if (f.some((e) => e.moveThroughModels)) return 'all';
   if (kind === 'charge' && f.some((e) => e.chargeThroughModels)) return 'nonMV';
   // Super-heavy Walker: Normal, Advance and Fall Back moves go through every model but TITANIC ones
-  if (SUPER_HEAVY.includes(kind) && superHeavy(u)) return 'titanic';
-  return null;
-}, (s, u, kind) => (SUPER_HEAVY.includes(kind) && superHeavy(u)) || unitFx(s, u).some((a) => a.e.throughTerrain));
-const SUPER_HEAVY = ['normal', 'advance', 'fallback'];
+  return moveThroughModels(s, u, kind);
+}, (s, u, kind) => moveThroughTerrain(s, u, kind) || unitFx(s, u).some((a) => a.e.throughTerrain));
 
 // ---------- fixed at Declare Battle Formations ----------
 

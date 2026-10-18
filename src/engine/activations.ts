@@ -7,12 +7,8 @@ import {
   setFreeDamageHook, targetToughness, woundNeed,
 } from './attack';
 import { RULES } from './config';
-import { autoPact } from './darkPacts';
 import { d6, rollExpr, rollN } from './dice';
-import { favouredOnKill } from './emperorsChildren';
-import { blightedLand, extraPlague, eyestingerStorm, signalPox } from './deathGuard';
-import { bondAgain, expend, knightsAttackDone, longLeash } from './knights';
-import { battleShockMod, emit } from './events';
+import { battleShockMod, emit, rescueDie, runActionHandlers, shockDice } from './events';
 import {
   abilityOff, abilityRule, abilitySheet, activeRules, addTimed, cond, DET_RULES, fightOnDeathFor, grantsOf, isRiled, retaliateFor, type AbilityRule, type Effect, type FreeDieSpec,
   type Incoming, type Limit, unitFlags, unitMatches,
@@ -20,10 +16,7 @@ import {
 import { baseDist, bodyAt, bodyTouchesPoly, circleTouchesPoly, dist, gap, ptGap } from './geometry';
 import { alive, boardUnits, centreOf, engagedEnemies, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from './state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from './types';
-import { inSynapse } from './tyranids';
 import { unitVisibleTo } from './visibility';
-import { tryActOfFaith } from './sororitas';
-import { tryFateDie } from './aeldari';
 
 export type Trigger =
   | 'formation' | 'battleStart' | 'roundStart' | 'commandStart' | 'command' | 'anyCommand' | 'commandEnd'
@@ -515,18 +508,11 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
   let passed = total >= ld;
   if (!passed) {
     const needOnDie = ld - effMod - unitFlags(s, u).shockBonus - r[1];
-    const aof = tryActOfFaith(s, u, 'shock', { need: needOnDie });
-    if (aof !== null) {
-      r[0] = aof;
+    const rescued = rescueDie(s, u, 'shock', { need: needOnDie });
+    if (rescued !== null) {
+      r[0] = rescued.v;
       total = r[0] + r[1] + effMod + unitFlags(s, u).shockBonus;
       passed = total >= ld;
-    } else {
-      const fate = tryFateDie(s, u, 'shock', { need: needOnDie });
-      if (fate !== null) {
-        r[0] = fate;
-        total = r[0] + r[1] + effMod + unitFlags(s, u).shockBonus;
-        passed = total >= ld;
-      }
     }
   }
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'failed!'}${effMod ? ` (${effMod})` : ''}`, good: passed });
@@ -544,8 +530,7 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
 
 /** Leadership test for an ability: 2D6 >= the best Ld of the unit. */
 export function ldTest(s: GameState, u: UnitState, why: string, mod = 0): boolean {
-  const syn = inSynapse(s, u);
-  const r = rollN(s, syn ? 3 : 2);
+  const r = rollN(s, shockDice(s, u));
   const ld = ldOf(s, u);
   const sum = r.reduce((a, b) => a + b, 0);
   const ok = sum + mod + unitFlags(s, u).shockBonus >= ld;
@@ -706,11 +691,8 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       log(s, `${def.name}: ${on.name} can use its (Once per battle) ability again`, 'info', u.owner);
     }
     if (a.splitSingles) splitSingles(s, on, def.name);
-    if (a.bondFar) bondAgain(s, on, a.bondFar);
-    if (a.leash) longLeash(s, on);
     if (a.rallyNear) for (const f of boardUnits(s, on.owner).filter((x) => x.battleShocked && unitMatches(x, a.rallyNear!.units) && unitDistance(x, on) <= a.rallyNear!.range + 1e-6)) if (ldTest(s, f, def.name)) { f.battleShocked = false; log(s, `${f.name} is no longer Battle-shocked`, 'info', f.owner); }
     if (a.shockFail && !shockTest(s, on, 0, def.name)) for (const e of a.shockFail) addTimed(s, on, { e, label: def.name, until: a.until ?? 'phase', by: u.owner });
-    if (a.expend) { expend(s, u.owner, a.expend); log(s, `${a.expend} is expended (it comes back when the army fulfils an Oath)`, 'info', u.owner); }
     if (a.thundershock && target) {
       for (const e of [target, ...boardUnits(s, target.owner).filter((x) => x.id !== target.id && unitDistance(x, target) <= 6 + 1e-6)]) {
         const r = d6(s);
@@ -961,17 +943,8 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.alsoNear && target) {
       for (const e of boardUnits(s, target.owner).filter((x) => x.id !== target.id && unitDistance(x, target) <= a.alsoNear! + 1e-6)) doActions(s, def, [{ ...a, alsoNear: undefined }], e, ctx);
     }
-    if (a.dg === 'signalPox') signalPox(s, u, def.name);
-    if (a.dg === 'blightedLand') blightedLand(s, u, def.name);
-    if (a.dg === 'extraPlague') extraPlague(s, u.owner, def.name);
-    if (a.dg === 'eyestinger') eyestingerStorm(s, u, def.name, (e) => shockTest(s, e, 0, def.name));
-    if (a.dg === 'leechspore' && target) {
-      const m = alive(u).filter((x) => x.wounds < x.profile.W).sort((x, y) => (y.profile.W - y.wounds) - (x.profile.W - x.wounds))[0];
-      const dice = m ? rollN(s, Math.min(6, m.profile.W - m.wounds)) : [];
-      const n = Math.min(6, dice.filter((v) => v >= 5).length);
-      log(s, `${def.name}: rolled [${dice.join(' ')}] → ${target.name} suffers ${n} mortal wound(s)${m && n ? `, ${m.name} regains ${n}` : ''}`, 'roll', u.owner);
-      if (n) { applyMortalWounds(s, target, n, def.name); if (m) m.wounds = Math.min(m.profile.W, m.wounds + n); }
-    }
+    // faction mechanics (Bondsman, Plagues ...): factionHooks.ts
+    runActionHandlers(s, a, { label: def.name, u, on, target });
     if (a.splashMortals) {
       const others = boardUnits(s, on.owner).filter((x) => x.id !== on.id && alive(x).some((m) => alive(on).some((n) => baseDist(m, n) <= a.splashMortals!.range + 1e-6)));
       const v = others.sort((x, y) => y.pts - x.pts)[0];
@@ -1199,7 +1172,7 @@ export function unitSelected(s: GameState, u: UnitState, kind: 'shoot' | 'fight'
   if ((u.used ??= {})[key] === phaseKey(s)) return;
   u.used[key] = phaseKey(s);
   // Dark Pacts: made here for bots and players who leave their rules to the app; a player who decides picks it on screen
-  autoPact(s, u, kind, (p) => (s.decides ?? []).includes(p) && !(s.bots ?? []).includes(p));
+  emit(s, 'unitSelected', { u, kind });
   if (kind === 'shoot') for (const o of boardUnits(s, u.owner)) if (o.id !== u.id) { scouringDue(s, o, true); unleashHellDue(s, o, true); }
   fire(s, kind === 'shoot' ? 'selectedToShoot' : 'selectedToFight', [u]);
 }
@@ -1452,7 +1425,7 @@ onAttackFinished((s, at, info) => {
   // Styrix's Duty: once per phase, one enemy unit it hit takes a Battle-shock test (−1)
   const sa = unitFlags(s, A).shockAfterAttack;
   if (sa !== null && info.hits > 0 && onBoard(T) && (A.used ??= {}).styrix !== phaseKey(s)) { A.used.styrix = phaseKey(s); shockTest(s, T, sa, 'Styrix’s Duty'); }
-  knightsAttackDone(s, A, T); // Malefic Surge: Diabolic Power / Unnatural Fortitude used
+  emit(s, 'attackDone', { A, T });
   // Conquerors Without Mercy: it destroyed an enemy unit this phase — every enemy unit within 6" takes a Battle-shock test
   const ksa = unitFlags(s, A).killShockAura;
   if (ksa && at.kind === 'fight' && info.destroyed && (A.used ??= {}).conquer !== phaseKey(s)) { A.used.conquer = phaseKey(s); for (const e of boardUnits(s, T.owner).filter((x) => unitDistance(A, x) <= ksa + 1e-6)) shockTest(s, e, 0, 'Conquerors Without Mercy'); }
@@ -1547,13 +1520,6 @@ export function arrivalShock(s: GameState, u: UnitState) {
     if (e) shockTest(s, e, 0, `${u.name} arrives`);
   }
 }
-
-// An enemy unit is wiped out: Eye of Abaddon / Weaponised Hatred (your Oath / focus / Vendetta target), Soul Harvester,
-// Architect of Ruin (a new hated foe)
-// Slaanesh's Chosen: a CHARACTER unit that wipes out an enemy unit becomes the Favoured Champions
-onModelKilled((s, u, _m, killerId) => {
-  if (!alive(u).length && killerId) favouredOnKill(s, s.units.find((x) => x.id === killerId));
-});
 
 // Accomplished Tactician: in the opponent's Shooting phase, a unit near the bearer that was hit can embark within a
 // friendly transport it is wholly within 6" of (once per turn). The bot does it when the unit lost wounds.

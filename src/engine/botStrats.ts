@@ -3,6 +3,7 @@
 // Explosives, Crushing Impact, Epic Challenge, and its detachments' defensive stratagems when one of its units is
 // attacked. It keeps a CP back for a re-roll until the last round unless the play is worth more.
 import { botOff } from './botWeights';
+import { on } from './events';
 import { freeDiceNow, useFreeDie } from './activations';
 import { applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, onAttackStart, onMortalWounds, rerollOne, setDiceHook, shootingModes, targetToughness, woundNeed } from './attack';
 import { chargeValue, isBrawler, maxRange, meleeKills, onObjective, oc, p2d6, perModel, rangedKills, unitValue } from './botEval';
@@ -13,9 +14,9 @@ import {
   arrivalRound, autoApproach, chargeReach, bestLd, chargeTargetOptions, commitCharge, counteroffensiveCandidates, declareCharge, heroicCandidates, hasDeepStrike,
   ingressUnit, rapidIngressCandidates, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, crushingImpact,
 } from './game';
-import { addTimed, applyLateEffects, targetHasCover, unitFlags, withRuleCache } from './effects';
+import { addTimed, applyLateEffects, cond, targetHasCover, unitFlags, withRuleCache } from './effects';
 import { botFightOnDeath } from './botPlus';
-import { alive, boardUnits, canUseStratagem, hasKw, isEngaged, lastRound, log, other, pace, playsItself, spendStratagem, stratCost, unitById, unitDistance } from './state';
+import { alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, log, onBoard, other, pace, phaseKey, playsItself, spendStratagem, stratCost, unitById, unitDistance } from './state';
 import { applyDetachmentStratagem, stratagemBlock, stratChoices, stratRule, withChoice, type StratRule } from './stratagems';
 import { unitVisibleTo } from './visibility';
 import type { AttackSession, GameState, PlayerId, StratagemData, TimedEffect, UnitState } from './types';
@@ -400,3 +401,31 @@ export function botEpicChallenge(s: GameState, u: UnitState, targetId: string): 
   spendStratagem(s, u.owner, 'epic-challenge', u);
   return chars[0].id;
 }
+
+// Emperor's Children: stratagems the bot plays when one of its units wipes out an enemy unit (after Slaanesh's Chosen
+// has picked the Favoured Champions)
+on('modelKilled', (s, { u, killerId }) => {
+  if (alive(u).length || !killerId) return;
+  const k = s.units.find((x) => x.id === killerId);
+  if (!k || !onBoard(k) || !playsItself(s, k.owner)) return;
+  const p = k.owner;
+  const find = (name: string) => s.players[p].detachments.flatMap((d) => d.stratagems).find((st) => st.name === name);
+  const can = (name: string, x: UnitState, keep = 1) => { const st = find(name); return st && !stratagemBlock(s, p, st, x) && s.players[p].cp >= stratCost(s, st.id, x, st.cp) + keep ? st : undefined; };
+  // Unbound Arrogance: the pledge is already beaten, so raising it is a free Pact point
+  const ua = can('UNBOUND ARROGANCE', k);
+  if (ua && cond('pledgeBeaten', { s, A: k })) applyDetachmentStratagem(s, p, ua, k.id);
+  const fav = s.players[p].favoured === k.id;
+  // Diabolic Majesty: the new Favoured Champions terrify the enemy units around them
+  const dm = fav && s.players[p].favouredTurn === s.turn ? can('DIABOLIC MAJESTY', k) : undefined;
+  if (dm && boardUnits(s, other(p)).some((e) => unitDistance(k, e) <= 6)) applyDetachmentStratagem(s, p, dm, k.id);
+  // Heightened Jealousy: other CHARACTER units still to fight this phase hit harder
+  const hj = fav && s.phase === 'fight' ? can('HEIGHTENED JEALOUSY', k, 2) : undefined;
+  if (hj && boardUnits(s, p).some((x) => x.id !== k.id && alive(x).some((mm) => mm.isCharacter) && !x.fought && engagedEnemies(s, x).length)) applyDetachmentStratagem(s, p, hj, k.id);
+  // Ecstatic Slaughter: a Legions of Excess kill lets an Emperor's Children unit nearby charge
+  if (s.phase === 'fight' && k.factionKeywords.includes('LEGIONS OF EXCESS')) {
+    const x = boardUnits(s, p).find((f) => f.factionKeywords.includes('EMPEROR’S CHILDREN') && unitDistance(f, k) <= 6 && !engagedEnemies(s, f).length && !f.fought
+      && boardUnits(s, other(p)).some((e) => unitDistance(f, e) <= 8));
+    const es = x && can('ECSTATIC SLAUGHTER', x);
+    if (x && es) { (k.used ??= {}).killedUnit = phaseKey(s); applyDetachmentStratagem(s, p, es, x.id); }
+  }
+});

@@ -25,8 +25,12 @@ data/ (rule data, JSON)            public/data/factions/*.json (datasheets, gene
 `game.ts` owns the flow: `createGame` -> deployment -> battle rounds -> `startTurn` -> Command, Movement, Shooting,
 Charge, Fight (`endPhase` moves from one to the next) -> end of turn -> end of round -> game over.
 
-Faction rules that keep state of their own (Knights' Code Chivalric, Drukhari Pain tokens, Daemons' Shadow of
-Chaos ...) do not live in `game.ts`. The loop emits **lifecycle events** and each faction subscribes:
+Faction rules (Knights' Code Chivalric, Drukhari Pain tokens, Daemons' Shadow of Chaos ...) do not live in the core.
+The core files (`game.ts`, `attack.ts`, `effects.ts`, `activations.ts`, `stratagems.ts`, `detachments.ts`) import
+no faction module. They emit events and ask the hooks in `events.ts` and `combatMods.ts`; each faction module
+registers in `factionHooks.ts`.
+
+### Events (`on(name, handler)`)
 
 | Event | Emitted | Payload |
 |---|---|---|
@@ -38,18 +42,54 @@ Chaos ...) do not live in `game.ts`. The loop emits **lifecycle events** and eac
 | `commandStart` / `commandEnd` | Command phase | `p` |
 | `movementEnd` | end of Movement, after Reinforcements | `p` |
 | `shootingStart` | start of the Shooting phase | `p` |
+| `fightStart` | start of the Fight phase, before pile-in | - |
 | `phaseEnd` | any phase ends | `phase` |
 | `turnEnd` / `roundEnd` | end of a turn / battle round | `p` / - |
 | `shockResult` | any Battle-shock test is resolved | `u`, `passed` |
 | `moved` | a Normal, Advance or Fall Back move ends | `u`, `kind`, `paths` |
 | `unitMoved` | a unit moved or arrived (enemy reactions) | `u` |
+| `unitSelected` | a unit is selected to shoot or fight | `u`, `kind` |
+| `targetChosen` | a unit picked a target to shoot, fight or charge | `attackerId`, `targetId` |
+| `attackDone` | a unit finished attacking a target | `A`, `T` |
+| `unitDestroyed` | the last model of a unit was destroyed by an attack | `u`, `attackerId` |
+| `modelKilled` | a model was destroyed, after the core's own reactions | `u`, `m`, `killerId` |
+| `deadlyDemiseHit` | a Deadly Demise explosion hit a unit | `u`, `v` |
 
-Values several rules can change are **modifiers**, summed or combined in `events.ts`: `battleShock` (added to a
-Battle-shock test) and `deepStrikeDistance` (the closest a Deep Striking unit may arrive).
+### Modifiers (`addModifier(name, fn)`)
 
-`events.ts` defines the events, `factionHooks.ts` is the one place factions subscribe. Handlers run in the order
-they are registered there; the dice come from one seeded generator, so that order is part of the game's
-behaviour and must not change by accident.
+Questions several rules can answer; `events.ts` combines the answers.
+
+| Modifier | Answer | Combined |
+|---|---|---|
+| `battleShock` | added to a Battle-shock test | sum |
+| `shockDice` | dice rolled for Battle-shock / Leadership | highest (2 by default) |
+| `deepStrikeDistance` | closest a Deep Striking unit may arrive | smallest |
+| `deepStrikeKeep` | closest it may arrive to one enemy unit | smallest |
+| `deepStrikeZone` | may it arrive here (units bound to a zone) | all must agree |
+| `moveBlock` | why a model's move is not allowed | first reason |
+| `targetBlock` | why a unit may not shoot / charge / fight a target | first reason |
+| `auraRange` | extra inches on aura abilities | sum |
+| `eligible` | may it do something it normally cannot (charge after Advancing ...) | any |
+| `assaultWeapons` | its ranged weapons count as [ASSAULT] | any |
+| `moveThroughModels` / `moveThroughTerrain` | what its moves pass through | first / any |
+| `meleeStrength` | melee Strength bonus with its note | all |
+
+### Other extension points
+
+| Hook | Where it is used | Example |
+|---|---|---|
+| `addCombatMods` (`combatMods.ts`) | every weapon profile of an attack: hit, wound, AP, Strength, re-rolls, weapon abilities, critical thresholds | Doctrina Imperatives, Power from Pain |
+| `addDieRescue` | a failed roll can be replaced by a die from a pool | Acts of Faith, Strands of Fate |
+| `addCondition` | an `if` condition in the rule data | `inSynapse`, `quality:...` |
+| `addEffectSource` | effects a module keeps for a unit outside its abilities | Blessings of Khorne, Plagues |
+| `addActionHandler` | faction keys in an ability's `do` actions | Bondsman, Signal Pox |
+| `addStratSpecial` | a stratagem's `special` | Malefic Surge |
+| `addTargetFilter` | a stratagem target filter | `contagion` |
+| `addChoiceHooks` | detachment / army rule choices (why an option is blocked, what picking it does) | Code Chivalric, Nurgle's Gift |
+
+Handlers and providers run in the order they are registered in `factionHooks.ts`. The dice come from one seeded
+generator, so that order is part of the game's behaviour and must not change by accident. Register functions
+through an arrow (`(s, u) => fn(s, u)`), not by value: modules can load in either order.
 
 ## The rules pipeline
 
