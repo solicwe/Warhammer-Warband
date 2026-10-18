@@ -1,6 +1,6 @@
 # แก้ / เพิ่ม / ลบ กฎ — คู่มือไฟล์ข้อมูล
 
-กฎทั้งหมดของเกมอยู่ในไฟล์ JSON ข้างล่าง แก้แล้วรัน `npm test` เพื่อเช็ก แล้ว `npm run artifact` เพื่อ build ใหม่
+กฎทั้งหมดของเกมอยู่ในไฟล์ JSON ข้างล่าง แก้แล้วรัน `npm test` เพื่อเช็ก แล้ว `npm run build` เพื่อ build ใหม่
 ตอนนี้โฟกัส **Space Marines (SM)**, **Orks (ORK)**, **Adeptus Custodes (AC)**, **Thousand Sons (TS)** และ **Chaos Space Marines (CSM)** — faction อื่นใช้ได้แต่ระบบอ่านจากข้อความการ์ดเท่าที่อ่านได้
 
 | อยากแก้อะไร | ไฟล์ |
@@ -66,7 +66,7 @@ Enhancement: เขียนกฎใน `data/abilities/<FACTION>.json` ด้�
 4. กฎ detachment ใส่ใน `data/detachment-rules.json` (key = ชื่อ detachment, `auto` = `full` / `partial` / `manual`)
 5. (ไม่บังคับ) ทัพสำเร็จรูปให้เลือกตอน New battle: เพิ่มใน `PRESETS` ของ `src/ui/presets.ts` (key = faction id)
 
-หน้าแรก (รายการทัพ), หน้า New battle, ตัวจัดทัพ และเกม ใช้ได้กับทุก faction อยู่แล้ว: เพิ่มข้อมูลตามข้างบนแล้ว `npm test` + `npm run artifact` จบ ไม่ต้องแก้ UI
+หน้าแรก (รายการทัพ), หน้า New battle, ตัวจัดทัพ และเกม ใช้ได้กับทุก faction อยู่แล้ว: เพิ่มข้อมูลตามข้างบนแล้ว `npm test` + `npm run build` จบ ไม่ต้องแก้ UI
 
 ## รูปภาพหน่วย
 ดู `public/images/README.md`

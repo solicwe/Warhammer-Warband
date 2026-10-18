@@ -25,7 +25,7 @@ export type Trigger =
   | 'anyPhase' | 'opponentTurnEnd' | 'opponentFightEnd' | 'onDeath' | 'friendlyDeath' | 'shotByEnemy' | 'enemyMovedNear' | 'enemyFellBack'
   | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks' | 'movementStart' | 'fightEnd' | 'attackStart'
   | 'attacked' | 'friendlyTargeted' | 'fightEndButton' | 'chargeStart' | 'chargeEnd'
-  | 'shootingStart' | 'oppShootingStart' | 'eachCommandStart';
+  | 'shootingStart' | 'oppShootingStart' | 'eachCommandStart' | 'shootingEnd';
 
 export type Until = TimedEffect['until'];
 
@@ -68,7 +68,7 @@ export interface Action {
   mark?: string;
   heal?: string; // wounds regained (on the most damaged model)
   revive?: number; // destroyed models returned
-  reviveLater?: { on: number; wounds: number; ld?: boolean; woundsRoll?: string }; // this model rolls at the end of the phase to come back (ld: a Leadership test instead; woundsRoll: with that many wounds)
+  reviveLater?: { on: number; wounds: number; ld?: boolean; woundsRoll?: string; half?: boolean }; // this model rolls at the end of the phase to come back (ld: a Leadership test instead; woundsRoll: with that many wounds; half: with half its Wounds)
   mortals?: string; // mortal wounds
   precisionMortals?: boolean; // mortal wounds can be allocated to a CHARACTER model as Precision
   mortalsVehicle?: string; // … instead, if the unit is a VEHICLE
@@ -88,7 +88,7 @@ export interface Action {
   asMove?: boolean; // … and that move is the unit's move this phase (Pulse Jet)
   setQuarry?: boolean;
   setPriority?: boolean; // Priority Objective Identified (target: the objective under the unit)
-  setSlayer?: boolean; // Slayer's Oath: the keyword the enemy army has most of
+  setSlayer?: boolean | string[]; // Slayer's Oath: the keyword the enemy army has most of (a list: picked from these, Fated Hero)
   secure?: boolean; // the objective the unit is on stays yours until the opponent controls it
   wardObjective?: boolean; // secure controlled objectives and bar enemy Daemons from setting up within 6"
   attacksPerEnemyNear?: { range: number; max: number; weapon?: string };
@@ -103,7 +103,7 @@ export interface Action {
   log?: string;
   // stratagem actions
   if?: string[]; // only when these conditions hold (on the unit using it; "target…" ones on the other unit)
-  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; n?: number; nWounds?: boolean; dmg?: string; shockIfAny?: number }; // one D6 per model engaged with the target (or n dice): each X+ is a mortal wound (dmg: that many each; shockIfAny: then a Battle-shock test with this modifier)
+  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; n?: number; nWounds?: boolean; dmg?: string; shockIfAny?: number; rerollIf?: string[] }; // one D6 per model engaged with the target (or n dice): each X+ is a mortal wound (dmg: that many each; shockIfAny: then a Battle-shock test with this modifier)
   ldFail?: Effect[]; // the target takes a Leadership test; failed → these effects (until `until`)
   ldBranch?: { pass?: Effect[]; fail?: Effect[] }; // Leadership test branching: pass effects vs fail effects
   decoyTargets?: boolean; // Callidus Assassin replaces a friendly Infantry model, destroying it
@@ -131,7 +131,7 @@ export interface Action {
   buffRoll?: { expr: string; fields: ('attacks' | 'strength' | 'move')[]; if?: string[] }; // roll now, then +that to these characteristics (Sacrificial Blessing: D3)
   explodeModels?: { name: string; on: number }; // these models roll a D6 each: on X+ the model is destroyed and the target suffers 1 mortal wound
   shockMortals?: { mod: number; mortals: string }; // the target takes a Battle-shock test; if it fails it also suffers these mortal wounds (Nethershriek Mind-eater)
-  phaseEndMortals?: string; // at the end of the phase the unit suffers these mortal wounds (Warpmeld Sacrifice)
+  phaseEndMortals?: string; // at the end of the phase the unit suffers these mortal wounds (Warpmeld Sacrifice); 'perModel:1': one D6 per model, each 1 is a mortal wound (Flickerjump)
   reviveRoll?: string; // return this many (rolled) destroyed models (Blessed Transmutations: D3+1)
   mutate?: boolean; // Mutate Landscape: the objective the unit controls is mutated (enemy units ending a move on it: 4+ D3 mortal wounds)
   pactTest?: { pass?: Effect[] }; // Desperate Pact: Leadership test; failed → D3 mortal wounds, passed → these effects (until `until`)
@@ -155,6 +155,8 @@ export interface Action {
   afflictNear?: number; // every enemy unit within X" of this unit is Afflicted until your next turn (Explosive Blight)
   alsoNear?: number; // do this to every other enemy unit within X" of the target too (Spore-laced Shock Waves)
   dg?: 'signalPox' | 'blightedLand' | 'eyestinger' | 'extraPlague' | 'leechspore';
+  ae?: string; // Aeldari: 'focus:<manoeuvre>' spends a Battle Focus token (aeldari.ts)
+  jumpToDeath?: boolean; // the unit (one model) is set up again where the destroyed model was (Inevitable Death)
   embarkNear?: number; // the target embarks within a friendly TRANSPORT it is wholly within this many inches of (Accomplished Tactician)
   addWounds?: number; // +X to the Wounds characteristic for the rest of the battle (the ability's models; Living Carapace)
   soulLink?: boolean; // the bearer copies the datasheet abilities of a CHARACTER in the target unit and gains PSYKER (Soul Link)
@@ -185,7 +187,7 @@ export interface ActSpec {
   oppShooting?: boolean; // only in the opponent's Shooting phase
   roll?: string; // e.g. "D6"
   rollCount?: number; // number of dice for a single roll/check
-  rollAdd?: 'per5models' | 'warlordInTarget2' | 'shockedEnemies' | 'onControlledObjective' | 'nearEnemyDz12';
+  rollAdd?: 'per5models' | 'warlordInTarget2' | 'shockedEnemies' | 'onControlledObjective' | 'nearEnemyDz12' | 'dzAdvance'; // dzAdvance: +1 out of your deployment zone, +1 more in the enemy's
   perModel?: boolean; // one die per model of this unit engaged with the target
   each?: { on: number; do: Action[] }; // per die: on X+
   table?: { min: number; max?: number; do: Action[] }[]; // by result
@@ -540,9 +542,9 @@ export function ldTest(s: GameState, u: UnitState, why: string, mod = 0): boolea
 }
 
 /** The keyword (CHARACTER / MONSTER / VEHICLE) the enemy army has the most points of. */
-function slayerKeyword(s: GameState, p: PlayerId): string {
+function slayerKeyword(s: GameState, p: PlayerId, from = ['CHARACTER', 'MONSTER', 'VEHICLE']): string {
   const score = (kw: string) => s.units.filter((x) => x.owner !== p && x.status !== 'destroyed' && hasKw(x, kw)).reduce((a, x) => a + x.pts, 0);
-  return ['CHARACTER', 'MONSTER', 'VEHICLE'].sort((a, b) => score(b) - score(a))[0];
+  return [...from].sort((a, b) => score(b) - score(a))[0];
 }
 
 function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState | null, ctx: FireCtx) {
@@ -555,7 +557,9 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       const q = a.mortalRoll;
       const n = q.nWounds ? Math.min(q.max ?? 99, alive(u).reduce((x, m) => x + m.wounds, 0)) : q.n ?? (q.all ? alive(u).length : alive(u).filter((m) => alive(on).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length);
       const plus = q.plus && (q.plusIf ?? []).every((c) => cond(c, { s, A: u, T: on, holder: u })) ? q.plus : 0;
-      const dice = rollN(s, Math.max(1, n));
+      let dice = rollN(s, Math.max(1, n));
+      // Cluster Caltrops: failed dice are rolled again
+      if (q.rerollIf?.every((c) => cond(c, { s, A: u, T: on, holder: u }))) dice = dice.map((v) => (v + plus >= q.on ? v : rollN(s, 1)[0]));
       const succ = dice.filter((v) => v + plus >= q.on).length;
       const hits = Math.min(q.max ?? 99, q.dmg ? Array.from({ length: succ }, () => rollExpr(s, q.dmg!).total).reduce((x, y) => x + y, 0) : succ);
       log(s, `${def.name}: rolled [${dice.join(' ')}]${plus ? ` +${plus}` : ''} → ${on.name} suffers ${hits} mortal wounds`, 'roll', u.owner);
@@ -762,7 +766,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.reviveLater && ctx.deadModelId) {
       const m = on.models.find((x) => x.id === ctx.deadModelId);
       if (m) {
-        (s.revivals ??= []).push({ unitId: on.id, modelId: m.id, label: def.name, on: a.reviveLater.on, wounds: a.reviveLater.wounds, x: m.x, y: m.y, ld: a.reviveLater.ld, woundsRoll: a.reviveLater.woundsRoll });
+        (s.revivals ??= []).push({ unitId: on.id, modelId: m.id, label: def.name, on: a.reviveLater.on, wounds: a.reviveLater.half ? Math.ceil(m.profile.W / 2) : a.reviveLater.wounds, x: m.x, y: m.y, ld: a.reviveLater.ld, woundsRoll: a.reviveLater.woundsRoll });
         log(s, `${def.name}: ${m.name} ${a.reviveLater.ld ? 'takes a Leadership test' : `rolls (${a.reviveLater.on}+)`} to return at the end of the phase`, 'info', u.owner);
       }
     }
@@ -850,13 +854,19 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     }
     if (a.chargeOnlyTarget && target) { u.chargeMust = { turn: s.turn, id: target.id }; log(s, `${def.name}: ${u.name}'s charge must end engaged with ${target.name}`, 'info', u.owner); }
     if (a.embarkNear) embarkNearHook?.(s, on, a.embarkNear, def.name);
+    if (a.jumpToDeath && ctx.deadModelId && alive(on).length === 1) {
+      const dm = s.units.flatMap((x) => x.models).find((x) => x.id === ctx.deadModelId);
+      const m = alive(on)[0];
+      const was = { x: m.x, y: m.y };
+      if (dm && setBackUp(s, on, m, { x: dm.x, y: dm.y })) { pushFx(s, { kind: 'place', unitId: on.id, owner: on.owner }); log(s, `${def.name}: ${on.name} is set up where ${dm.name} fell`, 'info', on.owner); } else { m.x = was.x; m.y = was.y; }
+    }
     if (a.setQuarry && target) { u.quarry = target.id; log(s, `${def.name}: target ${target.name}`, 'info', u.owner); }
     if (a.setPriority) {
       const o = s.objectives.find((q) => alive(on).some((m) => ptGap(m, q) <= 3)) ?? s.objectives.find((q) => q.type === 'central') ?? s.objectives[0];
       if (o) { s.players[u.owner].priorityObjective = o.id; log(s, `${def.name}: objective ${o.id}`, 'info', u.owner); }
     }
     if (a.setSlayer) {
-      const kw = slayerKeyword(s, u.owner);
+      const kw = slayerKeyword(s, u.owner, Array.isArray(a.setSlayer) ? a.setSlayer : undefined);
       (s.players[u.owner].slayer ??= {})[u.id] = kw;
       log(s, `${def.name}: ${kw}`, 'info', u.owner);
     }
@@ -1004,8 +1014,8 @@ export function resolvePickUnit(s: GameState, unitId: string | null) {
 
 /** Use an ability now (button, or automatically at its trigger). Returns an error message or null. */
 /** Actions of a rule that is not an ability (a stratagem's "your unit can make a Normal move of up to D6"" …). */
-export function runActions(s: GameState, name: string, holder: UnitState, acts: Action[], target: UnitState | null) {
-  doActions(s, { key: `rule:${name}`, name, holder, spec: { when: 'anyPhase' } as ActSpec, bearers: alive(holder) }, acts, target, {});
+export function runActions(s: GameState, name: string, holder: UnitState, acts: Action[], target: UnitState | null, ctx: FireCtx = {}) {
+  doActions(s, { key: `rule:${name}`, name, holder, spec: { when: 'anyPhase' } as ActSpec, bearers: alive(holder) }, acts, target, ctx);
 }
 
 export function useAct(s: GameState, def: ActDef, targetId?: string, ctx: FireCtx = {}): string | null {
@@ -1025,6 +1035,7 @@ export function useAct(s: GameState, def: ActDef, targetId?: string, ctx: FireCt
       // Warphead: the Weirdboy re-rolls a psychic roll of 1 (the Perils result)
       if (/psychic/i.test(def.name) && dice[0] === 1 && def.holder.enhancements?.some((e) => e.name === 'Warphead')) { dice[0] = rollN(s, 1)[0]; log(s, `Warphead: psychic roll of 1 re-rolled → ${dice[0]}`, 'roll', def.holder.owner); }
       let add = 0;
+      if (def.spec.rollAdd === 'dzAdvance') add = (cond('whollyInOwnDz', { s, A: def.holder, holder: def.holder }) ? 0 : 1) + (cond('inEnemyDz', { s, A: def.holder, holder: def.holder }) ? 1 : 0);
       if (def.spec.rollAdd === 'per5models') add = Math.floor(alive(def.holder).length / 5);
       if (def.spec.rollAdd === 'warlordInTarget2' && tg.isWarlordUnit) add = 2;
       if (def.spec.rollAdd === 'shockedEnemies') add = boardUnits(s, other(def.holder.owner)).filter((e) => e.battleShocked).length;
@@ -1114,7 +1125,7 @@ export interface ManualAct { def: ActDef; targets: UnitState[]; why: string | nu
 
 const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge',
   'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks', 'movementStart', 'fightEnd', 'attackStart',
-  'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart', 'chargeEnd'];
+  'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart', 'chargeEnd', 'shootingEnd'];
 
 /** Abilities player p can use by pressing a button right now. */
 export function manualActs(s: GameState, p: PlayerId): ManualAct[] {
@@ -1180,13 +1191,13 @@ export function unitSelected(s: GameState, u: UnitState, kind: 'shoot' | 'fight'
 // ---------- reactions: "if an enemy unit ends a move within 8" of this unit, this unit can make a Normal move" ----------
 
 /** After a unit of the active player moved: units of the other player with such abilities get a prompt. */
-export function offerReactions(s: GameState, trigger: 'enemyMovedNear' | 'enemyFellBack', mover: UnitState, candidates?: UnitState[]) {
+export function offerReactions(s: GameState, trigger: 'enemyMovedNear' | 'enemyFellBack' | 'shotByEnemy', mover: UnitState, candidates?: UnitState[]) {
   const p = other(mover.owner);
   const offers: { unitId: string; key: string; label: string }[] = [];
   for (const u of candidates ?? boardUnits(s, p)) {
     if (!onBoard(u)) continue;
     for (const def of actsOfUnit(s, u)) {
-      if (def.spec.when !== trigger || !limitLeft(s, def)) continue;
+      if (def.spec.when !== trigger || def.spec.auto || !limitLeft(s, def)) continue;
       if (trigger === 'enemyMovedNear' && !(alive(mover).length && near(from(def), mover, def.spec.range ?? 8))) continue;
       if (!(def.spec.if ?? []).every((c) => cond(c, { s, A: u, holder: u, bearers: def.bearers }))) continue;
       const mv = def.spec.do?.find((a) => a.move)?.move ?? '';
@@ -1421,7 +1432,10 @@ onAttackFinished((s, at, info) => {
     if (at.kind === 'shoot') { scouringDue(s, A, false); unleashHellDue(s, A, false); }
     if (at.kind === 'fight') fire(s, 'afterFighting', [A], ctx);
   }
-  if (at.kind !== 'fight' && info.woundsLost > 0 && T.owner !== s.active && onBoard(T)) fire(s, 'shotByEnemy', [T], { targetId: A.id, modelsKilled: info.modelsKilled });
+  if (at.kind !== 'fight' && info.woundsLost > 0 && T.owner !== s.active && onBoard(T)) {
+    fire(s, 'shotByEnemy', [T], { targetId: A.id, modelsKilled: info.modelsKilled });
+    offerReactions(s, 'shotByEnemy', A, [T]); // Fade Back: a move the player chooses to make
+  }
   // Styrix's Duty: once per phase, one enemy unit it hit takes a Battle-shock test (−1)
   const sa = unitFlags(s, A).shockAfterAttack;
   if (sa !== null && info.hits > 0 && onBoard(T) && (A.used ??= {}).styrix !== phaseKey(s)) { A.used.styrix = phaseKey(s); shockTest(s, T, sa, 'Styrix’s Duty'); }
@@ -1687,7 +1701,8 @@ function resolvePhaseMortals(s: GameState) {
   for (const q of list) {
     const u = unitById(s, q.unitId);
     if (!onBoard(u)) continue;
-    const n = rollExpr(s, q.expr).total;
+    const per = /^perModel:(\d)$/.exec(q.expr);
+    const n = per ? rollN(s, alive(u).length).filter((r) => r <= Number(per[1])).length : rollExpr(s, q.expr).total;
     log(s, `${q.label}: ${u.name} suffers ${n} mortal wounds at the end of the phase`, 'roll', u.owner);
     applyMortalWounds(s, u, n, q.label);
   }

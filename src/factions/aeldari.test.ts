@@ -4,8 +4,9 @@ import {
   getFateDice,
   gainFateDice,
   aeldariBattleStart,
-  aeldariTurnStart,
-  aeldariCommandEnd,
+  aeldariRoundStart,
+  canFocus,
+  spendFocus,
   canUseFateDie,
   useFateDie,
   tryFateDie,
@@ -98,20 +99,38 @@ describe('Aeldari Engine & Strands of Fate', () => {
     expect(isAeldariArmy(state, 1)).toBe(false);
   });
 
-  it('aeldariBattleStart rolls 6 Fate dice and grants Warhost Battle Focus tokens', () => {
+  it('aeldariBattleStart rolls 6 Fate dice (Eldrad does not add any: his ability gives CP)', () => {
+    state.units.push(createUnit('u-eldrad', 'Eldrad Ulthran', 0, 5, 5, ['Diviner of Futures']));
     aeldariBattleStart(state);
     const pool = getFateDice(state, 0);
     expect(pool.length).toBe(6);
     expect(pool.every((d) => d >= 1 && d <= 6)).toBe(true);
-    // Warhost detachment grants 2 + 1 = 3 tokens
-    expect(state.players[0].battleFocusTokens).toBe(3);
   });
 
-  it('aeldariBattleStart rolls 9 Fate dice when Eldrad Ulthran is in the army', () => {
-    state.units.push(createUnit('u-eldrad', 'Eldrad Ulthran', 0, 5, 5, ['Diviner of Futures']));
-    aeldariBattleStart(state);
-    const pool = getFateDice(state, 0);
-    expect(pool.length).toBe(9);
+  it('Battle Focus: 2 / 4 / 6 tokens by battle size each round, Warhost one more', () => {
+    state.players[0].armyRules = [{ name: 'Battle Focus', text: '' }] as never;
+    for (const [size, n] of [['incursion', 3], ['strike-force', 5], ['onslaught', 7]] as const) {
+      state.players[0].battleSize = size;
+      aeldariRoundStart(state);
+      expect(state.players[0].battleFocusTokens).toBe(n);
+    }
+  });
+
+  it('Agile Manoeuvres: a token each, one manoeuvre per unit per phase, Swift as the Wind for several units', () => {
+    state.players[0].battleFocusTokens = 2;
+    const a = createUnit('a', 'Dire Avengers', 0, 10, 10, ['Battle Focus']);
+    const b = createUnit('b', 'Rangers', 0, 20, 10, ['Battle Focus']);
+    const c = createUnit('c', 'Wraithguard', 0, 30, 10);
+    state.units.push(a, b, c);
+    expect(canFocus(state, c, 'swift')).toBe(false); // no Battle Focus (not in a Spirit Conclave)
+    expect(canFocus(state, a, 'swift')).toBe(true);
+    spendFocus(state, a, 'swift', 'Swift as the Wind');
+    expect(state.players[0].battleFocusTokens).toBe(1);
+    expect(canFocus(state, a, 'flitting')).toBe(false); // this unit performed one this phase
+    expect(canFocus(state, b, 'swift')).toBe(true); // another unit may still use Swift as the Wind
+    spendFocus(state, b, 'suddenStrike', 'Sudden Strike');
+    expect(state.players[0].battleFocusTokens).toBe(0);
+    expect(canFocus(state, c, 'flitting')).toBe(false);
   });
 
   it('gainFateDice adds dice in descending order', () => {
@@ -137,26 +156,6 @@ describe('Aeldari Engine & Strands of Fate', () => {
     // After phase reset, can use again
     resetPhaseStrandsOfFate(state);
     expect(canUseFateDie(state, unit)).toBe(true);
-  });
-
-  it('Farseer Branching Fates turns lowest die < 6 into a 6 at Command End', () => {
-    state.players[0].fateDice = [6, 4, 2];
-    const farseer = createUnit('u-farseer', 'Farseer', 0, 5, 5, ['Branching Fates (Psychic)']);
-    state.units.push(farseer);
-
-    aeldariCommandEnd(state, 0);
-    expect(state.players[0].fateDice).toEqual([6, 6, 4]); // 2 was changed to 6
-  });
-
-  it('Guardian Defenders on objective gain Fate die on 4+ at Command End', () => {
-    state.players[0].fateDice = [3];
-    const guardians = createUnit('u-guardians', 'Guardian Defenders', 0, 10, 10, ['Defenders of the Shrines']);
-    state.units.push(guardians);
-
-    // Call command end - may gain on 4+
-    aeldariCommandEnd(state, 0);
-    // Fate dice should either be length 1 or 2
-    expect(state.players[0].fateDice!.length).toBeGreaterThanOrEqual(1);
   });
 
   it('tryFateDie intelligently substitutes for charge when high die available', () => {

@@ -839,6 +839,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   const ddOn = dd ? unitFlags(s, u).deadlyDemiseOn : 6; // worked out while the model still stands
   m.dead = true;
   m.wounds = 0;
+  (u.used ??= {}).lostModel = `${s.turn}:${s.phase}`;
   (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || m.keywords.includes('CHARACTER'), W: m.profile.W });
   if (u.transport && m.keywords.includes('TRANSPORT')) transportHook?.(s, u, m);
   // Vengeance for the Omnissiah: a friendly ASTRA MILITARUM VEHICLE destroyed within 12"
@@ -849,6 +850,8 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   }
   // Servitors: the Cenobyte Servitors are destroyed with Chaplain Grimaldus
   if (/grimaldus/i.test(m.name) && u.abilities.some((a) => a.name === 'Servitors')) for (const x of alive(u).filter((n) => /servitor/i.test(n.name))) { x.dead = true; x.wounds = 0; }
+  // Crewed Platform: the weapon platforms go when the last crew model does
+  if (u.abilities.some((a) => a.name === 'Crewed Platform') && !alive(u).some((n) => !/platform/i.test(n.name))) for (const x of alive(u)) { x.dead = true; x.wounds = 0; }
   if (!alive(u).length) {
     u.status = 'destroyed';
     s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id, killerId: s.attack?.attackerId, phase: s.phase });
@@ -1005,7 +1008,7 @@ export function applyDamage(s: GameState) {
           p.damageLines.push(`${rescued.rule}: Damage substituted with ${rescued.die} [${rescued.v}] = ${dr.total}`);
         }
       }
-      if ((p.rerollDamage || (p.rerollDamageOne && dr.total < m.wounds)) && dr.dice.length && dr.total < exprAverage(p.damage)) {
+      if ((p.rerollDamage || (p.rerollDamageOne && dr.total < m.wounds) || (p.rerollDamage1 && dr.dice.includes(1))) && dr.dice.length && dr.total < exprAverage(p.damage)) {
         const again = rollExpr(s, p.damage); p.damageLines.push(`re-roll damage ${dr.total}→${again.total}`); dr = again; p.rerollDamageOne = false;
       } else if (dr.dice.length && dr.total < exprAverage(p.damage) && dr.total < m.wounds && freeDamageHook?.(s)) {
         // a free "hit, wound or damage" re-roll not used on the hit or wound dice goes on a low damage roll

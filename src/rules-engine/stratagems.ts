@@ -13,6 +13,16 @@ import qtStrats from '../../data/stratagems/QT.json';
 import aoiStrats from '../../data/stratagems/AoI.json';
 import amStrats from '../../data/stratagems/AM.json';
 import tyrStrats from '../../data/stratagems/TYR.json';
+import aeStrats from '../../data/stratagems/AE.json';
+import asStrats from '../../data/stratagems/AS.json';
+import admStrats from '../../data/stratagems/AdM.json';
+import cdStrats from '../../data/stratagems/CD.json';
+import druStrats from '../../data/stratagems/DRU.json';
+import gcStrats from '../../data/stratagems/GC.json';
+import gkStrats from '../../data/stratagems/GK.json';
+import lovStrats from '../../data/stratagems/LoV.json';
+import necStrats from '../../data/stratagems/NEC.json';
+import tauStrats from '../../data/stratagems/TAU.json';
 import { parseAbilityText } from './abilityText';
 import { emit, reactWorth, runStratSpecial, targetFilter } from '../engine/events';
 import { ldTest, runActions, runDeathQueue, shockTest, type Action } from './activations';
@@ -136,6 +146,16 @@ const BOOKS: Record<string, Record<string, StratRule>> = {
   AoI: (aoiStrats as unknown as { rules: Record<string, StratRule> }).rules,
   AM: (amStrats as unknown as { rules: Record<string, StratRule> }).rules,
   TYR: (tyrStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  AE: (aeStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  AS: (asStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  AdM: (admStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  CD: (cdStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  DRU: (druStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  GC: (gcStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  GK: (gkStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  LoV: (lovStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  NEC: (necStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  TAU: (tauStrats as unknown as { rules: Record<string, StratRule> }).rules,
 };
 
 const OFFENCE_BUFFS: BuffKind[] = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
@@ -500,8 +520,9 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
   const holder = own[0] ?? s.units.find((x) => x.owner === p && x.status === 'board');
   if (rule.do?.length && holder) {
     for (const x of own.length ? own : [holder]) {
-      if (enemies.length) for (const e of enemies) runActions(s, st.name, x, rule.do, e);
-      else runActions(s, st.name, x, rule.do, x);
+      const ctx = { deadModelId: use.ctx?.modelId };
+      if (enemies.length) for (const e of enemies) runActions(s, st.name, x, rule.do, e, ctx);
+      else runActions(s, st.name, x, rule.do, x, ctx);
     }
   }
   for (const sp of rule.special ?? []) runSpecial(s, p, sp, st.name, own[0] ?? holder, enemies[0], use.ctx ?? {});

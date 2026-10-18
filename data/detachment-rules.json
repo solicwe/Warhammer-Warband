@@ -5886,11 +5886,205 @@
     },
     "Strands of Fate": {
       "auto": "full",
-      "armyRule": true
+      "armyRule": true,
+      "code": true,
+      "manual": "Six Fate dice; the app's re-roll offer is not made (the first roll is kept)"
     },
     "Battle Focus": {
       "auto": "full",
-      "armyRule": true
+      "armyRule": true,
+      "code": true,
+      "acts": [
+        {
+          "when": "movement",
+          "if": [
+            "focusReady:swift"
+          ],
+          "label": "Swift as the Wind: +2\" Move this phase (1 Battle Focus token)",
+          "botUse": "always",
+          "do": [
+            {
+              "on": "self",
+              "ae": "focus:swift"
+            },
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "move": 2
+                }
+              ],
+              "until": "phase"
+            },
+            {
+              "on": "self",
+              "if": [
+                "detachment:Warhost"
+              ],
+              "buff": [
+                {
+                  "move": 1
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "movement",
+          "if": [
+            "focusReady:flitting"
+          ],
+          "label": "Flitting Shadows: no Fire Overwatch at this unit this turn (1 token)",
+          "botUse": "never",
+          "do": [
+            {
+              "on": "self",
+              "ae": "focus:flitting"
+            },
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "noSnapTarget": true
+                }
+              ],
+              "until": "turn"
+            }
+          ]
+        },
+        {
+          "when": "movement",
+          "if": [
+            "focusReady:starEngines",
+            "kw:VEHICLE"
+          ],
+          "label": "Star Engines: ranged weapons [ASSAULT] this turn (1 token)",
+          "botUse": "never",
+          "do": [
+            {
+              "on": "self",
+              "ae": "focus:starEngines"
+            },
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "attack": "ranged",
+                  "abilities": [
+                    "assault"
+                  ]
+                }
+              ],
+              "until": "turn"
+            }
+          ]
+        },
+        {
+          "when": "selectedToFight",
+          "if": [
+            "focusReady:suddenStrike"
+          ],
+          "label": "Sudden Strike: Pile-in and Consolidation up to 6\" (1 token)",
+          "botUse": "always",
+          "do": [
+            {
+              "on": "self",
+              "ae": "focus:suddenStrike"
+            },
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "pileIn": 6,
+                  "consolidate": 6
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "enemyFellBack",
+          "if": [
+            "focusReady:opportunity",
+            "!kw:TITANIC"
+          ],
+          "label": "Opportunity Seized: Normal move of up to D6+1\" (1 token)",
+          "botUse": "never",
+          "do": [
+            {
+              "on": "self",
+              "ae": "focus:opportunity"
+            },
+            {
+              "on": "self",
+              "if": [
+                "!detachment:Warhost"
+              ],
+              "move": "D6+1"
+            },
+            {
+              "on": "self",
+              "if": [
+                "detachment:Warhost"
+              ],
+              "move": "D6+2"
+            }
+          ]
+        },
+        {
+          "when": "shotByEnemy",
+          "if": [
+            "focusReady:fadeBack",
+            "!kw:TITANIC",
+            "!all:detachment:Devoted of Ynnead&&kw:YNNARI"
+          ],
+          "label": "Fade Back: Normal move of up to D6+1\" (1 token)",
+          "botUse": "never",
+          "do": [
+            {
+              "on": "self",
+              "ae": "focus:fadeBack"
+            },
+            {
+              "on": "self",
+              "if": [
+                "!detachment:Warhost"
+              ],
+              "move": "D6+1"
+            },
+            {
+              "on": "self",
+              "if": [
+                "detachment:Warhost"
+              ],
+              "move": "D6+2"
+            }
+          ]
+        },
+        {
+          "when": "shotByEnemy",
+          "if": [
+            "focusReady:fadeBack",
+            "!kw:TITANIC",
+            "detachment:Devoted of Ynnead",
+            "kw:YNNARI"
+          ],
+          "label": "Fade Back (Lethal Surge): surge move of up to D6+1\" (1 token)",
+          "botUse": "never",
+          "do": [
+            {
+              "on": "self",
+              "ae": "focus:fadeBack"
+            },
+            {
+              "on": "self",
+              "surge": "D6+1"
+            }
+          ]
+        }
+      ]
     },
     "Battle Host": {
       "auto": "full",
@@ -5914,14 +6108,16 @@
       ]
     },
     "Warhost": {
-      "auto": "full"
+      "auto": "full",
+      "code": true,
+      "manual": "One more Battle Focus token each round, +1\" on Swift as the Wind and +1 to the D6 of Agile Manoeuvres"
     },
     "Guardian Battlehost": {
       "auto": "full",
       "effects": [
         {
           "units": [
-            "GUARDIAN"
+            "DIRE AVENGERS|GUARDIANS|SUPPORT WEAPON|WAR WALKERS"
           ],
           "if": [
             "objectiveEitherWay"
@@ -5932,12 +6128,136 @@
     },
     "Aspect Host": {
       "auto": "full",
-      "effects": [
+      "acts": [
         {
+          "when": "selectedToShoot",
+          "auto": true,
+          "botOnly": true,
           "units": [
-            "ASPECT WARRIOR"
+            "ASPECT WARRIORS|AVATAR OF KHAINE"
           ],
-          "reroll": "hits1"
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "reroll": "hits1"
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "selectedToFight",
+          "auto": true,
+          "botOnly": true,
+          "units": [
+            "ASPECT WARRIORS|AVATAR OF KHAINE"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "reroll": "hits1"
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "selectedToShoot",
+          "units": [
+            "ASPECT WARRIORS|AVATAR OF KHAINE"
+          ],
+          "if": [
+            "!marked:pathWarrior"
+          ],
+          "label": "Path of the Warrior: re-roll Hit rolls of 1",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "reroll": "hits1"
+                }
+              ],
+              "until": "phase",
+              "mark": "pathWarrior"
+            }
+          ],
+          "botUse": "never"
+        },
+        {
+          "when": "selectedToShoot",
+          "units": [
+            "ASPECT WARRIORS|AVATAR OF KHAINE"
+          ],
+          "if": [
+            "!marked:pathWarrior"
+          ],
+          "label": "Path of the Warrior: re-roll Wound rolls of 1",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "reroll": "wounds1"
+                }
+              ],
+              "until": "phase",
+              "mark": "pathWarrior"
+            }
+          ],
+          "botUse": "never"
+        },
+        {
+          "when": "selectedToFight",
+          "units": [
+            "ASPECT WARRIORS|AVATAR OF KHAINE"
+          ],
+          "if": [
+            "!marked:pathWarrior"
+          ],
+          "label": "Path of the Warrior: re-roll Hit rolls of 1",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "reroll": "hits1"
+                }
+              ],
+              "until": "phase",
+              "mark": "pathWarrior"
+            }
+          ],
+          "botUse": "never"
+        },
+        {
+          "when": "selectedToFight",
+          "units": [
+            "ASPECT WARRIORS|AVATAR OF KHAINE"
+          ],
+          "if": [
+            "!marked:pathWarrior"
+          ],
+          "label": "Path of the Warrior: re-roll Wound rolls of 1",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "reroll": "wounds1"
+                }
+              ],
+              "until": "phase",
+              "mark": "pathWarrior"
+            }
+          ],
+          "botUse": "never"
         }
       ]
     },
@@ -5946,27 +6266,90 @@
       "effects": [
         {
           "units": [
-            "MOUNTED|VEHICLE"
+            "MOUNTED|VYPERS"
           ],
-          "abilities": [
-            "assault"
+          "arriveFromRound": 1
+        },
+        {
+          "units": [
+            "WINDRIDERS"
+          ],
+          "addKeywords": [
+            "BATTLELINE"
+          ]
+        }
+      ],
+      "acts": [
+        {
+          "when": "opponentTurnEnd",
+          "units": [
+            "ASURYANI",
+            "MOUNTED|VYPERS"
+          ],
+          "per": "army",
+          "limit": "turn",
+          "uses": "battleSize",
+          "if": [
+            "notEngaged"
+          ],
+          "label": "Ride the Wind: into Strategic Reserves",
+          "botUse": "never",
+          "do": [
+            {
+              "on": "self",
+              "reserves": true
+            }
           ]
         }
       ]
     },
     "Spirit Conclave": {
       "auto": "full",
+      "code": true,
       "effects": [
         {
           "units": [
             "WRAITH CONSTRUCT"
           ],
           "if": [
-            "near:6:SPIRITSEER"
+            "targetMarked:vengeful"
           ],
-          "reroll": "hits1"
+          "hit": 1,
+          "wound": 1
+        },
+        {
+          "units": [
+            "WRAITHBLADES|WRAITHGUARD"
+          ],
+          "addKeywords": [
+            "BATTLELINE"
+          ]
         }
-      ]
+      ],
+      "acts": [
+        {
+          "when": "onDeath",
+          "modelDeath": true,
+          "auto": true,
+          "units": [
+            "ASURYANI",
+            "PSYKER"
+          ],
+          "target": {
+            "side": "enemy",
+            "attacker": true
+          },
+          "do": [
+            {
+              "on": "target",
+              "buff": [],
+              "until": "battle",
+              "mark": "vengeful"
+            }
+          ]
+        }
+      ],
+      "manual": "Spirit Guides: Wraith units within 12\" of an ASURYANI PSYKER can use Battle Focus"
     },
     "The Shadow of Chaos": {
       "auto": "full",
@@ -6392,6 +6775,216 @@
     "Echojump": {
       "auto": "full",
       "desc": "Interceptor Squads can make a D6\" surge move after shooting."
+    },
+    "Agile Manoeuvres": {
+      "auto": "full",
+      "armyRule": true,
+      "code": true,
+      "manual": "Part of Battle Focus: the manoeuvres are buttons when their trigger happens"
+    },
+    "Disparate Paths": {
+      "auto": "full",
+      "armyRule": true,
+      "info": true,
+      "manual": "Army building: Harlequins units can be included"
+    },
+    "Armoured Warhost": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "AELDARI",
+            "VEHICLE"
+          ],
+          "attack": "ranged",
+          "abilities": [
+            "assault"
+          ]
+        }
+      ]
+    },
+    "Ghosts of the Webway": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "HARLEQUINS"
+          ],
+          "chargeThroughAll": true
+        },
+        {
+          "units": [
+            "TROUPE"
+          ],
+          "addKeywords": [
+            "BATTLELINE"
+          ]
+        },
+        {
+          "units": [
+            "TROUPE"
+          ],
+          "ocSet": 2
+        }
+      ],
+      "manual": "Army building: up to three Death Jesters, Shadowseers and Troupe Masters; a HARLEQUINS CHARACTER can be the WARLORD"
+    },
+    "Devoted of Ynnead": {
+      "auto": "full",
+      "acts": [
+        {
+          "when": "friendlyDeath",
+          "needUnitDestroyed": true,
+          "range": 6,
+          "deathUnits": [
+            "YNNARI"
+          ],
+          "oppShooting": true,
+          "units": [
+            "YNNARI",
+            "INFANTRY|MOUNTED"
+          ],
+          "per": "army",
+          "limit": "phase",
+          "label": "Lethal Intent: Normal move of up to D6+1\"",
+          "do": [
+            {
+              "on": "self",
+              "move": "D6+1"
+            }
+          ],
+          "auto": true
+        },
+        {
+          "when": "fightStart",
+          "auto": true,
+          "units": [
+            "YNNARI",
+            "!TITANIC"
+          ],
+          "per": "army",
+          "limit": "phase",
+          "if": [
+            "belowStarting"
+          ],
+          "label": "Lethal Reprisal: Fights First",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "fightsFirst": true
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ],
+      "manual": "Lethal Intent is offered when the YNNARI unit is destroyed (not at the end of the phase); Lethal Surge is the YNNARI Fade Back"
+    },
+    "Seer Council": {
+      "auto": "full",
+      "code": true,
+      "manual": "Fate dice of the shown value make Presentiment of Dread (1), Forewarned (2), Unshrouded Truth (3), Fate Inescapable (4), Isha's Fury (5) and Psychic Shield (6) 1CP cheaper"
+    },
+    "Serpent’s Brood": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "HARLEQUINS",
+            "MOUNTED|VEHICLE"
+          ],
+          "abilities": [
+            "sustained hits 1"
+          ]
+        },
+        {
+          "units": [
+            "HARLEQUINS"
+          ],
+          "if": [
+            "disembarkedThisTurn"
+          ],
+          "abilities": [
+            "sustained hits 1"
+          ]
+        },
+        {
+          "units": [
+            "TROUPE"
+          ],
+          "addKeywords": [
+            "BATTLELINE"
+          ]
+        },
+        {
+          "units": [
+            "TROUPE"
+          ],
+          "ocSet": 2
+        }
+      ],
+      "manual": "Army building: up to three Death Jesters, Shadowseers and Troupe Masters; a HARLEQUINS CHARACTER can be the WARLORD"
+    },
+    "Eldritch Raiders": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "AELDARI"
+          ],
+          "eligible": [
+            "chargeAfterAdvance"
+          ]
+        },
+        {
+          "units": [
+            "ANHRATHE|RANGERS|SHROUD RUNNERS"
+          ],
+          "rerollAdvance": true
+        }
+      ],
+      "manual": "Veterans of the Void: army building (one Corsair Enhancement per Anhrathe unit)"
+    },
+    "Corsair Coterie": {
+      "auto": "full",
+      "code": true,
+      "manual": "Relentless Raiders: enemy units ending a move on your objectives roll for D3 mortal wounds; Void Thieves: ANHRATHE units keep objectives at the end of each phase"
+    },
+    "Fateful Performance": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "HARLEQUINS"
+          ],
+          "chargeThroughAll": true
+        }
+      ]
+    },
+    "Path of the Outcast": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "RANGERS|SHROUD RUNNERS"
+          ],
+          "detection": 6
+        }
+      ]
+    },
+    "Twilight Flickers": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "HARLEQUINS"
+          ],
+          "stealth": true
+        }
+      ]
     }
   }
 }

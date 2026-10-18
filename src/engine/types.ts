@@ -162,6 +162,8 @@ export type Phase = 'formations' | 'deploy' | 'scouts' | 'command' | 'movement' 
 export type MoveKind = 'stationary' | 'normal' | 'advance' | 'fallback' | 'ingress' | 'charge' | 'pileIn' | 'consolidate' | 'deploy' | 'scout' | 'extra' | 'surge';
 
 export interface ModelState {
+  /** Shadow Field: the invulnerable save is gone for the rest of the battle */
+  shadowFieldDown?: boolean;
   id: string;
   name: string;
   profile: ModelProfileData;
@@ -372,6 +374,12 @@ export interface PlayerState {
   strandsOfFateUsed?: string[];
   /** Aeldari: Battle Focus tokens */
   battleFocusTokens?: number;
+  /** Agile Manoeuvres performed this phase (manoeuvre → phase key) */
+  focusUsed?: Record<string, string>;
+  /** Seer Council: Fate dice that make some stratagems cheaper */
+  seerFate?: number[];
+  /** Sonic Destruction: Vibro Cannon Platform units that shot each enemy unit this phase ("<phase>:<unit id>") */
+  vibroShots?: Record<string, string[]>;
   /** Leagues of Votann: Yield Points (Prioritised Efficiency) */
   yieldPoints?: number;
   /** Leagues of Votann: Active stance */
@@ -509,6 +517,7 @@ export interface Pool {
   rerollAllWounds?: boolean;
   rerollDamage?: boolean;
   rerollDamageOne?: boolean; // one low damage roll of this pool may be re-rolled (Aquilon Optics)
+  rerollDamage1?: boolean; // Damage rolls of 1 are re-rolled
   /** variable numbers of attacks rolled for this pool (D6, 2D3+1 …), so one can be re-rolled */
   attackRolls?: { expr: string; total: number; rerolled?: boolean }[];
   /** Command Re-roll the first damage roll below average that would not already kill the model */

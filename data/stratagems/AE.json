@@ -1,0 +1,1420 @@
+{
+  "_comment": "Stratagems written by hand (key: the card name, or NAME@Detachment); the rest are read from the card text.",
+  "rules": {
+    "SOULSIGHT@Armoured Warhost": {
+      "targetKw": [
+        "AELDARI",
+        "VEHICLE"
+      ],
+      "effects": [
+        {
+          "freeDie": [
+            {
+              "kind": "reroll",
+              "stage": "hit",
+              "limit": "phase"
+            },
+            {
+              "kind": "reroll",
+              "stage": "wound",
+              "limit": "phase"
+            },
+            {
+              "kind": "reroll",
+              "stage": "damage",
+              "limit": "phase"
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "LAYERED WARDS": {
+      "targetKw": [
+        "AELDARI",
+        "VEHICLE"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "fnp": 5,
+            "fnpVs": "mortal"
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "VECTORED ENGINES": {
+      "targetKw": [
+        "AELDARI",
+        "VEHICLE"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "LIGHTNING-FAST REACTIONS": {
+      "targetKw": [
+        "ASURYANI",
+        "!WRAITH CONSTRUCT"
+      ],
+      "buffs": [
+        "enemyHit-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "BLITZING FIREPOWER": {
+      "targetKw": [
+        "ASURYANI"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "within:12"
+          ],
+          "abilities": [
+            "sustained hits 1"
+          ]
+        },
+        {
+          "attack": "ranged",
+          "if": [
+            "within:12",
+            "sustainedWeapon"
+          ],
+          "critHitOn": 5
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "FEIGNED RETREAT": {
+      "targetKw": [
+        "ASURYANI"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "SKYBORNE SANCTUARY": {
+      "targetKw": [
+        "ASURYANI"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!engaged"
+      ],
+      "special": [
+        "embark"
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "WEBWAY TUNNEL": {
+      "targetKw": [
+        "ASURYANI",
+        "INFANTRY"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged",
+        "nearEdge:9"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "FIRE AND FADE": {
+      "targetKw": [
+        "ASURYANI",
+        "INFANTRY",
+        "!AIRCRAFT",
+        "!ASURMEN",
+        "!WRAITH CONSTRUCT"
+      ],
+      "unitIf": [
+        "shotThisTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "D6+1",
+          "noCharge": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SPIRALLING EVASION": {
+      "targetKw": [
+        "ASURYANI",
+        "MOUNTED|VYPERS"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "inv": 4
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "FOCUSED FIREPOWER": {
+      "targetKw": [
+        "ASURYANI",
+        "MOUNTED|VYPERS"
+      ],
+      "buffs": [
+        "ap+1"
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "DEATH FROM ON HIGH": {
+      "targetKw": [
+        "ASURYANI",
+        "MOUNTED|VYPERS"
+      ],
+      "unitIf": [
+        "setUpThisTurn"
+      ],
+      "buffs": [
+        "rerollWounds"
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "DARING RIDERS": {
+      "targetFrom": "reserves",
+      "targetKw": [
+        "ASURYANI",
+        "MOUNTED|VYPERS"
+      ],
+      "effects": [
+        {
+          "deepStrike": true,
+          "deepStrikeRange": 6
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "note": "Set up more than 6\" away; it cannot charge this turn (the card: only within 8\")",
+      "status": "auto"
+    },
+    "WIND OF BLADES": {
+      "targetKw": [
+        "ASURYANI",
+        "MOUNTED|VYPERS"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterAdvance",
+            "shootAfterFallBack",
+            "chargeAfterAdvance",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "OVERFLIGHT": {
+      "targetKw": [
+        "ASURYANI",
+        "MOUNTED"
+      ],
+      "unitIf": [
+        "destroyedUnitThisPhase"
+      ],
+      "do": [
+        {
+          "move": "7"
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "WRAITHBONE ARMOUR": {
+      "targetKw": [
+        "WRAITH CONSTRUCT",
+        "!TITANIC"
+      ],
+      "buffs": [
+        "damage-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "SEER’S EYE": {
+      "targetKw": [
+        "WRAITH CONSTRUCT"
+      ],
+      "unitIf": [
+        "nearModels:12:AELDARI+PSYKER"
+      ],
+      "effects": [
+        {
+          "ignoreMods": true
+        }
+      ],
+      "bot": "attack",
+      "note": "Its attacks ignore modifiers (the card: to AP and Damage, against the selected unit)",
+      "status": "auto"
+    },
+    "CRUSHING STRIDES": {
+      "targetKw": [
+        "WRAITHBLADES|WRAITHLORD|WRAITHKNIGHT"
+      ],
+      "unitIf": [
+        "charged"
+      ],
+      "enemy": {
+        "engaged": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "kw:WRAITHBLADES"
+          ],
+          "mortalRoll": {
+            "on": 3,
+            "all": true
+          }
+        },
+        {
+          "on": "target",
+          "if": [
+            "kw:WRAITHLORD"
+          ],
+          "mortalRoll": {
+            "on": 3,
+            "n": 4
+          }
+        },
+        {
+          "on": "target",
+          "if": [
+            "kw:WRAITHKNIGHT"
+          ],
+          "mortalRoll": {
+            "on": 3,
+            "n": 6
+          }
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "BLADES FROM BEYOND": {
+      "targetKw": [
+        "WRAITHBLADES|WRAITHLORD|WRAITHKNIGHT"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "devastating wounds"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SPIRIT TOKEN": {
+      "targetKw": [
+        "WRAITHBLADES|WRAITHGUARD"
+      ],
+      "unitIf": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "secure": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SOUL BRIDGE": {
+      "targetKw": [
+        "WRAITHBLADES|WRAITHGUARD|WRAITHLORD"
+      ],
+      "effects": [
+        {
+          "if": [
+            "kw:WRAITHBLADES|WRAITHGUARD",
+            "!nearModels:12:AELDARI+PSYKER"
+          ],
+          "ldSet": 6,
+          "hit": 1
+        },
+        {
+          "if": [
+            "kw:WRAITHLORD",
+            "!nearModels:12:AELDARI+PSYKER"
+          ],
+          "ldSet": 6,
+          "skill": 1
+        }
+      ],
+      "do": [
+        {
+          "buff": [],
+          "until": "nextCommand",
+          "mark": "soulBridge"
+        }
+      ],
+      "until": "nextCommand",
+      "bot": "never",
+      "status": "auto"
+    },
+    "WARDING SALVOES": {
+      "targetKw": [
+        "DIRE AVENGERS|GUARDIANS"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetOnObjective"
+          ],
+          "reroll": "wounds"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SHIELD NODES": {
+      "targetKw": [
+        "DIRE AVENGERS|GUARDIANS"
+      ],
+      "unitIf": [
+        "onObjective"
+      ],
+      "buffs": [
+        "enemyWound-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "BLADES OF ASURYAN": {
+      "targetKw": [
+        "DIRE AVENGERS|GUARDIANS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "pistol"
+          ]
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "VAUL’S VENGEANCE": {
+      "targetKw": [
+        "WAR WALKERS"
+      ],
+      "react": "ownDestroyed",
+      "killedKw": "DIRE AVENGERS|GUARDIANS",
+      "enemy": {
+        "killer": true
+      },
+      "special": [
+        "shootAt"
+      ],
+      "limit": "round",
+      "botReact": "shoot",
+      "status": "auto"
+    },
+    "TIME TO STRIKE": {
+      "targetKw": [
+        "STORM GUARDIANS"
+      ],
+      "effects": [
+        {
+          "advanceFixed": 6
+        },
+        {
+          "eligible": [
+            "shootAfterAdvance",
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "COST OF VICTORY": {
+      "targetKw": [
+        "GUARDIANS"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        },
+        {
+          "revive": 99
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "STAGED DEATH": {
+      "react": "modelDestroyed",
+      "ctxModel": "CHARACTER",
+      "targetKw": [
+        "HARLEQUINS"
+      ],
+      "do": [
+        {
+          "reviveLater": {
+            "on": 1,
+            "wounds": 1,
+            "half": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "EXIT THE STAGE": {
+      "targetKw": [
+        "HARLEQUINS"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "BLOODY DANCE": {
+      "targetKw": [
+        "HARLEQUINS",
+        "INFANTRY|MOUNTED"
+      ],
+      "react": "enemyChargePhaseEnd",
+      "unitIf": [
+        "!engaged"
+      ],
+      "enemy": {
+        "range": 6
+      },
+      "special": [
+        "charge"
+      ],
+      "botReact": "charge",
+      "status": "auto"
+    },
+    "TRICKSTERS’ RETORT": {
+      "targetKw": [
+        "TROUPE"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "MOCKING FLIGHT": {
+      "targetKw": [
+        "HARLEQUINS"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "HEROES’ FALL@Ghosts of the Webway": {
+      "targetKw": [
+        "HARLEQUINS"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 4
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "MACABRE RESILIENCE": {
+      "targetKw": [
+        "YNNARI",
+        "INFANTRY|MOUNTED",
+        "!WRAITH CONSTRUCT"
+      ],
+      "buffs": [
+        "enemyWound-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "EMISSARIES OF YNNEAD": {
+      "targetKw": [
+        "YNNARI",
+        "INFANTRY"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "reroll": "hits1"
+        },
+        {
+          "attack": "melee",
+          "if": [
+            "belowStarting"
+          ],
+          "reroll": "hits"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SOULSIGHT@Devoted of Ynnead": {
+      "targetKw": [
+        "YNNARI"
+      ],
+      "buffs": [
+        "lethal",
+        "ignoresCover"
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "PARTING THE VEIL": {
+      "targetKw": [
+        "YNNARI"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 1
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "DEATH ANSWERS DEATH": {
+      "targetKw": [
+        "YNNARI",
+        "!WRAITH CONSTRUCT"
+      ],
+      "react": "shootingPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "lostModelsThisPhase"
+      ],
+      "enemy": {
+        "visible": true
+      },
+      "special": [
+        "shootAt"
+      ],
+      "botReact": "shoot",
+      "status": "auto"
+    },
+    "PALL OF DREAD": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "YNNARI"
+      ],
+      "do": [
+        {
+          "secureDead": true
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "FATE INESCAPABLE": {
+      "targetKw": [
+        "ASURYANI",
+        "INFANTRY",
+        "!WRAITH CONSTRUCT"
+      ],
+      "unitIf": [
+        "nearModels:9:ASURYANI+PSYKER"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "ignores cover"
+          ],
+          "critWoundAp": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ISHA’S FURY": {
+      "react": "enemyMoved",
+      "targetKw": [
+        "ASURYANI",
+        "PSYKER"
+      ],
+      "unitIf": [
+        "nearLast:9"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 3,
+            "n": 6
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "UNSHROUDED TRUTH": {
+      "targetKw": [
+        "ASURYANI",
+        "INFANTRY",
+        "!WRAITH CONSTRUCT"
+      ],
+      "unitIf": [
+        "notMovedYet",
+        "!setUpThisTurn",
+        "nearModels:9:ASURYANI+PSYKER"
+      ],
+      "do": [
+        {
+          "reserves": true
+        },
+        {
+          "earlyArrival": true
+        }
+      ],
+      "effects": [
+        {
+          "deepStrike": true
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "note": "It must arrive this phase (by Deep Strike)",
+      "status": "auto"
+    },
+    "PRESENTIMENT OF DREAD": {
+      "targetKw": [
+        "ASURYANI",
+        "PSYKER"
+      ],
+      "enemy": {
+        "range": 18,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": -1
+        }
+      ],
+      "bot": "never",
+      "botIf": [
+        "onBattlefield"
+      ],
+      "status": "auto"
+    },
+    "PSYCHIC SHIELD": {
+      "targetKw": [
+        "ASURYANI",
+        "INFANTRY",
+        "!WRAITH CONSTRUCT"
+      ],
+      "unitIf": [
+        "nearModels:9:ASURYANI+PSYKER"
+      ],
+      "effects": [
+        {
+          "targetableWithin": 18
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "FOREWARNED": {
+      "targetKw": [
+        "ASURYANI",
+        "INFANTRY",
+        "!WRAITH CONSTRUCT"
+      ],
+      "unitIf": [
+        "nearModels:9:ASURYANI+PSYKER"
+      ],
+      "buffs": [
+        "enemyHit-1",
+        "enemyWound-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "WARRIOR FOCUS": {
+      "targetKw": [
+        "ASPECT WARRIORS|AVATAR OF KHAINE"
+      ],
+      "effects": [
+        {
+          "ignoreMods": true
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "PRETERNATURAL PRECISION": {
+      "targetKw": [
+        "ASPECT WARRIORS"
+      ],
+      "choice": [
+        {
+          "label": "[LETHAL HITS]",
+          "buffs": [
+            "lethal"
+          ]
+        },
+        {
+          "label": "[SUSTAINED HITS 1]",
+          "buffs": [
+            "sustained1"
+          ]
+        },
+        {
+          "label": "[IGNORES COVER]",
+          "buffs": [
+            "ignoresCover"
+          ]
+        },
+        {
+          "label": "Spend an Aspect Shrine token: [LETHAL HITS] and [SUSTAINED HITS 1]",
+          "buffs": [
+            "lethal",
+            "sustained1"
+          ],
+          "if": [
+            "hasAbility:Aspect Shrine Token"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "note": "The token option uses up the unit's Aspect Shrine token",
+      "status": "auto"
+    },
+    "DOOM INESCAPABLE": {
+      "targetKw": [
+        "AVATAR OF KHAINE"
+      ],
+      "effects": [
+        {
+          "weapon": "Wailing Doom",
+          "damageTo": 8
+        }
+      ],
+      "bot": "attack",
+      "note": "Wailing Doom: Range 18\" (the profile's own range is used), Damage 8",
+      "status": "auto"
+    },
+    "TO THEIR FINAL BREATH": {
+      "targetKw": [
+        "ASPECT WARRIORS|AVATAR OF KHAINE"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 4
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "KHAINE’S VENGEANCE": {
+      "targetKw": [
+        "ASPECT WARRIORS|AVATAR OF KHAINE"
+      ],
+      "effects": [
+        {
+          "forceDesperate": true
+        },
+        {
+          "if": [
+            "targetBattleShocked"
+          ],
+          "desperateMinus": 1
+        }
+      ],
+      "bot": "never",
+      "until": "phase",
+      "status": "auto"
+    },
+    "SKYBORNE SANCTUARY@Aspect Host": {
+      "targetKw": [
+        "ASURYANI"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!engaged"
+      ],
+      "special": [
+        "embark"
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "VENOMOUS WRATH": {
+      "targetKw": [
+        "HARLEQUINS",
+        "VEHICLE"
+      ],
+      "unitIf": [
+        "shotThisTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "6",
+          "noCharge": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "FANGS OF THE BROOD": {
+      "targetKw": [
+        "TROUPE"
+      ],
+      "effects": [
+        {
+          "reroll": "hits1",
+          "wound": 1,
+          "defend": {
+            "hit": -1
+          }
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "WEAVING STRIDE": {
+      "targetKw": [
+        "HARLEQUINS",
+        "INFANTRY"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "WEAVERS’ COILS": {
+      "targetKw": [
+        "HARLEQUINS",
+        "MOUNTED"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "ownTurn"
+      ],
+      "do": [
+        {
+          "if": [
+            "!engaged"
+          ],
+          "move": "M"
+        },
+        {
+          "if": [
+            "engaged"
+          ],
+          "move": "6"
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SKYWARD LUNGE": {
+      "targetKw": [
+        "HARLEQUINS",
+        "VEHICLE|MOUNTED"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "STRIKING STRIDE": {
+      "targetKw": [
+        "HARLEQUINS"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "NO PREY TOO BIG": {
+      "targetKw": [
+        "ANHRATHE|RANGERS|SHROUD RUNNERS"
+      ],
+      "effects": [
+        {
+          "if": [
+            "attackSLessT"
+          ],
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "YRIEL’S EXAMPLE": {
+      "targetKw": [
+        "AELDARI",
+        "INFANTRY",
+        "!WRAITH CONSTRUCT"
+      ],
+      "buffs": [
+        "fnp5"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "RUTHLESS KILLERS": {
+      "targetKw": [
+        "CORSAIR VOIDSCARRED"
+      ],
+      "effects": [
+        {
+          "damage": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "RAIDERS’ SPOILS": {
+      "targetKw": [
+        "ANHRATHE"
+      ],
+      "unitIf": [
+        "engaged"
+      ],
+      "effects": [
+        {
+          "oc": 1
+        }
+      ],
+      "until": "nextCommand",
+      "bot": "never",
+      "status": "auto"
+    },
+    "WITHDRAW AND REINFORCE": {
+      "targetKw": [
+        "ANHRATHE"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "if": [
+            "belowStarting"
+          ],
+          "revive": 99
+        },
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "IMPEDING FIRE": {
+      "targetKw": [
+        "RANGERS|SHROUD RUNNERS|STARFANGS"
+      ],
+      "react": "enemyChargePhaseStart",
+      "enemy": {
+        "range": 36,
+        "visible": true,
+        "notKw": [
+          "TITANIC"
+        ]
+      },
+      "enemyEffects": [
+        {
+          "chargeBonus": -2
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "PIRATES’ DUE": {
+      "targetKw": [
+        "AELDARI"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "reroll": "wounds1"
+        },
+        {
+          "attack": "melee",
+          "if": [
+            "kw:ANHRATHE",
+            "targetOnObjective"
+          ],
+          "reroll": "wounds"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "CLOAK AND SHADOW": {
+      "targetKw": [
+        "AELDARI",
+        "INFANTRY"
+      ],
+      "unitIf": [
+        "onControlledObjective"
+      ],
+      "effects": [
+        {
+          "stealth": true,
+          "targetableWithin": 18
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "VENGEFUL SORROW": {
+      "targetKw": [
+        "AELDARI",
+        "INFANTRY"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "lostToLast",
+        "!battleShocked",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "surge": "D6+1"
+        }
+      ],
+      "status": "auto"
+    },
+    "INTO THE BREACH": {
+      "targetKw": [
+        "ANHRATHE"
+      ],
+      "unitIf": [
+        "destroyedUnitThisPhase",
+        "shotThisTurn"
+      ],
+      "do": [
+        {
+          "move": "D6+1"
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "OUTCAST AMBUSH": {
+      "targetKw": [
+        "RANGERS|SHROUD RUNNERS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "ignores cover",
+            "rapid fire 1"
+          ],
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "LETHAL RUSE": {
+      "targetKw": [
+        "AELDARI"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "enemy": {
+        "range": 3
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "kw:ANHRATHE"
+          ],
+          "mortalRoll": {
+            "on": 4,
+            "n": 6
+          }
+        }
+      ],
+      "bot": "never",
+      "note": "The enemy unit: one your unit was engaged with at the start of the phase (pick it)",
+      "status": "auto"
+    },
+    "HEROES’ FALL@Fateful Performance": {
+      "targetKw": [
+        "HARLEQUINS"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 4
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "EXIT THE STAGE@Fateful Performance": {
+      "targetKw": [
+        "HARLEQUINS"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "DECEPTIVE FEINT": {
+      "targetKw": [
+        "HARLEQUINS",
+        "INFANTRY"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "D3+3"
+        }
+      ],
+      "status": "auto"
+    },
+    "NOMADS OF THE HIDDEN WAY": {
+      "targetKw": [
+        "RANGERS|SHROUD RUNNERS"
+      ],
+      "unitIf": [
+        "shotThisTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "D6",
+          "noCharge": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "CASTING BACK THE VEIL": {
+      "targetKw": [
+        "RANGERS|SHROUD RUNNERS"
+      ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "enemyEffects": [
+        {
+          "spotting": 6
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "note": "+6\" detection range against the enemy unit for the rest of the turn",
+      "status": "auto"
+    },
+    "ELDRITCH SUPPRESSION": {
+      "targetKw": [
+        "RANGERS|SHROUD RUNNERS"
+      ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "killedModelThisPhase"
+          ],
+          "shock": -1
+        },
+        {
+          "on": "target",
+          "if": [
+            "!killedModelThisPhase"
+          ],
+          "shock": 0
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "PHANTASMAL MIRAGE": {
+      "targetKw": [
+        "HARLEQUINS",
+        "VEHICLE"
+      ],
+      "unitIf": [
+        "shotThisTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "D6",
+          "noCharge": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "CAPTIVATING PERFORMANCE": {
+      "targetKw": [
+        "TROUPE"
+      ],
+      "unitIf": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "secure": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "PRESAGED REHEARSAL": {
+      "targetKw": [
+        "TROUPE"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "lance"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    }
+  }
+}

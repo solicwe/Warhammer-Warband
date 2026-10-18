@@ -795,6 +795,9 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string
   { name: "Kaptin's Hat", n: 3, infantryOnly: true }, // Orks: Wreckas enhancement
   { name: 'Liber Heresius', n: 3, infantryOnly: false },
   { name: 'Warrant of Trade', n: 3, infantryOnly: false, imperiumBattleline: true, rollD3: true },
+  { name: 'Prince of Corsairs', n: 3, infantryOnly: false, units: ['AELDARI'] }, // Aeldari: Prince Yriel
+  { name: 'Shedskin Raiment', n: 3, infantryOnly: false, units: ['HARLEQUINS'] },
+  { name: 'Veiled Hunter', n: 3, infantryOnly: true, units: ['SKITARII'] }, // Adeptus Mechanicus
 ];
 
 function redeployFor(s: GameState, p: PlayerId) {
@@ -811,7 +814,7 @@ export function redeployCandidates(s: GameState): UnitState[] {
       ? hasKw(u, 'BATTLELINE') && (hasKw(u, 'IMPERIUM') || u.factionKeywords.includes('IMPERIUM'))
       : r.source === 'Liber Heresius'
       ? hasKw(u, 'AGENTS OF THE IMPERIUM') || u.factionKeywords.includes('AGENTS OF THE IMPERIUM')
-      : isAstartes(u))
+      : r.units ? true : isAstartes(u))
     && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && (!r.units || r.units.some((k) => hasKw(u, k))) && !u.transport);
 }
 
@@ -1049,6 +1052,8 @@ export function endPhase(s: GameState) {
     openWindow(s, 'endOfMovement');
     if (!s.window) openWindow(s, 'startOfShooting');
   } else if (s.phase === 'shooting') {
+    if (phaseEndReactions(s, 'shootingPhaseEnd', [other(s.active), s.active])) return;
+    fireFor(s, 'shootingEnd', 'both');
     s.phase = 'charge';
     fireFor(s, 'chargeStart', s.active);
     emitReact(s, other(s.active), 'enemyChargePhaseStart', {});
@@ -1322,6 +1327,11 @@ export function beginMove(s: GameState, u: UnitState, kind: 'normal' | 'advance'
     addTimed(s, u, { e: { move: r <= 4 ? -2 : -3 }, label: 'Slowed', until: 'turn', by: other(u.owner) });
     log(s, `Slowed: ${u.name} rolled ${r} → −${r <= 4 ? 2 : 3}"`, 'roll', u.owner);
     applyMortalWounds(s, u, mw, 'Slowed (Stasis Bomb)');
+  }
+  if (f.snared) {
+    const mw = rollN(s, alive(u).length).filter((r) => r === 1).length;
+    log(s, `Snared: ${u.name} moves through the web → ${mw} mortal wound(s)`, 'roll', u.owner);
+    if (mw) applyMortalWounds(s, u, mw, 'Snared');
   }
   return onBoard(u);
 }

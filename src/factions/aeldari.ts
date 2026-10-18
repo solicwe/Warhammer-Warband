@@ -1,20 +1,19 @@
 // Aeldari army rules: Strands of Fate & Battle Focus.
 //
 // Strands of Fate (Faction Rule):
-//  - At the start of the battle, roll 6 D6 (or +3 if Eldrad Ulthran is in the army).
-//  - These form the player's Fate dice pool (fateDice).
+//  - At the start of the battle, roll six D6: the Fate dice pool.
 //  - Once per phase, before making a dice roll for a unit with Strands of Fate,
 //    substitute 1 Fate die for an unmodified roll:
 //    Advance, Battle-shock, Charge, Damage, Hit, Save, Wound.
-//  - Farseer (Branching Fates): Once per turn, change 1 Fate die to a 6.
-//  - Guardian Defenders (Defenders of the Shrines): on 4+ while holding an objective at end of Command phase, gain 1 Fate die.
-//  - Weeping Stones enhancement: roll 3+ when bearer destroys an enemy unit to gain 1 Fate die.
 //
 // Battle Focus (Faction Rule):
-//  - At the start of the battle round, receive Battle Focus tokens:
-//    Incursion: 2, Strike Force: 4. (Warhost detachment grants +1 token).
+//  - At the start of the battle round, receive 2 / 4 / 6 Battle Focus tokens (Incursion / Strike Force / Onslaught).
+//  - Spend one to let an eligible unit perform an Agile Manoeuvre: the manoeuvres are the rule's `acts` in
+//    data/detachment-rules.json, using the `focusReady:<manoeuvre>` condition and the `ae: "focus:<manoeuvre>"` action.
 import { d6, rollN } from '../engine/dice';
-import { alive, boardUnits, hasKw, log, onBoard, pushFx } from '../engine/state';
+import { alive, boardUnits, hasKw, log, onBoard, phaseKey, pushFx } from '../engine/state';
+import type { Active } from '../rules-engine/effects';
+import type { CombatMods } from '../engine/combatMods';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 
 export function isAeldariArmy(s: GameState, p: PlayerId): boolean {
@@ -54,97 +53,80 @@ export function gainFateDice(
   return gained;
 }
 
-/** Called at the start of the battle: initialize the Fate dice pool and Battle Focus tokens. */
+/** Start of the battle: the Strands of Fate roll (six D6; the bot keeps its first roll). */
 export function aeldariBattleStart(s: GameState) {
   for (const p of [0, 1] as PlayerId[]) {
-    if (isAeldariArmy(s, p)) {
-      if (!s.players[p].fateDice || s.players[p].fateDice!.length === 0) {
-        // Base Fate pool: 6 D6
-        let numDice = 6;
-        // Eldrad Ulthran (Diviner of Futures): +3 Fate dice at start of battle
-        const hasEldrad = s.units.some((u) => u.owner === p && u.name.includes('Eldrad Ulthran'));
-        if (hasEldrad) numDice += 3;
+    if (!isAeldariArmy(s, p) || s.players[p].fateDice?.length) continue;
+    s.players[p].fateDice = rollN(s, 6).sort((a, b) => b - a);
+    log(s, `[Fate] Strands of Fate: ${s.players[p].name} rolled the Fate dice pool: [${s.players[p].fateDice!.join(', ')}]`, 'info', p);
+    pushFx(s, { kind: 'skill', unitId: '', owner: p, at: { x: 22, y: 15 }, name: 'Strands of Fate', who: `Pool: [${s.players[p].fateDice!.join(', ')}]`, style: 'psychic', epic: true });
+  }
+}
 
-        s.players[p].fateDice = [];
-        const rolled = rollN(s, numDice);
-        s.players[p].fateDice = [...rolled].sort((a, b) => b - a);
-        log(s, `[Fate] Strands of Fate: ${s.players[p].name} rolled initial Fate dice pool (${numDice} dice${hasEldrad ? ' including +3 from Eldrad' : ''}): [${s.players[p].fateDice.join(', ')}]`, 'info', p);
-        pushFx(s, { kind: 'skill', unitId: '', owner: p, at: { x: 22, y: 15 }, name: 'Strands of Fate', who: `Initial Pool: [${s.players[p].fateDice.join(', ')}]`, style: 'psychic', epic: true });
-      }
+const FOCUS_TOKENS: Record<string, number> = { incursion: 2, 'strike-force': 4, strike: 4, onslaught: 6 };
+const SEER_DICE: Record<string, number> = { incursion: 3, 'strike-force': 6, strike: 6, onslaught: 9 };
+const hasDet = (s: GameState, p: PlayerId, n: string) => !!s.players[p].detachments?.some((d) => d.name === n);
 
-      // Initialize Battle Focus tokens (Incursion = 2 tokens, Warhost detachment +1)
-      const isWarhost = s.players[p].detachments?.some((d) => d.name === 'Warhost');
-      const baseTokens = 2; // Incursion (1000 pts)
-      const bonusWarhost = isWarhost ? 1 : 0;
-      s.players[p].battleFocusTokens = baseTokens + bonusWarhost;
+/** Start of the battle round: Battle Focus tokens (unspent ones are lost); Seer Council's Fate dice in round 1. */
+export function aeldariRoundStart(s: GameState) {
+  for (const p of [0, 1] as PlayerId[]) {
+    const P = s.players[p];
+    if (P.armyRules?.some((r) => r.name === 'Battle Focus')) {
+      let n = FOCUS_TOKENS[P.battleSize ?? ''] ?? 4;
+      if (hasDet(s, p, 'Warhost')) n += 1; // Martial Grace
+      // Timeless Strategist: the bearer on the battlefield (or in a transport that is)
+      if (s.units.some((u) => u.owner === p && u.enhancements?.some((e) => e.name === 'Timeless Strategist') && (onBoard(u) || (u.status === 'embarked' && s.units.some((t) => t.id === u.embarkedIn && onBoard(t)))))) n += 1;
+      P.battleFocusTokens = n;
+      P.focusUsed = {};
+      log(s, `Battle Focus: ${P.name} has ${n} tokens this battle round`, 'info', p);
+    }
+    if (s.round === 1 && hasDet(s, p, 'Seer Council') && !P.seerFate) {
+      P.seerFate = rollN(s, SEER_DICE[P.battleSize ?? ''] ?? 6).sort((a, b) => a - b);
+      log(s, `Strands of Fate (Seer Council): Fate dice [${P.seerFate.join(', ')}]`, 'info', p);
     }
   }
 }
 
-/** Called at the start of each battle round to refresh Battle Focus tokens. */
-export function aeldariTurnStart(s: GameState, activePlayer: PlayerId) {
-  // Battle round start is player 0's turn of each round (turn 1, 3, 5...)
-  if (s.turn % 2 === 1) {
-    for (const p of [0, 1] as PlayerId[]) {
-      if (isAeldariArmy(s, p)) {
-        const isWarhost = s.players[p].detachments?.some((d) => d.name === 'Warhost');
-        let tokens = 2; // Incursion
-        if (isWarhost) tokens += 1;
-        // Timeless Strategist enhancement: +1 Battle Focus token
-        const hasStrategist = s.units.some((u) => u.owner === p && onBoard(u) && u.enhancements?.some((e) => e.name === 'Timeless Strategist'));
-        if (hasStrategist) tokens += 1;
+/** Adrenal Infusions, Fleet of Foot: Fade Back without a token. */
+const freeFadeBack = (u: UnitState) => !!u.enhancements?.some((e) => e.name === 'Adrenal Infusions') || u.abilities.some((a) => a.name === 'Fleet of Foot');
 
-        s.players[p].battleFocusTokens = tokens;
-        log(s, `[Battle Focus]: ${s.players[p].name} received ${tokens} Battle Focus tokens for Battle Round ${Math.ceil(s.turn / 2)}`, 'info', p);
-      }
-    }
-  }
+/** A unit that can perform this Agile Manoeuvre now: it has Battle Focus (or Spirit Guides gives it it) and has not
+ *  performed one this phase; a token is left; the manoeuvre was not used this phase (Swift as the Wind: by another unit). */
+export function canFocus(s: GameState, u: UnitState, which: string): boolean {
+  const P = s.players[u.owner];
+  if (u.used?.focus === phaseKey(s)) return false;
+  const free = which === 'fadeBack' && freeFadeBack(u);
+  if (!free && !(P.battleFocusTokens ?? 0)) return false;
+  if (which !== 'swift' && !free && P.focusUsed?.[which] === phaseKey(s)) return false;
+  if (u.abilities.some((a) => a.name === 'Battle Focus')) return true;
+  // Spirit Guides (Spirit Conclave): Wraith units within 12" of an ASURYANI PSYKER model
+  return hasDet(s, u.owner, 'Spirit Conclave') && ['WRAITHBLADES', 'WRAITHGUARD', 'WRAITHLORD'].some((k) => hasKw(u, k))
+    && boardUnits(s, u.owner).some((f) => alive(f).some((m) => m.keywords.includes('PSYKER') && alive(u).some((n) => Math.hypot(m.x - n.x, m.y - n.y) - m.r - n.r <= 12)));
 }
 
-/** End of Command phase triggers: Guardian Defenders Fate generation, Farseer Branching Fates. */
-export function aeldariCommandEnd(s: GameState, p: PlayerId) {
-  if (!isAeldariArmy(s, p)) return;
+/** Spend a Battle Focus token on an Agile Manoeuvre (Indomitable Strength of Will / Pirate Prince: 3+ gets it back). */
+export function spendFocus(s: GameState, u: UnitState, which: string, label: string) {
+  const P = s.players[u.owner];
+  (u.used ??= {}).focus = phaseKey(s);
+  if (which === 'fadeBack' && freeFadeBack(u)) return;
+  P.battleFocusTokens = Math.max(0, (P.battleFocusTokens ?? 0) - 1);
+  (P.focusUsed ??= {})[which] = phaseKey(s);
+  const refund = u.abilities.some((a) => a.name === 'Indomitable Strength of Will') || !!u.enhancements?.some((e) => e.name === 'Pirate Prince');
+  const r = refund ? d6(s) : 0;
+  if (r >= 3) P.battleFocusTokens += 1;
+  log(s, `${label}: ${u.name} spends a Battle Focus token (${P.battleFocusTokens} left)${refund ? ` · rolled ${r}${r >= 3 ? ': token back' : ''}` : ''}`, 'info', u.owner);
+}
 
-  // Guardian Defenders: Defenders of the Shrines
-  // While within range of an objective marker you control, roll D6: on 4+, gain 1 Fate die
-  const guardianUnits = s.units.filter((u) => u.owner === p && onBoard(u) && (u.name.includes('Guardian Defender') || u.abilities?.some((a) => a.name === 'Defenders of the Shrines')));
-  if (guardianUnits.length > 0) {
-    for (const obj of s.objectives.filter((o) => o.controller === p)) {
-      const hasGuardiansOnObj = guardianUnits.some((u) => alive(u).some((m) => {
-        const dx = m.x - obj.x, dy = m.y - obj.y;
-        return Math.sqrt(dx * dx + dy * dy) <= 3 + m.r;
-      }));
-      if (hasGuardiansOnObj) {
-        const roll = d6(s);
-        if (roll >= 4) {
-          log(s, `Defenders of the Shrines: rolled ${roll} (4+) on objective ${obj.id} → gained Fate die!`, 'roll', p);
-          gainFateDice(s, p, 1, undefined, 'Defenders of the Shrines');
-        }
-      }
-    }
-  }
-
-  // Farseer: Branching Fates (Psychic)
-  // Once per turn, change the result of one Fate die to a 6
-  const farseer = s.units.find((u) => u.owner === p && onBoard(u) && (u.name.includes('Farseer') || u.abilities?.some((a) => a.name.includes('Branching Fates'))));
-  if (farseer && s.players[p].fateDice && s.players[p].fateDice!.length > 0) {
-    const pool = s.players[p].fateDice!;
-    let minVal = 6;
-    let minIdx = -1;
-    for (let i = 0; i < pool.length; i++) {
-      if (pool[i] < minVal) {
-        minVal = pool[i];
-        minIdx = i;
-      }
-    }
-    if (minIdx >= 0) {
-      const oldVal = pool[minIdx];
-      pool[minIdx] = 6;
-      pool.sort((a, b) => b - a);
-      log(s, `[Fate] Farseer Branching Fates: changed lowest Fate die ${oldVal} to 6! — Pool: [${pool.join(', ')}]`, 'info', p);
-      pushFx(s, { kind: 'skill', unitId: farseer.id, owner: p, at: alive(farseer)[0] ?? { x: 22, y: 15 }, name: 'Branching Fates', who: `${oldVal} → 6`, style: 'psychic', epic: false });
-    }
-  }
+/** Seer Council's Strands of Fate: the stratagems a Fate die of the right value makes 1CP cheaper. */
+const SEER_STRATS: Record<string, number> = { 'PRESENTIMENT OF DREAD': 1, FOREWARNED: 2, 'UNSHROUDED TRUTH': 3, 'FATE INESCAPABLE': 4, 'ISHA’S FURY': 5, "ISHA'S FURY": 5, 'PSYCHIC SHIELD': 6 };
+export function seerDiscounts(s: GameState, u: UnitState): Active[] {
+  const P = s.players[u.owner];
+  if (!P.seerFate?.length || !hasDet(s, u.owner, 'Seer Council')) return [];
+  const sts = P.detachments.find((d) => d.name === 'Seer Council')?.stratagems ?? [];
+  return sts.flatMap((st) => {
+    const v = SEER_STRATS[st.name.toUpperCase()];
+    return v && P.seerFate!.includes(v) ? [{ e: { stratDiscount: { ids: [st.id], cp: 1, fateValue: v } }, label: 'Strands of Fate', holder: u }] : [];
+  });
 }
 
 /** Check if a unit is eligible to use a Fate die this phase. */
@@ -268,5 +250,77 @@ export function resetPhaseStrandsOfFate(s: GameState) {
     if (s.players[p]) {
       s.players[p].strandsOfFateUsed = [];
     }
+  }
+}
+
+// ---------- Corsair Coterie ----------
+
+/** Relentless Raiders: an enemy unit ends a Normal, Advance, Fall Back or Charge move on an objective you control: 2+ → D3 mortal wounds. */
+export function relentlessRaiders(s: GameState, u: UnitState, mortals: (u: UnitState, n: number, why: string) => void) {
+  const p = (1 - u.owner) as PlayerId;
+  if (!hasDet(s, p, 'Corsair Coterie') || !onBoard(u)) return;
+  for (const o of s.objectives) {
+    if (o.controller !== p || !alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= 3 + 1e-6)) continue;
+    const r = d6(s);
+    const n = r >= 2 ? rollN(s, 1).map((x) => Math.ceil(x / 2))[0] : 0;
+    log(s, `Relentless Raiders: ${u.name} ended a move on objective ${o.id} — rolled ${r}${n ? ` → ${n} mortal wounds` : ''}`, 'roll', p);
+    if (n) mortals(u, n, 'Relentless Raiders');
+    return;
+  }
+}
+
+/** Void Thieves: at the end of a phase, objectives you control that an ANHRATHE unit is on stay yours. */
+export function voidThieves(s: GameState) {
+  for (const p of [0, 1] as PlayerId[]) {
+    if (!hasDet(s, p, 'Corsair Coterie')) continue;
+    for (const o of s.objectives) {
+      if (o.controller !== p || o.secured === p) continue;
+      if (boardUnits(s, p).some((u) => hasKw(u, 'ANHRATHE') && alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= 3 + 1e-6))) {
+        o.secured = p;
+        log(s, `Void Thieves: objective ${o.id} stays under ${s.players[p].name}'s control`, 'info', p);
+      }
+    }
+  }
+}
+
+/** Lucid Eye: +1 or -1 to one Seer Council Fate die, making a value the pool lacks out of a spare one. */
+export function lucidEye(s: GameState, p: PlayerId, label: string) {
+  const pool = s.players[p].seerFate;
+  if (!pool?.length) return;
+  const count = (v: number) => pool.filter((x) => x === v).length;
+  for (let v = 1; v <= 6; v++) {
+    if (count(v)) continue;
+    const from = [v - 1, v + 1].find((w) => count(w) > 1) ?? [v - 1, v + 1].find((w) => count(w) > 0);
+    if (!from) continue;
+    pool[pool.indexOf(from)] = v;
+    pool.sort((a, b) => a - b);
+    log(s, `${label}: a Fate die ${from} becomes ${v} — [${pool.join(', ')}]`, 'info', p);
+    return;
+  }
+}
+
+// ---------- Sonic Destruction (Vibro Cannon Platforms) and Shadow Field ----------
+
+/** Which Vibro Cannon Platform units shot which enemy unit this phase. */
+export function noteVibro(s: GameState, A: UnitState, T: UnitState) {
+  if (!A.sources.includes('Vibro Cannon Platform') || s.phase !== 'shooting') return;
+  const P = s.players[A.owner];
+  const k = `${phaseKey(s)}:${T.id}`;
+  const now = Object.entries(P.vibroShots ?? {}).filter(([key]) => key.startsWith(`${phaseKey(s)}:`));
+  P.vibroShots = { ...Object.fromEntries(now), [k]: [...new Set([...(P.vibroShots?.[k] ?? []), A.id])] };
+}
+
+/** +1 S, AP and D for each other Vibro Cannon Platform that shot the target this phase. */
+export function sonicDestruction(s: GameState, A: UnitState, T: UnitState, weapon: string | undefined): CombatMods | null {
+  if (!A.sources.includes('Vibro Cannon Platform') || !/vibro cannon/i.test(weapon ?? '') || s.phase !== 'shooting' || s.active !== A.owner) return null;
+  const n = (s.players[A.owner].vibroShots?.[`${phaseKey(s)}:${T.id}`] ?? []).filter((id) => id !== A.id).length;
+  return n ? { strengthBonus: n, apBonus: n, damageBonus: n, notes: [`Sonic Destruction: +${n} S, AP and D`] } : null;
+}
+
+/** Shadow Field: the 2+ invulnerable save is gone once the bearer has lost wounds to an attack. */
+export function shadowFieldCheck(s: GameState, T: UnitState) {
+  for (const m of T.models) {
+    if (m.shadowFieldDown || !T.abilities.some((a) => a.name === 'Shadow Field' && a.sheet === m.source)) continue;
+    if (m.dead || m.wounds < m.profile.W) { m.shadowFieldDown = true; log(s, `Shadow Field: ${m.name}'s field fails for the rest of the battle`, 'info', T.owner); }
   }
 }

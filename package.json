@@ -9,8 +9,7 @@
     "preview": "vite preview --host",
     "test": "vitest run",
     "data": "node scripts/build-data.mjs",
-    "images": "node scripts/build-images.mjs",
-    "artifact": "node scripts/build-images.mjs && VITE_ARTIFACT=1 vite build && node scripts/build-artifact.mjs"
+    "images": "node scripts/build-images.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",

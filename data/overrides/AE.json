@@ -1,0 +1,7 @@
+{
+  "datasheets": [
+    { "name": "D-cannon Platform", "leads": ["Guardian Defenders"] },
+    { "name": "Shadow Weaver Platform", "leads": ["Guardian Defenders"] },
+    { "name": "Vibro Cannon Platform", "leads": ["Guardian Defenders"] }
+  ]
+}

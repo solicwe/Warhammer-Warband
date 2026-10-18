@@ -7,6 +7,7 @@ import './orders';
 import { addCombatMods, addPoolFinisher } from '../engine/combatMods';
 import { addActionHandler, addChoiceHooks, addCondition, addDieRescue, addEffectSource, addModifier, addStratSpecial, addTargetFilter, on } from '../engine/events';
 import { shockTest } from '../rules-engine/activations';
+import { applyMortalWounds } from '../engine/attack';
 import { log } from '../engine/state';
 import type { GameState } from '../engine/types';
 import { ftggAttackModifiers, getFtggPairForGuided, isTauArmy } from './tau';
@@ -16,7 +17,7 @@ import { destroyedThisRound, ecUnitWiped, initFavoured, noteTarget, pledgeRoundE
 import { attachNear, blightedLand, dgBattleStart, dgCommandEnd, dgCommandStart, dgEffects, dgPhaseEnd, dgRoundStart, dsKeep, extraPlague, eyestingerStorm, inContagionOf, isAfflicted, leechspore, PLAGUE_IDS, putridHit, setPlague, signalPox, stinkBlocks } from './deathGuard';
 import { auraBonus, bondAgain, choicePicked, choiceWhy, expend, knightsAttackDone, knightsBattleStart, knightsCommandStart, knightsCond, knightsEffects, knightsMoved, knightsRoundEnd, knightsRoundStart, knightsShockFailed, knightsShootingStart, knightsTurnEnd, knightsTurnStart, longLeash, maleficSurge, superHeavy } from './knights';
 import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart, sororitasUnitDestroyed, tryActOfFaith } from './sororitas';
-import { aeldariBattleStart, aeldariCommandEnd, aeldariTurnStart, resetPhaseStrandsOfFate, tryFateDie } from './aeldari';
+import { aeldariBattleStart, aeldariRoundStart, canFocus, lucidEye, noteVibro, relentlessRaiders, resetPhaseStrandsOfFate, seerDiscounts, shadowFieldCheck, sonicDestruction, spendFocus, tryFateDie, voidThieves } from './aeldari';
 import { votannAttackModifiers, votannBattleStart, votannCommandEnd, votannDefenseModifiers, votannUnitDestroyed } from './votann';
 import { admechAttackModifiers, admechCommandStart, admechDefenseModifiers, admechRoundStart, unitActiveImperatives } from './admech';
 import { drukhariAttackModifiers, drukhariBattleShockFailed, drukhariBattleStart, drukhariCommandStart, drukhariDefenseModifiers, drukhariPhaseEnd, drukhariUnitDestroyed, isUnitEmpowered } from './drukhari';
@@ -120,9 +121,22 @@ on('unitDestroyed', (s, e) => sororitasUnitDestroyed(s, e.u));
 
 // Aeldari
 on('battleStart', (s) => aeldariBattleStart(s));
-on('turnStart', (s, e) => aeldariTurnStart(s, e.p));
+on('roundStart', (s) => aeldariRoundStart(s));
 on('phaseEnd', (s) => resetPhaseStrandsOfFate(s));
-on('commandEnd', (s, e) => aeldariCommandEnd(s, e.p));
+// Battle Focus: Agile Manoeuvres (data/detachment-rules.json) and Seer Council's Fate dice discounts
+addCondition(/^focusReady:/, (c, x) => canFocus(x.s, x.holder ?? x.A, c.slice(11)));
+addActionHandler((s, a, x) => {
+  if (a.ae?.startsWith('focus:')) spendFocus(s, x.on, a.ae.slice(6), x.label);
+  if (a.ae === 'lucidEye') lucidEye(s, x.u.owner, x.label);
+});
+addEffectSource((s, u) => seerDiscounts(s, u));
+// Corsair Coterie
+on('unitMoved', (s, e) => relentlessRaiders(s, e.u, (u, n, why) => applyMortalWounds(s, u, n, why)));
+on('phaseEnd', (s) => voidThieves(s));
+// Sonic Destruction, Shadow Field
+on('attackDone', (s, e) => { noteVibro(s, e.A, e.T); shadowFieldCheck(s, e.T); });
+addCombatMods((x) => sonicDestruction(x.s, x.A, x.T, x.weapon));
+addCondition('shadowFieldUp', (_c, x) => !x.m?.shadowFieldDown);
 addDieRescue('Strands of Fate', 'Fate die', (s, u, stage, x) => tryFateDie(s, u, stage, x));
 
 // Leagues of Votann
