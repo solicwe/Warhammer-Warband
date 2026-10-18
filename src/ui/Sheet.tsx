@@ -1,4 +1,4 @@
-import { abilityRule, abilityStatus, type AbilityStatus } from '../engine/effects';
+import { abilityRule, abilityStatus, type AbilityStatus } from '../rules-engine/effects';
 import { strength } from '../engine/state';
 import type { AbilityData, DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
 import { abilitiesOf, abilityLabel } from '../engine/weapons';

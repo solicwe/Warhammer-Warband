@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { transportLoads, validateList } from './army';
-import { botAct, botMoveOne } from './bot';
+import { botAct, botMoveOne } from '../ai/bot';
 import { createGame, disembarkMode, embarkUnit, formationAt, hullSpots, placeUnit, ringFormation, validateDisembark } from './game';
 import { baseDist } from './geometry';
 import { alive } from './state';

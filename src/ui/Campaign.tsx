@@ -2,16 +2,17 @@
 // Features a full roguelike engine: scrap currency, unit veterancy, battle honors, armory, medicae tents,
 // and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
+import { loadRun, saveRun } from '../services/storage';
 import { attachOptions, autoAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
   bossRuleById, buyEnhancementForUnit, buyHonorForUnit, changeSquadSize, cheapest, continueNextLoop,
-  enhancementScrapCost, enter, loadRun, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
-  removeEnhancementFromUnit, rerollOffer, saveRun, START_POINTS, takeReward,
+  enhancementScrapCost, enter, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
+  removeEnhancementFromUnit, rerollOffer, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
 } from '../engine/campaign';
-import { hasFactionRules } from '../engine/effects';
+import { hasFactionRules } from '../rules-engine/effects';
 import { createGame } from '../engine/game';
 import type { ArmyUnitEntry, DatasheetData, FactionData, GameState, WargearPick } from '../engine/types';
 import { Emblem, SECTIONS, sectionOf, UnitArt, WargearEditor } from './ArmyBuilder';

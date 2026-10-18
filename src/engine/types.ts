@@ -1,4 +1,4 @@
-import type { Effect } from './effects';
+import type { Effect } from '../rules-engine/effects';
 // ---------- Data (from public/data/factions/*.json, see scripts/build-data.mjs) ----------
 
 export interface WeaponProfileData {
@@ -613,9 +613,9 @@ export type Window =
   /** Coterie of the Conceited: the player pledges how many enemy units the army will destroy this battle round */
   | { kind: 'pledge'; player: PlayerId; max: number }
   /** Blessings of Khorne: the dice rolled and the ways to use them; the player picks one (or none) */
-  | { kind: 'blessings'; player: PlayerId; dice: number[]; picks: import('./blessings').BlessingPick[]; extra?: { label: string; kw?: string; until: 'phase' | 'round' }; rerolls?: number; rerollFrom?: string }
+  | { kind: 'blessings'; player: PlayerId; dice: number[]; picks: import('../factions/blessings').BlessingPick[]; extra?: { label: string; kw?: string; until: 'phase' | 'round' }; rerolls?: number; rerollFrom?: string }
   /** a rule asks the player to pick one unit ("select one enemy unit hit by those attacks"); `acts` go to it */
-  | { kind: 'pickUnit'; player: PlayerId; label: string; units: string[]; holderId: string; acts: import('./activations').Action[] }
+  | { kind: 'pickUnit'; player: PlayerId; label: string; units: string[]; holderId: string; acts: import('../rules-engine/activations').Action[] }
   /** detachment stratagems the player can use right now, at a moment the engine reported ("just after an enemy unit has shot") */
   | { kind: 'stratReaction'; player: PlayerId; on: string; ctx: { unitId?: string; modelId?: string; killerId?: string }; offers: { stratId: string; units: string[] }[]; label: string; resume?: 'endPhase' };
 

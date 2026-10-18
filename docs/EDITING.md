@@ -8,12 +8,12 @@
 | ค่าบนการ์ด (M/T/Sv/W, อาวุธ, แต้ม, keyword) | `data/overrides/<FACTION>.json` (ดู `data/overrides/README.md`) — อย่าแก้ `public/data/factions/*.json` ตรง ๆ เพราะถูกสร้างใหม่จาก Wahapedia |
 | **Space Marines (Codex 2026)** | `data/packs/SM.listforge-pack.json` (ไฟล์ ListForge) + `data/packs/SM.cards.txt` (การ์ด stratagem) — `npm run data` สร้าง SM จาก pack นี้แทน Wahapedia (ดู `scripts/pack.mjs`) |
 | **Adeptus Custodes (Codex 2026)** | `data/packs/AC.listforge-pack.json` — Martial Ka'tah (readied) อยู่ใน `data/detachment-rules.json` key `Martial Ka'tah` |
-| **Thousand Sons (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T, inferno S/AP, stratagem) อยู่ใน `data/overrides/TS.json`; Rituals (Cabal of Sorcerers) อยู่ใน `src/engine/rituals.ts` + bot ใน `src/engine/botRituals.ts`; Flow of Magic ใน `src/engine/flow.ts` |
-| **Chaos Space Marines (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T5/T6, boltgun S5 AP-1 …) อยู่ใน `data/overrides/CSM.json`; Dark Pacts อยู่ใน `src/engine/darkPacts.ts` (mark `darkPact`, ผ่านเทสต์ได้ mark `pactOk:lethal` / `pactOk:sustained`); focus of hatred / Vendetta ใช้ช่องเดียวกับ Oath of Moment (`markRuleName` ใน `src/engine/game.ts`) |
-| **Emperor's Children (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T5/T6, W3, bolt S5 AP-1, Frantic Focus, Vengeful Surge) อยู่ใน `data/overrides/EC.json`; Thrill Seekers (ข้อจำกัดเป้า), Pledges to the Dark Prince (Pact points), Favoured Champions, Sensational Performance, Daemonic Poisons อยู่ใน `src/engine/emperorsChildren.ts` |
-| **Death Guard (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (bolt/combi S5 AP-1, ตาราง Contagion Range) อยู่ใน `data/overrides/DG.json`; Nurgle's Gift (Contagion Range, Afflicted, Plagues), Worldblight, Miasmic Bombardment, Deadly Vectors, Numberless Horde, Blighted Land, Signal Pox อยู่ใน `src/engine/deathGuard.ts` |
+| **Thousand Sons (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T, inferno S/AP, stratagem) อยู่ใน `data/overrides/TS.json`; Rituals (Cabal of Sorcerers) อยู่ใน `src/factions/rituals.ts` + bot ใน `src/ai/botRituals.ts`; Flow of Magic ใน `src/factions/flow.ts` |
+| **Chaos Space Marines (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T5/T6, boltgun S5 AP-1 …) อยู่ใน `data/overrides/CSM.json`; Dark Pacts อยู่ใน `src/factions/darkPacts.ts` (mark `darkPact`, ผ่านเทสต์ได้ mark `pactOk:lethal` / `pactOk:sustained`); focus of hatred / Vendetta ใช้ช่องเดียวกับ Oath of Moment (`markRuleName` ใน `src/engine/game.ts`) |
+| **Emperor's Children (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T5/T6, W3, bolt S5 AP-1, Frantic Focus, Vengeful Surge) อยู่ใน `data/overrides/EC.json`; Thrill Seekers (ข้อจำกัดเป้า), Pledges to the Dark Prince (Pact points), Favoured Champions, Sensational Performance, Daemonic Poisons อยู่ใน `src/factions/emperorsChildren.ts` |
+| **Death Guard (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (bolt/combi S5 AP-1, ตาราง Contagion Range) อยู่ใน `data/overrides/DG.json`; Nurgle's Gift (Contagion Range, Afflicted, Plagues), Worldblight, Miasmic Bombardment, Deadly Vectors, Numberless Horde, Blighted Land, Signal Pox อยู่ใน `src/factions/deathGuard.ts` |
 | ขนาด/รูปทรงฐาน (วงรี, ตัวรถ) | ตาราง `HULLS` (ยาว × กว้าง นิ้ว) และ `ROUND` ใน `src/engine/army.ts` → `baseShape()` |
-| **Imperial / Chaos Knights** | Code Chivalric (Deeds/Qualities), Harbingers of Dread, Bondsman, Super-heavy Walker และกฎ detachment ทุกอัน อยู่ใน `src/engine/knights.ts` + `data/detachment-rules.json`; ค่าที่ pack เปลี่ยนอยู่ใน `data/overrides/QI.json`, `data/overrides/QT.json` |
+| **Imperial / Chaos Knights** | Code Chivalric (Deeds/Qualities), Harbingers of Dread, Bondsman, Super-heavy Walker และกฎ detachment ทุกอัน อยู่ใน `src/factions/knights.ts` + `data/detachment-rules.json`; ค่าที่ pack เปลี่ยนอยู่ใน `data/overrides/QI.json`, `data/overrides/QT.json` |
 | Ability ของ datasheet | `data/abilities/SM.json`, `data/abilities/ORK.json`, `data/abilities/AC.json`, `data/abilities/TS.json`, `data/abilities/CSM.json`, `data/abilities/WE.json`, `data/abilities/EC.json`, `data/abilities/DG.json`, `data/abilities/QI.json`, `data/abilities/QT.json` (รวม enhancement) |
 | กฎ Detachment / Army rule | `data/detachment-rules.json` |
 | **Stratagem ของ detachment** | `data/stratagems/SM.json`, `data/stratagems/ORK.json`, `data/stratagems/AC.json`, `data/stratagems/TS.json`, `data/stratagems/CSM.json`, `data/stratagems/WE.json`, `data/stratagems/EC.json`, `data/stratagems/DG.json`, `data/stratagems/QI.json`, `data/stratagems/QT.json` |
@@ -24,7 +24,7 @@
 ## Stratagem (`data/stratagems/<FACTION>.json`)
 
 key = ชื่อ stratagem ตามการ์ด (ตัวพิมพ์ใหญ่) หรือ `ชื่อ@Detachment` ถ้าชื่อซ้ำกัน
-ถ้าไม่มี entry ระบบจะอ่านจากข้อความ EFFECT เอง (`src/engine/stratagems.ts`) — เขียน entry เมื่ออ่านไม่ได้หรืออ่านผิด
+ถ้าไม่มี entry ระบบจะอ่านจากข้อความ EFFECT เอง (`src/rules-engine/stratagems.ts`) — เขียน entry เมื่ออ่านไม่ได้หรืออ่านผิด
 
 ```json
 "ARMOUR OF CONTEMPT": { "buffs": ["enemyAp-1"] },
@@ -37,8 +37,8 @@ key = ชื่อ stratagem ตามการ์ด (ตัวพิมพ์�
 | ฟิลด์ | ความหมาย |
 |---|---|
 | `buffs` | buff ด่วน: `hit+1 wound+1 ap+1 lethal sustained1 devastating ignoresCover rerollHits rerollHits1 rerollWounds rerollWounds1` / ฝ่ายรับ `enemyHit-1 enemyWound-1 enemyAp-1 damage-1 fnp4 fnp5 fnp6 cover save+1` |
-| `effects` | อะไรก็ได้ที่ ability ทำได้ (ดู `Effect` ใน `src/engine/effects.ts`): `hit wound ap strength attacks damage reroll abilities if` (โจมตี), `defend: { hit, wound, woundIfStronger, ap, damage, fnp, inv, minHit, vs }` (โดนโจมตี), `move chargeBonus advanceBonus oc toughness mobile stealth riled eligible fightOnDeath rangeBonus forceDesperate …` |
-| `do` | ทำทันที (ดู `Action` ใน `src/engine/activations.ts`): `move`, `surge`, `mortals`, `heal`, `reserves`, `secure`, `unshock`, `shock`, `noCharge` … |
+| `effects` | อะไรก็ได้ที่ ability ทำได้ (ดู `Effect` ใน `src/rules-engine/effects.ts`): `hit wound ap strength attacks damage reroll abilities if` (โจมตี), `defend: { hit, wound, woundIfStronger, ap, damage, fnp, inv, minHit, vs }` (โดนโจมตี), `move chargeBonus advanceBonus oc toughness mobile stealth riled eligible fightOnDeath rangeBonus forceDesperate …` |
+| `do` | ทำทันที (ดู `Action` ใน `src/rules-engine/activations.ts`): `move`, `surge`, `mortals`, `heal`, `reserves`, `secure`, `unshock`, `shock`, `noCharge` … |
 | `until` | `phase` (ค่าเริ่มต้น) / `turn` / `nextCommand` |
 | `bot` | `attack` / `defend` / `never` — ปกติระบบเดาให้: มีผลกับการโจมตี = attack, มีผลตอนโดนโจมตี = defend |
 | `status`, `note` | `auto` / `partial` / `manual` และข้อความบอกผู้เล่นว่าส่วนไหนต้องทำเอง (โชว์บนการ์ด stratagem) |
@@ -62,7 +62,7 @@ Enhancement: เขียนกฎใน `data/abilities/<FACTION>.json` ด้�
 ## Faction / datasheet ใหม่
 1. `npm run data -- --fetch` ดึงข้อมูลล่าสุดจาก Wahapedia (หรือวาง CSV ใน `data/raw`)
 2. แก้ค่าที่ผิดด้วย `data/overrides/<FACTION>.json`
-3. เพิ่ม `data/abilities/<FACTION>.json` และ `data/stratagems/<FACTION>.json` แล้ว import ใน `src/engine/effects.ts` (`FACTION_RULES`) และ `src/engine/stratagems.ts` (`BOOKS`)
+3. เพิ่ม `data/abilities/<FACTION>.json` และ `data/stratagems/<FACTION>.json` แล้ว import ใน `src/rules-engine/effects.ts` (`FACTION_RULES`) และ `src/rules-engine/stratagems.ts` (`BOOKS`)
 4. กฎ detachment ใส่ใน `data/detachment-rules.json` (key = ชื่อ detachment, `auto` = `full` / `partial` / `manual`)
 5. (ไม่บังคับ) ทัพสำเร็จรูปให้เลือกตอน New battle: เพิ่มใน `PRESETS` ของ `src/ui/presets.ts` (key = faction id)
 

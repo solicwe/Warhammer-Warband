@@ -1,5 +1,6 @@
-import { autoCharges, autoDeclareCharge, autoDue, autoEndMovement, autoSelectToShoot, autoShoot, autoStep, decides, onAuto } from '../engine/autoPlay';
+import { autoCharges, autoDeclareCharge, autoDue, autoEndMovement, autoSelectToShoot, autoShoot, autoStep, decides, onAuto } from '../ai/autoPlay';
 import { pathBlocked, routeAround } from '../engine/pathing';
+import { KEYS, readText, writeText } from '../services/storage';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { chapterRules } from '../engine/army';
 import { RuleText } from './RuleText';
@@ -12,8 +13,8 @@ import {
   applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, finishAttack, forceDie, meleeWeapons, rerollOne, resolveAll, shootingModes, startAttack, stepAttack,
   type ShootMode,
 } from '../engine/attack';
-import { performActOfFaith } from '../engine/sororitas';
-import { useFateDie } from '../engine/aeldari';
+import { performActOfFaith } from '../factions/sororitas';
+import { useFateDie } from '../factions/aeldari';
 import { deploymentById, dispositionById, MISSIONS, primaryById, RULES, secondaryById, type DispositionId } from '../engine/config';
 import { rollN } from '../engine/dice';
 import {
@@ -28,14 +29,14 @@ import {
   pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
-} from '../engine/activations';
-import { activeLabels, effectsFor, isRiled, loneOperativeNow, unitFlags, withRuleCache, type Effect } from '../engine/effects';
-import { activeIds, applyPick, BLESSINGS, blessingById, rerollBlessings } from '../engine/blessings';
-import { botPledge, setPledge } from '../engine/emperorsChildren';
+} from '../rules-engine/activations';
+import { activeLabels, effectsFor, isRiled, loneOperativeNow, unitFlags, withRuleCache, type Effect } from '../rules-engine/effects';
+import { activeIds, applyPick, BLESSINGS, blessingById, rerollBlessings } from '../factions/blessings';
+import { botPledge, setPledge } from '../factions/emperorsChildren';
 import { BlessingsPanel } from './Blessings';
-import { detChoices, detSummary, pickDetChoice } from '../engine/detachments';
-import { botAct, botShouldAct, botStep } from '../engine/bot';
-import { advantage, applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen, type Intent } from '../engine/botLook';
+import { detChoices, detSummary, pickDetChoice } from '../rules-engine/detachments';
+import { botAct, botShouldAct, botStep } from '../ai/bot';
+import { advantage, applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen, type Intent } from '../ai/botLook';
 import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
@@ -43,16 +44,16 @@ import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
-import { attemptRitual, casters, endRituals, RITUALS, ritualsLeft, ritualsPending, ritualTargets, testOdds } from '../engine/rituals';
+import { attemptRitual, casters, endRituals, RITUALS, ritualsLeft, ritualsPending, ritualTargets, testOdds } from '../factions/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/secondaries';
-import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../engine/stratagems';
+import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
 import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
-import { isOfficer, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../engine/orders';
-import { isTauArmy } from '../engine/tau';
+import { isOfficer, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../factions/orders';
+import { isTauArmy } from '../factions/tau';
 import { bodyTouchesPoly, dist, polyCentroid } from '../engine/geometry';
-import { smartPlacement } from '../engine/deploy';
+import { smartPlacement } from '../ai/deploy';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from '../engine/state';
@@ -64,7 +65,7 @@ import { isMelee, hasAbility } from '../engine/weapons';
 import { Board, type Paths, type Ring } from './Board';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
-import { canMakePact, madePact, makeDarkPact, type PactPick } from '../engine/darkPacts';
+import { canMakePact, madePact, makeDarkPact, type PactPick } from '../factions/darkPacts';
 import { UnitView } from './Sheet';
 import { useGame } from './store';
 import { AttackReport } from './AttackReport';
@@ -74,8 +75,7 @@ import { line, type VoiceEvent } from './voice';
 import { getPlayerFactionTheme } from './factionColors';
 
 type FxLevel = 'full' | 'short' | 'off';
-const FX_PREF = 'fx-level';
-const loadFxLevel = (): FxLevel => { try { const v = localStorage.getItem(FX_PREF); return v === 'short' || v === 'off' ? v : 'full'; } catch { return 'full'; } };
+const loadFxLevel = (): FxLevel => { const v = readText(KEYS.fx); return v === 'short' || v === 'off' ? v : 'full'; };
 
 type Mode =
   | { k: 'place'; unitId: string; how: 'deploy' | 'infiltrate' | 'ingress' | 'deepStrike' | 'disembark'; rapid?: boolean | 'free'; transportId?: string }
@@ -173,7 +173,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [showMissions, setShowMissions] = useState(false);
   // how much the screen tells about each attack (the player's choice, kept on this device), and sound on/off
   const [fxLevel, setFxLevelRaw] = useState<FxLevel>(loadFxLevel);
-  const setFxLevel = (v: FxLevel) => { setFxLevelRaw(v); try { localStorage.setItem(FX_PREF, v); } catch { /* this session only */ } };
+  const setFxLevel = (v: FxLevel) => { setFxLevelRaw(v); writeText(KEYS.fx, v); };
   const [sound, setSound] = useState(soundOn());
   const [shake, setShake] = useState(0);
   const [reporting, setReporting] = useState(false); // an attack is being told on screen: the bot waits for it

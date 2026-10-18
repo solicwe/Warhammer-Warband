@@ -1,5 +1,7 @@
 // Making Attacks (04) + Attack Sequence (05), resolved stage by stage so the UI can show every roll.
 import { weaponFx } from './weaponFx';
+import { combatMods, runPoolFinishers, type CombinedMods } from './combatMods';
+import { assaultWeapons, emit, rescueDie, targetBlock } from './events';
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems, gap, reachOf } from './geometry';
@@ -7,25 +9,12 @@ import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEne
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
-import { sororitasUnitDestroyed, tryActOfFaith } from './sororitas';
-import { tryFateDie } from './aeldari';
-import { ftggAttackModifiers, isTauArmy } from './tau';
-import { votannAttackModifiers, votannDefenseModifiers, votannUnitDestroyed } from './votann';
-import { admechAttackModifiers, admechDefenseModifiers, unitActiveImperatives } from './admech';
-import { drukhariAttackModifiers, drukhariDefenseModifiers, drukhariUnitDestroyed } from './drukhari';
-import { daemonsAttackModifiers, daemonsDefenseModifiers, daemonsUnitDestroyed } from './daemons';
-import { cultAttackModifiers, cultDefenseModifiers, cultAmbushUnitDestroyed } from './cult';
-import { necAttackModifiers, necDefenseModifiers } from './necrons';
-import { gkAttackModifiers, gkDefenseModifiers } from './greyKnights';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
-import { noteTarget, sensationalBlock, thrillBlock } from './emperorsChildren';
-import { putridHit } from './deathGuard';
-import { inFlow, isThousandSonsArmy } from './flow';
 
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
 export const setFreeDamageHook = (h: (s: GameState) => boolean) => { freeDamageHook = h; };
-import { applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from './effects';
+import { addToExpr, applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from '../rules-engine/effects';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
 
@@ -115,20 +104,6 @@ function applyUnitBuffs(pool: Pool, u: UnitState) {
   if (ap) pool.ap = pool.ap - ap;
 }
 
-function applyFlowOfMagic(s: GameState, A: UnitState, pool: Pool, psychic: boolean) {
-  if (!psychic) return;
-  if (!isThousandSonsArmy(s, A.owner)) return;
-  const isTs = (A.factionKeywords ?? []).includes('THOUSAND SONS') || (A.keywords ?? []).includes('THOUSAND SONS');
-  if (!isTs) return;
-  if (inFlow(s, A)) {
-    pool.woundMod = clamp(pool.woundMod + 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
-    pool.woundNote = [pool.woundNote, 'Flow of Magic: +1 Wound'].filter(Boolean).join(' · ');
-  } else {
-    pool.rerollWounds1 = true;
-    pool.woundNote = [pool.woundNote, 'Flow of Magic: re-roll 1s'].filter(Boolean).join(' · ');
-  }
-}
-
 /** "Ignore any or all modifiers to BS/WS and the Hit roll": drop the bad ones once everything is folded in. */
 function finishIgnore(pool: Pool, all = false) {
   // Unbowed Conviction: ignore every modifier to its rolls (saving throws excepted)
@@ -153,9 +128,7 @@ export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
     return modes;
   }
   if (u.move === 'advance' && !canDo(s, u, 'shootAfterAdvance')) {
-    const montka = isTauArmy(s, u.owner) && (s.players[u.owner].detachments ?? []).some((d) => d.name.toLowerCase().includes('mont')) && s.round <= 3;
-    const admechAssault = unitActiveImperatives(s, u).has('Conqueror Imperative');
-    if (riled(s, u) || weps.some((p) => hasAbility(p, 'assault')) || unitGrants(s, u, 'assault', 'ranged') || montka || admechAssault) modes.push('assault');
+    if (riled(s, u) || weps.some((p) => hasAbility(p, 'assault')) || unitGrants(s, u, 'assault', 'ranged') || assaultWeapons(s, u)) modes.push('assault');
     return modes;
   }
   modes.push('normal');
@@ -204,7 +177,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   if (aFlags.onlyTargetMarked && (A.move === 'advance' || A.move === 'fallback') && !(T.timed ?? []).some((t) => t.mark === aFlags.onlyTargetMarked && t.by === A.owner)) return { pools: [], notes, error: 'After Advancing / Falling Back it can only shoot a unit marked by the auspex scan' };
 
   // Advancing with [ASSAULT] weapons does not need Thrill Seekers, so no restriction then
-  const thrill = A.move === 'advance' && opt.mode === 'assault' ? null : thrillBlock(s, A, T);
+  const thrill = targetBlock(s, A, T, 'shoot', opt.mode === 'assault');
   if (thrill) return { pools: [], notes, error: thrill };
 
   // Seal of Shrouding / Blazing Icon / Linebreaker Onslaught: enemy units cannot snap-shoot this unit
@@ -255,23 +228,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const fx = offenceFor(s, A, m, T, w, p, 'ranged', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
       const inc = incomingFor(s, A, m, T, 'ranged').filter((i) => !i.psychic || psy);
-      const montka = isTauArmy(s, A.owner) && (s.players[A.owner].detachments ?? []).some((d) => d.name.toLowerCase().includes('mont')) && s.round <= 3;
-      const ftgg = ftggAttackModifiers(s, A, T, d);
-      const votann = votannAttackModifiers(s, A, T, d, 'ranged');
-      const def = votannDefenseModifiers(s, A, T, p, d);
-      const adm = admechAttackModifiers(s, A, T, d, 'ranged', p, w.name);
-      const admDef = admechDefenseModifiers(s, A, T, 'ranged');
-      const dru = drukhariAttackModifiers(s, A, T, d, 'ranged', p, w.name);
-      const druDef = drukhariDefenseModifiers(s, A, T, 'ranged', p);
-      const cd = daemonsAttackModifiers(s, A, T, d, 'ranged', p, w.name);
-      const cdDef = daemonsDefenseModifiers(s, A, T, 'ranged', p);
-      const cult = cultAttackModifiers(s, A, T, d, 'ranged', p, w.name);
-      const cultDef = cultDefenseModifiers(s, A, T, 'ranged', p);
-      const nec = necAttackModifiers(s, A, T, d, 'ranged', p, w.name);
-      const necDef = necDefenseModifiers(s, A, T, 'ranged', p);
-      const gk = gkAttackModifiers(s, A, T, d, 'ranged', p, w.name);
-      const gkDef = gkDefenseModifiers(s, A, T, 'ranged', p);
-      if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !montka && !adm.assault && !nec.assault) continue;
+      const cm = combatMods({ s, A, T, m, psychic: psy, mode: 'ranged', d, p, weapon: w.name });
+      if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !assaultWeapons(s, A) && !cm.assault) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
       if (d > maxRange + 1e-6) continue;
       if (untargetableAt(s, T, d)) continue;
@@ -283,27 +241,12 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (!indirect && !unitSees()) continue;
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
-      const mods: Mods = {
-        skillDelta: ftgg.skillDelta - (adm.bsBonus || 0),
-        skillNotes: [...ftgg.notes.filter((n) => n.includes('BS')), ...adm.notes.filter((n) => n.includes('BS'))],
-        hit: ftgg.hitMod + votann.hitMod + adm.hitMod + admDef.hitMod + dru.hitMod + druDef.hitMod + cd.hitMod + cdDef.hitMod + cult.hitMod + cultDef.hitMod + nec.hitMod + necDef.hitMod + gk.hitMod + gkDef.hitMod,
-        hitNotes: [
-          ...ftgg.notes.filter((n) => n.includes('hit')),
-          ...votann.notes.filter((n) => n.includes('Hit')),
-          ...adm.notes.filter((n) => n.includes('hit') || n.includes('Hit')),
-          ...dru.notes.filter((n) => n.includes('hit') || n.includes('Hit')),
-          ...cd.notes.filter((n) => n.includes('hit') || n.includes('Hit')),
-          ...cdDef.notes.filter((n) => n.includes('hit')),
-          ...cult.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
-          ...nec.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
-          ...gk.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
-        ],
-      };
-      const ignoresCover = ftgg.ignoresCover || votann.ignoresCover || adm.ignoresCover || dru.ignoresCover || hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
+      const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes] };
+      const ignoresCover = cm.ignoresCover || hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
       const cover = indirect || aFlags.givesCover || (!ignoresCover && (coverOf(m) || targetHasCover(s, T, d)));
       if (cover) { mods.skillDelta += 1; mods.skillNotes.push('Cover −1 BS'); }
       if (m.keywords.includes('TOWERING') && d <= RULES.plungingFire.toweringRange && !T.keywords.includes('AIRCRAFT')) { mods.skillDelta -= 1; mods.skillNotes.push('Plunging Fire +1 BS'); }
-      const heavy = hasAbility(p, 'heavy') || grants(fx, inc, 'heavy') || adm.heavy;
+      const heavy = hasAbility(p, 'heavy') || grants(fx, inc, 'heavy') || cm.heavy;
       if (heavy && isOwnShootingPhase && !isEngaged(s, A) && A.setUpTurn !== s.turn && A.maxMoved <= RULES.heavyMaxMove + 1e-6) { mods.hit += 1; mods.hitNotes.push('Heavy +1'); }
       if (tIsMV && tEngaged && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('Engaged MONSTER/VEHICLE target −1'); }
       if (opt.mode === 'closeQuarters' && isMV(m) && !aFlags.noBigGunsPenalty && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('Big guns in combat −1'); }
@@ -334,40 +277,18 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         }
         const melta = getAbility(p, 'melta', T.keywords);
         if (melta && half) pool.damage = `${p.D}+${melta.value ?? 0}`.replace(/^(\d+)\+(\d+)$/, (_, a, b) => String(+a + +b));
-        let strength = (p.S ?? 1) + ftgg.strengthBonus + votann.strengthBonus;
-        if (psy && isThousandSonsArmy(s, A.owner) && A.enhancements?.some((e) => e.name === 'Arcane Might')) {
-          strength += inFlow(s, A) ? 2 : 1;
-        }
+        let strength = (p.S ?? 1) + cm.strengthBonus;
         pool.woundNeed = woundNeed(strength, T_T);
-        if (ftgg.apBonus + votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus + cult.apBonus + nec.apBonus + gk.apBonus) pool.ap -= (ftgg.apBonus + votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus + cult.apBonus + nec.apBonus + gk.apBonus);
-        if (def.apWorsen + admDef.apWorsen + cdDef.apWorsen + cultDef.apWorsen + necDef.apWorsen + gkDef.apWorsen) pool.ap = Math.min(0, pool.ap + def.apWorsen + admDef.apWorsen + cdDef.apWorsen + cultDef.apWorsen + necDef.apWorsen + gkDef.apWorsen);
-        const wm = clamp(buffSum(A, 'wound+1', 'wound-1') + ftgg.woundMod + votann.woundMod + def.woundMod + adm.woundMod + dru.woundMod + druDef.woundMod + cd.woundMod + cdDef.woundMod + cult.woundMod + cultDef.woundMod + nec.woundMod + necDef.woundMod + gk.woundMod + gkDef.woundMod, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
+        applyCombatMods(pool, cm);
+        const wm = clamp(buffSum(A, 'wound+1', 'wound-1') + cm.woundMod, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundMod = wm;
-        pool.woundNote = `S${strength} vs T${T_T}` + (wm ? ` · Buff ${wm > 0 ? '+' : ''}${wm}` : '') + (def.notes.length ? ` · ${def.notes.join(' · ')}` : '') + (dru.notes.length ? ` · ${dru.notes.join(' · ')}` : '') + (cd.notes.length ? ` · ${cd.notes.join(' · ')}` : '') + (cult.notes.length ? ` · ${cult.notes.join(' · ')}` : '') + (nec.notes.length ? ` · ${nec.notes.join(' · ')}` : '') + (gk.notes.length ? ` · ${gk.notes.join(' · ')}` : '');
-        if (ftgg.rerollHits1 || votann.rerollHits1 || adm.rerollHits1 || dru.rerollHits1 || cd.rerollHits1 || cult.rerollHits1 || nec.rerollHits1 || gk.rerollHits1) pool.rerollHits1 = true;
-        if (ftgg.rerollWounds1 || votann.rerollWounds1 || adm.rerollWounds1 || dru.rerollWounds1 || cd.rerollWounds1 || cult.rerollWounds1 || nec.rerollWounds1 || gk.rerollWounds1) pool.rerollWounds1 = true;
-        if (votann.rerollHits || adm.rerollHits || dru.rerollHits || cd.rerollHits || cult.rerollHits || nec.rerollHits || gk.rerollHits) pool.rerollAllHits = true;
-        if (votann.rerollWounds || dru.rerollWounds || cd.rerollWounds || cult.rerollWounds || nec.rerollWounds || gk.rerollWounds) pool.rerollAllWounds = true;
-        if (ftgg.lethal || votann.lethal || adm.lethal || dru.lethal || cd.lethal || cult.lethal || nec.lethal || gk.lethal) pool.lethal = true;
-        if (cd.devastating || cult.devastating || nec.devastating || gk.devastating) pool.devastating = true;
-        if (cult.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = cult.critHitThreshold;
-        if (nec.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = nec.critHitThreshold;
-        if (gk.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = gk.critHitThreshold;
-        if (cult.sustained && !pool.sustained) pool.sustained = cult.sustained;
-        else if (nec.sustained && !pool.sustained) pool.sustained = nec.sustained;
-        else if (gk.sustained && !pool.sustained) pool.sustained = gk.sustained;
-        else if (cd.sustained && !pool.sustained) pool.sustained = cd.sustained;
-        else if (dru.sustained && !pool.sustained) pool.sustained = dru.sustained;
-        else if (adm.sustained && !pool.sustained) pool.sustained = adm.sustained;
-        else if (votann.sustained && !pool.sustained) pool.sustained = votann.sustained;
-        else if (ftgg.sustained && !pool.sustained) pool.sustained = ftgg.sustained;
-        if (dru.critWoundOn && (!pool.critWoundOn || dru.critWoundOn < pool.critWoundOn)) pool.critWoundOn = dru.critWoundOn;
+        pool.woundNote = [`S${strength} vs T${T_T}`, ...(wm ? [`Buff ${wm > 0 ? '+' : ''}${wm}`] : []), ...cm.otherNotes].join(' · ');
         if (psy) pool.psychic = true;
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
-        applyFlowOfMagic(s, A, pool, psy);
+        runPoolFinishers({ s, A, T, m, psychic: psy, mode: 'ranged', d, p, weapon: w.name }, pool);
         applyAttackEffects(s, A, T, pool, fx, inc, 'ranged', d, T_T, woundNeed);
-        finishIgnore(pool, unitFlags(s, A).ignoreMods || ftgg.ignoreMods);
+        finishIgnore(pool, unitFlags(s, A).ignoreMods || cm.ignoreMods);
         pools.set(key, pool);
       }
       pool.models += 1;
@@ -384,9 +305,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (hasAbility(p, 'rapid-fire')) {
         for (const a of fx) if (a.e.rapidFireAttacks) flat += a.e.rapidFireAttacks;
       }
-      if (m.isCharacter && A.enhancements?.some((e) => e.name === 'Empyric Onslaught') && psy && inFlow(s, A)) {
-        flat += 3;
-      }
+      flat += cm.attacksBonus;
       pool.instances.push({ A: p.A, extras, flat });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
@@ -419,7 +338,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
   const taunters = unitFlags(s, T).taunt ? [] : engagedEnemies(s, A).filter((e) => unitFlags(s, e).taunt);
   const glamour = unitFlags(s, T).glamour;
   const reach3 = unitFlags(s, A).fightReach3 && engagedEnemies(s, A).some((e) => e.id === T.id);
-  const sens = sensationalBlock(s, A, T);
+  const sens = targetBlock(s, A, T, 'fight');
   if (sens) return { pools: [], notes: [], error: sens };
   for (const m of fighters) {
     if (!modelEngagedWith(m, T) && !(reach3 && alive(T).some((t) => baseDist(m, t) <= 3 + 1e-6))) continue;
@@ -439,35 +358,8 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       const fx = offenceFor(s, A, m, T, w, p, 'melee', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
       const inc = incomingFor(s, A, m, T, 'melee').filter((i) => !i.psychic || psy);
-      const votann = votannAttackModifiers(s, A, T, 0, 'melee');
-      const def = votannDefenseModifiers(s, A, T, p, 0);
-      const adm = admechAttackModifiers(s, A, T, 0, 'melee', p, w.name);
-      const admDef = admechDefenseModifiers(s, A, T, 'melee');
-      const dru = drukhariAttackModifiers(s, A, T, 0, 'melee', p, w.name);
-      const druDef = drukhariDefenseModifiers(s, A, T, 'melee', p);
-      const cd = daemonsAttackModifiers(s, A, T, 0, 'melee', p, w.name);
-      const cdDef = daemonsDefenseModifiers(s, A, T, 'melee', p);
-      const cult = cultAttackModifiers(s, A, T, 0, 'melee', p, w.name);
-      const cultDef = cultDefenseModifiers(s, A, T, 'melee', p);
-      const nec = necAttackModifiers(s, A, T, 0, 'melee', p, w.name);
-      const necDef = necDefenseModifiers(s, A, T, 'melee', p);
-      const gk = gkAttackModifiers(s, A, T, 0, 'melee', p, w.name);
-      const gkDef = gkDefenseModifiers(s, A, T, 'melee', p);
-      const mods: Mods = {
-        skillDelta: adm.wsBonus ? -adm.wsBonus : 0,
-        skillNotes: [...adm.notes.filter((n) => n.includes('WS'))],
-        hit: votann.hitMod + adm.hitMod + admDef.hitMod + dru.hitMod + druDef.hitMod + cd.hitMod + cdDef.hitMod + cult.hitMod + cultDef.hitMod + nec.hitMod + necDef.hitMod + gk.hitMod + gkDef.hitMod,
-        hitNotes: [
-          ...votann.notes.filter((n) => n.includes('Hit')),
-          ...admDef.notes.filter((n) => n.includes('hit')),
-          ...dru.notes.filter((n) => n.includes('hit') || n.includes('Hit')),
-          ...cd.notes.filter((n) => n.includes('hit') || n.includes('Hit')),
-          ...cdDef.notes.filter((n) => n.includes('hit')),
-          ...cult.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
-          ...nec.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
-          ...gk.notes.filter((n) => n.includes('Hit') || n.includes('hit')),
-        ],
-      };
+      const cm = combatMods({ s, A, T, m, psychic: psy, mode: 'melee', d: 0, p, weapon: w.name });
+      const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes] };
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
       // Shield of Honour: this model is engaged with that unit but attacks another one
       const shamed = engagedEnemies(s, A).some((e) => e.id !== T.id && unitFlags(s, e).shieldOfHonour && modelEngagedWith(m, e));
@@ -478,54 +370,27 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         if (a.e.skill) { mods.skillDelta -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} WS`); }
       }
       const fm = finishPoolMods(p, mods, hasAbility(p, 'psychic'));
-      const precision = opt.epicChallengeModel === m.id || dru.precision;
+      const precision = opt.epicChallengeModel === m.id || cm.precision;
       const key = [m.source, w.name, fm.skill, fm.hit, precision, shamed, fxKey(fx, inc)].join('|');
       let pool = pools.get(key);
       if (!pool) {
         pool = newPool(key, w, p, T);
         pool.skill = fm.skill; pool.hitMod = fm.hit; pool.hitNote = mods.hitNotes.join(' · ');
         if (precision) pool.precision = true;
-        let strength = (p.S ?? 1) + votann.strengthBonus;
-        if (psy && isThousandSonsArmy(s, A.owner) && A.enhancements?.some((e) => e.name === 'Arcane Might')) {
-          strength += inFlow(s, A) ? 2 : 1;
-        }
+        let strength = (p.S ?? 1) + cm.strengthBonus;
         pool.woundNeed = woundNeed(strength, T_T);
-        let wm = buffSum(A, 'wound+1', 'wound-1') + votann.woundMod + def.woundMod + adm.woundMod + dru.woundMod + druDef.woundMod + cd.woundMod + cdDef.woundMod + cult.woundMod + cultDef.woundMod + nec.woundMod + necDef.woundMod + gk.woundMod + gkDef.woundMod;
+        let wm = buffSum(A, 'wound+1', 'wound-1') + cm.woundMod;
         const notes = [`S${strength} vs T${T_T}`];
         if (hasAbility(p, 'lance', T.keywords) && A.chargedTurn === s.turn) { wm += 1; notes.push('Lance +1'); }
         if (shamed) { wm -= 1; notes.push('Shield of Honour −1'); }
-        if (def.notes.length) notes.push(...def.notes);
-        if (adm.notes.length) notes.push(...adm.notes.filter((n) => !n.includes('WS') && !n.includes('AP')));
-        if (dru.notes.length) notes.push(...dru.notes.filter((n) => !n.includes('Hit')));
-        if (cd.notes.length) notes.push(...cd.notes.filter((n) => !n.includes('Hit') && !n.includes('hit')));
-        if (cult.notes.length) notes.push(...cult.notes.filter((n) => !n.includes('Hit') && !n.includes('hit')));
-        if (nec.notes.length) notes.push(...nec.notes.filter((n) => !n.includes('Hit') && !n.includes('hit')));
-        if (gk.notes.length) notes.push(...gk.notes.filter((n) => !n.includes('Hit') && !n.includes('hit')));
+        notes.push(...cm.otherNotes);
         pool.woundMod = clamp(wm, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundNote = notes.join(' · ');
-        if (votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus + cult.apBonus + nec.apBonus + gk.apBonus) pool.ap -= (votann.apBonus + adm.apBonus + dru.apBonus + cd.apBonus + cult.apBonus + nec.apBonus + gk.apBonus);
-        if (def.apWorsen + admDef.apWorsen + cdDef.apWorsen + cultDef.apWorsen + necDef.apWorsen + gkDef.apWorsen) pool.ap = Math.min(0, pool.ap + def.apWorsen + admDef.apWorsen + cdDef.apWorsen + cultDef.apWorsen + necDef.apWorsen + gkDef.apWorsen);
-        if (votann.rerollHits1 || adm.rerollHits1 || dru.rerollHits1 || cd.rerollHits1 || cult.rerollHits1 || nec.rerollHits1 || gk.rerollHits1) pool.rerollHits1 = true;
-        if (votann.rerollWounds1 || adm.rerollWounds1 || dru.rerollWounds1 || cd.rerollWounds1 || cult.rerollWounds1 || nec.rerollWounds1 || gk.rerollWounds1) pool.rerollWounds1 = true;
-        if (votann.rerollHits || adm.rerollHits || dru.rerollHits || cd.rerollHits || cult.rerollHits || nec.rerollHits || gk.rerollHits) pool.rerollAllHits = true;
-        if (votann.rerollWounds || dru.rerollWounds || cd.rerollWounds || cult.rerollWounds || nec.rerollWounds || gk.rerollWounds) pool.rerollAllWounds = true;
-        if (votann.lethal || adm.lethal || dru.lethal || cd.lethal || cult.lethal || nec.lethal || gk.lethal) pool.lethal = true;
-        if (cd.devastating || cult.devastating || nec.devastating || gk.devastating) pool.devastating = true;
-        if (cult.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = cult.critHitThreshold;
-        if (nec.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = nec.critHitThreshold;
-        if (gk.critHitThreshold < (pool.critHitOn ?? 6)) pool.critHitOn = gk.critHitThreshold;
-        if (cult.sustained && !pool.sustained) pool.sustained = cult.sustained;
-        else if (nec.sustained && !pool.sustained) pool.sustained = nec.sustained;
-        else if (gk.sustained && !pool.sustained) pool.sustained = gk.sustained;
-        else if (cd.sustained && !pool.sustained) pool.sustained = cd.sustained;
-        else if (dru.sustained && !pool.sustained) pool.sustained = dru.sustained;
-        else if (adm.sustained && !pool.sustained) pool.sustained = adm.sustained;
-        else if (votann.sustained && !pool.sustained) pool.sustained = votann.sustained;
-        if (dru.critWoundOn && (!pool.critWoundOn || dru.critWoundOn < pool.critWoundOn)) pool.critWoundOn = dru.critWoundOn;
+        applyCombatMods(pool, cm);
         if (psy) pool.psychic = true;
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
-        applyFlowOfMagic(s, A, pool, psy);
+        runPoolFinishers({ s, A, T, m, psychic: psy, mode: 'melee', d: 0, p, weapon: w.name }, pool);
         applyAttackEffects(s, A, T, pool, fx, inc, 'melee', d, T_T, woundNeed);
         finishIgnore(pool, unitFlags(s, A).ignoreMods);
         pools.set(key, pool);
@@ -533,7 +398,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       pool.models += 1;
       const cleave = getAbility(p, 'cleave', T.keywords);
       const cleaveN = (cleave ? parseInt(cleave.value ?? '1', 10) : grants(fx, inc, 'cleave 1') || grants(fx, inc, 'cleave +1') ? 1 : 0) + (cleave && grants(fx, inc, 'cleave +1') ? 1 : 0); // Into the Fray; Mow 'Em Down: +1
-      pool.instances.push({ A: p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) + (dru.attacksBonus || 0) + (cult.attacksBonus || 0) + (nec.attacksBonus || 0) + (gk.attacksBonus || 0) });
+      pool.instances.push({ A: p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) + cm.attacksBonus });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
   }
@@ -648,7 +513,7 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
   // a low random number of attacks: the bot (or a player who turned it on) re-rolls the worst one
   const low = s.attack.pools.map((p, i) => ({ i, gap: attackRerollGap(p) })).filter((x) => x.gap >= 1).sort((a, b) => b.gap - a.gap)[0];
   if (low && wantsCR(s, A.owner, 'attacks', A)) rerollAttackCount(s, low.i);
-  noteTarget(s, s.attack.attackerId, s.attack.targetId);
+  emit(s, 'targetChosen', { attackerId: s.attack.attackerId, targetId: s.attack.targetId });
   for (const h of startHooks) h(s, s.attack);
   if (s.campaign) {
     resolveAll(s);
@@ -744,16 +609,10 @@ export function rollHits(s: GameState) {
     p.hits = rollN(s, p.attacks).map((v) => ({ v, o: evalHit(p, v) }));
     const A = unitById(s, at.attackerId);
     if (p.hits.some((h) => h.o === 'miss')) {
-      const aofHit = tryActOfFaith(s, A, 'hit', { need: p.skill ?? 3, best: !!(p.lethal || p.sustained), damage: exprAverage(p.damage), isCharacter: A.models.some((m) => m.isCharacter) });
-      if (aofHit !== null) {
+      const rescued = rescueDie(s, A, 'hit', { need: p.skill ?? 3, best: !!(p.lethal || p.sustained), damage: exprAverage(p.damage), isCharacter: A.models.some((m) => m.isCharacter) });
+      if (rescued !== null) {
         const missIdx = p.hits.findIndex((h) => h.o === 'miss');
-        if (missIdx >= 0) p.hits[missIdx] = { v: aofHit, o: evalHit(p, aofHit), rerolled: true, orig: p.hits[missIdx].v };
-      } else {
-        const fateHit = tryFateDie(s, A, 'hit', { need: p.skill ?? 3, best: !!(p.lethal || p.sustained), damage: exprAverage(p.damage), isCharacter: A.models.some((m) => m.isCharacter) });
-        if (fateHit !== null) {
-          const missIdx = p.hits.findIndex((h) => h.o === 'miss');
-          if (missIdx >= 0) p.hits[missIdx] = { v: fateHit, o: evalHit(p, fateHit), rerolled: true, orig: p.hits[missIdx].v };
-        }
+        if (missIdx >= 0) p.hits[missIdx] = { v: rescued.v, o: evalHit(p, rescued.v), rerolled: true, orig: p.hits[missIdx].v };
       }
     }
     const all = p.rerollAllHits || A.buffs.some((b) => b.kind === 'rerollHits');
@@ -761,6 +620,22 @@ export function rollHits(s: GameState) {
     if (!p.noHitReroll && (all || ones)) offerReroll(s, p, 'hit', all ? 'all' : 'ones');
   }
   at.stage = 'wound';
+}
+
+/** The army-rule modifiers that change the pool itself: AP, re-rolls, weapon abilities, critical thresholds. */
+function applyCombatMods(pool: Pool, cm: CombinedMods) {
+  if (cm.apBonus) pool.ap -= cm.apBonus;
+  if (cm.apWorsen) pool.ap = Math.min(0, pool.ap + cm.apWorsen);
+  if (cm.rerollHits1) pool.rerollHits1 = true;
+  if (cm.rerollWounds1) pool.rerollWounds1 = true;
+  if (cm.rerollHits) pool.rerollAllHits = true;
+  if (cm.rerollWounds) pool.rerollAllWounds = true;
+  if (cm.lethal) pool.lethal = true;
+  if (cm.devastating) pool.devastating = true;
+  if (cm.critHitOn < (pool.critHitOn ?? 6)) pool.critHitOn = cm.critHitOn;
+  if (cm.sustained && !pool.sustained) pool.sustained = cm.sustained;
+  if (cm.critWoundOn && (!pool.critWoundOn || cm.critWoundOn < pool.critWoundOn)) pool.critWoundOn = cm.critWoundOn;
+  if (cm.damageBonus) pool.damage = addToExpr(pool.damage, cm.damageBonus);
 }
 
 /** Dice an ability lets the attacker re-roll at this stage (01.05.02: a die is only ever re-rolled once). */
@@ -875,16 +750,10 @@ export function rollWounds(s: GameState) {
   p.wounds = rollN(s, rolls).map((v) => ({ v, o: evalWound(p, v) }));
   const A = unitById(s, at.attackerId);
   if (p.wounds.some((w) => w.o === 'fail')) {
-    const aofWound = tryActOfFaith(s, A, 'wound', { need: p.woundNeed, best: !!p.devastating, damage: exprAverage(p.damage), isCharacter: A.models.some((m) => m.isCharacter) });
-    if (aofWound !== null) {
+    const rescued = rescueDie(s, A, 'wound', { need: p.woundNeed, best: !!p.devastating, damage: exprAverage(p.damage), isCharacter: A.models.some((m) => m.isCharacter) });
+    if (rescued !== null) {
       const failIdx = p.wounds.findIndex((w) => w.o === 'fail');
-      if (failIdx >= 0) p.wounds[failIdx] = { v: aofWound, o: evalWound(p, aofWound), rerolled: true, orig: p.wounds[failIdx].v };
-    } else {
-      const fateWound = tryFateDie(s, A, 'wound', { need: p.woundNeed, best: !!p.devastating, damage: exprAverage(p.damage), isCharacter: A.models.some((m) => m.isCharacter) });
-      if (fateWound !== null) {
-        const failIdx = p.wounds.findIndex((w) => w.o === 'fail');
-        if (failIdx >= 0) p.wounds[failIdx] = { v: fateWound, o: evalWound(p, fateWound), rerolled: true, orig: p.wounds[failIdx].v };
-      }
+      if (failIdx >= 0) p.wounds[failIdx] = { v: rescued.v, o: evalWound(p, rescued.v), rerolled: true, orig: p.wounds[failIdx].v };
     }
   }
   const rrAll = p.twinLinked || p.rerollAllWounds || A.buffs.some((b) => b.kind === 'rerollWounds');
@@ -984,11 +853,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     u.status = 'destroyed';
     s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id, killerId: s.attack?.attackerId, phase: s.phase });
     onUnitDestroyed(s, u, s.attack?.attackerId);
-    sororitasUnitDestroyed(s, u);
-    votannUnitDestroyed(s, u, s.attack?.attackerId);
-    drukhariUnitDestroyed(s, u, s.attack?.attackerId ? s.units.find((x) => x.id === s.attack?.attackerId) : undefined);
-    daemonsUnitDestroyed(s, u, s.attack?.attackerId ? s.units.find((x) => x.id === s.attack?.attackerId) : undefined);
-    cultAmbushUnitDestroyed(s, u);
+    emit(s, 'unitDestroyed', { u, attackerId: s.attack?.attackerId });
     log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
     if (s.campaign) {
       const killerOwner = s.attack ? unitById(s, s.attack.attackerId).owner : other(u.owner);
@@ -1017,7 +882,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
       pushFx(s, { kind: 'explosion', at: { x: m.x, y: m.y }, range: RULES.deadlyDemiseRange, radius: RULES.deadlyDemiseRange + reachOf(m), hits: targets.length });
       for (const v of targets) {
         applyMortalWounds(s, v, rollExpr(s, dd).total, 'Deadly Demise');
-        putridHit(s, u, v);
+        emit(s, 'deadlyDemiseHit', { u, v });
       }
     } else log(s, `Deadly Demise from ${m.name}: rolled ${r} (no explosion)`, 'roll');
   }
@@ -1120,18 +985,11 @@ export function applyDamage(s: GameState) {
     if (!ok && !d.rerolled) {
       const minSv = Math.min(inv ?? 99, Math.max(RULES.modifierCaps.bestSave, sv) - effAp);
       if (minSv <= 6) {
-        const aofSv = tryActOfFaith(s, T, 'save', { need: minSv, damage: exprAverage(p.damage), isCharacter: m.isCharacter });
-        if (aofSv !== null) {
-          d.v = aofSv;
+        const rescued = rescueDie(s, T, 'save', { need: minSv, damage: exprAverage(p.damage), isCharacter: m.isCharacter });
+        if (rescued !== null) {
+          d.v = rescued.v;
           ok = true;
           d.rerolled = true;
-        } else {
-          const fateSv = tryFateDie(s, T, 'save', { need: minSv, damage: exprAverage(p.damage), isCharacter: m.isCharacter });
-          if (fateSv !== null) {
-            d.v = fateSv;
-            ok = true;
-            d.rerolled = true;
-          }
         }
       }
     }
@@ -1140,18 +998,11 @@ export function applyDamage(s: GameState) {
     if (!ok) {
       let dr = rollExpr(s, p.damage);
       if (dr.dice.length && dr.total < exprAverage(p.damage)) {
-        const aofDmg = tryActOfFaith(s, A, 'damage');
-        if (aofDmg !== null) {
+        const rescued = rescueDie(s, A, 'damage');
+        if (rescued !== null) {
           const flat = p.damage.includes('+') ? parseInt(p.damage.split('+')[1]) : 0;
-          dr = { total: aofDmg + flat, dice: [aofDmg] };
-          p.damageLines.push(`Act of Faith: Damage substituted with Miracle die [${aofDmg}] = ${dr.total}`);
-        } else {
-          const fateDmg = tryFateDie(s, A, 'damage');
-          if (fateDmg !== null) {
-            const flat = p.damage.includes('+') ? parseInt(p.damage.split('+')[1]) : 0;
-            dr = { total: fateDmg + flat, dice: [fateDmg] };
-            p.damageLines.push(`Strands of Fate: Damage substituted with Fate die [${fateDmg}] = ${dr.total}`);
-          }
+          dr = { total: rescued.v + flat, dice: [rescued.v] };
+          p.damageLines.push(`${rescued.rule}: Damage substituted with ${rescued.die} [${rescued.v}] = ${dr.total}`);
         }
       }
       if ((p.rerollDamage || (p.rerollDamageOne && dr.total < m.wounds)) && dr.dice.length && dr.total < exprAverage(p.damage)) {

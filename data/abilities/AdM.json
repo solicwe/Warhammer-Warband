@@ -16,7 +16,7 @@
     "status": "auto",
     "note": "At the start of your Command phase, this model regains up to D3 lost wounds."
   },
-  "SUPREME COMMANDER": {
+  "SUPREME COMMANDER": { "code": true,
     "status": "auto",
     "note": "If this model is in your army, it must be your Warlord."
   },
@@ -39,7 +39,7 @@
       }
     ]
   },
-  "Leader": {
+  "Leader": { "code": true,
     "status": "auto",
     "note": "LEADER24.22 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
   },
@@ -65,7 +65,7 @@
     "status": "auto",
     "note": "In your Command phase, select one friendly ADEPTUS MECHANICUS model within 3\" of this model. That model regains up to D3 lost wounds and, if it is a VEHICLE model, until the start of your next Command phase, that model has the Feel No Pain 5+ ability."
   },
-  "Vengeance for the Omnissiah": {
+  "Vengeance for the Omnissiah": { "code": true,
     "status": "auto",
     "note": "If a friendly Adeptus Mechanicus Vehicle model is destroyed within 12\" of this model, until the end of the battle, this model’s Omnissian axe has an Attacks characteristic of 6."
   },
@@ -77,7 +77,7 @@
     "status": "auto",
     "note": "Each time you target this unit with the Fire Overwatch Stratagem, hits are scored on unmodified Hit rolls of 5+ when resolving that Stratagem."
   },
-  "Feel No Pain": {
+  "Feel No Pain": { "code": true,
     "status": "auto",
     "note": "FEEL NO PAIN24.12 The hardiest warriors refuse to be laid low, even by wounds that should by all rights prove lethal. This ability always takes the form Feel No Pain X+. Each time a model with this ability would lose a wound, roll one D6: on an X+, that wound is not lost."
   },
@@ -89,7 +89,7 @@
     "status": "auto",
     "note": "In your Shooting phase, after this unit has shot, select one enemy unit (excluding MONSTERS and VEHICLES) hit by one or more of those attacks. Until the end of your opponent’s next turn, that enemy unit is shocked."
   },
-  "Deadly Demise": {
+  "Deadly Demise": { "code": true,
     "status": "auto",
     "note": "DEADLY DEMISE24.08 From detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat. This ability always takes the form Deadly Demise X."
   },
@@ -101,7 +101,7 @@
     "status": "auto",
     "note": "When an enemy unit targets this unit with ranged attacks, until that enemy unit has shot, when this unit makes a save roll: • On an unmodified 6, that enemy unit suffers 1 mortal wound after that enemy unit has shot."
   },
-  "Support": {
+  "Support": { "code": true,
     "status": "auto",
     "note": "SUPPORT24.34 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
   },
@@ -113,7 +113,7 @@
     "status": "auto",
     "note": "If there are no KASTELAN ROBOT models in this unit: • This unit loses VEHICLE. • This unit has INFANTRY."
   },
-  "Scouts": {
+  "Scouts": { "code": true,
     "status": "auto",
     "note": "SCOUTS24.31 Scouts form the vanguard of many armies. Unnoticed by the enemy, they range ahead of the main force. This ability always takes the form Scouts X\"."
   },
@@ -141,11 +141,11 @@
     "status": "auto",
     "note": "While an enemy unit (excluding VEHICLE units) is within 3\" of this unit, subtract 1 from the Objective Control characteristic of models in that unit."
   },
-  "Infiltrators": {
+  "Infiltrators": { "code": true,
     "status": "auto",
     "note": "INFILTRATORS24.20 Many armies employ reconnaissance units who can sit concealed, waiting for the right moment to strike. During deployment, if every model in a unit has this ability, it can be set up anywhere on the battlefield that is more than 8\" horizontally from your opponent’s deployment zone and all enemy units."
   },
-  "Stealth": {
+  "Stealth": { "code": true,
     "status": "auto",
     "note": "STEALTH24.33 The stealthiest warriors can evade the attentions, and the bullets, of their foes. If every model in a unit has this ability, each time a ranged attack targets that unit, that unit has the benefit of cover against that attack (13.08)."
   },
@@ -193,7 +193,7 @@
     "status": "auto",
     "note": "Once per battle, at the start of any phase, this model can use this ability. If it does, until the end of the phase, all models in this model’s unit have a 4+ invulnerable save."
   },
-  "Firing Deck": {
+  "Firing Deck": { "code": true,
     "status": "auto",
     "note": "FIRING DECK24.14 Some transports have dedicated platforms or firing ports from which embarked passengers can lay down a withering hail of munitions. This ability always takes the form Firing Deck X."
   },
@@ -213,7 +213,7 @@
     "status": "auto",
     "note": "In your opponent’s Movement phase, if an enemy unit ends a move within 8\" of this unit, if this unit is not within Engagement Range of one or more enemy units, it can do one of the following: • Make a Normal move of up to D6\" • Make a Normal move of up to 6\" provided every model in this unit ends th..."
   },
-  "Deep Strike": {
+  "Deep Strike": { "code": true,
     "status": "auto",
     "note": "DEEP STRIKE24.09 There are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation. Each time this unit makes an ingress move (20."
   },
@@ -225,7 +225,7 @@
     "status": "auto",
     "note": "In your Shooting phase, after this unit has shot, if it is not within Engagement Range of one or more enemy units, it can do one of the following: • Make a Normal move of up to 6\"."
   },
-  "Hover": {
+  "Hover": { "code": true,
     "status": "auto",
     "note": "HOVER24.17 Some airborne vehicles can use vectored thrusters or anti-gravity technology to hover and skim over the battlefield, the better to hunt their prey or deploy embarked troops. Each time this unit takes to the skies (21.03), do not subtract 2\" from the maximum distance."
   },
@@ -233,7 +233,7 @@
     "status": "auto",
     "note": "The bearer has the SMOKE keyword."
   },
-  "Command Uplink": {
+  "Command Uplink": { "code": true,
     "status": "auto",
     "note": "Each time you select the bearer’s unit as the target of a Stratagem, roll one D6: on a 5+, you gain 1CP."
   },
@@ -281,7 +281,7 @@
     "status": "auto",
     "note": "At the start of the battle, select one unit from your opponent’s army. Until the end of the battle, each time a model in this unit makes an attack that targets that unit, you can re-roll the Hit roll."
   },
-  "Lone Operative": {
+  "Lone Operative": { "code": true,
     "status": "auto",
     "note": "LONE OPERATIVE24.24 Assassins and other covert agents are difficult to pinpoint in the storm of battle. Unless part of an attached unit, this unit is not visible to enemy models unless they are within 12\" of this unit, and it cannot be targeted by [INDIRECT FIRE] weapons unless the attacking model i..."
   },
@@ -302,7 +302,7 @@
     "note": "While this unit contains one or more Tech-Priest models, this unit is: • Eligible to perform an Action in a turn in which it Advanced. • Eligible to shoot in a turn in which it started an Action."
   },
   "ATTACHED UNIT": {
-    "status": "auto",
+    "status": "info",
     "note": "If a Character unit from your army with the Leader ability can be attached to a Kataphron Breachers unit, it can be attached to this unit instead."
   },
   "Rod of the War Forge": {
@@ -326,7 +326,7 @@
     "status": "auto",
     "note": "You can select one friendly Skitarii or THULIA GHULD unit within 6\" of this model; until the start of your next Command phase, that unit is eligible to shoot and declare a charge in a turn in which it Fell Back."
   },
-  "The Fires of Mars": {
+  "The Fires of Mars": { "code": true,
     "status": "auto",
     "note": "You can select one friendly Skitarii or THULIA GHULD unit within 6\" of this model; until the start of your next Command phase, the Conqueror Imperative and Protector Imperative are both active for that unit."
   },
@@ -446,7 +446,7 @@
     "status": "auto",
     "note": "Cybernetica Datasmith model only. When the bearer is attached to a Kastelan Robots unit, until the end of the battle, models in that unit gain the HALO OVERRIDE keyword. That unit cannot be selected when selecting units as part of the Noospheric Transference Detachment rule."
   },
-  "Cognitive Reinforcement": {
+  "Cognitive Reinforcement": { "code": true,
     "status": "auto",
     "note": "ADEPTUS MECHANICUS model only (excluding Cybernetica Datasmith models). The Conqueror Imperative and Protector Imperative are both active for the bearer’s unit."
   },
@@ -462,7 +462,7 @@
     "status": "auto",
     "note": "Each time a model in a Skitarii unit from your army makes an attack: • If the Protector Imperative is active for that unit, re-roll a Hit roll of 1. • If the Conqueror Imperative is active for that unit, re-roll a Wound roll of 1."
   },
-  "Omnicogitator": {
+  "Omnicogitator": { "code": true,
     "status": "auto",
     "note": "Skitarii Marshal model only. The Conqueror Imperative and Protector Imperative are both active for the bearer’s unit."
   },

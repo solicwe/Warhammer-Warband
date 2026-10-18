@@ -1,8 +1,8 @@
 // A campaign: a run of short battles across a branching map, roguelite style. The player starts with a small army of
 // one faction and picks a road through the map: battles, elite enemies with a special rule, supply drops, armories,
 // medicae tents, and a boss at the end.
-import { addTimed } from './effects';
-import type { Effect } from './effects';
+import { addTimed } from '../rules-engine/effects';
+import type { Effect } from '../rules-engine/effects';
 import { defaultWargear, pointsOptions, syncWargear } from './army';
 import { AUX_EXCLUSIONS } from './autoList';
 import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState, WargearPick } from './types';
@@ -224,8 +224,6 @@ export const BOSS_RULES: BossRule[] = [
   { id: 'furious-swarms', name: 'Furious Swarm', text: 'Enemy units have [SUSTAINED HITS 1] on melee attacks.', e: { abilities: ['sustained hits 1'], attack: 'melee' } },
 ];
 export const bossRuleById = (id: string) => BOSS_RULES.find((r) => r.id === id);
-
-const RUN_KEY = 'campaign-run';
 
 export function rng(seed: number) {
   let x = (seed >>> 0) || 1;
@@ -739,12 +737,3 @@ export function continueNextLoop(run: Run, faction: FactionData): Run {
   };
 }
 
-export function loadRun(): Run | null {
-  try {
-    const v = JSON.parse(localStorage.getItem(RUN_KEY) ?? 'null') as Run | null;
-    return v && v.version === 1 && Array.isArray(v.map) ? v : null;
-  } catch { return null; }
-}
-export function saveRun(run: Run | null) {
-  try { if (run) localStorage.setItem(RUN_KEY, JSON.stringify(run)); else localStorage.removeItem(RUN_KEY); } catch { /* private window */ }
-}

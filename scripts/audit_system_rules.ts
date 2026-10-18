@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createGame, formationAt, placeUnit, startTurn, endPhase, setOathTarget, callWaaagh } from '../src/engine/game';
-import { activeRules, DET_RULES, effectsFor, addTimed, expireTimed, withRuleCache } from '../src/engine/effects';
+import { activeRules, DET_RULES, effectsFor, addTimed, expireTimed, withRuleCache } from '../src/rules-engine/effects';
 import { buildShootPools, buildFightPools, resolveAll, applyMortalWounds } from '../src/engine/attack';
 import { PRESETS } from '../src/ui/presets';
 import { RULES } from '../src/engine/config';

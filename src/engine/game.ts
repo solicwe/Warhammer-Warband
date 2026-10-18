@@ -1,16 +1,12 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
-import { dsKeep, stinkBlocks } from './deathGuard';
-import { battleShockMod, deepStrikeDistance, emit } from './events';
-import './factionHooks';
-import { noteTarget, thrillBlock } from './emperorsChildren';
+import { battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
+import '../factions/index';
 import { buildUnits, forChapter, newUid, transportFit } from './army';
 import { applyMortalWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
-import { blessingsRoll } from './blessings';
-import { circleInFlow } from './flow';
 import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
@@ -21,14 +17,10 @@ import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKi
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
 import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathLength } from './pathing';
-import { detOnCommandStart } from './detachments';
-import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from './effects';
-import './rituals';
-import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from './activations';
+import { detOnCommandStart } from '../rules-engine/detachments';
+import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
+import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
 
-import { inSynapse } from './tyranids';
-import { tryActOfFaith } from './sororitas';
-import { tryFateDie } from './aeldari';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -442,7 +434,8 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     const len = pathLength(path);
     const max = maxMoveDistance(s, u, kind, m, opt);
     if (len > max + 0.02) { errors.push(`${m.name} moved ${len.toFixed(1)}", more than ${max.toFixed(1)}"`); bad.add(m.id); }
-    if (kind === 'advance' && stinkBlocks(s, u, m, path[0], path[path.length - 1])) { errors.push('Putrefying Stink: cannot start or end an Advance move within 9" of a Foul Blightspawn'); bad.add(m.id); }
+    const blocked = moveBlock(s, u, m, path[0], path[path.length - 1], kind);
+    if (blocked) { errors.push(blocked); bad.add(m.id); }
     const why = pathBlocked(s, u, kind, m, path, opt);
     if (why === 'enemy') { errors.push(`${m.name} cannot move through enemy models`); bad.add(m.id); }
     if (why === 'wall') { errors.push(`${m.name} cannot move through a terrain wall — release and a way around will be found`); bad.add(m.id); }
@@ -509,7 +502,7 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
     if (how !== 'deploy') {
       const keep = homer ? 8 : how === 'deepStrike' ? deepStrikeDistance(s, u, p, fl!.deepStrikeRange) : Math.min(RULES.reserves.enemyDistance, fl!.ingressRange ?? RULES.reserves.enemyDistance);
       // Death Approaches / Beckoning Blight: closer to some enemy units
-      const keepFor = (e: UnitState) => (how === 'deepStrike' ? Math.min(keep, dsKeep(s, u, e, p, m) ?? keep) : keep);
+      const keepFor = (e: UnitState) => (how === 'deepStrike' ? Math.min(keep, deepStrikeKeep(s, u, e, p, m) ?? keep) : keep);
       if (enemies.some((e) => alive(e).some((n) => gap(bodyAt(m, p), n) <= keepFor(e)))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
       if (hasKw(u, 'DAEMON') && s.objectives.some((o) => o.warded !== undefined && o.warded !== null && o.warded !== u.owner
         && o.controller === o.warded && ptGap({ ...m, ...p }, o) <= 6 + EPS)) {
@@ -519,7 +512,7 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
     }
     const dsNear = how === 'deepStrike' ? fl!.deepStrikeNear : undefined;
     if (dsNear && !boardUnits(s, u.owner).some((f) => f.id !== u.id && (hasKw(f, dsNear.kw) || f.factionKeywords.includes(dsNear.kw)) && alive(f).some((n) => ptGap(n, p) + reachOf(m) <= dsNear.range + 1e-6))) { errors.push(`Must be set up wholly within ${dsNear.range}" of a friendly ${dsNear.kw} unit`); bad.add(m.id); }
-    if (how === 'deepStrike' && fl!.deepStrikeInFlow && !circleInFlow(s, u.owner, p, m.r)) { errors.push('Through the Veil: must be set up wholly within your Flow of Magic'); bad.add(m.id); }
+    if (how === 'deepStrike' && fl!.deepStrikeInFlow && !deepStrikeZoneOk(s, u.owner, p, m.r)) { errors.push('Through the Veil: must be set up wholly within your Flow of Magic'); bad.add(m.id); }
     if (how === 'ingress' || how === 'deepStrike') {
       for (const { e, omni } of omnis) {
         if (alive(e).some((n) => gap(bodyAt(m, p), n) <= omni)) { errors.push(`Cannot be set up within ${omni}" of ${e.name} (Omni-scramblers)`); bad.add(m.id); }
@@ -982,30 +975,23 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
     const dMod = battleShockMod(s, u);
     const mod = (unitFlags(s, u).ignoreMods ? 0 : t.mod ?? 0) + dMod;
     if (unitFlags(s, u).autoPassShock) { t.result = 12; t.passed = true; t.auto = true; log(s, `${u.name}: Battle-shock test passed automatically`, 'info', u.owner); return; }
-    const syn = inSynapse(s, u);
-    let r = rollN(s, syn ? 3 : 2);
+    const nDice = shockDice(s, u);
+    let r = rollN(s, nDice);
     t.result = r.reduce((a, b) => a + b, 0) + mod;
     t.passed = t.result >= ld;
     if (!t.passed && rollMods(s, u).rerollShock) {
       log(s, `${u.name}: re-roll Battle-shock (ability)`, 'info', u.owner);
-      r = rollN(s, syn ? 3 : 2);
+      r = rollN(s, nDice);
       t.result = r.reduce((a, b) => a + b, 0) + mod;
       t.passed = t.result >= ld;
     }
     if (!t.passed) {
       const needOnDie = ld - mod - r[1];
-      const aofShock = tryActOfFaith(s, u, 'shock', { need: needOnDie });
-      if (aofShock !== null) {
-        r[0] = aofShock;
+      const rescued = rescueDie(s, u, 'shock', { need: needOnDie });
+      if (rescued !== null) {
+        r[0] = rescued.v;
         t.result = r.reduce((a, b) => a + b, 0) + mod;
         t.passed = t.result >= ld;
-      } else {
-        const fateShock = tryFateDie(s, u, 'shock', { need: needOnDie });
-        if (fateShock !== null) {
-          r[0] = fateShock;
-          t.result = r.reduce((a, b) => a + b, 0) + mod;
-          t.passed = t.result >= ld;
-        }
       }
     }
     pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${t.result} vs Ld ${ld}+ → ${t.passed ? 'passed' : 'failed!'}`, good: t.passed });
@@ -1164,12 +1150,8 @@ export function rollAdvance(s: GameState, u: UnitState) {
   }
   let raw = det.advanceSix ? 6 : d6(s);
   if (raw < 4) {
-    const aof = tryActOfFaith(s, u, 'advance', { need: 4 });
-    if (aof !== null) raw = aof;
-    else {
-      const fate = tryFateDie(s, u, 'advance', { need: 4 });
-      if (fate !== null) raw = fate;
-    }
+    const rescued = rescueDie(s, u, 'advance', { need: 4 });
+    if (rescued !== null) raw = rescued.v;
   }
   const bonus = (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0) + det.advanceBonus;
   u.advanceRoll = raw + bonus;
@@ -1451,14 +1433,9 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
     const higher = Math.max(r[0], r[1]);
     const needOnOther = near - higher - bonus;
     if (needOnOther <= 6) {
-      const aof = tryActOfFaith(s, u, 'charge', { need: needOnOther });
-      if (aof !== null) {
-        if (r[0] <= r[1]) r[0] = aof; else r[1] = aof;
-      } else {
-        const fate = tryFateDie(s, u, 'charge', { need: needOnOther });
-        if (fate !== null) {
-          if (r[0] <= r[1]) r[0] = fate; else r[1] = fate;
-        }
+      const rescued = rescueDie(s, u, 'charge', { need: needOnOther });
+      if (rescued !== null) {
+        if (r[0] <= r[1]) r[0] = rescued.v; else r[1] = rescued.v;
       }
     }
   }
@@ -1574,7 +1551,7 @@ export function chargeTargetOptions(s: GameState, u: UnitState, opts: { onlyChar
     if (opts.onlyChargedThisPhase && e.chargedTurn !== s.turn) return false;
     const only = unitFlags(s, u).onlyTargetMarked;
     if (only && (u.move === 'advance' || u.move === 'fallback') && !(e.timed ?? []).some((t) => t.mark === only && t.by === u.owner)) return false;
-    if (thrillBlock(s, u, e)) return false;
+    if (targetBlock(s, u, e, 'charge')) return false;
     const by = unitFlags(s, u).chargeNeedEngagedBy;
     if (by && (u.move === 'advance' || u.move === 'fallback') && !engagedEnemies(s, e).some((f) => hasKw(f, by) || f.factionKeywords.includes(by))) return false;
     return true;
@@ -1589,7 +1566,7 @@ export function commitCharge(s: GameState, u: UnitState, paths: Map<string, Pt[]
   commitMove(s, u, 'charge', paths);
   u.chargedTurn = s.turn;
   u.chargeTargets = targets;
-  for (const t of targets) noteTarget(s, u.id, t);
+  for (const t of targets) emit(s, 'targetChosen', { attackerId: u.id, targetId: t });
   if (s.lastAct?.unitId === u.id && s.lastAct.kind === 'charge') s.lastAct.targets = [...targets];
   log(s, `${u.name} charges successfully → ${targets.map((t) => unitById(s, t).name).join(', ')} (Fights First)`, 'info', u.owner);
   fire(s, 'endOfCharge', [u], { targetId: targets[0] });
@@ -1721,10 +1698,7 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
 
 function startFight(s: GameState) {
   s.fight = { step: 'pileIn', stepPlayer: s.active, chooser: s.active, eligible: [], fought: [], forcedNext: null, movedThisStep: [] };
-  // Adamantine Avalanche (Butchers of Khorne): an engaged Terminator Squad means one more Blessing for them this phase
-  for (const p of [s.active, other(s.active)]) {
-    if (activeRules(s, p).includes('Butchers of Khorne') && boardUnits(s, p).some((u) => u.keywords.includes('TERMINATOR SQUAD') && isEngaged(s, u))) blessingsRoll(s, p, { label: 'Adamantine Avalanche', kw: 'TERMINATOR SQUAD', until: 'phase' });
-  }
+  emit(s, 'fightStart', {});
   // Acheron's Duty, Unrestrained Terror, Nightmare's Master: enemy units engaged with them take a Battle-shock test
   for (const u of boardUnits(s)) {
     const mod = unitFlags(s, u).fightStartShock;

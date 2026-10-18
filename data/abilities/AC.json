@@ -598,7 +598,7 @@
     "status": "auto",
     "note": "Emperor's Light weapon [EXTRA ATTACKS] already added to the model"
   },
-  "Castellan's Mark": {
+  "Castellan's Mark": { "code": true,
     "status": "auto",
     "note": "After both players deploy: redeploy up to 3 CUSTODES units (set up again or place into Strategic Reserves)"
   },

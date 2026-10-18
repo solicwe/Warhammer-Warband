@@ -1,6 +1,6 @@
 // Blessings of Khorne roll: the dice (tap to pick the ones to re-roll), the ways to use them, and what each Blessing does.
 import { useState } from 'react';
-import { BLESSINGS, blessingById, blessingNeed, blessingPicks, type BlessingPick } from '../engine/blessings';
+import { BLESSINGS, blessingById, blessingNeed, blessingPicks, type BlessingPick } from '../factions/blessings';
 import { Die } from './RollOverlay';
 
 interface Props {

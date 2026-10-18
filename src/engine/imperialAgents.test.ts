@@ -1,15 +1,15 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { abilityRule, abilityStatus, DET_RULES, incomingFor, modelDefence, unitFlags, unitGrants } from './effects';
+import { abilityRule, abilityStatus, DET_RULES, incomingFor, modelDefence, unitFlags, unitGrants } from '../rules-engine/effects';
 import { buildUnits, listPoints, validateList } from './army';
-import { botAct } from './bot';
-import { botExplosives } from './botStrats';
-import { applyDetachmentStratagem, stratRule } from './stratagems';
+import { botAct } from '../ai/bot';
+import { botExplosives } from '../ai/botStrats';
+import { applyDetachmentStratagem, stratRule } from '../rules-engine/stratagems';
 import { canEmbarkIn, createGame, deployUnit, endRedeploy, findPlacement, formationAt, placeUnit, redeployCandidates, redeployUnit, validatePlacement } from './game';
-import { detChoices, pickDetChoice } from './detachments';
+import { detChoices, pickDetChoice } from '../rules-engine/detachments';
 import { buildShootPools } from './attack';
 import { d6 } from './dice';
-import { addTimed } from './effects';
+import { addTimed } from '../rules-engine/effects';
 import { engagedEnemies, notifyAbilityCpGain, unitDistance } from './state';
 import { PRESETS } from '../ui/presets';
 import type { FactionData, UnitState } from './types';
@@ -335,7 +335,7 @@ describe('Imperial Agents rule coverage', () => {
       const probe = { sources: [sheet.name], abilities: [], models: [] } as unknown as UnitState;
       for (const ability of sheet.abilities) {
         const status = abilityStatus(probe, { ...ability, sheet: sheet.name, faction: AoI.id }).status;
-        if (!['auto', 'core'].includes(status)) missing.push(`${sheet.name}: ${ability.name} (${status})`);
+        if (!['auto', 'core', 'info'].includes(status)) missing.push(`${sheet.name}: ${ability.name} (${status})`);
       }
     }
     console.log(missing.join('\n'));

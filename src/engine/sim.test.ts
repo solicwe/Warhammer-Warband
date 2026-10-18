@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { botAct } from './bot';
+import { botAct } from '../ai/bot';
 import { layoutsFor, MISSIONS, type DispositionId } from './config';
 import { createGame } from './game';
 import { PRESETS } from '../ui/presets';

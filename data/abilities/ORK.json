@@ -1,6 +1,6 @@
 {
   "Da Boss": { "act": { "when": "roundStart", "auto": true, "if": ["warlord"], "do": [{ "cp": 1 }] } },
-  "Waaagh!": { "status": "auto", "note": "Automated: WAAAGH! button in the Command phase, riled up = 5+ invulnerable save / shoot with [ASSAULT] / charge after Advancing, free Advance re-roll" },
+  "Waaagh!": { "code": true, "status": "auto", "note": "Automated: WAAAGH! button in the Command phase, riled up = 5+ invulnerable save / shoot with [ASSAULT] / charge after Advancing, free Advance re-roll" },
   "Boss’ Ammo Runt (Once per battle, per unit)": { "act": { "when": "selectedToShoot", "limit": "battle", "label": "+1 to Hit when shooting (Warboss)", "do": [{ "on": "self", "bearerOnly": true, "buff": [{ "attack": "ranged", "hit": 1 }], "until": "phase" }] } },
   "Might Is Right": { "effects": [{ "scope": "model", "attack": "melee", "if": ["charged"], "attacks": 3, "strength": 2 }] },
   "Intimidating Motivation (Once per battle round, per army)": { "act": { "when": "movement", "limit": "round", "per": "army", "target": { "side": "friendly", "range": 6, "units": ["ORKS"] }, "label": "Ork units within 6\": no longer Battle-shocked + riled up", "do": [{ "unshock": true, "riled": true }] } },
@@ -15,7 +15,7 @@
   "Da Grand Warlord's Ladz": { "effects": [{ "loneOperative": true, "if": ["near:3:ORKS+INFANTRY"] }] },
   "Makari, Hoist Dat Banner! (Once per battle, per army)": { "act": { "when": "movement", "limit": "battle", "per": "army", "botUse": "round3", "target": { "side": "friendly", "units": ["ORKS"], "each": true, "count": "round" }, "label": "Rile up Ork units equal to the battle round number (closest to the enemy first)", "do": [{ "riled": true }] } },
   "Prophet of da Great Waaagh! (Aura)": { "effects": [{ "scope": "aura", "range": 6, "units": ["ORKS"], "attack": "melee", "hit": 1, "wound": 1 }] },
-  "SUPREME COMMANDER": { "status": "auto", "note": "Checked by the army builder: must be your Warlord" },
+  "SUPREME COMMANDER": { "code": true, "status": "auto", "note": "Checked by the army builder: must be your Warlord" },
   "Kunnin’ Infiltrator": { "act": { "when": "opponentTurnEnd", "if": ["hiddenUnengaged"], "botUse": "never", "label": "Go into Strategic Reserves (all models hidden and not engaged)", "do": [{ "on": "self", "reserves": true }] } },
   "Deff from the Shadows (First battle round onwards)": { "effects": [{ "arriveFromRound": 1, "oppMoveIngress": true }] },
   "Kustom Dakka": { "effects": [{ "attack": "ranged", "abilities": ["ignores cover"] }] },
@@ -25,7 +25,7 @@
   "Ammo Runts (Once per battle, per unit)": { "act": { "when": "selectedToShoot", "limit": "battle", "label": "+1 to Hit when shooting (whole unit)", "do": [{ "on": "self", "buff": [{ "attack": "ranged", "hit": 1 }], "until": "phase" }] } },
   "Tide of Muscle": { "effects": [{ "attack": "melee", "if": ["fightPhase", "charged"], "abilities": ["lethal hits"] }] },
   "Never Too Busy to Fight": { "effects": [{ "eligible": ["actionWhileEngaged"] }] },
-  "Downtrodden": { "status": "auto", "note": "2 Gretchin take up 1 transport slot" },
+  "Downtrodden": { "code": true, "status": "auto", "note": "2 Gretchin take up 1 transport slot" },
   "Thievin’ Scavengers": { "act": { "when": "movementEnd", "auto": true, "if": ["onOwnObjective"], "do": [{ "on": "self", "secure": true }] } },
   "Rokkit Barrage": { "act": { "when": "afterShooting", "auto": true, "target": { "side": "enemy", "hit": true }, "do": [{ "shock": -1 }] } },
   "Bomb Squigs (Once per turn, twice per battle, per unit)": { "act": { "when": "endOfNormalMove", "limit": "turn", "battleUses": 2, "target": { "side": "enemy", "range": 12, "visible": true }, "label": "Bomb Squig: an enemy within 12\" rolls 3+ → D3 mortal wounds", "roll": "D6", "table": [{ "min": 3, "do": [{ "mortals": "D3" }] }] } },
@@ -38,7 +38,7 @@
   "Taktikal Know-wotz": { "split": "half", "note": "Split into 2 units of 5 in the army builder (first unit gets Bomb Squig, the other gets Found ’Em!)" },
   "Nowhere to Hide": { "effects": [{ "if": ["targetHidden"], "hit": 1 }] },
   "Bomb Squig (Once per battle, per unit)": { "act": { "when": "endOfNormalMove", "limit": "battle", "target": { "side": "enemy", "range": 12, "visible": true }, "label": "Bomb Squig: an enemy within 12\" rolls 3+ → D3 mortal wounds", "roll": "D6", "table": [{ "min": 3, "do": [{ "mortals": "D3" }] }] } },
-  "Pilin’ Out": { "status": "auto", "note": "The bot / automatic rules jump the passengers out when an enemy unit ends a move within 8\"" },
+  "Pilin’ Out": { "code": true, "status": "auto", "note": "The bot / automatic rules jump the passengers out when an enemy unit ends a move within 8\"" },
   "Rokkit Charge": { "act": { "when": "selectedToFight", "limit": "phase", "if": ["charged"], "label": "+1 A and S, [HAZARDOUS]", "do": [{ "on": "self", "buff": [{ "attack": "melee", "attacks": 1, "strength": 1, "abilities": ["hazardous"] }], "until": "phase" }] } },
   "Deff from Above": { "effects": [{ "attack": "ranged", "if": ["ownShooting", "ingressThisTurn"], "hit": 1 }] },
   "Aerial Manoover": { "act": { "when": "opponentTurnEnd", "if": ["unengaged"], "botUse": "never", "label": "Go into Strategic Reserves", "do": [{ "on": "self", "reserves": true }] } },
@@ -118,8 +118,8 @@
   "Kill Kommanda": { "effects": [{ "if": ["leaderAttached"], "infiltrators": true }, { "if": ["leaderAttached"], "stealth": true }] },
   "Throat-slittas": { "effects": [{ "attack": "melee", "if": ["targetNotMV"], "abilities": ["lethal hits"] }] },
   "Targetin' Gizmos": { "effects": [{ "attack": "ranged", "if": ["embarkedKw:BIG MEK"], "abilities": ["ignores cover"] }, { "attack": "ranged", "if": ["embarkedKw:BIG MEK", "riled"], "abilities": ["sustained hits 1"] }] },
-  "Boss Boomer": { "status": "auto", "note": "The Wagon can use the Intimidating Motivation / Keep Huntin' of a Warboss riding inside it" },
-  "Kaptin's Hat": { "status": "auto", "note": "Redeploy up to three Orks Infantry units after deployment (offered by the game)" },
+  "Boss Boomer": { "code": true, "status": "auto", "note": "The Wagon can use the Intimidating Motivation / Keep Huntin' of a Warboss riding inside it" },
+  "Kaptin's Hat": { "code": true, "status": "auto", "note": "Redeploy up to three Orks Infantry units after deployment (offered by the game)" },
   "Supa-snazz Dakka": { "effects": [{ "weapon": "snazzgun", "abilities": ["rapid fire 1"] }] },
   "Extra Sneaky": { "effects": [{ "detection": -3 }] },
   "Minefield Detail": { "effects": [{ "scouts": 6 }] },
@@ -138,5 +138,5 @@
   "Impulsive Recon": { "effects": [{ "arriveFromRound": 1 }] },
   "Da Krunch": { "status": "auto", "note": "The bearer gets the weapon (data/overrides/ORK.json)" },
   "'Eadbanger": { "status": "auto", "note": "The bearer gets the weapon (data/overrides/ORK.json)" },
-  "Warphead": { "status": "auto", "note": "Deadly Demise D6, psychic rolls of 1 re-rolled (Ork psychic abilities have no level cap here)" }
+  "Warphead": { "code": true, "status": "auto", "note": "Deadly Demise D6, psychic rolls of 1 re-rolled (Ork psychic abilities have no level cap here)" }
 }

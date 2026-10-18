@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { applyMortalWounds } from './attack';
-import { botCharacterStratagem, botFightStartStratagems, botRedeployActs } from './botPlus';
+import { botCharacterStratagem, botFightStartStratagems, botRedeployActs } from '../ai/botPlus';
 import { createGame, formationAt, placeUnit } from './game';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 

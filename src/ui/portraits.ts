@@ -4,12 +4,12 @@
 //  2. photos the player adds in the app, stored only in this browser. These win over the server images, and can be
 //     exported as a zip in the same folder layout, ready to drop into `public/images/units/` and upload.
 import { useEffect, useSyncExternalStore } from 'react';
+import { KEYS, readJSON, writeJSON } from '../services/storage';
 import cloudSeed from './cloudSeed.json';
 import namesSeed from './names.json';
 
-const KEY = 'w40k11-portraits';
 let cache: Record<string, string> = {};
-try { cache = JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch { cache = {}; }
+cache = readJSON<typeof cache>(KEYS.portraits) ?? {};
 let version = 0;
 const listeners = new Set<() => void>();
 
@@ -17,7 +17,7 @@ const listeners = new Set<() => void>();
 export let portraitsPersisted = true;
 function save() {
   version++;
-  try { localStorage.setItem(KEY, JSON.stringify(cache)); portraitsPersisted = true; } catch { portraitsPersisted = false; }
+  portraitsPersisted = writeJSON(KEYS.portraits, cache);
   listeners.forEach((l) => l());
 }
 

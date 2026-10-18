@@ -1,11 +1,9 @@
 // The player's army lists, kept in this browser: any number of them, each with its own id. The home screen lists
 // them; a battle picks one for each side.
 import { newUid } from '../engine/army';
+import { KEYS, readJSON, writeJSON } from '../services/storage';
 import type { ArmyList, BotLevel, GameState, PlayerId } from '../engine/types';
 
-const ARMIES_KEY = 'w40k11-armies';
-const OLD_PAIR_KEY = 'w40k11-lists'; // before the library: exactly two lists, one per player
-const BATTLE_KEY = 'w40k11-battle';
 
 export type Army = ArmyList & { id: string; updatedAt?: number };
 
@@ -15,20 +13,20 @@ const valid = (l: unknown): l is ArmyList => !!l && typeof l === 'object' && Arr
 /** The saved armies; the first time, the two lists of the old two-player screen move in. */
 export function loadArmies(): Army[] {
   try {
-    const v = JSON.parse(localStorage.getItem(ARMIES_KEY) ?? 'null');
+    const v = readJSON<unknown>(KEYS.armies);
     // the ready-made "(Quick)" lists are gone from the app
     if (Array.isArray(v)) return v.filter(valid).filter((a) => !/\(Quick\)$/.test(a.name ?? '')).map(withId);
   } catch { /* fall through */ }
   let start: ArmyList[] = [];
   try {
-    const old = JSON.parse(localStorage.getItem(OLD_PAIR_KEY) ?? 'null');
+    const old = readJSON<unknown>(KEYS.oldPair);
     if (Array.isArray(old) && old.every(valid)) start = old;
   } catch { /* start empty */ }
   return start.map((l) => withId(structuredClone(l)));
 }
 
 export function saveArmies(armies: Army[]) {
-  try { localStorage.setItem(ARMIES_KEY, JSON.stringify(armies)); } catch { /* storage full or blocked */ }
+  writeJSON(KEYS.armies, armies);
 }
 
 export const exportArmiesJson = (armies: Army[]): string => JSON.stringify({ kind: 'w40k11-armies', version: 1, armies }, null, 2);
@@ -64,7 +62,7 @@ export function loadBattlePrefs(armies: Army[]): BattlePrefs {
   const fallback = (i: number): ArmyRef => { const a = armies[i] ?? armies[0]; return { kind: 'list', id: a?.id ?? '' }; };
   const base: BattlePrefs = { mode: 'bot', sides: [fallback(0), fallback(1)], names: ['Player 1', 'Player 2'], secMode: 'tactical', layoutPick: '', level: 'hard', rounds: 5 };
   try {
-    const v = JSON.parse(localStorage.getItem(BATTLE_KEY) ?? 'null') as Partial<BattlePrefs> | null;
+    const v = readJSON<Partial<BattlePrefs>>(KEYS.battlePrefs);
     if (!v) return base;
     const ok = (r?: ArmyRef): r is ArmyRef => !!r && armies.some((a) => a.id === r.id);
     return {
@@ -78,7 +76,7 @@ export function loadBattlePrefs(armies: Army[]): BattlePrefs {
 }
 
 export function saveBattlePrefs(p: BattlePrefs) {
-  try { localStorage.setItem(BATTLE_KEY, JSON.stringify(p)); } catch { /* ignore */ }
+  writeJSON(KEYS.battlePrefs, p);
 }
 
 /** Every player who is not a bot plays with automatic rules: they only move and pick shooting targets. */

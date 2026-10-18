@@ -4,7 +4,7 @@
 import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { GameState, PlayerId } from '../engine/types';
 import { lastRound } from '../engine/state';
-import { flowAreas, isThousandSonsArmy } from '../engine/flow';
+import { flowAreas, isThousandSonsArmy } from '../factions/flow';
 import { Emblem } from './ArmyBuilder';
 import { DiceFace } from './DiceFace';
 import { Icon } from './Icon';

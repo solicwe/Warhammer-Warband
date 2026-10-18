@@ -2,7 +2,7 @@
 // Unfound, Teleport Homer, redeploys (Strategium Command …), Combat Embarkation and Miraculous Savior.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { botAct } from './bot';
+import { botAct } from '../ai/bot';
 import { commitMove, createGame, declareCharge, deployUnit, endPhase, endRedeploy, findPlacement, formationAt, ingressUnit, placeUnit, redeployCandidates, redeployUnit, validatePlacement } from './game';
 import { baseDist, pointInPoly, polyCentroid } from './geometry';
 import { alive, isEngaged } from './state';

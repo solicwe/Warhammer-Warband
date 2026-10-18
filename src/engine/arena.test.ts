@@ -1,10 +1,10 @@
-// Bot arena: the live bot (src/engine/bot*.ts) plays the frozen baseline (src/engine/baseline, made by
+// Bot arena: the live bot (src/ai/bot*.ts) plays the frozen baseline (src/engine/baseline, made by
 // scripts/bot-baseline/snapshot.mjs) over many games, both sides of every matchup. Only runs with ARENA=1:
 //   ARENA=1 ARENA_GAMES=12 npx vitest run src/engine/arena.test.ts
 import fs from 'node:fs';
 import { describe, it } from 'vitest';
-import * as live from './bot';
-import * as base from './baseline/bot';
+import * as live from '../ai/bot';
+import * as base from '../ai/baseline/bot';
 import { createGame } from './game';
 import type { DispositionId } from './config';
 import type { ArmyList, FactionData, GameState, PlayerId } from './types';

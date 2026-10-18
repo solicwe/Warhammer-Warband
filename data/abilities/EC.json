@@ -13,11 +13,11 @@
   ],
   "note": "Shoots and charges after Advancing / Falling Back; then it cannot target a unit it was engaged with at the start of the turn or one another unit already charged or attacked this phase"
  },
- "Pact of Excess": {
+ "Pact of Excess": { "code": true,
   "status": "auto",
   "note": "Checked by the army builder: Legions of Excess units only come with the Carnival of Excess detachment"
  },
- "SUPREME COMMANDER": {
+ "SUPREME COMMANDER": { "code": true,
   "status": "auto",
   "note": "Checked by the army builder: Fulgrim must be your Warlord"
  },
@@ -719,7 +719,7 @@
    }
   ]
  },
- "Tactical Perfection": {
+ "Tactical Perfection": { "code": true,
   "status": "auto",
   "note": "After both armies are deployed: redeploy up to two Emperor’s Children units (or put them into Strategic Reserves)"
  },
@@ -828,7 +828,7 @@
    }
   ]
  },
- "Accomplished Tactician": {
+ "Accomplished Tactician": { "code": true,
   "status": "auto",
   "note": "activations.ts: a unit near the bearer that was hit embarks within a transport it is wholly within 6\" of"
  },

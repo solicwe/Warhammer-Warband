@@ -3,15 +3,15 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildShootPools } from './attack';
-import { applyDetachmentStratagem } from './stratagems';
-import { botAct } from './bot';
-import { abilityRule, DET_RULES } from './effects';
+import { applyDetachmentStratagem } from '../rules-engine/stratagems';
+import { botAct } from '../ai/bot';
+import { abilityRule, DET_RULES } from '../rules-engine/effects';
 import { listPoints, validateList } from './army';
 import { createGame, formationAt, placeUnit } from './game';
-import { inFlow } from './flow';
-import { attemptRitual, casters, ritualsPending, testOdds } from './rituals';
-import { botRituals } from './botRituals';
-import { autoDue, autoStep } from './autoPlay';
+import { inFlow } from '../factions/flow';
+import { attemptRitual, casters, ritualsPending, testOdds } from '../factions/rituals';
+import { botRituals } from '../ai/botRituals';
+import { autoDue, autoStep } from '../ai/autoPlay';
 import { PRESETS } from '../ui/presets';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 

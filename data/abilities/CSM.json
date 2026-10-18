@@ -1,5 +1,5 @@
 {
- "Dark Pacts": {
+ "Dark Pacts": { "code": true,
   "status": "auto",
   "note": "Made when the unit is selected to shoot or fight: Leadership test (failed: D3 mortal wounds), then [LETHAL HITS] or [SUSTAINED HITS 1] for the phase. The bot and Automatic pick for you; with \"I decide\" the buttons are in the shoot / fight panel (darkPacts.ts)"
  },
@@ -15,11 +15,11 @@
    ]
   }
  },
- "Dark Destiny": {
+ "Dark Destiny": { "code": true,
   "status": "auto",
   "note": "A passed Dark Pact test of 7+ gives 1CP (darkPacts.ts)"
  },
- "SUPREME COMMANDER": {
+ "SUPREME COMMANDER": { "code": true,
   "status": "auto",
   "note": "Checked by the army builder: Abaddon must be your Warlord"
  },
@@ -1132,7 +1132,7 @@
   "note": "Cover from the Noctilith Crown: worked out by the terrain line of sight"
  },
  "Fortification": {
-  "status": "auto",
+  "status": "info",
   "note": "Fortification rules (engaged with a fortification: −1 to Hit for non-Pistol shots)"
  },
  "Bestial Raiders": {
@@ -1366,7 +1366,7 @@
    ]
   }
  },
- "Blessings of Khorne": {
+ "Blessings of Khorne": { "code": true,
   "status": "auto",
   "note": "World Eaters army rule: not used in a Chaos Space Marines army"
  },
@@ -1384,7 +1384,7 @@
    ]
   }
  },
- "Icon of Khorne": {
+ "Icon of Khorne": { "code": true,
   "status": "auto",
   "note": "Bloodshed points are for World Eaters armies"
  },
@@ -1424,12 +1424,12 @@
    }
   ]
  },
- "Nurgle’s Gift (Aura)": {
+ "Nurgle’s Gift (Aura)": { "code": true,
   "status": "auto",
   "note": "Death Guard army rule: not used in a Chaos Space Marines army"
  },
  "Infused with the Blessings of Nurgle": {
-  "status": "auto",
+  "status": "info",
   "note": "No effect in a Chaos Space Marines army (Faction Pack FAQ)"
  },
  "Icon of Despair (Aura)": {
@@ -1502,10 +1502,10 @@
   ]
  },
  "ATTACHED UNIT": {
-  "status": "auto",
+  "status": "info",
   "note": "Leaders that can join Legionaries can join this unit (army builder)"
  },
- "Thrill Seekers": {
+ "Thrill Seekers": { "code": true,
   "status": "auto",
   "note": "Emperor's Children army rule: not used in a Chaos Space Marines army"
  },
@@ -1566,7 +1566,7 @@
    }
   ]
  },
- "Fleet Command": {
+ "Fleet Command": { "code": true,
   "status": "auto",
   "note": "After both armies are deployed: redeploy up to three units (or put them into Strategic Reserves)"
  },
@@ -1719,7 +1719,7 @@
    }
   }
  },
- "Eye of Tzeentch": {
+ "Eye of Tzeentch": { "code": true,
   "status": "auto",
   "note": "Handled with the Dark Pact: a passed test of 8+ gives 1CP"
  },
@@ -2220,7 +2220,7 @@
    }
   ]
  },
- "Tempting Addendum": {
+ "Tempting Addendum": { "code": true,
   "status": "auto",
   "note": "Handled with the Dark Pact (contract invoked within 3\")"
  },

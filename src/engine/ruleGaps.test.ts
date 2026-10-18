@@ -4,9 +4,9 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildFightPools, killModel } from './attack';
 import { d6 } from './dice';
-import { reactionOffers } from './stratagems';
-import { abilityOff, addTimed, effectsFor, unitFlags } from './effects';
-import { actsOfUnit, resolvePickUnit, resolveRevivals } from './activations';
+import { reactionOffers } from '../rules-engine/stratagems';
+import { abilityOff, addTimed, effectsFor, unitFlags } from '../rules-engine/effects';
+import { actsOfUnit, resolvePickUnit, resolveRevivals } from '../rules-engine/activations';
 import { commitMove, createGame, formationAt, placeUnit, validatePlacement } from './game';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { baseShape, validateList } from './army';
 import { listDisposition } from './game';
-import { parseAbilityText } from './abilityText';
+import { parseAbilityText } from '../rules-engine/abilityText';
 import { stratCost, canUseStratagem } from './state';
-import { superHeavy } from './knights';
+import { superHeavy } from '../factions/knights';
 import { rollHits, rollWounds, rollSavesAndDamage, applyDamage } from './attack';
 import type { DatasheetData, GameState, UnitState, ModelState, ArmyList, FactionData } from './types';
 import tlFaction from '../../public/data/factions/TL.json';

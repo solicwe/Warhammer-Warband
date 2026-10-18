@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import type { GameState, UnitState } from '../engine/types';
 import { alive, hasKw, isEngaged } from '../engine/state';
-import { unitFlags } from '../engine/effects';
+import { unitFlags } from '../rules-engine/effects';
 import { shootingModes } from '../engine/attack';
 import { chargeEligibility } from '../engine/game';
 import { Icon, type IconName } from './Icon';

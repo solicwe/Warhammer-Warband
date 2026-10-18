@@ -2,7 +2,7 @@
 // silently do nothing, while the app still shows it as automated.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { cond, unknownConds } from './effects';
+import { cond, unknownConds } from '../rules-engine/effects';
 import { createGame } from './game';
 import { PRESETS } from '../ui/presets';
 import type { FactionData } from './types';
@@ -16,7 +16,7 @@ const books = files.map((f) => {
   const d = JSON.parse(fs.readFileSync(f, 'utf8'));
   return { f, rules: (d.rules ?? d) as Record<string, unknown> };
 });
-const src = ['src/engine', 'src/ui'].flatMap((d) => fs.readdirSync(d).filter((f) => /\.tsx?$/.test(f) && !f.includes('.test.')).map((f) => fs.readFileSync(`${d}/${f}`, 'utf8'))).join('\n');
+const src = ['src/engine', 'src/rules-engine', 'src/factions', 'src/ai', 'src/ui'].flatMap((d) => fs.readdirSync(d).filter((f) => /\.tsx?$/.test(f) && !f.includes('.test.')).map((f) => fs.readFileSync(`${d}/${f}`, 'utf8'))).join('\n');
 
 /** Every [rule name, object] pair under a rule, depth first, with the key it sits under. */
 function* nodes(o: unknown, key = ''): Generator<[string, Record<string, unknown>]> {

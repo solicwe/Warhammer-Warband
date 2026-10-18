@@ -1,9 +1,9 @@
 // The bot thinks off the main thread, so the board keeps animating and the screen never freezes:
-//  - look: plays the bot's turn a few ways on copies of the game (src/engine/botLook.ts) and answers with the style;
+//  - look: plays the bot's turn a few ways on copies of the game (src/ai/botLook.ts) and answers with the style;
 //  - ponder: the same during the player's turn, from where the bot's next turn would start (a worker of its own);
 //  - step: plays the bot's next step (one unit moves / shoots / charges …) and answers with the new game state.
-import { applyStyle, lookAhead, lookBudget, lookSig, playToMovement, setLookahead, type Intent } from '../engine/botLook';
-import { botAct, botStep } from '../engine/bot';
+import { applyStyle, lookAhead, lookBudget, lookSig, playToMovement, setLookahead, type Intent } from '../ai/botLook';
+import { botAct, botStep } from '../ai/bot';
 import type { GameState, PlayerId } from '../engine/types';
 
 type Msg =

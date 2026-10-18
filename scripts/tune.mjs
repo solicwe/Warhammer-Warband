@@ -1,4 +1,4 @@
-// Bot self-play tuning: hill-climbs the bot's weights (src/engine/botWeights.ts) by playing a changed set against the
+// Bot self-play tuning: hill-climbs the bot's weights (src/ai/botWeights.ts) by playing a changed set against the
 // current best on several CPU cores, keeping the change when it wins clearly. The best set is written to
 // data/bot-weights.json, which the bot loads by default.
 //   node scripts/tune.mjs --iters 30 --games 24 --workers 4 --log tune-log.txt [--auto: lists for every faction]
@@ -17,7 +17,7 @@ const ACCEPT = Number(arg('accept', 1.5)); // mean VP margin a change must win b
 const WEIGHTS = 'data/bot-weights.json';
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'tune-'));
 
-const src = fs.readFileSync('src/engine/botWeights.ts', 'utf8');
+const src = fs.readFileSync('src/ai/botWeights.ts', 'utf8');
 const block = /DEFAULT_W = \{([\s\S]*?)\n\};/.exec(src)[1];
 const DEFAULT = Object.fromEntries([...block.matchAll(/(\w+): ([\d.]+)/g)].map((m) => [m[1], Number(m[2])]));
 let best = { ...DEFAULT, ...JSON.parse(fs.readFileSync(WEIGHTS, 'utf8')) };

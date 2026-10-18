@@ -2,7 +2,7 @@
 // CP kept for nothing, the end-of-battle secondaries) come at round 3 instead of round 5.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { botShouldAct, botStep } from './bot';
+import { botShouldAct, botStep } from '../ai/bot';
 import { createGame, endPhase } from './game';
 import { lastRound, pace } from './state';
 import { PRESETS } from '../ui/presets';

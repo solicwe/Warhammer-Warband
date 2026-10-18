@@ -1,10 +1,10 @@
 // World Eaters (Faction Pack v1.3): Blessings of Khorne, Blood Tithe, Idols of Khorne, and whole bot games in every detachment.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { blessingPicks, blessingsRoll, rerollBlessings } from './blessings';
-import { botAct } from './bot';
-import { pickDetChoice } from './detachments';
-import { cond, effectsFor } from './effects';
+import { blessingPicks, blessingsRoll, rerollBlessings } from '../factions/blessings';
+import { botAct } from '../ai/bot';
+import { pickDetChoice } from '../rules-engine/detachments';
+import { cond, effectsFor } from '../rules-engine/effects';
 import { createGame, formationAt, placeUnit } from './game';
 import { PRESETS } from '../ui/presets';
 import type { ArmyList, FactionData, GameState } from './types';
