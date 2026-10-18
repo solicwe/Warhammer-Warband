@@ -212,7 +212,8 @@ export function daemonsCommandStart(s: GameState): void {
       if (enemyUnitsInShadow.length > 0) {
         const target = enemyUnitsInShadow[0];
         log(s, `Melancholic Miasma: ${target.name} must take a Battle-shock test`, 'info', opp);
-        s.shockTests.push({ unitId: target.id, mod: daemonBattleShockMod(s, target), passed: null, result: null });
+        // the Daemonic Terror modifier is added when the test is resolved (game.ts), not here as well
+        s.shockTests.push({ unitId: target.id, mod: 0, passed: null, result: null });
       }
     }
   }

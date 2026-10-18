@@ -1,14 +1,15 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
-import { dgBattleStart, dgCommandEnd, dgCommandStart, dgPhaseEnd, dgRoundStart, dsKeep, stinkBlocks } from './deathGuard';
-import { knightsBattleStart, knightsCommandStart, knightsMoved, knightsRoundEnd, knightsRoundStart, knightsShockFailed, knightsShootingStart, knightsTurnEnd, knightsTurnStart } from './knights';
-import { initFavoured, noteTarget, pledgeRoundEnd, pledgeRoundStart, poisonTick, snapshotEngaged, thrillBlock } from './emperorsChildren';
+import { dsKeep, stinkBlocks } from './deathGuard';
+import { battleShockMod, deepStrikeDistance, emit } from './events';
+import './factionHooks';
+import { noteTarget, thrillBlock } from './emperorsChildren';
 import { buildUnits, forChapter, newUid, transportFit } from './army';
 import { applyMortalWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
-import { blessingsRoll, blessingsRoundStart } from './blessings';
+import { blessingsRoll } from './blessings';
 import { circleInFlow } from './flow';
 import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
 import {
@@ -26,15 +27,8 @@ import './rituals';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from './activations';
 
 import { inSynapse } from './tyranids';
-import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart, tryActOfFaith } from './sororitas';
-import { aeldariBattleStart, aeldariCommandEnd, aeldariTurnStart, resetPhaseStrandsOfFate, tryFateDie } from './aeldari';
-import { votannBattleStart, votannCommandEnd } from './votann';
-import { admechCommandStart, admechRoundStart } from './admech';
-import { drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd } from './drukhari';
-import { daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsPhaseEnd } from './daemons';
-import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultBattleStart, cultIconCommandPhase } from './cult';
-import { necBattleStart, necCommandStart } from './necrons';
-import { gkEndOpponentTurn } from './greyKnights';
+import { tryActOfFaith } from './sororitas';
+import { tryFateDie } from './aeldari';
 
 const W = RULES.battlefield.width;
 const H = RULES.battlefield.height;
@@ -332,9 +326,7 @@ export function createGame(o: NewGameOptions): GameState {
   // abilities that give a core rule at deployment (Blackwing Shroud, Masters of Misdirection: Infiltrators)
   for (const u of s.units) if (!u.core.infiltrators && unitFlags(s, u).infiltrators) u.core.infiltrators = true;
   startOfBattle(s);
-  daemonsBattleStart(s);
-  cultBattleStart(s);
-  necBattleStart(s);
+  emit(s, 'setup', {});
   return s;
 }
 
@@ -515,8 +507,7 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
     const homer = u.homer && how !== 'deploy' && how !== 'infiltrate' && s.active !== u.owner ? u.homer : undefined;
     if (homer && ptGap(bodyAt(m, p), homer) > 3 + EPS) { errors.push('Teleport Homer: must be set up within 3" of the token'); bad.add(m.id); }
     if (how !== 'deploy') {
-      const daemonKeep = how === 'deepStrike' ? daemonsDeepStrikeDist(s, u, p) : 9;
-      const keep = homer ? 8 : how === 'deepStrike' ? Math.min(fl!.deepStrikeRange, daemonKeep) : Math.min(RULES.reserves.enemyDistance, fl!.ingressRange ?? RULES.reserves.enemyDistance);
+      const keep = homer ? 8 : how === 'deepStrike' ? deepStrikeDistance(s, u, p, fl!.deepStrikeRange) : Math.min(RULES.reserves.enemyDistance, fl!.ingressRange ?? RULES.reserves.enemyDistance);
       // Death Approaches / Beckoning Blight: closer to some enemy units
       const keepFor = (e: UnitState) => (how === 'deepStrike' ? Math.min(keep, dsKeep(s, u, e, p, m) ?? keep) : keep);
       if (enemies.some((e) => alive(e).some((n) => gap(bodyAt(m, p), n) <= keepFor(e)))) { errors.push(`Must be more than ${keep}" from all enemy units`); bad.add(m.id); }
@@ -914,18 +905,14 @@ export function startTurn(s: GameState, p: PlayerId) {
   s.active = p;
   expireTimed(s, 'turnStart', p);
   resetTurnFlags(s);
-  snapshotEngaged(s);
+  emit(s, 'turnBegin', { p });
   s.controlAtTurnStart = s.objectives.map((o) => o.controller);
   onTurnStart(s);
   log(s, `Battle Round ${s.round} · ${s.players[p].name}'s turn`, 'info', p);
   detOnCommandStart(s, p, p === s.firstPlayer);
-  if (s.turn === 0) { initSagas(s); initFavoured(s); dgBattleStart(s); knightsBattleStart(s); aeldariBattleStart(s); votannBattleStart(s); admechRoundStart(s); drukhariBattleStart(s); daemonsBattleStart(s); cultBattleStart(s); necBattleStart(s); fireAll(s, 'battleStart', 'both'); }
+  if (s.turn === 0) { initSagas(s); emit(s, 'battleStart', {}); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) {
-    blessingsRoundStart(s);
-    pledgeRoundStart(s);
-    dgRoundStart(s);
-    knightsRoundStart(s);
-    admechRoundStart(s);
+    emit(s, 'roundStart', {});
     if (s.campaign) {
       if (s.round >= 2) triggerCampaignReinforcements(s);
       triggerDynamicDramaEngine(s);
@@ -933,9 +920,7 @@ export function startTurn(s: GameState, p: PlayerId) {
     }
     fireAll(s, 'roundStart', 'both');
   }
-  knightsTurnStart(s);
-  sororitasTurnStart(s, p);
-  aeldariTurnStart(s, p);
+  emit(s, 'turnStart', { p });
   startCommand(s);
 }
 
@@ -957,14 +942,7 @@ function startCommand(s: GameState) {
     s.campaignScrap = (s.campaignScrap ?? 0) + roundScrap;
     log(s, `Logistics Requisition (Round ${s.round}): +${roundScrap} Scrap generated (${25} base + ${objsHeld * 10} from ${objsHeld} objectives held)`, 'vp', 0);
   }
-  poisonTick(s);
-  dgCommandStart(s);
-  knightsCommandStart(s);
-  admechCommandStart(s, s.active);
-  drukhariCommandStart(s, s.active);
-  daemonsCommandStart(s);
-  cultIconCommandPhase(s, s.active);
-  necCommandStart(s, s.active);
+  emit(s, 'commandStart', { p: s.active });
   fireFor(s, 'commandStart', s.active);
   fireFor(s, 'eachCommandStart', 'both');
   drawUpTo(s, s.active);
@@ -1001,7 +979,7 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
     t.result = 0; t.passed = true; t.auto = true;
   } else {
     const ld = bestLd(u, s);
-    const dMod = daemonBattleShockMod(s, u);
+    const dMod = battleShockMod(s, u);
     const mod = (unitFlags(s, u).ignoreMods ? 0 : t.mod ?? 0) + dMod;
     if (unitFlags(s, u).autoPassShock) { t.result = 12; t.passed = true; t.auto = true; log(s, `${u.name}: Battle-shock test passed automatically`, 'info', u.owner); return; }
     const syn = inSynapse(s, u);
@@ -1037,8 +1015,7 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
   u.battleShocked = !t.passed;
   if (was && t.passed) log(s, `${u.name} is no longer Battle-shocked`, 'info', u.owner);
   if (!was && !t.passed) fire(s, 'becameShocked', [u]);
-  if (!t.passed) knightsShockFailed(s, u);
-  daemonsOnBattleShockResult(s, u, t.passed);
+  emit(s, 'shockResult', { u, passed: t.passed });
 }
 
 /** The bot's decisions at the end of a phase of the other player (Echo of the Ravenspire …), set by botPlus.ts. */
@@ -1049,7 +1026,7 @@ export function endPhase(s: GameState) {
   updateControl(s);
   if (s.phase === 'movement') {
     fireFor(s, 'movementEnd', s.active);
-    cultAmbushArrival(s);
+    emit(s, 'movementEnd', { p: s.active });
     updateControl(s);
     // Uphold the Honour of the Emperor (Vow-sworn Crusaders): objectives INFANTRY control now are secured
     for (const u of boardUnits(s, s.active)) {
@@ -1057,20 +1034,13 @@ export function endPhase(s: GameState) {
       for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) o.secured = s.active;
     }
   }
-  dgPhaseEnd(s);
-  resetPhaseActsOfFaith(s);
-  resetPhaseStrandsOfFate(s);
-  drukhariPhaseEnd(s);
-  daemonsPhaseEnd(s);
+  emit(s, 'phaseEnd', { phase: s.phase });
   resolveRevivals(s);
   if (s.window?.kind === 'abilityMove') s.window = null;
   expireTimed(s, 'phaseEnd', s.active);
   if (s.phase === 'command') {
     fireFor(s, 'commandEnd', s.active);
-    dgCommandEnd(s);
-    sororitasCommandEnd(s, s.active);
-    aeldariCommandEnd(s, s.active);
-    votannCommandEnd(s, s.active);
+    emit(s, 'commandEnd', { p: s.active });
     // Uphold the Honour of the Emperor (Templar Vows): objectives held now stay yours
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtCommandEnd || !hasKw(u, 'INFANTRY')) continue;
@@ -1087,7 +1057,7 @@ export function endPhase(s: GameState) {
     for (const u of boardUnits(s, s.active)) if (!u.move) { u.move = 'stationary'; u.lastStationaryTurn = s.turn; }
     s.phase = 'shooting';
     // "at the start of your (opponent's) Shooting phase" (Marked by Fate, Treason of Tzeentch …)
-    knightsShootingStart(s);
+    emit(s, 'shootingStart', { p: s.active });
     fireFor(s, 'shootingStart', s.active);
     fireFor(s, 'oppShootingStart', other(s.active));
     openWindow(s, 'endOfMovement');
@@ -1153,9 +1123,8 @@ function endTurn(s: GameState) {
   // Aircraft return to reserves at the end of the opponent's turn
   for (const u of boardUnits(s, other(s.active))) if (hasKw(u, 'AIRCRAFT')) u.status = 'reserves';
   updateControl(s);
-  knightsTurnEnd(s);
+  emit(s, 'turnEnd', { p: s.active });
   sagaBoasts(s, 'turnEnd');
-  gkEndOpponentTurn(s);
   onTurnEnd(s);
   scoreTiming(s, 'endOfYourTurn');
   for (const p of [0, 1] as PlayerId[]) scorePrimary(s, 'endOfAnyTurn', p);
@@ -1163,8 +1132,7 @@ function endTurn(s: GameState) {
   const second = s.active !== s.firstPlayer;
   if (!second) { s.phase = 'command'; startTurn(s, other(s.active)); return; }
   // end of battle round
-  pledgeRoundEnd(s);
-  knightsRoundEnd(s);
+  emit(s, 'roundEnd', {});
   if (s.round === RULES.reserves.destroyedAfterRound) {
     for (const u of s.units) if (u.status === 'reserves' && !hasKw(u, 'AIRCRAFT')) {
       u.status = 'destroyed';
@@ -1280,7 +1248,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
     m.x = end.x; m.y = end.y;
     if (m.hl) faceTravel(s, m, path[path.length - 2]);
   }
-  if (['normal', 'advance', 'fallback'].includes(kind)) knightsMoved(s, u, paths);
+  if (['normal', 'advance', 'fallback'].includes(kind)) emit(s, 'moved', { u, kind, paths });
   if (['normal', 'advance', 'fallback', 'stationary', 'ingress'].includes(kind)) u.move = kind;
   if (['normal', 'advance', 'fallback'].includes(kind)) s.lastAct = { unitId: u.id, owner: u.owner, kind: 'move', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
   const reactAfterMove = ['normal', 'advance', 'fallback'].includes(kind) && u.owner === s.active && s.phase === 'movement';
@@ -1320,7 +1288,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
   if (kind === 'fallback' && s.lastAct?.unitId === u.id) s.lastAct.fellBackFrom = engagedBefore.map((e) => e.id);
   if (['normal', 'advance', 'fallback', 'charge'].includes(kind)) {
     sabotageCheck(s, u);
-    cultAmbushCheckEnemyMoved(s, u);
+    emit(s, 'unitMoved', { u });
   }
   // stratagems: "just after an enemy unit ends a Normal, Advance or Fall Back move" (Squad Tactics …)
   if (reactAfterMove) emitReact(s, other(u.owner), 'enemyMoved', { unitId: u.id });
@@ -1395,7 +1363,7 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   log(s, `${u.name} arrives (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closest <= RULES.reserves.enemyDistance ? ' within 9" of the enemy → cannot charge this turn' : ''}`, 'info', u.owner);
   if (u.owner === s.active && s.phase === 'movement') {
     offerReactions(s, 'enemyMovedNear', u);
-    cultAmbushCheckEnemyMoved(s, u);
+    emit(s, 'unitMoved', { u });
   }
   if (unitHasAbility(u, 'Drop Pod Assault')) dropPodAssault(s, u);
   if (u.homer && s.active !== u.owner) { log(s, `Teleport Homer: ${u.name} arrives at the token (token removed)`, 'info', u.owner); u.homer = undefined; }
