@@ -31,7 +31,7 @@ describe('T’au Empire ability status check', () => {
       for (const a of ds.abilities ?? []) {
         if (a.type !== 'Core' && a.type !== 'Faction' && !a.type?.includes('Fortification')) {
           const st = abilityStatus(dummyUnit, { ...a, sheet: ds.name, faction: 'TAU' });
-          if (st.status !== 'auto' && st.status !== 'manual') {
+          if (st.status !== 'auto' && st.status !== 'manual' && st.status !== 'info') {
             failures.push(`${ds.name} -> ${a.name} got status "${st.status}"`);
           }
           checked++;

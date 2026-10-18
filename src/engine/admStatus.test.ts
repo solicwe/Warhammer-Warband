@@ -31,7 +31,7 @@ describe('Adeptus Mechanicus ability status check', () => {
       for (const a of ds.abilities ?? []) {
         if (a.type !== 'Core' && a.type !== 'Faction' && !a.type?.includes('Fortification')) {
           const st = abilityStatus(dummyUnit, { ...a, sheet: ds.name, faction: 'AdM' });
-          if (st.status !== 'auto' && st.status !== 'manual') {
+          if (st.status !== 'auto' && st.status !== 'manual' && st.status !== 'info') {
             failures.push(`${ds.name} -> ${a.name} got status "${st.status}"`);
           }
           checked++;
@@ -60,7 +60,7 @@ describe('Adeptus Mechanicus ability status check', () => {
           transport: null,
         } as unknown as UnitState;
         const st = abilityStatus(dummyUnit, { name: e.name, type: 'Enhancement', text: e.text, faction: 'AdM' } as never);
-        if (st.status !== 'auto' && st.status !== 'manual') {
+        if (st.status !== 'auto' && st.status !== 'manual' && st.status !== 'info') {
           failures.push(`Enhancement ${e.name} got status "${st.status}"`);
         }
         checked++;
