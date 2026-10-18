@@ -1,6 +1,6 @@
 // Making Attacks (04) + Attack Sequence (05), resolved stage by stage so the UI can show every roll.
 import { weaponFx } from './weaponFx';
-import { combatMods, type CombinedMods } from './combatMods';
+import { combatMods, runPoolFinishers, type CombinedMods } from './combatMods';
 import { assaultWeapons, emit, rescueDie, targetBlock } from './events';
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
@@ -10,12 +10,11 @@ import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, Uni
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
-import { inFlow, isThousandSonsArmy } from './flow';
 
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
 export const setFreeDamageHook = (h: (s: GameState) => boolean) => { freeDamageHook = h; };
-import { applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from './effects';
+import { addToExpr, applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from './effects';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
 
@@ -103,20 +102,6 @@ function applyUnitBuffs(pool: Pool, u: UnitState) {
   if (u.buffs.some((b) => b.kind === 'sustained1') && !pool.sustained) pool.sustained = '1';
   const ap = u.buffs.filter((b) => b.kind === 'ap+1').length;
   if (ap) pool.ap = pool.ap - ap;
-}
-
-function applyFlowOfMagic(s: GameState, A: UnitState, pool: Pool, psychic: boolean) {
-  if (!psychic) return;
-  if (!isThousandSonsArmy(s, A.owner)) return;
-  const isTs = (A.factionKeywords ?? []).includes('THOUSAND SONS') || (A.keywords ?? []).includes('THOUSAND SONS');
-  if (!isTs) return;
-  if (inFlow(s, A)) {
-    pool.woundMod = clamp(pool.woundMod + 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
-    pool.woundNote = [pool.woundNote, 'Flow of Magic: +1 Wound'].filter(Boolean).join(' · ');
-  } else {
-    pool.rerollWounds1 = true;
-    pool.woundNote = [pool.woundNote, 'Flow of Magic: re-roll 1s'].filter(Boolean).join(' · ');
-  }
 }
 
 /** "Ignore any or all modifiers to BS/WS and the Hit roll": drop the bad ones once everything is folded in. */
@@ -243,7 +228,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const fx = offenceFor(s, A, m, T, w, p, 'ranged', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
       const inc = incomingFor(s, A, m, T, 'ranged').filter((i) => !i.psychic || psy);
-      const cm = combatMods({ s, A, T, mode: 'ranged', d, p, weapon: w.name });
+      const cm = combatMods({ s, A, T, m, psychic: psy, mode: 'ranged', d, p, weapon: w.name });
       if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !assaultWeapons(s, A) && !cm.assault) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
       if (d > maxRange + 1e-6) continue;
@@ -293,9 +278,6 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         const melta = getAbility(p, 'melta', T.keywords);
         if (melta && half) pool.damage = `${p.D}+${melta.value ?? 0}`.replace(/^(\d+)\+(\d+)$/, (_, a, b) => String(+a + +b));
         let strength = (p.S ?? 1) + cm.strengthBonus;
-        if (psy && isThousandSonsArmy(s, A.owner) && A.enhancements?.some((e) => e.name === 'Arcane Might')) {
-          strength += inFlow(s, A) ? 2 : 1;
-        }
         pool.woundNeed = woundNeed(strength, T_T);
         applyCombatMods(pool, cm);
         const wm = clamp(buffSum(A, 'wound+1', 'wound-1') + cm.woundMod, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
@@ -304,7 +286,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         if (psy) pool.psychic = true;
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
-        applyFlowOfMagic(s, A, pool, psy);
+        runPoolFinishers({ s, A, T, m, psychic: psy, mode: 'ranged', d, p, weapon: w.name }, pool);
         applyAttackEffects(s, A, T, pool, fx, inc, 'ranged', d, T_T, woundNeed);
         finishIgnore(pool, unitFlags(s, A).ignoreMods || cm.ignoreMods);
         pools.set(key, pool);
@@ -323,9 +305,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (hasAbility(p, 'rapid-fire')) {
         for (const a of fx) if (a.e.rapidFireAttacks) flat += a.e.rapidFireAttacks;
       }
-      if (m.isCharacter && A.enhancements?.some((e) => e.name === 'Empyric Onslaught') && psy && inFlow(s, A)) {
-        flat += 3;
-      }
+      flat += cm.attacksBonus;
       pool.instances.push({ A: p.A, extras, flat });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
@@ -378,7 +358,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       const fx = offenceFor(s, A, m, T, w, p, 'melee', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
       const inc = incomingFor(s, A, m, T, 'melee').filter((i) => !i.psychic || psy);
-      const cm = combatMods({ s, A, T, mode: 'melee', d: 0, p, weapon: w.name });
+      const cm = combatMods({ s, A, T, m, psychic: psy, mode: 'melee', d: 0, p, weapon: w.name });
       const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes] };
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
       // Shield of Honour: this model is engaged with that unit but attacks another one
@@ -398,9 +378,6 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         pool.skill = fm.skill; pool.hitMod = fm.hit; pool.hitNote = mods.hitNotes.join(' · ');
         if (precision) pool.precision = true;
         let strength = (p.S ?? 1) + cm.strengthBonus;
-        if (psy && isThousandSonsArmy(s, A.owner) && A.enhancements?.some((e) => e.name === 'Arcane Might')) {
-          strength += inFlow(s, A) ? 2 : 1;
-        }
         pool.woundNeed = woundNeed(strength, T_T);
         let wm = buffSum(A, 'wound+1', 'wound-1') + cm.woundMod;
         const notes = [`S${strength} vs T${T_T}`];
@@ -413,7 +390,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         if (psy) pool.psychic = true;
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
-        applyFlowOfMagic(s, A, pool, psy);
+        runPoolFinishers({ s, A, T, m, psychic: psy, mode: 'melee', d: 0, p, weapon: w.name }, pool);
         applyAttackEffects(s, A, T, pool, fx, inc, 'melee', d, T_T, woundNeed);
         finishIgnore(pool, unitFlags(s, A).ignoreMods);
         pools.set(key, pool);
@@ -658,6 +635,7 @@ function applyCombatMods(pool: Pool, cm: CombinedMods) {
   if (cm.critHitOn < (pool.critHitOn ?? 6)) pool.critHitOn = cm.critHitOn;
   if (cm.sustained && !pool.sustained) pool.sustained = cm.sustained;
   if (cm.critWoundOn && (!pool.critWoundOn || cm.critWoundOn < pool.critWoundOn)) pool.critWoundOn = cm.critWoundOn;
+  if (cm.damageBonus) pool.damage = addToExpr(pool.damage, cm.damageBonus);
 }
 
 /** Dice an ability lets the attacker re-roll at this stage (01.05.02: a die is only ever re-rolled once). */

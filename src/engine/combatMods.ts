@@ -1,6 +1,6 @@
 // Army-rule modifiers to an attack (Doctrina Imperatives, Power from Pain, For the Greater Good ...). Faction modules
 // register a provider in factionHooks.ts; attack.ts asks for the combined result once per weapon profile.
-import type { GameState, UnitState, WeaponProfileData } from './types';
+import type { GameState, ModelState, Pool, UnitState, WeaponProfileData } from './types';
 
 /** What one rule changes about an attack. Every field is optional: a provider fills in only what it changes. */
 export interface CombatMods {
@@ -42,6 +42,10 @@ export interface AttackContext {
   A: UnitState;
   /** the target unit */
   T: UnitState;
+  /** the attacking model */
+  m: ModelState;
+  /** a Psychic Attack */
+  psychic: boolean;
   mode: 'ranged' | 'melee';
   /** distance from the attacking model to the target (0 in melee) */
   d: number;
@@ -103,4 +107,16 @@ export function combatMods(x: AttackContext): CombinedMods {
     for (const n of m.notes ?? []) (/\b(BS|WS)\b/.test(n) ? out.skillNotes : /hit/i.test(n) ? out.hitNotes : out.otherNotes).push(n);
   }
   return out;
+}
+
+export type PoolFinisher = (x: AttackContext, pool: Pool) => void;
+const finishers: PoolFinisher[] = [];
+
+/** A rule that changes the finished pool directly (Flow of Magic: +1 to wound, or re-roll wound rolls of 1). */
+export function addPoolFinisher(fn: PoolFinisher) {
+  finishers.push(fn);
+}
+
+export function runPoolFinishers(x: AttackContext, pool: Pool) {
+  for (const fn of finishers) fn(x, pool);
 }

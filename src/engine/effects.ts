@@ -969,7 +969,7 @@ export const grants = (list: Active[], inc: Incoming[], ability: string) => list
 /** Stable key so models with the same effects share an attack pool. */
 export const fxKey = (list: Active[], inc: Incoming[]) => [...list.map((a) => `${a.label}:${JSON.stringify(a.e)}`), ...inc.map((i) => JSON.stringify(i))].sort().join(';');
 
-function addToExpr(expr: string, n: number): string {
+export function addToExpr(expr: string, n: number): string {
   if (!n) return expr;
   const m = /^(\d+)$/.exec(expr.trim());
   if (m) return String(Math.max(1, +m[1] + n));

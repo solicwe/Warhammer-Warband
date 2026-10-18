@@ -1,7 +1,7 @@
 // Faction modules subscribe to the game loop here. One block per faction; within each event the handlers run in the
 // order of the blocks below, which keeps dice rolls (and so seeded games) the same.
 // To add a faction: write its module, then add a block that subscribes its functions to the events it needs.
-import { addCombatMods } from './combatMods';
+import { addCombatMods, addPoolFinisher } from './combatMods';
 import { addActionHandler, addChoiceHooks, addCondition, addDieRescue, addEffectSource, addModifier, addStratSpecial, addTargetFilter, on } from './events';
 import { shockTest } from './activations';
 import { log } from './state';
@@ -21,7 +21,9 @@ import { daemonBattleShockMod, daemonsAttackModifiers, daemonsBattleStart, daemo
 import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultAmbushUnitDestroyed, cultAttackModifiers, cultBattleStart, cultDefenseModifiers, cultIconCommandPhase } from './cult';
 import { necAttackModifiers, necBattleStart, necCommandStart, necDefenseModifiers } from './necrons';
 import { gkAttackModifiers, gkDefenseModifiers, gkEndOpponentTurn } from './greyKnights';
-import { circleInFlow, inFlow } from './flow';
+import { circleInFlow, inFlow, isThousandSonsArmy } from './flow';
+import { RULES } from './config';
+import { clamp } from './geometry';
 import { inSynapse } from './tyranids';
 
 const unitOf = (s: GameState, id?: string) => (id ? s.units.find((x) => x.id === id) : undefined);
@@ -203,7 +205,7 @@ addCombatMods((x) => admechDefenseModifiers(x.s, x.A, x.T, x.mode));
 addCombatMods((x) => drukhariAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon));
 addCombatMods((x) => drukhariDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
 // Chaos Daemons
-addCombatMods((x) => ({ ...daemonsAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon), attacksBonus: 0 }));
+addCombatMods((x) => daemonsAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon));
 addCombatMods((x) => daemonsDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
 // Genestealer Cults
 addCombatMods((x) => { const c = cultAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon); return { ...c, critHitOn: c.critHitThreshold }; });
@@ -212,5 +214,28 @@ addCombatMods((x) => cultDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
 addCombatMods((x) => { const n = necAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon); return { ...n, critHitOn: n.critHitThreshold }; });
 addCombatMods((x) => necDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
 // Grey Knights
-addCombatMods((x) => { const g = gkAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon); return { ...g, critHitOn: g.critHitThreshold, damageBonus: 0 }; });
+addCombatMods((x) => { const g = gkAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon); return { ...g, critHitOn: g.critHitThreshold }; });
 addCombatMods((x) => gkDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
+
+// Thousand Sons: Arcane Might (+1 S to Psychic Attacks, +2 in the Flow of Magic), Empyric Onslaught (+3 Attacks for
+// the CHARACTER's Psychic ranged weapons in the Flow of Magic)
+addCombatMods((x) => {
+  if (!x.psychic || !isThousandSonsArmy(x.s, x.A.owner)) return null;
+  const has = (n: string) => x.A.enhancements?.some((e) => e.name === n);
+  return {
+    strengthBonus: has('Arcane Might') ? (inFlow(x.s, x.A) ? 2 : 1) : 0,
+    attacksBonus: x.mode === 'ranged' && x.m.isCharacter && has('Empyric Onslaught') && inFlow(x.s, x.A) ? 3 : 0,
+  };
+});
+// Flow of Magic: THOUSAND SONS Psychic Attacks get +1 to wound in the Flow, re-roll wound rolls of 1 outside it
+addPoolFinisher((x, pool) => {
+  if (!x.psychic || !isThousandSonsArmy(x.s, x.A.owner)) return;
+  if (!x.A.factionKeywords.includes('THOUSAND SONS') && !x.A.keywords.includes('THOUSAND SONS')) return;
+  if (inFlow(x.s, x.A)) {
+    pool.woundMod = clamp(pool.woundMod + 1, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
+    pool.woundNote = [pool.woundNote, 'Flow of Magic: +1 Wound'].filter(Boolean).join(' · ');
+  } else {
+    pool.rerollWounds1 = true;
+    pool.woundNote = [pool.woundNote, 'Flow of Magic: re-roll 1s'].filter(Boolean).join(' · ');
+  }
+});
