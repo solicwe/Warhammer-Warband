@@ -2,7 +2,7 @@
 import { weaponFx } from './weaponFx';
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
-import { baseDist, clamp, coherencyProblems, reachOf } from './geometry';
+import { baseDist, clamp, coherencyProblems, gap, reachOf } from './geometry';
 import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
@@ -972,6 +972,12 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   m.wounds = 0;
   (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || m.keywords.includes('CHARACTER'), W: m.profile.W });
   if (u.transport && m.keywords.includes('TRANSPORT')) transportHook?.(s, u, m);
+  // Vengeance for the Omnissiah: a friendly ASTRA MILITARUM VEHICLE destroyed within 12"
+  if (m.keywords.includes('VEHICLE') && u.factionKeywords.includes('ASTRA MILITARUM')) {
+    for (const f of boardUnits(s, u.owner)) {
+      if (f.abilities.some((a) => a.name === 'Vengeance for the Omnissiah') && alive(f).some((fm) => gap(fm, m) <= 12 + 1e-6)) (f.triggered ??= []).push('avengeVehicle');
+    }
+  }
   // Servitors: the Cenobyte Servitors are destroyed with Chaplain Grimaldus
   if (/grimaldus/i.test(m.name) && u.abilities.some((a) => a.name === 'Servitors')) for (const x of alive(u).filter((n) => /servitor/i.test(n.name))) { x.dead = true; x.wounds = 0; }
   if (!alive(u).length) {

@@ -238,6 +238,7 @@ export interface UnitState {
   homer?: Pt;
   /** abilities used once per battle / per turn by key (Miraculous Saviour, Emergency Combat Embarkation …) */
   onceUsed?: string[];
+  triggered?: string[]; // conditions that hold for the rest of the battle once they happen (Vengeance for the Omnissiah)
   oncePerTurnUsed?: string[];
   transport: TransportInfo | null;
   weaponsFired: string[]; // split fire: ranged weapons already used this phase

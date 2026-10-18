@@ -108,7 +108,7 @@
       "effects": [
         {
           "defend": {
-            "enemyHit": -1
+            "hit": -1
           }
         }
       ],
@@ -294,7 +294,7 @@
       "effects": [
         {
           "defend": {
-            "apMinus": 1
+            "ap": 1
           }
         }
       ],

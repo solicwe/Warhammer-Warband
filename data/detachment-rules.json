@@ -5377,13 +5377,17 @@
       "auto": "full",
       "effects": [
         {
-          "canChargeAfterFallBack": true
+          "eligible": [
+            "chargeAfterFallBack"
+          ]
         },
         {
           "units": [
             "VANGUARD INVADER"
           ],
-          "canChargeAfterAdvance": true
+          "eligible": [
+            "chargeAfterAdvance"
+          ]
         }
       ]
     },

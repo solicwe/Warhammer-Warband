@@ -1825,7 +1825,7 @@ function BoardImpl(props: BoardProps) {
                 return (
                   <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none" className="flow-magic-aura">
                     <rect x={-2.4} y={-0.28} width={4.8} height={0.56} rx={0.28} fill="rgba(8, 47, 73, 0.92)" stroke="#22d3ee" strokeWidth={0.05} />
-                    <text y={0.10} fontSize={0.28} textAnchor="middle" fill="#67e8f9" fontWeight={800} letterSpacing={0.04}>✦ IN FLOW OF MAGIC (+1 W)</text>
+                    <text y={0.10} fontSize={0.28} textAnchor="middle" fill="#67e8f9" fontWeight={800} letterSpacing={0.04}>IN FLOW OF MAGIC (+1 W)</text>
                   </g>
                 );
               }
@@ -1841,7 +1841,7 @@ function BoardImpl(props: BoardProps) {
                 return (
                   <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none" className="shadow-chaos-aura">
                     <rect x={-2.4} y={-0.28} width={4.8} height={0.56} rx={0.28} fill="rgba(59, 7, 100, 0.92)" stroke="#c084fc" strokeWidth={0.05} />
-                    <text y={0.10} fontSize={0.28} textAnchor="middle" fill="#e9d5ff" fontWeight={800} letterSpacing={0.04}>✦ IN SHADOW OF CHAOS</text>
+                    <text y={0.10} fontSize={0.28} textAnchor="middle" fill="#e9d5ff" fontWeight={800} letterSpacing={0.04}>IN SHADOW OF CHAOS</text>
                   </g>
                 );
               }
@@ -1849,7 +1849,7 @@ function BoardImpl(props: BoardProps) {
                 return (
                   <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none" className="shadow-chaos-aura">
                     <rect x={-2.3} y={-0.28} width={4.6} height={0.56} rx={0.28} fill="rgba(88, 28, 135, 0.92)" stroke="#a855f7" strokeWidth={0.05} />
-                    <text y={0.10} fontSize={0.26} textAnchor="middle" fill="#f3e8ff" fontWeight={800} letterSpacing={0.03}>✦ SHADOW OF CHAOS (-1 BS)</text>
+                    <text y={0.10} fontSize={0.26} textAnchor="middle" fill="#f3e8ff" fontWeight={800} letterSpacing={0.03}>SHADOW OF CHAOS (-1 BS)</text>
                   </g>
                 );
               }

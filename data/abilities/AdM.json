@@ -129,7 +129,7 @@
         "abilities": [
           "ignores cover"
         ],
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ]
   },

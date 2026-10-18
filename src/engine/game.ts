@@ -777,7 +777,7 @@ export function sendToReserves(s: GameState, unitId: string): string | null {
   return null;
 }
 
-function nextDeployer(s: GameState) {
+export function nextDeployer(s: GameState) {
   const pending = (p: PlayerId) => s.units.some((u) => u.owner === p && u.status === 'pending');
   if (s.redeploy) return; // re-deploying: the player says when they are done
   const o = other(s.deployTurn);

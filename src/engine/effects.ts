@@ -42,7 +42,8 @@ import { setActionEligibilityHook, unitInRange } from './missions';
 import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, unitDistance, withinTerrain } from './state';
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, UnitState, WeaponData, WeaponProfileData } from './types';
 import { abilityLabel, condApplies, parseAbility } from './weapons';
-import { hasLos, isHidden, setVisibilityHooks } from './visibility';
+import { hasCover, hasLos, isHidden, setVisibilityHooks } from './visibility';
+import { getFtggPairForGuided } from './tau';
 import { setThroughHook } from './pathing';
 import { activeIds, blessingById, unitBlessings } from './blessings';
 import { inFlow } from './flow';
@@ -680,6 +681,9 @@ const KNIGHT_CONDS = /^(quality:|dread:|fresh:|honoured$|onLine$|holderOnLine$|l
 /** What a Bondsman ability does to the ARMIGER model it affects (knights.ts). */
 export const bondOf = (u: UnitState, name: string) => { const a = u.abilities.find((x) => x.name === name); return a ? abilityRule(u, a)?.bond : undefined; };
 
+/** Condition names cond() did not recognise: a rule using one silently never applies (the data test checks this). */
+export const unknownConds = new Set<string>();
+
 export function cond(c: string, x: Ctx): boolean {
   const { s, A, T } = x;
   if (c.startsWith('!')) return !cond(c.slice(1), x);
@@ -925,10 +929,14 @@ export function cond(c: string, x: Ctx): boolean {
     case 'halfRange': return !!x.p && typeof x.p.range === 'number' && (x.d ?? Infinity) <= x.p.range / 2 + 1e-6;
     case 'targetInOwnDz': return !!T && alive(T).some((m) => pointInPoly(m, toPoly(deploymentById(s.deploymentId).zones[s.players[T.owner].role])));
     case 'targetSeenByHolder': return !!T && (x.bearers?.length ? x.bearers : alive(x.holder ?? A)).some((b) => alive(T).some((o) => hasLos(s, b, o)));
+    case 'targetSpotted': { const pr = getFtggPairForGuided(s, A); return !!T && !!pr && pr.spottedId === T.id; }
+    // defending: the attacker's model sees this unit in cover
+    case 'inCover': return !!T && alive(T).some((am) => hasCover(s, am, A));
+    case 'avengeVehicle': return (A.triggered ?? []).includes('avengeVehicle');
     case 'twoCharacters': return alive(A).filter((m) => m.isCharacter).length >= 2;
     case 'startingStrength5': return A.startingStrength >= 5;
     case 'attackerOnObjectiveOrTarget': return onObjective(s, A) || (!!T && onObjective(s, T));
-    default: return false;
+    default: unknownConds.add(c); return false;
   }
 }
 

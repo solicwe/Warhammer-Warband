@@ -59,7 +59,7 @@
         "abilities": [
           "lethal hits"
         ],
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged Critical Hits have the [LETHAL HITS] ability."
@@ -79,7 +79,7 @@
         "abilities": [
           "lethal hits"
         ],
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks have the [LETHAL HITS] ability."
@@ -110,7 +110,7 @@
       {
         "scope": "led",
         "attacks": 1,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "While leading a unit, add 1 to Attacks of ranged weapons."
@@ -193,7 +193,7 @@
         "abilities": [
           "devastating wounds"
         ],
-        "kind": "melee"
+        "attack": "melee"
       }
     ],
     "note": "While leading a unit, melee weapons have [DEVASTATING WOUNDS]."
@@ -228,7 +228,7 @@
     "effects": [
       {
         "critHitOn": 5,
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Ranged attacks score Critical Hits on unmodified 5+."
@@ -239,28 +239,58 @@
   },
   "Forceshield": {
     "status": "auto",
-    "invuln": 4,
-    "note": "4+ invulnerable save."
+    "note": "4+ invulnerable save.",
+    "effects": [
+      {
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
   },
   "Scattershield": {
     "status": "auto",
-    "invuln": 4,
-    "note": "4+ invulnerable save."
+    "note": "4+ invulnerable save.",
+    "effects": [
+      {
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
   },
   "Shimmershield": {
     "status": "auto",
-    "invuln": 4,
-    "note": "Bearer's unit has a 4+ invulnerable save."
+    "note": "Bearer's unit has a 4+ invulnerable save.",
+    "effects": [
+      {
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
   },
   "Shadow Field": {
     "status": "auto",
-    "invuln": 2,
-    "note": "Bearer has a 2+ invulnerable save (lost until end of battle if failed)."
+    "note": "Bearer has a 2+ invulnerable save (lost until end of battle if failed).",
+    "effects": [
+      {
+        "defend": {
+          "inv": 2
+        }
+      }
+    ]
   },
   "Mistshield": {
     "status": "auto",
-    "invuln": 4,
-    "note": "4+ invulnerable save."
+    "note": "4+ invulnerable save.",
+    "effects": [
+      {
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
   },
   "Wave Serpent Shield": {
     "status": "auto",
@@ -356,7 +386,7 @@
         "abilities": [
           "assault"
         ],
-        "kind": "ranged"
+        "attack": "ranged"
       }
     ],
     "note": "Vehicle ranged attacks have [ASSAULT]."

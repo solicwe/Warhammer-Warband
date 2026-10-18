@@ -87,10 +87,11 @@
     "effects": [
       {
         "defend": {
-          "damageMinus": 1
+          "negateOnce": "battle"
         }
       }
-    ]
+    ],
+    "note": "Once per battle: an attack allocated to it has Damage 0."
   },
   "Adaptive Biology": {
     "status": "auto",
@@ -276,10 +277,12 @@
     "status": "auto",
     "effects": [
       {
-        "aura": 6,
-        "enemyOc": -1
+        "scope": "enemyAura",
+        "range": 1,
+        "ocHalve": true
       }
-    ]
+    ],
+    "note": "Enemy units in Engagement Range have their OC halved."
   },
   "Grisly Spectacle": {
     "status": "auto",

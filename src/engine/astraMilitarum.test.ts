@@ -64,14 +64,14 @@ describe('Astra Militarum Voice of Command', () => {
   });
 
   it('enforces target eligibility based on Regiment, Squadron, and officer type', () => {
-    const officer = { id: 'off', owner: 0, name: 'Cadian Castellan', keywords: ['OFFICER'], abilities: [], models: [{ x: 10, y: 10 }] } as unknown as UnitState;
-    const tankCmd = { id: 'tc', owner: 0, name: 'Leman Russ Commander', keywords: ['OFFICER', 'SQUADRON'], abilities: [], models: [{ x: 10, y: 10 }] } as unknown as UnitState;
-    const lordSolar = { id: 'ls', owner: 0, name: 'Lord Solar Leontus', keywords: ['OFFICER'], abilities: [], models: [{ x: 10, y: 10 }] } as unknown as UnitState;
+    const officer = { id: 'off', owner: 0, name: 'Cadian Castellan', keywords: ['OFFICER'], abilities: [], models: [{ x: 10, y: 10, r: 0.5 }] } as unknown as UnitState;
+    const tankCmd = { id: 'tc', owner: 0, name: 'Leman Russ Commander', keywords: ['OFFICER', 'SQUADRON'], abilities: [], models: [{ x: 10, y: 10, r: 0.5 }] } as unknown as UnitState;
+    const lordSolar = { id: 'ls', owner: 0, name: 'Lord Solar Leontus', keywords: ['OFFICER'], abilities: [], models: [{ x: 10, y: 10, r: 0.5 }] } as unknown as UnitState;
 
-    const regiment = { id: 'reg', owner: 0, status: 'board', name: 'Shock Troops', keywords: ['REGIMENT'], models: [{ x: 12, y: 10 }] } as unknown as UnitState;
-    const squadron = { id: 'sqd', owner: 0, status: 'board', name: 'Leman Russ Tank', keywords: ['SQUADRON'], models: [{ x: 12, y: 10 }] } as unknown as UnitState;
-    const titanic = { id: 'tit', owner: 0, status: 'board', name: 'Baneblade', keywords: ['TITANIC'], models: [{ x: 12, y: 10 }] } as unknown as UnitState;
-    const enemy = { id: 'ene', owner: 1, status: 'board', name: 'Boyz', keywords: ['REGIMENT'], models: [{ x: 12, y: 10 }] } as unknown as UnitState;
+    const regiment = { id: 'reg', owner: 0, status: 'board', name: 'Shock Troops', keywords: ['REGIMENT'], models: [{ x: 12, y: 10, r: 0.5 }] } as unknown as UnitState;
+    const squadron = { id: 'sqd', owner: 0, status: 'board', name: 'Leman Russ Tank', keywords: ['SQUADRON'], models: [{ x: 12, y: 10, r: 0.5 }] } as unknown as UnitState;
+    const titanic = { id: 'tit', owner: 0, status: 'board', name: 'Baneblade', keywords: ['TITANIC'], models: [{ x: 12, y: 10, r: 0.5 }] } as unknown as UnitState;
+    const enemy = { id: 'ene', owner: 1, status: 'board', name: 'Boyz', keywords: ['REGIMENT'], models: [{ x: 12, y: 10, r: 0.5 }] } as unknown as UnitState;
 
     // Normal officer can order Regiment, but not Squadron or Titanic (unless detachment rule)
     expect(canOfficerTarget(officer, regiment)).toBe(true);
