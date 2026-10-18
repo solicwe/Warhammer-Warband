@@ -10,7 +10,7 @@ import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart } from '
 import { aeldariBattleStart, aeldariCommandEnd, aeldariTurnStart, resetPhaseStrandsOfFate } from './aeldari';
 import { votannBattleStart, votannCommandEnd } from './votann';
 import { admechCommandStart, admechRoundStart } from './admech';
-import { drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd } from './drukhari';
+import { drukhariBattleShockFailed, drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd } from './drukhari';
 import { daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsPhaseEnd } from './daemons';
 import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultBattleStart, cultIconCommandPhase } from './cult';
 import { necBattleStart, necCommandStart } from './necrons';
@@ -68,6 +68,8 @@ on('commandStart', (s, e) => admechCommandStart(s, e.p));
 on('battleStart', (s) => drukhariBattleStart(s));
 on('commandStart', (s, e) => drukhariCommandStart(s, e.p));
 on('phaseEnd', (s) => drukhariPhaseEnd(s));
+// Power from Pain: an enemy unit failing any Battle-shock test gives a Pain token
+on('shockResult', (s, e) => { if (!e.passed) drukhariBattleShockFailed(s, e.u); });
 
 // Chaos Daemons
 on('setup', (s) => daemonsBattleStart(s));

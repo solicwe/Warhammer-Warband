@@ -11,9 +11,8 @@ import { autoPact } from './darkPacts';
 import { d6, rollExpr, rollN } from './dice';
 import { favouredOnKill } from './emperorsChildren';
 import { blightedLand, extraPlague, eyestingerStorm, signalPox } from './deathGuard';
-import { bondAgain, expend, knightsAttackDone, knightsShockFailed, longLeash } from './knights';
-import { drukhariBattleShockFailed } from './drukhari';
-import { daemonBattleShockMod, daemonsOnBattleShockResult } from './daemons';
+import { bondAgain, expend, knightsAttackDone, longLeash } from './knights';
+import { battleShockMod, emit } from './events';
 import {
   abilityOff, abilityRule, abilitySheet, activeRules, addTimed, cond, DET_RULES, fightOnDeathFor, grantsOf, isRiled, retaliateFor, type AbilityRule, type Effect, type FreeDieSpec,
   type Incoming, type Limit, unitFlags, unitMatches,
@@ -510,7 +509,7 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
   if (!onBoard(u)) return true;
   const r = rollN(s, 2);
   const ld = ldOf(s, u);
-  const dMod = daemonBattleShockMod(s, u);
+  const dMod = battleShockMod(s, u);
   const effMod = mod + dMod;
   let total = r[0] + r[1] + effMod + unitFlags(s, u).shockBonus;
   let passed = total >= ld;
@@ -533,8 +532,7 @@ export function shockTest(s: GameState, u: UnitState, mod: number, why: string):
   pushFx(s, { kind: 'roll', owner: u.owner, title: `Battle-shock · ${u.name}`, dice: r, result: `${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'failed!'}${effMod ? ` (${effMod})` : ''}`, good: passed });
   log(s, `${why}: ${u.name} Battle-shock test [${r.join('+')}]${effMod ? ` ${effMod}` : ''} = ${total} vs Ld ${ld}+ → ${passed ? 'passed' : 'Battle-shocked!'}`, 'roll', u.owner);
   if (!passed && !u.battleShocked) { u.battleShocked = true; pushFx(s, { kind: 'shock', unitId: u.id, owner: u.owner, at: centreOf(u) }); fire(s, 'becameShocked', [u]); }
-  if (!passed) { knightsShockFailed(s, u); drukhariBattleShockFailed(s, u); }
-  daemonsOnBattleShockResult(s, u, passed);
+  emit(s, 'shockResult', { u, passed });
   // Tome of Bounteous Blessings: a passed test heals D3 wounds (a Battleline unit gets D3 models back instead)
   if (passed && unitFlags(s, u).shockPassHeal) {
     const n = rollExpr(s, 'D3').total;
