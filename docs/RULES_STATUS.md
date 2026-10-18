@@ -57,6 +57,36 @@ Each cell: works / partial / text only / bug.
 | AE / DRU | Agile Manoeuvres (Battle Focus) | tokens are counted and shown; nothing lets you spend them |
 | all | multi-target stratagems (`extraTargets`) | the player can pick extra units; the bot never uses these stratagems |
 
+## Bot use of stratagems in real games
+
+Two bot-vs-bot games per faction with its quick-play list. Only the list's own detachment can be used, so this samples one detachment per faction.
+
+| Faction | Detachment | Detachment stratagems used / available | Game stuck |
+|---|---|---|---|
+| AC | Guardians of the Throne | 3 / 6 (IN AURAMITE CLAD, SHIELD OF HONOUR, SUPERHUMAN FOCUS) | 0 of 2 |
+| AE | Warhost | 3 / 6 (BLITZING FIREPOWER, FEIGNED RETREAT, LIGHTNING-FAST REACTIONS) | 0 of 2 |
+| AM | Combined Arms | 1 / 6 (FIELDS OF FIRE) | 0 of 2 |
+| AS | Hallowed Martyrs | 0 / 6 (none) | 0 of 2 |
+| AdM | Rad-Zone Corps | 1 / 6 (LETHAL DOSAGE) | 0 of 2 |
+| AoI | Ordo Malleus Daemon Hunters | 0 / 6 (none) | 0 of 2 |
+| CD | Daemonic Incursion | 0 / 6 (none) | 0 of 2 |
+| CSM | Veterans of the Long War | 1 / 6 (CONTEMPTUOUS DISREGARD) | 0 of 2 |
+| DG | Virulent Vectorium | 2 / 6 (CREEPING BLIGHT, PUTRID DETONATION) | 0 of 2 |
+| DRU | Skysplinter Assault | 2 / 6 (NIGHT SHIELD, SKYBORNE ANNIHILATION) | 0 of 2 |
+| EC | Mercurial Host | 4 / 6 (CAPRICIOUS REACTIONS, DARK VIGOUR, HONOUR THE PRINCE, VIOLENT EXCESS) | 0 of 2 |
+| GC | Host of Ascension | 1 / 6 (COORDINATED TRAP) | 0 of 2 |
+| GK | Warpbane Task Force | 0 / 6 (none) | 0 of 2 |
+| LoV | Hearthband | 2 / 6 (BRËKKEKNOTS, FURY OF THE HEARTH) | 0 of 2 |
+| NEC | Awakened Dynasty | 0 / 6 (none) | 0 of 2 |
+| ORK | War Horde | 3 / 6 (CLOSE-RANGE DAKKA, HIT 'EM HARDER, ORKS IS NEVER BEATEN) | 0 of 2 |
+| QI | Spearhead-At-Arms | 1 / 6 (EXEMPLAR’S WISDOM) | 0 of 2 |
+| QT | Traitoris Lance | 1 / 6 (DISDAIN FOR THE WEAK) | 0 of 2 |
+| SM | Gladius Task Force | 4 / 6 (ADAPTIVE STRATEGY, ARMOUR OF CONTEMPT, RESPONSIVE TACTICS, STORM OF DEVASTATION) | 0 of 2 |
+| TAU | Mont’ka | 1 / 6 (AGGRESSIVE MOBILITY) | 0 of 2 |
+| TS | Hexwarp Thrallband | 1 / 6 (WARDING HEX) | 0 of 2 |
+| TYR | Invasion Fleet | 1 / 6 (RAPID REGENERATION) | 0 of 2 |
+| WE | Berzerker Warband | 2 / 6 (BERZERKER’S WRATH, SKULLS FOR THE SKULL THRONE!) | 0 of 2 |
+
 ## Accuracy
 
 Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were checked rule by rule when they were added. The other factions were filled in by generator scripts (`scripts/gen-*`), and many of their entries only carry the card text with `"status": "auto"` and no effect. Those show as automated in the app but do nothing; they are counted as "text only" here.
