@@ -6084,7 +6084,8 @@
             }
           ]
         }
-      ]
+      ],
+      "needKw": "ASURYANI"
     },
     "Battle Host": {
       "auto": "full",
@@ -6983,6 +6984,223 @@
             "HARLEQUINS"
           ],
           "stealth": true
+        }
+      ]
+    },
+    "Power from Pain": {
+      "auto": "full",
+      "armyRule": true,
+      "code": true,
+      "manual": "Pain tokens: 1 each Command phase, enemy unit destroyed or failed Battle-shock test; each Pain ability's button spends one to Empower"
+    },
+    "Corsairs and Travelling Players": {
+      "auto": "full",
+      "armyRule": true,
+      "info": true,
+      "manual": "Army building: Harlequins and Anhrathe units up to a points limit"
+    },
+    "Skysplinter Assault": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "DRUKHARI"
+          ],
+          "if": [
+            "disembarkedThisTurn"
+          ],
+          "attack": "ranged",
+          "abilities": [
+            "ignores cover"
+          ]
+        },
+        {
+          "units": [
+            "DRUKHARI"
+          ],
+          "if": [
+            "disembarkedThisTurn"
+          ],
+          "attack": "melee",
+          "abilities": [
+            "lance"
+          ]
+        }
+      ]
+    },
+    "Reaper’s Wager": {
+      "auto": "full",
+      "code": true,
+      "manual": "Callous Competition: the side winning the wager re-rolls Hit rolls of 1, the losing side Hit and Wound rolls of 1"
+    },
+    "Realspace Raiders": {
+      "auto": "full",
+      "code": true,
+      "manual": "Alliance of Agony: 2 Pain tokens at the start of the battle for each Archon + Kabalite Warriors, Succubus + Wyches and Haemonculus + Wracks pair"
+    },
+    "Spectacle of Spite": {
+      "auto": "full",
+      "choice": {
+        "name": "Combat Drugs",
+        "when": "command",
+        "uses": "free",
+        "pick": 1,
+        "options": [
+          {
+            "id": "adrenalight",
+            "name": "Adrenalight",
+            "text": "+1 Attacks (melee)",
+            "effects": [
+              {
+                "units": [
+                  "WYCH CULT"
+                ],
+                "attack": "melee",
+                "attacks": 1
+              }
+            ]
+          },
+          {
+            "id": "hypex",
+            "name": "Hypex",
+            "text": "+2\" Move",
+            "effects": [
+              {
+                "units": [
+                  "WYCH CULT"
+                ],
+                "move": 2
+              }
+            ]
+          },
+          {
+            "id": "serpentin",
+            "name": "Serpentin",
+            "text": "+1 WS (melee)",
+            "effects": [
+              {
+                "units": [
+                  "WYCH CULT"
+                ],
+                "attack": "melee",
+                "skill": 1
+              }
+            ]
+          },
+          {
+            "id": "painbringer",
+            "name": "Painbringer",
+            "text": "+1 Toughness",
+            "effects": [
+              {
+                "units": [
+                  "WYCH CULT"
+                ],
+                "toughness": 1
+              }
+            ]
+          },
+          {
+            "id": "graveLotus",
+            "name": "Grave Lotus",
+            "text": "+1 Strength (melee)",
+            "effects": [
+              {
+                "units": [
+                  "WYCH CULT"
+                ],
+                "attack": "melee",
+                "strength": 1
+              }
+            ]
+          },
+          {
+            "id": "splintermind",
+            "name": "Splintermind",
+            "text": "+1 Leadership and BS",
+            "effects": [
+              {
+                "units": [
+                  "WYCH CULT"
+                ],
+                "ld": 1
+              },
+              {
+                "units": [
+                  "WYCH CULT"
+                ],
+                "attack": "ranged",
+                "skill": 1
+              }
+            ]
+          },
+          {
+            "id": "randomDrugs",
+            "name": "Roll two random Combat Drugs",
+            "text": "Roll two D6",
+            "effects": [],
+            "random": 2
+          }
+        ]
+      },
+      "manual": "A drug selected (not rolled) cannot be selected again this battle"
+    },
+    "Covenite Coterie": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "HAEMONCULUS COVENS"
+          ],
+          "defend": {
+            "woundIfStronger": -1
+          }
+        }
+      ]
+    },
+    "Kabalite Cartel": {
+      "auto": "full",
+      "code": true,
+      "manual": "Murderous Agenda: the Contract and its unit are picked at the start of the first battle round (the most valuable fitting enemy unit)"
+    },
+    "Exhibition of Slaughter": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "WYCH CULT"
+          ],
+          "attack": "melee",
+          "abilities": [
+            "lethal hits: non-monster/vehicle"
+          ]
+        }
+      ]
+    },
+    "Kabalite Agonysts": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "BLADES FOR HIRE|KABAL"
+          ],
+          "attack": "ranged",
+          "abilities": [
+            "sustained hits 1: non-monster/vehicle"
+          ]
+        }
+      ]
+    },
+    "Tools of Torment": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "CRONOS|TALOS"
+          ],
+          "defend": {
+            "woundIfStronger": -1
+          }
         }
       ]
     }

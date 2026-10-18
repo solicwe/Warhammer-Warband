@@ -798,6 +798,7 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string
   { name: 'Prince of Corsairs', n: 3, infantryOnly: false, units: ['AELDARI'] }, // Aeldari: Prince Yriel
   { name: 'Shedskin Raiment', n: 3, infantryOnly: false, units: ['HARLEQUINS'] },
   { name: 'Veiled Hunter', n: 3, infantryOnly: true, units: ['SKITARII'] }, // Adeptus Mechanicus
+  { name: 'Precognisant', n: 3, infantryOnly: false, units: ['DRUKHARI'] }, // Drukhari: Lady Malys
 ];
 
 function redeployFor(s: GameState, p: PlayerId) {

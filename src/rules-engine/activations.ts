@@ -25,7 +25,7 @@ export type Trigger =
   | 'anyPhase' | 'opponentTurnEnd' | 'opponentFightEnd' | 'onDeath' | 'friendlyDeath' | 'shotByEnemy' | 'enemyMovedNear' | 'enemyFellBack'
   | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks' | 'movementStart' | 'fightEnd' | 'attackStart'
   | 'attacked' | 'friendlyTargeted' | 'fightEndButton' | 'chargeStart' | 'chargeEnd'
-  | 'shootingStart' | 'oppShootingStart' | 'eachCommandStart' | 'shootingEnd';
+  | 'shootingStart' | 'oppShootingStart' | 'eachCommandStart' | 'shootingEnd' | 'charge';
 
 export type Until = TimedEffect['until'];
 
@@ -155,6 +155,7 @@ export interface Action {
   afflictNear?: number; // every enemy unit within X" of this unit is Afflicted until your next turn (Explosive Blight)
   alsoNear?: number; // do this to every other enemy unit within X" of the target too (Spore-laced Shock Waves)
   dg?: 'signalPox' | 'blightedLand' | 'eyestinger' | 'extraPlague' | 'leechspore';
+  dru?: string; // Drukhari: 'empower' / 'gain' / 'spendCp' / 'wager' (drukhari.ts)
   ae?: string; // Aeldari: 'focus:<manoeuvre>' spends a Battle Focus token (aeldari.ts)
   jumpToDeath?: boolean; // the unit (one model) is set up again where the destroyed model was (Inevitable Death)
   embarkNear?: number; // the target embarks within a friendly TRANSPORT it is wholly within this many inches of (Accomplished Tactician)
@@ -379,6 +380,7 @@ function timingOk(s: GameState, def: ActDef): string | null {
     case 'movement': return s.phase === 'movement' && own ? null : 'Your Movement phase only';
     case 'endOfNormalMove': return s.phase === 'movement' && own && u.move === 'normal' ? null : 'After a Normal move';
     case 'shooting': return s.phase === 'shooting' && own ? null : 'Your Shooting phase only';
+    case 'charge': return s.phase === 'charge' && own ? null : 'Your Charge phase only';
     case 'selectedToShoot': return s.phase === 'shooting' && own && !u.selectedToShoot ? null : 'When this unit is selected to shoot';
     case 'afterShootingButton': return s.phase === 'shooting' && own && u.shotTurn === s.turn ? null : 'After this unit has shot';
     case 'selectedToFight': return s.phase === 'fight' && !u.fought && engagedEnemies(s, u).length > 0 ? null : 'When this unit is selected to fight';

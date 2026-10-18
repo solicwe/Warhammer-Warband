@@ -1,392 +1,186 @@
-// Drukhari army rules: Power from Pain (Pain Tokens & Empowered Abilities) and Detachments.
-// Legal for matched play from 26th August 2026 (Faction Pack v1.2).
-
+// Drukhari army rule Power from Pain, and the detachment rules that keep state (Faction Pack v1.2).
+//
+// Pain tokens: 1 at the start of your Command phase, 1 each time an enemy unit is destroyed, 1 each time an enemy
+// unit fails a Battle-shock test. Each Pain ability says when you can spend 1 token to Empower its unit until the end
+// of the phase: those are `act` buttons in data/abilities/DRU.json (condition `painReady`, action `dru: "empower"`)
+// and the abilities' effects check `painEmpowered`.
 import { d6 } from '../engine/dice';
-import { alive, boardUnits, hasKw, log, onBoard, other, unitDistance } from '../engine/state';
-import type { GameState, PlayerId, UnitState, WeaponProfileData } from '../engine/types';
-
-export interface DrukhariAttackBonus {
-  hitMod: number;
-  woundMod: number;
-  apBonus: number;
-  attacksBonus: number;
-  rerollHits1: boolean;
-  rerollWounds1: boolean;
-  rerollHits: boolean;
-  rerollWounds: boolean;
-  critHitOn?: number;
-  critWoundOn?: number;
-  lethal: boolean;
-  sustained: string | null;
-  ignoresCover: boolean;
-  precision: boolean;
-  notes: string[];
-}
-
-export interface DrukhariDefenseBonus {
-  hitMod: number;
-  woundMod: number;
-  inv?: number;
-  fnp?: number;
-  notes: string[];
-}
+import { alive, boardUnits, hasKw, log, other, unitDistance } from '../engine/state';
+import type { CombatMods } from '../engine/combatMods';
+import type { GameState, PlayerId, UnitState } from '../engine/types';
 
 export function isDrukhariArmy(s: GameState, p: PlayerId): boolean {
-  const P = s.players[p];
-  if (!P) return false;
-  return (
-    P.factionId === 'DRU'
-    || P.factionName?.toLowerCase().includes('drukhari')
-    || s.units.some((u) => u.owner === p && (u.factionKeywords?.includes('DRUKHARI') || u.keywords?.includes('DRUKHARI')))
-  );
+  return !!s.players[p]?.armyRules?.some((r) => r.name === 'Power from Pain');
 }
 
-export function hasDrukhariFaction(u: UnitState): boolean {
-  return u.factionKeywords?.includes('DRUKHARI') || u.keywords?.includes('DRUKHARI');
-}
+export const hasDrukhariFaction = (u: UnitState) => u.factionKeywords?.includes('DRUKHARI') || u.keywords?.includes('DRUKHARI');
+const hasDet = (s: GameState, p: PlayerId, n: string) => !!s.players[p].detachments?.some((d) => d.name === n);
+const hasEnh = (u: UnitState, n: string) => !!u.enhancements?.some((e) => e.name === n);
 
-/** Check if a unit is currently Empowered by Power from Pain this phase. */
+/** Empowered this phase (Dark Vitality: always). An attached unit is one unit here, so its leader and bodyguard share it. */
 export function isUnitEmpowered(s: GameState, u: UnitState): boolean {
-  const empList = s.players[u.owner]?.empoweredUnits;
-  if (!empList) return false;
-  if (empList.includes(u.id)) return true;
-  // If attached, check if attached leader or bodyguard is in empowered list
-  if (u.sources.length > 1) {
-    const allies = s.units.filter((x) => x.owner === u.owner && empList.includes(x.id));
-    if (allies.some((a) => a.sources.some((src) => u.sources.includes(src)))) {
-      return true;
-    }
-  }
-  return false;
+  return hasEnh(u, 'Dark Vitality') || !!s.players[u.owner]?.empoweredUnits?.includes(u.id);
 }
 
-/** Add Pain tokens to player's pool. */
 export function gainPainToken(s: GameState, p: PlayerId, count = 1, reason?: string) {
-  if (!isDrukhariArmy(s, p)) return;
+  if (!isDrukhariArmy(s, p) || count <= 0) return;
   s.players[p].painTokens = (s.players[p].painTokens ?? 0) + count;
-  log(s, `[Power from Pain] ${s.players[p].name} gained ${count} Pain token${count > 1 ? 's' : ''}${reason ? ` (${reason})` : ''} (Pool: ${s.players[p].painTokens})`, 'info', p);
+  log(s, `Power from Pain: ${s.players[p].name} gains ${count} Pain token${count > 1 ? 's' : ''}${reason ? ` (${reason})` : ''} — ${s.players[p].painTokens} in the pool`, 'info', p);
 }
 
-/** Spend Pain tokens from player's pool. Automatically triggers Cronos Pain Engine refund aura. */
-export function spendPainToken(s: GameState, p: PlayerId, count = 1, reason?: string, empoweringUnit?: UnitState): boolean {
-  if (!isDrukhariArmy(s, p)) return false;
-  const current = s.players[p].painTokens ?? 0;
-  if (current < count) return false;
-
-  s.players[p].painTokens = current - count;
-  log(s, `[Power from Pain] ${s.players[p].name} spent ${count} Pain token${count > 1 ? 's' : ''}${reason ? ` (${reason})` : ''} (Remaining: ${s.players[p].painTokens})`, 'info', p);
-
-  // Cronos: Pain Engine (Aura)
-  // Each time you spend 1 Pain token to Empower a friendly unit within 9" of this unit, roll D6:
-  // on 4+ (3+ if monster or vehicle), gain 1 Pain token!
-  if (empoweringUnit) {
-    const cronosList = boardUnits(s, p).filter((u) => u.name.includes('Cronos') || u.keywords.includes('CRONOS'));
-    for (const c of cronosList) {
-      if (unitDistance(c, empoweringUnit) <= 9 + 1e-6) {
-        const isMV = hasKw(empoweringUnit, 'MONSTER') || hasKw(empoweringUnit, 'VEHICLE');
-        const roll = d6(s);
-        const threshold = isMV ? 3 : 4;
-        if (roll >= threshold) {
-          s.players[p].painTokens = (s.players[p].painTokens ?? 0) + 1;
-          log(s, `[Pain Engine (Aura)] Cronos refunded 1 Pain token on roll of ${roll}! (Pool: ${s.players[p].painTokens})`, 'info', p);
-        }
-        break; // Max 1 refund attempt per spend
-      }
-    }
-  }
-
+export function spendPainToken(s: GameState, p: PlayerId, count = 1, reason?: string): boolean {
+  const have = s.players[p].painTokens ?? 0;
+  if (have < count) return false;
+  s.players[p].painTokens = have - count;
+  log(s, `Power from Pain: ${s.players[p].name} spends ${count} Pain token${count > 1 ? 's' : ''}${reason ? ` (${reason})` : ''} — ${s.players[p].painTokens} left`, 'info', p);
   return true;
 }
 
-/** Empower a unit until the end of the phase. */
+/** Spend 1 Pain token to Empower a unit until the end of the phase; Pain Engine (Cronos within 9"): 5+ gets it back. */
 export function empowerUnit(s: GameState, u: UnitState): boolean {
   if (isUnitEmpowered(s, u)) return true;
-  if (!spendPainToken(s, u.owner, 1, `Empowering ${u.name}`, u)) return false;
-
-  if (!s.players[u.owner].empoweredUnits) {
-    s.players[u.owner].empoweredUnits = [];
+  if (!spendPainToken(s, u.owner, 1, `Empowering ${u.name}`)) return false;
+  (s.players[u.owner].empoweredUnits ??= []).push(u.id);
+  const cronos = boardUnits(s, u.owner).find((c) => c.abilities.some((a) => a.name === 'Pain Engine (Aura)') && unitDistance(c, u) <= 9 + 1e-6);
+  if (cronos) {
+    const plus = alive(cronos).some((m) => !m.weapons.some((w) => /spirit vortex/i.test(w.name))) ? 1 : 0;
+    const r = d6(s);
+    if (r + plus >= 5) gainPainToken(s, u.owner, 1, `Pain Engine rolled ${r}${plus ? '+1' : ''}`);
   }
-  s.players[u.owner].empoweredUnits!.push(u.id);
-  log(s, `[Empowered Through Pain] ${u.name} is Empowered until end of phase`, 'info', u.owner);
   return true;
 }
 
-/** Start of battle: setup initial Pain tokens based on battle size and detachment. */
+/** Reaper's Wager: this unit's side is losing the wager. */
+export const losingWager = (s: GameState, u: UnitState) => hasDet(s, u.owner, "Reaper’s Wager") && (s.players[u.owner].drukhariWagerWinning ?? 'Drukhari') !== (hasKw(u, 'HARLEQUINS') ? 'Harlequins' : 'Drukhari');
+
+export const painReady = (s: GameState, u: UnitState) => !isUnitEmpowered(s, u) && (s.players[u.owner].painTokens ?? 0) >= 1;
+
+// ---------- battle start, Command phase, phase end ----------
+
+/** Alliance of Agony (Realspace Raiders): 2 Pain tokens per character / unit pair; Reaper's Wager: Drukhari start winning. */
 export function drukhariBattleStart(s: GameState) {
   for (const p of [0, 1] as PlayerId[]) {
     if (!isDrukhariArmy(s, p)) continue;
-    const bSize = s.players[p]?.battleSize ?? 'incursion';
-    const baseTokens = bSize === 'strike' || bSize === 'strikeForce' ? 3 : bSize === 'onslaught' ? 4 : 2;
-    const dets = s.players[p].detachments ?? [];
-    let bonus = 0;
-    // Realspace Raiders: Alliance of Agony starting bonus
-    if (dets.some((d) => d.name === 'Realspace Raiders')) {
-      bonus += 1;
+    s.players[p].painTokens ??= 0;
+    if (hasDet(s, p, 'Realspace Raiders')) {
+      const mine = s.units.filter((u) => u.owner === p);
+      const has = (k: string) => mine.some((u) => u.models.some((m) => m.keywords.includes(k) || m.source === k) || u.sources.includes(k));
+      const pairs = [['ARCHON', 'Kabalite Warriors'], ['SUCCUBUS', 'Wyches'], ['HAEMONCULUS', 'Wracks']].filter(([c, b]) => has(c) && has(b)).length;
+      gainPainToken(s, p, pairs * 2, 'Alliance of Agony');
     }
-    s.players[p].painTokens = baseTokens + bonus;
-    log(s, `[Power from Pain] ${s.players[p].name} starting Pain token pool: ${s.players[p].painTokens}`, 'info', p);
-
-    // Reaper’s Wager: Drukhari start winning the wager
-    if (dets.some((d) => d.name === 'Reaper’s Wager')) {
-      s.players[p].drukhariWagerWinning = 'Drukhari';
-    }
+    if (hasDet(s, p, "Reaper’s Wager")) s.players[p].drukhariWagerWinning = 'Drukhari';
   }
 }
 
-/** Start of Command phase: gain 1 Pain token and resolve Haemonculus Fleshcraft. */
+/** Murderous Agenda (Kabalite Cartel): the Contract and its unit, picked at the start of the first battle round. */
+export function pickContract(s: GameState, p: PlayerId) {
+  const P = s.players[p];
+  if (!hasDet(s, p, 'Kabalite Cartel') || P.contract) return;
+  const foes = s.units.filter((u) => u.owner === other(p) && u.status !== 'destroyed' && alive(u).length);
+  const best = (f: (u: UnitState) => boolean) => foes.filter(f).sort((a, b) => b.pts - a.pts)[0];
+  const ch = best((u) => hasKw(u, 'CHARACTER'));
+  const mv = best((u) => hasKw(u, 'MONSTER') || hasKw(u, 'VEHICLE'));
+  const inf = best((u) => (hasKw(u, 'INFANTRY') || hasKw(u, 'MOUNTED')) && alive(u).some((m) => !m.isCharacter));
+  const pick = mv && (!ch || mv.pts > ch.pts) ? { kind: 'strength' as const, u: mv } : ch ? { kind: 'trophy' as const, u: ch } : inf ? { kind: 'fear' as const, u: inf } : mv ? { kind: 'strength' as const, u: mv } : null;
+  if (!pick) return;
+  P.contract = { kind: pick.kind, unitId: pick.u.id };
+  const name = { trophy: 'Trophy Hunters', fear: 'Sow Fear and Terror', strength: 'Show of Strength' }[pick.kind];
+  log(s, `Murderous Agenda: ${name} — the Contract unit is ${pick.u.name}`, 'info', p);
+}
+
 export function drukhariCommandStart(s: GameState, p: PlayerId) {
   if (!isDrukhariArmy(s, p)) return;
   gainPainToken(s, p, 1, 'Command phase');
-
-  // Haemonculus: Fleshcraft (Pain)
-  // In your Command phase, you can spend 1 Pain token to Empower this unit.
-  // Each time you do, return up to D3+1 destroyed Bodyguard models (Wracks) or heal lost wounds!
-  const haemons = boardUnits(s, p).filter((u) => u.name.includes('Haemonculus'));
-  for (const h of haemons) {
-    const leaderModel = alive(h).find((m) => m.isCharacter);
-    const damaged = alive(h).find((m) => m.wounds < (m.profile?.W ?? 1));
-    const missingModels = h.startingStrength - alive(h).length;
-
-    if ((damaged || missingModels > 0) && (s.players[p].painTokens ?? 0) >= 1) {
-      if (spendPainToken(s, p, 1, `Fleshcraft for ${h.name}`, h)) {
-        if (damaged) {
-          const maxW = damaged.profile?.W ?? 1;
-          const healed = Math.min(Math.ceil(d6(s) / 2), maxW - damaged.wounds);
-          damaged.wounds += healed;
-          log(s, `[Fleshcraft (Pain)] ${h.name} restored ${healed} lost wounds (${damaged.wounds}/${maxW}W)`, 'info', p);
-        } else if (missingModels > 0) {
-          const toReturn = Math.min(missingModels, Math.ceil(d6(s) / 2) + 1);
-          // Revive dead models
-          const deadModels = h.models.filter((m) => m.dead).slice(0, toReturn);
-          for (const dm of deadModels) {
-            dm.dead = false;
-            dm.wounds = dm.profile?.W ?? 1;
-          }
-          log(s, `[Fleshcraft (Pain)] ${h.name} returned ${deadModels.length} destroyed models to the unit`, 'info', p);
-        }
-      }
-    }
+  const P = s.players[p];
+  const c = P.contract;
+  if (c && !c.done) {
+    const u = s.units.find((x) => x.id === c.unitId);
+    const done = !u || u.status === 'destroyed' || !alive(u).length || (c.kind === 'fear' && !alive(u).some((m) => !m.isCharacter));
+    if (done) { c.done = true; log(s, 'Murderous Agenda: the Contract is completed', 'info', p); gainPainToken(s, p, 3, 'Contract completed'); }
   }
 }
 
-/** Called at phase end to expire Empowered effects. */
 export function drukhariPhaseEnd(s: GameState) {
-  for (const p of [0, 1] as PlayerId[]) {
-    if (s.players[p]?.empoweredUnits?.length) {
-      s.players[p].empoweredUnits = [];
-    }
-  }
+  for (const p of [0, 1] as PlayerId[]) if (s.players[p]?.empoweredUnits?.length) s.players[p].empoweredUnits = [];
 }
 
-/** Called when an enemy unit is destroyed. Gains Pain token and updates Reaper's Wager. */
-export function drukhariUnitDestroyed(s: GameState, destroyedUnit: UnitState, killerUnit?: UnitState) {
-  const opponent = other(destroyedUnit.owner);
-  if (isDrukhariArmy(s, opponent)) {
-    gainPainToken(s, opponent, 1, `${destroyedUnit.name} destroyed`);
-
-    // Reaper's Wager update:
-    const dets = s.players[opponent].detachments ?? [];
-    if (dets.some((d) => d.name === 'Reaper’s Wager') && killerUnit && killerUnit.owner === opponent) {
-      const isHarlequin = hasKw(killerUnit, 'HARLEQUINS') || killerUnit.keywords.includes('HARLEQUINS');
-      const winning = isHarlequin ? 'Harlequins' : 'Drukhari';
-      s.players[opponent].drukhariWagerWinning = winning;
-      log(s, `[Callous Competition] ${winning} are now winning the wager!`, 'info', opponent);
+/** An enemy unit destroyed: 1 Pain token (Torture Device: 1 more); Reaper's Wager changes hands. A friendly unit
+ *  destroyed near a Master Repugnomancer: 4+ for a token. */
+export function drukhariUnitDestroyed(s: GameState, dead: UnitState, killer?: UnitState) {
+  const p = other(dead.owner);
+  if (isDrukhariArmy(s, p)) {
+    gainPainToken(s, p, 1, `${dead.name} destroyed`);
+    if (killer?.owner === p && killer.abilities.some((a) => a.name === 'Torture Device')) gainPainToken(s, p, 1, 'Torture Device');
+    if (killer?.owner === p && hasEnh(killer, 'Spiteful Raider') && s.phase === 'fight' && s.objectives.some((o) => dead.models.some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= 3 + 1e-6))) gainPainToken(s, p, 1, 'Spiteful Raider');
+    if (killer?.owner === p && hasDet(s, p, "Reaper’s Wager")) {
+      const side = hasKw(killer, 'HARLEQUINS') ? 'Harlequins' : hasDrukhariFaction(killer) ? 'Drukhari' : null;
+      if (side && s.players[p].drukhariWagerWinning !== side) { s.players[p].drukhariWagerWinning = side; log(s, `Callous Competition: ${side} units are winning the wager`, 'info', p); }
     }
   }
+  repugnomancer(s, dead);
 }
 
-/** Called when an enemy unit fails a Battle-shock test. Gains Pain token. */
-export function drukhariBattleShockFailed(s: GameState, shockedUnit: UnitState) {
-  const opponent = other(shockedUnit.owner);
-  if (isDrukhariArmy(s, opponent)) {
-    gainPainToken(s, opponent, 1, `${shockedUnit.name} failed Battle-shock`);
-  }
+export function drukhariBattleShockFailed(s: GameState, u: UnitState) {
+  if (isDrukhariArmy(s, other(u.owner))) gainPainToken(s, other(u.owner), 1, `${u.name} failed a Battle-shock test`);
+  repugnomancer(s, u);
 }
 
-/** Calculate attack bonuses for a Drukhari unit A attacking T. */
-export function drukhariAttackModifiers(
-  s: GameState,
-  A: UnitState,
-  T: UnitState,
-  distance: number,
-  mode: 'ranged' | 'melee',
-  profile?: WeaponProfileData,
-  weaponName?: string,
-): DrukhariAttackBonus {
-  const out: DrukhariAttackBonus = {
-    hitMod: 0,
-    woundMod: 0,
-    apBonus: 0,
-    attacksBonus: 0,
-    rerollHits1: false,
-    rerollWounds1: false,
-    rerollHits: false,
-    rerollWounds: false,
-    lethal: false,
-    sustained: null,
-    ignoresCover: false,
-    precision: false,
-    notes: [],
-  };
-
-  if (!isDrukhariArmy(s, A.owner) || !hasDrukhariFaction(A)) return out;
-
-  const empowered = isUnitEmpowered(s, A);
-  const dets = s.players[A.owner]?.detachments ?? [];
-
-  // --- Base Power from Pain / Empowered Datasheet Rules ---
-  if (empowered) {
-    // Archon: Hatred Eternal (Pain) -> re-roll Hit rolls
-    if (A.name.includes('Archon') || A.sources.some((s) => s.includes('Archon'))) {
-      out.rerollHits = true;
-      out.notes.push('Hatred Eternal (Pain): re-roll Hits');
-    }
-
-    // Lelith Hesperax / Wyches: Brides of Death (Pain)
-    if (A.name.includes('Lelith') || A.sources.some((s) => s.includes('Lelith'))) {
-      if (mode === 'melee') {
-        out.sustained = '2';
-        out.notes.push('Brides of Death (Pain): [SUSTAINED HITS 2]');
-      }
-    }
-
-    // Drazhar: Master of Blades (Pain) -> +1 to Wound rolls in Fight
-    if ((A.name.includes('Drazhar') || A.sources.some((s) => s.includes('Drazhar'))) && mode === 'melee') {
-      out.woundMod += 1;
-      out.notes.push('Master of Blades (Pain): +1 to Wound');
-    }
-
-    // Incubi: Decapitating Strikes (Pain) -> +1 to Wound rolls in Fight
-    if (A.name.includes('Incubi') && mode === 'melee') {
-      out.woundMod += 1;
-      out.notes.push('Decapitating Strikes (Pain): +1 to Wound');
-    }
-
-    // Kabalite Warriors: Sadistic Raiders (Pain) -> re-roll Hit 1s, or re-roll all Hits vs objective
-    if (A.name.includes('Kabalite Warriors')) {
-      const nearObj = s.objectives.some((o) => T.models.some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= 3 + 1e-6));
-      if (nearObj) {
-        out.rerollHits = true;
-        out.notes.push('Sadistic Raiders (Pain): re-roll Hits (Objective)');
-      } else {
-        out.rerollHits1 = true;
-        out.notes.push('Sadistic Raiders (Pain): re-roll Hit 1s');
-      }
-    }
-
-    // Scourges: Winged Strike (Pain) -> re-roll Hit rolls of 1
-    if (A.name.includes('Scourges') && mode === 'ranged') {
-      out.rerollHits1 = true;
-      out.notes.push('Winged Strike (Pain): re-roll Hit 1s');
-    }
-
-    // Hellions: Battlefield Butchery (Pain) -> +1 Attacks in Fight
-    if (A.name.includes('Hellions') && mode === 'melee') {
-      out.attacksBonus += 1;
-      out.notes.push('Battlefield Butchery (Pain): +1 Attack');
-    }
-
-    // Hand of the Archon: Assassins’ Poisons (Pain) -> Critical Wounds on 5+
-    if (A.name.includes('Hand of the Archon')) {
-      out.critWoundOn = 5;
-      out.notes.push('Assassins’ Poisons (Pain): Crit Wound 5+');
-    }
-
-    // General default Drukhari Empowered effect (re-roll Hit rolls of 1 or all Hits)
-    if (!out.rerollHits && !out.rerollHits1) {
-      out.rerollHits = true;
-      out.notes.push('Empowered: re-roll Hits');
-    }
-  }
-
-  // --- Detachments ---
-
-  // 1. Reaper’s Wager: Callous Competition
-  if (dets.some((d) => d.name === 'Reaper’s Wager')) {
-    const isHarlequin = hasKw(A, 'HARLEQUINS') || A.keywords.includes('HARLEQUINS');
-    const winningSide = s.players[A.owner]?.drukhariWagerWinning ?? 'Drukhari';
-    const isWinning = (isHarlequin && winningSide === 'Harlequins') || (!isHarlequin && winningSide === 'Drukhari');
-
-    if (isWinning) {
-      out.rerollHits1 = true;
-      out.notes.push('Winning Wager: re-roll Hit 1s');
-    } else {
-      out.rerollHits1 = true;
-      out.rerollWounds1 = true;
-      out.notes.push('Losing Wager: re-roll Hit 1s & Wound 1s');
-    }
-  }
-
-  // 2. Exhibition of Slaughter: Exacting Cruelty
-  // Friendly WYCH CULT units' melee attacks have [LETHAL HITS: non-MONSTER/VEHICLE]
-  if (dets.some((d) => d.name === 'Exhibition of Slaughter') && mode === 'melee') {
-    if (hasKw(A, 'WYCH CULT') || A.keywords.includes('WYCH CULT')) {
-      if (!hasKw(T, 'MONSTER') && !hasKw(T, 'VEHICLE')) {
-        out.lethal = true;
-        out.notes.push('Exacting Cruelty: [LETHAL HITS]');
-      }
-    }
-  }
-
-  // 3. Kabalite Agonysts: Contracted Harvest
-  // Friendly BLADES FOR HIRE / KABAL ranged attacks have [SUSTAINED HITS 1: non-MONSTER/VEHICLE]
-  if (dets.some((d) => d.name === 'Kabalite Agonysts') && mode === 'ranged') {
-    if (hasKw(A, 'KABAL') || hasKw(A, 'BLADES FOR HIRE') || A.keywords.includes('KABAL') || A.keywords.includes('BLADES FOR HIRE')) {
-      if (!hasKw(T, 'MONSTER') && !hasKw(T, 'VEHICLE')) {
-        out.sustained = '1';
-        out.notes.push('Contracted Harvest: [SUSTAINED HITS 1]');
-      }
-    }
-  }
-
-  // 4. Skysplinter Assault: Vicious Raiders
-  // Units that disembarked from a transport this turn gain [IGNORES COVER] and [SUSTAINED HITS 1] (ranged) / [LETHAL HITS] (melee)
-  if (dets.some((d) => d.name === 'Skysplinter Assault')) {
-    if (A.disembarkedTurn === s.turn) {
-      if (mode === 'ranged') {
-        out.ignoresCover = true;
-        out.sustained = '1';
-        out.notes.push('Skysplinter: [IGNORES COVER, SUSTAINED HITS 1]');
-      } else {
-        out.lethal = true;
-        out.notes.push('Skysplinter: [LETHAL HITS]');
-      }
-    }
-  }
-
-  return out;
+/** Master Repugnomancer (Aura): a friendly DRUKHARI unit within 9" fails a Battle-shock test or is destroyed: 4+ for a token. */
+function repugnomancer(s: GameState, u: UnitState) {
+  if (!isDrukhariArmy(s, u.owner) || !hasDrukhariFaction(u)) return;
+  const h = boardUnits(s, u.owner).find((x) => hasEnh(x, 'Master Repugnomancer') && (x.id === u.id || x.models.some((m) => !m.dead && u.models.some((n) => Math.hypot(m.x - n.x, m.y - n.y) - m.r - n.r <= 9))));
+  if (!h) return;
+  const r = d6(s);
+  if (r >= 4) gainPainToken(s, u.owner, 1, `Master Repugnomancer rolled ${r}`);
 }
 
-/** Calculate defensive modifiers when Drukhari unit T is targeted by A. */
-export function drukhariDefenseModifiers(
-  s: GameState,
-  A: UnitState,
-  T: UnitState,
-  mode: 'ranged' | 'melee',
-  profile?: WeaponProfileData,
-): DrukhariDefenseBonus {
-  const out: DrukhariDefenseBonus = {
-    hitMod: 0,
-    woundMod: 0,
-    notes: [],
-  };
+// ---------- attacks ----------
 
-  if (!isDrukhariArmy(s, T.owner) || !hasDrukhariFaction(T)) return out;
-
-  const dets = s.players[T.owner]?.detachments ?? [];
-
-  // Tools of Torment: Darkest Artifice
-  // Attacks that target friendly CRONOS/TALOS units with S > T have -1 to wound rolls
-  if (dets.some((d) => d.name === 'Tools of Torment')) {
-    if (hasKw(T, 'CRONOS') || hasKw(T, 'TALOS') || T.keywords.includes('CRONOS') || T.keywords.includes('TALOS')) {
-      const sVal = profile?.S ?? 4;
-      const tVal = alive(T)[0]?.profile.T ?? 4;
-      if (sVal > tVal) {
-        out.woundMod -= 1;
-        out.notes.push('Darkest Artifice: −1 to Wound');
-      }
-    }
+/** Callous Competition (Reaper's Wager) and the Kabalite Cartel Contract abilities. */
+export function drukhariAttackMods(s: GameState, A: UnitState, T: UnitState): CombatMods | null {
+  const P = s.players[A.owner];
+  const out: CombatMods = { notes: [] };
+  if (hasDet(s, A.owner, "Reaper’s Wager") && (hasDrukhariFaction(A) || hasKw(A, 'HARLEQUINS'))) {
+    const side = hasKw(A, 'HARLEQUINS') ? 'Harlequins' : 'Drukhari';
+    out.rerollHits1 = true;
+    if ((P.drukhariWagerWinning ?? 'Drukhari') !== side) { out.rerollWounds1 = true; out.notes!.push('Losing the wager: re-roll Hit and Wound rolls of 1'); } else out.notes!.push('Winning the wager: re-roll Hit rolls of 1');
   }
+  const c = P.contract;
+  if (c && !c.done && (hasKw(A, 'KABAL') || hasKw(A, 'BLADES FOR HIRE'))) {
+    if (c.kind === 'trophy' && T.id === c.unitId) { out.precision = true; out.notes!.push('Trophy Hunters: [PRECISION]'); }
+    if (c.kind === 'fear' && (hasKw(T, 'INFANTRY') || hasKw(T, 'MOUNTED'))) { out.sustained = '1'; out.notes!.push('Sow Fear and Terror: [SUSTAINED HITS 1]'); }
+    if (c.kind === 'strength' && (hasKw(T, 'MONSTER') || hasKw(T, 'VEHICLE'))) { out.lethal = true; out.notes!.push('Show of Strength: [LETHAL HITS]'); }
+  }
+  return out.notes!.length ? out : null;
+}
 
-  return out;
+// ---------- Combat Drugs (Spectacle of Spite) ----------
+
+/** A drug selected (not rolled) can't be selected again this battle. */
+export function drugBlocked(s: GameState, p: PlayerId, rule: string, id: string, random: boolean): string | null {
+  if (rule !== 'Spectacle of Spite' || random) return null;
+  return s.players[p].drugsSelected?.includes(id) ? 'Already selected this battle' : null;
+}
+
+export function drugPicked(s: GameState, p: PlayerId, rule: string, ids: string[], randomly: boolean) {
+  if (rule !== 'Spectacle of Spite' || randomly) return;
+  s.players[p].drugsSelected = [...(s.players[p].drugsSelected ?? []), ...ids];
+}
+
+// ---------- Pain actions ----------
+
+/** `dru` actions: "empower" (spend 1 token on the unit), "spend" / "gain" (1 token), "wager" (Conductor of Torment), "spendCp" (Labyrinthine Cunning). */
+export function drukhariAction(s: GameState, what: string, u: UnitState, label: string) {
+  if (what === 'empower') empowerUnit(s, u);
+  if (what === 'gain') gainPainToken(s, u.owner, 1, label);
+  if (what === 'spend') spendPainToken(s, u.owner, 1, label);
+  if (what === 'newContract') { const P = s.players[u.owner]; P.contract = undefined; pickContract(s, u.owner); }
+  if (what === 'spendCp' && spendPainToken(s, u.owner, 1, label)) { s.players[u.owner].cp += 1; log(s, `${label}: +1CP`, 'cp', u.owner); }
+  if (what === 'wager') {
+    const P = s.players[u.owner];
+    if ((P.drukhariWagerWinning ?? 'Drukhari') === 'Drukhari') {
+      if (spendPainToken(s, u.owner, 1, label)) P.drukhariWagerWinning = 'Harlequins';
+    } else { gainPainToken(s, u.owner, 1, label); P.drukhariWagerWinning = 'Drukhari'; }
+    log(s, `${label}: ${P.drukhariWagerWinning} units are winning the wager`, 'info', u.owner);
+  }
 }

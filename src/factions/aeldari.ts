@@ -16,13 +16,9 @@ import type { Active } from '../rules-engine/effects';
 import type { CombatMods } from '../engine/combatMods';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 
+/** Aeldari Army Faction (Strands of Fate): not Drukhari, whose pack repeats some Aeldari army rules for its allies. */
 export function isAeldariArmy(s: GameState, p: PlayerId): boolean {
-  const P = s.players[p];
-  if (!P) return false;
-  return P.factionId === 'AE'
-    || P.factionName?.toLowerCase().includes('aeldari')
-    || P.factionName?.toLowerCase().includes('asuryani')
-    || s.units.some((u) => u.owner === p && (u.factionKeywords?.includes('AELDARI') || u.keywords?.includes('AELDARI')));
+  return !!s.players[p]?.armyRules?.some((r) => r.name === 'Strands of Fate');
 }
 
 export function getFateDice(s: GameState, p: PlayerId): number[] {
@@ -71,7 +67,7 @@ const hasDet = (s: GameState, p: PlayerId, n: string) => !!s.players[p].detachme
 export function aeldariRoundStart(s: GameState) {
   for (const p of [0, 1] as PlayerId[]) {
     const P = s.players[p];
-    if (P.armyRules?.some((r) => r.name === 'Battle Focus')) {
+    if (isAeldariArmy(s, p) && P.armyRules?.some((r) => r.name === 'Battle Focus')) {
       let n = FOCUS_TOKENS[P.battleSize ?? ''] ?? 4;
       if (hasDet(s, p, 'Warhost')) n += 1; // Martial Grace
       // Timeless Strategist: the bearer on the battlefield (or in a transport that is)
@@ -320,7 +316,7 @@ export function sonicDestruction(s: GameState, A: UnitState, T: UnitState, weapo
 /** Shadow Field: the 2+ invulnerable save is gone once the bearer has lost wounds to an attack. */
 export function shadowFieldCheck(s: GameState, T: UnitState) {
   for (const m of T.models) {
-    if (m.shadowFieldDown || !T.abilities.some((a) => a.name === 'Shadow Field' && a.sheet === m.source)) continue;
+    if (m.shadowFieldDown || !T.abilities.some((a) => (a.name === 'Shadow Field' || a.name === 'Shadowfield') && a.sheet === m.source)) continue;
     if (m.dead || m.wounds < m.profile.W) { m.shadowFieldDown = true; log(s, `Shadow Field: ${m.name}'s field fails for the rest of the battle`, 'info', T.owner); }
   }
 }

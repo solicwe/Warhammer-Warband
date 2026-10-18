@@ -1,4 +1,840 @@
 {
   "_comment": "Stratagems written by hand (key: the card name, or NAME@Detachment); the rest are read from the card text.",
-  "rules": {}
+  "rules": {
+    "SKYBORNE ANNIHILATION": {
+      "targetKw": [
+        "DRUKHARI"
+      ],
+      "unitIf": [
+        "disembarkedThisTurn"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "!kw:KABALITE WARRIORS|HAND OF THE ARCHON"
+          ],
+          "abilities": [
+            "sustained hits 1"
+          ]
+        },
+        {
+          "attack": "ranged",
+          "if": [
+            "kw:KABALITE WARRIORS|HAND OF THE ARCHON"
+          ],
+          "abilities": [
+            "sustained hits 2"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "VICIOUS BLADES": {
+      "targetKw": [
+        "DRUKHARI",
+        "TRANSPORT"
+      ],
+      "unitIf": [
+        "hasEmbarked"
+      ],
+      "enemy": {
+        "engaged": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 5,
+            "n": 6,
+            "max": 6,
+            "plusIf": [
+              "embarkedKw:WRACKS"
+            ],
+            "plus": 1
+          }
+        }
+      ],
+      "bot": "never",
+      "note": "Six dice (the card: one per embarked model)",
+      "status": "auto"
+    },
+    "POUNCE ON THE PREY": {
+      "targetKw": [
+        "DRUKHARI",
+        "INFANTRY"
+      ],
+      "unitIf": [
+        "disembarkedThisTurn"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "note": "Assault disembark: the unit can still charge this turn",
+      "status": "auto"
+    },
+    "SWOOPING MOCKERY": {
+      "targetKw": [
+        "DRUKHARI",
+        "TRANSPORT"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "WRAITHLIKE RETREAT": {
+      "targetKw": [
+        "DRUKHARI",
+        "INFANTRY"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "any:kw:WYCHES||near:3:DRUKHARI+TRANSPORT"
+      ],
+      "special": [
+        "embark"
+      ],
+      "bot": "never",
+      "note": "Wyches: a Normal or Fall Back move instead of embarking (move them yourself)",
+      "status": "auto"
+    },
+    "NIGHT SHIELD": {
+      "targetKw": [
+        "DRUKHARI",
+        "VEHICLE"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "inv": 4
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "MURDERER’S CIRCUS": {
+      "targetKw": [
+        "DRUKHARI|HARLEQUINS"
+      ],
+      "buffs": [
+        "enemyHit-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "MALICIOUS FRENZY": {
+      "targetKw": [
+        "DRUKHARI|HARLEQUINS"
+      ],
+      "choice": [
+        {
+          "label": "[LETHAL HITS]",
+          "buffs": [
+            "lethal"
+          ]
+        },
+        {
+          "label": "[SUSTAINED HITS 1]",
+          "buffs": [
+            "sustained1"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SHORTEN THE ODDS": {
+      "targetKw": [
+        "DRUKHARI|HARLEQUINS"
+      ],
+      "unitIf": [
+        "advanced"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterAdvance",
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "SCINTILLATING TEMPO": {
+      "targetKw": [
+        "DRUKHARI|HARLEQUINS"
+      ],
+      "effects": [
+        {
+          "noSnapTarget": true
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "FATEFUL ROLE": {
+      "targetKw": [
+        "DRUKHARI|HARLEQUINS"
+      ],
+      "effects": [
+        {
+          "if": [
+            "!losingWager"
+          ],
+          "fightOnDeath": 4
+        },
+        {
+          "if": [
+            "losingWager"
+          ],
+          "fightOnDeath": 3
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "DANCE MACABRE": {
+      "targetKw": [
+        "DRUKHARI|HARLEQUINS",
+        "INFANTRY"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "if": [
+            "!losingWager"
+          ],
+          "move": "D6"
+        },
+        {
+          "if": [
+            "losingWager"
+          ],
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "INSTINCTIVE SPITE": {
+      "targetKw": [
+        "DRUKHARI"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "BATTLELINE"
+        ]
+      },
+      "effects": [
+        {
+          "if": [
+            "targetBelowHalf"
+          ],
+          "hit": 1
+        },
+        {
+          "if": [
+            "targetBelowHalf",
+            "marked:spite"
+          ],
+          "wound": 1
+        }
+      ],
+      "choice": [
+        {
+          "label": "No Pain token"
+        },
+        {
+          "label": "Spend 1 Pain token: +1 to Wound too",
+          "do": [
+            {
+              "dru": "spend"
+            },
+            {
+              "buff": [],
+              "until": "phase",
+              "mark": "spite"
+            }
+          ],
+          "if": [
+            "painToken"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "note": "Two units only if both are BATTLELINE",
+      "status": "auto"
+    },
+    "EAGER FOR THE KILL": {
+      "targetKw": [
+        "DRUKHARI"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "WYCHES"
+        ]
+      },
+      "effects": [
+        {
+          "advanceFixed": 6
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "FIGHTING SHADOWS": {
+      "targetKw": [
+        "DRUKHARI",
+        "!HAEMONCULUS COVENS"
+      ],
+      "buffs": [
+        "enemyHit-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "INSENSIBLE TO PAIN": {
+      "targetKw": [
+        "HAEMONCULUS COVENS"
+      ],
+      "buffs": [
+        "damage-1"
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "DARK HARVEST": {
+      "targetKw": [
+        "DRUKHARI"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "WRACKS"
+        ]
+      },
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "RAID AND FADE": {
+      "targetKw": [
+        "DRUKHARI",
+        "!SCOURGES",
+        "!AIRCRAFT"
+      ],
+      "react": "shootingPhaseEnd",
+      "unitIf": [
+        "ownTurn",
+        "!engaged"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "KABALITE WARRIORS"
+        ]
+      },
+      "do": [
+        {
+          "move": "6",
+          "noCharge": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "DEADLY DEBUT": {
+      "targetKw": [
+        "DRUKHARI"
+      ],
+      "unitIf": [
+        "charged"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "lethal hits"
+          ]
+        },
+        {
+          "attack": "melee",
+          "if": [
+            "kw:WYCHES"
+          ],
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ACROBATIC DISPLAY": {
+      "targetKw": [
+        "WYCH CULT"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "inv": 5
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "A CHALLENGE MET": {
+      "targetKw": [
+        "WYCH CULT"
+      ],
+      "react": "enemyFallBack",
+      "unitIf": [
+        "!engaged",
+        "nearLast:6"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "special": [
+        "charge"
+      ],
+      "botReact": "charge",
+      "status": "auto"
+    },
+    "FEIGNED WEAKNESS": {
+      "targetKw": [
+        "DRUKHARI"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "PRETERNATURAL AGILITY": {
+      "targetKw": [
+        "WYCH CULT"
+      ],
+      "effects": [
+        {
+          "ignoreMoveMods": true,
+          "moveThroughModels": true
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "BERSERK FUGUE": {
+      "targetKw": [
+        "WYCH CULT"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 1
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "CONNOISSEURS OF PAIN": {
+      "targetKw": [
+        "DRUKHARI"
+      ],
+      "unitIf": [
+        "painToken"
+      ],
+      "buffs": [
+        "enemyAp-1"
+      ],
+      "do": [
+        {
+          "dru": "spend"
+        },
+        {
+          "if": [
+            "kw:HAEMONCULUS COVENS"
+          ],
+          "dru": "gain"
+        }
+      ],
+      "bot": "defend",
+      "status": "auto",
+      "note": "A HAEMONCULUS COVENS unit gets its token back at once (the card: at the end of the phase if it is still on the battlefield)"
+    },
+    "POISONER’S ART": {
+      "targetKw": [
+        "HAEMONCULUS COVENS"
+      ],
+      "enemy": {
+        "hitBy": true,
+        "notKw": [
+          "VEHICLE"
+        ]
+      },
+      "enemyEffects": [
+        {
+          "poisoned": true
+        }
+      ],
+      "enemyUntil": "battle",
+      "bot": "never",
+      "status": "auto"
+    },
+    "POSTMORTALITY": {
+      "react": "modelDestroyed",
+      "ctxModel": "HAEMONCULUS",
+      "unitIf": [
+        "painToken"
+      ],
+      "limit": "battle",
+      "do": [
+        {
+          "dru": "spend"
+        },
+        {
+          "reviveLater": {
+            "on": 1,
+            "wounds": 1
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "1 Pain token spent: it returns with 1 wound (the card: 1-3 tokens, as many wounds)",
+      "status": "auto"
+    },
+    "SYMPHONY OF SUFFERING": {
+      "targetKw": [
+        "DRUKHARI"
+      ],
+      "unitIf": [
+        "destroyedUnitThisPhase"
+      ],
+      "enemy": {
+        "all": true,
+        "range": 9,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "!kw:HAEMONCULUS COVENS"
+          ],
+          "shock": 0
+        },
+        {
+          "on": "target",
+          "if": [
+            "kw:HAEMONCULUS COVENS"
+          ],
+          "shock": -1
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "ENFOLDING NIGHTMARE": {
+      "targetKw": [
+        "HAEMONCULUS COVENS"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "targetOfLast",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "surge": "D6"
+        }
+      ],
+      "status": "auto"
+    },
+    "DISTILLERS OF FEAR": {
+      "targetKw": [
+        "HAEMONCULUS COVENS"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetBattleShocked"
+          ],
+          "abilities": [
+            "devastating wounds"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "MAKING A POINT": {
+      "targetKw": [
+        "KABALITE WARRIORS|HAND OF THE ARCHON"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "skill": 1,
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "TAKEN ALIVE": {
+      "targetKw": [
+        "DRUKHARI"
+      ],
+      "buffs": [
+        "hit+1"
+      ],
+      "bot": "attack",
+      "note": "Destroying the Contract unit: every enemy unit takes a Battle-shock test (not automated)",
+      "status": "auto"
+    },
+    "TAILORED TOXINS": {
+      "targetKw": [
+        "KABAL|BLADES FOR HIRE"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetContract"
+          ],
+          "critHitOn": 5
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ENEMIES WITHOUT NUMBER": {
+      "targetKw": [
+        "ARCHON"
+      ],
+      "unitIf": [
+        "warlord",
+        "contractDone"
+      ],
+      "do": [
+        {
+          "dru": "newContract"
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "DEADLY DECEIVERS": {
+      "targetKw": [
+        "KABAL|BLADES FOR HIRE"
+      ],
+      "effects": [
+        {
+          "targetableWithin": 18
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "DOUBLE-CROSS": {
+      "targetKw": [
+        "KABAL|BLADES FOR HIRE"
+      ],
+      "effects": [
+        {
+          "thralls": true,
+          "thrallsKw": "DRUKHARI"
+        }
+      ],
+      "bot": "never",
+      "note": "Wound rolls against your unit hit a DRUKHARI unit within 3\" instead, as mortal wounds",
+      "status": "auto"
+    },
+    "ACROBATIC DISPLAY@Exhibition of Slaughter": {
+      "targetKw": [
+        "WYCH CULT"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "inv": 5
+          }
+        }
+      ],
+      "bot": "defend",
+      "status": "auto"
+    },
+    "SCULPTING THE STAGE": {
+      "targetKw": [
+        "WYCH CULT"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "actionAfterAdvance",
+            "actionAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "PLANNED STRIKES": {
+      "targetKw": [
+        "WYCH CULT"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "KILLERS FROM THE DARK SPIRES": {
+      "targetKw": [
+        "KABALITE WARRIORS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SHADOWS’ REACH": {
+      "targetKw": [
+        "BLADES FOR HIRE|KABAL"
+      ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "do": [
+        {
+          "unshot": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "PRIORITISED VICTIM": {
+      "targetKw": [
+        "BLADES FOR HIRE|KABAL"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetCharacter"
+          ],
+          "reroll": [
+            "hits1",
+            "wounds1"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SALTING THE WOUND": {
+      "targetKw": [
+        "CRONOS|TALOS"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetBattleShocked"
+          ],
+          "abilities": [
+            "devastating wounds"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "URGENT METAMORPHOSIS": {
+      "targetKw": [
+        "HAEMONCULUS COVENS"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "DIVIDENDS OF AGONY": {
+      "targetKw": [
+        "HAEMONCULUS COVENS"
+      ],
+      "unitIf": [
+        "destroyedUnitThisPhase"
+      ],
+      "enemy": {
+        "range": 12,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": -1
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    }
+  }
 }

@@ -20,7 +20,7 @@ import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart, sororit
 import { aeldariBattleStart, aeldariRoundStart, canFocus, lucidEye, noteVibro, relentlessRaiders, resetPhaseStrandsOfFate, seerDiscounts, shadowFieldCheck, sonicDestruction, spendFocus, tryFateDie, voidThieves } from './aeldari';
 import { votannAttackModifiers, votannBattleStart, votannCommandEnd, votannDefenseModifiers, votannUnitDestroyed } from './votann';
 import { admechAttackModifiers, admechCommandStart, admechDefenseModifiers, admechRoundStart, unitActiveImperatives } from './admech';
-import { drukhariAttackModifiers, drukhariBattleShockFailed, drukhariBattleStart, drukhariCommandStart, drukhariDefenseModifiers, drukhariPhaseEnd, drukhariUnitDestroyed, isUnitEmpowered } from './drukhari';
+import { drugBlocked, drugPicked, drukhariAction, drukhariAttackMods, drukhariBattleShockFailed, drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd, drukhariUnitDestroyed, isUnitEmpowered, losingWager, painReady, pickContract } from './drukhari';
 import { daemonBattleShockMod, daemonsAttackModifiers, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsDefenseModifiers, daemonsOnBattleShockResult, daemonsPhaseEnd, daemonsUnitDestroyed } from './daemons';
 import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultAmbushUnitDestroyed, cultAttackModifiers, cultBattleStart, cultDefenseModifiers, cultIconCommandPhase } from './cult';
 import { necAttackModifiers, necBattleStart, necCommandStart, necDefenseModifiers } from './necrons';
@@ -136,7 +136,6 @@ on('phaseEnd', (s) => voidThieves(s));
 // Sonic Destruction, Shadow Field
 on('attackDone', (s, e) => { noteVibro(s, e.A, e.T); shadowFieldCheck(s, e.T); });
 addCombatMods((x) => sonicDestruction(x.s, x.A, x.T, x.weapon));
-addCondition('shadowFieldUp', (_c, x) => !x.m?.shadowFieldDown);
 addDieRescue('Strands of Fate', 'Fate die', (s, u, stage, x) => tryFateDie(s, u, stage, x));
 
 // Leagues of Votann
@@ -155,8 +154,16 @@ addModifier('assaultWeapons', (s, u) => unitActiveImperatives(s, u).has('Conquer
 on('battleStart', (s) => drukhariBattleStart(s));
 on('commandStart', (s, e) => drukhariCommandStart(s, e.p));
 on('unitDestroyed', (s, e) => drukhariUnitDestroyed(s, e.u, unitOf(s, e.attackerId)));
-// Empowered Wyches (Acrobatic Gladiators) can charge after Advancing or Falling Back
-addModifier('eligible', (s, u, what) => (what === 'chargeAfterAdvance' || what === 'chargeAfterFallBack') && isUnitEmpowered(s, u) && (u.name.includes('Wyches') || u.abilities.some((a) => a.name.includes('Acrobatic Gladiators'))));
+// Pain: Empower buttons (data), Kabalite Cartel's Contract, Combat Drugs
+on('roundStart', (s) => { if (s.round === 1) for (const p of [0, 1] as const) pickContract(s, p); });
+addCondition('painReady', (_c, x) => painReady(x.s, x.holder ?? x.A));
+addCondition('painEmpowered', (_c, x) => isUnitEmpowered(x.s, x.holder ?? x.A));
+addCondition('losingWager', (_c, x) => losingWager(x.s, x.A));
+addCondition('targetContract', (_c, x) => { const c = x.s.players[x.A.owner].contract; return !!x.T && !!c && !c.done && c.unitId === x.T.id; });
+addCondition('contractDone', (_c, x) => !!x.s.players[x.A.owner].contract?.done);
+addCondition('painToken', (_c, x) => (x.s.players[x.A.owner].painTokens ?? 0) >= 1);
+addActionHandler((s, a, x) => { if (a.dru) drukhariAction(s, a.dru, x.on, x.label); });
+addChoiceHooks({ why: (s, p, rule, o) => drugBlocked(s, p, rule, o.id, !!o.random), picked: (s, p, rule, ids, randomly) => drugPicked(s, p, rule, ids, randomly) });
 on('phaseEnd', (s) => drukhariPhaseEnd(s));
 // Power from Pain: an enemy unit failing any Battle-shock test gives a Pain token
 on('shockResult', (s, e) => { if (!e.passed) drukhariBattleShockFailed(s, e.u); });
@@ -219,8 +226,7 @@ addCombatMods((x) => {
 });
 addCombatMods((x) => admechDefenseModifiers(x.s, x.A, x.T, x.mode));
 // Drukhari
-addCombatMods((x) => drukhariAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon));
-addCombatMods((x) => drukhariDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
+addCombatMods((x) => drukhariAttackMods(x.s, x.A, x.T));
 // Chaos Daemons
 addCombatMods((x) => daemonsAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon));
 addCombatMods((x) => daemonsDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));

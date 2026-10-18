@@ -51,7 +51,7 @@ export function woundNeed(S: number, T: number): number {
 
 const riled = isRiled;
 export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState, ranged = true, psychic = false, attacker?: UnitState) => {
-  const best = Math.min(m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee', psychic, attacker).inv ?? 7);
+  const best = Math.min(m.shadowFieldDown ? 7 : m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee', psychic, attacker).inv ?? 7);
   return best >= 7 ? null : best;
 };
 
@@ -738,7 +738,7 @@ export function rollWounds(s: GameState) {
   // Mortal Thralls: no Wound roll; the DAMNED unit within 3" (visible to the attackers) takes the Damage as mortal wounds
   const T0 = unitById(s, at.targetId), A0 = unitById(s, at.attackerId);
   const thrall = rolls && unitFlags(s, T0).thralls
-    ? boardUnits(s, T0.owner).find((d) => d.id !== T0.id && hasKw(d, 'DAMNED') && unitDistance(d, T0) <= 3 + 1e-6 && alive(A0).some((m) => unitVisibleTo(s, m, d))) : undefined;
+    ? boardUnits(s, T0.owner).find((d) => d.id !== T0.id && hasKw(d, unitFlags(s, T0).thrallsKw ?? 'DAMNED') && unitDistance(d, T0) <= 3 + 1e-6 && alive(A0).some((m) => unitVisibleTo(s, m, d))) : undefined;
   if (thrall) {
     let mw = 0;
     for (let i = 0; i < rolls; i++) mw += rollExpr(s, p.profile.D).total;

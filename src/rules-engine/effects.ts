@@ -237,6 +237,7 @@ export interface Effect {
   autoPassShock?: boolean; // its Battle-shock tests are passed automatically (Mob Mentality)
   shieldsNear?: number; // Grot Shields: hits against a friendly ORKS INFANTRY unit within X" become 1 mortal wound on this unit each
   thralls?: boolean; // Mortal Thralls: wound rolls against this unit hit a DAMNED unit within 3" instead (mortal wounds = Damage)
+  thrallsKw?: string; // … a unit with this keyword instead of DAMNED (Double-Cross: DRUKHARI)
   arriveShock?: number; // set up on the battlefield: one enemy INFANTRY / MOUNTED unit this close and visible takes a Battle-shock test
   arriveShockAll?: number; // … every enemy unit this close takes one (Dread Reputation)
   deathRetaliate?: number; // each model of this unit destroyed by an attack: on X+ the attacking unit suffers 1 mortal wound
@@ -1342,6 +1343,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     terrorBelowMod: Math.min(0, ...es.map((e) => e.terrorBelowMod ?? 0)),
     chargedMinus: Math.max(0, ...es.map((e) => e.chargedMinus ?? 0)),
     thralls: es.some((e) => e.thralls),
+    thrallsKw: es.find((e) => e.thrallsKw)?.thrallsKw,
     autoPassShock: es.some((e) => e.autoPassShock),
     shieldsNear: Math.max(0, ...es.map((e) => e.shieldsNear ?? 0)),
     ignoreMoveMods: es.some((e) => e.ignoreMoveMods),

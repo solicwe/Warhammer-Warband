@@ -576,19 +576,9 @@
     ]
   },
   "Shadow Field": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "if": [
-          "shadowFieldUp"
-        ],
-        "defend": {
-          "inv": 2
-        }
-      }
-    ],
-    "note": "Lost for the rest of the battle once the bearer loses wounds to an attack"
+    "code": true,
+    "status": "auto",
+    "note": "The 2+ invulnerable save is lost for the rest of the battle once the bearer loses wounds to an attack"
   },
   "Mistshield": {
     "gear": true,

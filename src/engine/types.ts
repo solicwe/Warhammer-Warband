@@ -397,6 +397,10 @@ export interface PlayerState {
   empoweredUnits?: string[];
   /** Drukhari: Reaper's Wager detachment side winning the wager */
   drukhariWagerWinning?: 'Drukhari' | 'Harlequins';
+  /** Drukhari: Murderous Agenda's Contract (Kabalite Cartel) */
+  contract?: { kind: 'trophy' | 'fear' | 'strength'; unitId: string; done?: boolean };
+  /** Drukhari: Combat Drugs selected (not rolled) this battle (Spectacle of Spite) */
+  drugsSelected?: string[];
   /** Chaos Daemons: Scintillating Legion Flux tokens pool */
   fluxTokens?: number;
   /** Chaos Daemons: Corrupted objective IDs (6" Shadow of Chaos aura + sticky control) */

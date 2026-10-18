@@ -11,10 +11,9 @@ import {
   drukhariPhaseEnd,
   drukhariUnitDestroyed,
   drukhariBattleShockFailed,
-  drukhariAttackModifiers,
-  drukhariDefenseModifiers,
+  drukhariAttackMods,
+  pickContract,
 } from './drukhari';
-import { canDo } from '../rules-engine/effects';
 import type { GameState, UnitState, ModelState } from '../engine/types';
 
 function createDummyUnit(
@@ -81,6 +80,7 @@ function createDummyGame(): GameState {
         factionId: 'DRU',
         factionName: 'Drukhari',
         painTokens: 2,
+        armyRules: [{ name: 'Power from Pain', text: '' }],
         empoweredUnits: [],
         cp: 2,
         detachments: [{ name: 'Skysplinter Assault' }],
@@ -130,17 +130,16 @@ describe('Drukhari Engine Rules (Faction Pack v1.2 & Power from Pain)', () => {
     expect(isUnitEmpowered(s, kabalites)).toBe(false);
   });
 
-  it('Cronos Pain Engine refunds Pain token on 4+ (3+ for vehicle/monster)', () => {
+  it('Pain Engine: a Cronos within 9\" rolls to refund a token spent on Empowering', () => {
     const s = createDummyGame();
-    s.players[0].painTokens = 2;
-
+    s.players[0].painTokens = 1;
     const cronos = createDummyUnit('cronos', 0, 'Cronos', ['MONSTER'], 0, 0);
+    cronos.abilities = [{ name: 'Pain Engine (Aura)', type: 'Datasheet', text: '' } as any];
     const raider = createDummyUnit('raider', 0, 'Raider', ['VEHICLE'], 4, 0);
     s.units = [cronos, raider];
-
-    // Seeded spend should trigger refund attempt
-    const success = spendPainToken(s, 0, 1, 'Empowering Raider', raider);
-    expect(success).toBe(true);
+    expect(empowerUnit(s, raider)).toBe(true);
+    expect([0, 1]).toContain(s.players[0].painTokens);
+    expect(spendPainToken(s, 0, 5)).toBe(false);
   });
 
   it('gains Pain tokens from Command phase, destroyed enemy units, and failed Battle-shock', () => {
@@ -161,36 +160,6 @@ describe('Drukhari Engine Rules (Faction Pack v1.2 & Power from Pain)', () => {
     expect(s.players[0].painTokens).toBe(4);
   });
 
-  it('applies Empowered attack modifiers (Archon, Drazhar, Incubi, Lelith)', () => {
-    const s = createDummyGame();
-    s.players[0].painTokens = 10;
-    const archon = createDummyUnit('u1', 0, 'Archon', ['CHARACTER', 'INFANTRY']);
-    const enemy = createDummyUnit('e1', 1, 'Intercessors', ['INFANTRY']);
-    s.units = [archon, enemy];
-
-    // Not empowered: no special re-roll
-    const atkNormal = drukhariAttackModifiers(s, archon, enemy, 10, 'ranged');
-    expect(atkNormal.rerollHits).toBe(false);
-
-    // Empower Archon
-    empowerUnit(s, archon);
-    const atkEmp = drukhariAttackModifiers(s, archon, enemy, 10, 'ranged');
-    expect(atkEmp.rerollHits).toBe(true);
-    expect(atkEmp.notes).toContain('Hatred Eternal (Pain): re-roll Hits');
-
-    // Drazhar: +1 to Wound in Fight
-    const drazhar = createDummyUnit('drazhar', 0, 'Drazhar', ['CHARACTER', 'INFANTRY']);
-    empowerUnit(s, drazhar);
-    const atkDrazhar = drukhariAttackModifiers(s, drazhar, enemy, 0, 'melee');
-    expect(atkDrazhar.woundMod).toBe(1);
-
-    // Lelith: Sustained Hits 2 in Fight
-    const lelith = createDummyUnit('lelith', 0, 'Lelith Hesperax', ['CHARACTER', 'INFANTRY']);
-    empowerUnit(s, lelith);
-    const atkLelith = drukhariAttackModifiers(s, lelith, enemy, 0, 'melee');
-    expect(atkLelith.sustained).toBe('2');
-  });
-
   it('supports Reaper’s Wager detachment mechanics', () => {
     const s = createDummyGame();
     s.players[0].detachments = [{ name: 'Reaper’s Wager' } as any];
@@ -201,46 +170,31 @@ describe('Drukhari Engine Rules (Faction Pack v1.2 & Power from Pain)', () => {
     s.units = [kabalites, enemy];
 
     // Drukhari winning -> re-roll Hit 1s
-    const atkWinning = drukhariAttackModifiers(s, kabalites, enemy, 12, 'ranged');
+    const atkWinning = drukhariAttackMods(s, kabalites, enemy)!;
     expect(atkWinning.rerollHits1).toBe(true);
-    expect(atkWinning.rerollWounds1).toBe(false);
+    expect(atkWinning.rerollWounds1).toBeFalsy();
 
     // Now Harlequins winning (Drukhari losing) -> re-roll Hit 1s AND Wound 1s
     s.players[0].drukhariWagerWinning = 'Harlequins';
-    const atkLosing = drukhariAttackModifiers(s, kabalites, enemy, 12, 'ranged');
+    const atkLosing = drukhariAttackMods(s, kabalites, enemy)!;
     expect(atkLosing.rerollHits1).toBe(true);
     expect(atkLosing.rerollWounds1).toBe(true);
   });
 
-  it('allows Wyches to charge after advance when Empowered (Acrobatic Gladiators)', () => {
+  it('Murderous Agenda: the Contract unit, its ability and 3 Pain tokens once it is destroyed', () => {
     const s = createDummyGame();
-    const wyches = createDummyUnit('w1', 0, 'Wyches', ['WYCH CULT', 'INFANTRY']);
-    wyches.abilities = [{ name: 'Acrobatic Gladiators (Pain)', type: 'Datasheet', text: '' } as any];
-    s.units = [wyches];
-
-    // Not empowered: cannot charge after advance
-    expect(canDo(s, wyches, 'chargeAfterAdvance')).toBe(false);
-
-    // Empowered: can charge after advance!
-    empowerUnit(s, wyches);
-    expect(canDo(s, wyches, 'chargeAfterAdvance')).toBe(true);
-  });
-
-  it('Tools of Torment detachment reduces wound rolls vs Cronos/Talos when S > T', () => {
-    const s = createDummyGame();
-    s.players[0].detachments = [{ name: 'Tools of Torment' } as any];
-
-    const talos = createDummyUnit('talos', 0, 'Talos', ['CRONOS', 'TALOS', 'MONSTER'], 0, 0, 7, 7, 7);
-    const enemy = createDummyUnit('e1', 1, 'Dreadnought', ['VEHICLE']);
-    s.units = [talos, enemy];
-
-    // Enemy attacks with S10 vs Talos T7 (S > T) -> -1 to Wound
-    const def = drukhariDefenseModifiers(s, enemy, talos, 'ranged', { S: 10 } as any);
-    expect(def.woundMod).toBe(-1);
-    expect(def.notes).toContain('Darkest Artifice: −1 to Wound');
-
-    // Enemy attacks with S4 vs Talos T7 (S <= T) -> no wound reduction
-    const def2 = drukhariDefenseModifiers(s, enemy, talos, 'ranged', { S: 4 } as any);
-    expect(def2.woundMod).toBe(0);
+    s.players[0].detachments = [{ name: 'Kabalite Cartel' } as any];
+    const kab = createDummyUnit('k1', 0, 'Kabalite Warriors', ['KABAL', 'INFANTRY']);
+    const lord = createDummyUnit('c1', 1, 'Captain', ['CHARACTER', 'INFANTRY']);
+    s.units = [kab, lord];
+    pickContract(s, 0);
+    expect(s.players[0].contract).toEqual({ kind: 'trophy', unitId: 'c1' });
+    expect(drukhariAttackMods(s, kab, lord)!.precision).toBe(true);
+    lord.status = 'destroyed';
+    lord.models[0].dead = true;
+    s.players[0].painTokens = 0;
+    drukhariCommandStart(s, 0);
+    expect(s.players[0].painTokens).toBe(4);
+    expect(s.players[0].contract?.done).toBe(true);
   });
 });

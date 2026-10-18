@@ -35,6 +35,7 @@ function createMockAeldariState(): GameState {
         cp: 1,
         vp: 0,
         fateDice: [],
+        armyRules: [{ name: 'Strands of Fate', text: '' }, { name: 'Battle Focus', text: '' }],
         strandsOfFateUsed: [],
         battleFocusTokens: 0,
         detachments: [{ id: 'd1', name: 'Warhost', rules: [{ name: 'Martial Grace', text: '' }] }],
@@ -108,7 +109,6 @@ describe('Aeldari Engine & Strands of Fate', () => {
   });
 
   it('Battle Focus: 2 / 4 / 6 tokens by battle size each round, Warhost one more', () => {
-    state.players[0].armyRules = [{ name: 'Battle Focus', text: '' }] as never;
     for (const [size, n] of [['incursion', 3], ['strike-force', 5], ['onslaught', 7]] as const) {
       state.players[0].battleSize = size;
       aeldariRoundStart(state);
