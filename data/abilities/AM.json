@@ -1692,8 +1692,9 @@
     "note": "Orders on this unit last until a new Order replaces them or it becomes Battle-shocked"
   },
   "Vox-relay Beacon": {
-    "status": "manual",
-    "note": "Not automated: the Vox-relay Beacon token"
+    "code": true,
+    "status": "auto",
+    "note": "Set up on a central objective outside the enemy deployment zone; REGIMENT units within 6\" of it can be given Orders at any range"
   },
   "Death Mask of Ollanius": {
     "effects": [

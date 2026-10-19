@@ -14,6 +14,8 @@ import { addTimed, cond, effectsFor, unitFlags } from '../rules-engine/effects';
 import { alive, boardUnits, emitReact, engagedEnemies, log, other, phaseKey, unitById, unitDistance } from '../engine/state';
 import { unitVisibleTo } from '../engine/visibility';
 import { setUpNear, shootNow } from '../engine/game';
+import { zonePoly } from '../engine/missions';
+import { pointInPoly } from '../engine/geometry';
 import type { GameState, UnitState } from '../engine/types';
 import { ftggMods, ftggTargetChosen, guidedVs, isTauArmy, observerFor, spotOf } from './tau';
 import { activeIds, blessingEffects, blessingsRoll, blessingsRoundStart, butchersFightStart } from './blessings';
@@ -537,4 +539,22 @@ addModifier('deepStrikeDistance', (s, u, at) => tunnelDeepStrike(s, u, at));
 addCondition('tunnels:2', (_c, { s, A }) => (s.players[A.owner].tunnels ?? []).length >= 2);
 addCondition(/^nearTunnel:/, (c, { s, A }) => nearTunnel(s, A, Number(c.split(':')[1])) >= 0);
 addActionHandler((s, a, x) => { if (a.tyr === 'tunnel') tunnelNetwork(s, x.on); });
+
+// Vox-relay Beacon: set up at the start of the battle on the objective closest to the enemy outside their deployment zone;
+// removed at the end of a phase with an enemy unit within 1" of it
+on('battleStart', (s) => {
+  for (const p of [0, 1] as const) {
+    const recon = s.units.find((u) => u.owner === p && u.abilities.some((a) => a.name === 'Vox-relay Beacon'));
+    if (!recon) continue;
+    const opp = zonePoly(s, other(p));
+    const spot = s.objectives.filter((o) => !pointInPoly(o, opp)).sort((a, b) => Math.hypot(b.x - 22, b.y - 30) - Math.hypot(a.x - 22, a.y - 30)).reverse()[0];
+    if (spot) { s.players[p].voxBeacon = { x: spot.x, y: spot.y }; log(s, 'Vox-relay Beacon set up', 'info', p); }
+  }
+});
+on('phaseEnd', (s) => {
+  for (const p of [0, 1] as const) {
+    const b = s.players[p].voxBeacon;
+    if (b && boardUnits(s, other(p)).some((e) => alive(e).some((m) => Math.hypot(m.x - b.x, m.y - b.y) - m.r <= 1 + 1e-6))) { s.players[p].voxBeacon = undefined; log(s, 'The Vox-relay Beacon is lost', 'info', p); }
+  }
+});
 

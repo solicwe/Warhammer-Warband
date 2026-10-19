@@ -88,7 +88,10 @@ export function canOfficerTarget(officer: UnitState, target: UnitState, s?: Game
   if (!from) return false;
   // VOX-RELAY: Orders to TRANSPORT units (not TITANIC) at any distance
   const relay = (officer.timed ?? []).some((x) => x.mark === 'VOX-RELAY') && target.keywords.includes('TRANSPORT') && !target.keywords.includes('TITANIC');
-  if (!relay && unitDistance(from, target) > officerOrderRange(officer, s) + 1e-6) return false;
+  // Vox-relay Beacon: a REGIMENT unit within 6" of the token is in range of every Officer
+  const beacon = s?.players[officer.owner].voxBeacon;
+  const byBeacon = !!beacon && target.keywords.includes('REGIMENT') && alive(target).some((m) => Math.hypot(m.x - beacon.x, m.y - beacon.y) <= 6 + m.r);
+  if (!relay && !byBeacon && unitDistance(from, target) > officerOrderRange(officer, s) + 1e-6) return false;
 
   const det = s ? activeRules(s, officer.owner) : [];
   const armouredInfantry = det.includes('Squadron Command') || det.includes('Armoured Infantry');

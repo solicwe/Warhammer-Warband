@@ -3211,5 +3211,10 @@
   "Aerial Seeding@Tyrannocyte": {
     "status": "info",
     "note": "It arrives from Reserves in battle rounds 1-3 and its passengers disembark (set up by hand more than 8\" from enemy models)"
+  },
+  "Vox-relay Beacon": {
+    "code": true,
+    "status": "auto",
+    "note": "Set up on a central objective outside the enemy deployment zone; REGIMENT units within 6\" of it can be given Orders at any range"
   }
 }

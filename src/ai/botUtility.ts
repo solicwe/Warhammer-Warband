@@ -126,7 +126,7 @@ function spendSurplus(s: GameState, p: PlayerId) {
       && !((rule.do ?? []).concat((rule.choice ?? []).flatMap((o) => o.do ?? [])).some((a) => a.heal || a.revive || a.unshock || a.mortals || a.mortalRoll) && Math.max(worth(s, p, rule, x).v, ...(rule.choice ?? []).map((_o, i) => worth(s, p, withChoice(rule, i), x).v)) <= 0))
       .sort((a, b) => b.pts - a.pts)[0];
     if (!u) continue;
-    applyDetachmentStratagem(s, p, st, u.id, { enemyId: rule.enemy ? stratEnemies(s, p, rule, u)[0]?.id : undefined });
+    applyDetachmentStratagem(s, p, st, u.id, { enemyId: rule.enemy ? stratEnemies(s, p, rule, u)[0]?.id : undefined, choice: stratChoices(s, rule, u)[0]?.i });
     log(s, `${P.name} uses ${st.name} (spare CP)`, 'info', p);
     return;
   }
