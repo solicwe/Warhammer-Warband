@@ -112,6 +112,7 @@ export interface Action {
   lovHostile?: boolean; // spend YP down to 6: the army has Hostile Acquisition until its next turn (ADAPTABLE AVARICE)
   redirectTo?: string; // a friendly unit of these keywords within 9" (visible) takes this unit's lost wounds as mortal wounds this phase (THIEVES OF PAIN)
   unshockNear?: number; // one Battle-shocked friendly unit (sharing its first Faction keyword) within X" of the unit is no longer Battle-shocked
+  seed?: { name: string; n: string; range: number; noShoot?: boolean }; // a new unit of this datasheet (n: a number, D3, or 'models' = this unit's models) set up within range, more than 9" from enemies (Seed Spore Mines)
   regenNear?: number; // Feed the Swarm's Regenerate on one friendly TYRANIDS unit within X" (RECLAIM BIOMASS)
   armyFlag?: string; // a lasting flag on the army (faction code reads it: YOUR TIME IS NIGH)
   lovRefund?: number; // roll a D6: on X+ gain 1 Yield Point back (Mantle of Elders)

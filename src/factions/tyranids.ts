@@ -6,6 +6,7 @@ import { rollExpr } from '../engine/dice';
 import { applyMortalWounds } from '../engine/attack';
 import { abilityOff, unitFlags } from '../rules-engine/effects';
 import { heal, shockTest } from '../rules-engine/activations';
+import { formationAt, validatePlacement } from '../engine/game';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 
 const isTyr = (u: UnitState) => u.factionKeywords.includes('TYRANIDS');
@@ -74,3 +75,33 @@ export function tyranidsCommandStart(s: GameState) {
     }
   }
 }
+
+/** A new Spore Mines / Mucolid Spores unit of n models set up within `range` of `near` and more than 9" from enemy units
+ *  (as close to the nearest enemy as that allows). shortcut: Deep Strike placement rules (9") stand in for the card's 8". */
+export function seedSpores(s: GameState, near: UnitState, name: string, n: number, range: number, label: string): boolean {
+  const tpl = s.players[near.owner].sporeTemplates?.[name];
+  const c = alive(near)[0];
+  if (!tpl || !c || n < 1) return false;
+  const u: UnitState = structuredClone(tpl);
+  u.id = `spore${s.units.length}-${s.turn}`;
+  u.models = u.models.slice(0, n);
+  u.models.forEach((m, i) => { m.id = `${u.id}-m${i}`; });
+  u.startingStrength = u.models.length;
+  const foe = boardUnits(s, other(near.owner)).flatMap(alive).sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y))[0];
+  let best: { pos: Map<string, { x: number; y: number }>; d: number } | null = null;
+  for (let ring = 1; ring <= 8; ring++) for (let a = 0; a < 16; a++) {
+    const r = (range * ring) / 8, ang = (a / 16) * Math.PI * 2;
+    const pos = formationAt(u, { x: c.x + Math.cos(ang) * r, y: c.y + Math.sin(ang) * r });
+    if (!validatePlacement(s, u, pos, 'deepStrike').ok) continue;
+    const mid = [...pos.values()][0];
+    const d = foe ? Math.hypot(mid.x - foe.x, mid.y - foe.y) : ring;
+    if (!best || d < best.d) best = { pos, d };
+  }
+  if (!best) return false;
+  for (const m of u.models) { const p = best.pos.get(m.id)!; m.x = p.x; m.y = p.y; }
+  u.status = 'board'; u.setUpTurn = s.turn;
+  s.units.push(u);
+  log(s, `${label}: a new ${name} unit (${u.models.length} model${u.models.length > 1 ? 's' : ''}) is set up`, 'info', near.owner);
+  return true;
+}
+

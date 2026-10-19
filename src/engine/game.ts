@@ -253,6 +253,14 @@ export function createGame(o: NewGameOptions): GameState {
     if (!s.players[i].detachments.some((d) => d.stratagems.some((st) => /Tzeentch Chaos Spawn/i.test(st.text)))) continue;
     s.players[i].spawnTemplate = buildUnits({ ...o.lists[i], units: [{ uid: 'gift-spawn', datasheet: 'Chaos Spawn', models: 1, pts: 0 }] }, o.factions[i], i)[0];
   }
+  // Seed Spore Mines, Seed Mucolids, Spore Mine Cysts: units a Tyranid army adds during the battle
+  for (const i of [0, 1] as const) {
+    if (!o.lists[i].units.some((u) => o.factions[i].datasheets.find((d) => d.name === u.datasheet)?.abilities.some((a) => /^(Seed Spore Mines|Seed Mucolids|Spore Mine Cysts)$/.test(a.name)))) continue;
+    for (const [name, n] of [['Spore Mines', 6], ['Mucolid Spores', 1]] as const) {
+      const t = buildUnits({ ...o.lists[i], units: [{ uid: 'spore', datasheet: name, models: n, pts: 0 }] }, o.factions[i], i)[0];
+      if (t) (s.players[i].sporeTemplates ??= {})[name] = t;
+    }
+  }
   // Numberless Horde (Shamblerot Vectorium): Poxwalkers units of 10 that join the army in later battle rounds (Battleline)
   for (const i of [0, 1] as const) {
     if (!o.lists[i].detachments.includes('Shamblerot Vectorium') || !o.factions[i].datasheets.some((d) => d.name === 'Poxwalkers')) continue;

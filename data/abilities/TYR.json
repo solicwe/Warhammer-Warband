@@ -527,37 +527,86 @@
     "status": "auto"
   },
   "Spore Mine Cysts": {
-    "act": {
-      "when": "opponentFightEnd",
-      "auto": true,
-      "target": {
-        "side": "enemy",
-        "range": 24,
-        "visible": true,
-        "units": [
-          "!LONE OPERATIVE"
+    "act": [
+      {
+        "when": "opponentFightEnd",
+        "auto": true,
+        "target": {
+          "side": "enemy",
+          "range": 24,
+          "visible": true,
+          "units": [
+            "!LONE OPERATIVE"
+          ]
+        },
+        "do": [
+          {
+            "on": "target",
+            "mortalRoll": {
+              "on": 3,
+              "n": 6
+            }
+          }
         ]
       },
+      {
+        "when": "opponentFightEnd",
+        "auto": true,
+        "if": [
+          "farFromEnemies:24"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "seed": {
+              "name": "Spore Mines",
+              "n": "D3",
+              "range": 6
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "Seed Spore Mines": {
+    "act": {
+      "when": "selectedToShoot",
+      "limit": "turn",
+      "per": "army",
+      "label": "Seed Spore Mines: a new Spore Mines unit instead of shooting",
+      "botUse": "always",
       "do": [
         {
-          "on": "target",
-          "mortalRoll": {
-            "on": 3,
-            "n": 6
+          "on": "self",
+          "seed": {
+            "name": "Spore Mines",
+            "n": "models",
+            "range": 48,
+            "noShoot": true
           }
         }
       ]
-    },
-    "status": "partial",
-    "note": "Not automated: the new SPORE MINES unit option"
-  },
-  "Seed Spore Mines": {
-    "status": "manual",
-    "note": "Not automated: new SPORE MINES units"
+    }
   },
   "Seed Mucolids": {
-    "status": "manual",
-    "note": "Not automated: new MUCOLID SPORES units"
+    "act": {
+      "when": "selectedToShoot",
+      "limit": "turn",
+      "per": "army",
+      "label": "Seed Mucolids: a new Mucolid Spores model instead of shooting",
+      "botUse": "always",
+      "do": [
+        {
+          "on": "self",
+          "seed": {
+            "name": "Mucolid Spores",
+            "n": "1",
+            "range": 18,
+            "noShoot": true
+          }
+        }
+      ]
+    }
   },
   "Subterranean Tunnels": {
     "effects": [

@@ -33,7 +33,7 @@ import { whollyHallowed } from './greyKnights';
 import { circleInFlow, inFlow, isThousandSonsArmy } from './flow';
 import { RULES } from '../engine/config';
 import { clamp } from '../engine/geometry';
-import { inSynapse, tyranidsCommandStart, tyranidsShockResult, unleashShadowInTheWarp } from './tyranids';
+import { inSynapse, seedSpores, tyranidsCommandStart, tyranidsShockResult, unleashShadowInTheWarp } from './tyranids';
 
 const unitOf = (s: GameState, id?: string) => (id ? s.units.find((x) => x.id === id) : undefined);
 
@@ -510,3 +510,11 @@ on('targetChosen', (s, { attackerId, targetId }) => {
   log(s, `Metalodermal Tesla Weave: rolled ${r}`, 'roll', T.owner);
   if (r >= 2) applyMortalWounds(s, A, r === 6 ? 3 : rollExpr(s, 'D3').total, 'Metalodermal Tesla Weave');
 });
+
+// Seed Spore Mines / Seed Mucolids / Spore Mine Cysts: a new spore unit joins the army
+addActionHandler((s, a, x) => {
+  if (!a.seed) return;
+  const n = a.seed.n === 'models' ? alive(x.u).length : rollExpr(s, a.seed.n).total;
+  if (seedSpores(s, x.u, a.seed.name, n, a.seed.range, x.label) && a.seed.noShoot) x.u.weaponsFired = [...new Set(alive(x.u).flatMap((m) => m.weapons.map((w) => w.name)))];
+});
+
