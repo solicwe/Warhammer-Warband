@@ -1666,8 +1666,9 @@
     "status": "auto"
   },
   "Biophagic Flow (Aura)": {
-    "status": "manual",
-    "note": "Not automated: Feed the Swarm reaches 9\""
+    "code": true,
+    "status": "auto",
+    "note": "Feed the Swarm reaches 9\" for a HARVESTER within 12\" of the bearer (detachment rule acts)"
   },
   "Parasitic Biomorphology": {
     "effects": [

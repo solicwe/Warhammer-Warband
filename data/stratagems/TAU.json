@@ -243,7 +243,7 @@
       "targetKw": [
         "T’AU EMPIRE"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -356,7 +356,7 @@
         "T’AU EMPIRE",
         "BATTLESUIT"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "fnp6"
       ],
@@ -436,7 +436,7 @@
       "targetKw": [
         "KROOT"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -453,7 +453,7 @@
         "KROOT",
         "GRENADES"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "nearLast:8"
       ],
@@ -508,7 +508,7 @@
       "targetKw": [
         "PATHFINDER TEAM|STEALTH BATTLESUITS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase",
         "hidden"

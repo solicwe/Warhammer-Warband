@@ -47,7 +47,7 @@
       "targetKw": [
         "LEGIONES DAEMONICA"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -132,7 +132,7 @@
         "LEGIONES DAEMONICA",
         "SLAANESH"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "enemyHit-1"
       ],
@@ -213,7 +213,7 @@
         "!MONSTER",
         "!VEHICLE"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "near:9:SLAANESH"
       ],
@@ -266,7 +266,7 @@
         "LEGIONES DAEMONICA",
         "TZEENTCH"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -376,7 +376,7 @@
         "LEGIONES DAEMONICA",
         "KHORNE"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -397,7 +397,7 @@
         "LEGIONES DAEMONICA",
         "KHORNE"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -871,7 +871,7 @@
         "LEGIONES DAEMONICA",
         "BATTLELINE"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],

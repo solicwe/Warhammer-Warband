@@ -21,17 +21,17 @@ Each cell: works / partial / text only / bug.
 | Aeldari (AE) | 3 / 0 / 0 / 0 | 15 / 0 / 0 / 0 | 52 / 0 / 0 / 0 | 78 / 0 / 0 / 0 | 152 / 0 / 1 / 0 |
 | Astra Militarum (AM) | 1 / 0 / 0 / 0 | 9 / 2 / 0 / 0 | 38 / 0 / 0 / 0 | 53 / 3 / 1 / 0 | 159 / 2 / 3 / 0 |
 | Adepta Sororitas (AS) | 1 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 24 / 0 / 1 / 0 | 35 / 1 / 0 / 0 | 83 / 0 / 0 / 0 |
-| Adeptus Mechanicus (AdM) | 1 / 0 / 0 / 0 | 9 / 1 / 0 / 0 | 32 / 1 / 1 / 0 | 49 / 0 / 1 / 0 | 78 / 0 / 0 / 0 |
+| Adeptus Mechanicus (AdM) | 1 / 0 / 0 / 0 | 9 / 1 / 0 / 0 | 33 / 1 / 0 / 0 | 49 / 0 / 1 / 0 | 78 / 0 / 0 / 0 |
 | Imperial Agents (AoI) | 2 / 0 / 0 / 0 | 5 / 0 / 0 / 0 | 20 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 88 / 0 / 0 / 0 |
 | Chaos Daemons (CD) | 3 / 0 / 0 / 0 | 8 / 1 / 0 / 0 | 28 / 1 / 0 / 0 | 46 / 0 / 0 / 0 | 135 / 1 / 0 / 0 |
 | Chaos Space Marines (CSM) | 1 / 0 / 0 / 0 | 17 / 0 / 0 / 0 | 62 / 0 / 0 / 0 | 93 / 0 / 0 / 0 | 119 / 0 / 0 / 0 |
 | Death Guard (DG) | 2 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 70 / 0 / 0 / 0 |
 | Drukhari (DRU) | 2 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 102 / 0 / 0 / 0 |
 | Emperor’s Children (EC) | 2 / 0 / 0 / 0 | 10 / 0 / 0 / 0 | 34 / 0 / 0 / 0 | 51 / 0 / 0 / 0 | 46 / 0 / 0 / 0 |
-| Genestealer Cults (GC) | 3 / 0 / 0 / 0 | 8 / 1 / 0 / 0 | 29 / 0 / 1 / 0 | 43 / 1 / 1 / 0 | 171 / 2 / 5 / 0 |
+| Genestealer Cults (GC) | 3 / 0 / 0 / 0 | 8 / 1 / 0 / 0 | 29 / 0 / 1 / 0 | 43 / 1 / 1 / 0 | 172 / 2 / 4 / 0 |
 | Grey Knights (GK) | 1 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 29 / 0 / 1 / 0 | 44 / 1 / 0 / 0 | 44 / 0 / 0 / 0 |
 | Leagues of Votann (LoV) | 1 / 0 / 0 / 0 | 10 / 0 / 0 / 0 | 34 / 0 / 0 / 0 | 50 / 1 / 0 / 0 | 55 / 0 / 0 / 0 |
-| Necrons (NEC) | 1 / 0 / 0 / 0 | 11 / 1 / 0 / 0 | 40 / 1 / 1 / 0 | 57 / 2 / 4 / 0 | 108 / 0 / 3 / 0 |
+| Necrons (NEC) | 1 / 0 / 0 / 0 | 11 / 1 / 0 / 0 | 40 / 1 / 1 / 0 | 59 / 2 / 2 / 0 | 109 / 0 / 2 / 0 |
 | Orks (ORK) | 3 / 0 / 0 / 0 | 15 / 0 / 0 / 0 | 38 / 0 / 0 / 0 | 40 / 0 / 0 / 0 | 109 / 0 / 0 / 0 |
 | Imperial Knights (QI) | 4 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 26 / 0 / 0 / 0 | 39 / 0 / 0 / 0 | 55 / 0 / 0 / 0 |
 | Chaos Knights (QT) | 3 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 28 / 0 / 0 / 0 | 39 / 0 / 0 / 0 | 45 / 0 / 0 / 0 |
@@ -39,9 +39,9 @@ Each cell: works / partial / text only / bug.
 | T’au Empire (TAU) | 1 / 0 / 0 / 0 | 7 / 0 / 0 / 0 | 21 / 2 / 0 / 0 | 25 / 3 / 0 / 0 | 94 / 1 / 0 / 0 |
 | Adeptus Titanicus (TL) | 2 / 0 / 0 / 0 | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 | 8 / 0 / 0 / 0 |
 | Thousand Sons (TS) | 2 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 62 / 0 / 0 / 0 |
-| Tyranids (TYR) | 2 / 0 / 0 / 0 | 9 / 0 / 1 / 0 | 32 / 1 / 1 / 0 | 46 / 3 / 2 / 0 | 79 / 0 / 2 / 0 |
+| Tyranids (TYR) | 2 / 0 / 0 / 0 | 9 / 0 / 1 / 0 | 33 / 1 / 0 / 0 | 47 / 3 / 1 / 0 | 79 / 0 / 2 / 0 |
 | World Eaters (WE) | 2 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 26 / 0 / 0 / 0 | 39 / 0 / 0 / 0 | 59 / 0 / 0 / 0 |
-| **All** | 50 / 0 / 0 / 0 | 249 / 6 / 1 / 0 | 805 / 6 / 6 / 0 | 1174 / 15 / 9 / 0 | 2298 / 6 / 14 / 0 |
+| **All** | 50 / 0 / 0 / 0 | 249 / 6 / 1 / 0 | 807 / 6 / 4 / 0 | 1177 / 15 / 6 / 0 | 2300 / 6 / 12 / 0 |
 
 ## Known bugs (engine work needed)
 
@@ -107,11 +107,11 @@ Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were check
 
 </details>
 
-<details><summary>Adeptus Mechanicus (AdM): 4</summary>
+<details><summary>Adeptus Mechanicus (AdM): 3</summary>
 
 **Detachment rules** (1): Haloscreed Battle Clade [partial]
 
-**Enhancements** (2): Artisan [partial]; Radial Suffusion
+**Enhancements** (1): Artisan [partial]
 
 **Stratagems** (1): INFOSLAVE SKULL
 
@@ -127,7 +127,7 @@ Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were check
 
 </details>
 
-<details><summary>Genestealer Cults (GC): 11</summary>
+<details><summary>Genestealer Cults (GC): 10</summary>
 
 **Detachment rules** (1): Brood Brother Auxilia [partial]
 
@@ -135,7 +135,7 @@ Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were check
 
 **Stratagems** (2): ACCEPTABLE LOSSES [partial]; PSI SURGE
 
-**Unit abilities** (7): Death Befitting An Officer (Leman Russ Commander); Death Korps Medi-pack (Death Korps Of Krieg) [partial]; Deathstrike Missile (Deathstrike); Defence Line (Aegis Defence Line) [partial]; Parasitic Infection (Parasite Of Mortrex); Plasma Warhead (Deathstrike); Psychic Familiar (Magus)
+**Unit abilities** (6): Death Befitting An Officer (Leman Russ Commander); Death Korps Medi-pack (Death Korps Of Krieg) [partial]; Deathstrike Missile (Deathstrike); Defence Line (Aegis Defence Line) [partial]; Parasitic Infection (Parasite Of Mortrex); Plasma Warhead (Deathstrike)
 
 </details>
 
@@ -153,15 +153,15 @@ Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were check
 
 </details>
 
-<details><summary>Necrons (NEC): 12</summary>
+<details><summary>Necrons (NEC): 9</summary>
 
 **Detachment rules** (1): Pantheon of Woe [partial]
 
 **Enhancements** (2): Reletavistic Tether; Relocational Optimiser [partial]
 
-**Stratagems** (6): DISHARMONISATION CASCADE [partial]; HYPERPHASIC RECALL; PHASE MELDING; SOLAR PULSE [partial]; SYNERGISTIC EMPOWERMENT; UNTAPPED POWER
+**Stratagems** (4): DISHARMONISATION CASCADE [partial]; PHASE MELDING; SOLAR PULSE [partial]; SYNERGISTIC EMPOWERMENT
 
-**Unit abilities** (3): Atomic Energy Manipulator (Illuminor Szeras); Surrogate Hosts (Trazyn The Infinite); Transdimensional Displacement (Transcendent C’tan)
+**Unit abilities** (2): Surrogate Hosts (Trazyn The Infinite); Transdimensional Displacement (Transcendent C’tan)
 
 </details>
 
@@ -175,13 +175,13 @@ Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were check
 
 </details>
 
-<details><summary>Tyranids (TYR): 10</summary>
+<details><summary>Tyranids (TYR): 8</summary>
 
 **Detachment rules** (1): Talons of the Norn Queen
 
-**Enhancements** (2): Biophagic Flow (Aura); Psychostatic Disruption [partial]
+**Enhancements** (1): Psychostatic Disruption [partial]
 
-**Stratagems** (5): ADAPTIVE OPTIMISATION [partial]; OVERRUN [partial]; PRESERVATION IMPERATIVE; REPLENISHING SWARMS [partial]; SYNAPTIC GOADING
+**Stratagems** (4): ADAPTIVE OPTIMISATION [partial]; OVERRUN [partial]; REPLENISHING SWARMS [partial]; SYNAPTIC GOADING
 
 **Unit abilities** (2): Harpooned (Norn Assimilator); Parasitic Infection (Parasite Of Mortrex)
 

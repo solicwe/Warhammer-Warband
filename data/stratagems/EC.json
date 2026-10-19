@@ -226,7 +226,7 @@
    "status": "auto"
   },
   "REACTIVE DISEMBARKATION": {
-   "react": "ownAttacked",
+   "react": "targeted",
    "targetKw": [
     "TRANSPORT"
    ],

@@ -142,7 +142,7 @@
       "targetKw": [
         "DESTROYER CULT|FLAYED ONES"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "enemyHit-1"
       ],
@@ -322,7 +322,7 @@
       "targetKw": [
         "CANOPTEK"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -367,7 +367,7 @@
         "NECRONS",
         "VEHICLE"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "damage-1"
       ],
@@ -395,7 +395,7 @@
       "targetKw": [
         "LYCHGUARD|TRIARCH PRAETORIANS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -458,9 +458,27 @@
       "status": "auto"
     },
     "HYPERPHASIC RECALL": {
-      "status": "manual",
-      "note": "Not automated: setting the unit up again next to a MONOLITH",
-      "bot": "never"
+      "targetKw": [
+        "NECRONS",
+        "INFANTRY"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "lostToLast",
+        "near:999:MONOLITH"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "recallTo": {
+            "kw": "MONOLITH",
+            "within": 6
+          }
+        }
+      ],
+      "botReact": "never",
+      "note": "After shooting only (the card also allows the Fight phase); the bot leaves it to the player",
+      "status": "auto"
     },
     "DIMENSIONAL CORRIDOR": {
       "targetKw": [
@@ -482,7 +500,7 @@
         "NECRONS",
         "VEHICLE"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "defend": {
@@ -497,7 +515,7 @@
       "targetKw": [
         "TITANIC"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase",
         "nearLast:18"
@@ -521,7 +539,7 @@
         "VEHICLE|MOUNTED",
         "!TITANIC"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "defend": {
@@ -615,9 +633,70 @@
       "status": "auto"
     },
     "UNTAPPED POWER": {
-      "status": "manual",
-      "note": "Not automated: a second Technosorcerous Augmentations ability",
-      "bot": "never"
+      "targetKw": [
+        "CRYPTEK"
+      ],
+      "choice": [
+        {
+          "label": "[ANTI-INFANTRY 3+]",
+          "effects": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "anti-infantry 3+"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "[ANTI-MOUNTED 4+]",
+          "effects": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "anti-mounted 4+"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "[HEAVY]",
+          "effects": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "heavy"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "[IGNORES COVER]",
+          "effects": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "ignores cover"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "[ASSAULT]",
+          "effects": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "assault"
+              ]
+            }
+          ]
+        }
+      ],
+      "until": "phase",
+      "bot": "attack",
+      "status": "auto",
+      "note": "A second Technosorcerous Augmentations ability for the phase"
     },
     "MOLECULAR TARGETING": {
       "targetKw": [
@@ -688,7 +767,7 @@
         "CRYPTEK",
         "INFANTRY"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "if": [
@@ -730,7 +809,7 @@
       "targetKw": [
         "DESTROYER CULT"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "enemyHit-1"
       ],
@@ -810,7 +889,7 @@
       "targetKw": [
         "NECRONS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -980,7 +1059,7 @@
         "NECRONS",
         "MOUNTED"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -1001,7 +1080,7 @@
         "TITANIC",
         "FLY"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "enemyAp-1"
       ],

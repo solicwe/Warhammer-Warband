@@ -532,6 +532,17 @@ addActionHandler((s, a, x) => {
   emit(s, 'arrived', { u: x.on });
 });
 
+// Hyperphasic Recall: the unit steps back out next to a friendly MONOLITH
+addActionHandler((s, a, x) => {
+  if (!a.recallTo) return;
+  const q = a.recallTo;
+  const c = alive(x.on)[0];
+  const host = c && boardUnits(s, x.on.owner).filter((h) => h.id !== x.on.id && alive(h).some((m) => m.keywords.includes(q.kw)))
+    .sort((p, r) => unitDistance(p, x.on) - unitDistance(r, x.on))[0];
+  if (!host || !setUpNear(s, x.on, host, q.within, null)) { log(s, `${x.label}: no room for ${x.on.name}`, 'info', x.on.owner); return; }
+  log(s, `${x.label}: ${x.on.name} is recalled next to ${host.name}`, 'info', x.on.owner);
+});
+
 // Subterranean Assault: Tunnel Markers
 on('arrived', (s, { u }) => tunnelArrived(s, u));
 on('unitMoved', (s, { u }) => tunnelEnemyMoved(s, u));

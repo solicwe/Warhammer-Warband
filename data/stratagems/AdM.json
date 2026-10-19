@@ -29,7 +29,7 @@
       "targetKw": [
         "SKITARII"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -68,7 +68,7 @@
         "ADEPTUS MECHANICUS",
         "!VEHICLE"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -162,7 +162,7 @@
         "SKITARII",
         "INFANTRY"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -215,7 +215,7 @@
       "targetKw": [
         "SICARIAN|PTERAXII|SYDONIAN"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "fnp5"
       ],
@@ -226,7 +226,7 @@
       "targetKw": [
         "CULT MECHANICUS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -244,7 +244,6 @@
       "targetKw": [
         "CULT MECHANICUS"
       ],
-      "react": "ownAttacked",
       "effects": [
         {
           "defend": {
@@ -296,7 +295,7 @@
       "targetKw": [
         "CULT MECHANICUS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -422,7 +421,7 @@
         "ADEPTUS MECHANICUS",
         "INFANTRY"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase",
         "near:6:ADEPTUS MECHANICUS+SMOKE"
@@ -936,7 +935,7 @@
       "targetKw": [
         "TECH-PRIEST"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "onObjective"
       ],

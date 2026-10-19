@@ -24,7 +24,7 @@
       "targetKw": [
         "TYRANIDS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "if": [
@@ -50,7 +50,7 @@
       "targetKw": [
         "TYRANIDS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -185,7 +185,7 @@
         "TYRANIDS",
         "MONSTER"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -294,7 +294,7 @@
       "targetKw": [
         "ENDLESS MULTITUDE"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "enemyHit-1"
       ],
@@ -302,9 +302,21 @@
       "status": "auto"
     },
     "PRESERVATION IMPERATIVE": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: counting as fewer than five models against [BLAST]"
+      "targetKw": [
+        "ENDLESS MULTITUDE"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "blastProof": true
+        }
+      ],
+      "until": "phase",
+      "botReact": "always",
+      "status": "auto"
     },
     "UNENDING WAVES": {
       "react": "ownDestroyed",
@@ -345,7 +357,7 @@
       "targetKw": [
         "HARVESTER"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "if": [
@@ -517,7 +529,7 @@
       "targetKw": [
         "VANGUARD INVADER"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -607,7 +619,7 @@
       "targetKw": [
         "SYNAPSE"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "enemyAp-1"
       ],
@@ -739,7 +751,7 @@
       "targetKw": [
         "TYRANID WARRIORS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "defend": {

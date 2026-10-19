@@ -135,6 +135,7 @@ export interface Effect {
   ignoreLdMods?: boolean; // modifiers to its Leadership (and Battle-shock tests) are ignored (Vexilla)
   stratsWhileShocked?: boolean; // can be targeted by Stratagems while Battle-shocked (Grim Determination)
   ordersStayShocked?: boolean; // Orders on it do not end when it becomes Battle-shocked (Grim Determination)
+  blastProof?: boolean; // the unit counts as fewer than five models for [BLAST] (Preservation Imperative)
   halfRangeAlways?: boolean; // the target always counts as within half range of the weapon (Close-range Titan Killer)
   killDemiseOn?: number; // an enemy model this weapon destroys has Deadly Demise on X+ instead of a 6 (Armour Obliteration)
   // defence
@@ -762,6 +763,8 @@ export function cond(c: string, x: Ctx): boolean {
   // a unit embarked within this TRANSPORT has this keyword (Targetin' Gizmos: a Big Mek inside)
   if (c.startsWith('embarkedKw:')) { const k = c.slice(11); return s.units.some((x) => x.status === 'embarked' && x.embarkedIn === A.id && alive(x).some((m) => m.keywords.includes(k))); }
   if (c.startsWith('hasAbility:')) return A.abilities.some((a) => a.name === c.slice(11));
+  if (c.startsWith('targetNearOwnDz:')) return !!x.T && alive(x.T).some((m) => bodyTouchesPoly(m, Number(c.slice(16)), toPoly(deploymentById(s.deploymentId).zones[s.players[x.T!.owner].role])));
+  if (c.startsWith('nearEnh:')) { const [, r, name] = c.split(':'); const self = x.holder ?? A; return boardUnits(s, self.owner).some((f) => f.enhancements.some((e) => e.name === name) && unitDistance(self, f) <= Number(r) + 1e-6); }
   if (c.startsWith('enh:')) return (x.holder ?? A).enhancements.some((e) => e.name === c.slice(4));
   // the target is engaged with a friendly unit with this keyword (Clutching Corruption: PLAGUE LEGIONS)
   if (c.startsWith('targetEngagedWithKw:')) { const k = c.slice(20); return !!T && boardUnits(s, A.owner).some((f) => (hasKw(f, k) || f.factionKeywords.includes(k)) && engagedEnemies(s, f).some((e) => e.id === T.id)); }
@@ -1336,6 +1339,7 @@ export function unitFlags(s: GameState, u: UnitState) {
   const es = list.map((a) => a.e);
   return {
     ordersStayShocked: es.some((e) => e.ordersStayShocked),
+    blastProof: es.some((e) => e.blastProof),
     ignoreLdMods: es.some((e) => e.ignoreLdMods),
     disembarkRange: Math.max(0, ...es.map((e) => e.disembarkRange ?? 0)),
     ignoreEngaged: es.find((e) => e.ignoreEngaged)?.ignoreEngaged,

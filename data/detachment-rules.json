@@ -5774,6 +5774,35 @@
               "on": "target",
               "heal": "D3+1"
             }
+          ],
+          "if": [
+            "!nearEnh:12:Biophagic Flow (Aura)"
+          ]
+        },
+        {
+          "when": "command",
+          "units": [
+            "HARVESTER"
+          ],
+          "limit": "phase",
+          "botUse": "always",
+          "label": "Feed the Swarm: a TYRANIDS unit within 9\" (Biophagic Flow) regains D3+1 wounds",
+          "target": {
+            "side": "friendly",
+            "range": 9,
+            "units": [
+              "TYRANIDS"
+            ],
+            "damaged": true
+          },
+          "do": [
+            {
+              "on": "target",
+              "heal": "D3+1"
+            }
+          ],
+          "if": [
+            "nearEnh:12:Biophagic Flow (Aura)"
           ]
         },
         {
@@ -5809,6 +5838,47 @@
               ],
               "revive": 3
             }
+          ],
+          "if": [
+            "!nearEnh:12:Biophagic Flow (Aura)"
+          ]
+        },
+        {
+          "when": "command",
+          "units": [
+            "HARVESTER"
+          ],
+          "limit": "phase",
+          "botUse": "always",
+          "label": "Feed the Swarm: destroyed INFANTRY models return to a TYRANIDS unit within 9\" (Biophagic Flow) (3 for ENDLESS MULTITUDE)",
+          "target": {
+            "side": "friendly",
+            "range": 9,
+            "units": [
+              "TYRANIDS",
+              "INFANTRY",
+              "!CHARACTER"
+            ],
+            "damaged": true
+          },
+          "do": [
+            {
+              "on": "target",
+              "if": [
+                "!targetKw:ENDLESS MULTITUDE"
+              ],
+              "revive": 1
+            },
+            {
+              "on": "target",
+              "if": [
+                "targetKw:ENDLESS MULTITUDE"
+              ],
+              "revive": 3
+            }
+          ],
+          "if": [
+            "nearEnh:12:Biophagic Flow (Aura)"
           ]
         }
       ],
@@ -8500,6 +8570,24 @@
                   "shock": 0,
                   "if": [
                     "targetInOwnDz"
+                  ]
+                },
+                {
+                  "on": "target",
+                  "mortals": "1",
+                  "if": [
+                    "!targetInOwnDz",
+                    "targetNearOwnDz:6",
+                    "nearEnh:999:Radial Suffusion"
+                  ]
+                },
+                {
+                  "on": "target",
+                  "shock": 0,
+                  "if": [
+                    "!targetInOwnDz",
+                    "targetNearOwnDz:6",
+                    "nearEnh:999:Radial Suffusion"
                   ]
                 }
               ]

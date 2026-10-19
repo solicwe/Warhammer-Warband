@@ -106,7 +106,7 @@
         "GREY KNIGHTS",
         "INFANTRY"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase",
         "hallowed"
@@ -168,7 +168,7 @@
       "targetKw": [
         "GREY KNIGHTS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -269,7 +269,7 @@
         "GREY KNIGHTS",
         "INFANTRY"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -326,7 +326,7 @@
         "GREY KNIGHTS",
         "INFANTRY"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "if": [
@@ -367,7 +367,7 @@
         "GREY KNIGHTS",
         "PSYKER"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "defend": {
@@ -625,7 +625,7 @@
         "GREY KNIGHTS",
         "INFANTRY"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -672,7 +672,7 @@
         "GREY KNIGHTS",
         "WALKER"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "enemyHit-1"
       ],
@@ -732,7 +732,7 @@
       "targetKw": [
         "PALADIN SQUAD"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],

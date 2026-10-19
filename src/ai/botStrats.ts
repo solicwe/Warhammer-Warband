@@ -139,7 +139,7 @@ export function tryRule<R>(s: GameState, u: UnitState, label: string, rule: Stra
 /** The bot's usable stratagems for a unit of the kind it wants ('attack' / 'defend'), with their rules. */
 function usable(s: GameState, p: PlayerId, u: UnitState, use: 'attack' | 'defend') {
   return s.players[p].detachments.flatMap((d) => d.stratagems.map((st) => ({ st, rule: stratRule(st, s.players[p].factionId, d.name) })))
-    .filter(({ st, rule }) => rule.bot === use && !rule.react && (!rule.enemy || !!rule.enemyMark) && !stratagemBlock(s, p, st, u) && spare(s, p, stratCost(s, st.id, u, st.cp)))
+    .filter(({ st, rule }) => rule.bot === use && (!rule.react || (use === 'defend' && rule.react === 'targeted')) && (!rule.enemy || !!rule.enemyMark) && !stratagemBlock(s, p, st, u) && spare(s, p, stratCost(s, st.id, u, st.cp)))
     // "select either …": each option is a separate candidate (Red Thirst ones too: the bot only takes them when they pay)
     .flatMap(({ st, rule }) => (rule.choice?.length ? stratChoices(s, rule, u).filter(({ o }) => !o.shock).map(({ i }) => ({ st, rule: withChoice(rule, i) as StratRule, choice: i as number | undefined })) : [{ st, rule, choice: undefined as number | undefined }]));
 }

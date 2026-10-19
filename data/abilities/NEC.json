@@ -710,8 +710,65 @@
     "note": "Atomic Energy Manipulator's longer range is not added"
   },
   "Atomic Energy Manipulator": {
-    "status": "partial",
-    "note": "Not automated: +3\" to Mechanical Augmentation after destroying models"
+    "act": [
+      {
+        "when": "fightEnd",
+        "auto": true,
+        "limit": "phase",
+        "if": [
+          "killedModelThisPhase",
+          "friendMarked:atomic2",
+          "!friendMarked:atomic3"
+        ],
+        "label": "Atomic Energy Manipulator: Mechanical Augmentation reaches 12\"",
+        "do": [
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "atomic3",
+            "until": "battle"
+          }
+        ]
+      },
+      {
+        "when": "fightEnd",
+        "auto": true,
+        "limit": "phase",
+        "if": [
+          "killedModelThisPhase",
+          "friendMarked:atomic1",
+          "!friendMarked:atomic2"
+        ],
+        "label": "Atomic Energy Manipulator: Mechanical Augmentation reaches 9\"",
+        "do": [
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "atomic2",
+            "until": "battle"
+          }
+        ]
+      },
+      {
+        "when": "fightEnd",
+        "auto": true,
+        "limit": "phase",
+        "if": [
+          "killedModelThisPhase",
+          "!friendMarked:atomic1"
+        ],
+        "label": "Atomic Energy Manipulator: Mechanical Augmentation reaches 6\"",
+        "do": [
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "atomic1",
+            "until": "battle"
+          }
+        ]
+      }
+    ],
+    "status": "auto"
   },
   "Harbinger of Destruction": {
     "effects": [
@@ -2117,5 +2174,117 @@
     "code": true,
     "status": "auto",
     "note": "The bearer can only shoot with this weapon once per battle."
+  },
+  "Mechanical Augmentation (Aura)@Illuminor Szeras": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 3,
+        "units": [
+          "NECRONS",
+          "BATTLELINE"
+        ],
+        "if": [
+          "!friendMarked:atomic1"
+        ],
+        "ap": 1
+      },
+      {
+        "scope": "aura",
+        "range": 3,
+        "units": [
+          "NECRONS",
+          "BATTLELINE"
+        ],
+        "if": [
+          "!friendMarked:atomic1"
+        ],
+        "defend": {
+          "ap": 1
+        }
+      },
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "NECRONS",
+          "BATTLELINE"
+        ],
+        "if": [
+          "friendMarked:atomic1",
+          "!friendMarked:atomic2"
+        ],
+        "ap": 1
+      },
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "NECRONS",
+          "BATTLELINE"
+        ],
+        "if": [
+          "friendMarked:atomic1",
+          "!friendMarked:atomic2"
+        ],
+        "defend": {
+          "ap": 1
+        }
+      },
+      {
+        "scope": "aura",
+        "range": 9,
+        "units": [
+          "NECRONS",
+          "BATTLELINE"
+        ],
+        "if": [
+          "friendMarked:atomic2",
+          "!friendMarked:atomic3"
+        ],
+        "ap": 1
+      },
+      {
+        "scope": "aura",
+        "range": 9,
+        "units": [
+          "NECRONS",
+          "BATTLELINE"
+        ],
+        "if": [
+          "friendMarked:atomic2",
+          "!friendMarked:atomic3"
+        ],
+        "defend": {
+          "ap": 1
+        }
+      },
+      {
+        "scope": "aura",
+        "range": 12,
+        "units": [
+          "NECRONS",
+          "BATTLELINE"
+        ],
+        "if": [
+          "friendMarked:atomic3"
+        ],
+        "ap": 1
+      },
+      {
+        "scope": "aura",
+        "range": 12,
+        "units": [
+          "NECRONS",
+          "BATTLELINE"
+        ],
+        "if": [
+          "friendMarked:atomic3"
+        ],
+        "defend": {
+          "ap": 1
+        }
+      }
+    ]
   }
 }

@@ -317,7 +317,7 @@
       "targetKw": [
         "GOLIATH ROCKGRINDER|GOLIATH TRUCK"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "damage-1"
       ],
@@ -347,7 +347,7 @@
       "targetKw": [
         "ACHILLES RIDGERUNNERS|ATALAN JACKALS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -654,7 +654,7 @@
       "targetKw": [
         "KELERMORPH|LOCUS|REDUCTUS SABOTEUR|SANCTUS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -715,7 +715,7 @@
       "targetKw": [
         "NEOPHYTE HYBRIDS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase",
         "inTerrain"

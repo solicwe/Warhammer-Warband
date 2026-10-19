@@ -58,7 +58,7 @@
       "targetKw": [
         "KÂHL|ÛTHAR THE DESTINED|EINHYR HEARTHGUARD"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "defend": {
@@ -258,7 +258,7 @@
       "targetKw": [
         "LEAGUES OF VOTANN"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fortify"
       ],
@@ -369,7 +369,7 @@
         "LEAGUES OF VOTANN",
         "INFANTRY|MOUNTED"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -570,7 +570,7 @@
         "LEAGUES OF VOTANN",
         "INFANTRY"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "hostile",
         "shootingPhase"
@@ -991,7 +991,7 @@
       "targetKw": [
         "SAGITAUR"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "shootingPhase"
       ],
@@ -1099,7 +1099,7 @@
       "targetKw": [
         "EINHYR HEARTHGUARD"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "defend": {

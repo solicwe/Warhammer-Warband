@@ -277,7 +277,7 @@
       "targetKw": [
         "AGENTS OF THE IMPERIUM"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "attached"
       ],
@@ -431,7 +431,7 @@
       "buffs": [
         "enemyAp-1"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "bot": "defend",
       "status": "auto",
       "botReact": "always"
@@ -443,7 +443,7 @@
       "buffs": [
         "enemyAp-1"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "bot": "defend",
       "status": "auto",
       "botReact": "always"
@@ -476,7 +476,7 @@
           }
         }
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "bot": "defend",
       "status": "auto",
       "botReact": "always"
@@ -564,7 +564,7 @@
           }
         }
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "bot": "defend",
       "status": "auto",
       "botReact": "always"

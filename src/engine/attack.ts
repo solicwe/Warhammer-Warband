@@ -301,8 +301,9 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (rf && (half || fx.some((a) => a.e.rapidFireFullRange))) extras.push(rfPlus ? `${rf.value ?? '1'}+1` : rf.value ?? '1');
       else if (half && (grants(fx, inc, 'rapid fire 1') || rfPlus)) extras.push('1');
       const blast = getAbility(p, 'blast', T.keywords);
-      if (blast) flat += parseInt(blast.value ?? '1', 10) * Math.floor(tModels.length / 5);
-      else if (grants(fx, inc, 'blast 1')) flat += Math.floor(tModels.length / 5);
+      const fives = unitFlags(s, T).blastProof ? 0 : Math.floor(tModels.length / 5);
+      if (blast) flat += parseInt(blast.value ?? '1', 10) * fives;
+      else if (grants(fx, inc, 'blast 1')) flat += fives;
       if (hasAbility(p, 'rapid-fire')) {
         for (const a of fx) if (a.e.rapidFireAttacks) flat += a.e.rapidFireAttacks;
       }
@@ -516,6 +517,10 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
   const low = s.attack.pools.map((p, i) => ({ i, gap: attackRerollGap(p) })).filter((x) => x.gap >= 1).sort((a, b) => b.gap - a.gap)[0];
   if (low && wantsCR(s, A.owner, 'attacks', A)) rerollAttackCount(s, low.i);
   emit(s, 'targetChosen', { attackerId: s.attack.attackerId, targetId: s.attack.targetId });
+  // "just after an enemy unit has selected its targets": that unit is the last one to act from now on
+  if (!opts.free && !(s.lastAct?.kind === 'attack' && s.lastAct.unitId === A.id && s.lastAct.turn === s.turn && s.lastAct.phase === s.phase)) {
+    s.lastAct = { unitId: A.id, owner: A.owner, kind: 'attack', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
+  }
   for (const h of startHooks) h(s, s.attack);
   if (s.campaign) {
     resolveAll(s);

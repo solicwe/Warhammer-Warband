@@ -27,7 +27,7 @@ import { parseAbilityText } from './abilityText';
 import { emit, reactWorth, runStratSpecial, targetFilter } from '../engine/events';
 import { ldTest, runActions, runDeathQueue, shockTest, type Action } from './activations';
 import { kwPhrase } from '../engine/army';
-import { buildShootPools, expectedDamage, finishAttack, onAttackFinished, onModelKilled, resolveAll, startAttack } from '../engine/attack';
+import { buildShootPools, expectedDamage, finishAttack, onAttackFinished, onAttackStart, onModelKilled, resolveAll, startAttack } from '../engine/attack';
 import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
 import {
   afterReaction, autoCharge, setUnleashWrath, placeNear, shootNow, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, formationAt, validateDisembark,
@@ -704,7 +704,7 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
 // ---------- reactions: the game offers a stratagem at its moment ----------
 
 /** Moments that cannot wait for a prompt (the dice are being rolled right now): only the bot or "use automatically" act. */
-const SYNC_ONLY = new Set<ReactOn>(['deadlyDemise', 'deadlyDemiseSix', 'enemyFallBack', 'enemyDeadlyDemise']);
+const SYNC_ONLY = new Set<ReactOn>(['deadlyDemise', 'deadlyDemiseSix', 'enemyFallBack', 'enemyDeadlyDemise', 'targeted']);
 
 export interface ReactOffer { st: StratagemData; rule: StratRule; units: UnitState[] }
 
@@ -720,7 +720,7 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
       if (!m || !(m.keywords.includes(rule.ctxModel) || new RegExp(rule.ctxModel, 'i').test(m.name))) continue;
       if (rule.ctxModelNot && m.keywords.includes(rule.ctxModelNot)) continue;
     }
-    const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked', 'ownKilled', 'actionStart'].includes(on)
+    const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked', 'ownKilled', 'actionStart', 'targeted'].includes(on)
       ? (ctx.unitId ? [unitById(s, ctx.unitId)] : [])
       : stratCandidates(s, p, st, ctx)
     ).filter((u) => u.owner === p && !stratagemBlock(s, p, st, u, { react: true, ctx }))
@@ -736,6 +736,7 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
 function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto: boolean): { u: UnitState; enemyId?: string; choice?: number } | null {
   const cost = o.st.cp;
   if (!auto && o.rule.botReact === 'never') return null;
+  if (!auto && o.rule.react === 'targeted' && o.rule.bot === 'defend') return null; // the bot weighs defences against the attack itself (botStrats)
   if (!auto && !o.rule.botReact) {
     // moves and redeploys: worth it when the planner finds somewhere better for the unit
     const kind = o.rule.do?.some((a) => a.reserves) ? 'reserves' : o.rule.do?.some((a) => a.surge) ? 'surge' : o.rule.do?.some((a) => a.move) ? 'move'
@@ -841,12 +842,15 @@ export function unleashWrath(s: GameState, arrived: UnitState) {
 export const REACT_LABEL: Partial<Record<ReactOn, string>> = {
   enemyChargeMoveEnd: 'an enemy unit just made a Charge move', enemyChargePhaseStart: "start of your opponent's Charge phase", enemyCommandStart: "your opponent's Command phase", anyPhaseEnd: 'end of the phase', actionStart: 'your unit just started an action', enemyWarlordDestroyed: "your opponent's Warlord was just destroyed", enemyShockFailed: 'an enemy unit just failed a Battle-shock test',
   enemyMoved: 'an enemy unit just ended a move', enemyArrived: 'an enemy unit was just set up from Reserves', enemyShot: 'an enemy unit has just shot', enemyChargeDeclared: 'an enemy unit just declared a charge', enemyChargePhaseEnd: "end of your opponent's Charge phase",
-  fightPhaseEnd: 'end of the Fight phase', chargeMoveEnd: 'your unit just made a Charge move', ownAttacked: 'your unit has just attacked', ownDestroyed: 'your unit was destroyed',
+  fightPhaseEnd: 'end of the Fight phase', chargeMoveEnd: 'your unit just made a Charge move', ownAttacked: 'your unit has just attacked', targeted: 'an enemy unit just selected your unit as its target', ownDestroyed: 'your unit was destroyed',
   modelDestroyed: 'your model was destroyed', oathDestroyed: 'the Oath of Moment target was destroyed', ownKilled: 'your unit just destroyed an enemy unit',
 };
 
 setReactHook(handleReact);
 setUnleashWrath(unleashWrath);
+
+// "just after an enemy unit has selected its targets": the target's side may answer before any dice
+onAttackStart((s, at) => { if (!at.free && (at.kind === 'fight' || s.phase === 'shooting')) handleReact(s, unitById(s, at.targetId).owner, 'targeted', { unitId: at.targetId, killerId: at.attackerId }); });
 
 // the attack sequence: "just after an enemy unit has shot", "after your unit has shot / fought"
 onAttackFinished((s, at, info) => {

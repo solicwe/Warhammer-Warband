@@ -44,7 +44,7 @@
       "targetKw": [
         "ADEPTA SORORITAS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],
@@ -100,7 +100,7 @@
       "targetKw": [
         "PENITENT"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "defend": {
@@ -248,7 +248,7 @@
       "targetKw": [
         "ADEPTA SORORITAS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "buffs": [
         "enemyAp-1"
       ],
@@ -426,7 +426,7 @@
         "ADEPTA SORORITAS",
         "INFANTRY|JUMP PACK"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "effects": [
         {
           "defend": {
@@ -500,7 +500,7 @@
       "targetKw": [
         "CELESTIAN SACRESANTS"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "fightPhase"
       ],

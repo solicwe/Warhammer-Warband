@@ -1967,8 +1967,9 @@
     "note": "Use it before Cosmic Horror resolves"
   },
   "Psychic Familiar@Magus": {
-    "status": "partial",
-    "note": "Not automated: +6\" to Mind Control's range once per battle"
+    "code": true,
+    "status": "auto",
+    "note": "Used by Mind Control the first time an enemy unit is more than 18\" and up to 24\" away"
   },
   "Cult Icon@Acolyte Hybrids With Autopistols": {
     "gear": true,
@@ -3216,5 +3217,139 @@
     "code": true,
     "status": "auto",
     "note": "Set up on a central objective outside the enemy deployment zone; REGIMENT units within 6\" of it can be given Orders at any range"
+  },
+  "Mind Control (Psychic)@Magus": {
+    "act": [
+      {
+        "when": "oppShootingStart",
+        "auto": true,
+        "limit": "phase",
+        "per": "army",
+        "target": {
+          "side": "enemy",
+          "range": 24
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 1,
+            "max": 1,
+            "do": [
+              {
+                "on": "self",
+                "mortals": "D3"
+              },
+              {
+                "on": "self",
+                "buff": [],
+                "mark": "familiar",
+                "until": "battle"
+              }
+            ]
+          },
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "buff": [
+                  {
+                    "hit": -1
+                  }
+                ],
+                "until": "phase"
+              },
+              {
+                "on": "self",
+                "buff": [],
+                "mark": "familiar",
+                "until": "battle"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "buff": [
+                  {
+                    "hit": -1,
+                    "wound": -1
+                  }
+                ],
+                "until": "phase"
+              },
+              {
+                "on": "self",
+                "buff": [],
+                "mark": "familiar",
+                "until": "battle"
+              }
+            ]
+          }
+        ],
+        "if": [
+          "!marked:familiar",
+          "!enemyBetween:-1:18",
+          "enemyBetween:18:24"
+        ]
+      },
+      {
+        "when": "oppShootingStart",
+        "auto": true,
+        "limit": "phase",
+        "per": "army",
+        "target": {
+          "side": "enemy",
+          "range": 18
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 1,
+            "max": 1,
+            "do": [
+              {
+                "on": "self",
+                "mortals": "D3"
+              }
+            ]
+          },
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "buff": [
+                  {
+                    "hit": -1
+                  }
+                ],
+                "until": "phase"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "buff": [
+                  {
+                    "hit": -1,
+                    "wound": -1
+                  }
+                ],
+                "until": "phase"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "note": "Psychic Familiar: once per battle it reaches 24\" when no enemy is within 18\""
   }
 }
