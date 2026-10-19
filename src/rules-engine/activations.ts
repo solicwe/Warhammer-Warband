@@ -156,6 +156,7 @@ export interface Action {
   afflictNear?: number; // every enemy unit within X" of this unit is Afflicted until your next turn (Explosive Blight)
   alsoNear?: number; // do this to every other enemy unit within X" of the target too (Spore-laced Shock Waves)
   dg?: 'signalPox' | 'blightedLand' | 'eyestinger' | 'extraPlague' | 'leechspore';
+  lov?: number; // Leagues of Votann: spend this many Yield points (negative: gain) (votann.ts)
   cd?: 'flux'; // Chaos Daemons: spend a Flux token (daemons.ts)
   gc?: 'parasitism'; // Genestealer Cults: Psionic Parasitism (cult.ts)
   nec?: 'reanimate' | 'resurrect'; // Necrons: the target unit's Reanimation Protocols activate (resurrect: D6, one unit per turn)

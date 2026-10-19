@@ -8273,6 +8273,254 @@
           ]
         }
       ]
+    },
+    "Prioritised Efficiency": {
+      "auto": "full",
+      "armyRule": true,
+      "code": true,
+      "effects": [
+        {
+          "units": [
+            "LEAGUES OF VOTANN"
+          ],
+          "if": [
+            "hostile",
+            "targetInRangeOfObjective"
+          ],
+          "hit": 1
+        },
+        {
+          "units": [
+            "LEAGUES OF VOTANN"
+          ],
+          "if": [
+            "hostile"
+          ],
+          "rerollAdvance": true,
+          "rerollCharge": true
+        },
+        {
+          "units": [
+            "LEAGUES OF VOTANN"
+          ],
+          "if": [
+            "fortify",
+            "onControlledObjective"
+          ],
+          "hit": 1
+        },
+        {
+          "units": [
+            "LEAGUES OF VOTANN",
+            "!VEHICLE"
+          ],
+          "if": [
+            "fortify"
+          ],
+          "defend": {
+            "woundIfStronger": -1
+          }
+        }
+      ],
+      "manual": "Yield points and the switch between Hostile Acquisition and Fortify Takeover are worked out by votann.ts"
+    },
+    "Hearthband": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "LEAGUES OF VOTANN"
+          ],
+          "if": [
+            "any:targetClosest||fightPhase"
+          ],
+          "reroll": "wounds1"
+        },
+        {
+          "units": [
+            "LEAGUES OF VOTANN",
+            "KÂHL|EINHYR HEARTHGUARD|ÛTHAR THE DESTINED"
+          ],
+          "if": [
+            "any:targetClosest||fightPhase"
+          ],
+          "ap": 1
+        }
+      ]
+    },
+    "Needgaârd Oathband": {
+      "auto": "full",
+      "code": true,
+      "manual": "Martial Leverage: +1YP each time an enemy unit is destroyed (votann.ts)"
+    },
+    "Persecution Prospect": {
+      "auto": "full",
+      "acts": [
+        {
+          "when": "selectedToShoot",
+          "units": [
+            "LEAGUES OF VOTANN"
+          ],
+          "limit": "phase",
+          "label": "Guerrilla Adepts: shoot one enemy unit (no MONSTER / VEHICLE); hit, it becomes assailed (assailed again: pinned)",
+          "botUse": "always",
+          "target": {
+            "side": "enemy",
+            "visible": true,
+            "units": [
+              "!MONSTER",
+              "!VEHICLE"
+            ],
+            "closest": true
+          },
+          "do": [
+            {
+              "on": "target",
+              "if": [
+                "targetMarked:assailed"
+              ],
+              "buff": [
+                {
+                  "move": -2,
+                  "chargeBonus": -2
+                }
+              ],
+              "until": "nextTurnStart",
+              "mark": "pinned"
+            },
+            {
+              "on": "target",
+              "buff": [],
+              "until": "nextTurnStart",
+              "mark": "assailed"
+            }
+          ]
+        }
+      ],
+      "manual": "The unit is marked when it is picked (the card: after the attacks, if one of them hit) and the shots are not limited to it"
+    },
+    "Dêlve Assault Shift": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "CTHONIAN BESERKS"
+          ],
+          "deepStrike": true,
+          "addKeywords": [
+            "BATTLELINE"
+          ]
+        }
+      ]
+    },
+    "Brandfast Oathband": {
+      "auto": "full",
+      "grants": [
+        {
+          "units": [
+            "LEAGUES OF VOTANN",
+            "TRANSPORT"
+          ],
+          "name": "Firebase Control (Aura)",
+          "rule": {
+            "effects": [
+              {
+                "scope": "aura",
+                "range": 6,
+                "units": [
+                  "LEAGUES OF VOTANN",
+                  "INFANTRY"
+                ],
+                "attack": "ranged",
+                "abilities": [
+                  "sustained hits 1"
+                ]
+              }
+            ],
+            "note": "Within 6\" (the card: wholly within)"
+          }
+        }
+      ]
+    },
+    "Hearthfyre Arsenal": {
+      "auto": "full",
+      "code": true,
+      "acts": [
+        {
+          "when": "selectedToShoot",
+          "units": [
+            "BRÔKHYR|IRONKIN STEELJACKS|ARKANYST EVALUATOR"
+          ],
+          "if": [
+            "yp"
+          ],
+          "limit": "phase",
+          "label": "Optimal Application: spend 1YP, re-roll Hit rolls of 1",
+          "botUse": "always",
+          "do": [
+            {
+              "on": "self",
+              "lov": 1
+            },
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "reroll": "hits1"
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ],
+      "manual": "YP for objectives held by Iron-masters / Memnyr Strategists (votann.ts)"
+    },
+    "Mercenary Oathband": {
+      "auto": "full",
+      "code": true,
+      "manual": "Ruthless Reinvestment: 3YP to switch at the end of your Command phase (Fortify Takeover while holding half the objectives or more)"
+    },
+    "Armoured Trailblazers": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "SAGITAUR"
+          ],
+          "scouts": 6
+        }
+      ]
+    },
+    "Farseekers": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "HERNKYN"
+          ],
+          "attack": "ranged",
+          "if": [
+            "targetWithin:12"
+          ],
+          "hit": 1
+        }
+      ]
+    },
+    "Hearthguard Covenant": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "KÂHL|EINHYR CHAMPION|EINHYR HEARTHGUARD|ÛTHAR THE DESTINED"
+          ],
+          "attack": "ranged",
+          "if": [
+            "targetWithin:9"
+          ],
+          "reroll": "wounds1"
+        }
+      ]
     }
   }
 }

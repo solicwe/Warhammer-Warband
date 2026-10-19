@@ -18,7 +18,7 @@ import { attachNear, blightedLand, dgBattleStart, dgCommandEnd, dgCommandStart, 
 import { auraBonus, bondAgain, choicePicked, choiceWhy, expend, knightsAttackDone, knightsBattleStart, knightsCommandStart, knightsCond, knightsEffects, knightsMoved, knightsRoundEnd, knightsRoundStart, knightsShockFailed, knightsShootingStart, knightsTurnEnd, knightsTurnStart, longLeash, maleficSurge, superHeavy } from './knights';
 import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart, sororitasUnitDestroyed, tryActOfFaith } from './sororitas';
 import { aeldariBattleStart, aeldariRoundStart, canFocus, lucidEye, noteVibro, relentlessRaiders, resetPhaseStrandsOfFate, seerDiscounts, shadowFieldCheck, sonicDestruction, spendFocus, tryFateDie, voidThieves } from './aeldari';
-import { votannAttackModifiers, votannBattleStart, votannCommandEnd, votannDefenseModifiers, votannUnitDestroyed } from './votann';
+import { gainYieldPoints, spendYieldPoints, tryUtharAncestralFortune, votannBattleStart, votannTurnEnd, votannCommandEnd, votannUnitDestroyed } from './votann';
 import { admechImperativePicked, onAcquisition, pickAcquisition } from './admech';
 import { drugBlocked, drugPicked, drukhariAction, drukhariAttackMods, drukhariBattleShockFailed, drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd, drukhariUnitDestroyed, isUnitEmpowered, losingWager, painReady, pickContract } from './drukhari';
 import { corruptRealspace, daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsUnitDestroyed, isUnderShadowOfChaos, spendFluxToken, tryFlux } from './daemons';
@@ -142,6 +142,13 @@ addDieRescue('Strands of Fate', 'Fate die', (s, u, stage, x) => tryFateDie(s, u,
 on('battleStart', (s) => votannBattleStart(s));
 on('commandEnd', (s, e) => votannCommandEnd(s, e.p));
 on('unitDestroyed', (s, e) => votannUnitDestroyed(s, e.u, e.attackerId));
+on('turnEnd', (s) => votannTurnEnd(s));
+addCondition('hostile', (_c, x) => (x.s.players[x.A.owner].votannAbility ?? 'Hostile Acquisition') === 'Hostile Acquisition');
+addCondition('fortify', (_c, x) => x.s.players[x.A.owner].votannAbility === 'Fortify Takeover');
+addCondition('yp', (_c, x) => (x.s.players[x.A.owner].yieldPoints ?? 0) >= 1);
+addCondition(/^yp:\d+$/, (c, x) => (x.s.players[x.A.owner].yieldPoints ?? 0) >= Number(c.slice(3)));
+addActionHandler((s, a, x) => { if (a.lov && a.lov > 0) spendYieldPoints(s, x.u.owner, a.lov, x.label); if (a.lov && a.lov < 0) gainYieldPoints(s, x.u.owner, -a.lov, x.label); });
+addDieRescue('Ancestral Fortune', 'YP', (s, u, stage, x) => (stage === 'hit' || stage === 'wound' || stage === 'save' ? tryUtharAncestralFortune(s, u, stage, x) : null));
 
 // Adeptus Mechanicus: the active Doctrina Imperative shown on the HUD
 addChoiceHooks({ picked: (s, p, rule, ids) => admechImperativePicked(s, p, rule, ids) });
@@ -227,8 +234,6 @@ addCombatMods((x) => {
   return { ...f, skillBonus: -f.skillDelta };
 });
 // Leagues of Votann
-addCombatMods((x) => votannAttackModifiers(x.s, x.A, x.T, x.d, x.mode));
-addCombatMods((x) => votannDefenseModifiers(x.s, x.A, x.T, x.p, x.d));
 // Drukhari
 addCombatMods((x) => drukhariAttackMods(x.s, x.A, x.T));
 // Necrons

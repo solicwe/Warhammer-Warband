@@ -393,7 +393,8 @@ export interface PlayerState {
   admechHaloOverrideAbility?: 'Electromotive Energisation' | 'Microactuator Bracing' | 'Predation Protocols' | 'Muted Servomotors';
   /** Belisarius Cawl: Machine Vengeance target unit id */
   machineVengeanceTarget?: string | null;
-  acquisitionId?: string; // Explorator Maniple: the Acquisition objective marker
+  acquisitionId?: string;
+  ypTurn?: { turn: number; gained: number; spent: number }; // Leagues of Votann: YP gained / spent this turn // Explorator Maniple: the Acquisition objective marker
   /** Drukhari: Pain Token pool (Power from Pain) */
   painTokens?: number;
   /** Drukhari: Units empowered by spending a Pain token this phase */

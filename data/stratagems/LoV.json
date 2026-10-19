@@ -1,4 +1,1104 @@
 {
   "_comment": "Stratagems written by hand (key: the card name, or NAME@Detachment); the rest are read from the card text.",
-  "rules": {}
+  "rules": {
+    "SUPERIOR CRAFTSMANSHIP": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetMV"
+          ],
+          "damage": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "FURY OF THE HEARTH": {
+      "targetKw": [
+        "EINHYR HEARTHGUARD"
+      ],
+      "choice": [
+        {
+          "label": "+1 Strength",
+          "effects": [
+            {
+              "attack": "ranged",
+              "strength": 1
+            }
+          ]
+        },
+        {
+          "label": "Spend 1YP: +1 Strength and [SUSTAINED HITS 1]",
+          "if": [
+            "yp:1"
+          ],
+          "do": [
+            {
+              "lov": 1
+            }
+          ],
+          "effects": [
+            {
+              "attack": "ranged",
+              "strength": 1,
+              "abilities": [
+                "sustained hits 1"
+              ]
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "BRËKKEKNOTS": {
+      "targetKw": [
+        "KÂHL|ÛTHAR THE DESTINED|EINHYR HEARTHGUARD"
+      ],
+      "react": "ownAttacked",
+      "effects": [
+        {
+          "defend": {
+            "inv": 4
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "MATERIALISATION MATRICES": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "targetFrom": "reserves",
+      "effects": [
+        {
+          "deepStrikeRange": 6
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "UNYIELDING AGGRESSION": {
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "INFANTRY"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "SURE OF PURPOSE": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "effects": [
+        {
+          "pileIn": 6,
+          "consolidate": 6
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ANCESTRAL SENTENCE": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "choice": [
+        {
+          "label": "[SUSTAINED HITS 1]",
+          "effects": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "sustained hits 1"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Spend 3YP: [SUSTAINED HITS 2]",
+          "if": [
+            "yp:3"
+          ],
+          "do": [
+            {
+              "lov": 3
+            }
+          ],
+          "effects": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "sustained hits 2"
+              ]
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "HUNTR’S MARK": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "effects": [
+        {
+          "reroll": [
+            "hits1",
+            "wounds1"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "HONOUR OF THE HOLD": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "enemy": {
+        "engaged": true
+      },
+      "enemyMark": "Honour of the Hold",
+      "choice": [
+        {
+          "label": "+1 AP against it",
+          "effects": [
+            {
+              "attack": "melee",
+              "if": [
+                "targetMarked:Honour of the Hold"
+              ],
+              "ap": 1
+            }
+          ]
+        },
+        {
+          "label": "Spend 3YP: +2 AP against it",
+          "if": [
+            "yp:3"
+          ],
+          "do": [
+            {
+              "lov": 3
+            }
+          ],
+          "effects": [
+            {
+              "attack": "melee",
+              "if": [
+                "targetMarked:Honour of the Hold"
+              ],
+              "ap": 2
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "note": "With YP: +2 AP (the card's exact bonus is cut off in the data)",
+      "status": "auto"
+    },
+    "ORDERED RETREAT": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "REACTIVE REPRISAL": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "fortify",
+        "targetOfLast",
+        "!engaged"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "special": [
+        "shootAt"
+      ],
+      "botReact": "shoot",
+      "status": "auto"
+    },
+    "VOID HARDENED": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "fortify"
+      ],
+      "buffs": [
+        "enemyAp-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "EXPOSED FLAWS": {
+      "targetKw": [
+        "HERNKYN"
+      ],
+      "choice": [
+        {
+          "label": "Re-roll Wound rolls against assailed units",
+          "effects": [
+            {
+              "if": [
+                "targetMarked:assailed"
+              ],
+              "reroll": "wounds"
+            }
+          ]
+        },
+        {
+          "label": "Spend 2YP: re-roll Wound rolls",
+          "if": [
+            "yp:2"
+          ],
+          "do": [
+            {
+              "lov": 2
+            }
+          ],
+          "effects": [
+            {
+              "reroll": "wounds"
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "FRONTIER MOMENTUM": {
+      "targetKw": [
+        "HERNKYN"
+      ],
+      "effects": [
+        {
+          "advanceFixed": 6
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "RANGER TACTICS": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "effects": [
+        {
+          "if": [
+            "any:targetMarked:assailed||kw:HERNKYN"
+          ],
+          "reroll": "hits"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "CLAIMSTAKER REFLEX": {
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "!ARTILLERY",
+        "!VEHICLE"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8"
+      ],
+      "do": [
+        {
+          "if": [
+            "!yp:2"
+          ],
+          "move": "D6"
+        },
+        {
+          "if": [
+            "yp:2"
+          ],
+          "lov": 2
+        },
+        {
+          "if": [
+            "yp:2"
+          ],
+          "move": "6"
+        }
+      ],
+      "note": "YP are spent for the 6\" move whenever you have 2 or more",
+      "status": "auto"
+    },
+    "DISPERSED FORMATION": {
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "INFANTRY|MOUNTED"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "stealth": true
+        },
+        {
+          "defend": {
+            "vs": "ranged",
+            "cover": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "ADAPTABLE AVARICE": {
+      "status": "manual",
+      "note": "Not automated: switching back to Hostile Acquisition",
+      "bot": "never"
+    },
+    "CYBERSTIMM INFUSION": {
+      "targetKw": [
+        "CTHONIAN BESERKS"
+      ],
+      "choice": [
+        {
+          "label": "Re-roll Wound rolls of 1",
+          "effects": [
+            {
+              "reroll": "wounds1"
+            }
+          ]
+        },
+        {
+          "label": "Spend 2YP: re-roll Wound rolls",
+          "if": [
+            "yp:2"
+          ],
+          "do": [
+            {
+              "lov": 2
+            }
+          ],
+          "effects": [
+            {
+              "reroll": "wounds"
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "HIDDEN ACCESSWAYS": {
+      "targetKw": [
+        "CTHONIAN BESERKS|HEARTHKYN WARRIORS|HERNKYN YAEGIRS"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "UNSTOPPABLE FORCE": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "effects": [
+        {
+          "pileIn": 6,
+          "consolidate": 6
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "AUGMENTED ASSAULT": {
+      "targetKw": [
+        "CTHONIAN BESERKS"
+      ],
+      "choice": [
+        {
+          "label": "Charge after Advancing",
+          "effects": [
+            {
+              "eligible": [
+                "chargeAfterAdvance"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Spend 1YP: +1\" Move and charge after Advancing",
+          "if": [
+            "yp"
+          ],
+          "do": [
+            {
+              "lov": 1
+            }
+          ],
+          "effects": [
+            {
+              "move": 1,
+              "eligible": [
+                "chargeAfterAdvance"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Spend 2YP: +2\" Move and charge after Advancing",
+          "if": [
+            "yp:2"
+          ],
+          "do": [
+            {
+              "lov": 2
+            }
+          ],
+          "effects": [
+            {
+              "move": 2,
+              "eligible": [
+                "chargeAfterAdvance"
+              ]
+            }
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "TECTONIC FRACTURE": {
+      "targetKw": [
+        "CTHONIAN EARTHSHAKERS"
+      ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "choice": [
+        {
+          "label": "-2\" Move",
+          "enemyEffects": [
+            {
+              "move": -2
+            }
+          ]
+        },
+        {
+          "label": "Spend 2YP: -2\" Move and -2 to Charge rolls",
+          "if": [
+            "yp:2"
+          ],
+          "do": [
+            {
+              "lov": 2
+            }
+          ],
+          "enemyEffects": [
+            {
+              "move": -2,
+              "chargeBonus": -2
+            }
+          ]
+        }
+      ],
+      "enemyUntil": "nextTurnStart",
+      "bot": "never",
+      "status": "auto"
+    },
+    "WEAVEWËRKE BUTTRESS": {
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "INFANTRY"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "hostile",
+        "shootingPhase"
+      ],
+      "buffs": [
+        "enemyWound-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "BASTION RUNNING": {
+      "targetKw": [
+        "HEKATON LAND FORTRESS"
+      ],
+      "effects": [
+        {
+          "throughTerrain": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SECURE POSITIONS": {
+      "status": "manual",
+      "note": "Not automated: disembarking anywhere within 6\" at the end of a phase",
+      "bot": "never"
+    },
+    "INEXORABLE EFFICIENCY": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack"
+          ]
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "OPPORTUNISTIC ESCALATION": {
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "VEHICLE",
+        "!HEKATON LAND FORTRESS"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "hostile",
+        "targetOfLast"
+      ],
+      "do": [
+        {
+          "move": "D6"
+        }
+      ],
+      "status": "auto"
+    },
+    "VENGEANCE FLARE": {
+      "status": "manual",
+      "note": "Not automated: a KAPRICUS / SAGITAUR unit shooting back",
+      "bot": "never"
+    },
+    "ILLUMINATED PRIORITY": {
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "VEHICLE"
+      ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "units": [
+              "LEAGUES OF VOTANN",
+              "INFANTRY"
+            ],
+            "reroll": "hits1"
+          }
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "UNWAVERING ACCURACY": {
+      "targetKw": [
+        "BRÔKHYR THUNDERKYN"
+      ],
+      "effects": [
+        {
+          "ignoreHitMods": true,
+          "ignoreWoundMods": true
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "WALL OF STEEL": {
+      "targetKw": [
+        "IRONKIN STEELJACKS"
+      ],
+      "react": "chargeMoveEnd",
+      "enemy": {
+        "engaged": true,
+        "notKw": [
+          "MONSTER",
+          "VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "all": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "Spending 2YP for two more dice is not offered",
+      "status": "auto"
+    },
+    "FIRST CONCERN": {
+      "targetKw": [
+        "BRÔKHYR|IRONKIN STEELJACKS|ARKANYST EVALUATOR"
+      ],
+      "unitIf": [
+        "shotThisTurn",
+        "stationary"
+      ],
+      "do": [
+        {
+          "move": "M"
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "COGITATED NEED": {
+      "targetKw": [
+        "IRONKIN STEELJACKS"
+      ],
+      "react": "enemyChargePhaseStart",
+      "unitIf": [
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "M"
+        }
+      ],
+      "note": "Offered at the start of the opponent's Charge phase (the card: end of their Movement phase); move towards the closest objective yourself",
+      "status": "auto"
+    },
+    "PREVENTATIVE PURGE": {
+      "targetKw": [
+        "BRÔKHYR THUNDERKYN|IRONKIN STEELJACKS"
+      ],
+      "react": "enemyFallBack",
+      "enemy": {
+        "lastActor": true
+      },
+      "effects": [
+        {
+          "hit": -1
+        }
+      ],
+      "special": [
+        "shootAt"
+      ],
+      "botReact": "shoot",
+      "status": "auto"
+    },
+    "DELAYED-FIRE ROUNDS": {
+      "targetKw": [
+        "BRÔKHYR|IRONKIN STEELJACKS|ARKANYST EVALUATOR"
+      ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true,
+        "notKw": [
+          "MONSTER",
+          "VEHICLE"
+        ]
+      },
+      "enemyEffects": [
+        {
+          "snared": true
+        }
+      ],
+      "enemyUntil": "nextTurnStart",
+      "bot": "never",
+      "status": "auto"
+    },
+    "GRAND ARTIFICE": {
+      "targetKw": [
+        "LEAGUES OF VOTANN"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "NEW HORIZONS": {
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "INFANTRY"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged",
+        "near:6:LEAGUES OF VOTANN+TRANSPORT"
+      ],
+      "special": [
+        "embark"
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "MOBILE EXPLOITATION": {
+      "targetKw": [
+        "HERNKYN"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "note": "Spending 2YP for a second unit is not offered",
+      "status": "auto"
+    },
+    "AUXILIARY CONTRACT": {
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "INFANTRY|MOUNTED"
+      ],
+      "effects": [
+        {
+          "abilities": [
+            "precision"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "OPTIMAL EXPENDITURE": {
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "INFANTRY"
+      ],
+      "choice": [
+        {
+          "label": "Re-roll Hit and Wound rolls of 1",
+          "effects": [
+            {
+              "reroll": [
+                "hits1",
+                "wounds1"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Spend 3YP: re-roll Hit rolls of 1 and Wound rolls",
+          "if": [
+            "yp:3"
+          ],
+          "do": [
+            {
+              "lov": 3
+            }
+          ],
+          "effects": [
+            {
+              "reroll": [
+                "hits1",
+                "wounds"
+              ]
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "PRIVATEER ARSENAL": {
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "INFANTRY"
+      ],
+      "choice": [
+        {
+          "label": "Re-roll Hit and Wound rolls of 1",
+          "effects": [
+            {
+              "reroll": [
+                "hits1",
+                "wounds1"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Spend 3YP: re-roll Hit rolls and Wound rolls of 1",
+          "if": [
+            "yp:3"
+          ],
+          "do": [
+            {
+              "lov": 3
+            }
+          ],
+          "effects": [
+            {
+              "reroll": [
+                "hits",
+                "wounds1"
+              ]
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "COORDINATED CROSSFIRE": {
+      "targetKw": [
+        "SAGITAUR"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "SAGITAUR"
+        ]
+      },
+      "enemy": {
+        "visible": true
+      },
+      "enemyMark": "Coordinated Crossfire",
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetMarked:Coordinated Crossfire"
+          ],
+          "reroll": [
+            "hits1",
+            "wounds1"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "BUILT TO LAST": {
+      "targetKw": [
+        "SAGITAUR"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "vs": "ranged",
+            "woundIfStronger": -1
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "OUTFLANKING ARMOUR": {
+      "targetKw": [
+        "SAGITAUR"
+      ],
+      "targetFrom": "reserves",
+      "effects": [
+        {
+          "oppMoveIngress": true
+        }
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "SAGITAUR"
+        ]
+      },
+      "until": "turn",
+      "bot": "never",
+      "note": "Use it in the opponent's Movement phase from the second battle round",
+      "status": "auto"
+    },
+    "SCORNFUL ANALYSIS": {
+      "targetKw": [
+        "HERNKYN"
+      ],
+      "enemy": {
+        "range": 12,
+        "visible": true
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "units": [
+              "LEAGUES OF VOTANN"
+            ],
+            "abilities": [
+              "ignores cover"
+            ]
+          }
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "NO SHOT WASTED": {
+      "targetKw": [
+        "HERNKYN"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ECONOMY OF MOTION": {
+      "targetKw": [
+        "PIONEERS"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "D3+3"
+        }
+      ],
+      "status": "auto"
+    },
+    "MATERIALISATION MATRICES@Hearthguard Covenant": {
+      "targetKw": [
+        "EINHYR HEARTHGUARD"
+      ],
+      "targetFrom": "reserves",
+      "effects": [
+        {
+          "deepStrikeRange": 6
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "BRËKKEKNOTS@Hearthguard Covenant": {
+      "targetKw": [
+        "EINHYR HEARTHGUARD"
+      ],
+      "react": "ownAttacked",
+      "effects": [
+        {
+          "defend": {
+            "inv": 4
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "FURY OF THE HEARTH@Hearthguard Covenant": {
+      "targetKw": [
+        "EINHYR HEARTHGUARD"
+      ],
+      "choice": [
+        {
+          "label": "+1 Strength",
+          "effects": [
+            {
+              "attack": "ranged",
+              "strength": 1
+            }
+          ]
+        },
+        {
+          "label": "Spend 1YP: +1 Strength and [SUSTAINED HITS 1]",
+          "if": [
+            "yp:1"
+          ],
+          "do": [
+            {
+              "lov": 1
+            }
+          ],
+          "effects": [
+            {
+              "attack": "ranged",
+              "strength": 1,
+              "abilities": [
+                "sustained hits 1"
+              ]
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    }
+  }
 }

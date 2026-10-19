@@ -15,47 +15,16 @@
 //     - >= 7 YP: Fortify Takeover
 //     (Exception: Mercenary Oathband does not auto-switch; can spend 3 YP to switch).
 //
-// Hostile Acquisition:
-// - +1 to Hit roll when targeting an enemy unit within range of 1+ objective markers.
-// - Re-roll Advance and Charge rolls.
-//
-// Fortify Takeover:
-// - +1 to Hit roll when attacking if within range of 1+ controlled objective markers.
-// - If non-VEHICLE and attack S > T: -1 to Wound roll.
+// Hostile Acquisition / Fortify Takeover themselves are data (data/detachment-rules.json, conditions hostile /
+// fortify), like the detachment rules, abilities and stratagems.
 
-import { alive, boardUnits, hasKw, log, onBoard, other, pushFx, unitById } from '../engine/state';
-import type { GameState, ModelState, PlayerId, UnitState, WeaponProfileData, ObjectiveState } from '../engine/types';
-import { unitInRange, zonePoly } from '../engine/missions';
-import { baseDist, pointInPoly, ptGap } from '../engine/geometry';
-
-export interface VotannAttackBonus {
-  hitMod: number;
-  strengthBonus: number;
-  apBonus: number;
-  woundMod: number;
-  ignoresCover: boolean;
-  rerollHits1: boolean;
-  rerollWounds1: boolean;
-  rerollWounds: boolean;
-  rerollHits: boolean;
-  lethal: boolean;
-  sustained: string | null;
-  notes: string[];
-}
-
-export interface VotannDefenseBonus {
-  woundMod: number;
-  apWorsen: number;
-  notes: string[];
-}
+import { alive, boardUnits, log, other, pushFx, unitById } from '../engine/state';
+import type { GameState, PlayerId, UnitState } from '../engine/types';
+import { zonePoly } from '../engine/missions';
+import { pointInPoly, ptGap } from '../engine/geometry';
 
 export function isVotannArmy(s: GameState, p: PlayerId): boolean {
-  const P = s.players[p];
-  if (!P) return false;
-  return P.factionId === 'LoV'
-    || P.factionId === 'LOV'
-    || P.factionName?.toLowerCase().includes('votann')
-    || s.units.some((u) => u.owner === p && (u.factionKeywords?.includes('LEAGUES OF VOTANN') || u.keywords?.includes('LEAGUES OF VOTANN')));
+  return !!s.players[p]?.armyRules?.some((r) => r.name === 'Prioritised Efficiency');
 }
 
 export function hasVotannFaction(u: UnitState): boolean {
@@ -70,6 +39,8 @@ export function getYieldPoints(s: GameState, p: PlayerId): number {
 export function gainYieldPoints(s: GameState, p: PlayerId, amount = 1, reason = 'Prioritised Efficiency'): number {
   if (amount <= 0 || !isVotannArmy(s, p)) return 0;
   s.players[p].yieldPoints = (s.players[p].yieldPoints ?? 0) + amount;
+  const P = s.players[p];
+  P.ypTurn = P.ypTurn?.turn === s.turn ? { ...P.ypTurn, gained: P.ypTurn.gained + amount } : { turn: s.turn, gained: amount, spent: 0 };
   log(s, `[YP] Prioritised Efficiency: ${s.players[p].name} gained ${amount} YP (${reason}) — Total: ${s.players[p].yieldPoints} YP`, 'info', p);
   pushFx(s, { kind: 'skill', unitId: '', owner: p, at: { x: 22, y: 15 }, name: 'Yield Points', who: `+${amount} YP (${s.players[p].yieldPoints} total)`, style: 'tech', epic: false });
   return amount;
@@ -81,6 +52,8 @@ export function spendYieldPoints(s: GameState, p: PlayerId, amount: number, reas
   const current = s.players[p].yieldPoints ?? 0;
   if (current < amount) return false;
   s.players[p].yieldPoints = current - amount;
+  const P = s.players[p];
+  P.ypTurn = P.ypTurn?.turn === s.turn ? { ...P.ypTurn, spent: P.ypTurn.spent + amount } : { turn: s.turn, gained: 0, spent: amount };
   log(s, `[YP] Prioritised Efficiency: ${s.players[p].name} spent ${amount} YP (${reason}) — Remaining: ${s.players[p].yieldPoints} YP`, 'info', p);
   return true;
 }
@@ -133,7 +106,15 @@ export function votannCommandEnd(s: GameState, commandPlayer: PlayerId) {
     // Ability stance update (only in own turn)
     if (p === commandPlayer) {
       const isMerc = (s.players[p].detachments ?? []).some((d) => d.name.toLowerCase().includes('mercenary oathband'));
-      if (!isMerc) {
+      if (isMerc) {
+        // Ruthless Reinvestment: 3YP to switch; Fortify Takeover while the army holds at least half the objectives
+        const mine = s.objectives.filter((o) => o.controller === p).length;
+        const want = mine * 2 >= s.objectives.length && mine > 0 ? 'Fortify Takeover' : 'Hostile Acquisition';
+        if (want !== (s.players[p].votannAbility ?? 'Hostile Acquisition') && spendYieldPoints(s, p, 3, 'Ruthless Reinvestment')) {
+          s.players[p].votannAbility = want;
+          log(s, `Ruthless Reinvestment: Leagues of Votann units switch to ${want}`, 'info', p);
+        }
+      } else {
         const currentYp = s.players[p].yieldPoints ?? 0;
         const newStance = currentYp >= 7 ? 'Fortify Takeover' : 'Hostile Acquisition';
         const oldStance = s.players[p].votannAbility ?? 'Hostile Acquisition';
@@ -167,174 +148,6 @@ export function votannUnitDestroyed(s: GameState, destroyedUnit: UnitState, kill
   }
 }
 
-/** Check if unit is within range of objective marker (inside terrain area or within 3"). */
-export function isUnitNearObjective(s: GameState, u: UnitState, o: ObjectiveState): boolean {
-  if (unitInRange(s, u, o)) return true;
-  return alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6 || Math.hypot(m.x - o.x, m.y - o.y) <= 3 + (m.r ?? 0.63));
-}
-
-/** Check if enemy unit T is the closest eligible target to A. */
-function isClosestEnemy(s: GameState, A: UnitState, T: UnitState): boolean {
-  let best = Infinity, bestId = '';
-  for (const e of boardUnits(s, other(A.owner))) {
-    const d = Math.min(...alive(A).flatMap((m) => alive(e).map((n) => baseDist(m, n))));
-    if (d < best - 1e-6) {
-      best = d;
-      bestId = e.id;
-    }
-  }
-  return bestId === T.id;
-}
-
-/** Calculate attack bonuses for a Leagues of Votann attacking unit A targeting T. */
-export function votannAttackModifiers(
-  s: GameState,
-  A: UnitState,
-  T: UnitState,
-  distance: number,
-  kind: 'ranged' | 'melee',
-): VotannAttackBonus {
-  const out: VotannAttackBonus = {
-    hitMod: 0,
-    strengthBonus: 0,
-    apBonus: 0,
-    woundMod: 0,
-    ignoresCover: false,
-    rerollHits1: false,
-    rerollWounds1: false,
-    rerollWounds: false,
-    rerollHits: false,
-    lethal: false,
-    sustained: null,
-    notes: [],
-  };
-
-  if (!isVotannArmy(s, A.owner) || !hasVotannFaction(A)) return out;
-
-  const stance = s.players[A.owner]?.votannAbility ?? 'Hostile Acquisition';
-
-  // 1. Hostile Acquisition: +1 to Hit vs enemy within range of objective marker
-  if (stance === 'Hostile Acquisition') {
-    const nearObj = s.objectives.some((o) => isUnitNearObjective(s, T, o));
-    if (nearObj) {
-      out.hitMod += 1;
-      out.notes.push('Hostile Acquisition (+1 Hit)');
-    }
-  }
-
-  // 2. Fortify Takeover: +1 to Hit if A is within range of controlled objective marker
-  if (stance === 'Fortify Takeover') {
-    const onOurObj = s.objectives.some((o) => o.controller === A.owner && isUnitNearObjective(s, A, o));
-    if (onOurObj) {
-      out.hitMod += 1;
-      out.notes.push('Fortify Takeover (+1 Hit)');
-    }
-  }
-
-  // 3. Hearthband: Methodical Annihilation
-  // Targets closest eligible target or target within Engagement Range: re-roll Wound 1.
-  // Kâhl / Einhyr Hearthguard / Ûthar the Destined: +1 AP.
-  const isHearthband = (s.players[A.owner].detachments ?? []).some((d) => d.name.toLowerCase().includes('hearthband'));
-  if (isHearthband) {
-    const isEngaged = distance <= 1.0;
-    const isClosest = isClosestEnemy(s, A, T);
-    if (isEngaged || isClosest) {
-      out.rerollWounds1 = true;
-      out.notes.push('Methodical Annihilation (re-roll Wound 1)');
-      const isElite = A.name.includes('Kâhl') || A.name.includes('Einhyr Hearthguard') || A.name.includes('Ûthar the Destined') || A.keywords.includes('KÂHL');
-      if (isElite) {
-        out.apBonus += 1;
-        out.notes.push('Methodical Annihilation (+1 AP)');
-      }
-    }
-  }
-
-  // 4. Farseekers: Eye of the Hunt
-  // Friendly HERNKYN ranged attacks within 12" have +1 to hit
-  const isFarseekers = (s.players[A.owner].detachments ?? []).some((d) => d.name.toLowerCase().includes('farseekers'));
-  if (isFarseekers && kind === 'ranged' && distance <= 12 && (A.keywords.includes('HERNKYN') || A.name.includes('Hernkyn'))) {
-    out.hitMod += 1;
-    out.notes.push('Eye of the Hunt (+1 Hit)');
-  }
-
-  // 5. Hearthguard Covenant: Avatars of the Ancestors
-  // Friendly KÂHL/EINHYR CHAMPION/EINHYR HEARTHGUARD/ÛTHAR THE DESTINED ranged attacks within 9": re-roll wound 1
-  const isCovenant = (s.players[A.owner].detachments ?? []).some((d) => d.name.toLowerCase().includes('covenant'));
-  if (isCovenant && kind === 'ranged' && distance <= 9) {
-    const isAv = A.keywords.includes('KÂHL') || A.keywords.includes('EINHYR CHAMPION') || A.keywords.includes('EINHYR HEARTHGUARD') || A.keywords.includes('ÛTHAR THE DESTINED') || A.name.includes('Kâhl') || A.name.includes('Einhyr') || A.name.includes('Ûthar');
-    if (isAv) {
-      out.rerollWounds1 = true;
-      out.notes.push('Avatars of the Ancestors (re-roll Wound 1)');
-    }
-  }
-
-  // 6. Brandfast Oathband: Mobile Sensor Relays
-  // Friendly INFANTRY wholly within 6" of friendly Votann TRANSPORT: [SUSTAINED HITS 1]
-  const isBrandfast = (s.players[A.owner].detachments ?? []).some((d) => d.name.toLowerCase().includes('brandfast'));
-  if (isBrandfast && kind === 'ranged' && hasKw(A, 'INFANTRY')) {
-    const nearTransport = boardUnits(s, A.owner).some((t) => hasKw(t, 'TRANSPORT') && hasVotannFaction(t) && alive(A).every((m) => alive(t).some((tm) => baseDist(m, tm) <= 6 + 1e-6)));
-    if (nearTransport) {
-      out.sustained = '1';
-      out.notes.push('Mobile Sensor Relays [Sustained Hits 1]');
-    }
-  }
-
-  // 7. Berehk Stornbröw: Break the Foe
-  // Melee weapons in unit have [SUSTAINED HITS 1]
-  if (kind === 'melee') {
-    const hasBerehk = A.name.includes('Berehk') || alive(A).some((m) => m.name.includes('Berehk') || m.keywords.includes('BEREHK STORNBRÖW'));
-    if (hasBerehk) {
-      out.sustained = '1';
-      out.notes.push('Break the Foe [Sustained Hits 1]');
-    }
-  }
-
-  return out;
-}
-
-/** Calculate defensive modifiers when Leagues of Votann unit T is attacked by A. */
-export function votannDefenseModifiers(
-  s: GameState,
-  A: UnitState,
-  T: UnitState,
-  p: WeaponProfileData,
-  attackerDistance = 10,
-): VotannDefenseBonus {
-  const out: VotannDefenseBonus = {
-    woundMod: 0,
-    apWorsen: 0,
-    notes: [],
-  };
-
-  if (!isVotannArmy(s, T.owner) || !hasVotannFaction(T)) return out;
-
-  const stance = s.players[T.owner]?.votannAbility ?? 'Hostile Acquisition';
-  const targetT = T.models[0]?.profile.T ?? 4;
-  const attackS = p.S ?? 1;
-
-  // 1. Fortify Takeover: if not VEHICLE and S > T: -1 to Wound roll
-  if (stance === 'Fortify Takeover' && !hasKw(T, 'VEHICLE')) {
-    if (attackS > targetT) {
-      out.woundMod -= 1;
-      out.notes.push('Fortify Takeover (−1 Wound: S > T)');
-    }
-  }
-
-  // 2. Bastion Shield enhancement: ranged attack within 12" (or 18"): worsen AP by 1
-  if (T.enhancements.some((e) => e.name.toLowerCase().includes('bastion shield')) && attackerDistance <= 12) {
-    out.apWorsen += 1;
-    out.notes.push('Bastion Shield (worsen AP by 1)');
-  }
-
-  // 3. Built to Last: Sagitaur S > T -> -1 to wound
-  if (hasKw(T, 'SAGITAUR') && attackS > targetT && T.buffs.some((b) => b.label?.includes('Built to Last'))) {
-    out.woundMod -= 1;
-    out.notes.push('Built to Last (−1 Wound: S > T)');
-  }
-
-  return out;
-}
-
 /** Ûthar the Destined: Ancestral Fortune - spend 1 YP to turn a roll into unmodified 6. */
 export function tryUtharAncestralFortune(
   s: GameState,
@@ -356,4 +169,16 @@ export function tryUtharAncestralFortune(
   u.oncePerTurnUsed = [...(u.oncePerTurnUsed ?? []), 'ancestral-fortune'];
   log(s, `[Ancestral Fortune] Ûthar the Destined spent 1 YP to change ${rollType} roll to unmodified 6!`, 'roll', u.owner);
   return 6;
+}
+
+/** End of a turn: Dead Reckoning (no YP spent this turn: +1YP) and Metaphysical Brokerage (end of your turn: top the
+ *  YP gained this turn up to 3). */
+export function votannTurnEnd(s: GameState) {
+  for (const p of [0, 1] as PlayerId[]) {
+    if (!isVotannArmy(s, p)) continue;
+    const t = s.players[p].ypTurn?.turn === s.turn ? s.players[p].ypTurn! : { turn: s.turn, gained: 0, spent: 0 };
+    const has = (name: string) => boardUnits(s, p).some((u) => u.enhancements?.some((e) => e.name === name));
+    if (has('Dead Reckoning') && t.spent === 0) gainYieldPoints(s, p, 1, 'Dead Reckoning');
+    if (s.active === p && has('Metaphysical Brokerage') && t.gained < 3) gainYieldPoints(s, p, 3 - t.gained, 'Metaphysical Brokerage');
+  }
 }
