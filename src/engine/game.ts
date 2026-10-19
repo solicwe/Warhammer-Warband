@@ -1077,7 +1077,9 @@ export function endPhase(s: GameState) {
     if (phaseEndReactions(s, 'fightPhaseEnd', [other(s.active), s.active])) return;
     fireFor(s, 'fightEnd', 'both');
     // Rise to the Challenge: a unit gets to fight once more before the phase ends
-    if (s.fight?.forcedNext && s.fight.eligible.includes(s.fight.forcedNext)) return;
+    // (only while it is still alive and able to fight: a unit destroyed after Frenzy does not hold the phase open)
+    if (s.fight?.forcedNext && s.fight.eligible.includes(s.fight.forcedNext) && fightEligibleNow(s, unitById(s, s.fight.forcedNext))) return;
+    if (s.fight) s.fight.forcedNext = null;
     phaseEndHook?.(s, 'fight');
     fireFor(s, 'opponentFightEnd', other(s.active));
     s.fight = null;

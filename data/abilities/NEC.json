@@ -2024,5 +2024,10 @@
         "terrorBelowMod": 0
       }
     ]
+  },
+  "One Shot": {
+    "code": true,
+    "status": "auto",
+    "note": "The bearer can only shoot with this weapon once per battle."
   }
 }

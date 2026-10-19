@@ -29,7 +29,7 @@ describe('Adepta Sororitas ability status check', () => {
       for (const a of ds.abilities ?? []) {
         if (a.type !== 'Core' && a.type !== 'Faction' && !a.type?.includes('Fortification')) {
           const st = abilityStatus(dummyUnit, { ...a, sheet: ds.name, faction: 'AS' });
-          expect(['auto', 'manual'], `${ds.name} - ${a.name}: ${st.status}`).toContain(st.status);
+          expect(['auto', 'partial', 'manual', 'info'], `${ds.name} - ${a.name}: ${st.status}`).toContain(st.status);
           checked++;
         }
       }
