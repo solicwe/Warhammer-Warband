@@ -509,6 +509,8 @@ function BoardImpl(props: BoardProps) {
     return () => clearTimeout(tm);
   }, [s.objectives]);
   const svgRef = useRef<SVGSVGElement>(null);
+  // phones: the bottom sheet covers the lower part of the screen, so the battlefield sits at the top, not in the middle
+  const FIT = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)')?.matches ? 'xMidYMin meet' : 'xMidYMid meet';
   // the whole table: the battlefield plus the strips the side cards lie on
   const sides = (props.side ?? []).filter((x) => x.cards.length);
   const padL = sides.some((x) => x.at !== 'right') ? SIDE : 0, padR = sides.some((x) => x.at === 'right') ? SIDE : 0;
@@ -1058,7 +1060,7 @@ function BoardImpl(props: BoardProps) {
     <svg
       ref={svgRef}
       viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio={FIT}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -1345,33 +1347,20 @@ function BoardImpl(props: BoardProps) {
               ) : null}
             </g>
 
-            {/* Detachment Territory Effect Badges */}
-            {effects.map((eff, idx) => {
-              const badgeW = 5.6;
-              const badgeH = 0.78;
+            {/* Detachment territory effects: one short chip (the rings show the areas; the full text is the tooltip) */}
+            {effects.length > 0 && (() => {
+              const label = effects.map((eff) => eff.title.replace(/\s*\(.*\)$/, '')).join(' · ');
+              const badgeW = Math.min(W - 1, 0.95 + label.length * 0.27);
               const clampedX = Math.max(badgeW / 2 + 0.5, Math.min(W - badgeW / 2 - 0.5, cx));
-              const badgeY = top > 2.8 ? (bannerY - (idx + 1) * 0.9) : (bannerY + 0.95 + (idx + 1) * 0.9);
+              const badgeY = top > 2.8 ? bannerY - 0.9 : bannerY + 1.85;
               return (
-                <g key={eff.id} transform={`translate(${clampedX} ${badgeY})`}>
-                  <rect
-                    x={-badgeW / 2}
-                    y={-badgeH / 2}
-                    width={badgeW}
-                    height={badgeH}
-                    rx={0.3}
-                    fill={eff.badgeBg}
-                    stroke={eff.badgeBorder}
-                    strokeWidth={0.07}
-                  />
-                  <text x={0} y={-0.06} fontSize={0.38} textAnchor="middle" fill="#ffffff" fontWeight={900}>
-                    {eff.title}
-                  </text>
-                  <text x={0} y={0.26} fontSize={0.28} textAnchor="middle" fill={eff.color} fontWeight={700}>
-                    {eff.desc}
-                  </text>
+                <g transform={`translate(${clampedX} ${badgeY})`}>
+                  <title>{effects.map((eff) => `${eff.title}: ${eff.desc}`).join('\n')}</title>
+                  <rect x={-badgeW / 2} y={-0.36} width={badgeW} height={0.72} rx={0.3} fill={effects[0].badgeBg} stroke={effects[0].badgeBorder} strokeWidth={0.07} />
+                  <text x={0} y={0.14} fontSize={0.42} textAnchor="middle" fill="#ffffff" fontWeight={900}>{label}</text>
                 </g>
               );
-            })}
+            })()}
           </g>
         );
       })}
@@ -1962,7 +1951,7 @@ function BoardImpl(props: BoardProps) {
         );
       })}
     </svg>
-    <svg className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <svg className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio={FIT} aria-hidden="true">
       <FxLayer fx={fx} />
     </svg>
     {boardPopover && (

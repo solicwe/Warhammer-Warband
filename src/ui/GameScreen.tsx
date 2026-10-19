@@ -2873,8 +2873,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const a = mid(p), o = mid((1 - p) as PlayerId);
     return Math.abs(a.x - o.x) > Math.abs(a.y - o.y) ? (a.x < o.x ? 'left' : 'right') : a.y < o.y ? 'top' : 'bottom';
   };
-  // army-wide buffs lie on the table beside the battlefield, next to each army's deployment zone
-  const sideCards = s.phase === 'deploy' ? [] : ([0, 1] as PlayerId[]).map((p) => ({ p, at: buffSide(p), cards: buffCards(p) }));
+  // army-wide buffs lie on the table beside the battlefield, next to each army's deployment zone; not on phones: the
+  // strips would shrink the battlefield and iOS Safari draws the cards (HTML in the SVG) as empty boxes
+  const sideCards = s.phase === 'deploy' || isMobileScreen ? [] : ([0, 1] as PlayerId[]).map((p) => ({ p, at: buffSide(p), cards: buffCards(p) }));
   const p0Theme = getPlayerFactionTheme(s, 0);
   const p1Theme = getPlayerFactionTheme(s, 1);
 
