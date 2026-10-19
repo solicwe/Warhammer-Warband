@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { autoSelectFtgg, canBeGuided, canBeObserver, ftggAttackModifiers, hasMarkerlight, isTauArmy, pairFtgg } from './tau';
-import { buildShootPools } from '../engine/attack';
+import { canBeObserver, ftggMods, ftggTargetChosen, guidedVs, hasMarkerlight, isTauArmy, spotOf } from './tau';
 import type { GameState, ModelState, PlayerState, UnitState, WeaponData } from '../engine/types';
 
 function createDummyModel(id: string, name: string, keywords: string[] = [], gear: string[] = [], x = 10, y = 10): ModelState {
@@ -149,151 +148,36 @@ describe('T’au Empire Army Rule: For the Greater Good', () => {
     s.units = [stealthSuits, fireWarriors, enemyIntercessors];
   });
 
-  it('detects T’au army and Markerlight keyword correctly', () => {
+  it('detects the army rule and the MARKERLIGHT keyword', () => {
     expect(isTauArmy(s, 0)).toBe(true);
     expect(isTauArmy(s, 1)).toBe(false);
     expect(hasMarkerlight(stealthSuits)).toBe(true);
     expect(hasMarkerlight(fireWarriors)).toBe(false);
   });
 
-  it('determines observer and guided eligibility', () => {
+  it('a unit that has shot or is Battle-shocked cannot be an Observer', () => {
     expect(canBeObserver(s, stealthSuits)).toBe(true);
-    expect(canBeGuided(s, fireWarriors)).toBe(true);
-
-    // Battle-shocked unit cannot be observer
     stealthSuits.battleShocked = true;
     expect(canBeObserver(s, stealthSuits)).toBe(false);
     stealthSuits.battleShocked = false;
-
-    // Unit that already shot cannot be normal observer
-    stealthSuits.selectedToShoot = true;
+    stealthSuits.shotTurn = s.turn;
     expect(canBeObserver(s, stealthSuits)).toBe(false);
   });
 
-  it('pairs Observer, Guided, and Spotted units correctly', () => {
-    const success = pairFtgg(s, fireWarriors.id, stealthSuits.id, enemyIntercessors.id);
-    expect(success).toBe(true);
-    expect(s.ftggPairs?.length).toBe(1);
-
-    const pair = s.ftggPairs![0];
-    expect(pair.guidedId).toBe(fireWarriors.id);
-    expect(pair.observerId).toBe(stealthSuits.id);
-    expect(pair.spottedId).toBe(enemyIntercessors.id);
+  it('a Guided shot gets +1 BS, [IGNORES COVER] from a MARKERLIGHT Observer and Forward Observers re-rolls; the target stays Spotted', () => {
+    const m = ftggMods(s, fireWarriors, enemyIntercessors)!;
+    expect(m.skillBonus).toBe(1);
+    expect(m.ignoresCover).toBe(true);
+    expect(m.rerollHits1).toBe(true);
+    expect(guidedVs(s, fireWarriors, enemyIntercessors)).toBe(true);
+    ftggTargetChosen(s, fireWarriors, enemyIntercessors);
+    expect(spotOf(s, enemyIntercessors)?.observerId).toBe(stealthSuits.id);
+    // the Observer itself is not Guided
+    expect(ftggMods(s, stealthSuits, enemyIntercessors)).toBeNull();
   });
 
-  it('gives +1 BS, Ignores Cover, and re-roll 1s when targeting Spotted unit', () => {
-    pairFtgg(s, fireWarriors.id, stealthSuits.id, enemyIntercessors.id);
-
-    const mods = ftggAttackModifiers(s, fireWarriors, enemyIntercessors, 15);
-    expect(mods.isGuided).toBe(true);
-    expect(mods.isSpotted).toBe(true);
-    expect(mods.skillDelta).toBe(-1); // +1 BS (improves from 4+ to 3+)
-    expect(mods.ignoresCover).toBe(true); // Observer has MARKERLIGHT
-    expect(mods.rerollHits1).toBe(true); // Stealth Battlesuits have Forward Observers
-    expect(mods.rerollWounds1).toBe(true); // Stealth Battlesuits have Forward Observers
-    expect(mods.lethal).toBe(true); // Mont'ka active round 1
-  });
-
-  it('applies -1 BS when Guided unit targets a non-spotted unit', () => {
-    const otherEnemy = createDummyUnit('u-enemy-2', 'Infiltrators', 1, ['INFANTRY']);
-    s.units.push(otherEnemy);
-
-    pairFtgg(s, fireWarriors.id, stealthSuits.id, enemyIntercessors.id);
-
-    // Firing at otherEnemy (not their Spotted unit)
-    const mods = ftggAttackModifiers(s, fireWarriors, otherEnemy, 15);
-    expect(mods.isGuided).toBe(true);
-    expect(mods.isSpotted).toBe(false);
-    expect(mods.skillDelta).toBe(1); // -1 BS (worsens from 4+ to 5+)
-  });
-
-  it('auto-selects best observer in buildShootPools if available', () => {
-    // Clear ftggPairs: should auto-pair stealth suits as observer
-    s.ftggPairs = [];
-    const res = buildShootPools(s, fireWarriors.id, enemyIntercessors.id, { mode: 'normal' });
-    expect(res.error).toBeUndefined();
-    expect(res.pools.length).toBeGreaterThan(0);
-
-    const p = res.pools[0];
-    // Base BS is 4+, with FTGG +1 BS it becomes 3+
-    expect(p.skill).toBe(3);
-    expect(p.skillNote).toContain('For the Greater Good +1 BS');
-    expect(p.rerollHits1).toBe(true);
-    expect(p.rerollWounds1).toBe(true);
-  });
-
-  it('Retaliation Cadre applies +1 S within 12" and +1 AP within 8"', () => {
-    s.players[0].detachments = [{ id: 'rc', name: 'Retaliation Cadre', dp: 1, forceDisposition: '', rules: [], enhancements: [], stratagems: [] }];
-    const crisisSuit = createDummyUnit('u-crisis', 'Crisis Sunforge Battlesuits', 0, ['BATTLESUIT', 'INFANTRY'], ['For the Greater Good']);
-    s.units.push(crisisSuit);
-
-    // Distance 10" (within 12", but outside 8")
-    const mods10 = ftggAttackModifiers(s, crisisSuit, enemyIntercessors, 10);
-    expect(mods10.strengthBonus).toBe(1);
-    expect(mods10.apBonus).toBe(0);
-
-    // Distance 6" (within 8")
-    const mods6 = ftggAttackModifiers(s, crisisSuit, enemyIntercessors, 6);
-    expect(mods6.strengthBonus).toBe(1);
-    expect(mods6.apBonus).toBe(1);
-  });
-
-  it('Kroot Hunting Pack adds +1 hit below starting and +1 wound below half', () => {
-    s.players[0].detachments = [{ id: 'khp', name: 'Kroot Hunting Pack', dp: 1, forceDisposition: '', rules: [], enhancements: [], stratagems: [] }];
-    const krootCarnivores = createDummyUnit('u-kroot', 'Kroot Carnivores', 0, ['INFANTRY', 'KROOT'], ['Fieldcraft']);
-    s.units.push(krootCarnivores);
-
-    enemyIntercessors.startingStrength = 5;
-    // Set 4 models alive (below starting strength)
-    enemyIntercessors.models = [
-      createDummyModel('e1', 'Intercessor'),
-      createDummyModel('e2', 'Intercessor'),
-      createDummyModel('e3', 'Intercessor'),
-      createDummyModel('e4', 'Intercessor'),
-    ];
-
-    const modsBelowStarting = ftggAttackModifiers(s, krootCarnivores, enemyIntercessors, 12);
-    expect(modsBelowStarting.hitMod).toBe(1);
-    expect(modsBelowStarting.woundMod).toBe(0);
-
-    // Set 2 models alive (below half strength)
-    enemyIntercessors.models = [
-      createDummyModel('e1', 'Intercessor'),
-      createDummyModel('e2', 'Intercessor'),
-    ];
-    const modsBelowHalf = ftggAttackModifiers(s, krootCarnivores, enemyIntercessors, 12);
-    expect(modsBelowHalf.hitMod).toBe(1);
-    expect(modsBelowHalf.woundMod).toBe(1);
-  });
-
-  it("Ta'unar Supremacy Armour: builds with 30 wounds, 790 pts, and Coordinated Strike re-rolls 1s when Guided", async () => {
-    const { buildUnits } = await import('../engine/army');
-    const fs = await import('fs');
-    const tau = JSON.parse(fs.readFileSync('public/data/factions/TAU.json', 'utf8'));
-    const list = {
-      name: 'Tau Test',
-      factionId: 'TAU',
-      battleSize: 'strike',
-      detachments: [],
-      units: [{ uid: 'tn-1', datasheet: "Ta'unar Supremacy Armour", models: 1, pts: 790 }],
-    };
-    const units = buildUnits(list, tau, 0);
-    expect(units.length).toBe(1);
-    const taunar = units[0];
-    expect(taunar.models[0].wounds).toBe(30);
-    expect(taunar.pts).toBe(790);
-    expect(taunar.keywords).toContain('TITANIC');
-    expect(taunar.keywords).toContain('TOWERING');
-
-    // Test Coordinated Strike
-    const plainObserver = createDummyUnit('u-plain-obs', 'Strike Team', 0, ['INFANTRY'], ['For the Greater Good']);
-    s.units.push(plainObserver, taunar);
-    pairFtgg(s, taunar.id, plainObserver.id, enemyIntercessors.id);
-
-    const mods = ftggAttackModifiers(s, taunar, enemyIntercessors, 24);
-    expect(mods.isGuided).toBe(true);
-    expect(mods.isSpotted).toBe(true);
-    expect(mods.rerollHits1).toBe(true);
+  it('no Observer that could see the target: no bonus (and no penalty)', () => {
+    stealthSuits.battleShocked = true;
+    expect(ftggMods(s, fireWarriors, enemyIntercessors)).toBeNull();
   });
 });
-

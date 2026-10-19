@@ -8,9 +8,9 @@ import { addCombatMods, addPoolFinisher } from '../engine/combatMods';
 import { addActionHandler, addChoiceHooks, addCondition, addDieRescue, addEffectSource, addModifier, addStratSpecial, addTargetFilter, on } from '../engine/events';
 import { heal, shockTest } from '../rules-engine/activations';
 import { applyMortalWounds } from '../engine/attack';
-import { boardUnits, log, other, unitDistance } from '../engine/state';
-import type { GameState } from '../engine/types';
-import { ftggAttackModifiers, getFtggPairForGuided, isTauArmy } from './tau';
+import { boardUnits, log, other, unitById, unitDistance } from '../engine/state';
+import type { GameState, UnitState } from '../engine/types';
+import { ftggMods, ftggTargetChosen, guidedVs, isTauArmy, observerFor, spotOf } from './tau';
 import { activeIds, blessingEffects, blessingsRoll, blessingsRoundStart, butchersFightStart } from './blessings';
 import { autoPact } from './darkPacts';
 import { destroyedThisRound, ecUnitWiped, initFavoured, noteTarget, pledgeRoundEnd, pledgeRoundStart, poisonTick, raisePledge, sensationalBlock, sensationalOk, snapshotEngaged, thrillBlock } from './emperorsChildren';
@@ -115,8 +115,10 @@ addActionHandler((s, a, x) => {
 });
 // Super-heavy Walker: Normal, Advance and Fall Back moves go through every model but TITANIC ones, and through terrain
 const SUPER_HEAVY = ['normal', 'advance', 'fallback'];
-addModifier('moveThroughModels', (_s, u, kind) => (SUPER_HEAVY.includes(kind) && superHeavy(u) ? 'titanic' : null));
-addModifier('moveThroughTerrain', (_s, u, kind) => SUPER_HEAVY.includes(kind) && superHeavy(u));
+// … and Heavy Walker (Stormsurge), the same movement
+const heavyWalker = (u: UnitState) => superHeavy(u) || u.abilities.some((a) => a.name === 'Heavy Walker');
+addModifier('moveThroughModels', (_s, u, kind) => (SUPER_HEAVY.includes(kind) && heavyWalker(u) ? 'titanic' : null));
+addModifier('moveThroughTerrain', (_s, u, kind) => SUPER_HEAVY.includes(kind) && heavyWalker(u));
 
 // Adepta Sororitas
 on('turnStart', (s, e) => sororitasTurnStart(s, e.p));
@@ -215,7 +217,12 @@ addActionHandler((s, a, x) => {
 });
 
 // T'au Empire: Mont'ka, the first three battle rounds: ranged weapons have [ASSAULT]
-addCondition('targetSpotted', (_c, { s, A, T }) => { const pr = getFtggPairForGuided(s, A); return !!T && !!pr && pr.spottedId === T.id; });
+addCondition('targetSpotted', (_c, { s, T }) => !!T && !!spotOf(s, T));
+addCondition('guided', (_c, { s, A, T }) => !!T && guidedVs(s, A, T));
+addCondition('targetSpottedBySelf', (_c, { s, A, T }) => !!T && spotOf(s, T)?.observerId === A.id);
+// Through Unity, Devastation / Coordinated Exploitation: the Observer of the Guided shot carries this Enhancement
+addCondition(/^observerEnh:/, (c, { s, A, T }) => !!T && guidedVs(s, A, T) && !!observerFor(s, A, T)?.enhancements?.some((e) => e.name === c.slice(12)));
+on('targetChosen', (s, e) => { if (s.phase === 'shooting') ftggTargetChosen(s, unitById(s, e.attackerId), unitById(s, e.targetId)); });
 addModifier('assaultWeapons', (s, u) => isTauArmy(s, u.owner) && (s.players[u.owner].detachments ?? []).some((d) => d.name.toLowerCase().includes('mont')) && s.round <= 3);
 
 // Thousand Sons: units that must Deep Strike within the Flow of Magic
@@ -235,11 +242,7 @@ addCondition('hallowed', (_c, x) => whollyHallowed(x.s, x.A));
 // Asked in this order for every weapon profile; the attacker's rules first, then the defender's.
 
 // T'au: For the Greater Good (ranged only)
-addCombatMods((x) => {
-  if (x.mode !== 'ranged') return null;
-  const f = ftggAttackModifiers(x.s, x.A, x.T, x.d);
-  return { ...f, skillBonus: -f.skillDelta };
-});
+addCombatMods((x) => (x.mode === 'ranged' ? ftggMods(x.s, x.A, x.T) : null));
 // Leagues of Votann
 // Drukhari
 addCombatMods((x) => drukhariAttackMods(x.s, x.A, x.T));

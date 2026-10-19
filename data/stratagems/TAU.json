@@ -1,4 +1,537 @@
 {
   "_comment": "Stratagems written by hand (key: the card name, or NAME@Detachment); the rest are read from the card text.",
-  "rules": {}
+  "rules": {
+    "COORDINATE TO ENGAGE": {
+      "targetKw": [
+        "T’AU EMPIRE"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetSpottedBySelf"
+          ],
+          "skill": 1
+        },
+        {
+          "attack": "ranged",
+          "if": [
+            "targetSpottedBySelf",
+            "kw:MARKERLIGHT"
+          ],
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "never",
+      "note": "Its attacks at the unit it spotted as an Observer",
+      "status": "auto"
+    },
+    "POINT-BLANK AMBUSH": {
+      "targetKw": [
+        "T’AU EMPIRE"
+      ],
+      "unitIf": [
+        "roundAtLeast:3"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetWithin:9"
+          ],
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "A TEMPTING TRAP": {
+      "targetKw": [
+        "T’AU EMPIRE"
+      ],
+      "unitIf": [
+        "roundAtLeast:3"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetInRangeOfObjective"
+          ],
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "partial",
+      "note": "Any objective marker (the card: the Trap objective marker picked the first time, not in the enemy deployment zone)"
+    },
+    "WALL OF MIRRORS": {
+      "targetKw": [
+        "STEALTH BATTLESUITS|GHOSTKEEL BATTLESUIT|COMMANDER SHADOWSUN"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "PHOTON GRENADES": {
+      "targetKw": [
+        "T’AU EMPIRE",
+        "GRENADES"
+      ],
+      "react": "enemyChargeDeclared",
+      "unitIf": [
+        "targetOfLast",
+        "!engaged"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ],
+      "enemyEffects": [
+        {
+          "chargeBonus": -2
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "COMBAT EMBARKATION": {
+      "targetKw": [
+        "T’AU EMPIRE",
+        "INFANTRY"
+      ],
+      "react": "enemyChargeDeclared",
+      "unitIf": [
+        "targetOfLast"
+      ],
+      "special": [
+        "embark"
+      ],
+      "botReact": "always",
+      "note": "The charge keeps its targets (the card: new ones can be picked)",
+      "status": "auto"
+    },
+    "COMBAT DEBARKATION": {
+      "targetKw": [
+        "T’AU EMPIRE",
+        "INFANTRY"
+      ],
+      "unitIf": [
+        "disembarkedThisTurn"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetClosest"
+          ],
+          "reroll": "wounds"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "FOCUSED FIRE": {
+      "targetKw": [
+        "T’AU EMPIRE"
+      ],
+      "unitIf": [
+        "!roundAtLeast:4"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "T’AU EMPIRE"
+        ]
+      },
+      "enemy": {
+        "visible": true
+      },
+      "enemyMark": "Focused Fire",
+      "effects": [
+        {
+          "if": [
+            "targetMarked:Focused Fire"
+          ],
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto",
+      "note": "Pick a second unit; both may still shoot other units (the card: only that enemy unit)"
+    },
+    "AGGRESSIVE MOBILITY": {
+      "targetKw": [
+        "T’AU EMPIRE"
+      ],
+      "effects": [
+        {
+          "advanceFixed": 6
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "PINPOINT COUNTER-OFFENSIVE": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "T’AU EMPIRE",
+        "!KROOT"
+      ],
+      "enemy": {
+        "killer": true
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "units": [
+              "!KROOT"
+            ],
+            "reroll": "hits"
+          }
+        }
+      ],
+      "enemyUntil": "battle",
+      "botReact": "always",
+      "status": "auto"
+    },
+    "PULSE ONSLAUGHT": {
+      "targetKw": [
+        "T’AU EMPIRE",
+        "INFANTRY",
+        "!KROOT"
+      ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true,
+        "notKw": [
+          "MONSTER",
+          "VEHICLE"
+        ]
+      },
+      "enemyEffects": [
+        {
+          "move": -2,
+          "advanceBonus": -2,
+          "chargeBonus": -2
+        }
+      ],
+      "enemyUntil": "endOfNextTurn",
+      "enemyMark": "shaken",
+      "bot": "never",
+      "status": "auto"
+    },
+    "COUNTERFIRE DEFENCE SYSTEMS": {
+      "targetKw": [
+        "T’AU EMPIRE"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "buffs": [
+        "damage-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "THE ARRO’KON PROTOCOL": {
+      "targetKw": [
+        "T’AU EMPIRE",
+        "BATTLESUIT"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetModelsAtLeast:6",
+            "!targetModelsAtLeast:11"
+          ],
+          "abilities": [
+            "sustained hits 1"
+          ]
+        },
+        {
+          "if": [
+            "targetModelsAtLeast:11"
+          ],
+          "abilities": [
+            "sustained hits 2"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "FAIL-SAFE DETONATOR": {
+      "status": "manual",
+      "bot": "never",
+      "note": "Not automated: picking the Deadly Demise result"
+    },
+    "THE TORCHSTAR GAMBIT": {
+      "targetKw": [
+        "T’AU EMPIRE",
+        "BATTLESUIT",
+        "FLY"
+      ],
+      "unitIf": [
+        "shotThisTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "M",
+          "noCharge": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "GRAV-INHIBITOR FIELD": {
+      "targetKw": [
+        "T’AU EMPIRE",
+        "BATTLESUIT"
+      ],
+      "react": "enemyChargeDeclared",
+      "unitIf": [
+        "targetOfLast"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        },
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 6,
+            "allOn": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "THE SHORTENED BLADE": {
+      "targetKw": [
+        "T’AU EMPIRE",
+        "BATTLESUIT"
+      ],
+      "targetFrom": "reserves",
+      "effects": [
+        {
+          "deepStrikeRange": 6
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "STIMM INJECTORS": {
+      "targetKw": [
+        "T’AU EMPIRE",
+        "BATTLESUIT"
+      ],
+      "react": "ownAttacked",
+      "buffs": [
+        "fnp6"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "JOIN THE HUNT": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "KROOT",
+        "INFANTRY|KROOT HOUNDS",
+        "!CHARACTER"
+      ],
+      "limit": "battle",
+      "special": [
+        "reserveAgain"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "A TRAP WELL LAID": {
+      "targetKw": [
+        "KROOT"
+      ],
+      "unitIf": [
+        "any:shotThisTurn||fightPhase"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "units": [
+              "KROOT"
+            ],
+            "ap": 1
+          }
+        }
+      ],
+      "bot": "never",
+      "note": "Used after your unit has attacked; Battle-shocked KROOT units still get it",
+      "status": "auto"
+    },
+    "THE GRISLY FEAST": {
+      "status": "manual",
+      "bot": "never",
+      "note": "Not automated: Battle-shock tests in the opponent's next Command phase"
+    },
+    "GUERRILLA WARRIORS": {
+      "targetKw": [
+        "KROOT"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "HIDDEN HUNTERS": {
+      "targetKw": [
+        "KROOT"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "targetableWithin": 18
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "EMP GRENADES": {
+      "targetKw": [
+        "KROOT",
+        "GRENADES"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "nearLast:8"
+      ],
+      "enemy": {
+        "lastActor": true,
+        "kw": [
+          "VEHICLE"
+        ]
+      },
+      "enemyEffects": [
+        {
+          "skill": -1
+        }
+      ],
+      "botReact": "always",
+      "status": "partial",
+      "note": "Offered when the VEHICLE attacks your KROOT unit (the card: any unit within 8\")"
+    },
+    "EXPERIMENTAL AMMUNITION": {
+      "targetKw": [
+        "BATTLESUIT",
+        "CHARACTER"
+      ],
+      "choice": [
+        {
+          "label": "+1 S",
+          "effects": [
+            {
+              "attack": "ranged",
+              "strength": 1
+            }
+          ]
+        },
+        {
+          "label": "+1 S and AP, [HAZARDOUS]",
+          "effects": [
+            {
+              "attack": "ranged",
+              "strength": 1,
+              "ap": 1,
+              "abilities": [
+                "hazardous"
+              ]
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "AUTOREACTIVE CAMOUFLAGE": {
+      "targetKw": [
+        "PATHFINDER TEAM|STEALTH BATTLESUITS"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase",
+        "hidden"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "save": 1
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "MICRODRONE SUPPORT": {
+      "status": "manual",
+      "bot": "never",
+      "note": "Not automated: Actions"
+    },
+    "MARKER BEACON": {
+      "targetKw": [
+        "PATHFINDER TEAM|STEALTH BATTLESUITS"
+      ],
+      "unitIf": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "secure": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    }
+  }
 }

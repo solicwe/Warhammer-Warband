@@ -5899,19 +5899,165 @@
       "armyRule": true
     },
     "Kauyon": {
-      "auto": "full"
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "T’AU EMPIRE"
+          ],
+          "attack": "ranged",
+          "if": [
+            "any:roundAtLeast:3||all:roundAtLeast:2&&enh:Exemplar of the Kauyon"
+          ],
+          "abilities": [
+            "sustained hits 1"
+          ]
+        },
+        {
+          "units": [
+            "T’AU EMPIRE"
+          ],
+          "attack": "ranged",
+          "if": [
+            "any:roundAtLeast:3||all:roundAtLeast:2&&enh:Exemplar of the Kauyon",
+            "guided"
+          ],
+          "ignoreMods": true
+        },
+        {
+          "units": [
+            "T’AU EMPIRE"
+          ],
+          "attack": "ranged",
+          "if": [
+            "observerEnh:Through Unity, Devastation"
+          ],
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ]
     },
     "Mont’ka": {
-      "auto": "full"
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "T’AU EMPIRE"
+          ],
+          "attack": "ranged",
+          "if": [
+            "any:!roundAtLeast:4||all:!roundAtLeast:5&&enh:Exemplar of the Mont’ka"
+          ],
+          "abilities": [
+            "assault"
+          ]
+        },
+        {
+          "units": [
+            "T’AU EMPIRE"
+          ],
+          "attack": "ranged",
+          "if": [
+            "any:!roundAtLeast:4||all:!roundAtLeast:5&&enh:Exemplar of the Mont’ka",
+            "guided"
+          ],
+          "abilities": [
+            "lethal hits"
+          ]
+        },
+        {
+          "units": [
+            "T’AU EMPIRE"
+          ],
+          "attack": "ranged",
+          "if": [
+            "observerEnh:Coordinated Exploitation"
+          ],
+          "abilities": [
+            "sustained hits 1"
+          ]
+        }
+      ]
     },
     "Mont'ka": {
       "auto": "full"
     },
     "Retaliation Cadre": {
-      "auto": "full"
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "T’AU EMPIRE",
+            "BATTLESUIT"
+          ],
+          "attack": "ranged",
+          "if": [
+            "targetWithin:12"
+          ],
+          "strength": 1
+        },
+        {
+          "units": [
+            "T’AU EMPIRE",
+            "BATTLESUIT"
+          ],
+          "attack": "ranged",
+          "if": [
+            "targetWithin:8"
+          ],
+          "ap": 1
+        }
+      ]
     },
     "Kroot Hunting Pack": {
-      "auto": "full"
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "KROOT"
+          ],
+          "if": [
+            "targetBelowStarting"
+          ],
+          "hit": 1
+        },
+        {
+          "units": [
+            "KROOT"
+          ],
+          "if": [
+            "targetBelowHalf"
+          ],
+          "wound": 1
+        },
+        {
+          "units": [
+            "KROOT"
+          ],
+          "defend": {
+            "vs": "melee",
+            "inv": 6
+          }
+        },
+        {
+          "units": [
+            "KROOT"
+          ],
+          "defend": {
+            "vs": "ranged",
+            "inv": 5
+          }
+        },
+        {
+          "units": [
+            "KROOT CARNIVORES"
+          ],
+          "addKeywords": [
+            "BATTLELINE"
+          ]
+        }
+      ]
     },
     "Strands of Fate": {
       "auto": "full",
@@ -8763,6 +8909,85 @@
               "on": "self",
               "reserves": true,
               "earlyArrival": true
+            }
+          ]
+        }
+      ]
+    },
+    "Auxiliary Cadre": {
+      "auto": "full",
+      "acts": [
+        {
+          "when": "shooting",
+          "units": [
+            "KROOT|VESPID STINGWINGS"
+          ],
+          "limit": "phase",
+          "botUse": "always",
+          "label": "Harnessed Alien Instincts: prey-mark an enemy unit within 12\" (+3\" detection range)",
+          "target": {
+            "side": "enemy",
+            "range": 12,
+            "visible": true
+          },
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "detection": 3
+                }
+              ],
+              "until": "turn",
+              "mark": "prey-marked"
+            }
+          ]
+        },
+        {
+          "when": "afterShooting",
+          "auto": true,
+          "units": [
+            "KROOT|VESPID STINGWINGS"
+          ],
+          "if": [
+            "any:near:6:GHOSTKEEL BATTLESUIT||near:6:STEALTH BATTLESUITS"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "unshot": true
+            }
+          ]
+        }
+      ],
+      "manual": "Prey-marked lasts until the end of the turn"
+    },
+    "Experimental Prototype Cadre": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "BATTLESUIT",
+            "CHARACTER"
+          ],
+          "attack": "ranged",
+          "rangeBonus": 6
+        }
+      ]
+    },
+    "Advanced Acquisition Cadre": {
+      "auto": "full",
+      "acts": [
+        {
+          "when": "afterShooting",
+          "auto": true,
+          "units": [
+            "PATHFINDER TEAM|STEALTH BATTLESUITS"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "unshot": true
             }
           ]
         }

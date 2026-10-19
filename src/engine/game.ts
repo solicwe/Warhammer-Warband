@@ -797,6 +797,8 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string
   { name: 'Fleet Command', n: 3, infantryOnly: false }, // Chaos Space Marines: Masters of the Maelstrom
   { name: "Kaptin's Hat", n: 3, infantryOnly: true }, // Orks: Wreckas enhancement
   { name: 'Liber Heresius', n: 3, infantryOnly: false },
+  { name: 'Solid-image Projection Unit', n: 3, infantryOnly: false, units: ['T’AU EMPIRE'] }, // T'au: Kauyon
+  { name: 'Kroot Ambush', n: 2, infantryOnly: false, units: ['KROOT'] }, // T'au: Kroot Trail Shaper (its unit and one more)
   { name: 'Warrant of Trade', n: 3, infantryOnly: false, imperiumBattleline: true, rollD3: true },
   { name: 'Prince of Corsairs', n: 3, infantryOnly: false, units: ['AELDARI'] }, // Aeldari: Prince Yriel
   { name: 'Shedskin Raiment', n: 3, infantryOnly: false, units: ['HARLEQUINS'] },
