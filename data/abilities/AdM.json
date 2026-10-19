@@ -1401,8 +1401,8 @@
         "onAcquisition"
       ]
     },
-    "status": "partial",
-    "note": "One Hit or Wound roll becomes a 6 (saving throws are not offered)"
+    "status": "auto",
+    "note": "One Hit, Wound or saving throw roll becomes a 6, once per phase"
   },
   "Necromechanic": {
     "effects": [

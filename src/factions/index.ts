@@ -8,8 +8,8 @@ import { copyOrders, extraOrder, ordersShockFailed, orderTo, isOfficer } from '.
 import { amOppMovementEnd, disembarkOne, shootFrom, shootWith } from './amTransports';
 import { addCombatMods, addPoolFinisher } from '../engine/combatMods';
 import { emit, addActionHandler, addChoiceHooks, addCondition, addDieRescue, addEffectSource, addModifier, addStratSpecial, addTargetFilter, on } from '../engine/events';
-import { heal, setBackUp, shockTest } from '../rules-engine/activations';
-import { applyMortalWounds, killModel, onAttackStart, onMortalWounds } from '../engine/attack';
+import { heal, runActions, setBackUp, shockTest } from '../rules-engine/activations';
+import { applyMortalWounds, killModel, onAttackFinished, onAttackStart, onMortalWounds } from '../engine/attack';
 import { rollExpr, rollN } from '../engine/dice';
 import { addTimed, cond, effectsFor, unitFlags } from '../rules-engine/effects';
 import { alive, boardUnits, emitReact, onBoard, engagedEnemies, log, other, phaseKey, unitById, unitDistance } from '../engine/state';
@@ -27,7 +27,7 @@ import { auraBonus, bondAgain, choicePicked, choiceWhy, expend, knightsAttackDon
 import { discardMiracle, gainMiracleDice, resetPhaseActsOfFaith, sororitasCommandEnd, sororitasCommandStart, sororitasTurnStart, sororitasUnitDestroyed, tryActOfFaith } from './sororitas';
 import { aeldariBattleStart, aeldariRoundStart, canFocus, lucidEye, noteVibro, relentlessRaiders, resetPhaseStrandsOfFate, seerDiscounts, shadowFieldCheck, sonicDestruction, spendFocus, tryFateDie, voidThieves } from './aeldari';
 import { delvwerkeNavigator, nomadStrategist, gainYieldPoints, spendYieldPoints, tryUtharAncestralFortune, votannBattleStart, votannTurnEnd, votannCommandEnd, votannUnitDestroyed } from './votann';
-import { admechImperativePicked, onAcquisition, pickAcquisition } from './admech';
+import { admechImperativePicked, infoslaveSkull, onAcquisition, pickAcquisition } from './admech';
 import { drugBlocked, drugPicked, drukhariAction, drukhariAttackMods, drukhariBattleShockFailed, drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd, drukhariUnitDestroyed, isUnitEmpowered, losingWager, painReady, pickContract } from './drukhari';
 import { corruptRealspace, impossibleEclipse, seedTheGarden, daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsUnitDestroyed, isUnderShadowOfChaos, spendFluxToken, tryFlux } from './daemons';
 import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultAmbushUnitDestroyed, cultBattleStart, cultInfiltration, psionicParasitism, regimentalReinforcements } from './cult';
@@ -183,7 +183,15 @@ addCondition('fortify', (_c, x) => x.s.players[x.A.owner].votannAbility === 'For
 addCondition('yp', (_c, x) => (x.s.players[x.A.owner].yieldPoints ?? 0) >= 1);
 addCondition(/^yp:\d+$/, (c, x) => (x.s.players[x.A.owner].yieldPoints ?? 0) >= Number(c.slice(3)));
 addActionHandler((s, a, x) => { if (a.lov && a.lov > 0) spendYieldPoints(s, x.u.owner, a.lov, x.label); if (a.lov && a.lov < 0) gainYieldPoints(s, x.u.owner, -a.lov, x.label); });
-addActionHandler((s, a, x) => { if (a.disembarkOne) disembarkOne(s, x.on, x.label); if (a.shootFrom && x.target) shootFrom(s, x.on, x.target, a.shootFrom, x.label); });
+addActionHandler((s, a, x) => {
+  if (a.disembarkOne) disembarkOne(s, x.on, x.label);
+  if (!a.shootFrom || !x.target) return;
+  // VENGEANCE FLARE: 2YP lets a HEKATON LAND FORTRESS answer instead (when one stands within 6")
+  const hek = a.shootFrom.includes('KAPRICUS') && (s.players[x.on.owner].yieldPoints ?? 0) >= 2
+    && boardUnits(s, x.on.owner).some((f) => f.keywords.includes('HEKATON LAND FORTRESS') && unitDistance(f, x.on) <= 6 + 1e-6);
+  if (hek && spendYieldPoints(s, x.on.owner, 2, x.label)) shootFrom(s, x.on, x.target, 'HEKATON LAND FORTRESS', x.label);
+  else shootFrom(s, x.on, x.target, a.shootFrom, x.label);
+});
 addActionHandler((s, a, x) => {
   if (!a.lovHostile) return;
   const p = x.u.owner, yp = s.players[p].yieldPoints ?? 0;
@@ -390,9 +398,27 @@ on('modelKilled', (s, { u, m }) => {
     const q = unitFlags(s, x).ignoreEngaged;
     if (!q || !alive(x).some((n) => Math.hypot(n.x - m.x, n.y - m.y) <= n.r + m.r + 1 + 1e-6)) continue;
     const r = rollN(s, 1)[0];
-    if (r < q.on) continue;
-    if (q.cost === 'mortal') applyMortalWounds(s, x, 1, 'Ficklefire');
-    else { const v = alive(x).find((n) => !n.isCharacter) ?? alive(x)[0]; if (v) { log(s, `Callous Sacrifice: ${v.name} of ${x.name} is destroyed`, 'info', x.owner); killModel(s, x, v); } }
+    if (r < q.on || q.cost !== 'mortal') continue;
+    applyMortalWounds(s, x, 1, 'Ficklefire');
+  }
+});
+// ACCEPTABLE LOSSES: after shooting into the melee, each GENESTEALER CULTS unit engaged with the target suffers D3+1 mortal wounds on a 5+
+onAttackFinished((s, at) => {
+  const A = unitById(s, at.attackerId), T = unitById(s, at.targetId);
+  if (at.kind !== 'shoot' || !(A.timed ?? []).some((t) => t.label === 'ACCEPTABLE LOSSES')) return;
+  for (const g of engagedEnemies(s, T).filter((x) => x.owner === A.owner && x.factionKeywords.includes('GENESTEALER CULTS'))) {
+    if (rollN(s, 1)[0] >= 5) applyMortalWounds(s, g, rollExpr(s, 'D3+1').total, 'Acceptable Losses');
+  }
+});
+// CALLOUS SACRIFICE: each wound an enemy unit engaged with it loses: D6, on 4+ one of its models is destroyed after the attack
+onAttackFinished((s, at, info) => {
+  const T = unitById(s, at.targetId);
+  if (!info.woundsLost) return;
+  for (const x of engagedEnemies(s, T)) {
+    const q = unitFlags(s, x).ignoreEngaged;
+    if (!q || q.cost !== 'model') continue;
+    const lost = rollN(s, info.woundsLost).filter((r) => r >= q.on).length;
+    for (let i = 0; i < lost; i++) { const v = alive(x).find((n) => !n.isCharacter) ?? alive(x)[0]; if (!v) break; log(s, `Callous Sacrifice: ${v.name} of ${x.name} is destroyed`, 'info', x.owner); killModel(s, x, v); }
   }
 });
 
@@ -599,6 +625,87 @@ addActionHandler((s, a, x) => {
   if (tether && foes.some((e) => unitDistance(x.u, e) <= 8 + 1e-6)) x.u.cantCharge = true;
   log(s, `${x.label}: ${x.u.name} reappears ${keep}" from the enemy`, 'info', x.u.owner);
 });
+
+// Strike Swiftly: up to two T'AU EMPIRE units within 6" of the bearer (without Scouts) get Scouts 6" for the battle
+on('preBattle', (s) => {
+  for (const b of s.units.filter((u) => u.status === 'board' && u.enhancements.some((e) => e.name === 'Strike Swiftly'))) {
+    const picks = boardUnits(s, b.owner).filter((u) => u.id !== b.id && u.factionKeywords.includes('T’AU EMPIRE') && !unitFlags(s, u).scouts && !u.core.scouts && unitDistance(u, b) <= 6 + 1e-6)
+      .sort((p, q) => q.pts - p.pts).slice(0, 2);
+    for (const u of picks) addTimed(s, u, { e: { scouts: 6 }, label: 'Strike Swiftly', until: 'battle', by: b.owner });
+    if (picks.length) log(s, `Strike Swiftly: ${picks.map((u) => u.name).join(', ')} gain Scouts 6"`, 'info', b.owner);
+  }
+});
+
+// Psychostatic Disruption: once per battle in the first two rounds, an enemy unit arriving from Strategic Reserves is held back on a 4+
+addModifier('arrivalDenied', (s, u) => {
+  if ((u.used ?? {}).heldBack === String(s.turn)) return 'Held back by Psychostatic Disruption this turn';
+  if (s.round > 2) return null;
+  const b = boardUnits(s, other(u.owner)).find((x) => x.enhancements.some((e) => e.name === 'Psychostatic Disruption') && !x.used?.psychostatic);
+  if (!b) return null;
+  (b.used ??= {}).psychostatic = 'yes';
+  const r = rollN(s, 1)[0];
+  log(s, `Psychostatic Disruption: ${b.name} rolls ${r} against ${u.name}${r >= 4 ? ' — it cannot arrive this turn' : ''}`, 'roll', b.owner);
+  if (r < 4) return null;
+  (u.used ??= {}).heldBack = String(s.turn);
+  return 'Held back by Psychostatic Disruption this turn';
+});
+
+// Solar Pulse: the objective marker within 18" with the most enemy value in range; those units lose cover against NECRONS
+addActionHandler((s, a, x) => {
+  if (!a.solarPulse) return;
+  const near = (o: { x: number; y: number }, u: UnitState) => alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= 3 + 1e-6);
+  const foes = boardUnits(s, other(x.u.owner));
+  const objs = s.objectives.filter((o) => alive(x.u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= a.solarPulse! + 1e-6));
+  const o = objs.sort((p, q) => foes.filter((e) => near(q, e)).reduce((n, e) => n + e.pts, 0) - foes.filter((e) => near(p, e)).reduce((n, e) => n + e.pts, 0))[0];
+  if (!o) return;
+  const hit = foes.filter((e) => near(o, e));
+  for (const e of hit) addTimed(s, e, { e: { incoming: { by: x.u.owner, units: ['NECRONS'], noCover: true } }, label: x.label, until: 'phase', by: x.u.owner });
+  log(s, `${x.label}: ${hit.length ? hit.map((e) => e.name).join(', ') : 'no enemy unit'} near objective ${o.id} lose cover`, 'info', x.u.owner);
+});
+
+// A Tempting Trap: the Trap objective marker, picked the first time (not in the opponent's deployment zone), where the enemy stands
+addActionHandler((s, a, x) => {
+  const P = s.players[x.u.owner];
+  if (!a.trap || P.trapObj) return;
+  const opp = zonePoly(s, other(x.u.owner));
+  const val = (o: { x: number; y: number }) => boardUnits(s, other(x.u.owner)).filter((e) => alive(e).some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= 3 + 1e-6)).reduce((n, e) => n + e.pts, 0);
+  const o = s.objectives.filter((q) => !pointInPoly(q, opp)).sort((p, q) => val(q) - val(p))[0];
+  if (o) { P.trapObj = o.id; log(s, `${x.label}: objective ${o.id} becomes the Trap objective marker`, 'info', x.u.owner); }
+});
+addCondition('targetNearTrap', (_c, x) => {
+  const id = x.s.players[x.A.owner].trapObj;
+  // before the first use: any objective marker it could become (the bot weighs the stratagem with that)
+  const os = id ? x.s.objectives.filter((q) => q.id === id) : x.s.objectives.filter((q) => !pointInPoly(q, zonePoly(x.s, other(x.A.owner))));
+  return !!x.T && os.some((o) => alive(x.T!).some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= 3 + 1e-6));
+});
+
+// unravelling (Pantheon of Woe): the last enemy unit to act is within a NECRONS MONSTER's Distortion Fields (6", 9" when paid for)
+addCondition('lastUnravelling', (_c, x) => {
+  const L = x.s.lastAct && x.s.lastAct.owner !== x.A.owner ? x.s.units.find((u) => u.id === x.s.lastAct!.unitId) : undefined;
+  return !!L && boardUnits(x.s, x.A.owner).some((n) => n.keywords.includes('MONSTER') && n.factionKeywords.includes('NECRONS')
+    && unitDistance(n, L) <= ((n.timed ?? []).some((t) => t.mark === 'distortion9') ? 9 : 6) + 1e-6);
+});
+
+// Integrated Tactics (Brood Brother Auxilia): the ASTRA MILITARUM unit can then only shoot at the enemy unit caught in overlapping fire
+addModifier('targetBlock', (s, A, T, kind) => {
+  if (kind !== 'shoot' || !(A.timed ?? []).some((t) => t.mark === 'integrated')) return null;
+  return (T.timed ?? []).some((t) => t.mark === 'overlapping fire' && t.by === A.owner) ? null : 'Integrated Tactics: it can only shoot the unit caught in overlapping fire';
+});
+
+// On My Signal (Squadron Command): an enemy unit ends a Normal / Advance move within 8": the ordered unit makes a Normal move of up to D6" (once per turn)
+on('unitMoved', (s, { u }) => {
+  if (u.move !== 'normal' && u.move !== 'advance') return;
+  for (const x of boardUnits(s, other(u.owner)).filter((x) => (x.timed ?? []).some((t) => t.mark === 'order:On My Signal') && unitDistance(x, u) <= 8 + 1e-6)) {
+    if ((x.used ??= {}).onMySignal === String(s.turn) || x.extraMove || engagedEnemies(s, x).length) continue;
+    x.used.onMySignal = String(s.turn);
+    runActions(s, 'On My Signal', x, [{ on: 'self', move: 'D6' }], null);
+  }
+});
+
+// Protean Purpose: re-pick Singular Purpose once its enemy unit is gone
+addCondition(/^markGone:/, (c, x) => !boardUnits(x.s, other(x.A.owner)).some((e) => (e.timed ?? []).some((t) => t.mark === c.slice(9) && t.by === x.A.owner)));
+
+addActionHandler((s, a, x) => { if (a.infoslave) infoslaveSkull(s, x.u); });
 
 // Hyperphasic Recall: the unit steps back out next to a friendly MONOLITH
 addActionHandler((s, a, x) => {

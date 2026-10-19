@@ -7,7 +7,7 @@ import {
   setFreeDamageHook, targetToughness, woundNeed,
 } from '../engine/attack';
 import { RULES } from '../engine/config';
-import { d6, rollExpr, rollN } from '../engine/dice';
+import { d6, exprAverage, rollExpr, rollN } from '../engine/dice';
 import { battleShockMod, emit, rescueDie, runActionHandlers, shockDice } from '../engine/events';
 import {
   abilityOff, abilityRule, abilitySheet, activeRules, addTimed, cond, DET_RULES, fightOnDeathFor, grantsOf, isRiled, retaliateFor, type AbilityRule, type Effect, type FreeDieSpec,
@@ -70,7 +70,8 @@ export interface Action {
   mark?: string;
   heal?: string; // wounds regained (on the most damaged model)
   revive?: number; // destroyed models returned
-  reviveLater?: { on: number; wounds: number; ld?: boolean; woundsRoll?: string; half?: boolean }; // this model rolls at the end of the phase to come back (ld: a Leadership test instead; woundsRoll: with that many wounds; half: with half its Wounds)
+  reviveW1?: boolean; // with reviveRoll: W1 models only (Replenishing Swarms)
+  reviveLater?: { on: number; wounds: number; ld?: boolean; woundsRoll?: string; half?: boolean; miracle?: number; own?: boolean; once?: boolean }; // this model rolls at the end of the phase to come back (ld: a Leadership test instead; woundsRoll: with that many wounds; half: with half its Wounds)
   mortals?: string; // mortal wounds
   precisionMortals?: boolean; // mortal wounds can be allocated to a CHARACTER model as Precision
   mortalsVehicle?: string; // … instead, if the unit is a VEHICLE
@@ -116,6 +117,9 @@ export interface Action {
   hallowedArrival?: number; // from Deep Strike: wholly within your Hallowed Ground, more than X" from enemy units (Hallowed Beacon)
   surrogate?: boolean; // Surrogate Hosts: the target's NECRONS INFANTRY CHARACTER model is destroyed and this model takes its place (and its unit)
   displace?: number; // Transdimensional Displacement: an Advance of any length, through models, ending more than X" from enemy units
+  solarPulse?: number; // one objective marker within X": enemy units in range of it lose cover against this army's attacks (Solar Pulse)
+  trap?: boolean; // A Tempting Trap: pick the Trap objective marker the first time (not in the enemy deployment zone)
+  infoslave?: boolean; // INFOSLAVE SKULL: a second Acquisition objective marker
   recallTo?: { kw: string; within: number }; // remove the unit and set it up wholly within X" of a friendly model with that keyword, unengaged (Hyperphasic Recall)
   gateWithin?: number; // the target unit (in Reserves or on the battlefield) is set up again wholly within X" of this unit, unengaged (Eternity Gate)
   seed?: { name: string; n: string; range: number; noShoot?: boolean }; // a new unit of this datasheet (n: a number, D3, or 'models' = this unit's models) set up within range, more than 9" from enemies (Seed Spore Mines)
@@ -516,11 +520,11 @@ export function setBackUp(s: GameState, u: UnitState, m: ModelState, at: { x: nu
   return false;
 }
 
-function revive(s: GameState, u: UnitState, n: number) {
+function revive(s: GameState, u: UnitState, n: number, w1 = false) {
   let k = 0;
   for (const m of u.models) {
     if (k >= n) break;
-    if (!m.dead || m.isCharacter) continue;
+    if (!m.dead || m.isCharacter || (w1 && m.profile.W !== 1)) continue;
     const anchor = alive(u)[0];
     if (!anchor) break;
     m.dead = false;
@@ -793,7 +797,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       log(s, `${def.name}: +${n} A`, 'info', u.owner);
     }
     if (a.heal) { const n = heal(s, on, rollExpr(s, a.heal).total); log(s, `${def.name}: ${on.name} regains ${n} wounds`, 'info', u.owner); }
-    if (a.reviveRoll) { const n = revive(s, on, rollExpr(s, a.reviveRoll).total); log(s, `${def.name}: ${n} model(s) returned to ${on.name}`, 'info', u.owner); }
+    if (a.reviveRoll) { const n = revive(s, on, rollExpr(s, a.reviveRoll).total, a.reviveW1); log(s, `${def.name}: ${n} model(s) returned to ${on.name}`, 'info', u.owner); }
     if (a.mutate) {
       for (const o of s.objectives) {
         if (o.controller === u.owner && alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6)) { o.mutated = u.owner; o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is mutated`, 'info', u.owner); }
@@ -802,8 +806,15 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.revive) { const n = revive(s, on, a.revive); if (n) log(s, `${def.name}: ${n} model(s) returned to ${on.name}`, 'info', u.owner); }
     if (a.reviveLater && ctx.deadModelId) {
       const m = on.models.find((x) => x.id === ctx.deadModelId);
-      if (m) {
-        (s.revivals ??= []).push({ unitId: on.id, modelId: m.id, label: def.name, on: a.reviveLater.on, wounds: a.reviveLater.half ? Math.ceil(m.profile.W / 2) : a.reviveLater.wounds, x: m.x, y: m.y, ld: a.reviveLater.ld, woundsRoll: a.reviveLater.woundsRoll });
+      const onceKey = `revived:${def.name}:${m?.id}`;
+      if (m && a.reviveLater.once && (on.used ?? {})[onceKey]) log(s, `${def.name}: ${m.name} has already returned once this battle`, 'info', u.owner);
+      else if (m) {
+        if (a.reviveLater.once) (on.used ??= {})[onceKey] = 'yes';
+        // Divine Intervention: Miracle dice discarded for +1 wound each (as many as can still matter)
+        const pool = s.players[u.owner].miracleDice ?? [];
+        const bonus = a.reviveLater.miracle ? Math.min(a.reviveLater.miracle, pool.length, Math.max(0, m.profile.W - 2)) : 0;
+        if (bonus) { pool.sort((x, y) => y - x).splice(-bonus, bonus); log(s, `${def.name}: ${bonus} Miracle dice discarded`, 'info', u.owner); }
+        (s.revivals ??= []).push({ unitId: on.id, modelId: m.id, label: def.name, on: a.reviveLater.on, wounds: a.reviveLater.half ? Math.ceil(m.profile.W / 2) : a.reviveLater.wounds, x: m.x, y: m.y, ld: a.reviveLater.ld, woundsRoll: a.reviveLater.woundsRoll, bonus, own: a.reviveLater.own });
         log(s, `${def.name}: ${m.name} ${a.reviveLater.ld ? 'takes a Leadership test' : `rolls (${a.reviveLater.on}+)`} to return at the end of the phase`, 'info', u.owner);
       }
     }
@@ -1357,6 +1368,31 @@ function takeFreeDamage(s: GameState): boolean {
 }
 setFreeDamageHook(takeFreeDamage);
 
+/** "change one saving throw to a 6" (Artisan, Altered Reality): used by the defending unit on its first failed save
+ *  of a multi-damage attack (or of any attack on a one-model unit), once per its period. */
+export function freeSaveDie(s: GameState) {
+  const at = s.attack;
+  const p = at?.pools[at.idx];
+  if (!at || !p) return;
+  const T = unitById(s, at.targetId);
+  const k = p.saves.findIndex((d) => d.o !== 'pass');
+  if (k < 0 || (exprAverage(p.damage) < 2 && alive(T).length > 1)) return;
+  for (const a of T.abilities) {
+    const rule = abilityRule(T, a);
+    if (!rule?.freeDie || abilityOff(T, a)) continue;
+    for (const [i, f] of freeList(rule.freeDie).entries()) {
+      if (f.kind !== 'setSix' || (f.stage !== 'any' && f.stage !== 'save')) continue;
+      if (f.if && !f.if.every((c) => cond(c, { s, A: T, holder: T }))) continue;
+      const bag = `free:${a.name}#${i}`;
+      if ((T.used ?? {})[bag] === period(s, f.limit)) continue;
+      (T.used ??= {})[bag] = period(s, f.limit);
+      forceDie(s, 'save', k, 6);
+      log(s, `${a.name}: a failed saving throw becomes a 6 (${T.name})`, 'info', T.owner);
+      return;
+    }
+  }
+}
+
 export function useFreeDie(s: GameState, key: string, index: number): string | null {
   const f = freeDiceNow(s).find((x) => x.key === key);
   if (!f) return 'No longer available';
@@ -1462,7 +1498,7 @@ onAttackFinished((s, at, info) => {
   if (info.hits > 0 && !A.lastHits.ids.includes(T.id)) A.lastHits.ids.push(T.id);
   if (info.hits > 0) A.lastHits.byWeapon![T.id] = [...new Set([...(A.lastHits.byWeapon![T.id] ?? []), ...info.hitWeapons])];
   const ctx: FireCtx = { targetId: T.id, destroyed: info.destroyed ? [T.id] : [], killedCharacter: info.killedCharacter, modelsKilled: info.modelsKilled };
-  if (info.destroyed) { (A.used ??= {}).killedUnit = key; sagaProgress(s, at, A, T); }
+  if (info.destroyed) { (A.used ??= {}).killedUnit = key; A.used.everKilled = 'yes'; sagaProgress(s, at, A, T); }
   // Strikes of Retribution: melee attacks allocated to this model hurt the attackers
   if (at.kind === 'fight' && at.allocated) retaliate(s, at, A, T);
   const dm = deathMW.get(A.id);
@@ -1788,10 +1824,18 @@ export function resolveRevivals(s: GameState) {
       if (v < r.on) continue;
     }
     m.dead = false;
-    m.wounds = Math.min(m.profile.W, r.woundsRoll ? rollExpr(s, r.woundsRoll).total : r.wounds);
-    if (!setBackUp(s, u, m, { x: r.x, y: r.y })) { m.dead = true; m.wounds = 0; log(s, `${r.label}: no room to set it up`, 'info', u.owner); continue; }
-    if (u.status === 'destroyed') { u.status = 'board'; s.destroyedByTurn = s.destroyedByTurn.filter((d) => d.unitId !== u.id); }
-    pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
+    m.wounds = Math.min(m.profile.W, (r.woundsRoll ? rollExpr(s, r.woundsRoll).total : r.wounds) + (r.bonus ?? 0));
+    // Divine Intervention: it comes back as a unit of its own (starting strength 1), not in the unit it led
+    let home = u;
+    if (r.own && u.models.length > 1) {
+      home = structuredClone({ ...u, models: [] }) as UnitState;
+      home.id = `${u.id}-r${s.turn}`; home.models = [m]; home.startingStrength = 1; home.sources = [m.source]; home.name = m.name; home.status = 'board';
+      u.models = u.models.filter((x) => x !== m);
+      s.units.push(home);
+    }
+    if (!setBackUp(s, home, m, { x: r.x, y: r.y })) { m.dead = true; m.wounds = 0; log(s, `${r.label}: no room to set it up`, 'info', u.owner); continue; }
+    if (home.status === 'destroyed') { home.status = 'board'; s.destroyedByTurn = s.destroyedByTurn.filter((d) => d.unitId !== home.id); }
+    pushFx(s, { kind: 'place', unitId: home.id, owner: u.owner });
     log(s, `${r.label}: ${m.name} returns with ${m.wounds} wounds!`, 'info', u.owner);
   }
 }

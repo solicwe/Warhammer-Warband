@@ -412,9 +412,17 @@
       "status": "auto"
     },
     "INFOSLAVE SKULL": {
-      "status": "manual",
-      "note": "Not automated: a second Acquisition objective",
-      "bot": "never"
+      "targetKw": [
+        "TECH-PRIEST"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "infoslave": true
+        }
+      ],
+      "status": "auto",
+      "note": "The objective marker within 24\" we do not control, closest to our units, is also an Acquisition objective until the next Command phase"
     },
     "INCENSE EXHAUSTS": {
       "targetKw": [

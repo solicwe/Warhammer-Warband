@@ -1110,8 +1110,69 @@
     "note": "A PENITENT unit destroys an enemy unit: the lowest Miracle dice becomes a 6"
   },
   "Verse of Holy Piety": {
-    "status": "manual",
-    "note": "Not automated: a second Vow of Atonement for the bearer's unit"
+    "act": [
+      {
+        "when": "roundStart",
+        "auto": true,
+        "limit": "battle",
+        "label": "Verse of Holy Piety: The Path of the Penitent for the bearer's unit",
+        "if": [
+          "!marked:verse",
+          "farFromEnemies:12"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "move": 3
+              }
+            ],
+            "until": "endOfNextTurn"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "verse",
+            "until": "battle"
+          }
+        ]
+      },
+      {
+        "when": "roundStart",
+        "auto": true,
+        "limit": "battle",
+        "label": "Verse of Holy Piety: Absolution in Battle for the bearer's unit",
+        "if": [
+          "!marked:verse",
+          "!farFromEnemies:12"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "attack": "melee",
+                "if": [
+                  "charged"
+                ],
+                "attacks": 1,
+                "strength": 1
+              }
+            ],
+            "until": "endOfNextTurn"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "verse",
+            "until": "battle"
+          }
+        ]
+      }
+    ],
+    "status": "auto",
+    "note": "Once per battle at the start of a round: +3\" Move while the enemy is more than 12\" away, otherwise Absolution in Battle"
   },
   "Refrain of Enduring Faith": {
     "effects": [

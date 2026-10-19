@@ -2194,15 +2194,26 @@
       {
         "attack": "ranged",
         "if": [
-          "marked:Eternity Gate"
+          "marked:Eternity Gate",
+          "hardToWound"
         ],
         "abilities": [
           "lethal hits"
         ]
+      },
+      {
+        "attack": "ranged",
+        "if": [
+          "marked:Eternity Gate",
+          "!hardToWound"
+        ],
+        "abilities": [
+          "sustained hits 1"
+        ]
       }
     ],
-    "status": "partial",
-    "note": "[LETHAL HITS] after arriving through the Eternity Gate (the [SUSTAINED HITS 1] option is not offered)"
+    "status": "auto",
+    "note": "After arriving through the Eternity Gate: [LETHAL HITS] when the weapon wounds on a 4+ or worse, otherwise [SUSTAINED HITS 1]"
   },
   "Mortality Shroud (Aura)": {
     "effects": [

@@ -1764,8 +1764,8 @@
         "omniScrambler": 12
       }
     ],
-    "status": "partial",
-    "note": "Not automated: stopping a Strategic Reserves unit from arriving"
+    "status": "auto",
+    "note": "No enemy arrival from Reserves within 12\"; once per battle in the first two rounds an enemy Strategic Reserves arrival is stopped on a 4+"
   },
   "Synaptic Control": {
     "effects": [

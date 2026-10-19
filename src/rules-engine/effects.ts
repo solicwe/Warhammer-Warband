@@ -142,7 +142,7 @@ export interface Effect {
   defend?: Defend;
   incoming?: Incoming;
   // the unit
-  stealth?: boolean; loneOperative?: boolean; deepStrike?: boolean; fightsFirst?: boolean; scouts?: number; infiltrators?: boolean;
+  stealth?: boolean; loneOperative?: boolean; deepStrike?: boolean; fightsFirst?: boolean; noFightsFirst?: boolean; scouts?: number; infiltrators?: boolean;
   oc?: number; ocSet?: number; shockedOc?: number; ocHalve?: boolean; ocZero?: boolean;
   toughness?: number; move?: number; ld?: number;
   eligible?: Eligibility[];
@@ -298,7 +298,7 @@ export interface DetChoiceOption { id: string; name: string; text: string; effec
 export interface DetChoice { name: string; when: 'command' | 'round' | 'battle' | 'tithe'; uses: 'eachOnce' | 'limit' | 'free'; limit?: number; pick?: number; options: DetChoiceOption[]; groups?: string[]; rounds?: number[]; keep?: boolean }
 /** An ability a detachment / army rule gives to units ("Friendly CHAPLAIN units have the following ability: …"). */
 export interface DetGrant { units: string[]; models?: string; name: string; rule: AbilityRule }
-export interface FreeDieSpec { kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' | 'damage' | 'any'; limit: Limit; count?: number; units?: string[]; if?: string[]; attack?: 'melee' | 'ranged' }
+export interface FreeDieSpec { kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' | 'damage' | 'save' | 'any'; limit: Limit; count?: number; units?: string[]; if?: string[]; attack?: 'melee' | 'ranged' }
 export interface SagaSpec { kind: 'hunter' | 'beastslayer' | 'bold'; target?: Record<string, number> }
 export interface DetRule {
   auto: 'full' | 'partial' | 'manual'; effects?: Effect[]; choice?: DetChoice; manual?: string; acts?: unknown[];
@@ -764,6 +764,10 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('embarkedKw:')) { const k = c.slice(11); return s.units.some((x) => x.status === 'embarked' && x.embarkedIn === A.id && alive(x).some((m) => m.keywords.includes(k))); }
   if (c.startsWith('hasAbility:')) return A.abilities.some((a) => a.name === c.slice(11));
   if (c.startsWith('targetNearOwnDz:')) return !!x.T && alive(x.T).some((m) => bodyTouchesPoly(m, Number(c.slice(16)), toPoly(deploymentById(s.deploymentId).zones[s.players[x.T!.owner].role])));
+  if (c.startsWith('gearCount:')) { const [, n, g] = c.split(':'); return alive(A).filter((m) => (m.gear ?? []).some((x) => wk(x).includes(wk(g)))).length >= Number(n); }
+  if (c.startsWith('enemySeenWithin:')) { const r = Number(c.slice(16)); return onBoard(A) && boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= r + 1e-6 && alive(A).some((m) => alive(e).some((n) => hasLos(s, m, n)))); }
+  if (c.startsWith('holderMarked:')) return ((x.holder ?? A).timed ?? []).some((t) => t.mark === c.slice(13));
+  if (c.startsWith('woundsLeft:')) return alive(x.holder ?? A).reduce((n, m) => n + m.wounds, 0) >= Number(c.slice(11));
   if (c.startsWith('nearEnh:')) { const [, r, name] = c.split(':'); const self = x.holder ?? A; return boardUnits(s, self.owner).some((f) => f.enhancements.some((e) => e.name === name) && unitDistance(self, f) <= Number(r) + 1e-6); }
   if (c.startsWith('enh:')) return (x.holder ?? A).enhancements.some((e) => e.name === c.slice(4));
   // the target is engaged with a friendly unit with this keyword (Clutching Corruption: PLAGUE LEGIONS)
@@ -828,6 +832,8 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('friendMarked:')) return s.units.some((f) => f.owner === A.owner && (f.timed ?? []).some((t) => t.mark === c.slice(13)));
   if (c.startsWith('targetKwAll:')) return !!T && c.slice(12).split('|').some((k) => alive(T).every((n) => n.keywords.includes(k)));
   if (c.startsWith('detachment:')) return (s.players[A.owner].detachments ?? []).some((d) => d.name === c.slice(11));
+  // "targetNearMarked:9:PSI SURGE": the target is within X" of a unit of A's army carrying that mark
+  if (c.startsWith('targetNearMarked:')) { const [, rs, mk] = c.split(':'); return !!T && boardUnits(s, A.owner).some((f) => (f.timed ?? []).some((t) => t.mark === mk || t.label === mk) && unitDistance(f, T) <= Number(rs) + 1e-6); }
   if (c.startsWith('targetNearFriendly:')) {
     // "targetNearFriendly:9:THOUSAND SONS+PSYKER": the target is within X" of a unit of A's army with all those keywords
     const [, rs, kws = ''] = c.split(':');
@@ -840,6 +846,10 @@ export function cond(c: string, x: Ctx): boolean {
     case 'targetOnUncontrolledObjective': return !!T && s.objectives.some((o) => o.controller !== A.owner && unitInRange(s, T, o));
     case 'readied': return !!A.readied;
     case 'usedBattleAbility': return Object.values(A.used ?? {}).some((v) => v.startsWith('battle|'));
+    // [LETHAL HITS] beats [SUSTAINED HITS 1] when the weapon wounds on a 4+ or worse (Relocational Optimiser picks one)
+    case 'hardToWound': { if (!T || !x.p) return false; const S = Number(x.p.S ?? 0), Tt = Math.max(...alive(T).map((m) => m.profile.T)); return !(S >= Tt * 2 || S > Tt); }
+    // defending: no other unit of ours is closer to the attacker (Courageous Diversion: "the closest eligible target")
+    case 'closestToAttacker': return !!T && onBoard(T) && boardUnits(s, A.owner).every((f) => f.id === A.id || unitDistance(T, f) >= unitDistance(T, A) - 1e-6);
     case 'targetTougher': return !!T && Math.max(...alive(T).map((m) => m.profile.T)) > Math.max(...alive(x.holder ?? A).map((m) => m.profile.T));
     case 'markAlive': { const id = (x.holder ?? A).mark; return !!id && s.units.some((e) => e.id === id && e.status !== 'destroyed' && alive(e).length > 0); }
     // below starting / half strength, a single-model unit counting its wounds
@@ -1348,6 +1358,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     deepStrike: es.some((e) => e.deepStrike),
     infiltrators: es.some((e) => e.infiltrators),
     fightsFirst: es.some((e) => e.fightsFirst),
+    noFightsFirst: es.some((e) => e.noFightsFirst),
     scouts: Math.max(0, ...es.map((e) => e.scouts ?? 0)),
     move: es.some((e) => e.ignoreMods || e.ignoreMoveMods) ? es.reduce((a, e) => a + Math.max(0, e.move ?? 0), 0) : es.reduce((a, e) => a + (e.move ?? 0), 0),
     ld: es.reduce((a, e) => a + (e.ld ?? 0), 0),

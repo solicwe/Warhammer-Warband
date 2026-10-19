@@ -353,6 +353,7 @@ export interface PlayerState {
   extraPlague?: string;
   blight?: { objId?: string; terrain?: number; untilTurn?: number }[];
   poxTemplate?: UnitState;
+  trapObj?: string; // A Tempting Trap: the Trap objective marker
   voxBeacon?: { x: number; y: number }; // Vox-relay Beacon token (Cadian Recon Squad)
   tunnels?: { x: number; y: number }[]; // Subterranean Assault: Tunnel Markers
   sporeTemplates?: Record<string, UnitState>; // Spore Mines / Mucolid Spores units Tyranid abilities add mid-battle
@@ -401,6 +402,7 @@ export interface PlayerState {
   /** Belisarius Cawl: Machine Vengeance target unit id */
   machineVengeanceTarget?: string | null;
   acquisitionId?: string;
+  acquisitionExtra?: string; // INFOSLAVE SKULL: a second Acquisition objective marker until the next Command phase
   ypTurn?: { turn: number; gained: number; spent: number }; // Leagues of Votann: YP gained / spent this turn // Explorator Maniple: the Acquisition objective marker
   /** Drukhari: Pain Token pool (Power from Pain) */
   painTokens?: number;
@@ -777,7 +779,7 @@ export interface GameState {
   tempCharacters?: { unitId: string; modelId: string; by: PlayerId }[];
   /** Gift of Change: Chaos Spawn to set up at the end of the phase where a character died */
   spawns?: { owner: PlayerId; x: number; y: number; label: string }[];
-  revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number; ld?: boolean; woundsRoll?: string }[];
+  revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number; ld?: boolean; woundsRoll?: string; bonus?: number; own?: boolean }[];
   /** mortal wounds a unit suffers at the end of the current phase (Warpmeld Sacrifice) */
   phaseMortals?: { unitId: string; expr: string; label: string }[];
   /** Split (Horrors): destroyed Horrors that roll to split once the attacking unit has finished its attacks */

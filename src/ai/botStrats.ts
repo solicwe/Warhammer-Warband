@@ -4,7 +4,7 @@
 // attacked. It keeps a CP back for a re-roll until the last round unless the play is worth more.
 import { botOff } from './botWeights';
 import { on } from '../engine/events';
-import { freeDiceNow, useFreeDie } from '../rules-engine/activations';
+import { freeDiceNow, freeSaveDie, useFreeDie } from '../rules-engine/activations';
 import { applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, onAttackStart, onMortalWounds, rerollOne, setDiceHook, shootingModes, targetToughness, woundNeed } from '../engine/attack';
 import { chargeValue, isBrawler, maxRange, meleeKills, onObjective, oc, p2d6, perModel, rangedKills, unitValue } from './botEval';
 import { bestArrival } from './botMove';
@@ -98,6 +98,7 @@ setDiceHook((s, stage) => {
     log(s, `Command Re-roll: a failed ${stage === 'hit' ? 'Hit' : 'Wound'} roll re-rolled (${p.weapon})`, 'roll', A.owner);
     return;
   }
+  freeSaveDie(s); // Artisan / Altered Reality: one failed save becomes a 6
   // saves: the defender re-rolls its lowest failed save when the damage it stops is worth the CP
   if (!isBot(s, T.owner) || canUseStratagem(s, T.owner, 'command-reroll', T) || !spare(s, T.owner, 1)) return;
   const m = alive(T)[0];

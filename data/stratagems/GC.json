@@ -494,8 +494,8 @@
           "shootIntoEngagement": 48
         }
       ],
-      "status": "partial",
-      "note": "Your unit can shoot an enemy unit engaged with your units (the D3+1 mortal wounds on a 5+ to your engaged GENESTEALER CULTS units are not rolled)"
+      "status": "auto",
+      "note": "Your unit can shoot an enemy unit engaged with your units; afterwards each GENESTEALER CULTS unit engaged with it suffers D3+1 mortal wounds on a 5+"
     },
     "HYPERFEROCITY": {
       "targetKw": [
@@ -577,9 +577,10 @@
       "targetKw": [
         "TYRANIDS"
       ],
-      "status": "partial",
-      "note": "Not automated: Catalyst reaches 9\"",
-      "bot": "never"
+      "mark": "PSI SURGE",
+      "until": "nextCommand",
+      "status": "auto",
+      "note": "Catalyst reaches 9\" for this unit until your next Command phase"
     },
     "RESISTANCE TUNNELS": {
       "targetKw": [

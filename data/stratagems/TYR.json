@@ -68,12 +68,23 @@
       ],
       "effects": [
         {
-          "consolidate": 6
+          "consolidate": 6,
+          "consolidateEngage": true
         }
       ],
-      "bot": "attack",
-      "status": "partial",
-      "note": "Not automated: the Normal move instead of consolidating"
+      "status": "auto",
+      "note": "Consolidation up to 6\" when it ends engaged; out of combat within Synapse Range, a Normal move of up to 6\" instead",
+      "do": [
+        {
+          "on": "self",
+          "if": [
+            "inSynapse",
+            "!engaged"
+          ],
+          "move": "6"
+        }
+      ],
+      "until": "phase"
     },
     "PREDATORY IMPERATIVE": {
       "targetKw": [
@@ -882,13 +893,13 @@
           "do": [
             {
               "on": "self",
-              "revive": 3
+              "reviveRoll": "D3+1",
+              "reviveW1": true
             }
           ]
         }
       ],
-      "status": "partial",
-      "note": "The return option brings back 3 models (the card: D3+1, W1 models only)"
+      "status": "auto"
     },
     "ADAPTIVE OPTIMISATION": {
       "targetKw": [

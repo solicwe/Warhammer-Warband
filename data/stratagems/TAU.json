@@ -58,14 +58,20 @@
         {
           "attack": "ranged",
           "if": [
-            "targetInRangeOfObjective"
+            "targetNearTrap"
           ],
           "wound": 1
         }
       ],
       "bot": "attack",
-      "status": "partial",
-      "note": "Any objective marker (the card: the Trap objective marker picked the first time, not in the enemy deployment zone)"
+      "status": "auto",
+      "note": "The first use picks the Trap objective marker (not in the enemy deployment zone, where the most enemy points stand); +1 to wound against units in range of it",
+      "do": [
+        {
+          "on": "self",
+          "trap": true
+        }
+      ]
     },
     "WALL OF MIRRORS": {
       "targetKw": [
@@ -286,8 +292,13 @@
       ],
       "react": "deadlyDemise",
       "botReact": "always",
-      "status": "partial",
-      "note": "Used when the battlesuit dies: its Deadly Demise goes off without the roll (models without Deadly Demise are not covered)"
+      "status": "auto",
+      "note": "With Deadly Demise: it goes off without a roll. Without it: each unit within 6\" takes D3 mortal wounds on a 4+",
+      "noDemise": {
+        "range": 6,
+        "on": 4,
+        "expr": "D3"
+      }
     },
     "THE TORCHSTAR GAMBIT": {
       "targetKw": [
@@ -469,8 +480,9 @@
         }
       ],
       "botReact": "always",
-      "status": "partial",
-      "note": "Offered when the VEHICLE attacks your KROOT unit (the card: any unit within 8\")"
+      "status": "auto",
+      "note": "Any KROOT GRENADES unit within 8\" of the enemy VEHICLE that was just selected to shoot or fight",
+      "anyUnit": true
     },
     "EXPERIMENTAL AMMUNITION": {
       "targetKw": [

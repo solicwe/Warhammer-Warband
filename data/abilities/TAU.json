@@ -1027,19 +1027,9 @@
     "note": "Not automated: +1 OC on the objective marker picked before the first turn"
   },
   "Strike Swiftly": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "T’AU EMPIRE"
-        ],
-        "notSelf": true,
-        "scouts": 6
-      }
-    ],
-    "status": "partial",
-    "note": "Every unit within 6\" at the start of the battle (the card: up to two)"
+    "code": true,
+    "status": "auto",
+    "note": "After deployment: the two most expensive T'AU EMPIRE units within 6\" without Scouts get Scouts 6\""
   },
   "Internal Grenade Racks": {
     "effects": [
@@ -1177,17 +1167,34 @@
     "note": "After deployment: up to three units can be redeployed (into Strategic Reserves too)"
   },
   "Student of Kauyon": {
-    "effects": [
-      {
-        "scope": "army",
+    "act": {
+      "when": "formation",
+      "auto": true,
+      "limit": "battle",
+      "label": "Student of Kauyon: Deep Strike",
+      "target": {
+        "side": "friendly",
+        "anywhere": true,
+        "each": true,
+        "count": 3,
         "units": [
           "KROOT CARNIVORES|KROOT FARSTALKERS"
-        ],
-        "deepStrike": true
-      }
-    ],
-    "status": "partial",
-    "note": "Every KROOT CARNIVORES / FARSTALKERS unit has Deep Strike (the card: up to three)"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "deepStrike": true
+            }
+          ],
+          "until": "battle"
+        }
+      ]
+    },
+    "status": "auto",
+    "note": "Up to three KROOT CARNIVORES / FARSTALKERS units (the most expensive) gain Deep Strike"
   },
   "Admired Leader": {
     "act": {

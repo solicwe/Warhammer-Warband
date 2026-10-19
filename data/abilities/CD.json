@@ -1182,8 +1182,8 @@
       "stage": "any",
       "limit": "round"
     },
-    "status": "partial",
-    "note": "One Hit or Wound roll becomes a 6 (saving throws are not offered)"
+    "status": "auto",
+    "note": "One Hit, Wound or saving throw roll becomes a 6, once per battle round"
   },
   "Virulent Blessing (Psychic)": {
     "act": {
@@ -1944,8 +1944,8 @@
         "deadlyDemiseOn": 2
       }
     ],
-    "status": "partial",
-    "note": "Deadly Demise on 2+ (the D3+3 after it destroyed a unit is not applied)"
+    "status": "auto",
+    "note": "Deadly Demise on 2+; Deadly Demise D3+3 once the bearer has destroyed an enemy unit"
   },
   "Cankerblight": {
     "code": true,

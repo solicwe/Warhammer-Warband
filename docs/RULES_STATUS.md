@@ -18,30 +18,30 @@ Each cell: works / partial / text only / bug.
 | Faction | Army rules | Detachment rules | Enhancements | Stratagems | Unit abilities |
 |---|---|---|---|---|---|
 | Adeptus Custodes (AC) | 4 / 0 / 0 / 0 | 13 / 0 / 0 / 0 | 29 / 0 / 0 / 0 | 41 / 0 / 0 / 0 | 47 / 0 / 0 / 0 |
-| Aeldari (AE) | 3 / 0 / 0 / 0 | 15 / 0 / 0 / 0 | 52 / 0 / 0 / 0 | 78 / 0 / 0 / 0 | 152 / 0 / 1 / 0 |
-| Astra Militarum (AM) | 1 / 0 / 0 / 0 | 9 / 2 / 0 / 0 | 38 / 0 / 0 / 0 | 53 / 3 / 1 / 0 | 159 / 2 / 3 / 0 |
-| Adepta Sororitas (AS) | 1 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 24 / 0 / 1 / 0 | 35 / 1 / 0 / 0 | 83 / 0 / 0 / 0 |
-| Adeptus Mechanicus (AdM) | 1 / 0 / 0 / 0 | 9 / 1 / 0 / 0 | 33 / 1 / 0 / 0 | 49 / 0 / 1 / 0 | 78 / 0 / 0 / 0 |
+| Aeldari (AE) | 3 / 0 / 0 / 0 | 15 / 0 / 0 / 0 | 52 / 0 / 0 / 0 | 78 / 0 / 0 / 0 | 153 / 0 / 0 / 0 |
+| Astra Militarum (AM) | 1 / 0 / 0 / 0 | 11 / 0 / 0 / 0 | 38 / 0 / 0 / 0 | 57 / 0 / 0 / 0 | 164 / 0 / 0 / 0 |
+| Adepta Sororitas (AS) | 1 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 25 / 0 / 0 / 0 | 36 / 0 / 0 / 0 | 83 / 0 / 0 / 0 |
+| Adeptus Mechanicus (AdM) | 1 / 0 / 0 / 0 | 10 / 0 / 0 / 0 | 34 / 0 / 0 / 0 | 50 / 0 / 0 / 0 | 78 / 0 / 0 / 0 |
 | Imperial Agents (AoI) | 2 / 0 / 0 / 0 | 5 / 0 / 0 / 0 | 20 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 88 / 0 / 0 / 0 |
-| Chaos Daemons (CD) | 3 / 0 / 0 / 0 | 8 / 1 / 0 / 0 | 28 / 1 / 0 / 0 | 46 / 0 / 0 / 0 | 135 / 1 / 0 / 0 |
+| Chaos Daemons (CD) | 3 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 29 / 0 / 0 / 0 | 46 / 0 / 0 / 0 | 136 / 0 / 0 / 0 |
 | Chaos Space Marines (CSM) | 1 / 0 / 0 / 0 | 17 / 0 / 0 / 0 | 62 / 0 / 0 / 0 | 93 / 0 / 0 / 0 | 119 / 0 / 0 / 0 |
 | Death Guard (DG) | 2 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 70 / 0 / 0 / 0 |
 | Drukhari (DRU) | 2 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 102 / 0 / 0 / 0 |
 | Emperor’s Children (EC) | 2 / 0 / 0 / 0 | 10 / 0 / 0 / 0 | 34 / 0 / 0 / 0 | 51 / 0 / 0 / 0 | 46 / 0 / 0 / 0 |
-| Genestealer Cults (GC) | 3 / 0 / 0 / 0 | 8 / 1 / 0 / 0 | 29 / 0 / 1 / 0 | 43 / 1 / 1 / 0 | 172 / 2 / 4 / 0 |
-| Grey Knights (GK) | 1 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 29 / 0 / 1 / 0 | 44 / 1 / 0 / 0 | 44 / 0 / 0 / 0 |
-| Leagues of Votann (LoV) | 1 / 0 / 0 / 0 | 10 / 0 / 0 / 0 | 34 / 0 / 0 / 0 | 50 / 1 / 0 / 0 | 55 / 0 / 0 / 0 |
-| Necrons (NEC) | 1 / 0 / 0 / 0 | 11 / 1 / 0 / 0 | 40 / 1 / 1 / 0 | 59 / 2 / 2 / 0 | 109 / 0 / 2 / 0 |
+| Genestealer Cults (GC) | 3 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 178 / 0 / 0 / 0 |
+| Grey Knights (GK) | 1 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 44 / 0 / 0 / 0 |
+| Leagues of Votann (LoV) | 1 / 0 / 0 / 0 | 10 / 0 / 0 / 0 | 34 / 0 / 0 / 0 | 51 / 0 / 0 / 0 | 55 / 0 / 0 / 0 |
+| Necrons (NEC) | 1 / 0 / 0 / 0 | 12 / 0 / 0 / 0 | 42 / 0 / 0 / 0 | 63 / 0 / 0 / 0 | 111 / 0 / 0 / 0 |
 | Orks (ORK) | 3 / 0 / 0 / 0 | 15 / 0 / 0 / 0 | 38 / 0 / 0 / 0 | 40 / 0 / 0 / 0 | 109 / 0 / 0 / 0 |
 | Imperial Knights (QI) | 4 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 26 / 0 / 0 / 0 | 39 / 0 / 0 / 0 | 55 / 0 / 0 / 0 |
 | Chaos Knights (QT) | 3 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 28 / 0 / 0 / 0 | 39 / 0 / 0 / 0 | 45 / 0 / 0 / 0 |
 | Space Marines (SM) | 3 / 0 / 0 / 0 | 35 / 0 / 0 / 0 | 93 / 0 / 0 / 0 | 141 / 0 / 0 / 0 | 330 / 0 / 0 / 0 |
-| T’au Empire (TAU) | 1 / 0 / 0 / 0 | 7 / 0 / 0 / 0 | 21 / 2 / 0 / 0 | 25 / 3 / 0 / 0 | 94 / 1 / 0 / 0 |
+| T’au Empire (TAU) | 1 / 0 / 0 / 0 | 7 / 0 / 0 / 0 | 23 / 0 / 0 / 0 | 28 / 0 / 0 / 0 | 95 / 0 / 0 / 0 |
 | Adeptus Titanicus (TL) | 2 / 0 / 0 / 0 | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 | 8 / 0 / 0 / 0 |
 | Thousand Sons (TS) | 2 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 62 / 0 / 0 / 0 |
-| Tyranids (TYR) | 2 / 0 / 0 / 0 | 9 / 0 / 1 / 0 | 33 / 1 / 0 / 0 | 47 / 3 / 1 / 0 | 79 / 0 / 2 / 0 |
+| Tyranids (TYR) | 2 / 0 / 0 / 0 | 10 / 0 / 0 / 0 | 34 / 0 / 0 / 0 | 51 / 0 / 0 / 0 | 81 / 0 / 0 / 0 |
 | World Eaters (WE) | 2 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 26 / 0 / 0 / 0 | 39 / 0 / 0 / 0 | 59 / 0 / 0 / 0 |
-| **All** | 50 / 0 / 0 / 0 | 249 / 6 / 1 / 0 | 807 / 6 / 4 / 0 | 1177 / 15 / 6 / 0 | 2300 / 6 / 12 / 0 |
+| **All** | 50 / 0 / 0 / 0 | 256 / 0 / 0 / 0 | 817 / 0 / 0 / 0 | 1198 / 0 / 0 / 0 | 2318 / 0 / 0 / 0 |
 
 ## Known bugs (engine work needed)
 
@@ -82,108 +82,4 @@ Two bot-vs-bot games per faction with its quick-play list. Only the list's own d
 Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were checked rule by rule when they were added. The other factions were filled in by generator scripts (`scripts/gen-*`), and many of their entries only carry the card text with `"status": "auto"` and no effect. Those show as automated in the app but do nothing; they are counted as "text only" here.
 
 ## Text-only and partial rules by faction
-
-<details><summary>Aeldari (AE): 1</summary>
-
-**Unit abilities** (1): Linked Fire (Fire Prism)
-
-</details>
-
-<details><summary>Astra Militarum (AM): 11</summary>
-
-**Detachment rules** (2): Armoured Infantry [partial]; Steel Hammer [partial]
-
-**Stratagems** (4): CALLOUS SACRIFICE [partial]; CLOSE-RANGE DETECTION [partial]; COURAGEOUS DIVERSION [partial]; IMPOSING ARRIVAL
-
-**Unit abilities** (5): Counterstrategist (Commissar Yarrick) [partial]; Death Befitting An Officer (Leman Russ Commander); Deathstrike Missile (Deathstrike); Defence Line (Aegis Defence Line) [partial]; Plasma Warhead (Deathstrike)
-
-</details>
-
-<details><summary>Adepta Sororitas (AS): 2</summary>
-
-**Enhancements** (1): Verse of Holy Piety
-
-**Stratagems** (1): DIVINE INTERVENTION [partial]
-
-</details>
-
-<details><summary>Adeptus Mechanicus (AdM): 3</summary>
-
-**Detachment rules** (1): Haloscreed Battle Clade [partial]
-
-**Enhancements** (1): Artisan [partial]
-
-**Stratagems** (1): INFOSLAVE SKULL
-
-</details>
-
-<details><summary>Chaos Daemons (CD): 3</summary>
-
-**Detachment rules** (1): Legion of Excess [partial]
-
-**Enhancements** (1): Gateway Unto Damnation [partial]
-
-**Unit abilities** (1): Altered Reality (Psychic) (Fluxmaster) [partial]
-
-</details>
-
-<details><summary>Genestealer Cults (GC): 10</summary>
-
-**Detachment rules** (1): Brood Brother Auxilia [partial]
-
-**Enhancements** (1): Cartographic Data-leech
-
-**Stratagems** (2): ACCEPTABLE LOSSES [partial]; PSI SURGE
-
-**Unit abilities** (6): Death Befitting An Officer (Leman Russ Commander); Death Korps Medi-pack (Death Korps Of Krieg) [partial]; Deathstrike Missile (Deathstrike); Defence Line (Aegis Defence Line) [partial]; Parasitic Infection (Parasite Of Mortrex); Plasma Warhead (Deathstrike)
-
-</details>
-
-<details><summary>Grey Knights (GK): 2</summary>
-
-**Enhancements** (1): Sigil of Exigence
-
-**Stratagems** (1): HALLOWED BEACON [partial]
-
-</details>
-
-<details><summary>Leagues of Votann (LoV): 1</summary>
-
-**Stratagems** (1): VENGEANCE FLARE [partial]
-
-</details>
-
-<details><summary>Necrons (NEC): 9</summary>
-
-**Detachment rules** (1): Pantheon of Woe [partial]
-
-**Enhancements** (2): Reletavistic Tether; Relocational Optimiser [partial]
-
-**Stratagems** (4): DISHARMONISATION CASCADE [partial]; PHASE MELDING; SOLAR PULSE [partial]; SYNERGISTIC EMPOWERMENT
-
-**Unit abilities** (2): Surrogate Hosts (Trazyn The Infinite); Transdimensional Displacement (Transcendent C’tan)
-
-</details>
-
-<details><summary>T’au Empire (TAU): 6</summary>
-
-**Enhancements** (2): Strike Swiftly [partial]; Student of Kauyon [partial]
-
-**Stratagems** (3): A TEMPTING TRAP [partial]; EMP GRENADES [partial]; FAIL-SAFE DETONATOR [partial]
-
-**Unit abilities** (1): Homing Beacon (Stealth Battlesuits) [partial]
-
-</details>
-
-<details><summary>Tyranids (TYR): 8</summary>
-
-**Detachment rules** (1): Talons of the Norn Queen
-
-**Enhancements** (1): Psychostatic Disruption [partial]
-
-**Stratagems** (4): ADAPTIVE OPTIMISATION [partial]; OVERRUN [partial]; REPLENISHING SWARMS [partial]; SYNAPTIC GOADING
-
-**Unit abilities** (2): Harpooned (Norn Assimilator); Parasitic Infection (Parasite Of Mortrex)
-
-</details>
 

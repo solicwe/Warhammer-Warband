@@ -32,13 +32,17 @@
           "reviveLater": {
             "on": 1,
             "wounds": 0,
-            "woundsRoll": "D3"
+            "woundsRoll": "D3",
+            "miracle": 3,
+            "own": true,
+            "once": true
           }
         }
       ],
       "botReact": "always",
-      "status": "partial",
-      "note": "It returns in its unit with D3 wounds (the card: as a unit of its own; +1 wound for each Miracle dice discarded); not for Saint Celestine"
+      "status": "auto",
+      "note": "Returns at the end of the phase as a unit of its own with D3 wounds, +1 for each Miracle dice discarded (up to 3); not Saint Celestine; once per character",
+      "ctxModelNot": "SAINT CELESTINE"
     },
     "SPIRIT OF THE MARTYR": {
       "targetKw": [

@@ -49,6 +49,11 @@ function worth(s: GameState, p: PlayerId, rule: StratRule, u: UnitState): { v: n
         // SYNERGISTIC EMPOWERMENT: another unit with guns gets the CRYPTEK detachment abilities before it shoots
         if (a.buffNear?.effects.some((x) => x.addKeywords) && s.active === p && s.phase === 'shooting'
           && boardUnits(s, p).some((x) => x.id !== u.id && !x.selectedToShoot && unitDistance(x, u) <= a.buffNear!.range && !(a.buffNear!.effects[0].addKeywords ?? []).every((k) => x.keywords.includes(k)))) v += 8;
+        // SOLAR PULSE: enemy units in cover on an objective it can reach
+        if (a.solarPulse && s.active === p && s.phase === 'shooting' && s.objectives.some((o) => alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= a.solarPulse!)
+          && boardUnits(s, other(p)).some((e) => alive(e).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= 4)))) v += 10;
+        // INFOSLAVE SKULL: a second objective to reward
+        if (a.infoslave && s.phase === 'command' && s.active === p && !s.players[p].acquisitionExtra) v += 8;
         // IMPOSSIBLE ECLIPSE: the bot's battle-shock tests and Daemonic Terror reach further this phase
         if (a.cd && a.cd !== 'flux' && s.phase === 'command') v += 6;
         // ADAPTABLE AVARICE: Hostile Acquisition for the bot's own shooting and fighting
@@ -80,6 +85,11 @@ function worth(s: GameState, p: PlayerId, rule: StratRule, u: UnitState): { v: n
     // ADAPTIVE OPTIMISATION: a SYNAPSE unit among the swarm that has none nearby
     if ((rule.effects ?? []).some((x) => x.addKeywords?.includes('SYNAPSE')) && !u.keywords.includes('SYNAPSE') && s.phase === 'command'
       && boardUnits(s, p).some((x) => x.id !== u.id && unitDistance(x, u) <= 6 && !boardUnits(s, p).some((y) => y.keywords.includes('SYNAPSE') && unitDistance(y, x) <= 6))) v += 8;
+    // PSI SURGE: Catalyst reaches 9" around this Tyranid while GENESTEALER CULTS units are about to attack
+    if (rule.mark === 'PSI SURGE' && s.active === p && (s.phase === 'shooting' || s.phase === 'fight') && boardUnits(s, other(p)).some((e) => { const d = unitDistance(e, u); return d > 6 && d <= 9; })) v += 8;
+    // OVERRUN: a longer consolidation into the next enemy unit, or a free move out of combat
+    if ((rule.effects ?? []).some((x) => (x.consolidate ?? 0) > 3) && s.phase === 'fight' && s.fight?.fought.includes(u.id)
+      && boardUnits(s, other(p)).some((e) => unitDistance(e, u) > 1.05 && unitDistance(e, u) <= 6)) v += 7;
     // THE GRISLY FEAST: Battle-shock tests for the enemy units around it next Command phase
     if (rule.mark === 'grislyFeast') v += 6 * boardUnits(s, other(p)).filter((e) => unitDistance(e, u) <= 6).length;
     // VOX-RELAY: an Officer inside a transport gets to issue its Orders

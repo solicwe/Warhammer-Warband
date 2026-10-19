@@ -1142,8 +1142,8 @@
         }
       }
     ],
-    "status": "partial",
-    "note": "ASTRA MILITARUM INFANTRY within 3\" of the line and in cover have a 4+ invulnerable save (the card: in cover because of the line)"
+    "status": "auto",
+    "note": "ASTRA MILITARUM INFANTRY within 3\" of the line and in cover have a 4+ invulnerable save"
   },
   "Fortification": {
     "status": "info",
@@ -1517,8 +1517,8 @@
   },
   "Counterstrategist": {
     "code": true,
-    "status": "partial",
-    "note": "A REGIMENT unit within 6\" snap-shoots an enemy unit that moved within 8\" (the Normal move / Surge options are by hand)"
+    "status": "auto",
+    "note": "A REGIMENT unit within 6\" snap-shoots the enemy unit that moved within 8\"; when no snap shot is worth it, one that cannot shoot them surges D6\""
   },
   "Decisive Command": {
     "code": true,

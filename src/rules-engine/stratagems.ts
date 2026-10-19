@@ -24,10 +24,11 @@ import lovStrats from '../../data/stratagems/LoV.json';
 import necStrats from '../../data/stratagems/NEC.json';
 import tauStrats from '../../data/stratagems/TAU.json';
 import { parseAbilityText } from './abilityText';
+import { rollExpr, rollN } from '../engine/dice';
 import { emit, reactWorth, runStratSpecial, targetFilter } from '../engine/events';
 import { ldTest, runActions, runDeathQueue, shockTest, type Action } from './activations';
 import { kwPhrase } from '../engine/army';
-import { buildShootPools, expectedDamage, finishAttack, onAttackFinished, onAttackStart, onModelKilled, resolveAll, startAttack } from '../engine/attack';
+import { applyMortalWounds, buildShootPools, expectedDamage, finishAttack, onAttackFinished, onAttackStart, onModelKilled, resolveAll, startAttack } from '../engine/attack';
 import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
 import {
   afterReaction, autoCharge, setUnleashWrath, placeNear, shootNow, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, formationAt, validateDisembark,
@@ -81,6 +82,9 @@ export interface StratRule {
   special?: Special[];
   /** reactions to a destroyed unit: only units that were within X" of it (PROTOCOL OF THE VENGEFUL STARS) */
   nearVictim?: number;
+  anyUnit?: boolean; // a reaction any qualifying unit can make, not only the unit the moment is about (EMP Grenades)
+  /** FAIL-SAFE DETONATOR: when the model has no Deadly Demise, each unit within `range` takes `expr` mortal wounds on `on`+ */
+  noDemise?: { range: number; on: number; expr: string };
   /** a mark on the unit's timed effects (faction code reads it: VOX-RELAY) */
   mark?: string;
   /** the effects go to the CHARACTER models of the unit only; `addWounds`: +X to their Wounds for the rest of the battle (Eye of the Gods) */
@@ -720,7 +724,7 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
       if (!m || !(m.keywords.includes(rule.ctxModel) || new RegExp(rule.ctxModel, 'i').test(m.name))) continue;
       if (rule.ctxModelNot && m.keywords.includes(rule.ctxModelNot)) continue;
     }
-    const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked', 'ownKilled', 'actionStart', 'targeted', 'surgeStart'].includes(on)
+    const units = (!rule.anyUnit && (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked', 'ownKilled', 'actionStart', 'targeted', 'surgeStart'].includes(on))
       ? (ctx.unitId ? [unitById(s, ctx.unitId)] : [])
       : stratCandidates(s, p, st, ctx)
     ).filter((u) => u.owner === p && !stratagemBlock(s, p, st, u, { react: true, ctx }))
@@ -884,6 +888,20 @@ onModelKilled((s, u, m, killerId) => {
     else handleReact(s, p, on, ctx);
   };
   queue(u.owner, 'modelDestroyed', { unitId: u.id, modelId: m.id, killerId });
+  // FAIL-SAFE DETONATOR on a model without Deadly Demise (one with it is a 'deadlyDemise' reaction)
+  const hasDD = !!(m.deadlyDemise ?? (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1)));
+  const p = u.owner;
+  if (!hasDD && (playsItself(s, p) || (s.players[p].autoStrats ?? []).length)) failSafe: for (const d of s.players[p].detachments) for (const st of d.stratagems) {
+    const rule = stratRule(st, s.players[p].factionId, d.name);
+    if (!rule.noDemise || !(rule.targetKw ?? []).every((k) => m.keywords.includes(k)) || stratagemBlock(s, p, st, u, { react: true }) || s.players[p].cp < st.cp + (playsItself(s, p) ? 1 : 0)) continue;
+    if (!playsItself(s, p) && !(s.players[p].autoStrats ?? []).includes(st.id)) continue;
+    const q = rule.noDemise;
+    const near = s.units.filter((v) => v.id !== u.id && onBoard(v) && alive(v).some((n) => baseDist(n, m) <= q.range + 1e-6));
+    if (!near.some((v) => v.owner !== p)) continue;
+    applyDetachmentStratagem(s, p, st, u.id);
+    for (const v of near) if (rollN(s, 1)[0] >= q.on) applyMortalWounds(s, v, rollExpr(s, q.expr).total, st.name);
+    break failSafe;
+  }
   if (!alive(u).length) {
     queue(u.owner, 'ownDestroyed', { unitId: u.id, killerId });
     if (s.players[other(u.owner)].oathTarget === u.id) queue(other(u.owner), 'oathDestroyed', { unitId: u.id });

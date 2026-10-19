@@ -1260,48 +1260,92 @@
     ]
   },
   "Death Korps Medi-pack": {
-    "act": {
-      "when": "commandStart",
-      "auto": true,
-      "limit": "phase",
-      "if": [
-        "belowStartingStrength"
-      ],
-      "roll": "D3",
-      "table": [
-        {
-          "min": 1,
-          "max": 1,
-          "do": [
-            {
-              "on": "self",
-              "revive": 1
-            }
-          ]
-        },
-        {
-          "min": 2,
-          "max": 2,
-          "do": [
-            {
-              "on": "self",
-              "revive": 2
-            }
-          ]
-        },
-        {
-          "min": 3,
-          "do": [
-            {
-              "on": "self",
-              "revive": 3
-            }
-          ]
-        }
-      ]
-    },
-    "status": "partial",
-    "note": "Up to D3 Troopers return (the D3+1 with two medi-packs is not applied)"
+    "act": [
+      {
+        "when": "commandStart",
+        "auto": true,
+        "limit": "phase",
+        "if": [
+          "belowStartingStrength",
+          "!gearCount:2:medi-pack"
+        ],
+        "roll": "D3",
+        "table": [
+          {
+            "min": 1,
+            "max": 1,
+            "do": [
+              {
+                "on": "self",
+                "revive": 1
+              }
+            ]
+          },
+          {
+            "min": 2,
+            "max": 2,
+            "do": [
+              {
+                "on": "self",
+                "revive": 2
+              }
+            ]
+          },
+          {
+            "min": 3,
+            "do": [
+              {
+                "on": "self",
+                "revive": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "when": "commandStart",
+        "auto": true,
+        "limit": "phase",
+        "if": [
+          "belowStartingStrength",
+          "gearCount:2:medi-pack"
+        ],
+        "roll": "D3",
+        "table": [
+          {
+            "min": 1,
+            "max": 1,
+            "do": [
+              {
+                "on": "self",
+                "revive": 2
+              }
+            ]
+          },
+          {
+            "min": 2,
+            "max": 2,
+            "do": [
+              {
+                "on": "self",
+                "revive": 3
+              }
+            ]
+          },
+          {
+            "min": 3,
+            "do": [
+              {
+                "on": "self",
+                "revive": 4
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "status": "auto",
+    "note": "Up to D3 Troopers return (D3+1 with two medi-packs)"
   },
   "Mobile Command Vehicle": {
     "code": true,
@@ -1341,8 +1385,8 @@
         }
       }
     ],
-    "status": "partial",
-    "note": "ASTRA MILITARUM INFANTRY within 3\" of the line and in cover have a 4+ invulnerable save (the card: in cover because of the line)"
+    "status": "auto",
+    "note": "ASTRA MILITARUM INFANTRY within 3\" of the line and in cover have a 4+ invulnerable save"
   },
   "Fortification": {
     "status": "info",
@@ -1750,8 +1794,9 @@
     ]
   },
   "Cartographic Data-leech": {
-    "status": "partial",
-    "note": "Not automated: +1 BS for the transport's Firing Deck weapons"
+    "code": true,
+    "status": "auto",
+    "note": "While the bearer is embarked, the transport's Firing Deck weapons get +1 BS"
   },
   "Starfall Shells": {
     "act": {
@@ -2407,8 +2452,8 @@
         }
       }
     ],
-    "status": "partial",
-    "note": "ASTRA MILITARUM INFANTRY within 3\" of the line and in cover have a 4+ invulnerable save (the card: in cover because of the line)"
+    "status": "auto",
+    "note": "ASTRA MILITARUM INFANTRY within 3\" of the line and in cover have a 4+ invulnerable save"
   },
   "Fortification@Aegis Defence Line": {
     "status": "info",

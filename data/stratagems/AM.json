@@ -242,8 +242,8 @@
           }
         }
       ],
-      "status": "partial",
-      "note": "Rolled for each enemy model destroyed while engaged with your unit (the card: each wound lost)"
+      "status": "auto",
+      "note": "Each wound an enemy unit engaged with it loses: on a 4+ one of its models is destroyed after the attack"
     },
     "OVER THE TOP": {
       "targetKw": [
@@ -534,14 +534,22 @@
         {
           "defend": {
             "fnp": 6,
-            "vs": "ranged",
-            "hit": -1
+            "vs": "ranged"
+          }
+        },
+        {
+          "if": [
+            "closestToAttacker"
+          ],
+          "defend": {
+            "hit": -1,
+            "vs": "ranged"
           }
         }
       ],
       "bot": "defend",
-      "status": "partial",
-      "note": "-1 to Hit against every attack on your unit (the card: only while it is the closest eligible target)"
+      "status": "auto",
+      "note": "Feel No Pain 6+, and -1 to Hit while it is the closest unit to the attacker"
     },
     "DRAW THEM OUT": {
       "targetKw": [
@@ -984,14 +992,16 @@
       "targetKw": [
         "SCOUT SENTINEL|INFANTRY"
       ],
-      "status": "partial",
+      "status": "auto",
       "effects": [
         {
+          "if": [
+            "enemySeenWithin:6"
+          ],
           "detection": 3
         }
       ],
-      "bot": "never",
-      "note": "+3\" detection range for your unit (the card: against enemy units within 6\")"
+      "bot": "never"
     }
   }
 }

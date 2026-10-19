@@ -6,6 +6,7 @@ import { baseDist } from '../engine/geometry';
 import { alive, boardUnits, hasKw, isEngaged, log, other, unitDistance } from '../engine/state';
 import { canEmbarkIn, disembarkUnit, embarkUnit, embarkedIn, placeNear, shootNow, validateDisembark } from '../engine/game';
 import { buildShootPools, expectedDamage } from '../engine/attack';
+import { runActions } from '../rules-engine/activations';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 
 const has = (u: UnitState, name: string) => u.abilities.some((a) => a.name === name);
@@ -32,7 +33,7 @@ export function amOppMovementEnd(s: GameState, p: PlayerId) {
 }
 
 /** Counterstrategist (Yarrick): a REGIMENT unit within 6" snap-shoots (hits on 6s only) an enemy unit that ended a
- *  move or arrived within 8" of him, the one it hurts most. (The move and surge options are left to the player.) */
+ *  move or arrived within 8" of him, the one it hurts most; when no snap shot is worth it, a unit that cannot shoot them surges. */
 function counterstrategist(s: GameState, p: PlayerId) {
   for (const y of boardUnits(s, p).filter((x) => has(x, 'Counterstrategist'))) {
     const foes = boardUnits(s, other(p)).filter((e) => unitDistance(y, e) <= 8 + 1e-6 && (e.move !== 'stationary' || e.setUpTurn === s.turn));
@@ -42,7 +43,11 @@ function counterstrategist(s: GameState, p: PlayerId) {
       const v = r.error ? 0 : r.pools.reduce((a, q) => a + expectedDamage(s, q, e).models, 0);
       if (v > (best?.v ?? 0)) best = { u, e, v };
     }
-    if (best) shootNow(s, best.u, best.e, 'Counterstrategist', 'snap');
+    if (best && best.v >= 0.3) { shootNow(s, best.u, best.e, 'Counterstrategist', 'snap'); continue; }
+    // nothing worth a snap shot: a unit that can't shoot them surges D6" at the closest enemy instead
+    const surger = boardUnits(s, p).find((x) => x.keywords.includes('REGIMENT') && unitDistance(x, y) <= 6 + 1e-6 && !isEngaged(s, x) && !x.extraMove
+      && foes.some((e) => unitDistance(x, e) <= 9) && foes.every((e) => !!buildShootPools(s, x.id, e.id, { mode: 'snap' }).error));
+    if (surger) runActions(s, 'Counterstrategist', surger, [{ on: 'self', surge: 'D6' }], null);
   }
 }
 

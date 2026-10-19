@@ -288,20 +288,14 @@
       "targetKw": [
         "CRYPTEK"
       ],
-      "enemy": {
-        "all": true,
-        "range": 24
-      },
-      "enemyEffects": [
+      "do": [
         {
-          "incoming": {
-            "noCover": true
-          }
+          "on": "self",
+          "solarPulse": 18
         }
       ],
-      "status": "partial",
-      "note": "Every enemy unit within 24\" loses cover against NECRONS attacks (the card: units within range of one objective marker within 18\")",
-      "bot": "never"
+      "status": "auto",
+      "note": "The objective marker within 18\" with the most enemy points in range: those enemy units lose cover against NECRONS attacks this phase"
     },
     "REACTIVE SUBROUTINES": {
       "targetKw": [
@@ -970,13 +964,33 @@
       ],
       "react": "deadlyDemise",
       "botReact": "always",
-      "status": "partial",
-      "note": "Its Deadly Demise goes off without a roll (the card: on a 3+)"
+      "status": "auto",
+      "note": "Its Deadly Demise goes off on a 3+",
+      "effects": [
+        {
+          "deadlyDemiseOn": 3
+        }
+      ],
+      "until": "phase"
     },
     "PHASE MELDING": {
-      "status": "manual",
-      "note": "Not automated: Desperate Escape tests for every model of the unravelling unit",
-      "bot": "never"
+      "targetKw": [
+        "NECRONS"
+      ],
+      "react": "enemyFallBack",
+      "unitIf": [
+        "nearLast:1",
+        "lastUnravelling"
+      ],
+      "effects": [
+        {
+          "forceDesperate": true
+        }
+      ],
+      "until": "phase",
+      "botReact": "always",
+      "status": "auto",
+      "note": "Every model of the unravelling unit falling back takes a Desperate Escape test (-1 if Battle-shocked)"
     },
     "MOLECULAR EROSION": {
       "targetKw": [

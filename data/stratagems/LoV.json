@@ -657,7 +657,7 @@
       "react": "enemyShot",
       "unitIf": [
         "targetOfLast",
-        "near:6:KAPRICUS|SAGITAUR"
+        "near:6:KAPRICUS|SAGITAUR|HEKATON LAND FORTRESS"
       ],
       "enemy": {
         "lastActor": true
@@ -669,8 +669,8 @@
         }
       ],
       "botReact": "always",
-      "status": "partial",
-      "note": "A KAPRICUS or SAGITAUR unit shoots back (the 2YP HEKATON option is not offered)"
+      "status": "auto",
+      "note": "A KAPRICUS or SAGITAUR unit within 6\" shoots back; with 2YP a HEKATON LAND FORTRESS does instead"
     },
     "ILLUMINATED PRIORITY": {
       "targetKw": [

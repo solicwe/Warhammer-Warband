@@ -1,5 +1,5 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
-import { battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
+import { arrivalDenied, battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
 import '../factions/index';
 import { buildUnits, forChapter, newUid, transportFit } from './army';
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
@@ -893,6 +893,7 @@ function finishDeployment(s: GameState) {
   log(s, `Roll-off for first turn: ${s.players[0].name} ${ro.a} – ${s.players[1].name} ${ro.b} → ${s.players[ro.winner].name} goes first`, 'roll', null);
   s.round = 1;
   s.turn = -1;
+  emit(s, 'preBattle', {});
   if (s.units.some((u) => u.status === 'board' && scoutsOf(s, u))) {
     s.phase = 'scouts';
     s.deployTurn = ro.winner;
@@ -1389,6 +1390,8 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   const how = hasDeepStrike(s, u) ? 'deepStrike' : 'ingress';
   const chk = validatePlacement(s, u, pos, how);
   if (!chk.ok) return chk;
+  const denied = how === 'ingress' ? arrivalDenied(s, u) : null;
+  if (denied) return { ok: false, errors: [denied] } as MoveCheck;
   // Meteoric Descent: set up closer than usual, then no charge this turn
   const closest = Math.min(99, ...boardUnits(s, other(u.owner)).flatMap((e) => alive(e).flatMap((n) => alive(u).map((m) => { const p = pos.get(m.id) ?? m; return gap(bodyAt(m, p), n); }))));
   u.move = 'ingress'; // before placing: rules on arrival (Dread Reputation) read it
@@ -1782,7 +1785,7 @@ export function endPileInStep(s: GameState) {
   if (!fightCandidates(s).units.length) startConsolidate(s);
 }
 
-export const isFightsFirst = (s: GameState, u: UnitState) => u.chargedTurn === s.turn || !!u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn || u.buffs.some((b) => b.kind === 'fightsFirst') || unitFlags(s, u).fightsFirst;
+export const isFightsFirst = (s: GameState, u: UnitState) => !unitFlags(s, u).noFightsFirst && (u.chargedTurn === s.turn || !!u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn || u.buffs.some((b) => b.kind === 'fightsFirst') || unitFlags(s, u).fightsFirst);
 
 export function fightEligibleNow(s: GameState, u: UnitState) {
   const f = s.fight!;

@@ -161,7 +161,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const pools = new Map<string, Pool>();
   const tModels = alive(T);
   // All Is Rot: enemy units engaged only with that Plague Legions unit can still be shot
-  const tEngaged = engagedEnemies(s, T).some((f) => !unitFlags(s, f).allIsRot && !(f.id === A.id && unitFlags(s, A).ignoreEngaged));
+  // Steel Hammer: a TITANIC / SQUADRON unit shoots (Blast too) at a unit engaged only with itself
+  const tEngaged = engagedEnemies(s, T).some((f) => !unitFlags(s, f).allIsRot && !(f.id === A.id && (unitFlags(s, A).ignoreEngaged || unitFlags(s, A).noBigGunsPenalty)));
   const engagedWithTarget = engagedEnemies(s, A).some((e) => e.id === T.id);
   const tIsMV = tModels.some(isMV);
   const aFlags = unitFlags(s, A);
@@ -182,7 +183,10 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
 
   // Seal of Shrouding / Blazing Icon / Linebreaker Onslaught: enemy units cannot snap-shoot this unit
   if (opt.mode === 'snap' && unitFlags(s, T).noSnapTarget) return { pools: [], notes, error: 'This unit cannot be targeted by snap shooting' };
-  const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : [...alive(A), ...firingDeck(s, A, opt)];
+  const deck = opt.models ? [] : firingDeck(s, A, opt);
+  const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : [...alive(A), ...deck];
+  // Cartographic Data-leech: a bearer embarked within this TRANSPORT improves its Firing Deck weapons' BS by 1
+  const leech = deck.length > 0 && s.units.some((x) => x.embarkedIn === A.id && x.status === 'embarked' && x.enhancements.some((e) => e.name === 'Cartographic Data-leech'));
   // sight and cover depend on the model, not the weapon: worked out once per model
   const sees = new Map<ModelState, boolean>();
   const seesT = (m: ModelState) => { let v = sees.get(m); if (v === undefined) { v = tModels.some((t) => modelVisible(s, m, T, t, aFlags.ignoreLoneOperative)); sees.set(m, v); } return v; };
@@ -248,6 +252,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const ignoresCover = cm.ignoresCover || hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
       const cover = indirect || aFlags.givesCover || (!ignoresCover && (coverOf(m) || targetHasCover(s, T, d)));
       if (cover) { mods.skillDelta += 1; mods.skillNotes.push('Cover −1 BS'); }
+      if (leech && deck.includes(m)) { mods.skillDelta -= 1; mods.skillNotes.push('Cartographic Data-leech +1 BS'); }
       if (m.keywords.includes('TOWERING') && d <= RULES.plungingFire.toweringRange && !T.keywords.includes('AIRCRAFT')) { mods.skillDelta -= 1; mods.skillNotes.push('Plunging Fire +1 BS'); }
       const heavy = hasAbility(p, 'heavy') || grants(fx, inc, 'heavy') || cm.heavy;
       if (heavy && isOwnShootingPhase && !isEngaged(s, A) && A.setUpTurn !== s.turn && A.maxMoved <= RULES.heavyMaxMove + 1e-6) { mods.hit += 1; mods.hitNotes.push('Heavy +1'); }
@@ -845,7 +850,9 @@ export const onMortalWounds = (fn: MortalHook) => { mortalHooks.push(fn); };
 export const onAttackStart = (fn: StartHook) => { startHooks.push(fn); };
 
 export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: string) {
-  const dd = m.deadlyDemise ?? (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1) ? u.core.deadlyDemise : undefined);
+  const dd0 = m.deadlyDemise ?? (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1) ? u.core.deadlyDemise : undefined);
+  // Gateway Unto Damnation: Deadly Demise D3+3 once the bearer has destroyed an enemy unit
+  const dd = u.enhancements.some((e) => e.name === 'Gateway Unto Damnation') && u.used?.everKilled && (m.isCharacter || m.keywords.includes('MONSTER')) ? 'D3+3' : dd0;
   const at = s.attack, pl = at?.pools[at.idx];
   const byWeapon = dd && at && pl && at.targetId === u.id ? killDemiseOn(s, unitById(s, at.attackerId), pl.weapon) : 6;
   const ddOn = dd ? Math.min(unitFlags(s, u).deadlyDemiseOn, byWeapon) : 6; // worked out while the model still stands
@@ -887,9 +894,13 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   if (dd) {
     // Vengeful Animus: no roll, it blows up anyway
     // Detonator (Deceptors): the opponent makes it explode without a roll
-    const sure = demiseSure(s, u, m) || emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id }) || (!m.keywords.includes('TITANIC') && emitReact(s, other(u.owner), 'enemyDeadlyDemise', { unitId: u.id, modelId: m.id }));
+    // Disharmonisation Cascade: a reaction that lowers the roll needed (3+) instead of making it go off
+    let need = ddOn;
+    const reacted = !demiseSure(s, u, m) && emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id });
+    if (reacted) need = Math.min(ddOn, unitFlags(s, u).deadlyDemiseOn);
+    const sure = demiseSure(s, u, m) || (reacted && need >= ddOn) || (!reacted && !m.keywords.includes('TITANIC') && emitReact(s, other(u.owner), 'enemyDeadlyDemise', { unitId: u.id, modelId: m.id }));
     const r = sure ? 6 : d6(s);
-    if (r >= ddOn) { // Warpfire Infusion: 5+ near a sorcerer
+    if (r >= need) { // Warpfire Infusion: 5+ near a sorcerer
       log(s, `Deadly Demise (${dd}) from ${m.name}: ${sure ? 'it explodes' : 'rolled a 6!'}`, 'roll');
       // Machine Wrath: the wreck makes one last move before it blows
       emitReact(s, u.owner, 'deadlyDemiseSix', { unitId: u.id, modelId: m.id, six: true });

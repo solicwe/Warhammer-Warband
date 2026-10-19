@@ -5040,7 +5040,7 @@
       "manual": "+1 Order for each OFFICER (orders.ts)"
     },
     "Steel Hammer": {
-      "auto": "partial",
+      "auto": "full",
       "effects": [
         {
           "units": [
@@ -5050,12 +5050,12 @@
           "noBigGunsPenalty": true
         }
       ],
-      "manual": "Shooting enemy units engaged with it (Blast too) and giving a TITANIC unit the CHARACTER keyword are not automated"
+      "manual": "TITANIC units taking the CHARACTER keyword is a list-building choice"
     },
     "Armoured Infantry": {
-      "auto": "partial",
+      "auto": "full",
       "code": true,
-      "manual": "Officers can issue Orders to SQUADRON units (orders.ts); the On My Signal Order is not offered"
+      "manual": "Officers can issue Orders to SQUADRON units, and On My Signal to ARMOURED SKIRMISHER units (orders.ts)"
     },
     "Abhuman Auxiliaries": {
       "auto": "auto",
@@ -5718,8 +5718,32 @@
       ]
     },
     "Talons of the Norn Queen": {
-      "auto": "manual",
-      "manual": "Protean Purpose (picking Singular Purpose again) is not automated"
+      "auto": "full",
+      "acts": [
+        {
+          "when": "command",
+          "units": [
+            "NORN EMISSARY|NORN ASSIMILATOR"
+          ],
+          "limit": "battle",
+          "label": "Protean Purpose: a new Singular Purpose target",
+          "botUse": "always",
+          "botIf": [
+            "markGone:Singular Purpose"
+          ],
+          "target": {
+            "side": "enemy"
+          },
+          "do": [
+            {
+              "on": "target",
+              "buff": [],
+              "mark": "Singular Purpose",
+              "until": "battle"
+            }
+          ]
+        }
+      ]
     },
     "Higher Imperatives": {
       "auto": "full"
@@ -6836,7 +6860,7 @@
       "manual": "Warp Rifts: Deep Strike more than 6\" away in the Shadow of Chaos or near a matching Greater Daemon"
     },
     "Legion of Excess": {
-      "auto": "partial",
+      "auto": "full",
       "effects": [
         {
           "units": [
@@ -6870,14 +6894,16 @@
                     "hits",
                     "wounds1"
                   ]
+                },
+                {
+                  "noFightsFirst": true
                 }
               ],
               "until": "turn"
             }
           ]
         }
-      ],
-      "manual": "Losing Fights First with a Seductive Gambit is not applied"
+      ]
     },
     "Scintillating Legion": {
       "auto": "full",
@@ -7137,10 +7163,10 @@
       ]
     },
     "Brood Brother Auxilia": {
-      "auto": "partial",
+      "auto": "full",
       "acts": [
         {
-          "when": "selectedToShoot",
+          "when": "attackStart",
           "units": [
             "ASTRA MILITARUM"
           ],
@@ -7163,11 +7189,17 @@
               },
               "until": "phase",
               "mark": "overlapping fire"
+            },
+            {
+              "on": "self",
+              "buff": [],
+              "mark": "integrated",
+              "until": "phase"
             }
-          ]
+          ],
+          "auto": true
         }
-      ],
-      "manual": "The ASTRA MILITARUM unit can then only shoot at that enemy unit (not enforced)"
+      ]
     },
     "Final Day": {
       "auto": "full",
@@ -7178,6 +7210,16 @@
           ],
           "if": [
             "targetNearFriendly:6:TYRANIDS"
+          ],
+          "hit": 1
+        },
+        {
+          "units": [
+            "GENESTEALER CULTS"
+          ],
+          "if": [
+            "!targetNearFriendly:6:TYRANIDS",
+            "targetNearMarked:9:PSI SURGE"
           ],
           "hit": 1
         }
@@ -7648,7 +7690,7 @@
       "manual": "Also when a DESTROYER CULT unit leaves an enemy unit Below Half-strength (only a destroyed unit is tracked)"
     },
     "Pantheon of Woe": {
-      "auto": "partial",
+      "auto": "full",
       "effects": [
         {
           "units": [
@@ -7659,10 +7701,158 @@
           "range": 6,
           "defend": {
             "ap": -1
-          }
+          },
+          "if": [
+            "!holderMarked:distortion9"
+          ]
+        },
+        {
+          "units": [
+            "NECRONS",
+            "MONSTER"
+          ],
+          "scope": "enemyAura",
+          "range": 9,
+          "defend": {
+            "ap": -1
+          },
+          "if": [
+            "holderMarked:distortion9"
+          ]
         }
       ],
-      "manual": "Suffering 3 mortal wounds at the start of a phase for a 9\" aura is not automated"
+      "acts": [
+        {
+          "when": "shootingStart",
+          "auto": true,
+          "units": [
+            "NECRONS",
+            "MONSTER"
+          ],
+          "limit": "phase",
+          "label": "Cosmic Distortion: 3 mortal wounds for a 9\" Distortion Fields aura",
+          "if": [
+            "enemyBetween:6:9",
+            "woundsLeft:10"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "mortals": "3"
+            },
+            {
+              "on": "self",
+              "buff": [],
+              "mark": "distortion9",
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "oppShootingStart",
+          "auto": true,
+          "units": [
+            "NECRONS",
+            "MONSTER"
+          ],
+          "limit": "phase",
+          "label": "Cosmic Distortion: 3 mortal wounds for a 9\" Distortion Fields aura",
+          "if": [
+            "enemyBetween:6:9",
+            "woundsLeft:10"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "mortals": "3"
+            },
+            {
+              "on": "self",
+              "buff": [],
+              "mark": "distortion9",
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "fightStart",
+          "auto": true,
+          "units": [
+            "NECRONS",
+            "MONSTER"
+          ],
+          "limit": "phase",
+          "label": "Cosmic Distortion: 3 mortal wounds for a 9\" Distortion Fields aura",
+          "if": [
+            "enemyBetween:6:9",
+            "woundsLeft:10"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "mortals": "3"
+            },
+            {
+              "on": "self",
+              "buff": [],
+              "mark": "distortion9",
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "movementStart",
+          "auto": true,
+          "units": [
+            "NECRONS",
+            "MONSTER"
+          ],
+          "limit": "phase",
+          "label": "Cosmic Distortion: 3 mortal wounds for a 9\" Distortion Fields aura",
+          "if": [
+            "enemyBetween:6:9",
+            "woundsLeft:10"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "mortals": "3"
+            },
+            {
+              "on": "self",
+              "buff": [],
+              "mark": "distortion9",
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "commandStart",
+          "auto": true,
+          "units": [
+            "NECRONS",
+            "MONSTER"
+          ],
+          "limit": "phase",
+          "label": "Cosmic Distortion: 3 mortal wounds for a 9\" Distortion Fields aura",
+          "if": [
+            "enemyBetween:6:9",
+            "woundsLeft:10"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "mortals": "3"
+            },
+            {
+              "on": "self",
+              "buff": [],
+              "mark": "distortion9",
+              "until": "phase"
+            }
+          ]
+        }
+      ]
     },
     "Hand of the Dynasty": {
       "auto": "full",
@@ -8698,7 +8888,7 @@
       ]
     },
     "Haloscreed Battle Clade": {
-      "auto": "partial",
+      "auto": "full",
       "choice": {
         "name": "Override ability",
         "when": "command",
@@ -8786,8 +8976,7 @@
             }
           ]
         }
-      ],
-      "manual": "HALO OVERRIDE is given with a button on each unit (up to 1 / 2 / 3)"
+      ]
     },
     "Eradication Cohort": {
       "auto": "full",

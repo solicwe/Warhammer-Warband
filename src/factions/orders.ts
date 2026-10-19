@@ -8,7 +8,8 @@ export type OrderName =
   | 'Take Aim!'
   | 'First Rank, Fire! Second Rank, Fire!'
   | 'Take Cover!'
-  | 'Duty and Honour!';
+  | 'Duty and Honour!'
+  | 'On My Signal';
 
 export const ORDER_NAMES: OrderName[] = [
   'Take Aim!',
@@ -26,6 +27,7 @@ export const ORDER_EFFECTS: Record<OrderName, Effect[]> = {
   'First Rank, Fire! Second Rank, Fire!': [{ rapidFireAttacks: 1 }],
   'Take Cover!': [{ defend: { save: 1, saveMax3: true } }],
   'Duty and Honour!': [{ ld: 1, oc: 1 }],
+  'On My Signal': [{}], // a D6" Normal move when an enemy unit ends a move within 8" (factions/index.ts)
 };
 
 const hasEnh = (u: UnitState, n: string) => !!u.enhancements?.some((e) => e.name === n);
@@ -68,7 +70,8 @@ export function officerAllowedOrders(u: UnitState, s?: GameState): OrderName[] {
   // Absolutist Principles (Abhuman Auxiliaries): Commissars can also issue Take Aim!
   if (name === 'Commissar') return s && activeRules(s, u.owner).includes('Absolutist Principles') ? ['Duty and Honour!', 'Fix Bayonets!', 'Take Aim!'] : ['Duty and Honour!', 'Fix Bayonets!'];
   if (name.startsWith('Commissar Graves')) return ['Move! Move! Move!', 'Duty and Honour!', 'Fix Bayonets!'];
-  return ORDER_NAMES;
+  // Squadron Command (Armoured Infantry): On My Signal for ARMOURED SKIRMISHER units
+  return s && activeRules(s, u.owner).some((r) => r === 'Squadron Command' || r === 'Armoured Infantry') ? [...ORDER_NAMES, 'On My Signal'] : ORDER_NAMES;
 }
 
 const decisive = (s: GameState | undefined, u: UnitState) => !!s && u.abilities.some((a) => a.name === 'Decisive Command') && (s.decisiveTurn ?? -1) !== s.turn;
@@ -121,6 +124,9 @@ export function canOfficerTarget(officer: UnitState, target: UnitState, s?: Game
 
 const hasKwAny = (u: UnitState, ks: string[]) => ks.some((k) => u.keywords.includes(k));
 
+/** Squadron Command: SQUADRON units (not ARTILLERY, no model with 13+ Wounds) are ARMOURED SKIRMISHER units. */
+export const armouredSkirmisher = (u: UnitState) => u.keywords.includes('SQUADRON') && !u.keywords.includes('ARTILLERY') && u.models.every((m) => m.profile.W < 13);
+
 export function currentOrders(u: UnitState): string[] {
   return (u.timed ?? []).filter((t) => t.label.startsWith('Order: ')).map((t) => t.label.slice(7));
 }
@@ -138,6 +144,7 @@ export function issueOrder(s: GameState, officerId: string, targetId: string, or
   if (ordersRemaining(s, officer) <= 0) return `${officer.name} has no orders remaining this turn`;
   if (!officerAllowedOrders(officer, s).includes(order)) return `${officer.name} cannot issue ${order}`;
   if (!canOfficerTarget(officer, target, s)) return `${target.name} is not an eligible target for ${officer.name}`;
+  if (order === 'On My Signal' && !armouredSkirmisher(target)) return 'On My Signal: only ARMOURED SKIRMISHER units';
 
   // Unless Creed's Lord Castellan allows 2 orders to a Regiment unit, clear existing orders
   const creedAllowance = officer.name.includes('Creed') && target.keywords.includes('REGIMENT') && currentOrders(target).length === 1;
@@ -218,6 +225,8 @@ function pickOrder(officer: UnitState, target: UnitState, s: GameState): OrderNa
   let pick: OrderName = 'Take Aim!';
   if (target.keywords.includes('MOUNTED') || target.keywords.includes('BULLGRYN') || target.keywords.includes('OGRYN')) {
     pick = allowed.includes('Fix Bayonets!') ? 'Fix Bayonets!' : 'Move! Move! Move!';
+  } else if (allowed.includes('On My Signal') && armouredSkirmisher(target) && !boardUnits(s, target.owner === 0 ? 1 : 0).some((e) => unitDistance(e, target) <= 24)) {
+    pick = 'On My Signal'; // nothing to shoot yet: a free move when the enemy comes close
   } else if (target.models[0].profile.Sv >= 4 && allowed.includes('Take Cover!')) {
     pick = 'Take Cover!';
   } else if (allowed.includes('Take Aim!')) {
