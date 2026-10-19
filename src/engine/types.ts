@@ -527,6 +527,7 @@ export interface Pool {
   noHitReroll: boolean;
   rerollAllHits?: boolean;
   rerollHits1?: boolean; // from detachment rules (unit buffs are checked separately)
+  critWoundApSet?: number; // on a Critical Wound the attack has AP -X (Crack Shot)
   mortalPerWound?: number; // each wound also inflicts this many mortal wounds (Rapturous Blows)
   rerollWounds1?: boolean;
   rerollWounds12?: boolean; // re-roll wound rolls of 1 and 2

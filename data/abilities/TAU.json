@@ -70,11 +70,9 @@
       {
         "scope": "model",
         "attack": "ranged",
-        "critWoundAp": 3
+        "critWoundApSet": 3
       }
-    ],
-    "status": "partial",
-    "note": "Critical Wounds improve AP by 3 (the card: AP becomes -3)"
+    ]
   },
   "Way of the Short Blade": {
     "status": "auto",
@@ -482,12 +480,11 @@
     "effects": [
       {
         "defend": {
-          "negateOnce": "battle"
+          "negateOnce": "battle",
+          "negateUses": 2
         }
       }
-    ],
-    "status": "partial",
-    "note": "Once per battle (the card: twice)"
+    ]
   },
   "Nova Charge": {
     "act": {

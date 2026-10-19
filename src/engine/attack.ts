@@ -988,7 +988,7 @@ export function applyDamage(s: GameState) {
     if (kind === 'melee') (at.allocated ??= {})[m.id] = (at.allocated[m.id] ?? 0) + 1;
     const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0) - (md.saveBonusD1 && p.damage.trim() === '1' ? md.saveBonusD1 : 0) - (md.save ?? 0);
     const inv = effectiveInSv(s, T, m, at.kind !== 'fight', psychic, A);
-    const effAp = p.ap - (d.crit && p.critWoundAp ? p.critWoundAp : 0);
+    const effAp = d.crit && p.critWoundApSet ? Math.min(p.ap, -p.critWoundApSet) : p.ap - (d.crit && p.critWoundAp ? p.critWoundAp : 0);
     let ok = false;
     if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + effAp >= Math.max(RULES.modifierCaps.bestSave, sv);
     // an invulnerable save of 1 re-rolled (only when the invulnerable save is the one taken)

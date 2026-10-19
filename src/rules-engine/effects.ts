@@ -70,6 +70,7 @@ export interface Defend {
   saveMax3?: boolean; // save bonus cannot improve to better than 3+ (Take Cover!)
   minHit?: number; // attacks that target this unit fail on an unmodified hit roll below this (Speediest Freeks: 4)
   negateOncePerPhase?: boolean; // once per phase: a failed save's damage becomes 0
+  negateUses?: number; // with negateOnce 'battle': that many times per battle (Stealth Drones: twice)
   negateOnce?: 'turn' | 'round' | 'battle'; // … once per turn / battle round / battle instead (Surgeon Acolyte, Bastion Plate, Chaos Familiar)
   notPsychic?: boolean; // the Damage change does not apply to Psychic Attacks (Impossible Form)
   charOnly?: boolean; // only the unit's CHARACTER models (Silent Bodyguard)
@@ -111,6 +112,7 @@ export interface Effect {
   // offence
   hit?: number; wound?: number; ap?: number; strength?: number; attacks?: number; damage?: number;
   critWoundAp?: number; // improves AP by X on a Critical Wound
+  critWoundApSet?: number; // on a Critical Wound the attack has AP -X (Crack Shot)
   skill?: number; // improves WS / BS characteristic by X (Take Aim!, Fix Bayonets!)
   skillSet?: number; // the weapons' WS / BS characteristic is this (Spotter: 3+)
   rapidFireAttacks?: number; // improves Attacks of Rapid Fire weapons by X (First Rank, Fire! Second Rank, Fire!)
@@ -1026,7 +1028,7 @@ const rerolls = (e: { reroll?: Reroll | Reroll[] }): Reroll[] => (e.reroll ? (Ar
 export function offenceFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, w: WeaponData, p: WeaponProfileData, kind: 'melee' | 'ranged', d: number): Active[] {
   const x: Ctx = { s, A, T, m, w, p, d, kind };
   return effectsFor(s, A).filter((a) => (!a.e.attack || a.e.attack === kind) && modelOk(a, m) && weaponOk(a, w, p) && holds(a, x)
-    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.critWoundAp || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange || a.e.halfRangeAlways || a.e.mortalPerWound || a.e.skill || a.e.skillSet));
+    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.critWoundAp || a.e.critWoundApSet || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange || a.e.halfRangeAlways || a.e.mortalPerWound || a.e.skill || a.e.skillSet));
 }
 
 /** Marks on the target ("hit by Multi-spectrum Array: +1 to hit for your ADEPTUS ASTARTES") that help this attacker. */
@@ -1122,6 +1124,7 @@ function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list:
     if (e.wound) { pool.woundMod = clamp(pool.woundMod + e.wound, -woundCap, woundCap); bump(a.label, `${e.wound > 0 ? '+' : ''}${e.wound} wound`); }
     if (e.ap) { pool.ap -= e.ap; bump(a.label, `+${e.ap} AP`); }
     if (e.critWoundAp) { pool.critWoundAp = (pool.critWoundAp ?? 0) + e.critWoundAp; bump(a.label, `+${e.critWoundAp} AP on critical wound`); }
+    if (e.critWoundApSet) { pool.critWoundApSet = e.critWoundApSet; bump(a.label, `AP -${e.critWoundApSet} on critical wound`); }
     if (e.strength) { strength += e.strength; bump(a.label, `+${e.strength} S`); }
     if (e.attacks) { pool.attackBonus = (pool.attackBonus ?? 0) + e.attacks; bump(a.label, `+${e.attacks} A`); }
     if (e.damage) { pool.damage = addToExpr(pool.damage, e.damage); bump(a.label, `+${e.damage} D`); }
@@ -1231,7 +1234,7 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
     if (df.charOnly && !m.isCharacter) continue;
     if (kind !== 'mortal') {
       if (df.negateOncePerPhase && T.used?.[`negate:${m.id}`] !== phaseKey(s)) negate = true;
-      if (df.negateOnce && T.used?.[`negate:${df.negateOnce}`] !== negatePeriod(s, df.negateOnce)) { negate = true; negateKey = df.negateOnce; }
+      if (df.negateOnce && (df.negateUses && df.negateOnce === 'battle' ? Number(T.used?.['negate:battleN'] ?? 0) < df.negateUses : T.used?.[`negate:${df.negateOnce}`] !== negatePeriod(s, df.negateOnce))) { negate = true; negateKey = df.negateOnce; }
       if (df.damage && !(df.notPsychic && psychic)) damage += df.damage;
       if (df.halveDamage) halve = true;
       if (df.damageSet) damageSet = Math.min(damageSet ?? 99, df.damageSet);
@@ -1291,6 +1294,7 @@ export function retaliateFor(s: GameState, u: UnitState, m: ModelState): { on: n
 /** Use the once-per-phase "change the Damage of that attack to 0" of a model. */
 const negatePeriod = (s: GameState, k: 'turn' | 'round' | 'battle') => (k === 'turn' ? `t${s.turn}` : k === 'round' ? `r${s.round}` : 'battle');
 export const useNegate = (s: GameState, T: UnitState, m: ModelState, k?: 'turn' | 'round' | 'battle') => {
+  if (k === 'battle') (T.used ??= {})['negate:battleN'] = String(Number(T.used?.['negate:battleN'] ?? 0) + 1);
   if (k) (T.used ??= {})[`negate:${k}`] = negatePeriod(s, k); else (T.used ??= {})[`negate:${m.id}`] = phaseKey(s);
 };
 
