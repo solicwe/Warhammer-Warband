@@ -7,7 +7,7 @@ import { cpWorth, surplus, tryRule } from './botStrats';
 import { dist } from '../engine/geometry';
 import { unitVisibleTo } from '../engine/visibility';
 import { centre, isBrawler, maxRange, moveOf, objPoint, onObjective, unitValue } from './botEval';
-import { effectsFor, rollMods, targetHasCover, unitDoctrines, unitFlags } from '../rules-engine/effects';
+import { effectsFor, rollMods, targetHasCover, unitDoctrines, unitFlags, type Effect } from '../rules-engine/effects';
 import { chargeEligibility, commitMove, consolidateMode, levelOfControl, setPhaseEndHook, validateMove } from '../engine/game';
 import { setReactWorth } from '../engine/events';
 import { alive, boardUnits, engagedEnemies, isEngaged, onBoard as onBoardUnit, other, playsItself, unitDistance } from '../engine/state';
@@ -302,10 +302,13 @@ export function botMobileStratagem(s: GameState, u: UnitState, M: number) {
 export function botShootOnTheMove(s: GameState, u: UnitState) {
   if (!maxRange(u) || isBrawler(s, u)) return;
   if (!boardUnits(s, other(u.owner)).some((e) => unitDistance(u, e) <= maxRange(u) + moveOf(u))) return;
+  const helps = (fx: Effect[]) => fx.some((e) => (Array.isArray(e.eligible) ? e.eligible.includes('shootAfterFallBack') : e.eligible === 'shootAfterFallBack') || (Array.isArray(e.abilities) ? e.abilities.includes('assault') : e.abilities === 'assault'));
   for (const { st, rule } of strats(s, u.owner)) {
-    if (rule.react || !fxOf(rule).some((e) => (Array.isArray(e.eligible) ? e.eligible.includes('shootAfterFallBack') : e.eligible === 'shootAfterFallBack') || (Array.isArray(e.abilities) ? e.abilities.includes('assault') : e.abilities === 'assault'))) continue;
-    if (!ready(s, u.owner, st, u)) continue;
-    applyDetachmentStratagem(s, u.owner, st, u.id);
+    if (rule.react || !ready(s, u.owner, st, u)) continue;
+    // "select either …" (Boundless Zeal): the option that lets it shoot
+    const choice = rule.choice?.length ? stratChoices(s, rule, u).find(({ o }) => helps(o.effects ?? []))?.i : undefined;
+    if (!helps(fxOf(rule)) && choice === undefined) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id, { choice });
     return;
   }
 }
