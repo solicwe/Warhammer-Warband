@@ -6757,103 +6757,418 @@
     "Reanimation Protocols": {
       "auto": "full",
       "armyRule": true,
-      "desc": "At the start of your Command phase, each Necrons unit activates Reanimation Protocols: reanimates D3 wounds, restoring lost wounds to damaged models or returning destroyed models with full wounds."
+      "code": true,
+      "manual": "End of your Command phase: each unit with the ability heals D3 wounds, returning destroyed models one wound at a time (necrons.ts)"
     },
     "Awakened Dynasty": {
       "auto": "full",
-      "desc": "Command Protocols: While a Necrons unit is being led by a Character, each time a model in that unit makes an attack, add 1 to the Hit roll."
-    },
-    "Command Protocols": {
-      "auto": "full",
-      "desc": "While led by a Character, models in the unit add 1 to Hit rolls."
+      "effects": [
+        {
+          "units": [
+            "NECRONS"
+          ],
+          "if": [
+            "leaderAttached"
+          ],
+          "hit": 1
+        }
+      ]
     },
     "Annihilation Legion": {
       "auto": "full",
-      "desc": "Annihilation Protocol: Destroyer Cult and Flayed Ones units re-roll Charge rolls and add 1 to Charge rolls. In melee, models can fight on death on a 4+."
-    },
-    "Annihilation Protocol": {
-      "auto": "full",
-      "desc": "Destroyer Cult and Flayed Ones re-roll and get +1 to Charge rolls; 4+ fight on death in melee."
+      "effects": [
+        {
+          "units": [
+            "DESTROYER CULT|FLAYED ONES"
+          ],
+          "rerollCharge": true
+        },
+        {
+          "units": [
+            "DESTROYER CULT"
+          ],
+          "attack": "ranged",
+          "if": [
+            "targetClosest"
+          ],
+          "ap": 1
+        }
+      ],
+      "manual": "+1 to the Charge roll when a target of the charge is Below Half-strength (not automated)"
     },
     "Canoptek Court": {
       "auto": "full",
-      "desc": "Power Matrix: Cryptek and Canoptek models re-roll Hit rolls of 1 (or re-roll all Hit rolls if within the Power Matrix or within range of an objective you control)."
-    },
-    "Power Matrix": {
-      "auto": "full",
-      "desc": "Cryptek and Canoptek models re-roll Hit rolls of 1 (or all Hit rolls within Power Matrix / controlled objectives)."
+      "effects": [
+        {
+          "units": [
+            "CRYPTEK|CANOPTEK"
+          ],
+          "if": [
+            "!powerMatrix"
+          ],
+          "reroll": "hits1"
+        },
+        {
+          "units": [
+            "CRYPTEK|CANOPTEK"
+          ],
+          "if": [
+            "powerMatrix"
+          ],
+          "reroll": "hits"
+        }
+      ]
     },
     "Obeisance Phalanx": {
       "auto": "full",
-      "desc": "Worthy Foes: At the start of the battle, select one enemy unit. Overlord, Lychguard and Triarch units add 1 to Wound rolls against that enemy unit."
-    },
-    "Worthy Foes": {
-      "auto": "full",
-      "desc": "+1 to Wound rolls for Overlord, Lychguard, and Triarch units against the designated Worthy Foe."
+      "acts": [
+        {
+          "when": "command",
+          "auto": true,
+          "armyWide": true,
+          "units": [
+            "NECRONS"
+          ],
+          "limit": "turn",
+          "target": {
+            "side": "enemy",
+            "anywhere": true,
+            "closest": true
+          },
+          "do": [
+            {
+              "incoming": {
+                "units": [
+                  "NOBLE|LYCHGUARD|TRIARCH"
+                ],
+                "wound": 1
+              },
+              "until": "nextCommand",
+              "mark": "Worthy Foe"
+            }
+          ]
+        }
+      ],
+      "note": "The closest enemy unit becomes the Worthy Foe"
     },
     "Hypercrypt Legion": {
       "auto": "full",
-      "desc": "Hyperphasing: At the end of your opponent’s turn, you can select up to 2 Necrons units (excluding units within Engagement Range) and place them into Strategic Reserves."
-    },
-    "Hyperphasing": {
-      "auto": "full",
-      "desc": "Pick up to 2 units at end of opponent turn and place into Strategic Reserves."
+      "acts": [
+        {
+          "when": "opponentTurnEnd",
+          "units": [
+            "NECRONS"
+          ],
+          "if": [
+            "notEngaged"
+          ],
+          "limit": "turn",
+          "per": "army",
+          "uses": "battleSize",
+          "botUse": "never",
+          "label": "Hyperphasing: into Strategic Reserves",
+          "do": [
+            {
+              "on": "self",
+              "reserves": true
+            }
+          ]
+        }
+      ]
     },
     "Starshatter Arsenal": {
       "auto": "full",
-      "desc": "Relentless Onslaught: Necrons Vehicle weapons have [LETHAL HITS] when targeting units within range of an objective marker."
-    },
-    "Relentless Onslaught": {
-      "auto": "full",
-      "desc": "Necrons Vehicle weapons have [LETHAL HITS] against targets within range of an objective marker."
+      "effects": [
+        {
+          "units": [
+            "NECRONS",
+            "!MONSTER"
+          ],
+          "if": [
+            "targetInRangeOfObjective"
+          ],
+          "hit": 1
+        },
+        {
+          "units": [
+            "NECRONS",
+            "VEHICLE|MOUNTED",
+            "!TITANIC"
+          ],
+          "attack": "ranged",
+          "abilities": [
+            "assault"
+          ]
+        }
+      ]
     },
     "Cryptek Conclave": {
       "auto": "full",
-      "desc": "Technosorcerous Augmentations: Cryptek models improve the invulnerable save of their unit to 5+ and critical hits score on 5+."
-    },
-    "Technosorcerous Augmentations": {
-      "auto": "full",
-      "desc": "Cryptek units gain 5+ invulnerable save and Critical Hits on 5+."
+      "effects": [
+        {
+          "units": [
+            "CRYPTEK"
+          ],
+          "attack": "ranged",
+          "abilities": [
+            "assault"
+          ]
+        }
+      ],
+      "acts": [
+        {
+          "when": "selectedToShoot",
+          "units": [
+            "CRYPTEK"
+          ],
+          "limit": "phase",
+          "botUse": "always",
+          "label": "Technosorcerous Augmentations: [ANTI-INFANTRY 3+]",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "attack": "ranged",
+                  "abilities": [
+                    "anti-infantry 3+"
+                  ]
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "selectedToShoot",
+          "units": [
+            "CRYPTEK"
+          ],
+          "limit": "phase",
+          "botUse": "never",
+          "label": "Technosorcerous Augmentations: [ANTI-MOUNTED 4+]",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "attack": "ranged",
+                  "abilities": [
+                    "anti-mounted 4+"
+                  ]
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "selectedToShoot",
+          "units": [
+            "CRYPTEK"
+          ],
+          "limit": "phase",
+          "botUse": "never",
+          "label": "Technosorcerous Augmentations: [ASSAULT]",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "attack": "ranged",
+                  "abilities": [
+                    "assault"
+                  ]
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "selectedToShoot",
+          "units": [
+            "CRYPTEK"
+          ],
+          "limit": "phase",
+          "botUse": "never",
+          "label": "Technosorcerous Augmentations: [HEAVY]",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "attack": "ranged",
+                  "abilities": [
+                    "heavy"
+                  ]
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "selectedToShoot",
+          "units": [
+            "CRYPTEK"
+          ],
+          "limit": "phase",
+          "botUse": "never",
+          "label": "Technosorcerous Augmentations: [IGNORES COVER]",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "attack": "ranged",
+                  "abilities": [
+                    "ignores cover"
+                  ]
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ]
     },
     "Cursed Legion": {
       "auto": "full",
-      "desc": "Cold Fervour: Flayed Ones and Destroyer Cult units gain +1 to Hit when targeting enemy units below Starting Strength."
-    },
-    "Cold Fervour": {
-      "auto": "full",
-      "desc": "+1 to Hit against below Starting Strength enemy units for Flayed Ones and Destroyer Cult."
+      "effects": [
+        {
+          "units": [
+            "DESTROYER CULT"
+          ],
+          "strength": 2
+        },
+        {
+          "units": [
+            "NECRONS",
+            "!DESTROYER CULT",
+            "!MONSTER",
+            "!TITANIC"
+          ],
+          "if": [
+            "friendMarked:Cold Fervour"
+          ],
+          "strength": 2
+        }
+      ],
+      "acts": [
+        {
+          "when": "afterShooting",
+          "auto": true,
+          "units": [
+            "DESTROYER CULT"
+          ],
+          "if": [
+            "destroyedUnitThisPhase",
+            "!friendMarked:Cold Fervour"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "buff": [],
+              "mark": "Cold Fervour",
+              "until": "turn"
+            }
+          ]
+        },
+        {
+          "when": "afterFighting",
+          "auto": true,
+          "units": [
+            "DESTROYER CULT"
+          ],
+          "if": [
+            "destroyedUnitThisPhase",
+            "!friendMarked:Cold Fervour"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "buff": [],
+              "mark": "Cold Fervour",
+              "until": "turn"
+            }
+          ]
+        }
+      ],
+      "manual": "Also when a DESTROYER CULT unit leaves an enemy unit Below Half-strength (only a destroyed unit is tracked)"
     },
     "Pantheon of Woe": {
-      "auto": "full",
-      "desc": "Cosmic Distortion: C’tan Shard models have a 4+ Feel No Pain against mortal wounds and their aura ranges are increased by 3\"."
-    },
-    "Cosmic Distortion": {
-      "auto": "full",
-      "desc": "C’tan Shards gain 4+ Feel No Pain against mortal wounds and +3\" aura ranges."
+      "auto": "partial",
+      "effects": [
+        {
+          "units": [
+            "NECRONS",
+            "MONSTER"
+          ],
+          "scope": "enemyAura",
+          "range": 6,
+          "defend": {
+            "ap": -1
+          }
+        }
+      ],
+      "manual": "Suffering 3 mortal wounds at the start of a phase for a 9\" aura is not automated"
     },
     "Hand of the Dynasty": {
       "auto": "full",
-      "desc": "Hypermotility Protocols: Immortals and Necron Warriors ranged weapons have [ASSAULT] and can advance without failing action eligibility."
-    },
-    "Hypermotility Protocols": {
-      "auto": "full",
-      "desc": "Immortals and Necron Warriors ranged attacks have [ASSAULT]; Advance moves do not prevent starting actions."
+      "effects": [
+        {
+          "units": [
+            "IMMORTALS|NECRON WARRIORS"
+          ],
+          "attack": "ranged",
+          "abilities": [
+            "assault"
+          ]
+        },
+        {
+          "units": [
+            "IMMORTALS|NECRON WARRIORS"
+          ],
+          "eligible": [
+            "actionAfterAdvance"
+          ]
+        }
+      ]
     },
     "Skyshroud Spearhead": {
       "auto": "full",
-      "desc": "Transdimensional Deployment: Tomb Blades units have Deep Strike and +1 to Hit on ranged attacks during the turn they arrive from Reserves."
-    },
-    "Transdimensional Deployment": {
-      "auto": "full",
-      "desc": "Tomb Blades gain Deep Strike and +1 to Hit on ingress/reserves arrival turn."
+      "effects": [
+        {
+          "units": [
+            "TOMB BLADES"
+          ],
+          "deepStrike": true
+        },
+        {
+          "units": [
+            "TOMB BLADES"
+          ],
+          "attack": "ranged",
+          "if": [
+            "ingressThisTurn"
+          ],
+          "hit": 1
+        }
+      ]
     },
     "The Phaeron's Armoury": {
       "auto": "full",
-      "desc": "Empowered Engines: Necrons Titanic Fly units have +6\" Move."
-    },
-    "Empowered Engines": {
-      "auto": "full",
-      "desc": "Necrons Titanic Fly units have +6\" Move."
+      "effects": [
+        {
+          "units": [
+            "NECRONS",
+            "TITANIC",
+            "FLY"
+          ],
+          "move": 6
+        }
+      ]
     },
     "Teleport Assault": {
       "auto": "full",

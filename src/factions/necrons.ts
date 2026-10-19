@@ -35,13 +35,14 @@ export function activateReanimation(s: GameState, u: UnitState, die: 'D3' | 'D6'
   let n = rollExpr(s, die).total;
   // Their Number is Legion: re-roll a low result
   if (has(u, 'Their Number is Legion') && n <= (die === 'D3' ? 1 : 3)) n = rollExpr(s, die).total;
+  if (u.enhancements?.some((e) => e.name === 'Recursive Reanimation')) n += 1;
   const friends = boardUnits(s, u.owner).filter((f) => f.id !== u.id);
   if (friends.some((f) => has(f, 'Nanoscarab Reanimation Beam (Aura)') && within(f, u, 3))) n += rollExpr(s, 'D3').total;
   const projector = friends.find((f) => has(f, 'Nanoscarab Projector') && within(f, u, 3) && f.used?.nanoscarab !== `${s.round}`);
   if (projector) { (projector.used ??= {}).nanoscarab = `${s.round}`; n += 1; }
   const before = alive(u).length;
   const healed = reanimateWounds(u, n);
-  if (healed) log(s, `${label}: ${u.name} reanimates ${healed} wound${healed > 1 ? 's' : ''}${alive(u).length > before ? ` (${alive(u).length - before} model${alive(u).length - before > 1 ? 's' : ''} return)` : ''}`, 'info', u.owner);
+  if (healed) log(s, `${label}: ${u.name} reanimates ${healed} wound${healed > 1 ? 's' : ''}${alive(u).length > before ? ` (${alive(u).length - before} model${alive(u).length - before > 1 ? 's return' : ' returns'})` : ''}`, 'info', u.owner);
   return healed;
 }
 

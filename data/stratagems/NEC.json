@@ -1,4 +1,1002 @@
 {
   "_comment": "Stratagems written by hand (key: the card name, or NAME@Detachment); the rest are read from the card text.",
-  "rules": {}
+  "rules": {
+    "PROTOCOL OF THE CONQUERING TYRANT": {
+      "targetKw": [
+        "NECRONS"
+      ],
+      "effects": [
+        {
+          "if": [
+            "halfRange",
+            "!leaderAttached"
+          ],
+          "reroll": "hits1"
+        },
+        {
+          "if": [
+            "halfRange",
+            "leaderAttached"
+          ],
+          "reroll": "hits"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "PROTOCOL OF THE HUNGRY VOID": {
+      "targetKw": [
+        "NECRONS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "strength": 1
+        },
+        {
+          "attack": "melee",
+          "if": [
+            "leaderAttached"
+          ],
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "PROTOCOL OF THE ETERNAL REVENANT": {
+      "react": "modelDestroyed",
+      "ctxModel": "CHARACTER",
+      "targetKw": [
+        "NECRONS",
+        "INFANTRY"
+      ],
+      "limit": "battle",
+      "do": [
+        {
+          "reviveLater": {
+            "on": 1,
+            "half": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "It returns in its unit (the card: as a unit of its own); once per battle",
+      "status": "auto"
+    },
+    "PROTOCOL OF THE SUDDEN STORM": {
+      "targetKw": [
+        "NECRONS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "assault"
+          ]
+        },
+        {
+          "if": [
+            "leaderAttached"
+          ],
+          "rerollAdvance": true
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "PROTOCOL OF THE VENGEFUL STARS": {
+      "status": "manual",
+      "note": "Not automated: a NECRONS CHARACTER within 6\" of the destroyed unit shoots the attacker",
+      "bot": "never"
+    },
+    "PROTOCOL OF THE UNDYING LEGIONS": {
+      "targetKw": [
+        "NECRONS"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "lostToLast"
+      ],
+      "do": [
+        {
+          "nec": "reanimate"
+        }
+      ],
+      "note": "After shooting attacks only; D3 (the card: D3+1 with a CHARACTER leading)",
+      "status": "auto"
+    },
+    "INSANITY’S IRE": {
+      "targetKw": [
+        "DESTROYER CULT|FLAYED ONES"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "targetOfLast",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "surge": "D6"
+        }
+      ],
+      "status": "auto"
+    },
+    "MASKS OF DEATH": {
+      "targetKw": [
+        "DESTROYER CULT|FLAYED ONES"
+      ],
+      "react": "ownAttacked",
+      "buffs": [
+        "enemyHit-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "BLOOD-FUELLED CRUELTY": {
+      "targetKw": [
+        "DESTROYER CULT|FLAYED ONES"
+      ],
+      "react": "enemyFallBack",
+      "unitIf": [
+        "fellBackFromLast"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalsTable": [
+            {
+              "min": 2,
+              "expr": "D3"
+            },
+            {
+              "min": 6,
+              "expr": "3"
+            }
+          ]
+        }
+      ],
+      "botReact": "always",
+      "note": "The Normal move after it is made by hand",
+      "status": "auto"
+    },
+    "PITILESS HUNTERS": {
+      "targetKw": [
+        "DESTROYER CULT|FLAYED ONES"
+      ],
+      "effects": [
+        {
+          "pileIn": 6,
+          "consolidate": 6
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "MURDEROUS REANIMATION": {
+      "targetKw": [
+        "DESTROYER CULT|FLAYED ONES"
+      ],
+      "unitIf": [
+        "destroyedUnitThisPhase"
+      ],
+      "do": [
+        {
+          "nec": "reanimate"
+        }
+      ],
+      "bot": "never",
+      "note": "Also usable after making an enemy unit Below Half-strength (check it yourself)",
+      "status": "auto"
+    },
+    "THE SPOOR OF FRAILTY": {
+      "targetKw": [
+        "DESTROYER CULT|FLAYED ONES"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetBelowStarting"
+          ],
+          "hit": 1
+        },
+        {
+          "if": [
+            "targetBelowHalf"
+          ],
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "CURSE OF THE CRYPTEK": {
+      "react": "modelDestroyed",
+      "ctxModel": "CRYPTEK",
+      "enemy": {
+        "killer": true
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "units": [
+              "CANOPTEK"
+            ],
+            "hit": 1,
+            "wound": 1
+          }
+        }
+      ],
+      "enemyUntil": "battle",
+      "botReact": "always",
+      "status": "auto"
+    },
+    "CYNOSURE OF ERADICATION": {
+      "targetKw": [
+        "CRYPTEK|CANOPTEK"
+      ],
+      "unitIf": [
+        "powerMatrix"
+      ],
+      "effects": [
+        {
+          "abilities": [
+            "devastating wounds"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SUBOPTIMAL FACADE": {
+      "targetKw": [
+        "CANOPTEK"
+      ],
+      "react": "enemyChargeDeclared",
+      "unitIf": [
+        "targetOfLast",
+        "powerMatrix"
+      ],
+      "do": [
+        {
+          "nec": "reanimate"
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "SOLAR PULSE": {
+      "targetKw": [
+        "CRYPTEK"
+      ],
+      "enemy": {
+        "all": true,
+        "range": 24
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "noCover": true
+          }
+        }
+      ],
+      "status": "partial",
+      "note": "Every enemy unit within 24\" loses cover against NECRONS attacks (the card: units within range of one objective marker within 18\")",
+      "bot": "never"
+    },
+    "REACTIVE SUBROUTINES": {
+      "targetKw": [
+        "CANOPTEK"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8"
+      ],
+      "do": [
+        {
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "COUNTERTEMPORAL SHIFT": {
+      "targetKw": [
+        "CANOPTEK"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "targetableWithin": 18
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "SUFFER NO RIVAL": {
+      "targetKw": [
+        "LYCHGUARD|TRIARCH"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "precision"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ENSLAVED ARTIFICE": {
+      "targetKw": [
+        "NECRONS",
+        "!TITANIC"
+      ],
+      "effects": [
+        {
+          "critHitOn": 5
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "NANOASSEMBLY PROTOCOLS": {
+      "targetKw": [
+        "NECRONS",
+        "VEHICLE"
+      ],
+      "react": "ownAttacked",
+      "buffs": [
+        "damage-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "YOUR TIME IS NIGH": {
+      "status": "manual",
+      "note": "Not automated: -1 to every enemy Battle-shock / Leadership test after the enemy WARLORD dies",
+      "bot": "never"
+    },
+    "SENTINELS OF ETERNITY": {
+      "targetKw": [
+        "LYCHGUARD|TRIARCH PRAETORIANS"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "fightPhase"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 4
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "TERRITORIAL OBSESSION": {
+      "targetKw": [
+        "LYCHGUARD|TRIARCH"
+      ],
+      "effects": [
+        {
+          "if": [
+            "!kw:VEHICLE"
+          ],
+          "oc": 1
+        },
+        {
+          "if": [
+            "kw:VEHICLE"
+          ],
+          "oc": 3
+        }
+      ],
+      "until": "nextCommand",
+      "bot": "never",
+      "status": "auto"
+    },
+    "COSMIC PRECISION": {
+      "targetKw": [
+        "NECRONS",
+        "!MONSTER"
+      ],
+      "targetFrom": "reserves",
+      "effects": [
+        {
+          "deepStrikeRange": 6
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "REANIMATION CRYPTS": {
+      "targetKw": [
+        "NECRONS"
+      ],
+      "unitIf": [
+        "warlord"
+      ],
+      "special": [
+        "reanimationCrypts"
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "HYPERPHASIC RECALL": {
+      "status": "manual",
+      "note": "Not automated: setting the unit up again next to a MONOLITH",
+      "bot": "never"
+    },
+    "DIMENSIONAL CORRIDOR": {
+      "status": "manual",
+      "note": "Not automated: the Eternity Gate is used by hand",
+      "bot": "never"
+    },
+    "QUANTUM DEFLECTION": {
+      "targetKw": [
+        "NECRONS",
+        "VEHICLE"
+      ],
+      "react": "ownAttacked",
+      "effects": [
+        {
+          "defend": {
+            "inv": 4
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "ENTROPIC DAMPING": {
+      "targetKw": [
+        "TITANIC"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase",
+        "nearLast:18"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "enemyEffects": [
+        {
+          "abilities": [
+            "hazardous"
+          ]
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "UNYIELDING FORMS": {
+      "targetKw": [
+        "NECRONS",
+        "VEHICLE|MOUNTED",
+        "!TITANIC"
+      ],
+      "react": "ownAttacked",
+      "effects": [
+        {
+          "defend": {
+            "woundIfStronger": -1
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "MERCILESS RECLAMATION": {
+      "targetKw": [
+        "NECRONS",
+        "!MONSTER",
+        "!TITANIC"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetInRangeOfObjective"
+          ],
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "CHRONOSHIFT": {
+      "targetKw": [
+        "NECRONS",
+        "VEHICLE|MOUNTED",
+        "!TITANIC"
+      ],
+      "effects": [
+        {
+          "advanceFixed": 6
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "DIMENSIONAL TUNNEL": {
+      "targetKw": [
+        "NECRONS",
+        "VEHICLE|MOUNTED",
+        "!TITANIC"
+      ],
+      "effects": [
+        {
+          "moveThroughModels": true
+        }
+      ],
+      "bot": "never",
+      "note": "Through models (terrain is not ignored)",
+      "status": "auto"
+    },
+    "ENDLESS SERVITUDE": {
+      "targetKw": [
+        "NECRONS",
+        "!MONSTER",
+        "!TITANIC"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "ownTurn",
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "nec": "reanimate"
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "REACTIVE REPOSITION": {
+      "targetKw": [
+        "NECRONS",
+        "!MONSTER",
+        "!TITANIC"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "targetOfLast"
+      ],
+      "do": [
+        {
+          "move": "D6"
+        }
+      ],
+      "status": "auto"
+    },
+    "UNTAPPED POWER": {
+      "status": "manual",
+      "note": "Not automated: a second Technosorcerous Augmentations ability",
+      "bot": "never"
+    },
+    "MOLECULAR TARGETING": {
+      "targetKw": [
+        "NECRONS"
+      ],
+      "effects": [
+        {
+          "ignoreHitMods": true
+        },
+        {
+          "if": [
+            "kw:CRYPTEK"
+          ],
+          "ignoreWoundMods": true
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SYNERGISTIC EMPOWERMENT": {
+      "status": "manual",
+      "note": "Not automated: giving a model the CRYPTEK keyword",
+      "bot": "never"
+    },
+    "POTENTIALITY SYPHON": {
+      "targetKw": [
+        "NECRONS"
+      ],
+      "unitIf": [
+        "onObjective"
+      ],
+      "do": [
+        {
+          "nec": "reanimate"
+        },
+        {
+          "if": [
+            "kw:CRYPTEK"
+          ],
+          "heal": "1"
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "ANIMUS CURSE": {
+      "react": "modelDestroyed",
+      "ctxModel": "CRYPTEK",
+      "enemy": {
+        "killer": true
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "units": [
+              "NECRONS"
+            ],
+            "reroll": "hits"
+          }
+        }
+      ],
+      "enemyUntil": "battle",
+      "botReact": "always",
+      "status": "auto"
+    },
+    "MICROSCARAB SWARM": {
+      "targetKw": [
+        "CRYPTEK",
+        "INFANTRY"
+      ],
+      "react": "ownAttacked",
+      "effects": [
+        {
+          "if": [
+            "kw:NECRON WARRIORS"
+          ],
+          "defend": {
+            "inv": 5
+          }
+        },
+        {
+          "if": [
+            "kw:IMMORTALS"
+          ],
+          "defend": {
+            "inv": 4
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "METHODICAL MURDER": {
+      "targetKw": [
+        "NECRONS",
+        "!MONSTER",
+        "!VEHICLE"
+      ],
+      "effects": [
+        {
+          "abilities": [
+            "sustained hits 1"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "IMAGE OF DEATH": {
+      "targetKw": [
+        "DESTROYER CULT"
+      ],
+      "react": "ownAttacked",
+      "buffs": [
+        "enemyHit-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "SPREADING MADNESS": {
+      "targetKw": [
+        "NECRONS",
+        "!MONSTER",
+        "!VEHICLE"
+      ],
+      "unitIf": [
+        "enemyEngagedWithin:12"
+      ],
+      "effects": [
+        {
+          "chargeBonus": 2
+        }
+      ],
+      "bot": "never",
+      "note": "Use it only when a target of the charge is already engaged with your units",
+      "status": "auto"
+    },
+    "MORTIS PROTOCOLS": {
+      "targetKw": [
+        "NECRONS",
+        "!MONSTER",
+        "!VEHICLE"
+      ],
+      "unitIf": [
+        "near:9:DESTROYER CULT"
+      ],
+      "do": [
+        {
+          "nec": "reanimate"
+        }
+      ],
+      "bot": "never",
+      "note": "Just after a DESTROYER CULT unit within 9\" destroys an enemy unit (check it yourself)",
+      "status": "auto"
+    },
+    "DRIVEN TO BUTCHERY": {
+      "targetKw": [
+        "DESTROYER CULT"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterAdvance",
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "UNNATURAL AGGRESSION": {
+      "targetKw": [
+        "NECRONS",
+        "!MONSTER",
+        "!VEHICLE"
+      ],
+      "react": "enemyChargePhaseEnd",
+      "unitIf": [
+        "enemyBetween:-1:6",
+        "!engaged"
+      ],
+      "special": [
+        "charge"
+      ],
+      "botReact": "charge",
+      "status": "auto"
+    },
+    "CHRONODISTORTION": {
+      "targetKw": [
+        "NECRONS"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "fightPhase"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 4
+        }
+      ],
+      "botReact": "always",
+      "note": "The +1 against an unravelling attacker is not added",
+      "status": "auto"
+    },
+    "ENTROPHASIC AURA TARGETING": {
+      "targetKw": [
+        "NECRONS",
+        "!MONSTER"
+      ],
+      "effects": [
+        {
+          "reroll": "hits1"
+        },
+        {
+          "if": [
+            "targetNearFriendly:6:NECRONS+MONSTER"
+          ],
+          "reroll": "wounds1"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "MASS TRANSMOGRIFICATION": {
+      "targetKw": [
+        "NECRONS",
+        "!MONSTER"
+      ],
+      "unitIf": [
+        "near:6:MONSTER"
+      ],
+      "do": [
+        {
+          "nec": "reanimate"
+        }
+      ],
+      "bot": "never",
+      "note": "Just after a NECRONS MONSTER within 6\" destroys an unravelling enemy unit (check it yourself)",
+      "status": "auto"
+    },
+    "DISHARMONISATION CASCADE": {
+      "status": "manual",
+      "note": "Not automated: Deadly Demise on 3+",
+      "bot": "never"
+    },
+    "PHASE MELDING": {
+      "status": "manual",
+      "note": "Not automated: Desperate Escape tests for every model of the unravelling unit",
+      "bot": "never"
+    },
+    "MOLECULAR EROSION": {
+      "targetKw": [
+        "NECRONS",
+        "MONSTER"
+      ],
+      "enemy": {
+        "visible": true,
+        "range": 6
+      },
+      "do": [
+        {
+          "on": "target",
+          "shockMortals": {
+            "mod": -1,
+            "mortals": "D3+1"
+          }
+        }
+      ],
+      "limit": "round",
+      "bot": "never",
+      "status": "auto"
+    },
+    "DOMINANCE PROTOCOLS": {
+      "targetKw": [
+        "IMMORTALS"
+      ],
+      "effects": [
+        {
+          "oc": 1
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "WILL OF THE CONQUEROR": {
+      "targetKw": [
+        "IMMORTALS|NECRON WARRIORS"
+      ],
+      "unitIf": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "secure": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "NANOSATURATION": {
+      "targetKw": [
+        "IMMORTALS|NECRON WARRIORS"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "targetOfLast",
+        "!engaged"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "special": [
+        "shootAtSnap"
+      ],
+      "botReact": "shoot",
+      "status": "auto"
+    },
+    "OMNILOCKED STRAFING": {
+      "targetKw": [
+        "NECRONS",
+        "MOUNTED"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "SWIFT AS DEATH": {
+      "targetKw": [
+        "NECRONS",
+        "MOUNTED"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "D3+3"
+        }
+      ],
+      "status": "auto"
+    },
+    "EVASIVE PROTOCOLS": {
+      "targetKw": [
+        "NECRONS",
+        "MOUNTED"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "vs": "ranged",
+            "woundIfStronger": -1
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "SUBSURFACE QUANTUMWEAVE": {
+      "targetKw": [
+        "NECRONS",
+        "TITANIC",
+        "FLY"
+      ],
+      "react": "ownAttacked",
+      "buffs": [
+        "enemyAp-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "PARTICLE PULSE": {
+      "targetKw": [
+        "NECRONS",
+        "TITANIC",
+        "FLY"
+      ],
+      "enemy": {
+        "range": 12,
+        "visible": true
+      },
+      "enemyEffects": [
+        {
+          "detection": 3
+        }
+      ],
+      "enemyUntil": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "COSMIC STORM": {
+      "targetKw": [
+        "OBELISK|TESSERACT VAULT"
+      ],
+      "effects": [
+        {
+          "weapon": "tesla sphere",
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    }
+  }
 }

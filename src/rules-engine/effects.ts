@@ -35,7 +35,7 @@ import { d6, exprAverage } from '../engine/dice';
 import { baseDist, bodyTouchesPoly, circleTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from '../engine/geometry';
 import { setActionEligibilityHook, unitInRange } from '../engine/missions';
 import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, unitDistance, withinTerrain } from '../engine/state';
-import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, UnitState, WeaponData, WeaponProfileData } from '../engine/types';
+import type { AbilityData, GameState, ModelState, PlayerId, Pool, Pt, TimedEffect, UnitState, WeaponData, WeaponProfileData } from '../engine/types';
 import { abilityLabel, condApplies, parseAbility } from '../engine/weapons';
 import { hasCover, hasLos, isHidden, setVisibilityHooks } from '../engine/visibility';
 import { setThroughHook } from '../engine/pathing';
@@ -160,6 +160,8 @@ export interface Effect {
   fallBackLdTest?: boolean; // enemy aura: units selected to Fall Back must pass a Leadership test or Remain Stationary
   followFallBack?: boolean; // when an enemy unit engaged with this unit Falls Back, this unit can make a Normal move
   slowed?: boolean; // selected to move: roll D6, mortal wounds and less Move (Stasis Bomb)
+  graviticFly?: boolean; // each move: D6, 4+ = D3 mortal wounds (Gravitic Pulse on a FLY unit)
+  moveHalve?: boolean; // halve the Move characteristic, Advance and Charge rolls (Gravitic Pulse)
   snared?: boolean; // each Normal / Advance / Fall Back move: one D6 per model, each 1 is a mortal wound (Monofilament Snare)
   noBigGunsPenalty?: boolean;
   attacksTo?: number; // the weapon's Attacks characteristic becomes X
@@ -936,6 +938,7 @@ export function cond(c: string, x: Ctx): boolean {
     // Death Guard: the target is Afflicted / within half the weapon's range / in its own deployment zone
     case 'halfRange': return !!x.p && typeof x.p.range === 'number' && (x.d ?? Infinity) <= x.p.range / 2 + 1e-6;
     case 'whollyInOwnDz': return alive(A).every((m) => pointInPoly(m, toPoly(deploymentById(s.deploymentId).zones[s.players[A.owner].role])));
+    case 'powerMatrix': return inPowerMatrix(s, A);
     case 'inEnemyDz': return alive(A).some((m) => pointInPoly(m, toPoly(deploymentById(s.deploymentId).zones[s.players[other(A.owner)].role])));
     case 'targetInOwnDz': return !!T && alive(T).some((m) => pointInPoly(m, toPoly(deploymentById(s.deploymentId).zones[s.players[T.owner].role])));
     case 'targetSeenByHolder': return !!T && (x.bearers?.length ? x.bearers : alive(x.holder ?? A)).some((b) => alive(T).some((o) => hasLos(s, b, o)));
@@ -1284,6 +1287,8 @@ export function unitFlags(s: GameState, u: UnitState) {
     toughness: es.reduce((a, e) => a + (e.toughness ?? 0), 0),
     cannotFallBack: es.some((e) => e.cannotFallBack),
     noOverwatch: es.some((e) => e.noOverwatch),
+    moveHalve: es.some((e) => e.moveHalve),
+    graviticFly: es.some((e) => e.graviticFly),
     noSnapTarget: es.some((e) => e.noSnapTarget),
     cannotBeHidden: es.some((e) => e.cannotBeHidden),
     detection: es.reduce((a, e) => a + (e.detection ?? 0), 0),
@@ -1565,4 +1570,19 @@ export function applyStaticEffects(s: GameState) {
       }
     }
   }
+}
+
+/** Canoptek Court: the unit is wholly within its army's Power Matrix (its own deployment zone; No Man's Land / the
+ *  opponent's zone while the army controls at least half of the objective markers there). */
+function inPowerMatrix(s: GameState, A: UnitState): boolean {
+  const zones = deploymentById(s.deploymentId).zones;
+  const own = toPoly(zones[s.players[A.owner].role]), opp = toPoly(zones[s.players[other(A.owner)].role]);
+  const ms = alive(A);
+  if (!ms.length) return false;
+  if (ms.every((m) => pointInPoly(m, own))) return true;
+  const half = (inZone: (o: Pt) => boolean) => { const os = s.objectives.filter(inZone); return os.length > 0 && os.filter((o) => o.controller === A.owner).length * 2 >= os.length; };
+  const nml = (q: Pt) => !pointInPoly(q, own) && !pointInPoly(q, opp);
+  if (ms.every((m) => pointInPoly(m, own) || nml(m)) && half(nml) && (ms.every((m) => nml(m)) || ms.every((m) => !pointInPoly(m, opp)))) return true;
+  if (ms.every((m) => !nml(m)) && half((o) => pointInPoly(o, opp)) && (half(nml) || ms.every((m) => pointInPoly(m, opp) || pointInPoly(m, own)))) return true;
+  return false;
 }

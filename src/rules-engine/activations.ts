@@ -79,6 +79,7 @@ export interface Action {
   unshock?: boolean;
   riled?: boolean; // Orks: riled up until the start of your next turn
   cp?: number;
+  oppCp?: number; // the opponent loses this many CP (negative number; never below 0) (Honourable Combatant)
   reserves?: boolean; // remove the unit and place it into Strategic Reserves
   earlyArrival?: boolean; // the unit may arrive from Reserves this battle round
   move?: string; // an extra Normal move of up to this many inches (dice allowed, "M" = the unit's Move)
@@ -801,6 +802,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     }
     if (a.unshock && on.battleShocked) { on.battleShocked = false; log(s, `${def.name}: ${on.name} is no longer Battle-shocked`, 'info', u.owner); }
     if (a.riled) { on.riledUntil = s.turn + (s.active === u.owner ? 1 : 0); log(s, `${def.name}: ${on.name} riled up`, 'info', u.owner); }
+    if (a.oppCp) { const O = s.players[other(u.owner)]; const n = Math.min(O.cp, -a.oppCp); if (n > 0) { O.cp -= n; log(s, `${def.name}: ${O.name} loses ${n}CP`, 'cp', u.owner); } }
     if (a.cp) { s.players[u.owner].cp += a.cp; log(s, `+${a.cp}CP (${def.name})`, 'cp', u.owner); notifyAbilityCpGain(s, u.owner, a.cp, def.name); }
     if (a.reserves) {
       on.status = 'reserves'; on.move = null;

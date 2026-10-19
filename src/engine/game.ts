@@ -394,7 +394,8 @@ export function chargeReach(s: GameState, u: UnitState, targets: (string | UnitS
   // Eager for Vengeance: +X when the focus of hatred is one of the targets
   const roll = (u.chargeRoll ?? 0) + (f.chargeBonusVsOath && ts.some((t) => s.players[u.owner].oathTarget === t.id) ? f.chargeBonusVsOath : 0);
   const pen = Math.max(0, ...ts.map((t) => unitFlags(s, t).chargedMinus));
-  return pen && rollMods(s, u).chargeBonus >= 0 && !f.ignoreMoveMods && !f.ignoreMods ? Math.max(0, roll - pen) : roll;
+  const out = pen && rollMods(s, u).chargeBonus >= 0 && !f.ignoreMoveMods && !f.ignoreMods ? Math.max(0, roll - pen) : roll;
+  return f.moveHalve ? Math.floor(out / 2) : out; // Gravitic Pulse
 }
 
 /** How far a Pile-in / Consolidation move may go (3", or more with stratagems such as Shock Onslaught). */
@@ -409,10 +410,11 @@ export function pileDistance(s: GameState, u: UnitState, kind: 'pileIn' | 'conso
 export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOptions = {}): number {
   if (opt.maxOverride !== undefined) return opt.maxOverride;
   const fl = unitFlags(s, u);
-  const M = (fl.moveSet || (m.profile.M ?? 0)) + fl.move;
+  const M0 = (fl.moveSet || (m.profile.M ?? 0)) + fl.move;
+  const M = fl.moveHalve ? M0 / 2 : M0; // Gravitic Pulse: halve the Move characteristic and Advance rolls
   let max = 0;
   if (kind === 'normal' || kind === 'fallback') max = M;
-  else if (kind === 'advance') max = M + (u.advanceRoll ?? 0);
+  else if (kind === 'advance') max = M + (fl.moveHalve ? Math.floor((u.advanceRoll ?? 0) / 2) : (u.advanceRoll ?? 0));
   else if (kind === 'charge') max = chargeReach(s, u, opt.targets);
   else if (kind === 'pileIn' || kind === 'consolidate') max = pileDistance(s, u, kind);
   else if (kind === 'scout') max = Math.max(u.core.scouts ?? 0, unitFlags(s, u).scouts);
@@ -781,6 +783,7 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string
   { name: 'Strategic Slaughter', n: 3, infantryOnly: false, units: ['JAKHALS', 'GOREMONGERS'] }, // World Eaters: Cult of Blood
   { name: 'Tactical Perfection', n: 2, infantryOnly: false, units: ['EMPEROR’S CHILDREN'] }, // Emperor's Children: Mercurial Host
   { name: 'Master of Deceit', n: 3, infantryOnly: true },
+  { name: 'Grand Illusion', n: 3, infantryOnly: false, units: ['NECRONS'] }, // Necrons: C'tan Shard of the Deceiver
   { name: 'Strategium Command', n: 3, infantryOnly: false },
   // Enhancements that redeploy (2026 Codex)
   { name: 'Cyber-familiar', n: 3, infantryOnly: true },
@@ -1328,6 +1331,11 @@ export function beginMove(s: GameState, u: UnitState, kind: 'normal' | 'advance'
     addTimed(s, u, { e: { move: r <= 4 ? -2 : -3 }, label: 'Slowed', until: 'turn', by: other(u.owner) });
     log(s, `Slowed: ${u.name} rolled ${r} → −${r <= 4 ? 2 : 3}"`, 'roll', u.owner);
     applyMortalWounds(s, u, mw, 'Slowed (Stasis Bomb)');
+  }
+  if (f.graviticFly) {
+    const r = d6(s);
+    log(s, `Gravitic Pulse: ${u.name} rolled ${r}${r >= 4 ? ' → D3 mortal wounds' : ''}`, 'roll', u.owner);
+    if (r >= 4) applyMortalWounds(s, u, rollExpr(s, 'D3').total, 'Gravitic Pulse');
   }
   if (f.snared) {
     const mw = rollN(s, alive(u).length).filter((r) => r === 1).length;

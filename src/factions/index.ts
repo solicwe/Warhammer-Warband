@@ -190,10 +190,11 @@ addActionHandler((s, a, x) => { if (a.gc === 'parasitism' && x.target) psionicPa
 
 // Necrons
 on('commandEnd', (s, e) => necCommandEnd(s, e.p));
+addStratSpecial('reanimationCrypts', (s, x) => { for (const u of s.units) if (u.owner === x.p && u.status === 'reserves' && u.abilities.some((a) => a.name === 'Reanimation Protocols')) activateReanimation(s, u, 'D3', 'Reanimation Crypts'); });
 on('attackDone', (s, e) => repairBarge(s, e.T));
 addActionHandler((s, a, x) => {
-  if (a.nec === 'reanimate' && x.target) activateReanimation(s, x.target);
-  if (a.nec === 'resurrect' && x.target) resurrect(s, x.target);
+  if (a.nec === 'reanimate') activateReanimation(s, x.on);
+  if (a.nec === 'resurrect') resurrect(s, x.on);
 });
 
 // T'au Empire: Mont'ka, the first three battle rounds: ranged weapons have [ASSAULT]
