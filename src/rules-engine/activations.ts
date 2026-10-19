@@ -82,6 +82,7 @@ export interface Action {
   cp?: number;
   miracle?: number; // Adepta Sororitas: gain this many Miracle dice (negative: discard, the lowest first)
   miracleValue?: number; // … showing this value
+  tyr?: 'shadow'; // Tyranids: unleash the Shadow in the Warp
   order?: number; // the OFFICER issues this many Orders now, outside its usual count (picked as the bot would)
   oppCp?: number; // the opponent loses this many CP (negative number; never below 0) (Honourable Combatant)
   reserves?: boolean; // remove the unit and place it into Strategic Reserves

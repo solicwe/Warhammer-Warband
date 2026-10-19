@@ -28,7 +28,7 @@ import { whollyHallowed } from './greyKnights';
 import { circleInFlow, inFlow, isThousandSonsArmy } from './flow';
 import { RULES } from '../engine/config';
 import { clamp } from '../engine/geometry';
-import { inSynapse } from './tyranids';
+import { inSynapse, tyranidsCommandStart, tyranidsShockResult, unleashShadowInTheWarp } from './tyranids';
 
 const unitOf = (s: GameState, id?: string) => (id ? s.units.find((x) => x.id === id) : undefined);
 
@@ -116,7 +116,7 @@ addActionHandler((s, a, x) => {
 // Super-heavy Walker: Normal, Advance and Fall Back moves go through every model but TITANIC ones, and through terrain
 const SUPER_HEAVY = ['normal', 'advance', 'fallback'];
 // … and Heavy Walker (Stormsurge), the same movement
-const heavyWalker = (u: UnitState) => superHeavy(u) || u.abilities.some((a) => a.name === 'Heavy Walker');
+const heavyWalker = (u: UnitState) => superHeavy(u) || u.abilities.some((a) => a.name === 'Heavy Walker' || a.name === 'Stalking Forward');
 addModifier('moveThroughModels', (_s, u, kind) => (SUPER_HEAVY.includes(kind) && heavyWalker(u) ? 'titanic' : null));
 addModifier('moveThroughTerrain', (_s, u, kind) => SUPER_HEAVY.includes(kind) && heavyWalker(u));
 
@@ -241,6 +241,9 @@ addCondition('inFlow', (_c, x) => inFlow(x.s, x.holder ?? x.A));
 addModifier('shockDice', (s, u) => (inSynapse(s, u) ? 3 : 2));
 addModifier('meleeStrength', (s, u) => (inSynapse(s, u) ? { n: 1, note: 'Synapse +1 S' } : null));
 addCondition('inSynapse', (_c, x) => inSynapse(x.s, x.A));
+on('shockResult', (s, e) => tyranidsShockResult(s, e.u, e.passed));
+on('commandStart', (s) => tyranidsCommandStart(s));
+addActionHandler((s, a, x) => { if (a.tyr === 'shadow' && !s.players[x.u.owner].shadowInTheWarpUsed) unleashShadowInTheWarp(s, x.u.owner); });
 
 // Grey Knights
 // Grey Knights: Hallowed Ground

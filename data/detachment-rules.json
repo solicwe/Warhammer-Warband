@@ -5240,7 +5240,30 @@
     },
     "Shadow in the Warp": {
       "auto": "full",
-      "armyRule": true
+      "armyRule": true,
+      "acts": [
+        {
+          "when": "anyCommand",
+          "armyWide": true,
+          "units": [
+            "TYRANIDS"
+          ],
+          "if": [
+            "any:hasAbility:Shadow in the Warp||hasAbility:Shadow In The Warp (Ravener Prime only)"
+          ],
+          "limit": "battle",
+          "per": "army",
+          "botUse": "never",
+          "label": "Unleash the Shadow in the Warp: every enemy unit takes a Battle-shock test",
+          "do": [
+            {
+              "on": "self",
+              "tyr": "shadow"
+            }
+          ]
+        }
+      ],
+      "manual": "The bot uses it by itself"
     },
     "Invasion Fleet": {
       "auto": "full",
@@ -5261,6 +5284,9 @@
                 ],
                 "abilities": [
                   "sustained hits 1"
+                ],
+                "units": [
+                  "TYRANIDS"
                 ]
               }
             ]
@@ -5276,6 +5302,9 @@
                 ],
                 "abilities": [
                   "lethal hits"
+                ],
+                "units": [
+                  "TYRANIDS"
                 ]
               }
             ]
@@ -5283,15 +5312,17 @@
           {
             "id": "predators",
             "name": "Hive Predators",
-            "text": "Each time a TYRANIDS model from your army makes a melee attack that targets a CHARACTER unit, that attack has the [PRECISION] ability.",
+            "text": "Attacks that target a CHARACTER unit have [PRECISION] (the card: on a Critical Hit)",
             "effects": [
               {
-                "attack": "melee",
                 "if": [
                   "targetKw:CHARACTER"
                 ],
                 "abilities": [
                   "precision"
+                ],
+                "units": [
+                  "TYRANIDS"
                 ]
               }
             ]
@@ -5361,6 +5392,7 @@
       "effects": [
         {
           "units": [
+            "TYRANIDS",
             "MONSTER"
           ],
           "if": [
@@ -5370,12 +5402,24 @@
         },
         {
           "units": [
+            "TYRANIDS",
             "MONSTER"
           ],
           "if": [
             "belowHalfStrength"
           ],
           "wound": 1
+        },
+        {
+          "units": [
+            "TYRANIDS",
+            "MONSTER"
+          ],
+          "if": [
+            "!belowStartingStrength",
+            "notBattleShocked"
+          ],
+          "oc": 2
         }
       ]
     },
@@ -5406,6 +5450,9 @@
       "auto": "full",
       "effects": [
         {
+          "units": [
+            "TYRANIDS"
+          ],
           "eligible": [
             "chargeAfterFallBack"
           ]
@@ -5547,8 +5594,7 @@
       "effects": [
         {
           "units": [
-            "TYRANID WARRIORS WITH RANGED BIO-WEAPONS",
-            "TYRANID WARRIORS WITH MELEE BIO-WEAPONS"
+            "TYRANID WARRIORS WITH RANGED BIO-WEAPONS|TYRANID WARRIORS WITH MELEE BIO-WEAPONS"
           ],
           "addKeywords": [
             "BATTLELINE",
@@ -5557,9 +5603,7 @@
         },
         {
           "units": [
-            "TYRANID WARRIORS",
-            "TYRANID PRIME WITH LASH WHIP",
-            "WINGED TYRANID PRIME"
+            "TYRANID WARRIORS|TYRANID WARRIORS WITH RANGED BIO-WEAPONS|TYRANID WARRIORS WITH MELEE BIO-WEAPONS|TYRANID PRIME WITH LASH WHIP|WINGED TYRANID PRIME"
           ],
           "defend": {
             "inv": 5
@@ -5596,9 +5640,21 @@
       "auto": "full",
       "effects": [
         {
+          "units": [
+            "TYRANIDS"
+          ],
           "reroll": "hits1"
+        },
+        {
+          "units": [
+            "MAWLOC|TRYGON"
+          ],
+          "addKeywords": [
+            "BURROWER"
+          ]
         }
-      ]
+      ],
+      "manual": "Tunnel Markers are not automated"
     },
     "Surprise Assault": {
       "auto": "full",
@@ -5655,19 +5711,101 @@
       ]
     },
     "Talons of the Norn Queen": {
-      "auto": "full"
+      "auto": "manual",
+      "manual": "Protean Purpose (picking Singular Purpose again) is not automated"
     },
     "Higher Imperatives": {
       "auto": "full"
     },
     "Unending Swarm": {
-      "auto": "full"
+      "auto": "full",
+      "acts": [
+        {
+          "when": "shotByEnemy",
+          "auto": true,
+          "units": [
+            "ENDLESS MULTITUDE"
+          ],
+          "needModelsLost": true,
+          "limit": "phase",
+          "if": [
+            "!engaged"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "surge": "D6"
+            }
+          ]
+        }
+      ]
     },
     "Insurmountable Odds": {
       "auto": "full"
     },
     "Assimilation Swarm": {
-      "auto": "full"
+      "auto": "full",
+      "acts": [
+        {
+          "when": "command",
+          "units": [
+            "HARVESTER"
+          ],
+          "limit": "phase",
+          "botUse": "always",
+          "label": "Feed the Swarm: a TYRANIDS unit within 6\" regains D3+1 wounds",
+          "target": {
+            "side": "friendly",
+            "range": 6,
+            "units": [
+              "TYRANIDS"
+            ],
+            "damaged": true
+          },
+          "do": [
+            {
+              "on": "target",
+              "heal": "D3+1"
+            }
+          ]
+        },
+        {
+          "when": "command",
+          "units": [
+            "HARVESTER"
+          ],
+          "limit": "phase",
+          "botUse": "always",
+          "label": "Feed the Swarm: destroyed INFANTRY models return to a TYRANIDS unit within 6\" (3 for ENDLESS MULTITUDE)",
+          "target": {
+            "side": "friendly",
+            "range": 6,
+            "units": [
+              "TYRANIDS",
+              "INFANTRY",
+              "!CHARACTER"
+            ],
+            "damaged": true
+          },
+          "do": [
+            {
+              "on": "target",
+              "if": [
+                "!targetKw:ENDLESS MULTITUDE"
+              ],
+              "revive": 1
+            },
+            {
+              "on": "target",
+              "if": [
+                "targetKw:ENDLESS MULTITUDE"
+              ],
+              "revive": 3
+            }
+          ]
+        }
+      ],
+      "manual": "A unit can be regenerated more than once per phase by different HARVESTER units"
     },
     "Feed the Swarm": {
       "auto": "full"

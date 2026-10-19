@@ -207,6 +207,7 @@ export interface Effect {
   statM?: number; // fixed change to the bearers' Move characteristic
   statW?: number; // fixed change to the bearers' Wounds characteristic (Blasphemous Engine)
   rangeBonus?: number; // ranged weapons +X" Range
+  synapseRange?: number; // Tyranids: its Synapse Range is this many inches (Synaptic Linchpin: 9)
   strengthPer5Models?: boolean; // +1 S for every 5 models in the unit (or embarked within it)
   fightOnDeathRiled?: number; // … +X to that roll while riled up
   secureAtCommandEnd?: boolean; // end of your Command phase: objectives this unit holds stay yours (Uphold the Honour)
@@ -1295,6 +1296,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     toughness: es.reduce((a, e) => a + (e.toughness ?? 0), 0),
     cannotFallBack: es.some((e) => e.cannotFallBack),
     noOverwatch: es.some((e) => e.noOverwatch),
+    synapseRange: Math.max(6, ...es.map((e) => e.synapseRange ?? 6)),
     moveHalve: es.some((e) => e.moveHalve),
     graviticFly: es.some((e) => e.graviticFly),
     noSnapTarget: es.some((e) => e.noSnapTarget),
