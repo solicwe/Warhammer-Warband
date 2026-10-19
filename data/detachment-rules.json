@@ -7308,7 +7308,26 @@
     },
     "Warpbane Task Force": {
       "auto": "full",
-      "desc": "Hallowed Ground: While a friendly Grey Knights unit is within range of an objective marker you control or wholly within your territory, improve its invulnerable save by 1 (to a max of 4+) and add 1 to Hit rolls."
+      "effects": [
+        {
+          "units": [
+            "GREY KNIGHTS"
+          ],
+          "if": [
+            "!any:kw:PURIFIER SQUAD||hallowed"
+          ],
+          "reroll": "hits1"
+        },
+        {
+          "units": [
+            "GREY KNIGHTS"
+          ],
+          "if": [
+            "any:kw:PURIFIER SQUAD||hallowed"
+          ],
+          "reroll": "hits"
+        }
+      ]
     },
     "Hallowed Ground": {
       "auto": "full",
@@ -7316,7 +7335,18 @@
     },
     "Brotherhood Strike": {
       "auto": "full",
-      "desc": "Fury of Titan: Brotherhood Terminator and Paladin Squad models re-roll Hit rolls of 1."
+      "effects": [
+        {
+          "if": [
+            "setUpThisTurn"
+          ],
+          "reroll": [
+            "hits1",
+            "wounds1"
+          ]
+        }
+      ],
+      "manual": "Also after an ingress move (the card: the Deep Strike ability only)"
     },
     "Fury of Titan": {
       "auto": "full",
@@ -7334,7 +7364,18 @@
     },
     "Hallowed Conclave": {
       "auto": "full",
-      "desc": "Duty Before All: Grey Knights Character models gain +1 Attack to melee weapons and +1 to Objective Control."
+      "effects": [
+        {
+          "units": [
+            "GREY KNIGHTS",
+            "TERMINATOR"
+          ],
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ]
     },
     "Duty Before All": {
       "auto": "full",
@@ -7342,7 +7383,62 @@
     },
     "Banishers": {
       "auto": "full",
-      "desc": "Channelled Force: Melee weapons equipped by Grey Knights models gain [LETHAL HITS]. In addition, against Daemon and Psyker units, add 1 to the Damage characteristic."
+      "acts": [
+        {
+          "when": "selectedToFight",
+          "units": [
+            "GREY KNIGHTS"
+          ],
+          "limit": "phase",
+          "ldTest": true,
+          "botUse": "always",
+          "label": "Channelled Force: Leadership test, psychic melee weapons get [LETHAL HITS]",
+          "pass": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "attack": "melee",
+                  "if": [
+                    "psychicWeapon"
+                  ],
+                  "abilities": [
+                    "lethal hits"
+                  ]
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "when": "selectedToFight",
+          "units": [
+            "GREY KNIGHTS"
+          ],
+          "limit": "phase",
+          "ldTest": true,
+          "botUse": "never",
+          "label": "Channelled Force: Leadership test, psychic melee weapons get [SUSTAINED HITS 1]",
+          "pass": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "attack": "melee",
+                  "if": [
+                    "psychicWeapon"
+                  ],
+                  "abilities": [
+                    "sustained hits 1"
+                  ]
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ]
     },
     "Channelled Force": {
       "auto": "full",
@@ -7350,7 +7446,28 @@
     },
     "Sanctic Spearhead": {
       "auto": "full",
-      "desc": "Mailed Fist: Nemesis Dreadknight models add 1 to the Damage characteristic of melee attacks during the turn they charged."
+      "effects": [
+        {
+          "units": [
+            "GREY KNIGHTS",
+            "VEHICLE"
+          ],
+          "advanceFixed": 6
+        },
+        {
+          "units": [
+            "GREY KNIGHTS",
+            "VEHICLE"
+          ],
+          "attack": "ranged",
+          "if": [
+            "advanced"
+          ],
+          "abilities": [
+            "assault"
+          ]
+        }
+      ]
     },
     "Mailed Fist": {
       "auto": "full",
@@ -7358,7 +7475,31 @@
     },
     "Augurium Task Force": {
       "auto": "full",
-      "desc": "Prescient Redeployment: After determining who has the first turn, you can redeploy up to 3 Grey Knights units."
+      "acts": [
+        {
+          "when": "movementStart",
+          "units": [
+            "GREY KNIGHTS"
+          ],
+          "if": [
+            "roundAtLeast:2",
+            "notEngaged",
+            "hasAbility:Gate of Infinity"
+          ],
+          "limit": "turn",
+          "per": "army",
+          "botUse": "never",
+          "label": "Prescient Redeployment: into Strategic Reserves, set up again this phase",
+          "do": [
+            {
+              "on": "self",
+              "reserves": true,
+              "earlyArrival": true
+            }
+          ]
+        }
+      ],
+      "manual": "Offered even when Gate of Infinity took the most units it could (the card: only when it did not)"
     },
     "Prescient Redeployment": {
       "auto": "full",
@@ -7366,7 +7507,18 @@
     },
     "Argent Assault": {
       "auto": "full",
-      "desc": "Dauntless Champions: When a Paladin Squad is selected to fight, if Strength is lower than target Toughness, add 1 to Wound rolls."
+      "effects": [
+        {
+          "units": [
+            "PALADIN SQUAD"
+          ],
+          "attack": "melee",
+          "if": [
+            "attackSLessT"
+          ],
+          "wound": 1
+        }
+      ]
     },
     "Dauntless Champions": {
       "auto": "full",
@@ -7374,7 +7526,8 @@
     },
     "Fires of Purgation": {
       "auto": "full",
-      "desc": "Searing Soulflame: When a Purgation Squad pins an enemy unit, that enemy makes a Battle-shock test with a -1 modifier."
+      "code": true,
+      "manual": "Righteous Persecution also forces a Battle-shock test at -1 (abilities/GK.json)"
     },
     "Searing Soulflame": {
       "auto": "full",
@@ -7382,7 +7535,32 @@
     },
     "Immaterial Interdiction": {
       "auto": "full",
-      "desc": "Echojump: After shooting, an Interceptor Squad can make a D6\" surge move."
+      "acts": [
+        {
+          "when": "afterShootingButton",
+          "units": [
+            "INTERCEPTOR SQUAD"
+          ],
+          "limit": "phase",
+          "if": [
+            "!marked:Personal Teleporters"
+          ],
+          "botUse": "never",
+          "label": "Echojump: surge move of up to D6+1\" (no Personal Teleporters)",
+          "do": [
+            {
+              "on": "self",
+              "surge": "D6+1"
+            },
+            {
+              "on": "self",
+              "buff": [],
+              "mark": "Echojump",
+              "until": "turn"
+            }
+          ]
+        }
+      ]
     },
     "Echojump": {
       "auto": "full",
@@ -8554,6 +8732,41 @@
       "armyRule": true,
       "code": true,
       "manual": "Orders are issued in the Command phase (orders.ts); issuing them after disembarking or arriving is not offered"
+    },
+    "Gate of Infinity": {
+      "auto": "full",
+      "armyRule": true,
+      "acts": [
+        {
+          "when": "opponentFightEnd",
+          "units": [
+            "GREY KNIGHTS"
+          ],
+          "if": [
+            "notEngaged",
+            "hasAbility:Gate of Infinity",
+            "!kw:AIRCRAFT"
+          ],
+          "limit": "turn",
+          "per": "army",
+          "uses": "battleSize+1",
+          "usesEnh": "Tome of Forbidden Ways",
+          "botUse": "always",
+          "botIf": [
+            "!onObjective",
+            "farFromEnemies:12",
+            "!kw:VEHICLE"
+          ],
+          "label": "Gate of Infinity: into Strategic Reserves (arrives in your next Movement phase)",
+          "do": [
+            {
+              "on": "self",
+              "reserves": true,
+              "earlyArrival": true
+            }
+          ]
+        }
+      ]
     }
   }
 }

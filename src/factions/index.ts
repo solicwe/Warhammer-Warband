@@ -24,7 +24,7 @@ import { drugBlocked, drugPicked, drukhariAction, drukhariAttackMods, drukhariBa
 import { corruptRealspace, daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsUnitDestroyed, isUnderShadowOfChaos, spendFluxToken, tryFlux } from './daemons';
 import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultAmbushUnitDestroyed, cultBattleStart, cultInfiltration, psionicParasitism, regimentalReinforcements } from './cult';
 import { activateReanimation, necCommandEnd, repairBarge, resurrect } from './necrons';
-import { gkAttackModifiers, gkDefenseModifiers, gkEndOpponentTurn } from './greyKnights';
+import { whollyHallowed } from './greyKnights';
 import { circleInFlow, inFlow, isThousandSonsArmy } from './flow';
 import { RULES } from '../engine/config';
 import { clamp } from '../engine/geometry';
@@ -228,7 +228,8 @@ addModifier('meleeStrength', (s, u) => (inSynapse(s, u) ? { n: 1, note: 'Synapse
 addCondition('inSynapse', (_c, x) => inSynapse(x.s, x.A));
 
 // Grey Knights
-on('turnEnd', (s) => gkEndOpponentTurn(s));
+// Grey Knights: Hallowed Ground
+addCondition('hallowed', (_c, x) => whollyHallowed(x.s, x.A));
 
 // ---------- attack modifiers (combatMods.ts) ----------
 // Asked in this order for every weapon profile; the attacker's rules first, then the defender's.
@@ -244,8 +245,6 @@ addCombatMods((x) => {
 addCombatMods((x) => drukhariAttackMods(x.s, x.A, x.T));
 // Necrons
 // Grey Knights
-addCombatMods((x) => { const g = gkAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon); return { ...g, critHitOn: g.critHitThreshold }; });
-addCombatMods((x) => gkDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
 
 // Thousand Sons: Arcane Might (+1 S to Psychic Attacks, +2 in the Flow of Magic), Empyric Onslaught (+3 Attacks for
 // the CHARACTER's Psychic ranged weapons in the Flow of Magic)

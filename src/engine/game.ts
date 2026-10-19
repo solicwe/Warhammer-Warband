@@ -1371,6 +1371,7 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
     emit(s, 'unitMoved', { u });
     emitReact(s, other(u.owner), 'enemyArrived', { unitId: u.id });
   }
+  fire(s, 'arrived', [u]);
   if (unitHasAbility(u, 'Drop Pod Assault')) dropPodAssault(s, u);
   if (u.homer && s.active !== u.owner) { log(s, `Teleport Homer: ${u.name} arrives at the token (token removed)`, 'info', u.owner); u.homer = undefined; }
   return chk;

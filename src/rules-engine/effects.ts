@@ -752,6 +752,8 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('nearMarked:')) { const [, mark, rs] = c.split(':'); return boardUnits(s, other(A.owner)).some((e) => (e.timed ?? []).some((t) => t.mark === mark && t.by === A.owner) && unitDistance(A, e) <= Number(rs) + 1e-6); }
   if (c.startsWith('nearModels:')) return nearModelsCond(x, c);
   if (c.startsWith('nearCount:')) return nearCountCond(x, c);
+  // a detachment rule / army rule the unit's army has: "rule:Searing Soulflame" or the detachment's name
+  if (c.startsWith('rule:')) return activeRules(s, A.owner).includes(c.slice(5));
   if (c.startsWith('roundAtLeast:')) return s.round >= Number(c.slice(13));
   if (c.startsWith('targetFar:')) { const r = Number(c.slice(10)); return !!T && !boardUnits(s, other(T.owner)).some((e) => unitDistance(T, e) <= r + 1e-6); }
   if (c.startsWith('enemyBetween:')) { const [lo, hi] = c.slice(13).split(':').map(Number); return boardUnits(s, other(A.owner)).some((e) => { const d = unitDistance(A, e); return d > lo + 1e-6 && d <= hi + 1e-6; }); }

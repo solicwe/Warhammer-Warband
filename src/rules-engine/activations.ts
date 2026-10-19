@@ -25,7 +25,8 @@ export type Trigger =
   | 'anyPhase' | 'opponentTurnEnd' | 'opponentFightEnd' | 'onDeath' | 'friendlyDeath' | 'shotByEnemy' | 'enemyMovedNear' | 'enemyFellBack'
   | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks' | 'movementStart' | 'fightEnd' | 'attackStart'
   | 'attacked' | 'friendlyTargeted' | 'fightEndButton' | 'chargeStart' | 'chargeEnd'
-  | 'shootingStart' | 'oppShootingStart' | 'eachCommandStart' | 'shootingEnd' | 'charge';
+  | 'shootingStart' | 'oppShootingStart' | 'eachCommandStart' | 'shootingEnd' | 'charge'
+  | 'arrived'; // the unit was just set up from Reserves (Deep Strike or ingress)
 
 export type Until = TimedEffect['until'];
 
@@ -178,7 +179,8 @@ export interface ActSpec {
   when: Trigger;
   limit?: Limit;
   per?: 'unit' | 'army';
-  uses?: number | 'battleSize'; // battleSize: 1 / 2 / 3 at Incursion / Strike Force / Onslaught (Warp Portals)
+  uses?: number | 'battleSize' | 'battleSize+1'; // battleSize: 1 / 2 / 3 at Incursion / Strike Force / Onslaught (Warp Portals); +1: 2 / 3 / 4 (Gate of Infinity)
+  usesEnh?: string; // one use more while a unit of the army has this Enhancement (Tome of Forbidden Ways)
   battleUses?: number; // "twice per battle" on top of the limit
   auto?: boolean; // resolves by itself at the trigger (no decision needed or always worth it)
   if?: string[];
@@ -328,7 +330,10 @@ const usesOf = (s: GameState, def: ActDef) => {
     && s.players[def.holder.owner].detachments.some((d) => d.name === 'Veiled Blade Elimination Force')) {
     return 2;
   }
-  return def.spec.uses === 'battleSize' ? BATTLE_SIZE_N[s.players[def.holder.owner].battleSize ?? ''] ?? 2 : def.spec.uses ?? 1;
+  const u0 = def.spec.uses;
+  const n = u0 === 'battleSize' || u0 === 'battleSize+1' ? (BATTLE_SIZE_N[s.players[def.holder.owner].battleSize ?? ''] ?? 2) + (u0 === 'battleSize+1' ? 1 : 0) : u0 ?? 1;
+  const enh = def.spec.usesEnh;
+  return n + (enh && s.units.some((x) => x.owner === def.holder.owner && (onBoard(x) || x.status === 'reserves') && x.enhancements?.some((e) => e.name === enh)) ? 1 : 0);
 };
 export const limitLeft = (s: GameState, def: ActDef) => psykerBudgetOk(s, def) && (!def.spec.limit || timesUsed(s, def) < usesOf(s, def))
   && (!def.spec.battleUses || (Number(usedBag(s, def)[`${baseKey(def)}#n`]) || 0) < def.spec.battleUses);
@@ -1140,7 +1145,7 @@ export interface ManualAct { def: ActDef; targets: UnitState[]; why: string | nu
 
 const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge',
   'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks', 'movementStart', 'fightEnd', 'attackStart',
-  'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart', 'chargeEnd', 'shootingEnd'];
+  'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart', 'chargeEnd', 'shootingEnd', 'arrived'];
 
 /** Abilities player p can use by pressing a button right now. */
 export function manualActs(s: GameState, p: PlayerId): ManualAct[] {
