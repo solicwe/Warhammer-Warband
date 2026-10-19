@@ -1345,6 +1345,11 @@ export function beginMove(s: GameState, u: UnitState, kind: 'normal' | 'advance'
   const f = unitFlags(s, u);
   if (f.mustStay) { log(s, `${u.name} must Remain Stationary this turn`, 'info', u.owner); remainStationary(s, u); return false; }
   if (kind === 'fallback' && f.fallBackLdTest && !ldTest(s, u, 'Transfixing Gaze')) { remainStationary(s, u); return false; }
+  if (kind === 'fallback' && f.fallBackRoll < 7 && !hasKw(u, 'TITANIC')) {
+    const r = rollN(s, 1)[0];
+    log(s, `Grasping Tendrils: ${u.name} rolled ${r} to Fall Back (${f.fallBackRoll}+ holds it)`, 'roll', u.owner);
+    if (r >= f.fallBackRoll) { remainStationary(s, u); return false; }
+  }
   if (f.slowed && (u.used ??= {}).slowed !== String(s.turn)) {
     u.used.slowed = String(s.turn);
     const r = d6(s);
@@ -2737,4 +2742,27 @@ export function shootNow(s: GameState, u: UnitState, target: UnitState, label: s
   resolveAll(s);
   finishAttack(s);
   u.weaponsFired = fired; // shooting out of phase does not use up its own Shooting phase
+}
+
+/** Set a unit up (from Reserves or the battlefield) wholly within `range` of `anchor`'s models, unengaged, as close to
+ *  `towards` as possible (Eternity Gate). Returns false when there is no room. */
+export function setUpNear(s: GameState, u: UnitState, anchor: UnitState, range: number, towards: Pt | null): boolean {
+  const c = alive(anchor)[0];
+  if (!c) return false;
+  let best: { pos: Map<string, Pt>; d: number } | null = null;
+  for (let ring = 0; ring <= 4; ring++) for (let a = 0; a < 16; a++) {
+    const r = c.r + 1 + (ring * Math.max(0, range - 2)) / 4, ang = (a / 16) * Math.PI * 2;
+    const pos = formationAt(u, { x: c.x + Math.cos(ang) * r, y: c.y + Math.sin(ang) * r });
+    const errors: string[] = [];
+    endChecks(s, u, pos, errors, new Set());
+    if (errors.length || engagedAt(s, u, pos).length) continue;
+    if (![...pos.entries()].every(([id, p]) => { const m = u.models.find((x) => x.id === id)!; return alive(anchor).some((n) => ptGap(n, p) + reachOf(m) <= range + 0.02); })) continue;
+    const mid = [...pos.values()][0];
+    const d = towards ? dist(mid, towards) : ring;
+    if (!best || d < best.d) best = { pos, d };
+  }
+  if (!best) return false;
+  for (const m of alive(u)) { const p = best.pos.get(m.id); if (p) { m.x = p.x; m.y = p.y; } }
+  u.status = 'board'; u.setUpTurn = s.turn; u.move = 'ingress';
+  return true;
 }

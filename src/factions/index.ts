@@ -6,14 +6,14 @@ import './rituals';
 import { copyOrders, extraOrder, ordersShockFailed, orderTo, isOfficer } from './orders';
 import { amOppMovementEnd, disembarkOne, shootFrom, shootWith } from './amTransports';
 import { addCombatMods, addPoolFinisher } from '../engine/combatMods';
-import { addActionHandler, addChoiceHooks, addCondition, addDieRescue, addEffectSource, addModifier, addStratSpecial, addTargetFilter, on } from '../engine/events';
+import { emit, addActionHandler, addChoiceHooks, addCondition, addDieRescue, addEffectSource, addModifier, addStratSpecial, addTargetFilter, on } from '../engine/events';
 import { heal, setBackUp, shockTest } from '../rules-engine/activations';
 import { applyMortalWounds, killModel, onMortalWounds } from '../engine/attack';
 import { rollExpr, rollN } from '../engine/dice';
 import { addTimed, cond, effectsFor, unitFlags } from '../rules-engine/effects';
 import { alive, boardUnits, emitReact, engagedEnemies, log, other, phaseKey, unitById, unitDistance } from '../engine/state';
 import { unitVisibleTo } from '../engine/visibility';
-import { shootNow } from '../engine/game';
+import { setUpNear, shootNow } from '../engine/game';
 import type { GameState, UnitState } from '../engine/types';
 import { ftggMods, ftggTargetChosen, guidedVs, isTauArmy, observerFor, spotOf } from './tau';
 import { activeIds, blessingEffects, blessingsRoll, blessingsRoundStart, butchersFightStart } from './blessings';
@@ -516,5 +516,17 @@ addActionHandler((s, a, x) => {
   if (!a.seed) return;
   const n = a.seed.n === 'models' ? alive(x.u).length : rollExpr(s, a.seed.n).total;
   if (seedSpores(s, x.u, a.seed.name, n, a.seed.range, x.label) && a.seed.noShoot) x.u.weaponsFired = [...new Set(alive(x.u).flatMap((m) => m.weapons.map((w) => w.name)))];
+});
+
+// Eternity Gate (Monolith): a NECRONS INFANTRY unit is set up wholly within 6" of it, towards the closest enemy
+addActionHandler((s, a, x) => {
+  if (!a.gateWithin || x.on.id === x.u.id) return;
+  const c = alive(x.u)[0];
+  const foe = c ? boardUnits(s, other(x.u.owner)).flatMap(alive).sort((p, q) => Math.hypot(p.x - c.x, p.y - c.y) - Math.hypot(q.x - c.x, q.y - c.y))[0] : undefined;
+  if (!setUpNear(s, x.on, x.u, a.gateWithin, foe ?? null)) { log(s, `${x.label}: no room for ${x.on.name}`, 'info', x.u.owner); return; }
+  addTimed(s, x.on, { e: {}, label: x.label, until: 'turn', by: x.u.owner, mark: 'Eternity Gate' });
+  x.on.cantCharge = true; // no charge this turn (DIMENSIONAL CORRIDOR lifts it)
+  log(s, `${x.label}: ${x.on.name} steps through the Eternity Gate`, 'info', x.u.owner);
+  emit(s, 'arrived', { u: x.on });
 });
 

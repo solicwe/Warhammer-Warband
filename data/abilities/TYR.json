@@ -663,11 +663,9 @@
         "units": [
           "!TITANIC"
         ],
-        "fallBackLdTest": true
+        "fallBackRoll": 3
       }
-    ],
-    "status": "partial",
-    "note": "A Leadership test to Fall Back (the card: a D6, 3+ = Remain Stationary)"
+    ]
   },
   "Will of the Hive Mind": {
     "effects": [
@@ -1170,10 +1168,48 @@
             }
           }
         ]
+      },
+      {
+        "when": "endOfNormalMove",
+        "auto": true,
+        "range": 3,
+        "target": {
+          "side": "enemy",
+          "range": 3
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "1"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          }
+        ],
+        "do": [
+          {
+            "on": "self",
+            "sacrifice": {
+              "n": "1",
+              "name": "Spore"
+            }
+          }
+        ]
       }
-    ],
-    "status": "partial",
-    "note": "Explodes when an enemy unit ends a move within 3\" (one model; the card: also after its own moves, one model per enemy unit)"
+    ]
   },
   "Aerial Seeding": {
     "status": "info",
@@ -1784,14 +1820,52 @@
             "on": "self",
             "sacrifice": {
               "n": "1",
-              "name": "Spore"
+              "name": "Mucolid"
+            }
+          }
+        ]
+      },
+      {
+        "when": "endOfNormalMove",
+        "auto": true,
+        "range": 3,
+        "target": {
+          "side": "enemy",
+          "range": 3
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D6"
+              }
+            ]
+          }
+        ],
+        "do": [
+          {
+            "on": "self",
+            "sacrifice": {
+              "n": "1",
+              "name": "Mucolid"
             }
           }
         ]
       }
-    ],
-    "status": "partial",
-    "note": "Explodes when an enemy unit ends a move within 3\" (one model; the card: also after its own moves, one model per enemy unit)"
+    ]
   },
   "Floating Death@Spore Mines": {
     "act": [
@@ -1834,10 +1908,48 @@
             }
           }
         ]
+      },
+      {
+        "when": "endOfNormalMove",
+        "auto": true,
+        "range": 3,
+        "target": {
+          "side": "enemy",
+          "range": 3
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "1"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          }
+        ],
+        "do": [
+          {
+            "on": "self",
+            "sacrifice": {
+              "n": "1",
+              "name": "Spore"
+            }
+          }
+        ]
       }
-    ],
-    "status": "partial",
-    "note": "Explodes when an enemy unit ends a move within 3\" (one model; the card: also after its own moves, one model per enemy unit)"
+    ]
   },
   "Protean Purpose": {
     "status": "manual",

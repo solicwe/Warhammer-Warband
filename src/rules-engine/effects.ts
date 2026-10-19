@@ -130,6 +130,7 @@ export interface Effect {
   redirectWounds?: string; // each wound it would lose becomes a mortal wound on this (friendly) unit instead (THIEVES OF PAIN)
   ignoreEngaged?: { on: number; cost: 'mortal' | 'model' }; // shoots as if no enemy were in Engagement Range of it; each enemy model destroyed while engaged with it: D6, on X+ it suffers a mortal wound / loses a model (FICKLEFIRE, CALLOUS SACRIFICE)
   disembarkRange?: number; // on a TRANSPORT: its passengers may be set up wholly within X" of it (SECURE POSITIONS)
+  fallBackRoll?: number; // enemy aura: an enemy unit selected to Fall Back rolls a D6, on X+ it must Remain Stationary instead (Grasping Tendrils)
   coverBehind?: { friendly?: boolean; units?: string[] }; // units it hides (partly) have the Benefit of Cover (Ramshackle Cover, STALWART PROTECTOR)
   ignoreLdMods?: boolean; // modifiers to its Leadership (and Battle-shock tests) are ignored (Vexilla)
   stratsWhileShocked?: boolean; // can be targeted by Stratagems while Battle-shocked (Grim Determination)
@@ -1370,6 +1371,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     noBigGunsPenalty: es.some((e) => e.noBigGunsPenalty),
     followFallBack: es.some((e) => e.followFallBack),
     fallBackLdTest: list.some((a) => a.e.fallBackLdTest && a.holder.owner !== u.owner),
+    fallBackRoll: Math.min(7, ...list.filter((a) => a.e.fallBackRoll && a.holder.owner !== u.owner).map((a) => a.e.fallBackRoll!)),
     slowed: es.some((e) => e.slowed),
     snared: es.some((e) => e.snared),
     ldSet: Math.min(99, ...es.map((e) => e.ldSet ?? 99)),

@@ -524,8 +524,68 @@
     "note": "One model (the card: one per SPYDER model in this unit)"
   },
   "Eternity Gate": {
-    "status": "manual",
-    "note": "Not automated: sending a NECRONS INFANTRY unit through the Monolith"
+    "act": [
+      {
+        "when": "movement",
+        "limit": "phase",
+        "if": [
+          "roundAtLeast:2",
+          "!marked:Gate Opened"
+        ],
+        "label": "Eternity Gate: a NECRONS INFANTRY unit in Reserves is set up within 6\"",
+        "botUse": "always",
+        "target": {
+          "side": "friendly",
+          "units": [
+            "NECRONS",
+            "INFANTRY"
+          ],
+          "inReserves": true
+        },
+        "do": [
+          {
+            "on": "target",
+            "gateWithin": 6
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Gate Opened",
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "movement",
+        "limit": "phase",
+        "if": [
+          "roundAtLeast:2",
+          "!marked:Gate Opened"
+        ],
+        "label": "Eternity Gate: a NECRONS INFANTRY unit on the battlefield is set up within 6\"",
+        "botUse": "never",
+        "target": {
+          "side": "friendly",
+          "units": [
+            "NECRONS",
+            "INFANTRY"
+          ],
+          "notSelf": true
+        },
+        "do": [
+          {
+            "on": "target",
+            "gateWithin": 6
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Gate Opened",
+            "until": "phase"
+          }
+        ]
+      }
+    ]
   },
   "Malevolent Arcing": {
     "act": {
@@ -2031,8 +2091,19 @@
     ]
   },
   "Relocational Optimiser": {
-    "status": "manual",
-    "note": "Not automated: Eternity Gate is used by hand"
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "marked:Eternity Gate"
+        ],
+        "abilities": [
+          "lethal hits"
+        ]
+      }
+    ],
+    "status": "partial",
+    "note": "[LETHAL HITS] after arriving through the Eternity Gate (the [SUSTAINED HITS 1] option is not offered)"
   },
   "Mortality Shroud (Aura)": {
     "effects": [

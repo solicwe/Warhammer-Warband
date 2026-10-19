@@ -463,9 +463,19 @@
       "bot": "never"
     },
     "DIMENSIONAL CORRIDOR": {
-      "status": "manual",
-      "note": "Not automated: the Eternity Gate is used by hand",
-      "bot": "never"
+      "targetKw": [
+        "NECRONS"
+      ],
+      "unitIf": [
+        "marked:Eternity Gate"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "allowCharge": true
+        }
+      ],
+      "status": "auto"
     },
     "QUANTUM DEFLECTION": {
       "targetKw": [
