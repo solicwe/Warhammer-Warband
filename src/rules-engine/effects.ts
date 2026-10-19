@@ -57,6 +57,7 @@ export interface Defend {
   inv?: number;
   invVs?: 'psychic';
   fnp?: number;
+  reflect6?: boolean; // each unmodified saving throw of 6 against a ranged attack: 1 mortal wound to the attacking unit after it has shot (Repulsor Grid)
   fnpVs?: 'mortal' | 'psychic' | 'mortalPsychic' | 'damage1'; // damage1: only attacks with an unmodified Damage of 1 (WARDING CHANT)
   cover?: boolean;
   coverUnless12?: boolean;

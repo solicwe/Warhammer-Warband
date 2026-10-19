@@ -14,7 +14,7 @@ import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
 export const setFreeDamageHook = (h: (s: GameState) => boolean) => { freeDamageHook = h; };
-import { addToExpr, applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, killDemiseOn, demiseSure, woundsGoTo, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from '../rules-engine/effects';
+import { addToExpr, applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, effectsFor, isRiled, killDemiseOn, demiseSure, woundsGoTo, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from '../rules-engine/effects';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
 
@@ -1052,6 +1052,9 @@ export function applyDamage(s: GameState) {
     p.mortalFromDev[k] = dmg;
     applyMortalWounds(s, T, dmg, `Devastating Wounds (${p.weapon})`, 1, !!precisionGroup);
   }
+  // Repulsor Grid: unmodified 6s on the saving throws against ranged attacks come back as mortal wounds
+  const sixes = at.kind === 'shoot' ? p.saves.filter((d) => d.v === 6).length : 0;
+  if (sixes && effectsFor(s, T).some((a) => a.e.defend?.reflect6)) at.reflected = (at.reflected ?? 0) + sixes;
   // Rapturous Blows / Radiant Champion: a mortal wound for each attack that wounded
   const wounded = p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds;
   if (p.mortalPerWound && wounded && alive(T).length) applyMortalWounds(s, T, wounded * p.mortalPerWound, `${p.weapon}: mortal wounds on wounding`);
@@ -1113,6 +1116,7 @@ export function finishAttack(s: GameState) {
   const at = s.attack!;
   const A = unitById(s, at.attackerId);
   const T = unitById(s, at.targetId);
+  if (at.reflected && alive(A).length) applyMortalWounds(s, A, at.reflected, 'Repulsor Grid');
   // one hazard roll per Hazardous weapon used in the attack, however many models fired it
   const haz = at.pools.filter((p) => p.hazardous > 0).length;
   if (haz && alive(A).length) {

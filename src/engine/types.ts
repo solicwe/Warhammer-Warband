@@ -578,6 +578,7 @@ export interface AttackSession {
   targetId: string;
   pools: Pool[];
   idx: number;
+  reflected?: number; // Repulsor Grid: mortal wounds back to the attacker after it has shot
   stage: 'hit' | 'wound' | 'save' | 'damage' | 'done';
   hazardousRolls: number[];
   summary: string[];

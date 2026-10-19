@@ -1123,8 +1123,24 @@
     "note": "Cover from the Fortification is worked out by the terrain rules"
   },
   "Defence Line": {
-    "status": "manual",
-    "note": "Not automated: the 4+ invulnerable save for INFANTRY in its cover"
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 3,
+        "units": [
+          "ASTRA MILITARUM",
+          "INFANTRY"
+        ],
+        "if": [
+          "inCover"
+        ],
+        "defend": {
+          "inv": 4
+        }
+      }
+    ],
+    "status": "partial",
+    "note": "ASTRA MILITARUM INFANTRY within 3\" of the line and in cover have a 4+ invulnerable save (the card: in cover because of the line)"
   },
   "Fortification": {
     "status": "info",

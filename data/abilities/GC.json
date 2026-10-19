@@ -1302,8 +1302,9 @@
     "note": "Up to D3 Troopers return (the D3+1 with two medi-packs is not applied)"
   },
   "Mobile Command Vehicle": {
+    "code": true,
     "status": "auto",
-    "note": "In your Command phase, one Officer model embarked within this TRANSPORT can issue Orders even though it is not on the battlefield. When doing so, measure distances to and from this TRANSPORT."
+    "note": "One Officer inside issues its Orders in the Command phase, measured from this transport"
   },
   "Rapid Deployment": {
     "status": "auto",
@@ -1322,8 +1323,24 @@
     "note": "Each time a ranged attack is allocated to a model, if that model is not fully visible to every model in the attacking unit because of this FORTIFICATION, that model has the Benefit of Cover against that attack."
   },
   "Defence Line": {
-    "status": "auto",
-    "note": "While an ASTRA MILITARUM INFANTRY model has the Benefit of Cover as a result of this terrain feature (see above), that model has a 4+ invulnerable save."
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 3,
+        "units": [
+          "ASTRA MILITARUM",
+          "INFANTRY"
+        ],
+        "if": [
+          "inCover"
+        ],
+        "defend": {
+          "inv": 4
+        }
+      }
+    ],
+    "status": "partial",
+    "note": "ASTRA MILITARUM INFANTRY within 3\" of the line and in cover have a 4+ invulnerable save (the card: in cover because of the line)"
   },
   "Fortification": {
     "status": "info",
@@ -1484,8 +1501,9 @@
     "note": "Each time this model makes a ranged attack with its volcano cannon that targets a MONSTER or VEHICLE unit, that attack has the [DEVASTATING WOUNDS] ability."
   },
   "Mount Up!": {
+    "code": true,
     "status": "auto",
-    "note": "At the end of your opponent’s Movement phase, if there are no models currently embarked within this TRANSPORT, you can select one friendly Astra Militarum Infantry unit (excluding Artillery units) that is wholly within 6\" of this TRANSPORT."
+    "note": "At the end of the opponent's Movement phase an INFANTRY unit wholly within 6\" that is near the enemy and off the objectives embarks"
   },
   "Concussive Wave": {
     "status": "auto",
@@ -2141,8 +2159,15 @@
     "note": "Orders are worked out by the Voice of Command rules (orders.ts)"
   },
   "Grim Determination@Krieg Command Squad": {
-    "status": "manual",
-    "note": "Not automated: Stratagems and Orders while Battle-shocked"
+    "effects": [
+      {
+        "if": [
+          "kw:OFFICER"
+        ],
+        "stratsWhileShocked": true,
+        "ordersStayShocked": true
+      }
+    ]
   },
   "Master Vox@Krieg Command Squad": {
     "code": true,
@@ -2169,8 +2194,17 @@
     ]
   },
   "Servo-scribes@Krieg Command Squad": {
-    "status": "manual",
-    "note": "Not automated: one extra Order once per battle"
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "order": 1
+        }
+      ]
+    }
   },
   "ORDERS@Krieg Command Squad": {
     "code": true,
@@ -2302,8 +2336,9 @@
     "note": "The +1 near an OFFICER is not added"
   },
   "Mobile Command Vehicle@Chimera": {
-    "status": "manual",
-    "note": "Not automated: an embarked OFFICER issuing Orders"
+    "code": true,
+    "status": "auto",
+    "note": "One Officer inside issues its Orders in the Command phase, measured from this transport"
   },
   "One Shot@Chimera": {
     "code": true,
@@ -2350,8 +2385,24 @@
     "note": "Cover from the Fortification is worked out by the terrain rules"
   },
   "Defence Line@Aegis Defence Line": {
-    "status": "manual",
-    "note": "Not automated: the 4+ invulnerable save for INFANTRY in its cover"
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 3,
+        "units": [
+          "ASTRA MILITARUM",
+          "INFANTRY"
+        ],
+        "if": [
+          "inCover"
+        ],
+        "defend": {
+          "inv": 4
+        }
+      }
+    ],
+    "status": "partial",
+    "note": "ASTRA MILITARUM INFANTRY within 3\" of the line and in cover have a 4+ invulnerable save (the card: in cover because of the line)"
   },
   "Fortification@Aegis Defence Line": {
     "status": "info",
@@ -2438,8 +2489,13 @@
     "note": "Only the target unit (not INFANTRY within 3\" of it); taken after the attacks"
   },
   "Armour Obliteration@Banesword": {
-    "status": "manual",
-    "note": "Not automated: Deadly Demise on 3+"
+    "effects": [
+      {
+        "weapon": "quake cannon",
+        "attack": "ranged",
+        "killDemiseOn": 3
+      }
+    ]
   },
   "Earthshaker Rounds@Basilisk": {
     "act": {
@@ -2543,8 +2599,16 @@
     "note": "[ONE SHOT] weapons fire once per battle"
   },
   "Close-range Titan Killer@Doomhammer": {
-    "status": "partial",
-    "note": "Not automated: the magma cannon counting as within half range"
+    "effects": [
+      {
+        "weapon": "magma cannon",
+        "attack": "ranged",
+        "if": [
+          "targetMV"
+        ],
+        "halfRangeAlways": true
+      }
+    ]
   },
   "Rearm, Reload, Fire@Field Ordnance Battery": {
     "effects": [
@@ -3052,8 +3116,9 @@
     ]
   },
   "Mount Up!@Stormlord": {
-    "status": "manual",
-    "note": "Not automated: embarking at the end of the opponent's Movement phase"
+    "code": true,
+    "status": "auto",
+    "note": "At the end of the opponent's Movement phase an INFANTRY unit wholly within 6\" that is near the enemy and off the objectives embarks"
   },
   "Concussive Wave@Stormsword": {
     "act": {

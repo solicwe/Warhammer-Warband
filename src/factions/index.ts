@@ -499,3 +499,14 @@ addActionHandler((s, a, x) => {
   if (hurt) heal(s, hurt, rollExpr(s, 'D3+1').total);
 });
 
+
+// Metalodermal Tesla Weave: an enemy unit picks the bearer's unit as a charge target (once per phase): 2-5 D3, 6: 3 mortal wounds
+on('targetChosen', (s, { attackerId, targetId }) => {
+  if (s.phase !== 'charge') return;
+  const A = unitById(s, attackerId), T = unitById(s, targetId);
+  if (!A || !T || A.owner === T.owner || A.chargedTurn !== s.turn || !T.enhancements.some((e) => e.name === 'Metalodermal Tesla Weave') || (T.used ?? {}).tesla === phaseKey(s)) return;
+  (T.used ??= {}).tesla = phaseKey(s);
+  const r = rollN(s, 1)[0];
+  log(s, `Metalodermal Tesla Weave: rolled ${r}`, 'roll', T.owner);
+  if (r >= 2) applyMortalWounds(s, A, r === 6 ? 3 : rollExpr(s, 'D3').total, 'Metalodermal Tesla Weave');
+});

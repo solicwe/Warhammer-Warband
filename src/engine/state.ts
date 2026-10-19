@@ -50,7 +50,7 @@ export function log(s: GameState, text: string, kind?: LogEntry['kind'], player:
 
 /** Resolve Coteaz's Spy Network after ability-generated CP; its own refund cannot trigger another refund. */
 export function notifyAbilityCpGain(s: GameState, p: PlayerId, amount: number, source: string) {
-  for (const c of boardUnits(s, other(p)).filter((u) => u.abilities.some((a) => a.name === 'Spy Network'))) {
+  for (const c of boardUnits(s, other(p)).filter((u) => u.abilities.some((a) => a.name === 'Spy Network' || a.name === 'Autodivinator'))) {
     for (let i = 0; i < amount; i++) {
       const roll = d6(s);
       if (roll >= 2) s.players[c.owner].cp += 1;

@@ -1587,12 +1587,14 @@
     ]
   },
   "Autodivinator": {
-    "status": "manual",
-    "note": "Not automated: 2+ to gain 1CP when the opponent gains CP from an ability"
+    "code": true,
+    "status": "auto",
+    "note": "Each time your opponent gains CP from an ability: 2+, you gain 1CP"
   },
   "Metalodermal Tesla Weave": {
-    "status": "manual",
-    "note": "Not automated: mortal wounds to an enemy unit that charges the bearer's unit"
+    "code": true,
+    "status": "auto",
+    "note": "Once per phase, an enemy unit charging the bearer's unit: 2-5 D3 mortal wounds, 6: 3"
   },
   "Honourable Combatant": {
     "act": [

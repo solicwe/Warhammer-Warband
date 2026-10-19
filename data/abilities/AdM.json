@@ -303,8 +303,13 @@
     ]
   },
   "Repulsor Grid": {
-    "status": "manual",
-    "note": "Not automated: mortal wounds back for unmodified 6s on saves"
+    "effects": [
+      {
+        "defend": {
+          "reflect6": true
+        }
+      }
+    ]
   },
   "Battle Protocols": {
     "act": [

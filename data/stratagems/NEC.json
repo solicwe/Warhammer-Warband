@@ -850,9 +850,14 @@
       "status": "auto"
     },
     "DISHARMONISATION CASCADE": {
-      "status": "manual",
-      "note": "Not automated: Deadly Demise on 3+",
-      "bot": "never"
+      "targetKw": [
+        "NECRONS",
+        "MONSTER"
+      ],
+      "react": "deadlyDemise",
+      "botReact": "always",
+      "status": "partial",
+      "note": "Its Deadly Demise goes off without a roll (the card: on a 3+)"
     },
     "PHASE MELDING": {
       "status": "manual",
