@@ -102,6 +102,7 @@ describe('Astra Militarum Voice of Command', () => {
     state.active = 0;
     cadians.models.forEach((m) => { m.x = 10; m.y = 10; });
     officer.models.forEach((m) => { m.x = 10; m.y = 12; });
+    officer.status = 'board';
 
     expect(ordersRemaining(state, officer)).toBeGreaterThan(0);
     expect(issueOrder(state, officer.id, cadians.id, 'Take Aim!')).toBeNull();

@@ -388,9 +388,20 @@
       "status": "auto"
     },
     "ADAPTABLE AVARICE": {
-      "status": "manual",
-      "note": "Not automated: switching back to Hostile Acquisition",
-      "bot": "never"
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "CHARACTER"
+      ],
+      "unitIf": [
+        "fortifyTakeover"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "lovHostile": true
+        }
+      ],
+      "status": "auto"
     },
     "CYBERSTIMM INFUSION": {
       "targetKw": [
@@ -583,9 +594,28 @@
       "status": "auto"
     },
     "SECURE POSITIONS": {
-      "status": "manual",
-      "note": "Not automated: disembarking anywhere within 6\" at the end of a phase",
-      "bot": "never"
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "TRANSPORT"
+      ],
+      "react": "anyPhaseEnd",
+      "unitIf": [
+        "ownTurn",
+        "hasEmbarked"
+      ],
+      "effects": [
+        {
+          "disembarkRange": 6
+        }
+      ],
+      "do": [
+        {
+          "on": "self",
+          "disembarkOne": true
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
     },
     "INEXORABLE EFFICIENCY": {
       "targetKw": [
@@ -620,9 +650,27 @@
       "status": "auto"
     },
     "VENGEANCE FLARE": {
-      "status": "manual",
-      "note": "Not automated: a KAPRICUS / SAGITAUR unit shooting back",
-      "bot": "never"
+      "targetKw": [
+        "LEAGUES OF VOTANN",
+        "INFANTRY"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "targetOfLast",
+        "near:6:KAPRICUS|SAGITAUR"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shootFrom": "KAPRICUS|SAGITAUR"
+        }
+      ],
+      "botReact": "always",
+      "status": "partial",
+      "note": "A KAPRICUS or SAGITAUR unit shoots back (the 2YP HEKATON option is not offered)"
     },
     "ILLUMINATED PRIORITY": {
       "targetKw": [

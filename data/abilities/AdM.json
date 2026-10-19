@@ -1370,8 +1370,17 @@
     ]
   },
   "Artisan": {
-    "status": "manual",
-    "note": "Not automated: changing one roll to a 6 once per phase"
+    "freeDie": {
+      "kind": "setSix",
+      "stage": "any",
+      "limit": "phase",
+      "if": [
+        "leaderAttached",
+        "onAcquisition"
+      ]
+    },
+    "status": "partial",
+    "note": "One Hit or Wound roll becomes a 6 (saving throws are not offered)"
   },
   "Necromechanic": {
     "effects": [
@@ -1424,8 +1433,16 @@
     "note": "A failed test leaves the unit hitting only on 6s (the card: it cannot shoot)"
   },
   "Emotionless Clarity": {
-    "status": "manual",
-    "note": "Not automated: Deadly Demise without the roll"
+    "effects": [
+      {
+        "demiseSure": {
+          "range": 12,
+          "units": [
+            "VEHICLE|LEGIO CYBERNETICA"
+          ]
+        }
+      }
+    ]
   },
   "Arch-negator": {
     "effects": [

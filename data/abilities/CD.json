@@ -307,8 +307,9 @@
     ]
   },
   "Formless Horror": {
-    "status": "manual",
-    "note": "Not automated: the Battle-shock test before targeting this model"
+    "code": true,
+    "status": "auto",
+    "note": "An enemy unit that wants to attack it takes a Battle-shock test first (once per phase); failed: it cannot target it"
   },
   "Mischief and Confusion": {
     "act": {
@@ -601,8 +602,9 @@
     ]
   },
   "Tally of Pestilence": {
-    "status": "manual",
-    "note": "Not automated: the tally of destroyed enemy models"
+    "code": true,
+    "status": "auto",
+    "note": "Enemy models destroyed by Nurgle daemons are counted; 7+ at the start of your Command phase: +1CP"
   },
   "Daemon Lord of Nurgle (Aura)": {
     "effects": [
@@ -642,8 +644,9 @@
     }
   },
   "Reverberating Summons": {
-    "status": "manual",
-    "note": "Not automated: returning Plaguebearers"
+    "code": true,
+    "status": "auto",
+    "note": "Each model the Doomsday bell destroys returns a Plaguebearer to a unit within 12\""
   },
   "Infected Outbreak": {
     "act": {
@@ -1174,8 +1177,13 @@
     ]
   },
   "Altered Reality (Psychic)": {
-    "status": "manual",
-    "note": "Not automated: changing one roll to a 6 once per battle round"
+    "freeDie": {
+      "kind": "setSix",
+      "stage": "any",
+      "limit": "round"
+    },
+    "status": "partial",
+    "note": "One Hit or Wound roll becomes a 6 (saving throws are not offered)"
   },
   "Virulent Blessing (Psychic)": {
     "act": {
@@ -1238,8 +1246,9 @@
     ]
   },
   "Seed the Garden of Nurgle": {
-    "status": "manual",
-    "note": "Not automated: the terrain feature joining the Shadow of Chaos"
+    "code": true,
+    "status": "auto",
+    "note": "End of your Movement phase: the area terrain it stands in is in the Shadow of Chaos for the rest of the battle"
   },
   "Poxbringer": {
     "effects": [
@@ -1929,12 +1938,19 @@
     ]
   },
   "Gateway Unto Damnation": {
-    "status": "manual",
-    "note": "Not automated: the stronger Deadly Demise"
+    "effects": [
+      {
+        "scope": "model",
+        "deadlyDemiseOn": 2
+      }
+    ],
+    "status": "partial",
+    "note": "Deadly Demise on 2+ (the D3+3 after it destroyed a unit is not applied)"
   },
   "Cankerblight": {
-    "status": "manual",
-    "note": "Not automated: destroying a model instead of Daemonic Terror's mortal wounds"
+    "code": true,
+    "status": "auto",
+    "note": "An enemy unit (not MONSTER / VEHICLE) within 6\" that fails a Battle-shock test loses one model (no Daemonic Terror mortal wounds)"
   },
   "Maggot Maws": {
     "act": {

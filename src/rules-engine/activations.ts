@@ -26,7 +26,8 @@ export type Trigger =
   | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks' | 'movementStart' | 'fightEnd' | 'attackStart'
   | 'attacked' | 'friendlyTargeted' | 'fightEndButton' | 'chargeStart' | 'chargeEnd'
   | 'shootingStart' | 'oppShootingStart' | 'eachCommandStart' | 'shootingEnd' | 'charge'
-  | 'arrived'; // the unit was just set up from Reserves (Deep Strike or ingress)
+  | 'arrived' // the unit was just set up from Reserves (Deep Strike or ingress)
+  | 'oppChargeStart'; // start of the opponent's Charge phase
 
 export type Until = TimedEffect['until'];
 
@@ -83,6 +84,7 @@ export interface Action {
   miracle?: number; // Adepta Sororitas: gain this many Miracle dice (negative: discard, the lowest first)
   miracleValue?: number; // … showing this value
   tyr?: 'shadow'; // Tyranids: unleash the Shadow in the Warp
+  copyOrders?: string; // Orders on this unit and on the closest friendly unit of this keyword within 6" affect both (Coordinated Action)
   order?: number; // the OFFICER issues this many Orders now, outside its usual count (picked as the bot would)
   oppCp?: number; // the opponent loses this many CP (negative number; never below 0) (Honourable Combatant)
   reserves?: boolean; // remove the unit and place it into Strategic Reserves
@@ -105,6 +107,16 @@ export interface Action {
   tryDatButton?: 1 | 2; // Dread Mob: roll 1 or 2 different D6 on the table (2 = one hazard roll)
   attackMod?: { hit?: number; toughness?: number; noCover?: boolean }; // changes the attack being made right now
   splashMortals?: { expr: string; range: number }; // another enemy unit within X" of the target suffers mortal wounds
+  disembarkOne?: boolean; // one unit embarked within this TRANSPORT gets out now, towards the closest objective, and cannot charge this turn (SECURE POSITIONS)
+  shootFrom?: string; // a friendly unit of these keywords (|) within 6" of this unit shoots the target unit now (VENGEANCE FLARE)
+  lovHostile?: boolean; // spend YP down to 6: the army has Hostile Acquisition until its next turn (ADAPTABLE AVARICE)
+  redirectTo?: string; // a friendly unit of these keywords within 9" (visible) takes this unit's lost wounds as mortal wounds this phase (THIEVES OF PAIN)
+  unshockNear?: number; // one Battle-shocked friendly unit (sharing its first Faction keyword) within X" of the unit is no longer Battle-shocked
+  regenNear?: number; // Feed the Swarm's Regenerate on one friendly TYRANIDS unit within X" (RECLAIM BIOMASS)
+  armyFlag?: string; // a lasting flag on the army (faction code reads it: YOUR TIME IS NIGH)
+  lovRefund?: number; // roll a D6: on X+ gain 1 Yield Point back (Mantle of Elders)
+  hexReprisal?: boolean; // a D6 per mortal wound the unit suffered this phase: each 2+ is a mortal wound on the target (max 6)
+  shootWith?: string; // this unit shoots now with only the weapons whose name has this text, at the enemy unit it hurts most (Servo-sentry)
   shootBack?: boolean; // after the enemy unit has finished its attacks, this unit shoots it (as if it were your Shooting phase)
   log?: string;
   // stratagem actions
@@ -162,7 +174,7 @@ export interface Action {
   alsoNear?: number; // do this to every other enemy unit within X" of the target too (Spore-laced Shock Waves)
   dg?: 'signalPox' | 'blightedLand' | 'eyestinger' | 'extraPlague' | 'leechspore';
   lov?: number; // Leagues of Votann: spend this many Yield points (negative: gain) (votann.ts)
-  cd?: 'flux'; // Chaos Daemons: spend a Flux token (daemons.ts)
+  cd?: 'flux' | 'eclipseNml' | 'eclipseOpp' | 'eclipseBoth'; // Chaos Daemons: spend a Flux token; IMPOSSIBLE ECLIPSE areas in the Shadow this phase (daemons.ts)
   gc?: 'parasitism'; // Genestealer Cults: Psionic Parasitism (cult.ts)
   nec?: 'reanimate' | 'resurrect'; // Necrons: the target unit's Reanimation Protocols activate (resurrect: D6, one unit per turn)
   dru?: string; // Drukhari: 'empower' / 'gain' / 'spendCp' / 'wager' (drukhari.ts)
@@ -811,6 +823,10 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       for (const m of victims) { m.dead = true; m.wounds = 0; }
       log(s, `${def.name}: ${on.name} loses ${victims.length} ${a.sacrifice.name}`, 'info', u.owner);
     }
+    if (a.unshockNear) {
+      const f = boardUnits(s, on.owner).find((x) => x.battleShocked && (!on.factionKeywords[0] || x.factionKeywords.includes(on.factionKeywords[0])) && unitDistance(x, on) <= a.unshockNear! + 1e-6);
+      if (f) { f.battleShocked = false; log(s, `${def.name}: ${f.name} is no longer Battle-shocked`, 'info', u.owner); }
+    }
     if (a.unshock && on.battleShocked) { on.battleShocked = false; log(s, `${def.name}: ${on.name} is no longer Battle-shocked`, 'info', u.owner); }
     if (a.riled) { on.riledUntil = s.turn + (s.active === u.owner ? 1 : 0); log(s, `${def.name}: ${on.name} riled up`, 'info', u.owner); }
     if (a.oppCp) { const O = s.players[other(u.owner)]; const n = Math.min(O.cp, -a.oppCp); if (n > 0) { O.cp -= n; log(s, `${def.name}: ${O.name} loses ${n}CP`, 'cp', u.owner); } }
@@ -1148,7 +1164,7 @@ export interface ManualAct { def: ActDef; targets: UnitState[]; why: string | nu
 
 const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge',
   'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks', 'movementStart', 'fightEnd', 'attackStart',
-  'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart', 'chargeEnd', 'shootingEnd', 'arrived'];
+  'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart', 'chargeEnd', 'shootingEnd', 'arrived', 'oppChargeStart'];
 
 /** Abilities player p can use by pressing a button right now. */
 export function manualActs(s: GameState, p: PlayerId): ManualAct[] {

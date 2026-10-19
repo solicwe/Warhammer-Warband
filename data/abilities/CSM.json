@@ -1,5 +1,6 @@
 {
- "Dark Pacts": { "code": true,
+ "Dark Pacts": {
+  "code": true,
   "status": "auto",
   "note": "Made when the unit is selected to shoot or fight: Leadership test (failed: D3 mortal wounds), then [LETHAL HITS] or [SUSTAINED HITS 1] for the phase. The bot and Automatic pick for you; with \"I decide\" the buttons are in the shoot / fight panel (darkPacts.ts)"
  },
@@ -15,11 +16,13 @@
    ]
   }
  },
- "Dark Destiny": { "code": true,
+ "Dark Destiny": {
+  "code": true,
   "status": "auto",
   "note": "A passed Dark Pact test of 7+ gives 1CP (darkPacts.ts)"
  },
- "SUPREME COMMANDER": { "code": true,
+ "SUPREME COMMANDER": {
+  "code": true,
   "status": "auto",
   "note": "Checked by the army builder: Abaddon must be your Warlord"
  },
@@ -1128,8 +1131,11 @@
   ]
  },
  "Malign Cover": {
-  "status": "auto",
-  "note": "Cover from the Noctilith Crown: worked out by the terrain line of sight"
+  "effects": [
+   {
+    "coverBehind": {}
+   }
+  ]
  },
  "Fortification": {
   "status": "info",
@@ -1366,7 +1372,8 @@
    ]
   }
  },
- "Blessings of Khorne": { "code": true,
+ "Blessings of Khorne": {
+  "code": true,
   "status": "auto",
   "note": "World Eaters army rule: not used in a Chaos Space Marines army"
  },
@@ -1384,7 +1391,8 @@
    ]
   }
  },
- "Icon of Khorne": { "code": true,
+ "Icon of Khorne": {
+  "code": true,
   "status": "auto",
   "note": "Bloodshed points are for World Eaters armies"
  },
@@ -1424,7 +1432,8 @@
    }
   ]
  },
- "Nurgle’s Gift (Aura)": { "code": true,
+ "Nurgle’s Gift (Aura)": {
+  "code": true,
   "status": "auto",
   "note": "Death Guard army rule: not used in a Chaos Space Marines army"
  },
@@ -1505,7 +1514,8 @@
   "status": "info",
   "note": "Leaders that can join Legionaries can join this unit (army builder)"
  },
- "Thrill Seekers": { "code": true,
+ "Thrill Seekers": {
+  "code": true,
   "status": "auto",
   "note": "Emperor's Children army rule: not used in a Chaos Space Marines army"
  },
@@ -1566,7 +1576,8 @@
    }
   ]
  },
- "Fleet Command": { "code": true,
+ "Fleet Command": {
+  "code": true,
   "status": "auto",
   "note": "After both armies are deployed: redeploy up to three units (or put them into Strategic Reserves)"
  },
@@ -1719,7 +1730,8 @@
    }
   }
  },
- "Eye of Tzeentch": { "code": true,
+ "Eye of Tzeentch": {
+  "code": true,
   "status": "auto",
   "note": "Handled with the Dark Pact: a passed test of 8+ gives 1CP"
  },
@@ -2220,7 +2232,8 @@
    }
   ]
  },
- "Tempting Addendum": { "code": true,
+ "Tempting Addendum": {
+  "code": true,
   "status": "auto",
   "note": "Handled with the Dark Pact (contract invoked within 3\")"
  },
@@ -2508,7 +2521,8 @@
  },
  "Crown of Worms": {
   "status": "auto",
-  "note": "+3\" to the ranges of Warpsmith, Master of Mechanisms and Enrage Machine Spirits"
+  "note": "+3\" to the ranges of Warpsmith, Master of Mechanisms and Enrage Machine Spirits",
+  "code": true
  },
  "Pact of Destruction": {
   "effects": [

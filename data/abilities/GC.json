@@ -1169,16 +1169,32 @@
     "note": "While this unit contains an OFFICER, ranged weapons equipped by models in this unit have the [ASSAULT] ability."
   },
   "Grim Determination": {
-    "status": "auto",
-    "note": "While this unit contains an OFFICER, you can target this unit with Stratagems even while it is Battle-shocked and Orders issued to this unit do not cease to affect this unit if it becomes Battle-shocked."
+    "effects": [
+      {
+        "if": [
+          "kw:OFFICER"
+        ],
+        "stratsWhileShocked": true,
+        "ordersStayShocked": true
+      }
+    ]
   },
   "Alchemyk Counteragents": {
     "status": "auto",
     "note": "The bearer’s unit has the Feel No Pain 6+ ability against mortal wounds."
   },
   "Servo-scribes": {
-    "status": "auto",
-    "note": "Once per battle, when issuing an Order, the Lord Commissar can issue one additional Order. Designer’s Note: Place a Servo-scribes token next to the unit, removing it when this ability has been used."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "order": 1
+        }
+      ]
+    }
   },
   "Vox-net": {
     "code": true,
@@ -1226,12 +1242,64 @@
     "note": "Each time a model in this unit makes a melee attack, if this unit made a Charge move or was charged this turn, add 1 to the Wound roll."
   },
   "Grim Demeanour": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes an attack, add 1 to the Hit roll if this unit is below its Starting Strength, and add 1 to the Wound roll as well if this unit is Below Half-strength."
+    "effects": [
+      {
+        "if": [
+          "belowStartingStrength"
+        ],
+        "hit": 1
+      },
+      {
+        "if": [
+          "belowHalfStrength"
+        ],
+        "wound": 1
+      }
+    ]
   },
   "Death Korps Medi-pack": {
-    "status": "auto",
-    "note": "At the start of your Command phase, if the bearer’s unit is below its Starting Strength, you can return up to D3 destroyed Death Korps Troopers to this unit (if this unit contains two models equipped with a Death Korps medi-pack, return up to D3+1 destroyed Death Korps Troopers to this unit instead)."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "phase",
+      "if": [
+        "belowStartingStrength"
+      ],
+      "roll": "D3",
+      "table": [
+        {
+          "min": 1,
+          "max": 1,
+          "do": [
+            {
+              "on": "self",
+              "revive": 1
+            }
+          ]
+        },
+        {
+          "min": 2,
+          "max": 2,
+          "do": [
+            {
+              "on": "self",
+              "revive": 2
+            }
+          ]
+        },
+        {
+          "min": 3,
+          "do": [
+            {
+              "on": "self",
+              "revive": 3
+            }
+          ]
+        }
+      ]
+    },
+    "status": "partial",
+    "note": "Up to D3 Troopers return (the D3+1 with two medi-packs is not applied)"
   },
   "Mobile Command Vehicle": {
     "status": "auto",
@@ -1287,8 +1355,13 @@
     "note": "In your Shooting phase, just after selecting a target for this model’s tremor cannon, the target unit and every other enemy INFANTRY unit within 3\" of that unit must take a Battle-shock test."
   },
   "Armour Obliteration": {
-    "status": "auto",
-    "note": "Each time an attack made with this model’s quake cannon destroys an enemy model that has the Deadly Demise ability, that model’s Deadly Demise ability inflicts mortal wounds on a D6 roll of 3+ instead of on a 6."
+    "effects": [
+      {
+        "weapon": "quake cannon",
+        "attack": "ranged",
+        "killDemiseOn": 3
+      }
+    ]
   },
   "Earthshaker Rounds": {
     "status": "auto",
@@ -1319,8 +1392,16 @@
     "note": "The bearer can only shoot with this weapon in your Shooting phase, and only if it Remained Stationary this turn and you did not use its Deathstrike Missile ability to Designate Target or Adjust Target this phase. When the bearer shoots with this weapon, do not select a target."
   },
   "Close-range Titan Killer": {
-    "status": "auto",
-    "note": "Each time this model’s magma cannon targets a MONSTER or VEHICLE unit, that target is always considered to be within half range of that weapon."
+    "effects": [
+      {
+        "weapon": "magma cannon",
+        "attack": "ranged",
+        "if": [
+          "targetMV"
+        ],
+        "halfRangeAlways": true
+      }
+    ]
   },
   "Rearm, Reload, Fire": {
     "status": "auto",

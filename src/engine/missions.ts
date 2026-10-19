@@ -2,7 +2,7 @@
 // operation markers and the scoring conditions of all 25 primary cards.
 import { deploymentById, MISSIONS, primaryById, RULES, toPoly, type ScoringRule } from './config';
 import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
-import { alive, boardUnits, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, unitById } from './state';
+import { alive, boardUnits, emitReact, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, unitById } from './state';
 import type { GameState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
@@ -295,6 +295,7 @@ export function startAction(s: GameState, opt: ActionOption) {
   const p = u.owner;
   const P = s.players[p];
   const def = MISSIONS.actions[opt.action];
+  emitReact(s, p, 'actionStart', { unitId: u.id }); // BY THOUGHT ALONE
   if (!may(s, u, 'shootAfterAction')) u.selectedToShoot = true; // cannot shoot (or charge) after starting an action
   u.cantCharge = true;
   // on screen as a card, like a roll: the player sees the action happen

@@ -60,6 +60,11 @@ export function pickDetChoice(s: GameState, p: PlayerId, rule: string, ids: stri
     const pool = now.choice.options.filter((o) => !o.random && o.group === rnd.group);
     const dice = rollN(s, rnd.random!);
     log(s, `${rnd.name}: rolled [${dice.join(' ')}]`, 'roll', p);
+    // Malevolent Heraldry (bearer on the battlefield): a result that repeats the other is re-rolled
+    if (dice.length === 2 && dice[0] === dice[1] && s.units.some((u) => u.owner === p && u.status === 'board' && u.enhancements.some((e) => e.name === 'Malevolent Heraldry'))) {
+      dice[1] = rollN(s, 1)[0];
+      log(s, `Malevolent Heraldry: re-rolled one die → [${dice.join(' ')}]`, 'roll', p);
+    }
     // a D6 table of fewer options (Code Chivalric: 1-2, 3-4, 5-6); six options: one each
     // … a result already sworn (Heroes of Legend) becomes one that was not
     const used = s.players[p].det?.[rule]?.used ?? [];

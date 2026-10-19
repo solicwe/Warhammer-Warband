@@ -126,16 +126,26 @@
         "miracle:1"
       ],
       "label": "Rapturous Blows: discard a Miracle dice, this model's melee wounds also inflict a mortal wound",
-      "botUse": "never",
+      "botUse": "always",
       "do": [
         {
           "on": "self",
           "miracle": -1
+        },
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "attack": "melee",
+              "mortalPerWound": 1
+            }
+          ],
+          "until": "phase"
         }
       ]
     },
-    "status": "partial",
-    "note": "Not automated: the extra mortal wound on each wound"
+    "status": "auto"
   },
   "Fury of the Righteous": {
     "status": "auto",
@@ -723,8 +733,7 @@
         ]
       }
     ],
-    "status": "partial",
-    "note": "Not automated: D3 Miracle dice when Agathae Dolan is destroyed"
+    "status": "auto"
   },
   "Sworn Protectors": {
     "effects": [
@@ -819,19 +828,23 @@
           "if": [
             "!targetKw:CHAOS"
           ],
-          "shock": 0
+          "shockMortals": {
+            "mod": 0,
+            "mortals": "3"
+          }
         },
         {
           "on": "target",
           "if": [
             "targetKw:CHAOS"
           ],
-          "shock": -2
+          "shockMortals": {
+            "mod": -2,
+            "mortals": "3"
+          }
         }
       ]
-    },
-    "status": "partial",
-    "note": "Not automated: the 3 mortal wounds when the test is failed"
+    }
   },
   "Mysterious Saviours": {
     "effects": [
@@ -915,8 +928,9 @@
     "status": "auto"
   },
   "Denuncia Oratory": {
-    "status": "manual",
-    "note": "Not automated: a new quarry when the old one is destroyed"
+    "code": true,
+    "status": "auto",
+    "note": "When the quarry is destroyed, the most valuable enemy unit becomes the new quarry"
   },
   "Righteous Denunciation": {
     "act": {
@@ -1091,8 +1105,9 @@
     "status": "auto"
   },
   "Psalm of Righteous Judgement": {
-    "status": "manual",
-    "note": "Not automated: trading a Miracle dice for a 6 when a PENITENT unit destroys an enemy unit"
+    "code": true,
+    "status": "auto",
+    "note": "A PENITENT unit destroys an enemy unit: the lowest Miracle dice becomes a 6"
   },
   "Verse of Holy Piety": {
     "status": "manual",
@@ -1236,11 +1251,16 @@
         {
           "on": "target",
           "shock": 0
+        },
+        {
+          "on": "self",
+          "if": [
+            "targetBattleShocked"
+          ],
+          "miracle": 1
         }
       ]
-    },
-    "status": "partial",
-    "note": "Not automated: the Miracle dice when the test is failed"
+    }
   },
   "Triptych of the Macharian Crusade": {
     "code": true,

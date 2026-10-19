@@ -34,10 +34,10 @@ import { deploymentById, RULES, toPoly } from '../engine/config';
 import { d6, exprAverage } from '../engine/dice';
 import { baseDist, bodyTouchesPoly, circleTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from '../engine/geometry';
 import { setActionEligibilityHook, unitInRange } from '../engine/missions';
-import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, unitDistance, withinTerrain } from '../engine/state';
+import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, setStratShockedHook, unitDistance, withinTerrain } from '../engine/state';
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, Pt, TimedEffect, UnitState, WeaponData, WeaponProfileData } from '../engine/types';
 import { abilityLabel, condApplies, parseAbility } from '../engine/weapons';
-import { hasCover, hasLos, isHidden, setVisibilityHooks } from '../engine/visibility';
+import { hasCover, hasLos, isHidden, setScreenHook, setVisibilityHooks } from '../engine/visibility';
 import { setThroughHook } from '../engine/pathing';
 import { auraRangeBonus, condExact, condPatterns, effectSources, eligibleByRule, meleeStrength, moveThroughModels, moveThroughTerrain } from '../engine/events';
 
@@ -57,7 +57,7 @@ export interface Defend {
   inv?: number;
   invVs?: 'psychic';
   fnp?: number;
-  fnpVs?: 'mortal' | 'psychic' | 'mortalPsychic';
+  fnpVs?: 'mortal' | 'psychic' | 'mortalPsychic' | 'damage1'; // damage1: only attacks with an unmodified Damage of 1 (WARDING CHANT)
   cover?: boolean;
   coverUnless12?: boolean;
   coverUnlessWithin?: number; // the Benefit of Cover against ranged attacks unless the attacker is within this range (Rune of Mists: 18)
@@ -120,6 +120,19 @@ export interface Effect {
   ignoreWoundMods?: boolean; // ignore (bad) modifiers to the wound roll
   givesCover?: boolean;
   rapidFireFullRange?: boolean; // [RAPID FIRE] counts up to the weapon's full range (Codex Fire-patterns)
+  moveNearMortals?: { range: number; on: number; dmg: string; plus?: number; plusIf?: string[] }; // an enemy unit set up or ending a move within range: D6 (+plus if plusIf holds on this unit), on X+ it suffers dmg mortal wounds (FIRES OF COVENANT)
+  demiseSure?: { range: number; units?: string[] }; // once per turn, a friendly model of these units destroyed within X": its Deadly Demise inflicts mortal wounds without a roll (Emotionless Clarity)
+  mortalPerWound?: number; // each attack that wounds also inflicts this many mortal wounds on the target (Rapturous Blows, Radiant Champion)
+  onKill?: { miracle?: number; shock?: boolean }; // once per phase, after its attacks destroyed enemy models: gain Miracle dice / that unit takes a Battle-shock test (FAITH AND FURY, RIGHTEOUS BLOWS)
+  redirectWounds?: string; // each wound it would lose becomes a mortal wound on this (friendly) unit instead (THIEVES OF PAIN)
+  ignoreEngaged?: { on: number; cost: 'mortal' | 'model' }; // shoots as if no enemy were in Engagement Range of it; each enemy model destroyed while engaged with it: D6, on X+ it suffers a mortal wound / loses a model (FICKLEFIRE, CALLOUS SACRIFICE)
+  disembarkRange?: number; // on a TRANSPORT: its passengers may be set up wholly within X" of it (SECURE POSITIONS)
+  coverBehind?: { friendly?: boolean; units?: string[] }; // units it hides (partly) have the Benefit of Cover (Ramshackle Cover, STALWART PROTECTOR)
+  ignoreLdMods?: boolean; // modifiers to its Leadership (and Battle-shock tests) are ignored (Vexilla)
+  stratsWhileShocked?: boolean; // can be targeted by Stratagems while Battle-shocked (Grim Determination)
+  ordersStayShocked?: boolean; // Orders on it do not end when it becomes Battle-shocked (Grim Determination)
+  halfRangeAlways?: boolean; // the target always counts as within half range of the weapon (Close-range Titan Killer)
+  killDemiseOn?: number; // an enemy model this weapon destroys has Deadly Demise on X+ instead of a 6 (Armour Obliteration)
   // defence
   defend?: Defend;
   incoming?: Incoming;
@@ -131,7 +144,7 @@ export interface Effect {
   cannotFallBack?: boolean; noOverwatch?: boolean; noSnapTarget?: boolean; cannotBeHidden?: boolean; detection?: number; rangeMinus?: number;
   rerollAdvance?: boolean; rerollCharge?: boolean; advanceSix?: boolean; advanceBonus?: number; chargeBonus?: number; rerollShock?: boolean;
   advanceSelfMortals?: string;
-  stratDiscount?: { ids: string[]; cp: number; limit?: Limit; perArmy?: boolean; sacrifice?: boolean; fateValue?: number }; // sacrifice: one Bodyguard model is destroyed each time (Brutal Example); fateValue: a Seer Council Fate die of this value is discarded
+  stratDiscount?: { ids: string[]; cp: number; limit?: Limit; perArmy?: boolean; sacrifice?: boolean; fateValue?: number; yp?: number }; // yp: costs this many Yield Points (Ancestral Crest); sacrifice: one Bodyguard model is destroyed each time (Brutal Example); fateValue: a Seer Council Fate die of this value is discarded
   stratTax?: { cp: number; limit?: Limit }; // enemy aura: your opponent's stratagems on their units near it cost more
   stratCpChance?: number; // targeting this unit with a stratagem: on X+ gain 1CP
   riled?: boolean;
@@ -542,6 +555,31 @@ function ruleEffects(s: GameState, u: UnitState, h: UnitState, effects: Effect[]
   }
 }
 
+/** THIEVES OF PAIN: the friendly unit that takes this unit's lost wounds as mortal wounds, if any. */
+export function woundsGoTo(s: GameState, u: UnitState): UnitState | undefined {
+  const id = unitFx(s, u).find((a) => a.e.redirectWounds)?.e.redirectWounds;
+  const t = id ? s.units.find((x) => x.id === id) : undefined;
+  return t && t.id !== u.id && t.status === 'board' && alive(t).length && !unitFx(s, t).some((a) => a.e.redirectWounds) ? t : undefined;
+}
+
+/** Emotionless Clarity: a friendly bearer within range makes this model's Deadly Demise go off without a roll (once per turn). */
+export function demiseSure(s: GameState, u: UnitState, m: ModelState): boolean {
+  for (const x of boardUnits(s, u.owner)) for (const a of unitFx(s, x)) {
+    const q = a.e.demiseSure;
+    if (!q || a.holder.id !== x.id || !unitMatches(u, q.units) || (x.used ?? {})[`sure:${a.label}`] === String(s.turn)) continue;
+    if (!alive(x).some((n) => baseDist(n, m) <= q.range + 1e-6)) continue;
+    (x.used ??= {})[`sure:${a.label}`] = String(s.turn);
+    log(s, `${a.label}: the Deadly Demise of ${m.name} goes off without a roll`, 'info', u.owner);
+    return true;
+  }
+  return false;
+}
+
+/** Deadly Demise X+ for a model destroyed by this attacker's weapon (Armour Obliteration), or 6. */
+export function killDemiseOn(s: GameState, A: UnitState, weapon: string): number {
+  return Math.min(6, ...effectsFor(s, A).filter((a) => a.e.killDemiseOn && (!a.e.weapon || wk(weapon).includes(wk(a.e.weapon)))).map((a) => a.e.killDemiseOn!));
+}
+
 export function effectsFor(s: GameState, u: UnitState): Active[] {
   const hit = memo?.fx.get(u.id);
   if (hit) return hit;
@@ -644,7 +682,7 @@ function nearCond(x: Ctx, spec: string): boolean {
   const from = x.bearers?.length ? x.bearers : alive(x.holder ?? x.A);
   const self = x.holder ?? x.A;
   return boardUnits(x.s, self.owner).some((f) => f.id !== self.id
-    && req.every((k) => f.keywords.includes(k) || f.factionKeywords.includes(k) || f.sources.includes(k))
+    && req.every((k0) => k0.split('|').some((k) => f.keywords.includes(k) || f.factionKeywords.includes(k) || f.sources.includes(k)))
     && !(not && (f.keywords.includes(not) || f.sources.includes(not)))
     && alive(f).some((n) => from.some((b) => baseDist(b, n) <= r + 1e-6)));
 }
@@ -984,7 +1022,7 @@ const rerolls = (e: { reroll?: Reroll | Reroll[] }): Reroll[] => (e.reroll ? (Ar
 export function offenceFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, w: WeaponData, p: WeaponProfileData, kind: 'melee' | 'ranged', d: number): Active[] {
   const x: Ctx = { s, A, T, m, w, p, d, kind };
   return effectsFor(s, A).filter((a) => (!a.e.attack || a.e.attack === kind) && modelOk(a, m) && weaponOk(a, w, p) && holds(a, x)
-    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.critWoundAp || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange || a.e.skill || a.e.skillSet));
+    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.critWoundAp || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange || a.e.halfRangeAlways || a.e.mortalPerWound || a.e.skill || a.e.skillSet));
 }
 
 /** Marks on the target ("hit by Multi-spectrum Array: +1 to hit for your ADEPTUS ASTARTES") that help this attacker. */
@@ -1087,6 +1125,7 @@ function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list:
     if (e.critWoundOn) { pool.critWoundOn = Math.min(pool.critWoundOn, e.critWoundOn); bump(a.label, `crit wound ${e.critWoundOn}+`); }
     if (e.ignoreHitMods) { pool.ignoreHitMods = true; bump(a.label, 'ignores Hit roll modifiers'); }
     if (e.ignoreWoundMods) { pool.ignoreWoundMods = true; bump(a.label, 'ignores Wound roll modifiers'); }
+    if (e.mortalPerWound) { pool.mortalPerWound = (pool.mortalPerWound ?? 0) + e.mortalPerWound; bump(a.label, `+${e.mortalPerWound} mortal wound per wound`); }
     if (e.strengthPer5Models) {
       const n = alive(A).length + s.units.filter((p) => p.embarkedIn === A.id && p.status === 'embarked').reduce((x, p) => x + alive(p).length, 0);
       const add = Math.floor(n / 5);
@@ -1203,7 +1242,8 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
     }
     if (df.fnp) {
       const vs = df.fnpVs;
-      const ok = !vs || (vs === 'mortal' && kind === 'mortal') || (vs === 'psychic' && psychic) || (vs === 'mortalPsychic' && (kind === 'mortal' || psychic));
+      const d1 = vs === 'damage1' && kind !== 'mortal' && s.attack?.pools[s.attack.idx]?.profile.D.trim() === '1';
+      const ok = !vs || d1 || (vs === 'mortal' && kind === 'mortal') || (vs === 'psychic' && psychic) || (vs === 'mortalPsychic' && (kind === 'mortal' || psychic));
       if (ok && (fnp === null || df.fnp < fnp)) fnp = df.fnp;
     }
   }
@@ -1286,6 +1326,10 @@ export function unitFlags(s: GameState, u: UnitState) {
   const list = unitFx(s, u);
   const es = list.map((a) => a.e);
   return {
+    ordersStayShocked: es.some((e) => e.ordersStayShocked),
+    ignoreLdMods: es.some((e) => e.ignoreLdMods),
+    disembarkRange: Math.max(0, ...es.map((e) => e.disembarkRange ?? 0)),
+    ignoreEngaged: es.find((e) => e.ignoreEngaged)?.ignoreEngaged,
     stealth: es.some((e) => e.stealth),
     loneOperative: es.some((e) => e.loneOperative),
     deepStrike: es.some((e) => e.deepStrike),
@@ -1413,6 +1457,7 @@ function stratParts(s: GameState, u: UnitState, stratId: string): StratParts {
   for (const a of unitFx(s, u)) {
     const d = a.e.stratDiscount;
     if (d && a.holder.owner === u.owner && (!d.ids || d.ids.includes(stratId) || d.ids.includes('*')) && limitFree(s, a, 'strat', d.limit, d.perArmy)
+      && (!d.yp || (s.players[u.owner].yieldPoints ?? 0) >= d.yp)
       && (!discount || d.cp > discount.e.stratDiscount!.cp)) discount = a;
     const t = a.e.stratTax;
     if (t && a.holder.owner !== u.owner && limitFree(s, a, 'tax', t.limit) && (!tax || t.cp > tax.e.stratTax!.cp)) tax = a;
@@ -1434,6 +1479,7 @@ function stratSpent(s: GameState, u: UnitState, stratId: string) {
     if (m) { m.dead = true; m.wounds = 0; log(s, `${discount.label}: ${m.name} is destroyed`, 'info', u.owner); }
     const pool = s.players[u.owner].seerFate;
     if (d.fateValue && pool?.includes(d.fateValue)) pool.splice(pool.indexOf(d.fateValue), 1);
+    if (d.yp) { s.players[u.owner].yieldPoints = (s.players[u.owner].yieldPoints ?? 0) - d.yp; log(s, `${discount.label}: ${d.yp}YP spent`, 'info', u.owner); }
   }
   if (tax) {
     const t = tax.e.stratTax!;
@@ -1538,6 +1584,8 @@ function stratRepeatUsed(s: GameState, u: UnitState, id: string) {
   for (const a of unitFx(s, u)) if (a.e.stratRepeat?.ids.includes(id)) limitBag(s, a)[`repeat:${u.id}:${a.label}`] = periodKey(s, a.e.stratRepeat.limit);
 }
 setStratHooks(stratDiscount, (s, u, id) => { stratSpent(s, u, id); stratRepeatUsed(s, u, id); }, stratRepeat);
+setScreenHook((s, x, T) => unitFx(s, x).some((a) => !!a.e.coverBehind && (!a.e.coverBehind.friendly || x.owner === T.owner) && unitMatches(T, a.e.coverBehind.units)));
+setStratShockedHook((s, u) => unitFx(s, u).some((a) => a.e.stratsWhileShocked));
 setStratBlockHook((s, u) => {
   if (!onBoard(u) || u.keywords.includes('MONSTER') || u.keywords.includes('VEHICLE')) return null;
   const e = engagedEnemies(s, u).find((x) => unitFlags(s, x).noEngagedStrats);

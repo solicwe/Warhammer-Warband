@@ -207,9 +207,24 @@
       "status": "auto"
     },
     "THIEVES OF PAIN": {
-      "status": "manual",
-      "note": "Not automated: moving lost wounds to another unit",
-      "bot": "never"
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "SLAANESH",
+        "!MONSTER",
+        "!VEHICLE"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "near:9:SLAANESH"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "redirectTo": "SLAANESH"
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
     },
     "PYROGENESIS": {
       "targetKw": [
@@ -280,9 +295,22 @@
       "status": "auto"
     },
     "FICKLEFIRE": {
-      "status": "manual",
-      "note": "Not automated: shooting while engaged",
-      "bot": "never"
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "TZEENTCH"
+      ],
+      "unitIf": [
+        "engaged"
+      ],
+      "effects": [
+        {
+          "ignoreEngaged": {
+            "on": 5,
+            "cost": "mortal"
+          }
+        }
+      ],
+      "status": "auto"
     },
     "DELIRIUM UNMADE": {
       "targetKw": [
@@ -304,9 +332,44 @@
       "status": "auto"
     },
     "IMPOSSIBLE ECLIPSE": {
-      "status": "manual",
-      "note": "Not automated: extra areas in the Shadow of Chaos",
-      "bot": "never"
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "TZEENTCH",
+        "MONSTER"
+      ],
+      "choice": [
+        {
+          "label": "No Man's Land",
+          "do": [
+            {
+              "on": "self",
+              "cd": "eclipseNml"
+            }
+          ]
+        },
+        {
+          "label": "Your opponent's deployment zone",
+          "do": [
+            {
+              "on": "self",
+              "cd": "eclipseOpp"
+            }
+          ]
+        },
+        {
+          "label": "Both (spend a Flux token)",
+          "if": [
+            "fluxToken"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "cd": "eclipseBoth"
+            }
+          ]
+        }
+      ],
+      "status": "auto"
     },
     "SHEATHED IN BRASS": {
       "targetKw": [

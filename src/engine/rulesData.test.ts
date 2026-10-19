@@ -30,7 +30,7 @@ const each = (fn: (where: string, key: string, n: Record<string, unknown>) => vo
 };
 
 // triggers no code fires yet: the rules that use them are listed as known gaps in docs/RULES_STATUS.md
-const KNOWN_TRIGGER_GAPS = new Set(['enemyShootHit', 'targetedByAttack']);
+const KNOWN_TRIGGER_GAPS = new Set<string>([]);
 
 describe('rules data matches the engine', () => {
   it('every condition is one cond() understands', () => {

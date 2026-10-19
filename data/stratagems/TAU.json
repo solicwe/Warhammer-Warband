@@ -281,9 +281,13 @@
       "status": "auto"
     },
     "FAIL-SAFE DETONATOR": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: picking the Deadly Demise result"
+      "targetKw": [
+        "BATTLESUIT"
+      ],
+      "react": "deadlyDemise",
+      "botReact": "always",
+      "status": "partial",
+      "note": "Used when the battlesuit dies: its Deadly Demise goes off without the roll (models without Deadly Demise are not covered)"
     },
     "THE TORCHSTAR GAMBIT": {
       "targetKw": [
@@ -399,9 +403,15 @@
       "status": "auto"
     },
     "THE GRISLY FEAST": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: Battle-shock tests in the opponent's next Command phase"
+      "targetKw": [
+        "KROOT"
+      ],
+      "unitIf": [
+        "destroyedUnitThisPhase"
+      ],
+      "mark": "grislyFeast",
+      "until": "battle",
+      "status": "auto"
     },
     "GUERRILLA WARRIORS": {
       "targetKw": [
@@ -514,9 +524,22 @@
       "status": "auto"
     },
     "MICRODRONE SUPPORT": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: Actions"
+      "targetKw": [
+        "PATHFINDER TEAM|STEALTH BATTLESUITS"
+      ],
+      "react": "actionStart",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterAction"
+          ]
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
     },
     "MARKER BEACON": {
       "targetKw": [

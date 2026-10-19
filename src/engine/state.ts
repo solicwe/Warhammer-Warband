@@ -131,6 +131,8 @@ let spentHook: SpentHook | null = null;
 let repeatHook: RepeatHook | null = null;
 let blockHook: ((s: GameState, u: UnitState) => string | null) | null = null;
 /** Something on the battlefield stops this unit being the target of its player's stratagems (Coronal Susurrant). */
+let shockedHook: ((s: GameState, u: UnitState) => boolean) | null = null;
+export const setStratShockedHook = (h: (s: GameState, u: UnitState) => boolean) => { shockedHook = h; };
 export const setStratBlockHook = (h: (s: GameState, u: UnitState) => string | null) => { blockHook = h; };
 export const setStratHooks = (discount: DiscountHook, spent: SpentHook, repeat?: RepeatHook) => { discountHook = discount; spentHook = spent; repeatHook = repeat ?? null; };
 export const stratCost = (s: GameState, id: string, unit?: UnitState, cost?: number) => {
@@ -150,7 +152,7 @@ export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit
   if (p.cp < cp) return 'Not enough CP';
   if (p.stratagemsUsed.includes(`${phaseKey(s)}:${id}`) && !(unit && repeatHook?.(s, unit, id))) return 'This Stratagem was already used this phase';
   if (unit) {
-    if (unit.battleShocked) return 'A Battle-shocked unit cannot be targeted by Stratagems';
+    if (unit.battleShocked && !shockedHook?.(s, unit)) return 'A Battle-shocked unit cannot be targeted by Stratagems';
     const blocked = blockHook?.(s, unit);
     if (blocked) return blocked;
     if (unit.stratagemPhase === phaseKey(s)) return 'This unit was already targeted by a Stratagem this phase';
@@ -191,7 +193,7 @@ export function withinTerrain(s: GameState, m: ModelState, categories: string[] 
 // ---------- stratagem reactions ----------
 /** Moments a stratagem can react to (stratagems.ts registers the handler; the engine only reports the moment). */
 export type ReactOn = 'enemyMoved' | 'enemyArrived' | 'enemyShot' | 'enemyChargeDeclared' | 'enemyChargePhaseEnd' | 'fightPhaseEnd' | 'shootingPhaseEnd' | 'chargeMoveEnd' | 'ownAttacked'
-  | 'ownDestroyed' | 'modelDestroyed' | 'oathDestroyed' | 'deadlyDemise' | 'enemyDeadlyDemise' | 'deadlyDemiseSix' | 'enemyChargeMoveEnd' | 'enemyChargePhaseStart' | 'enemyCommandStart' | 'enemyFallBack' | 'commandStart' | 'fightStart' | 'ownKilled';
+  | 'ownDestroyed' | 'modelDestroyed' | 'oathDestroyed' | 'deadlyDemise' | 'enemyDeadlyDemise' | 'deadlyDemiseSix' | 'enemyChargeMoveEnd' | 'enemyChargePhaseStart' | 'enemyCommandStart' | 'enemyFallBack' | 'commandStart' | 'fightStart' | 'ownKilled' | 'anyPhaseEnd' | 'actionStart' | 'enemyWarlordDestroyed' | 'enemyShockFailed';
 export interface ReactCtx { unitId?: string; modelId?: string; killerId?: string; six?: boolean; victimId?: string }
 type ReactHook = (s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx) => boolean;
 let reactHook: ReactHook | null = null;

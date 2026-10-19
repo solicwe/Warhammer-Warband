@@ -32,31 +32,31 @@
         "ASTRA MILITARUM",
         "VEHICLE"
       ],
-      "react": "ownAttacked",
-      "unitIf": [
-        "shootingPhase"
-      ],
       "effects": [
         {
-          "scope": "aura",
-          "range": 6,
-          "units": [
-            "INFANTRY"
-          ],
-          "defend": {
-            "vs": "ranged",
-            "cover": true
+          "coverBehind": {
+            "friendly": true,
+            "units": [
+              "INFANTRY"
+            ]
           }
         }
       ],
-      "botReact": "always",
-      "status": "partial",
-      "note": "INFANTRY within 6\" of the VEHICLE get cover (the card: when not fully visible because of it)"
+      "status": "auto"
     },
     "COORDINATED ACTION": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: Orders on one unit also affect the other (issue the same Order by hand)"
+      "targetKw": [
+        "REGIMENT"
+      ],
+      "unitIf": [
+        "near:6:SQUADRON"
+      ],
+      "do": [
+        {
+          "copyOrders": "SQUADRON"
+        }
+      ],
+      "status": "auto"
     },
     "INSPIRED COMMAND": {
       "targetKw": [
@@ -193,9 +193,13 @@
       "status": "auto"
     },
     "VOX-RELAY": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: Orders from an embarked Officer"
+      "targetKw": [
+        "INFANTRY",
+        "OFFICER"
+      ],
+      "targetFrom": "embarked",
+      "mark": "VOX-RELAY",
+      "status": "auto"
     },
     "TRENCH FIGHTERS": {
       "targetKw": [
@@ -224,9 +228,22 @@
       "status": "auto"
     },
     "CALLOUS SACRIFICE": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: shooting into combat with your own PLATOON unit"
+      "targetKw": [
+        "PLATOON"
+      ],
+      "unitIf": [
+        "engaged"
+      ],
+      "effects": [
+        {
+          "ignoreEngaged": {
+            "on": 4,
+            "cost": "model"
+          }
+        }
+      ],
+      "status": "partial",
+      "note": "Rolled for each enemy model destroyed while engaged with your unit (the card: each wound lost)"
     },
     "OVER THE TOP": {
       "targetKw": [
@@ -931,11 +948,13 @@
           "defend": {
             "cover": true
           }
+        },
+        {
+          "coverBehind": {}
         }
       ],
       "bot": "defend",
-      "status": "partial",
-      "note": "Units behind your unit also get cover (not automated)"
+      "status": "auto"
     },
     "TRIGGERED ALERTS": {
       "targetKw": [

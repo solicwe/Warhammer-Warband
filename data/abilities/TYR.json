@@ -53,25 +53,46 @@
     "status": "auto"
   },
   "Frenzied Metabolism": {
-    "act": {
-      "when": "selectedToShoot",
-      "limit": "phase",
-      "label": "Frenzied Metabolism: +1 to Wound this phase, then D3 mortal wounds on a 2+",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "buff": [
-            {
-              "wound": 1
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    },
-    "status": "partial",
-    "note": "Not automated: the D3 mortal wounds afterwards"
+    "act": [
+      {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "label": "Frenzied Metabolism: +1 to Wound this phase, then D3 mortal wounds on a 2+",
+        "botUse": "always",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "wound": 1
+              }
+            ],
+            "until": "phase",
+            "mark": "Frenzied Metabolism"
+          }
+        ]
+      },
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "limit": "phase",
+        "if": [
+          "marked:Frenzied Metabolism"
+        ],
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "do": [
+              {
+                "on": "self",
+                "mortals": "D3"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   },
   "Bio-stimulus": {
     "act": {
@@ -181,8 +202,7 @@
         "critWoundOn": 2
       }
     ],
-    "status": "partial",
-    "note": "Not automated: the wounds regained"
+    "code": true
   },
   "Vicious Insight": {
     "effects": [
@@ -1056,8 +1076,9 @@
     "status": "auto"
   },
   "Bio-minefield": {
-    "status": "manual",
-    "note": "Not automated: enemy units cannot Advance near it"
+    "code": true,
+    "status": "auto",
+    "note": "Enemy Advance moves cannot start or end within 6\""
   },
   "Floating Death": {
     "act": [
@@ -1406,10 +1427,19 @@
           "battleShocked"
         ],
         "hit": -1
+      },
+      {
+        "scope": "army",
+        "units": [
+          "TYRANIDS"
+        ],
+        "if": [
+          "targetBattleShocked",
+          "targetNearFriendly:12:NEUROLICTOR"
+        ],
+        "wound": 1
       }
-    ],
-    "status": "partial",
-    "note": "Not automated: +1 to wound for TYRANIDS attacks against those units"
+    ]
   },
   "Hypersensory Array": {
     "effects": [
@@ -1523,8 +1553,9 @@
     "status": "auto"
   },
   "Regenerating Monstrosity": {
-    "status": "manual",
-    "note": "Not automated: regenerated twice per phase"
+    "code": true,
+    "status": "auto",
+    "note": "Feed the Swarm has no once-per-phase limit per unit here, so the bearer's unit can be regenerated twice"
   },
   "Instinctive Defence": {
     "effects": [
@@ -1558,14 +1589,37 @@
       {
         "attack": "melee",
         "strength": 1
+      },
+      {
+        "attack": "melee",
+        "if": [
+          "marked:Parasitic Biomorphology"
+        ],
+        "attacks": 1
       }
     ],
-    "status": "partial",
-    "note": "Not automated: +1 Attacks after destroying a unit near a HARVESTER"
+    "act": {
+      "when": "afterFighting",
+      "auto": true,
+      "needUnitDestroyed": true,
+      "limit": "battle",
+      "if": [
+        "near:6:HARVESTER"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "buff": [],
+          "mark": "Parasitic Biomorphology",
+          "until": "battle"
+        }
+      ]
+    }
   },
   "Hunting Grounds": {
-    "status": "manual",
-    "note": "Not automated: Battle-shock tests for enemy units arriving from Reserves"
+    "code": true,
+    "status": "auto",
+    "note": "Each enemy unit set up from Reserves: 2+, it takes a Battle-shock test"
   },
   "Stalker": {
     "act": {

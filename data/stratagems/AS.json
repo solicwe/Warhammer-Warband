@@ -75,9 +75,9 @@
         "ADEPTA SORORITAS",
         "VEHICLE"
       ],
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: Deadly Demise mortal wounds without the roll"
+      "botReact": "always",
+      "status": "auto",
+      "note": "Used at the moment the vehicle dies: its Deadly Demise goes off without the roll"
     },
     "PRAISE THE FALLEN": {
       "targetKw": [
@@ -234,11 +234,15 @@
           "abilities": [
             "lethal hits"
           ]
+        },
+        {
+          "onKill": {
+            "shock": true
+          }
         }
       ],
       "bot": "attack",
-      "status": "partial",
-      "note": "Not automated: the Battle-shock test for a unit that lost models"
+      "status": "auto"
     },
     "SHIELD OF AVERSION": {
       "targetKw": [
@@ -284,11 +288,15 @@
             "targetInRangeOfObjective"
           ],
           "wound": 1
+        },
+        {
+          "onKill": {
+            "shock": true
+          }
         }
       ],
       "bot": "attack",
-      "status": "partial",
-      "note": "Not automated: the Battle-shock test for a unit that lost models"
+      "status": "auto"
     },
     "BLAZING IRE": {
       "targetKw": [
@@ -386,11 +394,15 @@
           "abilities": [
             "lance"
           ]
+        },
+        {
+          "onKill": {
+            "miracle": 1
+          }
         }
       ],
       "bot": "attack",
-      "status": "partial",
-      "note": "Not automated: the Miracle dice when enemy models are destroyed"
+      "status": "auto"
     },
     "DIVINE GUIDANCE": {
       "targetKw": [
@@ -399,11 +411,15 @@
       "effects": [
         {
           "ap": 1
+        },
+        {
+          "onKill": {
+            "miracle": 1
+          }
         }
       ],
       "bot": "attack",
-      "status": "partial",
-      "note": "Not automated: the Miracle dice when enemy models are destroyed"
+      "status": "auto"
     },
     "BLINDING RADIANCE": {
       "targetKw": [
@@ -608,12 +624,19 @@
     "INSPIRATIONAL BATTLE CANTICLES": {
       "targetKw": [
         "ADEPTA SORORITAS",
-        "INFANTRY",
+        "INFANTRY|EXORCIST",
         "FLY|EXORCIST"
       ],
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: a Battle-shocked ADEPTA SORORITAS unit within 6\" recovers"
+      "unitIf": [
+        "near:6:ADEPTA SORORITAS"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "unshockNear": 6
+        }
+      ],
+      "status": "auto"
     },
     "DEVASTATING REPRISE": {
       "targetKw": [

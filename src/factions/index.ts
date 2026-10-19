@@ -3,12 +3,17 @@
 // To add a faction: write its module, then add a block that subscribes its functions to the events it needs.
 // Modules that register themselves when loaded:
 import './rituals';
-import { extraOrder } from './orders';
+import { copyOrders, extraOrder, ordersShockFailed, orderTo, isOfficer } from './orders';
+import { amOppMovementEnd, disembarkOne, shootFrom, shootWith } from './amTransports';
 import { addCombatMods, addPoolFinisher } from '../engine/combatMods';
 import { addActionHandler, addChoiceHooks, addCondition, addDieRescue, addEffectSource, addModifier, addStratSpecial, addTargetFilter, on } from '../engine/events';
-import { heal, shockTest } from '../rules-engine/activations';
-import { applyMortalWounds } from '../engine/attack';
-import { boardUnits, log, other, unitById, unitDistance } from '../engine/state';
+import { heal, setBackUp, shockTest } from '../rules-engine/activations';
+import { applyMortalWounds, killModel, onMortalWounds } from '../engine/attack';
+import { rollExpr, rollN } from '../engine/dice';
+import { addTimed, cond, effectsFor, unitFlags } from '../rules-engine/effects';
+import { alive, boardUnits, emitReact, engagedEnemies, log, other, phaseKey, unitById, unitDistance } from '../engine/state';
+import { unitVisibleTo } from '../engine/visibility';
+import { shootNow } from '../engine/game';
 import type { GameState, UnitState } from '../engine/types';
 import { ftggMods, ftggTargetChosen, guidedVs, isTauArmy, observerFor, spotOf } from './tau';
 import { activeIds, blessingEffects, blessingsRoll, blessingsRoundStart, butchersFightStart } from './blessings';
@@ -18,10 +23,10 @@ import { attachNear, blightedLand, dgBattleStart, dgCommandEnd, dgCommandStart, 
 import { auraBonus, bondAgain, choicePicked, choiceWhy, expend, knightsAttackDone, knightsBattleStart, knightsCommandStart, knightsCond, knightsEffects, knightsMoved, knightsRoundEnd, knightsRoundStart, knightsShockFailed, knightsShootingStart, knightsTurnEnd, knightsTurnStart, longLeash, maleficSurge, superHeavy } from './knights';
 import { discardMiracle, gainMiracleDice, resetPhaseActsOfFaith, sororitasCommandEnd, sororitasCommandStart, sororitasTurnStart, sororitasUnitDestroyed, tryActOfFaith } from './sororitas';
 import { aeldariBattleStart, aeldariRoundStart, canFocus, lucidEye, noteVibro, relentlessRaiders, resetPhaseStrandsOfFate, seerDiscounts, shadowFieldCheck, sonicDestruction, spendFocus, tryFateDie, voidThieves } from './aeldari';
-import { gainYieldPoints, spendYieldPoints, tryUtharAncestralFortune, votannBattleStart, votannTurnEnd, votannCommandEnd, votannUnitDestroyed } from './votann';
+import { delvwerkeNavigator, nomadStrategist, gainYieldPoints, spendYieldPoints, tryUtharAncestralFortune, votannBattleStart, votannTurnEnd, votannCommandEnd, votannUnitDestroyed } from './votann';
 import { admechImperativePicked, onAcquisition, pickAcquisition } from './admech';
 import { drugBlocked, drugPicked, drukhariAction, drukhariAttackMods, drukhariBattleShockFailed, drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd, drukhariUnitDestroyed, isUnitEmpowered, losingWager, painReady, pickContract } from './drukhari';
-import { corruptRealspace, daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsUnitDestroyed, isUnderShadowOfChaos, spendFluxToken, tryFlux } from './daemons';
+import { corruptRealspace, impossibleEclipse, seedTheGarden, daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsUnitDestroyed, isUnderShadowOfChaos, spendFluxToken, tryFlux } from './daemons';
 import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultAmbushUnitDestroyed, cultBattleStart, cultInfiltration, psionicParasitism, regimentalReinforcements } from './cult';
 import { activateReanimation, necCommandEnd, repairBarge, resurrect } from './necrons';
 import { whollyHallowed } from './greyKnights';
@@ -102,7 +107,15 @@ on('attackDone', (s, e) => knightsAttackDone(s, e.A, e.T)); // Malefic Surge: Di
 addStratSpecial('maleficSurge', (s, x) => maleficSurge(s, x.u));
 // Code Chivalric's Oath, Harbingers of Dread
 addChoiceHooks({ why: (s, p, rule, o) => choiceWhy(s, p, rule, o), picked: (s, p, rule, ids, randomly) => choicePicked(s, p, rule, ids, randomly) });
-addActionHandler((s, a, x) => { if (a.order) extraOrder(s, x.u, a.order); });
+addActionHandler((s, a, x) => { if (a.order) extraOrder(s, x.u, a.order); if (a.copyOrders) copyOrders(s, x.u, a.copyOrders); if (a.shootWith) shootWith(s, x.u, a.shootWith, 'Servo-sentry'); });
+on('shockResult', (s, e) => { if (!e.passed) ordersShockFailed(s, e.u); });
+on('movementEnd', (s, e) => amOppMovementEnd(s, other(e.p)));
+// Mechanised Spearhead: a REGIMENT unit getting out of a transport near this Commissar gets an Order at once
+on('disembarked', (s, { u, t }) => {
+  if (s.phase !== 'movement' || u.owner !== s.active || !u.keywords.includes('REGIMENT')) return;
+  const o = boardUnits(s, u.owner).find((x) => isOfficer(x) && x.abilities.some((a) => a.name === 'Mechanised Spearhead') && unitDistance(x, t) <= 6 + 1e-6);
+  if (o) orderTo(s, o, u);
+});
 // Reactive Command: an enemy unit set up within 8" of the bearer's unit → one more Order
 on('unitMoved', (s, e) => {
   if (e.u.move !== 'ingress') return;
@@ -159,11 +172,23 @@ on('battleStart', (s) => votannBattleStart(s));
 on('commandEnd', (s, e) => votannCommandEnd(s, e.p));
 on('unitDestroyed', (s, e) => votannUnitDestroyed(s, e.u, e.attackerId));
 on('turnEnd', (s) => votannTurnEnd(s));
+on('phaseEnd', (s, e) => { if (e.phase === 'fight') nomadStrategist(s); });
+on('movementStart', (s) => delvwerkeNavigator(s));
 addCondition('hostile', (_c, x) => (x.s.players[x.A.owner].votannAbility ?? 'Hostile Acquisition') === 'Hostile Acquisition');
 addCondition('fortify', (_c, x) => x.s.players[x.A.owner].votannAbility === 'Fortify Takeover');
 addCondition('yp', (_c, x) => (x.s.players[x.A.owner].yieldPoints ?? 0) >= 1);
 addCondition(/^yp:\d+$/, (c, x) => (x.s.players[x.A.owner].yieldPoints ?? 0) >= Number(c.slice(3)));
 addActionHandler((s, a, x) => { if (a.lov && a.lov > 0) spendYieldPoints(s, x.u.owner, a.lov, x.label); if (a.lov && a.lov < 0) gainYieldPoints(s, x.u.owner, -a.lov, x.label); });
+addActionHandler((s, a, x) => { if (a.disembarkOne) disembarkOne(s, x.on, x.label); if (a.shootFrom && x.target) shootFrom(s, x.on, x.target, a.shootFrom, x.label); });
+addActionHandler((s, a, x) => {
+  if (!a.lovHostile) return;
+  const p = x.u.owner, yp = s.players[p].yieldPoints ?? 0;
+  if (yp > 6) spendYieldPoints(s, p, yp - 6, x.label);
+  s.players[p].votannAbility = 'Hostile Acquisition';
+  log(s, `${x.label}: Leagues of Votann units have Hostile Acquisition`, 'info', p);
+});
+addCondition('fortifyTakeover', (_c, { s, A }) => s.players[A.owner].votannAbility === 'Fortify Takeover');
+addActionHandler((s, a, x) => { if (a.lovRefund && rollN(s, 1)[0] >= a.lovRefund) gainYieldPoints(s, x.u.owner, 1, 'Mantle of Elders'); });
 addDieRescue('Ancestral Fortune', 'YP', (s, u, stage, x) => (stage === 'hit' || stage === 'wound' || stage === 'save' ? tryUtharAncestralFortune(s, u, stage, x) : null));
 
 // Adeptus Mechanicus: the active Doctrina Imperative shown on the HUD
@@ -198,7 +223,8 @@ on('unitDestroyed', (s, e) => daemonsUnitDestroyed(s, e.u, unitOf(s, e.attackerI
 addCondition('inShadow', (_c, x) => isUnderShadowOfChaos(x.s, x.A.owner, x.A));
 addCondition('targetInShadow', (_c, x) => !!x.T && isUnderShadowOfChaos(x.s, x.A.owner, x.T));
 addCondition('fluxToken', (_c, x) => (x.s.players[x.A.owner].fluxTokens ?? 0) > 0);
-addActionHandler((s, a, x) => { if (a.cd === 'flux') spendFluxToken(s, x.u.owner); });
+addActionHandler((s, a, x) => { if (a.cd === 'flux') spendFluxToken(s, x.u.owner); else if (a.cd) impossibleEclipse(s, x.u.owner, a.cd); });
+on('movementEnd', (s, e) => seedTheGarden(s, e.p));
 addDieRescue('Fates in Flux', 'Flux token', (s, u, stage, x) => tryFlux(s, u, stage, x));
 addStratSpecial('corrupt', (s, x) => corruptRealspace(s, x.u));
 on('shockResult', (s, e) => daemonsOnBattleShockResult(s, e.u, e.passed));
@@ -282,3 +308,194 @@ addPoolFinisher((x, pool) => {
     pool.woundNote = [pool.woundNote, 'Flow of Magic: re-roll 1s'].filter(Boolean).join(' · ');
   }
 });
+
+// HEXWROUGHT REPRISAL: mortal wounds a unit suffered this phase, and from which enemy unit
+onMortalWounds((s, u, n) => {
+  const src = s.attack && s.attack.targetId === u.id ? s.attack.attackerId : s.lastAct && s.lastAct.owner !== u.owner ? s.lastAct.unitId : undefined;
+  if (!src) return;
+  const k = phaseKey(s), [pk, c] = (u.used?.mwTaken ?? '').split('|');
+  (u.used ??= {}).mwTaken = `${k}|${(pk === k ? Number(c) : 0) + n}|${src}`;
+});
+addCondition('mwThisPhase', (_c, { s, A }) => (A.used?.mwTaken ?? '').startsWith(`${phaseKey(s)}|`));
+addActionHandler((s, a, x) => {
+  if (!a.hexReprisal || !x.target) return;
+  const n = Math.min(6, Number((x.u.used?.mwTaken ?? '').split('|')[1]) || 0);
+  const r = rollN(s, n), hits = Math.min(6, r.filter((v) => v >= 2).length);
+  log(s, `${x.label}: [${r.join(' ')}] → ${hits} mortal wound${hits === 1 ? '' : 's'} on ${x.target.name}`, 'roll', x.u.owner);
+  if (hits) applyMortalWounds(s, x.target, hits, x.label);
+});
+
+// FIRES OF COVENANT: an enemy unit set up or ending a Normal / Advance / Fall Back move near the unit may take mortal wounds
+on('unitMoved', (s, { u }) => {
+  if (!['normal', 'advance', 'fallback'].includes(u.move ?? '') && u.setUpTurn !== s.turn) return;
+  for (const x of boardUnits(s, other(u.owner))) for (const a of effectsFor(s, x)) {
+    const q = a.e.moveNearMortals;
+    if (!q || unitDistance(x, u) > q.range + 1e-6 || !alive(u).length) continue;
+    const r = rollN(s, 1)[0] + ((q.plusIf ?? []).length && q.plusIf!.every((c) => cond(c, { s, A: x, holder: x })) ? q.plus ?? 0 : 0);
+    log(s, `${a.label}: ${u.name} ended a move near ${x.name}, rolled ${r} (${q.on}+)`, 'roll', x.owner);
+    if (r >= q.on) applyMortalWounds(s, u, rollExpr(s, q.dmg).total, a.label);
+  }
+});
+
+// Tally of Pestilence (Epidemius): enemy models destroyed by NURGLE daemons; 7 or more at the start of your Command phase: +1CP
+on('modelKilled', (s, { u, killerId }) => {
+  const k = killerId ? s.units.find((x) => x.id === killerId) : undefined;
+  if (!k || k.owner === u.owner || !k.factionKeywords.includes('LEGIONES DAEMONICA') || !k.keywords.includes('NURGLE')) return;
+  const P = s.players[k.owner];
+  if (boardUnits(s, k.owner).some((x) => x.abilities.some((a) => a.name === 'Tally of Pestilence'))) P.pestilence = (P.pestilence ?? 0) + 1;
+});
+on('commandStart', (s, { p }) => {
+  const P = s.players[p];
+  if ((P.pestilence ?? 0) < 7 || !boardUnits(s, p).some((x) => x.abilities.some((a) => a.name === 'Tally of Pestilence'))) return;
+  P.pestilence = 0; P.cp += 1;
+  log(s, 'Tally of Pestilence: 7 enemy models destroyed → +1CP', 'cp', p);
+});
+
+
+// Formless Horror (The Changeling): an enemy unit that wishes to attack it takes a Battle-shock test first (once per phase); failed: it cannot target it this phase
+addModifier('targetBlock', (s, A, T, kind) => {
+  if (kind === 'charge' || A.owner === T.owner || !T.abilities.some((a) => a.name === 'Formless Horror')) return null;
+  const key = `formless:${A.id}`, now = phaseKey(s);
+  const seen = (T.used ?? {})[key];
+  if (!seen?.startsWith(now)) (T.used ??= {})[key] = `${now}|${shockTest(s, A, 0, 'Formless Horror') ? 'ok' : 'no'}`;
+  return T.used![key].endsWith('|no') ? `Formless Horror: ${A.name} failed its Battle-shock test and cannot target ${T.name} this phase` : null;
+});
+
+// Reverberating Summons (Great Unclean One's Doomsday bell): each model it destroys brings a Plaguebearer back to a unit within 12"
+on('modelKilled', (s, { u, killerId }) => {
+  const k = killerId ? s.units.find((x) => x.id === killerId) : undefined;
+  const pl = s.attack?.pools[s.attack.idx];
+  if (!k || k.owner === u.owner || !pl || !/doomsday bell/i.test(pl.weapon) || !k.abilities.some((a) => a.name === 'Reverberating Summons')) return;
+  const t = boardUnits(s, k.owner).find((x) => /plaguebearer/i.test(x.name) && unitDistance(x, k) <= 12 && x.models.some((m) => m.dead && !m.isCharacter));
+  const m = t?.models.find((x) => x.dead && !x.isCharacter);
+  if (!t || !m) return;
+  m.dead = false; m.wounds = m.profile.W;
+  if (setBackUp(s, t, m, alive(t).find((x) => x.id !== m.id) ?? m)) log(s, `Reverberating Summons: a Plaguebearer returns to ${t.name}`, 'info', k.owner);
+  else { m.dead = true; m.wounds = 0; }
+});
+
+// FICKLEFIRE / CALLOUS SACRIFICE: an enemy model destroyed while engaged with the unit costs it a mortal wound / a model on X+
+on('modelKilled', (s, { u, m }) => {
+  for (const x of engagedEnemies(s, u)) {
+    const q = unitFlags(s, x).ignoreEngaged;
+    if (!q || !alive(x).some((n) => Math.hypot(n.x - m.x, n.y - m.y) <= n.r + m.r + 1 + 1e-6)) continue;
+    const r = rollN(s, 1)[0];
+    if (r < q.on) continue;
+    if (q.cost === 'mortal') applyMortalWounds(s, x, 1, 'Ficklefire');
+    else { const v = alive(x).find((n) => !n.isCharacter) ?? alive(x)[0]; if (v) { log(s, `Callous Sacrifice: ${v.name} of ${x.name} is destroyed`, 'info', x.owner); killModel(s, x, v); } }
+  }
+});
+
+// THIEVES OF PAIN: another friendly unit within 9" takes the wounds instead
+addActionHandler((s, a, x) => {
+  if (!a.redirectTo) return;
+  const ks = a.redirectTo.split('|');
+  const t = boardUnits(s, x.on.owner).filter((f) => f.id !== x.on.id && ks.every((k) => f.keywords.includes(k)) && unitDistance(f, x.on) <= 9 + 1e-6)
+    .sort((p, q) => alive(q).reduce((n, m) => n + m.wounds, 0) / Math.max(1, q.pts) - alive(p).reduce((n, m) => n + m.wounds, 0) / Math.max(1, p.pts))[0];
+  if (!t) return;
+  addTimed(s, x.on, { e: { redirectWounds: t.id }, label: x.label, until: 'phase', by: x.on.owner });
+  log(s, `${x.label}: ${t.name} takes the wounds ${x.on.name} would lose this phase`, 'info', x.on.owner);
+});
+
+// FAITH AND FURY, DIVINE GUIDANCE, RIGHTEOUS BLOWS, RITES OF FIRE: after an attack that destroyed enemy models
+on('attackDone', (s, { A, T }) => {
+  if ((T.used ?? {}).lostModel !== `${s.turn}:${s.phase}` || (A.used ?? {}).killedModel !== phaseKey(s)) return;
+  for (const a of effectsFor(s, A)) {
+    const q = a.e.onKill;
+    if (!q || (A.used ?? {})[`onKill:${a.label}`] === phaseKey(s)) continue;
+    (A.used ??= {})[`onKill:${a.label}`] = phaseKey(s);
+    if (q.miracle) gainMiracleDice(s, A.owner, q.miracle, undefined, a.label);
+    if (q.shock && T.status === 'board') shockTest(s, T, 0, a.label);
+  }
+});
+
+
+// Recount the Deeds of the Saints: Agathae Dolan destroyed → D3 Miracle dice
+on('modelKilled', (s, { u, m }) => {
+  if (!/Agathae Dolan/i.test(m.name) || !u.abilities.some((a) => a.name === 'Recount the Deeds of the Saints')) return;
+  gainMiracleDice(s, u.owner, rollExpr(s, 'D3').total, undefined, 'Recount the Deeds of the Saints');
+});
+on('unitDestroyed', (s, { u, attackerId }) => {
+  // Denuncia Oratory: the quarry is gone, a new one is picked (the most valuable enemy unit)
+  const q = (u.timed ?? []).find((t) => t.mark === 'Quarry');
+  if (q && boardUnits(s, q.by).some((x) => x.abilities.some((a) => a.name === 'Denuncia Oratory'))) {
+    const next = boardUnits(s, u.owner).filter((x) => x.id !== u.id).sort((a, b) => b.pts - a.pts)[0];
+    if (next) { addTimed(s, next, { e: {}, label: q.label, until: 'battle', by: q.by, mark: 'Quarry' }); log(s, `Denuncia Oratory: ${next.name} is the new quarry`, 'info', q.by); }
+  }
+  // Psalm of Righteous Judgement: a PENITENT unit destroyed an enemy unit → one Miracle dice becomes a 6
+  const k = attackerId ? s.units.find((x) => x.id === attackerId) : undefined;
+  if (!k || k.owner === u.owner || !k.keywords.includes('PENITENT') || !boardUnits(s, k.owner).some((x) => x.enhancements.some((e) => e.name === 'Psalm of Righteous Judgement'))) return;
+  const dice = s.players[k.owner].miracleDice ?? [];
+  if (!dice.length || Math.min(...dice) === 6) return;
+  dice.splice(dice.indexOf(Math.min(...dice)), 1, 6);
+  log(s, 'Psalm of Righteous Judgement: a Miracle dice becomes a 6', 'info', k.owner);
+});
+
+// THE GRISLY FEAST: in the opponent's next Command phase, enemy units within 6" of the Kroot unit take a Battle-shock test
+on('commandStart', (s, { p }) => {
+  for (const k of boardUnits(s, other(p)).filter((x) => (x.timed ?? []).some((t) => t.mark === 'grislyFeast'))) {
+    k.timed = k.timed!.filter((t) => t.mark !== 'grislyFeast');
+    for (const e of boardUnits(s, p).filter((x) => unitDistance(x, k) <= 6 + 1e-6)) shockTest(s, e, alive(e).length * 2 <= e.startingStrength ? -1 : 0, 'THE GRISLY FEAST');
+  }
+});
+
+// YOUR TIME IS NIGH: offered when the opponent's Warlord is destroyed; then enemy Battle-shock tests are at -1
+on('unitDestroyed', (s, { u }) => { if (u.isWarlordUnit) emitReact(s, other(u.owner), 'enemyWarlordDestroyed', { unitId: u.id }); });
+addActionHandler((s, a, x) => { if (a.armyFlag && !(s.players[x.u.owner].flags ??= []).includes(a.armyFlag)) s.players[x.u.owner].flags!.push(a.armyFlag); });
+addModifier('battleShock', (s, u) => ((s.players[other(u.owner)].flags ?? []).includes('timeIsNigh') ? -1 : 0));
+
+// Hyperspace Hunters (Deathmarks): an enemy unit arriving from Reserves within 18" in your opponent's turn is shot at once (once per turn)
+on('arrived', (s, { u }) => {
+  if (s.phase !== 'movement' || u.owner !== s.active) return;
+  for (const d of boardUnits(s, other(u.owner)).filter((x) => x.abilities.some((a) => a.name === 'Hyperspace Hunters') && (x.used ?? {}).hyperspace !== String(s.turn))) {
+    if (unitDistance(d, u) > 18 || !alive(d).some((m) => unitVisibleTo(s, m, u))) continue;
+    (d.used ??= {}).hyperspace = String(s.turn);
+    shootNow(s, d, u, 'Hyperspace Hunters');
+  }
+});
+
+// Hunting Grounds: an enemy unit set up from Reserves, 2+: it takes a Battle-shock test
+on('arrived', (s, { u }) => {
+  if (!boardUnits(s, other(u.owner)).some((x) => x.enhancements.some((e) => e.name === 'Hunting Grounds')) || rollN(s, 1)[0] < 2) return;
+  shockTest(s, u, 0, 'Hunting Grounds');
+});
+// THE SMOTHERING SHADOW: an enemy unit that fails a Battle-shock test
+on('shockResult', (s, e) => { if (!e.passed && e.u.status === 'board') emitReact(s, other(e.u.owner), 'enemyShockFailed', { unitId: e.u.id }); });
+// Bio-minefield: enemy units cannot start or end an Advance move within 6" of it
+addModifier('moveBlock', (s, u, m, from, to, kind) => {
+  if (kind !== 'advance') return null;
+  const mine = boardUnits(s, other(u.owner)).find((x) => x.abilities.some((a) => a.name === 'Bio-minefield') && alive(x).some((n) => Math.hypot(n.x - from.x, n.y - from.y) - n.r - m.r <= 6 + 1e-6 || Math.hypot(n.x - to.x, n.y - to.y) - n.r - m.r <= 6 + 1e-6));
+  return mine ? `Bio-minefield: no Advance move starting or ending within 6" of ${mine.name}` : null;
+});
+
+
+// Swallow Whole (The Red Terror): an INFANTRY / MOUNTED / BEASTS model destroyed by the gaping maw: it regains D3+2 wounds
+on('modelKilled', (s, { u, m, killerId }) => {
+  const k = killerId ? s.units.find((x) => x.id === killerId) : undefined;
+  const pl = s.attack?.pools[s.attack.idx];
+  if (!k || !pl || !/gaping maw/i.test(pl.weapon) || !k.abilities.some((a) => a.name === 'Swallow Whole') || !['INFANTRY', 'MOUNTED', 'BEASTS'].some((kw) => m.keywords.includes(kw))) return;
+  const me = alive(k).find((x) => x.wounds < x.profile.W);
+  if (!me) return;
+  const n = Math.min(me.profile.W - me.wounds, rollExpr(s, 'D3+2').total);
+  me.wounds += n;
+  log(s, `Swallow Whole: ${k.name} regains ${n} wound${n === 1 ? '' : 's'}`, 'info', k.owner);
+});
+
+// RECLAIM BIOMASS: the HARVESTER regenerates a friendly TYRANIDS unit within 6" (models back for INFANTRY, else D3+1 wounds)
+addActionHandler((s, a, x) => {
+  if (!a.regenNear) return;
+  const near = boardUnits(s, x.on.owner).filter((f) => f.factionKeywords.includes('TYRANIDS') && unitDistance(f, x.on) <= a.regenNear! + 1e-6);
+  const inf = near.find((f) => f.keywords.includes('INFANTRY') && f.models.some((m) => m.dead && !m.isCharacter));
+  if (inf) {
+    let back = 0;
+    for (const m of inf.models.filter((y) => y.dead && !y.isCharacter).slice(0, inf.keywords.includes('ENDLESS MULTITUDE') ? 3 : 1)) {
+      m.dead = false; m.wounds = m.profile.W;
+      if (setBackUp(s, inf, m, alive(inf).find((y) => y.id !== m.id) ?? m)) back++; else { m.dead = true; m.wounds = 0; }
+    }
+    if (back) log(s, `${x.label}: ${back} model(s) return to ${inf.name}`, 'info', x.on.owner);
+    return;
+  }
+  const hurt = near.find((f) => alive(f).some((m) => m.wounds < m.profile.W));
+  if (hurt) heal(s, hurt, rollExpr(s, 'D3+1').total);
+});
+

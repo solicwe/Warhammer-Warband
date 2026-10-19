@@ -14,7 +14,7 @@ import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
 export const setFreeDamageHook = (h: (s: GameState) => boolean) => { freeDamageHook = h; };
-import { addToExpr, applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from '../rules-engine/effects';
+import { addToExpr, applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, killDemiseOn, demiseSure, woundsGoTo, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from '../rules-engine/effects';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
 
@@ -121,7 +121,7 @@ export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
   if (!onBoard(u) || u.selectedToShoot || unitFlags(s, u).cannotShoot || (u.move === 'fallback' && !canDo(s, u, 'shootAfterFallBack') && !hasKw(u, 'TITANIC'))) return [];
   const weps = alive(u).flatMap((m) => m.weapons.flatMap((w) => w.profiles)).filter((p) => !isMelee(p));
   if (!weps.length) return [];
-  const engaged = isEngaged(s, u);
+  const engaged = isEngaged(s, u) && !unitFlags(s, u).ignoreEngaged;
   const modes: ShootMode[] = [];
   if (engaged) {
     if (u.move !== 'advance' && (weps.some((p) => hasAbility(p, 'close-quarters')) || alive(u).some(isMV))) modes.push('closeQuarters');
@@ -161,7 +161,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const pools = new Map<string, Pool>();
   const tModels = alive(T);
   // All Is Rot: enemy units engaged only with that Plague Legions unit can still be shot
-  const tEngaged = engagedEnemies(s, T).some((f) => !unitFlags(s, f).allIsRot);
+  const tEngaged = engagedEnemies(s, T).some((f) => !unitFlags(s, f).allIsRot && !(f.id === A.id && unitFlags(s, A).ignoreEngaged));
   const engagedWithTarget = engagedEnemies(s, A).some((e) => e.id === T.id);
   const tIsMV = tModels.some(isMV);
   const aFlags = unitFlags(s, A);
@@ -259,7 +259,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       }
       const psychic = hasAbility(p, 'psychic');
       const fm = finishPoolMods(p, mods, psychic);
-      const half = d <= range / 2 + 1e-6;
+      const half = d <= range / 2 + 1e-6 || fx.some((a) => a.e.halfRangeAlways);
       const key = [m.source, w.name, p.name, cover, half, fm.skill, fm.hit, fxKey(fx, inc)].join('|');
       let pool = pools.get(key);
       if (!pool) {
@@ -838,7 +838,9 @@ export const onAttackStart = (fn: StartHook) => { startHooks.push(fn); };
 
 export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: string) {
   const dd = m.deadlyDemise ?? (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1) ? u.core.deadlyDemise : undefined);
-  const ddOn = dd ? unitFlags(s, u).deadlyDemiseOn : 6; // worked out while the model still stands
+  const at = s.attack, pl = at?.pools[at.idx];
+  const byWeapon = dd && at && pl && at.targetId === u.id ? killDemiseOn(s, unitById(s, at.attackerId), pl.weapon) : 6;
+  const ddOn = dd ? Math.min(unitFlags(s, u).deadlyDemiseOn, byWeapon) : 6; // worked out while the model still stands
   m.dead = true;
   m.wounds = 0;
   (u.used ??= {}).lostModel = `${s.turn}:${s.phase}`;
@@ -877,7 +879,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   if (dd) {
     // Vengeful Animus: no roll, it blows up anyway
     // Detonator (Deceptors): the opponent makes it explode without a roll
-    const sure = emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id }) || (!m.keywords.includes('TITANIC') && emitReact(s, other(u.owner), 'enemyDeadlyDemise', { unitId: u.id, modelId: m.id }));
+    const sure = demiseSure(s, u, m) || emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id }) || (!m.keywords.includes('TITANIC') && emitReact(s, other(u.owner), 'enemyDeadlyDemise', { unitId: u.id, modelId: m.id }));
     const r = sure ? 6 : d6(s);
     if (r >= ddOn) { // Warpfire Infusion: 5+ near a sorcerer
       log(s, `Deadly Demise (${dd}) from ${m.name}: ${sure ? 'it explodes' : 'rolled a 6!'}`, 'roll');
@@ -896,6 +898,8 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
 /** Lose wounds on one model with Feel No Pain. Returns wounds actually lost. */
 function loseWounds(s: GameState, u: UnitState, m: ModelState, n: number, lines?: string[], kind: 'melee' | 'ranged' | 'mortal' = 'ranged', psychic = false): number {
   let lost = 0;
+  const thief = woundsGoTo(s, u);
+  if (thief && n > 0) { lines?.push(`${n} wound(s) go to ${thief.name} (THIEVES OF PAIN)`); applyMortalWounds(s, thief, n, 'THIEVES OF PAIN'); return 0; }
   const buffFnp = u.buffs.some((b) => b.kind === 'fnp4') ? 4 : u.buffs.some((b) => b.kind === 'fnp5') ? 5 : u.buffs.some((b) => b.kind === 'fnp6') ? 6 : undefined;
   const fxFnp = modelDefence(s, u, m, kind, psychic).fnp ?? undefined;
   const fnp = [u.core.fnp, buffFnp, fxFnp].filter((x): x is number => x !== undefined).reduce<number | undefined>((a, b) => (a === undefined ? b : Math.min(a, b)), undefined);
@@ -1048,6 +1052,9 @@ export function applyDamage(s: GameState) {
     p.mortalFromDev[k] = dmg;
     applyMortalWounds(s, T, dmg, `Devastating Wounds (${p.weapon})`, 1, !!precisionGroup);
   }
+  // Rapturous Blows / Radiant Champion: a mortal wound for each attack that wounded
+  const wounded = p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds;
+  if (p.mortalPerWound && wounded && alive(T).length) applyMortalWounds(s, T, wounded * p.mortalPerWound, `${p.weapon}: mortal wounds on wounding`);
   p.killed = before - alive(T).length;
   p.done = true;
   at.summary.push(`${p.weapon}: ${p.attacks} attacks → ${p.hits.filter((h) => h.o !== 'miss').length} hit → ${p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds} wound → ${p.killed} slain`);

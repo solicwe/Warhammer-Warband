@@ -656,10 +656,16 @@
         "abilities": [
           "precision"
         ]
+      },
+      {
+        "scope": "model",
+        "attack": "melee",
+        "if": [
+          "hallowed"
+        ],
+        "mortalPerWound": 1
       }
-    ],
-    "status": "partial",
-    "note": "Not automated: the extra mortal wound on each wound while wholly within Hallowed Ground"
+    ]
   },
   "Phial of the Abyss": {
     "effects": [

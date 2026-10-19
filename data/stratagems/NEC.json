@@ -87,9 +87,24 @@
       "status": "auto"
     },
     "PROTOCOL OF THE VENGEFUL STARS": {
-      "status": "manual",
-      "note": "Not automated: a NECRONS CHARACTER within 6\" of the destroyed unit shoots the attacker",
-      "bot": "never"
+      "targetKw": [
+        "NECRONS",
+        "CHARACTER"
+      ],
+      "react": "ownDestroyed",
+      "nearVictim": 6,
+      "unitIf": [
+        "!ownTurn",
+        "shootingPhase"
+      ],
+      "enemy": {
+        "killer": true
+      },
+      "special": [
+        "shootAt"
+      ],
+      "botReact": "shoot",
+      "status": "auto"
     },
     "PROTOCOL OF THE UNDYING LEGIONS": {
       "targetKw": [
@@ -360,9 +375,21 @@
       "status": "auto"
     },
     "YOUR TIME IS NIGH": {
-      "status": "manual",
-      "note": "Not automated: -1 to every enemy Battle-shock / Leadership test after the enemy WARLORD dies",
-      "bot": "never"
+      "targetKw": [
+        "NECRONS"
+      ],
+      "react": "enemyWarlordDestroyed",
+      "unitIf": [
+        "warlord"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "armyFlag": "timeIsNigh"
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
     },
     "SENTINELS OF ETERNITY": {
       "targetKw": [

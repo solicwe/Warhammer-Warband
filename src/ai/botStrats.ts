@@ -27,6 +27,9 @@ export const isBot = (s: GameState, p: PlayerId) => (s.botPlayer != null && !s.b
 /** Can the bot afford this now and still keep a CP for a re-roll (until the last round)? */
 const spare = (s: GameState, p: PlayerId, cost: number, keep = s.campaign || s.round >= lastRound(s) ? 0 : 1) => s.players[p].cp - cost >= keep;
 
+/** More CP than the rounds left can spend on measured plays: spend one on a stratagem whose gain the bot can't price. */
+export const surplus = (s: GameState, p: PlayerId) => s.players[p].cp >= Math.max(2, lastRound(s) + 2 - s.round) || (s.round >= lastRound(s) && s.players[p].cp >= 1);
+
 /**
  * What one CP is worth right now, in points of damage done or saved. A good player spends CP every turn: points left
  * over at the end are wasted, so the more CP there are for the rounds left, the cheaper each one is (and the last
@@ -148,7 +151,8 @@ export function botOffensiveStratagem(s: GameState, u: UnitState, kind: 'shoot' 
   const best0 = () => Math.max(0, ...targets.map((t) => attackValue(s, u, t, kind)));
   const base = best0();
   let best: { st: StratagemData; gain: number; choice?: number; enemyId?: string } | null = null;
-  for (const { st, rule, choice } of usable(s, p, u, 'attack')) {
+  const all = usable(s, p, u, 'attack');
+  for (const { st, rule, choice } of all) {
     if (rule.enemyMark) {
       // "select one enemy unit: against it …" (Devoted Duellists): the target it gains most against
       for (const t of targets) {
@@ -169,6 +173,10 @@ export function botOffensiveStratagem(s: GameState, u: UnitState, kind: 'shoot' 
     return;
   }
   if (best && best.gain >= cpWorth(s, p) * best.st.cp) applyDetachmentStratagem(s, p, best.st, u.id, { choice: best.choice, enemyId: best.enemyId });
+  else if (all.length && surplus(s, p) && base > 0) {
+    const c = all[s.turn % all.length];
+    applyDetachmentStratagem(s, p, c.st, u.id, { choice: c.choice, enemyId: c.rule.enemyMark ? targets[0].id : undefined });
+  }
 }
 
 /** Expected points lost to this attack, with the target's current effects (and those of `rule`, when given). */
@@ -203,7 +211,7 @@ onAttackStart((s, at) => {
   const p = T.owner;
   if (!isBot(s, p) || T.battleShocked) return;
   const base = lossFrom(s, at, T);
-  if (base < 15) return;
+  if (base < (surplus(s, p) ? 4 : 15)) return;
   let best: { st: StratagemData; save: number; choice?: number } | null = null;
   for (const { st, rule, choice } of usable(s, p, T, 'defend')) {
     const save = base - tryRule(s, T, st.name, rule, () => lossFrom(s, at, T, rule));

@@ -758,7 +758,8 @@
     "Transhuman Strategist": {
       "auto": "full",
       "armyRule": true,
-      "note": "Warlord with this ability: gain 1CP at the start of the battle round (see data/abilities)"
+      "note": "Warlord with this ability: gain 1CP at the start of the battle round (see data/abilities)",
+      "code": true
     },
     "Gladius Task Force": {
       "auto": "full",
@@ -1699,12 +1700,14 @@
     "Aquila Commander": {
       "auto": "full",
       "armyRule": true,
-      "note": "Warlord with this ability: gain 1CP at the start of the battle round (see data/abilities/AC.json)"
+      "note": "Warlord with this ability: gain 1CP at the start of the battle round (see data/abilities/AC.json)",
+      "code": true
     },
     "Special Move Types": {
       "auto": "full",
       "armyRule": true,
-      "note": "Shock disembark: see Assault Vehicle"
+      "note": "Shock disembark: see Assault Vehicle",
+      "code": true
     },
     "Daughters of the Abyss": {
       "auto": "full",
@@ -2422,12 +2425,14 @@
     "Librarius": {
       "auto": "full",
       "armyRule": true,
-      "note": "Psyker level budget per battle round (activations.ts psykerBudgetOk)"
+      "note": "Psyker level budget per battle round (activations.ts psykerBudgetOk)",
+      "code": true
     },
     "Hunter": {
       "auto": "full",
       "armyRule": true,
-      "note": "Hunter profiles only target matching units (attack.ts)"
+      "note": "Hunter profiles only target matching units (attack.ts)",
+      "code": true
     },
     "Hexwarp Thrallband": {
       "auto": "full",
@@ -3584,7 +3589,8 @@
     "Pact of Blood": {
       "auto": "full",
       "armyRule": true,
-      "manual": "Blood Legions units only with Khorne Daemonkin (checked in the army builder)"
+      "manual": "Blood Legions units only with Khorne Daemonkin (checked in the army builder)",
+      "code": true
     },
     "Berzerker Warband": {
       "auto": "full",
@@ -3870,7 +3876,8 @@
     "Pact of Excess": {
       "auto": "full",
       "armyRule": true,
-      "manual": "Legions of Excess units only with the Carnival of Excess detachment (checked in the army builder)"
+      "manual": "Legions of Excess units only with the Carnival of Excess detachment (checked in the army builder)",
+      "code": true
     },
     "Mercurial Host": {
       "auto": "full",
@@ -9019,6 +9026,13 @@
             },
             {
               "on": "self",
+              "if": [
+                "hasAbility:Mantle of Elders"
+              ],
+              "lovRefund": 2
+            },
+            {
+              "on": "self",
               "buff": [
                 {
                   "reroll": "hits1"
@@ -9196,6 +9210,36 @@
           ]
         }
       ]
+    },
+    "Unstable Energies": {
+      "auto": "full",
+      "armyRule": true,
+      "code": true,
+      "note": "Psyker level budget per battle round (activations.ts psykerBudgetOk)"
+    },
+    "Towering Example": {
+      "auto": "full",
+      "armyRule": true,
+      "code": true,
+      "manual": "Army builder: an ADEPTUS TITANICUS model can be the Warlord (titanWarlordEligible)"
+    },
+    "Titanicus Traitoris": {
+      "auto": "full",
+      "armyRule": true,
+      "info": true,
+      "manual": "Army building: the same datasheets as CHAOS"
+    },
+    "Designer’s Note": {
+      "auto": "full",
+      "armyRule": true,
+      "info": true,
+      "manual": "Points note, no game effect"
+    },
+    "Pact of Sorcery": {
+      "auto": "full",
+      "armyRule": true,
+      "info": true,
+      "manual": "Army building: Scintillating Legions only as allies"
     }
   }
 }

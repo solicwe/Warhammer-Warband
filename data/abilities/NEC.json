@@ -239,8 +239,9 @@
     ]
   },
   "Hyperspace Hunters": {
-    "status": "manual",
-    "note": "Not automated: shooting an enemy unit set up from Reserves within 18\" in the opponent's Movement phase"
+    "code": true,
+    "status": "auto",
+    "note": "An enemy unit set up from Reserves within 18\" and visible in your opponent's Movement phase is shot at once (once per turn)"
   },
   "Flesh Hunger": {
     "effects": [
@@ -1068,8 +1069,22 @@
     ]
   },
   "Multi-threat Eliminator": {
-    "status": "manual",
-    "note": "Not automated: shooting back at an enemy unit that shot a NECRONS unit within 3\""
+    "act": {
+      "when": "friendlyTargeted",
+      "auto": true,
+      "limit": "turn",
+      "range": 3,
+      "oppShooting": true,
+      "deathUnits": [
+        "NECRONS"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "shootBack": true
+        }
+      ]
+    }
   },
   "Matter Absorption": {
     "act": {

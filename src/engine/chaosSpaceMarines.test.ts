@@ -202,8 +202,7 @@ describe('everything automatic', () => {
     const not: string[] = [];
     for (const u of buildUnits(all, CSM, 0)) for (const a of u.abilities) { const st = abilityStatus(u, a).status; if (st !== 'auto' && st !== 'core' && st !== 'info') not.push(`${a.name}@${u.sources[0]}: ${st}`); }
     for (const e of CSM.detachments.flatMap((d) => d.enhancements)) { const r = (csmAbilities as Record<string, { status?: string }>)[e.name]; if (r?.status && r.status !== 'auto') not.push(`${e.name}: ${r.status}`); }
-    // known gap: cover from a FORTIFICATION model blocking sight is not worked out
-    expect([...new Set(not)]).toEqual(['Malign Cover@Noctilith Crown: manual']);
+    expect([...new Set(not)]).toEqual([]);
   });
   it('Daemonic Allegiance picked in the army builder: the keyword and its ability, no choice in the battle', () => {
     const l = list('CSM', [['Heretic Astartes Daemon Prince', 1, 0]], 'Veterans of the Long War');

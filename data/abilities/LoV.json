@@ -256,6 +256,13 @@
             "contains:Ironkin Assistant"
           ],
           "heal": "3"
+        },
+        {
+          "on": "target",
+          "if": [
+            "enh:Signature Restoration"
+          ],
+          "heal": "1"
         }
       ]
     }
@@ -880,8 +887,18 @@
     "note": "Always 3YP (the card: up to 3)"
   },
   "Ancestral Crest": {
-    "status": "manual",
-    "note": "Not automated: 1YP to make a Command Re-roll cost 1CP less"
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "command-reroll"
+          ],
+          "cp": 1,
+          "limit": "turn",
+          "yp": 1
+        }
+      }
+    ]
   },
   "Eye for Weakness": {
     "effects": [
@@ -944,16 +961,34 @@
     }
   },
   "Nomad Strategist": {
-    "status": "manual",
-    "note": "Not automated: HERNKYN units into Strategic Reserves for YP"
+    "code": true,
+    "status": "auto",
+    "note": "End of the opponent's Fight phase: threatened HERNKYN units go into Strategic Reserves (1 + 1 per 2YP)"
   },
   "Dêlvwerke Navigator": {
-    "status": "manual",
-    "note": "Not automated: returning CTHONIAN BESERKS models for YP"
+    "code": true,
+    "status": "auto",
+    "note": "Start of your Movement phase: a CTHONIAN BESERKS model returns (one more for 2YP)"
   },
   "Multiwave System Jammer": {
-    "status": "manual",
-    "note": "Not automated: an earlier arrival from Reserves"
+    "act": {
+      "when": "movement",
+      "limit": "battle",
+      "target": {
+        "side": "friendly",
+        "inReserves": true,
+        "units": [
+          "CTHONIAN"
+        ]
+      },
+      "label": "A CTHONIAN unit in Reserves can arrive as if a round later",
+      "do": [
+        {
+          "on": "target",
+          "earlyArrival": true
+        }
+      ]
+    }
   },
   "Quake Supervisor": {
     "effects": [
@@ -1099,8 +1134,9 @@
     ]
   },
   "Signature Restoration": {
-    "status": "partial",
-    "note": "Not automated: +1 wound for Forgewrought Expertise"
+    "code": true,
+    "status": "auto",
+    "note": "Forgewrought Expertise repairs 1 more wound"
   },
   "Fârstrydr Node": {
     "effects": [
@@ -1118,8 +1154,9 @@
     ]
   },
   "Mantle of Elders": {
-    "status": "partial",
-    "note": "Not automated: 2+ to get the YP back after Optimal Application"
+    "code": true,
+    "status": "auto",
+    "note": "After Optimal Application is paid: a D6, on 2+ the YP comes back"
   },
   "Graviton Vault": {
     "act": [

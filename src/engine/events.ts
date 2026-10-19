@@ -21,6 +21,7 @@ export interface GameEvents {
   commandStart: { p: PlayerId };
   commandEnd: { p: PlayerId };
   /** end of the Movement phase, after the Reinforcements step */
+  movementStart: { p: PlayerId };
   movementEnd: { p: PlayerId };
   shootingStart: { p: PlayerId };
   /** the Fight phase starts (before pile-in) */
@@ -46,6 +47,10 @@ export interface GameEvents {
   /** a Deadly Demise explosion of unit u hit unit v */
   deadlyDemiseHit: { u: UnitState; v: UnitState };
   /** a model was destroyed, after the core reactions to it (u may now be wiped out) */
+  /** a unit was set up on the battlefield from Reserves */
+  arrived: { u: UnitState };
+  /** a unit got out of a transport */
+  disembarked: { u: UnitState; t: UnitState };
   modelKilled: { u: UnitState; m: ModelState; killerId?: string };
 }
 

@@ -50,7 +50,7 @@ import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/second
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
 import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
-import { isOfficer, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../factions/orders';
+import { isOfficer, officersOf, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../factions/orders';
 import { isTauArmy } from '../factions/tau';
 import { bodyTouchesPoly, dist, polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../ai/deploy';
@@ -1789,7 +1789,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
         {hasArmyRule(s, s.active, 'Voice of Command') && (() => {
-          const officers = boardUnits(s, s.active).filter(isOfficer);
+          const officers = officersOf(s, s.active);
           if (!officers.length) return null;
           const activeOfficer = officers.find((o) => o.id === orderOfficerId) ?? officers.find((o) => ordersRemaining(s, o) > 0) ?? officers[0];
           const targets = activeOfficer ? boardUnits(s, s.active).filter((t) => canOfficerTarget(activeOfficer, t, s)) : [];

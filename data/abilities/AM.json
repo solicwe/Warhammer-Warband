@@ -75,8 +75,9 @@
     ]
   },
   "Mobile Command Vehicle": {
-    "status": "manual",
-    "note": "Not automated: an embarked OFFICER issuing Orders"
+    "code": true,
+    "status": "auto",
+    "note": "One Officer inside issues its Orders in the Command phase, measured from this transport"
   },
   "Rapid Deployment": {
     "effects": [
@@ -275,12 +276,25 @@
     "note": "Only the target unit (not INFANTRY within 3\" of it); taken after the attacks"
   },
   "Armour Obliteration": {
-    "status": "manual",
-    "note": "Not automated: Deadly Demise on 3+"
+    "effects": [
+      {
+        "weapon": "quake cannon",
+        "attack": "ranged",
+        "killDemiseOn": 3
+      }
+    ]
   },
   "Close-range Titan Killer": {
-    "status": "partial",
-    "note": "Not automated: the magma cannon counting as within half range"
+    "effects": [
+      {
+        "weapon": "magma cannon",
+        "attack": "ranged",
+        "if": [
+          "targetMV"
+        ],
+        "halfRangeAlways": true
+      }
+    ]
   },
   "Close-quarters Warfare": {
     "effects": [
@@ -303,8 +317,9 @@
     ]
   },
   "Mount Up!": {
-    "status": "manual",
-    "note": "Not automated: embarking at the end of the opponent's Movement phase"
+    "code": true,
+    "status": "auto",
+    "note": "At the end of the opponent's Movement phase an INFANTRY unit wholly within 6\" that is near the enemy and off the objectives embarks"
   },
   "Concussive Wave": {
     "act": {
@@ -591,8 +606,9 @@
     "note": "Army building: joins a Command Squad"
   },
   "Airborne Insertion": {
-    "status": "manual",
-    "note": "Not automated: disembarking at the end of the opponent's Movement phase"
+    "code": true,
+    "status": "auto",
+    "note": "At the end of the opponent's Movement phase the passengers get out when enemies are within 15\" or from round 3"
   },
   "Malign Wardings(Psychic)": {
     "effects": [
@@ -704,6 +720,18 @@
             }
           ],
           "until": "nextCommand"
+        },
+        {
+          "on": "target",
+          "if": [
+            "enh:Engine Speaker"
+          ],
+          "buff": [
+            {
+              "move": 3
+            }
+          ],
+          "until": "nextCommand"
         }
       ]
     }
@@ -734,8 +762,22 @@
     }
   },
   "One-man Army": {
-    "status": "manual",
-    "note": "Not automated: shooting back at an enemy unit that shot a REGIMENT unit within 3\""
+    "act": {
+      "when": "friendlyTargeted",
+      "auto": true,
+      "limit": "turn",
+      "range": 3,
+      "oppShooting": true,
+      "deathUnits": [
+        "REGIMENT"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "shootBack": true
+        }
+      ]
+    }
   },
   "Like Fighting a Shadow": {
     "act": {
@@ -1191,12 +1233,27 @@
     "note": "Closer Deep Strike, then no charge that turn"
   },
   "Servo-sentry": {
-    "status": "manual",
-    "note": "Not automated: the sentry weapon shooting on arrival"
+    "act": {
+      "when": "arrived",
+      "auto": true,
+      "do": [
+        {
+          "on": "self",
+          "shootWith": "sentry"
+        }
+      ]
+    }
   },
   "Grim Determination": {
-    "status": "manual",
-    "note": "Not automated: Stratagems and Orders while Battle-shocked"
+    "effects": [
+      {
+        "if": [
+          "kw:OFFICER"
+        ],
+        "stratsWhileShocked": true,
+        "ordersStayShocked": true
+      }
+    ]
   },
   "Alchemyk Counteragents": {
     "gear": true,
@@ -1210,8 +1267,17 @@
     ]
   },
   "Servo-scribes": {
-    "status": "manual",
-    "note": "Not automated: one extra Order once per battle"
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "order": 1
+        }
+      ]
+    }
   },
   "Tough to Kill": {
     "act": {
@@ -1431,12 +1497,14 @@
     }
   },
   "Counterstrategist": {
-    "status": "manual",
-    "note": "Not automated: the Regiment reaction at the end of the opponent's Movement phase"
+    "code": true,
+    "status": "partial",
+    "note": "A REGIMENT unit within 6\" snap-shoots an enemy unit that moved within 8\" (the Normal move / Surge options are by hand)"
   },
   "Decisive Command": {
-    "status": "manual",
-    "note": "Not automated: an Order affecting every unit within 6\""
+    "code": true,
+    "status": "auto",
+    "note": "Its first Order each turn reaches 12\"; if it is the army's first Order that phase it also affects every eligible unit within 6\" of the target"
   },
   "Inspiring Hero (Aura)": {
     "effects": [
@@ -1451,8 +1519,9 @@
     ]
   },
   "Mechanised Spearhead": {
-    "status": "manual",
-    "note": "Not automated: an extra Order on disembarking"
+    "code": true,
+    "status": "auto",
+    "note": "A REGIMENT unit disembarking within 6\" of this model in your Movement phase gets an Order at once"
   },
   "Brutal Disciplinarian": {
     "act": {
@@ -1602,8 +1671,9 @@
     "note": "Adds the OC of embarked models (the card: +1 per 3 models)"
   },
   "Independent Operatives": {
-    "status": "manual",
-    "note": "Not automated: Orders lasting until replaced"
+    "code": true,
+    "status": "auto",
+    "note": "Orders on this unit last until a new Order replaces them or it becomes Battle-shocked"
   },
   "Vox-relay Beacon": {
     "status": "manual",
@@ -1954,8 +2024,9 @@
     ]
   },
   "Engine Speaker": {
-    "status": "manual",
-    "note": "Not automated: +3\" Move for the vehicle blessed by Omnissiah's Blessing"
+    "code": true,
+    "status": "auto",
+    "note": "Omnissiah's Blessing also gives the blessed VEHICLE +3\" Move until your next Command phase"
   },
   "Assault Hatches": {
     "effects": [

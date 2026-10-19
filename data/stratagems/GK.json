@@ -6,19 +6,11 @@
         "GREY KNIGHTS",
         "INFANTRY"
       ],
-      "react": "enemyMoved",
-      "unitIf": [
-        "nearLast:6"
-      ],
-      "enemy": {
-        "lastActor": true
-      },
-      "do": [
+      "effects": [
         {
-          "on": "target",
-          "mortalRoll": {
+          "moveNearMortals": {
+            "range": 6,
             "on": 4,
-            "n": 1,
             "dmg": "D3",
             "plus": 2,
             "plusIf": [
@@ -27,9 +19,7 @@
           }
         }
       ],
-      "botReact": "always",
-      "status": "partial",
-      "note": "Offered when an enemy unit ends a move within 6\" and hits that unit only (the card: every such unit this phase)"
+      "status": "auto"
     },
     "REPELLING SPHERE": {
       "targetKw": [
@@ -381,13 +371,13 @@
       "effects": [
         {
           "defend": {
-            "fnp": 5
+            "fnp": 5,
+            "fnpVs": "damage1"
           }
         }
       ],
       "botReact": "always",
-      "status": "partial",
-      "note": "Feel No Pain 5+ against every attack (the card: Damage 1 attacks only)"
+      "status": "auto"
     },
     "CHAOS BANE": {
       "targetKw": [
@@ -456,9 +446,25 @@
       "status": "auto"
     },
     "HEXWROUGHT REPRISAL": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: mortal wounds back at the unit that inflicted them"
+      "targetKw": [
+        "GREY KNIGHTS",
+        "PSYKER"
+      ],
+      "react": "anyPhaseEnd",
+      "unitIf": [
+        "mwThisPhase"
+      ],
+      "enemy": {
+        "mwFrom": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "hexReprisal": true
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
     },
     "CIRCLE OF SANCTUARY": {
       "targetKw": [
@@ -819,9 +825,22 @@
       "status": "auto"
     },
     "BY THOUGHT ALONE": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: Actions"
+      "targetKw": [
+        "INTERCEPTOR SQUAD"
+      ],
+      "react": "actionStart",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterAction"
+          ]
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
     },
     "BLADES FROM THE BEYOND": {
       "targetKw": [

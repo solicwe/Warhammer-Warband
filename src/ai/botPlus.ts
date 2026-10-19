@@ -3,7 +3,7 @@
 // shooting, and pulling a threatened unit back into Strategic Reserves.
 import { manualActs, useActByKey } from '../rules-engine/activations';
 import { bestArrival, ctxFor, bestMove, planMove, scoreSpot } from './botMove';
-import { cpWorth, tryRule } from './botStrats';
+import { cpWorth, surplus, tryRule } from './botStrats';
 import { dist } from '../engine/geometry';
 import { unitVisibleTo } from '../engine/visibility';
 import { centre, isBrawler, maxRange, moveOf, objPoint, onObjective, unitValue } from './botEval';
@@ -151,8 +151,10 @@ export function reactWorth(s: GameState, u: UnitState, st: StratagemData, kind: 
     // a unit about to be swarmed, not holding anything, can come back where it's needed
     if (s.objectives.some((o) => onObjective(s, u, o)) || pace(s) >= 4) return false;
     const threats = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= 9).length;
-    return threats >= 2 || alive(u).length * 2 <= u.startingStrength;
+    return threats >= (surplus(s, u.owner) ? 1 : 2) || alive(u).length * 2 <= u.startingStrength;
   }
+  // spare CP: any move that gets the unit somewhere better is worth it
+  if (surplus(s, u.owner)) return moveGain(s, u, 4) > unitValue(u) * 0.01;
   return !isBrawler(s, u) && moveGain(s, u, 4) > unitValue(u) * 0.05;
 }
 
@@ -328,7 +330,7 @@ export function botArrivalStratagem(s: GameState, u: UnitState, how: 'ingress' |
     const foes = boardUnits(s, other(u.owner)).flatMap(alive);
     const gap = Math.min(99, ...[...pos.values()].flatMap((p) => foes.map((e) => dist(p, e))));
     // only when it lands nearer than the usual 9" (a short-ranged or melee unit gets its shots / its fight)
-    if (gap < 8.5 && (isBrawler(s, u) || maxRange(u) <= 18)) { applyDetachmentStratagem(s, u.owner, st, u.id); return true; }
+    if (gap < 8.5 && (isBrawler(s, u) || maxRange(u) <= 18 || surplus(s, u.owner))) { applyDetachmentStratagem(s, u.owner, st, u.id); return true; }
   }
   return false;
 }

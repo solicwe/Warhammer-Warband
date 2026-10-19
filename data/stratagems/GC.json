@@ -489,12 +489,13 @@
       "targetKw": [
         "ASTRA MILITARUM"
       ],
-      "enemy": {
-        "engaged": false
-      },
+      "effects": [
+        {
+          "shootIntoEngagement": 48
+        }
+      ],
       "status": "partial",
-      "note": "Not automated: shooting into an enemy unit engaged with GENESTEALER CULTS units (and their D3+1 mortal wounds on a 5+)",
-      "bot": "never"
+      "note": "Your unit can shoot an enemy unit engaged with your units (the D3+1 mortal wounds on a 5+ to your engaged GENESTEALER CULTS units are not rolled)"
     },
     "HYPERFEROCITY": {
       "targetKw": [

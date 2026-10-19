@@ -383,6 +383,8 @@ export interface PlayerState {
   /** Sonic Destruction: Vibro Cannon Platform units that shot each enemy unit this phase ("<phase>:<unit id>") */
   vibroShots?: Record<string, string[]>;
   /** Leagues of Votann: Yield Points (Prioritised Efficiency) */
+  flags?: string[]; // lasting army-wide states set by rules (YOUR TIME IS NIGH)
+  pestilence?: number; // Tally of Pestilence (Epidemius)
   yieldPoints?: number;
   /** Leagues of Votann: Active stance */
   votannAbility?: 'Hostile Acquisition' | 'Fortify Takeover';
@@ -407,6 +409,8 @@ export interface PlayerState {
   drugsSelected?: string[];
   /** Chaos Daemons: Scintillating Legion Flux tokens pool */
   fluxTokens?: number;
+  eclipse?: { key: string; nml: boolean; opp: boolean }; // IMPOSSIBLE ECLIPSE: areas in the Shadow of Chaos this phase
+  gardenTerrain?: string[]; // Seed the Garden of Nurgle: terrain features in the Shadow of Chaos
   /** Chaos Daemons: Corrupted objective IDs (6" Shadow of Chaos aura + sticky control) */
   corruptedObjectives?: string[];
   /** Chaos Daemons: Units that performed Seductive Gambit this turn */
@@ -522,6 +526,7 @@ export interface Pool {
   noHitReroll: boolean;
   rerollAllHits?: boolean;
   rerollHits1?: boolean; // from detachment rules (unit buffs are checked separately)
+  mortalPerWound?: number; // each wound also inflicts this many mortal wounds (Rapturous Blows)
   rerollWounds1?: boolean;
   rerollWounds12?: boolean; // re-roll wound rolls of 1 and 2
   rerollAllWounds?: boolean;
@@ -771,6 +776,7 @@ export interface GameState {
   splits?: { unitId: string; from: 'pink' | 'blue'; x: number; y: number }[];
   /** Astra Militarum Voice of Command: orders issued this turn by officer unit id */
   ordersUsed?: Record<string, number>;
+  decisiveTurn?: number; // Decisive Command was used this turn (Yarrick)
   calmUnderFireTurn?: number; // Calm Under Fire: the turn its second Order was used
   /** T'au Empire For the Greater Good: Guided, Observer, and Spotted unit pairings this phase */
   ftggPairs?: { guidedId: string; observerId: string; spottedId: string; turn: number; phase: Phase }[];

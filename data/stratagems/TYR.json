@@ -234,9 +234,15 @@
       "status": "auto"
     },
     "CORROSIVE VISCERA": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: Deadly Demise mortal wounds without the roll"
+      "targetKw": [
+        "TYRANIDS",
+        "MONSTER",
+        "!FLY"
+      ],
+      "react": "deadlyDemise",
+      "botReact": "always",
+      "status": "auto",
+      "note": "Used when the monster dies: its Deadly Demise goes off without the roll"
     },
     "UNTRAMMELLED FEROCITY": {
       "targetKw": [
@@ -422,9 +428,19 @@
       "status": "auto"
     },
     "RECLAIM BIOMASS": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: a HARVESTER regenerates a unit when one is destroyed nearby"
+      "targetKw": [
+        "HARVESTER"
+      ],
+      "react": "ownDestroyed",
+      "nearVictim": 6,
+      "do": [
+        {
+          "on": "self",
+          "regenNear": 6
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
     },
     "SURPRISE ASSAULT": {
       "targetKw": [
@@ -446,11 +462,17 @@
             "targetMarked:Surprise Assault"
           ],
           "hit": 1
+        },
+        {
+          "if": [
+            "targetMarked:Surprise Assault",
+            "targetBattleShocked"
+          ],
+          "wound": 1
         }
       ],
       "bot": "attack",
-      "status": "partial",
-      "note": "Not automated: +1 to Wound after a failed test"
+      "status": "auto"
     },
     "ASSASSIN BEASTS": {
       "targetKw": [
@@ -613,9 +635,25 @@
       "status": "auto"
     },
     "THE SMOTHERING SHADOW": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: mortal wounds after an enemy unit fails a Battle-shock test"
+      "targetKw": [
+        "SYNAPSE"
+      ],
+      "react": "enemyShockFailed",
+      "nearVictim": 12,
+      "enemy": {
+        "ctxUnit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 3,
+            "n": 6
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
     },
     "IMPERATIVE DOMINANCE": {
       "targetKw": [

@@ -1,11 +1,11 @@
 // Chaos Daemons army rule The Shadow of Chaos (Daemonic Manifestation, Daemonic Terror), Warp Rifts (Daemonic Incursion),
 // Fates in Flux tokens (Scintillating Legion), Melancholic Miasma (Plague Legion), Blood Tainted (Blood Legion) and
 // Corrupt Realspace. Datasheet abilities, the other detachment rules and stratagems are data.
-import { alive, boardUnits, hasKw, log, other } from '../engine/state';
+import { alive, boardUnits, hasKw, log, other, phaseKey } from '../engine/state';
 import { dist, pointInPoly } from '../engine/geometry';
 import { zonePoly } from '../engine/missions';
 import { d6, rollExpr } from '../engine/dice';
-import { applyMortalWounds } from '../engine/attack';
+import { applyMortalWounds, killModel } from '../engine/attack';
 import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 import type { RollContext, RollStage } from '../engine/events';
 
@@ -27,7 +27,9 @@ export function isUnderShadowOfChaos(s: GameState, p: PlayerId, target: Pt | Uni
   const own = zonePoly(s, p), opp = zonePoly(s, other(p));
   const nml = (q: Pt) => !pointInPoly(q, own) && !pointInPoly(q, opp);
   const half = (inZone: (o: Pt) => boolean) => { const os = s.objectives.filter(inZone); return os.length > 0 && os.filter((o) => o.controller === p).length * 2 >= os.length; };
-  const nmlOk = half(nml), oppOk = half((o) => pointInPoly(o, opp));
+  const ecl = s.players[p].eclipse?.key === phaseKey(s) ? s.players[p].eclipse : undefined;
+  const nmlOk = half(nml) || !!ecl?.nml, oppOk = half((o) => pointInPoly(o, opp)) || !!ecl?.opp;
+  const garden = s.terrain.filter((t) => (s.players[p].gardenTerrain ?? []).includes(t.id));
   const plague = hasDet(s, p, 'Plague Legion') && 'models' in target && target.owner !== p;
   const own6 = (names: string[]) => boardUnits(s, p).filter((u) => u.abilities.some((a) => names.includes(a.name))).flatMap(alive);
   // The Dark Master (Be'lakor) / Shadow of Khorne (Skull Altar): the area within 6"
@@ -39,7 +41,7 @@ export function isUnderShadowOfChaos(s: GameState, p: PlayerId, target: Pt | Uni
     || areas.some((m) => dist(q, m) - m.r <= 6 + 1e-6) || greater.some((m) => dist(q, m) - m.r <= 6 + 1e-6)
     // Corrupt Realspace: 6" around a Corrupted objective marker still under your control
     || s.objectives.some((o) => o.corrupted === p && o.controller === p && dist(q, o) <= 6 + 1e-6)
-    || (nmlOk && nml(q)) || (oppOk && pointInPoly(q, opp))
+    || (nmlOk && nml(q)) || (oppOk && pointInPoly(q, opp)) || garden.some((t) => pointInPoly(q, t.poly))
     // Melancholic Miasma: enemy units within 9" of LEGIONES DAEMONICA NURGLE units
     || (plague && boardUnits(s, p).some((u) => isDaemonUnit(u) && hasKw(u, 'NURGLE') && alive(u).some((m) => dist(q, m) - m.r <= 9 + 1e-6))));
 }
@@ -74,6 +76,14 @@ export function daemonsOnBattleShockResult(s: GameState, u: UnitState, passed: b
     return;
   }
   const opp = other(u.owner);
+  // Cankerblight: a model of an enemy unit near the bearer that fails is destroyed (instead of Daemonic Terror's mortal wounds)
+  const canker = !passed && !hasKw(u, 'MONSTER') && !hasKw(u, 'VEHICLE')
+    && boardUnits(s, opp).some((b) => b.enhancements.some((e) => e.name === 'Cankerblight') && alive(b).some((m) => alive(u).some((n) => dist(m, n) - m.r - n.r <= 6 + 1e-6)));
+  if (canker) {
+    const m = [...alive(u)].sort((a, b) => a.wounds - b.wounds)[0];
+    if (m) { log(s, `Cankerblight: ${m.name} of ${u.name} is destroyed`, 'info', opp); killModel(s, u, m); }
+    return;
+  }
   if (!passed && isDaemonsArmy(s, opp) && (isUnderShadowOfChaos(s, opp, u) || isNearGreaterDaemon(s, opp, u))) {
     applyMortalWounds(s, u, rollExpr(s, 'D3').total, 'Daemonic Terror');
   }
@@ -163,3 +173,21 @@ export function corruptRealspace(s: GameState, u: UnitState) {
   o.secured = u.owner;
   log(s, `Corrupt Realspace: objective ${o.id} is Corrupted`, 'info', u.owner);
 }
+
+/** IMPOSSIBLE ECLIPSE: No Man's Land and / or the opponent's deployment zone are in the Shadow of Chaos this phase. */
+export function impossibleEclipse(s: GameState, p: PlayerId, which: 'eclipseNml' | 'eclipseOpp' | 'eclipseBoth') {
+  if (which === 'eclipseBoth' && !spendFluxToken(s, p)) which = 'eclipseNml';
+  s.players[p].eclipse = { key: phaseKey(s), nml: which !== 'eclipseOpp', opp: which !== 'eclipseNml' };
+  log(s, `IMPOSSIBLE ECLIPSE: ${which === 'eclipseBoth' ? "No Man's Land and the enemy deployment zone are" : which === 'eclipseNml' ? "No Man's Land is" : 'the enemy deployment zone is'} in the Shadow of Chaos this phase`, 'info', p);
+}
+
+/** Seed the Garden of Nurgle: end of your Movement phase, the area terrain the model stands in joins the Shadow for the battle. */
+export function seedTheGarden(s: GameState, p: PlayerId) {
+  for (const u of boardUnits(s, p).filter((x) => x.abilities.some((a) => a.name === 'Seed the Garden of Nurgle'))) {
+    const t = s.terrain.find((x) => x.kind !== 'objective-area' && alive(u).some((m) => pointInPoly(m, x.poly)));
+    if (!t || (s.players[p].gardenTerrain ?? []).includes(t.id)) continue;
+    (s.players[p].gardenTerrain ??= []).push(t.id);
+    log(s, `Seed the Garden of Nurgle: that terrain feature is in the Shadow of Chaos for the rest of the battle`, 'info', p);
+  }
+}
+

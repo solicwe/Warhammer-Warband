@@ -2,7 +2,7 @@
 import { battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
 import '../factions/index';
 import { buildUnits, forChapter, newUid, transportFit } from './army';
-import { applyMortalWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed } from './attack';
+import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
@@ -973,6 +973,7 @@ export function bestLd(u: UnitState, s?: GameState) {
   const base = Math.min(...alive(u).map((m) => m.profile.Ld));
   if (!s) return base;
   const f = unitFlags(s, u);
+  if (f.ignoreLdMods) return Math.min(base, f.ldSet); // Vexilla: modifiers to its Ld are ignored
   return Math.min(base, f.ldSet) - f.ld;
 }
 
@@ -985,7 +986,8 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
   } else {
     const ld = bestLd(u, s);
     const dMod = battleShockMod(s, u);
-    const mod = (unitFlags(s, u).ignoreMods ? 0 : t.mod ?? 0) + dMod;
+    const noLd = unitFlags(s, u).ignoreLdMods;
+    const mod = (unitFlags(s, u).ignoreMods || noLd ? 0 : t.mod ?? 0) + (noLd ? 0 : dMod);
     if (unitFlags(s, u).autoPassShock) { t.result = 12; t.passed = true; t.auto = true; log(s, `${u.name}: Battle-shock test passed automatically`, 'info', u.owner); return; }
     const nDice = shockDice(s, u);
     let r = rollN(s, nDice);
@@ -1021,6 +1023,8 @@ let phaseEndHook: ((s: GameState, phase: Phase) => void) | null = null;
 export const setPhaseEndHook = (h: (s: GameState, phase: Phase) => void) => { phaseEndHook = h; };
 
 export function endPhase(s: GameState) {
+  // "end of any phase" stratagems (HEXWROUGHT REPRISAL): offered once, before the phase's own end
+  if (s.phase !== 'deploy' && s.phase !== 'scouts' && s.phase !== 'gameover' && phaseEndReactions(s, 'anyPhaseEnd', [other(s.active), s.active])) return;
   updateControl(s);
   if (s.phase === 'movement') {
     fireFor(s, 'movementEnd', s.active);
@@ -1049,6 +1053,7 @@ export function endPhase(s: GameState) {
     s.phase = 'movement';
     expireTimed(s, 'movementStart', s.active);
     fireFor(s, 'movementStart', s.active);
+    emit(s, 'movementStart', { p: s.active });
     // Falsehood: the hidden Chaos Lord in Reserves can take a Legionary's place now
     fire(s, 'movementStart', s.units.filter((u) => u.owner === s.active && u.status === 'reserves' && u.enhancements.some((e) => e.name === 'Falsehood')));
   } else if (s.phase === 'movement') {
@@ -1065,6 +1070,7 @@ export function endPhase(s: GameState) {
     fireFor(s, 'shootingEnd', 'both');
     s.phase = 'charge';
     fireFor(s, 'chargeStart', s.active);
+    fireFor(s, 'oppChargeStart', other(s.active));
     emitReact(s, other(s.active), 'enemyChargePhaseStart', {});
   } else if (s.phase === 'charge') {
     if (phaseEndReactions(s, 'enemyChargePhaseEnd', [other(s.active)])) return;
@@ -1376,6 +1382,7 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
     emitReact(s, other(u.owner), 'enemyArrived', { unitId: u.id });
   }
   fire(s, 'arrived', [u]);
+  emit(s, 'arrived', { u });
   if (unitHasAbility(u, 'Drop Pod Assault')) dropPodAssault(s, u);
   if (u.homer && s.active !== u.owner) { log(s, `Teleport Homer: ${u.name} arrives at the token (token removed)`, 'info', u.owner); u.homer = undefined; }
   return chk;
@@ -1478,6 +1485,8 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   // Fortress of Intimidation: charging near that Knight means a Battle-shock test first
   const fort = boardUnits(s, other(u.owner)).find((e) => unitFlags(s, e).chargedShock !== null && unitDistance(u, e) <= 12 + 1e-6);
   if (fort) shockTest(s, u, unitFlags(s, fort).chargedShock!, fort.name);
+  // the units it may charge are the targets of the charge (for "a charge that targets your unit" reactions)
+  if (s.lastAct?.unitId === u.id) s.lastAct.targets = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.charge.declareRange + 1e-6).map((e) => e.id);
   if (declaredInOwnTurn) emitReact(s, other(u.owner), 'enemyChargeDeclared', { unitId: u.id });
   if (declaredInOwnTurn) emergencyEmbark(s, u);
   return r;
@@ -2131,7 +2140,7 @@ export function validateDisembark(s: GameState, u: UnitState, t: UnitState, pos:
   const errors: string[] = [];
   const bad = new Set<string>();
   if (!mode) return { ok: false, errors: ['The transport Advanced / Fell Back: no disembarking this phase'], bad: [] };
-  const range = mode === 'combat' ? 6 : 3;
+  const range = Math.max(mode === 'combat' ? 6 : 3, unitFlags(s, t).disembarkRange); // SECURE POSITIONS: within 6"
   endChecks(s, u, pos, errors, bad);
   // Aggressive Disembarkation: within the set-up distance is enough, not wholly within
   const loose = unitFlags(s, u).looseDisembark;
@@ -2166,6 +2175,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
   arrivalShock(s, u);
   unleashWrathHook?.(s, u);
   fire(s, 'passengerDisembarks', [t], { targetId: u.id });
+  emit(s, 'disembarked', { u, t });
   return chk;
 }
 
@@ -2687,4 +2697,36 @@ export function sanitizeGameState(s: GameState): GameState {
     }
   }
   return s;
+}
+
+/** Somewhere near the transport to put a unit (`range` from its hull), as close to `towards` as possible. */
+export function placeNear(s: GameState, u: UnitState, t: UnitState, range: number, towards: Pt | null, ok: (pos: Map<string, Pt>) => boolean): Map<string, Pt> | null {
+  const c = alive(t)[0];
+  if (!c) return null;
+  let best: { pos: Map<string, Pt>; d: number } | null = null;
+  for (let ring = 0; ring <= 4; ring++) {
+    const r = c.r + 1 + ring * (range / 4);
+    for (let a = 0; a < 16; a++) {
+      const ang = (a / 16) * Math.PI * 2;
+      const pos = formationAt(u, { x: c.x + Math.cos(ang) * r, y: c.y + Math.sin(ang) * r });
+      if (!ok(pos)) continue;
+      const mid = [...pos.values()].reduce((q, p2) => ({ x: q.x + p2.x / pos.size, y: q.y + p2.y / pos.size }), { x: 0, y: 0 });
+      const d = towards ? dist(mid, towards) : ring;
+      if (!best || d < best.d) best = { pos, d };
+    }
+  }
+  return best?.pos ?? null;
+}
+
+
+export function shootNow(s: GameState, u: UnitState, target: UnitState, label: string, mode: 'normal' | 'snap' = 'normal', skipWeapons?: string[]) {
+  if (!onBoard(u) || !onBoard(target)) return;
+  const r = buildShootPools(s, u.id, target.id, { mode, skipWeapons });
+  if (r.error || !r.pools.length) { log(s, `${label}: ${u.name} cannot shoot ${target.name} (${r.error ?? 'no weapon in range'})`, 'info', u.owner); return; }
+  const fired = [...u.weaponsFired];
+  log(s, `${label}: ${u.name} shoots ${target.name}`, 'info', u.owner);
+  startAttack(s, 'shoot', u.id, target.id, r.pools, { free: true });
+  resolveAll(s);
+  finishAttack(s);
+  u.weaponsFired = fired; // shooting out of phase does not use up its own Shooting phase
 }

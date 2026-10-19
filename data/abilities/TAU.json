@@ -376,10 +376,31 @@
         "defend": {
           "fnp": 6
         }
+      },
+      {
+        "scope": "led",
+        "if": [
+          "marked:Feasted"
+        ],
+        "defend": {
+          "fnp": 5
+        }
       }
     ],
-    "status": "partial",
-    "note": "Not automated: Feel No Pain 5+ after destroying a unit in the Fight phase"
+    "act": {
+      "when": "afterFighting",
+      "auto": true,
+      "needUnitDestroyed": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "buff": [],
+          "mark": "Feasted",
+          "until": "battle"
+        }
+      ]
+    }
   },
   "Shield Generator": {
     "status": "auto",
@@ -550,8 +571,11 @@
     "status": "auto"
   },
   "Grav-inhibitor Drone": {
-    "status": "manual",
-    "note": "Not automated: -2 to Charge rolls against the bearer's unit"
+    "effects": [
+      {
+        "chargedMinus": 2
+      }
+    ]
   },
   "Pulse Accelerator Drone": {
     "gear": true,
@@ -794,8 +818,35 @@
     "status": "auto"
   },
   "Neocapacitor Shields": {
-    "status": "manual",
-    "note": "Not automated: Battle-shock test and -1 to Charge rolls at the start of the opponent's Charge phase"
+    "act": {
+      "when": "oppChargeStart",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "visible": true,
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ],
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        },
+        {
+          "on": "target",
+          "buff": [
+            {
+              "chargeBonus": -1
+            }
+          ],
+          "until": "turn"
+        }
+      ]
+    }
   },
   "Retro-thrusters": {
     "act": {
@@ -1001,8 +1052,23 @@
         ]
       }
     ],
-    "status": "partial",
-    "note": "Not automated: mortal wounds to a unit it moved over"
+    "act": {
+      "when": "endOfNormalMove",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "movedOver": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "n": 6
+          }
+        }
+      ]
+    }
   },
   "Prototype Weapon System": {
     "act": {
@@ -1114,8 +1180,17 @@
     "note": "After deployment: up to three units can be redeployed (into Strategic Reserves too)"
   },
   "Student of Kauyon": {
-    "status": "manual",
-    "note": "Not automated: Deep Strike for up to three KROOT CARNIVORES / FARSTALKERS units"
+    "effects": [
+      {
+        "scope": "army",
+        "units": [
+          "KROOT CARNIVORES|KROOT FARSTALKERS"
+        ],
+        "deepStrike": true
+      }
+    ],
+    "status": "partial",
+    "note": "Every KROOT CARNIVORES / FARSTALKERS unit has Deep Strike (the card: up to three)"
   },
   "Admired Leader": {
     "act": {

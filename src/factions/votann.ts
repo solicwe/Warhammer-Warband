@@ -18,7 +18,8 @@
 // Hostile Acquisition / Fortify Takeover themselves are data (data/detachment-rules.json, conditions hostile /
 // fortify), like the detachment rules, abilities and stratagems.
 
-import { alive, boardUnits, log, other, pushFx, unitById } from '../engine/state';
+import { alive, boardUnits, engagedEnemies, log, other, pushFx, unitById, unitDistance } from '../engine/state';
+import { setBackUp } from '../rules-engine/activations';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 import { zonePoly } from '../engine/missions';
 import { pointInPoly, ptGap } from '../engine/geometry';
@@ -181,4 +182,38 @@ export function votannTurnEnd(s: GameState) {
     if (has('Dead Reckoning') && t.spent === 0) gainYieldPoints(s, p, 1, 'Dead Reckoning');
     if (s.active === p && has('Metaphysical Brokerage') && t.gained < 3) gainYieldPoints(s, p, 3 - t.gained, 'Metaphysical Brokerage');
   }
+}
+
+const bearerOf = (s: GameState, p: PlayerId, enh: string) => boardUnits(s, p).find((u) => u.enhancements.some((e) => e.name === enh));
+
+/** Nomad Strategist (once per battle, end of the opponent's Fight phase): up to 4YP, a HERNKYN unit and one more per
+ *  2YP go into Strategic Reserves. The units picked are those unengaged with an enemy within 9" (spending only what that needs). */
+export function nomadStrategist(s: GameState) {
+  const p = other(s.active);
+  const b = bearerOf(s, p, 'Nomad Strategist');
+  if (!b || (b.used ?? {}).nomad) return;
+  const units = boardUnits(s, p).filter((u) => u.keywords.includes('HERNKYN') && !engagedEnemies(s, u).length && boardUnits(s, s.active).some((e) => unitDistance(u, e) <= 9));
+  if (!units.length) return;
+  const n = Math.min(units.length, 1 + Math.floor(Math.min(4, getYieldPoints(s, p)) / 2));
+  if (n > 1 && !spendYieldPoints(s, p, (n - 1) * 2, 'Nomad Strategist')) return;
+  (b.used ??= {}).nomad = 'battle';
+  for (const u of units.slice(0, n)) { u.status = 'reserves'; u.move = null; log(s, `Nomad Strategist: ${u.name} is placed into Strategic Reserves`, 'info', p); }
+}
+
+/** Dêlvwerke Navigator (Reinforcements step): a CTHONIAN BESERKS unit gets a model back, and one more per 2YP spent (up to 2YP). */
+export function delvwerkeNavigator(s: GameState) {
+  const p = s.active;
+  const b = bearerOf(s, p, 'Dêlvwerke Navigator');
+  if (!b) return;
+  const t = boardUnits(s, p).find((u) => u.keywords.includes('CTHONIAN BESERKS') && u.models.some((m) => m.dead && !m.isCharacter));
+  if (!t) return;
+  const dead = t.models.filter((m) => m.dead && !m.isCharacter);
+  const extra = Math.min(dead.length - 1, Math.floor(Math.min(2, getYieldPoints(s, p)) / 2));
+  if (extra > 0) spendYieldPoints(s, p, extra * 2, 'Dêlvwerke Navigator');
+  let back = 0;
+  for (const m of dead.slice(0, 1 + Math.max(0, extra))) {
+    m.dead = false; m.wounds = m.profile.W;
+    if (setBackUp(s, t, m, alive(t).find((x) => x.id !== m.id) ?? m)) back++; else { m.dead = true; m.wounds = 0; }
+  }
+  if (back) log(s, `Dêlvwerke Navigator: ${back} model(s) return to ${t.name}`, 'info', p);
 }

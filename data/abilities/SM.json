@@ -87,7 +87,8 @@
   "Relic Shield": {
     "gear": true,
     "status": "auto",
-    "note": "W6 (per wargear chosen in the list)"
+    "note": "W6 (per wargear chosen in the list)",
+    "code": true
   },
   "Rites of Battle": {
     "effects": [
@@ -1966,7 +1967,8 @@
   "Shield Dome": {
     "gear": true,
     "status": "auto",
-    "note": "5+ invulnerable save (per wargear chosen in the list)"
+    "note": "5+ invulnerable save (per wargear chosen in the list)",
+    "code": true
   },
   "Primarch of the First Legion": {
     "choice": {
@@ -2612,7 +2614,8 @@
   "Blizzard Shield": {
     "gear": true,
     "status": "auto",
-    "note": "4+ invulnerable save (per wargear chosen in the list)"
+    "note": "4+ invulnerable save (per wargear chosen in the list)",
+    "code": true
   },
   "Braziers of Judgement": {
     "effects": [
@@ -3438,8 +3441,9 @@
     ]
   },
   "Supreme Commander": {
+    "code": true,
     "status": "auto",
-    "note": "Checked by the army builder: must be your Warlord"
+    "note": "Army builder: this model must be your Warlord"
   },
   "Strategic Acumen": {
     "act": [
@@ -3583,16 +3587,19 @@
     }
   },
   "Chief Librarian (psyker level 3)": {
+    "code": true,
     "status": "auto",
-    "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
+    "note": "Psyker level: the psychic abilities share the per-round budget (activations.ts)"
   },
   "Librarian (psyker level 1)": {
+    "code": true,
     "status": "auto",
-    "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
+    "note": "Psyker level: the psychic abilities share the per-round budget (activations.ts)"
   },
   "Rune Priest (psyker level 3)": {
+    "code": true,
     "status": "auto",
-    "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
+    "note": "Psyker level: the psychic abilities share the per-round budget (activations.ts)"
   },
   "Hood of Hellfire (Psychic)": {
     "effects": [
@@ -3686,8 +3693,9 @@
     }
   },
   "Captain of the Honour Guard": {
+    "code": true,
     "status": "auto",
-    "note": "With Marneus Calgar in the army it attaches as Support (army builder)"
+    "note": "Army builder: with MARNEUS CALGAR it is a Support character (supportIn)"
   },
   "Knight Champion of Macragge (Once per phase, per army)": {
     "act": {
@@ -4865,8 +4873,9 @@
     "note": "Split into 2 units of 5 in the army builder (⋮ menu)"
   },
   "Embarking within Transports": {
+    "code": true,
     "status": "auto",
-    "note": "Rides transports that carry TERMINATOR models, taking 4 spaces"
+    "note": "Rides transports that carry Terminators, 4 models of space (army.ts)"
   },
   "Murder-maker [Aura]": {
     "effects": [
@@ -4881,8 +4890,9 @@
     ]
   },
   "Force of Untamed Destruction": {
+    "code": true,
     "status": "auto",
-    "note": "Checked by the army builder: cannot be your Warlord"
+    "note": "Army builder: cannot be the Warlord"
   },
   "Beastial Fury": {
     "effects": [
@@ -5125,8 +5135,9 @@
     ]
   },
   "Imperium's Sword": {
+    "code": true,
     "status": "auto",
-    "note": "Gains the Imperium's Sword weapon (added automatically)"
+    "note": "The weapon is added to the bearer from the enhancement text (army.ts)"
   },
   "Furious Assault": {
     "effects": [
@@ -6278,7 +6289,8 @@
   "Combat Shield": {
     "gear": true,
     "status": "auto",
-    "note": "W / invulnerable save adjusted per wargear chosen in the list"
+    "note": "W / invulnerable save adjusted per wargear chosen in the list",
+    "code": true
   },
   "Blizzard shield": {
     "gear": true,
