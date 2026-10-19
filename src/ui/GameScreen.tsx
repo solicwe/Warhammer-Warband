@@ -1794,7 +1794,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           const activeOfficer = officers.find((o) => o.id === orderOfficerId) ?? officers.find((o) => ordersRemaining(s, o) > 0) ?? officers[0];
           const targets = activeOfficer ? boardUnits(s, s.active).filter((t) => canOfficerTarget(activeOfficer, t, s)) : [];
           const activeTarget = targets.find((t) => t.id === orderTargetId) ?? targets[0];
-          const allowed = activeOfficer ? officerAllowedOrders(activeOfficer) : [];
+          const allowed = activeOfficer ? officerAllowedOrders(activeOfficer, s) : [];
           return (
             <div className="card" style={{ padding: 8 }}>
               <div className="small"><b>Voice of Command</b> — select an Officer, an eligible friendly unit, and an Order to issue until your next Command phase</div>

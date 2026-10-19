@@ -432,7 +432,7 @@
   },
   "Voice of New Truths": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "per": "army",
@@ -1058,7 +1058,7 @@
   },
   "Neural Disruption": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "target": {
@@ -1874,7 +1874,7 @@
   "Cult Icon@Acolyte Hybrids With Autopistols": {
     "gear": true,
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "if": [
@@ -1901,7 +1901,7 @@
   "Cult Icon@Neophyte Hybrids": {
     "gear": true,
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "if": [

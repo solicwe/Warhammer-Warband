@@ -779,7 +779,7 @@ const isAstartes = (u: UnitState) => ['ADEPTUS ASTARTES', 'ADEPTUS CUSTODES', 'T
 let unleashWrathHook: ((s: GameState, u: UnitState) => void) | null = null;
 export const setUnleashWrath = (fn: (s: GameState, u: UnitState) => void) => { unleashWrathHook = fn; };
 
-const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string[]; imperiumBattleline?: boolean; rollD3?: boolean }[] = [
+const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string[]; imperiumBattleline?: boolean; rollD3?: boolean; textHas?: string }[] = [
   { name: 'Strategic Slaughter', n: 3, infantryOnly: false, units: ['JAKHALS', 'GOREMONGERS'] }, // World Eaters: Cult of Blood
   { name: 'Tactical Perfection', n: 2, infantryOnly: false, units: ['EMPEROR’S CHILDREN'] }, // Emperor's Children: Mercurial Host
   { name: 'Master of Deceit', n: 3, infantryOnly: true },
@@ -802,11 +802,14 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string
   { name: 'Shedskin Raiment', n: 3, infantryOnly: false, units: ['HARLEQUINS'] },
   { name: 'Veiled Hunter', n: 3, infantryOnly: true, units: ['SKITARII'] }, // Adeptus Mechanicus
   { name: 'Precognisant', n: 3, infantryOnly: false, units: ['DRUKHARI'] }, // Drukhari: Lady Malys
+  { name: 'The Collegiate Astrolex', n: 3, infantryOnly: false, units: ['ASTRA MILITARUM'] }, // Astra Militarum: Lord Solar Leontus
+  { name: 'Guerrilla Honours', n: 3, infantryOnly: true, units: ['ASTRA MILITARUM'] },
+  { name: 'Grand Strategist', n: 2, infantryOnly: false, units: ['REGIMENT', 'SQUADRON'], textHas: 'redeploy' }, // the Armoured Infantry one (Combined Arms' gives an Order)
 ];
 
 function redeployFor(s: GameState, p: PlayerId) {
   const mine = s.units.filter((u) => u.owner === p && (u.status === 'board' || u.status === 'embarked'));
-  return REDEPLOY.filter((r) => mine.some((u) => unitHasAbility(u, r.name))).sort((a, b) => b.n - a.n)[0];
+  return REDEPLOY.filter((r) => mine.some((u) => unitHasAbility(u, r.name) && (!r.textHas || [...u.abilities, ...u.enhancements].some((a) => a.name === r.name && a.text?.includes(r.textHas!))))).sort((a, b) => b.n - a.n)[0];
 }
 
 /** Units a player may pick up to redeploy now. */
@@ -819,7 +822,7 @@ export function redeployCandidates(s: GameState): UnitState[] {
       : r.source === 'Liber Heresius'
       ? hasKw(u, 'AGENTS OF THE IMPERIUM') || u.factionKeywords.includes('AGENTS OF THE IMPERIUM')
       : r.units ? true : isAstartes(u))
-    && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && (!r.units || r.units.some((k) => hasKw(u, k))) && !u.transport);
+    && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && (!r.units || r.units.some((k) => hasKw(u, k) || u.factionKeywords.includes(k))) && !u.transport);
 }
 
 /** Pick a unit up: it is placed again (deployment rules) or, with toReserves, goes into Strategic Reserves (no limit). */

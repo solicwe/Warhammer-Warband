@@ -165,7 +165,7 @@
   },
   "Omnissiah’s Blessing": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "target": {

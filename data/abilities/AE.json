@@ -313,7 +313,7 @@
   },
   "Word of the Phoenix (Psychic)": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "if": [
@@ -2226,7 +2226,7 @@
   },
   "Echoes of Ulthanesh": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "roll": "D6",
@@ -2245,7 +2245,7 @@
   },
   "Light of Clarity": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "target": {
@@ -2279,7 +2279,7 @@
   },
   "Stave of Kurnous": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "target": {
@@ -2308,7 +2308,7 @@
   },
   "Rune of Mists": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "target": {
@@ -2535,7 +2535,7 @@
   },
   "Lucid Eye": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "if": [

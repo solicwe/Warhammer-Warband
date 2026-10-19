@@ -79,6 +79,7 @@ export interface Action {
   unshock?: boolean;
   riled?: boolean; // Orks: riled up until the start of your next turn
   cp?: number;
+  order?: number; // the OFFICER issues this many Orders now, outside its usual count (picked as the bot would)
   oppCp?: number; // the opponent loses this many CP (negative number; never below 0) (Honourable Combatant)
   reserves?: boolean; // remove the unit and place it into Strategic Reserves
   earlyArrival?: boolean; // the unit may arrive from Reserves this battle round
@@ -104,7 +105,7 @@ export interface Action {
   log?: string;
   // stratagem actions
   if?: string[]; // only when these conditions hold (on the unit using it; "target…" ones on the other unit)
-  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; n?: number; nWounds?: boolean; dmg?: string; shockIfAny?: number; rerollIf?: string[] }; // one D6 per model engaged with the target (or n dice): each X+ is a mortal wound (dmg: that many each; shockIfAny: then a Battle-shock test with this modifier)
+  mortalRoll?: { on: number; max?: number; plus?: number; plusIf?: string[]; all?: boolean; allOn?: boolean; n?: number; nWounds?: boolean; dmg?: string; shockIfAny?: number; rerollIf?: string[] }; // one D6 per model engaged with the target (or n dice; all: per own model; allOn: per model of the unit it hits): each X+ is a mortal wound (dmg: that many each; shockIfAny: then a Battle-shock test with this modifier)
   ldFail?: Effect[]; // the target takes a Leadership test; failed → these effects (until `until`)
   ldBranch?: { pass?: Effect[]; fail?: Effect[] }; // Leadership test branching: pass effects vs fail effects
   decoyTargets?: boolean; // Callidus Assassin replaces a friendly Infantry model, destroying it
@@ -562,7 +563,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.if && !a.if.every((c) => cond(c, { s, A: u, T: target ?? undefined, holder: u, bearers: def.bearers }))) continue;
     if (a.mortalRoll) {
       const q = a.mortalRoll;
-      const n = q.nWounds ? Math.min(q.max ?? 99, alive(u).reduce((x, m) => x + m.wounds, 0)) : q.n ?? (q.all ? alive(u).length : alive(u).filter((m) => alive(on).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length);
+      const n = q.nWounds ? Math.min(q.max ?? 99, alive(u).reduce((x, m) => x + m.wounds, 0)) : q.n ?? (q.allOn ? alive(on).length : q.all ? alive(u).length : alive(u).filter((m) => alive(on).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length);
       const plus = q.plus && (q.plusIf ?? []).every((c) => cond(c, { s, A: u, T: on, holder: u })) ? q.plus : 0;
       let dice = rollN(s, Math.max(1, n));
       // Cluster Caltrops: failed dice are rolled again

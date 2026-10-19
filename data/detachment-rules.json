@@ -4528,7 +4528,7 @@
           "name": "Sacristan Pledge",
           "rule": {
             "act": {
-              "when": "command",
+              "when": "commandStart",
               "limit": "phase",
               "auto": true,
               "target": {
@@ -4952,51 +4952,7 @@
         }
       ]
     },
-    "Born Soldiers": {
-      "auto": "full",
-      "effects": [
-        {
-          "units": [
-            "REGIMENT"
-          ],
-          "attack": "ranged",
-          "if": [
-            "targetNotMV"
-          ],
-          "abilities": [
-            "lethal hits"
-          ]
-        },
-        {
-          "units": [
-            "SQUADRON"
-          ],
-          "attack": "ranged",
-          "if": [
-            "targetMV"
-          ],
-          "abilities": [
-            "lethal hits"
-          ]
-        }
-      ]
-    },
     "Mechanised Assault": {
-      "auto": "full",
-      "effects": [
-        {
-          "units": [
-            "ASTRA MILITARUM"
-          ],
-          "attack": "ranged",
-          "if": [
-            "disembarkedThisTurn"
-          ],
-          "wound": 1
-        }
-      ]
-    },
-    "Armoured Fist": {
       "auto": "full",
       "effects": [
         {
@@ -5023,48 +4979,30 @@
         }
       ]
     },
-    "Masters of Camouflage": {
+    "Hammer of the Emperor": {
       "auto": "full",
       "effects": [
         {
           "units": [
-            "ASTRA MILITARUM",
-            "!TITANIC"
+            "SQUADRON"
           ],
-          "stealth": true
+          "advanceFixed": 6
         }
-      ]
-    },
-    "Hammer of the Emperor": {
-      "auto": "full",
-      "rolls": {
-        "advanceSix": true
-      }
-    },
-    "Iron Tread": {
-      "auto": "full",
-      "rolls": {
-        "advanceSix": true
-      }
+      ],
+      "manual": "Moving through Engagement Range during that Advance is not applied"
     },
     "Bridgehead Strike": {
       "auto": "full",
       "effects": [
         {
           "units": [
-            "MILITARUM TEMPESTUS"
+            "TEMPESTUS SCIONS"
           ],
-          "attack": "ranged",
-          "if": [
-            "setUpThisTurn"
+          "addKeywords": [
+            "BATTLELINE"
           ],
-          "hit": 1
-        }
-      ]
-    },
-    "Fire Zone Purge": {
-      "auto": "full",
-      "effects": [
+          "oc": 1
+        },
         {
           "units": [
             "MILITARUM TEMPESTUS"
@@ -5075,10 +5013,12 @@
           ],
           "hit": 1
         }
-      ]
+      ],
+      "manual": "TEMPESTUS SCIONS get BATTLELINE and +1 OC without checking the WARLORD"
     },
     "Grizzled Company": {
       "auto": "full",
+      "code": true,
       "effects": [
         {
           "units": [
@@ -5089,53 +5029,76 @@
           ],
           "reroll": "hits1"
         }
-      ]
-    },
-    "Ruthless Discipline": {
-      "auto": "full",
-      "effects": [
-        {
-          "units": [
-            "ASTRA MILITARUM"
-          ],
-          "if": [
-            "hasOrder"
-          ],
-          "reroll": "hits1"
-        }
-      ]
+      ],
+      "manual": "+1 Order for each OFFICER (orders.ts)"
     },
     "Steel Hammer": {
-      "auto": "full",
-      "note": "Titanic/Squadron can shoot into Engagement Range without penalty, even with Blast weapons"
-    },
-    "Ceaseless Cannonade": {
-      "auto": "full",
-      "note": "Titanic/Squadron can shoot into Engagement Range without penalty, even with Blast weapons"
+      "auto": "partial",
+      "effects": [
+        {
+          "units": [
+            "ASTRA MILITARUM",
+            "TITANIC|SQUADRON"
+          ],
+          "noBigGunsPenalty": true
+        }
+      ],
+      "manual": "Shooting enemy units engaged with it (Blast too) and giving a TITANIC unit the CHARACTER keyword are not automated"
     },
     "Armoured Infantry": {
-      "auto": "full",
-      "note": "Officers can issue Orders to Squadron units"
-    },
-    "Squadron Command": {
-      "auto": "full",
-      "note": "Officers can issue Orders to Squadron units"
+      "auto": "partial",
+      "code": true,
+      "manual": "Officers can issue Orders to SQUADRON units (orders.ts); the On My Signal Order is not offered"
     },
     "Abhuman Auxiliaries": {
-      "auto": "full",
-      "note": "Bullgryn/Ogryn/Ratlings have ABHUMAN; Commissar can issue Take Aim! and orders to ABHUMAN"
-    },
-    "Absolutist Principles": {
-      "auto": "full",
-      "note": "Bullgryn/Ogryn/Ratlings have ABHUMAN; Commissar can issue Take Aim! and orders to ABHUMAN"
+      "auto": "auto",
+      "effects": [
+        {
+          "units": [
+            "BULLGRYN SQUAD|OGRYN SQUAD|RATLINGS"
+          ],
+          "addKeywords": [
+            "ABHUMAN"
+          ]
+        }
+      ]
     },
     "Designation Force": {
       "auto": "full",
-      "note": "Signal Flares: Scout Sentinel and Infantry Smoke can designate enemy within 12\" for +3\" detection range"
-    },
-    "Designated Targets": {
-      "auto": "full",
-      "note": "Signal Flares: Scout Sentinel and Infantry Smoke can designate enemy within 12\" for +3\" detection range"
+      "grants": [
+        {
+          "units": [
+            "SCOUT SENTINEL|SMOKE"
+          ],
+          "name": "Signal Flares",
+          "rule": {
+            "act": {
+              "when": "shooting",
+              "limit": "phase",
+              "label": "Signal Flares: an enemy unit within 12\" is designated (+3\" detection range)",
+              "botUse": "always",
+              "target": {
+                "side": "enemy",
+                "range": 12,
+                "visible": true
+              },
+              "do": [
+                {
+                  "on": "target",
+                  "buff": [
+                    {
+                      "detection": 3
+                    }
+                  ],
+                  "until": "turn",
+                  "mark": "designated"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "manual": "SMOKE units must be ASTRA MILITARUM INFANTRY (not checked)"
     },
     "Siege Regiment": {
       "auto": "full",
@@ -5148,62 +5111,126 @@
           {
             "id": "creeping-barrage",
             "name": "Creeping Barrage",
-            "text": "Enemy units >12\" away on 5+ are shaken (-2\" M, -2 to charge rolls)."
+            "text": "Enemy units more than 12\" away: 5+, shaken (-2\" Move, -2 to Charge rolls)",
+            "effects": []
           },
           {
             "id": "incendiary-bombardment",
             "name": "Incendiary Bombardment",
-            "text": "Enemy units >12\" away are scattered (no Benefit of Cover)."
+            "text": "Enemy units more than 12\" away are scattered (no Benefit of Cover)",
+            "effects": []
           },
           {
             "id": "smoke-shells",
             "name": "Smoke Shells",
-            "text": "Friendly units have Stealth.",
-            "effects": [
-              {
-                "units": [
-                  "ASTRA MILITARUM"
-                ],
-                "stealth": true
-              }
-            ]
+            "text": "Your units have Stealth",
+            "effects": []
           }
         ]
-      }
-    },
-    "Artillery Support": {
-      "auto": "full",
-      "choice": {
-        "name": "Artillery Support",
-        "when": "round",
-        "uses": "free",
-        "pick": 1,
-        "options": [
-          {
-            "id": "creeping-barrage",
-            "name": "Creeping Barrage",
-            "text": "Enemy units >12\" away on 5+ are shaken (-2\" M, -2 to charge rolls)."
+      },
+      "acts": [
+        {
+          "when": "commandEnd",
+          "auto": true,
+          "armyWide": true,
+          "units": [
+            "ASTRA MILITARUM"
+          ],
+          "limit": "round",
+          "if": [
+            "detActive:creeping-barrage"
+          ],
+          "target": {
+            "side": "enemy",
+            "anywhere": true,
+            "each": true,
+            "count": "battleSize"
           },
-          {
-            "id": "incendiary-bombardment",
-            "name": "Incendiary Bombardment",
-            "text": "Enemy units >12\" away are scattered (no Benefit of Cover)."
+          "roll": "D6",
+          "table": [
+            {
+              "min": 5,
+              "do": [
+                {
+                  "on": "target",
+                  "if": [
+                    "targetFar:12"
+                  ],
+                  "buff": [
+                    {
+                      "move": -2,
+                      "chargeBonus": -2
+                    }
+                  ],
+                  "until": "nextCommand",
+                  "mark": "shaken"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "when": "commandEnd",
+          "auto": true,
+          "armyWide": true,
+          "units": [
+            "ASTRA MILITARUM"
+          ],
+          "limit": "round",
+          "if": [
+            "detActive:incendiary-bombardment"
+          ],
+          "target": {
+            "side": "enemy",
+            "anywhere": true,
+            "each": true,
+            "count": "battleSize"
           },
-          {
-            "id": "smoke-shells",
-            "name": "Smoke Shells",
-            "text": "Friendly units have Stealth.",
-            "effects": [
-              {
-                "units": [
-                  "ASTRA MILITARUM"
-                ],
-                "stealth": true
-              }
-            ]
-          }
-        ]
-      }
+          "do": [
+            {
+              "on": "target",
+              "if": [
+                "targetFar:12"
+              ],
+              "incoming": {
+                "noCover": true
+              },
+              "until": "nextCommand",
+              "mark": "scattered"
+            }
+          ]
+        },
+        {
+          "when": "commandEnd",
+          "auto": true,
+          "armyWide": true,
+          "units": [
+            "ASTRA MILITARUM"
+          ],
+          "limit": "round",
+          "if": [
+            "detActive:smoke-shells"
+          ],
+          "target": {
+            "side": "friendly",
+            "each": true,
+            "count": "battleSize",
+            "range": 99
+          },
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "stealth": true
+                }
+              ],
+              "until": "nextCommand"
+            }
+          ]
+        }
+      ],
+      "manual": "Lasts until your next Command phase (the card: until the end of the battle round)"
     },
     "Synapse": {
       "auto": "full",
@@ -6919,7 +6946,7 @@
       "auto": "full",
       "acts": [
         {
-          "when": "command",
+          "when": "commandStart",
           "auto": true,
           "armyWide": true,
           "units": [
@@ -8521,6 +8548,12 @@
           "reroll": "wounds1"
         }
       ]
+    },
+    "Voice of Command": {
+      "auto": "full",
+      "armyRule": true,
+      "code": true,
+      "manual": "Orders are issued in the Command phase (orders.ts); issuing them after disembarking or arriving is not offered"
     }
   }
 }

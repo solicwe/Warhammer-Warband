@@ -1350,7 +1350,7 @@
   },
   "Harmonic Alignment": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "if": [

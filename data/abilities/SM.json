@@ -347,7 +347,8 @@
       }
     ]
   },
-  "Storm Shield": { "code": true,
+  "Storm Shield": {
+    "code": true,
     "gear": true,
     "status": "auto",
     "note": "W / invulnerable save per wargear chosen in the list"
@@ -648,7 +649,8 @@
       ]
     }
   },
-  "SUPREME COMMANDER": { "code": true,
+  "SUPREME COMMANDER": {
+    "code": true,
     "status": "auto",
     "note": "Checked by the army builder: must be your Warlord"
   },
@@ -784,7 +786,8 @@
       }
     ]
   },
-  "Miraculous Saviour": { "code": true,
+  "Miraculous Saviour": {
+    "code": true,
     "status": "auto",
     "note": "End of opponent's Charge phase: arrive engaged with the charging unit (once)"
   },
@@ -2034,7 +2037,8 @@
       }
     ]
   },
-  "Master of Deceit": { "code": true,
+  "Master of Deceit": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 INFANTRY units (set up again or place into Reserves)"
   },
@@ -2215,7 +2219,8 @@
     "status": "info",
     "note": "The 2D board has no vertical distance anyway"
   },
-  "Emergency Combat Embarkation": { "code": true,
+  "Emergency Combat Embarkation": {
+    "code": true,
     "status": "auto",
     "note": "Enemy declares a charge: a unit within 3\" embarks to escape (once per turn)"
   },
@@ -2292,7 +2297,7 @@
   },
   "Narthecium": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "botUse": "damaged",
       "do": [
@@ -2377,7 +2382,8 @@
       }
     }
   },
-  "Stabilised Disembarkation": { "code": true,
+  "Stabilised Disembarkation": {
+    "code": true,
     "status": "auto",
     "note": "Transport reduced to half wounds: units inside disembark automatically"
   },
@@ -2678,7 +2684,7 @@
   },
   "Healing Balms": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "botUse": "damaged",
       "do": [
@@ -3151,7 +3157,8 @@
       }
     ]
   },
-  "Strategium Command": { "code": true,
+  "Strategium Command": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 units (set up again or place into Reserves)"
   },
@@ -3177,11 +3184,13 @@
       }
     ]
   },
-  "Oath of Moment": { "code": true,
+  "Oath of Moment": {
+    "code": true,
     "status": "auto",
     "note": "Automated: select a target in the Command phase (re-roll Hit, +1 to Wound for codex armies)"
   },
-  "Templar Vows": { "code": true,
+  "Templar Vows": {
+    "code": true,
     "status": "auto",
     "note": "Automated: select a Vow in the first Command phase (Black Templars)"
   },
@@ -3253,7 +3262,8 @@
       }
     ]
   },
-  "Blackstar Cluster Launcher": { "code": true,
+  "Blackstar Cluster Launcher": {
+    "code": true,
     "status": "auto",
     "note": "End of Normal move: for each unit flown over, roll 6D6, each 5+ = 1 mortal wound (automatic)"
   },
@@ -3368,7 +3378,8 @@
       }
     ]
   },
-  "Combat Doctrines": { "code": true,
+  "Combat Doctrines": {
+    "code": true,
     "status": "auto",
     "note": "Select a Doctrine at the start of the Command phase (Detachment panel)"
   },
@@ -3386,7 +3397,8 @@
       ]
     }
   },
-  "Librarius": { "code": true,
+  "Librarius": {
+    "code": true,
     "status": "auto",
     "note": "Psyker level: psychic abilities used in a battle round add up to at most the unit's psyker level"
   },
@@ -4289,7 +4301,8 @@
       }
     ]
   },
-  "Rites of Thermal Appeasement": { "code": true,
+  "Rites of Thermal Appeasement": {
+    "code": true,
     "status": "auto",
     "note": "+1 to hazard rolls for its plasma weapons (attack.ts finishAttack)"
   },
@@ -4592,7 +4605,8 @@
       }
     ]
   },
-  "Combat Embarkation": { "code": true,
+  "Combat Embarkation": {
+    "code": true,
     "status": "auto",
     "note": "Enemy declares a charge against a unit within 3\" of the transport: it can embark (automated)"
   },
@@ -4707,7 +4721,8 @@
     ],
     "status": "auto"
   },
-  "Miraculous Savior": { "code": true,
+  "Miraculous Savior": {
+    "code": true,
     "status": "auto",
     "note": "(Once per battle) End of opponent's Charge phase: arrive from Reserves engaged with a unit that just charged (automatic)"
   },
@@ -4973,7 +4988,8 @@
       ]
     }
   },
-  "Servitors": { "code": true,
+  "Servitors": {
+    "code": true,
     "status": "auto",
     "note": "When Grimaldus dies, the Cenobyte Servitors die too"
   },
@@ -5210,7 +5226,8 @@
       }
     ]
   },
-  "Cyber-familiar": { "code": true,
+  "Cyber-familiar": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 INFANTRY units"
   },
@@ -5293,7 +5310,7 @@
   },
   "Narthecis Gauntlet": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "botUse": "damaged",
       "do": [
@@ -5529,7 +5546,8 @@
       }
     ]
   },
-  "Defensive Mastery": { "code": true,
+  "Defensive Mastery": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 INFANTRY units"
   },
@@ -6191,7 +6209,8 @@
       }
     ]
   },
-  "Hunter's Guile": { "code": true,
+  "Hunter's Guile": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 units"
   },
@@ -6207,7 +6226,8 @@
       }
     ]
   },
-  "Chariots of the Storm": { "code": true,
+  "Chariots of the Storm": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 units"
   },
@@ -6312,7 +6332,7 @@
   "Helix Gauntlet@Infiltrator Squad": {
     "gear": true,
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "botUse": "damaged",
       "do": [

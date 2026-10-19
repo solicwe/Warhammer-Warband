@@ -753,6 +753,7 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('nearModels:')) return nearModelsCond(x, c);
   if (c.startsWith('nearCount:')) return nearCountCond(x, c);
   if (c.startsWith('roundAtLeast:')) return s.round >= Number(c.slice(13));
+  if (c.startsWith('targetFar:')) { const r = Number(c.slice(10)); return !!T && !boardUnits(s, other(T.owner)).some((e) => unitDistance(T, e) <= r + 1e-6); }
   if (c.startsWith('enemyBetween:')) { const [lo, hi] = c.slice(13).split(':').map(Number); return boardUnits(s, other(A.owner)).some((e) => { const d = unitDistance(A, e); return d > lo + 1e-6 && d <= hi + 1e-6; }); }
   // wholly within X" of one or more battlefield edges (every model near the same or any edge)
   if (c.startsWith('nearEdge:')) { const d = Number(c.slice(9)); const W = RULES.battlefield.width, H = RULES.battlefield.height; return alive(A).every((m) => Math.min(m.x, m.y, W - m.x, H - m.y) + m.r <= d + 1e-6); }
@@ -1446,7 +1447,8 @@ export function ocOf(s: GameState, u: UnitState): (m: ModelState) => number {
   const list = effectsFor(s, u);
   return (m) => {
     const fx = list.filter((a) => modelOk(a, m) && holds(a, { s, A: u, m }));
-    if (u.battleShocked) return fx.reduce((a, x) => Math.max(a, x.e.shockedOc ?? 0), 0);
+    // shockedOc: the OC while Battle-shocked (negative: that much less than the characteristic, Death Mask of Ollanius)
+    if (u.battleShocked) return fx.reduce((a, x) => Math.max(a, x.e.shockedOc === undefined ? 0 : x.e.shockedOc < 0 ? (m.profile.OC ?? 0) + x.e.shockedOc : x.e.shockedOc), 0);
     if (fx.some((x) => x.e.ocZero)) return 0;
     let oc = m.profile.OC ?? 0;
     for (const x of fx) if (x.e.ocSet !== undefined) oc = Math.max(oc, x.e.ocSet);

@@ -331,7 +331,7 @@
   },
   "Pain Adept": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "per": "army",
       "limit": "phase",
@@ -2305,7 +2305,7 @@
   "Labyrinthine Cunning": {
     "act": [
       {
-        "when": "command",
+        "when": "commandStart",
         "auto": true,
         "botOnly": true,
         "limit": "phase",
@@ -2460,7 +2460,7 @@
   },
   "Pharmacophex": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "limit": "phase",
       "if": [

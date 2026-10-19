@@ -5,54 +5,111 @@
       "targetKw": [
         "REGIMENT|SQUADRON"
       ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "REGIMENT|SQUADRON"
+        ]
+      },
+      "enemy": {
+        "visible": true
+      },
+      "enemyMark": "Fields of Fire",
       "effects": [
         {
-          "attack": "ranged",
+          "if": [
+            "targetMarked:Fields of Fire"
+          ],
           "ap": 1
         }
       ],
       "bot": "attack",
+      "note": "Pick one REGIMENT and one SQUADRON unit",
       "status": "auto"
     },
     "STALWART PROTECTOR": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "VEHICLE"
       ],
-      "buffs": [
-        "cover"
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
       ],
-      "bot": "defend",
-      "status": "auto"
+      "effects": [
+        {
+          "scope": "aura",
+          "range": 6,
+          "units": [
+            "INFANTRY"
+          ],
+          "defend": {
+            "vs": "ranged",
+            "cover": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "partial",
+      "note": "INFANTRY within 6\" of the VEHICLE get cover (the card: when not fully visible because of it)"
     },
     "COORDINATED ACTION": {
-      "targetKw": [
-        "REGIMENT|SQUADRON"
-      ],
-      "status": "auto"
+      "status": "manual",
+      "bot": "never",
+      "note": "Not automated: Orders on one unit also affect the other (issue the same Order by hand)"
     },
     "INSPIRED COMMAND": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "OFFICER"
       ],
+      "do": [
+        {
+          "order": 1
+        }
+      ],
+      "bot": "never",
+      "note": "The Order and the unit are picked for you",
       "status": "auto"
     },
     "FLEXIBLE COMMAND": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "OFFICER"
       ],
-      "status": "auto"
+      "do": [
+        {
+          "buff": [],
+          "mark": "Flexible Command",
+          "until": "phase"
+        }
+      ],
+      "bot": "never",
+      "status": "auto",
+      "note": "One Officer unit (the card: any number)"
     },
     "REINFORCEMENTS!": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
       "targetKw": [
+        "ASTRA MILITARUM",
         "INFANTRY",
-        "REGIMENT"
+        "REGIMENT",
+        "!CHARACTER"
       ],
       "limit": "battle",
+      "special": [
+        "reserveAgain"
+      ],
+      "botReact": "always",
       "status": "auto"
     },
     "CLEAR AND SECURE": {
       "targetKw": [
         "ASTRA MILITARUM"
+      ],
+      "unitIf": [
+        "disembarkedThisTurn"
       ],
       "effects": [
         {
@@ -70,7 +127,15 @@
     },
     "SWIFT INTERCEPTION": {
       "targetKw": [
-        "TRANSPORT"
+        "ASTRA MILITARUM",
+        "TRANSPORT",
+        "!AIRCRAFT",
+        "!TITANIC"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
       ],
       "do": [
         {
@@ -81,58 +146,102 @@
     },
     "HASTY EXTRACTION": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "INFANTRY"
+      ],
+      "react": "enemyChargeDeclared",
+      "unitIf": [
+        "targetOfLast",
+        "!engaged"
       ],
       "special": [
         "embark"
       ],
+      "botReact": "always",
       "status": "auto"
     },
     "RAPID DISPERSAL": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "INFANTRY"
+      ],
+      "unitIf": [
+        "disembarkedThisTurn"
       ],
       "do": [
         {
           "move": "D6"
         }
       ],
+      "bot": "never",
       "status": "auto"
     },
     "MOVE OUT": {
       "targetKw": [
         "ASTRA MILITARUM"
       ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
       "special": [
         "embark"
       ],
+      "bot": "never",
+      "note": "Offered at the end of the opponent's Fight phase",
       "status": "auto"
     },
     "VOX-RELAY": {
-      "targetKw": [
-        "OFFICER"
-      ],
-      "status": "auto"
+      "status": "manual",
+      "bot": "never",
+      "note": "Not automated: Orders from an embarked Officer"
     },
     "TRENCH FIGHTERS": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "INFANTRY"
       ],
-      "special": [
-        "deathStrike"
+      "react": "ownAttacked",
+      "unitIf": [
+        "fightPhase"
       ],
+      "effects": [
+        {
+          "if": [
+            "kw:REGIMENT"
+          ],
+          "fightOnDeath": 2
+        },
+        {
+          "if": [
+            "!kw:REGIMENT"
+          ],
+          "fightOnDeath": 4
+        }
+      ],
+      "botReact": "always",
       "status": "auto"
     },
     "CALLOUS SACRIFICE": {
-      "targetKw": [
-        "PLATOON"
-      ],
-      "status": "auto"
+      "status": "manual",
+      "bot": "never",
+      "note": "Not automated: shooting into combat with your own PLATOON unit"
     },
     "OVER THE TOP": {
       "targetKw": [
-        "OFFICER"
+        "ASTRA MILITARUM",
+        "OFFICER",
+        "INFANTRY"
       ],
+      "do": [
+        {
+          "buff": [],
+          "mark": "Over the Top",
+          "until": "phase"
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "FURIOUS FUSILLADE": {
@@ -155,17 +264,37 @@
       "targetKw": [
         "PLATOON"
       ],
+      "react": "enemyChargeMoveEnd",
+      "unitIf": [
+        "engagedWithLast"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 5,
+            "max": 6,
+            "allOn": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "Offered when the charge ends (the card: used at the start of the Charge phase)",
       "status": "auto"
     },
     "FLARE BURST": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "CHARACTER"
       ],
       "effects": [
         {
           "attack": "ranged",
           "if": [
-            "within12"
+            "targetWithin:12"
           ],
           "reroll": "hits"
         }
@@ -179,9 +308,8 @@
       ],
       "effects": [
         {
-          "attack": "ranged",
           "if": [
-            "within12"
+            "targetWithin:12"
           ],
           "ap": 1
         }
@@ -193,58 +321,116 @@
       "targetKw": [
         "SQUADRON"
       ],
-      "buffs": [
-        "shootAfterAdvance"
+      "unitIf": [
+        "advanced"
       ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterAdvance"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
       "status": "auto"
     },
     "FINAL HOUR": {
       "targetKw": [
-        "SQUADRON"
+        "SQUADRON",
+        "!OFFICER"
+      ],
+      "unitIf": [
+        "belowHalf"
       ],
       "effects": [
         {
           "attack": "ranged",
-          "ignoreMods": true
+          "abilities": [
+            "hazardous"
+          ],
+          "ignoreHitMods": true
         }
       ],
+      "until": "turn",
+      "bot": "never",
+      "note": "[ONE SHOT] weapons also get [HAZARDOUS]",
       "status": "auto"
     },
     "TACTICAL WITHDRAWAL": {
       "targetKw": [
         "SQUADRON"
       ],
-      "buffs": [
-        "shootAfterFallBack"
+      "unitIf": [
+        "fellBack"
       ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
       "status": "auto"
     },
     "CRASH THROUGH": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "VEHICLE"
       ],
+      "effects": [
+        {
+          "throughTerrain": true
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "ABLATIVE PLATING": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "VEHICLE"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
       ],
       "buffs": [
         "damage-1"
       ],
-      "bot": "defend",
+      "botReact": "always",
       "status": "auto"
     },
     "ON MY POSITION": {
       "targetKw": [
         "REGIMENT"
       ],
+      "react": "enemyChargePhaseEnd",
+      "unitIf": [
+        "engaged"
+      ],
+      "enemy": {
+        "engaged": true,
+        "all": true
+      },
       "do": [
         {
-          "mortals": "D6"
+          "on": "target",
+          "mortalRoll": {
+            "on": 2,
+            "n": 1,
+            "dmg": "D6"
+          }
+        },
+        {
+          "mortals": "3D3"
         }
       ],
-      "status": "auto"
+      "botReact": "never",
+      "status": "auto",
+      "note": "With two or more engaged enemy units your unit suffers 3D3 for each (the card: once)"
     },
     "FIRING HOT": {
       "targetKw": [
@@ -252,8 +438,10 @@
       ],
       "effects": [
         {
+          "attack": "ranged",
+          "weapon": "Hot-shot",
           "if": [
-            "within12"
+            "targetWithin:12"
           ],
           "strength": 1,
           "ap": 1
@@ -266,15 +454,24 @@
       "targetKw": [
         "MILITARUM TEMPESTUS"
       ],
-      "effects": [
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "enemyEffects": [
         {
-          "attack": "ranged",
-          "abilities": [
-            "ignores cover"
-          ]
+          "incoming": {
+            "units": [
+              "MILITARUM TEMPESTUS"
+            ],
+            "attack": "ranged",
+            "noCover": true
+          }
         }
       ],
-      "bot": "attack",
+      "bot": "never",
       "status": "auto"
     },
     "SCOUTING OUTRIDERS": {
@@ -282,11 +479,18 @@
         "ASTRA MILITARUM",
         "MOUNTED|WALKER"
       ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged",
+        "nearEdge:10"
+      ],
       "do": [
         {
-          "move": "6"
+          "reserves": true
         }
       ],
+      "bot": "never",
       "status": "auto"
     },
     "CRACK SHOTS": {
@@ -297,7 +501,7 @@
         {
           "attack": "ranged",
           "abilities": [
-            "lethal hits"
+            "precision"
           ]
         }
       ],
@@ -306,17 +510,30 @@
     },
     "COURAGEOUS DIVERSION": {
       "targetKw": [
-        "INFANTRY"
+        "ASTRA MILITARUM",
+        "INFANTRY|MOUNTED"
       ],
-      "buffs": [
-        "enemyHit-1"
+      "effects": [
+        {
+          "defend": {
+            "fnp": 6,
+            "vs": "ranged",
+            "hit": -1
+          }
+        }
       ],
       "bot": "defend",
-      "status": "auto"
+      "status": "partial",
+      "note": "-1 to Hit against every attack on your unit (the card: only while it is the closest eligible target)"
     },
     "DRAW THEM OUT": {
       "targetKw": [
-        "ASTRA MILITARUM"
+        "PLATOON"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
       ],
       "do": [
         {
@@ -327,14 +544,32 @@
     },
     "SCRAMBLE FIELD": {
       "targetKw": [
-        "ASTRA MILITARUM"
+        "ASTRA MILITARUM",
+        "INFANTRY"
       ],
+      "effects": [
+        {
+          "omniScrambler": 12
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "TANGLEFOOT GRENADES": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "GRENADES"
       ],
+      "enemy": {
+        "visible": true,
+        "range": 12
+      },
+      "enemyEffects": [
+        {
+          "chargeBonus": -1
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "VETERAN SHARPSHOOTERS": {
@@ -356,12 +591,13 @@
       "targetKw": [
         "ASTRA MILITARUM"
       ],
+      "unitIf": [
+        "hasOrder",
+        "onObjective"
+      ],
       "effects": [
         {
           "attack": "ranged",
-          "if": [
-            "onObjective"
-          ],
           "abilities": [
             "lethal hits"
           ]
@@ -374,15 +610,23 @@
       "targetKw": [
         "ASTRA MILITARUM"
       ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
+      ],
       "buffs": [
         "enemyAp-1"
       ],
-      "bot": "defend",
+      "botReact": "always",
       "status": "auto"
     },
     "MORDIAN MINUTE": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "INFANTRY"
+      ],
+      "unitIf": [
+        "marked:order:First Rank, Fire! Second Rank, Fire!"
       ],
       "effects": [
         {
@@ -396,12 +640,30 @@
       "targetKw": [
         "ASTRA MILITARUM"
       ],
+      "unitIf": [
+        "marked:order:Duty and Honour!",
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "secure": true
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "SNAP TO IT": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "OFFICER"
       ],
+      "do": [
+        {
+          "order": 1
+        }
+      ],
+      "bot": "never",
+      "note": "The Order and the unit are picked for you",
       "status": "auto"
     },
     "ACCURACY UNDER PRESSURE": {
@@ -418,7 +680,11 @@
     },
     "ENGINE OF WRATH": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "TITANIC"
+      ],
+      "unitIf": [
+        "engaged"
       ],
       "effects": [
         {
@@ -432,39 +698,78 @@
     },
     "IMPOSING ARRIVAL": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "TITANIC"
       ],
-      "status": "auto"
+      "targetFrom": "reserves",
+      "unitIf": [
+        "roundAtLeast:2"
+      ],
+      "status": "manual",
+      "bot": "never",
+      "note": "Set it up by hand wholly within 8\" of a battlefield edge, more than 6\" from enemy units"
     },
     "SHATTERING SALVO": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "TITANIC"
       ],
-      "effects": [
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "enemyEffects": [
         {
-          "attack": "ranged",
-          "abilities": [
-            "ignores cover"
-          ]
+          "incoming": {
+            "noCover": true
+          }
         }
       ],
+      "bot": "never",
+      "note": "No cover against any of your attacks this phase",
       "status": "auto"
     },
     "WITHERING FIREPOWER": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "VEHICLE"
       ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": -1
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "ADAMANTINE BEHEMOTH": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "VEHICLE"
       ],
+      "effects": [
+        {
+          "throughTerrain": true
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "OPENING SALVO": {
       "targetKw": [
         "ASTRA MILITARUM"
+      ],
+      "unitIf": [
+        "disembarkedThisTurn"
       ],
       "effects": [
         {
@@ -478,15 +783,28 @@
       "targetKw": [
         "ARMOURED SKIRMISHER"
       ],
-      "effects": [
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "enemyEffects": [
         {
-          "strength": 2,
-          "abilities": [
-            "ignores cover"
-          ]
+          "incoming": {
+            "noCover": true
+          }
+        },
+        {
+          "incoming": {
+            "units": [
+              "ARMOURED SKIRMISHER"
+            ],
+            "strength": 2
+          }
         }
       ],
-      "bot": "attack",
+      "bot": "never",
       "status": "auto"
     },
     "SUPPORTING ORDNANCE": {
@@ -506,34 +824,65 @@
     },
     "ORDER THE ADVANCE": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "OFFICER"
       ],
+      "effects": [
+        {
+          "scope": "aura",
+          "range": 6,
+          "units": [
+            "ASTRA MILITARUM"
+          ],
+          "rerollAdvance": true
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "MOBILE FIREBASE": {
       "targetKw": [
         "ARMOURED SKIRMISHER"
       ],
-      "buffs": [
-        "shootAfterAdvance",
-        "shootAfterFallBack"
+      "unitIf": [
+        "any:advanced||fellBack"
       ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterAdvance",
+            "shootAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
       "status": "auto"
     },
     "BURST OF SPEED": {
       "targetKw": [
         "ASTRA MILITARUM"
       ],
+      "unitIf": [
+        "!stationary",
+        "!setUpThisTurn"
+      ],
       "do": [
         {
           "move": "D6"
         }
       ],
+      "bot": "never",
       "status": "auto"
     },
     "STIRRED TO ACTION": {
       "targetKw": [
         "BULLGRYN SQUAD|OGRYN SQUAD"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "targetOfLast",
+        "!engaged"
       ],
       "do": [
         {
@@ -546,32 +895,57 @@
       "targetKw": [
         "RATLINGS"
       ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "do": [
+        {
+          "unshot": true
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "THICK-SKULLED OBDURANCE": {
       "targetKw": [
         "BULLGRYN SQUAD|OGRYN SQUAD"
       ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "onObjective"
+      ],
       "buffs": [
         "enemyAp-1"
       ],
-      "bot": "defend",
+      "botReact": "always",
       "status": "auto"
     },
     "SUMP-SMOG SCREEN": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "INFANTRY",
         "SMOKE"
       ],
-      "buffs": [
-        "cover"
+      "effects": [
+        {
+          "defend": {
+            "cover": true
+          }
+        }
       ],
       "bot": "defend",
-      "status": "auto"
+      "status": "partial",
+      "note": "Units behind your unit also get cover (not automated)"
     },
     "TRIGGERED ALERTS": {
       "targetKw": [
+        "ASTRA MILITARUM",
         "INFANTRY"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
       ],
       "do": [
         {
@@ -584,7 +958,14 @@
       "targetKw": [
         "SCOUT SENTINEL|INFANTRY"
       ],
-      "status": "auto"
+      "status": "partial",
+      "effects": [
+        {
+          "detection": 3
+        }
+      ],
+      "bot": "never",
+      "note": "+3\" detection range for your unit (the card: against enemy units within 6\")"
     }
   }
 }

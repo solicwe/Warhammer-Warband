@@ -30,7 +30,7 @@ describe('Astra Militarum Voice of Command', () => {
     const creed = { name: 'Ursula Creed', keywords: ['OFFICER', 'CHARACTER'], abilities: [{ name: 'Voice of Command' }], enhancements: [] } as unknown as UnitState;
     const castellan = { name: 'Cadian Castellan', keywords: ['OFFICER', 'CHARACTER'], abilities: [{ name: 'Voice of Command' }], enhancements: [] } as unknown as UnitState;
     const commandSquad = { name: 'Cadian Command Squad', keywords: ['OFFICER'], abilities: [{ name: 'Voice of Command' }], enhancements: [] } as unknown as UnitState;
-    const commandSquadStrategist = { name: 'Cadian Command Squad', keywords: ['OFFICER'], abilities: [{ name: 'Voice of Command' }], enhancements: [{ name: 'Grand Strategist' }] } as unknown as UnitState;
+    const commandSquadStrategist = { name: 'Cadian Command Squad', keywords: ['OFFICER'], abilities: [{ name: 'Voice of Command' }], enhancements: [{ name: 'Grand Strategist', text: 'In your Command phase, the bearer can issue one additional Order.' }] } as unknown as UnitState;
     const infantry = { name: 'Cadian Shock Troops', keywords: ['REGIMENT', 'INFANTRY'], abilities: [], enhancements: [] } as unknown as UnitState;
 
     expect(isOfficer(lordSolar)).toBe(true);
@@ -252,5 +252,25 @@ describe('Astra Militarum Bot Simulation', () => {
     }
     expect(state.phase).toBe('gameover');
     expect(steps).toBeLessThan(5000);
+  });
+});
+
+describe('Astra Militarum Order count', () => {
+  it('each Order uses one of the Officer\'s Orders; Snap To It issues one more', async () => {
+    const { issueOrder, ordersRemaining, extraOrder, currentOrders } = await import('../factions/orders');
+    const mk = (id: string, name: string, keywords: string[], x: number) => ({
+      id, owner: 0, name, keywords, factionKeywords: ['ASTRA MILITARUM'], abilities: name === 'Cadian Command Squad' ? [{ name: 'Voice of Command' }] : [], enhancements: [], status: 'board', pts: 60, timed: [],
+      models: [{ id: `${id}m`, name, x, y: 10, r: 0.5, wounds: 1, dead: false, profile: { M: 6, T: 3, Sv: 5, W: 1, Ld: 7, OC: 2 }, keywords: [] }],
+    }) as unknown as UnitState;
+    const off = mk('o', 'Cadian Command Squad', ['OFFICER', 'INFANTRY'], 10);
+    const a = mk('a', 'Cadian Shock Troops', ['REGIMENT', 'INFANTRY'], 12);
+    const b = mk('b', 'Cadian Shock Troops', ['REGIMENT', 'INFANTRY'], 14);
+    const s = { turn: 1, round: 1, phase: 'command', active: 0, units: [off, a, b], players: [{ detachments: [] }, { detachments: [] }], log: [], fx: [] } as unknown as GameState;
+    expect(issueOrder(s, 'o', 'a', 'Take Aim!')).toBeNull();
+    expect(ordersRemaining(s, off)).toBe(0);
+    expect(issueOrder(s, 'o', 'b', 'Take Aim!')).not.toBeNull();
+    extraOrder(s, off);
+    expect(currentOrders(b).length).toBe(1);
+    expect(ordersRemaining(s, off)).toBe(0);
   });
 });

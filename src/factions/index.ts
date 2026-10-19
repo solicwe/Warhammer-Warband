@@ -3,12 +3,12 @@
 // To add a faction: write its module, then add a block that subscribes its functions to the events it needs.
 // Modules that register themselves when loaded:
 import './rituals';
-import './orders';
+import { extraOrder } from './orders';
 import { addCombatMods, addPoolFinisher } from '../engine/combatMods';
 import { addActionHandler, addChoiceHooks, addCondition, addDieRescue, addEffectSource, addModifier, addStratSpecial, addTargetFilter, on } from '../engine/events';
 import { heal, shockTest } from '../rules-engine/activations';
 import { applyMortalWounds } from '../engine/attack';
-import { log } from '../engine/state';
+import { boardUnits, log, other, unitDistance } from '../engine/state';
 import type { GameState } from '../engine/types';
 import { ftggAttackModifiers, getFtggPairForGuided, isTauArmy } from './tau';
 import { activeIds, blessingEffects, blessingsRoll, blessingsRoundStart, butchersFightStart } from './blessings';
@@ -102,6 +102,12 @@ on('attackDone', (s, e) => knightsAttackDone(s, e.A, e.T)); // Malefic Surge: Di
 addStratSpecial('maleficSurge', (s, x) => maleficSurge(s, x.u));
 // Code Chivalric's Oath, Harbingers of Dread
 addChoiceHooks({ why: (s, p, rule, o) => choiceWhy(s, p, rule, o), picked: (s, p, rule, ids, randomly) => choicePicked(s, p, rule, ids, randomly) });
+addActionHandler((s, a, x) => { if (a.order) extraOrder(s, x.u, a.order); });
+// Reactive Command: an enemy unit set up within 8" of the bearer's unit → one more Order
+on('unitMoved', (s, e) => {
+  if (e.u.move !== 'ingress') return;
+  for (const o of boardUnits(s, other(e.u.owner))) if (o.enhancements.some((x) => x.name === 'Reactive Command') && unitDistance(o, e.u) <= 8 + 1e-6) extraOrder(s, o);
+});
 addActionHandler((s, a, x) => {
   if (a.bondFar) bondAgain(s, x.on, a.bondFar);
   if (a.leash) longLeash(s, x.on);
