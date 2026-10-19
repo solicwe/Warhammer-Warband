@@ -44,17 +44,6 @@ export function stripBarricade(poly: number[][]): Seg[] {
   return [{ a: { x: a.x + ux * inset, y: a.y + uy * inset }, b: { x: b.x - ux * inset, y: b.y - uy * inset } }];
 }
 
-/** Convex hull (counter-clockwise) of a set of points. */
-function convexHull(pts: Pt[]): Pt[] {
-  const p = [...pts].sort((a, b) => a.x - b.x || a.y - b.y);
-  if (p.length < 3) return p;
-  const cross = (o: Pt, a: Pt, b: Pt) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-  const lo: Pt[] = [], up: Pt[] = [];
-  for (const q of p) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
-  for (let k = p.length - 1; k >= 0; k--) { const q = p[k]; while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
-  return [...lo.slice(0, -1), ...up.slice(0, -1)];
-}
-
 function buildTerrain(layoutId: string, tableSize?: { width: number; height: number }): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
   const L = deploymentById(layoutId);
   const targetW = tableSize?.width ?? RULES.battlefield.width;
@@ -128,15 +117,11 @@ function buildTerrain(layoutId: string, tableSize?: { width: number; height: num
     const ox = Math.round(o.x * sx * 10) / 10;
     const oy = Math.round(o.y * sy * 10) / 10;
     const at = { x: ox, y: oy };
-    // an objective on a terrain area is the whole baseplate (11e: a unit on the plate is in range of it)
+    // an objective on a terrain area is that one baseplate, the same size as its footprint (on two overlapping
+    // plates: the one whose centre is closest to the marker)
     const under = terrain.filter((t) => t.kind !== 'objective-area' && (pointInPoly(at, t.poly) || t.poly.some((q, k) => pointSegDist(at, { a: q, b: t.poly[(k + 1) % t.poly.length] }) <= 1.6 * Math.max(sx, sy))));
-    let tp = under.length === 1 ? under[0] : undefined;
-    if (under.length > 1) {
-      // the objective covers them all: one area around the pieces (it doesn't block sight; the pieces still do)
-      tp = { id: `obj-t${i}`, kind: 'objective-area', label: 'Objective (terrain)', category: 'exposed', height: 0, walls: [], obstacles: [], poly: convexHull(under.flatMap((t) => t.poly)) };
-      terrain.push(tp);
-      for (const t of under) t.objectiveId = id;
-    }
+    const holds = under.filter((t) => pointInPoly(at, t.poly));
+    let tp = [...(holds.length ? holds : under)].sort((a, b) => dist(polyCentroid(a.poly), at) - dist(polyCentroid(b.poly), at))[0];
     if (!tp) {
       // objective in the open (no terrain on it): a 40mm marker, in range within 3" of it — a circle of
       // 3" + the marker's radius around its centre, so control works the same way as for terrain objectives
