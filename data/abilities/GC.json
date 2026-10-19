@@ -1924,5 +1924,1142 @@
         }
       ]
     }
+  },
+  "SUPREME COMMANDER@Patriarch": {
+    "status": "info",
+    "note": "Army building: must be your WARLORD"
+  },
+  "One Shot@Reductus Saboteur": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "One Shot@Acolyte Hybrids With Hand Flamers": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Senior Officer@Cadian Castellan": {
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "ranged",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
+  },
+  "Get Back in the Fight@Cadian Castellan": {
+    "effects": [
+      {
+        "scope": "led",
+        "eligible": [
+          "shootAfterFallBack"
+        ]
+      }
+    ]
+  },
+  "ORDERS@Cadian Castellan": {
+    "code": true,
+    "status": "auto",
+    "note": "Orders are worked out by the Voice of Command rules (orders.ts)"
+  },
+  "Cadia Stands!@Cadian Command Squad": {
+    "effects": [
+      {
+        "if": [
+          "contains:Officer",
+          "onObjective"
+        ],
+        "rerollShock": true
+      }
+    ],
+    "note": "While the unit's OFFICER is alive"
+  },
+  "Master Vox@Cadian Command Squad": {
+    "code": true,
+    "status": "auto",
+    "note": "Orders up to 24\" away"
+  },
+  "Medi-pack@Cadian Command Squad": {
+    "gear": true,
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "if": [
+        "belowStarting"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "revive": "D3"
+        }
+      ]
+    }
+  },
+  "Regimental Standard@Cadian Command Squad": {
+    "gear": true,
+    "effects": [
+      {
+        "oc": 1
+      }
+    ]
+  },
+  "ORDERS@Cadian Command Squad": {
+    "code": true,
+    "status": "auto",
+    "note": "Orders are worked out by the Voice of Command rules (orders.ts)"
+  },
+  "Gung-ho Command@Catachan Command Squad": {
+    "effects": [
+      {
+        "if": [
+          "contains:Officer"
+        ],
+        "attack": "ranged",
+        "abilities": [
+          "assault"
+        ]
+      }
+    ],
+    "note": "While the unit's OFFICER is alive"
+  },
+  "Master Vox@Catachan Command Squad": {
+    "code": true,
+    "status": "auto",
+    "note": "Orders up to 24\" away"
+  },
+  "Medi-pack@Catachan Command Squad": {
+    "gear": true,
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "if": [
+        "belowStarting"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "revive": "D3"
+        }
+      ]
+    }
+  },
+  "Regimental Standard@Catachan Command Squad": {
+    "gear": true,
+    "effects": [
+      {
+        "oc": 1
+      }
+    ]
+  },
+  "ORDERS@Catachan Command Squad": {
+    "code": true,
+    "status": "auto",
+    "note": "Orders are worked out by the Voice of Command rules (orders.ts)"
+  },
+  "Grim Determination@Krieg Command Squad": {
+    "status": "manual",
+    "note": "Not automated: Stratagems and Orders while Battle-shocked"
+  },
+  "Master Vox@Krieg Command Squad": {
+    "code": true,
+    "status": "auto",
+    "note": "Orders up to 24\" away"
+  },
+  "Alchemyk Counteragents@Krieg Command Squad": {
+    "gear": true,
+    "effects": [
+      {
+        "defend": {
+          "fnp": 6,
+          "fnpVs": "mortal"
+        }
+      }
+    ]
+  },
+  "Regimental Standard@Krieg Command Squad": {
+    "gear": true,
+    "effects": [
+      {
+        "oc": 1
+      }
+    ]
+  },
+  "Servo-scribes@Krieg Command Squad": {
+    "status": "manual",
+    "note": "Not automated: one extra Order once per battle"
+  },
+  "ORDERS@Krieg Command Squad": {
+    "code": true,
+    "status": "auto",
+    "note": "Orders are worked out by the Voice of Command rules (orders.ts)"
+  },
+  "Death Befitting An Officer@Leman Russ Commander": {
+    "status": "manual",
+    "note": "Not automated: shooting back before it is removed"
+  },
+  "ORDERS@Leman Russ Commander": {
+    "code": true,
+    "status": "auto",
+    "note": "Orders are worked out by the Voice of Command rules (orders.ts)"
+  },
+  "One Shot@Leman Russ Commander": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Malign Wardings(Psychic)@Primaris Psyker": {
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "fnp": 4,
+          "fnpVs": "psychic"
+        }
+      }
+    ]
+  },
+  "Psychic Barrier (Psychic)@Primaris Psyker": {
+    "act": {
+      "when": "oppShootingStart",
+      "auto": true,
+      "limit": "phase",
+      "roll": "D6",
+      "table": [
+        {
+          "min": 1,
+          "max": 1,
+          "do": [
+            {
+              "on": "self",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 2,
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "defend": {
+                    "inv": 4
+                  }
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Called Shots@Rogal Dorn Commander": {
+    "freeDie": [
+      {
+        "kind": "reroll",
+        "stage": "hit",
+        "limit": "phase"
+      },
+      {
+        "kind": "reroll",
+        "stage": "wound",
+        "limit": "phase"
+      },
+      {
+        "kind": "reroll",
+        "stage": "damage",
+        "limit": "phase"
+      }
+    ]
+  },
+  "ORDERS@Rogal Dorn Commander": {
+    "code": true,
+    "status": "auto",
+    "note": "Orders are worked out by the Voice of Command rules (orders.ts)"
+  },
+  "Vox-caster@Cadian Shock Troops": {
+    "effects": [
+      {
+        "stratCpChance": 5
+      }
+    ],
+    "gear": true,
+    "note": "The +1 near an OFFICER is not added"
+  },
+  "Jungle Fighters@Catachan Jungle Fighters": {
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "charged"
+        ],
+        "wound": 1
+      }
+    ],
+    "note": "After charging (being charged is not tracked)"
+  },
+  "Vox-caster@Catachan Jungle Fighters": {
+    "effects": [
+      {
+        "stratCpChance": 5
+      }
+    ],
+    "gear": true,
+    "note": "The +1 near an OFFICER is not added"
+  },
+  "Vox-caster@Death Korps Of Krieg": {
+    "effects": [
+      {
+        "stratCpChance": 5
+      }
+    ],
+    "gear": true,
+    "note": "The +1 near an OFFICER is not added"
+  },
+  "Mobile Command Vehicle@Chimera": {
+    "status": "manual",
+    "note": "Not automated: an embarked OFFICER issuing Orders"
+  },
+  "One Shot@Chimera": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Rapid Deployment@Taurox": {
+    "effects": [
+      {
+        "disembarkAfterAdvance": true
+      }
+    ],
+    "note": "The shock disembark move is not applied"
+  },
+  "Transport Support@Taurox Prime": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "reroll": "hits"
+          },
+          "fromThisTransport": true,
+          "until": "phase",
+          "mark": "Transport Support"
+        }
+      ]
+    }
+  },
+  "Emplacement Platform@Aegis Defence Line": {
+    "status": "info",
+    "note": "Terrain: models can stand on the platform"
+  },
+  "Reinforced Cover@Aegis Defence Line": {
+    "status": "info",
+    "note": "Cover from the Fortification is worked out by the terrain rules"
+  },
+  "Defence Line@Aegis Defence Line": {
+    "status": "manual",
+    "note": "Not automated: the 4+ invulnerable save for INFANTRY in its cover"
+  },
+  "Fortification@Aegis Defence Line": {
+    "status": "info",
+    "note": "Core FORTIFICATION rules"
+  },
+  "Mobile Hunter-killers@Armoured Sentinels": {
+    "effects": [
+      {
+        "if": [
+          "targetMV"
+        ],
+        "reroll": "wounds"
+      }
+    ]
+  },
+  "One Shot@Armoured Sentinels": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Remorseless Barrage@Artillery Team": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    },
+    "note": "The -1 for multiple rocket launchers is not applied"
+  },
+  "Horsemasters@Attilan Rough Riders": {
+    "effects": [
+      {
+        "eligible": [
+          "shootAfterFallBack",
+          "chargeAfterFallBack"
+        ]
+      }
+    ]
+  },
+  "Rolling Fortress@Baneblade": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 3,
+        "units": [
+          "ASTRA MILITARUM"
+        ],
+        "defend": {
+          "vs": "ranged",
+          "cover": true
+        }
+      }
+    ],
+    "note": "Within 3\" of the Baneblade (the card: not fully visible because of it)"
+  },
+  "Tremor Quake@Banehammer": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "tremor cannon",
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    },
+    "note": "Only the target unit (not INFANTRY within 3\" of it); taken after the attacks"
+  },
+  "Armour Obliteration@Banesword": {
+    "status": "manual",
+    "note": "Not automated: Deadly Demise on 3+"
+  },
+  "Earthshaker Rounds@Basilisk": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "closest": true,
+        "hitWeapon": "earthshaker cannon",
+        "units": [
+          "INFANTRY"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "move": -2,
+              "chargeBonus": -2
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "shaken"
+        }
+      ]
+    }
+  },
+  "One Shot@Basilisk": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Covering Fire@Cadian Heavy Weapons Squad": {
+    "effects": [
+      {
+        "if": [
+          "!near:6:PLATOON"
+        ],
+        "overwatchHitOn": 5
+      },
+      {
+        "if": [
+          "near:6:PLATOON"
+        ],
+        "overwatchHitOn": 4
+      }
+    ]
+  },
+  "EMBARKING@Cadian Heavy Weapons Squad": {
+    "status": "info",
+    "note": "Transport capacity: each model counts as 2"
+  },
+  "Bring it Down!@Catachan Heavy Weapons Squad": {
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "targetMV"
+        ],
+        "reroll": [
+          "hits1",
+          "wounds1"
+        ]
+      }
+    ]
+  },
+  "EMBARKING@Catachan Heavy Weapons Squad": {
+    "status": "info",
+    "note": "Transport capacity: each model counts as 2"
+  },
+  "Screening Line@Death Riders": {
+    "act": {
+      "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "phase",
+      "if": [
+        "unengaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "move": "6"
+        }
+      ]
+    }
+  },
+  "Deathstrike Missile@Deathstrike": {
+    "status": "manual",
+    "note": "Not automated: the Deathstrike Target marker"
+  },
+  "Plasma Warhead@Deathstrike": {
+    "status": "manual",
+    "note": "Not automated: the Deathstrike plasma warhead"
+  },
+  "One Shot@Deathstrike": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Close-range Titan Killer@Doomhammer": {
+    "status": "partial",
+    "note": "Not automated: the magma cannon counting as within half range"
+  },
+  "Rearm, Reload, Fire@Field Ordnance Battery": {
+    "effects": [
+      {
+        "if": [
+          "hasOrder",
+          "stationary",
+          "heavyWeapon"
+        ],
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
+  },
+  "Close-quarters Warfare@Hellhammer": {
+    "effects": [
+      {
+        "noBigGunsPenalty": true
+      }
+    ]
+  },
+  "Flush Them Out@Hellhound": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "noCover": true
+          },
+          "until": "nextTurnStart",
+          "mark": "scattered"
+        }
+      ]
+    }
+  },
+  "One Shot@Hellhound": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Flak Battery@Hydra": {
+    "effects": [
+      {
+        "if": [
+          "targetFly"
+        ],
+        "reroll": "hits"
+      }
+    ]
+  },
+  "One Shot@Hydra": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Warrior Elite@Kasrkin": {
+    "act": [
+      {
+        "when": "anyPhase",
+        "limit": "round",
+        "label": "Warrior Elite: Take Aim!",
+        "botUse": "always",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "attack": "ranged",
+                "skill": 1
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "round",
+        "label": "Warrior Elite: Move! Move! Move!",
+        "botUse": "never",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "move": 3
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "round",
+        "label": "Warrior Elite: Take Cover!",
+        "botUse": "never",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "defend": {
+                  "save": 1,
+                  "saveMax3": true
+                }
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "round",
+        "label": "Warrior Elite: Fix Bayonets!",
+        "botUse": "never",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "attack": "melee",
+                "skill": 1
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "round",
+        "label": "Warrior Elite: First Rank, Fire! Second Rank, Fire!",
+        "botUse": "never",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "rapidFireAttacks": 1
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "round",
+        "label": "Warrior Elite: Duty and Honour!",
+        "botUse": "never",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "ld": 1,
+                "oc": 1
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      }
+    ]
+  },
+  "Vox-caster@Kasrkin": {
+    "effects": [
+      {
+        "stratCpChance": 5
+      }
+    ],
+    "gear": true,
+    "note": "The +1 near an OFFICER is not added"
+  },
+  "Melta Mine@Kasrkin": {
+    "gear": true,
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "label": "Melta Mine: an enemy unit within 3\", 2+: D3 mortal wounds (2D3 against a VEHICLE)",
+      "botUse": "always",
+      "target": {
+        "side": "enemy",
+        "range": 3
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "do": [
+            {
+              "on": "target",
+              "if": [
+                "!targetKw:VEHICLE"
+              ],
+              "mortals": "D3"
+            },
+            {
+              "on": "target",
+              "if": [
+                "targetKw:VEHICLE"
+              ],
+              "mortals": "2D3"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Grenadiers@Krieg Combat Engineers": {
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "grenade",
+            "explosives"
+          ],
+          "cp": 1,
+          "limit": "turn"
+        }
+      }
+    ]
+  },
+  "Remote Mine@Krieg Combat Engineers": {
+    "gear": true,
+    "act": {
+      "when": "shootingStart",
+      "limit": "battle",
+      "label": "Remote Mine: an enemy unit within 9\", 3+: D3 mortal wounds (2D3 against VEHICLE / FORTIFICATIONS)",
+      "botUse": "always",
+      "target": {
+        "side": "enemy",
+        "range": 9,
+        "visible": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 3,
+          "do": [
+            {
+              "on": "target",
+              "if": [
+                "!targetKw:VEHICLE|FORTIFICATION"
+              ],
+              "mortals": "D3"
+            },
+            {
+              "on": "target",
+              "if": [
+                "targetKw:VEHICLE|FORTIFICATION"
+              ],
+              "mortals": "2D3"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Final Duty@Krieg Heavy Weapons Squad": {
+    "effects": [
+      {
+        "if": [
+          "contains:Fire Coordinator"
+        ],
+        "shootOnDeath": 3
+      }
+    ]
+  },
+  "EMBARKING@Krieg Heavy Weapons Squad": {
+    "status": "info",
+    "note": "Transport capacity: each model counts as 2"
+  },
+  "Armoured Spearhead@Leman Russ Battle Tank": {
+    "effects": [
+      {
+        "if": [
+          "!targetOnUncontrolledObjective"
+        ],
+        "reroll": "hits1"
+      },
+      {
+        "if": [
+          "targetOnUncontrolledObjective"
+        ],
+        "reroll": "hits"
+      }
+    ]
+  },
+  "One Shot@Leman Russ Battle Tank": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Line-breaker@Leman Russ Demolisher": {
+    "effects": [
+      {
+        "noBigGunsPenalty": true,
+        "shootIntoEngagement": 1
+      }
+    ],
+    "note": "Shooting enemy units engaged with it (the card: demolisher battle cannon only)"
+  },
+  "One Shot@Leman Russ Demolisher": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Urban Warfare@Leman Russ Eradicator": {
+    "effects": [
+      {
+        "if": [
+          "inCover"
+        ],
+        "defend": {
+          "vs": "ranged",
+          "damage": -1
+        }
+      }
+    ]
+  },
+  "One Shot@Leman Russ Eradicator": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Gung-ho Executioners@Leman Russ Executioner": {
+    "effects": [
+      {
+        "weapon": "executioner plasma cannon",
+        "if": [
+          "targetBelowHalf"
+        ],
+        "hit": 1
+      }
+    ]
+  },
+  "One Shot@Leman Russ Executioner": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Withering Hail@Leman Russ Exterminator": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "exterminator autocannon",
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "ASTRA MILITARUM"
+            ],
+            "ap": 1
+          },
+          "until": "phase",
+          "mark": "Withering Hail"
+        }
+      ]
+    }
+  },
+  "One Shot@Leman Russ Exterminator": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Mow Down the Enemy@Leman Russ Punisher": {
+    "effects": [
+      {
+        "weapon": "punisher gatling cannon",
+        "if": [
+          "targetNotMV"
+        ],
+        "abilities": [
+          "devastating wounds"
+        ]
+      }
+    ]
+  },
+  "One Shot@Leman Russ Punisher": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Tank-killer@Leman Russ Vanquisher": {
+    "effects": [
+      {
+        "weapon": "vanquisher battle cannon",
+        "if": [
+          "targetMV"
+        ],
+        "reroll": "wounds"
+      }
+    ]
+  },
+  "One Shot@Leman Russ Vanquisher": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Furious Barrage@Manticore": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "closest": true,
+        "hitWeapon": "storm eagle rockets",
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "oc": -1
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "staggered"
+        }
+      ]
+    }
+  },
+  "One Shot@Manticore": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Ablative Plating@Rogal Dorn Battle Tank": {
+    "effects": [
+      {
+        "defend": {
+          "negateOnce": "battle"
+        }
+      }
+    ],
+    "note": "The first failed save in the battle (the card: you choose which)"
+  },
+  "Daring Recon@Scout Sentinels": {
+    "act": {
+      "when": "shootingStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 18,
+        "visible": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "ASTRA MILITARUM"
+            ],
+            "reroll": "hits1"
+          },
+          "until": "phase",
+          "mark": "Daring Recon"
+        }
+      ]
+    }
+  },
+  "One Shot@Scout Sentinels": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Titan-killer@Shadowsword": {
+    "effects": [
+      {
+        "weapon": "volcano cannon",
+        "if": [
+          "targetMV"
+        ],
+        "abilities": [
+          "devastating wounds"
+        ]
+      }
+    ]
+  },
+  "Mount Up!@Stormlord": {
+    "status": "manual",
+    "note": "Not automated: embarking at the end of the opponent's Movement phase"
+  },
+  "Concussive Wave@Stormsword": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "siege cannon",
+        "closest": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 5,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3"
+            }
+          ]
+        }
+      ]
+    },
+    "note": "Only the target unit is rolled for"
+  },
+  "Suppression Bombardment@Wyvern": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "closest": true,
+        "hitWeapon": "stormshard mortar",
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "hit": -1
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "suppressed"
+        }
+      ]
+    }
+  },
+  "One Shot@Wyvern": {
+    "code": true,
+    "status": "auto",
+    "note": "[ONE SHOT] weapons fire once per battle"
+  },
+  "Rapid Strike Vehicle@Centaur RSV": {
+    "effects": [
+      {
+        "if": [
+          "notBattleShocked"
+        ],
+        "embarkedOc": true
+      }
+    ],
+    "note": "Adds the OC of embarked models (the card: +1 per 3 models)"
+  },
+  "Convoy Escort Vehicle@Hippogriff AFV": {
+    "act": {
+      "when": "afterShootingButton",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Convoy Escort Vehicle: Normal move of up to D6\" (no charge)",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "move": "D6",
+          "noCharge": true
+        }
+      ]
+    }
   }
 }
