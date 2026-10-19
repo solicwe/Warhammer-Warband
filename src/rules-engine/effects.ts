@@ -91,6 +91,7 @@ export interface Incoming {
   fromTransport?: string; // only models that disembarked from this transport this turn
   disembarked?: boolean; // only units that disembarked (from any transport) this turn
   psychic?: boolean; // only Psychic Attacks
+  weaponAbilities?: string[]; // only weapons with one of these abilities (Forgefather: torrent, melta)
   damage?: number; // +X Damage (Virulent Blessing)
   rerollAttacks?: boolean; // ranged attacks against it re-roll a low number of attacks (Overwhelming Generosity)
   blastReroll?: boolean; // Blast weapons re-roll the Hit roll against it (Blight Bombardment)

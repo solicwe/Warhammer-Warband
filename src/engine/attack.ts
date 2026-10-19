@@ -227,7 +227,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const d = Math.min(...tModels.map((t) => baseDist(m, t)));
       const fx = offenceFor(s, A, m, T, w, p, 'ranged', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
-      const inc = incomingFor(s, A, m, T, 'ranged').filter((i) => !i.psychic || psy);
+      const inc = incomingFor(s, A, m, T, 'ranged').filter((i) => (!i.psychic || psy) && (!i.weaponAbilities || i.weaponAbilities.some((x) => hasAbility(p, x))));
       const cm = combatMods({ s, A, T, m, psychic: psy, mode: 'ranged', d, p, weapon: w.name });
       if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !assaultWeapons(s, A) && !cm.assault) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
@@ -358,7 +358,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       const p = w.profiles[0];
       const fx = offenceFor(s, A, m, T, w, p, 'melee', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
-      const inc = incomingFor(s, A, m, T, 'melee').filter((i) => !i.psychic || psy);
+      const inc = incomingFor(s, A, m, T, 'melee').filter((i) => (!i.psychic || psy) && (!i.weaponAbilities || i.weaponAbilities.some((x) => hasAbility(p, x))));
       const cm = combatMods({ s, A, T, m, psychic: psy, mode: 'melee', d: 0, p, weapon: w.name });
       const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes] };
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }

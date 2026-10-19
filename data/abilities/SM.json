@@ -2265,7 +2265,10 @@
               "ADEPTUS ASTARTES"
             ],
             "strength": 2,
-            "weaponCond": "torrentOrMelta"
+            "weaponAbilities": [
+              "torrent",
+              "melta"
+            ]
           },
           "until": "phase"
         }
