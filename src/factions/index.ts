@@ -15,7 +15,7 @@ import { addTimed, cond, effectsFor, unitFlags } from '../rules-engine/effects';
 import { alive, boardUnits, emitReact, onBoard, engagedEnemies, log, other, phaseKey, unitById, unitDistance } from '../engine/state';
 import { unitVisibleTo } from '../engine/visibility';
 import { setUpAway, setUpNear, shootNow } from '../engine/game';
-import { zonePoly } from '../engine/missions';
+import { unitInRange, zonePoly } from '../engine/missions';
 import { pointInPoly } from '../engine/geometry';
 import type { GameState, UnitState } from '../engine/types';
 import { ftggMods, ftggTargetChosen, guidedVs, isTauArmy, observerFor, spotOf } from './tau';
@@ -653,7 +653,7 @@ addModifier('arrivalDenied', (s, u) => {
 // Solar Pulse: the objective marker within 18" with the most enemy value in range; those units lose cover against NECRONS
 addActionHandler((s, a, x) => {
   if (!a.solarPulse) return;
-  const near = (o: { x: number; y: number }, u: UnitState) => alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= 3 + 1e-6);
+  const near = (o: (typeof s.objectives)[number], u: UnitState) => unitInRange(s, u, o);
   const foes = boardUnits(s, other(x.u.owner));
   const objs = s.objectives.filter((o) => alive(x.u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= a.solarPulse! + 1e-6));
   const o = objs.sort((p, q) => foes.filter((e) => near(q, e)).reduce((n, e) => n + e.pts, 0) - foes.filter((e) => near(p, e)).reduce((n, e) => n + e.pts, 0))[0];
@@ -668,7 +668,7 @@ addActionHandler((s, a, x) => {
   const P = s.players[x.u.owner];
   if (!a.trap || P.trapObj) return;
   const opp = zonePoly(s, other(x.u.owner));
-  const val = (o: { x: number; y: number }) => boardUnits(s, other(x.u.owner)).filter((e) => alive(e).some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= 3 + 1e-6)).reduce((n, e) => n + e.pts, 0);
+  const val = (o: (typeof s.objectives)[number]) => boardUnits(s, other(x.u.owner)).filter((e) => unitInRange(s, e, o)).reduce((n, e) => n + e.pts, 0);
   const o = s.objectives.filter((q) => !pointInPoly(q, opp)).sort((p, q) => val(q) - val(p))[0];
   if (o) { P.trapObj = o.id; log(s, `${x.label}: objective ${o.id} becomes the Trap objective marker`, 'info', x.u.owner); }
 });
@@ -676,7 +676,7 @@ addCondition('targetNearTrap', (_c, x) => {
   const id = x.s.players[x.A.owner].trapObj;
   // before the first use: any objective marker it could become (the bot weighs the stratagem with that)
   const os = id ? x.s.objectives.filter((q) => q.id === id) : x.s.objectives.filter((q) => !pointInPoly(q, zonePoly(x.s, other(x.A.owner))));
-  return !!x.T && os.some((o) => alive(x.T!).some((m) => Math.hypot(m.x - o.x, m.y - o.y) - m.r <= 3 + 1e-6));
+  return !!x.T && os.some((o) => unitInRange(x.s, x.T!, o));
 });
 
 // unravelling (Pantheon of Woe): the last enemy unit to act is within a NECRONS MONSTER's Distortion Fields (6", 9" when paid for)

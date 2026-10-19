@@ -1209,10 +1209,12 @@ function BoardImpl(props: BoardProps) {
       {s.objectives.map((o, i) => {
         const [a, b] = levelOfControl(s, o);
         const ctrl = o.controller;
-        const objRadius = 3 + 20 / 25.4; // 3" control zone from 40mm marker edge = ~3.787"
-        const top = o.y - objRadius;
-        const cx = o.x;
-        const bannerY = top > 1.8 ? top - 0.55 : o.y + objRadius + 1.25;
+        // the objective's area: the terrain baseplate it stands on, or a 3" circle round a marker in the open
+        const t = s.terrain.find((x) => x.id === o.terrainId)!;
+        const xs = t.poly.map((p) => p.x), ys = t.poly.map((p) => p.y);
+        const top = Math.min(...ys);
+        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const bannerY = top > 1.8 ? top - 0.55 : Math.max(...ys) + 1.25;
         const label = o.type === 'home' ? 'HOME' : o.type === 'central' ? 'CENTRE' : 'OBJ';
         const effects = getObjectiveEffects(s, o);
 
@@ -1269,16 +1271,7 @@ function BoardImpl(props: BoardProps) {
               </g>
             ))}
 
-            {/* Standard 3" Objective Control Area (40mm marker + 3" radius) */}
-            <circle
-              cx={o.x}
-              cy={o.y}
-              r={objRadius}
-              fill={ctrl === null ? 'rgba(245,184,61,0.08)' : SOFT[ctrl]}
-              stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]}
-              strokeWidth={0.16}
-              strokeDasharray="0.6 0.25"
-            />
+            <polygon points={t.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill={ctrl === null ? 'rgba(245,184,61,0.08)' : SOFT[ctrl]} stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.16} strokeDasharray="0.6 0.25" />
 
             {/* In-Progress Animated Dashed Halo */}
             {isInProgress && (

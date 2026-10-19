@@ -54,13 +54,12 @@ function homerPoint(s: GameState, p: PlayerId): Pt {
   return { x: edge.x + (centre.x - edge.x) * inset / length, y: edge.y + (centre.y - edge.y) * inset / length };
 }
 
-/** Is any model of the unit within range of the objective (within 3" of the 40mm marker or inside dedicated objective-area)? */
+/** Is any model of the unit within range of the objective (on its terrain area / baseplate, or within 3" of a marker in the open)? */
 export const unitInRange = (s: GameState, u: UnitState, o: ObjectiveState) => {
   const t = objTerrain(s, o);
-  const objR = 3 + 20 / 25.4;
-  const withinDist = alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= objR + (m.r ?? 0.6) + 1e-4);
-  if (!t?.poly || t.kind !== 'objective-area') return withinDist;
-  return withinDist || alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
+  // no area at all (a bare marker): within 3" of the 40mm marker
+  if (!t?.poly) return alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= 3 + 20 / 25.4 + (m.r ?? 0.6) + 1e-4);
+  return alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
 };
 const unitInTerrain = (u: UnitState, t: TerrainPiece) => alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
 const isOwnHome = (o: ObjectiveState, p: PlayerId) => o.type === 'home' && o.owner === p;
