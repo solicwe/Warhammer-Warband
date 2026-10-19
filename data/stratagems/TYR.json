@@ -792,9 +792,21 @@
       "status": "auto"
     },
     "TUNNEL NETWORK": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: Tunnel Markers"
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "unitIf": [
+        "nearTunnel:9",
+        "!engaged",
+        "tunnels:2"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "tyr": "tunnel"
+        }
+      ],
+      "status": "auto"
     },
     "RETREAT BELOW": {
       "targetKw": [
@@ -820,9 +832,37 @@
       "status": "auto"
     },
     "REPLENISHING SWARMS": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: Tunnel Markers"
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "unitIf": [
+        "nearTunnel:9"
+      ],
+      "choice": [
+        {
+          "label": "One model regains up to D3+1 wounds",
+          "do": [
+            {
+              "on": "self",
+              "heal": "D3+1"
+            }
+          ]
+        },
+        {
+          "label": "Up to D3+1 destroyed W1 models return",
+          "if": [
+            "belowStartingStrength"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "revive": 3
+            }
+          ]
+        }
+      ],
+      "status": "partial",
+      "note": "The return option brings back 3 models (the card: D3+1, W1 models only)"
     },
     "ADAPTIVE OPTIMISATION": {
       "targetKw": [

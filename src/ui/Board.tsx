@@ -1370,6 +1370,12 @@ function BoardImpl(props: BoardProps) {
           <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>{m.kind === 'trap' ? '!' : m.kind === 'locate' ? 'L' : m.kind === 'consecrate' ? '+' : ''}</text>
         </g>
       ))}
+      {s.players.flatMap((P, pi) => (P.tunnels ?? []).map((t, i) => (
+        <g key={`tunnel${pi}-${i}`} transform={`translate(${t.x} ${t.y})`} pointerEvents="none">
+          <circle r={0.8} fill="rgba(12,14,18,0.85)" stroke={COLORS[pi]} strokeWidth={0.15} />
+          <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>T</text>
+        </g>
+      )))}
       {s.pendingActions.map((a) => {
         const u = s.units.find((x) => x.id === a.unitId);
         const ms = u ? alive(u) : [];

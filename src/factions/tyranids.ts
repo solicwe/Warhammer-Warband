@@ -4,7 +4,7 @@
 import { alive, boardUnits, centreOf, hasKw, log, other, pushFx, unitDistance } from '../engine/state';
 import { rollExpr } from '../engine/dice';
 import { applyMortalWounds } from '../engine/attack';
-import { abilityOff, unitFlags } from '../rules-engine/effects';
+import { abilityOff, activeRules, unitFlags } from '../rules-engine/effects';
 import { heal, shockTest } from '../rules-engine/activations';
 import { formationAt, validatePlacement } from '../engine/game';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
@@ -103,5 +103,57 @@ export function seedSpores(s: GameState, near: UnitState, name: string, n: numbe
   s.units.push(u);
   log(s, `${label}: a new ${name} unit (${u.models.length} model${u.models.length > 1 ? 's' : ''}) is set up`, 'info', near.owner);
   return true;
+}
+
+// ---------- Subterranean Assault: Tunnel Markers ----------
+const isBurrower = (u: UnitState) => /^(Mawloc|Trygon)/.test(u.sources[0] ?? u.name);
+const centre = (u: UnitState) => { const ms = alive(u); return { x: ms.reduce((a, m) => a + m.x, 0) / ms.length, y: ms.reduce((a, m) => a + m.y, 0) / ms.length }; };
+
+/** A BURROWER set up from Reserves places a Tunnel Marker where it arrived. */
+export function tunnelArrived(s: GameState, u: UnitState) {
+  if (!isBurrower(u) || !activeRules(s, u.owner).includes('Subterranean Assault') || !alive(u).length) return;
+  (s.players[u.owner].tunnels ??= []).push(centre(u));
+  log(s, `Subterranean Assault: ${u.name} leaves a Tunnel Marker`, 'info', u.owner);
+}
+
+/** An enemy model (not AIRCRAFT) ending a move within 3" of a Tunnel Marker removes it. */
+export function tunnelEnemyMoved(s: GameState, u: UnitState) {
+  if (hasKw(u, 'AIRCRAFT')) return;
+  const P = s.players[other(u.owner)];
+  const before = P.tunnels?.length ?? 0;
+  P.tunnels = (P.tunnels ?? []).filter((t) => !alive(u).some((m) => Math.hypot(m.x - t.x, m.y - t.y) - m.r <= 3 + 1e-6));
+  if (P.tunnels.length < before) log(s, `${u.name} collapses a Tunnel Marker`, 'info', u.owner);
+}
+
+/** Every model of the unit wholly within X" of one of its army's Tunnel Markers (the marker index, or -1). */
+export function nearTunnel(s: GameState, u: UnitState, r: number): number {
+  return (s.players[u.owner].tunnels ?? []).findIndex((t) => alive(u).length > 0 && alive(u).every((m) => Math.hypot(m.x - t.x, m.y - t.y) + m.r <= r + 1e-6));
+}
+
+/** Deep Strike near a Tunnel Marker: more than 6" from enemy units is enough. */
+export function tunnelDeepStrike(s: GameState, u: UnitState, at: { x: number; y: number }): number | null {
+  return (s.players[u.owner].tunnels ?? []).some((t) => Math.hypot(at.x - t.x, at.y - t.y) <= 9) ? 6 : null;
+}
+
+/** TUNNEL NETWORK: the unit is set up again wholly within 9" of another Tunnel Marker, more than 6" from enemy units. */
+export function tunnelNetwork(s: GameState, u: UnitState) {
+  const ts = s.players[u.owner].tunnels ?? [];
+  const from = nearTunnel(s, u, 9);
+  const foe = boardUnits(s, other(u.owner)).flatMap(alive);
+  const order = ts.map((t, i) => ({ t, i })).filter(({ i }) => i !== from)
+    .sort((a, b) => Math.min(...foe.map((e) => Math.hypot(e.x - a.t.x, e.y - a.t.y))) - Math.min(...foe.map((e) => Math.hypot(e.x - b.t.x, e.y - b.t.y))));
+  for (const { t } of order) {
+    for (let ring = 0; ring <= 3; ring++) for (let a = 0; a < 12; a++) {
+      const r = ring * 2, ang = (a / 12) * Math.PI * 2;
+      const pos = formationAt(u, { x: t.x + Math.cos(ang) * r, y: t.y + Math.sin(ang) * r });
+      const ok = [...pos.values()].every((p) => Math.hypot(p.x - t.x, p.y - t.y) <= 9 - 1) && foe.every((e) => [...pos.values()].every((p) => Math.hypot(p.x - e.x, p.y - e.y) - e.r > 6 + 1));
+      if (!ok || !validatePlacement(s, u, pos, 'deepStrike').ok) continue;
+      for (const m of alive(u)) { const p = pos.get(m.id); if (p) { m.x = p.x; m.y = p.y; } }
+      u.setUpTurn = s.turn;
+      log(s, `TUNNEL NETWORK: ${u.name} emerges from another tunnel`, 'info', u.owner);
+      return;
+    }
+  }
+  log(s, `TUNNEL NETWORK: no room near another Tunnel Marker for ${u.name}`, 'info', u.owner);
 }
 

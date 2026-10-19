@@ -351,6 +351,7 @@ export interface PlayerState {
   extraPlague?: string;
   blight?: { objId?: string; terrain?: number; untilTurn?: number }[];
   poxTemplate?: UnitState;
+  tunnels?: { x: number; y: number }[]; // Subterranean Assault: Tunnel Markers
   sporeTemplates?: Record<string, UnitState>; // Spore Mines / Mucolid Spores units Tyranid abilities add mid-battle
   /** a unit the army can add mid-battle (Gift of Change: a one-model Tzeentch Chaos Spawn), cloned when it arrives */
   spawnTemplate?: UnitState;

@@ -33,7 +33,7 @@ import { whollyHallowed } from './greyKnights';
 import { circleInFlow, inFlow, isThousandSonsArmy } from './flow';
 import { RULES } from '../engine/config';
 import { clamp } from '../engine/geometry';
-import { inSynapse, seedSpores, tyranidsCommandStart, tyranidsShockResult, unleashShadowInTheWarp } from './tyranids';
+import { inSynapse, nearTunnel, seedSpores, tunnelArrived, tunnelDeepStrike, tunnelEnemyMoved, tunnelNetwork, tyranidsCommandStart, tyranidsShockResult, unleashShadowInTheWarp } from './tyranids';
 
 const unitOf = (s: GameState, id?: string) => (id ? s.units.find((x) => x.id === id) : undefined);
 
@@ -529,4 +529,12 @@ addActionHandler((s, a, x) => {
   log(s, `${x.label}: ${x.on.name} steps through the Eternity Gate`, 'info', x.u.owner);
   emit(s, 'arrived', { u: x.on });
 });
+
+// Subterranean Assault: Tunnel Markers
+on('arrived', (s, { u }) => tunnelArrived(s, u));
+on('unitMoved', (s, { u }) => tunnelEnemyMoved(s, u));
+addModifier('deepStrikeDistance', (s, u, at) => tunnelDeepStrike(s, u, at));
+addCondition('tunnels:2', (_c, { s, A }) => (s.players[A.owner].tunnels ?? []).length >= 2);
+addCondition(/^nearTunnel:/, (c, { s, A }) => nearTunnel(s, A, Number(c.split(':')[1])) >= 0);
+addActionHandler((s, a, x) => { if (a.tyr === 'tunnel') tunnelNetwork(s, x.on); });
 

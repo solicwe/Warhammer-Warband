@@ -5661,7 +5661,7 @@
           ]
         }
       ],
-      "manual": "Tunnel Markers are not automated"
+      "manual": "Tunnel Markers: placed where a BURROWER arrives from Reserves, removed by enemy models ending a move within 3\"; Deep Strike within 9\" of one is allowed more than 6\" from enemies (other Reserves arrivals near a marker are not offered)"
     },
     "Surprise Assault": {
       "auto": "full",

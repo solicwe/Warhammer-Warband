@@ -121,7 +121,10 @@ function spendSurplus(s: GameState, p: PlayerId) {
     .sort((a, b) => times(a.st.id) - times(b.st.id));
   for (const { st, rule } of cands) {
     const u = boardUnits(s, p).filter((x) => !x.battleShocked && P.cp >= stratCost(s, st.id, x, st.cp) && !stratagemBlock(s, p, st, x)
-      && (!rule.enemy || rule.enemy.all || stratEnemies(s, p, rule, x).length > 0)).sort((a, b) => b.pts - a.pts)[0];
+      && (!rule.enemy || rule.enemy.all || stratEnemies(s, p, rule, x).length > 0)
+      // a rule the bot can price (healing, mortal wounds …) only when it does something here
+      && !((rule.do ?? []).concat((rule.choice ?? []).flatMap((o) => o.do ?? [])).some((a) => a.heal || a.revive || a.unshock || a.mortals || a.mortalRoll) && Math.max(worth(s, p, rule, x).v, ...(rule.choice ?? []).map((_o, i) => worth(s, p, withChoice(rule, i), x).v)) <= 0))
+      .sort((a, b) => b.pts - a.pts)[0];
     if (!u) continue;
     applyDetachmentStratagem(s, p, st, u.id, { enemyId: rule.enemy ? stratEnemies(s, p, rule, u)[0]?.id : undefined });
     log(s, `${P.name} uses ${st.name} (spare CP)`, 'info', p);
