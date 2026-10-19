@@ -5773,7 +5773,7 @@
           "units": [
             "CELESTIAN"
           ],
-          "hit": 1
+          "skill": 1
         }
       ]
     },
@@ -5792,60 +5792,27 @@
       "auto": "full",
       "choice": {
         "name": "Vows of Atonement",
-        "when": "command",
+        "when": "round",
         "uses": "eachOnce",
         "pick": 1,
         "options": [
           {
-            "id": "ties",
-            "name": "The Ties of Duty",
-            "text": "ADEPTA SORORITAS units can declare a charge in a turn in which they Advanced or Fell Back.",
-            "effects": [
-              {
-                "units": [
-                  "ADEPTA SORORITAS"
-                ],
-                "eligible": {
-                  "chargeAfterAdvance": true,
-                  "chargeAfterFallBack": true
-                }
-              }
-            ]
-          },
-          {
-            "id": "grace",
-            "name": "Grace of the Penitent",
-            "text": "Friendly PENITENT units have Feel No Pain 5+.",
+            "id": "path",
+            "name": "The Path of the Penitent",
+            "text": "+3\" Move for PENITENT models",
             "effects": [
               {
                 "units": [
                   "PENITENT"
                 ],
-                "defend": {
-                  "fnp": 5
-                }
+                "move": 3
               }
             ]
           },
           {
-            "id": "rage",
-            "name": "Righteous Rage",
-            "text": "Friendly PENITENT melee attacks have +1 S and +1 D.",
-            "effects": [
-              {
-                "units": [
-                  "PENITENT"
-                ],
-                "attack": "melee",
-                "strength": 1,
-                "damage": 1
-              }
-            ]
-          },
-          {
-            "id": "blood",
-            "name": "Blood of the Martyrs",
-            "text": "Friendly PENITENT melee attacks have Sustained Hits 1 (Sustained Hits 2 while below half).",
+            "id": "absolution",
+            "name": "Absolution in Battle",
+            "text": "PENITENT models that charged this turn: +1 Attacks and Strength in melee",
             "effects": [
               {
                 "units": [
@@ -5853,23 +5820,23 @@
                 ],
                 "attack": "melee",
                 "if": [
-                  "belowStartingStrength"
+                  "charged"
                 ],
-                "abilities": [
-                  "sustained hits 1"
-                ]
-              },
+                "attacks": 1,
+                "strength": 1
+              }
+            ]
+          },
+          {
+            "id": "death",
+            "name": "Death Before Disgrace",
+            "text": "PENITENT models destroyed in melee fight on a 2+",
+            "effects": [
               {
                 "units": [
                   "PENITENT"
                 ],
-                "attack": "melee",
-                "if": [
-                  "belowHalfStrength"
-                ],
-                "abilities": [
-                  "sustained hits 2"
-                ]
+                "fightOnDeath": 2
               }
             ]
           }
@@ -5880,19 +5847,118 @@
       "auto": "full"
     },
     "Army of Faith": {
-      "auto": "full"
+      "auto": "full",
+      "code": true,
+      "manual": "Two Acts of Faith per unit per phase (sororitas.ts)"
     },
     "Champions of Faith": {
-      "auto": "full"
+      "auto": "full",
+      "acts": [
+        {
+          "when": "commandStart",
+          "auto": true,
+          "armyWide": true,
+          "units": [
+            "ADEPTA SORORITAS"
+          ],
+          "limit": "turn",
+          "target": {
+            "side": "friendly",
+            "anywhere": true,
+            "each": true,
+            "count": 3,
+            "units": [
+              "ADEPTA SORORITAS"
+            ]
+          },
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "move": 1,
+                  "ld": 1
+                }
+              ],
+              "until": "nextCommand",
+              "mark": "Righteous"
+            },
+            {
+              "on": "target",
+              "if": [
+                "targetKw:BATTLE SISTERS SQUAD|CELESTIAN INSIDIANTS|CELESTIAN SACRESANTS|PARAGON WARSUITS"
+              ],
+              "buff": [
+                {
+                  "skill": 1
+                }
+              ],
+              "until": "nextCommand"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "units": [
+            "CELESTIAN SACRESANTS"
+          ],
+          "if": [
+            "notBattleShocked"
+          ],
+          "oc": 1
+        }
+      ],
+      "manual": "The three Righteous units are picked for you (closest to the enemy)"
     },
     "Righteous Purpose": {
       "auto": "full"
     },
     "Sanctified Orators": {
-      "auto": "full"
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "ADEPTA SORORITAS",
+            "CHARACTER"
+          ],
+          "ld": 1
+        }
+      ],
+      "manual": "Its Enhancements not counting towards the army's total is an army-building rule"
     },
     "Chorus of Condemnation": {
-      "auto": "full"
+      "auto": "full",
+      "acts": [
+        {
+          "when": "shooting",
+          "units": [
+            "ADEPTA SORORITAS",
+            "INFANTRY",
+            "FLY"
+          ],
+          "limit": "phase",
+          "botUse": "always",
+          "label": "Condemnatory Psalms: condemn an enemy unit within 12\" (+3\" detection range)",
+          "target": {
+            "side": "enemy",
+            "range": 12,
+            "visible": true
+          },
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "detection": 3
+                }
+              ],
+              "until": "turn",
+              "mark": "condemned"
+            }
+          ]
+        }
+      ]
     },
     "For the Greater Good": {
       "auto": "full",

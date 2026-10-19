@@ -80,6 +80,8 @@ export interface Action {
   unshock?: boolean;
   riled?: boolean; // Orks: riled up until the start of your next turn
   cp?: number;
+  miracle?: number; // Adepta Sororitas: gain this many Miracle dice (negative: discard, the lowest first)
+  miracleValue?: number; // … showing this value
   order?: number; // the OFFICER issues this many Orders now, outside its usual count (picked as the bot would)
   oppCp?: number; // the opponent loses this many CP (negative number; never below 0) (Honourable Combatant)
   reserves?: boolean; // remove the unit and place it into Strategic Reserves

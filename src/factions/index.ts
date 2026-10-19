@@ -16,7 +16,7 @@ import { autoPact } from './darkPacts';
 import { destroyedThisRound, ecUnitWiped, initFavoured, noteTarget, pledgeRoundEnd, pledgeRoundStart, poisonTick, raisePledge, sensationalBlock, sensationalOk, snapshotEngaged, thrillBlock } from './emperorsChildren';
 import { attachNear, blightedLand, dgBattleStart, dgCommandEnd, dgCommandStart, dgEffects, dgPhaseEnd, dgRoundStart, dsKeep, extraPlague, eyestingerStorm, inContagionOf, isAfflicted, leechspore, PLAGUE_IDS, putridHit, setPlague, signalPox, stinkBlocks } from './deathGuard';
 import { auraBonus, bondAgain, choicePicked, choiceWhy, expend, knightsAttackDone, knightsBattleStart, knightsCommandStart, knightsCond, knightsEffects, knightsMoved, knightsRoundEnd, knightsRoundStart, knightsShockFailed, knightsShootingStart, knightsTurnEnd, knightsTurnStart, longLeash, maleficSurge, superHeavy } from './knights';
-import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart, sororitasUnitDestroyed, tryActOfFaith } from './sororitas';
+import { discardMiracle, gainMiracleDice, resetPhaseActsOfFaith, sororitasCommandEnd, sororitasCommandStart, sororitasTurnStart, sororitasUnitDestroyed, tryActOfFaith } from './sororitas';
 import { aeldariBattleStart, aeldariRoundStart, canFocus, lucidEye, noteVibro, relentlessRaiders, resetPhaseStrandsOfFate, seerDiscounts, shadowFieldCheck, sonicDestruction, spendFocus, tryFateDie, voidThieves } from './aeldari';
 import { gainYieldPoints, spendYieldPoints, tryUtharAncestralFortune, votannBattleStart, votannTurnEnd, votannCommandEnd, votannUnitDestroyed } from './votann';
 import { admechImperativePicked, onAcquisition, pickAcquisition } from './admech';
@@ -124,8 +124,16 @@ addModifier('moveThroughTerrain', (_s, u, kind) => SUPER_HEAVY.includes(kind) &&
 on('turnStart', (s, e) => sororitasTurnStart(s, e.p));
 on('phaseEnd', (s) => resetPhaseActsOfFaith(s));
 on('commandEnd', (s, e) => sororitasCommandEnd(s, e.p));
+on('commandStart', (s, e) => sororitasCommandStart(s, e.p));
+// Miracle dice spent or gained by abilities and enhancements (data: { "miracle": 1 } gains, { "miracle": -1 } discards)
+addActionHandler((s, a, x) => {
+  if (!a.miracle) return;
+  if (a.miracle > 0) gainMiracleDice(s, x.u.owner, a.miracle, a.miracleValue, x.label);
+  else discardMiracle(s, x.u.owner, -a.miracle);
+});
+addCondition(/^miracle:\d+$/, (c, { s, A }) => (s.players[A.owner].miracleDice ?? []).length >= Number(c.slice(8)));
 addDieRescue('Act of Faith', 'Miracle die', (s, u, stage, x) => tryActOfFaith(s, u, stage, x));
-on('unitDestroyed', (s, e) => sororitasUnitDestroyed(s, e.u));
+on('unitDestroyed', (s, e) => sororitasUnitDestroyed(s, e.u, e.attackerId));
 
 // Aeldari
 on('battleStart', (s) => aeldariBattleStart(s));

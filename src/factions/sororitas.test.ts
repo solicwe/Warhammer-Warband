@@ -107,7 +107,7 @@ describe('Adepta Sororitas: Acts of Faith & Miracle Dice', () => {
     performActOfFaith(state, battleSisters, 5, undefined, 'Advance roll');
     // Spent 1 die, but Cherub granted 1 die right back!
     expect(state.players[0].miracleDice.length).toBe(1);
-    expect(battleSisters.cherubUsed).toBe(true);
+    expect(battleSisters.cherubUses).toBe(1);
   });
 
   it('Hallowed Martyrs grants +1 to hit below starting and +1 to wound below half', () => {

@@ -1034,6 +1034,7 @@ export function applyDamage(s: GameState) {
       let dmg = dr.total;
       if (T.buffs.some((b) => b.kind === 'damage-1')) dmg = Math.max(1, dmg - 1);
       if (md.damage) dmg = Math.max(1, dmg + md.damage);
+      if (md.damageSet) dmg = md.damageSet;
       if (md.halve) dmg = Math.ceil(dmg / 2);
       if (md.negate) { useNegate(s, T, m, md.negateKey); dmg = 0; p.damageLines.push(`${m.name}: damage reduced to 0 (once per phase)`); }
       const lost = dmg ? loseWounds(s, T, m, dmg, p.damageLines, kind, psychic) : 0;

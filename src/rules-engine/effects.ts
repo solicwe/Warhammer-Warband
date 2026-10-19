@@ -53,6 +53,7 @@ export interface Defend {
   ap?: number; // worsen the attack's AP by this much
   damage?: number; // -1 D (minimum 1)
   halveDamage?: boolean;
+  damageSet?: number; // the attack's Damage characteristic becomes this (Mantle of Ophelia: 1)
   inv?: number;
   invVs?: 'psychic';
   fnp?: number;
@@ -1177,7 +1178,7 @@ export const untargetableAt = (s: GameState, T: UnitState, d: number) => d > 12 
 /** Damage, invulnerable save and Feel No Pain for one model hit by an attack. */
 export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'melee' | 'ranged' | 'mortal', psychic = false, attacker?: UnitState) {
   const list = kind === 'mortal' ? effectsFor(s, T).filter((a) => a.e.defend && modelOk(a, m) && holds(a, { s, A: T, T: attacker, m })) : defencesFor(s, T, kind, m, attacker);
-  let damage = 0, halve = false, inv: number | null = null, fnp: number | null = null, saveBonusD1 = 0, save = 0, worse = 0, negate = false, invReroll1 = false;
+  let damage = 0, damageSet: number | undefined, halve = false, inv: number | null = null, fnp: number | null = null, saveBonusD1 = 0, save = 0, worse = 0, negate = false, invReroll1 = false;
   let negateKey: 'turn' | 'round' | 'battle' | undefined;
   for (const a of list) {
     const df = a.e.defend!;
@@ -1188,6 +1189,7 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
       if (df.negateOnce && T.used?.[`negate:${df.negateOnce}`] !== negatePeriod(s, df.negateOnce)) { negate = true; negateKey = df.negateOnce; }
       if (df.damage && !(df.notPsychic && psychic)) damage += df.damage;
       if (df.halveDamage) halve = true;
+      if (df.damageSet) damageSet = Math.min(damageSet ?? 99, df.damageSet);
       if (df.inv && (!df.invVs || (df.invVs === 'psychic' && psychic)) && (inv === null || df.inv < inv)) inv = df.inv;
       if (df.invReroll1) invReroll1 = true;
       if (df.saveBonusD1) saveBonusD1 = Math.max(saveBonusD1, df.saveBonusD1);
@@ -1203,7 +1205,7 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
       if (ok && (fnp === null || df.fnp < fnp)) fnp = df.fnp;
     }
   }
-  return { damage, halve, inv, fnp, saveBonusD1, save: save + worse, negate, negateKey, invReroll1 };
+  return { damage, damageSet, halve, inv, fnp, saveBonusD1, save: save + worse, negate, negateKey, invReroll1 };
 }
 
 /** Abilities of one model even after it was destroyed ("If this model is destroyed by a melee attack…"). */

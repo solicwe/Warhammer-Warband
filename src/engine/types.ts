@@ -253,7 +253,7 @@ export interface UnitState {
   soulOwn?: AbilityData[]; // Soul Link: the bearer's own datasheet abilities while it copies another character's
   readied?: boolean; // Adeptus Custodes Martial Ka'tah: the unit can use one ka'tah ability
   mark?: string; // Blade Champion's Sword of the Throne: enemy unit id
-  cherubUsed?: boolean; // Adepta Sororitas: Cherub once per battle
+  cherubUses?: number; // Adepta Sororitas: Cherub (once per battle) / Cherubs (twice) used
   timed?: TimedEffect[]; // temporary effects and marks from abilities
   split?: string; // split off another unit at Declare Battle Formations (Combat Squads …): the other unit's id
   sagaDone?: boolean; // Slayer's Oath: this unit has the completed-Saga benefits

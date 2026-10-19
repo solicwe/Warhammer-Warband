@@ -1,24 +1,19 @@
-// Adepta Sororitas (Sisters of Battle) army rule: Acts of Faith & Miracle Dice.
-// Gaining Miracle Dice:
-//  - 1 Miracle die at the start of each turn.
-//  - 1 Miracle die each time an ADEPTA SORORITAS unit from your army is destroyed.
-//  - Triumph of Saint Katherine: Miracle die at start of turn has value 6 if on battlefield.
-//  - Simulacrum Imperialis: on 4+ per objective controlled at end of Command phase.
-//  - Cherub: once per battle after performing an Act of Faith.
-// Performing an Act of Faith:
-//  - 1 per phase per unit (2 for JUMP PACK in Army of Faith detachment).
-//  - Substitute a die before making a roll: Advance, Battle-shock, Charge, Damage, Hit, Save, Wound.
-import { d6, rollN } from '../engine/dice';
-import { alive, boardUnits, hasKw, log, onBoard, other, pushFx } from '../engine/state';
+// Adepta Sororitas army rule Acts of Faith: Miracle dice (one at the start of each turn, one each time an ADEPTA
+// SORORITAS unit is destroyed) substitute an Advance, Battle-shock, Charge, Damage, Hit, save or Wound roll, one Act
+// of Faith per unit per phase (two in Army of Faith or near the Simulacrum of the Ebon Chalice). The abilities and
+// enhancements that gain, spend or change Miracle dice are worked out here; the rest is data.
+import { d6, rollExpr } from '../engine/dice';
+import { dist } from '../engine/geometry';
+import { alive, log, onBoard, pushFx, unitDistance } from '../engine/state';
+import { abilityOff, addTimed } from '../rules-engine/effects';
+import { ldTest } from '../rules-engine/activations';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 
-export function isSororitasArmy(s: GameState, p: PlayerId): boolean {
-  const P = s.players[p];
-  if (!P) return false;
-  return P.factionId === 'AS'
-    || P.factionName?.toLowerCase().includes('sororitas')
-    || s.units.some((u) => u.owner === p && (u.factionKeywords?.includes('ADEPTA SORORITAS') || u.keywords?.includes('ADEPTA SORORITAS')));
-}
+export const isSororitasArmy = (s: GameState, p: PlayerId) => !!s.players[p]?.armyRules?.some((r) => r.name === 'Acts of Faith');
+const isAS = (u: UnitState) => u.factionKeywords.includes('ADEPTA SORORITAS');
+const hasAb = (u: UnitState, n: string) => u.abilities.some((a) => a.name === n && !abilityOff(u, a));
+const hasEnh = (u: UnitState, n: string) => !!u.enhancements?.some((e) => e.name === n);
+const det = (s: GameState, p: PlayerId, n: string) => (s.players[p].detachments ?? []).some((d) => d.name === n);
 
 export function getMiracleDice(s: GameState, p: PlayerId): number[] {
   return s.players[p]?.miracleDice ?? [];
@@ -34,8 +29,8 @@ export function gainMiracleDice(s: GameState, p: PlayerId, count = 1, fixedValue
     let val = fixedValue;
     if (val === undefined) {
       if (reason === 'Start of turn') {
-        const hasTriumph = s.units.some((u) => u.owner === p && onBoard(u) && u.name.includes('Triumph Of Saint Katherine'));
-        if (hasTriumph) val = 6;
+        // Solemn Procession (Triumph of Saint Katherine)
+        if (s.units.some((u) => u.owner === p && onBoard(u) && hasAb(u, 'Solemn Procession'))) val = 6;
       }
       val ??= d6(s);
     }
@@ -50,7 +45,7 @@ export function gainMiracleDice(s: GameState, p: PlayerId, count = 1, fixedValue
 }
 
 /** Called at the start of each turn: any Sororitas player gains 1 Miracle die. */
-export function sororitasTurnStart(s: GameState, activePlayer: PlayerId) {
+export function sororitasTurnStart(s: GameState, _activePlayer: PlayerId) {
   for (const p of [0, 1] as PlayerId[]) {
     if (isSororitasArmy(s, p)) {
       gainMiracleDice(s, p, 1, undefined, 'Start of turn');
@@ -58,78 +53,98 @@ export function sororitasTurnStart(s: GameState, activePlayer: PlayerId) {
   }
 }
 
-/** Called when a unit is destroyed: if ADEPTA SORORITAS, gains 1 Miracle die. */
-export function sororitasUnitDestroyed(s: GameState, victim: UnitState) {
-  if (!victim.factionKeywords?.includes('ADEPTA SORORITAS') && !victim.keywords?.includes('ADEPTA SORORITAS')) return;
-  if (!isSororitasArmy(s, victim.owner)) return;
-
-  // Imagifier within 12": Litany of Deeds allows re-rolling the gained Miracle die
-  const imagifierNear = s.units.some((u) => u.owner === victim.owner && u.id !== victim.id && onBoard(u) && u.name.includes('Imagifier') && alive(u).length > 0);
+/** An ADEPTA SORORITAS unit is destroyed: 1 Miracle dice (Litany of Deeds: re-rolled when low within 12" of an
+ *  Imagifier; Saintly Example: D3 more). */
+export function sororitasUnitDestroyed(s: GameState, victim: UnitState, killerId?: string) {
+  if (!isAS(victim) || !isSororitasArmy(s, victim.owner)) return;
+  // Storm of Retribution: the enemy unit that destroyed an ADEPTA SORORITAS unit is remembered
+  const killer = killerId ? s.units.find((u) => u.id === killerId) : undefined;
+  if (killer && !(killer.timed ?? []).some((t) => t.mark === 'Avenged')) addTimed(s, killer, { e: {}, label: 'Destroyed an ADEPTA SORORITAS unit', until: 'battle', by: victim.owner, mark: 'Avenged' });
+  const near = s.units.some((u) => u.owner === victim.owner && u.id !== victim.id && onBoard(u) && hasAb(u, 'Litany of Deeds')
+    && alive(u).some((m) => victim.models.some((v) => dist(m, v) <= 12 + 1e-6)));
   let roll = d6(s);
-  if (imagifierNear && roll <= 3) {
-    const rerolled = d6(s);
-    log(s, `Imagifier Litany of Deeds: re-rolled Miracle die ${roll} → ${rerolled}`, 'roll', victim.owner);
-    roll = rerolled;
+  if (near && roll <= 3) {
+    const again = d6(s);
+    log(s, `Litany of Deeds: Miracle dice ${roll} re-rolled → ${again}`, 'roll', victim.owner);
+    roll = again;
   }
-
   gainMiracleDice(s, victim.owner, 1, roll, `${victim.name} destroyed`);
+  if (hasEnh(victim, 'Saintly Example')) gainMiracleDice(s, victim.owner, rollExpr(s, 'D3').total, undefined, 'Saintly Example');
+}
 
-  // Saintly Example Enhancement: gain D3 additional Miracle dice
-  if (victim.enhancements?.some((e) => e.name === 'Saintly Example')) {
-    const extra = Math.ceil(d6(s) / 2);
-    gainMiracleDice(s, victim.owner, extra, undefined, 'Saintly Example');
+const back = (u: UnitState, n: number, label: string) => {
+  const dead = u.models.filter((m) => m.dead && !m.isCharacter).slice(0, n);
+  const anchor = alive(u)[0];
+  for (const m of dead) { m.dead = false; m.wounds = m.profile.W; if (anchor) { m.x = anchor.x + 0.5; m.y = anchor.y + 0.5; } }
+  return dead.length;
+};
+
+/** End of the Command phase: Simulacrum Imperialis, Chaplet of Sacrifice. */
+export function sororitasCommandEnd(s: GameState, p: PlayerId) {
+  if (!isSororitasArmy(s, p)) return;
+  const sims = s.units.filter((u) => u.owner === p && onBoard(u) && hasAb(u, 'Simulacrum Imperialis'));
+  for (const o of s.objectives.filter((x) => x.controller === p)) {
+    if (!sims.some((u) => alive(u).some((m) => dist(m, o) - m.r <= 3 + 1e-6))) continue;
+    const r = d6(s);
+    log(s, `Simulacrum Imperialis: objective ${o.id} rolled ${r}`, 'roll', p);
+    if (r >= 4) gainMiracleDice(s, p, 1, r, 'Simulacrum Imperialis');
+  }
+  // Chaplet of Sacrifice: re-roll the lowest Miracle dice (up to 3 while the bearer's unit is below Starting Strength)
+  const pool = s.players[p].miracleDice ?? [];
+  for (const u of s.units.filter((x) => x.owner === p && onBoard(x) && hasEnh(x, 'Chaplet of Sacrifice'))) {
+    const n = alive(u).length < u.startingStrength ? 3 : 1;
+    for (let i = 0; i < n; i++) {
+      pool.sort((a, b) => b - a);
+      if (!pool.length || pool[pool.length - 1] >= 4) break;
+      const old = pool.pop()!; const v = d6(s); pool.push(v);
+      log(s, `Chaplet of Sacrifice: Miracle dice ${old} re-rolled → ${v}`, 'roll', p);
+    }
+    pool.sort((a, b) => b - a);
   }
 }
 
-/** End of Command phase triggers: Simulacrum Imperialis, Healing Tears, Salvationist Medikit. */
-export function sororitasCommandEnd(s: GameState, p: PlayerId) {
+/** Command phase: Healing Tears, Sacred Healing, Salvationist Medikit, Litanies of Faith, Fiery Conviction, Manual of Saint Griselda. */
+export function sororitasCommandStart(s: GameState, p: PlayerId) {
   if (!isSororitasArmy(s, p)) return;
-
-  // Simulacrum Imperialis: roll D6 on 4+ for each objective controlled with a unit in range
-  const simUnits = s.units.filter((u) => u.owner === p && onBoard(u) && (u.abilities?.some((a) => a.name === 'Simulacrum Imperialis') || u.models.some((m) => (m.gear ?? []).some((g: string) => g.toLowerCase().includes('simulacrum')))));
-  if (simUnits.length) {
-    for (const obj of s.objectives.filter((o) => o.controller === p)) {
-      const hasSim = simUnits.some((u) => alive(u).some((m) => {
-        const dx = m.x - obj.x, dy = m.y - obj.y;
-        return Math.sqrt(dx * dx + dy * dy) <= 3 + m.r;
-      }));
-      if (hasSim) {
-        const roll = d6(s);
-        if (roll >= 4) {
-          log(s, `Simulacrum Imperialis: rolled ${roll} (4+) on objective ${obj.id} → gained Miracle die!`, 'roll', p);
-          gainMiracleDice(s, p, 1, roll, 'Simulacrum Imperialis');
-        }
-      }
+  const P = s.players[p];
+  P.miracleDice ??= [];
+  for (const u of s.units.filter((x) => x.owner === p && onBoard(x))) {
+    if (hasAb(u, 'Healing Tears') && alive(u).some((m) => /celestine/i.test(m.name))) {
+      const gem = u.models.find((m) => m.dead && /geminae/i.test(m.name));
+      if (gem) { gem.dead = false; gem.wounds = gem.profile.W; const a = alive(u)[0]; gem.x = a.x + 0.5; gem.y = a.y + 0.5; log(s, 'Healing Tears: a Geminae Superia returns', 'info', p); }
+    }
+    if (hasAb(u, 'Sacred Healing') && u.models.some((m) => m.dead && !m.isCharacter)) {
+      // a low Miracle dice is worth D3+1 models when several are missing
+      const lots = u.models.filter((m) => m.dead && !m.isCharacter).length >= 3 && P.miracleDice.length && P.miracleDice[P.miracleDice.length - 1] <= 3;
+      if (lots) P.miracleDice.pop();
+      const n = back(u, lots ? rollExpr(s, 'D3').total + 1 : 1, 'Sacred Healing');
+      log(s, `Sacred Healing: ${n} model${n === 1 ? '' : 's'} return${n === 1 ? 's' : ''} to ${u.name}${lots ? ' (a Miracle dice discarded)' : ''}`, 'info', p);
+    }
+    if (hasAb(u, 'Salvationist Medikit') && u.models.some((m) => m.dead && !m.isCharacter)) {
+      const n = back(u, rollExpr(s, 'D3').total, 'Salvationist Medikit');
+      log(s, `Salvationist Medikit: ${n} model${n === 1 ? '' : 's'} return to ${u.name}`, 'info', p);
+    }
+    if (hasEnh(u, 'Litanies of Faith') && ldTest(s, u, 'Litanies of Faith')) gainMiracleDice(s, p, 1, undefined, 'Litanies of Faith');
+    if (hasAb(u, 'Fiery Conviction')) {
+      if (P.miracleDice.length >= 3) { P.miracleDice.pop(); P.cp += 1; log(s, 'Fiery Conviction: a Miracle dice discarded, +1CP', 'info', p); }
+      else if (ldTest(s, u, 'Fiery Conviction')) { P.cp += 1; log(s, 'Fiery Conviction: +1CP', 'info', p); }
+    }
+    // Manual of Saint Griselda: two low Miracle dice become one of their sum (to a maximum of 6)
+    if (hasEnh(u, 'Manual of Saint Griselda') && P.miracleDice.length >= 2) {
+      P.miracleDice.sort((a, b) => b - a);
+      const [a, b] = P.miracleDice.slice(-2);
+      if (a + b > Math.max(a, b) && a <= 3) { P.miracleDice.splice(-2, 2); gainMiracleDice(s, p, 1, Math.min(6, a + b), 'Manual of Saint Griselda'); }
     }
   }
+}
 
-  // Saint Celestine Healing Tears: return 1 destroyed Geminae Superia
-  for (const cel of s.units.filter((u) => u.owner === p && onBoard(u) && u.name.includes('Saint Celestine'))) {
-    const gem = cel.models.find((m) => m.name.includes('Geminae') && m.dead);
-    if (gem) {
-      gem.dead = false;
-      gem.wounds = gem.profile.W;
-      const anchor = alive(cel)[0];
-      if (anchor) { gem.x = anchor.x + 0.5; gem.y = anchor.y + 0.5; }
-      log(s, `Saint Celestine Healing Tears: returned Geminae Superia to the battlefield`, 'info', p);
-    }
-  }
-
-  // Salvationist Medikit (Sanctifiers): return up to D3 destroyed models
-  for (const sanct of s.units.filter((u) => u.owner === p && onBoard(u) && u.abilities?.some((a) => a.name === 'Salvationist Medikit'))) {
-    const deadModels = sanct.models.filter((m) => m.dead && !m.isCharacter);
-    if (deadModels.length > 0) {
-      const numToReturn = Math.min(deadModels.length, Math.ceil(d6(s) / 2));
-      for (let i = 0; i < numToReturn; i++) {
-        const m = deadModels[i];
-        m.dead = false;
-        m.wounds = m.profile.W;
-        const anchor = alive(sanct)[0];
-        if (anchor) { m.x = anchor.x + 0.5; m.y = anchor.y + 0.5; }
-      }
-      log(s, `Salvationist Medikit: returned ${numToReturn} models to ${sanct.name}`, 'info', p);
-    }
-  }
+/** Spend (discard) one Miracle dice, the lowest: Rapturous Blows, Righteous Repugnance, Righteous Rage. */
+export function discardMiracle(s: GameState, p: PlayerId, n = 1): boolean {
+  const pool = s.players[p].miracleDice ?? [];
+  if (pool.length < n) return false;
+  pool.sort((a, b) => b - a).splice(-n, n);
+  log(s, `${n} Miracle dice discarded — Pool left: [${pool.join(', ')}]`, 'info', p);
+  return true;
 }
 
 /** Check if a unit is eligible to perform an Act of Faith this phase. */
@@ -141,10 +156,9 @@ export function canPerformActOfFaith(s: GameState, u: UnitState): boolean {
   const used = s.players[u.owner].actsOfFaithUsed ?? [];
   const unitUsedCount = used.filter((id) => id === u.id).length;
 
-  // Army of Faith detachment: JUMP PACK units can perform two Acts of Faith per phase
-  const isJumpPack = hasKw(u, 'JUMP PACK') || u.keywords?.includes('JUMP PACK');
-  const isArmyOfFaith = s.players[u.owner].detachments?.some((d) => d.name === 'Army of Faith');
-  const maxAllowed = isJumpPack && isArmyOfFaith ? 2 : 1;
+  // Sacred Rites (Army of Faith) / Simulacrum of the Ebon Chalice (Aura): two Acts of Faith per phase
+  const chalice = s.units.some((f) => f.owner === u.owner && onBoard(f) && hasAb(f, 'Simulacrum of the Ebon Chalice (Aura)') && unitDistance(f, u) <= 6 + 1e-6);
+  const maxAllowed = det(s, u.owner, 'Army of Faith') || chalice ? 2 : 1;
 
   return unitUsedCount < maxAllowed;
 }
@@ -162,7 +176,7 @@ export function performActOfFaith(
   if (!pool.length) return null;
 
   // Dialogus: "Stirring Rhetoric: While leading a unit, you can change the value of that Miracle dice to a 6!"
-  const hasDialogus = u.models.some((m) => m.name.includes('Dialogus') && !m.dead);
+  const hasDialogus = hasAb(u, 'Stirring Rhetoric') && u.models.some((m) => /dialogus/i.test(m.name) && !m.dead);
 
   let pickIdx = -1;
   if (preferredVal !== undefined) {
@@ -196,8 +210,10 @@ export function performActOfFaith(
   pushFx(s, { kind: 'skill', unitId: u.id, owner: u.owner, at: alive(u)[0] ?? { x: 22, y: 15 }, name: 'Act of Faith', who: `${rollType}: ${val}`, style: 'holy', epic: false });
 
   // Cherub ability: once per battle, after performing an Act of Faith, gain 1 Miracle die
-  if ((u.abilities?.some((a) => a.name === 'Cherub') || u.abilities?.some((a) => a.name === 'Cherubs')) && !u.cherubUsed) {
-    u.cherubUsed = true;
+  // Cherub: once per battle; Cherubs: twice
+  const cherubs = hasAb(u, 'Cherubs') ? 2 : hasAb(u, 'Cherub') ? 1 : 0;
+  if ((u.cherubUses ?? 0) < cherubs) {
+    u.cherubUses = (u.cherubUses ?? 0) + 1;
     gainMiracleDice(s, u.owner, 1, undefined, `${u.name} Cherub`);
   }
 
@@ -225,6 +241,10 @@ export function tryActOfFaith(
     }
   } else if (rollType === 'save') {
     const need = context?.need ?? 4;
+    // Triptych of the Macharian Crusade: a saving throw substituted by an Act of Faith is successful
+    if (hasEnh(u, 'Triptych of the Macharian Crusade') && ((context?.damage ?? 1) >= 2 || context?.isCharacter)) {
+      return performActOfFaith(s, u, pool[pool.length - 1], undefined, 'Saving throw (Triptych)') === null ? null : 6;
+    }
     const dmg = context?.damage ?? 1;
     if ((dmg >= 2 || context?.isCharacter || pool.length >= 3) && pool.some((v) => v >= need)) {
       return performActOfFaith(s, u, undefined, need, 'Saving throw');

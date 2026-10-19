@@ -1,4 +1,721 @@
 {
   "_comment": "Stratagems written by hand (key: the card name, or NAME@Detachment); the rest are read from the card text.",
-  "rules": {}
+  "rules": {
+    "RIGHTEOUS VENGEANCE": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "reroll": "hits"
+        },
+        {
+          "attack": "melee",
+          "if": [
+            "belowHalfStrength"
+          ],
+          "reroll": "wounds"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "DIVINE INTERVENTION": {
+      "react": "modelDestroyed",
+      "ctxModel": "CHARACTER",
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "do": [
+        {
+          "reviveLater": {
+            "on": 1,
+            "wounds": 0,
+            "woundsRoll": "D3"
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "partial",
+      "note": "It returns in its unit with D3 wounds (the card: as a unit of its own; +1 wound for each Miracle dice discarded); not for Saint Celestine"
+    },
+    "SPIRIT OF THE MARTYR": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "fightPhase"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 1
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "SUFFERING AND SACRIFICE": {
+      "targetKw": [
+        "ADEPTA SORORITAS",
+        "INFANTRY|WALKER"
+      ],
+      "effects": [
+        {
+          "taunt": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SANCTIFIED IMMOLATION": {
+      "react": "deadlyDemise",
+      "targetKw": [
+        "ADEPTA SORORITAS",
+        "VEHICLE"
+      ],
+      "status": "manual",
+      "bot": "never",
+      "note": "Not automated: Deadly Demise mortal wounds without the roll"
+    },
+    "PRAISE THE FALLEN": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "lostToLast"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "special": [
+        "shootAt"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "PURITY OF SUFFERING": {
+      "targetKw": [
+        "PENITENT"
+      ],
+      "react": "ownAttacked",
+      "effects": [
+        {
+          "defend": {
+            "fnp": 4
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "PASSION OF THE PENITENT": {
+      "targetKw": [
+        "PENITENT"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "critHitOn": 5
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "LASH OF GUILT": {
+      "targetKw": [
+        "PENITENT"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterAdvance"
+          ]
+        },
+        {
+          "if": [
+            "kw:PENITENT ENGINES"
+          ],
+          "advanceFixed": 6
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "FINAL REDEMPTION": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "PENITENT"
+      ],
+      "unitIf": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "secure": true
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "BOUNDLESS ZEAL": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "choice": [
+        {
+          "label": "Shoot after Falling Back",
+          "effects": [
+            {
+              "eligible": [
+                "shootAfterFallBack"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Charge after Falling Back",
+          "effects": [
+            {
+              "eligible": [
+                "chargeAfterFallBack"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Shoot and charge (PENITENT)",
+          "if": [
+            "kw:PENITENT"
+          ],
+          "effects": [
+            {
+              "eligible": [
+                "shootAfterFallBack",
+                "chargeAfterFallBack"
+              ]
+            }
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "DEVOUT FANATICISM": {
+      "targetKw": [
+        "PENITENT"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "targetOfLast"
+      ],
+      "do": [
+        {
+          "surge": "D6"
+        }
+      ],
+      "status": "auto"
+    },
+    "RIGHTEOUS BLOWS": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "partial",
+      "note": "Not automated: the Battle-shock test for a unit that lost models"
+    },
+    "SHIELD OF AVERSION": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "react": "ownAttacked",
+      "buffs": [
+        "enemyAp-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "CLEANSING FLAMES": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "torrentWeapon"
+          ],
+          "abilities": [
+            "devastating wounds"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "RITES OF FIRE": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "unitIf": [
+        "disembarkedThisTurn"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetWithin:6",
+            "targetInRangeOfObjective"
+          ],
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "partial",
+      "note": "Not automated: the Battle-shock test for a unit that lost models"
+    },
+    "BLAZING IRE": {
+      "targetKw": [
+        "ADEPTA SORORITAS",
+        "TRANSPORT"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "targetOfLast"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "special": [
+        "disembarkShoot"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "CARRY FORTH THE FAITHFUL": {
+      "targetKw": [
+        "ADEPTA SORORITAS",
+        "TRANSPORT"
+      ],
+      "effects": [
+        {
+          "rerollAdvance": true,
+          "disembarkAfterAdvance": true
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "LIGHT OF THE EMPEROR": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "effects": [
+        {
+          "ignoreMods": true
+        },
+        {
+          "if": [
+            "kw:JUMP PACK"
+          ],
+          "scope": "aura",
+          "range": 3,
+          "units": [
+            "ADEPTA SORORITAS"
+          ],
+          "ignoreMods": true
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "SHIELD OF FAITH": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "fnp": 5,
+            "fnpVs": "mortal"
+          }
+        },
+        {
+          "if": [
+            "kw:JUMP PACK"
+          ],
+          "scope": "aura",
+          "range": 3,
+          "units": [
+            "ADEPTA SORORITAS"
+          ],
+          "defend": {
+            "fnp": 5,
+            "fnpVs": "mortal"
+          }
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "FAITH AND FURY": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "lance"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "partial",
+      "note": "Not automated: the Miracle dice when enemy models are destroyed"
+    },
+    "DIVINE GUIDANCE": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "effects": [
+        {
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "partial",
+      "note": "Not automated: the Miracle dice when enemy models are destroyed"
+    },
+    "BLINDING RADIANCE": {
+      "targetKw": [
+        "ADEPTA SORORITAS",
+        "INFANTRY|JUMP PACK"
+      ],
+      "react": "ownAttacked",
+      "effects": [
+        {
+          "defend": {
+            "hit": -1
+          }
+        },
+        {
+          "if": [
+            "kw:JUMP PACK"
+          ],
+          "scope": "aura",
+          "range": 3,
+          "units": [
+            "ADEPTA SORORITAS",
+            "INFANTRY"
+          ],
+          "defend": {
+            "hit": -1
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "ANGELIC DESCENT": {
+      "targetKw": [
+        "ADEPTA SORORITAS",
+        "JUMP PACK"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SHIELD OF DENIAL": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "effects": [
+        {
+          "if": [
+            "!marked:Righteous"
+          ],
+          "defend": {
+            "fnp": 6,
+            "fnpVs": "mortal"
+          }
+        },
+        {
+          "if": [
+            "marked:Righteous"
+          ],
+          "defend": {
+            "fnp": 5,
+            "fnpVs": "mortal"
+          }
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "BASTION OF FAITH": {
+      "targetKw": [
+        "CELESTIAN SACRESANTS"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "fightPhase"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "hit": -1
+          }
+        },
+        {
+          "if": [
+            "marked:Righteous"
+          ],
+          "scope": "aura",
+          "range": 6,
+          "units": [
+            "CELESTIAN SACRESANTS"
+          ],
+          "defend": {
+            "hit": -1
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "While Righteous: every CELESTIAN SACRESANTS unit within 6\" (the card: one)",
+      "status": "auto"
+    },
+    "PATH OF THE RIGHTEOUS": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "effects": [
+        {
+          "pileIn": 6,
+          "consolidate": 6
+        }
+      ],
+      "until": "turn",
+      "bot": "attack",
+      "status": "auto"
+    },
+    "TO THE HEART OF HERESY": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "strength": 1
+        },
+        {
+          "attack": "melee",
+          "if": [
+            "marked:Righteous"
+          ],
+          "ap": 1
+        }
+      ],
+      "until": "turn",
+      "bot": "attack",
+      "status": "auto"
+    },
+    "INDEFATIGABLE DEDICATION": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack"
+          ]
+        },
+        {
+          "if": [
+            "marked:Righteous"
+          ],
+          "eligible": [
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "SUFFER NOT THE UNFAITHFUL": {
+      "targetKw": [
+        "ADEPTA SORORITAS"
+      ],
+      "unitIf": [
+        "marked:Righteous"
+      ],
+      "choice": [
+        {
+          "label": "[LETHAL HITS]",
+          "effects": [
+            {
+              "abilities": [
+                "lethal hits"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "[SUSTAINED HITS 1]",
+          "effects": [
+            {
+              "abilities": [
+                "sustained hits 1"
+              ]
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "INSPIRATIONAL BATTLE CANTICLES": {
+      "targetKw": [
+        "ADEPTA SORORITAS",
+        "INFANTRY",
+        "FLY|EXORCIST"
+      ],
+      "status": "manual",
+      "bot": "never",
+      "note": "Not automated: a Battle-shocked ADEPTA SORORITAS unit within 6\" recovers"
+    },
+    "DEVASTATING REPRISE": {
+      "targetKw": [
+        "ADEPTA SORORITAS",
+        "INFANTRY",
+        "FLY"
+      ],
+      "enemy": {
+        "visible": true,
+        "notKw": [
+          "MONSTER",
+          "VEHICLE"
+        ]
+      },
+      "enemyMark": "Devastating Reprise",
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetMarked:Devastating Reprise"
+          ],
+          "abilities": [
+            "devastating wounds"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "note": "Pick the enemy unit the EXORCIST hit",
+      "status": "auto"
+    },
+    "HARMONISED EXORCISM": {
+      "targetKw": [
+        "EXORCIST"
+      ],
+      "enemy": {
+        "visible": true
+      },
+      "enemyMark": "Harmonised Exorcism",
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetMarked:Harmonised Exorcism"
+          ],
+          "hit": 1
+        }
+      ],
+      "bot": "attack",
+      "note": "Pick a unit within 9\" of an ADEPTA SORORITAS INFANTRY FLY unit",
+      "status": "auto"
+    },
+    "UNFLINCHING DETERMINATION": {
+      "targetKw": [
+        "CELESTIAN SACRESANTS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "assault"
+          ]
+        },
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack",
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "FAITHFUL FORTITUDE": {
+      "targetKw": [
+        "CELESTIAN SACRESANTS"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "fnp": 5,
+            "fnpVs": "mortal"
+          }
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SANCTIFIED BLOWS": {
+      "targetKw": [
+        "CELESTIAN SACRESANTS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "attacks": 1,
+          "strength": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    }
+  }
 }
