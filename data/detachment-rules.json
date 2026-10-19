@@ -6357,7 +6357,8 @@
     "The Shadow of Chaos": {
       "auto": "full",
       "armyRule": true,
-      "desc": "Deployment zone is always Shadow of Chaos; No Man's Land and enemy zone while controlling half of objectives."
+      "code": true,
+      "manual": "Daemonic Manifestation and Daemonic Terror on Battle-shock tests (daemons.ts)"
     },
     "Daemonic Manifestation": {
       "auto": "full",
@@ -6372,63 +6373,120 @@
     "Daemonic Pact": {
       "auto": "full",
       "armyRule": true,
-      "desc": "Allows up to 250/500/750 pts of Legiones Daemonica in Chaos Knights or Heretic Astartes with 1:1 Battleline ratio."
+      "info": true,
+      "manual": "Army building: LEGIONES DAEMONICA allies"
     },
     "Daemonic Incursion": {
       "auto": "full",
-      "desc": "Warp Rifts: Deep strike >6\" away from enemies when wholly in Shadow of Chaos or within 6\" of friendly Greater Daemon."
-    },
-    "Warp Rifts": {
-      "auto": "full",
-      "desc": "Deep strike >6\" away when in Shadow of Chaos."
+      "code": true,
+      "manual": "Warp Rifts: Deep Strike more than 6\" away in the Shadow of Chaos or near a matching Greater Daemon"
     },
     "Legion of Excess": {
-      "auto": "full",
-      "desc": "Beguiling Aura: Slaanesh units can charge after Falling Back. Seductive Gambit: +1 Attack or Sustained Hits on charge.",
+      "auto": "partial",
       "effects": [
         {
           "units": [
+            "LEGIONES DAEMONICA",
             "SLAANESH"
           ],
           "eligible": [
             "chargeAfterFallBack"
           ]
         }
-      ]
+      ],
+      "acts": [
+        {
+          "when": "endOfCharge",
+          "units": [
+            "LEGIONES DAEMONICA",
+            "SLAANESH"
+          ],
+          "if": [
+            "charged"
+          ],
+          "limit": "turn",
+          "label": "Seductive Gambit: re-roll Hit rolls and Wound rolls of 1 this turn (no Fights First)",
+          "botUse": "always",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "reroll": [
+                    "hits",
+                    "wounds1"
+                  ]
+                }
+              ],
+              "until": "turn"
+            }
+          ]
+        }
+      ],
+      "manual": "Losing Fights First with a Seductive Gambit is not applied"
     },
     "Scintillating Legion": {
       "auto": "full",
-      "desc": "Fates in Flux: Start with 3 Flux tokens to reroll advance, hit, wound, damage, save, or hazard."
+      "code": true,
+      "manual": "Fates in Flux tokens re-roll failed rolls (daemons.ts)"
     },
     "Blood Legion": {
       "auto": "full",
-      "desc": "Murdercall: Surge D6\" when enemy ends move within 8\". Blood Tainted: Sticky objectives on kill."
+      "code": true,
+      "acts": [
+        {
+          "when": "enemyMovedNear",
+          "range": 8,
+          "units": [
+            "LEGIONES DAEMONICA",
+            "KHORNE"
+          ],
+          "limit": "phase",
+          "per": "army",
+          "if": [
+            "!engaged"
+          ],
+          "label": "Murdercall: surge move of up to D6\"",
+          "do": [
+            {
+              "on": "self",
+              "surge": "D6"
+            }
+          ]
+        }
+      ],
+      "manual": "Blood Tainted holds objectives (daemons.ts)"
     },
     "Plague Legion": {
       "auto": "full",
-      "desc": "Melancholic Miasma: 9\" around Nurgle daemons is Shadow of Chaos. Command phase forces Battle-shock test."
+      "code": true,
+      "manual": "Melancholic Miasma: enemy units within 9\" of NURGLE daemons are in the Shadow; a Battle-shock test each Command phase (daemons.ts)"
     },
     "Shadow Legion": {
       "auto": "full",
-      "desc": "Umbral blessings of the Dark Master: Khorne advance and charge, Tzeentch stealth and -1 to hit in melee, Nurgle -1 to wound if S > T.",
       "effects": [
         {
           "units": [
             "KHORNE"
           ],
           "eligible": [
-            "chargeAfterAdvance",
-            "shootAfterAdvance"
+            "shootAfterAdvance",
+            "chargeAfterAdvance"
           ]
         },
         {
           "units": [
             "TZEENTCH"
           ],
-          "stealth": true,
+          "stealth": true
+        },
+        {
+          "units": [
+            "TZEENTCH"
+          ],
           "defend": {
-            "hit": -1,
-            "vs": "melee"
+            "vs": "melee",
+            "hit": -1
           }
         },
         {
@@ -6438,34 +6496,72 @@
           "defend": {
             "woundIfStronger": -1
           }
+        },
+        {
+          "units": [
+            "SLAANESH"
+          ],
+          "noSnapTarget": true
+        },
+        {
+          "units": [
+            "HERETIC ASTARTES"
+          ],
+          "deepStrike": true
         }
-      ]
+      ],
+      "manual": "UNDIVIDED units make Dark Pacts (Be'lakor's automatic pass is not applied); the HERETIC ASTARTES list is not checked when building"
     },
     "Cavalcade of Chaos": {
       "auto": "full",
-      "desc": "Heralds of the Chariot: impact mortals on charge, 3\" engagement reach."
-    },
-    "Lords of the Warp": {
-      "auto": "full",
-      "desc": "Loci of Power: Friendly CHARACTER models (excluding MONSTER) have +1 Ld and +1 OC.",
       "effects": [
         {
           "units": [
-            "CHARACTER",
-            "!MONSTER"
+            "LEGIONES DAEMONICA",
+            "MOUNTED"
           ],
-          "rolls": {
-            "oc": 1
-          }
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ]
+    },
+    "Lords of the Warp": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "LEGIONES DAEMONICA"
+          ],
+          "if": [
+            "modelKw:CHARACTER",
+            "!kw:MONSTER"
+          ],
+          "ld": 1,
+          "oc": 1
         }
       ]
     },
     "Warptide": {
       "auto": "full",
-      "desc": "Shudderblink: Friendly BATTLELINE units advance: ranged weapons gain [ASSAULT] and can charge.",
       "effects": [
         {
           "units": [
+            "LEGIONES DAEMONICA",
+            "BATTLELINE"
+          ],
+          "attack": "ranged",
+          "if": [
+            "advanced"
+          ],
+          "abilities": [
+            "assault"
+          ]
+        },
+        {
+          "units": [
+            "LEGIONES DAEMONICA",
             "BATTLELINE"
           ],
           "eligible": [

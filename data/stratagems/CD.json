@@ -1,4 +1,841 @@
 {
   "_comment": "Stratagems written by hand (key: the card name, or NAME@Detachment); the rest are read from the card text.",
-  "rules": {}
+  "rules": {
+    "THE REALM OF CHAOS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "LEGIONES DAEMONICA"
+        ]
+      },
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "note": "A second unit only when both are in the Shadow of Chaos (check it yourself); offered at the end of the opponent's Fight phase (the card: end of their turn)",
+      "status": "auto"
+    },
+    "DRAUGHT OF TERROR": {
+      "targetKw": [
+        "LEGIONES DAEMONICA"
+      ],
+      "effects": [
+        {
+          "ap": 1
+        },
+        {
+          "if": [
+            "targetBattleShocked"
+          ],
+          "reroll": "wounds"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "DAEMONIC INVULNERABILITY": {
+      "targetKw": [
+        "LEGIONES DAEMONICA"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "invReroll1": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "WARP SURGE": {
+      "targetKw": [
+        "LEGIONES DAEMONICA"
+      ],
+      "unitIf": [
+        "inShadow"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "CORRUPT REALSPACE": {
+      "targetKw": [
+        "LEGIONES DAEMONICA"
+      ],
+      "unitIf": [
+        "onControlledObjective"
+      ],
+      "special": [
+        "corrupt"
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "DENIZENS OF THE WARP": {
+      "targetKw": [
+        "LEGIONES DAEMONICA"
+      ],
+      "targetFrom": "reserves",
+      "effects": [
+        {
+          "deepStrikeRange": 6
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "ARCHAGONISTS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "SLAANESH"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "LEGIONES DAEMONICA",
+          "SLAANESH",
+          "!MONSTER"
+        ]
+      },
+      "effects": [
+        {
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "note": "Two units only when neither is a MONSTER",
+      "status": "auto"
+    },
+    "OVERWHELMING EXCESS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "SLAANESH"
+      ],
+      "react": "ownAttacked",
+      "buffs": [
+        "enemyHit-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "CAVALCADE OF BLADES": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "SLAANESH"
+      ],
+      "react": "chargeMoveEnd",
+      "enemy": {
+        "engaged": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "all": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "One D6 per model (MONSTER units: six D6 is not applied)",
+      "status": "auto"
+    },
+    "PHANTASMAL LONGING": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "SLAANESH"
+      ],
+      "effects": [
+        {
+          "throughTerrain": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SENSORY EXCRUCIATION": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "SLAANESH",
+        "MONSTER"
+      ],
+      "enemy": {
+        "all": true,
+        "range": 99
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "targetInShadow",
+            "!targetBelowHalf"
+          ],
+          "shock": 0
+        },
+        {
+          "on": "target",
+          "if": [
+            "targetInShadow",
+            "targetBelowHalf"
+          ],
+          "shock": -1
+        }
+      ],
+      "bot": "never",
+      "note": "Enemy units only (your own units in the Shadow do not test)",
+      "status": "auto"
+    },
+    "THIEVES OF PAIN": {
+      "status": "manual",
+      "note": "Not automated: moving lost wounds to another unit",
+      "bot": "never"
+    },
+    "PYROGENESIS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "TZEENTCH"
+      ],
+      "choice": [
+        {
+          "label": "+2 Strength",
+          "effects": [
+            {
+              "strength": 2
+            }
+          ]
+        },
+        {
+          "label": "Spend a Flux token: +3 Strength and +1 AP",
+          "if": [
+            "fluxToken"
+          ],
+          "effects": [
+            {
+              "strength": 3,
+              "ap": 1
+            }
+          ],
+          "do": [
+            {
+              "cd": "flux"
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "FLICKERING REALITY": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "TZEENTCH"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "fightPhase"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "minHit": 2
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "Hit rolls of 1 end the attack (the card: a rolled number, which a Flux token can re-roll)",
+      "status": "auto"
+    },
+    "FATEBORNE NIGHTMARES": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "TZEENTCH"
+      ],
+      "effects": [
+        {
+          "throughTerrain": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "FICKLEFIRE": {
+      "status": "manual",
+      "note": "Not automated: shooting while engaged",
+      "bot": "never"
+    },
+    "DELIRIUM UNMADE": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "TZEENTCH"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "note": "Spending a Flux token for a second unit is not offered",
+      "status": "auto"
+    },
+    "IMPOSSIBLE ECLIPSE": {
+      "status": "manual",
+      "note": "Not automated: extra areas in the Shadow of Chaos",
+      "bot": "never"
+    },
+    "SHEATHED IN BRASS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "KHORNE"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "save": 1,
+            "saveMax3": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "+1 to the save (up to 3+)",
+      "status": "auto"
+    },
+    "WRATH UNDENIABLE": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "KHORNE"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "fightPhase"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 4
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "GORE‑HUNGRY ONSLAUGHT": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "KHORNE"
+      ],
+      "effects": [
+        {
+          "throughTerrain": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SKULLS BEGET BLOOD": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "KHORNE",
+        "INFANTRY|MOUNTED"
+      ],
+      "unitIf": [
+        "!engaged",
+        "!fellBack"
+      ],
+      "enemy": {
+        "range": 8,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "n": 6
+          }
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "BLOOD BEGETS SKULLS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "KHORNE"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "FOOLS’ FLIGHT": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "KHORNE"
+      ],
+      "react": "enemyFallBack",
+      "unitIf": [
+        "nearLast:6",
+        "!engaged"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "special": [
+        "charge"
+      ],
+      "botReact": "charge",
+      "status": "auto"
+    },
+    "MURKSHADOWS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "NURGLE",
+        "INFANTRY"
+      ],
+      "effects": [
+        {
+          "move": 5
+        }
+      ],
+      "bot": "never",
+      "note": "Also for an Advance move",
+      "status": "auto"
+    },
+    "FEVER VISIONS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "NURGLE"
+      ],
+      "effects": [
+        {
+          "hit": 1
+        },
+        {
+          "shockAfterAttack": 0
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SEEPING VIRULENCE": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "NURGLE"
+      ],
+      "effects": [
+        {
+          "critHitOn": 5
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "PLAGUE OF WOES": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "NURGLE"
+      ],
+      "enemy": {
+        "range": 9
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ],
+      "bot": "never",
+      "note": "Use it after Melancholic Miasma's test",
+      "status": "auto"
+    },
+    "ROT AND RENEWAL": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "NURGLE"
+      ],
+      "effects": [
+        {
+          "throughTerrain": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "FOETID RESURGENCE": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "NURGLE"
+      ],
+      "do": [
+        {
+          "if": [
+            "!kw:BATTLELINE",
+            "!kw:MONSTER"
+          ],
+          "revive": 1
+        },
+        {
+          "if": [
+            "kw:BATTLELINE"
+          ],
+          "revive": "D3"
+        },
+        {
+          "if": [
+            "kw:MONSTER"
+          ],
+          "heal": "D3+1"
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "ENCROACHING DARKNESS": {
+      "targetKw": [
+        "SHADOW LEGION"
+      ],
+      "unitIf": [
+        "setUpThisTurn"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "SHADOW LEGION"
+        ]
+      },
+      "effects": [
+        {
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "DEATH DENIED": {
+      "targetKw": [
+        "SHADOW LEGION"
+      ],
+      "do": [
+        {
+          "heal": "3"
+        },
+        {
+          "if": [
+            "kw:TZEENTCH"
+          ],
+          "revive": 1
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SHADE PATH": {
+      "targetKw": [
+        "SHADOW LEGION"
+      ],
+      "enemy": {
+        "range": 12,
+        "visible": true
+      },
+      "enemyEffects": [
+        {
+          "chargeBonus": -1
+        }
+      ],
+      "enemyUntil": "turn",
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "kw:NURGLE"
+          ],
+          "shock": 0
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "BINDING SHADOW": {
+      "targetKw": [
+        "SHADOW LEGION"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "SHADOW LEGION"
+        ]
+      },
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "CHANNELLED WRATH": {
+      "targetKw": [
+        "SHADOW LEGION"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "lance"
+          ]
+        },
+        {
+          "attack": "melee",
+          "if": [
+            "kw:KHORNE"
+          ],
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SPITEFUL DEMISE": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "SHADOW LEGION"
+      ],
+      "enemy": {
+        "all": true,
+        "range": 1
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalsTable": [
+            {
+              "min": 4,
+              "expr": "D3"
+            },
+            {
+              "min": 6,
+              "expr": "3"
+            }
+          ]
+        }
+      ],
+      "botReact": "always",
+      "note": "The +2 for SLAANESH units is not added",
+      "status": "auto"
+    },
+    "INESCAPABLE MANIFESTATIONS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "MOUNTED"
+      ],
+      "effects": [
+        {
+          "forceDesperate": true
+        },
+        {
+          "if": [
+            "targetBattleShocked"
+          ],
+          "desperateMinus": 1
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "WARP-RIDERS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "MOUNTED"
+      ],
+      "effects": [
+        {
+          "mobile": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "FROM BEYOND THE VEIL": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "MOUNTED"
+      ],
+      "targetFrom": "reserves",
+      "effects": [
+        {
+          "arriveFromRound": 1
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "CARNIVAL OF EXCESS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "CHARACTER",
+        "SLAANESH",
+        "!MONSTER"
+      ],
+      "buffs": [
+        "fightsFirst"
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SKIRLING MAGICKS": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "CHARACTER",
+        "TZEENTCH",
+        "!MONSTER"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "BILIOUS BLESSING": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "CHARACTER",
+        "NURGLE",
+        "!MONSTER"
+      ],
+      "enemy": {
+        "range": 8,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "n": 7
+          }
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "CALL TO MURDER": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "CHARACTER",
+        "KHORNE",
+        "!MONSTER"
+      ],
+      "unitIf": [
+        "charged"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "attacks": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SOULSEEING": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "BATTLELINE"
+      ],
+      "enemy": {
+        "range": 12,
+        "visible": true
+      },
+      "enemyEffects": [
+        {
+          "detection": 6
+        }
+      ],
+      "enemyUntil": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "INCORPOREAL ENTITIES": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "BATTLELINE"
+      ],
+      "react": "ownAttacked",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "vs": "ranged",
+            "woundIfStronger": -1
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "DAEMONIC INFESTATION": {
+      "targetKw": [
+        "LEGIONES DAEMONICA",
+        "BATTLELINE",
+        "!PINK HORRORS"
+      ],
+      "do": [
+        {
+          "heal": "3"
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    }
+  }
 }

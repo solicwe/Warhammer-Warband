@@ -21,7 +21,7 @@ import { aeldariBattleStart, aeldariRoundStart, canFocus, lucidEye, noteVibro, r
 import { votannAttackModifiers, votannBattleStart, votannCommandEnd, votannDefenseModifiers, votannUnitDestroyed } from './votann';
 import { admechAttackModifiers, admechCommandStart, admechDefenseModifiers, admechRoundStart, unitActiveImperatives } from './admech';
 import { drugBlocked, drugPicked, drukhariAction, drukhariAttackMods, drukhariBattleShockFailed, drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd, drukhariUnitDestroyed, isUnitEmpowered, losingWager, painReady, pickContract } from './drukhari';
-import { daemonBattleShockMod, daemonsAttackModifiers, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsDefenseModifiers, daemonsOnBattleShockResult, daemonsPhaseEnd, daemonsUnitDestroyed } from './daemons';
+import { corruptRealspace, daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsUnitDestroyed, isUnderShadowOfChaos, spendFluxToken, tryFlux } from './daemons';
 import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultAmbushUnitDestroyed, cultBattleStart, cultInfiltration, psionicParasitism, regimentalReinforcements } from './cult';
 import { activateReanimation, necCommandEnd, repairBarge, resurrect } from './necrons';
 import { gkAttackModifiers, gkDefenseModifiers, gkEndOpponentTurn } from './greyKnights';
@@ -173,7 +173,12 @@ on('setup', (s) => daemonsBattleStart(s));
 on('battleStart', (s) => daemonsBattleStart(s));
 on('commandStart', (s) => daemonsCommandStart(s));
 on('unitDestroyed', (s, e) => daemonsUnitDestroyed(s, e.u, unitOf(s, e.attackerId)));
-on('phaseEnd', (s) => daemonsPhaseEnd(s));
+addCondition('inShadow', (_c, x) => isUnderShadowOfChaos(x.s, x.A.owner, x.A));
+addCondition('targetInShadow', (_c, x) => !!x.T && isUnderShadowOfChaos(x.s, x.A.owner, x.T));
+addCondition('fluxToken', (_c, x) => (x.s.players[x.A.owner].fluxTokens ?? 0) > 0);
+addActionHandler((s, a, x) => { if (a.cd === 'flux') spendFluxToken(s, x.u.owner); });
+addDieRescue('Fates in Flux', 'Flux token', (s, u, stage, x) => tryFlux(s, u, stage, x));
+addStratSpecial('corrupt', (s, x) => corruptRealspace(s, x.u));
 on('shockResult', (s, e) => daemonsOnBattleShockResult(s, e.u, e.passed));
 addModifier('battleShock', (s, u) => daemonBattleShockMod(s, u));
 addModifier('deepStrikeDistance', (s, u, at) => daemonsDeepStrikeDist(s, u, at));
@@ -233,9 +238,6 @@ addCombatMods((x) => {
 addCombatMods((x) => admechDefenseModifiers(x.s, x.A, x.T, x.mode));
 // Drukhari
 addCombatMods((x) => drukhariAttackMods(x.s, x.A, x.T));
-// Chaos Daemons
-addCombatMods((x) => daemonsAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon));
-addCombatMods((x) => daemonsDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
 // Necrons
 // Grey Knights
 addCombatMods((x) => { const g = gkAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon); return { ...g, critHitOn: g.critHitThreshold }; });

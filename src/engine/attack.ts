@@ -987,6 +987,12 @@ export function applyDamage(s: GameState) {
     const effAp = p.ap - (d.crit && p.critWoundAp ? p.critWoundAp : 0);
     let ok = false;
     if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + effAp >= Math.max(RULES.modifierCaps.bestSave, sv);
+    // an invulnerable save of 1 re-rolled (only when the invulnerable save is the one taken)
+    if (d.v === 1 && md.invReroll1 && inv !== null && inv < Math.max(RULES.modifierCaps.bestSave, sv) - effAp) {
+      d.v = d6(s);
+      ok = d.v !== 1 && d.v >= inv;
+      p.damageLines.push(`invulnerable save of 1 re-rolled → ${d.v}`);
+    }
     if (!ok && !d.rerolled) {
       const minSv = Math.min(inv ?? 99, Math.max(RULES.modifierCaps.bestSave, sv) - effAp);
       if (minSv <= 6) {

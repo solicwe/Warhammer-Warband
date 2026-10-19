@@ -408,7 +408,7 @@ export interface PlayerState {
   /** Chaos Daemons: Corrupted objective IDs (6" Shadow of Chaos aura + sticky control) */
   corruptedObjectives?: string[];
   /** Chaos Daemons: Units that performed Seductive Gambit this turn */
-  seductiveGambitUnits?: string[];
+  fluxUsed?: string; // Fates in Flux: the last turn:phase:roll a Flux token re-rolled a Hit / Wound / Advance
   /** Genestealer Cults: Resurgence points pool (Cult Ambush) */
   resurgencePoints?: number;
   /** Genestealer Cults: Cult Ambush marker positions on battlefield */

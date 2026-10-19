@@ -156,6 +156,7 @@ export interface Action {
   afflictNear?: number; // every enemy unit within X" of this unit is Afflicted until your next turn (Explosive Blight)
   alsoNear?: number; // do this to every other enemy unit within X" of the target too (Spore-laced Shock Waves)
   dg?: 'signalPox' | 'blightedLand' | 'eyestinger' | 'extraPlague' | 'leechspore';
+  cd?: 'flux'; // Chaos Daemons: spend a Flux token (daemons.ts)
   gc?: 'parasitism'; // Genestealer Cults: Psionic Parasitism (cult.ts)
   nec?: 'reanimate' | 'resurrect'; // Necrons: the target unit's Reanimation Protocols activate (resurrect: D6, one unit per turn)
   dru?: string; // Drukhari: 'empower' / 'gain' / 'spendCp' / 'wager' (drukhari.ts)
@@ -191,7 +192,7 @@ export interface ActSpec {
   oppShooting?: boolean; // only in the opponent's Shooting phase
   roll?: string; // e.g. "D6"
   rollCount?: number; // number of dice for a single roll/check
-  rollAdd?: 'per5models' | 'warlordInTarget2' | 'shockedEnemies' | 'onControlledObjective' | 'nearEnemyDz12' | 'dzAdvance'; // dzAdvance: +1 out of your deployment zone, +1 more in the enemy's
+  rollAdd?: 'per5models' | 'warlordInTarget2' | 'shockedEnemies' | 'onControlledObjective' | 'nearEnemyDz12' | 'dzAdvance' | `if:${string}`; // if:<cond>: +1 when the condition holds // dzAdvance: +1 out of your deployment zone, +1 more in the enemy's
   perModel?: boolean; // one die per model of this unit engaged with the target
   each?: { on: number; do: Action[] }; // per die: on X+
   table?: { min: number; max?: number; do: Action[] }[]; // by result
@@ -1047,6 +1048,7 @@ export function useAct(s: GameState, def: ActDef, targetId?: string, ctx: FireCt
       if (/psychic/i.test(def.name) && dice[0] === 1 && def.holder.enhancements?.some((e) => e.name === 'Warphead')) { dice[0] = rollN(s, 1)[0]; log(s, `Warphead: psychic roll of 1 re-rolled → ${dice[0]}`, 'roll', def.holder.owner); }
       let add = 0;
       if (def.spec.rollAdd === 'dzAdvance') add = (cond('whollyInOwnDz', { s, A: def.holder, holder: def.holder }) ? 0 : 1) + (cond('inEnemyDz', { s, A: def.holder, holder: def.holder }) ? 1 : 0);
+      if (def.spec.rollAdd?.startsWith('if:')) add = cond(def.spec.rollAdd.slice(3), { s, A: def.holder, holder: def.holder }) ? 1 : 0;
       if (def.spec.rollAdd === 'per5models') add = Math.floor(alive(def.holder).length / 5);
       if (def.spec.rollAdd === 'warlordInTarget2' && tg.isWarlordUnit) add = 2;
       if (def.spec.rollAdd === 'shockedEnemies') add = boardUnits(s, other(def.holder.owner)).filter((e) => e.battleShocked).length;
@@ -1575,7 +1577,7 @@ onModelKilled((s, u) => {
     const fl = unitFlags(s, f);
     if (isMark && fl.cpOnOathKill <= 6) { const r = d6(s); log(s, `${f.name}: focus of hatred destroyed, rolled ${r} (${fl.cpOnOathKill}+)${r >= fl.cpOnOathKill ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnOathKill) { P.cp += 1; notifyAbilityCpGain(s, p, 1, f.name); } }
     if (fl.cpOnKillNear && unitDistance(f, u) <= fl.cpOnKillNear.range + 1e-6) { const r = d6(s); log(s, `${f.name}: enemy unit destroyed nearby, rolled ${r} (${fl.cpOnKillNear.on}+)${r >= fl.cpOnKillNear.on ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnKillNear.on) { P.cp += 1; notifyAbilityCpGain(s, p, 1, f.name); } }
-    if (f.quarry === u.id && f.abilities.some((a) => ['Architect of Ruin', 'Monarch of the Hunt', 'Exemplar of the Code', 'Methodical Destruction'].includes(a.name))) {
+    if (f.quarry === u.id && f.abilities.some((a) => ['Architect of Ruin', 'Monarch of the Hunt', 'Prey of the Blood God', 'Exemplar of the Code', 'Methodical Destruction'].includes(a.name))) {
       const next = boardUnits(s, u.owner).sort((a, b) => b.pts - a.pts)[0];
       if (next) { f.quarry = next.id; log(s, `${f.name}: new hated foe → ${next.name}`, 'info', p); }
     }

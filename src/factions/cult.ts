@@ -95,7 +95,7 @@ function saveMarker(s: GameState, p: PlayerId): Pt | null {
   const P = s.players[p];
   for (const st of MARKER_STRATS) {
     if (!P.detachments?.some((d) => d.stratagems?.some((x) => x.id === st.id)) || canUseStratagem(s, p, st.id, undefined, 1)) continue;
-    const anchor = st.vehicle ? boardUnits(s, p).find((u) => hasKw(u, 'ASTRA MILITARUM') && hasKw(u, 'VEHICLE')) : undefined;
+    const anchor = st.vehicle ? boardUnits(s, p).find((u) => u.factionKeywords.includes('ASTRA MILITARUM') && hasKw(u, 'VEHICLE')) : undefined;
     if (st.vehicle && !anchor) continue;
     const spot = markerSpot(s, p, anchor);
     if (!spot) continue;
@@ -205,7 +205,7 @@ export function cultInfiltration(s: GameState) {
  *  the TYRANIDS unit (`tyr`) regains that many wounds (Synaptic Auger: twice) and gets +1 to Hit until the next Movement phase. */
 export function psionicParasitism(s: GameState, synapse: UnitState, tyr: UnitState, mortals: (u: UnitState, n: number) => void, heal: (u: UnitState, n: number) => void) {
   const near = (u: UnitState) => alive(u).some((m) => alive(synapse).some((n) => dist(m, n) - m.r - n.r <= 9 + 1e-6));
-  const gc = boardUnits(s, synapse.owner).filter((u) => hasKw(u, 'GENESTEALER CULTS') && !hasKw(u, 'PURESTRAIN GENESTEALERS') && !hasKw(u, 'PATRIARCH') && near(u))
+  const gc = boardUnits(s, synapse.owner).filter((u) => u.factionKeywords.includes('GENESTEALER CULTS') && !hasKw(u, 'PURESTRAIN GENESTEALERS') && !hasKw(u, 'PATRIARCH') && near(u))
     .sort((a, b) => a.pts / Math.max(1, alive(a).length) - b.pts / Math.max(1, alive(b).length))[0];
   if (!gc) { log(s, 'Psionic Parasitism: no GENESTEALER CULTS unit within 9"', 'info', synapse.owner); return; }
   const n = 1 + Math.ceil(rollN(s, 1)[0] / 2);
