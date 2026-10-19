@@ -18,20 +18,20 @@ Each cell: works / partial / text only / bug.
 | Faction | Army rules | Detachment rules | Enhancements | Stratagems | Unit abilities |
 |---|---|---|---|---|---|
 | Adeptus Custodes (AC) | 4 / 0 / 0 / 0 | 13 / 0 / 0 / 0 | 29 / 0 / 0 / 0 | 41 / 0 / 0 / 0 | 47 / 0 / 0 / 0 |
-| Aeldari (AE) | 1 / 1 / 1 / 0 | 15 / 0 / 0 / 0 | 52 / 0 / 0 / 0 | 78 / 0 / 0 / 0 | 152 / 0 / 1 / 0 |
-| Astra Militarum (AM) | 1 / 0 / 0 / 0 | 9 / 2 / 0 / 0 | 38 / 0 / 0 / 0 | 53 / 3 / 1 / 0 | 158 / 2 / 4 / 0 |
+| Aeldari (AE) | 3 / 0 / 0 / 0 | 15 / 0 / 0 / 0 | 52 / 0 / 0 / 0 | 78 / 0 / 0 / 0 | 152 / 0 / 1 / 0 |
+| Astra Militarum (AM) | 1 / 0 / 0 / 0 | 9 / 2 / 0 / 0 | 38 / 0 / 0 / 0 | 53 / 3 / 1 / 0 | 159 / 2 / 3 / 0 |
 | Adepta Sororitas (AS) | 1 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 24 / 0 / 1 / 0 | 35 / 1 / 0 / 0 | 83 / 0 / 0 / 0 |
 | Adeptus Mechanicus (AdM) | 1 / 0 / 0 / 0 | 9 / 1 / 0 / 0 | 32 / 1 / 1 / 0 | 49 / 0 / 1 / 0 | 78 / 0 / 0 / 0 |
 | Imperial Agents (AoI) | 2 / 0 / 0 / 0 | 5 / 0 / 0 / 0 | 20 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 88 / 0 / 0 / 0 |
 | Chaos Daemons (CD) | 3 / 0 / 0 / 0 | 8 / 1 / 0 / 0 | 28 / 1 / 0 / 0 | 46 / 0 / 0 / 0 | 135 / 1 / 0 / 0 |
 | Chaos Space Marines (CSM) | 1 / 0 / 0 / 0 | 17 / 0 / 0 / 0 | 62 / 0 / 0 / 0 | 93 / 0 / 0 / 0 | 119 / 0 / 0 / 0 |
 | Death Guard (DG) | 2 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 70 / 0 / 0 / 0 |
-| Drukhari (DRU) | 1 / 0 / 1 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 102 / 0 / 0 / 0 |
+| Drukhari (DRU) | 2 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 102 / 0 / 0 / 0 |
 | Emperor’s Children (EC) | 2 / 0 / 0 / 0 | 10 / 0 / 0 / 0 | 34 / 0 / 0 / 0 | 51 / 0 / 0 / 0 | 46 / 0 / 0 / 0 |
 | Genestealer Cults (GC) | 3 / 0 / 0 / 0 | 8 / 1 / 0 / 0 | 29 / 0 / 1 / 0 | 43 / 1 / 1 / 0 | 171 / 2 / 5 / 0 |
 | Grey Knights (GK) | 1 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 29 / 0 / 1 / 0 | 44 / 1 / 0 / 0 | 44 / 0 / 0 / 0 |
 | Leagues of Votann (LoV) | 1 / 0 / 0 / 0 | 10 / 0 / 0 / 0 | 34 / 0 / 0 / 0 | 50 / 1 / 0 / 0 | 55 / 0 / 0 / 0 |
-| Necrons (NEC) | 1 / 0 / 0 / 0 | 11 / 1 / 0 / 0 | 40 / 0 / 2 / 0 | 56 / 2 / 5 / 0 | 107 / 0 / 4 / 0 |
+| Necrons (NEC) | 1 / 0 / 0 / 0 | 11 / 1 / 0 / 0 | 40 / 1 / 1 / 0 | 57 / 2 / 4 / 0 | 108 / 0 / 3 / 0 |
 | Orks (ORK) | 3 / 0 / 0 / 0 | 15 / 0 / 0 / 0 | 38 / 0 / 0 / 0 | 40 / 0 / 0 / 0 | 109 / 0 / 0 / 0 |
 | Imperial Knights (QI) | 4 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 26 / 0 / 0 / 0 | 39 / 0 / 0 / 0 | 55 / 0 / 0 / 0 |
 | Chaos Knights (QT) | 3 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 28 / 0 / 0 / 0 | 39 / 0 / 0 / 0 | 45 / 0 / 0 / 0 |
@@ -39,17 +39,14 @@ Each cell: works / partial / text only / bug.
 | T’au Empire (TAU) | 1 / 0 / 0 / 0 | 7 / 0 / 0 / 0 | 21 / 2 / 0 / 0 | 25 / 3 / 0 / 0 | 94 / 1 / 0 / 0 |
 | Adeptus Titanicus (TL) | 2 / 0 / 0 / 0 | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 | 8 / 0 / 0 / 0 |
 | Thousand Sons (TS) | 2 / 0 / 0 / 0 | 9 / 0 / 0 / 0 | 30 / 0 / 0 / 0 | 45 / 0 / 0 / 0 | 62 / 0 / 0 / 0 |
-| Tyranids (TYR) | 2 / 0 / 0 / 0 | 9 / 0 / 1 / 0 | 32 / 1 / 1 / 0 | 45 / 2 / 4 / 0 | 76 / 3 / 2 / 0 |
+| Tyranids (TYR) | 2 / 0 / 0 / 0 | 9 / 0 / 1 / 0 | 32 / 1 / 1 / 0 | 46 / 3 / 2 / 0 | 79 / 0 / 2 / 0 |
 | World Eaters (WE) | 2 / 0 / 0 / 0 | 8 / 0 / 0 / 0 | 26 / 0 / 0 / 0 | 39 / 0 / 0 / 0 | 59 / 0 / 0 / 0 |
-| **All** | 47 / 1 / 2 / 0 | 249 / 6 / 1 / 0 | 805 / 5 / 7 / 0 | 1172 / 14 / 12 / 0 | 2293 / 9 / 16 / 0 |
+| **All** | 50 / 0 / 0 / 0 | 249 / 6 / 1 / 0 | 805 / 6 / 6 / 0 | 1174 / 15 / 9 / 0 | 2298 / 6 / 14 / 0 |
 
 ## Known bugs (engine work needed)
 
 | Faction | Rule | Problem |
 |---|---|---|
-| AE / DRU | Agile Manoeuvres (Battle Focus) | tokens are counted and shown; nothing lets you spend them |
-| all | multi-target stratagems (`extraTargets`) | the player can pick extra units; the bot never uses these stratagems |
-
 ## Bot use of stratagems in real games
 
 Two bot-vs-bot games per faction with its quick-play list. Only the list's own detachment can be used, so this samples one detachment per faction.
@@ -86,21 +83,19 @@ Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were check
 
 ## Text-only and partial rules by faction
 
-<details><summary>Aeldari (AE): 3</summary>
-
-**Army rules** (2): Agile Manoeuvres; Battle Focus [partial]
+<details><summary>Aeldari (AE): 1</summary>
 
 **Unit abilities** (1): Linked Fire (Fire Prism)
 
 </details>
 
-<details><summary>Astra Militarum (AM): 12</summary>
+<details><summary>Astra Militarum (AM): 11</summary>
 
 **Detachment rules** (2): Armoured Infantry [partial]; Steel Hammer [partial]
 
 **Stratagems** (4): CALLOUS SACRIFICE [partial]; CLOSE-RANGE DETECTION [partial]; COURAGEOUS DIVERSION [partial]; IMPOSING ARRIVAL
 
-**Unit abilities** (6): Counterstrategist (Commissar Yarrick) [partial]; Death Befitting An Officer (Leman Russ Commander); Deathstrike Missile (Deathstrike); Defence Line (Aegis Defence Line) [partial]; Plasma Warhead (Deathstrike); Vox-relay Beacon (Cadian Recon Squad)
+**Unit abilities** (5): Counterstrategist (Commissar Yarrick) [partial]; Death Befitting An Officer (Leman Russ Commander); Deathstrike Missile (Deathstrike); Defence Line (Aegis Defence Line) [partial]; Plasma Warhead (Deathstrike)
 
 </details>
 
@@ -132,12 +127,6 @@ Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were check
 
 </details>
 
-<details><summary>Drukhari (DRU): 1</summary>
-
-**Army rules** (1): Battle Focus
-
-</details>
-
 <details><summary>Genestealer Cults (GC): 11</summary>
 
 **Detachment rules** (1): Brood Brother Auxilia [partial]
@@ -164,15 +153,15 @@ Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were check
 
 </details>
 
-<details><summary>Necrons (NEC): 14</summary>
+<details><summary>Necrons (NEC): 12</summary>
 
 **Detachment rules** (1): Pantheon of Woe [partial]
 
-**Enhancements** (2): Reletavistic Tether; Relocational Optimiser
+**Enhancements** (2): Reletavistic Tether; Relocational Optimiser [partial]
 
-**Stratagems** (7): DIMENSIONAL CORRIDOR; DISHARMONISATION CASCADE [partial]; HYPERPHASIC RECALL; PHASE MELDING; SOLAR PULSE [partial]; SYNERGISTIC EMPOWERMENT; UNTAPPED POWER
+**Stratagems** (6): DISHARMONISATION CASCADE [partial]; HYPERPHASIC RECALL; PHASE MELDING; SOLAR PULSE [partial]; SYNERGISTIC EMPOWERMENT; UNTAPPED POWER
 
-**Unit abilities** (4): Atomic Energy Manipulator (Illuminor Szeras); Eternity Gate (Monolith); Surrogate Hosts (Trazyn The Infinite); Transdimensional Displacement (Transcendent C’tan)
+**Unit abilities** (3): Atomic Energy Manipulator (Illuminor Szeras); Surrogate Hosts (Trazyn The Infinite); Transdimensional Displacement (Transcendent C’tan)
 
 </details>
 
@@ -186,15 +175,15 @@ Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were check
 
 </details>
 
-<details><summary>Tyranids (TYR): 14</summary>
+<details><summary>Tyranids (TYR): 10</summary>
 
 **Detachment rules** (1): Talons of the Norn Queen
 
 **Enhancements** (2): Biophagic Flow (Aura); Psychostatic Disruption [partial]
 
-**Stratagems** (6): ADAPTIVE OPTIMISATION [partial]; OVERRUN [partial]; PRESERVATION IMPERATIVE; REPLENISHING SWARMS; SYNAPTIC GOADING; TUNNEL NETWORK
+**Stratagems** (5): ADAPTIVE OPTIMISATION [partial]; OVERRUN [partial]; PRESERVATION IMPERATIVE; REPLENISHING SWARMS [partial]; SYNAPTIC GOADING
 
-**Unit abilities** (5): Floating Death (Mucolid Spores) [partial]; Floating Death (Spore Mines) [partial]; Grasping Tendrils (Toxicrene) [partial]; Harpooned (Norn Assimilator); Parasitic Infection (Parasite Of Mortrex)
+**Unit abilities** (2): Harpooned (Norn Assimilator); Parasitic Infection (Parasite Of Mortrex)
 
 </details>
 

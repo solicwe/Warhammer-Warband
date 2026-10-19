@@ -481,6 +481,15 @@ const condText = (c: string) => COND_TH[c] ?? (c.startsWith('nearLast:') ? `must
 
 export interface StratUse { choice?: number; enemyId?: string; extraIds?: string[]; ctx?: ReactCtx }
 
+/** Units that can be the extra targets of a multi-target stratagem with `u` (both must have one of its keywords). */
+export function extraTargetUnits(s: GameState, p: PlayerId, rule: StratRule, u: UnitState): UnitState[] {
+  const q = rule.extraTargets;
+  if (!q) return [];
+  const has = (x: UnitState, k: string) => k.split('|').some((a) => x.keywords.includes(a) || x.sources.some((n) => n.toUpperCase() === a));
+  return boardUnits(s, p).filter((x) => x.id !== u.id && (!q.kw || [u, x].every((y) => q.kw!.some((k) => has(y, k)))) && !q.notKw?.some((k) => x.keywords.includes(k)) && !x.battleShocked)
+    .sort((a, b) => b.pts - a.pts);
+}
+
 /** The rule with the chosen option folded in. */
 export function withChoice(rule: StratRule, choice?: number): StratRule & { mark?: string; shock?: boolean; cpExtra?: number } {
   const o = choice !== undefined ? rule.choice?.[choice] : undefined;
@@ -512,6 +521,8 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
   if (rule.limit) (s.players[p].stratLimits ??= {})[st.id] = rule.limit === 'battle' ? -1 : s.round;
   const buffs = rule.buffs ?? [];
   const until = rule.until === 'turn' || rule.until === 'nextCommand' ? 'turn' : 'phase';
+  // multi-target stratagems: the bot (and automatic rules) add the most valuable units that qualify
+  if (rule.extraTargets && !use.extraIds && u && playsItself(s, p)) use = { ...use, extraIds: extraTargetUnits(s, p, rule, u).slice(0, rule.extraTargets.count - 1).map((x) => x.id) };
   const own = [u, ...(use.extraIds ?? []).map((id) => unitById(s, id))].filter((x): x is UnitState => !!x && x.owner === p);
   const enemies = rule.enemy
     ? (rule.enemy.all ? stratEnemies(s, p, rule, u, use.ctx) : [stratEnemies(s, p, rule, u, use.ctx).find((e) => e.id === use.enemyId) ?? stratEnemies(s, p, rule, u, use.ctx)[0]].filter((e): e is UnitState => !!e))
