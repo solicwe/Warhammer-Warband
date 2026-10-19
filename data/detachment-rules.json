@@ -7787,6 +7787,492 @@
           }
         }
       ]
+    },
+    "Doctrina Imperatives": {
+      "auto": "full",
+      "armyRule": true,
+      "choice": {
+        "name": "Doctrina Imperatives",
+        "when": "round",
+        "uses": "free",
+        "pick": 1,
+        "options": [
+          {
+            "id": "protector",
+            "name": "Protector Imperative",
+            "text": "Ranged [HEAVY] and +1 BS; near BATTLELINE: -1 to be hit in melee",
+            "effects": [
+              {
+                "units": [
+                  "ADEPTUS MECHANICUS"
+                ],
+                "if": [
+                  "hasAbility:Doctrina Imperatives"
+                ],
+                "attack": "ranged",
+                "abilities": [
+                  "heavy"
+                ],
+                "skill": 1
+              },
+              {
+                "units": [
+                  "ADEPTUS MECHANICUS"
+                ],
+                "if": [
+                  "hasAbility:Doctrina Imperatives",
+                  "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+                ],
+                "defend": {
+                  "vs": "melee",
+                  "hit": -1
+                }
+              }
+            ]
+          },
+          {
+            "id": "conqueror",
+            "name": "Conqueror Imperative",
+            "text": "Ranged [ASSAULT] and +1 WS; near BATTLELINE: +1 AP",
+            "effects": [
+              {
+                "units": [
+                  "ADEPTUS MECHANICUS"
+                ],
+                "if": [
+                  "hasAbility:Doctrina Imperatives"
+                ],
+                "attack": "ranged",
+                "abilities": [
+                  "assault"
+                ]
+              },
+              {
+                "units": [
+                  "ADEPTUS MECHANICUS"
+                ],
+                "if": [
+                  "hasAbility:Doctrina Imperatives"
+                ],
+                "attack": "melee",
+                "skill": 1
+              },
+              {
+                "units": [
+                  "ADEPTUS MECHANICUS"
+                ],
+                "if": [
+                  "hasAbility:Doctrina Imperatives",
+                  "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+                ],
+                "ap": 1
+              }
+            ]
+          }
+        ]
+      },
+      "manual": "Chosen in your first Command phase of each battle round (the card: at the start of the battle round)"
+    },
+    "Rad-Zone Corps": {
+      "auto": "full",
+      "acts": [
+        {
+          "when": "battleStart",
+          "auto": true,
+          "armyWide": true,
+          "units": [
+            "ADEPTUS MECHANICUS"
+          ],
+          "limit": "battle",
+          "target": {
+            "side": "enemy",
+            "anywhere": true,
+            "each": true
+          },
+          "roll": "D6",
+          "table": [
+            {
+              "min": 3,
+              "do": [
+                {
+                  "on": "target",
+                  "mortals": "D3",
+                  "if": [
+                    "targetInOwnDz"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "when": "commandStart",
+          "auto": true,
+          "armyWide": true,
+          "units": [
+            "ADEPTUS MECHANICUS"
+          ],
+          "limit": "turn",
+          "if": [
+            "roundAtLeast:2"
+          ],
+          "target": {
+            "side": "enemy",
+            "anywhere": true,
+            "each": true
+          },
+          "roll": "D6",
+          "table": [
+            {
+              "min": 3,
+              "do": [
+                {
+                  "on": "target",
+                  "mortals": "1",
+                  "if": [
+                    "targetInOwnDz"
+                  ]
+                },
+                {
+                  "on": "target",
+                  "shock": 0,
+                  "if": [
+                    "targetInOwnDz"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "manual": "Bombardment: every enemy unit stands firm (D3 mortal wounds on a 3+); taking cover is not offered"
+    },
+    "Skitarii Hunter Cohort": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "SKITARII",
+            "INFANTRY|MOUNTED"
+          ],
+          "stealth": true
+        },
+        {
+          "units": [
+            "IRONSTRIDER BALLISTARII"
+          ],
+          "stealth": true
+        }
+      ]
+    },
+    "Data-Psalm Conclave": {
+      "auto": "full",
+      "choice": {
+        "name": "Benedictions of the Omnissiah",
+        "when": "battle",
+        "uses": "free",
+        "pick": 1,
+        "options": [
+          {
+            "id": "procession",
+            "name": "Panegyric Procession",
+            "text": "Ranged attacks within half range: +1 AP",
+            "effects": [
+              {
+                "units": [
+                  "CULT MECHANICUS"
+                ],
+                "attack": "ranged",
+                "if": [
+                  "halfRange"
+                ],
+                "ap": 1
+              }
+            ]
+          },
+          {
+            "id": "savagery",
+            "name": "Citation in Savagery",
+            "text": "After charging: +1 S and A in melee",
+            "effects": [
+              {
+                "units": [
+                  "CULT MECHANICUS"
+                ],
+                "attack": "melee",
+                "if": [
+                  "charged"
+                ],
+                "strength": 1,
+                "attacks": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "Explorator Maniple": {
+      "auto": "full",
+      "code": true,
+      "effects": [
+        {
+          "units": [
+            "ADEPTUS MECHANICUS"
+          ],
+          "if": [
+            "any:onAcquisition||targetOnAcquisition"
+          ],
+          "reroll": "wounds1"
+        }
+      ],
+      "manual": "The Acquisition objective is picked in your Command phase: the closest one you do not control (admech.ts)"
+    },
+    "Cohort Cybernetica": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "LEGIO CYBERNETICA"
+          ],
+          "move": 2
+        },
+        {
+          "units": [
+            "LEGIO CYBERNETICA"
+          ],
+          "if": [
+            "notBattleShocked"
+          ],
+          "oc": 1
+        }
+      ]
+    },
+    "Haloscreed Battle Clade": {
+      "auto": "partial",
+      "choice": {
+        "name": "Override ability",
+        "when": "command",
+        "uses": "free",
+        "pick": 1,
+        "options": [
+          {
+            "id": "electromotive",
+            "name": "Electromotive Energisation",
+            "text": "+2\" Move",
+            "effects": [
+              {
+                "units": [
+                  "HALO OVERRIDE"
+                ],
+                "move": 2
+              }
+            ]
+          },
+          {
+            "id": "bracing",
+            "name": "Microactuator Bracing",
+            "text": "+1 Toughness",
+            "effects": [
+              {
+                "units": [
+                  "HALO OVERRIDE"
+                ],
+                "toughness": 1
+              }
+            ]
+          },
+          {
+            "id": "predation",
+            "name": "Predation Protocols",
+            "text": "Charge after Advancing",
+            "effects": [
+              {
+                "units": [
+                  "HALO OVERRIDE"
+                ],
+                "eligible": [
+                  "chargeAfterAdvance"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "muted",
+            "name": "Muted Servomotors",
+            "text": "Stealth",
+            "effects": [
+              {
+                "units": [
+                  "HALO OVERRIDE"
+                ],
+                "stealth": true
+              }
+            ]
+          }
+        ]
+      },
+      "acts": [
+        {
+          "when": "command",
+          "units": [
+            "ADEPTUS MECHANICUS"
+          ],
+          "limit": "phase",
+          "per": "army",
+          "uses": "battleSize",
+          "label": "Noospheric Transference: this unit gains HALO OVERRIDE",
+          "botUse": "always",
+          "do": [
+            {
+              "on": "self",
+              "buff": [
+                {
+                  "addKeywords": [
+                    "HALO OVERRIDE"
+                  ]
+                }
+              ],
+              "until": "nextCommand"
+            }
+          ]
+        }
+      ],
+      "manual": "HALO OVERRIDE is given with a button on each unit (up to 1 / 2 / 3)"
+    },
+    "Eradication Cohort": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "SKITARII"
+          ],
+          "if": [
+            "detActive:protector"
+          ],
+          "reroll": "hits1"
+        },
+        {
+          "units": [
+            "SKITARII"
+          ],
+          "if": [
+            "detActive:conqueror"
+          ],
+          "reroll": "wounds1"
+        }
+      ]
+    },
+    "Cohort Acquisitus": {
+      "auto": "full",
+      "acts": [
+        {
+          "when": "shooting",
+          "units": [
+            "PTERAXII|INFILTRATORS|RANGERS|SERBERYS RAIDERS|SERBERYS SULPHURHOUNDS"
+          ],
+          "limit": "phase",
+          "label": "Enhanced Augurs: an enemy unit within 12\" is analysed (+3\" detection range)",
+          "botUse": "always",
+          "target": {
+            "side": "enemy",
+            "range": 12,
+            "visible": true
+          },
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "detection": 3
+                }
+              ],
+              "until": "turn",
+              "mark": "analysed"
+            }
+          ]
+        }
+      ]
+    },
+    "Lords of the Forge": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "TECH-PRIEST"
+          ],
+          "scope": "model",
+          "if": [
+            "modelKw:TECH-PRIEST"
+          ],
+          "defend": {
+            "inv": 4,
+            "fnp": 5
+          }
+        }
+      ],
+      "acts": [
+        {
+          "when": "selectedToShoot",
+          "units": [
+            "TECH-PRIEST"
+          ],
+          "if": [
+            "notBattleShocked"
+          ],
+          "limit": "phase",
+          "label": "Baffling Data Screed: 2+, an enemy VEHICLE within 12\" takes a Battle-shock test at -1",
+          "botUse": "always",
+          "target": {
+            "side": "enemy",
+            "range": 12,
+            "units": [
+              "VEHICLE"
+            ]
+          },
+          "roll": "D6",
+          "table": [
+            {
+              "min": 2,
+              "do": [
+                {
+                  "on": "target",
+                  "shock": -1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "manual": "Staying hidden after shooting (the other option) is not offered"
+    },
+    "Luminen Auto-choir": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "CORPUSCARII"
+          ],
+          "attack": "ranged",
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "acts": [
+        {
+          "when": "afterFighting",
+          "auto": true,
+          "units": [
+            "FULGURITE"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "heal": "D3"
+            }
+          ]
+        }
+      ]
     }
   }
 }

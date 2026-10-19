@@ -1,257 +1,794 @@
 {
-  "_comment": "Adeptus Mechanicus Faction Pack v1.4. Complete datasheet, detachment, enhancement, and army rules.",
   "Doctrina Imperatives": {
+    "code": true,
     "status": "auto",
-    "note": "At the start of the battle round, you can select one of the Doctrina Imperatives below. Until the end of the battle round, that Doctrina Imperative is active for your army, and all units from your army that have the Doctrina Imperatives ability gain the relevant abilities shown below."
+    "note": "The Imperative chosen for the battle round (army rule)"
   },
   "Canticles of the Omnissiah": {
-    "status": "auto",
-    "note": "At the start of your Command phase, select one of the abilities in the Canticles of the Omnissiah section. Until the start of your next Command phase, this model has that ability."
+    "status": "manual",
+    "note": "Not automated: the Canticles are not in the data"
   },
   "Mechanicus Bodyguard": {
-    "status": "auto",
-    "note": "While this model is within 3\" of one or more other friendly ADEPTUS MECHANICUS units, this model has the Lone Operative ability."
+    "effects": [
+      {
+        "if": [
+          "near:3:ADEPTUS MECHANICUS"
+        ],
+        "loneOperative": true
+      }
+    ]
   },
   "Self-repair Mechanisms": {
-    "status": "auto",
-    "note": "At the start of your Command phase, this model regains up to D3 lost wounds."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "if": [
+        "belowStartingW"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "heal": "D3"
+        }
+      ]
+    }
   },
-  "SUPREME COMMANDER": { "code": true,
-    "status": "auto",
-    "note": "If this model is in your army, it must be your Warlord."
+  "SUPREME COMMANDER": {
+    "status": "info",
+    "note": "Army building: must be your WARLORD"
   },
   "Invocation of Machine Vengeance": {
-    "status": "auto",
-    "note": "At the start of your Command phase, select one unit from your opponent’s army. Until the start of your next Command phase, that enemy unit is your Machine Vengeance target. Each time a model in a friendly Adeptus Mechanicus unit makes an attack that targets your Machine Vengeance target, you can re-roll the Hit roll."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "turn",
+      "target": {
+        "side": "enemy",
+        "anywhere": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "ADEPTUS MECHANICUS"
+            ],
+            "reroll": "hits"
+          },
+          "until": "nextCommand",
+          "mark": "Machine Vengeance"
+        }
+      ]
+    },
+    "note": "The closest enemy unit"
   },
   "Mantra of Discipline": {
-    "status": "auto",
-    "note": "This model has the BATTLELINE keyword and has the following ability: • Binharic Courage (Aura): While a friendly ADEPTUS MECHANICUS unit is within 6\" of this model, add 1 to the Objective Control characteristic of models in that unit and each time you take a Battle-shock or Leadership test for that ..."
+    "effects": [
+      {
+        "addKeywords": [
+          "BATTLELINE"
+        ]
+      },
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "ADEPTUS MECHANICUS"
+        ],
+        "oc": 1,
+        "shockBonus": 1
+      }
+    ]
   },
   "Shroudpsalm (Aura)": {
-    "status": "auto",
-    "note": "While a friendly ADEPTUS MECHANICUS unit is within 6\" of this model, that unit has the Stealth ability.",
     "effects": [
       {
         "scope": "aura",
         "range": 6,
+        "units": [
+          "ADEPTUS MECHANICUS"
+        ],
         "stealth": true
       }
     ]
   },
-  "Leader": { "code": true,
-    "status": "auto",
-    "note": "LEADER24.22 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
-  },
   "Lord of the Machine Cult": {
-    "status": "auto",
-    "note": "While this model is leading a unit, models in that unit have the Feel No Pain 5+ ability. If that unit has the Electro-Priests keyword, models in that unit have the Feel No Pain 4+ ability instead.",
     "effects": [
       {
         "scope": "led",
-        "fnp": 5
+        "if": [
+          "!kw:ELECTRO-PRIESTS"
+        ],
+        "defend": {
+          "fnp": 5
+        }
+      },
+      {
+        "scope": "led",
+        "if": [
+          "kw:ELECTRO-PRIESTS"
+        ],
+        "defend": {
+          "fnp": 4
+        }
       }
     ]
   },
   "Data-spike": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, you can select one enemy VEHICLE unit within Engagement Range of this model’s unit and roll one D6: on a 4+, that enemy unit suffers D6 mortal wounds and, until the end of the phase, the Weapon Skill characteristic of melee weapons equipped by that enemy unit is worsened by 1."
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true,
+        "units": [
+          "VEHICLE"
+        ],
+        "closest": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 4,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D6"
+            },
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "attack": "melee",
+                  "skill": -1
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ]
+    }
   },
   "Enginseer": {
-    "status": "auto",
-    "note": "While this model is within 3\" of one or more friendly Adeptus Mechanicus Vehicle units, unless it is leading a unit, this model has the Lone Operative ability."
-  },
-  "Omnissiah’s Blessing": {
-    "status": "auto",
-    "note": "In your Command phase, select one friendly ADEPTUS MECHANICUS model within 3\" of this model. That model regains up to D3 lost wounds and, if it is a VEHICLE model, until the start of your next Command phase, that model has the Feel No Pain 5+ ability."
-  },
-  "Vengeance for the Omnissiah": { "code": true,
-    "status": "auto",
-    "note": "If a friendly Adeptus Mechanicus Vehicle model is destroyed within 12\" of this model, until the end of the battle, this model’s Omnissian axe has an Attacks characteristic of 6."
-  },
-  "Breaching Command": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes an attack, re-roll a Hit roll of 1. While this unit is within 6\" of one or more friendly Adeptus Mechanicus Battleline units, you can re-roll the Hit roll instead."
-  },
-  "Sentinel Directives": {
-    "status": "auto",
-    "note": "Each time you target this unit with the Fire Overwatch Stratagem, hits are scored on unmodified Hit rolls of 5+ when resolving that Stratagem."
-  },
-  "Feel No Pain": { "code": true,
-    "status": "auto",
-    "note": "FEEL NO PAIN24.12 The hardiest warriors refuse to be laid low, even by wounds that should by all rights prove lethal. This ability always takes the form Feel No Pain X+. Each time a model with this ability would lose a wound, roll one D6: on an X+, that wound is not lost."
-  },
-  "Electro-infusion": {
-    "status": "auto",
-    "note": "While a CHARACTER model is leading this unit, each time an attack targets this unit, subtract 1 from the Wound roll."
-  },
-  "Electro-shock": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, select one enemy unit (excluding MONSTERS and VEHICLES) hit by one or more of those attacks. Until the end of your opponent’s next turn, that enemy unit is shocked."
-  },
-  "Deadly Demise": { "code": true,
-    "status": "auto",
-    "note": "DEADLY DEMISE24.08 From detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat. This ability always takes the form Deadly Demise X."
-  },
-  "Robotic Bodyguard": {
-    "status": "auto",
-    "note": "While a Cybernetica Datasmith model is leading this unit, that model has the Feel No Pain 4+ ability."
-  },
-  "Repulsor Grid": {
-    "status": "auto",
-    "note": "When an enemy unit targets this unit with ranged attacks, until that enemy unit has shot, when this unit makes a save roll: • On an unmodified 6, that enemy unit suffers 1 mortal wound after that enemy unit has shot."
-  },
-  "Support": { "code": true,
-    "status": "auto",
-    "note": "SUPPORT24.34 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
-  },
-  "Battle Protocols": {
-    "status": "auto",
-    "note": "At the start of the battle, if this model is leading a KASTELAN ROBOTS unit, that unit enters Aegis Protocols (see below). In your Command phase, if this model is leading a KASTELAN ROBOTS unit, you can select one protocol from those listed below for that unit to enter."
-  },
-  "Data-severed": {
-    "status": "auto",
-    "note": "If there are no KASTELAN ROBOT models in this unit: • This unit loses VEHICLE. • This unit has INFANTRY."
-  },
-  "Scouts": { "code": true,
-    "status": "auto",
-    "note": "SCOUTS24.31 Scouts form the vanguard of many armies. Unnoticed by the enemy, they range ahead of the main force. This ability always takes the form Scouts X\"."
-  },
-  "Enhanced data-tether": {
-    "status": "auto",
-    "note": "Each time you select the bearer’s unit as the target of a Stratagem, roll one D6: on a 5+, you gain 1CP."
-  },
-  "Omnispex": {
-    "status": "auto",
-    "note": "Ranged weapons equipped by models in the bearer’s unit have the [IGNORES COVER] ability.",
     "effects": [
       {
+        "if": [
+          "near:3:ADEPTUS MECHANICUS+VEHICLE",
+          "!leaderAttached"
+        ],
+        "loneOperative": true
+      }
+    ]
+  },
+  "Omnissiah’s Blessing": {
+    "act": {
+      "when": "command",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "friendly",
+        "range": 3,
+        "units": [
+          "ADEPTUS MECHANICUS"
+        ],
+        "damaged": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "heal": "D3"
+        },
+        {
+          "on": "target",
+          "if": [
+            "targetKw:VEHICLE"
+          ],
+          "buff": [
+            {
+              "defend": {
+                "fnp": 5
+              }
+            }
+          ],
+          "until": "nextCommand"
+        }
+      ]
+    }
+  },
+  "Vengeance for the Omnissiah": {
+    "act": {
+      "when": "friendlyDeath",
+      "auto": true,
+      "range": 12,
+      "deathUnits": [
+        "ADEPTUS MECHANICUS",
+        "VEHICLE"
+      ],
+      "needUnitDestroyed": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "buff": [
+            {
+              "weapon": "Omnissian axe",
+              "attacksTo": 6
+            }
+          ],
+          "until": "battle"
+        }
+      ]
+    },
+    "note": "When a whole ADEPTUS MECHANICUS VEHICLE unit within 12\" is destroyed"
+  },
+  "Breaching Command": {
+    "effects": [
+      {
+        "if": [
+          "!near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "reroll": "hits1"
+      },
+      {
+        "if": [
+          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "reroll": "hits"
+      }
+    ]
+  },
+  "Sentinel Directives": {
+    "effects": [
+      {
+        "overwatchHitOn": 5
+      }
+    ]
+  },
+  "Electro-infusion": {
+    "effects": [
+      {
+        "if": [
+          "leaderAttached"
+        ],
+        "defend": {
+          "wound": -1
+        }
+      }
+    ]
+  },
+  "Electro-shock": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "move": -2,
+              "advanceBonus": -2,
+              "chargeBonus": -2
+            }
+          ],
+          "until": "endOfNextTurn",
+          "mark": "shocked"
+        }
+      ]
+    }
+  },
+  "Robotic Bodyguard": {
+    "effects": [
+      {
+        "if": [
+          "leader:Cybernetica Datasmith"
+        ],
+        "defend": {
+          "fnp": 4,
+          "charOnly": true
+        }
+      }
+    ]
+  },
+  "Repulsor Grid": {
+    "status": "manual",
+    "note": "Not automated: mortal wounds back for unmodified 6s on saves"
+  },
+  "Battle Protocols": {
+    "act": [
+      {
+        "when": "command",
+        "limit": "phase",
+        "if": [
+          "contains:Kastelan"
+        ],
+        "botUse": "always",
+        "label": "Battle Protocols: Protector Protocol (+2 A ranged)",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "attack": "ranged",
+                "attacks": 2,
+                "if": [
+                  "modelKw:KASTELAN ROBOT"
+                ]
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      },
+      {
+        "when": "command",
+        "limit": "phase",
+        "if": [
+          "contains:Kastelan"
+        ],
+        "botUse": "never",
+        "label": "Battle Protocols: Conqueror Protocol (+2 A melee)",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "attack": "melee",
+                "attacks": 2,
+                "if": [
+                  "modelKw:KASTELAN ROBOT"
+                ]
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      },
+      {
+        "when": "command",
+        "limit": "phase",
+        "if": [
+          "contains:Kastelan"
+        ],
+        "botUse": "never",
+        "label": "Battle Protocols: Aegis Protocol (+1 T)",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "toughness": 1
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      }
+    ],
+    "note": "Picked again each Command phase (the card: it lasts until another is picked; Aegis at the start)"
+  },
+  "Data-severed": {
+    "status": "info",
+    "note": "Without KASTELAN ROBOT models the Datasmith counts as INFANTRY"
+  },
+  "Enhanced data-tether": {
+    "effects": [
+      {
+        "stratCpChance": 5
+      }
+    ],
+    "gear": true
+  },
+  "Omnispex": {
+    "gear": true,
+    "effects": [
+      {
+        "attack": "ranged",
         "abilities": [
           "ignores cover"
-        ],
-        "attack": "ranged"
+        ]
       }
     ]
   },
   "Objective Scouted": {
-    "status": "auto",
-    "note": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "if": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "secure": true
+        }
+      ]
+    }
   },
   "Rad-saturation (Aura)": {
-    "status": "auto",
-    "note": "While an enemy unit (excluding VEHICLE units) is within 3\" of this unit, subtract 1 from the Objective Control characteristic of models in that unit."
-  },
-  "Infiltrators": { "code": true,
-    "status": "auto",
-    "note": "INFILTRATORS24.20 Many armies employ reconnaissance units who can sit concealed, waiting for the right moment to strike. During deployment, if every model in a unit has this ability, it can be set up anywhere on the battlefield that is more than 8\" horizontally from your opponent’s deployment zone and all enemy units."
-  },
-  "Stealth": { "code": true,
-    "status": "auto",
-    "note": "STEALTH24.33 The stealthiest warriors can evade the attentions, and the bullets, of their foes. If every model in a unit has this ability, each time a ranged attack targets that unit, that unit has the benefit of cover against that attack (13.08)."
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 3,
+        "if": [
+          "!kw:VEHICLE"
+        ],
+        "oc": -1
+      }
+    ]
   },
   "Voices in the Code": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, each enemy unit within Engagement Range of one or more units with this ability must take a Battle-shock test."
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true,
+        "each": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    }
   },
   "Neurostatic Interference (Aura)": {
-    "status": "auto",
-    "note": "While an enemy unit is within 6\" of this unit, each time a Battle-shock or Leadership test is taken for that unit, subtract 1 from that test. While this unit is within 6\" of one or more friendly Adeptus Mechanicus Battleline units, subtract 2 from that test instead."
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 6,
+        "shockBonus": -1
+      },
+      {
+        "if": [
+          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "scope": "enemyAura",
+        "range": 6,
+        "shockBonus": -1
+      }
+    ],
+    "note": "-2 near an ADEPTUS MECHANICUS BATTLELINE unit"
   },
   "Optimised Gait": {
-    "status": "auto",
-    "note": "Add 1 to Advance and Charge rolls made for this unit. While this unit is within 6\" of one or more friendly Adeptus Mechanicus Battleline units, add 2 to Advance and Charge rolls made for this unit instead."
+    "effects": [
+      {
+        "advanceBonus": 1,
+        "chargeBonus": 1
+      },
+      {
+        "if": [
+          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "advanceBonus": 1,
+        "chargeBonus": 1
+      }
+    ]
   },
   "Elevated Strider": {
-    "status": "auto",
-    "note": "This unit is eligible to shoot in a turn in which it Fell Back or Advanced, and you can re-roll Desperate Escape tests taken for models in this unit."
+    "effects": [
+      {
+        "eligible": [
+          "shootAfterFallBack",
+          "shootAfterAdvance"
+        ]
+      }
+    ],
+    "note": "Re-rolling Desperate Escape tests is not applied"
   },
   "Broad Spectrum Data-tether": {
-    "status": "auto",
-    "note": "Each time you target this unit with a Stratagem, roll one D6: on a 5+, you gain 1CP."
-  },
-  "Dynamic Efficiency": {
-    "status": "auto",
-    "note": "This unit is eligible to declare a charge in a turn in which it Advanced or Fell Back, and you can re-roll Desperate Escape tests taken for models in this unit."
+    "effects": [
+      {
+        "stratCpChance": 5
+      }
+    ]
   },
   "Broad spectrum data-tether": {
-    "status": "auto",
-    "note": "The bearer loses the SMOKE keyword, but each time you target the bearer with a Stratagem, roll one D6: on a 5+, you gain 1CP."
+    "effects": [
+      {
+        "stratCpChance": 5
+      }
+    ],
+    "gear": true
+  },
+  "Dynamic Efficiency": {
+    "effects": [
+      {
+        "eligible": [
+          "chargeAfterAdvance",
+          "chargeAfterFallBack"
+        ]
+      }
+    ],
+    "note": "Re-rolling Desperate Escape tests is not applied"
   },
   "Emanatus Force Field (Aura)": {
-    "status": "auto",
-    "note": "While a friendly ADEPTUS MECHANICUS BATTLELINE model is wholly within 6\" of this model, that BATTLELINE model has a 4+ invulnerable save against ranged attacks."
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "ADEPTUS MECHANICUS",
+          "BATTLELINE"
+        ],
+        "defend": {
+          "vs": "ranged",
+          "inv": 4
+        }
+      }
+    ]
   },
   "Scuttling Walker": {
-    "status": "auto",
-    "note": "Each time this model makes a Normal, Advance or Fall Back move, it can move through friendly Monster and Vehicle models and sections of terrain features that are 4\" or less in height."
+    "effects": [
+      {
+        "mobile": true
+      }
+    ]
   },
   "Galvanic Field": {
-    "status": "auto",
-    "note": "While this model is leading a unit, weapons equipped by models in that unit have the [LETHAL HITS] ability."
+    "effects": [
+      {
+        "scope": "led",
+        "abilities": [
+          "lethal hits"
+        ]
+      }
+    ]
   },
   "Defend the Divine Work": {
-    "status": "auto",
-    "note": "Once per battle, at the start of any phase, this model can use this ability. If it does, until the end of the phase, all models in this model’s unit have a 4+ invulnerable save."
-  },
-  "Firing Deck": { "code": true,
-    "status": "auto",
-    "note": "FIRING DECK24.14 Some transports have dedicated platforms or firing ports from which embarked passengers can lay down a withering hail of munitions. This ability always takes the form Firing Deck X."
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "label": "Defend the Divine Work: 4+ invulnerable save this phase",
+      "botUse": "damaged",
+      "do": [
+        {
+          "on": "self",
+          "buff": [
+            {
+              "defend": {
+                "inv": 4
+              }
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Fire Support": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, select one enemy unit it scored one or more hits against this phase. Until the end of the phase, each time a friendly model that disembarked from this Transport this turn makes an attack that targets that enemy unit, you can re-roll the Wound roll."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "reroll": "wounds"
+          },
+          "fromThisTransport": true,
+          "until": "phase",
+          "mark": "Fire Support"
+        }
+      ]
+    }
   },
   "Blistering Salvoes": {
-    "status": "auto",
-    "note": "Each time this model makes an attack with a belleros energy cannon that targets an INFANTRY unit, add 1 to the Hit roll. Each time this model makes an attack with a ferrumite cannon that targets a MONSTER or VEHICLE unit, add 1 to the Hit roll."
+    "effects": [
+      {
+        "weapon": "belleros energy cannon",
+        "if": [
+          "targetInfantry"
+        ],
+        "hit": 1
+      },
+      {
+        "weapon": "ferrumite cannon",
+        "if": [
+          "targetMV"
+        ],
+        "hit": 1
+      }
+    ]
   },
   "Line-breakers": {
-    "status": "auto",
-    "note": "Each time this unit ends a Charge move, select one enemy unit within Engagement Range of it and roll one D6 for each model in this unit that is within Engagement Range of that enemy unit, adding 2 to the result if this unit started its Charge move within 6\" of one or more friendly ADEPTUS MECHANICUS..."
+    "act": {
+      "when": "endOfCharge",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "all": true,
+            "plusIf": [
+              "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+            ],
+            "plus": 2
+          }
+        }
+      ]
+    },
+    "note": "+2 when within 6\" of a BATTLELINE unit after the charge (the card: when it started the charge)"
   },
   "Tactica Obliqua": {
-    "status": "auto",
-    "note": "In your opponent’s Movement phase, if an enemy unit ends a move within 8\" of this unit, if this unit is not within Engagement Range of one or more enemy units, it can do one of the following: • Make a Normal move of up to D6\" • Make a Normal move of up to 6\" provided every model in this unit ends th..."
-  },
-  "Deep Strike": { "code": true,
-    "status": "auto",
-    "note": "DEEP STRIKE24.09 There are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation. Each time this unit makes an ingress move (20."
+    "act": [
+      {
+        "when": "enemyMovedNear",
+        "range": 8,
+        "limit": "phase",
+        "if": [
+          "unengaged",
+          "!near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "move": "D6"
+          }
+        ]
+      },
+      {
+        "when": "enemyMovedNear",
+        "range": 8,
+        "limit": "phase",
+        "if": [
+          "unengaged",
+          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "move": "6"
+          }
+        ]
+      }
+    ],
+    "note": "6\" when it starts near a BATTLELINE unit (the card: when it ends wholly within 6\" of one)"
   },
   "Searing Conflagration": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes an attack with a phosphor torch that targets an enemy unit within range of an objective marker, re-roll a Wound roll of 1."
+    "effects": [
+      {
+        "weapon": "phosphor torch",
+        "if": [
+          "targetInRangeOfObjective",
+          "!near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "reroll": "wounds1"
+      },
+      {
+        "weapon": "phosphor torch",
+        "if": [
+          "targetInRangeOfObjective",
+          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "reroll": "wounds"
+      }
+    ]
   },
   "Ride the Thermals": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, if it is not within Engagement Range of one or more enemy units, it can do one of the following: • Make a Normal move of up to 6\"."
-  },
-  "Hover": { "code": true,
-    "status": "auto",
-    "note": "HOVER24.17 Some airborne vehicles can use vectored thrusters or anti-gravity technology to hover and skim over the battlefield, the better to hunt their prey or deploy embarked troops. Each time this unit takes to the skies (21.03), do not subtract 2\" from the maximum distance."
+    "act": [
+      {
+        "when": "afterShootingButton",
+        "if": [
+          "notEngaged"
+        ],
+        "label": "Ride the Thermals: Normal move of up to 6\" (no charge)",
+        "botUse": "never",
+        "do": [
+          {
+            "on": "self",
+            "move": "6",
+            "noCharge": true
+          }
+        ]
+      },
+      {
+        "when": "afterShootingButton",
+        "if": [
+          "notEngaged",
+          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "label": "Ride the Thermals: Normal move of up to 12\" ending wholly within 6\" of a BATTLELINE unit (no charge)",
+        "botUse": "never",
+        "do": [
+          {
+            "on": "self",
+            "move": "12",
+            "noCharge": true
+          }
+        ]
+      }
+    ]
   },
   "Chaff Launcher": {
-    "status": "auto",
-    "note": "The bearer has the SMOKE keyword."
+    "gear": true,
+    "effects": [
+      {
+        "addKeywords": [
+          "SMOKE"
+        ]
+      }
+    ]
   },
-  "Command Uplink": { "code": true,
-    "status": "auto",
-    "note": "Each time you select the bearer’s unit as the target of a Stratagem, roll one D6: on a 5+, you gain 1CP."
+  "Command Uplink": {
+    "effects": [
+      {
+        "stratCpChance": 5
+      }
+    ],
+    "gear": true
   },
   "Aerial Deployment": {
-    "status": "auto",
-    "note": "In your first Movement phase, this unit can make an ingress move."
+    "effects": [
+      {
+        "arriveFromRound": 1
+      }
+    ]
   },
   "Strafing Run": {
-    "status": "auto",
-    "note": "Each time this model makes a ranged attack that targets an enemy unit (excluding units that can FLY), add 1 to the Hit roll."
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "targetNotFly"
+        ],
+        "hit": 1
+      }
+    ]
   },
   "Bomb Rack": {
-    "status": "auto",
-    "note": "At the end of your opponent’s Fight phase, select one visible enemy unit (excluding Lone Operative units) within 24\" of this unit, and roll six D6 for that unit: for each 4+, that unit suffers 1 mortal wound."
+    "act": {
+      "when": "opponentFightEnd",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 24,
+        "visible": true,
+        "notLoneOperative": true,
+        "closest": true
+      },
+      "roll": "D6",
+      "rollCount": 6,
+      "each": {
+        "on": 4,
+        "do": [
+          {
+            "on": "target",
+            "mortals": "1"
+          }
+        ]
+      }
+    }
   },
   "Seekers of Divine Arcana": {
-    "status": "auto",
-    "note": "While this model is leading a unit, add 1 to the Objective Control characteristic of models in that unit.",
     "effects": [
       {
         "scope": "led",
@@ -260,258 +797,842 @@
     ]
   },
   "Cogitative Instincts": {
-    "status": "auto",
-    "note": "Enemy units that are set up on the battlefield as Reinforcements cannot be set up within 12\" horizontally of this model."
+    "effects": [
+      {
+        "omniScrambler": 12
+      }
+    ]
   },
   "Control Edict": {
-    "status": "auto",
-    "note": "While this model is leading a unit, each time a model in that unit makes an attack, you can re-roll the Hit roll.",
     "effects": [
       {
         "scope": "led",
-        "reroll": "hits1"
+        "reroll": "hits"
       }
     ]
   },
   "Servo-skull Uplink": {
-    "status": "auto",
-    "note": "Once per battle, at the start of any phase, you can select one friendly Skitarii unit that is Battle-shocked and within 6\" of this model. That unit is no longer Battle-shocked."
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "label": "Servo-skull Uplink: a Battle-shocked SKITARII unit within 6\" recovers",
+      "botUse": "always",
+      "target": {
+        "side": "friendly",
+        "range": 6,
+        "shocked": true,
+        "units": [
+          "SKITARII"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "unshock": true
+        }
+      ]
+    }
   },
   "Focused Hunters": {
-    "status": "auto",
-    "note": "At the start of the battle, select one unit from your opponent’s army. Until the end of the battle, each time a model in this unit makes an attack that targets that unit, you can re-roll the Hit roll."
-  },
-  "Lone Operative": { "code": true,
-    "status": "auto",
-    "note": "LONE OPERATIVE24.24 Assassins and other covert agents are difficult to pinpoint in the storm of battle. Unless part of an attached unit, this unit is not visible to enemy models unless they are within 12\" of this unit, and it cannot be targeted by [INDIRECT FIRE] weapons unless the attacking model i..."
-  },
-  "Dread Snipers": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. That unit must take a Battle-shock test."
-  },
-  "Achillan Eye": {
-    "status": "auto",
-    "note": "Each time this model makes an attack with a radium jezzail that targets an INFANTRY unit, you can re-roll the Wound roll. Each time this model makes an attack with a Skatros transuranic arquebus that targets a MONSTER or VEHICLE unit, you can re-roll the Wound roll."
-  },
-  "SYDONIAN SENTINEL": {
-    "status": "auto",
-    "note": "This model cannot be your WARLORD"
-  },
-  "Network Override": {
-    "status": "auto",
-    "note": "While this unit contains one or more Tech-Priest models, this unit is: • Eligible to perform an Action in a turn in which it Advanced. • Eligible to shoot in a turn in which it started an Action."
-  },
-  "ATTACHED UNIT": {
-    "status": "info",
-    "note": "If a Character unit from your army with the Leader ability can be attached to a Kataphron Breachers unit, it can be attached to this unit instead."
-  },
-  "Rod of the War Forge": {
-    "status": "auto",
-    "note": "In your Command phase, select one of the abilities in the Icon of War section (see next page). Until the start of your next Command phase, this model has that ability."
-  },
-  "Secutor of Olympus": {
-    "status": "auto",
-    "note": "At the start of your Shooting phase, select one enemy VEHICLE unit within 12\" of this model and roll one D6: on a 2+, that enemy unit suffers D3+1 mortal wounds."
-  },
-  "Fanatical Devotion": {
-    "status": "auto",
-    "note": "You can select one friendly Skitarii or THULIA GHULD unit within 6\" of this model; until the start of your next Command phase, that unit is eligible to shoot and declare a charge in a turn in which it Advanced.",
     "effects": [
       {
-        "fnp": 5
+        "if": [
+          "targetQuarry"
+        ],
+        "reroll": "hits"
+      }
+    ],
+    "act": {
+      "when": "battleStart",
+      "auto": true,
+      "limit": "battle",
+      "target": {
+        "side": "enemy",
+        "anywhere": true
+      },
+      "do": [
+        {
+          "setQuarry": true
+        }
+      ]
+    }
+  },
+  "Dread Snipers": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    }
+  },
+  "Achillan Eye": {
+    "effects": [
+      {
+        "weapon": "radium jezzail",
+        "if": [
+          "targetInfantry"
+        ],
+        "reroll": "wounds"
+      },
+      {
+        "weapon": "transuranic arquebus",
+        "if": [
+          "targetMV"
+        ],
+        "reroll": "wounds"
       }
     ]
   },
-  "Adaptive Tactics": {
-    "status": "auto",
-    "note": "You can select one friendly Skitarii or THULIA GHULD unit within 6\" of this model; until the start of your next Command phase, that unit is eligible to shoot and declare a charge in a turn in which it Fell Back."
+  "SYDONIAN SENTINEL": {
+    "status": "info",
+    "note": "Army building: cannot be your WARLORD"
   },
-  "The Fires of Mars": { "code": true,
-    "status": "auto",
-    "note": "You can select one friendly Skitarii or THULIA GHULD unit within 6\" of this model; until the start of your next Command phase, the Conqueror Imperative and Protector Imperative are both active for that unit."
+  "Network Override": {
+    "effects": [
+      {
+        "if": [
+          "contains:Tech-Priest"
+        ],
+        "eligible": [
+          "actionAfterAdvance",
+          "shootAfterAction"
+        ]
+      }
+    ]
+  },
+  "ATTACHED UNIT": {
+    "status": "info",
+    "note": "Army building: Leaders can join this unit"
+  },
+  "Rod of the War Forge": {
+    "status": "manual",
+    "note": "Not automated: the Icon of War abilities are not in the data"
+  },
+  "Secutor of Olympus": {
+    "act": {
+      "when": "shootingStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "units": [
+          "VEHICLE"
+        ],
+        "closest": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3+1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Fanatical Devotion": {
+    "act": {
+      "when": "command",
+      "limit": "phase",
+      "label": "Fanatical Devotion: a SKITARII unit within 6\" can shoot and charge after Advancing",
+      "botUse": "always",
+      "target": {
+        "side": "friendly",
+        "range": 6,
+        "units": [
+          "SKITARII|THULIA GHULD"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "eligible": [
+                "shootAfterAdvance",
+                "chargeAfterAdvance"
+              ]
+            }
+          ],
+          "until": "nextCommand"
+        }
+      ]
+    }
+  },
+  "Adaptive Tactics": {
+    "act": {
+      "when": "command",
+      "limit": "phase",
+      "label": "Adaptive Tactics: a SKITARII unit within 6\" can shoot and charge after Falling Back",
+      "botUse": "always",
+      "target": {
+        "side": "friendly",
+        "range": 6,
+        "units": [
+          "SKITARII|THULIA GHULD"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "eligible": [
+                "shootAfterFallBack",
+                "chargeAfterFallBack"
+              ]
+            }
+          ],
+          "until": "nextCommand"
+        }
+      ]
+    }
+  },
+  "The Fires of Mars": {
+    "act": {
+      "when": "command",
+      "limit": "phase",
+      "label": "The Fires of Mars: both Imperatives for a SKITARII unit within 6\"",
+      "botUse": "always",
+      "target": {
+        "side": "friendly",
+        "range": 6,
+        "units": [
+          "SKITARII|THULIA GHULD"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "if": [
+                "!detActive:protector"
+              ],
+              "attack": "ranged",
+              "abilities": [
+                "heavy"
+              ],
+              "skill": 1
+            },
+            {
+              "if": [
+                "!detActive:protector",
+                "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+              ],
+              "defend": {
+                "vs": "melee",
+                "hit": -1
+              }
+            },
+            {
+              "if": [
+                "!detActive:conqueror"
+              ],
+              "attack": "ranged",
+              "abilities": [
+                "assault"
+              ]
+            },
+            {
+              "if": [
+                "!detActive:conqueror"
+              ],
+              "attack": "melee",
+              "skill": 1
+            },
+            {
+              "if": [
+                "!detActive:conqueror",
+                "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+              ],
+              "ap": 1
+            }
+          ],
+          "until": "nextCommand"
+        }
+      ]
+    }
   },
   "Broad-spectrum Targeting Augurs": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes an attack with an eradication caster that targets a unit (excluding MONSTER and VEHICLE units), that attack has the [SUSTAINED HITS 1] ability."
+    "effects": [
+      {
+        "weapon": "eradication caster",
+        "if": [
+          "targetNotMV"
+        ],
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
   },
   "Monocular Targeting Helms": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes an attack with a neutron fusil against a MONSTER or VEHICLE unit, that attack has the [IGNORES COVER] ability."
-  },
-  "Rad-bombardment": {
-    "status": "auto",
-    "note": "BATTLE ROUND1 BOMBARDMENT At the start of the first battle round, for each enemy unit within your opponent’s deployment zone, your opponent must decide whether that unit will take cover or stand firm."
+    "effects": [
+      {
+        "weapon": "neutron fusil",
+        "if": [
+          "targetMV"
+        ],
+        "abilities": [
+          "ignores cover"
+        ]
+      }
+    ]
   },
   "Radial Suffusion": {
-    "status": "auto",
-    "note": "ADEPTUS MECHANICUS model only. From the second battle round onwards, when resolving the Fallout effect of the Rad-bombardment Detachment rule, if the bearer is on the battlefield, roll one D6 for each enemy unit within 6\" of your opponent’s deployment zone, in addition to those that are within your ..."
+    "status": "partial",
+    "note": "Not automated: Fallout also rolling for enemy units within 6\" of their deployment zone"
   },
   "Malphonic Susurrus": {
-    "status": "auto",
-    "note": "ADEPTUS MECHANICUS model only. While the bearer is leading a unit, models in that unit have the Stealth ability."
+    "effects": [
+      {
+        "scope": "led",
+        "stealth": true
+      }
+    ]
   },
   "Peerless Eradicator": {
-    "status": "auto",
-    "note": "ADEPTUS MECHANICUS model only. While the bearer is leading a unit, ranged weapons equipped by models in that unit have the [SUSTAINED HITS 1] ability."
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "ranged",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
   },
   "Autoclavic Denunciation": {
-    "status": "auto",
-    "note": "ADEPTUS MECHANICUS model only. Ranged weapons equipped by the bearer have the [ANTI-INFANTRY 2+] and [ANTI-MONSTER 4+] abilities."
-  },
-  "Stealth Optimisation": {
-    "status": "auto",
-    "note": "Friendly SKITARII INFANTRY, SKITARII MOUNTED and IRONSTRIDER BALLISTARII units have Stealth."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "ranged",
+        "abilities": [
+          "anti-infantry 2+",
+          "anti-monster 4+"
+        ]
+      }
+    ]
   },
   "Cantic Thrallnet": {
-    "status": "auto",
-    "note": "SKITARII MARSHAL model only. At the start of the battle round, you can select one friendly SKITARII unit within 12\" of the bearer. Until the start of the next battle round, the Protector Imperative and the Conqueror Imperative are both active for that unit."
+    "act": {
+      "when": "command",
+      "limit": "round",
+      "label": "Cantic Thrallnet: both Imperatives for a SKITARII unit within 12\"",
+      "botUse": "always",
+      "target": {
+        "side": "friendly",
+        "range": 12,
+        "units": [
+          "SKITARII"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "if": [
+                "!detActive:protector"
+              ],
+              "attack": "ranged",
+              "abilities": [
+                "heavy"
+              ],
+              "skill": 1
+            },
+            {
+              "if": [
+                "!detActive:protector",
+                "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+              ],
+              "defend": {
+                "vs": "melee",
+                "hit": -1
+              }
+            },
+            {
+              "if": [
+                "!detActive:conqueror"
+              ],
+              "attack": "ranged",
+              "abilities": [
+                "assault"
+              ]
+            },
+            {
+              "if": [
+                "!detActive:conqueror"
+              ],
+              "attack": "melee",
+              "skill": 1
+            },
+            {
+              "if": [
+                "!detActive:conqueror",
+                "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+              ],
+              "ap": 1
+            }
+          ],
+          "until": "nextCommand"
+        }
+      ]
+    },
+    "note": "Picked in your Command phase (the card: at the start of the battle round)"
   },
   "Clandestine Infiltrator": {
-    "status": "auto",
-    "note": "SKITARII model only. The bearer, and models in any unit they are leading, have the Infiltrators and Scouts 6\" abilities."
+    "effects": [
+      {
+        "infiltrators": true,
+        "scouts": 6
+      }
+    ]
   },
   "Veiled Hunter": {
+    "code": true,
     "status": "auto",
-    "note": "SKITARII MARSHAL model only. After both players have deployed their armies, you can select up to three SKITARII INFANTRY units from your army and redeploy all of those units. When doing so, any of those units can be placed into Strategic Reserves, regardless of how many units are already in Strategic Reserves."
+    "note": "After deployment: up to three SKITARII INFANTRY units can be redeployed"
   },
   "Battle-sphere Uplink": {
-    "status": "auto",
-    "note": "SKITARII model only. In your Shooting phase, after the bearer’s unit has shot, if it is not within Engagement Range of one or more enemy units, that unit can make a Normal move of up to 6\". If it does, until the end of the turn, that unit is not eligible to declare a charge."
-  },
-  "Benedictions Of The Omnissiah": {
-    "status": "auto",
-    "note": "At the start of the first battle round, select one of the following Benedictions of the Omnissiah to be active for CULT MECHANICUS units from your army until the end of the battle: Panegyric Procession Each time a CULT MECHANICUS model from your army makes a ranged attack that targets a unit within ..."
+    "act": {
+      "when": "afterShootingButton",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Battle-sphere Uplink: Normal move of up to 6\" (no charge)",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "move": "6",
+          "noCharge": true
+        }
+      ]
+    }
   },
   "Mechanicus Locum": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. The bearer has a Leadership characteristic of 6+ and, once per battle, at the start of any phase, you can select one friendly CULT MECHANICUS unit that is Battle-shocked and within 12\" of the bearer. That unit is no longer Battle-shocked."
+    "effects": [
+      {
+        "scope": "model",
+        "ldSet": 6
+      }
+    ],
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "label": "Mechanicus Locum: a Battle-shocked CULT MECHANICUS unit within 12\" recovers",
+      "botUse": "always",
+      "target": {
+        "side": "friendly",
+        "range": 12,
+        "shocked": true,
+        "units": [
+          "CULT MECHANICUS"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "unshock": true
+        }
+      ]
+    }
   },
   "Mantle of the Gnosticarch": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. Each time an attack is allocated to the bearer, change the Damage characteristic of that attack to 1."
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "damage": -99
+        }
+      }
+    ],
+    "note": "Every attack allocated to it has Damage 1"
   },
   "Data-blessed Autosermon": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. Once per battle, at the start of your Command phase, you can select the Benediction of the Omnissiah you did not select at the start of the first battle round."
+    "act": [
+      {
+        "when": "command",
+        "limit": "battle",
+        "if": [
+          "detActive:savagery"
+        ],
+        "label": "Data-blessed Autosermon: Panegyric Procession for this unit too",
+        "botUse": "round2",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "attack": "ranged",
+                "if": [
+                  "halfRange"
+                ],
+                "ap": 1
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      },
+      {
+        "when": "command",
+        "limit": "battle",
+        "if": [
+          "detActive:procession"
+        ],
+        "label": "Data-blessed Autosermon: Citation in Savagery for this unit too",
+        "botUse": "round2",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "attack": "melee",
+                "if": [
+                  "charged"
+                ],
+                "strength": 1,
+                "attacks": 1
+              }
+            ],
+            "until": "nextCommand"
+          }
+        ]
+      }
+    ]
   },
   "Temporcopia": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. The bearer’s unit has the Fights First ability."
-  },
-  "Acquisition At Any Cost": {
-    "status": "auto",
-    "note": "At the start of your Command phase, select one objective marker. Until the start of your next Command phase, that objective marker is your Acquisition objective marker."
+    "effects": [
+      {
+        "fightsFirst": true
+      }
+    ]
   },
   "Magos": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. At the end of your Command phase, if the bearer is within range of your Acquisition objective marker, roll one D6: on a 4+, you gain 1CP."
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "if": [
+        "onAcquisition"
+      ],
+      "roll": "D6",
+      "table": [
+        {
+          "min": 4,
+          "do": [
+            {
+              "cp": 1
+            }
+          ]
+        }
+      ]
+    }
   },
   "Genetor": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. While the bearer is leading a unit that is within range of your Acquisition objective marker, models in that unit have a 4+ invulnerable save."
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "onAcquisition"
+        ],
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
   },
   "Logis": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. While the bearer is leading a unit, each time a model in that unit makes an attack that targets a unit within range of your Acquisition objective marker, add 1 to the Hit roll."
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "targetOnAcquisition"
+        ],
+        "hit": 1
+      }
+    ]
   },
   "Artisan": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. While the bearer is leading a unit that is within range of your Acquisition objective marker, once per phase, you can change the result of one Hit roll, one Wound roll or one saving throw made for that unit to an unmodified 6."
-  },
-  "Cyber-Psalm Programming": {
-    "status": "auto",
-    "note": "Add 2\" to the Move characteristic of models in Legio Cybernetica units from your army. In addition, unless that unit is Battle-shocked, add 1 to the Objective Control characteristic of models in that unit."
+    "status": "manual",
+    "note": "Not automated: changing one roll to a 6 once per phase"
   },
   "Necromechanic": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. Once per battle round, when a saving throw made for a friendly LEGIO CYBERNETICA or ADEPTUS MECHANICUS VEHICLE model within 12\" of the bearer is failed, the bearer can use this Enhancement. If they do, change the Damage characteristic of that attack to 0."
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 12,
+        "units": [
+          "LEGIO CYBERNETICA|VEHICLE"
+        ],
+        "defend": {
+          "negateOnce": "round"
+        }
+      }
+    ],
+    "note": "The first failed save each battle round (the card: you choose which)"
   },
   "Lord of Machines": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. Once per turn, at the start of your opponent’s Shooting phase, select one enemy VEHICLE unit within 12\" of and visible to the bearer."
+    "act": {
+      "when": "oppShootingStart",
+      "auto": true,
+      "limit": "turn",
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "visible": true,
+        "units": [
+          "VEHICLE"
+        ],
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "ldBranch": {
+            "pass": [
+              {
+                "hit": -1
+              }
+            ],
+            "fail": [
+              {
+                "hit": -6
+              }
+            ]
+          }
+        }
+      ],
+      "until": "phase"
+    },
+    "note": "A failed test leaves the unit hitting only on 6s (the card: it cannot shoot)"
   },
   "Emotionless Clarity": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. Once per turn, when a friendly LEGIO CYBERNETICA or ADEPTUS MECHANICUS VEHICLE model with the Deadly Demise ability that is within 12\" of the bearer is destroyed, the bearer can use this Enhancement."
+    "status": "manual",
+    "note": "Not automated: Deadly Demise without the roll"
   },
   "Arch-negator": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. Ranged weapons equipped by the bearer have the [ANTI-VEHICLE 4+] ability."
-  },
-  "Noospheric Transference": {
-    "status": "auto",
-    "note": "In your Command phase, select one or more ADEPTUS MECHANICUS units from your army (including units that are embarked within Transports)."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "ranged",
+        "abilities": [
+          "anti-vehicle 4+"
+        ]
+      }
+    ]
   },
   "Transoracular Dyad Wafers": {
-    "status": "auto",
-    "note": "Cybernetica Datasmith model only. When the bearer is attached to a Kastelan Robots unit, until the end of the battle, models in that unit gain the HALO OVERRIDE keyword. That unit cannot be selected when selecting units as part of the Noospheric Transference Detachment rule."
+    "effects": [
+      {
+        "if": [
+          "contains:Kastelan"
+        ],
+        "addKeywords": [
+          "HALO OVERRIDE"
+        ]
+      }
+    ]
   },
-  "Cognitive Reinforcement": { "code": true,
-    "status": "auto",
-    "note": "ADEPTUS MECHANICUS model only (excluding Cybernetica Datasmith models). The Conqueror Imperative and Protector Imperative are both active for the bearer’s unit."
+  "Cognitive Reinforcement": {
+    "effects": [
+      {
+        "if": [
+          "!detActive:protector"
+        ],
+        "attack": "ranged",
+        "abilities": [
+          "heavy"
+        ],
+        "skill": 1
+      },
+      {
+        "if": [
+          "!detActive:protector",
+          "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "defend": {
+          "vs": "melee",
+          "hit": -1
+        }
+      },
+      {
+        "if": [
+          "!detActive:conqueror"
+        ],
+        "attack": "ranged",
+        "abilities": [
+          "assault"
+        ]
+      },
+      {
+        "if": [
+          "!detActive:conqueror"
+        ],
+        "attack": "melee",
+        "skill": 1
+      },
+      {
+        "if": [
+          "!detActive:conqueror",
+          "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "ap": 1
+      }
+    ]
   },
   "Sanctified Ordnance": {
-    "status": "auto",
-    "note": "ADEPTUS MECHANICUS model only. Add 6\" to the range characteristic of ranged weapons equipped by models in the bearer’s unit and, each time a Hazardous test is taken for that unit, you can re-roll the result."
+    "effects": [
+      {
+        "attack": "ranged",
+        "weaponRange": 6
+      }
+    ],
+    "note": "Re-rolling Hazardous tests is not applied"
   },
   "Inloaded Lethality": {
-    "status": "auto",
-    "note": "Tech-Priest Dominus or Tech-Priest Manipulus model only. Add 3 to the Attacks characteristic of the bearer’s melee weapons and add 1 to the Damage characteristic of the bearer’s melee weapons."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "attacks": 3,
+        "damage": 1
+      }
+    ]
   },
-  "Murderous Imperative": {
-    "status": "auto",
-    "note": "Each time a model in a Skitarii unit from your army makes an attack: • If the Protector Imperative is active for that unit, re-roll a Hit roll of 1. • If the Conqueror Imperative is active for that unit, re-roll a Wound roll of 1."
-  },
-  "Omnicogitator": { "code": true,
-    "status": "auto",
-    "note": "Skitarii Marshal model only. The Conqueror Imperative and Protector Imperative are both active for the bearer’s unit."
+  "Omnicogitator": {
+    "effects": [
+      {
+        "if": [
+          "!detActive:protector"
+        ],
+        "attack": "ranged",
+        "abilities": [
+          "heavy"
+        ],
+        "skill": 1
+      },
+      {
+        "if": [
+          "!detActive:protector",
+          "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "defend": {
+          "vs": "melee",
+          "hit": -1
+        }
+      },
+      {
+        "if": [
+          "!detActive:conqueror"
+        ],
+        "attack": "ranged",
+        "abilities": [
+          "assault"
+        ]
+      },
+      {
+        "if": [
+          "!detActive:conqueror"
+        ],
+        "attack": "melee",
+        "skill": 1
+      },
+      {
+        "if": [
+          "!detActive:conqueror",
+          "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+        ],
+        "ap": 1
+      }
+    ]
   },
   "Martial Signatum Amplificator": {
-    "status": "auto",
-    "note": "Tech-Priest model only. Models in the bearer’s unit have the Skitarii keyword."
+    "effects": [
+      {
+        "addKeywords": [
+          "SKITARII"
+        ]
+      }
+    ]
   },
   "Belicosa-Class Capacitor Vanes": {
-    "status": "auto",
-    "note": "Adeptus Mechanicus model only. Add 6\" to the Range characteristic of ranged weapons equipped by models in the bearer’s unit, and add 1 to the Strength characteristic of those weapons."
+    "effects": [
+      {
+        "attack": "ranged",
+        "weaponRange": 6,
+        "strength": 1
+      }
+    ]
   },
   "Omnissiah’s Fury": {
-    "status": "auto",
-    "note": "Skitarii Marshal model only. Add 2 to the Attacks characteristic of melee weapons equipped by the bearer, and improve the Armour Penetration and Damage characteristics of those weapons by 1."
-  },
-  "Noospheric Recon": {
-    "status": "auto",
-    "note": "• Friendly PTERAXII/INFILTRATORS/RANGERS/SERBERYS RAIDERS/ SERBERYS SULPHURHOUNDS units have RECON AUGURY. • Friendly RECON AUGURY units have the following ability: Enhanced Augurs: In your Shooting phase, this unit can select one visible enemy unit within 12\"."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "attacks": 2,
+        "ap": 1,
+        "damage": 1
+      }
+    ]
   },
   "Explorator Dispensation": {
-    "status": "auto",
-    "note": "SKITARII MARSHAL model only. This unit has Infiltrators"
+    "effects": [
+      {
+        "infiltrators": true
+      }
+    ]
   },
   "Stealth-Screened Cybercanids": {
-    "status": "auto",
-    "note": "SERBERYS RAIDERS unit only. This unit has Lone Operative 15\"."
-  },
-  "War-Form Mantles": {
-    "status": "auto",
-    "note": "Friendly TECH-PRIEST models have: • 4+ InSv. • Feel No Pain 5+. Friendly TECH-PRIEST models have the following ability: Baffling Data Screed: In your Shooting phase, when this unit is selected to shoot, if this unit is not battle-shocked, you can use this ability."
+    "effects": [
+      {
+        "loneOperative": true
+      }
+    ],
+    "note": "Lone Operative (the card: 15\")"
   },
   "Vingh’s Wafers of Dynamism": {
-    "status": "auto",
-    "note": "CYBERNETICA DATASMITH model only. At the start of the first battle round, if this unit is an attached unit, this unit has MOBILE until the end of the battle."
+    "effects": [
+      {
+        "if": [
+          "leaderAttached"
+        ],
+        "mobile": true
+      }
+    ]
   },
   "TL-4Ø9": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. This model has the following weapon: TL-4ø9 [DEVASTATING WOUNDS, HAZARDOUS] Range 24\", A 3, BS 2+, S 11, AP -2, D D3+2."
-  },
-  "Cyber-Static Canticles": {
-    "status": "auto",
-    "note": "• Friendly CORPUSCARII units’ ranged attacks have [LETHAL HITS]. • When a friendly FULGURITE unit has fought, that unit heals D3 wounds. This detachment has the DATA-PSALM tag and cannot be taken with another DATA-PSALM detachment."
+    "status": "info",
+    "note": "No rule text"
   },
   "Voltagheist Reliquary": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. Enemy units cannot target this unit with snap shooting attacks"
+    "effects": [
+      {
+        "noSnapTarget": true
+      }
+    ]
   },
   "Electromiasmic Brazier": {
-    "status": "auto",
-    "note": "TECH-PRIEST model only. This unit has Stealth."
+    "effects": [
+      {
+        "stealth": true
+      }
+    ]
   }
 }

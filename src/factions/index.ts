@@ -19,7 +19,7 @@ import { auraBonus, bondAgain, choicePicked, choiceWhy, expend, knightsAttackDon
 import { resetPhaseActsOfFaith, sororitasCommandEnd, sororitasTurnStart, sororitasUnitDestroyed, tryActOfFaith } from './sororitas';
 import { aeldariBattleStart, aeldariRoundStart, canFocus, lucidEye, noteVibro, relentlessRaiders, resetPhaseStrandsOfFate, seerDiscounts, shadowFieldCheck, sonicDestruction, spendFocus, tryFateDie, voidThieves } from './aeldari';
 import { votannAttackModifiers, votannBattleStart, votannCommandEnd, votannDefenseModifiers, votannUnitDestroyed } from './votann';
-import { admechAttackModifiers, admechCommandStart, admechDefenseModifiers, admechRoundStart, unitActiveImperatives } from './admech';
+import { admechImperativePicked, onAcquisition, pickAcquisition } from './admech';
 import { drugBlocked, drugPicked, drukhariAction, drukhariAttackMods, drukhariBattleShockFailed, drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd, drukhariUnitDestroyed, isUnitEmpowered, losingWager, painReady, pickContract } from './drukhari';
 import { corruptRealspace, daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsUnitDestroyed, isUnderShadowOfChaos, spendFluxToken, tryFlux } from './daemons';
 import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultAmbushUnitDestroyed, cultBattleStart, cultInfiltration, psionicParasitism, regimentalReinforcements } from './cult';
@@ -143,12 +143,11 @@ on('battleStart', (s) => votannBattleStart(s));
 on('commandEnd', (s, e) => votannCommandEnd(s, e.p));
 on('unitDestroyed', (s, e) => votannUnitDestroyed(s, e.u, e.attackerId));
 
-// Adeptus Mechanicus: the Doctrina Imperatives are set at the start of every battle round, the first one included
-on('battleStart', (s) => admechRoundStart(s));
-on('roundStart', (s) => admechRoundStart(s));
-on('commandStart', (s, e) => admechCommandStart(s, e.p));
-// Conqueror Imperative: ranged weapons have [ASSAULT]
-addModifier('assaultWeapons', (s, u) => unitActiveImperatives(s, u).has('Conqueror Imperative'));
+// Adeptus Mechanicus: the active Doctrina Imperative shown on the HUD
+addChoiceHooks({ picked: (s, p, rule, ids) => admechImperativePicked(s, p, rule, ids) });
+on('commandStart', (s, e) => pickAcquisition(s, e.p));
+addCondition('onAcquisition', (_c, x) => onAcquisition(x.s, x.A.owner, x.A));
+addCondition('targetOnAcquisition', (_c, x) => !!x.T && onAcquisition(x.s, x.A.owner, x.T));
 
 // Drukhari
 on('battleStart', (s) => drukhariBattleStart(s));
@@ -230,12 +229,6 @@ addCombatMods((x) => {
 // Leagues of Votann
 addCombatMods((x) => votannAttackModifiers(x.s, x.A, x.T, x.d, x.mode));
 addCombatMods((x) => votannDefenseModifiers(x.s, x.A, x.T, x.p, x.d));
-// Adeptus Mechanicus
-addCombatMods((x) => {
-  const a = admechAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon);
-  return { ...a, skillBonus: x.mode === 'ranged' ? a.bsBonus : a.wsBonus };
-});
-addCombatMods((x) => admechDefenseModifiers(x.s, x.A, x.T, x.mode));
 // Drukhari
 addCombatMods((x) => drukhariAttackMods(x.s, x.A, x.T));
 // Necrons

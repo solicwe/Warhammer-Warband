@@ -752,6 +752,7 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('nearMarked:')) { const [, mark, rs] = c.split(':'); return boardUnits(s, other(A.owner)).some((e) => (e.timed ?? []).some((t) => t.mark === mark && t.by === A.owner) && unitDistance(A, e) <= Number(rs) + 1e-6); }
   if (c.startsWith('nearModels:')) return nearModelsCond(x, c);
   if (c.startsWith('nearCount:')) return nearCountCond(x, c);
+  if (c.startsWith('roundAtLeast:')) return s.round >= Number(c.slice(13));
   if (c.startsWith('enemyBetween:')) { const [lo, hi] = c.slice(13).split(':').map(Number); return boardUnits(s, other(A.owner)).some((e) => { const d = unitDistance(A, e); return d > lo + 1e-6 && d <= hi + 1e-6; }); }
   // wholly within X" of one or more battlefield edges (every model near the same or any edge)
   if (c.startsWith('nearEdge:')) { const d = Number(c.slice(9)); const W = RULES.battlefield.width, H = RULES.battlefield.height; return alive(A).every((m) => Math.min(m.x, m.y, W - m.x, H - m.y) + m.r <= d + 1e-6); }
