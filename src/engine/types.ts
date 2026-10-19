@@ -280,6 +280,8 @@ export interface UnitState {
   advanceRoll: number | null;
   maxMoved: number;
   setUpTurn: number;
+  /** Genestealer Cults: waiting in Cult Ambush (not destroyed with other Reserves after the third round) */
+  cultAmbush?: boolean;
   shotTurn: number; // global turn index of last ranged attacks (-10 = never)
   selectedToShoot: boolean;
   declaredCharge: boolean;
@@ -411,8 +413,10 @@ export interface PlayerState {
   resurgencePoints?: number;
   /** Genestealer Cults: Cult Ambush marker positions on battlefield */
   cultAmbushMarkers?: Pt[];
+  /** Genestealer Cults: Summon the Cult was used */
+  summonedCult?: boolean;
   /** Necrons: Obeisance Phalanx Worthy Foe designated target */
-  worthyFoeUnitId?: string;
+  resurrectTurn?: number; // Resurrection Orb: the turn a unit of this army last resurrected (one per turn)
   riledUntilTurn: number;
   secMode: 'none' | 'tactical' | 'fixed';
   secDeck: string[];

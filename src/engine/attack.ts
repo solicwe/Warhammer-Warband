@@ -255,6 +255,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
       for (const a of fx) {
         if (a.e.skill) { mods.skillDelta -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} BS`); }
+        if (a.e.skillSet && p.skill !== null && p.skill > a.e.skillSet) { mods.skillDelta -= p.skill - a.e.skillSet; mods.skillNotes.push(`${a.label} BS ${a.e.skillSet}+`); }
       }
       const psychic = hasAbility(p, 'psychic');
       const fm = finishPoolMods(p, mods, psychic);
@@ -368,6 +369,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
       for (const a of fx) {
         if (a.e.skill) { mods.skillDelta -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} WS`); }
+        if (a.e.skillSet && p.skill !== null && p.skill > a.e.skillSet) { mods.skillDelta -= p.skill - a.e.skillSet; mods.skillNotes.push(`${a.label} WS ${a.e.skillSet}+`); }
       }
       const fm = finishPoolMods(p, mods, hasAbility(p, 'psychic'));
       const precision = opt.epicChallengeModel === m.id || cm.precision;

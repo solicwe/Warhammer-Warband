@@ -3,8 +3,7 @@
   "rules": {
     "FIELDS OF FIRE": {
       "targetKw": [
-        "REGIMENT",
-        "SQUADRON"
+        "REGIMENT|SQUADRON"
       ],
       "effects": [
         {
@@ -27,8 +26,7 @@
     },
     "COORDINATED ACTION": {
       "targetKw": [
-        "REGIMENT",
-        "SQUADRON"
+        "REGIMENT|SQUADRON"
       ],
       "status": "auto"
     },
@@ -250,8 +248,7 @@
     },
     "FIRING HOT": {
       "targetKw": [
-        "MILITARUM TEMPESTUS",
-        "KASRKIN"
+        "MILITARUM TEMPESTUS|KASRKIN"
       ],
       "effects": [
         {
@@ -282,8 +279,8 @@
     },
     "SCOUTING OUTRIDERS": {
       "targetKw": [
-        "MOUNTED",
-        "SQUADRON"
+        "ASTRA MILITARUM",
+        "MOUNTED|WALKER"
       ],
       "do": [
         {
@@ -536,8 +533,7 @@
     },
     "STIRRED TO ACTION": {
       "targetKw": [
-        "BULLGRYN SQUAD",
-        "OGRYN SQUAD"
+        "BULLGRYN SQUAD|OGRYN SQUAD"
       ],
       "do": [
         {
@@ -554,8 +550,7 @@
     },
     "THICK-SKULLED OBDURANCE": {
       "targetKw": [
-        "BULLGRYN SQUAD",
-        "OGRYN SQUAD"
+        "BULLGRYN SQUAD|OGRYN SQUAD"
       ],
       "buffs": [
         "enemyAp-1"
@@ -587,8 +582,7 @@
     },
     "CLOSE-RANGE DETECTION": {
       "targetKw": [
-        "SCOUT SENTINEL",
-        "INFANTRY"
+        "SCOUT SENTINEL|INFANTRY"
       ],
       "status": "auto"
     }

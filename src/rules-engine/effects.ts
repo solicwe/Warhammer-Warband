@@ -108,6 +108,7 @@ export interface Effect {
   hit?: number; wound?: number; ap?: number; strength?: number; attacks?: number; damage?: number;
   critWoundAp?: number; // improves AP by X on a Critical Wound
   skill?: number; // improves WS / BS characteristic by X (Take Aim!, Fix Bayonets!)
+  skillSet?: number; // the weapons' WS / BS characteristic is this (Spotter: 3+)
   rapidFireAttacks?: number; // improves Attacks of Rapid Fire weapons by X (First Rank, Fire! Second Rank, Fire!)
   reroll?: Reroll | Reroll[];
   abilities?: string[];
@@ -748,6 +749,7 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('nearMarked:')) { const [, mark, rs] = c.split(':'); return boardUnits(s, other(A.owner)).some((e) => (e.timed ?? []).some((t) => t.mark === mark && t.by === A.owner) && unitDistance(A, e) <= Number(rs) + 1e-6); }
   if (c.startsWith('nearModels:')) return nearModelsCond(x, c);
   if (c.startsWith('nearCount:')) return nearCountCond(x, c);
+  if (c.startsWith('enemyBetween:')) { const [lo, hi] = c.slice(13).split(':').map(Number); return boardUnits(s, other(A.owner)).some((e) => { const d = unitDistance(A, e); return d > lo + 1e-6 && d <= hi + 1e-6; }); }
   // wholly within X" of one or more battlefield edges (every model near the same or any edge)
   if (c.startsWith('nearEdge:')) { const d = Number(c.slice(9)); const W = RULES.battlefield.width, H = RULES.battlefield.height; return alive(A).every((m) => Math.min(m.x, m.y, W - m.x, H - m.y) + m.r <= d + 1e-6); }
   if (c.startsWith('enemyEngagedWithin:')) { const r = Number(c.slice(19)); return boardUnits(s, other(A.owner)).some((e) => engagedEnemies(s, e).length > 0 && unitDistance(A, e) <= r + 1e-6); }
@@ -928,6 +930,8 @@ export function cond(c: string, x: Ctx): boolean {
     case 'enemyPsykerWithin12': return boardUnits(s, other(A.owner)).some((e) => hasKw(e, 'PSYKER') && unitDistance(A, e) <= 12 + 1e-6);
     case 'unengaged': return engagedEnemies(s, A).length === 0;
     case 'shotThisTurn': return A.shotTurn === s.turn;
+    // set up as Reinforcements "until the end of your next Fight phase": this turn, or last (the opponent's) turn
+    case 'reinforcedRecently': return (A.setUpTurn ?? 0) > 0 && (A.setUpTurn === s.turn || (A.setUpTurn === s.turn - 1 && s.active === A.owner));
     case 'lostModelsThisPhase': return (A.used ?? {}).lostModel === `${s.turn}:${s.phase}`;
     // Death Guard: the target is Afflicted / within half the weapon's range / in its own deployment zone
     case 'halfRange': return !!x.p && typeof x.p.range === 'number' && (x.d ?? Infinity) <= x.p.range / 2 + 1e-6;
@@ -969,7 +973,7 @@ const rerolls = (e: { reroll?: Reroll | Reroll[] }): Reroll[] => (e.reroll ? (Ar
 export function offenceFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, w: WeaponData, p: WeaponProfileData, kind: 'melee' | 'ranged', d: number): Active[] {
   const x: Ctx = { s, A, T, m, w, p, d, kind };
   return effectsFor(s, A).filter((a) => (!a.e.attack || a.e.attack === kind) && modelOk(a, m) && weaponOk(a, w, p) && holds(a, x)
-    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.critWoundAp || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange || a.e.skill));
+    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.critWoundAp || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange || a.e.skill || a.e.skillSet));
 }
 
 /** Marks on the target ("hit by Multi-spectrum Array: +1 to hit for your ADEPTUS ASTARTES") that help this attacker. */
@@ -1498,7 +1502,7 @@ export function loneOperativeNow(s: GameState, u: UnitState): boolean {
 
 setVisibilityHooks({
   loneOperative: loneOperativeNow,
-  detection: (s, u) => (u.timed ?? []).reduce((a, t) => a + (t.e.detection ?? 0), 0)
+  detection: (s, u) => unitFlags(s, u).detection
     // an identified terrain feature: enemy units within it are seen from 3" further
     + ((s.identified ?? []).some((x) => x.turn === s.turn && x.by !== u.owner && alive(u).some((m) => { const t = s.terrain.find((q) => q.id === x.terrainId); return !!t && bodyTouchesPoly(m, 0, t.poly); })) ? 3 : 0),
   cannotBeHidden: (_s, u) => (u.timed ?? []).some((t) => t.e.cannotBeHidden),

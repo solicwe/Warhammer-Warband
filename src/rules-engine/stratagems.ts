@@ -84,6 +84,8 @@ export interface StratRule {
   addWounds?: number;
   /** "You can only use this Stratagem once per battle round / battle" */
   limit?: 'round' | 'battle';
+  /** a faction module uses it by itself at its moment (cult.ts: Cult Ambush markers); never offered as a button */
+  code?: boolean;
   /** the TARGET keywords, when the card's wording can't be read ("INFANTRY or MOUNTED") */
   targetKw?: string[];
   /** ownKilled: the enemy unit it destroyed must have this keyword (Bloody Example: CHARACTER) */
@@ -99,7 +101,7 @@ export interface StratRule {
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'deathStrike' | 'maleficSurge' | 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'chargeWithCallidusWound' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap' | 'raisePledge' | 'putrid' | 'attachNear' | 'mireslick';
+export type Special = 'deathStrike' | 'maleficSurge' | 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'chargeWithCallidusWound' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap' | 'raisePledge' | 'putrid' | 'attachNear' | 'mireslick' | 'regimental';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -427,6 +429,9 @@ export function stratEnemies(s: GameState, p: PlayerId, rule: StratRule, u: Unit
   });
 }
 
+/** Every entry must hold (an entry may list alternatives with |, or exclude with a leading !). */
+const targetKwOk = (s: GameState, kws: string[], u: UnitState) => kws.every((k) => cond(k.startsWith('!') ? `!kw:${k.slice(1)}` : `kw:${k}`, { s, A: u }));
+
 const limitUsed = (s: GameState, p: PlayerId, st: StratagemData, rule: StratRule) =>
   rule.limit && s.players[p].stratLimits?.[st.id] !== undefined && (rule.limit === 'battle' || s.players[p].stratLimits![st.id] === s.round);
 
@@ -436,6 +441,7 @@ export function stratagemBlock(s: GameState, p: PlayerId, st: StratagemData, uni
   const plan = planStratagem(st);
   const rule = stratRuleFor(s, p, st);
   if (s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'gameover') return 'The battle has not started';
+  if (rule.code) return 'Used by itself when its moment comes';
   if (!opt.react) {
     if (plan.turn === 'your' && s.active !== p) return 'Your turn only';
     if (plan.turn === 'opponent' && s.active === p) return "Opponent's turn only";
@@ -444,7 +450,7 @@ export function stratagemBlock(s: GameState, p: PlayerId, st: StratagemData, uni
   if (limitUsed(s, p, st, rule)) return rule.limit === 'battle' ? 'Once per battle' : 'Once per battle round';
   if (plan.target === 'own' && !unit) return 'Select a target unit first';
   if (unit && plan.target === 'own' && unit.owner !== p) return 'Must be one of your units';
-  if (unit && plan.target === 'own' && unit.owner === p && !(rule.targetKw ? cond(`kw:${rule.targetKw.join('|')}`, { s, A: unit }) : stratTargetOk(st, unit))) return "This unit does not match the Stratagem's TARGET";
+  if (unit && plan.target === 'own' && unit.owner === p && !(rule.targetKw ? targetKwOk(s, rule.targetKw, unit) : stratTargetOk(st, unit))) return "This unit does not match the Stratagem's TARGET";
   if (unit && plan.target === 'enemy' && unit.owner === p && !rule.enemy) return 'Select an enemy unit';
   if (unit && unit.owner === p) {
     const L = lastEnemyAct(s, p);
@@ -514,7 +520,7 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
     if (rule.addWounds) for (const m of alive(x).filter((m) => chars?.includes(m.id) ?? true)) { m.profile = { ...m.profile, W: m.profile.W + rule.addWounds }; m.wounds += rule.addWounds; }
     if (rule.shock && !x.battleShocked) { x.battleShocked = true; log(s, `${st.name}: ${x.name} gives in to the Red Thirst → Battle-shocked`, 'info', p); }
   }
-  for (const e of enemies) for (const fx of rule.enemyEffects ?? []) addTimed(s, e, { e: fx, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, ...(rule.enemyMark ? { mark: rule.enemyMark } : {}) });
+  for (const e of enemies) for (const fx0 of rule.enemyEffects ?? []) addTimed(s, e, { e: fx0.incoming ? { ...fx0, incoming: { ...fx0.incoming, by: p } } : fx0, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, ...(rule.enemyMark ? { mark: rule.enemyMark } : {}) });
   if (rule.enemyMark && !(rule.enemyEffects ?? []).length) for (const e of enemies) addTimed(s, e, { e: {}, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, mark: rule.enemyMark });
   // one-off actions: on the own unit, or on the enemy unit for stratagems that pick one
   const holder = own[0] ?? s.units.find((x) => x.owner === p && x.status === 'board');
@@ -829,7 +835,7 @@ export function unleashWrath(s: GameState, arrived: UnitState) {
 
 export const REACT_LABEL: Partial<Record<ReactOn, string>> = {
   enemyChargeMoveEnd: 'an enemy unit just made a Charge move', enemyChargePhaseStart: "start of your opponent's Charge phase", enemyCommandStart: "your opponent's Command phase",
-  enemyMoved: 'an enemy unit just ended a move', enemyShot: 'an enemy unit has just shot', enemyChargeDeclared: 'an enemy unit just declared a charge', enemyChargePhaseEnd: "end of your opponent's Charge phase",
+  enemyMoved: 'an enemy unit just ended a move', enemyArrived: 'an enemy unit was just set up from Reserves', enemyShot: 'an enemy unit has just shot', enemyChargeDeclared: 'an enemy unit just declared a charge', enemyChargePhaseEnd: "end of your opponent's Charge phase",
   fightPhaseEnd: 'end of the Fight phase', chargeMoveEnd: 'your unit just made a Charge move', ownAttacked: 'your unit has just attacked', ownDestroyed: 'your unit was destroyed',
   modelDestroyed: 'your model was destroyed', oathDestroyed: 'the Oath of Moment target was destroyed', ownKilled: 'your unit just destroyed an enemy unit',
 };

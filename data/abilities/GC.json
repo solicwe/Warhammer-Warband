@@ -1,323 +1,1140 @@
 {
-  "Deep Strike": { "code": true,
+  "Deep Strike": {
+    "code": true,
     "status": "auto",
     "note": "DEEP STRIKE24.09 There are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation. Each time this unit makes an ingress move (20."
   },
-  "Infiltrators": { "code": true,
+  "Infiltrators": {
+    "code": true,
     "status": "auto",
     "note": "INFILTRATORS24.20 Many armies employ reconnaissance units who can sit concealed, waiting for the right moment to strike. During deployment, if every model in a unit has this ability, it can be set up anywhere on the battlefield that is more than 8\" horizontally from your opponent’s deployment zone and all enemy units."
   },
-  "Leader": { "code": true,
+  "Leader": {
+    "code": true,
     "status": "auto",
     "note": "LEADER24.22 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
   },
   "Might From Beyond": {
-    "status": "auto",
-    "note": "While this model is leading a unit, melee weapons equipped by models in that unit have the [DEVASTATING WOUNDS] ability."
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "melee",
+        "abilities": [
+          "devastating wounds"
+        ]
+      }
+    ]
   },
   "Cosmic Horror (Psychic)": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, each enemy unit within 6\" of this model must take a Battle-shock test."
+    "act": [
+      {
+        "when": "fightStart",
+        "auto": true,
+        "limit": "phase",
+        "if": [
+          "enemyBetween:6:12",
+          "!marked:familiar"
+        ],
+        "target": {
+          "side": "enemy",
+          "range": 12,
+          "each": true
+        },
+        "do": [
+          {
+            "shock": 0
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "familiar",
+            "until": "battle"
+          }
+        ]
+      },
+      {
+        "when": "fightStart",
+        "auto": true,
+        "limit": "phase",
+        "if": [
+          "marked:familiar"
+        ],
+        "target": {
+          "side": "enemy",
+          "range": 6,
+          "each": true
+        },
+        "do": [
+          {
+            "shock": 0
+          }
+        ]
+      },
+      {
+        "when": "fightStart",
+        "auto": true,
+        "limit": "phase",
+        "if": [
+          "!marked:familiar",
+          "!enemyBetween:6:12"
+        ],
+        "target": {
+          "side": "enemy",
+          "range": 6,
+          "each": true
+        },
+        "do": [
+          {
+            "shock": 0
+          }
+        ]
+      }
+    ]
   },
   "Psychic Familiar": {
+    "code": true,
     "status": "auto",
-    "note": "Once per battle, at the start of the Fight phase, this model can use its psychic familiar. If it does, until the end of the phase, add 6\" to the range of its Cosmic Horror ability. Designer’s Note: Place a Psychic Familiar token next to the model, removing it once this ability has been used."
+    "note": "Used by Cosmic Horror the first Fight phase an enemy unit is more than 6\" and up to 12\" away"
   },
-  "SUPREME COMMANDER": { "code": true,
-    "status": "auto",
-    "note": "• You cannot include more than one PATRIARCH model in your army. • If this model is in your army, it must be your Warlord."
+  "SUPREME COMMANDER": {
+    "status": "info",
+    "note": "Army building: one Patriarch, and it must be your Warlord"
   },
   "Spiritual Leader": {
-    "status": "auto",
-    "note": "Once per battle, at the start of any phase, you can select one friendly GENESTEALER CULTS unit that is Battle-shocked and within 12\" of this model. That unit is no longer Battle-shocked."
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "label": "Spiritual Leader: a Battle-shocked unit within 12\" is no longer Battle-shocked",
+      "target": {
+        "side": "friendly",
+        "range": 12,
+        "shocked": true,
+        "units": [
+          "GENESTEALER CULTS"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "unshock": true
+        }
+      ]
+    }
   },
   "Mind Control (Psychic)": {
-    "status": "auto",
-    "note": "At the start of your opponent’s Shooting phase, one Psyker model from your army with this ability can use it. If used, select one enemy unit within 18\" of that PSYKER model and roll one D6: on a 1, that PSYKER model suffers D3 mortal wounds; on a 2-5, until the end of the phase, each time a model in..."
+    "act": {
+      "when": "oppShootingStart",
+      "auto": true,
+      "limit": "phase",
+      "per": "army",
+      "target": {
+        "side": "enemy",
+        "range": 18
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 1,
+          "max": 1,
+          "do": [
+            {
+              "on": "self",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 2,
+          "max": 5,
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "hit": -1
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "min": 6,
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "hit": -1,
+                  "wound": -1
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ]
+    },
+    "note": "Range 24\" with the Psychic Familiar is not added"
   },
   "Cult Demagogue": {
-    "status": "auto",
-    "note": "While this model is leading a unit, each time a model in that unit makes an attack, you can add 1 to the Hit roll."
+    "effects": [
+      {
+        "scope": "led",
+        "hit": 1
+      }
+    ]
   },
   "Decoys and Misdirection": {
+    "code": true,
     "status": "auto",
-    "note": "If your army includes one or more models with this ability, after both players have deployed their armies, select up to three GENESTEALER CULTS units from your army and redeploy them."
+    "note": "After deployment: redeploy up to three GENESTEALER CULTS units (set up again or into Strategic Reserves)"
   },
-  "Scouts": { "code": true,
+  "Scouts": {
+    "code": true,
     "status": "auto",
     "note": "SCOUTS24.31 Scouts form the vanguard of many armies. Unnoticed by the enemy, they range ahead of the main force. This ability always takes the form Scouts X\"."
   },
   "Nexus of Devotion": {
-    "status": "auto",
-    "note": "While this model is leading a unit, models in that unit have the Feel No Pain 5+ ability. If that unit has the Hybrid Metamorphs keyword, models in that unit have the Feel No Pain 4+ ability instead."
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "!kw:HYBRID METAMORPHS"
+        ],
+        "defend": {
+          "fnp": 5
+        }
+      },
+      {
+        "scope": "led",
+        "if": [
+          "kw:HYBRID METAMORPHS"
+        ],
+        "defend": {
+          "fnp": 4
+        }
+      }
+    ]
   },
   "Summon the Cult": {
+    "code": true,
     "status": "auto",
-    "note": "Once per battle, when you have to remove a Cult Ambush marker because your opponent has moved too close to it, if one or more models from your army with this ability are on the battlefield, you can use this ability."
+    "note": "Once per battle a Cult Ambush marker the enemy comes too close to is moved within 12\" of this model instead of removed"
   },
   "Cult Ambush": {
     "status": "auto",
     "note": "If your Army Faction is GENESTEALER CULTS, you start the battle with a number of Resurgence points, depending on the battle size, as shown below."
   },
   "Claimed for the Cult": {
-    "status": "auto",
-    "note": "At the start of your Command phase, roll one D6 for each objective marker you control that has one or more units from your army with this ability within range of it. If one or more of the results is a 4+, you gain 1CP."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "phase",
+      "per": "army",
+      "if": [
+        "onControlledObjective"
+      ],
+      "roll": "D6",
+      "table": [
+        {
+          "min": 4,
+          "do": [
+            {
+              "cp": 1
+            }
+          ]
+        }
+      ]
+    },
+    "note": "One die (the card: one per objective with such a unit)"
   },
-  "Cult Icon": { "code": true,
+  "Cult Icon": {
+    "code": true,
     "status": "auto",
     "note": "In your Command phase, you can return up to D3 destroyed models to the bearer’s unit. If the bearer’s unit is within range of an objective marker you control, you can return up to 3 destroyed models to that unit instead."
   },
   "A Plan Generations in the Making": {
-    "status": "auto",
-    "note": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "if": [
+        "onOwnObjective"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "secure": true
+        }
+      ]
+    }
   },
-  "Feel No Pain": { "code": true,
+  "Feel No Pain": {
+    "code": true,
     "status": "auto",
     "note": "FEEL NO PAIN24.12 The hardiest warriors refuse to be laid low, even by wounds that should by all rights prove lethal. This ability always takes the form Feel No Pain X+. Each time a model with this ability would lose a wound, roll one D6: on an X+, that wound is not lost."
   },
   "Brood Surge": {
-    "status": "auto",
-    "note": "In your opponent’s Shooting phase, when an enemy unit has shot, if a model in this unit was destroyed as a result of those attacks, this unit can make a surge move of up to D6\"."
+    "act": {
+      "when": "shotByEnemy",
+      "auto": true,
+      "if": [
+        "notEngaged"
+      ],
+      "needModelsLost": true,
+      "do": [
+        {
+          "on": "self",
+          "surge": "D6"
+        }
+      ]
+    }
   },
   "Hulking Bodyguards": {
-    "status": "auto",
-    "note": "While a Character is leading this unit, each time an attack targets this unit, if the Strength characteristic of that attack is greater than the Toughness characteristic of this unit, subtract 1 from the Wound roll."
+    "effects": [
+      {
+        "if": [
+          "leaderAttached"
+        ],
+        "defend": {
+          "woundIfStronger": -1
+        }
+      }
+    ]
   },
   "Swift and Deadly": {
-    "status": "auto",
-    "note": "This unit is eligible to declare a charge in a turn in which it Advanced."
+    "effects": [
+      {
+        "eligible": [
+          "chargeAfterAdvance"
+        ]
+      }
+    ]
   },
-  "Deadly Demise": { "code": true,
+  "Deadly Demise": {
+    "code": true,
     "status": "auto",
     "note": "DEADLY DEMISE24.08 From detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat. This ability always takes the form Deadly Demise X."
   },
-  "Firing Deck": { "code": true,
+  "Firing Deck": {
+    "code": true,
     "status": "auto",
     "note": "FIRING DECK24.14 Some transports have dedicated platforms or firing ports from which embarked passengers can lay down a withering hail of munitions. This ability always takes the form Firing Deck X."
   },
   "Fire Support": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, select one enemy unit it scored one or more hits against this phase. Until the end of the phase, each time a friendly model that disembarked from this TRANSPORT this turn makes an attack that targets that enemy unit, you can re-roll the Wound roll."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "reroll": "wounds"
+          },
+          "fromThisTransport": true,
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Grinding Clearance": {
-    "status": "auto",
-    "note": "Each time an enemy unit (excluding MONSTERS and VEHICLES) that is within Engagement Range of this model Falls Back, all models in that enemy unit must take a Desperate Escape test. When doing so, if that enemy unit is Battle-shocked, subtract 1 from each of those tests."
+    "effects": [
+      {
+        "forceDesperate": true
+      },
+      {
+        "if": [
+          "targetBattleShocked"
+        ],
+        "desperateMinus": 1
+      }
+    ]
   },
   "The Chosen One": {
-    "status": "auto",
-    "note": "While this model is leading a unit, each time a model in that unit is destroyed by a melee attack, if that model has not fought this phase, roll one D6. On a 4+, do not remove the destroyed model from play; it can fight after the attacking model’s unit has finished making its attacks, and is then removed from play."
+    "effects": [
+      {
+        "scope": "led",
+        "fightOnDeath": 4
+      }
+    ]
   },
   "Regenerating Gene-mass": {
-    "status": "auto",
-    "note": "The first time this model is destroyed, roll one D6 at the end of the phase. On a 2+, set this model back up on the battlefield as close as possible to where it was destroyed and not within Engagement Range of any enemy units, with its full wounds remaining."
+    "act": {
+      "when": "onDeath",
+      "auto": true,
+      "modelDeath": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "reviveLater": {
+            "on": 2,
+            "wounds": 99
+          }
+        }
+      ]
+    }
   },
-  "Stealth": { "code": true,
+  "Stealth": {
+    "code": true,
     "status": "auto",
     "note": "STEALTH24.33 The stealthiest warriors can evade the attentions, and the bullets, of their foes. If every model in a unit has this ability, each time a ranged attack targets that unit, that unit has the benefit of cover against that attack (13.08)."
   },
   "Priority Target": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model’s unit has shot, select one enemy unit hit by one or more of those attacks made with a cult sniper rifle. Until the end of the phase, each time a friendly GENESTEALER CULTS model makes an attack that targets that enemy unit, re-roll a Hit roll of 1."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "cult sniper rifle"
+      },
+      "do": [
+        {
+          "incoming": {
+            "units": [
+              "GENESTEALER CULTS"
+            ],
+            "reroll": "hits1"
+          },
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Master Outrider": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model’s unit has shot, if it is not within Engagement Range of any enemy units, that unit can make a Normal move of up to 6\" as if it were your Movement phase. If it does, until the end of the turn, that unit is not eligible to declare a charge."
+    "act": {
+      "when": "afterShootingButton",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Normal move of up to 6\" (no charge this turn)",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "move": "6",
+          "noCharge": true
+        }
+      ]
+    }
   },
-  "Support": { "code": true,
+  "Support": {
+    "code": true,
     "status": "auto",
     "note": "SUPPORT24.34 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
   },
   "Voice of New Truths": {
-    "status": "auto",
-    "note": "In your Command phase, one model from your army with this ability can use it. If it does, select one enemy unit within 18\" of it; that enemy unit must take a Battle-shock test."
+    "act": {
+      "when": "command",
+      "auto": true,
+      "limit": "phase",
+      "per": "army",
+      "target": {
+        "side": "enemy",
+        "range": 18
+      },
+      "do": [
+        {
+          "shock": 0
+        }
+      ]
+    }
   },
   "Scrambler Array": {
-    "status": "auto",
-    "note": "Enemy units that are set up on the battlefield as Reinforcements cannot be set up within 12\" of this model."
+    "effects": [
+      {
+        "scope": "model",
+        "omniScrambler": 12
+      }
+    ]
   },
-  "Fights First": { "code": true,
+  "Fights First": {
+    "code": true,
     "status": "auto",
     "note": "FIGHTS FIRST24.13 Those possessed of lightning-fast reactions may strike before the opponent can react. While every model in a unit has this ability, that unit is a Fights First unit. See the Resolve Fights First Combats step in the Fight phase (12.04)."
   },
   "Sudden Assault": {
-    "status": "auto",
-    "note": "While this model is leading a unit, models in that unit have the Fights First ability."
+    "effects": [
+      {
+        "scope": "led",
+        "fightsFirst": true
+      }
+    ]
   },
   "Bodyguard": {
-    "status": "auto",
-    "note": "While this model is leading a unit, other Character models attached to that unit have the Feel No Pain 4+ ability."
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "fnp": 4,
+          "charOnly": true
+        }
+      }
+    ]
   },
-  "Lone Operative": { "code": true,
+  "Lone Operative": {
+    "code": true,
     "status": "auto",
     "note": "LONE OPERATIVE24.24 Assassins and other covert agents are difficult to pinpoint in the storm of battle. Unless part of an attached unit, this unit is not visible to enemy models unless they are within 12\" of this unit, and it cannot be targeted by [INDIRECT FIRE] weapons unless the attacking model i..."
   },
   "Creeping Shadow": {
-    "status": "auto",
-    "note": "If this model is equipped with a cult sniper rifle, In your opponent's Movement phase, if an enemy unit ends a move within 8\" of this unit, if this unit is not within Engagement Range of one or more enemy units, this unit can make a Normal move of up to 6\"."
+    "act": {
+      "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "phase",
+      "if": [
+        "unengaged",
+        "hasWeapon:cult sniper rifle"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "move": "6"
+        }
+      ]
+    }
   },
   "Cloaked Assassin": {
-    "status": "auto",
-    "note": "Enemy units cannot target this unit with snap shooting attacks."
+    "effects": [
+      {
+        "noSnapTarget": true
+      }
+    ]
   },
   "Psychic Spoor": {
-    "status": "auto",
-    "note": "At the start of the first battle round, select one enemy unit to be this model’s prey. Each time this model makes an attack that targets its prey, you can re-roll the Hit roll and you can re-roll the Wound roll."
+    "effects": [
+      {
+        "if": [
+          "targetQuarry"
+        ],
+        "reroll": [
+          "hits",
+          "wounds"
+        ]
+      }
+    ],
+    "act": {
+      "when": "battleStart",
+      "auto": true,
+      "limit": "battle",
+      "target": {
+        "side": "enemy",
+        "anywhere": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "setQuarry": true
+        }
+      ]
+    }
   },
   "Heroic Fusillade": {
-    "status": "auto",
-    "note": "Once per turn, after one model from your army with this ability has shot, you can select one INFANTRY unit hit by one or more of those attacks. That unit must take a Battle-shock test."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "turn",
+      "per": "army",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "INFANTRY"
+        ]
+      },
+      "do": [
+        {
+          "shock": 0
+        }
+      ]
+    }
   },
   "Hypersensory Abilities": {
-    "status": "auto",
-    "note": "Once per turn, in your opponent’s Movement phase, when an enemy unit ends a Normal, Advance or Fall Back move within 8\" of this model, if this model is not within Engagement Range of one or more enemy units, it can shoot at that unit as if it were your Shooting phase and then make a Normal move of u..."
+    "act": {
+      "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "turn",
+      "per": "army",
+      "if": [
+        "unengaged"
+      ],
+      "target": {
+        "side": "enemy",
+        "ctxUnit": true
+      },
+      "do": [
+        {
+          "on": "self",
+          "shootBack": true
+        },
+        {
+          "on": "self",
+          "move": "D6"
+        }
+      ]
+    },
+    "note": "It shoots the unit that moved, then makes a Normal move of up to D6\""
   },
   "Battlefield Analysis": {
-    "status": "auto",
-    "note": "Once per battle round, one model from your army with this ability can use it when its unit is targeted with a Stratagem. If it does, reduce the CP cost of that use of that Stratagem by 1CP."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "*"
+          ],
+          "cp": 1,
+          "limit": "round",
+          "perArmy": true
+        }
+      }
+    ]
   },
   "Cult Infiltration": {
+    "code": true,
     "status": "auto",
-    "note": "At the start of each player’s Command phase, if this model is on the battlefield, you can select one of your Cult Ambush markers that is on the battlefield and has not been moved this turn and move it up to 6\"."
+    "note": "Start of each Command phase: one Cult Ambush marker moves up to 6\" (towards the enemy)"
   },
   "Twisted Science": {
-    "status": "auto",
-    "note": "While this model is leading a unit, melee weapons equipped by models in that unit have the [LETHAL HITS] ability."
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "melee",
+        "abilities": [
+          "lethal hits"
+        ]
+      }
+    ]
   },
   "Biological Warfare": {
-    "status": "auto",
-    "note": "Once per battle, when this model's unit is selected to fight, this model can use this ability. If it does, until the end of the phase, improve the Attacks and Damage characteristics of its injector goad by 3."
+    "act": {
+      "when": "selectedToFight",
+      "limit": "battle",
+      "label": "Biological Warfare: injector goad +3 Attacks and Damage",
+      "botUse": "valuable",
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "weapon": "injector goad",
+              "attacks": 3,
+              "damage": 3
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Alchemicus Familiar": {
-    "status": "auto",
-    "note": "Once per battle, when the bearer’s unit is selected to fight, the bearer can use its alchemicus familiar. If it does, until the end of the phase, each time a model in the bearer’s unit makes an attack that targets an INFANTRY unit, add 1 to the Wound roll."
+    "act": {
+      "when": "selectedToFight",
+      "limit": "battle",
+      "label": "Alchemicus Familiar: +1 to Wound against INFANTRY",
+      "botUse": "valuable",
+      "do": [
+        {
+          "on": "self",
+          "buff": [
+            {
+              "if": [
+                "targetInfantry"
+              ],
+              "wound": 1
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Crossfire": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, select one enemy unit hit by one or more of those attacks. Until the end of the turn, each time a friendly GENESTEALER CULTS unit makes an attack that targets that enemy unit, improve the Armour Penetration characteristic of that attack by 1."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "units": [
+              "GENESTEALER CULTS"
+            ],
+            "ap": 1
+          },
+          "until": "turn"
+        }
+      ]
+    }
   },
   "Flare Launcher": {
-    "status": "auto",
-    "note": "The bearer’s unit has the SMOKE keyword and you can target it with the Smokescreen Stratagem for 0CP."
+    "gear": true,
+    "effects": [
+      {
+        "addKeywords": [
+          "SMOKE"
+        ]
+      },
+      {
+        "stratDiscount": {
+          "ids": [
+            "smokescreen"
+          ],
+          "cp": 9
+        }
+      }
+    ]
   },
   "Spotter": {
-    "status": "auto",
-    "note": "The bearer’s ranged weapons have a Ballistic Skill characteristic of 3+."
+    "gear": true,
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "ranged",
+        "skillSet": 3
+      }
+    ]
   },
   "Survey Augur": {
-    "status": "auto",
-    "note": "Each time the bearer’s unit has shot, select one enemy unit that was hit by one or more attacks made by the bearer this phase. Until the end of the phase, each time a friendly GENESTEALER CULTS model makes an attack against that unit, that attack has the [IGNORES COVER] ability."
+    "gear": true,
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "units": [
+              "GENESTEALER CULTS"
+            ],
+            "abilities": [
+              "ignores cover"
+            ]
+          },
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Outrider Gangs": {
+    "code": true,
     "status": "auto",
-    "note": "Each time you use the Cult Ambush ability to set this unit back upon the battlefield, in addition to the normal rules, all of its models must be set up wholly within 9\" of a battlefield edge and at least one of its models must be touching one of your Cult Ambush markers (that marker is then removed ..."
+    "note": "Cult Ambush: it arrives wholly within 9\" of a battlefield edge, touching a marker"
   },
   "Demolition Run": {
-    "status": "auto",
-    "note": "Once per turn, in your Movement phase, when this unit ends a Normal, Advance or Fall Back move, you can select one enemy unit within 6\" of and visible to this unit and roll one D6 for each ATALAN JACKALS model in this unit: for each 4+, that enemy unit suffers 1 mortal wound (to a maximum of 6 mortal wounds)."
+    "act": {
+      "when": "endOfNormalMove",
+      "limit": "turn",
+      "label": "Demolition Run: 1 D6 per model, 4+ = 1 mortal wound",
+      "target": {
+        "side": "enemy",
+        "range": 6,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "all": true,
+            "max": 6
+          }
+        }
+      ]
+    }
   },
   "Primed and Ready": {
-    "status": "auto",
-    "note": "In your Shooting phase, you can select one model from your army with this ability as the target of the Explosives Stratagem for 0CP, provided that model has not already been the target of that Stratagem this phase."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "explosives"
+          ],
+          "cp": 9,
+          "limit": "phase"
+        }
+      }
+    ]
   },
   "Planted Explosives": {
-    "status": "auto",
-    "note": "Once per battle, when an enemy unit ends a Normal, Advance or Fall Back move within 8\" of this model, this model can use its Reductus mine. If it does, roll one D6: on a 2+, that enemy unit suffers D3+3 mortal wounds."
+    "act": {
+      "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "battle",
+      "per": "army",
+      "target": {
+        "side": "enemy",
+        "ctxUnit": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3+3"
+            }
+          ]
+        }
+      ]
+    }
   },
-  "One Shot": { "code": true,
-    "status": "auto",
-    "note": "The bearer can only shoot with this weapon once per battle."
+  "One Shot": {
+    "status": "info",
+    "note": "The weapon's [ONE SHOT] is applied by the weapon itself"
   },
   "Bio-horror Disruption (Psychic)": {
-    "status": "auto",
-    "note": "While this model is leading a unit, ranged weapons equipped by models in that unit have the [LETHAL HITS] ability."
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "ranged",
+        "abilities": [
+          "lethal hits"
+        ]
+      }
+    ]
   },
   "Psionic Shield (Psychic)": {
-    "status": "auto",
-    "note": "Once per battle, at the start of any phase, this model can use this ability. If it does, until the end of the phase, this model has a 4+ invulnerable save."
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "label": "Psionic Shield: 4+ invulnerable save this phase",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "defend": {
+                "inv": 4
+              }
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Industrialised Destruction": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes an attack, re-roll a Wound roll of 1. If the target of that attack is an enemy unit within range of an objective marker, you can re-roll the Wound roll."
+    "effects": [
+      {
+        "reroll": "wounds1"
+      },
+      {
+        "if": [
+          "targetOnObjective"
+        ],
+        "reroll": "wounds"
+      }
+    ]
   },
   "Synapse": {
     "status": "auto",
     "note": "If your Army Faction is TYRANIDS, while a TYRANIDS unit from your army is within 6\" of one or more friendly Synapse models, that TYRANIDS unit is said to be within Synapse Range of that model and of your army."
   },
   "Feeder Tendrils": {
-    "status": "auto",
-    "note": "Each time this model destroys an enemy CHARACTER model, you gain 1CP."
+    "act": {
+      "when": "afterFighting",
+      "auto": true,
+      "needCharacterKill": true,
+      "do": [
+        {
+          "cp": 1
+        }
+      ]
+    }
   },
   "Fear of the Unseen (Aura)": {
-    "status": "auto",
-    "note": "While an enemy unit is within 6\" of this model, worsen the Leadership characteristic of models in that unit by 1. In addition, in the Battle-shock step of your opponent’s Command phase, if such an enemy unit is below its Starting Strength, it must take a Battle-shock test."
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 6,
+        "ld": -1
+      },
+      {
+        "scope": "model",
+        "terrorBelow": 6
+      }
+    ]
   },
   "HUNTER ORGANISM": {
-    "status": "auto",
-    "note": "This model cannot be your WARLORD."
+    "status": "info",
+    "note": "Army building: cannot be your WARLORD"
   },
   "Parasitic Infection": {
-    "status": "auto",
-    "note": "Each time an INFANTRY model is destroyed by an attack made with this model’s barbed ovipositor, after this model has finished making its attacks, you can add one new Ripper Swarms unit to your army consisting of D3 models and set it up within 3\" of this model."
+    "status": "manual",
+    "note": "Not automated: new Ripper Swarms units are not added"
   },
   "It Itches!": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, select one enemy unit within Engagement Range of this model. That enemy unit must take a Battle-shock test."
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true
+      },
+      "do": [
+        {
+          "shock": 0
+        }
+      ]
+    }
   },
-  "Shadow in the Warp": { "code": true,
+  "Shadow in the Warp": {
+    "code": true,
     "status": "auto",
     "note": "If your Army Faction is TYRANIDS, once per battle, in either player’s Command phase, if one or more units from your army with this ability are on the battlefield, you can unleash the Shadow in the Warp. When you do, each enemy unit on the battlefield must take a Battle-shock test."
   },
   "Will of the Hive Mind": {
-    "status": "auto",
-    "note": "Once per battle round, one model from your army with this ability can use it when a friendly TYRANIDS unit within 12\" of that model is targeted with a Stratagem. If it does, reduce the CP cost of that usage of that Stratagem by 1CP."
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 12,
+        "units": [
+          "TYRANIDS"
+        ],
+        "stratDiscount": {
+          "ids": [
+            "*"
+          ],
+          "cp": 1,
+          "limit": "round",
+          "perArmy": true
+        }
+      }
+    ]
   },
   "Paroxysm (Psychic)": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, you can select one enemy unit within 12\" of and visible to this model and roll one D6: on a 1, this PSYKER suffers D3 mortal wounds; on a 2+, until the end of the phase, subtract 1 from the Attacks characteristic of weapons equipped by models in that unit."
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "visible": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 1,
+          "max": 1,
+          "do": [
+            {
+              "on": "self",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 2,
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "attacks": -1
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ]
+    }
   },
   "Alpha Warrior": {
-    "status": "auto",
-    "note": "While this model is leading a unit, weapons equipped by models in that unit have the [SUSTAINED HITS 1] ability."
+    "effects": [
+      {
+        "scope": "led",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
   },
   "Death Blow": {
-    "status": "auto",
-    "note": "If this model is destroyed by a melee attack, if it has not fought this phase, roll one D6: on a 4+, do not remove it from play. The destroyed model can fight after the attacking model’s unit has finished making its attacks, and is then removed from play."
+    "effects": [
+      {
+        "scope": "model",
+        "fightOnDeath": 4
+      }
+    ]
   },
   "Winged Swarm": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, if it is not within Engagement Range of any enemy units, it can make a Normal move of up to 6\". If it does, until the end of the turn, this unit is not eligible to declare a charge."
+    "act": {
+      "when": "afterShootingButton",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Normal move of up to 6\" (no charge this turn)",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "move": "6",
+          "noCharge": true
+        }
+      ]
+    }
   },
   "Aerial Seeding": {
-    "status": "auto",
-    "note": "This model must start the battle in Reserves, but neither it nor any units embarked within it are counted towards any limits placed on the maximum number of Reserves units you can start the battle with."
+    "status": "partial",
+    "note": "It is set up from Reserves like other units; its passengers disembark more than 8\" from enemies by hand"
   },
   "Pheromone Trail": {
-    "status": "auto",
-    "note": "Once per battle round, you can target one model with this ability with the Rapid Ingress Stratagem for 0CP."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "rapid-ingress"
+          ],
+          "cp": 9,
+          "limit": "round",
+          "perArmy": true
+        }
+      }
+    ]
   },
   "Terror From The Deep": {
-    "status": "auto",
-    "note": "Each time this model is set up on the battlefield using the Deep Strike ability, roll one D6 for each enemy unit within 12\" of this model: on a 2-4, that unit suffers D3 mortal wounds; on a 5+, that unit suffers 3 mortal wounds and must take a Battle-shock test."
+    "act": {
+      "when": "movement",
+      "auto": true,
+      "if": [
+        "setUpThisTurn"
+      ],
+      "limit": "battle",
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "each": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "max": 4,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 5,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "3"
+            },
+            {
+              "on": "target",
+              "shock": 0
+            }
+          ]
+        }
+      ]
+    },
+    "note": "Each time it arrives by Deep Strike"
   },
   "Neural Disruption": {
-    "status": "auto",
-    "note": "In your Command phase, select one enemy unit within 12\" of this model. That unit must take a Battle-shock test."
+    "act": {
+      "when": "command",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 12
+      },
+      "do": [
+        {
+          "shock": 0
+        }
+      ]
+    }
   },
   "Psychological Saboteur (Aura)": {
-    "status": "auto",
-    "note": "While an enemy unit is within 12\" of this model, if that unit is Battle-shocked: • Each time a model in that unit makes an attack, subtract 1 from the Hit roll. • Each time a friendly TYRANIDS model makes an attack that targets that unit, add 1 to the Wound roll."
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 12,
+        "if": [
+          "battleShocked"
+        ],
+        "hit": -1
+      },
+      {
+        "scope": "enemyAura",
+        "range": 12,
+        "if": [
+          "battleShocked"
+        ],
+        "defend": {
+          "wound": 1
+        }
+      }
+    ],
+    "note": "+1 to Wound for every attack on it (the card: TYRANIDS attacks)"
   },
   "Death From Below": {
-    "status": "auto",
-    "note": "At the end of your opponent’s turn, if this unit is not within Engagement Range of one or more enemy units, you can remove it from the battlefield and place it into Strategic Reserves."
+    "act": {
+      "when": "opponentTurnEnd",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Death From Below: into Strategic Reserves",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
+        }
+      ]
+    }
   },
   "Subterranean Tunnels": {
-    "status": "auto",
-    "note": "In your Movement phase, when this model is set up on the battlefield using the Deep Strike ability, it can use a subterranean tunnel."
+    "effects": [
+      {
+        "deepStrikeRange": 6
+      }
+    ]
   },
   "Pouncing Leap": {
-    "status": "auto",
-    "note": "You can target this unit with the Heroic Intervention stratagem, regardless of any other uses of that stratagem this phase. If you do: • That use is -1 CP. • That use does not prevent any uses of that stratagem on other units this phase."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "cp": 1
+        },
+        "stratRepeat": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "limit": "phase"
+        }
+      }
+    ]
   },
   "Senior Officer": {
     "status": "auto",
@@ -363,7 +1180,8 @@
     "status": "auto",
     "note": "Once per battle, when issuing an Order, the Lord Commissar can issue one additional Order. Designer’s Note: Place a Servo-scribes token next to the unit, removing it when this ability has been used."
   },
-  "Vox-net": { "code": true,
+  "Vox-net": {
+    "code": true,
     "status": "auto",
     "note": "Each time this model issues an Order, it can issue it to an eligible unit up to 12\" away."
   },
@@ -443,7 +1261,8 @@
     "status": "info",
     "note": "While an enemy unit is only within Engagement Range of one or more FORTIFICATIONS from your army: • That unit can still be selected as the target of ranged attacks, but each time such an attack is made, unless it is made with a Pistol, subtract 1 from the Hit roll."
   },
-  "DEPLOYMENT": { "code": true,
+  "DEPLOYMENT": {
+    "code": true,
     "status": "auto",
     "note": "When this model is set up, it will consist of 1 platform section, up to 5 shield sections, up to 2 broken shield sections, and up to 2 end sections."
   },
@@ -600,12 +1419,34 @@
     "note": "If your Army Faction is TYRANIDS, once per battle, in either player’s Command phase, if one or more units from your army with this ability are on the battlefield, you can unleash the Shadow in the Warp. When you do, each enemy unit on the battlefield must take a Battle-shock test."
   },
   "Alpha Invader": {
-    "status": "auto",
-    "note": "Weapons equipped by models in this unit have the [SUSTAINED HITS 1] ability."
+    "effects": [
+      {
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
   },
   "Hypersensory Array": {
-    "status": "auto",
-    "note": "Once per battle round, you can target this unit with the Rapid Ingress/Heroic Intervention stratagem, regardless of any other uses of that stratagem this phase. If you do: • That use is -1 CP. • That use does not prevent any uses of that stratagem on other units this phase."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "rapid-ingress",
+            "heroic-intervention"
+          ],
+          "cp": 1,
+          "limit": "round"
+        },
+        "stratRepeat": {
+          "ids": [
+            "rapid-ingress",
+            "heroic-intervention"
+          ],
+          "limit": "phase"
+        }
+      }
+    ]
   },
   "Rapid Strike Vehicle": {
     "status": "auto",
@@ -616,92 +1457,234 @@
     "note": "In your Shooting phase, after this unit has shot, it can make a Normal move of up to D6\". If it does, until the end of the turn, this unit is not eligible to declare a charge."
   },
   "Swallow Whole": {
-    "status": "auto",
-    "note": "Each time an attack with this model’s gaping maw targets an INFANTRY, MOUNTED or BEASTS unit, each successful unmodified Wound roll is a Critical Wound. Each time an INFANTRY, MOUNTED or BEASTS model is destroyed as a result of an attack made by this model’s gaping maw, this model regains up to D3+2 lost wounds."
+    "effects": [
+      {
+        "weapon": "gaping maw",
+        "if": [
+          "targetKw:INFANTRY|MOUNTED|BEASTS"
+        ],
+        "critWoundOn": 2
+      }
+    ],
+    "act": {
+      "when": "afterFighting",
+      "auto": true,
+      "if": [
+        "killedModelThisPhase"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "heal": "D3+2"
+        }
+      ]
+    },
+    "note": "Heals once per fight (the card: per model destroyed by the maw)"
   },
   "Subterranean Hunter": {
-    "status": "auto",
-    "note": "At the end of the Fight phase, if this unit is not within Engagement Range of one or more enemy units, you can remove it from the battlefield and place it into Strategic Reserves."
+    "act": {
+      "when": "fightEndButton",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Subterranean Hunter: into Strategic Reserves",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
+        }
+      ]
+    }
   },
   "A Perfect Ambush": {
     "status": "auto",
     "note": "Each time a GENESTEALER CULTS unit from your army is set up on the battlefield as Reinforcements, until the end of your next Fight phase, weapons equipped by models in that unit have the [SUSTAINED HITS 1] and [IGNORES COVER] abilities."
   },
   "Prowling Agitant": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS model only. In your opponent's Movement phase, if an enemy unit ends a move within 8\" of this unit, if this unit is not within Engagement Range of one or more enemy units, this unit can make a Normal move of up to D6\"."
+    "act": {
+      "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "phase",
+      "if": [
+        "unengaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "move": "D6"
+        }
+      ]
+    }
   },
   "A Chink in Their Armour": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS model only. Each time the bearer is set up on the battlefield as Reinforcements, until the end of your next Fight phase, ranged weapons equipped by models in the bearer’s unit have the [LETHAL HITS] ability."
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "reinforcedRecently"
+        ],
+        "abilities": [
+          "lethal hits"
+        ]
+      }
+    ]
   },
-  "Our Time Is Nigh": { "code": true,
+  "Our Time Is Nigh": {
+    "code": true,
     "status": "auto",
     "note": "GENESTEALER CULTS model only. Once per battle, when the bearer’s unit declares a charge, the bearer can use this Enhancement. If it does, until the end of the phase, add 2 to Charge rolls made for the bearer’s unit."
   },
   "Assassination Edict": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS model only. Each time a model in the bearer’s unit makes an attack that targets a CHARACTER unit, add 1 to the Hit roll"
+    "effects": [
+      {
+        "if": [
+          "targetCharacter"
+        ],
+        "hit": 1
+      }
+    ]
   },
   "Unquestioning Fanaticism": {
     "status": "auto",
     "note": "For each ACOLyTE HybRIDS, HybRID METAmORPHS and NEOPHyTE HybRIDS unit from your army, while one or more CHARACTER models are leading that unit, you can re-roll Advance and Charge rolls made for it."
   },
   "Gene-sire’s Reliquant": {
-    "status": "auto",
-    "note": "MAgUS, PRImUS or ACOLyTE ICONwARD model only. You can re-roll Battle-shock tests taken for the bearer’s unit."
+    "effects": [
+      {
+        "rerollShock": true
+      }
+    ]
   },
   "Denunciator of Tyrants": {
-    "status": "auto",
-    "note": "MAgUS, PRImUS or ACOLyTE ICONwARD model only. Each time a model in the bearer’s unit makes an attack that targets a CHARACTER unit, add 1 to the Hit roll and add 1 to the Wound roll."
+    "effects": [
+      {
+        "if": [
+          "targetCharacter"
+        ],
+        "hit": 1,
+        "wound": 1
+      }
+    ]
   },
   "Deeds That Speak to the Masses": {
+    "code": true,
     "status": "auto",
-    "note": "Magus, Primus or Acolyte Iconward model only. You start the battle with 2 additional Resurgence points."
+    "note": "+2 Resurgence points at the start of the battle"
   },
   "Incendiary Inspiration": {
-    "status": "auto",
-    "note": "MAgUS, PRImUS or ACOLyTE ICONwARD model only. The bearer’s unit is eligible to declare a charge in a turn in which it Advanced."
+    "effects": [
+      {
+        "eligible": [
+          "chargeAfterAdvance"
+        ]
+      }
+    ]
   },
   "Hypermorphic Fury": {
     "status": "auto",
     "note": "Add 1 to Charge rolls made for AbERRANTS, BIOPHAgUS and PURESTRAIN GENESTEALERS units from your army. In addition, each time such a unit is selected to fight, if it made a Charge move this turn, until the end of the phase, add 1 to the Attacks characteristic of melee weapons equipped by models in that unit."
   },
   "Predatory Instincts": {
-    "status": "auto",
-    "note": "ABOMINANT, BIOPHAGUS or PATRIARCH model only. • Models in the bearer’s unit have the Infiltrators ability. • You can target this unit with the Heroic Intervention stratagem, regardless of any other uses of that stratagem this phase. If you do: • That use is -1 CP."
+    "effects": [
+      {
+        "infiltrators": true
+      },
+      {
+        "stratDiscount": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "cp": 1
+        }
+      }
+    ],
+    "note": "Heroic Intervention costs 1CP less (it still counts as that stratagem's use this phase)"
   },
   "Biomorph Adaptation": {
-    "status": "auto",
-    "note": "AbOmINANT or PATRIARCH model only. Improve the Armour Penetration and Damage characteristics of melee weapons equipped by the bearer by 1."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "ap": 1,
+        "damage": 1
+      }
+    ]
   },
   "Mutagenic Regeneration": {
-    "status": "auto",
-    "note": "AbOmINANT, BIOPHAgUS or PATRIARCH model only. In each Command phase, one model in the bearer’s unit regains 1 lost wound."
+    "act": {
+      "when": "eachCommandStart",
+      "auto": true,
+      "limit": "phase",
+      "do": [
+        {
+          "on": "self",
+          "heal": "1"
+        }
+      ]
+    }
   },
   "Alien Majesty": {
-    "status": "auto",
-    "note": "AbOmINANT, BIOPHAgUS or PATRIARCH model only. While an enemy unit is within Engagement Range of the bearer’s unit, subtract 1 from the Objective Control characteristic of models in that enemy unit (to a minimum of 1)."
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 1,
+        "oc": -1
+      }
+    ]
   },
   "Rapid Takeover": {
     "status": "auto",
     "note": "While a GENESTEALER CULTS MOUNTED/VEHICLE model from your army is not Battle-shocked, add 1 to its Objective Control characteristic."
   },
   "Serpentine Tactics": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS MOUNTED model only. The bearer’s unit is eligible to shoot in a turn in which it Fell Back."
+    "effects": [
+      {
+        "eligible": [
+          "shootAfterFallBack"
+        ]
+      }
+    ]
   },
   "Cartographic Data-leech": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS model only. While the bearer is embarked within a TRANSPORT, each time that TRANSPORT is selected to shoot, until the end of the phase, improve the Ballistic Skill characteristic of ranged weapons equipped by that TRANSPORT as a result of the Firing Deck ability by 1."
+    "status": "partial",
+    "note": "Not automated: +1 BS for the transport's Firing Deck weapons"
   },
   "Starfall Shells": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS MOUNTED model only. In your Shooting phase, after the bearer has shot, select one enemy unit hit by one or more of those attacks made with a cult sniper rifle. Until the start of your next Shooting phase, each time a model in that enemy unit makes an attack, subtract 1 from the Hit roll."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "cult sniper rifle"
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "hit": -1
+            }
+          ],
+          "until": "nextCommand",
+          "mark": "starfall"
+        }
+      ]
+    },
+    "note": "Lasts until your next Command phase (the card: your next Shooting phase)"
   },
   "Assault Commando": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS model only. Each time a model in the bearer’s unit makes a ranged attack, if it disembarked from a TRANSPORT this turn, you can re-roll the Hit roll."
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "disembarkedThisTurn"
+        ],
+        "reroll": "hits"
+      }
+    ]
   },
   "Integrated Tactics": {
     "status": "auto",
@@ -712,20 +1695,59 @@
     "note": "You can include ASTRA MILITARUm units in your army, even though they do not have the GENESTEALER CULTS Faction keyword. The combined points cost of such units you can include in your army is: • Incursion: Up to 500 pts • Strike Force: Up to 1000 pts • Onslaught: Up to 1500 pts A GENESTEALER CULTS mo..."
   },
   "Martial Espionage": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS INFANTRy model only. Once per turn, when a friendly ASTRA MILITARUm INFANTRy or ASTRA MILITARUm MOUNTED unit within 9\" of the bearer is selected to shoot, the bearer can use this Enhancement."
+    "act": {
+      "when": "shooting",
+      "limit": "turn",
+      "target": {
+        "side": "friendly",
+        "range": 9,
+        "units": [
+          "ASTRA MILITARUM",
+          "INFANTRY|MOUNTED"
+        ]
+      },
+      "label": "Martial Espionage: +1 AP for an ASTRA MILITARUM unit within 9\"",
+      "botUse": "always",
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "attack": "ranged",
+              "ap": 1
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Adaptive Reprisal": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS INFANTRY model only. When you target this unit with the Heroic Intervention stratagem, that use is -1 CP."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "cp": 1
+        }
+      }
+    ]
   },
   "The Hero Returned": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS INFANTRY model only. Improve the Leadership and Objective Control characteristics of models in the bearer’s unit by 1."
+    "effects": [
+      {
+        "ld": 1,
+        "oc": 1
+      }
+    ]
   },
   "Firepoint Commander": {
-    "status": "auto",
-    "note": "GENESTEALER CULTS INFANTRY model only. Each time you target the bearer’s unit with the Fire Overwatch Stratagem, while resolving that Stratagem, hits are scored on unmodified Hit rolls of 5+."
+    "effects": [
+      {
+        "overwatchHitOn": 5
+      }
+    ]
   },
   "Psionic Parasitism": {
     "status": "auto",
@@ -736,51 +1758,171 @@
     "note": "Tyranids model only. Each time the bearer would regain one or more lost wounds from the Psionic Parasitism Detachment rule, it regains up to twice that number of lost wounds instead."
   },
   "Enraptured Damnation": {
-    "status": "auto",
-    "note": "Genestealer Cults model only. Enemy units cannot use the Fire Overwatch Stratagem to shoot at the bearer’s unit."
+    "effects": [
+      {
+        "noSnapTarget": true
+      }
+    ]
   },
   "Vanguard Tyrant": {
-    "status": "auto",
-    "note": "Winged Hive Tyrant model only. Improve the Strength and Armour Penetration characteristics of melee weapons equipped by the bearer by 1."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "strength": 1,
+        "ap": 1
+      }
+    ]
   },
   "Inhuman Integration": {
-    "status": "auto",
-    "note": "Genestealer Cults model only. Weapons equipped by models in the bearer’s unit have the [SUSTAINED HITS 1] ability while targeting an enemy unit within 6\" of one or more friendly Tyranids units."
+    "effects": [
+      {
+        "if": [
+          "targetNearFriendly:6:TYRANIDS"
+        ],
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
   },
   "Killer Reputation": {
     "status": "auto",
     "note": "Friendly KELERMORPH/LOCUS/REDUCTUS SABOTEUR/SANCTUS models have KILLER. Friendly KILLER models’ attacks can: • Re-roll hit rolls of 1. • Re-roll wound rolls of 1"
   },
   "Gene-Tailored Toxins": {
-    "status": "auto",
-    "note": "LOCUS/SANCTUS model only. This model’s attacks have +1 D."
+    "effects": [
+      {
+        "scope": "model",
+        "damage": 1
+      }
+    ]
   },
   "Contraband Munitions": {
-    "status": "auto",
-    "note": "KELERMORPH/REDUCTUS SABOTEUR model only. This unit’s ranged attacks have +2 S."
+    "effects": [
+      {
+        "attack": "ranged",
+        "strength": 2
+      }
+    ]
   },
   "Enemy Within": {
     "status": "auto",
     "note": "At the end of your opponent’s Fight phase, friendly unengaged PURESTRAIN GENESTEALER units can be placed in strategic reserves. This detachment has the PURESTRAIN tag and cannot be taken with another PURESTRAIN detachment."
   },
   "Mark of the Star Children": {
-    "status": "auto",
-    "note": "PURESTRAIN GENESTEALERS unit only. This unit has: • +1 T. • 4+ Sv. • This unit’s melee attacks have +1 S."
+    "effects": [
+      {
+        "toughness": 1,
+        "svSet": 4
+      },
+      {
+        "attack": "melee",
+        "strength": 1
+      }
+    ]
   },
   "Talons of the Sire": {
-    "status": "auto",
-    "note": "PATRIARCH model only. This unit’s attacks can re-roll wound rolls of 1."
+    "effects": [
+      {
+        "reroll": "wounds1"
+      }
+    ]
   },
   "Hordes of the Faithful": {
     "status": "auto",
     "note": "In your Command phase, if a friendly NEOPHYTE HYBRIDS unit is within a terrain area, that unit heals 3 wounds. This detachment has the HOSTS tag and cannot be taken with another HOSTS detachment."
   },
   "Inspired to Greatness": {
-    "status": "auto",
-    "note": "MAGUS/PRIMUS model only. This unit’s attacks can re-roll damage rolls."
+    "effects": [
+      {
+        "reroll": "damage"
+      }
+    ]
   },
   "Devious Disguises": {
-    "status": "auto",
-    "note": "NEOPHYTE HYBRIDS unit only. This unit has -3\" detection range."
+    "effects": [
+      {
+        "detection": -3
+      }
+    ]
+  },
+  "Psychic Familiar@Patriarch": {
+    "act": {
+      "when": "fightStartButton",
+      "limit": "battle",
+      "label": "Psychic Familiar: Cosmic Horror reaches 12\" this phase",
+      "botUse": "always",
+      "botIf": [
+        "enemyEngagedWithin:12"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "buff": [],
+          "until": "phase",
+          "mark": "familiar"
+        }
+      ]
+    },
+    "note": "Use it before Cosmic Horror resolves"
+  },
+  "Psychic Familiar@Magus": {
+    "status": "partial",
+    "note": "Not automated: +6\" to Mind Control's range once per battle"
+  },
+  "Cult Icon@Acolyte Hybrids With Autopistols": {
+    "gear": true,
+    "act": {
+      "when": "command",
+      "auto": true,
+      "limit": "phase",
+      "if": [
+        "belowStarting"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "if": [
+            "!onControlledObjective"
+          ],
+          "reviveRoll": "D3"
+        },
+        {
+          "on": "self",
+          "if": [
+            "onControlledObjective"
+          ],
+          "reviveRoll": "3"
+        }
+      ]
+    }
+  },
+  "Cult Icon@Neophyte Hybrids": {
+    "gear": true,
+    "act": {
+      "when": "command",
+      "auto": true,
+      "limit": "phase",
+      "if": [
+        "belowStarting"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "if": [
+            "!onControlledObjective"
+          ],
+          "reviveRoll": "3"
+        },
+        {
+          "on": "self",
+          "if": [
+            "onControlledObjective"
+          ],
+          "reviveRoll": "D3+3"
+        }
+      ]
+    }
   }
 }

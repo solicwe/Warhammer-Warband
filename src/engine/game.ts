@@ -1126,7 +1126,7 @@ function endTurn(s: GameState) {
   // end of battle round
   emit(s, 'roundEnd', {});
   if (s.round === RULES.reserves.destroyedAfterRound) {
-    for (const u of s.units) if (u.status === 'reserves' && !hasKw(u, 'AIRCRAFT')) {
+    for (const u of s.units) if (u.status === 'reserves' && !hasKw(u, 'AIRCRAFT') && !u.cultAmbush) {
       u.status = 'destroyed';
       log(s, `${u.name} did not arrive from Reserves by battle round ${s.round} → destroyed`, 'kill', u.owner);
     }
@@ -1355,8 +1355,10 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   if (closest <= RULES.reserves.enemyDistance || (how === 'deepStrike' && unitFlags(s, u).deepStrikeInFlow)) u.noChargeTurn = s.turn;
   log(s, `${u.name} arrives (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closest <= RULES.reserves.enemyDistance ? ' within 9" of the enemy → cannot charge this turn' : ''}`, 'info', u.owner);
   if (u.owner === s.active && s.phase === 'movement') {
+    s.lastAct = { unitId: u.id, owner: u.owner, kind: 'move', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
     offerReactions(s, 'enemyMovedNear', u);
     emit(s, 'unitMoved', { u });
+    emitReact(s, other(u.owner), 'enemyArrived', { unitId: u.id });
   }
   if (unitHasAbility(u, 'Drop Pod Assault')) dropPodAssault(s, u);
   if (u.homer && s.active !== u.owner) { log(s, `Teleport Homer: ${u.name} arrives at the token (token removed)`, 'info', u.owner); u.homer = undefined; }

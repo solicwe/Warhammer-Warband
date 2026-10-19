@@ -155,6 +155,8 @@ export interface Action {
   afflictNear?: number; // every enemy unit within X" of this unit is Afflicted until your next turn (Explosive Blight)
   alsoNear?: number; // do this to every other enemy unit within X" of the target too (Spore-laced Shock Waves)
   dg?: 'signalPox' | 'blightedLand' | 'eyestinger' | 'extraPlague' | 'leechspore';
+  gc?: 'parasitism'; // Genestealer Cults: Psionic Parasitism (cult.ts)
+  nec?: 'reanimate' | 'resurrect'; // Necrons: the target unit's Reanimation Protocols activate (resurrect: D6, one unit per turn)
   dru?: string; // Drukhari: 'empower' / 'gain' / 'spendCp' / 'wager' (drukhari.ts)
   ae?: string; // Aeldari: 'focus:<manoeuvre>' spends a Battle Focus token (aeldari.ts)
   jumpToDeath?: boolean; // the unit (one model) is set up again where the destroyed model was (Inevitable Death)
@@ -453,7 +455,7 @@ export interface FireCtx {
   killedCharacter?: boolean; modelsKilled?: number; melee?: boolean; deadModelId?: string;
 }
 
-function heal(s: GameState, u: UnitState, n: number) {
+export function heal(s: GameState, u: UnitState, n: number) {
   let left = n;
   const ms = alive(u).filter((m) => m.wounds < m.profile.W).sort((a, b) => b.profile.W - a.profile.W);
   for (const m of ms) {
@@ -743,6 +745,8 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     }
     const models = a.bearerOnly ? def.bearers.map((m) => m.id) : undefined;
     for (const e of a.buff ?? []) addTimed(s, on, { e, label: def.name, until: a.until ?? 'phase', by: u.owner, mark: a.mark, models });
+    // a bare mark ("buff": []) still has to be placed so `marked:` conditions can see it
+    if (a.mark && a.buff && !a.buff.length) addTimed(s, on, { e: {}, label: def.name, until: a.until ?? 'phase', by: u.owner, mark: a.mark, models });
     if (a.incoming) {
       const inc: Incoming = { ...a.incoming, by: u.owner };
       if (a.selfOnly) inc.units = [...(inc.units ?? []), `id:${u.id}`];
@@ -938,13 +942,16 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       }
       log(s, `${def.name}: ${a.attackMod.hit ? '+1 hit' : a.attackMod.noCover ? 'target has no cover' : `target T${a.attackMod.toughness}`} (this attack)`, 'info', u.owner);
     }
-    if (a.shootBack && ctx.killerId) {
-      const k = unitById(s, ctx.killerId);
+    // the attacker, or (Hypersensory Abilities) the enemy unit the ability picked
+    const shootAtId = a.shootBack ? ctx.killerId ?? (target && target.owner !== u.owner ? target.id : undefined) : undefined;
+    if (shootAtId) {
+      const k = unitById(s, shootAtId);
       // "that unit can shoot" (Inflamed Reprisal): the friendly unit that was targeted, not the ability's own unit
       const by = a.on === 'target' ? on : u;
       if (onBoard(k)) {
         (s.deathQueue ??= []).push({ unitId: by.id, modelIds: alive(by).map((m) => m.id), targetId: k.id, kind: 'shoot', label: def.name, alive: true });
         log(s, `${def.name}: ${by.name} will shoot back at ${k.name} after its attacks`, 'info', u.owner);
+        if (!s.attack) runDeathQueue(s); // not during an attack: it shoots now
       }
     }
     if (a.afflictNear) {

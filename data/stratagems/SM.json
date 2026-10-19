@@ -1483,8 +1483,7 @@
    "react": "ownDestroyed",
    "targetFrom": "destroyed",
    "targetKw": [
-    "DEATHWING",
-    "RAVENWING"
+    "DEATHWING|RAVENWING"
    ],
    "do": [
     {

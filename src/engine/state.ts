@@ -190,7 +190,7 @@ export function withinTerrain(s: GameState, m: ModelState, categories: string[] 
 
 // ---------- stratagem reactions ----------
 /** Moments a stratagem can react to (stratagems.ts registers the handler; the engine only reports the moment). */
-export type ReactOn = 'enemyMoved' | 'enemyShot' | 'enemyChargeDeclared' | 'enemyChargePhaseEnd' | 'fightPhaseEnd' | 'shootingPhaseEnd' | 'chargeMoveEnd' | 'ownAttacked'
+export type ReactOn = 'enemyMoved' | 'enemyArrived' | 'enemyShot' | 'enemyChargeDeclared' | 'enemyChargePhaseEnd' | 'fightPhaseEnd' | 'shootingPhaseEnd' | 'chargeMoveEnd' | 'ownAttacked'
   | 'ownDestroyed' | 'modelDestroyed' | 'oathDestroyed' | 'deadlyDemise' | 'enemyDeadlyDemise' | 'deadlyDemiseSix' | 'enemyChargeMoveEnd' | 'enemyChargePhaseStart' | 'enemyCommandStart' | 'enemyFallBack' | 'commandStart' | 'fightStart' | 'ownKilled';
 export interface ReactCtx { unitId?: string; modelId?: string; killerId?: string; six?: boolean; victimId?: string }
 type ReactHook = (s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx) => boolean;

@@ -6,7 +6,7 @@ import './rituals';
 import './orders';
 import { addCombatMods, addPoolFinisher } from '../engine/combatMods';
 import { addActionHandler, addChoiceHooks, addCondition, addDieRescue, addEffectSource, addModifier, addStratSpecial, addTargetFilter, on } from '../engine/events';
-import { shockTest } from '../rules-engine/activations';
+import { heal, shockTest } from '../rules-engine/activations';
 import { applyMortalWounds } from '../engine/attack';
 import { log } from '../engine/state';
 import type { GameState } from '../engine/types';
@@ -22,8 +22,8 @@ import { votannAttackModifiers, votannBattleStart, votannCommandEnd, votannDefen
 import { admechAttackModifiers, admechCommandStart, admechDefenseModifiers, admechRoundStart, unitActiveImperatives } from './admech';
 import { drugBlocked, drugPicked, drukhariAction, drukhariAttackMods, drukhariBattleShockFailed, drukhariBattleStart, drukhariCommandStart, drukhariPhaseEnd, drukhariUnitDestroyed, isUnitEmpowered, losingWager, painReady, pickContract } from './drukhari';
 import { daemonBattleShockMod, daemonsAttackModifiers, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsDefenseModifiers, daemonsOnBattleShockResult, daemonsPhaseEnd, daemonsUnitDestroyed } from './daemons';
-import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultAmbushUnitDestroyed, cultAttackModifiers, cultBattleStart, cultDefenseModifiers, cultIconCommandPhase } from './cult';
-import { necAttackModifiers, necBattleStart, necCommandStart, necDefenseModifiers } from './necrons';
+import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultAmbushUnitDestroyed, cultBattleStart, cultInfiltration, psionicParasitism, regimentalReinforcements } from './cult';
+import { activateReanimation, necCommandEnd, repairBarge, resurrect } from './necrons';
 import { gkAttackModifiers, gkDefenseModifiers, gkEndOpponentTurn } from './greyKnights';
 import { circleInFlow, inFlow, isThousandSonsArmy } from './flow';
 import { RULES } from '../engine/config';
@@ -181,15 +181,20 @@ addModifier('deepStrikeDistance', (s, u, at) => daemonsDeepStrikeDist(s, u, at))
 // Genestealer Cults
 on('setup', (s) => cultBattleStart(s));
 on('battleStart', (s) => cultBattleStart(s));
-on('commandStart', (s, e) => cultIconCommandPhase(s, e.p));
+on('commandStart', (s) => cultInfiltration(s));
 on('unitDestroyed', (s, e) => cultAmbushUnitDestroyed(s, e.u));
 on('movementEnd', (s) => cultAmbushArrival(s));
 on('unitMoved', (s, e) => cultAmbushCheckEnemyMoved(s, e.u));
+addStratSpecial('regimental', (s, x) => regimentalReinforcements(s, x.u));
+addActionHandler((s, a, x) => { if (a.gc === 'parasitism' && x.target) psionicParasitism(s, x.u, x.target, (u, n) => applyMortalWounds(s, u, n, 'Psionic Parasitism'), (u, n) => heal(s, u, n)); });
 
 // Necrons
-on('setup', (s) => necBattleStart(s));
-on('battleStart', (s) => necBattleStart(s));
-on('commandStart', (s, e) => necCommandStart(s, e.p));
+on('commandEnd', (s, e) => necCommandEnd(s, e.p));
+on('attackDone', (s, e) => repairBarge(s, e.T));
+addActionHandler((s, a, x) => {
+  if (a.nec === 'reanimate' && x.target) activateReanimation(s, x.target);
+  if (a.nec === 'resurrect' && x.target) resurrect(s, x.target);
+});
 
 // T'au Empire: Mont'ka, the first three battle rounds: ranged weapons have [ASSAULT]
 addCondition('targetSpotted', (_c, { s, A, T }) => { const pr = getFtggPairForGuided(s, A); return !!T && !!pr && pr.spottedId === T.id; });
@@ -230,12 +235,7 @@ addCombatMods((x) => drukhariAttackMods(x.s, x.A, x.T));
 // Chaos Daemons
 addCombatMods((x) => daemonsAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon));
 addCombatMods((x) => daemonsDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
-// Genestealer Cults
-addCombatMods((x) => { const c = cultAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon); return { ...c, critHitOn: c.critHitThreshold }; });
-addCombatMods((x) => cultDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
 // Necrons
-addCombatMods((x) => { const n = necAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon); return { ...n, critHitOn: n.critHitThreshold }; });
-addCombatMods((x) => necDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
 // Grey Knights
 addCombatMods((x) => { const g = gkAttackModifiers(x.s, x.A, x.T, x.d, x.mode, x.p, x.weapon); return { ...g, critHitOn: g.critHitThreshold }; });
 addCombatMods((x) => gkDefenseModifiers(x.s, x.A, x.T, x.mode, x.p));
