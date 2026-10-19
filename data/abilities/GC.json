@@ -879,8 +879,9 @@
     "note": "Army building: cannot be your WARLORD"
   },
   "Parasitic Infection": {
-    "status": "manual",
-    "note": "Not automated: new Ripper Swarms units are not added"
+    "code": true,
+    "status": "auto",
+    "note": "One Ripper Swarms unit of D3 models per INFANTRY model the barbed ovipositor destroys, set up within 3\" (not within Engagement Range)"
   },
   "It Itches!": {
     "act": {
@@ -1202,8 +1203,9 @@
     "note": "Each time this model issues an Order, it can issue it to an eligible unit up to 12\" away."
   },
   "Death Befitting An Officer": {
+    "code": true,
     "status": "auto",
-    "note": "When this model is destroyed, roll one D6: on a 2+, do not remove it from play - it can, after the attacking model’s unit has finished making its attacks, shoot as if it were your Shooting phase and as if it had its full wounds remaining. This model is then removed from play."
+    "note": "On a 2+ it shoots once more before it is removed (Astra Militarum: at the attacking unit, in the opponent's Shooting phase; its Deadly Demise is rolled first)"
   },
   "Malign Wardings(Psychic)": {
     "status": "auto",
@@ -1401,12 +1403,14 @@
     "note": "In your opponent’s Movement phase, if an enemy unit ends a move within 8\" of this unit, if this unit is not within Engagement Range of one or more enemy units, this unit can make a Normal move of up to 6\"."
   },
   "Deathstrike Missile": {
+    "code": true,
     "status": "auto",
-    "note": "In your Shooting phase, each time this model is selected to shoot, if it has not shot with its Deathstrike missile this battle, you can do one of the following in addition to resolving this model’s ranged attacks: • Designate Target: If this model does not have a Deathstrike Target marker on the bat..."
+    "note": "Start of your Shooting phase: the marker goes on the enemy unit worth the most under a 6\" blast (moved again if nothing is left there)"
   },
   "Plasma Warhead": {
+    "code": true,
     "status": "auto",
-    "note": "The bearer can only shoot with this weapon in your Shooting phase, and only if it Remained Stationary this turn and you did not use its Deathstrike Missile ability to Designate Target or Adjust Target this phase. When the bearer shoots with this weapon, do not select a target."
+    "note": "Fired at the start of your Shooting phase if the Deathstrike Remained Stationary and its marker was placed in an earlier turn; every unit within 6\" of the marker (yours too) is attacked"
   },
   "Close-range Titan Killer": {
     "effects": [
@@ -2213,8 +2217,9 @@
     "note": "Orders are worked out by the Voice of Command rules (orders.ts)"
   },
   "Death Befitting An Officer@Leman Russ Commander": {
-    "status": "manual",
-    "note": "Not automated: shooting back before it is removed"
+    "code": true,
+    "status": "auto",
+    "note": "On a 2+ it shoots once more before it is removed (Astra Militarum: at the attacking unit, in the opponent's Shooting phase; its Deadly Demise is rolled first)"
   },
   "ORDERS@Leman Russ Commander": {
     "code": true,
@@ -2587,12 +2592,14 @@
     }
   },
   "Deathstrike Missile@Deathstrike": {
-    "status": "manual",
-    "note": "Not automated: the Deathstrike Target marker"
+    "code": true,
+    "status": "auto",
+    "note": "Start of your Shooting phase: the marker goes on the enemy unit worth the most under a 6\" blast (moved again if nothing is left there)"
   },
   "Plasma Warhead@Deathstrike": {
-    "status": "manual",
-    "note": "Not automated: the Deathstrike plasma warhead"
+    "code": true,
+    "status": "auto",
+    "note": "Fired at the start of your Shooting phase if the Deathstrike Remained Stationary and its marker was placed in an earlier turn; every unit within 6\" of the marker (yours too) is attacked"
   },
   "One Shot@Deathstrike": {
     "code": true,

@@ -174,8 +174,34 @@
     }
   },
   "Surrogate Hosts": {
-    "status": "manual",
-    "note": "Not automated: swapping places with another NECRONS INFANTRY CHARACTER"
+    "act": {
+      "when": "commandStart",
+      "limit": "phase",
+      "label": "Surrogate Hosts: take the place of another NECRONS INFANTRY CHARACTER",
+      "target": {
+        "side": "friendly",
+        "units": [
+          "NECRONS",
+          "INFANTRY",
+          "CHARACTER",
+          "!EPIC HERO",
+          "!SKORPEKH LORD"
+        ],
+        "notSelf": true
+      },
+      "botUse": "always",
+      "botIf": [
+        "farFromEnemies:18"
+      ],
+      "do": [
+        {
+          "on": "target",
+          "surrogate": true
+        }
+      ]
+    },
+    "status": "auto",
+    "note": "The bot uses it when Trazyn is more than 18\" from the enemy, swapping into the character closest to the enemy"
   },
   "Carrier Wave (Aura)": {
     "effects": [
@@ -626,8 +652,23 @@
     ]
   },
   "Transdimensional Displacement": {
-    "status": "manual",
-    "note": "Not automated: the unlimited Advance through models"
+    "act": {
+      "when": "movement",
+      "limit": "phase",
+      "label": "Transdimensional Displacement: Advance anywhere more than 8\" from the enemy",
+      "botUse": "always",
+      "botIf": [
+        "farFromEnemies:16"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "displace": 8
+        }
+      ]
+    },
+    "status": "auto",
+    "note": "Counts as an Advance; the bot uses it to close in when the enemy is more than 16\" away"
   },
   "Powers of the C’tan": {
     "status": "info",
@@ -2112,8 +2153,9 @@
     }
   },
   "Reletavistic Tether": {
-    "status": "manual",
-    "note": "Not automated: Transdimensional Displacement is moved by hand"
+    "code": true,
+    "status": "auto",
+    "note": "Transdimensional Displacement ends more than 6\" away; no charge this turn if it ends within 8\""
   },
   "Enlivened Sentinels": {
     "effects": [

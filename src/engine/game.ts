@@ -13,6 +13,7 @@ import {
   emitReact, type ReactOn,
   heroFx, phaseKey,
 } from './state';
+import RIPPERS from '../../data/extra/ripper-swarms.json';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
@@ -260,6 +261,13 @@ export function createGame(o: NewGameOptions): GameState {
       const t = buildUnits({ ...o.lists[i], units: [{ uid: 'spore', datasheet: name, models: n, pts: 0 }] }, o.factions[i], i)[0];
       if (t) (s.players[i].sporeTemplates ??= {})[name] = t;
     }
+  }
+  // Parasitic Infection (Parasite of Mortrex): new Ripper Swarms units (GC armies borrow the Tyranid datasheet)
+  for (const i of [0, 1] as const) {
+    if (!o.lists[i].units.some((u) => o.factions[i].datasheets.find((d) => d.name === u.datasheet)?.abilities.some((a) => a.name === 'Parasitic Infection'))) continue;
+    const F = o.factions[i].datasheets.some((d) => d.name === 'Ripper Swarms') ? o.factions[i] : { ...o.factions[i], datasheets: [...o.factions[i].datasheets, RIPPERS as unknown as FactionData['datasheets'][number]] };
+    const t = buildUnits({ ...o.lists[i], units: [{ uid: 'rippers', datasheet: 'Ripper Swarms', models: 3, pts: 0 }] }, F, i)[0];
+    if (t) (s.players[i].sporeTemplates ??= {})['Ripper Swarms'] = t;
   }
   // Numberless Horde (Shamblerot Vectorium): Poxwalkers units of 10 that join the army in later battle rounds (Battleline)
   for (const i of [0, 1] as const) {
@@ -2764,5 +2772,26 @@ export function setUpNear(s: GameState, u: UnitState, anchor: UnitState, range: 
   if (!best) return false;
   for (const m of alive(u)) { const p = best.pos.get(m.id); if (p) { m.x = p.x; m.y = p.y; } }
   u.status = 'board'; u.setUpTurn = s.turn; u.move = 'ingress';
+  return true;
+}
+
+/** Set a unit up anywhere on the battlefield more than `keep`" from every enemy unit, closest to `prefer`
+ *  (`ok` narrows the spots, e.g. wholly within 8" of an edge). Sigil of Exigence, Imposing Arrival. */
+export function setUpAway(s: GameState, u: UnitState, keep: number, prefer: Pt, ok: (pos: Map<string, Pt>) => boolean = () => true): boolean {
+  const enemies = boardUnits(s, other(u.owner)).flatMap(alive);
+  let best: { pos: Map<string, Pt>; d: number } | null = null;
+  for (let x = 2; x < W - 1; x += 2) for (let y = 2; y < H - 1; y += 2) {
+    const d = dist({ x, y }, prefer);
+    if (best && d >= best.d) continue;
+    const pos = formationAt(u, { x, y });
+    if (![...pos.entries()].every(([id, p]) => { const m = u.models.find((q) => q.id === id)!; return onTable(bodyAt(m, p), W, H) && enemies.every((e) => gap(bodyAt(m, p), e) > keep + EPS); })) continue;
+    const errors: string[] = [];
+    endChecks(s, u, pos, errors, new Set());
+    if (errors.length || !ok(pos)) continue;
+    best = { pos, d };
+  }
+  if (!best) return false;
+  for (const m of alive(u)) { const p = best.pos.get(m.id); if (p) { m.x = p.x; m.y = p.y; } }
+  u.status = 'board'; u.setUpTurn = s.turn;
   return true;
 }

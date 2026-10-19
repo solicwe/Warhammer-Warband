@@ -67,15 +67,13 @@
         "!TERMINATOR"
       ],
       "targetFrom": "reserves",
-      "effects": [
+      "status": "auto",
+      "do": [
         {
-          "deepStrikeRange": 6
+          "on": "self",
+          "hallowedArrival": 6
         }
-      ],
-      "until": "turn",
-      "bot": "never",
-      "status": "partial",
-      "note": "Set it up wholly within your Hallowed Ground yourself"
+      ]
     },
     "SANCTIFIED KILL ZONE": {
       "targetKw": [

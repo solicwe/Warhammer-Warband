@@ -269,9 +269,13 @@ export function botRapidIngress(s: GameState, p: PlayerId): boolean {
     const free = unitFlags(s, u).oppMoveIngress && s.round >= arrivalRound(s, u);
     if (!free && (canUseStratagem(s, p, 'rapid-ingress', u) || !spare(s, p, 1))) continue;
     const how = hasDeepStrike(s, u) ? 'deepStrike' : 'ingress';
+    // Homing Beacon: the free Rapid Ingress lands within 3" of the bearer's unit (more than 8" from the enemy)
+    const beacon = !free && !u.homer ? boardUnits(s, p).find((b) => b.abilities.some((a) => a.name === 'Homing Beacon') && !b.used?.beacon && alive(b).length) : undefined;
+    if (beacon) u.homer = { x: alive(beacon)[0].x, y: alive(beacon)[0].y };
     const pos = withRuleCache(() => bestArrival(s, u, how));
-    if (!pos || !validatePlacement(s, u, pos, how).ok) continue;
-    if (!free && ingressWorth(s, u, pos) < cpWorth(s, p)) continue;
+    if (!pos || !validatePlacement(s, u, pos, how).ok) { if (beacon) u.homer = undefined; continue; }
+    if (beacon) (beacon.used ??= {}).beacon = 'yes';
+    if (!free && !beacon && ingressWorth(s, u, pos) < cpWorth(s, p)) continue;
     if (!free) spendStratagem(s, p, 'rapid-ingress', u);
     ingressUnit(s, u, pos);
     return true;

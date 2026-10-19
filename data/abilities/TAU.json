@@ -892,8 +892,8 @@
         }
       }
     ],
-    "status": "partial",
-    "note": "Set the arriving unit up within 3\" of the bearer's unit yourself"
+    "status": "auto",
+    "note": "The free Rapid Ingress lands within 3\" of the bearer's unit and more than 8\" from the enemy"
   },
   "Pulse Bombs": {
     "act": {

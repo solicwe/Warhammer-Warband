@@ -3,17 +3,18 @@
 // To add a faction: write its module, then add a block that subscribes its functions to the events it needs.
 // Modules that register themselves when loaded:
 import './rituals';
+import { deathstrikeShooting, officerDeath, sigilOfExigence } from './deathstrike';
 import { copyOrders, extraOrder, ordersShockFailed, orderTo, isOfficer } from './orders';
 import { amOppMovementEnd, disembarkOne, shootFrom, shootWith } from './amTransports';
 import { addCombatMods, addPoolFinisher } from '../engine/combatMods';
 import { emit, addActionHandler, addChoiceHooks, addCondition, addDieRescue, addEffectSource, addModifier, addStratSpecial, addTargetFilter, on } from '../engine/events';
 import { heal, setBackUp, shockTest } from '../rules-engine/activations';
-import { applyMortalWounds, killModel, onMortalWounds } from '../engine/attack';
+import { applyMortalWounds, killModel, onAttackStart, onMortalWounds } from '../engine/attack';
 import { rollExpr, rollN } from '../engine/dice';
 import { addTimed, cond, effectsFor, unitFlags } from '../rules-engine/effects';
-import { alive, boardUnits, emitReact, engagedEnemies, log, other, phaseKey, unitById, unitDistance } from '../engine/state';
+import { alive, boardUnits, emitReact, onBoard, engagedEnemies, log, other, phaseKey, unitById, unitDistance } from '../engine/state';
 import { unitVisibleTo } from '../engine/visibility';
-import { setUpNear, shootNow } from '../engine/game';
+import { setUpAway, setUpNear, shootNow } from '../engine/game';
 import { zonePoly } from '../engine/missions';
 import { pointInPoly } from '../engine/geometry';
 import type { GameState, UnitState } from '../engine/types';
@@ -31,11 +32,11 @@ import { drugBlocked, drugPicked, drukhariAction, drukhariAttackMods, drukhariBa
 import { corruptRealspace, impossibleEclipse, seedTheGarden, daemonBattleShockMod, daemonsBattleStart, daemonsCommandStart, daemonsDeepStrikeDist, daemonsOnBattleShockResult, daemonsUnitDestroyed, isUnderShadowOfChaos, spendFluxToken, tryFlux } from './daemons';
 import { cultAmbushArrival, cultAmbushCheckEnemyMoved, cultAmbushUnitDestroyed, cultBattleStart, cultInfiltration, psionicParasitism, regimentalReinforcements } from './cult';
 import { activateReanimation, necCommandEnd, repairBarge, resurrect } from './necrons';
-import { whollyHallowed } from './greyKnights';
+import { inHallowedGround, whollyHallowed } from './greyKnights';
 import { circleInFlow, inFlow, isThousandSonsArmy } from './flow';
 import { RULES } from '../engine/config';
 import { clamp } from '../engine/geometry';
-import { inSynapse, nearTunnel, seedSpores, tunnelArrived, tunnelDeepStrike, tunnelEnemyMoved, tunnelNetwork, tyranidsCommandStart, tyranidsShockResult, unleashShadowInTheWarp } from './tyranids';
+import { harpoonHit, inSynapse, nearTunnel, parasiteDone, parasiteKill, seedSpores, tunnelArrived, tunnelDeepStrike, tunnelEnemyMoved, tunnelNetwork, tyranidsCommandStart, tyranidsShockResult, unleashShadowInTheWarp } from './tyranids';
 
 const unitOf = (s: GameState, id?: string) => (id ? s.units.find((x) => x.id === id) : undefined);
 
@@ -97,6 +98,7 @@ on('roundStart', (s) => knightsRoundStart(s));
 on('turnStart', (s) => knightsTurnStart(s));
 on('commandStart', (s) => knightsCommandStart(s));
 on('shootingStart', (s) => knightsShootingStart(s));
+on('shootingStart', (s, e) => deathstrikeShooting(s, e.p));
 on('moved', (s, e) => knightsMoved(s, e.u, e.paths));
 on('shockResult', (s, e) => { if (!e.passed) knightsShockFailed(s, e.u); });
 on('turnEnd', (s) => knightsTurnEnd(s));
@@ -247,6 +249,12 @@ addActionHandler((s, a, x) => { if (a.gc === 'parasitism' && x.target) psionicPa
 on('commandEnd', (s, e) => necCommandEnd(s, e.p));
 addStratSpecial('reanimationCrypts', (s, x) => { for (const u of s.units) if (u.owner === x.p && u.status === 'reserves' && u.abilities.some((a) => a.name === 'Reanimation Protocols')) activateReanimation(s, u, 'D3', 'Reanimation Crypts'); });
 on('attackDone', (s, e) => repairBarge(s, e.T));
+on('modelKilled', (s, e) => parasiteKill(s, e.u, e.m, e.killerId));
+on('attackDone', (s, e) => parasiteDone(s, e.A));
+on('attackDone', (s, e) => harpoonHit(s, e.A, e.T));
+addCondition('harpooned', (_c, x) => x.A.chargeMust?.turn === x.s.turn && x.A.abilities.some((a) => a.name === 'Harpooned') && (x.s.units.find((u) => u.id === x.A.chargeMust!.id)?.status === 'board') && unitDistance(x.A, x.s.units.find((u) => u.id === x.A.chargeMust!.id)!) <= 12 + 1e-6);
+on('attackDone', (s, e) => officerDeath(s, e.A, e.T));
+onAttackStart((s, at) => sigilOfExigence(s, at));
 addActionHandler((s, a, x) => {
   if (a.nec === 'reanimate') activateReanimation(s, x.on);
   if (a.nec === 'resurrect') resurrect(s, x.on);
@@ -530,6 +538,66 @@ addActionHandler((s, a, x) => {
   x.on.cantCharge = true; // no charge this turn (DIMENSIONAL CORRIDOR lifts it)
   log(s, `${x.label}: ${x.on.name} steps through the Eternity Gate`, 'info', x.u.owner);
   emit(s, 'arrived', { u: x.on });
+});
+
+// Imposing Arrival: from Reserves, wholly within 8" of one battlefield edge and more than 6" from enemy units, nearest the enemy
+addActionHandler((s, a, x) => {
+  if (!a.edgeArrival || x.on.status !== 'reserves') return;
+  const { edge, keep } = a.edgeArrival;
+  const W = RULES.battlefield.width, H = RULES.battlefield.height;
+  const foe = boardUnits(s, other(x.on.owner)).flatMap(alive)[0];
+  const byEdge = (pos: Map<string, { x: number; y: number }>) => [(p: { x: number }) => p.x, (p: { y: number }) => p.y, (p: { x: number }) => W - p.x, (p: { y: number }) => H - p.y]
+    .some((d) => [...pos.entries()].every(([id, p]) => d(p as { x: number; y: number }) + (x.on.models.find((m) => m.id === id)?.r ?? 0) <= edge + 1e-6));
+  if (!setUpAway(s, x.on, keep, foe ?? { x: W / 2, y: H / 2 }, byEdge)) { log(s, `${x.label}: no room for ${x.on.name}`, 'info', x.on.owner); return; }
+  x.on.move = 'ingress';
+  log(s, `${x.label}: ${x.on.name} arrives near the battlefield edge`, 'info', x.on.owner);
+  emit(s, 'arrived', { u: x.on });
+});
+
+// Hallowed Beacon: Deep Strike wholly within your Hallowed Ground, more than 6" from enemy units, nearest the enemy
+addActionHandler((s, a, x) => {
+  if (!a.hallowedArrival || x.on.status !== 'reserves') return;
+  const foe = boardUnits(s, other(x.on.owner)).flatMap(alive)[0];
+  const inside = (pos: Map<string, { x: number; y: number }>) => [...pos.values()].every((p) => inHallowedGround(s, x.on.owner, p));
+  if (!setUpAway(s, x.on, a.hallowedArrival, foe ?? { x: 30, y: 22 }, inside)) { log(s, `${x.label}: no room for ${x.on.name} in Hallowed Ground`, 'info', x.on.owner); return; }
+  x.on.move = 'ingress';
+  log(s, `${x.label}: ${x.on.name} arrives in Hallowed Ground`, 'info', x.on.owner);
+  emit(s, 'arrived', { u: x.on });
+});
+
+// Surrogate Hosts (Trazyn): another NECRONS INFANTRY CHARACTER model is destroyed (no death rules) and Trazyn takes its
+// place, joining the unit it led
+addActionHandler((s, a, x) => {
+  if (!a.surrogate || x.on.id === x.u.id) return;
+  const me = alive(x.u).find((m) => /Trazyn/i.test(m.source)) ?? alive(x.u)[0];
+  const host = alive(x.on).find((m) => m.keywords.includes('CHARACTER') && m.keywords.includes('INFANTRY') && !m.keywords.includes('EPIC HERO') && !/Skorpekh Lord/i.test(m.source));
+  if (!me || !host) return;
+  me.x = host.x; me.y = host.y;
+  host.dead = true; host.wounds = 0;
+  x.u.models = x.u.models.filter((m) => m !== me);
+  x.on.models.push(me);
+  x.on.sources = [...new Set([...x.on.sources, me.source])];
+  x.on.keywords = [...new Set([...x.on.keywords, ...me.keywords])];
+  x.on.abilities = [...x.on.abilities, ...x.u.abilities.filter((ab) => !x.on.abilities.some((o) => o.name === ab.name))];
+  x.on.pts += x.u.pts;
+  if (!alive(x.u).length) x.u.status = 'destroyed';
+  log(s, `Surrogate Hosts: ${me.name} takes the place of ${host.name} in ${x.on.name}`, 'info', x.on.owner);
+});
+
+// Transdimensional Displacement: an Advance with no maximum, through any model, ending more than 8" from every enemy unit
+// (Reletavistic Tether: 6", and no charge this turn when it ends within 8")
+addActionHandler((s, a, x) => {
+  if (!a.displace || !onBoard(x.u) || x.u.move) return;
+  const tether = x.u.enhancements.some((e) => e.name === 'Reletavistic Tether');
+  const keep = tether ? 6 : a.displace;
+  const foes = boardUnits(s, other(x.u.owner));
+  const c = alive(x.u)[0];
+  const foe = foes.flatMap(alive).sort((p, q) => Math.hypot(p.x - c.x, p.y - c.y) - Math.hypot(q.x - c.x, q.y - c.y))[0];
+  if (!foe || !setUpAway(s, x.u, keep, foe)) return;
+  x.u.move = 'advance';
+  x.u.setUpTurn = -10; // it moved, it was not set up
+  if (tether && foes.some((e) => unitDistance(x.u, e) <= 8 + 1e-6)) x.u.cantCharge = true;
+  log(s, `${x.label}: ${x.u.name} reappears ${keep}" from the enemy`, 'info', x.u.owner);
 });
 
 // Hyperphasic Recall: the unit steps back out next to a friendly MONOLITH

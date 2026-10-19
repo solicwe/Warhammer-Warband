@@ -6,8 +6,8 @@ import { rollExpr } from '../engine/dice';
 import { applyMortalWounds } from '../engine/attack';
 import { abilityOff, activeRules, unitFlags } from '../rules-engine/effects';
 import { heal, shockTest } from '../rules-engine/activations';
-import { formationAt, validatePlacement } from '../engine/game';
-import type { GameState, PlayerId, UnitState } from '../engine/types';
+import { formationAt, setUpNear, validatePlacement } from '../engine/game';
+import type { GameState, ModelState, PlayerId, UnitState } from '../engine/types';
 
 const isTyr = (u: UnitState) => u.factionKeywords.includes('TYRANIDS');
 const hasAb = (u: UnitState, n: string) => u.abilities.some((a) => a.name === n && !abilityOff(u, a));
@@ -103,6 +103,39 @@ export function seedSpores(s: GameState, near: UnitState, name: string, n: numbe
   s.units.push(u);
   log(s, `${label}: a new ${name} unit (${u.models.length} model${u.models.length > 1 ? 's' : ''}) is set up`, 'info', near.owner);
   return true;
+}
+
+// ---------- Parasitic Infection: Ripper Swarms from INFANTRY killed by the barbed ovipositor ----------
+export function parasiteKill(s: GameState, u: UnitState, m: ModelState, killerId?: string) {
+  const at = s.attack, pl = at?.pools[at.idx];
+  const k = killerId ? s.units.find((x) => x.id === killerId) : undefined;
+  if (!k || !pl || !/ovipositor/i.test(pl.weapon) || !m.keywords.includes('INFANTRY') || !k.abilities.some((a) => a.name === 'Parasitic Infection')) return;
+  k.parasiteKills = (k.parasiteKills ?? 0) + 1;
+}
+
+/** After the Parasite has finished its attacks: one Ripper Swarms unit of D3 models per INFANTRY model it destroyed. */
+export function parasiteDone(s: GameState, A: UnitState) {
+  const n = A.parasiteKills ?? 0;
+  A.parasiteKills = 0;
+  const tpl = s.players[A.owner].sporeTemplates?.['Ripper Swarms'];
+  for (let i = 0; i < n && tpl && alive(A).length; i++) {
+    const u: UnitState = structuredClone(tpl);
+    u.id = `rippers${s.units.length}-${s.turn}`;
+    u.models = u.models.slice(0, rollExpr(s, 'D3').total);
+    u.models.forEach((m, j) => { m.id = `${u.id}-m${j}`; });
+    u.startingStrength = u.models.length;
+    if (!setUpNear(s, u, A, 3, null)) { log(s, `Parasitic Infection: no room for Ripper Swarms`, 'info', A.owner); return; }
+    s.units.push(u);
+    log(s, `Parasitic Infection: a new Ripper Swarms unit (${u.models.length}) is set up next to ${A.name}`, 'info', A.owner);
+  }
+}
+
+// ---------- Harpooned (Norn Assimilator): a MONSTER / VEHICLE hit by the harpoon is dragged in ----------
+export function harpoonHit(s: GameState, A: UnitState, T: UnitState) {
+  if (!A.abilities.some((a) => a.name === 'Harpooned') || !(T.keywords.includes('MONSTER') || T.keywords.includes('VEHICLE'))) return;
+  if (!(A.lastHits?.byWeapon?.[T.id] ?? []).some((w) => /harpoon/i.test(w)) || !alive(T).length) return;
+  A.chargeMust = { turn: s.turn, id: T.id }; // its charge must end engaged with that unit (and gets +2)
+  log(s, `Harpooned: ${A.name} reels in ${T.name} (+2 to its charge, which must reach it)`, 'info', A.owner);
 }
 
 // ---------- Subterranean Assault: Tunnel Markers ----------

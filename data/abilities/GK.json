@@ -934,8 +934,9 @@
     "status": "auto"
   },
   "Sigil of Exigence": {
-    "status": "manual",
-    "note": "Not automated: setting the unit up again more than 8\" from enemy units"
+    "code": true,
+    "status": "auto",
+    "note": "Used when the attack would cost a quarter of the unit or more; the unit is set up more than 8\" from every enemy unit and the attacker picks new targets"
   },
   "Spiritus Machina": {
     "effects": [

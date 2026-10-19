@@ -14,7 +14,7 @@ import {
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
 import { baseDist, bodyAt, bodyTouchesPoly, circleTouchesPoly, dist, gap, ptGap } from '../engine/geometry';
-import { alive, boardUnits, centreOf, engagedEnemies, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from '../engine/state';
+import { alive, boardUnits, centreOf, emitReact, engagedEnemies, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from '../engine/state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from '../engine/types';
 import { unitVisibleTo } from '../engine/visibility';
 
@@ -112,6 +112,10 @@ export interface Action {
   lovHostile?: boolean; // spend YP down to 6: the army has Hostile Acquisition until its next turn (ADAPTABLE AVARICE)
   redirectTo?: string; // a friendly unit of these keywords within 9" (visible) takes this unit's lost wounds as mortal wounds this phase (THIEVES OF PAIN)
   unshockNear?: number; // one Battle-shocked friendly unit (sharing its first Faction keyword) within X" of the unit is no longer Battle-shocked
+  edgeArrival?: { edge: number; keep: number }; // from Reserves: wholly within X" of one battlefield edge, more than Y" from enemy units (Imposing Arrival)
+  hallowedArrival?: number; // from Deep Strike: wholly within your Hallowed Ground, more than X" from enemy units (Hallowed Beacon)
+  surrogate?: boolean; // Surrogate Hosts: the target's NECRONS INFANTRY CHARACTER model is destroyed and this model takes its place (and its unit)
+  displace?: number; // Transdimensional Displacement: an Advance of any length, through models, ending more than X" from enemy units
   recallTo?: { kw: string; within: number }; // remove the unit and set it up wholly within X" of a friendly model with that keyword, unengaged (Hyperphasic Recall)
   gateWithin?: number; // the target unit (in Reserves or on the battlefield) is set up again wholly within X" of this unit, unengaged (Eternity Gate)
   seed?: { name: string; n: string; range: number; noShoot?: boolean }; // a new unit of this datasheet (n: a number, D3, or 'models' = this unit's models) set up within range, more than 9" from enemies (Seed Spore Mines)
@@ -864,6 +868,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       offerExtraMove(s, on, `${def.name}: move ${max}"`);
     }
     if (a.surge) {
+      emitReact(s, on.owner, 'surgeStart', { unitId: on.id }); // Synaptic Goading
       const fixed = unitFlags(s, on).surgeFixed;
       const roll = fixed ? { total: fixed, dice: [] } : rollExpr(s, a.surge);
       let max = roll.total;
@@ -1139,7 +1144,7 @@ export function bestTarget(s: GameState, def: ActDef, cands: UnitState[], ctx: F
   if (t.side === 'friendly') {
     const hurt = (u: UnitState) => alive(u).reduce((a, m) => a + (m.profile.W - m.wounds), 0) + u.models.filter((m) => m.dead).length * 2;
     if (t.shocked) return cands.find((c) => c.battleShocked)?.id ?? cands[0].id;
-    if ((def.spec.do ?? []).some((a) => a.riled)) {
+    if ((def.spec.do ?? []).some((a) => a.riled || a.surrogate)) {
       // riling up: a battle-shocked unit first, then the unit closest to the enemy
       const foes = boardUnits(s, other(def.holder.owner));
       const gap = (x: UnitState) => (onBoard(x) && foes.length ? Math.min(...foes.map((e) => unitDistance(x, e))) : 99);

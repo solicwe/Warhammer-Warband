@@ -46,6 +46,9 @@ function worth(s: GameState, p: PlayerId, rule: StratRule, u: UnitState): { v: n
         if (a.order && isOfficer(u) && ordersRemaining(s, u) === 0) v += 12;
         if ((a.miracle ?? 0) > 0) v += 12 * a.miracle!;
         if ((a.cp ?? 0) > 0) v += 15 * a.cp!;
+        // SYNERGISTIC EMPOWERMENT: another unit with guns gets the CRYPTEK detachment abilities before it shoots
+        if (a.buffNear?.effects.some((x) => x.addKeywords) && s.active === p && s.phase === 'shooting'
+          && boardUnits(s, p).some((x) => x.id !== u.id && !x.selectedToShoot && unitDistance(x, u) <= a.buffNear!.range && !(a.buffNear!.effects[0].addKeywords ?? []).every((k) => x.keywords.includes(k)))) v += 8;
         // IMPOSSIBLE ECLIPSE: the bot's battle-shock tests and Daemonic Terror reach further this phase
         if (a.cd && a.cd !== 'flux' && s.phase === 'command') v += 6;
         // ADAPTABLE AVARICE: Hostile Acquisition for the bot's own shooting and fighting
@@ -74,6 +77,9 @@ function worth(s: GameState, p: PlayerId, rule: StratRule, u: UnitState): { v: n
     // STALWART PROTECTOR: friendly INFANTRY next to this vehicle get cover from it this phase
     if ((rule.effects ?? []).some((x) => x.coverBehind?.friendly) && s.active !== p)
       v += 4 * boardUnits(s, p).filter((x) => x.id !== u.id && x.keywords.includes('INFANTRY') && unitDistance(x, u) <= 6).length;
+    // ADAPTIVE OPTIMISATION: a SYNAPSE unit among the swarm that has none nearby
+    if ((rule.effects ?? []).some((x) => x.addKeywords?.includes('SYNAPSE')) && !u.keywords.includes('SYNAPSE') && s.phase === 'command'
+      && boardUnits(s, p).some((x) => x.id !== u.id && unitDistance(x, u) <= 6 && !boardUnits(s, p).some((y) => y.keywords.includes('SYNAPSE') && unitDistance(y, x) <= 6))) v += 8;
     // THE GRISLY FEAST: Battle-shock tests for the enemy units around it next Command phase
     if (rule.mark === 'grislyFeast') v += 6 * boardUnits(s, other(p)).filter((e) => unitDistance(e, u) <= 6).length;
     // VOX-RELAY: an Officer inside a transport gets to issue its Orders

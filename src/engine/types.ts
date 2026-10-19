@@ -211,6 +211,8 @@ export interface TransportInfo {
 }
 
 export interface UnitState {
+  dsMarker?: Pt; // Deathstrike Target marker
+  parasiteKills?: number; // INFANTRY models the barbed ovipositor destroyed during the current attack (Parasitic Infection)
   startEngaged?: { turn: number; ids: string[] }; // enemy units it was engaged with at the start of this turn (Thrill Seekers)
   plagueExtra?: string;
   leads?: string[]; // a lone CHARACTER: the datasheets it can lead (attaching during the battle: Mobile Vector)
@@ -472,6 +474,7 @@ export interface TimedEffect {
   turn: number;
   mark?: string;
   models?: string[]; // only these models ("this model" abilities)
+  kwAdded?: string[]; // keywords this effect gave the unit, taken away when it ends
 }
 
 /** State behind secondary cards that need choices or actions. */

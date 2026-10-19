@@ -325,6 +325,12 @@ export function botAdvanceActs(s: GameState, u: UnitState) {
 
 /** Deep Strike that may land closer to the enemy (Relic Teleportarium): where it lands with it, if that is worth it. */
 export function botArrivalStratagem(s: GameState, u: UnitState, how: 'ingress' | 'deepStrike'): boolean {
+  // Imposing Arrival: closer than the usual 9" from the edge
+  for (const { st, rule } of strats(s, u.owner)) {
+    if (!dosOf(rule).some((a) => a.edgeArrival || a.hallowedArrival) || stratagemBlock(s, u.owner, st, u) || !ready(s, u.owner, st, u)) continue;
+    applyDetachmentStratagem(s, u.owner, st, u.id);
+    if (u.status === 'board') return true;
+  }
   if (how !== 'deepStrike') return false;
   for (const { st, rule } of strats(s, u.owner)) {
     if (!fxOf(rule).some((e) => e.deepStrikeRange) || stratagemBlock(s, u.owner, st, u) || s.players[u.owner].cp < st.cp + 1) continue;

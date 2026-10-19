@@ -1534,14 +1534,20 @@ export const modelOc = (s: GameState, u: UnitState, m: ModelState) => ocOf(s, u)
 
 /** Put a timed effect on a unit (own buff, or a mark on an enemy unit). */
 export function addTimed(s: GameState, u: UnitState, t: Omit<TimedEffect, 'turn'>) {
-  (u.timed ??= []).push({ ...t, turn: s.turn });
+  // a keyword for a while (Adaptive Optimisation: SYNAPSE; Synergistic Empowerment: CRYPTEK on one model)
+  const kw = t.e.addKeywords?.filter((k) => !u.keywords.includes(k));
+  if (kw?.length) {
+    u.keywords = [...u.keywords, ...kw];
+    for (const m of u.models) if (!t.models || t.models.includes(m.id)) m.keywords = [...new Set([...m.keywords, ...kw])];
+  }
+  (u.timed ??= []).push({ ...t, turn: s.turn, ...(kw?.length ? { kwAdded: kw } : {}) });
 }
 
 /** Drop timed effects whose time is up. Called at phase and turn boundaries. */
 export function expireTimed(s: GameState, at: 'phaseEnd' | 'turnEnd' | 'turnStart' | 'commandStart' | 'movementStart', player: PlayerId) {
   for (const u of s.units) {
     if (!u.timed?.length) continue;
-    u.timed = u.timed.filter((t) => {
+    const keep = (t: TimedEffect) => {
       switch (t.until) {
         case 'phase': return at !== 'phaseEnd';
         case 'turn': return at !== 'turnEnd';
@@ -1552,7 +1558,15 @@ export function expireTimed(s: GameState, at: 'phaseEnd' | 'turnEnd' | 'turnStar
         case 'opponentNextMovementEnd': return !(at === 'phaseEnd' && s.phase === 'movement' && s.active !== t.by && s.turn > t.turn);
         default: return true;
       }
-    });
+    };
+    const gone = u.timed.filter((t) => !keep(t));
+    if (!gone.length) continue;
+    u.timed = u.timed.filter(keep);
+    for (const t of gone) for (const k of t.kwAdded ?? []) {
+      if (u.timed.some((o) => o.kwAdded?.includes(k))) continue;
+      u.keywords = u.keywords.filter((x) => x !== k);
+      for (const m of u.models) m.keywords = m.keywords.filter((x) => x !== k);
+    }
   }
 }
 

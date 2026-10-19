@@ -231,14 +231,17 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const cm = combatMods({ s, A, T, m, psychic: psy, mode: 'ranged', d, p, weapon: w.name });
       if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !assaultWeapons(s, A) && !cm.assault) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
-      if (d > maxRange + 1e-6) continue;
+      // Linked Fire (Fire Prism): range and visibility from another friendly FIRE PRISM the bearer can see; then 1 attack
+      const linked = p.abilities.includes('linked fire') && (d > maxRange + 1e-6 || !unitSees()) && s.units.some((f) => f.owner === A.owner && f.id !== A.id && onBoard(f)
+        && alive(f).some((r) => /Fire Prism/i.test(r.source) && modelVisible(s, m, f, r) && tModels.some((t) => baseDist(r, t) <= maxRange + 1e-6 && modelVisible(s, r, T, t))));
+      if (d > maxRange + 1e-6 && !linked) continue;
       if (untargetableAt(s, T, d)) continue;
       if (d > unitFlags(s, T).targetableWithin + 1e-6) continue; // In the Shadow of Great Wings
       if (T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative && !aFlags.ignoreLoneOperative) continue;
       if (opt.mode === 'closeQuarters' && !isMV(m) && !engagedWithTarget) continue;
       if (hasAbility(p, 'blast') && tEngaged) continue;
       const indirect = opt.mode === 'indirect' && hasAbility(p, 'indirect-fire');
-      if (!indirect && !unitSees()) continue;
+      if (!indirect && !linked && !unitSees()) continue;
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
       const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes] };
@@ -260,7 +263,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const psychic = hasAbility(p, 'psychic');
       const fm = finishPoolMods(p, mods, psychic);
       const half = d <= range / 2 + 1e-6 || fx.some((a) => a.e.halfRangeAlways);
-      const key = [m.source, w.name, p.name, cover, half, fm.skill, fm.hit, fxKey(fx, inc)].join('|');
+      const key = [m.source, w.name, p.name, cover, half, fm.skill, fm.hit, fxKey(fx, inc), linked].join('|');
       let pool = pools.get(key);
       if (!pool) {
         pool = newPool(key, w, p, T);
@@ -308,7 +311,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         for (const a of fx) if (a.e.rapidFireAttacks) flat += a.e.rapidFireAttacks;
       }
       flat += cm.attacksBonus;
-      pool.instances.push({ A: p.A, extras, flat });
+      pool.instances.push(linked ? { A: '1', extras: [], flat: 0 } : { A: p.A, extras, flat });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
   }

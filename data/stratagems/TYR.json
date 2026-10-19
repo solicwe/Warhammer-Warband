@@ -333,9 +333,23 @@
       "status": "auto"
     },
     "SYNAPTIC GOADING": {
-      "status": "manual",
-      "bot": "never",
-      "note": "Not automated: re-rolling a surge move and moving towards an objective marker"
+      "targetKw": [
+        "ENDLESS MULTITUDE"
+      ],
+      "react": "surgeStart",
+      "unitIf": [
+        "inSynapse"
+      ],
+      "effects": [
+        {
+          "surgeReroll": true,
+          "surgeObjective": true
+        }
+      ],
+      "until": "phase",
+      "botReact": "always",
+      "status": "auto",
+      "note": "The surge distance is re-rolled when below 5, and the surge may end at the closest objective marker the army does not hold"
     },
     "RAPACIOUS HUNGER": {
       "targetKw": [
@@ -888,9 +902,7 @@
         }
       ],
       "until": "nextCommand",
-      "bot": "never",
-      "status": "partial",
-      "note": "The SYNAPSE keyword may not be read until the next battle (keywords are set at the start)"
+      "status": "auto"
     },
     "COUNTERPREDATION": {
       "targetKw": [

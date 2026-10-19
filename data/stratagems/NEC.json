@@ -717,9 +717,34 @@
       "status": "auto"
     },
     "SYNERGISTIC EMPOWERMENT": {
-      "status": "manual",
-      "note": "Not automated: giving a model the CRYPTEK keyword",
-      "bot": "never"
+      "targetKw": [
+        "CRYPTEK"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "buffNear": {
+            "range": 12,
+            "units": [
+              "NECRONS",
+              "!MONSTER",
+              "!VEHICLE",
+              "!CRYPTEK"
+            ],
+            "one": true,
+            "effects": [
+              {
+                "addKeywords": [
+                  "CRYPTEK"
+                ]
+              }
+            ]
+          },
+          "until": "phase"
+        }
+      ],
+      "status": "auto",
+      "note": "The most valuable NECRONS unit within 12\" (not MONSTER / VEHICLE) counts as CRYPTEK this phase"
     },
     "POTENTIALITY SYPHON": {
       "targetKw": [

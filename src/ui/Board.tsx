@@ -1376,6 +1376,13 @@ function BoardImpl(props: BoardProps) {
           <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>T</text>
         </g>
       )))}
+      {s.units.filter((u) => u.dsMarker && u.status === 'board').map((u) => (
+        <g key={`ds-${u.id}`} transform={`translate(${u.dsMarker!.x} ${u.dsMarker!.y})`} pointerEvents="none">
+          <circle r={6} fill="none" stroke={COLORS[u.owner]} strokeWidth={0.15} strokeDasharray="0.6 0.4" />
+          <circle r={0.8} fill="rgba(12,14,18,0.85)" stroke={COLORS[u.owner]} strokeWidth={0.15} />
+          <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>D</text>
+        </g>
+      ))}
       {s.pendingActions.map((a) => {
         const u = s.units.find((x) => x.id === a.unitId);
         const ms = u ? alive(u) : [];

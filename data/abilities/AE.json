@@ -143,8 +143,9 @@
     }
   },
   "Linked Fire": {
-    "status": "manual",
-    "note": "Not automated: shooting from another Fire Prism's position is not offered"
+    "code": true,
+    "status": "auto",
+    "note": "Focused lances can shoot a target only another friendly Fire Prism sees or reaches; then 1 attack"
   },
   "Storm of Blades": {
     "effects": [

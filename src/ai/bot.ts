@@ -350,7 +350,7 @@ export function botMoveOne(s: GameState): boolean {
       markTried(s, u);
       const how = hasDeepStrike(s, u) ? 'deepStrike' : 'ingress';
       botArrivalDefence(s, u);
-      withRuleCache(() => botArrivalStratagem(s, u, how));
+      if (withRuleCache(() => botArrivalStratagem(s, u, how)) && (u.status as string) === 'board') return true;
       const pos = withRuleCache(() => bestArrival(s, u, how));
       // a deep striker waits in reserve until it can hurt something worth it (or the last round it may arrive) — but a
       // unit that lands on an objective we don't hold scores right away, and a turn in reserve is a turn doing nothing

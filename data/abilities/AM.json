@@ -5,8 +5,9 @@
     "note": "Orders up to 12\" away"
   },
   "Death Befitting An Officer": {
-    "status": "manual",
-    "note": "Not automated: shooting back before it is removed"
+    "code": true,
+    "status": "auto",
+    "note": "On a 2+ it shoots once more before it is removed (Astra Militarum: at the attacking unit, in the opponent's Shooting phase; its Deadly Demise is rolled first)"
   },
   "ORDERS": {
     "code": true,
@@ -207,12 +208,14 @@
     }
   },
   "Deathstrike Missile": {
-    "status": "manual",
-    "note": "Not automated: the Deathstrike Target marker"
+    "code": true,
+    "status": "auto",
+    "note": "Start of your Shooting phase: the marker goes on the enemy unit worth the most under a 6\" blast (moved again if nothing is left there)"
   },
   "Plasma Warhead": {
-    "status": "manual",
-    "note": "Not automated: the Deathstrike plasma warhead"
+    "code": true,
+    "status": "auto",
+    "note": "Fired at the start of your Shooting phase if the Deathstrike Remained Stationary and its marker was placed in an earlier turn; every unit within 6\" of the marker (yours too) is attacked"
   },
   "Armoured Spearhead": {
     "effects": [

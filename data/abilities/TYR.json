@@ -385,8 +385,16 @@
     "status": "auto"
   },
   "Harpooned": {
-    "status": "manual",
-    "note": "Not automated: +2 to the charge roll after hitting a MONSTER or VEHICLE with the harpoon"
+    "effects": [
+      {
+        "if": [
+          "harpooned"
+        ],
+        "chargeBonus": 2
+      }
+    ],
+    "status": "auto",
+    "note": "After the harpoon hits a MONSTER / VEHICLE this turn: +2 to the charge, which must end engaged with that unit"
   },
   "Burning Spray": {
     "act": {
@@ -1319,8 +1327,9 @@
     "status": "auto"
   },
   "Parasitic Infection": {
-    "status": "manual",
-    "note": "Not automated: new RIPPER SWARMS units"
+    "code": true,
+    "status": "auto",
+    "note": "One Ripper Swarms unit of D3 models per INFANTRY model the barbed ovipositor destroys, set up within 3\" (not within Engagement Range)"
   },
   "It Itches!": {
     "act": {

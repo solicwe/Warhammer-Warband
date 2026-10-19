@@ -193,7 +193,7 @@ export function withinTerrain(s: GameState, m: ModelState, categories: string[] 
 // ---------- stratagem reactions ----------
 /** Moments a stratagem can react to (stratagems.ts registers the handler; the engine only reports the moment). */
 export type ReactOn = 'enemyMoved' | 'enemyArrived' | 'enemyShot' | 'enemyChargeDeclared' | 'enemyChargePhaseEnd' | 'fightPhaseEnd' | 'shootingPhaseEnd' | 'chargeMoveEnd' | 'ownAttacked'
-  | 'ownDestroyed' | 'modelDestroyed' | 'oathDestroyed' | 'deadlyDemise' | 'enemyDeadlyDemise' | 'deadlyDemiseSix' | 'enemyChargeMoveEnd' | 'enemyChargePhaseStart' | 'enemyCommandStart' | 'enemyFallBack' | 'commandStart' | 'fightStart' | 'ownKilled' | 'anyPhaseEnd' | 'actionStart' | 'enemyWarlordDestroyed' | 'enemyShockFailed' | 'targeted';
+  | 'ownDestroyed' | 'modelDestroyed' | 'oathDestroyed' | 'deadlyDemise' | 'enemyDeadlyDemise' | 'deadlyDemiseSix' | 'enemyChargeMoveEnd' | 'enemyChargePhaseStart' | 'enemyCommandStart' | 'enemyFallBack' | 'commandStart' | 'fightStart' | 'ownKilled' | 'anyPhaseEnd' | 'actionStart' | 'enemyWarlordDestroyed' | 'enemyShockFailed' | 'targeted' | 'surgeStart';
 export interface ReactCtx { unitId?: string; modelId?: string; killerId?: string; six?: boolean; victimId?: string }
 type ReactHook = (s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx) => boolean;
 let reactHook: ReactHook | null = null;

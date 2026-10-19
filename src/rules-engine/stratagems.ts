@@ -704,7 +704,7 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
 // ---------- reactions: the game offers a stratagem at its moment ----------
 
 /** Moments that cannot wait for a prompt (the dice are being rolled right now): only the bot or "use automatically" act. */
-const SYNC_ONLY = new Set<ReactOn>(['deadlyDemise', 'deadlyDemiseSix', 'enemyFallBack', 'enemyDeadlyDemise', 'targeted']);
+const SYNC_ONLY = new Set<ReactOn>(['deadlyDemise', 'deadlyDemiseSix', 'enemyFallBack', 'enemyDeadlyDemise', 'targeted', 'surgeStart']);
 
 export interface ReactOffer { st: StratagemData; rule: StratRule; units: UnitState[] }
 
@@ -720,7 +720,7 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
       if (!m || !(m.keywords.includes(rule.ctxModel) || new RegExp(rule.ctxModel, 'i').test(m.name))) continue;
       if (rule.ctxModelNot && m.keywords.includes(rule.ctxModelNot)) continue;
     }
-    const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked', 'ownKilled', 'actionStart', 'targeted'].includes(on)
+    const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked', 'ownKilled', 'actionStart', 'targeted', 'surgeStart'].includes(on)
       ? (ctx.unitId ? [unitById(s, ctx.unitId)] : [])
       : stratCandidates(s, p, st, ctx)
     ).filter((u) => u.owner === p && !stratagemBlock(s, p, st, u, { react: true, ctx }))
@@ -744,7 +744,7 @@ function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto:
     // reactions that help without a move (a defence, mortal wounds, a mark on the enemy unit): used like 'always'
     const r = o.rule;
     const useful = !!r.buffs?.length || !!r.enemyEffects?.length || !!r.special?.length
-      || (r.effects ?? []).some((e) => e.defend || e.fightOnDeath || e.shootOnDeath || e.stealth || e.targetableWithin || e.eligible)
+      || (r.effects ?? []).some((e) => e.surgeReroll || e.defend || e.fightOnDeath || e.shootOnDeath || e.stealth || e.targetableWithin || e.eligible)
       || (r.do ?? []).some((a) => a.mortals || a.mortalRoll || a.mortalsTable || a.shock !== undefined || a.heal || a.revive || a.reviveLater || a.secure || a.nec);
     if (!kind && useful) return autoPick(s, p, { ...o, rule: { ...r, botReact: 'always' } }, ctx, auto);
     if (!kind || o.rule.enemy) return null;
@@ -842,7 +842,7 @@ export function unleashWrath(s: GameState, arrived: UnitState) {
 export const REACT_LABEL: Partial<Record<ReactOn, string>> = {
   enemyChargeMoveEnd: 'an enemy unit just made a Charge move', enemyChargePhaseStart: "start of your opponent's Charge phase", enemyCommandStart: "your opponent's Command phase", anyPhaseEnd: 'end of the phase', actionStart: 'your unit just started an action', enemyWarlordDestroyed: "your opponent's Warlord was just destroyed", enemyShockFailed: 'an enemy unit just failed a Battle-shock test',
   enemyMoved: 'an enemy unit just ended a move', enemyArrived: 'an enemy unit was just set up from Reserves', enemyShot: 'an enemy unit has just shot', enemyChargeDeclared: 'an enemy unit just declared a charge', enemyChargePhaseEnd: "end of your opponent's Charge phase",
-  fightPhaseEnd: 'end of the Fight phase', chargeMoveEnd: 'your unit just made a Charge move', ownAttacked: 'your unit has just attacked', targeted: 'an enemy unit just selected your unit as its target', ownDestroyed: 'your unit was destroyed',
+  fightPhaseEnd: 'end of the Fight phase', chargeMoveEnd: 'your unit just made a Charge move', ownAttacked: 'your unit has just attacked', targeted: 'an enemy unit just selected your unit as its target', surgeStart: 'your unit is about to make a surge move', ownDestroyed: 'your unit was destroyed',
   modelDestroyed: 'your model was destroyed', oathDestroyed: 'the Oath of Moment target was destroyed', ownKilled: 'your unit just destroyed an enemy unit',
 };
 

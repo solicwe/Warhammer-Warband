@@ -722,9 +722,16 @@
       "unitIf": [
         "roundAtLeast:2"
       ],
-      "status": "manual",
-      "bot": "never",
-      "note": "Set it up by hand wholly within 8\" of a battlefield edge, more than 6\" from enemy units"
+      "status": "auto",
+      "do": [
+        {
+          "on": "self",
+          "edgeArrival": {
+            "edge": 8,
+            "keep": 6
+          }
+        }
+      ]
     },
     "SHATTERING SALVO": {
       "targetKw": [
