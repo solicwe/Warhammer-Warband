@@ -926,6 +926,9 @@ export function cond(c: string, x: Ctx): boolean {
     case 'ownTurn': return A.owner === s.active;
     case 'fightPhase': return s.phase === 'fight';
     case 'shootingPhase': return s.phase === 'shooting';
+    case 'movementPhase': return s.phase === 'movement';
+    case 'commandPhase': return s.phase === 'command';
+    case 'chargePhase': return s.phase === 'charge';
     case 'leaderAttached': return hasLivingLeader(A);
     // Idols of Khorne: within 6" of a friendly World Eaters MONSTER or 9" of a TITANIC unit (+3" Chosen of the Blood God)
     case 'nearIdol': return boardUnits(s, A.owner).some((f) => f.id !== A.id && f.factionKeywords.includes('WORLD EATERS') && (hasKw(f, 'MONSTER') || hasKw(f, 'TITANIC'))

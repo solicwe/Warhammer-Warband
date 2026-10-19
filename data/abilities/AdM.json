@@ -5,8 +5,16 @@
     "note": "The Imperative chosen for the battle round (army rule)"
   },
   "Canticles of the Omnissiah": {
-    "status": "manual",
-    "note": "Not automated: the Canticles are not in the data"
+    "choice": {
+      "name": "Canticles of the Omnissiah",
+      "pick": 1,
+      "when": "command",
+      "options": [
+        "Invocation of Machine Vengeance",
+        "Mantra of Discipline",
+        "Shroudpsalm (Aura)"
+      ]
+    }
   },
   "Mechanicus Bodyguard": {
     "effects": [
@@ -919,8 +927,16 @@
     "note": "Army building: Leaders can join this unit"
   },
   "Rod of the War Forge": {
-    "status": "manual",
-    "note": "Not automated: the Icon of War abilities are not in the data"
+    "choice": {
+      "name": "Rod of the War Forge",
+      "pick": 1,
+      "when": "command",
+      "options": [
+        "Fanatical Devotion",
+        "Adaptive Tactics",
+        "The Fires of Mars"
+      ]
+    }
   },
   "Secutor of Olympus": {
     "act": {

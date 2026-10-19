@@ -1386,8 +1386,75 @@
       {
         "when": "anyPhase",
         "limit": "turn",
-        "botUse": "never",
-        "label": "Hagiomnifex: +1\" Move",
+        "if": [
+          "!marked:Hagiomnifex"
+        ],
+        "botUse": "always",
+        "botIf": [
+          "ownTurn",
+          "shootingPhase"
+        ],
+        "label": "Hagiomnifex: Rite of Revelation (+6\" detection while shooting)",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "detection": 6
+              }
+            ],
+            "until": "phase"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Hagiomnifex",
+            "until": "turn"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "turn",
+        "if": [
+          "!marked:Hagiomnifex"
+        ],
+        "botUse": "always",
+        "botIf": [
+          "commandPhase",
+          "belowStartingStrength"
+        ],
+        "label": "Hagiomnifex: Sermon of Intolerance (Battle-shock tests pass)",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "autoPassShock": true
+              }
+            ],
+            "until": "phase"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Hagiomnifex",
+            "until": "turn"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "turn",
+        "if": [
+          "!marked:Hagiomnifex"
+        ],
+        "botUse": "always",
+        "botIf": [
+          "ownTurn",
+          "movementPhase"
+        ],
+        "label": "Hagiomnifex: Catechism of Raging Fervour (+1\" Move)",
         "do": [
           {
             "on": "self",
@@ -1397,14 +1464,26 @@
               }
             ],
             "until": "phase"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Hagiomnifex",
+            "until": "turn"
           }
         ]
       },
       {
         "when": "anyPhase",
         "limit": "turn",
-        "botUse": "never",
-        "label": "Hagiomnifex: +1 Strength",
+        "if": [
+          "!marked:Hagiomnifex"
+        ],
+        "botUse": "always",
+        "botIf": [
+          "fightPhase"
+        ],
+        "label": "Hagiomnifex: Psalm of Righteous Smiting (+1 Strength)",
         "do": [
           {
             "on": "self",
@@ -1414,14 +1493,27 @@
               }
             ],
             "until": "phase"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Hagiomnifex",
+            "until": "turn"
           }
         ]
       },
       {
         "when": "anyPhase",
         "limit": "turn",
-        "botUse": "never",
-        "label": "Hagiomnifex: -1 to wound against it when S > T",
+        "if": [
+          "!marked:Hagiomnifex"
+        ],
+        "botUse": "always",
+        "botIf": [
+          "!ownTurn",
+          "shootingPhase"
+        ],
+        "label": "Hagiomnifex: Chorus of Repudiation (-1 to wound when S > T)",
         "do": [
           {
             "on": "self",
@@ -1433,11 +1525,15 @@
               }
             ],
             "until": "phase"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Hagiomnifex",
+            "until": "turn"
           }
         ]
       }
-    ],
-    "status": "partial",
-    "note": "The detection range and the automatic Battle-shock pass are not automated"
+    ]
   }
 }
