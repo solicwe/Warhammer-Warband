@@ -1196,7 +1196,7 @@ function BoardImpl(props: BoardProps) {
             if (!o) return null;
             return (
               <g key={oid}>
-                {objectivePolys(s, o).map((p, k) => <polygon key={k} points={p.map((q) => `${q.x},${q.y}`).join(' ')} fill="none" stroke="#f5d48a" strokeWidth={0.14} strokeDasharray="0.6 0.4" strokeLinejoin="round" className="goal-ring" />)}
+                <rect x={0} y={0} width={W} height={H} fill="#f5d48a" mask={`url(#objm-${o.id})`} className="goal-ring" />
                 <g transform={`translate(${o.x} ${o.y + 4.1})`}>
                   <rect x={-3.6} y={-0.48} width={7.2} height={0.95} rx={0.45} fill="rgba(60,40,0,0.9)" stroke="#f5d48a" strokeWidth={0.06} />
                   <text y={0.2} fontSize={0.55} textAnchor="middle" fill="#f5d48a" fontWeight={800}>{g.name.length > 24 ? g.name.slice(0, 23) + '…' : g.name}</text>
@@ -1233,9 +1233,18 @@ function BoardImpl(props: BoardProps) {
 
         return (
           <g key={o.id} pointerEvents="none">
-            {/* the objective: every plate under the marker, lightly tinted in the controller's colour with a thin edge */}
-            {polys.map((p, k) => <polygon key={'f' + k} points={p.map((q) => `${q.x},${q.y}`).join(' ')} fill={ctrl === null ? '#f5b83d' : COLORS[ctrl]} fillOpacity={0.16} stroke="none" />)}
-            {polys.map((p, k) => <polygon key={'e' + k} points={p.map((q) => `${q.x},${q.y}`).join(' ')} fill="none" stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.14} strokeLinejoin="round" opacity={0.95} />)}
+            {/* the objective: all plates under the marker as one shape. Held: tinted in the holder's army colour;
+                the edge is one thin line round the outside (a mask keeps only what lies outside every plate). */}
+            <defs>
+              <mask id={`objm-${o.id}`} maskUnits="userSpaceOnUse" x={0} y={0} width={W} height={H}>
+                {polys.map((p, k) => <polygon key={'w' + k} points={p.map((q) => `${q.x},${q.y}`).join(' ')} fill="#fff" stroke="#fff" strokeWidth={0.3} strokeLinejoin="round" />)}
+                {polys.map((p, k) => <polygon key={'b' + k} points={p.map((q) => `${q.x},${q.y}`).join(' ')} fill="#000" />)}
+              </mask>
+            </defs>
+            {ctrl !== null && (
+              <g opacity={0.22}>{polys.map((p, k) => <polygon key={'f' + k} points={p.map((q) => `${q.x},${q.y}`).join(' ')} fill={COLORS[ctrl]} />)}</g>
+            )}
+            <rect x={0} y={0} width={W} height={H} fill={ctrl === null ? '#f5b83d' : COLORS[ctrl]} opacity={ctrl === null ? 0.75 : 1} mask={`url(#objm-${o.id})`} />
 
             {/* effects on the objective itself (Secured, Blighted …) are named in its banner; only auras reaching
                 past it get a faint ring */}
