@@ -110,7 +110,7 @@ export function fireDeathstrikeWarhead(s: GameState, u: UnitState, customPoint?:
 
 /** Start of its Shooting phase: fire on a marker placed in an earlier phase (only if it Remained Stationary), else designate / adjust the target. */
 export function deathstrikeShooting(s: GameState, p: PlayerId) {
-  if (!(s.bots ?? []).includes(p)) return;
+  if (s.bots && s.bots.length > 0 && !s.bots.includes(p)) return;
   for (const u of boardUnits(s, p).filter(hasDeathstrikeMissile)) {
     const mk = u.dsMarker;
     const isStationary = u.move === 'stationary' || !u.move || u.lastStationaryTurn === s.turn;

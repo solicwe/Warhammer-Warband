@@ -678,13 +678,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const picked = ritMap ? ritMap.picked : mode?.k === 'shoot' || mode?.k === 'fight' || mode?.k === 'explosives' ? (mode.target ? [mode.target] : []) : mode?.k === 'charge' ? mode.targets : [];
 
   const onTapUnit = (unitId: string, modelId?: string) => {
-    // two quick taps on a model / unit: its datasheet with the weapons it carries
+    // tap on a model / unit: select on battlefield (full datasheet is opened via the > arrow button)
     const now = performance.now(), tp = taps.current;
     const same = (tp.unitId === unitId) && (!modelId || !tp.modelId || tp.modelId === modelId);
     tp.t = same ? [...tp.t.filter((t) => now - t < 700), now] : [now];
     tp.unitId = unitId;
     tp.modelId = modelId;
-    if (tp.t.length >= 2) { tp.t = []; setSheetModel(modelId); setSheet(unitId); return; }
     if (tape.on) {
       const m = U(unitId).models.find((x) => x.id === modelId && !x.dead) ?? alive(U(unitId))[0];
       if (m) measureTap({ x: m.x, y: m.y }, { u: unitId, m: m.id });
@@ -1852,11 +1851,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="handoff">Command phase · {pName(s, s.active)} · both players gain 1CP</div>
-        {boardUnits(s, s.active).filter(hasDeathstrikeMissile).map((ds) => (
-          <div key={ds.id} className="card" style={{ padding: 10, background: 'rgba(234, 88, 12, 0.12)', border: '1.5px solid #ea580c', margin: '6px 0' }}>
+        {selUnit && hasDeathstrikeMissile(selUnit) && selUnit.owner === s.active && (
+          <div className="card" style={{ padding: 10, background: 'rgba(234, 88, 12, 0.12)', border: '1.5px solid #ea580c', margin: '6px 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontWeight: 800, color: '#fb923c' }}><Icon name="objective" size={14} /> {ds.name} · Deathstrike Target Marker</span>
-              <span className="tiny muted">{ds.dsMarker ? `Marker: (${ds.dsMarker.x.toFixed(1)}", ${ds.dsMarker.y.toFixed(1)}")` : 'No marker on battlefield'}</span>
+              <span style={{ fontWeight: 800, color: '#fb923c' }}><Icon name="objective" size={14} /> {selUnit.name} · Deathstrike Target Marker</span>
+              <span className="tiny muted">{selUnit.dsMarker ? `Marker: (${selUnit.dsMarker.x.toFixed(1)}", ${selUnit.dsMarker.y.toFixed(1)}")` : 'No marker on battlefield'}</span>
             </div>
             <div className="tiny muted" style={{ marginBottom: 6 }}>
               Designate or adjust target coordinates anywhere on the battlefield during Command phase (6" blast radius).
@@ -1864,16 +1863,18 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button
               type="button"
               className="btn small primary"
-              disabled={!canDesignateDeathstrike(s, ds)}
+              disabled={!canDesignateDeathstrike(s, selUnit)}
               onClick={() => {
-                setSel(ds.id);
-                setMode({ k: 'deathstrike-target', unitId: ds.id });
+                setMode({ k: 'deathstrike-target', unitId: selUnit.id });
               }}
             >
-              <Icon name="objective" size={14} /> {ds.dsMarker ? 'Adjust Target Marker' : 'Designate Target Marker'}
+              <Icon name="objective" size={14} /> {selUnit.dsMarker ? 'Adjust Target Marker' : 'Designate Target Marker'}
             </button>
           </div>
-        ))}
+        )}
+        {!selUnit && boardUnits(s, s.active).some(hasDeathstrikeMissile) && (
+          <div className="tiny muted" style={{ margin: '4px 0 6px 0' }}>Tap a Deathstrike on the battlefield map to place or adjust its target marker.</div>
+        )}
         {markRuleName(s, s.active) && (
           <div className="card" style={{ padding: 8 }}>
             <div className="small"><b>{markRuleName(s, s.active)}</b> — select one enemy unit: attacks against it re-roll the Hit roll{s.players[s.active].oathWoundBonus ? ' and get +1 to wound' : ''}{markRuleName(s, s.active) !== 'Oath of Moment' ? ' (HERETIC ASTARTES, not DAMNED)' : ''} until your next Command phase</div>
@@ -2129,6 +2130,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 {isEngaged(s, u) && <button className="btn" onClick={() => start('fallback')}><Icon name="fallback" /> Fall back</button>}
                 <button className="btn" onClick={() => { act((g) => remainStationary(g, unitById(g, u.id))); setSel(null); }}><Icon name="hold" /> Remain Stationary</button>
                 {canFly && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
+                {alive(u).some((m) => m.hl) && (
+                  <>
+                    <button className="btn small" title="Pivot counter-clockwise 45°" onClick={() => { const res = act((g) => rotateUnit(g, u.id, -Math.PI / 4)); if (res?.reason) flash(res.reason); }}>↺ −45°</button>
+                    <button className="btn small" title="Pivot clockwise 45°" onClick={() => { const res = act((g) => rotateUnit(g, u.id, Math.PI / 4)); if (res?.reason) flash(res.reason); }}>↻ +45°</button>
+                  </>
+                )}
               </div>
               {unitCard(u)}
             </>

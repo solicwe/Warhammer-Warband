@@ -382,6 +382,16 @@ export function botMoveOne(s: GameState): boolean {
     markTried(s, u);
     if (hasDeathstrikeMissile(u)) {
       remainStationary(s, u);
+      if (canDesignateDeathstrike(s, u)) {
+        const spot = bestDeathstrikeSpot(s, u.owner);
+        if (spot) {
+          const curWorth = u.dsMarker ? deathstrikeWorth(s, u.owner, u.dsMarker) : 0;
+          const newWorth = deathstrikeWorth(s, u.owner, spot);
+          if (!u.dsMarker || (curWorth <= 0 && newWorth > 0) || newWorth > curWorth + 25) {
+            designateDeathstrikeTarget(s, u, spot);
+          }
+        }
+      }
       botRapidDisembark(s, u);
       return true;
     }
