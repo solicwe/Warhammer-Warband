@@ -2109,7 +2109,8 @@ b.em { font-weight: 700; color: var(--text); }
     width: 100% !important;
     max-height: 60vh !important;
     height: auto !important;
-    z-index: 100 !important;
+    /* under the menu / mission trays (20) and pop-ups, over the board */
+    z-index: 19 !important;
     background: var(--surface) !important;
     border-top: 2px solid var(--accent) !important;
     border-radius: 16px 16px 0 0 !important;

@@ -4,7 +4,7 @@ import '../factions/index';
 import { buildUnits, forChapter, newUid, transportFit } from './army';
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
-import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
+import { mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
 import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
@@ -131,7 +131,9 @@ function buildTerrain(layoutId: string, tableSize?: { width: number; height: num
       terrain.push(tp);
     }
     tp.objectiveId = id;
-    return { id, type: o.type, owner: undefined, x: ox, y: oy, terrainId: tp.id, controller: null, ownerRole: o.owner ?? undefined } as ObjectiveState & { ownerRole?: string };
+    const plates = [tp, ...platesUnder(terrain, at).filter((t) => t !== tp)];
+    for (const t of plates) t.objectiveId = id;
+    return { id, type: o.type, owner: undefined, x: ox, y: oy, terrainId: tp.id, terrainIds: plates.map((t) => t.id), controller: null, ownerRole: o.owner ?? undefined } as ObjectiveState & { ownerRole?: string };
   });
   return { terrain, objectives };
 }
@@ -1815,7 +1817,7 @@ export function consolidateMode(s: GameState, u: UnitState): { mode: 'ongoing' |
   const eng = engagedEnemies(s, u);
   // Establish Supremacy: an objective consolidation even while engaged
   if (eng.length && unitFlags(s, u).objConsolidate) {
-    const obj = s.objectives.find((o) => alive(u).some((m) => bodyTouchesPoly(m, RULES.consolidate.range, objectiveTerrain(s, o).poly)));
+    const obj = s.objectives.find((o) => alive(u).some((m) => objectivePolys(s, o).some((p) => bodyTouchesPoly(m, RULES.consolidate.range, p))));
     if (obj) return { mode: 'objective', enemies: [], objective: obj };
   }
   if (eng.length) return { mode: 'ongoing', enemies: eng };
@@ -1929,15 +1931,22 @@ export function useCounteroffensive(s: GameState, u: UnitState) {
 
 // ---------- objectives & scoring ----------
 
+export { objectivePolys };
+
 export function objectiveTerrain(s: GameState, o: ObjectiveState) {
   return s.terrain.find((t) => t.id === o.terrainId)!;
 }
 
+/** The baseplates a 40mm marker stands on or touches. */
+export function platesUnder(terrain: TerrainPiece[], at: { x: number; y: number }) {
+  return terrain.filter((t) => t.kind !== 'objective-area' && t.poly?.length && circleTouchesPoly(at, 20 / 25.4, t.poly));
+}
+
 export function levelOfControl(s: GameState, o: ObjectiveState): [number, number] {
-  const t = objectiveTerrain(s, o);
+  const polys = objectivePolys(s, o);
   const lv: [number, number] = [0, 0];
   for (const u of boardUnits(s)) {
-    for (const m of alive(u)) if (bodyTouchesPoly(m, 0, t.poly)) lv[u.owner] += modelOc(s, u, m);
+    for (const m of alive(u)) if (polys.some((p) => bodyTouchesPoly(m, 0, p))) lv[u.owner] += modelOc(s, u, m);
   }
   return lv;
 }
@@ -2672,6 +2681,12 @@ export function sanitizeGameState(s: GameState): GameState {
         plate.objectiveId = o.id;
         o.terrainId = plate.id;
         tp = plate;
+      }
+      // saves from before multi-plate objectives: every plate under the marker belongs to it
+      if (tp && tp.kind !== 'objective-area' && !o.terrainIds) {
+        const plates = [tp, ...platesUnder(s.terrain, o).filter((t) => t !== tp)];
+        for (const t of plates) t.objectiveId = o.id;
+        o.terrainIds = plates.map((t) => t.id);
       }
       if (!tp) {
         const objId = `obj-t${i}`;

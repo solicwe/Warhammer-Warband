@@ -18,6 +18,10 @@ export const mulberryPick = (seed: number, n: number) => {
 
 // ---------- geometry helpers ----------
 
+/** Every area that is the objective: all the plates under its marker (or its 3" circle in the open). */
+export function objectivePolys(s: GameState, o: ObjectiveState) {
+  return (o.terrainIds ?? [o.terrainId]).map((id) => s.terrain.find((t) => t.id === id)?.poly).filter((p): p is Pt[] => !!p?.length);
+}
 const objTerrain = (s: GameState, o: ObjectiveState) => s.terrain.find((t) => t.id === o.terrainId)!;
 
 const zonePolyCache = new Map<string, Pt[]>();
@@ -56,10 +60,10 @@ function homerPoint(s: GameState, p: PlayerId): Pt {
 
 /** Is any model of the unit within range of the objective (on its terrain area / baseplate, or within 3" of a marker in the open)? */
 export const unitInRange = (s: GameState, u: UnitState, o: ObjectiveState) => {
-  const t = objTerrain(s, o);
+  const polys = objectivePolys(s, o);
   // no area at all (a bare marker): within 3" of the 40mm marker
-  if (!t?.poly) return alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= 3 + 20 / 25.4 + (m.r ?? 0.6) + 1e-4);
-  return alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
+  if (!polys.length) return alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= 3 + 20 / 25.4 + (m.r ?? 0.6) + 1e-4);
+  return alive(u).some((m) => polys.some((p) => bodyTouchesPoly(m, 0, p)));
 };
 const unitInTerrain = (u: UnitState, t: TerrainPiece) => alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
 const isOwnHome = (o: ObjectiveState, p: PlayerId) => o.type === 'home' && o.owner === p;

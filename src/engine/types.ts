@@ -323,6 +323,8 @@ export interface ObjectiveState {
   x: number;
   y: number;
   terrainId: string;
+  /** every baseplate the marker stands on (terrainId first): the objective is all of them */
+  terrainIds?: string[];
   controller: PlayerId | null;
   secured?: PlayerId | null; // stays under this player's control until the opponent controls it (Objective Secured …)
   sabotaged?: PlayerId | null; // A Deadly Prize: enemy units ending a move on it may suffer mortal wounds while this player holds it
