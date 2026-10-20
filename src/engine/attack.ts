@@ -67,7 +67,7 @@ function applyOath(s: GameState, A: UnitState, T: UnitState, pool: Pool) {
   }
 }
 
-const isMV = (m: ModelState) => m.keywords.includes('MONSTER') || m.keywords.includes('VEHICLE');
+const isMV = (m: ModelState) => (m.keywords ?? []).includes('MONSTER') || (m.keywords ?? []).includes('VEHICLE');
 const buffSum = (u: UnitState, plus: string, minus: string) => u.buffs.filter((b) => b.kind === plus).length - u.buffs.filter((b) => b.kind === minus).length;
 const has = (u: UnitState, kind: string) => u.buffs.some((b) => b.kind === kind);
 
@@ -859,10 +859,11 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   m.dead = true;
   m.wounds = 0;
   (u.used ??= {}).lostModel = `${s.turn}:${s.phase}`;
-  (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || m.keywords.includes('CHARACTER'), W: m.profile.W });
-  if (u.transport && m.keywords.includes('TRANSPORT')) transportHook?.(s, u, m);
+  const kws = m.keywords ?? u.keywords ?? [];
+  (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || kws.includes('CHARACTER'), W: m.profile.W });
+  if (u.transport && kws.includes('TRANSPORT')) transportHook?.(s, u, m);
   // Vengeance for the Omnissiah: a friendly ASTRA MILITARUM VEHICLE destroyed within 12"
-  if (m.keywords.includes('VEHICLE') && u.factionKeywords.includes('ASTRA MILITARUM')) {
+  if (kws.includes('VEHICLE') && (u.factionKeywords ?? []).includes('ASTRA MILITARUM')) {
     for (const f of boardUnits(s, u.owner)) {
       if (f.abilities.some((a) => a.name === 'Vengeance for the Omnissiah') && alive(f).some((fm) => gap(fm, m) <= 12 + 1e-6)) (f.triggered ??= []).push('avengeVehicle');
     }

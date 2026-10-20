@@ -150,7 +150,7 @@ export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit
   const cp = stratCost(s, id, unit, cost);
   const p = s.players[player];
   if (p.cp < cp) return 'Not enough CP';
-  if (p.stratagemsUsed.includes(`${phaseKey(s)}:${id}`) && !(unit && repeatHook?.(s, unit, id))) return 'This Stratagem was already used this phase';
+  if ((p.stratagemsUsed ?? []).includes(`${phaseKey(s)}:${id}`) && !(unit && repeatHook?.(s, unit, id))) return 'This Stratagem was already used this phase';
   if (unit) {
     if (unit.battleShocked && !shockedHook?.(s, unit)) return 'A Battle-shocked unit cannot be targeted by Stratagems';
     const blocked = blockHook?.(s, unit);

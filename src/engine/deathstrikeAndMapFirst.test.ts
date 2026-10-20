@@ -61,8 +61,8 @@ function makeState(units: UnitState[]): GameState {
     bots: [],
     decides: [0, 1],
     players: [
-      { id: 0, name: 'P0', role: 'attacker', detachments: [], armyRules: [], flags: [], secActive: [], cp: 2, mission: { primary: '', trapped: [], done: [] } },
-      { id: 1, name: 'P1', role: 'defender', detachments: [], armyRules: [], flags: [], secActive: [], cp: 2, mission: { primary: '', trapped: [], done: [] } },
+      { id: 0, name: 'P0', role: 'attacker', detachments: [], armyRules: [], flags: [], secActive: [], cp: 2, stratagemsUsed: [], mission: { primary: '', trapped: [], done: [] } },
+      { id: 1, name: 'P1', role: 'defender', detachments: [], armyRules: [], flags: [], secActive: [], cp: 2, stratagemsUsed: [], mission: { primary: '', trapped: [], done: [] } },
     ],
     log: [],
     fx: [],
@@ -247,6 +247,47 @@ describe('Deathstrike Ground Targeting System & Bot AI', () => {
     console.log('DS WEAPONS:', ds.models[0].weapons.map((w) => w.name));
     console.log('DS HAS MISSILE:', hasDeathstrikeMissile(ds));
     expect(hasDeathstrikeMissile(ds)).toBe(true);
+  });
+
+  it('Bot with 10 Deathstrikes fires multiple warheads across enemy squads with explosion Fx', async () => {
+    const { botMovement, botShooting } = await import('../ai/bot');
+    const dsUnits: UnitState[] = Array.from({ length: 10 }, (_, i) => {
+      const m = makeModel(`bot10-m${i}`, 5 + (i % 5) * 3, 5 + Math.floor(i / 5) * 3, 1.5, [
+        { name: 'Deathstrike missile', profiles: [{ name: 'Plasma warhead', range: 'Unlimited', a: '2D6', skill: 2, s: 16, ap: -4, d: '1', abilities: [] }] },
+      ]);
+      return makeUnit(`bot10-ds-${i}`, 0, [m], ['VEHICLE', 'ASTRA MILITARUM'], [{ name: 'Deathstrike Missile' }]);
+    });
+
+    const enemy1 = makeUnit('ork-squad-1', 1, Array.from({ length: 10 }, (_, i) => makeModel(`ork1-m${i}`, 25, 10 + i * 0.7, 0.6)), ['INFANTRY']);
+    const enemy2 = makeUnit('ork-squad-2', 1, Array.from({ length: 10 }, (_, i) => makeModel(`ork2-m${i}`, 25, 25 + i * 0.7, 0.6)), ['INFANTRY']);
+    const enemy3 = makeUnit('ork-squad-3', 1, Array.from({ length: 10 }, (_, i) => makeModel(`ork3-m${i}`, 25, 38 + i * 0.7, 0.6)), ['INFANTRY']);
+
+    const s = makeState([...dsUnits, enemy1, enemy2, enemy3]);
+    s.bots = [0];
+    s.active = 0;
+    s.phase = 'command';
+    s.turn = 1;
+
+    botStep(s, 0);
+
+    // In Movement phase, all 10 Deathstrikes remain stationary
+    s.phase = 'movement';
+    botMovement(s);
+    expect(dsUnits.every((u) => u.move === 'stationary')).toBe(true);
+
+    // In Shooting phase, bot executes shooting
+    s.phase = 'shooting';
+    botShooting(s);
+
+    // Verify multiple Deathstrikes fired (not just 1!)
+    const firedCount = dsUnits.filter((u) => u.oneShotUsed.includes('Deathstrike missile')).length;
+    console.log('DEATHSTRIKES FIRED COUNT:', firedCount);
+    expect(firedCount).toBeGreaterThanOrEqual(3);
+
+    // Verify explosion FxEvent was pushed with Plasma Warhead title
+    const explosions = (s.fx ?? []).filter((e) => e.kind === 'explosion');
+    expect(explosions.length).toBeGreaterThanOrEqual(1);
+    expect(explosions.some((e) => e.kind === 'explosion' && e.title?.includes('PLASMA WARHEAD'))).toBe(true);
   });
 });
 

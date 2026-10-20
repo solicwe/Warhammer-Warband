@@ -30,7 +30,7 @@ export function condApplies(cond: KwCond | undefined, targetKeywords: string[]):
 }
 
 export function abilitiesOf(p: WeaponProfileData): ParsedAbility[] {
-  return p.abilities.map(parseAbility);
+  return (p.abilities ?? []).map(parseAbility);
 }
 
 /** Returns the ability if present and applicable to this target. */

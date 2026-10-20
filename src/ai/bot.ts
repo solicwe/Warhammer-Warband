@@ -190,9 +190,11 @@ export function botCommand(s: GameState) {
   botCharacterStratagem(s, p);
   botRedeployActs(s, p);
   autoIssueOrders(s, p);
-  for (const u of mine.filter(hasDeathstrikeMissile)) {
+  const missiles = mine.filter(hasDeathstrikeMissile);
+  for (const u of missiles) {
     if (canDesignateDeathstrike(s, u)) {
-      const spot = bestDeathstrikeSpot(s, p);
+      const otherMarkers = missiles.filter((x) => x.id !== u.id && x.dsMarker).map((x) => x.dsMarker!);
+      const spot = bestDeathstrikeSpot(s, p, otherMarkers);
       if (spot) {
         const curWorth = u.dsMarker ? deathstrikeWorth(s, p, u.dsMarker) : 0;
         const newWorth = deathstrikeWorth(s, p, spot);
@@ -383,7 +385,8 @@ export function botMoveOne(s: GameState): boolean {
     if (hasDeathstrikeMissile(u)) {
       remainStationary(s, u);
       if (canDesignateDeathstrike(s, u)) {
-        const spot = bestDeathstrikeSpot(s, u.owner);
+        const otherMarkers = boardUnits(s, u.owner).filter((x) => x.id !== u.id && hasDeathstrikeMissile(x) && x.dsMarker).map((x) => x.dsMarker!);
+        const spot = bestDeathstrikeSpot(s, u.owner, otherMarkers);
         if (spot) {
           const curWorth = u.dsMarker ? deathstrikeWorth(s, u.owner, u.dsMarker) : 0;
           const newWorth = deathstrikeWorth(s, u.owner, spot);
@@ -467,22 +470,27 @@ export function botShootOne(s: GameState): boolean {
   const mine = boardUnits(s, s.active);
 
   // Deathstrike: fire plasma warhead or designate target if available
-  for (const u of mine.filter(hasDeathstrikeMissile)) {
+  const missiles = mine.filter(hasDeathstrikeMissile);
+  for (const u of missiles) {
     if (canFireDeathstrike(s, u)) {
       const worth = u.dsMarker ? deathstrikeWorth(s, s.active, u.dsMarker) : 0;
       if (worth > 0) {
         fireDeathstrikeWarhead(s, u);
         return true;
       }
-    }
-    if (canDesignateDeathstrike(s, u)) {
-      const spot = bestDeathstrikeSpot(s, s.active);
+      // Target was eliminated by earlier missile: retarget and detonate
+      const otherMarkers = missiles.filter((x) => x.id !== u.id && x.dsMarker).map((x) => x.dsMarker!);
+      const nextSpot = bestDeathstrikeSpot(s, s.active, otherMarkers);
+      if (nextSpot && deathstrikeWorth(s, s.active, nextSpot) > 0) {
+        designateDeathstrikeTarget(s, u, nextSpot);
+        fireDeathstrikeWarhead(s, u, nextSpot);
+        return true;
+      }
+    } else if (canDesignateDeathstrike(s, u)) {
+      const otherMarkers = missiles.filter((x) => x.id !== u.id && x.dsMarker).map((x) => x.dsMarker!);
+      const spot = bestDeathstrikeSpot(s, s.active, otherMarkers);
       if (spot) {
-        const curWorth = u.dsMarker ? deathstrikeWorth(s, s.active, u.dsMarker) : 0;
-        const newWorth = deathstrikeWorth(s, s.active, spot);
-        if (!u.dsMarker || (curWorth <= 0 && newWorth > 0) || newWorth > curWorth + 25) {
-          designateDeathstrikeTarget(s, u, spot);
-        }
+        designateDeathstrikeTarget(s, u, spot);
       }
     }
   }

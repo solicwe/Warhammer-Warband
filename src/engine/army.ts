@@ -866,7 +866,8 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
     // Enhancements that change the model itself: "+2 W", "the following weapon: Name: Melee | A 6 | WS 2+ | S 7 | AP -3 | D 3"
     for (const x of [e, ...joiners].filter((j) => j.enhancement)) {
       const activeDets = faction.detachments.filter((d) => list.detachments.includes(d.name));
-      const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
+      const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement)
+        ?? faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
       const m = units[units.length - 1].models.find((md) => md.source === x.datasheet && md.isCharacter) ?? units[units.length - 1].models.find((md) => md.source === x.datasheet);
       if (!enh || !m) continue;
       const w = /This model has \+(\d+) W\b/i.exec(enh.text);

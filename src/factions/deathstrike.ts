@@ -38,7 +38,7 @@ export function deathstrikeWorth(s: GameState, p: PlayerId, c: Pt): number {
 }
 
 /** The best spot for the marker: evaluating single unit centres and multi-unit cluster centroids. */
-export function bestDeathstrikeSpot(s: GameState, p: PlayerId): Pt | null {
+export function bestDeathstrikeSpot(s: GameState, p: PlayerId, excludeSpots?: Pt[]): Pt | null {
   let best: { c: Pt; v: number } | null = null;
   const foes = boardUnits(s, other(p));
   const testSpots: Pt[] = foes.map(centre);
@@ -56,7 +56,11 @@ export function bestDeathstrikeSpot(s: GameState, p: PlayerId): Pt | null {
   }
 
   for (const c of testSpots) {
-    const v = deathstrikeWorth(s, p, c);
+    let v = deathstrikeWorth(s, p, c);
+    // De-prioritize spots that already have a friendly Deathstrike marker targeting them
+    if (excludeSpots && excludeSpots.some((ex) => Math.hypot(ex.x - c.x, ex.y - c.y) < 5)) {
+      v *= 0.1;
+    }
     if (v > 0 && (!best || v > best.v)) best = { c, v };
   }
   return best?.c ?? null;
@@ -71,7 +75,7 @@ export function canFireDeathstrike(s: GameState, u: UnitState): boolean {
 }
 
 export function canDesignateDeathstrike(s: GameState, u: UnitState): boolean {
-  if ((s.phase !== 'command' && s.phase !== 'shooting') || u.owner !== s.active) return false;
+  if ((s.phase !== 'command' && s.phase !== 'movement' && s.phase !== 'shooting') || u.owner !== s.active) return false;
   if (!hasDeathstrikeMissile(u)) return false;
   const usedDesignateThisPhase = (u.used ?? {})['dsDesignated'] === `${s.turn}:${s.phase}`;
   return !usedDesignateThisPhase;
@@ -95,6 +99,15 @@ export function fireDeathstrikeWarhead(s: GameState, u: UnitState, customPoint?:
   log(s, `Plasma Warhead Detonation: ${u.name} launches warhead at target coordinates (${c.x.toFixed(1)}, ${c.y.toFixed(1)})!`, 'info', u.owner);
 
   const targets = s.units.filter((x) => x.status === 'board' && alive(x).length && withinMarker(x, c));
+  pushFx(s, {
+    kind: 'explosion',
+    at: c,
+    range: 6,
+    radius: 6,
+    hits: targets.length,
+    title: `PLASMA WARHEAD · 6" · ${targets.length} unit${targets.length === 1 ? '' : 's'} hit`,
+  });
+
   for (const T of targets) {
     // 2D6 attacks + Blast (+1 attack per 5 models in target unit)
     const n = rollExpr(s, '2D6').total + Math.floor(alive(T).length / 5);
@@ -108,21 +121,40 @@ export function fireDeathstrikeWarhead(s: GameState, u: UnitState, customPoint?:
   }
 }
 
-/** Start of its Shooting phase: fire on a marker placed in an earlier phase (only if it Remained Stationary), else designate / adjust the target. */
 export function deathstrikeShooting(s: GameState, p: PlayerId) {
-  if (s.bots && s.bots.length > 0 && !s.bots.includes(p)) return;
-  for (const u of boardUnits(s, p).filter(hasDeathstrikeMissile)) {
-    const mk = u.dsMarker;
+  if (s.decides && s.decides.includes(p) && !(s.bots ?? []).includes(p)) return;
+  const missiles = boardUnits(s, p).filter(hasDeathstrikeMissile);
+  for (const u of missiles) {
     const isStationary = u.move === 'stationary' || !u.move || u.lastStationaryTurn === s.turn;
-    const enemiesInBlast = mk ? s.units.some((x) => x.owner !== p && x.status === 'board' && alive(x).length && withinMarker(x, mk)) : false;
+    if (!isStationary) continue;
 
-    if (mk && isStationary && (enemiesInBlast || deathstrikeWorth(s, p, mk) > 0)) {
-      fireDeathstrikeWarhead(s, u, mk);
-      continue;
+    const hadMarkerAtStart = Boolean(u.dsMarker);
+    const initialMk = u.dsMarker;
+    let mk: Pt | undefined = initialMk;
+    let enemiesInBlast = initialMk ? s.units.some((x) => x.owner !== p && x.status === 'board' && alive(x).length && withinMarker(x, initialMk)) : false;
+
+    if (hadMarkerAtStart) {
+      if (!enemiesInBlast) {
+        // Earlier missile destroyed the target under this marker, retarget to next available cluster
+        const otherMarkers = missiles.filter((x) => x.id !== u.id && x.dsMarker).map((x) => x.dsMarker!);
+        const nextSpot = bestDeathstrikeSpot(s, p, otherMarkers);
+        if (nextSpot) {
+          designateDeathstrikeTarget(s, u, nextSpot);
+          mk = nextSpot;
+          enemiesInBlast = true;
+        }
+      }
+      if (mk && (enemiesInBlast || deathstrikeWorth(s, p, mk) > 0)) {
+        fireDeathstrikeWarhead(s, u, mk);
+      }
+    } else {
+      // First time placing marker: designate target now, ready to fire on subsequent turns
+      const otherMarkers = missiles.filter((x) => x.id !== u.id && x.dsMarker).map((x) => x.dsMarker!);
+      const spot = bestDeathstrikeSpot(s, p, otherMarkers);
+      if (spot) {
+        designateDeathstrikeTarget(s, u, spot);
+      }
     }
-    const c = bestDeathstrikeSpot(s, p);
-    if (!c) continue;
-    designateDeathstrikeTarget(s, u, c);
   }
 }
 

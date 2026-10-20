@@ -265,14 +265,16 @@ function Explosion({ at, k, seed, big = 1 }: { at: Pt; k: number; seed: number; 
 function DeadlyDemiseFx({ e, f }: { e: Extract<FxEvent, { kind: 'explosion' }>; f: number }) {
   const wave = easeOut(clamp01(f / 0.42));
   const fade = f > 0.84 ? (1 - f) / 0.16 : 1;
+  const label = e.title ?? `DEADLY DEMISE · ${e.range}" · ${e.hits} unit${e.hits === 1 ? '' : 's'} hit`;
+  const boxW = Math.max(6.6, label.length * 0.3 + 0.8);
   return (
     <g>
-      {f < 0.65 && <Explosion at={e.at} k={f / 0.65} seed={e.seq} big={0.9} />}
-      <circle cx={e.at.x} cy={e.at.y} r={e.radius * wave} fill="rgba(249,115,22,0.08)" stroke="#fdba74" strokeWidth={0.18} strokeDasharray="0.45 0.25" opacity={fade * 0.8} />
+      {f < 0.65 && <Explosion at={e.at} k={f / 0.65} seed={e.seq} big={e.range >= 6 ? 1.3 : 0.9} />}
+      <circle cx={e.at.x} cy={e.at.y} r={e.radius * wave} fill={e.range >= 6 ? "rgba(234,88,12,0.14)" : "rgba(249,115,22,0.08)"} stroke={e.range >= 6 ? "#ea580c" : "#fdba74"} strokeWidth={0.2} strokeDasharray="0.45 0.25" opacity={fade * 0.85} />
       <g opacity={fade}>
-        <rect x={e.at.x - 3.3} y={e.at.y - e.radius * wave - 1.05} width={6.6} height={0.9} rx={0.2} fill="rgba(12,14,17,0.9)" stroke="#fdba74" strokeWidth={0.07} />
-        <text x={e.at.x} y={e.at.y - e.radius * wave - 0.42} textAnchor="middle" fontSize={0.58} fill="#fff7ed" stroke="#111" strokeWidth={0.08} paintOrder="stroke" fontWeight={900}>
-          DEADLY DEMISE · {e.range}" · {e.hits} unit{e.hits === 1 ? '' : 's'} hit
+        <rect x={e.at.x - boxW / 2} y={e.at.y - e.radius * wave - 1.05} width={boxW} height={0.9} rx={0.2} fill="rgba(12,14,17,0.92)" stroke={e.range >= 6 ? "#ea580c" : "#fdba74"} strokeWidth={0.07} />
+        <text x={e.at.x} y={e.at.y - e.radius * wave - 0.42} textAnchor="middle" fontSize={0.56} fill="#fff7ed" stroke="#111" strokeWidth={0.08} paintOrder="stroke" fontWeight={900}>
+          {label}
         </text>
       </g>
     </g>
