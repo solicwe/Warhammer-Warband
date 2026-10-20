@@ -197,7 +197,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const covered = new Map<ModelState, boolean>();
   const coverOf = (m: ModelState) => { let v = covered.get(m); if (v === undefined) { v = hasCover(s, m, T); covered.set(m, v); } return v; };
   for (const m of shooters) {
-    const ranged = m.weapons.filter((w) => !isMelee(w.profiles[0]) && !(opt.skipWeapons ?? []).includes(w.name) && (!!opt.models || !A.weaponsFired.includes(w.name)));
+    const ranged = m.weapons.filter((w) => !isMelee(w.profiles[0]) && !/deathstrike missile/i.test(w.name) && !(opt.skipWeapons ?? []).includes(w.name) && (!!opt.models || !A.weaponsFired.includes(w.name)));
     const cqOnly = ranged.filter((w) => hasAbility(w.profiles[0], 'close-quarters'));
     const others = ranged.filter((w) => !hasAbility(w.profiles[0], 'close-quarters'));
     let chosen = ranged;
@@ -1231,6 +1231,7 @@ export function unfiredWeaponNames(u: UnitState): string[] {
     const firedCq = all.some((w) => cq(w) && u.weaponsFired.includes(w.name));
     const firedOther = all.some((w) => !cq(w) && u.weaponsFired.includes(w.name));
     for (const w of all) {
+      if (/deathstrike missile/i.test(w.name)) continue;
       if (u.weaponsFired.includes(w.name)) continue;
       if (!isMV(m) && ((firedOther && cq(w)) || (firedCq && !cq(w)))) continue;
       out.add(w.name);

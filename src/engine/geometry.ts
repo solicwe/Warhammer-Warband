@@ -142,13 +142,27 @@ export function segLengthInPoly(s: Seg, poly: Pt[]): number {
 }
 
 /** Sample points on and inside a base for line-of-sight tests. */
-export function samplePoints(m: Pt & { r: number }, n = 8): Pt[] {
+export function samplePoints(m: Pt & { r: number; hl?: number; hw?: number; rot?: number }, n = 8): Pt[] {
   const pts: Pt[] = [{ x: m.x, y: m.y }];
-  // the model itself stands inside its base: a sliver of base rim past a wall end is not a model to see or shoot from
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2;
-    pts.push({ x: m.x + Math.cos(a) * m.r * 0.75, y: m.y + Math.sin(a) * m.r * 0.75 });
+  if (!m.hl) {
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      pts.push({ x: m.x + Math.cos(a) * m.r * 0.75, y: m.y + Math.sin(a) * m.r * 0.75 });
+    }
+    return pts;
   }
+  const theta = m.rot ?? 0;
+  const ux = Math.cos(theta), uy = Math.sin(theta);
+  const vx = -uy, vy = ux;
+  const hl = m.hl, hw = m.hw ?? m.r;
+  for (const f of [-0.7, 0, 0.7]) {
+    pts.push({ x: m.x + f * hl * ux, y: m.y + f * hl * uy });
+    pts.push({ x: m.x + f * hl * ux + 0.75 * hw * vx, y: m.y + f * hl * uy + 0.75 * hw * vy });
+    pts.push({ x: m.x + f * hl * ux - 0.75 * hw * vx, y: m.y + f * hl * uy - 0.75 * hw * vy });
+  }
+  const reach = hl + 0.75 * hw;
+  pts.push({ x: m.x + reach * 0.85 * ux, y: m.y + reach * 0.85 * uy });
+  pts.push({ x: m.x - reach * 0.85 * ux, y: m.y - reach * 0.85 * uy });
   return pts;
 }
 

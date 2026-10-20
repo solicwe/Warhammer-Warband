@@ -7,29 +7,96 @@ import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 const MISSILE = 'Deathstrike missile';
 const R = 6;
-const centre = (u: UnitState): Pt => { const ms = alive(u); return { x: ms.reduce((a, m) => a + m.x, 0) / ms.length, y: ms.reduce((a, m) => a + m.y, 0) / ms.length }; };
-const within = (u: UnitState, c: Pt) => alive(u).some((m) => Math.hypot(m.x - c.x, m.y - c.y) - m.r <= R + 1e-6);
-const hasMissile = (u: UnitState) => u.abilities.some((a) => a.name === 'Deathstrike Missile') && alive(u).some((m) => m.weapons.some((w) => w.name === MISSILE)) && !u.oneShotUsed.includes(MISSILE);
+export const centre = (u: UnitState): Pt => { const ms = alive(u); return { x: ms.reduce((a, m) => a + m.x, 0) / ms.length, y: ms.reduce((a, m) => a + m.y, 0) / ms.length }; };
+export const withinMarker = (u: UnitState, c: Pt) => alive(u).some((m) => Math.hypot(m.x - c.x, m.y - c.y) - m.r <= R + 1e-6);
 
-/** Points worth under a 6" blast at c: enemy value caught minus own value caught. */
-function worth(s: GameState, p: PlayerId, c: Pt): number {
-  return s.units.filter((u) => u.status === 'board' && alive(u).length && within(u, c))
-    .reduce((a, u) => a + (u.owner === p ? -1.5 : 1) * u.pts * alive(u).length / Math.max(1, u.startingStrength), 0);
+export const hasDeathstrikeMissile = (u: UnitState) =>
+  u.abilities.some((a) => /deathstrike missile/i.test(a.name)) &&
+  alive(u).some((m) => m.weapons.some((w) => /deathstrike missile/i.test(w.name))) &&
+  !u.oneShotUsed.some((w) => /deathstrike missile/i.test(w));
+
+/** Points worth under a 6" blast at c: enemy value caught (weighted by heavy armour and blast bonus) minus own value caught. */
+export function deathstrikeWorth(s: GameState, p: PlayerId, c: Pt): number {
+  let score = 0;
+  for (const u of s.units) {
+    if (u.status !== 'board' || !alive(u).length || !withinMarker(u, c)) continue;
+    const msCaught = alive(u).filter((m) => Math.hypot(m.x - c.x, m.y - c.y) - m.r <= R + 1e-6).length;
+    if (!msCaught) continue;
+    const baseValue = (u.pts * msCaught) / Math.max(1, u.startingStrength);
+    if (u.owner === p) {
+      // Friendly fire penalty
+      score -= baseValue * 2.5;
+    } else {
+      const t = targetToughness(u, s);
+      const isHeavy = t >= 9 || u.keywords.includes('VEHICLE') || u.keywords.includes('MONSTER');
+      const heavyBonus = isHeavy ? 1.35 : 1.0;
+      const blastBonus = Math.floor(alive(u).length / 5) * 6;
+      score += baseValue * heavyBonus + blastBonus;
+    }
+  }
+  return score;
 }
 
-/** The best spot for the marker: the centre of the enemy unit that is worth the most under the blast. */
-function bestSpot(s: GameState, p: PlayerId): Pt | null {
+/** The best spot for the marker: evaluating single unit centres and multi-unit cluster centroids. */
+export function bestDeathstrikeSpot(s: GameState, p: PlayerId): Pt | null {
   let best: { c: Pt; v: number } | null = null;
-  for (const e of boardUnits(s, other(p))) { const c = centre(e); const v = worth(s, p, c); if (v > 0 && (!best || v > best.v)) best = { c, v }; }
+  const foes = boardUnits(s, other(p));
+  const testSpots: Pt[] = foes.map(centre);
+
+  // Evaluate centroids between pairs of enemy units within 11" to hit clusters
+  for (let i = 0; i < foes.length; i++) {
+    const ci = testSpots[i];
+    for (let j = i + 1; j < foes.length; j++) {
+      const cj = testSpots[j];
+      const d = Math.hypot(ci.x - cj.x, ci.y - cj.y);
+      if (d <= 11) {
+        testSpots.push({ x: (ci.x + cj.x) / 2, y: (ci.y + cj.y) / 2 });
+      }
+    }
+  }
+
+  for (const c of testSpots) {
+    const v = deathstrikeWorth(s, p, c);
+    if (v > 0 && (!best || v > best.v)) best = { c, v };
+  }
   return best?.c ?? null;
 }
 
-/** Plasma warhead: every unit within 6" of the marker is attacked (2D6 attacks, Blast, BS 2+, S16 AP-4 D1). */
-function fire(s: GameState, u: UnitState, c: Pt) {
+export function canFireDeathstrike(s: GameState, u: UnitState): boolean {
+  if (s.phase !== 'shooting' || u.owner !== s.active) return false;
+  if (!hasDeathstrikeMissile(u) || !u.dsMarker) return false;
+  const isStationary = u.move === 'stationary' || !u.move || u.lastStationaryTurn === s.turn;
+  const usedDesignateThisPhase = (u.used ?? {})['dsDesignated'] === `${s.turn}:${s.phase}`;
+  return isStationary && !usedDesignateThisPhase;
+}
+
+export function canDesignateDeathstrike(s: GameState, u: UnitState): boolean {
+  if ((s.phase !== 'command' && s.phase !== 'shooting') || u.owner !== s.active) return false;
+  if (!hasDeathstrikeMissile(u)) return false;
+  const usedDesignateThisPhase = (u.used ?? {})['dsDesignated'] === `${s.turn}:${s.phase}`;
+  return !usedDesignateThisPhase;
+}
+
+export function designateDeathstrikeTarget(s: GameState, u: UnitState, c: Pt) {
+  const mk = u.dsMarker;
+  u.dsMarker = { x: c.x, y: c.y };
+  (u.used ??= {})['dsDesignated'] = `${s.turn}:${s.phase}`;
+  pushFx(s, { kind: 'skill', unitId: u.id, owner: u.owner, at: c, name: 'Deathstrike Target', who: u.name, style: 'tech', epic: false });
+  log(s, `Deathstrike Missile: ${u.name} ${mk ? 'adjusts' : 'designates'} target marker at (${c.x.toFixed(1)}, ${c.y.toFixed(1)})`, 'info', u.owner);
+}
+
+/** Plasma warhead: every unit within 6" of the marker is attacked (2D6 attacks + Blast, BS 2+, S16 AP-4 D1). */
+export function fireDeathstrikeWarhead(s: GameState, u: UnitState, customPoint?: Pt) {
+  const c = customPoint ?? u.dsMarker;
+  if (!c) return;
   u.oneShotUsed.push(MISSILE);
   u.dsMarker = undefined;
   pushFx(s, { kind: 'skill', unitId: u.id, owner: u.owner, at: c, name: 'Plasma Warhead', who: u.name, style: 'tech', epic: true });
-  for (const T of s.units.filter((x) => x.status === 'board' && alive(x).length && within(x, c))) {
+  log(s, `Plasma Warhead Detonation: ${u.name} launches warhead at target coordinates (${c.x.toFixed(1)}, ${c.y.toFixed(1)})!`, 'info', u.owner);
+
+  const targets = s.units.filter((x) => x.status === 'board' && alive(x).length && withinMarker(x, c));
+  for (const T of targets) {
+    // 2D6 attacks + Blast (+1 attack per 5 models in target unit)
     const n = rollExpr(s, '2D6').total + Math.floor(alive(T).length / 5);
     const hits = rollN(s, n).filter((v) => v >= 2).length;
     const wounds = rollN(s, hits).filter((v) => v >= woundNeed(16, targetToughness(T, s))).length;
@@ -37,19 +104,25 @@ function fire(s: GameState, u: UnitState, c: Pt) {
     const need = Math.min(m.profile.Sv + 4, m.profile.InSv ?? 7);
     const unsaved = need > 6 ? wounds : rollN(s, wounds).filter((v) => v < need).length;
     const lost = unsaved ? applyMortalWounds(s, T, unsaved, 'Plasma Warhead') : 0;
-    log(s, `Plasma Warhead: ${T.name} takes ${n} attacks, ${unsaved} unsaved, ${lost} model${lost === 1 ? '' : 's'} destroyed`, 'info', u.owner);
+    log(s, `Plasma Warhead: ${T.name} takes ${n} attacks (${hits} hits, ${wounds} wounds) → ${unsaved} unsaved, ${lost} model${lost === 1 ? '' : 's'} destroyed`, 'info', u.owner);
   }
 }
 
 /** Start of its Shooting phase: fire on a marker placed in an earlier phase (only if it Remained Stationary), else designate / adjust the target. */
 export function deathstrikeShooting(s: GameState, p: PlayerId) {
-  for (const u of boardUnits(s, p).filter(hasMissile)) {
+  if (!(s.bots ?? []).includes(p)) return;
+  for (const u of boardUnits(s, p).filter(hasDeathstrikeMissile)) {
     const mk = u.dsMarker;
-    if (mk && u.move === 'stationary' && worth(s, p, mk) > 0) { fire(s, u, mk); continue; }
-    const c = bestSpot(s, p);
+    const isStationary = u.move === 'stationary' || !u.move || u.lastStationaryTurn === s.turn;
+    const enemiesInBlast = mk ? s.units.some((x) => x.owner !== p && x.status === 'board' && alive(x).length && withinMarker(x, mk)) : false;
+
+    if (mk && isStationary && (enemiesInBlast || deathstrikeWorth(s, p, mk) > 0)) {
+      fireDeathstrikeWarhead(s, u, mk);
+      continue;
+    }
+    const c = bestDeathstrikeSpot(s, p);
     if (!c) continue;
-    u.dsMarker = { x: c.x, y: c.y };
-    log(s, `Deathstrike Missile: ${u.name} ${mk ? 'adjusts' : 'designates'} its target`, 'info', p);
+    designateDeathstrikeTarget(s, u, c);
   }
 }
 

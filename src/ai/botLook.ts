@@ -46,7 +46,7 @@ const LEVELS: Record<BotLevel, { styles: string[]; samples: number; budget: numb
 export const levelOf = (s: GameState, p?: PlayerId): BotLevel => (p !== undefined ? s.botLevels?.[p] : undefined) ?? s.botLevel ?? 'normal';
 /** How long the app lets the bot think about its turn at this level (a Web Worker, so the screen never freezes). */
 export const lookBudget = (s: GameState, p?: PlayerId) => {
-  if (s.campaign) return 0;
+  if (s.campaign || (s as any).idleMode || ((s.bots ?? []).length >= 2)) return 0;
   return LEVELS[levelOf(s, p)].budget;
 };
 
@@ -130,10 +130,11 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Inf
 
 /** The style that leaves p best off after playing this turn and the opponent's next one on copies of the game. */
 export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs?: number): string {
-  if (!enabled || inRollout || s.phase === 'gameover') return 'steady';
-  if (s.campaign) return 'rogue';
+  const b = budgetMs ?? lookBudget(s, p);
+  if (!enabled || inRollout || s.phase === 'gameover' || b <= 0) return 'steady';
+  if (s.campaign || (s as any).idleMode) return 'rogue';
   let best = { name: 'steady', v: -Infinity };
-  for (const [name, v] of Object.entries(styleValues(s, p, budgetMs))) if (v > best.v + 1e-6) best = { name, v };
+  for (const [name, v] of Object.entries(styleValues(s, p, b))) if (v > best.v + 1e-6) best = { name, v };
   return best.name;
 }
 
@@ -145,7 +146,7 @@ export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs?: number): s
 export function styleValues(s: GameState, p: PlayerId, budgetMs?: number, watch?: LookWatch): Record<string, number> {
   const L = LEVELS[levelOf(s, p)];
   const out: Record<string, number> = {};
-  if (!L.styles.length) return out;
+  if (!L.styles.length || (budgetMs !== undefined && budgetMs <= 0)) return out;
   own[p] ??= W(p);
   const deadline = Date.now() + (budgetMs ?? Infinity);
   const sum: Record<string, number> = {}, n: Record<string, number> = {};

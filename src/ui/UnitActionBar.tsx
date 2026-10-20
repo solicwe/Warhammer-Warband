@@ -4,6 +4,7 @@ import { alive, hasKw, isEngaged } from '../engine/state';
 import { unitFlags } from '../rules-engine/effects';
 import { shootingModes } from '../engine/attack';
 import { chargeEligibility } from '../engine/game';
+import { canDesignateDeathstrike, canFireDeathstrike } from '../factions/deathstrike';
 import { Icon, type IconName } from './Icon';
 
 export interface UnitAction {
@@ -28,6 +29,9 @@ export interface UnitActionBarProps {
   onShoot?: () => void;
   onCharge?: () => void;
   onFight?: () => void;
+  onDeathstrikeDesignate?: () => void;
+  onDeathstrikeFire?: () => void;
+  onRotate?: (deg: number) => void;
   onOpenSheet?: () => void;
   onOpenStrats?: () => void;
   onToggleTape?: () => void;
@@ -50,6 +54,9 @@ export const UnitActionBar = memo(function UnitActionBar({
   onShoot,
   onCharge,
   onFight,
+  onDeathstrikeDesignate,
+  onDeathstrikeFire,
+  onRotate,
   onOpenSheet,
   onOpenStrats,
   onToggleTape,
@@ -61,12 +68,42 @@ export const UnitActionBar = memo(function UnitActionBar({
   const flags = unitFlags(s, unit);
   const moveDist = (profile?.M ?? 0) + flags.move;
   const engaged = isEngaged(s, unit);
+  const isVehicleOrOval = hasKw(unit, 'VEHICLE') || hasKw(unit, 'MONSTER') || models.some((m) => !!m.hl);
 
   // Derive phase actions
   const primaryActions: UnitAction[] = [];
 
   if (isCurrentPlayer && unit.owner === s.active) {
-    if (s.phase === 'movement') {
+    if (s.phase === 'command') {
+      if (canDesignateDeathstrike(s, unit) && onDeathstrikeDesignate) {
+        primaryActions.push({
+          id: 'deathstrike-designate',
+          label: unit.dsMarker ? 'Relocate Marker' : 'Designate Target',
+          sublabel: '6" Radius',
+          icon: 'objective',
+          primary: true,
+          onClick: onDeathstrikeDesignate,
+          tooltip: 'Place or move the Deathstrike Target Marker anywhere on the battlefield',
+        });
+      }
+    } else if (s.phase === 'deploy') {
+      if (isVehicleOrOval && onRotate) {
+        primaryActions.push({
+          id: 'rotate-left-45',
+          label: '↺ -45°',
+          sublabel: 'Pivot',
+          onClick: () => onRotate(-45),
+          tooltip: 'Rotate unit counter-clockwise by 45 degrees',
+        });
+        primaryActions.push({
+          id: 'rotate-right-45',
+          label: '↻ +45°',
+          sublabel: 'Pivot',
+          onClick: () => onRotate(45),
+          tooltip: 'Rotate unit clockwise by 45 degrees',
+        });
+      }
+    } else if (s.phase === 'movement') {
       if (canUndoMove && onUndoMove) {
         primaryActions.push({
           id: 'undo-move',
@@ -113,6 +150,36 @@ export const UnitActionBar = memo(function UnitActionBar({
             tooltip: 'Remain Stationary (triggers Heavy weapon bonus)',
           });
         }
+        if (isVehicleOrOval && onRotate) {
+          primaryActions.push({
+            id: 'rotate-left-45',
+            label: '↺ -45°',
+            sublabel: 'Pivot',
+            onClick: () => onRotate(-45),
+            tooltip: 'Rotate unit counter-clockwise by 45 degrees',
+          });
+          primaryActions.push({
+            id: 'rotate-right-45',
+            label: '↻ +45°',
+            sublabel: 'Pivot',
+            onClick: () => onRotate(45),
+            tooltip: 'Rotate unit clockwise by 45 degrees',
+          });
+          primaryActions.push({
+            id: 'rotate-left-15',
+            label: '↺ -15°',
+            sublabel: 'Fine',
+            onClick: () => onRotate(-15),
+            tooltip: 'Fine-tune rotation counter-clockwise by 15 degrees',
+          });
+          primaryActions.push({
+            id: 'rotate-right-15',
+            label: '↻ +15°',
+            sublabel: 'Fine',
+            onClick: () => onRotate(15),
+            tooltip: 'Fine-tune rotation clockwise by 15 degrees',
+          });
+        }
       }
     } else if (s.phase === 'shooting') {
       const smodes = shootingModes(s, unit);
@@ -125,6 +192,28 @@ export const UnitActionBar = memo(function UnitActionBar({
           primary: true,
           onClick: onShoot,
           tooltip: 'Select target and fire ranged weapons',
+        });
+      }
+      if (canFireDeathstrike(s, unit) && onDeathstrikeFire) {
+        primaryActions.push({
+          id: 'deathstrike-fire',
+          label: 'Launch Warhead',
+          sublabel: 'Blast 2D6 Mortal',
+          icon: 'shoot',
+          primary: true,
+          onClick: onDeathstrikeFire,
+          tooltip: 'Detonate Deathstrike Plasma Warhead on target marker (attacks all units within 6")',
+        });
+      }
+      if (canDesignateDeathstrike(s, unit) && onDeathstrikeDesignate) {
+        primaryActions.push({
+          id: 'deathstrike-designate',
+          label: unit.dsMarker ? 'Relocate Marker' : 'Designate Target',
+          sublabel: '6" Radius',
+          icon: 'objective',
+          primary: false,
+          onClick: onDeathstrikeDesignate,
+          tooltip: 'Place or move the Deathstrike Target Marker anywhere on the battlefield',
         });
       }
     } else if (s.phase === 'charge') {
@@ -160,16 +249,16 @@ export const UnitActionBar = memo(function UnitActionBar({
 
   return (
     <div
-      className="unit-action-bar-container"
+      className="unit-action-bar-container floating-unit-menu"
       style={{
-        position: 'sticky',
-        bottom: 0,
+        position: 'relative',
         zIndex: 25,
-        margin: '0 -14px',
-        padding: '8px 12px',
-        background: '#121417',
-        borderTop: '1.5px solid #2b3036',
-        boxShadow: 'none',
+        margin: 0,
+        padding: '10px 14px',
+        background: '#12161c',
+        border: '1.5px solid #2d3748',
+        borderRadius: 8,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.65)',
         display: 'flex',
         flexDirection: 'column',
         gap: 8,

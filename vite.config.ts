@@ -2,8 +2,11 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // a fingerprint of the rules data: the page asks for ./data/…?v=<it>, so a browser never keeps last version's files
 function dataVersion() {

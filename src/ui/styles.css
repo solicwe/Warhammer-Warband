@@ -599,6 +599,13 @@ b.em { font-weight: 700; color: var(--text); }
 .unit-pill.sel .muted { color: var(--on-fill); opacity: 0.75; }
 .unit-pill.shock { box-shadow: inset 0 0 0 1.5px var(--warn); }
 .unit-pill:active { transform: scale(0.97); }
+.unit-pill-count { display: inline-flex; align-items: center; justify-content: center; margin-left: 6px; padding: 1px 6px; font-size: 11px; font-weight: 800; color: #38bdf8; background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 9999px; }
+.datasheet-open-btn { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 38px; min-height: 38px; width: 38px; height: 38px; padding: 0; border-radius: 8px; border: 1px solid var(--line-2, #334155); background: rgba(30, 41, 59, 0.7); color: #94a3b8; cursor: pointer; transition: all 0.15s ease-out; touch-action: manipulation; }
+.datasheet-open-btn:hover { background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #60a5fa; box-shadow: 0 0 10px rgba(59, 130, 246, 0.35); transform: translateX(2px); }
+.datasheet-open-btn:active { background: rgba(59, 130, 246, 0.35); border-color: #60a5fa; transform: scale(0.95); }
+.ready-next-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 14px; font-size: 13px; font-weight: 800; border-radius: 6px; background: rgba(14, 116, 144, 0.2); border: 1.5px solid #06b6d4; color: #67e8f9; box-shadow: 0 0 10px rgba(6, 182, 212, 0.25); cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
+.ready-next-btn:hover { background: rgba(6, 182, 212, 0.3); border-color: #22d3ee; color: #cffafe; box-shadow: 0 0 14px rgba(6, 182, 212, 0.45); }
+.ready-next-btn:active { transform: scale(0.96); }
 .statline { font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
 .statline b { color: var(--text); font-weight: 700; }
 .stats { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font: 600 11px var(--font-cond); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-2); }
@@ -2765,4 +2772,74 @@ select option {
   border-color: rgba(239, 68, 68, 0.35) !important;
   color: #fca5a5 !important;
 }
+
+/* ==========================================================================
+   WARHAMMER 11E GRIMDARK MOBILE - FLOATING CONTEXTUAL UNIT DOCK & IDLE UI
+   ========================================================================== */
+
+.floating-unit-dock {
+  position: absolute;
+  bottom: 14px;
+  left: 12px;
+  right: 12px;
+  max-width: 520px;
+  margin: 0 auto;
+  z-index: 40;
+  pointer-events: auto;
+  animation: dockSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(217, 155, 38, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0f1318;
+}
+
+@keyframes dockSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.floating-unit-menu {
+  background: rgba(18, 24, 33, 0.88) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.72) !important;
+}
+
+.floating-unit-menu .btn.primary {
+  background: linear-gradient(180deg, #d99b26 0%, #b45309 100%) !important;
+  border-color: #f59e0b !important;
+  color: #0b0f17 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(217, 155, 38, 0.35);
+}
+
+.floating-unit-menu .btn.primary:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(217, 155, 38, 0.2);
+}
+
+.idle-btn.active {
+  background: rgba(34, 197, 94, 0.18) !important;
+  border-color: #22c55e !important;
+  color: #4ade80 !important;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
+  animation: idlePulse 2.5s infinite ease-in-out;
+}
+
+@keyframes idlePulse {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.55);
+  }
+}
+
 

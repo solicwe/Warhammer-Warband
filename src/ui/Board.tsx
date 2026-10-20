@@ -7,7 +7,7 @@ import { isDaemonsArmy, isDaemonUnit, isUnderShadowOfChaos } from '../factions/d
 import { zonePoly } from '../engine/missions';
 import { levelOfControl, markRuleLabel, objectivePolys, scaledPoly } from '../engine/game';
 import { loneOperativeNow, unitFlags } from '../rules-engine/effects';
-import { getUnitLoneOpRange, isInfantryBeastLoneOpActive, modelVisible } from '../engine/visibility';
+import { getUnitLoneOpRange, isHidden, isInfantryBeastLoneOpActive, modelVisible } from '../engine/visibility';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 import { loadoutLabels, shortItem } from './loadout';
@@ -27,6 +27,8 @@ export interface BoardProps {
   s: GameState;
   viewer: PlayerId;
   selected?: string | null;
+  /** Focus / center camera on this unit */
+  focusUnit?: string | null;
   /** unit IDs eligible to move this phase: highlighted so the player sees who can move */
   movable?: string[];
   draftUnit?: string | null;
@@ -537,6 +539,25 @@ function BoardImpl(props: BoardProps) {
     if (!el) return;
     setVb(home);
   }, [home]);
+
+  // Camera focus on selected or next-ready unit
+  const lastFocusRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!props.focusUnit) return;
+    if (props.focusUnit === lastFocusRef.current) return;
+    lastFocusRef.current = props.focusUnit;
+    const u = s.units.find((x) => x.id === props.focusUnit);
+    if (!u || !onBoard(u)) return;
+    const ms = alive(u);
+    if (!ms.length) return;
+    const cx = ms.reduce((sum, m) => sum + m.x, 0) / ms.length;
+    const cy = ms.reduce((sum, m) => sum + m.y, 0) / ms.length;
+    setVb((cur) => {
+      const nx = Math.max(-1 - padL, Math.min(W + 1 + padR - cur.w, cx - cur.w / 2));
+      const ny = Math.max(-1, Math.min(H + 1 - cur.h, cy - cur.h / 2));
+      return { ...cur, x: nx, y: ny };
+    });
+  }, [props.focusUnit, s.units, padL, padR, W, H]);
 
   const zoomAt = (factor: number, c: Pt, base = vb) => {
     const w = Math.min(W * 2.5, Math.max(8, base.w * factor));
@@ -1153,10 +1174,10 @@ function BoardImpl(props: BoardProps) {
       {territoryAuras}
       <polygon points={scaledPoly(dep.territory.attacker, W, H).map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth={0.1} strokeDasharray="0.5 0.4" pointerEvents="none" />
       {Array.from({ length: Math.floor(H / 6) + 1 }, (_, i) => (
-        <text key={`ty${i}`} x={0.2} y={i * 6 + 0.5} fontSize={0.6} fill="rgba(255,255,255,0.4)">{i * 6}"</text>
+        <text key={`ty${i}`} x={0.2} y={i * 6 + 0.5} fontSize={0.6} fill="rgba(255,255,255,0.4)" pointerEvents="none">{i * 6}"</text>
       ))}
       {Array.from({ length: Math.floor(W / 6) + 1 }, (_, i) => (
-        <text key={`tx${i}`} x={i * 6 + 0.15} y={H - 0.25} fontSize={0.6} fill="rgba(255,255,255,0.4)">{i * 6}"</text>
+        <text key={`tx${i}`} x={i * 6 + 0.15} y={H - 0.25} fontSize={0.6} fill="rgba(255,255,255,0.4)" pointerEvents="none">{i * 6}"</text>
       ))}
       {terrainEls}
       {props.edgeGuide !== undefined && props.edgeGuide > 0 && props.edgeGuide * 2 < Math.min(W, H) && (
@@ -1355,9 +1376,24 @@ function BoardImpl(props: BoardProps) {
       )))}
       {s.units.filter((u) => u.dsMarker && u.status === 'board').map((u) => (
         <g key={`ds-${u.id}`} transform={`translate(${u.dsMarker!.x} ${u.dsMarker!.y})`} pointerEvents="none">
-          <circle r={6} fill="none" stroke={COLORS[u.owner]} strokeWidth={0.15} strokeDasharray="0.6 0.4" />
-          <circle r={0.8} fill="rgba(12,14,18,0.85)" stroke={COLORS[u.owner]} strokeWidth={0.15} />
-          <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>D</text>
+          {/* 6" Blast Zone area with glowing fiery radial overlay */}
+          <circle r={6} fill="rgba(234, 88, 12, 0.2)" stroke="#ea580c" strokeWidth={0.16} strokeDasharray="0.8 0.4" />
+          <circle r={5.9} fill="none" stroke="#f97316" strokeWidth={0.06} opacity={0.6} />
+          {/* Crosshair lines extending across the 6" circle */}
+          <line x1={-6} y1={0} x2={6} y2={0} stroke="#ea580c" strokeWidth={0.08} strokeDasharray="0.5 0.5" opacity={0.7} />
+          <line x1={0} y1={-6} x2={0} y2={6} stroke="#ea580c" strokeWidth={0.08} strokeDasharray="0.5 0.5" opacity={0.7} />
+          {/* Concentric targeting beacon rings */}
+          <circle r={2} fill="none" stroke="#fdba74" strokeWidth={0.08} strokeDasharray="0.4 0.3" opacity={0.6} />
+          <circle r={1.0} fill="rgba(15, 23, 42, 0.9)" stroke="#f97316" strokeWidth={0.16} />
+          <circle r={0.3} fill="#ef4444" />
+          <text y={0.32} fontSize={0.65} textAnchor="middle" fill="#fdba74" fontWeight={900}>🎯</text>
+          {/* Badge Label */}
+          <g transform="translate(0, -6.4)">
+            <rect x={-3.2} y={-0.45} width={6.4} height={0.9} rx={0.3} fill="rgba(12, 14, 18, 0.92)" stroke="#ea580c" strokeWidth={0.1} />
+            <text y={0.18} fontSize={0.42} textAnchor="middle" fill="#ffedd5" fontWeight={800} letterSpacing="0.03em">
+              DEATHSTRIKE TARGET (6" BLAST)
+            </text>
+          </g>
         </g>
       ))}
       {s.pendingActions.map((a) => {
@@ -1450,6 +1486,15 @@ function BoardImpl(props: BoardProps) {
             })}
             {ms.map((m, i) => {
               const p = pts[i];
+              // Visual Clipping / Virtualization: Cull off-screen models outside the active viewport + margin
+              if (
+                p.x < vb.x - 3.5 ||
+                p.x > vb.x + vb.w + 3.5 ||
+                p.y < vb.y - 3.5 ||
+                p.y > vb.y + vb.h + 3.5
+              ) {
+                return null;
+              }
               const bad = props.bad?.includes(m.id);
               // the photo fits the narrow side of an oval or hull base
               const pr = m.hl ? (m.hw ?? m.r) : m.r;
@@ -1458,6 +1503,7 @@ function BoardImpl(props: BoardProps) {
               const disp = getModelDisplayWounds(u, m, fx, now);
               const isEnemy = u.owner !== props.viewer;
               const isUntargetable = isEnemy && untargetableModelIds.has(m.id);
+              const isModelHidden = isHidden(s, u, m);
               return (
                 <g
                   key={m.id}
@@ -1466,6 +1512,7 @@ function BoardImpl(props: BoardProps) {
                   style={{
                     cursor: isDraft ? 'grab' : 'pointer',
                     ...(isUntargetable ? { opacity: 0.45 } : {}),
+                    ...(isModelHidden ? { opacity: 0.55, filter: 'grayscale(100%)' } : {}),
                   }}
                   transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
                   opacity={disp.fading !== undefined ? disp.fading : 1}
@@ -1519,9 +1566,28 @@ function BoardImpl(props: BoardProps) {
                   })()}
                   {hasLoneOp && (
                     <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
-                      <circle r={0.36} fill={isInfBeastOp ? '#064e3b' : '#0f172a'} stroke={isInfBeastOp ? '#10b981' : '#f59e0b'} strokeWidth={0.08} />
-                      <text y={0.11} fontSize={0.26} textAnchor="middle" fill={isInfBeastOp ? '#6ee7b7' : '#fbbf24'} fontWeight={900}>
-                        {loRange ? `${loRange}"` : '12"'}
+                      {isInfBeastOp ? (
+                        <>
+                          <rect x={-0.8} y={-0.22} width={1.6} height={0.44} rx={0.22} fill="#1e293b" stroke="#64748b" strokeWidth={0.06} />
+                          <text y={0.09} fontSize={0.2} textAnchor="middle" fill="#e2e8f0" fontWeight={900} letterSpacing={0.02}>
+                            HIDDEN 15"
+                          </text>
+                        </>
+                      ) : (
+                        <>
+                          <circle r={0.36} fill="#0f172a" stroke="#f59e0b" strokeWidth={0.08} />
+                          <text y={0.11} fontSize={0.26} textAnchor="middle" fill="#fbbf24" fontWeight={900}>
+                            {loRange ? `${loRange}"` : '12"'}
+                          </text>
+                        </>
+                      )}
+                    </g>
+                  )}
+                  {isModelHidden && !hasLoneOp && (
+                    <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
+                      <rect x={-0.8} y={-0.22} width={1.6} height={0.44} rx={0.22} fill="#1e293b" stroke="#94a3b8" strokeWidth={0.06} />
+                      <text y={0.09} fontSize={0.2} textAnchor="middle" fill="#94a3b8" fontWeight={900} letterSpacing={0.02}>
+                        HIDDEN
                       </text>
                     </g>
                   )}

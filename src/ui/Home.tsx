@@ -78,7 +78,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
           <button className="mode slate" onClick={onCampaign}>
             <span className="slate-in">
               <span className="mode-icon"><Icon name="trophy" size={22} /></span>
-              <span className="mode-text"><b>Campaign (Roguelike)</b><small>{run && !run.over ? `Stage ${Math.min(runLayer + 1, runLayers)} of ${runLayers} · ${run.fate} Fate · ${run.scrap ?? 0} Scrap` : 'Branching battles, armory, battle honors, and Warlord'}</small></span>
+              <span className="mode-text"><b>Campaign (Idle Mode)</b><small>{run && !run.over ? `Stage ${Math.min(runLayer + 1, runLayers)} of ${runLayers} · ${run.fate} Fate · ${run.scrap ?? 0} Scrap · 100% Autonomous AI` : 'Universal Auto-Play, branching battles, armory, battle honors, and Warlord'}</small></span>
             </span>
           </button>
           <button className="mode slate" onClick={onTutorial}>

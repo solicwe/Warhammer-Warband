@@ -39,6 +39,7 @@ export function flowAreas(s: GameState, p: PlayerId): { nml: boolean; opp: boole
 export function inFlow(s: GameState, u: UnitState): boolean {
   if (!onBoard(u)) return false;
   if (!hasFlowOfMagic(s, u.owner)) return false;
+  if (!u.factionKeywords.includes('THOUSAND SONS') && !u.keywords.includes('THOUSAND SONS')) return false;
   if (u.enhancements.some((e) => e.name === NOCTILITH)) return true;
   const models = alive(u);
   if (!models.length) return false;

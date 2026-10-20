@@ -37,6 +37,7 @@ import {
 } from './botStrats';
 import { answerReaction } from '../rules-engine/stratagems';
 import { autoIssueOrders } from '../factions/orders';
+import { bestDeathstrikeSpot, canDesignateDeathstrike, canFireDeathstrike, deathstrikeWorth, designateDeathstrikeTarget, fireDeathstrikeWarhead, hasDeathstrikeMissile } from '../factions/deathstrike';
 import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 
@@ -189,6 +190,18 @@ export function botCommand(s: GameState) {
   botCharacterStratagem(s, p);
   botRedeployActs(s, p);
   autoIssueOrders(s, p);
+  for (const u of mine.filter(hasDeathstrikeMissile)) {
+    if (canDesignateDeathstrike(s, u)) {
+      const spot = bestDeathstrikeSpot(s, p);
+      if (spot) {
+        const curWorth = u.dsMarker ? deathstrikeWorth(s, p, u.dsMarker) : 0;
+        const newWorth = deathstrikeWorth(s, p, spot);
+        if (!u.dsMarker || (curWorth <= 0 && newWorth > 0) || newWorth > curWorth + 25) {
+          designateDeathstrikeTarget(s, u, spot);
+        }
+      }
+    }
+  }
   endPhase(s);
 }
 
@@ -367,6 +380,11 @@ export function botMoveOne(s: GameState): boolean {
     }
     if (!onBoard(u) || u.move) continue;
     markTried(s, u);
+    if (hasDeathstrikeMissile(u)) {
+      remainStationary(s, u);
+      botRapidDisembark(s, u);
+      return true;
+    }
     const M = moveOf(u);
     if (!M || !Number.isFinite(M)) { remainStationary(s, u); botRapidDisembark(s, u); return true; }
     const MM = M + unitFlags(s, u).move;
@@ -437,6 +455,27 @@ export function botShootOne(s: GameState): boolean {
   const startKey = `${s.turn}|shootStart|${s.active}`;
   if (!(s.botTried ?? []).includes(startKey)) { s.botTried = [...(s.botTried ?? []), startKey]; botDetectionStratagem(s, s.active); }
   const mine = boardUnits(s, s.active);
+
+  // Deathstrike: fire plasma warhead or designate target if available
+  for (const u of mine.filter(hasDeathstrikeMissile)) {
+    if (canFireDeathstrike(s, u)) {
+      const worth = u.dsMarker ? deathstrikeWorth(s, s.active, u.dsMarker) : 0;
+      if (worth > 0) {
+        fireDeathstrikeWarhead(s, u);
+        return true;
+      }
+    }
+    if (canDesignateDeathstrike(s, u)) {
+      const spot = bestDeathstrikeSpot(s, s.active);
+      if (spot) {
+        const curWorth = u.dsMarker ? deathstrikeWorth(s, s.active, u.dsMarker) : 0;
+        const newWorth = deathstrikeWorth(s, s.active, spot);
+        if (!u.dsMarker || (curWorth <= 0 && newWorth > 0) || newWorth > curWorth + 25) {
+          designateDeathstrikeTarget(s, u, spot);
+        }
+      }
+    }
+  }
 
   // Pre-filter: any unit that has no ranged weapons or cannot shoot this phase is marked tried immediately
   for (const u of mine) {

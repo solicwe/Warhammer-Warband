@@ -414,9 +414,13 @@ export function syncList(list: ArmyList, faction: FactionData): ArmyList {
   let changed = false;
   const units = list.units.map((u) => {
     let next = syncWargear(faction.datasheets.find((d) => d.name === u.datasheet), u);
-    // the enhancement's price follows the current points too
+    // the enhancement's price follows the current points too; foreign or inactive enhancements are stripped
     const enh = u.enhancement ? faction.detachments.filter((d) => list.detachments.includes(d.name)).flatMap((d) => d.enhancements).find((e) => e.name === u.enhancement) : undefined;
-    if (enh && enh.pts !== u.enhancementPts) next = { ...next, enhancementPts: enh.pts };
+    if (u.enhancement && !enh) {
+      next = { ...next, enhancement: undefined, enhancementPts: undefined };
+    } else if (enh && enh.pts !== u.enhancementPts) {
+      next = { ...next, enhancementPts: enh.pts };
+    }
     if (faction.id === 'AoI' && list.detachments.includes('Veiled Blade Elimination Force') && next.enhancement === undefined) {
       const ext = EXTREMIS_ABILITIES[next.datasheet];
       if (ext) {
@@ -845,9 +849,10 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       isWarlordUnit: !!(e.warlord || joiners.some((j) => j.warlord)),
       warlordSource: [e, ...joiners].find((j) => j.warlord)?.datasheet,
       enhancements: [
-        ...[e, ...joiners].filter((x) => x.enhancement).map((x) => {
-        const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
-        return { name: x.enhancement!, text: enh?.text ?? '', model: x.datasheet };
+        ...[e, ...joiners].filter((x) => x.enhancement).flatMap((x) => {
+          const activeDets = faction.detachments.filter((d) => list.detachments.includes(d.name));
+          const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
+          return enh ? [{ name: x.enhancement!, text: enh.text ?? '', model: x.datasheet }] : [];
         }),
         ...[e, ...joiners].flatMap((x) => {
           const enh = extremisEnhancement(x, list, faction);
@@ -860,7 +865,8 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
     });
     // Enhancements that change the model itself: "+2 W", "the following weapon: Name: Melee | A 6 | WS 2+ | S 7 | AP -3 | D 3"
     for (const x of [e, ...joiners].filter((j) => j.enhancement)) {
-      const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
+      const activeDets = faction.detachments.filter((d) => list.detachments.includes(d.name));
+      const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
       const m = units[units.length - 1].models.find((md) => md.source === x.datasheet && md.isCharacter) ?? units[units.length - 1].models.find((md) => md.source === x.datasheet);
       if (!enh || !m) continue;
       const w = /This model has \+(\d+) W\b/i.exec(enh.text);

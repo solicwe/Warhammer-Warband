@@ -1,7 +1,7 @@
 // Movement helpers: what a model may pass through, routing around walls / enemy models (A*),
 // and settling a dragged draft into legal end positions (models stop at base contact instead of overlapping).
 import { RULES } from './config';
-import { axis, bodyAt, dist, gap, girth, pointSegDist, ptGap, segSegDist, type Body , onTable } from './geometry';
+import { axis, bodyAt, dist, gap, girth, onTable, pointInPoly, pointSegDist, ptGap, segCrossesPoly, segSegDist, type Body } from './geometry';
 import { alive, boardUnits, hasKw, onBoard, other } from './state';
 import type { GameState, ModelState, MoveKind, Pt, Seg, UnitState } from './types';
 
@@ -78,6 +78,26 @@ export function pathBlocked(s: GameState, u: UnitState, kind: MoveKind, m: Model
 export function pathLength(path: Pt[]) {
   let d = 0;
   for (let i = 1; i < path.length; i++) d += dist(path[i - 1], path[i]);
+  return d;
+}
+
+/** Total path distance including vertical climb (up and down) for non-FLY models traversing elevated terrain (13.06). */
+export function pathDistance(s: GameState, m: ModelState, path: Pt[]): number {
+  let d = 0;
+  for (let i = 1; i < path.length; i++) d += dist(path[i - 1], path[i]);
+  if (!m.keywords.includes('FLY') && path.length >= 2) {
+    for (const t of s.terrain) {
+      if (t.height > 2) {
+        const startIn = pointInPoly(path[0], t.poly);
+        const endIn = pointInPoly(path[path.length - 1], t.poly);
+        if (!startIn && endIn) d += t.height;
+        else if (startIn && !endIn) d += t.height;
+        else if (!startIn && !endIn && segCrossesPoly({ a: path[0], b: path[path.length - 1] }, t.poly)) {
+          d += t.height * 2;
+        }
+      }
+    }
+  }
   return d;
 }
 

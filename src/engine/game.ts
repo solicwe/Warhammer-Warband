@@ -7,7 +7,7 @@ import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MI
 import { mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
-import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
+import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, polyEdges, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
@@ -17,7 +17,7 @@ import RIPPERS from '../../data/extra/ripper-swarms.json';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
-import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathLength } from './pathing';
+import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathDistance, pathLength } from './pathing';
 import { detOnCommandStart } from '../rules-engine/detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
@@ -371,6 +371,26 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
         const roof = bodyWhollyInPoly(bodyAt(m, p), t.box) && ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
         if (!roof) { errors.push(`${m.name} cannot overlap a container (place it beside the container or wholly on its roof)`); bad.add(m.id); }
       }
+      // 13.06 Elevated floor / level check
+      if (t.height > 2 && pointInPoly(p, t.poly)) {
+        const allowedElevated = ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
+        if (!allowedElevated) {
+          errors.push(`${m.name} cannot end on elevated terrain (13.06)`); bad.add(m.id);
+        } else if (!bodyWhollyInPoly(bodyAt(m, p), t.poly)) {
+          errors.push(`${m.name} cannot overhang the edge of elevated terrain (13.06)`); bad.add(m.id);
+        }
+      }
+      // 13.06.01 Solid Terrain: cannot end protruding through doors/windows/openings <= 3"
+      if (t.category === 'dense' && t.walls.length) {
+        const b = bodyAt(m, p);
+        for (const w of t.walls) {
+          if (segSegDist(axis(b), w) < girth(b) * 0.45) {
+            errors.push(`${m.name} cannot end protruding through terrain openings or walls ≤ 3" (13.06.01)`);
+            bad.add(m.id);
+            break;
+          }
+        }
+      }
     }
   }
   if (models.length > 1) {
@@ -437,9 +457,25 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
   for (const m of alive(u)) {
     const path = paths.get(m.id);
     if (!path || path.length < 2) continue;
-    const len = pathLength(path);
+    const len = pathDistance(s, m, path);
     const max = maxMoveDistance(s, u, kind, m, opt);
     if (len > max + 0.02) { errors.push(`${m.name} moved ${len.toFixed(1)}", more than ${max.toFixed(1)}"`); bad.add(m.id); }
+    // Rule 13.06: Climbing up/down elevated terrain (>2") requires model to be within 0.5" horizontal of terrain edge
+    if (!m.keywords.includes('FLY')) {
+      for (const t of s.terrain) {
+        if (t.height > 2) {
+          const startIn = pointInPoly(path[0], t.poly);
+          const endIn = pointInPoly(path[path.length - 1], t.poly);
+          if (startIn !== endIn) {
+            const edgeDist = polyEdges(t.poly).reduce((min, e) => Math.min(min, pointSegDist(path[0], e), pointSegDist(path[path.length - 1], e)), Infinity);
+            if (edgeDist > 0.5 + 1e-6) {
+              errors.push(`${m.name} must be within 0.5" horizontal of terrain edge to climb (13.06)`);
+              bad.add(m.id);
+            }
+          }
+        }
+      }
+    }
     const blocked = moveBlock(s, u, m, path[0], path[path.length - 1], kind);
     if (blocked) { errors.push(blocked); bad.add(m.id); }
     const why = pathBlocked(s, u, kind, m, path, opt);
@@ -1239,6 +1275,30 @@ function faceTravel(s: GameState, m: ModelState, from: Pt) {
   const engaged = (b: Body) => others.map((o) => gap(b, o) <= RULES.engagementRange + 1e-6).join();
   if (!onTable(turned, W, H) || endSpotBlocked(s, turned, turned) || others.some((o) => gap(turned, o) < -0.02) || engaged(turned) !== engaged(m)) return;
   m.rot = turned.rot;
+}
+
+/** Rotate / pivot a unit's models (especially oval bases / vehicles) by angleDelta radians.
+ *  Checks that the rotated footprint remains fully on the table, clear of blocking walls and other models. */
+export function rotateUnit(s: GameState, unitId: string, angleDelta: number): { ok: boolean; reason?: string } {
+  const u = s.units.find((x) => x.id === unitId);
+  if (!u || !onBoard(u)) return { ok: false, reason: 'Unit is not on the battlefield' };
+  const others = s.units.filter((x) => onBoard(x) && x.id !== u.id).flatMap(alive);
+  const models = alive(u);
+
+  for (const m of models) {
+    const curRot = m.rot ?? 0;
+    const newRot = ((curRot + angleDelta) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+    const turned = { ...bodyAt(m, m), rot: newRot };
+    if (!onTable(turned, W, H)) return { ok: false, reason: 'Rotation would push unit off the battlefield' };
+    if (endSpotBlocked(s, turned, turned)) return { ok: false, reason: 'Rotation would clip inside terrain walls' };
+    if (others.some((o) => gap(turned, o) < -0.02)) return { ok: false, reason: 'Rotation would overlap another model' };
+  }
+
+  for (const m of models) {
+    const curRot = m.rot ?? 0;
+    m.rot = ((curRot + angleDelta) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+  }
+  return { ok: true };
 }
 
 export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Map<string, Pt[]>) {
