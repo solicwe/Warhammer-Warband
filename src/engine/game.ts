@@ -7,7 +7,7 @@ import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MI
 import { mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
-import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, polyEdges, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
+import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
@@ -371,15 +371,15 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
         const roof = bodyWhollyInPoly(bodyAt(m, p), t.box) && ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
         if (!roof) { errors.push(`${m.name} cannot overlap a container (place it beside the container or wholly on its roof)`); bad.add(m.id); }
       }
-      // 13.06 Elevated floor / level check
+      // 13.06 Elevated floor / level check: non-eligible units (VEHICLE, etc.) cannot end on elevated terrain
       if (t.height > 2 && pointInPoly(p, t.poly)) {
         const allowedElevated = ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
         if (!allowedElevated) {
-          errors.push(`${m.name} cannot end on elevated terrain (13.06)`); bad.add(m.id);
-        } else if (!bodyWhollyInPoly(bodyAt(m, p), t.poly)) {
-          errors.push(`${m.name} cannot overhang the edge of elevated terrain (13.06)`); bad.add(m.id);
+          errors.push(`${m.name} cannot end on elevated terrain (13.06)`);
+          bad.add(m.id);
         }
       }
+
       // 13.06.01 Solid Terrain: cannot end protruding through doors/windows/openings <= 3"
       if (t.category === 'dense' && t.walls.length) {
         const b = bodyAt(m, p);
@@ -457,25 +457,9 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
   for (const m of alive(u)) {
     const path = paths.get(m.id);
     if (!path || path.length < 2) continue;
-    const len = pathDistance(s, m, path);
+    const len = pathLength(path);
     const max = maxMoveDistance(s, u, kind, m, opt);
     if (len > max + 0.02) { errors.push(`${m.name} moved ${len.toFixed(1)}", more than ${max.toFixed(1)}"`); bad.add(m.id); }
-    // Rule 13.06: Climbing up/down elevated terrain (>2") requires model to be within 0.5" horizontal of terrain edge
-    if (!m.keywords.includes('FLY')) {
-      for (const t of s.terrain) {
-        if (t.height > 2) {
-          const startIn = pointInPoly(path[0], t.poly);
-          const endIn = pointInPoly(path[path.length - 1], t.poly);
-          if (startIn !== endIn) {
-            const edgeDist = polyEdges(t.poly).reduce((min, e) => Math.min(min, pointSegDist(path[0], e), pointSegDist(path[path.length - 1], e)), Infinity);
-            if (edgeDist > 0.5 + 1e-6) {
-              errors.push(`${m.name} must be within 0.5" horizontal of terrain edge to climb (13.06)`);
-              bad.add(m.id);
-            }
-          }
-        }
-      }
-    }
     const blocked = moveBlock(s, u, m, path[0], path[path.length - 1], kind);
     if (blocked) { errors.push(blocked); bad.add(m.id); }
     const why = pathBlocked(s, u, kind, m, path, opt);

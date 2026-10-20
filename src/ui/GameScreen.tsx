@@ -1342,7 +1342,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <div className="row unit-card" style={{ flexWrap: 'nowrap', gap: 10 }}>
         <Portrait kind={unitToken(u)} owner={u.owner} character={u.models.some((x) => x.isCharacter && !x.dead)} size={40} datasheet={lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source} fallback={lead.source} />
         <div className="grow">
-          <div style={{ fontWeight: 700 }} className={u.owner ? 'p1' : 'p0'}>{u.name} <span className="muted tiny">{alive(u).length}/{u.startingStrength}</span></div>
+          <div style={{ fontWeight: 700, color: getPlayerFactionTheme(s, u.owner).primary }}>{u.name} <span className="muted tiny">{alive(u).length}/{u.startingStrength}</span></div>
           <div className="statline">
             M <b>{m.profile.M !== undefined && m.profile.M !== null ? m.profile.M + unitFlags(s, u).move : '-'}"</b> · T <b>{m.profile.T}</b> · Sv <b>{m.profile.Sv}+</b>{m.profile.InSv ? <> · <b>{m.profile.InSv}++</b></> : null} · W <b>{m.wounds}/{m.profile.W}</b> · Ld <b>{bestLd(u, s)}+</b> · OC <b>{u.battleShocked ? '-' : m.profile.OC ?? '-'}</b>
           </div>
@@ -1389,19 +1389,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             );
           })()}
         </div>
-        <button
-          type="button"
-          className="datasheet-open-btn"
-          aria-label={`Open full datasheet for ${u.name}`}
-          title="Open Datasheet"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSheetModel(undefined);
-            setSheet(u.id);
-          }}
-        >
-          <Icon name="next" size={18} />
-        </button>
       </div>
     );
   };
@@ -3226,7 +3213,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             </button>
           )}
         </div>
-        {s.phase !== 'deploy' && <AdvantageBar share={advantage(s)} names={[s.players[0].name, s.players[1].name]} />}
+        {s.phase !== 'deploy' && <AdvantageBar share={advantage(s)} names={[s.players[0].name, s.players[1].name]} colors={[getPlayerFactionTheme(s, 0).primary, getPlayerFactionTheme(s, 1).primary]} />}
         {['command', 'movement', 'shooting', 'charge', 'fight'].includes(s.phase) && (
           <div className={`phasebar a${s.active}`}>
             {(['command', 'movement', 'shooting', 'charge', 'fight'] as const).map((ph) => (

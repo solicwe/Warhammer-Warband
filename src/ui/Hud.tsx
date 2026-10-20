@@ -10,6 +10,7 @@ import { DiceFace } from './DiceFace';
 import { Icon } from './Icon';
 import { play } from './sfx';
 import { voiceOf } from './voice';
+import { getPlayerFactionTheme } from './factionColors';
 
 /** A number that counts up to its new value instead of jumping. */
 function useCount(value: number, ms = 450): number {
@@ -141,15 +142,15 @@ export const CpGems = memo(function CpGems({ cp }: { cp: number }) {
 });
 
 /** Who has the upper hand, as the bot weighs it (VP, objectives held, army left): player 0's share, 0..1. */
-export const AdvantageBar = memo(function AdvantageBar({ share, names }: { share: number; names: [string, string] }) {
+export const AdvantageBar = memo(function AdvantageBar({ share, names, colors }: { share: number; names: [string, string]; colors?: [string, string] }) {
   const pct = Math.round(share * 100);
   const lead = pct >= 50 ? 0 : 1;
   const by = Math.abs(pct - 50) * 2;
   const text = by < 8 ? 'Even battle' : `${names[lead]} ahead`;
   return (
     <div className="adv" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={`Advantage: ${text}`} title={`Advantage (VP, objectives held, army left): ${text}`}>
-      <i className="adv-0" style={{ width: `${pct}%` }} />
-      <i className="adv-1" style={{ width: `${100 - pct}%` }} />
+      <i className="adv-0" style={{ width: `${pct}%`, background: colors?.[0] }} />
+      <i className="adv-1" style={{ width: `${100 - pct}%`, background: colors?.[1] }} />
     </div>
   );
 });
@@ -218,6 +219,9 @@ export function tally(s: GameState, round: number | null, vpAtStart: [number, nu
 export const RoundSummary = memo(function RoundSummary({ s, t, final, onClose, actions }: { s: GameState; t: RoundTally; final?: boolean; onClose: () => void; actions?: ReactNode }) {
   const names = [s.players[0].name, s.players[1].name];
   const win = s.winner;
+  const theme0 = getPlayerFactionTheme(s, 0);
+  const theme1 = getPlayerFactionTheme(s, 1);
+  const winTheme = typeof win === 'number' ? getPlayerFactionTheme(s, win as PlayerId) : null;
 
   // Auto-dismiss between rounds after a brief delay, allowing gameplay to continue smoothly
   useEffect(() => {
@@ -233,11 +237,21 @@ export const RoundSummary = memo(function RoundSummary({ s, t, final, onClose, a
       <div className={`round-card slate ${final ? 'final' : ''}`} role="dialog" aria-label={final ? 'Battle result' : `Round ${t.round} summary`} onClick={final ? undefined : onClose}>
        <div className="slate-in">
         <div className="rc-kicker">{final ? 'Battle over' : `Round ${t.round} of ${lastRound(s)} complete`}</div>
-        {final && <div className={`rc-title ${win === 0 ? 'p0' : win === 1 ? 'p1' : ''}`}><Icon name="trophy" size={26} /> {win === 'draw' ? 'Draw' : `${names[win as number]} wins`}</div>}
+        {final && (
+          <div
+            className="rc-title"
+            style={{
+              color: winTheme ? winTheme.primary : undefined,
+              textShadow: winTheme ? `0 0 16px ${winTheme.glow}` : undefined,
+            }}
+          >
+            <Icon name="trophy" size={26} /> {win === 'draw' ? 'Draw' : `${names[win as number]} wins`}
+          </div>
+        )}
         <div className="rc-grid">
           <span />
-          <b className="p0">{names[0]}</b>
-          <b className="p1">{names[1]}</b>
+          <b style={{ color: theme0.primary }}>{names[0]}</b>
+          <b style={{ color: theme1.primary }}>{names[1]}</b>
           <span className="rc-l">{final ? 'Final score' : 'VP this round'}</span>
           <span className="num rc-v">{final ? s.players[0].vp + s.players[0].secVp : `+${t.vp[0]}`}</span>
           <span className="num rc-v">{final ? s.players[1].vp + s.players[1].secVp : `+${t.vp[1]}`}</span>
@@ -245,7 +259,13 @@ export const RoundSummary = memo(function RoundSummary({ s, t, final, onClose, a
           <span className="num">{t.pts[0]} pts{t.units[0] ? ` · ${t.units[0]} unit${t.units[0] > 1 ? 's' : ''}` : ''}</span>
           <span className="num">{t.pts[1]} pts{t.units[1] ? ` · ${t.units[1]} unit${t.units[1] > 1 ? 's' : ''}` : ''}</span>
         </div>
-        {t.mvp && <div className="rc-mvp"><Icon name="trophy" size={16} /> {final ? 'Unit of the battle' : 'Unit of the round'}: <b className={t.mvp.owner ? 'p1' : 'p0'}>{t.mvp.name}</b> <span className="muted">· {t.mvp.pts} pts destroyed</span></div>}
+        {t.mvp && (
+          <div className="rc-mvp">
+            <Icon name="trophy" size={16} /> {final ? 'Unit of the battle' : 'Unit of the round'}:{' '}
+            <b style={{ color: t.mvp.owner === 1 ? theme1.primary : theme0.primary }}>{t.mvp.name}</b>{' '}
+            <span className="muted">· {t.mvp.pts} pts destroyed</span>
+          </div>
+        )}
         {actions ? <div className="rc-acts">{actions}</div> : <div className="rc-tap">{final ? 'Tap to continue' : 'Auto-continuing · Tap to skip'}</div>}
        </div>
       </div>
