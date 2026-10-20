@@ -81,9 +81,14 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
   const layouts = d0 && d1 ? layoutsFor(d0, d1) : [];
 
   const bot = (i: 0 | 1) => prefs.mode === 'botbot' || (prefs.mode === 'bot' && i === 1);
-  const role = (i: 0 | 1) => (prefs.mode === 'botbot' ? (i ? 'Red Bot' : 'Blue Bot') : prefs.mode === 'bot' ? (i ? 'Bot' : 'You') : `Player ${i + 1}`);
   const factionName = (id: string) => index?.factions.find((f) => f.id === id)?.name ?? id;
-  const playerName = (i: 0 | 1) => (bot(i) ? (i ? 'Red Bot' : 'Blue Bot') : prefs.names[i] || `Player ${i + 1}`);
+  const armyNameOf = (i: 0 | 1) => lists[i]?.name?.trim() || factionName(lists[i]?.factionId) || (i ? 'Side 2' : 'Side 1');
+  const role = (i: 0 | 1) => armyNameOf(i);
+  const playerName = (i: 0 | 1) => {
+    const custom = prefs.names[i] && !/^Player [12]$/i.test(prefs.names[i]) ? prefs.names[i] : null;
+    const base = custom || armyNameOf(i);
+    return bot(i) ? `${base} (Bot)` : base;
+  };
 
   const start = async () => {
     setBusy(true);

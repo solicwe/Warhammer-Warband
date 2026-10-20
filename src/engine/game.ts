@@ -219,7 +219,7 @@ export function createGame(o: NewGameOptions): GameState {
     phase: 'deploy',
     deployTurn: 0,
     players: [0, 1].map((i) => ({
-      name: o.names[i], factionId: o.factions[i].id, factionName: o.factions[i].name,
+      name: o.names[i], listName: o.lists[i]?.name, factionId: o.factions[i].id, factionName: o.factions[i].name,
       cp: RULES.startingCP, vp: 0, vpByRound: [0, 0, 0, 0, 0, 0], role: 'attacker', stratagemsUsed: [], insaneBraveryUsed: false,
       oathTarget: null, oathWoundBonus: false, waaaghUsed: false, riledUntilTurn: -10,
       secMode: o.secondaryMode ?? 'none', secDeck: [], secActive: [], secVp: 0, secByRound: [0, 0, 0, 0, 0, 0], secFixedVp: {}, secSwapUsed: false,

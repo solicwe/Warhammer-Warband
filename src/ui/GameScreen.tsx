@@ -104,7 +104,13 @@ const startPaths = (u: UnitState): Paths => new Map(alive(u).map((m) => [m.id, [
 const placePaths = (pos: Map<string, Pt>): Paths => new Map([...pos].map(([id, p]) => [id, [p]]));
 const lastPos = (d: Paths): Map<string, Pt> => new Map([...d].map(([id, p]) => [id, p[p.length - 1]]));
 const mergePaths = (base: Paths, add: Paths): Paths => { const o = new Map(base); for (const [k, v] of add) o.set(k, v); return o; };
-const pName = (s: GameState, p: PlayerId) => s.players[p].name;
+const pName = (s: GameState, p: PlayerId) => {
+  const pl = s.players[p];
+  if (!pl) return p === 0 ? 'Side 1' : 'Side 2';
+  if (pl.listName && pl.listName.trim()) return pl.listName;
+  if (pl.name && !/^Player [12]$/i.test(pl.name) && !/^(Red|Blue) Bot$/i.test(pl.name)) return pl.name.replace(/ \(Bot\)$/, '').replace(/ Bot$/, '');
+  return pl.factionName || (p === 0 ? 'Side 1' : 'Side 2');
+};
 /** What the look worker answers: progress while it plays the ways out, then the style (and, pondering, the board it starts from). */
 type LookMsg = { id: number; sig?: string | null; name?: string; values?: Record<string, number>; intents?: Intent[]; progress?: { name: string; value: number; done: number; total: number } };
 
@@ -3045,13 +3051,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const layoutName = deploymentById(s.deploymentId).name;
   const draftUnit = mode && (mode.k === 'move' || mode.k === 'place' || mode.k === 'charge' || mode.k === 'pile') ? mode.unitId : null;
-  // the sides as the player thinks of them: "You" and "Bot" against the bot, else the players' names
-  const sideLabel = (p: PlayerId) => (bots.length === 1 ? (bots.includes(p) ? 'Bot' : 'You') : s.players[p].name.replace(/ Bot$/, ''));
-  const activeSideName = s.active === 0 ? 'Blue' : 'Red';
+  // the sides as the player thinks of them: army name
+  const armyName = (p: PlayerId) => pName(s, p);
+  const sideLabel = (p: PlayerId) => (bots.length === 1 && bots.includes(p) ? `${armyName(p)} (Bot)` : armyName(p));
   const turnText = s.phase === 'deploy' ? 'Deploy'
     : s.phase === 'scouts' ? 'Scouts'
     : s.phase === 'gameover' ? 'Battle over'
-    : bots.length === 1 ? (bots.includes(s.active) ? `${activeSideName} Turn` : 'Your turn') : `${activeSideName} Turn`;
+    : `${armyName(s.active)} Turn`;
   // the commander on screen: whoever spoke last, else the bot whose turn it is
   const commanderP: PlayerId | null = bots.length ? (actingBot ?? (says && bots.includes(says.p) ? says.p : bots[0])) : null;
   // the enemy's likely attacks next turn, drawn on request while it is the player's turn

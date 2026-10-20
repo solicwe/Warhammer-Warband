@@ -362,6 +362,7 @@ export interface PlayerState {
   /** a unit the army can add mid-battle (Gift of Change: a one-model Tzeentch Chaos Spawn), cloned when it arrives */
   spawnTemplate?: UnitState;
   name: string;
+  listName?: string;
   factionId: string;
   factionName: string;
   cp: number;
