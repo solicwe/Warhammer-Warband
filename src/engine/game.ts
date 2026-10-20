@@ -2664,6 +2664,15 @@ export function sanitizeGameState(s: GameState): GameState {
       const o = s.objectives[i];
       // an objective already on its terrain plate (or circle) keeps it: only a save with none gets the 3" circle
       let tp = s.terrain.find((t) => t.id === o.terrainId);
+      // older saves moved every objective onto a circle: put it back on the plate under its marker
+      const plate = s.terrain.filter((t) => t.kind !== 'objective-area' && t.poly?.length && pointInPoly(o, t.poly))
+        .sort((a, b) => dist(polyCentroid(a.poly), o) - dist(polyCentroid(b.poly), o))[0];
+      if (plate && (!tp || tp.kind === 'objective-area')) {
+        if (tp) delete tp.objectiveId;
+        plate.objectiveId = o.id;
+        o.terrainId = plate.id;
+        tp = plate;
+      }
       if (!tp) {
         const objId = `obj-t${i}`;
         tp = s.terrain.find((t) => t.id === objId);
