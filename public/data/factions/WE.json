@@ -2700,7 +2700,8 @@
             [
               "Heavy flamer"
             ]
-          ]
+          ],
+          "perItem": "Helbrute fist"
         }
       ],
       "weapons": [
@@ -5717,7 +5718,7 @@
             ]
           ],
           "max": 1,
-          "requires": [
+          "requiresNot": [
             "Daemonic icon"
           ]
         },
@@ -5732,7 +5733,7 @@
             ]
           ],
           "max": 1,
-          "requires": [
+          "requiresNot": [
             "Instrument of Chaos"
           ]
         }
@@ -5867,7 +5868,7 @@
             ]
           ],
           "max": 1,
-          "requires": [
+          "requiresNot": [
             "Daemonic icon"
           ]
         },
@@ -5882,7 +5883,7 @@
             ]
           ],
           "max": 1,
-          "requires": [
+          "requiresNot": [
             "Instrument of Chaos"
           ]
         }

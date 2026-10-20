@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../rules-engine/effects';
-import { addonLines, supportIn, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, supportIn, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { ALLIES, detachmentAllyOf } from '../engine/allies';
 import { Em } from './Em';
@@ -159,6 +159,8 @@ export function UnitArt({ sheet }: { sheet?: DatasheetData }) {
 const itemsLabel = (items: string[]) => [...new Set(items)].map((n) => { const k = items.filter((x) => x === n).length; return k > 1 ? `${k}× ${n}` : n; }).join(' + ');
 
 function scopeLabel(o: WargearOption, max: number) {
+  const perIt = optPerItem(o);
+  if (perIt) return `1 per ${perIt} (max ${max})`;
   if (o.stack) return `up to ${max}`;
   if (o.scope === 'all') return 'whole unit';
   if (o.scope === 'perN') return `${max} per ${o.per} models`;
@@ -189,22 +191,33 @@ export function WargearEditor({ sheet, u, onChange, scrapMode = false }: { sheet
         <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· {scrapMode ? 'some weapons cost Scrap (shown as +Scrap each)' : 'some weapons cost points (shown as +pts each)'}</span> : null}</span>
       </div>
       {opts.map((o, i) => {
-        const max = wargearMax(sheet, o, u.models, u.addons);
+        const max = wargearMax(sheet, o, u.models, u.addons, picks);
         const mine = picks.filter((p) => p.opt === i);
         const used = mine.reduce((a, p) => a + p.count, 0);
         const who = o.who !== '*' && !single ? `${o.who}: ` : '';
         const head = `${who}${o.replace.length ? `${itemsLabel(o.replace)} →` : 'Add'}`;
         if (max <= 0) {
+          const perIt = optPerItem(o);
+          const req = optRequires(o);
+          const notReq = optRequiresNot(o);
+          const reqItem = perIt ?? req[0];
+          const reason = reqItem
+            ? `requires ${reqItem}`
+            : notReq.length
+            ? `unavailable with ${notReq.join('/')}`
+            : o.minModels
+            ? `needs ${o.minModels}+ models`
+            : 'not available with current loadout';
           return (
             <div key={i} className="wg-opt off">
               <div className="wg-head">{head}</div>
-              <div className="tiny muted">{o.minModels ? `needs ${o.minModels}+ models` : 'not available at this unit size'}</div>
+              <div className="tiny muted">{reason}</div>
             </div>
           );
         }
         const pickSel = mine.find((p) => p.choice < 0);
         const pickDefault = (): string[] => (o.pickFrom ?? []).slice(0, o.pick ?? 2);
-        const radio = max === 1 || o.scope === 'all' || o.scope === 'one';
+        const radio = (max === 1 && o.scope !== 'any') || o.scope === 'all';
         return (
           <div key={i} className="wg-opt">
             <div className="wg-head">{head} <span className="tiny muted">{scopeLabel(o, max)}</span></div>

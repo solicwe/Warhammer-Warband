@@ -271,7 +271,52 @@ function loadoutItemsFor(sheet: DatasheetData, compName: string | undefined, pro
 
 // ---------- wargear ----------
 
-interface ModelPlan { name: string; comp?: string; profile: number; items: string[]; used: number[] }
+interface ModelPlan {
+  name: string;
+  comp?: string;
+  profile: number;
+  items: string[];
+  used: number[];
+  usedPerItem?: Record<string, number>;
+}
+
+/** "For each Helbrute fist this model is equipped with..." -> "Helbrute fist" */
+export function optPerItem(o: WargearOption): string | null {
+  if (o.perItem) return o.perItem;
+  const m = /For each (.*?) (?:this model is|this model|it is|it|they are) equipped with/i.exec(o.text);
+  return m ? m[1].trim() : null;
+}
+
+/** Items the model must carry (excluding any items erroneously captured from "not equipped with") */
+export function optRequires(o: WargearOption): string[] {
+  if (!o.requires?.length) return [];
+  if (/\b(?:not|neither)\s+equipped with\b/i.test(o.text)) {
+    return o.requires.filter((r) => {
+      const escaped = wkey(r).replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\s+/g, '[\\s-]');
+      return !new RegExp(`(?:not|neither)\\s+equipped with\\s+(?:either\\s+)?(?:a\\s+|an\\s+|1\\s+)?${escaped}`, 'i').test(o.text);
+    });
+  }
+  return o.requires;
+}
+
+/** Items the model must NOT carry (e.g. "not equipped with a daemonic icon") */
+export function optRequiresNot(o: WargearOption): string[] {
+  const list = [...(o.requiresNot ?? [])];
+  if (o.requires?.length && /\b(?:not|neither)\s+equipped with\b/i.test(o.text)) {
+    for (const r of o.requires) {
+      const escaped = wkey(r).replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\s+/g, '[\\s-]');
+      if (new RegExp(`(?:not|neither)\\s+equipped with\\s+(?:either\\s+)?(?:a\\s+|an\\s+|1\\s+)?${escaped}`, 'i').test(o.text)) {
+        if (!list.some((x) => wkey(x) === wkey(r))) list.push(r);
+      }
+    }
+  }
+  const m = /(?:not|neither)\s+equipped with\s+(?:either\s+)?(?:a\\s+|an\\s+|1\\s+)?([^.,;]+?)(?:\s+can|\s+or|\s*\.|\s*\(|$)/i.exec(o.text);
+  if (m) {
+    const raw = m[1].replace(/\b(?:or|and)\b.*/i, '').trim();
+    if (raw && !list.some((x) => wkey(x) === wkey(raw))) list.push(raw);
+  }
+  return list;
+}
 
 /** The models of a unit with their default items, before any wargear choice. */
 function planModels(sheet: DatasheetData, count: number, addons: string[] = []): ModelPlan[] {
@@ -328,11 +373,36 @@ export function choiceItems(o: WargearOption, pk: Pick<WargearPick, 'choice' | '
   return pk.choice < 0 ? pk.picks ?? [] : o.choices[pk.choice] ?? [];
 }
 
-/** How many models (or copies, for `stack`) may take option `o` in a unit of `size` models. */
-export function wargearMax(sheet: DatasheetData, o: WargearOption, size: number, addons: string[] = []): number {
+/** How many models (or copies, for `stack` or `perItem`) may take option `o` in a unit of `size` models. */
+export function wargearMax(sheet: DatasheetData, o: WargearOption, size: number, addons: string[] = [], picks: WargearPick[] = []): number {
   if (o.minModels && size < o.minModels) return 0;
   const plans = planModels(sheet, size, addons);
-  const n = whoModels(plans, o.who).length;
+  const opts = sheet.wargearOptions ?? [];
+  const optIdx = opts.indexOf(o);
+
+  if (picks?.length) {
+    const earlier = picks.filter((p) => p.opt !== optIdx && p.count > 0);
+    applyWargear(sheet, plans, earlier);
+  }
+
+  const targets = whoModels(plans, o.who);
+  const perIt = optPerItem(o);
+  if (perIt) {
+    const key = wkey(perIt);
+    return targets.reduce((sum, p) => sum + p.items.filter((i) => wkey(i) === key).length, 0);
+  }
+
+  const req = optRequires(o);
+  const notReq = optRequiresNot(o);
+  let eligibleTargets = targets;
+  if (req.length) {
+    eligibleTargets = eligibleTargets.filter((p) => hasAll(p.items, req));
+  }
+  if (notReq.length) {
+    eligibleTargets = eligibleTargets.filter((p) => !notReq.some((r) => p.items.some((i) => wkey(i) === wkey(r))));
+  }
+
+  const n = eligibleTargets.length;
   switch (o.scope) {
     case 'one': return Math.min(1, n);
     case 'upTo': return o.stack ? o.max ?? 1 : Math.min(o.max ?? 1, n);
@@ -353,22 +423,52 @@ function applyWargear(sheet: DatasheetData, plans: ModelPlan[], picks: WargearPi
     if (!gain.length) continue;
     const need = o.replace.filter((r) => everything.has(wkey(r))); // ignore data quirks naming items no model has
     let left = pk.count;
-    if (o.stack) {
-      const target = whoModels(plans, o.who)[0];
-      for (; target && left > 0; left--) target.items.push(...gain);
+
+    const perIt = optPerItem(o);
+    const req = optRequires(o);
+    const notReq = optRequiresNot(o);
+
+    if (perIt) {
+      const key = wkey(perIt);
+      for (const p of whoModels(plans, o.who)) {
+        if (left <= 0) break;
+        const total = p.items.filter((i) => wkey(i) === key).length;
+        p.usedPerItem ??= {};
+        while (left > 0 && (p.usedPerItem[key] ?? 0) < total) {
+          p.items.push(...gain);
+          p.usedPerItem[key] = (p.usedPerItem[key] ?? 0) + 1;
+          left--;
+        }
+      }
+      if (left > 0) problems.push(`${gain.join(' + ')}: requires ${left} more ${perIt}`);
       continue;
     }
+
+    if (o.stack) {
+      const target = whoModels(plans, o.who)[0];
+      if (target && (!req.length || hasAll(target.items, req)) && (!notReq.length || !notReq.some((r) => target.items.some((i) => wkey(i) === wkey(r))))) {
+        for (; left > 0; left--) target.items.push(...gain);
+      }
+      if (left > 0) problems.push(`${gain.join(' + ')}: ${left} more model(s) needed carrying ${[...need, ...req].join(' + ') || 'the original weapon'}`);
+      continue;
+    }
+
     // rank-and-file first, so "1 model can …" does not take the sergeant's slot
     for (const p of [...whoModels(plans, o.who)].reverse()) {
       if (left <= 0) break;
       if (p.used.includes(pk.opt)) continue;
-      if (!hasAll(p.items, need) || (o.requires && !hasAll(p.items, o.requires))) continue;
+      if (!hasAll(p.items, need)) continue;
+      if (req.length && !hasAll(p.items, req)) continue;
+      if (notReq.length && notReq.some((r) => p.items.some((i) => wkey(i) === wkey(r)))) continue;
       removeItems(p.items, need);
       p.items.push(...gain);
       p.used.push(pk.opt);
       left--;
     }
-    if (left > 0) problems.push(`${gain.join(' + ')}: ${left} more model(s) needed carrying ${[...need, ...(o.requires ?? [])].join(' + ') || 'the original weapon'}`);
+    if (left > 0) {
+      const needText = [...need, ...req].join(' + ') || (notReq.length ? `without ${notReq.join('/')}` : 'the original weapon');
+      problems.push(`${gain.join(' + ')}: ${left} more model(s) needed carrying ${needText}`);
+    }
   }
   return problems;
 }
@@ -394,10 +494,11 @@ export function syncWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntry):
   if (!sheet) return e;
   const opts = sheet.wargearOptions ?? [];
   const wargear: WargearPick[] = [];
-  for (const pk of e.wargear ?? []) {
+  const sortedPicks = [...(e.wargear ?? [])].sort((a, b) => a.opt - b.opt);
+  for (const pk of sortedPicks) {
     const o = opts[pk.opt];
     if (!o || pk.count <= 0) continue;
-    const max = wargearMax(sheet, o, e.models, e.addons);
+    const max = wargearMax(sheet, o, e.models, e.addons, wargear);
     const used = wargear.filter((x) => x.opt === pk.opt).reduce((a, x) => a + x.count, 0);
     const count = o.scope === 'all' ? (pk.count > 0 ? max : 0) : Math.min(pk.count, max - used);
     if (count > 0) wargear.push({ ...pk, count });
@@ -492,7 +593,7 @@ export function defaultWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntr
   // 1. Auto-equip all free additions (o.replace.length === 0, cost 0 pts: icons, drones, missiles, extra wargear)
   opts.forEach((o, i) => {
     if (o.replace.length > 0 || (o.minModels && e.models < o.minModels)) return;
-    const max = wargearMax(sheet, o, e.models, e.addons);
+    const max = wargearMax(sheet, o, e.models, e.addons, picks);
     if (max <= 0) return;
     const freeChoices = o.choices
       .map((items, choice) => ({ choice, items }))
@@ -538,7 +639,7 @@ export function defaultWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntr
     let best: { picks: WargearPick[]; v: number } | null = null;
     opts.forEach((o, i) => {
       if (picks.some((p) => p.opt === i) || (o.minModels && e.models < o.minModels) || isGear(o.replace)) return;
-      const max = wargearMax(sheet, o, e.models, e.addons);
+      const max = wargearMax(sheet, o, e.models, e.addons, picks);
       if (max <= 0) return;
       o.choices.forEach((items, choice) => {
         if (!items.length || costOf(items) || isGear(items)) return;
@@ -569,7 +670,7 @@ export function wargearProblems(sheet: DatasheetData, e: ArmyUnitEntry): string[
   for (const [i, n] of byOpt) {
     const o = opts[i];
     if (!o) continue;
-    const max = wargearMax(sheet, o, e.models, e.addons);
+    const max = wargearMax(sheet, o, e.models, e.addons, e.wargear);
     if (n > max) out.push(`${e.datasheet}: "${o.text.slice(0, 60)}…" allows at most ${max}`);
   }
   for (const pk of e.wargear ?? []) {

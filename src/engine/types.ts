@@ -82,6 +82,8 @@ export interface WargearOption {
   pick?: number; // "two different weapons from the following list"
   pickFrom?: string[];
   requires?: string[]; // the model must carry these
+  requiresNot?: string[]; // the model must NOT carry these ("not equipped with X")
+  perItem?: string; // "For each [item] this model is equipped with"
   unique?: string[]; // "a model cannot be equipped with more than one X"
 }
 

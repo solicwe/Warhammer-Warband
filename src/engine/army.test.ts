@@ -151,3 +151,114 @@ describe('Epic Hero Enhancement Restrictions', () => {
   });
 });
 
+describe('conditional wargear rules (Helbrute fist sync, requiresNot)', () => {
+  const WE = JSON.parse(fs.readFileSync('public/data/factions/WE.json', 'utf8')) as FactionData;
+  const NEC = JSON.parse(fs.readFileSync('public/data/factions/NEC.json', 'utf8')) as FactionData;
+  const CD = JSON.parse(fs.readFileSync('public/data/factions/CD.json', 'utf8')) as FactionData;
+
+  const helbruteSheet = WE.datasheets.find((d) => d.name === 'Helbrute')!;
+  const overlordSheet = NEC.datasheets.find((d) => d.name === 'Overlord')!;
+  const horrorSheet = CD.datasheets.find((d) => d.name === 'Pink Horrors')!;
+
+  it('Helbrute: cannot equip combi-bolter or heavy flamer with 0 fists', async () => {
+    const { wargearMax } = await import('./army');
+    const optFistWeapon = helbruteSheet.wargearOptions![2];
+    expect(wargearMax(helbruteSheet, optFistWeapon, 1)).toBe(0);
+
+    const illegal = { uid: 'h0', datasheet: 'Helbrute', models: 1, pts: 130, wargear: [{ opt: 2, choice: 0, count: 1 }] };
+    const errs = wargearProblems(helbruteSheet, illegal);
+    expect(errs.length).toBeGreaterThan(0);
+    expect(errs.some((e) => /requires 1 more Helbrute fist|allows at most 0/i.test(e))).toBe(true);
+
+    const synced = syncWargear(helbruteSheet, illegal);
+    expect(synced.wargear ?? []).toEqual([]);
+  });
+
+  it('Helbrute: with 1 fist, can equip exactly 1 combi-bolter or heavy flamer', async () => {
+    const { wargearMax } = await import('./army');
+    const optFistWeapon = helbruteSheet.wargearOptions![2];
+    // Option 0 choice 4 = Helbrute fist
+    const picks1Fist = [{ opt: 0, choice: 4, count: 1 }];
+    expect(wargearMax(helbruteSheet, optFistWeapon, 1, [], picks1Fist)).toBe(1);
+
+    const legal1 = {
+      uid: 'h1', datasheet: 'Helbrute', models: 1, pts: 130,
+      wargear: [{ opt: 0, choice: 4, count: 1 }, { opt: 2, choice: 0, count: 1 }],
+    };
+    expect(wargearProblems(helbruteSheet, legal1)).toEqual([]);
+
+    // Attempting 2 combi-bolters with only 1 fist is illegal
+    const illegal2 = {
+      uid: 'h1', datasheet: 'Helbrute', models: 1, pts: 130,
+      wargear: [{ opt: 0, choice: 4, count: 1 }, { opt: 2, choice: 0, count: 2 }],
+    };
+    const errs = wargearProblems(helbruteSheet, illegal2);
+    expect(errs.length).toBeGreaterThan(0);
+
+    const synced = syncWargear(helbruteSheet, illegal2);
+    expect(synced.wargear?.find((p) => p.opt === 2)?.count).toBe(1);
+  });
+
+  it('Helbrute: with 2 fists, can equip up to 2 fist weapons (duplicates or mixed)', async () => {
+    const { wargearMax } = await import('./army');
+    const optFistWeapon = helbruteSheet.wargearOptions![2];
+    // Option 0 choice 4 = Helbrute fist, Option 1 choice 0 = Helbrute fist
+    const picks2Fists = [{ opt: 0, choice: 4, count: 1 }, { opt: 1, choice: 0, count: 1 }];
+    expect(wargearMax(helbruteSheet, optFistWeapon, 1, [], picks2Fists)).toBe(2);
+
+    // 2 combi-bolters
+    const legal2Bolters = {
+      uid: 'h2', datasheet: 'Helbrute', models: 1, pts: 130,
+      wargear: [{ opt: 0, choice: 4, count: 1 }, { opt: 1, choice: 0, count: 1 }, { opt: 2, choice: 0, count: 2 }],
+    };
+    expect(wargearProblems(helbruteSheet, legal2Bolters)).toEqual([]);
+
+    // 1 combi-bolter + 1 heavy flamer
+    const legalMixed = {
+      uid: 'h2', datasheet: 'Helbrute', models: 1, pts: 130,
+      wargear: [
+        { opt: 0, choice: 4, count: 1 },
+        { opt: 1, choice: 0, count: 1 },
+        { opt: 2, choice: 0, count: 1 },
+        { opt: 2, choice: 1, count: 1 },
+      ],
+    };
+    expect(wargearProblems(helbruteSheet, legalMixed)).toEqual([]);
+
+    // 3 combi-bolters is illegal
+    const illegal3 = {
+      uid: 'h2', datasheet: 'Helbrute', models: 1, pts: 130,
+      wargear: [{ opt: 0, choice: 4, count: 1 }, { opt: 1, choice: 0, count: 1 }, { opt: 2, choice: 0, count: 3 }],
+    };
+    expect(wargearProblems(helbruteSheet, illegal3).length).toBeGreaterThan(0);
+    expect(syncWargear(helbruteSheet, illegal3).wargear?.find((p) => p.opt === 2)?.count).toBe(2);
+  });
+
+  it('Necron Overlord: Resurrection orb requires NOT having tachyon arrow', async () => {
+    const { wargearMax } = await import('./army');
+    const optOrb = overlordSheet.wargearOptions![1];
+    // Default Overlord has tachyon arrow
+    expect(wargearMax(overlordSheet, optOrb, 1)).toBe(0);
+
+    const illegal = { uid: 'o1', datasheet: 'Overlord', models: 1, pts: 85, wargear: [{ opt: 1, choice: 0, count: 1 }] };
+    expect(wargearProblems(overlordSheet, illegal).length).toBeGreaterThan(0);
+    expect(syncWargear(overlordSheet, illegal).wargear ?? []).toEqual([]);
+
+    // Swap tachyon arrow away (Option 0 choice 0 = staff of light)
+    const picksStaff = [{ opt: 0, choice: 0, count: 1 }];
+    expect(wargearMax(overlordSheet, optOrb, 1, [], picksStaff)).toBe(1);
+
+    const legal = { uid: 'o1', datasheet: 'Overlord', models: 1, pts: 85, wargear: [{ opt: 0, choice: 0, count: 1 }, { opt: 1, choice: 0, count: 1 }] };
+    expect(wargearProblems(overlordSheet, legal)).toEqual([]);
+  });
+
+  it('Daemons Pink Horrors: Instrument and Icon can both be taken in squad on different models', () => {
+    // 10 Pink Horrors: 1 Instrument of Chaos + 1 Daemonic icon
+    const squad = {
+      uid: 'p1', datasheet: 'Pink Horrors', models: 10, pts: 140,
+      wargear: [{ opt: 0, choice: 0, count: 1 }, { opt: 1, choice: 0, count: 1 }],
+    };
+    expect(wargearProblems(horrorSheet, squad)).toEqual([]);
+  });
+});
+

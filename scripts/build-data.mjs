@@ -157,9 +157,11 @@ export function parseWargearOption(text, weapons = []) {
   let m;
   // conditions first: "If this unit contains 12 models, …" / "If the Reiver Sergeant is equipped with 1 bolt carbine, it can be equipped with …"
   if ((m = t.match(/^If this unit contains (\d+) models,\s*/i))) { opt.minModels = +m[1]; t = t.slice(m[0].length); t = t.charAt(0).toUpperCase() + t.slice(1); }
-  if ((m = t.match(/^If (?:this model|the ([A-Z][\w -]+?)) is equipped with (.+?), (?:it|its|they) /i))) {
+  if ((m = t.match(/^For each (.+?) (?:this model is|it is|they are|this model) equipped with,/i))) { opt.perItem = m[1].trim(); }
+  if ((m = t.match(/^If (?:this model|the ([A-Z][\w -]+?)) is (not )?equipped with (.+?), (?:it|its|they) /i))) {
     if (m[1]) opt.who = m[1].trim();
-    if (!/\bnot\b/i.test(t.slice(0, m.index + m[0].length))) opt.requires = items(m[2]);
+    if (m[2]) opt.requiresNot = items(m[3]);
+    else opt.requires = items(m[3]);
   }
   // "(this model's X cannot be replaced)" / "This model's X cannot be replaced." are notes, not replacements
   t = t.replace(/\([^)]*cannot be replaced[^)]*\)/gi, '').replace(/[^.•]*cannot be replaced\.?/gi, '').trim();
@@ -213,7 +215,10 @@ export function parseWargearOption(text, weapons = []) {
   }
   opt.choices = opt.choices.filter((c) => c.length);
   // "1 model equipped with a Y can be equipped with Z" mentions Y as a requirement, not a replacement
-  if (!opt.requires && (m = t.match(/equipped with (?:a |an |1 )?(.+?) can (?:be equipped with|have)/i)) && !opt.replace.length) opt.requires = items(m[1]);
+  if (!opt.requires && !opt.requiresNot && (m = t.match(/(?:^|that is )(not )?equipped with (?:a |an |1 )?(.+?) can (?:be equipped with|have)/i)) && !opt.replace.length) {
+    if (m[1]) opt.requiresNot = items(m[2]);
+    else opt.requires = items(m[2]);
+  }
   if (!opt.choices.length && !opt.pick) return null;
   const canon = (arr) => arr.map((x) => canonWeapon(x, weapons));
   // "its excruciator cannons can be replaced with 2 …": a plural carried twice goes as a pair
@@ -224,6 +229,8 @@ export function parseWargearOption(text, weapons = []) {
   opt.choices = opt.choices.map(canon);
   if (opt.pickFrom) opt.pickFrom = [...new Set(canon(opt.pickFrom))];
   if (opt.requires) opt.requires = canon(opt.requires);
+  if (opt.requiresNot) opt.requiresNot = canon(opt.requiresNot);
+  if (opt.perItem) opt.perItem = canonWeapon(opt.perItem, weapons);
   return opt;
 }
 
