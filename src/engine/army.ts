@@ -851,7 +851,8 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       enhancements: [
         ...[e, ...joiners].filter((x) => x.enhancement).flatMap((x) => {
           const activeDets = faction.detachments.filter((d) => list.detachments.includes(d.name));
-          const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
+          const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement)
+            ?? faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
           return enh ? [{ name: x.enhancement!, text: enh.text ?? '', model: x.datasheet }] : [];
         }),
         ...[e, ...joiners].flatMap((x) => {
