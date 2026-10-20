@@ -1,8 +1,8 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
-import { battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
+import { arrivalDenied, battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
 import '../factions/index';
 import { buildUnits, forChapter, newUid, transportFit } from './army';
-import { applyMortalWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed } from './attack';
+import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
@@ -13,6 +13,7 @@ import {
   emitReact, type ReactOn,
   heroFx, phaseKey,
 } from './state';
+import RIPPERS from '../../data/extra/ripper-swarms.json';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
@@ -41,17 +42,6 @@ export function stripBarricade(poly: number[][]): Seg[] {
   if (L < 1.5) return [];
   const ux = (b.x - a.x) / L, uy = (b.y - a.y) / L, inset = 0.35;
   return [{ a: { x: a.x + ux * inset, y: a.y + uy * inset }, b: { x: b.x - ux * inset, y: b.y - uy * inset } }];
-}
-
-/** Convex hull (counter-clockwise) of a set of points. */
-function convexHull(pts: Pt[]): Pt[] {
-  const p = [...pts].sort((a, b) => a.x - b.x || a.y - b.y);
-  if (p.length < 3) return p;
-  const cross = (o: Pt, a: Pt, b: Pt) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-  const lo: Pt[] = [], up: Pt[] = [];
-  for (const q of p) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
-  for (let k = p.length - 1; k >= 0; k--) { const q = p[k]; while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
-  return [...lo.slice(0, -1), ...up.slice(0, -1)];
 }
 
 function buildTerrain(layoutId: string, tableSize?: { width: number; height: number }): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
@@ -126,24 +116,21 @@ function buildTerrain(layoutId: string, tableSize?: { width: number; height: num
     const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
     const ox = Math.round(o.x * sx * 10) / 10;
     const oy = Math.round(o.y * sy * 10) / 10;
-    // In Warhammer 40k 10th Edition: an objective is a 40mm marker, controlled within 3" radius.
-    // Ruins and buildings are independent terrain features and must NOT be hijacked as the objective.
-    const R = 3 + 20 / 25.4;
-    const tp: TerrainPiece = {
-      id: `obj-t${i}`,
-      kind: 'objective-area',
-      label: `Objective ${i + 1} (40mm marker, range 3")`,
-      category: 'exposed',
-      height: 0,
-      walls: [],
-      obstacles: [],
-      poly: Array.from({ length: 32 }, (_, k) => ({
-        x: Math.round((ox + R * Math.cos((k / 32) * Math.PI * 2)) * 10) / 10,
-        y: Math.round((oy + R * Math.sin((k / 32) * Math.PI * 2)) * 10) / 10,
-      })),
-      objectiveId: id,
-    };
-    terrain.push(tp);
+    const at = { x: ox, y: oy };
+    // an objective on a terrain area is that one baseplate, the same size as its footprint (on two overlapping
+    // plates: the one whose centre is closest to the marker)
+    const under = terrain.filter((t) => t.kind !== 'objective-area' && (pointInPoly(at, t.poly) || t.poly.some((q, k) => pointSegDist(at, { a: q, b: t.poly[(k + 1) % t.poly.length] }) <= 1.6 * Math.max(sx, sy))));
+    const holds = under.filter((t) => pointInPoly(at, t.poly));
+    let tp = [...(holds.length ? holds : under)].sort((a, b) => dist(polyCentroid(a.poly), at) - dist(polyCentroid(b.poly), at))[0];
+    if (!tp) {
+      // objective in the open (no terrain on it): a 40mm marker, in range within 3" of it — a circle of
+      // 3" + the marker's radius around its centre, so control works the same way as for terrain objectives
+      const R = 3 + 20 / 25.4;
+      tp = { id: `obj-t${i}`, kind: 'objective-area', label: 'Objective (40mm marker, range 3")', category: 'exposed', height: 0, walls: [], obstacles: [],
+        poly: Array.from({ length: 32 }, (_, k) => ({ x: ox + R * Math.cos((k / 32) * Math.PI * 2), y: oy + R * Math.sin((k / 32) * Math.PI * 2) })) };
+      terrain.push(tp);
+    }
+    tp.objectiveId = id;
     return { id, type: o.type, owner: undefined, x: ox, y: oy, terrainId: tp.id, controller: null, ownerRole: o.owner ?? undefined } as ObjectiveState & { ownerRole?: string };
   });
   return { terrain, objectives };
@@ -252,6 +239,21 @@ export function createGame(o: NewGameOptions): GameState {
   for (const i of [0, 1] as const) {
     if (!s.players[i].detachments.some((d) => d.stratagems.some((st) => /Tzeentch Chaos Spawn/i.test(st.text)))) continue;
     s.players[i].spawnTemplate = buildUnits({ ...o.lists[i], units: [{ uid: 'gift-spawn', datasheet: 'Chaos Spawn', models: 1, pts: 0 }] }, o.factions[i], i)[0];
+  }
+  // Seed Spore Mines, Seed Mucolids, Spore Mine Cysts: units a Tyranid army adds during the battle
+  for (const i of [0, 1] as const) {
+    if (!o.lists[i].units.some((u) => o.factions[i].datasheets.find((d) => d.name === u.datasheet)?.abilities.some((a) => /^(Seed Spore Mines|Seed Mucolids|Spore Mine Cysts)$/.test(a.name)))) continue;
+    for (const [name, n] of [['Spore Mines', 6], ['Mucolid Spores', 1]] as const) {
+      const t = buildUnits({ ...o.lists[i], units: [{ uid: 'spore', datasheet: name, models: n, pts: 0 }] }, o.factions[i], i)[0];
+      if (t) (s.players[i].sporeTemplates ??= {})[name] = t;
+    }
+  }
+  // Parasitic Infection (Parasite of Mortrex): new Ripper Swarms units (GC armies borrow the Tyranid datasheet)
+  for (const i of [0, 1] as const) {
+    if (!o.lists[i].units.some((u) => o.factions[i].datasheets.find((d) => d.name === u.datasheet)?.abilities.some((a) => a.name === 'Parasitic Infection'))) continue;
+    const F = o.factions[i].datasheets.some((d) => d.name === 'Ripper Swarms') ? o.factions[i] : { ...o.factions[i], datasheets: [...o.factions[i].datasheets, RIPPERS as unknown as FactionData['datasheets'][number]] };
+    const t = buildUnits({ ...o.lists[i], units: [{ uid: 'rippers', datasheet: 'Ripper Swarms', models: 3, pts: 0 }] }, F, i)[0];
+    if (t) (s.players[i].sporeTemplates ??= {})['Ripper Swarms'] = t;
   }
   // Numberless Horde (Shamblerot Vectorium): Poxwalkers units of 10 that join the army in later battle rounds (Battleline)
   for (const i of [0, 1] as const) {
@@ -394,7 +396,8 @@ export function chargeReach(s: GameState, u: UnitState, targets: (string | UnitS
   // Eager for Vengeance: +X when the focus of hatred is one of the targets
   const roll = (u.chargeRoll ?? 0) + (f.chargeBonusVsOath && ts.some((t) => s.players[u.owner].oathTarget === t.id) ? f.chargeBonusVsOath : 0);
   const pen = Math.max(0, ...ts.map((t) => unitFlags(s, t).chargedMinus));
-  return pen && rollMods(s, u).chargeBonus >= 0 && !f.ignoreMoveMods && !f.ignoreMods ? Math.max(0, roll - pen) : roll;
+  const out = pen && rollMods(s, u).chargeBonus >= 0 && !f.ignoreMoveMods && !f.ignoreMods ? Math.max(0, roll - pen) : roll;
+  return f.moveHalve ? Math.floor(out / 2) : out; // Gravitic Pulse
 }
 
 /** How far a Pile-in / Consolidation move may go (3", or more with stratagems such as Shock Onslaught). */
@@ -409,10 +412,11 @@ export function pileDistance(s: GameState, u: UnitState, kind: 'pileIn' | 'conso
 export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOptions = {}): number {
   if (opt.maxOverride !== undefined) return opt.maxOverride;
   const fl = unitFlags(s, u);
-  const M = (fl.moveSet || (m.profile.M ?? 0)) + fl.move;
+  const M0 = (fl.moveSet || (m.profile.M ?? 0)) + fl.move;
+  const M = fl.moveHalve ? M0 / 2 : M0; // Gravitic Pulse: halve the Move characteristic and Advance rolls
   let max = 0;
   if (kind === 'normal' || kind === 'fallback') max = M;
-  else if (kind === 'advance') max = M + (u.advanceRoll ?? 0);
+  else if (kind === 'advance') max = M + (fl.moveHalve ? Math.floor((u.advanceRoll ?? 0) / 2) : (u.advanceRoll ?? 0));
   else if (kind === 'charge') max = chargeReach(s, u, opt.targets);
   else if (kind === 'pileIn' || kind === 'consolidate') max = pileDistance(s, u, kind);
   else if (kind === 'scout') max = Math.max(u.core.scouts ?? 0, unitFlags(s, u).scouts);
@@ -777,10 +781,11 @@ const isAstartes = (u: UnitState) => ['ADEPTUS ASTARTES', 'ADEPTUS CUSTODES', 'T
 let unleashWrathHook: ((s: GameState, u: UnitState) => void) | null = null;
 export const setUnleashWrath = (fn: (s: GameState, u: UnitState) => void) => { unleashWrathHook = fn; };
 
-const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string[]; imperiumBattleline?: boolean; rollD3?: boolean }[] = [
+const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string[]; imperiumBattleline?: boolean; rollD3?: boolean; textHas?: string }[] = [
   { name: 'Strategic Slaughter', n: 3, infantryOnly: false, units: ['JAKHALS', 'GOREMONGERS'] }, // World Eaters: Cult of Blood
   { name: 'Tactical Perfection', n: 2, infantryOnly: false, units: ['EMPEROR’S CHILDREN'] }, // Emperor's Children: Mercurial Host
   { name: 'Master of Deceit', n: 3, infantryOnly: true },
+  { name: 'Grand Illusion', n: 3, infantryOnly: false, units: ['NECRONS'] }, // Necrons: C'tan Shard of the Deceiver
   { name: 'Strategium Command', n: 3, infantryOnly: false },
   // Enhancements that redeploy (2026 Codex)
   { name: 'Cyber-familiar', n: 3, infantryOnly: true },
@@ -794,12 +799,21 @@ const REDEPLOY: { name: string; n: number; infantryOnly: boolean; units?: string
   { name: 'Fleet Command', n: 3, infantryOnly: false }, // Chaos Space Marines: Masters of the Maelstrom
   { name: "Kaptin's Hat", n: 3, infantryOnly: true }, // Orks: Wreckas enhancement
   { name: 'Liber Heresius', n: 3, infantryOnly: false },
+  { name: 'Solid-image Projection Unit', n: 3, infantryOnly: false, units: ['T’AU EMPIRE'] }, // T'au: Kauyon
+  { name: 'Kroot Ambush', n: 2, infantryOnly: false, units: ['KROOT'] }, // T'au: Kroot Trail Shaper (its unit and one more)
   { name: 'Warrant of Trade', n: 3, infantryOnly: false, imperiumBattleline: true, rollD3: true },
+  { name: 'Prince of Corsairs', n: 3, infantryOnly: false, units: ['AELDARI'] }, // Aeldari: Prince Yriel
+  { name: 'Shedskin Raiment', n: 3, infantryOnly: false, units: ['HARLEQUINS'] },
+  { name: 'Veiled Hunter', n: 3, infantryOnly: true, units: ['SKITARII'] }, // Adeptus Mechanicus
+  { name: 'Precognisant', n: 3, infantryOnly: false, units: ['DRUKHARI'] }, // Drukhari: Lady Malys
+  { name: 'The Collegiate Astrolex', n: 3, infantryOnly: false, units: ['ASTRA MILITARUM'] }, // Astra Militarum: Lord Solar Leontus
+  { name: 'Guerrilla Honours', n: 3, infantryOnly: true, units: ['ASTRA MILITARUM'] },
+  { name: 'Grand Strategist', n: 2, infantryOnly: false, units: ['REGIMENT', 'SQUADRON'], textHas: 'redeploy' }, // the Armoured Infantry one (Combined Arms' gives an Order)
 ];
 
 function redeployFor(s: GameState, p: PlayerId) {
   const mine = s.units.filter((u) => u.owner === p && (u.status === 'board' || u.status === 'embarked'));
-  return REDEPLOY.filter((r) => mine.some((u) => unitHasAbility(u, r.name))).sort((a, b) => b.n - a.n)[0];
+  return REDEPLOY.filter((r) => mine.some((u) => unitHasAbility(u, r.name) && (!r.textHas || [...u.abilities, ...u.enhancements].some((a) => a.name === r.name && a.text?.includes(r.textHas!))))).sort((a, b) => b.n - a.n)[0];
 }
 
 /** Units a player may pick up to redeploy now. */
@@ -811,8 +825,8 @@ export function redeployCandidates(s: GameState): UnitState[] {
       ? hasKw(u, 'BATTLELINE') && (hasKw(u, 'IMPERIUM') || u.factionKeywords.includes('IMPERIUM'))
       : r.source === 'Liber Heresius'
       ? hasKw(u, 'AGENTS OF THE IMPERIUM') || u.factionKeywords.includes('AGENTS OF THE IMPERIUM')
-      : isAstartes(u))
-    && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && (!r.units || r.units.some((k) => hasKw(u, k))) && !u.transport);
+      : r.units ? true : isAstartes(u))
+    && (!r.infantryOnly || hasKw(u, 'INFANTRY')) && (!r.units || r.units.some((k) => hasKw(u, k) || u.factionKeywords.includes(k))) && !u.transport);
 }
 
 /** Pick a unit up: it is placed again (deployment rules) or, with toReserves, goes into Strategic Reserves (no limit). */
@@ -865,6 +879,7 @@ function finishDeployment(s: GameState) {
   log(s, `Roll-off for first turn: ${s.players[0].name} ${ro.a} – ${s.players[1].name} ${ro.b} → ${s.players[ro.winner].name} goes first`, 'roll', null);
   s.round = 1;
   s.turn = -1;
+  emit(s, 'preBattle', {});
   if (s.units.some((u) => u.status === 'board' && scoutsOf(s, u))) {
     s.phase = 'scouts';
     s.deployTurn = ro.winner;
@@ -961,6 +976,7 @@ export function bestLd(u: UnitState, s?: GameState) {
   const base = Math.min(...alive(u).map((m) => m.profile.Ld));
   if (!s) return base;
   const f = unitFlags(s, u);
+  if (f.ignoreLdMods) return Math.min(base, f.ldSet); // Vexilla: modifiers to its Ld are ignored
   return Math.min(base, f.ldSet) - f.ld;
 }
 
@@ -973,7 +989,8 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
   } else {
     const ld = bestLd(u, s);
     const dMod = battleShockMod(s, u);
-    const mod = (unitFlags(s, u).ignoreMods ? 0 : t.mod ?? 0) + dMod;
+    const noLd = unitFlags(s, u).ignoreLdMods;
+    const mod = (unitFlags(s, u).ignoreMods || noLd ? 0 : t.mod ?? 0) + (noLd ? 0 : dMod);
     if (unitFlags(s, u).autoPassShock) { t.result = 12; t.passed = true; t.auto = true; log(s, `${u.name}: Battle-shock test passed automatically`, 'info', u.owner); return; }
     const nDice = shockDice(s, u);
     let r = rollN(s, nDice);
@@ -1009,6 +1026,8 @@ let phaseEndHook: ((s: GameState, phase: Phase) => void) | null = null;
 export const setPhaseEndHook = (h: (s: GameState, phase: Phase) => void) => { phaseEndHook = h; };
 
 export function endPhase(s: GameState) {
+  // "end of any phase" stratagems (HEXWROUGHT REPRISAL): offered once, before the phase's own end
+  if (s.phase !== 'deploy' && s.phase !== 'scouts' && s.phase !== 'gameover' && phaseEndReactions(s, 'anyPhaseEnd', [other(s.active), s.active])) return;
   updateControl(s);
   if (s.phase === 'movement') {
     fireFor(s, 'movementEnd', s.active);
@@ -1037,6 +1056,7 @@ export function endPhase(s: GameState) {
     s.phase = 'movement';
     expireTimed(s, 'movementStart', s.active);
     fireFor(s, 'movementStart', s.active);
+    emit(s, 'movementStart', { p: s.active });
     // Falsehood: the hidden Chaos Lord in Reserves can take a Legionary's place now
     fire(s, 'movementStart', s.units.filter((u) => u.owner === s.active && u.status === 'reserves' && u.enhancements.some((e) => e.name === 'Falsehood')));
   } else if (s.phase === 'movement') {
@@ -1049,8 +1069,11 @@ export function endPhase(s: GameState) {
     openWindow(s, 'endOfMovement');
     if (!s.window) openWindow(s, 'startOfShooting');
   } else if (s.phase === 'shooting') {
+    if (phaseEndReactions(s, 'shootingPhaseEnd', [other(s.active), s.active])) return;
+    fireFor(s, 'shootingEnd', 'both');
     s.phase = 'charge';
     fireFor(s, 'chargeStart', s.active);
+    fireFor(s, 'oppChargeStart', other(s.active));
     emitReact(s, other(s.active), 'enemyChargePhaseStart', {});
   } else if (s.phase === 'charge') {
     if (phaseEndReactions(s, 'enemyChargePhaseEnd', [other(s.active)])) return;
@@ -1063,7 +1086,9 @@ export function endPhase(s: GameState) {
     if (phaseEndReactions(s, 'fightPhaseEnd', [other(s.active), s.active])) return;
     fireFor(s, 'fightEnd', 'both');
     // Rise to the Challenge: a unit gets to fight once more before the phase ends
-    if (s.fight?.forcedNext && s.fight.eligible.includes(s.fight.forcedNext)) return;
+    // (only while it is still alive and able to fight: a unit destroyed after Frenzy does not hold the phase open)
+    if (s.fight?.forcedNext && s.fight.eligible.includes(s.fight.forcedNext) && fightEligibleNow(s, unitById(s, s.fight.forcedNext))) return;
+    if (s.fight) s.fight.forcedNext = null;
     phaseEndHook?.(s, 'fight');
     fireFor(s, 'opponentFightEnd', other(s.active));
     s.fight = null;
@@ -1120,7 +1145,7 @@ function endTurn(s: GameState) {
   // end of battle round
   emit(s, 'roundEnd', {});
   if (s.round === RULES.reserves.destroyedAfterRound) {
-    for (const u of s.units) if (u.status === 'reserves' && !hasKw(u, 'AIRCRAFT')) {
+    for (const u of s.units) if (u.status === 'reserves' && !hasKw(u, 'AIRCRAFT') && !u.cultAmbush) {
       u.status = 'destroyed';
       log(s, `${u.name} did not arrive from Reserves by battle round ${s.round} → destroyed`, 'kill', u.owner);
     }
@@ -1315,6 +1340,11 @@ export function beginMove(s: GameState, u: UnitState, kind: 'normal' | 'advance'
   const f = unitFlags(s, u);
   if (f.mustStay) { log(s, `${u.name} must Remain Stationary this turn`, 'info', u.owner); remainStationary(s, u); return false; }
   if (kind === 'fallback' && f.fallBackLdTest && !ldTest(s, u, 'Transfixing Gaze')) { remainStationary(s, u); return false; }
+  if (kind === 'fallback' && f.fallBackRoll < 7 && !hasKw(u, 'TITANIC')) {
+    const r = rollN(s, 1)[0];
+    log(s, `Grasping Tendrils: ${u.name} rolled ${r} to Fall Back (${f.fallBackRoll}+ holds it)`, 'roll', u.owner);
+    if (r >= f.fallBackRoll) { remainStationary(s, u); return false; }
+  }
   if (f.slowed && (u.used ??= {}).slowed !== String(s.turn)) {
     u.used.slowed = String(s.turn);
     const r = d6(s);
@@ -1322,6 +1352,16 @@ export function beginMove(s: GameState, u: UnitState, kind: 'normal' | 'advance'
     addTimed(s, u, { e: { move: r <= 4 ? -2 : -3 }, label: 'Slowed', until: 'turn', by: other(u.owner) });
     log(s, `Slowed: ${u.name} rolled ${r} → −${r <= 4 ? 2 : 3}"`, 'roll', u.owner);
     applyMortalWounds(s, u, mw, 'Slowed (Stasis Bomb)');
+  }
+  if (f.graviticFly) {
+    const r = d6(s);
+    log(s, `Gravitic Pulse: ${u.name} rolled ${r}${r >= 4 ? ' → D3 mortal wounds' : ''}`, 'roll', u.owner);
+    if (r >= 4) applyMortalWounds(s, u, rollExpr(s, 'D3').total, 'Gravitic Pulse');
+  }
+  if (f.snared) {
+    const mw = rollN(s, alive(u).length).filter((r) => r === 1).length;
+    log(s, `Snared: ${u.name} moves through the web → ${mw} mortal wound(s)`, 'roll', u.owner);
+    if (mw) applyMortalWounds(s, u, mw, 'Snared');
   }
   return onBoard(u);
 }
@@ -1336,6 +1376,8 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   const how = hasDeepStrike(s, u) ? 'deepStrike' : 'ingress';
   const chk = validatePlacement(s, u, pos, how);
   if (!chk.ok) return chk;
+  const denied = how === 'ingress' ? arrivalDenied(s, u) : null;
+  if (denied) return { ok: false, errors: [denied] } as MoveCheck;
   // Meteoric Descent: set up closer than usual, then no charge this turn
   const closest = Math.min(99, ...boardUnits(s, other(u.owner)).flatMap((e) => alive(e).flatMap((n) => alive(u).map((m) => { const p = pos.get(m.id) ?? m; return gap(bodyAt(m, p), n); }))));
   u.move = 'ingress'; // before placing: rules on arrival (Dread Reputation) read it
@@ -1344,9 +1386,13 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   if (closest <= RULES.reserves.enemyDistance || (how === 'deepStrike' && unitFlags(s, u).deepStrikeInFlow)) u.noChargeTurn = s.turn;
   log(s, `${u.name} arrives (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closest <= RULES.reserves.enemyDistance ? ' within 9" of the enemy → cannot charge this turn' : ''}`, 'info', u.owner);
   if (u.owner === s.active && s.phase === 'movement') {
+    s.lastAct = { unitId: u.id, owner: u.owner, kind: 'move', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
     offerReactions(s, 'enemyMovedNear', u);
     emit(s, 'unitMoved', { u });
+    emitReact(s, other(u.owner), 'enemyArrived', { unitId: u.id });
   }
+  fire(s, 'arrived', [u]);
+  emit(s, 'arrived', { u });
   if (unitHasAbility(u, 'Drop Pod Assault')) dropPodAssault(s, u);
   if (u.homer && s.active !== u.owner) { log(s, `Teleport Homer: ${u.name} arrives at the token (token removed)`, 'info', u.owner); u.homer = undefined; }
   return chk;
@@ -1449,6 +1495,8 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   // Fortress of Intimidation: charging near that Knight means a Battle-shock test first
   const fort = boardUnits(s, other(u.owner)).find((e) => unitFlags(s, e).chargedShock !== null && unitDistance(u, e) <= 12 + 1e-6);
   if (fort) shockTest(s, u, unitFlags(s, fort).chargedShock!, fort.name);
+  // the units it may charge are the targets of the charge (for "a charge that targets your unit" reactions)
+  if (s.lastAct?.unitId === u.id) s.lastAct.targets = boardUnits(s, other(u.owner)).filter((e) => unitDistance(u, e) <= RULES.charge.declareRange + 1e-6).map((e) => e.id);
   if (declaredInOwnTurn) emitReact(s, other(u.owner), 'enemyChargeDeclared', { unitId: u.id });
   if (declaredInOwnTurn) emergencyEmbark(s, u);
   return r;
@@ -1723,7 +1771,7 @@ export function endPileInStep(s: GameState) {
   if (!fightCandidates(s).units.length) startConsolidate(s);
 }
 
-export const isFightsFirst = (s: GameState, u: UnitState) => u.chargedTurn === s.turn || !!u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn || u.buffs.some((b) => b.kind === 'fightsFirst') || unitFlags(s, u).fightsFirst;
+export const isFightsFirst = (s: GameState, u: UnitState) => !unitFlags(s, u).noFightsFirst && (u.chargedTurn === s.turn || !!u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn || u.buffs.some((b) => b.kind === 'fightsFirst') || unitFlags(s, u).fightsFirst);
 
 export function fightEligibleNow(s: GameState, u: UnitState) {
   const f = s.fight!;
@@ -1886,15 +1934,10 @@ export function objectiveTerrain(s: GameState, o: ObjectiveState) {
 }
 
 export function levelOfControl(s: GameState, o: ObjectiveState): [number, number] {
-  const t = s.terrain.find((x) => x.id === o.terrainId);
+  const t = objectiveTerrain(s, o);
   const lv: [number, number] = [0, 0];
-  const objR = 3 + 20 / 25.4; // 3" control range from 40mm marker edge = ~3.787"
   for (const u of boardUnits(s)) {
-    for (const m of alive(u)) {
-      const inDist = Math.hypot(m.x - o.x, m.y - o.y) <= objR + (m.r ?? 0.6) + 1e-4;
-      const inPoly = !!t?.poly && t.kind === 'objective-area' && bodyTouchesPoly(m, 0, t.poly);
-      if (inDist || inPoly) lv[u.owner] += modelOc(s, u, m);
-    }
+    for (const m of alive(u)) if (bodyTouchesPoly(m, 0, t.poly)) lv[u.owner] += modelOc(s, u, m);
   }
   return lv;
 }
@@ -2102,7 +2145,7 @@ export function validateDisembark(s: GameState, u: UnitState, t: UnitState, pos:
   const errors: string[] = [];
   const bad = new Set<string>();
   if (!mode) return { ok: false, errors: ['The transport Advanced / Fell Back: no disembarking this phase'], bad: [] };
-  const range = mode === 'combat' ? 6 : 3;
+  const range = Math.max(mode === 'combat' ? 6 : 3, unitFlags(s, t).disembarkRange); // SECURE POSITIONS: within 6"
   endChecks(s, u, pos, errors, bad);
   // Aggressive Disembarkation: within the set-up distance is enough, not wholly within
   const loose = unitFlags(s, u).looseDisembark;
@@ -2137,6 +2180,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
   arrivalShock(s, u);
   unleashWrathHook?.(s, u);
   fire(s, 'passengerDisembarks', [t], { targetId: u.id });
+  emit(s, 'disembarked', { u, t });
   return chk;
 }
 
@@ -2658,4 +2702,80 @@ export function sanitizeGameState(s: GameState): GameState {
     }
   }
   return s;
+}
+
+/** Somewhere near the transport to put a unit (`range` from its hull), as close to `towards` as possible. */
+export function placeNear(s: GameState, u: UnitState, t: UnitState, range: number, towards: Pt | null, ok: (pos: Map<string, Pt>) => boolean): Map<string, Pt> | null {
+  const c = alive(t)[0];
+  if (!c) return null;
+  let best: { pos: Map<string, Pt>; d: number } | null = null;
+  for (let ring = 0; ring <= 4; ring++) {
+    const r = c.r + 1 + ring * (range / 4);
+    for (let a = 0; a < 16; a++) {
+      const ang = (a / 16) * Math.PI * 2;
+      const pos = formationAt(u, { x: c.x + Math.cos(ang) * r, y: c.y + Math.sin(ang) * r });
+      if (!ok(pos)) continue;
+      const mid = [...pos.values()].reduce((q, p2) => ({ x: q.x + p2.x / pos.size, y: q.y + p2.y / pos.size }), { x: 0, y: 0 });
+      const d = towards ? dist(mid, towards) : ring;
+      if (!best || d < best.d) best = { pos, d };
+    }
+  }
+  return best?.pos ?? null;
+}
+
+
+export function shootNow(s: GameState, u: UnitState, target: UnitState, label: string, mode: 'normal' | 'snap' = 'normal', skipWeapons?: string[]) {
+  if (!onBoard(u) || !onBoard(target)) return;
+  const r = buildShootPools(s, u.id, target.id, { mode, skipWeapons });
+  if (r.error || !r.pools.length) { log(s, `${label}: ${u.name} cannot shoot ${target.name} (${r.error ?? 'no weapon in range'})`, 'info', u.owner); return; }
+  const fired = [...u.weaponsFired];
+  log(s, `${label}: ${u.name} shoots ${target.name}`, 'info', u.owner);
+  startAttack(s, 'shoot', u.id, target.id, r.pools, { free: true });
+  resolveAll(s);
+  finishAttack(s);
+  u.weaponsFired = fired; // shooting out of phase does not use up its own Shooting phase
+}
+
+/** Set a unit up (from Reserves or the battlefield) wholly within `range` of `anchor`'s models, unengaged, as close to
+ *  `towards` as possible (Eternity Gate). Returns false when there is no room. */
+export function setUpNear(s: GameState, u: UnitState, anchor: UnitState, range: number, towards: Pt | null): boolean {
+  const c = alive(anchor)[0];
+  if (!c) return false;
+  let best: { pos: Map<string, Pt>; d: number } | null = null;
+  for (let ring = 0; ring <= 4; ring++) for (let a = 0; a < 16; a++) {
+    const r = c.r + 1 + (ring * Math.max(0, range - 2)) / 4, ang = (a / 16) * Math.PI * 2;
+    const pos = formationAt(u, { x: c.x + Math.cos(ang) * r, y: c.y + Math.sin(ang) * r });
+    const errors: string[] = [];
+    endChecks(s, u, pos, errors, new Set());
+    if (errors.length || engagedAt(s, u, pos).length) continue;
+    if (![...pos.entries()].every(([id, p]) => { const m = u.models.find((x) => x.id === id)!; return alive(anchor).some((n) => ptGap(n, p) + reachOf(m) <= range + 0.02); })) continue;
+    const mid = [...pos.values()][0];
+    const d = towards ? dist(mid, towards) : ring;
+    if (!best || d < best.d) best = { pos, d };
+  }
+  if (!best) return false;
+  for (const m of alive(u)) { const p = best.pos.get(m.id); if (p) { m.x = p.x; m.y = p.y; } }
+  u.status = 'board'; u.setUpTurn = s.turn; u.move = 'ingress';
+  return true;
+}
+
+/** Set a unit up anywhere on the battlefield more than `keep`" from every enemy unit, closest to `prefer`
+ *  (`ok` narrows the spots, e.g. wholly within 8" of an edge). Sigil of Exigence, Imposing Arrival. */
+export function setUpAway(s: GameState, u: UnitState, keep: number, prefer: Pt, ok: (pos: Map<string, Pt>) => boolean = () => true): boolean {
+  const enemies = boardUnits(s, other(u.owner)).flatMap(alive);
+  let best: { pos: Map<string, Pt>; d: number } | null = null;
+  for (let x = 2; x < W - 1; x += 2) for (let y = 2; y < H - 1; y += 2) {
+    const d = dist({ x, y }, prefer);
+    if (best && d >= best.d) continue;
+    const pos = formationAt(u, { x, y });
+    if (![...pos.entries()].every(([id, p]) => { const m = u.models.find((q) => q.id === id)!; return onTable(bodyAt(m, p), W, H) && enemies.every((e) => gap(bodyAt(m, p), e) > keep + EPS); })) continue;
+    const errors: string[] = [];
+    endChecks(s, u, pos, errors, new Set());
+    if (errors.length || !ok(pos)) continue;
+    best = { pos, d };
+  }
+  if (!best) return false;
+  for (const m of alive(u)) { const p = best.pos.get(m.id); if (p) { m.x = p.x; m.y = p.y; } }
+  u.status = 'board'; u.setUpTurn = s.turn;
+  return true;
 }

@@ -385,8 +385,16 @@ export function unitVisibleTo(s: GameState, observer: ModelState, u: UnitState):
  * 3. Attacker inside Footprint + Target outside Footprint: LoS ESTABLISHED, Target does NOT gain Cover from that footprint.
  * 4. Attacker inside Footprint + Target inside SAME Footprint: LoS ESTABLISHED, Target does NOT gain Cover from shared footprint.
  */
+/** Units that give cover to units behind them ("not fully visible because of this unit": Ramshackle Cover, Smoky
+ *  Gubbinz, Malign Cover, STALWART PROTECTOR): set by the effects module. */
+let screenHook: ((s: GameState, screen: UnitState, target: UnitState) => boolean) | null = null;
+export const setScreenHook = (h: typeof screenHook) => { screenHook = h; };
+
 export function hasCover(s: GameState, attacker: ModelState, target: UnitState): boolean {
   if (target.core.stealth || target.buffs.some((b) => b.kind === 'smoke' || b.kind === 'cover')) return true;
+  // shortcut: a line from the attacker to one target model through a model of the screening unit counts as "not fully visible"
+  if (screenHook && s.units.some((x) => x.id !== target.id && x.status === 'board' && screenHook!(s, x, target)
+    && alive(target).some((m) => alive(x).some((n) => pointSegDist(n, { a: attacker, b: m }) <= n.r)))) return true;
   return alive(target).some((m) => {
     // Check if target model is inside a footprint that the attacker is NOT inside (Rule 2)
     const inDifferentFootprint = s.terrain.some((t) =>

@@ -5,9 +5,6 @@ import {
   cultAmbushUnitDestroyed,
   cultAmbushCheckEnemyMoved,
   cultAmbushArrival,
-  cultIconCommandPhase,
-  cultAttackModifiers,
-  cultDefenseModifiers,
 } from './cult';
 import type { GameState, ObjectiveState, PlayerId, UnitState } from '../engine/types';
 
@@ -70,6 +67,7 @@ function makeMockUnit(
     id: `${id}_m${i}`,
     name,
     x: 10 + i * 2,
+    r: 0.5,
     y: 10,
     wounds: woundsPerModel,
     dead: false,
@@ -119,7 +117,8 @@ describe('Genestealer Cults mechanics', () => {
     cultBattleStart(s);
     const initialPts = s.players[0].resurgencePoints!;
 
-    const neo = makeMockUnit('u1', 0, 'Neophyte Hybrids', ['INFANTRY', 'CULT AMBUSH'], ['GENESTEALER CULTS'], 10);
+    const neo = makeMockUnit('u1', 0, 'Neophyte Hybrids', ['INFANTRY'], ['GENESTEALER CULTS'], 10);
+    neo.abilities.push({ name: 'Cult Ambush', type: 'Faction', text: '' } as never);
     neo.models.forEach((m) => { m.dead = true; m.wounds = 0; });
     s.units.push(neo);
 
@@ -150,6 +149,7 @@ describe('Genestealer Cults mechanics', () => {
 
     const neo = makeMockUnit('u1', 0, 'Neophyte Hybrids', ['INFANTRY', 'CULT AMBUSH'], ['GENESTEALER CULTS'], 10);
     neo.status = 'reserves';
+    neo.cultAmbush = true;
     s.units.push(neo);
 
     cultAmbushArrival(s);
@@ -160,31 +160,4 @@ describe('Genestealer Cults mechanics', () => {
     expect(s.players[0].cultAmbushMarkers?.length).toBe(0);
   });
 
-  it('cult icon revives models in Command phase', () => {
-    const s = makeMockState();
-    const neo = makeMockUnit('u1', 0, 'Neophyte Hybrids', ['INFANTRY'], ['GENESTEALER CULTS'], 10);
-    neo.abilities.push({ name: 'Cult Icon', type: 'Datasheet', text: '' });
-    neo.models[0].dead = true;
-    neo.models[1].dead = true;
-    s.units.push(neo);
-
-    cultIconCommandPhase(s, 0);
-
-    const aliveCount = neo.models.filter((m) => !m.dead).length;
-    expect(aliveCount).toBeGreaterThan(8);
-  });
-
-  it('applies Host of Ascension ambush bonuses on arrival turn', () => {
-    const s = makeMockState();
-    s.turn = 2;
-    const neo = makeMockUnit('u1', 0, 'Neophyte Hybrids', ['INFANTRY'], ['GENESTEALER CULTS'], 10);
-    neo.setUpTurn = 2; // Arrived this turn
-    const target = makeMockUnit('e1', 1, 'Intercessors', ['INFANTRY'], ['ADEPTUS ASTARTES'], 5);
-
-    const rangedMods = cultAttackModifiers(s, neo, target, 12, 'ranged');
-    expect(rangedMods.sustained).toBe('1');
-
-    const meleeMods = cultAttackModifiers(s, neo, target, 0, 'melee');
-    expect(meleeMods.critHitThreshold).toBe(5);
-  });
 });

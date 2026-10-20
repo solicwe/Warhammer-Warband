@@ -55,6 +55,12 @@ export function allyErrors(list: ArmyList, faction: FactionData, sizePoints: num
     const d = sheetOf(u);
     if (d?.ally) by.set(d.ally, [...(by.get(d.ally) ?? []), { u, d }]);
   }
+  // Cult of the Dark Gods: the cult Legionaries (in the Heretic Astartes book) share one points cap
+  const cult = faction.id === 'CSM' ? list.units.filter((u) => ['Khorne Berzerkers', 'Rubric Marines', 'Plague Marines', 'Noise Marines'].includes(u.datasheet)) : [];
+  if (cult.length) {
+    const cap = [250, 500, 750][tier], pts = cult.reduce((a, u) => a + unitPoints(u), 0);
+    if (pts > cap) errs.push(`Cult of the Dark Gods: ${pts} pts of cult units — at most ${cap} pts at this battle size`);
+  }
   for (const [id, xs] of by) {
     const name = xs[0].d.allyName ?? id;
     if (xs.some((x) => x.u.warlord)) errs.push(`Allied ${name} units cannot be your Warlord`);

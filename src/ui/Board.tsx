@@ -509,6 +509,8 @@ function BoardImpl(props: BoardProps) {
     return () => clearTimeout(tm);
   }, [s.objectives]);
   const svgRef = useRef<SVGSVGElement>(null);
+  // phones: the bottom sheet covers the lower part of the screen, so the battlefield sits at the top, not in the middle
+  const FIT = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)')?.matches ? 'xMidYMin meet' : 'xMidYMid meet';
   // the whole table: the battlefield plus the strips the side cards lie on
   const sides = (props.side ?? []).filter((x) => x.cards.length);
   const padL = sides.some((x) => x.at !== 'right') ? SIDE : 0, padR = sides.some((x) => x.at === 'right') ? SIDE : 0;
@@ -1058,7 +1060,7 @@ function BoardImpl(props: BoardProps) {
     <svg
       ref={svgRef}
       viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio={FIT}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -1207,10 +1209,12 @@ function BoardImpl(props: BoardProps) {
       {s.objectives.map((o, i) => {
         const [a, b] = levelOfControl(s, o);
         const ctrl = o.controller;
-        const objRadius = 3 + 20 / 25.4; // 3" control zone from 40mm marker edge = ~3.787"
-        const top = o.y - objRadius;
-        const cx = o.x;
-        const bannerY = top > 1.8 ? top - 0.55 : o.y + objRadius + 1.25;
+        // the objective's area: the terrain baseplate it stands on, or a 3" circle round a marker in the open
+        const t = s.terrain.find((x) => x.id === o.terrainId)!;
+        const xs = t.poly.map((p) => p.x), ys = t.poly.map((p) => p.y);
+        const top = Math.min(...ys);
+        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const bannerY = top > 1.8 ? top - 0.55 : Math.max(...ys) + 1.25;
         const label = o.type === 'home' ? 'HOME' : o.type === 'central' ? 'CENTRE' : 'OBJ';
         const effects = getObjectiveEffects(s, o);
 
@@ -1267,16 +1271,7 @@ function BoardImpl(props: BoardProps) {
               </g>
             ))}
 
-            {/* Standard 3" Objective Control Area (40mm marker + 3" radius) */}
-            <circle
-              cx={o.x}
-              cy={o.y}
-              r={objRadius}
-              fill={ctrl === null ? 'rgba(245,184,61,0.08)' : SOFT[ctrl]}
-              stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]}
-              strokeWidth={0.16}
-              strokeDasharray="0.6 0.25"
-            />
+            <polygon points={t.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill={ctrl === null ? 'rgba(245,184,61,0.08)' : SOFT[ctrl]} stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.16} strokeDasharray="0.6 0.25" />
 
             {/* In-Progress Animated Dashed Halo */}
             {isInProgress && (
@@ -1345,33 +1340,20 @@ function BoardImpl(props: BoardProps) {
               ) : null}
             </g>
 
-            {/* Detachment Territory Effect Badges */}
-            {effects.map((eff, idx) => {
-              const badgeW = 5.6;
-              const badgeH = 0.78;
+            {/* Detachment territory effects: one short chip (the rings show the areas; the full text is the tooltip) */}
+            {effects.length > 0 && (() => {
+              const label = effects.map((eff) => eff.title.replace(/\s*\(.*\)$/, '')).join(' · ');
+              const badgeW = Math.min(W - 1, 0.95 + label.length * 0.27);
               const clampedX = Math.max(badgeW / 2 + 0.5, Math.min(W - badgeW / 2 - 0.5, cx));
-              const badgeY = top > 2.8 ? (bannerY - (idx + 1) * 0.9) : (bannerY + 0.95 + (idx + 1) * 0.9);
+              const badgeY = top > 2.8 ? bannerY - 0.9 : bannerY + 1.85;
               return (
-                <g key={eff.id} transform={`translate(${clampedX} ${badgeY})`}>
-                  <rect
-                    x={-badgeW / 2}
-                    y={-badgeH / 2}
-                    width={badgeW}
-                    height={badgeH}
-                    rx={0.3}
-                    fill={eff.badgeBg}
-                    stroke={eff.badgeBorder}
-                    strokeWidth={0.07}
-                  />
-                  <text x={0} y={-0.06} fontSize={0.38} textAnchor="middle" fill="#ffffff" fontWeight={900}>
-                    {eff.title}
-                  </text>
-                  <text x={0} y={0.26} fontSize={0.28} textAnchor="middle" fill={eff.color} fontWeight={700}>
-                    {eff.desc}
-                  </text>
+                <g transform={`translate(${clampedX} ${badgeY})`}>
+                  <title>{effects.map((eff) => `${eff.title}: ${eff.desc}`).join('\n')}</title>
+                  <rect x={-badgeW / 2} y={-0.36} width={badgeW} height={0.72} rx={0.3} fill={effects[0].badgeBg} stroke={effects[0].badgeBorder} strokeWidth={0.07} />
+                  <text x={0} y={0.14} fontSize={0.42} textAnchor="middle" fill="#ffffff" fontWeight={900}>{label}</text>
                 </g>
               );
-            })}
+            })()}
           </g>
         );
       })}
@@ -1379,6 +1361,19 @@ function BoardImpl(props: BoardProps) {
         <g key={m.id} transform={`translate(${m.x} ${m.y})`} pointerEvents="none">
           <rect x={-0.55} y={-0.55} width={1.1} height={1.1} rx={0.15} transform="rotate(45)" fill={COLORS[m.owner]} stroke="#fff" strokeWidth={0.12} />
           <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>{m.kind === 'trap' ? '!' : m.kind === 'locate' ? 'L' : m.kind === 'consecrate' ? '+' : ''}</text>
+        </g>
+      ))}
+      {s.players.flatMap((P, pi) => (P.tunnels ?? []).map((t, i) => (
+        <g key={`tunnel${pi}-${i}`} transform={`translate(${t.x} ${t.y})`} pointerEvents="none">
+          <circle r={0.8} fill="rgba(12,14,18,0.85)" stroke={COLORS[pi]} strokeWidth={0.15} />
+          <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>T</text>
+        </g>
+      )))}
+      {s.units.filter((u) => u.dsMarker && u.status === 'board').map((u) => (
+        <g key={`ds-${u.id}`} transform={`translate(${u.dsMarker!.x} ${u.dsMarker!.y})`} pointerEvents="none">
+          <circle r={6} fill="none" stroke={COLORS[u.owner]} strokeWidth={0.15} strokeDasharray="0.6 0.4" />
+          <circle r={0.8} fill="rgba(12,14,18,0.85)" stroke={COLORS[u.owner]} strokeWidth={0.15} />
+          <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>D</text>
         </g>
       ))}
       {s.pendingActions.map((a) => {
@@ -1962,7 +1957,7 @@ function BoardImpl(props: BoardProps) {
         );
       })}
     </svg>
-    <svg className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <svg className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio={FIT} aria-hidden="true">
       <FxLayer fx={fx} />
     </svg>
     {boardPopover && (

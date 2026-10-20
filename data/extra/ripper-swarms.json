@@ -1,0 +1,137 @@
+{
+ "id": "000000470",
+ "name": "Ripper Swarms",
+ "role": "Swarm",
+ "keywords": [
+  "SWARM",
+  "GREAT DEVOURER",
+  "RIPPER SWARMS",
+  "HARVESTER"
+ ],
+ "factionKeywords": [
+  "TYRANIDS"
+ ],
+ "models": [
+  {
+   "name": "Ripper Swarms",
+   "M": 6,
+   "T": 2,
+   "Sv": 6,
+   "InSv": null,
+   "W": 4,
+   "Ld": 8,
+   "OC": 0,
+   "base": {
+    "w": 40,
+    "h": 40,
+    "text": "40mm"
+   }
+  }
+ ],
+ "composition": [
+  {
+   "name": "Ripper Swarms",
+   "min": 1,
+   "max": 3,
+   "text": "1-3 Ripper Swarms"
+  }
+ ],
+ "loadout": {
+  "*": [
+   "chitinous claws and teeth"
+  ]
+ },
+ "loadoutText": "Every model is equipped with: chitinous claws and teeth.",
+ "options": [
+  "All models in this unit can each be equipped with 1 spinemaws."
+ ],
+ "wargearOptions": [
+  {
+   "text": "All models in this unit can each be equipped with 1 spinemaws.",
+   "scope": "all",
+   "who": "*",
+   "replace": [],
+   "choices": [
+    [
+     "Spinemaws"
+    ]
+   ]
+  }
+ ],
+ "weapons": [
+  {
+   "name": "Spinemaws",
+   "profiles": [
+    {
+     "name": "Spinemaws",
+     "range": 6,
+     "A": "4",
+     "skill": 5,
+     "S": 3,
+     "AP": 0,
+     "D": "1",
+     "abilities": [
+      "pistol"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chitinous claws and teeth",
+   "profiles": [
+    {
+     "name": "Chitinous claws and teeth",
+     "range": "Melee",
+     "A": "6",
+     "skill": 5,
+     "S": 2,
+     "AP": 0,
+     "D": "1",
+     "abilities": [
+      "sustained hits 1"
+     ]
+    }
+   ]
+  }
+ ],
+ "abilities": [
+  {
+   "name": "Deep Strike",
+   "type": "Core",
+   "text": "DEEP STRIKE24.09\nThere are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation.\nEach time this unit makes an ingress move (20.04), if every model in this unit has this ability, it can be set up anywhere on the battlefield that is more than 8\" horizontally from all enemy units, even if that is within your opponent’s deployment zone."
+  },
+  {
+   "name": "Synapse",
+   "type": "Faction",
+   "text": "If your Army Faction is TYRANIDS, while a TYRANIDS unit from your army is within 6\" of one or more friendly Synapse models, that TYRANIDS unit is said to be within Synapse Range of that model and of your army. While a TYRANIDS unit from your army is within Synapse Range of your army: \n• Each time that unit takes a Battle-shock test, take that test on 3D6 instead of 2D6. \n• Each time a model in that unit makes a melee attack, add 1 to the Strength characteristic of that attack."
+  },
+  {
+   "name": "Chitinous Horrors (Aura)",
+   "type": "Datasheet",
+   "text": "While an enemy unit is within Engagement Range of this unit, halve the Objective Control characteristic of models in that enemy unit."
+  }
+ ],
+ "leads": [],
+ "isSupport": false,
+ "points": [
+  {
+   "label": "YOUR UNIT COSTS",
+   "options": [
+    {
+     "models": 1,
+     "pts": 30
+    },
+    {
+     "models": 2,
+     "pts": 40
+    },
+    {
+     "models": 3,
+     "pts": 50
+    }
+   ]
+  }
+ ],
+ "wargearCosts": [],
+ "link": "https://wahapedia.ru/wh40k11ed/factions/tyranids/Ripper-Swarms"
+}

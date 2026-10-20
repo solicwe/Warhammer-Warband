@@ -1,10 +1,12 @@
 {
  "_comment": "Death Guard (Codex + Faction Pack v1.3, 30 Sep 2026): datasheet abilities and enhancements. Afflicted / Contagion Range / Plagues live in src/engine/deathGuard.ts.",
- "Pact of Decay": { "code": true,
+ "Pact of Decay": {
+  "code": true,
   "status": "auto",
   "note": "Checked by the army builder: Plague Legions units only come with the Tallyband Summoners detachment"
  },
- "SUPREME COMMANDER": { "code": true,
+ "SUPREME COMMANDER": {
+  "code": true,
   "status": "auto",
   "note": "Checked by the army builder: Mortarion must be your Warlord"
  },
@@ -445,7 +447,8 @@
    ]
   }
  },
- "Putrefying Stink": { "code": true,
+ "Putrefying Stink": {
+  "code": true,
   "status": "auto",
   "note": "Enemy models cannot start or end an Advance move within 9\" of it (checked on the move)"
  },
@@ -483,7 +486,7 @@
  "Tainted Narthecium": {
   "act": [
    {
-    "when": "command",
+    "when": "commandStart",
     "auto": true,
     "limit": "phase",
     "if": [
@@ -498,7 +501,7 @@
     ]
    },
    {
-    "when": "command",
+    "when": "commandStart",
     "auto": true,
     "limit": "phase",
     "if": [
@@ -546,7 +549,7 @@
  },
  "Sevenfold Chant": {
   "act": {
-   "when": "command",
+   "when": "commandStart",
    "auto": true,
    "limit": "phase",
    "roll": "2D6",
@@ -576,7 +579,8 @@
    }
   ]
  },
- "Death Approaches": { "code": true,
+ "Death Approaches": {
+  "code": true,
   "status": "auto",
   "note": "Deep Strike in your Movement phase: 6\" from Afflicted enemy units, 8\" from the others (checked on placement)"
  },
@@ -844,7 +848,8 @@
    ]
   }
  },
- "Gift of Poxes": { "code": true,
+ "Gift of Poxes": {
+  "code": true,
   "status": "auto",
   "note": "+3\" Contagion Range for this model"
  },
@@ -981,7 +986,8 @@
    ]
   }
  },
- "Grotesque Regeneration": { "code": true,
+ "Grotesque Regeneration": {
+  "code": true,
   "status": "auto",
   "note": "End of each phase: a wounded Beast regains all its wounds"
  },
@@ -1158,19 +1164,23 @@
    ]
   }
  },
- "Visions of Virulence": { "code": true,
+ "Visions of Virulence": {
+  "code": true,
   "status": "auto",
   "note": "Units enfeebled by its Pestilent Fallout are also Afflicted"
  },
- "Needle of Nurgle": { "code": true,
+ "Needle of Nurgle": {
+  "code": true,
   "status": "auto",
   "note": "Tainted Narthecium returns D3 models"
  },
- "Cornucophagus": { "code": true,
+ "Cornucophagus": {
+  "code": true,
   "status": "auto",
   "note": "Enemy units within its Contagion Range also have a second Plague (the first one the army did not choose)"
  },
- "Beckoning Blight": { "code": true,
+ "Beckoning Blight": {
+  "code": true,
   "status": "auto",
   "note": "Plague Legions Deep Striking wholly within 12\" of the bearer: 6\" from enemy models"
  },

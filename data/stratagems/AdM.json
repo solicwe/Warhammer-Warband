@@ -1,0 +1,1037 @@
+{
+  "_comment": "Stratagems written by hand (key: the card name, or NAME@Detachment); the rest are read from the card text.",
+  "rules": {
+    "PRE-CALIBRATED PURGE SOLUTION": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "SKITARII",
+          "!BATTLELINE"
+        ]
+      },
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetInOwnDz"
+          ],
+          "reroll": "hits"
+        }
+      ],
+      "bot": "attack",
+      "note": "The second unit only when the first is BATTLELINE (check it yourself)",
+      "status": "auto"
+    },
+    "BULWARK IMPERATIVE": {
+      "targetKw": [
+        "SKITARII"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "inv": 4
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "The second unit is not offered",
+      "status": "auto"
+    },
+    "AGGRESSOR IMPERATIVE": {
+      "targetKw": [
+        "SKITARII"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "SKITARII",
+          "!BATTLELINE"
+        ]
+      },
+      "effects": [
+        {
+          "advanceFixed": 6
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "BALEFUL HALO": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS",
+        "!VEHICLE"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "fightPhase"
+      ],
+      "buffs": [
+        "enemyWound-1"
+      ],
+      "until": "turn",
+      "botReact": "always",
+      "status": "auto"
+    },
+    "EXTINCTION ORDER": {
+      "targetKw": [
+        "TECH-PRIEST"
+      ],
+      "enemy": {
+        "all": true,
+        "range": 24
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "targetInRangeOfObjective"
+          ],
+          "mortalRoll": {
+            "on": 4,
+            "n": 1,
+            "shockIfAny": 0
+          }
+        }
+      ],
+      "bot": "never",
+      "note": "Every enemy unit on an objective within 24\" (the card: one objective marker)",
+      "status": "auto"
+    },
+    "LETHAL DOSAGE": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "EXPEDITED PURGE PROTOCOL": {
+      "targetKw": [
+        "SKITARII"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "PROGRAMMED WITHDRAWAL": {
+      "targetKw": [
+        "SICARIAN|SKITARII"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged",
+        "farFromEnemies:3"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "SICARIAN"
+        ]
+      },
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "SHROUD PROTOCOLS": {
+      "targetKw": [
+        "SKITARII",
+        "INFANTRY"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "targetableWithin": 18
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "ISOLATE AND DESTROY": {
+      "targetKw": [
+        "SICARIAN|PTERAXII|SYDONIAN|IRONSTRIDER BALLISTARII|MOUNTED"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetIsolated"
+          ],
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "BINHARIC OFFENCE": {
+      "targetKw": [
+        "SKITARII"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "SKITARII"
+        ]
+      },
+      "enemy": {
+        "visible": true
+      },
+      "effects": [
+        {
+          "ap": 1
+        }
+      ],
+      "bot": "attack",
+      "note": "Both units may still attack other units",
+      "status": "auto"
+    },
+    "BIONIC ENDURANCE": {
+      "targetKw": [
+        "SICARIAN|PTERAXII|SYDONIAN"
+      ],
+      "react": "targeted",
+      "buffs": [
+        "fnp5"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "LUMINESCENT BLESSING": {
+      "targetKw": [
+        "CULT MECHANICUS"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "inv": 4
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "INCANTATION OF THE IRON SOUL": {
+      "targetKw": [
+        "CULT MECHANICUS"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "fnp": 4,
+            "fnpVs": "mortal"
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "Offered when the unit is attacked (the card: when it suffers a mortal wound)",
+      "status": "auto"
+    },
+    "CHANT OF THE REMORSELESS FIST": {
+      "targetKw": [
+        "CULT MECHANICUS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "TRIBUTE OF EMPHATIC VENERATION": {
+      "targetKw": [
+        "CULT MECHANICUS"
+      ],
+      "enemy": {
+        "range": 18
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0,
+          "shockFailEffects": [
+            {
+              "hit": -1
+            }
+          ],
+          "until": "nextCommand"
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "VERSE OF VENGEANCE": {
+      "targetKw": [
+        "CULT MECHANICUS"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "fightPhase"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 4
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "LITANY OF THE ELECTROMANCER": {
+      "targetKw": [
+        "CULT MECHANICUS"
+      ],
+      "enemy": {
+        "all": true,
+        "range": 6
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "!kw:ELECTRO-PRIESTS"
+          ],
+          "mortalsTable": [
+            {
+              "min": 5,
+              "expr": "D3"
+            }
+          ]
+        },
+        {
+          "on": "target",
+          "if": [
+            "kw:ELECTRO-PRIESTS"
+          ],
+          "mortalsTable": [
+            {
+              "min": 4,
+              "expr": "D3"
+            }
+          ]
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "PRIORITY RECLAMATION": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "unitIf": [
+        "!engaged"
+      ],
+      "effects": [
+        {
+          "consolidate": 6,
+          "freeConsolidate": true
+        }
+      ],
+      "bot": "never",
+      "note": "It must end within range of the Acquisition objective (check it yourself)",
+      "status": "auto"
+    },
+    "AUTO-ORACULAR RETRIEVAL": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "unitIf": [
+        "disembarkedThisTurn"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetOnAcquisition"
+          ],
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "CACHED ACQUISITION": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "do": [
+        {
+          "secureDead": true
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "REACTIVE SAFEGUARD": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS",
+        "INFANTRY"
+      ],
+      "react": "enemyChargeDeclared",
+      "unitIf": [
+        "targetOfLast",
+        "onAcquisition",
+        "near:3:ADEPTUS MECHANICUS+TRANSPORT"
+      ],
+      "special": [
+        "embark"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "INFOSLAVE SKULL": {
+      "targetKw": [
+        "TECH-PRIEST"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "infoslave": true
+        }
+      ],
+      "status": "auto",
+      "note": "The objective marker within 24\" we do not control, closest to our units, is also an Acquisition objective until the next Command phase"
+    },
+    "INCENSE EXHAUSTS": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS",
+        "INFANTRY"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "shootingPhase",
+        "near:6:ADEPTUS MECHANICUS+SMOKE"
+      ],
+      "effects": [
+        {
+          "stealth": true
+        },
+        {
+          "defend": {
+            "cover": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "note": "The SMOKE unit does not get it too",
+      "status": "auto"
+    },
+    "MOTIVE IMPERATIVE": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS",
+        "VEHICLE"
+      ],
+      "effects": [
+        {
+          "move": 3,
+          "advanceBonus": 1,
+          "chargeBonus": 1
+        }
+      ],
+      "until": "nextCommand",
+      "bot": "never",
+      "status": "auto"
+    },
+    "AUTO-DIVINATORY TARGETING": {
+      "targetKw": [
+        "LEGIO CYBERNETICA|VEHICLE"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "skillSet": 3,
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "until": "nextCommand",
+      "bot": "never",
+      "note": "Shoot only at units on the chosen objective marker (not enforced)",
+      "status": "auto"
+    },
+    "BENEVOLENCE OF THE OMNISSIAH": {
+      "targetKw": [
+        "LEGIO CYBERNETICA|VEHICLE"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "fnp": 6
+          }
+        },
+        {
+          "defend": {
+            "fnp": 5,
+            "fnpVs": "mortal"
+          }
+        }
+      ],
+      "until": "nextCommand",
+      "bot": "never",
+      "status": "auto"
+    },
+    "MACHINE SPIRIT RESURGENT": {
+      "targetKw": [
+        "LEGIO CYBERNETICA|VEHICLE"
+      ],
+      "unitIf": [
+        "belowStarting"
+      ],
+      "effects": [
+        {
+          "reroll": "hits"
+        },
+        {
+          "if": [
+            "belowHalf"
+          ],
+          "reroll": "wounds"
+        }
+      ],
+      "until": "nextCommand",
+      "bot": "never",
+      "status": "auto"
+    },
+    "MACHINE SUPERIORITY": {
+      "targetKw": [
+        "LEGIO CYBERNETICA|VEHICLE"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack"
+          ],
+          "ignoreMods": true
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "TRANSCENDENT COGITATION": {
+      "targetKw": [
+        "LEGIO CYBERNETICA|VEHICLE"
+      ],
+      "effects": [
+        {
+          "if": [
+            "!detActive:protector"
+          ],
+          "attack": "ranged",
+          "abilities": [
+            "heavy"
+          ],
+          "skill": 1
+        },
+        {
+          "if": [
+            "!detActive:protector",
+            "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+          ],
+          "defend": {
+            "vs": "melee",
+            "hit": -1
+          }
+        },
+        {
+          "if": [
+            "!detActive:conqueror"
+          ],
+          "attack": "ranged",
+          "abilities": [
+            "assault"
+          ]
+        },
+        {
+          "if": [
+            "!detActive:conqueror"
+          ],
+          "attack": "melee",
+          "skill": 1
+        },
+        {
+          "if": [
+            "!detActive:conqueror",
+            "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+          ],
+          "ap": 1
+        }
+      ],
+      "until": "nextCommand",
+      "bot": "never",
+      "status": "auto"
+    },
+    "TARGETING OVERRIDE": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "effects": [
+        {
+          "critHitOn": 5
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ERADICATION PROTOCOLS": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "effects": [
+        {
+          "reroll": "wounds1"
+        },
+        {
+          "if": [
+            "kw:HALO OVERRIDE"
+          ],
+          "reroll": "hits1"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "ANALYTICAL DIVINATION": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS",
+        "INFANTRY",
+        "!KATAPHRON"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "if": [
+            "!kw:HALO OVERRIDE"
+          ],
+          "move": "D6"
+        },
+        {
+          "if": [
+            "kw:HALO OVERRIDE"
+          ],
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "GUIDED RETREAT": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "AGGRESSIVE IMPULSE": {
+      "targetKw": [
+        "SKORPIUS DUNERIDER"
+      ],
+      "effects": [
+        {
+          "assaultDisembark": true
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "NEURAL OVERLOAD": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "choice": [
+        {
+          "label": "Electromotive Energisation (+2\" Move)",
+          "do": [
+            {
+              "if": [
+                "kw:HALO OVERRIDE"
+              ],
+              "mortals": "D3"
+            }
+          ],
+          "effects": [
+            {
+              "move": 2
+            }
+          ]
+        },
+        {
+          "label": "Microactuator Bracing (+1 T)",
+          "do": [
+            {
+              "if": [
+                "kw:HALO OVERRIDE"
+              ],
+              "mortals": "D3"
+            }
+          ],
+          "effects": [
+            {
+              "toughness": 1
+            }
+          ]
+        },
+        {
+          "label": "Predation Protocols (charge after Advancing)",
+          "do": [
+            {
+              "if": [
+                "kw:HALO OVERRIDE"
+              ],
+              "mortals": "D3"
+            }
+          ],
+          "effects": [
+            {
+              "eligible": [
+                "chargeAfterAdvance"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Muted Servomotors (Stealth)",
+          "do": [
+            {
+              "if": [
+                "kw:HALO OVERRIDE"
+              ],
+              "mortals": "D3"
+            }
+          ],
+          "effects": [
+            {
+              "stealth": true
+            }
+          ]
+        }
+      ],
+      "until": "nextCommand",
+      "bot": "never",
+      "status": "auto"
+    },
+    "PRECISION ONSLAUGHT": {
+      "targetKw": [
+        "SICARIAN"
+      ],
+      "react": "chargeMoveEnd",
+      "enemy": {
+        "engaged": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "all": true
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "ANALYTIC REPRISALS": {
+      "targetKw": [
+        "SKITARII",
+        "INFANTRY"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "lostToLast",
+        "!engaged"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "special": [
+        "shootAt"
+      ],
+      "botReact": "shoot",
+      "status": "auto"
+    },
+    "UNRELENTING AGGRESSION": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "unitIf": [
+        "fellBack"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack"
+          ]
+        },
+        {
+          "if": [
+            "kw:SKITARII"
+          ],
+          "eligible": [
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "UNSHACKLED WRATH": {
+      "targetKw": [
+        "SKITARII"
+      ],
+      "choice": [
+        {
+          "label": "[SUSTAINED HITS 1]",
+          "effects": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "sustained hits 1"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "[LETHAL HITS]",
+          "effects": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "lethal hits"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "[SUSTAINED HITS 1], [LETHAL HITS] and [HAZARDOUS]",
+          "effects": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "sustained hits 1",
+                "lethal hits",
+                "hazardous"
+              ]
+            }
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SERVO‑DRIVEN CHARGE": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "lance"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "DEFECT SCRUTINY": {
+      "targetKw": [
+        "ADEPTUS MECHANICUS"
+      ],
+      "enemy": {
+        "visible": true
+      },
+      "enemyMark": "Defect Scrutiny",
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetMarked:Defect Scrutiny"
+          ],
+          "abilities": [
+            "ignores cover"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "note": "The enemy unit must be within 12\" of a RECON AUGURY unit (check it yourself)",
+      "status": "auto"
+    },
+    "CLANDESTINE REPOSITION": {
+      "targetKw": [
+        "INFILTRATORS|PTERAXII"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "REPOLARISED AUGURS": {
+      "targetKw": [
+        "PTERAXII|INFILTRATORS|RANGERS|SERBERYS RAIDERS|SERBERYS SULPHURHOUNDS"
+      ],
+      "unitIf": [
+        "!engaged"
+      ],
+      "effects": [
+        {
+          "detection": -3
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "SCRIPTURAL PROGNOSIS": {
+      "targetKw": [
+        "TECH-PRIEST"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "onObjective"
+      ],
+      "buffs": [
+        "enemyAp-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "HOLY AVARICE": {
+      "targetKw": [
+        "TECH-PRIEST"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterAction"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "OVERLOADED SAFEGUARDS": {
+      "targetKw": [
+        "TECH-PRIEST"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "ECHOES OF THE CONDUIT WARS": {
+      "targetKw": [
+        "ELECTRO-PRIESTS"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetInRangeOfObjective"
+          ],
+          "reroll": [
+            "hits1",
+            "wounds1"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "CHANT OF ELECTROTRACTION": {
+      "targetKw": [
+        "ELECTRO-PRIESTS"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterAdvance"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "MOMENTUM FEEDBACK": {
+      "targetKw": [
+        "ELECTRO-PRIESTS"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "targetOfLast",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "surge": "D6"
+        }
+      ],
+      "status": "auto"
+    }
+  }
+}

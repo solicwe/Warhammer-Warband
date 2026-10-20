@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import {
-  teleportAssaultLimit,
-  gkEndOpponentTurn,
-  gkAttackModifiers,
-  gkDefenseModifiers,
-} from './greyKnights';
-import type { GameState, ObjectiveState, PlayerId, UnitState, WeaponProfileData } from '../engine/types';
+import { whollyHallowed } from './greyKnights';
+import type { GameState, ObjectiveState, PlayerId, UnitState } from '../engine/types';
 
 function makeMockState(): GameState {
   return {
@@ -23,8 +18,8 @@ function makeMockState(): GameState {
         name: 'Player 0 (Grey Knights)',
         role: 'attacker',
         factionId: 'GK',
-        detachments: [{ name: 'Teleport Strike Force', dp: 3 }],
-        armyRules: [{ name: 'Teleport Assault' }],
+        detachments: [{ name: 'Warpbane Task Force', dp: 3 }],
+        armyRules: [{ name: 'Gate of Infinity' }],
         cp: 2,
         vp: 0,
         secVp: 0,
@@ -93,93 +88,17 @@ function makeMockUnit(
   } as unknown as UnitState;
 }
 
-describe('Grey Knights Teleport Assault & Detachments', () => {
-  it('calculates Teleport Assault limit based on battle size', () => {
+describe('Grey Knights Hallowed Ground', () => {
+  it('No Man\'s Land is Hallowed Ground only with half its objectives; 6" around a Purifier Squad always is', () => {
     const s = makeMockState();
-    expect(teleportAssaultLimit(s)).toBe(2); // 3 objectives -> Incursion
-  });
-
-  it('places unengaged units into Strategic Reserves at end of opponent turn', () => {
-    const s = makeMockState();
-    const strike = makeMockUnit('u1', 0, 'Strike Squad', ['INFANTRY'], ['GREY KNIGHTS'], 5);
-    const interceptors = makeMockUnit('u2', 0, 'Interceptor Squad', ['INFANTRY'], ['GREY KNIGHTS'], 5);
-    s.units.push(strike, interceptors);
-
-    gkEndOpponentTurn(s);
-
-    expect(strike.status).toBe('reserves');
-    expect(strike.core.deepStrike).toBe(true);
-    expect(interceptors.status).toBe('reserves');
-    expect(interceptors.core.deepStrike).toBe(true);
-  });
-
-  it('Warpbane Task Force adds +1 to Hit and improves invuln save on controlled objectives', () => {
-    const s = makeMockState();
-    s.players[0].detachments = [{ name: 'Warpbane Task Force', dp: 3 }] as unknown as any[];
-
-    const terminators = makeMockUnit('u1', 0, 'Brotherhood Terminator Squad', ['INFANTRY', 'TERMINATOR'], ['GREY KNIGHTS'], 5);
-    const target = makeMockUnit('e1', 1, 'Bloodletters', ['INFANTRY', 'DAEMON'], ['CHAOS DAEMONS'], 10, 1);
-
-    // Positioned on controlled obj1 (x: 10, y: 10)
-    terminators.models.forEach((m) => { m.x = 10; m.y = 10; });
-
-    const atk = gkAttackModifiers(s, terminators, target, 12, 'ranged');
-    expect(atk.hitMod).toBe(1);
-    expect(atk.notes.some((n) => n.includes('Hallowed Ground'))).toBe(true);
-
-    const def = gkDefenseModifiers(s, target, terminators, 'ranged');
-    expect(def.invulnSave).toBe(4);
-  });
-
-  it('Brotherhood Strike grants re-roll 1s to Hit for Terminators', () => {
-    const s = makeMockState();
-    s.players[0].detachments = [{ name: 'Brotherhood Strike', dp: 3 }] as unknown as any[];
-
-    const terminators = makeMockUnit('u1', 0, 'Brotherhood Terminator Squad', ['INFANTRY', 'TERMINATOR'], ['GREY KNIGHTS'], 5);
-    const target = makeMockUnit('e1', 1, 'Bloodletters', ['INFANTRY', 'DAEMON'], ['CHAOS DAEMONS'], 10, 1);
-
-    const atk = gkAttackModifiers(s, terminators, target, 0, 'melee');
-    expect(atk.rerollHits1).toBe(true);
-  });
-
-  it('Banishers gives Lethal Hits and +1 Damage vs Daemons', () => {
-    const s = makeMockState();
-    s.players[0].detachments = [{ name: 'Banishers', dp: 3 }] as unknown as any[];
-
-    const strike = makeMockUnit('u1', 0, 'Strike Squad', ['INFANTRY'], ['GREY KNIGHTS'], 5);
-    const daemonTarget = makeMockUnit('e1', 1, 'Bloodletters', ['INFANTRY', 'DAEMON'], ['CHAOS DAEMONS'], 10, 1);
-    const normalTarget = makeMockUnit('e2', 1, 'Intercessors', ['INFANTRY'], ['ADEPTUS ASTARTES'], 5, 2);
-
-    const vsDaemon = gkAttackModifiers(s, strike, daemonTarget, 0, 'melee');
-    expect(vsDaemon.lethal).toBe(true);
-    expect(vsDaemon.damageBonus).toBe(1);
-
-    const vsNormal = gkAttackModifiers(s, strike, normalTarget, 0, 'melee');
-    expect(vsNormal.lethal).toBe(true);
-    expect(vsNormal.damageBonus).toBe(0);
-  });
-
-  it('Argent Assault gives Paladins +1 to Wound when S < T', () => {
-    const s = makeMockState();
-    s.players[0].detachments = [{ name: 'Argent Assault', dp: 3 }] as unknown as any[];
-
-    const paladins = makeMockUnit('u1', 0, 'Paladin Squad', ['INFANTRY', 'PALADIN SQUAD'], ['GREY KNIGHTS'], 5);
-    const toughMonster = makeMockUnit('e1', 1, 'Great Unclean One', ['MONSTER'], ['CHAOS DAEMONS'], 1, 20);
-    toughMonster.models[0].profile.T = 12;
-
-    const profile: WeaponProfileData = {
-      name: 'Nemesis Force Weapon',
-      range: 'Melee',
-      A: '4',
-      skill: 2,
-      S: 6,
-      AP: -2,
-      D: '2',
-      abilities: [],
-    };
-
-    const atk = gkAttackModifiers(s, paladins, toughMonster, 0, 'melee', profile);
-    expect(atk.woundMod).toBe(1);
-    expect(atk.notes.some((n) => n.includes('Dauntless Champions'))).toBe(true);
+    s.objectives.forEach((o) => { o.controller = 1; });
+    const strike = makeMockUnit('u1', 0, 'Strike Squad', ['INFANTRY', 'GREY KNIGHTS'], ['GREY KNIGHTS'], 1);
+    strike.models[0].x = 22; strike.models[0].y = 30;
+    s.units.push(strike);
+    expect(whollyHallowed(s, strike)).toBe(false);
+    const purifiers = makeMockUnit('u2', 0, 'Purifier Squad', ['INFANTRY', 'PURIFIER SQUAD'], ['GREY KNIGHTS'], 1);
+    purifiers.models[0].x = 24; purifiers.models[0].y = 30;
+    s.units.push(purifiers);
+    expect(whollyHallowed(s, strike)).toBe(true);
   });
 });

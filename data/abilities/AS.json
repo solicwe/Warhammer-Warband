@@ -1,8 +1,9 @@
 {
   "_comment": "Adepta Sororitas Faction Pack v1.4. Complete datasheet and enhancement rules.",
-  "Acts of Faith": { "code": true,
+  "Acts of Faith": {
+    "code": true,
     "status": "auto",
-    "note": "Substitute 1 dice roll per phase per unit using a Miracle die (sororitas.ts)"
+    "note": "Army rule: Miracle dice (sororitas.ts)"
   },
   "Abbess Sanctorum": {
     "status": "auto",
@@ -18,28 +19,133 @@
     ]
   },
   "Righteous Repugnance": {
-    "status": "auto",
-    "note": "When selected to shoot or fight, discard 1 Miracle die to add 3 to the Attacks of Fidelis and the Lance of Illumination. Gain 1 Miracle die when an enemy unit is destroyed by this model."
+    "act": [
+      {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "if": [
+          "miracle:3"
+        ],
+        "label": "Righteous Repugnance: discard a Miracle dice, +3 Attacks to Fidelis and the Lance",
+        "botUse": "always",
+        "do": [
+          {
+            "on": "self",
+            "miracle": -1
+          },
+          {
+            "on": "self",
+            "bearerOnly": true,
+            "buff": [
+              {
+                "weapon": "Lance of Illumination",
+                "attacks": 3
+              },
+              {
+                "weapon": "Fidelis",
+                "attacks": 3
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "if": [
+          "miracle:3"
+        ],
+        "label": "Righteous Repugnance: discard a Miracle dice, +3 Attacks to Fidelis",
+        "botUse": "always",
+        "do": [
+          {
+            "on": "self",
+            "miracle": -1
+          },
+          {
+            "on": "self",
+            "bearerOnly": true,
+            "buff": [
+              {
+                "weapon": "Fidelis",
+                "attacks": 3
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "afterFighting",
+        "auto": true,
+        "needDestroyed": true,
+        "do": [
+          {
+            "on": "self",
+            "miracle": 1
+          }
+        ]
+      },
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "needDestroyed": true,
+        "do": [
+          {
+            "on": "self",
+            "miracle": 1
+          }
+        ]
+      }
+    ],
+    "status": "auto"
   },
-  "SUPREME COMMANDER": { "code": true,
+  "SUPREME COMMANDER": {
+    "code": true,
     "status": "auto",
     "note": "Checked by the army builder: Morvenn Vahl must be your Warlord."
   },
   "Righteous Paragons": {
-    "status": "auto",
     "effects": [
       {
-        "vs": {
-          "targetKw": "MONSTER|VEHICLE"
-        },
+        "if": [
+          "targetMV"
+        ],
         "hit": 1,
         "wound": 1
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Rapturous Blows": {
-    "status": "auto",
-    "note": "When selected to fight, discard 1 Miracle die: melee attacks that wound inflict 1 mortal wound."
+    "act": {
+      "when": "selectedToFight",
+      "limit": "phase",
+      "if": [
+        "miracle:1"
+      ],
+      "label": "Rapturous Blows: discard a Miracle dice, this model's melee wounds also inflict a mortal wound",
+      "botUse": "always",
+      "do": [
+        {
+          "on": "self",
+          "miracle": -1
+        },
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "attack": "melee",
+              "mortalPerWound": 1
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Fury of the Righteous": {
     "status": "auto",
@@ -53,16 +159,70 @@
     ]
   },
   "The Emperor’s Grace": {
-    "status": "auto",
-    "note": "Once per battle, at start of any phase, this model has a 2+ invulnerable save until end of phase."
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "label": "The Emperor's Grace: 2+ invulnerable save this phase",
+      "botUse": "damaged",
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "defend": {
+                "inv": 2
+              }
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Divine Deliverance": {
-    "status": "auto",
-    "note": "Once per battle, in Fight phase, melee weapons have +3 Attacks and [DEVASTATING WOUNDS]."
+    "act": {
+      "when": "fightStartButton",
+      "limit": "battle",
+      "label": "Divine Deliverance: +3 Attacks and [DEVASTATING WOUNDS] for this model's melee weapons",
+      "botUse": "always",
+      "botIf": [
+        "engaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "attack": "melee",
+              "attacks": 3,
+              "abilities": [
+                "devastating wounds"
+              ]
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Sacred Command": {
-    "status": "auto",
-    "note": "Once per battle round, reduce the CP cost of a Stratagem targeting this unit by 1CP."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "*"
+          ],
+          "cp": 1,
+          "limit": "round",
+          "perArmy": true
+        }
+      }
+    ],
+    "status": "auto"
   },
   "Null Rod": {
     "status": "auto",
@@ -85,7 +245,8 @@
       }
     ]
   },
-  "One Shot": { "code": true,
+  "One Shot": {
+    "code": true,
     "status": "auto",
     "note": "The bearer can only shoot with this weapon once per battle."
   },
@@ -102,8 +263,9 @@
     ]
   },
   "Litany of Deeds": {
+    "code": true,
     "status": "auto",
-    "note": "Re-roll Miracle dice of 1, 2, or 3 gained when an Adepta Sororitas unit is destroyed within 12\"."
+    "note": "Miracle dice gained from a unit destroyed within 12\" are re-rolled when low"
   },
   "Medicus Ministorum": {
     "status": "auto",
@@ -117,83 +279,199 @@
     ]
   },
   "Sacred Healing": {
+    "code": true,
     "status": "auto",
-    "note": "While leading a unit, in Command phase, return 1 destroyed model (or discard 1 Miracle die to return D3+1 models)."
+    "note": "Command phase: 1 model returns (a low Miracle dice is discarded for D3+1 when several are missing)"
   },
   "Laud Hailer": {
-    "status": "auto",
-    "note": "Once per battle, at start of any phase, select 1 friendly AS unit within 12\": no longer Battle-shocked."
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "label": "A Battle-shocked ADEPTA SORORITAS unit within 12\" recovers",
+      "botUse": "always",
+      "target": {
+        "side": "friendly",
+        "range": 12,
+        "shocked": true,
+        "units": [
+          "ADEPTA SORORITAS"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "unshock": true
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Stirring Rhetoric": {
+    "code": true,
     "status": "auto",
-    "note": "While leading a unit, each Miracle die used in an Act of Faith is changed to an unmodified 6."
+    "note": "The Miracle dice of this unit's Acts of Faith counts as a 6"
   },
-  "Cherub": { "code": true,
+  "Cherub": {
+    "code": true,
     "status": "auto",
-    "note": "Once per battle, after performing an Act of Faith, gain 1 Miracle die."
+    "note": "Once per battle: a Miracle dice after an Act of Faith"
   },
-  "Cherubs": { "code": true,
+  "Cherubs": {
+    "code": true,
     "status": "auto",
-    "note": "Twice per battle, after performing an Act of Faith, gain 1 Miracle die."
+    "note": "Twice per battle: a Miracle dice after an Act of Faith"
   },
   "Defenders of the Faith": {
-    "status": "auto",
-    "note": "Sticky objectives: an objective marker controlled by this unit remains under your control until opponent controls it."
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "if": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "secure": true
+        }
+      ]
+    },
+    "status": "auto"
   },
-  "Simulacrum Imperialis": { "code": true,
-    "status": "auto",
+  "Simulacrum Imperialis": {
     "gear": true,
-    "note": "At end of Command phase, for each controlled objective with unit in range, roll D6: on 4+, gain 1 Miracle die of that value."
+    "code": true,
+    "status": "auto",
+    "note": "End of the Command phase: a Miracle dice on a 4+ for each controlled objective marker it is on"
   },
   "Angelic Ascent": {
-    "status": "auto",
-    "note": "In Shooting phase, after shooting, if not engaged, make a Normal move of up to 6\" (cannot charge this turn)."
+    "act": {
+      "when": "afterShootingButton",
+      "limit": "phase",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Angelic Ascent: Normal move of up to 6\" (no charge this turn)",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "move": "6",
+          "noCharge": true
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Overseer of Redemption": {
-    "status": "auto",
     "effects": [
       {
-        "scope": "unit",
-        "reroll": "hits"
-      },
-      {
-        "scope": "unit",
-        "reroll": "wounds"
+        "attack": "melee",
+        "if": [
+          "contains:Repentia Superior"
+        ],
+        "reroll": [
+          "hits",
+          "wounds"
+        ]
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Storm of Retribution": {
-    "status": "auto",
     "effects": [
       {
         "attack": "ranged",
-        "reroll": "hits1"
+        "reroll": [
+          "hits1",
+          "wounds1"
+        ]
       },
       {
         "attack": "ranged",
-        "reroll": "wounds1"
+        "if": [
+          "targetMarked:Avenged"
+        ],
+        "hit": 1,
+        "wound": 1
       }
-    ]
+    ],
+    "note": "+1 to Hit and Wound against a unit that destroyed one of your ADEPTA SORORITAS units",
+    "status": "auto"
   },
   "Righteous Awareness": {
-    "status": "auto",
-    "note": "In opponent's Movement phase, if enemy ends move within 8\", make a Normal move of up to D6\"."
+    "act": {
+      "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "phase",
+      "if": [
+        "notEngaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "move": "D6"
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Holy Vanguard": {
-    "status": "auto",
-    "note": "Attached Leader gains Scouts 6\" if starting embarked."
+    "status": "info",
+    "note": "Its Leader gets Scouts 6\" when it starts embarked (army building)"
   },
   "Self Repair": {
-    "status": "auto",
-    "note": "At start of your Command phase, this model regains 1 lost wound."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "do": [
+        {
+          "on": "self",
+          "heal": "1"
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Purge and Cleanse": {
-    "status": "auto",
-    "note": "In Shooting phase, after shooting, enemy unit hit cannot have Benefit of Cover until end of phase."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "noCover": true
+          },
+          "until": "phase",
+          "mark": "Purge and Cleanse"
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Devastating Refrain": {
-    "status": "auto",
-    "note": "After shooting with Indirect Fire weapon and hitting an enemy unit, that unit must take a Battle-shock test."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    },
+    "note": "The Deadly Demise part is not automated",
+    "status": "auto"
   },
   "Righteous Smiting": {
     "status": "auto",
@@ -206,12 +484,34 @@
     ]
   },
   "Zealot": {
-    "status": "auto",
-    "note": "Once per battle, in Fight phase, melee weapons have +3 Strength and +3 Attacks."
+    "act": {
+      "when": "fightStartButton",
+      "limit": "battle",
+      "label": "Zealot: +3 Strength and Attacks to this model's melee weapons",
+      "botUse": "always",
+      "botIf": [
+        "engaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "attack": "melee",
+              "attacks": 3,
+              "strength": 3
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Holy Mission": {
-    "status": "auto",
-    "note": "Attached to Dominion Squad gains Scouts 6\"; attached to Sisters Novitiate Squad gains Infiltrators."
+    "status": "info",
+    "note": "Scouts 6\" / Infiltrators by the unit it joins (army building)"
   },
   "Relics of the Matriarchs": {
     "status": "auto",
@@ -230,11 +530,11 @@
     }
   },
   "Solemn Procession": {
+    "code": true,
     "status": "auto",
-    "note": "Miracle die gained at start of turn has value 6 while on the battlefield."
+    "note": "Miracle dice gained at the start of a turn are 6s while it is on the battlefield"
   },
   "The Fiery Heart (Aura)": {
-    "status": "auto",
     "effects": [
       {
         "scope": "aura",
@@ -243,9 +543,11 @@
           "ADEPTA SORORITAS"
         ],
         "move": 2,
+        "advanceBonus": 1,
         "chargeBonus": 1
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Censer of the Sacred Rose (Aura)": {
     "status": "auto",
@@ -261,8 +563,9 @@
     ]
   },
   "Simulacrum of the Ebon Chalice (Aura)": {
+    "code": true,
     "status": "auto",
-    "note": "Friendly ADEPTA SORORITAS units within 6\" can perform up to two Acts of Faith per phase."
+    "note": "ADEPTA SORORITAS units within 6\" can make two Acts of Faith per phase"
   },
   "Simulacrum of the Argent Shroud (Aura)": {
     "status": "auto",
@@ -308,24 +611,23 @@
     ]
   },
   "The Pulpit of Saint Holline’s Basilica": {
-    "status": "auto",
     "effects": [
       {
-        "defend": {
-          "stealth": true
-        }
+        "stealth": true
       },
       {
-        "attack": "melee",
         "defend": {
+          "vs": "melee",
           "hit": -1
         }
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Fiery Conviction": {
+    "code": true,
     "status": "auto",
-    "note": "In Command phase, discard 1 Miracle die to gain 1CP, or pass a Leadership test to gain 1CP."
+    "note": "Start of the Command phase: a Miracle dice for 1CP, or a Leadership test for 1CP"
   },
   "Embodied Prophecy": {
     "status": "auto",
@@ -372,24 +674,22 @@
     ]
   },
   "Anguish of the Unredeemed": {
-    "status": "auto",
     "effects": [
       {
-        "defend": {
-          "fightOnDeath": 2
-        }
+        "fightOnDeath": 2
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Anchorite Sarcophagus": {
-    "status": "auto",
     "gear": true,
     "effects": [
       {
-        "svSet": 3,
-        "statM": -1
+        "moveSet": 7,
+        "svSet": 3
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Auto-Tapestry of the Emperor’s Judgement": {
     "status": "auto",
@@ -403,18 +703,50 @@
     ]
   },
   "Recount the Deeds of the Saints": {
-    "status": "auto",
-    "note": "Gain 1 Miracle die when destroying an enemy unit; gain D3 Miracle dice when Agathae Dolan is destroyed."
+    "act": [
+      {
+        "when": "afterFighting",
+        "auto": true,
+        "needDestroyed": true,
+        "if": [
+          "contains:Agathae Dolan"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "miracle": 1
+          }
+        ]
+      },
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "needDestroyed": true,
+        "if": [
+          "contains:Agathae Dolan"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "miracle": 1
+          }
+        ]
+      }
+    ],
+    "status": "auto"
   },
   "Sworn Protectors": {
-    "status": "auto",
     "effects": [
       {
+        "if": [
+          "leaderAttached"
+        ],
         "defend": {
           "wound": -1
         }
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Executioner of Heretics (Aura)": {
     "status": "auto",
@@ -439,41 +771,120 @@
     ]
   },
   "Rites of Castigation": {
-    "status": "auto",
-    "note": "In Shooting phase, after shooting and hitting an enemy unit, friendly Adepta Sororitas ranged attacks targeting that enemy unit gain +1 AP."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "ADEPTA SORORITAS"
+            ],
+            "attack": "ranged",
+            "ap": 1
+          },
+          "until": "turn",
+          "mark": "Rites of Castigation"
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Impetuous Fervour": {
-    "status": "auto",
     "effects": [
       {
+        "if": [
+          "!targetInRangeOfObjective"
+        ],
         "reroll": "hits1"
+      },
+      {
+        "if": [
+          "targetInRangeOfObjective"
+        ],
+        "reroll": "hits"
       }
     ],
-    "note": "Re-roll Hit rolls of 1 (or all Hit rolls if targeting an enemy within range of an objective marker)."
+    "status": "auto"
   },
   "Holy Judgement": {
-    "status": "auto",
-    "note": "In Shooting phase, select enemy within 12\": Battle-shock test (-2 if CHAOS). If failed, 3 mortal wounds."
+    "act": {
+      "when": "shootingStart",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "!targetKw:CHAOS"
+          ],
+          "shockMortals": {
+            "mod": 0,
+            "mortals": "3"
+          }
+        },
+        {
+          "on": "target",
+          "if": [
+            "targetKw:CHAOS"
+          ],
+          "shockMortals": {
+            "mod": -2,
+            "mortals": "3"
+          }
+        }
+      ]
+    }
   },
   "Mysterious Saviours": {
-    "status": "auto",
-    "note": "Can target this unit with Heroic Intervention for 0CP without preventing other uses."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "cp": 1,
+          "limit": "phase"
+        },
+        "stratRepeat": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "limit": "phase"
+        }
+      }
+    ],
+    "status": "auto"
   },
   "Ministorum Sermon": {
-    "status": "auto",
     "effects": [
       {
         "attack": "melee",
+        "if": [
+          "contains:Ministorum Priest"
+        ],
         "abilities": [
           "sustained hits 1"
         ]
       }
-    ]
+    ],
+    "status": "auto"
   },
-  "Salvationist Medikit": { "code": true,
-    "status": "auto",
+  "Salvationist Medikit": {
     "gear": true,
-    "note": "In your Command phase, if on battlefield, return up to D3 destroyed models."
+    "code": true,
+    "status": "auto",
+    "note": "Command phase: up to D3 destroyed models return"
   },
   "Rituale Nullificatus": {
     "status": "auto",
@@ -487,60 +898,703 @@
     ]
   },
   "Virtue of Intolerance": {
-    "status": "auto",
+    "act": {
+      "when": "battleStart",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "anywhere": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [],
+          "mark": "Quarry",
+          "until": "battle"
+        }
+      ]
+    },
     "effects": [
       {
-        "reroll": "hits",
+        "if": [
+          "targetMarked:Quarry"
+        ],
+        "abilities": [
+          "precision"
+        ],
+        "reroll": "hits"
+      }
+    ],
+    "status": "auto"
+  },
+  "Denuncia Oratory": {
+    "code": true,
+    "status": "auto",
+    "note": "When the quarry is destroyed, the most valuable enemy unit becomes the new quarry"
+  },
+  "Righteous Denunciation": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 6,
+        "each": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": -1
+        }
+      ]
+    },
+    "status": "auto"
+  },
+  "Judged for Execution": {
+    "act": {
+      "when": "movementEnd",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 18,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "ADEPTA SORORITAS"
+            ],
+            "abilities": [
+              "lethal hits"
+            ]
+          },
+          "until": "nextCommand",
+          "mark": "Judged for Execution"
+        }
+      ]
+    },
+    "status": "auto"
+  },
+  "Extremis Trigger Word": {
+    "act": {
+      "when": "selectedToFight",
+      "limit": "phase",
+      "label": "Extremis Trigger Word: arco-flails A6 and [HAZARDOUS]",
+      "botUse": "always",
+      "do": [
+        {
+          "on": "self",
+          "buff": [
+            {
+              "attack": "melee",
+              "weapon": "arco-flail",
+              "attacksTo": 6,
+              "abilities": [
+                "hazardous"
+              ]
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "status": "auto"
+  },
+  "Endless Suffering": {
+    "effects": [
+      {
+        "eligible": [
+          "chargeAfterAdvance"
+        ]
+      }
+    ],
+    "status": "auto"
+  },
+  "Lifewards": {
+    "effects": [
+      {
+        "if": [
+          "contains:Geminae"
+        ],
+        "defend": {
+          "fnp": 4,
+          "charOnly": true
+        }
+      }
+    ],
+    "status": "auto"
+  },
+  "Miraculous Intervention": {
+    "act": {
+      "when": "onDeath",
+      "modelDeath": true,
+      "limit": "battle",
+      "auto": true,
+      "do": [
+        {
+          "on": "self",
+          "reviveLater": {
+            "on": 2,
+            "wounds": 99
+          }
+        }
+      ],
+      "if": [
+        "contains:Celestine"
+      ]
+    },
+    "note": "The model comes back with all its wounds on a 2+ at the end of the phase",
+    "status": "auto"
+  },
+  "Healing Tears": {
+    "code": true,
+    "status": "auto",
+    "note": "Command phase: a destroyed Geminae Superia returns while Celestine lives"
+  },
+  "ATTACHED UNIT": {
+    "status": "info",
+    "note": "Army building: which Leaders can join this unit"
+  },
+  "Saintly Example": {
+    "code": true,
+    "status": "auto",
+    "note": "When the bearer is destroyed: D3 more Miracle dice"
+  },
+  "Through Suffering, Strength": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "if": [
+          "!belowStartingW"
+        ],
+        "attacks": 1,
+        "strength": 1,
+        "damage": 1
+      },
+      {
+        "scope": "model",
+        "attack": "melee",
+        "if": [
+          "belowStartingW"
+        ],
+        "attacks": 2,
+        "strength": 2,
+        "damage": 2
+      }
+    ],
+    "note": "+2 once its unit has lost a wound",
+    "status": "auto"
+  },
+  "Chaplet of Sacrifice": {
+    "code": true,
+    "status": "auto",
+    "note": "End of the Command phase: a low Miracle dice is re-rolled (up to 3 below Starting Strength)"
+  },
+  "Mantle of Ophelia": {
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "damageSet": 1
+        }
+      }
+    ],
+    "status": "auto"
+  },
+  "Psalm of Righteous Judgement": {
+    "code": true,
+    "status": "auto",
+    "note": "A PENITENT unit destroys an enemy unit: the lowest Miracle dice becomes a 6"
+  },
+  "Verse of Holy Piety": {
+    "act": [
+      {
+        "when": "roundStart",
+        "auto": true,
+        "limit": "battle",
+        "label": "Verse of Holy Piety: The Path of the Penitent for the bearer's unit",
+        "if": [
+          "!marked:verse",
+          "farFromEnemies:12"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "move": 3
+              }
+            ],
+            "until": "endOfNextTurn"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "verse",
+            "until": "battle"
+          }
+        ]
+      },
+      {
+        "when": "roundStart",
+        "auto": true,
+        "limit": "battle",
+        "label": "Verse of Holy Piety: Absolution in Battle for the bearer's unit",
+        "if": [
+          "!marked:verse",
+          "!farFromEnemies:12"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "attack": "melee",
+                "if": [
+                  "charged"
+                ],
+                "attacks": 1,
+                "strength": 1
+              }
+            ],
+            "until": "endOfNextTurn"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "verse",
+            "until": "battle"
+          }
+        ]
+      }
+    ],
+    "status": "auto",
+    "note": "Once per battle at the start of a round: +3\" Move while the enemy is more than 12\" away, otherwise Absolution in Battle"
+  },
+  "Refrain of Enduring Faith": {
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "inv": 5
+        }
+      }
+    ],
+    "status": "auto"
+  },
+  "Catechism of Divine Penitence": {
+    "effects": [
+      {
+        "addKeywords": [
+          "PENITENT"
+        ]
+      }
+    ],
+    "status": "auto"
+  },
+  "Righteous Rage": {
+    "act": {
+      "when": "selectedToFight",
+      "limit": "phase",
+      "if": [
+        "miracle:3"
+      ],
+      "label": "Righteous Rage: discard 3 Miracle dice, +3 Attacks and Strength to the bearer's melee weapons",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "miracle": -3
+        },
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "attack": "melee",
+              "attacks": 3,
+              "strength": 3
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "note": "Always 3 dice (the card: up to 3)",
+    "status": "auto"
+  },
+  "Manual of Saint Griselda": {
+    "code": true,
+    "status": "auto",
+    "note": "Start of the Command phase: two low Miracle dice become one of their sum"
+  },
+  "Fire and Fury": {
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "ranged",
+        "if": [
+          "torrentWeapon"
+        ],
+        "attacks": 1
+      },
+      {
+        "scope": "led",
+        "attack": "ranged",
+        "if": [
+          "!torrentWeapon"
+        ],
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ],
+    "status": "auto"
+  },
+  "Iron Surplice of Saint Istalela": {
+    "effects": [
+      {
+        "scope": "model",
+        "svSet": 2,
+        "defend": {
+          "fnp": 5
+        }
+      }
+    ],
+    "status": "auto"
+  },
+  "Litanies of Faith": {
+    "code": true,
+    "status": "auto",
+    "note": "Start of the Command phase: a Leadership test for a Miracle dice"
+  },
+  "Blade of Saint Ellynor": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "strength": 1,
+        "ap": 1,
         "abilities": [
           "precision"
         ]
       }
-    ]
+    ],
+    "act": {
+      "when": "afterFighting",
+      "auto": true,
+      "if": [
+        "killedModelThisPhase"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "miracle": 1
+        }
+      ]
+    },
+    "status": "auto"
   },
-  "Denuncia Oratory": {
-    "status": "auto",
-    "gear": true,
-    "note": "Select a new quarry when the current quarry is destroyed."
+  "Divine Aspect": {
+    "act": {
+      "when": "movement",
+      "limit": "phase",
+      "label": "Divine Aspect: an enemy unit within 12\" takes a Battle-shock test (a Miracle dice if it fails)",
+      "botUse": "always",
+      "target": {
+        "side": "enemy",
+        "range": 12
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        },
+        {
+          "on": "self",
+          "if": [
+            "targetBattleShocked"
+          ],
+          "miracle": 1
+        }
+      ]
+    }
   },
-  "Righteous Denunciation": {
+  "Triptych of the Macharian Crusade": {
+    "code": true,
     "status": "auto",
-    "note": "At start of Fight phase, each enemy unit within 6\" takes a Battle-shock test at -1."
+    "note": "A save substituted by an Act of Faith is passed"
   },
-  "Judged for Execution": {
-    "status": "auto",
-    "note": "At end of Movement phase, select enemy within 18\": friendly Adepta Sororitas attacks targeting it have [LETHAL HITS]."
-  },
-  "Extremis Trigger Word": {
-    "status": "auto",
-    "note": "When selected to fight, can invoke extremis trigger word: until end of phase, arco-flails have A=6 and [HAZARDOUS]."
-  },
-  "Endless Suffering": {
-    "status": "auto",
+  "Triptych of Judgement": {
     "effects": [
       {
+        "ignoreHitMods": true
+      }
+    ],
+    "status": "auto"
+  },
+  "Mark of Devotion": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "if": [
+          "!marked:Righteous"
+        ],
+        "attacks": 1
+      },
+      {
+        "scope": "model",
+        "attack": "melee",
+        "if": [
+          "marked:Righteous"
+        ],
+        "attacks": 2,
+        "damage": 1
+      }
+    ],
+    "status": "auto"
+  },
+  "Eyes of the Oracle": {
+    "effects": [
+      {
+        "scope": "model",
         "abilities": [
-          "chargeAfterAdvance"
+          "precision"
+        ]
+      }
+    ],
+    "act": [
+      {
+        "when": "afterFighting",
+        "auto": true,
+        "needCharacterKill": true,
+        "do": [
+          {
+            "on": "self",
+            "cp": 1
+          }
+        ]
+      },
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "needCharacterKill": true,
+        "do": [
+          {
+            "on": "self",
+            "cp": 1
+          }
+        ]
+      }
+    ],
+    "status": "auto"
+  },
+  "Sanctified Amulet": {
+    "effects": [
+      {
+        "omniScrambler": 12
+      }
+    ],
+    "status": "auto"
+  },
+  "Clarion of Urgency": {
+    "act": {
+      "when": "opponentFightEnd",
+      "if": [
+        "notEngaged"
+      ],
+      "botUse": "never",
+      "label": "Clarion of Urgency: into Strategic Reserves",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
+        }
+      ]
+    },
+    "status": "auto"
+  },
+  "Symphonic Payload": {
+    "effects": [
+      {
+        "rerollAttackRolls": true
+      }
+    ],
+    "status": "auto"
+  },
+  "Writ of Compunction": {
+    "effects": [
+      {
+        "oc": 1
+      }
+    ],
+    "status": "auto"
+  },
+  "Perfervid Haste": {
+    "effects": [
+      {
+        "move": 1
+      }
+    ],
+    "status": "auto"
+  },
+  "Hagiomnifex": {
+    "act": [
+      {
+        "when": "anyPhase",
+        "limit": "turn",
+        "if": [
+          "!marked:Hagiomnifex"
+        ],
+        "botUse": "always",
+        "botIf": [
+          "ownTurn",
+          "shootingPhase"
+        ],
+        "label": "Hagiomnifex: Rite of Revelation (+6\" detection while shooting)",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "detection": 6
+              }
+            ],
+            "until": "phase"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Hagiomnifex",
+            "until": "turn"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "turn",
+        "if": [
+          "!marked:Hagiomnifex"
+        ],
+        "botUse": "always",
+        "botIf": [
+          "commandPhase",
+          "belowStartingStrength"
+        ],
+        "label": "Hagiomnifex: Sermon of Intolerance (Battle-shock tests pass)",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "autoPassShock": true
+              }
+            ],
+            "until": "phase"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Hagiomnifex",
+            "until": "turn"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "turn",
+        "if": [
+          "!marked:Hagiomnifex"
+        ],
+        "botUse": "always",
+        "botIf": [
+          "ownTurn",
+          "movementPhase"
+        ],
+        "label": "Hagiomnifex: Catechism of Raging Fervour (+1\" Move)",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "move": 1
+              }
+            ],
+            "until": "phase"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Hagiomnifex",
+            "until": "turn"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "turn",
+        "if": [
+          "!marked:Hagiomnifex"
+        ],
+        "botUse": "always",
+        "botIf": [
+          "fightPhase"
+        ],
+        "label": "Hagiomnifex: Psalm of Righteous Smiting (+1 Strength)",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "strength": 1
+              }
+            ],
+            "until": "phase"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Hagiomnifex",
+            "until": "turn"
+          }
+        ]
+      },
+      {
+        "when": "anyPhase",
+        "limit": "turn",
+        "if": [
+          "!marked:Hagiomnifex"
+        ],
+        "botUse": "always",
+        "botIf": [
+          "!ownTurn",
+          "shootingPhase"
+        ],
+        "label": "Hagiomnifex: Chorus of Repudiation (-1 to wound when S > T)",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "defend": {
+                  "woundIfStronger": -1
+                }
+              }
+            ],
+            "until": "phase"
+          },
+          {
+            "on": "self",
+            "buff": [],
+            "mark": "Hagiomnifex",
+            "until": "turn"
+          }
         ]
       }
     ]
-  },
-  "Lifewards": {
-    "status": "auto",
-    "effects": [
-      {
-        "scope": "self",
-        "defend": {
-          "fnp": 4
-        }
-      }
-    ]
-  },
-  "Miraculous Intervention": {
-    "status": "auto",
-    "note": "First time Celestine is destroyed, roll D6 at end of phase: on 2+, return with full wounds."
-  },
-  "Healing Tears": {
-    "status": "auto",
-    "note": "While Celestine is in unit, in Command phase, return 1 destroyed Geminae Superia model."
   }
 }

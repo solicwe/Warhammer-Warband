@@ -1,13 +1,16 @@
 {
   "_comment": "Tyranids Faction Pack v1.3. Datasheet and enhancement rules.",
   "Synapse": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "Army rule: 3D6 Battle-shock tests and +1 melee Strength within Synapse Range (tyranids.ts)"
   },
-  "Shadow in the Warp": { "code": true,
-    "status": "auto"
+  "Shadow in the Warp": {
+    "code": true,
+    "status": "auto",
+    "note": "Army rule: once per battle every enemy unit takes a Battle-shock test (tyranids.ts)"
   },
   "Alpha Warrior": {
-    "status": "auto",
     "effects": [
       {
         "scope": "led",
@@ -15,30 +18,30 @@
           "sustained hits 1"
         ]
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Alpha Invader": {
-    "status": "auto",
     "effects": [
       {
         "abilities": [
           "sustained hits 1"
         ]
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Bounding Leap": {
-    "status": "auto",
     "effects": [
       {
         "eligible": [
           "chargeAfterAdvance"
         ]
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Apex-beast": {
-    "status": "auto",
     "effects": [
       {
         "if": [
@@ -46,44 +49,108 @@
         ],
         "hit": 1
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Frenzied Metabolism": {
-    "status": "auto",
-    "effects": [
+    "act": [
       {
-        "attack": "ranged",
-        "wound": 1
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "label": "Frenzied Metabolism: +1 to Wound this phase, then D3 mortal wounds on a 2+",
+        "botUse": "always",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "wound": 1
+              }
+            ],
+            "until": "phase",
+            "mark": "Frenzied Metabolism"
+          }
+        ]
+      },
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "limit": "phase",
+        "if": [
+          "marked:Frenzied Metabolism"
+        ],
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "do": [
+              {
+                "on": "self",
+                "mortals": "D3"
+              }
+            ]
+          }
+        ]
       }
     ]
   },
   "Bio-stimulus": {
-    "status": "auto",
-    "effects": [
-      {
-        "attack": "melee",
-        "ap": 1
-      }
-    ]
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "TYRANIDS"
+            ],
+            "attack": "melee",
+            "ap": 1
+          },
+          "until": "turn",
+          "mark": "Bio-stimulus"
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Symbiotic Targeting": {
-    "status": "auto",
-    "effects": [
-      {
-        "reroll": "hits1"
-      }
-    ]
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "TYRANIDS"
+            ],
+            "reroll": "hits1"
+          },
+          "until": "phase",
+          "mark": "Symbiotic Targeting"
+        }
+      ]
+    },
+    "status": "auto"
   },
   "Stalking Forward": {
+    "code": true,
     "status": "auto",
-    "effects": [
-      {
-        "throughTerrain": true
-      }
-    ]
+    "note": "Moves over models (excluding TITANIC) and terrain like a Super-heavy Walker"
   },
   "Resilient Organism": {
-    "status": "auto",
     "effects": [
       {
         "defend": {
@@ -91,93 +158,141 @@
         }
       }
     ],
-    "note": "Once per battle: an attack allocated to it has Damage 0."
+    "status": "auto"
   },
   "Adaptive Biology": {
-    "status": "auto",
     "effects": [
       {
+        "scope": "model",
+        "if": [
+          "!belowStartingW"
+        ],
         "defend": {
           "fnp": 5
         }
+      },
+      {
+        "scope": "model",
+        "if": [
+          "belowStartingW"
+        ],
+        "defend": {
+          "fnp": 4
+        }
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Synaptic Linchpin": {
-    "status": "auto",
     "effects": [
       {
         "synapseRange": 9
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Swallow Whole": {
-    "status": "auto",
     "effects": [
       {
         "attack": "melee",
+        "weapon": "gaping maw",
         "if": [
-          "targetKw:INFANTRY|MOUNTED|BEAST"
+          "targetKw:INFANTRY|MOUNTED|BEASTS"
         ],
-        "abilities": [
-          "devastating wounds"
-        ]
+        "critWoundOn": 2
       }
-    ]
+    ],
+    "code": true
   },
   "Vicious Insight": {
-    "status": "auto",
     "effects": [
       {
         "scope": "led",
         "abilities": [
-          "twin-linked"
+          "devastating wounds"
         ]
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Aggressive Leader-beast": {
-    "status": "auto",
     "act": {
-      "when": "enemyShootHit",
+      "when": "shotByEnemy",
+      "auto": true,
+      "limit": "phase",
+      "needModelsLost": true,
+      "if": [
+        "!engaged"
+      ],
       "do": [
         {
+          "on": "self",
           "surge": "D6"
         }
       ]
-    }
+    },
+    "status": "auto"
   },
   "Blistering Assault": {
-    "status": "auto",
     "act": {
-      "when": "enemyShootHit",
+      "when": "shotByEnemy",
+      "auto": true,
+      "limit": "phase",
+      "if": [
+        "!engaged"
+      ],
       "do": [
         {
+          "on": "self",
           "surge": "D6+2"
         }
       ]
-    }
+    },
+    "note": "After any wound lost to the shots",
+    "status": "auto"
   },
   "Skulking Horrors": {
-    "status": "auto",
     "act": {
       "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "phase",
+      "if": [
+        "notEngaged"
+      ],
       "do": [
         {
+          "on": "self",
           "move": "D6"
         }
       ]
-    }
+    },
+    "status": "auto"
   },
   "Pouncing Leap": {
-    "status": "auto",
-    "note": "Heroic Intervention -1CP."
-  },
-  "Onslaught (Aura, Psychic)": {
-    "status": "auto",
     "effects": [
       {
-        "aura": 6,
+        "stratDiscount": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "cp": 1,
+          "limit": "phase"
+        },
+        "stratRepeat": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "limit": "phase"
+        }
+      }
+    ],
+    "status": "auto"
+  },
+  "Onslaught (Aura, Psychic)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
         "units": [
           "TYRANIDS"
         ],
@@ -187,94 +302,149 @@
           "lethal hits"
         ]
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Foul Spores (Aura)": {
-    "status": "auto",
     "effects": [
       {
-        "aura": 6,
+        "scope": "aura",
+        "range": 6,
         "units": [
           "TYRANIDS"
         ],
         "stealth": true
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Death From Below": {
-    "status": "auto",
     "act": {
       "when": "opponentTurnEnd",
+      "if": [
+        "notEngaged"
+      ],
+      "botUse": "never",
+      "label": "Death From Below: into Strategic Reserves",
       "do": [
         {
+          "on": "self",
           "reserves": true
         }
       ]
-    }
+    },
+    "status": "auto"
   },
   "Subterranean Hunter": {
-    "status": "auto",
     "act": {
-      "when": "fightEnd",
+      "when": "fightEndButton",
+      "limit": "phase",
+      "if": [
+        "notEngaged"
+      ],
+      "botUse": "never",
+      "label": "Subterranean Hunter: into Strategic Reserves",
       "do": [
         {
+          "on": "self",
           "reserves": true
         }
       ]
-    }
+    },
+    "status": "auto"
   },
   "Singular Purpose": {
-    "status": "auto",
-    "effects": [
-      {
-        "reroll": "hits"
+    "act": {
+      "when": "battleStart",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "anywhere": true
       },
-      {
-        "reroll": "wounds"
-      }
-    ]
-  },
-  "Harpooned": {
-    "status": "auto",
-    "effects": [
-      {
-        "chargeBonus": 2
-      }
-    ]
-  },
-  "Burning Spray": {
-    "status": "auto",
-    "effects": [
-      {
-        "abilities": [
-          "ignores cover"
-        ]
-      }
-    ]
-  },
-  "Airborne Predator": {
-    "status": "auto",
+      "do": [
+        {
+          "on": "target",
+          "buff": [],
+          "mark": "Singular Purpose",
+          "until": "battle"
+        }
+      ]
+    },
     "effects": [
       {
         "if": [
-          "targetKw:FLY"
+          "targetMarked:Singular Purpose"
+        ],
+        "reroll": [
+          "hits",
+          "wounds"
+        ]
+      }
+    ],
+    "note": "The enemy unit option (the objective marker option is not offered)",
+    "status": "auto"
+  },
+  "Harpooned": {
+    "effects": [
+      {
+        "if": [
+          "harpooned"
+        ],
+        "chargeBonus": 2
+      }
+    ],
+    "status": "auto",
+    "note": "After the harpoon hits a MONSTER / VEHICLE this turn: +2 to the charge, which must end engaged with that unit"
+  },
+  "Burning Spray": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "noCover": true
+          },
+          "until": "phase",
+          "mark": "Burning Spray"
+        }
+      ]
+    },
+    "status": "auto"
+  },
+  "Airborne Predator": {
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "targetFly"
         ],
         "hit": 1
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Guardian Organism": {
-    "status": "auto",
     "effects": [
       {
+        "if": [
+          "leaderAttached"
+        ],
         "defend": {
-          "fnp": 5
+          "fnp": 5,
+          "charOnly": true
         }
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Chitinous Horrors (Aura)": {
-    "status": "auto",
     "effects": [
       {
         "scope": "enemyAura",
@@ -282,83 +452,230 @@
         "ocHalve": true
       }
     ],
-    "note": "Enemy units in Engagement Range have their OC halved."
+    "status": "auto"
   },
   "Grisly Spectacle": {
-    "status": "auto",
     "act": {
-      "when": "fightEnd",
+      "when": "afterFighting",
+      "auto": true,
+      "needDestroyed": true,
+      "target": {
+        "side": "enemy",
+        "range": 6,
+        "each": true
+      },
       "do": [
         {
-          "shock": -1
+          "on": "target",
+          "shock": 0
         }
       ]
-    }
+    },
+    "status": "auto"
   },
   "Vanguard Predator": {
-    "status": "auto",
     "effects": [
       {
-        "reroll": "wounds1"
+        "reroll": "hits1"
       },
       {
         "if": [
-          "targetOnObjective"
+          "targetInRangeOfObjective"
         ],
-        "reroll": "wounds"
+        "reroll": "wounds1"
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Disruption Bombardment": {
-    "status": "auto",
-    "effects": [
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "INFANTRY"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "move": -2,
+              "advanceBonus": -2,
+              "chargeBonus": -2
+            }
+          ],
+          "until": "endOfNextTurn",
+          "mark": "disrupted"
+        }
+      ]
+    },
+    "status": "auto"
+  },
+  "Death Scream": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": -1
+        }
+      ]
+    },
+    "status": "auto"
+  },
+  "Spore Mine Cysts": {
+    "act": [
       {
-        "attack": "ranged",
-        "slowsEnemy": 2
+        "when": "opponentFightEnd",
+        "auto": true,
+        "target": {
+          "side": "enemy",
+          "range": 24,
+          "visible": true,
+          "units": [
+            "!LONE OPERATIVE"
+          ]
+        },
+        "do": [
+          {
+            "on": "target",
+            "mortalRoll": {
+              "on": 3,
+              "n": 6
+            }
+          }
+        ]
+      },
+      {
+        "when": "opponentFightEnd",
+        "auto": true,
+        "if": [
+          "farFromEnemies:24"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "seed": {
+              "name": "Spore Mines",
+              "n": "D3",
+              "range": 6
+            }
+          }
+        ]
       }
     ]
   },
-  "Death Scream": {
-    "status": "auto",
+  "Seed Spore Mines": {
     "act": {
-      "when": "shootingEnd",
+      "when": "selectedToShoot",
+      "limit": "turn",
+      "per": "army",
+      "label": "Seed Spore Mines: a new Spore Mines unit instead of shooting",
+      "botUse": "always",
       "do": [
         {
-          "shock": -1
+          "on": "self",
+          "seed": {
+            "name": "Spore Mines",
+            "n": "models",
+            "range": 48,
+            "noShoot": true
+          }
         }
       ]
     }
   },
-  "Spore Mine Cysts": {
-    "status": "auto"
-  },
-  "Seed Spore Mines": {
-    "status": "auto"
-  },
   "Seed Mucolids": {
-    "status": "auto"
+    "act": {
+      "when": "selectedToShoot",
+      "limit": "turn",
+      "per": "army",
+      "label": "Seed Mucolids: a new Mucolid Spores model instead of shooting",
+      "botUse": "always",
+      "do": [
+        {
+          "on": "self",
+          "seed": {
+            "name": "Mucolid Spores",
+            "n": "1",
+            "range": 18,
+            "noShoot": true
+          }
+        }
+      ]
+    }
   },
   "Subterranean Tunnels": {
-    "status": "auto",
     "effects": [
       {
         "deepStrikeRange": 6
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Terror From The Deep": {
+    "act": {
+      "when": "arrived",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "each": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "max": 4,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 5,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "3"
+            },
+            {
+              "on": "target",
+              "shock": 0
+            }
+          ]
+        }
+      ]
+    },
+    "note": "Also after an ingress move",
     "status": "auto"
   },
   "Grasping Tendrils": {
-    "status": "auto",
     "effects": [
       {
-        "cannotFallBack": true
+        "scope": "enemyAura",
+        "range": 1,
+        "units": [
+          "!TITANIC"
+        ],
+        "fallBackRoll": 3
       }
     ]
   },
   "Will of the Hive Mind": {
-    "status": "auto",
     "effects": [
       {
         "scope": "aura",
@@ -375,7 +692,8 @@
           "perArmy": true
         }
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Malign Presence": {
     "status": "auto",
@@ -389,73 +707,116 @@
     ]
   },
   "Malign Presence (Aura)": {
-    "status": "auto",
     "effects": [
       {
+        "scope": "enemyAura",
+        "range": 12,
         "stratTax": {
           "cp": 1,
           "limit": "turn"
         }
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Feed the Swarm": {
     "status": "auto"
   },
   "Elevated Might": {
-    "status": "auto",
     "effects": [
       {
+        "scope": "model",
         "attack": "melee",
         "reroll": "wounds",
         "ap": 1
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Ocular Adaptation": {
-    "status": "auto",
     "effects": [
       {
         "attack": "melee",
         "hit": 1
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Synaptic Strategy": {
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "rapid-ingress"
+          ],
+          "cp": 1,
+          "limit": "battle"
+        },
+        "stratRepeat": {
+          "ids": [
+            "rapid-ingress"
+          ],
+          "limit": "phase"
+        }
+      }
+    ],
     "status": "auto"
   },
   "Tremor Senses": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "After deployment: up to three units can be redeployed (into Strategic Reserves too)"
   },
   "Vanguard Intellect": {
+    "effects": [
+      {
+        "arriveFromRound": 1
+      }
+    ],
     "status": "auto"
   },
   "Trygon Prime": {
-    "status": "auto",
     "effects": [
       {
+        "addKeywords": [
+          "SYNAPSE"
+        ]
+      },
+      {
+        "scope": "model",
         "attack": "melee",
         "strength": 1,
         "skill": 1
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Encircling Horrors": {
-    "status": "auto",
     "act": {
       "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "phase",
+      "if": [
+        "notEngaged"
+      ],
       "do": [
         {
+          "on": "self",
           "move": "D3+3"
         }
       ]
-    }
+    },
+    "status": "auto"
   },
   "Cryptophotaic Camouflage": {
+    "effects": [
+      {
+        "detection": -3
+      }
+    ],
     "status": "auto"
   },
   "Destabilising Predation": {
-    "status": "auto",
     "effects": [
       {
         "attack": "ranged",
@@ -463,205 +824,1145 @@
           "anti-character 2+"
         ]
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Synaptoprescience": {
-    "status": "auto",
     "effects": [
       {
         "defend": {
           "inv": 4
         }
       }
-    ]
-  },
-  "Neuronode": {
+    ],
     "status": "auto"
   },
-  "Chameleonic": {
+  "Neuronode": {
+    "code": true,
     "status": "auto",
+    "note": "After deployment: up to three VANGUARD INVADER units can be redeployed (into Strategic Reserves too)"
+  },
+  "Chameleonic": {
     "effects": [
       {
         "stealth": true
       }
-    ]
-  },
-  "Alien Cunning": {
+    ],
     "status": "auto"
   },
-  "Perfectly Adapted": {
+  "Alien Cunning": {
+    "code": true,
     "status": "auto",
+    "note": "After deployment: up to three units can be redeployed (into Strategic Reserves too)"
+  },
+  "Perfectly Adapted": {
     "freeDie": [
       {
         "kind": "reroll",
         "stage": "any",
         "limit": "turn"
       }
-    ]
+    ],
+    "status": "auto"
   },
   "Hive Commander": {
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "do": [
+        {
+          "on": "self",
+          "cp": 1
+        }
+      ]
+    },
     "status": "auto"
   },
   "Domination of the Hive Mind (Aura)": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "Synapse Range of 9\" (tyranids.ts)"
   },
   "Alpha Leader": {
+    "effects": [
+      {
+        "scope": "led",
+        "reroll": "hits"
+      }
+    ],
     "status": "auto"
   },
   "Unstoppable Monster": {
+    "act": [
+      {
+        "when": "commandStart",
+        "auto": true,
+        "do": [
+          {
+            "on": "self",
+            "heal": "D3"
+          }
+        ]
+      },
+      {
+        "when": "eachCommandStart",
+        "auto": true,
+        "if": [
+          "!ownTurn"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "heal": "D3"
+          }
+        ]
+      }
+    ],
     "status": "auto"
   },
   "Hypnotic Gaze (Psychic)": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "engaged": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "hit": -1
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
     "status": "auto"
   },
   "Spawn Termagants": {
+    "act": {
+      "when": "command",
+      "limit": "phase",
+      "label": "Spawn Termagants: D3+3 models return to a Termagants unit within 6\"",
+      "botUse": "always",
+      "target": {
+        "side": "friendly",
+        "range": 6,
+        "units": [
+          "TERMAGANTS"
+        ],
+        "damaged": true
+      },
+      "roll": "D3",
+      "table": [
+        {
+          "min": 1,
+          "max": 1,
+          "do": [
+            {
+              "on": "target",
+              "revive": 4
+            }
+          ]
+        },
+        {
+          "min": 2,
+          "max": 2,
+          "do": [
+            {
+              "on": "target",
+              "revive": 5
+            }
+          ]
+        },
+        {
+          "min": 3,
+          "do": [
+            {
+              "on": "target",
+              "revive": 6
+            }
+          ]
+        }
+      ]
+    },
     "status": "auto"
   },
   "Brood Progenitor (Aura, Psychic)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "TERMAGANTS"
+        ],
+        "attack": "ranged",
+        "abilities": [
+          "lethal hits"
+        ]
+      }
+    ],
     "status": "auto"
   },
   "Defensive Stance": {
+    "effects": [
+      {
+        "overwatchHitOn": 5
+      }
+    ],
+    "note": "5+ (the card: 4+ while within range of an objective marker)",
     "status": "auto"
   },
   "Feeder Tendrils": {
+    "act": [
+      {
+        "when": "afterFighting",
+        "auto": true,
+        "needCharacterKill": true,
+        "do": [
+          {
+            "on": "self",
+            "cp": 1
+          }
+        ]
+      },
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "needCharacterKill": true,
+        "do": [
+          {
+            "on": "self",
+            "cp": 1
+          }
+        ]
+      }
+    ],
     "status": "auto"
   },
   "Pheromone Trail": {
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "rapid-ingress"
+          ],
+          "cp": 1,
+          "limit": "round"
+        }
+      }
+    ],
     "status": "auto"
   },
   "Encephalic Diffusion (Aura, Psychic)": {
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 6,
+        "hit": -1
+      },
+      {
+        "scope": "enemyAura",
+        "range": 6,
+        "if": [
+          "belowHalfStrength"
+        ],
+        "wound": -1
+      }
+    ],
     "status": "auto"
   },
   "Spirit Leech (Aura, Psychic)": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "An enemy unit within 6\" fails a Battle-shock test: D3 mortal wounds, D3 wounds back (with a Neurothrope)"
   },
   "Warp Field (Aura, Psychic)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "TYRANIDS"
+        ],
+        "defend": {
+          "inv": 6
+        }
+      }
+    ],
     "status": "auto"
   },
   "Fear of the Unseen (Aura)": {
+    "code": true,
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 6,
+        "ld": -1
+      }
+    ],
+    "note": "Enemy units within 6\" below Starting Strength also take a Battle-shock test in their Command phase (tyranids.ts)",
     "status": "auto"
   },
   "HUNTER ORGANISM": {
-    "status": "auto"
+    "status": "info",
+    "note": "Army building: it cannot be your Warlord"
   },
   "Winged Swarm": {
+    "act": {
+      "when": "afterShootingButton",
+      "limit": "phase",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Winged Swarm: Normal move of up to 6\" (no charge this turn)",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "move": "6",
+          "noCharge": true
+        }
+      ]
+    },
     "status": "auto"
   },
   "Bio-minefield": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "Enemy Advance moves cannot start or end within 6\""
   },
   "Floating Death": {
-    "status": "auto"
+    "act": [
+      {
+        "when": "enemyMovedNear",
+        "auto": true,
+        "range": 3,
+        "target": {
+          "side": "enemy",
+          "range": 3
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "1"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          }
+        ],
+        "do": [
+          {
+            "on": "self",
+            "sacrifice": {
+              "n": "1",
+              "name": "Spore"
+            }
+          }
+        ]
+      },
+      {
+        "when": "endOfNormalMove",
+        "auto": true,
+        "range": 3,
+        "target": {
+          "side": "enemy",
+          "range": 3
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "1"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          }
+        ],
+        "do": [
+          {
+            "on": "self",
+            "sacrifice": {
+              "n": "1",
+              "name": "Spore"
+            }
+          }
+        ]
+      }
+    ]
   },
   "Aerial Seeding": {
-    "status": "auto"
+    "status": "info",
+    "note": "It arrives from Reserves in battle rounds 1-3 and its passengers disembark (set up by hand more than 8\" from enemy models)"
   },
   "Hypertoxic Miasma (Aura)": {
+    "act": {
+      "when": "movementEnd",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 6,
+        "each": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "max": 3,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "1"
+            }
+          ]
+        },
+        {
+          "min": 4,
+          "max": 5,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 6,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D6"
+            }
+          ]
+        }
+      ]
+    },
     "status": "auto"
   },
   "Hive Defences": {
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "fire-overwatch"
+          ],
+          "cp": 1,
+          "limit": "turn"
+        },
+        "stratRepeat": {
+          "ids": [
+            "fire-overwatch"
+          ],
+          "limit": "turn"
+        }
+      }
+    ],
     "status": "auto"
   },
   "Paroxysm (Psychic)": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "visible": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 1,
+          "max": 1,
+          "do": [
+            {
+              "on": "self",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 2,
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "attacks": -1
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ]
+    },
     "status": "auto"
   },
   "Parasitic Infection": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "One Ripper Swarms unit of D3 models per INFANTRY model the barbed ovipositor destroys, set up within 3\" (not within Engagement Range)"
   },
   "It Itches!": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "engaged": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    },
     "status": "auto"
   },
   "Neurocytes": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "It has SYNAPSE while within Synapse Range of another SYNAPSE unit (tyranids.ts)"
   },
   "Node Lash (Psychic)": {
+    "effects": [
+      {
+        "scope": "led",
+        "hit": 1
+      },
+      {
+        "scope": "led",
+        "if": [
+          "targetBattleShocked"
+        ],
+        "wound": 1
+      }
+    ],
     "status": "auto"
   },
   "Psychic Terror (Psychic)": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "Shadow in the Warp tests at -1 more (tyranids.ts)"
   },
   "Neuroloids": {
+    "act": {
+      "when": "command",
+      "limit": "phase",
+      "label": "Neuroloids: two TYRANIDS units within 18\" are in Synapse Range until your next Command phase",
+      "botUse": "always",
+      "target": {
+        "side": "friendly",
+        "range": 18,
+        "units": [
+          "TYRANIDS"
+        ],
+        "each": true,
+        "count": 2
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [],
+          "mark": "Neuroloids",
+          "until": "nextCommand"
+        }
+      ]
+    },
     "status": "auto"
   },
   "Feeding Frenzy": {
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "targetBelowStarting"
+        ],
+        "hit": 1
+      },
+      {
+        "attack": "melee",
+        "if": [
+          "targetBelowHalf"
+        ],
+        "wound": 1
+      }
+    ],
     "status": "auto"
   },
   "Adaptive Instincts (Once per turn, per unit)": {
+    "act": {
+      "when": "selectedToFight",
+      "limit": "turn",
+      "label": "Adaptive Instincts: +1 Strength to melee attacks",
+      "botUse": "always",
+      "do": [
+        {
+          "on": "self",
+          "buff": [
+            {
+              "attack": "melee",
+              "strength": 1
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "note": "The +1 Toughness option is not offered",
     "status": "auto"
   },
   "Adaptable Predators": {
+    "effects": [
+      {
+        "eligible": [
+          "shootAfterFallBack",
+          "chargeAfterFallBack"
+        ]
+      }
+    ],
     "status": "auto"
   },
   "Death Blow": {
+    "effects": [
+      {
+        "scope": "model",
+        "fightOnDeath": 4
+      }
+    ],
     "status": "auto"
   },
   "Unnatural Resilience": {
+    "effects": [
+      {
+        "defend": {
+          "fnp": 4,
+          "fnpVs": "mortal"
+        }
+      }
+    ],
     "status": "auto"
   },
   "Harpoon Barbs": {
+    "act": {
+      "when": "enemyFellBack",
+      "auto": true,
+      "limit": "turn",
+      "target": {
+        "side": "enemy"
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D6"
+            }
+          ]
+        }
+      ]
+    },
     "status": "auto"
   },
   "Neural Disruption": {
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 12
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    },
     "status": "auto"
   },
   "Psychological Saboteur (Aura)": {
-    "status": "auto"
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 12,
+        "if": [
+          "battleShocked"
+        ],
+        "hit": -1
+      },
+      {
+        "scope": "army",
+        "units": [
+          "TYRANIDS"
+        ],
+        "if": [
+          "targetBattleShocked",
+          "targetNearFriendly:12:NEUROLICTOR"
+        ],
+        "wound": 1
+      }
+    ]
   },
   "Hypersensory Array": {
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "rapid-ingress",
+            "heroic-intervention"
+          ],
+          "cp": 1,
+          "limit": "round"
+        },
+        "stratRepeat": {
+          "ids": [
+            "rapid-ingress",
+            "heroic-intervention"
+          ],
+          "limit": "phase"
+        }
+      }
+    ],
     "status": "auto"
   },
   "Ominous Presence": {
+    "effects": [
+      {
+        "scope": "model",
+        "oc": 3
+      }
+    ],
     "status": "auto"
   },
   "Enraged Reserves": {
+    "effects": [
+      {
+        "scope": "model",
+        "fightOnDeath": 3
+      }
+    ],
     "status": "auto"
   },
   "Null Nodules": {
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "fnp": 5,
+          "fnpVs": "psychic"
+        }
+      }
+    ],
+    "note": "Always (the card: once per battle, for a phase)",
     "status": "auto"
   },
   "Monstrous Nemesis": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "if": [
+          "targetMV"
+        ],
+        "wound": 1
+      }
+    ],
     "status": "auto"
   },
   "Relentless Hunger": {
+    "effects": [
+      {
+        "move": 2
+      }
+    ],
     "status": "auto"
   },
   "Naturalised Camouflage": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 9,
+        "units": [
+          "ENDLESS MULTITUDE"
+        ],
+        "if": [
+          "!roundAtLeast:2"
+        ],
+        "defend": {
+          "vs": "ranged",
+          "cover": true
+        }
+      }
+    ],
+    "note": "Every ENDLESS MULTITUDE unit within 9\" in battle round 1 (the card: up to three, picked at the start)",
     "status": "auto"
   },
   "Piercing Talons": {
+    "effects": [
+      {
+        "critWoundAp": 1
+      }
+    ],
     "status": "auto"
   },
   "Adrenalised Onslaught": {
+    "effects": [
+      {
+        "pileIn": 6,
+        "consolidate": 6
+      }
+    ],
     "status": "auto"
   },
   "Regenerating Monstrosity": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "Feed the Swarm has no once-per-phase limit per unit here, so the bearer's unit can be regenerated twice"
   },
   "Instinctive Defence": {
+    "effects": [
+      {
+        "if": [
+          "near:6:HARVESTER"
+        ],
+        "fightsFirst": true
+      },
+      {
+        "if": [
+          "near:6:HARVESTER"
+        ],
+        "stratDiscount": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "cp": 1,
+          "limit": "phase"
+        }
+      }
+    ],
     "status": "auto"
   },
   "Biophagic Flow (Aura)": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "Feed the Swarm reaches 9\" for a HARVESTER within 12\" of the bearer (detachment rule acts)"
   },
   "Parasitic Biomorphology": {
-    "status": "auto"
+    "effects": [
+      {
+        "attack": "melee",
+        "strength": 1
+      },
+      {
+        "attack": "melee",
+        "if": [
+          "marked:Parasitic Biomorphology"
+        ],
+        "attacks": 1
+      }
+    ],
+    "act": {
+      "when": "afterFighting",
+      "auto": true,
+      "needUnitDestroyed": true,
+      "limit": "battle",
+      "if": [
+        "near:6:HARVESTER"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "buff": [],
+          "mark": "Parasitic Biomorphology",
+          "until": "battle"
+        }
+      ]
+    }
   },
   "Hunting Grounds": {
-    "status": "auto"
+    "code": true,
+    "status": "auto",
+    "note": "Each enemy unit set up from Reserves: 2+, it takes a Battle-shock test"
   },
   "Stalker": {
+    "act": {
+      "when": "battleStart",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "anywhere": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [],
+          "mark": "Stalker",
+          "until": "battle"
+        }
+      ]
+    },
+    "effects": [
+      {
+        "scope": "model",
+        "if": [
+          "targetMarked:Stalker"
+        ],
+        "hit": 1,
+        "wound": 1
+      }
+    ],
     "status": "auto"
   },
   "Power of the Hive Mind": {
+    "effects": [
+      {
+        "scope": "model",
+        "if": [
+          "psychicWeapon"
+        ],
+        "strength": 1,
+        "ap": 1
+      }
+    ],
     "status": "auto"
   },
   "Psychostatic Disruption": {
-    "status": "auto"
+    "effects": [
+      {
+        "omniScrambler": 12
+      }
+    ],
+    "status": "auto",
+    "note": "No enemy arrival from Reserves within 12\"; once per battle in the first two rounds an enemy Strategic Reserves arrival is stopped on a 4+"
   },
   "Synaptic Control": {
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "damage": -1
+        }
+      }
+    ],
     "status": "auto"
   },
   "The Dirgeheart of Kharis (Aura)": {
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 9,
+        "ld": -1
+      }
+    ],
     "status": "auto"
+  },
+  "Shadow In The Warp (Ravener Prime only)": {
+    "code": true,
+    "status": "auto",
+    "note": "Army rule: once per battle every enemy unit takes a Battle-shock test (tyranids.ts)"
+  },
+  "Floating Death@Mucolid Spores": {
+    "act": [
+      {
+        "when": "enemyMovedNear",
+        "auto": true,
+        "range": 3,
+        "target": {
+          "side": "enemy",
+          "range": 3
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D6"
+              }
+            ]
+          }
+        ],
+        "do": [
+          {
+            "on": "self",
+            "sacrifice": {
+              "n": "1",
+              "name": "Mucolid"
+            }
+          }
+        ]
+      },
+      {
+        "when": "endOfNormalMove",
+        "auto": true,
+        "range": 3,
+        "target": {
+          "side": "enemy",
+          "range": 3
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D6"
+              }
+            ]
+          }
+        ],
+        "do": [
+          {
+            "on": "self",
+            "sacrifice": {
+              "n": "1",
+              "name": "Mucolid"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "Floating Death@Spore Mines": {
+    "act": [
+      {
+        "when": "enemyMovedNear",
+        "auto": true,
+        "range": 3,
+        "target": {
+          "side": "enemy",
+          "range": 3
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "1"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          }
+        ],
+        "do": [
+          {
+            "on": "self",
+            "sacrifice": {
+              "n": "1",
+              "name": "Spore"
+            }
+          }
+        ]
+      },
+      {
+        "when": "endOfNormalMove",
+        "auto": true,
+        "range": 3,
+        "target": {
+          "side": "enemy",
+          "range": 3
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 2,
+            "max": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "1"
+              }
+            ]
+          },
+          {
+            "min": 6,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          }
+        ],
+        "do": [
+          {
+            "on": "self",
+            "sacrifice": {
+              "n": "1",
+              "name": "Spore"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "Protean Purpose": {
+    "status": "manual",
+    "note": "Not automated: picking Singular Purpose again"
   }
 }

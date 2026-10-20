@@ -1,547 +1,1749 @@
 {
-  "_comment": "Chaos Daemons Faction Pack v1.2. Complete datasheet, detachment, enhancement, and army rules.",
-  "Deep Strike": { "code": true,
-    "status": "auto",
-    "note": "DEEP STRIKE24.09 There are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation. Each time this unit makes an ingress move (20."
-  },
-  "Leader": { "code": true,
-    "status": "auto",
-    "note": "LEADER24.22 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
-  },
   "The Shadow of Chaos": {
+    "code": true,
     "status": "auto",
-    "note": "If your Army Faction is LEGIONES DAEMONICA, certain areas of the battlefield are considered to be within your army’s Shadow of Chaos, as follows: • Your deployment zone is always within your army’s Shadow of Chaos."
+    "note": "Daemonic Manifestation and Daemonic Terror"
   },
   "Pack Leader": {
-    "status": "auto",
-    "note": "While this model is leading a unit, you can re-roll Advance and Charge rolls made for that unit."
-  },
-  "Prey of the Blood God": {
-    "status": "auto",
-    "note": "At the start of the first battle round, select one enemy unit to be this model’s prey. Each time a model in this model’s unit makes a melee attack that targets its prey, you can re-roll the Wound roll. Each time this model’s prey is destroyed, select one new enemy unit to be this model’s prey."
-  },
-  "Brass Collar of Bloody Vengeance": {
-    "status": "auto",
-    "note": "The bearer has the Feel No Pain 3+ ability against Psychic Attacks and mortal wounds."
-  },
-  "Deadly Demise": { "code": true,
-    "status": "auto",
-    "note": "DEADLY DEMISE24.08 From detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat. This ability always takes the form Deadly Demise X."
-  },
-  "Greater Daemon of Khorne (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Khorne Legiones Daemonica unit is within 6\" of this model, that unit is within your army’s Shadow of Chaos.",
     "effects": [
       {
-        "reroll": "hits1"
+        "scope": "led",
+        "rerollAdvance": true,
+        "rerollCharge": true
       }
     ]
   },
-  "Rage Embodied (Aura)": {
+  "Prey of the Blood God": {
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "targetQuarry"
+        ],
+        "reroll": "wounds"
+      }
+    ],
+    "act": {
+      "when": "battleStart",
+      "auto": true,
+      "limit": "battle",
+      "target": {
+        "side": "enemy",
+        "anywhere": true
+      },
+      "do": [
+        {
+          "setQuarry": true
+        }
+      ]
+    },
+    "note": "A new prey when it is destroyed"
+  },
+  "Brass Collar of Bloody Vengeance": {
+    "gear": true,
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "fnp": 3,
+          "fnpVs": "mortalPsychic"
+        }
+      }
+    ]
+  },
+  "Greater Daemon of Khorne (Aura)": {
+    "code": true,
     "status": "auto",
-    "note": "While a friendly Khorne Legiones Daemonica unit is within 6\" of this model, add 1 to the Attacks characteristic of melee weapons equipped by models in that unit.",
+    "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
+  },
+  "Greater Daemon of Tzeentch (Aura)": {
+    "code": true,
+    "status": "auto",
+    "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
+  },
+  "Greater Daemon of Nurgle (Aura)": {
+    "code": true,
+    "status": "auto",
+    "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
+  },
+  "Greater Daemon of Slaanesh (Aura)": {
+    "code": true,
+    "status": "auto",
+    "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
+  },
+  "Rage Embodied (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "KHORNE"
+        ],
+        "attack": "melee",
+        "attacks": 1
+      }
+    ]
+  },
+  "Murderlust": {
+    "effects": [
+      {
+        "eligible": [
+          "chargeAfterAdvance"
+        ]
+      }
+    ]
+  },
+  "Lord of Decapitations": {
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "melee",
+        "abilities": [
+          "devastating wounds"
+        ]
+      }
+    ]
+  },
+  "Skulls for Khorne": {
+    "effects": [
+      {
+        "scope": "model",
+        "if": [
+          "targetCharacter"
+        ],
+        "reroll": [
+          "hits",
+          "wounds"
+        ]
+      }
+    ],
+    "act": [
+      {
+        "when": "afterFighting",
+        "auto": true,
+        "needCharacterKill": true,
+        "do": [
+          {
+            "cp": 1
+          }
+        ]
+      },
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "needCharacterKill": true,
+        "do": [
+          {
+            "cp": 1
+          }
+        ]
+      }
+    ]
+  },
+  "Blood Throne": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 18,
+        "visible": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "LEGIONES DAEMONICA",
+              "KHORNE"
+            ],
+            "strength": 1,
+            "ap": 1,
+            "damage": 1
+          },
+          "until": "phase",
+          "mark": "Blood Throne"
+        }
+      ]
+    }
+  },
+  "Champion Slayer": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "if": [
+          "targetKw:CHARACTER|MONSTER"
+        ],
+        "reroll": "wounds"
+      }
+    ],
+    "note": "Regaining D6 wounds after destroying one is not automated"
+  },
+  "Collar of Khorne": {
+    "gear": true,
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "fnp": 3,
+          "fnpVs": "psychic"
+        }
+      }
+    ]
+  },
+  "Hunters from the Warp": {
+    "act": {
+      "when": "opponentTurnEnd",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Hunters from the Warp: into Strategic Reserves",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
+        }
+      ]
+    }
+  },
+  "Daemonic Icon": {
+    "gear": true,
+    "effects": [
+      {
+        "ldSet": 6
+      }
+    ]
+  },
+  "Instrument of Chaos": {
+    "gear": true,
     "effects": [
       {
         "chargeBonus": 1
       }
     ]
   },
-  "Murderlust": {
-    "status": "auto",
-    "note": "This unit is eligible to declare a charge in a turn in which it Advanced."
-  },
-  "Lord of Decapitations": {
-    "status": "auto",
-    "note": "While this model is leading a unit, melee weapons equipped by models in that unit have the [DEVASTATING WOUNDS] ability."
-  },
-  "Skulls for Khorne": {
-    "status": "auto",
-    "note": "Each time this model makes an attack that targets a Character unit, you can re-roll the Hit roll and you can re-roll the Wound roll. Each time this model destroys an enemy Character unit, you gain 1CP."
-  },
-  "Blood Throne": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, select one enemy unit within 18\" of and visible to this model. Until the end of the phase, each time a friendly Khorne Legiones Daemonica unit makes an attack that targets that unit, improve the Strength, Armour Penetration and Damage characteristics of that attack by 1."
-  },
-  "Champion Slayer": {
-    "status": "auto",
-    "note": "Each time this model makes a melee attack that targets a CHARACTER or MONSTER unit, you can re-roll the Wound roll. Each time this model destroys an enemy CHARACTER or MONSTER unit, this model regains up to D6 lost wounds."
-  },
-  "Collar of Khorne": {
-    "status": "auto",
-    "note": "The bearer has the Feel No Pain 3+ ability against Psychic Attacks."
-  },
-  "Hunters from the Warp": {
-    "status": "auto",
-    "note": "At the end of your opponent’s turn, if this unit is not within Engagement Range of one or more enemy units, you can remove it from the battlefield and place it into Strategic Reserves."
-  },
-  "Daemonic Icon": {
-    "status": "auto",
-    "note": "Models in the bearer’s unit have a Leadership characteristic of 6+."
-  },
-  "Instrument of Chaos": {
-    "status": "auto",
-    "note": "Add 1 to Charge rolls made for the bearer’s unit.",
+  "Bane of Cowards": {
     "effects": [
       {
-        "chargeBonus": 1,
-        "advanceBonus": 1
+        "forceDesperate": true
+      },
+      {
+        "if": [
+          "targetBattleShocked"
+        ],
+        "desperateMinus": 1
       }
-    ]
-  },
-  "Bane of Cowards": {
-    "status": "auto",
-    "note": "Each time an enemy unit (excluding MONSTERS and VEHICLES) within Engagement Range of one or more units from your army with this ability Falls Back, models in that enemy unit must take Desperate Escape tests. When doing so, if that enemy unit is also Battle-shocked, subtract 1 from each of those Desperate Escape tests."
+    ],
+    "note": "Also against MONSTERS and VEHICLES"
   },
   "Brass Stampede": {
-    "status": "auto",
-    "note": "Each time this unit ends a Charge move, select one enemy unit within Engagement Range of this unit and roll one D6 for each model in this unit: for each 4+, that enemy unit suffers D3 mortal wounds."
+    "act": {
+      "when": "endOfCharge",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "all": true,
+            "dmg": "D3"
+          }
+        }
+      ]
+    },
+    "note": "D3 mortal wounds for each 4+"
   },
   "Skulls of the Fallen": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, select one enemy unit that was hit by one or more of those attacks. That unit must take a Battle-shock test."
-  },
-  "Greater Daemon of Tzeentch (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Tzeentch Legiones Daemonica unit is within 6\" of this model, that unit is within your army’s Shadow of Chaos.",
-    "effects": [
-      {
-        "reroll": "hits1"
-      }
-    ]
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    }
   },
   "One Head Looks Forward": {
-    "status": "auto",
-    "note": "At the end of your Command phase, if this model is on the battlefield, take a Leadership test for this model; if that test is passed, you gain 1CP."
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "ldTest": true,
+      "pass": [
+        {
+          "cp": 1
+        }
+      ],
+      "fail": []
+    }
   },
   "One Head Looks Back": {
-    "status": "auto",
-    "note": "Once per turn, when your opponent targets a unit from their army within 12\" of this model with a stratagem, you can use this ability. If you do, increase the CP cost of the use of that stratagem by 1CP."
-  },
-  "Lone Operative": { "code": true,
-    "status": "auto",
-    "note": "LONE OPERATIVE24.24 Assassins and other covert agents are difficult to pinpoint in the storm of battle. Unless part of an attached unit, this unit is not visible to enemy models unless they are within 12\" of this unit, and it cannot be targeted by [INDIRECT FIRE] weapons unless the attacking model i..."
-  },
-  "Stealth": { "code": true,
-    "status": "auto",
-    "note": "STEALTH24.33 The stealthiest warriors can evade the attentions, and the bullets, of their foes. If every model in a unit has this ability, each time a ranged attack targets that unit, that unit has the benefit of cover against that attack (13.08)."
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 12,
+        "stratTax": {
+          "cp": 1,
+          "limit": "turn"
+        }
+      }
+    ]
   },
   "Formless Horror": {
+    "code": true,
     "status": "auto",
-    "note": "Each time an enemy unit wishes to select this model as the target of an attack, that unit must first take a Battle-shock test. If that test is failed, in addition to being Battle-shocked, that enemy unit cannot target this model this phase."
+    "note": "An enemy unit that wants to attack it takes a Battle-shock test first (once per phase); failed: it cannot target it"
   },
   "Mischief and Confusion": {
-    "status": "auto",
-    "note": "At the start of your opponent’s Shooting phase, select one enemy unit within 12\" of and visible to this model and roll one D6: on a 2-5, until the end of the phase, each time a model in that enemy unit makes an attack, subtract 1 from the Hit roll; on a 6, that enemy unit is not eligible to shoot this phase."
+    "act": {
+      "when": "oppShootingStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "visible": true,
+        "closest": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "max": 5,
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "hit": -1
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "min": 6,
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "hit": -6
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ]
+    },
+    "note": "On a 6 the unit hits only on an unmodified 6 (the card: it cannot shoot)"
   },
   "P’tarix’s Sorcerous Syphon (Aura)": {
-    "status": "auto",
-    "note": "While an enemy unit is within 12\" of this model, each time a model in that unit makes a Psychic Attack, subtract 1 from the Wound roll."
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 12,
+        "if": [
+          "psychicWeapon"
+        ],
+        "wound": -1
+      }
+    ]
   },
   "Xirat’p’s Sorcerous Barrages (Psychic)": {
-    "status": "auto",
-    "note": "At the end of your Movement phase, roll one D6 for each enemy unit within 6\" of this model: on a 2-3, that unit suffers 1 mortal wound; on a 4-5, that unit suffers D3 mortal wounds; on a 6, that unit suffers D6 mortal wounds."
+    "act": {
+      "when": "movementEnd",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 6,
+        "each": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "max": 3,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "1"
+            }
+          ]
+        },
+        {
+          "min": 4,
+          "max": 5,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 6,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D6"
+            }
+          ]
+        }
+      ]
+    }
   },
   "Daemon Lord of Tzeentch (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Tzeentch Legiones Daemonica unit is within 6\" of this model, each time a model in that unit makes a ranged attack, add 1 to the Strength characteristic of that attack."
-  },
-  "Master of Magicks (Psychic)": {
-    "status": "auto",
-    "note": "In your Shooting phase, select one of the following abilities: [IGNORES COVER]; [LETHAL HITS]; [SUSTAINED HITS D3]. Until the end of the phase, this model’s Bolt of Change has that ability."
-  },
-  "Bounding Leaps": {
-    "status": "auto",
-    "note": "This unit is eligible to shoot in a turn in which it Fell Back."
-  },
-  "Blazing Warpfire (Psychic)": {
-    "status": "auto",
-    "note": "While this model is leading a unit, ranged weapons equipped by models in that unit have the [ASSAULT] ability."
-  },
-  "Flames of Change (Psychic)": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, select one enemy unit (excluding MONSTERS and VEHICLES) hit by one or more of those attacks, and roll one D6. On a 4+, until the end of your opponent’s next turn, that enemy unit is aflame."
-  },
-  "MANIFESTATION OF DESTRUCTION": {
-    "status": "auto",
-    "note": "This model cannot be your Warlord and cannot be given Enhancements."
-  },
-  "Slashing Dive": {
-    "status": "auto",
-    "note": "In your Movement phase, after this unit ends a Normal move, you can select one enemy unit it moved over during that move and roll one D6 for each model in this unit: for each 4+, that enemy unit suffers 1 mortal wound."
-  },
-  "Eldritch Flames (Psychic)": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, select one enemy unit that was hit by one or more of those attacks. Until the end of the phase, that unit cannot have the Benefit of Cover."
-  },
-  "Blessed by the Plague God": {
-    "status": "auto",
-    "note": "While this model is leading a unit, models in that unit have a 4+ invulnerable save."
-  },
-  "Tally of Pestilence": {
-    "status": "auto",
-    "note": "Keep a tally of how many enemy models are destroyed by Nurgle Legiones Daemonica models from your army during the battle. At the start of your Command phase, if this tally is 7 or more, you gain 1CP and the tally is reset to 0."
-  },
-  "Feel No Pain": { "code": true,
-    "status": "auto",
-    "note": "FEEL NO PAIN24.12 The hardiest warriors refuse to be laid low, even by wounds that should by all rights prove lethal. This ability always takes the form Feel No Pain X+. Each time a model with this ability would lose a wound, roll one D6: on an X+, that wound is not lost."
-  },
-  "Greater Daemon of Nurgle (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Nurgle Legiones Daemonica unit is within 6\" of this model, that unit is within your army’s Shadow of Chaos.",
     "effects": [
       {
-        "reroll": "hits1"
-      }
-    ]
-  },
-  "Daemon Lord of Nurgle (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Nurgle Legiones Daemonica unit is within 6\" of this model, add 1 to the Toughness characteristic of models in that unit."
-  },
-  "Nurgle’s Rot (Psychic)": {
-    "status": "auto",
-    "note": "At the end of your Movement phase, you can select one enemy unit within 12\" of this model. Until the start of your next Movement phase, subtract 1 from the Toughness characteristic of models in that unit."
-  },
-  "Reverberating Summons": {
-    "status": "auto",
-    "note": "Each time a model is destroyed by this weapon, you can select one friendly Plaguebearer’s unit within 12\" of the bearer and return 1 destroyed Plaguebearer model to that unit."
-  },
-  "Infected Outbreak": {
-    "status": "auto",
-    "note": "If you control an objective marker at the end of your Command phase and this unit is within range of that objective marker, that objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
-  },
-  "Infiltrators": { "code": true,
-    "status": "auto",
-    "note": "INFILTRATORS24.20 Many armies employ reconnaissance units who can sit concealed, waiting for the right moment to strike. During deployment, if every model in a unit has this ability, it can be set up anywhere on the battlefield that is more than 8\" horizontally from your opponent’s deployment zone and all enemy units."
-  },
-  "Mischief Makers": {
-    "status": "auto",
-    "note": "Each time an enemy unit (excluding TITANIC units) within Engagement Range of one or more units with this ability is selected to fight, until the end of the phase, each time a model in that enemy unit makes a melee attack, subtract 1 from the Hit roll."
-  },
-  "Scouts": { "code": true,
-    "status": "auto",
-    "note": "SCOUTS24.31 Scouts form the vanguard of many armies. Unnoticed by the enemy, they range ahead of the main force. This ability always takes the form Scouts X\"."
-  },
-  "Grotesque Regeneration": { "code": true,
-    "status": "auto",
-    "note": "At the end of each phase, if a Beasts of Nurgle model in this unit has lost any wounds but is not destroyed, that model regains all of its lost wounds."
-  },
-  "Death’s Heads": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, select one enemy unit hit by one or more of those attacks. Until the end of the turn, each time a friendly Nurgle Legiones Daemonica unit makes an attack that targets that unit, you can re-roll the Wound roll."
-  },
-  "Fights First": { "code": true,
-    "status": "auto",
-    "note": "FIGHTS FIRST24.13 Those possessed of lightning-fast reactions may strike before the opponent can react. While every model in a unit has this ability, that unit is a Fights First unit. See the Resolve Fights First Combats step in the Fight phase (12.04)."
-  },
-  "The Eternal Dance": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, select one enemy unit within 6\" of this model. Until the end of the phase: • Each time a friendly Slaanesh Legiones Daemonica model makes a melee attack that targets that enemy unit, add 1 to the Wound roll."
-  },
-  "Dazzling Acrobatics": {
-    "status": "auto",
-    "note": "This model is eligible to declare a charge in a turn in which it Advanced or Fell Back."
-  },
-  "Shining Aegis": {
-    "status": "auto",
-    "note": "The bearer has a Save characteristic of 3+."
-  },
-  "Daemon Lord of Slaanesh (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Slaanesh Legiones Daemonica unit is within 6\" of this model, improve the Armour Penetration of melee weapons in that unit by 1."
-  },
-  "Mesmerising Form": {
-    "status": "auto",
-    "note": "Each time an attack targets this model, subtract 1 from the Hit roll."
-  },
-  "Greater Daemon of Slaanesh (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Slaanesh Legiones Daemonica unit is within 6\" of this model, that unit is within your army’s Shadow of Chaos.",
-    "effects": [
-      {
-        "reroll": "hits1"
-      }
-    ]
-  },
-  "Tranceweaver": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes an attack, re-roll a Hit roll of 1. If the target of that attack is within range of an objective marker, you can re-roll the Hit roll instead."
-  },
-  "Symphony of Pain (Psychic)": {
-    "status": "auto",
-    "note": "At the end of your Movement phase, you can select one enemy unit that is Battle-shocked and within 12\" of this model. Until the end of the turn, each time a Slaanesh Legiones Daemonica model from your army makes an attack that targets that enemy unit, you can re-roll the Hit roll and you can re-roll the Wound roll."
-  },
-  "Horrifying Beauty": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, each enemy unit within Engagement Range of one or more units from your army with this ability must take a Battle-shock test, subtracting 1 from the result if that enemy unit is Below Half-strength."
-  },
-  "Soporific Musk": {
-    "status": "auto",
-    "note": "Each time an enemy unit (excluding MONSTERS and VEHICLES) within Engagement Range of one or more units from your army with this ability Falls Back, models in that enemy unit must take Desperate Escape tests. When doing so, if that enemy unit is also Battle-shocked, subtract 1 from each of those Desperate Escape tests."
-  },
-  "Cutting Down the Foe": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes a melee attack, if this unit made a Charge move this turn, improve the Strength and Damage characteristics of that attack by 1."
-  },
-  "Unholy Speed": {
-    "status": "auto",
-    "note": "You can re-roll Advance and Charge rolls made for this unit."
-  },
-  "The Dark Master (Aura)": {
-    "status": "auto",
-    "note": "The area of the battlefield within 6\" of this model is within your army’s Shadow of Chaos."
-  },
-  "Shadow Form": {
-    "status": "auto",
-    "note": "At the start of the battle round, select one Shadow Form ability (see below). Until the end of the battle round, this model has that ability."
-  },
-  "SUPREME COMMANDER": { "code": true,
-    "status": "auto",
-    "note": "If this model is in your army, it must be your Warlord."
-  },
-  "Wreathed in Shadows (Aura, Psychic)": {
-    "status": "auto",
-    "note": "While a friendly Legiones Daemonica unit or Shadow Legion unit is within 6\" of this model, that unit can only be targeted by a ranged attack if the attacking model is within 18\"."
-  },
-  "Pall of Despair (Aura, Psychic)": {
-    "status": "auto",
-    "note": "In the Battle-shock step of your opponent’s Command phase, if an enemy unit that is below its Starting Strength is within 9\" of this model, that unit must take a Battle-shock test."
-  },
-  "Shadow Lord (Aura, Psychic)": {
-    "status": "auto",
-    "note": "While a friendly Legiones Daemonica or Shadow Legion unit is within 6\" of this model, each time a model in that unit makes an attack, re-roll a Hit roll of 1."
-  },
-  "Daemonic Lord": {
-    "status": "auto",
-    "note": "While this model is within 3\" of one or more friendly Legiones Daemonica Infantry units, this model has the Lone Operative ability."
-  },
-  "Prince of Darkness (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Legiones Daemonica unit is within 6\" of this model, models in that unit have the Stealth ability."
-  },
-  "Unholy Vigour": {
-    "status": "auto",
-    "note": "Once per battle, at the start of any phase, this model can use this ability. If it does, until the end of the phase, this model has a 3+ invulnerable save."
-  },
-  "DAEMONIC ALLEGIANCE": {
-    "status": "auto",
-    "note": "When you select this model to include in your army, you must select one of the following keywords for it to gain: • KHORNE • TZEENTCH • NURGLE • SLAANESH The keyword you select will also affect some of this model’s characteristics, as stated overleaf."
-  },
-  "Daemon Prince of Khorne": {
-    "status": "auto",
-    "note": "If this model has the KHORNE keyword, add 2 to the Strength characteristic of this model’s hellforged weapons."
-  },
-  "Daemon Prince of Tzeentch": { "code": true,
-    "status": "auto",
-    "note": "If this model has the TZEENTCH keyword, add 3 to the Attacks characteristic of this model’s infernal cannon."
-  },
-  "Daemon Prince of Nurgle": {
-    "status": "auto",
-    "note": "If this model has the NURGLE keyword, add 1 to this model’s Toughness characteristic."
-  },
-  "Daemon Prince of Slaanesh": {
-    "status": "auto",
-    "note": "If this model has the SLAANESH keyword, add 2\" to this model’s Move characteristic."
-  },
-  "Scuttling Walker": {
-    "status": "auto",
-    "note": "Each time this model makes a Normal or Advance move, it can move over friendly Monster and Vehicle models and terrain features that are 4\" or less in height as if they were not there."
-  },
-  "Bloodmaster": {
-    "status": "auto",
-    "note": "While this model is leading a unit, each time a model in that unit makes an attack, add 1 to the Wound roll."
-  },
-  "A Gory Path": {
-    "status": "auto",
-    "note": "Each time this model’s unit Consolidates, it can move up to 6\" instead of up to 3\"."
-  },
-  "Skullmaster’s Fury": {
-    "status": "auto",
-    "note": "While this model is leading a unit, each time that unit ends a Charge move, until the end of the turn, Juggernaut’s bladed horns equipped by models in that unit have the [DEVASTATING WOUNDS] ability."
-  },
-  "Devastating Charge": {
-    "status": "auto",
-    "note": "Each time this model’s unit ends a Charge move, each enemy unit within Engagement Range of that unit must take a Battle-shock test."
-  },
-  "Changecaster": {
-    "status": "auto",
-    "note": "While this model is leading a unit, ranged weapons equipped by models in that unit have the [SUSTAINED HITS 1] ability."
-  },
-  "Storm of Mutating Sorcery (Psychic)": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, select one enemy Infantry unit hit by one or more of those attacks. That unit must take a Battle-shock test."
-  },
-  "Fateskimmer": {
-    "status": "auto",
-    "note": "While this model is leading a unit, melee weapons equipped by models in that unit have the [LETHAL HITS] ability."
-  },
-  "Rider of the Immaterial Winds": {
-    "status": "auto",
-    "note": "Once per battle, at the end of your opponent’s turn, if this model’s unit is not within Engagement Range of one or more enemy units, you can remove that unit from the battlefield and place it into Strategic Reserves."
-  },
-  "Fluxmaster": {
-    "status": "auto",
-    "note": "• This unit has Stealth. • Melee attacks that target this unit have -1 to hit rolls."
-  },
-  "Altered Reality (Psychic)": {
-    "status": "auto",
-    "note": "Once per battle round, after a Hit roll, a Wound roll, or a saving throw is made for this model, you can change the result of that roll to a 6."
-  },
-  "Virulent Blessing (Psychic)": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, you can select one enemy unit within 24\" and visible to this model. Until the end of the phase, each time an attack made by a Nurgle Legiones Daemonica model is allocated to a model in that unit, add 1 to the Damage characteristic of that attack."
-  },
-  "Deluge of Nurgle (Aura)": {
-    "status": "auto",
-    "note": "While an enemy unit is within 6\" of this model, subtract 2 from the Move characteristic and subtract 1 from the Objective Control characteristic of models in that unit."
-  },
-  "Beast Handler": {
-    "status": "auto",
-    "note": "While this model is leading a unit, you can re-roll charge rolls made for that unit. In addition, once per battle, you can target this unit with the Heroic Intervention stratagem, regardless of any other uses of that stratagem this phase. If you do: • That use is -1 CP."
-  },
-  "Seed the Garden of Nurgle": {
-    "status": "auto",
-    "note": "At the end of your Movement phase, if this model is within one Area Terrain feature, until the end of the battle, that AREA TERRAIN feature is considered to be within your army’s Shadow of Chaos."
-  },
-  "Poxbringer": {
-    "status": "auto",
-    "note": "While this model is leading a unit, each time a model in that unit makes an attack, a successful unmodified Hit roll of 5+ scores a Critical Hit."
-  },
-  "Feculent Despair (Aura, Psychic)": {
-    "status": "auto",
-    "note": "While an enemy unit is within 6\" of this model, each time that unit takes a Battle-shock test, subtract 1 from that test."
-  },
-  "Jolly Gutpipes": {
-    "status": "auto",
-    "note": "While this model is leading a unit, add 1 to the Move characteristic of models in that unit and you can re-roll Advance rolls made for that unit."
-  },
-  "Disease of Mirth (Aura)": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, every enemy unit (excluding MONSTERS and VEHICLES) within 6\" of this model must take a Battle-shock test."
-  },
-  "Keep Counting!": {
-    "status": "auto",
-    "note": "While this model is leading a unit, melee weapons equipped by models in that unit have the [SUSTAINED HITS 1] ability."
-  },
-  "Meet Your Quota!": {
-    "status": "auto",
-    "note": "While this model is leading a unit, add 1 to the Objective Control characteristic of models in that unit."
-  },
-  "Shroud of Flies (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Nurgle Legiones Daemonica unit is within 6\" of this FORTIFICATION, models in that unit have the Stealth ability."
-  },
-  "Diseased Cover": {
-    "status": "auto",
-    "note": "Each time a ranged attack is allocated to a model, if that model is not fully visible to every model in the attacking unit because of this FORTIFICATION, that model has the Benefit of Cover against that attack."
-  },
-  "Fortification": {
-    "status": "info",
-    "note": "While an enemy unit is only within Engagement Range of one or more Fortifications from your army: • That unit can still be selected as the target of ranged attacks, but each time such an attack is made, unless it is made with a Pistol, subtract 1 from the Hit roll."
-  },
-  "Shadow of Khorne (Aura)": {
-    "status": "auto",
-    "note": "The area of the battlefield within 6\" of this FORTIFICATION is considered to be within your army’s Shadow of Chaos. In addition, while a friendly Khorne Legiones Daemonica unit is within 6\" of this FORTIFICATION, each time you take a Battle-shock test for that unit, you can re-roll that test."
-  },
-  "Cover": { "code": true,
-    "status": "auto",
-    "note": "Each time a ranged attack is allocated to a model, if that model is not fully visible to every model in the attacking unit because of this FORTIFICATION, that model has the Benefit of Cover against that attack."
-  },
-  "Harmonic Alignment": {
-    "status": "auto",
-    "note": "While this model is leading a unit, in your Command phase, you can return D3 destroyed Bodyguard models to that unit."
-  },
-  "Discordant Disruption (Aura)": {
-    "status": "auto",
-    "note": "While an enemy PSYKER unit is within 12\" of this model, Psychic weapons equipped by models in that unit have the [HAZARDOUS] ability."
-  },
-  "Swallow Energy (Psychic)": {
-    "status": "auto",
-    "note": "While this model is leading a unit, models in that unit have the Feel No Pain 4+ ability against mortal wounds and Psychic Attacks."
-  },
-  "Horrible Fascination(Psychic)": {
-    "status": "auto",
-    "note": "At the start of your opponent’s Shooting phase, one Psyker model from your army with this ability can use it. If it does, select one enemy unit within 12\" of and visible to that PSYKER model and roll one D6: on a 1, that PSYKER model suffers D3 mortal wounds; on a 2-5, until the end of the phase, ea..."
-  },
-  "No Prey Can Evade": {
-    "status": "auto",
-    "note": "You can re-roll Advance and Charge rolls made for this model."
-  },
-  "Monarch of the Hunt": { "code": true,
-    "status": "auto",
-    "note": "At the start of the first battle round, select one enemy unit to be this model’s quarry. Each time this model makes a melee attack that targets its quarry, you can re-roll the Hit roll and you can re-roll the Wound roll. Each time this model’s quarry is destroyed, select one new enemy unit to be this model’s quarry."
-  },
-  "Prince of Slaanesh": {
-    "status": "auto",
-    "note": "While this model is leading a unit, each time a model in that unit makes a melee attack, a successful unmodified Wound roll of 5+ scores a Critical Wound."
-  },
-  "Delightful Agonies": {
-    "status": "auto",
-    "note": "The first time this model is destroyed, roll one D6 at the end of the phase. On a 2+, set this model back up on the battlefield, as close as possible to where it was destroyed and not within Engagement Range of any enemy units, with its full wounds remaining."
-  },
-  "Daemon Lord of Khorne (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Khorne Legiones Daemonica unit is within 6\" of this model, each time a model in that unit makes a melee attack, add 1 to the Hit roll."
-  },
-  "Relentless Carnage": {
-    "status": "auto",
-    "note": "At the end of the Fight phase, you can select one enemy unit within Engagement Range of this model and roll eight D6: for each 4+, that enemy unit suffers 1 mortal wound."
-  },
-  "Split": { "code": true,
-    "status": "auto",
-    "note": "Each time a BLUE HORROR model in this unit is destroyed, after the attacking unit has finished making its attacks, if this unit is not destroyed, roll one D6 for that model. On a 4+, add one BRIMSTONE HORROR model to this unit."
-  },
-  "Sullen Malevolence (Aura)": { "code": true,
-    "status": "auto",
-    "note": "While an enemy unit is within 6\" of this unit, if this unit contains one or more BLUE HORROR models, worsen the Leadership characteristic of models in that enemy unit by 1."
-  },
-  "Exploding Horrors": { "code": true,
-    "status": "auto",
-    "note": "Each time this unit is selected to fight, you can select one enemy unit within Engagement Range of it, then select one or more BRIMSTONE HORROR models in this unit. For each BRIMSTONE HORROR model you select, roll one D6: on a 4+, that model is destroyed and that enemy unit suffers 1 mortal wound."
-  },
-  "HORRORS ARE PINK. HORRORS ARE BLUE. WHEREONCE THERE WAS ONE, NOW THERE ARE TWO.": {
-    "status": "auto",
-    "note": "If, at any point, this unit contains no PINK HORROR models, use the BLUE HORRORS datasheet for this unit. Designer’s Note: While this unit contains one or more PINK HORROR models, the Sullen Malevolence and Exploding Horrors abilities from the BLUE HORRORS datasheet do not apply to this unit."
-  },
-  "Malefic Destruction": {
-    "status": "auto",
-    "note": "Once per battle, at the start of the Fight phase, this model can use this ability. If it does, until the end of the phase, add 3 to the Attacks characteristic of this model’s hellforged weapons."
-  },
-  "Harbinger of Death": {
-    "status": "auto",
-    "note": "Each time this model is selected to fight, select one of the following abilities. Until the end of the phase, this model’s hellforged weapons have that ability: • [LETHAL HITS] • [PRECISION] • [SUSTAINED HITS 1]"
-  },
-  "Tormentbringer (Aura)": {
-    "status": "auto",
-    "note": "While a friendly Slaanesh Legiones Daemonica unit is within 6\" of this model, melee weapons in that unit have the [SUSTAINED HITS 1] ability."
-  },
-  "Hysterical Frenzy (Psychic)": {
-    "status": "auto",
-    "note": "Each time a model in this model’s unit is destroyed, if that model has not fought this phase, do not remove it from play. The destroyed model can fight after the attacking unit has finished making its attacks, and is then removed from play."
-  },
-  "Warp Rifts": {
-    "status": "auto",
-    "note": "Each time a LEGIONES DAEMONICA unit from your army is set up on the battlefield using the Deep Strike ability, if it is set up wholly within your army’s Shadow of Chaos, and/or if it is set up wholly within 6\" of one or more friendly Bloodthirster, Great Unclean One, Kairos Fateweaver, Keeper of Sec..."
-  },
-  "A’rgath, the King of Blades": {
-    "status": "auto",
-    "note": "Khorne Legiones Daemonica model only. Add 1 to the Attacks and Strength characteristics of the bearer’s melee weapons. While the bearer is within your army’s Shadow of Chaos, add 2 to the Attacks and Strength characteristics of the bearer’s melee weapons instead.",
-    "effects": [
-      {
-        "attacks": 1,
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "TZEENTCH"
+        ],
+        "attack": "ranged",
         "strength": 1
       }
     ]
   },
-  "Soulstealer": {
-    "status": "auto",
-    "note": "Slaanesh Legiones Daemonica model only. Each time the bearer destroys an enemy model with a melee attack, roll one D6, adding 1 to the result if the bearer is within your army’s Shadow of Chaos. On a 4+, the bearer regains 1 lost wound."
+  "Master of Magicks (Psychic)": {
+    "act": [
+      {
+        "when": "shooting",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Master of Magicks: Bolt of Change has [IGNORES COVER]",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "Bolt of Change",
+                "abilities": [
+                  "ignores cover"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "shooting",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Master of Magicks: Bolt of Change has [LETHAL HITS]",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "Bolt of Change",
+                "abilities": [
+                  "lethal hits"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "shooting",
+        "limit": "phase",
+        "botUse": "always",
+        "label": "Master of Magicks: Bolt of Change has [SUSTAINED HITS D3]",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "Bolt of Change",
+                "abilities": [
+                  "sustained hits d3"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      }
+    ]
   },
-  "The Endless Gift": {
-    "status": "auto",
-    "note": "Nurgle Legiones Daemonica model only. The bearer has the Feel No Pain 5+ ability.",
+  "Bounding Leaps": {
     "effects": [
       {
+        "eligible": [
+          "shootAfterFallBack"
+        ]
+      }
+    ]
+  },
+  "Blazing Warpfire (Psychic)": {
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "ranged",
+        "abilities": [
+          "assault"
+        ]
+      }
+    ]
+  },
+  "Flames of Change (Psychic)": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 4,
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "move": -2,
+                  "advanceBonus": -2,
+                  "chargeBonus": -2
+                }
+              ],
+              "until": "endOfNextTurn",
+              "mark": "aflame"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "MANIFESTATION OF DESTRUCTION": {
+    "status": "info",
+    "note": "Army building: cannot be your WARLORD or take Enhancements"
+  },
+  "Slashing Dive": {
+    "act": {
+      "when": "endOfNormalMove",
+      "limit": "phase",
+      "label": "Slashing Dive: 1 D6 per model, 4+ = 1 mortal wound",
+      "target": {
+        "side": "enemy",
+        "movedOver": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "all": true
+          }
+        }
+      ]
+    }
+  },
+  "Eldritch Flames (Psychic)": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "noCover": true
+          },
+          "until": "phase",
+          "mark": "Eldritch Flames"
+        }
+      ]
+    }
+  },
+  "Blessed by the Plague God": {
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
+  },
+  "Tally of Pestilence": {
+    "code": true,
+    "status": "auto",
+    "note": "Enemy models destroyed by Nurgle daemons are counted; 7+ at the start of your Command phase: +1CP"
+  },
+  "Daemon Lord of Nurgle (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "NURGLE"
+        ],
+        "toughness": 1
+      }
+    ]
+  },
+  "Nurgle’s Rot (Psychic)": {
+    "act": {
+      "when": "movementEnd",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "toughness": -1
+            }
+          ],
+          "until": "nextMovement",
+          "mark": "Nurgle's Rot"
+        }
+      ]
+    }
+  },
+  "Reverberating Summons": {
+    "code": true,
+    "status": "auto",
+    "note": "Each model the Doomsday bell destroys returns a Plaguebearer to a unit within 12\""
+  },
+  "Infected Outbreak": {
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "if": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "secure": true
+        }
+      ]
+    }
+  },
+  "Mischief Makers": {
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 1,
+        "if": [
+          "!kw:TITANIC"
+        ],
+        "attack": "melee",
+        "hit": -1
+      }
+    ]
+  },
+  "Grotesque Regeneration": {
+    "act": {
+      "when": "anyPhase",
+      "auto": true,
+      "if": [
+        "belowStartingW"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "heal": "99"
+        }
+      ]
+    },
+    "note": "Healed when its ability is checked (the card: at the end of each phase)"
+  },
+  "Death’s Heads": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "LEGIONES DAEMONICA",
+              "NURGLE"
+            ],
+            "reroll": "wounds"
+          },
+          "until": "turn",
+          "mark": "Death's Heads"
+        }
+      ]
+    }
+  },
+  "The Eternal Dance": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 6,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "LEGIONES DAEMONICA",
+              "SLAANESH"
+            ],
+            "attack": "melee",
+            "wound": 1
+          },
+          "until": "phase",
+          "mark": "Eternal Dance"
+        },
+        {
+          "on": "target",
+          "buff": [
+            {
+              "attack": "melee",
+              "wound": -1
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
+  },
+  "Dazzling Acrobatics": {
+    "effects": [
+      {
+        "eligible": [
+          "chargeAfterAdvance",
+          "chargeAfterFallBack"
+        ]
+      }
+    ]
+  },
+  "Shining Aegis": {
+    "gear": true,
+    "effects": [
+      {
+        "scope": "model",
+        "svSet": 3
+      }
+    ]
+  },
+  "Daemon Lord of Slaanesh (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "SLAANESH"
+        ],
+        "attack": "melee",
+        "ap": 1
+      }
+    ]
+  },
+  "Mesmerising Form": {
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "hit": -1
+        }
+      }
+    ]
+  },
+  "Tranceweaver": {
+    "effects": [
+      {
+        "if": [
+          "!targetInRangeOfObjective"
+        ],
+        "reroll": "hits1"
+      },
+      {
+        "if": [
+          "targetInRangeOfObjective"
+        ],
+        "reroll": "hits"
+      }
+    ]
+  },
+  "Symphony of Pain (Psychic)": {
+    "act": {
+      "when": "movementEnd",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "shocked": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "LEGIONES DAEMONICA",
+              "SLAANESH"
+            ],
+            "reroll": [
+              "hits",
+              "wounds"
+            ]
+          },
+          "until": "turn",
+          "mark": "Symphony of Pain"
+        }
+      ]
+    }
+  },
+  "Horrifying Beauty": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true,
+        "each": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "!targetBelowHalf"
+          ],
+          "shock": 0
+        },
+        {
+          "on": "target",
+          "if": [
+            "targetBelowHalf"
+          ],
+          "shock": -1
+        }
+      ]
+    }
+  },
+  "Soporific Musk": {
+    "effects": [
+      {
+        "forceDesperate": true
+      },
+      {
+        "if": [
+          "targetBattleShocked"
+        ],
+        "desperateMinus": 1
+      }
+    ],
+    "note": "Also against MONSTERS and VEHICLES"
+  },
+  "Cutting Down the Foe": {
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "charged"
+        ],
+        "strength": 1,
+        "damage": 1
+      }
+    ]
+  },
+  "Unholy Speed": {
+    "effects": [
+      {
+        "rerollAdvance": true,
+        "rerollCharge": true
+      }
+    ]
+  },
+  "The Dark Master (Aura)": {
+    "code": true,
+    "status": "auto",
+    "note": "The area within 6\" is within the Shadow of Chaos"
+  },
+  "Shadow Form": {
+    "choice": {
+      "name": "Shadow Form",
+      "pick": 1,
+      "when": "command",
+      "options": [
+        "Wreathed in Shadows (Aura, Psychic)",
+        "Pall of Despair (Aura, Psychic)",
+        "Shadow Lord (Aura, Psychic)"
+      ]
+    },
+    "note": "Chosen in your Command phase (the card: at the start of the battle round)"
+  },
+  "SUPREME COMMANDER": {
+    "status": "info",
+    "note": "Army building: must be your WARLORD"
+  },
+  "Wreathed in Shadows (Aura, Psychic)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA|SHADOW LEGION"
+        ],
+        "targetableWithin": 18
+      }
+    ]
+  },
+  "Pall of Despair (Aura, Psychic)": {
+    "effects": [
+      {
+        "terrorBelow": 9,
+        "terrorBelowMod": 0
+      }
+    ],
+    "note": "Regaining wounds for failed tests is not automated"
+  },
+  "Shadow Lord (Aura, Psychic)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA|SHADOW LEGION"
+        ],
+        "reroll": "hits1"
+      }
+    ]
+  },
+  "Daemonic Lord": {
+    "effects": [
+      {
+        "if": [
+          "near:3:LEGIONES DAEMONICA+INFANTRY"
+        ],
+        "loneOperative": true
+      }
+    ]
+  },
+  "Prince of Darkness (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA"
+        ],
+        "stealth": true
+      }
+    ]
+  },
+  "Unholy Vigour": {
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "label": "Unholy Vigour: 3+ invulnerable save this phase",
+      "botUse": "damaged",
+      "do": [
+        {
+          "on": "self",
+          "buff": [
+            {
+              "defend": {
+                "inv": 3
+              }
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
+  },
+  "DAEMONIC ALLEGIANCE": {
+    "status": "info",
+    "note": "Army building: pick KHORNE, TZEENTCH, NURGLE or SLAANESH"
+  },
+  "Daemon Prince of Khorne": {
+    "effects": [
+      {
+        "if": [
+          "kw:KHORNE"
+        ],
+        "weapon": "hellforged",
+        "strength": 2
+      }
+    ]
+  },
+  "Daemon Prince of Tzeentch": {
+    "effects": [
+      {
+        "if": [
+          "kw:TZEENTCH"
+        ],
+        "weapon": "infernal cannon",
+        "attacks": 3
+      }
+    ]
+  },
+  "Daemon Prince of Nurgle": {
+    "effects": [
+      {
+        "if": [
+          "kw:NURGLE"
+        ],
+        "toughness": 1
+      }
+    ]
+  },
+  "Daemon Prince of Slaanesh": {
+    "effects": [
+      {
+        "if": [
+          "kw:SLAANESH"
+        ],
+        "move": 2
+      }
+    ]
+  },
+  "Scuttling Walker": {
+    "effects": [
+      {
+        "mobile": true
+      }
+    ],
+    "note": "It moves over terrain like INFANTRY (friendly MONSTERS / VEHICLES are not ignored)"
+  },
+  "Bloodmaster": {
+    "effects": [
+      {
+        "scope": "led",
+        "wound": 1
+      }
+    ]
+  },
+  "A Gory Path": {
+    "effects": [
+      {
+        "consolidate": 6
+      }
+    ]
+  },
+  "Skullmaster’s Fury": {
+    "effects": [
+      {
+        "scope": "led",
+        "weapon": "Juggernaut",
+        "if": [
+          "charged"
+        ],
+        "abilities": [
+          "devastating wounds"
+        ]
+      }
+    ]
+  },
+  "Devastating Charge": {
+    "act": {
+      "when": "endOfCharge",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true,
+        "each": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    }
+  },
+  "Changecaster": {
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "ranged",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
+  },
+  "Storm of Mutating Sorcery (Psychic)": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "INFANTRY"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    }
+  },
+  "Fateskimmer": {
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "melee",
+        "abilities": [
+          "lethal hits"
+        ]
+      }
+    ]
+  },
+  "Rider of the Immaterial Winds": {
+    "act": {
+      "when": "opponentTurnEnd",
+      "limit": "battle",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Rider of the Immaterial Winds: into Strategic Reserves",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
+        }
+      ]
+    }
+  },
+  "Fluxmaster": {
+    "effects": [
+      {
+        "stealth": true
+      },
+      {
+        "defend": {
+          "vs": "melee",
+          "hit": -1
+        }
+      }
+    ]
+  },
+  "Altered Reality (Psychic)": {
+    "freeDie": {
+      "kind": "setSix",
+      "stage": "any",
+      "limit": "round"
+    },
+    "status": "auto",
+    "note": "One Hit, Wound or saving throw roll becomes a 6, once per battle round"
+  },
+  "Virulent Blessing (Psychic)": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 24,
+        "visible": true,
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "units": [
+              "LEGIONES DAEMONICA",
+              "NURGLE"
+            ],
+            "damage": 1
+          },
+          "until": "phase",
+          "mark": "Virulent Blessing"
+        }
+      ]
+    }
+  },
+  "Deluge of Nurgle (Aura)": {
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 6,
+        "move": -2,
+        "oc": -1
+      }
+    ]
+  },
+  "Beast Handler": {
+    "effects": [
+      {
+        "scope": "led",
+        "rerollCharge": true
+      },
+      {
+        "stratDiscount": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "cp": 1,
+          "limit": "battle"
+        },
+        "stratRepeat": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "limit": "battle"
+        }
+      }
+    ]
+  },
+  "Seed the Garden of Nurgle": {
+    "code": true,
+    "status": "auto",
+    "note": "End of your Movement phase: the area terrain it stands in is in the Shadow of Chaos for the rest of the battle"
+  },
+  "Poxbringer": {
+    "effects": [
+      {
+        "scope": "led",
+        "critHitOn": 5
+      }
+    ]
+  },
+  "Feculent Despair (Aura, Psychic)": {
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 6,
+        "shockBonus": -1
+      }
+    ]
+  },
+  "Jolly Gutpipes": {
+    "effects": [
+      {
+        "scope": "led",
+        "move": 1,
+        "rerollAdvance": true
+      }
+    ]
+  },
+  "Disease of Mirth (Aura)": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "range": 6,
+        "each": true,
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ]
+    }
+  },
+  "Keep Counting!": {
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "melee",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
+  },
+  "Meet Your Quota!": {
+    "effects": [
+      {
+        "scope": "led",
+        "oc": 1
+      }
+    ]
+  },
+  "Shroud of Flies (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "NURGLE"
+        ],
+        "stealth": true
+      }
+    ]
+  },
+  "Diseased Cover": {
+    "status": "info",
+    "note": "Cover from the Fortification is worked out by the terrain rules"
+  },
+  "Cover": {
+    "status": "info",
+    "note": "Cover from the Fortification is worked out by the terrain rules"
+  },
+  "Fortification": {
+    "status": "info",
+    "note": "Core FORTIFICATION rules"
+  },
+  "Shadow of Khorne (Aura)": {
+    "code": true,
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "KHORNE"
+        ],
+        "rerollShock": true
+      }
+    ],
+    "note": "The area within 6\" is within the Shadow of Chaos"
+  },
+  "Harmonic Alignment": {
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "phase",
+      "if": [
+        "leaderAttached",
+        "belowStarting"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "revive": "D3"
+        }
+      ]
+    }
+  },
+  "Discordant Disruption (Aura)": {
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 12,
+        "if": [
+          "kw:PSYKER",
+          "psychicWeapon"
+        ],
+        "abilities": [
+          "hazardous"
+        ]
+      }
+    ]
+  },
+  "Swallow Energy (Psychic)": {
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "fnp": 4,
+          "fnpVs": "mortalPsychic"
+        }
+      }
+    ]
+  },
+  "Horrible Fascination(Psychic)": {
+    "act": {
+      "when": "oppShootingStart",
+      "auto": true,
+      "limit": "phase",
+      "per": "army",
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "visible": true,
+        "closest": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 1,
+          "max": 1,
+          "do": [
+            {
+              "on": "self",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 2,
+          "max": 5,
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "hit": -1
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        },
+        {
+          "min": 6,
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "hit": -6
+                }
+              ],
+              "until": "phase"
+            }
+          ]
+        }
+      ]
+    },
+    "note": "On a 6 the unit hits only on an unmodified 6 (the card: it cannot shoot)"
+  },
+  "No Prey Can Evade": {
+    "effects": [
+      {
+        "rerollAdvance": true,
+        "rerollCharge": true
+      }
+    ]
+  },
+  "Monarch of the Hunt": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "if": [
+          "targetQuarry"
+        ],
+        "reroll": [
+          "hits",
+          "wounds"
+        ]
+      }
+    ],
+    "act": {
+      "when": "battleStart",
+      "auto": true,
+      "limit": "battle",
+      "target": {
+        "side": "enemy",
+        "anywhere": true
+      },
+      "do": [
+        {
+          "setQuarry": true
+        }
+      ]
+    }
+  },
+  "Prince of Slaanesh": {
+    "effects": [
+      {
+        "scope": "led",
+        "attack": "melee",
+        "critWoundOn": 5
+      }
+    ]
+  },
+  "Delightful Agonies": {
+    "act": {
+      "when": "onDeath",
+      "auto": true,
+      "modelDeath": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "reviveLater": {
+            "on": 2,
+            "wounds": 99
+          }
+        }
+      ]
+    }
+  },
+  "Daemon Lord of Khorne (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "KHORNE"
+        ],
+        "attack": "melee",
+        "hit": 1
+      }
+    ]
+  },
+  "Relentless Carnage": {
+    "act": {
+      "when": "fightEnd",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true,
+        "closest": true
+      },
+      "roll": "D6",
+      "rollCount": 8,
+      "each": {
+        "on": 4,
+        "do": [
+          {
+            "on": "target",
+            "mortals": "1"
+          }
+        ]
+      }
+    }
+  },
+  "Split": {
+    "status": "manual",
+    "note": "Not automated: new Horror models joining the unit"
+  },
+  "Sullen Malevolence (Aura)": {
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 6,
+        "if": [
+          "!contains:Pink Horror"
+        ],
+        "ld": -1
+      }
+    ],
+    "note": "Ld worsened by 1 (Leadership is 2D6 based: higher is worse)"
+  },
+  "Exploding Horrors": {
+    "status": "manual",
+    "note": "Not automated: Brimstone Horrors exploding"
+  },
+  "HORRORS ARE PINK. HORRORS ARE BLUE. WHEREONCE THERE WAS ONE, NOW THERE ARE TWO.": {
+    "status": "info",
+    "note": "Datasheet change when no Pink Horror is left"
+  },
+  "Malefic Destruction": {
+    "act": {
+      "when": "fightStartButton",
+      "limit": "battle",
+      "label": "Malefic Destruction: +3 Attacks for hellforged weapons this phase",
+      "botUse": "valuable",
+      "if": [
+        "engaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "buff": [
+            {
+              "weapon": "hellforged",
+              "attacks": 3
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
+  },
+  "Harbinger of Death": {
+    "act": [
+      {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "botUse": "always",
+        "label": "Harbinger of Death: hellforged weapons have [LETHAL HITS]",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "hellforged",
+                "abilities": [
+                  "lethal hits"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Harbinger of Death: hellforged weapons have [PRECISION]",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "hellforged",
+                "abilities": [
+                  "precision"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToFight",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Harbinger of Death: hellforged weapons have [SUSTAINED HITS 1]",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "hellforged",
+                "abilities": [
+                  "sustained hits 1"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      }
+    ]
+  },
+  "Tormentbringer (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "SLAANESH"
+        ],
+        "attack": "melee",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
+  },
+  "Hysterical Frenzy (Psychic)": {
+    "effects": [
+      {
+        "fightOnDeath": 1
+      }
+    ]
+  },
+  "A’rgath, the King of Blades": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "if": [
+          "!inShadow"
+        ],
+        "attacks": 1,
+        "strength": 1
+      },
+      {
+        "scope": "model",
+        "attack": "melee",
+        "if": [
+          "inShadow"
+        ],
+        "attacks": 2,
+        "strength": 2
+      }
+    ]
+  },
+  "Soulstealer": {
+    "act": {
+      "when": "afterFighting",
+      "auto": true,
+      "if": [
+        "killedModelThisPhase"
+      ],
+      "limit": "phase",
+      "roll": "D6",
+      "rollAdd": "if:inShadow",
+      "table": [
+        {
+          "min": 4,
+          "do": [
+            {
+              "on": "self",
+              "bearerOnly": true,
+              "heal": "1"
+            }
+          ]
+        }
+      ]
+    },
+    "note": "One roll after it fights (the card: one per model destroyed)"
+  },
+  "The Endless Gift": {
+    "effects": [
+      {
+        "scope": "model",
         "defend": {
           "fnp": 5
         }
@@ -549,170 +1751,374 @@
     ]
   },
   "The Everstave": {
-    "status": "auto",
-    "note": "Tzeentch Legiones Daemonica model only. Add 1 to the Strength characteristic of the bearer’s ranged weapons and increase the Range characteristic of such weapons by 3\".",
     "effects": [
       {
+        "scope": "model",
+        "attack": "ranged",
+        "if": [
+          "!inShadow"
+        ],
         "strength": 1,
-        "range": 3
+        "weaponRange": 3
+      },
+      {
+        "scope": "model",
+        "attack": "ranged",
+        "if": [
+          "inShadow"
+        ],
+        "strength": 2,
+        "weaponRange": 6
       }
     ]
-  },
-  "Beguiling Aura": {
-    "status": "auto",
-    "note": "Legiones Daemonica Slaanesh units from your army are eligible to declare a charge in a turn in which they Fell Back."
-  },
-  "Seductive Gambit": {
-    "status": "auto",
-    "note": "Legiones Daemonica Slaanesh units from your army have the following ability: Seductive Gambit: Each time this unit ends a Charge move, you can declare it will perform a Seductive Gambit."
   },
   "False Majesty (Aura)": {
-    "status": "auto",
-    "note": "Legiones Daemonica Slaanesh model only. While a friendly LEGIONES DAEMONICA SLAANESH unit (excluding Monsters) is within 6\" of the bearer, each time a model in that unit makes a melee attack, add 1 to the Wound roll."
-  },
-  "Dreaming Crown (Aura)": {
-    "status": "auto",
-    "note": "Legiones Daemonica Slaanesh model only. While a friendly LEGIONES DAEMONICA SLAANESH unit (excluding Monsters) is within 6\" of the bearer, each time a model in that unit makes a melee attack, add 1 to the Hit roll."
-  },
-  "Avatar of Perfection": {
-    "status": "auto",
-    "note": "Legiones Daemonica Slaanesh Monster model only. At the start of each phase, if there are no other friendly units within 6\" of the bearer, you can: re-roll Advance rolls made for the bearer; re-roll Charge rolls made for the bearer; ignore any or all modifiers to its Move characteristic and to any Ad..."
-  },
-  "Soul Glutton": {
-    "status": "auto",
-    "note": "Legiones Daemonica Slaanesh Monster model only. At the end of the Fight phase, if one or more enemy models were destroyed this phase as a result of one or more of the bearer’s attacks, it can use this Enhancement. If it does, it regains up to D3 lost wounds."
-  },
-  "Fates in Flux": {
-    "status": "auto",
-    "note": "You start the battle with three Flux tokens (we recommend using a dice to track how many Flux tokens you have). You can spend one Flux token just after an Advance roll, Hit roll, Wound roll, Damage roll, saving throw or Hazardous test is made for a Legiones Daemonica Tzeentch model or LEGIONES DAEMO..."
-  },
-  "Inescapable Eye": {
-    "status": "auto",
-    "note": "Legiones Daemonica Tzeentch model only. In your Command phase, if the bearer is on the battlefield, if your opponent has one or more Flux tokens, you gain one additional Flux token."
-  },
-  "Infernal Puppeteer": {
-    "status": "auto",
-    "note": "LEGIONES DAEMONICA TZEENTCH MONSTER model only. In your Shooting phase, when this unit is selected to shoot, while an enemy unit is visible to a friendly LEGIONES DAEMONICA TZEENTCH unit, that enemy unit has +9\" detection range until this unit has shot."
-  },
-  "Neverblade": {
-    "status": "auto",
-    "note": "Legiones Daemonica Tzeentch Monster model only. Improve the Strength characteristic of melee weapons equipped by the bearer by 2, improve the Attacks and Armour Penetration characteristics of melee weapons equipped by the bearer by 1, and each time the bearer makes a melee attack, add 1 to the Hit roll."
-  },
-  "Improbable Shield (Aura)": {
-    "status": "auto",
-    "note": "Legiones Daemonica Tzeentch model only. While a friendly Legiones Daemonica Tzeentch unit is within 6\" of the bearer, models in that unit have the Feel No Pain 4+ ability against Psychic Attacks and mortal wounds."
-  },
-  "Murdercall": {
-    "status": "auto",
-    "note": "In your opponent's movement phase, each time an enemy unit (excluding AIRCRAFT) ends a move within 8\" of one or more LEGIONES DAEMONICA KHORNE units from your army, one of those LEGIONES DAEMONICA KHORNE units can make a surge move of up to D6\"."
-  },
-  "Blood Tainted": {
-    "status": "auto",
-    "note": "At the end of a phase in which a Legiones Daemonica Khorne unit from your army destroyed an enemy unit that was within range of an objective marker at the start of the phase, if your unit has a higher Level of Control over that objective marker, that objective marker remains under your control until..."
-  },
-  "Slaughterthirst (Aura)": {
-    "status": "auto",
-    "note": "Legiones Daemonica Khorne model only. While a friendly LEGIONES DAEMONICA KHORNE unit (excluding Monsters) is within 6\" of the bearer, weapons equipped by models in that unit have the [LANCE] ability."
-  },
-  "Fury’s Cage": {
-    "status": "auto",
-    "note": "Legiones Daemonica Khorne Monster model only. Each time the bearer is selected to fight, it can use this Enhancement. If it does, the bearer suffers D3+1 mortal wounds, and until the end of the phase, each time it makes an attack, you can re-roll the Hit roll and you can re-roll the Wound roll."
-  },
-  "Brazenmaw": {
-    "status": "auto",
-    "note": "Legiones Daemonica Khorne model only. Add 2 to Charge rolls made for the bearer’s unit."
-  },
-  "Gateway Unto Damnation": {
-    "status": "auto",
-    "note": "Legiones Daemonica Khorne Monster model only. The bearer’s Deadly Demise ability inflicts mortal wounds on a D6 roll of 2+ instead of on a 6."
-  },
-  "Melancholic Miasma": {
-    "status": "auto",
-    "note": "While an enemy unit is within 9\" of one or more Legiones Daemonica Nurgle units from your army, that enemy unit is within your army’s Shadow of Chaos. In each player’s Command phase, select one enemy unit within your army’s Shadow of Chaos. That unit must take a Battle-shock test."
-  },
-  "Cankerblight": {
-    "status": "auto",
-    "note": "Legiones Daemonica Nurgle model only. Each time an enemy unit (excluding MONSTERS and VEHICLES) that is within 6\" of the bearer fails a Battle-shock test, the bearer can use this Enhancement. If it does, one model in that unit is destroyed (chosen by its controlling player)."
-  },
-  "Maggot Maws": {
-    "status": "auto",
-    "note": "Legiones Daemonica Nurgle model only. In your Shooting phase, select one enemy unit within 6\" of the bearer; that enemy unit must take a Battle-shock test. Then roll one D6: on a 3+, that enemy unit suffers D3 mortal wounds."
-  },
-  "Droning Shroud (Aura)": {
-    "status": "auto",
-    "note": "Legiones Daemonica Nurgle Monster model only. While a friendly Legiones Daemonica Nurgle unit is within 6\" of the bearer, that unit can only be targeted by a ranged attack if the attacking model is within 18\"."
-  },
-  "Font of Spores (Aura)": {
-    "status": "auto",
-    "note": "Legiones Daemonica Nurgle Monster model only. While a friendly Legiones Daemonica Nurgle unit is within 6\" of the bearer, improve the Armour Penetration characteristic of weapons equipped by models in that unit by 1."
-  },
-  "Thralls of the First Prince": {
-    "status": "auto",
-    "note": "When mustering your army, you cannot include any Daemon Prince, Daemon Prince with Wings or Epic Hero units (excluding Be’lakor), but you can include the following HERETIC ASTARTES units: • Chaos Lord • Chaos Lord in Terminator Armour • Chaos Lord with Jump Pack • Chaos Terminator Squad • Chosen • D..."
-  },
-  "First Prince of Chaos": {
-    "status": "auto",
-    "note": "Units from your army have the relevant abilities presented below. MURDERER’S COWL The most murderous seek not to hide in the Dark Master’s pall. The shadows extend before them, offering a rapid route to slaughter. SHADOW LEGION KHORNE units only."
-  },
-  "Leaping Shadows": {
-    "status": "auto",
-    "note": "Shadow Legion model only. Models in the bearer’s unit have the Scouts 9\" ability."
-  },
-  "Mantle of Gloom (Aura)": {
-    "status": "auto",
-    "note": "Shadow Legion model only. While an enemy unit is within Engagement Range of the bearer’s unit, subtract 1 from the Objective Control characteristic of models in that enemy unit."
-  },
-  "Fade to Darkness": {
-    "status": "auto",
-    "note": "Shadow Legion model only. At the end of the Fight phase, if the bearer’s unit destroyed one or more enemy units this phase and is not within Engagement Range of one or more enemy units, you can remove the bearer’s unit from the battlefield and place it into Strategic Reserves."
-  },
-  "Malice Made Manifest": {
-    "status": "auto",
-    "note": "Shadow Legion model only. At the start of the Fight phase, select one enemy unit within Engagement Range of the bearer’s unit and roll one D6: on a 2-5, that enemy unit suffers D3 mortal wounds; on a 6, that enemy unit suffers 3 mortal wounds."
-  },
-  "Unholy Avalanche": {
-    "status": "auto",
-    "note": "If a friendly LEGIONES DAEMONICA MOUNTED unit made a fall-back move this turn, that move does not prevent that unit from being eligible to shoot/eligible to declare a charge."
-  },
-  "Apocalyptic Steeds": {
-    "status": "auto",
-    "note": "LEGIONES DAEMONICA MOUNTED unit only. This unit has +1\" M."
-  },
-  "Soul-Shattering Charge": {
-    "status": "auto",
-    "note": "LEGIONES DAEMONICA MOUNTED unit only. When this unit is selected to fight, if this unit made a charge move this turn, you can use this ability. If you do, when determining which models in this unit can fight, friendly models that are within 3\" of enemy units engaged with this unit can target those enemy units."
-  },
-  "Loci of Power": {
-    "status": "auto",
-    "note": "Friendly LEGIONES DAEMONICA CHARACTER models (excluding MONSTER models) have +1 Ld and OC."
-  },
-  "Swollen with Power": {
-    "status": "auto",
-    "note": "LEGIONES DAEMONICA CHARACTER model only (excluding MONSTER units). This model has +2 W.",
     "effects": [
       {
-        "wounds": 2
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "SLAANESH",
+          "!MONSTER"
+        ],
+        "attack": "melee",
+        "wound": 1
       }
     ]
   },
-  "Shudderblink": {
+  "Dreaming Crown (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "SLAANESH",
+          "!MONSTER"
+        ],
+        "attack": "melee",
+        "hit": 1
+      }
+    ]
+  },
+  "Avatar of Perfection": {
+    "effects": [
+      {
+        "if": [
+          "!near:6:LEGIONES DAEMONICA"
+        ],
+        "rerollAdvance": true,
+        "rerollCharge": true,
+        "ignoreMoveMods": true
+      }
+    ]
+  },
+  "Soul Glutton": {
+    "act": {
+      "when": "fightEnd",
+      "auto": true,
+      "if": [
+        "killedModelThisPhase"
+      ],
+      "limit": "phase",
+      "do": [
+        {
+          "on": "self",
+          "heal": "D3"
+        }
+      ]
+    }
+  },
+  "Inescapable Eye": {
+    "code": true,
     "status": "auto",
-    "note": "When a friendly LEGIONES DAEMONICA BATTLELINE unit is selected to make an advance move: • That unit’s ranged attacks have [ASSAULT] until the end of the turn. • That move does not prevent that unit from being eligible to declare a charge."
+    "note": "One more Flux token in your Command phase while the opponent holds any"
+  },
+  "Infernal Puppeteer": {
+    "act": {
+      "when": "selectedToShoot",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "visible": true,
+        "each": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "detection": 9
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "note": "Every enemy unit visible to it (the card: visible to any friendly LEGIONES DAEMONICA TZEENTCH unit)"
+  },
+  "Neverblade": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "strength": 2,
+        "attacks": 1,
+        "ap": 1,
+        "hit": 1
+      }
+    ]
+  },
+  "Improbable Shield (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "TZEENTCH"
+        ],
+        "defend": {
+          "fnp": 4,
+          "fnpVs": "mortalPsychic"
+        }
+      }
+    ]
+  },
+  "Slaughterthirst (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "KHORNE",
+          "!MONSTER"
+        ],
+        "abilities": [
+          "lance"
+        ]
+      }
+    ]
+  },
+  "Fury’s Cage": {
+    "act": {
+      "when": "selectedToFight",
+      "limit": "phase",
+      "label": "Fury's Cage: suffer D3+1 mortal wounds, re-roll Hit and Wound rolls this phase",
+      "botUse": "healthy",
+      "do": [
+        {
+          "on": "self",
+          "mortals": "D3+1"
+        },
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "reroll": [
+                "hits",
+                "wounds"
+              ]
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
+  },
+  "Brazenmaw": {
+    "effects": [
+      {
+        "chargeBonus": 2
+      }
+    ]
+  },
+  "Gateway Unto Damnation": {
+    "effects": [
+      {
+        "scope": "model",
+        "deadlyDemiseOn": 2
+      }
+    ],
+    "status": "auto",
+    "note": "Deadly Demise on 2+; Deadly Demise D3+3 once the bearer has destroyed an enemy unit"
+  },
+  "Cankerblight": {
+    "code": true,
+    "status": "auto",
+    "note": "An enemy unit (not MONSTER / VEHICLE) within 6\" that fails a Battle-shock test loses one model (no Daemonic Terror mortal wounds)"
+  },
+  "Maggot Maws": {
+    "act": {
+      "when": "shooting",
+      "limit": "phase",
+      "label": "Maggot Maws: an enemy unit within 6\" takes a Battle-shock test, then 3+: D3 mortal wounds",
+      "botUse": "always",
+      "target": {
+        "side": "enemy",
+        "range": 6
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ],
+      "roll": "D6",
+      "table": [
+        {
+          "min": 3,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3"
+            }
+          ]
+        }
+      ]
+    },
+    "note": "Daemonic Terror's mortal wounds are not switched off for this test"
+  },
+  "Droning Shroud (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "NURGLE"
+        ],
+        "targetableWithin": 18
+      }
+    ]
+  },
+  "Font of Spores (Aura)": {
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 6,
+        "units": [
+          "LEGIONES DAEMONICA",
+          "NURGLE"
+        ],
+        "ap": 1
+      }
+    ]
+  },
+  "Leaping Shadows": {
+    "effects": [
+      {
+        "scouts": 9
+      }
+    ]
+  },
+  "Mantle of Gloom (Aura)": {
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 1,
+        "oc": -1
+      }
+    ]
+  },
+  "Fade to Darkness": {
+    "act": {
+      "when": "fightEndButton",
+      "if": [
+        "destroyedUnitThisPhase",
+        "notEngaged"
+      ],
+      "label": "Fade to Darkness: into Strategic Reserves",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
+        }
+      ]
+    }
+  },
+  "Malice Made Manifest": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true,
+        "closest": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "max": 5,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 6,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "3"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Apocalyptic Steeds": {
+    "effects": [
+      {
+        "move": 1
+      }
+    ]
+  },
+  "Soul-Shattering Charge": {
+    "effects": [
+      {
+        "if": [
+          "charged"
+        ],
+        "fightReach3": true
+      }
+    ]
+  },
+  "Swollen with Power": {
+    "effects": [
+      {
+        "scope": "model",
+        "statW": 2
+      }
+    ]
   },
   "Bane-Forged Weapons": {
-    "status": "auto",
-    "note": "LEGIONES DAEMONICA BATTLELINE unit only. This unit’s attacks have +1 S."
+    "effects": [
+      {
+        "strength": 1
+      }
+    ]
   },
   "Soul-Hungry Slaughterers": {
-    "status": "auto",
-    "note": "LEGIONES DAEMONICA BATTLELINE unit only. When you target this unit with the Heroic Intervention/Fire Overwatch stratagem, that use is -1 CP."
-  },
-  "Dark Pacts": { "code": true,
-    "status": "auto",
-    "note": "If your Army Faction is HERETIC ASTARTES, each time a unit with this ability is selected to shoot or fight, it can make a Dark Pact. If it does, it must first take a Leadership test before any effects of that Dark Pact are resolved; if that test is failed, that unit suffers D3 mortal wounds."
-  },
-  "Daemonic Pact": { "code": true,
-    "status": "auto",
-    "note": "If every model from your army has the Chaos Knights or Heretic Astartes keyword, you can include LEGIONES DAEMONICA units in your army, even if they do not have the Faction keyword you selected in the Select Army Faction step."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "heroic-intervention",
+            "fire-overwatch"
+          ],
+          "cp": 1
+        }
+      }
+    ]
   }
 }

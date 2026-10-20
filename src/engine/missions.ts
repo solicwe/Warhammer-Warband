@@ -2,7 +2,7 @@
 // operation markers and the scoring conditions of all 25 primary cards.
 import { deploymentById, MISSIONS, primaryById, RULES, toPoly, type ScoringRule } from './config';
 import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
-import { alive, boardUnits, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, unitById } from './state';
+import { alive, boardUnits, emitReact, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, unitById } from './state';
 import type { GameState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
@@ -54,13 +54,12 @@ function homerPoint(s: GameState, p: PlayerId): Pt {
   return { x: edge.x + (centre.x - edge.x) * inset / length, y: edge.y + (centre.y - edge.y) * inset / length };
 }
 
-/** Is any model of the unit within range of the objective (within 3" of the 40mm marker or inside dedicated objective-area)? */
+/** Is any model of the unit within range of the objective (on its terrain area / baseplate, or within 3" of a marker in the open)? */
 export const unitInRange = (s: GameState, u: UnitState, o: ObjectiveState) => {
   const t = objTerrain(s, o);
-  const objR = 3 + 20 / 25.4;
-  const withinDist = alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= objR + (m.r ?? 0.6) + 1e-4);
-  if (!t?.poly || t.kind !== 'objective-area') return withinDist;
-  return withinDist || alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
+  // no area at all (a bare marker): within 3" of the 40mm marker
+  if (!t?.poly) return alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= 3 + 20 / 25.4 + (m.r ?? 0.6) + 1e-4);
+  return alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
 };
 const unitInTerrain = (u: UnitState, t: TerrainPiece) => alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
 const isOwnHome = (o: ObjectiveState, p: PlayerId) => o.type === 'home' && o.owner === p;
@@ -295,6 +294,7 @@ export function startAction(s: GameState, opt: ActionOption) {
   const p = u.owner;
   const P = s.players[p];
   const def = MISSIONS.actions[opt.action];
+  emitReact(s, p, 'actionStart', { unitId: u.id }); // BY THOUGHT ALONE
   if (!may(s, u, 'shootAfterAction')) u.selectedToShoot = true; // cannot shoot (or charge) after starting an action
   u.cantCharge = true;
   // on screen as a card, like a roll: the player sees the action happen

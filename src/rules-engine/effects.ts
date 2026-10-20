@@ -34,15 +34,15 @@ import { deploymentById, RULES, toPoly } from '../engine/config';
 import { d6, exprAverage } from '../engine/dice';
 import { baseDist, bodyTouchesPoly, circleTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from '../engine/geometry';
 import { setActionEligibilityHook, unitInRange } from '../engine/missions';
-import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, unitDistance, withinTerrain } from '../engine/state';
-import type { AbilityData, GameState, ModelState, PlayerId, Pool, TimedEffect, UnitState, WeaponData, WeaponProfileData } from '../engine/types';
+import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, setStratShockedHook, unitDistance, withinTerrain } from '../engine/state';
+import type { AbilityData, GameState, ModelState, PlayerId, Pool, Pt, TimedEffect, UnitState, WeaponData, WeaponProfileData } from '../engine/types';
 import { abilityLabel, condApplies, parseAbility } from '../engine/weapons';
-import { hasCover, hasLos, isHidden, setVisibilityHooks } from '../engine/visibility';
+import { hasCover, hasLos, isHidden, setScreenHook, setVisibilityHooks } from '../engine/visibility';
 import { setThroughHook } from '../engine/pathing';
 import { auraRangeBonus, condExact, condPatterns, effectSources, eligibleByRule, meleeStrength, moveThroughModels, moveThroughTerrain } from '../engine/events';
 
 export type Eligibility = 'shootAfterAdvance' | 'shootAfterFallBack' | 'chargeAfterAdvance' | 'chargeAfterFallBack' | 'actionWhileEngaged' | 'actionWhileShocked' | 'actionAfterAdvance' | 'actionAfterFallBack' | 'shootAfterAction' | 'actionAfterShooting';
-export type Reroll = 'hits1' | 'hits' | 'wounds1' | 'wounds12' | 'wounds' | 'damage' | 'damageOne';
+export type Reroll = 'hits1' | 'hits' | 'wounds1' | 'wounds12' | 'wounds' | 'damage' | 'damageOne' | 'damage1';
 
 export interface Defend {
   vs?: 'melee' | 'ranged';
@@ -53,19 +53,24 @@ export interface Defend {
   ap?: number; // worsen the attack's AP by this much
   damage?: number; // -1 D (minimum 1)
   halveDamage?: boolean;
+  damageSet?: number; // the attack's Damage characteristic becomes this (Mantle of Ophelia: 1)
   inv?: number;
   invVs?: 'psychic';
   fnp?: number;
-  fnpVs?: 'mortal' | 'psychic' | 'mortalPsychic';
+  reflect6?: boolean; // each unmodified saving throw of 6 against a ranged attack: 1 mortal wound to the attacking unit after it has shot (Repulsor Grid)
+  fnpVs?: 'mortal' | 'psychic' | 'mortalPsychic' | 'damage1'; // damage1: only attacks with an unmodified Damage of 1 (WARDING CHANT)
   cover?: boolean;
   coverUnless12?: boolean;
+  coverUnlessWithin?: number; // the Benefit of Cover against ranged attacks unless the attacker is within this range (Rune of Mists: 18)
   untargetableBeyond12?: boolean;
   strengthMinus?: number;
   saveBonusD1?: number;
   save?: number; // +X to save rolls (better armour save)
+  invReroll1?: boolean; // re-roll an invulnerable saving throw of 1 (Daemonic Invulnerability)
   saveMax3?: boolean; // save bonus cannot improve to better than 3+ (Take Cover!)
   minHit?: number; // attacks that target this unit fail on an unmodified hit roll below this (Speediest Freeks: 4)
   negateOncePerPhase?: boolean; // once per phase: a failed save's damage becomes 0
+  negateUses?: number; // with negateOnce 'battle': that many times per battle (Stealth Drones: twice)
   negateOnce?: 'turn' | 'round' | 'battle'; // … once per turn / battle round / battle instead (Surgeon Acolyte, Bastion Plate, Chaos Familiar)
   notPsychic?: boolean; // the Damage change does not apply to Psychic Attacks (Impossible Form)
   charOnly?: boolean; // only the unit's CHARACTER models (Silent Bodyguard)
@@ -88,9 +93,12 @@ export interface Incoming {
   fromTransport?: string; // only models that disembarked from this transport this turn
   disembarked?: boolean; // only units that disembarked (from any transport) this turn
   psychic?: boolean; // only Psychic Attacks
+  weaponAbilities?: string[]; // only weapons with one of these abilities (Forgefather: torrent, melta)
   damage?: number; // +X Damage (Virulent Blessing)
   rerollAttacks?: boolean; // ranged attacks against it re-roll a low number of attacks (Overwhelming Generosity)
   blastReroll?: boolean; // Blast weapons re-roll the Hit roll against it (Blight Bombardment)
+  critHitOn?: number; // unmodified Hit rolls of X+ against it score a Critical Hit (Whispering Web)
+  strength?: number; // +X Strength for attacks against it (Fury of the Void)
 }
 
 export interface Effect {
@@ -104,7 +112,9 @@ export interface Effect {
   // offence
   hit?: number; wound?: number; ap?: number; strength?: number; attacks?: number; damage?: number;
   critWoundAp?: number; // improves AP by X on a Critical Wound
+  critWoundApSet?: number; // on a Critical Wound the attack has AP -X (Crack Shot)
   skill?: number; // improves WS / BS characteristic by X (Take Aim!, Fix Bayonets!)
+  skillSet?: number; // the weapons' WS / BS characteristic is this (Spotter: 3+)
   rapidFireAttacks?: number; // improves Attacks of Rapid Fire weapons by X (First Rank, Fire! Second Rank, Fire!)
   reroll?: Reroll | Reroll[];
   abilities?: string[];
@@ -113,18 +123,33 @@ export interface Effect {
   ignoreWoundMods?: boolean; // ignore (bad) modifiers to the wound roll
   givesCover?: boolean;
   rapidFireFullRange?: boolean; // [RAPID FIRE] counts up to the weapon's full range (Codex Fire-patterns)
+  moveNearMortals?: { range: number; on: number; dmg: string; plus?: number; plusIf?: string[] }; // an enemy unit set up or ending a move within range: D6 (+plus if plusIf holds on this unit), on X+ it suffers dmg mortal wounds (FIRES OF COVENANT)
+  demiseSure?: { range: number; units?: string[] }; // once per turn, a friendly model of these units destroyed within X": its Deadly Demise inflicts mortal wounds without a roll (Emotionless Clarity)
+  mortalPerWound?: number; // each attack that wounds also inflicts this many mortal wounds on the target (Rapturous Blows, Radiant Champion)
+  onKill?: { miracle?: number; shock?: boolean }; // once per phase, after its attacks destroyed enemy models: gain Miracle dice / that unit takes a Battle-shock test (FAITH AND FURY, RIGHTEOUS BLOWS)
+  redirectWounds?: string; // each wound it would lose becomes a mortal wound on this (friendly) unit instead (THIEVES OF PAIN)
+  ignoreEngaged?: { on: number; cost: 'mortal' | 'model' }; // shoots as if no enemy were in Engagement Range of it; each enemy model destroyed while engaged with it: D6, on X+ it suffers a mortal wound / loses a model (FICKLEFIRE, CALLOUS SACRIFICE)
+  disembarkRange?: number; // on a TRANSPORT: its passengers may be set up wholly within X" of it (SECURE POSITIONS)
+  fallBackRoll?: number; // enemy aura: an enemy unit selected to Fall Back rolls a D6, on X+ it must Remain Stationary instead (Grasping Tendrils)
+  coverBehind?: { friendly?: boolean; units?: string[] }; // units it hides (partly) have the Benefit of Cover (Ramshackle Cover, STALWART PROTECTOR)
+  ignoreLdMods?: boolean; // modifiers to its Leadership (and Battle-shock tests) are ignored (Vexilla)
+  stratsWhileShocked?: boolean; // can be targeted by Stratagems while Battle-shocked (Grim Determination)
+  ordersStayShocked?: boolean; // Orders on it do not end when it becomes Battle-shocked (Grim Determination)
+  blastProof?: boolean; // the unit counts as fewer than five models for [BLAST] (Preservation Imperative)
+  halfRangeAlways?: boolean; // the target always counts as within half range of the weapon (Close-range Titan Killer)
+  killDemiseOn?: number; // an enemy model this weapon destroys has Deadly Demise on X+ instead of a 6 (Armour Obliteration)
   // defence
   defend?: Defend;
   incoming?: Incoming;
   // the unit
-  stealth?: boolean; loneOperative?: boolean; deepStrike?: boolean; fightsFirst?: boolean; scouts?: number; infiltrators?: boolean;
+  stealth?: boolean; loneOperative?: boolean; deepStrike?: boolean; fightsFirst?: boolean; noFightsFirst?: boolean; scouts?: number; infiltrators?: boolean;
   oc?: number; ocSet?: number; shockedOc?: number; ocHalve?: boolean; ocZero?: boolean;
   toughness?: number; move?: number; ld?: number;
   eligible?: Eligibility[];
   cannotFallBack?: boolean; noOverwatch?: boolean; noSnapTarget?: boolean; cannotBeHidden?: boolean; detection?: number; rangeMinus?: number;
   rerollAdvance?: boolean; rerollCharge?: boolean; advanceSix?: boolean; advanceBonus?: number; chargeBonus?: number; rerollShock?: boolean;
   advanceSelfMortals?: string;
-  stratDiscount?: { ids: string[]; cp: number; limit?: Limit; perArmy?: boolean; sacrifice?: boolean }; // sacrifice: one Bodyguard model is destroyed each time (Brutal Example)
+  stratDiscount?: { ids: string[]; cp: number; limit?: Limit; perArmy?: boolean; sacrifice?: boolean; fateValue?: number; yp?: number }; // yp: costs this many Yield Points (Ancestral Crest); sacrifice: one Bodyguard model is destroyed each time (Brutal Example); fateValue: a Seer Council Fate die of this value is discarded
   stratTax?: { cp: number; limit?: Limit }; // enemy aura: your opponent's stratagems on their units near it cost more
   stratCpChance?: number; // targeting this unit with a stratagem: on X+ gain 1CP
   riled?: boolean;
@@ -132,6 +157,7 @@ export interface Effect {
   overwatchHitOn?: number;
   moveThroughModels?: boolean; // any move: through all models
   chargeThroughModels?: boolean; // charge moves: through models other than MONSTER / VEHICLE
+  chargeThroughAll?: boolean; // charge moves: through enemy models (Acrobatic Onslaught)
   advanceHazard?: boolean; // after an Advance: a hazard roll for each model
   grounded?: boolean; // cannot take to the skies
   oppMoveIngress?: boolean; // in Reserves: may arrive at the end of the opponent's Movement phase
@@ -155,6 +181,9 @@ export interface Effect {
   fallBackLdTest?: boolean; // enemy aura: units selected to Fall Back must pass a Leadership test or Remain Stationary
   followFallBack?: boolean; // when an enemy unit engaged with this unit Falls Back, this unit can make a Normal move
   slowed?: boolean; // selected to move: roll D6, mortal wounds and less Move (Stasis Bomb)
+  graviticFly?: boolean; // each move: D6, 4+ = D3 mortal wounds (Gravitic Pulse on a FLY unit)
+  moveHalve?: boolean; // halve the Move characteristic, Advance and Charge rolls (Gravitic Pulse)
+  snared?: boolean; // each Normal / Advance / Fall Back move: one D6 per model, each 1 is a mortal wound (Monofilament Snare)
   noBigGunsPenalty?: boolean;
   attacksTo?: number; // the weapon's Attacks characteristic becomes X
   damageTo?: number; // the weapon's Damage characteristic becomes X
@@ -197,6 +226,7 @@ export interface Effect {
   statM?: number; // fixed change to the bearers' Move characteristic
   statW?: number; // fixed change to the bearers' Wounds characteristic (Blasphemous Engine)
   rangeBonus?: number; // ranged weapons +X" Range
+  synapseRange?: number; // Tyranids: its Synapse Range is this many inches (Synaptic Linchpin: 9)
   strengthPer5Models?: boolean; // +1 S for every 5 models in the unit (or embarked within it)
   fightOnDeathRiled?: number; // … +X to that roll while riled up
   secureAtCommandEnd?: boolean; // end of your Command phase: objectives this unit holds stay yours (Uphold the Honour)
@@ -232,6 +262,7 @@ export interface Effect {
   autoPassShock?: boolean; // its Battle-shock tests are passed automatically (Mob Mentality)
   shieldsNear?: number; // Grot Shields: hits against a friendly ORKS INFANTRY unit within X" become 1 mortal wound on this unit each
   thralls?: boolean; // Mortal Thralls: wound rolls against this unit hit a DAMNED unit within 3" instead (mortal wounds = Damage)
+  thrallsKw?: string; // … a unit with this keyword instead of DAMNED (Double-Cross: DRUKHARI)
   arriveShock?: number; // set up on the battlefield: one enemy INFANTRY / MOUNTED unit this close and visible takes a Battle-shock test
   arriveShockAll?: number; // … every enemy unit this close takes one (Dread Reputation)
   deathRetaliate?: number; // each model of this unit destroyed by an attack: on X+ the attacking unit suffers 1 mortal wound
@@ -267,10 +298,12 @@ export interface DetChoiceOption { id: string; name: string; text: string; effec
 export interface DetChoice { name: string; when: 'command' | 'round' | 'battle' | 'tithe'; uses: 'eachOnce' | 'limit' | 'free'; limit?: number; pick?: number; options: DetChoiceOption[]; groups?: string[]; rounds?: number[]; keep?: boolean }
 /** An ability a detachment / army rule gives to units ("Friendly CHAPLAIN units have the following ability: …"). */
 export interface DetGrant { units: string[]; models?: string; name: string; rule: AbilityRule }
-export interface FreeDieSpec { kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' | 'damage' | 'any'; limit: Limit; count?: number; units?: string[]; if?: string[]; attack?: 'melee' | 'ranged' }
+export interface FreeDieSpec { kind: 'reroll' | 'setSix'; stage: 'hit' | 'wound' | 'damage' | 'save' | 'any'; limit: Limit; count?: number; units?: string[]; if?: string[]; attack?: 'melee' | 'ranged' }
 export interface SagaSpec { kind: 'hunter' | 'beastslayer' | 'bold'; target?: Record<string, number> }
 export interface DetRule {
   auto: 'full' | 'partial' | 'manual'; effects?: Effect[]; choice?: DetChoice; manual?: string; acts?: unknown[];
+  code?: boolean; // the rule is worked out by a faction module (src/factions), not by this data
+  info?: boolean; // army building only: nothing happens in the battle
   grants?: DetGrant[]; freeDie?: FreeDieSpec[]; saga?: SagaSpec;
   armyRule?: boolean; needKw?: string; // army rules: apply when the army has units with this (Chapter) keyword
   oathRetarget?: { needs: string; limit: Limit }; // Recalculating: a new Oath target when the old one dies
@@ -527,6 +560,31 @@ function ruleEffects(s: GameState, u: UnitState, h: UnitState, effects: Effect[]
   }
 }
 
+/** THIEVES OF PAIN: the friendly unit that takes this unit's lost wounds as mortal wounds, if any. */
+export function woundsGoTo(s: GameState, u: UnitState): UnitState | undefined {
+  const id = unitFx(s, u).find((a) => a.e.redirectWounds)?.e.redirectWounds;
+  const t = id ? s.units.find((x) => x.id === id) : undefined;
+  return t && t.id !== u.id && t.status === 'board' && alive(t).length && !unitFx(s, t).some((a) => a.e.redirectWounds) ? t : undefined;
+}
+
+/** Emotionless Clarity: a friendly bearer within range makes this model's Deadly Demise go off without a roll (once per turn). */
+export function demiseSure(s: GameState, u: UnitState, m: ModelState): boolean {
+  for (const x of boardUnits(s, u.owner)) for (const a of unitFx(s, x)) {
+    const q = a.e.demiseSure;
+    if (!q || a.holder.id !== x.id || !unitMatches(u, q.units) || (x.used ?? {})[`sure:${a.label}`] === String(s.turn)) continue;
+    if (!alive(x).some((n) => baseDist(n, m) <= q.range + 1e-6)) continue;
+    (x.used ??= {})[`sure:${a.label}`] = String(s.turn);
+    log(s, `${a.label}: the Deadly Demise of ${m.name} goes off without a roll`, 'info', u.owner);
+    return true;
+  }
+  return false;
+}
+
+/** Deadly Demise X+ for a model destroyed by this attacker's weapon (Armour Obliteration), or 6. */
+export function killDemiseOn(s: GameState, A: UnitState, weapon: string): number {
+  return Math.min(6, ...effectsFor(s, A).filter((a) => a.e.killDemiseOn && (!a.e.weapon || wk(weapon).includes(wk(a.e.weapon)))).map((a) => a.e.killDemiseOn!));
+}
+
 export function effectsFor(s: GameState, u: UnitState): Active[] {
   const hit = memo?.fx.get(u.id);
   if (hit) return hit;
@@ -629,7 +687,7 @@ function nearCond(x: Ctx, spec: string): boolean {
   const from = x.bearers?.length ? x.bearers : alive(x.holder ?? x.A);
   const self = x.holder ?? x.A;
   return boardUnits(x.s, self.owner).some((f) => f.id !== self.id
-    && req.every((k) => f.keywords.includes(k) || f.factionKeywords.includes(k) || f.sources.includes(k))
+    && req.every((k0) => k0.split('|').some((k) => f.keywords.includes(k) || f.factionKeywords.includes(k) || f.sources.includes(k)))
     && !(not && (f.keywords.includes(not) || f.sources.includes(not)))
     && alive(f).some((n) => from.some((b) => baseDist(b, n) <= r + 1e-6)));
 }
@@ -645,6 +703,17 @@ function nearModelsCond(x: Ctx, spec: string): boolean {
   const has = (f: UnitState, n: ModelState, k: string) => n.keywords.includes(k) || f.factionKeywords.includes(k) || (k === 'CHARACTER' && n.isCharacter) || wk(n.source) === wk(k);
   return boardUnits(x.s, self.owner).some((f) => alive(f).some((n) => req.every((k) => has(f, n, k)) && !(not && has(f, n, not))
     && from.some((b) => b.id !== n.id && baseDist(b, n) <= r + 1e-6)));
+}
+
+/** "nearCount:6:2:AELDARI+PSYKER" — at least 2 other friendly models with those keywords within 6" of this model (Psychic Communion). */
+function nearCountCond(x: Ctx, spec: string): boolean {
+  const [, rs, ns, kws = ''] = spec.split(':');
+  const self = x.holder ?? x.A;
+  const from = x.m ? [x.m] : x.bearers?.length ? x.bearers : alive(self);
+  const req = kws.split('+').filter(Boolean);
+  const has = (f: UnitState, n: ModelState, k: string) => n.keywords.includes(k) || f.factionKeywords.includes(k) || f.keywords.includes(k);
+  const near = boardUnits(x.s, self.owner).flatMap((f) => alive(f).filter((n) => req.every((k) => has(f, n, k)) && from.some((b) => b.id !== n.id && baseDist(b, n) <= Number(rs) + 1e-6)));
+  return near.length >= Number(ns);
 }
 
 function closestEnemy(s: GameState, A: UnitState, T: UnitState): boolean {
@@ -694,6 +763,12 @@ export function cond(c: string, x: Ctx): boolean {
   // a unit embarked within this TRANSPORT has this keyword (Targetin' Gizmos: a Big Mek inside)
   if (c.startsWith('embarkedKw:')) { const k = c.slice(11); return s.units.some((x) => x.status === 'embarked' && x.embarkedIn === A.id && alive(x).some((m) => m.keywords.includes(k))); }
   if (c.startsWith('hasAbility:')) return A.abilities.some((a) => a.name === c.slice(11));
+  if (c.startsWith('targetNearOwnDz:')) return !!x.T && alive(x.T).some((m) => bodyTouchesPoly(m, Number(c.slice(16)), toPoly(deploymentById(s.deploymentId).zones[s.players[x.T!.owner].role])));
+  if (c.startsWith('gearCount:')) { const [, n, g] = c.split(':'); return alive(A).filter((m) => (m.gear ?? []).some((x) => wk(x).includes(wk(g)))).length >= Number(n); }
+  if (c.startsWith('enemySeenWithin:')) { const r = Number(c.slice(16)); return onBoard(A) && boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= r + 1e-6 && alive(A).some((m) => alive(e).some((n) => hasLos(s, m, n)))); }
+  if (c.startsWith('holderMarked:')) return ((x.holder ?? A).timed ?? []).some((t) => t.mark === c.slice(13));
+  if (c.startsWith('woundsLeft:')) return alive(x.holder ?? A).reduce((n, m) => n + m.wounds, 0) >= Number(c.slice(11));
+  if (c.startsWith('nearEnh:')) { const [, r, name] = c.split(':'); const self = x.holder ?? A; return boardUnits(s, self.owner).some((f) => f.enhancements.some((e) => e.name === name) && unitDistance(self, f) <= Number(r) + 1e-6); }
   if (c.startsWith('enh:')) return (x.holder ?? A).enhancements.some((e) => e.name === c.slice(4));
   // the target is engaged with a friendly unit with this keyword (Clutching Corruption: PLAGUE LEGIONS)
   if (c.startsWith('targetEngagedWithKw:')) { const k = c.slice(20); return !!T && boardUnits(s, A.owner).some((f) => (hasKw(f, k) || f.factionKeywords.includes(k)) && engagedEnemies(s, f).some((e) => e.id === T.id)); }
@@ -728,6 +803,12 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('farFromEnemies:')) { const r = Number(c.slice(15)); return onBoard(A) && !boardUnits(s, other(A.owner)).some((e) => unitDistance(A, e) <= r + 1e-6); }
   if (c.startsWith('nearMarked:')) { const [, mark, rs] = c.split(':'); return boardUnits(s, other(A.owner)).some((e) => (e.timed ?? []).some((t) => t.mark === mark && t.by === A.owner) && unitDistance(A, e) <= Number(rs) + 1e-6); }
   if (c.startsWith('nearModels:')) return nearModelsCond(x, c);
+  if (c.startsWith('nearCount:')) return nearCountCond(x, c);
+  // a detachment rule / army rule the unit's army has: "rule:Searing Soulflame" or the detachment's name
+  if (c.startsWith('rule:')) return activeRules(s, A.owner).includes(c.slice(5));
+  if (c.startsWith('roundAtLeast:')) return s.round >= Number(c.slice(13));
+  if (c.startsWith('targetFar:')) { const r = Number(c.slice(10)); return !!T && !boardUnits(s, other(T.owner)).some((e) => unitDistance(T, e) <= r + 1e-6); }
+  if (c.startsWith('enemyBetween:')) { const [lo, hi] = c.slice(13).split(':').map(Number); return boardUnits(s, other(A.owner)).some((e) => { const d = unitDistance(A, e); return d > lo + 1e-6 && d <= hi + 1e-6; }); }
   // wholly within X" of one or more battlefield edges (every model near the same or any edge)
   if (c.startsWith('nearEdge:')) { const d = Number(c.slice(9)); const W = RULES.battlefield.width, H = RULES.battlefield.height; return alive(A).every((m) => Math.min(m.x, m.y, W - m.x, H - m.y) + m.r <= d + 1e-6); }
   if (c.startsWith('enemyEngagedWithin:')) { const r = Number(c.slice(19)); return boardUnits(s, other(A.owner)).some((e) => engagedEnemies(s, e).length > 0 && unitDistance(A, e) <= r + 1e-6); }
@@ -751,6 +832,8 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('friendMarked:')) return s.units.some((f) => f.owner === A.owner && (f.timed ?? []).some((t) => t.mark === c.slice(13)));
   if (c.startsWith('targetKwAll:')) return !!T && c.slice(12).split('|').some((k) => alive(T).every((n) => n.keywords.includes(k)));
   if (c.startsWith('detachment:')) return (s.players[A.owner].detachments ?? []).some((d) => d.name === c.slice(11));
+  // "targetNearMarked:9:PSI SURGE": the target is within X" of a unit of A's army carrying that mark
+  if (c.startsWith('targetNearMarked:')) { const [, rs, mk] = c.split(':'); return !!T && boardUnits(s, A.owner).some((f) => (f.timed ?? []).some((t) => t.mark === mk || t.label === mk) && unitDistance(f, T) <= Number(rs) + 1e-6); }
   if (c.startsWith('targetNearFriendly:')) {
     // "targetNearFriendly:9:THOUSAND SONS+PSYKER": the target is within X" of a unit of A's army with all those keywords
     const [, rs, kws = ''] = c.split(':');
@@ -763,6 +846,10 @@ export function cond(c: string, x: Ctx): boolean {
     case 'targetOnUncontrolledObjective': return !!T && s.objectives.some((o) => o.controller !== A.owner && unitInRange(s, T, o));
     case 'readied': return !!A.readied;
     case 'usedBattleAbility': return Object.values(A.used ?? {}).some((v) => v.startsWith('battle|'));
+    // [LETHAL HITS] beats [SUSTAINED HITS 1] when the weapon wounds on a 4+ or worse (Relocational Optimiser picks one)
+    case 'hardToWound': { if (!T || !x.p) return false; const S = Number(x.p.S ?? 0), Tt = Math.max(...alive(T).map((m) => m.profile.T)); return !(S >= Tt * 2 || S > Tt); }
+    // defending: no other unit of ours is closer to the attacker (Courageous Diversion: "the closest eligible target")
+    case 'closestToAttacker': return !!T && onBoard(T) && boardUnits(s, A.owner).every((f) => f.id === A.id || unitDistance(T, f) >= unitDistance(T, A) - 1e-6);
     case 'targetTougher': return !!T && Math.max(...alive(T).map((m) => m.profile.T)) > Math.max(...alive(x.holder ?? A).map((m) => m.profile.T));
     case 'markAlive': { const id = (x.holder ?? A).mark; return !!id && s.units.some((e) => e.id === id && e.status !== 'destroyed' && alive(e).length > 0); }
     // below starting / half strength, a single-model unit counting its wounds
@@ -855,6 +942,9 @@ export function cond(c: string, x: Ctx): boolean {
     case 'ownTurn': return A.owner === s.active;
     case 'fightPhase': return s.phase === 'fight';
     case 'shootingPhase': return s.phase === 'shooting';
+    case 'movementPhase': return s.phase === 'movement';
+    case 'commandPhase': return s.phase === 'command';
+    case 'chargePhase': return s.phase === 'charge';
     case 'leaderAttached': return hasLivingLeader(A);
     // Idols of Khorne: within 6" of a friendly World Eaters MONSTER or 9" of a TITANIC unit (+3" Chosen of the Blood God)
     case 'nearIdol': return boardUnits(s, A.owner).some((f) => f.id !== A.id && f.factionKeywords.includes('WORLD EATERS') && (hasKw(f, 'MONSTER') || hasKw(f, 'TITANIC'))
@@ -907,8 +997,15 @@ export function cond(c: string, x: Ctx): boolean {
     case 'attackSLeqT': return !!x.p && !!T && (x.p.S ?? 0) <= Math.max(...alive(T).map((n) => n.profile.T));
     case 'enemyPsykerWithin12': return boardUnits(s, other(A.owner)).some((e) => hasKw(e, 'PSYKER') && unitDistance(A, e) <= 12 + 1e-6);
     case 'unengaged': return engagedEnemies(s, A).length === 0;
+    case 'shotThisTurn': return A.shotTurn === s.turn;
+    // set up as Reinforcements "until the end of your next Fight phase": this turn, or last (the opponent's) turn
+    case 'reinforcedRecently': return (A.setUpTurn ?? 0) > 0 && (A.setUpTurn === s.turn || (A.setUpTurn === s.turn - 1 && s.active === A.owner));
+    case 'lostModelsThisPhase': return (A.used ?? {}).lostModel === `${s.turn}:${s.phase}`;
     // Death Guard: the target is Afflicted / within half the weapon's range / in its own deployment zone
     case 'halfRange': return !!x.p && typeof x.p.range === 'number' && (x.d ?? Infinity) <= x.p.range / 2 + 1e-6;
+    case 'whollyInOwnDz': return alive(A).every((m) => pointInPoly(m, toPoly(deploymentById(s.deploymentId).zones[s.players[A.owner].role])));
+    case 'powerMatrix': return inPowerMatrix(s, A);
+    case 'inEnemyDz': return alive(A).some((m) => pointInPoly(m, toPoly(deploymentById(s.deploymentId).zones[s.players[other(A.owner)].role])));
     case 'targetInOwnDz': return !!T && alive(T).some((m) => pointInPoly(m, toPoly(deploymentById(s.deploymentId).zones[s.players[T.owner].role])));
     case 'targetSeenByHolder': return !!T && (x.bearers?.length ? x.bearers : alive(x.holder ?? A)).some((b) => alive(T).some((o) => hasLos(s, b, o)));
     // defending: the attacker's model sees this unit in cover
@@ -945,7 +1042,7 @@ const rerolls = (e: { reroll?: Reroll | Reroll[] }): Reroll[] => (e.reroll ? (Ar
 export function offenceFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, w: WeaponData, p: WeaponProfileData, kind: 'melee' | 'ranged', d: number): Active[] {
   const x: Ctx = { s, A, T, m, w, p, d, kind };
   return effectsFor(s, A).filter((a) => (!a.e.attack || a.e.attack === kind) && modelOk(a, m) && weaponOk(a, w, p) && holds(a, x)
-    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.critWoundAp || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange || a.e.skill));
+    && (a.e.hit || a.e.wound || a.e.ap || a.e.strength || a.e.attacks || a.e.damage || a.e.reroll || a.e.abilities?.length || a.e.critHitOn || a.e.critWoundOn || a.e.critWoundAp || a.e.critWoundApSet || a.e.ignoreHitMods || a.e.ignoreWoundMods || a.e.givesCover || a.e.rapidFireFullRange || a.e.halfRangeAlways || a.e.mortalPerWound || a.e.skill || a.e.skillSet));
 }
 
 /** Marks on the target ("hit by Multi-spectrum Array: +1 to hit for your ADEPTUS ASTARTES") that help this attacker. */
@@ -989,10 +1086,12 @@ export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, poo
   let strength = (pool.profile.S ?? 1) + offenceInto(s, A, T, pool, list, kind, notes);
   if (kind === 'melee') for (const b of meleeStrength(s, A)) { strength += b.n; notes.push(b.note); }
   for (const i of inc) {
+    if (i.strength) { strength += i.strength; notes.push(`marked target: +${i.strength} S`); }
     if (i.hit && !pool.autoHit) { pool.hitMod = clamp(pool.hitMod + i.hit, -hitCap, hitCap); notes.push(`marked target: +${i.hit} to hit`); }
     if (i.wound) { pool.woundMod = clamp(pool.woundMod + i.wound, -woundCap, woundCap); notes.push(`marked target: +${i.wound} to wound`); }
     if (i.ap) { pool.ap -= i.ap; notes.push(`marked target: +${i.ap} AP`); }
     if (i.critWoundAp) { pool.critWoundAp = (pool.critWoundAp ?? 0) + i.critWoundAp; notes.push(`marked target: +${i.critWoundAp} AP on critical wound`); }
+    if (i.critHitOn) { pool.critHitOn = Math.min(pool.critHitOn ?? 6, i.critHitOn); notes.push(`marked target: crit hit ${i.critHitOn}+`); }
     for (const r of rerolls(i)) applyReroll(pool, r, 'marked target', notes);
     if (i.blastReroll && pool.profile.abilities.includes('blast')) applyReroll(pool, 'hits', 'marked target (Blast)', notes);
     if (i.damage) { pool.damage = addToExpr(pool.damage, i.damage); notes.push(`marked target: +${i.damage} D`); }
@@ -1039,6 +1138,7 @@ function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list:
     if (e.wound) { pool.woundMod = clamp(pool.woundMod + e.wound, -woundCap, woundCap); bump(a.label, `${e.wound > 0 ? '+' : ''}${e.wound} wound`); }
     if (e.ap) { pool.ap -= e.ap; bump(a.label, `+${e.ap} AP`); }
     if (e.critWoundAp) { pool.critWoundAp = (pool.critWoundAp ?? 0) + e.critWoundAp; bump(a.label, `+${e.critWoundAp} AP on critical wound`); }
+    if (e.critWoundApSet) { pool.critWoundApSet = e.critWoundApSet; bump(a.label, `AP -${e.critWoundApSet} on critical wound`); }
     if (e.strength) { strength += e.strength; bump(a.label, `+${e.strength} S`); }
     if (e.attacks) { pool.attackBonus = (pool.attackBonus ?? 0) + e.attacks; bump(a.label, `+${e.attacks} A`); }
     if (e.damage) { pool.damage = addToExpr(pool.damage, e.damage); bump(a.label, `+${e.damage} D`); }
@@ -1046,6 +1146,7 @@ function offenceInto(s: GameState, A: UnitState, T: UnitState, pool: Pool, list:
     if (e.critWoundOn) { pool.critWoundOn = Math.min(pool.critWoundOn, e.critWoundOn); bump(a.label, `crit wound ${e.critWoundOn}+`); }
     if (e.ignoreHitMods) { pool.ignoreHitMods = true; bump(a.label, 'ignores Hit roll modifiers'); }
     if (e.ignoreWoundMods) { pool.ignoreWoundMods = true; bump(a.label, 'ignores Wound roll modifiers'); }
+    if (e.mortalPerWound) { pool.mortalPerWound = (pool.mortalPerWound ?? 0) + e.mortalPerWound; bump(a.label, `+${e.mortalPerWound} mortal wound per wound`); }
     if (e.strengthPer5Models) {
       const n = alive(A).length + s.units.filter((p) => p.embarkedIn === A.id && p.status === 'embarked').reduce((x, p) => x + alive(p).length, 0);
       const add = Math.floor(n / 5);
@@ -1088,6 +1189,7 @@ function applyReroll(pool: Pool, r: Reroll, label: string, notes: string[]) {
   if (r === 'wounds1' && !pool.rerollWounds1) { pool.rerollWounds1 = true; notes.push(`${label}: re-roll wound 1`); }
   if (r === 'wounds12' && !pool.rerollWounds12) { pool.rerollWounds12 = true; notes.push(`${label}: re-roll wound 1-2`); }
   if (r === 'damage' && !pool.rerollDamage) { pool.rerollDamage = true; notes.push(`${label}: re-roll damage`); }
+  if (r === 'damage1' && !pool.rerollDamage1) { pool.rerollDamage1 = true; notes.push(`${label}: re-roll damage 1`); }
   if (r === 'damageOne' && !pool.rerollDamage && !pool.rerollDamageOne) { pool.rerollDamageOne = true; notes.push(`${label}: re-roll one Damage roll`); }
 }
 
@@ -1129,7 +1231,7 @@ export function defencesFor(s: GameState, T: UnitState, kind: 'melee' | 'ranged'
   }).map((a) => ({ ...a }));
 }
 
-export const targetHasCover = (s: GameState, T: UnitState, d: number) => defencesFor(s, T, 'ranged').some((a) => a.e.defend!.cover || (a.e.defend!.coverUnless12 && d > 12 + 1e-6))
+export const targetHasCover = (s: GameState, T: UnitState, d: number) => defencesFor(s, T, 'ranged').some((a) => a.e.defend!.cover || (a.e.defend!.coverUnless12 && d > 12 + 1e-6) || (!!a.e.defend!.coverUnlessWithin && d > a.e.defend!.coverUnlessWithin + 1e-6))
   || effectsFor(s, T).some((a) => a.e.stealth && holds(a, { s, A: T }));
 
 /** "Cannot be targeted by ranged attacks unless the attacking model is within 12"". */
@@ -1138,7 +1240,7 @@ export const untargetableAt = (s: GameState, T: UnitState, d: number) => d > 12 
 /** Damage, invulnerable save and Feel No Pain for one model hit by an attack. */
 export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'melee' | 'ranged' | 'mortal', psychic = false, attacker?: UnitState) {
   const list = kind === 'mortal' ? effectsFor(s, T).filter((a) => a.e.defend && modelOk(a, m) && holds(a, { s, A: T, T: attacker, m })) : defencesFor(s, T, kind, m, attacker);
-  let damage = 0, halve = false, inv: number | null = null, fnp: number | null = null, saveBonusD1 = 0, save = 0, worse = 0, negate = false;
+  let damage = 0, damageSet: number | undefined, halve = false, inv: number | null = null, fnp: number | null = null, saveBonusD1 = 0, save = 0, worse = 0, negate = false, invReroll1 = false;
   let negateKey: 'turn' | 'round' | 'battle' | undefined;
   for (const a of list) {
     const df = a.e.defend!;
@@ -1146,10 +1248,12 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
     if (df.charOnly && !m.isCharacter) continue;
     if (kind !== 'mortal') {
       if (df.negateOncePerPhase && T.used?.[`negate:${m.id}`] !== phaseKey(s)) negate = true;
-      if (df.negateOnce && T.used?.[`negate:${df.negateOnce}`] !== negatePeriod(s, df.negateOnce)) { negate = true; negateKey = df.negateOnce; }
+      if (df.negateOnce && (df.negateUses && df.negateOnce === 'battle' ? Number(T.used?.['negate:battleN'] ?? 0) < df.negateUses : T.used?.[`negate:${df.negateOnce}`] !== negatePeriod(s, df.negateOnce))) { negate = true; negateKey = df.negateOnce; }
       if (df.damage && !(df.notPsychic && psychic)) damage += df.damage;
       if (df.halveDamage) halve = true;
+      if (df.damageSet) damageSet = Math.min(damageSet ?? 99, df.damageSet);
       if (df.inv && (!df.invVs || (df.invVs === 'psychic' && psychic)) && (inv === null || df.inv < inv)) inv = df.inv;
+      if (df.invReroll1) invReroll1 = true;
       if (df.saveBonusD1) saveBonusD1 = Math.max(saveBonusD1, df.saveBonusD1);
       if (df.save) {
         let add = df.save;
@@ -1159,11 +1263,12 @@ export function modelDefence(s: GameState, T: UnitState, m: ModelState, kind: 'm
     }
     if (df.fnp) {
       const vs = df.fnpVs;
-      const ok = !vs || (vs === 'mortal' && kind === 'mortal') || (vs === 'psychic' && psychic) || (vs === 'mortalPsychic' && (kind === 'mortal' || psychic));
+      const d1 = vs === 'damage1' && kind !== 'mortal' && s.attack?.pools[s.attack.idx]?.profile.D.trim() === '1';
+      const ok = !vs || d1 || (vs === 'mortal' && kind === 'mortal') || (vs === 'psychic' && psychic) || (vs === 'mortalPsychic' && (kind === 'mortal' || psychic));
       if (ok && (fnp === null || df.fnp < fnp)) fnp = df.fnp;
     }
   }
-  return { damage, halve, inv, fnp, saveBonusD1, save: save + worse, negate, negateKey };
+  return { damage, damageSet, halve, inv, fnp, saveBonusD1, save: save + worse, negate, negateKey, invReroll1 };
 }
 
 /** Abilities of one model even after it was destroyed ("If this model is destroyed by a melee attack…"). */
@@ -1203,6 +1308,7 @@ export function retaliateFor(s: GameState, u: UnitState, m: ModelState): { on: n
 /** Use the once-per-phase "change the Damage of that attack to 0" of a model. */
 const negatePeriod = (s: GameState, k: 'turn' | 'round' | 'battle') => (k === 'turn' ? `t${s.turn}` : k === 'round' ? `r${s.round}` : 'battle');
 export const useNegate = (s: GameState, T: UnitState, m: ModelState, k?: 'turn' | 'round' | 'battle') => {
+  if (k === 'battle') (T.used ??= {})['negate:battleN'] = String(Number(T.used?.['negate:battleN'] ?? 0) + 1);
   if (k) (T.used ??= {})[`negate:${k}`] = negatePeriod(s, k); else (T.used ??= {})[`negate:${m.id}`] = phaseKey(s);
 };
 
@@ -1242,17 +1348,26 @@ export function unitFlags(s: GameState, u: UnitState) {
   const list = unitFx(s, u);
   const es = list.map((a) => a.e);
   return {
+    ordersStayShocked: es.some((e) => e.ordersStayShocked),
+    blastProof: es.some((e) => e.blastProof),
+    ignoreLdMods: es.some((e) => e.ignoreLdMods),
+    disembarkRange: Math.max(0, ...es.map((e) => e.disembarkRange ?? 0)),
+    ignoreEngaged: es.find((e) => e.ignoreEngaged)?.ignoreEngaged,
     stealth: es.some((e) => e.stealth),
     loneOperative: es.some((e) => e.loneOperative),
     deepStrike: es.some((e) => e.deepStrike),
     infiltrators: es.some((e) => e.infiltrators),
     fightsFirst: es.some((e) => e.fightsFirst),
+    noFightsFirst: es.some((e) => e.noFightsFirst),
     scouts: Math.max(0, ...es.map((e) => e.scouts ?? 0)),
     move: es.some((e) => e.ignoreMods || e.ignoreMoveMods) ? es.reduce((a, e) => a + Math.max(0, e.move ?? 0), 0) : es.reduce((a, e) => a + (e.move ?? 0), 0),
     ld: es.reduce((a, e) => a + (e.ld ?? 0), 0),
     toughness: es.reduce((a, e) => a + (e.toughness ?? 0), 0),
     cannotFallBack: es.some((e) => e.cannotFallBack),
     noOverwatch: es.some((e) => e.noOverwatch),
+    synapseRange: Math.max(6, ...es.map((e) => e.synapseRange ?? 6)),
+    moveHalve: es.some((e) => e.moveHalve),
+    graviticFly: es.some((e) => e.graviticFly),
     noSnapTarget: es.some((e) => e.noSnapTarget),
     cannotBeHidden: es.some((e) => e.cannotBeHidden),
     detection: es.reduce((a, e) => a + (e.detection ?? 0), 0),
@@ -1271,7 +1386,9 @@ export function unitFlags(s: GameState, u: UnitState) {
     noBigGunsPenalty: es.some((e) => e.noBigGunsPenalty),
     followFallBack: es.some((e) => e.followFallBack),
     fallBackLdTest: list.some((a) => a.e.fallBackLdTest && a.holder.owner !== u.owner),
+    fallBackRoll: Math.min(7, ...list.filter((a) => a.e.fallBackRoll && a.holder.owner !== u.owner).map((a) => a.e.fallBackRoll!)),
     slowed: es.some((e) => e.slowed),
+    snared: es.some((e) => e.snared),
     ldSet: Math.min(99, ...es.map((e) => e.ldSet ?? 99)),
     advanceHazard: es.some((e) => e.advanceHazard),
     rangeBonus: es.reduce((a, e) => a + (e.rangeBonus ?? 0), 0),
@@ -1315,6 +1432,7 @@ export function unitFlags(s: GameState, u: UnitState) {
     terrorBelowMod: Math.min(0, ...es.map((e) => e.terrorBelowMod ?? 0)),
     chargedMinus: Math.max(0, ...es.map((e) => e.chargedMinus ?? 0)),
     thralls: es.some((e) => e.thralls),
+    thrallsKw: es.find((e) => e.thrallsKw)?.thrallsKw,
     autoPassShock: es.some((e) => e.autoPassShock),
     shieldsNear: Math.max(0, ...es.map((e) => e.shieldsNear ?? 0)),
     ignoreMoveMods: es.some((e) => e.ignoreMoveMods),
@@ -1364,6 +1482,7 @@ function stratParts(s: GameState, u: UnitState, stratId: string): StratParts {
   for (const a of unitFx(s, u)) {
     const d = a.e.stratDiscount;
     if (d && a.holder.owner === u.owner && (!d.ids || d.ids.includes(stratId) || d.ids.includes('*')) && limitFree(s, a, 'strat', d.limit, d.perArmy)
+      && (!d.yp || (s.players[u.owner].yieldPoints ?? 0) >= d.yp)
       && (!discount || d.cp > discount.e.stratDiscount!.cp)) discount = a;
     const t = a.e.stratTax;
     if (t && a.holder.owner !== u.owner && limitFree(s, a, 'tax', t.limit) && (!tax || t.cp > tax.e.stratTax!.cp)) tax = a;
@@ -1383,6 +1502,9 @@ function stratSpent(s: GameState, u: UnitState, stratId: string) {
     log(s, `${discount.label}: Stratagem costs ${d.cp}CP less`, 'cp', u.owner);
     const m = d.sacrifice ? alive(u).find((x) => !x.isCharacter) : undefined;
     if (m) { m.dead = true; m.wounds = 0; log(s, `${discount.label}: ${m.name} is destroyed`, 'info', u.owner); }
+    const pool = s.players[u.owner].seerFate;
+    if (d.fateValue && pool?.includes(d.fateValue)) pool.splice(pool.indexOf(d.fateValue), 1);
+    if (d.yp) { s.players[u.owner].yieldPoints = (s.players[u.owner].yieldPoints ?? 0) - d.yp; log(s, `${discount.label}: ${d.yp}YP spent`, 'info', u.owner); }
   }
   if (tax) {
     const t = tax.e.stratTax!;
@@ -1403,7 +1525,8 @@ export function ocOf(s: GameState, u: UnitState): (m: ModelState) => number {
   const list = effectsFor(s, u);
   return (m) => {
     const fx = list.filter((a) => modelOk(a, m) && holds(a, { s, A: u, m }));
-    if (u.battleShocked) return fx.reduce((a, x) => Math.max(a, x.e.shockedOc ?? 0), 0);
+    // shockedOc: the OC while Battle-shocked (negative: that much less than the characteristic, Death Mask of Ollanius)
+    if (u.battleShocked) return fx.reduce((a, x) => Math.max(a, x.e.shockedOc === undefined ? 0 : x.e.shockedOc < 0 ? (m.profile.OC ?? 0) + x.e.shockedOc : x.e.shockedOc), 0);
     if (fx.some((x) => x.e.ocZero)) return 0;
     let oc = m.profile.OC ?? 0;
     for (const x of fx) if (x.e.ocSet !== undefined) oc = Math.max(oc, x.e.ocSet);
@@ -1422,14 +1545,20 @@ export const modelOc = (s: GameState, u: UnitState, m: ModelState) => ocOf(s, u)
 
 /** Put a timed effect on a unit (own buff, or a mark on an enemy unit). */
 export function addTimed(s: GameState, u: UnitState, t: Omit<TimedEffect, 'turn'>) {
-  (u.timed ??= []).push({ ...t, turn: s.turn });
+  // a keyword for a while (Adaptive Optimisation: SYNAPSE; Synergistic Empowerment: CRYPTEK on one model)
+  const kw = t.e.addKeywords?.filter((k) => !u.keywords.includes(k));
+  if (kw?.length) {
+    u.keywords = [...u.keywords, ...kw];
+    for (const m of u.models) if (!t.models || t.models.includes(m.id)) m.keywords = [...new Set([...m.keywords, ...kw])];
+  }
+  (u.timed ??= []).push({ ...t, turn: s.turn, ...(kw?.length ? { kwAdded: kw } : {}) });
 }
 
 /** Drop timed effects whose time is up. Called at phase and turn boundaries. */
 export function expireTimed(s: GameState, at: 'phaseEnd' | 'turnEnd' | 'turnStart' | 'commandStart' | 'movementStart', player: PlayerId) {
   for (const u of s.units) {
     if (!u.timed?.length) continue;
-    u.timed = u.timed.filter((t) => {
+    const keep = (t: TimedEffect) => {
       switch (t.until) {
         case 'phase': return at !== 'phaseEnd';
         case 'turn': return at !== 'turnEnd';
@@ -1440,7 +1569,15 @@ export function expireTimed(s: GameState, at: 'phaseEnd' | 'turnEnd' | 'turnStar
         case 'opponentNextMovementEnd': return !(at === 'phaseEnd' && s.phase === 'movement' && s.active !== t.by && s.turn > t.turn);
         default: return true;
       }
-    });
+    };
+    const gone = u.timed.filter((t) => !keep(t));
+    if (!gone.length) continue;
+    u.timed = u.timed.filter(keep);
+    for (const t of gone) for (const k of t.kwAdded ?? []) {
+      if (u.timed.some((o) => o.kwAdded?.includes(k))) continue;
+      u.keywords = u.keywords.filter((x) => x !== k);
+      for (const m of u.models) m.keywords = m.keywords.filter((x) => x !== k);
+    }
   }
 }
 
@@ -1467,7 +1604,7 @@ export function loneOperativeNow(s: GameState, u: UnitState): boolean {
 
 setVisibilityHooks({
   loneOperative: loneOperativeNow,
-  detection: (s, u) => (u.timed ?? []).reduce((a, t) => a + (t.e.detection ?? 0), 0)
+  detection: (s, u) => unitFlags(s, u).detection
     // an identified terrain feature: enemy units within it are seen from 3" further
     + ((s.identified ?? []).some((x) => x.turn === s.turn && x.by !== u.owner && alive(u).some((m) => { const t = s.terrain.find((q) => q.id === x.terrainId); return !!t && bodyTouchesPoly(m, 0, t.poly); })) ? 3 : 0),
   cannotBeHidden: (_s, u) => (u.timed ?? []).some((t) => t.e.cannotBeHidden),
@@ -1486,6 +1623,8 @@ function stratRepeatUsed(s: GameState, u: UnitState, id: string) {
   for (const a of unitFx(s, u)) if (a.e.stratRepeat?.ids.includes(id)) limitBag(s, a)[`repeat:${u.id}:${a.label}`] = periodKey(s, a.e.stratRepeat.limit);
 }
 setStratHooks(stratDiscount, (s, u, id) => { stratSpent(s, u, id); stratRepeatUsed(s, u, id); }, stratRepeat);
+setScreenHook((s, x, T) => unitFx(s, x).some((a) => !!a.e.coverBehind && (!a.e.coverBehind.friendly || x.owner === T.owner) && unitMatches(T, a.e.coverBehind.units)));
+setStratShockedHook((s, u) => unitFx(s, u).some((a) => a.e.stratsWhileShocked));
 setStratBlockHook((s, u) => {
   if (!onBoard(u) || u.keywords.includes('MONSTER') || u.keywords.includes('VEHICLE')) return null;
   const e = engagedEnemies(s, u).find((x) => unitFlags(s, x).noEngagedStrats);
@@ -1495,6 +1634,7 @@ setActionEligibilityHook((s, u, what) => canDo(s, u, what));
 setThroughHook((s, u, kind) => {
   const f = unitFx(s, u).map((a) => a.e);
   if (f.some((e) => e.moveThroughModels)) return 'all';
+  if (kind === 'charge' && f.some((e) => e.chargeThroughAll)) return 'all';
   if (kind === 'charge' && f.some((e) => e.chargeThroughModels)) return 'nonMV';
   // Super-heavy Walker: Normal, Advance and Fall Back moves go through every model but TITANIC ones
   return moveThroughModels(s, u, kind);
@@ -1529,4 +1669,19 @@ export function applyStaticEffects(s: GameState) {
       }
     }
   }
+}
+
+/** Canoptek Court: the unit is wholly within its army's Power Matrix (its own deployment zone; No Man's Land / the
+ *  opponent's zone while the army controls at least half of the objective markers there). */
+function inPowerMatrix(s: GameState, A: UnitState): boolean {
+  const zones = deploymentById(s.deploymentId).zones;
+  const own = toPoly(zones[s.players[A.owner].role]), opp = toPoly(zones[s.players[other(A.owner)].role]);
+  const ms = alive(A);
+  if (!ms.length) return false;
+  if (ms.every((m) => pointInPoly(m, own))) return true;
+  const half = (inZone: (o: Pt) => boolean) => { const os = s.objectives.filter(inZone); return os.length > 0 && os.filter((o) => o.controller === A.owner).length * 2 >= os.length; };
+  const nml = (q: Pt) => !pointInPoly(q, own) && !pointInPoly(q, opp);
+  if (ms.every((m) => pointInPoly(m, own) || nml(m)) && half(nml) && (ms.every((m) => nml(m)) || ms.every((m) => !pointInPoly(m, opp)))) return true;
+  if (ms.every((m) => !nml(m)) && half((o) => pointInPoly(o, opp)) && (half(nml) || ms.every((m) => pointInPoly(m, opp) || pointInPoly(m, own)))) return true;
+  return false;
 }

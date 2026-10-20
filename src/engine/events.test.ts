@@ -1,3 +1,4 @@
+import { actsOfUnit } from '../rules-engine/activations';
 // Faction rules reached through the event bus (src/factions/index.ts) from every path of the game loop.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -29,23 +30,14 @@ describe('faction hooks', () => {
     for (const t of s.shockTests) expect(t.mod).toBe(0);
   });
 
-  it('Channelled Force (Banishers): Grey Knights melee attacks against a DAEMON unit have +1 Damage', () => {
-    const run = (det: string) => {
+  it('Channelled Force (Banishers): a Grey Knights unit selected to fight can take a Leadership test for [LETHAL HITS] / [SUSTAINED HITS 1]', () => {
+    const acts = (det: string) => {
       const s = createGame({ lists: [{ ...PRESETS.GK, detachments: [det] }, PRESETS.CD], factions: [load('GK'), load('CD')], names: ['A', 'B'], seed: 3 });
-      s.terrain = [];
       const A = s.units.find((u) => u.owner === 0)!;
-      const T = s.units.find((u) => u.owner === 1 && u.keywords.includes('DAEMON'))!;
-      placeUnit(s, A, formationAt(A, { x: 20, y: 22 }));
-      placeUnit(s, T, formationAt(T, { x: 20 + A.models[0].r + T.models[0].r + 0.5, y: 22 }));
-      A.status = 'board'; T.status = 'board';
-      s.phase = 'fight'; s.active = 0;
-      return buildFightPools(s, A.id, T.id).pools;
+      return actsOfUnit(s, A).filter((d) => d.spec.when === 'selectedToFight' && d.spec.ldTest);
     };
-    const plain = run('Warpbane Task Force');
-    const banishers = run('Banishers');
-    expect(plain.length).toBeGreaterThan(0);
-    expect(banishers.map((p) => p.damage)).not.toEqual(plain.map((p) => p.damage));
-    expect(banishers.every((p) => /\+1$|^\d+$/.test(p.damage))).toBe(true);
+    expect(acts('Warpbane Task Force').length).toBe(0);
+    expect(acts('Banishers').length).toBe(2);
   });
 });
 

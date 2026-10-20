@@ -481,7 +481,7 @@
    "status": "auto"
   },
   "SHAMBLING WALL": {
-   "react": "ownAttacked",
+   "react": "targeted",
    "unitIf": [
     "nearModels:3:POXWALKERS"
    ],
@@ -495,7 +495,7 @@
    "status": "auto"
   },
   "GRIP OF THE WALKING POX": {
-   "react": "ownAttacked",
+   "react": "targeted",
    "targetKw": [
     "POXWALKERS"
    ],

@@ -678,7 +678,8 @@
  },
  "Malevolent Heraldry": {
   "status": "auto",
-  "note": "Random Dread abilities: the two dice are rolled once"
+  "note": "When the two Dread dice show the same result, one is re-rolled (bearer on the battlefield)",
+  "code": true
  },
  "Veil of Medrengard": {
   "effects": [
@@ -885,7 +886,8 @@
    }
   ]
  },
- "Preyslayer’s Mantle": { "code": true,
+ "Preyslayer’s Mantle": {
+  "code": true,
   "status": "auto",
   "note": "The bearer has the Super-heavy Walker ability (moves through models and terrain)"
  },
@@ -920,7 +922,8 @@
    }
   ]
  },
- "Aspect of the Beast": { "code": true,
+ "Aspect of the Beast": {
+  "code": true,
   "status": "auto",
   "note": "Start of your Command phase: one more Dread ability for the bearer (knights.ts)"
  },
@@ -944,7 +947,8 @@
    }
   ]
  },
- "Throne Tyrannicus": { "code": true,
+ "Throne Tyrannicus": {
+  "code": true,
   "status": "auto",
   "note": "Your Command phase: the closest other CHARACTER Knight within 9\" is affected by the bearer’s War Dog auras (knights.ts)"
  },
@@ -1000,8 +1004,12 @@
    {
     "scope": "model",
     "attack": "ranged",
-    "if": ["targetInRangeOfObjective"],
-     "abilities": ["ignores cover"]
+    "if": [
+     "targetInRangeOfObjective"
+    ],
+    "abilities": [
+     "ignores cover"
+    ]
    }
   ]
  },
@@ -1009,7 +1017,9 @@
   "effects": [
    {
     "scope": "model",
-    "if": ["targetMV"],
+    "if": [
+     "targetMV"
+    ],
     "reroll": "wounds"
    }
   ]

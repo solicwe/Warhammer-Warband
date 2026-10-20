@@ -5,76 +5,165 @@
       "targetKw": [
         "TYRANIDS"
       ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "TYRANIDS"
+        ]
+      },
       "effects": [
         {
-          "attack": "melee",
-          "abilities": [
-            "sustained hits 1"
-          ]
+          "critHitOn": 5
         }
       ],
       "bot": "attack",
+      "note": "Two units (the card: both within Synapse Range, or one unit)",
       "status": "auto"
     },
     "RAPID REGENERATION": {
       "targetKw": [
         "TYRANIDS"
       ],
+      "react": "targeted",
       "effects": [
         {
+          "if": [
+            "!inSynapse"
+          ],
+          "defend": {
+            "fnp": 6
+          }
+        },
+        {
+          "if": [
+            "inSynapse"
+          ],
           "defend": {
             "fnp": 5
           }
         }
       ],
-      "bot": "defend",
+      "botReact": "always",
       "status": "auto"
     },
     "DEATH FRENZY": {
       "targetKw": [
         "TYRANIDS"
       ],
+      "react": "targeted",
+      "unitIf": [
+        "fightPhase"
+      ],
       "effects": [
         {
           "fightOnDeath": 4
         }
       ],
-      "bot": "defend",
+      "botReact": "always",
       "status": "auto"
     },
     "OVERRUN": {
       "targetKw": [
         "TYRANIDS"
       ],
-      "bot": "attack",
-      "status": "auto"
+      "effects": [
+        {
+          "consolidate": 6,
+          "consolidateEngage": true
+        }
+      ],
+      "status": "auto",
+      "note": "Consolidation up to 6\" when it ends engaged; out of combat within Synapse Range, a Normal move of up to 6\" instead",
+      "do": [
+        {
+          "on": "self",
+          "if": [
+            "inSynapse",
+            "!engaged"
+          ],
+          "move": "6"
+        }
+      ],
+      "until": "phase"
     },
     "PREDATORY IMPERATIVE": {
       "targetKw": [
-        "SYNAPSE"
+        "TYRANIDS"
       ],
-      "effects": [
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "TYRANIDS"
+        ]
+      },
+      "choice": [
         {
-          "aura": 6,
-          "units": [
-            "TYRANIDS"
-          ],
-          "eligible": [
-            "chargeAfterAdvance"
+          "label": "Swarming Instincts",
+          "effects": [
+            {
+              "if": [
+                "targetKw:INFANTRY|SWARM"
+              ],
+              "abilities": [
+                "sustained hits 1"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Hyper-aggression",
+          "effects": [
+            {
+              "if": [
+                "targetMV"
+              ],
+              "abilities": [
+                "lethal hits"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Hive Predators",
+          "effects": [
+            {
+              "if": [
+                "targetKw:CHARACTER"
+              ],
+              "abilities": [
+                "precision"
+              ]
+            }
           ]
         }
       ],
-      "bot": "attack",
+      "until": "nextCommand",
+      "bot": "never",
+      "note": "Pick a Hyper-adaptation other than the army's",
       "status": "auto"
     },
     "ENDLESS SWARM": {
       "targetKw": [
         "ENDLESS MULTITUDE"
       ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "ENDLESS MULTITUDE"
+        ]
+      },
+      "do": [
+        {
+          "revive": 4
+        }
+      ],
+      "bot": "never",
+      "note": "4 models each (the card: D3+3)",
       "status": "auto"
     },
     "SWARM-GUIDED SALVOES": {
       "targetKw": [
+        "TYRANIDS",
         "MONSTER"
       ],
       "effects": [
@@ -82,7 +171,8 @@
           "attack": "ranged",
           "abilities": [
             "ignores cover"
-          ]
+          ],
+          "ignoreHitMods": true
         }
       ],
       "bot": "attack",
@@ -90,11 +180,11 @@
     },
     "RAMPAGING MONSTROSITIES": {
       "targetKw": [
+        "TYRANIDS",
         "MONSTER"
       ],
       "effects": [
         {
-          "attack": "melee",
           "reroll": "hits"
         }
       ],
@@ -103,46 +193,80 @@
     },
     "SAVAGE ROAR": {
       "targetKw": [
+        "TYRANIDS",
         "MONSTER"
       ],
-      "effects": [
+      "react": "targeted",
+      "unitIf": [
+        "fightPhase"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "do": [
         {
-          "defend": {
-            "hit": -1
-          }
+          "on": "target",
+          "shock": 0,
+          "shockFailEffects": [
+            {
+              "wound": -1
+            }
+          ]
         }
       ],
-      "bot": "defend",
+      "enemyEffects": [
+        {
+          "hit": -1
+        }
+      ],
+      "botReact": "always",
+      "note": "-1 to Hit for all its attacks this phase",
       "status": "auto"
     },
     "MASSIVE IMPACT": {
       "targetKw": [
+        "TYRANIDS",
         "MONSTER"
       ],
+      "react": "chargeMoveEnd",
+      "enemy": {
+        "engaged": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "n": 6
+          }
+        }
+      ],
+      "botReact": "always",
       "status": "auto"
     },
     "CORROSIVE VISCERA": {
       "targetKw": [
-        "MONSTER"
+        "TYRANIDS",
+        "MONSTER",
+        "!FLY"
       ],
-      "effects": [
-        {
-          "deadlyDemise": "D6"
-        }
-      ],
-      "bot": "defend",
-      "status": "auto"
+      "react": "deadlyDemise",
+      "botReact": "always",
+      "status": "auto",
+      "note": "Used when the monster dies: its Deadly Demise goes off without the roll"
     },
     "UNTRAMMELLED FEROCITY": {
       "targetKw": [
+        "TYRANIDS",
         "MONSTER"
       ],
       "effects": [
         {
-          "throughTerrain": true
+          "throughTerrain": true,
+          "moveThroughModels": true
         }
       ],
-      "bot": "attack",
+      "bot": "never",
       "status": "auto"
     },
     "BOUNDING ADVANCE": {
@@ -154,7 +278,7 @@
           "advanceFixed": 6
         }
       ],
-      "bot": "attack",
+      "bot": "never",
       "status": "auto"
     },
     "SWARMING MASSES": {
@@ -163,10 +287,15 @@
       ],
       "effects": [
         {
-          "attack": "melee",
           "abilities": [
             "sustained hits 1"
           ]
+        },
+        {
+          "if": [
+            "minModels:15"
+          ],
+          "critHitOn": 5
         }
       ],
       "bot": "attack",
@@ -176,49 +305,207 @@
       "targetKw": [
         "ENDLESS MULTITUDE"
       ],
-      "effects": [
-        {
-          "defend": {
-            "stealth": true
-          }
-        }
+      "react": "targeted",
+      "buffs": [
+        "enemyHit-1"
       ],
-      "bot": "defend",
+      "botReact": "always",
       "status": "auto"
     },
     "PRESERVATION IMPERATIVE": {
       "targetKw": [
         "ENDLESS MULTITUDE"
       ],
+      "react": "targeted",
+      "unitIf": [
+        "shootingPhase"
+      ],
       "effects": [
         {
-          "defend": {
-            "inv": 5
-          }
+          "blastProof": true
         }
       ],
-      "bot": "defend",
+      "until": "phase",
+      "botReact": "always",
       "status": "auto"
     },
     "UNENDING WAVES": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
       "targetKw": [
-        "ENDLESS MULTITUDE"
+        "ENDLESS MULTITUDE",
+        "!CHARACTER"
       ],
+      "limit": "battle",
+      "special": [
+        "reserveAgain"
+      ],
+      "botReact": "always",
       "status": "auto"
     },
     "SYNAPTIC GOADING": {
       "targetKw": [
         "ENDLESS MULTITUDE"
       ],
+      "react": "surgeStart",
+      "unitIf": [
+        "inSynapse"
+      ],
+      "effects": [
+        {
+          "surgeReroll": true,
+          "surgeObjective": true
+        }
+      ],
+      "until": "phase",
+      "botReact": "always",
+      "status": "auto",
+      "note": "The surge distance is re-rolled when below 5, and the surge may end at the closest objective marker the army does not hold"
+    },
+    "RAPACIOUS HUNGER": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "unitIf": [
+        "destroyedUnitThisPhase"
+      ],
+      "do": [
+        {
+          "heal": "D3"
+        }
+      ],
+      "bot": "never",
+      "note": "Regenerates by regaining wounds (D3; the card: 3 for a HARVESTER, or a model back)",
+      "status": "auto"
+    },
+    "ABLATIVE CARAPACE": {
+      "targetKw": [
+        "HARVESTER"
+      ],
+      "react": "targeted",
+      "effects": [
+        {
+          "if": [
+            "!onControlledObjective"
+          ],
+          "defend": {
+            "fnp": 5
+          }
+        },
+        {
+          "if": [
+            "onControlledObjective"
+          ],
+          "defend": {
+            "fnp": 4
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "BROODGUARD IMPULSE": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "HARVESTER"
+      ],
+      "enemy": {
+        "killer": true
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "units": [
+              "TYRANIDS"
+            ],
+            "wound": 1
+          }
+        }
+      ],
+      "enemyUntil": "battle",
+      "botReact": "always",
+      "status": "auto"
+    },
+    "SECURE BIOMASS": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "abilities": [
+            "lethal hits"
+          ]
+        },
+        {
+          "attack": "melee",
+          "if": [
+            "kw:HARVESTER"
+          ],
+          "critHitOn": 5
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "TYRANNOFORMED": {
+      "targetKw": [
+        "HARVESTER"
+      ],
+      "unitIf": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "secure": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "RECLAIM BIOMASS": {
+      "targetKw": [
+        "HARVESTER"
+      ],
+      "react": "ownDestroyed",
+      "nearVictim": 6,
+      "do": [
+        {
+          "on": "self",
+          "regenNear": 6
+        }
+      ],
+      "botReact": "always",
       "status": "auto"
     },
     "SURPRISE ASSAULT": {
       "targetKw": [
         "VANGUARD INVADER"
       ],
+      "enemy": {
+        "visible": true
+      },
+      "enemyMark": "Surprise Assault",
+      "do": [
+        {
+          "on": "target",
+          "shock": 0
+        }
+      ],
       "effects": [
         {
+          "if": [
+            "targetMarked:Surprise Assault"
+          ],
           "hit": 1
+        },
+        {
+          "if": [
+            "targetMarked:Surprise Assault",
+            "targetBattleShocked"
+          ],
+          "wound": 1
         }
       ],
       "bot": "attack",
@@ -226,7 +513,8 @@
     },
     "ASSASSIN BEASTS": {
       "targetKw": [
-        "VANGUARD INVADER"
+        "VANGUARD INVADER",
+        "INFANTRY"
       ],
       "effects": [
         {
@@ -241,93 +529,232 @@
     },
     "INVISIBLE HUNTER": {
       "targetKw": [
-        "VANGUARD INVADER"
+        "VANGUARD INVADER|INFANTRY"
       ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "farFromEnemies:3"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "VANGUARD INVADER"
+        ]
+      },
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "UNSEEN LURKERS": {
       "targetKw": [
         "VANGUARD INVADER"
       ],
+      "react": "targeted",
+      "unitIf": [
+        "shootingPhase"
+      ],
       "effects": [
         {
-          "loneOperative": true
+          "targetableWithin": 18
         }
       ],
-      "bot": "defend",
+      "botReact": "always",
+      "note": "18\" (the card: 6\" for a Lone Operative unit)",
       "status": "auto"
     },
     "HYPERSENSORY SCILLIA": {
       "targetKw": [
-        "VANGUARD INVADER"
+        "VANGUARD INVADER|INFANTRY"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "VANGUARD INVADER"
+        ]
+      },
+      "do": [
+        {
+          "move": "6"
+        }
       ],
       "status": "auto"
     },
     "SEEDED BROODS": {
       "targetKw": [
-        "VANGUARD INVADER"
+        "TYRANIDS"
       ],
+      "targetFrom": "reserves",
+      "do": [
+        {
+          "earlyArrival": true
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "IRRESISTIBLE WILL": {
       "targetKw": [
         "SYNAPSE"
       ],
-      "effects": [
+      "enemy": {
+        "range": 24,
+        "visible": true
+      },
+      "enemyEffects": [
         {
-          "reroll": "wounds1"
+          "incoming": {
+            "units": [
+              "TYRANIDS"
+            ],
+            "reroll": [
+              "hits1",
+              "wounds1"
+            ]
+          }
         }
       ],
       "bot": "attack",
+      "note": "Every TYRANIDS unit (the card: within 6\" of the SYNAPSE unit)",
       "status": "auto"
     },
     "SYNAPTIC CHANNELLING": {
       "targetKw": [
-        "TYRANIDS"
+        "SYNAPSE"
       ],
+      "effects": [
+        {
+          "synapseRange": 9
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
       "status": "auto"
     },
     "REINFORCED HIVE NODE": {
       "targetKw": [
         "SYNAPSE"
       ],
-      "effects": [
-        {
-          "defend": {
-            "ap": 1
-          }
-        }
+      "react": "targeted",
+      "buffs": [
+        "enemyAp-1"
       ],
-      "bot": "defend",
+      "botReact": "always",
       "status": "auto"
     },
     "OVERRIDE INSTINCTS": {
       "targetKw": [
         "TYRANIDS"
       ],
-      "eligible": [
-        "shootAfterFallBack",
-        "chargeAfterFallBack"
+      "unitIf": [
+        "inSynapse",
+        "fellBack"
       ],
-      "bot": "attack",
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
       "status": "auto"
     },
     "THE SMOTHERING SHADOW": {
       "targetKw": [
         "SYNAPSE"
       ],
+      "react": "enemyShockFailed",
+      "nearVictim": 12,
+      "enemy": {
+        "ctxUnit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 3,
+            "n": 6
+          }
+        }
+      ],
+      "botReact": "always",
       "status": "auto"
     },
     "IMPERATIVE DOMINANCE": {
       "targetKw": [
-        "SYNAPSE"
+        "TYRANIDS"
       ],
+      "unitIf": [
+        "inSynapse"
+      ],
+      "choice": [
+        {
+          "label": "Synaptic Augmentation",
+          "effects": [
+            {
+              "if": [
+                "inSynapse"
+              ],
+              "defend": {
+                "inv": 5
+              }
+            }
+          ]
+        },
+        {
+          "label": "Surging Vitality",
+          "effects": [
+            {
+              "if": [
+                "inSynapse"
+              ],
+              "advanceBonus": 1,
+              "chargeBonus": 1
+            }
+          ]
+        },
+        {
+          "label": "Goaded to Slaughter",
+          "effects": [
+            {
+              "attack": "melee",
+              "if": [
+                "inSynapse"
+              ],
+              "hit": 1
+            }
+          ]
+        }
+      ],
+      "until": "nextCommand",
+      "bot": "never",
       "status": "auto"
     },
     "SYNAPTIC MICRONODES": {
       "targetKw": [
         "TYRANID WARRIORS"
       ],
+      "unitIf": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "secure": true
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "PARASITIC PAYLOAD": {
@@ -349,32 +776,44 @@
       "targetKw": [
         "TYRANID WARRIORS"
       ],
+      "react": "targeted",
       "effects": [
         {
           "defend": {
-            "wound": -1
+            "woundIfStronger": -1
           }
         }
       ],
-      "bot": "defend",
+      "botReact": "always",
       "status": "auto"
     },
     "SWARMING ASSAULT": {
       "targetKw": [
+        "TYRANIDS",
         "MONSTER"
+      ],
+      "unitIf": [
+        "setUpThisTurn"
       ],
       "effects": [
         {
-          "aura": 6,
-          "reroll": "charges"
+          "scope": "aura",
+          "range": 6,
+          "units": [
+            "TYRANIDS"
+          ],
+          "rerollCharge": true
         }
       ],
-      "bot": "attack",
+      "bot": "never",
       "status": "auto"
     },
     "ENFILADING EMERGENCE": {
       "targetKw": [
         "TYRANIDS"
+      ],
+      "unitIf": [
+        "setUpThisTurn"
       ],
       "effects": [
         {
@@ -384,40 +823,107 @@
           ]
         }
       ],
-      "bot": "attack",
+      "until": "endOfNextTurn",
+      "bot": "never",
+      "note": "Until the end of your next turn (the card: your next Fight phase)",
       "status": "auto"
     },
     "TUNNEL NETWORK": {
       "targetKw": [
         "TYRANIDS"
       ],
+      "unitIf": [
+        "nearTunnel:9",
+        "!engaged",
+        "tunnels:2"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "tyr": "tunnel"
+        }
+      ],
       "status": "auto"
     },
     "RETREAT BELOW": {
       "targetKw": [
-        "BURROWERS"
+        "TYRANIDS"
       ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "BURROWER"
+        ]
+      },
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "REPLENISHING SWARMS": {
       "targetKw": [
         "TYRANIDS"
       ],
+      "unitIf": [
+        "nearTunnel:9"
+      ],
+      "choice": [
+        {
+          "label": "One model regains up to D3+1 wounds",
+          "do": [
+            {
+              "on": "self",
+              "heal": "D3+1"
+            }
+          ]
+        },
+        {
+          "label": "Up to D3+1 destroyed W1 models return",
+          "if": [
+            "belowStartingStrength"
+          ],
+          "do": [
+            {
+              "on": "self",
+              "reviveRoll": "D3+1",
+              "reviveW1": true
+            }
+          ]
+        }
+      ],
       "status": "auto"
     },
     "ADAPTIVE OPTIMISATION": {
       "targetKw": [
-        "BURROWERS"
+        "MAWLOC|TRYGON"
       ],
+      "effects": [
+        {
+          "addKeywords": [
+            "SYNAPSE"
+          ]
+        }
+      ],
+      "until": "nextCommand",
       "status": "auto"
     },
     "COUNTERPREDATION": {
       "targetKw": [
-        "VANGUARD INVADER"
+        "DEATHLEAPER|LICTOR|NEUROLICTOR|VON RYAN’S LEAPERS"
       ],
       "effects": [
         {
-          "attack": "melee",
+          "if": [
+            "targetHidden"
+          ],
           "strength": 1,
           "ap": 1
         }
@@ -427,25 +933,60 @@
     },
     "SCANNER GHEIST": {
       "targetKw": [
-        "VANGUARD INVADER"
+        "DEATHLEAPER|LICTOR|NEUROLICTOR"
       ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "HYPERSENSORY ADAPTATIONS": {
       "targetKw": [
-        "VANGUARD INVADER"
+        "DEATHLEAPER|LICTOR|NEUROLICTOR|VON RYAN’S LEAPERS"
       ],
+      "enemy": {
+        "range": 12,
+        "visible": true
+      },
+      "enemyEffects": [
+        {
+          "detection": 6
+        }
+      ],
+      "bot": "never",
       "status": "auto"
     },
     "TANGLESTRIKE ROUNDS": {
       "targetKw": [
         "NORN ASSIMILATOR"
       ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "enemyEffects": [
+        {
+          "move": -2
+        }
+      ],
+      "enemyUntil": "nextCommand",
+      "enemyMark": "tethered",
+      "bot": "never",
       "status": "auto"
     },
     "LESSER PREY": {
       "targetKw": [
-        "MONSTER"
+        "NORN ASSIMILATOR|NORN EMISSARY"
       ],
       "effects": [
         {
@@ -468,25 +1009,7 @@
           }
         }
       ],
-      "bot": "defend",
-      "status": "auto"
-    },
-    "RAPACIOUS HUNGER": {
-      "status": "auto"
-    },
-    "ABLATIVE CARAPACE": {
-      "status": "auto"
-    },
-    "BROODGUARD IMPULSE": {
-      "status": "auto"
-    },
-    "SECURE BIOMASS": {
-      "status": "auto"
-    },
-    "TYRANNOFORMED": {
-      "status": "auto"
-    },
-    "RECLAIM BIOMASS": {
+      "bot": "never",
       "status": "auto"
     }
   }

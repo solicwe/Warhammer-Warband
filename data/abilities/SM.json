@@ -87,7 +87,8 @@
   "Relic Shield": {
     "gear": true,
     "status": "auto",
-    "note": "W6 (per wargear chosen in the list)"
+    "note": "W6 (per wargear chosen in the list)",
+    "code": true
   },
   "Rites of Battle": {
     "effects": [
@@ -347,7 +348,8 @@
       }
     ]
   },
-  "Storm Shield": { "code": true,
+  "Storm Shield": {
+    "code": true,
     "gear": true,
     "status": "auto",
     "note": "W / invulnerable save per wargear chosen in the list"
@@ -648,7 +650,8 @@
       ]
     }
   },
-  "SUPREME COMMANDER": { "code": true,
+  "SUPREME COMMANDER": {
+    "code": true,
     "status": "auto",
     "note": "Checked by the army builder: must be your Warlord"
   },
@@ -784,7 +787,8 @@
       }
     ]
   },
-  "Miraculous Saviour": { "code": true,
+  "Miraculous Saviour": {
+    "code": true,
     "status": "auto",
     "note": "End of opponent's Charge phase: arrive engaged with the charging unit (once)"
   },
@@ -1963,7 +1967,8 @@
   "Shield Dome": {
     "gear": true,
     "status": "auto",
-    "note": "5+ invulnerable save (per wargear chosen in the list)"
+    "note": "5+ invulnerable save (per wargear chosen in the list)",
+    "code": true
   },
   "Primarch of the First Legion": {
     "choice": {
@@ -2034,7 +2039,8 @@
       }
     ]
   },
-  "Master of Deceit": { "code": true,
+  "Master of Deceit": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 INFANTRY units (set up again or place into Reserves)"
   },
@@ -2215,7 +2221,8 @@
     "status": "info",
     "note": "The 2D board has no vertical distance anyway"
   },
-  "Emergency Combat Embarkation": { "code": true,
+  "Emergency Combat Embarkation": {
+    "code": true,
     "status": "auto",
     "note": "Enemy declares a charge: a unit within 3\" embarks to escape (once per turn)"
   },
@@ -2260,7 +2267,10 @@
               "ADEPTUS ASTARTES"
             ],
             "strength": 2,
-            "weaponCond": "torrentOrMelta"
+            "weaponAbilities": [
+              "torrent",
+              "melta"
+            ]
           },
           "until": "phase"
         }
@@ -2292,7 +2302,7 @@
   },
   "Narthecium": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "botUse": "damaged",
       "do": [
@@ -2377,7 +2387,8 @@
       }
     }
   },
-  "Stabilised Disembarkation": { "code": true,
+  "Stabilised Disembarkation": {
+    "code": true,
     "status": "auto",
     "note": "Transport reduced to half wounds: units inside disembark automatically"
   },
@@ -2603,7 +2614,8 @@
   "Blizzard Shield": {
     "gear": true,
     "status": "auto",
-    "note": "4+ invulnerable save (per wargear chosen in the list)"
+    "note": "4+ invulnerable save (per wargear chosen in the list)",
+    "code": true
   },
   "Braziers of Judgement": {
     "effects": [
@@ -2678,7 +2690,7 @@
   },
   "Healing Balms": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "botUse": "damaged",
       "do": [
@@ -3151,7 +3163,8 @@
       }
     ]
   },
-  "Strategium Command": { "code": true,
+  "Strategium Command": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 units (set up again or place into Reserves)"
   },
@@ -3177,11 +3190,13 @@
       }
     ]
   },
-  "Oath of Moment": { "code": true,
+  "Oath of Moment": {
+    "code": true,
     "status": "auto",
     "note": "Automated: select a target in the Command phase (re-roll Hit, +1 to Wound for codex armies)"
   },
-  "Templar Vows": { "code": true,
+  "Templar Vows": {
+    "code": true,
     "status": "auto",
     "note": "Automated: select a Vow in the first Command phase (Black Templars)"
   },
@@ -3253,7 +3268,8 @@
       }
     ]
   },
-  "Blackstar Cluster Launcher": { "code": true,
+  "Blackstar Cluster Launcher": {
+    "code": true,
     "status": "auto",
     "note": "End of Normal move: for each unit flown over, roll 6D6, each 5+ = 1 mortal wound (automatic)"
   },
@@ -3368,7 +3384,8 @@
       }
     ]
   },
-  "Combat Doctrines": { "code": true,
+  "Combat Doctrines": {
+    "code": true,
     "status": "auto",
     "note": "Select a Doctrine at the start of the Command phase (Detachment panel)"
   },
@@ -3386,7 +3403,8 @@
       ]
     }
   },
-  "Librarius": { "code": true,
+  "Librarius": {
+    "code": true,
     "status": "auto",
     "note": "Psyker level: psychic abilities used in a battle round add up to at most the unit's psyker level"
   },
@@ -3423,8 +3441,9 @@
     ]
   },
   "Supreme Commander": {
+    "code": true,
     "status": "auto",
-    "note": "Checked by the army builder: must be your Warlord"
+    "note": "Army builder: this model must be your Warlord"
   },
   "Strategic Acumen": {
     "act": [
@@ -3568,16 +3587,19 @@
     }
   },
   "Chief Librarian (psyker level 3)": {
+    "code": true,
     "status": "auto",
-    "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
+    "note": "Psyker level: the psychic abilities share the per-round budget (activations.ts)"
   },
   "Librarian (psyker level 1)": {
+    "code": true,
     "status": "auto",
-    "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
+    "note": "Psyker level: the psychic abilities share the per-round budget (activations.ts)"
   },
   "Rune Priest (psyker level 3)": {
+    "code": true,
     "status": "auto",
-    "note": "Psyker level: limits the psychic abilities used per battle round (automatic)"
+    "note": "Psyker level: the psychic abilities share the per-round budget (activations.ts)"
   },
   "Hood of Hellfire (Psychic)": {
     "effects": [
@@ -3671,8 +3693,9 @@
     }
   },
   "Captain of the Honour Guard": {
+    "code": true,
     "status": "auto",
-    "note": "With Marneus Calgar in the army it attaches as Support (army builder)"
+    "note": "Army builder: with MARNEUS CALGAR it is a Support character (supportIn)"
   },
   "Knight Champion of Macragge (Once per phase, per army)": {
     "act": {
@@ -4289,7 +4312,8 @@
       }
     ]
   },
-  "Rites of Thermal Appeasement": { "code": true,
+  "Rites of Thermal Appeasement": {
+    "code": true,
     "status": "auto",
     "note": "+1 to hazard rolls for its plasma weapons (attack.ts finishAttack)"
   },
@@ -4592,7 +4616,8 @@
       }
     ]
   },
-  "Combat Embarkation": { "code": true,
+  "Combat Embarkation": {
+    "code": true,
     "status": "auto",
     "note": "Enemy declares a charge against a unit within 3\" of the transport: it can embark (automated)"
   },
@@ -4707,7 +4732,8 @@
     ],
     "status": "auto"
   },
-  "Miraculous Savior": { "code": true,
+  "Miraculous Savior": {
+    "code": true,
     "status": "auto",
     "note": "(Once per battle) End of opponent's Charge phase: arrive from Reserves engaged with a unit that just charged (automatic)"
   },
@@ -4847,8 +4873,9 @@
     "note": "Split into 2 units of 5 in the army builder (⋮ menu)"
   },
   "Embarking within Transports": {
+    "code": true,
     "status": "auto",
-    "note": "Rides transports that carry TERMINATOR models, taking 4 spaces"
+    "note": "Rides transports that carry Terminators, 4 models of space (army.ts)"
   },
   "Murder-maker [Aura]": {
     "effects": [
@@ -4863,8 +4890,9 @@
     ]
   },
   "Force of Untamed Destruction": {
+    "code": true,
     "status": "auto",
-    "note": "Checked by the army builder: cannot be your Warlord"
+    "note": "Army builder: cannot be the Warlord"
   },
   "Beastial Fury": {
     "effects": [
@@ -4973,7 +5001,8 @@
       ]
     }
   },
-  "Servitors": { "code": true,
+  "Servitors": {
+    "code": true,
     "status": "auto",
     "note": "When Grimaldus dies, the Cenobyte Servitors die too"
   },
@@ -5106,8 +5135,9 @@
     ]
   },
   "Imperium's Sword": {
+    "code": true,
     "status": "auto",
-    "note": "Gains the Imperium's Sword weapon (added automatically)"
+    "note": "The weapon is added to the bearer from the enhancement text (army.ts)"
   },
   "Furious Assault": {
     "effects": [
@@ -5210,7 +5240,8 @@
       }
     ]
   },
-  "Cyber-familiar": { "code": true,
+  "Cyber-familiar": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 INFANTRY units"
   },
@@ -5293,7 +5324,7 @@
   },
   "Narthecis Gauntlet": {
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "botUse": "damaged",
       "do": [
@@ -5529,7 +5560,8 @@
       }
     ]
   },
-  "Defensive Mastery": { "code": true,
+  "Defensive Mastery": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 INFANTRY units"
   },
@@ -6191,7 +6223,8 @@
       }
     ]
   },
-  "Hunter's Guile": { "code": true,
+  "Hunter's Guile": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 units"
   },
@@ -6207,7 +6240,8 @@
       }
     ]
   },
-  "Chariots of the Storm": { "code": true,
+  "Chariots of the Storm": {
+    "code": true,
     "status": "auto",
     "note": "After deployment: redeploy up to 3 units"
   },
@@ -6255,7 +6289,8 @@
   "Combat Shield": {
     "gear": true,
     "status": "auto",
-    "note": "W / invulnerable save adjusted per wargear chosen in the list"
+    "note": "W / invulnerable save adjusted per wargear chosen in the list",
+    "code": true
   },
   "Blizzard shield": {
     "gear": true,
@@ -6312,7 +6347,7 @@
   "Helix Gauntlet@Infiltrator Squad": {
     "gear": true,
     "act": {
-      "when": "command",
+      "when": "commandStart",
       "auto": true,
       "botUse": "damaged",
       "do": [

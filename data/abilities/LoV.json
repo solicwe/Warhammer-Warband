@@ -1,359 +1,1378 @@
 {
-  "_comment": "Leagues of Votann Faction Pack v1.2. Complete datasheet, detachment, enhancement, and army rules.",
-  "Prioritised Efficiency": { "code": true,
+  "Prioritised Efficiency": {
+    "code": true,
     "status": "auto",
-    "note": "Yield Points (YP) tracking and dual stances (Hostile Acquisition / Fortify Takeover). Auto-switches to Fortify Takeover at 7+ YP."
+    "note": "Hostile Acquisition / Fortify Takeover (army rule)"
   },
-  "Ancestral Fortune": { "code": true,
+  "Ancestral Fortune": {
+    "code": true,
     "status": "auto",
-    "note": "Once per turn, you can spend 1YP to change one Hit roll, one Wound roll or one saving throw made for this model to an unmodified 6."
+    "note": "Once per turn, 1YP turns a failed Hit / Wound roll needing 5+ or a save needing 4+ into a 6"
   },
   "Grim Efficiency": {
-    "status": "auto",
-    "note": "Once per battle round, when a friendly Leagues of Votann unit within 12“ of this model is targeted with a Stratagem, this model can use this ability. If it does, reduce the CP cost of that use of that Stratagem by 1CP."
+    "effects": [
+      {
+        "scope": "aura",
+        "range": 12,
+        "units": [
+          "LEAGUES OF VOTANN"
+        ],
+        "stratDiscount": {
+          "ids": [
+            "*"
+          ],
+          "cp": 1,
+          "limit": "round",
+          "perArmy": true
+        }
+      }
+    ]
   },
   "Rampart Crest": {
-    "status": "auto",
-    "note": "While this model is leading a unit, models in that unit have a 5+ invulnerable save."
+    "gear": true,
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "inv": 5
+        }
+      }
+    ]
   },
   "Kindred Hero": {
-    "status": "auto",
-    "note": "While this model is leading a unit, weapons equipped by models in that unit have the [LETHAL HITS] ability."
+    "effects": [
+      {
+        "scope": "led",
+        "abilities": [
+          "lethal hits"
+        ]
+      }
+    ]
   },
   "Seized Opportunity": {
-    "status": "auto",
-    "note": "Once per phase, one model from your army with this ability can use it when its unit destroys an enemy unit. If it does, you gain 1YP."
+    "act": [
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "if": [
+          "destroyedUnitThisPhase"
+        ],
+        "limit": "phase",
+        "per": "army",
+        "do": [
+          {
+            "on": "self",
+            "lov": -1
+          }
+        ]
+      },
+      {
+        "when": "afterFighting",
+        "auto": true,
+        "if": [
+          "destroyedUnitThisPhase"
+        ],
+        "limit": "phase",
+        "per": "army",
+        "do": [
+          {
+            "on": "self",
+            "lov": -1
+          }
+        ]
+      }
+    ]
   },
   "Teleport Crest": {
-    "status": "auto",
-    "note": "Models in the bearer’s unit have the Deep Strike ability."
+    "gear": true,
+    "effects": [
+      {
+        "scope": "led",
+        "deepStrike": true
+      }
+    ]
+  },
+  "Teleport Crest@Einhyr Hearthguard": {
+    "gear": true,
+    "effects": [
+      {
+        "deepStrike": true
+      }
+    ]
   },
   "Exemplar of the Einhyr": {
-    "status": "auto",
-    "note": "While this model is leading a unit, add 1 to Advance and Charge rolls made for that unit."
+    "effects": [
+      {
+        "scope": "led",
+        "advanceBonus": 1,
+        "chargeBonus": 1
+      }
+    ]
   },
   "Mass Driver Accelerators": {
-    "status": "auto",
-    "note": "Each time this model ends a Charge move, you can select one enemy unit within Engagement Range of this model and roll one D6: on a 2-5, that enemy unit suffers D3 mortal wounds; on a 6, that enemy unit suffers D3+3 mortal wounds."
+    "act": {
+      "when": "endOfCharge",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true,
+        "closest": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "max": 5,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3"
+            }
+          ]
+        },
+        {
+          "min": 6,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "D3+3"
+            }
+          ]
+        }
+      ]
+    }
   },
   "Weavefield Crest": {
-    "status": "auto",
-    "note": "Models in the bearer’s unit have a 5+ invulnerable save."
+    "gear": true,
+    "effects": [
+      {
+        "scope": "model",
+        "defend": {
+          "inv": 4
+        }
+      }
+    ]
+  },
+  "Weavefield Crest@Hearthkyn Warriors": {
+    "gear": true,
+    "effects": [
+      {
+        "defend": {
+          "inv": 5
+        }
+      }
+    ]
+  },
+  "Weavefield Crest@Einhyr Hearthguard": {
+    "gear": true,
+    "effects": [
+      {
+        "defend": {
+          "inv": 5
+        }
+      }
+    ]
   },
   "Fortify (Psychic)": {
-    "status": "auto",
-    "note": "While this unit is leading a unit, models in that unit have the Feel No Pain 5+ ability."
+    "effects": [
+      {
+        "scope": "led",
+        "defend": {
+          "fnp": 5
+        }
+      }
+    ]
   },
   "Grimnyr’s Regard": {
-    "status": "auto",
-    "note": "Once per battle, at the start of any phase, you can select one friendly Leagues of Votann unit that is Battle-shocked and within 12\" of this unit’s GRIMNYR model. That unit is no longer Battle-shocked."
+    "act": {
+      "when": "anyPhase",
+      "limit": "battle",
+      "label": "Grimnyr's Regard: a Battle-shocked LEAGUES OF VOTANN unit within 12\" recovers",
+      "botUse": "always",
+      "target": {
+        "side": "friendly",
+        "range": 12,
+        "shocked": true,
+        "units": [
+          "LEAGUES OF VOTANN"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "unshock": true
+        }
+      ]
+    }
   },
   "Brôkhyr Guild Support": {
-    "status": "auto",
-    "note": "While this unit is within 3\" of one or more friendly Leagues of Votann Vehicle or Ironkin Steeljacks units, if this unit is not an Attached unit, it has the Lone Operative ability."
+    "effects": [
+      {
+        "if": [
+          "near:3:LEAGUES OF VOTANN+VEHICLE",
+          "!leaderAttached"
+        ],
+        "loneOperative": true
+      }
+    ],
+    "note": "Also next to IRONKIN STEELJACKS (not checked)"
   },
   "Multispectral Visor": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes a ranged attack, re-roll a Wound roll of 1."
+    "gear": true,
+    "effects": [
+      {
+        "attack": "ranged",
+        "reroll": "wounds1"
+      }
+    ]
   },
   "Forgewrought Expertise": {
-    "status": "auto",
-    "note": "At the end of your Movement phase, this unit can repair one friendly Leagues of Votann Vehicle, Exoframe or Ironkin Steeljacks unit within 3\" of it. One model in that unit regains up to D3 lost wounds, or up to 3 lost wounds instead if this unit contains an Ironkin Assistant model. Each unit can only be repaired once per turn."
+    "act": {
+      "when": "movementEnd",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "friendly",
+        "range": 3,
+        "damaged": true,
+        "units": [
+          "LEAGUES OF VOTANN",
+          "VEHICLE|EXOFRAME|IRONKIN STEELJACKS"
+        ],
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "!contains:Ironkin Assistant"
+          ],
+          "heal": "D3"
+        },
+        {
+          "on": "target",
+          "if": [
+            "contains:Ironkin Assistant"
+          ],
+          "heal": "3"
+        },
+        {
+          "on": "target",
+          "if": [
+            "enh:Signature Restoration"
+          ],
+          "heal": "1"
+        }
+      ]
+    }
   },
   "Luck Has. Need Keeps. Toil Earns": {
-    "status": "auto",
-    "note": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control until your opponent’s Level of Control over that objective markers greater than yours at the end of a phase."
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "if": [
+        "onControlledObjective"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "secure": true
+        }
+      ]
+    }
   },
   "Panspectral Scanning": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes a ranged attack, re-roll a Hit roll of 1."
+    "effects": [
+      {
+        "attack": "ranged",
+        "reroll": "hits1"
+      }
+    ]
   },
   "Decisive Destruction": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes a ranged attack that targets the closest eligible target, re-roll a Hit roll of 1."
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "targetClosest"
+        ],
+        "reroll": "hits1"
+      }
+    ]
   },
   "Cyberstimms": {
-    "status": "auto",
-    "note": "Each time a model in this unit is destroyed by a melee attack, if that model has not fought this phase, roll one D6, adding 1 to the result if units from your army have Fortify Takeover: on a 4+, do not remove it from play. The destroyed model can fight after the attacking unit has finished making its attacks, and is then removed from play."
+    "effects": [
+      {
+        "attack": "melee",
+        "if": [
+          "!fortify"
+        ],
+        "fightOnDeath": 4
+      },
+      {
+        "attack": "melee",
+        "if": [
+          "fortify"
+        ],
+        "fightOnDeath": 3
+      }
+    ]
   },
   "Subterranean Explosives": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, select one enemy unit (excluding MONSTERS and VEHICLES) hit by one or more of those attacks made with a mole grenade launcher. Until the start of your next Shooting phase, that enemy unit cannot be targeted with the Fire Overwatch Stratagem. Designer’s Note: We recommend placing a Mole Grenade token next to that enemy unit as a reminder."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "mole grenade launcher",
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "noSnapTarget": true
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "Mole Grenade"
+        }
+      ]
+    }
   },
   "Outflanking Mag-riders": {
-    "status": "auto",
-    "note": "At the end of your opponent’s turn, if this unit is wholly within 9\" of one or more battlefield edges and not within Engagement Range of one or more enemy units, you can remove it from the battlefield and place it into Strategic Reserves."
+    "act": {
+      "when": "opponentTurnEnd",
+      "if": [
+        "notEngaged",
+        "nearEdge:9"
+      ],
+      "label": "Outflanking Mag-riders: into Strategic Reserves",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
+        }
+      ]
+    }
   },
   "Multiwave Comms Array": {
-    "status": "auto",
-    "note": "Each time you target the bearer’s unit with a Stratagem, roll one D6: on a 5+, you gain 1CP."
+    "effects": [
+      {
+        "stratCpChance": 5
+      }
+    ],
+    "gear": true
   },
   "Panspectral Scanner": {
-    "status": "auto",
-    "note": "Each time a model in the bearer’s unit makes a ranged attack, re-roll a Hit roll of 1."
+    "gear": true,
+    "effects": [
+      {
+        "attack": "ranged",
+        "reroll": "hits1"
+      }
+    ]
   },
   "Rollbar Searchlight": {
-    "status": "auto",
-    "note": "Each time a model in the bearer’s unit makes a ranged attack, you can ignore any or all modifiers to the Hit roll."
+    "gear": true,
+    "effects": [
+      {
+        "attack": "ranged",
+        "ignoreHitMods": true
+      }
+    ]
   },
   "Blistering Advance": {
-    "status": "auto",
-    "note": "Units can disembark from this TRANSPORT after it has Advanced. Units that do so make a shock disembark move (Core Rules, 18.07) for that disembarkation."
+    "effects": [
+      {
+        "disembarkAfterAdvance": true
+      }
+    ],
+    "note": "The shock disembark move is not applied"
   },
   "Breaching Fire": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, select one enemy unit hit by one or more of those attacks. Until the start of your next Shooting phase, that enemy unit cannot have the Benefit of Cover."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "incoming": {
+            "noCover": true
+          },
+          "until": "nextTurnStart",
+          "mark": "Breaching Fire"
+        }
+      ]
+    }
   },
   "Conversion": {
-    "status": "auto",
-    "note": "Each time an attack made with this weapon targets an enemy unit that is not within 12\", an unmodified successful Hit roll of 4+ scores a Critical Hit."
+    "effects": [
+      {
+        "if": [
+          "!targetWithin:12",
+          "weaponHas:conversion"
+        ],
+        "critHitOn": 4
+      }
+    ],
+    "note": "Weapons with [CONVERSION]"
   },
   "MultiCOG Targeting": {
-    "status": "auto",
-    "note": "Each time this model makes a ranged attack, you can ignore any or all modifiers to the following: that attack’s Ballistic Skill characteristic; the Hit roll."
+    "effects": [
+      {
+        "attack": "ranged",
+        "ignoreHitMods": true
+      }
+    ]
   },
-  "One Shot": { "code": true,
+  "One Shot": {
+    "code": true,
     "status": "auto",
-    "note": "The bearer can only shoot with this weapon once per battle."
+    "note": "[ONE SHOT] weapons fire once per battle"
   },
   "Pragmatic Hunters": {
-    "status": "auto",
-    "note": "In your opponent's Movement phase, if an enemy unit ends a move within 8\" of this unit, if this unit is not within Engagement Range of one or more enemy units, this unit can make a Normal move of up to D6\"."
+    "act": {
+      "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "phase",
+      "if": [
+        "unengaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "move": "D6"
+        }
+      ]
+    }
   },
   "Grudge-fuelled Fortitude": {
-    "status": "auto",
-    "note": "The first time this model is destroyed, at the end of the phase, roll one D6: on a 2+, set this model back up on the battlefield as close as possible to where it was destroyed and not within Engagement Range of one or more enemy units, with its full wounds remaining."
+    "act": {
+      "when": "onDeath",
+      "auto": true,
+      "modelDeath": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "reviveLater": {
+            "on": 2,
+            "wounds": 99
+          }
+        }
+      ]
+    }
   },
   "Unhinged Vengeance": {
-    "status": "auto",
-    "note": "In your opponent’s Shooting phase, when an enemy unit has shot, if this model lost one or more wounds as a result of those attacks, this unit can make a surge move of up to D6+2\"."
+    "act": {
+      "when": "shotByEnemy",
+      "if": [
+        "notEngaged"
+      ],
+      "limit": "phase",
+      "label": "Unhinged Vengeance: surge move of up to D6+2\"",
+      "do": [
+        {
+          "on": "self",
+          "surge": "D6+2"
+        }
+      ]
+    },
+    "note": "Offered after the unit is shot (check it lost wounds)"
   },
   "Computational Mastermind": {
-    "status": "auto",
-    "note": "At the end of your Command phase, before you determine if units from your army have Hostile Acquisition or Fortify Takeover, for each objective marker you control that has one or more models with this ability within range of it, you can spend 1YP or gain 1YP."
+    "act": [
+      {
+        "when": "commandEnd",
+        "auto": true,
+        "if": [
+          "onControlledObjective"
+        ],
+        "limit": "phase",
+        "do": [
+          {
+            "on": "self",
+            "lov": -1
+          }
+        ]
+      }
+    ],
+    "note": "Always gains 1YP (spending instead is not offered)"
   },
   "Predictive Guidance": {
-    "status": "auto",
-    "note": "Once per battle round, when you target this unit with the Fire Overwatch/Heroic Intervention stratagem, you can use this ability. If you do, that use of that stratagem is -1 CP."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "fire-overwatch",
+            "heroic-intervention"
+          ],
+          "cp": 1,
+          "limit": "round"
+        }
+      }
+    ]
   },
   "Science Guild Support": {
-    "status": "auto",
-    "note": "While this model is within 3\" of one or more other friendly Leagues of Votann Infantry units (excluding units with the Lone Operative ability), this model has the Lone Operative ability."
+    "effects": [
+      {
+        "if": [
+          "near:3:LEAGUES OF VOTANN+INFANTRY"
+        ],
+        "loneOperative": true
+      }
+    ]
   },
   "Resource Transmutation": {
-    "status": "auto",
-    "note": "Once per turn, in your Shooting phase, one model with this ability can use it when it is selected to shoot. If it does, you must spend 1YP and, until the end of the phase, ranged weapons equipped by that model have the [SUSTAINED HITS 1] ability and, after that model has shot this phase, if one or more enemy units were destroyed by those attacks, you can gain up to 2YP."
+    "act": {
+      "when": "selectedToShoot",
+      "if": [
+        "yp"
+      ],
+      "limit": "turn",
+      "per": "army",
+      "label": "Resource Transmutation: spend 1YP, [SUSTAINED HITS 1] this phase",
+      "botUse": "valuable",
+      "do": [
+        {
+          "on": "self",
+          "lov": 1
+        },
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "sustained hits 1"
+              ]
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "note": "Gaining 2YP after destroying a unit is not applied"
   },
-  "Overcharge": { "code": true,
-    "status": "auto",
-    "note": "Each time the bearer takes a Hazardous test for this weapon profile, subtract 2 from the result."
+  "Overcharge": {
+    "status": "partial",
+    "note": "Not automated: -2 to its Hazardous tests"
   },
   "Purge Response": {
-    "status": "auto",
-    "note": "Each time you target this unit with the Fire Overwatch Stratagem, hits are scored on unmodified Hit rolls of 5+ while resolving that Stratagem. If units from your army have Fortify Takeover, hits are scored on unmodified Hit rolls of 4+ while resolving that Stratagem instead."
+    "effects": [
+      {
+        "if": [
+          "!fortify"
+        ],
+        "overwatchHitOn": 5
+      },
+      {
+        "if": [
+          "fortify"
+        ],
+        "overwatchHitOn": 4
+      }
+    ]
   },
   "Preymark Crest": {
-    "status": "auto",
-    "note": "Each time a model in the bearer’s unit makes an attack that targets an enemy unit within range of one or more objective markers, on a Critical Wound, that attack has the [PRECISION] ability."
+    "gear": true,
+    "effects": [
+      {
+        "if": [
+          "targetInRangeOfObjective"
+        ],
+        "abilities": [
+          "precision"
+        ]
+      }
+    ],
+    "note": "[PRECISION] on every attack (the card: on Critical Wounds)"
   },
   "Merciless Eradication": {
-    "status": "auto",
-    "note": "Each time an enemy unit (excluding MONSTERS and VEHICLES) that is within Engagement Range of this unit Falls Back, all models in that enemy unit must take a Desperate Escape test. When doing so, if that enemy unit is Battle-shocked, subtract 1 from each of those tests."
+    "effects": [
+      {
+        "forceDesperate": true
+      },
+      {
+        "if": [
+          "targetBattleShocked"
+        ],
+        "desperateMinus": 1
+      }
+    ]
   },
   "Destabilising Quakes": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, select one enemy unit hit by one or more of those attacks made with its tremor shells. That unit must take a Battle-shock test, subtracting 1 from the result."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "tremor shells"
+      },
+      "do": [
+        {
+          "on": "target",
+          "shock": -1
+        }
+      ]
+    }
   },
   "Geomantic Hunters": {
-    "status": "auto",
-    "note": "Up to twice per battle, in your Shooting phase, when this unit is selected to shoot, it can use this ability. If it does, until the end of the phase, each time a model in this unit makes an attack with its breacher ordnance, you can re-roll the Wound roll. Designer’s Note: Place two breacher ordnance tokens next to the unit, removing one each time this unit uses this ability."
+    "act": {
+      "when": "selectedToShoot",
+      "limit": "battle",
+      "battleUses": 2,
+      "label": "Geomantic Hunters: re-roll Wound rolls with breacher ordnance",
+      "botUse": "valuable",
+      "do": [
+        {
+          "on": "self",
+          "buff": [
+            {
+              "weapon": "breacher ordnance",
+              "reroll": "wounds"
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Opportunistic Manoeuvre": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, it can make a Normal move of up to D6\". If it does, until the end of the turn, this unit is not eligible to declare a charge."
+    "act": {
+      "when": "afterShootingButton",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Opportunistic Manoeuvre: Normal move of up to D6\" (no charge)",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "move": "D6",
+          "noCharge": true
+        }
+      ]
+    }
   },
   "Smoke Launcher": {
-    "status": "auto",
-    "note": "The bearer has the SMOKE keyword."
+    "gear": true,
+    "effects": [
+      {
+        "addKeywords": [
+          "SMOKE"
+        ]
+      }
+    ]
   },
   "Scanner Uplinks": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, select one enemy unit (excluding MONSTERS and VEHICLES) hit by one or more of those attacks. Until the start of your next turn, that enemy unit is suppressed. While a unit is suppressed, each time a model in that unit makes an attack, subtract 1 from the Hit roll."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "hit": -1
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "suppressed"
+        }
+      ]
+    }
   },
   "Break the Foe": {
-    "status": "auto",
-    "note": "Melee weapons equipped by models in this model’s unit have the [SUSTAINED HITS 1] ability."
+    "effects": [
+      {
+        "attack": "melee",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
   },
   "Relentless Avalanche": {
-    "status": "auto",
-    "note": "You can target this unit with the Heroic Intervention stratagem, regardless of any other uses of that stratagem this phase. If you do: • That use is -1 CP. • That use does not prevent any uses of that stratagem on other units this phase."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "cp": 1
+        },
+        "stratRepeat": {
+          "ids": [
+            "heroic-intervention"
+          ],
+          "limit": "phase"
+        }
+      }
+    ]
   },
-  "Methodical Annihilation": {
-    "status": "auto",
-    "note": "Each time a Leagues of Votann model from your army makes an attack with a weapon that targets the closest eligible target or a target that is within Engagement Range of that model’s unit: • Re-roll a Wound roll of 1. • If your unit is a Kâhl, Einhyr Hearthguard or Ûthar the Destined unit, improve the Armour Penetration characteristic of that attack by 1."
-  },
-  "Bastion Shield": { "code": true,
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. Each time a ranged attack targets the bearer’s unit, if the attacking model is within 12\" of the bearer’s unit, worsen the Armour Penetration characteristic of that attack by 1. If you spend 1YP, until the end of the phase, if the attacking model is within 18\" of the bearer’s unit, worsen the Armour Penetration characteristic of that attack by 1 instead."
+  "Bastion Shield": {
+    "effects": [
+      {
+        "if": [
+          "targetWithin:12"
+        ],
+        "defend": {
+          "vs": "ranged",
+          "ap": 1
+        }
+      }
+    ],
+    "note": "Spending 1YP for 18\" is not offered"
   },
   "Quake Multigenerator": {
-    "status": "auto",
-    "note": "Kâhl model only. In your Shooting phase, after the bearer has shot, select one enemy unit (excluding TITANIC units) hit by one or more of those attacks. Until the start of your next turn, that enemy unit is suppressed. While a unit is suppressed, each time a model in that unit makes an attack, subtract 1 from the Hit roll."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "!TITANIC"
+        ],
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "hit": -1
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "suppressed"
+        }
+      ]
+    }
   },
   "Ironskein": {
-    "status": "auto",
-    "note": "KÂHL model only. This model has +2 W."
+    "effects": [
+      {
+        "scope": "model",
+        "statW": 2
+      }
+    ]
   },
   "High Kâhl": {
-    "status": "auto",
-    "note": "KÂHL model only. In the Fight phase, when a model in this unit is destroyed, if this unit has not been selected to fight this phase, roll one D6: on a 4+, do not remove that model from the battlefield; after this unit has fought, or at the end of the phase (whichever comes first), that model is removed from the battlefield."
-  },
-  "Martial Leverage": { "code": true,
-    "status": "auto",
-    "note": "Each time an enemy unit is destroyed, you gain 1YP."
+    "effects": [
+      {
+        "attack": "melee",
+        "fightOnDeath": 4
+      }
+    ]
   },
   "Oathbound Speculator": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. Each time a model in the bearer’s unit makes an attack, re-roll a Wound roll of 1. Each time the bearer’s unit is selected to shoot or fight, you can spend 3YP. If you do, until the end of the phase, each time a model in the bearer’s unit makes an attack, add 1 to the Wound roll."
+    "effects": [
+      {
+        "reroll": "wounds1"
+      }
+    ],
+    "act": [
+      {
+        "when": "selectedToShoot",
+        "if": [
+          "yp:3"
+        ],
+        "limit": "phase",
+        "label": "Oathbound Speculator: spend 3YP, +1 to Wound this phase",
+        "botUse": "valuable",
+        "do": [
+          {
+            "on": "self",
+            "lov": 3
+          },
+          {
+            "on": "self",
+            "buff": [
+              {
+                "wound": 1
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToFight",
+        "if": [
+          "yp:3"
+        ],
+        "limit": "phase",
+        "label": "Oathbound Speculator: spend 3YP, +1 to Wound this phase",
+        "botUse": "valuable",
+        "do": [
+          {
+            "on": "self",
+            "lov": 3
+          },
+          {
+            "on": "self",
+            "buff": [
+              {
+                "wound": 1
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      }
+    ]
   },
   "Dead Reckoning": {
+    "code": true,
     "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. At the end of the turn, if the bearer is on the battlefield and you spent no YP in that turn, you can gain 1YP."
+    "note": "End of a turn with no YP spent: +1YP"
   },
   "Iron Ambassador": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model equipped with an Autoch-pattern combi-bolter only. Once per battle, when the bearer’s unit is selected to shoot, the bearer can use this Enhancement. If it does, spend up to 3YP and, until the end of the phase, add the number of YP you just spent to the Damage characteristic of the bearer’s ranged weapons."
+    "act": {
+      "when": "selectedToShoot",
+      "if": [
+        "yp:3"
+      ],
+      "limit": "battle",
+      "label": "Iron Ambassador: spend 3YP, +3 Damage for the bearer's ranged weapons",
+      "botUse": "valuable",
+      "do": [
+        {
+          "on": "self",
+          "lov": 3
+        },
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "attack": "ranged",
+              "damage": 3
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "note": "Always 3YP (the card: up to 3)"
   },
   "Ancestral Crest": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. Once per turn, when you target the bearer’s unit with the Command Re-roll Stratagem, the bearer can use this Enhancement. If it does, spend 1YP and reduce the CP cost of that use of that Stratagem by 1CP."
-  },
-  "Assailed From Every Angle": {
-    "status": "auto",
-    "note": "Leagues of Votann units from your army have the following ability: Guerrilla Adepts: In your Shooting phase, just after this unit is selected to shoot, this unit can use this ability. If it does, select one enemy unit (excluding MONSTERS and VEHICLES). Until the end of the phase, attacks made by models in this unit can only target that enemy unit (and only if it is an eligible target) and, after resolving those attacks, if one or more of those attacks hit that enemy unit, until the start of your next Shooting phase, that enemy unit is assailed (this simply labels that unit for the purposes of this ability and some Enhancements and Stratagems). If that unit is already assailed, until the start of your next Shooting phase, it is also pinned. While a unit is pinned, subtract 2\" from its Move characteristic and subtract 2 from Charge rolls made for it."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "command-reroll"
+          ],
+          "cp": 1,
+          "limit": "turn",
+          "yp": 1
+        }
+      }
+    ]
   },
   "Eye for Weakness": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. Each time a model in the bearer’s unit makes an attack that targets an assailed unit, add 1 to the Wound roll."
+    "effects": [
+      {
+        "if": [
+          "targetMarked:assailed"
+        ],
+        "wound": 1
+      }
+    ]
   },
   "Writ of Acquisition": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. In your Shooting phase, after the bearer’s unit has shot, you gain 1YP for each assailed enemy unit hit by one or more of those attacks (to a maximum of 3YP)."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "each": true,
+        "count": 3
+      },
+      "do": [
+        {
+          "on": "self",
+          "if": [
+            "targetMarked:assailed"
+          ],
+          "lov": -1
+        }
+      ]
+    }
   },
   "Surgical Saboteur": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. In your Shooting phase, after the bearer’s unit has shot, select one MONSTER or VEHICLE unit hit by one or more of those attacks; until the start of your next Shooting phase, that unit is pinned."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "MONSTER|VEHICLE"
+        ],
+        "closest": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "move": -2,
+              "chargeBonus": -2
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "pinned"
+        }
+      ]
+    }
   },
   "Nomad Strategist": {
+    "code": true,
     "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. Once per battle, at the end of your opponent’s Fight phase, if the bearer is on the battlefield, it can use this Enhancement. If it does, you can spend up to 4YP. Select one Hernkyn unit from your army, and, for every 2YP you just spent, select up to one additional HERNKYN unit from your army. You can remove those units from the battlefield and place them into Strategic Reserves. You cannot select a unit that is within Engagement Range of one or more enemy units (excluding assailed units)."
-  },
-  "Fury From The Dêlve": {
-    "status": "auto",
-    "note": "Cthonian Beserks units from your army have the Deep Strike ability. KEYWORDS CTHONIAN BESERKS units from your army gain the BATTLELINE keyword."
+    "note": "End of the opponent's Fight phase: threatened HERNKYN units go into Strategic Reserves (1 + 1 per 2YP)"
   },
   "Dêlvwerke Navigator": {
+    "code": true,
     "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. In the Reinforcements step of your Movement phase, the bearer can use this Enhancement. If it does, select one friendly CTHONIAN BESERKS unit visible to the bearer and then spend any number of YP. Return one destroyed model (excluding CHARACTER models) to that unit and then, for every 2YP you just spent, return up to one additional destroyed model (excluding CHARACTER models) to that unit."
+    "note": "Start of your Movement phase: a CTHONIAN BESERKS model returns (one more for 2YP)"
   },
   "Multiwave System Jammer": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. Once per battle, in your Movement phase, if the bearer is on the battlefield, it can use this Enhancement. If it does, select one friendly Cthonian unit that is in Reserves. Until the end of the phase, for the purposes of setting up that unit on the battlefield, treat the current battle round number as being one higher than it actually is."
+    "act": {
+      "when": "movement",
+      "limit": "battle",
+      "target": {
+        "side": "friendly",
+        "inReserves": true,
+        "units": [
+          "CTHONIAN"
+        ]
+      },
+      "label": "A CTHONIAN unit in Reserves can arrive as if a round later",
+      "do": [
+        {
+          "on": "target",
+          "earlyArrival": true
+        }
+      ]
+    }
   },
   "Quake Supervisor": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. While the bearer is within 3\" of one or more friendly Leagues of Votann Artillery units, the bearer has the Lone Operative ability, and each time one of those ARTILLERY units makes a ranged attack that targets an enemy unit visible to the bearer, add 1 to the Hit roll."
+    "effects": [
+      {
+        "if": [
+          "near:3:LEAGUES OF VOTANN+ARTILLERY"
+        ],
+        "loneOperative": true
+      },
+      {
+        "scope": "aura",
+        "range": 3,
+        "units": [
+          "LEAGUES OF VOTANN",
+          "ARTILLERY"
+        ],
+        "attack": "ranged",
+        "hit": 1
+      }
+    ],
+    "note": "+1 to Hit for any target (the card: targets visible to the bearer)"
   },
   "Piledriver": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. Each time the bearer’s unit is selected to fight, the bearer can use this Enhancement. If it does, spend up to 2YP and, until the end of the phase, add the number of YP you just spent to the Damage characteristic of the bearer’s melee weapons."
-  },
-  "Mobile Sensor Relays": {
-    "status": "auto",
-    "note": "Leagues of Votann Transport units from your army have the following ability: Firebase Control (Aura): While a friendly Leagues of Votann Infantry unit is wholly within 6\" of this TRANSPORT, ranged weapons equipped by models in that INFANTRY unit have the [sustained hits 1] ability."
+    "act": {
+      "when": "selectedToFight",
+      "if": [
+        "yp:2"
+      ],
+      "limit": "phase",
+      "label": "Piledriver: spend 2YP, +2 Damage for the bearer's melee weapons",
+      "botUse": "valuable",
+      "do": [
+        {
+          "on": "self",
+          "lov": 2
+        },
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "attack": "melee",
+              "damage": 2
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    },
+    "note": "Always 2YP (the card: up to 2)"
   },
   "Tactical Alchemy": {
-    "status": "auto",
-    "note": "Kâhl model only. In your Command phase, if the bearer’s unit is within range of one or more objective markers you control that are not within your deployment zone, you can spend 1YP. If you do, roll one D6: on a 4+, you gain 1CP."
+    "act": {
+      "when": "command",
+      "if": [
+        "yp",
+        "onControlledObjective",
+        "!whollyInOwnDz"
+      ],
+      "limit": "phase",
+      "label": "Tactical Alchemy: spend 1YP, 4+ for 1CP",
+      "botUse": "always",
+      "do": [
+        {
+          "on": "self",
+          "lov": 1
+        }
+      ],
+      "roll": "D6",
+      "table": [
+        {
+          "min": 4,
+          "do": [
+            {
+              "cp": 1
+            }
+          ]
+        }
+      ]
+    }
   },
   "Trivärg Cyber Implant": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. In your Shooting phase, each time the bearer’s unit is selected to shoot, if it disembarked from a Transport this turn, or if you spend 2YP, until the end of the phase, ranged weapons equipped by models in that unit have the [sustained HITS 2] ability."
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "disembarkedThisTurn"
+        ],
+        "abilities": [
+          "sustained hits 2"
+        ]
+      }
+    ],
+    "act": {
+      "when": "selectedToShoot",
+      "if": [
+        "yp:2",
+        "!disembarkedThisTurn"
+      ],
+      "limit": "phase",
+      "label": "Trivärg Cyber Implant: spend 2YP, [SUSTAINED HITS 2] this phase",
+      "botUse": "valuable",
+      "do": [
+        {
+          "on": "self",
+          "lov": 2
+        },
+        {
+          "on": "self",
+          "buff": [
+            {
+              "attack": "ranged",
+              "abilities": [
+                "sustained hits 2"
+              ]
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Precursive Judgement": {
-    "status": "auto",
-    "note": "Kâhl model only. While the bearer’s unit is wholly within 6\" of one or more friendly Leagues of Votann Transport units, you can target the bearer’s unit with the Fire Overwatch Stratagem for 0CP and hits are scored on unmodified Hit rolls of 5+ while resolving that Stratagem."
+    "effects": [
+      {
+        "if": [
+          "near:6:LEAGUES OF VOTANN+TRANSPORT"
+        ],
+        "overwatchHitOn": 5,
+        "stratDiscount": {
+          "ids": [
+            "fire-overwatch"
+          ],
+          "cp": 9
+        },
+        "stratRepeat": {
+          "ids": [
+            "fire-overwatch"
+          ],
+          "limit": "phase"
+        }
+      }
+    ]
   },
   "Signature Restoration": {
+    "code": true,
     "status": "auto",
-    "note": "Iron-master model only. Each time a friendly LEAGUES OF VOTANN model is repaired using the bearer’s Forgewrought Expertise ability, that model regains 1 additional lost wound."
-  },
-  "Optimal Application": {
-    "status": "auto",
-    "note": "At the end of your Command phase, you gain 1YP for each objective marker you control that is not within your deployment zone and has one or more Iron-master and/or Memnyr Strategist models from your army within range of it (to a maximum of 2YP gained from this Detachment rule per turn). In your Shooting phase, each time a Brôkhyr, Ironkin Steeljacks or Arkanyst Evaluator unit from your army is selected to shoot, you can spend 1YP. If you do, until the end of the phase, each time a model in that unit makes an attack, re-roll a Hit roll of 1."
+    "note": "Forgewrought Expertise repairs 1 more wound"
   },
   "Fârstrydr Node": {
-    "status": "auto",
-    "note": "Iron-master or Memnyr Strategist model only. Models in the bearer’s unit have the Deep Strike ability."
+    "effects": [
+      {
+        "deepStrike": true
+      }
+    ]
   },
   "Calculated Tenacity": {
-    "status": "auto",
-    "note": "Iron-master or Memnyr Strategist model only. While the bearer is leading a unit, add 1 to the Objective Control characteristic of models in that unit."
+    "effects": [
+      {
+        "scope": "led",
+        "oc": 1
+      }
+    ]
   },
   "Mantle of Elders": {
+    "code": true,
     "status": "auto",
-    "note": "Memnyr Strategist model only. Each time the bearer’s unit is selected to shoot, if you spend YP using the Optimal Application Detachment rule when doing so, you can roll one D6: on a 2+, you gain 1YP."
+    "note": "After Optimal Application is paid: a D6, on 2+ the YP comes back"
   },
   "Graviton Vault": {
-    "status": "auto",
-    "note": "Iron-master model only. In your Shooting phase, after the bearer has shot, and in the Fight phase, after the bearer has fought, select one enemy MONSTER or VEHICLE unit hit by one or more of those attacks. Until the start of your next turn, that enemy unit is suppressed. While a unit is suppressed, each time a model in that unit makes an attack, subtract 1 from the Hit roll."
+    "act": [
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "limit": "phase",
+        "target": {
+          "side": "enemy",
+          "hit": true,
+          "units": [
+            "MONSTER|VEHICLE"
+          ],
+          "closest": true
+        },
+        "do": [
+          {
+            "on": "target",
+            "buff": [
+              {
+                "hit": -1
+              }
+            ],
+            "until": "nextTurnStart",
+            "mark": "suppressed"
+          }
+        ]
+      },
+      {
+        "when": "afterFighting",
+        "auto": true,
+        "limit": "phase",
+        "target": {
+          "side": "enemy",
+          "hit": true,
+          "units": [
+            "MONSTER|VEHICLE"
+          ],
+          "closest": true
+        },
+        "do": [
+          {
+            "on": "target",
+            "buff": [
+              {
+                "hit": -1
+              }
+            ],
+            "until": "nextTurnStart",
+            "mark": "suppressed"
+          }
+        ]
+      }
+    ]
   },
-  "Ruthless Reinvestment": {
+  "Mercenary Prospector": {
+    "code": true,
     "status": "auto",
-    "note": "Your Leagues of Votann units do not have the Hostile Acquisition or Fortify Takeover abilities except as described in this rule. At the start of the battle, your LEAGUES OF VOTANN units have the Hostile Acquisition ability. At the end of your Command phase, you can spend 3YP. If you do, LEAGUES OF VOTANN units from your army lose the Hostile Acquisition ability and gain the Fortify Takeover ability, or vice versa."
-  },
-  "Mercenary Prospector": { "code": true,
-    "status": "auto",
-    "note": "Kâhl model only. Each time an enemy unit is destroyed by the bearer’s unit, gain 2YP."
+    "note": "+2YP each time the bearer's unit destroys an enemy unit"
   },
   "Metaphysical Brokerage": {
+    "code": true,
     "status": "auto",
-    "note": "Memnyr Strategist model only. At the end of your turn, if the bearer is on the battlefield and you gained fewer than 3YP this turn, you gain an amount of YP equal to the difference."
+    "note": "End of your turn: YP gained that turn is topped up to 3"
   },
   "Etacarn SB9 Targeting Implant": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. Each time a model in the bearer’s unit makes an attack, re-roll a Hit roll of 1. Each time the bearer’s unit is selected to shoot or fight, you can spend 3YP. If you do, until the end of the phase, each time a model in the bearer’s unit makes an attack, that attack has the [SUSTAINED HITS 1] ability."
+    "effects": [
+      {
+        "reroll": "hits1"
+      }
+    ],
+    "act": [
+      {
+        "when": "selectedToShoot",
+        "if": [
+          "yp:3"
+        ],
+        "limit": "phase",
+        "label": "Etacarn SB9: spend 3YP, [SUSTAINED HITS 1] this phase",
+        "botUse": "valuable",
+        "do": [
+          {
+            "on": "self",
+            "lov": 3
+          },
+          {
+            "on": "self",
+            "buff": [
+              {
+                "abilities": [
+                  "sustained hits 1"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToFight",
+        "if": [
+          "yp:3"
+        ],
+        "limit": "phase",
+        "label": "Etacarn SB9: spend 3YP, [SUSTAINED HITS 1] this phase",
+        "botUse": "valuable",
+        "do": [
+          {
+            "on": "self",
+            "lov": 3
+          },
+          {
+            "on": "self",
+            "buff": [
+              {
+                "abilities": [
+                  "sustained hits 1"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      }
+    ]
   },
   "Asset Manipulator": {
-    "status": "auto",
-    "note": "LEAGUES OF VOTANN model only. At the start of the Command phase, you can spend 3YP. If you do, until the end of the turn, while an enemy unit is within 3\" of the bearer, subtract 1 from the Objective Control characteristic of models in that enemy unit."
-  },
-  "Sagitaur Spearhead": {
-    "status": "auto",
-    "note": "Friendly SAGITAUR units have Scouts 6\"."
+    "act": {
+      "when": "commandStart",
+      "if": [
+        "yp:3"
+      ],
+      "limit": "phase",
+      "label": "Asset Manipulator: spend 3YP, -1 OC for enemy units within 3\"",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "lov": 3
+        },
+        {
+          "on": "self",
+          "buff": [
+            {
+              "scope": "enemyAura",
+              "range": 3,
+              "oc": -1
+            }
+          ],
+          "until": "turn"
+        }
+      ]
+    }
   },
   "Saturation Rounds": {
-    "status": "auto",
-    "note": "SAGITAUR unit only. This unit’s ranged attacks have [IGNORES COVER]."
+    "effects": [
+      {
+        "attack": "ranged",
+        "abilities": [
+          "ignores cover"
+        ]
+      }
+    ]
   },
   "Optimised Attack Lines": {
-    "status": "auto",
-    "note": "SAGITAUR unit only. This unit has MOBILE."
-  },
-  "Eye of the Hunt": {
-    "status": "auto",
-    "note": "Friendly HERNKYN units’ ranged attacks that target a unit within 12\" have +1 to hit rolls."
+    "effects": [
+      {
+        "mobile": true
+      }
+    ]
   },
   "Pan-Spectral Lockons": {
-    "status": "auto",
-    "note": "PIONEERS unit only. In your Shooting phase, you can select one visible enemy unit within 12\" of this unit. That enemy unit is spotted: • While a unit is spotted, that unit has +3\" detection range."
+    "act": {
+      "when": "shooting",
+      "limit": "phase",
+      "label": "Pan-Spectral Lockons: an enemy unit within 12\" is spotted (+3\" detection range)",
+      "botUse": "always",
+      "target": {
+        "side": "enemy",
+        "range": 12,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "detection": 3
+            }
+          ],
+          "until": "turn",
+          "mark": "spotted"
+        }
+      ]
+    }
   },
   "Shroudwërke Talismans": {
-    "status": "auto",
-    "note": "YAEGIRS unit only. This unit has -3\" detection range"
+    "effects": [
+      {
+        "detection": -3
+      }
+    ]
   },
-  "Avatars of the Ancestors": {
-    "status": "auto",
-    "note": "Friendly KÂHL/EINHYR CHAMPION/EINHYR HEARTHGUARD/ÛTHAR THE DESTINED units’ ranged attacks that target a unit within 9\" can re-roll wound rolls of 1. This detachment has the HEARTHGUARD tag and cannot be taken with another HEARTHGUARD detachment."
+  "High Kâhl@Hearthguard Covenant": {
+    "effects": [
+      {
+        "fightOnDeath": 4
+      }
+    ]
+  },
+  "Ironskein@Hearthguard Covenant": {
+    "effects": [
+      {
+        "scope": "model",
+        "statW": 2
+      }
+    ]
   }
 }

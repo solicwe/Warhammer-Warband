@@ -13,14 +13,25 @@ import qtStrats from '../../data/stratagems/QT.json';
 import aoiStrats from '../../data/stratagems/AoI.json';
 import amStrats from '../../data/stratagems/AM.json';
 import tyrStrats from '../../data/stratagems/TYR.json';
+import aeStrats from '../../data/stratagems/AE.json';
+import asStrats from '../../data/stratagems/AS.json';
+import admStrats from '../../data/stratagems/AdM.json';
+import cdStrats from '../../data/stratagems/CD.json';
+import druStrats from '../../data/stratagems/DRU.json';
+import gcStrats from '../../data/stratagems/GC.json';
+import gkStrats from '../../data/stratagems/GK.json';
+import lovStrats from '../../data/stratagems/LoV.json';
+import necStrats from '../../data/stratagems/NEC.json';
+import tauStrats from '../../data/stratagems/TAU.json';
 import { parseAbilityText } from './abilityText';
+import { rollExpr, rollN } from '../engine/dice';
 import { emit, reactWorth, runStratSpecial, targetFilter } from '../engine/events';
 import { ldTest, runActions, runDeathQueue, shockTest, type Action } from './activations';
 import { kwPhrase } from '../engine/army';
-import { buildShootPools, expectedDamage, finishAttack, onAttackFinished, onModelKilled, resolveAll, startAttack } from '../engine/attack';
+import { applyMortalWounds, buildShootPools, expectedDamage, finishAttack, onAttackFinished, onAttackStart, onModelKilled, resolveAll, startAttack } from '../engine/attack';
 import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
 import {
-  afterReaction, autoCharge, setUnleashWrath, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, formationAt, validateDisembark,
+  afterReaction, autoCharge, setUnleashWrath, placeNear, shootNow, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, formationAt, validateDisembark,
 } from '../engine/game';
 import { baseDist, bodyAt, dist, gap, ptGap } from '../engine/geometry';
 import {
@@ -69,11 +80,20 @@ export interface StratRule {
   unitIf?: string[];
   /** things only the stratagem engine can do: shoot back, charge now, embark, disembark, move the wreck */
   special?: Special[];
+  /** reactions to a destroyed unit: only units that were within X" of it (PROTOCOL OF THE VENGEFUL STARS) */
+  nearVictim?: number;
+  anyUnit?: boolean; // a reaction any qualifying unit can make, not only the unit the moment is about (EMP Grenades)
+  /** FAIL-SAFE DETONATOR: when the model has no Deadly Demise, each unit within `range` takes `expr` mortal wounds on `on`+ */
+  noDemise?: { range: number; on: number; expr: string };
+  /** a mark on the unit's timed effects (faction code reads it: VOX-RELAY) */
+  mark?: string;
   /** the effects go to the CHARACTER models of the unit only; `addWounds`: +X to their Wounds for the rest of the battle (Eye of the Gods) */
   characterOnly?: boolean;
   addWounds?: number;
   /** "You can only use this Stratagem once per battle round / battle" */
   limit?: 'round' | 'battle';
+  /** a faction module uses it by itself at its moment (cult.ts: Cult Ambush markers); never offered as a button */
+  code?: boolean;
   /** the TARGET keywords, when the card's wording can't be read ("INFANTRY or MOUNTED") */
   targetKw?: string[];
   /** ownKilled: the enemy unit it destroyed must have this keyword (Bloody Example: CHARACTER) */
@@ -85,11 +105,11 @@ export interface StratRule {
   /** the bot (only) uses it when these conditions hold on the unit (a person may use it any time) */
   botIf?: string[];
   /** reactions: when the bot uses it (default never) */
-  botReact?: 'always' | 'shoot' | 'charge';
+  botReact?: 'always' | 'shoot' | 'charge' | 'never';
 }
 
 type TimedUntil = 'phase' | 'turn' | 'nextCommand' | 'nextTurnStart' | 'battle';
-export type Special = 'deathStrike' | 'maleficSurge' | 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'chargeWithCallidusWound' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap' | 'raisePledge' | 'putrid' | 'attachNear' | 'mireslick';
+export type Special = 'deathStrike' | 'maleficSurge' | 'reserveAgain' | 'spawnAtDeath' | 'blessingOne' | 'summonNear' | 'disembarkSurge' | 'shootAt' | 'charge' | 'chargeCap6' | 'chargeWithCallidusWound' | 'embark' | 'embarkEmpty' | 'embarkHeavy' | 'disembarkShoot' | 'disembarkNear6' | 'wreckMove' | 'moveEndDzOrObjective' | 'moveEndObjective' | 'shootAtSnap' | 'raisePledge' | 'putrid' | 'attachNear' | 'mireslick' | 'regimental';
 
 export interface StratOption {
   label: string; buffs?: BuffKind[]; effects?: Effect[]; do?: Action[]; enemyEffects?: Effect[];
@@ -108,10 +128,14 @@ export interface EnemyPick {
   all?: boolean;
   /** the enemy unit that just attacked / charged / moved (the last one to act this phase) */
   lastActor?: boolean;
+  /** the enemy unit the reaction is about (reaction context: it just failed a Battle-shock test) */
+  ctxUnit?: boolean;
   /** the enemy unit that destroyed ours (reaction context) */
   killer?: boolean;
   /** only units this unit hit this phase (optionally: with a weapon whose name matches) */
   hitBy?: boolean | string;
+  /** only the enemy unit that inflicted mortal wounds on this unit this phase (HEXWROUGHT REPRISAL) */
+  mwFrom?: boolean;
   /** only an enemy unit that Fell Back this turn */
   fellBack?: boolean;
   /** only an enemy unit within Contagion Range of this unit (Aggravus Spasms) */
@@ -136,6 +160,16 @@ const BOOKS: Record<string, Record<string, StratRule>> = {
   AoI: (aoiStrats as unknown as { rules: Record<string, StratRule> }).rules,
   AM: (amStrats as unknown as { rules: Record<string, StratRule> }).rules,
   TYR: (tyrStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  AE: (aeStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  AS: (asStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  AdM: (admStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  CD: (cdStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  DRU: (druStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  GC: (gcStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  GK: (gkStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  LoV: (lovStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  NEC: (necStrats as unknown as { rules: Record<string, StratRule> }).rules,
+  TAU: (tauStrats as unknown as { rules: Record<string, StratRule> }).rules,
 };
 
 const OFFENCE_BUFFS: BuffKind[] = ['hit+1', 'wound+1', 'rerollHits', 'rerollHits1', 'rerollWounds', 'rerollWounds1', 'ap+1', 'lethal', 'sustained1', 'devastating', 'ignoresCover'];
@@ -272,7 +306,8 @@ export const stratDetachment = (s: GameState, p: PlayerId, st: StratagemData) =>
 export function stratRule(st: StratagemData, factionId?: string, detachment?: string): StratRule {
   const book = factionId ? BOOKS[factionId] : undefined;
   const own = book?.[`${st.name}@${detachment}`] ?? book?.[st.name];
-  if (own) return { status: 'auto', ...own, bot: own.bot ?? botUseOf(own) };
+  // an entry marked 'never' still gets the attack / defend use its effects call for (the bot measures whether it pays)
+  if (own) return { status: 'auto', ...own, bot: !own.bot || (own.bot === 'never' && !own.react) ? botUseOf(own) : own.bot };
   return readStratagem(st);
 }
 
@@ -386,11 +421,13 @@ export function stratEnemies(s: GameState, p: PlayerId, rule: StratRule, u: Unit
   const q = rule.enemy;
   if (!q) return [];
   if (q.killer) return ctx.killerId ? [unitById(s, ctx.killerId)].filter(onBoard) : [];
+  if (q.ctxUnit) return ctx.unitId ? [unitById(s, ctx.unitId)].filter((e) => onBoard(e) && e.owner !== p) : [];
   if (q.lastActor) { const L = lastEnemyAct(s, p); return L && onBoard(L.u) ? [L.u] : []; }
   return boardUnits(s, other(p)).filter((e) => {
     if (q.kw && !q.kw.some((k) => e.keywords.includes(k) || e.factionKeywords.includes(k))) return false;
     if (q.notKw && q.notKw.some((k) => e.keywords.includes(k))) return false;
     if (q.fellBack && e.move !== 'fallback') return false;
+    if (q.mwFrom && !(u?.used?.mwTaken ?? '').endsWith(`|${e.id}`)) return false;
     if (q.shocked && !e.battleShocked) return false;
     if (!u || !onBoard(u)) return !(q.range || q.engaged || q.visible || q.hitBy);
     if (q.engaged && !engagedEnemies(s, u).some((x) => x.id === e.id)) return false;
@@ -407,6 +444,9 @@ export function stratEnemies(s: GameState, p: PlayerId, rule: StratRule, u: Unit
   });
 }
 
+/** Every entry must hold (an entry may list alternatives with |, or exclude with a leading !). */
+const targetKwOk = (s: GameState, kws: string[], u: UnitState) => kws.every((k) => cond(k.startsWith('!') ? `!kw:${k.slice(1)}` : `kw:${k}`, { s, A: u }));
+
 const limitUsed = (s: GameState, p: PlayerId, st: StratagemData, rule: StratRule) =>
   rule.limit && s.players[p].stratLimits?.[st.id] !== undefined && (rule.limit === 'battle' || s.players[p].stratLimits![st.id] === s.round);
 
@@ -416,6 +456,7 @@ export function stratagemBlock(s: GameState, p: PlayerId, st: StratagemData, uni
   const plan = planStratagem(st);
   const rule = stratRuleFor(s, p, st);
   if (s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'gameover') return 'The battle has not started';
+  if (rule.code) return 'Used by itself when its moment comes';
   if (!opt.react) {
     if (plan.turn === 'your' && s.active !== p) return 'Your turn only';
     if (plan.turn === 'opponent' && s.active === p) return "Opponent's turn only";
@@ -424,7 +465,7 @@ export function stratagemBlock(s: GameState, p: PlayerId, st: StratagemData, uni
   if (limitUsed(s, p, st, rule)) return rule.limit === 'battle' ? 'Once per battle' : 'Once per battle round';
   if (plan.target === 'own' && !unit) return 'Select a target unit first';
   if (unit && plan.target === 'own' && unit.owner !== p) return 'Must be one of your units';
-  if (unit && plan.target === 'own' && unit.owner === p && !(rule.targetKw ? cond(`kw:${rule.targetKw.join('|')}`, { s, A: unit }) : stratTargetOk(st, unit))) return "This unit does not match the Stratagem's TARGET";
+  if (unit && plan.target === 'own' && unit.owner === p && !(rule.targetKw ? targetKwOk(s, rule.targetKw, unit) : stratTargetOk(st, unit))) return "This unit does not match the Stratagem's TARGET";
   if (unit && plan.target === 'enemy' && unit.owner === p && !rule.enemy) return 'Select an enemy unit';
   if (unit && unit.owner === p) {
     const L = lastEnemyAct(s, p);
@@ -444,6 +485,15 @@ const condText = (c: string) => COND_TH[c] ?? (c.startsWith('nearLast:') ? `must
 
 export interface StratUse { choice?: number; enemyId?: string; extraIds?: string[]; ctx?: ReactCtx }
 
+/** Units that can be the extra targets of a multi-target stratagem with `u` (both must have one of its keywords). */
+export function extraTargetUnits(s: GameState, p: PlayerId, rule: StratRule, u: UnitState): UnitState[] {
+  const q = rule.extraTargets;
+  if (!q) return [];
+  const has = (x: UnitState, k: string) => k.split('|').some((a) => x.keywords.includes(a) || x.sources.some((n) => n.toUpperCase() === a));
+  return boardUnits(s, p).filter((x) => x.id !== u.id && (!q.kw || [u, x].every((y) => q.kw!.some((k) => has(y, k)))) && !q.notKw?.some((k) => x.keywords.includes(k)) && !x.battleShocked)
+    .sort((a, b) => b.pts - a.pts);
+}
+
 /** The rule with the chosen option folded in. */
 export function withChoice(rule: StratRule, choice?: number): StratRule & { mark?: string; shock?: boolean; cpExtra?: number } {
   const o = choice !== undefined ? rule.choice?.[choice] : undefined;
@@ -454,7 +504,7 @@ export function withChoice(rule: StratRule, choice?: number): StratRule & { mark
     effects: [...(rule.effects ?? []), ...(o.effects ?? [])],
     do: [...(rule.do ?? []), ...(o.do ?? [])],
     enemyEffects: [...(rule.enemyEffects ?? []), ...(o.enemyEffects ?? [])],
-    mark: o.mark, shock: o.shock, cpExtra: o.cpExtra,
+    mark: o.mark ?? rule.mark, shock: o.shock, cpExtra: o.cpExtra,
   };
 }
 
@@ -475,6 +525,8 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
   if (rule.limit) (s.players[p].stratLimits ??= {})[st.id] = rule.limit === 'battle' ? -1 : s.round;
   const buffs = rule.buffs ?? [];
   const until = rule.until === 'turn' || rule.until === 'nextCommand' ? 'turn' : 'phase';
+  // multi-target stratagems: the bot (and automatic rules) add the most valuable units that qualify
+  if (rule.extraTargets && !use.extraIds && u && playsItself(s, p)) use = { ...use, extraIds: extraTargetUnits(s, p, rule, u).slice(0, rule.extraTargets.count - 1).map((x) => x.id) };
   const own = [u, ...(use.extraIds ?? []).map((id) => unitById(s, id))].filter((x): x is UnitState => !!x && x.owner === p);
   const enemies = rule.enemy
     ? (rule.enemy.all ? stratEnemies(s, p, rule, u, use.ctx) : [stratEnemies(s, p, rule, u, use.ctx).find((e) => e.id === use.enemyId) ?? stratEnemies(s, p, rule, u, use.ctx)[0]].filter((e): e is UnitState => !!e))
@@ -488,20 +540,25 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
         : e;
       addTimed(s, x, { e: applied, label: st.name, until: rule.until ?? 'phase', by: p, mark: rule.mark, models: chars });
     }
+    // a mark with nothing else (MASTERS OF THE VOID, VOX-RELAY): faction / engine code reads it
+    if (rule.mark && !(rule.effects ?? []).length) addTimed(s, x, { e: {}, label: st.name, until: rule.until ?? 'phase', by: p, mark: rule.mark });
     // Berzerker's Wrath after the surge was already offered: that move is now up to 8"
     const fixed = Math.max(0, ...(rule.effects ?? []).map((e) => e.surgeFixed ?? 0));
     if (fixed && x.extraMove?.kind === 'surge') x.extraMove.max = fixed;
     if (rule.addWounds) for (const m of alive(x).filter((m) => chars?.includes(m.id) ?? true)) { m.profile = { ...m.profile, W: m.profile.W + rule.addWounds }; m.wounds += rule.addWounds; }
     if (rule.shock && !x.battleShocked) { x.battleShocked = true; log(s, `${st.name}: ${x.name} gives in to the Red Thirst → Battle-shocked`, 'info', p); }
   }
-  for (const e of enemies) for (const fx of rule.enemyEffects ?? []) addTimed(s, e, { e: fx, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, ...(rule.enemyMark ? { mark: rule.enemyMark } : {}) });
+  // a charge already rolled (the reaction comes after the roll): the modifier changes that roll
+  for (const e of enemies) for (const fx0 of rule.enemyEffects ?? []) if (fx0.chargeBonus && e.declaredCharge && e.chargeRoll != null && e.chargedTurn !== s.turn) e.chargeRoll = Math.max(0, e.chargeRoll + fx0.chargeBonus);
+  for (const e of enemies) for (const fx0 of rule.enemyEffects ?? []) addTimed(s, e, { e: fx0.incoming ? { ...fx0, incoming: { ...fx0.incoming, by: p } } : fx0, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, ...(rule.enemyMark ? { mark: rule.enemyMark } : {}) });
   if (rule.enemyMark && !(rule.enemyEffects ?? []).length) for (const e of enemies) addTimed(s, e, { e: {}, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, mark: rule.enemyMark });
   // one-off actions: on the own unit, or on the enemy unit for stratagems that pick one
   const holder = own[0] ?? s.units.find((x) => x.owner === p && x.status === 'board');
   if (rule.do?.length && holder) {
     for (const x of own.length ? own : [holder]) {
-      if (enemies.length) for (const e of enemies) runActions(s, st.name, x, rule.do, e);
-      else runActions(s, st.name, x, rule.do, x);
+      const ctx = { deadModelId: use.ctx?.modelId };
+      if (enemies.length) for (const e of enemies) runActions(s, st.name, x, rule.do, e, ctx);
+      else runActions(s, st.name, x, rule.do, x, ctx);
     }
   }
   for (const sp of rule.special ?? []) runSpecial(s, p, sp, st.name, own[0] ?? holder, enemies[0], use.ctx ?? {});
@@ -516,36 +573,6 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
 // ---------- special actions ----------
 
 /** Shoot `target` with `u` right now, as if it were its Shooting phase (dice rolled automatically). */
-function shootNow(s: GameState, u: UnitState, target: UnitState, label: string, mode: 'normal' | 'snap' = 'normal') {
-  if (!onBoard(u) || !onBoard(target)) return;
-  const r = buildShootPools(s, u.id, target.id, { mode });
-  if (r.error || !r.pools.length) { log(s, `${label}: ${u.name} cannot shoot ${target.name} (${r.error ?? 'no weapon in range'})`, 'info', u.owner); return; }
-  const fired = [...u.weaponsFired];
-  log(s, `${label}: ${u.name} shoots ${target.name}`, 'info', u.owner);
-  startAttack(s, 'shoot', u.id, target.id, r.pools, { free: true });
-  resolveAll(s);
-  finishAttack(s);
-  u.weaponsFired = fired; // shooting out of phase does not use up its own Shooting phase
-}
-
-/** Somewhere near the transport to put a unit (`range` from its hull), as close to `towards` as possible. */
-function placeNear(s: GameState, u: UnitState, t: UnitState, range: number, towards: Pt | null, ok: (pos: Map<string, Pt>) => boolean): Map<string, Pt> | null {
-  const c = alive(t)[0];
-  if (!c) return null;
-  let best: { pos: Map<string, Pt>; d: number } | null = null;
-  for (let ring = 0; ring <= 4; ring++) {
-    const r = c.r + 1 + ring * (range / 4);
-    for (let a = 0; a < 16; a++) {
-      const ang = (a / 16) * Math.PI * 2;
-      const pos = formationAt(u, { x: c.x + Math.cos(ang) * r, y: c.y + Math.sin(ang) * r });
-      if (!ok(pos)) continue;
-      const mid = [...pos.values()].reduce((q, p2) => ({ x: q.x + p2.x / pos.size, y: q.y + p2.y / pos.size }), { x: 0, y: 0 });
-      const d = towards ? dist(mid, towards) : ring;
-      if (!best || d < best.d) best = { pos, d };
-    }
-  }
-  return best?.pos ?? null;
-}
 
 function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: UnitState | undefined, enemy: UnitState | undefined, ctx: ReactCtx) {
   if (!u) return;
@@ -681,7 +708,7 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
 // ---------- reactions: the game offers a stratagem at its moment ----------
 
 /** Moments that cannot wait for a prompt (the dice are being rolled right now): only the bot or "use automatically" act. */
-const SYNC_ONLY = new Set<ReactOn>(['deadlyDemise', 'deadlyDemiseSix', 'enemyFallBack', 'enemyDeadlyDemise']);
+const SYNC_ONLY = new Set<ReactOn>(['deadlyDemise', 'deadlyDemiseSix', 'enemyFallBack', 'enemyDeadlyDemise', 'targeted', 'surgeStart']);
 
 export interface ReactOffer { st: StratagemData; rule: StratRule; units: UnitState[] }
 
@@ -697,10 +724,11 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
       if (!m || !(m.keywords.includes(rule.ctxModel) || new RegExp(rule.ctxModel, 'i').test(m.name))) continue;
       if (rule.ctxModelNot && m.keywords.includes(rule.ctxModelNot)) continue;
     }
-    const units = (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked', 'ownKilled'].includes(on)
+    const units = (!rule.anyUnit && (rule.targetFrom || ['deadlyDemise', 'deadlyDemiseSix', 'modelDestroyed', 'chargeMoveEnd', 'ownAttacked', 'ownKilled', 'actionStart', 'targeted', 'surgeStart'].includes(on))
       ? (ctx.unitId ? [unitById(s, ctx.unitId)] : [])
       : stratCandidates(s, p, st, ctx)
     ).filter((u) => u.owner === p && !stratagemBlock(s, p, st, u, { react: true, ctx }))
+      .filter((u) => !rule.nearVictim || (!!ctx.unitId && unitById(s, ctx.unitId).models.some((m) => alive(u).some((n) => baseDist(n, m) <= rule.nearVictim! + 1e-6))))
       // Detonator: a unit within 18" of the exploding model
       .filter((u) => on !== 'enemyDeadlyDemise' || alive(u).some((n) => { const m = ctx.unitId && unitById(s, ctx.unitId).models.find((x) => x.id === ctx.modelId); return !!m && baseDist(n, m) <= 18; }));
     if (units.length) out.push({ st, rule, units });
@@ -711,10 +739,18 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
 /** Bot (or "use automatically"): which unit and enemy it would use the stratagem with, and whether it is worth it. */
 function autoPick(s: GameState, p: PlayerId, o: ReactOffer, ctx: ReactCtx, auto: boolean): { u: UnitState; enemyId?: string; choice?: number } | null {
   const cost = o.st.cp;
+  if (!auto && o.rule.botReact === 'never') return null;
+  if (!auto && o.rule.react === 'targeted' && o.rule.bot === 'defend') return null; // the bot weighs defences against the attack itself (botStrats)
   if (!auto && !o.rule.botReact) {
     // moves and redeploys: worth it when the planner finds somewhere better for the unit
     const kind = o.rule.do?.some((a) => a.reserves) ? 'reserves' : o.rule.do?.some((a) => a.surge) ? 'surge' : o.rule.do?.some((a) => a.move) ? 'move'
       : o.rule.special?.some((x) => x.startsWith('embark')) ? 'embark' : null;
+    // reactions that help without a move (a defence, mortal wounds, a mark on the enemy unit): used like 'always'
+    const r = o.rule;
+    const useful = !!r.buffs?.length || !!r.enemyEffects?.length || !!r.special?.length
+      || (r.effects ?? []).some((e) => e.surgeReroll || e.defend || e.fightOnDeath || e.shootOnDeath || e.stealth || e.targetableWithin || e.eligible)
+      || (r.do ?? []).some((a) => a.mortals || a.mortalRoll || a.mortalsTable || a.shock !== undefined || a.heal || a.revive || a.reviveLater || a.secure || a.nec);
+    if (!kind && useful) return autoPick(s, p, { ...o, rule: { ...r, botReact: 'always' } }, ctx, auto);
     if (!kind || o.rule.enemy) return null;
     const u = o.units.find((x) => (o.rule.botIf ?? []).every((c) => cond(c, { s, A: x, holder: x })) && reactWorth(s, x, o.st, kind));
     return u ? { u, choice: stratChoices(s, o.rule, u)[0]?.i } : null;
@@ -758,6 +794,7 @@ function handleReact(s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx): boo
   const bot = playsItself(s, p);
   const autos = s.players[p].autoStrats ?? [];
   for (const o of offers) {
+    (globalThis as unknown as { __offer?: (id: string) => void }).__offer?.(o.st.id); // DEBUG-OFFER
     const isAuto = !bot && autos.includes(o.st.id);
     if (!bot && !isAuto) continue;
     const pick = autoPick(s, p, o, ctx, isAuto);
@@ -807,14 +844,17 @@ export function unleashWrath(s: GameState, arrived: UnitState) {
 }
 
 export const REACT_LABEL: Partial<Record<ReactOn, string>> = {
-  enemyChargeMoveEnd: 'an enemy unit just made a Charge move', enemyChargePhaseStart: "start of your opponent's Charge phase", enemyCommandStart: "your opponent's Command phase",
-  enemyMoved: 'an enemy unit just ended a move', enemyShot: 'an enemy unit has just shot', enemyChargeDeclared: 'an enemy unit just declared a charge', enemyChargePhaseEnd: "end of your opponent's Charge phase",
-  fightPhaseEnd: 'end of the Fight phase', chargeMoveEnd: 'your unit just made a Charge move', ownAttacked: 'your unit has just attacked', ownDestroyed: 'your unit was destroyed',
+  enemyChargeMoveEnd: 'an enemy unit just made a Charge move', enemyChargePhaseStart: "start of your opponent's Charge phase", enemyCommandStart: "your opponent's Command phase", anyPhaseEnd: 'end of the phase', actionStart: 'your unit just started an action', enemyWarlordDestroyed: "your opponent's Warlord was just destroyed", enemyShockFailed: 'an enemy unit just failed a Battle-shock test',
+  enemyMoved: 'an enemy unit just ended a move', enemyArrived: 'an enemy unit was just set up from Reserves', enemyShot: 'an enemy unit has just shot', enemyChargeDeclared: 'an enemy unit just declared a charge', enemyChargePhaseEnd: "end of your opponent's Charge phase",
+  fightPhaseEnd: 'end of the Fight phase', chargeMoveEnd: 'your unit just made a Charge move', ownAttacked: 'your unit has just attacked', targeted: 'an enemy unit just selected your unit as its target', surgeStart: 'your unit is about to make a surge move', ownDestroyed: 'your unit was destroyed',
   modelDestroyed: 'your model was destroyed', oathDestroyed: 'the Oath of Moment target was destroyed', ownKilled: 'your unit just destroyed an enemy unit',
 };
 
 setReactHook(handleReact);
 setUnleashWrath(unleashWrath);
+
+// "just after an enemy unit has selected its targets": the target's side may answer before any dice
+onAttackStart((s, at) => { if (!at.free && (at.kind === 'fight' || s.phase === 'shooting')) handleReact(s, unitById(s, at.targetId).owner, 'targeted', { unitId: at.targetId, killerId: at.attackerId }); });
 
 // the attack sequence: "just after an enemy unit has shot", "after your unit has shot / fought"
 onAttackFinished((s, at, info) => {
@@ -848,6 +888,20 @@ onModelKilled((s, u, m, killerId) => {
     else handleReact(s, p, on, ctx);
   };
   queue(u.owner, 'modelDestroyed', { unitId: u.id, modelId: m.id, killerId });
+  // FAIL-SAFE DETONATOR on a model without Deadly Demise (one with it is a 'deadlyDemise' reaction)
+  const hasDD = !!(m.deadlyDemise ?? (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1)));
+  const p = u.owner;
+  if (!hasDD && (playsItself(s, p) || (s.players[p].autoStrats ?? []).length)) failSafe: for (const d of s.players[p].detachments) for (const st of d.stratagems) {
+    const rule = stratRule(st, s.players[p].factionId, d.name);
+    if (!rule.noDemise || !(rule.targetKw ?? []).every((k) => m.keywords.includes(k)) || stratagemBlock(s, p, st, u, { react: true }) || s.players[p].cp < st.cp + (playsItself(s, p) ? 1 : 0)) continue;
+    if (!playsItself(s, p) && !(s.players[p].autoStrats ?? []).includes(st.id)) continue;
+    const q = rule.noDemise;
+    const near = s.units.filter((v) => v.id !== u.id && onBoard(v) && alive(v).some((n) => baseDist(n, m) <= q.range + 1e-6));
+    if (!near.some((v) => v.owner !== p)) continue;
+    applyDetachmentStratagem(s, p, st, u.id);
+    for (const v of near) if (rollN(s, 1)[0] >= q.on) applyMortalWounds(s, v, rollExpr(s, q.expr).total, st.name);
+    break failSafe;
+  }
   if (!alive(u).length) {
     queue(u.owner, 'ownDestroyed', { unitId: u.id, killerId });
     if (s.players[other(u.owner)].oathTarget === u.id) queue(other(u.owner), 'oathDestroyed', { unitId: u.id });

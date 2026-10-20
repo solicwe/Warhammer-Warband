@@ -162,6 +162,8 @@ export type Phase = 'formations' | 'deploy' | 'scouts' | 'command' | 'movement' 
 export type MoveKind = 'stationary' | 'normal' | 'advance' | 'fallback' | 'ingress' | 'charge' | 'pileIn' | 'consolidate' | 'deploy' | 'scout' | 'extra' | 'surge';
 
 export interface ModelState {
+  /** Shadow Field: the invulnerable save is gone for the rest of the battle */
+  shadowFieldDown?: boolean;
   id: string;
   name: string;
   profile: ModelProfileData;
@@ -209,6 +211,8 @@ export interface TransportInfo {
 }
 
 export interface UnitState {
+  dsMarker?: Pt; // Deathstrike Target marker
+  parasiteKills?: number; // INFANTRY models the barbed ovipositor destroyed during the current attack (Parasitic Infection)
   startEngaged?: { turn: number; ids: string[] }; // enemy units it was engaged with at the start of this turn (Thrill Seekers)
   plagueExtra?: string;
   leads?: string[]; // a lone CHARACTER: the datasheets it can lead (attaching during the battle: Mobile Vector)
@@ -251,7 +255,7 @@ export interface UnitState {
   soulOwn?: AbilityData[]; // Soul Link: the bearer's own datasheet abilities while it copies another character's
   readied?: boolean; // Adeptus Custodes Martial Ka'tah: the unit can use one ka'tah ability
   mark?: string; // Blade Champion's Sword of the Throne: enemy unit id
-  cherubUsed?: boolean; // Adepta Sororitas: Cherub once per battle
+  cherubUses?: number; // Adepta Sororitas: Cherub (once per battle) / Cherubs (twice) used
   timed?: TimedEffect[]; // temporary effects and marks from abilities
   split?: string; // split off another unit at Declare Battle Formations (Combat Squads …): the other unit's id
   sagaDone?: boolean; // Slayer's Oath: this unit has the completed-Saga benefits
@@ -278,6 +282,8 @@ export interface UnitState {
   advanceRoll: number | null;
   maxMoved: number;
   setUpTurn: number;
+  /** Genestealer Cults: waiting in Cult Ambush (not destroyed with other Reserves after the third round) */
+  cultAmbush?: boolean;
   shotTurn: number; // global turn index of last ranged attacks (-10 = never)
   selectedToShoot: boolean;
   declaredCharge: boolean;
@@ -347,6 +353,10 @@ export interface PlayerState {
   extraPlague?: string;
   blight?: { objId?: string; terrain?: number; untilTurn?: number }[];
   poxTemplate?: UnitState;
+  trapObj?: string; // A Tempting Trap: the Trap objective marker
+  voxBeacon?: { x: number; y: number }; // Vox-relay Beacon token (Cadian Recon Squad)
+  tunnels?: { x: number; y: number }[]; // Subterranean Assault: Tunnel Markers
+  sporeTemplates?: Record<string, UnitState>; // Spore Mines / Mucolid Spores units Tyranid abilities add mid-battle
   /** a unit the army can add mid-battle (Gift of Change: a one-model Tzeentch Chaos Spawn), cloned when it arrives */
   spawnTemplate?: UnitState;
   name: string;
@@ -372,7 +382,15 @@ export interface PlayerState {
   strandsOfFateUsed?: string[];
   /** Aeldari: Battle Focus tokens */
   battleFocusTokens?: number;
+  /** Agile Manoeuvres performed this phase (manoeuvre → phase key) */
+  focusUsed?: Record<string, string>;
+  /** Seer Council: Fate dice that make some stratagems cheaper */
+  seerFate?: number[];
+  /** Sonic Destruction: Vibro Cannon Platform units that shot each enemy unit this phase ("<phase>:<unit id>") */
+  vibroShots?: Record<string, string[]>;
   /** Leagues of Votann: Yield Points (Prioritised Efficiency) */
+  flags?: string[]; // lasting army-wide states set by rules (YOUR TIME IS NIGH)
+  pestilence?: number; // Tally of Pestilence (Epidemius)
   yieldPoints?: number;
   /** Leagues of Votann: Active stance */
   votannAbility?: 'Hostile Acquisition' | 'Fortify Takeover';
@@ -383,24 +401,35 @@ export interface PlayerState {
   admechHaloOverrideAbility?: 'Electromotive Energisation' | 'Microactuator Bracing' | 'Predation Protocols' | 'Muted Servomotors';
   /** Belisarius Cawl: Machine Vengeance target unit id */
   machineVengeanceTarget?: string | null;
+  acquisitionId?: string;
+  acquisitionExtra?: string; // INFOSLAVE SKULL: a second Acquisition objective marker until the next Command phase
+  ypTurn?: { turn: number; gained: number; spent: number }; // Leagues of Votann: YP gained / spent this turn // Explorator Maniple: the Acquisition objective marker
   /** Drukhari: Pain Token pool (Power from Pain) */
   painTokens?: number;
   /** Drukhari: Units empowered by spending a Pain token this phase */
   empoweredUnits?: string[];
   /** Drukhari: Reaper's Wager detachment side winning the wager */
   drukhariWagerWinning?: 'Drukhari' | 'Harlequins';
+  /** Drukhari: Murderous Agenda's Contract (Kabalite Cartel) */
+  contract?: { kind: 'trophy' | 'fear' | 'strength'; unitId: string; done?: boolean };
+  /** Drukhari: Combat Drugs selected (not rolled) this battle (Spectacle of Spite) */
+  drugsSelected?: string[];
   /** Chaos Daemons: Scintillating Legion Flux tokens pool */
   fluxTokens?: number;
+  eclipse?: { key: string; nml: boolean; opp: boolean }; // IMPOSSIBLE ECLIPSE: areas in the Shadow of Chaos this phase
+  gardenTerrain?: string[]; // Seed the Garden of Nurgle: terrain features in the Shadow of Chaos
   /** Chaos Daemons: Corrupted objective IDs (6" Shadow of Chaos aura + sticky control) */
   corruptedObjectives?: string[];
   /** Chaos Daemons: Units that performed Seductive Gambit this turn */
-  seductiveGambitUnits?: string[];
+  fluxUsed?: string; // Fates in Flux: the last turn:phase:roll a Flux token re-rolled a Hit / Wound / Advance
   /** Genestealer Cults: Resurgence points pool (Cult Ambush) */
   resurgencePoints?: number;
   /** Genestealer Cults: Cult Ambush marker positions on battlefield */
   cultAmbushMarkers?: Pt[];
+  /** Genestealer Cults: Summon the Cult was used */
+  summonedCult?: boolean;
   /** Necrons: Obeisance Phalanx Worthy Foe designated target */
-  worthyFoeUnitId?: string;
+  resurrectTurn?: number; // Resurrection Orb: the turn a unit of this army last resurrected (one per turn)
   riledUntilTurn: number;
   secMode: 'none' | 'tactical' | 'fixed';
   secDeck: string[];
@@ -447,6 +476,7 @@ export interface TimedEffect {
   turn: number;
   mark?: string;
   models?: string[]; // only these models ("this model" abilities)
+  kwAdded?: string[]; // keywords this effect gave the unit, taken away when it ends
 }
 
 /** State behind secondary cards that need choices or actions. */
@@ -504,11 +534,14 @@ export interface Pool {
   noHitReroll: boolean;
   rerollAllHits?: boolean;
   rerollHits1?: boolean; // from detachment rules (unit buffs are checked separately)
+  critWoundApSet?: number; // on a Critical Wound the attack has AP -X (Crack Shot)
+  mortalPerWound?: number; // each wound also inflicts this many mortal wounds (Rapturous Blows)
   rerollWounds1?: boolean;
   rerollWounds12?: boolean; // re-roll wound rolls of 1 and 2
   rerollAllWounds?: boolean;
   rerollDamage?: boolean;
   rerollDamageOne?: boolean; // one low damage roll of this pool may be re-rolled (Aquilon Optics)
+  rerollDamage1?: boolean; // Damage rolls of 1 are re-rolled
   /** variable numbers of attacks rolled for this pool (D6, 2D3+1 …), so one can be re-rolled */
   attackRolls?: { expr: string; total: number; rerolled?: boolean }[];
   /** Command Re-roll the first damage roll below average that would not already kill the model */
@@ -554,6 +587,7 @@ export interface AttackSession {
   targetId: string;
   pools: Pool[];
   idx: number;
+  reflected?: number; // Repulsor Grid: mortal wounds back to the attacker after it has shot
   stage: 'hit' | 'wound' | 'save' | 'damage' | 'done';
   hazardousRolls: number[];
   summary: string[];
@@ -745,13 +779,15 @@ export interface GameState {
   tempCharacters?: { unitId: string; modelId: string; by: PlayerId }[];
   /** Gift of Change: Chaos Spawn to set up at the end of the phase where a character died */
   spawns?: { owner: PlayerId; x: number; y: number; label: string }[];
-  revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number; ld?: boolean; woundsRoll?: string }[];
+  revivals?: { unitId: string; modelId: string; label: string; on: number; wounds: number; x: number; y: number; ld?: boolean; woundsRoll?: string; bonus?: number; own?: boolean }[];
   /** mortal wounds a unit suffers at the end of the current phase (Warpmeld Sacrifice) */
   phaseMortals?: { unitId: string; expr: string; label: string }[];
   /** Split (Horrors): destroyed Horrors that roll to split once the attacking unit has finished its attacks */
   splits?: { unitId: string; from: 'pink' | 'blue'; x: number; y: number }[];
   /** Astra Militarum Voice of Command: orders issued this turn by officer unit id */
   ordersUsed?: Record<string, number>;
+  decisiveTurn?: number; // Decisive Command was used this turn (Yarrick)
+  calmUnderFireTurn?: number; // Calm Under Fire: the turn its second Order was used
   /** T'au Empire For the Greater Good: Guided, Observer, and Spotted unit pairings this phase */
   ftggPairs?: { guidedId: string; observerId: string; spottedId: string; turn: number; phase: Phase }[];
 }

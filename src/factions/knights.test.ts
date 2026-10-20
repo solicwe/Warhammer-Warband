@@ -208,8 +208,7 @@ describe('everything automatic', () => {
         const s = game({ ...all, units: all.units.slice(0, 2) }, F);
         for (const st of det.stratagems) if (stratRuleFor(s, 0, st).status !== 'auto') not.push(`${st.name}: ${stratRuleFor(s, 0, st).status}`);
       }
-      // known gap: Malevolent Heraldry's re-roll of the Dread ability dice
-      expect([...new Set(not)]).toEqual(F === QT ? ['Malevolent Heraldry: manual'] : []);
+      expect([...new Set(not)]).toEqual([]);
     });
   }
 });

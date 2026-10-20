@@ -10,6 +10,8 @@ import type { Active, Ctx, DetChoiceOption, Eligibility } from '../rules-engine/
 export interface GameEvents {
   /** the game was just created, before deployment */
   setup: Record<string, never>;
+  /** deployment is over, before Scout moves (Resolve Pre-battle Abilities) */
+  preBattle: Record<string, never>;
   /** the first turn begins, before its Command phase */
   battleStart: Record<string, never>;
   /** a turn begins: nothing of it has happened yet */
@@ -21,6 +23,7 @@ export interface GameEvents {
   commandStart: { p: PlayerId };
   commandEnd: { p: PlayerId };
   /** end of the Movement phase, after the Reinforcements step */
+  movementStart: { p: PlayerId };
   movementEnd: { p: PlayerId };
   shootingStart: { p: PlayerId };
   /** the Fight phase starts (before pile-in) */
@@ -46,6 +49,10 @@ export interface GameEvents {
   /** a Deadly Demise explosion of unit u hit unit v */
   deadlyDemiseHit: { u: UnitState; v: UnitState };
   /** a model was destroyed, after the core reactions to it (u may now be wiped out) */
+  /** a unit was set up on the battlefield from Reserves */
+  arrived: { u: UnitState };
+  /** a unit got out of a transport */
+  disembarked: { u: UnitState; t: UnitState };
   modelKilled: { u: UnitState; m: ModelState; killerId?: string };
 }
 
@@ -77,6 +84,8 @@ export interface GameModifiers {
   deepStrikeKeep: (s: GameState, u: UnitState, e: UnitState, at: Pt, m: ModelState) => number | null;
   /** a unit that must Deep Strike within its army's own zone (Flow of Magic): may this model be set up here? */
   deepStrikeZone: (s: GameState, p: PlayerId, at: Pt, r: number) => boolean | null;
+  /** a unit about to arrive from Strategic Reserves is stopped this turn (Psychostatic Disruption): the reason, or null */
+  arrivalDenied: (s: GameState, u: UnitState) => string | null;
   /** a model's move is not allowed: the reason, or null */
   moveBlock: (s: GameState, u: UnitState, m: ModelState, from: Pt, to: Pt, kind: MoveKind) => string | null;
   /** this unit may not target that one (shooting, charging or fighting): the reason, or null */
@@ -118,6 +127,11 @@ export function deepStrikeKeep(s: GameState, u: UnitState, e: UnitState, at: Pt,
 }
 
 export const deepStrikeZoneOk = (s: GameState, p: PlayerId, at: Pt, r: number) => all('deepStrikeZone').every((fn) => fn(s, p, at, r) ?? true);
+
+export function arrivalDenied(s: GameState, u: UnitState): string | null {
+  for (const fn of all('arrivalDenied')) { const why = fn(s, u); if (why) return why; }
+  return null;
+}
 
 export function moveBlock(s: GameState, u: UnitState, m: ModelState, from: Pt, to: Pt, kind: MoveKind): string | null {
   for (const fn of all('moveBlock')) { const why = fn(s, u, m, from, to, kind); if (why) return why; }

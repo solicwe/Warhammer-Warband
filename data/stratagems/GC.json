@@ -1,0 +1,772 @@
+{
+  "_comment": "Stratagems written by hand (key: the card name, or NAME@Detachment); the rest are read from the card text.",
+  "rules": {
+    "PRIMED AND READIED": {
+      "targetKw": [
+        "GENESTEALER CULTS"
+      ],
+      "effects": [
+        {
+          "critHitOn": 5
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "COORDINATED TRAP": {
+      "targetKw": [
+        "GENESTEALER CULTS"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "GENESTEALER CULTS"
+        ]
+      },
+      "enemy": {
+        "visible": true
+      },
+      "enemyMark": "Coordinated Trap",
+      "effects": [
+        {
+          "if": [
+            "targetMarked:Coordinated Trap"
+          ],
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "note": "Both units may still attack other units (the card: only that enemy unit)",
+      "status": "auto"
+    },
+    "RETURN TO THE SHADOWS": {
+      "targetKw": [
+        "GENESTEALER CULTS",
+        "INFANTRY"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "LYING IN WAIT": {
+      "code": true,
+      "note": "Used by itself when a BATTLELINE unit cannot fit within 3\" of its Cult Ambush marker: it is set up within 6\" instead",
+      "status": "auto"
+    },
+    "TUNNEL CRAWLERS": {
+      "targetKw": [
+        "GENESTEALER CULTS"
+      ],
+      "targetFrom": "reserves",
+      "effects": [
+        {
+          "deepStrikeRange": 6
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "A DEADLY SNARE": {
+      "targetKw": [
+        "GENESTEALER CULTS",
+        "INFANTRY"
+      ],
+      "react": "enemyChargeDeclared",
+      "unitIf": [
+        "targetOfLast"
+      ],
+      "enemy": {
+        "lastActor": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalsTable": [
+            {
+              "min": 2,
+              "expr": "D3"
+            },
+            {
+              "min": 5,
+              "expr": "3"
+            }
+          ]
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "FRENZIED DEVOTION": {
+      "targetKw": [
+        "ACOLYTE HYBRIDS|HYBRID METAMORPHS|NEOPHYTE HYBRIDS"
+      ],
+      "effects": [
+        {
+          "attack": "melee",
+          "if": [
+            "notCharacterModel"
+          ],
+          "attacks": 1,
+          "skill": 1,
+          "abilities": [
+            "hazardous"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "VENGEANCE FOR THE MARTYR!": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "GENESTEALER CULTS",
+        "CHARACTER"
+      ],
+      "enemy": {
+        "killer": true
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "units": [
+              "ACOLYTE HYBRIDS|HYBRID METAMORPHS|NEOPHYTE HYBRIDS"
+            ],
+            "reroll": "hits1"
+          }
+        }
+      ],
+      "enemyUntil": "battle",
+      "botReact": "always",
+      "note": "Re-roll Hit rolls of 1 (the card: any Hit roll when a Magus, Primus or Acolyte Iconward died); only when the CHARACTER's whole unit is destroyed",
+      "status": "auto"
+    },
+    "TRANSCENDENT CELERITY": {
+      "targetKw": [
+        "ACOLYTE HYBRIDS|HYBRID METAMORPHS|NEOPHYTE HYBRIDS"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "abilities": [
+            "assault"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "THE DOWNTRODDEN RISE": {
+      "code": true,
+      "note": "Used by itself at the end of the opponent's Movement phase for a unit still in Cult Ambush (2CP)",
+      "status": "auto"
+    },
+    "THE PATH OF ANGUISH": {
+      "targetKw": [
+        "ACOLYTE HYBRIDS|NEOPHYTE HYBRIDS"
+      ],
+      "react": "enemyShot",
+      "unitIf": [
+        "lostToLast"
+      ],
+      "do": [
+        {
+          "surge": "D6"
+        }
+      ],
+      "status": "auto"
+    },
+    "TIRELESS FERVOUR": {
+      "targetKw": [
+        "ACOLYTE HYBRIDS|HYBRID METAMORPHS|NEOPHYTE HYBRIDS"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterAdvance",
+            "chargeAfterFallBack"
+          ]
+        },
+        {
+          "rerollCharge": true,
+          "chargeMustEngaged": true
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "note": "The charge must end engaged with an enemy unit already engaged (the card: engaged with a friendly CHARACTER unit)",
+      "status": "auto"
+    },
+    "GENE-TWISTED MUSCLE": {
+      "targetKw": [
+        "ABERRANTS|BIOPHAGUS|PURESTRAIN GENESTEALERS"
+      ],
+      "effects": [
+        {
+          "if": [
+            "targetMV"
+          ],
+          "wound": 1
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "STIMULATED BIO-SURGE": {
+      "targetKw": [
+        "ABERRANTS|BIOPHAGUS|PURESTRAIN GENESTEALERS"
+      ],
+      "effects": [
+        {
+          "chargeBonus": 2
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "HYPER-METABOLIC VIGOUR": {
+      "targetKw": [
+        "ABERRANTS|BIOPHAGUS|PURESTRAIN GENESTEALERS"
+      ],
+      "effects": [
+        {
+          "pileIn": 6,
+          "consolidate": 6,
+          "freeConsolidate": true
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "SAINTLY PAROXYSM": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "GENESTEALER CULTS",
+        "CHARACTER"
+      ],
+      "unitIf": [
+        "fightPhase"
+      ],
+      "enemy": {
+        "killer": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "!kw:ABOMINANT|PATRIARCH"
+          ],
+          "mortalsTable": [
+            {
+              "min": 2,
+              "expr": "D3"
+            }
+          ]
+        },
+        {
+          "on": "target",
+          "if": [
+            "kw:ABOMINANT|PATRIARCH"
+          ],
+          "mortalsTable": [
+            {
+              "min": 2,
+              "expr": "2D3"
+            }
+          ]
+        }
+      ],
+      "botReact": "always",
+      "note": "Only when the CHARACTER's whole unit is destroyed",
+      "status": "auto"
+    },
+    "EVASIVE VANGUARD": {
+      "code": true,
+      "note": "Used by itself (1CP) when an enemy unit ends a move within 8\" of a Cult Ambush marker: the marker moves instead of being removed",
+      "status": "auto"
+    },
+    "BIO-HORROR REVELATION": {
+      "targetKw": [
+        "ABERRANTS|BIOPHAGUS|PURESTRAIN GENESTEALERS"
+      ],
+      "enemy": {
+        "range": 9,
+        "all": true
+      },
+      "enemyEffects": [
+        {
+          "hit": -1
+        }
+      ],
+      "bot": "never",
+      "note": "Every enemy unit within 9\" gets -1 to Hit until the end of the phase (the card: a Leadership test at -1 when selected to shoot, only against your unit)",
+      "status": "auto"
+    },
+    "DEVOTED CREW": {
+      "targetKw": [
+        "GOLIATH ROCKGRINDER|GOLIATH TRUCK"
+      ],
+      "react": "targeted",
+      "buffs": [
+        "damage-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "CLOSE-RANGE SHOOT-OUT": {
+      "targetKw": [
+        "GENESTEALER CULTS",
+        "MOUNTED|VEHICLE"
+      ],
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetWithin:18"
+          ],
+          "abilities": [
+            "lethal hits"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "DEFT MANOEUVRING": {
+      "targetKw": [
+        "ACHILLES RIDGERUNNERS|ATALAN JACKALS"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "shootingPhase"
+      ],
+      "effects": [
+        {
+          "defend": {
+            "inv": 4
+          }
+        }
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "RAPID FEINT": {
+      "targetKw": [
+        "ACHILLES RIDGERUNNERS|ATALAN JACKALS"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8"
+      ],
+      "do": [
+        {
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "ENCIRCLING THE PREY": {
+      "targetKw": [
+        "GENESTEALER CULTS",
+        "MOUNTED|VEHICLE"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged",
+        "nearEdge:9"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "ALONG SHADOWED TRAILS": {
+      "code": true,
+      "note": "Used by itself (1CP) when an enemy unit ends a move within 8\" of a Cult Ambush marker: the marker moves instead of being removed",
+      "status": "auto"
+    },
+    "SYMBIOTIC DESTRUCTION": {
+      "targetKw": [
+        "ASTRA MILITARUM|GENESTEALER CULTS"
+      ],
+      "extraTargets": {
+        "count": 1,
+        "kw": [
+          "ASTRA MILITARUM|GENESTEALER CULTS"
+        ]
+      },
+      "enemy": {
+        "visible": true
+      },
+      "enemyMark": "Symbiotic Destruction",
+      "effects": [
+        {
+          "if": [
+            "targetMarked:Symbiotic Destruction"
+          ],
+          "reroll": "wounds1"
+        }
+      ],
+      "bot": "attack",
+      "note": "Pick one ASTRA MILITARUM and one GENESTEALER CULTS unit; they may still attack other units (the card: only that enemy unit)",
+      "status": "auto"
+    },
+    "A DARK NETWORK": {
+      "targetKw": [
+        "ASTRA MILITARUM|GENESTEALER CULTS",
+        "!MONSTER",
+        "!VEHICLE"
+      ],
+      "react": "enemyArrived",
+      "unitIf": [
+        "nearLast:12"
+      ],
+      "do": [
+        {
+          "move": "6"
+        }
+      ],
+      "status": "auto"
+    },
+    "SUPPRESS AND OVERWHELM": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "unitIf": [
+        "shotThisTurn"
+      ],
+      "enemy": {
+        "hitBy": true
+      },
+      "enemyEffects": [
+        {
+          "noSnapTarget": true
+        }
+      ],
+      "enemyUntil": "turn",
+      "enemyMark": "Suppress and Overwhelm",
+      "bot": "never",
+      "note": "GENESTEALER CULTS charges against that unit can re-roll the Charge roll (not automated)",
+      "status": "auto"
+    },
+    "REGIMENTAL REINFORCEMENTS": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "ASTRA MILITARUM",
+        "INFANTRY",
+        "!ARTILLERY",
+        "!CHARACTER"
+      ],
+      "limit": "battle",
+      "special": [
+        "regimental"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "IN THE SHADOW OF IRON": {
+      "code": true,
+      "note": "Used by itself (1CP) when an enemy unit ends a move within 8\" of a Cult Ambush marker and an ASTRA MILITARUM VEHICLE is on the battlefield: the marker moves within 6\" of it",
+      "status": "auto"
+    },
+    "ACCEPTABLE LOSSES": {
+      "targetKw": [
+        "ASTRA MILITARUM"
+      ],
+      "effects": [
+        {
+          "shootIntoEngagement": 48
+        }
+      ],
+      "status": "auto",
+      "note": "Your unit can shoot an enemy unit engaged with your units; afterwards each GENESTEALER CULTS unit engaged with it suffers D3+1 mortal wounds on a 5+"
+    },
+    "HYPERFEROCITY": {
+      "targetKw": [
+        "GENESTEALER CULTS"
+      ],
+      "effects": [
+        {
+          "if": [
+            "!targetNearFriendly:6:TYRANIDS"
+          ],
+          "reroll": "wounds1"
+        },
+        {
+          "if": [
+            "targetNearFriendly:6:TYRANIDS"
+          ],
+          "reroll": "wounds"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "DIVINE IMPERATIVE": {
+      "targetKw": [
+        "GENESTEALER CULTS"
+      ],
+      "unitIf": [
+        "near:12:TYRANIDS"
+      ],
+      "effects": [
+        {
+          "chargeBonus": 1
+        }
+      ],
+      "choice": [
+        {
+          "label": "+1 to Charge rolls"
+        },
+        {
+          "label": "+1 and re-roll Charge rolls; the charge must end engaged with an enemy unit already engaged",
+          "effects": [
+            {
+              "rerollCharge": true,
+              "chargeMustEngaged": true
+            }
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "AVENGE THE STAR CHILDREN": {
+      "react": "ownDestroyed",
+      "targetFrom": "destroyed",
+      "targetKw": [
+        "TYRANIDS",
+        "CHARACTER"
+      ],
+      "enemy": {
+        "killer": true
+      },
+      "enemyEffects": [
+        {
+          "incoming": {
+            "units": [
+              "GENESTEALER CULTS"
+            ],
+            "hit": 1,
+            "wound": 1
+          }
+        }
+      ],
+      "enemyUntil": "battle",
+      "botReact": "always",
+      "status": "auto"
+    },
+    "PSI SURGE": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "mark": "PSI SURGE",
+      "until": "nextCommand",
+      "status": "auto",
+      "note": "Catalyst reaches 9\" for this unit until your next Command phase"
+    },
+    "RESISTANCE TUNNELS": {
+      "targetKw": [
+        "GENESTEALER CULTS|TYRANIDS"
+      ],
+      "react": "fightPhaseEnd",
+      "unitIf": [
+        "!ownTurn",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "reserves": true
+        }
+      ],
+      "bot": "never",
+      "status": "auto"
+    },
+    "DARTING ATTACKS": {
+      "targetKw": [
+        "TYRANIDS"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "shootAfterFallBack",
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "SURGING BROODWORSHIP": {
+      "targetKw": [
+        "KELERMORPH|LOCUS|REDUCTUS SABOTEUR|SANCTUS"
+      ],
+      "effects": [
+        {
+          "abilities": [
+            "devastating wounds"
+          ]
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    },
+    "LIVING UP TO LEGEND": {
+      "targetKw": [
+        "KELERMORPH|LOCUS|REDUCTUS SABOTEUR|SANCTUS"
+      ],
+      "unitIf": [
+        "destroyedUnitThisPhase"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "rallyNear": {
+            "range": 12,
+            "units": [
+              "GENESTEALER CULTS"
+            ]
+          }
+        }
+      ],
+      "bot": "never",
+      "note": "Battle-shocked units within 12\" take a Leadership test to recover (the card: they simply recover)",
+      "status": "auto"
+    },
+    "LOYAL TO THE END": {
+      "targetKw": [
+        "KELERMORPH|LOCUS|REDUCTUS SABOTEUR|SANCTUS"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "fightPhase"
+      ],
+      "effects": [
+        {
+          "fightOnDeath": 2
+        }
+      ],
+      "botReact": "always",
+      "note": "2+: the model fights before it is removed (on a 1 the enemy unit is not hit by the mortal wound)",
+      "status": "auto"
+    },
+    "INHUMAN REACTIONS": {
+      "targetKw": [
+        "PURESTRAIN GENESTEALERS"
+      ],
+      "react": "enemyMoved",
+      "unitIf": [
+        "nearLast:8",
+        "!engaged"
+      ],
+      "do": [
+        {
+          "move": "D3+3"
+        }
+      ],
+      "status": "auto"
+    },
+    "LURK AND STRIKE": {
+      "targetKw": [
+        "PURESTRAIN GENESTEALERS"
+      ],
+      "effects": [
+        {
+          "eligible": [
+            "chargeAfterFallBack"
+          ]
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "CRAWLING HORROR": {
+      "targetKw": [
+        "PURESTRAIN GENESTEALERS"
+      ],
+      "effects": [
+        {
+          "detection": -6
+        }
+      ],
+      "until": "turn",
+      "bot": "never",
+      "status": "auto"
+    },
+    "SLUNK FROM THE UNDERBELLY": {
+      "targetKw": [
+        "NEOPHYTE HYBRIDS"
+      ],
+      "react": "targeted",
+      "unitIf": [
+        "shootingPhase",
+        "inTerrain"
+      ],
+      "buffs": [
+        "enemyAp-1"
+      ],
+      "botReact": "always",
+      "status": "auto"
+    },
+    "EYES OF THE CULT": {
+      "targetKw": [
+        "NEOPHYTE HYBRIDS"
+      ],
+      "unitIf": [
+        "inTerrain"
+      ],
+      "enemy": {
+        "all": true,
+        "range": 6
+      },
+      "enemyEffects": [
+        {
+          "detection": 6
+        }
+      ],
+      "enemyUntil": "turn",
+      "bot": "never",
+      "note": "Enemy units within 6\" (the card: within the same terrain area)",
+      "status": "auto"
+    },
+    "FANATICAL HAIL": {
+      "targetKw": [
+        "NEOPHYTE HYBRIDS"
+      ],
+      "enemy": {
+        "visible": true
+      },
+      "enemyMark": "Fanatical Hail",
+      "effects": [
+        {
+          "attack": "ranged",
+          "if": [
+            "targetMarked:Fanatical Hail"
+          ],
+          "reroll": "hits"
+        }
+      ],
+      "bot": "attack",
+      "status": "auto"
+    }
+  }
+}

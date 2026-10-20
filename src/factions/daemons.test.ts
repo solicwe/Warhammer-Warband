@@ -6,8 +6,6 @@ import {
   daemonsDeepStrikeDist,
   daemonsBattleStart,
   spendFluxToken,
-  daemonsAttackModifiers,
-  daemonsDefenseModifiers,
   daemonsUnitDestroyed,
 } from './daemons';
 import type { GameState, ObjectiveState, PlayerId, UnitState } from '../engine/types';
@@ -81,6 +79,7 @@ function makeMockUnit(id: string, owner: PlayerId, name: string, keywords: strin
       },
     ],
     abilities: [],
+    buffs: [],
     status: 'board',
     core: {},
   } as unknown as UnitState;
@@ -138,6 +137,7 @@ describe('Chaos Daemons Engine', () => {
     const s = makeMockState();
     const enemyUnit = makeMockUnit('u2', 1, 'Intercessors', ['BATTLELINE', 'INFANTRY'], 10, 10);
     s.objectives[0].corrupted = 0;
+    s.objectives[0].controller = 0;
     enemyUnit.models[0].x = s.objectives[0].x;
     enemyUnit.models[0].y = s.objectives[0].y;
     s.units.push(enemyUnit);
@@ -153,6 +153,7 @@ describe('Chaos Daemons Engine', () => {
     // Enemy controls all objectives except obj0 is corrupted by daemons
     s.objectives.forEach((o) => { o.controller = 1; });
     s.objectives[0].corrupted = 0;
+    s.objectives[0].controller = 0;
 
     // Within 6" of corrupted objective (in Shadow of Chaos)
     const inShadowPt = { x: s.objectives[0].x + 1, y: s.objectives[0].y + 1 };
@@ -175,34 +176,14 @@ describe('Chaos Daemons Engine', () => {
     expect(s.players[1].fluxTokens).toBe(1);
   });
 
-  it('handles Blood Legion Blood Tainted corrupted objectives upon killing enemy on objective', () => {
+  it('Blood Tainted: an objective both units were on stays under the Daemons player control', () => {
     const s = makeMockState();
     s.players[0].detachments = [{ name: 'Blood Legion', dp: 2 }] as never;
-    const bloodletters = makeMockUnit('u1', 0, 'Bloodletters', ['BATTLELINE', 'INFANTRY', 'KHORNE']);
+    const bloodletters = makeMockUnit('u1', 0, 'Bloodletters', ['BATTLELINE', 'INFANTRY', 'KHORNE', 'LEGIONES DAEMONICA']);
     const victim = makeMockUnit('u2', 1, 'Intercessors', ['INFANTRY']);
-
-    victim.models[0].x = s.objectives[1].x;
-    victim.models[0].y = s.objectives[1].y;
-
+    for (const u of [victim, bloodletters]) { u.models[0].x = s.objectives[1].x; u.models[0].y = s.objectives[1].y; }
     daemonsUnitDestroyed(s, victim, bloodletters);
-    expect(s.objectives[1].corrupted).toBe(0);
-    expect(s.objectives[1].controller).toBe(0);
-  });
-
-  it('calculates Greater Daemon auras and special attack modifiers', () => {
-    const s = makeMockState();
-    const bt = makeMockUnit('u1', 0, 'Bloodthirster', ['MONSTER', 'CHARACTER', 'KHORNE']);
-    const enemy = makeMockUnit('u2', 1, 'Enemy Tank', ['VEHICLE']);
-    s.units.push(bt, enemy);
-
-    const atk = daemonsAttackModifiers(s, bt, enemy, 1, 'melee');
-    expect(atk.devastating).toBe(true);
-
-    const belakor = makeMockUnit('u3', 0, "Be'lakor", ['MONSTER', 'CHARACTER']);
-    belakor.models[0].x = 35;
-    belakor.models[0].y = 35;
-    const def = daemonsDefenseModifiers(s, enemy, belakor, 'ranged');
-    expect(def.hitMod).toBe(-1); // distance > 18"
+    expect(s.objectives[1].secured).toBe(0);
   });
 
   it('Heldrake with DAEMON keyword in CSM is not treated as Legiones Daemonica unit', async () => {
@@ -224,6 +205,7 @@ describe('Chaos Daemons Engine', () => {
 
     const s = makeMockState();
     s.players[0].factionId = 'CSM';
+    s.players[0].armyRules = [{ name: 'Dark Pacts' }] as never;
     s.players[0].detachments = [{ name: 'Veterans of the Long War', dp: 3 }] as never;
     expect(isUnderShadowOfChaos(s, 0, heldrake)).toBe(false);
   });

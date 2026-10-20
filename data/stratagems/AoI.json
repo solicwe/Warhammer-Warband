@@ -277,7 +277,7 @@
       "targetKw": [
         "AGENTS OF THE IMPERIUM"
       ],
-      "react": "ownAttacked",
+      "react": "targeted",
       "unitIf": [
         "attached"
       ],
@@ -431,9 +431,10 @@
       "buffs": [
         "enemyAp-1"
       ],
-      "react": "targetedByAttack",
+      "react": "targeted",
       "bot": "defend",
-      "status": "auto"
+      "status": "auto",
+      "botReact": "always"
     },
     "TRUESILVER ARMOUR": {
       "targetKw": [
@@ -442,9 +443,10 @@
       "buffs": [
         "enemyAp-1"
       ],
-      "react": "targetedByAttack",
+      "react": "targeted",
       "bot": "defend",
-      "status": "auto"
+      "status": "auto",
+      "botReact": "always"
     },
     "DISPENSE JUSTICE": {
       "targetKw": [
@@ -474,9 +476,10 @@
           }
         }
       ],
-      "react": "targetedByAttack",
+      "react": "targeted",
       "bot": "defend",
-      "status": "auto"
+      "status": "auto",
+      "botReact": "always"
     },
     "STEEL HEART": {
       "targetKw": [
@@ -561,9 +564,10 @@
           }
         }
       ],
-      "react": "targetedByAttack",
+      "react": "targeted",
       "bot": "defend",
-      "status": "auto"
+      "status": "auto",
+      "botReact": "always"
     },
     "WILL-SAPPING SALVO": {
       "targetKw": [

@@ -4,7 +4,7 @@
 // attacked. It keeps a CP back for a re-roll until the last round unless the play is worth more.
 import { botOff } from './botWeights';
 import { on } from '../engine/events';
-import { freeDiceNow, useFreeDie } from '../rules-engine/activations';
+import { freeDiceNow, freeSaveDie, useFreeDie } from '../rules-engine/activations';
 import { applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, onAttackStart, onMortalWounds, rerollOne, setDiceHook, shootingModes, targetToughness, woundNeed } from '../engine/attack';
 import { chargeValue, isBrawler, maxRange, meleeKills, onObjective, oc, p2d6, perModel, rangedKills, unitValue } from './botEval';
 import { bestArrival } from './botMove';
@@ -26,6 +26,9 @@ export const isBot = (s: GameState, p: PlayerId) => (s.botPlayer != null && !s.b
 
 /** Can the bot afford this now and still keep a CP for a re-roll (until the last round)? */
 const spare = (s: GameState, p: PlayerId, cost: number, keep = s.campaign || s.round >= lastRound(s) ? 0 : 1) => s.players[p].cp - cost >= keep;
+
+/** More CP than the rounds left can spend on measured plays: spend one on a stratagem whose gain the bot can't price. */
+export const surplus = (s: GameState, p: PlayerId) => s.players[p].cp >= Math.max(2, lastRound(s) + 2 - s.round) || (s.round >= lastRound(s) && s.players[p].cp >= 1);
 
 /**
  * What one CP is worth right now, in points of damage done or saved. A good player spends CP every turn: points left
@@ -95,6 +98,7 @@ setDiceHook((s, stage) => {
     log(s, `Command Re-roll: a failed ${stage === 'hit' ? 'Hit' : 'Wound'} roll re-rolled (${p.weapon})`, 'roll', A.owner);
     return;
   }
+  freeSaveDie(s); // Artisan / Altered Reality: one failed save becomes a 6
   // saves: the defender re-rolls its lowest failed save when the damage it stops is worth the CP
   if (!isBot(s, T.owner) || canUseStratagem(s, T.owner, 'command-reroll', T) || !spare(s, T.owner, 1)) return;
   const m = alive(T)[0];
@@ -136,7 +140,7 @@ export function tryRule<R>(s: GameState, u: UnitState, label: string, rule: Stra
 /** The bot's usable stratagems for a unit of the kind it wants ('attack' / 'defend'), with their rules. */
 function usable(s: GameState, p: PlayerId, u: UnitState, use: 'attack' | 'defend') {
   return s.players[p].detachments.flatMap((d) => d.stratagems.map((st) => ({ st, rule: stratRule(st, s.players[p].factionId, d.name) })))
-    .filter(({ st, rule }) => rule.bot === use && !rule.react && (!rule.enemy || !!rule.enemyMark) && !stratagemBlock(s, p, st, u) && spare(s, p, stratCost(s, st.id, u, st.cp)))
+    .filter(({ st, rule }) => rule.bot === use && (!rule.react || (use === 'defend' && rule.react === 'targeted')) && (!rule.enemy || !!rule.enemyMark) && !stratagemBlock(s, p, st, u) && spare(s, p, stratCost(s, st.id, u, st.cp)))
     // "select either …": each option is a separate candidate (Red Thirst ones too: the bot only takes them when they pay)
     .flatMap(({ st, rule }) => (rule.choice?.length ? stratChoices(s, rule, u).filter(({ o }) => !o.shock).map(({ i }) => ({ st, rule: withChoice(rule, i) as StratRule, choice: i as number | undefined })) : [{ st, rule, choice: undefined as number | undefined }]));
 }
@@ -148,7 +152,8 @@ export function botOffensiveStratagem(s: GameState, u: UnitState, kind: 'shoot' 
   const best0 = () => Math.max(0, ...targets.map((t) => attackValue(s, u, t, kind)));
   const base = best0();
   let best: { st: StratagemData; gain: number; choice?: number; enemyId?: string } | null = null;
-  for (const { st, rule, choice } of usable(s, p, u, 'attack')) {
+  const all = usable(s, p, u, 'attack');
+  for (const { st, rule, choice } of all) {
     if (rule.enemyMark) {
       // "select one enemy unit: against it …" (Devoted Duellists): the target it gains most against
       for (const t of targets) {
@@ -169,6 +174,10 @@ export function botOffensiveStratagem(s: GameState, u: UnitState, kind: 'shoot' 
     return;
   }
   if (best && best.gain >= cpWorth(s, p) * best.st.cp) applyDetachmentStratagem(s, p, best.st, u.id, { choice: best.choice, enemyId: best.enemyId });
+  else if (all.length && surplus(s, p) && base > 0) {
+    const c = all[s.turn % all.length];
+    applyDetachmentStratagem(s, p, c.st, u.id, { choice: c.choice, enemyId: c.rule.enemyMark ? targets[0].id : undefined });
+  }
 }
 
 /** Expected points lost to this attack, with the target's current effects (and those of `rule`, when given). */
@@ -203,7 +212,7 @@ onAttackStart((s, at) => {
   const p = T.owner;
   if (!isBot(s, p) || T.battleShocked) return;
   const base = lossFrom(s, at, T);
-  if (base < 15) return;
+  if (base < (surplus(s, p) ? 4 : 15)) return;
   let best: { st: StratagemData; save: number; choice?: number } | null = null;
   for (const { st, rule, choice } of usable(s, p, T, 'defend')) {
     const save = base - tryRule(s, T, st.name, rule, () => lossFrom(s, at, T, rule));
@@ -261,9 +270,13 @@ export function botRapidIngress(s: GameState, p: PlayerId): boolean {
     const free = unitFlags(s, u).oppMoveIngress && s.round >= arrivalRound(s, u);
     if (!free && (canUseStratagem(s, p, 'rapid-ingress', u) || !spare(s, p, 1))) continue;
     const how = hasDeepStrike(s, u) ? 'deepStrike' : 'ingress';
+    // Homing Beacon: the free Rapid Ingress lands within 3" of the bearer's unit (more than 8" from the enemy)
+    const beacon = !free && !u.homer ? boardUnits(s, p).find((b) => b.abilities.some((a) => a.name === 'Homing Beacon') && !b.used?.beacon && alive(b).length) : undefined;
+    if (beacon) u.homer = { x: alive(beacon)[0].x, y: alive(beacon)[0].y };
     const pos = withRuleCache(() => bestArrival(s, u, how));
-    if (!pos || !validatePlacement(s, u, pos, how).ok) continue;
-    if (!free && ingressWorth(s, u, pos) < cpWorth(s, p)) continue;
+    if (!pos || !validatePlacement(s, u, pos, how).ok) { if (beacon) u.homer = undefined; continue; }
+    if (beacon) (beacon.used ??= {}).beacon = 'yes';
+    if (!free && !beacon && ingressWorth(s, u, pos) < cpWorth(s, p)) continue;
     if (!free) spendStratagem(s, p, 'rapid-ingress', u);
     ingressUnit(s, u, pos);
     return true;

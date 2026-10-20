@@ -14,7 +14,7 @@ import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
 export const setFreeDamageHook = (h: (s: GameState) => boolean) => { freeDamageHook = h; };
-import { addToExpr, applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, isRiled, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from '../rules-engine/effects';
+import { addToExpr, applyAttackEffects, applyLateEffects, canDo, fxKey, grants, incomingFor, effectsFor, isRiled, killDemiseOn, demiseSure, woundsGoTo, modelDefence, offenceFor, targetHasCover, unitFlags, unitGrants, untargetableAt, useNegate, weaponRangeFor } from '../rules-engine/effects';
 
 export type ShootMode = 'normal' | 'assault' | 'closeQuarters' | 'indirect' | 'snap';
 
@@ -51,7 +51,7 @@ export function woundNeed(S: number, T: number): number {
 
 const riled = isRiled;
 export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState, ranged = true, psychic = false, attacker?: UnitState) => {
-  const best = Math.min(m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee', psychic, attacker).inv ?? 7);
+  const best = Math.min(m.shadowFieldDown ? 7 : m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee', psychic, attacker).inv ?? 7);
   return best >= 7 ? null : best;
 };
 
@@ -121,7 +121,7 @@ export function shootingModes(s: GameState, u: UnitState): ShootMode[] {
   if (!onBoard(u) || u.selectedToShoot || unitFlags(s, u).cannotShoot || (u.move === 'fallback' && !canDo(s, u, 'shootAfterFallBack') && !hasKw(u, 'TITANIC'))) return [];
   const weps = alive(u).flatMap((m) => m.weapons.flatMap((w) => w.profiles)).filter((p) => !isMelee(p));
   if (!weps.length) return [];
-  const engaged = isEngaged(s, u);
+  const engaged = isEngaged(s, u) && !unitFlags(s, u).ignoreEngaged;
   const modes: ShootMode[] = [];
   if (engaged) {
     if (u.move !== 'advance' && (weps.some((p) => hasAbility(p, 'close-quarters')) || alive(u).some(isMV))) modes.push('closeQuarters');
@@ -161,7 +161,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   const pools = new Map<string, Pool>();
   const tModels = alive(T);
   // All Is Rot: enemy units engaged only with that Plague Legions unit can still be shot
-  const tEngaged = engagedEnemies(s, T).some((f) => !unitFlags(s, f).allIsRot);
+  // Steel Hammer: a TITANIC / SQUADRON unit shoots (Blast too) at a unit engaged only with itself
+  const tEngaged = engagedEnemies(s, T).some((f) => !unitFlags(s, f).allIsRot && !(f.id === A.id && (unitFlags(s, A).ignoreEngaged || unitFlags(s, A).noBigGunsPenalty)));
   const engagedWithTarget = engagedEnemies(s, A).some((e) => e.id === T.id);
   const tIsMV = tModels.some(isMV);
   const aFlags = unitFlags(s, A);
@@ -182,7 +183,10 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
 
   // Seal of Shrouding / Blazing Icon / Linebreaker Onslaught: enemy units cannot snap-shoot this unit
   if (opt.mode === 'snap' && unitFlags(s, T).noSnapTarget) return { pools: [], notes, error: 'This unit cannot be targeted by snap shooting' };
-  const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : [...alive(A), ...firingDeck(s, A, opt)];
+  const deck = opt.models ? [] : firingDeck(s, A, opt);
+  const shooters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : [...alive(A), ...deck];
+  // Cartographic Data-leech: a bearer embarked within this TRANSPORT improves its Firing Deck weapons' BS by 1
+  const leech = deck.length > 0 && s.units.some((x) => x.embarkedIn === A.id && x.status === 'embarked' && x.enhancements.some((e) => e.name === 'Cartographic Data-leech'));
   // sight and cover depend on the model, not the weapon: worked out once per model
   const sees = new Map<ModelState, boolean>();
   const seesT = (m: ModelState) => { let v = sees.get(m); if (v === undefined) { v = tModels.some((t) => modelVisible(s, m, T, t, aFlags.ignoreLoneOperative)); sees.set(m, v); } return v; };
@@ -227,24 +231,28 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       const d = Math.min(...tModels.map((t) => baseDist(m, t)));
       const fx = offenceFor(s, A, m, T, w, p, 'ranged', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
-      const inc = incomingFor(s, A, m, T, 'ranged').filter((i) => !i.psychic || psy);
+      const inc = incomingFor(s, A, m, T, 'ranged').filter((i) => (!i.psychic || psy) && (!i.weaponAbilities || i.weaponAbilities.some((x) => hasAbility(p, x))));
       const cm = combatMods({ s, A, T, m, psychic: psy, mode: 'ranged', d, p, weapon: w.name });
       if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !assaultWeapons(s, A) && !cm.assault) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
-      if (d > maxRange + 1e-6) continue;
+      // Linked Fire (Fire Prism): range and visibility from another friendly FIRE PRISM the bearer can see; then 1 attack
+      const linked = p.abilities.includes('linked fire') && (d > maxRange + 1e-6 || !unitSees()) && s.units.some((f) => f.owner === A.owner && f.id !== A.id && onBoard(f)
+        && alive(f).some((r) => /Fire Prism/i.test(r.source) && modelVisible(s, m, f, r) && tModels.some((t) => baseDist(r, t) <= maxRange + 1e-6 && modelVisible(s, r, T, t))));
+      if (d > maxRange + 1e-6 && !linked) continue;
       if (untargetableAt(s, T, d)) continue;
       if (d > unitFlags(s, T).targetableWithin + 1e-6) continue; // In the Shadow of Great Wings
       if (T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative && !aFlags.ignoreLoneOperative) continue;
       if (opt.mode === 'closeQuarters' && !isMV(m) && !engagedWithTarget) continue;
       if (hasAbility(p, 'blast') && tEngaged) continue;
       const indirect = opt.mode === 'indirect' && hasAbility(p, 'indirect-fire');
-      if (!indirect && !unitSees()) continue;
+      if (!indirect && !linked && !unitSees()) continue;
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
       const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes] };
       const ignoresCover = cm.ignoresCover || hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
       const cover = indirect || aFlags.givesCover || (!ignoresCover && (coverOf(m) || targetHasCover(s, T, d)));
       if (cover) { mods.skillDelta += 1; mods.skillNotes.push('Cover −1 BS'); }
+      if (leech && deck.includes(m)) { mods.skillDelta -= 1; mods.skillNotes.push('Cartographic Data-leech +1 BS'); }
       if (m.keywords.includes('TOWERING') && d <= RULES.plungingFire.toweringRange && !T.keywords.includes('AIRCRAFT')) { mods.skillDelta -= 1; mods.skillNotes.push('Plunging Fire +1 BS'); }
       const heavy = hasAbility(p, 'heavy') || grants(fx, inc, 'heavy') || cm.heavy;
       if (heavy && isOwnShootingPhase && !isEngaged(s, A) && A.setUpTurn !== s.turn && A.maxMoved <= RULES.heavyMaxMove + 1e-6) { mods.hit += 1; mods.hitNotes.push('Heavy +1'); }
@@ -255,11 +263,12 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
       for (const a of fx) {
         if (a.e.skill) { mods.skillDelta -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} BS`); }
+        if (a.e.skillSet && p.skill !== null && p.skill > a.e.skillSet) { mods.skillDelta -= p.skill - a.e.skillSet; mods.skillNotes.push(`${a.label} BS ${a.e.skillSet}+`); }
       }
       const psychic = hasAbility(p, 'psychic');
       const fm = finishPoolMods(p, mods, psychic);
-      const half = d <= range / 2 + 1e-6;
-      const key = [m.source, w.name, p.name, cover, half, fm.skill, fm.hit, fxKey(fx, inc)].join('|');
+      const half = d <= range / 2 + 1e-6 || fx.some((a) => a.e.halfRangeAlways);
+      const key = [m.source, w.name, p.name, cover, half, fm.skill, fm.hit, fxKey(fx, inc), linked].join('|');
       let pool = pools.get(key);
       if (!pool) {
         pool = newPool(key, w, p, T);
@@ -300,13 +309,14 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (rf && (half || fx.some((a) => a.e.rapidFireFullRange))) extras.push(rfPlus ? `${rf.value ?? '1'}+1` : rf.value ?? '1');
       else if (half && (grants(fx, inc, 'rapid fire 1') || rfPlus)) extras.push('1');
       const blast = getAbility(p, 'blast', T.keywords);
-      if (blast) flat += parseInt(blast.value ?? '1', 10) * Math.floor(tModels.length / 5);
-      else if (grants(fx, inc, 'blast 1')) flat += Math.floor(tModels.length / 5);
+      const fives = unitFlags(s, T).blastProof ? 0 : Math.floor(tModels.length / 5);
+      if (blast) flat += parseInt(blast.value ?? '1', 10) * fives;
+      else if (grants(fx, inc, 'blast 1')) flat += fives;
       if (hasAbility(p, 'rapid-fire')) {
         for (const a of fx) if (a.e.rapidFireAttacks) flat += a.e.rapidFireAttacks;
       }
       flat += cm.attacksBonus;
-      pool.instances.push({ A: p.A, extras, flat });
+      pool.instances.push(linked ? { A: '1', extras: [], flat: 0 } : { A: p.A, extras, flat });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
   }
@@ -357,7 +367,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       const p = w.profiles[0];
       const fx = offenceFor(s, A, m, T, w, p, 'melee', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
-      const inc = incomingFor(s, A, m, T, 'melee').filter((i) => !i.psychic || psy);
+      const inc = incomingFor(s, A, m, T, 'melee').filter((i) => (!i.psychic || psy) && (!i.weaponAbilities || i.weaponAbilities.some((x) => hasAbility(p, x))));
       const cm = combatMods({ s, A, T, m, psychic: psy, mode: 'melee', d: 0, p, weapon: w.name });
       const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes] };
       if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
@@ -368,6 +378,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
       for (const a of fx) {
         if (a.e.skill) { mods.skillDelta -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} WS`); }
+        if (a.e.skillSet && p.skill !== null && p.skill > a.e.skillSet) { mods.skillDelta -= p.skill - a.e.skillSet; mods.skillNotes.push(`${a.label} WS ${a.e.skillSet}+`); }
       }
       const fm = finishPoolMods(p, mods, hasAbility(p, 'psychic'));
       const precision = opt.epicChallengeModel === m.id || cm.precision;
@@ -514,6 +525,10 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
   const low = s.attack.pools.map((p, i) => ({ i, gap: attackRerollGap(p) })).filter((x) => x.gap >= 1).sort((a, b) => b.gap - a.gap)[0];
   if (low && wantsCR(s, A.owner, 'attacks', A)) rerollAttackCount(s, low.i);
   emit(s, 'targetChosen', { attackerId: s.attack.attackerId, targetId: s.attack.targetId });
+  // "just after an enemy unit has selected its targets": that unit is the last one to act from now on
+  if (!opts.free && !(s.lastAct?.kind === 'attack' && s.lastAct.unitId === A.id && s.lastAct.turn === s.turn && s.lastAct.phase === s.phase)) {
+    s.lastAct = { unitId: A.id, owner: A.owner, kind: 'attack', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
+  }
   for (const h of startHooks) h(s, s.attack);
   if (s.campaign) {
     resolveAll(s);
@@ -738,7 +753,7 @@ export function rollWounds(s: GameState) {
   // Mortal Thralls: no Wound roll; the DAMNED unit within 3" (visible to the attackers) takes the Damage as mortal wounds
   const T0 = unitById(s, at.targetId), A0 = unitById(s, at.attackerId);
   const thrall = rolls && unitFlags(s, T0).thralls
-    ? boardUnits(s, T0.owner).find((d) => d.id !== T0.id && hasKw(d, 'DAMNED') && unitDistance(d, T0) <= 3 + 1e-6 && alive(A0).some((m) => unitVisibleTo(s, m, d))) : undefined;
+    ? boardUnits(s, T0.owner).find((d) => d.id !== T0.id && hasKw(d, unitFlags(s, T0).thrallsKw ?? 'DAMNED') && unitDistance(d, T0) <= 3 + 1e-6 && alive(A0).some((m) => unitVisibleTo(s, m, d))) : undefined;
   if (thrall) {
     let mw = 0;
     for (let i = 0; i < rolls; i++) mw += rollExpr(s, p.profile.D).total;
@@ -835,10 +850,15 @@ export const onMortalWounds = (fn: MortalHook) => { mortalHooks.push(fn); };
 export const onAttackStart = (fn: StartHook) => { startHooks.push(fn); };
 
 export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: string) {
-  const dd = m.deadlyDemise ?? (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1) ? u.core.deadlyDemise : undefined);
-  const ddOn = dd ? unitFlags(s, u).deadlyDemiseOn : 6; // worked out while the model still stands
+  const dd0 = m.deadlyDemise ?? (u.core.deadlyDemise && (m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER') || u.models.length === 1) ? u.core.deadlyDemise : undefined);
+  // Gateway Unto Damnation: Deadly Demise D3+3 once the bearer has destroyed an enemy unit
+  const dd = u.enhancements.some((e) => e.name === 'Gateway Unto Damnation') && u.used?.everKilled && (m.isCharacter || m.keywords.includes('MONSTER')) ? 'D3+3' : dd0;
+  const at = s.attack, pl = at?.pools[at.idx];
+  const byWeapon = dd && at && pl && at.targetId === u.id ? killDemiseOn(s, unitById(s, at.attackerId), pl.weapon) : 6;
+  const ddOn = dd ? Math.min(unitFlags(s, u).deadlyDemiseOn, byWeapon) : 6; // worked out while the model still stands
   m.dead = true;
   m.wounds = 0;
+  (u.used ??= {}).lostModel = `${s.turn}:${s.phase}`;
   (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || m.keywords.includes('CHARACTER'), W: m.profile.W });
   if (u.transport && m.keywords.includes('TRANSPORT')) transportHook?.(s, u, m);
   // Vengeance for the Omnissiah: a friendly ASTRA MILITARUM VEHICLE destroyed within 12"
@@ -849,6 +869,8 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   }
   // Servitors: the Cenobyte Servitors are destroyed with Chaplain Grimaldus
   if (/grimaldus/i.test(m.name) && u.abilities.some((a) => a.name === 'Servitors')) for (const x of alive(u).filter((n) => /servitor/i.test(n.name))) { x.dead = true; x.wounds = 0; }
+  // Crewed Platform: the weapon platforms go when the last crew model does
+  if (u.abilities.some((a) => a.name === 'Crewed Platform') && !alive(u).some((n) => !/platform/i.test(n.name))) for (const x of alive(u)) { x.dead = true; x.wounds = 0; }
   if (!alive(u).length) {
     u.status = 'destroyed';
     s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id, killerId: s.attack?.attackerId, phase: s.phase });
@@ -872,9 +894,13 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   if (dd) {
     // Vengeful Animus: no roll, it blows up anyway
     // Detonator (Deceptors): the opponent makes it explode without a roll
-    const sure = emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id }) || (!m.keywords.includes('TITANIC') && emitReact(s, other(u.owner), 'enemyDeadlyDemise', { unitId: u.id, modelId: m.id }));
+    // Disharmonisation Cascade: a reaction that lowers the roll needed (3+) instead of making it go off
+    let need = ddOn;
+    const reacted = !demiseSure(s, u, m) && emitReact(s, u.owner, 'deadlyDemise', { unitId: u.id, modelId: m.id });
+    if (reacted) need = Math.min(ddOn, unitFlags(s, u).deadlyDemiseOn);
+    const sure = demiseSure(s, u, m) || (reacted && need >= ddOn) || (!reacted && !m.keywords.includes('TITANIC') && emitReact(s, other(u.owner), 'enemyDeadlyDemise', { unitId: u.id, modelId: m.id }));
     const r = sure ? 6 : d6(s);
-    if (r >= ddOn) { // Warpfire Infusion: 5+ near a sorcerer
+    if (r >= need) { // Warpfire Infusion: 5+ near a sorcerer
       log(s, `Deadly Demise (${dd}) from ${m.name}: ${sure ? 'it explodes' : 'rolled a 6!'}`, 'roll');
       // Machine Wrath: the wreck makes one last move before it blows
       emitReact(s, u.owner, 'deadlyDemiseSix', { unitId: u.id, modelId: m.id, six: true });
@@ -891,6 +917,8 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
 /** Lose wounds on one model with Feel No Pain. Returns wounds actually lost. */
 function loseWounds(s: GameState, u: UnitState, m: ModelState, n: number, lines?: string[], kind: 'melee' | 'ranged' | 'mortal' = 'ranged', psychic = false): number {
   let lost = 0;
+  const thief = woundsGoTo(s, u);
+  if (thief && n > 0) { lines?.push(`${n} wound(s) go to ${thief.name} (THIEVES OF PAIN)`); applyMortalWounds(s, thief, n, 'THIEVES OF PAIN'); return 0; }
   const buffFnp = u.buffs.some((b) => b.kind === 'fnp4') ? 4 : u.buffs.some((b) => b.kind === 'fnp5') ? 5 : u.buffs.some((b) => b.kind === 'fnp6') ? 6 : undefined;
   const fxFnp = modelDefence(s, u, m, kind, psychic).fnp ?? undefined;
   const fnp = [u.core.fnp, buffFnp, fxFnp].filter((x): x is number => x !== undefined).reduce<number | undefined>((a, b) => (a === undefined ? b : Math.min(a, b)), undefined);
@@ -979,9 +1007,15 @@ export function applyDamage(s: GameState) {
     if (kind === 'melee') (at.allocated ??= {})[m.id] = (at.allocated[m.id] ?? 0) + 1;
     const sv = m.profile.Sv - (T.buffs.some((b) => b.kind === 'save+1') ? 1 : 0) - (md.saveBonusD1 && p.damage.trim() === '1' ? md.saveBonusD1 : 0) - (md.save ?? 0);
     const inv = effectiveInSv(s, T, m, at.kind !== 'fight', psychic, A);
-    const effAp = p.ap - (d.crit && p.critWoundAp ? p.critWoundAp : 0);
+    const effAp = d.crit && p.critWoundApSet ? Math.min(p.ap, -p.critWoundApSet) : p.ap - (d.crit && p.critWoundAp ? p.critWoundAp : 0);
     let ok = false;
     if (d.v !== 1) ok = (inv !== null && d.v >= inv) || d.v + effAp >= Math.max(RULES.modifierCaps.bestSave, sv);
+    // an invulnerable save of 1 re-rolled (only when the invulnerable save is the one taken)
+    if (d.v === 1 && md.invReroll1 && inv !== null && inv < Math.max(RULES.modifierCaps.bestSave, sv) - effAp) {
+      d.v = d6(s);
+      ok = d.v !== 1 && d.v >= inv;
+      p.damageLines.push(`invulnerable save of 1 re-rolled → ${d.v}`);
+    }
     if (!ok && !d.rerolled) {
       const minSv = Math.min(inv ?? 99, Math.max(RULES.modifierCaps.bestSave, sv) - effAp);
       if (minSv <= 6) {
@@ -1005,7 +1039,7 @@ export function applyDamage(s: GameState) {
           p.damageLines.push(`${rescued.rule}: Damage substituted with ${rescued.die} [${rescued.v}] = ${dr.total}`);
         }
       }
-      if ((p.rerollDamage || (p.rerollDamageOne && dr.total < m.wounds)) && dr.dice.length && dr.total < exprAverage(p.damage)) {
+      if ((p.rerollDamage || (p.rerollDamageOne && dr.total < m.wounds) || (p.rerollDamage1 && dr.dice.includes(1))) && dr.dice.length && dr.total < exprAverage(p.damage)) {
         const again = rollExpr(s, p.damage); p.damageLines.push(`re-roll damage ${dr.total}→${again.total}`); dr = again; p.rerollDamageOne = false;
       } else if (dr.dice.length && dr.total < exprAverage(p.damage) && dr.total < m.wounds && freeDamageHook?.(s)) {
         // a free "hit, wound or damage" re-roll not used on the hit or wound dice goes on a low damage roll
@@ -1023,6 +1057,7 @@ export function applyDamage(s: GameState) {
       let dmg = dr.total;
       if (T.buffs.some((b) => b.kind === 'damage-1')) dmg = Math.max(1, dmg - 1);
       if (md.damage) dmg = Math.max(1, dmg + md.damage);
+      if (md.damageSet) dmg = md.damageSet;
       if (md.halve) dmg = Math.ceil(dmg / 2);
       if (md.negate) { useNegate(s, T, m, md.negateKey); dmg = 0; p.damageLines.push(`${m.name}: damage reduced to 0 (once per phase)`); }
       const lost = dmg ? loseWounds(s, T, m, dmg, p.damageLines, kind, psychic) : 0;
@@ -1036,6 +1071,12 @@ export function applyDamage(s: GameState) {
     p.mortalFromDev[k] = dmg;
     applyMortalWounds(s, T, dmg, `Devastating Wounds (${p.weapon})`, 1, !!precisionGroup);
   }
+  // Repulsor Grid: unmodified 6s on the saving throws against ranged attacks come back as mortal wounds
+  const sixes = at.kind === 'shoot' ? p.saves.filter((d) => d.v === 6).length : 0;
+  if (sixes && effectsFor(s, T).some((a) => a.e.defend?.reflect6)) at.reflected = (at.reflected ?? 0) + sixes;
+  // Rapturous Blows / Radiant Champion: a mortal wound for each attack that wounded
+  const wounded = p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds;
+  if (p.mortalPerWound && wounded && alive(T).length) applyMortalWounds(s, T, wounded * p.mortalPerWound, `${p.weapon}: mortal wounds on wounding`);
   p.killed = before - alive(T).length;
   p.done = true;
   at.summary.push(`${p.weapon}: ${p.attacks} attacks → ${p.hits.filter((h) => h.o !== 'miss').length} hit → ${p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds} wound → ${p.killed} slain`);
@@ -1094,6 +1135,7 @@ export function finishAttack(s: GameState) {
   const at = s.attack!;
   const A = unitById(s, at.attackerId);
   const T = unitById(s, at.targetId);
+  if (at.reflected && alive(A).length) applyMortalWounds(s, A, at.reflected, 'Repulsor Grid');
   // one hazard roll per Hazardous weapon used in the attack, however many models fired it
   const haz = at.pools.filter((p) => p.hazardous > 0).length;
   if (haz && alive(A).length) {

@@ -101,8 +101,9 @@
     ]
   },
   "Supreme Commander": {
+    "code": true,
     "status": "auto",
-    "note": "Checked by the army builder: must be your Warlord"
+    "note": "Army builder: this model must be your Warlord"
   },
   "Praesidium Shield": {
     "gear": true,
@@ -245,8 +246,12 @@
     }
   },
   "Vexilla": {
-    "status": "auto",
-    "note": "+1 OC (ignore Ld modifiers: almost no effect)"
+    "effects": [
+      {
+        "oc": 1,
+        "ignoreLdMods": true
+      }
+    ]
   },
   "Stand Vigil": {
     "effects": [
@@ -596,9 +601,11 @@
   },
   "Emperor's Light": {
     "status": "auto",
-    "note": "Emperor's Light weapon [EXTRA ATTACKS] already added to the model"
+    "note": "Emperor's Light weapon [EXTRA ATTACKS] already added to the model",
+    "code": true
   },
-  "Castellan's Mark": { "code": true,
+  "Castellan's Mark": {
+    "code": true,
     "status": "auto",
     "note": "After both players deploy: redeploy up to 3 CUSTODES units (set up again or place into Strategic Reserves)"
   },

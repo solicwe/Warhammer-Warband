@@ -2107,10 +2107,10 @@ b.em { font-weight: 700; color: var(--text); }
     max-height: 60vh !important;
     height: auto !important;
     z-index: 100 !important;
-    background: #1E293B !important;
-    border-top: 2px solid #F59E0B !important;
+    background: var(--surface) !important;
+    border-top: 2px solid var(--accent) !important;
     border-radius: 16px 16px 0 0 !important;
-    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.75) !important;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35) !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
@@ -2122,7 +2122,7 @@ b.em { font-weight: 700; color: var(--text); }
     width: 44px;
     height: 5px;
     border-radius: 2.5px;
-    background: #475569;
+    background: var(--line);
     margin: 8px auto 6px;
     flex: none;
   }

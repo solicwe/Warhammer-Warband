@@ -1,6 +1,7 @@
 {
   "_comment": "Aeldari Faction Pack v1.4. Complete datasheet, army rule, detachment and enhancement rules.",
-  "Strands of Fate": { "code": true,
+  "Strands of Fate": {
+    "code": true,
     "status": "auto",
     "note": "Fate dice pool at start of battle. Substitute 1 Fate die per phase for Advance, Battle-shock, Charge, Damage, Hit, Save, or Wound roll."
   },
@@ -17,231 +18,535 @@
     "note": "Can include Harlequins units in your army even without Asuryani keyword."
   },
   "Branching Fates (Psychic)": {
-    "status": "auto",
-    "note": "Once per turn, you can change the result of one Fate dice to a 6."
-  },
-  "Defenders of the Shrines": { "code": true,
-    "status": "auto",
-    "note": "At end of Command phase, if this unit controls an objective, roll D6: on 4+, gain 1 Fate die."
+    "freeDie": {
+      "kind": "setSix",
+      "stage": "any",
+      "limit": "phase",
+      "if": [
+        "leaderAttached"
+      ]
+    }
   },
   "Diviner of Futures": {
-    "status": "auto",
-    "note": "At start of battle, gain 3 additional Fate dice."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "do": [
+        {
+          "cp": 1
+        }
+      ]
+    }
   },
   "Doom (Psychic)": {
-    "status": "auto",
-    "note": "In Shooting phase, select 1 visible enemy unit within 18\": attacks against it add 1 to Wound roll."
+    "act": {
+      "when": "movementEnd",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 18,
+        "visible": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "units": [
+              "AELDARI"
+            ],
+            "wound": 1
+          },
+          "until": "nextCommand",
+          "mark": "doomed"
+        }
+      ]
+    }
   },
   "Guide (Psychic)": {
-    "status": "auto",
-    "effects": [
-      {
-        "scope": "led",
-        "reroll": "hits"
-      }
-    ],
-    "note": "While leading a unit, models in that unit can re-roll the Hit roll."
+    "act": {
+      "when": "movementEnd",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 18,
+        "visible": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "units": [
+              "AELDARI"
+            ],
+            "hit": 1
+          },
+          "until": "nextCommand",
+          "mark": "guided"
+        }
+      ]
+    }
   },
   "Hand of Asuryan": {
-    "status": "auto",
-    "effects": [
-      {
-        "scope": "led",
-        "hit": 1
-      }
-    ],
-    "note": "While leading a unit, each time a model makes an attack, add 1 to the Hit roll."
+    "act": {
+      "when": "selectedToShoot",
+      "limit": "battle",
+      "label": "Hand of Asuryan: Bloody Twins D3, [ANTI-INFANTRY 5+], [DEVASTATING WOUNDS]",
+      "botUse": "valuable",
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "buff": [
+            {
+              "weapon": "Bloody Twins",
+              "damageTo": 3,
+              "abilities": [
+                "anti-infantry 5+",
+                "devastating wounds"
+              ]
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Bladestorm": {
-    "status": "auto",
     "effects": [
       {
-        "abilities": [
-          "lethal hits"
+        "attack": "ranged",
+        "if": [
+          "halfRange"
         ],
-        "attack": "ranged"
+        "abilities": [
+          "sustained hits 1"
+        ]
       }
-    ],
-    "note": "Ranged Critical Hits have the [LETHAL HITS] ability."
+    ]
   },
   "Fire Support": {
-    "status": "auto",
-    "note": "Units that disembarked from this transport can re-roll the Wound roll for attacks targeting an enemy unit hit by this transport."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "reroll": "wounds"
+          },
+          "fromThisTransport": true,
+          "until": "turn"
+        }
+      ]
+    }
   },
   "Linked Fire": {
+    "code": true,
     "status": "auto",
-    "note": "Each time a Fire Prism shoots, it can draw line of sight and range from another friendly Fire Prism, and can re-roll a Hit roll of 1 and a Wound roll of 1."
+    "note": "Focused lances can shoot a target only another friendly Fire Prism sees or reaches; then 1 attack"
   },
   "Storm of Blades": {
-    "status": "auto",
-    "effects": [
-      {
-        "abilities": [
-          "lethal hits"
-        ],
-        "attack": "ranged"
-      }
-    ],
-    "note": "Ranged attacks have the [LETHAL HITS] ability."
-  },
-  "Cry of the Wind": {
-    "status": "auto",
-    "note": "Once per battle, at end of opponent's turn, remove from battlefield and place into Reserves."
-  },
-  "Burning Lance": {
-    "status": "auto",
-    "effects": [
-      {
-        "fnp": 5
-      },
-      {
-        "if": [
-          "belowStarting"
-        ],
-        "hit": 1,
-        "wound": 1
-      }
-    ],
-    "note": "Feel No Pain 5+. While below Starting Strength, add 1 to Hit and Wound rolls."
-  },
-  "Harvester of Souls": {
-    "status": "auto",
     "effects": [
       {
         "scope": "led",
-        "attacks": 1,
-        "attack": "ranged"
+        "attack": "melee",
+        "abilities": [
+          "sustained hits 1"
+        ]
       }
-    ],
-    "note": "While leading a unit, add 1 to Attacks of ranged weapons."
+    ]
+  },
+  "Cry of the Wind": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "ranged",
+        "if": [
+          "setUpThisTurn"
+        ],
+        "critHitOn": 2
+      }
+    ]
+  },
+  "Burning Lance": {
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "weaponHas:melta"
+        ],
+        "weaponRange": 6
+      }
+    ]
+  },
+  "Harvester of Souls": {
+    "act": [
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "if": [
+          "leaderAttached"
+        ],
+        "target": {
+          "side": "enemy",
+          "hit": true
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "if": [
+          "leaderAttached"
+        ],
+        "target": {
+          "side": "enemy",
+          "nearCtx": 3,
+          "each": true
+        },
+        "roll": "D6",
+        "table": [
+          {
+            "min": 5,
+            "do": [
+              {
+                "on": "target",
+                "mortals": "D3"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   },
   "The Bloody-Handed (Aura)": {
-    "status": "auto",
     "effects": [
       {
         "scope": "aura",
         "range": 6,
-        "reroll": "hits1"
+        "units": [
+          "AELDARI"
+        ],
+        "advanceBonus": 1,
+        "chargeBonus": 1
       }
-    ],
-    "note": "Friendly AELDARI units within 6\" re-roll Hit rolls of 1 and add 1 to Advance and Charge rolls."
+    ]
   },
   "Molten Form": {
-    "status": "auto",
     "effects": [
       {
-        "def": {
+        "scope": "model",
+        "defend": {
           "halveDamage": true
         }
       }
-    ],
-    "note": "Each time an attack is allocated to this model, halve the Damage characteristic."
+    ]
   },
   "Spirit Mark (Psychic)": {
-    "status": "auto",
-    "effects": [
-      {
-        "scope": "led",
-        "hit": 1
-      }
-    ],
-    "note": "While leading a unit, each time a Wraith Construct makes an attack, add 1 to the Hit roll."
+    "act": {
+      "when": "movement",
+      "auto": true,
+      "limit": "turn",
+      "target": {
+        "side": "enemy",
+        "visible": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "units": [
+              "WRAITH CONSTRUCT"
+            ],
+            "abilities": [
+              "sustained hits 1"
+            ]
+          },
+          "until": "nextMovement",
+          "mark": "spirit-marked"
+        }
+      ]
+    },
+    "note": "Every WRAITH CONSTRUCT unit gets it against the marked unit (the card: one unit within 6\")"
   },
   "Tears of Isha (Psychic)": {
-    "status": "auto",
-    "note": "In your Command phase, select one friendly Wraith Construct model within 6\": that model regains up to D3 lost wounds."
+    "act": {
+      "when": "command",
+      "limit": "phase",
+      "label": "Return a model or heal D3",
+      "target": {
+        "side": "friendly",
+        "range": 6,
+        "units": [
+          "WRAITH CONSTRUCT"
+        ],
+        "damaged": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "targetBelowStarting"
+          ],
+          "revive": 1
+        },
+        {
+          "on": "target",
+          "if": [
+            "!targetBelowStarting"
+          ],
+          "heal": "D3"
+        }
+      ]
+    }
   },
   "Word of the Phoenix (Psychic)": {
-    "status": "auto",
-    "note": "In your Command phase, select one friendly Ynnari unit within 6\": return D3 destroyed models."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "phase",
+      "if": [
+        "leaderAttached",
+        "belowStarting"
+      ],
+      "roll": "D6",
+      "table": [
+        {
+          "min": 2,
+          "do": [
+            {
+              "on": "self",
+              "reviveRoll": "D3+1"
+            }
+          ]
+        }
+      ]
+    }
   },
   "Herald of Ynnead": {
-    "status": "auto",
-    "effects": [
-      {
-        "scope": "led",
-        "fnp": 5
-      }
-    ],
-    "note": "While leading a unit, models in that unit have Feel No Pain 5+."
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "units": [
+              "AELDARI"
+            ],
+            "reroll": "wounds1"
+          },
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Yvraine’s Champion": {
-    "status": "auto",
     "effects": [
       {
         "scope": "led",
-        "def": {
-          "fightsFirst": true
+        "defend": {
+          "fnp": 4,
+          "charOnly": true
         }
       }
-    ],
-    "note": "While leading a unit, models in that unit have the Fights First ability."
+    ]
   },
   "Inevitable Death": {
-    "status": "auto",
-    "note": "When a unit is destroyed, set up this model within 1\" of where that unit was destroyed."
+    "act": {
+      "when": "friendlyDeath",
+      "auto": true,
+      "needUnitDestroyed": true,
+      "range": 99,
+      "deathUnits": [
+        "AELDARI"
+      ],
+      "limit": "turn",
+      "if": [
+        "!ownTurn"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "jumpToDeath": true
+        }
+      ]
+    }
   },
   "Blitz": {
-    "status": "auto",
-    "note": "Once per battle, when selected to move: +2D6\" Move and +3 Attacks until end of turn."
+    "act": {
+      "when": "movement",
+      "limit": "battle",
+      "label": "Blitz: +2D6\" Move, +3 Attacks",
+      "botUse": "round2",
+      "do": [
+        {
+          "on": "self",
+          "buffRoll": {
+            "expr": "2D6",
+            "fields": [
+              "move"
+            ]
+          }
+        },
+        {
+          "on": "self",
+          "buff": [
+            {
+              "weapon": "Solitaire",
+              "attacks": 3
+            }
+          ],
+          "until": "turn"
+        }
+      ]
+    }
   },
   "Dance of Death": {
-    "status": "auto",
-    "effects": [
+    "act": [
       {
-        "scope": "led",
-        "abilities": [
-          "devastating wounds"
-        ],
-        "attack": "melee"
-      }
-    ],
-    "note": "While leading a unit, melee weapons have [DEVASTATING WOUNDS]."
-  },
-  "Choreographer of War": {
-    "status": "auto",
-    "effects": [
+        "when": "fightStart",
+        "auto": true,
+        "botOnly": true,
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "wound": 1
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
       {
-        "scope": "led",
-        "eligible": [
-          "chargeAfterFallBack"
+        "when": "fightStart",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Hero's Prowess: re-roll Hit rolls of 1",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "reroll": "hits1"
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "fightStart",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Villain's Doom: +1 to Wound",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "wound": 1
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "fightStart",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Trickster's Grace: -1 to be hit",
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "defend": {
+                  "hit": -1
+                }
+              }
+            ],
+            "until": "phase"
+          }
         ]
       }
-    ],
-    "note": "While leading a unit, eligible to charge in a turn in which it Fell Back."
+    ]
   },
-  "Fog of Dreams (Psychic)": {
-    "status": "auto",
+  "Choreographer of War": {
     "effects": [
       {
         "scope": "led",
-        "def": {
-          "wound": -1,
-          "vs": "ranged"
-        }
+        "pileIn": 6,
+        "consolidate": 6,
+        "freeConsolidate": true
       }
-    ],
-    "note": "While leading a unit, ranged attacks targeting that unit subtract 1 from the Wound roll."
+    ]
+  },
+  "Fog of Dreams (Psychic)": {
+    "effects": [
+      {
+        "scope": "led",
+        "targetableWithin": 18
+      }
+    ]
   },
   "Death is Not Enough": {
-    "status": "auto",
-    "effects": [
-      {
-        "critHitOn": 5,
-        "attack": "ranged"
-      }
-    ],
-    "note": "Ranged attacks score Critical Hits on unmodified 5+."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "if": [
+            "killedModelThisPhase"
+          ],
+          "shock": -1
+        },
+        {
+          "if": [
+            "!killedModelThisPhase"
+          ],
+          "shock": 0
+        }
+      ]
+    }
   },
   "Flip Belt": {
-    "status": "auto",
-    "note": "Can move over enemy models and terrain as if they were not there."
+    "status": "info",
+    "note": "The board is flat: vertical distance never counts"
   },
   "Forceshield": {
-    "status": "auto",
-    "note": "4+ invulnerable save.",
+    "gear": true,
     "effects": [
       {
+        "scope": "model",
         "defend": {
           "inv": 4
         }
@@ -249,21 +554,22 @@
     ]
   },
   "Scattershield": {
-    "status": "auto",
-    "note": "4+ invulnerable save.",
+    "gear": true,
     "effects": [
       {
+        "scope": "model",
         "defend": {
-          "inv": 4
+          "inv": 4,
+          "damage": -1
         }
       }
     ]
   },
   "Shimmershield": {
-    "status": "auto",
-    "note": "Bearer's unit has a 4+ invulnerable save.",
+    "gear": true,
     "effects": [
       {
+        "scope": "model",
         "defend": {
           "inv": 4
         }
@@ -271,21 +577,15 @@
     ]
   },
   "Shadow Field": {
+    "code": true,
     "status": "auto",
-    "note": "Bearer has a 2+ invulnerable save (lost until end of battle if failed).",
-    "effects": [
-      {
-        "defend": {
-          "inv": 2
-        }
-      }
-    ]
+    "note": "The 2+ invulnerable save is lost for the rest of the battle once the bearer loses wounds to an attack"
   },
   "Mistshield": {
-    "status": "auto",
-    "note": "4+ invulnerable save.",
+    "gear": true,
     "effects": [
       {
+        "scope": "model",
         "defend": {
           "inv": 4
         }
@@ -293,67 +593,654 @@
     ]
   },
   "Wave Serpent Shield": {
-    "status": "auto",
     "effects": [
       {
-        "def": {
-          "wound": -1,
-          "vs": "ranged"
+        "defend": {
+          "vs": "ranged",
+          "woundIfStronger": -1
         }
       }
-    ],
-    "note": "Ranged attacks targeting this model subtract 1 from the Wound roll."
+    ]
   },
   "Fleet of Foot": {
+    "code": true,
     "status": "auto",
-    "effects": [
-      {
-        "reroll": "all"
-      }
-    ],
-    "note": "Can re-roll Advance rolls and Charge rolls."
+    "note": "Fade Back without spending a Battle Focus token"
   },
   "Flickerjump": {
-    "status": "auto",
-    "note": "When selected to make a Normal move, can teleport up to 24\"."
+    "act": {
+      "when": "movement",
+      "limit": "phase",
+      "label": "Flickerjump: Move 24\", no charge this turn",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "buff": [
+            {
+              "moveSet": 24
+            }
+          ],
+          "until": "turn"
+        },
+        {
+          "on": "self",
+          "if": [
+            "!leader:Lhykhis"
+          ],
+          "noCharge": true
+        },
+        {
+          "on": "self",
+          "phaseEndMortals": "perModel:1"
+        }
+      ]
+    }
   },
   "Indomitable Strength of Will": {
+    "code": true,
     "status": "auto",
-    "note": "In your opponent's Shooting phase, after an enemy unit has shot, can shoot back at that enemy unit."
+    "note": "Each Battle Focus token spent on its unit: 3+ gets it back"
   },
   "Mandiblasters": {
-    "status": "auto",
-    "note": "Each time this unit makes a Charge move, roll D6 for each model in Engagement Range: on 4+ deal 1 mortal wound."
-  },
-  "Face of Death": {
-    "status": "auto",
-    "note": "Enemy units cannot declare Overwatch against this unit."
-  },
-  "Whirling Death": {
-    "status": "auto",
     "effects": [
       {
-        "def": {
-          "fightsFirst": true,
-          "hit": -1,
-          "vs": "melee"
-        }
+        "attack": "melee",
+        "if": [
+          "charged"
+        ],
+        "critHitOn": 5
       }
-    ],
-    "note": "Fights First ability; melee attacks targeting this unit subtract 1 from Hit rolls."
+    ]
   },
-  "Storm of Silence": {
-    "status": "auto",
+  "Face of Death": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "shock": -1
+        }
+      ]
+    }
+  },
+  "Whirling Death": {
     "effects": [
       {
         "scope": "led",
-        "move": 2
+        "advanceFixed": 6
       }
-    ],
-    "note": "While leading a unit, add 2\" to Move and +1 to Advance and Charge rolls."
+    ]
+  },
+  "Storm of Silence": {
+    "effects": [
+      {
+        "scope": "model",
+        "if": [
+          "targetCharacter"
+        ],
+        "reroll": "wounds"
+      }
+    ]
   },
   "Piratical Raiders": {
+    "effects": [
+      {
+        "if": [
+          "targetMarked:piratical"
+        ],
+        "abilities": [
+          "lethal hits",
+          "precision"
+        ]
+      }
+    ],
+    "act": {
+      "when": "battleStart",
+      "auto": true,
+      "limit": "battle",
+      "target": {
+        "side": "enemy",
+        "anywhere": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [],
+          "until": "battle",
+          "mark": "piratical"
+        }
+      ]
+    }
+  },
+  "Sadistic Raiders": {
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "if": [
+        "onOwnObjective"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "secure": true
+        }
+      ]
+    }
+  },
+  "Tactical Acumen": {
+    "act": {
+      "when": "afterShootingButton",
+      "if": [
+        "leaderAttached",
+        "notEngaged"
+      ],
+      "label": "Normal move of up to 6\" (no charge this turn)",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "move": "6",
+          "noCharge": true
+        }
+      ]
+    }
+  },
+  "Unquenchable Resolve": {
+    "act": {
+      "when": "onDeath",
+      "auto": true,
+      "modelDeath": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "reviveLater": {
+            "on": 2,
+            "wounds": 99
+          }
+        }
+      ]
+    }
+  },
+  "Cloudstrider": {
+    "effects": [
+      {
+        "scope": "led",
+        "deepStrikeRange": 6
+      }
+    ],
+    "act": {
+      "when": "opponentTurnEnd",
+      "if": [
+        "leaderAttached",
+        "notEngaged"
+      ],
+      "label": "Into Strategic Reserves",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
+        }
+      ]
+    }
+  },
+  "Superlative Strategist": {
+    "effects": [
+      {
+        "scope": "led",
+        "rerollAdvance": true
+      }
+    ]
+  },
+  "Path of Command": {
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "*"
+          ],
+          "cp": 1,
+          "limit": "round",
+          "perArmy": true
+        }
+      }
+    ]
+  },
+  "ASPECT TRAINING": {
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "kw:HOWLING BANSHEES"
+        ],
+        "fightsFirst": true
+      },
+      {
+        "scope": "led",
+        "if": [
+          "kw:STRIKING SCORPIONS"
+        ],
+        "infiltrators": true,
+        "scouts": 7,
+        "stealth": true
+      }
+    ]
+  },
+  "Misfortune (Psychic)": {
+    "act": {
+      "when": "movementEnd",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "range": 18,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "wound": -1
+            }
+          ],
+          "until": "nextCommand",
+          "mark": "misfortune"
+        }
+      ]
+    }
+  },
+  "Protect (Psychic)": {
+    "effects": [
+      {
+        "if": [
+          "leader:Farseer"
+        ],
+        "defend": {
+          "wound": -1
+        }
+      }
+    ]
+  },
+  "Psychic Communion (Psychic)": {
+    "effects": [
+      {
+        "scope": "model",
+        "weapon": "Destructor",
+        "if": [
+          "nearCount:6:1:AELDARI+PSYKER"
+        ],
+        "attacks": 1,
+        "strength": 1
+      },
+      {
+        "scope": "model",
+        "weapon": "Destructor",
+        "if": [
+          "nearCount:6:2:AELDARI+PSYKER"
+        ],
+        "attacks": 1,
+        "strength": 1
+      }
+    ]
+  },
+  "Runes of Fortune (Psychic)": {
+    "effects": [
+      {
+        "chargedMinus": 2
+      }
+    ]
+  },
+  "Runes of Battle (Psychic)": {
+    "effects": [
+      {
+        "abilities": [
+          "ignores cover"
+        ]
+      }
+    ]
+  },
+  "Spiritseer": {
+    "effects": [
+      {
+        "if": [
+          "near:3:WRAITH CONSTRUCT"
+        ],
+        "loneOperative": true
+      }
+    ]
+  },
+  "Crewed Platform": {
+    "code": true,
     "status": "auto",
+    "note": "The platforms are removed with the last crew model"
+  },
+  "Stormblades": {
+    "act": {
+      "when": "commandEnd",
+      "auto": true,
+      "if": [
+        "onOwnObjective"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "secure": true
+        }
+      ]
+    }
+  },
+  "Serpent Shield": {
+    "gear": true,
+    "effects": [
+      {
+        "defend": {
+          "inv": 5
+        }
+      }
+    ]
+  },
+  "Swift Demise": {
+    "effects": [
+      {
+        "attack": "ranged",
+        "reroll": "hits1"
+      },
+      {
+        "attack": "ranged",
+        "if": [
+          "targetClosest"
+        ],
+        "reroll": "hits"
+      }
+    ]
+  },
+  "Path of the Outcast": {
+    "act": {
+      "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "phase",
+      "if": [
+        "unengaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "move": "D6"
+        }
+      ]
+    }
+  },
+  "Aspect Shrine Token": {
+    "freeDie": {
+      "kind": "setSix",
+      "stage": "hit",
+      "limit": "battle",
+      "if": [
+        "notCharacterModel"
+      ]
+    },
+    "note": "One token: one Hit roll becomes a 6 once per battle"
+  },
+  "Acrobatic": {
+    "effects": [
+      {
+        "eligible": [
+          "chargeAfterAdvance",
+          "chargeAfterFallBack"
+        ]
+      }
+    ]
+  },
+  "Assured Destruction": {
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "ownShooting",
+          "targetMV"
+        ],
+        "reroll": [
+          "hits",
+          "wounds",
+          "damage"
+        ]
+      }
+    ]
+  },
+  "War Construct": {
+    "effects": [
+      {
+        "eligible": [
+          "shootAfterFallBack"
+        ]
+      }
+    ]
+  },
+  "Psychic Guidance": {
+    "effects": [
+      {
+        "if": [
+          "nearModels:12:AELDARI+PSYKER"
+        ],
+        "ldSet": 6,
+        "hit": 1
+      }
+    ]
+  },
+  "Malevolent Souls": {
+    "effects": [
+      {
+        "fightOnDeath": 3
+      }
+    ]
+  },
+  "Grenade Pack Flyover": {
+    "act": {
+      "when": "endOfNormalMove",
+      "limit": "turn",
+      "label": "Grenade Pack Flyover: 1 D6 per model, 4+ = 1 mortal wound",
+      "target": {
+        "side": "enemy",
+        "range": 8,
+        "visible": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "all": true,
+            "max": 6
+          }
+        }
+      ]
+    }
+  },
+  "Extreme Mobility": {
+    "status": "info",
+    "note": "The board is flat: vertical distance never counts"
+  },
+  "Skyhunter": {
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "targetFly"
+        ],
+        "hit": 1,
+        "wound": 1
+      }
+    ]
+  },
+  "Harassment Fire": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "hit": -1
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "suppressed"
+        }
+      ]
+    }
+  },
+  "Mindshock Pod (Aura, Psychic)": {
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 9,
+        "ld": -1,
+        "shockBonus": -1
+      }
+    ]
+  },
+  "Inescapable Accuracy": {
+    "effects": [
+      {
+        "attack": "ranged",
+        "ignoreHitMods": true
+      }
+    ]
+  },
+  "Crystal Matrix": {
+    "freeDie": [
+      {
+        "kind": "reroll",
+        "stage": "hit",
+        "limit": "phase",
+        "attack": "ranged"
+      },
+      {
+        "kind": "reroll",
+        "stage": "wound",
+        "limit": "phase",
+        "attack": "ranged"
+      }
+    ]
+  },
+  "Monofilament Web": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "doomweaver"
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "move": -2,
+              "chargeBonus": -2
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "pinned"
+        }
+      ]
+    }
+  },
+  "Crystalline Targeting": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "units": [
+              "AELDARI"
+            ],
+            "ap": 1
+          },
+          "until": "phase"
+        }
+      ]
+    }
+  },
+  "Fated Hero": {
+    "effects": [
+      {
+        "if": [
+          "targetSlayer"
+        ],
+        "reroll": [
+          "hits1",
+          "wounds1"
+        ]
+      }
+    ],
+    "act": {
+      "when": "battleStart",
+      "auto": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "setSlayer": [
+            "INFANTRY",
+            "MONSTER",
+            "MOUNTED",
+            "VEHICLE"
+          ]
+        }
+      ]
+    },
+    "note": "The keyword with the most enemy points is selected"
+  },
+  "Titanic Strides": {
+    "effects": [
+      {
+        "moveThroughModels": true,
+        "throughTerrain": true
+      }
+    ],
+    "note": "Moves through models and terrain; the Battle-shock roll for tall terrain is not made"
+  },
+  "Point-blank Devastation": {
+    "effects": [
+      {
+        "weapon": "heavy wraithcannon",
+        "if": [
+          "halfRange"
+        ],
+        "rerollAttackRolls": true
+      },
+      {
+        "weapon": "suncannon",
+        "if": [
+          "halfRange"
+        ],
+        "rerollAttackRolls": true
+      }
+    ]
+  },
+  "Reavers of the Void": {
     "effects": [
       {
         "reroll": "hits1"
@@ -364,627 +1251,1555 @@
         ],
         "reroll": "hits"
       }
-    ],
-    "note": "Re-roll Hit rolls of 1 (or all Hit rolls if target is on an objective)."
+    ]
   },
-  "Sadistic Raiders": {
-    "status": "auto",
-    "note": "Objective marker remains under your control even if no models within range (sticky objective)."
-  },
-  "Unparalleled Foresight": {
-    "status": "auto",
-    "note": "Battle Host detachment: each time this unit is selected to shoot or fight, re-roll one Hit roll and re-roll one Wound roll."
-  },
-  "Martial Grace": {
-    "status": "auto",
-    "note": "Warhost detachment: receive +1 Battle Focus token; Swift as the Wind gives +1\" additional M."
-  },
-  "Skilled Crews": {
-    "status": "auto",
+  "Channeller Stones": {
+    "gear": true,
     "effects": [
       {
-        "abilities": [
-          "assault"
-        ],
-        "attack": "ranged"
+        "defend": {
+          "negateOnce": "turn"
+        }
       }
-    ],
-    "note": "Vehicle ranged attacks have [ASSAULT]."
+    ]
   },
-  "Defend at All Costs": {
+  "Faolchú": {
+    "gear": true,
+    "effects": [
+      {
+        "attack": "ranged",
+        "abilities": [
+          "ignores cover"
+        ]
+      }
+    ]
+  },
+  "Target Acquisition": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "long rifle"
+      },
+      "do": [
+        {
+          "incoming": {
+            "noCover": true
+          },
+          "until": "phase"
+        }
+      ]
+    }
+  },
+  "Cegorach’s Favour": {
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "reroll": "hits1",
+        "wound": 1
+      }
+    ]
+  },
+  "TRAVELLING PLAYERS": {
+    "status": "info",
+    "note": "Army building: at most one of this model"
+  },
+  "Treacherous Illusion (Psychic)": {
+    "act": {
+      "when": "attacked",
+      "auto": true,
+      "do": [
+        {
+          "on": "attacker",
+          "buff": [
+            {
+              "attack": "melee",
+              "abilities": [
+                "hazardous"
+              ]
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
+  },
+  "Cruel Amusement": {
+    "act": [
+      {
+        "when": "selectedToShoot",
+        "auto": true,
+        "botOnly": true,
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "shrieker cannon",
+                "abilities": [
+                  "sustained hits 3"
+                ]
+              }
+            ],
+            "until": "phase"
+          },
+          {
+            "on": "self",
+            "if": [
+              "enh:Fanged Leer"
+            ],
+            "buff": [
+              {
+                "weapon": "shrieker cannon",
+                "abilities": [
+                  "precision"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Shrieker cannon: [SUSTAINED HITS 3]",
+        "if": [
+          "!enh:Fanged Leer"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "shrieker cannon",
+                "abilities": [
+                  "sustained hits 3"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Shrieker cannon: [PRECISION]",
+        "if": [
+          "!enh:Fanged Leer"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "shrieker cannon",
+                "abilities": [
+                  "precision"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Shrieker cannon: [IGNORES COVER]",
+        "if": [
+          "!enh:Fanged Leer"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "shrieker cannon",
+                "abilities": [
+                  "ignores cover"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Shrieker cannon: [SUSTAINED HITS 3] and [PRECISION]",
+        "if": [
+          "enh:Fanged Leer"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "shrieker cannon",
+                "abilities": [
+                  "sustained hits 3",
+                  "precision"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Shrieker cannon: [SUSTAINED HITS 3] and [IGNORES COVER]",
+        "if": [
+          "enh:Fanged Leer"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "shrieker cannon",
+                "abilities": [
+                  "sustained hits 3",
+                  "ignores cover"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      },
+      {
+        "when": "selectedToShoot",
+        "limit": "phase",
+        "botUse": "never",
+        "label": "Shrieker cannon: [PRECISION] and [IGNORES COVER]",
+        "if": [
+          "enh:Fanged Leer"
+        ],
+        "do": [
+          {
+            "on": "self",
+            "buff": [
+              {
+                "weapon": "shrieker cannon",
+                "abilities": [
+                  "precision",
+                  "ignores cover"
+                ]
+              }
+            ],
+            "until": "phase"
+          }
+        ]
+      }
+    ]
+  },
+  "Blur of Movement": {
+    "effects": [
+      {
+        "eligible": [
+          "chargeAfterAdvance"
+        ]
+      }
+    ]
+  },
+  "PATH OF DAMNATION": {
+    "status": "info",
+    "note": "Army building: cannot be your WARLORD"
+  },
+  "Acrobatic Grace": {
+    "effects": [
+      {
+        "stealth": true
+      },
+      {
+        "defend": {
+          "vs": "melee",
+          "hit": -1
+        }
+      }
+    ]
+  },
+  "Polychromatic Camouflage": {
+    "effects": [
+      {
+        "targetableWithin": 18
+      }
+    ]
+  },
+  "Rapid Embarkation": {
+    "act": {
+      "when": "fightEndButton",
+      "if": [
+        "!hasEmbarked"
+      ],
+      "label": "Embark a HARLEQUINS INFANTRY unit within 6\"",
+      "target": {
+        "side": "friendly",
+        "range": 6,
+        "units": [
+          "HARLEQUINS",
+          "INFANTRY"
+        ],
+        "notSelf": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "!engaged"
+          ],
+          "embarkNear": 6
+        }
+      ]
+    },
+    "note": "The unit must have 6 or fewer models (check when choosing)"
+  },
+  "SERVANT OF THE WHISPERING GOD": {
+    "status": "info",
+    "note": "Army building: no other Epic Heroes (excluding Ynnari)"
+  },
+  "Way of the Blade": {
+    "effects": [
+      {
+        "scope": "led",
+        "fightsFirst": true
+      }
+    ]
+  },
+  "Ethereal Form": {
+    "act": [
+      {
+        "when": "afterFighting",
+        "auto": true,
+        "needDestroyed": true,
+        "do": [
+          {
+            "on": "self",
+            "heal": "D3"
+          }
+        ]
+      },
+      {
+        "when": "afterShooting",
+        "auto": true,
+        "needDestroyed": true,
+        "do": [
+          {
+            "on": "self",
+            "heal": "D3"
+          }
+        ]
+      }
+    ]
+  },
+  "AVATAR OF THE WHISPERING GOD": {
+    "status": "info",
+    "note": "Army building: no other Epic Heroes (excluding Ynnari)"
+  },
+  "Empyric Ambush": {
+    "code": true,
     "status": "auto",
+    "note": "Its unit can still charge after Flickerjump"
+  },
+  "Whispering Web": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "incoming": {
+            "units": [
+              "AELDARI"
+            ],
+            "critHitOn": 5
+          },
+          "until": "turn"
+        }
+      ]
+    }
+  },
+  "Support Weapon": {
+    "code": true,
+    "status": "auto",
+    "note": "Joined to a Guardians unit, attacks use the Guardians' Toughness"
+  },
+  "Structural Collapse": {
+    "effects": [
+      {
+        "weapon": "D-cannon",
+        "reroll": "damage1"
+      },
+      {
+        "weapon": "D-cannon",
+        "if": [
+          "targetKw:TITANIC"
+        ],
+        "reroll": "damage"
+      }
+    ]
+  },
+  "SUPPORT ARTILLERY": {
+    "code": true,
+    "status": "auto",
+    "note": "Joins a Guardian Defenders unit in the army builder (like a leader)"
+  },
+  "Monofilament Snare": {
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "shadow weaver"
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "snared": true
+            }
+          ],
+          "until": "nextTurnStart",
+          "mark": "snared"
+        }
+      ]
+    }
+  },
+  "Sonic Destruction": {
+    "code": true,
+    "status": "auto",
+    "note": "+1 S, AP and D for each other Vibro Cannon Platform that shot the same unit this phase"
+  },
+  "Titanic Agility": {
+    "effects": [
+      {
+        "moveThroughModels": true,
+        "throughTerrain": true
+      }
+    ]
+  },
+  "Overlord": {
+    "effects": [
+      {
+        "scope": "led",
+        "reroll": "wounds1"
+      },
+      {
+        "scope": "led",
+        "if": [
+          "belowStarting"
+        ],
+        "reroll": "wounds"
+      }
+    ]
+  },
+  "Reborn Mastermind": {
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "*"
+          ],
+          "cp": 1,
+          "limit": "round",
+          "perArmy": true
+        }
+      }
+    ]
+  },
+  "Empowered by Death": {
     "effects": [
       {
         "if": [
-          "objectiveEitherWay"
+          "belowStarting"
         ],
-        "hit": 1
+        "fightsFirst": true
       }
-    ],
-    "note": "If this unit or target unit is within range of an objective marker, add 1 to the Hit roll."
-  },
-  "Path of the Warrior": {
-    "status": "auto",
-    "note": "Aspect Host detachment: select re-roll Hit 1s or re-roll Wound 1s."
-  },
-  "Tactical Acumen": {
-    "status": "auto",
-    "note": "While this model is leading a unit, in your Shooting phase, after that unit has shot, it can make a Normal move of up to 6\". If it does, until the end of the turn, that unit is not eligible to decl..."
-  },
-  "Unquenchable Resolve": {
-    "status": "auto",
-    "note": "The first time this model is destroyed, at the end of the phase, roll one D6: on a 2+, set this model back up on the battlefield as close as possible to where it was destroyed and not within Engage..."
-  },
-  "Cloudstrider": {
-    "status": "auto",
-    "note": "While this model is leading a unit, at the end of your opponent’s turn, if that unit is not within Engagement Range of one or more enemy units, you can remove it from the battlefield and place it i..."
-  },
-  "Superlative Strategist": {
-    "status": "auto",
-    "note": "While this model is leading a unit, you can re-roll Advance rolls made for that unit, and you can re-roll any rolls made for that unit while it is performing an Agile Manoeuvre."
-  },
-  "Path of Command": {
-    "status": "auto",
-    "note": "Once per battle round, one model from your army with this ability can use it when its unit is targeted with a Stratagem. If it does, reduce the CP cost of that usage of that Stratagem by 1CP."
-  },
-  "ASPECT TRAINING": {
-    "status": "auto",
-    "note": "• While this model is leading a Howling Banshees unit, it has the Fights First ability.\n• While this model is leading a Striking Scorpions unit, it has the Infiltrators, Scouts 7\" and Stealth abili..."
-  },
-  "Misfortune (Psychic)": {
-    "status": "auto",
-    "note": "At the end of your Movement phase, select one enemy unit within 18\" of and visible to this model. Until the start of your next Command phase, each time a model in that unit makes an attack, subtrac..."
-  },
-  "Protect (Psychic)": {
-    "status": "auto",
-    "note": "While a Farseer model is leading this unit, each time an attack targets this unit, subtract 1 from the Wound roll."
-  },
-  "Psychic Communion (Psychic)": {
-    "status": "auto",
-    "note": "Each time this unit is selected to shoot, for each Warlock model in this unit, until the end of the phase, add 1 to the Attacks and Strength characteristics of that model’s Destructor weapon for ea..."
-  },
-  "Runes of Fortune (Psychic)": {
-    "status": "auto",
-    "note": "Each time an enemy unit declares a charge, if one or more units with this ability are selected as a target of that charge, subtract 2 from the Charge roll."
-  },
-  "Runes of Battle (Psychic)": {
-    "status": "auto",
-    "note": "Weapons equipped by models in this unit have the [IGNORES COVER] ability."
-  },
-  "Spiritseer": {
-    "status": "auto",
-    "note": "While this model is within 3\" of one or more friendly Wraith Construct units, this model has the Lone Operative ability."
-  },
-  "Crewed Platform": {
-    "status": "auto",
-    "note": "When the last Guardian Defender model in this unit is destroyed, any remaining Heavy Weapon Platform models in this unit are also destroyed."
-  },
-  "Stormblades": {
-    "status": "auto",
-    "note": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control until your opponent’s Level of Control over that ..."
-  },
-  "Serpent Shield": {
-    "status": "auto",
-    "note": "Models in the bearer’s unit have a 5+ invulnerable save."
-  },
-  "Swift Demise": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes a ranged attack, re-roll a Hit roll of 1. If the target of that attack is the closest eligible target, you can re-roll the Hit roll instead."
-  },
-  "Path of the Outcast": {
-    "status": "auto",
-    "note": "In your opponent's Movement phase, if an enemy unit ends a move within 8\" of this unit, if this unit is not within Engagement Range of one or more enemy units, this unit can make a Normal move of u..."
-  },
-  "Aspect Shrine Token": {
-    "status": "auto",
-    "note": "Once per battle for each Aspect Shrine token this unit has, you can change the result of one Hit roll or one Wound roll made for a model in this unit (excluding CHARACTER models) to an unmodified 6..."
-  },
-  "Acrobatic": {
-    "status": "auto",
-    "note": "This unit is eligible to declare a charge in a turn in which it Advanced or Fell Back."
-  },
-  "Assured Destruction": {
-    "status": "auto",
-    "note": "In your Shooting phase, each time a model in this unit makes a ranged attack that targets a MONSTER or VEHICLE unit, you can re-roll the Hit roll, you can re-roll the Wound roll and you can re-roll..."
-  },
-  "War Construct": {
-    "status": "auto",
-    "note": "This unit is eligible to shoot in a turn in which it Fell Back."
-  },
-  "Psychic Guidance": {
-    "status": "auto",
-    "note": "While this unit is within 12\" of one or more friendly Aeldari Psyker models, models in this unit have a Leadership characteristic of 6+ and each time a model in this unit makes an attack, add 1 to ..."
-  },
-  "Malevolent Souls": {
-    "status": "auto",
-    "note": "Each time a model in this unit is destroyed by a melee attack, if that model has not fought this phase, roll one D6. On a 3+, do not remove it from play; that destroyed model can fight after the at..."
-  },
-  "Grenade Pack Flyover": {
-    "status": "auto",
-    "note": "Once per turn, in your Movement phase, when this unit is set up on the battlefield or ends a Normal, Advance or Fall Back move, it can use this ability. If it does, select one enemy unit within 8\" ..."
-  },
-  "Extreme Mobility": {
-    "status": "auto",
-    "note": "Each time this unit makes a Normal, Advance, Fall Back or Charge move, ignore any vertical distance when determining the total distance models in this unit can be moved during that move."
-  },
-  "Skyhunter": {
-    "status": "auto",
-    "note": "Each time this model makes a ranged attack that targets a unit that can FLY, add 1 to the Hit roll and add 1 to the Wound roll."
-  },
-  "Harassment Fire": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, select one enemy unit hit by one or more of those attacks. Until the start of your next turn, that enemy unit is suppressed. While a unit is suppre..."
-  },
-  "Mindshock Pod (Aura, Psychic)": {
-    "status": "auto",
-    "note": "While an enemy unit is within 9\" of this model, subtract 1 from Battle-shock and Leadership tests taken for that unit."
-  },
-  "Inescapable Accuracy": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes a ranged attack, you can ignore any or all modifiers to that attack’s Ballistic Skill characteristic and any or all modifiers to the Hit roll."
-  },
-  "Crystal Matrix": {
-    "status": "auto",
-    "note": "Each time this model is selected to shoot, you can re-roll one Hit roll and you can re-roll one Wound roll when resolving those attacks."
-  },
-  "Monofilament Web": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, if one or more of those attacks made with its doomweaver scored a hit against an enemy unit, until the start of your next turn, that enemy unit is..."
-  },
-  "Crystalline Targeting": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, select one enemy unit hit by one or more of those attacks. Until the end of the phase, each time a friendly AELDARI unit makes an attack that targe..."
-  },
-  "Fated Hero": {
-    "status": "auto",
-    "note": "At the start of the battle, select one of the following keywords: INFANTRY; MONSTER; MOUNTED; VEHICLE. Each time this model makes an attack that targets a unit with the selected keyword, re-roll a ..."
-  },
-  "Titanic Strides": {
-    "status": "auto",
-    "note": "Each time this model makes a Normal, Advance or Fall Back move, it can move through models (excluding TITANIC models) and sections of terrain features that are 4\" or less in height. When doing so:\n..."
-  },
-  "Point-blank Devastation": {
-    "status": "auto",
-    "note": "Each time this model’s heavy wraithcannon or suncannon targets a unit within half range, you can re-roll the dice to determine the number of attacks made."
-  },
-  "Reavers of the Void": {
-    "status": "auto",
-    "note": "Each time a model in this unit makes an attack, re-roll a Hit roll of 1. If the target of that attack is within range of an objective marker, you can re-roll the Hit roll instead."
-  },
-  "Channeller Stones": {
-    "status": "auto",
-    "note": "Once per turn, the first time a saving throw is failed for the bearer’s unit, change the Damage characteristic of that attack to 0."
-  },
-  "Faolchú": {
-    "status": "auto",
-    "note": "Ranged weapons equipped by models in the bearer’s unit have the [IGNORES COVER] ability."
-  },
-  "Target Acquisition": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this unit has shot, select one enemy unit hit by one or more of those attacks made with a long rifle. Until the end of the phase, that enemy unit cannot have the Benef..."
-  },
-  "Cegorach’s Favour": {
-    "status": "auto",
-    "note": "Each time this model makes a melee attack, you can re-roll a Hit roll of 1 and add 1 to the Wound roll."
-  },
-  "TRAVELLING PLAYERS": {
-    "status": "auto",
-    "note": "Unless otherwise stated, you cannot include more than one of this model in your army."
-  },
-  "Treacherous Illusion (Psychic)": {
-    "status": "auto",
-    "note": "Melee weapons equipped by enemy models have the [HAZARDOUS] ability while targeting this model’s unit."
-  },
-  "Cruel Amusement": {
-    "status": "auto",
-    "note": "In your Shooting phase, each time this model is selected to shoot, select one of the abilities below. Until the end of the phase, this model’s shrieker cannon has that ability.\n• [IGNORES COVER]\n• ..."
-  },
-  "Blur of Movement": {
-    "status": "auto",
-    "note": "This model is eligible to declare a charge in a turn in which it Advanced."
-  },
-  "PATH OF DAMNATION": {
-    "status": "auto",
-    "note": "This model cannot be your WARLORD."
-  },
-  "Acrobatic Grace": {
-    "status": "auto",
-    "note": "• This unit has Stealth.\n• Melee attacks that target this unit have -1 to hit rolls."
-  },
-  "Polychromatic Camouflage": {
-    "status": "auto",
-    "note": "This unit can only be selected as the target of a ranged attack if the attacking model is within 18\"."
-  },
-  "Rapid Embarkation": {
-    "status": "auto",
-    "note": "At the end of the Fight phase, if there are no models currently embarked within this TRANSPORT, you can select one friendly Harlequins Infantry unit that has 6 or fewer models that is wholly within..."
-  },
-  "SERVANT OF THE WHISPERING GOD": {
-    "status": "auto",
-    "note": "If your army includes YVRAINE, it cannot include any Epic Hero units (excluding Ynnari units). If your army includes any EPIC HERO units (excluding YNNARI units), it cannot include YVRAINE."
-  },
-  "Way of the Blade": {
-    "status": "auto",
-    "note": "While this model is leadings unit, models in that unit have the Fights First ability."
-  },
-  "Ethereal Form": {
-    "status": "auto",
-    "note": "Each time this model destroys an enemy unit, it regains up to D3 lost wounds."
-  },
-  "AVATAR OF THE WHISPERING GOD": {
-    "status": "auto",
-    "note": "If your army includes THE YNCARNE, it cannot include any Epic Hero units (excluding Ynnari units). If your army includes any EPIC HERO units (excluding YNNARI units), it cannot include THE YNCARNE."
-  },
-  "Empyric Ambush": {
-    "status": "auto",
-    "note": "While this model is leading a unit, that unit is eligible to declare a charge in a turn in which it used its Flickerjump ability."
-  },
-  "Whispering Web": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. Until the end of the turn, each time a friendly Aeldari model makes an attack that targ..."
-  },
-  "Support Weapon": {
-    "status": "auto",
-    "note": "Each time an attack targets this model’s unit, if that unit contains one or more other models, until that attack is resolved, this model has a Toughness characteristic of 3."
-  },
-  "Structural Collapse": {
-    "status": "auto",
-    "note": "Each time this model makes an attack with its D-cannon, re-roll a Damage roll of 1. If that attack targets a TITANIC unit, you can re-roll the Damage roll instead."
-  },
-  "SUPPORT ARTILLERY": {
-    "status": "auto",
-    "note": "At the start of the Declare Battle Formations step, this model can join one Guardian Defenders unit from your army (a unit cannot have more than one Support Weapon model joined to it). This model t..."
-  },
-  "Monofilament Snare": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks made with its shadow weaver. Until the start of your next turn, that enemy unit is snare..."
-  },
-  "Sonic Destruction": {
-    "status": "auto",
-    "note": "In your Shooting phase, each time this model makes an attack with its vibro cannon that targets an enemy unit, improve the Strength, Armour Penetration and Damage characteristics of that attack by ..."
-  },
-  "Titanic Agility": {
-    "status": "auto",
-    "note": "Each time this model makes a Normal, Advance or Fall Back move, it can move through models and terrain features. When doing so, it can move within Engagement Range of enemy models, but cannot end t..."
-  },
-  "Overlord": { "code": true,
-    "status": "auto",
-    "note": "While this model is leading a unit, each time a model in that unit makes an attack, re-roll a Wound roll of 1. While that unit is below its Starting Strength, each time a model in that unit makes a..."
-  },
-  "Reborn Mastermind": {
-    "status": "auto",
-    "note": "Once per battle round, one model from your army with this ability can use it when its unit is targeted with a Stratagem. If it does, reduce the CP cost of that usage of that Stratagem by 1CP."
-  },
-  "Empowered by Death": {
-    "status": "auto",
-    "note": "At the start of the Fight phase, if this model’s unit is below its Starting Strength, until the end of the phase, models in that unit have the Fights First ability."
+    ]
   },
   "Phantasm Grenade Launcher": {
-    "status": "auto",
-    "note": "The bearer’s unit has the GRENADES keyword."
+    "gear": true,
+    "effects": [
+      {
+        "addKeywords": [
+          "GRENADES"
+        ]
+      }
+    ]
   },
   "No Escape": {
-    "status": "auto",
-    "note": "Each time an enemy unit (excluding MONSTERS and VEHICLES) within Engagement Range of one or more units from your army with this ability is selected to Fall Back, all models in that enemy unit must ..."
+    "effects": [
+      {
+        "forceDesperate": true
+      },
+      {
+        "if": [
+          "targetBattleShocked"
+        ],
+        "desperateMinus": 1
+      }
+    ]
   },
-  "Tormentors": { "code": true,
-    "status": "auto",
-    "note": "At the start of the Fight phase, each enemy unit within Engagement Range of one or more units from your army with this ability must take a Battle-shock test."
+  "Tormentors": {
+    "act": {
+      "when": "fightStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "engaged": true,
+        "each": true
+      },
+      "do": [
+        {
+          "shock": 0
+        }
+      ]
+    }
   },
   "Eviscerating Fly-by": {
-    "status": "auto",
-    "note": "Each time this unit ends a Normal move, you can select one enemy unit (excluding MONSTERS and VEHICLES) that it moved over during that move. If you do, roll one D6 for each model in this unit: for ..."
+    "act": {
+      "when": "endOfNormalMove",
+      "limit": "phase",
+      "label": "Eviscerating Fly-by: 1 D6 per model, 4+ = 1 mortal wound",
+      "target": {
+        "side": "enemy",
+        "movedOver": true,
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "all": true,
+            "rerollIf": [
+              "hasAbility:Cluster Caltrops"
+            ]
+          }
+        }
+      ]
+    }
   },
   "Cluster Caltrops": {
+    "code": true,
     "status": "auto",
-    "note": "Each time you roll a D6 for the bearer while resolving this unit’s Eviscerating Fly-by ability, you can re-roll the result."
+    "note": "Eviscerating Fly-by re-rolls its failed dice (all of the unit's dice, not only the bearer's)"
   },
   "Grav-talon": {
-    "status": "auto",
-    "note": "The bearer’s melee weapons have the [LANCE] ability."
+    "gear": true,
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "abilities": [
+          "lance"
+        ]
+      }
+    ]
   },
   "Aethersails": {
-    "status": "auto",
-    "note": "Each time this model Advances, do not make an Advance roll for it. Instead, until the end of the phase, add 6\" to the Move characteristic of this model."
+    "effects": [
+      {
+        "advanceFixed": 6
+      }
+    ]
   },
   "Lithe Embarkation": {
-    "status": "auto",
-    "note": "At the end of the Fight phase, if there are no models currently embarked within this TRANSPORT, you can select one friendly Ynnari Infantry unit that only includes models from the units listed in t..."
+    "act": {
+      "when": "fightEndButton",
+      "if": [
+        "!hasEmbarked"
+      ],
+      "label": "Embark a YNNARI INFANTRY unit within 6\"",
+      "target": {
+        "side": "friendly",
+        "range": 6,
+        "units": [
+          "YNNARI",
+          "INFANTRY"
+        ],
+        "notSelf": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "if": [
+            "!engaged"
+          ],
+          "embarkNear": 6
+        }
+      ]
+    },
+    "note": "The unit must have 6 or fewer models (check when choosing)"
   },
   "Piratical Hero": {
-    "status": "auto",
-    "note": "While this model is leading a unit, each time a model in that unit makes an attack, that attack has the [SUSTAINED HITS 1] ability and add 1 to the Hit roll."
+    "effects": [
+      {
+        "scope": "led",
+        "hit": 1,
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
   },
   "Prince of Corsairs": {
+    "code": true,
     "status": "auto",
-    "note": "After both players have deployed their armies, if this unit is on the battlefield (or any Transport it is embarked within is on the battlefield), select up to three AELDARI units from your army and..."
+    "note": "After deployment: redeploy up to three AELDARI units (set up again or into Strategic Reserves)"
   },
   "Aethersense (Psychic)": {
-    "status": "auto",
-    "note": "Enemy units that are set up on the battlefield from Reserves cannot be set up within 12\" of this model."
+    "effects": [
+      {
+        "scope": "model",
+        "omniScrambler": 12
+      }
+    ]
   },
   "Fury of the Void (Psychic)": {
-    "status": "auto",
-    "note": "In your Shooting phase, after this model’s unit has shot, select one enemy unit hit by one or more attacks made with this model’s Dread of the Deep Void. Until the end of the turn, that unit is riv..."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "hitWeapon": "Dread of the Deep Void"
+      },
+      "do": [
+        {
+          "incoming": {
+            "units": [
+              "AELDARI"
+            ],
+            "strength": 1
+          },
+          "until": "turn",
+          "mark": "riven"
+        }
+      ]
+    }
   },
   "Hallucinogen Grenades": {
-    "status": "auto",
-    "note": "At the start of your opponent’s Shooting phase, this unit can use this ability. If it does, select one Aeldari Infantry unit from your army visible to and within 36\" of this unit: until the end of ..."
+    "act": {
+      "when": "oppShootingStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "friendly",
+        "range": 36,
+        "visible": true,
+        "units": [
+          "AELDARI",
+          "INFANTRY"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "stealth": true
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
   },
   "Raid and Run": {
-    "status": "auto",
-    "note": "At the end of the Fight phase, if this unit was eligible to fight this phase, and is not within Engagement Range of one or more enemy units, it can make a Normal move of up to D3+3\". Otherwise, if ..."
+    "act": {
+      "when": "fightEndButton",
+      "limit": "phase",
+      "label": "Raid and Run: move D3+3\" (Fall Back if engaged)",
+      "do": [
+        {
+          "on": "self",
+          "move": "D3+3"
+        }
+      ]
+    }
   },
   "On the Hunt": {
-    "status": "auto",
-    "note": "When this unit is selected to make a fall-back move, that fall-back move does not prevent this unit from being eligible to shoot and eligible to declare a charge."
+    "effects": [
+      {
+        "eligible": [
+          "shootAfterFallBack",
+          "chargeAfterFallBack"
+        ]
+      }
+    ]
   },
   "Agile Reach": {
-    "status": "auto",
-    "note": "When this unit is selected to fight, melee weapons equipped by unengaged models in this unit that are within 3\" of an enemy unit that is engaged with this unit can target that enemy unit."
+    "effects": [
+      {
+        "fightReach3": true
+      }
+    ]
   },
   "Drakolithe (Once per battle, per token)": {
-    "status": "auto",
-    "note": "When an enemy unit ends a move within 8\" of this unit, if this unit is unengaged or if that enemy unit ended that move engaged with this unit, you can use this ability. If you do, roll one D6:\n• On..."
+    "act": {
+      "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "battle",
+      "label": "Drakolithe: 3+ = 1 mortal wound",
+      "target": {
+        "side": "enemy",
+        "ctxUnit": true
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 3,
+          "do": [
+            {
+              "on": "target",
+              "mortals": "1"
+            }
+          ]
+        }
+      ]
+    }
   },
   "Panicked Quarry": {
-    "status": "auto",
-    "note": "In your Shooting phase, when this unit has shot, select one enemy unit (excluding MONSTER/VEHICLE units) hit by those attacks. That enemy unit makes a battle-shock roll, with -1 to that battle-shoc..."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true,
+        "units": [
+          "!MONSTER",
+          "!VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "shock": -1
+        }
+      ]
+    }
   },
   "Elemental Ensnarement": {
-    "status": "auto",
-    "note": "At the end of your Fight phase, if this unit is not battle-shocked, you can use this ability. If you do, roll one D6:\n• On a 1, this unit is battle-shocked.\n• Select one visible enemy MONSTER/VEHIC..."
+    "act": {
+      "when": "fightEndButton",
+      "if": [
+        "ownTurn",
+        "notBattleShocked"
+      ],
+      "limit": "phase",
+      "label": "Ensnare an enemy MONSTER / VEHICLE (on a 1 this unit is Battle-shocked)",
+      "target": {
+        "side": "enemy",
+        "range": 18,
+        "visible": true,
+        "units": [
+          "MONSTER|VEHICLE",
+          "!TITANIC"
+        ]
+      },
+      "roll": "D6",
+      "table": [
+        {
+          "min": 1,
+          "max": 1,
+          "do": [
+            {
+              "on": "self",
+              "battleShock": true
+            },
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "move": -2
+                }
+              ],
+              "until": "nextTurnStart",
+              "mark": "ensnared"
+            }
+          ]
+        },
+        {
+          "min": 2,
+          "do": [
+            {
+              "on": "target",
+              "buff": [
+                {
+                  "move": -2
+                }
+              ],
+              "until": "nextTurnStart",
+              "mark": "ensnared"
+            }
+          ]
+        }
+      ]
+    }
   },
   "Blade of the Clans": {
-    "status": "auto",
-    "note": "This unit’s melee attacks have [Sustained Hits 1]."
+    "effects": [
+      {
+        "attack": "melee",
+        "abilities": [
+          "sustained hits 1"
+        ]
+      }
+    ]
   },
   "Cornered Prey": {
-    "status": "auto",
-    "note": "When an enemy unit engaged with this unit is selected to make a fall-back move, that enemy unit must use the desperate escape mode. If that enemy unit is battle-shocked, -1 from those hazard rolls."
+    "effects": [
+      {
+        "forceDesperate": true
+      },
+      {
+        "if": [
+          "targetBattleShocked"
+        ],
+        "desperateMinus": 1
+      }
+    ]
   },
   "Spirit Stone of Raelyth": {
-    "status": "auto",
-    "note": "AELDARI PSYKER model only.\n• While this model is within 3\" of a friendly AELDARI VEHICLE unit, this model has Lone Operative.\n• In your Movement phase, at the start or end of this unit’s move, you ..."
+    "effects": [
+      {
+        "scope": "model",
+        "if": [
+          "near:3:AELDARI+VEHICLE"
+        ],
+        "loneOperative": true
+      }
+    ],
+    "act": {
+      "when": "movement",
+      "limit": "phase",
+      "label": "Spirit Stone: a VEHICLE within 3\" heals D3 wounds",
+      "botUse": "damaged",
+      "target": {
+        "side": "friendly",
+        "range": 3,
+        "units": [
+          "AELDARI",
+          "VEHICLE"
+        ],
+        "damaged": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "heal": "D3"
+        }
+      ]
+    }
   },
   "Guiding Presence": {
-    "status": "auto",
-    "note": "AELDARI PSYKER model only. At the start of your Shooting phase, select one visible friendly AELDARI VEHICLE unit within 6\" of this model. That VEHICLE unit’s ranged attacks have +1 to hit rolls."
+    "act": {
+      "when": "shootingStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "friendly",
+        "range": 6,
+        "visible": true,
+        "units": [
+          "AELDARI",
+          "VEHICLE"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "attack": "ranged",
+              "hit": 1
+            }
+          ],
+          "until": "phase"
+        }
+      ]
+    }
   },
-  "Phoenix Gem": { "code": true,
-    "status": "auto",
-    "note": "Asuryani model only. The first time the bearer is destroyed, remove it from play, then, at the end of the phase, roll one D6: on a 2+, set the bearer back up on the battlefield as close as possible..."
+  "Phoenix Gem": {
+    "act": {
+      "when": "onDeath",
+      "auto": true,
+      "modelDeath": true,
+      "limit": "battle",
+      "do": [
+        {
+          "on": "self",
+          "bearerOnly": true,
+          "reviveLater": {
+            "on": 2,
+            "wounds": 99
+          }
+        }
+      ]
+    }
   },
-  "Timeless Strategist": { "code": true,
+  "Timeless Strategist": {
+    "code": true,
     "status": "auto",
-    "note": "Asuryani model only. At the start of the battle round, if the bearer is on the battlefield (or any Transport it is embarked within is on the battlefield), you receive 1 additional Battle Focus token."
+    "note": "One more Battle Focus token each battle round while the bearer is on the battlefield"
   },
   "Gift of Foresight": {
-    "status": "auto",
-    "note": "Asuryani model only. Once per battle round, you can target the bearer’s unit with the Command Re-roll Stratagem for 0CP."
+    "effects": [
+      {
+        "stratDiscount": {
+          "ids": [
+            "command-reroll"
+          ],
+          "cp": 1,
+          "limit": "round"
+        }
+      }
+    ]
   },
   "Psychic Destroyer": {
-    "status": "auto",
-    "note": "Asuryani Psyker model only. Add 1 to the Damage characteristic of ranged Psychic weapons equipped by the bearer."
-  },
-  "Ride the Wind": {
-    "status": "auto",
-    "note": "In the Declare Battle Formations step you can set up Asuryani Mounted and Vyper units from your army in Reserves. During the battle, such units can be set up on the battlefield as if they were arri..."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "ranged",
+        "if": [
+          "psychicWeapon"
+        ],
+        "damage": 1
+      }
+    ]
   },
   "Firstdrawn Blade": {
-    "status": "auto",
-    "note": "Asuryani Mounted model only. Models in the bearer’s unit have the Scouts 9\" ability."
+    "effects": [
+      {
+        "scouts": 9
+      }
+    ]
   },
   "Mirage Field": {
-    "status": "auto",
-    "note": "Asuryani Mounted model only. Each time an attack targets the bearer’s unit, subtract 1 from the Hit roll."
+    "effects": [
+      {
+        "defend": {
+          "hit": -1
+        }
+      }
+    ]
   },
   "Seersight Strike": {
-    "status": "auto",
-    "note": "Asuryani Mounted Psyker model only. Psychic weapons equipped by the bearer have the [anti-monster 2+] and [anti-vehicle 2+] abilities."
+    "effects": [
+      {
+        "scope": "model",
+        "if": [
+          "psychicWeapon"
+        ],
+        "abilities": [
+          "anti-monster 2+",
+          "anti-vehicle 2+"
+        ]
+      }
+    ]
   },
   "Echoes of Ulthanesh": {
-    "status": "auto",
-    "note": "Asuryani Mounted model only. In your Command phase, roll one D6, adding 1 to the result if the bearer is not within your deployment zone, and adding an additional 1 to the result if the bearer is w..."
-  },
-  "Shepherds of the Dead": {
-    "status": "auto",
-    "note": "Each time an Asuryani Psyker model from your army is destroyed by an enemy unit, that enemy unit gains a Vengeful Dead token. Each time a Wraith Construct model from your army makes an attack that ..."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "phase",
+      "roll": "D6",
+      "rollAdd": "dzAdvance",
+      "table": [
+        {
+          "min": 5,
+          "do": [
+            {
+              "cp": 1
+            }
+          ]
+        }
+      ]
+    }
   },
   "Light of Clarity": {
-    "status": "auto",
-    "note": "Spiritseer model only. In your Command phase, select one friendly Wraith Construct unit within 12\" of the bearer. Until the start of your next Command phase, add 1 to the Objective Control characte..."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "friendly",
+        "range": 12,
+        "units": [
+          "WRAITH CONSTRUCT"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "if": [
+                "kw:INFANTRY"
+              ],
+              "oc": 1
+            },
+            {
+              "if": [
+                "kw:MONSTER"
+              ],
+              "oc": 3
+            }
+          ],
+          "until": "nextCommand"
+        }
+      ]
+    }
   },
   "Stave of Kurnous": {
-    "status": "auto",
-    "note": "Spiritseer model only. In your Command phase, select one friendly Wraith Construct unit within 12\" of the bearer (excluding TITANIC units). Until the start of your next Command phase, each time a m..."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "friendly",
+        "range": 12,
+        "units": [
+          "WRAITH CONSTRUCT",
+          "!TITANIC"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "abilities": [
+                "precision"
+              ]
+            }
+          ],
+          "until": "nextCommand"
+        }
+      ]
+    },
+    "note": "Played as [PRECISION] on every attack (the card: on a Critical Wound)"
   },
   "Rune of Mists": {
-    "status": "auto",
-    "note": "Spiritseer model only. In your Command phase, select one friendly Wraith Construct unit within 12\" of the bearer. Until the start of your next Command phase, each time a ranged attack targets that ..."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "friendly",
+        "range": 12,
+        "units": [
+          "WRAITH CONSTRUCT"
+        ]
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "defend": {
+                "vs": "ranged",
+                "coverUnlessWithin": 18
+              }
+            }
+          ],
+          "until": "nextCommand"
+        }
+      ]
+    }
   },
   "Higher Duty": {
-    "status": "auto",
-    "note": "SPIRITSEER model only. In your opponent’s Movement phase, if an enemy unit ends a move within 8\" of this unit, if this unit is not within Engagement Range of one or more enemy units, this unit can ..."
+    "act": {
+      "when": "enemyMovedNear",
+      "range": 8,
+      "limit": "phase",
+      "if": [
+        "unengaged"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "move": "6"
+        }
+      ]
+    }
   },
   "Craftworld’s Champion": {
-    "status": "auto",
-    "note": "Asuryani model only. The bearer has an Objective Control characteristic of 5."
+    "effects": [
+      {
+        "scope": "model",
+        "ocSet": 5
+      }
+    ]
   },
   "Ethereal Pathway": {
-    "status": "auto",
-    "note": "Asuryani model only. In the Deploy Armies step, select up to two Guardians units from your army. Models in the selected units have the Infiltrators ability."
+    "act": {
+      "when": "formation",
+      "auto": true,
+      "limit": "battle",
+      "target": {
+        "side": "friendly",
+        "units": [
+          "GUARDIANS"
+        ],
+        "each": true,
+        "count": 2,
+        "anywhere": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "buff": [
+            {
+              "infiltrators": true
+            }
+          ],
+          "until": "battle"
+        }
+      ]
+    }
   },
   "Protector of the Paths": {
-    "status": "auto",
-    "note": "Asuryani model only. While the bearer is leading a Dire Avengers or Guardians unit, once per battle round, you can target the bearer’s unit with the Fire Overwatch Stratagem for 0CP, and while reso..."
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "kw:DIRE AVENGERS|GUARDIANS"
+        ],
+        "stratDiscount": {
+          "ids": [
+            "fire-overwatch"
+          ],
+          "cp": 1,
+          "limit": "round"
+        }
+      },
+      {
+        "scope": "led",
+        "if": [
+          "kw:DIRE AVENGERS|GUARDIANS"
+        ],
+        "overwatchHitOn": 5
+      },
+      {
+        "scope": "led",
+        "if": [
+          "kw:DIRE AVENGERS|GUARDIANS",
+          "onControlledObjective"
+        ],
+        "overwatchHitOn": 4
+      }
+    ],
+    "note": "The 5+ / 4+ also counts when the Overwatch was paid for"
   },
   "Breath of Vaul": {
-    "status": "auto",
-    "note": "Asuryani model only. While the bearer is leading a Storm Guardians unit, each time you roll to determine the number of attacks made with a flamer equipped by a model in that unit, you can re-roll t..."
-  },
-  "Acrobatic Onslaught": {
-    "status": "auto",
-    "note": "Each time a Harlequins model from your army makes a Charge move, it can move through enemy models.\nTRAVELLING PLAYERS\n• Troupe units from your army gain the BATTLELINE keyword and TROUPE models in ..."
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "kw:STORM GUARDIANS"
+        ],
+        "weapon": "flamer",
+        "rerollAttackRolls": true
+      },
+      {
+        "scope": "led",
+        "if": [
+          "kw:STORM GUARDIANS"
+        ],
+        "weapon": "fusion gun",
+        "reroll": "damage"
+      }
+    ]
   },
   "Cegorach’s Coil": {
-    "status": "auto",
-    "note": "Troupe Master model only. Each time the bearer’s unit ends a Charge move, select one enemy unit within Engagement Range of the bearer’s unit, then roll one D6 for each model in the bearer’s unit th..."
+    "act": {
+      "when": "endOfCharge",
+      "auto": true,
+      "target": {
+        "side": "enemy",
+        "engaged": true
+      },
+      "do": [
+        {
+          "on": "target",
+          "mortalRoll": {
+            "on": 4,
+            "max": 6
+          }
+        }
+      ]
+    }
   },
   "Mask of Secrets": {
-    "status": "auto",
-    "note": "Harlequins model only. Each time an enemy unit (excluding MONSTERS and VEHICLES) within Engagement Range of the bearer’s unit Falls Back, all models in that enemy unit must take a Desperate Escape ..."
+    "effects": [
+      {
+        "forceDesperate": true
+      },
+      {
+        "if": [
+          "targetBattleShocked"
+        ],
+        "desperateMinus": 1
+      }
+    ]
   },
   "Murder’s Jest": {
-    "status": "auto",
-    "note": "Death Jester model only. Each time the bearer makes an attack that targets a unit that is Below Half-strength, each successful Hit roll scores a Critical Hit."
+    "effects": [
+      {
+        "scope": "model",
+        "if": [
+          "targetBelowHalf"
+        ],
+        "critHitOn": 2
+      }
+    ]
   },
   "Mistweave": {
-    "status": "auto",
-    "note": "Shadowseer model only. While the bearer is leading a unit, models in that unit have the Infiltrators ability."
-  },
-  "Strength from Death": {
-    "status": "auto",
-    "note": "You can use the following rules:\nLethal Intent\nAt the end of your opponent’s Shooting phase, if one or more YNNARI units from your army were destroyed this phase, select one YNNARI INFANTRY or YNNA..."
+    "effects": [
+      {
+        "infiltrators": true
+      }
+    ]
   },
   "Gaze of Ynnead": {
-    "status": "auto",
-    "note": "Farseer model only. The bearer’s Eldritch Storm weapon has the [devastating wounds] ability."
+    "effects": [
+      {
+        "scope": "model",
+        "weapon": "Eldritch Storm",
+        "abilities": [
+          "devastating wounds"
+        ]
+      }
+    ]
   },
   "Storm of Whispers": {
-    "status": "auto",
-    "note": "Warlock model only. In your Shooting phase, after the bearer has shot, select one enemy unit hit by one or more of those attacks. That unit must take a Battle-shock test."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "limit": "phase",
+      "target": {
+        "side": "enemy",
+        "hit": true
+      },
+      "do": [
+        {
+          "shock": 0
+        }
+      ]
+    }
   },
   "Borrowed Vigour": {
-    "status": "auto",
-    "note": "Archon model only. Add 2 to the Attacks characteristic of the bearer’s melee weapons."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "attacks": 2
+      }
+    ]
   },
   "Morbid Might": {
-    "status": "auto",
-    "note": "Succubus model only. Each time the bearer makes a melee attack, you can re-roll the Wound roll."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "reroll": "wounds"
+      }
+    ]
   },
   "Lucid Eye": {
-    "status": "auto",
-    "note": "Asuryani Psyker model only. In your Command phase, you can add 1 to or subtract 1 from the value of one Fate dice in your Fate dice pool."
+    "act": {
+      "when": "commandStart",
+      "auto": true,
+      "limit": "phase",
+      "if": [
+        "detachment:Seer Council"
+      ],
+      "do": [
+        {
+          "on": "self",
+          "ae": "lucidEye"
+        }
+      ]
+    }
   },
   "Runes of Warding": {
-    "status": "auto",
-    "note": "Asuryani Psyker model only. Models in the bearer’s unit have the Feel No Pain 4+ ability against mortal wounds, Psychic Attacks and Critical Wounds caused by attacks with the [devastating wounds] a..."
+    "effects": [
+      {
+        "defend": {
+          "fnp": 4,
+          "fnpVs": "mortalPsychic"
+        }
+      }
+    ]
   },
   "Stone of Eldritch Fury": {
-    "status": "auto",
-    "note": "Asuryani Psyker model only. Add 12\" to the Range characteristic of ranged Psychic weapons equipped by the bearer."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "ranged",
+        "if": [
+          "psychicWeapon"
+        ],
+        "weaponRange": 12
+      }
+    ]
   },
   "Torc of Morai-Heg": {
-    "status": "auto",
-    "note": "Asuryani Psyker model only. Once per turn, when your opponent targets a unit from their army within 12\" of the bearer with a Stratagem, the bearer can use this Enhancement. If it does, increase the..."
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 12,
+        "stratTax": {
+          "cp": 1,
+          "limit": "turn"
+        }
+      }
+    ]
   },
   "Aspect of Murder": {
-    "status": "auto",
-    "note": "Autarch or Autarch Wayleaper model only. Add 1 to the Damage characteristic of melee weapons equipped by the bearer, and those weapons have the [precision] ability."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "damage": 1,
+        "abilities": [
+          "precision"
+        ]
+      }
+    ]
   },
   "Mantle of Wisdom": {
-    "status": "auto",
-    "note": "Autarch or Autarch Wayleaper model only. While the bearer is leading an Aspect Warriors unit, each time that unit is selected to shoot or fight, until the end of the phase, models in that unit gain..."
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "kw:ASPECT WARRIORS"
+        ],
+        "reroll": [
+          "hits1",
+          "wounds1"
+        ]
+      }
+    ]
   },
   "Shimmerstone": {
-    "status": "auto",
-    "note": "Autarch or Autarch Wayleaper model only. While the bearer is leading an Aspect Warriors unit, each time a ranged attack targets that unit, subtract 1 from the Wound roll."
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "kw:ASPECT WARRIORS"
+        ],
+        "defend": {
+          "vs": "ranged",
+          "wound": -1
+        }
+      }
+    ]
   },
   "Strategic Savant": {
-    "status": "auto",
-    "note": "Autarch or Autarch Wayleaper model only. While the bearer is leading an Aspect Warriors unit, add 1 to the Objective Control characteristic of models in that unit."
-  },
-  "Boons of the Brood": {
-    "status": "auto",
-    "note": "Weapons equipped by Harlequins Mounted and Harlequins Vehicle models from your army have the [SUSTAINED HITS 1] ability.\nEach time a Harlequins unit from your army disembarks from a Transport, unti..."
+    "effects": [
+      {
+        "scope": "led",
+        "if": [
+          "kw:ASPECT WARRIORS"
+        ],
+        "oc": 1
+      }
+    ]
   },
   "Key of Ghosts": {
-    "status": "auto",
-    "note": "Harlequins model only (excluding Solitaire models). Models in the bearer’s unit have the Scouts 6\" ability."
+    "effects": [
+      {
+        "scouts": 6
+      }
+    ]
   },
   "Weavers’ Wail": {
-    "status": "auto",
-    "note": "Troupe Master model only. Add 3 to the Strength and add 1 to the Attacks characteristics of the bearer’s melee weapons."
+    "effects": [
+      {
+        "scope": "model",
+        "attack": "melee",
+        "strength": 3,
+        "attacks": 1
+      }
+    ]
   },
   "Fanged Leer": {
+    "code": true,
     "status": "auto",
-    "note": "Death Jester model only. When using the bearer’s Cruel Amusement ability, you can select two of the abilities for its shrieker cannon to gain, instead of one."
+    "note": "Cruel Amusement: a second ability can be picked"
   },
   "Shedskin Raiment": {
+    "code": true,
     "status": "auto",
-    "note": "Shadowseer model only. After both players have deployed their armies, select up to three Harlequins units from your army and redeploy them. When doing so, you can set those units up in Strategic Re..."
-  },
-  "Yriel’s Own": {
-    "status": "auto",
-    "note": "AELDARI units in your army are eligible to declare a charge in a turn in which they Advanced. In addition, each time an Anhrathe, Rangers or Shroud Runners unit from your army Advances, you can re-..."
-  },
-  "Veterans of the Void": {
-    "status": "auto",
-    "note": "Each time you add an Anhrathe unit to your army, it can be given up to one Corsair Enhancement. Each Corsair Enhancement included in your army must be unique. If a unit is given a Corsair Enhanceme..."
+    "note": "After deployment: redeploy up to three HARLEQUINS units (set up again or into Strategic Reserves)"
   },
   "Pirate Prince": {
+    "code": true,
     "status": "auto",
-    "note": "Prince Yriel unit only. Each time you spend a Battle Focus token to enable this unit to perform an Agile Manoeuvre, roll one D6: on a 3+, you gain 1 Battle Focus token."
+    "note": "Each Battle Focus token spent on this unit: 3+ gets it back"
   },
   "Alacritous Assault": {
-    "status": "auto",
-    "note": "Anhrathe unit only. Melee weapons equipped by models in this unit have the [LANCE] ability."
+    "effects": [
+      {
+        "attack": "melee",
+        "abilities": [
+          "lance"
+        ]
+      }
+    ]
   },
   "Exotic Munitions": {
-    "status": "auto",
-    "note": "Anhrathe unit only. Ranged weapons equipped by models in this unit have the [ANTI-MONSTER 5+] and [ANTI-VEHICLE 5+] abilities."
+    "effects": [
+      {
+        "attack": "ranged",
+        "abilities": [
+          "anti-monster 5+",
+          "anti-vehicle 5+"
+        ]
+      }
+    ]
   },
   "Adrenal Infusions": {
+    "code": true,
     "status": "auto",
-    "note": "Anhrathe Infantry unit only. This unit can perform the Fade Back Agile Manoeuvre without spending a Battle Focus token to do so. It can do so even if other units have done so in the same phase, and..."
-  },
-  "Relentless Raiders": {
-    "status": "auto",
-    "note": "While an objective marker is under your control, each time an enemy unit ends a Normal, Advance, Fall Back or Charge move within range of that objective marker, roll one D6: on a 2+, that enemy uni..."
+    "note": "Fade Back without spending a token, even if another unit used it this phase"
   },
   "Infamy (Aura)": {
-    "status": "auto",
-    "note": "Anhrathe unit only. While an enemy unit is within 3\" of this unit, subtract 1 from the Objective Control characteristic of models in that unit (to a minimum of 1)."
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 3,
+        "oc": -1,
+        "ocMin1": true
+      }
+    ]
   },
   "Webway Pathstone": {
-    "status": "auto",
-    "note": "Anhrathe unit only. Models in this unit have the Deep Strike ability. In addition, once per battle, at the end of your opponent’s turn, if this unit is not within Engagement Range of one or more en..."
+    "effects": [
+      {
+        "deepStrike": true
+      }
+    ],
+    "act": {
+      "when": "opponentTurnEnd",
+      "limit": "battle",
+      "if": [
+        "notEngaged"
+      ],
+      "label": "Webway Pathstone: into Strategic Reserves",
+      "botUse": "never",
+      "do": [
+        {
+          "on": "self",
+          "reserves": true
+        }
+      ]
+    }
   },
   "Archraider": {
-    "status": "auto",
-    "note": "ANHRATHE CHARACTER unit only. At the start of the battle, select one CHARACTER model in this unit. That model has the following ability:\nLord of Deceit (Aura): Once per turn, when your opponent tar..."
+    "effects": [
+      {
+        "scope": "enemyAura",
+        "range": 12,
+        "stratTax": {
+          "cp": 1,
+          "limit": "turn"
+        }
+      }
+    ],
+    "note": "Lord of Deceit on the bearer"
   },
   "Voidstone": {
-    "status": "auto",
-    "note": "Anhrathe Infantry unit only. Models in this unit have a 5+ invulnerable save."
+    "effects": [
+      {
+        "defend": {
+          "inv": 5
+        }
+      }
+    ]
   },
   "A Foot in the Future": {
-    "status": "auto",
-    "note": "TROUPE MASTER model only. This unit can re-roll charge rolls"
-  },
-  "Far-Reaching Doom": {
-    "status": "auto",
-    "note": "When a friendly RANGERS/SHROUD RUNNERS unit is selected to shoot, enemy units have +6\" detection range until that friendly unit has shot."
+    "effects": [
+      {
+        "rerollCharge": true
+      }
+    ]
   },
   "Camouflaged Snipers": {
-    "status": "auto",
-    "note": "RANGERS unit only. This unit’s ranged attacks do not prevent this unit from being hidden."
+    "act": {
+      "when": "afterShooting",
+      "auto": true,
+      "do": [
+        {
+          "on": "self",
+          "unshot": true
+        }
+      ]
+    }
   },
   "Assassins' Eye": {
-    "status": "auto",
-    "note": "RANGERS/SHROUD RUNNERS unit only. This unit’s ranged attacks that target a CHARACTER unit have +1 AP."
-  },
-  "Dance of Distortion": {
-    "status": "auto",
-    "note": "Friendly HARLEQUINS units have Stealth.\nThis detachment has the ACROBATIC tag and cannot be taken with another ACROBATIC detachment."
+    "effects": [
+      {
+        "attack": "ranged",
+        "if": [
+          "targetCharacter"
+        ],
+        "ap": 1
+      }
+    ]
   },
   "Shadowfall Masks": {
-    "status": "auto",
-    "note": "TROUPE unit only. This unit has Fights First."
+    "effects": [
+      {
+        "fightsFirst": true
+      }
+    ]
   },
   "Prelude Performer": {
-    "status": "auto",
-    "note": "HARLEQUINS model only. This unit has Scouts 6\""
+    "effects": [
+      {
+        "scouts": 6
+      }
+    ]
+  },
+  "Psychic Guidance@Wraithlord": {
+    "effects": [
+      {
+        "if": [
+          "nearModels:12:AELDARI+PSYKER"
+        ],
+        "ldSet": 6,
+        "skill": 1
+      }
+    ]
   }
 }

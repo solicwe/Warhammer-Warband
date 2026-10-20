@@ -6,8 +6,6 @@ import {
   votannBattleStart,
   votannCommandEnd,
   votannUnitDestroyed,
-  votannAttackModifiers,
-  votannDefenseModifiers,
   tryUtharAncestralFortune,
 } from './votann';
 import { validateList } from '../engine/army';
@@ -20,6 +18,7 @@ function mockGameState(): GameState {
   const p0 = {
     name: 'Votann Player',
     factionId: 'LoV',
+    armyRules: [{ name: 'Prioritised Efficiency' }],
     factionName: 'Leagues of Votann',
     role: 'attacker',
     cp: 2,
@@ -244,105 +243,6 @@ describe('Leagues of Votann (LoV) - Prioritised Efficiency', () => {
 
     votannUnitDestroyed(s, enemyUnit, 'k1');
     expect(s.players[0].yieldPoints).toBe(2);
-  });
-});
-
-describe('Leagues of Votann - Combat & Modifier Stances', () => {
-  let s: GameState;
-  let votannAttacker: UnitState;
-  let enemyTarget: UnitState;
-
-  beforeEach(() => {
-    s = mockGameState();
-    votannAttacker = makeVotannUnit('v1', 'Hearthkyn Warriors', ['HEARTHKYN WARRIORS'], 0, 10, 10);
-    enemyTarget = makeVotannUnit('e1', 'Intercessor Squad', ['SM'], 1, 22, 25);
-    s.units = [votannAttacker, enemyTarget];
-  });
-
-  it('Hostile Acquisition adds +1 Hit when target is near an objective', () => {
-    s.players[0].votannAbility = 'Hostile Acquisition';
-    // enemyTarget is at (22, 25), where obj-mid is at (22, 25) -> near objective!
-    const bonus = votannAttackModifiers(s, votannAttacker, enemyTarget, 12, 'ranged');
-    expect(bonus.hitMod).toBe(1);
-    expect(bonus.notes).toContain('Hostile Acquisition (+1 Hit)');
-
-    // Move enemy far away from any objective
-    enemyTarget.models[0].x = 100;
-    enemyTarget.models[0].y = 100;
-    const bonusFar = votannAttackModifiers(s, votannAttacker, enemyTarget, 12, 'ranged');
-    expect(bonusFar.hitMod).toBe(0);
-  });
-
-  it('Hostile Acquisition enables Advance and Charge re-rolls in rollMods', () => {
-    s.players[0].votannAbility = 'Hostile Acquisition';
-    const mods = rollMods(s, votannAttacker);
-    expect(mods.rerollAdvance).toBe(true);
-    expect(mods.rerollCharge).toBe(true);
-  });
-
-  it('Fortify Takeover adds +1 Hit when attacker is on controlled objective', () => {
-    s.players[0].votannAbility = 'Fortify Takeover';
-    // votannAttacker is at (10, 10), where obj-home-0 is at (10, 10) and controlled by P0!
-    const bonus = votannAttackModifiers(s, votannAttacker, enemyTarget, 12, 'ranged');
-    expect(bonus.hitMod).toBe(1);
-    expect(bonus.notes).toContain('Fortify Takeover (+1 Hit)');
-
-    // Move attacker away from objective
-    votannAttacker.models[0].x = 100;
-    votannAttacker.models[0].y = 100;
-    const bonusOff = votannAttackModifiers(s, votannAttacker, enemyTarget, 12, 'ranged');
-    expect(bonusOff.hitMod).toBe(0);
-  });
-
-  it('Fortify Takeover grants -1 to Wound when attack S > target T on non-VEHICLE', () => {
-    s.players[0].votannAbility = 'Fortify Takeover';
-    // votannAttacker is defending, target T = 5
-    const profileS6 = { name: 'Heavy Bolter', range: 36, A: '3', skill: 3, S: 6, AP: -1, D: '2', abilities: [] };
-    const defBonus = votannDefenseModifiers(s, enemyTarget, votannAttacker, profileS6, 12);
-    expect(defBonus.woundMod).toBe(-1);
-    expect(defBonus.notes).toContain('Fortify Takeover (−1 Wound: S > T)');
-
-    // Strength <= Toughness -> no modifier
-    const profileS4 = { name: 'Bolter', range: 24, A: '2', skill: 3, S: 4, AP: 0, D: '1', abilities: [] };
-    const defBonusLowS = votannDefenseModifiers(s, enemyTarget, votannAttacker, profileS4, 12);
-    expect(defBonusLowS.woundMod).toBe(0);
-  });
-
-  it('Hearthband Methodical Annihilation grants re-roll Wound 1 and +1 AP for Kâhl', () => {
-    s.players[0].detachments = [{ id: 'hb', name: 'Hearthband', dp: 3, forceDisposition: 'Priority Assets', rules: [], enhancements: [], stratagems: [] }];
-    const kahl = makeVotannUnit('k1', 'Kâhl', ['CHARACTER', 'KÂHL'], 0, 10, 10);
-    s.units.push(kahl);
-
-    // enemyTarget is the only enemy, so it is the closest enemy
-    const bonus = votannAttackModifiers(s, kahl, enemyTarget, 12, 'ranged');
-    expect(bonus.rerollWounds1).toBe(true);
-    expect(bonus.apBonus).toBe(1);
-    expect(bonus.notes).toContain('Methodical Annihilation (re-roll Wound 1)');
-    expect(bonus.notes).toContain('Methodical Annihilation (+1 AP)');
-  });
-
-  it('Berehk Stornbröw Break the Foe grants Sustained Hits 1 in melee', () => {
-    const berehk = makeVotannUnit('b1', 'Berehk Stornbröw', ['CHARACTER', 'EPIC HERO', 'BEREHK STORNBRÖW'], 0, 10, 10);
-    s.units.push(berehk);
-
-    const bonus = votannAttackModifiers(s, berehk, enemyTarget, 0, 'melee');
-    expect(bonus.sustained).toBe('1');
-    expect(bonus.notes).toContain('Break the Foe [Sustained Hits 1]');
-  });
-
-  it('Ûthar the Destined Ancestral Fortune spends 1 YP to substitute unmodified 6', () => {
-    const uthar = makeVotannUnit('u1', 'Ûthar the Destined', ['CHARACTER', 'EPIC HERO', 'ÛTHAR THE DESTINED'], 0, 10, 10);
-    s.units.push(uthar);
-    s.players[0].yieldPoints = 2;
-
-    const res = tryUtharAncestralFortune(s, uthar, 'save', { need: 4, isCharacter: true });
-    expect(res).toBe(6);
-    expect(s.players[0].yieldPoints).toBe(1);
-    expect(uthar.oncePerTurnUsed).toContain('ancestral-fortune');
-
-    // Second time in same turn should fail
-    const res2 = tryUtharAncestralFortune(s, uthar, 'save', { need: 4 });
-    expect(res2).toBeNull();
   });
 });
 
