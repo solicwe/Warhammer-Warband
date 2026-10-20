@@ -2662,13 +2662,9 @@ export function sanitizeGameState(s: GameState): GameState {
     const R = 3 + 20 / 25.4;
     for (let i = 0; i < s.objectives.length; i++) {
       const o = s.objectives[i];
-      let tp = s.terrain.find((t) => t.id === o.terrainId && t.kind === 'objective-area');
+      // an objective already on its terrain plate (or circle) keeps it: only a save with none gets the 3" circle
+      let tp = s.terrain.find((t) => t.id === o.terrainId);
       if (!tp) {
-        for (const t of s.terrain) {
-          if (t.objectiveId === o.id && t.kind !== 'objective-area') {
-            delete t.objectiveId;
-          }
-        }
         const objId = `obj-t${i}`;
         tp = s.terrain.find((t) => t.id === objId);
         if (!tp) {

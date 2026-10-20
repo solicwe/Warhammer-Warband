@@ -2082,6 +2082,9 @@ b.em { font-weight: 700; color: var(--text); }
   .atk-result { font-size: 12px; }
 }
 
+/* the bottom sheet handle only exists on phones */
+.drawer-handle { display: none; }
+
 /* ---------- Mobile-first Bottom Sheet Modal (< 768px) & Touch Targets ---------- */
 @media (max-width: 768px) {
   /* Completely disable fixed side panels; convert to Bottom Sheet Modal drawer */
@@ -2116,16 +2119,17 @@ b.em { font-weight: 700; color: var(--text); }
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
-  .game-side.draggable-drawer::before {
-    content: '';
-    display: block;
-    width: 44px;
-    height: 5px;
-    border-radius: 2.5px;
-    background: var(--line);
-    margin: 8px auto 6px;
-    flex: none;
+  /* the handle folds the sheet down to a strip and back up (the board stays visible while moving) */
+  .drawer-handle {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; min-height: 32px !important; padding: 0; margin: 0;
+    background: transparent; border: none; flex: none; cursor: pointer;
   }
+  .drawer-grip { display: block; width: 44px; height: 5px; border-radius: 2.5px; background: var(--muted, #888); }
+  .game-side.mini { max-height: calc(36px + env(safe-area-inset-bottom)) !important; overflow: hidden !important; }
+  .game-side.mini > :not(.drawer-handle) { display: none !important; }
+  .game-side.moving { max-height: 34vh !important; }
+  .game-side.moving .panel { max-height: calc(34vh - 36px) !important; }
   .game-side.tucked {
     transform: translateY(105%) !important;
     opacity: 0 !important;

@@ -1196,7 +1196,7 @@ function BoardImpl(props: BoardProps) {
             if (!o) return null;
             return (
               <g key={oid}>
-                <circle cx={o.x} cy={o.y} r={3.2} fill="none" stroke="#f5d48a" strokeWidth={0.22} className="goal-ring" />
+                <polygon points={(s.terrain.find((t) => t.id === o.terrainId)?.poly ?? []).map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="#f5d48a" strokeWidth={0.22} strokeLinejoin="round" className="goal-ring" />
                 <g transform={`translate(${o.x} ${o.y + 4.1})`}>
                   <rect x={-3.6} y={-0.48} width={7.2} height={0.95} rx={0.45} fill="rgba(60,40,0,0.9)" stroke="#f5d48a" strokeWidth={0.06} />
                   <text y={0.2} fontSize={0.55} textAnchor="middle" fill="#f5d48a" fontWeight={800}>{g.name.length > 24 ? g.name.slice(0, 23) + '…' : g.name}</text>
@@ -1234,44 +1234,23 @@ function BoardImpl(props: BoardProps) {
         return (
           <g key={o.id} pointerEvents="none">
             {/* Territory / Detachment Aura Circles */}
-            {effects.map((eff) => (
+            {/* the objective's footprint: tinted in the controller's colour with a solid outline */}
+            <polygon points={t.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill={ctrl === null ? 'rgba(245,184,61,0.22)' : COLORS[ctrl]} fillOpacity={ctrl === null ? 1 : 0.28} stroke="rgba(0,0,0,0.75)" strokeWidth={0.5} strokeLinejoin="round" />
+            <polygon points={t.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.28} strokeLinejoin="round" />
+
+            {effects.map((eff) => eff.radius <= 3 ? (
+              // an effect on the objective itself (Secured, Blighted, Vowed …): drawn on its footprint
+              <polygon key={eff.id} points={t.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke={eff.color} strokeWidth={0.2} strokeDasharray="0.6 0.3" strokeLinejoin="round" opacity={0.9} />
+            ) : (
               <g key={eff.id}>
-                <circle
-                  cx={o.x}
-                  cy={o.y}
-                  r={eff.radius}
-                  fill={eff.fill}
-                  stroke={eff.color}
-                  strokeWidth={0.14}
-                  strokeDasharray="0.6 0.3"
-                  opacity={0.88}
-                />
-                <circle
-                  cx={o.x}
-                  cy={o.y}
-                  r={eff.radius - 0.28}
-                  fill="none"
-                  stroke={eff.color}
-                  strokeWidth={0.06}
-                  opacity={0.45}
-                />
-                <text
-                  x={o.x + eff.radius - 0.25}
-                  y={o.y - 0.2}
-                  fontSize={0.42}
-                  fill={eff.color}
-                  fontWeight={800}
-                  textAnchor="end"
-                  stroke="#000"
-                  strokeWidth={0.08}
-                  paintOrder="stroke"
-                >
+                <circle cx={o.x} cy={o.y} r={eff.radius} fill={eff.fill} stroke={eff.color} strokeWidth={0.14} strokeDasharray="0.6 0.3" opacity={0.88} />
+                <circle cx={o.x} cy={o.y} r={eff.radius - 0.28} fill="none" stroke={eff.color} strokeWidth={0.06} opacity={0.45} />
+                <text x={o.x + eff.radius - 0.25} y={o.y - 0.2} fontSize={0.42} fill={eff.color} fontWeight={800} textAnchor="end" stroke="#000" strokeWidth={0.08} paintOrder="stroke">
                   {eff.radius}"
                 </text>
               </g>
             ))}
 
-            <polygon points={t.poly.map((p) => `${p.x},${p.y}`).join(' ')} fill={ctrl === null ? 'rgba(245,184,61,0.08)' : SOFT[ctrl]} stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.16} strokeDasharray="0.6 0.25" />
 
             {/* In-Progress Animated Dashed Halo */}
             {isInProgress && (
