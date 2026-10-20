@@ -474,6 +474,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [orderTargetId, setOrderTargetId] = useState<string | null>(null);
   const [mode, setModeRaw] = useState<Mode | null>(null);
   const [draft, setDraft] = useState<Paths | null>(null);
+  const [drawerMin, setDrawerMin] = useState(false); // phone: the bottom sheet folded down to its handle
   // the joystick's loop outlives a render: it settles the latest draft when let go
   const draftRef = useRef<Paths | null>(null);
   draftRef.current = draft;
@@ -3009,8 +3010,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </button>
         )}
       </div>
-      <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''}`}>
-        {commanderP !== null && (
+      <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''} ${drawerMin ? 'mini' : ''} ${mode ? 'moving' : ''}`}>
+        <button className="drawer-handle" aria-label={drawerMin ? 'Show the panel' : 'Fold the panel down'} aria-expanded={!drawerMin} onClick={() => setDrawerMin((v) => !v)}>
+          <span className="drawer-grip" aria-hidden="true" />
+        </button>
+        {commanderP !== null && !mode && (
           <Commander quiet={actingBot === null && !thinking && !(says && Date.now() - says.k < 6000)} s={s} p={commanderP} says={says && says.p === commanderP ? says.text : null}
             think={thinking && actingBot === commanderP ? think ?? { values: {}, done: 0, total: 0 } : null}
             planning={!actingBot && ponderProg ? ponderProg : null} />
