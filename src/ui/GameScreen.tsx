@@ -73,7 +73,6 @@ import { AdvantageBar, Commander, RoundSummary, SideScore, tally, type RoundTall
 import { play, setSoundOn, soundOn } from './sfx';
 import { line, type VoiceEvent } from './voice';
 import { getPlayerFactionTheme } from './factionColors';
-import { UnitActionBar } from './UnitActionBar';
 import { bestDeathstrikeSpot, canDesignateDeathstrike, canFireDeathstrike, designateDeathstrikeTarget, fireDeathstrikeWarhead, hasDeathstrikeMissile } from '../factions/deathstrike';
 
 type FxLevel = 'full' | 'short' | 'off';
@@ -524,31 +523,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return [...map.values()];
   };
 
-  const getReadyUnitsForPhase = (): UnitState[] => {
-    if (s.phase === 'movement') {
-      return boardUnits(s, s.active).filter((u) => !u.move);
-    }
-    if (s.phase === 'shooting') {
-      return boardUnits(s, s.active).filter((u) => !u.selectedToShoot && (shootingModes(s, u).length > 0 || hasDeathstrikeMissile(u)));
-    }
-    if (s.phase === 'charge') {
-      return boardUnits(s, s.active).filter((u) => !u.declaredCharge && eligibleChargeUnits.has(u.id));
-    }
-    if (s.phase === 'fight') {
-      return fc?.units ?? [];
-    }
-    return [];
-  };
-
-  const cycleNextReadyUnit = () => {
-    const ready = getReadyUnitsForPhase();
-    if (!ready.length) return;
-    const curIdx = sel ? ready.findIndex((u) => u.id === sel) : -1;
-    const nextU = ready[(curIdx + 1) % ready.length];
-    setSel(nextU.id);
-    setFocusUnit(nextU.id);
-    flash(`Selected ${nextU.name}`);
-  };
 
   const setMode = (m: Mode | null, d: Paths | null = null) => { setModeRaw(m); setDraft(d); setCheck(null); joyOff.current = { x: 0, y: 0 }; };
   // moving without a finger over the models: the joystick walks the unit (how far it has gone from where it stood)
@@ -559,24 +533,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   useEffect(() => { if (s.reinforcementAlert || s.titanAlert) play('bad'); }, [s.reinforcementAlert, s.titanAlert]);
   /** The phase's way out: what is left undone shows under it, and ending with nothing done asks once more. */
   const endButton = (key: string, label: string, idle: boolean, why: string, note?: string) => {
-    const readyCount = getReadyUnitsForPhase().length;
     return (
       <div className="sticky-act">
-        <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
-          {!selUnit && readyCount > 0 && (
-            <button
-              type="button"
-              className="ready-next-btn"
-              onClick={cycleNextReadyUnit}
-              title="Focus camera and select next unit that can act"
-            >
-              <Icon name="search" size={15} /> Next Ready ({readyCount}) 🔍
-            </button>
-          )}
-          <button
-            className={`btn primary big wide end-btn ${armed === key ? 'armed' : ''}`}
-            style={{ flex: 1 }}
-            onClick={() => {
+        <button
+          className={`btn primary big wide end-btn ${armed === key ? 'armed' : ''}`}
+          onClick={() => {
               if (idle && armed !== key) { setArmed(key); flash(`${why} — tap again to confirm`); return; }
               setArmed(null);
               play('turn');
@@ -593,7 +554,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <span className="end-l">{armed === key ? `Confirm ${label}?` : label} <Icon name="next" /></span>
             {note && armed !== key && <span className="end-note">{note}</span>}
           </button>
-        </div>
       </div>
     );
   };
@@ -2562,55 +2522,46 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   <Icon name="shoot" /> Shoot
                 </button>
               )}
+              {hasDeathstrikeMissile(u) && (
+                <button
+                  type="button"
+                  className="btn primary"
+                  disabled={!canFireDeathstrike(s, u)}
+                  style={{
+                    background: canFireDeathstrike(s, u) ? 'linear-gradient(180deg, #ea580c 0%, #c2410c 100%)' : undefined,
+                    borderColor: canFireDeathstrike(s, u) ? '#f97316' : undefined,
+                    color: '#fff',
+                    fontWeight: 800,
+                  }}
+                  onClick={() => {
+                    act((g) => fireDeathstrikeWarhead(g, unitById(g, u.id)));
+                    play('plasma');
+                    flash('Deathstrike Warhead launched!');
+                  }}
+                >
+                  <Icon name="shoot" /> Launch Warhead
+                </button>
+              )}
+              {hasDeathstrikeMissile(u) && (
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={!canDesignateDeathstrike(s, u)}
+                  onClick={() => {
+                    setMode({ k: 'deathstrike-target', unitId: u.id });
+                    flash('Tap battlefield to place Deathstrike target marker (6" radius)');
+                  }}
+                >
+                  <Icon name="objective" /> {u.dsMarker ? 'Relocate Marker' : 'Designate Target'}
+                </button>
+              )}
               {modes.length === 0 && !hasDeathstrikeMissile(u) && <span className="muted small">{u.selectedToShoot ? 'Already shot' : u.move === 'fallback' ? 'Fell Back: cannot shoot' : u.move === 'advance' ? 'Advanced (no Assault weapons)' : 'Cannot shoot'}</span>}
               {canExplode && <button className="btn small" onClick={() => setMode({ k: 'explosives', unitId: u.id, target: null })}>Explosives 1CP</button>}
               {u.weaponsFired.length > 0 && !u.selectedToShoot && <button className="btn small ghost" onClick={() => act((g) => endUnitShooting(unitById(g, u.id)))}>Done shooting with this unit</button>}
             </div>
-            {hasDeathstrikeMissile(u) && (
-              <div style={{ marginTop: 8, marginBottom: 8, padding: '8px 10px', background: 'rgba(234, 88, 12, 0.12)', border: '1px solid rgba(234, 88, 12, 0.4)', borderRadius: 6 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <span style={{ fontWeight: 800, color: '#fed7aa', fontSize: '13px' }}>🎯 Deathstrike Missile System</span>
-                  {u.dsMarker ? (
-                    <span style={{ background: 'rgba(234, 88, 12, 0.25)', border: '1px solid #f97316', color: '#fed7aa', padding: '1px 6px', borderRadius: 4, fontSize: '11px', fontWeight: 700 }}>
-                      Target: ({u.dsMarker.x.toFixed(1)}", {u.dsMarker.y.toFixed(1)}")
-                    </span>
-                  ) : (
-                    <span style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#fca5a5', padding: '1px 6px', borderRadius: 4, fontSize: '11px', fontWeight: 700 }}>
-                      No Target Marker
-                    </span>
-                  )}
-                </div>
-                <div className="row wrap" style={{ gap: 6 }}>
-                  <button
-                    type="button"
-                    className="btn small"
-                    disabled={!canDesignateDeathstrike(s, u)}
-                    onClick={() => {
-                      setMode({ k: 'deathstrike-target', unitId: u.id });
-                      flash('Tap battlefield to place Deathstrike target marker (6" radius)');
-                    }}
-                  >
-                    <Icon name="objective" size={14} /> {u.dsMarker ? 'Adjust Target Marker' : 'Place Target Marker'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn small primary"
-                    disabled={!canFireDeathstrike(s, u)}
-                    style={{
-                      background: canFireDeathstrike(s, u) ? 'linear-gradient(180deg, #ea580c 0%, #c2410c 100%)' : undefined,
-                      borderColor: canFireDeathstrike(s, u) ? '#f97316' : undefined,
-                      color: '#fff',
-                      fontWeight: 800,
-                    }}
-                    onClick={() => {
-                      act((g) => fireDeathstrikeWarhead(g, unitById(g, u.id)));
-                      play('plasma');
-                      flash(`Deathstrike Warhead launched!`);
-                    }}
-                  >
-                    <Icon name="shoot" size={14} /> Fire Deathstrike Missile (Plasma Warhead)
-                  </button>
-                </div>
+            {hasDeathstrikeMissile(u) && u.dsMarker && (
+              <div className="tiny muted" style={{ margin: '4px 0 6px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="objective" size={13} /> Target Marker: ({u.dsMarker.x.toFixed(1)}", {u.dsMarker.y.toFixed(1)}") · 6" Blast Zone
               </div>
             )}
             {unitCard(u)}
@@ -2904,21 +2855,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <>
         {cands.player !== null && <div className="handoff">{pName(s, cands.player)} selects a unit to fight{cands.units.some((u) => u.chargedTurn === s.turn || u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn) ? ' (Fights First units first)' : ''}</div>}
         {!selUnit && <div className="hint"><span>Tap an engaged friendly unit on the map to fight</span></div>}
-        {!selUnit && cands.units.length > 0 && (
-          <div className="sticky-act">
-            <button
-              type="button"
-              className="ready-next-btn big wide"
-              onClick={() => {
-                const nextU = cands.units[0];
-                pick(nextU);
-                setFocusUnit(nextU.id);
-              }}
-            >
-              <Icon name="search" size={16} /> Select Next Eligible Fighter ({cands.units.length} ready) 🔍
-            </button>
-          </div>
-        )}
         {selUnit && cands.units.includes(selUnit) && unitCard(selUnit)}
         {overrunReady && (
           <div className="row">
@@ -3328,6 +3264,19 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 setCheck(chk.ok ? null : chk);
               } else { setDraft(d); setCheck(null); }
             }}
+            onMoveDeathstrikeMarker={(unitId, pt) => {
+              act((g) => {
+                const gu = unitById(g, unitId);
+                designateDeathstrikeTarget(g, gu, pt);
+              });
+              flash(`Deathstrike marker moved to (${pt.x.toFixed(1)}, ${pt.y.toFixed(1)})`);
+            }}
+            onTapDeathstrikeMarker={(unitId) => {
+              setSel(unitId);
+              setFocusUnit(unitId);
+              setMode({ k: 'deathstrike-target', unitId });
+              flash('Deathstrike target marker selected — drag marker or tap board to relocate');
+            }}
             onDragEnd={onDragEnd}
             plan={planArrows}
             side={sideCards}
@@ -3359,63 +3308,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <button className={`plan-toggle ${showPlan ? 'on' : ''}`} aria-pressed={showPlan} onClick={() => setShowPlan((v) => !v)}>
             <Icon name="bot" size={16} /> {showPlan ? 'Hide enemy plan' : 'Enemy plan'}
           </button>
-        )}
-        {/* Floating Contextual Unit Action Bar (Grimdark Mobile) */}
-        {selUnit && onBoard(selUnit) && !mode && (
-          <div className="floating-unit-dock">
-            <UnitActionBar
-              s={s}
-              unit={selUnit}
-              isCurrentPlayer={selUnit.owner === s.active && !bots.includes(s.active)}
-              canUndoMove={canUndo}
-              onUndoMove={() => { undo(); setMode(null); }}
-              onMove={(kind) => {
-                const ok = act((g) => {
-                  const gu = unitById(g, selUnit.id);
-                  if (!beginMove(g, gu, kind)) return false;
-                  if (kind === 'advance') rollAdvance(g, gu);
-                  return true;
-                });
-                if (!ok) { flash(`${selUnit.name} must Remain Stationary`); setSel(null); return; }
-                setMode({ k: 'move', unitId: selUnit.id, kind, fly: false }, startPaths(selUnit));
-              }}
-              onHold={() => {
-                act((g) => remainStationary(g, unitById(g, selUnit.id)));
-                setSel(null);
-              }}
-              onShoot={() => {
-                const smodes = shootingModes(s, selUnit);
-                if (smodes.length > 0) {
-                  act((g) => autoSelectToShoot(g, unitById(g, selUnit.id)));
-                  setMode({ k: 'shoot', unitId: selUnit.id, smode: smodes[0], target: null, useCQ: false, profile: {} });
-                }
-              }}
-              onCharge={() => {
-                act((g) => autoDeclareCharge(g, unitById(g, selUnit.id), false));
-                setMode({ k: 'charge', unitId: selUnit.id, targets: [] }, startPaths(selUnit));
-              }}
-              onFight={() => {
-                setMode({ k: 'fight', unitId: selUnit.id, target: null, epic: false });
-              }}
-              onRotate={(deg) => {
-                const res = act((g) => rotateUnit(g, selUnit.id, (deg * Math.PI) / 180));
-                if (res?.reason) flash(res.reason);
-              }}
-              onDeathstrikeDesignate={() => {
-                setMode({ k: 'deathstrike-target', unitId: selUnit.id });
-                flash('Tap battlefield to place Deathstrike target marker (6" radius)');
-              }}
-              onDeathstrikeFire={() => {
-                act((g) => fireDeathstrikeWarhead(g, unitById(g, selUnit.id)));
-                play('plasma');
-                flash(`Deathstrike Warhead launched!`);
-              }}
-              onOpenSheet={() => setSheet(selUnit.id)}
-              onOpenStrats={() => openStrats(selUnit.owner)}
-              onToggleTape={() => setTape((tp) => ({ on: !tp.on }))}
-              onClose={() => setSel(null)}
-            />
-          </div>
         )}
       </div>
       <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''} ${drawerMin ? 'mini' : ''} ${mode ? 'moving' : ''}`}>

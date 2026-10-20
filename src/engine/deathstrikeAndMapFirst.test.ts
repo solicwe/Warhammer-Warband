@@ -228,5 +228,25 @@ describe('Deathstrike Ground Targeting System & Bot AI', () => {
     expect(intGroup).toBeDefined();
     expect(intGroup!.count).toBe(1);
   });
+
+  it('verifies real AM Deathstrike from AM.json hasDeathstrikeMissile', async () => {
+    const fs = await import('node:fs');
+    const { buildUnits } = await import('./army');
+    const AM = JSON.parse(fs.readFileSync('public/data/factions/AM.json', 'utf8'));
+    const list = {
+      name: 'AM Deathstrike Test',
+      factionId: 'AM',
+      battleSize: 'incursion' as const,
+      detachments: ['Combined Regiment'],
+      units: [{ uid: 'ds1', datasheet: 'Deathstrike', models: 1, pts: 145 }],
+    };
+    const units = buildUnits(list, AM, 0);
+    const ds = units[0];
+    console.log('DS NAME:', ds.name);
+    console.log('DS ABILITIES:', ds.abilities.map((a) => a.name));
+    console.log('DS WEAPONS:', ds.models[0].weapons.map((w) => w.name));
+    console.log('DS HAS MISSILE:', hasDeathstrikeMissile(ds));
+    expect(hasDeathstrikeMissile(ds)).toBe(true);
+  });
 });
 

@@ -71,6 +71,8 @@ export interface BoardProps {
   side?: { p: PlayerId; at: 'left' | 'right' | 'top' | 'bottom'; cards: React.ReactNode[] }[];
   /** quick floating contextual action menu above selected unit */
   quickActions?: { unitId: string; actions: { label: string; icon?: string; primary?: boolean; onClick: () => void }[] };
+  onMoveDeathstrikeMarker?: (unitId: string, pt: Pt) => void;
+  onTapDeathstrikeMarker?: (unitId: string) => void;
 }
 
 /** Width of the table beside the battlefield that holds the side cards, in inches; card text is laid out at PX px per inch. */
@@ -590,6 +592,16 @@ function BoardImpl(props: BoardProps) {
     drag.current = { pointerId: e.pointerId, start: toBoard(e.clientX, e.clientY), models, base, moved: false, unitId, modelId };
   };
 
+  const dsDrag = useRef<{ pointerId: number; unitId: string; pos: Pt; moved: boolean } | null>(null);
+  const [liveMarkerPos, setLiveMarkerPos] = useState<{ unitId: string; pt: Pt } | null>(null);
+
+  const startDsMarkerDrag = (e: React.PointerEvent, unitId: string, currentPt: Pt) => {
+    e.stopPropagation();
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try { (e.target as Element).setPointerCapture?.(e.pointerId); } catch {}
+    dsDrag.current = { pointerId: e.pointerId, unitId, pos: currentPt, moved: false };
+  };
+
   const onPointerDown = (e: React.PointerEvent) => {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 2) {
@@ -604,8 +616,8 @@ function BoardImpl(props: BoardProps) {
 
   const moveRaf = useRef(0);
   const pendingPointer = useRef<{ pointerId: number; clientX: number; clientY: number } | null>(null);
-  const propsRef = useRef({ draft, onDraft, walk, maxFor, toBoard, zoomAt });
-  propsRef.current = { draft, onDraft, walk, maxFor, toBoard, zoomAt };
+  const propsRef = useRef({ draft, onDraft, walk, maxFor, toBoard, zoomAt, onMoveDeathstrikeMarker: props.onMoveDeathstrikeMarker, onTapDeathstrikeMarker: props.onTapDeathstrikeMarker });
+  propsRef.current = { draft, onDraft, walk, maxFor, toBoard, zoomAt, onMoveDeathstrikeMarker: props.onMoveDeathstrikeMarker, onTapDeathstrikeMarker: props.onTapDeathstrikeMarker };
 
   useEffect(() => {
     return () => {
@@ -670,6 +682,14 @@ function BoardImpl(props: BoardProps) {
       curOnDraft(next);
       return;
     }
+    const dsd = dsDrag.current;
+    if (dsd && dsd.pointerId === pointerId) {
+      const p = propsRef.current.toBoard(clientX, clientY);
+      dsd.moved = true;
+      dsd.pos = p;
+      setLiveMarkerPos({ unitId: dsd.unitId, pt: p });
+      return;
+    }
     const pn = pan.current;
     if (pn && pn.id === pointerId) {
       const dx = clientX - pn.sx, dy = clientY - pn.sy;
@@ -701,6 +721,17 @@ function BoardImpl(props: BoardProps) {
     }
     pointers.current.delete(e.pointerId);
     if (pointers.current.size < 2) pinch.current = null;
+    const dsd = dsDrag.current;
+    if (dsd && dsd.pointerId === e.pointerId) {
+      dsDrag.current = null;
+      setLiveMarkerPos(null);
+      if (dsd.moved) {
+        propsRef.current.onMoveDeathstrikeMarker?.(dsd.unitId, dsd.pos);
+      } else {
+        propsRef.current.onTapDeathstrikeMarker?.(dsd.unitId);
+      }
+      return;
+    }
     const dg = drag.current;
     if (dg && dg.pointerId === e.pointerId) {
       drag.current = null;
@@ -1374,28 +1405,41 @@ function BoardImpl(props: BoardProps) {
           <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>T</text>
         </g>
       )))}
-      {s.units.filter((u) => u.dsMarker && u.status === 'board').map((u) => (
-        <g key={`ds-${u.id}`} transform={`translate(${u.dsMarker!.x} ${u.dsMarker!.y})`} pointerEvents="none">
-          {/* 6" Blast Zone area with glowing fiery radial overlay */}
-          <circle r={6} fill="rgba(234, 88, 12, 0.2)" stroke="#ea580c" strokeWidth={0.16} strokeDasharray="0.8 0.4" />
-          <circle r={5.9} fill="none" stroke="#f97316" strokeWidth={0.06} opacity={0.6} />
-          {/* Crosshair lines extending across the 6" circle */}
-          <line x1={-6} y1={0} x2={6} y2={0} stroke="#ea580c" strokeWidth={0.08} strokeDasharray="0.5 0.5" opacity={0.7} />
-          <line x1={0} y1={-6} x2={0} y2={6} stroke="#ea580c" strokeWidth={0.08} strokeDasharray="0.5 0.5" opacity={0.7} />
-          {/* Concentric targeting beacon rings */}
-          <circle r={2} fill="none" stroke="#fdba74" strokeWidth={0.08} strokeDasharray="0.4 0.3" opacity={0.6} />
-          <circle r={1.0} fill="rgba(15, 23, 42, 0.9)" stroke="#f97316" strokeWidth={0.16} />
-          <circle r={0.3} fill="#ef4444" />
-          <text y={0.32} fontSize={0.65} textAnchor="middle" fill="#fdba74" fontWeight={900}>🎯</text>
-          {/* Badge Label */}
-          <g transform="translate(0, -6.4)">
-            <rect x={-3.2} y={-0.45} width={6.4} height={0.9} rx={0.3} fill="rgba(12, 14, 18, 0.92)" stroke="#ea580c" strokeWidth={0.1} />
-            <text y={0.18} fontSize={0.42} textAnchor="middle" fill="#ffedd5" fontWeight={800} letterSpacing="0.03em">
-              DEATHSTRIKE TARGET (6" BLAST)
-            </text>
+      {s.units.filter((u) => u.dsMarker && u.status === 'board').map((u) => {
+        const markerPt = (liveMarkerPos?.unitId === u.id ? liveMarkerPos.pt : u.dsMarker)!;
+        return (
+          <g
+            key={`ds-${u.id}`}
+            transform={`translate(${markerPt.x} ${markerPt.y})`}
+            pointerEvents="auto"
+            style={{ cursor: 'grab' }}
+            onPointerDown={(e) => startDsMarkerDrag(e, u.id, markerPt)}
+          >
+            {/* 6" Blast Zone area with glowing fiery radial overlay */}
+            <circle r={6} fill="rgba(234, 88, 12, 0.2)" stroke="#ea580c" strokeWidth={0.16} strokeDasharray="0.8 0.4" />
+            <circle r={5.9} fill="none" stroke="#f97316" strokeWidth={0.06} opacity={0.6} />
+            {/* Crosshair lines extending across the 6" circle */}
+            <line x1={-6} y1={0} x2={6} y2={0} stroke="#ea580c" strokeWidth={0.08} strokeDasharray="0.5 0.5" opacity={0.7} />
+            <line x1={0} y1={-6} x2={0} y2={6} stroke="#ea580c" strokeWidth={0.08} strokeDasharray="0.5 0.5" opacity={0.7} />
+            {/* Concentric targeting beacon rings */}
+            <circle r={2} fill="none" stroke="#fdba74" strokeWidth={0.08} strokeDasharray="0.4 0.3" opacity={0.6} />
+            <circle r={1.0} fill="rgba(15, 23, 42, 0.9)" stroke="#f97316" strokeWidth={0.16} />
+            <circle r={0.3} fill="#ef4444" />
+            {/* Central Target Reticle */}
+            <circle r={0.45} fill="#ea580c" stroke="#fed7aa" strokeWidth={0.07} />
+            <line x1={-0.35} y1={0} x2={0.35} y2={0} stroke="#fff" strokeWidth={0.07} />
+            <line x1={0} y1={-0.35} x2={0.35} y2={0.35} stroke="#fff" strokeWidth={0.07} />
+            <circle r={0.14} fill="#fff" />
+            {/* Badge Label */}
+            <g transform="translate(0, -6.4)">
+              <rect x={-3.2} y={-0.45} width={6.4} height={0.9} rx={0.3} fill="rgba(12, 14, 18, 0.92)" stroke="#ea580c" strokeWidth={0.1} />
+              <text y={0.18} fontSize={0.42} textAnchor="middle" fill="#ffedd5" fontWeight={800} letterSpacing="0.03em">
+                DEATHSTRIKE TARGET (6" BLAST)
+              </text>
+            </g>
           </g>
-        </g>
-      ))}
+        );
+      })}
       {s.pendingActions.map((a) => {
         const u = s.units.find((x) => x.id === a.unitId);
         const ms = u ? alive(u) : [];
