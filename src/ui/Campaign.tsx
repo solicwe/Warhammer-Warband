@@ -807,16 +807,13 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               {rosterTab === 'roster' && (() => {
                 const unitPanel = (u: ArmyUnitEntry) => {
                   const sheet = fac.datasheets.find((x) => x.name === u.datasheet);
-                  const sizeOpts = sheet ? pointsOptions(sheet) : [];
-                  const canResize = sizeOpts.length > 1;
                   const enhOpts = fac ? enhancementOptions(run.list, fac, u) : [];
                   const canTakeEnh = enhOpts.length > 0 || Boolean(u.enhancement);
 
                   const isSheetOpen = isSectionOpen(u.uid, 'sheet', false);
-                  const isHonorsOpen = isSectionOpen(u.uid, 'honors', true);
+                  const isHonorsOpen = isSectionOpen(u.uid, 'honors', false);
                   const isWargearOpen = isSectionOpen(u.uid, 'wargear', true);
                   const isEnhOpen = isSectionOpen(u.uid, 'enh', false);
-                  const isSizeOpen = isSectionOpen(u.uid, 'size', false);
 
                   return (
                     <div className="ab-inline" key={`panel-${u.uid}`}>
@@ -837,7 +834,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                         {/* 2. Battle Honors */}
                         <div className="ab-collapsible-section field">
-                          <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'honors', true)}>
+                          <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'honors', false)}>
                             <span className="row gap-2" style={{ alignItems: 'center' }}>
                               <Icon name={isHonorsOpen ? 'down' : 'next'} size={16} />
                               <Icon name="shop" size={15} />
@@ -847,7 +844,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             <span className="tiny muted">{isHonorsOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
                           </button>
                           {isHonorsOpen && (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 8, marginTop: 8 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 8, marginTop: 8 }}>
                               {BATTLE_HONORS.map((h) => {
                                 const has = (u.honors ?? []).includes(h.id);
                                 const canAfford = (run.scrap ?? 0) >= h.cost;
@@ -855,31 +852,47 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   <div
                                     key={h.id}
                                     style={{
-                                      padding: 10,
+                                      padding: '10px 12px',
                                       borderRadius: 8,
-                                      background: 'rgba(255,255,255,0.04)',
-                                      border: '1px solid rgba(255,255,255,0.1)',
+                                      background: has ? 'rgba(34, 197, 94, 0.08)' : 'rgba(255,255,255,0.03)',
+                                      border: has ? '1.5px solid #22c55e' : '1px solid rgba(255,255,255,0.08)',
                                       display: 'flex',
                                       flexDirection: 'column',
                                       justifyContent: 'space-between',
+                                      gap: 8,
                                       opacity: !has && !canAfford ? 0.45 : 1,
-                                      filter: !has && !canAfford ? 'grayscale(0.75)' : 'none',
                                     }}
                                   >
                                     <div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <b style={{ color: '#f8fafc', fontSize: 13.5 }}>{h.name}</b>
-                                        <span className="cmp-scrap"><Icon name="shop" size={12} /> {h.cost}</span>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                                        <span style={{
+                                          fontFamily: 'var(--font-cond, sans-serif)',
+                                          fontWeight: 700,
+                                          fontSize: 12.5,
+                                          letterSpacing: '0.04em',
+                                          color: has ? '#4ade80' : '#f59e0b',
+                                          background: has ? 'rgba(34, 197, 94, 0.15)' : 'rgba(245, 158, 11, 0.12)',
+                                          padding: '2px 8px',
+                                          borderRadius: 4,
+                                        }}>
+                                          {h.tag || h.name}
+                                        </span>
+                                        <span className="cmp-scrap" style={{ fontSize: 12 }}>
+                                          <Icon name="shop" size={12} /> {h.cost}
+                                        </span>
                                       </div>
-                                      <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 4, lineHeight: 1.35 }}>{h.desc}</div>
+                                      <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 6, lineHeight: 1.35 }}>
+                                        {h.desc}
+                                      </div>
                                     </div>
                                     <button
-                                      className="btn small primary"
-                                      style={{ marginTop: 8 }}
+                                      type="button"
+                                      className={`btn small ${has ? 'ok' : canAfford ? 'primary' : ''}`}
+                                      style={{ width: '100%', marginTop: 2, fontWeight: 600, fontSize: 12 }}
                                       disabled={has || !canAfford}
                                       onClick={() => { setRun(buyHonorForUnit(run, u.uid, h.id)); play('good'); }}
                                     >
-                                      {has ? 'Equipped' : !canAfford ? 'Need Scrap' : `Purchase (${h.cost} Scrap)`}
+                                      {has ? <><Icon name="check" size={12} /> Active</> : !canAfford ? `Need ${h.cost} Scrap` : `Upgrade (${h.cost} Scrap)`}
                                     </button>
                                   </div>
                                 );
@@ -1039,67 +1052,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           </div>
                         )}
 
-                        {/* 5. Squad Size & Reinforce */}
-                        {canResize && (
-                          <div className="ab-collapsible-section field">
-                            <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'size', false)}>
-                              <span className="row gap-2" style={{ alignItems: 'center' }}>
-                                <Icon name={isSizeOpen ? 'down' : 'next'} size={16} />
-                                <Icon name="size" size={15} />
-                                <b>Squad Size & Reinforce</b>
-                                <span className="ab-badge-selected">{u.models} models</span>
-                              </span>
-                              <span className="tiny muted">{isSizeOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
-                            </button>
-                            {isSizeOpen && (
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8, marginTop: 8 }}>
-                                {sizeOpts.map((o) => {
-                                  const isCurrent = u.models === o.models;
-                                  const currentOpt = sizeOpts.find((x) => x.models === u.models) ?? { pts: u.pts };
-                                  const scrapDiff = o.pts - currentOpt.pts;
-                                  const canAfford = scrapDiff <= 0 || (run.scrap ?? 0) >= scrapDiff;
-                                  return (
-                                    <div
-                                      key={o.models}
-                                      style={{
-                                        padding: 10,
-                                        borderRadius: 8,
-                                        background: isCurrent ? 'rgba(56, 189, 248, 0.12)' : 'rgba(255,255,255,0.04)',
-                                        border: isCurrent ? '1.5px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        justifyContent: 'space-between',
-                                        gap: 8,
-                                      }}
-                                    >
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <b style={{ color: '#f8fafc', fontSize: 13.5 }}>{o.models} {o.models === 1 ? 'model' : 'models'}</b>
-                                        <span className="cmp-card-pts">{o.pts} pts</span>
-                                      </div>
-                                      {isCurrent ? (
-                                        <span className="chip ok small" style={{ width: 'fit-content' }}>
-                                          <Icon name="check" size={12} /> Current ({o.models})
-                                        </span>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          className="btn small primary"
-                                          disabled={!canAfford}
-                                          onClick={() => {
-                                            setRun(changeSquadSize(run, fac, u.uid, o.models));
-                                            play('good');
-                                          }}
-                                        >
-                                          {scrapDiff > 0 ? `Reinforce (-${scrapDiff} Scrap)` : `Reorganize to ${o.models}`}
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        )}
 
 
                         <button type="button" className="ab-moreinfo" onClick={() => setMenu(null)}>

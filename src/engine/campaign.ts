@@ -32,27 +32,43 @@ export type Reward =
 export interface BattleHonor {
   id: string;
   name: string;
+  tag: string;
   desc: string;
   cost: number;
   e: Effect;
 }
 
 export const BATTLE_HONORS: BattleHonor[] = [
-  { id: 'hardened', name: 'Hardened Armor', desc: '+1 Toughness characteristic.', cost: 60, e: { toughness: 1 } },
-  { id: 'weapon_master', name: 'Weapon Masters', desc: 'Improve Ballistic Skill and Weapon Skill by 1.', cost: 75, e: { skill: 1 } },
-  { id: 'swift', name: 'Swift Assault', desc: '+2" Move, and +1 to Advance and Charge rolls.', cost: 50, e: { move: 2, advanceBonus: 1, chargeBonus: 1 } },
-  { id: 'master_crafted', name: 'Master-crafted Weapons', desc: 'Improve the AP of all attacks by 1.', cost: 80, e: { ap: 1 } },
-  { id: 'iron_will', name: 'Iron Will', desc: 'Models have Feel No Pain 6+, and re-roll Battle-shock tests.', cost: 70, e: { defend: { fnp: 6 }, rerollShock: true } },
-  { id: 'lethal_spec', name: 'Deadly Marksmen', desc: 'Ranged attacks have [LETHAL HITS].', cost: 90, e: { abilities: ['lethal hits'], attack: 'ranged' } },
-  { id: 'sustained_fury', name: 'Savage Frenzy', desc: 'Melee attacks have [SUSTAINED HITS 1].', cost: 90, e: { abilities: ['sustained hits 1'], attack: 'melee' } },
-  { id: 'reinforced_save', name: 'Reinforced Carapace', desc: 'Add 1 to saving throws against all attacks.', cost: 85, e: { defend: { save: 1 } } },
-  { id: 'heroic_strike', name: 'Heroic Might', desc: '+1 Attack characteristic on melee weapons.', cost: 65, e: { attacks: 1, attack: 'melee' } },
-  { id: 'range_finders', name: 'Advanced Targeters', desc: 'Ranged weapons gain +4" range and ignore cover.', cost: 60, e: { rangeBonus: 4, abilities: ['ignores cover'], attack: 'ranged' } },
+  { id: 'hardened', name: '+1 Toughness', tag: '+1 TOUGHNESS', desc: '+1 Toughness characteristic.', cost: 60, e: { toughness: 1 } },
+  { id: 'weapon_master', name: '+1 BS / WS', tag: '+1 BS / WS', desc: 'Improve Ballistic Skill & Weapon Skill by 1.', cost: 75, e: { skill: 1 } },
+  { id: 'swift', name: '+2" Move · +1 Adv/Chg', tag: '+2" MOVE · +1 ADV/CHG', desc: '+2" Move, and +1 to Advance & Charge rolls.', cost: 50, e: { move: 2, advanceBonus: 1, chargeBonus: 1 } },
+  { id: 'master_crafted', name: '+1 AP', tag: '+1 AP', desc: 'Improve the AP of all attacks by 1.', cost: 80, e: { ap: 1 } },
+  { id: 'iron_will', name: 'FNP 6+ · Re-roll Shock', tag: 'FNP 6+ · RE-ROLL SHOCK', desc: 'Models have Feel No Pain 6+, and re-roll Battle-shock tests.', cost: 70, e: { defend: { fnp: 6 }, rerollShock: true } },
+  { id: 'lethal_spec', name: '[Lethal Hits] Ranged', tag: '[LETHAL HITS] RANGED', desc: 'Ranged attacks gain [LETHAL HITS].', cost: 90, e: { abilities: ['lethal hits'], attack: 'ranged' } },
+  { id: 'sustained_fury', name: '[Sustained Hits 1] Melee', tag: '[SUSTAINED HITS 1] MELEE', desc: 'Melee attacks gain [SUSTAINED HITS 1].', cost: 90, e: { abilities: ['sustained hits 1'], attack: 'melee' } },
+  { id: 'reinforced_save', name: '+1 Save', tag: '+1 SAVE', desc: 'Add 1 to saving throws against all attacks.', cost: 85, e: { defend: { save: 1 } } },
+  { id: 'heroic_strike', name: '+1 Attack (Melee)', tag: '+1 ATTACK (MELEE)', desc: '+1 Attack characteristic on melee weapons.', cost: 65, e: { attacks: 1, attack: 'melee' } },
+  { id: 'range_finders', name: '+4" Range · Ignores Cover', tag: '+4" RNG · IGNORES COVER', desc: 'Ranged weapons gain +4" range and ignore cover.', cost: 60, e: { rangeBonus: 4, abilities: ['ignores cover'], attack: 'ranged' } },
 ];
+
+const LEGACY_HONOR_ALIASES: Record<string, string> = {
+  'HARDENED ARMOR': 'hardened',
+  'WEAPON MASTERS': 'weapon_master',
+  'SWIFT ASSAULT': 'swift',
+  'MASTER-CRAFTED WEAPONS': 'master_crafted',
+  'IRON WILL': 'iron_will',
+  'DEADLY MARKSMEN': 'lethal_spec',
+  'SAVAGE FRENZY': 'sustained_fury',
+  'REINFORCED CARAPACE': 'reinforced_save',
+  'HEROIC MIGHT': 'heroic_strike',
+  'ADVANCED TARGETERS': 'range_finders',
+};
+
 export const battleHonorById = (id: unknown) => {
   const key = typeof id === 'string' ? id : (id && typeof id === 'object' ? String((id as any).id || (id as any).name || '') : String(id ?? ''));
   const upper = key.toUpperCase();
-  return BATTLE_HONORS.find((h) => h.id === key || h.id.toUpperCase() === upper || h.name.toUpperCase() === upper);
+  const aliasId = LEGACY_HONOR_ALIASES[upper];
+  return BATTLE_HONORS.find((h) => h.id === key || (aliasId && h.id === aliasId) || h.id.toUpperCase() === upper || h.name.toUpperCase() === upper || h.tag.toUpperCase() === upper);
 };
 
 export interface Run {
