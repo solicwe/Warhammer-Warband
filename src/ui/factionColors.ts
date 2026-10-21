@@ -379,8 +379,10 @@ const ALTERNATE_THEMES: Record<string, FactionTheme> = {
   },
 };
 
-export function getFactionTheme(factionId?: string, subfaction?: string, isAlternate?: boolean): FactionTheme {
-  const base = FACTION_THEMES[factionId ?? ''] ?? {
+export function getFactionTheme(factionId?: unknown, subfaction?: unknown, isAlternate?: boolean): FactionTheme {
+  const fId = typeof factionId === 'string' ? factionId : String((factionId as any)?.id || (factionId as any)?.name || '');
+  const subStr = typeof subfaction === 'string' ? subfaction : String((subfaction as any)?.name || (subfaction as any)?.id || '');
+  const base = FACTION_THEMES[fId] ?? {
     id: 'UNKNOWN',
     name: 'Warhammer 40k',
     primary: '#d99b26',
@@ -390,11 +392,11 @@ export function getFactionTheme(factionId?: string, subfaction?: string, isAlter
   };
 
   if (isAlternate) {
-    return ALTERNATE_THEMES[factionId ?? ''] ?? ALTERNATE_THEMES.defaultAlt;
+    return ALTERNATE_THEMES[fId] ?? ALTERNATE_THEMES.defaultAlt;
   }
 
-  if (subfaction && SUBFACTION_THEMES[subfaction.toUpperCase()]) {
-    return { ...base, ...SUBFACTION_THEMES[subfaction.toUpperCase()] };
+  if (subStr && SUBFACTION_THEMES[subStr.toUpperCase()]) {
+    return { ...base, ...SUBFACTION_THEMES[subStr.toUpperCase()] };
   }
 
   return base;

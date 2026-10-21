@@ -296,7 +296,16 @@ export function fullyVisible(s: GameState, a: ModelState, b: ModelState, denseOn
 }
 
 function shotRecently(s: GameState, u: UnitState) {
-  return u.shotTurn >= s.turn - 1;
+  // If unit has an unshot effect active (e.g. Space Marine Phobos Shadow Masters, Suppressed Weapons),
+  // those ranged attacks do not prevent it from being hidden.
+  if (u.shotTurn <= -99) return false;
+
+  return (
+    u.shotTurn >= s.turn - 1 ||
+    (u.weaponsFired && u.weaponsFired.length > 0) ||
+    Boolean(u.selectedToShoot) ||
+    Boolean((u as any).hasFiredThisTurn)
+  );
 }
 
 /** Hidden (13.09): INFANTRY/BEASTS/SWARM in a light/dense terrain area, no ranged attacks this or the previous turn. */
@@ -319,7 +328,7 @@ export function isInfantryBeastUnit(u: UnitState): boolean {
   if (typeof typeStr === 'string' && (typeStr.toLowerCase().includes('infantry') || typeStr.toLowerCase().includes('beast'))) {
     return true;
   }
-  const allKw = [...u.keywords, ...u.models.flatMap((m) => m.keywords)].map((k) => k.toUpperCase());
+  const allKw = [...u.keywords, ...u.models.flatMap((m) => m.keywords)].map((k) => (typeof k === 'string' ? k.toUpperCase() : String((k as any)?.name || (k as any)?.id || '').toUpperCase()));
   return allKw.includes('INFANTRY') || allKw.includes('BEAST') || allKw.includes('BEASTS') || allKw.includes('SWARM');
 }
 

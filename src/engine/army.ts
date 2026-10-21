@@ -80,7 +80,17 @@ export function parseTransport(text?: string): TransportInfo | null {
   };
 }
 
-const normKw = (x: string) => x.toUpperCase().replace(/[’`]/g, "'").replace(/[^A-Z0-9' ]+/g, ' ').replace(/S\b/g, '').replace(/\s+/g, ' ').trim();
+export const safeUpper = (val: unknown): string => {
+  if (typeof val === 'string') return val.toUpperCase();
+  if (val && typeof val === 'object') {
+    const o = val as { name?: unknown; id?: unknown; keyword?: unknown; title?: unknown; value?: unknown };
+    const str = o.name || o.id || o.keyword || o.title || o.value || '';
+    return typeof str === 'string' ? str.toUpperCase() : String(str).toUpperCase();
+  }
+  return String(val ?? '').toUpperCase();
+};
+
+const normKw = (x: unknown) => safeUpper(x).replace(/[’`]/g, "'").replace(/[^A-Z0-9' ]+/g, ' ').replace(/S\b/g, '').replace(/\s+/g, ' ').trim();
 
 /** Does a model with these keywords (its own, its faction's and its datasheet name) match a phrase from a transport
  *  rule, e.g. "JUMP PACK", "TACTICUS CHARACTER", "ADEPTUS ASTARTES INFANTRY", "GHAZGHKULL THRAKA"? */
@@ -1159,7 +1169,7 @@ export function enhancementFits(text: string, keywords: string[]): { ok: boolean
     return [parts[0], ...parts.slice(1).flatMap((x) => (prefix ? [`${prefix} ${x.trim()}`, x.trim()] : [x.trim()]))];
   });
   // "ADEPTUS ASTARTES INFANTRY" is two keywords together: every word has to be among the unit's keyword words
-  const words = new Set(keywords.flatMap((k) => k.toUpperCase().split(/\s+/)));
+  const words = new Set(keywords.flatMap((k) => safeUpper(k).split(/\s+/)));
   const has = (n: string) => n.trim().split(/\s+/).every((w) => words.has(w));
   if (m[2] && m[2].split('/').some(has)) return { ok: false, need: `${alts.join(' / ')} (excluding ${m[2]})` };
   return { ok: alts.some(has), need: alts.join(' / ') };

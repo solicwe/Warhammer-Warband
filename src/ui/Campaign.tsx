@@ -131,7 +131,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     if (!run || !fac || !node.enemy) return;
     setBusy(true); setErr(null);
     try {
-      let ef = await loadFaction(node.enemy.factionId).catch(() => null);
+      const enemyFactionId = typeof node.enemy.factionId === 'string' ? node.enemy.factionId : String((node.enemy.factionId as any)?.id || (node.enemy.factionId as any)?.name || 'ORK');
+      let ef = await loadFaction(enemyFactionId).catch(() => null);
       if (!ef || !playable(ef)) ef = await loadFaction('ORK');
       const enemyList = autoList(ef, node.enemy.pts, node.enemy.seed);
       const r = run.fighting === node.id ? run : enter(run, node.id, fac);
@@ -145,7 +146,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       s.botPlayer = 1;
       s.bots = [1];
       s.botLevel = node.enemy.level;
-      applyCampaign(s, r, node.enemy.rules);
+      applyCampaign(s, r, node.enemy.rules || []);
       setRun(r);
       onPlay(withAutoRules(s));
     } catch (e) { setErr(`Could not start the battle: ${e instanceof Error ? e.message : String(e)}`); } finally { setBusy(false); }
@@ -732,7 +733,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   <span className="cmp-emblem"><Emblem factionId={focused.enemy.factionId} /></span>
                   <span className="cmp-army-text"><b>{nameOf(focused.enemy.factionId)}</b><span className="muted small"><span className="num">{focused.enemy.pts}</span> pts · bot {LEVEL[focused.enemy.level]} · 3 rounds</span></span>
                 </div>
-                {focused.enemy.rules.map((id) => { const b = bossRuleById(id)!; return <div key={id} className="cmp-rule"><RelicToken id={id} enemy /> <span><b>{b.name}</b> — {b.text}</span></div>; })}
+                {focused.enemy.rules.map((rawRule, idx) => { const b = bossRuleById(rawRule); if (!b) return null; return <div key={b.id || idx} className="cmp-rule"><RelicToken id={b.id} enemy /> <span><b>{b.name}</b> — {b.text}</span></div>; })}
               </>
             ) : <div className="small">{KIND[focused.kind].note}</div>}
 
@@ -806,19 +807,16 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               {rosterTab === 'roster' && (() => {
                 const unitPanel = (u: ArmyUnitEntry) => {
                   const sheet = fac.datasheets.find((x) => x.name === u.datasheet);
-                  const canLead = Boolean(sheet?.leads && sheet.leads.length > 0);
                   const sizeOpts = sheet ? pointsOptions(sheet) : [];
                   const canResize = sizeOpts.length > 1;
                   const enhOpts = fac ? enhancementOptions(run.list, fac, u) : [];
                   const canTakeEnh = enhOpts.length > 0 || Boolean(u.enhancement);
-                  const attachedSquad = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined;
 
                   const isSheetOpen = isSectionOpen(u.uid, 'sheet', false);
                   const isHonorsOpen = isSectionOpen(u.uid, 'honors', true);
                   const isWargearOpen = isSectionOpen(u.uid, 'wargear', true);
                   const isEnhOpen = isSectionOpen(u.uid, 'enh', false);
                   const isSizeOpen = isSectionOpen(u.uid, 'size', false);
-                  const isAttachOpen = isSectionOpen(u.uid, 'attach', false);
 
                   return (
                     <div className="ab-inline" key={`panel-${u.uid}`}>
@@ -1103,86 +1101,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           </div>
                         )}
 
-                        {/* 6. Squad Attachment */}
-                        {canLead && (
-                          <div className="ab-collapsible-section field">
-                            <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'attach', false)}>
-                              <span className="row gap-2" style={{ alignItems: 'center' }}>
-                                <Icon name={isAttachOpen ? 'down' : 'next'} size={16} />
-                                <Icon name="swords" size={15} />
-                                <b>Squad Attachment</b>
-                                {u.attachTo ? <span className="ab-badge-selected">Attached with {attachedSquad?.datasheet}</span> : <span className="tiny muted">(Solo)</span>}
-                              </span>
-                              <span className="tiny muted">{isAttachOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
-                            </button>
-                            {isAttachOpen && (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                                <div
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={() => {
-                                    if (u.attachTo) {
-                                      const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: undefined } : x));
-                                      setRun({ ...run, list: { ...run.list, units: updatedUnits } });
-                                      play('tick');
-                                    }
-                                  }}
-                                  style={{
-                                    padding: '10px 12px',
-                                    borderRadius: 8,
-                                    background: !u.attachTo ? 'rgba(217, 155, 38, 0.12)' : '#181B22',
-                                    border: !u.attachTo ? '1.5px solid #F59E0B' : '1px solid #262930',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    cursor: !u.attachTo ? 'default' : 'pointer',
-                                  }}
-                                >
-                                  <div>
-                                    <b style={{ color: !u.attachTo ? '#F59E0B' : '#F8FAFC', fontSize: 13.5 }}>Solo Operation (Unattached)</b>
-                                    <div style={{ fontSize: 12, color: '#94a3b8' }}>Operates independently as a single Character</div>
-                                  </div>
-                                  {!u.attachTo && <span className="chip ok small"><Icon name="check" size={12} /> Active</span>}
-                                </div>
-                                {attachOptions(run.list, fac, u).map((opt) => {
-                                  const body = run.list.units.find((x) => x.uid === opt.uid);
-                                  if (!body) return null;
-                                  const isCurrent = u.attachTo === body.uid;
-                                  return (
-                                    <div
-                                      key={body.uid}
-                                      role="button"
-                                      tabIndex={0}
-                                      onClick={() => {
-                                        if (!isCurrent) {
-                                          const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: body.uid } : x));
-                                          setRun({ ...run, list: { ...run.list, units: updatedUnits } });
-                                          play('good');
-                                        }
-                                      }}
-                                      style={{
-                                        padding: '10px 12px',
-                                        borderRadius: 8,
-                                        background: isCurrent ? 'rgba(245, 158, 11, 0.12)' : '#181B22',
-                                        border: isCurrent ? '1.5px solid #F59E0B' : '1px solid #262930',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        cursor: isCurrent ? 'default' : 'pointer',
-                                      }}
-                                    >
-                                      <div>
-                                        <b style={{ color: isCurrent ? '#F59E0B' : '#F8FAFC', fontSize: 13.5 }}>{body.datasheet}</b>
-                                        <div style={{ fontSize: 12, color: '#94a3b8' }}>{body.models} models · {body.pts + (body.wargearPts ?? 0)} pts</div>
-                                      </div>
-                                      {isCurrent ? <span className="chip ok small"><Icon name="check" size={12} /> Attached</span> : <span className="btn small">Attach</span>}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        )}
 
                         <button type="button" className="ab-moreinfo" onClick={() => setMenu(null)}>
                           Close <Icon name="down" size={18} />

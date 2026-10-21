@@ -55,20 +55,32 @@ export function autoList(f: FactionData, points = 1000, seed = 1, wild = false):
   const main = [...count].sort((a, b) => b[1] - a[1])[0]?.[0];
   const usable = ownDatasheets.filter((d) => (!main || d.factionKeywords.includes(main)) && d.points[0]?.options?.length && !d.subfaction && !d.keywords.includes('FORTIFICATION')
     && !d.keywords.includes('AIRCRAFT') && !d.transport && d.models.length && d.weapons.length);
-  const price = (d: DatasheetData) => [...d.points[0].options].sort((a, b) => a.pts - b.pts)[0];
+  const price = (d: DatasheetData, maxSquad = false) => {
+    const opts = [...d.points[0].options].sort((a, b) => a.pts - b.pts);
+    if (maxSquad && opts.length > 1 && opts[opts.length - 1].pts <= left) {
+      return opts[opts.length - 1];
+    }
+    return opts[0];
+  };
   const det = f.detachments[Math.floor(rnd() * Math.min(3, f.detachments.length))]?.name;
   const units: ArmyUnitEntry[] = [];
   let left = points;
   let n = 0;
-  const add = (d: DatasheetData, extra: Partial<ArmyUnitEntry> = {}) => {
-    const o = price(d);
+  const add = (d: DatasheetData, extra: Partial<ArmyUnitEntry> = {}, maxSquad = false) => {
+    const o = price(d, maxSquad);
     if (o.pts > left) return null;
     const e: ArmyUnitEntry = syncWargear(d, defaultWargear(d, { uid: `a${n++}`, datasheet: d.name, models: o.models, pts: o.pts, ...extra }));
     units.push(e);
     left -= o.pts + (e.wargearPts ?? 0);
     return e;
   };
-  const score = (d: DatasheetData) => { if (wild) return rnd(); const o = price(d); return punch(d, o.pts, o.models) * (0.75 + rnd() * 0.5); };
+  const score = (d: DatasheetData) => {
+    if (wild) return rnd();
+    const o = price(d);
+    let p = punch(d, o.pts, o.models) * (0.75 + rnd() * 0.5);
+    if (points >= 750 && (d.keywords.includes('VEHICLE') || d.keywords.includes('MONSTER') || d.keywords.includes('WALKER'))) p *= 1.2;
+    return p;
+  };
   // the warlord: a character that leads a squad the faction has, and its bodyguard
   const leaders = usable.filter((d) => d.keywords.includes('CHARACTER') && !d.isSupport && d.leads.some((b) => usable.some((x) => x.name === b)) && price(d).pts <= points * 0.2);
   const lead = leaders.sort((a, b) => score(b) - score(a))[0];
@@ -77,9 +89,20 @@ export function autoList(f: FactionData, points = 1000, seed = 1, wild = false):
     const be = body ? add(body) : null;
     add(lead, { warlord: true, ...(be ? { attachTo: be.uid } : {}) });
   }
-  // Battleline holds the objectives
+  // Battleline holds the objectives and forms the sturdy frontline
   const lines = usable.filter((d) => d.keywords.includes('BATTLELINE') && price(d).pts <= points * 0.25).sort((a, b) => score(b) - score(a));
   for (const d of lines.slice(0, 2)) add(d);
+  if (points >= 1200 && lines.length > 2) add(lines[2], {}, points >= 1000);
+
+  // Heavies / Vehicles / Monsters / Walkers: ensure high-point bot armies include armored war machines / heavy fire support
+  if (points >= 750) {
+    const heavies = usable.filter((d) => (d.keywords.includes('VEHICLE') || d.keywords.includes('MONSTER') || d.keywords.includes('WALKER')) && !d.keywords.includes('CHARACTER') && price(d).pts <= points * 0.45).sort((a, b) => score(b) - score(a));
+    if (heavies.length > 0) {
+      add(heavies[0]);
+      if (points >= 1200 && heavies.length > 1) add(heavies[1]);
+    }
+  }
+
   // then the hardest-hitting units per point, allowing up to 3-4 duplicates (6 for Battleline) for large armies
   const rest = usable.filter((d) => !d.keywords.includes('CHARACTER') || !d.leads.length).filter((d) => price(d).pts <= points * 0.4 && !d.keywords.includes('EPIC HERO'));
   const maxDup = (d: DatasheetData) => (d.keywords.includes('BATTLELINE') ? 6 : points >= 2000 ? 4 : 3);

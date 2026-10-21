@@ -1,7 +1,7 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
 import { arrivalDenied, battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
 import '../factions/index';
-import { buildUnits, forChapter, newUid, transportFit } from './army';
+import { buildUnits, forChapter, newUid, safeUpper, transportFit } from './army';
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
 import { mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
@@ -279,7 +279,8 @@ export function createGame(o: NewGameOptions): GameState {
   for (const u of s.units) if (hasKw(u, 'AIRCRAFT')) { u.status = 'reserves'; }
   const CHAPTERS = ['BLACK TEMPLARS', 'BLOOD ANGELS', 'DARK ANGELS', 'DEATHWATCH', 'SPACE WOLVES'];
   for (const p of [0, 1] as PlayerId[]) {
-    s.players[p].oathWoundBonus = !CHAPTERS.includes(o.lists[p].subfaction ?? '') && !s.units.some((u) => u.owner === p && u.factionKeywords.some((k) => CHAPTERS.includes(k)));
+    const sub = safeUpper(o.lists[p].subfaction);
+    s.players[p].oathWoundBonus = !CHAPTERS.includes(sub) && !s.units.some((u) => u.owner === p && u.factionKeywords.some((k) => CHAPTERS.includes(safeUpper(k))));
   }
   s.deployTurn = other(s.attackerPlayer); // Defender deploys first
   for (const p of [0, 1] as PlayerId[]) if (s.players[p].secMode === 'tactical') s.players[p].secDeck = shuffle(s, MISSIONS.secondaries.map((x) => x.id));
@@ -290,10 +291,10 @@ export function createGame(o: NewGameOptions): GameState {
   // Heirs of Sigismund: Black Templars swap Oath of Moment for Templar Vows
   for (const p of [0, 1] as PlayerId[]) {
     const P = s.players[p];
-    if (P.subfaction !== 'BLACK TEMPLARS' && !s.units.some((u) => u.owner === p && u.factionKeywords.includes('BLACK TEMPLARS'))) continue;
-    if (!P.armyRules.some((r) => r.name === 'Templar Vows')) continue;
-    P.armyRules = P.armyRules.filter((r) => r.name !== 'Oath of Moment');
-    for (const u of s.units) if (u.owner === p) u.abilities = u.abilities.filter((a) => a.name !== 'Oath of Moment');
+    if (safeUpper(P.subfaction) !== 'BLACK TEMPLARS' && !s.units.some((u) => u.owner === p && u.factionKeywords.some((k) => safeUpper(k) === 'BLACK TEMPLARS'))) continue;
+    if (!P.armyRules.some((r) => safeUpper((r as any)?.name || r) === 'TEMPLAR VOWS')) continue;
+    P.armyRules = P.armyRules.filter((r) => safeUpper((r as any)?.name || r) !== 'OATH OF MOMENT');
+    for (const u of s.units) if (u.owner === p) u.abilities = u.abilities.filter((a) => safeUpper((a as any)?.name || a) !== 'OATH OF MOMENT');
   }
   // oval bases and hulls start pointing from their deployment zone towards the enemy's
   for (const p of [0, 1] as PlayerId[]) {
@@ -926,6 +927,7 @@ function resetTurnFlags(s: GameState) {
   for (const u of s.units) {
     u.move = null; u.advanceRoll = null; u.maxMoved = 0; u.selectedToShoot = false; u.declaredCharge = false;
     u.chargeRoll = null; u.chargeTargets = []; u.fought = false; u.weaponsFired = []; u.cantCharge = false;
+    (u as any).hasFiredThisTurn = false;
     u.buffs = u.buffs.filter((b) => b.until === 'battle');
   }
 }
@@ -2298,27 +2300,481 @@ export function autoPileMove(s: GameState, u: UnitState, kind: 'pileIn' | 'conso
   return true;
 }
 
-/** Random reinforcement events in Rogue-like campaign mode (20% chance at start of round 2+) */
+function makeUnitState(base: Partial<UnitState> & { id: string; owner: PlayerId; name: string; models: ModelState[] }): UnitState {
+  return {
+    sources: [base.name],
+    keywords: [],
+    factionKeywords: [],
+    startingStrength: base.models.length,
+    abilities: [],
+    core: {},
+    pts: 100,
+    status: 'board',
+    embarkedIn: null,
+    transport: null,
+    weaponsFired: [],
+    cantCharge: false,
+    scoutDone: false,
+    battleShocked: false,
+    isWarlordUnit: false,
+    enhancements: [],
+    move: null,
+    advanceRoll: null,
+    maxMoved: 0,
+    setUpTurn: -10,
+    shotTurn: -10,
+    selectedToShoot: false,
+    declaredCharge: false,
+    chargeRoll: null,
+    chargedTurn: -10,
+    chargeTargets: [],
+    fought: false,
+    foughtFirstUntilTurn: -10,
+    stratagemPhase: null,
+    oneShotUsed: [],
+    buffs: [],
+    ...base,
+  } as UnitState;
+}
+
+export function createFactionTitan(factionId: string, factionName: string): UnitState {
+  const fid = safeUpper(factionId);
+  let name = 'God-Engine Warhound Titan';
+  let modelName = 'Warhound Titan';
+  let kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'CHARACTER'];
+  let T = 12, W = 30, Sv = 2, InSv = 4, OC = 10, M = 10;
+  let core: { fnp?: number } = {};
+  let abilities: { name: string; text: string; type: 'datasheet' }[] = [
+    { name: 'Void Shields', text: '4+ Invulnerable save against ranged attacks.', type: 'datasheet' },
+  ];
+  let weapons: any[] = [];
+
+  if (fid === 'NEC') {
+    name = 'Seraptek Heavy Construct';
+    modelName = 'Seraptek Heavy Construct';
+    kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'CHARACTER'];
+    T = 12; W = 28; Sv = 2; InSv = 4;
+    core = { fnp: 5 };
+    abilities = [{ name: 'Quantum Shielding', text: '4+ Invulnerable save and 5+ Feel No Pain.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Synaptic Obliterators',
+        profiles: [{ name: 'Focused', range: 48, A: 6, skill: 3, S: 14, AP: -4, D: '6', abilities: ['blast'] }],
+      },
+      {
+        name: 'Titanic Forelimbs',
+        profiles: [{ name: 'Strike', range: 0, A: 10, skill: 3, S: 10, AP: -3, D: '3', abilities: [] }],
+      },
+    ];
+  } else if (fid === 'ORK') {
+    name = 'Gorkamorka Great Stompa';
+    modelName = 'Great Stompa';
+    kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'CHARACTER'];
+    T = 12; W = 32; Sv = 2; InSv = 5; OC = 12;
+    abilities = [{ name: 'Effigy of Gork', text: '5+ Invulnerable save and +2" to Charge.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Mega-Choppa',
+        profiles: [{ name: 'Smash', range: 0, A: 8, skill: 3, S: 16, AP: -4, D: 'D6+3', abilities: [] }],
+      },
+      {
+        name: 'Deff Cannon',
+        profiles: [{ name: 'Standard', range: 48, A: '3D6', skill: 4, S: 12, AP: -3, D: '3', abilities: ['blast'] }],
+      },
+    ];
+  } else if (fid === 'TYR') {
+    name = 'Hierophant Bio-Titan';
+    modelName = 'Hierophant Bio-Titan';
+    kws = ['MONSTER', 'TITANIC', 'TOWERING', 'GREAT DEVOURER', 'CHARACTER'];
+    T = 12; W = 30; Sv = 2; InSv = 5; M = 12;
+    core = { fnp: 5 };
+    abilities = [{ name: 'Bio-Chitin Bastion', text: '5+ Invulnerable save and 5+ Feel No Pain.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Dire Bio-cannons',
+        profiles: [{ name: 'Acid Volley', range: 48, A: 12, skill: 3, S: 10, AP: -3, D: '3', abilities: ['blast'] }],
+      },
+      {
+        name: 'Titanic Scything Talons',
+        profiles: [{ name: 'Strike', range: 0, A: 10, skill: 3, S: 12, AP: -3, D: 'D6', abilities: ['lethal hits'] }],
+      },
+    ];
+  } else if (fid === 'TAU') {
+    name = 'KX139 Ta\'unar Supremacy Armour';
+    modelName = 'Ta\'unar Battlesuit';
+    kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'BATTLESUIT', 'CHARACTER'];
+    T = 12; W = 30; Sv = 2; InSv = 4;
+    abilities = [{ name: 'Vanguard Barrier Field', text: '4+ Invulnerable save against all attacks.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Heavy Rail Cannon Array',
+        profiles: [{ name: 'Solid Slug', range: 72, A: 3, skill: 3, S: 18, AP: -5, D: 'D6+6', abilities: ['heavy'] }],
+      },
+      {
+        name: 'Tri-axis Ion Cannons',
+        profiles: [{ name: 'Standard', range: 36, A: 9, skill: 3, S: 9, AP: -2, D: '3', abilities: [] }],
+      },
+    ];
+  } else if (['CSM', 'WE', 'DG', 'TS', 'EC'].includes(fid)) {
+    name = 'Khorne Lord of Skulls';
+    modelName = 'Lord of Skulls';
+    kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'CHAOS', 'DAEMON', 'CHARACTER'];
+    T = 12; W = 30; Sv = 2; InSv = 4;
+    abilities = [{ name: 'Daemonic Hull', text: '4+ Invulnerable save.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Gorestorm Cannon',
+        profiles: [{ name: 'Burst', range: 36, A: 'D6+3', skill: 3, S: 10, AP: -3, D: '3', abilities: ['blast'] }],
+      },
+      {
+        name: 'Great Cleaver of Khorne',
+        profiles: [{ name: 'Strike', range: 0, A: 8, skill: 3, S: 16, AP: -4, D: '6', abilities: [] }],
+      },
+    ];
+  } else if (fid === 'AM') {
+    name = 'Baneblade Super-Heavy Tank';
+    modelName = 'Baneblade Tank';
+    kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'SMOKE', 'CHARACTER'];
+    T = 12; W = 28; Sv = 2; InSv = 5; M = 9;
+    abilities = [{ name: 'Armoured Behemoth', text: '5+ Invulnerable save. Ignores cover.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Baneblade Cannon',
+        profiles: [{ name: 'Standard', range: 48, A: '3D6', skill: 4, S: 14, AP: -3, D: '4', abilities: ['blast'] }],
+      },
+      {
+        name: 'Demolisher Cannon',
+        profiles: [{ name: 'Siege', range: 24, A: 'D6+3', skill: 4, S: 14, AP: -3, D: 'D6', abilities: ['blast'] }],
+      },
+    ];
+  } else if (['IK', 'QI', 'CK', 'QT'].includes(fid)) {
+    name = 'Knight Castellan Supreme';
+    modelName = 'Knight Castellan';
+    kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'CHARACTER'];
+    T = 12; W = 30; Sv = 2; InSv = 4;
+    abilities = [{ name: 'Ion Shields', text: '4+ Invulnerable save against ranged attacks.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Volcano Lance',
+        profiles: [{ name: 'Lance', range: 48, A: 'D3', skill: 3, S: 18, AP: -5, D: 'D6+6', abilities: ['blast'] }],
+      },
+      {
+        name: 'Plasma Decimator',
+        profiles: [{ name: 'Standard', range: 36, A: '2D6', skill: 3, S: 9, AP: -3, D: '3', abilities: ['blast'] }],
+      },
+    ];
+  } else if (['AE', 'CW', 'DRU'].includes(fid)) {
+    name = 'Phantom Wraith Titan';
+    modelName = 'Phantom Titan';
+    kws = ['MONSTER', 'TITANIC', 'TOWERING', 'WRAITH CONSTRUCT', 'CHARACTER'];
+    T = 12; W = 26; Sv = 2; InSv = 4; M = 12;
+    abilities = [{ name: 'Holo-Field Distortion', text: '4+ Invulnerable save. -1 to Hit against this model.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Twin Heavy Wraithcannon',
+        profiles: [{ name: 'Distortion Beam', range: 48, A: 4, skill: 3, S: 18, AP: -4, D: 'D6+6', abilities: ['devastating wounds'] }],
+      },
+      {
+        name: 'Titanic Ghostblade',
+        profiles: [{ name: 'Sweep', range: 0, A: 10, skill: 3, S: 10, AP: -3, D: '3', abilities: [] }],
+      },
+    ];
+  } else {
+    // Space Marines / Imperium default
+    weapons = [
+      {
+        name: 'Plasma Blastgun',
+        profiles: [{ name: 'Overcharge', range: 48, A: '4D3', skill: 3, S: 10, AP: -3, D: '4', abilities: ['blast'] }],
+      },
+      {
+        name: 'Vulcan Mega-bolter',
+        profiles: [{ name: 'Rapid Fire', range: 36, A: 20, skill: 3, S: 6, AP: -1, D: '2', abilities: ['sustained hits 1'] }],
+      },
+    ];
+  }
+
+  const id = newUid('titan-boss');
+  return makeUnitState({
+    id,
+    owner: 1,
+    name,
+    sources: [name],
+    keywords: kws,
+    factionKeywords: [fid],
+    pts: 800,
+    status: 'board',
+    isWarlordUnit: true,
+    abilities,
+    core,
+    models: [{
+      id: `${id}-m0`,
+      name: modelName,
+      source: modelName,
+      isCharacter: true,
+      isBodyguard: false,
+      keywords: kws,
+      weapons,
+      x: 35,
+      y: 15,
+      r: 2.5,
+      wounds: W,
+      dead: false,
+      profile: { name: modelName, M, T, Sv, W, Ld: 6, OC, InSv, base: { w: 120, h: 92, text: '120 x 92mm' } },
+    }],
+  });
+}
+
+export function createAlliedReinforcement(playerFactionId: string, playerName: string, s: GameState): UnitState {
+  const fid = safeUpper(playerFactionId);
+  const id = newUid('ally-reinf');
+  let name = 'Venerable Dreadnought Heavy Support';
+  let modelName = 'Venerable Dreadnought';
+  let kws = ['VEHICLE', 'WALKER', 'SMOKE', 'ELITE', 'CHARACTER'];
+  let T = 9, W = 8, Sv = 2, InSv = 4, OC = 4, M = 6;
+  let core: { fnp?: number } = {};
+  let abilities: { name: string; text: string; type: 'datasheet' }[] = [
+    { name: 'Unyielding Ancient', text: '4+ Invulnerable save. Each time this model makes an attack, re-roll a Hit roll of 1.', type: 'datasheet' },
+  ];
+  let weapons: any[] = [
+    {
+      name: 'Twin Lascannon',
+      profiles: [{ name: 'Anti-Tank', range: 48, A: 2, skill: 3, S: 12, AP: -3, D: 'D6+1', abilities: [] }],
+    },
+    {
+      name: 'Dreadnought Combat Weapon',
+      profiles: [{ name: 'Crush', range: 0, A: 5, skill: 3, S: 12, AP: -2, D: '3', abilities: [] }],
+    },
+  ];
+
+  if (fid === 'AM') {
+    name = 'Leman Russ Battle Tank';
+    modelName = 'Leman Russ';
+    kws = ['VEHICLE', 'SMOKE', 'ELITE', 'HEAVY SUPPORT'];
+    T = 11; W = 13; Sv = 2; InSv = 5; OC = 5; M = 9;
+    abilities = [{ name: 'Armoured Fist', text: '5+ Invulnerable save. Re-roll Hit rolls of 1 against targets on objectives.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Battle Cannon',
+        profiles: [{ name: 'High Explosive', range: 48, A: 'D6+3', skill: 4, S: 10, AP: -1, D: '3', abilities: ['blast'] }],
+      },
+      {
+        name: 'Lascannon',
+        profiles: [{ name: 'Beam', range: 48, A: 1, skill: 4, S: 12, AP: -3, D: 'D6+1', abilities: [] }],
+      },
+    ];
+  } else if (fid === 'NEC') {
+    name = 'Canoptek Doomstalker Heavy Support';
+    modelName = 'Canoptek Doomstalker';
+    kws = ['VEHICLE', 'WALKER', 'ELITE', 'HEAVY SUPPORT'];
+    T = 8; W = 12; Sv = 3; InSv = 4; OC = 4; M = 7;
+    abilities = [{ name: 'Containment Field', text: '4+ Invulnerable save.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Doomsday Blaster',
+        profiles: [{ name: 'High Power', range: 48, A: 'D6+1', skill: 4, S: 14, AP: -3, D: 'D6', abilities: ['blast', 'heavy'] }],
+      },
+      {
+        name: 'Twin Gauss Flayer',
+        profiles: [{ name: 'Rapid', range: 24, A: 2, skill: 4, S: 5, AP: -1, D: '1', abilities: ['lethal hits'] }],
+      },
+    ];
+  } else if (fid === 'ORK') {
+    name = 'Deff Dread Heavy Walker';
+    modelName = 'Deff Dread';
+    kws = ['VEHICLE', 'WALKER', 'ELITE'];
+    T = 9; W = 8; Sv = 3; InSv = 5; OC = 4; M = 8;
+    abilities = [{ name: 'Ere We Go', text: '5+ Invulnerable save. Re-roll Charge rolls.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Dread Klaw',
+        profiles: [{ name: 'Snip', range: 0, A: 6, skill: 3, S: 10, AP: -2, D: '3', abilities: [] }],
+      },
+      {
+        name: 'Rokkit Launcha',
+        profiles: [{ name: 'Barrage', range: 24, A: 'D3', skill: 5, S: 9, AP: -2, D: '3', abilities: ['blast'] }],
+      },
+    ];
+  } else if (fid === 'TYR') {
+    name = 'Carnifex Heavy Bio-Monster';
+    modelName = 'Carnifex';
+    kws = ['MONSTER', 'GREAT DEVOURER', 'ELITE'];
+    T = 9; W = 8; Sv = 2; InSv = 5; OC = 4; M = 8;
+    core = { fnp: 5 };
+    abilities = [{ name: 'Living Battering Ram', text: '5+ Invulnerable save and 5+ Feel No Pain.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Heavy Venom Cannon',
+        profiles: [{ name: 'Bio-Blast', range: 36, A: 'D3', skill: 3, S: 9, AP: -2, D: '3', abilities: ['blast'] }],
+      },
+      {
+        name: 'Carnifex Scything Talons',
+        profiles: [{ name: 'Rend', range: 0, A: 6, skill: 3, S: 9, AP: -2, D: '3', abilities: [] }],
+      },
+    ];
+  } else if (['CSM', 'WE', 'DG', 'TS', 'EC'].includes(fid)) {
+    name = 'Helbrute Heavy Dreadnought';
+    modelName = 'Helbrute';
+    kws = ['VEHICLE', 'WALKER', 'CHAOS', 'ELITE'];
+    T = 9; W = 8; Sv = 2; InSv = 5; OC = 4; M = 6;
+    abilities = [{ name: 'Frenzied Retaliation', text: '5+ Invulnerable save.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Multi-melta',
+        profiles: [{ name: 'Melta', range: 18, A: 2, skill: 3, S: 9, AP: -4, D: 'D6', abilities: ['melta 2'] }],
+      },
+      {
+        name: 'Helbrute Fist',
+        profiles: [{ name: 'Smash', range: 0, A: 5, skill: 3, S: 12, AP: -2, D: '3', abilities: [] }],
+      },
+    ];
+  } else if (fid === 'TAU') {
+    name = 'XV88 Broadside Battlesuit';
+    modelName = 'Broadside Battlesuit';
+    kws = ['VEHICLE', 'WALKER', 'BATTLESUIT', 'ELITE'];
+    T = 6; W = 8; Sv = 2; InSv = 4; OC = 3; M = 5;
+    abilities = [{ name: 'Heavy Support System', text: '4+ Invulnerable save.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Heavy Rail Rifle',
+        profiles: [{ name: 'Kinetic Piercer', range: 48, A: 2, skill: 4, S: 12, AP: -4, D: 'D6+1', abilities: ['devastating wounds', 'heavy'] }],
+      },
+      {
+        name: 'Twin Smart Missile System',
+        profiles: [{ name: 'Indirect', range: 30, A: 3, skill: 4, S: 5, AP: 0, D: '1', abilities: ['indirect fire'] }],
+      },
+    ];
+  } else if (['AE', 'CW', 'DRU'].includes(fid)) {
+    name = 'Wraithlord Heavy Construct';
+    modelName = 'Wraithlord';
+    kws = ['MONSTER', 'WRAITH CONSTRUCT', 'ELITE'];
+    T = 11; W = 10; Sv = 2; InSv = 5; OC = 4; M = 7;
+    abilities = [{ name: 'Wraithbone Resilience', text: '5+ Invulnerable save.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Bright Lance',
+        profiles: [{ name: 'Lance', range: 36, A: 1, skill: 3, S: 12, AP: -3, D: 'D6+2', abilities: [] }],
+      },
+      {
+        name: 'Ghostglaive',
+        profiles: [{ name: 'Strike', range: 0, A: 5, skill: 3, S: 10, AP: -3, D: 'D6', abilities: [] }],
+      },
+    ];
+  } else if (fid === 'AC') {
+    name = 'Allarus Custodians Elite Guard';
+    modelName = 'Allarus Custodian';
+    kws = ['INFANTRY', 'CHARACTER', 'ELITE', 'TERMINATOR'];
+    T = 7; W = 8; Sv = 2; InSv = 4; OC = 4; M = 6;
+    core = { fnp: 5 };
+    abilities = [{ name: 'From Golden Light', text: '4+ Invulnerable save and 5+ Feel No Pain vs mortals.', type: 'datasheet' }];
+    weapons = [
+      {
+        name: 'Castellan Axe',
+        profiles: [{ name: 'Strike', range: 0, A: 6, skill: 2, S: 9, AP: -2, D: '3', abilities: [] }],
+      },
+      {
+        name: 'Balistus Grenade Launcher',
+        profiles: [{ name: 'Burst', range: 18, A: 'D6', skill: 2, S: 5, AP: -1, D: '1', abilities: ['blast'] }],
+      },
+    ];
+  }
+
+  return makeUnitState({
+    id,
+    owner: 0,
+    name,
+    sources: [name],
+    keywords: kws,
+    factionKeywords: [fid],
+    pts: 220,
+    status: 'board',
+    abilities,
+    core,
+    models: [{
+      id: `${id}-m0`,
+      name: modelName,
+      source: modelName,
+      isCharacter: kws.includes('CHARACTER'),
+      isBodyguard: false,
+      keywords: kws,
+      weapons,
+      x: 10,
+      y: 15,
+      r: 1.5,
+      wounds: W,
+      dead: false,
+      profile: { name: modelName, M, T, Sv, W, Ld: 6, OC, InSv, base: { w: 60, h: 60, text: '60mm' } },
+    }],
+  });
+}
+
+/** Random reinforcement events in Rogue-like campaign mode (25% chance at start of round 2+) */
 export function triggerCampaignReinforcements(s: GameState): boolean {
   if (!s.campaign) return false;
   s.campaign.reinforcementsTriggered ??= [];
   if (s.campaign.reinforcementsTriggered.includes(s.round)) return false;
 
-  // 20% probability check per round in Roguelike mode
+  // 25% probability check per round in Roguelike mode
   const roll = nextRandom(s) * 100;
-  if (roll > 20) return false;
+  if (roll > 25) return false;
 
   s.campaign.reinforcementsTriggered.push(s.round);
 
+  const playerPts = fightingArmyPoints(s, 0);
+  const aiPts = fightingArmyPoints(s, 1);
+  const playerVp = s.players[0].vp;
+  const aiVp = s.players[1].vp;
+
+  // Decide if this strategic reinforcement is Allied or Enemy:
+  // If player is trailing in points or VP, or 50% chance: spawn powerful Allied Reinforcements!
+  const sendAllied = playerPts < aiPts || playerVp < aiVp || nextRandom(s) < 0.5;
+
+  if (sendAllied) {
+    const ally = createAlliedReinforcement(s.players[0].factionId, s.players[0].name, s);
+    const prefPos = {
+      x: Math.max(4, Math.min(18, (s.table?.width ?? RULES.battlefield.width) * 0.25)),
+      y: (s.table?.height ?? RULES.battlefield.height) / 2,
+    };
+    const placed = setUpAway(s, ally, 9, prefPos);
+    if (!placed) {
+      ally.models[0].x = prefPos.x;
+      ally.models[0].y = prefPos.y;
+      ally.status = 'board';
+    }
+    s.units.push(ally);
+    s.maxRounds = 5;
+
+    pushFx(s, {
+      kind: 'place',
+      unitId: ally.id,
+      owner: 0,
+      at: centreOf(ally),
+      deepStrike: true,
+      label: '⚡ ALLIED REINFORCEMENTS',
+    });
+    s.screenShake = Date.now();
+
+    s.reinforcementAlert = {
+      unitName: ally.name,
+      factionName: s.players[0].name,
+      round: s.round,
+      count: ally.models.length,
+      text: '⚡ ALLIED REINFORCEMENTS ARRIVED (5 ROUNDS)',
+    };
+    log(s, `ALLIED REINFORCEMENTS: Elite ${ally.name} arrived via Deep Strike (>9" from enemies) to reinforce our lines! Battle extended to Round 5!`, 'info', 0);
+    return true;
+  }
+
+  // Otherwise, Enemy Reinforcements: pick tough Heavy/Vehicle/Elite unit
   const enemyUnits = s.units.filter((u) => u.owner === 1);
   if (!enemyUnits.length) return false;
 
-  const candidate = enemyUnits.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC') && !u.keywords.includes('EPIC HERO'))
+  const candidate = enemyUnits.find((u) => (u.keywords.includes('VEHICLE') || u.keywords.includes('MONSTER') || u.keywords.includes('ELITE')) && !u.keywords.includes('TITANIC'))
+    ?? enemyUnits.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC') && !u.keywords.includes('EPIC HERO'))
     ?? enemyUnits[0];
 
   const cloned: UnitState = structuredClone(candidate);
   cloned.id = newUid('reinf');
-  cloned.status = 'reserves';
+  cloned.status = 'board';
   cloned.move = null;
   cloned.cantCharge = false;
   cloned.weaponsFired = [];
@@ -2328,17 +2784,34 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
     id: `${cloned.id}-m${idx}`,
     dead: false,
     wounds: m.profile.W,
-    x: -100,
-    y: -100,
   }));
   cloned.startingStrength = cloned.models.length;
 
+  const prefPos = {
+    x: Math.max(5, (s.table?.width ?? RULES.battlefield.width) - 8),
+    y: (s.table?.height ?? RULES.battlefield.height) / 2,
+  };
+  const placed = setUpAway(s, cloned, 9, prefPos);
+  if (!placed) {
+    cloned.models.forEach((m, idx) => {
+      m.x = prefPos.x + (idx % 3) * 1.5;
+      m.y = prefPos.y + Math.floor(idx / 3) * 1.5;
+    });
+  }
   s.units.push(cloned);
-
-  // Strategic Event in campaign: battle duration extends to 5 rounds
   s.maxRounds = 5;
 
-  const alertText = `WARNING: STRATEGIC EVENT! Enemy reinforcements (${cloned.name}, ${cloned.models.length} models) arriving from strategic reserves! Battle extended to Round 5!`;
+  pushFx(s, {
+    kind: 'place',
+    unitId: cloned.id,
+    owner: 1,
+    at: centreOf(cloned),
+    deepStrike: true,
+    label: '⚡ ENEMY DEEP STRIKE ARRIVAL',
+  });
+  s.screenShake = Date.now();
+
+  const alertText = `WARNING: STRATEGIC EVENT! Enemy heavy reinforcements (${cloned.name}, ${cloned.models.length} models) arrived via Deep Strike! Battle extended to Round 5!`;
   log(s, alertText, 'kill', 1);
 
   s.reinforcementAlert = {
@@ -2374,8 +2847,6 @@ export function fightingArmyPoints(s: GameState, p: PlayerId): number {
 
 /** Check if fighting armies are evenly matched ("สูสี"):
  * Evaluates whether player's fighting force and enemy fighting force are closely matched.
- * Both sides must have surviving forces, and the strength ratio must be competitive (>= 0.60
- * or points delta <= 250), preventing Titan from spawning if either side is already wiped out or heavily unbalanced.
  */
 export function isFightEvenlyMatched(s: GameState): boolean {
   const playerPts = fightingArmyPoints(s, 0);
@@ -2390,7 +2861,14 @@ export function isFightEvenlyMatched(s: GameState): boolean {
 /** Dynamic Drama Engine for Rogue-like mode:
  * Checks conditions at the start of every Battle Round:
  * 1. Rubberband Trigger (Catch-up): VP Delta >= 30 forces High-Threat Event (elite spawn 9" away or Warp Storm debuff).
- * 2. Boss Spawns (Titan Class): Round >= 3, Player VP >= 50, and armies are evenly matched ("สูสี") in fighting points (5% baseline probability).
+ * 2. Boss Spawns (Titan Class):
+ *    - Strictly forbidden on Rounds 1-2 (s.round >= 3 only).
+ *    - Strictly forbidden when points are small (< 400 player or < 150 AI).
+ *    - Strictly forbidden on close "EVEN MATCH" on low stakes.
+ *    - Triggers only when:
+ *      (a) Boss / Elite node in campaign with player VP >= 50
+ *      (b) Player has an overwhelming point lead (playerPts >= 500 && playerPts >= aiPts * 1.5)
+ *    - Spawns faction-accurate Titan via Deep Strike (>9" away) with shockwave VFX and screen shake.
  */
 export function triggerDynamicDramaEngine(s: GameState): boolean {
   if (!s.campaign) return false;
@@ -2425,24 +2903,33 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
       elite.keywords = Array.from(new Set([...elite.keywords, 'ELITE']));
 
       const leaderM = alive(mostExp)[0];
-      const angle = nextRandom(s) * Math.PI * 2;
-      const targetPos = {
-        x: Math.max(3, Math.min((s.table?.width ?? RULES.battlefield.width) - 3, leaderM.x + Math.cos(angle) * 9)),
-        y: Math.max(3, Math.min((s.table?.height ?? RULES.battlefield.height) - 3, leaderM.y + Math.sin(angle) * 9)),
-      };
-
+      const targetPos = leaderM ? { x: leaderM.x, y: leaderM.y } : { x: 22, y: 15 };
       elite.models = elite.models.map((m, idx) => ({
         ...m,
         id: `${elite.id}-m${idx}`,
         dead: false,
         wounds: m.profile.W + 1,
-        x: targetPos.x + (idx % 3) * 1.2,
-        y: targetPos.y + Math.floor(idx / 3) * 1.2,
       }));
       elite.startingStrength = elite.models.length;
+
+      const placed = setUpAway(s, elite, 9, targetPos);
+      if (!placed) {
+        elite.models.forEach((m, idx) => {
+          m.x = Math.max(3, Math.min((s.table?.width ?? RULES.battlefield.width) - 3, targetPos.x + 9 + (idx % 3) * 1.2));
+          m.y = Math.max(3, Math.min((s.table?.height ?? RULES.battlefield.height) - 3, targetPos.y + Math.floor(idx / 3) * 1.2));
+        });
+      }
       s.units.push(elite);
+      pushFx(s, {
+        kind: 'place',
+        unitId: elite.id,
+        owner: 1,
+        at: centreOf(elite),
+        deepStrike: true,
+        label: '⚡ ELITE DEEP STRIKE ARRIVAL',
+      });
       s.screenShake = Date.now();
-      log(s, `DRAMA CATCH-UP EVENT: Player leads by ${vpDelta} VP! Elite strike squad deployed 9" from ${mostExp.name}!`, 'kill', 1);
+      log(s, `DRAMA CATCH-UP EVENT: Player leads by ${vpDelta} VP! Elite strike squad deployed via Deep Strike >9" from ${mostExp.name}!`, 'kill', 1);
     } else {
       s.warpStormActive = true;
       for (const u of playerUnits) {
@@ -2459,72 +2946,57 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
     }
   }
 
-  // 2. Boss Spawns (Titan Class): Round >= 3 AND Player VP >= 50, 5% baseline probability
-  // Check if our fighting army points are evenly matched with the opponent ("สูสี")
-  if (s.round >= 3 && playerVp >= 50 && !s.campaign.titanSpawned && isFightEvenlyMatched(s)) {
+  // 2. Boss Spawns (Titan Class):
+  // Strictly enforce currentRound >= 3 (NEVER on rounds 1-2).
+  // Strictly enforce adequate points (never on low points like 105 vs 158 pts).
+  // Never spawn on ordinary "EVEN MATCH".
+  const playerPts = fightingArmyPoints(s, 0);
+  const aiPts = fightingArmyPoints(s, 1);
+  const nodeStr = typeof s.campaign.node === 'string' ? s.campaign.node : '';
+  const isBossNode = nodeStr.includes('boss') || nodeStr.includes('elite');
+  const hasOverwhelmingLead = playerPts >= 500 && (playerPts >= aiPts * 1.5 || vpDelta >= 25);
+  const pointsAdequate = playerPts >= 400 && aiPts >= 250;
+
+  if (s.round >= 3 && !s.campaign.titanSpawned && pointsAdequate && (isBossNode || hasOverwhelmingLead)) {
     const titanRoll = nextRandom(s);
-    if (titanRoll < 0.05) {
+    // Baseline chance on overwhelming lead, high chance on boss nodes
+    if (titanRoll < 0.15 || isBossNode) {
       s.campaign.titanSpawned = true;
       triggeredAny = true;
+
+      const titan = createFactionTitan(s.players[1].factionId, s.players[1].name);
+
+      const preferPos = {
+        x: Math.max(5, (s.table?.width ?? RULES.battlefield.width) - 8),
+        y: (s.table?.height ?? RULES.battlefield.height) / 2,
+      };
+
+      const placed = setUpAway(s, titan, 9, preferPos);
+      if (!placed) {
+        titan.models[0].x = preferPos.x;
+        titan.models[0].y = preferPos.y;
+      }
+      s.units.push(titan);
+
+      pushFx(s, {
+        kind: 'place',
+        unitId: titan.id,
+        owner: 1,
+        at: centreOf(titan),
+        deepStrike: true,
+        label: '⚡ TITAN DEEP STRIKE ARRIVAL',
+      });
       s.screenShake = Date.now();
 
-      const playerPts = fightingArmyPoints(s, 0);
-      const aiPts = fightingArmyPoints(s, 1);
-
       s.titanAlert = {
-        unitName: 'Warlord Titan Supreme Commander',
+        unitName: titan.name,
         factionName: s.players[1].name,
         round: s.round,
-        text: `TITAN DETECTED: EVEN MATCH (${playerPts} vs ${aiPts} PTS)`,
+        text: `TITAN DETECTED: ${titan.name.toUpperCase()}`,
         triggered: true,
       };
 
-      const titanCand = s.units.find((u) => u.owner === 1) ?? s.units[0];
-      const titan: UnitState = structuredClone(titanCand);
-      titan.id = newUid('titan-boss');
-      titan.owner = 1;
-      titan.name = 'God-Engine Warhound Titan';
-      titan.sources = ['Titan Datasheet'];
-      titan.keywords = ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'CHARACTER'];
-      titan.pts = 800;
-      titan.status = 'board';
-      titan.isWarlordUnit = true;
-      titan.abilities = [{ name: 'Void Shields', text: '4+ Invulnerable save against ranged attacks.', type: 'datasheet' }];
-      titan.core = { fnp: 5 };
-      titan.move = null;
-      titan.cantCharge = false;
-      titan.weaponsFired = [];
-      titan.models = [{
-        id: `${titan.id}-m0`,
-        name: 'Warhound Titan',
-        source: 'Warhound Titan',
-        isCharacter: true,
-        isBodyguard: false,
-        keywords: ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'CHARACTER'],
-        weapons: [{
-          name: 'Plasma Blastgun',
-          profiles: [{
-            name: 'Overcharge',
-            range: 48,
-            A: '4D3',
-            skill: 3,
-            S: 10,
-            AP: -3,
-            D: '4',
-            abilities: ['blast'],
-          }],
-        }],
-        x: Math.max(5, (s.table?.width ?? RULES.battlefield.width) - 8),
-        y: (s.table?.height ?? RULES.battlefield.height) / 2,
-        r: 2.5,
-        wounds: 30,
-        dead: false,
-        profile: { name: 'Warhound Titan', M: 10, T: 12, Sv: 2, W: 30, Ld: 6, OC: 10, InSv: 4, base: { w: 120, h: 92, text: '120 x 92mm' } },
-      }];
-      titan.startingStrength = 1;
-
-      s.units.push(titan);
-      log(s, `TITAN DETECTED: Evenly matched engagement (${playerPts} vs ${aiPts} pts). God-Engine Warhound Titan has arrived with Void Shields active!`, 'kill', 1);
+      log(s, `TITAN DETECTED: ${titan.name} has entered the fray via Deep Strike (>9" from enemy lines)! Void Shields active!`, 'kill', 1);
     }
   }
 

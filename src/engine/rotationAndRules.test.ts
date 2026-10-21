@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { rotateUnit, validateMove } from './game';
 import { canDesignateDeathstrike, canFireDeathstrike, bestDeathstrikeSpot, deathstrikeWorth } from '../factions/deathstrike';
-import { isHidden, modelVisible } from './visibility';
+import { getUnitLoneOpRange, isHidden, modelVisible } from './visibility';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 
 const P = (x: number, y: number): Pt => ({ x, y });
@@ -117,6 +117,24 @@ describe('Rules 13.06 - 13.11: Terrain, Movement, Hidden and Sight', () => {
     // Observer moves within 14 inches (<= 15")
     const observerNear = makeModel('obs_near', 28, 20, 0.63, ['INFANTRY'], 0, 0);
     expect(modelVisible(s, observerNear, uTarget, hiddenModel)).toBe(true);
+
+    // Shooting removes Hidden status immediately
+    uTarget.weaponsFired = ['Boltgun'];
+    expect(isHidden(s, uTarget, hiddenModel)).toBe(false);
+    expect(modelVisible(s, observerFar, uTarget, hiddenModel)).toBe(true);
+
+    // Phobos Shadow Masters detachment rule (unshot: true -> shotTurn = -99) allows unit to remain Hidden although it shot
+    uTarget.shotTurn = -99;
+    expect(isHidden(s, uTarget, hiddenModel)).toBe(true);
+    expect(modelVisible(s, observerFar, uTarget, hiddenModel)).toBe(false);
+
+    // Lone Operative is NOT removed when unit shoots
+    const loneOpModel = makeModel('m_lone', 50, 50, 0.63, ['INFANTRY', 'CHARACTER'], 0, 0);
+    const uLoneOp = makeUnit('u_lone', 1, [loneOpModel], ['INFANTRY', 'CHARACTER', 'Lone Operative']);
+    expect(getUnitLoneOpRange(s, uLoneOp)).toBe(12);
+    uLoneOp.weaponsFired = ['Pistol'];
+    uLoneOp.shotTurn = s.turn;
+    expect(getUnitLoneOpRange(s, uLoneOp)).toBe(12);
   });
 
   it('13.06 Elevated terrain: rejects overhang and non-eligible unit types', () => {

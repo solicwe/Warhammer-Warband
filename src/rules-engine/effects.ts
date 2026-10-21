@@ -457,7 +457,16 @@ const wk = (s: string) => s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0
 
 /** "kw:ADEPTUS MECHANICUS VEHICLE": the words split into keywords / datasheet names the unit has (read from ability text). */
 function kwPhraseMatch(u: UnitState, phrase: string): boolean {
-  const K = new Set([...u.keywords, ...u.factionKeywords, ...u.sources.map((n) => n.toUpperCase())].map((k) => k.replace(/[’']/g, "'")));
+  const toStr = (v: unknown): string => {
+    if (v == null) return '';
+    if (typeof v === 'string') return v;
+    if (typeof v === 'object') {
+      const obj = v as Record<string, unknown>;
+      return String(obj.name || obj.id || obj.keyword || obj.title || '');
+    }
+    return String(v);
+  };
+  const K = new Set([...u.keywords, ...u.factionKeywords, ...u.sources.map((n) => toStr(n).toUpperCase())].map((k) => toStr(k).replace(/[’']/g, "'")));
   const w = phrase.replace(/[’']/g, "'").split(' ').filter(Boolean);
   const ok: boolean[] = [true, ...w.map(() => false)];
   for (let i = 0; i < w.length; i++) {
@@ -1594,8 +1603,8 @@ export { onObjective };
 
 /** Lone Operative from an ability ("while within 3" of a friendly X unit, this model has Lone Operative"). */
 export function loneOperativeNow(s: GameState, u: UnitState): boolean {
-  if (u.sources.length !== 1) return false;
-  for (const a of u.abilities) {
+  if (u.sources && u.sources.length !== 1) return false;
+  for (const a of u.abilities ?? []) {
     const r = abilityRule(u, a);
     for (const e of r?.effects ?? []) if (e.loneOperative && (e.if ?? []).every((c) => cond(c, { s, A: u, holder: u, bearers: alive(u) }))) return true;
   }

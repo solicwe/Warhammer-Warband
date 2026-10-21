@@ -761,7 +761,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       if (n) applyMortalWounds(s, target, n, def.name);
     }
     if (a.setMark) { u.mark = on.id; log(s, `${def.name}: ${on.name} is ${u.name}'s mark`, 'info', u.owner); }
-    if (a.unshot) { on.shotTurn = -99; log(s, `${def.name}: ${on.name} can still be Hidden although it shot`, 'info', u.owner); }
+    if (a.unshot) { on.shotTurn = -99; (on as any).hasFiredThisTurn = false; log(s, `${def.name}: ${on.name} can still be Hidden although it shot`, 'info', u.owner); }
     if (a.characterModel) {
       const m = alive(on).find((x) => !x.isCharacter && /sergeant|leader|champion|headtaker/i.test(x.name)) ?? alive(on).find((x) => !x.isCharacter);
       if (m) {
@@ -1415,7 +1415,10 @@ export function abilityChoices(s: GameState, p: PlayerId): AbilityChoiceNow[] {
       if (!ch) continue;
       if (ch.if && !ch.if.every((c) => cond(c, { s, A: u, holder: u }))) continue;
       // picked in the army builder (Daemonic Allegiance: the god keyword the unit was given) — not a choice in the battle
-      const fixed = ch.options.filter((o) => u.keywords.includes(o.toUpperCase()));
+      const fixed = ch.options.filter((o) => {
+        const oUpper = String(o || '').toUpperCase();
+        return u.keywords.some((k) => (typeof k === 'string' ? k.toUpperCase() : String((k as any)?.name || (k as any)?.id || '').toUpperCase()) === oUpper);
+      });
       if (fixed.length >= ch.pick) { u.abilityPicks ??= { pool: ch.options, on: fixed.slice(0, ch.pick) }; continue; }
       out.push({ unit: u, name: ch.name, pick: ch.pick, options: ch.options, on: u.abilityPicks?.on ?? ch.options.slice(0, ch.pick) });
     }

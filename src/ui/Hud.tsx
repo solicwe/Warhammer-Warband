@@ -163,7 +163,7 @@ const STYLE_NAME: Record<string, string> = { steady: 'As planned', aggressive: '
  * The bot's commander: its army's emblem, a title, and what it says. While it thinks, the ways of playing the turn it
  * is weighing fill in as each is played out on copies of the game (the best one leads).
  */
-export const Commander = memo(function Commander({ s, p, says, think, planning, quiet }: { s: GameState; p: PlayerId; says: string | null; think: ThinkView | null; planning?: { done: number; total: number } | null; quiet?: boolean }) {
+export const Commander = memo(function Commander({ s, p, think, planning, quiet }: { s: GameState; p: PlayerId; think: ThinkView | null; planning?: { done: number; total: number } | null; quiet?: boolean }) {
   const P = s.players[p];
   const v = voiceOf(P.factionId);
   const warlordUnit = s.units.find((u) => u.owner === p && u.isWarlordUnit)
@@ -181,7 +181,6 @@ export const Commander = memo(function Commander({ s, p, says, think, planning, 
           {think && <span className="cmd-thinking"><Icon name="wait" size={13} /> thinking{think.total ? ` ${think.done}/${think.total}` : '…'}</span>}
           {!think && planning && <span className="cmd-thinking quiet" title="The bot works out its next turn while you play yours"><Icon name="wait" size={13} /> planning its turn {planning.done}/{planning.total}</span>}
         </div>
-        {says && <div key={says} className="cmd-says">“{says}”</div>}
         {think && entries.length > 0 && (
           <div className="cmd-styles">
             {entries.map(([name, x]) => (

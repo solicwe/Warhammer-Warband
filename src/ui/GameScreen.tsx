@@ -6,7 +6,6 @@ import { chapterRules } from '../engine/army';
 import { RuleText } from './RuleText';
 import { modelPortraitKey } from './portraits';
 import { loadoutSummary } from './loadout';
-import { AbilityBadge } from './AbilityBadgePopover';
 import { WeaponFireModePanel } from './WeaponFireModePanel';
 import { Em } from './Em';
 import {
@@ -69,7 +68,7 @@ import { canMakePact, madePact, makeDarkPact, type PactPick } from '../factions/
 import { UnitView } from './Sheet';
 import { useGame } from './store';
 import { AttackReport } from './AttackReport';
-import { AdvantageBar, Commander, RoundSummary, SideScore, tally, type RoundTally, type ThinkView } from './Hud';
+import { AdvantageBar, RoundSummary, SideScore, tally, type RoundTally, type ThinkView } from './Hud';
 import { play, setSoundOn, soundOn } from './sfx';
 import { line, type VoiceEvent } from './voice';
 import { getPlayerFactionTheme } from './factionColors';
@@ -191,21 +190,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // what the bot means to attack in its coming turn (from thinking during the player's turn), shown on request
   const [plan, setPlan] = useState<{ turn: number; p: PlayerId; intents: Intent[] } | null>(null);
   const [showPlan, setShowPlan] = useState(false);
-  // the bot's commander: what it last said
-  const [says, setSays] = useState<{ p: PlayerId; text: string; k: number } | null>(null);
-  // on a phone the commander steps aside 6 s after speaking (during the player's turn): redraw at that moment
-  const [, setSaysTick] = useState(0);
-  useEffect(() => { if (!says) return; const t = window.setTimeout(() => setSaysTick((x) => x + 1), 6100); return () => window.clearTimeout(t); }, [says]);
-  const speak = (p: PlayerId, ev: VoiceEvent, names: { u?: string; t?: string } = {}) => {
-    if (!bots.includes(p)) return;
-    try {
-      const fId = s.players[p]?.factionId ?? 'SM';
-      const text = line(fId, ev, names);
-      if (text) setSays({ p, text, k: Date.now() });
-    } catch {
-      // Voice should never interrupt game logic
-    }
-  };
+  // Faction voice lines / barks disabled to eliminate clutter and unwanted re-renders
+  const speak = (_p?: PlayerId, _ev?: VoiceEvent, _names?: { u?: string; t?: string }) => {};
 
   // engine errors become a message instead of a crash
   useEffect(() => {
@@ -216,8 +202,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return () => { window.removeEventListener('game-error', onErr); window.removeEventListener('save-error', onSave); };
   }, []);
 
-  // single-player: let the bot take its steps one at a time so the board animates; caption what it just did
-  const [botSays, setBotSays] = useState<string | null>(null);
+  // single-player: let the bot take its steps one at a time so the board animates
   const [rolling, setRolling] = useState(false); // a big dice roll is on screen: the bot waits for it
   // the bot looks ahead (plays its turn a few ways on copies) in a worker; the main thread never rolls out itself
   const [thinking, setThinking] = useState(false);
@@ -318,7 +303,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (!worker) { done('steady'); return; }
       setThinking(true);
       speak(who, 'think');
-      setBotSays(null);
       const id = Math.random();
       // the worker stops looking by itself when the level's thinking time is up; this only catches a worker that hangs
       const fallback = window.setTimeout(() => { worker.onmessage = null; done('steady'); }, effectiveBudget + 600);
@@ -343,14 +327,22 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (who === null && !drive) return;
     const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command' || s.window != null;
     const delay = (quick ? 60 : s.campaign ? 200 : 240) / (spectate && speed === 2 ? 3 : 1) / (rush ? 5 : 1);
-    const caption = (before: GameState, after: GameState) => {
-      const fresh = after.log.slice(before.log.length).filter((e) => e.kind !== 'roll' || /charge|Advance/i.test(e.text));
-      if (fresh.length) { setBotSays(fresh[fresh.length - 1].text); }
-    };
     const onMain = () => {
-      const before = sRef.current;
-      const after = act((g) => { if (who === null) botAct(g); else botStep(g, who); return g; });
-      if (after) caption(before, after);
+      act((g) => {
+        if (who === null) {
+          botAct(g);
+        } else {
+          botStep(g, who);
+          if (rush || spectate) {
+            let steps = 0;
+            while (steps < 4 && botShouldAct(g, who) && g.phase !== 'gameover' && !g.attack && !g.window) {
+              botStep(g, who);
+              steps++;
+            }
+          }
+        }
+        return g;
+      });
     };
     const t = window.setTimeout(() => {
       // the bot's thinking (a unit's move can take a second or more on a phone) runs in the worker: the screen stays live
@@ -368,13 +360,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         const next = e.data.state;
         if (!next) { stepOnMain.current = true; onMain(); return; }
         act((g) => { Object.assign(g, next); });
-        caption(sent, next);
       };
       try { worker.postMessage({ kind: 'step', state: s, who, id, style: styleRef.current ?? undefined }); }
       catch { window.clearTimeout(giveUp); worker.onmessage = null; setStepping(false); stepOnMain.current = true; onMain(); }
     }, delay);
     return () => window.clearTimeout(t);
-  }, [s, actingBot, act, botSays, rolling, reporting, thinking, stepping, viewing, worker, speed, spectate, bots.length, rush]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s, actingBot, act, rolling, reporting, thinking, stepping, viewing, worker, speed, spectate, bots.length, rush]); // eslint-disable-line react-hooks/exhaustive-deps
   // the hurry lasts for the bot's turn only
   useEffect(() => { if (actingBot === null && !spectate) setRush(false); }, [actingBot, spectate]);
   useEffect(() => { stepOnMain.current = false; }, [s.turn, s.phase]);
@@ -426,30 +417,18 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     play(s.winner !== null && s.winner !== 'draw' && !bots.includes(s.winner) ? 'vp' : 'turn');
   }, [s.phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // a caption of what the bot did goes away once the player has the turn (it is in the log)
-  useEffect(() => {
-    if (!botSays || actingBot !== null || spectate) return;
-    const tm = window.setTimeout(() => setBotSays(null), 2600);
-    return () => window.clearTimeout(tm);
-  }, [botSays, actingBot, spectate]);
-
   // auto rules: the player only moves and shoots; the app takes every other decision of theirs as it comes up
   const autoWho = ([0, 1] as PlayerId[]).find((p) => autoDue(s, p)) ?? null;
   useEffect(() => {
     if (autoWho === null || rolling || thinking || viewing) return;
     const t = window.setTimeout(() => {
-      let said: string | null = null;
       act((g) => {
-        const last = g.log[g.log.length - 1];
-        autoStep(g, autoWho);
-        const fresh = g.log.slice(g.log.lastIndexOf(last) + 1).filter((e) => e.kind !== 'roll' && e.player === autoWho);
-        said = fresh.length ? fresh[fresh.length - 1].text : null;
+        let count = 0;
+        while (count < 3 && onAuto(g, autoWho) && g.phase !== 'gameover' && !g.attack && !g.window) {
+          autoStep(g, autoWho);
+          count++;
+        }
       });
-      if (said) {
-        const msg = `Auto: ${said}`;
-        setBotSays(msg);
-        window.setTimeout(() => setBotSays((x) => (x === msg ? null : x)), 2600);
-      }
     }, s.phase === 'fight' ? 700 : 300);
     return () => window.clearTimeout(t);
   }, [s, autoWho, rolling, thinking, viewing]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1347,48 +1326,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             M <b>{m.profile.M !== undefined && m.profile.M !== null ? m.profile.M + unitFlags(s, u).move : '-'}"</b> · T <b>{m.profile.T}</b> · Sv <b>{m.profile.Sv}+</b>{m.profile.InSv ? <> · <b>{m.profile.InSv}++</b></> : null} · W <b>{m.wounds}/{m.profile.W}</b> · Ld <b>{bestLd(u, s)}+</b> · OC <b>{u.battleShocked ? '-' : m.profile.OC ?? '-'}</b>
           </div>
           {flags.length > 0 && <div className="tiny" style={{ color: 'var(--warn)' }}>{flags.join(' · ')}</div>}
-          {(() => {
-            let kit = loadoutSummary(u);
-            if (!kit.length) {
-              const counts = new Map<string, number>();
-              for (const mdl of (alive(u).length ? alive(u) : u.models)) {
-                for (const w of mdl.weapons) {
-                  counts.set(w.name, (counts.get(w.name) ?? 0) + 1);
-                }
-              }
-              kit = [...counts.entries()].map(([name, n]) => (n > 1 ? `${n}× ${name}` : name));
-            }
-            if (!kit.length) return null;
-            return (
-              <div className="tiny loadout-line" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                <Icon name="shoot" size={13} />
-                {kit.map((item, idx) => {
-                  const clean = item.replace(/^\d+×\s*/, '');
-                  const count = item.match(/^(\d+×)\s*/)?.[1];
-                  return (
-                    <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                      {count && <span style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600 }}>{count}</span>}
-                      <AbilityBadge name={clean} unit={u} compact />
-                    </span>
-                  );
-                })}
-              </div>
-            );
-          })()}
-          {(() => {
-            const ls = activeLabels(s, u);
-            if (!ls.length) return null;
-            return (
-              <div className="tiny fx-labels" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                <Icon name="ability" size={13} />
-                {ls.slice(0, 6).map((label, idx) => (
-                  <AbilityBadge key={idx} name={label} unit={u} compact />
-                ))}
-                {ls.length > 6 ? <span style={{ color: '#94a3b8', fontSize: 11 }}>+{ls.length - 6}</span> : null}
-              </div>
-            );
-          })()}
         </div>
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label="View Datasheet"
+          title="View Datasheet"
+          style={{ padding: '6px 8px', alignSelf: 'center', color: 'var(--text-2)', fontSize: '18px', fontWeight: 700 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSheet(u.id);
+          }}
+        >
+          ›
+        </button>
       </div>
     );
   };
@@ -1403,7 +1354,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <Joystick onMove={joyMove} onEnd={() => { if (draftRef.current) onDragEnd(draftRef.current); }} />
         <div className="move-joy-info">
           <span className="move-joy-d">{moved.toFixed(1)}" <span className="tiny muted">/ {max.toFixed(1)}"</span></span>
-          <span className="tiny muted">Hold the stick and push the way to go · or drag the models</span>
         </div>
       </div>
     );
@@ -1413,7 +1363,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     <>
       {joystick()}
       <div className="row">
-        <span className="tiny muted grow">{mode?.k === 'move' ? '' : 'Drag = whole unit · tap a model = move that model'}</span>
+        <span className="grow" />
         <button className="btn small" onClick={() => { setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); joyOff.current = { x: 0, y: 0 }; }}>Reset</button>
         {extra}
       </div>
@@ -1515,7 +1465,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const em = modeUnit.extraMove;
     return (
       <>
-        <div className="small"><b>{modeUnit.name}</b> · {em?.label}: {mode.kind === 'surge' ? `Surge move ${em?.max ?? 0}" (towards the closest enemy, not ending within Engagement Range)` : `Move up to ${em?.max ?? 0}" (not ending within Engagement Range)`}</div>
+        <div style={{ fontWeight: 700, padding: '4px 0', color: 'var(--text)' }}><b>{modeUnit.name}</b>{em?.label ? ` · ${em.label}` : ''}</div>
         {moveControls(mode.kind === 'surge' ? 'surge move' : 'move', () => confirmMove(mode.kind as 'extra' | 'surge', () => setSel(null)))}
       </>
     );
@@ -1531,8 +1481,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (mode?.k === 'shoot' && mode.overwatch) return shootPanel();
       return (
         <>
-          <div className="handoff">{pName(s, p)}: use Fire Overwatch (1CP)? <span className="small muted">— Snap Shooting: a visible target within {RULES.snapShooting.range}", hits only on a 6 (not Critical), no hit re-rolls</span></div>
-          <div className="tiny muted">{overwatchCandidates(s, p).map((u) => `${u.name}: closest enemy ${Math.min(...boardUnits(s, other(p)).map((e) => unitDistance(u, e))).toFixed(1)}"`).join(' · ')}</div>
+          <div className="handoff">{pName(s, p)}: use Fire Overwatch (1CP)?</div>
           <div className="unit-strip">{overwatchCandidates(s, p).map((u) => unitPill(u, false, () => setMode({ k: 'shoot', unitId: u.id, smode: 'snap', target: null, useCQ: false, profile: {}, overwatch: true })))}</div>
           {skip}
         </>
@@ -1544,7 +1493,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <>
           <div className="handoff">{pName(s, p)}: use Rapid Ingress (1CP)?</div>
           <div className="unit-strip">{rapidIngressCandidates(s, p).map((u) => unitPill(u, false, () => setMode({ k: 'place', unitId: u.id, how: hasDeepStrike(s, u) ? 'deepStrike' : 'ingress', rapid: unitFlags(s, u).oppMoveIngress ? 'free' : true })))}</div>
-          {rapidIngressCandidates(s, p).some((u) => unitFlags(s, u).oppMoveIngress) && <div className="tiny muted">Units with an ability (e.g. Deff from the Shadows) arrive free, no CP</div>}
           {skip}
         </>
       );
@@ -1557,12 +1505,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       );
     }
     if (w.kind === 'pledge') {
-      const pp = s.players[p].pactPoints ?? 0;
       return (
         <>
           <div className="handoff">{pName(s, p)}: Pledges to the Dark Prince</div>
-          <div className="tiny muted">How many enemy units will be destroyed this battle round? Kept: that many Pact points (now {pp}). Broken: your Warlord suffers D3 mortal wounds.</div>
-          <div className="tiny muted">{PACT_BONUSES}</div>
           <div className="row wrap">{Array.from({ length: w.max + 1 }, (_, n) => <button key={n} type="button" className={`btn ${n === botPledge(s, p) ? 'primary' : ''}`} onClick={() => act((g) => setPledge(g, p, n))}>{n}</button>)}</div>
         </>
       );
@@ -1580,12 +1525,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (mode?.k === 'move') return extraMovePanel();
       return (
         <>
-          <div className="handoff">{pName(s, p)}: reaction ability — {w.label}</div>
+          <div className="handoff">{pName(s, p)}: {w.label}</div>
           {w.offers.map((o) => {
             const u = U(o.unitId);
             return (
               <div key={o.unitId + o.key} className="row card" style={{ padding: 8 }}>
-                <div className="grow small"><b>{u.name}</b><div className="tiny muted">{o.label}</div></div>
+                <div className="grow small"><b>{u.name}</b></div>
                 <button className="btn small primary" onClick={() => {
                   const res = act((g) => { const err = acceptOffer(g, o.unitId, o.key); return { err, kind: unitById(g, o.unitId).extraMove?.kind ?? 'extra' }; });
                   if (res.err) { flash(res.err); return; }
@@ -1618,7 +1563,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return (
         <>
           <div className="handoff">{pName(s, p)}: use Heroic Intervention?</div>
-          <div className="tiny muted">The game picks the right option: <b>Leap to Defend</b> (1CP) when a unit that just charged is in reach, else <b>Into the Fray</b> (2CP, enemy within 6", charge roll at most 6).</div>
           {heroicPick.map((u, i) => {
             const how = heroicMode(s, p, u);
             const go = () => {
@@ -1676,9 +1620,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const u = U(mode.unitId);
     return (
       <>
-        <div className="small">Set up <b>{u.name}</b>: tap the battlefield{mode.how === 'deploy' ? ' in your deployment zone' : mode.how === 'disembark' ? ` within ${disembarkMode(s, U(mode.transportId!)) === 'combat' ? 6 : 3}" of the transport (${disembarkMode(s, U(mode.transportId!))} disembark)` : mode.how === 'deepStrike' ? ` (more than ${unitFlags(s, u).deepStrikeRange}" from enemies)` : mode.how === 'infiltrate' ? ` (more than ${RULES.reserves.enemyDistance}" from the enemy deployment zone)` : ` (within ${RULES.reserves.edgeDistance}" of a battlefield edge, more than ${RULES.reserves.enemyDistance}" from enemies)`} then drag to adjust</div>
+        <div className="small"><b>{u.name}</b></div>
         <div className="row">
-          <span className="tiny muted grow">Drag = whole unit · tap a model = move that model</span>
+          <span className="grow" />
           <button className="btn small" onClick={autoPlace}>Auto place</button>
         </div>
         {check && !check.ok && <div className="err">{check.errors.slice(0, 4).map((e) => <div key={e}>{e}</div>)}</div>}
@@ -2000,7 +1944,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const advRR = mode.kind === 'advance' ? canUseStratagem(s, modeUnit.owner, 'command-reroll', modeUnit) : 'x';
       return (
         <>
-          <div className="hint"><span><b>{modeUnit.name}</b> · {mode.kind === 'normal' ? 'Normal move' : mode.kind === 'advance' ? `Advance (M + ${modeUnit.advanceRoll})` : modeUnit.battleShocked ? 'Fall back – Desperate Escape (a hazard roll per model)' : 'Fall back – Ordered Retreat'} · drag the models (distance is limited for you), then confirm</span></div>
+          <div style={{ fontWeight: 700, padding: '4px 0', color: 'var(--text)' }}><b>{modeUnit.name}</b> · {mode.kind === 'normal' ? 'Normal Move' : mode.kind === 'advance' ? `Advance (M + ${modeUnit.advanceRoll})` : 'Fall Back'}</div>
           {moveControls(mode.kind, () => confirmMove(mode.kind),
             mode.kind === 'advance' && unitHasAbility(modeUnit, 'Waaagh!') && freeAdvRR !== modeUnit.id ? <button className="btn small" onClick={() => { act((g) => rollAdvance(g, unitById(g, modeUnit.id))); setFreeAdvRR(modeUnit.id); setDraft(startPaths(modeUnit)); }}>Re-roll advance (Waaagh!, free)</button>
             : mode.kind === 'advance' && canDetReroll(s, modeUnit, 'advance') ? <button className="btn small" onClick={() => { act((g) => detReroll(g, unitById(g, modeUnit.id), 'advance')); setDraft(startPaths(modeUnit)); }}>Re-roll advance (Detachment, free)</button>
@@ -2015,7 +1959,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const rides = moved ? s.units.filter((t) => t.owner === s.active && t.transport && onBoard(t) && !canEmbarkIn(s, moved, t)) : [];
     return (
       <>
-        {!selUnit && <div className="hint"><span>Tap a unit on the battlefield map to move</span></div>}
+
         {offBoard.length > 0 && (
           <div className="offboard-tray" style={{ marginBottom: 8 }}>
             <div className="tiny muted" style={{ marginBottom: 4 }}>Reserves & Embarked Units:</div>
@@ -2485,7 +2429,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const canExplode = u && !u.selectedToShoot && !isEngaged(s, u) && u.move !== 'advance' && u.move !== 'fallback' && (hasKw(u, 'GRENADES') || hasKw(u, 'EXPLOSIVES')) && !canUseStratagem(s, u.owner, 'explosives', u);
     return (
       <>
-        {!selUnit && <div className="hint"><span>Tap an eligible friendly unit on the battlefield map to fire</span></div>}
+
         {actionOptions(s).length > 0 && (
           <div style={{ background: 'rgba(37, 99, 235, 0.15)', border: '1px solid rgba(59, 130, 246, 0.5)', borderRadius: 8, padding: '8px 12px', margin: '6px 0' }}>
             <div style={{ fontWeight: 700, color: '#93c5fd', fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -2601,7 +2545,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return (
         <>
           <div className="big-result">Charge roll: {roll}"</div>
-          {chargeOpts.length ? <div className="hint"><span>Tap a highlighted enemy unit: your unit charges it</span></div> : <div className="small">No target within the rolled distance: the charge fails</div>}
+          {!chargeOpts.length && <div className="small">No target within the rolled distance: the charge fails</div>}
           {(hasKw(modeUnit, 'MONSTER') || hasKw(modeUnit, 'VEHICLE')) && canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit) === null && (
             <div className="small" style={{ color: '#fca5a5', marginTop: '0.2rem' }}>
               Crushing Impact (1CP) available: rolls T{alive(modeUnit)[0]?.profile.T ?? 4}D6 on impact
@@ -2677,7 +2621,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const why = u ? chargeEligibility(s, u) : null;
     return (
       <>
-        {!selUnit && <div className="hint"><span>Tap a friendly unit within 12" of the enemy on the map to charge</span></div>}
+
         {u && (
           <>
             {why ? <div className="muted small" style={{ marginBottom: 6 }}>Cannot charge: {why}</div> : (
@@ -2854,7 +2798,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         {cands.player !== null && <div className="handoff">{pName(s, cands.player)} selects a unit to fight{cands.units.some((u) => u.chargedTurn === s.turn || u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn) ? ' (Fights First units first)' : ''}</div>}
-        {!selUnit && <div className="hint"><span>Tap an engaged friendly unit on the map to fight</span></div>}
+
         {selUnit && cands.units.includes(selUnit) && unitCard(selUnit)}
         {overrunReady && (
           <div className="row">
@@ -2987,7 +2931,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     );
     if (spectate) return (
       <div className="row">
-        <div className="bot-act grow"><span className={`bot-dot s${actingBot ?? 0}`} />{botSays ?? (actingBot !== null ? `${pName(s, actingBot)} is playing` : 'Between turns')}</div>
+        <div className="bot-act grow"><span className={`bot-dot s${actingBot ?? 0}`} />{actingBot !== null ? `${pName(s, actingBot)} is playing` : 'Between turns'}</div>
         <div className="seg" role="radiogroup" aria-label="Speed" style={{ minWidth: 170 }}>
           <button role="radio" aria-checked={speed === 0} className={speed === 0 ? 'on' : ''} onClick={() => setSpeed(0)}>Pause</button>
           <button role="radio" aria-checked={speed === 1} className={speed === 1 ? 'on' : ''} onClick={() => setSpeed(1)}>Normal</button>
@@ -3006,7 +2950,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           style={{ cursor: thinking ? 'pointer' : 'default' }}
           title={thinking ? 'Tap to skip thinking and move now' : undefined}
         >
-          {thinking ? `${pName(s, actingBot)} is weighing its turn… (tap to move)` : botSays ?? `${pName(s, actingBot)} is playing…`}
+          {thinking ? `${pName(s, actingBot)} is weighing its turn… (tap to move)` : `${pName(s, actingBot)} is playing…`}
         </span>
         {thinking && (
           <button
@@ -3052,8 +2996,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     : s.phase === 'scouts' ? 'Scouts'
     : s.phase === 'gameover' ? 'Battle over'
     : `${armyName(s.active)} Turn`;
-  // the commander on screen: whoever spoke last, else the bot whose turn it is
-  const commanderP: PlayerId | null = bots.length ? (actingBot ?? (says && bots.includes(says.p) ? says.p : bots[0])) : null;
   // the enemy's likely attacks next turn, drawn on request while it is the player's turn
   const planArrows = useMemo(() => {
     if (!showPlan || !plan || plan.turn !== s.turn || s.active === plan.p) return [];
@@ -3284,7 +3226,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         </InlineErrorBoundary>
         <AttackReport s={s} level={((spectate && speed === 2) || (rush && actingBot !== null)) && fxLevel === 'full' ? 'short' : fxLevel} quick={(o) => spectate || rush || bots.includes(o)} onBusy={setReporting}
           onShake={(lv) => { if (!lv) return; setShake(lv); window.setTimeout(() => setShake(0), 420 + lv * 80); }} />
-        {botSays && actingBot === null && !spectate && <div className="bot-caption">{botSays}</div>}
+
         {toast && <div className="toast">{toast}</div>}
         {tape.on && (
           <div className="tape-bar">
@@ -3314,11 +3256,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <button className="drawer-handle" aria-label={drawerMin ? 'Show the panel' : 'Fold the panel down'} aria-expanded={!drawerMin} onClick={() => setDrawerMin((v) => !v)}>
           <span className="drawer-grip" aria-hidden="true" />
         </button>
-        {commanderP !== null && !mode && (
-          <Commander quiet={actingBot === null && !thinking && !(says && Date.now() - says.k < 6000)} s={s} p={commanderP} says={says && says.p === commanderP ? says.text : null}
-            think={thinking && actingBot === commanderP ? think ?? { values: {}, done: 0, total: 0 } : null}
-            planning={!actingBot && ponderProg ? ponderProg : null} />
-        )}
         <div className={`panel ${actor ? 's1' : ''}`}>
           {bots.length === 0 && s.phase !== 'deploy' && s.phase !== 'gameover' && !s.window && <div className="label"><span className={`side-dot s${actor}`} aria-hidden="true" /> {pName(s, actor)} to act</div>}
           <InlineErrorBoundary name={`Phase: ${s.phase}`} onRecover={() => { setSel(null); setMode(null); setDraft(null); setCheck(null); }}>

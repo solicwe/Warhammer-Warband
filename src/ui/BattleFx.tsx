@@ -80,7 +80,7 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
   }
   if (e.kind === 'explosion') return <DeadlyDemiseFx e={e} f={f} />;
   if (e.kind === 'attack') return <AttackFx e={e} f={f} />;
-  if (e.kind === 'place' && e.at) return <ArrivalFx at={e.at} f={f} seed={e.seq} />;
+  if (e.kind === 'place' && e.at) return <ArrivalFx at={e.at} f={f} seed={e.seq} deepStrike={e.deepStrike} label={e.label} />;
   if (e.kind === 'shock') return <ShockFx at={e.at} f={f} seed={e.seq} />;
   if (e.kind === 'heal') return <HealFx at={e.at} f={f} seed={e.seq} n={e.n} revive={!!e.revive} />;
   if (e.kind === 'move') return <ChargeFx paths={e.paths} f={f} seed={e.seq} />;
@@ -915,25 +915,99 @@ function SkillLite({ e, f }: { e: SkillEvent; f: number }) {
 
 // ---------- a unit arrives from Reserves: a column of light, a shockwave and the dust it throws up ----------
 
-function ArrivalFx({ at, f, seed }: { at: Pt; f: number; seed: number }) {
-  const beam = f < 0.45 ? Math.sin((f / 0.45) * Math.PI) : 0;
-  const ring = clamp01((f - 0.25) / 0.5), dust = clamp01((f - 0.3) / 0.7);
+function ArrivalFx({ at, f, seed, deepStrike, label }: { at: Pt; f: number; seed: number; deepStrike?: boolean; label?: string }) {
+  const beam = f < 0.5 ? Math.sin((f / 0.5) * Math.PI) : 0;
+  const ring = clamp01((f - 0.2) / 0.6);
+  const ring2 = clamp01((f - 0.35) / 0.55);
+  const dust = clamp01((f - 0.25) / 0.7);
+  const bannerOpacity = f < 0.15 ? f / 0.15 : f > 0.8 ? (1 - f) / 0.2 : 1;
+  const bannerY = at.y - 2.8 - easeOut(Math.min(1, f * 2.5)) * 0.8;
+
   return (
     <g>
+      {/* Warp Beam */}
       {beam > 0 && (
         <g opacity={beam}>
-          <rect x={at.x - 0.9} y={at.y - 14} width={1.8} height={14} fill="url(#fx-beam)" />
-          <rect x={at.x - 0.25} y={at.y - 14} width={0.5} height={14} fill="#fff" opacity={0.7} />
+          <rect x={at.x - (deepStrike ? 1.6 : 0.9)} y={at.y - 18} width={deepStrike ? 3.2 : 1.8} height={18} fill="url(#fx-beam)" />
+          <rect x={at.x - (deepStrike ? 0.6 : 0.25)} y={at.y - 18} width={deepStrike ? 1.2 : 0.5} height={18} fill="#fff" opacity={0.85} />
         </g>
       )}
-      <Glow at={at} r={1 + 2.2 * beam} color="cyan" op={beam} />
-      {ring > 0 && ring < 1 && <circle cx={at.x} cy={at.y} r={0.8 + easeOut(ring) * 4.2} fill="none" stroke="#a5f3fc" strokeWidth={0.22 * (1 - ring)} opacity={0.9 * (1 - ring)} />}
-      {ring > 0 && ring < 1 && <circle cx={at.x} cy={at.y} r={0.5 + easeOut(ring) * 2.8} fill="none" stroke="#fff" strokeWidth={0.08} opacity={0.7 * (1 - ring)} />}
-      {Array.from({ length: 10 }, (_, i) => {
-        const a = (i / 10) * Math.PI * 2 + noise(seed, i) * 0.5;
-        const d = 1.2 + dust * (2 + noise(seed, i + 9) * 1.2);
-        return <Puff key={i} at={{ x: at.x + Math.cos(a) * d, y: at.y + Math.sin(a) * d }} k={dust} r={0.9} />;
+      <Glow at={at} r={deepStrike ? 2.5 + 4 * beam : 1 + 2.2 * beam} color="cyan" op={beam} />
+
+      {/* Primary Shockwave Ring */}
+      {ring > 0 && ring < 1 && (
+        <g>
+          <circle cx={at.x} cy={at.y} r={0.8 + easeOut(ring) * (deepStrike ? 6.5 : 4.2)} fill="none" stroke="#67e8f9" strokeWidth={(deepStrike ? 0.35 : 0.22) * (1 - ring)} opacity={0.95 * (1 - ring)} />
+          <circle cx={at.x} cy={at.y} r={0.5 + easeOut(ring) * (deepStrike ? 4.5 : 2.8)} fill="none" stroke="#ffffff" strokeWidth={0.12} opacity={0.85 * (1 - ring)} />
+        </g>
+      )}
+
+      {/* Secondary Resonant Shockwave Ring for Deep Strike */}
+      {deepStrike && ring2 > 0 && ring2 < 1 && (
+        <circle cx={at.x} cy={at.y} r={0.4 + easeOut(ring2) * 5.5} fill="none" stroke="#fbcfe8" strokeWidth={0.25 * (1 - ring2)} opacity={0.75 * (1 - ring2)} />
+      )}
+
+      {/* Warp Lightning Arcs */}
+      {deepStrike && f < 0.7 && (
+        <g opacity={1 - f / 0.7}>
+          {Array.from({ length: 6 }, (_, i) => {
+            const angle = (i / 6) * Math.PI * 2 + noise(seed, i) * 0.4;
+            const r1 = 0.8 + noise(seed, i + 10) * 1.5;
+            const r2 = r1 + 1.2 + noise(seed, i + 20) * 1.8;
+            const mx = at.x + Math.cos(angle + 0.25) * r1;
+            const my = at.y + Math.sin(angle + 0.25) * r1;
+            const ex = at.x + Math.cos(angle) * r2;
+            const ey = at.y + Math.sin(angle) * r2;
+            return (
+              <polyline
+                key={i}
+                points={`${at.x},${at.y} ${mx},${my} ${ex},${ey}`}
+                fill="none"
+                stroke={i % 2 === 0 ? '#67e8f9' : '#ffffff'}
+                strokeWidth={0.12}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            );
+          })}
+        </g>
+      )}
+
+      {/* Dust Clouds */}
+      {Array.from({ length: deepStrike ? 14 : 10 }, (_, i) => {
+        const a = (i / (deepStrike ? 14 : 10)) * Math.PI * 2 + noise(seed, i) * 0.5;
+        const d = 1.2 + dust * ((deepStrike ? 3.2 : 2) + noise(seed, i + 9) * 1.4);
+        return <Puff key={i} at={{ x: at.x + Math.cos(a) * d, y: at.y + Math.sin(a) * d }} k={dust} r={deepStrike ? 1.2 : 0.9} />;
       })}
+
+      {/* Floating Deep Strike Banner */}
+      {(deepStrike || label) && bannerOpacity > 0 && (
+        <g transform={`translate(${at.x} ${bannerY})`} opacity={bannerOpacity}>
+          <rect
+            x={-4.5}
+            y={-0.8}
+            width={9.0}
+            height={1.6}
+            rx={0.35}
+            fill="rgba(15, 23, 42, 0.92)"
+            stroke="#67e8f9"
+            strokeWidth={0.12}
+          />
+          <text
+            y={0.25}
+            fontSize={0.65}
+            textAnchor="middle"
+            fill="#a5f3fc"
+            fontWeight={900}
+            letterSpacing={0.08}
+            stroke="#0f172a"
+            strokeWidth={0.15}
+            paintOrder="stroke"
+          >
+            {label || '⚡ DEEP STRIKE ARRIVAL'}
+          </text>
+        </g>
+      )}
     </g>
   );
 }

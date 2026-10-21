@@ -611,7 +611,7 @@ export interface AttackSession {
 /** Visual events for the board (animations). Not rules state; capped to the last few. */
 export type FxEvent =
   | { seq: number; kind: 'move'; unitId: string; owner: PlayerId; moveKind: MoveKind; paths: [string, Pt[]][] }
-  | { seq: number; kind: 'place'; unitId: string; owner: PlayerId; at?: Pt }
+  | { seq: number; kind: 'place'; unitId: string; owner: PlayerId; at?: Pt; deepStrike?: boolean; label?: string }
   /** a unit fails a Battle-shock test */
   | { seq: number; kind: 'shock'; unitId: string; owner: PlayerId; at: Pt }
   /** wounds regained or destroyed models returned */

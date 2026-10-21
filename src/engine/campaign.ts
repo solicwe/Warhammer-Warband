@@ -49,7 +49,11 @@ export const BATTLE_HONORS: BattleHonor[] = [
   { id: 'heroic_strike', name: 'Heroic Might', desc: '+1 Attack characteristic on melee weapons.', cost: 65, e: { attacks: 1, attack: 'melee' } },
   { id: 'range_finders', name: 'Advanced Targeters', desc: 'Ranged weapons gain +4" range and ignore cover.', cost: 60, e: { rangeBonus: 4, abilities: ['ignores cover'], attack: 'ranged' } },
 ];
-export const battleHonorById = (id: string) => BATTLE_HONORS.find((h) => h.id === id);
+export const battleHonorById = (id: unknown) => {
+  const key = typeof id === 'string' ? id : (id && typeof id === 'object' ? String((id as any).id || (id as any).name || '') : String(id ?? ''));
+  const upper = key.toUpperCase();
+  return BATTLE_HONORS.find((h) => h.id === key || h.id.toUpperCase() === upper || h.name.toUpperCase() === upper);
+};
 
 export interface Run {
   version: 1;
@@ -145,8 +149,23 @@ export const RELICS: Relic[] = [
   { id: 'aoi_rosette', factionId: 'AoI', name: 'Rosette of the Inquisitor Lord', text: 'Imperial Agents: +2 CP, and ranged attacks have [LETHAL HITS] and [IGNORES COVER].', e: { abilities: ['lethal hits', 'ignores cover'], attack: 'ranged' }, rare: true },
   { id: 'qi_sanctuary', factionId: 'QI', name: 'Sanctuary Ion Shield', text: 'Imperial Knights: 4+ invulnerable save in melee and ranged.', e: { defend: { inv: 4 } }, rare: true },
   { id: 'qt_warpsight', factionId: 'QT', name: 'Helm of Warpsight', text: 'Chaos Knights: Ranged attacks ignore cover, +1 to Hit, and +1 AP.', e: { abilities: ['ignores cover'], hit: 1, ap: 1, attack: 'ranged' }, rare: true },
+  // Wild & Faction Synergies
+  { id: 'wild_phase_shift', name: 'Phase-Shift Distortion Drives', text: 'Every unit moves through terrain and models freely, and +3" Move.', e: { mobile: true, moveThroughModels: true, move: 3 }, rare: true },
+  { id: 'wild_chain_lightning', name: 'Arcing Lightning Munitions', text: 'Ranged attacks score Critical Hits on 5+, and each wound inflicts 1 mortal wound.', e: { critHitOn: 5, mortalPerWound: 1, attack: 'ranged' }, rare: true },
+  { id: 'wild_kinetic_deflector', name: 'Reactive Kinetic Deflectors', text: 'Every unit adds 1 to saving throws, and reflects 1 mortal wound on save rolls of 6.', e: { defend: { save: 1 }, retaliate: { on: 6, max: 6 } }, rare: true },
+  { id: 'wild_death_burst', name: 'Spiteful Plasma Overload Core', text: 'Friendly models destroyed within 6" detonate with Deadly Demise automatically.', e: { demiseSure: { range: 6 } }, rare: true },
+  { id: 'nec_hypercrypt', factionId: 'NEC', name: 'Hypercrypt Reanimation Matrix', text: 'Necrons: Every unit gains Feel No Pain 5+, +1 Toughness, and re-rolls Battle-shock tests.', e: { defend: { fnp: 5 }, toughness: 1, rerollShock: true }, rare: true },
+  { id: 'am_overlapping_vox', factionId: 'AM', name: 'Tactical Vox Relay Grid', text: 'Astra Militarum: Ranged weapons have [LETHAL HITS], +1 BS skill, and +2" Move.', e: { abilities: ['lethal hits'], skill: 1, move: 2, attack: 'ranged' }, rare: true },
+  { id: 'sm_artificer_plasma', factionId: 'SM', name: 'Artificer Plasma & Reflective Ceramite', text: 'Space Marines: Ranged weapons gain +1 Damage and [SUSTAINED HITS 1], and 4+ invulnerable save.', e: { damage: 1, abilities: ['sustained hits 1'], defend: { inv: 4 }, attack: 'ranged' }, rare: true },
+  { id: 'ork_endless_waaagh', factionId: 'ORK', name: 'Endless WAAAGH! Frenzy', text: 'Orks: Melee attacks have [SUSTAINED HITS 2], +2 Attacks, and units can re-roll Advance and Charge.', e: { abilities: ['sustained hits 2'], attacks: 2, rerollCharge: true, rerollAdvance: true, attack: 'melee' }, rare: true },
+  { id: 'csm_spiteful_daemon', factionId: 'CSM', name: 'Spiteful Daemonic Fury', text: 'Chaos Space Marines: Melee weapons have Critical Hits on 5+, +1 AP, and each wound deals 1 mortal wound.', e: { critHitOn: 5, ap: 1, mortalPerWound: 1, attack: 'melee' }, rare: true },
+  { id: 'tyr_hyper_evolution', factionId: 'TYR', name: 'Hyper-Evolution Feeding Tendrils', text: 'Tyranids: +2" Move, moves ignore terrain, and melee attacks have [LETHAL HITS].', e: { move: 2, mobile: true, abilities: ['lethal hits'], attack: 'melee' }, rare: true },
 ];
-export const relicById = (id: string) => RELICS.find((r) => r.id === id);
+export const relicById = (id: unknown) => {
+  const key = typeof id === 'string' ? id : (id && typeof id === 'object' ? String((id as any).id || (id as any).name || '') : String(id ?? ''));
+  const upper = key.toUpperCase();
+  return RELICS.find((r) => r.id === key || r.id.toUpperCase() === upper || r.name.toUpperCase() === upper);
+};
 
 export function relicLevel(run: Run, id: string): number {
   return run.relicLevels?.[id] ?? (run.relics.includes(id) ? 1 : 0);
@@ -223,7 +242,21 @@ export const BOSS_RULES: BossRule[] = [
   { id: 'relentless-foe', name: 'Relentless Assault', text: 'Enemy units can re-roll Advance and Charge rolls.', e: { rerollAdvance: true, rerollCharge: true } },
   { id: 'furious-swarms', name: 'Furious Swarm', text: 'Enemy units have [SUSTAINED HITS 1] on melee attacks.', e: { abilities: ['sustained hits 1'], attack: 'melee' } },
 ];
-export const bossRuleById = (id: string) => BOSS_RULES.find((r) => r.id === id);
+export const safeUpper = (val: unknown): string => {
+  if (typeof val === 'string') return val.toUpperCase();
+  if (val && typeof val === 'object') {
+    const o = val as { name?: unknown; id?: unknown; keyword?: unknown; title?: unknown; value?: unknown };
+    const str = o.name || o.id || o.keyword || o.title || o.value || '';
+    return typeof str === 'string' ? str.toUpperCase() : String(str).toUpperCase();
+  }
+  return String(val ?? '').toUpperCase();
+};
+
+export const bossRuleById = (id: unknown) => {
+  const key = typeof id === 'string' ? id : (id && typeof id === 'object' ? String((id as any).id || (id as any).name || '') : String(id ?? ''));
+  const upper = key.toUpperCase();
+  return BOSS_RULES.find((r) => r.id === key || r.id.toUpperCase() === upper || r.name.toUpperCase() === upper);
+};
 
 export function rng(seed: number) {
   let x = (seed >>> 0) || 1;
@@ -465,18 +498,19 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
   return next;
 }
 
-const hasKwIn = (u: UnitState, units?: string) => !units || units.split('|').some((k) => u.keywords.includes(k));
+const hasKwIn = (u: UnitState, units?: string) => !units || units.split('|').some((k) => (u.keywords || []).some((kw) => safeUpper(kw) === safeUpper(k)));
 
 /** Put the run's relics on the player's army and the enemy's special rules on theirs, for the whole battle. */
-export function applyCampaign(s: GameState, run: Run, rules: string[]) {
+export function applyCampaign(s: GameState, run: Run, rules: (string | { id?: string; name?: string })[]) {
   const me: PlayerId = 0, foe: PlayerId = 1;
   // Set Roguelike Annihilation primary mission for both players
   for (const p of [me, foe]) {
     s.players[p].primaryId = 'roguelike-annihilation';
     s.players[p].disposition = 'purge-the-foe';
   }
-  for (const id of run.relics) {
-    const r = relicById(id);
+  for (const rawId of run.relics) {
+    const r = relicById(rawId);
+    const id = r?.id ?? (typeof rawId === 'string' ? rawId : String((rawId as any)?.id || ''));
     if (!r || id === 'cache') continue;
     const lvl = run.relicLevels?.[id] ?? 1;
     const eff = scaleRelicEffect(r.e, lvl);
@@ -495,14 +529,18 @@ export function applyCampaign(s: GameState, run: Run, rules: string[]) {
       }
     }
   }
-  for (const id of rules) {
-    const b = bossRuleById(id);
+  const cleanRules: string[] = [];
+  for (const rawId of rules) {
+    const b = bossRuleById(rawId);
     if (!b) continue;
-    for (const u of s.units.filter((x) => x.owner === foe && hasKwIn(x, b.units))) addTimed(s, u, { e: { ...b.e }, label: b.name, until: 'battle', by: foe });
+    cleanRules.push(b.id);
+    for (const u of s.units.filter((x) => x.owner === foe && hasKwIn(x, b.units))) {
+      addTimed(s, u, { e: { ...b.e }, label: b.name, until: 'battle', by: foe });
+    }
   }
   const cacheLvl = run.relicLevels?.['cache'] ?? (run.relics.includes('cache') ? 1 : 0);
   s.players[me].cp += run.cp + (cacheLvl > 1 ? cacheLvl - 1 : 0);
-  s.campaign = { node: run.fighting ?? '', relics: [...run.relics], rules: [...rules], relicLevels: { ...(run.relicLevels ?? {}) } };
+  s.campaign = { node: run.fighting ?? '', relics: [...run.relics.map((r: any) => typeof r === 'string' ? r : String(r?.id || r?.name || ''))], rules: cleanRules, relicLevels: { ...(run.relicLevels ?? {}) } };
 }
 
 /** Purchase a Battle Honor for a unit using Scrap */

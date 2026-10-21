@@ -85,6 +85,6 @@ export function withAutoRules(s: GameState): GameState {
   // people make every choice themselves (stratagem prompts, reactions, Rituals, Blessings); bots make their own
   s.decides = ([0, 1] as PlayerId[]).filter((p) => !(s.bots ?? []).includes(p));
   // battles saved before the Thousand Sons fix still carry army rules that are not theirs
-  for (const P of s.players) if (P.factionId === 'TS') P.armyRules = P.armyRules.filter((r) => r.name !== 'Oath of Moment' && r.name !== 'Dark Pacts');
+  for (const P of s.players) if (P.factionId === 'TS') P.armyRules = P.armyRules.filter((r) => { const n = typeof r === 'string' ? r : (r as any)?.name; return n !== 'Oath of Moment' && n !== 'Dark Pacts'; });
   return s;
 }

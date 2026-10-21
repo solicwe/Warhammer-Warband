@@ -503,6 +503,10 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     if (hasAbility(p.profile, 'one-shot') && !A.oneShotUsed.includes(p.weapon)) A.oneShotUsed.push(p.weapon);
     if (kind === 'shoot' && !opts.free && !A.weaponsFired.includes(p.weapon)) A.weaponsFired.push(p.weapon);
   }
+  if (kind === 'shoot' || kind === 'overwatch') {
+    A.shotTurn = s.turn;
+    (A as any).hasFiredThisTurn = true;
+  }
   const T = unitById(s, targetId);
   s.attack = {
     kind, attackerId, targetId, pools, idx: 0, stage: pools.length ? 'hit' : 'done', hazardousRolls: [], summary: [],
@@ -1186,8 +1190,11 @@ export function finishAttack(s: GameState) {
   }
   const verb = at.kind === 'fight' ? 'fights' : at.kind === 'overwatch' ? 'fires Overwatch at' : 'shoots';
   log(s, `${A.name} ${verb} ${T.name}: ${killed} models destroyed`, 'info', A.owner);
+  if (at.kind !== 'fight') {
+    A.shotTurn = s.turn;
+    (A as any).hasFiredThisTurn = true;
+  }
   if (!at.free) {
-    if (at.kind !== 'fight') A.shotTurn = s.turn;
     if (at.kind === 'shoot' && !unfiredWeaponNames(A).length) A.selectedToShoot = true;
     if (at.kind === 'fight') A.fought = true;
   }

@@ -10,8 +10,7 @@ import { loneOperativeNow, unitFlags } from '../rules-engine/effects';
 import { getUnitLoneOpRange, isHidden, isInfantryBeastLoneOpActive, modelVisible } from '../engine/visibility';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
-import { loadoutLabels, shortItem } from './loadout';
-import { getAbilityOrWeaponInfo, PopoverCard, type AbilityOrWeaponInfo } from './AbilityBadgePopover';
+
 import { Icon, SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import { getPlayerFactionTheme, getUnitFactionTheme } from './factionColors';
@@ -286,6 +285,177 @@ function BaseShape({ m, p, grow = 0, ...rest }: { m: ModelState; p: Pt; grow?: n
     : <ellipse cx={p.x} cy={p.y} rx={len} ry={hw} transform={t} {...attrs} />;
 }
 
+interface ModelTokenProps {
+  u: UnitState;
+  m: ModelState;
+  p: Pt;
+  isDraft: boolean;
+  isSel: boolean;
+  isTarget: boolean;
+  isPicked: boolean;
+  isMovable: boolean;
+  isSolo: boolean;
+  isUntargetable: boolean;
+  isModelHidden: boolean;
+  bad: boolean;
+  col: string;
+  uTheme: { primary: string; secondary: string; glow: string };
+  acting: boolean;
+  unitInFlow: boolean;
+  unitInShadow: boolean;
+  hasStealth: boolean;
+  hasLoneOp: boolean;
+  loRange: number | null;
+  isInfBeastOp: boolean;
+  riled: boolean;
+  flinch?: Pt;
+  disp: { wounds: number; low: boolean; fading?: number };
+  onPointerDown: (e: React.PointerEvent) => void;
+}
+
+const ModelToken = memo(function ModelToken({
+  u,
+  m,
+  p,
+  isDraft,
+  isSel,
+  isTarget,
+  isPicked,
+  isMovable,
+  isSolo,
+  isUntargetable,
+  isModelHidden,
+  bad,
+  col,
+  uTheme,
+  acting,
+  unitInFlow,
+  unitInShadow,
+  hasStealth,
+  hasLoneOp,
+  loRange,
+  isInfBeastOp,
+  riled,
+  flinch,
+  disp,
+  onPointerDown,
+}: ModelTokenProps) {
+  const pr = m.hl ? (m.hw ?? m.r) : m.r;
+  return (
+    <g
+      data-unit={u.id}
+      onPointerDown={onPointerDown}
+      style={{
+        cursor: isDraft ? 'grab' : 'pointer',
+        transform: 'translate3d(0, 0, 0)',
+        ...(isUntargetable ? { opacity: 0.45 } : {}),
+        ...(isModelHidden ? { opacity: 0.55, filter: 'grayscale(100%)' } : {}),
+      }}
+      transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
+      opacity={disp.fading !== undefined ? disp.fading : 1}
+    >
+      <BaseShape m={m} p={p} grow={Math.max(0, 0.35 - m.r) + 0.35} fill="transparent" />
+      {acting && <BaseShape m={m} p={p} grow={0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
+      {(isSel || isPicked) && !isDraft && (
+        <>
+          <BaseShape m={m} p={p} grow={0.44} fill="none" stroke={uTheme.glow} strokeWidth={0.24} opacity={0.85} className="faction-aura-glow" pointerEvents="none" />
+          <BaseShape m={m} p={p} grow={0.26} fill="none" stroke={isSel ? uTheme.primary : uTheme.secondary} strokeWidth={0.16} className="sel-ring" pointerEvents="none" />
+        </>
+      )}
+      {isMovable && !isSel && !isDraft && !isPicked && <BaseShape m={m} p={p} grow={0.24} fill="none" stroke="#38bdf8" strokeWidth={0.13} strokeDasharray="0.32 0.18" className="movable-ring" pointerEvents="none" />}
+      {isTarget && !isPicked && !isSel && <BaseShape m={m} p={p} grow={0.28} fill="none" stroke="#fde68a" strokeWidth={0.1} strokeDasharray="0.3 0.2" pointerEvents="none" />}
+      {isSolo && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
+      {unitInFlow && <BaseShape m={m} p={p} grow={0.34} fill="none" stroke="#22d3ee" strokeWidth={0.16} strokeDasharray="0.45 0.22" opacity={0.9} className="flow-magic-aura" pointerEvents="none" />}
+      {unitInShadow && <BaseShape m={m} p={p} grow={0.34} fill="none" stroke="#c084fc" strokeWidth={0.16} strokeDasharray="0.45 0.22" opacity={0.9} className="shadow-chaos-aura" pointerEvents="none" />}
+      {hasStealth && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#38bdf8" strokeWidth={0.14} strokeDasharray="0.22 0.14" opacity={0.88} className="stealth-aura" pointerEvents="none" />}
+      {hasLoneOp && <BaseShape m={m} p={p} grow={0.38} fill="none" stroke="#fbbf24" strokeWidth={0.12} strokeDasharray="0.35 0.15" opacity={0.9} className="lone-op-aura" pointerEvents="none" />}
+      {hasLoneOp && (isSel || isTarget || isPicked) && (
+        <circle cx={p.x} cy={p.y} r={loRange ?? 12} fill="rgba(251, 191, 36, 0.02)" stroke="#fbbf24" strokeWidth={0.08} strokeDasharray="0.6 0.3" opacity={0.65} pointerEvents="none" />
+      )}
+      {riled && (
+        <g pointerEvents="none">
+          <path className="ork-flame" d={`M ${p.x - m.r * 0.95} ${p.y} Q ${p.x - m.r * 1.25} ${p.y - m.r * 1.2} ${p.x - m.r * 0.45} ${p.y - m.r * 1.95} Q ${p.x - m.r * 0.35} ${p.y - m.r * 1.3} ${p.x} ${p.y - m.r * 2.5} Q ${p.x + m.r * 0.3} ${p.y - m.r * 1.35} ${p.x + m.r * 0.5} ${p.y - m.r * 1.95} Q ${p.x + m.r * 1.25} ${p.y - m.r * 1.2} ${p.x + m.r * 0.95} ${p.y} Z`} fill="url(#ork-flame)" />
+          <BaseShape m={m} p={p} grow={0.12} fill="none" stroke="#4ade80" strokeWidth={0.16} opacity={0.85} className="fx-glow" />
+        </g>
+      )}
+      <BaseShape
+        m={m} p={p}
+        fill={bad ? '#7f1d1d' : '#ffffff'}
+        fillOpacity={1}
+        stroke={bad ? '#fca5a5' : isSel || isDraft ? uTheme.primary : isPicked ? uTheme.secondary : isTarget ? '#fde68a' : col}
+        strokeWidth={isSel || isDraft || isTarget || isPicked || bad ? 0.16 : 0.12}
+        strokeDasharray={u.battleShocked ? '0.25 0.15' : undefined}
+      />
+      {getModelPortrait(m)
+        ? <image href={getModelPortrait(m)} x={p.x - pr * 0.9} y={p.y - pr * 0.9} width={pr * 1.8} height={pr * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
+        : <use href={`#tok-${modelToken(m)}`} x={p.x - pr * 0.82} y={p.y - pr * 0.82} width={pr * 1.64} height={pr * 1.64} pointerEvents="none" />}
+      {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
+      {((m.profile.W > 1 && disp.wounds < m.profile.W) || (m.dead && disp.wounds > 0)) && (() => {
+        const fsz = Math.max(0.48, Math.min(0.85, m.r * 0.55));
+        const by = p.y + m.r * 0.98;
+        return (
+          <g pointerEvents="none">
+            <rect x={p.x - fsz * 0.62} y={by - fsz * 0.72} width={fsz * 1.24} height={fsz * 0.98} rx={fsz * 0.3} fill="rgba(0,0,0,0.78)" stroke={disp.low ? '#f87171' : '#fde68a'} strokeWidth={0.06} />
+            <text x={p.x} y={by + fsz * 0.1} fontSize={fsz} textAnchor="middle" fill={disp.low ? '#fca5a5' : '#fff7d6'} stroke="#000" strokeWidth={fsz * 0.22} paintOrder="stroke" fontWeight={900}>{disp.wounds}</text>
+          </g>
+        );
+      })()}
+      {hasLoneOp && (
+        <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
+          {isInfBeastOp ? (
+            <>
+              <rect x={-0.8} y={-0.22} width={1.6} height={0.44} rx={0.22} fill="#1e293b" stroke="#64748b" strokeWidth={0.06} />
+              <text y={0.09} fontSize={0.2} textAnchor="middle" fill="#e2e8f0" fontWeight={900} letterSpacing={0.02}>
+                HIDDEN 15"
+              </text>
+            </>
+          ) : (
+            <>
+              <circle r={0.36} fill="#0f172a" stroke="#f59e0b" strokeWidth={0.08} />
+              <text y={0.11} fontSize={0.26} textAnchor="middle" fill="#fbbf24" fontWeight={900}>
+                {loRange ? `${loRange}"` : '12"'}
+              </text>
+            </>
+          )}
+        </g>
+      )}
+      {isModelHidden && !hasLoneOp && (
+        <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
+          <rect x={-0.8} y={-0.22} width={1.6} height={0.44} rx={0.22} fill="#1e293b" stroke="#94a3b8" strokeWidth={0.06} />
+          <text y={0.09} fontSize={0.2} textAnchor="middle" fill="#94a3b8" fontWeight={900} letterSpacing={0.02}>
+            HIDDEN
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}, (prev, next) => {
+  return (
+    prev.p.x === next.p.x &&
+    prev.p.y === next.p.y &&
+    prev.disp.wounds === next.disp.wounds &&
+    prev.disp.low === next.disp.low &&
+    prev.disp.fading === next.disp.fading &&
+    prev.isSel === next.isSel &&
+    prev.isTarget === next.isTarget &&
+    prev.isPicked === next.isPicked &&
+    prev.isMovable === next.isMovable &&
+    prev.isDraft === next.isDraft &&
+    prev.bad === next.bad &&
+    prev.isSolo === next.isSolo &&
+    prev.isUntargetable === next.isUntargetable &&
+    prev.isModelHidden === next.isModelHidden &&
+    prev.acting === next.acting &&
+    prev.unitInFlow === next.unitInFlow &&
+    prev.unitInShadow === next.unitInShadow &&
+    prev.hasStealth === next.hasStealth &&
+    prev.hasLoneOp === next.hasLoneOp &&
+    prev.riled === next.riled &&
+    prev.flinch?.x === next.flinch?.x &&
+    prev.flinch?.y === next.flinch?.y
+  );
+});
+
 /** Calculate hit flinch / recoil / twitch offset for a model being shot, struck, or caught in explosions. */
 function modelFlinch(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): { x: number; y: number; intensity: number } | null {
   if (!fx.length) return null;
@@ -434,11 +604,11 @@ function BoardImpl(props: BoardProps) {
   const SOFT = [p0Theme.soft, p1Theme.soft];
   const W = Math.max(RULES.battlefield.width, s.table?.width ?? RULES.battlefield.width);
   const H = Math.max(RULES.battlefield.height, s.table?.height ?? RULES.battlefield.height);
-  // board popover for clicked interactive ability/wargear badges
-  const [boardPopover, setBoardPopover] = useState<{ info: AbilityOrWeaponInfo; rect: DOMRect } | null>(null);
+  // local draft position for dragging to eliminate global re-renders
+  const [localDraft, setLocalDraft] = useState<Paths | null>(null);
   // models picked for single-model adjustment (tap a model of the moving unit); otherwise a drag moves the whole unit
   const [solo, setSolo] = useState<string[]>([]);
-  useEffect(() => setSolo([]), [draftUnit]);
+  useEffect(() => { setSolo([]); setLocalDraft(null); }, [draftUnit]);
   // --- effects: replay new engine events as short animations ---
   const seen = useRef(s.fxSeq ?? 0);
   const [fx, setFx] = useState<ActiveFx[]>([]);
@@ -575,20 +745,21 @@ function BoardImpl(props: BoardProps) {
     e.stopPropagation();
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try { (e.target as Element).setPointerCapture?.(e.pointerId); } catch { /* synthetic pointer */ }
-    const canDrag = draft && draftUnit === unitId && draft.has(modelId);
+    const activeDraft = localDraft ?? draft;
+    const canDrag = activeDraft && draftUnit === unitId && activeDraft.has(modelId);
     if (!canDrag) {
       drag.current = { pointerId: e.pointerId, start: toBoard(e.clientX, e.clientY), models: [], base: new Map(), moved: false, unitId, modelId };
       return;
     }
     if (solo.includes(modelId)) {
-      const p = draft!.get(modelId)!;
+      const p = activeDraft.get(modelId)!;
       drag.current = { pointerId: e.pointerId, start: toBoard(e.clientX, e.clientY), models: [modelId], base: new Map([[modelId, [...p]]]), moved: false, unitId, modelId, solo: true, grab: { ...p[p.length - 1] } };
       return;
     }
     // whole unit: every model keeps a straight line from where it started this move, so dragging again re-aims it
     // (no hidden waypoints eating the move distance); walls and enemy models are routed around when the drag ends
-    const models = [...draft!.keys()];
-    const base: Paths = new Map([...draft!].map(([id, p]) => [id, [...p]]));
+    const models = [...activeDraft.keys()];
+    const base: Paths = new Map([...activeDraft].map(([id, p]) => [id, [...p]]));
     drag.current = { pointerId: e.pointerId, start: toBoard(e.clientX, e.clientY), models, base, moved: false, unitId, modelId };
   };
 
@@ -660,7 +831,7 @@ function BoardImpl(props: BoardProps) {
         const next: Paths = new Map(curDraft);
         next.set(id, path.length < 2 ? [end] : curWalk ? curWalk(id, [origin, end]) : [origin, end]);
         dg.last = next;
-        curOnDraft(next);
+        setLocalDraft(next);
         return;
       }
       // each model ends at most its maximum from where it started this move: one at its limit slides along that
@@ -679,7 +850,7 @@ function BoardImpl(props: BoardProps) {
         next.set(id, path.length < 2 ? [end] : curWalk ? curWalk(id, [path[0], end]) : [path[0], end]);
       }
       dg.last = next;
-      curOnDraft(next);
+      setLocalDraft(next);
       return;
     }
     const dsd = dsDrag.current;
@@ -735,13 +906,17 @@ function BoardImpl(props: BoardProps) {
     const dg = drag.current;
     if (dg && dg.pointerId === e.pointerId) {
       drag.current = null;
+      setLocalDraft(null);
       if (!dg.moved) {
         // tapping a model of the unit being moved picks it for single-model adjustment
         if (dg.models.length && draftUnit === dg.unitId) setSolo((cur) => (cur[0] === dg.modelId ? [] : [dg.modelId]));
         else props.onTapUnit?.(dg.unitId, dg.modelId);
       } else {
         if (!solo.includes(dg.modelId)) setSolo([]);
-        if (dg.last) props.onDragEnd?.(dg.last);
+        if (dg.last) {
+          props.onDraft?.(dg.last);
+          props.onDragEnd?.(dg.last);
+        }
       }
       return;
     }
@@ -763,8 +938,9 @@ function BoardImpl(props: BoardProps) {
   const posOf = (u: UnitState, id: string, m: Pt): Pt => {
     const ap = animPos.get(id);
     if (ap) return ap;
-    if (draft && draftUnit === u.id) {
-      const p = draft.get(id);
+    const curDraft = localDraft ?? draft;
+    if (curDraft && draftUnit === u.id) {
+      const p = curDraft.get(id);
       if (p) return p[p.length - 1];
     }
     return m;
@@ -1467,7 +1643,7 @@ function BoardImpl(props: BoardProps) {
         <BaseShape key={`e${id}`} m={m} p={m} grow={RULES.engagementRange} fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.55)" strokeWidth={0.06} strokeDasharray="0.3 0.15" />
       ))}
       {units.map((u) => {
-        const isDraft = draft && draftUnit === u.id;
+        const isDraft = !!(localDraft ?? draft) && draftUnit === u.id;
         const isSel = props.selected === u.id;
         const isTarget = props.targets?.includes(u.id);
         const isPicked = props.picked?.includes(u.id);
@@ -1475,7 +1651,6 @@ function BoardImpl(props: BoardProps) {
         const col = COLORS[u.owner];
         const uTheme = getUnitFactionTheme(s, u);
         const ms = u.models.filter((m) => !m.dead || isDyingModel(u, m, fx, now));
-        const labels = loadoutLabels(u); // which model carries what, in a squad with mixed wargear
         const pts = ms.map((m) => posOf(u, m.id, m));
         const cx = pts.reduce((a, p) => a + p.x, 0) / Math.max(1, pts.length);
         const minY = Math.min(...pts.map((p, i) => p.y - ms[i].r));
@@ -1497,7 +1672,7 @@ function BoardImpl(props: BoardProps) {
         return (
           <g key={u.id}>
             {isDraft && ms.map((m) => {
-              const p = draft!.get(m.id);
+              const p = (localDraft ?? draft)!.get(m.id);
               if (!p || p.length < 2) return null;
               const used = pathLen(p);
               const maxAllowed = maxFor ? maxFor(m.id) : 999;
@@ -1530,7 +1705,6 @@ function BoardImpl(props: BoardProps) {
             })}
             {ms.map((m, i) => {
               const p = pts[i];
-              // Visual Clipping / Virtualization: Cull off-screen models outside the active viewport + margin
               if (
                 p.x < vb.x - 3.5 ||
                 p.x > vb.x + vb.w + 3.5 ||
@@ -1540,8 +1714,6 @@ function BoardImpl(props: BoardProps) {
                 return null;
               }
               const bad = props.bad?.includes(m.id);
-              // the photo fits the narrow side of an oval or hull base
-              const pr = m.hl ? (m.hw ?? m.r) : m.r;
               const isSolo = isDraft && solo.includes(m.id);
               const flinch = modelFlinch(u, m, fx, now);
               const disp = getModelDisplayWounds(u, m, fx, now);
@@ -1549,188 +1721,34 @@ function BoardImpl(props: BoardProps) {
               const isUntargetable = isEnemy && untargetableModelIds.has(m.id);
               const isModelHidden = isHidden(s, u, m);
               return (
-                <g
+                <ModelToken
                   key={m.id}
-                  data-unit={u.id}
+                  u={u}
+                  m={m}
+                  p={p}
+                  isDraft={isDraft}
+                  isSel={isSel}
+                  isTarget={!!isTarget}
+                  isPicked={!!isPicked}
+                  isMovable={!!isMovable}
+                  isSolo={isSolo}
+                  isUntargetable={isUntargetable}
+                  isModelHidden={isModelHidden}
+                  bad={bad ?? false}
+                  col={col}
+                  uTheme={uTheme}
+                  acting={acting.has(u.id)}
+                  unitInFlow={unitInFlow}
+                  unitInShadow={unitInShadow}
+                  hasStealth={hasStealth}
+                  hasLoneOp={hasLoneOp}
+                  loRange={loRange}
+                  isInfBeastOp={isInfBeastOp}
+                  riled={riled ?? false}
+                  flinch={flinch ?? undefined}
+                  disp={disp}
                   onPointerDown={(e) => startModelDrag(e, u.id, m.id)}
-                  style={{
-                    cursor: isDraft ? 'grab' : 'pointer',
-                    ...(isUntargetable ? { opacity: 0.45 } : {}),
-                    ...(isModelHidden ? { opacity: 0.55, filter: 'grayscale(100%)' } : {}),
-                  }}
-                  transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
-                  opacity={disp.fading !== undefined ? disp.fading : 1}
-                >
-                  <BaseShape m={m} p={p} grow={Math.max(0, 0.35 - m.r) + 0.35} fill="transparent" />
-                  {acting.has(u.id) && <BaseShape m={m} p={p} grow={0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
-                  {(isSel || isPicked) && !isDraft && (
-                    <>
-                      <BaseShape m={m} p={p} grow={0.44} fill="none" stroke={uTheme.glow} strokeWidth={0.24} opacity={0.85} className="faction-aura-glow" pointerEvents="none" />
-                      <BaseShape m={m} p={p} grow={0.26} fill="none" stroke={isSel ? uTheme.primary : uTheme.secondary} strokeWidth={0.16} className="sel-ring" pointerEvents="none" />
-                    </>
-                  )}
-                  {isMovable && !isSel && !isDraft && !isPicked && <BaseShape m={m} p={p} grow={0.24} fill="none" stroke="#38bdf8" strokeWidth={0.13} strokeDasharray="0.32 0.18" className="movable-ring" pointerEvents="none" />}
-                  {isTarget && !isPicked && !isSel && <BaseShape m={m} p={p} grow={0.28} fill="none" stroke="#fde68a" strokeWidth={0.1} strokeDasharray="0.3 0.2" pointerEvents="none" />}
-                  {isSolo && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#fff" strokeWidth={0.12} strokeDasharray="0.25 0.15" pointerEvents="none" />}
-                  {unitInFlow && <BaseShape m={m} p={p} grow={0.34} fill="none" stroke="#22d3ee" strokeWidth={0.16} strokeDasharray="0.45 0.22" opacity={0.9} className="flow-magic-aura" pointerEvents="none" />}
-                  {unitInShadow && <BaseShape m={m} p={p} grow={0.34} fill="none" stroke="#c084fc" strokeWidth={0.16} strokeDasharray="0.45 0.22" opacity={0.9} className="shadow-chaos-aura" pointerEvents="none" />}
-                  {hasStealth && <BaseShape m={m} p={p} grow={0.3} fill="none" stroke="#38bdf8" strokeWidth={0.14} strokeDasharray="0.22 0.14" opacity={0.88} className="stealth-aura" pointerEvents="none" />}
-                  {hasLoneOp && <BaseShape m={m} p={p} grow={0.38} fill="none" stroke="#fbbf24" strokeWidth={0.12} strokeDasharray="0.35 0.15" opacity={0.9} className="lone-op-aura" pointerEvents="none" />}
-                  {hasLoneOp && (isSel || isTarget || isPicked) && (
-                    <circle cx={p.x} cy={p.y} r={loRange ?? 12} fill="rgba(251, 191, 36, 0.02)" stroke="#fbbf24" strokeWidth={0.08} strokeDasharray="0.6 0.3" opacity={0.65} pointerEvents="none" />
-                  )}
-                  {riled && (
-                    <g pointerEvents="none">
-                      <path className="ork-flame" d={`M ${p.x - m.r * 0.95} ${p.y} Q ${p.x - m.r * 1.25} ${p.y - m.r * 1.2} ${p.x - m.r * 0.45} ${p.y - m.r * 1.95} Q ${p.x - m.r * 0.35} ${p.y - m.r * 1.3} ${p.x} ${p.y - m.r * 2.5} Q ${p.x + m.r * 0.3} ${p.y - m.r * 1.35} ${p.x + m.r * 0.5} ${p.y - m.r * 1.95} Q ${p.x + m.r * 1.25} ${p.y - m.r * 1.2} ${p.x + m.r * 0.95} ${p.y} Z`} fill="url(#ork-flame)" />
-                      <BaseShape m={m} p={p} grow={0.12} fill="none" stroke="#4ade80" strokeWidth={0.16} opacity={0.85} className="fx-glow" />
-                    </g>
-                  )}
-                  <BaseShape
-                    m={m} p={p}
-                    fill={bad ? '#7f1d1d' : '#ffffff'}
-                    fillOpacity={1}
-                    stroke={bad ? '#fca5a5' : isSel || isDraft ? uTheme.primary : isPicked ? uTheme.secondary : isTarget ? '#fde68a' : col}
-                    strokeWidth={isSel || isDraft || isTarget || isPicked || bad ? 0.16 : 0.12}
-                    strokeDasharray={u.battleShocked ? '0.25 0.15' : undefined}
-                  />
-                  {getModelPortrait(m)
-                    ? <image href={getModelPortrait(m)} x={p.x - pr * 0.9} y={p.y - pr * 0.9} width={pr * 1.8} height={pr * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
-                    : <use href={`#tok-${modelToken(m)}`} x={p.x - pr * 0.82} y={p.y - pr * 0.82} width={pr * 1.64} height={pr * 1.64} pointerEvents="none" />}
-                  {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
-                  {((m.profile.W > 1 && disp.wounds < m.profile.W) || (m.dead && disp.wounds > 0)) && (() => {
-                    // wounds left on a small badge sitting on the base's rim, so the photo stays visible
-                    const fsz = Math.max(0.48, Math.min(0.85, m.r * 0.55));
-                    const by = p.y + m.r * 0.98;
-                    return (
-                      <g pointerEvents="none">
-                        <rect x={p.x - fsz * 0.62} y={by - fsz * 0.72} width={fsz * 1.24} height={fsz * 0.98} rx={fsz * 0.3} fill="rgba(0,0,0,0.78)" stroke={disp.low ? '#f87171' : '#fde68a'} strokeWidth={0.06} />
-                        <text x={p.x} y={by + fsz * 0.1} fontSize={fsz} textAnchor="middle" fill={disp.low ? '#fca5a5' : '#fff7d6'} stroke="#000" strokeWidth={fsz * 0.22} paintOrder="stroke" fontWeight={900}>{disp.wounds}</text>
-                      </g>
-                    );
-                  })()}
-                  {hasLoneOp && (
-                    <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
-                      {isInfBeastOp ? (
-                        <>
-                          <rect x={-0.8} y={-0.22} width={1.6} height={0.44} rx={0.22} fill="#1e293b" stroke="#64748b" strokeWidth={0.06} />
-                          <text y={0.09} fontSize={0.2} textAnchor="middle" fill="#e2e8f0" fontWeight={900} letterSpacing={0.02}>
-                            HIDDEN 15"
-                          </text>
-                        </>
-                      ) : (
-                        <>
-                          <circle r={0.36} fill="#0f172a" stroke="#f59e0b" strokeWidth={0.08} />
-                          <text y={0.11} fontSize={0.26} textAnchor="middle" fill="#fbbf24" fontWeight={900}>
-                            {loRange ? `${loRange}"` : '12"'}
-                          </text>
-                        </>
-                      )}
-                    </g>
-                  )}
-                  {isModelHidden && !hasLoneOp && (
-                    <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
-                      <rect x={-0.8} y={-0.22} width={1.6} height={0.44} rx={0.22} fill="#1e293b" stroke="#94a3b8" strokeWidth={0.06} />
-                      <text y={0.09} fontSize={0.2} textAnchor="middle" fill="#94a3b8" fontWeight={900} letterSpacing={0.02}>
-                        HIDDEN
-                      </text>
-                    </g>
-                  )}
-                  {labels.has(m.id) && vb.w >= 30 && (
-                    // zoomed out: words don't fit, a letter badge tells the kits apart (C = Claws, H = Hammer…)
-                    <g pointerEvents="none">
-                      <circle cx={p.x + m.r * 0.72} cy={p.y + m.r * 0.72} r={Math.max(0.32, m.r * 0.42)} fill="#fff7d6" stroke="#000" strokeWidth={0.07} />
-                      <text x={p.x + m.r * 0.72} y={p.y + m.r * 0.72 + Math.max(0.32, m.r * 0.42) * 0.42} fontSize={Math.max(0.32, m.r * 0.42) * 1.25} textAnchor="middle" fill="#111" fontWeight={900}>{labels.get(m.id)!.charAt(0).toUpperCase()}</text>
-                    </g>
-                  )}
-                  {labels.has(m.id) && vb.w < 30 && (isSel || isDraft) && (() => {
-                    const raw = labels.get(m.id)!;
-                    const items = raw.replace(/ \+$/, '').split('+').map((x) => x.trim()).filter(Boolean);
-                    if (!items.length) return null;
-                    const pillH = 0.44;
-                    const placeAbove = p.y + m.r + 0.2 + pillH > H && p.y - m.r - pillH - 0.2 >= 0;
-                    const badgeY = placeAbove ? p.y - m.r - 0.28 : p.y + m.r + 0.32;
-                    return (
-                      <g key={`badge-${m.id}`} pointerEvents="none">
-                        {items.slice(0, 2).map((item, k) => {
-                          const info = getAbilityOrWeaponInfo(item, u, m);
-                          const label = info.badgeLabel || item;
-                          const shortText = label.length > 14 ? label.slice(0, 13) + '…' : label;
-                          const pillW = Math.max(1.6, Math.min(2.8, shortText.length * 0.16 + 0.65));
-                          const offX = items.length === 1 ? 0 : (k === 0 ? -pillW / 2 - 0.08 : pillW / 2 + 0.08);
-                          const bx = Math.max(pillW / 2 + 0.2, Math.min(W - pillW / 2 - 0.2, p.x + offX));
-                          return (
-                            <g
-                              key={k}
-                              className="board-ability-pill"
-                              transform={`translate(${bx} ${badgeY})`}
-                              pointerEvents="auto"
-                              style={{ cursor: 'pointer' }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setBoardPopover({ info, rect: e.currentTarget.getBoundingClientRect() });
-                              }}
-                            >
-                              <rect
-                                x={-pillW / 2}
-                                y={-pillH / 2}
-                                width={pillW}
-                                height={pillH}
-                                rx={pillH / 2}
-                                fill="rgba(18, 20, 23, 0.94)"
-                                stroke="#374151"
-                                strokeWidth={0.04}
-                                className="board-pill-rect"
-                              />
-                              {info.category.variant === 'cp' && (
-                                <path
-                                  d="M -0.15 -0.12 L -0.05 0 L -0.12 0 L -0.02 0.14 L 0.08 -0.02 L 0.01 -0.02 Z"
-                                  transform={`translate(${-pillW / 2 + 0.25} 0) scale(0.8)`}
-                                  fill="#34D399"
-                                />
-                              )}
-                              <text
-                                x={info.category.variant === 'cp' ? 0.08 : -0.1}
-                                y={0.08}
-                                fontSize={0.24}
-                                textAnchor="middle"
-                                fill="#E2E8F0"
-                                fontWeight={700}
-                              >
-                                {shortText}
-                              </text>
-                              <circle
-                                cx={pillW / 2 - 0.2}
-                                cy={0}
-                                r={0.11}
-                                fill="none"
-                                stroke="#F59E0B"
-                                strokeWidth={0.03}
-                                opacity={0.9}
-                              />
-                              <text
-                                x={pillW / 2 - 0.2}
-                                y={0.05}
-                                fontSize={0.15}
-                                textAnchor="middle"
-                                fill="#F59E0B"
-                                fontWeight={900}
-                              >
-                                i
-                              </text>
-                            </g>
-                          );
-                        })}
-                      </g>
-                    );
-                  })()}
-                  {props.noLos?.includes(m.id) && (
-                    <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.7} ${p.y - m.r * 0.7})`}>
-                      <circle r={0.38} fill="#111" stroke="#f87171" strokeWidth={0.08} />
-                      <path d="M -0.22 0 Q 0 -0.2 0.22 0 Q 0 0.2 -0.22 0 Z" fill="none" stroke="#fff" strokeWidth={0.06} />
-                      <line x1={-0.26} y1={0.26} x2={0.26} y2={-0.26} stroke="#f87171" strokeWidth={0.09} />
-                    </g>
-                  )}
-                </g>
+                />
               );
             })}
             {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (
@@ -1945,7 +1963,7 @@ function BoardImpl(props: BoardProps) {
               return null;
             })()}
             {isDraft && maxFor && ms.map((m) => {
-              const p = draft!.get(m.id);
+              const p = (localDraft ?? draft)!.get(m.id);
               if (!p || p.length < 2) return null;
               const used = pathLen(p);
               if (used < 0.05) return null;
@@ -2054,13 +2072,6 @@ function BoardImpl(props: BoardProps) {
     <svg className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio={FIT} aria-hidden="true">
       <FxLayer fx={fx} />
     </svg>
-    {boardPopover && (
-      <PopoverCard
-        info={boardPopover.info}
-        anchorRect={boardPopover.rect}
-        onClose={() => setBoardPopover(null)}
-      />
-    )}
     </>
   );
 }
