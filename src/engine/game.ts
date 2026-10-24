@@ -945,10 +945,13 @@ export function startTurn(s: GameState, p: PlayerId) {
   if (s.turn === 0) { initSagas(s); emit(s, 'battleStart', {}); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) {
     emit(s, 'roundStart', {});
-    if (s.campaign) {
-      if (s.round >= 2) triggerCampaignReinforcements(s);
-      triggerDynamicDramaEngine(s);
-      expandRoguelikeMap(s);
+    if (s.campaign && !s.campaign.battleEventTriggered) {
+      if (s.round >= 3) {
+        const reinf = triggerCampaignReinforcements(s);
+        if (!reinf) triggerDynamicDramaEngine(s);
+      } else {
+        triggerDynamicDramaEngine(s);
+      }
     }
     fireAll(s, 'roundStart', 'both');
   }
@@ -2710,6 +2713,7 @@ export function createAlliedReinforcement(playerFactionId: string, playerName: s
 /** Random reinforcement events in Rogue-like campaign mode (at most once per battle, round >= 3, strictly when player has advantage) */
 export function triggerCampaignReinforcements(s: GameState): boolean {
   if (!s.campaign) return false;
+  if (s.campaign.battleEventTriggered) return false;
   s.campaign.reinforcementsTriggered ??= [];
   // Limit to at most once per battle to avoid repeated reinforcement spam
   if (s.campaign.reinforcementsTriggered.length > 0) return false;
@@ -2734,6 +2738,7 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
   if (roll > 15) return false;
 
   s.campaign.reinforcementsTriggered.push(s.round);
+  s.campaign.battleEventTriggered = true;
 
   // Strategic Reinforcements: Challenge player with enemy reinforcements
   const candidate = enemyUnits.find((u) => (u.keywords.includes('VEHICLE') || u.keywords.includes('MONSTER') || u.keywords.includes('ELITE')) && !u.keywords.includes('TITANIC'))
@@ -2840,6 +2845,7 @@ export function isFightEvenlyMatched(s: GameState): boolean {
  */
 export function triggerDynamicDramaEngine(s: GameState): boolean {
   if (!s.campaign) return false;
+  if (s.campaign.battleEventTriggered) return false;
   s.campaign.dramaRounds ??= [];
   if (s.campaign.dramaRounds.includes(s.round)) return false;
   s.campaign.dramaRounds.push(s.round);
@@ -2860,6 +2866,7 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
   // 1. Rubberband Trigger (Catch-up): VP Delta >= 30 (player leading massively on objectives), at most once per battle
   if (vpDelta >= 30 && !s.campaign.eliteDramaTriggered) {
     s.campaign.eliteDramaTriggered = true;
+    s.campaign.battleEventTriggered = true;
     triggeredAny = true;
     const mostExp = [...playerUnits].sort((a, b) => b.pts - a.pts)[0];
     const enemyTemplates = s.units.filter((u) => u.owner === 1);
@@ -2937,6 +2944,7 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
     // Baseline chance on overwhelming lead, high chance on boss nodes
     if (titanRoll < 0.15 || isBossNode) {
       s.campaign.titanSpawned = true;
+      s.campaign.battleEventTriggered = true;
       triggeredAny = true;
 
       const titan = createFactionTitan(s.players[1].factionId, s.players[1].name);

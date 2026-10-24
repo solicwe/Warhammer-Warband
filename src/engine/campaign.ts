@@ -1111,8 +1111,8 @@ export function buyTechNode(run: Run, techId: string): Run {
   };
 }
 
-/** Check if a unit is permitted to be recruited under the strict Knight/Titan faction lock */
-export function canRecruitTitanOrKnight(factionId: string, targetDatasheet: DatasheetData, run: Run): boolean {
+/** Check if a unit is permitted by faction family (Imperium -> QI/TL, Chaos -> QT/CD, Xenos -> only own) */
+export function isFactionAllowedKnight(factionId: string, targetDatasheet: DatasheetData): boolean {
   const isImperialKnight = (targetDatasheet.factionKeywords || []).includes('IMPERIAL KNIGHTS') || targetDatasheet.ally === 'QI';
   const isChaosKnight = (targetDatasheet.factionKeywords || []).includes('CHAOS KNIGHTS') || targetDatasheet.ally === 'QT';
   const isTitanic = (targetDatasheet.keywords || []).includes('TITANIC') || (targetDatasheet.keywords || []).includes('TOWERING');
@@ -1123,9 +1123,28 @@ export function canRecruitTitanOrKnight(factionId: string, targetDatasheet: Data
   if (family !== 'IMPERIUM' && (isImperialKnight || (isTitanic && targetDatasheet.ally === 'QI'))) return false;
   // Strict Lock: Non-Chaos cannot recruit Chaos Knights / Titans
   if (family !== 'CHAOS' && (isChaosKnight || (isTitanic && targetDatasheet.ally === 'QT'))) return false;
+  // Xenos cannot recruit Imperial or Chaos Knights
+  if (family === 'XENOS' && (isImperialKnight || isChaosKnight || targetDatasheet.ally === 'QI' || targetDatasheet.ally === 'QT')) return false;
 
-  // Titanic / Knight units require the Tier 4 Tech Node
-  if (isTitanic || isImperialKnight || isChaosKnight) {
+  return true;
+}
+
+/** Check if this unit requires Tier 4 Super-Heavy / Titanic support in the Command Tech Tree */
+export function requiresTier4Tech(targetDatasheet: DatasheetData): boolean {
+  const isLightKnight = (targetDatasheet.keywords || []).includes('ARMIGER') || (targetDatasheet.keywords || []).includes('WAR DOG');
+  if (isLightKnight) return false;
+  const isTitanic = (targetDatasheet.keywords || []).includes('TITANIC') || (targetDatasheet.keywords || []).includes('TOWERING');
+  const isBigKnight = (targetDatasheet.factionKeywords || []).includes('IMPERIAL KNIGHTS') ||
+    (targetDatasheet.factionKeywords || []).includes('CHAOS KNIGHTS') ||
+    targetDatasheet.ally === 'QI' || targetDatasheet.ally === 'QT';
+  return isTitanic || isBigKnight;
+}
+
+/** Check if a unit is permitted to be recruited under the strict Knight/Titan faction lock */
+export function canRecruitTitanOrKnight(factionId: string, targetDatasheet: DatasheetData, run: Run): boolean {
+  if (!isFactionAllowedKnight(factionId, targetDatasheet)) return false;
+
+  if (requiresTier4Tech(targetDatasheet)) {
     const hasTier4 = (run.techTree ?? []).some((t) => t.endsWith('_titanic') || t.endsWith('_supremacy') || t.endsWith('_titan') || t.endsWith('_apex'));
     if (!hasTier4) return false;
   }

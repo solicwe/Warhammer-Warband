@@ -9,8 +9,8 @@ import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
   bossRuleById, buyDatasheetHonor, buyEnhancementForUnit, buyHonorForUnit, buyTechNode, canRecruitTitanOrKnight,
   changeSquadSize, cheapest, continueNextLoop, datasheetHonorCost, enhancementScrapCost, enter,
-  getFactionFamily, getFactionTechNodes, getSmartBattleHonors, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
-  removeEnhancementFromUnit, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward,
+  getFactionFamily, getFactionTechNodes, getSmartBattleHonors, isFactionAllowedKnight, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
+  removeEnhancementFromUnit, requiresTier4Tech, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
 } from '../engine/campaign';
 import { hasFactionRules } from '../rules-engine/effects';
@@ -1246,10 +1246,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                   {(() => {
                     const qClean = recruitQ.trim().toLowerCase();
+                    const family = getFactionFamily(fac.id);
                     const availableSheets = fac.datasheets.filter(
-                      (d) => !d.ally && d.points?.[0]?.options?.length && !d.keywords?.includes('FORTIFICATION')
+                      (d) => (!d.ally || (family === 'IMPERIUM' && (d.ally === 'QI' || d.ally === 'TL')) || (family === 'CHAOS' && (d.ally === 'QT' || d.ally === 'CD')))
+                        && d.points?.[0]?.options?.length && !d.keywords?.includes('FORTIFICATION')
                         && hasRealPortrait(d.name)
-                        && canRecruitTitanOrKnight(fac.id, d, run)
+                        && isFactionAllowedKnight(fac.id, d)
                     );
                     const matchesQ = (d: DatasheetData) =>
                       !qClean ||
@@ -1264,7 +1266,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                        {SECTIONS.filter((sec) => sec.id !== 'allies').map((sec) => {
+                        {SECTIONS.map((sec) => {
                           const sheetsInSec = filtered.filter((d) => sectionOf(d, fac.id) === sec.id);
                           if (!sheetsInSec.length) return null;
 
@@ -1282,9 +1284,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   const alreadyInForce = isEpicHero && count > 0;
                                   const minCost = cheapest(d)?.pts ?? opts[0]?.pts ?? 0;
                                   const canAffordAny = (run.scrap ?? 0) >= minCost;
+                                  const needsTier4 = requiresTier4Tech(d) && !canRecruitTitanOrKnight(fac.id, d, run);
                                   const isOpenPeek = recruitView === d.name;
                                   const isOpenSize = recruitSize === d.name;
-                                  const isUnaffordable = !canAffordAny && !alreadyInForce;
+                                  const isUnaffordable = (!canAffordAny || needsTier4) && !alreadyInForce;
 
                                   return [
                                     <div
@@ -1313,18 +1316,29 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                                 Epic Hero
                                               </span>
                                             )}
+                                            {needsTier4 && (
+                                              <span className="chip subtle small" style={{ marginLeft: 6, color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
+                                                Requires Tier 4 Tech
+                                              </span>
+                                            )}
                                           </span>
                                           <span className="ab-pts" style={isUnaffordable ? { color: '#94a3b8' } : undefined}>
                                             {opts.map((o) => `${o.models}: ${o.pts}`).join(' / ')} Scrap
-                                            {isUnaffordable && (
+                                            {needsTier4 ? (
+                                              <span className="tiny" style={{ marginLeft: 6, color: '#f59e0b', fontWeight: 600 }}>
+                                                (Locked: Requires Tier 4 Tech)
+                                              </span>
+                                            ) : isUnaffordable ? (
                                               <span className="tiny" style={{ marginLeft: 6, color: '#f87171', fontWeight: 600 }}>
                                                 (Need {minCost - (run.scrap ?? 0)} more)
                                               </span>
-                                            )}
+                                            ) : null}
                                           </span>
                                           <span className="ab-sub">
                                             {alreadyInForce
                                               ? 'Already Recruited (Limit 1)'
+                                              : needsTier4
+                                              ? 'Super-Heavy Support · Unlock Tier 4 in Command Tech Tree'
                                               : d.role || (d.keywords ? d.keywords.slice(0, 3).join(', ') : '')}
                                           </span>
                                         </span>
@@ -1333,8 +1347,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                         type="button"
                                         className="ab-add dark"
                                         aria-label={`Recruit ${d.name}`}
-                                        title={alreadyInForce ? 'Limit 1 (Already recruited)' : !canAffordAny ? `Need ${minCost} Scrap` : `Recruit ${d.name}`}
-                                        disabled={alreadyInForce || !canAffordAny}
+                                        title={alreadyInForce ? 'Limit 1 (Already recruited)' : needsTier4 ? 'Requires Command Tech Tree Tier 4 (Titanic Support)' : !canAffordAny ? `Need ${minCost} Scrap` : `Recruit ${d.name}`}
+                                        disabled={alreadyInForce || !canAffordAny || needsTier4}
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           if (alreadyInForce) return;

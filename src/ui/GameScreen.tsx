@@ -258,10 +258,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }, 800);
     return () => window.clearTimeout(t);
   }, [s, ponderFor]); // eslint-disable-line react-hooks/exhaustive-deps
-  // the player is reading (mission cards, the menu, a rule): the game waits instead of moving under them
-  const viewing = showCards || showMissions || showMenu || !!explain || !!summary;
+  // the player is reading (mission cards, the menu, a rule) or an alert is active: the game waits instead of moving under them
+  const hasActiveAlert = Boolean(s.reinforcementAlert || s.titanAlert);
+  const viewing = showCards || showMissions || showMenu || !!explain || !!summary || hasActiveAlert;
   useEffect(() => {
-    if (!bots.length || rolling || reporting || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0)) return;
+    if (!bots.length || rolling || reporting || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0) || hasActiveAlert) return;
     const who = actingBot;
     // start of a bot's Movement phase: pick how to play the turn before moving anything
     if (who !== null && s.phase === 'movement' && s.active === who && !styleChosen(s)) {
