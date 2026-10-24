@@ -176,37 +176,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const open = useMemo(() => (run ? reachable(run) : []), [run]);
   const focused = run?.map.find((n) => n.id === (focus ?? run.fighting)) ?? null;
 
-  // Idle Auto-Battle & Auto-Progress Engine
-  useEffect(() => {
-    if (!run || !run.autoBattle || busy || !fac) return;
-    if (run.over === 'won') {
-      const timer = window.setTimeout(() => {
-        const next = continueNextLoop(run, fac);
-        setRun(next);
-        saveRun(next);
-        play('turn');
-      }, 1000);
-      return () => window.clearTimeout(timer);
-    }
-    if (run.offer && run.offer.length > 0) {
-      const timer = window.setTimeout(() => {
-        const rw = run.offer![0];
-        let next = takeReward(run, rw, fac);
-        if ((next.scrap ?? 0) >= 120) {
-          next = autoUpgradeAll(next, fac);
-        }
-        setRun(next);
-        play('good');
-      }, 750);
-      return () => window.clearTimeout(timer);
-    }
-    if (!run.fighting && open.length > 0) {
-      const timer = window.setTimeout(() => {
-        go(open[0]);
-      }, 850);
-      return () => window.clearTimeout(timer);
-    }
-  }, [run?.autoBattle, run?.fighting, run?.offer, run?.over, open, busy, fac]);
 
   // Rank calculator based on XP
   const rankLabel = (xp = 0) => {
@@ -615,42 +584,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       </header>
 
       <main className="screen">
-        {/* Idle Progression & Speed Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: 'rgba(0,0,0,0.35)', borderRadius: 8, marginBottom: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
-          <button
-            type="button"
-            className={`btn small ${run.autoBattle ? 'ok' : 'ghost'}`}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
-            onClick={() => {
-              const next = { ...run, autoBattle: !run.autoBattle };
-              setRun(next);
-              play('tick');
-              setInfo(next.autoBattle ? 'Auto-Battle & Auto-Progress Enabled' : 'Auto-Battle Paused');
-            }}
-          >
-            <Icon name={run.autoBattle ? 'check' : 'next'} size={14} />
-            {run.autoBattle ? 'Auto-Battle & Auto-Progress [ON]' : 'Auto-Battle & Auto-Progress [OFF]'}
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span className="tiny muted" style={{ marginRight: 4 }}>Speed:</span>
-            {([1, 2, 4] as const).map((spd) => (
-              <button
-                key={spd}
-                type="button"
-                className={`btn tiny ${(run.autoSpeed ?? 1) === spd ? 'primary' : 'ghost'}`}
-                style={{ minWidth: 32, padding: '2px 6px', fontWeight: 700 }}
-                onClick={() => {
-                  const next = { ...run, autoSpeed: spd };
-                  setRun(next);
-                  play('tick');
-                }}
-              >
-                {spd}x
-              </button>
-            ))}
-          </div>
-        </div>
 
         <section className="cmp-army slate"><div className="slate-in">
           <div className="cmp-army-top">

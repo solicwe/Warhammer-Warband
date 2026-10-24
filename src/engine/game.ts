@@ -2707,22 +2707,35 @@ export function createAlliedReinforcement(playerFactionId: string, playerName: s
   });
 }
 
-/** Random reinforcement events in Rogue-like campaign mode (25% chance at start of round 2+) */
+/** Random reinforcement events in Rogue-like campaign mode (at most once per battle, round >= 3, strictly when player has advantage) */
 export function triggerCampaignReinforcements(s: GameState): boolean {
   if (!s.campaign) return false;
   s.campaign.reinforcementsTriggered ??= [];
-  if (s.campaign.reinforcementsTriggered.includes(s.round)) return false;
+  // Limit to at most once per battle to avoid repeated reinforcement spam
+  if (s.campaign.reinforcementsTriggered.length > 0) return false;
+  if (s.round < 3) return false;
 
-  // 25% probability check per round in Roguelike mode
+  const playerUnits = s.units.filter((u) => u.owner === 0 && onBoard(u) && alive(u).length > 0);
+  const enemyUnits = s.units.filter((u) => u.owner === 1 && onBoard(u) && alive(u).length > 0);
+  if (playerUnits.length < 2 || !enemyUnits.length) return false;
+
+  const playerPts = fightingArmyPoints(s, 0);
+  const aiPts = fightingArmyPoints(s, 1);
+  const playerVp = s.players[0].vp;
+  const aiVp = s.players[1].vp;
+
+  // STRICT GUARD: If the player is losing (fewer points or trailing in VP), NEVER trigger enemy reinforcements!
+  if (playerPts <= aiPts || playerVp < aiVp) return false;
+  const playerHasAdvantage = playerPts >= aiPts * 1.2 || playerVp >= aiVp + 10;
+  if (!playerHasAdvantage) return false;
+
+  // Controlled probability check (15%)
   const roll = nextRandom(s) * 100;
-  if (roll > 25) return false;
+  if (roll > 15) return false;
 
   s.campaign.reinforcementsTriggered.push(s.round);
 
   // Strategic Reinforcements: Challenge player with enemy reinforcements
-  const enemyUnits = s.units.filter((u) => u.owner === 1);
-  if (!enemyUnits.length) return false;
-
   const candidate = enemyUnits.find((u) => (u.keywords.includes('VEHICLE') || u.keywords.includes('MONSTER') || u.keywords.includes('ELITE')) && !u.keywords.includes('TITANIC'))
     ?? enemyUnits.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC') && !u.keywords.includes('EPIC HERO'))
     ?? enemyUnits[0];
@@ -2835,11 +2848,19 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
   const playerVp = s.players[0].vp;
   const aiVp = s.players[1].vp;
   const vpDelta = playerVp - aiVp;
+  const playerUnits = s.units.filter((u) => u.owner === 0 && onBoard(u) && alive(u).length > 0);
+  const playerPts = fightingArmyPoints(s, 0);
+  const aiPts = fightingArmyPoints(s, 1);
 
-  // 1. Rubberband Trigger (Catch-up): VP Delta >= 30
-  if (vpDelta >= 30) {
+  // STRICT GUARD: If the player is losing (fewer points AND trailing in VP, or army wiped out), NEVER trigger drama against player!
+  if (!playerUnits.length || (playerPts < aiPts && vpDelta <= 0)) {
+    return false;
+  }
+
+  // 1. Rubberband Trigger (Catch-up): VP Delta >= 30 (player leading massively on objectives), at most once per battle
+  if (vpDelta >= 30 && !s.campaign.eliteDramaTriggered) {
+    s.campaign.eliteDramaTriggered = true;
     triggeredAny = true;
-    const playerUnits = s.units.filter((u) => u.owner === 0 && onBoard(u) && alive(u).length > 0);
     const mostExp = [...playerUnits].sort((a, b) => b.pts - a.pts)[0];
     const enemyTemplates = s.units.filter((u) => u.owner === 1);
 
@@ -2904,13 +2925,12 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
   // 2. Boss Spawns (Titan Class):
   // Strictly enforce currentRound >= 3 (NEVER on rounds 1-2).
   // Strictly enforce adequate points (never on low points like 105 vs 158 pts).
-  // Never spawn on ordinary "EVEN MATCH".
-  const playerPts = fightingArmyPoints(s, 0);
-  const aiPts = fightingArmyPoints(s, 1);
+  // STRICT GUARD: If the player is losing (points significantly below AI and trailing), do NOT spawn Titan!
   const nodeStr = typeof s.campaign.node === 'string' ? s.campaign.node : '';
   const isBossNode = nodeStr.includes('boss') || nodeStr.includes('elite');
+  const isPlayerLosing = playerPts < aiPts * 0.75 && vpDelta < 0;
   const hasOverwhelmingLead = playerPts >= 500 && (playerPts >= aiPts * 1.5 || vpDelta >= 25);
-  const pointsAdequate = playerPts >= 400 && aiPts >= 250;
+  const pointsAdequate = playerPts >= 400 && aiPts >= 250 && !isPlayerLosing;
 
   if (s.round >= 3 && !s.campaign.titanSpawned && pointsAdequate && (isBossNode || hasOverwhelmingLead)) {
     const titanRoll = nextRandom(s);
