@@ -323,7 +323,7 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
             const v = all.length ? all : names.length > 1 ? names.map((n) => ({ key: n === sheet.name ? sheet.name : modelPortraitKey(sheet.name, n), fallback: [sheet.name], label: n })) : [];
             return <div className="ds-pics"><ModelPictures variants={v} kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} /></div>;
           })()}
-          {sheet.link && <div className="tiny muted">Data: Wahapedia (<a href={sheet.link} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>source</a>)</div>}
+
           <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(false)}>LESS <span className="dt-chev up"><Icon name="down" size={18} /></span></button>
         </>
       )}

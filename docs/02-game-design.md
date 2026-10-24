@@ -48,7 +48,7 @@
 │                              │
 ├──────────────────────────────┤
 │ [Intercessors ▾] M6 T4 Sv3+  │ ← การ์ดหน่วย (ปัดขึ้นดู datasheet เต็ม)
-│ W ●●●●●○○○○○  OC2  ⚠Shocked  │
+│ W ●●●●●○○○○○  OC2  [Shocked] │
 ├──────────────────────────────┤
 │ [Normal] [Advance] [Stay]    │ ← ปุ่ม action ตาม phase (มีเฉพาะที่กฎอนุญาต)
 │          [ ยืนยัน ✓ ]        │
@@ -101,8 +101,8 @@
    - ถ้ามี Sustained/Lethal จะแสดงเป็นป้ายที่ลูกทอง
    - ช่อง reaction: "Command Re-roll 1 ลูก (1CP)" ให้แตะเลือกลูกที่จะทอยใหม่ (มีเวลาให้ตัดสินใจ ไม่ต้องรีบ)
    - **Wound** → **Save** (ฝ่ายป้องกันทอย ดู 3.6) → **Damage/FNP** → โมเดลที่ตายจางหายไปจากสนาม
-   - ปุ่ม `⏩ ข้าม animation` สำหรับคนที่อยากเล่นเร็ว (ตั้งค่า: Full / Fast / Instant)
-5. สรุปผล: "Boyz เสีย 4 ตัว (เหลือ 6/10 → ต่ำกว่าครึ่ง ⚠ ต้องทอย battle-shock รอบหน้า)"
+   - ปุ่ม `[Skip] ข้าม animation` สำหรับคนที่อยากเล่นเร็ว (ตั้งค่า: Full / Fast / Instant)
+5. สรุปผล: "Boyz เสีย 4 ตัว (เหลือ 6/10 → ต่ำกว่าครึ่ง [!] ต้องทอย battle-shock รอบหน้า)"
 
 ### 3.5 Charge
 1. แตะหน่วย → แสดงศัตรูภายใน 12" (เส้นประพร้อมระยะจริง เช่น `7.4"`)
@@ -114,7 +114,7 @@
 ### 3.6 จังหวะของฝ่ายป้องกัน (hotseat)
 ใน hotseat ฝ่ายป้องกันต้องตัดสินใจ: ลำดับการรับดาเมจ, Command Re-roll ของ save และ reaction stratagems
 - **Allocation order**: engine เรียงให้อัตโนมัติตามกฎ (ตัวที่บาดเจ็บก่อน, CHARACTER ทีหลัง) ถ้ามีหลายกลุ่มที่เลือกได้ใช้ค่า default "ปกป้องตัวที่มีค่าที่สุด" และฝ่ายป้องกันตั้งค่าล่วงหน้าต่อหน่วยได้ (เช่น "ให้ Nob โดนเป็นคนสุดท้าย")
-- **Reaction prompt**: แสดงแบนเนอร์ "🛡 ผู้เล่น 2: ใช้ Fire Overwatch ไหม?" พร้อมปุ่ม `ใช้ / ข้าม / ไม่ต้องถามอีกในเกมนี้`
+- **Reaction prompt**: แสดงแบนเนอร์ "[Defense] ผู้เล่น 2: ใช้ Fire Overwatch ไหม?" พร้อมปุ่ม `ใช้ / ข้าม / ไม่ต้องถามอีกในเกมนี้`
 - ตัวเลือก **"Reaction อัตโนมัติ"**: เช่น ไม่ re-roll save เลย หรือ re-roll เฉพาะเมื่อโมเดลที่มีค่าจะตาย ฯลฯ ช่วยลดการส่งมือถือกลับไปกลับมา
 
 ### 3.7 Fight
@@ -192,7 +192,7 @@ resolveAttacks(attacker, weaponGroups, target):
   for group in identicalGroups(weaponGroups, perModelCover):    // แยกกองตาม cover ต่อผู้ยิง
     n = sum(rollAttacks(w.A)) + blast(X, target.models) + rapidFire + cleave
     hits = torrent ? n : roll(n).map(d => d==1?miss : d==6?crit : (d+hitMod)>=effBS?hit:miss)
-    // effBS = clamp(BS + bsMods, 2, 6); hitMod = clamp(sum(rollMods), -1, +1)  ⚠ ตรวจ cap
+    // effBS = clamp(BS + bsMods, 2, 6); hitMod = clamp(sum(rollMods), -1, +1)  [Note] ตรวจ cap
     sustained / lethal → expand hits
     wounds = roll(hits).map(woundTable(S, targetT) with anti-X, lance, twin-linked)
     devWounds = wounds.filter(crit && DEV) → mortalWounds queue (cap 1 model each)

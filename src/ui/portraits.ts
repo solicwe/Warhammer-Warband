@@ -84,6 +84,20 @@ export const getPortrait = (datasheet: string): string | undefined => {
   }
   return undefined;
 };
+
+/** Strict Sprite Validation: Check if unit has a real model image portrait loaded */
+export function hasRealPortrait(datasheetName: string): boolean {
+  if (!datasheetName) return false;
+  const p = getPortrait(datasheetName);
+  return Boolean(p && !p.includes('placeholder') && !p.includes('default') && !p.includes('generic'));
+}
+
+/** Check if image URL is an invalid placeholder or generic icon */
+export function isPlaceholderIcon(imgUrl?: string): boolean {
+  if (!imgUrl) return true;
+  return imgUrl.includes('placeholder') || imgUrl.includes('default') || imgUrl.includes('generic') || imgUrl.startsWith('#tok-');
+}
+
 /** A unit whose models have different names (Wardens of Ultramar, a squad's sergeant): each model name can have its
  *  own picture, stored under "Datasheet::Model name"; a model without one shows the unit's picture. */
 export const modelPortraitKey = (datasheet: string, model: string) => `${datasheet}::${model}`;

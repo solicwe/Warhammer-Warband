@@ -212,13 +212,8 @@ function standsIn(s: GameState, m: ModelState, t: TerrainPiece): boolean {
 }
 
 function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false): Blockers {
-  const isToweringOrTitanic = (m: ModelState) => (m.keywords ?? []).some((k) => k === 'TOWERING' || k === 'TITANIC' || k === 'AIRCRAFT');
-  const isElevated = (m: ModelState) => ((m as any).z ?? 0) > 3 || isToweringOrTitanic(m);
-  const towering = isElevated(a) || isElevated(b);
-  if (towering) {
-    // 10th edition: TOWERING, TITANIC, AIRCRAFT and elevated (>3") models ignore ground level solid walls
-    return { grid: emptyWallGrid, areas: [] };
-  }
+  // Absolute Footprint Obscuring Rule: NO size exceptions (Titans, Knights, Monsters, Vehicles, Infantry)
+  // If neither shooter nor target is standing on the footprint, the footprint area strictly blocks LoS 100%.
   // only terrain overlapping the box around both models can be crossed by a line between them
   const x0 = Math.min(a.x - a.r, b.x - b.r), x1 = Math.max(a.x + a.r, b.x + b.r);
   const y0 = Math.min(a.y - a.r, b.y - b.r), y1 = Math.max(a.y + a.r, b.y + b.r);
@@ -278,6 +273,9 @@ export function hasLos(s: GameState, a: ModelState, b: ModelState): boolean {
   const pa = lookPoints(a, bl), pb = lookPoints(b, bl);
   return pa.some((p) => pb.some((q) => lineClear(p, q, bl)));
 }
+
+/** Check line of sight from shooter model to target model (Absolute Footprint Obscuring Rule). */
+export const checkLineOfSight = hasLos;
 
 /** A quick sight check for planning (deployment): from `a`'s centre to `b`'s centre and four points of its rim. */
 export function roughLos(s: GameState, a: ModelState, b: ModelState): boolean {

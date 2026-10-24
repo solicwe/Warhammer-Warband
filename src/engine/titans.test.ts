@@ -515,9 +515,12 @@ describe('Titan Abilities', () => {
 
       const mTitan = state.units[0].models[0];
       const mTarget = state.units[1].models[0];
-      // Despite ruin between (y: 20-25), line of sight is clear for towering titan
-      expect(hasLos(state, mTitan, mTarget)).toBe(true);
+      // Absolute Footprint Obscuring: Ruin footprint between (y: 20-25) blocks LoS even for Towering/Titanic units
+      expect(hasLos(state, mTitan, mTarget)).toBe(false);
 
+      // Once the titan steps into the footprint, line of sight is established
+      mTitan.y = 22;
+      expect(hasLos(state, mTitan, mTarget)).toBe(true);
       const r = buildShootPools(state, 'titan-1', 'target-1', { mode: 'normal' });
       expect(r.error).toBeUndefined();
       expect(r.pools.length).toBeGreaterThan(0);

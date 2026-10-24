@@ -107,12 +107,7 @@ export default function App() {
         }}
         onBattle={() => setScreen({ kind: 'battle' })}
         onCampaign={() => setScreen({ kind: 'campaign' })}
-        onTutorial={() => {
-          // a first battle with every tip: against an easy bot, short, Primary Mission only
-          resetCoach();
-          saveBattlePrefs({ ...loadBattlePrefs(armies), mode: 'bot', level: 'easy', rounds: 3, secMode: 'none' });
-          setScreen({ kind: 'battle' });
-        }}
+
         onContinue={() => { if (saved) setScreen({ kind: 'game', state: withAutoRules(saved) }); }}
         onAbandon={() => { clearSaved(); setSaved(null); }}
       />

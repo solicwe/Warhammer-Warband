@@ -348,8 +348,7 @@ const ModelToken = memo(function ModelToken({
       style={{
         cursor: isDraft ? 'grab' : 'pointer',
         transform: 'translate3d(0, 0, 0)',
-        ...(isUntargetable ? { opacity: 0.45 } : {}),
-        ...(isModelHidden ? { opacity: 0.55, filter: 'grayscale(100%)' } : {}),
+        ...(isUntargetable || isModelHidden ? { opacity: 0.45, filter: 'grayscale(100%)' } : {}),
       }}
       transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
       opacity={disp.fading !== undefined ? disp.fading : 1}
@@ -2140,16 +2139,37 @@ function useBackdrop(
           if (t.kind === 'crater' || t.kind === 'barricade' || t.kind === 'container' || t.kind === 'objective-area') continue;
           const plate = plateFor(t);
           if (!plate) continue;
-          const im = await loadImg(plate.href);
-          g.save();
-          g.beginPath(); t.poly.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath();
-          g.fillStyle = t.category === 'dense' ? '#5a4a3a' : '#8a7d62'; g.fill();
-          g.clip();
-          g.translate(plate.ax, plate.ay); g.rotate(plate.ang);
-          // cover the piece's frame, keeping the art's proportions (cropped, never stretched)
-          const k = Math.max(plate.w / im.width, plate.h / im.height), dw = im.width * k, dh = im.height * k;
-          g.drawImage(im, plate.x + (plate.w - dw) / 2, plate.y + (plate.h - dh) / 2, dw, dh);
-          g.restore();
+          try {
+            const im = await loadImg(plate.href);
+            g.save();
+            g.beginPath(); t.poly.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath();
+            g.fillStyle = t.category === 'dense' ? '#5a4a3a' : '#8a7d62'; g.fill();
+            g.clip();
+            g.translate(plate.ax, plate.ay); g.rotate(plate.ang);
+            // cover the piece's frame, keeping the art's proportions (cropped, never stretched)
+            const k = Math.max(plate.w / im.width, plate.h / im.height), dw = im.width * k, dh = im.height * k;
+            g.drawImage(im, plate.x + (plate.w - dw) / 2, plate.y + (plate.h - dh) / 2, dw, dh);
+            g.restore();
+          } catch {
+            // Robust procedural ruin fallback: detailed flagstones, rubble, dark stone floor
+            g.save();
+            g.beginPath(); t.poly.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath();
+            g.fillStyle = t.category === 'dense' ? '#443b32' : '#6b614e'; g.fill();
+            g.strokeStyle = '#221c16'; g.lineWidth = 0.15; g.stroke();
+            g.clip();
+            g.strokeStyle = 'rgba(0, 0, 0, 0.45)'; g.lineWidth = 0.05;
+            const xs = t.poly.map((p) => p.x), ys = t.poly.map((p) => p.y);
+            const bx0 = Math.min(...xs), by0 = Math.min(...ys), bw = Math.max(...xs) - bx0, bh = Math.max(...ys) - by0;
+            for (let tx = bx0; tx <= bx0 + bw; tx += 1.2) { g.beginPath(); g.moveTo(tx, by0); g.lineTo(tx, by0 + bh); g.stroke(); }
+            for (let ty = by0; ty <= by0 + bh; ty += 1.2) { g.beginPath(); g.moveTo(bx0, ty); g.lineTo(bx0 + bw, ty); g.stroke(); }
+            g.fillStyle = 'rgba(20, 16, 12, 0.6)';
+            for (let i = 0; i < 16; i++) {
+              const rx = bx0 + 0.3 + ((i * 1.7) % Math.max(0.5, bw - 0.6));
+              const ry = by0 + 0.3 + ((i * 2.3) % Math.max(0.5, bh - 0.6));
+              g.fillRect(rx, ry, 0.25, 0.25);
+            }
+            g.restore();
+          }
           if (t.category !== 'dense') {
             // light terrain reads a little paler than ruins
             g.save(); g.beginPath(); t.poly.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath();

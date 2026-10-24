@@ -1004,7 +1004,7 @@ function ArrivalFx({ at, f, seed, deepStrike, label }: { at: Pt; f: number; seed
             strokeWidth={0.15}
             paintOrder="stroke"
           >
-            {label || '⚡ DEEP STRIKE ARRIVAL'}
+            {label || 'DEEP STRIKE ARRIVAL'}
           </text>
         </g>
       )}

@@ -21,12 +21,11 @@ interface Props {
   onImportArmies?: (armies: Army[]) => void;
   onBattle: () => void;
   onCampaign: () => void;
-  onTutorial: () => void;
   onContinue: () => void;
   onAbandon: () => void;
 }
 
-export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelete, onImportArmies, onBattle, onCampaign, onTutorial, onContinue, onAbandon }: Props) {
+export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelete, onImportArmies, onBattle, onCampaign, onContinue, onAbandon }: Props) {
   const run = loadRun();
   const runLayer = run ? Math.max(0, ...run.path.map((id) => (run.map.find((n) => n.id === id)?.layer ?? -1) + 1)) : 0;
   const runLayers = run ? Math.max(...run.map.map((n) => n.layer)) + 1 : 0;
@@ -81,12 +80,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
               <span className="mode-text"><b>Campaign (Idle Mode)</b><small>{run && !run.over ? `Stage ${Math.min(runLayer + 1, runLayers)} of ${runLayers} · ${run.fate} Fate · ${run.scrap ?? 0} Scrap · 100% Autonomous AI` : 'Universal Auto-Play, branching battles, armory, battle honors, and Warlord'}</small></span>
             </span>
           </button>
-          <button className="mode slate" onClick={onTutorial}>
-            <span className="slate-in">
-              <span className="mode-icon"><Icon name="hint" size={22} /></span>
-              <span className="mode-text"><b>How to play</b><small>A first battle with tips at every step</small></span>
-            </span>
-          </button>
+
         </nav>
 
         <section className="group" aria-label="Your armies">
@@ -158,7 +152,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
           );
         })()}
 
-        <footer className="foot">Datasheets: Wahapedia 11th edition export{index ? ` · updated ${index.lastUpdate.slice(0, 10)}` : ''} · Core Rules June 2026 · Warhammer 40,000 is a trademark of Games Workshop</footer>
+
       </main>
     </div>
   );

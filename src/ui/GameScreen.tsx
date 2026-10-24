@@ -326,20 +326,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const drive = who === null && spectate && !s.attack;
     if (who === null && !drive) return;
     const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command' || s.window != null;
-    const delay = (quick ? 60 : s.campaign ? 200 : 240) / (spectate && speed === 2 ? 3 : 1) / (rush ? 5 : 1);
+    // Asynchronous Staggered Queue: maintain smooth cadence, scaled by autoSpeed multiplier
+    const autoMult = (s as any).autoSpeed === 4 ? 3.2 : (s as any).autoSpeed === 2 ? 1.8 : 1;
+    const delay = (quick ? 40 : Math.max(80, Math.min(250, (s.campaign ? 180 : 220) / (spectate && speed === 2 ? 1.5 : 1) / (rush ? 1.6 : 1)))) / autoMult;
     const onMain = () => {
       act((g) => {
         if (who === null) {
-          botAct(g);
+          if (botShouldAct(g, g.active)) botStep(g, g.active);
+          else botAct(g);
         } else {
+          // Asynchronous single-unit step: process exactly 1 unit per tick so animations and dice rolls resolve smoothly
           botStep(g, who);
-          if (rush || spectate) {
-            let steps = 0;
-            while (steps < 4 && botShouldAct(g, who) && g.phase !== 'gameover' && !g.attack && !g.window) {
-              botStep(g, who);
-              steps++;
-            }
-          }
         }
         return g;
       });

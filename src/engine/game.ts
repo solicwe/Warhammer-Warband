@@ -2367,8 +2367,8 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
       },
     ];
   } else if (fid === 'ORK') {
-    name = 'Gorkamorka Great Stompa';
-    modelName = 'Great Stompa';
+    name = 'Stompa';
+    modelName = 'Stompa';
     kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'CHARACTER'];
     T = 12; W = 32; Sv = 2; InSv = 5; OC = 12;
     abilities = [{ name: 'Effigy of Gork', text: '5+ Invulnerable save and +2" to Charge.', type: 'datasheet' }];
@@ -2719,52 +2719,7 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
 
   s.campaign.reinforcementsTriggered.push(s.round);
 
-  const playerPts = fightingArmyPoints(s, 0);
-  const aiPts = fightingArmyPoints(s, 1);
-  const playerVp = s.players[0].vp;
-  const aiVp = s.players[1].vp;
-
-  // Decide if this strategic reinforcement is Allied or Enemy:
-  // If player is trailing in points or VP, or 50% chance: spawn powerful Allied Reinforcements!
-  const sendAllied = playerPts < aiPts || playerVp < aiVp || nextRandom(s) < 0.5;
-
-  if (sendAllied) {
-    const ally = createAlliedReinforcement(s.players[0].factionId, s.players[0].name, s);
-    const prefPos = {
-      x: Math.max(4, Math.min(18, (s.table?.width ?? RULES.battlefield.width) * 0.25)),
-      y: (s.table?.height ?? RULES.battlefield.height) / 2,
-    };
-    const placed = setUpAway(s, ally, 9, prefPos);
-    if (!placed) {
-      ally.models[0].x = prefPos.x;
-      ally.models[0].y = prefPos.y;
-      ally.status = 'board';
-    }
-    s.units.push(ally);
-    s.maxRounds = 5;
-
-    pushFx(s, {
-      kind: 'place',
-      unitId: ally.id,
-      owner: 0,
-      at: centreOf(ally),
-      deepStrike: true,
-      label: '⚡ ALLIED REINFORCEMENTS',
-    });
-    s.screenShake = Date.now();
-
-    s.reinforcementAlert = {
-      unitName: ally.name,
-      factionName: s.players[0].name,
-      round: s.round,
-      count: ally.models.length,
-      text: '⚡ ALLIED REINFORCEMENTS ARRIVED (5 ROUNDS)',
-    };
-    log(s, `ALLIED REINFORCEMENTS: Elite ${ally.name} arrived via Deep Strike (>9" from enemies) to reinforce our lines! Battle extended to Round 5!`, 'info', 0);
-    return true;
-  }
-
-  // Otherwise, Enemy Reinforcements: pick tough Heavy/Vehicle/Elite unit
+  // Strategic Reinforcements: Challenge player with enemy reinforcements
   const enemyUnits = s.units.filter((u) => u.owner === 1);
   if (!enemyUnits.length) return false;
 
@@ -2807,7 +2762,7 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
     owner: 1,
     at: centreOf(cloned),
     deepStrike: true,
-    label: '⚡ ENEMY DEEP STRIKE ARRIVAL',
+    label: 'ENEMY DEEP STRIKE ARRIVAL',
   });
   s.screenShake = Date.now();
 
@@ -2926,7 +2881,7 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
         owner: 1,
         at: centreOf(elite),
         deepStrike: true,
-        label: '⚡ ELITE DEEP STRIKE ARRIVAL',
+        label: 'ELITE DEEP STRIKE ARRIVAL',
       });
       s.screenShake = Date.now();
       log(s, `DRAMA CATCH-UP EVENT: Player leads by ${vpDelta} VP! Elite strike squad deployed via Deep Strike >9" from ${mostExp.name}!`, 'kill', 1);
@@ -2984,7 +2939,7 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
         owner: 1,
         at: centreOf(titan),
         deepStrike: true,
-        label: '⚡ TITAN DEEP STRIKE ARRIVAL',
+        label: 'TITAN DEEP STRIKE ARRIVAL',
       });
       s.screenShake = Date.now();
 
@@ -3034,36 +2989,7 @@ export function expandRoguelikeMap(s: GameState): boolean {
 
   log(s, `Map Expanded! Dimensions increased from ${oldW}"×${oldH}" to ${targetW}"×${targetH}" (VP: ${s.players[0].vp})`, 'vp', 0);
 
-  // Symmetrically scale existing terrain, walls, obstacles, objectives and models
-  const sx = targetW / oldW;
-  const sy = targetH / oldH;
-  for (const t of s.terrain) {
-    t.poly = t.poly.map((p) => ({ x: Math.round(p.x * sx * 10) / 10, y: Math.round(p.y * sy * 10) / 10 }));
-    if (t.walls) {
-      t.walls = t.walls.map((w) => ({
-        a: { x: Math.round(w.a.x * sx * 10) / 10, y: Math.round(w.a.y * sy * 10) / 10 },
-        b: { x: Math.round(w.b.x * sx * 10) / 10, y: Math.round(w.b.y * sy * 10) / 10 },
-      }));
-    }
-    if (t.obstacles) {
-      t.obstacles = t.obstacles.map((ob) => ({
-        a: { x: Math.round(ob.a.x * sx * 10) / 10, y: Math.round(ob.a.y * sy * 10) / 10 },
-        b: { x: Math.round(ob.b.x * sx * 10) / 10, y: Math.round(ob.b.y * sy * 10) / 10 },
-      }));
-    }
-  }
-  for (const o of s.objectives) {
-    o.x = Math.round(o.x * sx * 10) / 10;
-    o.y = Math.round(o.y * sy * 10) / 10;
-  }
-  for (const u of s.units) {
-    for (const m of u.models) {
-      m.x = Math.round(m.x * sx * 10) / 10;
-      m.y = Math.round(m.y * sy * 10) / 10;
-    }
-  }
-
-  // Maintain strict 25% footprint coverage ratio
+  // Maintain strict 25% footprint coverage ratio across the whole expanded grid
   const totalArea = targetW * targetH;
   const targetTerrainArea = totalArea * 0.25;
 
@@ -3075,23 +3001,28 @@ export function expandRoguelikeMap(s: GameState): boolean {
   let nextIdx = s.terrain.length + 1;
   const kinds: ('ruin' | 'crater' | 'barricade')[] = ['ruin', 'crater', 'barricade', 'ruin'];
   let kIdx = 0;
+  const addedPieces: TerrainPiece[] = [];
 
-  while (neededArea > 10 && nextIdx < 60) {
+  const existingModels = s.units.flatMap((u) => u.models.filter((m) => !m.dead));
+
+  while (neededArea > 8 && nextIdx < 70) {
     const kind = kinds[kIdx % kinds.length];
     kIdx++;
-    const inRightBand = nextRandom(s) > 0.5;
+    const inRightBand = targetW > oldW && (targetH <= oldH || nextRandom(s) > 0.5);
     let x0: number, y0: number, pw: number, ph: number;
 
-    if (inRightBand && targetW > oldW) {
-      pw = kind === 'ruin' ? 6 : kind === 'crater' ? 5 : 4;
-      ph = kind === 'ruin' ? 4 : kind === 'crater' ? 5 : 2;
-      x0 = oldW + nextRandom(s) * Math.max(1, (targetW - oldW - pw));
-      y0 = 2 + nextRandom(s) * (targetH - ph - 4);
-    } else {
-      pw = kind === 'ruin' ? 5 : kind === 'crater' ? 4 : 4;
+    if (inRightBand) {
+      const availW = Math.max(2, targetW - oldW - 1);
+      pw = Math.min(availW, kind === 'ruin' ? 5 : 4);
       ph = kind === 'ruin' ? 4 : kind === 'crater' ? 4 : 2;
-      x0 = 2 + nextRandom(s) * (targetW - pw - 4);
-      y0 = oldH + nextRandom(s) * Math.max(1, (targetH - oldH - ph));
+      x0 = oldW + 0.5 + nextRandom(s) * Math.max(0, targetW - oldW - pw - 1);
+      y0 = 2 + nextRandom(s) * Math.max(1, targetH - ph - 4);
+    } else {
+      const availH = Math.max(2, targetH - oldH - 1);
+      pw = kind === 'ruin' ? 5 : kind === 'crater' ? 4 : 4;
+      ph = Math.min(availH, kind === 'ruin' ? 4 : 3);
+      x0 = 2 + nextRandom(s) * Math.max(1, targetW - pw - 4);
+      y0 = oldH + 0.5 + nextRandom(s) * Math.max(0, targetH - oldH - ph - 1);
     }
 
     const poly = [
@@ -3100,6 +3031,10 @@ export function expandRoguelikeMap(s: GameState): boolean {
       { x: x0 + pw, y: y0 + ph },
       { x: x0, y: y0 + ph },
     ];
+
+    // Ensure new terrain does not overlap existing models
+    const overlapsModel = existingModels.some((m) => m.x >= x0 - 1 && m.x <= x0 + pw + 1 && m.y >= y0 - 1 && m.y <= y0 + ph + 1);
+    if (overlapsModel) continue;
 
     const pieceArea = pw * ph;
     const isDense = kind === 'ruin';
@@ -3122,12 +3057,17 @@ export function expandRoguelikeMap(s: GameState): boolean {
       obstacles: kind === 'barricade' ? [{ a: { x: x0, y: y0 + ph / 2 }, b: { x: x0 + pw, y: y0 + ph / 2 } }] : [],
     };
 
-    s.terrain.push(newPiece);
+    addedPieces.push(newPiece);
     neededArea -= pieceArea;
   }
 
+  // Assign fresh array to invalidate spatial caches for collision and line of sight
+  s.terrain = [...s.terrain, ...addedPieces];
   return true;
 }
+
+/** Alias for map expansion */
+export const expandMap = expandRoguelikeMap;
 
 /** Sanitize GameState to ensure all arrays and properties are initialized and never throw undefined length */
 export function sanitizeGameState(s: GameState): GameState {

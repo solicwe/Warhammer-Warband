@@ -5,7 +5,7 @@
 > เลขในวงเล็บ เช่น (09.06) คือเลขหัวข้อใน Core Rules ใช้อ้างอิงเวลาเขียนโค้ดหรือ test
 >
 > เอกสารนี้ไม่ได้คัดลอกกฎทั้งหมด แต่สรุปเฉพาะส่วนที่ engine ต้อง implement ให้ถูก
-> ตัวเลขทุกตัวในนี้ตรวจกับต้นฉบับแล้ว ยกเว้นข้อที่มี ⚠️ ซึ่งยังต้องตรวจซ้ำ
+> ตัวเลขทุกตัวในนี้ตรวจกับต้นฉบับแล้ว ยกเว้นข้อที่มี [Note] ซึ่งยังต้องตรวจซ้ำ
 
 ---
 
@@ -91,7 +91,7 @@
 - **BS/WS อยู่ในช่วง 2+ ถึง 6+** (ห้าม 1+ และห้าม 7+)
 - AP แย่ได้สุดคือ 0; OC ต่ำสุด 0
 - "Improve BS 1" = ลบเลข (3+ → 2+); "Worsen" = บวกเลข
-- ⚠️ **Hit roll และ wound roll modifier สูงสุด ±1** (cap ของ roll modifier แยกจาก cap ของ BS stat) ตามที่หลายแหล่งรีวิวรายงานไว้ แต่ข้อความตรงส่วนนี้ไม่ได้อยู่ในชุดที่ดึงมา ต้องตรวจกับ PDF ก่อนล็อกโค้ด
+- [Note] **Hit roll และ wound roll modifier สูงสุด ±1** (cap ของ roll modifier แยกจาก cap ของ BS stat) ตามที่หลายแหล่งรีวิวรายงานไว้ แต่ข้อความตรงส่วนนี้ไม่ได้อยู่ในชุดที่ดึงมา ต้องตรวจกับ PDF ก่อนล็อกโค้ด
   - ผลคือ cover (−1 BS) + roll modifier −1 ซ้อนกันได้ และ plunging (+1 BS) + heavy (+1 hit) ก็ซ้อนกันได้
 
 ---
@@ -537,7 +537,7 @@ Battle Round (×5)
 
 ---
 
-## 17. ⚠️ สิ่งที่ต้องตรวจซ้ำก่อนล็อกโค้ด
+## 17. [Note] สิ่งที่ต้องตรวจซ้ำก่อนล็อกโค้ด
 1. **Cap ของ hit/wound roll modifier** (±1?) และลำดับการรวมกับ BS modifier → ต้องดูหัวข้อ 02.02.01 ใน PDF ทางการ
 2. ข้อความเต็มของ Primary Missions กลุ่ม Disruption / Recon / Priority Assets (ใช้ operation marker และ action เฉพาะ) → ทำทีหลัง MVP
 3. Primary ที่เขียนว่า "End of your Command phase (or the end of your turn in the fifth battle round)" — engine ตีความว่ารอบ 5 นับตอนจบเทิร์นแทน Command phase (แก้ได้ใน `data/missions.json` ช่อง `round5When`)

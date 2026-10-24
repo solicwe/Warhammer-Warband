@@ -6,10 +6,11 @@ import { loadRun, saveRun } from '../services/storage';
 import { attachOptions, autoAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
-  adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, BATTLE_HONORS, battleHonorById,
-  bossRuleById, buyEnhancementForUnit, buyHonorForUnit, changeSquadSize, cheapest, continueNextLoop,
-  enhancementScrapCost, enter, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
-  removeEnhancementFromUnit, rerollOffer, START_POINTS, takeReward,
+  adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
+  bossRuleById, buyDatasheetHonor, buyEnhancementForUnit, buyHonorForUnit, buyTechNode, canRecruitTitanOrKnight,
+  changeSquadSize, cheapest, continueNextLoop, datasheetHonorCost, enhancementScrapCost, enter,
+  getFactionFamily, getFactionTechNodes, getSmartBattleHonors, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
+  removeEnhancementFromUnit, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
 } from '../engine/campaign';
 import { hasFactionRules } from '../rules-engine/effects';
@@ -20,7 +21,7 @@ import { DatasheetView } from './Sheet';
 import { loadFaction, type FactionIndex } from './data';
 import { Icon, type IconName } from './Icon';
 import { withAutoRules } from './library';
-import { getPortrait } from './portraits';
+import { getPortrait, hasRealPortrait } from './portraits';
 import { RelicToken } from './Relics';
 import { play } from './sfx';
 import { Em } from './Em';
@@ -57,7 +58,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
   // Roguelike Roster & Armory state
   const [showRoster, setShowRoster] = useState(false);
-  const [rosterTab, setRosterTab] = useState<'roster' | 'recruit' | 'detachments'>('roster');
+  const [rosterTab, setRosterTab] = useState<'roster' | 'recruit' | 'tech' | 'detachments'>('roster');
   const [menu, setMenu] = useState<string | null>(null);
   const [panelCollapse, setPanelCollapse] = useState<Record<string, Record<string, boolean>>>({});
   const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null);
@@ -143,8 +144,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         names: ['You', isBoss ? `${ef.name} Warlord` : ef.name], secondaryMode: 'none', maxRounds, seed: node.enemy.seed,
         primaryId: 'roguelike-annihilation',
       });
-      s.botPlayer = 1;
-      s.bots = [1];
+      const isAuto = Boolean(r.autoBattle);
+      s.botPlayer = isAuto ? 0 : 1;
+      s.bots = isAuto ? [0, 1] : [1];
+      (s as any).autoSpeed = r.autoSpeed ?? 1;
       s.botLevel = node.enemy.level;
       applyCampaign(s, r, node.enemy.rules || []);
       setRun(r);
@@ -172,6 +175,38 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
   const open = useMemo(() => (run ? reachable(run) : []), [run]);
   const focused = run?.map.find((n) => n.id === (focus ?? run.fighting)) ?? null;
+
+  // Idle Auto-Battle & Auto-Progress Engine
+  useEffect(() => {
+    if (!run || !run.autoBattle || busy || !fac) return;
+    if (run.over === 'won') {
+      const timer = window.setTimeout(() => {
+        const next = continueNextLoop(run, fac);
+        setRun(next);
+        saveRun(next);
+        play('turn');
+      }, 1000);
+      return () => window.clearTimeout(timer);
+    }
+    if (run.offer && run.offer.length > 0) {
+      const timer = window.setTimeout(() => {
+        const rw = run.offer![0];
+        let next = takeReward(run, rw, fac);
+        if ((next.scrap ?? 0) >= 120) {
+          next = autoUpgradeAll(next, fac);
+        }
+        setRun(next);
+        play('good');
+      }, 750);
+      return () => window.clearTimeout(timer);
+    }
+    if (!run.fighting && open.length > 0) {
+      const timer = window.setTimeout(() => {
+        go(open[0]);
+      }, 850);
+      return () => window.clearTimeout(timer);
+    }
+  }, [run?.autoBattle, run?.fighting, run?.offer, run?.over, open, busy, fac]);
 
   // Rank calculator based on XP
   const rankLabel = (xp = 0) => {
@@ -513,6 +548,26 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               <Icon name={u.warlord ? 'check' : 'leader'} size={22} />{u.warlord ? 'Warlord' : 'Make Warlord'}
             </button>
           )}
+          {(() => {
+            const topLevel = run.list.units.filter((x) => !x.attachTo);
+            const isLast = topLevel.length <= 1 && !u.attachTo;
+            const refund = sellValue(u);
+            return !isLast && (
+              <button type="button" className="danger" onClick={() => {
+                if (!armed) { setArmed(true); return; }
+                const next = sellUnit(run, u.uid);
+                if (next !== run) {
+                  setRun(next);
+                  play('tick');
+                  setInfo(`Sold ${u.datasheet} (+${refund} Scrap)`);
+                }
+                setArmed(false);
+                close();
+              }}>
+                <Icon name="delete" size={22} />{armed ? 'Tap again to sell' : `Sell Unit (+${refund} Scrap)`}
+              </button>
+            );
+          })()}
         </>
       );
     }
@@ -552,7 +607,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     <div className="app campaign">
       <header className="appbar">
         <button className="appbar-back-btn" aria-label="Back" onClick={onBack}>&lt;</button>
-        <span className="appbar-title">Campaign · Sector {run.loop ?? 1}</span>
+        <span className="appbar-title">Campaign · Sector {run.sector || run.loop || 1}</span>
         <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span> <span>Scrap</span></span>
         <span className="cmp-fate" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
           {[0, 1, 2].map((i) => <i key={i} className={i < run.fate ? 'on' : ''} />)}
@@ -560,12 +615,49 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       </header>
 
       <main className="screen">
+        {/* Idle Progression & Speed Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: 'rgba(0,0,0,0.35)', borderRadius: 8, marginBottom: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
+          <button
+            type="button"
+            className={`btn small ${run.autoBattle ? 'ok' : 'ghost'}`}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+            onClick={() => {
+              const next = { ...run, autoBattle: !run.autoBattle };
+              setRun(next);
+              play('tick');
+              setInfo(next.autoBattle ? 'Auto-Battle & Auto-Progress Enabled' : 'Auto-Battle Paused');
+            }}
+          >
+            <Icon name={run.autoBattle ? 'check' : 'next'} size={14} />
+            {run.autoBattle ? 'Auto-Battle & Auto-Progress [ON]' : 'Auto-Battle & Auto-Progress [OFF]'}
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span className="tiny muted" style={{ marginRight: 4 }}>Speed:</span>
+            {([1, 2, 4] as const).map((spd) => (
+              <button
+                key={spd}
+                type="button"
+                className={`btn tiny ${(run.autoSpeed ?? 1) === spd ? 'primary' : 'ghost'}`}
+                style={{ minWidth: 32, padding: '2px 6px', fontWeight: 700 }}
+                onClick={() => {
+                  const next = { ...run, autoSpeed: spd };
+                  setRun(next);
+                  play('tick');
+                }}
+              >
+                {spd}x
+              </button>
+            ))}
+          </div>
+        </div>
+
         <section className="cmp-army slate"><div className="slate-in">
           <div className="cmp-army-top">
             <span className="cmp-emblem"><Emblem factionId={run.factionId} /></span>
             <span className="cmp-army-text">
               <b>{run.list.name}</b>
-              <span className="muted small">Sector {run.loop ?? 1} · <span className="num">{pts}</span> pts · {run.list.units.length} units · {run.wins} {run.wins === 1 ? 'win' : 'wins'}{run.cp ? ` · +${run.cp} CP` : ''}</span>
+              <span className="muted small">Sector {(run.sector || run.loop || 1) > 5 ? `${run.loop} (Endless)` : `${run.sector || run.loop || 1} of 5`} · <span className="num">{pts}</span> pts · {run.list.units.length} units · {run.wins} {run.wins === 1 ? 'win' : 'wins'}{run.cp ? ` · +${run.cp} CP` : ''}</span>
             </span>
             <button className="btn small primary cmp-roster-btn" style={{ marginLeft: 'auto' }} onClick={() => setShowRoster(true)}>
               <Icon name="swords" size={15} /> Roster & Armory
@@ -799,6 +891,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 <button className={`cmp-armory-tab ${rosterTab === 'recruit' ? 'active' : ''}`} onClick={() => setRosterTab('recruit')}>
                   Recruit Reinforcements
                 </button>
+                <button className={`cmp-armory-tab ${rosterTab === 'tech' ? 'active' : ''}`} onClick={() => setRosterTab('tech')}>
+                  <Icon name="shop" size={14} /> Command Tech Tree
+                </button>
                 <button className={`cmp-armory-tab ${rosterTab === 'detachments' ? 'active' : ''}`} onClick={() => setRosterTab('detachments')}>
                   <Icon name="cards" size={14} /> Detachments ({run.list.detachments?.length ?? 1})
                 </button>
@@ -832,73 +927,90 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           </div>
                         )}
 
-                        {/* 2. Battle Honors */}
+                        {/* 2. Datasheet-Wide Battle Honors with Smart Filter */}
                         <div className="ab-collapsible-section field">
                           <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'honors', false)}>
                             <span className="row gap-2" style={{ alignItems: 'center' }}>
                               <Icon name={isHonorsOpen ? 'down' : 'next'} size={16} />
                               <Icon name="shop" size={15} />
-                              <b>Battle Honors (Veterancy)</b>
-                              {u.honors?.length ? <span className="ab-badge-selected">{u.honors.length} honors</span> : null}
+                              <b>Battle Honors (Datasheet-Wide)</b>
+                              {(() => {
+                                const activeHonors = run.datasheetHonors?.[u.datasheet] ?? u.honors ?? [];
+                                return activeHonors.length ? <span className="ab-badge-selected">{activeHonors.length} active</span> : null;
+                              })()}
                             </span>
                             <span className="tiny muted">{isHonorsOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
                           </button>
-                          {isHonorsOpen && (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 8, marginTop: 8 }}>
-                              {BATTLE_HONORS.map((h) => {
-                                const has = (u.honors ?? []).includes(h.id);
-                                const canAfford = (run.scrap ?? 0) >= h.cost;
-                                return (
-                                  <div
-                                    key={h.id}
-                                    style={{
-                                      padding: '10px 12px',
-                                      borderRadius: 8,
-                                      background: has ? 'rgba(34, 197, 94, 0.08)' : 'rgba(255,255,255,0.03)',
-                                      border: has ? '1.5px solid #22c55e' : '1px solid rgba(255,255,255,0.08)',
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      justifyContent: 'space-between',
-                                      gap: 8,
-                                      opacity: !has && !canAfford ? 0.45 : 1,
-                                    }}
-                                  >
-                                    <div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-                                        <span style={{
-                                          fontFamily: 'var(--font-cond, sans-serif)',
-                                          fontWeight: 700,
-                                          fontSize: 12.5,
-                                          letterSpacing: '0.04em',
-                                          color: has ? '#4ade80' : '#f59e0b',
-                                          background: has ? 'rgba(34, 197, 94, 0.15)' : 'rgba(245, 158, 11, 0.12)',
-                                          padding: '2px 8px',
-                                          borderRadius: 4,
-                                        }}>
-                                          {h.tag || h.name}
-                                        </span>
-                                        <span className="cmp-scrap" style={{ fontSize: 12 }}>
-                                          <Icon name="shop" size={12} /> {h.cost}
-                                        </span>
-                                      </div>
-                                      <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 6, lineHeight: 1.35 }}>
-                                        {h.desc}
-                                      </div>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      className={`btn small ${has ? 'ok' : canAfford ? 'primary' : ''}`}
-                                      style={{ width: '100%', marginTop: 2, fontWeight: 600, fontSize: 12 }}
-                                      disabled={has || !canAfford}
-                                      onClick={() => { setRun(buyHonorForUnit(run, u.uid, h.id)); play('good'); }}
+                          {isHonorsOpen && (() => {
+                            const squadCount = Math.max(1, run.list.units.filter((x) => x.datasheet === u.datasheet).length);
+                            const currentHonors = run.datasheetHonors?.[u.datasheet] ?? u.honors ?? [];
+                            const smartList = sheet ? getSmartBattleHonors(sheet, currentHonors) : [];
+                            return (
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 8, marginTop: 8 }}>
+                                {BATTLE_HONORS.map((h) => {
+                                  const has = currentHonors.includes(h.id);
+                                  const isEligible = has || smartList.some((s) => s.id === h.id);
+                                  if (!isEligible) return null; // Smart filter: prune incompatible or redundant honors
+
+                                  const cost = datasheetHonorCost(h.cost, squadCount);
+                                  const canAfford = (run.scrap ?? 0) >= cost;
+                                  return (
+                                    <div
+                                      key={h.id}
+                                      style={{
+                                        padding: '10px 12px',
+                                        borderRadius: 8,
+                                        background: has ? 'rgba(34, 197, 94, 0.08)' : 'rgba(255,255,255,0.03)',
+                                        border: has ? '1.5px solid #22c55e' : '1px solid rgba(255,255,255,0.08)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
+                                        gap: 8,
+                                        opacity: !has && !canAfford ? 0.45 : 1,
+                                      }}
                                     >
-                                      {has ? <><Icon name="check" size={12} /> Active</> : !canAfford ? `Need ${h.cost} Scrap` : `Upgrade (${h.cost} Scrap)`}
-                                    </button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
+                                      <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                                          <span style={{
+                                            fontFamily: 'var(--font-cond, sans-serif)',
+                                            fontWeight: 700,
+                                            fontSize: 12,
+                                            letterSpacing: '0.04em',
+                                            color: has ? '#4ade80' : h.tier === 'legendary' ? '#c084fc' : h.tier === 'heroic' ? '#38bdf8' : '#f59e0b',
+                                            background: has ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.06)',
+                                            padding: '2px 8px',
+                                            borderRadius: 4,
+                                          }}>
+                                            {h.tier ? `[${h.tier.toUpperCase()}] ` : ''}{h.tag || h.name}
+                                          </span>
+                                          <span className="cmp-scrap" style={{ fontSize: 12 }}>
+                                            <Icon name="shop" size={12} /> {cost}
+                                          </span>
+                                        </div>
+                                        <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 6, lineHeight: 1.35 }}>
+                                          {h.desc}
+                                        </div>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        className={`btn small ${has ? 'ok' : canAfford ? 'primary' : ''}`}
+                                        style={{ width: '100%', marginTop: 2, fontWeight: 600, fontSize: 12 }}
+                                        disabled={has || !canAfford}
+                                        onClick={() => {
+                                          const next = buyDatasheetHonor(run, fac, u.datasheet, h.id);
+                                          setRun(next);
+                                          play('good');
+                                          setInfo(`Upgraded ${u.datasheet} with ${h.name}!`);
+                                        }}
+                                      >
+                                        {has ? <><Icon name="check" size={12} /> Active Army-Wide</> : !canAfford ? `Need ${cost} Scrap` : `Upgrade All (${cost} Scrap)`}
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         {/* 3. Wargear Options with Scrap mode */}
@@ -1117,6 +1229,31 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {/* One-Click Auto Upgrade All Button */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(245, 158, 11, 0.08)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: '#f59e0b' }}>Datasheet-Wide Upgrades</div>
+                        <div className="tiny muted">Upgrades apply to every squad of that type across your entire crusade force.</div>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn small primary"
+                        style={{ fontWeight: 700, gap: 6 }}
+                        onClick={() => {
+                          const next = autoUpgradeAll(run, fac);
+                          if (next !== run) {
+                            setRun(next);
+                            play('good');
+                            setInfo('Auto-upgraded all squads with smart battle honors.');
+                          } else {
+                            setInfo('No eligible upgrades or insufficient Scrap.');
+                          }
+                        }}
+                      >
+                        <Icon name="sparkles" size={15} /> [AUTO-UPGRADE ALL]
+                      </button>
+                    </div>
+
                     {SECTIONS.filter((sec) => sec.id !== 'allies' || run.list.units.some((u) => sectionOf(fac.datasheets.find((x) => x.name === u.datasheet), run.factionId) === 'allies')).map((sec) => {
                       const joined = (b: ArmyUnitEntry) => run.list.units.filter((c) => c.attachTo === b.uid);
                       const homeOf = (u: ArmyUnitEntry): string => {
@@ -1178,6 +1315,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     const qClean = recruitQ.trim().toLowerCase();
                     const availableSheets = fac.datasheets.filter(
                       (d) => !d.ally && d.points?.[0]?.options?.length && !d.keywords?.includes('FORTIFICATION')
+                        && hasRealPortrait(d.name)
+                        && canRecruitTitanOrKnight(fac.id, d, run)
                     );
                     const matchesQ = (d: DatasheetData) =>
                       !qClean ||
@@ -1336,6 +1475,103 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   })()}
                 </div>
               )}
+
+              {rosterTab === 'tech' && (() => {
+                const family = getFactionFamily(run.factionId);
+                const nodes = getFactionTechNodes(run.factionId);
+                const familyTitles: Record<string, string> = {
+                  IMPERIUM: 'Imperium Strategic Command Grid',
+                  CHAOS: 'Chaos Hereticus Warp Lore',
+                  NECRONS: 'Necron Dynastic Awakening',
+                  ORKS: 'Ork Great WAAAGH! Forge',
+                  TYRANIDS: 'Tyranid Synaptic Hive Evolution',
+                  XENOS: 'Xenos High Technology Protocol',
+                };
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div className="cmp-armory-hint">
+                      <b>{familyTitles[family] || 'Command Tech Tree'}</b>: Unlock persistent faction perks and Super-Heavy requisitions using Scrap.
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+                      {nodes.map((n) => {
+                        const isUnlocked = (run.techTree ?? []).includes(n.id);
+                        const reqNode = n.req ? nodes.find((x) => x.id === n.req) : undefined;
+                        const isReqMet = !n.req || (run.techTree ?? []).includes(n.req);
+                        const canAfford = (run.scrap ?? 0) >= n.cost;
+
+                        return (
+                          <div
+                            key={n.id}
+                            style={{
+                              padding: '12px 14px',
+                              borderRadius: 10,
+                              background: isUnlocked ? 'rgba(34, 197, 94, 0.08)' : 'rgba(255,255,255,0.03)',
+                              border: isUnlocked ? '1.5px solid #22c55e' : '1px solid rgba(255,255,255,0.08)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              gap: 10,
+                              opacity: !isUnlocked && (!isReqMet || !canAfford) ? 0.55 : 1,
+                            }}
+                          >
+                            <div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  color: isUnlocked ? '#4ade80' : '#38bdf8',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em',
+                                }}>
+                                  Tier {n.tier} · {n.tag}
+                                </span>
+                                <span className="cmp-scrap" style={{ fontSize: 13 }}>
+                                  <Icon name="shop" size={13} /> {n.cost} Scrap
+                                </span>
+                              </div>
+                              <div style={{ fontWeight: 700, fontSize: 14, color: '#f1f5f9', marginTop: 4 }}>
+                                {n.name}
+                              </div>
+                              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6, lineHeight: 1.4 }}>
+                                {n.desc}
+                              </div>
+                              {reqNode && !isReqMet && (
+                                <div style={{ fontSize: 11, color: '#f87171', marginTop: 6 }}>
+                                  Requires: {reqNode.name}
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              className={`btn small ${isUnlocked ? 'ok' : canAfford && isReqMet ? 'primary' : ''}`}
+                              disabled={isUnlocked || !canAfford || !isReqMet}
+                              onClick={() => {
+                                const next = buyTechNode(run, n.id);
+                                setRun(next);
+                                play('good');
+                                setInfo(`Command Tech Tree: Unlocked ${n.name}!`);
+                              }}
+                            >
+                              {isUnlocked ? (
+                                <><Icon name="check" size={14} /> Unlocked</>
+                              ) : !isReqMet ? (
+                                `Locked (Requires Tier ${n.tier - 1})`
+                              ) : !canAfford ? (
+                                `Need ${n.cost} Scrap`
+                              ) : (
+                                `Unlock (-${n.cost} Scrap)`
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {rosterTab === 'detachments' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

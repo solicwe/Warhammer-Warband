@@ -6,8 +6,8 @@ import { emph } from './Em';
 type Bullet = { text: string; sub: string[] };
 type Block = { kind: 'p'; text: string } | { kind: 'ul'; items: Bullet[] } | { kind: 'note'; label: string; text: string } | { kind: 'table'; rows: string[][] };
 
-const isBullet = (l: string) => /^[•●▪▫■◦*-]\s*/.test(l);
-const strip = (l: string) => l.replace(/^[•●▪▫■◦*-]\s*/, '');
+const isBullet = (l: string) => /^[•●\u25AA\u25AB\u25A0◦*-]\s*/.test(l);
+const strip = (l: string) => l.replace(/^[•●\u25AA\u25AB\u25A0◦*-]\s*/, '');
 const isHeading = (l: string, next?: string) => !!next && !isBullet(l) && !l.includes('¦') && !next.includes('¦') && l.length >= 3 && l.length <= 60 && !/[.:;?"”]$/.test(l) && !/^(Designer|Example)/.test(l);
 
 function blocks(lines: string[]): Block[] {
