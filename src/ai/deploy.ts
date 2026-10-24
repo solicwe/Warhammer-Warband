@@ -99,7 +99,7 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   // where the enemy could stand (sight checks), and the objectives
   // the enemy's zone, plus the enemy models already on the table (they deploy in turns: those are known)
   const placed = s.units.filter((e) => e.owner !== u.owner && onBoard(e)).flatMap(alive);
-  const watchers = [...samplePoly(enemyZone, 4).map(lookout), ...placed.filter((_, i) => i % Math.max(1, Math.ceil(placed.length / 16)) === 0).map((m) => lookout(m))];
+  const watchers = [...samplePoly(enemyZone, 6).map(lookout), ...placed.filter((_, i) => i % Math.max(1, Math.ceil(placed.length / 8)) === 0).map((m) => lookout(m))].slice(0, 8);
   const objs = s.objectives.map((o) => ({ o, p: polyCentroid(objectiveTerrain(s, o).poly) }));
   // its own home objective (some layouts put it on the zone's edge, outside the zone itself) and any inside the zone
   const home = objs.filter(({ o, p }) => (o.type === 'home' && o.owner === u.owner) || pointInPoly(p, zone));
@@ -107,8 +107,8 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   const friends = s.units.filter((f) => f.owner === u.owner && f.id !== u.id && onBoard(f));
   // held by a unit that stays there: a mob of Boyz standing on it now charges off in the first turn
   const homeHeld = (p: Pt) => friends.some((f) => oc(f) > 0 && !isBrawler(s, f) && alive(f).some((m) => ptGap(m, p) <= 3));
-  const zoneDepth = Math.max(1, ...samplePoly(zone, 3).map((p) => dist(p, ec))) - Math.min(...samplePoly(zone, 3).map((p) => dist(p, ec)));
-  const frontDist = Math.min(...samplePoly(zone, 3).map((p) => dist(p, ec)));
+  const zoneDepth = Math.max(1, ...samplePoly(zone, 4).map((p) => dist(p, ec))) - Math.min(...samplePoly(zone, 4).map((p) => dist(p, ec)));
+  const frontDist = Math.min(...samplePoly(zone, 4).map((p) => dist(p, ec)));
 
   // first the cheap terms for every open spot, then the sight checks only for the most promising ones
   const cands: { pos: Map<string, Pt>; ms: ModelState[]; centre: Pt; score: number }[] = [];
@@ -162,11 +162,9 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   cands.sort((a, b) => b.score - a.score);
 
   let best: { pos: Map<string, Pt>; score: number } | null = null;
-  // sight checks for many spots: a hidden spot a little further back often beats the open one in front
+  // sight checks for the top candidates: a bounded pool eliminates long freezes on starting deployment
   const worth = Math.min(2, (u.pts * alive(u).length) / Math.max(1, u.startingStrength) / 120);
-  // the best by position, plus the best spots in cover (often a little further back, and out of sight)
-  // every open spot gets its sight check: the hidden one is the one to find, wherever it is in the zone
-  const pool = cands.slice(0, 400);
+  const pool = cands.slice(0, 36);
   for (const cand of pool) {
     if (vehicle && !canLeave(s, u, cand.pos)) continue;
     let score = cand.score;

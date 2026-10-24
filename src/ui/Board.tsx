@@ -601,6 +601,10 @@ function getModelDisplayWounds(u: UnitState, m: ModelState, fx: ActiveFx[], now:
   return { wounds: m.wounds, low: m.wounds * 2 <= m.profile.W };
 }
 
+const StaticTerrainLayer = memo(function StaticTerrainLayer({ children }: { children: React.ReactNode }) {
+  return <g className="static-terrain-layer" pointerEvents="none">{children}</g>;
+});
+
 function BoardImpl(props: BoardProps) {
   usePortraitsVersion();
   const { s, draft, draftUnit, maxFor, onDraft, walk } = props;
@@ -835,7 +839,7 @@ function BoardImpl(props: BoardProps) {
           if (d > max) end = { x: origin.x + ((end.x - origin.x) * max) / d, y: origin.y + ((end.y - origin.y) * max) / d };
         }
         const next: Paths = new Map(curDraft);
-        next.set(id, path.length < 2 ? [end] : curWalk ? curWalk(id, [origin, end]) : [origin, end]);
+        next.set(id, path.length < 2 ? [end] : [origin, end]);
         dg.last = next;
         setLocalDraft(next);
         return;
@@ -853,7 +857,7 @@ function BoardImpl(props: BoardProps) {
           const d = dist(o, end);
           if (d > max) end = { x: o.x + ((end.x - o.x) * max) / d, y: o.y + ((end.y - o.y) * max) / d };
         }
-        next.set(id, path.length < 2 ? [end] : curWalk ? curWalk(id, [path[0], end]) : [path[0], end]);
+        next.set(id, path.length < 2 ? [end] : [path[0], end]);
       }
       dg.last = next;
       setLocalDraft(next);
@@ -920,8 +924,16 @@ function BoardImpl(props: BoardProps) {
       } else {
         if (!solo.includes(dg.modelId)) setSolo([]);
         if (dg.last) {
-          props.onDraft?.(dg.last);
-          props.onDragEnd?.(dg.last);
+          const curWalk = propsRef.current.walk;
+          let finalDraft = dg.last;
+          if (curWalk) {
+            finalDraft = new Map();
+            for (const [id, pts] of dg.last) {
+              finalDraft.set(id, pts.length >= 2 ? curWalk(id, pts) : pts);
+            }
+          }
+          props.onDraft?.(finalDraft);
+          props.onDragEnd?.(finalDraft);
         }
       }
       return;
@@ -1241,6 +1253,7 @@ function BoardImpl(props: BoardProps) {
     const selectedUnit = props.selected ? s.units.find((x) => x.id === props.selected) : null;
     const selAlive = selectedUnit && selectedUnit.owner === props.viewer ? alive(selectedUnit) : null;
     const isTargetingActive = s.phase === 'shooting' || (props.targets && props.targets.length > 0);
+    if (!isTargetingActive || drag.current) return set;
 
     const friendlyUnits = s.units.filter((fu) => fu.owner === props.viewer && onBoard(fu));
     const friendlyModels = friendlyUnits.flatMap((fu) => alive(fu));
@@ -1392,7 +1405,7 @@ function BoardImpl(props: BoardProps) {
       {Array.from({ length: Math.floor(W / 6) + 1 }, (_, i) => (
         <text key={`tx${i}`} x={i * 6 + 0.15} y={H - 0.25} fontSize={0.6} fill="rgba(255,255,255,0.4)" pointerEvents="none">{i * 6}"</text>
       ))}
-      {terrainEls}
+      <StaticTerrainLayer>{terrainEls}</StaticTerrainLayer>
       {props.edgeGuide !== undefined && props.edgeGuide > 0 && props.edgeGuide * 2 < Math.min(W, H) && (
         <g pointerEvents="none">
           <rect x={props.edgeGuide} y={props.edgeGuide} width={W - props.edgeGuide * 2} height={H - props.edgeGuide * 2}

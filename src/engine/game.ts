@@ -99,6 +99,14 @@ function buildTerrain(layoutId: string, tableSize?: { width: number; height: num
       const onBox = (w: Seg) => [w.a, w.b].every((p) => edges.some((e) => pointSegDist(p, e) < 0.6 * Math.max(sx, sy)));
       walls = [...edges, ...walls.filter((w) => !onBox(w))];
     }
+    const polyPts = t.poly.map(([x, y]) => ({ x, y }));
+    const allPts = [...polyPts, ...walls.flatMap((w) => [w.a, w.b])];
+    const bounds = {
+      x0: Math.min(...allPts.map((p) => p.x)),
+      y0: Math.min(...allPts.map((p) => p.y)),
+      x1: Math.max(...allPts.map((p) => p.x)),
+      y1: Math.max(...allPts.map((p) => p.y)),
+    };
     return {
       id: `t${i}`,
       kind: 'ruin',
@@ -106,10 +114,11 @@ function buildTerrain(layoutId: string, tableSize?: { width: number; height: num
       // a baseplate with ruin walls is dense (walls block sight); a bare baseplate with obstacles only is light
       category: walls.length ? 'dense' : 'light',
       height: walls.length ? 5 : 1.5,
-      poly: t.poly.map(([x, y]) => ({ x, y })),
+      poly: polyPts,
       walls,
       obstacles: t.obstacles.length || walls.length ? t.obstacles.map(seg) : stripBarricade(t.poly),
       ...(box ? { box } : {}),
+      bounds,
     };
   });
   const objectives: ObjectiveState[] = L.objectives.map((o, i) => {
@@ -1774,17 +1783,22 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
       const cur = pos.get(m.id)!;
       if (gapTo(m, cur) <= 0.05) continue;
       const budget = maxDist - dist(m, cur);
-      if (budget <= 0.05) continue;
       let best: Pt | null = null;
       let bestScore = Infinity;
-      for (const e of enemyModels) {
-        for (let a = 0; a < 24; a++) {
-          const ang = Math.atan2(cur.y - e.y, cur.x - e.x) + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 12);
+      const nearFoes = [...enemyModels].sort((a, b) => dist(cur, a) - dist(cur, b)).slice(0, 3);
+      let attempts = 0;
+      const MAX_RADIAL_ATTEMPTS = 24;
+      for (const e of nearFoes) {
+        if (attempts >= MAX_RADIAL_ATTEMPTS) break;
+        for (let a = 0; a < 12; a++) {
+          if (++attempts > MAX_RADIAL_ATTEMPTS) break;
+          const ang = Math.atan2(cur.y - e.y, cur.x - e.x) + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 6);
           const c = contactAt(m, e, ang, 0.02);
           const travel = dist(m, c);
           if (travel > maxDist + 1e-6 || !free(m.id, bodyAt(m, c)) || !clearLine(m, c)) continue;
-          if (travel < bestScore) { bestScore = travel; best = c; }
+          if (travel < bestScore) { bestScore = travel; best = c; break; }
         }
+        if (best) break;
       }
       if (best) {
         pos.set(m.id, best);
@@ -2063,7 +2077,8 @@ export const terrainOfObjective = objectiveTerrain;
 export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate', near?: Pt, accept?: (pos: Map<string, Pt>) => boolean): Map<string, Pt> | null {
   const zone = how === 'deploy' ? zoneOf(s, u.owner) : null;
   const cands: Pt[] = [];
-  for (let y = 1; y < H; y += 1.5) for (let x = 1; x < W; x += 1.5) cands.push({ x, y });
+  const gridStep = (how === 'deepStrike' || how === 'ingress') ? 2.0 : 1.5;
+  for (let y = 1; y < H; y += gridStep) for (let x = 1; x < W; x += gridStep) cands.push({ x, y });
   const enemyZone = zoneOf(s, other(u.owner));
   const ec = polyCentroid(enemyZone);
   const ref = near ?? (zone ? ec : polyCentroid(zoneOf(s, u.owner)));
@@ -2074,7 +2089,10 @@ export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingre
   const keep = how === 'deploy' ? 0 : Math.min(u.homer ? 8 : 99, how === 'deepStrike' ? unitFlags(s, u).deepStrikeRange : RULES.reserves.enemyDistance);
   const foes = keep ? boardUnits(s, other(u.owner)).flatMap(alive) : [];
   const r0 = Math.min(...alive(u).map((m) => m.r));
+  let tested = 0;
+  const maxTests = how === 'deepStrike' ? 60 : 150;
   for (const c of cands) {
+    if (tested++ > maxTests) break;
     if (zone && !circleTouchesPoly(c, 0, zone)) continue;
     if (keep && foes.some((n) => dist(c, n) - n.r - r0 <= keep)) continue;
     // a big unit arriving from Strategic Reserves has to fit within 6" of an edge: try it in two long rows too

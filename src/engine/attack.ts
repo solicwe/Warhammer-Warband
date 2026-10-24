@@ -9,7 +9,7 @@ import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEne
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
-import { hasCover, modelVisible, unitVisibleTo } from './visibility';
+import { checkPhaseCache, getUnitLoneOpRange, hasCover, isHidden, losUnitPairCache, modelVisible, unitVisibleTo } from './visibility';
 
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
@@ -939,30 +939,35 @@ function loseWounds(s: GameState, u: UnitState, m: ModelState, n: number, lines?
 }
 
 export function applyMortalWounds(s: GameState, u: UnitState, n: number, source: string, maxModels?: number, preferChar?: boolean): number {
-  if (n > 0 && alive(u).length) for (const h of mortalHooks) h(s, u, n);
+  if (n <= 0) return 0;
+  const initialAlive = alive(u);
+  if (!initialAlive.length) return 0;
+  for (const h of mortalHooks) h(s, u, n);
   let killed = 0;
   let modelsHit = 0;
   let current: ModelState | undefined;
   const deadIds: string[] = [];
   for (let i = 0; i < n; i++) {
-    const a = alive(u);
-    if (!a.length) break;
     if (!current || current.dead) {
+      const a = alive(u);
+      if (!a.length) break;
       if (maxModels !== undefined && modelsHit >= maxModels) break;
       const nonChar = a.filter((m) => !m.isCharacter);
       const pool = preferChar && a.some((m) => m.isCharacter) ? a.filter((m) => m.isCharacter) : nonChar.length ? nonChar : a;
-      current = pickCasualty(u, pool)!;
+      current = pickCasualty(u, pool);
+      if (!current) break;
       modelsHit += 1;
     }
     loseWounds(s, u, current, 1, undefined, 'mortal');
     if (current.dead) {
       killed += 1;
       deadIds.push(current.id);
+      current = undefined;
     }
   }
   const hitAt = alive(u)[0] ?? u.models.find((m) => m.dead);
   if (hitAt) pushFx(s, { kind: 'mortal', unitId: u.id, n, at: { x: hitAt.x, y: hitAt.y }, deadIds: deadIds.length ? deadIds : undefined });
-  log(s, `${u.name} suffers ${n} mortal wounds (${source})${killed ? ` → ${killed} slain` : ''}`, 'roll', u.owner);
+  log(s, `${u.name} suffers ${n} mortal wounds (${source})${killed ? ` -> ${killed} slain` : ''}`, 'roll', u.owner);
   return killed;
 }
 
@@ -1219,7 +1224,60 @@ export function finishAttack(s: GameState) {
 }
 
 export function canShootTarget(s: GameState, a: UnitState, t: UnitState): boolean {
-  return onBoard(t) && t.owner !== a.owner && alive(a).some((m) => unitVisibleTo(s, m, t));
+  if (!onBoard(t) || t.owner === a.owner) return false;
+  const aAlive = alive(a);
+  const tAlive = alive(t);
+  if (!aAlive.length || !tAlive.length) return false;
+
+  // 1. Distance & Bounding Box Pre-Filter:
+  let ax0 = Infinity, ax1 = -Infinity, ay0 = Infinity, ay1 = -Infinity;
+  for (const m of aAlive) {
+    if (m.x < ax0) ax0 = m.x; if (m.x > ax1) ax1 = m.x;
+    if (m.y < ay0) ay0 = m.y; if (m.y > ay1) ay1 = m.y;
+  }
+  let tx0 = Infinity, tx1 = -Infinity, ty0 = Infinity, ty1 = -Infinity;
+  for (const m of tAlive) {
+    if (m.x < tx0) tx0 = m.x; if (m.x > tx1) tx1 = m.x;
+    if (m.y < ty0) ty0 = m.y; if (m.y > ty1) ty1 = m.y;
+  }
+  const dx = Math.max(0, Math.max(ax0 - tx1, tx0 - ax1));
+  const dy = Math.max(0, Math.max(ay0 - ty1, ty0 - ay1));
+  const roughDist = Math.hypot(dx, dy);
+
+  // Maximum ranged weapon reach of unit A
+  let maxWepRange = 0;
+  for (const m of aAlive) {
+    for (const w of m.weapons) {
+      const prof = w.profiles[0];
+      if (!isMelee(prof)) {
+        const r = typeof prof.range === 'number' ? prof.range : 24;
+        if (r > maxWepRange) maxWepRange = r;
+      }
+    }
+  }
+  if (maxWepRange > 0 && roughDist > maxWepRange + 3) return false;
+
+  // 2. Lone Operative and Hidden Pre-Filter
+  const loRange = getUnitLoneOpRange(s, t);
+  if (loRange !== null && roughDist > loRange) {
+    if (aAlive.every((am) => tAlive.every((tm) => baseDist(am, tm) > loRange))) return false;
+  }
+  if (tAlive.every((tm) => isHidden(s, t, tm)) && roughDist > 15) {
+    if (aAlive.every((am) => tAlive.every((tm) => baseDist(am, tm) > 15))) return false;
+  }
+
+  // 3. LoS Cache Matrix check within shooting phase
+  if (s.phase === 'shooting') {
+    checkPhaseCache(s);
+    const key = `${a.id}->${t.id}`;
+    const cached = losUnitPairCache.get(key);
+    if (cached !== undefined) return cached;
+    const canSee = aAlive.some((m) => unitVisibleTo(s, m, t));
+    losUnitPairCache.set(key, canSee);
+    return canSee;
+  }
+
+  return aAlive.some((m) => unitVisibleTo(s, m, t));
 }
 
 export const opponentOf = (s: GameState, u: UnitState) => other(u.owner);

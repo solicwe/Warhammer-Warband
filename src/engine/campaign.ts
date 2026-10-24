@@ -495,11 +495,17 @@ export function reachable(run: Run): MapNode[] {
   return at ? run.map.filter((n) => at.next.includes(n.id)) : run.map.filter((n) => n.layer === 0);
 }
 
+const usableCache = new Map<string, DatasheetData[]>();
 const usable = (f: FactionData, main?: string) => {
+  const key = `${f.id}:${main ?? ''}`;
+  const hit = usableCache.get(key);
+  if (hit) return hit;
   const excl = AUX_EXCLUSIONS[f.id] ?? [];
-  return f.datasheets.filter((d) => !d.ally && !excl.some((k) => (d.factionKeywords || []).includes(k)) && d.points[0]?.options?.length && !d.subfaction && d.models.length && d.weapons.length
+  const res = f.datasheets.filter((d) => !d.ally && !excl.some((k) => (d.factionKeywords || []).includes(k)) && d.points[0]?.options?.length && !d.subfaction && d.models.length && d.weapons.length
     && !d.keywords.includes('FORTIFICATION') && !d.keywords.includes('AIRCRAFT') && !d.keywords.includes('EPIC HERO') && !d.transport && (!main || d.factionKeywords.includes(main))
     && hasRealPortrait(d.name));
+  usableCache.set(key, res);
+  return res;
 };
 export const cheapest = (d: DatasheetData) => [...d.points[0].options].sort((a, b) => a.pts - b.pts)[0];
 

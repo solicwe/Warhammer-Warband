@@ -317,6 +317,8 @@ export interface TerrainPiece {
   /** a sealed container inside the piece: walls on all four sides (models can't stand in it, some can on its roof) */
   box?: Pt[];
   objectiveId?: string;
+  /** pre-computed bounding box for zero-overhead spatial culling and raycasting */
+  bounds?: { x0: number; y0: number; x1: number; y1: number };
 }
 
 export interface ObjectiveState {

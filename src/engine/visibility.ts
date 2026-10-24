@@ -21,6 +21,7 @@ export const setVisibilityHooks = (h: VisibilityHooks) => { hooks = h; };
 interface Box { x0: number; y0: number; x1: number; y1: number }
 const boxes = new WeakMap<TerrainPiece, Box>();
 function boxOf(t: TerrainPiece): Box {
+  if (t.bounds) return t.bounds;
   let b = boxes.get(t);
   if (!b) {
     const pts = [...t.poly, ...t.walls.flatMap((w) => [w.a, w.b])];
@@ -28,6 +29,26 @@ function boxOf(t: TerrainPiece): Box {
     boxes.set(t, b);
   }
   return b;
+}
+
+/** Scoped LoS cache matrix within a shooting phase to avoid redundant raycasting between units */
+export const losUnitPairCache = new Map<string, boolean>();
+export const coverUnitPairCache = new Map<string, boolean>();
+let losCachePhaseTag = '';
+
+export function checkPhaseCache(s: GameState) {
+  const currentTag = `${s.turn}:${s.phase}`;
+  if (losCachePhaseTag !== currentTag) {
+    losUnitPairCache.clear();
+    coverUnitPairCache.clear();
+    losCachePhaseTag = currentTag;
+  }
+}
+
+export function clearLosCache() {
+  losUnitPairCache.clear();
+  coverUnitPairCache.clear();
+  losCachePhaseTag = '';
 }
 
 
@@ -413,13 +434,24 @@ export const setScreenHook = (h: typeof screenHook) => { screenHook = h; };
 
 export function hasCover(s: GameState, attacker: ModelState, target: UnitState): boolean {
   if (target.core.stealth || target.buffs.some((b) => b.kind === 'smoke' || b.kind === 'cover')) return true;
+  let cacheKey: string | null = null;
+  if (s.phase === 'shooting') {
+    checkPhaseCache(s);
+    cacheKey = `${attacker.id}->${target.id}`;
+    const cached = coverUnitPairCache.get(cacheKey);
+    if (cached !== undefined) return cached;
+  }
+
   // shortcut: a line from the attacker to one target model through a model of the screening unit counts as "not fully visible"
   if (screenHook && s.units.some((x) => x.id !== target.id && x.status === 'board' && screenHook!(s, x, target)
-    && alive(target).some((m) => alive(x).some((n) => pointSegDist(n, { a: attacker, b: m }) <= n.r)))) return true;
+    && alive(target).some((m) => alive(x).some((n) => pointSegDist(n, { a: attacker, b: m }) <= n.r)))) {
+    if (cacheKey) coverUnitPairCache.set(cacheKey, true);
+    return true;
+  }
 
   const isInfantryLike = unitIsInfantryLike(target);
 
-  return alive(target).some((m) => {
+  const res = alive(target).some((m) => {
     if (isInfantryLike) {
       // Check if target model is inside a footprint that the attacker is NOT inside (Rule 2)
       const inDifferentFootprint = s.terrain.some((t) =>
@@ -452,5 +484,8 @@ export function hasCover(s: GameState, attacker: ModelState, target: UnitState):
     if (!fullyVisible(s, attacker, m)) return true;
     return false;
   });
+
+  if (cacheKey) coverUnitPairCache.set(cacheKey, res);
+  return res;
 }
 

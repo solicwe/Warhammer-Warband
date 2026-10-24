@@ -540,7 +540,31 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       </div>
     );
   };
-  const flash = (t: string) => { setToast(t); window.setTimeout(() => setToast((x) => (x === t ? null : x)), 2600); };
+  const flashTimer = useRef<number | null>(null);
+  const flash = (t: string) => {
+    if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    setToast(t);
+    flashTimer.current = window.setTimeout(() => {
+      setToast((x) => (x === t ? null : x));
+      flashTimer.current = null;
+    }, 2600);
+  };
+  const shakeTimer = useRef<number | null>(null);
+  const triggerShake = (lv: number) => {
+    if (!lv) return;
+    if (shakeTimer.current) window.clearTimeout(shakeTimer.current);
+    setShake(lv);
+    shakeTimer.current = window.setTimeout(() => {
+      setShake(0);
+      shakeTimer.current = null;
+    }, 420 + lv * 80);
+  };
+  useEffect(() => {
+    return () => {
+      if (flashTimer.current) window.clearTimeout(flashTimer.current);
+      if (shakeTimer.current) window.clearTimeout(shakeTimer.current);
+    };
+  }, []);
   // on a computer: Escape closes the sheet on top (or cancels what is being done), Ctrl+Z undoes
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -3223,7 +3247,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           />
         </InlineErrorBoundary>
         <AttackReport s={s} level={((spectate && speed === 2) || (rush && actingBot !== null)) && fxLevel === 'full' ? 'short' : fxLevel} quick={(o) => spectate || rush || bots.includes(o)} onBusy={setReporting}
-          onShake={(lv) => { if (!lv) return; setShake(lv); window.setTimeout(() => setShake(0), 420 + lv * 80); }} />
+          onShake={triggerShake} />
 
         {toast && <div className="toast">{toast}</div>}
         {tape.on && (
