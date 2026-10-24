@@ -3,7 +3,7 @@
 // and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
 import { loadRun, saveRun } from '../services/storage';
-import { attachOptions, autoAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
+import { attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
@@ -75,10 +75,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     setRecruitView(null);
   };
 
-  const isSectionOpen = (uid: string, section: string, defaultOpen = true) => {
+  const isSectionOpen = (uid: string, section: string, defaultOpen = false) => {
     return panelCollapse[uid]?.[section] !== undefined ? panelCollapse[uid][section] : defaultOpen;
   };
-  const toggleSection = (uid: string, section: string, defaultOpen = true) => {
+  const toggleSection = (uid: string, section: string, defaultOpen = false) => {
     setPanelCollapse((prev) => {
       const cur = prev[uid]?.[section] !== undefined ? prev[uid][section] : defaultOpen;
       return {
@@ -262,17 +262,24 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       || !!sheet?.keywords.includes('ADEPTUS TITANICUS')
       || !!sheet?.factionKeywords.includes('ADEPTUS TITANICUS');
 
-    const allowed = (x: { subfaction?: string }) => !x.subfaction || x.subfaction === run.list.subfaction;
+    const allowed = (x: { subfaction?: string }) => {
+      if (!x.subfaction) return true;
+      if (run.list.subfaction && x.subfaction === run.list.subfaction) return true;
+      if (!run.list.subfaction) return true;
+      if (sheet && (canLeaderAttach(sheet, x as DatasheetData) || canLeaderAttach(x as DatasheetData, sheet))) return true;
+      return false;
+    };
     // characters that could join this squad: Leader slot, then Support slot
-    const leadersFor = (support: boolean) => fac.datasheets.filter((d) => allowed(d) && !d.ally && d.leads?.includes(u.datasheet) && supportIn(run.list, d) === support && pointsOptions(d).length);
+    const leadersFor = (support: boolean) => fac.datasheets.filter((d) => allowed(d) && !d.ally && sheet && canLeaderAttach(d, sheet) && supportIn(run.list, d) === support && pointsOptions(d).length);
     const hasLeader = joined.some((x) => x.d && !supportIn(run.list, x.d));
     const hasSupport = joined.some((x) => x.d && supportIn(run.list, x.d));
     const canLeader = !u.attachTo && !hasLeader && leadersFor(false).length > 0;
     const canSupport = !u.attachTo && !hasSupport && leadersFor(true).length > 0;
     // a Leader in a squad: Add Support works on the squad it leads
-    const bodySupport = body && !supportIn(run.list, sheet) && !run.list.units.some((c) => c.attachTo === body.uid && supportIn(run.list, fac.datasheets.find((d) => d.name === c.datasheet)))
-      && fac.datasheets.some((d) => allowed(d) && !d.ally && supportIn(run.list, d) && d.leads?.includes(body.datasheet) && pointsOptions(d).length);
-    const squadsFor = sheet?.leads?.length && !body ? [...new Set(sheet.leads)].map((n) => fac.datasheets.find((d) => d.name === n)).filter((d): d is DatasheetData => !!d && allowed(d) && !d.ally && pointsOptions(d).length > 0) : [];
+    const bodySheet = body ? fac.datasheets.find((d) => d.name === body.datasheet) : undefined;
+    const bodySupport = body && bodySheet && !supportIn(run.list, sheet) && !run.list.units.some((c) => c.attachTo === body.uid && supportIn(run.list, fac.datasheets.find((d) => d.name === c.datasheet)))
+      && fac.datasheets.some((d) => allowed(d) && !d.ally && supportIn(run.list, d) && canLeaderAttach(d, bodySheet) && pointsOptions(d).length);
+    const squadsFor = sheet?.leads?.length && !body ? fac.datasheets.filter((d) => allowed(d) && !d.ally && pointsOptions(d).length > 0 && canLeaderAttach(sheet, d)) : [];
 
     const close = () => { setPop(null); setPeek(null); };
     const w = pop.mode && pop.mode !== 'size' ? Math.min(340, window.innerWidth - 16) : 260;
@@ -508,6 +515,22 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark</button>
           ))}
           {opts.length > 1 && <button type="button" onClick={() => setPop({ ...pop, mode: 'size' })}><Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span></button>}
+          <button
+            type="button"
+            onClick={() => {
+              setMenu(u.uid);
+              setPanelCollapse((prev) => ({
+                ...prev,
+                [u.uid]: {
+                  ...prev[u.uid],
+                  honors: true,
+                },
+              }));
+              close();
+            }}
+          >
+            <Icon name="shop" size={22} />Upgrade Unit
+          </button>
           {isChar && (
             <button type="button" className={u.warlord ? 'on' : ''} onClick={() => {
               const nextUnits = run.list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false }));
@@ -840,7 +863,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                   const isSheetOpen = isSectionOpen(u.uid, 'sheet', false);
                   const isHonorsOpen = isSectionOpen(u.uid, 'honors', false);
-                  const isWargearOpen = isSectionOpen(u.uid, 'wargear', true);
+                  const isWargearOpen = isSectionOpen(u.uid, 'wargear', false);
                   const isEnhOpen = isSectionOpen(u.uid, 'enh', false);
 
                   return (
@@ -949,7 +972,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         {/* 3. Wargear Options with Scrap mode */}
                         {sheet && (sheet.wargearOptions?.length || sheet.wargearCosts?.length) ? (
                           <div className="ab-collapsible-section field">
-                            <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'wargear', true)}>
+                            <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'wargear', false)}>
                               <span className="row gap-2" style={{ alignItems: 'center' }}>
                                 <Icon name={isWargearOpen ? 'down' : 'next'} size={16} />
                                 <Icon name="wargear" size={15} />
@@ -1000,100 +1023,109 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                 <Icon name={isEnhOpen ? 'down' : 'next'} size={16} />
                                 <Icon name="enhancement" size={15} />
                                 <b>Enhancement (Scrap)</b>
-                                {u.enhancement && <span className="ab-badge-selected">{u.enhancement} (+{u.enhancementPts} pts)</span>}
+                                {(() => {
+                                  const eqList = (u.enhancements && u.enhancements.length > 0) ? u.enhancements : (u.enhancement ? [{ name: u.enhancement, pts: u.enhancementPts ?? 0 }] : []);
+                                  return eqList.length > 0 ? <span className="ab-badge-selected">{eqList.length} equipped (+{eqList.reduce((s, x) => s + x.pts, 0)} pts)</span> : null;
+                                })()}
                               </span>
                               <span className="tiny muted">{isEnhOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
                             </button>
-                            {isEnhOpen && (
-                              <div style={{ marginTop: 8 }}>
-                                {u.enhancement && (
-                                  <div style={{ marginBottom: 12, padding: 10, borderRadius: 8, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                      <span className="chip warn small" style={{ fontWeight: 700 }}>Currently Equipped</span>
-                                      <b style={{ color: '#fef08a', fontSize: 13.5 }}>{u.enhancement}</b>
-                                      <span className="tiny muted">(+{u.enhancementPts ?? 0} pts)</span>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      className="btn small"
-                                      style={{ border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
-                                      onClick={() => {
-                                        setRun(removeEnhancementFromUnit(run, u.uid));
-                                        play('bad');
-                                      }}
-                                    >
-                                      Unequip & Refund (+{enhancementScrapCost(u.enhancementPts ?? 0)} Scrap)
-                                    </button>
+                            {isEnhOpen && (() => {
+                              const eqList = (u.enhancements && u.enhancements.length > 0) ? u.enhancements : (u.enhancement ? [{ name: u.enhancement, pts: u.enhancementPts ?? 0 }] : []);
+                              const nextSlot = eqList.length;
+                              return (
+                                <div style={{ marginTop: 8 }}>
+                                  <div className="tiny muted" style={{ marginBottom: 10, color: '#94a3b8', lineHeight: 1.4 }}>
+                                    Enhancements are repeatable and stackable with no unit or army limits. Each additional Enhancement equipped on a unit incurs an escalating Scrap cost (+50% per slot).
                                   </div>
-                                )}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 8 }}>
-                                  {enhOpts.map((o) => {
-                                    const isCurrent = u.enhancement === o.name;
-                                    const taken = run.list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
-                                    const fit = sheet ? enhancementFits(o.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]) : null;
-                                    const cost = enhancementScrapCost(o.pts);
-                                    const refund = u.enhancement ? enhancementScrapCost(u.enhancementPts ?? 0) : 0;
-                                    const netCost = cost - refund;
-                                    const canAfford = netCost <= 0 || (run.scrap ?? 0) >= netCost;
-                                    return (
-                                      <div
-                                        key={o.detachment + o.name}
-                                        style={{
-                                          padding: 10,
-                                          borderRadius: 8,
-                                          background: isCurrent ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255,255,255,0.04)',
-                                          border: isCurrent ? '1.5px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
-                                          display: 'flex',
-                                          flexDirection: 'column',
-                                          justifyContent: 'space-between',
-                                          gap: 8,
-                                          opacity: taken || (fit && !fit.ok) || (!isCurrent && !canAfford) ? 0.45 : 1,
-                                          filter: taken || (fit && !fit.ok) || (!isCurrent && !canAfford) ? 'grayscale(0.75)' : 'none',
-                                        }}
-                                      >
-                                        <div>
-                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
-                                            <div>
-                                              <b style={{ color: isCurrent ? '#fef08a' : '#f8fafc', fontSize: 13.5 }}>{o.name}</b>
-                                              <div className="tiny muted">{o.detachment} · +{o.pts} pts</div>
+                                  {eqList.length > 0 && (
+                                    <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                      {eqList.map((eq, eqIdx) => {
+                                        const slotRefund = enhancementScrapCost(eq.pts, eqList.length - 1);
+                                        return (
+                                          <div key={`eq-${eq.name}-${eqIdx}`} style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                              <span className="chip warn small" style={{ fontWeight: 700 }}>Slot {eqIdx + 1}</span>
+                                              <b style={{ color: '#fef08a', fontSize: 13.5 }}>{eq.name}</b>
+                                              <span className="tiny muted">(+{eq.pts} pts)</span>
                                             </div>
-                                            <span className="cmp-scrap"><Icon name="shop" size={12} /> {cost}</span>
-                                          </div>
-                                          {fit && !fit.ok && <div style={{ marginTop: 4, color: '#f87171', fontSize: 11.5, fontWeight: 600 }}>Requires: {fit.need}</div>}
-                                          {o.text && <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 6, lineHeight: 1.35 }}><Em text={o.text} /></div>}
-                                        </div>
-                                        <div style={{ marginTop: 8 }}>
-                                          {isCurrent ? (
-                                            <span className="chip ok small" style={{ width: '100%', justifyContent: 'center' }}>
-                                              <Icon name="check" size={12} /> Equipped
-                                            </span>
-                                          ) : taken ? (
-                                            <span className="chip subtle small" style={{ width: '100%', justifyContent: 'center', color: '#94a3b8' }}>
-                                              Equipped on {taken.datasheet}
-                                            </span>
-                                          ) : fit && !fit.ok ? (
-                                            <button type="button" className="btn small" disabled style={{ width: '100%' }}>Not Eligible</button>
-                                          ) : (
                                             <button
                                               type="button"
-                                              className="btn small primary"
-                                              disabled={!canAfford}
-                                              style={{ width: '100%' }}
+                                              className="btn small"
+                                              style={{ border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
                                               onClick={() => {
-                                                setRun(buyEnhancementForUnit(run, fac, u.uid, o.name, o.pts));
-                                                play('good');
+                                                setRun(removeEnhancementFromUnit(run, u.uid, eqIdx));
+                                                play('bad');
                                               }}
                                             >
-                                              {!canAfford ? `Need Scrap (${netCost > 0 ? netCost : cost})` : `Equip (${cost} Scrap)`}
+                                              Unequip (+{slotRefund} Scrap)
                                             </button>
-                                          )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 8 }}>
+                                    {enhOpts.map((o) => {
+                                      const fit = sheet ? enhancementFits(o.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]) : null;
+                                      const cost = enhancementScrapCost(o.pts, nextSlot);
+                                      const canAfford = (run.scrap ?? 0) >= cost;
+                                      const alreadyCount = eqList.filter((x) => x.name === o.name).length;
+                                      return (
+                                        <div
+                                          key={o.detachment + o.name}
+                                          style={{
+                                            padding: 10,
+                                            borderRadius: 8,
+                                            background: alreadyCount > 0 ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255,255,255,0.04)',
+                                            border: alreadyCount > 0 ? '1.5px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'space-between',
+                                            gap: 8,
+                                            opacity: (fit && !fit.ok) || !canAfford ? 0.5 : 1,
+                                            filter: (fit && !fit.ok) || !canAfford ? 'grayscale(0.75)' : 'none',
+                                          }}
+                                        >
+                                          <div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
+                                              <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                  <b style={{ color: alreadyCount > 0 ? '#fef08a' : '#f8fafc', fontSize: 13.5 }}>{o.name}</b>
+                                                  {alreadyCount > 0 && <span className="chip warn small" style={{ fontSize: 10.5, padding: '1px 5px' }}>x{alreadyCount}</span>}
+                                                </div>
+                                                <div className="tiny muted">{o.detachment} · +{o.pts} pts</div>
+                                              </div>
+                                              <span className="cmp-scrap"><Icon name="shop" size={12} /> {cost}</span>
+                                            </div>
+                                            {fit && !fit.ok && <div style={{ marginTop: 4, color: '#f87171', fontSize: 11.5, fontWeight: 600 }}>Requires: {fit.need}</div>}
+                                            {o.text && <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 6, lineHeight: 1.35 }}><Em text={o.text} /></div>}
+                                          </div>
+                                          <div style={{ marginTop: 8 }}>
+                                            {fit && !fit.ok ? (
+                                              <button type="button" className="btn small" disabled style={{ width: '100%' }}>Not Eligible</button>
+                                            ) : (
+                                              <button
+                                                type="button"
+                                                className="btn small primary"
+                                                disabled={!canAfford}
+                                                style={{ width: '100%' }}
+                                                onClick={() => {
+                                                  setRun(buyEnhancementForUnit(run, fac, u.uid, o.name, o.pts));
+                                                  play('good');
+                                                }}
+                                              >
+                                                {!canAfford ? `Need ${cost} Scrap` : `Equip Slot ${nextSlot + 1} (${cost} Scrap)`}
+                                              </button>
+                                            )}
+                                          </div>
                                         </div>
-                                      </div>
-                                    );
-                                  })}
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              );
+                            })()}
                           </div>
                         )}
 
@@ -1162,29 +1194,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {/* One-Click Auto Upgrade All Button */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(245, 158, 11, 0.08)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(245, 158, 11, 0.25)' }}>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: '#f59e0b' }}>Datasheet-Wide Upgrades</div>
-                        <div className="tiny muted">Upgrades apply to every squad of that type across your entire crusade force.</div>
+                    {/* Datasheet-Wide Upgrades Information Banner */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(245, 158, 11, 0.06)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                      <Icon name="shop" size={18} />
+                      <div className="tiny" style={{ color: '#cbd5e1', lineHeight: 1.4 }}>
+                        <b style={{ color: '#f59e0b' }}>Datasheet-Wide Upgrades:</b> Upgrades are accessed via each unit's three-dots (<span style={{ fontWeight: 800 }}>⋮</span>) menu. Upgrades apply to every squad of that type across your entire crusade force.
                       </div>
-                      <button
-                        type="button"
-                        className="btn small primary"
-                        style={{ fontWeight: 700, gap: 6 }}
-                        onClick={() => {
-                          const next = autoUpgradeAll(run, fac);
-                          if (next !== run) {
-                            setRun(next);
-                            play('good');
-                            setInfo('Auto-upgraded all squads with smart battle honors.');
-                          } else {
-                            setInfo('No eligible upgrades or insufficient Scrap.');
-                          }
-                        }}
-                      >
-                        <Icon name="sparkles" size={15} /> [AUTO-UPGRADE ALL]
-                      </button>
                     </div>
 
                     {SECTIONS.filter((sec) => sec.id !== 'allies' || run.list.units.some((u) => sectionOf(fac.datasheets.find((x) => x.name === u.datasheet), run.factionId) === 'allies')).map((sec) => {

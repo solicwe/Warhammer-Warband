@@ -646,10 +646,13 @@ export function buyHonorForUnit(run: Run, unitUid: string, honorId: string): Run
   };
 }
 
-/** Calculate the Scrap cost of an Enhancement (points * 3, minimum 40) */
-export const enhancementScrapCost = (pts: number) => Math.max(40, pts * 3);
+/** Calculate the Scrap cost of an Enhancement (points * 3, minimum 40), scaling +50% compounding per existing slot */
+export const enhancementScrapCost = (pts: number, slotIndex = 0) => {
+  const base = Math.max(40, pts * 3);
+  return Math.round(base * Math.pow(1.5, Math.max(0, slotIndex)));
+};
 
-/** Purchase and equip a detachment enhancement on a character in the campaign roster using Scrap */
+/** Purchase and equip a detachment enhancement on a character in the campaign roster using Scrap (repeatable & stackable) */
 export function buyEnhancementForUnit(
   run: Run,
   faction: FactionData,
@@ -660,35 +663,62 @@ export function buyEnhancementForUnit(
   const u = run.list.units.find((x) => x.uid === unitUid);
   if (!u) return run;
 
-  const cost = enhancementScrapCost(pts);
-  const refund = u.enhancement ? enhancementScrapCost(u.enhancementPts ?? 0) : 0;
-  const netCost = cost - refund;
-  if ((run.scrap ?? 0) < netCost) return run;
+  const existingEnhancements = (u.enhancements && u.enhancements.length > 0)
+    ? u.enhancements
+    : (u.enhancement ? [{ name: u.enhancement, pts: u.enhancementPts ?? 0 }] : []);
 
-  const units = run.list.units.map((x) => (x.uid === unitUid ? { ...x, enhancement: enhancementName, enhancementPts: pts } : x));
+  const slotIndex = existingEnhancements.length;
+  const cost = enhancementScrapCost(pts, slotIndex);
+  if ((run.scrap ?? 0) < cost) return run;
+
+  const nextEnhancements = [...existingEnhancements, { name: enhancementName, pts }];
+  const units = run.list.units.map((x) => (x.uid === unitUid ? {
+    ...x,
+    enhancement: nextEnhancements[0].name,
+    enhancementPts: nextEnhancements.reduce((s, e) => s + e.pts, 0),
+    enhancements: nextEnhancements,
+  } : x));
+
   return {
     ...run,
-    scrap: (run.scrap ?? 0) - netCost,
+    scrap: (run.scrap ?? 0) - cost,
     list: { ...run.list, units },
-    story: [...run.story, `Armory: Equipped ${enhancementName} on ${u.datasheet} (-${netCost} Scrap)`],
+    story: [...run.story, `Armory: Equipped ${enhancementName} (Slot ${slotIndex + 1}) on ${u.datasheet} (-${cost} Scrap)`],
   };
 }
 
 /** Remove an equipped detachment enhancement and refund its Scrap */
 export function removeEnhancementFromUnit(
   run: Run,
-  unitUid: string
+  unitUid: string,
+  enhIndex?: number
 ): Run {
   const u = run.list.units.find((x) => x.uid === unitUid);
-  if (!u || !u.enhancement) return run;
+  const existingEnhancements = (u?.enhancements && u.enhancements.length > 0)
+    ? u.enhancements
+    : (u?.enhancement ? [{ name: u.enhancement, pts: u.enhancementPts ?? 0 }] : []);
+  if (!u || !existingEnhancements.length) return run;
 
-  const refund = enhancementScrapCost(u.enhancementPts ?? 0);
-  const units = run.list.units.map((x) => (x.uid === unitUid ? { ...x, enhancement: undefined, enhancementPts: undefined } : x));
+  const idx = enhIndex !== undefined && enhIndex >= 0 && enhIndex < existingEnhancements.length
+    ? enhIndex
+    : existingEnhancements.length - 1;
+  const removed = existingEnhancements[idx];
+  const refundSlot = existingEnhancements.length - 1;
+  const refund = enhancementScrapCost(removed.pts, refundSlot);
+
+  const nextEnhancements = existingEnhancements.filter((_, i) => i !== idx);
+  const units = run.list.units.map((x) => (x.uid === unitUid ? {
+    ...x,
+    enhancement: nextEnhancements[0]?.name,
+    enhancementPts: nextEnhancements.length ? nextEnhancements.reduce((s, e) => s + e.pts, 0) : undefined,
+    enhancements: nextEnhancements.length ? nextEnhancements : undefined,
+  } : x));
+
   return {
     ...run,
     scrap: (run.scrap ?? 0) + refund,
     list: { ...run.list, units },
-    story: [...run.story, `Armory: Unequipped ${u.enhancement} from ${u.datasheet} (+${refund} Scrap refunded)`],
+    story: [...run.story, `Armory: Unequipped ${removed.name} from ${u.datasheet} (+${refund} Scrap refunded)`],
   };
 }
 
@@ -750,8 +780,11 @@ export function sellUnit(run: Run, unitUid: string): Run {
 }
 
 /** Calculate the scrap refund value for selling a unit (75% of total pts). */
-export function sellValue(u: { pts: number; wargearPts?: number; enhancementPts?: number }): number {
-  return Math.floor((u.pts + (u.wargearPts ?? 0) + (u.enhancementPts ?? 0)) * 0.75);
+export function sellValue(u: { pts: number; wargearPts?: number; enhancementPts?: number; enhancements?: { pts: number }[] }): number {
+  const enhPts = (u.enhancements && u.enhancements.length > 0)
+    ? u.enhancements.reduce((s, x) => s + x.pts, 0)
+    : (u.enhancementPts ?? 0);
+  return Math.floor((u.pts + (u.wargearPts ?? 0) + enhPts) * 0.75);
 }
 
 /** Change the model count / squad size of a unit in the campaign roster */

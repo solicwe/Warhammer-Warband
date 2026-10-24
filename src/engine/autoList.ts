@@ -113,5 +113,5 @@ export function autoList(f: FactionData, points = 1000, seed = 1, wild = false):
     add(pick);
   }
   if (!units.some((u) => u.warlord) && units.length) units[0].warlord = true;
-  return { name: `${f.name} (auto ${seed})`, factionId: f.id, battleSize: 'incursion', detachments: det ? [det] : [], units };
+  return { name: `${f.name} Strike Force`, factionId: f.id, battleSize: 'incursion', detachments: det ? [det] : [], units };
 }

@@ -129,6 +129,7 @@ export interface ArmyUnitEntry {
   mark?: string; // Pactbound Zealots: the Mark of Chaos picked for it (KHORNE, TZEENTCH, NURGLE, SLAANESH, CHAOS UNDIVIDED)
   enhancement?: string;
   enhancementPts?: number;
+  enhancements?: { name: string; pts: number }[];
   warlord?: boolean;
   wargear?: WargearPick[];
   wargearPts?: number; // points for costed wargear and add-on models, kept in sync by the army builder

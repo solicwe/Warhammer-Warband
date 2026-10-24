@@ -646,23 +646,32 @@ export function defaultWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntr
   // 2. Weapon swaps: greedily pick replacements that increase overall unit firepower
   let now = unitPower(picks);
   for (let round = 0; round < opts.length; round++) {
-    let best: { picks: WargearPick[]; v: number } | null = null;
-    opts.forEach((o, i) => {
-      if (picks.some((p) => p.opt === i) || (o.minModels && e.models < o.minModels) || isGear(o.replace)) return;
+    let best: { picks: WargearPick[]; v: number; score: number } | null = null;
+    // Prioritize limited options (scope !== 'any') first so heavy/special weapons (like Soulreaper cannon) aren't crowded out by mass swaps
+    const candidates = opts.map((o, i) => ({ o, i })).sort((a, b) => {
+      const aAny = a.o.scope === 'any' ? 1 : 0;
+      const bAny = b.o.scope === 'any' ? 1 : 0;
+      return aAny - bAny;
+    });
+
+    for (const { o, i } of candidates) {
+      if (picks.some((p) => p.opt === i) || (o.minModels && e.models < o.minModels) || isGear(o.replace)) continue;
       const max = wargearMax(sheet, o, e.models, e.addons, picks);
-      if (max <= 0) return;
+      if (max <= 0) continue;
       o.choices.forEach((items, choice) => {
         if (!items.length || costOf(items) || isGear(items)) return;
         for (let n = max; n > 0; n--) {
           const next = [...picks, { opt: i, choice, count: n }];
           if (!legal(next)) continue;
           const v = unitPower(next);
-          if (!best || v > best.v) best = { picks: next, v };
+          // Measure per-model efficiency to favor premier weapon upgrades (e.g. 1 heavy weapon)
+          const score = (v - now) / Math.max(1, n);
+          if (!best || score > best.score) best = { picks: next, v, score };
           break;
         }
       });
-    });
-    const b = best as { picks: WargearPick[]; v: number } | null;
+    }
+    const b = best as { picks: WargearPick[]; v: number; score: number } | null;
     // a swap has to be clearly better; a free extra weapon is always taken
     if (!b || b.v <= now * 1.02 + 0.05) break;
     picks = b.picks;
@@ -934,17 +943,21 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       startingStrength: models.length,
       abilities: [
         ...sheets.flatMap((s) => s.abilities.map((a) => ({ ...a, sheet: s.name, faction: s.ally ?? faction.id, model: a.model || (sheets.length > 1 ? s.name : undefined) }))),
-        // Horrors are Pink, Horrors are Blue: once no Pink Horror is left, the unit uses the Blue Horrors abilities (switched in abilityOff)
         ...(sheet.abilities.some((a) => a.name.startsWith('HORRORS ARE PINK')) ? (faction.datasheets.find((d) => d.name === 'Blue Horrors')?.abilities ?? [])
           .filter((a) => BLUE_ONLY.includes(a.name)).map((a) => ({ ...a, sheet: sheet.name, faction: sheet.ally ?? faction.id })) : []),
         // an Enhancement works like an ability of the character carrying it (rules in data/abilities)
-        ...[e, ...joiners].filter((x) => x.enhancement).map((x) => {
-          const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
-          return { name: x.enhancement!, type: 'Enhancement', text: enh?.text ?? '', sheet: x.datasheet, faction: faction.id, model: sheets.length > 1 ? x.datasheet : undefined };
+        ...[e, ...joiners].flatMap((x) => {
+          const list = (x.enhancements && x.enhancements.length > 0)
+            ? x.enhancements
+            : (x.enhancement ? [{ name: x.enhancement, pts: x.enhancementPts ?? 0 }] : []);
+          return list.map((item) => {
+            const enh = faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === item.name);
+            return { name: item.name, type: 'Enhancement' as const, text: enh?.text ?? '', sheet: x.datasheet, faction: faction.id, model: sheets.length > 1 ? x.datasheet : undefined };
+          });
         }),
         ...[e, ...joiners].flatMap((x) => {
           const enh = extremisEnhancement(x, list, faction);
-          return enh ? [{ name: enh.name, type: 'Enhancement', text: enh.text, sheet: x.datasheet, faction: faction.id, model: sheets.length > 1 ? x.datasheet : undefined }] : [];
+          return enh ? [{ name: enh.name, type: 'Enhancement' as const, text: enh.text, sheet: x.datasheet, faction: faction.id, model: sheets.length > 1 ? x.datasheet : undefined }] : [];
         }),
       ],
       core,
@@ -960,11 +973,16 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       isWarlordUnit: !!(e.warlord || joiners.some((j) => j.warlord)),
       warlordSource: [e, ...joiners].find((j) => j.warlord)?.datasheet,
       enhancements: [
-        ...[e, ...joiners].filter((x) => x.enhancement).flatMap((x) => {
+        ...[e, ...joiners].flatMap((x) => {
           const activeDets = faction.detachments.filter((d) => list.detachments.includes(d.name));
-          const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement)
-            ?? faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
-          return enh ? [{ name: x.enhancement!, text: enh.text ?? '', model: x.datasheet }] : [];
+          const listEnh = (x.enhancements && x.enhancements.length > 0)
+            ? x.enhancements
+            : (x.enhancement ? [{ name: x.enhancement, pts: x.enhancementPts ?? 0 }] : []);
+          return listEnh.flatMap((item) => {
+            const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === item.name)
+              ?? faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === item.name);
+            return enh ? [{ name: item.name, text: enh.text ?? '', model: x.datasheet }] : [];
+          });
         }),
         ...[e, ...joiners].flatMap((x) => {
           const enh = extremisEnhancement(x, list, faction);
@@ -976,25 +994,30 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       fought: false, foughtFirstUntilTurn: -10, stratagemPhase: null, oneShotUsed: [], buffs: [],
     });
     // Enhancements that change the model itself: "+2 W", "the following weapon: Name: Melee | A 6 | WS 2+ | S 7 | AP -3 | D 3"
-    for (const x of [e, ...joiners].filter((j) => j.enhancement)) {
+    for (const x of [e, ...joiners]) {
       const activeDets = faction.detachments.filter((d) => list.detachments.includes(d.name));
-      const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement)
-        ?? faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === x.enhancement);
-      const m = units[units.length - 1].models.find((md) => md.source === x.datasheet && md.isCharacter) ?? units[units.length - 1].models.find((md) => md.source === x.datasheet);
-      if (!enh || !m) continue;
-      const w = /This model has \+(\d+) W\b/i.exec(enh.text);
-      if (w) { m.profile = { ...m.profile, W: m.profile.W + +w[1] }; m.wounds = m.profile.W; }
-      // "… and a Wounds characteristic of 5" (Flowing Flesh)
-      // Deadly Demise from an enhancement (Warphead): the bearer explodes, even inside a mob
-      const dd = /(?:Has|has the) Deadly Demise (D?\d+(?:\+\d+)?)/i.exec(enh.text);
-      if (dd) m.deadlyDemise = dd[1];
-      const wSet = /a Wounds characteristic of (\d+)/i.exec(enh.text);
-      if (wSet) { m.profile = { ...m.profile, W: +wSet[1] }; m.wounds = m.profile.W; }
-      // "Name [KEYWORD, KEYWORD]: Range 12" | A 3 | BS 2+ …" — the bracketed words are the weapon's abilities
-      const wp = /following weapon:\s*([^:[]+?)\s*(?:\[([^\]]+)\])?\s*:\s*(?:Range\s*)?(Melee|\d+")\s*\|\s*A\s*(\S+)\s*\|\s*(?:WS|BS)\s*(\d)\+\s*\|\s*S\s*(\d+)\s*\|\s*AP\s*(-?\d+)\s*\|\s*D\s*([^.\s|]+)/i.exec(enh.text);
-      if (wp) {
-        const abilities = (wp[2] ?? '').split(',').map((k) => k.trim().toLowerCase()).filter(Boolean);
-        m.weapons = [...m.weapons, { name: wp[1].trim(), profiles: [{ name: wp[1].trim(), range: wp[3] === 'Melee' ? 'Melee' : parseInt(wp[3], 10), A: wp[4], skill: +wp[5], S: +wp[6], AP: +wp[7], D: wp[8], abilities }] }];
+      const listEnh = (x.enhancements && x.enhancements.length > 0)
+        ? x.enhancements
+        : (x.enhancement ? [{ name: x.enhancement, pts: x.enhancementPts ?? 0 }] : []);
+      for (const item of listEnh) {
+        const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === item.name)
+          ?? faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === item.name);
+        const m = units[units.length - 1].models.find((md) => md.source === x.datasheet && md.isCharacter) ?? units[units.length - 1].models.find((md) => md.source === x.datasheet);
+        if (!enh || !m) continue;
+        const w = /This model has \+(\d+) W\b/i.exec(enh.text);
+        if (w) { m.profile = { ...m.profile, W: m.profile.W + +w[1] }; m.wounds = m.profile.W; }
+        // "… and a Wounds characteristic of 5" (Flowing Flesh)
+        // Deadly Demise from an enhancement (Warphead): the bearer explodes, even inside a mob
+        const dd = /(?:Has|has the) Deadly Demise (D?\d+(?:\+\d+)?)/i.exec(enh.text);
+        if (dd) m.deadlyDemise = dd[1];
+        const wSet = /a Wounds characteristic of (\d+)/i.exec(enh.text);
+        if (wSet) { m.profile = { ...m.profile, W: +wSet[1] }; m.wounds = m.profile.W; }
+        // "Name [KEYWORD, KEYWORD]: Range 12" | A 3 | BS 2+ …" — the bracketed words are the weapon's abilities
+        const wp = /following weapon:\s*([^:[]+?)\s*(?:\[([^\]]+)\])?\s*:\s*(?:Range\s*)?(Melee|\d+")\s*\|\s*A\s*(\S+)\s*\|\s*(?:WS|BS)\s*(\d)\+\s*\|\s*S\s*(\d+)\s*\|\s*AP\s*(-?\d+)\s*\|\s*D\s*([^.\s|]+)/i.exec(enh.text);
+        if (wp) {
+          const abilities = (wp[2] ?? '').split(',').map((k) => k.trim().toLowerCase()).filter(Boolean);
+          m.weapons = [...m.weapons, { name: wp[1].trim(), profiles: [{ name: wp[1].trim(), range: wp[3] === 'Melee' ? 'Melee' : parseInt(wp[3], 10), A: wp[4], skill: +wp[5], S: +wp[6], AP: +wp[7], D: wp[8], abilities }] }];
+        }
       }
     }
     // Split (Horrors): the models a destroyed Horror can turn into
@@ -1045,7 +1068,10 @@ export function dupTaxes(list: ArmyList, faction: FactionData): Map<string, numb
 
 /** A list entry's total: unit + enhancement + costed wargear. */
 export function unitPoints(u: ArmyUnitEntry): number {
-  return u.pts + (u.enhancementPts ?? 0) + (u.wargearPts ?? 0);
+  const enhPts = (u.enhancements && u.enhancements.length > 0)
+    ? u.enhancements.reduce((s, x) => s + x.pts, 0)
+    : (u.enhancementPts ?? 0);
+  return u.pts + enhPts + (u.wargearPts ?? 0);
 }
 
 const EXTREMIS_ABILITIES: Record<string, string> = {
@@ -1072,12 +1098,73 @@ export const supportIn = (list: ArmyList, d?: DatasheetData) => !!d && (d.isSupp
 /** Enhancements a unit may take from the selected detachments (25.04). */
 
 export function canLeaderAttach(leader: DatasheetData, body: DatasheetData, enhancement?: string): boolean {
-  if (leader.leads.includes(body.name)) return true;
+  const leads = leader.leads || [];
+  if (leads.includes(body.name)) return true;
   if (enhancement === 'Sorrowscent Vulture' && body.name === 'Warp Talons') return true;
-  // Aquila Kill Team: ATTACHED UNIT allows Deathwatch Kill Team leaders
-  if (body.name === 'Aquila Kill Team' && leader.leads.includes('Deathwatch Kill Team')) return true;
-  // Sanctifiers: ATTACHED UNIT allows Sisters of Battle Squad Inquisitor / Priest leaders
-  if (body.name === 'Sanctifiers' && leader.leads.includes('Sisters of Battle Squad') && (leader.keywords.includes('INQUISITOR') || leader.keywords.includes('MINISTORUM PRIEST') || leader.name === 'Ministorum Priest')) return true;
+
+  // 10th Edition ATTACHED UNIT rules across all factions:
+  // Space Marines - Chapter specific bodyguard variants
+  // Terminators: Deathwing Knights, Deathwing Terminator Squad, Wolf Guard Terminators, Deathwatch Terminator Squad
+  if (
+    ['Deathwing Knights', 'Deathwing Terminator Squad', 'Wolf Guard Terminators', 'Deathwatch Terminator Squad'].includes(body.name) &&
+    (leads.includes('Terminator Squad') || leads.includes('Terminator Assault Squad'))
+  ) return true;
+
+  // Intercessors / Assault Intercessors: Blood Claws, Grey Hunters, Death Company Marines, Fortis Kill Team, Crusader Squad, Sword Brethren Squad
+  if (
+    ['Blood Claws', 'Grey Hunters', 'Death Company Marines', 'Fortis Kill Team', 'Crusader Squad', 'Sword Brethren Squad'].includes(body.name) &&
+    (leads.includes('Intercessor Squad') || leads.includes('Assault Intercessor Squad'))
+  ) return true;
+
+  // Jump Pack Intercessors: Death Company Marines With Jump Packs, Sanguinary Guard, Skyclaws
+  if (
+    ['Death Company Marines With Jump Packs', 'Sanguinary Guard', 'Skyclaws'].includes(body.name) &&
+    (leads.includes('Jump Pack Intercessor Squad') || leads.includes('Assault Intercessors with Jump Packs'))
+  ) return true;
+
+  // Heavy Intercessors: Indomitor Kill Team
+  if (body.name === 'Indomitor Kill Team' && leads.includes('Heavy Intercessor Squad')) return true;
+
+  // Infiltrators / Incursors: Spectrus Kill Team, Wolf Scouts
+  if (
+    ['Spectrus Kill Team', 'Wolf Scouts'].includes(body.name) &&
+    (leads.includes('Infiltrator Squad') || leads.includes('Incursor Squad'))
+  ) return true;
+
+  // Bladeguard Veterans: Inner Circle Companions, Sword Brethren Squad
+  if (
+    ['Inner Circle Companions', 'Sword Brethren Squad'].includes(body.name) &&
+    leads.includes('Bladeguard Veteran Squad')
+  ) return true;
+
+  // Company Heroes / Victrix Honour Guard
+  if (body.name === 'Victrix Honour Guard' && (leads.includes('Company Heroes') || leader.name === 'Marneus Calgar')) return true;
+
+  // Deathwatch Kill Teams
+  if (body.name === 'Aquila Kill Team' && (leads.includes('Deathwatch Kill Team') || leads.includes('Deathwatch Veterans'))) return true;
+
+  // Adepta Sororitas / Agents of the Imperium
+  if (
+    ['Sanctifiers', 'Dominion Squad', 'Celestian Sacresants', 'Novitiate Squad', 'Subductor Squad', 'Exaction Squad', 'Vigilant Squad'].includes(body.name) &&
+    (leads.includes('Battle Sisters Squad') || leads.includes('Sisters of Battle Squad') || leader.keywords.includes('INQUISITOR') || leader.keywords.includes('MINISTORUM PRIEST') || leader.name === 'Ministorum Priest')
+  ) return true;
+
+  // Astra Militarum
+  if (
+    ['Catachan Jungle Fighters', 'Death Korps of Krieg', 'Kasrkin', 'Infantry Squad'].includes(body.name) &&
+    (leads.includes('Cadian Shock Troops') || leads.includes('Infantry Squad'))
+  ) return true;
+
+  // Chaos Space Marines
+  if (
+    ['Chosen', 'Khorne Berzerkers', 'Rubric Marines', 'Plague Marines', 'Noise Marines'].includes(body.name) &&
+    leads.includes('Legionaries')
+  ) return true;
+  if (
+    ['Scarab Occult Terminators', 'Deathshroud Bodyguard', 'Blightlord Terminators'].includes(body.name) &&
+    leads.includes('Chaos Terminator Squad')
+  ) return true;
+
   return false;
 }
 

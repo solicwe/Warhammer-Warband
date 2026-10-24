@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../rules-engine/effects';
-import { addonLines, supportIn, attachOptions, buildUnits, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { ALLIES, detachmentAllyOf } from '../engine/allies';
 import { Em } from './Em';
@@ -898,15 +898,16 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       || !!sheet?.keywords.includes('ADEPTUS TITANICUS')
       || !!sheet?.factionKeywords.includes('ADEPTUS TITANICUS');
     // characters that could join this squad: Leader slot, then Support slot
-    const leadersFor = (support: boolean) => faction.datasheets.filter((d) => allowed(d) && d.leads.includes(u.datasheet) && supportIn(list, d) === support && pointsOptions(d).length);
+    const leadersFor = (support: boolean) => faction.datasheets.filter((d) => allowed(d) && sheet && canLeaderAttach(d, sheet) && supportIn(list, d) === support && pointsOptions(d).length);
     const hasLeader = joined.some((x) => x.d && !supportIn(list, x.d));
     const hasSupport = joined.some((x) => supportIn(list, x.d));
     const canLeader = !u.attachTo && !hasLeader && leadersFor(false).length > 0;
     const canSupport = !u.attachTo && !hasSupport && leadersFor(true).length > 0;
     // a Leader in a squad: Add Support works on the squad it leads
-    const bodySupport = body && !supportIn(list, sheet) && !list.units.some((c) => c.attachTo === body.uid && supportIn(list, sheetOf(c.datasheet)))
-      && faction.datasheets.some((d) => allowed(d) && supportIn(list, d) && d.leads.includes(body.datasheet) && pointsOptions(d).length);
-    const squadsFor = sheet?.leads.length && !body ? [...new Set(sheet.leads)].map((n) => sheetOf(n)).filter((d): d is DatasheetData => !!d && allowed(d) && pointsOptions(d).length > 0) : [];
+    const bodySheet = body ? sheetOf(body.datasheet) : undefined;
+    const bodySupport = body && bodySheet && !supportIn(list, sheet) && !list.units.some((c) => c.attachTo === body.uid && supportIn(list, sheetOf(c.datasheet)))
+      && faction.datasheets.some((d) => allowed(d) && supportIn(list, d) && canLeaderAttach(d, bodySheet) && pointsOptions(d).length);
+    const squadsFor = sheet?.leads.length && !body ? faction.datasheets.filter((d) => allowed(d) && pointsOptions(d).length > 0 && canLeaderAttach(sheet, d)) : [];
     const close = () => { setPop(null); setPeek(null); };
     const w = pop.mode && pop.mode !== 'size' ? Math.min(340, window.innerWidth - 16) : 260;
     const left = Math.max(8, Math.min(window.innerWidth - w - 8, pop.x - w));

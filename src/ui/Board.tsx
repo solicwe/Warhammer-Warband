@@ -348,7 +348,11 @@ const ModelToken = memo(function ModelToken({
       style={{
         cursor: isDraft ? 'grab' : 'pointer',
         transform: 'translate3d(0, 0, 0)',
-        ...(isUntargetable || isModelHidden ? { opacity: 0.45, filter: 'grayscale(100%)' } : {}),
+        ...(isModelHidden
+          ? { opacity: 0.8, filter: 'grayscale(55%)' }
+          : isUntargetable
+            ? { opacity: 0.45, filter: 'grayscale(100%)' }
+            : {}),
       }}
       transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
       opacity={disp.fading !== undefined ? disp.fading : 1}
@@ -360,6 +364,9 @@ const ModelToken = memo(function ModelToken({
           <BaseShape m={m} p={p} grow={0.44} fill="none" stroke={uTheme.glow} strokeWidth={0.24} opacity={0.85} className="faction-aura-glow" pointerEvents="none" />
           <BaseShape m={m} p={p} grow={0.26} fill="none" stroke={isSel ? uTheme.primary : uTheme.secondary} strokeWidth={0.16} className="sel-ring" pointerEvents="none" />
         </>
+      )}
+      {isModelHidden && !isSel && !isPicked && !isDraft && (
+        <BaseShape m={m} p={p} grow={0.24} fill="none" stroke="#94a3b8" strokeWidth={0.12} strokeDasharray="0.28 0.16" opacity={0.85} pointerEvents="none" />
       )}
       {isMovable && !isSel && !isDraft && !isPicked && <BaseShape m={m} p={p} grow={0.24} fill="none" stroke="#38bdf8" strokeWidth={0.13} strokeDasharray="0.32 0.18" className="movable-ring" pointerEvents="none" />}
       {isTarget && !isPicked && !isSel && <BaseShape m={m} p={p} grow={0.28} fill="none" stroke="#fde68a" strokeWidth={0.1} strokeDasharray="0.3 0.2" pointerEvents="none" />}
@@ -420,8 +427,8 @@ const ModelToken = memo(function ModelToken({
       )}
       {isModelHidden && !hasLoneOp && (
         <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
-          <rect x={-0.8} y={-0.22} width={1.6} height={0.44} rx={0.22} fill="#1e293b" stroke="#94a3b8" strokeWidth={0.06} />
-          <text y={0.09} fontSize={0.2} textAnchor="middle" fill="#94a3b8" fontWeight={900} letterSpacing={0.02}>
+          <rect x={-0.85} y={-0.24} width={1.7} height={0.48} rx={0.24} fill="rgba(15, 23, 42, 0.92)" stroke="#94a3b8" strokeWidth={0.08} />
+          <text y={0.1} fontSize={0.22} textAnchor="middle" fill="#f1f5f9" fontWeight={900} letterSpacing={0.04}>
             HIDDEN
           </text>
         </g>
