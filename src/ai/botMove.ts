@@ -226,6 +226,7 @@ function frontFor(s: GameState, u: UnitState, ctx: Ctx): Pt | undefined {
   const foes = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT'));
   const reach = 2 * moveOf(u) + Math.max(ctx.range, 1);
   const prey = foes.map((e) => ({ e, v: unitValue(e) / (1 + Math.max(0, unitDistance(u, e) - reach) / 6) })).sort((a, b) => b.v - a.v)[0]?.e;
+  if (s.isBossAnnihilation && prey) return centre(prey);
   if (s.round <= 2 && mid.length) return mid[0];
   if (prey) return centre(prey);
   return mid[0];
@@ -640,6 +641,7 @@ function positionScore(s: GameState, u: UnitState): number {
 
 /** How much holding objectives matters to this unit: less for an expensive damage dealer (cheap units hold, it fights). */
 function objectiveWeight(s: GameState, u: UnitState, ctx: Ctx): number {
+  if (s.isBossAnnihilation) return 0.05;
   if (ctx.deliver) return 0.3;
   if (ctx.escort && ctx.escort.weight >= 3) return 0.3; // a Techmarine's job is its vehicle, not holding ground
   if (u.keywords?.includes?.('BATTLELINE') || alive(u).some((m) => m.keywords.includes('BATTLELINE'))) return 1;

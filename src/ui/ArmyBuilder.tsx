@@ -23,8 +23,9 @@ interface Props {
   startPicker?: boolean;
 }
 
-export type Section = 'characters' | 'battleline' | 'others' | 'transports' | 'allies';
+export type Section = 'epic_characters' | 'characters' | 'battleline' | 'others' | 'transports' | 'allies';
 export const SECTIONS: { id: Section; title: string }[] = [
+  { id: 'epic_characters', title: 'Epic Characters' },
   { id: 'characters', title: 'Characters' },
   { id: 'battleline', title: 'Battleline' },
   { id: 'others', title: 'Others' },
@@ -38,7 +39,8 @@ const OTHERS = new Set(['Victrix Honour Guard']);
 export function sectionOf(d: DatasheetData | undefined, factionId?: string): Section {
   if (d?.ally || (d && detachmentAllyOf(factionId, d))) return 'allies';
   if (!d || OTHERS.has(d.name)) return 'others';
-  if (d.keywords.includes('CHARACTER') || /Character|Epic Hero/.test(d.role)) return 'characters';
+  if (d.keywords.includes('EPIC HERO') || d.role === 'Epic Hero') return 'epic_characters';
+  if (d.keywords.includes('CHARACTER') || /Character/.test(d.role)) return 'characters';
   if (d.keywords.includes('BATTLELINE') || d.role === 'Battleline') return 'battleline';
   if (d.role === 'Dedicated Transports' || d.keywords.includes('DEDICATED TRANSPORT')) return 'transports';
   return 'others';

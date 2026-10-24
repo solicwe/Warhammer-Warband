@@ -3,7 +3,7 @@
 // medicae tents, and a boss at the end.
 import { addTimed } from '../rules-engine/effects';
 import type { Effect } from '../rules-engine/effects';
-import { defaultWargear, pointsOptions, syncWargear } from './army';
+import { canLeaderAttach, defaultWargear, pointsOptions, syncWargear } from './army';
 import { AUX_EXCLUSIONS } from './autoList';
 import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState, WargearPick } from './types';
 import { hasRealPortrait } from '../ui/portraits';
@@ -22,8 +22,10 @@ export interface MapNode {
   enemy?: { factionId: string; pts: number; level: BotLevel; rules: string[]; seed: number };
 }
 
+export type RewardRarity = 'common' | 'rare' | 'epic' | 'legendary';
+
 export type Reward =
-  | { kind: 'unit'; datasheet: string; models: number; pts: number }
+  | { kind: 'unit'; datasheet: string; models: number; pts: number; rarity?: RewardRarity; bonusLeader?: { datasheet: string; models: number; pts: number } }
   | { kind: 'relic'; id: string }
   | { kind: 'cp' }
   | { kind: 'scrap'; amount: number }
@@ -99,6 +101,53 @@ export function honorRequiredRank(minXp: number): string {
   if (minXp >= 2) return 'Veteran';
   if (minXp >= 1) return 'Blooded';
   return 'Recruit';
+}
+
+export const rankLabel = (xp = 0): string => {
+  if (xp >= 4) return 'Legendary';
+  if (xp >= 3) return 'Heroic';
+  if (xp >= 2) return 'Battle-hardened';
+  if (xp >= 1) return 'Blooded';
+  return 'Recruit';
+};
+
+export interface RankCombatBonus {
+  rank: string;
+  effect: Effect;
+  discountPct: number;
+}
+
+export function rankCombatBonus(xp = 0): RankCombatBonus {
+  const rank = rankLabel(xp);
+  if (xp >= 4) {
+    return {
+      rank,
+      effect: { ld: 1, oc: 1, reroll: 'hits1', attacks: 1, wound: 1, critHitOn: 5 },
+      discountPct: 0.25,
+    };
+  }
+  if (xp >= 3) {
+    return {
+      rank,
+      effect: { ld: 1, oc: 1, reroll: 'hits1', attacks: 1, wound: 1 },
+      discountPct: 0.15,
+    };
+  }
+  if (xp >= 2) {
+    return {
+      rank,
+      effect: { ld: 1, oc: 1, reroll: 'hits1' },
+      discountPct: 0.10,
+    };
+  }
+  if (xp >= 1) {
+    return {
+      rank,
+      effect: { ld: 1, oc: 1 },
+      discountPct: 0.05,
+    };
+  }
+  return { rank, effect: {}, discountPct: 0 };
 }
 
 export function canBuyDatasheetHonor(
@@ -453,6 +502,16 @@ const usable = (f: FactionData, main?: string) => {
     && hasRealPortrait(d.name));
 };
 export const cheapest = (d: DatasheetData) => [...d.points[0].options].sort((a, b) => a.pts - b.pts)[0];
+
+export function unitRarity(d: DatasheetData): RewardRarity {
+  const pts = cheapest(d)?.pts ?? 0;
+  const kws = d.keywords || [];
+  if (kws.includes('TITANIC') || pts >= 220) return 'legendary';
+  if (kws.includes('VEHICLE') || kws.includes('MONSTER') || kws.includes('TERMINATOR') || kws.includes('GRAVIS') || pts >= 140) return 'epic';
+  if (kws.includes('ELITE') || kws.includes('JUMP PACK') || kws.includes('MOUNTED') || kws.includes('WALKER') || pts >= 85) return 'rare';
+  return 'common';
+}
+
 const mainKeyword = (f: FactionData) => {
   const count = new Map<string, number>();
   for (const d of f.datasheets.filter((d) => !d.ally)) for (const k of d.factionKeywords) count.set(k, (count.get(k) ?? 0) + 1);
@@ -480,8 +539,69 @@ export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt =
     }
     return chosen;
   };
-  const units = (n: number, cap: number) => pickN(usable(faction, mainKeyword(faction)).filter((d) => { const o = cheapest(d); return o.pts >= 50 && o.pts <= cap; }), n, r)
-    .map((d): Reward => { const o = cheapest(d); return { kind: 'unit', datasheet: d.name, models: o.models, pts: o.pts }; });
+
+  const depth = (run.loop ?? 1) * 3 + run.path.length;
+  const rollRarity = (): RewardRarity => {
+    const val = r();
+    if (depth >= 8) {
+      if (val < 0.25) return 'legendary';
+      if (val < 0.65) return 'epic';
+      if (val < 0.90) return 'rare';
+      return 'common';
+    }
+    if (depth >= 4) {
+      if (val < 0.12) return 'legendary';
+      if (val < 0.38) return 'epic';
+      if (val < 0.75) return 'rare';
+      return 'common';
+    }
+    if (val < 0.05) return 'legendary';
+    if (val < 0.20) return 'epic';
+    if (val < 0.55) return 'rare';
+    return 'common';
+  };
+
+  const units = (n: number, cap: number): Reward[] => {
+    const available = usable(faction, mainKeyword(faction)).filter((d) => {
+      const o = cheapest(d);
+      return o.pts >= 40 && o.pts <= cap;
+    });
+    if (!available.length) return [];
+
+    const chosen: Reward[] = [];
+    for (let i = 0; i < n; i++) {
+      const targetRarity = rollRarity();
+      const byRarity = available.filter((d) => unitRarity(d) === targetRarity);
+      const pool = byRarity.length ? byRarity : available;
+      const d = pool[Math.floor(r() * pool.length)];
+      const o = cheapest(d);
+      const rarity = unitRarity(d);
+
+      let bonusLeader: { datasheet: string; models: number; pts: number } | undefined;
+      if (rarity === 'legendary') {
+        const leaderCand = faction.datasheets.find((ld) =>
+          !ld.keywords.includes('FORTIFICATION') &&
+          !ld.keywords.includes('EPIC HERO') &&
+          hasRealPortrait(ld.name) &&
+          canLeaderAttach(ld, d)
+        );
+        if (leaderCand) {
+          const lo = cheapest(leaderCand);
+          bonusLeader = { datasheet: leaderCand.name, models: lo.models, pts: lo.pts };
+        }
+      }
+
+      chosen.push({
+        kind: 'unit',
+        datasheet: d.name,
+        models: o.models,
+        pts: o.pts,
+        rarity,
+        ...(bonusLeader ? { bonusLeader } : {}),
+      });
+    }
+    return chosen;
+  };
   const unpickedDets = (faction.detachments ?? []).filter((d) => !(run.list.detachments ?? []).includes(d.name));
   const detReward: Reward | null = unpickedDets.length ? { kind: 'detachment', name: unpickedDets[Math.floor(r() * unpickedDets.length)].name } : null;
 
@@ -535,8 +655,23 @@ export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
     const d = faction.datasheets.find((x) => x.name === rw.datasheet);
     const uid = `c${run.path.length}${Math.floor(Math.random() * 1e6).toString(36)}`;
     const e: ArmyUnitEntry = syncWargear(d, defaultWargear(d, { uid, datasheet: rw.datasheet, models: rw.models, pts: rw.pts }));
-    next.list = { ...run.list, units: [...run.list.units, e] };
-    next.story.push(`Reinforcements: ${rw.datasheet}`);
+    let newUnits = [...run.list.units, e];
+    if (rw.bonusLeader) {
+      const ld = faction.datasheets.find((x) => x.name === rw.bonusLeader!.datasheet);
+      const lUid = `l${run.path.length}${Math.floor(Math.random() * 1e6).toString(36)}`;
+      const lEntry: ArmyUnitEntry = syncWargear(ld, defaultWargear(ld, {
+        uid: lUid,
+        datasheet: rw.bonusLeader.datasheet,
+        models: rw.bonusLeader.models,
+        pts: rw.bonusLeader.pts,
+        attachTo: uid,
+      }));
+      newUnits = [...newUnits, lEntry];
+      next.story.push(`Reinforcements: ${rw.datasheet} with attached Leader ${rw.bonusLeader.datasheet}`);
+    } else {
+      next.story.push(`Reinforcements: ${rw.datasheet}`);
+    }
+    next.list = { ...run.list, units: newUnits };
   }
   if (rw.kind === 'detachment') {
     const cur = run.list.detachments ?? [];
@@ -586,7 +721,13 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
     };
   }
   const baseGain = node.kind === 'boss' ? 120 : node.kind === 'elite' ? 70 : 45;
-  const scrapGain = baseGain + (battleScrap || 0);
+  const scrapTechBonus = (run.techTree?.includes('imp_logistics') ? 30 : 0)
+    + (run.techTree?.includes('chaos_tribute') ? 30 : 0)
+    + (run.techTree?.includes('nec_salvage') ? 30 : 0)
+    + (run.techTree?.includes('ork_scrappers') ? 40 : 0)
+    + (run.techTree?.includes('tyr_biomass') ? 30 : 0)
+    + (run.techTree?.includes('xenos_trade') ? 30 : 0);
+  const scrapGain = baseGain + (battleScrap || 0) + scrapTechBonus;
   // Units that took part gain +1 XP
   const updatedUnits = run.list.units.map((u) => ({ ...u, xp: (u.xp ?? 0) + 1 }));
   const next: Run = {
@@ -597,7 +738,7 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
     scrap: (run.scrap ?? 0) + scrapGain,
     freeRerolls: 1,
     list: { ...run.list, units: updatedUnits },
-    story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap${battleScrap > 0 ? `: ${baseGain} victory + ${battleScrap} battle loot` : ''})${node.kind === 'boss' ? ' — the Warlord is vanquished!' : ''}`],
+    story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap${battleScrap > 0 ? `: ${baseGain} victory + ${battleScrap} battle loot` : ''}${scrapTechBonus > 0 ? ` + ${scrapTechBonus} Tech Bonus` : ''})${node.kind === 'boss' ? ' — the Warlord is vanquished!' : ''}`],
   };
   next.picksLeft = node.kind === 'boss' ? 2 : 1;
   next.offer = makeOffer(next, faction, node.kind);
@@ -614,6 +755,15 @@ export function applyCampaign(s: GameState, run: Run, rules: (string | { id?: st
     s.players[p].primaryId = 'roguelike-annihilation';
     s.players[p].disposition = 'purge-the-foe';
   }
+
+  // Set Boss & Elite Annihilation flag (requires 100% total wipeout to win)
+  if (run.fighting) {
+    const node = run.map.find((n) => n.id === run.fighting);
+    if (node && (node.kind === 'boss' || node.kind === 'elite')) {
+      s.isBossAnnihilation = true;
+    }
+  }
+
   for (const rawId of run.relics) {
     const r = relicById(rawId);
     const id = r?.id ?? (typeof rawId === 'string' ? rawId : String((rawId as any)?.id || ''));
@@ -632,6 +782,41 @@ export function applyCampaign(s: GameState, run: Run, rules: (string | { id?: st
       for (const hid of entry.honors) {
         const h = battleHonorById(hid);
         if (h) addTimed(s, u, { e: { ...h.e }, label: h.name, until: 'battle', by: me });
+      }
+    }
+  }
+
+  // Apply Functional XP Rank Combat Bonuses to each unit
+  for (const entry of run.list.units) {
+    const rkb = rankCombatBonus(entry.xp ?? 0);
+    if (rkb.effect && Object.keys(rkb.effect).length > 0) {
+      const matching = s.units.filter((u) => u.owner === me && (u.id.includes(entry.uid) || u.name === entry.datasheet));
+      for (const u of matching) {
+        addTimed(s, u, { e: { ...rkb.effect }, label: `Rank: ${rkb.rank}`, until: 'battle', by: me });
+      }
+    }
+  }
+
+  // Category 8: Attached Unit Battle Honor Sync (Shared Movement, FNP, Stealth)
+  for (const entry of run.list.units) {
+    const joiners = run.list.units.filter((x) => x.attachTo === entry.uid);
+    if (!joiners.length) continue;
+    const attachedGroup = [entry, ...joiners];
+    const groupHonors = new Set<string>();
+    for (const m of attachedGroup) {
+      for (const hid of (m.honors ?? [])) groupHonors.add(hid);
+      for (const hid of (run.datasheetHonors?.[m.datasheet] ?? [])) groupHonors.add(hid);
+    }
+    const matching = s.units.filter((u) => u.owner === me && attachedGroup.some((g) => u.id.includes(g.uid) || u.name.includes(g.datasheet)));
+    for (const u of matching) {
+      for (const hid of groupHonors) {
+        const h = battleHonorById(hid);
+        if (!h) continue;
+        const isShared = h.id === 'swift' || h.id === 'iron_will' || h.id === 'undying_resilience' ||
+          h.e.move !== undefined || h.e.defend?.fnp !== undefined || h.e.stealth || h.e.rerollAdvance || h.e.rerollCharge;
+        if (isShared && !u.timed?.some((t) => t.label === h.name)) {
+          addTimed(s, u, { e: { ...h.e }, label: `${h.name} (Sync)`, until: 'battle', by: me });
+        }
       }
     }
   }
@@ -717,6 +902,22 @@ export const enhancementScrapCost = (pts: number, slotIndex = 0) => {
   return Math.round(base * Math.pow(1.5, Math.max(0, slotIndex)));
 };
 
+/** Check whether a character can purchase a specific detachment enhancement (blocks duplicates on the same model) */
+export function canBuyEnhancementForUnit(
+  run: Run,
+  faction: FactionData,
+  unitUid: string,
+  enhancementName: string
+): boolean {
+  const u = run.list.units.find((x) => x.uid === unitUid);
+  if (!u) return false;
+  const existingEnhancements = (u.enhancements && u.enhancements.length > 0)
+    ? u.enhancements
+    : (u.enhancement ? [{ name: u.enhancement, pts: u.enhancementPts ?? 0 }] : []);
+  if (existingEnhancements.some((e) => e.name === enhancementName)) return false;
+  return true;
+}
+
 /** Purchase and equip a detachment enhancement on a character in the campaign roster using Scrap (repeatable & stackable) */
 export function buyEnhancementForUnit(
   run: Run,
@@ -731,6 +932,9 @@ export function buyEnhancementForUnit(
   const existingEnhancements = (u.enhancements && u.enhancements.length > 0)
     ? u.enhancements
     : (u.enhancement ? [{ name: u.enhancement, pts: u.enhancementPts ?? 0 }] : []);
+
+  // Category 1: Cannot buy the exact same enhancement on the same model!
+  if (existingEnhancements.some((e) => e.name === enhancementName)) return run;
 
   const slotIndex = existingEnhancements.length;
   const cost = enhancementScrapCost(pts, slotIndex);
@@ -787,6 +991,15 @@ export function removeEnhancementFromUnit(
   };
 }
 
+/** Calculate escalating duplicate recruitment scrap cost */
+export function recruitScrapCost(run: Run, datasheetName: string, basePts: number): number {
+  const count = run.list.units.filter((u) => u.datasheet === datasheetName).length;
+  if (count <= 1) return basePts;
+  if (count === 2) return Math.round(basePts * 1.5);
+  if (count === 3) return Math.round(basePts * 2.0);
+  return Math.round(basePts * 3.0);
+}
+
 /** Buy and recruit a new unit into the campaign roster using Scrap */
 export function recruitUnit(run: Run, faction: FactionData, datasheetName: string, chosenModels?: number): Run {
   const excl = AUX_EXCLUSIONS[faction.id] ?? [];
@@ -797,7 +1010,9 @@ export function recruitUnit(run: Run, faction: FactionData, datasheetName: strin
   if ((d.keywords || []).includes('EPIC HERO') && run.list.units.some((x) => x.datasheet === d.name)) return run;
   const opts = pointsOptions(d);
   const o = (chosenModels ? opts.find((x) => x.models === chosenModels) : undefined) ?? cheapest(d);
-  if (!o || (run.scrap ?? 0) < o.pts) return run;
+  if (!o) return run;
+  const cost = recruitScrapCost(run, d.name, o.pts);
+  if ((run.scrap ?? 0) < cost) return run;
   const uid = `c${run.path.length}${Math.floor(Math.random() * 1e6).toString(36)}`;
   const existingHonors = run.datasheetHonors?.[d.name] ?? [];
   const e: ArmyUnitEntry = syncWargear(d, defaultWargear(d, {
@@ -809,9 +1024,9 @@ export function recruitUnit(run: Run, faction: FactionData, datasheetName: strin
   }));
   return {
     ...run,
-    scrap: (run.scrap ?? 0) - o.pts,
+    scrap: (run.scrap ?? 0) - cost,
     list: { ...run.list, units: [...run.list.units, e] },
-    story: [...run.story, `Recruited: ${d.name} (${o.models} models, ${o.pts} pts)`],
+    story: [...run.story, `Recruited: ${d.name} (${o.models} models, -${cost} Scrap)`],
   };
 }
 
@@ -966,8 +1181,24 @@ export function applyMedicaeService(run: Run, service: 'fate' | 'cp'): Run {
   }
 }
 
+const DETACHMENT_PREMIER = new Set([
+  'Gladius Strike Force', 'Ironstorm Spearhead', 'War Horde', 'Awakened Dynasty',
+  'Invasion Fleet', 'Slaves to Darkness', 'Kauyon', 'Mont\'ka', 'Cult of Strife',
+  'Hallowed Martyrs', 'Host of the Brass Stampede', 'Pactbound Zealots', 'Synaptic Nexus'
+]);
+const DETACHMENT_STANDARD = new Set([
+  '1st Company Task Force', 'Firestorm Assault Force', 'Green Tide',
+  'Obeisance Phalanx', 'Assimilation Brood', 'Deceptors', 'Nob Mob'
+]);
+
+export function detachmentScrapCost(name: string): number {
+  if (DETACHMENT_PREMIER.has(name)) return 140;
+  if (DETACHMENT_STANDARD.has(name)) return 60;
+  return 90;
+}
+
 /** Requisition / adopt a new detachment into the campaign army using Scrap */
-export function adoptDetachment(run: Run, detachmentName: string, cost = 100): Run {
+export function adoptDetachment(run: Run, detachmentName: string, cost = detachmentScrapCost(detachmentName)): Run {
   if ((run.scrap ?? 0) < cost) return run;
   const cur = run.list.detachments ?? [];
   if (cur.includes(detachmentName)) return run;
@@ -1151,39 +1382,69 @@ export function getFactionFamily(factionId: string): 'IMPERIUM' | 'CHAOS' | 'NEC
 export const FACTION_TECH_TREES: Record<string, TechNode[]> = {
   IMPERIUM: [
     { id: 'imp_orbital', name: 'Orbital Bombardment', tier: 1, family: 'IMPERIUM', tag: 'ORBITAL STRIKE', desc: 'At battle round 1 start, rain fire dealing mortal wounds to enemy units.', cost: 80, effect: {} },
+    { id: 'imp_logistics', name: 'Munitorum Supply Lines', tier: 1, family: 'IMPERIUM', tag: 'SCRAP HARVEST +30', desc: 'Munitorum tithes grant +30 Scrap salvaged after every battle.', cost: 70, effect: {} },
     { id: 'imp_shield', name: 'Emperor\'s Aegis', tier: 2, family: 'IMPERIUM', tag: 'FAITH SHIELD', desc: 'INFANTRY & CHARACTER units gain +1 Save and 6+ Feel No Pain.', cost: 120, effect: { defend: { save: 1, fnp: 6 } }, req: 'imp_orbital' },
+    { id: 'imp_litany', name: 'Litany of Devotion', tier: 2, family: 'IMPERIUM', tag: 'UNYIELDING FAITH', desc: 'Reroll Battle-shock tests and +1 Leadership army-wide.', cost: 110, effect: { ld: 1, rerollShock: true }, req: 'imp_logistics' },
     { id: 'imp_tactics', name: 'Master Tactician', tier: 3, family: 'IMPERIUM', tag: 'TACTICAL SUPREMACY', desc: '+1 CP every battle round, and army-wide tactical flexibility.', cost: 160, effect: {}, req: 'imp_shield' },
+    { id: 'imp_armor', name: 'Astartes Ceramite Reinforcement', tier: 3, family: 'IMPERIUM', tag: 'ARMORED RESILIENCE', desc: 'VEHICLE and DREADNOUGHT units gain +1 Toughness and +1 Wound.', cost: 160, effect: { toughness: 1, wound: 1 }, req: 'imp_litany' },
+    { id: 'imp_righteous', name: 'Righteous Vengeance', tier: 3, family: 'IMPERIUM', tag: 'LETHAL ZEAL', desc: 'Melee attacks gain [LETHAL HITS] and +1 Strength.', cost: 150, effect: { abilities: ['lethal hits'], strength: 1, attack: 'melee' }, req: 'imp_shield' },
     { id: 'imp_titanic', name: 'Imperial Knight Requisition', tier: 4, family: 'IMPERIUM', tag: 'KNIGHT TITANIC UNLOCK', desc: 'Unlocks Imperial Knights and Titanic warmachines for army recruitment.', cost: 250, effect: {}, req: 'imp_tactics' },
+    { id: 'imp_crusade', name: 'Indomitus Crusade Mandate', tier: 4, family: 'IMPERIUM', tag: 'CRUSADE SUPREMACY', desc: 'All friendly units score Critical Hits on 5+ and gain +1 Move.', cost: 260, effect: { critHitOn: 5, move: 1 }, req: 'imp_armor' },
   ],
   CHAOS: [
     { id: 'chaos_pact', name: 'Dark Pact Overdrive', tier: 1, family: 'CHAOS', tag: 'WARP CRITICALS 5+', desc: 'All units score Critical Hits on an unmodified roll of 5+.', cost: 80, effect: { critHitOn: 5 } },
+    { id: 'chaos_tribute', name: 'Dark Scrap Tribute', tier: 1, family: 'CHAOS', tag: 'WARP SALVAGE +30', desc: 'Dark Mechanicum rituals salvage +30 Scrap after every battle.', cost: 70, effect: {} },
     { id: 'chaos_siphon', name: 'Soul Siphon', tier: 2, family: 'CHAOS', tag: 'SOUL STEAL', desc: 'Destroying an enemy unit restores lost wounds or models to friendly units.', cost: 120, effect: {}, req: 'chaos_pact' },
+    { id: 'chaos_warpfire', name: 'Warpfire Infusion', tier: 2, family: 'CHAOS', tag: 'SUSTAINED FIRE', desc: 'Ranged weapons gain [SUSTAINED HITS 1] and +1 AP.', cost: 120, effect: { abilities: ['sustained hits 1'], ap: 1, attack: 'ranged' }, req: 'chaos_tribute' },
     { id: 'chaos_mutation', name: 'Warp Mutation', tier: 3, family: 'CHAOS', tag: 'MUTATION FRENZY', desc: 'All units gain +1 Strength, +1 Melee Attack, and +1 AP.', cost: 160, effect: { strength: 1, attacks: 1, ap: 1 }, req: 'chaos_siphon' },
+    { id: 'chaos_daemon_ward', name: 'Daemonic Ward', tier: 3, family: 'CHAOS', tag: 'INVULNERABLE 5+', desc: 'All friendly units gain a 5+ Invulnerable save.', cost: 170, effect: { defend: { inv: 5 } }, req: 'chaos_warpfire' },
+    { id: 'chaos_bloodlust', name: 'Blood God Fury', tier: 3, family: 'CHAOS', tag: 'SAVAGE CHARGE', desc: 'Reroll Charge rolls and +2 Strength on Melee weapons.', cost: 150, effect: { rerollCharge: true, strength: 2, attack: 'melee' }, req: 'chaos_mutation' },
     { id: 'chaos_titanic', name: 'Chaos Knight Requisition', tier: 4, family: 'CHAOS', tag: 'CHAOS TITANIC UNLOCK', desc: 'Unlocks Chaos Knights and Daemon Engine titans for army recruitment.', cost: 250, effect: {}, req: 'chaos_mutation' },
+    { id: 'chaos_apocalypse', name: 'Eye of Terror Ascendance', tier: 4, family: 'CHAOS', tag: 'TOTAL CORRUPTION', desc: 'All friendly units gain Feel No Pain 5+ and +1 Attack army-wide.', cost: 260, effect: { defend: { fnp: 5 }, attacks: 1 }, req: 'chaos_daemon_ward' },
   ],
   NECRONS: [
     { id: 'nec_reanim', name: 'Reanimation Overdrive', tier: 1, family: 'NECRONS', tag: 'DOUBLE REANIMATION', desc: 'Reanimation Protocols trigger at double potency each turn.', cost: 80, effect: {} },
+    { id: 'nec_salvage', name: 'Dynastic Scrap Siphon', tier: 1, family: 'NECRONS', tag: 'CANOPTEK SALVAGE +30', desc: 'Canoptek scarabs harvest +30 Scrap from battlefield wreckage.', cost: 70, effect: {} },
     { id: 'nec_gauss', name: 'Gauss Disintegration', tier: 2, family: 'NECRONS', tag: 'MORTAL GAUSS', desc: 'Critical Wound rolls on ranged attacks inflict 1 additional Mortal Wound.', cost: 120, effect: { critHitOn: 6, mortalPerWound: 1, attack: 'ranged' }, req: 'nec_reanim' },
+    { id: 'nec_chronomancy', name: 'Chronomantic Phasing', tier: 2, family: 'NECRONS', tag: 'TEMPORAL DRIFT +2M', desc: '+2" Move and advance re-rolls army-wide.', cost: 110, effect: { move: 2, rerollAdvance: true }, req: 'nec_salvage' },
     { id: 'nec_living_metal', name: 'Living Metal Protocol', tier: 3, family: 'NECRONS', tag: 'LIVING METAL FNP 5+', desc: 'Every unit gains Feel No Pain 5+ and +1 Toughness.', cost: 160, effect: { defend: { fnp: 5 }, toughness: 1 }, req: 'nec_gauss' },
+    { id: 'nec_tesla', name: 'Tesla Arcing Overcharge', tier: 3, family: 'NECRONS', tag: 'TESLA ARCING', desc: 'Ranged weapons gain [SUSTAINED HITS 2] on critical hits.', cost: 160, effect: { abilities: ['sustained hits 2'], attack: 'ranged' }, req: 'nec_chronomancy' },
+    { id: 'nec_command', name: 'Phaeron Absolute Authority', tier: 3, family: 'NECRONS', tag: 'IMPERIAL WILL +2 OC', desc: '+2 Objective Control and +1 to Hit rolls army-wide.', cost: 150, effect: { oc: 2, hit: 1 }, req: 'nec_living_metal' },
     { id: 'nec_supremacy', name: 'Monolith & C\'tan Supremacy', tier: 4, family: 'NECRONS', tag: 'NECRON SUPER-HEAVY', desc: 'Unlocks Monoliths and C\'tan Shards for army recruitment.', cost: 250, effect: {}, req: 'nec_living_metal' },
+    { id: 'nec_awakened_god', name: 'Awakened Star God Ascendancy', tier: 4, family: 'NECRONS', tag: 'STAR GOD POWER', desc: '+1 AP across all weapons, and 4+ Invulnerable save.', cost: 260, effect: { ap: 1, defend: { inv: 4 } }, req: 'nec_tesla' },
   ],
   ORKS: [
     { id: 'ork_waaagh', name: 'Permanent WAAAGH!', tier: 1, family: 'ORKS', tag: 'PERMANENT WAAAGH!', desc: 'WAAAGH! is permanently active (+1 Melee Attack, 5+ Invuln in melee, Advance & Charge).', cost: 80, effect: { attacks: 1, defend: { inv: 5 }, rerollAdvance: true, rerollCharge: true, attack: 'melee' } },
+    { id: 'ork_scrappers', name: 'Grot Scrap Scavengers', tier: 1, family: 'ORKS', tag: 'GROT LOOT +40', desc: 'Grot mobs scavenge +40 Scrap after every scrap!', cost: 70, effect: {} },
     { id: 'ork_dakka', name: 'More Dakka!', tier: 2, family: 'ORKS', tag: 'SUSTAINED DAKKA', desc: 'Ranged weapons gain +1 Attack and [SUSTAINED HITS 1].', cost: 120, effect: { attacks: 1, abilities: ['sustained hits 1'], attack: 'ranged' }, req: 'ork_waaagh' },
-    { id: 'ork_ram', name: 'Ramming Speed', tier: 3, family: 'ORKS', tag: 'RAMMING CHARGE', desc: '+2" Move army-wide, and charging deals crushing impact damage.', cost: 160, effect: { move: 2 }, req: 'ork_dakka' },
+    { id: 'ork_cybork', name: 'Cybork Bodies', tier: 2, family: 'ORKS', tag: 'CYBORK BITS FNP 6+', desc: 'All units gain 6+ Feel No Pain and +1 Wound.', cost: 120, effect: { defend: { fnp: 6 }, wound: 1 }, req: 'ork_scrappers' },
+    { id: 'ork_ram', name: 'Ramming Speed', tier: 3, family: 'ORKS', tag: 'RAMMING CHARGE +2M', desc: '+2" Move army-wide, and charging deals crushing impact damage.', cost: 160, effect: { move: 2 }, req: 'ork_dakka' },
+    { id: 'ork_choppa', name: 'Extra Choppy Bits', tier: 3, family: 'ORKS', tag: 'CHOPPA CARNAGE', desc: 'Melee weapons gain +1 Damage and +1 AP.', cost: 160, effect: { damage: 1, ap: 1, attack: 'melee' }, req: 'ork_cybork' },
+    { id: 'ork_mob_rule', name: 'Unstoppable Green Tide', tier: 3, family: 'ORKS', tag: 'MOB RULE +3 OC', desc: '+3 Objective Control and re-roll Battle-shock tests.', cost: 150, effect: { oc: 3, rerollShock: true }, req: 'ork_ram' },
     { id: 'ork_titan', name: 'Stompa Warboss Requisition', tier: 4, family: 'ORKS', tag: 'STOMPA UNLOCK', desc: 'Unlocks Stompas and heavy Ork war-constructs for army recruitment.', cost: 250, effect: {}, req: 'ork_ram' },
+    { id: 'ork_gorkamorka', name: 'Wrath of Gork and Mork', tier: 4, family: 'ORKS', tag: 'GORKAMORKA WRATH', desc: 'Critical Hits on 5+, +2 Strength, and Feel No Pain 5+.', cost: 260, effect: { critHitOn: 5, strength: 2, defend: { fnp: 5 } }, req: 'ork_choppa' },
   ],
   TYRANIDS: [
     { id: 'xenos_synapse', name: 'Synaptic Dominance', tier: 1, family: 'TYRANIDS', tag: 'SYNAPSE +2 OC', desc: 'Re-roll Battle-shock tests and gain +2 Objective Control.', cost: 80, effect: { oc: 2, rerollShock: true } },
-    { id: 'xenos_shadow', name: 'Shadow in the Warp', tier: 2, family: 'TYRANIDS', tag: 'WARP TERROR -1 HIT', desc: 'Enemy forces suffer −1 to Hit across the entire battle.', cost: 120, effect: {}, req: 'xenos_synapse' },
+    { id: 'tyr_biomass', name: 'Biomass Digestion Pools', tier: 1, family: 'TYRANIDS', tag: 'BIOMASS SALVAGE +30', desc: 'Hive fleet reclamation pools generate +30 Scrap after every victory.', cost: 70, effect: {} },
+    { id: 'xenos_shadow', name: 'Shadow in the Warp', tier: 2, family: 'TYRANIDS', tag: 'WARP TERROR -1 HIT', desc: 'Enemy forces suffer -1 to Hit across the entire battle.', cost: 120, effect: {}, req: 'xenos_synapse' },
+    { id: 'tyr_chitin', name: 'Reinforced Chitin Shells', tier: 2, family: 'TYRANIDS', tag: 'CHITIN CARAPACE +1T', desc: 'All units gain +1 Toughness and 6+ Feel No Pain.', cost: 120, effect: { toughness: 1, defend: { fnp: 6 } }, req: 'tyr_biomass' },
     { id: 'xenos_adaptation', name: 'Hyper-Adaptation', tier: 3, family: 'TYRANIDS', tag: 'LETHAL & DEVASTATING', desc: 'All units gain [LETHAL HITS] and [DEVASTATING WOUNDS].', cost: 160, effect: { abilities: ['lethal hits', 'devastating wounds'] }, req: 'xenos_shadow' },
+    { id: 'tyr_swarming', name: 'Endless Swarm Instinct', tier: 3, family: 'TYRANIDS', tag: 'SWARM HORDE +2M', desc: '+2" Move and Advance & Charge for all units.', cost: 160, effect: { move: 2, rerollAdvance: true, rerollCharge: true }, req: 'tyr_chitin' },
+    { id: 'tyr_predator', name: 'Apex Predator Instincts', tier: 3, family: 'TYRANIDS', tag: 'PREDATOR CRIT 5+', desc: 'Critical Hits on 5+ in melee combat and +1 Melee Attack.', cost: 150, effect: { critHitOn: 5, attacks: 1, attack: 'melee' }, req: 'xenos_adaptation' },
     { id: 'xenos_apex', name: 'Apex Bio-Titan Requisition', tier: 4, family: 'TYRANIDS', tag: 'BIO-TITAN UNLOCK', desc: 'Unlocks Titanic Bio-constructs and Super-Heavies for recruitment.', cost: 250, effect: {}, req: 'xenos_adaptation' },
+    { id: 'tyr_hive_devour', name: 'Planetary Devastation Swarm', tier: 4, family: 'TYRANIDS', tag: 'HIVE DEVOURER', desc: 'All units gain +1 Wound, +1 Strength, and 5+ Invulnerable save.', cost: 260, effect: { wound: 1, strength: 1, defend: { inv: 5 } }, req: 'tyr_swarming' },
   ],
   XENOS: [
-    { id: 'xenos_synapse', name: 'Command Matrix Network', tier: 1, family: 'XENOS', tag: 'COORDINATED +2 OC', desc: 'Re-roll Battle-shock tests and gain +2 Objective Control.', cost: 80, effect: { oc: 2, rerollShock: true } },
-    { id: 'xenos_shadow', name: 'Sensor Scramblers', tier: 2, family: 'XENOS', tag: 'RADAR JAM -1 HIT', desc: 'Enemy forces suffer −1 to Hit across the entire battle.', cost: 120, effect: {}, req: 'xenos_synapse' },
-    { id: 'xenos_adaptation', name: 'Technological Innovation', tier: 3, family: 'XENOS', tag: 'LETHAL & DEVASTATING', desc: 'All units gain [LETHAL HITS] and [DEVASTATING WOUNDS].', cost: 160, effect: { abilities: ['lethal hits', 'devastating wounds'] }, req: 'xenos_shadow' },
-    { id: 'xenos_apex', name: 'Super-Heavy Titan Construct', tier: 4, family: 'XENOS', tag: 'SUPER-HEAVY UNLOCK', desc: 'Unlocks faction Titanic / Super-Heavy war engines for recruitment.', cost: 250, effect: {}, req: 'xenos_adaptation' },
+    { id: 'xenos_marker', name: 'Target Lock Network', tier: 1, family: 'XENOS', tag: 'TARGET LOCK +1 HIT', desc: '+1 to Hit on ranged attacks and re-roll Wound rolls of 1.', cost: 80, effect: { hit: 1, reroll: 'wounds1', attack: 'ranged' } },
+    { id: 'xenos_trade', name: 'Black Market Scrap Conduit', tier: 1, family: 'XENOS', tag: 'BLACK MARKET +30', desc: 'Shadow trading networks supply +30 Scrap after every victory.', cost: 70, effect: {} },
+    { id: 'xenos_shields', name: 'Energy Shield Matrices', tier: 2, family: 'XENOS', tag: 'SHIELD MATRIX 5+ INV', desc: 'All units gain 5+ Invulnerable save and +1 Save.', cost: 120, effect: { defend: { inv: 5, save: 1 } }, req: 'xenos_marker' },
+    { id: 'xenos_repulsor', name: 'Gravitic Repulsor Skimmers', tier: 2, family: 'XENOS', tag: 'GRAV SKIMMER +2M', desc: '+2" Move and advance re-rolls army-wide.', cost: 110, effect: { move: 2, rerollAdvance: true }, req: 'xenos_trade' },
+    { id: 'xenos_hyper', name: 'Hyper-Frequency Beamers', tier: 3, family: 'XENOS', tag: 'HYPER BEAM [LETHAL]', desc: 'All weapons gain [LETHAL HITS] and +1 AP.', cost: 160, effect: { abilities: ['lethal hits'], ap: 1 }, req: 'xenos_shields' },
+    { id: 'xenos_drone', name: 'Combat Drone Sub-routines', tier: 3, family: 'XENOS', tag: 'DRONE SUB-ROUTINE', desc: '+2 Objective Control and 6+ Feel No Pain.', cost: 150, effect: { oc: 2, defend: { fnp: 6 } }, req: 'xenos_repulsor' },
+    { id: 'xenos_sniper', name: 'Predictive AI Targeting', tier: 3, family: 'XENOS', tag: 'CRIT 5+ & PRECISION', desc: 'Critical Hits on 5+ and [PRECISION] on all weapons.', cost: 160, effect: { critHitOn: 5, abilities: ['precision'] }, req: 'xenos_hyper' },
+    { id: 'xenos_titanic_war', name: 'Super-Heavy Titan Construct', tier: 4, family: 'XENOS', tag: 'SUPER-HEAVY UNLOCK', desc: 'Unlocks faction Titanic and Super-Heavy war engines for recruitment.', cost: 250, effect: {}, req: 'xenos_hyper' },
+    { id: 'xenos_singularity', name: 'Singularity Weapon System', tier: 4, family: 'XENOS', tag: 'SINGULARITY CANNON', desc: 'Weapons gain [DEVASTATING WOUNDS] and +1 Damage.', cost: 260, effect: { abilities: ['devastating wounds'], damage: 1 }, req: 'xenos_drone' },
   ],
 };
 
@@ -1245,11 +1506,120 @@ export function canRecruitTitanOrKnight(factionId: string, targetDatasheet: Data
   if (!isFactionAllowedKnight(factionId, targetDatasheet)) return false;
 
   if (requiresTier4Tech(targetDatasheet)) {
-    const hasTier4 = (run.techTree ?? []).some((t) => t.endsWith('_titanic') || t.endsWith('_supremacy') || t.endsWith('_titan') || t.endsWith('_apex'));
+    const nodes = getFactionTechNodes(factionId);
+    const hasTier4 = (run.techTree ?? []).some((t) => {
+      const n = nodes.find((x) => x.id === t);
+      return n?.tier === 4 || t.endsWith('_titanic') || t.endsWith('_supremacy') || t.endsWith('_titan') || t.endsWith('_apex') || t.endsWith('_titanic_war');
+    });
     if (!hasTier4) return false;
   }
 
   return true;
+}
+
+export interface AutoUpgradePreview {
+  unit: ArmyUnitEntry;
+  honor: BattleHonor;
+  baseCost: number;
+  finalCost: number;
+  companion?: ArmyUnitEntry;
+  isAttached: boolean;
+  rankDiscountPct: number;
+}
+
+export function previewAutoUpgradeUnit(run: Run, faction: FactionData, unitUid: string): AutoUpgradePreview | null {
+  const u = run.list.units.find((x) => x.uid === unitUid);
+  if (!u) return null;
+  const d = faction.datasheets.find((x) => x.name === u.datasheet);
+  if (!d) return null;
+
+  // Attached companion: either leader attached to u, or bodyguard u is attached to
+  const companion = run.list.units.find((x) => x.attachTo === u.uid) ?? (u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined);
+  const isAttached = !!companion;
+
+  const curHonors = [
+    ...(run.datasheetHonors?.[u.datasheet] ?? []),
+    ...(u.honors ?? []),
+  ];
+  const eligible = getSmartBattleHonors(d, curHonors);
+  if (!eligible.length) return null;
+
+  // Filter by rank / XP
+  const xp = u.xp ?? 0;
+  const available = eligible.filter((h) => honorMinXp(h) <= xp);
+  if (!available.length) return null;
+
+  // Role matching
+  const hasRanged = (d.weapons || []).some((w) => w.profiles.some((p) => p.range !== 'Melee' && p.range !== null));
+  const hasMelee = (d.weapons || []).some((w) => w.profiles.some((p) => p.range === 'Melee'));
+  let pick = available[0];
+  if (hasRanged && !hasMelee) {
+    pick = available.find((h) => h.role === 'ranged') || pick;
+  } else if (hasMelee && !hasRanged) {
+    pick = available.find((h) => h.role === 'melee') || pick;
+  }
+
+  // Base cost scaled by squad count
+  const squads = run.list.units.filter((x) => x.datasheet === u.datasheet);
+  const squadCount = Math.max(1, squads.length);
+  const baseCost = datasheetHonorCost(pick.cost, squadCount);
+
+  // Rank discount if any
+  const rkb = rankCombatBonus(xp);
+  const rankDiscountPct = rkb.discountPct ?? 0;
+  let finalCost = Math.round(baseCost * (1 - rankDiscountPct));
+
+  // Attached companion surcharge: +25%
+  if (isAttached) {
+    finalCost = Math.round(finalCost * 1.25);
+  }
+
+  return {
+    unit: u,
+    honor: pick,
+    baseCost,
+    finalCost,
+    companion,
+    isAttached,
+    rankDiscountPct,
+  };
+}
+
+export function applyAutoUpgradeUnit(run: Run, faction: FactionData, unitUid: string): Run {
+  const preview = previewAutoUpgradeUnit(run, faction, unitUid);
+  if (!preview) return run;
+  if ((run.scrap ?? 0) < preview.finalCost) return run;
+
+  const { unit, honor, finalCost, companion, isAttached } = preview;
+  const curDatasheetHonors = { ...(run.datasheetHonors ?? {}) };
+
+  // Add to main unit datasheet
+  curDatasheetHonors[unit.datasheet] = [...new Set([...(curDatasheetHonors[unit.datasheet] ?? []), honor.id])];
+
+  // If companion attached, also add to companion datasheet
+  if (companion) {
+    curDatasheetHonors[companion.datasheet] = [...new Set([...(curDatasheetHonors[companion.datasheet] ?? []), honor.id])];
+  }
+
+  // Also update per-unit honors on run.list.units
+  const updatedUnits = run.list.units.map((x) => {
+    if (x.datasheet === unit.datasheet || (companion && x.datasheet === companion.datasheet)) {
+      return { ...x, honors: [...new Set([...(x.honors ?? []), honor.id])] };
+    }
+    return x;
+  });
+
+  const storyMsg = isAttached && companion
+    ? `Auto-Upgrade (Sync): Upgraded ${unit.datasheet} and ${companion.datasheet} with ${honor.name} (-${finalCost} Scrap)`
+    : `Auto-Upgrade: Upgraded ${unit.datasheet} with ${honor.name} (-${finalCost} Scrap)`;
+
+  return {
+    ...run,
+    scrap: (run.scrap ?? 0) - finalCost,
+    datasheetHonors: curDatasheetHonors,
+    list: { ...run.list, units: updatedUnits },
+    story: [...run.story, storyMsg],
+  };
 }
 
 

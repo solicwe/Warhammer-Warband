@@ -6,12 +6,13 @@ import { loadRun, saveRun } from '../services/storage';
 import { attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
-  adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
+  adoptDetachment, afterBattle, applyAutoUpgradeUnit, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
   bossRuleById, buyDatasheetHonor, buyEnhancementForUnit, buyHonorForUnit, buyTechNode, canBuyDatasheetHonor, canRecruitTitanOrKnight,
-  changeSquadSize, cheapest, continueNextLoop, datasheetHonorCost, enhancementScrapCost, enter,
-  getFactionFamily, getFactionTechNodes, getSmartBattleHonors, honorMinXp, honorRequiredRank, isFactionAllowedKnight, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
+  changeSquadSize, cheapest, continueNextLoop, datasheetHonorCost, detachmentScrapCost, enhancementScrapCost, enter,
+  getFactionFamily, getFactionTechNodes, getSmartBattleHonors, honorMinXp, honorRequiredRank, isFactionAllowedKnight, makeOffer, newRun,
+  previewAutoUpgradeUnit, rankCombatBonus, rankLabel, reachable, recruitScrapCost, recruitUnit, relicById, relicDesc,
   removeEnhancementFromUnit, requiresTier4Tech, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward,
-  type MapNode, type Reward, type Run,
+  type AutoUpgradePreview, type MapNode, type Reward, type Run,
 } from '../engine/campaign';
 import { detachmentAllyOf } from '../engine/allies';
 import { hasFactionRules } from '../rules-engine/effects';
@@ -67,6 +68,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const [recruitQ, setRecruitQ] = useState('');
   const [recruitSize, setRecruitSize] = useState<string | null>(null);
   const [recruitView, setRecruitView] = useState<string | null>(null);
+  const [autoUpgradeConfirm, setAutoUpgradeConfirm] = useState<AutoUpgradePreview | null>(null);
 
   const closeRoster = () => {
     setShowRoster(false);
@@ -74,6 +76,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     setPeek(null);
     setRecruitSize(null);
     setRecruitView(null);
+    setAutoUpgradeConfirm(null);
   };
 
   const isSectionOpen = (uid: string, section: string, defaultOpen = false) => {
@@ -519,14 +522,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           <button
             type="button"
             onClick={() => {
-              setMenu(u.uid);
-              setPanelCollapse((prev) => ({
-                ...prev,
-                [u.uid]: {
-                  ...prev[u.uid],
-                  honors: true,
-                },
-              }));
+              const preview = previewAutoUpgradeUnit(run, fac, u.uid);
+              if (preview) {
+                setAutoUpgradeConfirm(preview);
+              } else {
+                setInfo('No eligible upgrades available for this unit right now.');
+              }
               close();
             }}
           >
@@ -717,15 +718,93 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 const curLvl = rw.kind === 'relic' ? (run.relicLevels?.[rw.id] ?? (run.relics.includes(rw.id) ? 1 : 0)) : 0;
                 const isUpgrade = curLvl > 0;
                 const nextLvl = curLvl + 1;
+                const isUnit = rw.kind === 'unit';
+                const sheet = isUnit ? fac.datasheets.find((x) => x.name === rw.datasheet) : null;
+                const bonusSheet = isUnit && rw.bonusLeader ? fac?.datasheets.find((x) => x.name === rw.bonusLeader!.datasheet) : null;
+                const rarity = isUnit ? (rw.rarity ?? 'common') : null;
+                const rarityColors: Record<string, string> = {
+                  common: '#94A3B8',
+                  rare: '#38BDF8',
+                  epic: '#A855F7',
+                  legendary: '#F59E0B',
+                };
+                const borderCol = rarity ? rarityColors[rarity] : undefined;
+
                 return (
-                  <button key={i} className={`cmp-card slate k-${rw.kind} ${relic?.rare ? 'rare' : ''} ${isUpgrade ? 'upgrade' : ''}`} style={{ animationDelay: `${i * 90}ms`, position: 'relative' }} onClick={() => take(rw)}>
+                  <button
+                    key={i}
+                    className={`cmp-card slate k-${rw.kind} ${relic?.rare ? 'rare' : ''} ${isUpgrade ? 'upgrade' : ''}`}
+                    style={{
+                      animationDelay: `${i * 90}ms`,
+                      position: 'relative',
+                      ...(borderCol ? { borderColor: borderCol, boxShadow: `0 0 16px ${borderCol}33` } : {}),
+                    }}
+                    onClick={() => take(rw)}
+                  >
                     <span className="slate-in">
                       <span className="cmp-card-kind" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>{rw.kind === 'unit' ? 'Reinforcements' : isUpgrade ? 'Upgrade' : rw.kind === 'relic' ? (relic?.rare ? 'Rare relic' : 'Relic') : rw.kind === 'detachment' ? 'Detachment' : rw.kind === 'scrap' ? 'Scrap Cache' : 'Command'}</span>
+                        <span>
+                          {isUnit
+                            ? (rarity ? rarity.toUpperCase() : 'REINFORCEMENTS')
+                            : isUpgrade ? 'Upgrade' : rw.kind === 'relic' ? (relic?.rare ? 'Rare relic' : 'Relic') : rw.kind === 'detachment' ? 'Detachment' : rw.kind === 'scrap' ? 'Scrap Cache' : 'Command'}
+                        </span>
+                        {isUnit && rarity && (
+                          <span
+                            className="chip small"
+                            style={{
+                              fontSize: '0.68rem',
+                              padding: '1px 6px',
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                              color: borderCol,
+                              borderColor: borderCol,
+                              background: `${borderCol}18`,
+                            }}
+                          >
+                            {rarity}
+                          </span>
+                        )}
                         {isUpgrade && <span className="chip warn small" style={{ fontSize: '0.72rem', padding: '1px 6px', fontWeight: 800 }}>Lv.{nextLvl}</span>}
                       </span>
+
                       {rw.kind === 'relic' && <RelicToken id={rw.id} lvl={isUpgrade ? nextLvl : 1} big />}
-                      {rw.kind === 'unit' && <span className="cmp-card-icon"><Icon name="plus" size={22} /></span>}
+                      {isUnit && (
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '8px 0', position: 'relative' }}>
+                          <div style={{
+                            width: 76,
+                            height: 76,
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            border: `2px solid ${borderCol ?? '#94A3B8'}`,
+                            boxShadow: `0 0 14px ${borderCol ?? '#94A3B8'}44`,
+                            background: '#0f172a',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}>
+                            <UnitArt sheet={sheet ?? undefined} />
+                          </div>
+                          {bonusSheet && (
+                            <div
+                              title={`Bonus Attached Leader: ${bonusSheet.name}`}
+                              style={{
+                                position: 'absolute',
+                                right: '12%',
+                                bottom: -4,
+                                width: 38,
+                                height: 38,
+                                borderRadius: '50%',
+                                overflow: 'hidden',
+                                border: '2px solid #F59E0B',
+                                background: '#0f172a',
+                                boxShadow: '0 0 12px rgba(245, 158, 11, 0.7)',
+                              }}
+                            >
+                              <UnitArt sheet={bonusSheet} />
+                            </div>
+                          )}
+                        </div>
+                      )}
                       {rw.kind === 'detachment' && <span className="cmp-card-icon"><Icon name="cards" size={22} /></span>}
                       {rw.kind === 'cp' && <span className="cmp-card-icon"><Icon name="strat" size={22} /></span>}
                       {rw.kind === 'scrap' && <span className="cmp-card-icon"><Icon name="shop" size={22} /></span>}
@@ -733,7 +812,16 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         {rw.kind === 'unit' ? rw.datasheet : rw.kind === 'relic' ? (isUpgrade ? `${relic?.name} (Lv.${nextLvl})` : relic?.name) : rw.kind === 'detachment' ? rw.name : rw.kind === 'scrap' ? `+${rw.amount} Scrap` : '+1 CP every battle'}
                       </b>
                       <span className="cmp-card-text">
-                        {rw.kind === 'unit' ? `${rw.models} models · ${rw.pts} pts joins army` : rw.kind === 'relic' && relic ? relicDesc(relic, isUpgrade ? nextLvl : 1) : rw.kind === 'detachment' ? 'Adopt Detachment: gain rules, abilities, and 6 Stratagems!' : rw.kind === 'scrap' ? `Add ${rw.amount} scrap to buy armory upgrades.` : 'Start each battle with one more CP.'}
+                        {rw.kind === 'unit' ? (
+                          <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <span>{rw.models} models · {rw.pts} pts joins army</span>
+                            {rw.bonusLeader ? (
+                              <span style={{ color: '#f59e0b', fontWeight: 700, fontSize: '0.75rem', marginTop: 2 }}>
+                                + Attached Leader: {rw.bonusLeader.datasheet} ({rw.bonusLeader.pts} pts Free)
+                              </span>
+                            ) : null}
+                          </span>
+                        ) : rw.kind === 'relic' && relic ? relicDesc(relic, isUpgrade ? nextLvl : 1) : rw.kind === 'detachment' ? 'Adopt Detachment: gain rules, abilities, and 6 Stratagems!' : rw.kind === 'scrap' ? `Add ${rw.amount} scrap to buy armory upgrades.` : 'Start each battle with one more CP.'}
                       </span>
                     </span>
                   </button>
@@ -1147,8 +1235,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             flexDirection: 'column',
                                             justifyContent: 'space-between',
                                             gap: 8,
-                                            opacity: (fit && !fit.ok) || !canAfford ? 0.5 : 1,
-                                            filter: (fit && !fit.ok) || !canAfford ? 'grayscale(0.75)' : 'none',
+                                            opacity: (fit && !fit.ok) || (!canAfford && alreadyCount === 0) ? 0.5 : 1,
+                                            filter: (fit && !fit.ok) || (!canAfford && alreadyCount === 0) ? 'grayscale(0.75)' : 'none',
                                           }}
                                         >
                                           <div>
@@ -1168,6 +1256,16 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                           <div style={{ marginTop: 8 }}>
                                             {fit && !fit.ok ? (
                                               <button type="button" className="btn small" disabled style={{ width: '100%' }}>Not Eligible</button>
+                                            ) : alreadyCount > 0 ? (
+                                              <button
+                                                type="button"
+                                                className="btn small"
+                                                disabled
+                                                title="This character model already has this Enhancement equipped."
+                                                style={{ width: '100%', opacity: 0.7, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderColor: '#38bdf8', cursor: 'not-allowed' }}
+                                              >
+                                                Equipped
+                                              </button>
                                             ) : (
                                               <button
                                                 type="button"
@@ -1270,14 +1368,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {/* Datasheet-Wide Upgrades Information Banner */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(245, 158, 11, 0.06)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                      <Icon name="shop" size={18} />
-                      <div className="tiny" style={{ color: '#cbd5e1', lineHeight: 1.4 }}>
-                        <b style={{ color: '#f59e0b' }}>Datasheet-Wide Upgrades:</b> Upgrades are accessed via each unit's three-dots (<span style={{ fontWeight: 800 }}>⋮</span>) menu. Upgrades apply to every squad of that type across your entire crusade force.
-                      </div>
-                    </div>
-
                     {SECTIONS.filter((sec) => sec.id !== 'allies' || run.list.units.some((u) => sectionOf(fac.datasheets.find((x) => x.name === u.datasheet), run.factionId) === 'allies')).map((sec) => {
                       const joined = (b: ArmyUnitEntry) => run.list.units.filter((c) => c.attachTo === b.uid);
                       const homeOf = (u: ArmyUnitEntry): string => {
@@ -1409,7 +1499,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   const isEpicHero = (d.keywords || []).includes('EPIC HERO');
                                   const isChar = (d.keywords || []).includes('CHARACTER') && !isEpicHero;
                                   const alreadyInForce = isEpicHero && count > 0;
-                                  const minCost = cheapest(d)?.pts ?? opts[0]?.pts ?? 0;
+                                  const basePts = cheapest(d)?.pts ?? opts[0]?.pts ?? 0;
+                                  const minCost = recruitScrapCost(run, d.name, basePts);
                                   const canAffordAny = (run.scrap ?? 0) >= minCost;
                                   const needsTier4 = requiresTier4Tech(d) && !canRecruitTitanOrKnight(fac.id, d, run);
                                   const isOpenPeek = recruitView === d.name;
@@ -1456,7 +1547,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             )}
                                           </span>
                                           <span className="ab-pts" style={isUnaffordable ? { color: '#94a3b8' } : undefined}>
-                                            {opts.map((o) => `${o.models}: ${o.pts}`).join(' / ')} Scrap
+                                            {opts.map((o) => `${o.models}: ${recruitScrapCost(run, d.name, o.pts)}`).join(' / ')} Scrap
+                                            {count >= 2 && (
+                                              <span className="chip subtle small" style={{ marginLeft: 6, color: '#f59e0b', borderColor: '#f59e0b', fontSize: '11px', padding: '1px 5px' }}>
+                                                +{count === 2 ? '50%' : count === 3 ? '100%' : '200%'} Dupe Cost
+                                              </span>
+                                            )}
                                             {needsTier4 ? (
                                               <span className="tiny" style={{ marginLeft: 6, color: '#f59e0b', fontWeight: 600 }}>
                                                 (Locked: Requires Tier 4 Tech)
@@ -1504,7 +1600,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                       <div key={`size-${d.name}`} className="ab-add-size">
                                         <div className="ab-pop-head">Unit size · {d.name}</div>
                                         {opts.map((o) => {
-                                          const canAfford = (run.scrap ?? 0) >= o.pts;
+                                          const cost = recruitScrapCost(run, d.name, o.pts);
+                                          const canAfford = (run.scrap ?? 0) >= cost;
                                           const disabled = !canAfford || alreadyInForce;
                                           return (
                                             <button
@@ -1525,7 +1622,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                               }}
                                             >
                                               <span className="ab-pop-models">{o.models} {o.models === 1 ? 'model' : 'models'}</span>
-                                              <span className="ab-pop-pts" style={!canAfford ? { color: '#94a3b8' } : undefined}>{o.pts} Scrap</span>
+                                              <span className="ab-pop-pts" style={!canAfford ? { color: '#94a3b8' } : undefined}>{cost} Scrap</span>
                                               <span className="ab-pop-plus" style={disabled ? { background: 'rgba(255,255,255,0.08)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)' } : undefined}>
                                                 {disabled ? (alreadyInForce ? 'Limit 1' : 'Need Scrap') : '+ Recruit'}
                                               </span>
@@ -1700,14 +1797,16 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                           {available.map((d) => {
-                            const cost = 100;
+                            const cost = detachmentScrapCost(d.name);
                             const canAfford = (run.scrap ?? 0) >= cost;
+                            const tierBadge = cost >= 140 ? 'Premier' : cost <= 60 ? 'Standard' : 'Specialist';
                             const rulesText = d.rules?.map((r) => `${r.name}: ${r.text}`).join('\n\n') || '';
                             return (
                               <div key={d.name} className="cmp-roster-card" style={!canAfford ? { opacity: 0.5, filter: 'grayscale(0.75)' } : undefined}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <b style={{ color: '#f8fafc', fontSize: 14 }}>{d.name}</b>
+                                    <span className="chip subtle small" style={{ fontSize: '10.5px', color: cost >= 140 ? '#f59e0b' : cost <= 60 ? '#94a3b8' : '#38bdf8' }}>{tierBadge}</span>
                                     {d.forceDisposition && <span className="disp-chip small">{d.forceDisposition}</span>}
                                   </div>
                                 </div>
@@ -1755,6 +1854,126 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             </div>
           </div>
           {quickMenu()}
+        </div>
+      )}
+
+      {autoUpgradeConfirm && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirm Auto-Upgrade"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.78)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={() => setAutoUpgradeConfirm(null)}
+        >
+          <div
+            className="slate"
+            style={{
+              maxWidth: 440,
+              width: '100%',
+              background: '#0f172a',
+              border: '1px solid #334155',
+              borderRadius: 12,
+              padding: 22,
+              boxShadow: '0 24px 38px rgba(0,0,0,0.6)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <b style={{ fontSize: 16, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon name="shop" size={20} /> Confirm Auto-Upgrade
+              </b>
+              <button
+                type="button"
+                className="icon-btn small"
+                aria-label="Close"
+                onClick={() => setAutoUpgradeConfirm(null)}
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <div style={{ background: '#1e293b', borderRadius: 8, padding: 14, marginBottom: 16, border: '1px solid #334155' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#f8fafc' }}>
+                  {autoUpgradeConfirm.unit.datasheet}
+                </span>
+                <span className="chip small" style={{ fontSize: 11, color: '#38bdf8', borderColor: '#38bdf8' }}>
+                  Rank: {rankLabel(autoUpgradeConfirm.unit.xp ?? 0)}
+                </span>
+              </div>
+
+              {autoUpgradeConfirm.isAttached && autoUpgradeConfirm.companion && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: 6, fontSize: 12, color: '#38bdf8' }}>
+                  <Icon name="leader" size={14} /> Attached Sync: Upgrades {autoUpgradeConfirm.companion.datasheet} (+25% Scrap)
+                </div>
+              )}
+
+              <div style={{ borderTop: '1px solid #334155', paddingTop: 10, marginTop: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <b style={{ color: '#f59e0b', fontSize: 14 }}>{autoUpgradeConfirm.honor.name}</b>
+                  <span style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    {autoUpgradeConfirm.honor.role ?? 'General'}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12.5, color: '#cbd5e1', lineHeight: 1.4 }}>
+                  {autoUpgradeConfirm.honor.desc}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, padding: '0 4px' }}>
+              <span style={{ fontSize: 13, color: '#94a3b8' }}>Upgrade Cost:</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {autoUpgradeConfirm.rankDiscountPct > 0 && (
+                  <span className="tiny" style={{ color: '#4ade80' }}>
+                    -{Math.round(autoUpgradeConfirm.rankDiscountPct * 100)}% Rank Discount
+                  </span>
+                )}
+                <b style={{ fontSize: 16, color: (run.scrap ?? 0) >= autoUpgradeConfirm.finalCost ? '#f59e0b' : '#f87171' }}>
+                  {autoUpgradeConfirm.finalCost} Scrap
+                </b>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                type="button"
+                className="btn"
+                style={{ flex: 1 }}
+                onClick={() => setAutoUpgradeConfirm(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn primary"
+                style={{ flex: 1.5 }}
+                disabled={!fac || (run.scrap ?? 0) < autoUpgradeConfirm.finalCost}
+                onClick={() => {
+                  if (!fac) return;
+                  const next = applyAutoUpgradeUnit(run, fac, autoUpgradeConfirm.unit.uid);
+                  if (next !== run) {
+                    setRun(next);
+                    play('good');
+                    setInfo(`Auto-Upgraded ${autoUpgradeConfirm.unit.datasheet}!`);
+                  }
+                  setAutoUpgradeConfirm(null);
+                }}
+              >
+                {!fac || (run.scrap ?? 0) < autoUpgradeConfirm.finalCost ? `Need ${autoUpgradeConfirm.finalCost - (run.scrap ?? 0)} Scrap` : 'Confirm'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

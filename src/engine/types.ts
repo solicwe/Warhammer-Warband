@@ -765,6 +765,7 @@ export interface GameState {
   screenShake?: number;
   warpStormActive?: boolean;
   campaignScrap?: number; // scrap salvaged during campaign battle
+  isBossAnnihilation?: boolean; // boss & elite battle 100% total wipeout victory condition
   table?: { width: number; height: number };
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

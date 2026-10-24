@@ -788,15 +788,15 @@ export function distributeModels(sheet: DatasheetData, total: number): { comp?: 
 
 export function coreAbilities(sheets: DatasheetData[]): CoreAbilities {
   const core: CoreAbilities = {};
-  const all = sheets.flatMap((s) => s.abilities.filter((a) => a.type === 'Core'));
+  const all = sheets.flatMap((s) => (s.abilities || []).filter((a) => a.type === 'Core'));
   const has = (n: string) => all.find((a) => a.name.toLowerCase() === n.toLowerCase());
   const fnp = has('Feel No Pain');
   if (fnp?.param) core.fnp = parseInt(fnp.param, 10);
-  if (has('Stealth') && sheets.every((s) => s.abilities.some((a) => a.name === 'Stealth'))) core.stealth = true;
+  if (has('Stealth') && sheets.every((s) => (s.abilities || []).some((a) => a.name === 'Stealth'))) core.stealth = true;
   const lo = has('Lone Operative');
   if (lo) core.loneOperative = lo.param ? parseInt(lo.param, 10) : 12;
-  if (has('Fights First') && sheets.every((s) => s.abilities.some((a) => a.name === 'Fights First'))) core.fightsFirst = true;
-  if (has('Deep Strike') && sheets.every((s) => s.abilities.some((a) => a.name === 'Deep Strike'))) core.deepStrike = true;
+  if (has('Fights First') && sheets.every((s) => (s.abilities || []).some((a) => a.name === 'Fights First'))) core.fightsFirst = true;
+  if (has('Deep Strike') && sheets.every((s) => (s.abilities || []).some((a) => a.name === 'Deep Strike'))) core.deepStrike = true;
   const sc = has('Scouts');
   if (sc?.param) core.scouts = parseInt(sc.param, 10);
   if (has('Infiltrators')) core.infiltrators = true;
@@ -826,7 +826,7 @@ function makeModels(sheet: DatasheetData, e: Pick<ArmyUnitEntry, 'models' | 'war
     const profile = gearProfile(sheet, gear, sheet.models[p.profile]);
     const isAttendant = sheet.models.length > 1 && profile.W < maxW && attendantRe.test(p.name || profile.name);
     const modelIsChar = isCharUnit && !isAttendant;
-    const keywords = [...sheet.keywords, ...sheet.factionKeywords].filter((k) => modelIsChar || k !== 'CHARACTER');
+    const keywords = [...sheet.keywords, ...(sheet.factionKeywords || [])].filter((k) => modelIsChar || k !== 'CHARACTER');
     return {
       id: `${unitId}-m${i}`,
       name: p.name,
@@ -919,6 +919,21 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       ...joiners.flatMap((j, k) => makeModels(sheetOf(j), j, `${id}-l${k}`, false)),
     ];
     const core = coreAbilities(sheets);
+    // Category 8: Attached Unit Sync (shared movement, FNP, stealth)
+    if (joiners.length > 0) {
+      const validMs = models.map((m) => m.profile.M).filter((m): m is number => typeof m === 'number');
+      if (validMs.length > 0) {
+        const maxM = Math.max(...validMs);
+        for (const m of models) {
+          if (typeof m.profile.M === 'number' && m.profile.M < maxM) {
+            m.profile.M = maxM;
+          }
+        }
+      }
+      if (core.stealth === undefined && sheets.some((s) => s.keywords.includes('STEALTH'))) {
+        core.stealth = true;
+      }
+    }
     // Sanctifiers: ATTACHED UNIT grants attached Ministorum Priest or Inquisitor Scouts 6"
     if (sheet.name === 'Sanctifiers' && joiners.length > 0) {
       core.scouts = 6;
@@ -974,13 +989,13 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       warlordSource: [e, ...joiners].find((j) => j.warlord)?.datasheet,
       enhancements: [
         ...[e, ...joiners].flatMap((x) => {
-          const activeDets = faction.detachments.filter((d) => list.detachments.includes(d.name));
+          const activeDets = (faction.detachments || []).filter((d) => (list.detachments || []).includes(d.name));
           const listEnh = (x.enhancements && x.enhancements.length > 0)
             ? x.enhancements
             : (x.enhancement ? [{ name: x.enhancement, pts: x.enhancementPts ?? 0 }] : []);
           return listEnh.flatMap((item) => {
-            const enh = activeDets.flatMap((d) => d.enhancements).find((n) => n.name === item.name)
-              ?? faction.detachments.flatMap((d) => d.enhancements).find((n) => n.name === item.name);
+            const enh = activeDets.flatMap((d) => d.enhancements || []).find((n) => n.name === item.name)
+              ?? (faction.detachments || []).flatMap((d) => d.enhancements || []).find((n) => n.name === item.name);
             return enh ? [{ name: item.name, text: enh.text ?? '', model: x.datasheet }] : [];
           });
         }),
