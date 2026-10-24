@@ -45,7 +45,7 @@ export function sectionOf(d: DatasheetData | undefined, factionId?: string): Sec
 }
 
 /** Groups of the add-unit list, in the order they show. */
-const KINDS = ['Epic Hero', 'Character', 'Infantry', 'Fast Infantry', 'Heavy Infantry', 'Mounted', 'Walker', 'Vehicle', 'Aircraft', 'Other'] as const;
+export const KINDS = ['Epic Hero', 'Character', 'Infantry', 'Fast Infantry', 'Heavy Infantry', 'Mounted', 'Walker', 'Vehicle', 'Aircraft', 'Other'] as const;
 export function unitKind(d: DatasheetData): (typeof KINDS)[number] {
   const k = (w: string) => d.keywords.includes(w);
   if (k('EPIC HERO')) return 'Epic Hero';

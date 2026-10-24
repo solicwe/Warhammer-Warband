@@ -7,16 +7,17 @@ import { attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
-  bossRuleById, buyDatasheetHonor, buyEnhancementForUnit, buyHonorForUnit, buyTechNode, canRecruitTitanOrKnight,
+  bossRuleById, buyDatasheetHonor, buyEnhancementForUnit, buyHonorForUnit, buyTechNode, canBuyDatasheetHonor, canRecruitTitanOrKnight,
   changeSquadSize, cheapest, continueNextLoop, datasheetHonorCost, enhancementScrapCost, enter,
-  getFactionFamily, getFactionTechNodes, getSmartBattleHonors, isFactionAllowedKnight, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
+  getFactionFamily, getFactionTechNodes, getSmartBattleHonors, honorMinXp, honorRequiredRank, isFactionAllowedKnight, makeOffer, newRun, reachable, recruitUnit, relicById, relicDesc,
   removeEnhancementFromUnit, requiresTier4Tech, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
 } from '../engine/campaign';
+import { detachmentAllyOf } from '../engine/allies';
 import { hasFactionRules } from '../rules-engine/effects';
 import { createGame } from '../engine/game';
 import type { ArmyUnitEntry, DatasheetData, FactionData, GameState, WargearPick } from '../engine/types';
-import { Emblem, SECTIONS, sectionOf, UnitArt, WargearEditor } from './ArmyBuilder';
+import { Emblem, KINDS, SECTIONS, sectionOf, UnitArt, unitKind, WargearEditor } from './ArmyBuilder';
 import { DatasheetView } from './Sheet';
 import { loadFaction, type FactionIndex } from './data';
 import { Icon, type IconName } from './Icon';
@@ -898,72 +899,135 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             <span className="tiny muted">{isHonorsOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
                           </button>
                           {isHonorsOpen && (() => {
-                            const squadCount = Math.max(1, run.list.units.filter((x) => x.datasheet === u.datasheet).length);
                             const currentHonors = run.datasheetHonors?.[u.datasheet] ?? u.honors ?? [];
                             const smartList = sheet ? getSmartBattleHonors(sheet, currentHonors) : [];
-                            return (
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 8, marginTop: 8 }}>
-                                {BATTLE_HONORS.map((h) => {
-                                  const has = currentHonors.includes(h.id);
-                                  const isEligible = has || smartList.some((s) => s.id === h.id);
-                                  if (!isEligible) return null; // Smart filter: prune incompatible or redundant honors
+                            const unitXp = u.xp ?? 0;
+                            const curRank = rankLabel(unitXp);
 
-                                  const cost = datasheetHonorCost(h.cost, squadCount);
-                                  const canAfford = (run.scrap ?? 0) >= cost;
-                                  return (
-                                    <div
-                                      key={h.id}
-                                      style={{
-                                        padding: '10px 12px',
-                                        borderRadius: 8,
-                                        background: has ? 'rgba(34, 197, 94, 0.08)' : 'rgba(255,255,255,0.03)',
-                                        border: has ? '1.5px solid #22c55e' : '1px solid rgba(255,255,255,0.08)',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        justifyContent: 'space-between',
-                                        gap: 8,
-                                        opacity: !has && !canAfford ? 0.45 : 1,
-                                      }}
-                                    >
-                                      <div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-                                          <span style={{
-                                            fontFamily: 'var(--font-cond, sans-serif)',
-                                            fontWeight: 700,
-                                            fontSize: 12,
-                                            letterSpacing: '0.04em',
-                                            color: has ? '#4ade80' : h.tier === 'legendary' ? '#c084fc' : h.tier === 'heroic' ? '#38bdf8' : '#f59e0b',
-                                            background: has ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.06)',
-                                            padding: '2px 8px',
-                                            borderRadius: 4,
-                                          }}>
-                                            {h.tier ? `[${h.tier.toUpperCase()}] ` : ''}{h.tag || h.name}
-                                          </span>
-                                          <span className="cmp-scrap" style={{ fontSize: 12 }}>
-                                            <Icon name="shop" size={12} /> {cost}
-                                          </span>
-                                        </div>
-                                        <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 6, lineHeight: 1.35 }}>
-                                          {h.desc}
-                                        </div>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        className={`btn small ${has ? 'ok' : canAfford ? 'primary' : ''}`}
-                                        style={{ width: '100%', marginTop: 2, fontWeight: 600, fontSize: 12 }}
-                                        disabled={has || !canAfford}
-                                        onClick={() => {
-                                          const next = buyDatasheetHonor(run, fac, u.datasheet, h.id);
-                                          setRun(next);
-                                          play('good');
-                                          setInfo(`Upgraded ${u.datasheet} with ${h.name}!`);
+                            return (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+                                <div style={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  background: 'rgba(255, 255, 255, 0.03)',
+                                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                                  borderRadius: 8,
+                                  padding: '8px 12px',
+                                  gap: 8,
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span style={{ fontSize: 12, color: '#94a3b8' }}>Unit Veterancy:</span>
+                                    <span className="cmp-rank-badge" style={{ fontSize: 12, padding: '2px 8px' }}>
+                                      {curRank} (XP {unitXp})
+                                    </span>
+                                  </div>
+                                  <div className="tiny muted" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                    <span style={{ color: '#4ade80' }}>Tier 1: 0 XP (Recruit)</span>
+                                    <span style={{ color: unitXp >= 1 ? '#38bdf8' : '#64748b' }}>Tier 2: 1+ XP (Blooded)</span>
+                                    <span style={{ color: unitXp >= 2 ? '#c084fc' : '#64748b' }}>Tier 3: 2+ XP (Veteran)</span>
+                                  </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 8 }}>
+                                  {BATTLE_HONORS.map((h) => {
+                                    const has = currentHonors.includes(h.id);
+                                    const isEligible = has || smartList.some((s) => s.id === h.id);
+                                    if (!isEligible) return null; // Smart filter: prune incompatible or redundant honors
+
+                                    const status = canBuyDatasheetHonor(run, u.datasheet, h, u.uid);
+                                    const isXpLocked = status.isXpLocked;
+                                    const cost = status.neededScrap;
+                                    const canAfford = status.canAfford;
+                                    const reqRank = honorRequiredRank(status.neededXp);
+
+                                    return (
+                                      <div
+                                        key={h.id}
+                                        style={{
+                                          padding: '10px 12px',
+                                          borderRadius: 8,
+                                          background: has
+                                            ? 'rgba(34, 197, 94, 0.08)'
+                                            : isXpLocked
+                                            ? 'rgba(0, 0, 0, 0.25)'
+                                            : 'rgba(255,255,255,0.03)',
+                                          border: has
+                                            ? '1.5px solid #22c55e'
+                                            : isXpLocked
+                                            ? '1px dashed rgba(248, 113, 113, 0.3)'
+                                            : '1px solid rgba(255,255,255,0.08)',
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          justifyContent: 'space-between',
+                                          gap: 8,
+                                          opacity: has ? 1 : isXpLocked ? 0.55 : canAfford ? 1 : 0.65,
                                         }}
                                       >
-                                        {has ? <><Icon name="check" size={12} /> Active Army-Wide</> : !canAfford ? `Need ${cost} Scrap` : `Upgrade All (${cost} Scrap)`}
-                                      </button>
-                                    </div>
-                                  );
-                                })}
+                                        <div>
+                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                                            <span style={{
+                                              fontFamily: 'var(--font-cond, sans-serif)',
+                                              fontWeight: 700,
+                                              fontSize: 12,
+                                              letterSpacing: '0.04em',
+                                              color: has
+                                                ? '#4ade80'
+                                                : isXpLocked
+                                                ? '#94a3b8'
+                                                : h.tier === 'legendary'
+                                                ? '#c084fc'
+                                                : h.tier === 'heroic'
+                                                ? '#38bdf8'
+                                                : '#f59e0b',
+                                              background: has ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.06)',
+                                              padding: '2px 8px',
+                                              borderRadius: 4,
+                                            }}>
+                                              {h.tier ? `[${h.tier.toUpperCase()}] ` : ''}{h.tag || h.name}
+                                            </span>
+                                            <span className="cmp-scrap" style={{ fontSize: 12, color: isXpLocked ? '#64748b' : undefined }}>
+                                              <Icon name="shop" size={12} /> {cost}
+                                            </span>
+                                          </div>
+                                          <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 6, lineHeight: 1.35 }}>
+                                            {h.desc}
+                                          </div>
+                                          {isXpLocked && (
+                                            <div style={{ marginTop: 6 }}>
+                                              <span className="chip subtle small" style={{ color: '#f87171', background: 'rgba(248, 113, 113, 0.12)', borderColor: 'rgba(248, 113, 113, 0.35)', fontSize: '10.5px', padding: '1px 6px' }}>
+                                                Requires {status.neededXp} XP ({reqRank})
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                        <button
+                                          type="button"
+                                          className={`btn small ${has ? 'ok' : !isXpLocked && canAfford ? 'primary' : ''}`}
+                                          style={{ width: '100%', marginTop: 2, fontWeight: 600, fontSize: 12 }}
+                                          disabled={has || isXpLocked || !canAfford}
+                                          onClick={() => {
+                                            const next = buyDatasheetHonor(run, fac, u.datasheet, h.id, u.uid);
+                                            setRun(next);
+                                            play('good');
+                                            setInfo(`Upgraded ${u.datasheet} with ${h.name}!`);
+                                          }}
+                                        >
+                                          {has ? (
+                                            <><Icon name="check" size={12} /> Active Army-Wide</>
+                                          ) : isXpLocked ? (
+                                            `Locked · Needs ${status.neededXp} XP (${reqRank})`
+                                          ) : !canAfford ? (
+                                            `Need ${cost} Scrap`
+                                          ) : (
+                                            `Upgrade All (${cost} Scrap)`
+                                          )}
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             );
                           })()}
@@ -1164,7 +1228,19 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       <button type="button" className="ab-row-main" onClick={() => setMenu(isOpen ? null : u.uid)}>
                         <span className="ab-art-wrap"><UnitArt sheet={sheet} /></span>
                         <span className="ab-row-text">
-                          <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
+                          <span className="ab-name">
+                            {u.datasheet} <span className="ab-count">({u.models})</span>
+                            {sheet && sheet.keywords.includes('EPIC HERO') && (
+                              <span className="chip subtle small" style={{ marginLeft: 6, color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.4)', background: 'rgba(192, 132, 252, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
+                                Epic Hero
+                              </span>
+                            )}
+                            {sheet && sheet.keywords.includes('CHARACTER') && !sheet.keywords.includes('EPIC HERO') && (
+                              <span className="chip subtle small" style={{ marginLeft: 6, color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
+                                Character
+                              </span>
+                            )}
+                          </span>
                           <span className="ab-pts">
                             {u.pts + (u.wargearPts ?? 0) + (u.enhancementPts ?? 0)} pts
                             <span className="cmp-rank-badge" style={{ marginLeft: 6 }}>{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
@@ -1215,6 +1291,19 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       const us = run.list.units.filter((u) => (!u.attachTo || !run.list.units.some((b) => b.uid === u.attachTo)) && !inRide(u) && homeOf(u) === sec.id);
                       if (!us.length) return null;
 
+                      const sortedUs = [...us].sort((a, b) => {
+                        const sheetA = fac.datasheets.find((x) => x.name === a.datasheet);
+                        const sheetB = fac.datasheets.find((x) => x.name === b.datasheet);
+                        const kindA = sheetA ? unitKind(sheetA) : 'Other';
+                        const kindB = sheetB ? unitKind(sheetB) : 'Other';
+                        return KINDS.indexOf(kindA) - KINDS.indexOf(kindB) || a.datasheet.localeCompare(b.datasheet);
+                      });
+
+                      const kindOf = (x: ArmyUnitEntry) => {
+                        const d = fac.datasheets.find((s) => s.name === x.datasheet);
+                        return d ? unitKind(d) : 'Other';
+                      };
+
                       const bySupport = (a: ArmyUnitEntry, b: ArmyUnitEntry) =>
                         Number(!!supportIn(run.list, fac.datasheets.find((x) => x.name === a.datasheet))) -
                         Number(!!supportIn(run.list, fac.datasheets.find((x) => x.name === b.datasheet)));
@@ -1230,13 +1319,23 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             <span>{sec.title}</span>
                             <button type="button" className="ab-add" aria-label={`Recruit ${sec.title}`} onClick={() => setRosterTab('recruit')}>+</button>
                           </div>
-                          {us.map((u) => {
+                          {sortedUs.map((u, i) => {
                             const riders = run.list.units.filter((r) => r.embarkIn === u.uid && !r.attachTo);
-                            if (!joined(u).length && !riders.length) return unitRow(u);
-                            return (
+                            const k = kindOf(u);
+                            const showKind = (sec.id === 'characters' || sec.id === 'others') && (i === 0 || kindOf(sortedUs[i - 1]) !== k);
+                            const rowNode = (!joined(u).length && !riders.length) ? (
+                              unitRow(u)
+                            ) : (
                               <div key={u.uid} className="ab-group">
                                 {squadRows(u, true)}
                                 {riders.map((r) => <div key={`ride-${r.uid}`} className="ab-ride">{squadRows(r, true)}</div>)}
+                              </div>
+                            );
+
+                            return (
+                              <div key={`item-${u.uid}`} style={{ display: 'contents' }}>
+                                {showKind && <div key={`kind-${k}`} className="ab-kind">{k}</div>}
+                                {rowNode}
                               </div>
                             );
                           })}
@@ -1285,17 +1384,30 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           const sheetsInSec = filtered.filter((d) => sectionOf(d, fac.id) === sec.id);
                           if (!sheetsInSec.length) return null;
 
+                          const detAlly = (d: DatasheetData) => detachmentAllyOf(fac.id, d);
+                          const groupOf = (d: DatasheetData) => (d.ally ? `${d.allyName} · ${unitKind(d)}` : detAlly(d) ? `${detAlly(d)!.rule} · ${unitKind(d)}` : unitKind(d));
+
+                          const sortedSheets = [...sheetsInSec].sort((a, b) =>
+                            (a.allyName ?? '').localeCompare(b.allyName ?? '') ||
+                            KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) ||
+                            Number(!!b.subfaction) - Number(!!a.subfaction) ||
+                            a.name.localeCompare(b.name)
+                          );
+
                           return (
                             <section key={sec.id} className="ab-section">
                               <div className="ab-section-head">
                                 <span>{sec.title}</span>
-                                <span className="tiny muted" style={{ textTransform: 'none' }}>{sheetsInSec.length} available</span>
+                                <span className="tiny muted" style={{ textTransform: 'none' }}>{sortedSheets.length} available</span>
                               </div>
                               <div className="ab-pick">
-                                {sheetsInSec.map((d) => {
+                                {sortedSheets.map((d, i) => {
+                                  const kind = groupOf(d);
+                                  const showKind = (sec.id === 'characters' || sec.id === 'others' || sec.id === 'allies') && (i === 0 || groupOf(sortedSheets[i - 1]) !== kind);
                                   const opts = pointsOptions(d);
                                   const count = run.list.units.filter((u) => u.datasheet === d.name).length;
                                   const isEpicHero = (d.keywords || []).includes('EPIC HERO');
+                                  const isChar = (d.keywords || []).includes('CHARACTER') && !isEpicHero;
                                   const alreadyInForce = isEpicHero && count > 0;
                                   const minCost = cheapest(d)?.pts ?? opts[0]?.pts ?? 0;
                                   const canAffordAny = (run.scrap ?? 0) >= minCost;
@@ -1305,6 +1417,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   const isUnaffordable = (!canAffordAny || needsTier4) && !alreadyInForce;
 
                                   return [
+                                    showKind && <div key={`kind-${kind}`} className="ab-kind">{kind}</div>,
                                     <div
                                       key={d.name}
                                       className={`ab-row ${isOpenPeek ? 'open' : ''} ${alreadyInForce ? 'already-recruited' : ''} ${isUnaffordable ? 'unaffordable' : ''}`}
@@ -1329,6 +1442,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             {isEpicHero && (
                                               <span className="chip subtle small" style={{ marginLeft: 6, color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.4)', background: 'rgba(192, 132, 252, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
                                                 Epic Hero
+                                              </span>
+                                            )}
+                                            {isChar && (
+                                              <span className="chip subtle small" style={{ marginLeft: 6, color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
+                                                Character
                                               </span>
                                             )}
                                             {needsTier4 && (

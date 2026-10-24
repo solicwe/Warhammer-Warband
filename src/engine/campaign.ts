@@ -34,6 +34,7 @@ export interface BattleHonor {
   id: string;
   name: string;
   tier?: 'veteran' | 'heroic' | 'legendary';
+  minXp?: number;
   role?: 'universal' | 'ranged' | 'melee' | 'tank';
   tag: string;
   desc: string;
@@ -42,28 +43,28 @@ export interface BattleHonor {
 }
 
 export const BATTLE_HONORS: BattleHonor[] = [
-  // Veteran Honors (Tier 1)
-  { id: 'hardened', name: '+1 Toughness', tier: 'veteran', role: 'tank', tag: '+1 TOUGHNESS', desc: '+1 Toughness characteristic.', cost: 60, e: { toughness: 1 } },
-  { id: 'weapon_master', name: '+1 BS / WS', tier: 'veteran', role: 'universal', tag: '+1 BS / WS', desc: 'Improve Ballistic Skill & Weapon Skill by 1.', cost: 75, e: { skill: 1 } },
-  { id: 'swift', name: '+2" Move · +1 Adv/Chg', tier: 'veteran', role: 'universal', tag: '+2" MOVE · +1 ADV/CHG', desc: '+2" Move, and +1 to Advance & Charge rolls.', cost: 50, e: { move: 2, advanceBonus: 1, chargeBonus: 1 } },
-  { id: 'iron_will', name: 'FNP 6+ · Re-roll Shock', tier: 'veteran', role: 'tank', tag: 'FNP 6+ · RE-ROLL SHOCK', desc: 'Models have Feel No Pain 6+, and re-roll Battle-shock tests.', cost: 70, e: { defend: { fnp: 6 }, rerollShock: true } },
-  { id: 'reinforced_save', name: '+1 Save', tier: 'veteran', role: 'tank', tag: '+1 SAVE', desc: 'Add 1 to saving throws against all attacks.', cost: 85, e: { defend: { save: 1 } } },
-  { id: 'heroic_strike', name: '+1 Attack (Melee)', tier: 'veteran', role: 'melee', tag: '+1 ATTACK (MELEE)', desc: '+1 Attack characteristic on melee weapons.', cost: 65, e: { attacks: 1, attack: 'melee' } },
-  { id: 'range_finders', name: '+4" Range · Ignores Cover', tier: 'veteran', role: 'ranged', tag: '+4" RNG · IGNORES COVER', desc: 'Ranged weapons gain +4" range and ignore cover.', cost: 60, e: { rangeBonus: 4, abilities: ['ignores cover'], attack: 'ranged' } },
+  // Veteran Honors (Tier 1 - Min XP: 0 Recruit+)
+  { id: 'hardened', name: '+1 Toughness', tier: 'veteran', minXp: 0, role: 'tank', tag: '+1 TOUGHNESS', desc: '+1 Toughness characteristic.', cost: 60, e: { toughness: 1 } },
+  { id: 'weapon_master', name: '+1 BS / WS', tier: 'veteran', minXp: 0, role: 'universal', tag: '+1 BS / WS', desc: 'Improve Ballistic Skill & Weapon Skill by 1.', cost: 75, e: { skill: 1 } },
+  { id: 'swift', name: '+2" Move · +1 Adv/Chg', tier: 'veteran', minXp: 0, role: 'universal', tag: '+2" MOVE · +1 ADV/CHG', desc: '+2" Move, and +1 to Advance & Charge rolls.', cost: 50, e: { move: 2, advanceBonus: 1, chargeBonus: 1 } },
+  { id: 'iron_will', name: 'FNP 6+ · Re-roll Shock', tier: 'veteran', minXp: 0, role: 'tank', tag: 'FNP 6+ · RE-ROLL SHOCK', desc: 'Models have Feel No Pain 6+, and re-roll Battle-shock tests.', cost: 70, e: { defend: { fnp: 6 }, rerollShock: true } },
+  { id: 'reinforced_save', name: '+1 Save', tier: 'veteran', minXp: 0, role: 'tank', tag: '+1 SAVE', desc: 'Add 1 to saving throws against all attacks.', cost: 85, e: { defend: { save: 1 } } },
+  { id: 'heroic_strike', name: '+1 Attack (Melee)', tier: 'veteran', minXp: 0, role: 'melee', tag: '+1 ATTACK (MELEE)', desc: '+1 Attack characteristic on melee weapons.', cost: 65, e: { attacks: 1, attack: 'melee' } },
+  { id: 'range_finders', name: '+4" Range · Ignores Cover', tier: 'veteran', minXp: 0, role: 'ranged', tag: '+4" RNG · IGNORES COVER', desc: 'Ranged weapons gain +4" range and ignore cover.', cost: 60, e: { rangeBonus: 4, abilities: ['ignores cover'], attack: 'ranged' } },
 
-  // Heroic Honors (Tier 2)
-  { id: 'master_crafted', name: '+1 AP (All Weapons)', tier: 'heroic', role: 'universal', tag: '+1 AP', desc: 'Improve the AP of all attacks by 1.', cost: 90, e: { ap: 1 } },
-  { id: 'lethal_spec', name: '[Lethal Hits] Ranged', tier: 'heroic', role: 'ranged', tag: '[LETHAL HITS] RANGED', desc: 'Ranged attacks gain [LETHAL HITS].', cost: 100, e: { abilities: ['lethal hits'], attack: 'ranged' } },
-  { id: 'sustained_fury', name: '[Sustained Hits 1] Melee', tier: 'heroic', role: 'melee', tag: '[SUSTAINED HITS 1] MELEE', desc: 'Melee attacks gain [SUSTAINED HITS 1].', cost: 100, e: { abilities: ['sustained hits 1'], attack: 'melee' } },
-  { id: 'heavy_salvo', name: '+1 Attack / Shot (Ranged)', tier: 'heroic', role: 'ranged', tag: '+1 SHOT RANGED', desc: '+1 Attack characteristic on ranged weapons.', cost: 110, e: { attacks: 1, attack: 'ranged' } },
-  { id: 'crushing_might', name: '+2 Strength · +1 Damage (Melee)', tier: 'heroic', role: 'melee', tag: '+2 STR · +1 DMG MELEE', desc: '+2 Strength and +1 Damage on melee weapons.', cost: 115, e: { strength: 2, damage: 1, attack: 'melee' } },
-  { id: 'invulnerable_aegis', name: '4+ Invulnerable Save', tier: 'heroic', role: 'tank', tag: '4++ INVULN', desc: 'Models gain a 4+ invulnerable save.', cost: 110, e: { defend: { inv: 4 } } },
+  // Heroic Honors (Tier 2 - Min XP: 1 Blooded+)
+  { id: 'master_crafted', name: '+1 AP (All Weapons)', tier: 'heroic', minXp: 1, role: 'universal', tag: '+1 AP', desc: 'Improve the AP of all attacks by 1.', cost: 90, e: { ap: 1 } },
+  { id: 'lethal_spec', name: '[Lethal Hits] Ranged', tier: 'heroic', minXp: 1, role: 'ranged', tag: '[LETHAL HITS] RANGED', desc: 'Ranged attacks gain [LETHAL HITS].', cost: 100, e: { abilities: ['lethal hits'], attack: 'ranged' } },
+  { id: 'sustained_fury', name: '[Sustained Hits 1] Melee', tier: 'heroic', minXp: 1, role: 'melee', tag: '[SUSTAINED HITS 1] MELEE', desc: 'Melee attacks gain [SUSTAINED HITS 1].', cost: 100, e: { abilities: ['sustained hits 1'], attack: 'melee' } },
+  { id: 'heavy_salvo', name: '+1 Attack / Shot (Ranged)', tier: 'heroic', minXp: 1, role: 'ranged', tag: '+1 SHOT RANGED', desc: '+1 Attack characteristic on ranged weapons.', cost: 110, e: { attacks: 1, attack: 'ranged' } },
+  { id: 'crushing_might', name: '+2 Strength · +1 Damage (Melee)', tier: 'heroic', minXp: 1, role: 'melee', tag: '+2 STR · +1 DMG MELEE', desc: '+2 Strength and +1 Damage on melee weapons.', cost: 115, e: { strength: 2, damage: 1, attack: 'melee' } },
+  { id: 'invulnerable_aegis', name: '4+ Invulnerable Save', tier: 'heroic', minXp: 1, role: 'tank', tag: '4++ INVULN', desc: 'Models gain a 4+ invulnerable save.', cost: 110, e: { defend: { inv: 4 } } },
 
-  // Legendary Honors (Tier 3)
-  { id: 'devastating_wrath', name: '[Devastating Wounds]', tier: 'legendary', role: 'universal', tag: '[DEVASTATING WOUNDS]', desc: 'All attacks gain [DEVASTATING WOUNDS].', cost: 150, e: { abilities: ['devastating wounds'] } },
-  { id: 'undying_resilience', name: 'FNP 5+ · +1 Toughness', tier: 'legendary', role: 'tank', tag: 'FNP 5+ · +1 TOUGHNESS', desc: 'Models have Feel No Pain 5+ and +1 Toughness.', cost: 150, e: { defend: { fnp: 5 }, toughness: 1 } },
-  { id: 'apex_predator', name: 'Fights First · +1 to Wound', tier: 'legendary', role: 'melee', tag: 'FIGHTS FIRST · +1 TO WOUND', desc: 'Unit has Fights First, and +1 to all Wound rolls.', cost: 160, e: { fightsFirst: true, wound: 1 } },
-  { id: 'retaliation_core', name: 'Spiteful Deflection', tier: 'legendary', role: 'tank', tag: 'REFLECT MORTALS ON 6', desc: 'Each saving roll of 6 reflects 1 mortal wound back to the attacker.', cost: 140, e: { retaliate: { on: 6, max: 6 } } },
+  // Legendary Honors (Tier 3 - Min XP: 2 Veteran+)
+  { id: 'devastating_wrath', name: '[Devastating Wounds]', tier: 'legendary', minXp: 2, role: 'universal', tag: '[DEVASTATING WOUNDS]', desc: 'All attacks gain [DEVASTATING WOUNDS].', cost: 150, e: { abilities: ['devastating wounds'] } },
+  { id: 'undying_resilience', name: 'FNP 5+ · +1 Toughness', tier: 'legendary', minXp: 2, role: 'tank', tag: 'FNP 5+ · +1 TOUGHNESS', desc: 'Models have Feel No Pain 5+ and +1 Toughness.', cost: 150, e: { defend: { fnp: 5 }, toughness: 1 } },
+  { id: 'apex_predator', name: 'Fights First · +1 to Wound', tier: 'legendary', minXp: 2, role: 'melee', tag: 'FIGHTS FIRST · +1 TO WOUND', desc: 'Unit has Fights First, and +1 to all Wound rolls.', cost: 160, e: { fightsFirst: true, wound: 1 } },
+  { id: 'retaliation_core', name: 'Spiteful Deflection', tier: 'legendary', minXp: 2, role: 'tank', tag: 'REFLECT MORTALS ON 6', desc: 'Each saving roll of 6 reflects 1 mortal wound back to the attacker.', cost: 140, e: { retaliate: { on: 6, max: 6 } } },
 ];
 
 const LEGACY_HONOR_ALIASES: Record<string, string> = {
@@ -85,6 +86,70 @@ export const battleHonorById = (id: unknown) => {
   const aliasId = LEGACY_HONOR_ALIASES[upper];
   return BATTLE_HONORS.find((h) => h.id === key || (aliasId && h.id === aliasId) || h.id.toUpperCase() === upper || h.name.toUpperCase() === upper || h.tag.toUpperCase() === upper);
 };
+
+export function honorMinXp(h: BattleHonor): number {
+  if (h.minXp !== undefined) return h.minXp;
+  if (h.tier === 'legendary') return 2;
+  if (h.tier === 'heroic') return 1;
+  return 0;
+}
+
+export function honorRequiredRank(minXp: number): string {
+  if (minXp >= 3) return 'Legendary';
+  if (minXp >= 2) return 'Veteran';
+  if (minXp >= 1) return 'Blooded';
+  return 'Recruit';
+}
+
+export function canBuyDatasheetHonor(
+  run: Run,
+  datasheetName: string,
+  honor: BattleHonor,
+  unitUid?: string
+): { ok: boolean; reason?: string; neededXp: number; currentXp: number; neededScrap: number; canAfford: boolean; isXpLocked: boolean } {
+  const minXp = honorMinXp(honor);
+  const squads = run.list.units.filter((u) => u.datasheet === datasheetName);
+  const targetUnit = unitUid ? squads.find((u) => u.uid === unitUid) : undefined;
+  const currentXp = targetUnit ? (targetUnit.xp ?? 0) : Math.max(0, ...squads.map((u) => u.xp ?? 0));
+  const squadCount = Math.max(1, squads.length);
+  const cost = datasheetHonorCost(honor.cost, squadCount);
+  const canAfford = (run.scrap ?? 0) >= cost;
+  const isXpLocked = currentXp < minXp;
+
+  if (isXpLocked) {
+    const rank = honorRequiredRank(minXp);
+    return {
+      ok: false,
+      reason: `Requires ${minXp} XP (${rank})`,
+      neededXp: minXp,
+      currentXp,
+      neededScrap: cost,
+      canAfford,
+      isXpLocked: true,
+    };
+  }
+
+  if (!canAfford) {
+    return {
+      ok: false,
+      reason: `Need ${cost} Scrap (${cost - (run.scrap ?? 0)} more)`,
+      neededXp: minXp,
+      currentXp,
+      neededScrap: cost,
+      canAfford: false,
+      isXpLocked: false,
+    };
+  }
+
+  return {
+    ok: true,
+    neededXp: minXp,
+    currentXp,
+    neededScrap: cost,
+    canAfford: true,
+    isXpLocked: false,
+  };
+}
 
 export interface Run {
   version: 1;
@@ -984,13 +1049,16 @@ export function datasheetHonorCost(baseCost: number, squadCount: number): number
 }
 
 /** Purchase a Battle Honor for all squads of a given datasheet type across the army */
-export function buyDatasheetHonor(run: Run, faction: FactionData, datasheetName: string, honorId: string): Run {
+export function buyDatasheetHonor(run: Run, faction: FactionData, datasheetName: string, honorId: string, unitUid?: string): Run {
   const honor = battleHonorById(honorId);
   if (!honor) return run;
+
+  const check = canBuyDatasheetHonor(run, datasheetName, honor, unitUid);
+  if (!check.ok) return run;
+
   const squads = run.list.units.filter((u) => u.datasheet === datasheetName);
   const squadCount = Math.max(1, squads.length);
   const cost = datasheetHonorCost(honor.cost, squadCount);
-  if ((run.scrap ?? 0) < cost) return run;
 
   const currentHonors = run.datasheetHonors?.[datasheetName] ?? [];
   if (currentHonors.includes(honorId)) return run;
@@ -1032,8 +1100,7 @@ export function autoUpgradeAll(run: Run, faction: FactionData): Run {
       const eligible = getSmartBattleHonors(d, curHonors);
       if (!eligible.length) continue;
 
-      const squadCount = Math.max(1, cur.list.units.filter((u) => u.datasheet === dname).length);
-      const affordable = eligible.filter((h) => (cur.scrap ?? 0) >= datasheetHonorCost(h.cost, squadCount));
+      const affordable = eligible.filter((h) => canBuyDatasheetHonor(cur, dname, h).ok);
       if (!affordable.length) continue;
 
       const hasRanged = (d.weapons || []).some((w) => w.profiles.some((p) => p.range !== 'Melee' && p.range !== null));
