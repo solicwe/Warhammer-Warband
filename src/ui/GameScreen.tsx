@@ -158,14 +158,10 @@ const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
 
 export function GameScreen({ initial, onExit }: { initial: GameState; onExit: () => void }) {
   const { state: s, act, undo, canUndo } = useGame(initial);
-  const [autoPlay, setAutoPlay] = useState(false);
-  const bots: PlayerId[] = useMemo(() => {
-    const base = s.bots ?? (s.botPlayer != null ? [s.botPlayer] : []);
-    if (autoPlay) {
-      return [0, 1] as PlayerId[];
-    }
-    return base;
-  }, [s.bots, s.botPlayer, autoPlay]);
+  // idle lives in the game itself (both sides in s.bots), so saves, dice and reactions all go to the bot and it
+  // survives leaving and continuing the battle
+  const autoPlay = !!s.idleBots;
+  const bots: PlayerId[] = useMemo(() => s.bots ?? (s.botPlayer != null ? [s.botPlayer] : []), [s.bots, s.botPlayer]);
   const spectate = bots.length === 2;
   const actingBot = bots.find((b) => botShouldAct(s, b)) ?? null;
   const [speed, setSpeed] = useState<0 | 1 | 2>(1); // bot-vs-bot: pause / normal / fast
@@ -3110,20 +3106,22 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             className={`tb-tool idle-btn ${autoPlay ? 'active' : ''}`}
             onClick={() => {
               const next = !autoPlay;
-              setAutoPlay(next);
               if (next) {
                 setSpeed(2);
                 setRush(true);
-                if (s.phase === 'deploy') {
-                  act((g) => {
+                act((g) => {
+                  g.idleBots = g.bots ?? (g.botPlayer != null ? [g.botPlayer] : []);
+                  g.bots = [0, 1];
+                  if (g.phase === 'deploy') {
                     g.autoDeploy = [0, 1];
                     g.deployAllOnField = [0, 1];
-                  });
-                }
-                flash('IDLE MODE: Autonomous Bot Engaged');
+                  }
+                });
+                flash('Idle: the bot plays for you');
               } else {
                 setRush(false);
-                flash('Idle Mode Paused');
+                act((g) => { g.bots = g.idleBots; delete g.idleBots; });
+                flash('Idle off: your turn to play');
               }
             }}
             aria-label="Toggle Idle Auto-Play"

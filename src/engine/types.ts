@@ -745,6 +745,8 @@ export interface GameState {
   botLevels?: Partial<Record<PlayerId, BotLevel>>;
   /** players run by the bot (both for a bot-vs-bot game) */
   bots?: PlayerId[];
+  /** idle: the bot plays the player's side too; who the bots were before (restored when idle ends) */
+  idleBots?: PlayerId[];
   /** players who only move and pick shooting targets: every other decision (stratagems, abilities, re-rolls, saves,
    *  battle-shock, fights, reactions) is taken for them by the bot's logic */
   autoRules?: PlayerId[];

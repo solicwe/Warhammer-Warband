@@ -7,7 +7,7 @@ import { primaryById, RULES } from '../engine/config';
 import { chargeEligibility, findPlacement, formationAt, hasDeepStrike, levelOfControl, validateMove, validatePlacement, zoneOf } from '../engine/game';
 import { bodyTouchesPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from '../engine/geometry';
 import { blockingWalls, distanceField, pathLength, pointAt, routeAround } from '../engine/pathing';
-import { alive, boardUnits, hasKw, isEngaged, other, pace, tableH, tableW, unitDistance } from '../engine/state';
+import { alive, boardUnits, hasKw, isEngaged, other, pace, tableH, tableW, unitDistance, zombieRush } from '../engine/state';
 import { hasLos } from '../engine/visibility';
 import { secondaryGoal } from '../engine/secondaries';
 import { zonePoly } from '../engine/missions';
@@ -475,7 +475,8 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
     if (ctx.front) ctx.toFront = distanceField(s, u, 'normal', lead, [ctx.front]);
     if (ctx.post) ctx.toPost = distanceField(s, u, 'normal', lead, [ctx.post]);
   }
-  if (u.owner !== 0) {
+  // Zombie Rush (campaign): every enemy unit goes for the nearest player unit
+  if (zombieRush(s, u.owner)) {
     ctx.holder = false;
     ctx.ocNeed = [];
     ctx.claim = undefined;
@@ -556,7 +557,7 @@ function seen(s: GameState, e: UnitState, u: UnitState): boolean {
 
 /** Expected loss (in points) during the enemy's next turn: shots from units in range after a move, charges from brawlers. */
 function dangerScore(s: GameState, u: UnitState, ctx: Ctx): number {
-  if (u.owner !== 0) return 0; // Zombie Rush: Fearless
+  if (zombieRush(s, u.owner)) return 0; // Zombie Rush (campaign): fearless
   let shots = 0, melee = 0;
   const infantryInCover = alive(u).every((m) => ['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) && s.terrain.some((t) => t.category !== 'exposed' && bodyTouchesPoly(m, 0, t.poly)));
   for (const f of ctx.foes) {
@@ -656,7 +657,7 @@ function positionScore(s: GameState, u: UnitState): number {
 
 /** How much holding objectives matters to this unit: less for an expensive damage dealer (cheap units hold, it fights). */
 function objectiveWeight(s: GameState, u: UnitState, ctx: Ctx): number {
-  if (u.owner !== 0) return 0; // Zombie Rush: Objectives are ignored by bot
+  if (zombieRush(s, u.owner)) return 0; // Zombie Rush (campaign): objectives are ignored
   if (s.isBossAnnihilation) return 0.05;
   if (ctx.deliver) return 0.3;
   if (ctx.escort && ctx.escort.weight >= 3) return 0.3; // a Techmarine's job is its vehicle, not holding ground
