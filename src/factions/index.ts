@@ -12,7 +12,7 @@ import { heal, runActions, setBackUp, shockTest } from '../rules-engine/activati
 import { applyMortalWounds, killModel, onAttackFinished, onAttackStart, onMortalWounds } from '../engine/attack';
 import { rollExpr, rollN } from '../engine/dice';
 import { addTimed, cond, effectsFor, unitFlags } from '../rules-engine/effects';
-import { alive, boardUnits, emitReact, onBoard, engagedEnemies, log, other, phaseKey, unitById, unitDistance } from '../engine/state';
+import { alive, boardUnits, emitReact, onBoard, engagedEnemies, log, other, phaseKey, tableH, tableW, unitById, unitDistance } from '../engine/state';
 import { unitVisibleTo } from '../engine/visibility';
 import { setUpAway, setUpNear, shootNow } from '../engine/game';
 import { unitInRange, zonePoly } from '../engine/missions';
@@ -570,7 +570,7 @@ addActionHandler((s, a, x) => {
 addActionHandler((s, a, x) => {
   if (!a.edgeArrival || x.on.status !== 'reserves') return;
   const { edge, keep } = a.edgeArrival;
-  const W = RULES.battlefield.width, H = RULES.battlefield.height;
+  const W = tableW(s), H = tableH(s);
   const foe = boardUnits(s, other(x.on.owner)).flatMap(alive)[0];
   const byEdge = (pos: Map<string, { x: number; y: number }>) => [(p: { x: number }) => p.x, (p: { y: number }) => p.y, (p: { x: number }) => W - p.x, (p: { y: number }) => H - p.y]
     .some((d) => [...pos.entries()].every(([id, p]) => d(p as { x: number; y: number }) + (x.on.models.find((m) => m.id === id)?.r ?? 0) <= edge + 1e-6));

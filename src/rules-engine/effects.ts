@@ -34,7 +34,7 @@ import { deploymentById, RULES, toPoly } from '../engine/config';
 import { d6, exprAverage } from '../engine/dice';
 import { baseDist, bodyTouchesPoly, circleTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from '../engine/geometry';
 import { setActionEligibilityHook, unitInRange } from '../engine/missions';
-import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, setStratShockedHook, unitDistance, withinTerrain } from '../engine/state';
+import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, setStratShockedHook, tableH, tableW, unitDistance, withinTerrain } from '../engine/state';
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, Pt, TimedEffect, UnitState, WeaponData, WeaponProfileData } from '../engine/types';
 import { abilityLabel, condApplies, parseAbility } from '../engine/weapons';
 import { hasCover, hasLos, isHidden, setScreenHook, setVisibilityHooks } from '../engine/visibility';
@@ -819,7 +819,7 @@ export function cond(c: string, x: Ctx): boolean {
   if (c.startsWith('targetFar:')) { const r = Number(c.slice(10)); return !!T && !boardUnits(s, other(T.owner)).some((e) => unitDistance(T, e) <= r + 1e-6); }
   if (c.startsWith('enemyBetween:')) { const [lo, hi] = c.slice(13).split(':').map(Number); return boardUnits(s, other(A.owner)).some((e) => { const d = unitDistance(A, e); return d > lo + 1e-6 && d <= hi + 1e-6; }); }
   // wholly within X" of one or more battlefield edges (every model near the same or any edge)
-  if (c.startsWith('nearEdge:')) { const d = Number(c.slice(9)); const W = RULES.battlefield.width, H = RULES.battlefield.height; return alive(A).every((m) => Math.min(m.x, m.y, W - m.x, H - m.y) + m.r <= d + 1e-6); }
+  if (c.startsWith('nearEdge:')) { const d = Number(c.slice(9)); const W = tableW(s), H = tableH(s); return alive(A).every((m) => Math.min(m.x, m.y, W - m.x, H - m.y) + m.r <= d + 1e-6); }
   if (c.startsWith('enemyEngagedWithin:')) { const r = Number(c.slice(19)); return boardUnits(s, other(A.owner)).some((e) => engagedEnemies(s, e).length > 0 && unitDistance(A, e) <= r + 1e-6); }
   if (c.startsWith('pact:')) return (s.players[A.owner].pactPoints ?? 0) >= Number(c.slice(5));
   if (c.startsWith('enemyModelsEngaged:')) return engagedEnemies(s, A).flatMap(alive).filter((e) => alive(A).some((m) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length >= Number(c.slice(19));
@@ -933,7 +933,7 @@ export function cond(c: string, x: Ctx): boolean {
     case 'onObjective': return onObjective(s, A);
     case 'onSeekerObjective': return !!A.seekerObjective && s.objectives.some((o) => o.id === A.seekerObjective && unitInRange(s, A, o));
     case 'onOwnObjective': return onOwnObjective(s, A);
-    case 'centreOrObjective': return onObjective(s, A) || alive(A).some((m) => dist(m, { x: RULES.battlefield.width / 2, y: RULES.battlefield.height / 2 }) - m.r <= 6);
+    case 'centreOrObjective': return onObjective(s, A) || alive(A).some((m) => dist(m, { x: tableW(s) / 2, y: tableH(s) / 2 }) - m.r <= 6);
     case 'objectiveEitherWay': return onObjective(s, A) || (!!T && onObjective(s, T));
     case 'riled': return isRiled(s, A);
     case 'setUpThisTurn': return A.setUpTurn === s.turn;

@@ -14,7 +14,7 @@ import {
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
 import { baseDist, bodyAt, bodyTouchesPoly, circleTouchesPoly, dist, gap, ptGap } from '../engine/geometry';
-import { alive, boardUnits, centreOf, emitReact, engagedEnemies, extractToReserves, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from '../engine/state';
+import { alive, boardUnits, centreOf, emitReact, engagedEnemies, extractToReserves, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, tableH, tableW, unitById, unitDistance } from '../engine/state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from '../engine/types';
 import { unitVisibleTo } from '../engine/visibility';
 
@@ -507,7 +507,7 @@ export function heal(s: GameState, u: UnitState, n: number) {
 export function setBackUp(s: GameState, u: UnitState, m: ModelState, at: { x: number; y: number }): boolean {
   const enemies = boardUnits(s, other(u.owner)).flatMap(alive);
   const others = s.units.filter((x) => onBoard(x) || x.id === u.id).flatMap(alive).filter((o) => o.id !== m.id);
-  const ok = (p: { x: number; y: number }) => p.x - m.r >= 0 && p.y - m.r >= 0 && p.x + m.r <= RULES.battlefield.width && p.y + m.r <= RULES.battlefield.height
+  const ok = (p: { x: number; y: number }) => p.x - m.r >= 0 && p.y - m.r >= 0 && p.x + m.r <= tableW(s) && p.y + m.r <= tableH(s)
     && others.every((o) => dist(o, p) >= o.r + m.r - 0.01) && enemies.every((e) => gap(e, bodyAt(m, p)) > RULES.engagementRange + 0.02);
   if (ok(at)) { m.x = at.x; m.y = at.y; return true; }
   for (let ring = 1; ring <= 16; ring++) {

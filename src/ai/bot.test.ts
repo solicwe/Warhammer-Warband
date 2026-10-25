@@ -447,7 +447,7 @@ describe('table quarters', () => {
     expect(new Set(jobs).size).toBe(4);
     for (const u of s.units.filter((x) => x.owner === 0)) { u.move = null; u.maxMoved = 0; }
     for (let i = 0; i < 12 && botMoveOne(s); i++) { /* move every unit */ }
-    const held = new Set(s.units.filter((x) => x.owner === 0).map(unitQuarter).filter((q) => q !== null));
+    const held = new Set(s.units.filter((x) => x.owner === 0).map((u) => unitQuarter(s, u)).filter((q) => q !== null));
     expect(held.size).toBeGreaterThanOrEqual(2);
   });
 });

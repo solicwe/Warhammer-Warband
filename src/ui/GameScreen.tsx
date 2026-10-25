@@ -22,7 +22,7 @@ import {
   formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
-  canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
+  canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
   pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit } from '../engine/game';
@@ -2818,7 +2818,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode?.k === 'move' && modeUnit) {
       return (
         <>
-          <div className="small"><b>{modeUnit.name}</b> · Scout move up to {modeUnit.core.scouts}" · must end more than {RULES.reserves.enemyDistance}" from enemies</div>
+          <div className="small"><b>{modeUnit.name}</b> · Scout move up to {scoutsOf(s, modeUnit)}" · must end more than {RULES.reserves.enemyDistance}" from enemies</div>
           {moveControls('scout', () => confirmMove('scout'))}
         </>
       );

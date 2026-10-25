@@ -7,7 +7,7 @@ import { primaryById, RULES } from '../engine/config';
 import { chargeEligibility, findPlacement, formationAt, hasDeepStrike, levelOfControl, validateMove, validatePlacement, zoneOf } from '../engine/game';
 import { bodyTouchesPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from '../engine/geometry';
 import { blockingWalls, distanceField, pathLength, pointAt, routeAround } from '../engine/pathing';
-import { alive, boardUnits, hasKw, isEngaged, other, pace, unitDistance } from '../engine/state';
+import { alive, boardUnits, hasKw, isEngaged, other, pace, tableH, tableW, unitDistance } from '../engine/state';
 import { hasLos } from '../engine/visibility';
 import { secondaryGoal } from '../engine/secondaries';
 import { zonePoly } from '../engine/missions';
@@ -34,12 +34,10 @@ export function withFastPlanning<T>(fn: () => T): T {
 export const isFastPlanning = (s: GameState, u?: UnitState) => fastPlanning || !!s.campaign || (u ? (s.botLevels?.[u.owner] ?? s.botLevel) === 'easy' : s.botLevel === 'easy');
 type Spot = Map<string, Pt>;
 
-const W = RULES.battlefield.width;
-const H = RULES.battlefield.height;
 /** Holding an objective is worth about this many points of damage (a few VP each turn). */
 
 const endOf = (paths: Paths): Spot => new Map([...paths].map(([id, p]) => [id, p[p.length - 1]]));
-const clampIn = (p: Pt, r: number): Pt => ({ x: Math.min(W - r, Math.max(r, p.x)), y: Math.min(H - r, Math.max(r, p.y)) });
+const clampIn = (s: GameState, p: Pt, r: number): Pt => ({ x: Math.min(tableW(s) - r, Math.max(r, p.x)), y: Math.min(tableH(s) - r, Math.max(r, p.y)) });
 
 /** The model that finds the route: the biggest one (it has the least room), then the one in the middle. */
 function leaderOf(u: UnitState): ModelState {
@@ -65,7 +63,7 @@ function trailPaths(s: GameState, u: UnitState, kind: MoveKind, max: number, d: 
   const out: Paths = new Map();
   let moved = false;
   for (const m of alive(u)) {
-    const to = clampIn({ x: m.x + d.x, y: m.y + d.y }, m.r);
+    const to = clampIn(s, { x: m.x + d.x, y: m.y + d.y }, m.r);
     const r = routeAround(s, u, kind, m, m, to, max + 6, { fly });
     if (!r) { out.set(m.id, [{ x: m.x, y: m.y }, { x: m.x, y: m.y }]); continue; }
     const L = Math.min(max, pathLength(r));
@@ -106,7 +104,7 @@ export function movesTowards(s: GameState, u: UnitState, kind: MoveKind, max: nu
   const fly = !!opt.fly;
   const lead = leaderOf(u);
   const c = centre(u);
-  const goal = clampIn({ x: lead.x + aim.x - c.x, y: lead.y + aim.y - c.y }, lead.r);
+  const goal = clampIn(s, { x: lead.x + aim.x - c.x, y: lead.y + aim.y - c.y }, lead.r);
   // look a little past this move so the route bends around a wall instead of stopping against it
   let route = routeAround(s, u, kind, lead, lead, goal, max + 6, { fly });
   if (!route) return [];
@@ -234,16 +232,15 @@ function frontFor(s: GameState, u: UnitState, ctx: Ctx): Pt | undefined {
 
 // ---------- table quarters ----------
 
-const BOARD_W = RULES.battlefield.width, BOARD_H = RULES.battlefield.height;
 
-const quarterOf = (m: Pt) => (m.x < BOARD_W / 2 ? 0 : 1) + (m.y < BOARD_H / 2 ? 0 : 2);
+const quarterOf = (s: GameState, m: Pt) => (m.x < tableW(s) / 2 ? 0 : 1) + (m.y < tableH(s) / 2 ? 0 : 2);
 /** Is the unit wholly in one table quarter and more than 6" from the centre (what quarter missions count)? */
-export function unitQuarter(u: UnitState): number | null {
+export function unitQuarter(s: GameState, u: UnitState): number | null {
   const ms = alive(u);
   if (!ms.length) return null;
-  const c = { x: BOARD_W / 2, y: BOARD_H / 2 };
-  const q0 = quarterOf(ms[0]);
-  const ok = ms.every((m) => quarterOf(m) === q0 && ptGap(m, c) > 6 && Math.abs(m.x - c.x) >= m.r && Math.abs(m.y - c.y) >= m.r);
+  const c = { x: tableW(s) / 2, y: tableH(s) / 2 };
+  const q0 = quarterOf(s, ms[0]);
+  const ok = ms.every((m) => quarterOf(s, m) === q0 && ptGap(m, c) > 6 && Math.abs(m.x - c.x) >= m.r && Math.abs(m.y - c.y) >= m.r);
   return ok ? q0 : null;
 }
 
@@ -256,7 +253,8 @@ export function wantsQuarters(s: GameState, p: PlayerId): boolean {
 }
 
 /** A spot in quarter q for the unit: its centre pulled into the quarter, at least 9" from the board centre. */
-function quarterAim(u: UnitState, q: number): Pt {
+function quarterAim(s: GameState, u: UnitState, q: number): Pt {
+  const BOARD_W = tableW(s), BOARD_H = tableH(s);
   const c = centre(u);
   const x0 = q % 2 === 0 ? 2 : BOARD_W / 2 + 2, x1 = q % 2 === 0 ? BOARD_W / 2 - 2 : BOARD_W - 2;
   const y0 = q < 2 ? 2 : BOARD_H / 2 + 2, y1 = q < 2 ? BOARD_H / 2 - 2 : BOARD_H - 2;
@@ -287,20 +285,20 @@ function quarterJobs(s: GameState, p: PlayerId): Map<string, { q: number; aim: P
       && unitValue(u) <= 150 && !(isBrawler(s, u) && unitValue(u) > 60));
     const taken = new Set<number>();
     for (const u of free) {
-      const q = unitQuarter(u);
+      const q = unitQuarter(s, u);
       if (q === null || taken.has(q)) continue;
       // the cheapest unit already in the quarter keeps it
-      const holders = free.filter((x) => unitQuarter(x) === q).sort((a, b) => unitValue(a) - unitValue(b));
+      const holders = free.filter((x) => unitQuarter(s, x) === q).sort((a, b) => unitValue(a) - unitValue(b));
       jobs.set(holders[0].id, { q, aim: centre(holders[0]) });
       taken.add(q);
     }
     for (const q of [0, 1, 2, 3]) {
       if (taken.has(q)) continue;
       const cands = free.filter((u) => !jobs.has(u.id))
-        .map((u) => ({ u, cost: unitValue(u) + 8 * dist(centre(u), quarterAim(u, q)) / Math.max(4, moveOf(u)) * 10 }))
+        .map((u) => ({ u, cost: unitValue(u) + 8 * dist(centre(u), quarterAim(s, u, q)) / Math.max(4, moveOf(u)) * 10 }))
         .sort((a, b) => a.cost - b.cost);
       if (!cands.length) continue;
-      jobs.set(cands[0].u.id, { q, aim: quarterAim(cands[0].u, q) });
+      jobs.set(cands[0].u.id, { q, aim: quarterAim(s, cands[0].u, q) });
       taken.add(q);
     }
   }
@@ -316,6 +314,7 @@ const cardCache = new WeakMap<GameState, { key: string; jobs: Map<string, { aim:
  * fights. Cards about killing are left to the target choice.
  */
 function cardJobs(s: GameState, p: PlayerId): Map<string, { aim: Pt; card: string; done: (u: UnitState) => boolean }> {
+  const BOARD_W = tableW(s), BOARD_H = tableH(s);
   const P = s.players[p];
   const key = `${s.turn}|${s.phase}|${p}|${P.secActive.join(',')}|${boardUnits(s, p).map((u) => u.id + ':' + alive(u).length).join(',')}`;
   const hit = cardCache.get(s);
@@ -373,6 +372,7 @@ function cardJobs(s: GameState, p: PlayerId): Map<string, { aim: Pt; card: strin
  * what is waiting in Reserves.
  */
 function denialFor(s: GameState, u: UnitState, ctx: Ctx): Ctx['denial'] {
+  const W = tableW(s), H = tableH(s);
   if (botOff('screenDS') || pace(s) > 3 || unitValue(u) > 150 || ctx.role === 'hammer' || u.transport || isEngaged(s, u)) return undefined;
   const waiting = s.units.filter((e) => e.owner !== u.owner && e.status === 'reserves' && hasDeepStrike(s, e)).reduce((a, e) => a + unitValue(e), 0);
   if (waiting < 100) return undefined;
@@ -614,7 +614,7 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
   }
   if (ctx.quarter && !ctx.deliver) {
     // its job this turn: be wholly in that quarter, more than 6" from the centre, at the end of the turn
-    v += unitQuarter(u) === ctx.quarter.q ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.quarter.aim) - 2);
+    v += unitQuarter(s, u) === ctx.quarter.q ? w.claimBonus : -w.claimPull * Math.max(0, dist(c, ctx.quarter.aim) - 2);
   }
   if (ctx.escort && alive(ctx.escort.u).length) v -= ctx.escort.weight * 2 * Math.max(0, unitDistance(u, ctx.escort.u) - (ctx.escort.range - 1));
   if (ctx.post && !ctx.deliver && !ctx.quarter) {
@@ -639,6 +639,7 @@ function pullScore(s: GameState, u: UnitState, ctx: Ctx): number {
  *  - an expensive damage dealer doesn't sit on an objective a cheap unit could hold (a factor on objectiveScore).
  */
 function positionScore(s: GameState, u: UnitState): number {
+  const W = tableW(s), H = tableH(s);
   const c = centre(u);
   let v = 0;
   // a small character on its own stays with the army; a big one (Magnus, a Daemon Prince, a tank) fights on its own
@@ -744,11 +745,11 @@ function aimsFor(s: GameState, u: UnitState, max: number, ctx: Ctx): Pt[] {
     for (const id of P.secActive) {
       const g = secondaryGoal(s, u.owner, id);
       for (const oid of g.objectives) { const o = s.objectives.find((x) => x.id === oid); if (o && dist(o, c) <= max + 12) pts.push({ x: o.x, y: o.y }); }
-      for (const a of g.areas) { const p = polyCentroid(a); if (dist(p, c) <= max + 14) pts.push(clampIn(p, 1)); }
+      for (const a of g.areas) { const p = polyCentroid(a); if (dist(p, c) <= max + 14) pts.push(clampIn(s, p, 1)); }
       for (const ci of g.circles.slice(0, 1)) if (dist(ci, c) <= max + 12) pts.push({ x: ci.x, y: ci.y });
     }
   }
-  for (let k = 0; k < 4; k++) pts.push(clampIn({ x: c.x + Math.cos((k * Math.PI) / 2 + 0.4) * max, y: c.y + Math.sin((k * Math.PI) / 2 + 0.4) * max }, 1));
+  for (let k = 0; k < 4; k++) pts.push(clampIn(s, { x: c.x + Math.cos((k * Math.PI) / 2 + 0.4) * max, y: c.y + Math.sin((k * Math.PI) / 2 + 0.4) * max }, 1));
   const out: Pt[] = [];
   for (const p of pts) if (dist(p, c) > 0.6 && !out.some((q) => dist(p, q) < 1.5)) out.push(p);
   return out;
@@ -787,7 +788,7 @@ export function bestFallBack(s: GameState, u: UnitState, max: number, ctx: Ctx, 
   const c = centre(u);
   const ec = polyCentroid(from.flatMap(alive));
   const L = Math.max(0.1, dist(c, ec));
-  const away = clampIn({ x: c.x + ((c.x - ec.x) / L) * max, y: c.y + ((c.y - ec.y) / L) * max }, 1);
+  const away = clampIn(s, { x: c.x + ((c.x - ec.x) / L) * max, y: c.y + ((c.y - ec.y) / L) * max }, 1);
   const aims = [away, ...aimsFor(s, u, max, ctx).filter((p) => dist(p, ec) > dist(c, ec))];
   return bestMove(s, u, 'fallback', max, ctx, { aims, noStay: true });
 }
@@ -861,6 +862,7 @@ export function arrivalStrike(s: GameState, u: UnitState, pos: Spot): number {
 
 /** Can a unit set up at `pos` drive out again? (A vehicle boxed in by ruin walls would sit there all game.) */
 export function canLeave(s: GameState, u: UnitState, pos: Spot): boolean {
+  const W = tableW(s), H = tableH(s);
   const ms = alive(u);
   if (!ms.some((m) => blockingWalls(s, m).length)) return true;
   const saved = ms.map((m) => [m, m.x, m.y] as const);

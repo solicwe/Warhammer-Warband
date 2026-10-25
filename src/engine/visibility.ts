@@ -45,6 +45,13 @@ export function checkPhaseCache(s: GameState) {
   }
 }
 
+/** Where a unit's living models are: part of a cache key, so a move or a casualty never reuses an old answer. */
+export function unitSig(u: UnitState) {
+  let x = 0, y = 0, n = 0;
+  for (const m of u.models) if (!m.dead) { x += m.x; y += m.y; n++; }
+  return `${n}:${x.toFixed(2)}:${y.toFixed(2)}`;
+}
+
 export function clearLosCache() {
   losUnitPairCache.clear();
   coverUnitPairCache.clear();
@@ -437,7 +444,7 @@ export function hasCover(s: GameState, attacker: ModelState, target: UnitState):
   let cacheKey: string | null = null;
   if (s.phase === 'shooting') {
     checkPhaseCache(s);
-    cacheKey = `${attacker.id}->${target.id}`;
+    cacheKey = `${attacker.id}@${attacker.x.toFixed(2)},${attacker.y.toFixed(2)}->${target.id}:${unitSig(target)}`;
     const cached = coverUnitPairCache.get(cacheKey);
     if (cached !== undefined) return cached;
   }
@@ -451,7 +458,8 @@ export function hasCover(s: GameState, attacker: ModelState, target: UnitState):
 
   const isInfantryLike = unitIsInfantryLike(target);
 
-  const res = alive(target).some((m) => {
+  // 13.08: the unit has cover only if every one of its models qualifies
+  const res = alive(target).every((m) => {
     if (isInfantryLike) {
       // Check if target model is inside a footprint that the attacker is NOT inside (Rule 2)
       const inDifferentFootprint = s.terrain.some((t) =>

@@ -1,13 +1,11 @@
 // Chapter Approved 2026-27 secondary missions, scored automatically from the board state.
-import { MISSIONS, RULES, secondaryById, toPoly, deploymentById, type SecondaryRule } from './config';
+import { MISSIONS, secondaryById, toPoly, deploymentById, type SecondaryRule } from './config';
 import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, dist, gap, pointInPoly, ptGap } from './geometry';
 import { territoryPoly, unitInRange, zonePoly } from './missions';
-import { pushFx, alive, boardUnits, hasKw, log, onBoard, other, unitById } from './state';
+import { pushFx, alive, boardUnits, hasKw, log, onBoard, other, tableH, tableW, unitById } from './state';
 import type { GameState, PlayerId, UnitState } from './types';
 
-const W = RULES.battlefield.width;
-const H = RULES.battlefield.height;
-const CENTRE = { x: W / 2, y: H / 2 };
+const centreOf = (s: GameState) => ({ x: tableW(s) / 2, y: tableH(s) / 2 });
 
 const counts = (u: UnitState) => !u.battleShocked && !hasKw(u, 'AIRCRAFT');
 const whollyIn = (u: UnitState, poly: { x: number; y: number }[]) => alive(u).every((m) => bodyWhollyInPoly(m, poly));
@@ -19,11 +17,12 @@ const objInNML = (s: GameState, o: { x: number; y: number }) => !pointInPoly(o, 
 
 /** Table quarters where the player has a presence (units wholly within a quarter, none within 6" of the centre). */
 export function presenceQuarters(s: GameState, p: PlayerId): number {
+  const W = tableW(s), H = tableH(s);
   const qs = new Set<number>();
   for (const u of boardUnits(s, p)) {
     if (!counts(u)) continue;
     const ms = alive(u);
-    if (ms.some((m) => ptGap(m, CENTRE) <= 6)) continue;
+    if (ms.some((m) => ptGap(m, centreOf(s)) <= 6)) continue;
     const q = (m: { x: number; y: number }) => (m.x < W / 2 ? 0 : 1) + (m.y < H / 2 ? 0 : 2);
     const q0 = q(ms[0]);
     if (ms.every((m) => q(m) === q0 && Math.abs(m.x - W / 2) >= m.r && Math.abs(m.y - H / 2) >= m.r)) qs.add(q0);
@@ -32,6 +31,7 @@ export function presenceQuarters(s: GameState, p: PlayerId): number {
 }
 
 function cond(s: GameState, p: PlayerId, c: string): number {
+  const W = tableW(s), H = tableH(s);
   const e = other(p);
   const killsThisTurn = s.destroyedByTurn.filter((d) => d.turn === s.turn && d.owner === e);
   const deaths = (s.modelDeaths ?? []).filter((d) => d.turn === s.turn && d.owner === e);
@@ -88,8 +88,8 @@ function cond(s: GameState, p: PlayerId, c: string): number {
       return home || (exp.length > 0 && exp.every((o) => o.controller === p)) ? 1 : 0;
     }
     case 'centreGround': {
-      const near = (q: PlayerId, r: number) => boardUnits(s, q).some((u) => alive(u).some((m) => ptGap(m, CENTRE) <= r));
-      const mine = boardUnits(s, p).some((u) => counts(u) && alive(u).some((m) => ptGap(m, CENTRE) <= 3));
+      const near = (q: PlayerId, r: number) => boardUnits(s, q).some((u) => alive(u).some((m) => ptGap(m, centreOf(s)) <= r));
+      const mine = boardUnits(s, p).some((u) => counts(u) && alive(u).some((m) => ptGap(m, centreOf(s)) <= 3));
       if (!mine) return 0;
       return !near(e, 6) ? 2 : !near(e, 3) ? 1 : 0;
     }
@@ -240,6 +240,7 @@ export interface SecondaryGoal {
 }
 
 export function secondaryGoal(s: GameState, p: PlayerId, id: string): SecondaryGoal {
+  const W = tableW(s), H = tableH(s);
   const def = secondaryById(id);
   const e = other(p);
   const S = s.players[p].sec;
@@ -255,10 +256,10 @@ export function secondaryGoal(s: GameState, p: PlayerId, id: string): SecondaryG
     case 'beacon': g.todo = 'Get the Beacon unit out of your deployment zone'; if (S.beacon) g.units = [S.beacon]; g.areas = [zonePoly(s, p)]; break;
     case 'a-grievous-blow': g.todo = 'Destroy an enemy unit with a Starting Strength of 13+'; g.units = foes.filter((u) => u.startingStrength >= 13).map((u) => u.id); break;
     case 'defend-stronghold': g.todo = 'Control your home objective'; g.objectives = s.objectives.filter((o) => o.type === 'home' && o.owner === p).map((o) => o.id); break;
-    case 'engage-on-all-fronts': g.todo = 'Have units in 3–4 table quarters (more than 6" from the centre)'; g.circles = [{ ...CENTRE, r: 6 }]; break;
+    case 'engage-on-all-fronts': g.todo = 'Have units in 3–4 table quarters (more than 6" from the centre)'; g.circles = [{ ...centreOf(s), r: 6 }]; break;
     case 'secure-no-mans-land': g.todo = 'Control 2 objectives in No Man\'s Land'; g.objectives = nml.filter((o) => !(o.type === 'home' && o.owner === p)).map((o) => o.id); break;
     case 'forward-position': g.todo = 'Control the enemy home objective or all expansion objectives'; g.objectives = s.objectives.filter((o) => (o.type === 'home' && o.owner === e) || o.type === 'expansion').map((o) => o.id); break;
-    case 'centre-ground': g.todo = 'Have a unit within 3" of the centre (no enemy within 6")'; g.circles = [{ ...CENTRE, r: 3 }, { ...CENTRE, r: 6 }]; break;
+    case 'centre-ground': g.todo = 'Have a unit within 3" of the centre (no enemy within 6")'; g.circles = [{ ...centreOf(s), r: 3 }, { ...centreOf(s), r: 6 }]; break;
     case 'assassination': g.todo = 'Destroy enemy CHARACTER models'; g.units = foes.filter((u) => alive(u).some((m) => m.isCharacter)).map((u) => u.id); break;
     case 'a-tempting-target': g.todo = 'Control the objective your opponent selected'; if (S.temptingTarget) g.objectives = [S.temptingTarget]; break;
     case 'behind-enemy-lines': g.todo = 'Get units wholly within the enemy deployment zone'; g.areas = [zonePoly(s, e)]; break;
@@ -293,6 +294,7 @@ export { toPoly, deploymentById };
  * cards it won't score this turn (+1CP) so a fresh card is drawn instead of holding a dead one.
  */
 export function secondaryChance(s: GameState, p: PlayerId, id: string): number {
+  const W = tableW(s), H = tableH(s);
   if (secondaryDead(s, p, id)) return 0;
   const e = other(p);
   const mine = boardUnits(s, p).filter(counts);
@@ -313,7 +315,7 @@ export function secondaryChance(s: GameState, p: PlayerId, id: string): number {
     case 'outflank': { const terr = territoryPoly(s, p); return mine.some((u) => alive(u).some((m) => !pointInPoly(m, terr) && Math.min(m.x, m.y, W - m.x, H - m.y) <= 6 + M(u))) ? 0.6 : 0.15; }
     case 'display-of-might': { const n = (q: PlayerId) => boardUnits(s, q).filter((u) => counts(u) && inNML(s, u)).length; return n(p) + 1 >= n(e) ? 0.6 : 0.2; }
     case 'engage-on-all-fronts': return presenceQuarters(s, p) >= 2 ? 0.6 : 0.25;
-    case 'centre-ground': return reachPt(CENTRE) && !foes.some((u) => alive(u).some((m) => dist(m, CENTRE) <= 6)) ? 0.5 : 0.15;
+    case 'centre-ground': return reachPt(centreOf(s)) && !foes.some((u) => alive(u).some((m) => dist(m, centreOf(s)) <= 6)) ? 0.5 : 0.15;
     case 'secure-no-mans-land': return g.objectives.filter((oid) => { const o = s.objectives.find((x) => x.id === oid)!; return o.controller === p || reachPt(o); }).length >= 2 ? 0.6 : 0.15;
     case 'forward-position': return g.objectives.some((oid) => { const o = s.objectives.find((x) => x.id === oid)!; return o.type === 'home' && (o.controller === p || reachPt(o)); }) ? 0.4 : 0.1;
     case 'plunder': case 'cleanse': return s.objectives.some((o) => reachPt(o, 1)) ? 0.7 : 0.2;

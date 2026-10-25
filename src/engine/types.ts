@@ -276,6 +276,8 @@ export interface UnitState {
   detRerolled?: string; // `${turn}:advance|charge`: free detachment re-roll used
   detAdvanceHurt?: string; // `${turn}:advance`: Wrath of the Doomed mortal wounds taken
   scoutDone: boolean;
+  /** set up outside its deployment zone with Infiltrators: it then gets no Scout move */
+  infiltrated?: boolean;
   battleShocked: boolean;
   isWarlordUnit: boolean;
   warlordSource?: string; // datasheet of the Warlord model in this unit

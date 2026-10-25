@@ -101,6 +101,9 @@ export function unitDistance(a: UnitState, b: UnitState): number {
 }
 
 /** The battle round the game ends after (5, or fewer in a short game). */
+/** The battlefield of this game: big battles use a bigger table than the 44" x 60" default. */
+export const tableW = (s: GameState) => s.table?.width ?? RULES.battlefield.width;
+export const tableH = (s: GameState) => s.table?.height ?? RULES.battlefield.height;
 export const lastRound = (s: GameState) => Math.max(s.round, s.maxRounds ?? RULES.battleRounds);
 /** How far into the battle this is, as the round of a full 5-round game (a short game's rounds count for more). */
 export const pace = (s: GameState) => (s.maxRounds ? (s.round * RULES.battleRounds) / s.maxRounds : s.round);

@@ -9,13 +9,11 @@ import { formationAt, objectiveTerrain, validatePlacement, zoneOf } from '../eng
 import { circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from '../engine/geometry';
 import { canLeave } from './botMove';
 import { isBrawler, maxRange, moveOf, oc, unitValue } from './botEval';
-import { alive, onBoard, other, withinTerrain } from '../engine/state';
+import { alive, onBoard, other, tableH, tableW, withinTerrain } from '../engine/state';
 import { homeScoresVp } from './botPlan';
 import type { GameState, ModelState, Pt, UnitState } from '../engine/types';
 import { roughLos } from '../engine/visibility';
 
-const W = RULES.battlefield.width;
-const H = RULES.battlefield.height;
 
 /** A stand-in model at a point (to ask "could a model standing here see that unit?"). */
 const lookout = (p: Pt): ModelState => ({ x: p.x, y: p.y, r: 0.5, keywords: ['INFANTRY'] }) as unknown as ModelState;
@@ -112,6 +110,7 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
 
   // first the cheap terms for every open spot, then the sight checks only for the most promising ones
   const cands: { pos: Map<string, Pt>; ms: ModelState[]; centre: Pt; score: number }[] = [];
+  const W = tableW(s), H = tableH(s);
   for (let y = 1; y < H; y += 2) {
     for (let x = 1; x < W; x += 2) {
       const c = { x, y };

@@ -9,7 +9,7 @@ import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEne
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
-import { checkPhaseCache, getUnitLoneOpRange, hasCover, isHidden, losUnitPairCache, modelVisible, unitVisibleTo } from './visibility';
+import { checkPhaseCache, getUnitLoneOpRange, hasCover, isHidden, losUnitPairCache, modelVisible, unitSig, unitVisibleTo } from './visibility';
 
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
@@ -1294,7 +1294,7 @@ export function canShootTarget(s: GameState, a: UnitState, t: UnitState): boolea
   // 3. LoS Cache Matrix check within shooting phase
   if (s.phase === 'shooting') {
     checkPhaseCache(s);
-    const key = `${a.id}->${t.id}`;
+    const key = `${a.id}:${unitSig(a)}->${t.id}:${unitSig(t)}`;
     const cached = losUnitPairCache.get(key);
     if (cached !== undefined) return cached;
     const canSee = aAlive.some((m) => unitVisibleTo(s, m, t));
