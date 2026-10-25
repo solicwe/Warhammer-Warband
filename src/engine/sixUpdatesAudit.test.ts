@@ -41,7 +41,7 @@ describe('Verification of 6 Core Updates', () => {
       expect(enhancementScrapCost(basePoints, 3)).toBe(203); // 135 * 1.5
     });
 
-    it('allows buying and stacking multiple enhancements on a character', () => {
+    it('stacks different enhancements on a character, never the same one twice', () => {
       const list: ArmyList = {
         name: 'Test Force',
         factionId: 'SM',
@@ -65,15 +65,21 @@ describe('Verification of 6 Core Updates', () => {
       expect(run.scrap).toBe(940 - 60);
       expect(run.list.units[0].enhancements?.length).toBe(2);
 
-      // Buy duplicate of same enhancement: Adept of the Codex (20 pts -> slot 2 cost = 135)
+      // The same enhancement twice on one model is refused: nothing is spent
       run = buyEnhancementForUnit(run, SM, 'u1', 'Adept of the Codex', 20);
+      expect(run.scrap).toBe(880);
+      expect(run.list.units[0].enhancements?.length).toBe(2);
+
+      // A third, different one (20 pts -> slot 2 cost = 135)
+      run = buyEnhancementForUnit(run, SM, 'u1', 'Laurels of Triumph', 20);
       expect(run.scrap).toBe(880 - 135);
       expect(run.list.units[0].enhancements?.length).toBe(3);
 
       // Test combat model construction: all enhancements present in unit abilities and state
       const units = buildUnits(run.list, SM, 0);
       expect(units[0].enhancements.length).toBe(3);
-      expect(units[0].enhancements.filter((e) => e.name === 'Adept of the Codex').length).toBe(2);
+      expect(units[0].enhancements.filter((e) => e.name === 'Adept of the Codex').length).toBe(1);
+      expect(units[0].enhancements.filter((e) => e.name === 'Laurels of Triumph').length).toBe(1);
       expect(units[0].enhancements.filter((e) => e.name === 'Artificer Armour').length).toBe(1);
 
       // Test unequip: refunds cost scaled to the removed slot

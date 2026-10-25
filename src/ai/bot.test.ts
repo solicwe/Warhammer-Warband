@@ -57,7 +57,8 @@ describe('bot movement', () => {
     s.terrain.push(uRuin(14, 18, 26, 30));
     s.objectives = []; // only the route matters here (a central objective inside the ruin would be worth staying on)
     s.phase = 'movement';
-    const dread = put(s, 'p0-x0', { x: 20, y: 22 });
+    // a vehicle can't end a move inside a ruin (13.06), so it starts where one normal move takes it clear of the opening
+    const dread = put(s, 'p0-x0', { x: 20, y: 25 });
     put(s, 'p1-x0', { x: 20, y: 6 }); // the enemy is behind the closed wall
     const before = { x: alive(dread)[0].x, y: alive(dread)[0].y };
     s.botTried = [];

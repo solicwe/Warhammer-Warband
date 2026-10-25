@@ -171,9 +171,9 @@ function routeSearch(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, 
   let bestD = dist({ x: cx(start), y: cy(start) }, to);
   const goal = idx(to);
   const D = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
-  let expansions = 0;
-  const MAX_EXPANSIONS = 250;
-  while (heap.length && expansions++ < MAX_EXPANSIONS) {
+  // no step cap: every cell is closed at most once, so the grid size bounds the search (a cap of a few hundred
+  // steps stopped vehicles finding their way round a long wall)
+  while (heap.length) {
     const i = pop();
     if (closed[i]) continue;
     closed[i] = 1;
