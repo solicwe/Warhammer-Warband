@@ -3231,6 +3231,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onShake={triggerShake} />
 
         {toast && <div className="toast">{toast}</div>}
+        {/* on the board, under the phase bar: it never covers the tabs or takes a tap */}
+        {s.botKillAlert && Date.now() - s.botKillAlert.time < 5000 && (
+          <div className="toast kill-alert" role="status"><Icon name="skull" size={15} />{s.botKillAlert.text} ({s.botKillAlert.victim})</div>
+        )}
         {tape.on && (
           <div className="tape-bar">
             <span>{tapeInfo ? tapeInfo.line : tape.a ? 'Tap the second point (tap a model = base to base + line of sight)' : 'Tape measure: tap a model or a first point'}</span>
@@ -3567,12 +3571,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             </div>
           </div>
         </>
-      )}
-      {s.botKillAlert && Date.now() - s.botKillAlert.time < 5000 && (
-        <div style={{ position: 'fixed', top: 54, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: 'rgba(220, 38, 38, 0.95)', border: '1px solid #f87171', borderRadius: 8, padding: '8px 18px', color: '#fff', fontWeight: 800, fontSize: '13px', boxShadow: '0 4px 16px rgba(0,0,0,0.6)', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Icon name="skull" size={16} />
-          <span>{s.botKillAlert.text} ({s.botKillAlert.victim})</span>
-        </div>
       )}
     </div>
   );

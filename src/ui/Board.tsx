@@ -700,6 +700,14 @@ function BoardImpl(props: BoardProps) {
   const padL = sides.some((x) => x.at !== 'right') ? SIDE : 0, padR = sides.some((x) => x.at === 'right') ? SIDE : 0;
   const home = useMemo(() => ({ x: -1 - padL, y: -1, w: W + 2 + padL + padR, h: H + 2 }), [padL, padR, W, H]);
   const [vb, setVb] = useState(home);
+  // zooming out stops at the whole table and panning stays on it: the board can't shrink into a corner
+  const homeRef = useRef(home);
+  homeRef.current = home;
+  const clampVb = useCallback((v: typeof vb) => {
+    const hm = homeRef.current;
+    const w = Math.min(v.w, hm.w), h = (w / v.w) * v.h;
+    return { x: Math.min(hm.x + hm.w - w, Math.max(hm.x, v.x)), y: Math.min(hm.y + Math.max(0, hm.h - h), Math.max(hm.y, v.y)), w, h };
+  }, []);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const pan = useRef<{ id: number; sx: number; sy: number; vb: typeof vb; moved: boolean } | null>(null);
   const pinch = useRef<{ d: number; vb: typeof vb; mid: Pt } | null>(null);
@@ -744,7 +752,7 @@ function BoardImpl(props: BoardProps) {
   const zoomAt = (factor: number, c: Pt, base = vb) => {
     const w = Math.min(W * 2.5, Math.max(8, base.w * factor));
     const h = (w / base.w) * base.h;
-    setVb({ x: c.x - ((c.x - base.x) * w) / base.w, y: c.y - ((c.y - base.y) * h) / base.h, w, h });
+    setVb(clampVb({ x: c.x - ((c.x - base.x) * w) / base.w, y: c.y - ((c.y - base.y) * h) / base.h, w, h }));
   };
 
   const onWheel = (e: React.WheelEvent) => {
@@ -879,7 +887,7 @@ function BoardImpl(props: BoardProps) {
       const rect = svgRef.current?.getBoundingClientRect();
       if (!rect) return;
       const scale = Math.max(pn.vb.w / rect.width, pn.vb.h / rect.height);
-      setVb({ ...pn.vb, x: pn.vb.x - dx * scale, y: pn.vb.y - dy * scale });
+      setVb(clampVb({ ...pn.vb, x: pn.vb.x - dx * scale, y: pn.vb.y - dy * scale }));
     }
   }, []);
 
@@ -1315,6 +1323,7 @@ function BoardImpl(props: BoardProps) {
       onWheel={onWheel}
     >
       <defs>
+        <clipPath id="board-clip"><rect x={0} y={0} width={W} height={H} /></clipPath>
         <marker id="plan-head" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f87171" /></marker>
         {ground && <pattern id="ground" width="11" height="11" patternUnits="userSpaceOnUse"><image href={ground} width="11" height="11" preserveAspectRatio="none" /></pattern>}
         <pattern id="grid" width="6" height="6" patternUnits="userSpaceOnUse">
@@ -1391,14 +1400,14 @@ function BoardImpl(props: BoardProps) {
         : <rect x={0} y={0} width={W} height={H} fill={ground ? 'url(#ground)' : 'url(#ash)'} />}
       <rect x={0} y={0} width={W} height={H} fill="url(#grid)" />
       {props.zones !== false && (
-        <>
+        <g clipPath="url(#board-clip)">
           <polygon points={scaledPoly(dep.zones.attacker, W, H).map((p) => `${p.x},${p.y}`).join(' ')} fill={SOFT[attacker]} stroke={COLORS[attacker]} strokeWidth={0.1} strokeDasharray="0.5 0.3" />
           <polygon points={scaledPoly(dep.zones.defender, W, H).map((p) => `${p.x},${p.y}`).join(' ')} fill={SOFT[defender]} stroke={COLORS[defender]} strokeWidth={0.1} strokeDasharray="0.5 0.3" />
-        </>
+        </g>
       )}
       {/* Detachment Territory Auras: Thousand Sons Flow of Magic & Chaos Daemons Shadow of Chaos */}
       {territoryAuras}
-      <polygon points={scaledPoly(dep.territory.attacker, W, H).map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth={0.1} strokeDasharray="0.5 0.4" pointerEvents="none" />
+      <polygon points={scaledPoly(dep.territory.attacker, W, H).map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth={0.1} strokeDasharray="0.5 0.4" pointerEvents="none" clipPath="url(#board-clip)" />
       {Array.from({ length: Math.floor(H / 6) + 1 }, (_, i) => (
         <text key={`ty${i}`} x={0.2} y={i * 6 + 0.5} fontSize={0.6} fill="rgba(255,255,255,0.4)" pointerEvents="none">{i * 6}"</text>
       ))}
