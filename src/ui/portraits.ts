@@ -5,6 +5,7 @@
 //     exported as a zip in the same folder layout, ready to drop into `public/images/units/` and upload.
 import { useEffect, useSyncExternalStore } from 'react';
 import { KEYS, readJSON, writeJSON } from '../services/storage';
+import { setPicturedCheck } from '../engine/state';
 import cloudSeed from './cloudSeed.json';
 import namesSeed from './names.json';
 
@@ -91,6 +92,8 @@ export function hasRealPortrait(datasheetName: string): boolean {
   const p = getPortrait(datasheetName);
   return Boolean(p && !p.includes('placeholder') && !p.includes('default') && !p.includes('generic'));
 }
+
+setPicturedCheck(hasRealPortrait);
 
 /** Check if image URL is an invalid placeholder or generic icon */
 export function isPlaceholderIcon(imgUrl?: string): boolean {

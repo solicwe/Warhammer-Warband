@@ -12,7 +12,7 @@ import {
   alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, extractToReserves, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
   heroFx, phaseKey,
-  tableH, tableW,
+  tableH, tableW, hasPicture,
 } from './state';
 import RIPPERS from '../../data/extra/ripper-swarms.json';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
@@ -22,7 +22,6 @@ import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathDistance, pa
 import { detOnCommandStart } from '../rules-engine/detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
-import { hasRealPortrait } from '../ui/portraits';
 
 
 
@@ -2098,8 +2097,8 @@ export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingre
   const W = tableW(s), H = tableH(s);
   const zone = how === 'deploy' ? zoneOf(s, u.owner) : null;
   const cands: Pt[] = [];
-  const gridStep = (how === 'deepStrike' || how === 'ingress') ? 2.0 : 1.5;
-  for (let y = 1; y < H; y += gridStep) for (let x = 1; x < W; x += gridStep) cands.push({ x, y });
+  // a fine grid: the full checks are capped below, and a coarser one misses the few legal spots near a Teleport Homer
+  for (let y = 1; y < H; y += 1.5) for (let x = 1; x < W; x += 1.5) cands.push({ x, y });
   const enemyZone = zoneOf(s, other(u.owner));
   const ec = polyCentroid(enemyZone);
   const ref = near ?? (zone ? ec : polyCentroid(zoneOf(s, u.owner)));
@@ -2803,7 +2802,7 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
   s.campaign.battleEventTriggered = true;
 
   // Filter candidates that strictly have real portraits
-  const validCandidates = enemyUnits.filter((u) => hasRealPortrait(u.sources?.[0] ?? u.name));
+  const validCandidates = enemyUnits.filter((u) => hasPicture(u.sources?.[0] ?? u.name));
   const candidate = validCandidates.find((u) => (u.keywords.includes('VEHICLE') || u.keywords.includes('MONSTER') || u.keywords.includes('ELITE')) && !u.keywords.includes('TITANIC'))
     ?? validCandidates.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC') && !u.keywords.includes('EPIC HERO'))
     ?? validCandidates[0]
@@ -2940,7 +2939,7 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
 
     const roll = nextRandom(s);
     if (roll < 0.5 && mostExp && enemyTemplates.length > 0) {
-      const validTemplates = enemyTemplates.filter((u) => hasRealPortrait(u.sources?.[0] ?? u.name));
+      const validTemplates = enemyTemplates.filter((u) => hasPicture(u.sources?.[0] ?? u.name));
       const cand = validTemplates.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC'))
         ?? validTemplates[0]
         ?? enemyTemplates[0];
