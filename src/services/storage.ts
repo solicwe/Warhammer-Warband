@@ -21,15 +21,9 @@ export function readText(key: string): string | null {
   try { return localStorage.getItem(key); } catch { return null; }
 }
 
-// the account service listens here, so a signed-in player's saves are backed up as they change
-let writeHook: ((key: string) => void) | null = null;
-export const setWriteHook = (h: typeof writeHook) => { writeHook = h; };
-
 /** false when the value could not be stored (storage full or blocked) */
 export function writeText(key: string, value: string): boolean {
-  try { localStorage.setItem(key, value); } catch { return false; }
-  writeHook?.(key);
-  return true;
+  try { localStorage.setItem(key, value); return true; } catch { return false; }
 }
 
 export function readJSON<T>(key: string): T | null {
@@ -45,8 +39,7 @@ export function writeJSON(key: string, value: unknown): boolean {
 }
 
 export function removeKey(key: string) {
-  try { localStorage.removeItem(key); } catch { return; }
-  writeHook?.(key);
+  try { localStorage.removeItem(key); } catch { /* nothing stored */ }
 }
 
 // ---------- campaign ----------

@@ -4,7 +4,7 @@ import { listPoints } from '../engine/army';
 import { loadRun } from '../services/storage';
 import { lastRound } from '../engine/state';
 import type { GameState } from '../engine/types';
-import { AccountPanel } from './Account';
+import { SavesPanel } from './Saves';
 import { Emblem, titleCase } from './ArmyBuilder';
 import { useFactions, type FactionIndex } from './data';
 import { Icon, Logo } from './Icon';
@@ -128,7 +128,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
           {!armies.length && <div className="empty">No armies yet. Tap “New army” to build one.</div>}
         </section>
 
-        <AccountPanel />
+        <SavesPanel />
 
         {pop && (() => {
           const a = armies.find((x) => x.id === pop.id);

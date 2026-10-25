@@ -1,6 +1,6 @@
-// A save file (or a Google Drive backup) is checked whole before anything is written to this device.
+// A save file is checked whole before anything is written to this device.
 import { expect, it } from 'vitest';
-import { parseSave } from './account';
+import { parseSave } from './saves';
 import { KEYS } from './storage';
 
 const save = (data: Record<string, unknown>, extra: Record<string, unknown> = {}) =>

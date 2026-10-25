@@ -4,8 +4,8 @@ Warhammer Warband is a browser game for playing Warhammer 40,000 (11th edition) 
 army list, then fight a bot, pass the phone to a friend, or watch two bots play each other. There is also a campaign:
 a run of battles across a branching map where your army gains experience, upgrades and reinforcements.
 
-Everything runs in the browser. There is no game server. Your armies and battles are saved on your device, and you can
-sign in with Google to keep them in sync across devices.
+Everything runs in the browser. There is no game server and no account. Your armies and battles are saved on your
+device, and a save file moves them to another one.
 
 This is an unofficial fan project. It is not made, approved or endorsed by Games Workshop. Warhammer 40,000 and all
 related names, rules text and imagery belong to Games Workshop.
@@ -19,6 +19,8 @@ related names, rules text and imagery belong to Games Workshop.
 3. **Play your turns.** You move units and pick targets. The game handles the rest: it rolls every die, applies
    re-rolls and modifiers, and resolves abilities at the right moment. Each roll is shown with the number it needed
    and why.
+4. **Or let the bot play for you.** The Idle button in the top bar hands your side to the bot, in a normal battle
+   or in the campaign, and you watch. Tap it again to take back control.
 
 The bot plays the same rules you do, including stratagems and faction abilities, and has several difficulty levels.
 
@@ -66,7 +68,9 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   big the unit is.
 - **Tech trees.** Each faction family (Imperium, Chaos, Tyranids and others) has its own tree of upgrades. The last
   tier unlocks Knights, Titans or other titanic units for recruitment.
-- **Idle auto-battle.** You can let the bot fight your battles for you and watch at 1x, 2x or 4x speed.
+- **Zombie Rush.** In the campaign the enemy bot fights differently from a normal battle: it ignores objectives,
+  never falls back from fear, always charges, and scores VP for every model and unit it kills instead of the
+  primary mission. Normal battles use the standard rules for both sides.
 
 ## On your phone
 
@@ -78,20 +82,15 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 - Pinch to zoom and drag to pan. The view stays on the table.
 - The site can be added to your home screen and works like an app.
 
-## Accounts and saves
+## Saves
 
 - **On this device.** Armies, the battle in progress, the campaign and your settings are saved in the browser as you
-  play.
-- **Google sign-in.** Sign in from the home screen to back your saves up to Google Drive and restore them on another
-  device. The save goes to the app's private folder in your own Drive, which other apps and people can't see. On a new
-  device with no armies yet, signing in brings your saves across automatically. Otherwise the game asks before it
-  replaces anything.
-- **Save files.** Export file and Import file move everything by hand, with no account needed.
+  play. Closing the tab or the browser loses nothing.
+- **Save files.** On the home screen, Export file writes everything to one file and Import file reads it back, on
+  this device or another one. The game asks before it replaces anything.
 
-Privacy and security: the sign-in runs entirely in your browser through Google Identity Services. The app asks only
-for your name, email and its own Drive folder. The access token is kept in memory and never written to storage. Every
-save, from a file or from Drive, is checked in full before anything is written. The site sends a Content Security
-Policy that only allows its own files, Google Fonts and Google sign-in.
+Nothing leaves your device unless you export it. An imported file is checked in full before anything is written, and
+the site sends a Content Security Policy that only allows its own files and Google Fonts.
 
 ## Running it yourself
 
@@ -110,14 +109,8 @@ The workflow in `.github/workflows/deploy.yml` builds `main` and publishes it to
 
 1. In the repository settings, open Pages and set the source to GitHub Actions. Pages on a private repository
    needs a paid GitHub plan; on a public repository it is free.
-2. Optional, for Google sign-in: create an OAuth client of type "Web application" in Google Cloud Console and enable
-   the Google Drive API. Add your site's address (for example `https://<user>.github.io`) to its Authorized
-   JavaScript origins. Then add a repository variable (not a secret) named `GOOGLE_CLIENT_ID` holding the client id.
-   A client id is public by design. The app never uses a client secret. Without the variable, sign-in is simply
-   hidden and file export and import still work.
-
 All paths in the app are relative, so it works at `https://<user>.github.io/<repository>/`. The workflow also
-publishes a copy of the page as `404.html`, so a refresh or a return from sign-in never lands on an error page.
+publishes a copy of the page as `404.html`, so a refresh never lands on an error page.
 
 ## For developers
 

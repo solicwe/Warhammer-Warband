@@ -25,11 +25,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-        env:
-          # the Google sign-in client id: public, kept as a repository variable (Settings, Secrets and variables, Actions)
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
-      # GitHub Pages serves 404.html for any unknown path: the same app page, so a refresh or a
-      # sign-in redirect never lands on a dead page; .nojekyll keeps files starting with _ served
+      # GitHub Pages serves 404.html for any unknown path: the same app page, so a refresh never lands on a
+      # dead page; .nojekyll keeps files starting with _ served
       - run: cp dist/index.html dist/404.html && touch dist/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

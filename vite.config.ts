@@ -22,18 +22,17 @@ function dataVersion() {
   return h.digest('hex').slice(0, 10);
 }
 
-// Content Security Policy of the built site: our own files, Google Fonts, and Google sign-in / Drive for account sync.
+// Content Security Policy of the built site: our own files and Google Fonts.
 // Build only: the dev server's hot reload injects inline scripts. An absolute VITE_IMAGE_BASE host is allowed too.
 function csp(): string {
   const imageHost = /^https?:\/\//.test(process.env.VITE_IMAGE_BASE ?? '') ? new URL(process.env.VITE_IMAGE_BASE!).origin : '';
   return [
     "default-src 'self'",
-    "script-src 'self' https://accounts.google.com/gsi/client",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    `img-src 'self' data: blob: https://*.googleusercontent.com ${imageHost}`.trim(),
-    `connect-src 'self' data: blob: https://www.googleapis.com https://accounts.google.com ${imageHost}`.trim(),
-    'frame-src https://accounts.google.com',
+    `img-src 'self' data: blob: ${imageHost}`.trim(),
+    `connect-src 'self' data: blob: ${imageHost}`.trim(),
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
