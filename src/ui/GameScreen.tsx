@@ -2935,6 +2935,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (spectate) return (
       <div className="row">
         <div className="bot-act grow"><span className={`bot-dot s${actingBot ?? 0}`} />{actingBot !== null ? `${pName(s, actingBot)} is playing` : 'Between turns'}</div>
+        <div className="seg" role="radiogroup" aria-label="Speed" style={{ minWidth: 170 }}>
+          <button role="radio" aria-checked={speed === 0} className={speed === 0 ? 'on' : ''} onClick={() => setSpeed(0)}>Pause</button>
+          <button role="radio" aria-checked={speed === 1} className={speed === 1 ? 'on' : ''} onClick={() => setSpeed(1)}>Normal</button>
+          <button role="radio" aria-checked={speed === 2} className={speed === 2 ? 'on' : ''} onClick={() => setSpeed(2)}>Fast</button>
+        </div>
       </div>
     );
     if (s.window && (!actingBot || s.window.player !== actingBot)) return windowPanel();
@@ -3112,6 +3117,33 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <button className="tb-tool" onClick={() => openStrats()} aria-label="Stratagems">
             <span className="tb-ico"><Icon name="strat" size={20} /></span>
             <span className="tb-lbl">Strat</span>
+          </button>
+          <button
+            className={`tb-tool idle-btn ${autoPlay ? 'active' : ''}`}
+            onClick={() => {
+              const next = !autoPlay;
+              setAutoPlay(next);
+              if (next) {
+                setSpeed(2);
+                setRush(true);
+                if (s.phase === 'deploy') {
+                  act((g) => {
+                    g.autoDeploy = [0, 1];
+                    g.deployAllOnField = [0, 1];
+                  });
+                }
+                flash('IDLE MODE: Autonomous Bot Engaged');
+              } else {
+                setRush(false);
+                flash('Idle Mode Paused');
+              }
+            }}
+            aria-label="Toggle Idle Auto-Play"
+            title="Toggle Autonomous Idle Mode"
+            style={autoPlay ? { color: '#4ade80' } : undefined}
+          >
+            <span className="tb-ico"><Icon name="bot" size={20} /></span>
+            <span className="tb-lbl">{autoPlay ? 'IDLE ON' : 'IDLE'}</span>
           </button>
           {canUndo && (
             <button
