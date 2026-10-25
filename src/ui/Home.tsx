@@ -49,7 +49,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
            <div className="slate-in">
             <div className="resume-head">
               <span className="label">{live.campaign ? 'Campaign battle' : 'Battle in progress'}</span>
-              <span className="resume-round">{live.phase === 'deploy' || live.phase === 'scouts' ? 'Deployment' : `Round ${live.round} of ${lastRound(live)}`}</span>
+              <span className="resume-round">{live.phase === 'deploy' || live.phase === 'scouts' ? 'Deployment' : `Round ${live.round} of ${Math.max(live.round, lastRound(live))}`}</span>
             </div>
             <div className="resume-score">
               <span className="p0">{live.players[0].name}</span>
@@ -74,10 +74,11 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
               <Icon name="next" size={20} className="mode-go" />
             </span>
           </button>
-          <button className="mode slate" onClick={onCampaign}>
+          <button className="mode slate main" onClick={onCampaign}>
             <span className="slate-in">
               <span className="mode-icon"><Icon name="trophy" size={22} /></span>
-              <span className="mode-text"><b>Campaign (Idle Mode)</b><small>{run && !run.over ? `Stage ${Math.min(runLayer + 1, runLayers)} of ${runLayers} · ${run.fate} Fate · ${run.scrap ?? 0} Scrap · 100% Autonomous AI` : 'Universal Auto-Play, branching battles, armory, battle honors, and Warlord'}</small></span>
+              <span className="mode-text"><b>Campaign</b><small>{run && !run.over ? `Stage ${Math.min(runLayer + 1, runLayers)} of ${runLayers} · ${run.fate} Fate · ${run.scrap ?? 0} Scrap` : 'Branching battles, armory, battle honors, and Warlord'}</small></span>
+              <Icon name="next" size={20} className="mode-go" />
             </span>
           </button>
 

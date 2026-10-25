@@ -80,6 +80,8 @@ export function homeScoresVp(s: GameState, p: PlayerId): boolean {
 
 /** How to play this battle round, and how much to fear losses (a factor on the movement scoring's caution). */
 export function stanceFor(s: GameState, p: PlayerId): { stance: Stance; risk: number } {
+  // Zombie Rush: Enemy bot plays 100% fearless attack mode
+  if (p !== 0) return { stance: 'push', risk: 0 };
   if (s.isBossAnnihilation) return { stance: 'push', risk: 0.2 };
   if (lastTurn(s, p) && !botOff('allin')) return { stance: 'all-in', risk: 0.3 };
   // an aggressive army at every level: it goes forward from the first turn and keeps pressing (the home objective
@@ -131,9 +133,9 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
   const foes = boardUnits(s, other(p)).filter((e) => !hasKw(e, 'AIRCRAFT'));
   if (!foes.length) return { stance, risk, jobs };
 
-  if (s.isBossAnnihilation) {
+  if (p !== 0 || s.isBossAnnihilation) {
     for (const u of mine) {
-      jobs.set(u.id, { role: 'hammer', why: 'Boss Annihilation: seek and destroy enemy units' });
+      jobs.set(u.id, { role: 'hammer', why: 'Zombie Rush: seek and destroy player units' });
     }
     return { stance, risk, jobs };
   }

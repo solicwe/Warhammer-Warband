@@ -475,6 +475,19 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
     if (ctx.front) ctx.toFront = distanceField(s, u, 'normal', lead, [ctx.front]);
     if (ctx.post) ctx.toPost = distanceField(s, u, 'normal', lead, [ctx.post]);
   }
+  if (u.owner !== 0) {
+    ctx.holder = false;
+    ctx.ocNeed = [];
+    ctx.claim = undefined;
+    ctx.post = undefined;
+    ctx.quarter = undefined;
+    ctx.card = undefined;
+    ctx.front = undefined;
+    const nearest = [...foes].sort((a, b) => unitDistance(u, a.u) - unitDistance(u, b.u))[0]?.u;
+    ctx.target = nearest;
+    ctx.brawler = true;
+    ctx.risk = 0;
+  }
   return ctx;
 }
 
@@ -543,6 +556,7 @@ function seen(s: GameState, e: UnitState, u: UnitState): boolean {
 
 /** Expected loss (in points) during the enemy's next turn: shots from units in range after a move, charges from brawlers. */
 function dangerScore(s: GameState, u: UnitState, ctx: Ctx): number {
+  if (u.owner !== 0) return 0; // Zombie Rush: Fearless
   let shots = 0, melee = 0;
   const infantryInCover = alive(u).every((m) => ['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) && s.terrain.some((t) => t.category !== 'exposed' && bodyTouchesPoly(m, 0, t.poly)));
   for (const f of ctx.foes) {
@@ -641,6 +655,7 @@ function positionScore(s: GameState, u: UnitState): number {
 
 /** How much holding objectives matters to this unit: less for an expensive damage dealer (cheap units hold, it fights). */
 function objectiveWeight(s: GameState, u: UnitState, ctx: Ctx): number {
+  if (u.owner !== 0) return 0; // Zombie Rush: Objectives are ignored by bot
   if (s.isBossAnnihilation) return 0.05;
   if (ctx.deliver) return 0.3;
   if (ctx.escort && ctx.escort.weight >= 3) return 0.3; // a Techmarine's job is its vehicle, not holding ground

@@ -555,10 +555,10 @@ export function botShootOne(s: GameState): boolean {
       markTried(s, u);
       unitSelected(s, u, 'shoot');
       botShootActs(s, u);
-      botUseActs(s, u.owner, ['selectedToShoot', 'shooting'], u.id);
       // a mission action is worth roughly 16 points of damage per VP it brings (a 1000-point game is decided by ~30 VP)
       const ACTION_VP: Record<string, number> = { cleanse: 3, plunder: 5, 'booby-trap': 3, decoy: 4, 'sensor-sweep': 4, triangulate: 5, surveil: 4, 'extract-intelligence': 7, 'secure-asset': 4, 'maintain-control': 3, 'vanguard-operation': 4, sabotage: 4 };
-      const acts = actionOptions(s, u.owner).filter((o) => o.unitId === u.id);
+      // Zombie Rush: bot units never waste shooting on non-combat mission actions
+      const acts = u.owner === 0 ? actionOptions(s, u.owner).filter((o) => o.unitId === u.id) : [];
       if (acts.length) {
         const P = s.players[u.owner];
         const already = (a: string) => P.mission.done.some((d) => d.action === a && d.turn === s.turn) || s.pendingActions.some((x) => x.action === a && x.player === u.owner && x.turn === s.turn);
@@ -627,8 +627,9 @@ export function botChargeOne(s: GameState, eager = false): boolean {
     };
     const best = [...enemies].sort((a, b) => value(b) * p2d6(unitDistance(u, b)) - value(a) * p2d6(unitDistance(u, a)))[0];
     const p = p2d6(unitDistance(u, best));
-    // shooters only charge weak, close targets; brawlers accept long shots
-    if (value(best) <= (eager ? -4 : 0) || p < (eager ? 0.2 : brawler ? 0.25 : 0.58)) continue;
+    // shooters only charge weak, close targets; brawlers accept long shots; Zombie Rush bot always charges
+    const isZombie = u.owner !== 0;
+    if (!isZombie && (value(best) <= (eager ? -4 : 0) || p < (eager ? 0.2 : brawler ? 0.25 : 0.58))) continue;
     botChargeBonusStratagem(s, u, unitDistance(u, best), best);
     declareCharge(s, u);
     let opts = chargeTargetOptions(s, u);

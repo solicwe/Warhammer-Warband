@@ -18,7 +18,7 @@
 // Hostile Acquisition / Fortify Takeover themselves are data (data/detachment-rules.json, conditions hostile /
 // fortify), like the detachment rules, abilities and stratagems.
 
-import { alive, boardUnits, engagedEnemies, log, other, pushFx, unitById, unitDistance } from '../engine/state';
+import { alive, boardUnits, engagedEnemies, extractToReserves, log, other, pushFx, unitById, unitDistance } from '../engine/state';
 import { setBackUp } from '../rules-engine/activations';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 import { zonePoly } from '../engine/missions';
@@ -197,7 +197,7 @@ export function nomadStrategist(s: GameState) {
   const n = Math.min(units.length, 1 + Math.floor(Math.min(4, getYieldPoints(s, p)) / 2));
   if (n > 1 && !spendYieldPoints(s, p, (n - 1) * 2, 'Nomad Strategist')) return;
   (b.used ??= {}).nomad = 'battle';
-  for (const u of units.slice(0, n)) { u.status = 'reserves'; u.move = null; log(s, `Nomad Strategist: ${u.name} is placed into Strategic Reserves`, 'info', p); }
+  for (const u of units.slice(0, n)) { extractToReserves(s, u, 'Nomad Strategist'); log(s, `Nomad Strategist: ${u.name} is placed into Strategic Reserves`, 'info', p); }
 }
 
 /** Dêlvwerke Navigator (Reinforcements step): a CTHONIAN BESERKS unit gets a model back, and one more per 2YP spent (up to 2YP). */

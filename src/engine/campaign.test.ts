@@ -93,7 +93,7 @@ describe('campaign', () => {
     const sm = load('SM');
     const list = autoList(sm, 500, 3);
     let run = newRun(sm, list, ['ORK'], 42);
-    run.scrap = 300;
+    run.scrap = 500;
 
     // Recruit a 5-man Intercessor Squad
     run = recruitUnit(run, sm, 'Intercessor Squad', 5);

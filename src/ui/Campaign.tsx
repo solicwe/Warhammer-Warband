@@ -6,7 +6,7 @@ import { loadRun, saveRun } from '../services/storage';
 import { attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
-  adoptDetachment, afterBattle, applyAutoUpgradeUnit, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
+  adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyAutoUpgradeUnit, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
   bossRuleById, buyDatasheetHonor, buyEnhancementForUnit, buyHonorForUnit, buyTechNode, canBuyDatasheetHonor, canRecruitTitanOrKnight,
   changeSquadSize, cheapest, continueNextLoop, datasheetHonorCost, detachmentScrapCost, enhancementScrapCost, enter,
   getFactionFamily, getFactionTechNodes, getSmartBattleHonors, honorMinXp, honorRequiredRank, isFactionAllowedKnight, makeOffer, newRun,
@@ -125,9 +125,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       if (!playable(f)) { setErr(`${f.name} has too few units in the data for a campaign yet. Pick another army.`); return; }
       const seed = Date.now() >>> 0;
       const list = { ...autoList(f, START_POINTS, seed, true), name: `${f.name} Strike Force` };
-      const enemies = (index?.factions ?? []).map((x) => x.id).filter((id) => id !== f.id && hasFactionRules(id) && id !== 'TL');
+      const enemies = ALL_PLAYABLE_FACTIONS.filter((id) => id !== f.id && id !== 'TL');
       setFac(f);
-      setRun(newRun(f, list, enemies.length ? enemies : ['ORK'], seed));
+      setRun(newRun(f, list, enemies, seed));
       play('turn');
     } catch (e) { setErr(`Could not start: ${e instanceof Error ? e.message : String(e)}`); } finally { setBusy(false); }
   };
@@ -148,10 +148,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         names: ['You', isBoss ? `${ef.name} Warlord` : ef.name], secondaryMode: 'none', maxRounds, seed: node.enemy.seed,
         primaryId: 'roguelike-annihilation',
       });
-      const isAuto = Boolean(r.autoBattle);
-      s.botPlayer = isAuto ? 0 : 1;
-      s.bots = isAuto ? [0, 1] : [1];
-      (s as any).autoSpeed = r.autoSpeed ?? 1;
+      s.botPlayer = 1;
+      s.bots = [1];
       s.botLevel = node.enemy.level;
       applyCampaign(s, r, node.enemy.rules || []);
       setRun(r);

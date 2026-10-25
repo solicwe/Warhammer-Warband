@@ -14,7 +14,7 @@ import {
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
 import { baseDist, bodyAt, bodyTouchesPoly, circleTouchesPoly, dist, gap, ptGap } from '../engine/geometry';
-import { alive, boardUnits, centreOf, emitReact, engagedEnemies, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from '../engine/state';
+import { alive, boardUnits, centreOf, emitReact, engagedEnemies, extractToReserves, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, unitById, unitDistance } from '../engine/state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from '../engine/types';
 import { unitVisibleTo } from '../engine/visibility';
 
@@ -850,7 +850,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.oppCp) { const O = s.players[other(u.owner)]; const n = Math.min(O.cp, -a.oppCp); if (n > 0) { O.cp -= n; log(s, `${def.name}: ${O.name} loses ${n}CP`, 'cp', u.owner); } }
     if (a.cp) { s.players[u.owner].cp += a.cp; log(s, `+${a.cp}CP (${def.name})`, 'cp', u.owner); notifyAbilityCpGain(s, u.owner, a.cp, def.name); }
     if (a.reserves) {
-      on.status = 'reserves'; on.move = null;
+      extractToReserves(s, on, def.name);
       if (a.earlyArrival) on.arriveEarly = s.round;
       log(s, `${def.name}: ${on.name} is placed into Strategic Reserves`, 'info', u.owner);
     } else if (a.earlyArrival) {

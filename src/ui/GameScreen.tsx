@@ -4,7 +4,7 @@ import { KEYS, readText, writeText } from '../services/storage';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { chapterRules } from '../engine/army';
 import { RuleText } from './RuleText';
-import { modelPortraitKey } from './portraits';
+import { getPortrait, modelPortraitKey } from './portraits';
 import { loadoutSummary } from './loadout';
 import { WeaponFireModePanel } from './WeaponFireModePanel';
 import { Em } from './Em';
@@ -1040,18 +1040,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             else flash(`${selUnit.name} must Remain Stationary`);
           },
         });
-        actions.push({
-          label: 'Advance',
-          onClick: () => {
-            const ok = act((g) => {
-              const gu = unitById(g, selUnit.id);
-              if (!beginMove(g, gu, 'advance')) return false;
-              rollAdvance(g, gu);
-              return true;
-            });
-            if (ok) setMode({ k: 'move', unitId: selUnit.id, kind: 'advance', fly: fly && hasKw(selUnit, 'FLY') }, startPaths(selUnit));
-          },
-        });
       } else {
         actions.push({
           label: 'Fall back',
@@ -1066,14 +1054,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           },
         });
       }
-        actions.push({
-          label: 'Hold',
-          onClick: () => {
-            act((g) => remainStationary(g, unitById(g, selUnit.id)));
-            setSel(null);
-          },
-        });
-      }
+    }
     } else if (s.phase === 'shooting' && onBoard(selUnit) && !selUnit.selectedToShoot) {
       const smodes = shootingModes(s, selUnit);
       if (smodes.length > 0) {
@@ -2954,11 +2935,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (spectate) return (
       <div className="row">
         <div className="bot-act grow"><span className={`bot-dot s${actingBot ?? 0}`} />{actingBot !== null ? `${pName(s, actingBot)} is playing` : 'Between turns'}</div>
-        <div className="seg" role="radiogroup" aria-label="Speed" style={{ minWidth: 170 }}>
-          <button role="radio" aria-checked={speed === 0} className={speed === 0 ? 'on' : ''} onClick={() => setSpeed(0)}>Pause</button>
-          <button role="radio" aria-checked={speed === 1} className={speed === 1 ? 'on' : ''} onClick={() => setSpeed(1)}>Normal</button>
-          <button role="radio" aria-checked={speed === 2} className={speed === 2 ? 'on' : ''} onClick={() => setSpeed(2)}>Fast</button>
-        </div>
       </div>
     );
     if (s.window && (!actingBot || s.window.player !== actingBot)) return windowPanel();
@@ -3125,7 +3101,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <button className="icon-btn" onClick={() => setShowMenu(true)} aria-label="Menu"><Icon name="menu" size={24} /></button>
           <SideScore s={s} p={0} label={sideLabel(0)} onOpen={() => { setCardSide(0); setShowCards(true); }} />
           <div className="round-box" aria-label="Battle status">
-            <span className="rb-round">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : `Round ${s.round}/${lastRound(s)}`}</span>
+            <span className="rb-round">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : s.isBossAnnihilation ? `Round ${s.round}` : `Round ${s.round}/${Math.max(s.round, lastRound(s))}`}</span>
             <span className={`rb-turn ${s.active ? 'p1' : 'p0'}`}>{turnText}</span>
           </div>
           <SideScore s={s} p={1} label={sideLabel(1)} onOpen={() => { setCardSide(1); setShowCards(true); }} />
@@ -3136,33 +3112,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <button className="tb-tool" onClick={() => openStrats()} aria-label="Stratagems">
             <span className="tb-ico"><Icon name="strat" size={20} /></span>
             <span className="tb-lbl">Strat</span>
-          </button>
-          <button
-            className={`tb-tool idle-btn ${autoPlay ? 'active' : ''}`}
-            onClick={() => {
-              const next = !autoPlay;
-              setAutoPlay(next);
-              if (next) {
-                setSpeed(2);
-                setRush(true);
-                if (s.phase === 'deploy') {
-                  act((g) => {
-                    g.autoDeploy = [0, 1];
-                    g.deployAllOnField = [0, 1];
-                  });
-                }
-                flash('IDLE MODE: 100% Autonomous Bot Engaged');
-              } else {
-                setRush(false);
-                flash('Idle Mode Paused');
-              }
-            }}
-            aria-label="Toggle Idle Auto-Play"
-            title="Toggle 100% Autonomous Idle Mode"
-            style={autoPlay ? { color: '#4ade80' } : undefined}
-          >
-            <span className="tb-ico"><Icon name="bot" size={20} /></span>
-            <span className="tb-lbl">{autoPlay ? 'IDLE ON' : 'IDLE'}</span>
           </button>
           {canUndo && (
             <button
@@ -3358,7 +3307,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 <div className="mc-head">
                   <span className="mc-kicker">Primary Mission</span>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <span className="prim-status-pill">Active · Round {s.round}/{lastRound(s)}</span>
+                    <span className="prim-status-pill">Active · Round {s.round}/{Math.max(s.round, lastRound(s))}</span>
                     <span className="disp-chip" style={{ background: disp.color }}>{disp.name}</span>
                   </div>
                 </div>
@@ -3530,9 +3479,22 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{s.reinforcementAlert.text}</div>
             </div>
             <div style={{ color: '#e2e8f0', fontSize: '0.92rem' }}>Strategic sensors have detected unexpected hostile reserve forces mobilizing onto the battle grid! Battle extended to 5 Rounds.</div>
-            <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '10px 14px' }}>
-              <div style={{ fontWeight: 700, color: '#fca5a5' }}>{s.reinforcementAlert.unitName}</div>
-              <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{s.reinforcementAlert.factionName} · {s.reinforcementAlert.count} models · Round {s.reinforcementAlert.round} Strategic Reserves</div>
+            <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {(() => {
+                const photo = getPortrait(s.reinforcementAlert.unitName);
+                return photo ? (
+                  <img
+                    src={photo}
+                    alt=""
+                    style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', flex: 'none', border: '1px solid #ef4444' }}
+                    onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                  />
+                ) : null;
+              })()}
+              <div>
+                <div style={{ fontWeight: 700, color: '#fca5a5' }}>{s.reinforcementAlert.unitName}</div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{s.reinforcementAlert.factionName} · {s.reinforcementAlert.count} models · Round {s.reinforcementAlert.round} Strategic Reserves</div>
+              </div>
             </div>
             <button className="btn primary big wide" style={{ background: '#dc2626', borderColor: '#ef4444', fontWeight: 700 }} onClick={() => { act((g) => { g.reinforcementAlert = null; }); }}>Acknowledge Threat</button>
           </div>
@@ -3550,9 +3512,22 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               <div style={{ fontSize: '14.5px', color: '#fecaca', lineHeight: 1.4 }}>
                 A colossal <b>{s.titanAlert.unitName}</b> has made landfall. Void Shields active. All friendly units prepare for catastrophic engagement!
               </div>
-              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '8px', padding: '10px 14px' }}>
-                <div style={{ fontWeight: 800, color: '#fca5a5' }}>{s.titanAlert.unitName}</div>
-                <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>{s.titanAlert.factionName} · TITAN CLASS · Battle Round {s.titanAlert.round}</div>
+              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {(() => {
+                  const photo = getPortrait(s.titanAlert.unitName);
+                  return photo ? (
+                    <img
+                      src={photo}
+                      alt=""
+                      style={{ width: 56, height: 56, borderRadius: 6, objectFit: 'cover', flex: 'none', border: '1px solid #ef4444' }}
+                      onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                    />
+                  ) : null;
+                })()}
+                <div>
+                  <div style={{ fontWeight: 800, color: '#fca5a5' }}>{s.titanAlert.unitName}</div>
+                  <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>{s.titanAlert.factionName} · TITAN CLASS · Battle Round {s.titanAlert.round}</div>
+                </div>
               </div>
               <button className="btn primary big wide" style={{ background: '#dc2626', borderColor: '#ef4444', color: '#fff', fontWeight: 800, minHeight: '44px' }} onClick={() => { act((g) => { g.titanAlert = null; }); play('turn'); }}>
                 Acknowledge Titan Threat
@@ -3560,6 +3535,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             </div>
           </div>
         </>
+      )}
+      {s.botKillAlert && Date.now() - s.botKillAlert.time < 5000 && (
+        <div style={{ position: 'fixed', top: 54, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: 'rgba(220, 38, 38, 0.95)', border: '1px solid #f87171', borderRadius: 8, padding: '8px 18px', color: '#fff', fontWeight: 800, fontSize: '13px', boxShadow: '0 4px 16px rgba(0,0,0,0.6)', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Icon name="skull" size={16} />
+          <span>{s.botKillAlert.text} ({s.botKillAlert.victim})</span>
+        </div>
       )}
     </div>
   );

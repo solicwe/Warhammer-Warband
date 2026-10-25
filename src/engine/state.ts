@@ -23,6 +23,24 @@ export function pushFx(s: GameState, e: FxInput) {
   if (s.fx.length > 24) s.fx.splice(0, s.fx.length - 24);
 }
 
+/** Extract a unit from the battlefield back into Strategic/Deep Strike Reserves with VFX */
+export function extractToReserves(s: GameState, u: UnitState, source?: string) {
+  if (onBoard(u)) {
+    const at = centreOf(u);
+    const ms = alive(u).map((m) => ({ x: m.x, y: m.y, r: m.r ?? 0.6, name: m.name }));
+    pushFx(s, {
+      kind: 'extract',
+      unitId: u.id,
+      owner: u.owner,
+      at,
+      label: 'EXTRACTED TO RESERVES',
+      models: ms,
+    });
+  }
+  u.status = 'reserves';
+  u.move = null;
+}
+
 /** The look of a hero's ability effect: from what it does and who uses it. */
 export function skillStyle(u: UnitState, name: string, defensive = false): SkillStyle {
   const kw = (k: string) => hasKw(u, k);
@@ -83,7 +101,7 @@ export function unitDistance(a: UnitState, b: UnitState): number {
 }
 
 /** The battle round the game ends after (5, or fewer in a short game). */
-export const lastRound = (s: GameState) => s.maxRounds ?? RULES.battleRounds;
+export const lastRound = (s: GameState) => Math.max(s.round, s.maxRounds ?? RULES.battleRounds);
 /** How far into the battle this is, as the round of a full 5-round game (a short game's rounds count for more). */
 export const pace = (s: GameState) => (s.maxRounds ? (s.round * RULES.battleRounds) / s.maxRounds : s.round);
 

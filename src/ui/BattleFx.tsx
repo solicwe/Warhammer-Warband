@@ -3,9 +3,9 @@ import type { FxEvent, Pt } from '../engine/types';
 import type { WeaponFx } from '../engine/weaponFx';
 
 /** How long each kind of effect plays (ms). Most rolls are shown by the screen; charge rolls stay by their unit. */
-export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 1300, shock: 1500, heal: 1500, attack: 1900, mortal: 1200, skill: 2800, ritual: 2600, explosion: 2400, roll: 2600, rolloff: 0, cards: 0, primary: 0 };
+export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 1300, shock: 1500, heal: 1500, attack: 1900, mortal: 1200, skill: 2800, ritual: 2600, explosion: 2400, roll: 2600, rolloff: 0, cards: 0, primary: 0, extract: 550 };
 export interface ActiveFx { e: FxEvent; t0: number }
-const LIVE = new Set<FxEvent['kind']>(['attack', 'mortal', 'skill', 'ritual', 'shock', 'heal', 'explosion', 'roll']);
+const LIVE = new Set<FxEvent['kind']>(['attack', 'mortal', 'skill', 'ritual', 'shock', 'heal', 'explosion', 'roll', 'extract']);
 
 /**
  * The effects layer. It runs its own animation clock, so only these few shapes are redrawn
@@ -86,6 +86,7 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
   if (e.kind === 'move') return <ChargeFx paths={e.paths} f={f} seed={e.seq} />;
   if (e.kind === 'roll' && e.unitId && e.at) return <ChargeRollFx e={e} f={f} />;
   if (e.kind === 'ritual') return <RitualFx e={e} f={f} />;
+  if (e.kind === 'extract') return <ExtractFx e={e} f={f} />;
   if (e.kind === 'skill') return e.grand ? <SkillFx e={e} f={f} /> : <SkillLite e={e} f={(now - a.t0) / SKILL_LITE_MS} />;
   return null;
 }
@@ -1005,6 +1006,56 @@ function ArrivalFx({ at, f, seed, deepStrike, label }: { at: Pt; f: number; seed
             paintOrder="stroke"
           >
             {label || 'DEEP STRIKE ARRIVAL'}
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}
+
+// ---------- a unit is extracted to Reserves: warp beam, contracting energy ring, floating ascent, and banner ----------
+
+function ExtractFx({ e, f }: { e: Extract<FxEvent, { kind: 'extract' }>; f: number }) {
+  const at = e.at;
+  const lift = easeOut(f) * 2.5;
+  const modelFade = Math.max(0, 1 - f * 1.5);
+  const beamOp = f < 0.65 ? Math.sin((f / 0.65) * Math.PI) : 0;
+  const contractRing = Math.max(0.15, (1 - easeOut(f)) * 3.5);
+  const bannerFade = f < 0.12 ? f / 0.12 : f > 0.82 ? (1 - f) / 0.18 : 1;
+
+  return (
+    <g>
+      {/* Upward Warp Beam into the sky */}
+      {beamOp > 0 && (
+        <g opacity={beamOp}>
+          <rect x={at.x - 1.5} y={at.y - 22} width={3.0} height={22} fill="url(#fx-beam)" />
+          <rect x={at.x - 0.45} y={at.y - 22} width={0.9} height={22} fill="#ffffff" opacity={0.92} />
+          <Glow at={at} r={2.8} color="cyan" op={beamOp * 0.85} />
+        </g>
+      )}
+
+      {/* Contracting Energy Rings towards centre */}
+      {f < 0.9 && (
+        <g opacity={1 - f * 0.85}>
+          <circle cx={at.x} cy={at.y} r={contractRing} fill="none" stroke="#38bdf8" strokeWidth={0.16} />
+          <circle cx={at.x} cy={at.y} r={contractRing * 0.6} fill="none" stroke="#ffffff" strokeWidth={0.08} />
+        </g>
+      )}
+
+      {/* Model Silhouettes Lifting and Fading */}
+      {modelFade > 0 && e.models && e.models.map((m, idx) => (
+        <g key={idx} transform={`translate(${m.x} ${m.y - lift})`} opacity={modelFade}>
+          <circle cx={0} cy={0} r={m.r} fill="rgba(56, 189, 248, 0.3)" stroke="#38bdf8" strokeWidth={0.08} />
+          <circle cx={0} cy={0} r={m.r * 0.45} fill="rgba(255, 255, 255, 0.5)" />
+        </g>
+      ))}
+
+      {/* EXTRACTED TO RESERVES Banner */}
+      {bannerFade > 0 && (
+        <g transform={`translate(${at.x} ${at.y - 2.8 - lift * 0.3})`} opacity={bannerFade}>
+          <rect x={-3.5} y={-0.65} width={7.0} height={1.3} rx={0.32} fill="rgba(8, 14, 26, 0.94)" stroke="#38bdf8" strokeWidth={0.09} />
+          <text y={0.16} fontSize={0.36} textAnchor="middle" fill="#e0f2fe" fontWeight={900} letterSpacing={0.06}>
+            {e.label || 'EXTRACTED TO RESERVES'}
           </text>
         </g>
       )}

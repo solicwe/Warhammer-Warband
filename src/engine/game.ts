@@ -9,7 +9,7 @@ import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
 import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
 import {
-  alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
+  alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, extractToReserves, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
   heroFx, phaseKey,
 } from './state';
@@ -21,6 +21,7 @@ import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathDistance, pa
 import { detOnCommandStart } from '../rules-engine/detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
+import { hasRealPortrait } from '../ui/portraits';
 
 
 const W = RULES.battlefield.width;
@@ -867,7 +868,11 @@ export function redeployUnit(s: GameState, unitId: string, toReserves: boolean):
   const u = unitById(s, unitId);
   if (!r || r.left <= 0 || !redeployCandidates(s).includes(u)) return 'This unit cannot be redeployed';
   r.left--;
-  u.status = toReserves ? 'reserves' : 'pending';
+  if (toReserves) {
+    extractToReserves(s, u, r.source);
+  } else {
+    u.status = 'pending';
+  }
   log(s, `${r.source}: ${u.name} ${toReserves ? 'moved into Strategic Reserves' : 'picked up to be set up again'}`, 'info', u.owner);
   return null;
 }
@@ -1168,7 +1173,7 @@ function endTurn(s: GameState) {
     }
   }
   // Aircraft return to reserves at the end of the opponent's turn
-  for (const u of boardUnits(s, other(s.active))) if (hasKw(u, 'AIRCRAFT')) u.status = 'reserves';
+  for (const u of boardUnits(s, other(s.active))) if (hasKw(u, 'AIRCRAFT')) extractToReserves(s, u, 'Aircraft');
   updateControl(s);
   emit(s, 'turnEnd', { p: s.active });
   sagaBoasts(s, 'turnEnd');
@@ -2392,9 +2397,9 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
   let weapons: any[] = [];
 
   if (fid === 'NEC') {
-    name = 'Seraptek Heavy Construct';
-    modelName = 'Seraptek Heavy Construct';
-    kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'CHARACTER'];
+    name = 'Monolith Heavy Support';
+    modelName = 'Monolith';
+    kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'CHARACTER'];
     T = 12; W = 28; Sv = 2; InSv = 4;
     core = { fnp: 5 };
     abilities = [{ name: 'Quantum Shielding', text: '4+ Invulnerable save and 5+ Feel No Pain.', type: 'datasheet' }];
@@ -2426,7 +2431,7 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
     ];
   } else if (fid === 'TYR') {
     name = 'Hierophant Bio-Titan';
-    modelName = 'Hierophant Bio-Titan';
+    modelName = 'Hierophant';
     kws = ['MONSTER', 'TITANIC', 'TOWERING', 'GREAT DEVOURER', 'CHARACTER'];
     T = 12; W = 30; Sv = 2; InSv = 5; M = 12;
     core = { fnp: 5 };
@@ -2442,8 +2447,8 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
       },
     ];
   } else if (fid === 'TAU') {
-    name = 'KX139 Ta\'unar Supremacy Armour';
-    modelName = 'Ta\'unar Battlesuit';
+    name = 'Broadside Battlesuits Heavy Team';
+    modelName = 'Broadside Battlesuits';
     kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'WALKER', 'BATTLESUIT', 'CHARACTER'];
     T = 12; W = 30; Sv = 2; InSv = 4;
     abilities = [{ name: 'Vanguard Barrier Field', text: '4+ Invulnerable save against all attacks.', type: 'datasheet' }];
@@ -2459,7 +2464,7 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
     ];
   } else if (['CSM', 'WE', 'DG', 'TS', 'EC'].includes(fid)) {
     name = 'Khorne Lord of Skulls';
-    modelName = 'Lord of Skulls';
+    modelName = 'Khorne Lord of Skulls';
     kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'CHAOS', 'DAEMON', 'CHARACTER'];
     T = 12; W = 30; Sv = 2; InSv = 4;
     abilities = [{ name: 'Daemonic Hull', text: '4+ Invulnerable save.', type: 'datasheet' }];
@@ -2475,7 +2480,7 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
     ];
   } else if (fid === 'AM') {
     name = 'Baneblade Super-Heavy Tank';
-    modelName = 'Baneblade Tank';
+    modelName = 'Baneblade';
     kws = ['VEHICLE', 'TITANIC', 'TOWERING', 'SMOKE', 'CHARACTER'];
     T = 12; W = 28; Sv = 2; InSv = 5; M = 9;
     abilities = [{ name: 'Armoured Behemoth', text: '5+ Invulnerable save. Ignores cover.', type: 'datasheet' }];
@@ -2506,8 +2511,8 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
       },
     ];
   } else if (['AE', 'CW', 'DRU'].includes(fid)) {
-    name = 'Phantom Wraith Titan';
-    modelName = 'Phantom Titan';
+    name = 'Wraithlord Heavy Construct';
+    modelName = 'Wraithlord';
     kws = ['MONSTER', 'TITANIC', 'TOWERING', 'WRAITH CONSTRUCT', 'CHARACTER'];
     T = 12; W = 26; Sv = 2; InSv = 4; M = 12;
     abilities = [{ name: 'Holo-Field Distortion', text: '4+ Invulnerable save. -1 to Hit against this model.', type: 'datasheet' }];
@@ -2523,6 +2528,7 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
     ];
   } else {
     // Space Marines / Imperium default
+    modelName = 'Warhound Titan';
     weapons = [
       {
         name: 'Plasma Blastgun',
@@ -2540,7 +2546,7 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
     id,
     owner: 1,
     name,
-    sources: [name],
+    sources: [modelName],
     keywords: kws,
     factionKeywords: [fid],
     pts: 800,
@@ -2756,44 +2762,39 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
   s.campaign.reinforcementsTriggered ??= [];
   // Limit to at most once per battle to avoid repeated reinforcement spam
   if (s.campaign.reinforcementsTriggered.length > 0) return false;
-  if (s.round < 3) return false;
+  // Guaranteed dynamic event in rounds 2, 3, or 4
+  if (s.round < 2 || s.round > 4) return false;
 
   const playerUnits = s.units.filter((u) => u.owner === 0 && onBoard(u) && alive(u).length > 0);
   const enemyUnits = s.units.filter((u) => u.owner === 1 && onBoard(u) && alive(u).length > 0);
-  if (playerUnits.length < 2 || !enemyUnits.length) return false;
+  if (!playerUnits.length || !enemyUnits.length) return false;
 
-  const playerPts = fightingArmyPoints(s, 0);
-  const aiPts = fightingArmyPoints(s, 1);
-  const playerVp = s.players[0].vp;
-  const aiVp = s.players[1].vp;
-
-  // STRICT GUARD: If the player is losing (fewer points or trailing in VP), NEVER trigger enemy reinforcements!
-  if (playerPts <= aiPts || playerVp < aiVp) return false;
-  const playerHasAdvantage = playerPts >= aiPts * 1.2 || playerVp >= aiVp + 10;
-  if (!playerHasAdvantage) return false;
-
-  // Controlled probability check (15%)
-  const roll = nextRandom(s) * 100;
-  if (roll > 15) return false;
+  // On round 2: 70% chance to trigger; on round 3 or 4: 100% guaranteed if not yet triggered
+  if (s.round === 2 && nextRandom(s) > 0.70) return false;
 
   s.campaign.reinforcementsTriggered.push(s.round);
   s.campaign.battleEventTriggered = true;
 
-  // Strategic Reinforcements: Challenge player with enemy reinforcements
-  const candidate = enemyUnits.find((u) => (u.keywords.includes('VEHICLE') || u.keywords.includes('MONSTER') || u.keywords.includes('ELITE')) && !u.keywords.includes('TITANIC'))
-    ?? enemyUnits.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC') && !u.keywords.includes('EPIC HERO'))
+  // Filter candidates that strictly have real portraits
+  const validCandidates = enemyUnits.filter((u) => hasRealPortrait(u.sources?.[0] ?? u.name));
+  const candidate = validCandidates.find((u) => (u.keywords.includes('VEHICLE') || u.keywords.includes('MONSTER') || u.keywords.includes('ELITE')) && !u.keywords.includes('TITANIC'))
+    ?? validCandidates.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC') && !u.keywords.includes('EPIC HERO'))
+    ?? validCandidates[0]
     ?? enemyUnits[0];
 
+  const canonicalName = candidate.sources?.[0] ?? candidate.name;
   const cloned: UnitState = structuredClone(candidate);
   cloned.id = newUid('reinf');
+  cloned.name = canonicalName;
   cloned.status = 'board';
   cloned.move = null;
   cloned.cantCharge = false;
   cloned.weaponsFired = [];
-  cloned.sources = cloned.sources?.length ? cloned.sources : [cloned.name];
+  cloned.sources = [canonicalName];
   cloned.models = cloned.models.map((m, idx) => ({
     ...m,
     id: `${cloned.id}-m${idx}`,
+    source: canonicalName,
     dead: false,
     wounds: m.profile.W,
   }));
@@ -2912,15 +2913,19 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
 
     const roll = nextRandom(s);
     if (roll < 0.5 && mostExp && enemyTemplates.length > 0) {
-      const cand = enemyTemplates.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC')) ?? enemyTemplates[0];
+      const validTemplates = enemyTemplates.filter((u) => hasRealPortrait(u.sources?.[0] ?? u.name));
+      const cand = validTemplates.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC'))
+        ?? validTemplates[0]
+        ?? enemyTemplates[0];
+      const canonical = cand.sources?.[0] ?? cand.name;
       const elite: UnitState = structuredClone(cand);
       elite.id = newUid('elite-drama');
-      elite.name = `Elite Strike ${cand.name}`;
+      elite.name = `Elite Strike ${canonical}`;
       elite.status = 'board';
       elite.move = null;
       elite.cantCharge = false;
       elite.weaponsFired = [];
-      elite.sources = [elite.name];
+      elite.sources = [canonical];
       elite.pts = Math.round(cand.pts * 1.3);
       elite.keywords = Array.from(new Set([...elite.keywords, 'ELITE']));
 
@@ -2929,6 +2934,7 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
       elite.models = elite.models.map((m, idx) => ({
         ...m,
         id: `${elite.id}-m${idx}`,
+        source: canonical,
         dead: false,
         wounds: m.profile.W + 1,
       }));

@@ -1812,7 +1812,8 @@ function BoardImpl(props: BoardProps) {
               );
             })() : null}
             {props.quickActions?.unitId === u.id && pts.length > 0 && (() => {
-              const qa = props.quickActions.actions;
+              const qa = props.quickActions.actions.filter((a) => a.label !== 'Advance' && a.label !== 'Hold');
+              if (!qa.length) return null;
               const btnW = 2.1;
               const gap = 0.22;
               const qaY = minY - (props.badges?.[u.id]?.length ? 2.3 : (hasStealth || hasLoneOp || hasCover) ? 2.0 : 1.4);

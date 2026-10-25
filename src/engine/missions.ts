@@ -492,6 +492,8 @@ export function ruleValue(s: GameState, p: PlayerId, r: ScoringRule): number {
 }
 
 export function scorePrimary(s: GameState, timing: 'endOfYourCommandPhase' | 'endOfYourTurn' | 'endOfBattle' | 'endOfAnyTurn', player: PlayerId) {
+  // Asymmetric Scoring: Enemy bot scores exclusively from killing player units/models, not from holding objectives
+  if (player !== 0 && (s.bots?.includes(player) || (s.campaign && player === 1))) return;
   const P = s.players[player];
   const prim = primaryById(P.primaryId);
   for (const r of prim.scoring) {

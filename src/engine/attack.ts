@@ -865,6 +865,18 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   (u.used ??= {}).lostModel = `${s.turn}:${s.phase}`;
   const kws = m.keywords ?? u.keywords ?? [];
   (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || kws.includes('CHARACTER'), W: m.profile.W });
+
+  // Asymmetric Scoring: Enemy bot scores VP on slaying player models
+  const isBotEnemy = (s.bots?.includes(1) || (s.campaign && s.botPlayer === 1));
+  if (u.owner === 0 && isBotEnemy) {
+    const isChar = m.isCharacter || kws.includes('CHARACTER');
+    const isEpic = kws.includes('EPIC HERO') || m.name.includes('Warlord');
+    const isVehicleOrMonster = kws.includes('VEHICLE') || kws.includes('MONSTER');
+    const modelVp = isEpic ? 5 : (isChar || isVehicleOrMonster) ? 3 : 1;
+    s.players[1].vp += modelVp;
+    log(s, `Zombie Rush: Enemy Bot scores +${modelVp} VP for killing ${m.name}!`, 'kill', 1);
+  }
+
   if (u.transport && kws.includes('TRANSPORT')) transportHook?.(s, u, m);
   // Vengeance for the Omnissiah: a friendly ASTRA MILITARUM VEHICLE destroyed within 12"
   if (kws.includes('VEHICLE') && (u.factionKeywords ?? []).includes('ASTRA MILITARUM')) {
@@ -882,6 +894,19 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     onUnitDestroyed(s, u, s.attack?.attackerId);
     emit(s, 'unitDestroyed', { u, attackerId: s.attack?.attackerId });
     log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
+
+    // Asymmetric Scoring: Enemy bot scores unit destruction bonus VP and triggers botKillAlert
+    if (u.owner === 0 && isBotEnemy) {
+      const unitBonusVp = Math.max(3, Math.round((u.pts ?? 50) / 25));
+      s.players[1].vp += unitBonusVp;
+      log(s, `Zombie Rush: Enemy Bot scores +${unitBonusVp} VP for destroying ${u.name}!`, 'kill', 1);
+      s.botKillAlert = {
+        text: `ENEMY BOT SLAYER: +${unitBonusVp} VP`,
+        vp: unitBonusVp,
+        victim: u.name,
+        time: Date.now(),
+      };
+    }
     if (s.campaign) {
       const killerOwner = s.attack ? unitById(s, s.attack.attackerId).owner : other(u.owner);
       const vpEarned = Math.max(5, Math.round((u.pts ?? 50) / 10));

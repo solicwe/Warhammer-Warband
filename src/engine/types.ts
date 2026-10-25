@@ -615,6 +615,8 @@ export interface AttackSession {
 export type FxEvent =
   | { seq: number; kind: 'move'; unitId: string; owner: PlayerId; moveKind: MoveKind; paths: [string, Pt[]][] }
   | { seq: number; kind: 'place'; unitId: string; owner: PlayerId; at?: Pt; deepStrike?: boolean; label?: string }
+  /** a unit is extracted back into Strategic/Deep Strike Reserves with VFX */
+  | { seq: number; kind: 'extract'; unitId: string; owner: PlayerId; at: Pt; label?: string; models?: { x: number; y: number; r: number; name?: string }[] }
   /** a unit fails a Battle-shock test */
   | { seq: number; kind: 'shock'; unitId: string; owner: PlayerId; at: Pt }
   /** wounds regained or destroyed models returned */
@@ -764,6 +766,7 @@ export interface GameState {
   campaign?: { node: string; relics: string[]; rules: string[]; relicLevels?: Record<string, number>; lootedObjectives?: string[]; reinforcementsTriggered?: number[]; dramaRounds?: number[]; titanSpawned?: boolean; eliteDramaTriggered?: boolean; battleEventTriggered?: boolean; allowDynamicExpansion?: boolean };
   reinforcementAlert?: { unitName: string; factionName: string; round: number; count: number; text: string } | null;
   titanAlert?: { unitName: string; factionName: string; round: number; text: string; triggered: boolean } | null;
+  botKillAlert?: { text: string; vp: number; victim: string; time: number } | null;
   screenShake?: number;
   warpStormActive?: boolean;
   campaignScrap?: number; // scrap salvaged during campaign battle

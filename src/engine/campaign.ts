@@ -232,6 +232,8 @@ export interface Run {
   picksLeft?: number;
   freeRerolls?: number;
   rerollCount?: number;
+  /** History of recent opponent factions faced in the campaign */
+  recentOpponentFactions?: string[];
   /** what happened, newest last */
   story: string[];
   over?: 'won' | 'lost';
@@ -426,10 +428,18 @@ export const START_POINTS = 500;
 const LAYERS = [2, 3, 3, 3, 3, 2, 1];
 const LEVEL_BY_LAYER: BotLevel[] = ['normal', 'normal', 'hard', 'hard', 'hard', 'hard', 'hard'];
 
+export const ALL_PLAYABLE_FACTIONS = [
+  'AS', 'AC', 'AdM', 'AE', 'AM', 'CD', 'QT', 'CSM', 'DG', 'DRU',
+  'EC', 'GC', 'GK', 'AoI', 'QI', 'LoV', 'NEC', 'ORK', 'SM', 'TAU',
+  'TS', 'TYR', 'WE'
+];
+
 /** The map: seven layers, each node leading to one or two nodes of the next; the last is the boss. */
-export function makeMap(seed: number, enemies: string[], loop = 1): MapNode[] {
+export function makeMap(seed: number, enemies: string[], loop = 1, recentOpponents: string[] = []): MapNode[] {
   const r = rng(seed * 7919 + 13 + loop * 101);
   const nodes: MapNode[] = [];
+  const assignedFactions: string[] = [...recentOpponents];
+  const validEnemies = enemies.length ? enemies : ALL_PLAYABLE_FACTIONS;
   LAYERS.forEach((n, layer) => {
     let specialCount = 0;
     for (let i = 0; i < n; i++) {
@@ -461,7 +471,12 @@ export function makeMap(seed: number, enemies: string[], loop = 1): MapNode[] {
         const extraRules = loop > 1 ? Math.min(3, loop) : 0;
         const rules = kind === 'elite' ? pickN(BOSS_RULES, 1 + extraRules, r).map((b) => b.id) : kind === 'boss' ? pickN(BOSS_RULES, 2 + extraRules, r).map((b) => b.id) : (loop > 1 && layer >= 2 ? pickN(BOSS_RULES, 1, r).map((b) => b.id) : []);
         const level: BotLevel = loop > 1 ? 'expert' : kind === 'boss' ? 'hard' : kind === 'elite' ? 'hard' : LEVEL_BY_LAYER[layer];
-        node.enemy = { factionId: enemies[Math.floor(r() * enemies.length)], pts, level, rules, seed: Math.floor(r() * 1e9) };
+        const recentWindow = assignedFactions.slice(-5);
+        let pool = validEnemies.filter((e) => !recentWindow.includes(e));
+        if (!pool.length) pool = validEnemies;
+        const picked = pool[Math.floor(r() * pool.length)];
+        assignedFactions.push(picked);
+        node.enemy = { factionId: picked, pts, level, rules, seed: Math.floor(r() * 1e9) };
       }
       nodes.push(node);
     }
@@ -482,9 +497,12 @@ export function makeMap(seed: number, enemies: string[], loop = 1): MapNode[] {
 }
 
 export function newRun(faction: FactionData, list: ArmyList, enemies: string[], seed = Date.now()): Run {
+  const pool = enemies.length ? enemies : ALL_PLAYABLE_FACTIONS;
+  const filtered = pool.filter((e) => e !== faction.id && e !== 'TL');
   return {
-    version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, enemies.filter((e) => e !== faction.id && e !== 'TL')),
+    version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, filtered, 1, []),
     path: [], relics: [], relicLevels: {}, freeRerolls: 1, cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
+    recentOpponentFactions: [],
   };
 }
 
@@ -707,7 +725,9 @@ export function enter(run: Run, nodeId: string, faction: FactionData): Run {
   if (node.kind === 'supply') return { ...run, path: [...run.path, nodeId], offer: makeOffer(run, faction, 'supply'), story: [...run.story, 'Supply drop'] };
   if (node.kind === 'armory') return { ...run, path: [...run.path, nodeId], scrap: (run.scrap ?? 0) + 25, story: [...run.story, 'Munitorum Armory reached (+25 Scrap)'] };
   if (node.kind === 'medicae') return { ...run, path: [...run.path, nodeId], story: [...run.story, 'Medicae Field Camp reached'] };
-  return { ...run, fighting: nodeId };
+  const enemyFaction = typeof node.enemy?.factionId === 'string' ? node.enemy.factionId : (node.enemy?.factionId as any)?.id;
+  const recent = enemyFaction ? [...(run.recentOpponentFactions ?? []), enemyFaction].slice(-10) : run.recentOpponentFactions;
+  return { ...run, fighting: nodeId, recentOpponentFactions: recent };
 }
 
 /** The battle's result: a win moves the player on and offers rewards, a loss costs a Fate point (a draw counts as a win). */
@@ -1009,7 +1029,12 @@ export function recruitScrapCost(run: Run, datasheetName: string, basePts: numbe
 /** Buy and recruit a new unit into the campaign roster using Scrap */
 export function recruitUnit(run: Run, faction: FactionData, datasheetName: string, chosenModels?: number): Run {
   const excl = AUX_EXCLUSIONS[faction.id] ?? [];
-  const d = faction.datasheets.find((x) => x.name === datasheetName && !x.ally && !excl.some((k) => (x.factionKeywords || []).includes(k)));
+  const family = getFactionFamily(faction.id);
+  const isAllowedAlly = (x: DatasheetData) =>
+    !x.ally ||
+    (family === 'IMPERIUM' && (x.ally === 'QI' || x.ally === 'TL')) ||
+    (family === 'CHAOS' && (x.ally === 'QT' || x.ally === 'CD'));
+  const d = faction.datasheets.find((x) => x.name === datasheetName && isAllowedAlly(x) && !excl.some((k) => (x.factionKeywords || []).includes(k)));
   if (!d) return run;
   if (!hasRealPortrait(d.name)) return run;
   if (!canRecruitTitanOrKnight(faction.id, d, run)) return run;
@@ -1220,9 +1245,8 @@ export function adoptDetachment(run: Run, detachmentName: string, cost = detachm
 export function continueNextLoop(run: Run, faction: FactionData): Run {
   const nextLoop = (run.loop ?? 1) + 1;
   const newSeed = Math.floor(Math.random() * 1e9);
-  const existingEnemies = [...new Set(run.map.map((n) => n.enemy?.factionId).filter((x): x is string => !!x))];
-  const nextEnemies = existingEnemies.length ? existingEnemies : ['ORK', 'TYR', 'NEC', 'SM', 'CSM'];
-  const newMap = makeMap(newSeed, nextEnemies, nextLoop);
+  const nextEnemies = ALL_PLAYABLE_FACTIONS.filter((id) => id !== faction.id && id !== 'TL');
+  const newMap = makeMap(newSeed, nextEnemies, nextLoop, run.recentOpponentFactions ?? []);
   const isEndless = nextLoop > 5;
   const sectorTitle = isEndless ? `Sector ${nextLoop} (Endless Crusade Mode)` : `Sector ${nextLoop} of 5`;
   return {
@@ -1512,8 +1536,15 @@ export function canRecruitTitanOrKnight(factionId: string, targetDatasheet: Data
   if (!isFactionAllowedKnight(factionId, targetDatasheet)) return false;
 
   if (requiresTier4Tech(targetDatasheet)) {
+    const family = getFactionFamily(factionId);
     const nodes = getFactionTechNodes(factionId);
     const hasTier4 = (run.techTree ?? []).some((t) => {
+      if (family === 'IMPERIUM' && (t === 'imp_titanic' || t.includes('titanic') || t.includes('titan'))) return true;
+      if (family === 'CHAOS' && (t === 'chaos_titanic' || t.includes('titanic') || t.includes('titan'))) return true;
+      if (family === 'NECRONS' && (t === 'nec_supremacy' || t.includes('supremacy'))) return true;
+      if (family === 'ORKS' && (t === 'ork_titan' || t.includes('titan'))) return true;
+      if (family === 'TYRANIDS' && (t === 'xenos_apex' || t.includes('apex'))) return true;
+      if (family === 'XENOS' && (t === 'xenos_titanic_war' || t.includes('titanic'))) return true;
       const n = nodes.find((x) => x.id === t);
       return n?.tier === 4 || t.endsWith('_titanic') || t.endsWith('_supremacy') || t.endsWith('_titan') || t.endsWith('_apex') || t.endsWith('_titanic_war');
     });
