@@ -714,11 +714,17 @@ function BoardImpl(props: BoardProps) {
   // settles: re-rendering every unit on each pointer move is what made panning stutter on phones
   const fxRef = useRef<SVGSVGElement>(null);
   const vbLive = useRef(vb);
-  useEffect(() => { vbLive.current = vb; }, [vb]);
+  // the view drawn is the live one: a redraw during a gesture (the bot moving, an animation) must not put back the view
+  // React last committed, which made pinch zoom jump back and forth
+  const vbSeen = useRef(vb);
+  if (vbSeen.current !== vb) { vbSeen.current = vb; vbLive.current = vb; }
+  const shown = vbLive.current;
+  const touchedAt = useRef(0); // when the player last panned or zoomed: the camera doesn't follow units for a while after
   const commitT = useRef<number | undefined>(undefined);
   const liveVb = useCallback((v: typeof vb) => {
     const c = clampVb(v);
     vbLive.current = c;
+    touchedAt.current = Date.now();
     const a = `${c.x} ${c.y} ${c.w} ${c.h}`;
     svgRef.current?.setAttribute('viewBox', a);
     fxRef.current?.setAttribute('viewBox', a);
@@ -752,6 +758,7 @@ function BoardImpl(props: BoardProps) {
   useEffect(() => {
     if (!props.focusUnit) return;
     if (props.focusUnit === lastFocusRef.current) return;
+    if (Date.now() - touchedAt.current < 5000) return;
     lastFocusRef.current = props.focusUnit;
     const u = s.units.find((x) => x.id === props.focusUnit);
     if (!u || !onBoard(u)) return;
@@ -759,7 +766,8 @@ function BoardImpl(props: BoardProps) {
     if (!ms.length) return;
     const cx = ms.reduce((sum, m) => sum + m.x, 0) / ms.length;
     const cy = ms.reduce((sum, m) => sum + m.y, 0) / ms.length;
-    setVb((cur) => {
+    setVb(() => {
+      const cur = vbLive.current;
       const nx = Math.max(-1 - padL, Math.min(W + 1 + padR - cur.w, cx - cur.w / 2));
       const ny = Math.max(-1, Math.min(H + 1 - cur.h, cy - cur.h / 2));
       return { ...cur, x: nx, y: ny };
@@ -778,6 +786,8 @@ function BoardImpl(props: BoardProps) {
 
   const startModelDrag = (e: React.PointerEvent, unitId: string, modelId: string) => {
     e.stopPropagation();
+    // a second finger on a model starts a pinch like anywhere else on the board
+    if (pointers.current.size >= 1) { onPointerDown(e); return; }
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try { (e.target as Element).setPointerCapture?.(e.pointerId); } catch { /* synthetic pointer */ }
     const activeDraft = localDraft ?? draft;
@@ -975,6 +985,8 @@ function BoardImpl(props: BoardProps) {
     }
   };
 
+  // objective control, once per game state rather than on every animation frame
+  const control = useMemo(() => s.objectives.map((o) => levelOfControl(s, o)), [s]);
   const dep = deploymentById(s.deploymentId);
   const attacker = s.attackerPlayer;
   const defender = (1 - attacker) as PlayerId;
@@ -1336,7 +1348,7 @@ function BoardImpl(props: BoardProps) {
     <>
     <svg
       ref={svgRef}
-      viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
+      viewBox={`${shown.x} ${shown.y} ${shown.w} ${shown.h}`}
       preserveAspectRatio={FIT}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -1487,7 +1499,7 @@ function BoardImpl(props: BoardProps) {
         </g>
       ))}
       {s.objectives.map((o, i) => {
-        const [a, b] = levelOfControl(s, o);
+        const [a, b] = control[i];
         const ctrl = o.controller;
         // the objective's area: the terrain baseplate it stands on, or a 3" circle round a marker in the open
         const polys = objectivePolys(s, o);
@@ -2123,7 +2135,7 @@ function BoardImpl(props: BoardProps) {
       })}
       </g>
     </svg>
-    <svg ref={fxRef} className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio={FIT} aria-hidden="true">
+    <svg ref={fxRef} className="fx-overlay" viewBox={`${shown.x} ${shown.y} ${shown.w} ${shown.h}`} preserveAspectRatio={FIT} aria-hidden="true">
       <FxLayer fx={fx} />
     </svg>
     </>

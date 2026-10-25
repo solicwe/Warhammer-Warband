@@ -358,6 +358,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         if (!next) { stepOnMain.current = true; onMain(); return; }
         act((g) => { Object.assign(g, next); });
       };
+      worker.onerror = () => { window.clearTimeout(giveUp); worker.onmessage = null; setStepping(false); stepOnMain.current = true; if (sRef.current === sent) onMain(); };
       try { worker.postMessage({ kind: 'step', state: s, who, id, style: styleRef.current ?? undefined }); }
       catch { window.clearTimeout(giveUp); worker.onmessage = null; setStepping(false); stepOnMain.current = true; onMain(); }
     }, delay);
@@ -658,6 +659,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const tg = ritActiveTargets.map((t) => t.id);
     return { cs, c, tg, targets: c && r ? tg : [...new Set(cs.map((x) => x.unit.id))], picked: c && r ? (rit.target ? [rit.target] : []) : c ? [c.unit.id] : [] };
   }, [ritualOn, ritCasters, ritActiveCaster, ritActiveRitual, ritActiveTargets, rit.target]);
+  // who may fire overwatch, worked out once per game state (the board redraws many times per state while it animates)
+  const owNow = useMemo(() => (s.window?.kind === 'fireOverwatch' ? overwatchCandidates(s, s.window.player) : []), [s]);
   const heroicWindow = !mode && s.window?.kind === 'heroicIntervention' ? s.window : null;
   const heroicSelection = heroicWindow !== null;
   const heroicPick = heroicWindow ? heroicCandidates(s, heroicWindow.player) : [];
@@ -666,7 +669,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const targets = s.window?.kind === 'pickUnit' ? s.window.units
     : stratPick ? stratPick.ids
     : actPick ? actTargets
-    : (!mode && s.window?.kind === 'fireOverwatch' && s.window.player === actor) ? overwatchCandidates(s, s.window.player).map((u) => u.id)
+    : (!mode && s.window?.kind === 'fireOverwatch' && s.window.player === actor) ? owNow.map((u) => u.id)
     : ritMap ? ritMap.targets
     : heroicPick.length ? heroicPick.map((u) => u.id)
     : mode?.k === 'shoot' ? shootTargets
@@ -1471,7 +1474,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return (
         <>
           <div className="handoff">{pName(s, p)}: use Fire Overwatch (1CP)?</div>
-          <div className="unit-strip">{overwatchCandidates(s, p).map((u) => unitPill(u, false, () => setMode({ k: 'shoot', unitId: u.id, smode: 'snap', target: null, useCQ: false, profile: {}, overwatch: true })))}</div>
+          <div className="unit-strip">{owNow.map((u) => unitPill(u, false, () => setMode({ k: 'shoot', unitId: u.id, smode: 'snap', target: null, useCQ: false, profile: {}, overwatch: true })))}</div>
           {skip}
         </>
       );
@@ -3164,7 +3167,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             focusUnit={focusUnit}
             movable={
               s.phase === 'movement' && !mode ? s.units.filter((u) => u.owner === s.active && onBoard(u) && !u.move).map((u) => u.id)
-              : (!mode && s.window?.kind === 'fireOverwatch' && s.window.player === actor) ? overwatchCandidates(s, s.window.player).map((u) => u.id)
+              : (!mode && s.window?.kind === 'fireOverwatch' && s.window.player === actor) ? owNow.map((u) => u.id)
               : undefined
             }
             draftUnit={draftUnit}

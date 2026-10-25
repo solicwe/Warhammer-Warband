@@ -29,6 +29,9 @@ function csp(): string {
   return [
     "default-src 'self'",
     "script-src 'self'",
+    // the bot thinks in a Web Worker built inline (a blob: URL); without this the browser silently refuses it and every
+    // bot step falls back to the screen's own thread
+    "worker-src 'self' blob:",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     `img-src 'self' data: blob: ${imageHost}`.trim(),

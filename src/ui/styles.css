@@ -177,12 +177,6 @@ details summary { cursor: pointer; }
 .group { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
 .group.pad { padding: 14px 16px 16px; gap: 12px; }
 .group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 12px 16px 10px; border-bottom: 1px solid var(--line); }
-/* Home: saves */
-.saves > p, .saves-acts, .saves-offer { margin: 0; padding: 10px 16px 0; }
-.saves-acts { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 14px; }
-.saves-acts .btn { display: inline-flex; align-items: center; gap: 6px; }
-.saves-offer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-bottom: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
-.saves-error { color: var(--bad); padding: 0 16px 12px; margin: 0; }
 .group.pad > .group-head { padding: 0 0 10px; }
 .group-count { font: 600 15px var(--font-cond); color: var(--text-3); font-variant-numeric: tabular-nums; }
 .group-note { font-size: 12.5px; color: var(--text-3); }

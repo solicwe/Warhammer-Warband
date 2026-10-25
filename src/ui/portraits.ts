@@ -61,7 +61,18 @@ const fromSeed = (name: string): string | undefined => {
 /** The picture to show: the player's own photo, else the web page's, else the server image. Until the page's photo
  *  list has loaded (or when this view can't read it), the list as it was at the last build stands in for it: the
  *  files themselves are served to every view of the page. */
+// the board asks for every model's picture on every redraw: answers are kept until the photos change (each change bumps
+// version)
+const memo = new Map<string, string | undefined>();
+let memoV = -1;
 export const getPortrait = (datasheet: string): string | undefined => {
+  if (memoV !== version) { memo.clear(); memoV = version; }
+  if (memo.has(datasheet)) return memo.get(datasheet);
+  const r = lookupPortrait(datasheet);
+  memo.set(datasheet, r);
+  return r;
+};
+const lookupPortrait = (datasheet: string): string | undefined => {
   if (!datasheet) return undefined;
   const direct = cache[datasheet] ?? (cloud[datasheet] ? `/_blob/${cloud[datasheet].asset}` : undefined) ?? served[datasheet]
     ?? (!cloudLoaded && seedOn && SEED[datasheet] ? `/_blob/${SEED[datasheet]}` : undefined);

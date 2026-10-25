@@ -5,7 +5,7 @@ army list, then fight a bot, pass the phone to a friend, or watch two bots play 
 a run of battles across a branching map where your army gains experience, upgrades and reinforcements.
 
 Everything runs in the browser. There is no game server and no account. Your armies and battles are saved on your
-device, and a save file moves them to another one.
+device.
 
 This is an unofficial fan project. It is not made, approved or endorsed by Games Workshop. Warhammer 40,000 and all
 related names, rules text and imagery belong to Games Workshop.
@@ -78,7 +78,7 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   the table (reserves and embarked units) and can be folded down to its handle.
 - When a sheet, the dice or a menu covers most of the screen, a small live map window appears under the phase tabs.
   It follows the action (the attack under way, the unit you picked, or the last unit that acted) and shows a line
-  about what just happened. Drag it anywhere, or close it.
+  about what just happened. Drag the picture to look around, pinch it to zoom, drag its caption to move it, or close it.
 - Pinch to zoom and drag to pan. The view stays on the table.
 - The site can be added to your home screen and works like an app.
 
@@ -86,11 +86,8 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 
 - **On this device.** Armies, the battle in progress, the campaign and your settings are saved in the browser as you
   play. Closing the tab or the browser loses nothing.
-- **Save files.** On the home screen, Export file writes everything to one file and Import file reads it back, on
-  this device or another one. The game asks before it replaces anything.
 
-Nothing leaves your device unless you export it. An imported file is checked in full before anything is written, and
-the site sends a Content Security Policy that only allows its own files and Google Fonts.
+Nothing leaves your device, and the site sends a Content Security Policy that only allows its own files and Google Fonts.
 
 ## Running it yourself
 
