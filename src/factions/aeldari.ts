@@ -11,7 +11,7 @@
 //  - Spend one to let an eligible unit perform an Agile Manoeuvre: the manoeuvres are the rule's `acts` in
 //    data/detachment-rules.json, using the `focusReady:<manoeuvre>` condition and the `ae: "focus:<manoeuvre>"` action.
 import { d6, rollN } from '../engine/dice';
-import { alive, boardUnits, hasKw, log, onBoard, phaseKey, pushFx } from '../engine/state';
+import { alive, boardUnits, centreOf, hasKw, log, onBoard, phaseKey, pushFx } from '../engine/state';
 import type { Active } from '../rules-engine/effects';
 import type { CombatMods } from '../engine/combatMods';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
@@ -173,7 +173,9 @@ export function useFateDie(
   s.players[u.owner].strandsOfFateUsed!.push(u.id);
 
   log(s, `[Fate] Strands of Fate: ${u.name} substituted a ${rollType} die with Fate die [${val}] — Pool left: [${pool.join(', ')}]`, 'roll', u.owner);
-  pushFx(s, { kind: 'skill', unitId: u.id, owner: u.owner, at: alive(u)[0] ?? { x: 22, y: 15 }, name: 'Strands of Fate', who: `${rollType}: ${val}`, style: 'psychic', epic: false });
+  // over the unit, or the transport it rides in; nothing for a unit off the table (its coordinates are stale)
+  const host = onBoard(u) ? u : u.embarkedIn ? s.units.find((x) => x.id === u.embarkedIn && onBoard(x)) : undefined;
+  if (host) pushFx(s, { kind: 'skill', unitId: host.id, owner: u.owner, at: centreOf(host), name: 'Strands of Fate', who: `${rollType}: ${val}`, style: 'psychic', epic: false });
 
   return val;
 }

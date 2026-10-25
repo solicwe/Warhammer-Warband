@@ -4,7 +4,7 @@
 // enhancements that gain, spend or change Miracle dice are worked out here; the rest is data.
 import { d6, rollExpr } from '../engine/dice';
 import { dist } from '../engine/geometry';
-import { alive, log, onBoard, pushFx, unitDistance } from '../engine/state';
+import { alive, centreOf, log, onBoard, pushFx, unitDistance } from '../engine/state';
 import { abilityOff, addTimed } from '../rules-engine/effects';
 import { ldTest } from '../rules-engine/activations';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
@@ -207,7 +207,10 @@ export function performActOfFaith(
   s.players[u.owner].actsOfFaithUsed!.push(u.id);
 
   log(s, `[Miracle] Act of Faith: ${u.name} substituted a ${rollType} die with Miracle die [${val}] — Pool left: [${pool.join(', ')}]`, 'roll', u.owner);
-  pushFx(s, { kind: 'skill', unitId: u.id, owner: u.owner, at: alive(u)[0] ?? { x: 22, y: 15 }, name: 'Act of Faith', who: `${rollType}: ${val}`, style: 'holy', epic: false });
+  // shown over the unit, or over the transport it rides in; a unit that is not on the table (reserves) gets no effect
+  // (its models keep stale coordinates, which put the effect somewhere in mid-field)
+  const host = onBoard(u) ? u : u.embarkedIn ? s.units.find((x) => x.id === u.embarkedIn && onBoard(x)) : undefined;
+  if (host) pushFx(s, { kind: 'skill', unitId: host.id, owner: u.owner, at: centreOf(host), name: 'Act of Faith', who: `${rollType}: ${val}`, style: 'holy', epic: false });
 
   // Cherub ability: once per battle, after performing an Act of Faith, gain 1 Miracle die
   // Cherub: once per battle; Cherubs: twice

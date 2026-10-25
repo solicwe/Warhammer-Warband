@@ -774,6 +774,25 @@ function BoardImpl(props: BoardProps) {
     });
   }, [props.focusUnit, s.units, padL, padR, W, H]);
 
+  // screen point -> table point for a given view box, from the element's box and the fit rule alone: getScreenCTM can
+  // lag behind a view box set directly during a gesture, which anchored the pinch in the wrong place (it drifted up-left)
+  const fitOf = (v: typeof vb) => {
+    const r = svgRef.current!.getBoundingClientRect();
+    const k = Math.min(r.width / v.w, r.height / v.h);
+    return { r, k, ox: (r.width - v.w * k) / 2, oy: FIT.includes('YMin') ? 0 : (r.height - v.h * k) / 2 };
+  };
+  const screenToBoard = (cx: number, cy: number, v = vbLive.current): Pt => {
+    const { r, k, ox, oy } = fitOf(v);
+    return { x: v.x + (cx - r.left - ox) / k, y: v.y + (cy - r.top - oy) / k };
+  };
+  /** Pinch: zoom by how far the fingers spread, keeping the table point first under them under their midpoint now. */
+  const pinchTo = (p: { d: number; vb: typeof vb; mid: Pt }, a: Pt, b: Pt) => {
+    const w = Math.min(W * 2.5, Math.max(8, (p.vb.w * p.d) / Math.max(1, Math.hypot(a.x - b.x, a.y - b.y))));
+    const h = (w / p.vb.w) * p.vb.h;
+    const { r, k, ox, oy } = fitOf({ ...p.vb, w, h });
+    liveVb({ x: p.mid.x - ((a.x + b.x) / 2 - r.left - ox) / k, y: p.mid.y - ((a.y + b.y) / 2 - r.top - oy) / k, w, h });
+  };
+
   const zoomAt = (factor: number, c: Pt, base = vbLive.current) => {
     const w = Math.min(W * 2.5, Math.max(8, base.w * factor));
     const h = (w / base.w) * base.h;
@@ -781,7 +800,7 @@ function BoardImpl(props: BoardProps) {
   };
 
   const onWheel = (e: React.WheelEvent) => {
-    zoomAt(e.deltaY > 0 ? 1.12 : 1 / 1.12, toBoard(e.clientX, e.clientY));
+    zoomAt(e.deltaY > 0 ? 1.12 : 1 / 1.12, screenToBoard(e.clientX, e.clientY));
   };
 
   const startModelDrag = (e: React.PointerEvent, unitId: string, modelId: string) => {
@@ -826,7 +845,7 @@ function BoardImpl(props: BoardProps) {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()];
-      pinch.current = { d: Math.hypot(a.x - b.x, a.y - b.y), vb: vbLive.current, mid: toBoard((a.x + b.x) / 2, (a.y + b.y) / 2) };
+      pinch.current = { d: Math.hypot(a.x - b.x, a.y - b.y), vb: vbLive.current, mid: screenToBoard((a.x + b.x) / 2, (a.y + b.y) / 2) };
       pan.current = null;
       drag.current = null;
       return;
@@ -836,8 +855,8 @@ function BoardImpl(props: BoardProps) {
 
   const moveRaf = useRef(0);
   const pendingPointer = useRef<{ pointerId: number; clientX: number; clientY: number } | null>(null);
-  const propsRef = useRef({ draft, onDraft, walk, maxFor, toBoard, zoomAt, onMoveDeathstrikeMarker: props.onMoveDeathstrikeMarker, onTapDeathstrikeMarker: props.onTapDeathstrikeMarker });
-  propsRef.current = { draft, onDraft, walk, maxFor, toBoard, zoomAt, onMoveDeathstrikeMarker: props.onMoveDeathstrikeMarker, onTapDeathstrikeMarker: props.onTapDeathstrikeMarker };
+  const propsRef = useRef({ draft, onDraft, walk, maxFor, toBoard, zoomAt, pinchTo, onMoveDeathstrikeMarker: props.onMoveDeathstrikeMarker, onTapDeathstrikeMarker: props.onTapDeathstrikeMarker });
+  propsRef.current = { draft, onDraft, walk, maxFor, toBoard, zoomAt, pinchTo, onMoveDeathstrikeMarker: props.onMoveDeathstrikeMarker, onTapDeathstrikeMarker: props.onTapDeathstrikeMarker };
 
   useEffect(() => {
     return () => {
@@ -854,8 +873,7 @@ function BoardImpl(props: BoardProps) {
 
     if (pinch.current && pointers.current.size >= 2) {
       const [a, b] = [...pointers.current.values()];
-      const d = Math.hypot(a.x - b.x, a.y - b.y);
-      propsRef.current.zoomAt(pinch.current.d / Math.max(d, 1), pinch.current.mid, pinch.current.vb);
+      propsRef.current.pinchTo(pinch.current, a, b);
       return;
     }
     const dg = drag.current;
