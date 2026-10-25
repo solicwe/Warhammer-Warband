@@ -3,7 +3,7 @@ import { pathBlocked, routeAround } from '../engine/pathing';
 import { KEYS, readText, writeText } from '../services/storage';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { chapterRules } from '../engine/army';
-import { RuleText } from './RuleText';
+import { abilityRuleText, RuleText } from './RuleText';
 import { getPortrait, modelPortraitKey } from './portraits';
 import { loadoutSummary } from './loadout';
 import { WeaponFireModePanel } from './WeaponFireModePanel';
@@ -1384,20 +1384,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const optLabel = (l: string) => (l.split(':')[0] || l).replace(/\s*\(.*\)\s*$/, '').trim();
   const shortName = (n: string) => n.replace(/\s*\((?:once|psychic|psyker|first)[^)]*\)\s*$/i, '').replace(/\s*\(Aura\)\s*$/i, '');
   /** Buttons for abilities player p can use right now ("Once per battle, in your Command phase …"). */
-  /** The full rule text behind an ability button: the datasheet / enhancement ability, else the army or detachment rule. */
-  const actRuleText = (u: UnitState, name: string): string => {
-    const a = u.abilities.find((x) => x.name === name);
-    if (a?.text) return a.text;
-    const P = s.players[u.owner];
-    const det = P.detachments.flatMap((d) => d.rules ?? []).find((r) => r.name === name);
-    if (det?.text) return det.text;
-    const army = P.armyRules.find((r) => r.name === name);
-    if (army?.text) return army.text;
-    // a granted ability ("friendly CHAPLAIN units have the following ability: Name: …"): the paragraph that names it
-    const src = [...P.detachments.flatMap((d) => d.rules ?? []), ...P.armyRules].map((r) => r.text ?? '').find((t) => t.includes(name));
-    if (src) { const i = src.indexOf(name); return src.slice(i, src.indexOf('\n\n', i) > 0 ? src.indexOf('\n\n', i) : undefined); }
-    return '';
-  };
+  const actRuleText = (u: UnitState, name: string) => abilityRuleText(s, u, name);
   const abilityBar = (p: PlayerId, only: { unitId?: string; whens?: Trigger[] } = {}) => {
     if (bots.includes(p)) return null;
     const list = manualActs(s, p).filter((m) => (!only.unitId || m.def.holder.id === only.unitId) && (!only.whens || only.whens.includes(m.def.spec.when)));

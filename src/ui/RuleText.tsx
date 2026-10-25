@@ -1,6 +1,7 @@
 // Army rule text laid out: bullet lists (nested after a "…:" bullet), named options (Mission Tactics, Templar Vows …)
 // as boxed rows with their flavour text in italics, and Designer's Notes / Examples set apart.
 import type { ReactNode } from 'react';
+import type { GameState, UnitState } from '../engine/types';
 import { emph } from './Em';
 
 type Bullet = { text: string; sub: string[] };
@@ -115,4 +116,31 @@ export function RuleText({ text, names }: { text: string; names?: string[] }) {
       </div>
     </div>
   );
+}
+
+/** "Martial Exemplar (Aura)" and "Martial Exemplar" are the same ability: compare names without the tag in brackets. */
+const bare = (n: string) => n.replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase();
+
+/** The full rule text behind an ability button: the datasheet or enhancement ability, else the army or detachment rule
+ *  (or the paragraph of it that grants the ability). Empty when there is none. */
+export function abilityRuleText(s: GameState, u: UnitState, name: string): string {
+  const same = (n: string) => n === name || bare(n) === bare(name);
+  const a = u.abilities.find((x) => same(x.name));
+  if (a?.text) return a.text;
+  const e = u.enhancements.find((x) => same(x.name));
+  if (e?.text) return e.text;
+  const P = s.players[u.owner];
+  const rules = [...P.detachments.flatMap((d) => d.rules ?? []), ...P.armyRules];
+  const r = rules.find((x) => same(x.name));
+  if (r?.text) return r.text;
+  // named after the detachment itself: its rules
+  const det = P.detachments.find((d) => same(d.name));
+  if (det?.rules?.length) return det.rules.map((x) => `${x.name}: ${x.text ?? ''}`).join('\n\n');
+  // a granted ability ("friendly CHAPLAIN units have the following ability: Name: ..."): from its name to the next paragraph
+  const key = bare(name);
+  const src = rules.map((x) => x.text ?? '').find((t) => t.toLowerCase().includes(key));
+  if (!src) return '';
+  const k = src.toLowerCase().indexOf(key);
+  const end = src.indexOf('\n\n', k);
+  return src.slice(k, end > 0 ? end : undefined);
 }
