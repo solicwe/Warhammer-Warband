@@ -709,6 +709,22 @@ function BoardImpl(props: BoardProps) {
     return { x: Math.min(hm.x + hm.w - w, Math.max(hm.x, v.x)), y: Math.min(hm.y + Math.max(0, hm.h - h), Math.max(hm.y, v.y)), w, h };
   }, []);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
+  // during a pinch, pan or wheel zoom the view box is set on the SVG directly and handed to React once the gesture
+  // settles: re-rendering every unit on each pointer move is what made panning stutter on phones
+  const fxRef = useRef<SVGSVGElement>(null);
+  const vbLive = useRef(vb);
+  useEffect(() => { vbLive.current = vb; }, [vb]);
+  const commitT = useRef<number | undefined>(undefined);
+  const liveVb = useCallback((v: typeof vb) => {
+    const c = clampVb(v);
+    vbLive.current = c;
+    const a = `${c.x} ${c.y} ${c.w} ${c.h}`;
+    svgRef.current?.setAttribute('viewBox', a);
+    fxRef.current?.setAttribute('viewBox', a);
+    window.clearTimeout(commitT.current);
+    commitT.current = window.setTimeout(() => setVb(c), 150);
+  }, [clampVb]);
+  const commitVb = () => { window.clearTimeout(commitT.current); setVb(vbLive.current); };
   const pan = useRef<{ id: number; sx: number; sy: number; vb: typeof vb; moved: boolean } | null>(null);
   const pinch = useRef<{ d: number; vb: typeof vb; mid: Pt } | null>(null);
   const drag = useRef<DragState | null>(null);
@@ -749,10 +765,10 @@ function BoardImpl(props: BoardProps) {
     });
   }, [props.focusUnit, s.units, padL, padR, W, H]);
 
-  const zoomAt = (factor: number, c: Pt, base = vb) => {
+  const zoomAt = (factor: number, c: Pt, base = vbLive.current) => {
     const w = Math.min(W * 2.5, Math.max(8, base.w * factor));
     const h = (w / base.w) * base.h;
-    setVb(clampVb({ x: c.x - ((c.x - base.x) * w) / base.w, y: c.y - ((c.y - base.y) * h) / base.h, w, h }));
+    liveVb({ x: c.x - ((c.x - base.x) * w) / base.w, y: c.y - ((c.y - base.y) * h) / base.h, w, h });
   };
 
   const onWheel = (e: React.WheelEvent) => {
@@ -795,12 +811,12 @@ function BoardImpl(props: BoardProps) {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()];
-      pinch.current = { d: Math.hypot(a.x - b.x, a.y - b.y), vb, mid: toBoard((a.x + b.x) / 2, (a.y + b.y) / 2) };
+      pinch.current = { d: Math.hypot(a.x - b.x, a.y - b.y), vb: vbLive.current, mid: toBoard((a.x + b.x) / 2, (a.y + b.y) / 2) };
       pan.current = null;
       drag.current = null;
       return;
     }
-    pan.current = { id: e.pointerId, sx: e.clientX, sy: e.clientY, vb, moved: false };
+    pan.current = { id: e.pointerId, sx: e.clientX, sy: e.clientY, vb: vbLive.current, moved: false };
   };
 
   const moveRaf = useRef(0);
@@ -887,7 +903,7 @@ function BoardImpl(props: BoardProps) {
       const rect = svgRef.current?.getBoundingClientRect();
       if (!rect) return;
       const scale = Math.max(pn.vb.w / rect.width, pn.vb.h / rect.height);
-      setVb(clampVb({ ...pn.vb, x: pn.vb.x - dx * scale, y: pn.vb.y - dy * scale }));
+      liveVb({ ...pn.vb, x: pn.vb.x - dx * scale, y: pn.vb.y - dy * scale });
     }
   }, []);
 
@@ -950,6 +966,7 @@ function BoardImpl(props: BoardProps) {
     if (pn && pn.id === e.pointerId) {
       pan.current = null;
       if (!pn.moved) props.onTapBoard?.(toBoard(e.clientX, e.clientY));
+      else commitVb();
     }
   };
 
@@ -2101,7 +2118,7 @@ function BoardImpl(props: BoardProps) {
       })}
       </g>
     </svg>
-    <svg className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio={FIT} aria-hidden="true">
+    <svg ref={fxRef} className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio={FIT} aria-hidden="true">
       <FxLayer fx={fx} />
     </svg>
     </>
