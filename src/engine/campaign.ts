@@ -6,7 +6,7 @@ import type { Effect } from '../rules-engine/effects';
 import { canLeaderAttach, defaultWargear, pointsOptions, syncWargear } from './army';
 import { AUX_EXCLUSIONS } from './autoList';
 import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState, WargearPick } from './types';
-import { hasRealPortrait } from '../ui/portraits';
+import { hasPicture } from './state';
 
 export type NodeKind = 'battle' | 'elite' | 'supply' | 'armory' | 'medicae' | 'boss';
 
@@ -521,7 +521,7 @@ const usable = (f: FactionData, main?: string) => {
   const excl = AUX_EXCLUSIONS[f.id] ?? [];
   const res = f.datasheets.filter((d) => !d.ally && !excl.some((k) => (d.factionKeywords || []).includes(k)) && d.points[0]?.options?.length && !d.subfaction && d.models.length && d.weapons.length
     && !d.keywords.includes('FORTIFICATION') && !d.keywords.includes('AIRCRAFT') && !d.keywords.includes('EPIC HERO') && !d.transport && (!main || d.factionKeywords.includes(main))
-    && hasRealPortrait(d.name));
+    && hasPicture(d.name));
   usableCache.set(key, res);
   return res;
 };
@@ -606,7 +606,7 @@ export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt =
         const leaderCand = faction.datasheets.find((ld) =>
           !ld.keywords.includes('FORTIFICATION') &&
           !ld.keywords.includes('EPIC HERO') &&
-          hasRealPortrait(ld.name) &&
+          hasPicture(ld.name) &&
           canLeaderAttach(ld, d)
         );
         if (leaderCand) {
@@ -1036,7 +1036,7 @@ export function recruitUnit(run: Run, faction: FactionData, datasheetName: strin
     (family === 'CHAOS' && (x.ally === 'QT' || x.ally === 'CD'));
   const d = faction.datasheets.find((x) => x.name === datasheetName && isAllowedAlly(x) && !excl.some((k) => (x.factionKeywords || []).includes(k)));
   if (!d) return run;
-  if (!hasRealPortrait(d.name)) return run;
+  if (!hasPicture(d.name)) return run;
   if (!canRecruitTitanOrKnight(faction.id, d, run)) return run;
   if ((d.keywords || []).includes('EPIC HERO') && run.list.units.some((x) => x.datasheet === d.name)) return run;
   const opts = pointsOptions(d);

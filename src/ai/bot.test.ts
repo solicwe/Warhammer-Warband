@@ -57,7 +57,8 @@ describe('bot movement', () => {
     s.terrain.push(uRuin(14, 18, 26, 30));
     s.objectives = []; // only the route matters here (a central objective inside the ruin would be worth staying on)
     s.phase = 'movement';
-    const dread = put(s, 'p0-x0', { x: 20, y: 22 });
+    // a vehicle can't end a move inside a ruin (13.06), so it starts where one normal move takes it clear of the opening
+    const dread = put(s, 'p0-x0', { x: 20, y: 25 });
     put(s, 'p1-x0', { x: 20, y: 6 }); // the enemy is behind the closed wall
     const before = { x: alive(dread)[0].x, y: alive(dread)[0].y };
     s.botTried = [];
@@ -447,7 +448,7 @@ describe('table quarters', () => {
     expect(new Set(jobs).size).toBe(4);
     for (const u of s.units.filter((x) => x.owner === 0)) { u.move = null; u.maxMoved = 0; }
     for (let i = 0; i < 12 && botMoveOne(s); i++) { /* move every unit */ }
-    const held = new Set(s.units.filter((x) => x.owner === 0).map(unitQuarter).filter((q) => q !== null));
+    const held = new Set(s.units.filter((x) => x.owner === 0).map((u) => unitQuarter(s, u)).filter((q) => q !== null));
     expect(held.size).toBeGreaterThanOrEqual(2);
   });
 });

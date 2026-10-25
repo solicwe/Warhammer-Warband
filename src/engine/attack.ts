@@ -5,11 +5,11 @@ import { assaultWeapons, emit, rescueDie, targetBlock } from './events';
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems, gap, reachOf } from './geometry';
-import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
+import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR, zombieRush } from './state';
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
-import { checkPhaseCache, getUnitLoneOpRange, hasCover, isHidden, losUnitPairCache, modelVisible, unitVisibleTo } from './visibility';
+import { checkPhaseCache, getUnitLoneOpRange, hasCover, isHidden, losUnitPairCache, modelVisible, unitSig, unitVisibleTo } from './visibility';
 
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
@@ -867,7 +867,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || kws.includes('CHARACTER'), W: m.profile.W });
 
   // Asymmetric Scoring: Enemy bot scores VP on slaying player models
-  const isBotEnemy = (s.bots?.includes(1) || (s.campaign && s.botPlayer === 1));
+  const isBotEnemy = zombieRush(s, 1);
   if (u.owner === 0 && isBotEnemy) {
     const isChar = m.isCharacter || kws.includes('CHARACTER');
     const isEpic = kws.includes('EPIC HERO') || m.name.includes('Warlord');
@@ -1294,7 +1294,7 @@ export function canShootTarget(s: GameState, a: UnitState, t: UnitState): boolea
   // 3. LoS Cache Matrix check within shooting phase
   if (s.phase === 'shooting') {
     checkPhaseCache(s);
-    const key = `${a.id}->${t.id}`;
+    const key = `${a.id}:${unitSig(a)}->${t.id}:${unitSig(t)}`;
     const cached = losUnitPairCache.get(key);
     if (cached !== undefined) return cached;
     const canSee = aAlive.some((m) => unitVisibleTo(s, m, t));

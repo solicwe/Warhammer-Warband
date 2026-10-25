@@ -276,6 +276,8 @@ export interface UnitState {
   detRerolled?: string; // `${turn}:advance|charge`: free detachment re-roll used
   detAdvanceHurt?: string; // `${turn}:advance`: Wrath of the Doomed mortal wounds taken
   scoutDone: boolean;
+  /** set up outside its deployment zone with Infiltrators: it then gets no Scout move */
+  infiltrated?: boolean;
   battleShocked: boolean;
   isWarlordUnit: boolean;
   warlordSource?: string; // datasheet of the Warlord model in this unit
@@ -743,6 +745,8 @@ export interface GameState {
   botLevels?: Partial<Record<PlayerId, BotLevel>>;
   /** players run by the bot (both for a bot-vs-bot game) */
   bots?: PlayerId[];
+  /** idle: the bot plays the player's side too; who the bots were before (restored when idle ends) */
+  idleBots?: PlayerId[];
   /** players who only move and pick shooting targets: every other decision (stratagems, abilities, re-rolls, saves,
    *  battle-shock, fights, reactions) is taken for them by the bot's logic */
   autoRules?: PlayerId[];

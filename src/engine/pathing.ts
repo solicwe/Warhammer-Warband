@@ -2,11 +2,9 @@
 // and settling a dragged draft into legal end positions (models stop at base contact instead of overlapping).
 import { RULES } from './config';
 import { axis, bodyAt, dist, gap, girth, onTable, pointSegDist, ptGap, segSegDist, type Body } from './geometry';
-import { alive, boardUnits, hasKw, onBoard, other } from './state';
+import { alive, boardUnits, hasKw, onBoard, other, tableH, tableW } from './state';
 import type { GameState, ModelState, MoveKind, Pt, Seg, UnitState } from './types';
 
-const W = RULES.battlefield.width;
-const H = RULES.battlefield.height;
 
 export const canCrossDense = (m: ModelState) => ['INFANTRY', 'BEASTS', 'SWARM', 'MOBILE'].some((k) => m.keywords.includes(k));
 
@@ -39,7 +37,7 @@ export function endSpotBlocked(s: GameState, m: Body, p: Pt): 'wall' | 'objectiv
 
 export interface MoveOpts { fly?: boolean }
 
-interface Ctx { m: ModelState; enemies: ModelState[]; walls: Seg[]; clear: number }
+interface Ctx { m: ModelState; enemies: ModelState[]; walls: Seg[]; clear: number; W: number; H: number }
 
 function ctxFor(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOpts, ends: Pt[] = [m]): Ctx {
   const desperate = kind === 'fallback' && u.battleShocked;
@@ -48,7 +46,7 @@ function ctxFor(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: 
   const enemies = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive)
     .filter((e) => thr !== 'all' && !(thr === 'nonMV' && !isMV(e)) && !(thr === 'titanic' && !e.keywords.includes('TITANIC')))
     .filter((e) => !through || (isMV(m) && isMV(e) && !opt.fly && !desperate));
-  return { m, enemies, walls: terrainHook?.(s, u, kind) ? [] : blockingWalls(s, m, opt.fly, ends), clear: wallClearance(m, true) };
+  return { m, enemies, walls: terrainHook?.(s, u, kind) ? [] : blockingWalls(s, m, opt.fly, ends), clear: wallClearance(m, true), W: tableW(s), H: tableH(s) };
 }
 
 /** Why a straight step a→b is illegal for this model ("enemy" / "wall"), or null. `first`: the model may leave a spot it already overlaps. */
@@ -123,6 +121,7 @@ export function routeAround(s: GameState, u: UnitState, kind: MoveKind, m: Model
 }
 
 function routeSearch(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, from: Pt, to: Pt, maxLen: number, opt: MoveOpts = {}): Pt[] | null {
+  const W = tableW(s), H = tableH(s);
   const all = ctxFor(s, u, kind, m, opt, [from, to]);
   // only what lies within reach of this move can be in the way
   const reach = maxLen + 1.5;
@@ -172,9 +171,9 @@ function routeSearch(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, 
   let bestD = dist({ x: cx(start), y: cy(start) }, to);
   const goal = idx(to);
   const D = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
-  let expansions = 0;
-  const MAX_EXPANSIONS = 250;
-  while (heap.length && expansions++ < MAX_EXPANSIONS) {
+  // no step cap: every cell is closed at most once, so the grid size bounds the search (a cap of a few hundred
+  // steps stopped vehicles finding their way round a long wall)
+  while (heap.length) {
     const i = pop();
     if (closed[i]) continue;
     closed[i] = 1;
@@ -217,6 +216,7 @@ function routeSearch(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, 
 
 /** The 0.5" grid a model moves on: which cells it can stand on (walls it can't cross, enemy models, board edges). */
 function gridOf(c: Ctx, m: ModelState) {
+  const { W, H } = c;
   const step = 0.5;
   const nx = Math.floor(W / step) + 1;
   const ny = Math.floor(H / step) + 1;
@@ -341,6 +341,7 @@ export interface SettleOpts extends MoveOpts { maxFor: (m: ModelState) => number
  *  2) models are settled front first, each sliding back along its own path until it doesn't overlap a model,
  *     sit in a wall, leave the board or (Normal / Advance / Fall Back) end in engagement range. */
 export function settleMove(s: GameState, u: UnitState, kind: MoveKind, paths: Map<string, Pt[]>, opt: SettleOpts): Map<string, Pt[]> {
+  const W = tableW(s), H = tableH(s);
   const out = new Map(paths);
   const movers = alive(u).filter((m) => (paths.get(m.id)?.length ?? 0) >= 2 && pathLength(paths.get(m.id)!) > 0.01);
   if (!movers.length) return out;

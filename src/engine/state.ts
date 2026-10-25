@@ -101,6 +101,9 @@ export function unitDistance(a: UnitState, b: UnitState): number {
 }
 
 /** The battle round the game ends after (5, or fewer in a short game). */
+/** The battlefield of this game: big battles use a bigger table than the 44" x 60" default. */
+export const tableW = (s: GameState) => s.table?.width ?? RULES.battlefield.width;
+export const tableH = (s: GameState) => s.table?.height ?? RULES.battlefield.height;
 export const lastRound = (s: GameState) => Math.max(s.round, s.maxRounds ?? RULES.battleRounds);
 /** How far into the battle this is, as the round of a full 5-round game (a short game's rounds count for more). */
 export const pace = (s: GameState) => (s.maxRounds ? (s.round * RULES.battleRounds) / s.maxRounds : s.round);
@@ -219,5 +222,14 @@ export const setReactHook = (fn: ReactHook) => { reactHook = fn; };
 /** Tell the reaction system a moment has come for player p. True when p used a stratagem / a prompt was opened. */
 export const emitReact = (s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx = {}) => (reactHook ? reactHook(s, p, on, ctx) : false);
 
+// The ui knows which datasheets have a real picture; the campaign only offers and spawns those. The engine never
+// imports the ui, so the ui registers the check here; with none registered every datasheet counts.
+let pictured: (datasheet: string) => boolean = () => true;
+export const setPicturedCheck = (fn: typeof pictured) => { pictured = fn; };
+export const hasPicture = (datasheet: string) => pictured(datasheet);
+
+/** Campaign only: the enemy bot plays Zombie Rush. It is fearless, ignores objectives, always charges and scores VP
+ *  for kills instead of the primary mission. Normal battles use the standard rules for both sides. */
+export const zombieRush = (s: GameState, p: PlayerId) => !!s.campaign && p === (s.botPlayer ?? 1);
 /** The game makes this player's choices: a bot, or a person who left the rules to the app (not one who decides). */
 export const playsItself = (s: GameState, p: PlayerId) => (s.bots ?? []).includes(p) || ((s.autoRules ?? []).includes(p) && !(s.decides ?? []).includes(p));

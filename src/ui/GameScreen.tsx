@@ -3,7 +3,8 @@ import { pathBlocked, routeAround } from '../engine/pathing';
 import { KEYS, readText, writeText } from '../services/storage';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { chapterRules } from '../engine/army';
-import { RuleText } from './RuleText';
+import { abilityRuleText, RuleText } from './RuleText';
+import { camFocus, MapCam } from './MapCam';
 import { getPortrait, modelPortraitKey } from './portraits';
 import { loadoutSummary } from './loadout';
 import { WeaponFireModePanel } from './WeaponFireModePanel';
@@ -22,7 +23,7 @@ import {
   formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
-  canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, endScouts, transportSpaceUsed,
+  canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
   pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit } from '../engine/game';
@@ -157,14 +158,10 @@ const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
 
 export function GameScreen({ initial, onExit }: { initial: GameState; onExit: () => void }) {
   const { state: s, act, undo, canUndo } = useGame(initial);
-  const [autoPlay, setAutoPlay] = useState(false);
-  const bots: PlayerId[] = useMemo(() => {
-    const base = s.bots ?? (s.botPlayer != null ? [s.botPlayer] : []);
-    if (autoPlay) {
-      return [0, 1] as PlayerId[];
-    }
-    return base;
-  }, [s.bots, s.botPlayer, autoPlay]);
+  // idle lives in the game itself (both sides in s.bots), so saves, dice and reactions all go to the bot and it
+  // survives leaving and continuing the battle
+  const autoPlay = !!s.idleBots;
+  const bots: PlayerId[] = useMemo(() => s.bots ?? (s.botPlayer != null ? [s.botPlayer] : []), [s.bots, s.botPlayer]);
   const spectate = bots.length === 2;
   const actingBot = bots.find((b) => botShouldAct(s, b)) ?? null;
   const [speed, setSpeed] = useState<0 | 1 | 2>(1); // bot-vs-bot: pause / normal / fast
@@ -1384,20 +1381,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const optLabel = (l: string) => (l.split(':')[0] || l).replace(/\s*\(.*\)\s*$/, '').trim();
   const shortName = (n: string) => n.replace(/\s*\((?:once|psychic|psyker|first)[^)]*\)\s*$/i, '').replace(/\s*\(Aura\)\s*$/i, '');
   /** Buttons for abilities player p can use right now ("Once per battle, in your Command phase …"). */
-  /** The full rule text behind an ability button: the datasheet / enhancement ability, else the army or detachment rule. */
-  const actRuleText = (u: UnitState, name: string): string => {
-    const a = u.abilities.find((x) => x.name === name);
-    if (a?.text) return a.text;
-    const P = s.players[u.owner];
-    const det = P.detachments.flatMap((d) => d.rules ?? []).find((r) => r.name === name);
-    if (det?.text) return det.text;
-    const army = P.armyRules.find((r) => r.name === name);
-    if (army?.text) return army.text;
-    // a granted ability ("friendly CHAPLAIN units have the following ability: Name: …"): the paragraph that names it
-    const src = [...P.detachments.flatMap((d) => d.rules ?? []), ...P.armyRules].map((r) => r.text ?? '').find((t) => t.includes(name));
-    if (src) { const i = src.indexOf(name); return src.slice(i, src.indexOf('\n\n', i) > 0 ? src.indexOf('\n\n', i) : undefined); }
-    return '';
-  };
+  const actRuleText = (u: UnitState, name: string) => abilityRuleText(s, u, name);
   const abilityBar = (p: PlayerId, only: { unitId?: string; whens?: Trigger[] } = {}) => {
     if (bots.includes(p)) return null;
     const list = manualActs(s, p).filter((m) => (!only.unitId || m.def.holder.id === only.unitId) && (!only.whens || only.whens.includes(m.def.spec.when)));
@@ -2818,7 +2802,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode?.k === 'move' && modeUnit) {
       return (
         <>
-          <div className="small"><b>{modeUnit.name}</b> · Scout move up to {modeUnit.core.scouts}" · must end more than {RULES.reserves.enemyDistance}" from enemies</div>
+          <div className="small"><b>{modeUnit.name}</b> · Scout move up to {scoutsOf(s, modeUnit)}" · must end more than {RULES.reserves.enemyDistance}" from enemies</div>
           {moveControls('scout', () => confirmMove('scout'))}
         </>
       );
@@ -3122,20 +3106,22 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             className={`tb-tool idle-btn ${autoPlay ? 'active' : ''}`}
             onClick={() => {
               const next = !autoPlay;
-              setAutoPlay(next);
               if (next) {
                 setSpeed(2);
                 setRush(true);
-                if (s.phase === 'deploy') {
-                  act((g) => {
+                act((g) => {
+                  g.idleBots = g.bots ?? (g.botPlayer != null ? [g.botPlayer] : []);
+                  g.bots = [0, 1];
+                  if (g.phase === 'deploy') {
                     g.autoDeploy = [0, 1];
                     g.deployAllOnField = [0, 1];
-                  });
-                }
-                flash('IDLE MODE: Autonomous Bot Engaged');
+                  }
+                });
+                flash('Idle: the bot plays for you');
               } else {
                 setRush(false);
-                flash('Idle Mode Paused');
+                act((g) => { g.bots = g.idleBots; delete g.idleBots; });
+                flash('Idle off: your turn to play');
               }
             }}
             aria-label="Toggle Idle Auto-Play"
@@ -3231,6 +3217,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onShake={triggerShake} />
 
         {toast && <div className="toast">{toast}</div>}
+        {/* on the board, under the phase bar: it never covers the tabs or takes a tap */}
+        {s.botKillAlert && Date.now() - s.botKillAlert.time < 5000 && (
+          <div className="toast kill-alert" role="status"><Icon name="skull" size={15} />{s.botKillAlert.text} ({s.botKillAlert.victim})</div>
+        )}
         {tape.on && (
           <div className="tape-bar">
             <span>{tapeInfo ? tapeInfo.line : tape.a ? 'Tap the second point (tap a model = base to base + line of sight)' : 'Tape measure: tap a model or a first point'}</span>
@@ -3255,6 +3245,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </button>
         )}
       </div>
+      {isMobileScreen && <MapCam s={s} focus={camFocus(s, modeUnit ?? selUnit)} />}
       <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''} ${drawerMin ? 'mini' : ''} ${mode ? 'moving' : ''}`}>
         <button className="drawer-handle" aria-label={drawerMin ? 'Show the panel' : 'Fold the panel down'} aria-expanded={!drawerMin} onClick={() => setDrawerMin((v) => !v)}>
           <span className="drawer-grip" aria-hidden="true" />
@@ -3567,12 +3558,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             </div>
           </div>
         </>
-      )}
-      {s.botKillAlert && Date.now() - s.botKillAlert.time < 5000 && (
-        <div style={{ position: 'fixed', top: 54, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: 'rgba(220, 38, 38, 0.95)', border: '1px solid #f87171', borderRadius: 8, padding: '8px 18px', color: '#fff', fontWeight: 800, fontSize: '13px', boxShadow: '0 4px 16px rgba(0,0,0,0.6)', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Icon name="skull" size={16} />
-          <span>{s.botKillAlert.text} ({s.botKillAlert.victim})</span>
-        </div>
       )}
     </div>
   );

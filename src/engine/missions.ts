@@ -1,13 +1,11 @@
 // Chapter Approved 2026-27 primary missions: Force Disposition matchups, objective actions,
 // operation markers and the scoring conditions of all 25 primary cards.
-import { deploymentById, MISSIONS, primaryById, RULES, toPoly, type ScoringRule } from './config';
+import { deploymentById, MISSIONS, primaryById, toPoly, type ScoringRule } from './config';
 import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
-import { alive, boardUnits, emitReact, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, unitById } from './state';
+import { alive, boardUnits, emitReact, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, tableH, tableW, unitById, zombieRush } from './state';
 import type { GameState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
-const W = RULES.battlefield.width;
-const H = RULES.battlefield.height;
 
 export const mulberryPick = (seed: number, n: number) => {
   let t = (seed + 0x6d2b79f5) >>> 0;
@@ -51,7 +49,7 @@ export const territoryPoly = (s: GameState, p: PlayerId): Pt[] => {
 function homerPoint(s: GameState, p: PlayerId): Pt {
   const zone = zonePoly(s, p);
   const centre = polyCentroid(zone);
-  const edgeDistance = (q: Pt) => Math.min(q.x, q.y, RULES.battlefield.width - q.x, RULES.battlefield.height - q.y);
+  const edgeDistance = (q: Pt) => Math.min(q.x, q.y, tableW(s) - q.x, tableH(s) - q.y);
   const edge = zone.reduce((best, q) => edgeDistance(q) < edgeDistance(best) ? q : best);
   const length = dist(edge, centre) || 1;
   const inset = Math.min(4, length * 0.35);
@@ -389,6 +387,7 @@ function markerHeld(s: GameState, p: PlayerId, owner: PlayerId): boolean {
 }
 
 function tableQuarters(s: GameState, p: PlayerId): number {
+  const W = tableW(s), H = tableH(s);
   const c = { x: W / 2, y: H / 2 };
   const quarters = new Set<number>();
   for (const u of boardUnits(s, p)) {
@@ -492,8 +491,8 @@ export function ruleValue(s: GameState, p: PlayerId, r: ScoringRule): number {
 }
 
 export function scorePrimary(s: GameState, timing: 'endOfYourCommandPhase' | 'endOfYourTurn' | 'endOfBattle' | 'endOfAnyTurn', player: PlayerId) {
-  // Asymmetric Scoring: Enemy bot scores exclusively from killing player units/models, not from holding objectives
-  if (player !== 0 && (s.bots?.includes(player) || (s.campaign && player === 1))) return;
+  // Zombie Rush (campaign): the enemy bot scores from kills only, not from the primary mission
+  if (zombieRush(s, player)) return;
   const P = s.players[player];
   const prim = primaryById(P.primaryId);
   for (const r of prim.scoring) {

@@ -7,3 +7,6 @@ __pycache__/
 tsconfig.tsbuildinfo
 .claude/settings.local.json
 .aider*
+.env
+.env.*
+!.env.example

@@ -22,9 +22,30 @@ function dataVersion() {
   return h.digest('hex').slice(0, 10);
 }
 
+// Content Security Policy of the built site: our own files and Google Fonts.
+// Build only: the dev server's hot reload injects inline scripts. An absolute VITE_IMAGE_BASE host is allowed too.
+function csp(): string {
+  const imageHost = /^https?:\/\//.test(process.env.VITE_IMAGE_BASE ?? '') ? new URL(process.env.VITE_IMAGE_BASE!).origin : '';
+  return [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    `img-src 'self' data: blob: ${imageHost}`.trim(),
+    `connect-src 'self' data: blob: ${imageHost}`.trim(),
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ');
+}
+
 export default defineConfig({
   base: './',
-  plugins: [react()],
+  plugins: [react(), {
+    name: 'csp',
+    apply: 'build',
+    transformIndexHtml: (html) => html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${csp()}" />`),
+  }],
   define: { __DATA_VERSION__: JSON.stringify(dataVersion()) },
   // whole bot-vs-bot games run in the tests: a few seconds each
   test: { testTimeout: 120000, setupFiles: ['src/engine/testSetup.ts'] },

@@ -4,7 +4,7 @@
 // trails, everything onto the objectives in the last turn. botMove.ctxFor reads the job; the movement scoring does
 // the rest.
 import { dist } from '../engine/geometry';
-import { alive, boardUnits, hasKw, isEngaged, lastRound, other, pace } from '../engine/state';
+import { alive, boardUnits, hasKw, isEngaged, lastRound, other, pace, zombieRush } from '../engine/state';
 import { centre, isBrawler, maxRange, moveOf, objPoint, oc, unitPunch, unitValue } from './botEval';
 import { hasAbility } from '../engine/weapons';
 import { botOff } from './botWeights';
@@ -81,7 +81,7 @@ export function homeScoresVp(s: GameState, p: PlayerId): boolean {
 /** How to play this battle round, and how much to fear losses (a factor on the movement scoring's caution). */
 export function stanceFor(s: GameState, p: PlayerId): { stance: Stance; risk: number } {
   // Zombie Rush: Enemy bot plays 100% fearless attack mode
-  if (p !== 0) return { stance: 'push', risk: 0 };
+  if (zombieRush(s, p)) return { stance: 'push', risk: 0 };
   if (s.isBossAnnihilation) return { stance: 'push', risk: 0.2 };
   if (lastTurn(s, p) && !botOff('allin')) return { stance: 'all-in', risk: 0.3 };
   // an aggressive army at every level: it goes forward from the first turn and keeps pressing (the home objective
@@ -133,7 +133,7 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
   const foes = boardUnits(s, other(p)).filter((e) => !hasKw(e, 'AIRCRAFT'));
   if (!foes.length) return { stance, risk, jobs };
 
-  if (p !== 0 || s.isBossAnnihilation) {
+  if (zombieRush(s, p) || s.isBossAnnihilation) {
     for (const u of mine) {
       jobs.set(u.id, { role: 'hammer', why: 'Zombie Rush: seek and destroy player units' });
     }

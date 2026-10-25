@@ -12,6 +12,7 @@ import {
   alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, extractToReserves, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
   heroFx, phaseKey,
+  tableH, tableW, hasPicture,
 } from './state';
 import RIPPERS from '../../data/extra/ripper-swarms.json';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
@@ -21,11 +22,8 @@ import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathDistance, pa
 import { detOnCommandStart } from '../rules-engine/detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
-import { hasRealPortrait } from '../ui/portraits';
 
 
-const W = RULES.battlefield.width;
-const H = RULES.battlefield.height;
 
 // ---------- setup ----------
 
@@ -360,6 +358,7 @@ export interface MoveCheck { ok: boolean; errors: string[]; bad: string[] }
 export { canCrossDense, isMV, pathLength, settleMove, routeAround } from './pathing';
 
 function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: string[], bad: Set<string>) {
+  const W = tableW(s), H = tableH(s);
   const models = alive(u);
   const all = s.units.filter((x) => onBoard(x) || x.id === u.id).flatMap((x) => alive(x).map((m) => ({ m, owner: x.owner, unit: x.id })));
   for (const m of models) {
@@ -370,8 +369,10 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
       const op = o.unit === u.id ? pos.get(o.m.id) ?? o.m : o.m;
       if (gap(bodyAt(m, p), bodyAt(o.m, op)) < -0.02) { errors.push(`${m.name} overlaps another model`); bad.add(m.id); break; }
     }
+    // a TITANIC model stands astride ruins: its walls, floors and openings don't stop it ending a move or being set up
+    const titanic = m.keywords.includes('TITANIC');
     const spot = endSpotBlocked(s, m, p);
-    if (spot === 'wall') { errors.push(`${m.name} ends on a wall`); bad.add(m.id); }
+    if (spot === 'wall' && !titanic) { errors.push(`${m.name} ends on a wall`); bad.add(m.id); }
     if (spot === 'objective') { errors.push(`${m.name} cannot end on top of an objective marker`); bad.add(m.id); }
     for (const t of s.terrain) {
       if (t.kind === 'container' && pointInPoly(p, t.poly) && !['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k))) {
@@ -383,7 +384,7 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
         if (!roof) { errors.push(`${m.name} cannot overlap a container (place it beside the container or wholly on its roof)`); bad.add(m.id); }
       }
       // 13.06 Elevated floor / level check: non-eligible units (VEHICLE, etc.) cannot end on elevated terrain
-      if (t.height > 2 && pointInPoly(p, t.poly)) {
+      if (t.height > 2 && !titanic && pointInPoly(p, t.poly)) {
         const allowedElevated = ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
         if (!allowedElevated) {
           errors.push(`${m.name} cannot end on elevated terrain (13.06)`);
@@ -392,7 +393,7 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
       }
 
       // 13.06.01 Solid Terrain: cannot end protruding through doors/windows/openings <= 3"
-      if (t.category === 'dense' && t.walls.length) {
+      if (t.category === 'dense' && t.walls.length && !titanic) {
         const b = bodyAt(m, p);
         for (const w of t.walls) {
           if (segSegDist(axis(b), w) < girth(b) * 0.45) {
@@ -452,7 +453,7 @@ export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: M
   else if (kind === 'advance') max = M + (fl.moveHalve ? Math.floor((u.advanceRoll ?? 0) / 2) : (u.advanceRoll ?? 0));
   else if (kind === 'charge') max = chargeReach(s, u, opt.targets);
   else if (kind === 'pileIn' || kind === 'consolidate') max = pileDistance(s, u, kind);
-  else if (kind === 'scout') max = Math.max(u.core.scouts ?? 0, unitFlags(s, u).scouts);
+  else if (kind === 'scout') max = scoutsOf(s, u);
   else if (kind === 'extra' || kind === 'surge') max = u.extraMove?.max ?? 0;
   if (opt.fly && ['normal', 'advance', 'fallback', 'charge'].includes(kind) && !u.core.hover) max -= RULES.flyTakeToSkiesPenalty;
   return Math.max(0, max);
@@ -523,6 +524,7 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
 }
 
 export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate'): MoveCheck {
+  const W = tableW(s), H = tableH(s);
   const errors: string[] = [];
   const bad = new Set<string>();
   endChecks(s, u, pos, errors, bad);
@@ -532,7 +534,10 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
   const omnis = how === 'ingress' || how === 'deepStrike' ? enemies.map((e) => ({ e, omni: unitFlags(s, e).omniScrambler })).filter((x) => x.omni) : [];
   for (const m of alive(u)) {
     const p = pos.get(m.id) ?? m;
-    if (how === 'deploy' && !bodyWhollyInPoly(bodyAt(m, p), zoneOf(s, u.owner))) { errors.push('Must be set up wholly within your deployment zone'); bad.add(m.id); }
+    // a Titan's footprint can be wider than a 12" deployment strip: its centre in the zone is enough (it may overhang)
+    if (how === 'deploy' && !(m.keywords.includes('TITANIC') ? pointInPoly(p, zoneOf(s, u.owner)) : bodyWhollyInPoly(bodyAt(m, p), zoneOf(s, u.owner)))) {
+      errors.push('Must be set up wholly within your deployment zone'); bad.add(m.id);
+    }
     // Teleport Homer: arriving in the opponent's turn (Rapid Ingress, 0CP) is within 3" of its token, and 8" is enough
     const homer = u.homer && how !== 'deploy' && how !== 'infiltrate' && s.active !== u.owner ? u.homer : undefined;
     if (homer && ptGap(bodyAt(m, p), homer) > 3 + EPS) { errors.push('Teleport Homer: must be set up within 3" of the token'); bad.add(m.id); }
@@ -569,6 +574,7 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
 
 /** Nudge only invalid models toward nearby legal spots without disturbing already-valid placement. */
 export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>, how: 'ingress' | 'deepStrike' | 'infiltrate'): Map<string, Pt> {
+  const W = tableW(s), H = tableH(s);
   const out = new Map(pos);
   if (how === 'ingress') {
     const models = alive(u);
@@ -654,6 +660,7 @@ export function ringFormation(u: UnitState, tm: ModelState, angle: number, maxAr
  * packing as ringFormation, but each model only takes a spot it may end on. Null when the unit doesn't fit that side.
  */
 export function fitFormation(s: GameState, u: UnitState, tm: ModelState, angle: number, within = 3, engage = false): Map<string, Pt> | null {
+  const W = tableW(s), H = tableH(s);
   const reach = tm.r + within + 2;
   const others = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap((x) => alive(x).map((m) => ({ m, foe: x.owner !== u.owner && !hasKw(x, 'AIRCRAFT') })))
     .filter(({ m }) => ptGap(m, tm) <= reach + 1);
@@ -784,7 +791,10 @@ export function deployUnit(s: GameState, unitId: string, pos: Map<string, Pt>, h
   const chk = validatePlacement(s, u, pos, how);
   if (!chk.ok) return chk;
   placeUnit(s, u, pos);
-  log(s, `Deployed ${u.name}`, 'info', u.owner);
+  // Infiltrators and Scouts don't stack: a unit set up outside its zone by Infiltrators gives up its Scout move
+  const zone = zoneOf(s, u.owner);
+  u.infiltrated = how === 'infiltrate' && !alive(u).every((m) => bodyWhollyInPoly(m, zone));
+  log(s, `Deployed ${u.name}${u.infiltrated ? ' (Infiltrators)' : ''}`, 'info', u.owner);
   nextDeployer(s);
   return chk;
 }
@@ -926,7 +936,7 @@ function finishDeployment(s: GameState) {
   startTurn(s, ro.winner);
 }
 
-export const scoutsOf = (s: GameState, u: UnitState) => Math.max(u.core.scouts ?? 0, unitFlags(s, u).scouts);
+export const scoutsOf = (s: GameState, u: UnitState) => (u.infiltrated ? 0 : Math.max(u.core.scouts ?? 0, unitFlags(s, u).scouts));
 export const hasDeepStrike = (s: GameState, u: UnitState) => !!u.core.deepStrike || unitFlags(s, u).deepStrike;
 export const scoutUnits = (s: GameState, p: PlayerId) => s.units.filter((u) => u.owner === p && u.status === 'board' && scoutsOf(s, u) > 0 && !u.scoutDone);
 
@@ -1293,6 +1303,7 @@ function blackstarLaunch(s: GameState, u: UnitState, paths: Map<string, Pt[]>) {
 /** An oval base or hull turns to face the way it last travelled, the way a vehicle drives — only when the turned
  *  base still fits (on the table, clear of other models and walls) and is engaged with exactly the same enemy models. */
 function faceTravel(s: GameState, m: ModelState, from: Pt) {
+  const W = tableW(s), H = tableH(s);
   if (dist(from, m) < 0.3) return;
   const turned = { ...bodyAt(m, m), rot: Math.atan2(m.y - from.y, m.x - from.x) };
   const others = s.units.filter((x) => onBoard(x)).flatMap(alive).filter((o) => o.id !== m.id);
@@ -1304,6 +1315,7 @@ function faceTravel(s: GameState, m: ModelState, from: Pt) {
 /** Rotate / pivot a unit's models (especially oval bases / vehicles) by angleDelta radians.
  *  Checks that the rotated footprint remains fully on the table, clear of blocking walls and other models. */
 export function rotateUnit(s: GameState, unitId: string, angleDelta: number): { ok: boolean; reason?: string } {
+  const W = tableW(s), H = tableH(s);
   const u = s.units.find((x) => x.id === unitId);
   if (!u || !onBoard(u)) return { ok: false, reason: 'Unit is not on the battlefield' };
   const others = s.units.filter((x) => onBoard(x) && x.id !== u.id).flatMap(alive);
@@ -1487,10 +1499,11 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
 /** Drop Pod Assault: the units inside get out at once, more than 8" from every enemy model (done by itself: they
  *  must). Tried all round the pod; the side away from the enemy first. */
 function dropPodAssault(s: GameState, pod: UnitState) {
+  const W = tableW(s), H = tableH(s);
   const hull = alive(pod)[0];
   if (!hull) return;
   const enemies = boardUnits(s, other(pod.owner)).flatMap(alive);
-  const ec = enemies.length ? polyCentroid(enemies) : { x: W / 2, y: H / 2 };
+  const ec = enemies.length ? polyCentroid(enemies) : { x: tableW(s) / 2, y: tableH(s) / 2 };
   const away = Math.atan2(hull.y - ec.y, hull.x - ec.x);
   for (const p of s.units.filter((x) => x.status === 'embarked' && x.embarkedIn === pod.id)) {
     let done = false;
@@ -1653,7 +1666,7 @@ onAttackFinished((s, at) => {
   const hull = alive(t)[0];
   if (!hull || hull.wounds * 2 > hull.profile.W) return;
   const enemies = boardUnits(s, s.active).flatMap(alive);
-  const ec = enemies.length ? polyCentroid(enemies) : { x: W / 2, y: H / 2 };
+  const ec = enemies.length ? polyCentroid(enemies) : { x: tableW(s) / 2, y: tableH(s) / 2 };
   const away = Math.atan2(hull.y - ec.y, hull.x - ec.x);
   for (const p of s.units.filter((x) => x.status === 'embarked' && x.embarkedIn === t.id)) {
     for (const pos of hullSpots(s, p, hull, away, 6)) {
@@ -1726,6 +1739,7 @@ export function crushingImpact(s: GameState, u: UnitState, targetId: string) {
 /** Auto-place models towards target units (charge / pile-in / consolidation helper).
  *  1) shift the whole unit as a block (keeps coherency), 2) pull individual models into base contact if the unit stays coherent. */
 export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], maxDist: number, opts: { objective?: Pt } = {}): Map<string, Pt[]> {
+  const W = tableW(s), H = tableH(s);
   const ms = alive(u);
   const others = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap((x) => alive(x).map((m) => bodyAt(m, m)));
   const enemyModels = targets.flatMap(alive);
@@ -2080,10 +2094,11 @@ export const terrainOfObjective = objectiveTerrain;
 
 /** Find a legal spot for a whole unit (used by "auto place" during deployment / ingress). */
 export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate', near?: Pt, accept?: (pos: Map<string, Pt>) => boolean): Map<string, Pt> | null {
+  const W = tableW(s), H = tableH(s);
   const zone = how === 'deploy' ? zoneOf(s, u.owner) : null;
   const cands: Pt[] = [];
-  const gridStep = (how === 'deepStrike' || how === 'ingress') ? 2.0 : 1.5;
-  for (let y = 1; y < H; y += gridStep) for (let x = 1; x < W; x += gridStep) cands.push({ x, y });
+  // a fine grid: the full checks are capped below, and a coarser one misses the few legal spots near a Teleport Homer
+  for (let y = 1; y < H; y += 1.5) for (let x = 1; x < W; x += 1.5) cands.push({ x, y });
   const enemyZone = zoneOf(s, other(u.owner));
   const ec = polyCentroid(enemyZone);
   const ref = near ?? (zone ? ec : polyCentroid(zoneOf(s, u.owner)));
@@ -2095,21 +2110,32 @@ export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingre
   const foes = keep ? boardUnits(s, other(u.owner)).flatMap(alive) : [];
   const r0 = Math.min(...alive(u).map((m) => m.r));
   let tested = 0;
-  const maxTests = how === 'deepStrike' ? 60 : 150;
+  // a lone model is cheap to check, so a Titan or a Knight gets a wider search than a big squad
+  const maxTests = how === 'deepStrike' ? 60 : alive(u).length === 1 ? 600 : 150;
+  // a long hull that doesn't fit one way (a Warlord Titan in a 12" deep zone) may fit turned a quarter
+  const hulls = alive(u).filter((m) => m.hull);
+  const rot0 = hulls.map((m) => m.rot ?? 0);
+  const turns = hulls.length ? [0, Math.PI / 2] : [0];
   for (const c of cands) {
-    if (tested++ > maxTests) break;
     if (zone && !circleTouchesPoly(c, 0, zone)) continue;
     if (keep && foes.some((n) => dist(c, n) - n.r - r0 <= keep)) continue;
+    // the cap bounds the costly full checks only: cheap rejections above must not use it up
+    if (tested++ > maxTests) break;
     // a big unit arriving from Strategic Reserves has to fit within 6" of an edge: try it in two long rows too
-    const tries = how === 'ingress' && alive(u).length > 5 ? [formationAt(u, c, up), wideFormation(u, c, true), wideFormation(u, c, false)] : [formationAt(u, c, up)];
-    for (const pos of tries) if (validatePlacement(s, u, pos, how).ok && (!accept || accept(pos))) return pos;
+    const tries = how === 'ingress' && alive(u).length > 5 ? [formationAt(u, c, up), wideFormation(s, u, c, true), wideFormation(s, u, c, false)] : [formationAt(u, c, up)];
+    for (const turn of turns) {
+      hulls.forEach((m, i) => { m.rot = rot0[i] + turn; });
+      for (const pos of tries) if (validatePlacement(s, u, pos, how).ok && (!accept || accept(pos))) return pos;
+    }
   }
+  hulls.forEach((m, i) => { m.rot = rot0[i]; });
   return null;
 }
 
 /** A tight block no deeper than 6" (as few rows as fit), centred on `c`, its rows along x (or along y): for setting up
  *  a big unit within 6" of a board edge. */
-export function wideFormation(u: UnitState, c: Pt, alongX: boolean): Map<string, Pt> {
+export function wideFormation(s: GameState, u: UnitState, c: Pt, alongX: boolean): Map<string, Pt> {
+  const W = tableW(s), H = tableH(s);
   const ms = [...alive(u)].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter));
   const r = Math.max(...ms.map(reachOf));
   // staggered rows (each half a base along): the rows sit closer, so more of them fit in 6"
@@ -2776,7 +2802,7 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
   s.campaign.battleEventTriggered = true;
 
   // Filter candidates that strictly have real portraits
-  const validCandidates = enemyUnits.filter((u) => hasRealPortrait(u.sources?.[0] ?? u.name));
+  const validCandidates = enemyUnits.filter((u) => hasPicture(u.sources?.[0] ?? u.name));
   const candidate = validCandidates.find((u) => (u.keywords.includes('VEHICLE') || u.keywords.includes('MONSTER') || u.keywords.includes('ELITE')) && !u.keywords.includes('TITANIC'))
     ?? validCandidates.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC') && !u.keywords.includes('EPIC HERO'))
     ?? validCandidates[0]
@@ -2913,7 +2939,7 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
 
     const roll = nextRandom(s);
     if (roll < 0.5 && mostExp && enemyTemplates.length > 0) {
-      const validTemplates = enemyTemplates.filter((u) => hasRealPortrait(u.sources?.[0] ?? u.name));
+      const validTemplates = enemyTemplates.filter((u) => hasPicture(u.sources?.[0] ?? u.name));
       const cand = validTemplates.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC'))
         ?? validTemplates[0]
         ?? enemyTemplates[0];
@@ -3311,6 +3337,7 @@ export function setUpNear(s: GameState, u: UnitState, anchor: UnitState, range: 
 /** Set a unit up anywhere on the battlefield more than `keep`" from every enemy unit, closest to `prefer`
  *  (`ok` narrows the spots, e.g. wholly within 8" of an edge). Sigil of Exigence, Imposing Arrival. */
 export function setUpAway(s: GameState, u: UnitState, keep: number, prefer: Pt, ok: (pos: Map<string, Pt>) => boolean = () => true): boolean {
+  const W = tableW(s), H = tableH(s);
   const enemies = boardUnits(s, other(u.owner)).flatMap(alive);
   let best: { pos: Map<string, Pt>; d: number } | null = null;
   for (let x = 2; x < W - 1; x += 2) for (let y = 2; y < H - 1; y += 2) {

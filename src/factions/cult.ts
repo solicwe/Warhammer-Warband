@@ -6,7 +6,7 @@ import { addTimed } from '../rules-engine/effects';
 import { RULES } from '../engine/config';
 import { dist } from '../engine/geometry';
 import { rollN } from '../engine/dice';
-import { alive, boardUnits, canUseStratagem, hasKw, log, other, pushFx, spendStratagem } from '../engine/state';
+import { alive, boardUnits, canUseStratagem, hasKw, log, other, pushFx, spendStratagem, tableH, tableW } from '../engine/state';
 import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export function isCultArmy(s: GameState, p: PlayerId): boolean {
@@ -46,7 +46,7 @@ export function cultBattleStart(s: GameState) {
 /** A place for a Cult Ambush marker more than 9" from every enemy unit: the one closest to the enemy's objectives. */
 function markerSpot(s: GameState, p: PlayerId, near?: UnitState): Pt | null {
   const foes = boardUnits(s, other(p)).flatMap(alive);
-  const W = RULES.battlefield.width, H = RULES.battlefield.height;
+  const W = tableW(s), H = tableH(s);
   let best: { at: Pt; score: number } | null = null;
   for (let x = 2; x <= W - 2; x += 2) for (let y = 2; y <= H - 2; y += 2) {
     const at = { x, y };
@@ -157,7 +157,7 @@ export function cultAmbushArrival(s: GameState) {
   if (!isCultArmy(s, p)) return;
   const left: Pt[] = [];
   for (const mk of P.cultAmbushMarkers ?? []) {
-    const edge = Math.min(mk.x, mk.y, RULES.battlefield.width - mk.x, RULES.battlefield.height - mk.y);
+    const edge = Math.min(mk.x, mk.y, tableW(s) - mk.x, tableH(s) - mk.y);
     // Outrider Gangs: Atalan Jackals arrive wholly within 9" of a battlefield edge
     const u = s.units.find((x) => x.owner === p && x.status === 'reserves' && x.cultAmbush && (edge <= 6 || !x.abilities.some((a) => a.name === 'Outrider Gangs')));
     if (!u) { left.push(mk); continue; }
