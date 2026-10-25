@@ -379,6 +379,21 @@ const ALTERNATE_THEMES: Record<string, FactionTheme> = {
   },
 };
 
+const lum = (hex: string) => {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+/** The colour lifted towards white until it reads on the dark UI (contrast 4.5 against #0e1013, the WCAG bar for
+ *  text): a dark navy Ultramarines or near-black Raven Guard name stays its own hue but turns legible. */
+export function readableOnDark(hex: string): string {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return hex;
+  const bg = lum('#0e1013');
+  const mix = (k: number) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) + (255 - parseInt(hex.slice(i, i + 2), 16)) * k).toString(16).padStart(2, '0')).join('');
+  for (let k = 0; k <= 1; k += 0.05) { const c = mix(k); if ((lum(c) + 0.05) / (bg + 0.05) >= 4.5) return c; }
+  return '#ffffff';
+}
+const legible = (t: FactionTheme): FactionTheme => ({ ...t, primary: readableOnDark(t.primary), secondary: readableOnDark(t.secondary) });
+
 export function getFactionTheme(factionId?: unknown, subfaction?: unknown, isAlternate?: boolean): FactionTheme {
   const fId = typeof factionId === 'string' ? factionId : String((factionId as any)?.id || (factionId as any)?.name || '');
   const subStr = typeof subfaction === 'string' ? subfaction : String((subfaction as any)?.name || (subfaction as any)?.id || '');
@@ -392,14 +407,14 @@ export function getFactionTheme(factionId?: unknown, subfaction?: unknown, isAlt
   };
 
   if (isAlternate) {
-    return ALTERNATE_THEMES[fId] ?? ALTERNATE_THEMES.defaultAlt;
+    return legible(ALTERNATE_THEMES[fId] ?? ALTERNATE_THEMES.defaultAlt);
   }
 
   if (subStr && SUBFACTION_THEMES[subStr.toUpperCase()]) {
-    return { ...base, ...SUBFACTION_THEMES[subStr.toUpperCase()] };
+    return legible({ ...base, ...SUBFACTION_THEMES[subStr.toUpperCase()] });
   }
 
-  return base;
+  return legible(base);
 }
 
 /** Get the dynamic faction theme for Player 0 or Player 1 in the current game state. */

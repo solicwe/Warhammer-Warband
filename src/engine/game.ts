@@ -18,7 +18,7 @@ import RIPPERS from '../../data/extra/ripper-swarms.json';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
-import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathDistance, pathLength } from './pathing';
+import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathDistance, pathLength, settleMove } from './pathing';
 import { detOnCommandStart } from '../rules-engine/detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
@@ -2352,8 +2352,13 @@ const stayPaths = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x
 /** Charge `targetIds` with the distance rolled: every model is moved in by itself. False when no legal move was found. */
 export function autoCharge(s: GameState, u: UnitState, targetIds: string[]): boolean {
   const targets = targetIds.map((id) => unitById(s, id));
-  const paths = new Map([...stayPaths(u), ...autoApproach(s, u, targets, chargeReach(s, u, targets))]);
-  if (!validateMove(s, u, 'charge', paths, { targets: targetIds }).ok) return false;
+  const reach = chargeReach(s, u, targets);
+  let paths = new Map([...stayPaths(u), ...autoApproach(s, u, targets, reach)]);
+  if (!validateMove(s, u, 'charge', paths, { targets: targetIds }).ok) {
+    // straight lines that cross a wall or end on another model: route and settle them as a dragged charge is
+    paths = settleMove(s, u, 'charge', paths, { targets: targetIds, maxFor: () => reach });
+    if (!validateMove(s, u, 'charge', paths, { targets: targetIds }).ok) return false;
+  }
   commitCharge(s, u, paths, targetIds);
   return true;
 }

@@ -347,7 +347,6 @@ const ModelToken = memo(function ModelToken({
       onPointerDown={onPointerDown}
       style={{
         cursor: isDraft ? 'grab' : 'pointer',
-        transform: 'translate3d(0, 0, 0)',
         ...(isModelHidden
           ? { opacity: 0.8, filter: 'grayscale(55%)' }
           : isUntargetable
@@ -706,7 +705,9 @@ function BoardImpl(props: BoardProps) {
   const clampVb = useCallback((v: typeof vb) => {
     const hm = homeRef.current;
     const w = Math.min(v.w, hm.w), h = (w / v.w) * v.h;
-    return { x: Math.min(hm.x + hm.w - w, Math.max(hm.x, v.x)), y: Math.min(hm.y + Math.max(0, hm.h - h), Math.max(hm.y, v.y)), w, h };
+    // the view may hang half off the table, so any corner (and the part under a phone's bottom sheet) can be
+    // dragged into view at every zoom; zooming out still stops at the whole table
+    return { x: Math.min(hm.x + hm.w - w / 2, Math.max(hm.x - w / 2, v.x)), y: Math.min(hm.y + hm.h - h / 2, Math.max(hm.y - h / 2, v.y)), w, h };
   }, []);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   // during a pinch, pan or wheel zoom the view box is set on the SVG directly and handed to React once the gesture
@@ -796,6 +797,10 @@ function BoardImpl(props: BoardProps) {
     const base: Paths = new Map([...activeDraft].map(([id, p]) => [id, [...p]]));
     drag.current = { pointerId: e.pointerId, start: toBoard(e.clientX, e.clientY), models, base, moved: false, unitId, modelId };
   };
+
+  // tokens call the latest handler through a ref, so their memo can ignore the (always new) closure
+  const startDragRef = useRef(startModelDrag);
+  startDragRef.current = startModelDrag;
 
   const dsDrag = useRef<{ pointerId: number; unitId: string; pos: Pt; moved: boolean } | null>(null);
   const [liveMarkerPos, setLiveMarkerPos] = useState<{ unitId: string; pt: Pt } | null>(null);
@@ -1794,7 +1799,7 @@ function BoardImpl(props: BoardProps) {
                   riled={riled ?? false}
                   flinch={flinch ?? undefined}
                   disp={disp}
-                  onPointerDown={(e) => startModelDrag(e, u.id, m.id)}
+                  onPointerDown={(e) => startDragRef.current(e, u.id, m.id)}
                 />
               );
             })}

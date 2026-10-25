@@ -1,4 +1,5 @@
 import { abilityRule, abilityStatus, type AbilityStatus } from '../rules-engine/effects';
+import { readableOnDark } from './factionColors';
 import { strength } from '../engine/state';
 import type { AbilityData, DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
@@ -104,7 +105,7 @@ const CHAPTER_COLOR: Record<string, string> = {
   ULTRAMARINES: '#2f63c9', 'BLOOD ANGELS': '#c8262f', 'DARK ANGELS': '#2e8a46', 'SPACE WOLVES': '#7d9bb3', 'BLACK TEMPLARS': '#9aa0a8',
   DEATHWATCH: '#8a93a3', 'IMPERIAL FISTS': '#e0b018', 'IRON HANDS': '#7f8a96', 'RAVEN GUARD': '#6f7a8c', SALAMANDERS: '#2f9a3a', 'WHITE SCARS': '#d23a3a',
 };
-export const armyColor = (factionId?: string, sub?: string) => (sub && CHAPTER_COLOR[sub]) || ARMY_COLOR[factionId ?? ''] || '#c9a13b';
+export const armyColor = (factionId?: string, sub?: string) => readableOnDark((sub && CHAPTER_COLOR[sub]) || ARMY_COLOR[factionId ?? ''] || '#c9a13b');
 
 export const dsColor = (factionId?: string) => DS_COLOR[factionId ?? ''] ?? '#2c4440';
 

@@ -735,7 +735,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     style={{
                       animationDelay: `${i * 90}ms`,
                       position: 'relative',
-                      ...(borderCol ? { borderColor: borderCol, boxShadow: `0 0 16px ${borderCol}33` } : {}),
+                      // the slate's frame is its padding over its own background (its clip-path cuts off borders and
+                      // box-shadows), so the rarity colour goes there, with a glow that follows the cut corners
+                      ...(borderCol ? { padding: 2, background: borderCol, filter: `drop-shadow(0 0 10px ${borderCol}99)` } : {}),
                     }}
                     onClick={() => take(rw)}
                   >
@@ -743,7 +745,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       <span className="cmp-card-kind" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>
                           {isUnit
-                            ? (rarity ? rarity.toUpperCase() : 'REINFORCEMENTS')
+                            ? 'Reinforcements'
                             : isUpgrade ? 'Upgrade' : rw.kind === 'relic' ? (relic?.rare ? 'Rare relic' : 'Relic') : rw.kind === 'detachment' ? 'Detachment' : rw.kind === 'scrap' ? 'Scrap Cache' : 'Command'}
                         </span>
                         {isUnit && rarity && (
@@ -775,12 +777,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             overflow: 'hidden',
                             border: `2px solid ${borderCol ?? '#94A3B8'}`,
                             boxShadow: `0 0 14px ${borderCol ?? '#94A3B8'}44`,
-                            background: '#0f172a',
+                            background: '#FFFFFF',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}>
-                            <UnitArt sheet={sheet ?? undefined} />
+                            <span className="cmp-card-art"><UnitArt sheet={sheet ?? undefined} /></span>
                           </div>
                           {bonusSheet && (
                             <div
@@ -794,11 +796,14 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                 borderRadius: '50%',
                                 overflow: 'hidden',
                                 border: '2px solid #F59E0B',
-                                background: '#0f172a',
+                                background: '#FFFFFF',
                                 boxShadow: '0 0 12px rgba(245, 158, 11, 0.7)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                               }}
                             >
-                              <UnitArt sheet={bonusSheet} />
+                              <span className="cmp-card-art"><UnitArt sheet={bonusSheet} /></span>
                             </div>
                           )}
                         </div>
