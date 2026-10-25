@@ -4,6 +4,7 @@ import { KEYS, readText, writeText } from '../services/storage';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { chapterRules } from '../engine/army';
 import { abilityRuleText, RuleText } from './RuleText';
+import { camFocus, MapCam } from './MapCam';
 import { getPortrait, modelPortraitKey } from './portraits';
 import { loadoutSummary } from './loadout';
 import { WeaponFireModePanel } from './WeaponFireModePanel';
@@ -3246,6 +3247,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </button>
         )}
       </div>
+      {isMobileScreen && <MapCam s={s} focus={camFocus(s, modeUnit ?? selUnit)} />}
       <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''} ${drawerMin ? 'mini' : ''} ${mode ? 'moving' : ''}`}>
         <button className="drawer-handle" aria-label={drawerMin ? 'Show the panel' : 'Fold the panel down'} aria-expanded={!drawerMin} onClick={() => setDrawerMin((v) => !v)}>
           <span className="drawer-grip" aria-hidden="true" />

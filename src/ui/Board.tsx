@@ -1395,6 +1395,8 @@ function BoardImpl(props: BoardProps) {
           <circle cx="1.5" cy="1.5" r="0.25" fill="rgba(216, 180, 254, 0.3)" />
         </pattern>
       </defs>
+      {/* the live board, mirrored by the picture-in-picture camera (an SVG <use> of this group) */}
+      <g id="board-live">
       {backdrop
         ? <image href={backdrop} x={0} y={0} width={W} height={H} preserveAspectRatio="none" />
         : <rect x={0} y={0} width={W} height={H} fill={ground ? 'url(#ground)' : 'url(#ash)'} />}
@@ -2097,6 +2099,7 @@ function BoardImpl(props: BoardProps) {
           </g>
         );
       })}
+      </g>
     </svg>
     <svg className="fx-overlay" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio={FIT} aria-hidden="true">
       <FxLayer fx={fx} />
