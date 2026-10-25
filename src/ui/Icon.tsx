@@ -100,7 +100,7 @@ export function SvgIcon({ name, x, y, size, color }: { name: IconName; x: number
   );
 }
 
-/** Pocket Warband's mark: a war banner whose cloth is the face of a die. `tile` draws it on its dark app-icon square. */
+/** Warhammer Warband's mark: a war banner whose cloth is the face of a die. `tile` draws it on its dark app-icon square. */
 export function Logo({ size = 28, tile = false }: { size?: number; tile?: boolean }) {
   return (
     <svg className="logo" width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">

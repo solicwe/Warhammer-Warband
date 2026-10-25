@@ -4,6 +4,7 @@ import { listPoints } from '../engine/army';
 import { loadRun } from '../services/storage';
 import { lastRound } from '../engine/state';
 import type { GameState } from '../engine/types';
+import { AccountPanel } from './Account';
 import { Emblem, titleCase } from './ArmyBuilder';
 import { useFactions, type FactionIndex } from './data';
 import { Icon, Logo } from './Icon';
@@ -40,7 +41,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
   return (
     <div className="app home">
       <header className="appbar">
-        <span className="brand"><Logo size={30} />Pocket Warband</span>
+        <span className="brand"><Logo size={30} />Warhammer Warband</span>
         <span className="appbar-note">11th edition</span>
       </header>
       <main className="screen">
@@ -126,6 +127,8 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
           })}
           {!armies.length && <div className="empty">No armies yet. Tap “New army” to build one.</div>}
         </section>
+
+        <AccountPanel />
 
         {pop && (() => {
           const a = armies.find((x) => x.id === pop.id);
