@@ -8,7 +8,6 @@ import { Emblem, titleCase } from './ArmyBuilder';
 import { useFactions, type FactionIndex } from './data';
 import { Icon, Logo } from './Icon';
 import { armyColor } from './Sheet';
-import { clearAllLocalPortraits, ownPortraitCount, usePortraitsVersion } from './portraits';
 import type { Army } from './library';
 
 interface Props {
@@ -129,8 +128,6 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
         </section>
 
 
-        <MyPhotos />
-
         {pop && (() => {
           const a = armies.find((x) => x.id === pop.id);
           if (!a) return null;
@@ -160,25 +157,5 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
 
       </main>
     </div>
-  );
-}
-
-
-/** Photos changed on this device show instead of the site's: this drops them so the site's own pictures show again.
- *  Hidden when there are none. */
-function MyPhotos() {
-  usePortraitsVersion();
-  const [armed, setArmed] = useState(false);
-  useEffect(() => { if (!armed) return; const t = window.setTimeout(() => setArmed(false), 3000); return () => window.clearTimeout(t); }, [armed]);
-  const n = ownPortraitCount();
-  if (!n) return null;
-  return (
-    <section className="group my-photos" aria-label="Your photos">
-      <div className="group-head"><h3>Your photos</h3><span className="group-count num">{n}</span></div>
-      <p className="small muted">Pictures you changed on this device show instead of the site's. Remove them to see the site's pictures.</p>
-      <div className="my-photos-acts">
-        <button className={`btn ${armed ? 'danger' : 'ghost'}`} onClick={() => { if (!armed) { setArmed(true); return; } clearAllLocalPortraits(); setArmed(false); }}>{armed ? 'Tap again to remove' : "Use the site's pictures"}</button>
-      </div>
-    </section>
   );
 }
