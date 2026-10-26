@@ -8,6 +8,7 @@ import { Emblem, titleCase } from './ArmyBuilder';
 import { useFactions, type FactionIndex } from './data';
 import { Icon, Logo } from './Icon';
 import { armyColor } from './Sheet';
+import { clearAllLocalPortraits, exportPortraitsZip, ownPortraitCount, usePortraitsVersion } from './portraits';
 import type { Army } from './library';
 
 interface Props {
@@ -128,6 +129,8 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
         </section>
 
 
+        <MyPhotos />
+
         {pop && (() => {
           const a = armies.find((x) => x.id === pop.id);
           if (!a) return null;
@@ -160,3 +163,32 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
   );
 }
 
+
+/** Photos changed on this device: export them as one zip (laid out like the server's image folder, so they can be
+ *  added to the site), or drop them so the site's own pictures show again. Hidden when there are none. */
+function MyPhotos() {
+  usePortraitsVersion();
+  const [armed, setArmed] = useState(false);
+  useEffect(() => { if (!armed) return; const t = window.setTimeout(() => setArmed(false), 3000); return () => window.clearTimeout(t); }, [armed]);
+  const n = ownPortraitCount();
+  if (!n) return null;
+  const exportZip = async () => {
+    const zip = await exportPortraitsZip(() => undefined);
+    const url = URL.createObjectURL(new Blob([zip as BlobPart], { type: 'application/zip' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `warband-photos-${new Date().toISOString().slice(0, 10)}.zip`;
+    a.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  return (
+    <section className="group my-photos" aria-label="Your photos">
+      <div className="group-head"><h3>Your photos</h3><span className="group-count num">{n}</span></div>
+      <p className="small muted">Pictures you changed on this device show instead of the site's. Export them to send them in for the site, or remove them to see the site's pictures.</p>
+      <div className="my-photos-acts">
+        <button className="btn primary" onClick={() => void exportZip()}><Icon name="download" size={18} />Export photos</button>
+        <button className={`btn ${armed ? 'danger' : 'ghost'}`} onClick={() => { if (!armed) { setArmed(true); return; } clearAllLocalPortraits(); setArmed(false); }}>{armed ? 'Tap again to remove' : "Use the site's pictures"}</button>
+      </div>
+    </section>
+  );
+}
