@@ -1,5 +1,25 @@
 # Warhammer Warband
 
+![Warhammer Warband: Warhammer 40,000 battles on your phone](docs/images/banner.jpg)
+
+**Play it in your browser: [solicwe.github.io/Warhammer-Warband](https://solicwe.github.io/Warhammer-Warband/)**. No
+install, no account. On a phone, add it to your home screen and it works like an app.
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="docs/images/home.jpg" alt="Home screen with saved armies" width="200"><br><sub><b>Home.</b> Your armies, the battle in progress and the campaign.</sub></td>
+    <td align="center" width="25%"><img src="docs/images/builder.jpg" alt="Army builder" width="200"><br><sub><b>Army builder.</b> Units, leaders, wargear and enhancements at current points.</sub></td>
+    <td align="center" width="25%"><img src="docs/images/setup.jpg" alt="Battle setup" width="200"><br><sub><b>Battle setup.</b> Against the bot, two players, or bot against bot.</sub></td>
+    <td align="center" width="25%"><img src="docs/images/battle.jpg" alt="The battlefield" width="200"><br><sub><b>The battlefield.</b> Terrain, objectives and every model to scale.</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/attack.jpg" alt="An attack resolving on the board" width="200"><br><sub><b>Attacks.</b> Every roll is made and shown on the board.</sub></td>
+    <td align="center"><img src="docs/images/campaign.jpg" alt="Campaign start" width="200"><br><sub><b>Campaign.</b> Pick a faction and fight your way to the Warlord.</sub></td>
+    <td align="center"><img src="docs/images/campaign-map.jpg" alt="Campaign map" width="200"><br><sub><b>Campaign map.</b> Battles, elites, armories, medicae and the boss.</sub></td>
+    <td align="center" valign="middle"><sub>23 factions with their army rules, detachments, stratagems and unit abilities, all 45 mission layouts, and a bot that plays the same rules you do.</sub></td>
+  </tr>
+</table>
+
 Warhammer Warband is a browser game for playing Warhammer 40,000 (11th edition) battles on your phone. You build an
 army list, then fight a bot, pass the phone to a friend, or watch two bots play each other. There is also a campaign:
 a run of battles across a branching map where your army gains experience, upgrades and reinforcements.
