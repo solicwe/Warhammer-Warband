@@ -15,7 +15,7 @@ import { hasAbility } from '../engine/weapons';
 import { actsOfUnit } from '../rules-engine/activations';
 import { unitFlags } from '../rules-engine/effects';
 import { botOff, W as BW, type BotW } from './botWeights';
-import { armyPlan, followedJob, unitPunch, type Role } from './botPlan';
+import { armyPlan, followedJob, homeScoresVp, unitPunch, type Role } from './botPlan';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, shotValue, unitValue,
 } from './botEval';
@@ -496,7 +496,8 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
  * How much the home objective counts for this unit. It is a job for a cheap unit: a tournament player doesn't park 400
  * points of Terminators on it, nor a full squad of Battleline with its Sorcerer (they go and take the middle).
  */
-function homeFactorOf(u: UnitState, ctx: Ctx, w: BotW): number {
+function homeFactorOf(s: GameState, u: UnitState, ctx: Ctx, w: BotW): number {
+  if (!homeScoresVp(s, u.owner)) return 0; // nothing scores for holding it: no unit stays for it
   if (ctx.role && !botOff('homeF')) return ctx.role === 'home' ? 1 : w.homeExpensive;
   return unitValue(u) <= 200 ? 1 : w.homeExpensive;
 }
@@ -689,7 +690,7 @@ export function scoreParts(s: GameState, u: UnitState, kind: MoveKind | 'station
   try {
     const w = BW(u.owner);
     const caution = (ctx.role === 'screen' ? w.cautionBrawler * 1.4 : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
-    const homeFactor = homeFactorOf(u, ctx, w);
+    const homeFactor = homeFactorOf(s, u, ctx, w);
     return { obj: objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor), shoot: shootScore(s, u, kind, ctx), charge: chargeScore(s, u, ctx), danger: -caution * dangerScore(s, u, ctx), pull: pullScore(s, u, ctx), crowd: -crowdScore(s, u), pos: positionScore(s, u) };
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }
@@ -710,7 +711,7 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
     const w = BW(u.owner);
     // a screen keeps out of sight like a shooting unit (it's there to be in the way later, not shot now)
     const caution = (ctx.role === 'screen' ? w.cautionBrawler * 1.4 : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
-    const homeFactor = homeFactorOf(u, ctx, w);
+    const homeFactor = homeFactorOf(s, u, ctx, w);
     return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u) + denialScore(u, ctx) + slip(s, u);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }

@@ -835,9 +835,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (mode?.k === 'place') {
       const u = U(mode.unitId);
       let pos = formationAt(u, p, s.players[u.owner].role === 'defender');
-      if (mode.how === 'ingress' || mode.how === 'deepStrike' || mode.how === 'infiltrate') pos = nudgePlacement(s, u, pos, mode.how);
+      if (mode.how !== 'disembark') pos = nudgePlacement(s, u, pos, mode.how);
       setDraft(placePaths(pos));
-      const chk = mode.how === 'deepStrike' || mode.how === 'infiltrate' ? validatePlacement(s, u, pos, mode.how) : null;
+      const chk = mode.how !== 'disembark' && mode.how !== 'ingress' ? validatePlacement(s, u, pos, mode.how) : null;
       setCheck(chk?.ok ? null : chk);
       return;
     }
@@ -869,7 +869,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     ? settleMove(s, modeUnit, draftKind, d, { fly: mode?.k === 'move' ? mode.fly : undefined, targets: mode?.k === 'charge' ? mode.targets : undefined, maxFor: (m) => maxFor(m.id) })
     : d);
   const onDragEnd = (d: Paths) => {
-    if (mode?.k === 'place' && modeUnit && (mode.how === 'ingress' || mode.how === 'deepStrike' || mode.how === 'infiltrate')) {
+    if (mode?.k === 'place' && modeUnit && mode.how !== 'disembark') {
+      // a model dragged into a wall, a ruin it can't stand in or another model shuffles to the nearest legal spot
       const pos = nudgePlacement(s, modeUnit, lastPos(d), mode.how);
       setDraft(placePaths(pos));
       const chk = validatePlacement(s, modeUnit, pos, mode.how);
@@ -889,6 +890,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
    * its whole move in about half a second (at least 14" a second); a light push creeps, for fine placing.
    */
   const joyMove = (x: number, y: number, dt: number) => {
+    // setting a unit up: the stick slides the whole unit (no move limit); it settles clear of walls on release
+    if (mode?.k === 'place' && draftRef.current) {
+      const push = Math.min(1, Math.hypot(x, y));
+      if (push <= 0) return;
+      const step = 10 * Math.pow(push, 1.6) * dt;
+      const d = draftRef.current;
+      setDraft(new Map([...d].map(([id, p]) => { const q = p[p.length - 1]; return [id, [{ x: q.x + (x / push) * step, y: q.y + (y / push) * step }]]; })));
+      setCheck(null);
+      return;
+    }
     if (!modeUnit || !draftKind) return;
     const max = slideMax();
     const push = Math.min(1, Math.hypot(x, y));
@@ -1350,6 +1361,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
 
   const joystick = () => {
+    if (mode?.k === 'place' && modeUnit && mode.how !== 'disembark') {
+      if (!draft) return <div className="tiny muted">Tap the map to set the unit down, then fine-tune it with the stick.</div>;
+      return (
+        <div className="move-joy" data-coach="joy">
+          <Joystick onMove={joyMove} onEnd={() => { if (draftRef.current) onDragEnd(draftRef.current); }} />
+        </div>
+      );
+    }
     if (mode?.k !== 'move' || !modeUnit) return null;
     const max = slideMax();
     if (!Number.isFinite(max) || max <= 0) return null;
@@ -1613,6 +1632,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="small"><b>{u.name}</b></div>
+        {joystick()}
         <div className="row">
           <span className="grow" />
           <button className="btn small" onClick={autoPlace}>Auto place</button>

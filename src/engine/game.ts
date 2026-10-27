@@ -573,7 +573,7 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
 }
 
 /** Nudge only invalid models toward nearby legal spots without disturbing already-valid placement. */
-export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>, how: 'ingress' | 'deepStrike' | 'infiltrate'): Map<string, Pt> {
+export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate'): Map<string, Pt> {
   const W = tableW(s), H = tableH(s);
   const out = new Map(pos);
   if (how === 'ingress') {
@@ -2109,22 +2109,32 @@ export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingre
   const keep = how === 'deploy' ? 0 : Math.min(u.homer ? 8 : 99, how === 'deepStrike' ? unitFlags(s, u).deepStrikeRange : RULES.reserves.enemyDistance);
   const foes = keep ? boardUnits(s, other(u.owner)).flatMap(alive) : [];
   const r0 = Math.min(...alive(u).map((m) => m.r));
+  const earlyNoEnemyZone = how !== 'deploy' && s.round < RULES.reserves.noEnemyZoneBeforeRound
+    && !s.units.some((f) => f.owner === u.owner && (f.timed ?? []).some((t) => t.mark === 'mastersOfTheVoid'));
   let tested = 0;
   // a lone model is cheap to check, so a Titan or a Knight gets a wider search than a big squad
-  const maxTests = how === 'deepStrike' ? 60 : alive(u).length === 1 ? 600 : 150;
+  const maxTests = how === 'deepStrike' ? 60 : alive(u).length === 1 ? 600 : how === 'ingress' ? 300 : 150;
   // a long hull that doesn't fit one way (a Warlord Titan in a 12" deep zone) may fit turned a quarter
-  const hulls = alive(u).filter((m) => m.hull);
+  const hulls = alive(u).filter((m) => m.hull || m.hl); // hulls and oval bases (bikes, cavalry)
   const rot0 = hulls.map((m) => m.rot ?? 0);
-  const turns = hulls.length ? [0, Math.PI / 2] : [0];
+  // as they face now, then square to the table both ways (a facing left from moving is often at an odd angle, and a
+  // row along a table edge needs the long side along it)
+  const turns: (number | null)[] = hulls.length ? [null, 0, Math.PI / 2] : [null];
   for (const c of cands) {
     if (zone && !circleTouchesPoly(c, 0, zone)) continue;
     if (keep && foes.some((n) => dist(c, n) - n.r - r0 <= keep)) continue;
+    // Strategic Reserves: a spot further than 6" from every edge can never be legal (the edge rows are tried below)
+    if (how === 'ingress' && Math.min(c.x, c.y, W - c.x, H - c.y) > RULES.reserves.edgeDistance) continue;
+    // …and before round 3 nor can a spot in the enemy deployment zone (a near miss is still left to the full check)
+    if (earlyNoEnemyZone && pointInPoly(c, enemyZone)) continue;
     // the cap bounds the costly full checks only: cheap rejections above must not use it up
     if (tested++ > maxTests) break;
-    // a big unit arriving from Strategic Reserves has to fit within 6" of an edge: try it in two long rows too
-    const tries = how === 'ingress' && alive(u).length > 5 ? [formationAt(u, c, up), wideFormation(s, u, c, true), wideFormation(s, u, c, false)] : [formationAt(u, c, up)];
+    // a unit arriving from Strategic Reserves has to fit within 6" of an edge: try it in long rows along the edge too
+    // (three bikes on long bases already spread too deep in the usual formation)
     for (const turn of turns) {
-      hulls.forEach((m, i) => { m.rot = rot0[i] + turn; });
+      hulls.forEach((m, i) => { m.rot = turn === null ? rot0[i] : turn; });
+      // built after the facing is set: the spacing follows each base's extent as it now faces
+      const tries = how === 'ingress' && alive(u).length > 1 ? [formationAt(u, c, up), wideFormation(s, u, c, true), wideFormation(s, u, c, false)] : [formationAt(u, c, up)];
       for (const pos of tries) if (validatePlacement(s, u, pos, how).ok && (!accept || accept(pos))) return pos;
     }
   }
@@ -2137,9 +2147,14 @@ export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingre
 export function wideFormation(s: GameState, u: UnitState, c: Pt, alongX: boolean): Map<string, Pt> {
   const W = tableW(s), H = tableH(s);
   const ms = [...alive(u)].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter));
-  const r = Math.max(...ms.map(reachOf));
-  // staggered rows (each half a base along): the rows sit closer, so more of them fit in 6"
-  const step = r * 2 + 0.05, rowStep = step * 0.87;
+  // each base's real extent along the row and across it, as it faces now (a bike lying along the edge is narrow
+  // across); round bases are staggered half a base along, so the rows sit closer
+  const box = ms.map((m) => bodyBox(bodyAt(m, { x: 0, y: 0 })));
+  const ex = Math.max(...box.map((k) => k.x1 - k.x0)), ey = Math.max(...box.map((k) => k.y1 - k.y0));
+  const along = alongX ? ex : ey, across = alongX ? ey : ex;
+  const round = !ms.some((m) => m.hl);
+  const step = along + 0.05, rowStep = round ? step * 0.87 : across + 0.05;
+  const r = across / 2;
   const rowsMax = Math.max(1, Math.floor((6 - 2 * r - 0.1) / rowStep) + 1);
   const perRow = Math.ceil(ms.length / rowsMax);
   const rows = Math.ceil(ms.length / perRow);
@@ -2150,7 +2165,7 @@ export function wideFormation(s: GameState, u: UnitState, c: Pt, alongX: boolean
   ms.forEach((m, i) => {
     const row = Math.floor(i / perRow), col = i % perRow;
     const inRow = Math.min(perRow, ms.length - row * perRow);
-    const a = (col - (inRow - 1) / 2 + (row % 2 ? 0.25 : -0.25)) * step, b = (row - (rows - 1) / 2) * rowStep;
+    const a = (col - (inRow - 1) / 2 + (round ? (row % 2 ? 0.25 : -0.25) : 0)) * step, b = (row - (rows - 1) / 2) * rowStep;
     out.set(m.id, alongX ? { x: c.x + a, y: c.y + b } : { x: c.x + b, y: c.y + a });
   });
   return out;

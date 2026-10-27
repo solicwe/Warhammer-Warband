@@ -57,25 +57,17 @@ export function homeScoresVp(s: GameState, p: PlayerId): boolean {
   // Check primary scoring rules
   const prim = P.primaryId ? primaryById(P.primaryId) : undefined;
   const rules = prim?.scoring ?? [];
-  if (!rules.length) return true;
-
-  let anyExcl = false;
+  // a mission that scores no objective at all (kills only): home is worth nothing to hold
   for (const r of rules) {
     const cond = r.condition;
     // Conditions where own home gives VP or is needed
     if (cond === 'perObjectiveControlled' || cond === 'controlMoreThanOpponent' ||
         cond === 'control2Plus' || cond === 'control3Plus' || cond === 'control4Plus' ||
-        cond === 'perNonHomeIfHomeControlled' || cond === 'onlyOneOwnMarkerHeld') {
+        cond === 'perNonHomeIfHomeControlled' || cond === 'onlyOneOwnMarkerHeld' || cond === 'controlOwnHome' || cond === 'perGuarded') {
       return true;
     }
-    if (cond === 'perObjectiveControlledExclHome' || cond === 'controlAnyExclHome' || cond === 'controlAnyExclHomes') {
-      anyExcl = true;
-    }
   }
-
-  // If mission only has excluding-home conditions and no rules that reward home
-  if (anyExcl) return false;
-  return true;
+  return false;
 }
 
 /** How to play this battle round, and how much to fear losses (a factor on the movement scoring's caution). */
@@ -184,7 +176,8 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
       }).sort((a, b) => a.cost - b.cost);
     // never the army's hammer: 200 points of Dreadnought guarding home is a wasted unit (better nobody, until a cheap one comes)
     const c0 = cands[0] && info.get(cands[0].u.id)!;
-    if (c0 && (jobs.get(c0.u.id)?.role === 'firebase' || (c0.value <= 160 && !(c0.brawler && c0.value > 120)))) {
+    // a gun line unit too: only a cheap one (a 250-point tank parked on home all game is the same waste)
+    if (c0 && c0.value <= 160 && !(c0.brawler && c0.value > 120)) {
       // a squad this cheap loses nothing by sitting at home all game (the way a player parks Gretchin there); one
       // already out in the field is doing a job there, so it is not called back
       const keep = !c0.brawler && c0.value <= 80 && dist(centre(c0.u), hp) <= c0.M + 3;
