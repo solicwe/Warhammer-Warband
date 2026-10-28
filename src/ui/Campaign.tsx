@@ -3,7 +3,7 @@
 // and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
 import { loadRun, saveRun } from '../services/storage';
-import { attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
+import { loadoutLines, attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyAutoUpgradeUnit, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
@@ -1125,7 +1125,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         </div>
 
                         {/* 3. Wargear Options with Scrap mode */}
-                        {sheet && (sheet.wargearOptions?.length || sheet.wargearCosts?.length) ? (
+                        {sheet && (sheet.wargearOptions?.length || sheet.wargearCosts?.length || loadoutLines(sheet).length) ? (
                           <div className="ab-collapsible-section field">
                             <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'wargear', false)}>
                               <span className="row gap-2" style={{ alignItems: 'center' }}>

@@ -329,8 +329,8 @@ export function optRequiresNot(o: WargearOption): string[] {
 }
 
 /** The models of a unit with their default items, before any wargear choice. */
-function planModels(sheet: DatasheetData, count: number, addons: string[] = []): ModelPlan[] {
-  const parts = distributeModels(sheet, count);
+function planModels(sheet: DatasheetData, count: number, addons: string[] = [], comp?: Record<string, number>): ModelPlan[] {
+  const parts = distributeModels(sheet, count, comp);
   for (const a of addons) if (addonLines(sheet).some((l) => l.name === a)) parts.push({ comp: a, profile: matchProfile(sheet, a), count: 1 });
   const out: ModelPlan[] = [];
   for (const part of parts) {
@@ -484,10 +484,10 @@ function applyWargear(sheet: DatasheetData, plans: ModelPlan[], picks: WargearPi
 }
 
 /** Points for costed wargear ("per thunder hammer +5", counted on every model that carries one) and add-on models. */
-export function wargearPoints(sheet: DatasheetData | undefined, e: Pick<ArmyUnitEntry, 'models' | 'wargear' | 'addons'>): number {
+export function wargearPoints(sheet: DatasheetData | undefined, e: Pick<ArmyUnitEntry, 'models' | 'wargear' | 'addons' | 'comp'>): number {
   const costs = sheet?.wargearCosts ?? [];
   if (!sheet || !costs.length) return 0;
-  const plans = planModels(sheet, e.models, e.addons);
+  const plans = planModels(sheet, e.models, e.addons, e.comp);
   applyWargear(sheet, plans, e.wargear ?? []);
   const addons = addonLines(sheet);
   let pts = 0;
@@ -585,7 +585,7 @@ export function defaultWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntr
   };
   /** The whole unit: every gun each model carries, and its best melee weapon. */
   const unitPower = (picks: WargearPick[]) => {
-    const plans = planModels(sheet, e.models, e.addons);
+    const plans = planModels(sheet, e.models, e.addons, e.comp);
     applyWargear(sheet, plans, picks);
     return plans.reduce((sum, p) => {
       let guns = 0, fist = 0;
@@ -701,7 +701,7 @@ export function wargearProblems(sheet: DatasheetData, e: ArmyUnitEntry): string[
     const pistols = ranged.filter((w) => w.profiles.some((p) => p.abilities.includes('pistol')));
     if (ranged.length >= 2 && pistols.length !== 1) out.push(`${e.datasheet}: two ranged weapons only if exactly one is a Pistol`);
   }
-  const plans = planModels(sheet, e.models, e.addons);
+  const plans = planModels(sheet, e.models, e.addons, e.comp);
   out.push(...applyWargear(sheet, plans, e.wargear ?? []).map((p) => `${e.datasheet}: ${p}`));
   // "a model cannot be equipped with more than one electroscourge"
   for (const u of new Set(opts.flatMap((o) => o.unique ?? []))) {
@@ -759,7 +759,7 @@ export function gearFnp(sheet: DatasheetData, gear: string[]): number | undefine
 }
 
 /** Distribute N models over composition lines: each line gets its minimum, the remainder goes to the largest line. */
-export function distributeModels(sheet: DatasheetData, total: number): { comp?: string; profile: number; count: number }[] {
+export function distributeModels(sheet: DatasheetData, total: number, comp?: Record<string, number>): { comp?: string; profile: number; count: number }[] {
   const variants: typeof sheet.composition[] = [[]];
   for (const entry of sheet.composition) {
     if (/^\s*OR\s*$/i.test(entry.text)) variants.push([]);
@@ -773,7 +773,13 @@ export function distributeModels(sheet: DatasheetData, total: number): { comp?: 
     b.reduce((sum, entry) => sum + entry.min!, 0) - a.reduce((sum, entry) => sum + entry.min!, 0),
   )[0] ?? [];
   if (!lines.length) return [{ profile: 0, count: total }];
-  const out = lines.map((c) => ({ comp: c.name, profile: matchProfile(sheet, c.name), count: c.min! }));
+  // the player's own split (within each line's min-max) comes first; trimmed from the last lines if it is over the size
+  const out = lines.map((c) => ({ comp: c.name, profile: matchProfile(sheet, c.name), count: Math.max(c.min!, Math.min(c.max!, (c.name ? comp?.[c.name] : undefined) ?? c.min!)) }));
+  for (let i = out.length - 1, over = out.reduce((a, b) => a + b.count, 0) - total; i >= 0 && over > 0; i--) {
+    const cut = Math.min(over, out[i].count - lines[i].min!);
+    out[i].count -= cut;
+    over -= cut;
+  }
   let left = total - out.reduce((a, b) => a + b.count, 0);
   const order = [...lines.keys()].sort((a, b) => (lines[b].max! - lines[b].min!) - (lines[a].max! - lines[a].min!));
   for (const i of order) {
@@ -813,11 +819,11 @@ export function coreAbilities(sheets: DatasheetData[]): CoreAbilities {
 let uidCounter = 0;
 export const newUid = (p = 'u') => `${p}${Date.now().toString(36)}${(uidCounter++).toString(36)}`;
 
-function makeModels(sheet: DatasheetData, e: Pick<ArmyUnitEntry, 'models' | 'wargear' | 'addons'>, unitId: string, bodyguard: boolean): ModelState[] {
+function makeModels(sheet: DatasheetData, e: Pick<ArmyUnitEntry, 'models' | 'wargear' | 'addons' | 'comp'>, unitId: string, bodyguard: boolean): ModelState[] {
   const isCharUnit = sheet.keywords.includes('CHARACTER');
   const maxW = sheet.models?.length ? Math.max(...sheet.models.map((m) => m.W)) : 1;
   const attendantRe = /veteran|disciple|acolyte|servitor|corv|cog|assistant|menhir|geminae|other|scion|guardsm|ghost|ravener/i;
-  const plans = planModels(sheet, e.models, e.addons);
+  const plans = planModels(sheet, e.models, e.addons, e.comp);
   const picks = e.wargear ?? defaultWargear(sheet, e as ArmyUnitEntry).wargear ?? [];
   applyWargear(sheet, plans, picks);
   return plans.map((p, i) => {
@@ -1502,4 +1508,12 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
   for (const u of list.units) if (u.embarkIn && !list.units.some((t) => t.uid === u.embarkIn)) errs.push(`${u.datasheet}: the chosen transport is no longer in the army`);
   for (const t of transportLoads(list, faction)) errs.push(...t.problems);
   return errs;
+}
+
+/** Units whose loadouts are separate optional model lines (0-4 with thunder hammer, 0-1 sergeant with …) rather than
+ *  swaps: the player picks how many models take each line. */
+export function loadoutLines(sheet: DatasheetData): { name: string; min: number; max: number }[] {
+  const lines = sheet.composition.filter((c) => c.name && c.min !== undefined && c.max !== undefined);
+  if (lines.length < 3 || sheet.wargearOptions?.length || !lines.every((c) => c.min === 0)) return [];
+  return lines.map((c) => ({ name: c.name!, min: c.min!, max: c.max! }));
 }

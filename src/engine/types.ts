@@ -134,6 +134,7 @@ export interface ArmyUnitEntry {
   wargear?: WargearPick[];
   wargearPts?: number; // points for costed wargear and add-on models, kept in sync by the army builder
   addons?: string[]; // optional extra models bought separately, e.g. "Invader ATV"
+  comp?: Record<string, number>; // models per loadout line, for units whose loadouts are separate lines (Deathwatch Veterans)
   split?: boolean; // split into two units at Declare Battle Formations (Combat Squads …)
   embarkIn?: string; // uid of the TRANSPORT this unit starts the battle embarked within
   xp?: number; // battle experience in campaign

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../rules-engine/effects';
-import { addonLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
 import { ALLIES, detachmentAllyOf } from '../engine/allies';
 import { Em } from './Em';
@@ -175,7 +175,8 @@ function scopeLabel(o: WargearOption, max: number) {
 export function WargearEditor({ sheet, u, onChange, scrapMode = false }: { sheet: DatasheetData; u: ArmyUnitEntry; onChange: (patch: Partial<ArmyUnitEntry>) => void; scrapMode?: boolean }) {
   const opts = sheet.wargearOptions ?? [];
   const addons = addonLines(sheet);
-  if (!opts.length && !addons.length) return null;
+  const lines = loadoutLines(sheet);
+  if (!opts.length && !addons.length && !lines.length) return null;
   const picks = u.wargear ?? defaultWargear(sheet, u).wargear ?? [];
   const cost = (items: string[]) => items.reduce((a, n) => a + (sheet.wargearCosts?.find((c) => wkey(c.name) === wkey(n))?.pts ?? 0), 0);
   // what a swap changes per model: what it gains minus what it gives up (claws for hammer + shield: −5)
@@ -192,6 +193,25 @@ export function WargearEditor({ sheet, u, onChange, scrapMode = false }: { sheet
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
         <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· {scrapMode ? 'some weapons cost Scrap (shown as +Scrap each)' : 'some weapons cost points (shown as +pts each)'}</span> : null}</span>
       </div>
+      {lines.length > 0 && (() => {
+        // each model takes one loadout line: adding one moves a model over from the biggest other line
+        const now = Object.fromEntries(lines.map((l) => [l.name, 0])) as Record<string, number>;
+        for (const p of distributeModels(sheet, u.models, u.comp)) if (p.comp) now[p.comp] = p.count;
+        const move = (to: string, from?: string) => {
+          const giver = from ?? lines.filter((l) => l.name !== to && now[l.name] > l.min).sort((a, b) => now[b.name] - now[a.name])[0]?.name;
+          if (!giver) return;
+          onChange({ comp: { ...now, [to]: now[to] + 1, [giver]: now[giver] - 1 } });
+        };
+        const taker = (from: string) => lines.filter((l) => l.name !== from && now[l.name] < l.max).sort((a, b) => (b.max - now[b.name]) - (a.max - now[a.name]))[0]?.name;
+        return lines.map((l) => (
+          <div key={l.name} className="wg-step">
+            <span className="grow">{l.name} <span className="tiny muted">max {l.max}</span></span>
+            <button type="button" aria-label={`Remove ${l.name}`} disabled={now[l.name] <= l.min || !taker(l.name)} onClick={() => { const t = taker(l.name); if (t) move(t, l.name); }}>−</button>
+            <b>{now[l.name]}</b>
+            <button type="button" aria-label={`Add ${l.name}`} disabled={now[l.name] >= l.max || !lines.some((o) => o.name !== l.name && now[o.name] > o.min)} onClick={() => move(l.name)}>+</button>
+          </div>
+        ));
+      })()}
       {opts.map((o, i) => {
         const max = wargearMax(sheet, o, u.models, u.addons, picks);
         const mine = picks.filter((p) => p.opt === i);
