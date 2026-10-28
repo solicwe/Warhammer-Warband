@@ -2,7 +2,7 @@
 // 6" of an edge, laid along the edge in two rows when needed (they used to never arrive: the bot left them in reserve).
 import fs from 'node:fs';
 import { expect, it } from 'vitest';
-import { createGame, findPlacement, nudgePlacement, validatePlacement } from './game';
+import { commitMove, createGame, findPlacement, nudgePlacement, placeUnit, turnUnit, validatePlacement } from './game';
 import type { ArmyList, FactionData } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -31,4 +31,15 @@ it('a long base set down across a narrow gap turns to fit instead of being refus
   const fixed = nudgePlacement(s, u, pos, 'deploy');
   expect(validatePlacement(s, u, fixed, 'deploy').bad).not.toContain(m.id);
   expect(Math.abs(Math.sin(m.rot!))).toBeGreaterThan(0.5);
+});
+
+it('a long base turned by hand during a move keeps that facing instead of facing the way it drove', () => {
+  const s = createGame({ lists: [list('SM', 'Outrider Squad', 3), list('ORK', 'Boyz', 10)], factions: [SM, ORK], names: ['A', 'B'], seed: 1 });
+  const u = s.units.find((x) => x.owner === 0)!;
+  placeUnit(s, u, findPlacement(s, u, 'deploy')!);
+  turnUnit(s, u.id, Math.PI / 2);
+  const want = u.models.map((m) => m.rot);
+  commitMove(s, u, 'normal', new Map(u.models.map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x + 2, y: m.y }]])));
+  expect(u.models.map((m) => m.rot)).toEqual(want);
+  expect(u.models.some((m) => m.keepRot)).toBe(false);
 });

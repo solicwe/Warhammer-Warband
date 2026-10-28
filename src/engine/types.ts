@@ -184,6 +184,7 @@ export interface ModelState {
   hw?: number; // oval base / hull: half its width (inches)
   hl?: number; // oval base / hull: half its length beyond the width, along its facing (inches)
   rot?: number; // oval base / hull: which way its long axis points (radians)
+  keepRot?: boolean; // turned by hand during the current move: the move keeps that facing instead of facing its travel
   hull?: true; // set up without a base: drawn as the vehicle's hull, not an oval
   wounds: number;
   dead: boolean;

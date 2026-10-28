@@ -1340,6 +1340,14 @@ export function rotateUnit(s: GameState, unitId: string, angleDelta: number): { 
   return { ok: true };
 }
 
+/** Turn a unit's long bases in place while it is being moved or set up: the facing applies wherever the move ends
+ *  (the end-of-move checks test it there) and the move keeps it. `keep` false when undoing a turn on Cancel. */
+export function turnUnit(s: GameState, unitId: string, delta: number, keep = true) {
+  const u = s.units.find((x) => x.id === unitId);
+  if (!u) return;
+  for (const m of alive(u)) if (m.hl) { m.rot = (m.rot ?? 0) + delta; if (keep) m.keepRot = true; else delete m.keepRot; }
+}
+
 export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Map<string, Pt[]>) {
   // copy the points first: a path may start at the model object itself, which is about to move
   const paths = new Map([...given].map(([id, p]) => [id, p.map((q) => ({ x: q.x, y: q.y }))]));
@@ -1350,11 +1358,13 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
     ? engagedEnemies(s, u).filter((e) => effectsFor(s, e).some((a) => a.e.forceDesperate)) : [];
   for (const m of alive(u)) {
     const path = paths.get(m.id);
+    const keep = m.keepRot;
+    delete m.keepRot;
     if (!path || path.length < 2) continue;
     maxMoved = Math.max(maxMoved, pathLength(path));
     const end = path[path.length - 1];
     m.x = end.x; m.y = end.y;
-    if (m.hl) faceTravel(s, m, path[path.length - 2]);
+    if (!keep && m.hl) faceTravel(s, m, path[path.length - 2]);
   }
   if (['normal', 'advance', 'fallback'].includes(kind)) emit(s, 'moved', { u, kind, paths });
   if (['normal', 'advance', 'fallback', 'stationary', 'ingress'].includes(kind)) u.move = kind;

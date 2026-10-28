@@ -26,7 +26,7 @@ import {
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
-  pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit } from '../engine/game';
+  pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
 } from '../rules-engine/activations';
@@ -393,7 +393,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (m && l.player !== null && bots.includes(l.player)) speak(l.player, 'charge', { u: m[1] });
     }
     h.log = s.log.length;
-  }, [s]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s]);
 
   // between battle rounds: the round just played, in numbers (and the commander sizes up the battle)
   const vpNow = (): [number, number] => [s.players[0].vp + s.players[0].secVp, s.players[1].vp + s.players[1].secVp];
@@ -510,6 +510,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const setMode = (m: Mode | null, d: Paths | null = null) => { setModeRaw(m); setDraft(d); setCheck(null); joyOff.current = { x: 0, y: 0 }; };
   // moving without a finger over the models: the joystick walks the unit (how far it has gone from where it stood)
   const joyOff = useRef<Pt>({ x: 0, y: 0 });
+  // how far the player turned the moving unit's long bases, so Cancel can turn them back
+  const turned = useRef(0);
+  const recheck = useRef(false);
   // ending a phase where nothing was done needs a second tap (protects against mis-taps)
   const [armed, setArmed] = useState<string | null>(null);
   useEffect(() => { if (!armed) return; const tm = window.setTimeout(() => setArmed(null), 3500); return () => window.clearTimeout(tm); }, [armed]);
@@ -883,6 +886,29 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const chk = validateMove(s, modeUnit, draftKind, st, draftOpts);
     setCheck(chk.ok ? null : chk);
   };
+  // a turn lands in the next state: re-check the drafted spot with the new facing once it is there
+  useEffect(() => {
+    if (!recheck.current) return;
+    recheck.current = false;
+    if (draftRef.current) onDragEnd(draftRef.current);
+  }, [s]);
+  useEffect(() => { turned.current = 0; }, [mode]);
+  const turnDraft = (d: number) => {
+    if (!modeUnit) return;
+    act((g) => turnUnit(g, modeUnit.id, d, mode?.k === 'move'));
+    turned.current += d;
+    recheck.current = true;
+  };
+  const unTurn = () => {
+    if (modeUnit && turned.current) act((g) => turnUnit(g, modeUnit.id, -turned.current, false));
+    turned.current = 0;
+  };
+  const turnButtons = () => modeUnit && alive(modeUnit).some((m) => m.hl) ? (
+    <>
+      <button className="btn small" title="Turn 45° counter-clockwise" onClick={() => turnDraft(-Math.PI / 4)}>↺</button>
+      <button className="btn small" title="Turn 45° clockwise" onClick={() => turnDraft(Math.PI / 4)}>↻</button>
+    </>
+  ) : null;
   /** The furthest every model of the moving unit may go. */
   const slideMax = () => (modeUnit ? Math.min(...alive(modeUnit).map((m) => maxFor(m.id))) : 0);
   /**
@@ -1387,8 +1413,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     <>
       {/* Confirm / Cancel first: the sheet is short while moving, so anything below the stick can sit off screen */}
       <div className="row">
-        <button className="btn" onClick={() => setMode(null)}>Cancel</button>
-        <button className="btn small" onClick={() => { setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); joyOff.current = { x: 0, y: 0 }; }}>Reset</button>
+        <button className="btn" onClick={() => { unTurn(); setMode(null); }}>Cancel</button>
+        <button className="btn small" onClick={() => { unTurn(); setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); joyOff.current = { x: 0, y: 0 }; }}>Reset</button>
+        {turnButtons()}
         {extra}
         <button className="btn primary grow" onClick={onConfirm}><Icon name="check" /> Confirm {kind}</button>
       </div>
@@ -1631,8 +1658,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <>
         <div className="small"><b>{u.name}</b></div>
         <div className="row">
-          <button className="btn" onClick={() => setMode(null)}>Cancel</button>
+          <button className="btn" onClick={() => { unTurn(); setMode(null); }}>Cancel</button>
           <button className="btn small" onClick={autoPlace}>Auto place</button>
+          {draft && turnButtons()}
           <button className="btn primary grow" disabled={!draft} onClick={confirmPlace}><Icon name="check" /> Confirm{mode.rapid ? ' (Rapid Ingress 1CP)' : ''}</button>
         </div>
         {check && !check.ok && <div className="err">{check.errors.slice(0, 4).map((e) => <div key={e}>{e}</div>)}</div>}
