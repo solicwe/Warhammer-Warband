@@ -52,7 +52,7 @@ The game follows the 11th edition core rules. A summary of what is modelled, wit
 - **Phases.** Each turn runs Command, Movement, Shooting, Charge and Fight, in that order. Command points, Battle-shock,
   reserves, Deep Strike, Advance, Fall Back, overwatch, heroic interventions, pile-in and consolidation are all in.
 - **Terrain footprints.** Every piece of terrain sits on a baseplate, its footprint. Models walk into ruin footprints
-  freely but can't walk through walls. Vehicles can't end a move inside a ruin. Titanic models stand astride ruins.
+  freely but can't walk through walls. Every model, vehicles included, may end a move inside one to hold an objective. Titanic models stand astride ruins.
 - **Line of sight.** Sight is checked model to model. Walls block it. A dense footprint that neither model stands in
   blocks it completely. A model inside a footprint can see out and be seen.
 - **Benefit of cover.** A unit has cover only when every one of its models qualifies: an infantry, beast or swarm

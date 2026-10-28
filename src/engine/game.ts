@@ -383,15 +383,6 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
         const roof = bodyWhollyInPoly(bodyAt(m, p), t.box) && ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
         if (!roof) { errors.push(`${m.name} cannot overlap a container (place it beside the container or wholly on its roof)`); bad.add(m.id); }
       }
-      // 13.06 Elevated floor / level check: non-eligible units (VEHICLE, etc.) cannot end on elevated terrain
-      if (t.height > 2 && !titanic && pointInPoly(p, t.poly)) {
-        const allowedElevated = ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
-        if (!allowedElevated) {
-          errors.push(`${m.name} cannot end on elevated terrain (13.06)`);
-          bad.add(m.id);
-        }
-      }
-
       // 13.06.01 Solid Terrain: cannot end protruding through doors/windows/openings <= 3"
       if (t.category === 'dense' && t.walls.length && !titanic) {
         const b = bodyAt(m, p);

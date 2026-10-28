@@ -137,18 +137,16 @@ describe('Rules 13.06 - 13.11: Terrain, Movement, Hidden and Sight', () => {
     expect(getUnitLoneOpRange(s, uLoneOp)).toBe(12);
   });
 
-  it('13.06 Elevated terrain: rejects overhang and non-eligible unit types', () => {
-    const elevated = makeTerrain('t_elev', [P(10, 10), P(20, 10), P(20, 20), P(10, 20)], 4, 'dense');
+  it('a vehicle may end inside a ruin footprint to hold an objective, but not drive through its wall', () => {
+    const ruin = makeTerrain('t_ruin', [P(10, 10), P(20, 10), P(20, 20), P(10, 20)], 4, 'dense', [[P(10, 10), P(10, 20)]]);
     const vehModel = makeModel('m_veh', 15, 15, 1.5, ['VEHICLE'], 2, 1);
     const uVeh = makeUnit('u_veh', 0, [vehModel], ['VEHICLE']);
 
-    const s = makeState([uVeh], [elevated]);
+    const s = makeState([uVeh], [ruin]);
     s.phase = 'movement';
 
-    const paths = new Map([[vehModel.id, [P(5, 15), P(15, 15)]]]);
-    const check = validateMove(s, uVeh, 'normal', paths);
-    expect(check.ok).toBe(false);
-    expect(check.errors.some((e) => e.includes('13.06'))).toBe(true);
+    expect(validateMove(s, uVeh, 'normal', new Map([[vehModel.id, [P(15, 25), P(15, 15)]]])).ok).toBe(true);
+    expect(validateMove(s, uVeh, 'normal', new Map([[vehModel.id, [P(5, 15), P(15, 15)]]])).ok).toBe(false);
   });
 });
 
