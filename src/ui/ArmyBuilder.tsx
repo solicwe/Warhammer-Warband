@@ -13,7 +13,7 @@ import { DET_RULES } from '../rules-engine/detachments';
 import { armyColor, dsColor, DatasheetView } from './Sheet';
 import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';
-import { getPortrait, setPortrait, usePortraitsVersion } from './portraits';
+import { PHOTO_EDIT, getPortrait, setPortrait, usePortraitsVersion } from './portraits';
 
 interface Props {
   list: ArmyList;
@@ -336,9 +336,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const [peek, setPeek] = useState<string | null>(null); // a datasheet opened from the ⋮ pickers (its abilities)
   const [resetArmed, setResetArmed] = useState(false);
   const [panelCollapse, setPanelCollapse] = useState<{ [uid: string]: { sheet?: boolean; enh?: boolean; wargear?: boolean } }>({});
-  const [sheetLimit, setSheetLimit] = useState(30);
   useEffect(() => setView(null), [adding]); // the datasheet opened under a row of the add list
-  useEffect(() => setSheetLimit(30), [adding, q]);
   const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => { loadIndex().then(setIndex).catch(() => setNote('Could not load the faction list')); }, []);
@@ -554,10 +552,10 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const detachmentTab = () => faction && (
     <>
       <div className="dt-top">
-        <label className="dt-emblem" aria-label="Change emblem">
+        <label className="dt-emblem" aria-label={PHOTO_EDIT ? 'Change emblem' : 'Emblem'}>
           <Emblem factionId={list.factionId} color={sub?.color} sub={list.subfaction} />
-          <span className="dt-emblem-cam"><Icon name="camera" size={14} /></span>
-          <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) pickEmblem(f); }} />
+          {PHOTO_EDIT && <span className="dt-emblem-cam"><Icon name="camera" size={14} /></span>}
+          {PHOTO_EDIT && <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) pickEmblem(f); }} />}
         </label>
         <div className="grow dt-top-text">
           <input className="ab-title dt-name" aria-label="Army name" value={list.name} placeholder="Army name" onChange={(e) => set({ name: e.target.value })} />
@@ -657,8 +655,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const sheets = faction.datasheets
       .filter((d) => offered(d) && sectionOf(d, list.factionId) === adding && d.name.toLowerCase().includes(q.toLowerCase()) && pointsOptions(d).length)
       .sort((a, b) => (a.allyName ?? '').localeCompare(b.allyName ?? '') || KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) || Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
-    const totalSheets = sheets.length;
-    const visibleSheets = sheets.slice(0, sheetLimit);
+    const visibleSheets = sheets;
     // the allied list is grouped by the book each unit comes from
     const groupOf = (d: DatasheetData) => (d.ally ? `${d.allyName} · ${unitKind(d)}` : detAlly(d) ? `${detAlly(d)!.rule} · ${unitKind(d)}` : unitKind(d));
     return (
@@ -717,13 +714,6 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                 ),
               ];
             })}
-            {visibleSheets.length < totalSheets && (
-              <div style={{ padding: '12px', textAlign: 'center' }}>
-                <button type="button" className="btn small" onClick={() => setSheetLimit((c) => c + 30)}>
-                  Show more ({totalSheets - visibleSheets.length} remaining)
-                </button>
-              </div>
-            )}
             {!sheets.length && <div className="ab-empty">No datasheets found</div>}
           </div>
         </div>

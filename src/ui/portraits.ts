@@ -1,3 +1,5 @@
+/** Players can't change unit pictures or the army emblem in the app; pictures are added to public/images on request. */
+export const PHOTO_EDIT = false;
 // Unit photos, keyed by datasheet name. Two sources:
 //  1. images on the server: `public/images/units/<FACTION>/<datasheet-slug>.webp|jpg|png`, listed in
 //     `public/images/manifest.json` (built by `npm run images`). The folder can live elsewhere: set VITE_IMAGE_BASE.
@@ -374,7 +376,7 @@ export function matchDatasheet(fileName: string, names: string[]): string | unde
 /** While mounted, an image pasted anywhere on the page becomes this datasheet's portrait. */
 export function usePastePortrait(datasheet: string | undefined) {
   useEffect(() => {
-    if (!datasheet) return;
+    if (!datasheet || !PHOTO_EDIT) return;
     const onPaste = async (e: ClipboardEvent) => {
       const item = [...(e.clipboardData?.items ?? [])].find((i) => i.type.startsWith('image/'));
       const file = item?.getAsFile();

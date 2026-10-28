@@ -4,7 +4,7 @@ import { strength } from '../engine/state';
 import type { AbilityData, DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
 import { Portrait, tokenKind, type TokenKind } from './Tokens';
-import { modelPortraitKey, usePastePortrait } from './portraits';
+import { PHOTO_EDIT, modelPortraitKey, usePastePortrait } from './portraits';
 import { datasheetVariants, pictureVariants, type PictureVariant } from './loadout';
 import { Icon } from './Icon';
 import { useState, type ReactNode } from 'react';
@@ -263,7 +263,7 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
   return (
     <div className="ds-sheet" style={{ display: 'flex', flexDirection: 'column', gap: 8, ['--ds-band' as string]: dsColor(factionId) }}>
       <div className="ds-head">
-        <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={60} datasheet={sheet.name} editable />
+        <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={60} datasheet={sheet.name} editable={PHOTO_EDIT} />
         <div className="grow">
           <h2>{sheet.name}</h2>
           <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''} · tap the picture or paste to set one</div>
@@ -351,7 +351,7 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="ds-head">
         {sources.map((src) => (
-          <Portrait key={src} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} character={u.models.some((m) => m.source === src && m.isCharacter)} size={56} datasheet={src} editable />
+          <Portrait key={src} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} character={u.models.some((m) => m.source === src && m.isCharacter)} size={56} datasheet={src} editable={PHOTO_EDIT} />
         ))}
         <div className="grow">
           <h2>{u.name}</h2>
@@ -446,7 +446,7 @@ export function ModelPictures({ variants, kind, owner }: { variants: PictureVari
       <div className="model-pics">
         {variants.map((v) => (
           <div key={v.key} className="model-pic">
-            <Portrait kind={kind} owner={owner} size={48} datasheet={v.key} fallback={v.fallback} editable />
+            <Portrait kind={kind} owner={owner} size={48} datasheet={v.key} fallback={v.fallback} editable={PHOTO_EDIT} />
             <span>{v.label}</span>
           </div>
         ))}
