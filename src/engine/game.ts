@@ -595,10 +595,15 @@ export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>,
     for (const m of alive(u)) {
       if (!bad.has(m.id)) continue;
       const start = out.get(m.id) ?? m;
-      search: for (let step = 1; step <= 12; step++) for (let i = 0; i < 16; i++) {
+      // a hull or oval base also turns to find an angle that fits (between walls, inside a ruin), nearest spot first
+      const rot0 = m.rot ?? 0;
+      const turns = m.hl ? [0, Math.PI / 4, -Math.PI / 4, Math.PI / 2] : [0];
+      search: for (let step = 0; step <= 12; step++) for (const t of turns) for (let i = 0; i < (step ? 16 : 1); i++) {
+        if (!step && !t) continue;
         const a = (i / 16) * Math.PI * 2, d = step * 0.25;
         const trial = new Map(out);
         trial.set(m.id, { x: start.x + Math.cos(a) * d, y: start.y + Math.sin(a) * d });
+        if (m.hl) m.rot = rot0 + t;
         const check = validatePlacement(s, u, trial, how);
         if (!check.bad.includes(m.id) && check.bad.length < before.bad.length && check.bad.every((id) => bad.has(id))) {
           out.set(m.id, trial.get(m.id)!);
@@ -606,6 +611,7 @@ export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>,
           break search;
         }
       }
+      if (!changed && m.hl) m.rot = rot0;
       if (changed) break;
     }
     if (!changed) break;
