@@ -2345,6 +2345,29 @@ select option {
   border-radius: 12px;
   overflow: hidden;
   color: #f8fafc !important;
+  /* the modal is dark: the army-builder parts inside it (unit sections, pickers) take these instead of the light theme,
+     so the light text written for this modal stays readable on them */
+  --surface: #171b22;
+  --surface-2: #1c212a;
+  --sunk: #0f1215;
+  --line: rgba(255, 255, 255, 0.12);
+  --line-2: rgba(255, 255, 255, 0.22);
+  --text: #f1f5f9;
+  --text-2: #cbd5e1;
+  --text-3: #94a3b8;
+  --accent: #d3a04a;
+  --accent-2: #e0b25c;
+  --accent-soft: rgba(211, 160, 74, 0.16);
+  --good: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --p0: #60a5fa;
+  --p1: #f87171;
+  --good-soft: rgba(74, 222, 128, 0.12);
+  --warn-soft: rgba(251, 191, 36, 0.12);
+  --bad-soft: rgba(248, 113, 113, 0.12);
+  --p0-soft: rgba(96, 165, 250, 0.14);
+  --p1-soft: rgba(248, 113, 113, 0.14);
 }
 @media (max-width: 640px) {
   .cmp-modal-backdrop {
