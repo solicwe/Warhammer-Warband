@@ -1385,17 +1385,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   const moveControls = (kind: string, onConfirm: () => void, extra?: React.ReactNode) => (
     <>
-      {joystick()}
-      <div className="row">
-        <span className="grow" />
-        <button className="btn small" onClick={() => { setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); joyOff.current = { x: 0, y: 0 }; }}>Reset</button>
-        {extra}
-      </div>
-      {check && !check.ok && <div className="err">{check.errors.slice(0, 4).map((e) => <div key={e}>{e}</div>)}</div>}
+      {/* Confirm / Cancel first: the sheet is short while moving, so anything below the stick can sit off screen */}
       <div className="row">
         <button className="btn" onClick={() => setMode(null)}>Cancel</button>
+        <button className="btn small" onClick={() => { setDraft(modeUnit ? startPaths(modeUnit) : null); setCheck(null); joyOff.current = { x: 0, y: 0 }; }}>Reset</button>
+        {extra}
         <button className="btn primary grow" onClick={onConfirm}><Icon name="check" /> Confirm {kind}</button>
       </div>
+      {check && !check.ok && <div className="err">{check.errors.slice(0, 4).map((e) => <div key={e}>{e}</div>)}</div>}
+      {joystick()}
     </>
   );
 
@@ -1632,16 +1630,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="small"><b>{u.name}</b></div>
-        {joystick()}
-        <div className="row">
-          <span className="grow" />
-          <button className="btn small" onClick={autoPlace}>Auto place</button>
-        </div>
-        {check && !check.ok && <div className="err">{check.errors.slice(0, 4).map((e) => <div key={e}>{e}</div>)}</div>}
         <div className="row">
           <button className="btn" onClick={() => setMode(null)}>Cancel</button>
+          <button className="btn small" onClick={autoPlace}>Auto place</button>
           <button className="btn primary grow" disabled={!draft} onClick={confirmPlace}><Icon name="check" /> Confirm{mode.rapid ? ' (Rapid Ingress 1CP)' : ''}</button>
         </div>
+        {check && !check.ok && <div className="err">{check.errors.slice(0, 4).map((e) => <div key={e}>{e}</div>)}</div>}
+        {joystick()}
       </>
     );
   };

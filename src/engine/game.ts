@@ -1297,12 +1297,18 @@ function blackstarLaunch(s: GameState, u: UnitState, paths: Map<string, Pt[]>) {
   if (n) applyMortalWounds(s, t, n, 'Blackstar Cluster Launcher');
 }
 
+/** A facing within 20 degrees of straight along or across the table snaps to it, so a squad driven slightly askew lines up square. */
+export function squareUp(rot: number) {
+  const q = Math.round(rot / (Math.PI / 2)) * (Math.PI / 2);
+  return Math.abs(rot - q) <= Math.PI / 9 ? q : rot;
+}
+
 /** An oval base or hull turns to face the way it last travelled, the way a vehicle drives — only when the turned
  *  base still fits (on the table, clear of other models and walls) and is engaged with exactly the same enemy models. */
 function faceTravel(s: GameState, m: ModelState, from: Pt) {
   const W = tableW(s), H = tableH(s);
   if (dist(from, m) < 0.3) return;
-  const turned = { ...bodyAt(m, m), rot: Math.atan2(m.y - from.y, m.x - from.x) };
+  const turned = { ...bodyAt(m, m), rot: squareUp(Math.atan2(m.y - from.y, m.x - from.x)) };
   const others = s.units.filter((x) => onBoard(x)).flatMap(alive).filter((o) => o.id !== m.id);
   const engaged = (b: Body) => others.map((o) => gap(b, o) <= RULES.engagementRange + 1e-6).join();
   if (!onTable(turned, W, H) || endSpotBlocked(s, turned, turned) || others.some((o) => gap(turned, o) < -0.02) || engaged(turned) !== engaged(m)) return;

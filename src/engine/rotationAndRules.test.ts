@@ -191,3 +191,12 @@ describe('Deathstrike Missile Targeting Logic', () => {
     expect(best).not.toBeNull();
   });
 });
+
+describe('squareUp', () => {
+  it('snaps a slightly askew facing straight and leaves a real diagonal alone', async () => {
+    const { squareUp } = await import('./game');
+    expect(squareUp(0.2)).toBe(0);
+    expect(squareUp(Math.PI / 2 - 0.3)).toBeCloseTo(Math.PI / 2);
+    expect(squareUp(Math.PI / 4)).toBeCloseTo(Math.PI / 4);
+  });
+});
