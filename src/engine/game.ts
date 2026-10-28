@@ -1787,10 +1787,15 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
   if (dir && !ms.some(inContact)) {
     for (let k = need; k > 0.05; k -= 0.25) {
       const trial = new Map<string, Pt>();
-      for (const m of ms) {
+      // front models first, each clear of its squad mates (moved ones where they went, the rest where they stand):
+      // a model held back by a wall must not be driven into by the one behind it
+      const ahead = (m: ModelState) => m.x * dir!.x + m.y * dir!.y;
+      for (const m of [...ms].sort((a, b) => ahead(b) - ahead(a))) {
         let bestP = { x: m.x, y: m.y };
+        const mates = ms.filter((o) => o.id !== m.id).map((o) => bodyAt(o, trial.get(o.id) ?? o));
         for (let sub = k; sub >= 0; sub -= 0.5) {
           const cand = { x: m.x + dir!.x * sub, y: m.y + dir!.y * sub };
+          if (sub > 0 && mates.some((o) => gap(bodyAt(m, cand), o) < -0.01)) continue;
           if (onTable(bodyAt(m, cand), W, H) && others.every((o) => gap(bodyAt(m, cand), o) >= -0.01)
             && !endSpotBlocked(s, m, cand) && clearOfOthers(bodyAt(m, cand)) && clearLine(m, cand)) {
             bestP = cand;
@@ -1808,35 +1813,34 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
       }
     }
   }
-  // 2) individual refinement into contact
-  if (enemyModels.length) {
+  // 2) individual refinement: each model tries spots all round the nearest enemy models (base contact first, then just
+  //    inside engagement range), shortest trip first, keeping the unit coherent; a second pass lets a model use the room
+  //    or the coherency link a squad mate made
+  if (enemyModels.length) for (let pass = 0; pass < 2; pass++) {
     const order = [...ms].sort((a, b) => gapTo(a, pos.get(a.id)!) - gapTo(b, pos.get(b.id)!));
     for (const m of order) {
       const cur = pos.get(m.id)!;
-      if (gapTo(m, cur) <= 0.05) continue;
-      const budget = maxDist - dist(m, cur);
-      let best: Pt | null = null;
-      let bestScore = Infinity;
-      const nearFoes = [...enemyModels].sort((a, b) => dist(cur, a) - dist(cur, b)).slice(0, 3);
-      let attempts = 0;
-      const MAX_RADIAL_ATTEMPTS = 24;
-      for (const e of nearFoes) {
-        if (attempts >= MAX_RADIAL_ATTEMPTS) break;
-        for (let a = 0; a < 12; a++) {
-          if (++attempts > MAX_RADIAL_ATTEMPTS) break;
-          const ang = Math.atan2(cur.y - e.y, cur.x - e.x) + (a % 2 ? 1 : -1) * Math.ceil(a / 2) * (Math.PI / 6);
-          const c = contactAt(m, e, ang, 0.02);
-          const travel = dist(m, c);
-          if (travel > maxDist + 1e-6 || !free(m.id, bodyAt(m, c)) || !clearLine(m, c)) continue;
-          if (travel < bestScore) { bestScore = travel; best = c; break; }
-        }
-        if (best) break;
+      const g0 = gapTo(m, cur);
+      if (g0 <= 0.05) continue;
+      const nearFoes = [...enemyModels].sort((a, b) => dist(cur, a) - dist(cur, b)).slice(0, 5);
+      const spots: { p: Pt; g: number; t: number }[] = [];
+      for (const e of nearFoes) for (const clear of [0.02, 0.5, 0.95]) for (let k = 0; k < 24; k++) {
+        const c = contactAt(m, e, (k / 24) * Math.PI * 2, clear);
+        const t = dist(m, c);
+        if (t > maxDist + 1e-6) continue;
+        const g = gapTo(m, c);
+        if (g < g0 - 0.05 && g <= RULES.engagementRange) spots.push({ p: c, g: Math.max(g, 0.05), t });
       }
-      if (best) {
-        pos.set(m.id, best);
-        if (coherent()) continue;
+      spots.sort((a, b) => a.g - b.g || a.t - b.t);
+      let placed = false, tries = 0;
+      for (const c of spots) {
+        if (!free(m.id, bodyAt(m, c.p)) || !clearLine(m, c.p)) continue;
+        pos.set(m.id, c.p);
+        if (coherent()) { placed = true; break; }
         pos.set(m.id, cur);
+        if (++tries >= 40) break;
       }
+      if (placed) continue;
       // no base contact within reach: get as close as it can (inside engagement range still fights)
       const near = enemyModels.reduce((a, e) => (ptGap(e, cur) < ptGap(a, cur) ? e : a));
       const L = dist(cur, near);
