@@ -75,6 +75,13 @@ find one, the fix is usually a one-line change in `data/` (see below).
 
 Tap the info button next to any ability, stratagem or rule to read its full text.
 
+### Building an army
+
+The unit picker lists every datasheet of the faction at once. Wargear Options covers weapon swaps, costed wargear,
+optional extra models and, for units that list each loadout as its own model line (Deathwatch Veterans), how many
+models take each loadout. Unit pictures and army emblems can't be changed in the app; new pictures are added to the
+site's image folder (see "Add unit pictures" below).
+
 ## Campaign
 
 The campaign is a roguelite run with one faction. You start with a small army and travel across a branching map of
@@ -100,6 +107,12 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   It follows the action (the attack under way, the unit you picked, or the last unit that acted) and shows a line
   about what just happened. Drag the picture to look around, pinch it to zoom, drag its caption to move it, or close it.
 - Pinch to zoom and drag to pan. The view stays on the table.
+- **Moving and setting up.** Drag a model or use the stick, then press Confirm. Cancel, Reset and Confirm sit at the
+  top of the sheet, above the stick, so they stay on screen. Bikes and vehicles get turn buttons (45 degrees a press)
+  while they move or set up, and keep the facing you gave them. A facing within 20 degrees of straight snaps straight.
+- **Auto fit.** A unit set down against a wall or another model shuffles to the nearest legal spot, and a long base
+  also turns to find an angle that fits. Pile-in and consolidation are automatic: each model tries every spot around
+  the nearest enemy models, base contact first, while the unit stays in coherency.
 - The site can be added to your home screen and works like an app.
 
 ## Saves
