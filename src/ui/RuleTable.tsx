@@ -43,14 +43,16 @@ const typeOf = (t?: string) => {
   const m = /(Battle Tactic|Strategic Ploy|Epic Deed|Wargear)/i.exec(t ?? '');
   return m ? m[1] : t?.replace(/^.*–\s*/, '').replace(/\s*Stratagem$/i, '') || '';
 };
-const typeKey = (t: string) => t.toLowerCase().replace(/\s+/g, '-');
 const turnKey = (t?: string) => (/opponent/i.test(t ?? '') ? 'theirs' : /your/i.test(t ?? '') ? 'yours' : 'either');
 const turnLabel = (t?: string) => ({ theirs: "Opponent's turn", yours: 'Your turn', either: 'Either turn' })[turnKey(t)];
 
 export function PhaseChips({ phases }: { phases: PhaseKey[] }) {
-  if (!phases.length) return <span className="ph-chip ph-passive">Always on</span>;
-  return <>{phases.map((p) => <span key={p} className={`ph-chip ph-${p}`}>{PHASE_LABEL[p]}</span>)}</>;
+  if (!phases.length) return <span className="rt-ph ph-passive">Passive</span>;
+  return <>{phases.map((p) => <span key={p} className={`rt-ph ph-${p}`}>{PHASE_LABEL[p]}</span>)}</>;
 }
+
+/** "Your turn" / "Opponent's turn" / "Either turn" from a stratagem's turn field. */
+export const turnText = (t?: string) => turnLabel(t);
 
 /** The WHEN / TARGET / EFFECT table of one stratagem. */
 export function StratRows({ text, names }: { text: string; names?: string[] }) {
@@ -78,11 +80,11 @@ export function StratTable({ strats, names, source }: { strats: StratLike[]; nam
   return (
     <div className="rt-table">
       {present.length > 1 && (
-        <div className="rt-filter">
-          <button type="button" className={!only ? 'on' : ''} onClick={() => setOnly(null)}>All {rows.length}</button>
+        <div className="seg rt-seg">
+          <button type="button" className={!only ? 'on' : ''} onClick={() => setOnly(null)}>All <span className="rt-n">{rows.length}</span></button>
           {present.map((p) => (
-            <button key={p} type="button" className={`ph-chip ph-${p} ${only === p ? 'on' : only ? 'dim' : ''}`} onClick={() => setOnly(only === p ? null : p)}>
-              {PHASE_LABEL[p]} {rows.filter((r) => r.ph.includes(p)).length}
+            <button key={p} type="button" className={only === p ? 'on' : ''} onClick={() => setOnly(only === p ? null : p)}>
+              <span className={`rt-ph ph-${p}`}>{PHASE_LABEL[p]}</span> <span className="rt-n">{rows.filter((r) => r.ph.includes(p)).length}</span>
             </button>
           ))}
         </div>
@@ -97,8 +99,8 @@ export function StratTable({ strats, names, source }: { strats: StratLike[]; nam
             </div>
             <div className="rt-meta">
               <PhaseChips phases={ph} />
-              {st.turn && <span className={`turn-chip turn-${turnKey(st.turn)}`}>{turnLabel(st.turn)}</span>}
-              {type && <span className={`type-chip type-${typeKey(type)}`}>{type}</span>}
+              {st.turn && <span className="rt-dot">{turnLabel(st.turn)}</span>}
+              {type && <span className="rt-dot">{type}</span>}
               {source && <span className="rt-src">{source(st)}</span>}
             </div>
             <StratRows text={st.when && !/WHEN:/i.test(st.text) ? `WHEN: ${st.when}\nEFFECT: ${st.text}` : st.text} names={names} />
@@ -123,8 +125,8 @@ export function EnhTable({ enh, names }: { enh: { name: string; pts: number; tex
               <span className="rt-cp">{e.pts} pts</span>
             </div>
             <div className="rt-meta">
-              {m && <span className="who-chip">{m[1]}</span>}
               <PhaseChips phases={ph} />
+              {m && <span className="rt-dot">{m[1]}</span>}
             </div>
             <div className="rt-rows">
               <div className="rt-row rt-effect"><span className="rt-label">EFFECT</span><span className="rt-text"><Em text={m ? e.text.slice(m[0].length) : e.text} names={names} /></span></div>

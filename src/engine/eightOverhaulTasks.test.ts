@@ -145,7 +145,7 @@ describe('Comprehensive Validation of All 8 Overhaul Categories', () => {
       expect(b4.discountPct).toBe(0.25);
     });
 
-    it('separates EPIC HERO into epic_characters section and standard leaders into characters', () => {
+    it('lists EPIC HERO units in the characters section with the standard leaders', () => {
       const epicHeroSheet = {
         id: 'calgar',
         name: 'Marneus Calgar',
@@ -167,7 +167,7 @@ describe('Comprehensive Validation of All 8 Overhaul Categories', () => {
         loadoutText: '',
       } as unknown as DatasheetData;
 
-      expect(sectionOf(epicHeroSheet, 'SM')).toBe('epic_characters');
+      expect(sectionOf(epicHeroSheet, 'SM')).toBe('characters');
       expect(sectionOf(standardLeaderSheet, 'SM')).toBe('characters');
     });
   });

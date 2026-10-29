@@ -1,7 +1,7 @@
 // One detachment stratagem, ready to use: pick the unit, the option ("select either …"), the enemy unit, then use it.
 // Shared by the Stratagem tray and the prompt the game opens at a stratagem's moment ("just after an enemy unit has shot").
 import { useState, type ReactNode } from 'react';
-import { PhaseChips, StratRows, phasesOf } from './RuleTable';
+import { PhaseChips, StratRows, phasesOf, turnText } from './RuleTable';
 import { alive, onBoard, stratCost, type ReactCtx } from '../engine/state';
 import { EFFECT_LABEL, stratagemBlock, stratChoices, stratEnemies, stratagemShortSummary, type StratRule, type StratUse as Use } from '../rules-engine/stratagems';
 import type { GameState, PlayerId, StratagemData, UnitState } from '../engine/types';
@@ -92,8 +92,8 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
         <div className="strat-meta-row">
           <div className="rt-meta">
             <PhaseChips phases={phasesOf(st.phase, st.text)} />
-            {st.turn && <span className={`turn-chip turn-${/opponent/i.test(st.turn) ? 'theirs' : /your/i.test(st.turn) ? 'yours' : 'either'}`}>{/opponent/i.test(st.turn) ? "Opponent's turn" : /your/i.test(st.turn) ? 'Your turn' : 'Either turn'}</span>}
-            <span className="rt-src">{detachment}</span>
+            {st.turn && <span className="rt-dot">{turnText(st.turn)}</span>}
+            <span className="rt-dot">{detachment}</span>
           </div>
 
           <div className="strat-badges-wrap">

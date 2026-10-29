@@ -22,13 +22,12 @@ const SM = load('SM');
 
 describe('Campaign Exp Requirements & Character Categorization Audit', () => {
   describe('1. Character & Epic Hero Categorization', () => {
-    it('accurately categorizes datasheets into Epic Hero and Character using unitKind', () => {
-      expect(KINDS[0]).toBe('Epic Hero');
-      expect(KINDS[1]).toBe('Character');
+    it('lists Epic Heroes with the other Characters (unitKind)', () => {
+      expect(KINDS[0]).toBe('Character');
 
       const guilliman = SM.datasheets.find((d) => d.name === 'Roboute Guilliman');
       if (guilliman) {
-        expect(unitKind(guilliman)).toBe('Epic Hero');
+        expect(unitKind(guilliman)).toBe('Character');
         expect(guilliman.keywords).toContain('EPIC HERO');
       }
 

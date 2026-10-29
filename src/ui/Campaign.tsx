@@ -3,7 +3,7 @@
 // and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
 import { loadRun, saveRun } from '../services/storage';
-import { loadoutLines, attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
+import { buildUnits, loadoutLines, attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
   adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyAutoUpgradeUnit, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
@@ -19,7 +19,7 @@ import { hasFactionRules } from '../rules-engine/effects';
 import { createGame } from '../engine/game';
 import type { ArmyUnitEntry, DatasheetData, FactionData, GameState, WargearPick } from '../engine/types';
 import { Emblem, KINDS, SECTIONS, sectionOf, UnitArt, unitKind, WargearEditor } from './ArmyBuilder';
-import { DatasheetView } from './Sheet';
+import { DatasheetView, weaponCounts } from './Sheet';
 import { loadFaction, type FactionIndex } from './data';
 import { Icon, type IconName } from './Icon';
 import { withAutoRules } from './library';
@@ -971,7 +971,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                               </span>
                               <span className="tiny muted">{isSheetOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
                             </button>
-                            {isSheetOpen && <DatasheetView sheet={sheet} factionId={fac.id} />}
+                            {isSheetOpen && (() => {
+                              let counts;
+                              try { counts = weaponCounts(buildUnits({ ...run.list, units: [{ ...u, attachTo: undefined }] }, fac, 0).flatMap((x) => x.models)); } catch { counts = undefined; }
+                              return <DatasheetView sheet={sheet} factionId={fac.id} counts={counts} />;
+                            })()}
                           </div>
                         )}
 

@@ -10,7 +10,7 @@ import { Icon } from './Icon';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { listDisposition, listDispositionOptions } from '../engine/game';
 import { DET_RULES } from '../rules-engine/detachments';
-import { armyColor, dsColor, DatasheetView } from './Sheet';
+import { armyColor, dsColor, DatasheetView, weaponCounts } from './Sheet';
 import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';
 import { EnhTable, RuleCards, StratTable } from './RuleTable';
@@ -24,9 +24,8 @@ interface Props {
   startPicker?: boolean;
 }
 
-export type Section = 'epic_characters' | 'characters' | 'battleline' | 'others' | 'transports' | 'allies';
+export type Section = 'characters' | 'battleline' | 'others' | 'transports' | 'allies';
 export const SECTIONS: { id: Section; title: string }[] = [
-  { id: 'epic_characters', title: 'Epic Characters' },
   { id: 'characters', title: 'Characters' },
   { id: 'battleline', title: 'Battleline' },
   { id: 'others', title: 'Others' },
@@ -40,7 +39,6 @@ const OTHERS = new Set(['Victrix Honour Guard']);
 export function sectionOf(d: DatasheetData | undefined, factionId?: string): Section {
   if (d?.ally || (d && detachmentAllyOf(factionId, d))) return 'allies';
   if (!d || OTHERS.has(d.name)) return 'others';
-  if (d.keywords.includes('EPIC HERO') || d.role === 'Epic Hero') return 'epic_characters';
   if (d.keywords.includes('CHARACTER') || /Character/.test(d.role)) return 'characters';
   if (d.keywords.includes('BATTLELINE') || d.role === 'Battleline') return 'battleline';
   if (d.role === 'Dedicated Transports' || d.keywords.includes('DEDICATED TRANSPORT')) return 'transports';
@@ -48,10 +46,9 @@ export function sectionOf(d: DatasheetData | undefined, factionId?: string): Sec
 }
 
 /** Groups of the add-unit list, in the order they show. */
-export const KINDS = ['Epic Hero', 'Character', 'Infantry', 'Fast Infantry', 'Heavy Infantry', 'Mounted', 'Walker', 'Vehicle', 'Aircraft', 'Other'] as const;
+export const KINDS = ['Character', 'Infantry', 'Fast Infantry', 'Heavy Infantry', 'Mounted', 'Walker', 'Vehicle', 'Aircraft', 'Other'] as const;
 export function unitKind(d: DatasheetData): (typeof KINDS)[number] {
   const k = (w: string) => d.keywords.includes(w);
-  if (k('EPIC HERO')) return 'Epic Hero';
   if (k('CHARACTER')) return 'Character';
   if (k('AIRCRAFT')) return 'Aircraft';
   if (k('WALKER')) return 'Walker';
@@ -770,9 +767,11 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               <span className="tiny muted">{isSheetOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
             </button>
             {isSheetOpen && sheet && (
-              <DatasheetView sheet={sheet} factionId={faction.id} variants={(() => {
-                try { return datasheetVariants(sheet, buildUnits({ ...list, units: [{ ...u, attachTo: undefined }] }, faction, 0).flatMap((x) => x.models)); } catch { return undefined; }
-              })()} />
+              (() => {
+                let models;
+                try { models = buildUnits({ ...list, units: [{ ...u, attachTo: undefined }] }, faction, 0).flatMap((x) => x.models); } catch { models = undefined; }
+                return <DatasheetView sheet={sheet} factionId={faction.id} variants={models && datasheetVariants(sheet, models)} counts={models && weaponCounts(models)} />;
+              })()
             )}
             {isSheetOpen && !sheet && <div className="sheet-title">{u.datasheet}</div>}
           </div>

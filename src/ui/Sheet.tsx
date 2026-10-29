@@ -23,7 +23,7 @@ function Stats({ p, noInv }: { p: ModelProfileData; noInv?: boolean }) {
   );
 }
 
-function WeaponTable({ rows, melee }: { rows: { w: WeaponData; p: WeaponData['profiles'][number]; n: number }[]; melee: boolean }) {
+function WeaponTable({ rows, melee, counted }: { rows: { w: WeaponData; p: WeaponData['profiles'][number]; n: number }[]; melee: boolean; counted?: boolean }) {
   if (!rows.length) return null;
   return (
     <table className="wtable ds-wt">
@@ -35,9 +35,9 @@ function WeaponTable({ rows, melee }: { rows: { w: WeaponData; p: WeaponData['pr
       </thead>
       <tbody>
         {rows.map(({ w, p, n }, i) => (
-          <tr key={i}>
+          <tr key={i} className={counted && !n ? 'ds-off' : undefined}>
             <td>
-              {n > 1 ? `${n}× ` : ''}{w.name}{p.name !== w.name ? ` – ${p.name}` : ''}
+              {counted ? n > 0 && <b className="ds-wn">x{n}</b> : n > 1 ? `${n}× ` : ''}{w.name}{p.name !== w.name ? ` – ${p.name}` : ''}
               {p.abilities.length > 0 && <span className="ds-wkw"> {abilitiesOf(p).map((a) => `[${abilityLabel(a).toUpperCase()}]`).join(', ')}</span>}
             </td>
             <td>{p.range === 'Melee' ? 'Melee' : `${p.range}"`}</td>
@@ -53,14 +53,21 @@ function WeaponTable({ rows, melee }: { rows: { w: WeaponData; p: WeaponData['pr
   );
 }
 
-function Weapons({ weapons }: { weapons: WeaponData[] }) {
-  // a weapon carried twice (2 godhammer lascannons) shows once as "2×"
-  const counted = [...new Map(weapons.map((w) => [w.name, w])).values()].map((w) => ({ w, n: weapons.filter((x) => x.name === w.name).length }));
+/** How many models of a built unit carry each weapon ("x8 Boltgun"). */
+export function weaponCounts(models: { weapons: WeaponData[] }[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const m of models) for (const w of m.weapons) out[w.name] = (out[w.name] ?? 0) + 1;
+  return out;
+}
+
+function Weapons({ weapons, counts }: { weapons: WeaponData[]; counts?: Record<string, number> }) {
+  // a weapon carried twice (2 godhammer lascannons) shows once as "2×"; with the unit's counts, "x8" and options not taken dimmed
+  const counted = [...new Map(weapons.map((w) => [w.name, w])).values()].map((w) => ({ w, n: counts ? counts[w.name] ?? 0 : weapons.filter((x) => x.name === w.name).length }));
   const rows = counted.flatMap(({ w, n }) => w.profiles.map((p) => ({ w, p, n })));
   return (
     <>
-      <WeaponTable rows={rows.filter((r) => r.p.range !== 'Melee')} melee={false} />
-      <WeaponTable rows={rows.filter((r) => r.p.range === 'Melee')} melee />
+      <WeaponTable rows={rows.filter((r) => r.p.range !== 'Melee')} melee={false} counted={!!counts} />
+      <WeaponTable rows={rows.filter((r) => r.p.range === 'Melee')} melee counted={!!counts} />
     </>
   );
 }
@@ -253,7 +260,7 @@ export function renderAbilitiesContent(
   return out;
 }
 
-export function DatasheetView({ sheet, factionId, variants }: { sheet: DatasheetData; factionId?: string; variants?: PictureVariant[] }) {
+export function DatasheetView({ sheet, factionId, variants, counts }: { sheet: DatasheetData; factionId?: string; variants?: PictureVariant[]; counts?: Record<string, number> }) {
   const probe = { sources: [sheet.name], abilities: [] } as unknown as UnitState;
   const rulesFaction = sheet.ally ?? factionId;
   const [more, setMore] = useState(false);
@@ -277,7 +284,7 @@ export function DatasheetView({ sheet, factionId, variants }: { sheet: Datasheet
           </div>
         ))}
       </div>
-      <Weapons weapons={sheet.weapons} />
+      <Weapons weapons={sheet.weapons} counts={counts} />
       {(sheet.options ?? []).length > 0 && <details><summary className="small">Wargear options</summary>{(sheet.options ?? []).map((o, i) => <div key={i} className="small">• <Em text={o} /></div>)}</details>}
       {renderAbilitiesContent(sheet.abilities, probe, sheet.name, rulesFaction, names, sheet.damaged)}
       {!more && <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(true)}>MORE INFO <Icon name="down" size={18} /></button>}
