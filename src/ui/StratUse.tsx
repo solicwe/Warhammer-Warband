@@ -1,82 +1,13 @@
 // One detachment stratagem, ready to use: pick the unit, the option ("select either …"), the enemy unit, then use it.
 // Shared by the Stratagem tray and the prompt the game opens at a stratagem's moment ("just after an enemy unit has shot").
 import { useState, type ReactNode } from 'react';
+import { PhaseChips, StratRows, phasesOf } from './RuleTable';
 import { alive, onBoard, stratCost, type ReactCtx } from '../engine/state';
 import { EFFECT_LABEL, stratagemBlock, stratChoices, stratEnemies, stratagemShortSummary, type StratRule, type StratUse as Use } from '../rules-engine/stratagems';
 import type { GameState, PlayerId, StratagemData, UnitState } from '../engine/types';
 import { Icon } from './Icon';
 
 const short = (n: string) => (n.length > 22 ? n.slice(0, 21) + '…' : n);
-
-interface StratSection {
-  label?: string;
-  text: string;
-}
-
-/** Parses raw Warhammer 40k stratagem rules text into WHEN / TARGET / EFFECT / RESTRICTIONS blocks */
-function parseStratagemSections(rawText: string): StratSection[] {
-  if (!rawText) return [];
-  const parts = rawText
-    .split(/(?=(?:^|\s)(?:WHEN|TARGET|EFFECT|RESTRICTIONS):)/i)
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  if (!parts.length) return [{ text: rawText }];
-
-  return parts.map((part) => {
-    const match = part.match(/^(WHEN|TARGET|EFFECT|RESTRICTIONS):\s*([\s\S]*)$/i);
-    if (match) {
-      return {
-        label: match[1].toUpperCase(),
-        text: match[2].trim(),
-      };
-    }
-    return { text: part };
-  });
-}
-
-const EXCLUDED_KW = new Set([
-  'WHEN', 'TARGET', 'EFFECT', 'RESTRICTIONS', 'OR', 'AND', 'THE', 'A', 'IN', 'ON', 'AT',
-  'TO', 'FOR', 'OF', 'WITH', 'BY', 'AS', 'IF', 'NOT', 'NO', 'CP', 'VP', 'D6', 'D3'
-]);
-
-/** Tokenizes rule text to highlight numeric distances (amber/gold), keywords (mini-badges), and key terms */
-function highlightRuleTokens(text: string): ReactNode[] {
-  const pattern = /(\b(?:D\d(?:\+\d+)?|\d+(?:\.\d+)?)(?:"|”))|(\b[A-Z]{2,}(?:[/\\-][A-Z]{2,})*(?:\s+[A-Z]{2,}(?:[/\\-][A-Z]{2,})*)*\b)|(\b(?:normal move|fall(?:s)? back|advance(?:d|s)?|tactical doctrine|devastator doctrine|assault doctrine|benefit of cover|feel no pain \d\+|invulnerable save of \d\+|\d\+ invulnerable save|critical hit(?:s)?|critical wound(?:s)?|battle-shock(?:ed)?|mortal wound(?:s)?|deadly demise|rapid fire|sustained hits|lethal hits|devastating wounds)\b)/gi;
-
-  const out: ReactNode[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = pattern.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      out.push(text.slice(lastIndex, match.index));
-    }
-
-    const [full, dist, kw, term] = match;
-    const key = `${match.index}-${full}`;
-
-    if (dist) {
-      out.push(<span key={key} className="strat-dist">{dist}</span>);
-    } else if (kw) {
-      if (EXCLUDED_KW.has(kw.toUpperCase())) {
-        out.push(kw);
-      } else {
-        out.push(<b key={key} className="strat-kw">{kw}</b>);
-      }
-    } else if (term) {
-      out.push(<b key={key} className="strat-term">{term}</b>);
-    }
-
-    lastIndex = match.index + full.length;
-  }
-
-  if (lastIndex < text.length) {
-    out.push(text.slice(lastIndex));
-  }
-
-  return out;
-}
 
 export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bot, auto, onAuto, onUse }: {
   s: GameState; p: PlayerId; st: StratagemData; rule: StratRule; detachment: string;
@@ -108,7 +39,6 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
     && (!rule.extraTargets.kw || [unit, u].every((x) => x && rule.extraTargets!.kw!.some((k0) => k0.split('|').some((k) => x.keywords.includes(k) || (x.sources ?? [x.name]).some((n) => n.toUpperCase() === k)))))
     && [unit, u].every((x) => x && !rule.extraTargets!.notKw?.some((k) => x.keywords.includes(k)));
 
-  const sections = parseStratagemSections(st.text);
 
   // Construct structured CTA labels
   let ctaPrimary = `Use ${st.name}`;
@@ -146,7 +76,7 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
   }
 
   return (
-    <div className={`strat-card ${timingOk ? '' : 'off'}`}>
+    <div className={`strat-card ph-edge-${phasesOf(st.phase, st.text)[0] ?? 'passive'} ${timingOk ? '' : 'off'}`}>
       {/* 1. Header & Metadata Section */}
       <div className="strat-head">
         <div className="strat-title-row">
@@ -160,12 +90,10 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
         </div>
 
         <div className="strat-meta-row">
-          <div className="strat-meta-info">
-            <span>{detachment}</span>
-            <span className="strat-meta-dot">•</span>
-            <span>{st.turn}</span>
-            <span className="strat-meta-dot">•</span>
-            <span>{st.phase}</span>
+          <div className="rt-meta">
+            <PhaseChips phases={phasesOf(st.phase, st.text)} />
+            {st.turn && <span className={`turn-chip turn-${/opponent/i.test(st.turn) ? 'theirs' : /your/i.test(st.turn) ? 'yours' : 'either'}`}>{/opponent/i.test(st.turn) ? "Opponent's turn" : /your/i.test(st.turn) ? 'Your turn' : 'Either turn'}</span>}
+            <span className="rt-src">{detachment}</span>
           </div>
 
           <div className="strat-badges-wrap">
@@ -195,19 +123,12 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
       </div>
 
       {/* 2. Collapsible <details> Accordion for verbose WHEN, TARGET, EFFECT text */}
-      <details className="strat-details-accordion" style={{ margin: '6px 0 10px', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '6px', border: '1px solid #334155', padding: '6px 8px' }}>
-        <summary style={{ cursor: 'pointer', color: '#94A3B8', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', userSelect: 'none' }}>
+      <details className="strat-details-accordion">
+        <summary>
           <Icon name="down" size={12} />
           <span>Rules Detail (WHEN / TARGET / EFFECT)</span>
         </summary>
-        <div className="strat-rules-inset" style={{ marginTop: '8px', borderTop: '1px solid #334155', paddingTop: '6px' }}>
-          {sections.map((sec, idx) => (
-            <div key={idx} className="strat-rule-block" style={{ marginBottom: '4px', fontSize: '12.5px', lineHeight: 1.4 }}>
-              {sec.label && <span className="strat-rule-tag" style={{ fontWeight: 700, color: '#F59E0B' }}>{sec.label}:</span>}{' '}
-              <span className="strat-rule-body" style={{ color: '#CBD5E1' }}>{highlightRuleTokens(sec.text)}</span>
-            </div>
-          ))}
-        </div>
+        <StratRows text={st.text} />
       </details>
 
       {/* Bot notification */}

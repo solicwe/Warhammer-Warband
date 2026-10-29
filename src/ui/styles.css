@@ -2876,3 +2876,75 @@ select option {
 .cmp-card-art { display: flex; align-items: center; justify-content: center; width: 75%; height: 75%; }
 .cmp-card-art .ab-art { width: 100%; height: 100%; background: transparent; border: 0; aspect-ratio: auto; }
 .cmp-card-art .ab-art img, .cmp-card-art .ab-art svg { width: 100%; height: 100%; object-fit: contain; }
+
+/* ---------- rule tables: stratagems, enhancements, detachment rules, coloured by phase ---------- */
+:root {
+  --ph-command: #a16207; --ph-movement: #2f7d4f; --ph-shooting: #c2410c; --ph-charge: #7c3aed; --ph-fight: #b91c1c;
+  --ph-any: #475569; --ph-passive: #64748b;
+  --ty-battle-tactic: #0f766e; --ty-strategic-ploy: #1d4ed8; --ty-epic-deed: #a16207; --ty-wargear: #475569;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ph-command: #fbbf24; --ph-movement: #4ade80; --ph-shooting: #fb923c; --ph-charge: #a78bfa; --ph-fight: #f87171;
+    --ph-any: #94a3b8; --ph-passive: #94a3b8;
+    --ty-battle-tactic: #2dd4bf; --ty-strategic-ploy: #60a5fa; --ty-epic-deed: #fbbf24; --ty-wargear: #94a3b8;
+  }
+}
+:root[data-theme="dark"], .cmp-armory-modal {
+  --ph-command: #fbbf24; --ph-movement: #4ade80; --ph-shooting: #fb923c; --ph-charge: #a78bfa; --ph-fight: #f87171;
+  --ph-any: #94a3b8; --ph-passive: #94a3b8;
+  --ty-battle-tactic: #2dd4bf; --ty-strategic-ploy: #60a5fa; --ty-epic-deed: #fbbf24; --ty-wargear: #94a3b8;
+}
+.ph-command, .ph-edge-command { --ph: var(--ph-command); }
+.ph-movement, .ph-edge-movement { --ph: var(--ph-movement); }
+.ph-shooting, .ph-edge-shooting { --ph: var(--ph-shooting); }
+.ph-charge, .ph-edge-charge { --ph: var(--ph-charge); }
+.ph-fight, .ph-edge-fight { --ph: var(--ph-fight); }
+.ph-any, .ph-edge-any { --ph: var(--ph-any); }
+.ph-passive, .ph-edge-passive { --ph: var(--ph-passive); }
+.type-battle-tactic { --ty: var(--ty-battle-tactic); }
+.type-strategic-ploy { --ty: var(--ty-strategic-ploy); }
+.type-epic-deed { --ty: var(--ty-epic-deed); }
+.type-wargear { --ty: var(--ty-wargear); }
+
+.rt-table { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
+.dt-sec-body > .rt-table { padding: 10px 12px; }
+.rt-filter { display: flex; flex-wrap: wrap; gap: 6px; }
+.rt-filter button { min-height: 32px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text); font: 600 13px var(--font-cond); letter-spacing: 0.03em; cursor: pointer; }
+.rt-filter button.on { outline: 2px solid var(--text); outline-offset: 1px; }
+.rt-filter button.dim { opacity: 0.45; }
+.rt-card { border: 1px solid var(--line); border-left: 5px solid var(--ph, var(--ph-passive)); border-radius: 8px; background: var(--surface); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.rt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.rt-name { font: 700 16px var(--font-cond); letter-spacing: 0.02em; color: var(--text); text-transform: uppercase; min-width: 0; overflow-wrap: anywhere; }
+.rt-cp { flex: none; font: 700 14px var(--font-cond); padding: 2px 8px; border-radius: 6px; background: var(--text); color: var(--surface); }
+.rt-meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.rt-src { font-size: 12px; color: var(--text-2); }
+.ph-chip, .turn-chip, .type-chip, .who-chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font: 700 12px var(--font-cond); letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.5; }
+.ph-chip { background: var(--ph); color: var(--surface); }
+.rt-filter .ph-chip { border-color: transparent; color: var(--surface); background: var(--ph); }
+.type-chip { border: 1.5px solid var(--ty); color: var(--ty); background: transparent; }
+.turn-chip { border: 1px solid var(--line-2); color: var(--text-2); background: var(--surface-2); }
+.turn-chip.turn-yours { color: var(--p0); border-color: var(--p0); }
+.turn-chip.turn-theirs { color: var(--p1); border-color: var(--p1); }
+.who-chip { background: var(--surface-2); color: var(--text); border: 1px solid var(--line-2); text-transform: none; letter-spacing: 0; }
+.rt-rows { display: grid; grid-template-columns: auto 1fr; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.rt-row { display: contents; }
+.rt-row > .rt-text:only-child { grid-column: 1 / -1; }
+.rt-label { padding: 6px 8px; font: 700 11.5px var(--font-cond); letter-spacing: 0.06em; color: var(--text-2); background: var(--surface-2); border-top: 1px solid var(--line); }
+.rt-text { padding: 6px 10px; font-size: 13.5px; line-height: 1.45; color: var(--text); border-top: 1px solid var(--line); min-width: 0; overflow-wrap: anywhere; white-space: pre-line; }
+.rt-row:first-child > .rt-label, .rt-row:first-child > .rt-text { border-top: none; }
+.rt-effect > .rt-label { color: var(--ph); background: color-mix(in srgb, var(--ph) 14%, var(--surface)); }
+.rt-effect > .rt-text { background: color-mix(in srgb, var(--ph) 7%, var(--surface)); font-weight: 600; }
+.rt-restriction > .rt-label { color: var(--bad); }
+
+.rt-effect b.em { color: var(--ph); }
+/* the in-game stratagem card is dark: the tables inside it use dark colours too */
+.strat-card {
+  --surface: #121417; --surface-2: #1c2026; --line: rgba(255, 255, 255, 0.12); --line-2: rgba(255, 255, 255, 0.22);
+  --text: #eceff1; --text-2: #cbd5e1; --text-3: #94a3b8; --p0: #60a5fa; --p1: #f87171; --bad: #f87171;
+  --ph-command: #fbbf24; --ph-movement: #4ade80; --ph-shooting: #fb923c; --ph-charge: #a78bfa; --ph-fight: #f87171;
+  --ph-any: #94a3b8; --ph-passive: #94a3b8;
+  border-left: 5px solid var(--ph, #262930) !important;
+}
+.strat-details-accordion { margin: 2px 0 6px; }
+.strat-details-accordion > summary { cursor: pointer; color: var(--text-2); font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; user-select: none; margin-bottom: 6px; }

@@ -13,6 +13,7 @@ import { DET_RULES } from '../rules-engine/detachments';
 import { armyColor, dsColor, DatasheetView } from './Sheet';
 import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';
+import { EnhTable, RuleCards, StratTable } from './RuleTable';
 import { PHOTO_EDIT, getPortrait, setPortrait, usePortraitsVersion } from './portraits';
 
 interface Props {
@@ -545,12 +546,6 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       {openSecs.includes(k) && <div className="dt-sec-body">{body}</div>}
     </div>
   );
-  const ruleCard = (key: string, name: string, right: string, text: string) => (
-    <div key={key} className="dt-card">
-      <div className="dt-card-head"><b>{name}</b><span>{right}</span></div>
-      <div className="dt-card-text"><Em text={text} names={ruleNames} /></div>
-    </div>
-  );
   const ruleNames = useMemo(() => (faction ? [...faction.datasheets.map((d) => d.name), ...faction.detachments.flatMap((d) => [...d.stratagems.map((st) => st.name), ...d.enhancements.map((e) => e.name), ...d.rules.map((r) => r.name)]), ...faction.armyRules.map((r) => r.name)] : []), [faction]);
   const chosenDets = faction ? list.detachments.map((n) => faction.detachments.find((d) => d.name === n)).filter((d): d is NonNullable<typeof d> => !!d) : [];
   /** Force Disposition: the detachments may offer more than one — tap one to play it (the mission and map follow it). */
@@ -586,10 +581,10 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
         </div>
         {faction.detachments.length > 0 && <button type="button" className="dt-gear" aria-label="Change Detachment" onClick={() => setDetPicker(true)}><Icon name="gear" size={26} /></button>}
       </div>
-      {chosenDets.length > 0 && dSection('rule', 'Detachment Rule', chosenDets.flatMap((d) => d.rules.map((r) => ruleCard(d.name + r.name, r.name, chosenDets.length > 1 ? d.name : '', r.text))))}
-      {chosenDets.length > 0 && dSection('enh', 'Enhancements', chosenDets.flatMap((d) => d.enhancements.map((e) => ruleCard(d.name + e.name, e.name, `${e.pts}pts`, e.text))), chosenDets.reduce((a, d) => a + d.enhancements.length, 0))}
-      {chosenDets.length > 0 && dSection('strat', 'Stratagems', chosenDets.flatMap((d) => d.stratagems.map((st) => ruleCard(d.name + st.name, st.name, `${st.cp}CP`, st.text))), chosenDets.reduce((a, d) => a + d.stratagems.length, 0))}
-      {dSection('core', 'Core Stratagems', RULES.coreStratagems.map((st) => ruleCard(st.id, st.name, `${st.cp}CP`, `${st.when}\n${st.text}`)))}
+      {chosenDets.length > 0 && dSection('rule', 'Detachment Rule', chosenDets.map((d) => <RuleCards key={d.name} rules={d.rules} names={ruleNames} source={chosenDets.length > 1 ? d.name : undefined} />))}
+      {chosenDets.length > 0 && dSection('enh', 'Enhancements', <EnhTable enh={chosenDets.flatMap((d) => d.enhancements)} names={ruleNames} />, chosenDets.reduce((a, d) => a + d.enhancements.length, 0))}
+      {chosenDets.length > 0 && dSection('strat', 'Stratagems', <StratTable strats={chosenDets.flatMap((d) => d.stratagems)} names={ruleNames} />, chosenDets.reduce((a, d) => a + d.stratagems.length, 0))}
+      {dSection('core', 'Core Stratagems', <StratTable strats={RULES.coreStratagems} names={ruleNames} />)}
       {dSection('army', 'Army Rule', chapterRules(faction.armyRules, list.subfaction).map((r) => (
         <div key={r.name} className="dt-card">
           <div className="dt-card-head"><b>{r.name}</b></div>
@@ -651,14 +646,12 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                 </div>
                 {open && (
                   <div className="dt-item-body">
-                    {d.rules.map((r) => (
-                      <div key={r.name}><div className="dt-rule-name">{r.name.toUpperCase()}</div><div className="dt-card-text"><Em text={r.text} names={ruleNames} /></div></div>
-                    ))}
+                    <RuleCards rules={d.rules} names={ruleNames} />
                     <div className="tiny">Force Disposition: <b>{d.forceDisposition}</b> · <span className={`det-auto ${DET_RULES[d.name]?.auto ?? 'none'}`}>{{ full: 'Fully automated', partial: 'Mostly automated', manual: 'Manual' }[DET_RULES[d.name]?.auto ?? 'manual'] ?? 'Read only'}</span></div>
                     <button type="button" className="dt-sub" onClick={() => toggleSec(`${d.name}:enh`)}>Enhancements ({d.enhancements.length})<span className={`dt-chev ${sec('enh') ? 'up' : ''}`}><Icon name="down" size={16} /></span></button>
-                    {sec('enh') && d.enhancements.map((e) => ruleCard(e.name, e.name, `${e.pts}pts`, e.text))}
+                    {sec('enh') && <EnhTable enh={d.enhancements} names={ruleNames} />}
                     <button type="button" className="dt-sub" onClick={() => toggleSec(`${d.name}:strat`)}>Stratagems ({d.stratagems.length})<span className={`dt-chev ${sec('strat') ? 'up' : ''}`}><Icon name="down" size={16} /></span></button>
-                    {sec('strat') && d.stratagems.map((st) => ruleCard(st.name, st.name, `${st.cp}CP`, st.text))}
+                    {sec('strat') && <StratTable strats={d.stratagems} names={ruleNames} />}
                   </div>
                 )}
               </div>
