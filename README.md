@@ -7,8 +7,8 @@ install, no account. On a phone, add it to your home screen and it works like an
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="docs/images/home.jpg" alt="Home screen with saved armies" width="200"><br><sub><b>Home.</b> Your armies, the battle in progress and the campaign.</sub></td>
-    <td align="center" width="25%"><img src="docs/images/builder.jpg" alt="Army builder" width="200"><br><sub><b>Army builder.</b> Units, leaders, wargear and enhancements at current points.</sub></td>
+    <td align="center" width="25%"><img src="docs/images/home.jpg" alt="Home screen with saved armies" width="200"><br><sub><b>Home.</b> Your armies first; New battle and Campaign sit at the top.</sub></td>
+    <td align="center" width="25%"><img src="docs/images/builder.jpg" alt="Army builder" width="200"><br><sub><b>Army builder.</b> Units, leaders, wargear and enhancements at current points. Epic Heroes sit with the Characters.</sub></td>
     <td align="center" width="25%"><img src="docs/images/setup.jpg" alt="Battle setup" width="200"><br><sub><b>Battle setup.</b> Against the bot, two players, or bot against bot.</sub></td>
     <td align="center" width="25%"><img src="docs/images/battle.jpg" alt="The battlefield" width="200"><br><sub><b>The battlefield.</b> Terrain, objectives and every model to scale.</sub></td>
   </tr>
@@ -77,10 +77,24 @@ Tap the info button next to any ability, stratagem or rule to read its full text
 
 ### Building an army
 
-The unit picker lists every datasheet of the faction at once. Wargear Options covers weapon swaps, costed wargear,
+The unit picker lists every datasheet of the faction at once. Tap + on a unit with more than one size and the
+size list stays open, so you can add several in a row; tap + again (or + on another unit) to close it. Wargear Options covers weapon swaps, costed wargear,
 optional extra models and, for units that list each loadout as its own model line (Deathwatch Veterans), how many
 models take each loadout. Unit pictures and army emblems can't be changed in the app; new pictures are added to the
 site's image folder (see "Add unit pictures" below).
+
+On a unit's datasheet each model line shows its name, then M T Sv W Ld OC, with the invulnerable save shield under
+Sv. The weapon table shows how many models carry each weapon (x8 Boltgun); weapons the unit could take but doesn't
+are dimmed.
+
+### Reading the rules
+
+The Detachment tab shows the detachment rule, enhancements and stratagems coloured by the phase they are used in
+(Command amber, Movement green, Shooting orange, Charge purple, Fight red). Each stratagem is laid out as WHEN /
+TARGET / EFFECT, with its CP cost, whose turn it is and its type, and the list can be filtered by phase. Enhancements
+show who can take them and the phase they matter in. Rules with named options (Mission Tactics, Rituals with their
+Warp Charge) show each option in its own block, and bullet lists read as lists. With two or more detachments each
+one gets its own heading.
 
 ## Campaign
 
@@ -95,6 +109,8 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   big the unit is.
 - **Tech trees.** Each faction family (Imperium, Chaos, Tyranids and others) has its own tree of upgrades. The last
   tier unlocks Knights, Titans or other titanic units for recruitment.
+- **Planned.** Battle Honors and unit experience are to be replaced by one deep tree for the whole army; the
+  proposal is in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
 - **Zombie Rush.** In the campaign the enemy bot fights differently from a normal battle: it ignores objectives,
   never falls back from fear, always charges, and scores VP for every model and unit it kills instead of the
   primary mission. Normal battles use the standard rules for both sides.

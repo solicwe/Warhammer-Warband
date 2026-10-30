@@ -969,7 +969,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                 <Icon name={isSheetOpen ? 'down' : 'next'} size={16} />
                                 <span>Datasheet Profile & Rules</span>
                               </span>
-                              <span className="tiny muted">{isSheetOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
                             </button>
                             {isSheetOpen && (() => {
                               let counts;
@@ -991,7 +990,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                 return activeHonors.length ? <span className="ab-badge-selected">{activeHonors.length} active</span> : null;
                               })()}
                             </span>
-                            <span className="tiny muted">{isHonorsOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
                           </button>
                           {isHonorsOpen && (() => {
                             const currentHonors = run.datasheetHonors?.[u.datasheet] ?? u.honors ?? [];
@@ -1138,7 +1136,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                 <b>Wargear Options</b>
                                 {u.wargearPts ? <span className="ab-badge-selected">+{u.wargearPts} pts (Scrap)</span> : null}
                               </span>
-                              <span className="tiny muted">{isWargearOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
                             </button>
                             {isWargearOpen && (
                               <WargearEditor
@@ -1187,7 +1184,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   return eqList.length > 0 ? <span className="ab-badge-selected">{eqList.length} equipped (+{eqList.reduce((s, x) => s + x.pts, 0)} pts)</span> : null;
                                 })()}
                               </span>
-                              <span className="tiny muted">{isEnhOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
                             </button>
                             {isEnhOpen && (() => {
                               const eqList = (u.enhancements && u.enhancements.length > 0) ? u.enhancements : (u.enhancement ? [{ name: u.enhancement, pts: u.enhancementPts ?? 0 }] : []);

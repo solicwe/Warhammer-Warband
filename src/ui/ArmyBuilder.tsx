@@ -764,7 +764,6 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                 <Icon name={isSheetOpen ? "down" : "next"} size={16} />
                 <span>Datasheet Profile & Rules</span>
               </span>
-              <span className="tiny muted">{isSheetOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
             </button>
             {isSheetOpen && sheet && (
               (() => {
@@ -786,7 +785,6 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                   <span>Enhancement</span>
                   {u.enhancement && <span className="ab-badge-selected">{u.enhancement} (+{u.enhancementPts} pts)</span>}
                 </span>
-                <span className="tiny muted">{isEnhOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
               </button>
               {isEnhOpen && (
                 <div className="enh-list">
@@ -845,7 +843,6 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                   <b>Wargear Options</b>
                   {u.wargearPts ? <span className="ab-badge-selected">+{u.wargearPts} pts</span> : null}
                 </span>
-                <span className="tiny muted">{isWargearOpen ? 'Tap to collapse' : 'Tap to expand'}</span>
               </button>
               {isWargearOpen && <WargearEditor sheet={sheet} u={u} onChange={(patch) => setUnit(u.uid, patch)} />}
             </div>

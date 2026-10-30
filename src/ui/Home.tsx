@@ -115,7 +115,6 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
               </div>
             );
           })}
-          {!armies.length && <div className="empty">No armies yet. Tap “New army” to build one.</div>}
         </section>
 
 
