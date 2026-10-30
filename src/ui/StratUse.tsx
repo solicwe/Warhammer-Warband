@@ -90,10 +90,10 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
         </div>
 
         <div className="strat-meta-row">
-          <div className="rt-meta">
+          <div className="rl-meta">
             <PhaseChips phases={phasesOf(st.phase, st.text)} />
-            {st.turn && <span className="rt-dot">{turnText(st.turn)}</span>}
-            <span className="rt-dot">{detachment}</span>
+            {st.turn && <span className="rl-dot">{turnText(st.turn)}</span>}
+            <span className="rl-dot">{detachment}</span>
           </div>
 
           <div className="strat-badges-wrap">

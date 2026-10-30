@@ -3,11 +3,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, it } from 'vitest';
 import { RuleText } from './RuleText';
 
-it('Nurgle’s Gift: CONTAGION RANGE / AFFLICTED are section titles, the Plagues boxed options under AFFLICTED', () => {
+it('Nurgle’s Gift: CONTAGION RANGE / AFFLICTED are boxed sections, the Plagues boxed options under AFFLICTED', () => {
   const dg = JSON.parse(fs.readFileSync('public/data/factions/DG.json', 'utf8'));
   expect(dg.armyRules.map((r: { name: string }) => r.name)).not.toContain('Oath of Moment');
   const html = renderToStaticMarkup(<RuleText text={dg.armyRules.find((r: { name: string }) => r.name.startsWith('Nurgle')).text} />);
-  expect(html.match(/rt-sec/g)?.length).toBe(2);
+  expect(html.match(/rt-box-head/g)?.length).toBe(2);
   expect(html.match(/rt-opt-head/g)?.length).toBe(3);
   expect(html.indexOf('AFFLICTED')).toBeLessThan(html.indexOf('Skullsquirm'));
 });
@@ -52,3 +52,11 @@ it('chapterRules preserves Imperial Agents army rules in ArmyBuilder', async () 
   expect(visibleRules.map((r: { name: string }) => r.name)).toEqual(['Assigned Agents', 'Kill Team']);
 });
 
+
+it('Cabal of Sorcerers: each Ritual in its own box with its Warp Charge beside the name', () => {
+  const ts = JSON.parse(fs.readFileSync('public/data/factions/TS.json', 'utf8'));
+  const html = renderToStaticMarkup(<RuleText text={ts.armyRules.find((r: { name: string }) => r.name === 'Cabal of Sorcerers').text} />);
+  expect(html).toContain('Warp Charge 5');
+  expect(html).not.toMatch(/rt-box-head"><span>WARP CHARGE/);
+  expect(html.indexOf('DESTINY')).toBeLessThan(html.indexOf('Warp Charge 5'));
+});

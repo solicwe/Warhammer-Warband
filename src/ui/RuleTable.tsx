@@ -47,8 +47,8 @@ const turnKey = (t?: string) => (/opponent/i.test(t ?? '') ? 'theirs' : /your/i.
 const turnLabel = (t?: string) => ({ theirs: "Opponent's turn", yours: 'Your turn', either: 'Either turn' })[turnKey(t)];
 
 export function PhaseChips({ phases }: { phases: PhaseKey[] }) {
-  if (!phases.length) return <span className="rt-ph ph-passive">Passive</span>;
-  return <>{phases.map((p) => <span key={p} className={`rt-ph ph-${p}`}>{PHASE_LABEL[p]}</span>)}</>;
+  if (!phases.length) return <span className="rl-ph ph-passive">Passive</span>;
+  return <>{phases.map((p) => <span key={p} className={`rl-ph ph-${p}`}>{PHASE_LABEL[p]}</span>)}</>;
 }
 
 /** "Your turn" / "Opponent's turn" / "Either turn" from a stratagem's turn field. */
@@ -78,14 +78,14 @@ export function ruleBlocks(text: string): { intro: string[]; items: { title: str
 /** Rule text, with named options laid out as separate blocks when it has them. */
 export function RuleBody({ text, names }: { text: string; names?: string[] }) {
   const b = ruleBlocks(text);
-  if (!b) return <span className="rt-text"><Em text={text} names={names} /></span>;
+  if (!b) return <span className="rl-text"><Em text={text} names={names} /></span>;
   return (
-    <div className="rt-text rt-blocks">
+    <div className="rl-text rl-blocks">
       {b.intro.map((t, i) => <p key={i}><Em text={t} names={names} /></p>)}
       {b.items.map((it) => (
-        <div key={it.title} className="rt-opt">
-          <b className="rt-opt-name">{it.title}</b>
-          {it.lines.map((l, i) => <p key={i} className={l.flavour ? 'rt-flavour' : undefined}>{l.flavour ? l.text : <Em text={l.text} names={names} />}</p>)}
+        <div key={it.title} className="rl-opt">
+          <b className="rl-opt-name">{it.title}</b>
+          {it.lines.map((l, i) => <p key={i} className={l.flavour ? 'rl-flavour' : undefined}>{l.flavour ? l.text : <Em text={l.text} names={names} />}</p>)}
         </div>
       ))}
     </div>
@@ -95,11 +95,11 @@ export function RuleBody({ text, names }: { text: string; names?: string[] }) {
 /** The WHEN / TARGET / EFFECT table of one stratagem. */
 export function StratRows({ text, names }: { text: string; names?: string[] }) {
   return (
-    <div className="rt-rows">
+    <div className="rl-rows">
       {stratRows(text).map((r, i) => (
-        <div key={i} className={`rt-row ${r.label ? `rt-${r.label.toLowerCase().replace(/s$/, '')}` : ''}`}>
-          {r.label && <span className="rt-label">{r.label}</span>}
-          <span className="rt-text"><Em text={r.text} names={names} /></span>
+        <div key={i} className={`rl-row ${r.label ? `rl-${r.label.toLowerCase().replace(/s$/, '')}` : ''}`}>
+          {r.label && <span className="rl-label">{r.label}</span>}
+          <span className="rl-text"><Em text={r.text} names={names} /></span>
         </div>
       ))}
     </div>
@@ -116,13 +116,13 @@ export function StratTable({ strats, names, source }: { strats: StratLike[]; nam
   const shown = rows.filter((r) => !only || r.ph.includes(only)).sort((a, b) => first(a.ph) - first(b.ph));
   const present = PHASE_ORDER.filter((p) => rows.some((r) => r.ph.includes(p)));
   return (
-    <div className="rt-table">
+    <div className="rl-table">
       {present.length > 1 && (
-        <div className="seg rt-seg">
-          <button type="button" className={!only ? 'on' : ''} onClick={() => setOnly(null)}>All <span className="rt-n">{rows.length}</span></button>
+        <div className="seg rl-seg">
+          <button type="button" className={!only ? 'on' : ''} onClick={() => setOnly(null)}>All <span className="rl-n">{rows.length}</span></button>
           {present.map((p) => (
             <button key={p} type="button" className={only === p ? 'on' : ''} onClick={() => setOnly(only === p ? null : p)}>
-              <span className={`rt-ph ph-${p}`}>{PHASE_LABEL[p]}</span> <span className="rt-n">{rows.filter((r) => r.ph.includes(p)).length}</span>
+              <span className={`rl-ph ph-${p}`}>{PHASE_LABEL[p]}</span> <span className="rl-n">{rows.filter((r) => r.ph.includes(p)).length}</span>
             </button>
           ))}
         </div>
@@ -130,16 +130,16 @@ export function StratTable({ strats, names, source }: { strats: StratLike[]; nam
       {shown.map(({ st, ph }) => {
         const type = typeOf(st.type);
         return (
-          <div key={(st.id ?? '') + st.name} className={`rt-card ph-edge-${ph[0] ?? 'passive'}`}>
-            <div className="rt-head">
-              <b className="rt-name">{st.name}</b>
-              <span className="rt-cp">{st.cp}CP</span>
+          <div key={(st.id ?? '') + st.name} className={`rl-card ph-edge-${ph[0] ?? 'passive'}`}>
+            <div className="rl-head">
+              <b className="rl-name">{st.name}</b>
+              <span className="rl-cp">{st.cp}CP</span>
             </div>
-            <div className="rt-meta">
+            <div className="rl-meta">
               <PhaseChips phases={ph} />
-              {st.turn && <span className="rt-dot">{turnLabel(st.turn)}</span>}
-              {type && <span className="rt-dot">{type}</span>}
-              {source && <span className="rt-src">{source(st)}</span>}
+              {st.turn && <span className="rl-dot">{turnLabel(st.turn)}</span>}
+              {type && <span className="rl-dot">{type}</span>}
+              {source && <span className="rl-src">{source(st)}</span>}
             </div>
             <StratRows text={st.when && !/WHEN:/i.test(st.text) ? `WHEN: ${st.when}\nEFFECT: ${st.text}` : st.text} names={names} />
           </div>
@@ -152,22 +152,22 @@ export function StratTable({ strats, names, source }: { strats: StratLike[]; nam
 /** Enhancements: who can take it, the points, when it matters, and what it gives. */
 export function EnhTable({ enh, names }: { enh: { name: string; pts: number; text: string }[]; names?: string[] }) {
   return (
-    <div className="rt-table">
+    <div className="rl-table">
       {enh.map((e) => {
         const m = /^([^.\n]*?\bonly)\.\s*/i.exec(e.text);
         const ph = phasesOf(undefined, e.text);
         return (
-          <div key={e.name} className={`rt-card ph-edge-${ph[0] ?? 'passive'}`}>
-            <div className="rt-head">
-              <b className="rt-name">{e.name}</b>
-              <span className="rt-cp">{e.pts} pts</span>
+          <div key={e.name} className={`rl-card ph-edge-${ph[0] ?? 'passive'}`}>
+            <div className="rl-head">
+              <b className="rl-name">{e.name}</b>
+              <span className="rl-cp">{e.pts} pts</span>
             </div>
-            <div className="rt-meta">
+            <div className="rl-meta">
               <PhaseChips phases={ph} />
-              {m && <span className="rt-dot">{m[1]}</span>}
+              {m && <span className="rl-dot">{m[1]}</span>}
             </div>
-            <div className="rt-rows">
-              <div className="rt-row rt-effect"><span className="rt-label">EFFECT</span><span className="rt-text"><Em text={m ? e.text.slice(m[0].length) : e.text} names={names} /></span></div>
+            <div className="rl-rows">
+              <div className="rl-row rl-effect"><span className="rl-label">EFFECT</span><span className="rl-text"><Em text={m ? e.text.slice(m[0].length) : e.text} names={names} /></span></div>
             </div>
           </div>
         );
@@ -179,14 +179,14 @@ export function EnhTable({ enh, names }: { enh: { name: string; pts: number; tex
 /** Detachment and army rules with the phases they touch. */
 export function RuleCards({ rules, names, source }: { rules: { name: string; text: string }[]; names?: string[]; source?: string }) {
   return (
-    <div className="rt-table">
+    <div className="rl-table">
       {rules.map((r) => {
         const ph = phasesOf(undefined, r.text);
         return (
-          <div key={r.name} className={`rt-card ph-edge-${ph[0] ?? 'passive'}`}>
-            <div className="rt-head"><b className="rt-name">{r.name}</b>{source && <span className="rt-src">{source}</span>}</div>
-            <div className="rt-meta"><PhaseChips phases={ph} /></div>
-            <div className="rt-rows"><div className="rt-row"><RuleBody text={r.text} names={names} /></div></div>
+          <div key={r.name} className={`rl-card ph-edge-${ph[0] ?? 'passive'}`}>
+            <div className="rl-head"><b className="rl-name">{r.name}</b>{source && <span className="rl-src">{source}</span>}</div>
+            <div className="rl-meta"><PhaseChips phases={ph} /></div>
+            <div className="rl-rows"><div className="rl-row"><RuleBody text={r.text} names={names} /></div></div>
           </div>
         );
       })}

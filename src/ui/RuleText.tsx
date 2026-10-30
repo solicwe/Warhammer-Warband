@@ -79,17 +79,28 @@ const isCaps = (l: string) => l.length >= 3 && !/[a-z]/.test(l);
 export function RuleText({ text, names }: { text: string; names?: string[] }) {
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
   // CAPITALISED section titles (CONTAGION RANGE, AFFLICTED) above Title Case options (the Plagues): one section each
-  const caps = lines.flatMap((l, i) => (isHeading(l, lines[i + 1]) && isCaps(l) ? [i] : []));
+  // a capitalised label over a bare number ("WARP CHARGE" / "5") is a value of the section above it, not a section
+  const isStat = (i: number) => isCaps(lines[i]) && /^\d+\+?$/.test(lines[i + 1] ?? '');
+  const caps = lines.flatMap((l, i) => (isHeading(l, lines[i + 1]) && isCaps(l) && !isStat(i) ? [i] : []));
   if (caps.length && lines.some((l, i) => isHeading(l, lines[i + 1]) && !isCaps(l) && i > caps[0])) {
     return (
       <div className="rt">
         {caps[0] > 0 && <RuleText text={lines.slice(0, caps[0]).join('\n')} names={names} />}
-        {caps.map((h, k) => (
-          <div key={h}>
-            <div className="rt-sec">{lines[h]}</div>
-            <RuleText text={lines.slice(h + 1, caps[k + 1] ?? lines.length).join('\n')} names={names} />
-          </div>
-        ))}
+        {caps.map((h, k) => {
+          const end = caps[k + 1] ?? lines.length;
+          const stats: string[] = [];
+          const body: string[] = [];
+          for (let j = h + 1; j < end; j++) {
+            if (isStat(j)) { stats.push(`${lines[j].toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())} ${lines[j + 1]}`); j++; } else body.push(lines[j]);
+          }
+          // each section (a Ritual, a Plague) in its own box, its values (Warp Charge 5) beside the name
+          return (
+            <div key={h} className="rt-box">
+              <div className="rt-box-head"><span>{lines[h]}</span>{stats.map((x) => <span key={x} className="rt-badge">{x}</span>)}</div>
+              <div className="rt-box-body"><RuleText text={body.join('\n')} names={names} /></div>
+            </div>
+          );
+        })}
       </div>
     );
   }
