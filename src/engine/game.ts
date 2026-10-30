@@ -980,6 +980,16 @@ export function startTurn(s: GameState, p: PlayerId) {
   startCommand(s);
 }
 
+/** Campaign: 25 Scrap each of the player's rounds; holding the centre objective (and only that one) adds +20 Scrap
+ *  and +1 CP. */
+export function campaignRequisition(s: GameState) {
+  const centre = s.objectives.some((o) => o.type === 'central' && o.controller === 0);
+  const roundScrap = 25 + (centre ? 20 : 0);
+  s.campaignScrap = (s.campaignScrap ?? 0) + roundScrap;
+  if (centre) s.players[0].cp += 1;
+  log(s, `Logistics Requisition (Round ${s.round}): +${roundScrap} Scrap${centre ? ' (+20 Scrap and +1 CP for holding the centre)' : ''}`, 'vp', 0);
+}
+
 function startCommand(s: GameState) {
   s.phase = 'command';
   s.ordersUsed = {};
@@ -992,12 +1002,7 @@ function startCommand(s: GameState) {
   if (s.tempCharacters) s.tempCharacters = s.tempCharacters.filter((x) => x.by !== s.active);
   for (const p of [0, 1] as PlayerId[]) s.players[p].cp += RULES.cpPerCommandPhase;
   log(s, `+${RULES.cpPerCommandPhase}CP to both players (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
-  if (s.campaign && s.active === 0) {
-    const objsHeld = s.objectives.filter((o) => o.controller === 0).length;
-    const roundScrap = 25 + objsHeld * 10;
-    s.campaignScrap = (s.campaignScrap ?? 0) + roundScrap;
-    log(s, `Logistics Requisition (Round ${s.round}): +${roundScrap} Scrap generated (${25} base + ${objsHeld * 10} from ${objsHeld} objectives held)`, 'vp', 0);
-  }
+  if (s.campaign && s.active === 0) campaignRequisition(s);
   emit(s, 'commandStart', { p: s.active });
   fireFor(s, 'commandStart', s.active);
   fireFor(s, 'eachCommandStart', 'both');
@@ -2083,23 +2088,6 @@ export function updateControl(s: GameState) {
     o.controller = c;
     if (o.warded != null && c === other(o.warded)) o.warded = null;
 
-    // In Roguelike mode: capturing objectives grants loot rewards and scrap!
-    if (s.campaign && c === 0 && !s.campaign.lootedObjectives?.includes(o.id)) {
-      (s.campaign.lootedObjectives ??= []).push(o.id);
-      s.players[0].vp += 5;
-      const scrapGain = 20;
-      s.campaignScrap = (s.campaignScrap ?? 0) + scrapGain;
-      const roll = (s.turn * 31 + Math.floor(o.x * 7 + o.y)) % 100;
-      let bonusText = '';
-      if (roll < 50) {
-        s.players[0].cp += 1;
-        bonusText = ' & Munitions cache (+1 CP)';
-      } else {
-        s.players[0].vp += 5;
-        bonusText = ' & Field supply (+5 extra VP)';
-      }
-      log(s, `Objective Secured (${o.id}): +${scrapGain} Scrap salvaged! (+5 VP${bonusText})`, 'vp', 0);
-    }
   }
 }
 

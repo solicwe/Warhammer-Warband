@@ -114,21 +114,15 @@ describe('Comprehensive Validation of All 8 Overhaul Categories', () => {
     });
   });
 
-  // Category 4: Boss Total Annihilation
-  describe('Category 4: Boss Annihilation Mode', () => {
-    it('sets isBossAnnihilation flag on boss and elite battle nodes', () => {
+  // Category 4: boss and elite battles are won on VP like the others
+  describe('Category 4: Boss battles', () => {
+    it('no longer needs a total wipeout to end', () => {
       const run = newRun(SM, autoList(SM, 500, 1), ['ORK'], 1);
       const bossNode = run.map.find((n) => n.kind === 'boss')!;
       run.fighting = bossNode.id;
-
-      const s = createGame({
-        names: ['Player', 'Enemy'],
-        factions: [SM, ORK],
-        lists: [run.list, autoList(ORK, 500, 1)],
-      });
+      const s = createGame({ names: ['Player', 'Enemy'], factions: [SM, ORK], lists: [run.list, autoList(ORK, 500, 1)] });
       applyCampaign(s, run, bossNode.enemy?.rules ?? []);
-
-      expect(s.isBossAnnihilation).toBe(true);
+      expect(s.isBossAnnihilation).toBeFalsy();
     });
   });
 
@@ -248,10 +242,11 @@ describe('Comprehensive Validation of All 8 Overhaul Categories', () => {
       expect(recruitScrapCost(run, 'Intercessor Squad', basePts)).toBe(240);
     });
 
-    it('differentiates detachment costs based on power tier', () => {
-      expect(detachmentScrapCost('Gladius Strike Force')).toBe(140); // Premier
-      expect(detachmentScrapCost('Firestorm Assault Force')).toBe(60);   // Standard
-      expect(detachmentScrapCost('Anvil Siege Force')).toBe(90); // Tactical default
+    it('prices detachments by their Detachment Points', () => {
+      expect(detachmentScrapCost({ dp: 1 })).toBe(60);
+      expect(detachmentScrapCost({ dp: 2 })).toBe(110);
+      expect(detachmentScrapCost({ dp: 3 })).toBe(170);
+      expect(new Set(SM.detachments.map((d) => detachmentScrapCost(d))).size).toBeGreaterThan(1);
     });
   });
 

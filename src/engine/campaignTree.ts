@@ -516,7 +516,10 @@ export interface TreeRun {
 
 export const RENOWN = { battle: 3, elite: 5, boss: 6, loss: 1, start: 3 } as const;
 
-export const taken = (run: TreeRun) => new Set(['start', ...(run.tree ?? [])]);
+/** Whose tree it is and what is taken: the player's run, or an enemy army in a campaign battle. */
+export type TreeOwner = Pick<TreeRun, 'factionId' | 'tree'>;
+
+export const taken = (run: TreeOwner) => new Set(['start', ...(run.tree ?? [])]);
 
 export function canAllocate(run: TreeRun, id: string): boolean {
   const n = treeFor(run.factionId).find((x) => x.id === id);
@@ -561,23 +564,23 @@ export function refund<T extends TreeRun>(run: T, id: string): T {
 
 // ---------- what the taken nodes give ----------
 
-const takenNodes = (run: TreeRun) => { const t = taken(run); return treeFor(run.factionId).filter((n) => t.has(n.id)); };
+const takenNodes = (run: TreeOwner) => { const t = taken(run); return treeFor(run.factionId).filter((n) => t.has(n.id)); };
 
 /** nodes of each spoke taken (for threshold bonuses) */
 const slotCounts = (nodes: TreeNode[]) => nodes.reduce<Record<string, number>>((a, n) => ({ ...a, [n.slot]: (a[n.slot] ?? 0) + 1 }), {});
 const bonusOn = (n: TreeNode, counts: Record<string, number>) => !!n.bonus && (counts[n.slot] ?? 0) >= n.bonus.count;
 
-export function treeCp(run: TreeRun): number {
+export function treeCp(run: TreeOwner): number {
   const nodes = takenNodes(run), c = slotCounts(nodes);
   return nodes.reduce((a, n) => a + (n.cp ?? 0) + (bonusOn(n, c) ? n.bonus!.cp ?? 0 : 0), 0);
 }
 
-export function treeScrap(run: TreeRun): number {
+export function treeScrap(run: TreeOwner): number {
   const nodes = takenNodes(run), c = slotCounts(nodes);
   return nodes.reduce((a, n) => a + (n.scrap ?? 0) + (bonusOn(n, c) ? n.bonus!.scrap ?? 0 : 0), 0);
 }
 
-export const titanUnlocked = (run: TreeRun) => takenNodes(run).some((n) => n.titan);
+export const titanUnlocked = (run: TreeOwner) => takenNodes(run).some((n) => n.titan);
 
 // ---------- VETERAN and keywords ----------
 
@@ -596,7 +599,7 @@ const reaches = (n: Pick<Spec, 'units'>, k: Set<string>) => !n.units || n.units.
 const effectsOf = (n: TreeNode, counts: Record<string, number>): Effect[] => [...(n.e ? (Array.isArray(n.e) ? n.e : [n.e]) : []), ...(bonusOn(n, counts) && n.bonus!.e ? [n.bonus!.e] : [])];
 
 /** How many units of the roster a node reaches ("Applies to 4 units"). */
-export function unitsReached(run: TreeRun & { list: { units: ArmyUnitEntry[] } }, sheets: DatasheetData[], node: TreeNode): ArmyUnitEntry[] {
+export function unitsReached(run: TreeOwner & { list: { units: ArmyUnitEntry[] } }, sheets: DatasheetData[], node: TreeNode): ArmyUnitEntry[] {
   if (!node.e && !node.bonus?.e) return [];
   const conv = takenNodes(run).flatMap((n) => (n.as ? [n.as] : []));
   if (node.as) conv.push(node.as);
@@ -607,7 +610,7 @@ export function unitsReached(run: TreeRun & { list: { units: ArmyUnitEntry[] } }
 }
 
 /** Put the taken nodes on the player's units for the whole battle. */
-export function applyTree(s: GameState, run: TreeRun & { list: { units: ArmyUnitEntry[] } }, me: PlayerId = 0) {
+export function applyTree(s: GameState, run: TreeOwner & { list: { units: ArmyUnitEntry[] } }, me: PlayerId = 0) {
   const nodes = takenNodes(run);
   const counts = slotCounts(nodes);
   const conv = nodes.flatMap((n) => (n.as ? [n.as] : []));
@@ -624,4 +627,29 @@ export function applyTree(s: GameState, run: TreeRun & { list: { units: ArmyUnit
       for (const e of effectsOf(n, counts)) addTimed(s, u, { e: { ...e }, label: n.name, until: 'battle', by: me, models });
     }
   }
+}
+
+// ---------- the enemy's tree ----------
+
+/** Tree points an enemy army spends: as many nodes as the player has taken, +3 for an elite, +6 for a boss. */
+export const enemyTreePoints = (playerNodes: number, kind: string) => playerNodes + (kind === 'boss' ? 6 : kind === 'elite' ? 3 : 0);
+
+/** An enemy's tree: it favours two spokes (picked by the seed) and takes nodes that do something in battle first. */
+export function enemyTree(factionId: string, points: number, seed: number): string[] {
+  const nodes = treeFor(factionId);
+  const slots = [...new Set(nodes.map((n) => n.slot).filter((x) => x !== 'start' && x !== 'ring'))];
+  let r = seed >>> 0;
+  const rand = () => ((r = (r * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+  const fav = new Set([slots[Math.floor(rand() * slots.length)], slots[Math.floor(rand() * slots.length)]]);
+  const got = new Set(['start']);
+  const out: string[] = [];
+  const score = (n: TreeNode) => (fav.has(n.slot) ? 2 : 0) + (n.e || n.cp ? 1 : 0) - (n.scrap && !n.e ? 1 : 0) + rand() * 0.5;
+  while (out.length < points) {
+    const open = nodes.filter((n) => !got.has(n.id) && n.links.some((l) => got.has(l)));
+    if (!open.length) break;
+    const pick = open.reduce((a, b) => (score(b) > score(a) ? b : a));
+    got.add(pick.id);
+    out.push(pick.id);
+  }
+  return out;
 }

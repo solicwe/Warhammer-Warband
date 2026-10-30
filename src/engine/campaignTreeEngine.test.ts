@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botShouldAct, botStep } from '../ai/bot';
 import { addTimed, cond, defencesFor, modelDefence, ocOf, offenceFor, rollMods, unitFlags, unknownConds, type Effect } from '../rules-engine/effects';
-import { afterBattle, applyCampaign, newRun, type Run } from './campaign';
+import { afterBattle, applyCampaign, campaignMission, enemyDetachments, newRun, type Run } from './campaign';
 import { autoList } from './autoList';
 import { OWN_BRANCHES, treeFor, type TreeNode } from './campaignTree';
 import { createGame, endPhase } from './game';
@@ -130,7 +130,9 @@ describe('army tree in a whole campaign battle', () => {
     const tree = treeFor('SM').filter((n) => n.id !== 'start' && !['fire-7', 'armour-7', 'speed-7'].includes(n.id)).map((n) => n.id);
     const node = base.map.find((n) => n.layer === 0)!;
     const run: Run = { ...base, tree, fighting: node.id };
-    const s = createGame({ lists: [run.list, autoList(ORK, 500, 4)], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', maxRounds: 3, seed: 9, primaryId: 'roguelike-annihilation' });
+    const orks = autoList(ORK, 500, 4);
+    // as the campaign plays it: the battle's own primary mission, and a later-campaign enemy with three detachments
+    const s = createGame({ lists: [run.list, { ...orks, detachments: enemyDetachments(ORK, orks.detachments, 3, 4) }], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', maxRounds: 3, seed: 9, dispositions: campaignMission(node).dispositions });
     applyCampaign(s, run, []);
     const cp0 = s.players[0].cp;
     expect(s.units.filter((u) => u.owner === 0).every((u) => (u.timed ?? []).length > 0)).toBe(true);
@@ -142,7 +144,7 @@ describe('army tree in a whole campaign battle', () => {
       if (botShouldAct(s, p)) botStep(s, p); else endPhase(s);
     }
     expect(s.phase).toBe('gameover');
-    const plain = createGame({ lists: [run.list, autoList(ORK, 500, 4)], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', maxRounds: 3, seed: 9 });
+    const plain = createGame({ lists: [run.list, autoList(ORK, 500, 4)], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', maxRounds: 3, seed: 9, dispositions: campaignMission(node).dispositions });
     applyCampaign(plain, { ...run, tree: [] }, []);
     expect(cp0 - plain.players[0].cp).toBe(6); // War Council 1, Master Tactician 1 + its bonus 1, Total War 2, Tithe Masters' bonus 1
     // the buffs last the whole battle

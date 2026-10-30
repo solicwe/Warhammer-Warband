@@ -7,7 +7,8 @@ import { canLeaderAttach, defaultWargear, pointsOptions, syncWargear } from './a
 import { AUX_EXCLUSIONS } from './autoList';
 import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState, WargearPick } from './types';
 import { hasPicture } from './state';
-import { applyTree, getFactionFamily, RENOWN, titanUnlocked, treeCp, treeScrap } from './campaignTree';
+import { applyTree, enemyTree, enemyTreePoints, getFactionFamily, RENOWN, titanUnlocked, treeCp, treeScrap } from './campaignTree';
+import { MISSIONS, type DispositionId, type PrimaryDef } from './config';
 
 export { getFactionFamily };
 
@@ -612,18 +613,14 @@ const hasKwIn = (u: UnitState, units?: string) => !units || units.split('|').som
 /** Put the run's relics on the player's army and the enemy's special rules on theirs, for the whole battle. */
 export function applyCampaign(s: GameState, run: Run, rules: (string | { id?: string; name?: string })[]) {
   const me: PlayerId = 0, foe: PlayerId = 1;
-  // Set Roguelike Annihilation primary mission for both players
-  for (const p of [me, foe]) {
-    s.players[p].primaryId = 'roguelike-annihilation';
-    s.players[p].disposition = 'purge-the-foe';
-  }
-
-  // Set Boss & Elite Annihilation flag (requires 100% total wipeout to win)
-  if (run.fighting) {
-    const node = run.map.find((n) => n.id === run.fighting);
-    if (node && (node.kind === 'boss' || node.kind === 'elite')) {
-      s.isBossAnnihilation = true;
-    }
+  // the primary mission comes from the battle (campaignMission, passed to createGame); boss and elite fights are
+  // won on VP like the others
+  // the enemy's army tree grows with the player's
+  const node = run.map.find((n) => n.id === run.fighting);
+  if (node?.enemy) {
+    const foeTree = { factionId: s.players[foe].factionId, tree: enemyTree(s.players[foe].factionId, enemyTreePoints(run.tree?.length ?? 0, node.kind), node.enemy.seed) };
+    applyTree(s, { ...foeTree, list: { units: [] } }, foe);
+    s.players[foe].cp += treeCp(foeTree);
   }
 
   for (const rawId of run.relics) {
@@ -936,24 +933,12 @@ export function applyMedicaeService(run: Run, service: 'fate' | 'cp'): Run {
   }
 }
 
-const DETACHMENT_PREMIER = new Set([
-  'Gladius Strike Force', 'Ironstorm Spearhead', 'War Horde', 'Awakened Dynasty',
-  'Invasion Fleet', 'Slaves to Darkness', 'Kauyon', 'Mont\'ka', 'Cult of Strife',
-  'Hallowed Martyrs', 'Host of the Brass Stampede', 'Pactbound Zealots', 'Synaptic Nexus'
-]);
-const DETACHMENT_STANDARD = new Set([
-  '1st Company Task Force', 'Firestorm Assault Force', 'Green Tide',
-  'Obeisance Phalanx', 'Assimilation Brood', 'Deceptors', 'Nob Mob'
-]);
-
-export function detachmentScrapCost(name: string): number {
-  if (DETACHMENT_PREMIER.has(name)) return 140;
-  if (DETACHMENT_STANDARD.has(name)) return 60;
-  return 90;
-}
+/** Scrap to adopt a detachment, by its Detachment Points: the bigger the detachment, the dearer. */
+export const DETACHMENT_SCRAP: Record<number, number> = { 1: 60, 2: 110, 3: 170 };
+export const detachmentScrapCost = (d: { dp?: number }) => DETACHMENT_SCRAP[d.dp ?? 2] ?? DETACHMENT_SCRAP[3];
 
 /** Requisition / adopt a new detachment into the campaign army using Scrap */
-export function adoptDetachment(run: Run, detachmentName: string, cost = detachmentScrapCost(detachmentName)): Run {
+export function adoptDetachment(run: Run, detachmentName: string, cost: number): Run {
   if ((run.scrap ?? 0) < cost) return run;
   const cur = run.list.detachments ?? [];
   if (cur.includes(detachmentName)) return run;
@@ -1038,4 +1023,26 @@ export function migrateRun(run: Run): Run {
     tree: run.tree ?? [],
     list: { ...run.list, units: units.map(({ xp, honors: _h, ...u }) => ({ ...u, battles: u.battles ?? xp ?? 0 })) },
   };
+}
+
+/** A campaign battle's primary mission: one of the official ones (many are won with actions), the same for the same
+ *  battle. The player plays it; the enemy (Zombie Rush) scores from kills. */
+export function campaignMission(node: MapNode): { primary: PrimaryDef; dispositions: [DispositionId, DispositionId] } {
+  const all = MISSIONS.primaries;
+  const primary = all[(node.enemy?.seed ?? 0) % all.length];
+  return { primary, dispositions: [primary.forceDisposition, primary.vs] };
+}
+
+/** Detachments an enemy brings: one more for every 3 battles won and every sector after the first, one more for an
+ *  elite or a boss; at most 4. */
+export const enemyDetachmentCount = (run: Pick<Run, 'wins' | 'loop'>, kind: NodeKind) =>
+  Math.min(4, 1 + Math.floor(run.wins / 3) + ((run.loop ?? 1) - 1) + (kind === 'elite' || kind === 'boss' ? 1 : 0));
+
+/** The enemy's detachments: the list's own first, then others of its army (no Chapter-only ones), picked by the seed. */
+export function enemyDetachments(f: FactionData, own: string[], n: number, seed: number): string[] {
+  const r = rng(seed);
+  const pool = f.detachments.filter((d) => !d.subfaction && d.forceDisposition && !own.includes(d.name)).map((d) => d.name);
+  const out = [...own];
+  while (out.length < n && pool.length) out.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
+  return out.slice(0, Math.max(n, own.length ? 1 : 0));
 }

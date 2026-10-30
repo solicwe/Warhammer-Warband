@@ -101,7 +101,13 @@ one gets its own heading.
 The campaign is a roguelite run with one faction. You start with a small army and travel across a branching map of
 battles, elite fights (enemies with a special rule), supply drops, armories, medicae tents and a boss at the end.
 
-- **Scrap** is the currency. You earn it by winning and spend it in the armory on recruits, wargear, enhancements and detachments.
+- **Scrap** is the currency. You earn it by winning (and 25 a round in battle, +20 and +1 CP while you hold the
+  centre objective) and spend it in the armory on recruits, wargear, enhancements and detachments. A detachment costs
+  60, 110 or 170 Scrap for 1, 2 or 3 Detachment Points.
+- **Missions.** Each battle plays one of the official primary missions (many are won with actions), shown on the
+  map before you fight. Boss and elite battles are won on VP like the others.
+- **The enemy grows with you.** Enemies bring more detachments as you win (one more every 3 wins and every sector,
+  one more for an elite or boss, up to 4), and an army tree with as many nodes as yours (+3 elite, +6 boss).
 - **Reinforcements** are offered after battles, each with a rarity (common, rare, epic, legendary) that follows how
   big the unit is.
 - **Army tree.** One passive tree for the whole army, paid for with Renown (battle 3, elite 5, boss 6, a loss 1).

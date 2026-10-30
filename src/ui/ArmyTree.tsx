@@ -157,19 +157,6 @@ export function ArmyTree({ run, fac, onRun, onInfo }: { run: Run; fac: FactionDa
         </div>
       )}
       </div>
-      <div className="tree-guide">
-        <div className="cmp-kicker">What each spoke does</div>
-        {guide.map((g) => (
-          <button key={g.id} type="button" className={`tree-guide-row ${node?.slot === g.id ? 'on' : ''}`} onClick={() => setSel(`${g.id}-1`)}>
-            <span className="tree-guide-head"><b>{g.name}</b><span className="num">{counts[g.id] ?? 0}/{nodes.filter((n) => n.slot === g.id).length}</span></span>
-            <span className="tree-guide-about">{g.id === 'army' ? 'Your army\'s own branch. ' : ''}{g.about}</span>
-          </button>
-        ))}
-        <div className="tree-guide-row static">
-          <span className="tree-guide-head"><b>Rings</b></span>
-          <span className="tree-guide-about">The inner ring links neighbouring spokes halfway out. The outer ring holds keystones that make one keyword count as another (INFANTRY as VEHICLE and so on). Circles are small nodes, big circles notables, diamonds keystones.</span>
-        </div>
-      </div>
     </div>
   );
 }

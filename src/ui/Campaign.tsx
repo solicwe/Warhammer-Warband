@@ -6,7 +6,7 @@ import { loadRun, saveRun } from '../services/storage';
 import { buildUnits, loadoutLines, attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
-  adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyCampaign, applyMedicaeService,
+  adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyCampaign, applyMedicaeService, campaignMission, enemyDetachmentCount, enemyDetachments,
   bossRuleById, buyEnhancementForUnit, canRecruitTitanOrKnight,
   changeSquadSize, cheapest, continueNextLoop, detachmentScrapCost, enhancementScrapCost, enter,
   getFactionFamily, isFactionAllowedKnight, makeOffer, newRun,
@@ -14,7 +14,7 @@ import {
   removeEnhancementFromUnit, requiresTitanRequisition, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
 } from '../engine/campaign';
-import { isVeteran, VETERAN_BATTLES } from '../engine/campaignTree';
+import { enemyTreePoints, isVeteran, VETERAN_BATTLES } from '../engine/campaignTree';
 import { ArmyTree } from './ArmyTree';
 import { detachmentAllyOf } from '../engine/allies';
 import { hasFactionRules } from '../rules-engine/effects';
@@ -139,14 +139,16 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       const enemyFactionId = typeof node.enemy.factionId === 'string' ? node.enemy.factionId : String((node.enemy.factionId as any)?.id || (node.enemy.factionId as any)?.name || 'ORK');
       let ef = await loadFaction(enemyFactionId).catch(() => null);
       if (!ef || !playable(ef)) ef = await loadFaction('ORK');
-      const enemyList = autoList(ef, node.enemy.pts, node.enemy.seed);
+      const base = autoList(ef, node.enemy.pts, node.enemy.seed);
+      // later battles: the enemy brings more detachments
+      const enemyList = { ...base, detachments: enemyDetachments(ef, base.detachments, enemyDetachmentCount(run, node.kind), node.enemy.seed) };
       const r = run.fighting === node.id ? run : enter(run, node.id, fac);
       const isBoss = node.kind === 'boss';
       const maxRounds = isBoss ? 5 : 3;
       const s = createGame({
         lists: [syncList(r.list, fac), autoAttach(syncList(enemyList, ef), ef)], factions: [fac, ef],
         names: ['You', isBoss ? `${ef.name} Warlord` : ef.name], secondaryMode: 'none', maxRounds, seed: node.enemy.seed,
-        primaryId: 'roguelike-annihilation',
+        dispositions: campaignMission(node).dispositions,
       });
       s.botPlayer = 1;
       s.bots = [1];
@@ -850,8 +852,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               <>
                 <div className="cmp-foe">
                   <span className="cmp-emblem"><Emblem factionId={focused.enemy.factionId} /></span>
-                  <span className="cmp-army-text"><b>{nameOf(focused.enemy.factionId)}</b><span className="muted small"><span className="num">{focused.enemy.pts}</span> pts · bot {LEVEL[focused.enemy.level]} · 3 rounds</span></span>
+                  <span className="cmp-army-text"><b>{nameOf(focused.enemy.factionId)}</b><span className="muted small"><span className="num">{focused.enemy.pts}</span> pts · bot {LEVEL[focused.enemy.level]} · {focused.kind === 'boss' ? 5 : 3} rounds</span></span>
                 </div>
+                <div className="small">Mission: <b>{campaignMission(focused).primary.name}</b>{campaignMission(focused).primary.action ? ' (actions)' : ''} · {enemyDetachmentCount(run, focused.kind)} {enemyDetachmentCount(run, focused.kind) === 1 ? 'detachment' : 'detachments'} · army tree {enemyTreePoints(run.tree?.length ?? 0, focused.kind)} nodes</div>
                 {focused.enemy.rules.map((rawRule, idx) => { const b = bossRuleById(rawRule); if (!b) return null; return <div key={b.id || idx} className="cmp-rule"><RelicToken id={b.id} enemy /> <span><b>{b.name}</b> — {b.text}</span></div>; })}
               </>
             ) : <div className="small">{KIND[focused.kind].note}</div>}
@@ -1540,7 +1543,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                           {available.map((d, i) => {
-                            const cost = detachmentScrapCost(d.name);
+                            const cost = detachmentScrapCost(d);
                             const canAfford = (run.scrap ?? 0) >= cost;
                             const tint = armyColor(fac.id, d.subfaction);
                             const head = (i === 0 || available[i - 1].subfaction !== d.subfaction) && available.some((x) => x.subfaction);
@@ -1552,6 +1555,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <b style={{ color: '#f8fafc', fontSize: 14 }}>{d.name}</b>
+                                    <span className="chip subtle small">{d.dp} DP</span>
                                     {d.forceDisposition && <span className="disp-chip small">{d.forceDisposition}</span>}
                                   </div>
                                 </div>
