@@ -13,3 +13,12 @@ it('splits a stratagem into WHEN / TARGET / EFFECT rows', () => {
   expect(stratRows('WHEN: Your Command phase.\nTARGET: One unit.\nEFFECT: It gets +1.').map((r) => r.label)).toEqual(['WHEN', 'TARGET', 'EFFECT']);
   expect(stratRows('Re-roll 1 die')).toEqual([{ label: '', text: 'Re-roll 1 die' }]);
 });
+
+it('lays out a rule with named options as blocks: name, flavour, effect', async () => {
+  const { ruleBlocks } = await import('./RuleTable');
+  const b = ruleBlocks('Select one below.\nFuror Tactics\nThe warriors are outnumbered.\nWhile active, weapons have [SUSTAINED HITS 1].\nMalleus Tactics\nEven the largest behemoth has a weak point.\nWhile active, weapons have [LETHAL HITS].')!;
+  expect(b.intro).toEqual(['Select one below.']);
+  expect(b.items.map((i) => i.title)).toEqual(['Furor Tactics', 'Malleus Tactics']);
+  expect(b.items[0].lines.map((l) => l.flavour)).toEqual([true, false]);
+  expect(ruleBlocks('This model has a 2+ Sv.')).toBeNull();
+});

@@ -54,6 +54,44 @@ export function PhaseChips({ phases }: { phases: PhaseKey[] }) {
 /** "Your turn" / "Opponent's turn" / "Either turn" from a stratagem's turn field. */
 export const turnText = (t?: string) => turnLabel(t);
 
+const RULE_WORDS = /\b(?:units?|models?|attacks?|rolls?|phases?|abilit(?:y|ies)|weapons?|CP|wounds?|hits?|saves?|moves?|charges?|objectives?|re-roll|battle-shock|keywords?|\d+)\b|"|\+\d/i;
+const isTitle = (l: string) => l.length <= 48 && /^[A-Z]/.test(l) && !/[.:!?,;)\]]$/.test(l) && !/^[-•]/.test(l) && l.split(/\s+/).length <= 6;
+
+/** A rule that lists named options ("Furor Tactics" + flavour + effect, …): the intro, then one block per option.
+ *  Null when the text has fewer than two such options, so ordinary rules keep their plain layout. */
+export function ruleBlocks(text: string): { intro: string[]; items: { title: string; lines: { text: string; flavour: boolean }[] }[] } | null {
+  if (text.includes('¦')) return null; // battle-size tables have their own layout (RuleText)
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  const intro: string[] = [];
+  const items: { title: string; lines: { text: string; flavour: boolean }[] }[] = [];
+  lines.forEach((l, i) => {
+    if (isTitle(l) && i + 1 < lines.length && !isTitle(lines[i + 1])) items.push({ title: l, lines: [] });
+    else if (items.length) items[items.length - 1].lines.push({ text: l, flavour: false });
+    else intro.push(l);
+  });
+  if (items.length < 2) return null;
+  // the line under a name with no rules words in it, followed by the effect, is flavour text
+  for (const it of items) if (it.lines.length >= 2 && !RULE_WORDS.test(it.lines[0].text)) it.lines[0].flavour = true;
+  return { intro, items };
+}
+
+/** Rule text, with named options laid out as separate blocks when it has them. */
+export function RuleBody({ text, names }: { text: string; names?: string[] }) {
+  const b = ruleBlocks(text);
+  if (!b) return <span className="rt-text"><Em text={text} names={names} /></span>;
+  return (
+    <div className="rt-text rt-blocks">
+      {b.intro.map((t, i) => <p key={i}><Em text={t} names={names} /></p>)}
+      {b.items.map((it) => (
+        <div key={it.title} className="rt-opt">
+          <b className="rt-opt-name">{it.title}</b>
+          {it.lines.map((l, i) => <p key={i} className={l.flavour ? 'rt-flavour' : undefined}>{l.flavour ? l.text : <Em text={l.text} names={names} />}</p>)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** The WHEN / TARGET / EFFECT table of one stratagem. */
 export function StratRows({ text, names }: { text: string; names?: string[] }) {
   return (
@@ -148,7 +186,7 @@ export function RuleCards({ rules, names, source }: { rules: { name: string; tex
           <div key={r.name} className={`rt-card ph-edge-${ph[0] ?? 'passive'}`}>
             <div className="rt-head"><b className="rt-name">{r.name}</b>{source && <span className="rt-src">{source}</span>}</div>
             <div className="rt-meta"><PhaseChips phases={ph} /></div>
-            <div className="rt-rows"><div className="rt-row"><span className="rt-text"><Em text={r.text} names={names} /></span></div></div>
+            <div className="rt-rows"><div className="rt-row"><RuleBody text={r.text} names={names} /></div></div>
           </div>
         );
       })}

@@ -2943,3 +2943,10 @@ select option {
 /* keyword lines: a little air between the words so the run of capitals reads as separate keywords */
 .ds-kw, .ds-kw2 { word-spacing: 0.3em; letter-spacing: 0.02em; line-height: 1.6; }
 .ds-kw span { word-spacing: normal; }
+
+/* rules with named options (Mission Tactics, Combat Doctrines): intro, then one block per option */
+.rt-blocks { white-space: normal; display: flex; flex-direction: column; gap: 8px; }
+.rt-blocks p { margin: 0; }
+.rt-opt { display: flex; flex-direction: column; gap: 2px; padding: 8px 0 0 12px; border-top: 1px dotted var(--line-2); border-left: 3px solid var(--ph, var(--line-2)); }
+.rt-opt-name { font: 600 14.5px var(--font-cond); letter-spacing: 0.05em; text-transform: uppercase; color: var(--text); }
+.rt-flavour { font-style: italic; font-size: 13px; color: var(--text-3); }
