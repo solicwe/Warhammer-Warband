@@ -707,7 +707,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                   <div key={`size-${d.id}`} className="ab-add-size">
                     <div className="ab-pop-head">Unit size · {d.name}</div>
                     {pointsOptions(d).map((o) => (
-                      <button key={o.models} type="button" className="ab-pop-size" onClick={() => { addUnit(d, o); setAddSize(null); }}>
+                      <button key={o.models} type="button" className="ab-pop-size" onClick={() => addUnit(d, o)}>
                         <span className="ab-pop-models">{o.models} {o.models === 1 ? 'model' : 'models'}</span><span className="ab-pop-pts">{o.pts} pts</span><span className="ab-pop-plus">+ Add</span>
                       </button>
                     ))}
@@ -776,7 +776,6 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
             {isSheetOpen && !sheet && <div className="sheet-title">{u.datasheet}</div>}
           </div>
 
-          <div className="ab-panel-title">Unit settings · <span className="ab-pts">{ptsOf(u)} pts{u.wargearPts ? <span className="tiny muted"> (wargear +{u.wargearPts})</span> : null}</span></div>
 
           {(enh.length > 0 || u.enhancement) && (
             <div className="ab-collapsible-section field">
