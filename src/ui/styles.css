@@ -3025,3 +3025,20 @@ select option {
 .tree-guide-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-family: var(--font-cond); font-size: 15px; }
 .tree-guide-head .num { color: var(--text-3); font-size: 13px; }
 .tree-guide-about { font-size: 13px; line-height: 1.4; color: var(--text-2); }
+.tree-zoom { display: flex; align-items: center; gap: 8px; align-self: flex-end; margin-bottom: -4px; }
+.tree-zoom .btn { min-width: 40px; justify-content: center; }
+.tree-zoom .num { font-family: var(--font-cond); font-size: 13px; color: var(--text-3); min-width: 38px; text-align: center; }
+.tree-ico { color: var(--text-3); pointer-events: none; }
+.tree-node.open .tree-ico { color: var(--accent); }
+.tree-node.taken .tree-ico { color: var(--on-fill); }
+.tree-icons { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--text-2); }
+.tree-icons span { display: inline-flex; align-items: center; gap: 4px; }
+.tree-card-head b { display: inline-flex; align-items: center; gap: 6px; }
+/* enemy reinforcements arrive: a red glow around the screen edge, gone by itself */
+.reinf-edge { position: fixed; inset: 0; z-index: 9999; pointer-events: none; box-shadow: inset 0 0 0 4px rgba(239, 68, 68, 0.95), inset 0 0 60px 18px rgba(220, 38, 38, 0.55); animation: reinf-edge 1.8s ease-out forwards; display: flex; justify-content: center; align-items: flex-start; padding-top: calc(env(safe-area-inset-top, 0px) + 58px); }
+.reinf-edge-label { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(127, 29, 29, 0.92); color: #fee2e2; font-family: var(--font-cond); font-weight: 700; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; }
+@keyframes reinf-edge { 0% { opacity: 0; } 15% { opacity: 1; } 35% { opacity: 0.55; } 55% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .reinf-edge { animation: reinf-fade 1.8s linear forwards; } @keyframes reinf-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } } }
+/* detachments grouped by Chapter: a coloured heading, and the same colour down each card's edge */
+.dt-group { margin-top: 10px; padding: 4px 0 4px 10px; border-left: 4px solid var(--tint, var(--accent)); font-family: var(--font-cond); font-weight: 700; font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tint, var(--accent)); }
+.dt-item { border-left: 4px solid var(--tint, var(--line)); }

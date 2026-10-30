@@ -256,7 +256,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return () => window.clearTimeout(t);
   }, [s, ponderFor]); // eslint-disable-line react-hooks/exhaustive-deps
   // the player is reading (mission cards, the menu, a rule) or an alert is active: the game waits instead of moving under them
-  const hasActiveAlert = Boolean(s.reinforcementAlert || s.titanAlert);
+  const hasActiveAlert = Boolean(s.titanAlert);
   const viewing = showCards || showMissions || showMenu || !!explain || !!summary || hasActiveAlert;
   useEffect(() => {
     if (!bots.length || rolling || reporting || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0) || hasActiveAlert) return;
@@ -517,6 +517,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [armed, setArmed] = useState<string | null>(null);
   useEffect(() => { if (!armed) return; const tm = window.setTimeout(() => setArmed(null), 3500); return () => window.clearTimeout(tm); }, [armed]);
   useEffect(() => { if (s.reinforcementAlert || s.titanAlert) play('bad'); }, [s.reinforcementAlert, s.titanAlert]);
+  // the reinforcements flash clears itself
+  useEffect(() => {
+    if (!s.reinforcementAlert) return;
+    const t = window.setTimeout(() => act((g) => { g.reinforcementAlert = null; }), 1800);
+    return () => window.clearTimeout(t);
+  }, [s.reinforcementAlert]); // eslint-disable-line react-hooks/exhaustive-deps
   /** The phase's way out: what is left undone shows under it, and ending with nothing done asks once more. */
   const endButton = (key: string, label: string, idle: boolean, why: string, note?: string) => {
     return (
@@ -3543,32 +3549,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       )}
 
       {s.reinforcementAlert && (
-        <div className="tray-backdrop" style={{ zIndex: 9999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="card" style={{ maxWidth: '440px', width: '100%', background: 'linear-gradient(180deg, #1e1111 0%, #110c0c 100%)', border: '2px solid #ef4444', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f87171' }}>
-              <Icon name="skull" size={26} />
-              <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{s.reinforcementAlert.text}</div>
-            </div>
-            <div style={{ color: '#e2e8f0', fontSize: '0.92rem' }}>Strategic sensors have detected unexpected hostile reserve forces mobilizing onto the battle grid! Battle extended to 5 Rounds.</div>
-            <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {(() => {
-                const photo = getPortrait(s.reinforcementAlert.unitName);
-                return photo ? (
-                  <img
-                    src={photo}
-                    alt=""
-                    style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', flex: 'none', border: '1px solid #ef4444' }}
-                    onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
-                  />
-                ) : null;
-              })()}
-              <div>
-                <div style={{ fontWeight: 700, color: '#fca5a5' }}>{s.reinforcementAlert.unitName}</div>
-                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{s.reinforcementAlert.factionName} · {s.reinforcementAlert.count} models · Round {s.reinforcementAlert.round} Strategic Reserves</div>
-              </div>
-            </div>
-            <button className="btn primary big wide" style={{ background: '#dc2626', borderColor: '#ef4444', fontWeight: 700 }} onClick={() => { act((g) => { g.reinforcementAlert = null; }); }}>Acknowledge Threat</button>
-          </div>
+        // enemy reinforcements: the screen edge flashes red and they land; nothing to tap
+        <div className="reinf-edge" key={`${s.reinforcementAlert.unitName}-${s.reinforcementAlert.round}`}>
+          <span className="reinf-edge-label"><Icon name="skull" size={14} /> Enemy reinforcements: {s.reinforcementAlert.unitName}</span>
         </div>
       )}
       {s.titanAlert && (

@@ -1,7 +1,7 @@
 // The campaign screen: pick a faction, then walk a branching map of short battles to the boss.
 // Features a full roguelike engine: scrap currency, the army tree (Renown), VETERAN units, armory, medicae tents,
 // and in-campaign roster customization.
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { loadRun, saveRun } from '../services/storage';
 import { buildUnits, loadoutLines, attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
@@ -21,7 +21,7 @@ import { hasFactionRules } from '../rules-engine/effects';
 import { createGame } from '../engine/game';
 import type { ArmyUnitEntry, DatasheetData, FactionData, GameState, WargearPick } from '../engine/types';
 import { Emblem, KINDS, SECTIONS, sectionOf, UnitArt, unitKind, WargearEditor } from './ArmyBuilder';
-import { DatasheetView, weaponCounts } from './Sheet';
+import { armyColor, DatasheetView, weaponCounts } from './Sheet';
 import { loadFaction, type FactionIndex } from './data';
 import { Icon, type IconName } from './Icon';
 import { withAutoRules } from './library';
@@ -1528,7 +1528,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   </div>
 
                   {(() => {
-                    const available = fac.detachments.filter((d) => !(run.list.detachments ?? []).includes(d.name));
+                    // the army's own detachments first, then one group per Chapter
+                    const available = fac.detachments.filter((d) => !(run.list.detachments ?? []).includes(d.name))
+                      .sort((a, b) => (a.subfaction ?? '').localeCompare(b.subfaction ?? ''));
+                    const titled = (k: string) => k.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
                     if (!available.length) return null;
                     return (
                       <div style={{ marginTop: 8 }}>
@@ -1536,17 +1539,19 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           Available Detachments to Requisition
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          {available.map((d) => {
+                          {available.map((d, i) => {
                             const cost = detachmentScrapCost(d.name);
                             const canAfford = (run.scrap ?? 0) >= cost;
-                            const tierBadge = cost >= 140 ? 'Premier' : cost <= 60 ? 'Standard' : 'Specialist';
+                            const tint = armyColor(fac.id, d.subfaction);
+                            const head = (i === 0 || available[i - 1].subfaction !== d.subfaction) && available.some((x) => x.subfaction);
                             const rulesText = d.rules?.map((r) => `${r.name}: ${r.text}`).join('\n\n') || '';
                             return (
-                              <div key={d.name} className="cmp-roster-card" style={!canAfford ? { opacity: 0.5, filter: 'grayscale(0.75)' } : undefined}>
+                              <Fragment key={d.name}>
+                              {head && <div className="dt-group" style={{ ['--tint' as string]: tint }}>{d.subfaction ? titled(d.subfaction) : `${fac.name} detachments`}</div>}
+                              <div className="cmp-roster-card" style={{ borderLeft: `4px solid ${tint}`, ...(!canAfford ? { opacity: 0.5, filter: 'grayscale(0.75)' } : {}) }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <b style={{ color: '#f8fafc', fontSize: 14 }}>{d.name}</b>
-                                    <span className="chip subtle small" style={{ fontSize: '10.5px', color: cost >= 140 ? '#f59e0b' : cost <= 60 ? '#94a3b8' : '#38bdf8' }}>{tierBadge}</span>
                                     {d.forceDisposition && <span className="disp-chip small">{d.forceDisposition}</span>}
                                   </div>
                                 </div>
@@ -1576,6 +1581,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   </button>
                                 </div>
                               </div>
+                              </Fragment>
                             );
                           })}
                         </div>

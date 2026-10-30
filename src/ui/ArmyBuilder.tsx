@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../rules-engine/effects';
 import { addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
 import { RuleText } from './RuleText';
@@ -599,7 +599,9 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const detPickerPage = () => {
     if (!detPicker || !faction) return null;
     const dets = faction.detachments.filter((d) => d.forceDisposition && (allowed(d) || list.detachments.includes(d.name)))
-      .sort((a, b) => Number(!!b.subfaction) - Number(!!a.subfaction));
+      // the army's own detachments first, then one group per Chapter (or other sub-faction)
+      .sort((a, b) => (a.subfaction ?? '').localeCompare(b.subfaction ?? ''));
+    const groupName = (k?: string) => (k ? subTag(k) : `${factionName} detachments`);
     // Detachment Points: picks add up to the battle size's DP (one detachment alone may cost more)
     const dpOf = (n: string) => faction.detachments.find((x) => x.name === n)?.dp ?? 0;
     const used = list.detachments.reduce((a, n) => a + dpOf(n), 0);
@@ -621,18 +623,22 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           </div>
           <div className="dt-dp-bar">Detachment Points: <b>{used}/{size.dp} DP</b> · pick as many as fit the DP{list.detachments.length > 1 && <> · the army's Force Disposition is the one marked <Icon name="leader" size={14} /> (tap a disposition to change it)</>}</div>
           {subs && !sub && <div className="small muted">No {subs.label} selected: only generic Detachments are shown <button type="button" className="linkish" onClick={() => setPicker({ factionId: list.factionId })}>Select {subs.label}</button></div>}
-          {dets.map((d) => {
+          {dets.map((d, i) => {
             const on = list.detachments.includes(d.name);
+            const head = (i === 0 || dets[i - 1].subfaction !== d.subfaction) && dets.some((x) => x.subfaction);
+            const tint = armyColor(faction.id, d.subfaction);
             const blocked = !on && !fits(d);
             const primary = on && list.detachments[0] === d.name;
             const open = openDet === d.name;
             const sec = (k: string) => openSecs.includes(`${d.name}:${k}`);
             return (
-              <div key={d.id} className={`dt-item ${on ? 'on' : ''} ${blocked ? 'blocked' : ''}`}>
+              <Fragment key={d.id}>
+              {head && <div className="dt-group" style={{ ['--tint' as string]: tint }}>{groupName(d.subfaction)}</div>}
+              <div className={`dt-item ${on ? 'on' : ''} ${blocked ? 'blocked' : ''}`} style={{ ['--tint' as string]: tint }}>
                 <div className="dt-item-head">
                   <div className="grow">
                     <button type="button" className="dt-item-name" onClick={() => setOpenDet(open ? null : d.name)}>
-                      {d.name}{d.subfaction && <span className={`ab-chip ${allowed(d) ? '' : 'bad'}`}>{subTag(d.subfaction)}</span>}
+                      {d.name}{d.subfaction && !allowed(d) && <span className="ab-chip bad">{subTag(d.subfaction)}</span>}
                     </button>
                     <button type="button" className={`dt-disp ${primary && list.detachments.length > 1 ? 'primary' : ''}`} style={{ background: dispositionById(dispositionId(d.forceDisposition) ?? 'take-and-hold').color, color: '#fff' }} disabled={!on || primary || list.detachments.length < 2}
                       onClick={() => setDets([d.name, ...list.detachments.filter((n) => n !== d.name)])}>
@@ -654,6 +660,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                   </div>
                 )}
               </div>
+              </Fragment>
             );
           })}
         </div>
