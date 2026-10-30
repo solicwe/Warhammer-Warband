@@ -1254,6 +1254,119 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 );
               })()}
 
+
+              {rosterTab === 'tech' && <ArmyTree run={run} onRun={(r) => { setRun(r); play('good'); }} onInfo={setInfo} />}
+
+              {rosterTab === 'detachments' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div className="cmp-armory-hint">
+                    In Roguelike Campaign, your army can unlock and stack multiple Detachments! Each Detachment provides its unique Army Rule, Enhancements, and 6 Stratagems in battle.
+                  </div>
+
+                  <div>
+                    <div className="cmp-kicker" style={{ color: '#4ade80', marginBottom: 8, fontSize: 13 }}>
+                      Active Detachments ({run.list.detachments?.length ?? 0})
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {(run.list.detachments ?? []).map((detName) => {
+                        const det = fac.detachments.find((d) => d.name === detName);
+                        const rulesText = det?.rules?.map((r) => `${r.name}: ${r.text}`).join('\n\n') || 'Detachment abilities and stratagems active.';
+                        return (
+                          <div key={detName} className="cmp-roster-card" style={{ background: 'rgba(74, 222, 128, 0.06)', borderColor: 'rgba(74, 222, 128, 0.3)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span className="chip ok small" style={{ fontWeight: 800 }}>ACTIVE</span>
+                                <b style={{ color: '#f8fafc', fontSize: 15 }}>{detName}</b>
+                              </div>
+                              {det?.forceDisposition && <span className="disp-chip small">{det.forceDisposition}</span>}
+                            </div>
+                            <div style={{ fontSize: 12.5, color: '#cbd5e1', marginTop: 6, whiteSpace: 'pre-line', lineHeight: 1.4 }}>
+                              {rulesText}
+                            </div>
+                            {det?.stratagems?.length ? (
+                              <div className="tiny muted" style={{ marginTop: 6 }}>
+                                Includes {det.stratagems.length} Stratagems: {det.stratagems.map((s) => s.name).join(', ')}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {(() => {
+                    // the army's own detachments first, then one group per Chapter
+                    const available = fac.detachments.filter((d) => !(run.list.detachments ?? []).includes(d.name))
+                      .sort((a, b) => (a.subfaction ?? '').localeCompare(b.subfaction ?? ''));
+                    const titled = (k: string) => k.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+                    if (!available.length) return null;
+                    return (
+                      <div style={{ marginTop: 8 }}>
+                        <div className="cmp-kicker" style={{ color: '#fef08a', marginBottom: 8, fontSize: 13 }}>
+                          Available Detachments to Requisition
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          {available.map((d, i) => {
+                            const cost = detachmentScrapCost(d);
+                            const canAfford = (run.scrap ?? 0) >= cost;
+                            const tint = armyColor(fac.id, d.subfaction);
+                            const head = (i === 0 || available[i - 1].subfaction !== d.subfaction) && available.some((x) => x.subfaction);
+                            const rulesText = d.rules?.map((r) => `${r.name}: ${r.text}`).join('\n\n') || '';
+                            return (
+                              <Fragment key={d.name}>
+                              {head && <div className="dt-group" style={{ ['--tint' as string]: tint }}>{d.subfaction ? titled(d.subfaction) : `${fac.name} detachments`}</div>}
+                              <div className="cmp-roster-card" style={{ borderLeft: `4px solid ${tint}`, ...(!canAfford ? { filter: 'grayscale(0.75)' } : {}) }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <b style={{ color: '#f8fafc', fontSize: 14 }}>{d.name}</b>
+                                    <span className="chip subtle small">{d.dp} DP</span>
+                                    {d.forceDisposition && <span className="disp-chip small">{d.forceDisposition}</span>}
+                                  </div>
+                                </div>
+                                {rulesText && (
+                                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, whiteSpace: 'pre-line', lineHeight: 1.35 }}>
+                                    {rulesText}
+                                  </div>
+                                )}
+                                {d.stratagems?.length ? (
+                                  <div className="tiny muted" style={{ marginTop: 2 }}>
+                                    Stratagems: {d.stratagems.map((s) => s.name).join(', ')}
+                                  </div>
+                                ) : null}
+                                <div className="cmp-card-actions">
+                                  <button
+                                    className="cmp-card-btn active"
+                                    style={{ width: '100%', minHeight: '38px', justifyContent: 'center' }}
+                                    disabled={!canAfford}
+                                    onClick={() => {
+                                      const next = adoptDetachment(run, d.name, cost);
+                                      setRun(next);
+                                      play('good');
+                                      setInfo(`Adopted Detachment: ${d.name}!`);
+                                    }}
+                                  >
+                                    <Icon name="plus" size={13} /> {canAfford ? `Adopt Detachment (${cost} Scrap)` : `Need ${cost} Scrap`}
+                                  </button>
+                                </div>
+                              </div>
+                              </Fragment>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+
+            <div className="cmp-armory-footer">
+              <button className="cmp-footer-btn" onClick={closeRoster}>
+                <Icon name="check" size={18} />
+                <span>Done</span>
+              </button>
+            </div>
+            {/* outside the scrolling body: iPhone Safari clips a fixed tray inside a scroller under the Done bar */}
               {recruitSec && (
                 <div className="tray-backdrop" style={{ zIndex: 160 }} onClick={() => setRecruitSec(null)}>
                 <div className="tray" onClick={(e) => e.stopPropagation()}>
@@ -1474,118 +1587,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 </div>
                 </div>
               )}
-
-              {rosterTab === 'tech' && <ArmyTree run={run} onRun={(r) => { setRun(r); play('good'); }} onInfo={setInfo} />}
-
-              {rosterTab === 'detachments' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div className="cmp-armory-hint">
-                    In Roguelike Campaign, your army can unlock and stack multiple Detachments! Each Detachment provides its unique Army Rule, Enhancements, and 6 Stratagems in battle.
-                  </div>
-
-                  <div>
-                    <div className="cmp-kicker" style={{ color: '#4ade80', marginBottom: 8, fontSize: 13 }}>
-                      Active Detachments ({run.list.detachments?.length ?? 0})
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {(run.list.detachments ?? []).map((detName) => {
-                        const det = fac.detachments.find((d) => d.name === detName);
-                        const rulesText = det?.rules?.map((r) => `${r.name}: ${r.text}`).join('\n\n') || 'Detachment abilities and stratagems active.';
-                        return (
-                          <div key={detName} className="cmp-roster-card" style={{ background: 'rgba(74, 222, 128, 0.06)', borderColor: 'rgba(74, 222, 128, 0.3)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span className="chip ok small" style={{ fontWeight: 800 }}>ACTIVE</span>
-                                <b style={{ color: '#f8fafc', fontSize: 15 }}>{detName}</b>
-                              </div>
-                              {det?.forceDisposition && <span className="disp-chip small">{det.forceDisposition}</span>}
-                            </div>
-                            <div style={{ fontSize: 12.5, color: '#cbd5e1', marginTop: 6, whiteSpace: 'pre-line', lineHeight: 1.4 }}>
-                              {rulesText}
-                            </div>
-                            {det?.stratagems?.length ? (
-                              <div className="tiny muted" style={{ marginTop: 6 }}>
-                                Includes {det.stratagems.length} Stratagems: {det.stratagems.map((s) => s.name).join(', ')}
-                              </div>
-                            ) : null}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {(() => {
-                    // the army's own detachments first, then one group per Chapter
-                    const available = fac.detachments.filter((d) => !(run.list.detachments ?? []).includes(d.name))
-                      .sort((a, b) => (a.subfaction ?? '').localeCompare(b.subfaction ?? ''));
-                    const titled = (k: string) => k.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-                    if (!available.length) return null;
-                    return (
-                      <div style={{ marginTop: 8 }}>
-                        <div className="cmp-kicker" style={{ color: '#fef08a', marginBottom: 8, fontSize: 13 }}>
-                          Available Detachments to Requisition
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          {available.map((d, i) => {
-                            const cost = detachmentScrapCost(d);
-                            const canAfford = (run.scrap ?? 0) >= cost;
-                            const tint = armyColor(fac.id, d.subfaction);
-                            const head = (i === 0 || available[i - 1].subfaction !== d.subfaction) && available.some((x) => x.subfaction);
-                            const rulesText = d.rules?.map((r) => `${r.name}: ${r.text}`).join('\n\n') || '';
-                            return (
-                              <Fragment key={d.name}>
-                              {head && <div className="dt-group" style={{ ['--tint' as string]: tint }}>{d.subfaction ? titled(d.subfaction) : `${fac.name} detachments`}</div>}
-                              <div className="cmp-roster-card" style={{ borderLeft: `4px solid ${tint}`, ...(!canAfford ? { filter: 'grayscale(0.75)' } : {}) }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <b style={{ color: '#f8fafc', fontSize: 14 }}>{d.name}</b>
-                                    <span className="chip subtle small">{d.dp} DP</span>
-                                    {d.forceDisposition && <span className="disp-chip small">{d.forceDisposition}</span>}
-                                  </div>
-                                </div>
-                                {rulesText && (
-                                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, whiteSpace: 'pre-line', lineHeight: 1.35 }}>
-                                    {rulesText}
-                                  </div>
-                                )}
-                                {d.stratagems?.length ? (
-                                  <div className="tiny muted" style={{ marginTop: 2 }}>
-                                    Stratagems: {d.stratagems.map((s) => s.name).join(', ')}
-                                  </div>
-                                ) : null}
-                                <div className="cmp-card-actions">
-                                  <button
-                                    className="cmp-card-btn active"
-                                    style={{ width: '100%', minHeight: '38px', justifyContent: 'center' }}
-                                    disabled={!canAfford}
-                                    onClick={() => {
-                                      const next = adoptDetachment(run, d.name, cost);
-                                      setRun(next);
-                                      play('good');
-                                      setInfo(`Adopted Detachment: ${d.name}!`);
-                                    }}
-                                  >
-                                    <Icon name="plus" size={13} /> {canAfford ? `Adopt Detachment (${cost} Scrap)` : `Need ${cost} Scrap`}
-                                  </button>
-                                </div>
-                              </div>
-                              </Fragment>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-            </div>
-
-            <div className="cmp-armory-footer">
-              <button className="cmp-footer-btn" onClick={closeRoster}>
-                <Icon name="check" size={18} />
-                <span>Done</span>
-              </button>
-            </div>
           </div>
           {quickMenu()}
         </div>
