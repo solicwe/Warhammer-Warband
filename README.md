@@ -119,6 +119,8 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 - **VETERAN.** A unit that has fought 3 battles becomes VETERAN by itself, and tree nodes that name VETERAN reach it.
 - **Battles are won on points.** Both sides play the battle's primary mission (and its actions); nothing ends a
   battle early, not even wiping out the enemy, and boss and elite battles are decided on VP like the others.
+- **Kills still count a little.** Destroying an enemy unit gives 1 VP (2 for a character, vehicle or monster), up to
+  12 VP a battle, well under the 45 the primary mission can give.
 
 ## On your phone
 

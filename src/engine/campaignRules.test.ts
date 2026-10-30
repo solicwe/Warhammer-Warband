@@ -7,6 +7,7 @@ import { afterBattle, applyCampaign, campaignMission, detachmentScrapCost, enter
 import { enemyTree, enemyTreePoints, treeFor } from './campaignTree';
 import { MISSIONS, primaryById } from './config';
 import { campaignRequisition, createGame } from './game';
+import { applyMortalWounds, CAMPAIGN_KILL_VP } from './attack';
 import type { FactionData } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -101,5 +102,29 @@ describe('campaign nodes and defeats', () => {
     expect(lost.renown).toBe((run.renown ?? 0) + 1);
     expect(lost.scrap).toBe((run.scrap ?? 0) + 40);
     expect(lost.story.at(-1)).toMatch(/-1 Fate, \+1 Renown, \+40 Scrap/);
+  });
+});
+
+describe('campaign kills', () => {
+  it('a destroyed unit gives its killer a little VP (2 for characters, vehicles, monsters), capped below the primary', () => {
+    const run = newRun(SM, autoList(SM, 1000, 5), ['ORK'], 5);
+    const node = run.map.find((n) => n.enemy)!;
+    const s = createGame({ lists: [run.list, autoList(ORK, 1000, 5)], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', maxRounds: 3, seed: 5, dispositions: campaignMission(node).dispositions });
+    applyCampaign(s, { ...run, fighting: node.id }, []);
+    const orks = s.units.filter((u) => u.owner === 1);
+    let want = 0;
+    for (const u of orks) {
+      const big = ['CHARACTER', 'VEHICLE', 'MONSTER'].some((k) => (u.keywords ?? []).includes(k));
+      applyMortalWounds(s, u, 999, 'test');
+      if (u.status === 'destroyed') want = Math.min(CAMPAIGN_KILL_VP, want + (big ? 2 : 1));
+      expect(s.players[0].vp).toBe(want);
+    }
+    expect(want).toBeGreaterThan(3);
+    expect(s.players[0].vp).toBe(Math.min(CAMPAIGN_KILL_VP, want));
+    expect(CAMPAIGN_KILL_VP).toBeLessThan(45);
+    // outside the campaign a kill scores nothing by itself
+    const plain = createGame({ lists: [run.list, autoList(ORK, 1000, 5)], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', seed: 5 });
+    applyMortalWounds(plain, plain.units.find((u) => u.owner === 1)!, 999, 'test');
+    expect(plain.players[0].vp).toBe(0);
   });
 });

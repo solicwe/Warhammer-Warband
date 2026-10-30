@@ -403,6 +403,8 @@ export interface PlayerState {
   flags?: string[]; // lasting army-wide states set by rules (YOUR TIME IS NIGH)
   pestilence?: number; // Tally of Pestilence (Epidemius)
   yieldPoints?: number;
+  /** campaign battles: VP scored for destroying enemy units so far (capped, below what the primary gives) */
+  killVp?: number;
   /** Leagues of Votann: Active stance */
   votannAbility?: 'Hostile Acquisition' | 'Fortify Takeover';
   /** Adeptus Mechanicus: Active Doctrina Imperative */
