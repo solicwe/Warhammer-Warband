@@ -854,6 +854,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       setCheck(chk?.ok ? null : chk);
       return;
     }
+    // a mission marker (Booby Trap, operation marker, Consecrated) says what it is when tapped
+    const mk = !mode && s.markers.find((m) => Math.hypot(m.x - p.x, m.y - p.y) <= 1.2);
+    if (mk) {
+      const who = s.players[mk.owner].name;
+      const what = mk.kind === 'trap'
+        ? `Booby Trap (${who}): this terrain area is trapped. Its owner scores for an enemy unit destroyed after starting a turn in it (Death Trap).`
+        : mk.kind === 'locate'
+        ? `Operation marker (${who}, Locate and Deny): its owner scores 4VP when only one of their markers is left, held by their unit with no enemies in that terrain area.`
+        : mk.kind === 'consecrate'
+        ? `Consecrated objective (${who}): counts for the Consecrate primary, 1-2 consecrated = 3VP, 3+ = 6VP each turn.`
+        : `${mk.kind} marker (${who})`;
+      flash(what);
+      return;
+    }
     if (!mode) setSel(null);
   };
 
@@ -1135,12 +1149,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         },
       });
     }
-    actions.push({
-      label: 'Sheet',
-      onClick: () => {
-        setSheet(selUnit.id);
-      },
-    });
+    // the unit's sheet opens from the unit bar; the map keeps only the phase's action
     return actions.length > 0 ? { unitId: selUnit.id, actions } : undefined;
   }, [sel, selUnit, s, fly, reopenMove]);
 
@@ -2976,8 +2985,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     );
     if (spectate) return (
       <div className="row">
-        <div className="bot-act grow"><span className={`bot-dot s${actingBot ?? 0}`} />{actingBot !== null ? `${pName(s, actingBot)} is playing` : 'Between turns'}</div>
-        <div className="seg" role="radiogroup" aria-label="Speed" style={{ minWidth: 170 }}>
+        {/* idle and bot-vs-bot: what was just done, not only who is playing */}
+        <div className="bot-act spec grow"><span className={`bot-dot s${actingBot ?? 0}`} /><span className="spec-text"><b>{actingBot !== null ? pName(s, actingBot) : 'Between turns'}</b>{s.log.length ? <span>{s.log[s.log.length - 1].text}</span> : null}</span></div>
+        <div className="seg spec-speed" role="radiogroup" aria-label="Speed">
           <button role="radio" aria-checked={speed === 0} className={speed === 0 ? 'on' : ''} onClick={() => setSpeed(0)}>Pause</button>
           <button role="radio" aria-checked={speed === 1} className={speed === 1 ? 'on' : ''} onClick={() => setSpeed(1)}>Normal</button>
           <button role="radio" aria-checked={speed === 2} className={speed === 2 ? 'on' : ''} onClick={() => setSpeed(2)}>Fast</button>

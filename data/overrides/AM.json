@@ -1,0 +1,87 @@
+{
+ "datasheets": [
+  {
+   "name": "Cadian Recon Squad",
+   "wargearOptions": [
+    {
+     "text": "One Recon Trooper can replace their lasgun with 1 autostubber.",
+     "scope": "upTo",
+     "who": "Recon Trooper",
+     "replace": [
+      "Lasgun"
+     ],
+     "choices": [
+      [
+       "Autostubber"
+      ]
+     ],
+     "max": 1
+    },
+    {
+     "text": "One Recon Trooper can replace their lasgun with one of the following:• 1 plasma gun • 1 meltagun",
+     "scope": "upTo",
+     "who": "Recon Trooper",
+     "replace": [
+      "Lasgun"
+     ],
+     "choices": [
+      [
+       "Plasma gun"
+      ],
+      [
+       "Meltagun"
+      ]
+     ],
+     "max": 1
+    },
+    {
+     "text": "Up to one Recon Trooper can replace their lasgun with 1 long-las.",
+     "scope": "upTo",
+     "who": "Recon Trooper",
+     "replace": [
+      "Lasgun"
+     ],
+     "choices": [
+      [
+       "Long-las"
+      ]
+     ],
+     "max": 1
+    },
+    {
+     "text": "One Recon Trooper equipped with 1 lasgun can be equipped with 1 vox-caster and 1 vox-relay beacon (that model's lasgun cannot be replaced).",
+     "scope": "upTo",
+     "who": "Recon Trooper",
+     "replace": [],
+     "choices": [
+      [
+       "Vox-caster",
+       "Vox-relay beacon"
+      ]
+     ],
+     "max": 1,
+     "requires": [
+      "Lasgun"
+     ]
+    },
+    {
+     "text": "You can select one of the following options:• Up to one Recon Trooper can replace their lasgun with 1 long-las. • Up to two Recon Troopers each equipped with a lasgun can form a weapons team. If they do, one model's lasgun is replaced with 1 laspistol, and one model's lasgun is replaced with 1 missile launcher and 1 laspistol.",
+     "scope": "one",
+     "who": "*",
+     "replace": [
+      "Lasgun"
+     ],
+     "choices": [
+      [
+       "Long-las"
+      ],
+      [
+       "Missile launcher",
+       "Laspistol"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

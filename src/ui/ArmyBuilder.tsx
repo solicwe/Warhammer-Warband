@@ -241,7 +241,32 @@ export function WargearEditor({ sheet, u, onChange, scrapMode = false }: { sheet
         return (
           <div key={i} className="wg-opt">
             <div className="wg-head">{head} <span className="tiny muted">{scopeLabel(o, max)}</span></div>
-            {radio ? (
+            {radio && o.choices.length > 8 && !o.pick ? (() => {
+              // a long list of whole loadouts (the Lieutenant has 27): pick weapon by weapon, each step offering only
+              // what a legal loadout allows after the ones before it
+              const all = [o.replace, ...o.choices];
+              const cur = mine.length ? o.choices[mine[0].choice] : o.replace;
+              const len = Math.max(...all.map((c) => c.length));
+              const same = (a: string[], b: string[], n: number) => a.slice(0, n).every((x, k) => x === b[k]);
+              const choose = (k: number, v: string | undefined) => {
+                const fits = all.map((c, ci) => ({ c, ci })).filter(({ c }) => same(c, cur, k) && c[k] === v);
+                // keep as much of the rest of the current loadout as still fits
+                const best = fits.sort((a, b) => b.c.filter((x, j) => j > k && x === cur[j]).length - a.c.filter((x, j) => j > k && x === cur[j]).length)[0];
+                if (!best) return;
+                put(i, best.ci === 0 ? [] : [{ opt: i, choice: best.ci - 1, count: 1 }]);
+              };
+              return Array.from({ length: len }, (_, k) => {
+                const vals = [...new Set(all.filter((c) => same(c, cur, k)).map((c) => c[k]))];
+                if (vals.length < 2 && vals[0] === cur[k]) return null;
+                return (
+                  <div key={k} className="wg-chips">
+                    {vals.map((v) => (
+                      <button type="button" key={v ?? '-'} className={v === cur[k] ? 'on' : ''} onClick={() => choose(k, v)}>{v ?? 'None'}</button>
+                    ))}
+                  </div>
+                );
+              });
+            })() : radio ? (
               <div className="wg-chips">
                 <button type="button" className={!mine.length ? 'on' : ''} onClick={() => put(i, [])}>{o.replace.length ? 'Keep' : 'None'}</button>
                 {o.choices.map((c, ci) => {
