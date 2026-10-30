@@ -1,0 +1,5 @@
+# Forge World units the army keeps although the Munitorum Field Manual above doesn't price them: a price here puts the
+# Wahapedia datasheet in the game (same format as mfm-2026-09.txt). Before these lines the units were typed into
+# public/data by hand, so every rebuild dropped them.
+TYR | Harridan | =610
+TYR | Hierophant | =810

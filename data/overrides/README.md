@@ -4,6 +4,13 @@
 ถ้าจะแก้ค่าใดค่าหนึ่ง (เช่น GW ออก balance dataslate หรือ errata ใหม่ แต่ Wahapedia ยังไม่อัปเดต) ให้เขียนไฟล์ override ที่นี่แทน
 ไฟล์ชื่อ `<FACTION_ID>.json` (เช่น `ORK.json`, `SM.json`) แล้วจะถูก merge ทับทุกครั้งที่ build
 
+อย่าแก้ `public/data/factions/*.json` ตรง ๆ: build รอบหน้าจะทับทิ้ง ข้อมูลที่ต้องการให้อยู่ต่อใส่ที่นี่, ใน `data/points/*.txt`
+(หน่วย Forge World ที่มีราคาจะถูกดึงเข้าเกม) หรือใน `data/factions-meta.json` (`allies`: หน่วยของอีกเล่มที่ Wahapedia ลงไว้ใต้กองทัพนี้)
+
+ตรวจก่อน commit: `npm run data:check` สร้างข้อมูลจาก `data/raw` โดยไม่เขียนไฟล์ แล้วบอกว่าแต่ละไฟล์ต่างจากที่ commit ไว้ตรงไหน
+(datasheet / detachment ที่หายหรือเพิ่ม และฟิลด์ที่ต่าง) ไฟล์ faction เขียนเป็น JSON ย่อหน้า 2 ช่อง ปิดท้ายด้วยขึ้นบรรทัดใหม่
+เพื่อให้ `git diff` เห็นเฉพาะข้อมูลที่เปลี่ยนจริง (`src/engine/factionFiles.test.ts` ตรวจรูปแบบนี้)
+
 ## กติกาการ merge
 - object → merge ทีละ key
 - array ของ object ที่มี `name` → จับคู่ด้วย `name` (ถ้าไม่เจอจะเพิ่มใหม่)
