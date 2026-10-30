@@ -2262,10 +2262,10 @@ b.em { font-weight: 700; color: var(--text); }
 /* army-wide buffs lie on the table beside the battlefield (inside the map's SVG, so they zoom and pan with it) */
 .table-cards { transform-origin: 0 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
 .table-cards.bottom { justify-content: flex-end; }
-.table-head { flex: none; font: 700 14px var(--font-cond); letter-spacing: 0.06em; text-transform: uppercase; color: var(--p0); padding: 2px 4px; }
-.table-head.p1 { color: var(--p1); }
-.table-cards .buffcard { flex: none; max-height: none; font-size: 13px; }
-.table-cards .buffcard b { font-size: 15px; }
+.table-head { flex: none; font: 700 15px var(--font-cond); letter-spacing: 0.06em; text-transform: uppercase; color: color-mix(in srgb, var(--p0) 65%, #fff); padding: 0 2px 4px; border-bottom: 2px solid var(--p0); }
+.table-head.p1 { color: color-mix(in srgb, var(--p1) 65%, #fff); border-bottom-color: var(--p1); }
+.table-cards .buffcard { flex: none; max-height: none; gap: 4px; padding: 10px 12px; font-size: 14px; line-height: 1.45; color: #e2e8f0; background: rgba(15, 18, 24, 0.92); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45); }
+.table-cards .buffcard b { font-size: 16px; color: #fff; }
 .buffcard b { font: 700 13px var(--font-cond); letter-spacing: 0.02em; }
 .bk-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text-2); cursor: pointer; }
 .bk-row.ok { border-color: var(--good); color: var(--text); }

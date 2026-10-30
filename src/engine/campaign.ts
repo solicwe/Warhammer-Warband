@@ -475,6 +475,8 @@ export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt =
   const cap = 140 + run.path.length * 25;
   const scrapReward: Reward = { kind: 'scrap', amount: Math.round(25 + r() * 25) };
   if (kind === 'supply') return [...units(1, cap), ...relics(false).slice(0, 1), detReward && r() < 0.5 ? detReward : scrapReward];
+  // the depot: pick one of two bigger reinforcements or a relic (a relic already held levels up)
+  if (kind === 'armory') return [...units(2, cap + 60), ...relics(false).slice(0, 1)];
   // a won battle: one new unit, one relic, or scrap/detachment
   const thirdReward = detReward && r() < 0.45 ? detReward : scrapReward;
   return [...units(1, cap), ...relics(false).slice(0, 1), thirdReward];
@@ -561,7 +563,7 @@ export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
 export function enter(run: Run, nodeId: string, faction: FactionData): Run {
   const node = run.map.find((n) => n.id === nodeId)!;
   if (node.kind === 'supply') return { ...run, path: [...run.path, nodeId], offer: makeOffer(run, faction, 'supply'), story: [...run.story, 'Supply drop'] };
-  if (node.kind === 'armory') return { ...run, path: [...run.path, nodeId], scrap: (run.scrap ?? 0) + 25, story: [...run.story, 'Munitorum Armory reached (+25 Scrap)'] };
+  if (node.kind === 'armory') return { ...run, path: [...run.path, nodeId], scrap: (run.scrap ?? 0) + 25, offer: makeOffer(run, faction, 'armory'), story: [...run.story, 'Munitorum Depot (+25 Scrap)'] };
   if (node.kind === 'medicae') return { ...run, path: [...run.path, nodeId], story: [...run.story, 'Medicae Field Camp reached'] };
   const enemyFaction = typeof node.enemy?.factionId === 'string' ? node.enemy.factionId : (node.enemy?.factionId as any)?.id;
   const recent = enemyFaction ? [...(run.recentOpponentFactions ?? []), enemyFaction].slice(-10) : run.recentOpponentFactions;
@@ -583,7 +585,7 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
       renown: (run.renown ?? 0) + RENOWN.loss,
       list: { ...run.list, units: run.list.units.map((u) => ({ ...u, battles: (u.battles ?? 0) + 1 })) },
       over: fate <= 0 ? 'lost' : undefined,
-      story: [...run.story, `Defeated by ${enemyName}${salvage > 0 ? ` (+${salvage} Scrap salvaged)` : ''}${fate > 0 ? ` · ${fate} Fate left` : ''}`],
+      story: [...run.story, `Defeated by ${enemyName} (-1 Fate, +${RENOWN.loss} Renown${salvage > 0 ? `, +${salvage} Scrap salvaged` : ''})${fate > 0 ? ` · ${fate} Fate left` : ''}`],
     };
   }
   const baseGain = node.kind === 'boss' ? 120 : node.kind === 'elite' ? 70 : 45;

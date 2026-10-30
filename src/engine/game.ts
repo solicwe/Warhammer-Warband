@@ -43,7 +43,7 @@ export function stripBarricade(poly: number[][]): Seg[] {
   return [{ a: { x: a.x + ux * inset, y: a.y + uy * inset }, b: { x: b.x - ux * inset, y: b.y - uy * inset } }];
 }
 
-function buildTerrain(layoutId: string, tableSize?: { width: number; height: number }): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
+export function buildTerrain(layoutId: string, tableSize?: { width: number; height: number }): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
   const L = deploymentById(layoutId);
   const targetW = tableSize?.width ?? RULES.battlefield.width;
   const targetH = tableSize?.height ?? RULES.battlefield.height;
@@ -120,6 +120,34 @@ function buildTerrain(layoutId: string, tableSize?: { width: number; height: num
       bounds,
     };
   });
+  // two plates that meet were traced with the same wall each: the part of a wall lying along one already kept
+  // (parallel, within half an inch) is a copy and goes; what is left of it under half an inch goes too
+  const kept: Seg[] = [];
+  const trim = (w: Seg, k: Seg): Seg | null => {
+    const L = dist(k.a, k.b);
+    if (L < EPS) return w;
+    const ux = (k.b.x - k.a.x) / L, uy = (k.b.y - k.a.y) / L;
+    const off = (p: Pt) => Math.abs((p.x - k.a.x) * uy - (p.y - k.a.y) * ux);
+    if (off(w.a) > 0.45 || off(w.b) > 0.45) return w;
+    const along = (p: Pt) => (p.x - k.a.x) * ux + (p.y - k.a.y) * uy;
+    const [p, q] = along(w.a) <= along(w.b) ? [w.a, w.b] : [w.b, w.a];
+    const tp = along(p), tq = along(q);
+    if (Math.min(L, tq) - Math.max(0, tp) < 0.3) return w;
+    const at = (t: number): Pt => ({ x: p.x + ((q.x - p.x) * (t - tp)) / (tq - tp || 1), y: p.y + ((q.y - p.y) * (t - tp)) / (tq - tp || 1) });
+    // the longer of the two bits sticking out past the kept wall's ends
+    const before = 0 - tp, after = tq - L;
+    if (Math.max(before, after) < 0.5) return null;
+    return before >= after ? { a: p, b: at(0) } : { a: at(L), b: q };
+  };
+  // longest first, so the full wall stays and the short copy is cut
+  const cut = new Map<Seg, Seg | null>();
+  for (const w0 of terrain.flatMap((t) => t.walls).sort((a, b) => dist(b.a, b.b) - dist(a.a, a.b))) {
+    let w: Seg | null = w0;
+    for (const k of kept) { if (!w) break; w = trim(w, k); }
+    if (w !== w0) cut.set(w0, w);
+    if (w) kept.push(w);
+  }
+  for (const t of terrain) t.walls = t.walls.flatMap((w) => { const c = cut.has(w) ? cut.get(w) : w; return c ? [c] : []; });
   const objectives: ObjectiveState[] = L.objectives.map((o, i) => {
     const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
     const ox = Math.round(o.x * sx * 10) / 10;

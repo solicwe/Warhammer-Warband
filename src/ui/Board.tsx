@@ -2141,7 +2141,6 @@ function BoardImpl(props: BoardProps) {
         const x = at === 'right' ? W + 1 : -SIDE - 0.5, y = at === 'bottom' ? H / 2 + 0.5 : 0, h = at === 'top' || at === 'bottom' ? H / 2 - 0.5 : H;
         return (
           <g key={p}>
-            <rect x={x - 0.3} y={y - 0.3} width={SIDE - 0.1} height={h + 0.6} rx={0.6} fill="rgba(255,255,255,0.04)" stroke={p ? 'var(--p1)' : 'var(--p0)'} strokeOpacity={0.5} strokeWidth={0.08} />
             <foreignObject x={x} y={y} width={SIDE - 0.5} height={h}>
               <div className={`table-cards ${at}`} style={{ width: (SIDE - 0.5) * PX, height: h * PX, transform: `scale(${1 / PX})` }}>
                 <div className={`table-head p${p}`}>{s.players[p].name} · army buffs</div>

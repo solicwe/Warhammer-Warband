@@ -42,7 +42,7 @@ interface Props {
 const KIND: Record<MapNode['kind'], { name: string; icon: IconName; note: string }> = {
   battle: { name: 'Battle', icon: 'fight', note: 'A 3-round battle. Win to earn Scrap and rewards.' },
   elite: { name: 'Elite Miniboss', icon: 'skull', note: 'A 3-round battle against a tougher foe with a boss rule. Yields high Scrap and rare relics.' },
-  armory: { name: 'Munitorum Depot', icon: 'shop', note: 'Field depot: hire reinforcements, customize wargear, or refund army tree nodes.' },
+  armory: { name: 'Munitorum Depot', icon: 'shop', note: '+25 Scrap, then take one: a reinforcement unit for free, or a relic (one you hold levels up).' },
   medicae: { name: 'Medicae Field Camp', icon: 'heal', note: 'Restore lost Fate, hold a tactical briefing for +1 CP per battle, or refund army tree nodes.' },
   supply: { name: 'Supply drop', icon: 'cards', note: 'Secure a supply cache: choose from units, relics, or scrap.' },
   boss: { name: 'The Warlord Boss', icon: 'trophy', note: 'A 5-round climactic battle against the enemy warlord with two special rules.' },
@@ -168,7 +168,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       setRun(enter(run, node.id, fac));
       setFocus(null);
       play('card');
-      if (node.kind === 'armory') setShowRoster(true);
       return;
     }
     void fight(node);
@@ -873,13 +872,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               </div>
             )}
 
-            {focused.kind === 'armory' && (
-              <div style={{ marginTop: 8 }}>
-                <button className="btn small primary" onClick={() => setShowRoster(true)}>
-                  <Icon name="shop" size={14} /> Open Armory & Upgrade Roster
-                </button>
-              </div>
-            )}
 
             {focused.enemy && <div className="tiny muted">{KIND[focused.kind].note}</div>}
             {err && <div className="err" role="alert">{err}</div>}
