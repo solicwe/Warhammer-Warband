@@ -81,6 +81,43 @@ export function ArmyTree({ run, fac, onRun, onInfo }: { run: Run; fac: FactionDa
     el.addEventListener('touchend', up);
     return () => { el.removeEventListener('touchstart', down); el.removeEventListener('touchmove', move); el.removeEventListener('touchend', up); };
   }, []);
+  // on a computer: drag the map with the mouse to move around it, and the mouse wheel zooms
+  const dragged = useRef(false);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    let from: { x: number; y: number; left: number; top: number } | null = null;
+    const down = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      from = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop };
+      dragged.current = false;
+    };
+    const move = (e: PointerEvent) => {
+      if (!from) return;
+      const dx = e.clientX - from.x, dy = e.clientY - from.y;
+      if (!dragged.current && Math.hypot(dx, dy) < 4) return;
+      dragged.current = true;
+      el.classList.add('dragging');
+      el.scrollLeft = from.left - dx;
+      el.scrollTop = from.top - dy;
+    };
+    const up = () => { from = null; el.classList.remove('dragging'); };
+    const wheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z * Math.exp(-e.deltaY * 0.0015))));
+    };
+    // a drag that ends on a node is not a tap on it
+    const click = (e: MouseEvent) => { if (dragged.current) { e.stopPropagation(); e.preventDefault(); dragged.current = false; } };
+    el.addEventListener('pointerdown', down);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    el.addEventListener('wheel', wheel, { passive: false });
+    el.addEventListener('click', click, true);
+    return () => {
+      el.removeEventListener('pointerdown', down); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+      el.removeEventListener('wheel', wheel); el.removeEventListener('click', click, true);
+    };
+  }, []);
   const zoomOut = ZOOMS.filter((z) => z < zoom - 0.01).pop();
   const zoomIn = ZOOMS.find((z) => z > zoom + 0.01);
 

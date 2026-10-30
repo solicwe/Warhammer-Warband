@@ -2993,6 +2993,7 @@ select option {
 .tree-legend i.taken { background: var(--accent); border-color: var(--accent); }
 .tree-legend i.open { border-color: var(--accent); }
 .tree-stage { position: relative; }
+@media (pointer: fine) { .tree-map { cursor: grab; } .tree-map.dragging { cursor: grabbing; user-select: none; } }
 .tree-map { overflow: auto; max-height: 58vh; touch-action: pan-x pan-y; border: 1px solid var(--line); border-radius: 8px; background: var(--sunk); -webkit-overflow-scrolling: touch; }
 .tree-map svg { display: block; }
 .tree-edge { stroke: var(--line-2); stroke-width: 2; }
