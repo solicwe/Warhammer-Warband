@@ -30,3 +30,25 @@ it('no wall runs alongside or crosses another on any of the 45 layouts', () => {
   expect(LAYOUTS.length).toBe(45);
   expect([...new Set(bad)]).toEqual([]);
 });
+
+it('plates stand apart: under 1" only where both hold an objective or the slide would be over the cap; walls stay on their plate', () => {
+  const es = (p: Pt[]) => p.map((a, i) => ({ a, b: p[(i + 1) % p.length] }));
+  const segDist = (s: Seg, t: Seg) => {
+    const pd = (p: Pt, w: Seg) => { const L2 = (w.b.x - w.a.x) ** 2 + (w.b.y - w.a.y) ** 2; const f = L2 ? Math.max(0, Math.min(1, ((p.x - w.a.x) * (w.b.x - w.a.x) + (p.y - w.a.y) * (w.b.y - w.a.y)) / L2)) : 0; return Math.hypot(p.x - w.a.x - f * (w.b.x - w.a.x), p.y - w.a.y - f * (w.b.y - w.a.y)); };
+    return crosses(s, t) ? 0 : Math.min(pd(s.a, t), pd(s.b, t), pd(t.a, s), pd(t.b, s));
+  };
+  const inside = (p: Pt, poly: Pt[]) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) if ((poly[i].y > p.y) !== (poly[j].y > p.y) && p.x < ((poly[j].x - poly[i].x) * (p.y - poly[i].y)) / (poly[j].y - poly[i].y) + poly[i].x) c = !c; return c; };
+  let close = 0;
+  const off: string[] = [];
+  for (const L of LAYOUTS) {
+    const ts = buildTerrain(L.id).terrain.filter((t) => t.kind !== 'objective-area');
+    for (let i = 0; i < ts.length; i++) for (let j = i + 1; j < ts.length; j++) {
+      const A = ts[i].poly, B = ts[j].poly;
+      const over = A.some((p) => inside(p, B)) || B.some((p) => inside(p, A));
+      if (over || Math.min(...es(A).flatMap((e) => es(B).map((f) => segDist(e, f)))) < 0.99) close++;
+    }
+    for (const t of ts) for (const w of t.walls) for (const p of [w.a, w.b]) if (!inside(p, t.poly) && Math.min(...es(t.poly).map((e) => segDist({ a: p, b: p }, e))) > 0.35) off.push(`${L.id} ${t.id}`);
+  }
+  expect(close).toBeLessThanOrEqual(20); // was 177 as traced
+  expect(off).toEqual([]);
+});
