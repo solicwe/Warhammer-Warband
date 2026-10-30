@@ -86,7 +86,7 @@ export const KeywordBadges = React.memo(function KeywordBadges({ abilities }: { 
           <span
             key={i}
             style={{
-              fontSize: '10px',
+              fontSize: '11px',
               fontWeight: 700,
               padding: '2px 6px',
               borderRadius: '4px',
@@ -118,7 +118,7 @@ const statBoxStyle: React.CSSProperties = {
 };
 
 const statLabelStyle: React.CSSProperties = {
-  fontSize: '9px',
+  fontSize: '11px',
   color: '#9CA3AF',
   textTransform: 'uppercase',
   fontWeight: 600,
@@ -242,7 +242,7 @@ export const WeaponFireModePanel = React.memo(function WeaponFireModePanel({
                   </b>
                   <span
                     style={{
-                      fontSize: '10px',
+                      fontSize: '11px',
                       fontWeight: 700,
                       padding: '1px 5px',
                       borderRadius: '3px',
@@ -332,7 +332,7 @@ export const WeaponFireModePanel = React.memo(function WeaponFireModePanel({
                   </b>
                   <span
                     style={{
-                      fontSize: '10px',
+                      fontSize: '11px',
                       fontWeight: 700,
                       padding: '1px 5px',
                       borderRadius: '3px',

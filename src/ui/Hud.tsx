@@ -71,7 +71,7 @@ export const SideScore = memo(function SideScore({ s, p, label, onOpen }: { s: G
         <span className="miracle-pool votann-pool" title={`Prioritised Efficiency: ${P.votannAbility} (${P.yieldPoints ?? 0} YP)`}>
           <Icon name="radar" size={11} />
           <b className="miracle-more" style={{ color: '#ffb347' }}>{P.yieldPoints ?? 0}YP</b>
-          <small style={{ fontSize: 9, opacity: 0.85, marginLeft: 2 }}>{P.votannAbility === 'Hostile Acquisition' ? 'Hostile' : 'Fortify'}</small>
+          <small style={{ fontSize: 11, opacity: 0.85, marginLeft: 2 }}>{P.votannAbility === 'Hostile Acquisition' ? 'Hostile' : 'Fortify'}</small>
         </span>
       )}
       {P.admechImperative && (

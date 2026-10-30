@@ -295,15 +295,15 @@ export const UnitActionBar = memo(function UnitActionBar({
           {profile && (
             <>
               <div style={{ background: '#1a1f26', border: '1px solid #2d3748', borderRadius: 4, padding: '2px 5px', textAlign: 'center', minWidth: 28 }}>
-                <div style={{ fontSize: '9px', color: '#64748b', fontWeight: 700 }}>T</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-3)', fontWeight: 700 }}>T</div>
                 <div style={{ fontSize: '12px', color: '#e2e8f0', fontWeight: 800 }}>{profile.T}</div>
               </div>
               <div style={{ background: '#1a1f26', border: '1px solid #2d3748', borderRadius: 4, padding: '2px 5px', textAlign: 'center', minWidth: 28 }}>
-                <div style={{ fontSize: '9px', color: '#64748b', fontWeight: 700 }}>SV</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-3)', fontWeight: 700 }}>SV</div>
                 <div style={{ fontSize: '12px', color: '#e2e8f0', fontWeight: 800 }}>{profile.Sv}+</div>
               </div>
               <div style={{ background: '#1a1f26', border: '1px solid #2d3748', borderRadius: 4, padding: '2px 5px', textAlign: 'center', minWidth: 28 }}>
-                <div style={{ fontSize: '9px', color: '#64748b', fontWeight: 700 }}>OC</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-3)', fontWeight: 700 }}>OC</div>
                 <div style={{ fontSize: '12px', color: '#e2e8f0', fontWeight: 800 }}>{unit.battleShocked ? 0 : (profile.OC ?? 1)}</div>
               </div>
             </>

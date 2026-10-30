@@ -183,6 +183,9 @@ Common changes in short:
   `intercessor-squad.webp`) and run `npm run images` to rebuild the manifest.
 - **Add a game mode.** Modes are set up in `src/ui/BattleSetup.tsx` and run on the same `GameState`. Pass options
   through `createGame` in `src/engine/game.ts`.
+- **Change the look.** Keep to WCAG 2.2 AA: text at 4.5:1 contrast or more (take colours from the tokens at the top
+  of `src/ui/styles.css`, and mix a faction colour toward `--text` before using it as text), touch targets of 44 px
+  where there is room and never under 24 px, no text under 11 px, and leave page zoom on in `index.html`.
 
 The engine is deterministic: every die comes from a seeded generator, so any game can be replayed from its seed.
 Never use `Math.random()` in `src/engine/`.

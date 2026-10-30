@@ -95,7 +95,7 @@ export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
       onPointerUp={(e) => { touches.current.delete(e.pointerId); if (touches.current.size < 2) pinch.current = null; drag.current = null; }}
       onPointerCancel={(e) => { touches.current.delete(e.pointerId); pinch.current = null; drag.current = null; }}
       onWheel={(e) => setZ(zoom * (e.deltaY > 0 ? 1 / 1.15 : 1.15))}
-      role="img"
+      role="group"
       aria-label={`Live map: ${line}`}
     >
       <svg style={{ cursor: 'move' }} viewBox={`${x} ${y} ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true"><use href="#board-live" /></svg>

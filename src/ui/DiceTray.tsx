@@ -298,7 +298,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
               {at.kind === 'fight' ? 'Melee' : at.kind === 'overwatch' ? 'Overwatch' : 'Ranged'}
             </span>
             {at.pools.length > 1 && (
-              <span style={{ fontSize: '10px', color: '#94a3b8' }}>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>
                 Group {Math.min(at.idx + 1, at.pools.length)}/{at.pools.length}
               </span>
             )}

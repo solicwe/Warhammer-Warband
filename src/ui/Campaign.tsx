@@ -586,7 +586,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         <span className="appbar-title">Campaign · Sector {run.sector || run.loop || 1}</span>
         <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span> <span>Scrap</span></span>
         <span className="cmp-scrap" title="Renown: allocate army tree nodes"><Icon name="trophy" size={14} /> <span className="num">{run.renown ?? 0}</span> <span>Renown</span></span>
-        <span className="cmp-fate" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
+        <span className="cmp-fate" role="img" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
           {[0, 1, 2].map((i) => <i key={i} className={i < run.fate ? 'on' : ''} />)}
         </span>
       </header>
@@ -1081,7 +1081,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                               <div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                                   <b style={{ color: alreadyCount > 0 ? '#fef08a' : '#f8fafc', fontSize: 13.5 }}>{o.name}</b>
-                                                  {alreadyCount > 0 && <span className="chip warn small" style={{ fontSize: 10.5, padding: '1px 5px' }}>x{alreadyCount}</span>}
+                                                  {alreadyCount > 0 && <span className="chip warn small" style={{ fontSize: 11, padding: '1px 5px' }}>x{alreadyCount}</span>}
                                                 </div>
                                                 <div className="tiny muted">{o.detachment} · +{o.pts} pts</div>
                                               </div>
@@ -1551,7 +1551,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             return (
                               <Fragment key={d.name}>
                               {head && <div className="dt-group" style={{ ['--tint' as string]: tint }}>{d.subfaction ? titled(d.subfaction) : `${fac.name} detachments`}</div>}
-                              <div className="cmp-roster-card" style={{ borderLeft: `4px solid ${tint}`, ...(!canAfford ? { opacity: 0.5, filter: 'grayscale(0.75)' } : {}) }}>
+                              <div className="cmp-roster-card" style={{ borderLeft: `4px solid ${tint}`, ...(!canAfford ? { filter: 'grayscale(0.75)' } : {}) }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <b style={{ color: '#f8fafc', fontSize: 14 }}>{d.name}</b>

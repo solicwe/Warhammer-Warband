@@ -365,7 +365,7 @@ export function PopoverCard({
         </div>
         <span
           style={{
-            fontSize: '10px',
+            fontSize: '11px',
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
@@ -457,7 +457,7 @@ const statBoxStyle: React.CSSProperties = {
 };
 
 const statLabelStyle: React.CSSProperties = {
-  fontSize: '9px',
+  fontSize: '11px',
   color: '#94A3B8',
   textTransform: 'uppercase',
   fontWeight: 600,

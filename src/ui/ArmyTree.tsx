@@ -15,6 +15,7 @@ const PAD = 40;
 const MIN_K = 0.8, MAX_K = 6;
 /** a press that moves less than this is a tap */
 const TAP = 8;
+const HIT = 22;
 
 /** What a node is about at a glance: shooting, melee, defence, movement, OC, CP, Scrap ... */
 function iconOf(n: TreeNode): IconName {
@@ -133,8 +134,15 @@ export function ArmyTree({ run, onRun, onInfo }: { run: Run; onRun: (r: Run) => 
       if (pts.size === 0) {
         el.classList.remove('dragging');
         if (moved < TAP && e.type === 'pointerup') {
-          const hit = (document.elementFromPoint(e.clientX, e.clientY) as Element | null)?.closest('[data-node]');
-          setSel(hit ? hit.getAttribute('data-node') : null);
+          // nodes are small when zoomed out: a tap picks the nearest one within HIT px of its edge (WCAG 2.5.8 spacing)
+          const p = local(e), cur = viewRef.current;
+          const tx = cur.cx + (p.x - dim.w / 2) / cur.k, ty = cur.cy + (p.y - dim.h / 2) / cur.k;
+          let best: string | null = null, bestD = HIT;
+          for (const n of nodes) {
+            const d = Math.hypot(n.x - tx, n.y - ty) * cur.k - RADIUS[n.kind] * cur.k;
+            if (d < bestD) { bestD = d; best = n.id; }
+          }
+          setSel(best);
         }
         downAt = null;
       }

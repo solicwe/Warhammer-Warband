@@ -178,7 +178,7 @@ export function SecondaryCard({ id, faceUp = true, delay = 0, owner, progress, d
           )}
         </div>
         <div className="sec-when"><Icon name="wait" size={13} /> {def.when}</div>
-        <div className="sec-text">{def.text}</div>
+        <div className="sec-text" tabIndex={0}>{def.text}</div>
         {progress && <div className={`sec-progress ${dead ? 'dead' : isCompleted ? 'completed' : ''}`}>{progress}</div>}
       </div>
     </div>
@@ -203,10 +203,10 @@ export function PrimaryCard({ s, owner, faceUp = true, delay = 0 }: { s: GameSta
     <div className={`sec-card prim-card ${faceUp ? 'up' : ''} ${owner === 1 ? 'p1' : 'p0'}`} style={{ animationDelay: `${delay}ms` }}>
       <div className="sec-face sec-back"><Icon name="objective" size={42} /><span>PRIMARY</span></div>
       <div className="sec-face sec-front">
-        <div className="prim-who" style={{ color: owner ? 'var(--p1)' : 'var(--p0)' }}>{P.name}</div>
+        <div className={`prim-who ${owner ? 'p1' : 'p0'}`}>{P.name}</div>
         <div className="sec-name">{prim.name}</div>
         <span className="disp-chip" style={{ background: disp.color }}>{disp.name}</span>
-        <div className="sec-text">
+        <div className="sec-text" tabIndex={0}>
           {prim.scoring.map((r) => (
             <div key={r.text + r.rounds} className="prim-rule">
               <div className="sec-when"><Icon name="wait" size={12} /> {roundsText(r.rounds, lastRound(s))} · {WHEN_TH[r.when] ?? r.when}</div>
