@@ -2,6 +2,7 @@
 //
 //   node scripts/build-data.mjs           # use CSVs already in data/raw
 //   node scripts/build-data.mjs --fetch   # download the latest CSVs first
+//   node scripts/build-data.mjs --check   # write nothing; list what a build would change in public/data (exit 1 if anything)
 //
 // Output: public/data/index.json + public/data/factions/<ID>.json
 // Manual corrections live in data/overrides/<ID>.json and are merged on top
@@ -525,15 +526,55 @@ function build() {
         return t && moves.every((k) => !t.keywords.includes(k) || d.keywords.includes(k));
       });
     }
-    fs.writeFileSync(path.join(OUT, 'factions', `${f.id}.json`), JSON.stringify(faction));
+    // units of another book that this army's own book lists (Brood Brothers, Tyranids in a Genestealer Cults army)
+    for (const a of META.allies?.[f.id] ?? []) {
+      for (const d of faction.datasheets) if (!d.ally && d.factionKeywords.includes(a.keyword)) Object.assign(d, { ally: a.ally, allyName: a.name });
+    }
+    emit(path.join(OUT, 'factions', `${f.id}.json`), `${JSON.stringify(faction, null, 2)}\n`);
     const group = Object.entries(META.groups).find(([, ids]) => ids.includes(f.id))?.[0] ?? 'Other';
     index.factions.push({ id: f.id, name: f.name, group, datasheets: faction.datasheets.length, detachments: faction.detachments.length, ...(sub ? { subfactions: sub.options.map((o) => o.name) } : {}) });
   }
   index.factions.sort((a, b) => a.name.localeCompare(b.name));
-  fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));
+  emit(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));
   if (pointsMisses.length) console.log(`points updates not applied (${pointsMisses.length}):\n  ${pointsMisses.join('\n  ')}`);
   console.log(`built ${index.factions.length} factions (data ${lastUpdate}); left out ${dropped} non-11th-edition (Legends / Forge World / old index) datasheets`);
 }
 
+// --check: what would change in each committed file (datasheets / detachments added or gone, fields that differ)
+const CHECK = process.argv.includes('--check');
+const changed = [];
+function emit(file, text) {
+  if (!CHECK) { fs.writeFileSync(file, text); return; }
+  const old = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+  if (old === text) return;
+  changed.push(file);
+  console.log(`\n${path.relative(ROOT, file)}: differs`);
+  let a, b;
+  try { a = JSON.parse(old); b = JSON.parse(text); } catch { console.log('  (not JSON or missing)'); return; }
+  if (JSON.stringify(a) === JSON.stringify(b)) { console.log('  formatting only'); return; }
+  const diffList = (label, xs = [], ys = []) => {
+    const yn = new Map(ys.map((y) => [y.name, y]));
+    const xn = new Set(xs.map((x) => x.name));
+    const gone = xs.filter((x) => !yn.has(x.name)).map((x) => x.name), added = ys.filter((y) => !xn.has(y.name)).map((y) => y.name);
+    if (gone.length) console.log(`  ${label} only in the committed file: ${gone.join(', ')}`);
+    if (added.length) console.log(`  ${label} only in the build: ${added.join(', ')}`);
+    for (const x of xs) {
+      const y = yn.get(x.name);
+      if (!y || JSON.stringify(x) === JSON.stringify(y)) continue;
+      const keys = [...new Set([...Object.keys(x), ...Object.keys(y)])].filter((k) => JSON.stringify(x[k]) !== JSON.stringify(y[k]));
+      console.log(`  ${label} ${x.name}: ${keys.join(', ')}`);
+    }
+  };
+  if (Array.isArray(a.datasheets)) {
+    for (const k of Object.keys({ ...a, ...b })) if (!['datasheets', 'detachments'].includes(k) && JSON.stringify(a[k]) !== JSON.stringify(b[k])) console.log(`  ${k}`);
+    diffList('detachment', a.detachments, b.detachments);
+    diffList('datasheet', a.datasheets, b.datasheets);
+  } else diffList('faction', a.factions, b.factions);
+}
+
 if (process.argv.includes('--fetch')) await fetchAll();
 build();
+if (CHECK) {
+  console.log(changed.length ? `\n${changed.length} file(s) in public/data differ from this build` : 'public/data matches the build');
+  process.exitCode = changed.length ? 1 : 0;
+}

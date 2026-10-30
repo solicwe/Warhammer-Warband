@@ -1,0 +1,8 @@
+{
+ "datasheets": [
+  {
+   "name": "Harridan",
+   "models": [{ "name": "Harridan", "base": { "w": 120, "h": 92, "text": "120 x 92mm oval" } }]
+  }
+ ]
+}

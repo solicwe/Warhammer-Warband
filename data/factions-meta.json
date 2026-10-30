@@ -109,5 +109,12 @@
       ],
       "detachments": {}
     }
+  },
+  "allies": {
+    "_comment": "Units of another book that an army's own book lists (Wahapedia files them under the army): marked `ally` / `allyName` for the army builder's groups and the ally rules in src/engine/allies.ts.",
+    "GC": [
+      { "keyword": "TYRANIDS", "ally": "TYR", "name": "Tyranids" },
+      { "keyword": "ASTRA MILITARUM", "ally": "AM", "name": "Brood Brothers (Astra Militarum)" }
+    ]
   }
 }
