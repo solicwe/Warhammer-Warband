@@ -137,8 +137,7 @@ export interface ArmyUnitEntry {
   comp?: Record<string, number>; // models per loadout line, for units whose loadouts are separate lines (Deathwatch Veterans)
   split?: boolean; // split into two units at Declare Battle Formations (Combat Squads …)
   embarkIn?: string; // uid of the TRANSPORT this unit starts the battle embarked within
-  xp?: number; // battle experience in campaign
-  honors?: string[]; // battle honors / upgrades applied to this unit
+  battles?: number; // campaign battles fought; at 3 the unit is VETERAN for the army tree
   customName?: string;
 }
 

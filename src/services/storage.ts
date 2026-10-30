@@ -1,7 +1,7 @@
 // Everything the app keeps on the device goes through here: army lists, the battle in progress, the campaign run,
 // preferences and custom photos. Reads and writes never throw (a private window or a full / blocked storage just
 // means this session only), so callers do not need their own try/catch. A cloud sync hooks in at this one place.
-import type { Run } from '../engine/campaign';
+import { migrateRun, type Run } from '../engine/campaign';
 
 /** The storage keys in use. */
 export const KEYS = {
@@ -46,7 +46,7 @@ export function removeKey(key: string) {
 
 export function loadRun(): Run | null {
   const v = readJSON<Run>(KEYS.campaignRun);
-  return v && v.version === 1 && Array.isArray(v.map) ? v : null;
+  return v && v.version === 1 && Array.isArray(v.map) ? migrateRun(v) : null;
 }
 
 export function saveRun(run: Run | null) {

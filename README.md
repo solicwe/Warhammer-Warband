@@ -101,16 +101,16 @@ one gets its own heading.
 The campaign is a roguelite run with one faction. You start with a small army and travel across a branching map of
 battles, elite fights (enemies with a special rule), supply drops, armories, medicae tents and a boss at the end.
 
-- **Scrap** is the currency. You earn it by winning and spend it in the armory on recruits, wargear and upgrades.
-- **Experience and ranks.** Your units gain experience from every battle they win or draw, and climb from Recruit to Blooded,
-  Battle-hardened, Heroic and Legendary. Higher ranks unlock stronger Battle Honors.
-- **Battle Honors** are upgrades bought for a datasheet. Every unit of that datasheet shares them.
+- **Scrap** is the currency. You earn it by winning and spend it in the armory on recruits, wargear, enhancements and detachments.
 - **Reinforcements** are offered after battles, each with a rarity (common, rare, epic, legendary) that follows how
   big the unit is.
-- **Tech trees.** Each faction family (Imperium, Chaos, Tyranids and others) has its own tree of upgrades. The last
-  tier unlocks Knights, Titans or other titanic units for recruitment.
-- **Planned.** Battle Honors and unit experience are to be replaced by one deep tree for the whole army; the
-  proposal is in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
+- **Army tree.** One passive tree for the whole army, paid for with Renown (battle 3, elite 5, boss 6, a loss 1).
+  Seven shared spokes (Fire, Assault, Armour, Speed, Command, Objectives, Logistics) and a branch for your army's
+  family sit around a start node, with an inner ring of bridges and an outer ring of keystones that make one keyword
+  count as another. Nodes reach units by keyword, some only in rounds 1-2 or from round 3, and some add a bonus once
+  enough nodes of their spoke are taken. Refund a node for Scrap at an armory or medicae tent. The Logistics
+  keystone unlocks Knights, Titans and other titanic units. Details in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
+- **VETERAN.** A unit that has fought 3 battles becomes VETERAN by itself, and tree nodes that name VETERAN reach it.
 - **Zombie Rush.** In the campaign the enemy bot fights differently from a normal battle: it ignores objectives,
   never falls back from fear, always charges, and scores VP for every model and unit it kills instead of the
   primary mission. Normal battles use the standard rules for both sides.

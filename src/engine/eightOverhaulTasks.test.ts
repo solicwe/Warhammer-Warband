@@ -5,17 +5,12 @@ import { autoList } from './autoList';
 import { createGame } from './game';
 import type { DatasheetData, FactionData } from './types';
 import {
-  applyAutoUpgradeUnit,
   applyCampaign,
   buyEnhancementForUnit,
   canBuyEnhancementForUnit,
   detachmentScrapCost,
   enhancementScrapCost,
-  FACTION_TECH_TREES,
   newRun,
-  previewAutoUpgradeUnit,
-  rankCombatBonus,
-  rankLabel,
   recruitScrapCost,
   recruitUnit,
   takeReward,
@@ -88,62 +83,9 @@ describe('Comprehensive Validation of All 8 Overhaul Categories', () => {
   });
 
   // Category 2: Auto-Upgrade Unit Preview & Execution
-  describe('Category 2: Kebab Menu Auto-Upgrade Preview & Confirmation', () => {
-    it('generates a valid auto-upgrade preview with smart honor and scrap cost', () => {
-      const run = newRun(SM, autoList(SM, 500, 1), ['ORK'], 1);
-      const intercessors = run.list.units.find((u) => u.datasheet === 'Intercessor Squad')!;
-      const preview = previewAutoUpgradeUnit(run, SM, intercessors.uid);
 
-      expect(preview).not.toBeNull();
-      expect(preview!.unit.datasheet).toBe('Intercessor Squad');
-      expect(preview!.honor).toBeDefined();
-      expect(preview!.finalCost).toBeGreaterThan(0);
-    });
-
-    it('executes auto-upgrade, deducts scrap, and applies datasheet and unit honors', () => {
-      let run = newRun(SM, autoList(SM, 500, 1), ['ORK'], 1);
-      run.scrap = 300;
-      const intercessors = run.list.units.find((u) => u.datasheet === 'Intercessor Squad')!;
-      const preview = previewAutoUpgradeUnit(run, SM, intercessors.uid)!;
-      const initialScrap = run.scrap;
-
-      run = applyAutoUpgradeUnit(run, SM, intercessors.uid);
-      expect(run.scrap).toBe(initialScrap - preview.finalCost);
-      expect(run.datasheetHonors?.['Intercessor Squad']).toContain(preview.honor.id);
-
-      const upgraded = run.list.units.find((u) => u.uid === intercessors.uid)!;
-      expect(upgraded.honors).toContain(preview.honor.id);
-    });
-  });
-
-  // Category 3: Functional XP, Ranks, and Section Separation
-  describe('Category 3: Functional XP Combat Bonuses and Character Separation', () => {
-    it('maps XP to correct 5 rank tiers and assigns increasing combat bonuses and upgrade discounts', () => {
-      expect(rankLabel(0)).toBe('Recruit');
-      expect(rankCombatBonus(0).discountPct).toBe(0);
-
-      expect(rankLabel(1)).toBe('Blooded');
-      const b1 = rankCombatBonus(1);
-      expect(b1.effect.ld).toBe(1);
-      expect(b1.effect.oc).toBe(1);
-      expect(b1.discountPct).toBe(0.05);
-
-      expect(rankLabel(2)).toBe('Battle-hardened');
-      const b2 = rankCombatBonus(2);
-      expect(b2.effect.reroll).toBe('hits1');
-      expect(b2.discountPct).toBe(0.10);
-
-      expect(rankLabel(3)).toBe('Heroic');
-      const b3 = rankCombatBonus(3);
-      expect(b3.effect.attacks).toBe(1);
-      expect(b3.effect.wound).toBe(1);
-      expect(b3.discountPct).toBe(0.15);
-
-      expect(rankLabel(4)).toBe('Legendary');
-      const b4 = rankCombatBonus(4);
-      expect(b4.effect.critHitOn).toBe(5);
-      expect(b4.discountPct).toBe(0.25);
-    });
+  // Category 3: Section Separation
+  describe('Category 3: Character Separation', () => {
 
     it('lists EPIC HERO units in the characters section with the standard leaders', () => {
       const epicHeroSheet = {
@@ -314,28 +256,6 @@ describe('Comprehensive Validation of All 8 Overhaul Categories', () => {
   });
 
   // Category 7: Expanded Command Tech Tree
-  describe('Category 7: Expanded Faction Command Tech Trees', () => {
-    it('provides >= 8 distinct nodes across 4 tiers for every faction family', () => {
-      const families: ('IMPERIUM' | 'CHAOS' | 'NECRONS' | 'ORKS' | 'TYRANIDS' | 'XENOS')[] = [
-        'IMPERIUM', 'CHAOS', 'NECRONS', 'ORKS', 'TYRANIDS', 'XENOS',
-      ];
-
-      for (const fam of families) {
-        const nodes = FACTION_TECH_TREES[fam];
-        expect(nodes.length).toBeGreaterThanOrEqual(8);
-
-        // Check tier distribution
-        expect(nodes.some((n) => n.tier === 1)).toBe(true);
-        expect(nodes.some((n) => n.tier === 2)).toBe(true);
-        expect(nodes.some((n) => n.tier === 3)).toBe(true);
-        expect(nodes.some((n) => n.tier === 4)).toBe(true);
-
-        // Check faction scrap economy node exists
-        const economyTags = ['SCRAP', 'SALVAGE', 'LOOT', 'MARKET'];
-        expect(nodes.some((n) => economyTags.some((tag) => n.tag.includes(tag)))).toBe(true);
-      }
-    });
-  });
 
   // Category 8: Attached Unit Battle Honor Sync
   describe('Category 8: Attached Unit Battle Honor Sync & Move Upgrades', () => {
@@ -399,30 +319,5 @@ describe('Comprehensive Validation of All 8 Overhaul Categories', () => {
       }
     });
 
-    it('previewAutoUpgradeUnit charges +25% scrap when companion is attached and syncs both', () => {
-      let run = newRun(SM, autoList(SM, 500, 1), ['ORK'], 1);
-      run.scrap = 500;
-
-      // Find an attached pair
-      const leader = run.list.units.find((u) => u.attachTo);
-      expect(leader).toBeDefined();
-
-      const previewSolo = previewAutoUpgradeUnit(run, SM, leader!.attachTo!)!;
-      expect(previewSolo.isAttached).toBe(true);
-      expect(previewSolo.companion).toBeDefined();
-
-      // Final cost must reflect +25% companion surcharge
-      expect(previewSolo.finalCost).toBe(Math.round(Math.round(previewSolo.baseCost * (1 - previewSolo.rankDiscountPct)) * 1.25));
-
-      const companionDatasheet = previewSolo.companion!.datasheet;
-      const mainDatasheet = previewSolo.unit.datasheet;
-
-      // Apply auto upgrade
-      run = applyAutoUpgradeUnit(run, SM, previewSolo.unit.uid);
-
-      // Both datasheets must now possess the honor!
-      expect(run.datasheetHonors?.[mainDatasheet]).toContain(previewSolo.honor.id);
-      expect(run.datasheetHonors?.[companionDatasheet]).toContain(previewSolo.honor.id);
-    });
   });
 });

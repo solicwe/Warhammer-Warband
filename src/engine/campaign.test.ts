@@ -116,11 +116,9 @@ describe('campaign', () => {
     const squads = run.list.units.filter((u) => u.datasheet === 'Intercessor Squad' && u.models === 5);
     expect(squads.length).toBe(2);
 
-    // Give one of them some XP and an honor
-    squads[0].xp = 5;
-    squads[0].honors = ['hardened'];
-    squads[1].xp = 3;
-    squads[1].honors = ['weapon_master'];
+    // battles fought count towards VETERAN
+    squads[0].battles = 5;
+    squads[1].battles = 3;
 
     // Combine the two 5-man squads into one 10-man squad for free
     const countBefore = run.list.units.length;
@@ -130,8 +128,7 @@ describe('campaign', () => {
     const merged = run.list.units.find((u) => u.uid === squads[0].uid)!;
     expect(merged.models).toBe(10);
     expect(merged.pts).toBe(175);
-    expect(merged.xp).toBe(8); // 5 + 3 combined
-    expect(merged.honors).toEqual(expect.arrayContaining(['hardened', 'weapon_master']));
+    expect(merged.battles).toBe(5); // the more experienced squad's count
   });
 
   it('allows recruiting Epic Heroes into the campaign roster but limits them to max 1', () => {

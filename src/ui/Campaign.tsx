@@ -1,19 +1,21 @@
 // The campaign screen: pick a faction, then walk a branching map of short battles to the boss.
-// Features a full roguelike engine: scrap currency, unit veterancy, battle honors, armory, medicae tents,
+// Features a full roguelike engine: scrap currency, the army tree (Renown), VETERAN units, armory, medicae tents,
 // and in-campaign roster customization.
 import { useEffect, useMemo, useState } from 'react';
 import { loadRun, saveRun } from '../services/storage';
 import { buildUnits, loadoutLines, attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
 import {
-  adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyAutoUpgradeUnit, applyCampaign, applyMedicaeService, autoUpgradeAll, BATTLE_HONORS, battleHonorById,
-  bossRuleById, buyDatasheetHonor, buyEnhancementForUnit, buyHonorForUnit, buyTechNode, canBuyDatasheetHonor, canRecruitTitanOrKnight,
-  changeSquadSize, cheapest, continueNextLoop, datasheetHonorCost, detachmentScrapCost, enhancementScrapCost, enter,
-  getFactionFamily, getFactionTechNodes, getSmartBattleHonors, honorMinXp, honorRequiredRank, isFactionAllowedKnight, makeOffer, newRun,
-  previewAutoUpgradeUnit, rankCombatBonus, rankLabel, reachable, recruitScrapCost, recruitUnit, relicById, relicDesc,
-  removeEnhancementFromUnit, requiresTier4Tech, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward,
-  type AutoUpgradePreview, type MapNode, type Reward, type Run,
+  adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyCampaign, applyMedicaeService,
+  bossRuleById, buyEnhancementForUnit, canRecruitTitanOrKnight,
+  changeSquadSize, cheapest, continueNextLoop, detachmentScrapCost, enhancementScrapCost, enter,
+  getFactionFamily, isFactionAllowedKnight, makeOffer, newRun,
+  reachable, recruitScrapCost, recruitUnit, relicById, relicDesc,
+  removeEnhancementFromUnit, requiresTitanRequisition, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward,
+  type MapNode, type Reward, type Run,
 } from '../engine/campaign';
+import { isVeteran, VETERAN_BATTLES } from '../engine/campaignTree';
+import { ArmyTree } from './ArmyTree';
 import { detachmentAllyOf } from '../engine/allies';
 import { hasFactionRules } from '../rules-engine/effects';
 import { createGame } from '../engine/game';
@@ -40,8 +42,8 @@ interface Props {
 const KIND: Record<MapNode['kind'], { name: string; icon: IconName; note: string }> = {
   battle: { name: 'Battle', icon: 'fight', note: 'A 3-round battle. Win to earn Scrap and rewards.' },
   elite: { name: 'Elite Miniboss', icon: 'skull', note: 'A 3-round battle against a tougher foe with a boss rule. Yields high Scrap and rare relics.' },
-  armory: { name: 'Munitorum Depot', icon: 'shop', note: 'Field depot: buy Battle Honors for units, hire reinforcements, or customize wargear.' },
-  medicae: { name: 'Medicae Field Camp', icon: 'heal', note: 'Restore lost Fate or hold a tactical briefing to gain +1 CP per battle.' },
+  armory: { name: 'Munitorum Depot', icon: 'shop', note: 'Field depot: hire reinforcements, customize wargear, or refund army tree nodes.' },
+  medicae: { name: 'Medicae Field Camp', icon: 'heal', note: 'Restore lost Fate, hold a tactical briefing for +1 CP per battle, or refund army tree nodes.' },
   supply: { name: 'Supply drop', icon: 'cards', note: 'Secure a supply cache: choose from units, relics, or scrap.' },
   boss: { name: 'The Warlord Boss', icon: 'trophy', note: 'A 5-round climactic battle against the enemy warlord with two special rules.' },
 };
@@ -68,7 +70,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const [recruitQ, setRecruitQ] = useState('');
   const [recruitSize, setRecruitSize] = useState<string | null>(null);
   const [recruitView, setRecruitView] = useState<string | null>(null);
-  const [autoUpgradeConfirm, setAutoUpgradeConfirm] = useState<AutoUpgradePreview | null>(null);
 
   const closeRoster = () => {
     setShowRoster(false);
@@ -76,7 +77,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     setPeek(null);
     setRecruitSize(null);
     setRecruitView(null);
-    setAutoUpgradeConfirm(null);
   };
 
   const isSectionOpen = (uid: string, section: string, defaultOpen = false) => {
@@ -179,13 +179,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const focused = run?.map.find((n) => n.id === (focus ?? run.fighting)) ?? null;
 
 
-  // Rank calculator based on XP
-  const rankLabel = (xp = 0) => {
-    if (xp >= 3) return 'Legendary';
-    if (xp >= 2) return 'Veteran';
-    if (xp >= 1) return 'Blooded';
-    return 'Recruit';
-  };
 
   if (!run) {
     const groups = new Map<string, { id: string; name: string }[]>();
@@ -205,7 +198,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <div className="cmp-title">Fight your way to the Warlord</div>
             <ul className="cmp-points">
               <li><Icon name="fight" size={16} /> {START_POINTS}-point army, 3-round battles</li>
-              <li><Icon name="shop" size={16} /> Earn Scrap: customize roster, buy Battle Honors & reinforcements</li>
+              <li><Icon name="shop" size={16} /> Earn Scrap for recruits and wargear, and Renown for the army tree</li>
               <li><Icon name="cards" size={16} /> Relics & boons: stack powerful army-wide modifiers</li>
               <li><Icon name="fate" size={16} /> 3 Fate: each defeat costs one</li>
             </ul>
@@ -517,20 +510,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark</button>
           ))}
           {opts.length > 1 && <button type="button" onClick={() => setPop({ ...pop, mode: 'size' })}><Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span></button>}
-          <button
-            type="button"
-            onClick={() => {
-              const preview = previewAutoUpgradeUnit(run, fac, u.uid);
-              if (preview) {
-                setAutoUpgradeConfirm(preview);
-              } else {
-                setInfo('No eligible upgrades available for this unit right now.');
-              }
-              close();
-            }}
-          >
-            <Icon name="shop" size={22} />Upgrade Unit
-          </button>
           {isChar && (
             <button type="button" className={u.warlord ? 'on' : ''} onClick={() => {
               const nextUnits = run.list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false }));
@@ -601,6 +580,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         <button className="appbar-back-btn" aria-label="Back" onClick={onBack}>&lt;</button>
         <span className="appbar-title">Campaign · Sector {run.sector || run.loop || 1}</span>
         <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span> <span>Scrap</span></span>
+        <span className="cmp-scrap" title="Renown: allocate army tree nodes"><Icon name="trophy" size={14} /> <span className="num">{run.renown ?? 0}</span> <span>Renown</span></span>
         <span className="cmp-fate" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
           {[0, 1, 2].map((i) => <i key={i} className={i < run.fate ? 'on' : ''} />)}
         </span>
@@ -630,7 +610,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               return (
                 <div key={u.uid} className="cmp-unit">
                   <div>
-                    <span className="cmp-rank-badge">{rankLabel(u.xp)}</span>
+                    {isVeteran(u) && <span className="cmp-rank-badge">VETERAN</span>}
                     <span>{u.datasheet}{u.models > 1 ? ` ×${u.models}` : ''}</span>
                     {attachedSquad && (
                       <span className="cmp-honor-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)' }}>
@@ -653,7 +633,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         })}
                       </span>
                     )}
-                    {u.honors?.map((h) => <span key={h} className="cmp-honor-badge">{battleHonorById(h)?.name}</span>)}
                   </div>
                   <span className="num muted">{u.pts + (u.wargearPts ?? 0)} pts</span>
                 </div>
@@ -940,7 +919,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   Recruit Reinforcements
                 </button>
                 <button className={`cmp-armory-tab ${rosterTab === 'tech' ? 'active' : ''}`} onClick={() => setRosterTab('tech')}>
-                  <Icon name="shop" size={14} /> Command Tech Tree
+                  <Icon name="cards" size={14} /> Army Tree{run.renown ? ` (${run.renown})` : ''}
                 </button>
                 <button className={`cmp-armory-tab ${rosterTab === 'detachments' ? 'active' : ''}`} onClick={() => setRosterTab('detachments')}>
                   <Icon name="cards" size={14} /> Detachments ({run.list.detachments?.length ?? 1})
@@ -977,154 +956,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             })()}
                           </div>
                         )}
-
-                        {/* 2. Datasheet-Wide Battle Honors with Smart Filter */}
-                        <div className="ab-collapsible-section field">
-                          <button type="button" className="ab-section-toggle" onClick={() => toggleSection(u.uid, 'honors', false)}>
-                            <span className="row gap-2" style={{ alignItems: 'center' }}>
-                              <Icon name={isHonorsOpen ? 'down' : 'next'} size={16} />
-                              <Icon name="shop" size={15} />
-                              <b>Battle Honors (Datasheet-Wide)</b>
-                              {(() => {
-                                const activeHonors = run.datasheetHonors?.[u.datasheet] ?? u.honors ?? [];
-                                return activeHonors.length ? <span className="ab-badge-selected">{activeHonors.length} active</span> : null;
-                              })()}
-                            </span>
-                          </button>
-                          {isHonorsOpen && (() => {
-                            const currentHonors = run.datasheetHonors?.[u.datasheet] ?? u.honors ?? [];
-                            const smartList = sheet ? getSmartBattleHonors(sheet, currentHonors) : [];
-                            const unitXp = u.xp ?? 0;
-                            const curRank = rankLabel(unitXp);
-
-                            return (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
-                                <div style={{
-                                  display: 'flex',
-                                  flexWrap: 'wrap',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  background: 'rgba(255, 255, 255, 0.03)',
-                                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                                  borderRadius: 8,
-                                  padding: '8px 12px',
-                                  gap: 8,
-                                }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{ fontSize: 12, color: '#94a3b8' }}>Unit Veterancy:</span>
-                                    <span className="cmp-rank-badge" style={{ fontSize: 12, padding: '2px 8px' }}>
-                                      {curRank} (XP {unitXp})
-                                    </span>
-                                  </div>
-                                  <div className="tiny muted" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                                    <span style={{ color: '#4ade80' }}>Tier 1: 0 XP (Recruit)</span>
-                                    <span style={{ color: unitXp >= 1 ? '#38bdf8' : '#64748b' }}>Tier 2: 1+ XP (Blooded)</span>
-                                    <span style={{ color: unitXp >= 2 ? '#c084fc' : '#64748b' }}>Tier 3: 2+ XP (Veteran)</span>
-                                  </div>
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 8 }}>
-                                  {BATTLE_HONORS.map((h) => {
-                                    const has = currentHonors.includes(h.id);
-                                    const isEligible = has || smartList.some((s) => s.id === h.id);
-                                    if (!isEligible) return null; // Smart filter: prune incompatible or redundant honors
-
-                                    const status = canBuyDatasheetHonor(run, u.datasheet, h, u.uid);
-                                    const isXpLocked = status.isXpLocked;
-                                    const cost = status.neededScrap;
-                                    const canAfford = status.canAfford;
-                                    const reqRank = honorRequiredRank(status.neededXp);
-
-                                    return (
-                                      <div
-                                        key={h.id}
-                                        style={{
-                                          padding: '10px 12px',
-                                          borderRadius: 8,
-                                          background: has
-                                            ? 'rgba(34, 197, 94, 0.08)'
-                                            : isXpLocked
-                                            ? 'rgba(0, 0, 0, 0.25)'
-                                            : 'rgba(255,255,255,0.03)',
-                                          border: has
-                                            ? '1.5px solid #22c55e'
-                                            : isXpLocked
-                                            ? '1px dashed rgba(248, 113, 113, 0.3)'
-                                            : '1px solid rgba(255,255,255,0.08)',
-                                          display: 'flex',
-                                          flexDirection: 'column',
-                                          justifyContent: 'space-between',
-                                          gap: 8,
-                                          opacity: has ? 1 : isXpLocked ? 0.55 : canAfford ? 1 : 0.65,
-                                        }}
-                                      >
-                                        <div>
-                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-                                            <span style={{
-                                              fontFamily: 'var(--font-cond, sans-serif)',
-                                              fontWeight: 700,
-                                              fontSize: 12,
-                                              letterSpacing: '0.04em',
-                                              color: has
-                                                ? '#4ade80'
-                                                : isXpLocked
-                                                ? '#94a3b8'
-                                                : h.tier === 'legendary'
-                                                ? '#c084fc'
-                                                : h.tier === 'heroic'
-                                                ? '#38bdf8'
-                                                : '#f59e0b',
-                                              background: has ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.06)',
-                                              padding: '2px 8px',
-                                              borderRadius: 4,
-                                            }}>
-                                              {h.tier ? `[${h.tier.toUpperCase()}] ` : ''}{h.tag || h.name}
-                                            </span>
-                                            <span className="cmp-scrap" style={{ fontSize: 12, color: isXpLocked ? '#64748b' : undefined }}>
-                                              <Icon name="shop" size={12} /> {cost}
-                                            </span>
-                                          </div>
-                                          <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 6, lineHeight: 1.35 }}>
-                                            {h.desc}
-                                          </div>
-                                          {isXpLocked && (
-                                            <div style={{ marginTop: 6 }}>
-                                              <span className="chip subtle small" style={{ color: '#f87171', background: 'rgba(248, 113, 113, 0.12)', borderColor: 'rgba(248, 113, 113, 0.35)', fontSize: '10.5px', padding: '1px 6px' }}>
-                                                Requires {status.neededXp} XP ({reqRank})
-                                              </span>
-                                            </div>
-                                          )}
-                                        </div>
-                                        <button
-                                          type="button"
-                                          className={`btn small ${has ? 'ok' : !isXpLocked && canAfford ? 'primary' : ''}`}
-                                          style={{ width: '100%', marginTop: 2, fontWeight: 600, fontSize: 12 }}
-                                          disabled={has || isXpLocked || !canAfford}
-                                          onClick={() => {
-                                            const next = buyDatasheetHonor(run, fac, u.datasheet, h.id, u.uid);
-                                            setRun(next);
-                                            play('good');
-                                            setInfo(`Upgraded ${u.datasheet} with ${h.name}!`);
-                                          }}
-                                        >
-                                          {has ? (
-                                            <><Icon name="check" size={12} /> Active Army-Wide</>
-                                          ) : isXpLocked ? (
-                                            `Locked · Needs ${status.neededXp} XP (${reqRank})`
-                                          ) : !canAfford ? (
-                                            `Need ${cost} Scrap`
-                                          ) : (
-                                            `Upgrade All (${cost} Scrap)`
-                                          )}
-                                        </button>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
 
                         {/* 3. Wargear Options with Scrap mode */}
                         {sheet && (sheet.wargearOptions?.length || sheet.wargearCosts?.length || loadoutLines(sheet).length) ? (
@@ -1318,7 +1149,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     u.warlord && 'Warlord',
                     leads && !inGroup && `${supportIn(run.list, sheet) ? 'Support for' : 'Leading'} ${leads.datasheet}`,
                     leads && inGroup && (supportIn(run.list, sheet) ? 'Support' : 'Leader'),
-                    u.honors?.length ? `${u.honors.length} Battle ${u.honors.length === 1 ? 'Honor' : 'Honors'}` : null,
+                    isVeteran(u) ? 'VETERAN' : `${u.battles ?? 0}/${VETERAN_BATTLES} battles to VETERAN`,
                     rides && (inGroup ? 'Embarked' : `Starts embarked in ${rides.name}`),
                     load && (carried.length ? `Carrying ${carried.join(', ')} (${load.used}/${load.capacity})` : `Empty (0/${load.capacity})`),
                   ].filter(Boolean).join(' · ');
@@ -1344,7 +1175,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           </span>
                           <span className="ab-pts">
                             {u.pts + (u.wargearPts ?? 0) + (u.enhancementPts ?? 0)} pts
-                            <span className="cmp-rank-badge" style={{ marginLeft: 6 }}>{rankLabel(u.xp)} (XP {u.xp ?? 0})</span>
                             {u.enhancement && <span className="ab-enh" style={{ marginLeft: 6 }}> {u.enhancement}</span>}
                           </span>
                           {line && <span className="ab-sub">{line}</span>}
@@ -1505,7 +1335,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   const basePts = cheapest(d)?.pts ?? opts[0]?.pts ?? 0;
                                   const minCost = recruitScrapCost(run, d.name, basePts);
                                   const canAffordAny = (run.scrap ?? 0) >= minCost;
-                                  const needsTier4 = requiresTier4Tech(d) && !canRecruitTitanOrKnight(fac.id, d, run);
+                                  const needsTier4 = requiresTitanRequisition(d) && !canRecruitTitanOrKnight(fac.id, d, run);
                                   const isOpenPeek = recruitView === d.name;
                                   const isOpenSize = recruitSize === d.name;
                                   const isUnaffordable = (!canAffordAny || needsTier4) && !alreadyInForce;
@@ -1545,7 +1375,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             )}
                                             {needsTier4 && (
                                               <span className="chip subtle small" style={{ marginLeft: 6, color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
-                                                Requires Tier 4 Tech
+                                                Requires Titan Requisition
                                               </span>
                                             )}
                                           </span>
@@ -1558,7 +1388,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             )}
                                             {needsTier4 ? (
                                               <span className="tiny" style={{ marginLeft: 6, color: '#f59e0b', fontWeight: 600 }}>
-                                                (Locked: Requires Tier 4 Tech)
+                                                (Locked: Requires Titan Requisition)
                                               </span>
                                             ) : isUnaffordable ? (
                                               <span className="tiny" style={{ marginLeft: 6, color: '#f87171', fontWeight: 600 }}>
@@ -1570,7 +1400,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             {alreadyInForce
                                               ? 'Already Recruited (Limit 1)'
                                               : needsTier4
-                                              ? 'Super-Heavy Support · Unlock Tier 4 in Command Tech Tree'
+                                              ? 'Super-Heavy Support · take Titan Requisition in the army tree'
                                               : d.role || (d.keywords ? d.keywords.slice(0, 3).join(', ') : '')}
                                           </span>
                                         </span>
@@ -1579,7 +1409,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                         type="button"
                                         className="ab-add dark"
                                         aria-label={`Recruit ${d.name}`}
-                                        title={alreadyInForce ? 'Limit 1 (Already recruited)' : needsTier4 ? 'Requires Command Tech Tree Tier 4 (Titanic Support)' : !canAffordAny ? `Need ${minCost} Scrap` : `Recruit ${d.name}`}
+                                        title={alreadyInForce ? 'Limit 1 (Already recruited)' : needsTier4 ? 'Requires Titan Requisition (army tree, Logistics keystone)' : !canAffordAny ? `Need ${minCost} Scrap` : `Recruit ${d.name}`}
                                         disabled={alreadyInForce || !canAffordAny || needsTier4}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -1658,102 +1488,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 </div>
               )}
 
-              {rosterTab === 'tech' && (() => {
-                const family = getFactionFamily(run.factionId);
-                const nodes = getFactionTechNodes(run.factionId);
-                const familyTitles: Record<string, string> = {
-                  IMPERIUM: 'Imperium Strategic Command Grid',
-                  CHAOS: 'Chaos Hereticus Warp Lore',
-                  NECRONS: 'Necron Dynastic Awakening',
-                  ORKS: 'Ork Great WAAAGH! Forge',
-                  TYRANIDS: 'Tyranid Synaptic Hive Evolution',
-                  XENOS: 'Xenos High Technology Protocol',
-                };
-
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <div className="cmp-armory-hint">
-                      <b>{familyTitles[family] || 'Command Tech Tree'}</b>: Unlock persistent faction perks and Super-Heavy requisitions using Scrap.
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
-                      {nodes.map((n) => {
-                        const isUnlocked = (run.techTree ?? []).includes(n.id);
-                        const reqNode = n.req ? nodes.find((x) => x.id === n.req) : undefined;
-                        const isReqMet = !n.req || (run.techTree ?? []).includes(n.req);
-                        const canAfford = (run.scrap ?? 0) >= n.cost;
-
-                        return (
-                          <div
-                            key={n.id}
-                            style={{
-                              padding: '12px 14px',
-                              borderRadius: 10,
-                              background: isUnlocked ? 'rgba(34, 197, 94, 0.08)' : 'rgba(255,255,255,0.03)',
-                              border: isUnlocked ? '1.5px solid #22c55e' : '1px solid rgba(255,255,255,0.08)',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'space-between',
-                              gap: 10,
-                              opacity: !isUnlocked && (!isReqMet || !canAfford) ? 0.55 : 1,
-                            }}
-                          >
-                            <div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{
-                                  fontSize: 11,
-                                  fontWeight: 800,
-                                  color: isUnlocked ? '#4ade80' : '#38bdf8',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.05em',
-                                }}>
-                                  Tier {n.tier} · {n.tag}
-                                </span>
-                                <span className="cmp-scrap" style={{ fontSize: 13 }}>
-                                  <Icon name="shop" size={13} /> {n.cost} Scrap
-                                </span>
-                              </div>
-                              <div style={{ fontWeight: 700, fontSize: 14, color: '#f1f5f9', marginTop: 4 }}>
-                                {n.name}
-                              </div>
-                              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6, lineHeight: 1.4 }}>
-                                {n.desc}
-                              </div>
-                              {reqNode && !isReqMet && (
-                                <div style={{ fontSize: 11, color: '#f87171', marginTop: 6 }}>
-                                  Requires: {reqNode.name}
-                                </div>
-                              )}
-                            </div>
-
-                            <button
-                              type="button"
-                              className={`btn small ${isUnlocked ? 'ok' : canAfford && isReqMet ? 'primary' : ''}`}
-                              disabled={isUnlocked || !canAfford || !isReqMet}
-                              onClick={() => {
-                                const next = buyTechNode(run, n.id);
-                                setRun(next);
-                                play('good');
-                                setInfo(`Command Tech Tree: Unlocked ${n.name}!`);
-                              }}
-                            >
-                              {isUnlocked ? (
-                                <><Icon name="check" size={14} /> Unlocked</>
-                              ) : !isReqMet ? (
-                                `Locked (Requires Tier ${n.tier - 1})`
-                              ) : !canAfford ? (
-                                `Need ${n.cost} Scrap`
-                              ) : (
-                                `Unlock (-${n.cost} Scrap)`
-                              )}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
+              {rosterTab === 'tech' && <ArmyTree run={run} fac={fac} onRun={(r) => { setRun(r); play('good'); }} onInfo={setInfo} />}
 
               {rosterTab === 'detachments' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1859,126 +1594,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             </div>
           </div>
           {quickMenu()}
-        </div>
-      )}
-
-      {autoUpgradeConfirm && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Confirm Auto-Upgrade"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.78)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 16,
-          }}
-          onClick={() => setAutoUpgradeConfirm(null)}
-        >
-          <div
-            className="slate"
-            style={{
-              maxWidth: 440,
-              width: '100%',
-              background: '#0f172a',
-              border: '1px solid #334155',
-              borderRadius: 12,
-              padding: 22,
-              boxShadow: '0 24px 38px rgba(0,0,0,0.6)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <b style={{ fontSize: 16, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Icon name="shop" size={20} /> Confirm Auto-Upgrade
-              </b>
-              <button
-                type="button"
-                className="icon-btn small"
-                aria-label="Close"
-                onClick={() => setAutoUpgradeConfirm(null)}
-              >
-                <Icon name="close" size={16} />
-              </button>
-            </div>
-
-            <div style={{ background: '#1e293b', borderRadius: 8, padding: 14, marginBottom: 16, border: '1px solid #334155' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: '#f8fafc' }}>
-                  {autoUpgradeConfirm.unit.datasheet}
-                </span>
-                <span className="chip small" style={{ fontSize: 11, color: '#38bdf8', borderColor: '#38bdf8' }}>
-                  Rank: {rankLabel(autoUpgradeConfirm.unit.xp ?? 0)}
-                </span>
-              </div>
-
-              {autoUpgradeConfirm.isAttached && autoUpgradeConfirm.companion && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: 6, fontSize: 12, color: '#38bdf8' }}>
-                  <Icon name="leader" size={14} /> Attached Sync: Upgrades {autoUpgradeConfirm.companion.datasheet} (+25% Scrap)
-                </div>
-              )}
-
-              <div style={{ borderTop: '1px solid #334155', paddingTop: 10, marginTop: 6 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <b style={{ color: '#f59e0b', fontSize: 14 }}>{autoUpgradeConfirm.honor.name}</b>
-                  <span style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    {autoUpgradeConfirm.honor.role ?? 'General'}
-                  </span>
-                </div>
-                <div style={{ fontSize: 12.5, color: '#cbd5e1', lineHeight: 1.4 }}>
-                  {autoUpgradeConfirm.honor.desc}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, padding: '0 4px' }}>
-              <span style={{ fontSize: 13, color: '#94a3b8' }}>Upgrade Cost:</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {autoUpgradeConfirm.rankDiscountPct > 0 && (
-                  <span className="tiny" style={{ color: '#4ade80' }}>
-                    -{Math.round(autoUpgradeConfirm.rankDiscountPct * 100)}% Rank Discount
-                  </span>
-                )}
-                <b style={{ fontSize: 16, color: (run.scrap ?? 0) >= autoUpgradeConfirm.finalCost ? '#f59e0b' : '#f87171' }}>
-                  {autoUpgradeConfirm.finalCost} Scrap
-                </b>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button
-                type="button"
-                className="btn"
-                style={{ flex: 1 }}
-                onClick={() => setAutoUpgradeConfirm(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn primary"
-                style={{ flex: 1.5 }}
-                disabled={!fac || (run.scrap ?? 0) < autoUpgradeConfirm.finalCost}
-                onClick={() => {
-                  if (!fac) return;
-                  const next = applyAutoUpgradeUnit(run, fac, autoUpgradeConfirm.unit.uid);
-                  if (next !== run) {
-                    setRun(next);
-                    play('good');
-                    setInfo(`Auto-Upgraded ${autoUpgradeConfirm.unit.datasheet}!`);
-                  }
-                  setAutoUpgradeConfirm(null);
-                }}
-              >
-                {!fac || (run.scrap ?? 0) < autoUpgradeConfirm.finalCost ? `Need ${autoUpgradeConfirm.finalCost - (run.scrap ?? 0)} Scrap` : 'Confirm'}
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
