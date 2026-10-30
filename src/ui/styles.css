@@ -2955,3 +2955,15 @@ select option {
 .rl-opt { display: flex; flex-direction: column; gap: 2px; padding: 8px 0 0 12px; border-top: 1px dotted var(--line-2); border-left: 3px solid var(--ph, var(--line-2)); }
 .rl-opt-name { font: 600 14.5px var(--font-cond); letter-spacing: 0.05em; text-transform: uppercase; color: var(--text); }
 .rl-flavour { font-style: italic; font-size: 13px; color: var(--text-3); }
+
+/* datasheet stat lines on one row: M T Sv W Ld OC, the invulnerable save shield, then the model name level with the labels */
+.ds-statline { flex-wrap: nowrap; align-items: flex-start; gap: 8px; }
+.ds-statline .ds-statrow { grid-template-columns: repeat(6, 32px) auto; gap: 3px; align-items: end; }
+.ds-statline .ds-inv { grid-column: auto; margin: 0 0 2px 2px; }
+.ds-sheet .ds-statline .ds-stat b { font-size: 15px; min-height: 30px; letter-spacing: -0.02em; }
+.ds-sheet .ds-statline .ds-stat span { font-size: 11px; }
+.ds-sheet .ds-statline .ds-shield { width: 28px; height: 32px; font-size: 14px; }
+.ds-mname { flex: 1 1 0; min-width: 0; padding-top: 0; font-size: 13px; line-height: 1.15; overflow-wrap: normal; word-break: normal; hyphens: none; }
+.ds-mname small { white-space: nowrap; }
+/* weapon keywords on their own line under the name, so the count and the name read together */
+.ds-wt .ds-wkw { display: block; margin-top: 2px; }
