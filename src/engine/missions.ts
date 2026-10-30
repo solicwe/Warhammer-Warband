@@ -2,7 +2,7 @@
 // operation markers and the scoring conditions of all 25 primary cards.
 import { deploymentById, MISSIONS, primaryById, toPoly, type ScoringRule } from './config';
 import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
-import { alive, boardUnits, emitReact, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, tableH, tableW, unitById, zombieRush } from './state';
+import { alive, boardUnits, emitReact, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, tableH, tableW, unitById } from './state';
 import type { GameState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
@@ -491,8 +491,6 @@ export function ruleValue(s: GameState, p: PlayerId, r: ScoringRule): number {
 }
 
 export function scorePrimary(s: GameState, timing: 'endOfYourCommandPhase' | 'endOfYourTurn' | 'endOfBattle' | 'endOfAnyTurn', player: PlayerId) {
-  // Zombie Rush (campaign): the enemy bot scores from kills only, not from the primary mission
-  if (zombieRush(s, player)) return;
   const P = s.players[player];
   const prim = primaryById(P.primaryId);
   for (const r of prim.scoring) {

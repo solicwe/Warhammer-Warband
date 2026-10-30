@@ -228,8 +228,5 @@ let pictured: (datasheet: string) => boolean = () => true;
 export const setPicturedCheck = (fn: typeof pictured) => { pictured = fn; };
 export const hasPicture = (datasheet: string) => pictured(datasheet);
 
-/** Campaign only: the enemy bot plays Zombie Rush. It is fearless, ignores objectives, always charges and scores VP
- *  for kills instead of the primary mission. Normal battles use the standard rules for both sides. */
-export const zombieRush = (s: GameState, p: PlayerId) => !!s.campaign && p === (s.botPlayer ?? 1);
 /** The game makes this player's choices: a bot, or a person who left the rules to the app (not one who decides). */
 export const playsItself = (s: GameState, p: PlayerId) => (s.bots ?? []).includes(p) || ((s.autoRules ?? []).includes(p) && !(s.decides ?? []).includes(p));

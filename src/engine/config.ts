@@ -86,44 +86,7 @@ export const deploymentById = (id: string): DeploymentDef => {
   const l = LAYOUTS.find((d) => d.id === id) ?? LAYOUTS[0];
   return { ...l, name: deploymentName(l.deployment) };
 };
-export const ROGUELIKE_PRIMARY: PrimaryDef = {
-  id: 'roguelike-annihilation',
-  name: 'Annihilation',
-  forceDisposition: 'purge-the-foe',
-  vs: 'purge-the-foe',
-  scoring: [
-    {
-      rounds: [1, 5],
-      when: 'endOfAnyTurn',
-      condition: 'enemyDestroyed',
-      vp: 0,
-      text: 'Eliminate enemy units to score VP equal to their points value. Total annihilation wins immediately!',
-    },
-    {
-      rounds: [1, 5],
-      when: 'endOfAnyTurn',
-      condition: 'captureLoot',
-      vp: 5,
-      text: 'Capturing an Objective marker awards +100 Scrap, +1 CP, and +5 VP!',
-    },
-    {
-      rounds: [1, 5],
-      when: 'endOfYourCommandPhase',
-      condition: 'perObjectiveControlled',
-      vp: 5,
-      text: 'Control objectives (5 VP each per round)',
-    },
-    {
-      rounds: [1, 5],
-      when: 'endOfYourCommandPhase',
-      condition: 'controlMoreThanOpponent',
-      vp: 5,
-      text: 'Control more objectives than your opponent (5 VP)',
-    },
-  ],
-};
-
 export const primaryById = (id: string): PrimaryDef => {
-  if (id === 'roguelike-annihilation') return ROGUELIKE_PRIMARY;
-  return MISSIONS.primaries.find((p) => p.id === id) ?? ROGUELIKE_PRIMARY;
+  // a campaign battle saved before the old 'roguelike-annihilation' mission went plays Meatgrinder (both Purge the Foe)
+  return MISSIONS.primaries.find((p) => p.id === id) ?? MISSIONS.primaries.find((p) => p.id === 'meatgrinder')!;
 };

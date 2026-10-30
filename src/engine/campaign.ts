@@ -1026,7 +1026,7 @@ export function migrateRun(run: Run): Run {
 }
 
 /** A campaign battle's primary mission: one of the official ones (many are won with actions), the same for the same
- *  battle. The player plays it; the enemy (Zombie Rush) scores from kills. */
+ *  battle. Both sides play it and the battle is won on VP. */
 export function campaignMission(node: MapNode): { primary: PrimaryDef; dispositions: [DispositionId, DispositionId] } {
   const all = MISSIONS.primaries;
   const primary = all[(node.enemy?.seed ?? 0) % all.length];

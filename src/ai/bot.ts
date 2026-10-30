@@ -24,7 +24,7 @@ import { botAllowChargeStratagem, botDetectionStratagem, botIgnorePenaltiesStrat
 import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, botChargeBonusStratagem, botCommandExtras, botFightEndActs, botIgnoreModsStratagem, botReadyStratagem, botShieldStratagem, botTeleportActs } from './botPlus';
 import { botAdvanceActs, botArrivalStratagem, botCharacterStratagem, botFightChoice, botFightStartStratagems, botFightsFirstStratagem, botLooseDisembark, botMobileStratagem, botPileStratagem, botRedeployActs, botShootActs, botShootOnTheMove, botAdvanceStratagem, botAfterShootMove, botConsolidateStratagem, botCommandStratagems, botDoctrineActs, botEndOfMovement, botExtraMove, moveGain } from './botPlus';
 import { abilityRule, unitFlags, withRuleCache } from '../rules-engine/effects';
-import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, lastRound, log, onBoard, other, pace, spendStratagem, unitById, unitDistance, zombieRush } from '../engine/state';
+import { alive, boardUnits, canUseStratagem, engagedEnemies, isEngaged, lastRound, log, onBoard, other, pace, spendStratagem, unitById, unitDistance } from '../engine/state';
 import { shouldUnleashShadow, unleashShadowInTheWarp } from '../factions/tyranids';
 import { actionOptions, startAction } from '../engine/missions';
 import { secondaryChance, secondaryDead } from '../engine/secondaries';
@@ -557,8 +557,7 @@ export function botShootOne(s: GameState): boolean {
       botShootActs(s, u);
       // a mission action is worth roughly 16 points of damage per VP it brings (a 1000-point game is decided by ~30 VP)
       const ACTION_VP: Record<string, number> = { cleanse: 3, plunder: 5, 'booby-trap': 3, decoy: 4, 'sensor-sweep': 4, triangulate: 5, surveil: 4, 'extract-intelligence': 7, 'secure-asset': 4, 'maintain-control': 3, 'vanguard-operation': 4, sabotage: 4 };
-      // Zombie Rush: bot units never waste shooting on non-combat mission actions
-      const acts = !zombieRush(s, u.owner) ? actionOptions(s, u.owner).filter((o) => o.unitId === u.id) : [];
+      const acts = actionOptions(s, u.owner).filter((o) => o.unitId === u.id);
       if (acts.length) {
         const P = s.players[u.owner];
         const already = (a: string) => P.mission.done.some((d) => d.action === a && d.turn === s.turn) || s.pendingActions.some((x) => x.action === a && x.player === u.owner && x.turn === s.turn);
@@ -627,9 +626,8 @@ export function botChargeOne(s: GameState, eager = false): boolean {
     };
     const best = [...enemies].sort((a, b) => value(b) * p2d6(unitDistance(u, b)) - value(a) * p2d6(unitDistance(u, a)))[0];
     const p = p2d6(unitDistance(u, best));
-    // shooters only charge weak, close targets; brawlers accept long shots; Zombie Rush bot always charges
-    const isZombie = zombieRush(s, u.owner);
-    if (!isZombie && (value(best) <= (eager ? -4 : 0) || p < (eager ? 0.2 : brawler ? 0.25 : 0.58))) continue;
+    // shooters only charge weak, close targets; brawlers accept long shots
+    if (value(best) <= (eager ? -4 : 0) || p < (eager ? 0.2 : brawler ? 0.25 : 0.58)) continue;
     botChargeBonusStratagem(s, u, unitDistance(u, best), best);
     declareCharge(s, u);
     let opts = chargeTargetOptions(s, u);

@@ -158,7 +158,7 @@ export interface NewGameOptions {
   secondaryMode?: 'none' | 'tactical' | 'fixed';
   /** a short game: battle rounds before it ends (default 5) */
   maxRounds?: number;
-  /** override primary mission id (e.g. roguelike-annihilation) */
+  /** override primary mission id */
   primaryId?: string;
 }
 
@@ -1203,17 +1203,6 @@ function endTurn(s: GameState) {
       log(s, `${u.name} did not arrive from Reserves by battle round ${s.round} → destroyed`, 'kill', u.owner);
     }
   }
-  if (s.isBossAnnihilation) {
-    const p0Alive = s.units.some((x) => x.owner === 0 && x.status !== 'destroyed' && alive(x).length > 0);
-    const p1Alive = s.units.some((x) => x.owner === 1 && x.status !== 'destroyed' && alive(x).length > 0);
-    if (!p0Alive || !p1Alive) {
-      endBattle(s);
-      return;
-    }
-    s.round += 1;
-    startTurn(s, s.firstPlayer);
-    return;
-  }
   if (s.round >= lastRound(s)) { endBattle(s); return; }
   s.round += 1;
   startTurn(s, s.firstPlayer);
@@ -1222,16 +1211,6 @@ function endTurn(s: GameState) {
 function endBattle(s: GameState) {
   for (const p of [s.firstPlayer, other(s.firstPlayer)] as PlayerId[]) scoreTiming(s, 'endOfBattle', p);
   s.phase = 'gameover';
-  if (s.isBossAnnihilation) {
-    const p0Alive = s.units.some((x) => x.owner === 0 && x.status !== 'destroyed' && alive(x).length > 0);
-    const p1Alive = s.units.some((x) => x.owner === 1 && x.status !== 'destroyed' && alive(x).length > 0);
-    if (!p1Alive && p0Alive) s.winner = 0;
-    else if (!p0Alive && p1Alive) s.winner = 1;
-    else if (!p0Alive && !p1Alive) s.winner = 'draw';
-    else s.winner = s.players[0].vp >= s.players[1].vp ? 0 : 1;
-    log(s, `Boss Encounter Concluded: ${s.winner === 'draw' ? 'mutual annihilation' : s.players[s.winner].name + ' total wipeout victory!'}`, 'vp', null);
-    return;
-  }
   const [a, b] = [s.players[0].vp + s.players[0].secVp, s.players[1].vp + s.players[1].secVp];
   s.winner = a === b ? 'draw' : a > b ? 0 : 1;
   log(s, `Battle over: ${s.players[0].name} ${a} VP – ${s.players[1].name} ${b} VP → ${s.winner === 'draw' ? 'draw' : s.players[s.winner].name + ' wins!'}`, 'vp', null);

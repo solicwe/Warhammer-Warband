@@ -771,11 +771,9 @@ export interface GameState {
   campaign?: { node: string; relics: string[]; rules: string[]; relicLevels?: Record<string, number>; lootedObjectives?: string[]; reinforcementsTriggered?: number[]; dramaRounds?: number[]; titanSpawned?: boolean; eliteDramaTriggered?: boolean; battleEventTriggered?: boolean; allowDynamicExpansion?: boolean };
   reinforcementAlert?: { unitName: string; factionName: string; round: number; count: number; text: string } | null;
   titanAlert?: { unitName: string; factionName: string; round: number; text: string; triggered: boolean } | null;
-  botKillAlert?: { text: string; vp: number; victim: string; time: number } | null;
   screenShake?: number;
   warpStormActive?: boolean;
   campaignScrap?: number; // scrap salvaged during campaign battle
-  isBossAnnihilation?: boolean; // boss & elite battle 100% total wipeout victory condition
   table?: { width: number; height: number };
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

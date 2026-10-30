@@ -22,7 +22,7 @@ install, no account. On a phone, add it to your home screen and it works like an
 
 Warhammer Warband is a browser game for playing Warhammer 40,000 (11th edition) battles on your phone. You build an
 army list, then fight a bot, pass the phone to a friend, or watch two bots play each other. There is also a campaign:
-a run of battles across a branching map where your army gains experience, upgrades and reinforcements.
+a run of battles across a branching map where your army grows an army tree and gains reinforcements.
 
 Everything runs in the browser. There is no game server and no account. Your armies and battles are saved on your
 device.
@@ -105,7 +105,7 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   centre objective) and spend it in the armory on recruits, wargear, enhancements and detachments. A detachment costs
   60, 110 or 170 Scrap for 1, 2 or 3 Detachment Points.
 - **Missions.** Each battle plays one of the official primary missions (many are won with actions), shown on the
-  map before you fight. Boss and elite battles are won on VP like the others.
+  map before you fight.
 - **The enemy grows with you.** Enemies bring more detachments as you win (one more every 3 wins and every sector,
   one more for an elite or boss, up to 4), and an army tree with as many nodes as yours (+3 elite, +6 boss).
 - **Reinforcements** are offered after battles, each with a rarity (common, rare, epic, legendary) that follows how
@@ -117,9 +117,8 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   enough nodes of their spoke are taken. Refund a node for Scrap at an armory or medicae tent. The Logistics
   keystone unlocks Knights, Titans and other titanic units. Details in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
 - **VETERAN.** A unit that has fought 3 battles becomes VETERAN by itself, and tree nodes that name VETERAN reach it.
-- **Zombie Rush.** In the campaign the enemy bot fights differently from a normal battle: it ignores objectives,
-  never falls back from fear, always charges, and scores VP for every model and unit it kills instead of the
-  primary mission. Normal battles use the standard rules for both sides.
+- **Battles are won on points.** Both sides play the battle's primary mission (and its actions); nothing ends a
+  battle early, not even wiping out the enemy, and boss and elite battles are decided on VP like the others.
 
 ## On your phone
 

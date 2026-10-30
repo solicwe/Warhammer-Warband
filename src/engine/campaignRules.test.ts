@@ -59,7 +59,6 @@ describe('campaign battles', () => {
     const s = createGame({ lists: [run.list, autoList(ORK, 500, 1)], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', maxRounds: 5, seed: node.enemy!.seed });
     applyCampaign(s, run, []);
     expect(s.units.filter((u) => u.owner === 1).some((u) => (u.timed ?? []).length > 0)).toBe(true);
-    expect(s.isBossAnnihilation).toBeFalsy();
   });
 
   it('only the centre objective gives extra Scrap and CP; holding others gives nothing', () => {

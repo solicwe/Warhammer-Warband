@@ -255,11 +255,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }, 800);
     return () => window.clearTimeout(t);
   }, [s, ponderFor]); // eslint-disable-line react-hooks/exhaustive-deps
-  // the player is reading (mission cards, the menu, a rule) or an alert is active: the game waits instead of moving under them
-  const hasActiveAlert = Boolean(s.titanAlert);
-  const viewing = showCards || showMissions || showMenu || !!explain || !!summary || hasActiveAlert;
+  // the player is reading (mission cards, the menu, a rule): the game waits instead of moving under them
+  const viewing = showCards || showMissions || showMenu || !!explain || !!summary;
   useEffect(() => {
-    if (!bots.length || rolling || reporting || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0) || hasActiveAlert) return;
+    if (!bots.length || rolling || reporting || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0)) return;
     const who = actingBot;
     // start of a bot's Movement phase: pick how to play the turn before moving anything
     if (who !== null && s.phase === 'movement' && s.active === who && !styleChosen(s)) {
@@ -523,6 +522,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const t = window.setTimeout(() => act((g) => { g.reinforcementAlert = null; }), 1800);
     return () => window.clearTimeout(t);
   }, [s.reinforcementAlert]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!s.titanAlert) return;
+    const t = window.setTimeout(() => act((g) => { g.titanAlert = null; }), 3600);
+    return () => window.clearTimeout(t);
+  }, [s.titanAlert]); // eslint-disable-line react-hooks/exhaustive-deps
   /** The phase's way out: what is left undone shows under it, and ending with nothing done asks once more. */
   const endButton = (key: string, label: string, idle: boolean, why: string, note?: string) => {
     return (
@@ -3144,10 +3148,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <button className="icon-btn" onClick={() => setShowMenu(true)} aria-label="Menu"><Icon name="menu" size={24} /></button>
           <SideScore s={s} p={0} label={sideLabel(0)} onOpen={() => { setCardSide(0); setShowCards(true); }} />
           <div className="round-box" aria-label="Battle status">
-            <span className="rb-round">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : s.isBossAnnihilation ? `Round ${s.round}` : `Round ${s.round}/${Math.max(s.round, lastRound(s))}`}</span>
+            <span className="rb-round">{s.phase === 'deploy' ? 'Deployment' : s.phase === 'scouts' ? 'Pre-battle' : `Round ${s.round}/${Math.max(s.round, lastRound(s))}`}</span>
             <span className={`rb-turn ${s.active ? 'p1' : 'p0'}`}>{turnText}</span>
           </div>
           <SideScore s={s} p={1} label={sideLabel(1)} onOpen={() => { setCardSide(1); setShowCards(true); }} />
+          {/* the tools stay together: when the bar is too narrow they take a second row instead of going off screen */}
+          <div className="tb-tools">
           <button className="tb-tool" onClick={() => { setCardSide(null); setShowCards(true); }} aria-label="Mission cards">
             <span className="tb-ico"><Icon name="cards" size={20} />{s.players[me].secActive.length > 0 && <i className="tb-badge">{s.players[me].secActive.length}</i>}</span>
             <span className="tb-lbl">Mission</span>
@@ -3197,6 +3203,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               <span className="tb-lbl">Undo</span>
             </button>
           )}
+          </div>
         </div>
         {s.phase !== 'deploy' && <AdvantageBar share={advantage(s)} names={[s.players[0].name, s.players[1].name]} colors={[getPlayerFactionTheme(s, 0).primary, getPlayerFactionTheme(s, 1).primary]} />}
         {['command', 'movement', 'shooting', 'charge', 'fight'].includes(s.phase) && (
@@ -3272,9 +3279,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
         {toast && <div className="toast">{toast}</div>}
         {/* on the board, under the phase bar: it never covers the tabs or takes a tap */}
-        {s.botKillAlert && Date.now() - s.botKillAlert.time < 5000 && (
-          <div className="toast kill-alert" role="status"><Icon name="skull" size={15} />{s.botKillAlert.text} ({s.botKillAlert.victim})</div>
-        )}
         {tape.on && (
           <div className="tape-bar">
             <span>{tapeInfo ? tapeInfo.line : tape.a ? 'Tap the second point (tap a model = base to base + line of sight)' : 'Tape measure: tap a model or a first point'}</span>
@@ -3551,44 +3555,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       {s.reinforcementAlert && (
         // enemy reinforcements: the screen edge flashes red and they land; nothing to tap
         <div className="reinf-edge" key={`${s.reinforcementAlert.unitName}-${s.reinforcementAlert.round}`}>
-          <span className="reinf-edge-label"><Icon name="skull" size={14} /> Enemy reinforcements: {s.reinforcementAlert.unitName}</span>
+          <span className="reinf-edge-label"><Icon name="skull" size={14} /> Enemy reinforcements: {s.reinforcementAlert.unitName} · battle now 5 rounds</span>
         </div>
       )}
       {s.titanAlert && (
-        <>
-          <div className="titan-screen-flash" />
-          <div className="tray-backdrop" style={{ zIndex: 99999, background: 'rgba(20, 0, 0, 0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }} onClick={() => { act((g) => { g.titanAlert = null; }); }}>
-            <div className="card titan-banner" style={{ maxWidth: '480px', width: '100%', background: 'linear-gradient(180deg, #350808 0%, #150505 100%)', border: '3px solid #ef4444', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 0 40px rgba(239,68,68,0.5)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#f87171' }}>
-                <Icon name="skull" size={32} />
-                <div style={{ fontWeight: 900, fontSize: '1.2rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fca5a5' }}>{s.titanAlert.text}</div>
-              </div>
-              <div style={{ fontSize: '14.5px', color: '#fecaca', lineHeight: 1.4 }}>
-                A colossal <b>{s.titanAlert.unitName}</b> has made landfall. Void Shields active. All friendly units prepare for catastrophic engagement!
-              </div>
-              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {(() => {
-                  const photo = getPortrait(s.titanAlert.unitName);
-                  return photo ? (
-                    <img
-                      src={photo}
-                      alt=""
-                      style={{ width: 56, height: 56, borderRadius: 6, objectFit: 'cover', flex: 'none', border: '1px solid #ef4444' }}
-                      onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
-                    />
-                  ) : null;
-                })()}
-                <div>
-                  <div style={{ fontWeight: 800, color: '#fca5a5' }}>{s.titanAlert.unitName}</div>
-                  <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>{s.titanAlert.factionName} · TITAN CLASS · Battle Round {s.titanAlert.round}</div>
-                </div>
-              </div>
-              <button className="btn primary big wide" style={{ background: '#dc2626', borderColor: '#ef4444', color: '#fff', fontWeight: 800, minHeight: '44px' }} onClick={() => { act((g) => { g.titanAlert = null; }); play('turn'); }}>
-                Acknowledge Titan Threat
-              </button>
-            </div>
-          </div>
-        </>
+        // a Titan lands: the same red screen edge, held longer; nothing to tap
+        <div className="reinf-edge titan" key={`titan-${s.titanAlert.unitName}-${s.titanAlert.round}`}>
+          <span className="reinf-edge-label"><Icon name="skull" size={14} /> Titan landfall: {s.titanAlert.unitName}</span>
+        </div>
       )}
     </div>
   );

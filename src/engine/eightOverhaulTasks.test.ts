@@ -122,7 +122,7 @@ describe('Comprehensive Validation of All 8 Overhaul Categories', () => {
       run.fighting = bossNode.id;
       const s = createGame({ names: ['Player', 'Enemy'], factions: [SM, ORK], lists: [run.list, autoList(ORK, 500, 1)] });
       applyCampaign(s, run, bossNode.enemy?.rules ?? []);
-      expect(s.isBossAnnihilation).toBeFalsy();
+      expect(s.phase).not.toBe('gameover');
     });
   });
 

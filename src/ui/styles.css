@@ -1578,7 +1578,9 @@ b.em { font-weight: 700; color: var(--text); }
 }
 
 /* the scoreboard: each side's VP and CP gems, the round and whose turn in the middle */
-.topbar { gap: 3px; padding: 2px 4px; }
+.topbar { gap: 3px; padding: 2px 4px; flex-wrap: wrap; justify-content: center; overflow: visible; }
+.tb-tools { display: flex; align-items: center; gap: 3px; margin-left: auto; }
+.round-box { min-width: 0; }
 .side-score { position: relative; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 56px; max-width: 108px; min-height: 44px; padding: 2px 6px; border: none; border-radius: 8px; background: transparent; cursor: pointer; color: var(--text); overflow: hidden; }
 .side-score:hover { background: var(--surface-2); }
 .side-score.s0 { color: var(--p0); }
@@ -2162,31 +2164,6 @@ b.em { font-weight: 700; color: var(--text); }
   }
 }
 
-/* Titan Warning Screen Flash & Banner */
-.titan-screen-flash {
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(circle, rgba(239, 68, 68, 0.7) 0%, rgba(185, 28, 28, 0.9) 100%);
-  z-index: 99999;
-  pointer-events: none;
-  animation: titan-flash 1.6s ease-out forwards;
-}
-@keyframes titan-flash {
-  0% { opacity: 0; }
-  20% { opacity: 0.9; }
-  50% { opacity: 0.6; }
-  80% { opacity: 0.8; }
-  100% { opacity: 0; }
-}
-
-.titan-banner {
-  animation: titan-banner-pulse 1.2s ease-in-out infinite alternate;
-}
-@keyframes titan-banner-pulse {
-  0% { transform: scale(1); filter: drop-shadow(0 0 10px #ef4444); }
-  100% { transform: scale(1.04); filter: drop-shadow(0 0 26px #dc2626); }
-}
-
 .board-wrap.shake-expand > svg { animation: shake-expand 0.5s ease-in-out; }
 .board-wrap.shake-titan > svg { animation: shake-titan 0.8s cubic-bezier(.36,.07,.19,.97); }
 @keyframes shake-expand {
@@ -2205,8 +2182,6 @@ b.em { font-weight: 700; color: var(--text); }
   80% { transform: translate(-3px, 2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .titan-screen-flash { animation: none; display: none; }
-  .titan-banner { animation: none; }
   .board-wrap.shake-expand > svg, .board-wrap.shake-titan > svg { animation: none; }
 }
 .pill-face { display: inline-grid; place-items: center; width: 26px; height: 26px; flex: none; vertical-align: middle; margin: -4px 2px -4px -6px; }
@@ -2985,7 +2960,7 @@ select option {
 .mode-mini:active { transform: translateY(1px); }
 
 /* ---------- campaign army tree ---------- */
-.tree { display: flex; flex-direction: column; gap: 10px; }
+.tree { display: flex; flex-direction: column; gap: 8px; }
 .tree-bar { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-family: var(--font-cond); font-size: 14px; color: var(--text-2); }
 .tree-bar b { color: var(--accent); font-size: 18px; }
 .tree-legend { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 12px; }
@@ -2993,8 +2968,9 @@ select option {
 .tree-legend i.taken { background: var(--accent); border-color: var(--accent); }
 .tree-legend i.open { border-color: var(--accent); }
 .tree-stage { position: relative; }
-@media (pointer: fine) { .tree-map { cursor: grab; } .tree-map.dragging { cursor: grabbing; user-select: none; } }
-.tree-map { overflow: auto; max-height: 58vh; touch-action: pan-x pan-y; border: 1px solid var(--line); border-radius: 8px; background: var(--sunk); -webkit-overflow-scrolling: touch; }
+/* the whole tree in one screen: the map takes the height the roster page leaves */
+.tree-map { height: 300px; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; border: 1px solid var(--line); border-radius: 8px; background: var(--sunk); }
+@media (pointer: fine) { .tree-map { cursor: grab; } .tree-map.dragging { cursor: grabbing; } }
 .tree-map svg { display: block; }
 .tree-edge { stroke: var(--line-2); stroke-width: 2; }
 .tree-edge.open { stroke: color-mix(in srgb, var(--accent) 45%, var(--line-2)); }
@@ -3010,38 +2986,30 @@ select option {
 .tree-node.locked { opacity: 0.55; }
 .tree-node text { font-family: var(--font-cond); font-size: 11px; font-weight: 600; fill: var(--text-2); paint-order: stroke; stroke: var(--sunk); stroke-width: 3px; pointer-events: none; }
 .tree-node.taken text { fill: var(--text); }
-.tree-card { position: absolute; left: 8px; right: 8px; top: 8px; max-height: calc(100% - 16px); overflow: auto; box-shadow: var(--shadow); z-index: 2; display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--line-2); border-radius: 8px; background: var(--surface); }
-.tree-card.notable { border-left-color: var(--accent-2); }
-.tree-card.keystone { border-left-color: var(--accent); }
-.tree-card-x { margin-left: auto; display: inline-grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 6px; background: var(--surface-2); color: var(--text-2); cursor: pointer; }
-.tree-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; }
-.tree-card-head b { font-family: var(--font-cond); font-size: 17px; color: var(--text); }
-.tree-chip { font-family: var(--font-cond); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); }
-.tree-text { font-size: 14px; color: var(--text); line-height: 1.4; }
-.tree-bonus { font-size: 13px; color: var(--text-3); }
-.tree-bonus.on { color: var(--good); }
-.tree-reach { font-size: 12.5px; color: var(--text-2); }
-.tree-card .btn { align-self: flex-start; }
-.tree-slot-label { font-family: var(--font-cond); font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--accent); }
-.tree-guide { display: flex; flex-direction: column; gap: 6px; }
-.tree-guide-row { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
-.tree-guide-row.static { cursor: default; }
-.tree-guide-row.on { border-color: var(--accent); }
-.tree-guide-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-family: var(--font-cond); font-size: 15px; }
-.tree-guide-head .num { color: var(--text-3); font-size: 13px; }
-.tree-guide-about { font-size: 13px; line-height: 1.4; color: var(--text-2); }
-.tree-zoom { display: flex; align-items: center; gap: 8px; align-self: flex-end; margin-bottom: -4px; }
-.tree-zoom .btn { min-width: 40px; justify-content: center; }
-.tree-zoom .num { font-family: var(--font-cond); font-size: 13px; color: var(--text-3); min-width: 38px; text-align: center; }
+.tree-slot-label { font-family: var(--font-cond); font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--accent); pointer-events: none; }
 .tree-ico { color: var(--text-3); pointer-events: none; }
 .tree-node.open .tree-ico { color: var(--accent); }
 .tree-node.taken .tree-ico { color: var(--on-fill); }
-.tree-icons { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--text-2); }
-.tree-icons span { display: inline-flex; align-items: center; gap: 4px; }
+/* zoom buttons on the map's corner */
+.tree-zoom { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 6px; z-index: 1; }
+.tree-zoom button { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font: 600 22px/1 var(--font-cond); cursor: pointer; }
+/* the tapped node: a plain panel over the bottom of the map, as tall as its text */
+.tree-card { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 2; display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); }
+.tree-card-x { margin-left: auto; display: inline-grid; place-items: center; width: 44px; height: 44px; margin: -8px -8px -8px auto; border: 0; border-radius: 8px; background: transparent; color: var(--text-2); cursor: pointer; }
+.tree-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.tree-card-head b { font-family: var(--font-cond); font-size: 17px; color: var(--text); }
+.tree-chip { font-family: var(--font-cond); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); }
+.tree-text { font-size: 15px; color: var(--text); line-height: 1.45; }
+.tree-bonus { font-size: 13px; color: var(--text-3); }
+.tree-bonus.on { color: var(--good); }
+.tree-card .btn { align-self: flex-start; min-height: 44px; }
 .tree-card-head b { display: inline-flex; align-items: center; gap: 6px; }
 /* enemy reinforcements arrive: a red glow around the screen edge, gone by itself */
 .reinf-edge { position: fixed; inset: 0; z-index: 9999; pointer-events: none; box-shadow: inset 0 0 0 4px rgba(239, 68, 68, 0.95), inset 0 0 60px 18px rgba(220, 38, 38, 0.55); animation: reinf-edge 1.8s ease-out forwards; display: flex; justify-content: center; align-items: flex-start; padding-top: calc(env(safe-area-inset-top, 0px) + 58px); }
 .reinf-edge-label { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(127, 29, 29, 0.92); color: #fee2e2; font-family: var(--font-cond); font-weight: 700; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; }
+/* a Titan landing: the same red edge, held about twice as long */
+.reinf-edge.titan { animation-name: reinf-edge-titan; animation-duration: 3.6s; }
+@keyframes reinf-edge-titan { 0% { opacity: 0; } 8% { opacity: 1; } 20% { opacity: 0.55; } 32% { opacity: 1; } 44% { opacity: 0.6; } 75% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes reinf-edge { 0% { opacity: 0; } 15% { opacity: 1; } 35% { opacity: 0.55; } 55% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .reinf-edge { animation: reinf-fade 1.8s linear forwards; } @keyframes reinf-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } } }
 /* detachments grouped by Chapter: a coloured heading, and the same colour down each card's edge */

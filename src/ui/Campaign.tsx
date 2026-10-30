@@ -62,7 +62,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
   // Roguelike Roster & Armory state
   const [showRoster, setShowRoster] = useState(false);
-  const [rosterTab, setRosterTab] = useState<'roster' | 'recruit' | 'tech' | 'detachments'>('roster');
+  const [rosterTab, setRosterTab] = useState<'roster' | 'tech' | 'detachments'>('roster');
+  /** the roster section whose + was tapped: its recruit list is open */
+  const [recruitSec, setRecruitSec] = useState<string | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
   const [panelCollapse, setPanelCollapse] = useState<Record<string, Record<string, boolean>>>({});
   const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null);
@@ -73,6 +75,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
   const closeRoster = () => {
     setShowRoster(false);
+    setRecruitSec(null);
     setPop(null);
     setPeek(null);
     setRecruitSize(null);
@@ -918,14 +921,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 <button className={`cmp-armory-tab ${rosterTab === 'roster' ? 'active' : ''}`} onClick={() => setRosterTab('roster')}>
                   Active Roster ({run.list.units.length})
                 </button>
-                <button className={`cmp-armory-tab ${rosterTab === 'recruit' ? 'active' : ''}`} onClick={() => setRosterTab('recruit')}>
-                  Recruit Reinforcements
-                </button>
                 <button className={`cmp-armory-tab ${rosterTab === 'tech' ? 'active' : ''}`} onClick={() => setRosterTab('tech')}>
-                  <Icon name="cards" size={14} /> Army Tree{run.renown ? ` (${run.renown})` : ''}
+                  Army Tree{run.renown ? ` (${run.renown})` : ''}
                 </button>
                 <button className={`cmp-armory-tab ${rosterTab === 'detachments' ? 'active' : ''}`} onClick={() => setRosterTab('detachments')}>
-                  <Icon name="cards" size={14} /> Detachments ({run.list.detachments?.length ?? 1})
+                  Detachments ({run.list.detachments?.length ?? 1})
                 </button>
               </div>
 
@@ -1204,7 +1204,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {SECTIONS.filter((sec) => sec.id !== 'allies' || run.list.units.some((u) => sectionOf(fac.datasheets.find((x) => x.name === u.datasheet), run.factionId) === 'allies')).map((sec) => {
+                    {SECTIONS.filter((sec) => sec.id !== 'allies' || fac.datasheets.some((d) => sectionOf(d, run.factionId) === 'allies')).map((sec) => {
                       const joined = (b: ArmyUnitEntry) => run.list.units.filter((c) => c.attachTo === b.uid);
                       const homeOf = (u: ArmyUnitEntry): string => {
                         const body = u.attachTo ? run.list.units.find((b) => b.uid === u.attachTo) : undefined;
@@ -1215,8 +1215,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       };
                       const inRide = (u: ArmyUnitEntry) => !!u.embarkIn && run.list.units.some((t) => t.uid === u.embarkIn);
                       const us = run.list.units.filter((u) => (!u.attachTo || !run.list.units.some((b) => b.uid === u.attachTo)) && !inRide(u) && homeOf(u) === sec.id);
-                      if (!us.length) return null;
-
                       const sortedUs = [...us].sort((a, b) => {
                         const sheetA = fac.datasheets.find((x) => x.name === a.datasheet);
                         const sheetB = fac.datasheets.find((x) => x.name === b.datasheet);
@@ -1243,7 +1241,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         <section key={sec.id} className="ab-section">
                           <div className="ab-section-head">
                             <span>{sec.title}</span>
-                            <button type="button" className="ab-add" aria-label={`Recruit ${sec.title}`} onClick={() => setRosterTab('recruit')}>+</button>
+                            <button type="button" className="ab-add" aria-label={`Recruit ${sec.title}`} onClick={() => { setRecruitQ(''); setRecruitSec(sec.id); }}>+</button>
                           </div>
                           {sortedUs.map((u, i) => {
                             const riders = run.list.units.filter((r) => r.embarkIn === u.uid && !r.attachTo);
@@ -1259,10 +1257,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             );
 
                             return (
-                              <div key={`item-${u.uid}`} style={{ display: 'contents' }}>
-                                {showKind && <div key={`kind-${k}`} className="ab-kind">{k}</div>}
+                              <Fragment key={`item-${u.uid}`}>
+                                {showKind && <div className="ab-kind">{k}</div>}
                                 {rowNode}
-                              </div>
+                              </Fragment>
                             );
                           })}
                         </section>
@@ -1272,12 +1270,13 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 );
               })()}
 
-              {rosterTab === 'recruit' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <div className="cmp-armory-hint">
-                    Recruit reinforcements into your strike force using accumulated Scrap currency.
+              {recruitSec && (
+                <div className="tray-backdrop" style={{ zIndex: 160 }} onClick={() => setRecruitSec(null)}>
+                <div className="tray" onClick={(e) => e.stopPropagation()}>
+                  <div className="row">
+                    <div className="sheet-title grow">Add {SECTIONS.find((x) => x.id === recruitSec)?.title}</div>
+                    <button className="btn small ghost" onClick={() => setRecruitSec(null)}>Close</button>
                   </div>
-
                   <input
                     placeholder="Search datasheets to recruit…"
                     value={recruitQ}
@@ -1306,7 +1305,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                        {SECTIONS.map((sec) => {
+                        {SECTIONS.filter((sec) => sec.id === recruitSec).map((sec) => {
                           const sheetsInSec = filtered.filter((d) => sectionOf(d, fac.id) === sec.id);
                           if (!sheetsInSec.length) return null;
 
@@ -1324,7 +1323,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             <section key={sec.id} className="ab-section">
                               <div className="ab-section-head">
                                 <span>{sec.title}</span>
-                                <span className="tiny muted" style={{ textTransform: 'none' }}>{sortedSheets.length} available</span>
+                                <span className="tiny muted" style={{ textTransform: 'none' }}>{run.scrap ?? 0} Scrap to spend</span>
                               </div>
                               <div className="ab-pick">
                                 {sortedSheets.map((d, i) => {
@@ -1489,9 +1488,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     );
                   })()}
                 </div>
+                </div>
               )}
 
-              {rosterTab === 'tech' && <ArmyTree run={run} fac={fac} onRun={(r) => { setRun(r); play('good'); }} onInfo={setInfo} />}
+              {rosterTab === 'tech' && <ArmyTree run={run} onRun={(r) => { setRun(r); play('good'); }} onInfo={setInfo} />}
 
               {rosterTab === 'detachments' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

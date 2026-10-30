@@ -5,7 +5,7 @@ import { assaultWeapons, emit, rescueDie, targetBlock } from './events';
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems, gap, reachOf } from './geometry';
-import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR, zombieRush } from './state';
+import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
@@ -866,17 +866,6 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   const kws = m.keywords ?? u.keywords ?? [];
   (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || kws.includes('CHARACTER'), W: m.profile.W });
 
-  // Asymmetric Scoring: Enemy bot scores VP on slaying player models
-  const isBotEnemy = zombieRush(s, 1);
-  if (u.owner === 0 && isBotEnemy) {
-    const isChar = m.isCharacter || kws.includes('CHARACTER');
-    const isEpic = kws.includes('EPIC HERO') || m.name.includes('Warlord');
-    const isVehicleOrMonster = kws.includes('VEHICLE') || kws.includes('MONSTER');
-    const modelVp = isEpic ? 5 : (isChar || isVehicleOrMonster) ? 3 : 1;
-    s.players[1].vp += modelVp;
-    log(s, `Zombie Rush: Enemy Bot scores +${modelVp} VP for killing ${m.name}!`, 'kill', 1);
-  }
-
   if (u.transport && kws.includes('TRANSPORT')) transportHook?.(s, u, m);
   // Vengeance for the Omnissiah: a friendly ASTRA MILITARUM VEHICLE destroyed within 12"
   if (kws.includes('VEHICLE') && (u.factionKeywords ?? []).includes('ASTRA MILITARUM')) {
@@ -895,30 +884,6 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     emit(s, 'unitDestroyed', { u, attackerId: s.attack?.attackerId });
     log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
 
-    // Asymmetric Scoring: Enemy bot scores unit destruction bonus VP and triggers botKillAlert
-    if (u.owner === 0 && isBotEnemy) {
-      const unitBonusVp = Math.max(3, Math.round((u.pts ?? 50) / 25));
-      s.players[1].vp += unitBonusVp;
-      log(s, `Zombie Rush: Enemy Bot scores +${unitBonusVp} VP for destroying ${u.name}!`, 'kill', 1);
-      s.botKillAlert = {
-        text: `ENEMY BOT SLAYER: +${unitBonusVp} VP`,
-        vp: unitBonusVp,
-        victim: u.name,
-        time: Date.now(),
-      };
-    }
-    if (s.campaign) {
-      const killerOwner = s.attack ? unitById(s, s.attack.attackerId).owner : other(u.owner);
-      const vpEarned = Math.max(5, Math.round((u.pts ?? 50) / 10));
-      s.players[killerOwner].vp += vpEarned;
-      log(s, `${u.name} destroyed: +${vpEarned} VP to ${s.players[killerOwner].name}`, 'kill', killerOwner);
-      const enemyAlive = s.units.filter((x) => x.owner === other(killerOwner) && x.status !== 'destroyed');
-      if (!enemyAlive.length) {
-        s.winner = killerOwner;
-        s.phase = 'gameover';
-        log(s, `All enemy units destroyed! ${s.players[killerOwner].name} wins!`, 'vp', killerOwner);
-      }
-    }
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
   if (dd) {
