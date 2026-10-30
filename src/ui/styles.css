@@ -3017,3 +3017,11 @@ select option {
 .tree-bonus.on { color: var(--good); }
 .tree-reach { font-size: 12.5px; color: var(--text-2); }
 .tree-card .btn { align-self: flex-start; }
+.tree-slot-label { font-family: var(--font-cond); font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--accent); }
+.tree-guide { display: flex; flex-direction: column; gap: 6px; }
+.tree-guide-row { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.tree-guide-row.static { cursor: default; }
+.tree-guide-row.on { border-color: var(--accent); }
+.tree-guide-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-family: var(--font-cond); font-size: 15px; }
+.tree-guide-head .num { color: var(--text-3); font-size: 13px; }
+.tree-guide-about { font-size: 13px; line-height: 1.4; color: var(--text-2); }

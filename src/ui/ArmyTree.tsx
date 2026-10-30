@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Run } from '../engine/campaign';
 import {
-  allocate, atRespecSpot, branchName, canAllocate, canRefund, refund, refundCost, SLOT_NAMES, taken, treeFor, unitsReached, type TreeNode,
+  allocate, atRespecSpot, branchName, canAllocate, canRefund, refund, refundCost, slotGuide, taken, treeFor, unitsReached, type TreeNode,
 } from '../engine/campaignTree';
 import type { FactionData } from '../engine/types';
 
@@ -17,7 +17,8 @@ export function ArmyTree({ run, fac, onRun, onInfo }: { run: Run; fac: FactionDa
   const box = useRef<HTMLDivElement>(null);
   const got = taken(run);
   const node = nodes.find((n) => n.id === sel);
-  const ext = Math.max(...nodes.map((n) => Math.max(Math.abs(n.x), Math.abs(n.y)))) + PAD;
+  const guide = slotGuide(run.factionId);
+  const ext = Math.max(...[...nodes, ...guide].map((n) => Math.max(Math.abs(n.x), Math.abs(n.y)))) + PAD;
   const size = ext * 2;
   const counts = useMemo(() => nodes.filter((n) => got.has(n.id)).reduce<Record<string, number>>((a, n) => ({ ...a, [n.slot]: (a[n.slot] ?? 0) + 1 }), {}), [run.tree]);
 
@@ -29,7 +30,8 @@ export function ArmyTree({ run, fac, onRun, onInfo }: { run: Run; fac: FactionDa
 
   const edges = nodes.flatMap((n) => n.links.filter((l) => l > n.id).map((l) => [n, nodes.find((m) => m.id === l)!] as const));
   const state = (n: TreeNode) => (got.has(n.id) ? 'taken' : n.links.some((l) => got.has(l)) ? 'open' : 'locked');
-  const slotName = (n: TreeNode) => (n.slot === 'army' ? branchName(run.factionId) : SLOT_NAMES[n.slot] ?? n.slot);
+  const slotOf = (n: TreeNode) => guide.find((g) => g.id === n.slot);
+  const slotName = (n: TreeNode) => slotOf(n)?.name ?? (n.slot === 'ring' ? 'Ring' : 'Start');
   const reached = node ? unitsReached(run, fac.datasheets, node) : [];
   const affects = !!node && (!!node.e || !!node.bonus?.e);
 
@@ -56,6 +58,7 @@ export function ArmyTree({ run, fac, onRun, onInfo }: { run: Run; fac: FactionDa
               {n.kind !== 'small' && <text x={n.x} y={n.y + RADIUS[n.kind] + 13} textAnchor="middle">{n.name}</text>}
             </g>
           ))}
+          {guide.map((g) => <text key={g.id} x={g.x} y={g.y} textAnchor="middle" dominantBaseline="middle" className="tree-slot-label">{g.name}</text>)}
         </svg>
       </div>
       {node && (
@@ -65,6 +68,8 @@ export function ArmyTree({ run, fac, onRun, onInfo }: { run: Run; fac: FactionDa
             <span className="tree-chip">{KIND_LABEL[node.kind]} · {slotName(node)}</span>
           </div>
           <div className="tree-text">{node.text}</div>
+          {slotOf(node) && <div className="tree-reach">{slotOf(node)!.name}: {slotOf(node)!.about}</div>}
+          {node.slot === 'ring' && <div className="tree-reach">{node.kind === 'keystone' ? 'Outer ring: a keystone between two spokes that makes one keyword count as another for tree nodes.' : 'Inner ring: a bridge between two spokes, so a build can cross over halfway out.'}</div>}
           {node.bonus && (
             <div className={`tree-bonus ${(counts[node.slot] ?? 0) >= node.bonus.count && got.has(node.id) ? 'on' : ''}`}>
               {node.bonus.text} <span className="num">({Math.min(counts[node.slot] ?? 0, node.bonus.count)}/{node.bonus.count})</span>
@@ -86,6 +91,19 @@ export function ArmyTree({ run, fac, onRun, onInfo }: { run: Run; fac: FactionDa
           ))}
         </div>
       )}
+      <div className="tree-guide">
+        <div className="cmp-kicker">What each spoke does</div>
+        {guide.map((g) => (
+          <button key={g.id} type="button" className={`tree-guide-row ${node?.slot === g.id ? 'on' : ''}`} onClick={() => setSel(`${g.id}-1`)}>
+            <span className="tree-guide-head"><b>{g.name}</b><span className="num">{counts[g.id] ?? 0}/{nodes.filter((n) => n.slot === g.id).length}</span></span>
+            <span className="tree-guide-about">{g.id === 'army' ? 'Your army\'s own branch. ' : ''}{g.about}</span>
+          </button>
+        ))}
+        <div className="tree-guide-row static">
+          <span className="tree-guide-head"><b>Rings</b></span>
+          <span className="tree-guide-about">The inner ring links neighbouring spokes halfway out. The outer ring holds keystones that make one keyword count as another (INFANTRY as VEHICLE and so on). Circles are small nodes, big circles notables, diamonds keystones.</span>
+        </div>
+      </div>
     </div>
   );
 }

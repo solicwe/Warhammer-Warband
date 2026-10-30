@@ -36,7 +36,7 @@ export interface TreeNode extends Spec {
   links: string[];
 }
 
-interface Branch { id: string; name: string; main: Spec[]; sideA: Spec[]; sideB?: Spec[] }
+interface Branch { id: string; name: string; /** what the spoke is for, in one line */ about: string; main: Spec[]; sideA: Spec[]; sideB?: Spec[] }
 
 const s = (name: string, text: string, units: string | undefined, e: Effect | Effect[]): Spec => ({ name, text, units, e });
 const R = (e: Effect, ...rounds: ('early' | 'late')[]): Effect => ({ ...e, if: [...(e.if ?? []), ...rounds.map((r) => (r === 'early' ? '!roundAtLeast:3' : 'roundAtLeast:3'))] });
@@ -45,7 +45,7 @@ const R = (e: Effect, ...rounds: ('early' | 'late')[]): Effect => ({ ...e, if: [
 
 const SPOKES: Branch[] = [
   {
-    id: 'fire', name: 'Fire',
+    id: 'fire', name: 'Fire', about: 'Shooting: range, re-rolls, AP and Strength for ranged weapons. Keystone Iron Discipline: +1 to Hit, -2\" Move.',
     main: [
       s('Steady Aim', 'INFANTRY ranged weapons: +3" Range.', 'INFANTRY', { rangeBonus: 3, attack: 'ranged' }),
       s('Drilled Volleys', 'BATTLELINE ranged attacks re-roll Hit rolls of 1.', 'BATTLELINE', { reroll: 'hits1', attack: 'ranged' }),
@@ -68,7 +68,7 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'assault', name: 'Assault',
+    id: 'assault', name: 'Assault', about: 'Melee and charging: Strength, re-rolls, extra Attacks after a charge. Keystone Berserk Fury: +1 Attack in melee, -1 to Hit when shooting.',
     main: [
       s('Bayonet Drill', 'INFANTRY melee weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'melee' }),
       s('Blood Up', 'INFANTRY: +1 to Charge rolls.', 'INFANTRY', { chargeBonus: 1 }),
@@ -91,7 +91,7 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'armour', name: 'Armour',
+    id: 'armour', name: 'Armour', about: 'Staying alive: Toughness, saves and Feel No Pain. Keystone Fortress: +1 Toughness, -2\" Move.',
     main: [
       s('Thick Hide', 'MONSTER: +1 Toughness.', 'MONSTER', { toughness: 1 }),
       s('Warded Hulls', 'VEHICLE: Feel No Pain 6+ against mortal wounds.', 'VEHICLE', { defend: { fnp: 6, fnpVs: 'mortal' } }),
@@ -114,7 +114,7 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'speed', name: 'Speed',
+    id: 'speed', name: 'Speed', about: 'Moving fast: Move, Advance and Charge bonuses and re-rolls. Keystone Blitz: +2\" Move, -1 Toughness.',
     main: [
       s('Forced March', 'INFANTRY: +1" Move.', 'INFANTRY', { move: 1 }),
       s('Outriders', 'MOUNTED: +2" Move.', 'MOUNTED', { move: 2 }),
@@ -137,7 +137,7 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'command', name: 'Command',
+    id: 'command', name: 'Command', about: 'Command points and leaders: extra CP every battle, Battle-shock re-rolls, CHARACTER buffs. Keystone Total War: +2 CP, -1 OC.',
     main: [
       s('Steady Nerves', 'BATTLELINE re-rolls Battle-shock tests.', 'BATTLELINE', { rerollShock: true }),
       s('Officer Corps', 'CHARACTER re-rolls Hit rolls of 1.', 'CHARACTER', { reroll: 'hits1' }),
@@ -160,7 +160,7 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'objectives', name: 'Objectives',
+    id: 'objectives', name: 'Objectives', about: 'Holding ground: OC and buffs for units on an objective. Keystone Endless Ranks: BATTLELINE +2 OC.',
     main: [
       s('Hold the Line', 'BATTLELINE: +1 OC.', 'BATTLELINE', { oc: 1 }),
       s('Entrench', 'Units on an objective: Feel No Pain 6+.', undefined, { defend: { fnp: 6 }, if: ['onObjective'] }),
@@ -183,7 +183,7 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'logistics', name: 'Logistics',
+    id: 'logistics', name: 'Logistics', about: 'The campaign itself: more Scrap after each win, buffs for VETERAN units. Keystone Titan Requisition unlocks Knights and Titans.',
     main: [
       { name: 'Salvage Crews', text: '+10 Scrap after every won battle.', scrap: 10 },
       s('Blooded', 'VETERAN: +1 OC.', 'VETERAN', { oc: 1 }),
@@ -244,7 +244,7 @@ export function getFactionFamily(factionId: string): Family {
 
 const FAMILY_BRANCHES: Record<Family, Branch> = {
   IMPERIUM: {
-    id: 'army', name: 'Faith and Duty',
+    id: 'army', name: 'Faith and Duty', about: 'Imperium: Feel No Pain for infantry and vehicles, [LETHAL HITS] in melee, CP. Keystone: Critical Hits on 5+.',
     main: [
       s('Litany of Hate', 'BATTLELINE melee attacks re-roll Hit rolls of 1.', 'BATTLELINE', { reroll: 'hits1', attack: 'melee' }),
       s('Blessed Plating', 'VEHICLE: Feel No Pain 6+.', 'VEHICLE', { defend: { fnp: 6 } }),
@@ -262,7 +262,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     ],
   },
   CHAOS: {
-    id: 'army', name: 'The Dark Gods',
+    id: 'army', name: 'The Dark Gods', about: 'Chaos: daemonic wards, melee AP and Attacks. Keystone Dark Pact: Critical Hits on 5+, -1 to saves.',
     main: [
       s('Dark Zeal', 'INFANTRY melee weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'melee' }),
       { name: 'Warp Tribute', text: '+10 Scrap after every won battle.', scrap: 10 },
@@ -280,7 +280,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     ],
   },
   NECRONS: {
-    id: 'army', name: 'The Dynasty',
+    id: 'army', name: 'The Dynasty', about: 'Necrons: Feel No Pain, gauss [LETHAL HITS], CP. Keystone: +1 to Hit, -2\" Move.',
     main: [
       s('Living Metal', 'VEHICLE: Feel No Pain 6+.', 'VEHICLE', { defend: { fnp: 6 } }),
       s('Gauss Calibration', 'INFANTRY ranged weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'ranged' }),
@@ -298,7 +298,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     ],
   },
   ORKS: {
-    id: 'army', name: 'Waaagh!',
+    id: 'army', name: 'Waaagh!', about: 'Orks: choppas, dakka, fast vehicles, extra Scrap. Keystone Green Tide: +1 Attack in melee, -1 to Hit shooting.',
     main: [
       s('Choppa Drill', 'INFANTRY melee weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'melee' }),
       { name: 'Grot Scavengers', text: '+15 Scrap after every won battle.', scrap: 15 },
@@ -316,7 +316,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     ],
   },
   TYRANIDS: {
-    id: 'army', name: 'The Hive Mind',
+    id: 'army', name: 'The Hive Mind', about: 'Tyranids: Feel No Pain for monsters, OC and Battle-shock for the swarm, [LETHAL HITS] in melee.',
     main: [
       s('Chitin', 'MONSTER: Feel No Pain 6+.', 'MONSTER', { defend: { fnp: 6 } }),
       s('Swarm', 'INFANTRY: +1" Move.', 'INFANTRY', { move: 1 }),
@@ -334,7 +334,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     ],
   },
   XENOS: {
-    id: 'army', name: 'Alien Ingenuity',
+    id: 'army', name: 'Alien Ingenuity', about: 'Xenos: invulnerable saves for vehicles, ranged [LETHAL HITS], speed. Keystone: +1 Damage, -1 Toughness.',
     main: [
       s('Target Lock', 'INFANTRY ranged attacks re-roll Hit rolls of 1.', 'INFANTRY', { reroll: 'hits1', attack: 'ranged' }),
       { name: 'Black Market', text: '+10 Scrap after every won battle.', scrap: 10 },
@@ -357,7 +357,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
 const doctrine = 'any:doctrine:devastator||doctrine:assault||doctrine:tactical';
 const FACTION_BRANCHES: Record<string, Branch> = {
   SM: {
-    id: 'army', name: 'Codex Astartes',
+    id: 'army', name: 'Codex Astartes', about: 'Space Marines: TACTICUS, GRAVIS, PHOBOS and TERMINATOR squads, and bonuses tied to the Combat Doctrines. Keystone: +1 to Hit while a Doctrine is active.',
     main: [
       s('Tactical Discipline', 'TACTICUS ranged attacks re-roll Hit rolls of 1.', 'TACTICUS', { reroll: 'hits1', attack: 'ranged' }),
       s('Gravis Plate', 'GRAVIS: Feel No Pain 6+.', 'GRAVIS', { defend: { fnp: 6 } }),
@@ -376,7 +376,7 @@ const FACTION_BRANCHES: Record<string, Branch> = {
     ],
   },
   TS: {
-    id: 'army', name: 'Cult of Magic',
+    id: 'army', name: 'Cult of Magic', about: 'Thousand Sons: Rubricae and Sorcerers, and stronger psychic weapons (+1 Strength, +1 AP). Keystone: psychic weapons +1 Damage.',
     main: [
       s('Rubric Discipline', 'RUBRICAE ranged attacks re-roll Wound rolls of 1.', 'RUBRICAE', { reroll: 'wounds1', attack: 'ranged' }),
       s('Sorcerous Wards', 'SORCERER: Feel No Pain 6+.', 'SORCERER', { defend: { fnp: 6 } }),
@@ -394,7 +394,7 @@ const FACTION_BRANCHES: Record<string, Branch> = {
     ],
   },
   ORK: {
-    id: 'army', name: 'Da Big Waaagh!',
+    id: 'army', name: 'Da Big Waaagh!', about: 'Orks: Speed Freeks, Beast Snagga, Mega Armour, and more Attacks while the Waaagh! is on. Keystone Green Tide for the Boyz.',
     main: [
       s('Mob Rule', 'INFANTRY: +1 OC.', 'INFANTRY', { oc: 1 }),
       s('Speed Freeks', 'SPEED FREEKS: +2" Move.', 'SPEED FREEKS', { move: 2 }),
@@ -413,7 +413,7 @@ const FACTION_BRANCHES: Record<string, Branch> = {
     ],
   },
   NEC: {
-    id: 'army', name: 'Dynasty Awakened',
+    id: 'army', name: 'Dynasty Awakened', about: 'Necrons: Canoptek, Destroyer Cult, Crypteks and Triarch, Feel No Pain for infantry. Keystone: Feel No Pain 5+ for all, -2\" Move.',
     main: [
       s('Canoptek Swarms', 'CANOPTEK: +1" Move.', 'CANOPTEK', { move: 1 }),
       s('Gauss Calibration', 'INFANTRY ranged weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'ranged' }),
@@ -431,7 +431,7 @@ const FACTION_BRANCHES: Record<string, Branch> = {
     ],
   },
   TYR: {
-    id: 'army', name: 'Hive Fleet',
+    id: 'army', name: 'Hive Fleet', about: 'Tyranids: buffs inside Synapse range, Vanguard Invaders, Harvesters and burrowers. Keystone Endless Swarm: re-roll charges, +1 Attack.',
     main: [
       s('Synaptic Link', 'INFANTRY within Synapse range: +1 OC.', 'INFANTRY', { oc: 1, if: ['inSynapse'] }),
       s('Vanguard Organisms', 'VANGUARD INVADER: +1" Move.', 'VANGUARD INVADER', { move: 1 }),
@@ -496,6 +496,8 @@ export function treeFor(factionId: string): TreeNode[] {
 }
 
 export const branchName = (factionId: string) => branchOf(factionId).name;
+/** The eight slots in drawing order: name, what it is for, and where its label goes on the map. */
+export const slotGuide = (factionId: string) => [...SPOKES, branchOf(factionId)].map((b, i) => ({ id: b.id, name: b.name, about: b.about, ...at(angleOf(i), 8.45) }));
 export const SLOT_NAMES: Record<string, string> = Object.fromEntries([...SPOKES.map((b) => [b.id, b.name]), ['ring', 'Ring'], ['start', 'Start']]);
 
 // ---------- Renown, allocating and refunding ----------
