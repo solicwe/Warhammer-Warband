@@ -178,17 +178,21 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
     const onMerged = (w: Seg) => dist(w.a, w.b) <= 1.6 && merged.some((m) => pointSegDist({ x: (w.a.x + w.b.x) / 2, y: (w.a.y + w.b.y) / 2 }, m) < 0.75);
     t.walls = [...merged, ...t.walls.filter((w) => !gone.has(w) && !onMerged(w))];
   }
-  // a small ruin traced as a tangle of stubs (4+ walls inside 5" square) is drawn as one clean L: the two sides of its
+  // a small ruin traced as a tangle of stubs (4+ walls inside 5" square), or any ruin whose walls crowd each other, is
+  // drawn as one clean L: the two sides of its
   // box, along its longest wall, that carried the most of the traced walls
   for (const t of terrain) {
-    if (t.walls.length < 4) continue;
+    // crowded: a wall within 1.2" of another without meeting it at a corner
+    const meets = (w: Seg, k: Seg) => [w.a, w.b].some((p) => pointSegDist(p, k) < 0.35) || [k.a, k.b].some((p) => pointSegDist(p, w) < 0.35);
+    const crowded = t.walls.some((w, i) => t.walls.some((k, j) => j > i && segSegDist(w, k) < 1.2 && !meets(w, k)));
+    if (t.walls.length < 4 && !crowded) continue;
     const k = [...t.walls].sort((a, b) => dist(b.a, b.b) - dist(a.a, a.b))[0];
     const L = dist(k.a, k.b);
     const u = { x: (k.b.x - k.a.x) / L, y: (k.b.y - k.a.y) / L }, n = { x: -u.y, y: u.x };
     const pts = t.walls.flatMap((w) => [w.a, w.b]);
     const pu = pts.map((p) => p.x * u.x + p.y * u.y), pn = pts.map((p) => p.x * n.x + p.y * n.y);
     const [u0, u1, n0, n1] = [Math.min(...pu), Math.max(...pu), Math.min(...pn), Math.max(...pn)];
-    if (u1 - u0 > 5 || n1 - n0 > 5 || u1 - u0 < 1.5 || n1 - n0 < 1.5) continue;
+    if ((!crowded && (u1 - u0 > 5 || n1 - n0 > 5)) || u1 - u0 < 1.5 || n1 - n0 < 1.5) continue;
     const P = (a: number, b: number): Pt => ({ x: u.x * a + n.x * b, y: u.y * a + n.y * b });
     // the box's four sides, each scored by how much traced wall lies along it
     const sides = [
@@ -198,6 +202,17 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
     const best = sides.reduce((a, b) => (b.score > a.score ? b : a));
     const cross = sides.filter((x) => x.along !== best.along).reduce((a, b) => (b.score > a.score ? b : a));
     t.walls = [best.s, cross.s];
+  }
+  // what is left crowded (a wall within 1.2" of another without meeting it at a corner reads as one clump on the table)
+  // keeps its longer walls
+  for (const t of terrain) {
+    const kept: Seg[] = [];
+    const joins = (w: Seg, k: Seg) => [w.a, w.b].some((p) => pointSegDist(p, k) < 0.35) || [k.a, k.b].some((p) => pointSegDist(p, w) < 0.35);
+    for (const w of [...t.walls].sort((a, b) => dist(b.a, b.b) - dist(a.a, a.b))) {
+      if (kept.some((k) => segSegDist(w, k) < 1.2 && !joins(w, k))) continue;
+      kept.push(w);
+    }
+    t.walls = kept;
   }
   const objectives: ObjectiveState[] = L.objectives.map((o, i) => {
     const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
