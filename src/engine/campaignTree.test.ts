@@ -22,7 +22,7 @@ describe('army tree: shape', () => {
   const allKeywords = new Set(ids.flatMap((id) => load(id).datasheets.flatMap((d) => [...d.keywords, ...d.factionKeywords])));
 
   it('every army gets a tree of about 115 nodes, every node reachable from the start, links both ways', () => {
-    for (const id of ['SM', 'CSM', 'NEC', 'ORK', 'TYR', 'TAU']) {
+    for (const id of ['SM', 'TS', 'CSM', 'NEC', 'ORK', 'TYR', 'TAU', 'AM', 'GC']) {
       const nodes = treeFor(id);
       expect(nodes.length).toBeGreaterThanOrEqual(110);
       expect(nodes.length).toBeLessThanOrEqual(130);
@@ -41,7 +41,7 @@ describe('army tree: shape', () => {
   });
 
   it('every keyword a node names exists in the data (VETERAN aside)', () => {
-    for (const fam of ['SM', 'CSM', 'NEC', 'ORK', 'TYR', 'TAU']) {
+    for (const fam of ['SM', 'TS', 'CSM', 'NEC', 'ORK', 'TYR', 'TAU', 'AM', 'GC']) {
       for (const n of treeFor(fam)) {
         for (const k of [...(n.units?.split('|') ?? []), ...(n.as ? [n.as.from, n.as.to] : [])]) {
           if (k !== 'VETERAN') expect(allKeywords.has(k), `${n.name}: ${k}`).toBe(true);

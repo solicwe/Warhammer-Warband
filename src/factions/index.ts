@@ -282,6 +282,7 @@ addModifier('deepStrikeZone', (s, p, at, r) => circleInFlow(s, p, at, r));
 addCondition('inFlow', (_c, x) => inFlow(x.s, x.holder ?? x.A));
 
 // Tyranids: Synapse (Battle-shock and Leadership tests on 3D6)
+addCondition('inSynapse', (_c, x) => inSynapse(x.s, x.A)); // the campaign army tree (Synaptic Link)
 addModifier('shockDice', (s, u) => (inSynapse(s, u) ? 3 : 2));
 addModifier('meleeStrength', (s, u) => (inSynapse(s, u) ? { n: 1, note: 'Synapse +1 S' } : null));
 addCondition('inSynapse', (_c, x) => inSynapse(x.s, x.A));

@@ -59,9 +59,24 @@ nodes are read by the campaign code.
 Hybrid design: the big shared tree is the same for every army; the eighth slot is a branch of 10 nodes for the
 army itself, using its real keywords and leaning on its army rule.
 
-- First: a branch per family (Imperium, Chaos, Necrons, Orks, Tyranids, other Xenos) so every army has one now.
-- Then: a branch for each army, five at a time, starting with Space Marines, Thousand Sons, Orks, Necrons and
-  Tyranids. An army without its own branch uses its family's.
+- Built: a branch of its own for Space Marines (Codex Astartes: TACTICUS, GRAVIS, PHOBOS, TERMINATOR, Combat
+  Doctrines), Thousand Sons (Cult of Magic: RUBRICAE, SORCERER, psychic weapons), Orks (Da Big Waaagh!: SPEED FREEKS,
+  BEAST SNAGGA, MEGA ARMOUR, bonuses while the Waaagh! is on), Necrons (Dynasty Awakened: CANOPTEK, DESTROYER CULT,
+  CRYPTEK, TRIARCH) and Tyranids (Hive Fleet: Synapse range, VANGUARD INVADER, HARVESTER, BURROWER).
+- Every other army uses its family's branch (Imperium, Chaos, Tyranids, other Xenos). Next: more armies, three or four
+  at a time.
+
+In battle a node reaches each model by that model's own keywords, so a CHARACTER node on a Captain leading a squad
+buffs the Captain's attacks and saves, not the squad's.
+
+## How it is checked
+
+- `campaignTree.test.ts`: the shape (every node reachable, no overlaps, every keyword real), Renown, allocate and
+  refund rules, conversion keystones, thresholds, VETERAN, Titan Requisition, old saves.
+- `campaignTreeEngine.test.ts`: every condition a node names is one the engine knows; every node of every branch
+  changes what the engine works out for a unit it reaches (stats, rolls, OC, attack and defence modifiers), with a
+  control that a no-op effect changes nothing; a leader-only node stays on the leader; and a whole 3-round campaign
+  battle with 106 nodes taken plays to the end, keeps the buffs all battle and pays Renown.
 
 ## VETERAN
 

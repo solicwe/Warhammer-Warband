@@ -229,7 +229,7 @@ const CONVERSIONS: Spec[] = [
   { name: 'Old Guard', text: 'Keystone. BATTLELINE units also count as VETERAN for tree nodes.', as: { from: 'BATTLELINE', to: 'VETERAN' } },
 ];
 
-// ---------- the army's own branch (per family for now; per army next) ----------
+// ---------- the army's own branch: per family, and per army for the armies below ----------
 
 export type Family = 'IMPERIUM' | 'CHAOS' | 'NECRONS' | 'ORKS' | 'TYRANIDS' | 'XENOS';
 
@@ -353,6 +353,107 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
   },
 };
 
+/** Armies with a branch of their own, on their real keywords and army rule. The rest use their family's branch. */
+const doctrine = 'any:doctrine:devastator||doctrine:assault||doctrine:tactical';
+const FACTION_BRANCHES: Record<string, Branch> = {
+  SM: {
+    id: 'army', name: 'Codex Astartes',
+    main: [
+      s('Tactical Discipline', 'TACTICUS ranged attacks re-roll Hit rolls of 1.', 'TACTICUS', { reroll: 'hits1', attack: 'ranged' }),
+      s('Gravis Plate', 'GRAVIS: Feel No Pain 6+.', 'GRAVIS', { defend: { fnp: 6 } }),
+      s('Doctrinal Mastery', 'Devastator Doctrine: ranged attacks re-roll Hit rolls of 1. Assault Doctrine: melee attacks do.', undefined,
+        [{ reroll: 'hits1', attack: 'ranged', if: ['doctrine:devastator'] }, { reroll: 'hits1', attack: 'melee', if: ['doctrine:assault'] }]),
+      s('Shadow Warriors', 'PHOBOS: +1" Move.', 'PHOBOS', { move: 1 }),
+      s('Terminator Honours', 'TERMINATOR: Feel No Pain 6+.', 'TERMINATOR', { defend: { fnp: 6 } }),
+      { ...s('Angels of Death', 'CAPTAIN and CHAPLAIN: +1 Attack in melee.', 'CAPTAIN|CHAPLAIN', { attacks: 1, attack: 'melee' }),
+        bonus: { count: 6, text: 'With 6 branch nodes: Tactical Doctrine gives +1 OC.', e: { oc: 1, if: ['doctrine:tactical'] } } },
+      s('Codex Purity', 'Keystone. While a Combat Doctrine is active: +1 to Hit. Every unit: -1 OC.', undefined, [{ hit: 1, if: [doctrine] }, { oc: -1 }]),
+    ],
+    sideA: [
+      s('Death From Above', 'JUMP PACK: +1 to Charge rolls.', 'JUMP PACK', { chargeBonus: 1 }),
+      s('Ancient Sarcophagi', 'DREADNOUGHT: Feel No Pain 6+.', 'DREADNOUGHT', { defend: { fnp: 6 } }),
+      s('Chapter Relics', 'CHARACTER melee weapons: +1 Damage.', 'CHARACTER', { damage: 1, attack: 'melee' }),
+    ],
+  },
+  TS: {
+    id: 'army', name: 'Cult of Magic',
+    main: [
+      s('Rubric Discipline', 'RUBRICAE ranged attacks re-roll Wound rolls of 1.', 'RUBRICAE', { reroll: 'wounds1', attack: 'ranged' }),
+      s('Sorcerous Wards', 'SORCERER: Feel No Pain 6+.', 'SORCERER', { defend: { fnp: 6 } }),
+      s('Psychic Mastery', 'Psychic weapons: +1 Strength.', 'PSYKER', { strength: 1, if: ['psychicWeapon'] }),
+      s('Tzaangor Packs', 'MUTANT: +1" Move.', 'MUTANT', { move: 1 }),
+      s('Daemonforged', 'DAEMON: Feel No Pain 6+.', 'DAEMON', { defend: { fnp: 6 } }),
+      { ...s('Ether Flux', 'Psychic weapons: +1 AP.', 'PSYKER', { ap: 1, if: ['psychicWeapon'] }),
+        bonus: { count: 6, text: 'With 6 branch nodes: psychic weapons also have [IGNORES COVER].', e: { abilities: ['ignores cover'], if: ['psychicWeapon'] } } },
+      s('Unbound Sorcery', 'Keystone. Psychic weapons: +1 Damage. PSYKER units: -1 Toughness.', 'PSYKER', [{ damage: 1, if: ['psychicWeapon'] }, { toughness: -1 }]),
+    ],
+    sideA: [
+      s('Scarab Occult', 'TERMINATOR re-rolls Hit rolls of 1.', 'TERMINATOR', { reroll: 'hits1' }),
+      s('Discs of Tzeentch', 'FLY: +1" Move.', 'FLY', { move: 1 }),
+      s('Kairic Shield', 'PSYKER: Feel No Pain 5+ against mortal wounds and psychic attacks.', 'PSYKER', { defend: { fnp: 5, fnpVs: 'mortalPsychic' } }),
+    ],
+  },
+  ORK: {
+    id: 'army', name: 'Da Big Waaagh!',
+    main: [
+      s('Mob Rule', 'INFANTRY: +1 OC.', 'INFANTRY', { oc: 1 }),
+      s('Speed Freeks', 'SPEED FREEKS: +2" Move.', 'SPEED FREEKS', { move: 2 }),
+      s('Da Waaagh!', 'While the Waaagh! is on: +1 Attack in melee.', undefined, { attacks: 1, attack: 'melee', if: ['riled'] }),
+      s('Snagga Grit', 'BEAST SNAGGA melee attacks re-roll Wound rolls of 1.', 'BEAST SNAGGA', { reroll: 'wounds1', attack: 'melee' }),
+      s('Mega Armour', 'MEGA ARMOUR: Feel No Pain 6+.', 'MEGA ARMOUR', { defend: { fnp: 6 } }),
+      { ...s('Ere We Go', 'Every unit re-rolls Charge rolls.', undefined, { rerollCharge: true }),
+        bonus: { count: 6, text: 'With 6 branch nodes: +1 to Charge rolls while the Waaagh! is on.', e: { chargeBonus: 1, if: ['riled'] } } },
+      s('Green Tide', 'Keystone. INFANTRY: +1 Attack in melee and Feel No Pain 6+; -1 to Hit with ranged attacks.', 'INFANTRY',
+        [{ attacks: 1, attack: 'melee' }, { defend: { fnp: 6 } }, { hit: -1, attack: 'ranged' }]),
+    ],
+    sideA: [
+      { name: 'Grot Scavengers', text: '+15 Scrap after every won battle.', scrap: 15 },
+      s('Kustom Jobs', 'VEHICLE: Feel No Pain 6+.', 'VEHICLE', { defend: { fnp: 6 } }),
+      s('Warboss\'s Bellow', 'WARBOSS melee weapons: +1 Attack and +1 Strength.', 'WARBOSS', { attacks: 1, strength: 1, attack: 'melee' }),
+    ],
+  },
+  NEC: {
+    id: 'army', name: 'Dynasty Awakened',
+    main: [
+      s('Canoptek Swarms', 'CANOPTEK: +1" Move.', 'CANOPTEK', { move: 1 }),
+      s('Gauss Calibration', 'INFANTRY ranged weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'ranged' }),
+      s('Reanimation Surge', 'INFANTRY: Feel No Pain 6+.', 'INFANTRY', { defend: { fnp: 6 } }),
+      s('Destroyer Cult', 'DESTROYER CULT ranged attacks re-roll Hit rolls of 1.', 'DESTROYER CULT', { reroll: 'hits1', attack: 'ranged' }),
+      s('Living Metal', 'VEHICLE: Feel No Pain 6+.', 'VEHICLE', { defend: { fnp: 6 } }),
+      { ...s('Command Protocols', 'Units led by a CHARACTER: +1 to Hit with ranged attacks.', undefined, { hit: 1, attack: 'ranged', if: ['attached'] }),
+        bonus: { count: 6, text: 'With 6 branch nodes: those units also get +1 OC.', e: { oc: 1, if: ['attached'] } } },
+      s('Eternal Legion', 'Keystone. Every unit: Feel No Pain 5+ and -2" Move.', undefined, [{ defend: { fnp: 5 } }, { move: -2 }]),
+    ],
+    sideA: [
+      s('Dimensional Corridors', 'CRYPTEK: +2" Move.', 'CRYPTEK', { move: 2 }),
+      s('Triarch Precision', 'TRIARCH re-rolls Wound rolls of 1.', 'TRIARCH', { reroll: 'wounds1' }),
+      { name: 'Phaeron\'s Will', text: '+1 CP at the start of every battle.', cp: 1 },
+    ],
+  },
+  TYR: {
+    id: 'army', name: 'Hive Fleet',
+    main: [
+      s('Synaptic Link', 'INFANTRY within Synapse range: +1 OC.', 'INFANTRY', { oc: 1, if: ['inSynapse'] }),
+      s('Vanguard Organisms', 'VANGUARD INVADER: +1" Move.', 'VANGUARD INVADER', { move: 1 }),
+      s('Synaptic Imperative', 'Units within Synapse range re-roll melee Hit rolls of 1.', undefined, { reroll: 'hits1', attack: 'melee', if: ['inSynapse'] }),
+      s('Harvester Strains', 'HARVESTER: +1 OC.', 'HARVESTER', { oc: 1 }),
+      s('Chitin', 'MONSTER: Feel No Pain 6+.', 'MONSTER', { defend: { fnp: 6 } }),
+      { ...s('Hyper-Adaptation', 'Melee weapons have [LETHAL HITS].', undefined, { abilities: ['lethal hits'], attack: 'melee' }),
+        bonus: { count: 6, text: 'With 6 branch nodes: melee weapons +1 AP.', e: { ap: 1, attack: 'melee' } } },
+      s('Endless Swarm', 'Keystone. Every unit re-rolls Charge rolls and gets +1 Attack in melee; -1 to saving throws.', undefined, [{ rerollCharge: true, attacks: 1, attack: 'melee' }, { defend: { save: -1 } }]),
+    ],
+    sideA: [
+      s('Burrowers', 'BURROWER: +1 to Charge rolls.', 'BURROWER', { chargeBonus: 1 }),
+      s('Adrenal Glands', 'MONSTER melee weapons: +1 Strength.', 'MONSTER', { strength: 1, attack: 'melee' }),
+      s('Shadow in the Warp', 'Attacks against SYNAPSE units: -1 to Hit.', 'SYNAPSE', { defend: { hit: -1 } }),
+    ],
+  },
+};
+
+const branchOf = (factionId: string) => FACTION_BRANCHES[factionId] ?? FAMILY_BRANCHES[getFactionFamily(factionId)];
+/** Armies with a branch of their own (the rest use their family's). */
+export const OWN_BRANCHES = Object.keys(FACTION_BRANCHES);
+
 // ---------- building the graph ----------
 
 /** distance between depths on the drawing */
@@ -361,19 +462,19 @@ const SLOTS = 8;
 const angleOf = (slot: number) => -Math.PI / 2 + (slot * 2 * Math.PI) / SLOTS;
 const at = (a: number, r: number) => ({ x: Math.round(Math.cos(a) * r * STEP), y: Math.round(Math.sin(a) * r * STEP) });
 
-const treeCache = new Map<Family, TreeNode[]>();
+const treeCache = new Map<string, TreeNode[]>();
 
 /** The whole tree for an army: the shared spokes and rings, and its own branch. */
 export function treeFor(factionId: string): TreeNode[] {
-  const fam = getFactionFamily(factionId);
-  const hit = treeCache.get(fam);
+  const key = FACTION_BRANCHES[factionId] ? factionId : getFactionFamily(factionId);
+  const hit = treeCache.get(key);
   if (hit) return hit;
   const nodes: TreeNode[] = [{ id: 'start', name: 'Strike Force', kind: 'start', text: 'Where the tree starts. Always taken.', slot: 'start', x: 0, y: 0, links: [] }];
   const add = (n: TreeNode, from: string[]) => {
     nodes.push(n);
     for (const f of from) { n.links.push(f); nodes.find((x) => x.id === f)!.links.push(n.id); }
   };
-  const branches = [...SPOKES, FAMILY_BRANCHES[fam]];
+  const branches = [...SPOKES, branchOf(factionId)];
   branches.forEach((b, i) => {
     const a = angleOf(i);
     b.main.forEach((sp, d) => add({ ...sp, id: `${b.id}-${d + 1}`, kind: d === 6 ? 'keystone' : d === 2 || d === 5 ? 'notable' : 'small', slot: b.id, ...at(a, d + 1), links: [] }, [d ? `${b.id}-${d}` : 'start']));
@@ -390,11 +491,11 @@ export function treeFor(factionId: string): TreeNode[] {
     add({ ...BRIDGES[i], id: `ring-${b.id}`, kind: 'small', slot: 'ring', ...at(angleOf(i + 0.5), 4.15), links: [] }, [`${b.id}-4`, `${nb.id}-4`]);
     if (i < CONVERSIONS.length) add({ ...CONVERSIONS[i], id: `outer-${b.id}`, kind: 'keystone', slot: 'ring', ...at(angleOf(i + 0.5), 7.6), links: [] }, [`${b.id}-7`, `${nb.id}-7`]);
   });
-  treeCache.set(fam, nodes);
+  treeCache.set(key, nodes);
   return nodes;
 }
 
-export const branchName = (factionId: string) => FAMILY_BRANCHES[getFactionFamily(factionId)].name;
+export const branchName = (factionId: string) => branchOf(factionId).name;
 export const SLOT_NAMES: Record<string, string> = Object.fromEntries([...SPOKES.map((b) => [b.id, b.name]), ['ring', 'Ring'], ['start', 'Start']]);
 
 // ---------- Renown, allocating and refunding ----------
@@ -509,12 +610,16 @@ export function applyTree(s: GameState, run: TreeRun & { list: { units: ArmyUnit
   const counts = slotCounts(nodes);
   const conv = nodes.flatMap((n) => (n.as ? [n.as] : []));
   for (const u of s.units.filter((x) => x.owner === me)) {
-    // a unit is VETERAN when its body or a character leading it is
+    // the list entries in this unit: its body and the characters leading it
     const entries = run.list.units.filter((e) => u.id.endsWith(`-${e.uid}`) || run.list.units.some((b) => e.attachTo === b.uid && u.id.endsWith(`-${b.uid}`)));
-    const k = treeKeywords([...u.keywords, ...u.factionKeywords], entries.some(isVeteran), conv);
+    // each model by its own keywords, so a leader's CHARACTER node does not reach the squad it leads
+    const vet = (src: string) => entries.some((e) => e.datasheet === src && isVeteran(e));
+    const kws = new Map(u.models.map((m) => [m.id, treeKeywords([...m.keywords, ...u.factionKeywords], vet(m.source), conv)]));
     for (const n of nodes) {
-      if (!reaches(n, k)) continue;
-      for (const e of effectsOf(n, counts)) addTimed(s, u, { e: { ...e }, label: n.name, until: 'battle', by: me });
+      const ms = u.models.filter((m) => reaches(n, kws.get(m.id)!)).map((m) => m.id);
+      if (!ms.length) continue;
+      const models = ms.length === u.models.length ? undefined : ms;
+      for (const e of effectsOf(n, counts)) addTimed(s, u, { e: { ...e }, label: n.name, until: 'battle', by: me, models });
     }
   }
 }

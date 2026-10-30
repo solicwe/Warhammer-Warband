@@ -105,8 +105,8 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 - **Reinforcements** are offered after battles, each with a rarity (common, rare, epic, legendary) that follows how
   big the unit is.
 - **Army tree.** One passive tree for the whole army, paid for with Renown (battle 3, elite 5, boss 6, a loss 1).
-  Seven shared spokes (Fire, Assault, Armour, Speed, Command, Objectives, Logistics) and a branch for your army's
-  family sit around a start node, with an inner ring of bridges and an outer ring of keystones that make one keyword
+  Seven shared spokes (Fire, Assault, Armour, Speed, Command, Objectives, Logistics) and a branch for your army
+  (its own for Space Marines, Thousand Sons, Orks, Necrons and Tyranids; its family's for the rest) sit around a start node, with an inner ring of bridges and an outer ring of keystones that make one keyword
   count as another. Nodes reach units by keyword, some only in rounds 1-2 or from round 3, and some add a bonus once
   enough nodes of their spoke are taken. Refund a node for Scrap at an armory or medicae tent. The Logistics
   keystone unlocks Knights, Titans and other titanic units. Details in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
