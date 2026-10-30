@@ -39,7 +39,7 @@ const OTHERS = new Set(['Victrix Honour Guard']);
 export function sectionOf(d: DatasheetData | undefined, factionId?: string): Section {
   if (d?.ally || (d && detachmentAllyOf(factionId, d))) return 'allies';
   if (!d || OTHERS.has(d.name)) return 'others';
-  if (d.keywords.includes('CHARACTER') || /Character/.test(d.role)) return 'characters';
+  if (d.keywords.includes('CHARACTER') || d.keywords.includes('EPIC HERO') || /Character|Epic Hero/.test(d.role)) return 'characters';
   if (d.keywords.includes('BATTLELINE') || d.role === 'Battleline') return 'battleline';
   if (d.role === 'Dedicated Transports' || d.keywords.includes('DEDICATED TRANSPORT')) return 'transports';
   return 'others';
@@ -49,7 +49,7 @@ export function sectionOf(d: DatasheetData | undefined, factionId?: string): Sec
 export const KINDS = ['Character', 'Infantry', 'Fast Infantry', 'Heavy Infantry', 'Mounted', 'Walker', 'Vehicle', 'Aircraft', 'Other'] as const;
 export function unitKind(d: DatasheetData): (typeof KINDS)[number] {
   const k = (w: string) => d.keywords.includes(w);
-  if (k('CHARACTER')) return 'Character';
+  if (k('CHARACTER') || k('EPIC HERO')) return 'Character';
   if (k('AIRCRAFT')) return 'Aircraft';
   if (k('WALKER')) return 'Walker';
   if (k('VEHICLE')) return 'Vehicle';

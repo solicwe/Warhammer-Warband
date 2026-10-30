@@ -262,3 +262,15 @@ describe('conditional wargear rules (Helbrute fist sync, requiresNot)', () => {
   });
 });
 
+
+describe('per-model loadouts when models share a profile name', () => {
+  it('Dark Commune: each model gets its own kit, not the Cult Demagogue one', async () => {
+    const CSM = JSON.parse(fs.readFileSync('public/data/factions/CSM.json', 'utf8')) as FactionData;
+    const d = CSM.datasheets.find((x) => x.name === 'Dark Commune')!;
+    const [u] = buildUnits({ name: 't', factionId: 'CSM', battleSize: 'strike', detachments: [], units: [{ uid: 'a', datasheet: d.name, models: d.models.length, pts: 0 }] }, CSM, 0);
+    const kits = new Set(u.models.map((m) => m.weapons.map((w) => w.name).sort().join('+')));
+    expect(kits.size).toBeGreaterThan(1);
+    const { sectionOf } = await import('../ui/ArmyBuilder');
+    expect(sectionOf(CSM.datasheets.find((x) => x.name === 'Masters of the Maelstrom'))).toBe('characters');
+  });
+});

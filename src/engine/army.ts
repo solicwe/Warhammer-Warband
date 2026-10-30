@@ -207,7 +207,8 @@ export const wkey = (s: string) => s.toLowerCase().replace(/[’']/g, '').replac
 function canonItem(sheet: DatasheetData, item: string): string {
   const k = wkey(item);
   const w = sheet.weapons.find((x) => [k, k.replace(/es$/, ''), k.replace(/s$/, '')].includes(wkey(x.name))) ?? findWeapon(sheet, item);
-  return w ? w.name : item.charAt(0).toUpperCase() + item.slice(1);
+  const t = item.replace(/\.\s*$/, ''); // "Chaos icon." at the end of a loadout sentence
+  return w ? w.name : t.charAt(0).toUpperCase() + t.slice(1);
 }
 const weaponNamed = (sheet: DatasheetData, name: string) => sheet.weapons.find((w) => w.name === name) ?? sheet.weapons.find((w) => wkey(w.name) === wkey(name));
 
@@ -265,7 +266,10 @@ function loadoutItemsFor(sheet: DatasheetData, compName: string | undefined, pro
     return matchKey(p, false);
   };
 
-  const plain = parsed.find((p) => !p.n && p.base !== 'model' && matchKey(p, true))?.k
+  // the model's own line name first ("Mindwitch"): a shared profile name ("Cult Demagogue" stats for the whole unit)
+  // must not hand every model the leader's kit
+  const plain = (comp ? parsed.find((p) => !p.n && p.base === comp)?.k : undefined)
+    ?? parsed.find((p) => !p.n && p.base !== 'model' && matchKey(p, true))?.k
     ?? parsed.find((p) => !p.n && p.base !== 'model' && matchFuzzy(p))?.k
     ?? keys.find((k) => k === '*')
     ?? parsed.find((p) => matchKey(p, true))?.k
