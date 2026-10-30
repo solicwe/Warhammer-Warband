@@ -1223,11 +1223,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         return KINDS.indexOf(kindA) - KINDS.indexOf(kindB) || a.datasheet.localeCompare(b.datasheet);
                       });
 
-                      const kindOf = (x: ArmyUnitEntry) => {
-                        const d = fac.datasheets.find((s) => s.name === x.datasheet);
-                        return d ? unitKind(d) : 'Other';
-                      };
-
                       const bySupport = (a: ArmyUnitEntry, b: ArmyUnitEntry) =>
                         Number(!!supportIn(run.list, fac.datasheets.find((x) => x.name === a.datasheet))) -
                         Number(!!supportIn(run.list, fac.datasheets.find((x) => x.name === b.datasheet)));
@@ -1243,10 +1238,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             <span>{sec.title}</span>
                             <button type="button" className="ab-add" aria-label={`Recruit ${sec.title}`} onClick={() => { setRecruitQ(''); setRecruitSec(sec.id); }}>+</button>
                           </div>
-                          {sortedUs.map((u, i) => {
+                          {sortedUs.map((u) => {
                             const riders = run.list.units.filter((r) => r.embarkIn === u.uid && !r.attachTo);
-                            const k = kindOf(u);
-                            const showKind = (sec.id === 'characters' || sec.id === 'others') && (i === 0 || kindOf(sortedUs[i - 1]) !== k);
                             const rowNode = (!joined(u).length && !riders.length) ? (
                               unitRow(u)
                             ) : (
@@ -1258,7 +1251,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                             return (
                               <Fragment key={`item-${u.uid}`}>
-                                {showKind && <div className="ab-kind">{k}</div>}
                                 {rowNode}
                               </Fragment>
                             );
