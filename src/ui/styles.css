@@ -1741,10 +1741,6 @@ b.em { font-weight: 700; color: var(--text); }
   .topbar { gap: 2px; padding: 4px; overflow-x: auto; scrollbar-width: none; }
   .topbar::-webkit-scrollbar { display: none; }
   .topbar .tb-tool { width: auto; min-width: 44px; }
-  /* row one: the two scores and the round; row two: the tools */
-  .topbar .round-box { flex: 1 1 0; min-width: 0; }
-  .topbar .tb-tools { flex-basis: 100%; justify-content: flex-end; margin-left: 0; }
-  .phasebar span { min-width: 0; letter-spacing: 0; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .topbar .tb-tool .tb-lbl { font-size: 11px; }
   .side-score { min-width: 50px; max-width: 86px; padding: 2px 3px; }
   .ss-label { max-width: 80px; font-size: 11px; }
@@ -3031,3 +3027,11 @@ select option {
 /* detachments grouped by Chapter: a coloured heading, and the same colour down each card's edge */
 .dt-group { margin-top: 10px; padding: 4px 0 4px 10px; border-left: 4px solid var(--tint, var(--accent)); font-family: var(--font-cond); font-weight: 700; font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tint, var(--accent)); }
 .dt-item { border-left: 4px solid var(--tint, var(--line)); }
+
+/* a narrow top bar (a phone, or the PC side column): row one the two scores and the round, row two the tools */
+.game-top { container-type: inline-size; }
+@container (max-width: 720px) {
+  .topbar .round-box { flex: 1 1 0; min-width: 0; }
+  .topbar .tb-tools { flex-basis: 100%; justify-content: flex-end; margin-left: 0; }
+  .phasebar span { min-width: 0; letter-spacing: 0; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

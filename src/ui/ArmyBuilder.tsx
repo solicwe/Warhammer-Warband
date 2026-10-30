@@ -261,7 +261,7 @@ export function WargearEditor({ sheet, u, onChange, scrapMode = false }: { sheet
                 return (
                   <div key={k} className="wg-chips">
                     {vals.map((v) => (
-                      <button type="button" key={v ?? '-'} className={v === cur[k] ? 'on' : ''} onClick={() => choose(k, v)}>{v ?? 'None'}</button>
+                      <button type="button" key={v ?? '-'} className={v === cur[k] ? 'on' : ''} onClick={() => choose(k, v)}>{v ?? 'None'}{v && v !== cur[k] ? costTag([v], cur[k] ? [cur[k]] : []) : null}</button>
                     ))}
                   </div>
                 );

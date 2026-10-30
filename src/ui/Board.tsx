@@ -1787,12 +1787,11 @@ function BoardImpl(props: BoardProps) {
             })}
             {ms.map((m, i) => {
               const p = pts[i];
-              if (
-                p.x < vb.x - 3.5 ||
-                p.x > vb.x + vb.w + 3.5 ||
-                p.y < vb.y - 3.5 ||
-                p.y > vb.y + vb.h + 3.5
-              ) {
+              // off-screen models are left out (panning stays smooth on phones), measured against the view actually
+              // shown with half a screen to spare: a pan or a camera move before the next redraw must not leave units
+              // invisible
+              const mx = Math.max(3.5, shown.w / 2), my = Math.max(3.5, shown.h / 2);
+              if (p.x < shown.x - mx || p.x > shown.x + shown.w + mx || p.y < shown.y - my || p.y > shown.y + shown.h + my) {
                 return null;
               }
               const bad = props.bad?.includes(m.id);
