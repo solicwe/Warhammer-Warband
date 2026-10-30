@@ -1592,6 +1592,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                               setRun(next);
                                               play('good');
                                               setInfo(`Recruited ${d.name}!`);
+                                              setRecruitView(null);
                                             }
                                           }
                                         }}
@@ -1621,6 +1622,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                                   play('good');
                                                   setInfo(`Recruited ${d.name} (${o.models} models)!`);
                                                   setRecruitSize(null);
+                                                  setRecruitView(null);
                                                 }
                                               }}
                                             >

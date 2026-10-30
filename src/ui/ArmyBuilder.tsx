@@ -436,6 +436,8 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     if (!opt) return;
     set({ units: [...list.units, syncWargear(d, defaultWargear(d, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts }))] });
     setNote(`Added ${d.name}`);
+    setView(null); // adding closes the datasheet open in the add list
+    setAddSize(null);
   };
 
   const share = async () => {
