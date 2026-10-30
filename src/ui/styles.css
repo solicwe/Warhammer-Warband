@@ -2907,7 +2907,7 @@ select option {
 .rt-seg .rt-ph { color: inherit; }
 .rt-n { color: var(--text-3); font-variant-numeric: tabular-nums; }
 .rt-card { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.rt-card + .rt-card, .rt-seg + .rt-card { border-top: 1px solid var(--line); }
+.rt-card + .rt-card, .rt-seg + .rt-card { border-top: 2px solid var(--line-2); }
 .rt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .rt-name { font: 600 16px var(--font-cond); letter-spacing: 0.04em; text-transform: uppercase; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
 .rt-cp { flex: none; font: 600 15px var(--font-cond); color: var(--text-2); font-variant-numeric: tabular-nums; }
@@ -2939,3 +2939,7 @@ select option {
 /* weapon counts on a unit's datasheet: "x8" before the name, options the unit doesn't carry dimmed */
 .ds-wt .ds-wn { display: inline-block; min-width: 2.2em; margin-right: 4px; font-variant-numeric: tabular-nums; }
 .ds-wt tr.ds-off td { opacity: 0.4; }
+
+/* keyword lines: a little air between the words so the run of capitals reads as separate keywords */
+.ds-kw, .ds-kw2 { word-spacing: 0.3em; letter-spacing: 0.02em; line-height: 1.6; }
+.ds-kw span { word-spacing: normal; }

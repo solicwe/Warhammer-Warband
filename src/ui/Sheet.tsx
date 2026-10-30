@@ -273,7 +273,7 @@ export function DatasheetView({ sheet, factionId, variants, counts }: { sheet: D
         <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={60} datasheet={sheet.name} editable={PHOTO_EDIT} />
         <div className="grow">
           <h2>{sheet.name}</h2>
-          <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''} · tap the picture or paste to set one</div>
+          <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''}{PHOTO_EDIT ? ' · tap the picture or paste to set one' : ''}</div>
         </div>
       </div>
       <div className="ds-statband">
@@ -362,7 +362,7 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
         ))}
         <div className="grow">
           <h2>{u.name}</h2>
-          <div className="tiny">Tap the picture or paste to set one · saved on this device</div>
+          {PHOTO_EDIT && <div className="tiny">Tap the picture or paste to set one · saved on this device</div>}
         </div>
       </div>
       {sources.map((src) => {
@@ -446,7 +446,8 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
 
 /** One picture per model (by name, and by loadout when the same model comes with different kits): tap to set one. */
 export function ModelPictures({ variants, kind, owner }: { variants: PictureVariant[]; kind: TokenKind; owner: 0 | 1 }) {
-  if (!variants.length) return null;
+  // pictures are changed on request now, not in the app: nothing to tap here
+  if (!variants.length || !PHOTO_EDIT) return null;
   return (
     <div>
       <div className="small muted">Model pictures · tap to set one for each model / loadout</div>
