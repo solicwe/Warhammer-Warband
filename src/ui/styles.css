@@ -2990,7 +2990,8 @@ select option {
 .tree-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 2px solid var(--line-2); }
 .tree-legend i.taken { background: var(--accent); border-color: var(--accent); }
 .tree-legend i.open { border-color: var(--accent); }
-.tree-map { overflow: auto; max-height: 58vh; border: 1px solid var(--line); border-radius: 8px; background: var(--sunk); -webkit-overflow-scrolling: touch; }
+.tree-stage { position: relative; }
+.tree-map { overflow: auto; max-height: 58vh; touch-action: pan-x pan-y; border: 1px solid var(--line); border-radius: 8px; background: var(--sunk); -webkit-overflow-scrolling: touch; }
 .tree-map svg { display: block; }
 .tree-edge { stroke: var(--line-2); stroke-width: 2; }
 .tree-edge.open { stroke: color-mix(in srgb, var(--accent) 45%, var(--line-2)); }
@@ -3006,10 +3007,11 @@ select option {
 .tree-node.locked { opacity: 0.55; }
 .tree-node text { font-family: var(--font-cond); font-size: 11px; font-weight: 600; fill: var(--text-2); paint-order: stroke; stroke: var(--sunk); stroke-width: 3px; pointer-events: none; }
 .tree-node.taken text { fill: var(--text); }
-.tree-card { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--line-2); border-radius: 8px; background: var(--surface); }
+.tree-card { position: absolute; left: 8px; right: 8px; top: 8px; max-height: calc(100% - 16px); overflow: auto; box-shadow: var(--shadow); z-index: 2; display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--line-2); border-radius: 8px; background: var(--surface); }
 .tree-card.notable { border-left-color: var(--accent-2); }
 .tree-card.keystone { border-left-color: var(--accent); }
-.tree-card-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; }
+.tree-card-x { margin-left: auto; display: inline-grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 6px; background: var(--surface-2); color: var(--text-2); cursor: pointer; }
+.tree-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; }
 .tree-card-head b { font-family: var(--font-cond); font-size: 17px; color: var(--text); }
 .tree-chip { font-family: var(--font-cond); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); }
 .tree-text { font-size: 14px; color: var(--text); line-height: 1.4; }
