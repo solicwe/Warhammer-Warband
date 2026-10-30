@@ -148,6 +148,57 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
     if (w) kept.push(w);
   }
   for (const t of terrain) t.walls = t.walls.flatMap((w) => { const c = cut.has(w) ? cut.get(w) : w; return c ? [c] : []; });
+  // a thin wall was traced as its outline: two parallel walls about an inch apart (no base fits between them) and
+  // short caps closing the ends. On the table that draws as one fat double bar; it becomes one wall down the middle
+  for (const t of terrain) {
+    const ws = [...t.walls].sort((a, b) => dist(b.a, b.b) - dist(a.a, a.b));
+    const gone = new Set<Seg>(), merged: Seg[] = [];
+    for (const k of ws) {
+      if (gone.has(k)) continue;
+      const L = dist(k.a, k.b);
+      if (L < 0.8) continue;
+      const ux = (k.b.x - k.a.x) / L, uy = (k.b.y - k.a.y) / L;
+      const side = (p: Pt) => (p.x - k.a.x) * uy - (p.y - k.a.y) * ux, along = (p: Pt) => (p.x - k.a.x) * ux + (p.y - k.a.y) * uy;
+      const mate = ws.find((w) => {
+        if (w === k || gone.has(w) || dist(w.a, w.b) < 0.6) return false;
+        const sa = side(w.a), sb = side(w.b);
+        if (Math.abs(sa - sb) > 0.45 || Math.min(Math.abs(sa), Math.abs(sb)) < 0.3 || Math.max(Math.abs(sa), Math.abs(sb)) > 1.35 || sa * sb < 0) return false;
+        const lo = Math.max(0, Math.min(along(w.a), along(w.b))), hi = Math.min(L, Math.max(along(w.a), along(w.b)));
+        return hi - lo >= 0.6 * dist(w.a, w.b);
+      });
+      if (!mate) continue;
+      const off = (side(mate.a) + side(mate.b)) / 4; // halfway towards the mate
+      const t0 = Math.min(0, along(mate.a), along(mate.b)), t1 = Math.max(L, along(mate.a), along(mate.b));
+      const at = (tt: number): Pt => ({ x: k.a.x + ux * tt + uy * off, y: k.a.y + uy * tt - ux * off });
+      gone.add(k); gone.add(mate);
+      merged.push({ a: at(t0), b: at(t1) });
+    }
+    if (!merged.length) continue;
+    // the caps that closed the pair now cross the middle wall: short walls whose middle sits on a merged wall
+    const onMerged = (w: Seg) => dist(w.a, w.b) <= 1.6 && merged.some((m) => pointSegDist({ x: (w.a.x + w.b.x) / 2, y: (w.a.y + w.b.y) / 2 }, m) < 0.75);
+    t.walls = [...merged, ...t.walls.filter((w) => !gone.has(w) && !onMerged(w))];
+  }
+  // a small ruin traced as a tangle of stubs (4+ walls inside 5" square) is drawn as one clean L: the two sides of its
+  // box, along its longest wall, that carried the most of the traced walls
+  for (const t of terrain) {
+    if (t.walls.length < 4) continue;
+    const k = [...t.walls].sort((a, b) => dist(b.a, b.b) - dist(a.a, a.b))[0];
+    const L = dist(k.a, k.b);
+    const u = { x: (k.b.x - k.a.x) / L, y: (k.b.y - k.a.y) / L }, n = { x: -u.y, y: u.x };
+    const pts = t.walls.flatMap((w) => [w.a, w.b]);
+    const pu = pts.map((p) => p.x * u.x + p.y * u.y), pn = pts.map((p) => p.x * n.x + p.y * n.y);
+    const [u0, u1, n0, n1] = [Math.min(...pu), Math.max(...pu), Math.min(...pn), Math.max(...pn)];
+    if (u1 - u0 > 5 || n1 - n0 > 5 || u1 - u0 < 1.5 || n1 - n0 < 1.5) continue;
+    const P = (a: number, b: number): Pt => ({ x: u.x * a + n.x * b, y: u.y * a + n.y * b });
+    // the box's four sides, each scored by how much traced wall lies along it
+    const sides = [
+      { s: { a: P(u0, n0), b: P(u1, n0) }, along: 'u' }, { s: { a: P(u0, n1), b: P(u1, n1) }, along: 'u' },
+      { s: { a: P(u0, n0), b: P(u0, n1) }, along: 'n' }, { s: { a: P(u1, n0), b: P(u1, n1) }, along: 'n' },
+    ].map((x) => ({ ...x, score: t.walls.reduce((sum, w) => sum + (pointSegDist(w.a, x.s) < 0.8 && pointSegDist(w.b, x.s) < 0.8 ? dist(w.a, w.b) : 0), 0) }));
+    const best = sides.reduce((a, b) => (b.score > a.score ? b : a));
+    const cross = sides.filter((x) => x.along !== best.along).reduce((a, b) => (b.score > a.score ? b : a));
+    t.walls = [best.s, cross.s];
+  }
   const objectives: ObjectiveState[] = L.objectives.map((o, i) => {
     const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
     const ox = Math.round(o.x * sx * 10) / 10;
