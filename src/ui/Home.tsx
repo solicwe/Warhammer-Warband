@@ -66,22 +66,13 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
           </section>
         )}
 
-        <nav className="modes" aria-label="Play">
-          <button className="mode slate main" onClick={onBattle}>
-            <span className="slate-in">
-              <span className="mode-icon"><Icon name="fight" size={26} /></span>
-              <span className="mode-text"><b>New battle</b><small>Against the bot, two players on one device, or bot against bot</small></span>
-              <Icon name="next" size={20} className="mode-go" />
-            </span>
+        {/* playing sits small at the top: the page is about building armies */}
+        <nav className="modes-mini" aria-label="Play">
+          <button className="mode-mini" onClick={onBattle}><Icon name="fight" size={18} /><span>New battle</span></button>
+          <button className="mode-mini" onClick={onCampaign}>
+            <Icon name="trophy" size={18} />
+            <span>Campaign{run && !run.over ? <small>Stage {Math.min(runLayer + 1, runLayers)} of {runLayers}</small> : null}</span>
           </button>
-          <button className="mode slate main" onClick={onCampaign}>
-            <span className="slate-in">
-              <span className="mode-icon"><Icon name="trophy" size={22} /></span>
-              <span className="mode-text"><b>Campaign</b><small>{run && !run.over ? `Stage ${Math.min(runLayer + 1, runLayers)} of ${runLayers} · ${run.fate} Fate · ${run.scrap ?? 0} Scrap` : 'Branching battles, armory, battle honors, and Warlord'}</small></span>
-              <Icon name="next" size={20} className="mode-go" />
-            </span>
-          </button>
-
         </nav>
 
         <section className="group" aria-label="Your armies">

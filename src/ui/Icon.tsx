@@ -100,18 +100,12 @@ export function SvgIcon({ name, x, y, size, color }: { name: IconName; x: number
   );
 }
 
-/** Warhammer Warband's mark: a war banner whose cloth is the face of a die. `tile` draws it on its dark app-icon square. */
+/** Warhammer Warband's mark: a power-armoured helm (domed shell, red eye lenses, grille). `tile` draws it on its dark app-icon square. */
 export function Logo({ size = 28, tile = false }: { size?: number; tile?: boolean }) {
   return (
     <svg className="logo" width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
       {tile && <rect width="64" height="64" rx="14" fill="#16191d" />}
-      <path d="M20 10v46" stroke="#e8e2d4" strokeWidth="3.4" strokeLinecap="round" />
-      <path d="M20 4.5l3 3.6-3 3.6-3-3.6z" fill="#e8e2d4" />
-      <path d="M14.5 14h34" stroke="#e8e2d4" strokeWidth="3" strokeLinecap="round" />
-      <path d="M20 14h26v29l-13-6.5L20 43z" fill="#d3a04a" />
-      <circle cx="26.5" cy="20.5" r="2.7" fill="#16191d" />
-      <circle cx="33" cy="27" r="2.7" fill="#16191d" />
-      <circle cx="39.5" cy="33.5" r="2.7" fill="#16191d" />
+      <path d="M15 31C15 16 22.5 7 32 7s17 9 17 24v9c0 4-2 7.5-5.5 9.5L40 57H24l-3.5-7.5C17 47.5 15 44 15 40z" fill="#d3a04a" /><path d="M29.6 7.3h4.8l-.6 15.2h-3.6z" fill="#e8e2d4" /><path d="M18.5 26.5l11 2.2-1.2 5.6-9-1.4z" fill="#b3261e" /><path d="M45.5 26.5l-11 2.2 1.2 5.6 9-1.4z" fill="#b3261e" /><path d="M30.6 28.5h2.8l-.4 7.5h-2z" fill="#e8e2d4" /><rect x="26" y="38" width="12" height="12" rx="2.5" fill="#16191d" /><path d="M29 40.5v7M32 40.5v7M35 40.5v7" stroke="#d3a04a" strokeWidth="1.5" strokeLinecap="round" /><path d="M18 38.5l5.5 2v3.2l-5.5-1.8zM46 38.5l-5.5 2v3.2l5.5-1.8z" fill="#16191d" />
     </svg>
   );
 }
