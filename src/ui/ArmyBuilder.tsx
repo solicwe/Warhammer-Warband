@@ -578,9 +578,9 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
         </div>
         {faction.detachments.length > 0 && <button type="button" className="dt-gear" aria-label="Change Detachment" onClick={() => setDetPicker(true)}><Icon name="gear" size={26} /></button>}
       </div>
-      {chosenDets.length > 0 && dSection('rule', 'Detachment Rule', chosenDets.map((d) => <RuleCards key={d.name} rules={d.rules} names={ruleNames} source={chosenDets.length > 1 ? d.name : undefined} />))}
-      {chosenDets.length > 0 && dSection('enh', 'Enhancements', <EnhTable enh={chosenDets.flatMap((d) => d.enhancements)} names={ruleNames} />, chosenDets.reduce((a, d) => a + d.enhancements.length, 0))}
-      {chosenDets.length > 0 && dSection('strat', 'Stratagems', <StratTable strats={chosenDets.flatMap((d) => d.stratagems)} names={ruleNames} />, chosenDets.reduce((a, d) => a + d.stratagems.length, 0))}
+      {chosenDets.length > 0 && dSection('rule', 'Detachment Rule', chosenDets.map((d) => <div key={d.name} className="rl-det">{chosenDets.length > 1 && <div className="rl-det-head">{d.name}</div>}<RuleCards rules={d.rules} names={ruleNames} /></div>))}
+      {chosenDets.length > 0 && dSection('enh', 'Enhancements', chosenDets.map((d) => <div key={d.name} className="rl-det">{chosenDets.length > 1 && <div className="rl-det-head">{d.name}</div>}<EnhTable enh={d.enhancements} names={ruleNames} /></div>), chosenDets.reduce((a, d) => a + d.enhancements.length, 0))}
+      {chosenDets.length > 0 && dSection('strat', 'Stratagems', <StratTable strats={chosenDets.flatMap((d) => d.stratagems)} names={ruleNames} source={chosenDets.length > 1 ? (st) => chosenDets.find((d) => d.stratagems.some((x) => x.name === st.name))?.name ?? '' : undefined} />, chosenDets.reduce((a, d) => a + d.stratagems.length, 0))}
       {dSection('core', 'Core Stratagems', <StratTable strats={RULES.coreStratagems} names={ruleNames} />)}
       {dSection('army', 'Army Rule', chapterRules(faction.armyRules, list.subfaction).map((r) => (
         <div key={r.name} className="dt-card">

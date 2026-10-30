@@ -2964,3 +2964,12 @@ select option {
 /* weapon rows: name and keywords on one line (a keyword breaks only at a space, never at its hyphen); the number columns stay narrow */
 .ds-wt th:not(:first-child), .ds-wt td:not(:first-child) { white-space: nowrap; padding-left: 3px; padding-right: 3px; }
 .ds-wt th { letter-spacing: 0.04em; }
+
+/* rule text inside the rule cards: room between paragraphs and between bullet points */
+.rl-blocks .rt { gap: 10px; }
+.rl-blocks .rt-ul { gap: 8px; padding-left: 20px; }
+.rl-blocks .rt-ul li::marker { color: var(--ph, var(--text-3)); }
+
+/* two or more detachments: each one under its own name, a heavy line between them */
+.rl-det + .rl-det { border-top: 4px solid var(--line-2); }
+.rl-det-head { padding: 10px 16px 6px; font: 700 13px var(--font-cond); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); background: var(--surface-2); border-bottom: 1px solid var(--line); }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Em } from './Em';
+import { RuleText } from './RuleText';
 
 /** Rules shown the way you look them up mid-game: which phase, whose turn, what it gives. Phase colours come from
  *  the --ph-* tokens in styles.css. */
@@ -78,7 +79,8 @@ export function ruleBlocks(text: string): { intro: string[]; items: { title: str
 /** Rule text, with named options laid out as separate blocks when it has them. */
 export function RuleBody({ text, names }: { text: string; names?: string[] }) {
   const b = ruleBlocks(text);
-  if (!b) return <span className="rl-text"><Em text={text} names={names} /></span>;
+  // no named options: bullet lists and paragraphs laid out by RuleText ("• Your deployment zone …" as a list)
+  if (!b) return <div className="rl-text rl-blocks"><RuleText text={text} names={names} /></div>;
   return (
     <div className="rl-text rl-blocks">
       {b.intro.map((t, i) => <p key={i}><Em text={t} names={names} /></p>)}
