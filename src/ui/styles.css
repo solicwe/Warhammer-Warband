@@ -2956,14 +2956,13 @@ select option {
 .rl-opt-name { font: 600 14.5px var(--font-cond); letter-spacing: 0.05em; text-transform: uppercase; color: var(--text); }
 .rl-flavour { font-style: italic; font-size: 13px; color: var(--text-3); }
 
-/* datasheet stat lines on one row: M T Sv W Ld OC, the invulnerable save shield, then the model name level with the labels */
-.ds-statline { flex-wrap: nowrap; align-items: flex-start; gap: 8px; }
-.ds-statline .ds-statrow { grid-template-columns: repeat(6, 32px) auto; gap: 3px; align-items: end; }
-.ds-statline .ds-inv { grid-column: auto; margin: 0 0 2px 2px; }
-.ds-sheet .ds-statline .ds-stat b { font-size: 15px; min-height: 30px; letter-spacing: -0.02em; }
-.ds-sheet .ds-statline .ds-stat span { font-size: 11px; }
-.ds-sheet .ds-statline .ds-shield { width: 28px; height: 32px; font-size: 14px; }
-.ds-mname { flex: 1 1 0; min-width: 0; padding-top: 0; font-size: 13px; line-height: 1.15; overflow-wrap: normal; word-break: normal; hyphens: none; }
-.ds-mname small { white-space: nowrap; }
-/* weapon keywords on their own line under the name, so the count and the name read together */
-.ds-wt .ds-wkw { display: block; margin-top: 2px; }
+/* datasheet stat lines: the model name on top, M T Sv W Ld OC, the invulnerable save shield under Sv with its label */
+.ds-statline { flex-direction: column; align-items: flex-start; flex-wrap: nowrap; gap: 0; }
+.ds-statline .ds-inv { grid-column: 3 / span 4; display: flex; align-items: center; justify-content: flex-start; gap: 6px; margin: 2px 0 0 5px; }
+.ds-inv-label { font: 700 11px var(--font-cond); letter-spacing: 0.04em; color: var(--text-2); white-space: nowrap; }
+.ds-sheet .ds-inv-label { color: #fff; }
+.ds-mname { flex: none; padding-top: 6px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ds-mname small { display: inline; white-space: nowrap; }
+/* weapon rows: name and keywords on one line (a keyword breaks only at a space, never at its hyphen); the number columns stay narrow */
+.ds-wt th:not(:first-child), .ds-wt td:not(:first-child) { white-space: nowrap; padding-left: 3px; padding-right: 3px; }
+.ds-wt th { letter-spacing: 0.04em; }

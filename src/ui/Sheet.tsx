@@ -17,7 +17,7 @@ function Stats({ p, noInv }: { p: ModelProfileData; noInv?: boolean }) {
     <div className="ds-stats">
       <div className="ds-statrow">
         {cells.map(([k, v]) => <div key={k} className="ds-stat"><span>{k}</span><b>{v}</b></div>)}
-        {p.InSv && !noInv ? <div className="ds-inv" title="Invulnerable save"><span className="ds-shield">{p.InSv}+</span></div> : null}
+        {p.InSv && !noInv ? <div className="ds-inv" title="Invulnerable save"><span className="ds-shield">{p.InSv}+</span><span className="ds-inv-label">INV SAVE</span></div> : null}
       </div>
     </div>
   );
@@ -38,7 +38,7 @@ function WeaponTable({ rows, melee, counted }: { rows: { w: WeaponData; p: Weapo
           <tr key={i} className={counted && !n ? 'ds-off' : undefined}>
             <td>
               {counted ? n > 0 && <b className="ds-wn">x{n}</b> : n > 1 ? `${n}× ` : ''}{w.name}{p.name !== w.name ? ` – ${p.name}` : ''}
-              {p.abilities.length > 0 && <span className="ds-wkw"> {abilitiesOf(p).map((a) => `[${abilityLabel(a).toUpperCase()}]`).join(', ')}</span>}
+              {p.abilities.length > 0 && <span className="ds-wkw"> {abilitiesOf(p).map((a, k) => <span key={k}>[{abilityLabel(a).toUpperCase().replace(/-/g, '\u2011')}]{k < abilitiesOf(p).length - 1 ? ', ' : ''}</span>)}</span>}
             </td>
             <td>{p.range === 'Melee' ? 'Melee' : `${p.range}"`}</td>
             <td>{p.A}</td>
@@ -279,8 +279,8 @@ export function DatasheetView({ sheet, factionId, variants, counts }: { sheet: D
       <div className="ds-statband">
         {groups.map((g, gi) => (
           <div key={g.names.join('|')} className="ds-statline">
-            <Stats p={g.p} noInv={gi < groups.length - 1 && groups.every((x) => x.p.InSv === g.p.InSv)} />
             <div className="ds-mname">{(groups.length > 1 ? g.names.join(' / ') : sheet.models.length > 1 ? 'All models' : sheet.name).toUpperCase()}{g.base ? <small>base {g.base}</small> : null}</div>
+            <Stats p={g.p} noInv={gi < groups.length - 1 && groups.every((x) => x.p.InSv === g.p.InSv)} />
           </div>
         ))}
       </div>
