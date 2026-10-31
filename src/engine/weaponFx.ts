@@ -15,13 +15,41 @@ const has = (p: WeaponProfileData, a: string) => (p.abilities ?? []).some((x) =>
 export function weaponFx(weapon: string, p: WeaponProfileData, melee: boolean): WeaponFx {
   if (melee) return meleeFx(`${weapon} ${p.name ?? ''}`.toLowerCase(), p);
   if (has(p, 'torrent')) return 'flame';
+  // psychic fire (Coruscating Flames, Fires of the Abyss) burns like a flamer, in the warp's colours
+  if (has(p, 'psychic') && /flame|fire\b|fires|firestorm|blaze|burn|pyre/i.test(`${weapon} ${p.name ?? ''}`) && !/fireball/i.test(`${weapon} ${p.name ?? ''}`)) return 'flame';
   // a profile name only wins when it names a real weapon kind ("/ frag", "/ Shoota"), not a generic word ("Kill Shot")
   const prof = p.name && p.name !== weapon ? rangedFx(p.name.toLowerCase(), p, false) : null;
   return prof ?? rangedFx(weapon.toLowerCase(), p, true) ?? (has(p, 'psychic') ? 'psychic' : 'bolt');
 }
 
-/** How hard a weapon hits, for the size of its effect: about 0.85 for a lasgun, 1 for a bolter, 1.8 for a lascannon. */
-export const weaponPow = (p: WeaponProfileData) => Math.max(0.7, Math.min(1.8, 0.55 + (p.S ?? 4) / 16 + exprAverage(p.D || 1) / 8));
+/** How hard a weapon hits, for the size of its effect: about 0.85 for a lasgun, 1 for a bolter, 1.8 for a lascannon.
+ *  Flamers are sized by the weapon instead (their Strength and Damage barely differ): a hand flamer small, a heavy or
+ *  twin flamer big. */
+export function weaponPow(p: WeaponProfileData, weapon = ''): number {
+  if (has(p, 'torrent') || (has(p, 'psychic') && /flame|fire/i.test(`${weapon} ${p.name ?? ''}`))) {
+    const n = `${weapon} ${p.name ?? ''}`.toLowerCase();
+    if (has(p, 'pistol') || has(p, 'close-quarters') || /hand|pistol|tendril|spurt/.test(n)) return 0.7;
+    if (has(p, 'twin-linked') || has(p, 'blast 2') || /heavy|storm|breath|cannon|roar|abyss|focused/.test(n) || (p.S ?? 4) >= 6) return 1.45;
+    return 1.05;
+  }
+  return Math.max(0.7, Math.min(1.8, 0.55 + (p.S ?? 4) / 16 + exprAverage(p.D || 1) / 8));
+}
+
+/** The colour of a flame that is not ordinary promethium: warpfire, daemon fire, plague or C'tan fire. */
+export function flameTint(weapon: string, p: WeaponProfileData): string | undefined {
+  const n = `${weapon} ${p.name ?? ''}`.toLowerCase();
+  if (/pink/.test(n)) return '#ec4899';
+  if (/blue/.test(n)) return '#3b82f6';
+  if (/yellow/.test(n)) return '#facc15';
+  if (/cacophon/.test(n)) return '#ec4899';
+  if (/plague|rot|nurgl/.test(n)) return '#84cc16';
+  if (/cosmic|gauntlet of fire|c'tan|c’tan/.test(n) || has(p, "c'tan power")) return '#22c55e';
+  if (/darkflame|balefire/.test(n)) return '#65a30d';
+  if (/hellfire breath|burning blood|burning roar|blood/.test(n)) return '#dc2626';
+  if (/purif|holy|sanctif|blessed/.test(n)) return '#bfdbfe'; // a Grey Knight's purifying fire burns silver
+  if (has(p, 'psychic') || /warpflame|warp|tzeentch|flickering|abyss|coruscating|witchfire/.test(n)) return '#a855f7';
+  return undefined;
+}
 
 function meleeFx(n: string, p: WeaponProfileData): WeaponFx {
   if (/chain|choppa|eviscerator|ripper|saw|buzz|teef|flesh-tearer|gorechild|fleshmower|lopping shears/.test(n)) return 'chain';

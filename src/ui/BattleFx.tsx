@@ -1,7 +1,7 @@
 import { memo, useEffect, useState } from 'react';
 import type { FxEvent, Pt } from '../engine/types';
 import type { WeaponFx } from '../engine/weaponFx';
-import { energyTex, fxTextures, type TexKind } from './fxTextures';
+import { energyTex, fireTex, fxTextures, type TexKind } from './fxTextures';
 
 /** How long each kind of effect plays (ms). Most rolls are shown by the screen; charge rolls stay by their unit. */
 export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 1300, shock: 1500, heal: 1500, attack: 1900, mortal: 1200, skill: 2800, ritual: 2600, explosion: 2400, roll: 2600, rolloff: 0, cards: 0, primary: 0, extract: 550 };
@@ -235,10 +235,11 @@ function DustRing({ at, k, r, seed, color = 'rgba(120,110,95,0.5)' }: { at: Pt; 
 }
 
 /** one noise sprite (smoke, fire, flash, dust); null when there is no canvas, and the caller draws a plain shape */
-function Sprite({ kind, at, r, op = 1, rot = 0, v = 0 }: { kind: TexKind; at: Pt; r: number; op?: number; rot?: number; v?: number }) {
+function Sprite({ kind, at, r, op = 1, rot = 0, v = 0, sx = 1, href }: { kind: TexKind; at: Pt; r: number; op?: number; rot?: number; v?: number; sx?: number; href?: string }) {
   const t = fxTextures();
   if (!t || r <= 0 || op <= 0) return null;
-  return <image href={t[kind][Math.abs(Math.floor(v)) % t[kind].length]} x={at.x - r} y={at.y - r} width={r * 2} height={r * 2} opacity={Math.min(1, op)} preserveAspectRatio="none" transform={rot ? `rotate(${rot} ${at.x} ${at.y})` : undefined} />;
+  // sx stretches it along its rotation: a tongue of flame or a streak of smoke, not a round puff
+  return <image href={href ?? t[kind][Math.abs(Math.floor(v)) % t[kind].length]} x={at.x - r * sx} y={at.y - r} width={r * 2 * sx} height={r * 2} opacity={Math.min(1, op)} preserveAspectRatio="none" transform={rot ? `rotate(${rot} ${at.x} ${at.y})` : undefined} />;
 }
 
 /** a ragged tendril of coloured energy (warp, power fields, sound); a faint disc where there is no canvas */
@@ -246,7 +247,7 @@ function Wisp({ at, r, color, op = 1, rot = 0, v = 0 }: { at: Pt; r: number; col
   if (r <= 0 || op <= 0) return null;
   const t = energyTex(color);
   if (!t.length) return <circle cx={at.x} cy={at.y} r={r * 0.5} fill={color} opacity={Math.min(1, op) * 0.35} />;
-  return <image href={t[Math.abs(Math.floor(v)) % t.length]} x={at.x - r} y={at.y - r} width={r * 2} height={r * 2} opacity={Math.min(1, op)} preserveAspectRatio="none" transform={rot ? `rotate(${rot} ${at.x} ${at.y})` : undefined} />;
+  return <image href={t[Math.abs(Math.floor(v)) % t.length]} x={at.x - r * 1.4} y={at.y - r} width={r * 2.8} height={r * 2} opacity={Math.min(1, op)} preserveAspectRatio="none" transform={rot ? `rotate(${rot} ${at.x} ${at.y})` : undefined} />;
 }
 
 /** energy gathering and turning around a point: a few wisps that orbit, drift and change size, never a drawn circle */
@@ -276,7 +277,7 @@ function Puff({ at, k, r = 1, color = 'rgba(120,115,105,0.55)' }: { at: Pt; k: n
   if (k <= 0 || k >= 1) return null;
   const tex = puffTex(color), id = Math.round(at.x * 10); // drifting puffs move in y, so x keeps their look steady
   const alpha = +(/,\s*([\d.]+)\)\s*$/.exec(color)?.[1] ?? 0.5);
-  if (tex && fxTextures()) return <Sprite kind={tex} at={at} r={r * (0.45 + k * 1.1)} op={Math.min(1, alpha * 1.6) * (1 - k)} rot={(id * 47 + k * 40) % 360} v={id} />;
+  if (tex && fxTextures()) return <Sprite kind={tex} at={at} r={r * (0.45 + k * 1.1)} sx={1.35 + (id % 3) * 0.15} op={Math.min(1, alpha * 1.6) * (1 - k)} rot={(id * 47 + k * 40) % 360} v={id} />;
   return <circle cx={at.x} cy={at.y} r={r * (0.3 + k * 0.9)} fill={color} opacity={0.8 * (1 - k)} />;
 }
 
@@ -306,7 +307,7 @@ function Explosion({ at, k, seed, big = 1 }: { at: Pt; k: number; seed: number; 
         {Array.from({ length: 5 }, (_, i) => {
           const a = noise(seed, i + 70) * Math.PI * 2, d = smoke * (0.6 + noise(seed, i + 71)) * big;
           const p = { x: at.x + Math.cos(a) * d * 0.7, y: at.y + Math.sin(a) * d * 0.7 - smoke * 1.4 * big }, rr = (0.6 + smoke * 1.4) * big * (0.7 + noise(seed, i + 72) * 0.5);
-          return fxTextures() ? <Sprite key={i} kind="smoke" at={p} r={rr * 1.3} rot={noise(seed, i + 73) * 360 + smoke * 30} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-smoke-g)" />;
+          return fxTextures() ? <Sprite key={i} kind="smoke" at={p} r={rr * 1.2} sx={1.4} rot={noise(seed, i + 73) * 360 + smoke * 30} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-smoke-g)" />;
         })}
       </g>
       {fire < 1 && (
@@ -315,7 +316,7 @@ function Explosion({ at, k, seed, big = 1 }: { at: Pt; k: number; seed: number; 
           {Array.from({ length: 4 }, (_, i) => {
             const a = noise(seed, i + 80) * Math.PI * 2, d = (0.2 + fire * 0.7) * big * noise(seed, i + 81);
             const p = { x: at.x + Math.cos(a) * d, y: at.y + Math.sin(a) * d - fire * 0.4 * big }, rr = (0.4 + fire * 1.3) * big * (0.7 + noise(seed, i + 82) * 0.5);
-            return fxTextures() ? <Sprite key={i} kind="fire" at={p} r={rr * 1.4} op={1 - fire * fire} rot={noise(seed, i + 83) * 360} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-boom)" opacity={1 - fire} />;
+            return fxTextures() ? <Sprite key={i} kind="fire" at={p} r={rr * 1.2} sx={1.6} op={1 - fire * fire} rot={(Math.atan2(p.y - at.y, p.x - at.x) * 180) / Math.PI} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-boom)" opacity={1 - fire} />;
           })}
           {fire < 0.15 && <Glow at={at} r={(0.8 + fire * 4) * big} color="molten" op={1 - fire / 0.15} />}
           <Glow at={at} r={(2.4 + fire * 2) * big} color="orange" op={0.6 * (1 - fire)} />
@@ -657,8 +658,10 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
         case 'flame': {
           const fk = (f - t0) / 0.42;
           if (fk > 0 && fk < 1) {
-            const len = Math.min(12, Math.hypot(impact.x - src.x, impact.y - src.y));
-            const spread = 0.32;
+            // a hand flamer licks a few inches, a heavy flamer rolls a wide wall of fire
+            const len = Math.min(12 * Math.min(1, P), Math.hypot(impact.x - src.x, impact.y - src.y)), size = P;
+            const spread = 0.24 + 0.1 * P;
+            const tinted = v.tint ? fireTex(v.tint) : [];
             // a cone of burning fuel: a soft body, then overlapping tongues rolling out along it
             const reach = len * easeOut(clamp01(fk * 1.8)), w = reach * spread * 0.9;
             const cx = Math.cos(ang), cy = Math.sin(ang), nx = -cy, ny = cx;
@@ -671,11 +674,15 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
               const p = { x: src.x + Math.cos(a) * d, y: src.y + Math.sin(a) * d - life * 0.3 };
               if (fxTextures()) {
                 // burning fuel rolls out and turns to black smoke as it dies
-                over.push(<Sprite key={`fl${key}-${j}`} kind="fire" at={p} r={0.7 + life * 1.5} op={0.8 * (1 - life * life)} rot={noise(sd, 150 + j) * 360 + life * 90} v={j} />);
-                if (life > 0.55) under.push(<Sprite key={`fk${key}-${j}`} kind="smoke" at={{ x: p.x, y: p.y - life }} r={0.8 + life * 1.4} op={0.7 * (life - 0.55) * 2.2 * (1 - life)} rot={j * 67} v={j} />);
+                // tongues stretched along the flow and curling as they go, so the jet reads as one licking stream
+                const r = (0.55 + life * 1.2) * size, rot = ((a + Math.sin(life * 7 + j) * 0.45) * 180) / Math.PI;
+                over.push(<Sprite key={`fl${key}-${j}`} kind="fire" href={tinted.length ? tinted[j % tinted.length] : undefined} at={p} r={r} sx={2.1 - life * 0.7} op={0.85 * (1 - life * life)} rot={rot} v={j} />);
+                // warpfire burns without smoke; real fire turns to black smoke as it dies
+                if (!v.tint && life > 0.55) under.push(<Sprite key={`fk${key}-${j}`} kind="smoke" at={{ x: p.x, y: p.y - life }} r={0.8 + life * 1.4} op={0.7 * (life - 0.55) * 2.2 * (1 - life)} rot={j * 67} v={j} />);
               } else over.push(<Glow key={`fl${key}-${j}`} at={p} r={0.5 + life * 1.5} color={life < 0.3 ? 'molten' : life < 0.65 ? 'orange' : 'red'} op={0.95 * (1 - life * 0.6)} />);
             }
-            under.push(<Puff key={`fs${key}`} at={{ x: impact.x, y: impact.y - fk }} k={fk} r={1.3} color="rgba(60,55,50,0.45)" />);
+            if (!v.tint) under.push(<Puff key={`fs${key}`} at={{ x: impact.x, y: impact.y - fk }} k={fk} r={1.3 * size} color="rgba(60,55,50,0.45)" />);
+            else over.push(<Wisp key={`fw${key}`} at={{ x: impact.x, y: impact.y - fk * 0.6 }} r={1.4 * size} color={v.tint} op={0.6 * (1 - fk)} rot={fk * 120 + sd} />);
           }
           break;
         }

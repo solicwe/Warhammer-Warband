@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WeaponProfileData } from './types';
-import { weaponFx, weaponPow } from './weaponFx';
+import { flameTint, weaponFx, weaponPow } from './weaponFx';
 
 const prof = (o: Partial<WeaponProfileData> = {}): WeaponProfileData => ({ name: '', range: 24, A: '1', skill: 3, S: 4, AP: 0, D: '1', abilities: [], ...o });
 const ranged = (weapon: string, profile = weapon) => weaponFx(weapon, prof({ name: profile }), false);
@@ -45,5 +45,17 @@ describe('weapon effects match the weapon', () => {
     expect(bolter).toBeLessThan(lascannon);
     expect(lascannon).toBeLessThanOrEqual(1.8);
     expect(lasgun).toBeGreaterThanOrEqual(0.7);
+  });
+
+  it('psychic and daemon fire burns in its own colour, and flamers are sized by the weapon', () => {
+    const torrent = (o: Partial<WeaponProfileData> = {}) => prof({ ...o, abilities: ['torrent', ...(o.abilities ?? [])] });
+    expect(weaponFx('Coruscating Pink Flames', prof({ name: 'Coruscating Pink Flames', abilities: ['psychic'] }), false)).toBe('flame');
+    expect(weaponFx('Arcane Fireball', prof({ name: 'Arcane Fireball', abilities: ['psychic'] }), false)).toBe('psychic');
+    expect(flameTint('Warpflamer', torrent())).toBe('#a855f7');
+    expect(flameTint('Fire of Tzeentch', torrent({ name: 'pink fire' }))).toBe('#ec4899');
+    expect(flameTint('Torrent of burning blood', torrent())).toBe('#dc2626');
+    expect(flameTint('Flamer', torrent())).toBeUndefined();
+    expect(weaponPow(torrent({ abilities: ['pistol'] }), 'Hand flamer')).toBeLessThan(weaponPow(torrent(), 'Flamer'));
+    expect(weaponPow(torrent(), 'Flamer')).toBeLessThan(weaponPow(torrent(), 'Heavy flamer'));
   });
 });

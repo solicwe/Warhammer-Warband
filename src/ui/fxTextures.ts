@@ -26,20 +26,24 @@ function draw(kind: TexKind, seed: number): string {
   c.width = c.height = SIZE;
   const g = c.getContext('2d');
   if (!g) return '';
-  const img = g.createImageData(SIZE, SIZE), n = fbm(seed + 1), n2 = fbm(seed + 7);
+  const img = g.createImageData(SIZE, SIZE), n = fbm(seed + 1), n2 = fbm(seed + 7), warp = fbm(seed + 13);
   for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
-    const u = (x + 0.5) / SIZE * 2 - 1, v = (y + 0.5) / SIZE * 2 - 1, r = Math.hypot(u, v), a = Math.atan2(v, u);
+    const u0 = (x + 0.5) / SIZE * 2 - 1, v0 = (y + 0.5) / SIZE * 2 - 1, a = Math.atan2(v0, u0);
+    // domain warp: the outline bulges out and bites in, so no puff reads as a disc
+    const u = kind === 'flash' ? u0 : u0 + (warp(u0 * 1.6 + 2, v0 * 1.6 + 2) - 0.5) * 0.75;
+    const v = kind === 'flash' ? v0 : v0 + (warp(u0 * 1.6 + 8, v0 * 1.6 + 8) - 0.5) * 0.75;
+    const r = Math.hypot(u, v);
     const turb = n(u * 2.2 + 3, v * 2.2 + 3), fine = n2(u * 5 + 9, v * 5 + 9);
     let R = 0, G = 0, B = 0, A = 0;
     if (kind === 'smoke' || kind === 'dust') {
       // a billow: the edge is pushed in and out by the noise, the body is uneven
-      const edge = 0.7 + (turb - 0.5) * 0.9, body = Math.max(0, 1 - r / edge);
+      const edge = 0.68 + (turb - 0.5) * 1.2, body = Math.max(0, 1 - r / edge);
       A = Math.pow(body, 1.1) * (0.4 + fine * 0.6) * 0.85 + Math.max(0, 1 - r) * 0.08; // no hard rim: it thins out into a haze
       const shade = 0.8 + (fine - 0.5) * 0.45;
       [R, G, B] = kind === 'smoke' ? [150 * shade, 146 * shade, 140 * shade] : [138 * shade, 118 * shade, 92 * shade];
     } else if (kind === 'fire') {
       // heat from the centre out: white, yellow, orange, then dark red tongues licking through the noise
-      const heat = Math.max(0, 1 - r / (0.65 + (turb - 0.5) * 1.0)) * (0.5 + fine * 0.7);
+      const heat = Math.max(0, 1 - r / (0.62 + (turb - 0.5) * 1.3)) * (0.5 + fine * 0.7);
       A = Math.min(1, Math.pow(heat, 1.1) * 1.6 + Math.max(0, 1 - r) * 0.18); // a glow of heat around the flame
       R = 255; G = Math.min(240, 70 + heat * 230); B = Math.max(0, heat * 330 - 210);
       if (heat < 0.3) { R = 190 + heat * 200; G = 50 + heat * 150; B = 15; } // the cooler edge is deep orange-red
@@ -99,5 +103,36 @@ export function energyTex(hex: string): string[] {
     return c.toDataURL();
   });
   energyCache.set(hex, out);
+  return out;
+}
+
+const fireCache = new Map<string, string[]>();
+
+/** Fire in another colour (warpfire, daemon fire, plague fire): the same ragged flame, white at the heart, the
+ *  colour through the body and a darker shade of it at the licking edge. */
+export function fireTex(hex: string): string[] {
+  const hit = fireCache.get(hex);
+  if (hit) return hit;
+  if (!fxTextures()) return [];
+  const [cr, cg, cb] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const out = Array.from({ length: VARIANTS }, (_, vi) => {
+    const c = document.createElement('canvas');
+    c.width = c.height = SIZE;
+    const g = c.getContext('2d');
+    if (!g) return '';
+    const img = g.createImageData(SIZE, SIZE), n = fbm(vi * 5 + 14), n2 = fbm(vi * 5 + 20), warp = fbm(vi * 5 + 27);
+    for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
+      const u0 = (x + 0.5) / SIZE * 2 - 1, v0 = (y + 0.5) / SIZE * 2 - 1;
+      const u = u0 + (warp(u0 * 1.6 + 2, v0 * 1.6 + 2) - 0.5) * 0.75, v = v0 + (warp(u0 * 1.6 + 8, v0 * 1.6 + 8) - 0.5) * 0.75, r = Math.hypot(u, v);
+      const heat = Math.max(0, 1 - r / (0.62 + (n(u * 2.2 + 3, v * 2.2 + 3) - 0.5) * 1.3)) * (0.5 + n2(u * 5 + 9, v * 5 + 9) * 0.7);
+      const w = Math.max(0, heat * 1.6 - 0.6), dark = heat < 0.3 ? 0.6 + heat : 1; // white heart, darker edge
+      const i = (y * SIZE + x) * 4;
+      img.data[i] = (cr + (255 - cr) * w) * dark; img.data[i + 1] = (cg + (255 - cg) * w) * dark; img.data[i + 2] = (cb + (255 - cb) * w) * dark;
+      img.data[i + 3] = Math.min(1, Math.pow(heat, 1.1) * 1.6 + Math.max(0, 1 - r) * 0.18) * 255;
+    }
+    g.putImageData(img, 0, 0);
+    return c.toDataURL();
+  });
+  fireCache.set(hex, out);
   return out;
 }
