@@ -47,9 +47,9 @@ export const FxDefs = memo(function FxDefs() {
         <radialGradient key={k} id={`fxg-${k}`}>
           {/* a hot core with a fast falloff: a wide soft halo (heavy bloom) is what makes effects look fake */}
           <stop offset="0" stopColor="#fff" stopOpacity="0.9" />
-          <stop offset="0.14" stopColor={c} stopOpacity="0.75" />
-          <stop offset="0.38" stopColor={c} stopOpacity="0.2" />
-          <stop offset="0.7" stopColor={c} stopOpacity="0.04" />
+          <stop offset="0.14" stopColor={c} stopOpacity="0.7" />
+          <stop offset="0.38" stopColor={c} stopOpacity="0.3" />
+          <stop offset="0.7" stopColor={c} stopOpacity="0.12" />
           <stop offset="1" stopColor={c} stopOpacity="0" />
         </radialGradient>
       ))}
@@ -160,6 +160,7 @@ function RitualFx({ e, f }: { e: RitualEvent; f: number }) {
       <Sigil at={e.from} r={1.1 + cast * 0.4} rot={f * 4} color={col} op={0.9 * (1 - land)} />
       {travel > 0 && land < 0.6 && (e.ritual === 'doombolt' || e.ritual === 'twist-of-fate' || e.ritual === 'destinys-ruin') && (
         <g>
+          <polyline points={bolt()} fill="none" stroke={col} strokeWidth={1.2} strokeLinejoin="round" opacity={0.12} />
           <polyline points={bolt()} fill="none" stroke={col} strokeWidth={0.32} strokeLinejoin="round" opacity={0.45} />
           <polyline points={bolt()} fill="none" stroke="#fff" strokeWidth={0.1} strokeLinejoin="round" />
         </g>
@@ -317,6 +318,7 @@ function Explosion({ at, k, seed, big = 1 }: { at: Pt; k: number; seed: number; 
             return fxTextures() ? <Sprite key={i} kind="fire" at={p} r={rr * 1.4} op={1 - fire * fire} rot={noise(seed, i + 83) * 360} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-boom)" opacity={1 - fire} />;
           })}
           {fire < 0.15 && <Glow at={at} r={(0.8 + fire * 4) * big} color="molten" op={1 - fire / 0.15} />}
+          <Glow at={at} r={(2.4 + fire * 2) * big} color="orange" op={0.6 * (1 - fire)} />
         </g>
       )}
       <Debris at={at} k={clamp01(k / 0.6)} seed={seed} n={9} size={big} />
@@ -455,6 +457,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const w = (heavy ? 1.5 : v.fx === 'gatling' ? 0.7 : 1) * P;
             over.push(
               <g key={`t${key}`}>
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={glow} strokeWidth={1.1 * w} strokeLinecap="round" opacity={0.12} />
                 <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={glow} strokeWidth={0.3 * w} strokeLinecap="round" opacity={0.45} />
                 <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={core} strokeWidth={0.1 * w} strokeLinecap="round" />
                 {v.fx === 'pulse' && <Glow at={head} r={0.45} color="cyan" />}
@@ -532,6 +535,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const w = (1 - bk) * P;
             over.push(
               <g key={`b${key}`}>
+                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={1.8 * w} strokeLinecap="round" opacity={0.1} />
                 <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={0.6 * w} strokeLinecap="round" opacity={0.35} />
                 <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={0.22 * w} strokeLinecap="round" opacity={0.8} />
                 <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#fff" strokeWidth={0.07 * w} strokeLinecap="round" />
@@ -570,6 +574,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const w = (1 - bk * 0.6) * P;
             over.push(
               <g key={`mb${key}`} opacity={bk > 0.8 ? (1 - bk) * 5 : 1}>
+                <polyline points={pts} fill="none" stroke="#f97316" strokeWidth={2.2 * w} strokeLinecap="round" opacity={0.1} />
                 <polyline points={pts} fill="none" stroke="#f97316" strokeWidth={0.9 * w} strokeLinecap="round" opacity={0.3} />
                 <polyline points={pts} fill="none" stroke="#fb923c" strokeWidth={0.35 * w} strokeLinecap="round" opacity={0.85} />
                 <polyline points={pts} fill="none" stroke="#fffbeb" strokeWidth={0.12 * w} strokeLinecap="round" />
@@ -613,6 +618,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             }).join(' ');
             over.push(
               <g key={`lt${key}`} opacity={1 - bk * 0.5}>
+                <polyline points={pts} fill="none" stroke="#67e8f9" strokeWidth={1.1} strokeLinejoin="round" opacity={0.1} />
                 <polyline points={pts} fill="none" stroke="#67e8f9" strokeWidth={0.32} strokeLinejoin="round" opacity={0.4} />
                 <polyline points={pts} fill="none" stroke="#f0fdff" strokeWidth={0.08} strokeLinejoin="round" />
               </g>,
@@ -709,6 +715,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const head = lerp(src, impact, k), tail = lerp(src, impact, Math.max(0, k - 0.28));
             over.push(
               <g key={`gs${key}`}>
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={1.3} strokeLinecap="round" opacity={0.12} />
                 <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={0.5} strokeLinecap="round" opacity={0.4} />
                 <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#86efac" strokeWidth={0.2} strokeLinecap="round" opacity={0.9} />
                 <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#f0fdf4" strokeWidth={0.08} strokeLinecap="round" />
@@ -858,6 +865,7 @@ function Muzzle({ at, ang, k, sd, fx, pow = 1 }: { at: Pt; ang: number; k: numbe
   const chem = col === 'amber' || col === 'orange';
   return (
     <g opacity={1 - k}>
+      <Glow at={at} r={(1 + k * 0.4) * big} color={col} op={0.55} />
       <Glow at={at} r={(0.45 + k * 0.2) * big} color={col} op={0.9} />
       {chem && fxTextures() ? <Sprite kind="flash" at={at} r={1.1 * big} rot={(ang * 180) / Math.PI} v={sd} /> : <polygon points={star} fill={core} opacity={0.9} />}
     </g>

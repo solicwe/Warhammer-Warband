@@ -34,13 +34,13 @@ function draw(kind: TexKind, seed: number): string {
     if (kind === 'smoke' || kind === 'dust') {
       // a billow: the edge is pushed in and out by the noise, the body is uneven
       const edge = 0.7 + (turb - 0.5) * 0.9, body = Math.max(0, 1 - r / edge);
-      A = Math.pow(body, 1.4) * (0.35 + fine * 0.65) * 0.9; // no hard rim: it thins out into wisps
+      A = Math.pow(body, 1.1) * (0.4 + fine * 0.6) * 0.85 + Math.max(0, 1 - r) * 0.08; // no hard rim: it thins out into a haze
       const shade = 0.8 + (fine - 0.5) * 0.45;
       [R, G, B] = kind === 'smoke' ? [150 * shade, 146 * shade, 140 * shade] : [138 * shade, 118 * shade, 92 * shade];
     } else if (kind === 'fire') {
       // heat from the centre out: white, yellow, orange, then dark red tongues licking through the noise
       const heat = Math.max(0, 1 - r / (0.65 + (turb - 0.5) * 1.0)) * (0.5 + fine * 0.7);
-      A = Math.min(1, Math.pow(heat, 1.3) * 1.7);
+      A = Math.min(1, Math.pow(heat, 1.1) * 1.6 + Math.max(0, 1 - r) * 0.18); // a glow of heat around the flame
       R = 255; G = Math.min(240, 70 + heat * 230); B = Math.max(0, heat * 330 - 210);
       if (heat < 0.3) { R = 190 + heat * 200; G = 50 + heat * 150; B = 15; } // the cooler edge is deep orange-red
     } else {
@@ -89,7 +89,7 @@ export function energyTex(hex: string): string[] {
       const wx = u + (warp(u * 2 + 1, v * 2 + 1) - 0.5) * 0.8, wy = v + (warp(u * 2 + 7, v * 2 + 7) - 0.5) * 0.8;
       const ridge = Math.pow(1 - Math.abs(n(wx * 2.5 + 4, wy * 2.5 + 4) * 2 - 1), 4);
       const fall = Math.max(0, 1 - r), core = Math.pow(Math.max(0, 1 - r * 2.2), 2);
-      const A = Math.min(1, fall * fall * (ridge * 1.6 + 0.12) + core);
+      const A = Math.min(1, fall * fall * (ridge * 1.4 + 0.3) + core); // filaments sit in a soft haze
       const w = Math.min(1, core * 1.4 + ridge * fall * 0.35); // whiter where it is hottest
       const i = (y * SIZE + x) * 4;
       img.data[i] = cr + (255 - cr) * w; img.data[i + 1] = cg + (255 - cg) * w; img.data[i + 2] = cb + (255 - cb) * w;
