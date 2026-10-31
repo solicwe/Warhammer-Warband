@@ -7,7 +7,7 @@ import { afterBattle, applyCampaign, campaignMission, detachmentScrapCost, enter
 import { enemyTree, enemyTreePoints, treeFor } from './campaignTree';
 import { MISSIONS, primaryById } from './config';
 import { campaignRequisition, createGame } from './game';
-import { applyMortalWounds, CAMPAIGN_KILL_VP } from './attack';
+import { applyMortalWounds, KILL_VP } from './attack';
 import type { FactionData } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -116,16 +116,16 @@ describe('campaign kills', () => {
     for (const u of orks) {
       const big = ['CHARACTER', 'VEHICLE', 'MONSTER'].some((k) => (u.keywords ?? []).includes(k));
       applyMortalWounds(s, u, 999, 'test');
-      if (u.status === 'destroyed') want = Math.min(CAMPAIGN_KILL_VP, want + (big ? 2 : 1));
+      if (u.status === 'destroyed') want = Math.min(KILL_VP, want + (big ? 2 : 1));
       expect(s.players[0].vp).toBe(want);
     }
     expect(want).toBeGreaterThan(3);
-    expect(s.players[0].vp).toBe(Math.min(CAMPAIGN_KILL_VP, want));
-    expect(CAMPAIGN_KILL_VP).toBeLessThan(45);
-    // outside the campaign a kill scores nothing by itself
+    expect(s.players[0].vp).toBe(Math.min(KILL_VP, want));
+    expect(KILL_VP).toBeLessThan(45);
+    // every mission scores kills, not only the campaign
     const plain = createGame({ lists: [run.list, autoList(ORK, 1000, 5)], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', seed: 5 });
     applyMortalWounds(plain, plain.units.find((u) => u.owner === 1)!, 999, 'test');
-    expect(plain.players[0].vp).toBe(0);
+    expect(plain.players[0].vp).toBeGreaterThan(0);
   });
 });
 

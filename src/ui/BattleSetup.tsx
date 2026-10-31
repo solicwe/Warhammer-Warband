@@ -1,9 +1,10 @@
 // A new battle: who plays (you against the bot, two players on one phone, or two bots), each side's army, the
 // mission and the map. The last choices are remembered.
 import { useEffect, useMemo, useState } from 'react';
-import { deploymentName, dispositionById, LAYOUTS, layoutsFor, primaryFor, RULES, type DispositionId } from '../engine/config';
+import { deploymentName, dispositionById, LAYOUTS, MISSIONS, RULES, type DispositionId } from '../engine/config';
+import { KILL_VP } from '../engine/attack';
 import { autoAttach, forChapter, listPoints, syncList } from '../engine/army';
-import { createGame, listDisposition, listDispositionOptions } from '../engine/game';
+import { createGame } from '../engine/game';
 import type { ArmyList, FactionData, GameState } from '../engine/types';
 import { Emblem, titleCase } from './ArmyBuilder';
 import { loadFaction, useFactions, type FactionIndex } from './data';
@@ -43,12 +44,11 @@ const MODES: { id: BattleMode; label: string }[] = [
   { id: 'botbot', label: 'Bot vs Bot' },
 ];
 
-export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Props) {
+export function BattleSetup({ armies, index, onBack, onStart }: Props) {
   const [prefs, setPrefs] = useState<BattlePrefs>(() => loadBattlePrefs(armies));
   useEffect(() => saveBattlePrefs(prefs), [prefs]);
   const set = (patch: Partial<BattlePrefs>) => setPrefs((p) => ({ ...p, ...patch }));
   const [choosing, setChoosing] = useState<0 | 1 | null>(null); // the side whose army is being picked
-  const [allMaps, setAllMaps] = useState(false);
   const [mapDeploy, setMapDeploy] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -59,26 +59,6 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
   const lists: [ArmyList, ArmyList] = [listOf(0), listOf(1)];
   const ptsFacs = useFactions(armies.map((x) => x.factionId));
   const ptsOf = (l: ArmyList) => listPoints(l, ptsFacs[l.factionId]);
-  const [facs, setFacs] = useState<[FactionData | null, FactionData | null]>([null, null]);
-  useEffect(() => {
-    let live = true;
-    Promise.all([loadFaction(lists[0].factionId), loadFaction(lists[1].factionId)]).then((f) => { if (live) setFacs([f[0], f[1]]); }).catch(() => {});
-    return () => { live = false; };
-  }, [lists[0].factionId, lists[1].factionId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const dispOptions = (i: 0 | 1): DispositionId[] => {
-    const f = facs[i];
-    if (!f || f.id !== lists[i].factionId) return [];
-    const ids = listDispositionOptions(lists[i], f);
-    return ids.length ? ids : ['take-and-hold'];
-  };
-  const dispOf = (i: 0 | 1): DispositionId | null => (facs[i] && facs[i]!.id === lists[i].factionId ? listDisposition(lists[i], facs[i]!) : null);
-  const pickDisp = (i: 0 | 1, d: DispositionId) => {
-    const a = armies.find((x) => x.id === prefs.sides[i].id);
-    if (a) onUpdateArmy({ ...a, disposition: dispositionById(d).name });
-  };
-  const d0 = dispOf(0), d1 = dispOf(1);
-  const layouts = d0 && d1 ? layoutsFor(d0, d1) : [];
 
   const bot = (i: 0 | 1) => prefs.mode === 'botbot' || (prefs.mode === 'bot' && i === 1);
   const factionName = (id: string) => index?.factions.find((f) => f.id === id)?.name ?? id;
@@ -100,11 +80,14 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
       const gone = lists.flatMap((l, i) => l.units.filter((u) => !factions[i].datasheets.some((d) => d.name === u.datasheet)).map((u) => `${l.name || role(i as 0 | 1)}: ${u.datasheet}`));
       if (gone.length) { setErr(`Some units are not in 11th edition any more (Legends). Remove them from the army first: ${gone.join(', ')}`); return; }
       if (lists.some((l) => !l.units.length)) { setErr('An army has no units yet. Open it from the home screen and add some, or pick another army.'); return; }
-      const dz: [DispositionId, DispositionId] = [dispOf(0) ?? listDisposition(lists[0], factions[0]), dispOf(1) ?? listDisposition(lists[1], factions[1])];
-      const layout = LAYOUTS.find((l) => l.id === prefs.layoutPick) ?? LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
+      // each side's Force Disposition is rolled every battle (a picked layout keeps its own pairing)
+      const picked = LAYOUTS.find((l) => l.id === prefs.layoutPick);
+      const roll = () => MISSIONS.forceDispositions[Math.floor(Math.random() * MISSIONS.forceDispositions.length)].id;
+      const flip = Math.random() < 0.5;
+      const dz: [DispositionId, DispositionId] = picked ? [picked.matchup[flip ? 1 : 0], picked.matchup[flip ? 0 : 1]] : [roll(), roll()];
       const s = createGame({
         lists: [ready(0), ready(1)], factions: [factions[0], factions[1]],
-        names: [playerName(0), playerName(1)], deploymentId: layout?.id, dispositions: dz, secondaryMode: prefs.secMode, maxRounds: prefs.rounds,
+        names: [playerName(0), playerName(1)], deploymentId: picked?.id, dispositions: dz, secondaryMode: prefs.secMode, maxRounds: prefs.rounds,
       });
       s.botPlayer = prefs.mode === 'bot' ? 1 : null;
       s.bots = prefs.mode === 'botbot' ? [0, 1] : prefs.mode === 'bot' ? [1] : [];
@@ -124,8 +107,6 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
   const side = (i: 0 | 1) => {
     const l = lists[i];
     const size = RULES.battleSizes.find((b) => b.id === l.battleSize) ?? RULES.battleSizes[0];
-    const opts = dispOptions(i);
-    const cur = dispOf(i);
     return (
       <div className={`side-slot s${i}`}>
         <div className="side-head">
@@ -150,14 +131,6 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
           </span>
           <span className="pick-army-change">Change</span>
         </button>
-        )}
-        {cur && !missing(i) && (
-          <div className="disp-row">
-            <span className="tiny muted">Force Disposition</span>
-            {(opts.length > 1 ? opts : [cur]).map((d) => (
-              <button key={d} type="button" disabled={opts.length < 2} className={`disp-chip ${cur === d ? '' : 'off'}`} style={{ background: dispositionById(d).color }} aria-pressed={cur === d} onClick={() => pickDisp(i, d)}>{dispositionById(d).name}</button>
-            ))}
-          </div>
         )}
       </div>
     );
@@ -192,31 +165,23 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
 
         <section className="group pad" aria-label="Mission">
           <div className="group-head"><h3>Mission</h3><span className="group-note">Chapter Approved 2026–27</span></div>
-          {d0 && d1 ? (
-            <div className="prim-pair">
-              <div><span className="tiny muted">{playerName(0)}</span><b>{primaryFor(d0, d1).name}</b></div>
-              <div><span className="tiny muted">{playerName(1)}</span><b>{primaryFor(d1, d0).name}</b></div>
-            </div>
-          ) : <div className="small muted">Loading armies…</div>}
+          <p className="small muted">Each side's Force Disposition, and so its Primary Mission, is rolled when the battle starts. Every mission also gives a little VP for each enemy unit destroyed (2 for a Character, Vehicle or Monster, at most {KILL_VP} a battle).</p>
           <div className="map-head">
-            <span className="small">{allMaps ? `All ${LAYOUTS.length} official layouts` : 'Official layouts for this pairing'}</span>
-            <button type="button" className="btn small ghost" onClick={() => { setAllMaps((v) => !v); setMapDeploy(''); }}>{allMaps ? 'This pairing only' : `All maps`}</button>
+            <span className="small">{`All ${LAYOUTS.length} official layouts (a picked map sets the pairing)`}</span>
           </div>
-          {allMaps && (
-            <div className="map-filter">
-              {['', ...new Set(LAYOUTS.map((l) => l.deployment))].map((d) => (
-                <button key={d || 'all'} type="button" className={`chip ${mapDeploy === d ? 'on' : ''}`} onClick={() => setMapDeploy(d)}>{d ? deploymentName(d) : 'All'}</button>
-              ))}
-            </div>
-          )}
-          <div className={`layout-pick ${allMaps ? 'wrap' : ''}`}>
+          <div className="map-filter">
+            {['', ...new Set(LAYOUTS.map((l) => l.deployment))].map((d) => (
+              <button key={d || 'all'} type="button" className={`chip ${mapDeploy === d ? 'on' : ''}`} onClick={() => setMapDeploy(d)}>{d ? deploymentName(d) : 'All'}</button>
+            ))}
+          </div>
+          <div className="layout-pick wrap">
             <button type="button" className={`layout-opt ${prefs.layoutPick === '' ? 'on' : ''}`} onClick={() => set({ layoutPick: '' })}>
               <div className="layout-random">?</div><span>Random</span>
             </button>
-            {(allMaps ? LAYOUTS.filter((l) => !mapDeploy || l.deployment === mapDeploy) : layouts).map((l) => (
+            {LAYOUTS.filter((l) => !mapDeploy || l.deployment === mapDeploy).map((l) => (
               <button key={l.id} type="button" className={`layout-opt ${prefs.layoutPick === l.id ? 'on' : ''}`} onClick={() => set({ layoutPick: l.id })}>
                 <LayoutPreview layout={l} width={64} />
-                <span>{allMaps ? `${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}` : `#${l.number} ${deploymentName(l.deployment)}`}</span>
+                <span>{`${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}`}</span>
               </button>
             ))}
           </div>

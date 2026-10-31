@@ -60,7 +60,7 @@
 ### 3.2 ก่อนเกม
 1. **Army**: เลือก faction → detachment (นับ DP) → เพิ่มหน่วยจาก datasheet (นับแต้ม, unit limit) → ผูก leader/support → เลือก warlord/enhancement
    - Import รายชื่อ (ข้อความจาก GW app / New Recruit) เป็นฟีเจอร์ทีหลัง
-2. **Mission wizard**: เลือก Force Disposition แบบลับ (ส่งมือถือให้กัน) → engine หา primary ให้ → สุ่ม deployment → วาง terrain ตาม layout ที่ทำไว้ → roll-off หา Attacker/Defender → เลือก secondary → **Declare battle formations** แบบลับ
+2. **Mission wizard**: สุ่ม Force Disposition ของแต่ละฝ่ายตอนเริ่ม (ในแอป ไม่ได้มาจาก detachment; เลือกแผนที่เองจะได้คู่ disposition ของแผนที่นั้น) → engine หา primary ให้ → สุ่ม deployment → วาง terrain ตาม layout ที่ทำไว้ → roll-off หา Attacker/Defender → เลือก secondary → **Declare battle formations** แบบลับ
 3. **Deploy**: ผลัดกันวางทีละหน่วยในโซน (ไฮไลต์โซนที่วางได้) → ลากวางทั้งหน่วยแบบ formation (ดู 3.3) → Scouts/Infiltrators
 4. **Roll-off first turn** (ทอยเต๋าแบบมี animation)
 
