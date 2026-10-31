@@ -26,9 +26,9 @@ export function weaponFx(weapon: string, p: WeaponProfileData, melee: boolean): 
 export function weaponPow(p: WeaponProfileData, weapon = ''): number {
   if (has(p, 'torrent')) {
     const n = `${weapon} ${p.name ?? ''}`.toLowerCase();
-    if (has(p, 'pistol') || has(p, 'close-quarters') || /hand|pistol|tendril|spurt/.test(n)) return 0.7;
-    if (has(p, 'twin-linked') || has(p, 'blast 2') || /heavy|storm|breath|cannon|roar|abyss|focused/.test(n) || (p.S ?? 4) >= 6) return 1.45;
-    return 1.05;
+    if (has(p, 'pistol') || has(p, 'close-quarters') || /hand|pistol|tendril|spurt/.test(n)) return 0.55;
+    if (has(p, 'twin-linked') || has(p, 'blast 2') || /heavy|storm|breath|cannon|roar|abyss|focused/.test(n) || (p.S ?? 4) >= 6) return 1.15;
+    return 0.8;
   }
   return Math.max(0.7, Math.min(1.8, 0.55 + (p.S ?? 4) / 16 + exprAverage(p.D || 1) / 8));
 }

@@ -13,7 +13,12 @@ const LIVE = new Set<FxEvent['kind']>(['attack', 'mortal', 'skill', 'ritual', 's
  * every frame — the battlefield, terrain and units underneath are left alone.
  * No SVG filters: blur / turbulence filters are what made phones stutter; glows are radial gradients instead.
  */
-export const FxLayer = memo(function FxLayer({ fx }: { fx: ActiveFx[] }) {
+/** How much bigger effects are drawn: the whole table on a phone is ~60" in 400px, where an inch-sized flash is a few
+ *  pixels. Zoomed out they grow (up to 2.2x), zoomed in to a fight they are their real size. Set by the layer each frame. */
+let VIS = 1;
+
+export const FxLayer = memo(function FxLayer({ fx, viewW = 30 }: { fx: ActiveFx[]; viewW?: number }) {
+  VIS = Math.max(1, Math.min(2.2, viewW / 28));
   const live = fx.filter((a) => LIVE.has(a.e.kind) || (a.e.kind === 'move' && a.e.moveKind === 'charge') || (a.e.kind === 'place' && !!a.e.at));
   const [now, setNow] = useState(() => performance.now());
   useEffect(() => {
@@ -39,17 +44,18 @@ export const FxLayer = memo(function FxLayer({ fx }: { fx: ActiveFx[] }) {
 
 const GLOWS: Record<string, string> = { amber: '#fbbf24', orange: '#f97316', red: '#ef4444', blue: '#60a5fa', cyan: '#67e8f9', purple: '#c084fc', green: '#a3e635', white: '#ffffff', molten: '#fde68a', pink: '#f472b6' };
 type GlowColor = keyof typeof GLOWS;
+/** the glow under a coloured fire (weaponFx flameTint colours) */
+const TINT_GLOW: Record<string, GlowColor> = { '#a855f7': 'purple', '#ec4899': 'pink', '#3b82f6': 'blue', '#bfdbfe': 'white', '#facc15': 'amber', '#dc2626': 'red', '#22c55e': 'green', '#65a30d': 'green', '#84cc16': 'green' };
 
 export const FxDefs = memo(function FxDefs() {
   return (
     <defs>
       {Object.entries(GLOWS).map(([k, c]) => (
         <radialGradient key={k} id={`fxg-${k}`}>
-          {/* a hot core with a fast falloff: a wide soft halo (heavy bloom) is what makes effects look fake */}
-          <stop offset="0" stopColor="#fff" stopOpacity="0.9" />
-          <stop offset="0.14" stopColor={c} stopOpacity="0.7" />
-          <stop offset="0.38" stopColor={c} stopOpacity="0.3" />
-          <stop offset="0.7" stopColor={c} stopOpacity="0.12" />
+          {/* a hot core in a wide soft haze */}
+          <stop offset="0" stopColor="#fff" stopOpacity="0.85" />
+          <stop offset="0.25" stopColor={c} stopOpacity="0.65" />
+          <stop offset="0.6" stopColor={c} stopOpacity="0.22" />
           <stop offset="1" stopColor={c} stopOpacity="0" />
         </radialGradient>
       ))}
@@ -65,7 +71,7 @@ export const FxDefs = memo(function FxDefs() {
 /** a soft round glow */
 function Glow({ at, r, color, op = 1 }: { at: Pt; r: number; color: GlowColor; op?: number }) {
   if (r <= 0 || op <= 0) return null;
-  return <circle cx={at.x} cy={at.y} r={r} fill={`url(#fxg-${color})`} opacity={Math.min(1, op)} />;
+  return <circle cx={at.x} cy={at.y} r={r * VIS} fill={`url(#fxg-${color})`} opacity={Math.min(1, op)} />;
 }
 
 function FxView({ a, now }: { a: ActiveFx; now: number }) {
@@ -200,8 +206,9 @@ const easeOut = (k: number) => 1 - (1 - k) ** 3;
 
 /** Hot fragments thrown off a hit: uneven streaks that droop as they fly, sprayed back from the surface when the shot's
  *  direction is known, then a few slower embers after the first burst. */
-function Sparks({ at, seed, k, color = '#fde68a', size = 0.9, ang }: { at: Pt; seed: number; k: number; color?: string; size?: number; ang?: number }) {
+function Sparks({ at, seed, k, color = '#fde68a', size: sz = 0.9, ang }: { at: Pt; seed: number; k: number; color?: string; size?: number; ang?: number }) {
   if (k <= 0 || k >= 1) return null;
+  const size = sz * VIS;
   const dirOf = (i: number) => ang === undefined ? noise(seed, i) * Math.PI * 2 : ang + Math.PI + (noise(seed, i) - 0.5) * 2.4;
   const streak = (i: number, kk: number, sp: number, w: number) => {
     if (kk <= 0 || kk >= 1) return null;
@@ -235,15 +242,17 @@ function DustRing({ at, k, r, seed, color = 'rgba(120,110,95,0.5)' }: { at: Pt; 
 }
 
 /** one noise sprite (smoke, fire, flash, dust); null when there is no canvas, and the caller draws a plain shape */
-function Sprite({ kind, at, r, op = 1, rot = 0, v = 0, sx = 1, href }: { kind: TexKind; at: Pt; r: number; op?: number; rot?: number; v?: number; sx?: number; href?: string }) {
+function Sprite({ kind, at, r: r0, op = 1, rot = 0, v = 0, sx = 1, href }: { kind: TexKind; at: Pt; r: number; op?: number; rot?: number; v?: number; sx?: number; href?: string }) {
   const t = fxTextures();
+  const r = r0 * VIS;
   if (!t || r <= 0 || op <= 0) return null;
   // sx stretches it along its rotation: a tongue of flame or a streak of smoke, not a round puff
   return <image href={href ?? t[kind][Math.abs(Math.floor(v)) % t[kind].length]} x={at.x - r * sx} y={at.y - r} width={r * 2 * sx} height={r * 2} opacity={Math.min(1, op)} preserveAspectRatio="none" transform={rot ? `rotate(${rot} ${at.x} ${at.y})` : undefined} />;
 }
 
 /** a ragged tendril of coloured energy (warp, power fields, sound); a faint disc where there is no canvas */
-function Wisp({ at, r, color, op = 1, rot = 0, v = 0 }: { at: Pt; r: number; color: string; op?: number; rot?: number; v?: number }) {
+function Wisp({ at, r: r0, color, op = 1, rot = 0, v = 0 }: { at: Pt; r: number; color: string; op?: number; rot?: number; v?: number }) {
+  const r = r0 * VIS;
   if (r <= 0 || op <= 0) return null;
   const t = energyTex(color);
   if (!t.length) return <circle cx={at.x} cy={at.y} r={r * 0.5} fill={color} opacity={Math.min(1, op) * 0.35} />;
@@ -277,8 +286,8 @@ function Puff({ at, k, r = 1, color = 'rgba(120,115,105,0.55)' }: { at: Pt; k: n
   if (k <= 0 || k >= 1) return null;
   const tex = puffTex(color), id = Math.round(at.x * 10); // drifting puffs move in y, so x keeps their look steady
   const alpha = +(/,\s*([\d.]+)\)\s*$/.exec(color)?.[1] ?? 0.5);
-  if (tex && fxTextures()) return <Sprite kind={tex} at={at} r={r * (0.45 + k * 1.1)} sx={1.35 + (id % 3) * 0.15} op={Math.min(1, alpha * 1.6) * (1 - k)} rot={(id * 47 + k * 40) % 360} v={id} />;
-  return <circle cx={at.x} cy={at.y} r={r * (0.3 + k * 0.9)} fill={color} opacity={0.8 * (1 - k)} />;
+  if (tex && fxTextures()) return <Sprite kind={tex} at={at} r={r * (0.5 + k * 1.2)} sx={1.35 + (id % 3) * 0.15} op={Math.min(1, alpha * 2.4) * (1 - k * k)} rot={(id * 47 + k * 40) % 360} v={id} />;
+  return <circle cx={at.x} cy={at.y} r={r * VIS * (0.3 + k * 0.9)} fill={color} opacity={0.8 * (1 - k)} />;
 }
 
 /** Bits of dirt, rock or metal thrown out from a point, falling back as they fly. */
@@ -287,7 +296,7 @@ function Debris({ at, k, seed, n = 8, color = '#2b241c', size = 1 }: { at: Pt; k
   return (
     <g opacity={1 - k * k}>
       {Array.from({ length: n }, (_, i) => {
-        const a = noise(seed, i + 30) * Math.PI * 2, sp = (0.8 + noise(seed, i + 31) * 1.6) * size;
+        const a = noise(seed, i + 30) * Math.PI * 2, sp = (0.8 + noise(seed, i + 31) * 1.6) * size * VIS;
         const d = sp * (1 - (1 - k) * (1 - k)); // fast then slowing
         return <rect key={i} x={at.x + Math.cos(a) * d - 0.08} y={at.y + Math.sin(a) * d - 0.08 + k * k * 0.6} width={0.16 * size} height={0.12 * size} fill={color} transform={`rotate(${k * 500 + i * 40} ${at.x + Math.cos(a) * d} ${at.y + Math.sin(a) * d})`} />;
       })}
@@ -296,13 +305,15 @@ function Debris({ at, k, seed, n = 8, color = '#2b241c', size = 1 }: { at: Pt; k
 }
 
 /** A blast: white flash, fireball, shockwave ring, flying debris, then a column of smoke over a scorch mark. */
-function Explosion({ at, k, seed, big = 1 }: { at: Pt; k: number; seed: number; big?: number }) {
+function Explosion({ at, k, seed, big: b0 = 1 }: { at: Pt; k: number; seed: number; big?: number }) {
   if (k <= 0 || k >= 1) return null;
+  const big = b0 * VIS;
   const fire = clamp01(k / 0.45), ring = clamp01(k / 0.35), smoke = clamp01((k - 0.1) / 0.9);
   return (
     <g>
       <circle cx={at.x} cy={at.y} r={1.6 * big} fill="url(#fx-scorch)" opacity={Math.min(1, k * 4) * (1 - smoke * 0.3)} />
-      <DustRing at={at} k={ring} r={3 * big} seed={seed} />
+      {ring < 1 && <circle cx={at.x} cy={at.y} r={(0.5 + easeOut(ring) * 3) * big} fill="none" stroke="#fde68a" strokeWidth={0.12 * (1 - ring) * big} opacity={0.6 * (1 - ring)} />}
+      <DustRing at={at} k={ring} r={3 * b0} seed={seed} />
       <g opacity={0.9 * (1 - smoke)}>
         {Array.from({ length: 5 }, (_, i) => {
           const a = noise(seed, i + 70) * Math.PI * 2, d = smoke * (0.6 + noise(seed, i + 71)) * big;
@@ -415,13 +426,13 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
     // the models that fire this weapon (a heavy weapon is one model, a squad's bolters are many)
     const cnt = Math.max(1, Math.min(shooters.length, v.models || 1));
     const off = (vi * 5) % shooters.length;
-    const from = (i: number) => shooters[(off + (i % cnt)) % shooters.length];
+    const from = (i: number) => (v.from?.length ? v.from[i % v.from.length] : shooters[(off + (i % cnt)) % shooters.length]);
     const n = Math.max(1, Math.round(want[vi] * budget));
     const hitShare = v.shots ? v.hits / v.shots : 1;
     for (let i = 0; i < n; i++) {
       const sd = seed * 7 + vi * 101 + i;
       const t0 = vStart + (i / n) * S.span + noise(sd, 40) * 0.03;
-      const src = from(i);
+      const base = from(i);
       const tgt = victims[Math.floor(noise(sd, 3) * victims.length) % victims.length];
       const hit = noise(sd, 5) < hitShare;
       const spread = v.fx === 'shoota' ? 6 : v.fx === 'gatling' ? 3 : 4;
@@ -429,7 +440,10 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
         : { x: tgt.x + (noise(sd, 9) - 0.5) * spread, y: tgt.y + (noise(sd, 11) - 0.5) * spread };
       const k = (f - t0) / S.travel; // 0..1 while flying
       const ik = (f - t0 - S.travel) / 0.22; // 0..1 after impact
-      const ang = Math.atan2(impact.y - src.y, impact.x - src.x);
+      const ang = Math.atan2(impact.y - base.y, impact.x - base.x);
+      // ranged shots leave from the front of the firer's base, not its centre
+      const lip = MELEE.has(v.fx) ? 0 : (v.r ?? 0.5) * 0.9;
+      const src = { x: base.x + Math.cos(ang) * lip, y: base.y + Math.sin(ang) * lip };
       if (MELEE.has(v.fx)) { meleeHit(v.fx, `${vi}-${i}`, impact, hit, f - t0, sd, over, under, P); continue; }
       // muzzle flash (gatlings get one long flickering flash per gun instead)
       if (v.fx !== 'gatling' && v.fx !== 'flame' && v.fx !== 'psychic' && v.fx !== 'sonic') {
@@ -437,9 +451,9 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
         if (mk > 0 && mk < 1) over.push(<Muzzle key={`m${vi}-${i}`} at={src} ang={ang} k={mk} sd={sd} fx={v.fx} pow={P} />);
       }
       // gun smoke comes just after the flash and hangs a moment, drifting up
-      const smk = (f - t0 - 0.03) / 0.35;
+      const smk = (f - t0 - 0.03) / 0.55;
       if (smk > 0 && smk < 1 && !['las', 'lightning', 'gauss', 'cryo', 'gatling', 'flame', 'psychic', 'sonic'].includes(v.fx)) {
-        under.push(<Puff key={`gs${vi}-${i}`} at={{ x: src.x + Math.cos(ang) * 0.5 + (noise(sd, 60) - 0.5) * 0.5, y: src.y + Math.sin(ang) * 0.5 - smk * 0.7 }} k={smk} r={(v.fx === 'missile' ? 1.4 : 0.6) * Math.sqrt(P)} color="rgba(150,145,138,0.4)" />);
+        under.push(<Puff key={`gs${vi}-${i}`} at={{ x: src.x + Math.cos(ang) * 0.5 + (noise(sd, 60) - 0.5) * 0.5, y: src.y + Math.sin(ang) * 0.5 - smk * 0.7 }} k={smk} r={(v.fx === 'missile' ? 1.4 : 0.7) * Math.sqrt(P)} color="rgba(150,145,138,0.55)" />);
       }
       const key = `${vi}-${i}`;
       switch (v.fx) {
@@ -450,7 +464,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             if (k > 0 && k < 1) for (let j = 0; j < 5; j++) {
               const a = ang + (noise(sd, 80 + j) - 0.5) * 0.28, L = Math.hypot(impact.x - src.x, impact.y - src.y);
               const h = { x: src.x + Math.cos(a) * L * k, y: src.y + Math.sin(a) * L * k }, t = { x: src.x + Math.cos(a) * L * Math.max(0, k - 0.3), y: src.y + Math.sin(a) * L * Math.max(0, k - 0.3) };
-              over.push(<line key={`sg${key}-${j}`} x1={t.x} y1={t.y} x2={h.x} y2={h.y} stroke={core} strokeWidth={0.06} strokeLinecap="round" />);
+              over.push(<line key={`sg${key}-${j}`} x1={t.x} y1={t.y} x2={h.x} y2={h.y} stroke={core} strokeWidth={(0.06) * VIS} strokeLinecap="round" />);
             }
           } else if (k > 0 && k < 1) {
             const tl = v.fx === 'gatling' ? 0.3 : heavy ? 0.28 : 0.22;
@@ -458,9 +472,9 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const w = (heavy ? 1.5 : v.fx === 'gatling' ? 0.7 : 1) * P;
             over.push(
               <g key={`t${key}`}>
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={glow} strokeWidth={1.1 * w} strokeLinecap="round" opacity={0.12} />
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={glow} strokeWidth={0.3 * w} strokeLinecap="round" opacity={0.45} />
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={core} strokeWidth={0.1 * w} strokeLinecap="round" />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={glow} strokeWidth={(1.1 * w) * VIS} strokeLinecap="round" opacity={0.12} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={glow} strokeWidth={(0.3 * w) * VIS} strokeLinecap="round" opacity={0.45} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={core} strokeWidth={(0.1 * w) * VIS} strokeLinecap="round" />
                 {v.fx === 'pulse' && <Glow at={head} r={0.45} color="cyan" />}
               </g>,
             );
@@ -479,8 +493,8 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           const lk = (f - t0) / 0.35;
           if (lk > 0 && lk < 1) over.push(
             <g key={`sn${key}`} opacity={1 - lk}>
-              <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#e0f2fe" strokeWidth={0.18} opacity={0.35} />
-              <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#fff" strokeWidth={0.05} />
+              <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#e0f2fe" strokeWidth={(0.18) * VIS} opacity={0.35} />
+              <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#fff" strokeWidth={(0.05) * VIS} />
             </g>,
           );
           if (hit && ik > 0 && ik < 1) { over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={ik} color="#fff" size={0.7} />); under.push(<Puff key={`bm${key}`} at={impact} k={ik} r={0.7 * P} color="rgba(127,13,13,0.55)" />); }
@@ -517,8 +531,8 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
               const head = lerp(src, impact, lk), tail = lerp(src, impact, Math.max(0, lk - 0.35));
               over.push(
                 <g key={`lp${key}`}>
-                  <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={col[0]} strokeWidth={0.3} strokeLinecap="round" opacity={0.5} />
-                  <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#fff" strokeWidth={0.07} strokeLinecap="round" />
+                  <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={col[0]} strokeWidth={(0.3) * VIS} strokeLinecap="round" opacity={0.5} />
+                  <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#fff" strokeWidth={(0.07) * VIS} strokeLinecap="round" />
                 </g>,
               );
             }
@@ -536,10 +550,10 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const w = (1 - bk) * P;
             over.push(
               <g key={`b${key}`}>
-                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={1.8 * w} strokeLinecap="round" opacity={0.1} />
-                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={0.6 * w} strokeLinecap="round" opacity={0.35} />
-                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={0.22 * w} strokeLinecap="round" opacity={0.8} />
-                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#fff" strokeWidth={0.07 * w} strokeLinecap="round" />
+                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={(1.8 * w) * VIS} strokeLinecap="round" opacity={0.1} />
+                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={(0.6 * w) * VIS} strokeLinecap="round" opacity={0.35} />
+                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={(0.22 * w) * VIS} strokeLinecap="round" opacity={0.8} />
+                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#fff" strokeWidth={(0.07 * w) * VIS} strokeLinecap="round" />
               </g>,
             );
             if (v.fx !== 'las') for (let j = 0; j < 4; j++) {
@@ -575,10 +589,10 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const w = (1 - bk * 0.6) * P;
             over.push(
               <g key={`mb${key}`} opacity={bk > 0.8 ? (1 - bk) * 5 : 1}>
-                <polyline points={pts} fill="none" stroke="#f97316" strokeWidth={2.2 * w} strokeLinecap="round" opacity={0.1} />
-                <polyline points={pts} fill="none" stroke="#f97316" strokeWidth={0.9 * w} strokeLinecap="round" opacity={0.3} />
-                <polyline points={pts} fill="none" stroke="#fb923c" strokeWidth={0.35 * w} strokeLinecap="round" opacity={0.85} />
-                <polyline points={pts} fill="none" stroke="#fffbeb" strokeWidth={0.12 * w} strokeLinecap="round" />
+                <polyline points={pts} fill="none" stroke="#f97316" strokeWidth={(2.2 * w) * VIS} strokeLinecap="round" opacity={0.1} />
+                <polyline points={pts} fill="none" stroke="#f97316" strokeWidth={(0.9 * w) * VIS} strokeLinecap="round" opacity={0.3} />
+                <polyline points={pts} fill="none" stroke="#fb923c" strokeWidth={(0.35 * w) * VIS} strokeLinecap="round" opacity={0.85} />
+                <polyline points={pts} fill="none" stroke="#fffbeb" strokeWidth={(0.12 * w) * VIS} strokeLinecap="round" />
               </g>,
             );
           }
@@ -597,7 +611,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           // a graviton beam is unseen: only a faint shimmer in the air, then the target is crushed into the ground
           if (k > 0 && k < 1) {
             const head = lerp(src, impact, k), tail = lerp(src, impact, Math.max(0, k - 0.4));
-            over.push(<line key={`gr${key}`} x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#a78bfa" strokeWidth={0.35 * P} strokeLinecap="round" opacity={0.18} />);
+            over.push(<line key={`gr${key}`} x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#a78bfa" strokeWidth={(0.35 * P) * VIS} strokeLinecap="round" opacity={0.18} />);
           }
           const xk = (f - t0 - S.travel) / 0.35;
           if (xk > 0 && xk < 1) {
@@ -619,9 +633,9 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             }).join(' ');
             over.push(
               <g key={`lt${key}`} opacity={1 - bk * 0.5}>
-                <polyline points={pts} fill="none" stroke="#67e8f9" strokeWidth={1.1} strokeLinejoin="round" opacity={0.1} />
-                <polyline points={pts} fill="none" stroke="#67e8f9" strokeWidth={0.32} strokeLinejoin="round" opacity={0.4} />
-                <polyline points={pts} fill="none" stroke="#f0fdff" strokeWidth={0.08} strokeLinejoin="round" />
+                <polyline points={pts} fill="none" stroke="#67e8f9" strokeWidth={(1.1) * VIS} strokeLinejoin="round" opacity={0.1} />
+                <polyline points={pts} fill="none" stroke="#67e8f9" strokeWidth={(0.32) * VIS} strokeLinejoin="round" opacity={0.4} />
+                <polyline points={pts} fill="none" stroke="#f0fdff" strokeWidth={(0.08) * VIS} strokeLinejoin="round" />
               </g>,
             );
           }
@@ -636,22 +650,32 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
               const s2 = j / 4, off = j === 0 || j === 4 ? 0 : (noise(sd + fr, 160 + j) - 0.5) * 0.7;
               return `${impact.x + Math.cos(a2) * L2 * s2 - Math.sin(a2) * off},${impact.y + Math.sin(a2) * L2 * s2 + Math.cos(a2) * off}`;
             }).join(' ');
-            over.push(<polyline key={`lc${key}`} points={pts} fill="none" stroke="#a5f3fc" strokeWidth={0.07} strokeLinejoin="round" opacity={1 - ck} />);
+            over.push(<polyline key={`lc${key}`} points={pts} fill="none" stroke="#a5f3fc" strokeWidth={(0.07) * VIS} strokeLinejoin="round" opacity={1 - ck} />);
           }
           break;
         }
         case 'psychic': {
+          // the psyker gathers the warp around them, hurls a writhing bolt of it, and it bursts over the target
+          const gk = (f - t0 + 0.12) / 0.3;
+          if (gk > 0 && gk < 1) over.push(<g key={`pg${key}`}><Glow at={src} r={0.7 * Math.sqrt(P)} color="purple" op={0.7 * Math.sin(gk * Math.PI)} /><Swirl at={src} r={0.9 * Math.sqrt(P)} color="#a855f7" k={gk} seed={sd} n={4} op={Math.sin(gk * Math.PI)} inward={0.6} /></g>);
           if (k > 0 && k < 1) {
             const nx = -Math.sin(ang), ny = Math.cos(ang);
-            for (let j = 2; j >= 0; j--) {
-              const kk = Math.max(0, k - j * 0.07), wob = Math.sin(kk * 18) * 0.45;
-              const p = lerp(src, impact, kk);
-              over.push(<Glow key={`ps${key}-${j}`} at={{ x: p.x + nx * wob, y: p.y + ny * wob }} r={0.75 - j * 0.18} color="purple" op={1 - j * 0.3} />);
+            for (let j = 5; j >= 0; j--) {
+              const kk = k - j * 0.05;
+              if (kk <= 0) continue;
+              const wob = Math.sin(kk * 16 + sd) * 0.4 * (1 - kk * 0.5), p = lerp(src, impact, kk), at = { x: p.x + nx * wob, y: p.y + ny * wob };
+              const age = j / 6;
+              over.push(<Wisp key={`ps${key}-${j}`} at={at} r={(0.75 - age * 0.4) * Math.sqrt(P)} color="#a855f7" op={1 - age} rot={(ang * 180) / Math.PI + j * 40 + k * 200} v={j + sd} />);
+              if (j === 0) over.push(<Glow key={`ph${key}`} at={at} r={0.55 * Math.sqrt(P)} color="purple" op={1} />);
             }
           }
-          const xk = (f - t0 - S.travel) / 0.35;
+          const xk = (f - t0 - S.travel) / 0.45;
           if (xk > 0 && xk < 1) {
-            over.push(<Glow key={`px${key}`} at={impact} r={(0.6 + xk * 1.8) * P} color="purple" op={1 - xk} />);
+            over.push(<g key={`px${key}`}>
+              <Glow at={impact} r={(0.5 + xk * 1.4) * P} color="purple" op={1 - xk} />
+              <Swirl at={impact} r={(0.6 + xk * 1.2) * P} color="#c084fc" k={xk} seed={sd + 5} n={5} op={1 - xk * xk} />
+            </g>);
+            if (hit) under.push(<Puff key={`pp${key}`} at={{ x: impact.x, y: impact.y - xk * 0.5 }} k={xk} r={0.9 * P} color="rgba(88,60,110,0.45)" />);
           }
           break;
         }
@@ -659,7 +683,9 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           const fk = (f - t0) / 0.42;
           if (fk > 0 && fk < 1) {
             // a hand flamer licks a few inches, a heavy flamer rolls a wide wall of fire
-            const len = Math.min(12 * Math.min(1, P), Math.hypot(impact.x - src.x, impact.y - src.y)), size = P;
+            // ...and fire is sized to the model holding it: a trooper's flamer must not out-burn a tank's, nor swamp the board when zoomed out
+            const len = Math.min(12 * Math.min(1, P * 1.1), Math.hypot(impact.x - src.x, impact.y - src.y));
+            const size = (P * Math.max(0.75, Math.min(1.6, (v.r ?? 0.6) / 0.6))) / Math.sqrt(VIS);
             const spread = 0.24 + 0.1 * P;
             const tinted = v.tint ? fireTex(v.tint) : [];
             // a cone of burning fuel: a soft body, then overlapping tongues rolling out along it
@@ -676,6 +702,8 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
                 // burning fuel rolls out and turns to black smoke as it dies
                 // tongues stretched along the flow and curling as they go, so the jet reads as one licking stream
                 const r = (0.55 + life * 1.2) * size, rot = ((a + Math.sin(life * 7 + j) * 0.45) * 180) / Math.PI;
+                // a soft heat glow under every other tongue, so the jet is one hazy body and not separate flakes
+                if (j % 2 === 0) under.push(<Glow key={`fg${key}-${j}`} at={p} r={r * 1.6} color={TINT_GLOW[v.tint ?? ''] ?? (life < 0.4 ? 'orange' : 'red')} op={0.7 * (1 - life)} />);
                 over.push(<Sprite key={`fl${key}-${j}`} kind="fire" href={tinted.length ? tinted[j % tinted.length] : undefined} at={p} r={r} sx={2.1 - life * 0.7} op={0.85 * (1 - life * life)} rot={rot} v={j} />);
                 // warpfire burns without smoke; real fire turns to black smoke as it dies
                 if (!v.tint && life > 0.55) under.push(<Sprite key={`fk${key}-${j}`} kind="smoke" at={{ x: p.x, y: p.y - life }} r={0.8 + life * 1.4} op={0.7 * (life - 0.55) * 2.2 * (1 - life)} rot={j * 67} v={j} />);
@@ -710,7 +738,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const mid = { x: (src.x + impact.x) / 2, y: (src.y + impact.y) / 2 - Math.hypot(impact.x - src.x, impact.y - src.y) * 0.18 };
             const q = (a: Pt, b: Pt, cc: Pt, s: number) => lerp(lerp(a, cc, s), lerp(cc, b, s), s);
             const p = q(src, impact, mid, k), tail = q(src, impact, mid, Math.max(0, k - 0.15));
-            under.push(<line key={`tt${key}`} x1={tail.x} y1={tail.y} x2={p.x} y2={p.y} stroke="rgba(150,150,150,0.5)" strokeWidth={0.35} strokeLinecap="round" />);
+            under.push(<line key={`tt${key}`} x1={tail.x} y1={tail.y} x2={p.x} y2={p.y} stroke="rgba(150,150,150,0.5)" strokeWidth={(0.35) * VIS} strokeLinecap="round" />);
             over.push(<g key={`t${key}`}><Glow at={p} r={0.5} color="amber" /><circle cx={p.x} cy={p.y} r={0.18} fill="#fff1c2" /></g>);
           }
           const xk = (f - t0 - S.travel) / 0.4;
@@ -722,10 +750,10 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const head = lerp(src, impact, k), tail = lerp(src, impact, Math.max(0, k - 0.28));
             over.push(
               <g key={`gs${key}`}>
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={1.3} strokeLinecap="round" opacity={0.12} />
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={0.5} strokeLinecap="round" opacity={0.4} />
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#86efac" strokeWidth={0.2} strokeLinecap="round" opacity={0.9} />
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#f0fdf4" strokeWidth={0.08} strokeLinecap="round" />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={(1.3) * VIS} strokeLinecap="round" opacity={0.12} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={(0.5) * VIS} strokeLinecap="round" opacity={0.4} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#86efac" strokeWidth={(0.2) * VIS} strokeLinecap="round" opacity={0.9} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#f0fdf4" strokeWidth={(0.08) * VIS} strokeLinecap="round" />
                 <Glow at={head} r={0.55} color="green" />
               </g>,
             );
@@ -750,9 +778,9 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const spinDeg = ((f - t0) * 1800 + sd * 30) % 360;
             over.push(
               <g key={`sh${key}`}>
-                <line x1={trail.x} y1={trail.y} x2={p.x} y2={p.y} stroke="#38bdf8" strokeWidth={0.16} strokeLinecap="round" opacity={0.55} />
+                <line x1={trail.x} y1={trail.y} x2={p.x} y2={p.y} stroke="#38bdf8" strokeWidth={(0.16) * VIS} strokeLinecap="round" opacity={0.55} />
                 <g transform={`translate(${p.x} ${p.y}) rotate(${spinDeg})`}>
-                  <polygon points="-0.18,-0.05 0,-0.18 0.18,-0.05 0.05,0 0.18,0.05 0,0.18 -0.18,0.05 -0.05,0" fill="#f0f9ff" stroke="#0284c7" strokeWidth={0.03} />
+                  <polygon points="-0.18,-0.05 0,-0.18 0.18,-0.05 0.05,0 0.18,0.05 0,0.18 -0.18,0.05 -0.05,0" fill="#f0f9ff" stroke="#0284c7" strokeWidth={(0.03) * VIS} />
                   <circle r={0.05} fill="#38bdf8" />
                 </g>
                 <Glow at={p} r={0.4} color="cyan" op={0.7} />
@@ -847,7 +875,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             );
           })}
           <g opacity={after < 0.75 ? 1 : (1 - after) * 4} transform={`translate(${e.to.x} ${e.to.y - 1.6 - after * 1.6}) scale(${after < 0.15 ? 0.6 + after * 3 : 1.05})`}>
-            <text fontSize={1.05} textAnchor="middle" fill={e.dmg ? '#fecaca' : '#e5e7eb'} stroke="#000" strokeWidth={0.16} paintOrder="stroke" fontWeight={900}>
+            <text fontSize={1.05} textAnchor="middle" fill={e.dmg ? '#fecaca' : '#e5e7eb'} stroke="#000" strokeWidth={(0.16) * VIS} paintOrder="stroke" fontWeight={900}>
               {e.dmg ? `-${e.dmg}W` : 'no damage'}{e.killed ? ` · ${e.killed} slain` : ''}
             </text>
           </g>
@@ -865,7 +893,7 @@ function Muzzle({ at, ang, k, sd, fx, pow = 1 }: { at: Pt; ang: number; k: numbe
   const star = Array.from({ length: 10 }, (_, j) => {
     // the flash goes forwards: long ahead, short to the sides, almost nothing behind
     const a = ang + (j / 10) * Math.PI * 2, fwd = Math.max(0, Math.cos((j / 10) * Math.PI * 2));
-    const rr = (j % 2 ? 0.12 : 0.18 + fwd * fwd * (0.9 + noise(sd, j) * 0.3)) * big;
+    const rr = (j % 2 ? 0.12 : 0.18 + fwd * fwd * (0.9 + noise(sd, j) * 0.3)) * big * VIS; // Glow and Sprite scale by VIS themselves
     return `${at.x + Math.cos(a) * rr},${at.y + Math.sin(a) * rr}`;
   }).join(' ');
   // chemical guns get a ragged flame-coloured flash; energy weapons keep a clean coloured flare
@@ -906,7 +934,7 @@ function meleeHit(fx: WeaponFx, key: string, at: Pt, hit: boolean, t: number, sd
     } else {
       const col = fx === 'power' ? '#60a5fa' : fx === 'chain' ? '#ef4444' : fx === 'claw' ? '#93c5fd' : '#e5e7eb';
       over.push(
-        <g key={`s${key}`} transform={`translate(${at.x} ${at.y}) rotate(${a}) scale(${Math.sqrt(P)})`} opacity={1 - sk}>
+        <g key={`s${key}`} transform={`translate(${at.x} ${at.y}) rotate(${a}) scale(${Math.sqrt(P) * VIS})`} opacity={1 - sk}>
           {fx === 'claw' ? [-0.3, 0, 0.3].map((dy, j) => <g key={j}>{smear(dy, 0.12, col, 0.3)}{smear(dy, 0.04, '#fff', 0.55)}</g>)
             : <>{smear(0, fx === 'power' ? 0.35 : 0.28, col, 0.3)}{smear(0, 0.1, '#fff', 0.5)}</>}
         </g>,
@@ -1040,14 +1068,26 @@ function ArrivalFx({ at, f, seed, deepStrike, label }: { at: Pt; f: number; seed
   return (
     <g>
       {/* Warp Beam */}
-      <LightColumn at={at} w={deepStrike ? 2.4 : 1.4} h={14} op={beam} seed={seed} />
+      {beam > 0 && (
+        <g opacity={beam}>
+          <rect x={at.x - (deepStrike ? 1.6 : 0.9)} y={at.y - 18} width={deepStrike ? 3.2 : 1.8} height={18} fill="url(#fx-beam)" />
+          <rect x={at.x - (deepStrike ? 0.6 : 0.25)} y={at.y - 18} width={deepStrike ? 1.2 : 0.5} height={18} fill="#fff" opacity={0.85} />
+        </g>
+      )}
       <Glow at={at} r={deepStrike ? 2.5 + 4 * beam : 1 + 2.2 * beam} color="cyan" op={beam} />
 
       {/* Primary Shockwave Ring */}
-      <DustRing at={at} k={ring} r={deepStrike ? 6.5 : 4.2} seed={seed} />
+      {ring > 0 && ring < 1 && (
+        <g>
+          <circle cx={at.x} cy={at.y} r={0.8 + easeOut(ring) * (deepStrike ? 6.5 : 4.2)} fill="none" stroke="#67e8f9" strokeWidth={(deepStrike ? 0.35 : 0.22) * (1 - ring)} opacity={0.95 * (1 - ring)} />
+          <circle cx={at.x} cy={at.y} r={0.5 + easeOut(ring) * (deepStrike ? 4.5 : 2.8)} fill="none" stroke="#ffffff" strokeWidth={0.12} opacity={0.85 * (1 - ring)} />
+        </g>
+      )}
 
       {/* Secondary Resonant Shockwave Ring for Deep Strike */}
-      {deepStrike && ring2 > 0 && ring2 < 1 && <Swirl at={at} r={2.5} color="#67e8f9" k={ring2} seed={seed + 3} n={4} op={1 - ring2} />}
+      {deepStrike && ring2 > 0 && ring2 < 1 && (
+        <circle cx={at.x} cy={at.y} r={0.4 + easeOut(ring2) * 5.5} fill="none" stroke="#fbcfe8" strokeWidth={0.25 * (1 - ring2)} opacity={0.75 * (1 - ring2)} />
+      )}
 
       {/* Warp Lightning Arcs */}
       {deepStrike && f < 0.7 && (
@@ -1060,12 +1100,10 @@ function ArrivalFx({ at, f, seed, deepStrike, label }: { at: Pt; f: number; seed
             const my = at.y + Math.sin(angle + 0.25) * r1;
             const ex = at.x + Math.cos(angle) * r2;
             const ey = at.y + Math.sin(angle) * r2;
-            // a forked, jagged arc rather than two straight strokes
-            const kink = (a: Pt, b: Pt, j: number) => `${(a.x + b.x) / 2 + (noise(seed + Math.floor(f * 30), i * 7 + j) - 0.5) * 0.7},${(a.y + b.y) / 2 + (noise(seed + Math.floor(f * 30), i * 7 + j + 3) - 0.5) * 0.7}`;
             return (
               <polyline
                 key={i}
-                points={`${at.x},${at.y} ${kink(at, { x: mx, y: my }, 1)} ${mx},${my} ${kink({ x: mx, y: my }, { x: ex, y: ey }, 2)} ${ex},${ey}`}
+                points={`${at.x},${at.y} ${mx},${my} ${ex},${ey}`}
                 fill="none"
                 stroke={i % 2 === 0 ? '#67e8f9' : '#ffffff'}
                 strokeWidth={0.12}

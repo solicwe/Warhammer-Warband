@@ -6,7 +6,7 @@ import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems, gap, reachOf } from './geometry';
 import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
-import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, UnitState, WeaponData, WeaponProfileData } from './types';
+import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, Pt, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { checkPhaseCache, getUnitLoneOpRange, hasCover, isHidden, losUnitPairCache, modelVisible, unitSig, unitVisibleTo } from './visibility';
@@ -27,6 +27,12 @@ export interface ShootOptions {
 }
 
 // ---------- helpers ----------
+
+/** where a weapon's shots start: the models carrying it (six at most) and their base radius, for the battle effects */
+function carriers(A: UnitState, ids?: string[]): { from?: Pt[]; r?: number } {
+  const ms = (ids ?? []).map((id) => A.models.find((m) => m.id === id)).filter((m): m is ModelState => !!m).slice(0, 6);
+  return ms.length ? { from: ms.map((m) => ({ x: m.x, y: m.y })), r: ms.reduce((a, m) => a + m.r, 0) / ms.length } : {};
+}
 
 export function targetToughness(u: UnitState, s?: GameState): number {
   const a = alive(u);
@@ -303,6 +309,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         pools.set(key, pool);
       }
       pool.models += 1;
+      (pool.fromIds ??= []).push(m.id);
       const extras: string[] = [];
       let flat = 0;
       const rf = getAbility(p, 'rapid-fire', T.keywords);
@@ -409,6 +416,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         pools.set(key, pool);
       }
       pool.models += 1;
+      (pool.fromIds ??= []).push(m.id);
       const cleave = getAbility(p, 'cleave', T.keywords);
       const cleaveN = (cleave ? parseInt(cleave.value ?? '1', 10) : grants(fx, inc, 'cleave 1') || grants(fx, inc, 'cleave +1') ? 1 : 0) + (cleave && grants(fx, inc, 'cleave +1') ? 1 : 0); // Into the Fray; Mow 'Em Down: +1
       pool.instances.push({ A: p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) + cm.attacksBonus });
@@ -1192,7 +1200,8 @@ export function finishAttack(s: GameState) {
       kind: 'attack', attackKind: at.kind, attackerId: A.id, targetId: T.id, owner: A.owner, from: c(alive(A).length ? alive(A) : A.models), to: c(tm), dmg, killed: dead.length, dead: dead.map(pt), deadIds: dead.map((m) => m.id),
       style, shooters: (alive(A).length ? alive(A) : A.models).slice(0, 12).map(pt), victims: before.slice(0, 12).map(pt),
       shots: at.pools.reduce((a, p) => a + p.attacks, 0), hits: at.pools.reduce((a, p) => a + p.hits.filter((h) => h.o !== 'miss').length, 0),
-      volleys: at.pools.filter((p) => p.attacks > 0).slice(0, 6).map((p) => ({ fx: weaponFx(p.weapon, p.profile, at.kind === 'fight'), shots: p.attacks, hits: p.hits.filter((h) => h.o !== 'miss').length, models: p.models, pow: weaponPow(p.profile, p.weapon), tint: flameTint(p.weapon, p.profile) })),
+      volleys: at.pools.filter((p) => p.attacks > 0).slice(0, 6).map((p) => ({ fx: weaponFx(p.weapon, p.profile, at.kind === 'fight'), shots: p.attacks, hits: p.hits.filter((h) => h.o !== 'miss').length, models: p.models, pow: weaponPow(p.profile, p.weapon), tint: flameTint(p.weapon, p.profile),
+        ...carriers(A, p.fromIds) })),
       report,
     });
   }

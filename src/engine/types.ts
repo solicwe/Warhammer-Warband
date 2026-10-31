@@ -534,6 +534,8 @@ export interface Pool {
   weapon: string;
   profile: WeaponProfileData;
   models: number; // attacking models
+  /** the models firing it (where its shots start on the board) */
+  fromIds?: string[];
   instances: { A: string; extras: string[]; flat: number }[]; // per weapon instance: A + rapid fire/blast/cleave
   attacks: number;
   attackNote: string;
@@ -631,7 +633,7 @@ export type FxEvent =
   | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[]; deadIds?: string[];
       style?: 'bullet' | 'beam' | 'flame' | 'blast' | 'melee'; shooters?: Pt[]; victims?: Pt[]; shots?: number; hits?: number;
       /** one entry per weapon fired, so each weapon gets its own look (plasma balls, assault cannon streams …) */
-      volleys?: { fx: WeaponFx; shots: number; hits: number; models: number; /** how hard it hits (0.7 to 1.8; missing in old saves) */ pow?: number; /** a flame's colour when it is not ordinary fire */ tint?: string }[];
+      volleys?: { fx: WeaponFx; shots: number; hits: number; models: number; /** how hard it hits (0.7 to 1.8; missing in old saves) */ pow?: number; /** a flame's colour when it is not ordinary fire */ tint?: string; /** where the models carrying it stand, and their base radius */ from?: Pt[]; r?: number }[];
       /** the attack told step by step (the screen counts it up stage by stage) */
       report?: AttackReport }
   | { seq: number; kind: 'mortal'; unitId: string; n: number; at: Pt; deadIds?: string[] }

@@ -2152,7 +2152,7 @@ function BoardImpl(props: BoardProps) {
       </g>
     </svg>
     <svg ref={fxRef} className="fx-overlay" viewBox={`${shown.x} ${shown.y} ${shown.w} ${shown.h}`} preserveAspectRatio={FIT} aria-hidden="true">
-      <FxLayer fx={fx} />
+      <FxLayer fx={fx} viewW={shown.w} />
     </svg>
     </>
   );
