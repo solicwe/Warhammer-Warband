@@ -50,8 +50,8 @@ export function woundNeed(S: number, T: number): number {
 }
 
 const riled = isRiled;
-/** the most VP a side scores for kills in one battle, in every mission (the primary gives up to 45) */
-export const KILL_VP = 12;
+/** campaign battles: the most VP a side scores for kills in one battle (the primary gives up to 45) */
+export const CAMPAIGN_KILL_VP = 12;
 export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState, ranged = true, psychic = false, attacker?: UnitState) => {
   const best = Math.min(m.shadowFieldDown ? 7 : m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee', psychic, attacker).inv ?? 7);
   return best >= 7 ? null : best;
@@ -885,11 +885,11 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     onUnitDestroyed(s, u, s.attack?.attackerId);
     emit(s, 'unitDestroyed', { u, attackerId: s.attack?.attackerId });
     log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
-    // every mission: a kill is worth a little VP (2 for a character, vehicle or monster), at most KILL_VP in a battle,
-    // so the primary mission (up to 45) still decides it
-    {
+    // campaign battles: a kill is worth a little VP (2 for a character, vehicle or monster), at most CAMPAIGN_KILL_VP
+    // in a battle, so the primary mission (up to 45) still decides it
+    if (s.campaign) {
       const p = other(u.owner), P = s.players[p];
-      const vp = Math.min(['CHARACTER', 'VEHICLE', 'MONSTER'].some((k) => kws.includes(k)) ? 2 : 1, KILL_VP - (P.killVp ?? 0));
+      const vp = Math.min(['CHARACTER', 'VEHICLE', 'MONSTER'].some((k) => kws.includes(k)) ? 2 : 1, CAMPAIGN_KILL_VP - (P.killVp ?? 0));
       if (vp > 0) {
         P.killVp = (P.killVp ?? 0) + vp;
         P.vp += vp;
