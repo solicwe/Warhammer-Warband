@@ -15,8 +15,6 @@ const has = (p: WeaponProfileData, a: string) => (p.abilities ?? []).some((x) =>
 export function weaponFx(weapon: string, p: WeaponProfileData, melee: boolean): WeaponFx {
   if (melee) return meleeFx(`${weapon} ${p.name ?? ''}`.toLowerCase(), p);
   if (has(p, 'torrent')) return 'flame';
-  // psychic fire (Coruscating Flames, Fires of the Abyss) burns like a flamer, in the warp's colours
-  if (has(p, 'psychic') && /flame|fire\b|fires|firestorm|blaze|burn|pyre/i.test(`${weapon} ${p.name ?? ''}`) && !/fireball/i.test(`${weapon} ${p.name ?? ''}`)) return 'flame';
   // a profile name only wins when it names a real weapon kind ("/ frag", "/ Shoota"), not a generic word ("Kill Shot")
   const prof = p.name && p.name !== weapon ? rangedFx(p.name.toLowerCase(), p, false) : null;
   return prof ?? rangedFx(weapon.toLowerCase(), p, true) ?? (has(p, 'psychic') ? 'psychic' : 'bolt');
@@ -26,7 +24,7 @@ export function weaponFx(weapon: string, p: WeaponProfileData, melee: boolean): 
  *  Flamers are sized by the weapon instead (their Strength and Damage barely differ): a hand flamer small, a heavy or
  *  twin flamer big. */
 export function weaponPow(p: WeaponProfileData, weapon = ''): number {
-  if (has(p, 'torrent') || (has(p, 'psychic') && /flame|fire/i.test(`${weapon} ${p.name ?? ''}`))) {
+  if (has(p, 'torrent')) {
     const n = `${weapon} ${p.name ?? ''}`.toLowerCase();
     if (has(p, 'pistol') || has(p, 'close-quarters') || /hand|pistol|tendril|spurt/.test(n)) return 0.7;
     if (has(p, 'twin-linked') || has(p, 'blast 2') || /heavy|storm|breath|cannon|roar|abyss|focused/.test(n) || (p.S ?? 4) >= 6) return 1.45;
@@ -37,6 +35,8 @@ export function weaponPow(p: WeaponProfileData, weapon = ''): number {
 
 /** The colour of a flame that is not ordinary promethium: warpfire, daemon fire, plague or C'tan fire. */
 export function flameTint(weapon: string, p: WeaponProfileData): string | undefined {
+  // fire is only ever a torrent weapon's
+  if (!has(p, 'torrent')) return undefined;
   const n = `${weapon} ${p.name ?? ''}`.toLowerCase();
   if (/pink/.test(n)) return '#ec4899';
   if (/blue/.test(n)) return '#3b82f6';
@@ -78,10 +78,12 @@ function rangedFx(n: string, p: WeaponProfileData, catchAll: boolean): WeaponFx 
   if (/volkite|eradication ray|eradication caster|radium jezzail/.test(n)) return 'volkite';
 
   // 5. Flame / Torrent / Acid / Spewers / Vials
-  if (has(p, 'torrent') || /flam|burna|skorcha|pyre|acid|drool|spewer|plaguespitter|ignis|firestorm|phosphor|incinerat|cleanser|bile spurt|chemical vials|daemonbreath spear/.test(n)) return 'flame';
+  // fire is only ever a torrent weapon's (checked before any name); phosphor guns fire white-hot rounds
+  if (has(p, 'torrent')) return 'flame';
+  if (/phosphor/.test(n)) return 'heavyBolt';
 
   // 6. Melta / Fusion / Thermal / Dark Scythe
-  if (/melta|fusion|inferno pistol|heat lance|thermal|magma|solar atomis|firepike|wailing doom|heat ray|dark scythe/.test(n)) return 'melta';
+  if (/melta|fusion|inferno pistol|heat lance|thermal|magma|solar atomis|firepike|wailing doom|heat ray|dark scythe|daemonbreath/.test(n)) return 'melta';
 
   // 7. Plasma / Bio-plasma / Eldar starcannons
   if (/plasma|mega-blasta|mega-zappa|mega-slugga|bio-plasm|bioplasm|arioch|starcannon|suncannon/.test(n)) return 'plasma';
@@ -102,7 +104,7 @@ function rangedFx(n: string, p: WeaponProfileData, catchAll: boolean): WeaponFx 
   if (/shuriken|bloody twins|silent death|maugetar|triskele|chainsabres/.test(n)) return 'shuriken';
 
   // 13. Bio / poison: Tyranid symbiotes, Drukhari splinter and shard weapons, toxin injectors
-  if (/fleshborer|devourer|deathspitter|spinefist|spine banks|spinemaws|tentaclid|barblauncher|barbed strangler|spore mine|toxinjector|bio-weapon|bio-cannon|impaler cannon|harvester cannon|ichor cannon|venom cannon|stranglethorn|ossefactor|grasping tongue|living whip|lashes|lash of|scourging whip|malefic lash|dartmask|jindarii|anzuq|splinter|shardcarbine|stinger pistol|spike rifle|injector pistol|ichor/.test(n)) return 'bio';
+  if (/fleshborer|devourer|deathspitter|spinefist|spine banks|spinemaws|tentaclid|barblauncher|barbed strangler|spore mine|toxinjector|bio-weapon|bio-cannon|impaler cannon|harvester cannon|ichor cannon|venom cannon|stranglethorn|ossefactor|grasping tongue|living whip|lashes|lash of|scourging whip|malefic lash|dartmask|jindarii|anzuq|splinter|shardcarbine|stinger pistol|spike rifle|injector pistol|ichor|bile|chemical vials|acid|drool|spewer/.test(n)) return 'bio';
 
   // 14. Sniper / Long-range precision / rail weapons
   if (/sniper|marksman|instigator|stalker|longrifle|long rifle|long gun|fusil|eliminator|exitus|railgun|rail rifle|rail cannon|magna-rail|magnarail|arquebus|needle|tachyon arrow|condemnor|shade|hexrifle|magna-coil rifle|tankstopper|synaptic disintegrator/.test(n)) return 'sniper';

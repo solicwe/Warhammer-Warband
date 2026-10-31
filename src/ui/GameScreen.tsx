@@ -344,9 +344,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const sent = s;
       const id = Math.random();
       setStepping(true);
-      // a slow phone can take a few seconds over a big unit's move: only a worker that hangs is given up on (running
-      // the bot on the screen's thread is what froze it)
-      const giveUp = window.setTimeout(() => { worker.onmessage = null; setStepping(false); stepOnMain.current = true; if (sRef.current === sent) onMain(); }, 20000);
+      // a slow phone can take many seconds over a big unit's move in a 2000+ point game: only a worker that hangs is given
+      // up on (giving up early switched the bot to the screen's thread for good, and that froze the game)
+      const giveUp = window.setTimeout(() => { worker.onmessage = null; setStepping(false); stepOnMain.current = true; if (sRef.current === sent) onMain(); }, 90000);
       worker.onmessage = (e: MessageEvent<{ id: number; state: GameState | null; error?: string | null }>) => {
         if (e.data.id !== id) return;
         window.clearTimeout(giveUp);

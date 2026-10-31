@@ -31,7 +31,13 @@ export function withFastPlanning<T>(fn: () => T): T {
   fastPlanning = true;
   try { return fn(); } finally { fastPlanning = was; }
 }
-export const isFastPlanning = (s: GameState, u?: UnitState) => fastPlanning || !!s.campaign || (u ? (s.botLevels?.[u.owner] ?? s.botLevel) === 'easy' : s.botLevel === 'easy');
+export const isFastPlanning = (s: GameState, u?: UnitState) => fastPlanning || !!s.campaign || bigBoard(s) || (u ? (s.botLevels?.[u.owner] ?? s.botLevel) === 'easy' : s.botLevel === 'easy');
+
+/** Models the two armies brought (the dead count too, so a big game stays big as it goes) above which the bot plans
+ *  moves the quick way: at 2000+ points every spot it tried was checked model by model for line of sight, and one
+ *  unit's move took seconds on a phone. */
+export const BIG_BOARD = 150;
+export const bigBoard = (s: GameState) => s.units.reduce((n, u) => n + u.models.length, 0) > BIG_BOARD;
 type Spot = Map<string, Pt>;
 
 /** Holding an objective is worth about this many points of damage (a few VP each turn). */
@@ -141,6 +147,8 @@ interface Foe { u: UnitState; rk: number; mk: number; brawler: boolean; range: n
 /** What the enemy army can do to this unit (computed once per unit, positions vary). */
 export interface Ctx {
   foes: Foe[]; brawler: boolean; target?: UnitState; range: number; heavy: boolean; ocNeed: Pt[];
+  /** a big board (more than BIG_BOARD models alive): spots are scored the quick way */
+  big?: boolean;
   /** route distances for units that can't cross ruin walls (vehicles, monsters): to the melee target, to objectives */
   toTarget?: (p: Pt) => number; toObjective?: (p: Pt) => number; toFront?: (p: Pt) => number; toPost?: (p: Pt) => number;
   /** a transport with units inside: where to drop them off (the enemy for fighters, a contested objective for the rest) */
@@ -425,7 +433,7 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
   // an expensive unit is not pulled back to the home objective (it goes for the ones out on the field)
   const big = unitValue(u) > 200;
   const ocNeed = oc(u) > 0 ? objectiveNeeds(s, u.owner).filter((n) => n.need > 0 && !(big && n.o.type === 'home' && n.o.owner === u.owner)).map((n) => objPoint(s, n.o)) : [];
-  const ctx: Ctx = { foes, brawler, target, range: maxRange(u), heavy, ocNeed };
+  const ctx: Ctx = { foes, brawler, target, range: maxRange(u), heavy, ocNeed, big: bigBoard(s) };
   const battleline = alive(u).some((m) => m.keywords.includes('BATTLELINE'));
   // melee units go and fight; holding is a job for BATTLELINE and cheap shooting squads
   ctx.holder = oc(u) > 0 && !u.transport && (battleline || unitValue(u) <= 130) && !(brawler && (unitValue(u) > 130 || !battleline));
@@ -505,9 +513,16 @@ function shootScore(s: GameState, u: UnitState, kind: MoveKind | 'stationary', c
   const modes = shootingModes(s, u);
   if (!modes.length) return 0;
   let best = 0;
+  const quick = ctx.big;
   for (const f of ctx.foes) {
     const gap = unitDistance(u, f.u);
     if (gap > ctx.range + 0.5) continue;
+    // a big board: the rough kills it would score and one closest-pair sight check, not every model's line of sight
+    if (quick) {
+      if (!seen(s, u, f.u)) continue;
+      best = Math.max(best, shotValue(s, u, f.u, Math.min(alive(f.u).length, rangedKills(u, f.u)), gap));
+      continue;
+    }
     const r = buildShootPools(s, u.id, f.u.id, { mode: modes[0] });
     if (r.error || !r.pools.length) continue;
     const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, f.u).models, 0);
@@ -745,7 +760,7 @@ export interface Plan { kind: MoveKind | 'stationary'; paths?: Paths; score: num
 export function bestMove(s: GameState, u: UnitState, kind: MoveKind, max: number, ctx: Ctx, opt: MoveOpts & { aims?: Pt[]; noStay?: boolean } = {}): Plan {
   let best: Plan = opt.noStay ? { kind: 'stationary', score: -Infinity } : { kind: 'stationary', score: scoreSpot(s, u, 'stationary', null, ctx) };
   const byAim: { aim: Pt; score: number }[] = [];
-  for (const aim of opt.aims ?? (isFastPlanning(s, u) ? aimsFor(s, u, max, ctx).slice(0, 7) : aimsFor(s, u, max, ctx))) {
+  for (const aim of opt.aims ?? (isFastPlanning(s, u) ? aimsFor(s, u, max, ctx).slice(0, ctx.big ? 5 : 7) : aimsFor(s, u, max, ctx))) {
     let top = -Infinity;
     for (const paths of movesTowards(s, u, kind, max, aim, opt)) {
       const moved = Math.max(0, ...[...paths.values()].map(pathLength));
@@ -789,12 +804,16 @@ export function bestArrival(s: GameState, u: UnitState, how: 'ingress' | 'deepSt
   for (const f of [...ctx.foes].sort((a, b) => unitValue(b.u) - unitValue(a.u)).slice(0, 3)) {
     near.push(centre(f.u));
     // a melee unit dropping in wants the closest legal ring around a target (just over 9"), from every side
-    if (how === 'deepStrike' && ctx.brawler) for (let k = 0; k < 8; k++) ring.push({ x: centre(f.u).x + Math.cos((k * Math.PI) / 4) * (10 + u.models[0].r), y: centre(f.u).y + Math.sin((k * Math.PI) / 4) * (10 + u.models[0].r) });
+    if (how === 'deepStrike' && ctx.brawler) for (let k = 0; k < 8; k += ctx.big ? 2 : 1) ring.push({ x: centre(f.u).x + Math.cos((k * Math.PI) / 4) * (10 + u.models[0].r), y: centre(f.u).y + Math.sin((k * Math.PI) / 4) * (10 + u.models[0].r) });
   }
   near.push(...s.objectives.map((o) => objPoint(s, o)));
+  // the same spot searched twice gives the same placement: drop repeats (on a big board, near ones too, and keep six)
+  const spots: Pt[] = [];
+  for (const p of near) if (!spots.some((q) => dist(p, q) < (ctx.big ? 3 : 0.01))) spots.push(p);
+  if (ctx.big) spots.splice(6);
   let best: { pos: Spot; v: number } | null = null;
   const seen = new Set<string>();
-  for (const p of [...near, ...ring]) {
+  for (const p of [...spots, ...ring]) {
     const pos = ring.includes(p) ? formationAt(u, p, s.players[u.owner].role === 'defender') : findPlacement(s, u, how, p);
     if (!pos || !validatePlacement(s, u, pos, how).ok) continue;
     const key = [...pos.values()].map((q) => `${q.x.toFixed(1)},${q.y.toFixed(1)}`).join(';');

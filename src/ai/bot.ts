@@ -543,7 +543,9 @@ export function botShootOne(s: GameState): boolean {
       continue;
     }
     const mode = modes[0];
-    const rank = () => boardUnits(s, other(u.owner)).map((t) => {
+    // targets far past its longest gun cannot be shot: skip building their pools (6" margin for range bonuses)
+    const reach = maxRange(u) + 6.5;
+    const rank = () => boardUnits(s, other(u.owner)).filter((t) => unitDistance(u, t) <= reach).map((t) => {
       const r = buildShootPools(s, u.id, t.id, { mode });
       if (r.error || !r.pools.length) return null;
       const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, t).models, 0);

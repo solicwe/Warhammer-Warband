@@ -49,8 +49,12 @@ describe('weapon effects match the weapon', () => {
 
   it('psychic and daemon fire burns in its own colour, and flamers are sized by the weapon', () => {
     const torrent = (o: Partial<WeaponProfileData> = {}) => prof({ ...o, abilities: ['torrent', ...(o.abilities ?? [])] });
-    expect(weaponFx('Coruscating Pink Flames', prof({ name: 'Coruscating Pink Flames', abilities: ['psychic'] }), false)).toBe('flame');
-    expect(weaponFx('Arcane Fireball', prof({ name: 'Arcane Fireball', abilities: ['psychic'] }), false)).toBe('psychic');
+    // fire is only a torrent weapon's: a psychic power named "witchfire" is a psychic bolt
+    expect(weaponFx('Smite', prof({ name: 'witchfire', abilities: ['psychic'] }), false)).toBe('psychic');
+    expect(weaponFx('Coruscating Pink Flames', prof({ name: 'Coruscating Pink Flames', abilities: ['psychic'] }), false)).toBe('psychic');
+    expect(weaponFx('Plasma Incinerator', prof({ name: 'standard' }), false)).toBe('plasma');
+    expect(weaponFx('Plasma Incinerator', prof({ name: 'supercharge' }), false)).toBe('plasma');
+    expect(flameTint('Smite', prof({ name: 'witchfire', abilities: ['psychic'] }))).toBeUndefined();
     expect(flameTint('Warpflamer', torrent())).toBe('#a855f7');
     expect(flameTint('Fire of Tzeentch', torrent({ name: 'pink fire' }))).toBe('#ec4899');
     expect(flameTint('Torrent of burning blood', torrent())).toBe('#dc2626');
