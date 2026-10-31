@@ -631,7 +631,7 @@ export type FxEvent =
   | { seq: number; kind: 'attack'; attackKind: 'shoot' | 'fight' | 'overwatch'; attackerId: string; targetId: string; owner: PlayerId; from: Pt; to: Pt; dmg: number; killed: number; dead: Pt[]; deadIds?: string[];
       style?: 'bullet' | 'beam' | 'flame' | 'blast' | 'melee'; shooters?: Pt[]; victims?: Pt[]; shots?: number; hits?: number;
       /** one entry per weapon fired, so each weapon gets its own look (plasma balls, assault cannon streams …) */
-      volleys?: { fx: WeaponFx; shots: number; hits: number; models: number }[];
+      volleys?: { fx: WeaponFx; shots: number; hits: number; models: number; /** how hard it hits (0.7 to 1.8; missing in old saves) */ pow?: number }[];
       /** the attack told step by step (the screen counts it up stage by stage) */
       report?: AttackReport }
   | { seq: number; kind: 'mortal'; unitId: string; n: number; at: Pt; deadIds?: string[] }

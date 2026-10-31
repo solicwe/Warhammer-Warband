@@ -1,5 +1,5 @@
 // Making Attacks (04) + Attack Sequence (05), resolved stage by stage so the UI can show every roll.
-import { weaponFx } from './weaponFx';
+import { weaponFx, weaponPow } from './weaponFx';
 import { combatMods, runPoolFinishers, type CombinedMods } from './combatMods';
 import { assaultWeapons, emit, rescueDie, targetBlock } from './events';
 import { RULES } from './config';
@@ -1192,7 +1192,7 @@ export function finishAttack(s: GameState) {
       kind: 'attack', attackKind: at.kind, attackerId: A.id, targetId: T.id, owner: A.owner, from: c(alive(A).length ? alive(A) : A.models), to: c(tm), dmg, killed: dead.length, dead: dead.map(pt), deadIds: dead.map((m) => m.id),
       style, shooters: (alive(A).length ? alive(A) : A.models).slice(0, 12).map(pt), victims: before.slice(0, 12).map(pt),
       shots: at.pools.reduce((a, p) => a + p.attacks, 0), hits: at.pools.reduce((a, p) => a + p.hits.filter((h) => h.o !== 'miss').length, 0),
-      volleys: at.pools.filter((p) => p.attacks > 0).slice(0, 6).map((p) => ({ fx: weaponFx(p.weapon, p.profile, at.kind === 'fight'), shots: p.attacks, hits: p.hits.filter((h) => h.o !== 'miss').length, models: p.models })),
+      volleys: at.pools.filter((p) => p.attacks > 0).slice(0, 6).map((p) => ({ fx: weaponFx(p.weapon, p.profile, at.kind === 'fight'), shots: p.attacks, hits: p.hits.filter((h) => h.o !== 'miss').length, models: p.models, pow: weaponPow(p.profile) })),
       report,
     });
   }
