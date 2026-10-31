@@ -5,7 +5,7 @@ import { deploymentName, dispositionById, LAYOUTS, MISSIONS, RULES, type Disposi
 import { KILL_VP } from '../engine/attack';
 import { autoAttach, forChapter, listPoints, syncList } from '../engine/army';
 import { createGame } from '../engine/game';
-import type { ArmyList, FactionData, GameState } from '../engine/types';
+import type { ArmyList, GameState } from '../engine/types';
 import { Emblem, titleCase } from './ArmyBuilder';
 import { loadFaction, useFactions, type FactionIndex } from './data';
 import { Icon } from './Icon';
