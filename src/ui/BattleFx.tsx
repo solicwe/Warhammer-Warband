@@ -86,10 +86,12 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
   if (f < 0 || f > 1) return null;
   if (e.kind === 'mortal') {
     return (
-      <g opacity={1 - f}>
-        <Glow at={e.at} r={1.2 + f * 1.5} color="purple" op={0.7} />
-        <Swirl at={e.at} r={1.2 + easeOut(f) * 1.2} color="#c084fc" k={f} seed={e.seq} n={4} />
-        <text x={e.at.x} y={e.at.y - 1 - f * 1.6} fontSize={1} textAnchor="middle" fill="#e9d5ff" stroke="#000" strokeWidth={0.14} paintOrder="stroke" fontWeight={900}>-{e.n} MW</text>
+      <g>
+        {f < 0.2 && <Glow at={e.at} r={0.6 + f * 4} color="white" op={1 - f / 0.2} />}
+        <Glow at={e.at} r={1 + f} color="purple" op={0.7 * (1 - f)} />
+        <Shockwave at={e.at} r={1.8} k={f / 0.5} color="#c084fc" />
+        <Arcs at={e.at} r={1.6} k={f / 0.6} seed={e.seq} color="#c084fc" n={5} />
+        <text x={e.at.x} y={e.at.y - 1 - f * 1.6} opacity={1 - f} fontSize={1} textAnchor="middle" fill="#e9d5ff" stroke="#000" strokeWidth={0.14} paintOrder="stroke" fontWeight={900}>-{e.n} MW</text>
       </g>
     );
   }
@@ -129,8 +131,53 @@ function ChargeRollFx({ e, f }: { e: Extract<FxEvent, { kind: 'roll' }>; f: numb
 type RitualEvent = Extract<FxEvent, { kind: 'ritual' }>;
 
 /** The mark of a Ritual: warp energy gathering and turning around the caster. */
+/** Crackling arcs of energy thrown out from a point: jagged forks that flicker (redrawn from the noise a few times a
+ *  second), a wide faint glow, a coloured body and a white-hot core. Sharp, not a haze. */
+function Arcs({ at, r, k, seed, color, n = 6, inward = false }: { at: Pt; r: number; k: number; seed: number; color: string; n?: number; inward?: boolean }) {
+  if (k <= 0 || k >= 1) return null;
+  const flick = Math.floor(k * 14), R = r * VIS;
+  const reach = inward ? 1 - easeOut(k) * 0.7 : 0.35 + easeOut(k) * 0.65;
+  // each bolt runs out along its own direction and zigzags across it (never curls back), with a short fork
+  const arcs = Array.from({ length: n }, (_, i) => {
+    const a0 = (i / n) * Math.PI * 2 + noise(seed, i + 300) * 0.8, len = R * reach * (0.75 + noise(seed + flick, i + 301) * 0.4);
+    const cx = Math.cos(a0), cy = Math.sin(a0), at0 = (d: number, w: number) => `${at.x + cx * d - cy * w},${at.y + cy * d + cx * w}`;
+    const pts: string[] = [];
+    for (let j = 0; j <= 6; j++) {
+      const t = j / 6, d = (inward ? 1 - t * 0.85 : 0.1 + t * 0.9) * len, w = j && j < 6 ? (noise(seed + flick, i * 7 + j) - 0.5) * len * 0.22 : 0;
+      pts.push(at0(d, w));
+    }
+    const fj = 3 + Math.floor(noise(seed, i + 302) * 2), fd = (inward ? 1 - (fj / 6) * 0.85 : 0.1 + (fj / 6) * 0.9) * len;
+    const fork = [pts[fj], at0(fd + len * 0.22, (noise(seed + flick, i + 303) - 0.5) * len * 0.5)].join(' ');
+    return `${pts.join(' ')}|${fork}`;
+  }).flatMap((x) => x.split('|'));
+  const op = Math.sin(k * Math.PI) ** 0.5;
+  return (
+    <g opacity={op}>
+      {arcs.map((pts, i) => <polyline key={`w${i}`} points={pts} fill="none" stroke={color} strokeWidth={0.6 * TRACE} strokeLinejoin="round" opacity={0.25} />)}
+      {arcs.map((pts, i) => <polyline key={`c${i}`} points={pts} fill="none" stroke={color} strokeWidth={0.18 * TRACE} strokeLinejoin="round" opacity={0.9} />)}
+      {arcs.map((pts, i) => <polyline key={`h${i}`} points={pts} fill="none" stroke="#fff" strokeWidth={0.05 * TRACE} strokeLinejoin="round" />)}
+    </g>
+  );
+}
+
+/** a hard shockwave: a bright ring that snaps outwards and thins as it goes, with a white flash at the centre */
+function Shockwave({ at, r, k, color }: { at: Pt; r: number; k: number; color: string }) {
+  if (k <= 0 || k >= 1) return null;
+  const R = r * VIS * (0.15 + easeOut(k) * 0.85), w = (1 - k) * 0.35 * VIS;
+  return (
+    <g>
+      <circle cx={at.x} cy={at.y} r={R} fill="none" stroke={color} strokeWidth={w * 2.4} opacity={0.22 * (1 - k)} />
+      <circle cx={at.x} cy={at.y} r={R} fill="none" stroke={color} strokeWidth={w} opacity={0.9 * (1 - k)} />
+      <circle cx={at.x} cy={at.y} r={R} fill="none" stroke="#fff" strokeWidth={w * 0.3} opacity={1 - k} />
+      {k < 0.25 && <circle cx={at.x} cy={at.y} r={R * 0.7} fill="#fff" opacity={0.7 * (1 - k / 0.25)} />}
+    </g>
+  );
+}
+
 function Sigil({ at, r, rot, color, op }: { at: Pt; r: number; rot: number; color: string; op: number }) {
-  return <Swirl at={at} r={r} color={color} k={rot / 6} seed={Math.round(at.x * 7 + at.y * 3)} n={5} op={op} />;
+  // power gathering at the caster: arcs crawling in, flickering, over a bright core
+  const k = (rot / 6) % 1;
+  return <g opacity={op}><Glow at={at} r={r * 0.5} color="white" op={0.5} /><Arcs at={at} r={r} k={0.05 + k * 0.9} seed={Math.round(at.x * 7 + at.y * 3)} color={color} n={5} inward /></g>;
 }
 
 /**
@@ -180,17 +227,15 @@ function RitualFx({ e, f }: { e: RitualEvent; f: number }) {
       {land > 0 && (
         <g>
           <Glow at={e.to} r={1.5 + land * (e.ritual === 'doombolt' ? 2.6 : 1.4)} color={glow} op={0.8 * (1 - land)} />
-          {e.ritual === 'doombolt' && <><Sparks at={e.to} seed={seed + 3} k={land} color={col} size={2.2} /><DustRing at={e.to} k={land} r={3.2} seed={seed} /><Wisp at={e.to} r={1.2 + land * 2} color={col} op={1 - land} rot={land * 120} /></>}
-          {e.ritual === 'destinys-ruin' && (
-            <Swirl at={e.to} r={1.6} color={col} k={land} seed={seed + 5} n={5} op={1 - land * 0.6} inward={0.6} />
-          )}
-          {e.ritual === 'twist-of-fate' && (
-            <Swirl at={e.to} r={2} color={col} k={land * 2} seed={seed + 9} n={6} op={1 - land * 0.5} inward={0.4} />
-          )}
+          {/* the spell lands hard: a shockwave, crackling arcs and sparks */}
+          <Shockwave at={e.to} r={e.ritual === 'doombolt' ? 3.2 : 2.4} k={clamp01(land / 0.6)} color={col} />
+          <Arcs at={e.to} r={e.ritual === 'doombolt' ? 2.6 : 2} k={clamp01(land / 0.7)} seed={seed + 5} color={col} n={e.ritual === 'doombolt' ? 8 : 6} inward={e.ritual === 'destinys-ruin'} />
+          <Sparks at={e.to} seed={seed + 3} k={land} color={col} size={e.ritual === 'doombolt' ? 2 : 1.4} />
+          {e.ritual === 'doombolt' && <DustRing at={e.to} k={land} r={2.6} seed={seed} />}
           {e.ritual === 'temporal-surge' && (
-            <g opacity={1 - land * 0.5}>
-              {/* time runs backwards: motes of light rise and fall back */}
-              {Array.from({ length: 5 }, (_, i) => <Wisp key={i} at={{ x: e.to.x + (noise(seed, i + 70) - 0.5) * 2.2, y: e.to.y + 0.8 - Math.sin((land + i / 5) * Math.PI) * 2 }} r={0.7 + noise(seed, i + 71) * 0.5} color={col} op={0.8} rot={i * 72 + land * 60} v={i} />)}
+            <g opacity={1 - land}>
+              {/* time runs backwards: sparks of light rise and fall back */}
+              {Array.from({ length: 8 }, (_, i) => <circle key={i} cx={e.to.x + (noise(seed, i + 70) - 0.5) * 2.4} cy={e.to.y + 0.8 - Math.sin((land + i / 8) * Math.PI) * 2.2} r={0.09 * VIS} fill={i % 2 ? '#fff' : col} />)}
             </g>
           )}
           <text x={e.to.x} y={e.to.y - 2.2 - land * 0.6} fontSize={0.85} textAnchor="middle" fill="#fff" stroke="#000" strokeWidth={0.13} paintOrder="stroke" fontWeight={900}>{e.name}{e.text ? ` · ${e.text}` : ''}</text>
@@ -313,19 +358,20 @@ function Debris({ at, k, seed, n = 8, color = '#2b241c', size = 1 }: { at: Pt; k
 /** A blast: white flash, fireball, shockwave ring, flying debris, then a column of smoke over a scorch mark. */
 function Explosion({ at, k, seed, big: b0 = 1 }: { at: Pt; k: number; seed: number; big?: number }) {
   if (k <= 0 || k >= 1) return null;
-  // a hit's blast stays the size of the thing that made it: it grows with the zoom less than the shots do
-  const big = b0 * Math.sqrt(VIS) * 0.75;
+  // a hit's blast stays the size of the thing that made it: it grows with the zoom less than the shots do. `big` sizes
+  // what is drawn here; `hb` goes to Glow, Sprite, DustRing and Debris, which scale by the zoom themselves
+  const big = b0 * Math.sqrt(VIS) * 0.7, hb = big / VIS;
   const fire = clamp01(k / 0.45), ring = clamp01(k / 0.35), smoke = clamp01((k - 0.1) / 0.9);
   return (
     <g>
       <circle cx={at.x} cy={at.y} r={1.6 * big} fill="url(#fx-scorch)" opacity={Math.min(1, k * 4) * (1 - smoke * 0.3)} />
       {ring < 1 && <circle cx={at.x} cy={at.y} r={(0.5 + easeOut(ring) * 3) * big} fill="none" stroke="#fde68a" strokeWidth={0.12 * (1 - ring) * big} opacity={0.6 * (1 - ring)} />}
-      <DustRing at={at} k={ring} r={2.2 * big} seed={seed} />
+      <DustRing at={at} k={ring} r={2 * hb} seed={seed} />
       <g opacity={0.9 * (1 - smoke)}>
         {Array.from({ length: 3 }, (_, i) => {
           const a = noise(seed, i + 70) * Math.PI * 2, d = smoke * (0.6 + noise(seed, i + 71)) * big;
-          const p = { x: at.x + Math.cos(a) * d * 0.7, y: at.y + Math.sin(a) * d * 0.7 - smoke * 1.4 * big }, rr = (0.6 + smoke * 1.4) * big * (0.7 + noise(seed, i + 72) * 0.5);
-          return fxTextures() ? <Sprite key={i} kind="smoke" at={p} r={rr * 1.2} sx={1.4} rot={noise(seed, i + 73) * 360 + smoke * 30} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-smoke-g)" />;
+          const p = { x: at.x + Math.cos(a) * d * 0.7, y: at.y + Math.sin(a) * d * 0.7 - smoke * 1.4 * big }, rr = (0.5 + smoke * 1.0) * big * (0.7 + noise(seed, i + 72) * 0.5);
+          return fxTextures() ? <Sprite key={i} kind="smoke" at={p} r={(rr / VIS) * 1.2} sx={1.4} rot={noise(seed, i + 73) * 360 + smoke * 30} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-smoke-g)" />;
         })}
       </g>
       {fire < 1 && (
@@ -334,13 +380,13 @@ function Explosion({ at, k, seed, big: b0 = 1 }: { at: Pt; k: number; seed: numb
           {Array.from({ length: 3 }, (_, i) => {
             const a = noise(seed, i + 80) * Math.PI * 2, d = (0.2 + fire * 0.7) * big * noise(seed, i + 81);
             const p = { x: at.x + Math.cos(a) * d, y: at.y + Math.sin(a) * d - fire * 0.4 * big }, rr = (0.4 + fire * 1.3) * big * (0.7 + noise(seed, i + 82) * 0.5);
-            return fxTextures() ? <Sprite key={i} kind="fire" at={p} r={rr * 1.2} sx={1.6} op={1 - fire * fire} rot={(Math.atan2(p.y - at.y, p.x - at.x) * 180) / Math.PI} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-boom)" opacity={1 - fire} />;
+            return fxTextures() ? <Sprite key={i} kind="fire" at={p} r={(rr / VIS) * 1.2} sx={1.6} op={1 - fire * fire} rot={(Math.atan2(p.y - at.y, p.x - at.x) * 180) / Math.PI} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-boom)" opacity={1 - fire} />;
           })}
-          {fire < 0.15 && <Glow at={at} r={(0.8 + fire * 4) * big} color="molten" op={1 - fire / 0.15} />}
-          <Glow at={at} r={(2.4 + fire * 2) * big} color="orange" op={0.6 * (1 - fire)} />
+          {fire < 0.15 && <Glow at={at} r={(0.7 + fire * 3) * hb} color="molten" op={1 - fire / 0.15} />}
+          <Glow at={at} r={(1.4 + fire * 1.2) * hb} color="orange" op={0.6 * (1 - fire)} />
         </g>
       )}
-      <Debris at={at} k={clamp01(k / 0.6)} seed={seed} n={5} size={big} />
+      <Debris at={at} k={clamp01(k / 0.6)} seed={seed} n={5} size={hb} />
     </g>
   );
 }
@@ -662,27 +708,30 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           break;
         }
         case 'psychic': {
-          // the psyker gathers the warp around them, hurls a writhing bolt of it, and it bursts over the target
+          // the psyker gathers the warp (arcs crawl in), hurls a crackling bolt of it, and it bursts hard on the target
           const gk = (f - t0 + 0.12) / 0.3;
-          if (gk > 0 && gk < 1) over.push(<g key={`pg${key}`}><Glow at={src} r={0.7 * Math.sqrt(P)} color="purple" op={0.7 * Math.sin(gk * Math.PI)} /><Swirl at={src} r={0.9 * Math.sqrt(P)} color="#a855f7" k={gk} seed={sd} n={4} op={Math.sin(gk * Math.PI)} inward={0.6} /></g>);
+          if (gk > 0 && gk < 1) over.push(<g key={`pg${key}`}><Glow at={src} r={0.6 * Math.sqrt(P)} color="purple" op={0.8 * Math.sin(gk * Math.PI)} /><Arcs at={src} r={1.1 * Math.sqrt(P)} k={gk} seed={sd} color="#c084fc" n={4} inward /></g>);
           if (k > 0 && k < 1) {
-            const nx = -Math.sin(ang), ny = Math.cos(ang);
-            for (let j = 5; j >= 0; j--) {
-              const kk = k - j * 0.05;
-              if (kk <= 0) continue;
-              const wob = Math.sin(kk * 16 + sd) * 0.4 * (1 - kk * 0.5), p = lerp(src, impact, kk), at = { x: p.x + nx * wob, y: p.y + ny * wob };
-              const age = j / 6;
-              over.push(<Wisp key={`ps${key}-${j}`} at={at} r={(0.75 - age * 0.4) * Math.sqrt(P)} color="#a855f7" op={1 - age} rot={(ang * 180) / Math.PI + j * 40 + k * 200} v={j + sd} />);
-              if (j === 0) over.push(<Glow key={`ph${key}`} at={at} r={0.55 * Math.sqrt(P)} color="purple" op={1} />);
-            }
+            // a jagged tail of warp lightning behind a white-hot head
+            const tail = Math.max(0, k - 0.25), nx = -Math.sin(ang), ny = Math.cos(ang), flick = Math.floor((f - t0) * 40);
+            const pts = Array.from({ length: 6 }, (_, j) => { const kk = tail + ((k - tail) * j) / 5, p = lerp(src, impact, kk), w = j && j < 5 ? (noise(sd + flick, j) - 0.5) * 0.5 : 0; return `${p.x + nx * w},${p.y + ny * w}`; }).join(' ');
+            over.push(<g key={`ps${key}`}>
+              <polyline points={pts} fill="none" stroke="#a855f7" strokeWidth={0.5 * TRACE * Math.sqrt(P)} strokeLinejoin="round" opacity={0.25} />
+              <polyline points={pts} fill="none" stroke="#c084fc" strokeWidth={0.16 * TRACE * Math.sqrt(P)} strokeLinejoin="round" />
+              <polyline points={pts} fill="none" stroke="#fff" strokeWidth={0.05 * TRACE} strokeLinejoin="round" />
+            </g>);
+            const head = lerp(src, impact, k);
+            over.push(<g key={`ph${key}`}><Glow at={head} r={0.5 * Math.sqrt(P)} color="purple" /><circle cx={head.x} cy={head.y} r={0.13 * TRACE * Math.sqrt(P)} fill="#faf5ff" /></g>);
           }
           const xk = (f - t0 - S.travel) / 0.45;
           if (xk > 0 && xk < 1) {
             over.push(<g key={`px${key}`}>
-              <Glow at={impact} r={(0.5 + xk * 1.4) * P} color="purple" op={1 - xk} />
-              <Swirl at={impact} r={(0.6 + xk * 1.2) * P} color="#c084fc" k={xk} seed={sd + 5} n={5} op={1 - xk * xk} />
+              {xk < 0.2 && <Glow at={impact} r={(0.5 + xk * 3) * Math.sqrt(P)} color="white" op={1 - xk / 0.2} />}
+              <Glow at={impact} r={(0.5 + xk * 0.8) * P} color="purple" op={1 - xk} />
+              <Shockwave at={impact} r={1.4 * Math.sqrt(P)} k={xk / 0.7} color="#c084fc" />
+              <Arcs at={impact} r={1.3 * Math.sqrt(P)} k={xk / 0.8} seed={sd + 5} color="#c084fc" n={5} />
+              {hit && <Sparks at={impact} seed={sd} k={xk} color="#e9d5ff" size={1.1 * Math.sqrt(P)} ang={ang} />}
             </g>);
-            if (hit) under.push(<Puff key={`pp${key}`} at={{ x: impact.x, y: impact.y - xk * 0.5 }} k={xk} r={0.9 * P} color="rgba(88,60,110,0.45)" />);
           }
           break;
         }
@@ -749,7 +798,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             over.push(<g key={`t${key}`}><Glow at={p} r={0.5} color="amber" /><circle cx={p.x} cy={p.y} r={0.18} fill="#fff1c2" /></g>);
           }
           const xk = (f - t0 - S.travel) / 0.4;
-          if (xk > 0 && xk < 1) under.push(<Explosion key={`x${key}`} at={impact} k={xk} seed={sd} big={0.75 * P} />);
+          if (xk > 0 && xk < 1) under.push(<Explosion key={`x${key}`} at={impact} k={xk} seed={sd} big={0.6 * P} />);
           break;
         }
         case 'gauss': {
@@ -987,26 +1036,16 @@ function SkillFx({ e, f }: { e: SkillEvent; f: number }) {
     <g pointerEvents="none" transform={`translate(${shake} 0)`}>
       {/* the battlefield darkens a little and takes the colour of the power */}
       {e.epic && <rect x={x - 40} y={y - 40} width={80} height={80} fill={c.deep} opacity={0.16 * Math.sin(Math.min(1, f * 1.3) * Math.PI)} />}
-      {/* charge-up: sparks spiral in */}
-      {charge < 1 && <Swirl at={e.at} r={R * 1.6} color={c.glow} k={charge} seed={seed} n={6} op={0.4 + charge * 0.6} inward={0.8} />}
-      <g>
-        {/* flash */}
-        {f > 0.12 && f < 0.4 && <Wisp at={e.at} r={(1 + (f - 0.12) * 9) * big} color={c.glow} op={Math.max(0, 1 - (f - 0.12) / 0.28)} rot={seed * 37} />}
-        {/* shockwaves */}
-        {burst > 0 && burst < 0.7 && <DustRing at={e.at} k={burst / 0.7} r={6 * big} seed={seed} />}
-        {/* rays */}
-        {/* the power bursts out in uneven tongues, not a star of rays */}
-        <g opacity={Math.sin(Math.min(1, burst * 1.6) * Math.PI) * 0.8 * fadeOut}>
-          {Array.from({ length: rays / 2 }, (_, i) => {
-            const a = (i / (rays / 2)) * Math.PI * 2 + noise(seed, i) * 0.6, L = (R * 0.8 + noise(seed, i + 3) * R) * (0.5 + burst * 0.7);
-            return <Wisp key={`r${i}`} at={{ x: x + Math.cos(a) * L, y: y + Math.sin(a) * L }} r={(0.9 + noise(seed, i + 4) * 0.6) * big} color={c.glow} rot={(a * 180) / Math.PI + spin} v={i} />;
-          })}
-        </g>
-        {/* core glow */}
-        <Wisp at={e.at} r={1.3 * big} color={c.glow} op={0.7 * fadeOut * circleIn} rot={spin} v={1} />
-      </g>
-      {/* the power keeps turning around the hero while it lasts */}
-      <Swirl at={e.at} r={R} color={c.glow} k={f} seed={seed + 1} n={e.epic ? 7 : 5} op={circleIn * fadeOut * 0.8} />
+      {/* charge-up: arcs of power crawl in to the hero and the core brightens */}
+      {charge < 1 && <Arcs at={e.at} r={R * 1.5} k={0.05 + charge * 0.9} seed={seed} color={c.glow} n={e.epic ? 8 : 6} inward />}
+      {f < 0.2 && <Glow at={e.at} r={(0.6 + charge * 0.8) * big} color="white" op={0.4 + charge * 0.5} />}
+      {/* the release: a white flash, two shockwaves snapping out, arcs thrown wide, dust kicked up */}
+      {f > 0.12 && f < 0.32 && <Glow at={e.at} r={(1.4 + (f - 0.12) * 6) * big} color="white" op={1 - (f - 0.12) / 0.2} />}
+      <Shockwave at={e.at} r={R * 1.7} k={(f - 0.13) / 0.45} color={c.glow} />
+      <Shockwave at={e.at} r={R * 1.1} k={(f - 0.2) / 0.4} color={c.core} />
+      <Arcs at={e.at} r={R * 1.4} k={(f - 0.13) / 0.6} seed={seed + 1} color={c.glow} n={e.epic ? 9 : 6} />
+      {burst > 0 && burst < 0.7 && <DustRing at={e.at} k={burst / 0.7} r={4.5 * big} seed={seed} />}
+      <Sparks at={e.at} seed={seed + 2} k={clamp01((f - 0.13) / 0.5)} color={c.core} size={1.6 * big} />
       {/* embers drifting up and out */}
       {burst > 0 && Array.from({ length: e.epic ? 26 : 16 }, (_, i) => {
         const a = noise(seed, i + 7) * Math.PI * 2;
@@ -1043,7 +1082,9 @@ function SkillLite({ e, f }: { e: SkillEvent; f: number }) {
   const fade = f < 0.15 ? f / 0.15 : f > 0.7 ? (1 - f) / 0.3 : 1;
   return (
     <g opacity={fade}>
-      <Swirl at={e.at} r={1.3 + f * 0.6} color={c.glow} k={f} seed={e.seq} n={3} op={0.8 * (1 - f * 0.5)} />
+      {f < 0.2 && <Glow at={e.at} r={0.8 + f * 3} color="white" op={1 - f / 0.2} />}
+      <Shockwave at={e.at} r={1.8} k={f / 0.5} color={c.glow} />
+      <Arcs at={e.at} r={1.5} k={f / 0.55} seed={e.seq} color={c.glow} n={4} />
       <text x={x} y={y - 2.1 - f * 0.5} fontSize={0.8} textAnchor="middle" fontWeight={800} fill={c.text} stroke="#000" strokeWidth={0.16} paintOrder="stroke">{e.name}</text>
     </g>
   );
